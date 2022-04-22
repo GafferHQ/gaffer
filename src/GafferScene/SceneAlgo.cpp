@@ -875,8 +875,8 @@ ScenePlug *SceneAlgo::sourceScene( GafferImage::ImagePlug *image )
 namespace
 {
 
-static InternedString g_lights( "__lights" );
-static InternedString g_linkedLights( "linkedLights" );
+InternedString g_lights( "__lights" );
+InternedString g_linkedLights( "linkedLights" );
 
 template<typename AttributesPredicate>
 struct AttributesFinder

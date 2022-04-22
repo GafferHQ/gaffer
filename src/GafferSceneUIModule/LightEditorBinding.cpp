@@ -135,7 +135,7 @@ class LocationNameColumn : public StandardPathColumn
 
 };
 
-static const boost::container::flat_map<int, ConstColor4fDataPtr> g_sourceTypeColors = {
+const boost::container::flat_map<int, ConstColor4fDataPtr> g_sourceTypeColors = {
 	{ (int)Inspector::Result::SourceType::Upstream, nullptr },
 	{ (int)Inspector::Result::SourceType::EditScope, new Color4fData( Imath::Color4f( 48, 100, 153, 150 ) / 255.0f ) },
 	{ (int)Inspector::Result::SourceType::Downstream, new Color4fData( Imath::Color4f( 239, 198, 24, 104 ) / 255.0f ) },

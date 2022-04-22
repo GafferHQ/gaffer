@@ -51,13 +51,13 @@ GAFFER_NODE_DEFINE_TYPE( DeepState );
 namespace
 {
 
-const static IECore::InternedString g_AName = "A";
-const static IECore::InternedString g_ZName = "Z";
-const static IECore::InternedString g_ZBackName = "ZBack";
-const static IECore::InternedString g_sampleOffsetsName = "sampleOffsets";
-const static IECore::InternedString g_contributionIdsName = "contributionIds";
-const static IECore::InternedString g_contributionWeightsName = "contributionWeights";
-const static IECore::InternedString g_contributionOffsetsName = "contributionOffsets";
+const IECore::InternedString g_AName = "A";
+const IECore::InternedString g_ZName = "Z";
+const IECore::InternedString g_ZBackName = "ZBack";
+const IECore::InternedString g_sampleOffsetsName = "sampleOffsets";
+const IECore::InternedString g_contributionIdsName = "contributionIds";
+const IECore::InternedString g_contributionWeightsName = "contributionWeights";
+const IECore::InternedString g_contributionOffsetsName = "contributionOffsets";
 
 // This class stores all information about how samples are merged together.
 // It is initialized just based on the sorted Z and ZBack channels ( and the sampleOffsets that

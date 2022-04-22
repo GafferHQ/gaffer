@@ -78,8 +78,8 @@ using namespace GafferUI;
 
 namespace {
 
-static const float g_borderWidth = 0.5f;
-static const float g_maxFocusWidth = 2.0f;
+const float g_borderWidth = 0.5f;
+const float g_maxFocusWidth = 2.0f;
 
 IECoreGL::Texture *focusIconTexture( bool focus, bool hover )
 {

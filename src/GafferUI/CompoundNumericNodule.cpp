@@ -142,7 +142,7 @@ struct TypeDescription
 	}
 };
 
-static TypeDescription g_typeDescription;
+TypeDescription g_typeDescription;
 
 } // namespace
 

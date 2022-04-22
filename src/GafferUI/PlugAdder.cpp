@@ -66,7 +66,7 @@ using namespace GafferUI;
 namespace
 {
 
-static IECoreGL::Texture *texture( Style::State state )
+IECoreGL::Texture *texture( Style::State state )
 {
 	static IECoreGL::TexturePtr normalTexture;
 	static IECoreGL::TexturePtr highlightedTexture;

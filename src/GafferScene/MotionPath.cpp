@@ -54,9 +54,9 @@ using namespace GafferScene;
 namespace
 {
 
-static InternedString g_lightsSetName( "__lights" );
-static InternedString g_defaultLightsSetName( "defaultLights" );
-static InternedString g_camerasSetName( "__cameras" );
+InternedString g_lightsSetName( "__lights" );
+InternedString g_defaultLightsSetName( "defaultLights" );
+InternedString g_camerasSetName( "__cameras" );
 
 } // namespace
 

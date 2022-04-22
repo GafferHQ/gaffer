@@ -254,13 +254,13 @@ IECore::FrameListPtr frameRange( Dispatcher &n, const ScriptNode &script, const 
 	return n.Dispatcher::frameRange( &script, &context );
 }
 
-static void registerDispatcher( std::string type, object creator, object setupPlugsFn )
+void registerDispatcher( std::string type, object creator, object setupPlugsFn )
 {
 	DispatcherHelper helper( creator, setupPlugsFn );
 	Dispatcher::registerDispatcher( type, helper, helper );
 }
 
-static tuple registeredDispatchersWrapper()
+tuple registeredDispatchersWrapper()
 {
 	std::vector<std::string> types;
 	Dispatcher::registeredDispatchers( types );
@@ -272,7 +272,7 @@ static tuple registeredDispatchersWrapper()
 	return boost::python::tuple( result );
 }
 
-static list createMatching( std::string pattern )
+list createMatching( std::string pattern )
 {
 	std::vector<DispatcherPtr> dispatchers = Dispatcher::createMatching( pattern );
 	list result;

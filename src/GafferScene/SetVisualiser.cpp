@@ -116,7 +116,7 @@ Color3f colorForSetName( const InternedString &name, const std::vector<Override>
 // We're limited in our target GLSL version to fixed size shader array params
 size_t g_maxShaderColors = 9;
 
-static const StringDataPtr fragmentSource()
+const StringDataPtr fragmentSource()
 {
 	static StringDataPtr g_fragmentSource = new IECore::StringData(
 		"#if __VERSION__ <= 120\n"

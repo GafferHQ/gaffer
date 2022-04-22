@@ -80,7 +80,7 @@ struct NoduleCreator
 
 };
 
-static void registerNodule( const std::string &noduleTypeName, object creator, IECore::TypeId plugType )
+void registerNodule( const std::string &noduleTypeName, object creator, IECore::TypeId plugType )
 {
 	Nodule::registerNodule( noduleTypeName, NoduleCreator( creator ), plugType );
 }

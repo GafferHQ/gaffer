@@ -65,7 +65,7 @@ using OCIOMutex = tbb::mutex;
 using OCIOMutex = tbb::null_mutex;
 #endif
 
-static OCIOMutex g_ocioMutex;
+OCIOMutex g_ocioMutex;
 
 struct ProcessorProcess : public Process
 {

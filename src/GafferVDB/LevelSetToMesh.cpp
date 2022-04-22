@@ -79,7 +79,7 @@ struct MesherDispatch
 	openvdb::tools::VolumeToMesh &m_mesher;
 };
 
-static std::map<std::string, std::function<void( MesherDispatch& dispatch )> > meshers =
+std::map<std::string, std::function<void( MesherDispatch& dispatch )> > meshers =
 {
 	{ openvdb::typeNameAsString<bool>(), []( MesherDispatch& dispatch ) { dispatch.execute<openvdb::BoolGrid>(); } },
 	{ openvdb::typeNameAsString<double>(), []( MesherDispatch& dispatch ) { dispatch.execute<openvdb::DoubleGrid>(); } },
