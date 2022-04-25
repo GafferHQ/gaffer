@@ -110,8 +110,15 @@ Build
   - OpenColorIO : Updated to version 2.1.1.
   - Cortex : Updated to version 10.4.0.0.
 
-0.61.x.x (relative to 0.61.7.0)
+0.61.8.0 (relative to 0.61.7.0)
 ========
+
+Improvements
+------------
+
+- Profiling menu :
+  - Added menu item to start the ContextMonitor for all nodes, not just the selected one.
+  - Added "Clear Caches" menu item.
 
 Fixes
 -----

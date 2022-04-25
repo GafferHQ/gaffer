@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import functools
+
 import IECore
 
 import Gaffer
@@ -83,35 +85,33 @@ def __clearPerformanceMonitor( menu ) :
 	del script.__performanceMonitor
 	Gaffer.MonitorAlgo.removePerformanceAnnotations( script )
 
-def __contextMonitor( menu, createIfMissing = False ) :
+def __currentContextMonitor( menu ) :
 
 	# We store a monitor per script, so that we don't pollute
 	# other scripts with metrics collected as a side effect
 	# of monitoring this one.
 	script = menu.ancestor( GafferUI.ScriptWindow ).scriptNode()
-	monitor = getattr( script, "__contextMonitor", None )
-	if monitor is not None :
-		return monitor
+	return getattr( script, "__contextMonitor", None )
 
-	if createIfMissing :
-		monitor = Gaffer.ContextMonitor( script.selection()[-1] )
+def __startContextMonitor( menu, root = None ) :
+
+	monitor = __currentContextMonitor( menu )
+	if monitor is not None :
+		assert( root is None )
+	else :
+		script = menu.ancestor( GafferUI.ScriptWindow ).scriptNode()
+		assert( root is not None )
+		assert( script == root or script.isAncestorOf( root ) )
+		monitor = Gaffer.ContextMonitor( root )
 		monitor.__running = False
 		script.__contextMonitor = monitor
-		return monitor
-	else :
-		return None
-
-def __startContextMonitor( menu ) :
-
-	monitor = __contextMonitor( menu, createIfMissing = True )
-	assert( not monitor.__running )
 
 	monitor.__enter__()
 	monitor.__running = True
 
 def __stopContextMonitor( menu ) :
 
-	monitor = __contextMonitor( menu )
+	monitor = __currentContextMonitor( menu )
 	assert( monitor is not None and monitor.__running )
 	monitor.__exit__( None, None, None )
 	monitor.__running = False
@@ -124,6 +124,11 @@ def __clearContextMonitor( menu ) :
 	script = menu.ancestor( GafferUI.ScriptWindow ).scriptNode()
 	del script.__contextMonitor
 	Gaffer.MonitorAlgo.removeContextAnnotations( script )
+
+def __clearCaches( menu ) :
+
+	Gaffer.ValuePlug.clearCache()
+	Gaffer.ValuePlug.clearHashCache()
 
 def __profilingSubMenu( menu ) :
 
@@ -164,19 +169,32 @@ def __profilingSubMenu( menu ) :
 
 	# ContextMonitor
 
-	contextMonitor = __contextMonitor( menu )
-	selection = menu.ancestor( GafferUI.ScriptWindow ).scriptNode().selection()
+	contextMonitor = __currentContextMonitor( menu )
+	script = menu.ancestor( GafferUI.ScriptWindow ).scriptNode()
+	selection = script.selection()
 
-	result.append(
-		"/Context Monitor/" + ( "Start for Selected Node" if contextMonitor is None else "Resume" ),
-		{
-			"command" : __startContextMonitor,
-			"active" : (
-				( contextMonitor is None and selection.size() == 1 ) or
-				( contextMonitor is not None and not contextMonitor.__running )
-			)
-		}
-	)
+	if contextMonitor is not None :
+		result.append(
+			"/Context Monitor/Resume",
+			{
+				"command" : __startContextMonitor,
+				"active" : not contextMonitor.__running,
+			}
+		)
+	else :
+		result.append(
+			"/Context Monitor/Start",
+			{
+				"command" : functools.partial( __startContextMonitor, root = script )
+			}
+		)
+		result.append(
+			"/Context Monitor/Start for Selected Node",
+			{
+				"command" : functools.partial( __startContextMonitor, root = selection[-1] if len( selection ) else None ),
+				"active" : selection.size() == 1
+			}
+		)
 
 	result.append(
 		"/Context Monitor/Stop and Annotate",
@@ -196,6 +214,17 @@ def __profilingSubMenu( menu ) :
 		{
 			"command" : __clearContextMonitor,
 			"active" : contextMonitor is not None and not contextMonitor.__running
+		}
+	)
+
+	result.append(
+		"/CacheDivider", { "divider" : True },
+	)
+
+	result.append(
+		"/Clear Caches",
+		{
+			"command" : __clearCaches,
 		}
 	)
 
