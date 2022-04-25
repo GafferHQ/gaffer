@@ -3,6 +3,11 @@
 
 > Note : This release requires Arnold version 7.1.0.0 or newer.
 
+Features
+--------
+
+- Viewer : Added optional raytraced rendering, to provide high quality preview of lighting and shading. Initially only Arnold is supported, but other renderers will be added in future.
+
 Fixes
 -----
 
@@ -14,6 +19,7 @@ API
 - SceneView :
   - Added `registerRenderer()` and `registeredRenderers()` methods. These allow any suitable `IECoreScenePreview::Renderer` to be used to draw the scene.
   - Added `renderer.name` plug to control which renderer is used.
+  - Added `renderer.arnold` plug to control Arnold render settings.
 - RenderController : Added `pathForID()`, `pathsForIDs()`, `idForPath()` and `idsForPaths()` methods. These make it possible to identify an object in the scene from a `uint id` AOV.
 - PlugLayout : Improved activator support. The `layout:activator` and `layout:visibilityActivator` metadata may now take boolean values to control activation directly. This is useful when an activator only applies to one plug, or it applies to several but depends on properties of each plug. String values are treated as before, referring to a predefined activator.
 

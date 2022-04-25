@@ -137,6 +137,21 @@ def __createXRayShader() :
 
 GafferSceneUI.SceneView.registerShadingMode( "X-Ray", functools.partial( __createXRayShader ) )
 
+def __loadRendererSettings( fileName ) :
+
+	script = Gaffer.ScriptNode()
+	script["fileName"].setValue( fileName )
+	script.load()
+
+	script["Processor"] = GafferScene.SceneProcessor()
+	script.execute( script.serialise( parent = script["ViewerSettings"] ), parent = script["Processor"] )
+	script["Processor"]["BoxIn"]["__in"].setInput( script["Processor"]["in"] )
+	script["Processor"]["out"].setInput( script["Processor"]["BoxOut"]["__out"] )
+	for plug in Gaffer.ValuePlug.InputRange( script["Processor"] ) :
+		plug.setToDefault()
+
+	return script["Processor"]
+
 with IECore.IgnoredExceptions( ImportError ) :
 
 	import GafferArnold
@@ -156,6 +171,11 @@ with IECore.IgnoredExceptions( ImportError ) :
 		( "Diagnostic/Arnold/Self Shadows", GafferScene.AttributeVisualiser, { "attributeName" : "ai:self_shadows" } ),
 
 	] )
+
+	GafferSceneUI.SceneView.registerRenderer(
+		"Arnold",
+		functools.partial( __loadRendererSettings, os.path.join( os.path.dirname( __file__ ), "arnoldViewerSettings.gfr" ) )
+	)
 
 with IECore.IgnoredExceptions( ImportError ) :
 
