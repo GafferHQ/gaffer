@@ -53,9 +53,9 @@ using namespace GafferImage;
 
 namespace
 {
-	static IECore::InternedString g_tileInputBoundName( "tileInputBound"  );
-	static IECore::InternedString g_pixelInputPositionsName( "pixelInputPositions"  );
-	static IECore::InternedString g_pixelInputDerivativesName( "pixelInputDerivatives"  );
+	IECore::InternedString g_tileInputBoundName( "tileInputBound"  );
+	IECore::InternedString g_pixelInputPositionsName( "pixelInputPositions"  );
+	IECore::InternedString g_pixelInputDerivativesName( "pixelInputDerivatives"  );
 
 	const CompoundObject *sampleRegionsEmptyTile()
 	{

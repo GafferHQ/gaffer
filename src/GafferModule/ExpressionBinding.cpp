@@ -340,7 +340,7 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 
 ValuePlug::CachePolicy EngineWrapper::g_cachePolicy( defaultExecuteCachePolicy() );
 
-static tuple languages()
+tuple languages()
 {
 	std::vector<std::string> languages;
 	Expression::languages( languages );

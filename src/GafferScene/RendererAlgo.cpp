@@ -82,10 +82,10 @@ using namespace GafferScene;
 namespace
 {
 
-static InternedString g_transformBlurAttributeName( "gaffer:transformBlur" );
-static InternedString g_transformBlurSegmentsAttributeName( "gaffer:transformBlurSegments" );
-static InternedString g_deformationBlurAttributeName( "gaffer:deformationBlur" );
-static InternedString g_deformationBlurSegmentsAttributeName( "gaffer:deformationBlurSegments" );
+InternedString g_transformBlurAttributeName( "gaffer:transformBlur" );
+InternedString g_transformBlurSegmentsAttributeName( "gaffer:transformBlurSegments" );
+InternedString g_deformationBlurAttributeName( "gaffer:deformationBlur" );
+InternedString g_deformationBlurSegmentsAttributeName( "gaffer:deformationBlurSegments" );
 
 } // namespace
 
@@ -958,8 +958,8 @@ const InternedString g_transformBlurOptionName( "option:render:transformBlur" );
 const InternedString g_deformationBlurOptionName( "option:render:deformationBlur" );
 const InternedString g_shutterOptionName( "option:render:shutter" );
 
-static InternedString g_setsAttributeName( "sets" );
-static InternedString g_visibleAttributeName( "scene:visible" );
+InternedString g_setsAttributeName( "sets" );
+InternedString g_visibleAttributeName( "scene:visible" );
 
 IECore::InternedString optionName( const IECore::InternedString &globalsName )
 {

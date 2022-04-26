@@ -2076,8 +2076,8 @@ IE_CORE_DECLAREPTR( InstanceCache )
 namespace
 {
 
-static IECore::InternedString g_surfaceAttributeName( "surface" );
-static IECore::InternedString g_aiSurfaceAttributeName( "ai:surface" );
+IECore::InternedString g_surfaceAttributeName( "surface" );
+IECore::InternedString g_aiSurfaceAttributeName( "ai:surface" );
 
 IE_CORE_FORWARDDECLARE( ArnoldLight )
 
