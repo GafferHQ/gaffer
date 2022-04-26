@@ -1,3 +1,17 @@
+0.61.x.x (relative to 0.61.8.0)
+========
+
+Improvements
+------------
+
+- USD :
+  - Added support for reading `.usdz` files.
+  - Added support for `doubleSided` attribute.
+
+Build
+-----
+
+- Cortex : Updated to version 10.3.6.0.
 
 0.61.8.0 (relative to 0.61.7.0)
 ========
