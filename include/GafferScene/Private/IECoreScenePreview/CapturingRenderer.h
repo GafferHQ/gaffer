@@ -84,6 +84,9 @@ class GAFFERSCENE_API CapturingRenderer : public Renderer
 
 				CapturedAttributes( const IECore::ConstCompoundObjectPtr &attributes );
 
+				int uneditableAttributeValue() const;
+				bool unrenderableAttributeValue() const;
+
 				friend class CapturingRenderer;
 
 				IECore::ConstCompoundObjectPtr m_attributes;

@@ -133,13 +133,9 @@ Renderer::ObjectInterfacePtr CapturingRenderer::object( const std::string &name,
 
 	// To facilitate the testing of code that handles the return from the various object methods of
 	// a renderer, we return null if the `cr:unrenderable` attribute is set to true.
-	if( const auto attr = dynamic_cast<const CapturingRenderer::CapturedAttributes *>( attributes ) )
+	if( static_cast<const CapturedAttributes *>( attributes )->unrenderableAttributeValue() )
 	{
-		const BoolData *attrData = attr->attributes()->member<BoolData>( "cr:unrenderable" );
-		if( attrData && attrData->readable() )
-		{
-			return nullptr;
-		}
+		return nullptr;
 	}
 
 	ObjectMap::accessor a;
@@ -201,13 +197,25 @@ void CapturingRenderer::checkPaused() const
 //////////////////////////////////////////////////////////////////////////
 
 CapturingRenderer::CapturedAttributes::CapturedAttributes( const IECore::ConstCompoundObjectPtr &attributes )
-	:	m_attributes( attributes )
+	:	m_attributes( attributes->copy() )
 {
 }
 
 const IECore::CompoundObject *CapturingRenderer::CapturedAttributes::attributes() const
 {
 	return m_attributes.get();
+}
+
+int CapturingRenderer::CapturedAttributes::uneditableAttributeValue() const
+{
+	auto *data = m_attributes->member<IntData>( "cr:uneditable" );
+	return data ? data->readable() : 0;
+}
+
+bool CapturingRenderer::CapturedAttributes::unrenderableAttributeValue() const
+{
+	auto *data = m_attributes->member<BoolData>( "cr:unrenderable" );
+	return data && data->readable();
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -298,7 +306,19 @@ void CapturingRenderer::CapturedObject::transform( const std::vector<Imath::M44f
 bool CapturingRenderer::CapturedObject::attributes( const AttributesInterface *attributes )
 {
 	m_renderer->checkPaused();
-	m_capturedAttributes = static_cast<const CapturedAttributes *>( attributes );
+
+	auto capturedAttributes = static_cast<const CapturedAttributes *>( attributes );
+	if( capturedAttributes->unrenderableAttributeValue() )
+	{
+		return false;
+	}
+
+	if( m_capturedAttributes && m_capturedAttributes->uneditableAttributeValue() != capturedAttributes->uneditableAttributeValue() )
+	{
+		return false;
+	}
+
+	m_capturedAttributes = capturedAttributes;
 	m_numAttributeEdits++;
 	return true;
 }

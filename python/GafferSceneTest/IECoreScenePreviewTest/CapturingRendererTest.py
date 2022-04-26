@@ -59,7 +59,7 @@ class CapturingRendererTest( GafferTest.TestCase ) :
 		coreAttributes = IECore.CompoundObject( { "x" : IECore.IntData( 10 ) } )
 		attributes = renderer.attributes( coreAttributes )
 		self.assertIsInstance( attributes, renderer.CapturedAttributes )
-		self.assertTrue( attributes.attributes().isSame( coreAttributes ) )
+		self.assertEqual( attributes.attributes(), coreAttributes )
 
 	def testCapturedObject( self ) :
 

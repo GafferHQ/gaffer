@@ -746,5 +746,48 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		capturedObject = renderer.capturedObject( "/coordinateSystem" )
 		self.assertEqual( capturedObject.capturedSamples(), [ coordinateSystem["out"].object( "/coordinateSystem" ) ] )
 
+	def testFailedAttributeEdit( self ) :
+
+		sphere = GafferScene.Sphere()
+
+		attributes = GafferScene.CustomAttributes()
+		attributes["in"].setInput( sphere["out"] )
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer()
+		controller = GafferScene.RenderController( attributes["out"], Gaffer.Context(), renderer )
+		controller.update()
+		self.assertEqual( renderer.capturedObject( "/sphere" ).numAttributeEdits(), 1 )
+
+		# Successful edit should just update the object in place and
+		# increment `numAttributeEdits()`.
+
+		attributes["attributes"].addChild( Gaffer.NameValuePlug( "test", 10 ) )
+		controller.update()
+		self.assertEqual( renderer.capturedObject( "/sphere" ).numAttributeEdits(), 2 )
+		self.assertEqual( renderer.capturedObject( "/sphere" ).capturedAttributes().attributes()["test"], IECore.IntData( 10 ) )
+
+		# Failed edit should replace the object, so `numAttributeEdits()` should
+		# be reset to 1.
+
+		attributes["attributes"].addChild( Gaffer.NameValuePlug( "cr:uneditable", 10 ) )
+		with IECore.CapturingMessageHandler() as mh :
+			controller.update()
+
+		self.assertEqual( renderer.capturedObject( "/sphere" ).numAttributeEdits(), 1 )
+		self.assertEqual( renderer.capturedObject( "/sphere" ).capturedAttributes().attributes()["cr:uneditable"], IECore.IntData( 10 ) )
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].message, "1 attribute edit required geometry to be regenerated" )
+
+		# Adding `cr:unrenderable` should also cause an edit failure, because such
+		# objects can't be rendered. But this time the object should be removed
+		# and not replaced.
+
+		attributes["attributes"].addChild( Gaffer.NameValuePlug( "cr:unrenderable", True ) )
+		with IECore.CapturingMessageHandler() as mh :
+			controller.update()
+
+		self.assertIsNone( renderer.capturedObject( "/sphere" ) )
+
 if __name__ == "__main__":
 	unittest.main()
