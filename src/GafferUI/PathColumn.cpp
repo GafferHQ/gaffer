@@ -39,6 +39,7 @@
 #include "Gaffer/FileSystemPath.h"
 
 #include "IECore/MessageHandler.h"
+#include "IECore/SplineData.h"
 
 #include "QtWidgets/QFileIconProvider"
 
@@ -47,6 +48,25 @@
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferUI;
+
+namespace
+{
+
+const std::string basisName( StandardCubicBasis basis )
+{
+	switch( basis )
+	{
+		case StandardCubicBasis::Bezier : return "Bezier"; break;
+		case StandardCubicBasis::BSpline : return "BSpline"; break;
+		case StandardCubicBasis::CatmullRom : return "CatmullRom"; break;
+		case StandardCubicBasis::Linear : return "Linear"; break;
+		default: break;
+	}
+
+	return "Unknown";
+}
+
+}  // namespace
 
 //////////////////////////////////////////////////////////////////////////
 // PathColumn
@@ -73,7 +93,35 @@ IECore::InternedString StandardPathColumn::property() const
 
 PathColumn::CellData StandardPathColumn::cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const
 {
-	return CellData( runTimeCast<const IECore::Data>( path.property( m_property, canceller ) ) );
+	IECore::ConstDataPtr data = runTimeCast<const IECore::Data>( path.property( m_property, canceller ) );
+	CellData cellData = CellData( data );
+
+	if( auto color = runTimeCast<const Color3fData>( data.get() ) )
+	{
+		cellData.icon = color;
+	}
+	else if( auto color = runTimeCast<const Color4fData>( data.get() ) )
+	{
+		cellData.icon = color;
+	}
+	else if( auto spline = runTimeCast<const SplineffData>( data.get() ) )
+	{
+		cellData.value = new StringData( basisName( spline->readable().basis.standardBasis() ) );
+	}
+	else if( auto spline = runTimeCast<const SplineddData>( data.get() ) )
+	{
+		cellData.value = new StringData( basisName( spline->readable().basis.standardBasis() ) );
+	}
+	else if( auto spline = runTimeCast<const SplinefColor3fData>( data.get() ) )
+	{
+		cellData.value = new StringData( basisName( spline->readable().basis.standardBasis() ) );
+	}
+	else if( auto spline = runTimeCast<const SplinefColor4fData>( data.get() ) )
+	{
+		cellData.value = new StringData( basisName( spline->readable().basis.standardBasis() ) );
+	}
+
+	return CellData( cellData );
 }
 
 PathColumn::CellData StandardPathColumn::headerData( const IECore::Canceller *canceller ) const
