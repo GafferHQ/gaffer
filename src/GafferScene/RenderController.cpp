@@ -408,7 +408,10 @@ class RenderController::SceneGraph
 						}
 					}
 				}
+			}
 
+			if( m_objectInterface )
+			{
 				// If the transform has changed, or we have an entirely new object,
 				// the apply the transform.
 				if( m_changedComponents & ( ObjectComponent | TransformComponent ) )
