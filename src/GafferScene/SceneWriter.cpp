@@ -121,16 +121,6 @@ struct LocationWriter
 			m_output = m_output->child( scenePath.back(), SceneInterface::CreateIfMissing );
 		}
 
-		for( CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; it++ )
-		{
-			m_output->writeAttribute( it->first, it->second.get(), m_time );
-		}
-
-		if( globals && !globals->members().empty() )
-		{
-			m_output->writeAttribute( "gaffer:globals", globals.get(), m_time );
-		}
-
 		if( object->typeId() != IECore::NullObjectTypeId && scenePath.size() > 0 )
 		{
 			m_output->writeObject( object.get(), m_time );
@@ -141,6 +131,16 @@ struct LocationWriter
 		if( transformData )
 		{
 			m_output->writeTransform( transformData.get(), m_time );
+		}
+
+		for( CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; it++ )
+		{
+			m_output->writeAttribute( it->first, it->second.get(), m_time );
+		}
+
+		if( globals && !globals->members().empty() )
+		{
+			m_output->writeAttribute( "gaffer:globals", globals.get(), m_time );
 		}
 
 		if( !locationSets.empty() )
