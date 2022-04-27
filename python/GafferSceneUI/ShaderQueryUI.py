@@ -300,9 +300,8 @@ Gaffer.Metadata.registerNode(
 			"layout:section", "Settings.Outputs",
 
 			"nodule:type", "GafferUI::CompoundNodule",
-
 			"noduleLayout:section", "right",
-			"noduleLayout:spacing", 0.2,
+			"noduleLayout:spacing", 0.4,
 
 		],
 
@@ -318,9 +317,7 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type", "GafferSceneUI.ShaderQueryUI._OutputWidget",
 
 			"nodule:type", "GafferUI::CompoundNodule",
-
 			"noduleLayout:section", "right",
-			"noduleLayout:spacing", 0.2,
 
 		],
 
