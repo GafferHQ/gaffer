@@ -1303,5 +1303,37 @@ class AttributeQueryTest( GafferSceneTest.SceneTestCase ):
 		self.assertTrue( s["n"]["exists"].getValue() )
 		self.assertEqual( s["n"]["value"].getValue().value, a["attributes"]["o"]["value"].getValue() )
 
+	def testShaderOutput( self ) :
+
+		loc = "shaderSphere"
+
+		v = GafferSceneTest.TestShader( "assignedShader" )
+		v["type"].setValue( "test:shader" )
+
+		d = Gaffer.ObjectPlug(
+			"o",
+			direction = Gaffer.Plug.Direction.Out,
+			defaultValue = IECore.NullObject()
+		)
+
+		s = GafferScene.Sphere()
+		s["name"].setValue( loc )
+
+		sa = GafferScene.ShaderAssignment()
+		sa["in"].setInput( s["out"] )
+		sa["shader"].setInput( v["out"] )
+
+		q = GafferScene.AttributeQuery()
+		q["scene"].setInput( sa["out"] )
+		q.setup( d )
+		q["attribute"].setValue( "test:shader" )
+
+		self.assertEqual( q["value"].getValue(), d.getValue() )
+
+		q["location"].setValue( loc )
+
+		self.assertEqual( q["value"].getValue(), v.attributes()["test:shader"] )
+
+
 if __name__ == "__main__":
 	unittest.main()

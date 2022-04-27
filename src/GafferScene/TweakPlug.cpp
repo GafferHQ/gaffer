@@ -288,7 +288,7 @@ bool applyTweakInternal( TweakPlug::Mode mode, const ValuePlug *valuePlug, const
 	}
 
 	Data *parameterValue = parameters->member<Data>( parameterName );
-	DataPtr newData = PlugAlgo::extractDataFromPlug( valuePlug );
+	DataPtr newData = PlugAlgo::getValueAsData( valuePlug );
 	if( !newData )
 	{
 		throw IECore::Exception(

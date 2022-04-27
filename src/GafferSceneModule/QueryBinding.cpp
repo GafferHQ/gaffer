@@ -46,8 +46,13 @@
 #include "GafferScene/ExistenceQuery.h"
 #include "GafferScene/FilterQuery.h"
 #include "GafferScene/TransformQuery.h"
+#include "GafferScene/ShaderQuery.h"
 
 #include "IECorePython/ScopedGILRelease.h"
+
+using namespace boost::python;
+using namespace Gaffer;
+using namespace GafferBindings;
 
 namespace
 {
@@ -72,7 +77,7 @@ void setup( GafferScene::AttributeQuery& query, const Gaffer::ValuePlug& plug )
 	query.setup( & plug );
 }
 
-class Serialiser : public GafferBindings::NodeSerialiser
+class AttributeQuerySerialiser : public GafferBindings::NodeSerialiser
 {
 	std::string postConstructor( const Gaffer::GraphComponent* component, const std::string& identifier, GafferBindings::Serialisation& serialisation ) const override
 	{
@@ -87,8 +92,69 @@ class Serialiser : public GafferBindings::NodeSerialiser
 				result += "\n";
 			}
 
-			const GafferBindings::Serialisation::Serialiser* const serialiser = GafferBindings::Serialisation::acquireSerialiser( query->valuePlug() );
+			const GafferBindings::Serialisation::Serialiser* const serialiser = Serialisation::acquireSerialiser( query->valuePlug() );
 			result += identifier + ".setup( " + serialiser->constructor( query->valuePlug(), serialisation ) + " )\n";
+		}
+
+		return result;
+	}
+};
+
+NameValuePlugPtr addQuery(
+	GafferScene::ShaderQuery &query,
+	const ValuePlug &plug,
+	const std::string &parameter
+)
+{
+	IECorePython::ScopedGILRelease gilRelease;
+
+	NameValuePlug *result = query.addQuery( &plug, parameter );
+
+	return result;
+}
+
+void removeQuery( GafferScene::ShaderQuery &query, NameValuePlug &plug )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	query.removeQuery( &plug );
+}
+
+const BoolPlugPtr existsPlugFromQuery( const GafferScene::ShaderQuery &q, const NameValuePlug &p )
+{
+	return const_cast<BoolPlug *>( q.existsPlugFromQuery( &p ) );
+}
+
+const ValuePlugPtr valuePlugFromQuery( const GafferScene::ShaderQuery &q, const NameValuePlug &p )
+{
+	return const_cast<ValuePlug *>( q.valuePlugFromQuery( &p ) );
+}
+
+const ValuePlugPtr outPlugFromQuery( const GafferScene::ShaderQuery &q, const NameValuePlug &p )
+{
+	return const_cast<ValuePlug *>( q.outPlugFromQuery( &p ) );
+}
+
+const NameValuePlugPtr queryPlug( const GafferScene::ShaderQuery &q, const ValuePlug &p )
+{
+	return const_cast<NameValuePlug *>( q.queryPlug( &p ) );
+}
+
+class ShaderQuerySerialiser : public NodeSerialiser
+{
+	std::string postConstructor( const GraphComponent* component, const std::string& identifier, Serialisation& serialisation ) const override
+	{
+		std::string result = NodeSerialiser::postConstructor( component, identifier, serialisation );
+
+		const GafferScene::ShaderQuery* const query = IECore::runTimeCast< const GafferScene::ShaderQuery >( component );
+
+		for( const auto &queryPlug : NameValuePlug::Range( *query->queriesPlug() ) )
+		{
+			const Serialisation::Serialiser* serialiser = Serialisation::acquireSerialiser( queryPlug->valuePlug() );
+			result +=
+				identifier + ".addQuery( " +
+				serialiser->constructor( queryPlug->valuePlug(), serialisation ) +
+				" )\n"
+			;
 		}
 
 		return result;
@@ -103,9 +169,20 @@ void GafferSceneModule::bindQueries()
 		.def( "isSetup", & isSetup )
 		.def( "canSetup", & canSetup )
 		.def( "setup", & setup )
-		;
+	;
 
-	GafferBindings::Serialisation::registerSerialiser( GafferScene::AttributeQuery::staticTypeId(), new Serialiser() );
+	GafferBindings::Serialisation::registerSerialiser( GafferScene::AttributeQuery::staticTypeId(), new AttributeQuerySerialiser() );
+
+	DependencyNodeClass< GafferScene::ShaderQuery >()
+		.def( "addQuery", &addQuery, ( arg( "plug" ), arg( "parameter" ) = "" ) )
+		.def( "removeQuery", &removeQuery )
+		.def( "existsPlugFromQuery", &existsPlugFromQuery )
+		.def( "valuePlugFromQuery", &valuePlugFromQuery )
+		.def( "outPlugFromQuery", &outPlugFromQuery )
+		.def( "queryPlug", &queryPlug )
+	;
+
+	Serialisation::registerSerialiser( GafferScene::ShaderQuery::staticTypeId(), new ShaderQuerySerialiser() );
 
 	{
 		boost::python::scope s = GafferBindings::DependencyNodeClass< GafferScene::BoundQuery >();

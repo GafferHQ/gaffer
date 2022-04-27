@@ -212,7 +212,7 @@ class OSLObjectPlugAdder : public PlugAdder
 			{
 				try
 				{
-					matchingDataType = PlugAlgo::extractDataFromPlug( valueInput );
+					matchingDataType = PlugAlgo::getValueAsData( valueInput );
 				}
 				catch( ... )
 				{

@@ -140,7 +140,7 @@ def __registerCameraParameters() :
 
 		registerTweak(
 			"{}/{}".format( category, IECore.CamelCase.toSpaced( plugName ) ),
-			functools.partial( creator, plugName, Gaffer.PlugAlgo.extractDataFromPlug( cameraPlug ) )
+			functools.partial( creator, plugName, Gaffer.PlugAlgo.getValueAsData( cameraPlug ) )
 		)
 
 		__registerTweakMetadata( plugName, "name", "readOnly", True )
