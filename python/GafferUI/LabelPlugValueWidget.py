@@ -129,13 +129,17 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 		# with proper support for child plug connections/defaults) at the next API break.
 
 		def valueChanged( plug ) :
-			changed = plug.getInput() is not None
-			if not changed and isinstance( plug, Gaffer.ValuePlug ) :
-				if Gaffer.NodeAlgo.hasUserDefault( plug ) :
-					changed = not Gaffer.NodeAlgo.isSetToUserDefault( plug )
-				else :
-					changed = not plug.isSetToDefault()
-			return changed
+
+			if plug.direction() == Gaffer.Plug.Direction.Out :
+				return False
+			elif plug.getInput() is not None :
+				return True
+			elif not isinstance( plug, Gaffer.ValuePlug ) :
+				return False
+			elif Gaffer.NodeAlgo.hasUserDefault( plug ) :
+				return not Gaffer.NodeAlgo.isSetToUserDefault( plug )
+			else :
+				return not plug.isSetToDefault()
 
 		anyValueChanged = any( [ valueChanged( plug ) for plug in self.getPlugs() ] )
 		self.__setValueChanged( anyValueChanged )
