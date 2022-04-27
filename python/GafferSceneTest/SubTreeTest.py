@@ -351,7 +351,7 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 				self.assertEqual( s["out"].attributes( "/" ), IECore.CompoundObject() )
 				self.assertEqual( s["out"].transform( "/" ), imath.M44f() )
 
-	def testIncludeRootWithRootObjectInSet( self ) :
+	def testRootPathNeverInSet( self ) :
 
 		sphere = GafferScene.Sphere()
 		sphere["sets"].setValue( "setA" )
@@ -360,8 +360,10 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 		subTree["in"].setInput( sphere["out"] )
 		subTree["root"].setValue( "/sphere" )
 		subTree["includeRoot"].setValue( True )
-
 		self.assertEqual( subTree["out"].set( "setA" ).value, IECore.PathMatcher( [ "/sphere" ] ) )
+
+		subTree["includeRoot"].setValue( False )
+		self.assertEqual( subTree["out"].set( "setA" ).value, IECore.PathMatcher() )
 
 	def testTranformInheritance( self ) :
 
@@ -509,7 +511,7 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 		subTree["in"].setInput( setB["out"] )
 		subTree["root"].setValue( "/groupA" )
 		self.assertSceneValid( subTree["out"] )
-		self.assertEqual( subTree["out"].set( "setA" ).value, IECore.PathMatcher( [ "/" ] ) )
+		self.assertEqual( subTree["out"].set( "setA" ).value, IECore.PathMatcher() )
 		self.assertEqual( subTree["out"].set( "setB" ).value, IECore.PathMatcher( [ "/groupB", "/groupB/sphere" ] ) )
 
 		subTree["includeRoot"].setValue( True )

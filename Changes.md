@@ -37,6 +37,7 @@ Breaking Changes
 
 - ImageReader : Changed the default interpretation of channel names in multi-part OpenEXR files. Set the `channelInterpretation` plug to `Legacy` to preserve the old behaviour.
 - ImageWriter : Multi-part OpenEXR files are now written by default. Set the `layout` plug to `Single Part` to write a single-part file instead.
+- SubTree : Removed the `/` root location from generated sets, because root membership is unsupported elsewhere in Gaffer.
 - OSLShader : Removed `prepareSplineCVsForOSL()` method. Use `IECoreScene::ShaderNetworkAlgo::expandSplineParameters()` instead.
 - ArnoldMeshLight : The `ai:autobump_visibility` attributes are no longer modified. Use a separate ArnoldAttributes node if necessary.
 
