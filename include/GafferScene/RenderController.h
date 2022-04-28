@@ -147,7 +147,7 @@ class GAFFERSCENE_API RenderController : public Gaffer::Signals::Trackable
 		Private::RendererAlgo::RenderSets m_renderSets;
 		std::unique_ptr<Private::RendererAlgo::LightLinks> m_lightLinks;
 		IECoreScenePreview::Renderer::ObjectInterfacePtr m_defaultCamera;
-		IECoreScenePreview::Renderer::AttributesInterfacePtr m_boundAttributes;
+		IECoreScenePreview::Renderer::AttributesInterfacePtr m_defaultAttributes;
 
 		std::shared_ptr<Gaffer::BackgroundTask> m_backgroundTask;
 

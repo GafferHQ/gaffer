@@ -35,6 +35,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GafferScene/Private/IECoreGLPreview/ObjectVisualiser.h"
+#include "GafferScene/Private/IECoreScenePreview/Placeholder.h"
 #include "GafferScene/Private/IECoreScenePreview/Procedural.h"
 
 #include "IECoreGL/CurvesPrimitive.h"
@@ -148,5 +149,20 @@ class ExternalProceduralVisualiser : public BoundVisualiser
 };
 
 ObjectVisualiser::ObjectVisualiserDescription<ExternalProceduralVisualiser> ExternalProceduralVisualiser::g_visualiserDescription;
+
+class PlaceholderVisualiser : public BoundVisualiser
+{
+
+	public :
+
+		using ObjectType = IECoreScenePreview::Placeholder;
+
+	protected :
+
+		static ObjectVisualiserDescription<PlaceholderVisualiser> g_visualiserDescription;
+
+};
+
+ObjectVisualiser::ObjectVisualiserDescription<PlaceholderVisualiser> PlaceholderVisualiser::g_visualiserDescription;
 
 } // namespace
