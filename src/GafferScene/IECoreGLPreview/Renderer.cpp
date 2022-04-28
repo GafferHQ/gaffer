@@ -183,6 +183,20 @@ T *reportedCast( const IECore::RunTimeTyped *v, const char *type, const IECore::
 }
 
 template<typename T>
+T option( const IECore::Object *v, const IECore::InternedString &name, const T &defaultValue )
+{
+	if( !v )
+	{
+		return defaultValue;
+	}
+	if( auto d = reportedCast<const IECore::TypedData<T>>( v, "option", name ) )
+	{
+		return d->readable();
+	}
+	return defaultValue;
+}
+
+template<typename T>
 T parameter( const IECore::CompoundDataMap &parameters, const IECore::InternedString &name, const T &defaultValue )
 {
 	IECore::CompoundDataMap::const_iterator it = parameters.find( name );
@@ -724,33 +738,15 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 
 			if( name == "camera" )
 			{
-				if( value == nullptr )
-				{
-					m_camera = "";
-				}
-				else if( const IECore::StringData *d = reportedCast<const IECore::StringData>( value, "option", name ) )
-				{
-					m_camera = d->readable();
-
-				}
-				return;
+				m_camera = ::option<string>( value, name, "" );
 			}
 			else if( name == "frame" || name == "sampleMotion" )
 			{
 				// We know what these mean, we just have no use for them.
-				return;
 			}
 			else if( name == "gl:selection" )
 			{
-				if( value == nullptr )
-				{
-					m_selection.clear();
-				}
-				else if( auto d = reportedCast<const IECore::PathMatcherData>( value, "option", name ) )
-				{
-					m_selection = d->readable();
-				}
-				return;
+				m_selection = ::option<IECore::PathMatcher>( value, name, IECore::PathMatcher() );
 			}
 			else if(
 				boost::starts_with( name.string(), "gl:primitive:" ) ||
@@ -768,15 +764,15 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 					m_baseStateOptions->members().erase( name );
 				}
 				m_baseState = nullptr; // We'll update it lazily in `baseState()`
-				return;
 			}
 			else if( boost::contains( name.string(), ":" ) && !boost::starts_with( name.string(), "gl:" ) )
 			{
 				// Ignore options prefixed for some other renderer.
-				return;
 			}
-
-			IECore::msg( IECore::Msg::Warning, "IECoreGL::Renderer::option", boost::format( "Unknown option \"%s\"." ) % name.c_str() );
+			else
+			{
+				IECore::msg( IECore::Msg::Warning, "IECoreGL::Renderer::option", boost::format( "Unknown option \"%s\"." ) % name.c_str() );
+			}
 		}
 
 		void output( const IECore::InternedString &name, const Output *output ) override
