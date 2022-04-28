@@ -40,6 +40,7 @@
 #include "GafferScene/Private/IECoreGLPreview/LightVisualiser.h"
 #include "GafferScene/Private/IECoreGLPreview/LightFilterVisualiser.h"
 #include "GafferScene/Private/IECoreGLPreview/ObjectVisualiser.h"
+#include "GafferScene/Private/IECoreScenePreview/Placeholder.h"
 #include "GafferScene/ScenePlug.h"
 
 #include "IECoreGL/CachedConverter.h"
@@ -715,7 +716,8 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 	public :
 
 		OpenGLRenderer( RenderType renderType, const std::string &fileName, const IECore::MessageHandlerPtr &messageHandler )
-			:	m_renderType( renderType ), m_baseStateOptions( new CompoundObject ), m_messageHandler( messageHandler )
+			:	m_renderType( renderType ), m_baseStateOptions( new CompoundObject ),
+				m_renderObjects( true ), m_messageHandler( messageHandler )
 		{
 			if( renderType == SceneDescription )
 			{
@@ -764,6 +766,15 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 					m_baseStateOptions->members().erase( name );
 				}
 				m_baseState = nullptr; // We'll update it lazily in `baseState()`
+			}
+			/// \todo We can't support this being modified after the scene has
+			/// already been generated, because we've thrown away the source
+			/// objects already. This is similar to `ai:ignore_subdivision`.
+			/// Perhaps `option()` should have a return value to indicate to the
+			/// RenderController that it needs to resend objects?
+			else if( name == "gl:renderObjects" )
+			{
+				m_renderObjects = ::option<bool>( value, name, true );
 			}
 			else if( boost::contains( name.string(), ":" ) && !boost::starts_with( name.string(), "gl:" ) )
 			{
@@ -828,6 +839,11 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 
 		Renderer::ObjectInterfacePtr object( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
 		{
+			if( !m_renderObjects && !runTimeCast<const IECoreScenePreview::Placeholder>( object ) )
+			{
+				return nullptr;
+			}
+
 			IECore::MessageHandler::Scope s( m_messageHandler.get() );
 
 			OpenGLObjectPtr result = new OpenGLObject( name, object, static_cast<const OpenGLAttributes *>( attributes ), m_editQueue );
@@ -1192,6 +1208,7 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 		IECore::PathMatcher m_selection;
 		IECore::CompoundObjectPtr m_baseStateOptions;
 		IECoreGL::StatePtr m_baseState;
+		bool m_renderObjects;
 
 		IECore::MessageHandlerPtr m_messageHandler;
 
