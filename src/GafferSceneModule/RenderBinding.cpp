@@ -43,6 +43,7 @@
 #include "GafferScene/Private/IECoreScenePreview/CapturingRenderer.h"
 #include "GafferScene/Private/IECoreScenePreview/CompoundRenderer.h"
 #include "GafferScene/Private/IECoreScenePreview/Geometry.h"
+#include "GafferScene/Private/IECoreScenePreview/Placeholder.h"
 #include "GafferScene/Private/IECoreScenePreview/Procedural.h"
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 #include "GafferScene/Private/RendererAlgo.h"
@@ -471,7 +472,6 @@ void GafferSceneModule::bindRender()
 			.def( "render", (void (Procedural::*)( IECoreScenePreview::Renderer *)const)&Procedural::render )
 		;
 
-
 		IECorePython::RunTimeTypedClass<Geometry>()
 			.def(
 				init<const std::string &, const Box3f &, const IECore::CompoundDataPtr &>(
@@ -487,6 +487,12 @@ void GafferSceneModule::bindRender()
 			.def( "setBound", &Geometry::setBound )
 			.def( "getBound", &Geometry::getBound, return_value_policy<copy_const_reference>() )
 			.def( "parameters", (IECore::CompoundData *(Geometry::*)())&Geometry::parameters, return_value_policy<IECorePython::CastToIntrusivePtr>() )
+		;
+
+		IECorePython::RunTimeTypedClass<Placeholder>()
+			.def( init<const Box3f &>( arg( "bound" ) = Box3f() ) )
+			.def( "setBound", &Placeholder::setBound )
+			.def( "getBound", &Placeholder::getBound, return_value_policy<copy_const_reference>() )
 		;
 
 		scope capturingRendererScope = IECorePython::RefCountedClass<CapturingRenderer, Renderer>( "CapturingRenderer" )

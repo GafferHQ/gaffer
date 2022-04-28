@@ -168,6 +168,7 @@ enum TypeId
 	CryptomatteTypeId = 110623,
 	ShaderQueryTypeId = 110624,
 
+	PreviewPlaceholderTypeId = 110647,
 	PreviewGeometryTypeId = 110648,
 	PreviewProceduralTypeId = 110649,
 
