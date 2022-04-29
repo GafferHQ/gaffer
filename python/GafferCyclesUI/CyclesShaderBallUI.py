@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2020, Cinesite VFX Ltd. All rights reserved.
+#  Copyright (c) 2019, Murray Stevenson. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
 #
-#      * Neither the name of Cinesite VFX Ltd. nor the names of
+#      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
@@ -34,36 +34,60 @@
 #
 ##########################################################################
 
-import GafferSceneUI
+import Gaffer
+import GafferCycles
 
+Gaffer.Metadata.registerNode(
 
-# Arnold
+	GafferCycles.CyclesShaderBall,
 
-for p in [ "exposure", "color", "radius", "roundness", "spread", "cone_angle", "penumbra_angle", "samples", "aov" ] :
-	GafferSceneUI._SceneViewInspector.registerShaderParameter( "ai:light", p )
+	"description",
+	"""
+	Generates scenes suitable for rendering shader balls with Cycles.
+	""",
 
-for p in ["geometry_type", "density", "filtered_lights", "shader" ] :
-	GafferSceneUI._SceneViewInspector.registerShaderParameter( "ai:lightFilter:filter", p )
+	"layout:activator:deviceIsCpuOrMulti", lambda node : node["device"]["value"].getValue() in ["CPU", "MULTI"],
 
-for p in ["base", "base_color", "diffuse_roughness", "metallness", "specular", "specular_color", "specular_roughness" ] :
-	GafferSceneUI._SceneViewInspector.registerShaderParameter( "ai:surface", p )
+	plugs = {
 
+		"environment" : [
 
-# Appleseed (light-only as our shader hunting doesn't traverse the closure adaptor yet)
+			"description",
+			"""
+			An environment map used for lighting. Should be in latlong
+			format.
+			""",
 
-for p in [ "exposure", "intensity", "radiance", "irradiance", "inner_angle", "outer_angle" ] :
-	GafferSceneUI._SceneViewInspector.registerShaderParameter( "as:light", p )
+			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
+			"path:leaf", True,
+			"path:valid", True,
+			"path:bookmarks", "texture",
 
+		],
 
-# OSL
+		"device" : [
 
-for p in [ "exposure", "i_color", "radius", "roundness", "spread", "coneAngle", "penumbraAngle", "image" ] :
-	GafferSceneUI._SceneViewInspector.registerShaderParameter( "osl:light", p )
+			"description",
+			"""
+			The device to render the shader ball on.
+			""",
 
-# Cycles
+		],
 
-for p in [ "intensity", "exposure", "color", "size", "coneAngle", "penumbraAngle", "samples" ] :
-	GafferSceneUI._SceneViewInspector.registerShaderParameter( "ccl:light", p )
+		"threads" : [
 
-for p in ["base_color", "subsurface_color", "metallic", "subsurface", "subsurface_radius", "specular", "roughness", "specular_tint" ] :
-	GafferSceneUI._SceneViewInspector.registerShaderParameter( "ccl:surface", p )
+			"description",
+			"""
+			The number of threads used by Cycles to render the
+			shader ball. A value of 0 uses all cores, and negative
+			values reserve cores for other uses - to be used by
+			the rest of the UI for instance.
+			""",
+
+			"layout:visibilityActivator", "deviceIsCpuOrMulti",
+
+		],
+
+	}
+
+)

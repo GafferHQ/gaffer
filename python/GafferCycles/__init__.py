@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2020, Cinesite VFX Ltd. All rights reserved.
+#  Copyright (c) 2018, Alex Fuller. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
 #
-#      * Neither the name of Cinesite VFX Ltd. nor the names of
+#      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
@@ -34,36 +34,9 @@
 #
 ##########################################################################
 
-import GafferSceneUI
+__import__( "GafferScene" )
 
+from . _GafferCycles import *
+from . CyclesShaderBall import CyclesShaderBall
 
-# Arnold
-
-for p in [ "exposure", "color", "radius", "roundness", "spread", "cone_angle", "penumbra_angle", "samples", "aov" ] :
-	GafferSceneUI._SceneViewInspector.registerShaderParameter( "ai:light", p )
-
-for p in ["geometry_type", "density", "filtered_lights", "shader" ] :
-	GafferSceneUI._SceneViewInspector.registerShaderParameter( "ai:lightFilter:filter", p )
-
-for p in ["base", "base_color", "diffuse_roughness", "metallness", "specular", "specular_color", "specular_roughness" ] :
-	GafferSceneUI._SceneViewInspector.registerShaderParameter( "ai:surface", p )
-
-
-# Appleseed (light-only as our shader hunting doesn't traverse the closure adaptor yet)
-
-for p in [ "exposure", "intensity", "radiance", "irradiance", "inner_angle", "outer_angle" ] :
-	GafferSceneUI._SceneViewInspector.registerShaderParameter( "as:light", p )
-
-
-# OSL
-
-for p in [ "exposure", "i_color", "radius", "roundness", "spread", "coneAngle", "penumbraAngle", "image" ] :
-	GafferSceneUI._SceneViewInspector.registerShaderParameter( "osl:light", p )
-
-# Cycles
-
-for p in [ "intensity", "exposure", "color", "size", "coneAngle", "penumbraAngle", "samples" ] :
-	GafferSceneUI._SceneViewInspector.registerShaderParameter( "ccl:light", p )
-
-for p in ["base_color", "subsurface_color", "metallic", "subsurface", "subsurface_radius", "specular", "roughness", "specular_tint" ] :
-	GafferSceneUI._SceneViewInspector.registerShaderParameter( "ccl:surface", p )
+__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", {}, subdirectory = "GafferCycles" )
