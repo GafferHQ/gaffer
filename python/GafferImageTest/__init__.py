@@ -107,6 +107,8 @@ from .SaturationTest import SaturationTest
 from .FormatQueryTest import FormatQueryTest
 from .CreateViewsTest import CreateViewsTest
 from .SelectViewTest import SelectViewTest
+from .DeleteViewsTest import DeleteViewsTest
+from .CopyViewsTest import CopyViewsTest
 
 if __name__ == "__main__":
 	import unittest

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013-2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2022, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,108 +34,102 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferImage/DeleteChannels.h"
+#include "GafferImage/DeleteViews.h"
 
-#include "IECore/StringAlgo.h"
+#include "Gaffer/Context.h"
 
 using namespace std;
+using namespace Imath;
 using namespace IECore;
 using namespace Gaffer;
+using namespace GafferImage;
 
-namespace GafferImage
-{
+//////////////////////////////////////////////////////////////////////////
+// DeleteViews
+//////////////////////////////////////////////////////////////////////////
 
-GAFFER_NODE_DEFINE_TYPE( DeleteChannels );
+GAFFER_NODE_DEFINE_TYPE( DeleteViews );
 
-size_t DeleteChannels::g_firstPlugIndex = 0;
+size_t DeleteViews::g_firstPlugIndex = 0;
 
-DeleteChannels::DeleteChannels( const std::string &name )
+DeleteViews::DeleteViews( const std::string &name )
 	:	ImageProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
 	addChild( new IntPlug( "mode", Plug::In, Delete, Delete, Keep ) );
-	addChild( new StringPlug( "channels" ) );
+	addChild( new StringPlug( "views", Plug::In, "" ) );
 
-	// Direct pass-through for the things we don't ever change.
-	// This not only simplifies our implementation, but it is also
-	// faster to compute.
 	outPlug()->formatPlug()->setInput( inPlug()->formatPlug() );
 	outPlug()->dataWindowPlug()->setInput( inPlug()->dataWindowPlug() );
 	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );
 	outPlug()->deepPlug()->setInput( inPlug()->deepPlug() );
 	outPlug()->sampleOffsetsPlug()->setInput( inPlug()->sampleOffsetsPlug() );
+	outPlug()->channelNamesPlug()->setInput( inPlug()->channelNamesPlug() );
 	outPlug()->channelDataPlug()->setInput( inPlug()->channelDataPlug() );
 }
 
-DeleteChannels::~DeleteChannels()
+DeleteViews::~DeleteViews()
 {
 }
 
-Gaffer::IntPlug *DeleteChannels::modePlug()
+Gaffer::IntPlug *DeleteViews::modePlug()
 {
-	return getChild<IntPlug>( g_firstPlugIndex );
+	return getChild<Gaffer::IntPlug>( g_firstPlugIndex + 0 );
 }
 
-const Gaffer::IntPlug *DeleteChannels::modePlug() const
+const Gaffer::IntPlug *DeleteViews::modePlug() const
 {
-	return getChild<IntPlug>( g_firstPlugIndex );
+	return getChild<Gaffer::IntPlug>( g_firstPlugIndex + 0 );
 }
 
-Gaffer::StringPlug *DeleteChannels::channelsPlug()
+Gaffer::StringPlug *DeleteViews::viewsPlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 1 );
 }
 
-const Gaffer::StringPlug *DeleteChannels::channelsPlug() const
+const Gaffer::StringPlug *DeleteViews::viewsPlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 1 );
 }
 
-void DeleteChannels::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
+void DeleteViews::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ImageProcessor::affects( input, outputs );
 
-	if(
-		input == inPlug()->channelNamesPlug() ||
-		input == modePlug() ||
-		input == channelsPlug()
-	)
+	if( input == inPlug()->viewNamesPlug() || input == modePlug() || input == viewsPlug() )
 	{
-		outputs.push_back( outPlug()->channelNamesPlug() );
+		outputs.push_back( outPlug()->viewNamesPlug() );
 	}
 }
 
-void DeleteChannels::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void DeleteViews::hashViewNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ImageProcessor::hashChannelNames( output, context, h );
-
-	inPlug()->channelNamesPlug()->hash( h );
+	ImageProcessor::hashViewNames( output, context, h );
+	inPlug()->viewNamesPlug()->hash( h );
 	modePlug()->hash( h );
-	channelsPlug()->hash( h );
+	viewsPlug()->hash( h );
 }
 
-IECore::ConstStringVectorDataPtr DeleteChannels::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
+IECore::ConstStringVectorDataPtr DeleteViews::computeViewNames( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	const Mode mode = static_cast<Mode>( modePlug()->getValue() );
-	const string channels = channelsPlug()->getValue();
+	ConstStringVectorDataPtr inViewNamesData = inPlug()->viewNamesPlug()->getValue();
 
-	ConstStringVectorDataPtr inChannelNamesData = inPlug()->channelNamesPlug()->getValue();
-	const vector<string> &inChannelNames = inChannelNamesData->readable();
+	const Mode mode = static_cast<Mode>( modePlug()->getValue() );
+	const string views = viewsPlug()->getValue();
+
 
 	StringVectorDataPtr resultData = new StringVectorData();
 	vector<string> &result = resultData->writable();
 
-	for( vector<string>::const_iterator it = inChannelNames.begin(), eIt = inChannelNames.end(); it != eIt; ++it )
+	for( const std::string &i : inViewNamesData->readable() )
 	{
-		const bool match = StringAlgo::matchMultiple( *it, channels );
+		const bool match = StringAlgo::matchMultiple( i, views );
 		if( match == ( mode == Keep ) )
 		{
-			result.push_back( *it );
+			result.push_back( i );
 		}
 	}
 
 	return resultData;
 }
-
-} // namespace GafferImage

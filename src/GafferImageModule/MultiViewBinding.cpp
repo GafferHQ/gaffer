@@ -38,6 +38,8 @@
 
 #include "GafferImage/CreateViews.h"
 #include "GafferImage/SelectView.h"
+#include "GafferImage/DeleteViews.h"
+#include "GafferImage/CopyViews.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
 
@@ -50,5 +52,15 @@ void GafferImageModule::bindMultiView()
 
 	DependencyNodeClass<CreateViews>();
 	DependencyNodeClass<SelectView>();
+
+	{
+		scope s = DependencyNodeClass<DeleteViews>();
+		enum_<DeleteViews::Mode>( "Mode" )
+			.value( "Keep", DeleteViews::Keep )
+			.value( "Delete", DeleteViews::Delete )
+		;
+	}
+
+	DependencyNodeClass<CopyViews>();
 
 }

@@ -419,6 +419,8 @@ nodeMenu.append( "/Image/Deep/Deep Holdout", GafferImage.DeepHoldout, searchText
 nodeMenu.append( "/Image/Deep/Deep Recolor", GafferImage.DeepRecolor, searchText = "DeepRecolor" )
 nodeMenu.append( "/Image/MultiView/Create Views", GafferImage.CreateViews, searchText = "CreateViews", postCreator = GafferImageUI.CreateViewsUI.postCreate )
 nodeMenu.append( "/Image/MultiView/Select View", GafferImage.SelectView, searchText = "SelectView" )
+nodeMenu.append( "/Image/MultiView/Delete Views", GafferImage.DeleteViews, searchText = "DeleteViews" )
+nodeMenu.append( "/Image/MultiView/Copy Views", GafferImage.CopyViews, searchText = "CopyViews" )
 
 # OSL nodes
 

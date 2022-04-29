@@ -115,5 +115,7 @@ from . import SaturationUI
 from . import FormatQueryUI
 from . import CreateViewsUI
 from . import SelectViewUI
+from . import DeleteViewsUI
+from . import CopyViewsUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferImageUI" )
