@@ -56,6 +56,7 @@ layoutVariableDesc = """
 			* `${imageWriter:nukeLayerName}` : Like layerName, but set to "depth" for "Z", and "other" for custom channels of the main layer
 			* `${imageWriter:nukeBaseName}` : Like baseName, but set to "red", "green", "blue", "alpha" instead of RGBA for layers other than the main layer.
 			* `${imageWriter:nukePartName}` : Like standardPartName, but set to "depth" for "Z", and "other" for custom channels of the main layer
+			* `${imageWriter:singlePartViewName}` : The current view, or "" if this is the first view. This should be used to compose channel names for single-part multi-view EXR files.
 
 """
 
@@ -185,18 +186,6 @@ Gaffer.Metadata.registerNode(
 			"presetsPlugValueWidget:allowCustom", True,
 
 		],
-		"layout.viewName" : [
-
-			"description",
-			"""
-			Specifies the name of the view to be stored in EXR's view metadata.
-			Only useful when different views are written to different parts.
-			""" + layoutVariableDesc,
-
-			# The presets for this are useful in testing and scripting when the UI isn't loaded,
-			# so we register them in src/GafferImage/ImageWriter.cpp
-
-		],
 		"layout.partName" : [
 
 			"description",
@@ -223,6 +212,15 @@ Gaffer.Metadata.registerNode(
 			# The presets for this are useful in testing and scripting when the UI isn't loaded,
 			# so we register them in src/GafferImage/ImageWriter.cpp
 
+		],
+
+		"matchDataWindows" : [
+			"description",
+			"""
+			For multi-view images, sets the data windows to be the same for all views, by expanding them
+			all to include the union of all views.  Wastes disk space and processing time, but is
+			required by Nuke for multi-view images.
+			"""
 		],
 
 		"out" : [
