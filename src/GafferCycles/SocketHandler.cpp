@@ -214,26 +214,6 @@ Gaffer::Plug *setupColorPlug( const ccl::NodeType *nodeType, const ccl::SocketTy
 	return plug.get();
 }
 
-Gaffer::Plug *setupClosurePlug( const IECore::InternedString &socketName, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction )
-{
-	GafferOSL::ClosurePlug *existingPlug = plugParent->getChild<GafferOSL::ClosurePlug>( socketName );
-	if(
-		existingPlug &&
-		existingPlug->direction() == direction
-	)
-	{
-		existingPlug->setFlags( Gaffer::Plug::Dynamic, false );
-		return existingPlug;
-	}
-
-	GafferOSL::ClosurePlugPtr plug = new GafferOSL::ClosurePlug( socketName, direction );
-
-	PlugAlgo::replacePlug( plugParent, plug );
-
-	return plug.get();
-	
-}
-
 const string nodeName ( Gaffer::GraphComponent *plugParent )
 {
 	const Gaffer::Node *node = IECore::runTimeCast<const Gaffer::Node>( plugParent );

@@ -548,7 +548,6 @@ class ShaderCache : public IECore::RefCounted
 			InternedString displacementMethod( "bump" );
 			vector<IECore::MurmurHash> hSubstAovs;
 			vector<const IECoreScene::ShaderNetwork*> aovShaders;
-			bool prototype = false;
 
 			// Surface hash
 			if( surfaceShader )
@@ -1057,7 +1056,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				{
 					if( mesh->geometry_type == ccl::Geometry::MESH )
 					{
-						if( ccl::SubdParams *params = mesh->get_subd_params() )
+						if( mesh->get_subd_params() )
 						{
 							if( ( previousAttributes->m_maxLevel != m_maxLevel ) || ( previousAttributes->m_dicingRate != m_dicingRate ) )
 							{
@@ -1087,7 +1086,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 				if( mesh )
 				{
-					if( ccl::SubdParams *params = mesh->get_subd_params() )
+					if( mesh->get_subd_params() )
 					{
 						mesh->set_subd_dicing_rate( m_dicingRate );
 						mesh->set_subd_max_level( m_maxLevel );
@@ -1095,7 +1094,6 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 					if( m_shader )
 					{
-						ccl::AttributeSet &attributes = ( mesh->get_num_subd_faces() ) ? mesh->subd_attributes : mesh->attributes;
 						ccl::Shader *shader = m_shader->shader();
 						if( shader->attributes.find( ccl::ATTR_STD_UV_TANGENT ) )
 						{
@@ -2338,7 +2336,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 			{
 				if( mesh->geometry_type == ccl::Geometry::MESH )
 				{
-					if( ccl::SubdParams *params = mesh->get_subd_params() )
+					if( mesh->get_subd_params() )
 						mesh->set_subd_objecttoworld( object->get_tfm() );
 				}
 			}
@@ -2470,7 +2468,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 			{
 				if( mesh->geometry_type == ccl::Geometry::MESH )
 				{
-					if( ccl::SubdParams *params = mesh->get_subd_params() )
+					if( mesh->get_subd_params() )
 						mesh->set_subd_objecttoworld( object->get_tfm() );
 				}
 			}
@@ -3834,8 +3832,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			ccl::set<ccl::Pass *> clearPasses( m_scene->passes.begin(), m_scene->passes.end() );
 			m_scene->delete_nodes( clearPasses );
 
-			const ccl::NodeEnum &typeEnum = *ccl::Pass::get_type_enum();
-
 			CompoundDataPtr paramData = new CompoundData();
 
 			paramData->writable()["default"] = new StringData( "rgba" );
@@ -4117,17 +4113,12 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 
 			string status, subStatus, memStatus;
-			float progress;
-			double totalTime, remainingTime = 0, renderTime;
+			double totalTime, renderTime;
 			float memUsed = (float)m_session->stats.mem_used / 1024.0f / 1024.0f / 1024.0f;
 			float memPeak = (float)m_session->stats.mem_peak / 1024.0f / 1024.0f / 1024.0f;
 
 			m_session->progress.get_status( status, subStatus );
 			m_session->progress.get_time( totalTime, renderTime );
-			progress = m_session->progress.get_progress();
-
-			if( progress > 0 )
-				remainingTime = (1.0 - (double)progress) * (renderTime / (double)progress);
 
 			if( subStatus != "" )
 				status += ": " + subStatus;

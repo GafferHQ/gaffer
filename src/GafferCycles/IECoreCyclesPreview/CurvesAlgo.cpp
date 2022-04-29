@@ -64,7 +64,6 @@ ccl::Hair *convertCommon( const IECoreScene::CurvesPrimitive *curve )
 	size_t numCurves = curve->numCurves();
 	size_t numKeys = 0;
 
-	const IntVectorData *v = curve->verticesPerCurve();
 	const vector<int> &verticesPerCurve = curve->verticesPerCurve()->readable();
 	for( int i = 0; i < verticesPerCurve.size(); ++i )
 		numKeys += verticesPerCurve[i];

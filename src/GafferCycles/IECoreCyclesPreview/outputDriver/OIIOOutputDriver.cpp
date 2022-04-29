@@ -100,7 +100,6 @@ OIIOOutputDriver::OIIOOutputDriver( const Imath::Box2i &displayWindow, const Ima
 	const ccl::NodeEnum &typeEnum = *ccl::Pass::get_type_enum();
 	std::vector<std::string> channelNames;
 	IECore::CompoundDataPtr params;
-	bool defaultFound = false;
 
 	for( IECore::CompoundDataMap::const_iterator it = layers.begin(), eIt = layers.end(); it != eIt; ++it )
 	{
@@ -182,8 +181,6 @@ void OIIOOutputDriver::write_render_tile( const Tile &tile )
 {
 	const float *imageData;
 
-	const int x = tile.offset.x;
-	const int y = tile.offset.y;
 	const int w = tile.size.x;
 	const int h = tile.size.y;
 

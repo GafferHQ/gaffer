@@ -252,34 +252,6 @@ void setSplineParameter( ccl::ShaderNode *node, const std::string &name, const S
 
 typedef boost::unordered_map<ShaderNetwork::Parameter, ccl::ShaderNode *> ShaderMap;
 
-// Equivalent to Python's `s.partition( c )[0]`.
-InternedString partitionStart( const InternedString &s, char c )
-{
-	const size_t index = s.string().find_first_of( '.' );
-	if( index == string::npos )
-	{
-		return s;
-	}
-	else
-	{
-		return InternedString( s.c_str(), index );
-	}
-}
-
-// Equivalent to Python's `s.partition( c )[2]`.
-InternedString partitionEnd( const InternedString &s, char c )
-{
-	const size_t index = s.string().find_first_of( '.' );
-	if( index == string::npos )
-	{
-		return InternedString();
-	}
-	else
-	{
-		return InternedString( s.c_str() + index + 1 );
-	}
-}
-
 ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECoreScene::ShaderNetwork *shaderNetwork, const std::string &namePrefix, ccl::ShaderManager *shaderManager, ccl::ShaderGraph *shaderGraph, ShaderMap &converted )
 {
 	// Reuse previously created node if we can. It is ideal for all assigned
@@ -448,7 +420,6 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 		string parameterName = boost::replace_first_copy( connection.destination.name.string(), "__", "." );
 
 		InternedString sourceName = connection.source.name;
-		const IECoreScene::Shader *sourceShader = shaderNetwork->getShader( connection.source.shader );
 
 		// Need to create converters if only one of a color or vector's components is connected
 		std::vector<std::string> splitName;

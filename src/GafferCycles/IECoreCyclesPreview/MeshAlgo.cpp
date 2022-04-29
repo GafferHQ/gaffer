@@ -453,7 +453,6 @@ void convertN( const IECoreScene::MeshPrimitive *mesh, const V3fVectorData *norm
 	const vector<Imath::V3f> &normals = normalData->readable();
 	const IECore::IntVectorData* nIndices = mesh->variables.find( "N" )->second.indices.get();
 	ccl::float3 *cdata = attr->data_float3();
-	size_t vertex = 0;
 
 	if( !nIndices )
 	{
@@ -755,7 +754,6 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 		{
 			// triangulate primitive
 			trimesh = IECoreScene::MeshAlgo::triangulate( mesh );
-			const size_t numFaces = trimesh->numFaces();
 			const V3fVectorData *p = trimesh->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
 			const vector<Imath::V3f> &points = p->readable();
 			const size_t numVerts = points.size();

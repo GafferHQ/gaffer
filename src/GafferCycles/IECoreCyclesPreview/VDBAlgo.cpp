@@ -63,7 +63,6 @@ class GafferVolumeLoader : public ccl::VDBImageLoader
 		: VDBImageLoader( gridName ),
 		  m_ieVolume( ieVolume )
 		{
-			grid = ieVolume->findGrid( gridName );
 		}
 
 		~GafferVolumeLoader()
