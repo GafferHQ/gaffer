@@ -82,14 +82,28 @@ class RGBAChannelsPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__menuButton.setText( text )
 		self.__menuButton.setEnabled( self._editable() )
 
+	def _image( self ) :
+		return next( iter( self.getPlug().node().children( GafferImage.ImagePlug ) ) )
+
 	# Returns a dictionary mapping from display name to sets of `[ R, G, B, A ]`
 	# channels. Maybe belongs in ImageAlgo.h?
 	def _rgbaChannels( self ) :
 
-		image = next( iter( self.getPlug().node().children( GafferImage.ImagePlug ) ) )
 		try :
+			image = self._image()
 			with self.getContext() :
-				channelNames = image["channelNames"].getValue()
+				views = image.viewNames()
+				if len( views ) == 0:
+					channelNames = image["channelNames"].getValue()
+				else:
+					c = Gaffer.Context( self.getContext() )
+					channelNames = []
+					with c:
+						for v in views:
+							c.set( "image:viewName", v )
+							newNames = image["channelNames"].getValue()
+							channelNames += [ i for i in newNames if not i in channelNames ]
+
 		except Gaffer.ProcessException :
 			return {}
 
