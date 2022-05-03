@@ -11,6 +11,7 @@ Features
 Improvements
 ------------
 
+- USD : Added basic support for loading UsdLux lights. The data is available in Gaffer, but needs manual conversion to meet the requirements of a specific renderer.
 - ChannelPlugValueWidget : Improved the ordering of channel names presented in the menu.
 - PresetsPlugValueWidget : The children of compound plugs are now shown when in "Custom" mode.
 
