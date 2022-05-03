@@ -44,6 +44,7 @@ def __registerShaderPresets( presets ) :
 
 	for name, value in presets :
 		Gaffer.Metadata.registerValue( GafferScene.ShaderTweaks, "shader", "preset:" + name, value )
+		Gaffer.Metadata.registerValue( GafferScene.ShaderQuery, "shader", "preset:" + name, value )
 
 with IECore.IgnoredExceptions( ImportError ) :
 

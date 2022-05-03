@@ -399,13 +399,16 @@ class PlugLayout( GafferUI.Widget ) :
 		## \todo This mirrors LabelPlugValueWidget. This doesn't handle child plug defaults/connections
 		# properly. We need to improve NodeAlgo when we have the next API break.
 
-		valueChanged = plug.getInput() is not None
-		if not valueChanged and isinstance( plug, Gaffer.ValuePlug ) :
-			if Gaffer.NodeAlgo.hasUserDefault( plug ) :
-				valueChanged = not Gaffer.NodeAlgo.isSetToUserDefault( plug )
-			else :
-				valueChanged = not plug.isSetToDefault()
-		return valueChanged
+		if plug.direction() == Gaffer.Plug.Direction.Out :
+			return False
+		elif plug.getInput() is not None :
+			return True
+		elif not isinstance( plug, Gaffer.ValuePlug ) :
+			return False
+		elif Gaffer.NodeAlgo.hasUserDefault( plug ) :
+			return not Gaffer.NodeAlgo.isSetToUserDefault( plug )
+		else :
+			return not plug.isSetToDefault()
 
 	def __import( self, path ) :
 
