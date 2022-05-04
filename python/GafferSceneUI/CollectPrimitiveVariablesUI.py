@@ -51,7 +51,7 @@ Gaffer.Metadata.registerNode(
 	effects.
 	""",
 
-	"ui:spreadsheet:activeRowNamesConnection", "suffixes",
+	"ui:spreadsheet:enabledRowNamesConnection", "suffixes",
 	"ui:spreadsheet:selectorContextVariablePlug", "suffixContextVariable",
 
 	plugs = {
