@@ -844,8 +844,8 @@ Spreadsheet::Spreadsheet( const std::string &name )
 	addChild( new ValuePlug( "out", Plug::Out ) );
 	addChild( new StringVectorDataPlug( "enabledRowNames", Plug::Out, new IECore::StringVectorData ) );
 	addChild( new CompoundObjectPlug( "resolvedRows", Plug::Out, new IECore::CompoundObject() ) );
+	addChild( new IntPlug( "activeRowIndex", Plug::Out ) );
 	addChild( new ObjectPlug( "__rowsMap", Plug::Out, IECore::NullObject::defaultNullObject() ) );
-	addChild( new IntPlug( "__rowIndex", Plug::Out ) );
 }
 
 Spreadsheet::~Spreadsheet()
@@ -912,24 +912,24 @@ const CompoundObjectPlug *Spreadsheet::resolvedRowsPlug() const
 	return getChild<CompoundObjectPlug>( g_firstPlugIndex + 5 );
 }
 
+IntPlug *Spreadsheet::activeRowIndexPlug()
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 6 );
+}
+
+const IntPlug *Spreadsheet::activeRowIndexPlug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex + 6 );
+}
+
 ObjectPlug *Spreadsheet::rowsMapPlug()
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 6 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 7 );
 }
 
 const ObjectPlug *Spreadsheet::rowsMapPlug() const
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 6 );
-}
-
-IntPlug *Spreadsheet::rowIndexPlug()
-{
-	return getChild<IntPlug>( g_firstPlugIndex + 7 );
-}
-
-const IntPlug *Spreadsheet::rowIndexPlug() const
-{
-	return getChild<IntPlug>( g_firstPlugIndex + 7 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 7 );
 }
 
 void Spreadsheet::affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const
@@ -953,10 +953,10 @@ void Spreadsheet::affects( const Plug *input, DependencyNode::AffectedPlugsConta
 		input == rowsMapPlug()
 	)
 	{
-		outputs.push_back( rowIndexPlug() );
+		outputs.push_back( activeRowIndexPlug() );
 	}
 
-	if( input == rowIndexPlug() )
+	if( input == activeRowIndexPlug() )
 	{
 		appendLeafPlugs( outPlug(), outputs );
 	}
@@ -1016,7 +1016,7 @@ void Spreadsheet::hash( const ValuePlug *output, const Context *context, IECore:
 		RowsMap::hash( rowsPlug(), h );
 		return;
 	}
-	else if( output == rowIndexPlug() )
+	else if( output == activeRowIndexPlug() )
 	{
 		ComputeNode::hash( output, context, h );
 		enabledPlug()->hash( h );
@@ -1027,7 +1027,7 @@ void Spreadsheet::hash( const ValuePlug *output, const Context *context, IECore:
 	}
 	else if( outPlug()->isAncestorOf( output ) )
 	{
-		h = correspondingInput( output, rowIndexPlug()->getValue() )->hash();
+		h = correspondingInput( output, activeRowIndexPlug()->getValue() )->hash();
 		return;
 	}
 	else if( output == enabledRowNamesPlug() )
@@ -1055,7 +1055,7 @@ void Spreadsheet::compute( ValuePlug *output, const Context *context ) const
 		);
 		return;
 	}
-	else if( output == rowIndexPlug() )
+	else if( output == activeRowIndexPlug() )
 	{
 		size_t result = 0;
 		if( enabledPlug()->getValue() )
@@ -1069,7 +1069,7 @@ void Spreadsheet::compute( ValuePlug *output, const Context *context ) const
 	}
 	else if( outPlug()->isAncestorOf( output ) )
 	{
-		output->setFrom( correspondingInput( output, rowIndexPlug()->getValue() ) );
+		output->setFrom( correspondingInput( output, activeRowIndexPlug()->getValue() ) );
 		return;
 	}
 	else if( output == enabledRowNamesPlug() )
@@ -1156,10 +1156,10 @@ const ValuePlug *Spreadsheet::correspondingInput( const Plug *plug, size_t rowIn
 
 ValuePlug *Spreadsheet::activeInPlug( const ValuePlug *output )
 {
-	return const_cast<ValuePlug *>( correspondingInput( output, rowIndexPlug()->getValue() ) );
+	return const_cast<ValuePlug *>( correspondingInput( output, activeRowIndexPlug()->getValue() ) );
 }
 
 const ValuePlug *Spreadsheet::activeInPlug( const ValuePlug *output ) const
 {
-	return correspondingInput( output, rowIndexPlug()->getValue() );
+	return correspondingInput( output, activeRowIndexPlug()->getValue() );
 }

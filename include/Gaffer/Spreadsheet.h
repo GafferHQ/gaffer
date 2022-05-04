@@ -220,6 +220,9 @@ class GAFFER_API Spreadsheet : public ComputeNode
 		CompoundObjectPlug *resolvedRowsPlug();
 		const CompoundObjectPlug *resolvedRowsPlug() const;
 
+		IntPlug *activeRowIndexPlug();
+		const IntPlug *activeRowIndexPlug() const;
+
 		/// Returns the input plug which provides the value
 		/// for `output` in the current context.
 		ValuePlug *activeInPlug( const ValuePlug *output );
@@ -243,9 +246,6 @@ class GAFFER_API Spreadsheet : public ComputeNode
 
 		ObjectPlug *rowsMapPlug();
 		const ObjectPlug *rowsMapPlug() const;
-
-		IntPlug *rowIndexPlug();
-		const IntPlug *rowIndexPlug() const;
 
 		const ValuePlug *correspondingInput( const Plug *output, size_t rowIndex ) const;
 

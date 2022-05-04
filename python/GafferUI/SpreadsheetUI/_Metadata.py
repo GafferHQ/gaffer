@@ -209,6 +209,24 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"activeRowIndex" : [
+
+			"description",
+			"""
+			An output containing the index of the row that matches the selector
+			in the current context.
+
+			> Tip : The default row has index `0`, which converts to `False`
+			> when used to drive a BoolPlug via a connection (all other values
+			> convert to `True`). Therefore `Spreadsheet.activeRowIndex` can
+			> be connected to a Node's `enabled` plug to disable the node when
+			> no row is matched.
+			""",
+
+			"layout:section", "Advanced",
+
+		],
+
 	}
 
 )

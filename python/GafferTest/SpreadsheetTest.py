@@ -1218,5 +1218,22 @@ class SpreadsheetTest( GafferTest.TestCase ) :
 		self.assertIsNone( row["cells"]["b"]["value"].getInput() )
 		self.assertIsNone( add["op1"].getInput() )
 
+	def testActiveRowIndex( self ) :
+
+		s = Gaffer.Spreadsheet()
+		s["rows"].addRow()["name"].setValue( "a" )
+		s["rows"].addRow()["name"].setValue( "b" )
+		s["selector"].setValue( "${testSelector}" )
+
+		with Gaffer.Context() as c :
+
+			self.assertEqual( s["activeRowIndex"].getValue(), 0 )
+
+			c["testSelector"] = "a"
+			self.assertEqual( s["activeRowIndex"].getValue(), 1 )
+
+			c["testSelector"] = "b"
+			self.assertEqual( s["activeRowIndex"].getValue(), 2 )
+
 if __name__ == "__main__":
 	unittest.main()
