@@ -214,8 +214,8 @@ class GAFFER_API Spreadsheet : public ComputeNode
 		ValuePlug *outPlug();
 		const ValuePlug *outPlug() const;
 
-		StringVectorDataPlug *activeRowNamesPlug();
-		const StringVectorDataPlug *activeRowNamesPlug() const;
+		StringVectorDataPlug *enabledRowNamesPlug();
+		const StringVectorDataPlug *enabledRowNamesPlug() const;
 
 		CompoundObjectPlug *resolvedRowsPlug();
 		const CompoundObjectPlug *resolvedRowsPlug() const;

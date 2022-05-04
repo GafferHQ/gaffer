@@ -45,6 +45,7 @@ Breaking Changes
 - SubTree : Removed the `/` root location from generated sets, because root membership is unsupported elsewhere in Gaffer.
 - OSLShader : Removed `prepareSplineCVsForOSL()` method. Use `IECoreScene::ShaderNetworkAlgo::expandSplineParameters()` instead.
 - ArnoldMeshLight : The `ai:autobump_visibility` attributes are no longer modified. Use a separate ArnoldAttributes node if necessary.
+- Spreadsheet : Renamed `activeRowNames` plug to `enabledRowNames`. Backwards compatibility is provided when loading old `.gfr` files.
 
 0.62.0.0a1
 ==========

@@ -169,7 +169,7 @@ SceneProcessorPtr transformProcessor()
 
 	PathFilterPtr pathFilter = new PathFilter;
 	result->addChild( pathFilter );
-	pathFilter->pathsPlug()->setInput( spreadsheet->activeRowNamesPlug() );
+	pathFilter->pathsPlug()->setInput( spreadsheet->enabledRowNamesPlug() );
 
 	TransformPtr transform = new Transform;
 	result->addChild( transform );
@@ -335,7 +335,7 @@ SceneProcessorPtr shaderParameterProcessor( const std::string &attribute, const 
 
 	PathFilterPtr pathFilter = new PathFilter;
 	result->addChild( pathFilter );
-	pathFilter->pathsPlug()->setInput( spreadsheet->activeRowNamesPlug() );
+	pathFilter->pathsPlug()->setInput( spreadsheet->enabledRowNamesPlug() );
 
 	ShaderTweaksPtr shaderTweaks = new ShaderTweaks;
 	result->addChild( shaderTweaks );

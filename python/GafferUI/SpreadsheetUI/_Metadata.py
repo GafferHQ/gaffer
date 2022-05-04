@@ -171,11 +171,11 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"activeRowNames" : [
+		"enabledRowNames" : [
 
 			"description",
 			"""
-			An output plug containing the names of all currently active rows.
+			An output plug containing the names of all currently enabled rows.
 			""",
 
 			"layout:section", "Advanced",
@@ -187,7 +187,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			An output plug containing the resolved cell values for all active
+			An output plug containing the resolved cell values for all enabled
 			rows, This can be used to drive expressions in situations where the
 			standard `out` plug is not useful, or would be awkward to use. The
 			values are formatted as follows :

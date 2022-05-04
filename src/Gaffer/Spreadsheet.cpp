@@ -92,9 +92,9 @@ class RowsMap : public IECore::Data
 		using Selector = boost::variant<const vector<InternedString> *, string>;
 
 		RowsMap( const Spreadsheet::RowsPlug *rows )
-			:	m_activeRowNames( new StringVectorData )
+			:	m_enabledRowNames( new StringVectorData )
 		{
-			vector<string> &activeRowNames = m_activeRowNames->writable();
+			vector<string> &enabledRowNames = m_enabledRowNames->writable();
 
 			for( size_t i = 1, e = rows->children().size(); i < e; ++i )
 			{
@@ -109,7 +109,7 @@ class RowsMap : public IECore::Data
 				{
 					continue;
 				}
-				activeRowNames.push_back( name );
+				enabledRowNames.push_back( name );
 
 				const bool hasWildcards = StringAlgo::hasWildcards( name );
 				if( hasWildcards || name.find( ' ' ) != string::npos )
@@ -205,9 +205,9 @@ class RowsMap : public IECore::Data
 			return result;
 		}
 
-		const StringVectorData *activeRowNames() const
+		const StringVectorData *enabledRowNames() const
 		{
-			return m_activeRowNames.get();
+			return m_enabledRowNames.get();
 		}
 
 	private :
@@ -248,8 +248,8 @@ class RowsMap : public IECore::Data
 		using PathVector = std::vector<PathRow>;
 		PathVector m_wildcardPathRows;
 
-		// List of active row names for `activeRowNamesPlug()`.
-		StringVectorDataPtr m_activeRowNames;
+		// List of enabled row names for `enabledRowNamesPlug()`.
+		StringVectorDataPtr m_enabledRowNames;
 
 };
 
@@ -842,7 +842,7 @@ Spreadsheet::Spreadsheet( const std::string &name )
 	addChild( new StringPlug( "selector", Plug::In, "", Plug::Default, IECore::StringAlgo::NoSubstitutions ) );
 	addChild( new RowsPlug( "rows" ) );
 	addChild( new ValuePlug( "out", Plug::Out ) );
-	addChild( new StringVectorDataPlug( "activeRowNames", Plug::Out, new IECore::StringVectorData ) );
+	addChild( new StringVectorDataPlug( "enabledRowNames", Plug::Out, new IECore::StringVectorData ) );
 	addChild( new CompoundObjectPlug( "resolvedRows", Plug::Out, new IECore::CompoundObject() ) );
 	addChild( new ObjectPlug( "__rowsMap", Plug::Out, IECore::NullObject::defaultNullObject() ) );
 	addChild( new IntPlug( "__rowIndex", Plug::Out ) );
@@ -892,12 +892,12 @@ const ValuePlug *Spreadsheet::outPlug() const
 	return getChild<ValuePlug>( g_firstPlugIndex + 3 );
 }
 
-StringVectorDataPlug *Spreadsheet::activeRowNamesPlug()
+StringVectorDataPlug *Spreadsheet::enabledRowNamesPlug()
 {
 	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 4 );
 }
 
-const StringVectorDataPlug *Spreadsheet::activeRowNamesPlug() const
+const StringVectorDataPlug *Spreadsheet::enabledRowNamesPlug() const
 {
 	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 4 );
 }
@@ -984,7 +984,7 @@ void Spreadsheet::affects( const Plug *input, DependencyNode::AffectedPlugsConta
 
 	if( input == rowsMapPlug() )
 	{
-		outputs.push_back( activeRowNamesPlug() );
+		outputs.push_back( enabledRowNamesPlug() );
 	}
 
 	if( rowsPlug()->isAncestorOf( input ) )
@@ -1030,7 +1030,7 @@ void Spreadsheet::hash( const ValuePlug *output, const Context *context, IECore:
 		h = correspondingInput( output, rowIndexPlug()->getValue() )->hash();
 		return;
 	}
-	else if( output == activeRowNamesPlug() )
+	else if( output == enabledRowNamesPlug() )
 	{
 		ComputeNode::hash( output, context, h );
 		RowsMapScope rowsMapScope( context, selectorPlug()->getValue() );
@@ -1072,11 +1072,11 @@ void Spreadsheet::compute( ValuePlug *output, const Context *context ) const
 		output->setFrom( correspondingInput( output, rowIndexPlug()->getValue() ) );
 		return;
 	}
-	else if( output == activeRowNamesPlug() )
+	else if( output == enabledRowNamesPlug() )
 	{
 		RowsMapScope rowsMapScope( context, selectorPlug()->getValue() );
 		ConstRowsMapPtr rowsMap = boost::static_pointer_cast<const RowsMap>( rowsMapPlug()->getValue() );
-		static_cast<StringVectorDataPlug *>( output )->setValue( rowsMap->activeRowNames() );
+		static_cast<StringVectorDataPlug *>( output )->setValue( rowsMap->enabledRowNames() );
 		return;
 	}
 	else if( output == resolvedRowsPlug() )

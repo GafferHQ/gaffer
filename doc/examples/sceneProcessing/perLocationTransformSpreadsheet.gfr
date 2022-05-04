@@ -83,7 +83,7 @@ Gaffer.Metadata.registerValue( __children["Gaffy"]["BoxOut"]["__out"], 'nodule:t
 Gaffer.Metadata.registerValue( __children["Gaffy"]["BoxOut"]["__out"], 'description', 'The output scene.' )
 __children["Gaffy"]["BoxOut"]["__uiPosition"].setValue( imath.V2f( -22.6963253, -31.1985111 ) )
 __children["Gaffy"]["__uiPosition"].setValue( imath.V2f( -17.5966606, -25.5918255 ) )
-__children["PathFilter"]["paths"].setInput( __children["Spreadsheet"]["activeRowNames"] )
+__children["PathFilter"]["paths"].setInput( __children["Spreadsheet"]["enabledRowNames"] )
 __children["PathFilter"]["__uiPosition"].setValue( imath.V2f( -3.42518687, -29.7418251 ) )
 __children["Spreadsheet"]["selector"].setValue( '${scene:path}' )
 Gaffer.Metadata.registerValue( __children["Spreadsheet"]["selector"], 'readOnly', True )

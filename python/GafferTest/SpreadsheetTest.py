@@ -432,19 +432,19 @@ class SpreadsheetTest( GafferTest.TestCase ) :
 
 		self.assertEqual( s2["b"]["s"]["rows"].getInput(), s2["b"]["rows"] )
 
-	def testActiveRowNames( self ) :
+	def testEnabledRowNames( self ) :
 
 		s = Gaffer.Spreadsheet()
 		for i in range( 1, 4 ) :
 			s["rows"].addRow()["name"].setValue( str( i ) )
 
-		self.assertEqual( s["activeRowNames"].getValue(), IECore.StringVectorData( [ "1", "2", "3" ] ) )
+		self.assertEqual( s["enabledRowNames"].getValue(), IECore.StringVectorData( [ "1", "2", "3" ] ) )
 
 		s["rows"][1]["enabled"].setValue( False )
-		self.assertEqual( s["activeRowNames"].getValue(), IECore.StringVectorData( [ "2", "3" ] ) )
+		self.assertEqual( s["enabledRowNames"].getValue(), IECore.StringVectorData( [ "2", "3" ] ) )
 
 		s["rows"][2]["name"].setValue( "two" )
-		self.assertEqual( s["activeRowNames"].getValue(), IECore.StringVectorData( [ "two", "3" ] ) )
+		self.assertEqual( s["enabledRowNames"].getValue(), IECore.StringVectorData( [ "two", "3" ] ) )
 
 	def testAddColumnUsingDynamicPlug( self ) :
 
@@ -976,9 +976,9 @@ class SpreadsheetTest( GafferTest.TestCase ) :
 		# that is unintuitive. As a general rule in Gaffer, if something
 		# hasn't been given a name then it is treated as if it was disabled.
 		self.assertEqual( s["out"]["i"].getValue(), 0 )
-		# That should be reinforced by excluding the row from the `activeRows`
+		# That should be reinforced by excluding the row from the `enabledRowNames`
 		# and `resolvedRows` outputs.
-		self.assertEqual( s["activeRowNames"].getValue(), IECore.StringVectorData() )
+		self.assertEqual( s["enabledRowNames"].getValue(), IECore.StringVectorData() )
 		self.assertNotIn( "", s["resolvedRows"].getValue() )
 
 		# The same should apply even when the selector receives the empty value
@@ -992,18 +992,18 @@ class SpreadsheetTest( GafferTest.TestCase ) :
 			# rows as non-existent.
 			c["selector"] = ""
 			self.assertEqual( s["out"]["i"].getValue(), 0 )
-			self.assertEqual( s["activeRowNames"].getValue(), IECore.StringVectorData() )
+			self.assertEqual( s["enabledRowNames"].getValue(), IECore.StringVectorData() )
 			self.assertNotIn( "", s["resolvedRows"].getValue() )
 			# But by that logic, a row named '*' _should_ match the empty
 			# variable.
 			row["name"].setValue( "*" )
 			self.assertEqual( s["out"]["i"].getValue(), 1 )
-			self.assertEqual( s["activeRowNames"].getValue(), IECore.StringVectorData( [ "*" ] ) )
+			self.assertEqual( s["enabledRowNames"].getValue(), IECore.StringVectorData( [ "*" ] ) )
 			self.assertIn( "*", s["resolvedRows"].getValue() )
 			# Even if the variable doesnt exist at all.
 			del c["selector"]
 			self.assertEqual( s["out"]["i"].getValue(), 1 )
-			self.assertEqual( s["activeRowNames"].getValue(), IECore.StringVectorData( [ "*" ] ) )
+			self.assertEqual( s["enabledRowNames"].getValue(), IECore.StringVectorData( [ "*" ] ) )
 			self.assertIn( "*", s["resolvedRows"].getValue() )
 
 	@GafferTest.TestRunner.PerformanceTestMethod()
