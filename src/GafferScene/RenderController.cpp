@@ -36,6 +36,7 @@
 
 #include "GafferScene/RenderController.h"
 
+#include "GafferScene/Private/IECoreScenePreview/Placeholder.h"
 #include "GafferScene/SceneAlgo.h"
 
 #include "Gaffer/ParallelAlgo.h"
@@ -471,7 +472,7 @@ class RenderController::SceneGraph
 
 				if( !bound.isEmpty() )
 				{
-					IECoreScene::CurvesPrimitivePtr boundCurves = IECoreScene::CurvesPrimitive::createBox( bound );
+					IECoreScenePreview::PlaceholderPtr placeholder = new IECoreScenePreview::Placeholder( bound );
 
 					std::string boundName;
 					ScenePlug::pathToString( path, boundName );
@@ -483,7 +484,7 @@ class RenderController::SceneGraph
 						m_boundInterface = nullptr;
 					}
 
-					m_boundInterface = controller->m_renderer->object( boundName, boundCurves.get(), controller->m_boundAttributes.get() );
+					m_boundInterface = controller->m_renderer->object( boundName, placeholder.get(), controller->m_defaultAttributes.get() );
 					if( m_boundInterface )
 					{
 						newBound = true;
@@ -1232,13 +1233,8 @@ RenderController::RenderController( const ConstScenePlugPtr &scene, const Gaffer
 		m_lightLinks = std::make_unique<LightLinks>();
 	}
 
-	CompoundObjectPtr boundAttributes = new CompoundObject;
-	boundAttributes->members()["gl:curvesPrimitive:useGLLines"] = new BoolData( true );
-	boundAttributes->members()["gl:primitive:solid"] = new BoolData( false );
-	boundAttributes->members()["gl:primitive:points"] = new BoolData( false );
-	boundAttributes->members()["gl:primitive:wireframe"] = new BoolData( true );
-	boundAttributes->members()["gl:primitive:wireframeColor"] = new Color4fData( Color4f( 0.2f, 0.2f, 0.2f, 1.0f ) );
-	m_boundAttributes = m_renderer->attributes( boundAttributes.get() );
+	IECore::CompoundObjectPtr defaultAttributes = new CompoundObject();
+	m_defaultAttributes = m_renderer->attributes( defaultAttributes.get() );
 
 	setScene( scene );
 	setContext( context );

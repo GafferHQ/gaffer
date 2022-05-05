@@ -41,7 +41,9 @@
 #include "GafferScene/InteractiveRender.h"
 #include "GafferScene/OpenGLRender.h"
 #include "GafferScene/Private/IECoreScenePreview/CapturingRenderer.h"
+#include "GafferScene/Private/IECoreScenePreview/CompoundRenderer.h"
 #include "GafferScene/Private/IECoreScenePreview/Geometry.h"
+#include "GafferScene/Private/IECoreScenePreview/Placeholder.h"
 #include "GafferScene/Private/IECoreScenePreview/Procedural.h"
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 #include "GafferScene/Private/RendererAlgo.h"
@@ -200,6 +202,13 @@ void render( Renderer &renderer )
 {
 	IECorePython::ScopedGILRelease gilRelease;
 	renderer.render();
+}
+
+RendererPtr compoundRendererConstructor( object pythonRenderers )
+{
+	std::vector<RendererPtr> renderers;
+	container_utils::extend_container( renderers, pythonRenderers );
+	return new CompoundRenderer( renderers );
 }
 
 class ProceduralWrapper : public IECorePython::RunTimeTypedWrapper<IECoreScenePreview::Procedural>
@@ -450,11 +459,14 @@ void GafferSceneModule::bindRender()
 
 		CompoundDataMapFromDict();
 
+		IECorePython::RefCountedClass<CompoundRenderer, Renderer>( "CompoundRenderer" )
+			.def( "__init__", make_constructor( compoundRendererConstructor, default_call_policies(), arg( "renderers" ) ) )
+		;
+
 		IECorePython::RunTimeTypedClass<IECoreScenePreview::Procedural, ProceduralWrapper>()
 			.def( init<>() )
 			.def( "render", (void (Procedural::*)( IECoreScenePreview::Renderer *)const)&Procedural::render )
 		;
-
 
 		IECorePython::RunTimeTypedClass<Geometry>()
 			.def(
@@ -471,6 +483,12 @@ void GafferSceneModule::bindRender()
 			.def( "setBound", &Geometry::setBound )
 			.def( "getBound", &Geometry::getBound, return_value_policy<copy_const_reference>() )
 			.def( "parameters", (IECore::CompoundData *(Geometry::*)())&Geometry::parameters, return_value_policy<IECorePython::CastToIntrusivePtr>() )
+		;
+
+		IECorePython::RunTimeTypedClass<Placeholder>()
+			.def( init<const Box3f &>( arg( "bound" ) = Box3f() ) )
+			.def( "setBound", &Placeholder::setBound )
+			.def( "getBound", &Placeholder::getBound, return_value_policy<copy_const_reference>() )
 		;
 
 		scope capturingRendererScope = IECorePython::RefCountedClass<CapturingRenderer, Renderer>( "CapturingRenderer" )

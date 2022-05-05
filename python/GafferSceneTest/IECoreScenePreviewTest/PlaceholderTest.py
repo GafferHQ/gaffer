@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2019, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2022, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,10 +34,66 @@
 #
 ##########################################################################
 
-from .CapturingRendererTest import CapturingRendererTest
-from .CompoundRendererTest import CompoundRendererTest
-from .PlaceholderTest import PlaceholderTest
+import unittest
+
+import imath
+
+import IECore
+
+import GafferTest
+import GafferScene
+
+class PlaceholderTest( GafferTest.TestCase ) :
+
+	def testFactory( self ) :
+
+		o = IECore.Object.create( "IECoreScenePreview::Placeholder" )
+		self.assertIsInstance( o, GafferScene.Private.IECoreScenePreview.Placeholder )
+		self.assertEqual( o.getBound(), imath.Box3f() )
+
+	def testBound( self ) :
+
+		o = GafferScene.Private.IECoreScenePreview.Placeholder(
+			imath.Box3f( imath.V3f( 1, 2, 3 ), imath.V3f( 4, 5, 6 ) )
+		)
+		self.assertEqual(
+			o.getBound(),
+			imath.Box3f( imath.V3f( 1, 2, 3 ), imath.V3f( 4, 5, 6 ) )
+		)
+
+		o.setBound( imath.Box3f( imath.V3f( 2, 3, 4 ), imath.V3f( 5, 6, 7 ) ) )
+		self.assertEqual(
+			o.getBound(),
+			imath.Box3f( imath.V3f( 2, 3, 4 ), imath.V3f( 5, 6, 7 ) )
+		)
+
+	def testCopy( self ) :
+
+		o = GafferScene.Private.IECoreScenePreview.Placeholder(
+			imath.Box3f( imath.V3f( 1, 2, 3 ), imath.V3f( 4, 5, 6 ) )
+		)
+		o2 = o.copy()
+		self.assertEqual( o.getBound(), o2.getBound() )
+		self.assertEqual( o, o2 )
+
+		o2.setBound( imath.Box3f( imath.V3f( 2, 3, 4 ), imath.V3f( 5, 6, 7 ) ) )
+		self.assertNotEqual( o.getBound(), o2.getBound() )
+		self.assertNotEqual( o, o2 )
+
+	def testSerialisation( self ) :
+
+		o = GafferScene.Private.IECoreScenePreview.Placeholder(
+			imath.Box3f( imath.V3f( 1, 2, 3 ), imath.V3f( 4, 5, 6 ) )
+		)
+
+		m = IECore.MemoryIndexedIO( IECore.CharVectorData(), [], IECore.IndexedIO.OpenMode.Write )
+		o.save( m, "o" )
+
+		m2 = IECore.MemoryIndexedIO( m.buffer(), [], IECore.IndexedIO.OpenMode.Read )
+		o2 = IECore.Object.load( m2, "o" )
+
+		self.assertEqual( o.getBound(), o2.getBound() )
+		self.assertEqual( o, o2 )
 
 if __name__ == "__main__":
-	import unittest
 	unittest.main()
