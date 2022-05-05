@@ -12,6 +12,7 @@ Improvements
 ------------
 
 - USD : Added basic support for loading UsdLux lights. The data is available in Gaffer, but needs manual conversion to meet the requirements of a specific renderer.
+- InteractiveArnoldRender : Added support for an `updateInteractively` bool parameter for render outputs. This can be used to request more frequent updates for AOVs other than the beauty image.
 - ChannelPlugValueWidget : Improved the ordering of channel names presented in the menu.
 - PresetsPlugValueWidget : The children of compound plugs are now shown when in "Custom" mode.
 
