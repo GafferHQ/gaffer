@@ -70,6 +70,12 @@ class CompoundRendererTest( GafferTest.TestCase ) :
 			self.assertEqual( o.capturedSamples(), [ IECoreScene.SpherePrimitive() ] )
 			self.assertEqual( o.capturedSampleTimes(), [] )
 			self.assertEqual( o.capturedAttributes().attributes(), coreAttributes1 )
+			self.assertEqual( o.id(), 0 )
+
+		compoundObject.assignID( 1 )
+		for r in renderers :
+			o = r.capturedObject( "o" )
+			self.assertEqual( o.id(), 1 )
 
 		# Attribute edits
 

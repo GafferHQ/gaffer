@@ -296,6 +296,12 @@ class AppleseedEntity : public IECoreScenePreview::Renderer::ObjectInterface
 		{
 		}
 
+		void assignID( uint32_t id ) override
+		{
+			// Not implemented. We don't anticipate using Appleseed in scenarios
+			// where IDs are useful.
+		}
+
 	protected :
 
 		AppleseedEntity( asr::Project &project, const string &name, bool interactiveRender )

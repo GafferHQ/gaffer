@@ -119,6 +119,8 @@ class GAFFERSCENE_API CapturingRenderer : public Renderer
 				int numAttributeEdits() const;
 				int numLinkEdits( const IECore::InternedString &type ) const;
 
+				uint32_t id() const;
+
 				/// Renderer interface
 				/// ==================
 
@@ -126,6 +128,7 @@ class GAFFERSCENE_API CapturingRenderer : public Renderer
 				void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) override;
 				bool attributes( const AttributesInterface *attributes ) override;
 				void link( const IECore::InternedString &type, const ConstObjectSetPtr &objects ) override;
+				void assignID( uint32_t id ) override;
 
 			private :
 
@@ -142,6 +145,7 @@ class GAFFERSCENE_API CapturingRenderer : public Renderer
 				ConstCapturedAttributesPtr m_capturedAttributes;
 				int m_numAttributeEdits;
 				std::unordered_map<IECore::InternedString, std::pair<ConstObjectSetPtr, int>> m_capturedLinks;
+				uint32_t m_id;
 
 		};
 

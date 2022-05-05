@@ -3616,6 +3616,32 @@ class RendererTest( GafferTest.TestCase ) :
 		# Must delete objects before the renderer.
 		del light
 
+	def testIDAOV( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+		)
+
+		fileName = os.path.join( self.temporaryDirectory(), "testID.exr" )
+		r.output( "testID", IECoreScene.Output( fileName, "exr", "uint id", { "filter" : "closest" } ) )
+
+		o = r.object(
+			"/sphere",
+				IECoreScene.SpherePrimitive(),
+				r.attributes( IECore.CompoundObject() )
+		)
+		o.transform( imath.M44f().translate( imath.V3f( 0, 0, -2 ) ) )
+		o.assignID( 101 )
+		del o
+
+		r.render()
+
+		imageReader = IECoreImage.ImageReader( fileName )
+		data = imageReader.readChannel( "Y", raw = True )
+		self.assertIsInstance( data, IECore.UIntVectorData )
+		self.assertEqual( data[len(data)//2], 101 )
+
 	@staticmethod
 	def __m44f( m ) :
 
