@@ -208,11 +208,7 @@ RendererPtr compoundRendererConstructor( object pythonRenderers )
 {
 	std::vector<RendererPtr> renderers;
 	container_utils::extend_container( renderers, pythonRenderers );
-	if( renderers.size() != 2 )
-	{
-		throw IECore::Exception( "Expected 2 renderers" );
-	}
-	return new CompoundRenderer( { renderers[0], renderers[1] } );
+	return new CompoundRenderer( renderers );
 }
 
 class ProceduralWrapper : public IECorePython::RunTimeTypedWrapper<IECoreScenePreview::Procedural>

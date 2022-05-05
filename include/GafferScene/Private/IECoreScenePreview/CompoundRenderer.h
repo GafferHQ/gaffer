@@ -48,13 +48,11 @@ class GAFFERSCENE_API CompoundRenderer final : public IECoreScenePreview::Render
 
 		IE_CORE_DECLAREMEMBERPTR( CompoundRenderer )
 
-		/// Using `std::array` of fixed length since we currently only
-		/// need two renderers, and it minimises the size of internal
-		/// data structures.
-		using Renderers = std::array<RendererPtr, 2>;
+		using Renderers = std::vector<RendererPtr>;
 
 		/// CompoundRenderer is constructed directly rather than via
 		/// `Renderer::create()`, so that the renderers can be provided to it.
+		/// > Note : Currently, `renderers.size()` is required to be 2.
 		CompoundRenderer( const Renderers &renderers );
 		~CompoundRenderer() override;
 

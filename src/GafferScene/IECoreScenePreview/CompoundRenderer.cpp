@@ -53,7 +53,7 @@ namespace
 struct CompoundAttributesInterface : public IECoreScenePreview::Renderer::AttributesInterface
 {
 
-	CompoundAttributesInterface( CompoundRenderer::Renderers &renderers, const IECore::CompoundObject *a )
+	CompoundAttributesInterface( const CompoundRenderer::Renderers &renderers, const IECore::CompoundObject *a )
 	{
 		for( size_t i = 0; i < renderers.size(); ++i )
 		{
@@ -61,6 +61,10 @@ struct CompoundAttributesInterface : public IECoreScenePreview::Renderer::Attrib
 		}
 	}
 
+	/// Using `std::array` of fixed length since we currently only need two
+	/// renderers, and it minimises the size of internal data structures. We
+	/// check the number of renderers matches in the CompoundRenderer
+	/// constructor.
 	std::array<Renderer::AttributesInterfacePtr, 2> attributes;
 
 };
@@ -127,6 +131,7 @@ struct CompoundObjectInterface : public IECoreScenePreview::Renderer::ObjectInte
 		}
 	}
 
+	/// See comment for CompoundAttributesInterface::attributes.
 	std::array<IECoreScenePreview::Renderer::ObjectInterfacePtr, 2> objects;
 
 };
@@ -140,8 +145,12 @@ IE_CORE_DECLAREPTR( CompoundObjectInterface )
 //////////////////////////////////////////////////////////////////////////
 
 CompoundRenderer::CompoundRenderer( const Renderers &renderers )
-	:	Renderer(), m_renderers( renderers )
+	:	m_renderers( renderers )
 {
+	if( m_renderers.size() != 2 )
+	{
+		throw IECore::Exception( "Expected 2 renderers" );
+	}
 }
 
 CompoundRenderer::~CompoundRenderer()
