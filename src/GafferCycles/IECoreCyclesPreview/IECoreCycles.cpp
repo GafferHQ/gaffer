@@ -40,7 +40,8 @@
 #include "util/version.h"
 
 #include "IECore/MessageHandler.h"
-#include "IECore/SearchPath.h"
+
+#include <filesystem>
 
 namespace
 {
@@ -55,30 +56,23 @@ static std::vector<ccl::DeviceInfo> cyclesDevices;
 namespace IECoreCycles
 {
 
-bool init( const char *path )
+bool init()
 {
-	// Set path to find shaders & cuda cubins
-	#ifdef _WIN32
-	std::string paths = ccl::string_printf( "%s;%s\\\\cycles;%s", getenv( "GAFFERCYCLES" ), getenv( "GAFFER_ROOT" ), getenv( "GAFFER_EXTENSION_PATHS" ) );
-	#else
-	std::string paths = ccl::string_printf( "%s:%s/cycles:%s" , getenv( "GAFFERCYCLES" ), getenv( "GAFFER_ROOT" ), getenv( "GAFFER_EXTENSION_PATHS" ) );
-	#endif
-	// If a path was specified, use that
-	if( path )
-		paths = path;
-	const char *kernelFile = "source/kernel/types.h";
-	IECore::SearchPath searchPath( paths );
-	boost::filesystem::path filepath = searchPath.find( kernelFile );
-	if( filepath.empty() )
+	const char *cyclesRoot = getenv( "CYCLES_ROOT" );
+	if( !cyclesRoot )
 	{
-		IECore::msg( IECore::Msg::Error, "CyclesRenderer", "Cannot find GafferCycles location. Have you set the GAFFERCYCLES environment variable?" );
+		IECore::msg( IECore::Msg::Error, "IECoreCycles::init", "CYCLES_ROOT environment variable not set" );
+		return false;
 	}
-	else
+
+	auto kernelFile = std::filesystem::path( cyclesRoot ) / "source" / "kernel" / "types.h";
+	if( !std::filesystem::is_regular_file( kernelFile ) )
 	{
-		std::string cclPath = filepath.string();
-		cclPath.erase( cclPath.end() - strlen( kernelFile ), cclPath.end() );
-		ccl::path_init( cclPath );
+		IECore::msg( IECore::Msg::Error, "IECoreCycles::init", boost::format( "File %1% not found" ) % kernelFile );
+		return false;
 	}
+
+	ccl::path_init( cyclesRoot );
 
 	// This is a global thing for logging
 	const char* argv[] = { "-", "v", "1" };
@@ -86,7 +80,7 @@ bool init( const char *path )
 	ccl::util_logging_start();
 	ccl::util_logging_verbosity_set( 0 );
 
-	// Get devies
+	// Get devices
 	ccl::vector<ccl::DeviceInfo> devices = ccl::Device::available_devices( ccl::DEVICE_MASK_CPU | ccl::DEVICE_MASK_HIP | ccl::DEVICE_MASK_CUDA | ccl::DEVICE_MASK_METAL
 #ifdef WITH_OPTIX
 	| ccl::DEVICE_MASK_OPTIX
