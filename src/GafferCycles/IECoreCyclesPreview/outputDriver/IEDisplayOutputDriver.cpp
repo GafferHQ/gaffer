@@ -219,7 +219,7 @@ IEDisplayOutputDriver::~IEDisplayOutputDriver()
 
 void IEDisplayOutputDriver::write_render_tile( const Tile &tile )
 {
-	const float *imageData;
+	const float *imageData = nullptr;
 
 	const int x = tile.offset.x;
 	const int y = tile.offset.y;
