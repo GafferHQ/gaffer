@@ -635,38 +635,44 @@ void AnimationGadget::renderLayer( Layer layer, const Style *style, RenderReason
 				// draw the tangents
 				//
 				// NOTE : only draw if they are unconstrained and key or adjacent key is selected
+				//        or opposite tangent is being moved or highlighted. The opposite tangent
+				//        is always highlighted whilst being moved so just check highlighting.
 
 				if( previousKey )
 				{
 					const Animation::Tangent& in = key.tangentIn();
 					const Animation::Tangent& out = previousKey->tangentOut();
 
-					if( ( isSelected || previousKeySelected ) && ( ! out.slopeIsConstrained() || ! out.scaleIsConstrained() ) )
+					bool tieSlopeOut, tieScaleOut;
+					tieModeToBools( previousKey->getTieMode(), tieSlopeOut, tieScaleOut );
+					const bool isOutHighlighted = ( m_highlightedTangentKey == previousKey ) && (
+						( m_highlightedTangentDirection == Animation::Direction::Out ) || tieSlopeOut || tieScaleOut );
+
+					if( ( isSelected || previousKeySelected || isOutHighlighted ) && ( ! out.slopeIsConstrained() || ! out.scaleIsConstrained() ) )
 					{
-						bool tieSlope, tieScale;
-						tieModeToBools( previousKey->getTieMode(), tieSlope, tieScale );
 						const V2d outPosKey = out.getPosition();
 						const V2f outPosRas = viewportGadget->worldToRasterSpace( V3f( outPosKey.x, outPosKey.y, 0 ) );
-						const bool isOutHighlighted = ( ( m_highlightedTangentKey == previousKey ) && ( m_highlightedTangentDirection == Animation::Direction::Out ) );
 						const double outSize = isOutHighlighted ? 4.0 : 2.0;
 						const Box2f outBox( outPosRas - V2f( outSize ), outPosRas + V2f( outSize ) );
 						style->renderLine( IECore::LineSegment3f( V3f( outPosRas.x, outPosRas.y, 0 ), V3f( previousKeyPosition.x, previousKeyPosition.y, 0 ) ),
-							tieSlope ? 2.0 : 1.0, &color4 );
-						( tieScale ) ? style->renderSolidRectangle( outBox ) : style->renderRectangle( outBox );
+							tieSlopeOut ? 2.0 : 1.0, &color4 );
+						( tieScaleOut ) ? style->renderSolidRectangle( outBox ) : style->renderRectangle( outBox );
 					}
 
-					if( ( isSelected || previousKeySelected ) && ( ! in.slopeIsConstrained() || ! in.scaleIsConstrained() ) )
+					bool tieSlopeIn, tieScaleIn;
+					tieModeToBools( key.getTieMode(), tieSlopeIn, tieScaleIn );
+					const bool isInHighlighted = ( ( m_highlightedTangentKey == &key ) && (
+						( m_highlightedTangentDirection == Animation::Direction::In ) || tieSlopeIn || tieScaleIn ) );
+
+					if( ( isSelected || previousKeySelected || isInHighlighted ) && ( ! in.slopeIsConstrained() || ! in.scaleIsConstrained() ) )
 					{
-						bool tieSlope, tieScale;
-						tieModeToBools( key.getTieMode(), tieSlope, tieScale );
 						const V2d inPosKey = in.getPosition();
 						const V2f inPosRas = viewportGadget->worldToRasterSpace( V3f( inPosKey.x, inPosKey.y, 0 ) );
-						const bool isInHighlighted = ( ( m_highlightedTangentKey == &key ) && ( m_highlightedTangentDirection == Animation::Direction::In ) );
 						const double inSize = isInHighlighted ? 4.0 : 2.0;
 						const Box2f inBox( inPosRas - V2f( inSize ), inPosRas + V2f( inSize ) );
 						style->renderLine( IECore::LineSegment3f( V3f( inPosRas.x, inPosRas.y, 0 ), V3f( keyPosition.x, keyPosition.y, 0 ) ),
-							tieSlope ? 2.0 : 1.0, &color4 );
-						( tieScale ) ? style->renderSolidRectangle( inBox ) : style->renderRectangle( inBox );
+							tieSlopeIn ? 2.0 : 1.0, &color4 );
+						( tieScaleIn ) ? style->renderSolidRectangle( inBox ) : style->renderRectangle( inBox );
 					}
 				}
 
@@ -1213,6 +1219,8 @@ IECore::RunTimeTypedPtr AnimationGadget::dragBegin( GadgetPtr gadget, const Drag
 			m_dragTangentOriginalScale = t.getScale();
 			m_dragTangentKey = tangent.first;
 			m_dragTangentDirection = tangent.second;
+			m_highlightedTangentKey = m_dragTangentKey;
+			m_highlightedTangentDirection = m_dragTangentDirection;
 			m_dragMode = DragMode::MoveTangent;
 			if(
 				( event.modifiers & DragDropEvent::Control ) &&
@@ -1317,63 +1325,8 @@ bool AnimationGadget::mouseMove( GadgetPtr gadget, const ButtonEvent &event )
 		return false;
 	}
 
-	if( onTimeAxis( event.line ) && ! onValueAxis( event.line ) )
-	{
-		m_frameIndicatorPreviewFrame = static_cast<int>( round( timeToFrame( m_context->getFramesPerSecond(), i.x ) ) );
-	}
-	else
-	{
-		m_frameIndicatorPreviewFrame = std::nullopt;
-	}
+	updateHighlightingAndPreview( event );
 
-	std::pair<Gaffer::Animation::KeyPtr, Gaffer::Animation::Direction> tangent = tangentAt( event.line );
-
-	if( tangent.first )
-	{
-		m_highlightedTangentKey = tangent.first;
-		m_highlightedTangentDirection = tangent.second;
-		m_highlightedKey = nullptr;
-		m_highlightedCurve = nullptr;
-	}
-	else if( Animation::KeyPtr key = keyAt( event.line ) )
-	{
-		m_highlightedKey = key;
-		m_highlightedTangentKey = nullptr;
-		m_highlightedCurve = nullptr;
-	}
-	else
-	{
-		if( m_highlightedKey )
-		{
-			m_highlightedKey = nullptr;
-		}
-
-		if( m_highlightedTangentKey )
-		{
-			m_highlightedTangentKey = nullptr;
-		}
-
-		if( Animation::CurvePlugPtr curvePlug = curveAt( event.line ) )
-		{
-			m_highlightedCurve = curvePlug;
-
-			bool controlHeld = event.modifiers & DragDropEvent::Control;
-			if( controlHeld )
-			{
-				m_keyPreview = true;
-			}
-		}
-		else
-		{
-			if( m_highlightedCurve )
-			{
-				m_highlightedCurve = nullptr;
-				m_keyPreview = false;
-			}
-		}
-	}
-
-	updateKeyPreviewLocation( m_highlightedCurve.get(), i.x );
 	dirty( DirtyType::Render );
 
 	return true;
@@ -1508,6 +1461,7 @@ bool AnimationGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 	case DragMode::MoveTangent :
 	{
 		m_dragTangentKey.reset();
+		m_highlightedTangentKey.reset();
 		m_dragTangentOriginalScale = 0.0;
 		m_mergeGroupId++;
 		break;
@@ -1524,6 +1478,8 @@ bool AnimationGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 	m_dragMode = DragMode::None;
 	m_moveAxis = MoveAxis::Both;
 	Pointer::setCurrent( "" );
+
+	updateHighlightingAndPreview( event );
 
 	dirty( DirtyType::Render );
 
@@ -1938,4 +1894,73 @@ void AnimationGadget::updateKeyPreviewLocation( const Gaffer::Animation::CurvePl
 	float snappedTime = snapTimeToFrame( m_context->getFramesPerSecond(), time );
 	float value = curvePlug->evaluate( snappedTime );
 	m_keyPreviewLocation = V3f( snappedTime, value, 0 );
+}
+
+void AnimationGadget::updateHighlightingAndPreview( const ButtonEvent &event )
+{
+	V3f i;
+	if( !event.line.intersect( Plane3f( V3f( 0, 0, 1 ), 0 ), i ) )
+	{
+		return;
+	}
+
+	if( onTimeAxis( event.line ) && ! onValueAxis( event.line ) )
+	{
+		m_frameIndicatorPreviewFrame = static_cast<int>( round( timeToFrame( m_context->getFramesPerSecond(), i.x ) ) );
+	}
+	else
+	{
+		m_frameIndicatorPreviewFrame = std::nullopt;
+	}
+
+	std::pair<Gaffer::Animation::KeyPtr, Gaffer::Animation::Direction> tangent = tangentAt( event.line );
+
+	if( tangent.first )
+	{
+		m_highlightedTangentKey = tangent.first;
+		m_highlightedTangentDirection = tangent.second;
+		m_highlightedKey = nullptr;
+		m_highlightedCurve = nullptr;
+	}
+	else if( Animation::KeyPtr key = keyAt( event.line ) )
+	{
+		m_highlightedKey = key;
+		m_highlightedTangentKey = nullptr;
+		m_highlightedCurve = nullptr;
+	}
+	else
+	{
+		if( m_highlightedKey )
+		{
+			m_highlightedKey = nullptr;
+		}
+
+		if( m_highlightedTangentKey )
+		{
+			m_highlightedTangentKey = nullptr;
+		}
+
+		if( Animation::CurvePlugPtr curvePlug = curveAt( event.line ) )
+		{
+			m_highlightedCurve = curvePlug;
+
+			bool controlHeld = event.modifiers & DragDropEvent::Control;
+			if( controlHeld )
+			{
+				m_keyPreview = true;
+			}
+		}
+		else
+		{
+			if( m_highlightedCurve )
+			{
+				m_highlightedCurve = nullptr;
+				m_keyPreview = false;
+			}
+		}
+	}
+
+	updateKeyPreviewLocation( m_highlightedCurve.get(), i.x );
+
+	return;
 }
