@@ -43,6 +43,9 @@
 #include "boost/iterator/iterator_facade.hpp"
 #include "boost/visit_each.hpp"
 
+#include <optional>
+
+
 namespace Gaffer::Signals
 {
 
@@ -532,7 +535,7 @@ inline ScopedConnection &ScopedConnection::operator=( const Connection &connecti
 //////////////////////////////////////////////////////////////////////////
 
 inline BlockedConnection::BlockedConnection( Signals::Connection &connection, bool block )
-	:	m_connection( nullptr )
+	:	m_connection( nullptr ), m_previouslyBlocked( false )
 {
 	if( block && connection.connected() )
 	{

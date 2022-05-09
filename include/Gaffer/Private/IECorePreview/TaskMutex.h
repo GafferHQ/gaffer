@@ -53,6 +53,7 @@
 #include "tbb/task_scheduler_observer.h"
 
 #include <iostream>
+#include <optional>
 #include <thread>
 
 namespace IECorePreview

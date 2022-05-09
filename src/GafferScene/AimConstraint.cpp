@@ -92,7 +92,7 @@ void AimConstraint::hashConstraint( const Gaffer::Context *context, IECore::Murm
 Imath::M44f AimConstraint::computeConstraint( const Imath::M44f &fullTargetTransform, const Imath::M44f &fullInputTransform, const Imath::M44f &inputTransform ) const
 {
 	// decompose into scale, shear, rotate and translate
-	V3f s, h, r, t;
+	V3f s( 1 ), h( 0 ), r( 0 ), t( 0 );
 	extractSHRT( fullInputTransform, s, h, r, t );
 
 	// figure out the aim matrix
