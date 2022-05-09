@@ -675,6 +675,17 @@ class RendererTest( GafferTest.TestCase ) :
 			)
 		)
 
+		for name, type in [
+			( "C", "float" ),
+			( "D", "int" ),
+			( "E", "uint" ),
+		] :
+
+			r.output(
+				"test" + name,
+				IECoreScene.Output( name + ".exr", "exr", "{} {}".format( type, name ), {} )
+			)
+
 		r.render()
 		del r
 
@@ -684,11 +695,13 @@ class RendererTest( GafferTest.TestCase ) :
 
 			options = arnold.AiUniverseGetOptions( universe )
 			outputs = arnold.AiNodeGetArray( options, "outputs" )
-			self.assertEqual( arnold.AiArrayGetNumElements( outputs ), 2 )
-			outputSet = set( [ arnold.AiArrayGetStr( outputs, 0 ), arnold.AiArrayGetStr( outputs, 1 ) ] )
+			outputSet = set( arnold.AiArrayGetStr( outputs, i ) for i in range( 0, arnold.AiArrayGetNumElements( outputs ) ) )
 			self.assertEqual( outputSet, set( [
 				"A RGB ieCoreArnold:filter:testA ieCoreArnold:display:testA",
-				"B RGBA ieCoreArnold:filter:testB ieCoreArnold:display:testB"
+				"B RGBA ieCoreArnold:filter:testB ieCoreArnold:display:testB",
+				"C FLOAT ieCoreArnold:filter:testC ieCoreArnold:display:testC",
+				"D INT ieCoreArnold:filter:testD ieCoreArnold:display:testD",
+				"E UINT ieCoreArnold:filter:testE ieCoreArnold:display:testE",
 			] ) )
 
 	def testOutputFilters( self ) :
@@ -814,7 +827,7 @@ class RendererTest( GafferTest.TestCase ) :
 			IECoreScene.Output(
 				self.temporaryDirectory() + "/diffuse2.exr",
 				"exr",
-				"diffuse RGBA",
+				"color diffuse",
 				{
 					"camera" : "testCamera2"
 				}

@@ -574,25 +574,52 @@ class ArnoldOutput : public IECore::RefCounted
 			}
 			else
 			{
-				std::string arnoldType = "RGB";
+				std::string colorType = "RGB";
 				if( parameter<bool>( output->parameters(), "includeAlpha", false ) )
 				{
-					arnoldType = "RGBA";
+					colorType = "RGBA";
 				}
 
 				vector<std::string> tokens;
 				IECore::StringAlgo::tokenize( m_data, ' ', tokens );
+
 				if( tokens.size() == 2 )
 				{
 					if( tokens[0] == "color" )
 					{
-						m_data = tokens[1] + " " + arnoldType;
+						m_data = tokens[1] + " " + colorType;
 					}
 					else if( tokens[0] == "lpe" )
 					{
 						m_lpeValue = tokens[1];
-						m_data = m_lpeName + " " + arnoldType;
+						m_data = m_lpeName + " " + colorType;
 					}
+					else if( tokens[0] == "float" || tokens[0] == "int" || tokens[0] == "uint" )
+					{
+						// Cortex convention is `<type> <name>`. Arnold
+						// convention is `<name> <TYPE>`.
+						m_data = tokens[1] + " " + boost::to_upper_copy( tokens[0] );
+					}
+					else
+					{
+						/// \todo Omit this output completely. We currently give it to Arnold
+						/// with `m_data == output->getData()`, to provide backward compatibility
+						/// for old scenes that passed an Arnold-formatted data string directly.
+						/// In future, we want all outputs to use the standard Cortex formatting
+						/// instead.
+						IECore::msg(
+							IECore::Msg::Warning, "ArnoldRenderer",
+							boost::format( "Unknown data type \"%1%\" for output \"%2%\"" ) % tokens[0] % name
+						);
+					}
+				}
+				else
+				{
+					/// \todo See above.
+					IECore::msg(
+						IECore::Msg::Warning, "ArnoldRenderer",
+						boost::format( "Unknown data specification \"%1%\" for output \"%2%\"" ) % m_data % name
+					);
 				}
 			}
 
