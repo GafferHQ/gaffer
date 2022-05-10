@@ -12,6 +12,7 @@ Improvements
 ------------
 
 - USD : Added basic support for loading UsdLux lights. The data is available in Gaffer, but needs manual conversion to meet the requirements of a specific renderer.
+- InteractiveArnoldRender : Added support for an `updateInteractively` bool parameter for render outputs. This can be used to request more frequent updates for AOVs other than the beauty image.
 - ChannelPlugValueWidget : Improved the ordering of channel names presented in the menu.
 - PresetsPlugValueWidget : The children of compound plugs are now shown when in "Custom" mode.
 
@@ -27,6 +28,7 @@ Fixes
 - ViewportGadget :
   - Fixed `setCenterOfInterest()` so that it doesn't emit `cameraChangedSignal()` if the center of interest is unchanged.
   - Added GIL release in `setViewport()` Python bindings.
+- ArnoldRender : Fixed rendering of single-channel AOVs specified using Gaffer's generic `float|int|uint <name>` syntax. Outputs specified using Arnold's `<name> FLOAT|INT|UINT` syntax will now issue a warning, and should be updated to use the generic syntax.
 
 API
 ---
