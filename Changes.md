@@ -41,8 +41,9 @@ API
   - Added Python bindings for optional `callback` argument to `update()` and `updateMatchingPaths()`.
   - Added Python binding for `updateInBackground()`.
 - TestCase : Added `assertNodeIsDocumented()` method.
-- ImagePlug : Added viewNames plug and ViewScope for working with multi-view images
-- ImageAlgo : Added viewName arguments and viewIsValid helper method
+- ImagePlug : Added viewNames plug and ViewScope for working with multi-view images.
+- ImageAlgo : Added viewName arguments and viewIsValid helper method.
+- ImageTestCase.assertImagesEqual : Added `metadataBlacklist` argument for ignoring certain metadata.
 
 Breaking Changes
 ----------------
