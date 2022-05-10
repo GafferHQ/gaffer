@@ -7,6 +7,12 @@ Fixes
 - SetFilter : Fixed missing set names in `setExpression` context menu. Sets were being listed for nodes directly connected to the filter, but not for nodes downstream of an intermediate filter such as a UnionFilter (#2678).
 - Fixed `NameValue` plugs having a `delete` menu item in their popup menu when they shouldn't. This was broken in 0.61.9.0.
 - PythonEditor : Fixed autocompletion errors triggered by dictionaries with non-string keys.
+- ColorChooserPlugValueWidget/ColorSwatchPlugValueWidget : Fixed handling of errors when computing the plug value.
+
+API
+---
+
+- ColorChooser/ColorSwatch : Added setErrored() and getErrored() methods.
 
 0.61.10.0 (relative to 0.61.9.0)
 =========

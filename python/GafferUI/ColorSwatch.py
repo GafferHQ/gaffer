@@ -59,6 +59,8 @@ class ColorSwatch( GafferUI.Widget ) :
 
 		GafferUI.Widget.__init__( self, QtWidgets.QWidget(), **kw )
 
+		self.__errored = False
+
 		self.__opaqueChecker = _Checker( borderBottom = False )
 		self.__transparentChecker = _Checker( borderTop = False )
 
@@ -126,14 +128,31 @@ class ColorSwatch( GafferUI.Widget ) :
 			self.__transparentChecker.color1 = self._qtColor( effectiveDisplayTransform( color1 ) )
 
 		## \todo Colour should come from the style when we have styles applying to Widgets as well as Gadgets
-		self.__opaqueChecker.borderColor = QtGui.QColor( 119, 156, 255 ) if self.getHighlighted() else None
-		self.__transparentChecker.borderColor = QtGui.QColor( 119, 156, 255 ) if self.getHighlighted() else None
+		if not self.__errored:
+			self.__opaqueChecker.borderColor = QtGui.QColor( 119, 156, 255 ) if self.getHighlighted() else None
+			self.__transparentChecker.borderColor = QtGui.QColor( 119, 156, 255 ) if self.getHighlighted() else None
+		else:
+			self.__opaqueChecker.borderColor = QtGui.QColor( 255, 85, 85 )
+			self.__transparentChecker.borderColor = QtGui.QColor( 255, 85, 85 )
 
 		self._qtWidget().update()
 
 	def __displayTransformChanged( self ) :
 
 		self.__updateCheckerColors()
+
+	def setErrored( self, errored ) :
+
+		if errored == self.getErrored() :
+			return
+
+		self.__errored = errored
+		self.__updateCheckerColors()
+
+	def getErrored( self ) :
+
+		return self.__errored
+
 
 # Private implementation - a QWidget derived class which just draws a checker with
 # no knowledge of colour spaces or anything.
