@@ -265,6 +265,178 @@ if os.environ.get( "GAFFERAPPLESEED_HIDE_UI", "" ) != "1" :
 				)
 			)
 
+# Add standard cycles AOVs
+
+with IECore.IgnoredExceptions( ImportError ) :
+
+	# If cycles isn't available for any reason, this will fail
+	# and we won't add any unnecessary output definitions.
+	import GafferCycles
+
+	lightPasses = [
+		"emission",
+		"background",
+		"ao",
+		"shadow",
+		"diffuse_direct",
+		"diffuse_indirect",
+		"glossy_direct",
+		"glossy_indirect",
+		"transmission",
+		"transmission_direct",
+		"transmission_indirect",
+		"volume_direct",
+		"volume_indirect",
+		"lightgroup",
+	]
+
+	dataPasses = [
+		"depth",
+		"position",
+		"normal",
+		"roughness",
+		"uv",
+		"object_id",
+		"material_id",
+		"motion",
+		"motion_weight",
+		"render_time",
+		"cryptomatte_asset",
+		"cryptomatte_object",
+		"cryptomatte_material",
+		"aov_color",
+		"aov_value",
+		"adaptive_aux_buffer",
+		"sample_count",
+		"diffuse_color",
+		"glossy_color",
+		"transmission_color",
+		"mist",
+		"denoising_normal",
+		"denoising_albedo",
+
+		"shadow_catcher",
+		"shadow_catcher_sample_count",
+		"shadow_catcher_matte",
+
+		"bake_primitive",
+		"bake_differential",
+	]
+
+	def __registerOutputs( aovs, halfFloat = False, denoise = False ) :
+		for aov in aovs :
+
+			label = aov.replace( "_", " " ).title().replace( " ", "_" )
+
+			data = aov
+
+			interactiveOutput = {
+				"driverType" : "ClientDisplayDriver",
+				"displayHost" : "localhost",
+				"displayPort" : "${image:catalogue:port}",
+				"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+				"quantize" : IECore.IntVectorData( [ 0, 0, 0, 0 ] ),
+			}
+			batchOutput = {
+				"quantize" : IECore.IntVectorData( [ 0, 0, 0, 0 ] ),
+				"halfFloat" : halfFloat
+			}
+
+			if data == "lightgroup":
+				if not GafferCycles.withLightGroups :
+					continue
+				data = "lg lightgroup"
+				label = "Light_Group"
+
+			if data == "aov_color" :
+				data = "aovc aov_color"
+
+			if data == "aov_value" :
+				data = "aovv aov_value"
+
+			if data.startswith( "cryptomatte" ) :
+				data = data.replace( "_", " " )
+
+			GafferScene.Outputs.registerOutput(
+				"Interactive/Cycles/" + label,
+				IECoreScene.Output(
+					aov,
+					"ieDisplay",
+					data,
+					interactiveOutput
+				)
+			)
+
+			GafferScene.Outputs.registerOutput(
+								"Batch/Cycles/" + label,
+				IECoreScene.Output(
+					"${project:rootDirectory}/renders/${script:name}/%s/%s.####.exr" % ( aov, aov ),
+					"exr",
+					data,
+					batchOutput
+				)
+			)
+
+			if denoise:
+				interactiveOutput["denoise"] = True
+				batchOutput["denoise"] = True
+
+				# Denoised variants
+				GafferScene.Outputs.registerOutput(
+					"Interactive/Cycles/" + label + "_Denoised",
+					IECoreScene.Output(
+						aov + "_denoised",
+						"ieDisplay",
+						data,
+						interactiveOutput
+					)
+				)
+
+				GafferScene.Outputs.registerOutput(
+					"Batch/Cycles/" + label + "_Denoised",
+					IECoreScene.Output(
+						"${project:rootDirectory}/renders/${script:name}/%s/%s_denoised.####.exr" % ( aov, aov ),
+						"exr",
+						data,
+						batchOutput
+					)
+				)
+
+
+				GafferScene.Outputs.registerOutput(
+					"Interactive/Cycles/Beauty_Denoised",
+					IECoreScene.Output(
+						"beauty_denoised",
+						"ieDisplay",
+						"rgba",
+						{
+							"driverType" : "ClientDisplayDriver",
+							"displayHost" : "localhost",
+							"displayPort" : "${image:catalogue:port}",
+							"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+							"quantize" : IECore.IntVectorData( [ 0, 0, 0, 0 ] ),
+							"denoise" : True
+						}
+					)
+				)
+
+				GafferScene.Outputs.registerOutput(
+					"Batch/Cycles/Beauty_Denoised",
+					IECoreScene.Output(
+						"${project:rootDirectory}/renders/${script:name}/beauty/beauty_denoised.####.exr",
+						"exr",
+						"rgba",
+						{
+							"quantize" : IECore.IntVectorData( [ 0, 0, 0, 0 ] ),
+							"denoise" : True,
+							"halfFloat" : True
+						}
+					)
+				)
+
+	__registerOutputs( lightPasses, True )
+	__registerOutputs( dataPasses )
+
 # Publish the Catalogue port number as a context variable, so we can refer
 # to it easily in output definitions.
 

@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2020, Cinesite VFX Ltd. All rights reserved.
+#  Copyright (c) 2018, Alex Fuller. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
 #
-#      * Neither the name of Cinesite VFX Ltd. nor the names of
+#      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
@@ -34,36 +34,62 @@
 #
 ##########################################################################
 
-import GafferSceneUI
+import Gaffer
+import GafferCycles
 
+## \todo Refactor the GafferScene::Light base class so this can be
+# registered there, and work for all subclasses. The main issue is that
+# there is no simple generic way of querying the required "ai:light:"
+# prefix from the subclass.
+def __parameterUserDefault( plug ) :
 
-# Arnold
+	light = plug.node()
+	return Gaffer.Metadata.value(
+		"ccl:light:" + light["__shaderName"].getValue() + ":" + plug.relativeName( light["parameters"] ),
+		"userDefault"
+	)
 
-for p in [ "exposure", "color", "radius", "roundness", "spread", "cone_angle", "penumbra_angle", "samples", "aov" ] :
-	GafferSceneUI._SceneViewInspector.registerShaderParameter( "ai:light", p )
+Gaffer.Metadata.registerNode(
 
-for p in ["geometry_type", "density", "filtered_lights", "shader" ] :
-	GafferSceneUI._SceneViewInspector.registerShaderParameter( "ai:lightFilter:filter", p )
+	GafferCycles.CyclesLight,
 
-for p in ["base", "base_color", "diffuse_roughness", "metallness", "specular", "specular_color", "specular_roughness" ] :
-	GafferSceneUI._SceneViewInspector.registerShaderParameter( "ai:surface", p )
+	plugs = {
 
+		"parameters.*" : [
 
-# Appleseed (light-only as our shader hunting doesn't traverse the closure adaptor yet)
+			# Most light parameters are not connectable.
+			"nodule:type", "",
 
-for p in [ "exposure", "intensity", "radiance", "irradiance", "inner_angle", "outer_angle" ] :
-	GafferSceneUI._SceneViewInspector.registerShaderParameter( "as:light", p )
+		],
 
+		"parameters..." : [
 
-# OSL
+			"userDefault", __parameterUserDefault,
 
-for p in [ "exposure", "i_color", "radius", "roundness", "spread", "coneAngle", "penumbraAngle", "image" ] :
-	GafferSceneUI._SceneViewInspector.registerShaderParameter( "osl:light", p )
+		],
 
-# Cycles
+		"parameters.color" : [
 
-for p in [ "intensity", "exposure", "color", "size", "coneAngle", "penumbraAngle", "samples" ] :
-	GafferSceneUI._SceneViewInspector.registerShaderParameter( "ccl:light", p )
+			# The color parameter on quad and skydome lights is connectable.
+			"nodule:type", lambda plug : "GafferUI::StandardNodule" if plug.node()["__shaderName"].getValue() in ( "quad_light", "background_light" ) else ""
 
-for p in ["base_color", "subsurface_color", "metallic", "subsurface", "subsurface_radius", "specular", "roughness", "specular_tint" ] :
-	GafferSceneUI._SceneViewInspector.registerShaderParameter( "ccl:surface", p )
+		],
+
+		"parameters.shader" : [
+
+			# The shader parameter, which only exists on skydome lights, is connectable.
+			"nodule:type", "GafferUI::StandardNodule"
+
+		],
+
+		"parameters.image" : [
+
+			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
+			"path:leaf", True,
+			"path:bookmarks", "image",
+
+		],
+
+	}
+
+)
