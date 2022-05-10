@@ -947,22 +947,22 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 	public :
 
 		CyclesAttributes( const IECore::CompoundObject *attributes, ShaderCache *shaderCache )
-			:	m_shaderHash( IECore::MurmurHash() ), 
-				m_visibility( ~0 ), 
-				m_useHoldout( false ), 
-				m_isShadowCatcher( false ), 
+			:	m_shaderHash( IECore::MurmurHash() ),
+				m_visibility( ~0 ),
+				m_useHoldout( false ),
+				m_isShadowCatcher( false ),
 				m_shadowTerminatorShadingOffset( 0.0f ),
 				m_shadowTerminatorGeometryOffset( 0.0f ),
-				m_maxLevel( 1 ), 
-				m_dicingRate( 1.0f ), 
-				m_color( Color3f( 0.0f ) ), 
+				m_maxLevel( 1 ),
+				m_dicingRate( 1.0f ),
+				m_color( Color3f( 0.0f ) ),
 				m_dupliGenerated( V3f( 0.0f ) ),
 				m_dupliUV( V2f( 0.0f) ),
-				m_particle( attributes ), 
+				m_particle( attributes ),
 				m_volume( attributes ),
 				m_shaderAttributes( attributes ),
-				m_lightGroup( "" ),
 				m_assetName( "" ),
+				m_lightGroup( "" ),
 				m_shaderCache( shaderCache )
 		{
 			updateVisibility( g_cameraVisibilityAttributeName,       (int)ccl::PATH_RAY_CAMERA,         attributes );
@@ -2846,9 +2846,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		};
 
 		CyclesRenderer( RenderType renderType, const std::string &fileName, const IECore::MessageHandlerPtr &messageHandler )
-			:	m_renderType( renderType ),
-				m_frame( 1 ),
-				m_messageHandler( messageHandler ),
+			:	m_session( nullptr ),
+				m_scene( nullptr ),
 				m_sessionParams( ccl::SessionParams() ),
 				m_sceneParams( ccl::SceneParams() ),
 				m_bufferParams( ccl::BufferParams() ),
@@ -2856,8 +2855,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_textureCacheParams( ccl::TextureCacheParams() ),
 #endif
 				m_deviceName( g_defaultDeviceName ),
-				m_session( nullptr ),
-				m_scene( nullptr ),
+				m_renderType( renderType ),
+				m_frame( 1 ),
 				m_renderState( RENDERSTATE_READY ),
 				m_sceneChanged( true ),
 				m_sessionReset( false ),
@@ -2866,7 +2865,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_cryptomatteAccurate( true ),
 				m_cryptomatteDepth( 0 ),
 				m_seed( 0 ),
-				m_useFrameAsSeed( true )
+				m_useFrameAsSeed( true ),
+				m_messageHandler( messageHandler )
 		{
 			// Define internal device names
 			getCyclesDevices();
