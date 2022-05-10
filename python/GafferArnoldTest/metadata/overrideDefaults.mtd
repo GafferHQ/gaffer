@@ -44,10 +44,8 @@
 		gaffer.default       FLOAT  42.42
 	[attr multiply]
 		gaffer.default       RGB  1.2 3.4 5.6
-	# Until we get onto Arnold 5.3 and this is supported, declaring this breaks metadata parsing
-	# in general
-	#[attr missing_texture_color]
-	#	gaffer.default       RGBA  1.2 3.4 5.6 7.8
+	[attr missing_texture_color]
+		gaffer.default       RGBA  1.2 3.4 5.6 7.8
 	[attr uvcoords]
 		gaffer.default       VECTOR2  1.2 3.4
 	[attr filename]
