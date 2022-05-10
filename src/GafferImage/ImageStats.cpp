@@ -223,16 +223,6 @@ const ImagePlug *ImageStats::flattenedInPlug() const
 	return getChild<ImagePlug>( g_firstPlugIndex + 8 );
 }
 
-DeepState *ImageStats::deepState()
-{
-	return getChild<DeepState>( g_firstPlugIndex + 4 );
-}
-
-const DeepState *ImageStats::deepState() const
-{
-	return getChild<DeepState>( g_firstPlugIndex + 4 );
-}
-
 void ImageStats::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ComputeNode::affects( input, outputs );

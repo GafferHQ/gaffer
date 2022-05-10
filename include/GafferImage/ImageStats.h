@@ -102,10 +102,6 @@ class GAFFERIMAGE_API ImageStats : public Gaffer::ComputeNode
 		ImagePlug *flattenedInPlug();
 		const ImagePlug *flattenedInPlug() const;
 
-		// The internal DeepState node.
-		GafferImage::DeepState *deepState();
-		const GafferImage::DeepState *deepState() const;
-
 		static size_t g_firstPlugIndex;
 
 };
