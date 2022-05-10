@@ -132,12 +132,6 @@ qtVersion = gafferReg["qtVersion"]
 pysideVersion = gafferReg.get( "pysideVersion", "2.0.0" )
 qtPyVersion = gafferReg.get( "qtPyVersion", "1.0.0.b3" )
 
-## \todo: remove the last fallback for each of these once all shows are using Cortex 10.1+
-oiioVersion = gafferReg.get( "OpenImageIOVersion", cortexReg.get( "OpenImageIOVersion", gafferReg.get( "OpenImageIO" ) ) )
-ocioVersion = gafferReg.get( "OpenColorIOVersion", cortexReg.get( "OpenColorIOVersion", gafferReg.get( "OpenColorIO" ) ) )
-oslVersion = gafferReg.get( "OpenShadingLanguageVersion", cortexReg.get( "OpenShadingLanguageVersion", gafferReg.get( "OpenShadingLanguage" ) ) )
-vdbVersion = gafferReg.get( "OpenVDBVersion", cortexReg.get( "OpenVDBVersion", gafferReg.get( "OpenVDB" ) ) )
-
 vTuneVersion = getOption( "VTUNE_VERSION", os.environ["VTUNE_VERSION"] )
 VTUNE_ROOT = IEEnv.registry["apps"]["vtune"][vTuneVersion][IEEnv.platform()]["location"]
 
@@ -214,8 +208,6 @@ try :
 except :
 	APPLESEED_ROOT = ""
 
-OSLHOME = os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenShadingLanguage", oslVersion, IEEnv.platform(), compiler, compilerVersion )
-
 sphinxRoot = os.path.join( IEEnv.Environment.rootPath(), "apps", "sphinx", "1.4.1" )
 
 ##########################################################################
@@ -249,12 +241,18 @@ GAFFERCORTEX = True
 # get include locations right
 ##########################################################################
 
-boostVersion = targetAppReg.get( "boostVersion", cortexReg["boostVersion"] )
-tbbVersion = targetAppReg.get( "tbbVersion", cortexReg["tbbVersion"] )
-exrVersion = targetAppReg.get( "OpenEXRVersion", cortexReg["OpenEXRVersion"] )
-usdVersion = targetAppReg.get( "usdVersion", cortexReg["usdVersion"] )
 alembicVersion = targetAppReg.get( "AlembicVersion", cortexReg["AlembicVersion"] )
+boostVersion = targetAppReg.get( "boostVersion", cortexReg["boostVersion"] )
+ocioVersion = targetAppReg.get( "OpenColorIOVersion", cortexReg["OpenColorIOVersion"] )
+exrVersion = targetAppReg.get( "OpenEXRVersion", cortexReg["OpenEXRVersion"] )
+oiioVersion = targetAppReg.get( "OpenImageIOVersion", cortexReg["OpenImageIOVersion"] )
+oiioLibSuffix = targetAppReg.get( "OpenImageIOLibSuffix", oiioVersion )
 vdbVersion = targetAppReg.get( "OpenVDBVersion", cortexReg["OpenVDBVersion"] )
+oslVersion = targetAppReg.get( "OpenShadingLanguageVersion", cortexReg["OpenShadingLanguageVersion"] )
+tbbVersion = targetAppReg.get( "tbbVersion", cortexReg["tbbVersion"] )
+usdVersion = targetAppReg.get( "usdVersion", cortexReg["usdVersion"] )
+
+OSLHOME = os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenShadingLanguage", oslVersion, IEEnv.platform(), compiler, compilerVersion )
 
 LOCATE_DEPENDENCY_SYSTEMPATH = [
 
@@ -437,7 +435,7 @@ if "install" in sys.argv :
 ##########################################################################
 
 OPENEXR_LIB_SUFFIX = IEEnv.BuildUtil.libSuffix( "OpenEXR", exrVersion )
-OIIO_LIB_SUFFIX = IEEnv.BuildUtil.libSuffix( "OpenImageIO", oiioVersion )
+OIIO_LIB_SUFFIX = IEEnv.BuildUtil.libSuffix( "OpenImageIO", oiioLibSuffix )
 OCIO_LIB_SUFFIX = IEEnv.BuildUtil.libSuffix( "OpenColorIO", ocioVersion )
 OSL_LIB_SUFFIX = IEEnv.BuildUtil.libSuffix( "OpenShadingLanguage", oslVersion )
 BOOST_LIB_SUFFIX = IEEnv.BuildUtil.libSuffix( "boost", boostVersion, { "compiler" : compiler, "compilerVersion" : compilerVersion } )
