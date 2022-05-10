@@ -337,7 +337,7 @@ void setSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Da
 				auto stringSize = strings.size();
 				ccl::array<ccl::ustring> array( stringSize );
 				ccl::ustring *sdata = array.data();
-				for(int i = 0; i < stringSize; ++i)
+				for( size_t i = 0; i < stringSize; ++i)
 				{
 					*(sdata++) = ccl::ustring( strings[i].c_str() );
 				}
@@ -351,7 +351,7 @@ void setSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Da
 				auto matricesSize = matrices.size();
 				ccl::array<ccl::Transform> array( matricesSize );
 				ccl::Transform *tdata = array.data();
-				for(int i = 0; i < matricesSize; ++i)
+				for(size_t i = 0; i < matricesSize; ++i)
 				{
 					auto m = matrices[i];
 					*(tdata++) = setTransform( m );
@@ -364,7 +364,7 @@ void setSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Da
 				auto matricesSize = matrices.size();
 				ccl::array<ccl::Transform> array( matricesSize );
 				ccl::Transform *tdata = array.data();
-				for(int i = 0; i < matricesSize; ++i)
+				for(size_t i = 0; i < matricesSize; ++i)
 				{
 					auto m = matrices[i];
 					*(tdata++) = setTransform( m );

@@ -467,7 +467,7 @@ void convertN( const IECoreScene::MeshPrimitive *mesh, const V3fVectorData *norm
 		{
 			for( size_t i = 0; i < numFaces; ++i )
 			{
-				for( size_t j = 0; j < vertsPerFace[i]; ++j )
+				for( int j = 0; j < vertsPerFace[i]; ++j )
 				{
 					*(cdata++) = ccl::make_float3( normals[i].x, normals[i].y, normals[i].z );
 				}
@@ -516,7 +516,7 @@ void convertN( const IECoreScene::MeshPrimitive *mesh, const V3fVectorData *norm
 		{
 			for( size_t i = 0; i < numFaces; ++i )
 			{
-				for( size_t j = 0; j < vertsPerFace[i]; ++j )
+				for( int j = 0; j < vertsPerFace[i]; ++j )
 				{
 					*(cdata++) = ccl::make_float3( normals[indices[i]].x, normals[indices[i]].y, normals[indices[i]].z );
 				}
@@ -605,7 +605,7 @@ void convertUVSet( const string &uvSet, const IECoreScene::PrimitiveVariable &uv
 		{
 			for( size_t i = 0; i < numFaces; ++i )
 			{
-				for( size_t j = 0; j < vertsPerFace[i]; ++j, ++vertex )
+				for( int j = 0; j < vertsPerFace[i]; ++j, ++vertex )
 				{
 					*(fdata++) = ccl::make_float2(uvs[indices[vertexIds[vertex]]].x, uvs[indices[vertexIds[vertex]]].y);
 				}
@@ -615,7 +615,7 @@ void convertUVSet( const string &uvSet, const IECoreScene::PrimitiveVariable &uv
 		{
 			for( size_t i = 0; i < numFaces; ++i )
 			{
-				for( size_t j = 0; j < vertsPerFace[i]; ++j, ++vertex )
+				for( int j = 0; j < vertsPerFace[i]; ++j, ++vertex )
 				{
 					*(fdata++) = ccl::make_float2(uvs[indices[vertex]].x, uvs[indices[vertex]].y);
 				}
@@ -628,7 +628,7 @@ void convertUVSet( const string &uvSet, const IECoreScene::PrimitiveVariable &uv
 		{
 			for( size_t i = 0; i < numFaces; ++i )
 			{
-				for( size_t j = 0; j < vertsPerFace[i]; ++j, ++vertex )
+				for( int j = 0; j < vertsPerFace[i]; ++j, ++vertex )
 				{
 					*(fdata++) = ccl::make_float2(uvs[vertexIds[vertex]].x, uvs[vertexIds[vertex]].y);
 				}
@@ -638,7 +638,7 @@ void convertUVSet( const string &uvSet, const IECoreScene::PrimitiveVariable &uv
 		{
 			for( size_t i = 0; i < numFaces; ++i )
 			{
-				for( size_t j = 0; j < vertsPerFace[i]; ++j, ++vertex )
+				for( int j = 0; j < vertsPerFace[i]; ++j, ++vertex )
 				{
 					*(fdata++) = ccl::make_float2(uvs[vertex].x, uvs[vertex].y);
 				}
@@ -697,7 +697,7 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 		const std::vector<int> &vertsPerFace = mesh->verticesPerFace()->readable();
 		size_t ngons = 0;
 		size_t ncorners = 0;
-		for( int i = 0; i < vertsPerFace.size(); i++ )
+		for( size_t i = 0; i < vertsPerFace.size(); i++ )
 		{
 			ngons += ( vertsPerFace[i] == 4 ) ? 0 : 1;
 			ncorners += vertsPerFace[i];
@@ -885,7 +885,7 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 	int rank = -1;
 	for( auto it = uvsets.begin(); it != uvsets.end(); )
 	{
-		for( int i = 0; i < g_defautUVsetCandidates.size(); ++i )
+		for( int i = 0; i < (int)g_defautUVsetCandidates.size(); ++i )
 		{
 			if( it->first == g_defautUVsetCandidates[i] )
 			{

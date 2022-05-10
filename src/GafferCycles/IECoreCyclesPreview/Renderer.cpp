@@ -669,7 +669,7 @@ class ShaderCache : public IECore::RefCounted
 					}
 					// Get all the possible AOV shaders
 					vector<IECoreScene::ShaderNetworkPtr> substitutedAOVShaders;
-					for( int i = 0; i < hSubstAovs.size(); ++i )
+					for( size_t i = 0; i < hSubstAovs.size(); ++i )
 					{
 						if( hSubstAovs[i] != IECore::MurmurHash() )
 						{
@@ -2345,7 +2345,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 			if( object->get_geometry()->get_use_motion_blur() )
 			{
 				motion.resize( object->get_geometry()->get_motion_steps(), ccl::transform_empty() );
-				for( int i = 0; i < motion.size(); ++i )
+				for( size_t i = 0; i < motion.size(); ++i )
 				{
 					motion[i] = object->get_tfm();
 				}
@@ -2369,7 +2369,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 				IECore::msg( IECore::Msg::Error, "IECoreCycles::Renderer", boost::format( "Transform step size on \"%s\" must match deformation step size." ) % object->name.c_str() );
 				object->set_tfm( SocketAlgo::setTransform( samples.front() ) );
 				motion.resize( geo->get_motion_steps(), ccl::transform_empty() );
-				for( int i = 0; i < motion.size(); ++i )
+				for( size_t i = 0; i < motion.size(); ++i )
 				{
 					motion[i] = object->get_tfm();
 					object->set_motion( motion );
@@ -2388,7 +2388,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 			}
 
 			int frameIdx = -1;
-			for( int i = 0; i < numSamples; ++i )
+			for( size_t i = 0; i < numSamples; ++i )
 			{
 				if( times[i] == m_frame )
 				{
@@ -2400,7 +2400,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 			{
 				motion.resize( numSamples, ccl::transform_empty() );
 
-				for( int i = 0; i < numSamples; ++i )
+				for( int i = 0; i < (int)numSamples; ++i )
 				{
 					if( i == frameIdx )
 					{
@@ -2452,7 +2452,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 					object->set_tfm( SocketAlgo::setTransform( samples[numSamples-1] ) );
 				}
 
-				for( int i = 0; i < numSamples; ++i )
+				for( size_t i = 0; i < numSamples; ++i )
 				{
 					motion[i] = SocketAlgo::setTransform( samples[i] );
 				}
