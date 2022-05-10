@@ -41,6 +41,8 @@
 #include "boost/noncopyable.hpp"
 #include "boost/variant.hpp"
 
+#include <optional>
+
 namespace IECorePreview
 {
 
