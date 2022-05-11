@@ -471,6 +471,9 @@ Gaffer::Plug *setupPlug( const ccl::NodeType *nodeType, const ccl::SocketType so
 				);
 			}
 			break;
+
+		default :
+			break;
 	}
 
 	if( !plug )
