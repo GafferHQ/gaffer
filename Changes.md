@@ -12,7 +12,7 @@ Improvements
 - USD :
   - Added support for reading `.usdz` files.
   - Added support for `doubleSided` attribute.
-- ShaderTweaks : Use dialogue for choosing parameters to tweak instead of popup menus.
+- ShaderTweaks : Added dialogue for choosing parameters to tweak instead of popup menus.
 
 Fixes
 -----
