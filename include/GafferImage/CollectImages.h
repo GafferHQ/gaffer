@@ -64,6 +64,9 @@ class GAFFERIMAGE_API CollectImages : public ImageProcessor
 
 	protected :
 
+		void hashViewNames( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstStringVectorDataPtr computeViewNames( const Gaffer::Context *context, const ImagePlug *parent ) const override;
+
 		void hashFormat( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		GafferImage::Format computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const override;
 
