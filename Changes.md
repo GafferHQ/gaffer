@@ -6,6 +6,11 @@ Improvements
 
 - Viewer : Tool hotkeys now work as toggles for non-exclusive tools. This is currently noticeable on the Camera Tool - pressing <kbd>T</kbd> again will deactivate it.
 
+API
+---
+
+- Added support for `gaffer.layout.activator` and `gaffer.layout.visibilityActivator` in `.mtd` files.
+
 0.61.9.0 (relative to 0.61.8.0)
 ========
 

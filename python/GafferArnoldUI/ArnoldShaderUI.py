@@ -369,6 +369,24 @@ def __translateNodeMetadata( nodeEntry ) :
 			nodeName, _, plugName = paramPath.split( "." )
 			Gaffer.Metadata.registerValue( "ai:surface:%s:%s" % ( nodeName, plugName ), "userDefault", userDefault )
 
+		# Activator from Gaffer-specific metadata
+
+		def addActivator( activator ) :
+			parentActivator = "layout:activator:" + activator
+
+			if parentActivator not in __metadata[nodeName + ".parameters"] :
+				activatorCode = __aiMetadataGetStr( nodeEntry, None, "gaffer.layout.activator." + activator )
+				__metadata[nodeName + ".parameters"][parentActivator] = eval( "lambda parameters : " + activatorCode )
+
+		activator = __aiMetadataGetStr( nodeEntry, paramName, "gaffer.layout.activator" )
+		if activator is not None :
+			addActivator( activator )
+			__metadata[paramPath]["layout:activator"] = activator
+
+		visibilityActivator = __aiMetadataGetStr( nodeEntry, paramName, "gaffer.layout.visibilityActivator" )
+		if visibilityActivator is not None :
+			addActivator( visibilityActivator )
+			__metadata[paramPath]["layout:visibilityActivator"] = visibilityActivator
 
 with IECoreArnold.UniverseBlock( writable = False ) :
 
@@ -418,13 +436,18 @@ def __plugMetadata( plug, name ) :
 		return True
 
 	node = plug.node()
+	relativeName = plug.relativeName( node )
 	if isinstance( node, GafferArnold.ArnoldShader ) :
-		key = plug.node()["name"].getValue() + "." + plug.relativeName( node )
+		key = plug.node()["name"].getValue() + "." + relativeName
 	else :
 		# Other nodes hold an internal shader
-		key = plug.node()["__shader"]["name"].getValue() + "." + plug.relativeName( node )
+		key = plug.node()["__shader"]["name"].getValue() + "." + relativeName
 
-	return __metadata[key].get( name )
+	result = __metadata[key].get( name )
+	if callable( result ) :
+		return result( plug )
+	else :
+		return result
 
 for nodeType in ( GafferArnold.ArnoldShader, GafferArnold.ArnoldLight, GafferArnold.ArnoldMeshLight, GafferArnold.ArnoldColorManager ) :
 
