@@ -814,7 +814,7 @@ Constraint::Constraint( const std::string &name )
 	addChild( new BoolPlug( "ignoreMissingTarget" ) );
 	addChild( new IntPlug( "targetMode", Plug::In, Constraint::Origin, Constraint::Origin, Constraint::Vertex ) );
 	addChild( new V2fPlug( "targetUV" ) );
-	addChild( new IntPlug( "targetVertex" ) );
+	addChild( new IntPlug( "targetVertex", Plug::In, 0, 0 ) );
 	addChild( new V3fPlug( "targetOffset" ) );
 
 	// Pass through things we don't want to modify
