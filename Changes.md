@@ -31,7 +31,7 @@ Fixes
   - Fixed `setCenterOfInterest()` so that it doesn't emit `cameraChangedSignal()` if the center of interest is unchanged.
   - Added GIL release in `setViewport()` Python bindings.
 - ArnoldRender : Fixed rendering of single-channel AOVs specified using Gaffer's generic `float|int|uint <name>` syntax. Outputs specified using Arnold's `<name> FLOAT|INT|UINT` syntax will now issue a warning, and should be updated to use the generic syntax.
-- Constraint : Restrict `targetVertex` to positive integers.
+- Constraint : Restricted `targetVertex` to positive integers.
 
 API
 ---
