@@ -39,6 +39,7 @@ import functools
 import six
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferUI
@@ -359,6 +360,58 @@ Gaffer.Metadata.registerNode(
 	}
 )
 
+##########################################################################
+# Internal utilities
+##########################################################################
+
+def _shaderQueryNode( plugValueWidget ) :
+
+	# The plug may not belong to a ShaderQuery node
+	# directly. Instead it may have been promoted
+	# elsewhere and be driving a target plug on a
+	# ShaderQuery node.
+
+	def walkOutputs( plug ) :
+
+		if isinstance( plug.node(), GafferScene.ShaderQuery ) :
+			return plug.node()
+
+		for output in plug.outputs() :
+			node = walkOutputs( output )
+			if node is not None :
+				return node
+
+	return walkOutputs( plugValueWidget.getPlug() )
+
+def _pathsFromLocation( plugValueWidget ) :
+
+	node = _shaderQueryNode( plugValueWidget )
+	if node is None :
+		return []
+
+	return [ node["location"].getValue() ]
+
+def _shaderAttributes( plugValueWidget, paths, affectedOnly ) :
+
+	result = {}
+	node = _shaderQueryNode( plugValueWidget )
+	if node is None :
+		return result
+
+	with plugValueWidget.getContext() :
+		useFullAttr = node["inherit"].getValue()
+		attributeNamePatterns = node["shader"].getValue() if affectedOnly else "*"
+		for path in paths :
+			attributes = node["scene"].fullAttributes( path ) if useFullAttr else node["scene"].attributes( path )
+			for name, attribute in attributes.items() :
+				if not IECore.StringAlgo.matchMultiple( name, attributeNamePatterns ) :
+					continue
+				if not isinstance( attribute, IECoreScene.ShaderNetwork ) or not len( attribute ) :
+					continue
+				result.setdefault( path, {} )[name] = attribute
+
+	return result
+
 
 ##########################################################################
 # _ShaderQueryFooter
@@ -397,6 +450,15 @@ class _ShaderQueryFooter( GafferUI.PlugValueWidget ) :
 
 		result = IECore.MenuDefinition()
 
+		result.append(
+			"/From Location",
+			{
+				"command" : Gaffer.WeakMethod( self.__browseLocationShaders )
+			}
+		)
+
+		result.append( "/FromPathsDivider", { "divider" : True } )
+
 		for item in [
 			Gaffer.BoolPlug,
 			Gaffer.FloatPlug,
@@ -423,6 +485,29 @@ class _ShaderQueryFooter( GafferUI.PlugValueWidget ) :
 				)
 
 		return result
+
+	def __browseLocationShaders( self ) :
+
+		paths = _pathsFromLocation( self )
+
+		shaderAttributes = _shaderAttributes( self, paths, affectedOnly = True )
+
+		shaderNetworks = set().union( *[ set( a.values() ) for a in shaderAttributes.values() ] )
+
+		browser = GafferSceneUI.ShaderUI._ShaderParameterDialogue( shaderNetworks, "Location Shaders" )
+
+		queries = browser.waitForParameters( parentWindow = self.ancestor( GafferUI.ScriptWindow ) )
+
+		if queries is not None :
+			for shaderName, parameter in queries :
+				for network in shaderNetworks :
+					if shaderName in network.shaders() and parameter in network.shaders()[shaderName].parameters :
+						self.__addQuery(
+							shaderName + "." + parameter,
+							network.shaders()[shaderName].parameters[parameter]
+						)
+
+						break
 
 	def __addQuery( self, name, plugTypeOrValue ) :
 
@@ -456,6 +541,53 @@ class _ShaderQueryFooter( GafferUI.PlugValueWidget ) :
 					"label",
 					Gaffer.Metadata.ValueChangedReason.StaticRegistration
 				)
+
+##########################################################################
+# PlugValueWidget context menu
+##########################################################################
+
+def __setShaderFromLocationMenuDefinition( menu ) :
+
+	plugValueWidget = menu.ancestor( GafferUI.PlugValueWidget )
+	paths = _pathsFromLocation( plugValueWidget )
+
+	shaderAttributes = _shaderAttributes( plugValueWidget, paths, affectedOnly = False )
+	names = set().union( *[ set( a.keys() ) for a in shaderAttributes.values() ] )
+
+	result = IECore.MenuDefinition()
+	for name in sorted( names ) :
+		result.append(
+			"/" + name,
+			{
+				"command" : functools.partial( __setShader, plugValueWidget.getPlug(), name ),
+				"active" : not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( plugValueWidget.getPlug() ),
+			}
+		)
+
+	return result
+
+def __setShader( plug, value ) :
+
+	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
+		plug.setValue( value )
+
+def __plugPopupMenu( menuDefinition, plugValueWidget ) :
+
+	plug = plugValueWidget.getPlug()
+	if plug is None :
+		return
+
+	node = plug.node()
+	if not isinstance( node, GafferScene.ShaderQuery ) :
+		return
+
+	if plug != node["shader"] :
+		return
+
+	menuDefinition.prepend( "/ShaderQueryDivider/", { "divider" : True } )
+	menuDefinition.prepend( "/From Location/", { "subMenu" : __setShaderFromLocationMenuDefinition } )
+
+GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu, scoped = False )
 
 
 ##########################################################################
