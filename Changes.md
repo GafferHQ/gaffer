@@ -140,6 +140,7 @@ Fixes
 
 - InteractiveArnoldRender : Fixed crash triggered by changing the filter on an ArnoldMeshLight.
 - NodeEditor : Stopped applying "green dot" non-default plug annotations to output plugs.
+- Dot : Fixed a case where adding a Dot node between a `BoxIn` node and a downstream node would reverse the input and output nodules' sides on the Dot.
 
 API
 ---

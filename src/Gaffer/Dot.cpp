@@ -67,7 +67,8 @@ void Dot::setup( const Plug *plug )
 {
 	const Plug *originalPlug = plug;
 
-	if( const Plug *inputPlug = plug->getInput() )
+	const Plug *inputPlug = plug->getInput();
+	if( plug->direction() == Gaffer::Plug::In && inputPlug != nullptr )
 	{
 		// We'd prefer to set up based on an input plug if possible - see comments
 		// in DotNodeGadgetTest.testCustomNoduleTangentsPreferInputIfAvailable().
