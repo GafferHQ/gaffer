@@ -176,6 +176,12 @@ options.Add(
 )
 
 options.Add(
+	"CYCLES_ROOT",
+	"The directory in which Cycles is installed. Used to build GafferCycles",
+	os.path.join( "$BUILD_DIR", "cycles" ),
+)
+
+options.Add(
 	"OSLHOME",
 	"The directory in which OpenShadingLanguage is installed.",
 	"$BUILD_DIR",
@@ -1182,6 +1188,41 @@ libraries = {
 
 	"GafferAppleseedUITest" : {},
 
+	"GafferCycles" : {
+		"envAppends" : {
+			"LIBPATH" : [ "$CYCLES_ROOT/lib" ],
+			"LIBS" : [
+				"IECoreScene$CORTEX_LIB_SUFFIX", "IECoreImage$CORTEX_LIB_SUFFIX", "IECoreVDB$CORTEX_LIB_SUFFIX",
+				"Gaffer", "GafferScene", "GafferDispatch", "GafferOSL",
+				"cycles_session", "cycles_scene", "cycles_graph", "cycles_bvh", "cycles_device", "cycles_kernel", "cycles_kernel_osl",
+				"cycles_integrator", "cycles_util", "cycles_subd", "extern_sky",
+				"OpenImageIO$OIIO_LIB_SUFFIX", "OpenImageIO_Util$OIIO_LIB_SUFFIX", "oslexec$OSL_LIB_SUFFIX", "openvdb$VDB_LIB_SUFFIX",
+				"Alembic", "osdCPU", "OpenColorIO$OCIO_LIB_SUFFIX", "embree3",
+			],
+			"CXXFLAGS" : [ systemIncludeArgument, "$CYCLES_ROOT/include" ],
+			"CPPDEFINES" : [
+				( "CCL_NAMESPACE_BEGIN", "namespace ccl {" ),
+				( "CCL_NAMESPACE_END", "}" ),
+				( "WITH_OSL", "1" ),
+			],
+		},
+		"pythonEnvAppends" : {
+			"LIBPATH" : [ "$CYCLES_ROOT/lib" ],
+			"LIBS" : [
+				"Gaffer", "GafferScene", "GafferDispatch", "GafferBindings", "GafferCycles",
+				"OpenImageIO_Util$OIIO_LIB_SUFFIX",
+			],
+			"CXXFLAGS" : [ systemIncludeArgument, "$CYCLES_ROOT/include" ],
+			"CPPDEFINES" : [
+				( "CCL_NAMESPACE_BEGIN", "namespace ccl {" ),
+				( "CCL_NAMESPACE_END", "}" ),
+			],
+		},
+		"requiredOptions" : [ "CYCLES_ROOT" ],
+	},
+
+	"GafferCyclesUI" : { "requiredOptions" : [ "CYCLES_ROOT" ], },
+
 	"GafferTractor" : {},
 
 	"GafferTractorTest" : {},
@@ -1385,7 +1426,7 @@ for libraryName, libraryDef in libraries.items() :
 
 	# library
 
-	librarySource = sorted( glob.glob( "src/" + libraryName + "/*.cpp" ) + glob.glob( "src/" + libraryName + "/*/*.cpp" ) )
+	librarySource = sorted( glob.glob( "src/" + libraryName + "/*.cpp" ) + glob.glob( "src/" + libraryName + "/*/*.cpp" ) + glob.glob( "src/" + libraryName + "/*/*/*.cpp" ) )
 	if librarySource :
 
 		libraryInstallName = libraryDef.get( "installName", "lib/" + libraryName )
