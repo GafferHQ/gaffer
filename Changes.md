@@ -21,6 +21,7 @@ Fixes
 
 - AnimationEditor : Fixed glitches in the drawing of tangent handles during drags.
 - ArnoldMeshLight : Fixed bug which caused `ai:autobump_visibility` attributes to be inadvertently modified.
+- ArnoldShader/ArnoldLight : Fixed potential buffer overrun when loading color parameters with `gaffer.plugType` metadata.
 - Plug :
   - The `removeOutputs()` method now also removes any outputs from child plugs. This is consistent with the `setInput()` method, which has always managed child plug inputs.
   - Fixed bug which meant that child output connections were not removed when a plug was removed from a node.
