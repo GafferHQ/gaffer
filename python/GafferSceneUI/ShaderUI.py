@@ -656,7 +656,7 @@ class _ShaderParameterDialogue( GafferUI.Dialogue ) :
 		self._setWidget( self.__pathListingWidget )
 
 		self.__pathListingWidget.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__updateButtonState ), scoped = False )
-		self.__pathListingWidget.buttonReleaseSignal().connect( 0, Gaffer.WeakMethod( self.__buttonRelease ), scoped = False )
+		self.__pathListingWidget.buttonReleaseSignal().connectFront( Gaffer.WeakMethod( self.__buttonRelease ), scoped = False )
 		self.__pathListingWidget.pathSelectedSignal().connect( Gaffer.WeakMethod( self.__pathSelected ), scoped = False )
 
 		self._addButton( "Cancel" )
