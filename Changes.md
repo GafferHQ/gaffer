@@ -135,6 +135,7 @@ Improvements
 - USD :
   - Added support for reading `.usdz` files.
   - Added support for `doubleSided` attribute.
+- ShaderTweaks : Added dialogue for choosing parameters to tweak instead of popup menus.
 
 Fixes
 -----
@@ -150,6 +151,7 @@ API
   - Deprecated `extractDataFromPlug`. Use the equivalent `getValueAsData` instead.
   - Added `setValueFromData` to set the value of an existing plug.
   - Added `canSetValueFromData` to return whether or not a plug's value can be set from Data.
+- PathColumn : Add color swatch to cells containing `Color3fData` or `Color4fData`.
 
 Build
 ------
