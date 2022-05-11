@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2022, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,75 +35,16 @@
 ##########################################################################
 
 import Gaffer
-import GafferScene
 
-Gaffer.Metadata.registerNode(
+def __getItemWrapper( originalGetItem ):
 
-	GafferScene.CollectPrimitiveVariables,
+	def getItem( self, key ):
 
-	"description",
-	"""
-	Make copies of target primitive variables with different suffixes,
-	where the new suffixed copies come from different Contexts.
+		if key == "activeRowNames":
+			key = "enabledRowNames"
 
-	By combining this with a TimeWarp, you can create copies of
-	primitive variables at different times, useful for creating trail
-	effects.
-	""",
+		return originalGetItem( self, key )
 
-	"ui:spreadsheet:enabledRowNamesConnection", "suffixes",
-	"ui:spreadsheet:selectorContextVariablePlug", "suffixContextVariable",
+	return getItem
 
-	plugs = {
-		"primitiveVariables" : [
-
-			"description",
-			"""
-			A match pattern for which primitive variables will be copied.
-			"""
-
-		],
-
-		"suffixes" : [
-
-			"description",
-			"""
-			The names of the new suffixes to add to copies of the target
-			primitive variables.  The new suffixed variables will be
-			copied from different Contexts.
-			""",
-
-		],
-
-		"suffixContextVariable" : [
-
-			"description",
-			"""
-			The name of a Context Variable that is set to the current
-			suffix when evaluating the input object. This can be used
-			in upstream expressions and string substitutions to vary
-			the object while creating the primvar copies.
-
-			For example, you could drive a TimeWarp with this
-			variable in order create copies of a primitive variable at
-			different times.
-			""",
-
-		],
-
-		"requireVariation" : [
-
-			"description",
-			"""
-			If true, newly copied primitive variables will only be created
-			if the source object is differs in some of the suffix Contexts.
-			If the source object never changes, it will be passed through
-			unchanged ( since there is no variation, you can just use the
-			original primitive variables ).
-			"""
-
-		],
-
-	}
-
-)
+Gaffer.Spreadsheet.__getitem__ = __getItemWrapper( Gaffer.Spreadsheet.__getitem__ )

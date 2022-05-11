@@ -58,7 +58,7 @@ Gaffer.Metadata.registerNode(
 	paths.
 	""",
 
-	"ui:spreadsheet:activeRowNamesConnection", "paths",
+	"ui:spreadsheet:enabledRowNamesConnection", "paths",
 	"ui:spreadsheet:selectorValue", "${scene:path}",
 
 	plugs = {

@@ -852,7 +852,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 
 		script["collect"] = GafferScene.CollectScenes()
 		script["collect"]["in"].setInput( script["sphere"]["out"] )
-		script["collect"]["rootNames"].setInput( script["spreadsheet"]["activeRowNames"] )
+		script["collect"]["rootNames"].setInput( script["spreadsheet"]["enabledRowNames"] )
 
 		self.assertEqual( script["collect"]["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "sphere1", "sphere2" ] ) )
 

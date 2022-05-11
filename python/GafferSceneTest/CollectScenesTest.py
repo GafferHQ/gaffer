@@ -162,7 +162,7 @@ class CollectScenesTest( GafferSceneTest.SceneTestCase ) :
 
 		script["collect"] = GafferScene.CollectScenes()
 		script["collect"]["in"].setInput( script["options"]["out"] )
-		script["collect"]["rootNames"].setInput( script["spreadsheet"]["activeRowNames"] )
+		script["collect"]["rootNames"].setInput( script["spreadsheet"]["enabledRowNames"] )
 
 		# Merging off
 

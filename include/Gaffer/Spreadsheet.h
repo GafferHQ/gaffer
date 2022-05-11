@@ -214,11 +214,14 @@ class GAFFER_API Spreadsheet : public ComputeNode
 		ValuePlug *outPlug();
 		const ValuePlug *outPlug() const;
 
-		StringVectorDataPlug *activeRowNamesPlug();
-		const StringVectorDataPlug *activeRowNamesPlug() const;
+		StringVectorDataPlug *enabledRowNamesPlug();
+		const StringVectorDataPlug *enabledRowNamesPlug() const;
 
 		CompoundObjectPlug *resolvedRowsPlug();
 		const CompoundObjectPlug *resolvedRowsPlug() const;
+
+		IntPlug *activeRowIndexPlug();
+		const IntPlug *activeRowIndexPlug() const;
 
 		/// Returns the input plug which provides the value
 		/// for `output` in the current context.
@@ -243,9 +246,6 @@ class GAFFER_API Spreadsheet : public ComputeNode
 
 		ObjectPlug *rowsMapPlug();
 		const ObjectPlug *rowsMapPlug() const;
-
-		IntPlug *rowIndexPlug();
-		const IntPlug *rowIndexPlug() const;
 
 		const ValuePlug *correspondingInput( const Plug *output, size_t rowIndex ) const;
 

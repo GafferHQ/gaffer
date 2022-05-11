@@ -12,6 +12,7 @@ Improvements
 ------------
 
 - USD : Added basic support for loading UsdLux lights. The data is available in Gaffer, but needs manual conversion to meet the requirements of a specific renderer.
+- Spreadsheet : Added `activeRowIndex` plug, which outputs the index of the currently active row.
 - InteractiveArnoldRender : Added support for an `updateInteractively` bool parameter for render outputs. This can be used to request more frequent updates for AOVs other than the beauty image.
 - ChannelPlugValueWidget : Improved the ordering of channel names presented in the menu.
 - PresetsPlugValueWidget : The children of compound plugs are now shown when in "Custom" mode.
@@ -45,6 +46,9 @@ Breaking Changes
 - SubTree : Removed the `/` root location from generated sets, because root membership is unsupported elsewhere in Gaffer.
 - OSLShader : Removed `prepareSplineCVsForOSL()` method. Use `IECoreScene::ShaderNetworkAlgo::expandSplineParameters()` instead.
 - ArnoldMeshLight : The `ai:autobump_visibility` attributes are no longer modified. Use a separate ArnoldAttributes node if necessary.
+- Spreadsheet :
+  - Renamed `activeRowNames` plug to `enabledRowNames`. Backwards compatibility is provided when loading old `.gfr` files.
+  - Renamed `ui:spreadsheet:activeRowNamesConnection` metadata to `ui:spreadsheet:enabledRowNamesConnection`.
 
 0.62.0.0a1
 ==========
