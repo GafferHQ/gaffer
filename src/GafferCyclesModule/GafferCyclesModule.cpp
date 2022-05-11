@@ -104,7 +104,7 @@ static py::dict getSockets( const ccl::NodeType *nodeType, const bool output )
 
 	if( !output )
 	{
-		for( const ccl::SocketType socketType : nodeType->inputs )
+		for( const ccl::SocketType &socketType : nodeType->inputs )
 		{
 			py::dict d;
 			std::string name( socketType.name.c_str() );
@@ -143,7 +143,7 @@ static py::dict getSockets( const ccl::NodeType *nodeType, const bool output )
 	}
 	else
 	{
-		for( const ccl::SocketType socketType : nodeType->outputs )
+		for( const ccl::SocketType &socketType : nodeType->outputs )
 		{
 			py::dict d;
 			d["ui_name"] = socketType.ui_name.c_str();
