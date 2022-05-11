@@ -3056,7 +3056,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 							if( _split[1] == "*" )
 							{
-								for( const auto device : m_deviceMap )
+								for( const auto &device : m_deviceMap )
 								{
 									if( deviceType == device.second.type )
 									{
@@ -4017,15 +4017,15 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			init();
 
 			// Re-apply the settings for these.
-			for( const ccl::SocketType socketType : m_scene->integrator->type->inputs )
+			for( const ccl::SocketType &socketType : m_scene->integrator->type->inputs )
 			{
 				m_scene->integrator->copy_value(socketType, m_integrator, *m_integrator.type->find_input( socketType.name ) );
 			}
-			for( const ccl::SocketType socketType : m_scene->background->type->inputs )
+			for( const ccl::SocketType &socketType : m_scene->background->type->inputs )
 			{
 				m_scene->background->copy_value(socketType, m_background, *m_background.type->find_input( socketType.name ) );
 			}
-			for( const ccl::SocketType socketType : m_scene->film->type->inputs )
+			for( const ccl::SocketType &socketType : m_scene->film->type->inputs )
 			{
 				m_scene->film->copy_value(socketType, m_film, *m_film.type->find_input( socketType.name ) );
 			}
