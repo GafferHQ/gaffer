@@ -122,30 +122,23 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 	}
 	ccl::TypeDesc ctype = typeDesc( dataType );
 	ccl::Attribute *attr = nullptr;
-	bool exists = false;
 	if( name == "N" )
 	{
 		attr = attributes.find( ccl::ATTR_STD_VERTEX_NORMAL );
 		if(!attr)
 			attr = attributes.add( ccl::ATTR_STD_VERTEX_NORMAL, ccl::ustring(name.c_str()) );
-		else
-			exists = true;
 	}
 	else if( name == "uv" )
 	{
 		attr = attributes.find( ccl::ATTR_STD_UV );
 		if(!attr)
 			attr = attributes.add( ccl::ATTR_STD_UV, ccl::ustring(name.c_str()) );
-		else
-			exists = true;
 	}
 	else if( name == "uTangent" )
 	{
 		attr = attributes.find( ccl::ATTR_STD_UV_TANGENT );
 		if(!attr)
 			attr = attributes.add( ccl::ATTR_STD_UV_TANGENT, ccl::ustring(name.c_str()) );
-		else
-			exists = true;
 	}
 	else
 	{
@@ -185,8 +178,6 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 		attr = attributes.find( ccl::ustring(name.c_str()) );
 		if( !attr )
 			attr = attributes.add( ccl::ustring(name.c_str()), ctype, celem );
-		else
-			exists = true;
 	}
 
 	if( primitiveVariable.interpolation != PrimitiveVariable::Constant && ctype == ccl::TypeDesc::TypeFloat )

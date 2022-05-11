@@ -548,7 +548,6 @@ class ShaderCache : public IECore::RefCounted
 			InternedString displacementMethod( "bump" );
 			vector<IECore::MurmurHash> hSubstAovs;
 			vector<const IECoreScene::ShaderNetwork*> aovShaders;
-			bool prototype = false;
 
 			// Surface hash
 			if( surfaceShader )
@@ -670,7 +669,7 @@ class ShaderCache : public IECore::RefCounted
 					}
 					// Get all the possible AOV shaders
 					vector<IECoreScene::ShaderNetworkPtr> substitutedAOVShaders;
-					for( int i = 0; i < hSubstAovs.size(); ++i )
+					for( size_t i = 0; i < hSubstAovs.size(); ++i )
 					{
 						if( hSubstAovs[i] != IECore::MurmurHash() )
 						{
@@ -948,22 +947,22 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 	public :
 
 		CyclesAttributes( const IECore::CompoundObject *attributes, ShaderCache *shaderCache )
-			:	m_shaderHash( IECore::MurmurHash() ), 
-				m_visibility( ~0 ), 
-				m_useHoldout( false ), 
-				m_isShadowCatcher( false ), 
+			:	m_shaderHash( IECore::MurmurHash() ),
+				m_visibility( ~0 ),
+				m_useHoldout( false ),
+				m_isShadowCatcher( false ),
 				m_shadowTerminatorShadingOffset( 0.0f ),
 				m_shadowTerminatorGeometryOffset( 0.0f ),
-				m_maxLevel( 1 ), 
-				m_dicingRate( 1.0f ), 
-				m_color( Color3f( 0.0f ) ), 
+				m_maxLevel( 1 ),
+				m_dicingRate( 1.0f ),
+				m_color( Color3f( 0.0f ) ),
 				m_dupliGenerated( V3f( 0.0f ) ),
 				m_dupliUV( V2f( 0.0f) ),
-				m_particle( attributes ), 
+				m_particle( attributes ),
 				m_volume( attributes ),
 				m_shaderAttributes( attributes ),
-				m_lightGroup( "" ),
 				m_assetName( "" ),
+				m_lightGroup( "" ),
 				m_shaderCache( shaderCache )
 		{
 			updateVisibility( g_cameraVisibilityAttributeName,       (int)ccl::PATH_RAY_CAMERA,         attributes );
@@ -1057,7 +1056,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				{
 					if( mesh->geometry_type == ccl::Geometry::MESH )
 					{
-						if( ccl::SubdParams *params = mesh->get_subd_params() )
+						if( mesh->get_subd_params() )
 						{
 							if( ( previousAttributes->m_maxLevel != m_maxLevel ) || ( previousAttributes->m_dicingRate != m_dicingRate ) )
 							{
@@ -1087,7 +1086,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 				if( mesh )
 				{
-					if( ccl::SubdParams *params = mesh->get_subd_params() )
+					if( mesh->get_subd_params() )
 					{
 						mesh->set_subd_dicing_rate( m_dicingRate );
 						mesh->set_subd_max_level( m_maxLevel );
@@ -1095,7 +1094,6 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 					if( m_shader )
 					{
-						ccl::AttributeSet &attributes = ( mesh->get_num_subd_faces() ) ? mesh->subd_attributes : mesh->attributes;
 						ccl::Shader *shader = m_shader->shader();
 						if( shader->attributes.find( ccl::ATTR_STD_UV_TANGENT ) )
 						{
@@ -2338,7 +2336,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 			{
 				if( mesh->geometry_type == ccl::Geometry::MESH )
 				{
-					if( ccl::SubdParams *params = mesh->get_subd_params() )
+					if( mesh->get_subd_params() )
 						mesh->set_subd_objecttoworld( object->get_tfm() );
 				}
 			}
@@ -2347,7 +2345,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 			if( object->get_geometry()->get_use_motion_blur() )
 			{
 				motion.resize( object->get_geometry()->get_motion_steps(), ccl::transform_empty() );
-				for( int i = 0; i < motion.size(); ++i )
+				for( size_t i = 0; i < motion.size(); ++i )
 				{
 					motion[i] = object->get_tfm();
 				}
@@ -2371,7 +2369,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 				IECore::msg( IECore::Msg::Error, "IECoreCycles::Renderer", boost::format( "Transform step size on \"%s\" must match deformation step size." ) % object->name.c_str() );
 				object->set_tfm( SocketAlgo::setTransform( samples.front() ) );
 				motion.resize( geo->get_motion_steps(), ccl::transform_empty() );
-				for( int i = 0; i < motion.size(); ++i )
+				for( size_t i = 0; i < motion.size(); ++i )
 				{
 					motion[i] = object->get_tfm();
 					object->set_motion( motion );
@@ -2390,7 +2388,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 			}
 
 			int frameIdx = -1;
-			for( int i = 0; i < numSamples; ++i )
+			for( size_t i = 0; i < numSamples; ++i )
 			{
 				if( times[i] == m_frame )
 				{
@@ -2402,7 +2400,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 			{
 				motion.resize( numSamples, ccl::transform_empty() );
 
-				for( int i = 0; i < numSamples; ++i )
+				for( int i = 0; i < (int)numSamples; ++i )
 				{
 					if( i == frameIdx )
 					{
@@ -2454,7 +2452,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 					object->set_tfm( SocketAlgo::setTransform( samples[numSamples-1] ) );
 				}
 
-				for( int i = 0; i < numSamples; ++i )
+				for( size_t i = 0; i < numSamples; ++i )
 				{
 					motion[i] = SocketAlgo::setTransform( samples[i] );
 				}
@@ -2470,7 +2468,7 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 			{
 				if( mesh->geometry_type == ccl::Geometry::MESH )
 				{
-					if( ccl::SubdParams *params = mesh->get_subd_params() )
+					if( mesh->get_subd_params() )
 						mesh->set_subd_objecttoworld( object->get_tfm() );
 				}
 			}
@@ -2848,9 +2846,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		};
 
 		CyclesRenderer( RenderType renderType, const std::string &fileName, const IECore::MessageHandlerPtr &messageHandler )
-			:	m_renderType( renderType ),
-				m_frame( 1 ),
-				m_messageHandler( messageHandler ),
+			:	m_session( nullptr ),
+				m_scene( nullptr ),
 				m_sessionParams( ccl::SessionParams() ),
 				m_sceneParams( ccl::SceneParams() ),
 				m_bufferParams( ccl::BufferParams() ),
@@ -2858,8 +2855,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_textureCacheParams( ccl::TextureCacheParams() ),
 #endif
 				m_deviceName( g_defaultDeviceName ),
-				m_session( nullptr ),
-				m_scene( nullptr ),
+				m_renderType( renderType ),
+				m_frame( 1 ),
 				m_renderState( RENDERSTATE_READY ),
 				m_sceneChanged( true ),
 				m_sessionReset( false ),
@@ -2868,7 +2865,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_cryptomatteAccurate( true ),
 				m_cryptomatteDepth( 0 ),
 				m_seed( 0 ),
-				m_useFrameAsSeed( true )
+				m_useFrameAsSeed( true ),
+				m_messageHandler( messageHandler )
 		{
 			// Define internal device names
 			getCyclesDevices();
@@ -3834,8 +3832,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			ccl::set<ccl::Pass *> clearPasses( m_scene->passes.begin(), m_scene->passes.end() );
 			m_scene->delete_nodes( clearPasses );
 
-			const ccl::NodeEnum &typeEnum = *ccl::Pass::get_type_enum();
-
 			CompoundDataPtr paramData = new CompoundData();
 
 			paramData->writable()["default"] = new StringData( "rgba" );
@@ -4117,17 +4113,12 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 
 			string status, subStatus, memStatus;
-			float progress;
-			double totalTime, remainingTime = 0, renderTime;
+			double totalTime, renderTime;
 			float memUsed = (float)m_session->stats.mem_used / 1024.0f / 1024.0f / 1024.0f;
 			float memPeak = (float)m_session->stats.mem_peak / 1024.0f / 1024.0f / 1024.0f;
 
 			m_session->progress.get_status( status, subStatus );
 			m_session->progress.get_time( totalTime, renderTime );
-			progress = m_session->progress.get_progress();
-
-			if( progress > 0 )
-				remainingTime = (1.0 - (double)progress) * (renderTime / (double)progress);
 
 			if( subStatus != "" )
 				status += ": " + subStatus;

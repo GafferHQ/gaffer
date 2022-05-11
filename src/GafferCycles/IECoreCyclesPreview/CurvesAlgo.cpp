@@ -64,9 +64,8 @@ ccl::Hair *convertCommon( const IECoreScene::CurvesPrimitive *curve )
 	size_t numCurves = curve->numCurves();
 	size_t numKeys = 0;
 
-	const IntVectorData *v = curve->verticesPerCurve();
 	const vector<int> &verticesPerCurve = curve->verticesPerCurve()->readable();
-	for( int i = 0; i < verticesPerCurve.size(); ++i )
+	for( size_t i = 0; i < verticesPerCurve.size(); ++i )
 		numKeys += verticesPerCurve[i];
 
 	hair->reserve_curves( numCurves, numKeys );
@@ -82,7 +81,7 @@ ccl::Hair *convertCommon( const IECoreScene::CurvesPrimitive *curve )
 		for( size_t i = 0; i < numCurves; ++i )
 		{
 			size_t firstKey = key;
-			for( size_t j = 0; j < verticesPerCurve[i]; ++j, ++key )
+			for( int j = 0; j < verticesPerCurve[i]; ++j, ++key )
 				hair->add_curve_key( ccl::make_float3( points[key].x, points[key].y, points[key].z ), width[key] / 2.0f );
 
 			hair->add_curve( firstKey, 0 );
@@ -101,7 +100,7 @@ ccl::Hair *convertCommon( const IECoreScene::CurvesPrimitive *curve )
 		for( size_t i = 0; i < numCurves; ++i )
 		{
 			size_t firstKey = key;
-			for( size_t j = 0; j < verticesPerCurve[i]; ++j, ++key )
+			for( int j = 0; j < verticesPerCurve[i]; ++j, ++key )
 				hair->add_curve_key( ccl::make_float3( points[key].x, points[key].y, points[key].z ), constantWidth / 2.0f );
 
 			hair->add_curve( firstKey, 0 );
