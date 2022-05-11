@@ -381,7 +381,7 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 					{
 						if( boost::filesystem::is_regular_file( it->status() ) || boost::filesystem::is_symlink( it->status() ) )
 						{
-							string foundFile = boost::filesystem::basename( it->path().filename() );
+							string foundFile = it->path().stem().string();
 							if( baseFileName == ( foundFile.substr( 0, offset ) ) )
 							{
 								files.push_back( foundFile );
