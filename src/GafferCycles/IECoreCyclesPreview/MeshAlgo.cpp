@@ -123,7 +123,7 @@ struct MikkUserData {
 	float *tangent_sign;
 };
 
-static int mikk_get_num_faces( const SMikkTSpaceContext *context )
+int mikk_get_num_faces( const SMikkTSpaceContext *context )
 {
 	const MikkUserData *userdata = (const MikkUserData *)context->m_pUserData;
 	if( userdata->mesh->get_num_subd_faces() )
@@ -136,7 +136,7 @@ static int mikk_get_num_faces( const SMikkTSpaceContext *context )
 	}
 }
 
-static int mikk_get_num_verts_of_face( const SMikkTSpaceContext *context, const int face_num )
+int mikk_get_num_verts_of_face( const SMikkTSpaceContext *context, const int face_num )
 {
 	const MikkUserData *userdata = (const MikkUserData *)context->m_pUserData;
 	if( userdata->mesh->get_num_subd_faces() )
@@ -150,7 +150,7 @@ static int mikk_get_num_verts_of_face( const SMikkTSpaceContext *context, const 
 	}
 }
 
-static int mikk_vertex_index( const ccl::Mesh *mesh, const int face_num, const int vert_num )
+int mikk_vertex_index( const ccl::Mesh *mesh, const int face_num, const int vert_num )
 {
 	if( mesh->get_num_subd_faces() )
 	{
@@ -163,7 +163,7 @@ static int mikk_vertex_index( const ccl::Mesh *mesh, const int face_num, const i
 	}
 }
 
-static int mikk_corner_index( const ccl::Mesh *mesh, const int face_num, const int vert_num )
+int mikk_corner_index( const ccl::Mesh *mesh, const int face_num, const int vert_num )
 {
 	if( mesh->get_num_subd_faces() )
 	{
@@ -176,7 +176,7 @@ static int mikk_corner_index( const ccl::Mesh *mesh, const int face_num, const i
 	}
 }
 
-static void mikk_get_position( const SMikkTSpaceContext *context,
+void mikk_get_position( const SMikkTSpaceContext *context,
 							   float P[3],
 							   const int face_num,
 							   const int vert_num )
@@ -190,7 +190,7 @@ static void mikk_get_position( const SMikkTSpaceContext *context,
 	P[2] = vP.z;
 }
 
-static void mikk_get_texture_coordinate( const SMikkTSpaceContext *context,
+void mikk_get_texture_coordinate( const SMikkTSpaceContext *context,
 										 float uv[2],
 										 const int face_num,
 										 const int vert_num )
@@ -222,7 +222,7 @@ static void mikk_get_texture_coordinate( const SMikkTSpaceContext *context,
 	}
 }
 
-static void mikk_get_normal( const SMikkTSpaceContext *context,
+void mikk_get_normal( const SMikkTSpaceContext *context,
 							 float N[3],
 							 const int face_num,
 							 const int vert_num)
@@ -269,7 +269,7 @@ static void mikk_get_normal( const SMikkTSpaceContext *context,
 	N[2] = vN.z;
 }
 
-static void mikk_set_tangent_space(const SMikkTSpaceContext *context,
+void mikk_set_tangent_space(const SMikkTSpaceContext *context,
 								   const float T[],
 								   const float sign,
 								   const int face_num,
@@ -285,7 +285,7 @@ static void mikk_set_tangent_space(const SMikkTSpaceContext *context,
 	}
 }
 
-static void mikk_compute_tangents( const char *layer_name, ccl::Mesh *mesh, bool need_sign, bool active_render )
+void mikk_compute_tangents( const char *layer_name, ccl::Mesh *mesh, bool need_sign, bool active_render )
 {
 	/* Create tangent attributes. */
 	ccl::AttributeSet &attributes = ( mesh->get_num_subd_faces() ) ? mesh->subd_attributes : mesh->attributes;

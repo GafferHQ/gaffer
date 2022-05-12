@@ -66,7 +66,7 @@ using namespace GafferCycles;
 namespace
 {
 
-static py::list getDevices()
+py::list getDevices()
 {
 	py::scope().attr( "hasOptixDenoise" ) = false;
 
@@ -98,7 +98,7 @@ static py::list getDevices()
 	return result;
 }
 
-static py::dict getSockets( const ccl::NodeType *nodeType, const bool output )
+py::dict getSockets( const ccl::NodeType *nodeType, const bool output )
 {
 	py::dict result;
 
@@ -157,7 +157,7 @@ static py::dict getSockets( const ccl::NodeType *nodeType, const bool output )
 	return result;
 }
 
-static py::dict getNodes()
+py::dict getNodes()
 {
 	py::dict result;
 
@@ -183,7 +183,7 @@ static py::dict getNodes()
 	return result;
 }
 
-static py::dict getShaders()
+py::dict getShaders()
 {
 	py::dict result;
 
@@ -343,7 +343,7 @@ static py::dict getShaders()
 	return result;
 }
 
-static py::dict getLights()
+py::dict getLights()
 {
 	py::dict result;
 
@@ -422,7 +422,7 @@ static py::dict getLights()
 	return result;
 }
 
-static py::dict getPasses()
+py::dict getPasses()
 {
 	py::dict result;
 

@@ -47,9 +47,9 @@ namespace
 {
 
 // Version
-static std::string cyclesVersion = CYCLES_VERSION_STRING;
+std::string cyclesVersion = CYCLES_VERSION_STRING;
 // Store devices once
-static std::vector<ccl::DeviceInfo> cyclesDevices;
+std::vector<ccl::DeviceInfo> cyclesDevices;
 
 }
 
