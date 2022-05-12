@@ -1,4 +1,4 @@
-0.61.x.x (relative to 0.61.8.0)
+0.61.9.0 (relative to 0.61.8.0)
 ========
 
 Features
