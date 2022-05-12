@@ -378,7 +378,7 @@ class PathModel : public QAbstractItemModel
 			parent->setModel( this );
 		}
 
-		~PathModel()
+		~PathModel() override
 		{
 			// Cancel update task before the things it relies on are destroyed.
 			// No need to flush pending edits, because Qt won't deliver the events

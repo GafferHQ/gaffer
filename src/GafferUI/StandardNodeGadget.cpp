@@ -130,7 +130,7 @@ class FocusGadget : public Gadget
 			parent->addChild( this );
 		}
 
-		~FocusGadget()
+		~FocusGadget() override
 		{
 			// Make sure we don't leave around a dangling raw pointer after we destruct
 			if( g_pendingHoveredFocus == this )

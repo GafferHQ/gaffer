@@ -293,7 +293,7 @@ namespace GafferUI
 struct AnimationGadget::SelectionSet : public Gaffer::Set
 {
 	SelectionSet();
-	~SelectionSet();
+	~SelectionSet() override;
 
 	bool contains( const Gaffer::Set::Member *member ) const override;
 	Gaffer::Set::Member *member( size_t index ) override;
