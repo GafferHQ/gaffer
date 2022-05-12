@@ -65,7 +65,7 @@ class GafferVolumeLoader : public ccl::VDBImageLoader
 		{
 		}
 
-		~GafferVolumeLoader()
+		~GafferVolumeLoader() override
 		{
 		}
 

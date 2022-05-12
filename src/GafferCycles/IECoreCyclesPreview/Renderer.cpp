@@ -518,7 +518,7 @@ class ShaderCache : public IECore::RefCounted
 			m_defaultSurface = new CyclesShader( m_scene );
 		}
 
-		~ShaderCache()
+		~ShaderCache() override
 		{
 		}
 
