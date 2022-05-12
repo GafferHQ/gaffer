@@ -121,7 +121,7 @@ Build
   - OpenColorIO : Updated to version 2.1.1.
   - Cortex : Updated to version 10.4.0.0.
 
-0.61.x.x (relative to 0.61.8.0)
+0.61.9.0 (relative to 0.61.8.0)
 ========
 
 Features
@@ -140,6 +140,7 @@ Improvements
 Fixes
 -----
 
+- USD : Fixed reading and writing of Color4f shader parameters.
 - InteractiveArnoldRender : Fixed crash triggered by changing the filter on an ArnoldMeshLight.
 - NodeEditor : Stopped applying "green dot" non-default plug annotations to output plugs.
 - Dot : Fixed a case where adding a Dot node between a `BoxIn` node and a downstream node would reverse the input and output nodules' sides on the Dot.
@@ -156,7 +157,7 @@ API
 Build
 ------
 
-- Cortex : Updated to version 10.3.6.0.
+- Cortex : Updated to version 10.3.6.1.
 
 0.61.8.0 (relative to 0.61.7.0)
 ========
