@@ -128,22 +128,22 @@ namespace
 {
 
 //typedef std::unique_ptr<ccl::Camera> CCameraPtr;
-typedef std::unique_ptr<ccl::Integrator> CIntegratorPtr;
-typedef std::unique_ptr<ccl::Background> CBackgroundPtr;
-typedef std::unique_ptr<ccl::Film> CFilmPtr;
-typedef std::unique_ptr<ccl::Light> CLightPtr;
-typedef std::shared_ptr<ccl::Camera> SharedCCameraPtr;
-typedef std::shared_ptr<ccl::Object> SharedCObjectPtr;
-typedef std::shared_ptr<ccl::Light> SharedCLightPtr;
-typedef std::shared_ptr<ccl::Geometry> SharedCGeometryPtr;
-typedef std::shared_ptr<ccl::ParticleSystem> SharedCParticleSystemPtr;
+using CIntegratorPtr = std::unique_ptr<ccl::Integrator>;
+using CBackgroundPtr = std::unique_ptr<ccl::Background>;
+using CFilmPtr = std::unique_ptr<ccl::Film>;
+using CLightPtr = std::unique_ptr<ccl::Light>;
+using SharedCCameraPtr = std::shared_ptr<ccl::Camera>;
+using SharedCObjectPtr = std::shared_ptr<ccl::Object>;
+using SharedCLightPtr = std::shared_ptr<ccl::Light>;
+using SharedCGeometryPtr = std::shared_ptr<ccl::Geometry>;
+using SharedCParticleSystemPtr = std::shared_ptr<ccl::ParticleSystem>;
 // Need to defer shader assignments to the scene lock
 typedef std::pair<ccl::Node*, ccl::array<ccl::Node*>> ShaderAssignPair;
 // Defer adding the created nodes to the scene lock
-typedef tbb::concurrent_vector<ccl::Node *> NodesCreated;
+using NodesCreated = tbb::concurrent_vector<ccl::Node *>;
 
 // The shared pointer never deletes, we leave that up to Cycles to do the final delete
-typedef bool (*NodeDeleter)(ccl::Node *);
+using NodeDeleter = bool (*)( ccl::Node * );
 bool nullNodeDeleter( ccl::Node *node )
 {
 	return false;
@@ -192,7 +192,7 @@ T parameter( const IECore::CompoundDataMap &parameters, const IECore::InternedSt
 		return defaultValue;
 	}
 
-	typedef IECore::TypedData<T> DataType;
+	using DataType = IECore::TypedData<T>;
 	if( const DataType *d = reportedCast<const DataType>( it->second.get(), "parameter", name ) )
 	{
 		return d->readable();
@@ -857,7 +857,7 @@ class ShaderCache : public IECore::RefCounted
 		Cache m_cache;
 		CyclesShaderPtr m_defaultSurface;
 		// Need to assign shaders in a deferred manner
-		typedef tbb::concurrent_vector<ShaderAssignPair> ShaderAssignVector;
+		using ShaderAssignVector = tbb::concurrent_vector<ShaderAssignPair>;
 		ShaderAssignVector m_shaderAssignPairs;
 
 };
@@ -1287,7 +1287,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		template<typename T>
 		static T attributeValue( const IECore::InternedString &name, const IECore::CompoundObject *attributes, const T &defaultValue )
 		{
-			typedef IECore::TypedData<T> DataType;
+			using DataType = IECore::TypedData<T>;
 			const DataType *data = attribute<DataType>( name, attributes );
 			return data ? data->readable() : defaultValue;
 		}
@@ -1295,7 +1295,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		template<typename T>
 		static boost::optional<T> optionalAttribute( const IECore::InternedString &name, const IECore::CompoundObject *attributes )
 		{
-			typedef IECore::TypedData<T> DataType;
+			using DataType = IECore::TypedData<T>;
 			const DataType *data = attribute<DataType>( name, attributes );
 			return data ? data->readable() : boost::optional<T>();
 		}
@@ -2126,14 +2126,14 @@ class InstanceCache : public IECore::RefCounted
 		}
 
 		ccl::Scene *m_scene;
-		typedef tbb::concurrent_vector<SharedCObjectPtr> Objects;
+		using Objects = tbb::concurrent_vector<SharedCObjectPtr>;
 		Objects m_objects;
 		typedef tbb::concurrent_hash_map<IECore::MurmurHash, SharedCGeometryPtr> Geometry;
 		Geometry m_geometry;
-		typedef tbb::concurrent_vector<SharedCGeometryPtr> UniqueGeometry;
+		using UniqueGeometry = tbb::concurrent_vector<SharedCGeometryPtr>;
 		UniqueGeometry m_uniqueGeometry;
 		ParticleSystemsCachePtr m_particleSystemsCache;
-		typedef tbb::spin_mutex ParticlesMutex;
+		using ParticlesMutex = tbb::spin_mutex;
 		ParticlesMutex m_particlesMutex;
 
 
@@ -2228,7 +2228,7 @@ class LightCache : public IECore::RefCounted
 		}
 
 		ccl::Scene *m_scene;
-		typedef tbb::concurrent_vector<SharedCLightPtr> Lights;
+		using Lights = tbb::concurrent_vector<SharedCLightPtr>;
 		Lights m_lights;
 
 };

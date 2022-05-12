@@ -209,10 +209,10 @@ ccl::SocketType::Type getSocketType( const std::string &name )
 template<typename Spline>
 void setSplineParameter( ccl::ShaderNode *node, const std::string &name, const Spline &spline )
 {
-	typedef vector<typename Spline::XType> PositionsVector;
-	typedef vector<typename Spline::YType> ValuesVector;
-	typedef TypedData<PositionsVector> PositionsData;
-	typedef TypedData<ValuesVector> ValuesData;
+	using PositionsVector = vector<typename Spline::XType>;
+	using ValuesVector = vector<typename Spline::YType>;
+	using PositionsData = TypedData<PositionsVector>;
+	using ValuesData = TypedData<ValuesVector>;
 
 	typename PositionsData::Ptr positionsData = new PositionsData;
 	typename ValuesData::Ptr valuesData = new ValuesData;

@@ -64,7 +64,7 @@ class IEDisplayOutputDriver : public ccl::OutputDriver
 		};
 
 		IECoreImage::DisplayDriverPtr m_displayDriver;
-		typedef std::vector<Layer> Layers;
+		using Layers = std::vector<Layer>;
 		Layers m_layers;
 		int m_numChannels;
 };
