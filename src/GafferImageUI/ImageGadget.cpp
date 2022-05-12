@@ -155,7 +155,7 @@ void AllocateTexture3D(
 	unsigned edgelen, const float * values
 )
 {
-	if(values==0x0)
+	if(values==nullptr)
 	{
 		throw Exception("Missing texture data");
 	}
@@ -348,7 +348,7 @@ class ImageGadget::TileShader : public IECore::RefCounted
 						throw Exception("The texture data is corrupted");
 					}
 
-					const float * values = 0x0;
+					const float * values = nullptr;
 					shaderDesc->getTextureValues(idx, values);
 					if(!values)
 					{
