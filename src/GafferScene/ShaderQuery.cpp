@@ -105,7 +105,7 @@ void addChildPlugsToAffectedOutputs( const Gaffer::Plug* plug, Gaffer::Dependenc
 /// Returns the index into the child vector of `parentPlug` that is
 /// either the `childPlug` itself or an ancestor of childPlug.
 /// Throws an Exception if the `childPlug` is not a descendant of `parentPlug`.
-const size_t getChildIndex( const Gaffer::Plug *parentPlug, const Gaffer::ValuePlug *descendantPlug )
+size_t getChildIndex( const Gaffer::Plug *parentPlug, const Gaffer::ValuePlug *descendantPlug )
 {
 	const GraphComponent *p = descendantPlug;
 	while( p )
