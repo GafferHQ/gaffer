@@ -34,7 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERCYCLES_DCYCLESATTRIBUTES_H
+#ifndef GAFFERCYCLES_CYCLESATTRIBUTES_H
 #define GAFFERCYCLES_CYCLESATTRIBUTES_H
 
 #include "GafferScene/Attributes.h"
