@@ -146,5 +146,29 @@ class DotNodeGadgetTest( GafferUITest.TestCase ) :
 		dot1NodeGadget = graphGadget.nodeGadget( s["d1"] )
 		self.assertEqual( dot1NodeGadget.connectionTangent( dot1NodeGadget.nodule( s["d1"]["in"] ) ), imath.V3f( -1, 0, 0 ) )
 
+	def testOutputPassthroughTangents( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = GafferTest.AddNode()
+		s["n2"] = GafferTest.AddNode()
+
+		# Match the behavior of a BoxIn node which sets the internal `__in` nodule section to the right.
+		Gaffer.Metadata.registerValue( s["n"]["op1"], "noduleLayout:section", "right" )
+
+		Gaffer.Metadata.registerValue( s["n2"]["sum"], "noduleLayout:section", "right" )
+
+		s["n2"]["sum"].setInput( s["n"]["op1"] )
+
+		s["d"] = Gaffer.Dot()
+
+		g = GafferUI.NodeGadget.create( s["d"] )
+
+		s["d"].setup( s["n2"]["sum"] )
+
+		self.assertEqual( g.connectionTangent( g.nodule( s["d"]["in"] ) ), imath.V3f( -1, 0, 0 ) )
+		self.assertEqual( g.connectionTangent( g.nodule( s["d"]["out"] ) ), imath.V3f( 1, 0, 0 ) )
+
+
 if __name__ == "__main__":
 	unittest.main()

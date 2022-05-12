@@ -529,9 +529,7 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( n["parameters"]["start_channel"].defaultValue(), 42 )
 		self.assertAlmostEqual( n["parameters"]["sscale"].defaultValue(), 42.42, places = 5 )
 		self.assertEqual( n["parameters"]["multiply"].defaultValue(), imath.Color3f( 1.2, 3.4, 5.6 ) )
-		# RGBA metadata support added in Arnold 5.3.  Need to wait until we standardise on that
-		# to add this declaration to the test metadata
-		#self.assertEqual( n["parameters"]["missing_texture_color"].defaultValue(), imath.Color4f( 1.2, 3.4, 5.6, 7.8 ) )
+		self.assertEqual( n["parameters"]["missing_texture_color"].defaultValue(), imath.Color4f( 1.2, 3.4, 5.6, 7.8 ) )
 		self.assertEqual( n["parameters"]["uvcoords"].defaultValue(), imath.V2f( 1.2, 3.4 ) )
 		self.assertEqual( n["parameters"]["filename"].defaultValue(), "overrideDefault" )
 		self.assertEqual( n["parameters"]["filter"].defaultValue(), "closest" )

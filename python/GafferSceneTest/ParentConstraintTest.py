@@ -308,7 +308,7 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 			self.assertEqual( imath.V3f( m[ 2 ][ 0 ], m[ 2 ][ 1 ], m[ 2 ][ 2 ] ), imath.V3f( 0, -1, 0 ) )
 
 		constraint[ "targetVertex" ].setValue( -1 )
-		self.assertRaises( Gaffer.ProcessException, lambda : constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() ) )
+		self.assertEqual( constraint[ "targetVertex" ].getValue(), 0 )
 		constraint[ "targetVertex" ].setValue( len( points ) + 1 )
 		self.assertRaises( Gaffer.ProcessException, lambda : constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() ) )
 
@@ -323,7 +323,11 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 			self.assertEqual( imath.V3f( m[ 2 ][ 0 ], m[ 2 ][ 1 ], m[ 2 ][ 2 ] ), imath.V3f( 0, -1, 0 ) )
 
 		constraint[ "targetVertex" ].setValue( -1 )
-		self.assertEqual( constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() ), imath.M44f() )
+		m = constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() )
+		self.assertEqual( imath.V3f( m[ 3 ][ 0 ], m[ 3 ][ 1 ], m[ 3 ][ 2 ] ), points[ 0 ] )
+		self.assertEqual( imath.V3f( m[ 0 ][ 0 ], m[ 0 ][ 1 ], m[ 0 ][ 2 ] ), imath.V3f( -1, 0, 0 ) )
+		self.assertEqual( imath.V3f( m[ 1 ][ 0 ], m[ 1 ][ 1 ], m[ 1 ][ 2 ] ), imath.V3f( 0, 0, -1 ) )
+		self.assertEqual( imath.V3f( m[ 2 ][ 0 ], m[ 2 ][ 1 ], m[ 2 ][ 2 ] ), imath.V3f( 0, -1, 0 ) )
 		constraint[ "targetVertex" ].setValue( len( points ) + 1 )
 		self.assertEqual( constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() ), imath.M44f() )
 

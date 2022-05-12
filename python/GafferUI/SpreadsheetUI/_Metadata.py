@@ -171,11 +171,11 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"activeRowNames" : [
+		"enabledRowNames" : [
 
 			"description",
 			"""
-			An output plug containing the names of all currently active rows.
+			An output plug containing the names of all currently enabled rows.
 			""",
 
 			"layout:section", "Advanced",
@@ -187,7 +187,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			An output plug containing the resolved cell values for all active
+			An output plug containing the resolved cell values for all enabled
 			rows, This can be used to drive expressions in situations where the
 			standard `out` plug is not useful, or would be awkward to use. The
 			values are formatted as follows :
@@ -206,6 +206,24 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Advanced",
 			"plugValueWidget:type", "GafferUI.ConnectionPlugValueWidget"
+
+		],
+
+		"activeRowIndex" : [
+
+			"description",
+			"""
+			An output containing the index of the row that matches the selector
+			in the current context.
+
+			> Tip : The default row has index `0`, which converts to `False`
+			> when used to drive a BoolPlug via a connection (all other values
+			> convert to `True`). Therefore `Spreadsheet.activeRowIndex` can
+			> be connected to a Node's `enabled` plug to disable the node when
+			> no row is matched.
+			""",
+
+			"layout:section", "Advanced",
 
 		],
 

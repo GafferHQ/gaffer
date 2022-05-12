@@ -138,6 +138,7 @@ class GAFFERUI_API AnimationGadget : public Gadget
 
 		bool plugSetAcceptor( const Gaffer::Set *s, const Gaffer::Set::Member *m );
 		void updateKeyPreviewLocation( const Gaffer::Animation::CurvePlug *curvePlug, float time );
+		void updateHighlightingAndPreview( const ButtonEvent &event );
 
 		std::string undoMergeGroup() const;
 

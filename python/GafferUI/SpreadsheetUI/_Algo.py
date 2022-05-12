@@ -124,21 +124,21 @@ def cellsCanBeDisabled( cellPlugs ) :
 
 # Note, function may present dialogues.
 ## \todo Needs UndoScope removing
-def createSpreadsheetForNode( node, activeRowNamesConnection, selectorContextVariablePlug, selectorValue, menu ) :
+def createSpreadsheetForNode( node, enabledRowNamesConnection, selectorContextVariablePlug, selectorValue, menu ) :
 
 	with Gaffer.UndoScope( node.scriptNode() ) :
 
 		spreadsheet = Gaffer.Spreadsheet( node.getName() + "Spreadsheet" )
-		connectPlugToRowNames( activeRowNamesConnection, selectorContextVariablePlug, selectorValue, spreadsheet, menu )
+		connectPlugToRowNames( enabledRowNamesConnection, selectorContextVariablePlug, selectorValue, spreadsheet, menu )
 		node.parent().addChild( spreadsheet )
 
 	GafferUI.NodeEditor.acquire( spreadsheet )
 
 # Note, function may present dialogues.
 ## \todo This needs splitting into the pre-check + confirm and algo to affect the actual change without UndoScope
-def connectPlugToRowNames( activeRowNamesConnection, selectorContextVariablePlug, selectorValue, spreadsheet, menu ) :
+def connectPlugToRowNames( enabledRowNamesConnection, selectorContextVariablePlug, selectorValue, spreadsheet, menu ) :
 
-	node = activeRowNamesConnection.node()
+	node = enabledRowNamesConnection.node()
 
 	# We defer locking the plug until we know we're going ahead
 	lockSelectorVarPlug = False
@@ -159,7 +159,7 @@ def connectPlugToRowNames( activeRowNamesConnection, selectorContextVariablePlug
 			"Invalid Selector",
 			message.format(
 				sheetName = spreadsheet.getName(), sheetSelector = existingSelector,
-				plugName = activeRowNamesConnection.getName(), selector = selectorValue
+				plugName = enabledRowNamesConnection.getName(), selector = selectorValue
 			),
 			confirmLabel = "Continue"
 		)
@@ -177,8 +177,8 @@ def connectPlugToRowNames( activeRowNamesConnection, selectorContextVariablePlug
 			Gaffer.MetadataAlgo.setReadOnly( spreadsheet["selector"], True )
 
 		with node.scriptNode().context() :
-			rowNames = activeRowNamesConnection.getValue()
-		activeRowNamesConnection.setInput( spreadsheet["activeRowNames"] )
+			rowNames = enabledRowNamesConnection.getValue()
+		enabledRowNamesConnection.setInput( spreadsheet["enabledRowNames"] )
 
 		if rowNames :
 			for rowName in rowNames :

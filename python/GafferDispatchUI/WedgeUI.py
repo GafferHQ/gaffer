@@ -72,7 +72,7 @@ Gaffer.Metadata.registerNode(
 	"layout:customWidget:colorValues:visibilityActivator", "modeIsColorRange",
 	"layout:customWidget:colorValues:section", "Settings",
 
-	"ui:spreadsheet:activeRowNamesConnection", "strings",
+	"ui:spreadsheet:enabledRowNamesConnection", "strings",
 	"ui:spreadsheet:selectorContextVariablePlug", "variable",
 
 	plugs = {

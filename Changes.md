@@ -1,5 +1,5 @@
-0.62.x.x (relative to 0.62.0.0a1)
-========
+0.62.0.0a2 (relative to 0.62.0.0a1)
+==========
 
 Features
 --------
@@ -12,13 +12,18 @@ Improvements
 ------------
 
 - USD : Added basic support for loading UsdLux lights. The data is available in Gaffer, but needs manual conversion to meet the requirements of a specific renderer.
+- ImageReader/ImageWriter : Added support for JPEG 2000 (`.jp2`) images.
+- Spreadsheet : Added `activeRowIndex` plug, which outputs the index of the currently active row.
+- InteractiveArnoldRender : Added support for an `updateInteractively` bool parameter for render outputs. This can be used to request more frequent updates for AOVs other than the beauty image.
 - ChannelPlugValueWidget : Improved the ordering of channel names presented in the menu.
 - PresetsPlugValueWidget : The children of compound plugs are now shown when in "Custom" mode.
 
 Fixes
 -----
 
+- AnimationEditor : Fixed glitches in the drawing of tangent handles during drags.
 - ArnoldMeshLight : Fixed bug which caused `ai:autobump_visibility` attributes to be inadvertently modified.
+- ArnoldShader/ArnoldLight : Fixed potential buffer overrun when loading color parameters with `gaffer.plugType` metadata.
 - Plug :
   - The `removeOutputs()` method now also removes any outputs from child plugs. This is consistent with the `setInput()` method, which has always managed child plug inputs.
   - Fixed bug which meant that child output connections were not removed when a plug was removed from a node.
@@ -26,6 +31,8 @@ Fixes
 - ViewportGadget :
   - Fixed `setCenterOfInterest()` so that it doesn't emit `cameraChangedSignal()` if the center of interest is unchanged.
   - Added GIL release in `setViewport()` Python bindings.
+- ArnoldRender : Fixed rendering of single-channel AOVs specified using Gaffer's generic `float|int|uint <name>` syntax. Outputs specified using Arnold's `<name> FLOAT|INT|UINT` syntax will now issue a warning, and should be updated to use the generic syntax.
+- Constraint : Restricted `targetVertex` to positive integers.
 
 API
 ---
@@ -41,6 +48,17 @@ Breaking Changes
 - SubTree : Removed the `/` root location from generated sets, because root membership is unsupported elsewhere in Gaffer.
 - OSLShader : Removed `prepareSplineCVsForOSL()` method. Use `IECoreScene::ShaderNetworkAlgo::expandSplineParameters()` instead.
 - ArnoldMeshLight : The `ai:autobump_visibility` attributes are no longer modified. Use a separate ArnoldAttributes node if necessary.
+- Spreadsheet :
+  - Renamed `activeRowNames` plug to `enabledRowNames`. Backwards compatibility is provided when loading old `.gfr` files.
+  - Renamed `ui:spreadsheet:activeRowNamesConnection` metadata to `ui:spreadsheet:enabledRowNamesConnection`.
+
+Build
+-----
+
+- Qt : Updated to version 5.15.3.
+- LLVM : Updated to version 11.1.0.
+- OpenJPEG : Added version 2.4.0.
+- Subprocess32 : Now packaged as a regular module rather than as a `.egg` package.
 
 0.62.0.0a1
 ==========
@@ -112,7 +130,7 @@ Build
   - OpenColorIO : Updated to version 2.1.1.
   - Cortex : Updated to version 10.4.0.0.
 
-0.61.x.x (relative to 0.61.8.0)
+0.61.9.0 (relative to 0.61.8.0)
 ========
 
 Features
@@ -126,12 +144,15 @@ Improvements
 - USD :
   - Added support for reading `.usdz` files.
   - Added support for `doubleSided` attribute.
+- ShaderTweaks : Added dialogue for choosing parameters to tweak instead of popup menus.
 
 Fixes
 -----
 
+- USD : Fixed reading and writing of Color4f shader parameters.
 - InteractiveArnoldRender : Fixed crash triggered by changing the filter on an ArnoldMeshLight.
 - NodeEditor : Stopped applying "green dot" non-default plug annotations to output plugs.
+- Dot : Fixed a case where adding a Dot node between a `BoxIn` node and a downstream node would reverse the input and output nodules' sides on the Dot.
 
 API
 ---
@@ -140,11 +161,12 @@ API
   - Deprecated `extractDataFromPlug`. Use the equivalent `getValueAsData` instead.
   - Added `setValueFromData` to set the value of an existing plug.
   - Added `canSetValueFromData` to return whether or not a plug's value can be set from Data.
+- PathColumn : Add color swatch to cells containing `Color3fData` or `Color4fData`.
 
 Build
 ------
 
-- Cortex : Updated to version 10.3.6.0.
+- Cortex : Updated to version 10.3.6.1.
 
 0.61.8.0 (relative to 0.61.7.0)
 ========

@@ -2883,7 +2883,7 @@ class AppleseedRenderer final : public AppleseedRendererBase
 				}
 				else
 				{
-					msg( Msg::Warning, "AppleseedRenderer::output", boost::format( "Unknown AOV \"%s\"." ) % aov->get_name() );
+					msg( Msg::Warning, "AppleseedRenderer::output", boost::format( "Unknown AOV \"%s\"." ) % output->getData() );
 					return;
 				}
 			}

@@ -198,12 +198,12 @@ def __nodeEditorToolMenu( nodeEditor, node, menuDefinition ) :
 	if node.parent() is None :
 		return
 
-	activeRowNamesConnection = Gaffer.Metadata.value( node, "ui:spreadsheet:activeRowNamesConnection" )
-	if not activeRowNamesConnection :
+	enabledRowNamesConnection = Gaffer.Metadata.value( node, "ui:spreadsheet:enabledRowNamesConnection" )
+	if not enabledRowNamesConnection :
 		return
 	else :
-		activeRowNamesConnection = node.descendant( activeRowNamesConnection )
-		assert( activeRowNamesConnection is not None )
+		enabledRowNamesConnection = node.descendant( enabledRowNamesConnection )
+		assert( enabledRowNamesConnection is not None )
 
 	selectorContextVariablePlug = Gaffer.Metadata.value( node, "ui:spreadsheet:selectorContextVariablePlug" )
 	if selectorContextVariablePlug :
@@ -218,23 +218,23 @@ def __nodeEditorToolMenu( nodeEditor, node, menuDefinition ) :
 	itemsActive = (
 		not nodeEditor.getReadOnly()
 		and not Gaffer.MetadataAlgo.readOnly( node )
-		and not Gaffer.MetadataAlgo.readOnly( activeRowNamesConnection )
-		and activeRowNamesConnection.getInput() is None
+		and not Gaffer.MetadataAlgo.readOnly( enabledRowNamesConnection )
+		and enabledRowNamesConnection.getInput() is None
 	)
 
 	menuDefinition.append(
 		"/Create Spreadsheet...",
 		{
-			"command" : functools.partial( _Algo.createSpreadsheetForNode, node, activeRowNamesConnection, selectorContextVariablePlug, selectorValue ),
+			"command" : functools.partial( _Algo.createSpreadsheetForNode, node, enabledRowNamesConnection, selectorContextVariablePlug, selectorValue ),
 			"active" : itemsActive
 		}
 	)
 
-	connectCommand = functools.partial( _Algo.connectPlugToRowNames, activeRowNamesConnection, selectorContextVariablePlug, selectorValue )
+	connectCommand = functools.partial( _Algo.connectPlugToRowNames, enabledRowNamesConnection, selectorContextVariablePlug, selectorValue )
 	menuDefinition.append(
 		"/Connect to Spreadsheet",
 		{
-			"subMenu" :  functools.partial( __spreadsheetSubMenu, activeRowNamesConnection, connectCommand, showSections = False ),
+			"subMenu" :  functools.partial( __spreadsheetSubMenu, enabledRowNamesConnection, connectCommand, showSections = False ),
 			"active" : itemsActive
 		}
 	)

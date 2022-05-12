@@ -100,7 +100,7 @@ Gaffer.Metadata.registerValue( parent["variables"]["projectRootDirectory"]["name
 __children["Backdrop_TitleBG"]["title"].setValue( '' )
 __children["Backdrop_TitleBG"]["__uiBound"].setValue( imath.Box2f( imath.V2f( -9.49428558, -42.1358337 ), imath.V2f( 46.4567719, 21.1417542 ) ) )
 __children["Backdrop_TitleBG"]["__uiPosition"].setValue( imath.V2f( -27.4000015, 1.4925909 ) )
-__children["PathFilter"]["paths"].setInput( __children["Spreadsheet"]["activeRowNames"] )
+__children["PathFilter"]["paths"].setInput( __children["Spreadsheet"]["enabledRowNames"] )
 __children["PathFilter"]["__uiPosition"].setValue( imath.V2f( -2.03234386, -26.3235779 ) )
 __children["Spreadsheet"]["selector"].setValue( '${scene:path}' )
 Gaffer.Metadata.registerValue( __children["Spreadsheet"]["selector"], 'readOnly', True )

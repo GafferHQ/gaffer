@@ -284,7 +284,7 @@ class OSLImagePlugAdder : public PlugAdder
 
 			std::sort( result.begin(), result.end() );
 			vector<std::string> customSortResult;
-			for( const std::string &i : { "RGB", "RGBA", "R", "G", "B", "A" } )
+			for( const char *i : { "RGB", "RGBA", "R", "G", "B", "A" } )
 			{
 				if( std::find( result.begin(), result.end(), i ) != result.end() )
 				{

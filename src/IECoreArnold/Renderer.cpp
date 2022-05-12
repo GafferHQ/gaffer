@@ -574,27 +574,62 @@ class ArnoldOutput : public IECore::RefCounted
 			}
 			else
 			{
-				std::string arnoldType = "RGB";
+				std::string colorType = "RGB";
 				if( parameter<bool>( output->parameters(), "includeAlpha", false ) )
 				{
-					arnoldType = "RGBA";
+					colorType = "RGBA";
 				}
 
 				vector<std::string> tokens;
 				IECore::StringAlgo::tokenize( m_data, ' ', tokens );
+
 				if( tokens.size() == 2 )
 				{
 					if( tokens[0] == "color" )
 					{
-						m_data = tokens[1] + " " + arnoldType;
+						m_data = tokens[1] + " " + colorType;
 					}
 					else if( tokens[0] == "lpe" )
 					{
 						m_lpeValue = tokens[1];
-						m_data = m_lpeName + " " + arnoldType;
+						m_data = m_lpeName + " " + colorType;
+					}
+					else if( tokens[0] == "float" || tokens[0] == "int" || tokens[0] == "uint" )
+					{
+						// Cortex convention is `<type> <name>`. Arnold
+						// convention is `<name> <TYPE>`.
+						m_data = tokens[1] + " " + boost::to_upper_copy( tokens[0] );
+					}
+					else
+					{
+						/// \todo Omit this output completely. We currently give it to Arnold
+						/// with `m_data == output->getData()`, to provide backward compatibility
+						/// for old scenes that passed an Arnold-formatted data string directly.
+						/// In future, we want all outputs to use the standard Cortex formatting
+						/// instead.
+						IECore::msg(
+							IECore::Msg::Warning, "ArnoldRenderer",
+							boost::format( "Unknown data type \"%1%\" for output \"%2%\"" ) % tokens[0] % name
+						);
 					}
 				}
+				else
+				{
+					/// \todo See above.
+					IECore::msg(
+						IECore::Msg::Warning, "ArnoldRenderer",
+						boost::format( "Unknown data specification \"%1%\" for output \"%2%\"" ) % m_data % name
+					);
+				}
 			}
+
+			// Decide if this render should be updated at interactive rates or
+			// not. We update all beauty outputs interactively by default, and
+			// allow others to be overridden using a parameter.
+			m_updateInteractively = parameter<bool>(
+				output->parameters(), "updateInteractively",
+				boost::starts_with( m_data, "RGBA " ) || boost::starts_with( m_data, "RGB " )
+			);
 		}
 
 		void updateImager( AtNode *imager )
@@ -616,6 +651,11 @@ class ArnoldOutput : public IECore::RefCounted
 			return m_cameraOverride;
 		}
 
+		bool updateInteractively() const
+		{
+			return m_updateInteractively;
+		}
+
 	private :
 
 		SharedAtNodePtr m_driver;
@@ -624,6 +664,7 @@ class ArnoldOutput : public IECore::RefCounted
 		std::string m_lpeName;
 		std::string m_lpeValue;
 		std::string m_cameraOverride;
+		bool m_updateInteractively;
 
 };
 
@@ -2958,9 +2999,9 @@ void AiRenderAddInteractiveOutput( AtRenderSession *renderSession, uint32_t outp
 	::AiRenderAddInteractiveOutput( outputIndex );
 }
 
-bool AiRenderRemoveInteractiveOutput( AtRenderSession *renderSession, uint32_t outputIndex )
+void AiRenderRemoveAllInteractiveOutputs( AtRenderSession *renderSession )
 {
-	return ::AiRenderRemoveInteractiveOutput( outputIndex );
+	::AiRenderRemoveAllInteractiveOutputs();
 }
 
 void AiRenderSessionDestroy( AtRenderSession *renderSession )
@@ -3077,7 +3118,6 @@ class ArnoldGlobals
 					&AiRenderSessionDestroy
 				),
 				m_messageHandler( messageHandler ),
-				m_interactiveOutput( -1 ),
 				m_logFileFlags( g_logFlagsDefault ),
 				m_consoleFlags( g_consoleFlagsDefault ),
 				m_enableProgressiveRender( true ),
@@ -3775,6 +3815,7 @@ class ArnoldGlobals
 			// Set the global output list in the options to all outputs matching the current camera
 			IECore::StringVectorDataPtr outputs = new IECore::StringVectorData;
 			IECore::StringVectorDataPtr lpes = new IECore::StringVectorData;
+			vector<int> interactiveIndices;
 			for( OutputMap::const_iterator it = m_outputs.begin(), eIt = m_outputs.end(); it != eIt; ++it )
 			{
 				std::string outputCamera = it->second->cameraOverride();
@@ -3785,32 +3826,23 @@ class ArnoldGlobals
 
 				if( outputCamera == cameraName )
 				{
+					if( it->second->updateInteractively() )
+					{
+						interactiveIndices.push_back( outputs->writable().size() );
+					}
 					it->second->append( outputs->writable(), lpes->writable() );
 				}
 			}
 
-			if( m_interactiveOutput >= 0 )
-			{
-				// Remove interactive output before the index is invalidated. We'll set it
-				// again to the right index below.
-				AiRenderRemoveInteractiveOutput( m_renderSession.get(), m_interactiveOutput );
-			}
+			AiRenderRemoveAllInteractiveOutputs( m_renderSession.get() );
 
-			std::sort( outputs->writable().begin(), outputs->writable().end() );
 			IECoreArnold::ParameterAlgo::setParameter( options, "outputs", outputs.get() );
 			IECoreArnold::ParameterAlgo::setParameter( options, "light_path_expressions", lpes.get() );
 
-			// Set the beauty as the output to get frequent interactive updates
-			m_interactiveOutput = 0;
-			for( unsigned int i = 0; i < outputs->readable().size(); i++ )
+			for( auto i : interactiveIndices )
 			{
-				if( boost::starts_with( outputs->readable()[i], "RGBA " ) )
-				{
-					m_interactiveOutput = i;
-					break;
-				}
+				AiRenderAddInteractiveOutput( m_renderSession.get(), i );
 			}
-			AiRenderAddInteractiveOutput( m_renderSession.get(), m_interactiveOutput );
 
 			const IECoreScene::Camera *cortexCamera;
 			AtNode *arnoldCamera = AiNodeLookUpByName( m_universeBlock->universe(), AtString( cameraName.c_str() ) );
@@ -3978,9 +4010,8 @@ class ArnoldGlobals
 		IECore::MessageHandlerPtr m_messageHandler;
 		std::optional<unsigned> m_messageCallbackId;
 
-		using OutputMap = std::map<IECore::InternedString, ArnoldOutputPtr>;
+		using OutputMap = std::map<std::string, ArnoldOutputPtr>;
 		OutputMap m_outputs;
-		int m_interactiveOutput; // Negative if not yet set.
 
 		using AOVShaderMap = std::map<IECore::InternedString, ArnoldShaderPtr>;
 		AOVShaderMap m_aovShaders;
