@@ -1,5 +1,5 @@
-0.62.x.x (relative to 0.62.0.0a1)
-========
+0.62.0.0a2 (relative to 0.62.0.0a1)
+==========
 
 Features
 --------
@@ -57,6 +57,7 @@ Build
 
 - Qt : Updated to version 5.15.3.
 - LLVM : Updated to version 11.1.0.
+- OpenJPEG : Added version 2.4.0.
 - Subprocess32 : Now packaged as a regular module rather than as a `.egg` package.
 
 0.62.0.0a1
