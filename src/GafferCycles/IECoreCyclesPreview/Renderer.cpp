@@ -434,9 +434,9 @@ class CyclesShader : public IECore::RefCounted
 					  const IECoreScene::ShaderNetwork *displacementShader,
 					  const IECoreScene::ShaderNetwork *volumeShader,
 					  ccl::Scene *scene,
-					  const std::string &name, 
+					  const std::string &name,
 					  const IECore::MurmurHash &h,
-					  const bool singleSided, 
+					  const bool singleSided,
 					  const IECore::InternedString displacementMethod,
 					  vector<const IECoreScene::ShaderNetwork *> &aovShaders )
 			:	m_hash( h )
@@ -538,7 +538,7 @@ class ShaderCache : public IECore::RefCounted
 		CyclesShaderPtr get( const IECoreScene::ShaderNetwork *surfaceShader,
 							 const IECoreScene::ShaderNetwork *displacementShader,
 							 const IECoreScene::ShaderNetwork *volumeShader,
-							 const IECore::CompoundObject *attributes, 
+							 const IECore::CompoundObject *attributes,
 							 IECore::MurmurHash &h )
 		{
 			IECore::MurmurHash hSubst;
@@ -1042,7 +1042,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 							// In Blender a shader->set_graph(graph); is called which handles the hashing similar to the code above. In GafferCycles
 							// we re-create a fresh shader which is easier to manage, however it misses this call to set need_update_mesh to false.
 							// We set false here, but we also need to make sure all the attribute requests are the same to prevent the flag to be set
-							// to true in another place of the code inside of Cycles. If we have made it this far in this area, we are just updating 
+							// to true in another place of the code inside of Cycles. If we have made it this far in this area, we are just updating
 							// the same shader so this should be safe.
 							shader->attributes = prevShader->attributes;
 							//m_shader->need_update_uvs = false;
@@ -1855,10 +1855,10 @@ class InstanceCache : public IECore::RefCounted
 		}
 
 		// Can be called concurrently with other get() calls.
-		Instance get( const std::vector<const IECore::Object *> &samples, 
-					  const std::vector<float> &times, 
-					  const int frameIdx, 
-					  const IECoreScenePreview::Renderer::AttributesInterface *attributes, 
+		Instance get( const std::vector<const IECore::Object *> &samples,
+					  const std::vector<float> &times,
+					  const int frameIdx,
+					  const IECoreScenePreview::Renderer::AttributesInterface *attributes,
 					  const std::string &nodeName )
 		{
 			const CyclesAttributes *cyclesAttributes = static_cast<const CyclesAttributes *>( attributes );
@@ -1986,10 +1986,10 @@ class InstanceCache : public IECore::RefCounted
 
 	private :
 
-		SharedCObjectPtr convert( const IECore::Object *object, 
-								  const CyclesAttributes *attributes, 
-								  const std::string &nodeName, 
-								  SharedCParticleSystemPtr &cpsysPtr, 
+		SharedCObjectPtr convert( const IECore::Object *object,
+								  const CyclesAttributes *attributes,
+								  const std::string &nodeName,
+								  SharedCParticleSystemPtr &cpsysPtr,
 								  ccl::Geometry *cgeo = nullptr )
 		{
 			ccl::Object *cobject = nullptr;
@@ -2024,12 +2024,12 @@ class InstanceCache : public IECore::RefCounted
 			return SharedCObjectPtr( cobject, nullNodeDeleter );
 		}
 
-		SharedCObjectPtr convert( const std::vector<const IECore::Object *> &samples, 
-								  const std::vector<float> &times, 
-								  const int frame, 
-								  const CyclesAttributes *attributes, 
-								  const std::string &nodeName, 
-								  SharedCParticleSystemPtr &cpsysPtr, 
+		SharedCObjectPtr convert( const std::vector<const IECore::Object *> &samples,
+								  const std::vector<float> &times,
+								  const int frame,
+								  const CyclesAttributes *attributes,
+								  const std::string &nodeName,
+								  SharedCParticleSystemPtr &cpsysPtr,
 								  ccl::Geometry *cgeo = nullptr )
 		{
 			ccl::Object *cobject = nullptr;
@@ -3624,7 +3624,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			ccl::DeviceInfo deviceFallback;
 
 			bool deviceAvailable = false;
-			for( const ccl::DeviceInfo& device : IECoreCycles::devices() ) 
+			for( const ccl::DeviceInfo& device : IECoreCycles::devices() )
 			{
 				if( deviceTypeFallback == device.type )
 				{
@@ -3646,9 +3646,9 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 			else
 			{
-				for( const ccl::DeviceInfo& device : IECoreCycles::devices() ) 
+				for( const ccl::DeviceInfo& device : IECoreCycles::devices() )
 				{
-					if( m_deviceName ==  device.id ) 
+					if( m_deviceName ==  device.id )
 					{
 						m_sessionParams.device = device;
 						deviceAvailable = true;
@@ -3834,12 +3834,12 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			if( !m_outputsChanged )
 				return;
 
-			Box2i displayWindow( 
+			Box2i displayWindow(
 				V2i( 0, 0 ),
 				V2i( width - 1, height - 1 )
 				);
 			Box2i dataWindow(
-				V2i( (int)(camera->get_border_left()   * (float)width ), 
+				V2i( (int)(camera->get_border_left()   * (float)width ),
 					 (int)(camera->get_border_bottom() * (float)height ) ),
 				V2i( (int)(camera->get_border_right()  * (float)width ) - 1,
 					 (int)(camera->get_border_top()    * (float)height - 1 ) )
@@ -4159,7 +4159,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				}
 			}
 
-			// Not sure what the best way is to inform that an interactive render has stopped other than this. 
+			// Not sure what the best way is to inform that an interactive render has stopped other than this.
 			// No way that I know of to inform Gaffer that the render has stopped either.
 			if( m_lastStatus == "Finished" )
 			{
@@ -4173,7 +4173,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			int indexHIP = 0;
 			int indexOptiX = 0;
 			int indexMetal = 0;
-			for( const ccl::DeviceInfo &device : IECoreCycles::devices() ) 
+			for( const ccl::DeviceInfo &device : IECoreCycles::devices() )
 			{
 				if( device.type == ccl::DEVICE_CPU )
 				{

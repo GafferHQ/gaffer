@@ -538,10 +538,10 @@ ccl::ShaderOutput *output( ccl::ShaderNode *node, IECore::InternedString name )
 	return nullptr;
 }
 
-ccl::ShaderGraph *convertGraph( const IECoreScene::ShaderNetwork *surfaceShader, 
-								const IECoreScene::ShaderNetwork *displacementShader, 
-								const IECoreScene::ShaderNetwork *volumeShader, 
-								ccl::ShaderManager *shaderManager, 
+ccl::ShaderGraph *convertGraph( const IECoreScene::ShaderNetwork *surfaceShader,
+								const IECoreScene::ShaderNetwork *displacementShader,
+								const IECoreScene::ShaderNetwork *volumeShader,
+								ccl::ShaderManager *shaderManager,
 								const std::string &namePrefix )
 {
 	ccl::ShaderGraph *graph = new ccl::ShaderGraph();
@@ -598,10 +598,10 @@ ccl::ShaderGraph *convertGraph( const IECoreScene::ShaderNetwork *surfaceShader,
 	return graph;
 }
 
-ccl::Shader *convert( const IECoreScene::ShaderNetwork *surfaceShader, 
-					  const IECoreScene::ShaderNetwork *displacementShader, 
-					  const IECoreScene::ShaderNetwork *volumeShader, 
-					  ccl::ShaderManager *shaderManager, 
+ccl::Shader *convert( const IECoreScene::ShaderNetwork *surfaceShader,
+					  const IECoreScene::ShaderNetwork *displacementShader,
+					  const IECoreScene::ShaderNetwork *volumeShader,
+					  ccl::ShaderManager *shaderManager,
 					  const std::string &namePrefix )
 {
 	string shaderName(
@@ -686,7 +686,7 @@ void setSingleSided( ccl::ShaderGraph *graph )
 	if( ccl::ShaderOutput *shaderOutput = ShaderNetworkAlgo::output( geometry, "backfacing" ) )
 		if( ccl::ShaderInput *shaderInput = ShaderNetworkAlgo::input( mixClosure, "fac" ) )
 			graph->connect( shaderOutput, shaderInput );
-	
+
 	if( ccl::ShaderOutput *shaderOutput = ShaderNetworkAlgo::output( transparentBSDF, "BSDF" ) )
 		if( ccl::ShaderInput *shaderInput = ShaderNetworkAlgo::input( mixClosure, "closure2" ) )
 			graph->connect( shaderOutput, shaderInput );
@@ -720,11 +720,11 @@ ccl::Shader *createDefaultShader()
 	ccl::GeometryNode *geo = cgraph->create_node<ccl::GeometryNode>();
 	ccl::ShaderNode *vecMathNode = cgraph->add( (ccl::ShaderNode*)vecMath );
 	ccl::ShaderNode *geoNode = cgraph->add( (ccl::ShaderNode*)geo );
-	cgraph->connect( ShaderNetworkAlgo::output( geoNode, "normal" ), 
+	cgraph->connect( ShaderNetworkAlgo::output( geoNode, "normal" ),
 						ShaderNetworkAlgo::input( vecMathNode, "vector1" ) );
-	cgraph->connect( ShaderNetworkAlgo::output( geoNode, "incoming" ), 
+	cgraph->connect( ShaderNetworkAlgo::output( geoNode, "incoming" ),
 						ShaderNetworkAlgo::input( vecMathNode, "vector2" ) );
-	cgraph->connect( ShaderNetworkAlgo::output( vecMathNode, "value" ), 
+	cgraph->connect( ShaderNetworkAlgo::output( vecMathNode, "value" ),
 						ShaderNetworkAlgo::input( outputNode, "surface" ) );
 	cshader->set_graph( cgraph );
 

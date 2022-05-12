@@ -542,7 +542,7 @@ void convertN( const IECoreScene::MeshPrimitive *mesh, const V3fVectorData *norm
 			}
 		}
 	}
-	
+
 }
 
 void convertUVSet( const string &uvSet, const IECoreScene::PrimitiveVariable &uvVariable, const IECoreScene::MeshPrimitive *mesh, ccl::AttributeSet &attributes, bool subdivision_uvs, bool defaultUV )//, ccl::Mesh *cmesh )
@@ -707,7 +707,7 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 		int indexOffset = 0;
 		for( size_t i = 0; i < vertsPerFace.size(); i++ )
 		{
-			cmesh->add_subd_face( const_cast<int*>(&vertexIds[indexOffset]), vertsPerFace[i], 
+			cmesh->add_subd_face( const_cast<int*>(&vertexIds[indexOffset]), vertsPerFace[i],
 				f ? f->readable()[i] : 0, s ? s->readable()[i] : smooth ); // Last two args are shader sets and smooth
 			indexOffset += vertsPerFace[i];
 		}
@@ -769,7 +769,7 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 
 			int faceOffset = 0;
 			for( size_t i = 0; i < triVertexIds.size(); i+= 3, ++faceOffset )
-				cmesh->add_triangle( triVertexIds[i], triVertexIds[i+1], triVertexIds[i+2], 
+				cmesh->add_triangle( triVertexIds[i], triVertexIds[i+1], triVertexIds[i+2],
 					f ? f->readable()[faceOffset] : 0, s ? s->readable()[faceOffset] : smooth ); // Last two args are shader sets and smooth
 		}
 		else
@@ -788,7 +788,7 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 
 			int faceOffset = 0;
 			for( size_t i = 0; i < vertexIds.size(); i+= 3, ++faceOffset )
-				cmesh->add_triangle( vertexIds[i], vertexIds[i+1], vertexIds[i+2], 
+				cmesh->add_triangle( vertexIds[i], vertexIds[i+1], vertexIds[i+2],
 					f ? f->readable()[faceOffset] : 0, s ? s->readable()[faceOffset] : smooth ); // Last two args are shader sets and smooth
 		}
 	}

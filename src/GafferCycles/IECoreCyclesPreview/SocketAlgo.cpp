@@ -194,7 +194,7 @@ Imath::Quatf getQuaternion( const ccl::float4 quat )
 
 Imath::M44f getTransform( const ccl::Transform transform )
 {
-	return Imath::M44f( 
+	return Imath::M44f(
 		transform.x.x, transform.y.x, transform.z.x, 0.0f,
 		transform.x.y, transform.y.y, transform.z.y, 0.0f,
 		transform.x.z, transform.y.z, transform.z.z, 0.0f,
