@@ -3114,8 +3114,9 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				{
 					auto threads = data->readable();
 					if( threads < 0 )
-						threads = max( ccl::system_cpu_thread_count() + threads, 1);
-					
+					{
+						threads = max( (int)std::thread::hardware_concurrency() + threads, 1 );
+					}
 					m_sessionParams.threads = threads;
 				}
 				return;
@@ -4250,7 +4251,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		IECore::MessageHandlerPtr m_messageHandler;
 		string m_lastError;
 		string m_lastStatus;
-		float m_lastProgress;
 		double m_lastStatusTime;
 
 		// Caches

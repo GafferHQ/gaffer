@@ -46,11 +46,9 @@
 namespace IECoreCycles
 {
 
-/// Initialise the library. Specify root path, otherwise it will be searched for from these environment variables:
-/// $GAFFERCYCLES
-/// $GAFFER_ROOT/cycles
-/// $GAFFER_EXTENSION_PATHS
-IECORECYCLES_API bool init( const char *path = nullptr );
+/// Initialises the library using the CYCLES_ROOT environment
+/// variable, which should point to the root of a Cycles installation.
+IECORECYCLES_API bool init();
 
 /// Returns the major version for the IECore library
 IECORECYCLES_API int majorVersion();
