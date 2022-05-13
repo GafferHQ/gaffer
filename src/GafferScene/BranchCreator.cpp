@@ -744,7 +744,7 @@ void BranchCreator::hashObject( const ScenePath &path, const Gaffer::Context *co
 				hashBranchObject( path, branchPath, context, h );
 				break;
 			}
-			// Fall through
+			[[fallthrough]];
 		case Ancestor :
 		case PassThrough :
 			h = inPlug()->objectPlug()->hash();
@@ -778,7 +778,7 @@ IECore::ConstObjectPtr BranchCreator::computeObject( const ScenePath &path, cons
 				}
 				return computeBranchObject( path, branchPath, context );
 			}
-			// Fall through
+			[[fallthrough]];
 		case Ancestor :
 		case PassThrough :
 			return inPlug()->objectPlug()->getValue();
@@ -815,7 +815,7 @@ void BranchCreator::hashChildNames( const ScenePath &path, const Gaffer::Context
 				newChildNames->hash( h );
 				return;
 			}
-			// Fall through
+			[[fallthrough]];
 		case PassThrough :
 		default :
 			h = inPlug()->childNamesPlug()->hash();
@@ -850,7 +850,7 @@ IECore::ConstInternedStringVectorDataPtr BranchCreator::computeChildNames( const
 				);
 				return combinedNames;
 			}
-			// Fall through
+			[[fallthrough]];
 		case PassThrough :
 		default :
 			return inPlug()->childNamesPlug()->getValue();

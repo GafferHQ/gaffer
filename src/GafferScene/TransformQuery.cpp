@@ -267,6 +267,7 @@ void TransformQuery::hash( Gaffer::ValuePlug const* const output, Gaffer::Contex
 					{
 						h.append( splug->fullTransformHash( path ) );
 						h.append( invertPlug()->hash() );
+						break;
 					}
 					case Space::Relative:
 					{
