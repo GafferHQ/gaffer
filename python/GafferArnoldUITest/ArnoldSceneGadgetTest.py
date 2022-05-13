@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2022, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,12 +34,17 @@
 #
 ##########################################################################
 
-from .DocumentationTest import DocumentationTest
-from .ArnoldShaderUITest import ArnoldShaderUITest
-from .VisualiserAlgoTest import VisualiserAlgoTest
-from .InteractiveArnoldRenderPerformanceTest import InteractiveArnoldRenderPerformanceTest
-from .NodeUITest import NodeUITest
-from .ArnoldSceneGadgetTest import ArnoldSceneGadgetTest
+import unittest
+
+import GafferTest
+import GafferSceneUITest
+
+@unittest.skipIf( GafferTest.inCI(), "Insufficient OpenGL features - need GLSL 330" )
+class ArnoldSceneGadgetTest( GafferSceneUITest.SceneGadgetTest ) :
+
+	# Tests are inherited from base class. We just need to
+	# override the renderer being used.
+	renderer = "Arnold"
 
 if __name__ == "__main__":
 	unittest.main()
