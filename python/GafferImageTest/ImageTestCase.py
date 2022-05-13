@@ -205,6 +205,28 @@ parent["color"] = imath.Color4f( 0.5, 0.6, 0.7, 0.8 ) if context.get( "collect:l
 
 		return channelTestImage
 
+	## Convert the test image to a stereo test
+	def channelTestImageMultiView( self ) :
+
+		channelTestImageMultiView = GafferImage.CreateViews()
+		channelTestImageMultiView["views"].addChild( Gaffer.NameValuePlug( "left", GafferImage.ImagePlug(), True, "view0", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		channelTestImageMultiView["views"].addChild( Gaffer.NameValuePlug( "right", GafferImage.ImagePlug(), True, "view1", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+
+		channelTestImageMultiView["TestImage"] = self.channelTestImage()
+
+		channelTestImageMultiView["DeleteChannels"] = GafferImage.DeleteChannels()
+		channelTestImageMultiView["DeleteChannels"]["in"].setInput( channelTestImageMultiView["TestImage"]["out"] )
+		channelTestImageMultiView["DeleteChannels"]["channels"].setValue( 'custom character.custom' )
+
+		channelTestImageMultiView["ImageTransform"] = GafferImage.ImageTransform()
+		channelTestImageMultiView["ImageTransform"]["in"].setInput( channelTestImageMultiView["TestImage"]["out"] )
+		channelTestImageMultiView["ImageTransform"]["transform"]["translate"]["x"].setValue( -10 )
+
+		channelTestImageMultiView["views"][0]["value"].setInput( channelTestImageMultiView["DeleteChannels"]["out"] )
+		channelTestImageMultiView["views"][1]["value"].setInput( channelTestImageMultiView["ImageTransform"]["out"] )
+
+		return channelTestImageMultiView
+
 	def assertRaisesDeepNotSupported( self, node ) :
 
 		flat = GafferImage.Constant()
