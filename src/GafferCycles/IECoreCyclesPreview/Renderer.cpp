@@ -4251,7 +4251,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		IECore::MessageHandlerPtr m_messageHandler;
 		string m_lastError;
 		string m_lastStatus;
-		float m_lastProgress;
 		double m_lastStatusTime;
 
 		// Caches
