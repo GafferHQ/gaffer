@@ -52,16 +52,18 @@ using namespace GafferSceneUI;
 
 namespace
 {
-	float lineariseDepthBufferSample( float bufferDepth, float *m )
-	{
-		// Heavily optimised extraction that works with our orthogonal clipping planes
-		//   Fast Extraction of Viewing Frustum Planes from the WorldView-Projection Matrix
-		//   http://www.cs.otago.ac.nz/postgrads/alexis/planeExtraction.pdf
-		const float n = - ( m[15] + m[14] ) / ( m[11] + m[10] );
-		const float f = - ( m[15] - m[14] ) / ( m[11] - m[10] );
-		return ( 2.0f * n * f ) / ( f + n - ( bufferDepth * 2.0f - 1.0f ) * ( f - n ) );
-	}
+
+float lineariseDepthBufferSample( float bufferDepth, float *m )
+{
+	// Heavily optimised extraction that works with our orthogonal clipping planes
+	//   Fast Extraction of Viewing Frustum Planes from the WorldView-Projection Matrix
+	//   http://www.cs.otago.ac.nz/postgrads/alexis/planeExtraction.pdf
+	const float n = - ( m[15] + m[14] ) / ( m[11] + m[10] );
+	const float f = - ( m[15] - m[14] ) / ( m[11] - m[10] );
+	return ( 2.0f * n * f ) / ( f + n - ( bufferDepth * 2.0f - 1.0f ) * ( f - n ) );
 }
+
+} // namespace
 
 //////////////////////////////////////////////////////////////////////////
 // SceneGadget implementation
