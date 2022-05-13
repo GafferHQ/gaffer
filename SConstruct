@@ -88,7 +88,10 @@ options.Add(
 options.Add(
 	"CXXFLAGS",
 	"The extra flags to pass to the C++ compiler during compilation.",
-	[ "-pipe", "-Wall" ] if Environment()["PLATFORM"] != "win32" else [],
+	# We want `-Wextra` because some of its warnings are useful, and further useful
+	# warnings may be added in future. But it does introduce warnings we find unhelpful - see
+	# the compiler sections below where we turn them back off again.
+	[ "-pipe", "-Wall", "-Wextra" ] if Environment()["PLATFORM"] != "win32" else [],
 )
 
 options.Add(
@@ -429,6 +432,9 @@ if env["PLATFORM"] != "win32" :
 			CXXFLAGS = [ "-Wno-unused-local-typedef" ]
 		)
 
+		# Turn off the parts of `-Wextra` that we don't like.
+		env.Append( CXXFLAGS = [ "-Wno-unused-parameter" ] )
+
 	elif "g++" in os.path.basename( env["CXX"] ) :
 
 		# Get GCC version.
@@ -450,6 +456,9 @@ if env["PLATFORM"] != "win32" :
 
 		if gccVersion >= [ 9, 2 ] :
 			env.Append( CXXFLAGS = [ "-Wsuggest-override" ] )
+
+		# Turn off the parts of `-Wextra` that we don't like.
+		env.Append( CXXFLAGS = [ "-Wno-cast-function-type", "-Wno-unused-parameter" ] )
 
 		env.Append(
 			CXXFLAGS = [ "-pthread" ],
