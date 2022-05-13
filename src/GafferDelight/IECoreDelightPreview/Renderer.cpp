@@ -258,8 +258,8 @@ class DelightOutput : public IECore::RefCounted
 			const char *namePtr = output->getName().c_str();
 
 			ParameterList driverParams( output->parameters() );
-			driverParams.add( { "drivername", &typePtr, NSITypeString, 0, 1 } );
-			driverParams.add( { "imagefilename", &namePtr, NSITypeString, 0, 1 } );
+			driverParams.add( { "drivername", &typePtr, NSITypeString, 0, 1, 0 } );
+			driverParams.add( { "imagefilename", &namePtr, NSITypeString, 0, 1, 0 } );
 
 			m_driverHandle = DelightHandle( context, "outputDriver:" + name, ownership, "outputdriver", driverParams );
 
@@ -325,7 +325,7 @@ class DelightOutput : public IECore::RefCounted
 			layerParams.add( "variablesource", variableSource );
 			layerParams.add( "layertype", layerType );
 			layerParams.add( "layername", layerName );
-			layerParams.add( { "withalpha", &withAlpha, NSITypeInteger, 0, 1 } );
+			layerParams.add( { "withalpha", &withAlpha, NSITypeInteger, 0, 1, 0 } );
 
 			const string scalarFormat = this->scalarFormat( output );
 			const string colorProfile = scalarFormat == "float" ? "linear" : "sRGB";
@@ -1007,8 +1007,8 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 			if( renderType == SceneDescription )
 			{
 				params = {
-					{ "type", &apistream, NSITypeString, 0, 1 },
-					{ "streamfilename", &fileNamePtr, NSITypeString , 0, 1 }//,
+					{ "type", &apistream, NSITypeString, 0, 1, 0 },
+					{ "streamfilename", &fileNamePtr, NSITypeString , 0, 1, 0 }
 				};
 			}
 
@@ -1016,8 +1016,8 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 			{
 				void *handler = reinterpret_cast<void *>( &DelightRenderer::nsiErrorHandler );
 				void *data = this;
-				params.push_back( { "errorhandler",	&handler, NSITypePointer, 0, 1 } );
-				params.push_back( { "errorhandlerdata",	&data, NSITypePointer, 0, 1 } );
+				params.push_back( { "errorhandler",	&handler, NSITypePointer, 0, 1, 0 } );
+				params.push_back( { "errorhandlerdata",	&data, NSITypePointer, 0, 1, 0 } );
 			}
 
 			m_context = NSIBegin( params.size(), params.data() );
@@ -1259,7 +1259,7 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 			{
 				const char *synchronize = "synchronize";
 				vector<NSIParam_t> params = {
-					{ "action", &synchronize, NSITypeString, 0, 1 }
+					{ "action", &synchronize, NSITypeString, 0, 1, 0 }
 				};
 				NSIRenderControl(
 					m_context,
@@ -1273,13 +1273,13 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 			const int one = 1;
 			const char *start = "start";
 			vector<NSIParam_t> params = {
-				{ "action", &start, NSITypeString, 0, 1 },
-				{ "frame", &m_frame, NSITypeInteger, 0, 1 }
+				{ "action", &start, NSITypeString, 0, 1, 0 },
+				{ "frame", &m_frame, NSITypeInteger, 0, 1, 0 }
 			};
 
 			if( m_renderType == Interactive )
 			{
-				params.push_back( { "interactive", &one, NSITypeInteger, 0, 1 } );
+				params.push_back( { "interactive", &one, NSITypeInteger, 0, 1, 0 } );
 			}
 
 			NSIRenderControl(
@@ -1296,7 +1296,7 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 
 			const char *wait = "wait";
 			params = {
-				{ "action", &wait, NSITypeString, 0, 1 }
+				{ "action", &wait, NSITypeString, 0, 1, 0 }
 			};
 
 			NSIRenderControl(
@@ -1331,7 +1331,7 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 
 			const char *stop = "stop";
 			ParameterList params = {
-				{ "action", &stop, NSITypeString, 0, 1 }
+				{ "action", &stop, NSITypeString, 0, 1, 0 }
 			};
 
 			NSIRenderControl(
@@ -1412,7 +1412,7 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 			// Update the screen
 
 			ParameterList screeenParameters = {
-				{ "oversampling", &m_oversampling, NSITypeInteger, 0, 1 }
+				{ "oversampling", &m_oversampling, NSITypeInteger, 0, 1, 0 }
 			};
 
 			const V2i &resolution = camera->getResolution();

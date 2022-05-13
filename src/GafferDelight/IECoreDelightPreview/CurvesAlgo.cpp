@@ -77,7 +77,8 @@ void staticParameters( const IECoreScene::CurvesPrimitive *object, ParameterList
 			basis,
 			NSITypeString,
 			0,
-			1
+			1,
+			0
 		} );
 	}
 
