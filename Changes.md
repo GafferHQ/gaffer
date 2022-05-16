@@ -1,11 +1,10 @@
 0.61.x.x (relative to 0.61.9.0)
 ========
 
-Features
---------
+Improvements
+------------
 
-- Tool hotkeys now work as toggles for non-exclusive tools.  This is currently noticeable on the Camera Tool - pressing T again will deactivate it.
-
+- Tool hotkeys now work as toggles for non-exclusive tools. This is currently noticeable on the Camera Tool - pressing <kbd>T</kbd> again will deactivate it.
 
 0.61.9.0 (relative to 0.61.8.0)
 ========
