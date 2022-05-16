@@ -106,21 +106,13 @@ void driverParameters( AtList *params, AtNodeEntry *nentry )
 	AiMetaDataSetStr( nentry, nullptr, "maya.translator", "ie" );
 }
 
-#if ARNOLD_VERSION_NUM < 70100
-void driverInitialize( AtNode *node )
-#else
 void driverInitialize( AtRenderSession *session, AtNode *node )
-#endif
 {
 	AiDriverInitialize( node, true );
 	AiNodeSetLocalData( node, new LocalData );
 }
 
-#if ARNOLD_VERSION_NUM < 70100
-void driverUpdate( AtNode *node )
-#else
 void driverUpdate( AtRenderSession *session, AtNode *node )
-#endif
 {
 }
 
@@ -157,11 +149,7 @@ void driverOpen( AtNode *node, struct AtOutputIterator *iterator, AtBBox2 displa
 	CompoundDataPtr parameters = new CompoundData();
 	ParameterAlgo::getParameters( node, parameters->writable() );
 
-#if ARNOLD_VERSION_NUM >= 70000
 	AtString name;
-#else
-	const char *name;
-#endif
 	int pixelType = 0;
 	while( AiOutputIteratorGetNext( iterator, &name, &pixelType, nullptr ) )
 	{
@@ -194,11 +182,7 @@ void driverOpen( AtNode *node, struct AtOutputIterator *iterator, AtBBox2 displa
 			case AI_TYPE_FLOAT :
 			case AI_TYPE_UINT :
 				// no need for prefix because it's not a compound type
-#if ARNOLD_VERSION_NUM >= 70000
 				channelNames.push_back( name.c_str() );
-#else
-				channelNames.push_back( name );
-#endif
 				break;
 		}
 		localData->numOutputs += 1;

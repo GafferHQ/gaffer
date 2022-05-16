@@ -1,10 +1,17 @@
 0.62.x.x (relative to 0.62.0.0a2)
 ========
 
+> Note : This release requires Arnold version 7.1.0.0 or newer.
+
 API
 ---
 
 - RenderController : Added `pathForID()`, `pathsForIDs()`, `idForPath()` and `idsForPaths()` methods. These make it possible to identify an object in the scene from a `uint id` AOV.
+
+Breaking Changes
+----------------
+
+- Arnold : Removed support for Arnold versions prior to 7.1.0.0.
 
 0.62.0.0a2 (relative to 0.62.0.0a1)
 ==========

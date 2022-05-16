@@ -47,36 +47,13 @@ import IECoreArnold
 
 class UniverseBlockTest( unittest.TestCase ) :
 
-	__usingMultipleUniverses = [ int( v ) for v in arnold.AiGetVersion()[:3] ] >= [ 7, 0, 0 ]
-
-	def test( self ) :
-
-		if not self.__usingMultipleUniverses :
-			self.assertFalse( arnold.AiUniverseIsActive() )
-
-		with IECoreArnold.UniverseBlock( writable = False ) :
-
-			if not self.__usingMultipleUniverses :
-				self.assertTrue( arnold.AiUniverseIsActive() )
-
-			with IECoreArnold.UniverseBlock( writable = False ) :
-
-				if not self.__usingMultipleUniverses :
-					self.assertTrue( arnold.AiUniverseIsActive() )
-
-			if not self.__usingMultipleUniverses :
-				self.assertTrue( arnold.AiUniverseIsActive() )
-
 	def testWritable( self ) :
 
 		def createBlock( writable, expectedUniverse = None ) :
 
 			with IECoreArnold.UniverseBlock( writable ) as universe :
 
-				if not self.__usingMultipleUniverses :
-					self.assertTrue( arnold.AiUniverseIsActive() )
-				else :
-					self.assertIsNotNone( universe )
+				self.assertIsNotNone( universe )
 
 				if expectedUniverse is not None :
 					self.assertEqual(
@@ -86,21 +63,12 @@ class UniverseBlockTest( unittest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			if not self.__usingMultipleUniverses :
-				self.assertTrue( arnold.AiUniverseIsActive() )
-			else :
-				self.assertIsNotNone( universe )
-
+			self.assertIsNotNone( universe )
 			createBlock( False )
-			if not self.__usingMultipleUniverses :
-				six.assertRaisesRegex( self, RuntimeError, "Arnold is already in use", createBlock, True )
 
 		with IECoreArnold.UniverseBlock( writable = False ) as universe :
 
-			if not self.__usingMultipleUniverses :
-				self.assertTrue( arnold.AiUniverseIsActive() )
-			else :
-				self.assertIsNotNone( universe )
+			self.assertIsNotNone( universe )
 
 			createBlock( True )
 			createBlock( False, expectedUniverse = universe )
@@ -145,18 +113,6 @@ class UniverseBlockTest( unittest.TestCase ) :
 
 				arnold.AiMetaDataGetInt( e, "AA_samples", "cortex.testInt", i )
 				self.assertEqual( i.value, 12 )
-
-	@unittest.skipIf( __usingMultipleUniverses, "Not relevant" )
-	def testReadOnlyUniverseDoesntPreventWritableUniverseCleanup( self ) :
-
-		with IECoreArnold.UniverseBlock( writable = False ) :
-
-			with IECoreArnold.UniverseBlock( writable = True ) :
-
-				node = arnold.AiNode( "polymesh" )
-				arnold.AiNodeSetStr( node, "name", "test" )
-
-			self.assertEqual( arnold.AiNodeLookUpByName( "test" ), None )
 
 	def testKickNodes( self ) :
 

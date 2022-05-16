@@ -301,7 +301,7 @@ texinfo_documents = [
 
 # Variables for string replacement functions
 
-arnold_version = '5.1.1.1'
+arnold_version = '7.1.1.1'
 arnold_path_linux = '/opt/solidangle/arnold-{0}'.format( arnold_version )
 arnold_path_osx = '/opt/solidangle/arnold-{0}'.format( arnold_version )
 
