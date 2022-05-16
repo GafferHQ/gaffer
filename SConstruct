@@ -432,22 +432,11 @@ if env["PLATFORM"] != "win32" :
 				gccVersion = subprocess.check_output( [ env["CXX"], "-dumpfullversion" ], env=env["ENV"], universal_newlines=True ).strip()
 			gccVersion = [ int( v ) for v in gccVersion.split( "." ) ]
 
-			# GCC 4.1.2 in conjunction with boost::flat_map produces crashes when
-			# using the -fstrict-aliasing optimisation (which defaults to on with -O2),
-			# so we turn the optimisation off here, only for that specific GCC version.
-			if gccVersion == [ 4, 1, 2 ] :
-				env.Append( CXXFLAGS = [ "-fno-strict-aliasing" ] )
-
 			# GCC emits spurious "assuming signed overflow does not occur"
 			# warnings, typically triggered by the comparisons in Box3f::isEmpty().
 			# Downgrade these back to warning status.
 			if gccVersion >= [ 4, 2 ] :
 				env.Append( CXXFLAGS = [ "-Wno-error=strict-overflow" ] )
-
-			# Old GCC emits spurious "maybe uninitialized" warnings when using
-			# boost::optional
-			if gccVersion < [ 5, 1 ] :
-				env.Append( CXXFLAGS = [ "-Wno-error=maybe-uninitialized" ] )
 
 			if gccVersion >= [ 5, 1 ] :
 				env.Append( CXXFLAGS = [ "-D_GLIBCXX_USE_CXX11_ABI=0" ] )
