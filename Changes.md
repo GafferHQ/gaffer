@@ -130,6 +130,14 @@ Build
   - OpenColorIO : Updated to version 2.1.1.
   - Cortex : Updated to version 10.4.0.0.
 
+0.61.x.x (relative to 0.61.9.0)
+========
+
+Improvements
+------------
+
+- Viewer : Tool hotkeys now work as toggles for non-exclusive tools. This is currently noticeable on the Camera Tool - pressing <kbd>T</kbd> again will deactivate it.
+
 0.61.9.0 (relative to 0.61.8.0)
 ========
 
