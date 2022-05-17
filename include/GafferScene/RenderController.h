@@ -63,6 +63,9 @@ class GAFFERSCENE_API RenderController : public Gaffer::Signals::Trackable
 		RenderController( const ConstScenePlugPtr &scene, const Gaffer::ConstContextPtr &context, const IECoreScenePreview::RendererPtr &renderer );
 		~RenderController();
 
+		// Renderer, scene and expansion
+		// =============================
+
 		IECoreScenePreview::Renderer *renderer();
 
 		void setScene( const ConstScenePlugPtr &scene );
@@ -77,6 +80,9 @@ class GAFFERSCENE_API RenderController : public Gaffer::Signals::Trackable
 		void setMinimumExpansionDepth( size_t depth );
 		size_t getMinimumExpansionDepth() const;
 
+		// Update
+		// ======
+
 		using UpdateRequiredSignal = Gaffer::Signals::Signal<void ( RenderController & )>;
 		UpdateRequiredSignal &updateRequiredSignal();
 
@@ -88,6 +94,20 @@ class GAFFERSCENE_API RenderController : public Gaffer::Signals::Trackable
 		std::shared_ptr<Gaffer::BackgroundTask> updateInBackground( const ProgressCallback &callback = ProgressCallback(), const IECore::PathMatcher &priorityPaths = IECore::PathMatcher()  );
 
 		void updateMatchingPaths( const IECore::PathMatcher &pathsToUpdate, const ProgressCallback &callback = ProgressCallback() );
+
+		// ID queries
+		// ==========
+		//
+		// These allow IDs acquired from a standard `uint id` AOV to be mapped
+		// back to the scene paths they came from.
+
+		std::optional<ScenePlug::ScenePath> pathForID( uint32_t id ) const;
+		IECore::PathMatcher pathsForIDs( const std::vector<uint32_t> &ids ) const;
+
+		// Returns the ID associated with the specified path, or `0` if that
+		// path has not been rendered.
+		uint32_t idForPath( const ScenePlug::ScenePath &path ) const;
+		std::vector<uint32_t> idsForPaths( const IECore::PathMatcher &paths ) const;
 
 	private :
 
@@ -123,10 +143,12 @@ class GAFFERSCENE_API RenderController : public Gaffer::Signals::Trackable
 
 		class SceneGraph;
 		class SceneGraphUpdateTask;
+		class IDMap;
 
 		ConstScenePlugPtr m_scene;
 		Gaffer::ConstContextPtr m_context;
 		IECoreScenePreview::RendererPtr m_renderer;
+		std::unique_ptr<IDMap> m_idMap;
 
 		IECore::PathMatcher m_expandedPaths;
 		size_t m_minimumExpansionDepth;
