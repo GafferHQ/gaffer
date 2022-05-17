@@ -45,21 +45,6 @@ def __parameterUserDefault( plug ) :
 		"userDefault"
 	)
 
-# Activators specific to Arnold's "light_blocker" shader.
-
-def __activateRoundness( parent ) :
-
-	if 'geometry_type' in parent :
-		return parent["geometry_type"].getValue() == "plane" and not parent["shader"].getInput()
-	return True
-
-def __activateEdges( parent ) :
-
-	if parent["shader"].getInput() :
-		return parent["geometry_type"].getValue() == "box"
-
-	return True
-
 
 Gaffer.Metadata.registerNode(
 
@@ -74,14 +59,6 @@ Gaffer.Metadata.registerNode(
 	""",
 
 	plugs = {
-
-		# Activators need to live on the parent of the affected plug.
-		"parameters" : [
-
-			"layout:activator:roundnessActivator", __activateRoundness,
-			"layout:activator:edgeActivator", __activateEdges,
-
-		],
 
 		"parameters..." : [
 
@@ -99,24 +76,6 @@ Gaffer.Metadata.registerNode(
 			available if the geometry type is set to "box". Shading will need
 			to be based on P otherwise.
 			""",
-
-		],
-
-		"parameters.roundness" : [
-
-			"layout:visibilityActivator", "roundnessActivator",
-
-		],
-
-		"parameters.width_edge" : [
-
-			"layout:activator", "edgeActivator",
-
-		],
-
-		"parameters.height_edge" : [
-
-			"layout:activator", "edgeActivator",
 
 		],
 

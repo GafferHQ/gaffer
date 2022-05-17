@@ -449,7 +449,7 @@ def __plugMetadata( plug, name ) :
 	else :
 		return result
 
-for nodeType in ( GafferArnold.ArnoldShader, GafferArnold.ArnoldLight, GafferArnold.ArnoldMeshLight, GafferArnold.ArnoldColorManager ) :
+for nodeType in ( GafferArnold.ArnoldShader, GafferArnold.ArnoldLight, GafferArnold.ArnoldMeshLight, GafferArnold.ArnoldColorManager, GafferArnold.ArnoldLightFilter ) :
 
 	nodeKeys = set()
 	parametersPlugKeys = set()

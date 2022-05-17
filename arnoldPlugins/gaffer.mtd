@@ -1934,10 +1934,18 @@
 	gaffer.nodeMenu.category STRING "Light"
 	gaffer.graphEditorLayout.defaultVisibility BOOL false
 
+	gaffer.layout.activator.geometryIsPlane STRING "parameters['geometry_type'].getValue() == 'plane' and not parameters['shader'].getInput()"
+	gaffer.layout.activator.geometryIsBox STRING "parameters['geometry_type'].getValue() == 'box' if parameters['shader'].getInput() else True"
+
+	[attr roundness]
+		gaffer.layout.activator STRING "geometryIsPlane"
+
 	[attr width_edge]
 		page STRING "Falloff"
+		gaffer.layout.activator STRING "geometryIsBox"
 	[attr height_edge]
 		page STRING "Falloff"
+		gaffer.layout.activator STRING "geometryIsBox"
 	[attr ramp]
 		gaffer.graphEditorLayout.visible BOOL false
 		page STRING "Falloff"
