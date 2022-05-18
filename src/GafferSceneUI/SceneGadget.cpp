@@ -123,6 +123,56 @@ Box3f sceneBound( const ScenePlug *scene, const PathMatcher *include, const Path
 	);
 }
 
+vector<IECore::TypeId> typeIdsFromTypeNames( const vector<string> &typeNames )
+{
+	vector<IECore::TypeId> typeIds;
+	for( auto &typeName : typeNames )
+	{
+		typeIds.push_back( RunTimeTyped::typeIdFromTypeName( typeName.c_str() ) );
+	}
+	return typeIds;
+}
+
+bool isObjectInstanceOf( const ScenePlug *scene, const vector<IECore::TypeId> &typeIds )
+{
+	/// \todo In an ideal world we'd be able to determine object type without loading
+	/// the whole object. Perhaps a `ScenePlug::objectTypePlug()` could be useful?
+	const IECore::TypeId objectType = scene->objectPlug()->getValue()->typeId();
+	for( auto typeId : typeIds )
+	{
+		if( typeId == objectType || RunTimeTyped::inheritsFrom( objectType, typeId ) )
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+PathMatcher findTypedObjects( const ScenePlug *scene, const PathMatcher &paths, const vector<string> &typeNames )
+{
+	tbb::enumerable_thread_specific<PathMatcher> threadResults;
+
+	vector<IECore::TypeId> typeIds = typeIdsFromTypeNames( typeNames );
+
+	auto f = [&typeIds, &threadResults] ( const ScenePlug *scene, const ScenePlug::ScenePath &path ) {
+		if( isObjectInstanceOf( scene, typeIds ) )
+		{
+			threadResults.local().addPath( path );
+		}
+		return true;
+	};
+
+	SceneAlgo::filteredParallelTraverse( scene, paths, f );
+
+	return threadResults.combine(
+		[] ( const PathMatcher &a, const PathMatcher &b ) {
+			PathMatcher c = a;
+			c.addPaths( b );
+			return c;
+		}
+	);
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -449,6 +499,14 @@ bool SceneGadget::objectAt( const IECore::LineSegment3f &lineInGadgetSpace, Gaff
 			{
 				if( auto bufferPath = m_controller->pathForID( id ) )
 				{
+					if( m_selectionMask )
+					{
+						ScenePlug::PathScope pathScope( getContext(), &*bufferPath );
+						if( !isObjectInstanceOf( getScene(), typeIdsFromTypeNames( m_selectionMask->readable() ) ) )
+						{
+							return false;
+						}
+					}
 					depth = bufferDepth;
 					path = *bufferPath;
 					hit = true;
@@ -551,7 +609,13 @@ size_t SceneGadget::objectsAt(
 		Box2f ndcBox;
 		ndcBox.extendBy( viewportGadget->gadgetToRasterSpace( corner0InGadgetSpace, this ) / viewportGadget->getViewport() );
 		ndcBox.extendBy( viewportGadget->gadgetToRasterSpace( corner1InGadgetSpace, this ) / viewportGadget->getViewport() );
-		paths.addPaths( m_controller->pathsForIDs( m_outputBuffer->idsAt( ndcBox ) ) );
+		PathMatcher bufferPaths = m_controller->pathsForIDs( m_outputBuffer->idsAt( ndcBox ) );
+		if( m_selectionMask )
+		{
+			Context::Scope scope( getContext() );
+			bufferPaths = findTypedObjects( getScene(), bufferPaths, m_selectionMask->readable() );
+		}
+		paths.addPaths( bufferPaths );
 	}
 
 	return paths.size();
