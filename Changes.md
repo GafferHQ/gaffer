@@ -15,6 +15,7 @@ Improvements
 - Light Editor : Added keyboard shortcuts for selected light.
   - <kbd>Alt+E</kbd> : Edit source node.
   - <kbd>Shift+Alt+E</kbd> : Edit tweaks node.
+- Edit Menu : Added item to rename one or more selected nodes, with accompanying keyboard shortcut (#4286).
 
 Fixes
 -----

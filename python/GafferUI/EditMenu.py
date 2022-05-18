@@ -54,6 +54,7 @@ def appendDefinitions( menuDefinition, prefix="" ) :
 	menuDefinition.append( prefix + "/Copy", { "command" : copy, "shortCut" : "Ctrl+C", "active" : selectionAvailable } )
 	menuDefinition.append( prefix + "/Paste", { "command" : paste, "shortCut" : "Ctrl+V", "active" : __pasteAvailable } )
 	menuDefinition.append( prefix + "/Delete", { "command" : delete, "shortCut" : "Backspace, Delete", "active" : __mutableSelectionAvailable } )
+	menuDefinition.append( prefix + "/Rename", { "command" : rename, "shortCut" : "F2", "active" : selectionAvailable } )
 	menuDefinition.append( prefix + "/CutCopyPasteDeleteDivider", { "divider" : True } )
 
 	menuDefinition.append( prefix + "/Find...", { "command" : find, "shortCut" : "Ctrl+F" } )
@@ -198,6 +199,36 @@ def delete( menu ) :
 	s = scope( menu )
 	with Gaffer.UndoScope( s.script ) :
 		s.script.deleteNodes( s.parent, s.script.selection() )
+
+## A function suitable as the command for a Rename menu item. It must
+# be invoked from a menu that has a ScriptWindow in its ancestry.
+def rename( menu ) :
+
+	s = scope( menu )
+
+	d = GafferUI.TextInputDialogue(
+		initialText = s.script.selection()[-1].getName(),
+		title = "Enter name",
+		confirmLabel = "Rename"
+	)
+
+	# Hack to borrow the input validation from NameWidget so we can prevent the
+	# user entering an invalid name.
+	# \todo : This could be improved with some combination of a public validator
+	# API, sanitising node names in `GraphComponent::setName` and relaxing
+	# `GraphComponent` name contraints.
+	from GafferUI.NameWidget import _Validator
+	textWidget = d._getWidget()._qtWidget()
+	textWidget.setValidator( _Validator( textWidget ) )
+
+	newName = d.waitForText( parentWindow = menu.ancestor( GafferUI.Window ) )
+
+	if not newName :
+		return
+
+	with Gaffer.UndoScope( s.script ) :
+		for n in s.script.selection() :
+			n.setName( newName )
 
 ## A function suitable as the command for an Edit/Find menu item.  It must
 # be invoked from a menu that has a ScriptWindow in its ancestry.
