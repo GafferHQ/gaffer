@@ -426,6 +426,7 @@ void GafferSceneModule::bindRender()
 				.def( "transform", objectInterfaceTransform2 )
 				.def( "attributes", &Renderer::ObjectInterface::attributes )
 				.def( "link", &objectInterfaceLink )
+				.def( "assignID", &Renderer::ObjectInterface::assignID )
 			;
 		}
 
@@ -509,6 +510,7 @@ void GafferSceneModule::bindRender()
 			.def( "capturedLinks", &capturedObjectCapturedLinks )
 			.def( "numAttributeEdits", &CapturingRenderer::CapturedObject::numAttributeEdits )
 			.def( "numLinkEdits", &CapturingRenderer::CapturedObject::numLinkEdits )
+			.def( "id", &CapturingRenderer::CapturedObject::id )
 		;
 	}
 

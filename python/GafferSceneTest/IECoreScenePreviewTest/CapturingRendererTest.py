@@ -79,10 +79,14 @@ class CapturingRendererTest( GafferTest.TestCase ) :
 		self.assertEqual( o.capturedLinks( "lights" ), None )
 		self.assertEqual( o.numAttributeEdits(), 1 )
 		self.assertEqual( o.numLinkEdits( "lights" ), 0 )
+		self.assertEqual( o.id(), 0 )
 
 		o.attributes( attributes2 )
 		self.assertEqual( o.capturedAttributes(), attributes2 )
 		self.assertEqual( o.numAttributeEdits(), 2 )
+
+		o.assignID( 10 )
+		self.assertEqual( o.id(), 10 )
 
 		l1 = renderer.light( "l1", IECore.NullObject(), attributes1 )
 		l2 = renderer.light( "l2", IECore.NullObject(), attributes1 )

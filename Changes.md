@@ -39,6 +39,7 @@ API
 
 - ImageAlgo : Added `sortChannelNames()` function.
 - NodeAlgo : Added support for presets on compound plugs. If all child plugs have a particular preset then the parent plug is considered to have it too, and calling `applyPreset( parent, preset )` will apply it to all the children.
+- RenderController : Added `pathForID()`, `pathsForIDs()`, `idForPath()` and `idsForPaths()` methods. These make it possible to identify an object in the scene from a `uint id` AOV.
 
 Breaking Changes
 ----------------

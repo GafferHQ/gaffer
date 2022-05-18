@@ -286,6 +286,7 @@ const AtString g_boxArnoldString("box");
 const AtString g_cameraArnoldString( "camera" );
 const AtString g_catclarkArnoldString("catclark");
 const AtString g_colorManagerArnoldString( "color_manager" );
+const AtString g_cortexIDArnoldString( "cortex:id" );
 const AtString g_customAttributesArnoldString( "custom_attributes" );
 const AtString g_curvesArnoldString("curves");
 const AtString g_dispMapArnoldString( "disp_map" );
@@ -654,6 +655,11 @@ class ArnoldOutput : public IECore::RefCounted
 		bool updateInteractively() const
 		{
 			return m_updateInteractively;
+		}
+
+		bool requiresIDAOV() const
+		{
+			return m_data == "id UINT";
 		}
 
 	private :
@@ -2170,6 +2176,20 @@ class ArnoldObjectBase : public IECoreScenePreview::Renderer::ObjectInterface
 		{
 		}
 
+		void assignID( uint32_t id ) override
+		{
+			if( AtNode *node = m_instance.node() )
+			{
+				/// \todo Ideally we might use the built-in `id` parameter here, rather
+				/// than make our own. But Arnold's `user_data_int` shader can't query
+				/// it for some reason.
+				if( AiNodeDeclare( node, g_cortexIDArnoldString, "constant UINT" ) )
+				{
+					AiNodeSetUInt( node, g_cortexIDArnoldString, id );
+				}
+			}
+		}
+
 		const Instance &instance() const
 		{
 			return m_instance;
@@ -2922,6 +2942,7 @@ IECore::InternedString g_backgroundOptionName( "ai:background" );
 IECore::InternedString g_colorManagerOptionName( "ai:color_manager" );
 IECore::InternedString g_subdivDicingCameraOptionName( "ai:subdiv_dicing_camera" );
 IECore::InternedString g_imagerOptionName( "ai:imager" );
+IECore::InternedString g_idAOVShaderOptionName( "ai:aov_shader:__cortexID" );
 
 std::string g_logFlagsOptionPrefix( "ai:log:" );
 std::string g_consoleFlagsOptionPrefix( "ai:console:" );
@@ -3570,6 +3591,7 @@ class ArnoldGlobals
 
 		void render()
 		{
+			updateIDAOV();
 			updateCameraMeshes();
 
 			AtNode *options = AiUniverseGetOptions( m_universeBlock->universe() );
@@ -3936,6 +3958,45 @@ class ArnoldGlobals
 				}
 
 				throw IECore::Exception( boost::str( boost::format( "While outputting camera \"%s\", could not find target mesh at \"%s\"" ) % it.first % meshPath ) );
+			}
+		}
+
+		void updateIDAOV()
+		{
+			// Arnold actually declares a built in `ID` AOV, but it doesn't seem to
+			// do anything. So we have to emulate one using an AOV shader of our own.
+			// See related comments in `ArnoldObject::assignID().
+
+			bool needAOV = false;
+			for( const auto &output : m_outputs )
+			{
+				if( output.second->requiresIDAOV() )
+				{
+					needAOV = true;
+					break;
+				}
+			}
+
+			const bool haveAOV = m_aovShaders.find( g_idAOVShaderOptionName ) != m_aovShaders.end();
+			if( needAOV && !haveAOV )
+			{
+				IECoreScene::ShaderNetworkPtr network = new IECoreScene::ShaderNetwork;
+				network->addShader(
+					"userData",
+					new IECoreScene::Shader( "user_data_int", "ai:shader", { { "attribute", new IECore::StringData( "cortex:id" ) } } )
+				);
+				network->addShader(
+					"aovWrite",
+					new IECoreScene::Shader( "aov_write_int", "ai:shader", { { "aov_name", new IECore::StringData( "id" ) } })
+				);
+				network->addConnection( { { "userData", "" }, { "aovWrite", "aov_input" } } );
+				network->setOutput( { "aovWrite", "" } );
+
+				option( g_idAOVShaderOptionName, network.get() );
+			}
+			else if( !needAOV && haveAOV )
+			{
+				option( g_idAOVShaderOptionName, nullptr );
 			}
 		}
 

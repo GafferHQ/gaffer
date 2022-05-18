@@ -956,6 +956,11 @@ class DelightObject : public IECoreScenePreview::Renderer::ObjectInterface
 		{
 		}
 
+		void assignID( uint32_t id ) override
+		{
+			/// \todo Implement
+		}
+
 	private :
 
 		const DelightHandle m_transformHandle;

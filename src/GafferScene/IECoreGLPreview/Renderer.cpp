@@ -445,6 +445,16 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 		{
 		}
 
+		void assignID( uint32_t id ) override
+		{
+			// The GL renderer provides a more lightweight ID mechanism where
+			// IDs are just the index in the object list, and don't need
+			// assigning. This is exposed via the `gl:querySelection` command.
+			// So we don't implement `assignID()` for now.
+			/// \todo Evaluate overhead of the more general ID mechanism, and
+			/// consider dropping the custom OpenGL one.
+		}
+
 		Box3f transformedBound() const
 		{
 			Box3f b;
