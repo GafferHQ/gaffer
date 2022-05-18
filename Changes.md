@@ -1,6 +1,11 @@
 0.61.x.x (relative to 0.61.9.0)
 ========
 
+Features
+--------
+
+- Main Menu : Added item to populate the Arnold GPU cache, which may improve startup times for GPU renders.
+
 Improvements
 ------------
 

@@ -116,6 +116,7 @@ if moduleSearchPath.find( "arnold" ) :
 
 		import GafferArnold
 		import GafferArnoldUI
+		import arnold
 
 		GafferArnoldUI.ShaderMenu.appendShaders( nodeMenu.definition() )
 
@@ -134,6 +135,13 @@ if moduleSearchPath.find( "arnold" ) :
 		nodeMenu.append( "/Arnold/Arnold Texture Bake", GafferArnold.ArnoldTextureBake, searchText = "ArnoldTextureBake" )
 
 		GafferArnoldUI.CacheMenu.appendDefinitions( scriptWindowMenu, "/Tools/Arnold" )
+
+		scriptWindowMenu.append(
+			"/Tools/Arnold/Populate GPU Cache",
+			{
+				"command" : GafferArnoldUI.GPUCache.populateGPUCache,
+			}
+		)
 
 	except Exception as m :
 

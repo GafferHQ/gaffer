@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2022, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,30 +34,44 @@
 #
 ##########################################################################
 
-__import__( "GafferSceneUI" )
+import arnold
 
-from ._GafferArnoldUI import *
+import IECore
 
-from . import ArnoldShaderUI
-from . import ArnoldRenderUI
-from . import ShaderMenu
-from . import ArnoldOptionsUI
-from . import ArnoldAttributesUI
-from . import ArnoldLightUI
-from . import ArnoldVDBUI
-from . import InteractiveArnoldRenderUI
-from . import ArnoldDisplacementUI
-from . import ArnoldMeshLightUI
-from . import ArnoldShaderBallUI
-from . import ArnoldAOVShaderUI
-from . import ArnoldAtmosphereUI
-from . import ArnoldBackgroundUI
-from . import ArnoldTextureBakeUI
-from . import ArnoldCameraShadersUI
-from . import ArnoldLightFilterUI
-from . import ArnoldColorManagerUI
-from . import ArnoldImagerUI
-from . import CacheMenu
-from . import GPUCache
+import Gaffer
+import GafferUI
+import GafferArnold
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferArnoldUI" )
+class _ArnoldGPUCache( object ) :
+
+	currentStatus = None
+
+	def __cachePopulateCallback( self, userData, status, fractionDone, msg ) :
+
+		self.currentStatus = status
+
+		IECore.msg( IECore.Msg.Level.Debug, "populateGPUCache", str( msg ) )
+
+	def _populateCache( self ) :
+
+		canceller = Gaffer.Context.current().canceller()
+		arnold.AiGPUCachePopulate(
+			arnold.AI_GPU_CACHE_POPULATE_NON_BLOCKING,
+			0,  # num_proc
+			self.__cachePopulateCallback
+		)
+		try :
+			while self.currentStatus != arnold.AI_RENDER_STATUS_FINISHED.value :
+				IECore.Canceller.check( canceller )
+		except Exception as e :
+			arnold.AiGPUCachePopulateTerminate()
+
+def populateGPUCache( menu ) :
+
+	dialogue = GafferUI.BackgroundTaskDialogue( "Populating Arnold GPU Cache" )
+	cache = _ArnoldGPUCache()
+
+	dialogue.waitForBackgroundTask(
+		cache._populateCache,
+		parentWindow = menu.ancestor( GafferUI.Window )
+	)
