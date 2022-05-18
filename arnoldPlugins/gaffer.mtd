@@ -42,6 +42,8 @@
 	gaffer.layout.section.Shape.collapsed BOOL false
 	gaffer.layout.section.Sampling.collapsed BOOL false
 
+	gaffer.layout.activator.shadowsEnabled STRING "parameters['cast_shadows'].getValue() == True"
+
 	[attr color]
 		gaffer.layout.index INT 0
 	[attr intensity]
@@ -70,12 +72,15 @@
 	[attr cast_volumetric_shadows]
 		page STRING "Shadows"
 		gaffer.layout.index INT 9
+		gaffer.layout.activator STRING "shadowsEnabled"
 	[attr shadow_density]
 		page STRING "Shadows"
 		gaffer.layout.index INT 10
+		gaffer.layout.activator STRING "shadowsEnabled"
 	[attr shadow_color]
 		page STRING "Shadows"
 		gaffer.layout.index INT 11
+		gaffer.layout.activator STRING "shadowsEnabled"
 
 	[attr camera]
 		page STRING "Contribution"
@@ -121,6 +126,8 @@
 	gaffer.layout.section.Shape.collapsed BOOL false
 	gaffer.layout.section.Sampling.collapsed BOOL false
 
+	gaffer.layout.activator.shadowsEnabled STRING "parameters['cast_shadows'].getValue() == True"
+
 	[attr color]
 		gaffer.layout.index INT 0
 	[attr intensity]
@@ -149,12 +156,15 @@
 	[attr cast_volumetric_shadows]
 		page STRING "Shadows"
 		gaffer.layout.index INT 9
+		gaffer.layout.activator STRING "shadowsEnabled"
 	[attr shadow_density]
 		page STRING "Shadows"
 		gaffer.layout.index INT 10
+		gaffer.layout.activator STRING "shadowsEnabled"
 	[attr shadow_color]
 		page STRING "Shadows"
 		gaffer.layout.index INT 11
+		gaffer.layout.activator STRING "shadowsEnabled"
 
 	[attr camera]
 		page STRING "Contribution"
@@ -200,78 +210,107 @@
 	gaffer.layout.section.Shape.collapsed BOOL false
 	gaffer.layout.section.Sampling.collapsed BOOL false
 
+	gaffer.layout.activator.modeIsPortal STRING "parameters['portal'].getValue() == False"
+	gaffer.layout.activator.shadowsEnabled STRING "parameters['cast_shadows'].getValue() == True"
+
 	[attr portal]
 		options STRING "Light:0|Portal:1"
 		label STRING "Mode"
 		gaffer.layout.index INT 0
 	[attr color]
 		gaffer.layout.index INT 1
+		gaffer.layout.visibilityActivator STRING "modeIsPortal"
 	[attr intensity]
 		gaffer.layout.index INT 2
+		gaffer.layout.visibilityActivator STRING "modeIsPortal"
 	[attr exposure]
 		gaffer.layout.index INT 3
+		gaffer.layout.visibilityActivator STRING "modeIsPortal"
 	[attr normalize]
 		gaffer.layout.index INT 4
+		gaffer.layout.visibilityActivator STRING "modeIsPortal"
 	[attr aov]
 		gaffer.layout.index INT 5
+		gaffer.layout.visibilityActivator STRING "modeIsPortal"
 
 	[attr roundness]
 		page STRING "Shape"
 		gaffer.layout.index INT 6
+		gaffer.layout.visibilityActivator STRING "modeIsPortal"
 	[attr soft_edge]
 		page STRING "Shape"
 		gaffer.layout.index INT 7
+		gaffer.layout.visibilityActivator STRING "modeIsPortal"
 	[attr spread]
 		page STRING "Shape"
 		gaffer.layout.index INT 8
+		gaffer.layout.visibilityActivator STRING "modeIsPortal"
 	[attr resolution]
 		page STRING "Shape"
 		gaffer.layout.index INT 9
+		gaffer.layout.visibilityActivator STRING "modeIsPortal"
 
 	[attr samples]
 		page STRING "Sampling"
 		gaffer.layout.index INT 10
+		gaffer.layout.visibilityActivator STRING "modeIsPortal"
 	[attr volume_samples]
 		page STRING "Sampling"
 		gaffer.layout.index INT 11
+		gaffer.layout.visibilityActivator STRING "modeIsPortal"
 
 	[attr cast_shadows]
 		page STRING "Shadows"
 		gaffer.layout.index INT 12
+		gaffer.layout.visibilityActivator STRING "modeIsPortal"
 	[attr cast_volumetric_shadows]
 		page STRING "Shadows"
 		gaffer.layout.index INT 13
+		gaffer.layout.visibilityActivator STRING "modeIsPortal"
+		gaffer.layout.activator STRING "shadowsEnabled"
 	[attr shadow_density]
 		page STRING "Shadows"
 		gaffer.layout.index INT 14
+		gaffer.layout.visibilityActivator STRING "modeIsPortal"
+		gaffer.layout.activator STRING "shadowsEnabled"
 	[attr shadow_color]
 		page STRING "Shadows"
 		gaffer.layout.index INT 15
+		gaffer.layout.visibilityActivator STRING "modeIsPortal"
+		gaffer.layout.activator STRING "shadowsEnabled"
 
 	[attr camera]
 		page STRING "Contribution"
 		gaffer.layout.index INT 16
+		gaffer.layout.visibilityActivator STRING "modeIsPortal"
 	[attr transmission]
 		page STRING "Contribution"
 		gaffer.layout.index INT 17
+		gaffer.layout.visibilityActivator STRING "modeIsPortal"
 	[attr diffuse]
 		page STRING "Contribution"
 		gaffer.layout.index INT 18
+		gaffer.layout.visibilityActivator STRING "modeIsPortal"
 	[attr specular]
 		page STRING "Contribution"
 		gaffer.layout.index INT 19
+		gaffer.layout.visibilityActivator STRING "modeIsPortal"
 	[attr sss]
 		page STRING "Contribution"
 		gaffer.layout.index INT 20
+		gaffer.layout.visibilityActivator STRING "modeIsPortal"
 	[attr indirect]
 		page STRING "Contribution"
 		gaffer.layout.index INT 21
+		gaffer.layout.visibilityActivator STRING "modeIsPortal"
 	[attr volume]
 		page STRING "Contribution"
 		gaffer.layout.index INT 22
+		gaffer.layout.visibilityActivator STRING "modeIsPortal"
 	[attr max_bounces]
 		page STRING "Contribution"
 		gaffer.layout.index INT 23
+		gaffer.layout.visibilityActivator STRING "modeIsPortal"
 
 	[attr vertices]
 		gaffer.plugType STRING ""
@@ -291,6 +330,8 @@
 
 	gaffer.layout.section.Shape.collapsed BOOL false
 	gaffer.layout.section.Sampling.collapsed BOOL false
+
+	gaffer.layout.activator.shadowsEnabled STRING "parameters['cast_shadows'].getValue() == True"
 
 	[attr color]
 		gaffer.layout.index INT 0
@@ -338,12 +379,15 @@
 	[attr cast_volumetric_shadows]
 		page STRING "Shadows"
 		gaffer.layout.index INT 15
+		gaffer.layout.activator STRING "shadowsEnabled"
 	[attr shadow_density]
 		page STRING "Shadows"
 		gaffer.layout.index INT 16
+		gaffer.layout.activator STRING "shadowsEnabled"
 	[attr shadow_color]
 		page STRING "Shadows"
 		gaffer.layout.index INT 17
+		gaffer.layout.activator STRING "shadowsEnabled"
 
 	[attr camera]
 		page STRING "Contribution"
@@ -393,6 +437,8 @@
 	gaffer.layout.section.Map.collapsed BOOL false
 	gaffer.layout.section.Sampling.collapsed BOOL false
 
+	gaffer.layout.activator.shadowsEnabled STRING "parameters['cast_shadows'].getValue() == True"
+
 	[attr color]
 		gaffer.layout.index INT 0
 	[attr intensity]
@@ -432,12 +478,15 @@
 	[attr cast_volumetric_shadows]
 		page STRING "Shadows"
 		gaffer.layout.index INT 13
+		gaffer.layout.activator STRING "shadowsEnabled"
 	[attr shadow_density]
 		page STRING "Shadows"
 		gaffer.layout.index INT 14
+		gaffer.layout.activator STRING "shadowsEnabled"
 	[attr shadow_color]
 		page STRING "Shadows"
 		gaffer.layout.index INT 15
+		gaffer.layout.activator STRING "shadowsEnabled"
 
 	[attr camera]
 		page STRING "Contribution"
@@ -481,6 +530,8 @@
 	gaffer.layout.section.Shape.collapsed BOOL false
 	gaffer.layout.section.Sampling.collapsed BOOL false
 
+	gaffer.layout.activator.shadowsEnabled STRING "parameters['cast_shadows'].getValue() == True"
+
 	[attr color]
 		gaffer.layout.index INT 0
 	[attr intensity]
@@ -509,12 +560,15 @@
 	[attr cast_volumetric_shadows]
 		page STRING "Shadows"
 		gaffer.layout.index INT 9
+		gaffer.layout.activator STRING "shadowsEnabled"
 	[attr shadow_density]
 		page STRING "Shadows"
 		gaffer.layout.index INT 10
+		gaffer.layout.activator STRING "shadowsEnabled"
 	[attr shadow_color]
 		page STRING "Shadows"
 		gaffer.layout.index INT 11
+		gaffer.layout.activator STRING "shadowsEnabled"
 
 	[attr camera]
 		page STRING "Contribution"
@@ -562,6 +616,8 @@
 	gaffer.layout.section.Shape.collapsed BOOL false
 	gaffer.layout.section.Sampling.collapsed BOOL false
 
+	gaffer.layout.activator.shadowsEnabled STRING "parameters['cast_shadows'].getValue() == True"
+
 	[attr color]
 		gaffer.layout.index INT 0
 	[attr intensity]
@@ -593,12 +649,15 @@
 	[attr cast_volumetric_shadows]
 		page STRING "Shadows"
 		gaffer.layout.index INT 10
+		gaffer.layout.activator STRING "shadowsEnabled"
 	[attr shadow_density]
 		page STRING "Shadows"
 		gaffer.layout.index INT 11
+		gaffer.layout.activator STRING "shadowsEnabled"
 	[attr shadow_color]
 		page STRING "Shadows"
 		gaffer.layout.index INT 12
+		gaffer.layout.activator STRING "shadowsEnabled"
 
 	[attr camera]
 		page STRING "Contribution"
@@ -646,6 +705,8 @@
 	gaffer.layout.section.Shape.collapsed BOOL false
 	gaffer.layout.section.Sampling.collapsed BOOL false
 
+	gaffer.layout.activator.shadowsEnabled STRING "parameters['cast_shadows'].getValue() == True"
+
 	[attr color]
 		gaffer.layout.index INT 0
 	[attr intensity]
@@ -670,12 +731,15 @@
 	[attr cast_volumetric_shadows]
 		page STRING "Shadows"
 		gaffer.layout.index INT 12
+		gaffer.layout.activator STRING "shadowsEnabled"
 	[attr shadow_density]
 		page STRING "Shadows"
 		gaffer.layout.index INT 13
+		gaffer.layout.activator STRING "shadowsEnabled"
 	[attr shadow_color]
 		page STRING "Shadows"
 		gaffer.layout.index INT 14
+		gaffer.layout.activator STRING "shadowsEnabled"
 
 	[attr camera]
 		page STRING "Contribution"
@@ -721,6 +785,8 @@
 	gaffer.layout.section.Shape.collapsed BOOL false
 	gaffer.layout.section.Sampling.collapsed BOOL false
 
+	gaffer.layout.activator.shadowsEnabled STRING "parameters['cast_shadows'].getValue() == True"
+
 	[attr color]
 		gaffer.layout.index INT 0
 	[attr intensity]
@@ -753,12 +819,15 @@
 	[attr cast_volumetric_shadows]
 		page STRING "Shadows"
 		gaffer.layout.index INT 10
+		gaffer.layout.activator STRING "shadowsEnabled"
 	[attr shadow_density]
 		page STRING "Shadows"
 		gaffer.layout.index INT 11
+		gaffer.layout.activator STRING "shadowsEnabled"
 	[attr shadow_color]
 		page STRING "Shadows"
 		gaffer.layout.index INT 12
+		gaffer.layout.activator STRING "shadowsEnabled"
 
 	[attr camera]
 		page STRING "Contribution"
@@ -957,8 +1026,13 @@
 
 	gaffer.nodeMenu.category STRING "Utility"
 
+	gaffer.layout.activator.coordSpaceIsPref STRING "parameters['coord_space'].getValue() == 'Pref'"
+
 	[attr camera]
 		gaffer.plugType STRING ""
+
+	[attr pref_name]
+		gaffer.layout.activator STRING "coordSpaceIsPref"
 
 
 [node car_paint]
@@ -967,6 +1041,7 @@
 
 	gaffer.graphEditorLayout.defaultVisibility BOOL false
 
+	gaffer.layout.activator.flakeSpaceIsPref STRING "parameters['flake_coord_space'].getValue() == 'Pref'"
 
 	[attr base]
 		gaffer.graphEditorLayout.visible BOOL true
@@ -1021,6 +1096,7 @@
 		page STRING "Flake"
 	[attr pref_name]
 		page STRING "Flake"
+		gaffer.layout.activator STRING "flakeSpaceIsPref"
 
 	[attr flake_flip_flop]
 		page STRING "Flake"
@@ -1046,6 +1122,22 @@
 
 	gaffer.nodeMenu.category STRING "Texture"
 
+	gaffer.graphEditorLayout.defaultVisibility BOOL false
+
+	gaffer.layout.activator.densityEnabled STRING "parameters['pattern'].getValue().startswith('cell')"
+	gaffer.layout.activator.coordSpaceIsPref STRING "parameters['coord_space'].getValue() == 'Pref'"
+
+	[attr P]
+		gaffer.graphEditorLayout.visible BOOL true
+	[attr offset]
+		gaffer.graphEditorLayout.visible BOOL true
+	[attr color]
+		gaffer.graphEditorLayout.visible BOOL true
+	[attr density]
+		gaffer.layout.activator STRING "densityEnabled"
+	[attr pref_name]
+		gaffer.layout.activator STRING "coordSpaceIsPref"
+
 
 [node checkerboard]
 
@@ -1057,6 +1149,17 @@
 	primaryInput STRING "input"
 	gaffer.nodeMenu.category STRING "Maths"
 
+	gaffer.layout.activator.modeIsScalar STRING "parameters['mode'].getValue() == 'scalar'"
+	gaffer.layout.activator.modeIsColor STRING "parameters['mode'].getValue() == 'color'"
+
+	[attr min]
+		gaffer.layout.activator STRING "modeIsScalar"
+	[attr max]
+		gaffer.layout.activator STRING "modeIsScalar"
+	[attr min_color]
+		gaffer.layout.activator STRING "modeIsColor"
+	[attr max_color]
+		gaffer.layout.activator STRING "modeIsColor"
 
 [node clip_geo]
 
@@ -1072,6 +1175,53 @@
 
 	primaryInput STRING "input"
 	gaffer.nodeMenu.category STRING "Utility"
+	gaffer.layout.section.Adjustments.collapsed BOOL false
+
+	[attr input]
+		gaffer.layout.index INT 0
+	[attr mask]
+		gaffer.layout.index INT 1
+
+	[attr gamma]
+		page STRING "Adjustments"
+		gaffer.layout.index INT 2
+	[attr hue_shift]
+		page STRING "Adjustments"
+		gaffer.layout.index INT 3
+	[attr saturation]
+		page STRING "Adjustments"
+		gaffer.layout.index INT 4
+	[attr contrast]
+		page STRING "Adjustments"
+		gaffer.layout.index INT 5
+	[attr contrast_pivot]
+		page STRING "Adjustments"
+		gaffer.layout.index INT 6
+	[attr exposure]
+		page STRING "Adjustments"
+		gaffer.layout.index INT 7
+	[attr multiply]
+		page STRING "Adjustments"
+		gaffer.layout.index INT 8
+	[attr add]
+		page STRING "Adjustments"
+		gaffer.layout.index INT 9
+	[attr invert]
+		page STRING "Adjustments"
+		gaffer.layout.index INT 10
+
+	[attr alpha_is_luminance]
+		page STRING "Alpha"
+		gaffer.layout.index INT 11
+	[attr alpha_multiply]
+		page STRING "Alpha"
+		gaffer.layout.index INT 12
+	[attr alpha_add]
+		page STRING "Alpha"
+		gaffer.layout.index INT 13
+	[attr invert_alpha]
+		page STRING "Alpha"
+		gaffer.layout.index INT 14
 
 
 [node color_jitter]
@@ -1079,6 +1229,74 @@
 	primaryInput STRING "input"
 	gaffer.nodeMenu.category STRING "Utility"
 
+	gaffer.graphEditorLayout.defaultVisibility BOOL false
+
+	[attr input]
+		gaffer.graphEditorLayout.visible BOOL true
+
+	[attr data_input]
+		page STRING "User Data"
+	[attr data_gain_min]
+		page STRING "User Data"
+	[attr data_gain_max]
+		page STRING "User Data"
+	[attr data_hue_min]
+		page STRING "User Data"
+	[attr data_hue_max]
+		page STRING "User Data"
+	[attr data_saturation_min]
+		page STRING "User Data"
+	[attr data_saturation_max]
+		page STRING "User Data"
+	[attr data_seed]
+		page STRING "User Data"
+
+	[attr proc_gain_min]
+		page STRING "Procedural"
+	[attr proc_gain_max]
+		page STRING "Procedural"
+	[attr proc_hue_min]
+		page STRING "Procedural"
+	[attr proc_hue_max]
+		page STRING "Procedural"
+	[attr proc_saturation_min]
+		page STRING "Procedural"
+	[attr proc_saturation_max]
+		page STRING "Procedural"
+	[attr proc_seed]
+		page STRING "Procedural"
+
+	[attr obj_gain_min]
+		page STRING "Object"
+	[attr obj_gain_max]
+		page STRING "Object"
+	[attr obj_hue_min]
+		page STRING "Object"
+	[attr obj_hue_max]
+		page STRING "Object"
+	[attr obj_saturation_min]
+		page STRING "Object"
+	[attr obj_saturation_max]
+		page STRING "Object"
+	[attr obj_seed]
+		page STRING "Object"
+
+	[attr face_gain_min]
+		page STRING "Face"
+	[attr face_gain_max]
+		page STRING "Face"
+	[attr face_hue_min]
+		page STRING "Face"
+	[attr face_hue_max]
+		page STRING "Face"
+	[attr face_saturation_min]
+		page STRING "Face"
+	[attr face_saturation_max]
+		page STRING "Face"
+	[attr face_seed]
+		page STRING "Face"
+	[attr face_mode]
+		page STRING "Face"
 
 [node compare]
 
@@ -1145,6 +1363,11 @@
 
 	gaffer.nodeMenu.category STRING "Texture"
 
+	gaffer.layout.activator.coordSpaceIsPref STRING "parameters['coord_space'].getValue() == 'Pref'"
+
+	[attr pref_name]
+		gaffer.layout.activator STRING "coordSpaceIsPref"
+
 
 [node flat]
 
@@ -1188,9 +1411,37 @@
 	shaderType STRING "lightFilter"
 	gaffer.nodeMenu.category STRING "Light"
 
-	[attr rotate]
-		gaffer.plugType STRING "FloatPlug"
+	[attr slidemap]
+		gaffer.layout.index INT 0
+	[attr filter_mode]
+		gaffer.layout.index INT 1
+	[attr density]
+		gaffer.layout.index INT 2
 
+	[attr rotate]
+		gaffer.layout.index INT 3
+		gaffer.plugType STRING "FloatPlug"
+		page STRING "Transform"
+	[attr offset]
+		gaffer.layout.index INT 4
+		page STRING "Transform"
+
+	[attr swrap]
+		gaffer.layout.index INT 5
+		label STRING "Wrap U"
+		page STRING "UV Coordinates"
+	[attr twrap]
+		gaffer.layout.index INT 6
+		label STRING "Wrap V"
+		page STRING "UV Coordinates"
+	[attr sscale]
+		gaffer.layout.index INT 7
+		label STRING "Scale U"
+		page STRING "UV Coordinates"
+	[attr tscale]
+		gaffer.layout.index INT 8
+		label STRING "Scale V"
+		page STRING "UV Coordinates"
 
 [node hair]
 
@@ -1201,9 +1452,82 @@
 [node image]
 
 	gaffer.nodeMenu.category STRING "Texture"
+	gaffer.layout.section.Filter.collapsed BOOL false
 
 	[attr filename]
 		widget STRING "filename"
+		gaffer.layout.index INT 0
+	[attr color_space]
+		gaffer.layout.index INT 1
+	[attr uvset]
+		gaffer.layout.index INT 2
+
+	[attr filter]
+		gaffer.layout.index INT 3
+		page STRING "Filter"
+	[attr mipmap_bias]
+		gaffer.layout.index INT 4
+		page STRING "Filter"
+
+	[attr multiply]
+		gaffer.layout.index INT 5
+		page STRING "Adjustments"
+	[attr offset]
+		gaffer.layout.index INT 6
+		page STRING "Adjustments"
+	[attr single_channel]
+		gaffer.layout.index INT 7
+		page STRING "Interpretation"
+	[attr start_channel]
+		gaffer.layout.index INT 8
+		page STRING "Interpretation"
+	[attr ignore_missing_textures]
+		gaffer.layout.index INT 9
+		page STRING "Interpretation"
+	[attr missing_texture_color]
+		gaffer.layout.index INT 10
+		page STRING "Interpretation"
+
+	[attr uvcoords]
+		label STRING "UV Coords"
+		gaffer.layout.index INT 11
+		page STRING "UV Coordinates"
+	[attr soffset]
+		label STRING "Offset U"
+		gaffer.layout.index INT 12
+		page STRING "UV Coordinates"
+	[attr toffset]
+		label STRING "Offset V"
+		gaffer.layout.index INT 13
+		page STRING "UV Coordinates"
+	[attr swrap]
+		label STRING "Wrap U"
+		gaffer.layout.index INT 14
+		page STRING "UV Coordinates"
+	[attr twrap]
+		label STRING "Wrap V"
+		gaffer.layout.index INT 15
+		page STRING "UV Coordinates"
+	[attr sscale]
+		label STRING "Scale U"
+		gaffer.layout.index INT 16
+		page STRING "UV Coordinates"
+	[attr tscale]
+		label STRING "Scale V"
+		gaffer.layout.index INT 17
+		page STRING "UV Coordinates"
+	[attr sflip]
+		label STRING "Flip U"
+		gaffer.layout.index INT 18
+		page STRING "UV Coordinates"
+	[attr tflip]
+		label STRING "Flip V"
+		gaffer.layout.index INT 19
+		page STRING "UV Coordinates"
+	[attr swap_st]
+		label STRING "Swap UV"
+		gaffer.layout.index INT 20
+		page STRING "UV Coordinates"
 
 
 [node is_finite]
@@ -1219,16 +1543,384 @@
 [node layer_float]
 
 	gaffer.nodeMenu.category STRING "Utility"
+	gaffer.layout.section.Layer1.collapsed BOOL false
+
+	gaffer.layout.activator.layer1Enabled STRING "parameters['enable1'].getValue() == True"
+	gaffer.layout.activator.layer2Enabled STRING "parameters['enable2'].getValue() == True"
+	gaffer.layout.activator.layer3Enabled STRING "parameters['enable3'].getValue() == True"
+	gaffer.layout.activator.layer4Enabled STRING "parameters['enable4'].getValue() == True"
+	gaffer.layout.activator.layer5Enabled STRING "parameters['enable5'].getValue() == True"
+	gaffer.layout.activator.layer6Enabled STRING "parameters['enable6'].getValue() == True"
+	gaffer.layout.activator.layer7Enabled STRING "parameters['enable7'].getValue() == True"
+	gaffer.layout.activator.layer8Enabled STRING "parameters['enable8'].getValue() == True"
+
+	[attr enable1]
+		page STRING "Layer1"
+	[attr name1]
+		page STRING "Layer1"
+		gaffer.layout.activator STRING "layer1Enabled"
+	[attr input1]
+		page STRING "Layer1"
+		gaffer.layout.activator STRING "layer1Enabled"
+	[attr mix1]
+		page STRING "Layer1"
+		gaffer.layout.activator STRING "layer1Enabled"
+
+	[attr enable2]
+		page STRING "Layer2"
+	[attr name2]
+		page STRING "Layer2"
+		gaffer.layout.activator STRING "layer2Enabled"
+	[attr input2]
+		page STRING "Layer2"
+		gaffer.layout.activator STRING "layer2Enabled"
+	[attr mix2]
+		page STRING "Layer2"
+		gaffer.layout.activator STRING "layer2Enabled"
+
+	[attr enable3]
+		page STRING "Layer3"
+	[attr name3]
+		page STRING "Layer3"
+		gaffer.layout.activator STRING "layer3Enabled"
+	[attr input3]
+		page STRING "Layer3"
+		gaffer.layout.activator STRING "layer3Enabled"
+	[attr mix3]
+		page STRING "Layer3"
+		gaffer.layout.activator STRING "layer3Enabled"
+
+	[attr enable4]
+		page STRING "Layer4"
+	[attr name4]
+		page STRING "Layer4"
+		gaffer.layout.activator STRING "layer4Enabled"
+	[attr input4]
+		page STRING "Layer4"
+		gaffer.layout.activator STRING "layer4Enabled"
+	[attr mix4]
+		page STRING "Layer4"
+		gaffer.layout.activator STRING "layer4Enabled"
+
+	[attr enable5]
+		page STRING "Layer5"
+	[attr name5]
+		page STRING "Layer5"
+		gaffer.layout.activator STRING "layer5Enabled"
+	[attr input5]
+		page STRING "Layer5"
+		gaffer.layout.activator STRING "layer5Enabled"
+	[attr mix5]
+		page STRING "Layer5"
+		gaffer.layout.activator STRING "layer5Enabled"
+
+	[attr enable6]
+		page STRING "Layer6"
+	[attr name6]
+		page STRING "Layer6"
+		gaffer.layout.activator STRING "layer6Enabled"
+	[attr input6]
+		page STRING "Layer6"
+		gaffer.layout.activator STRING "layer6Enabled"
+	[attr mix6]
+		page STRING "Layer6"
+		gaffer.layout.activator STRING "layer6Enabled"
+
+	[attr enable7]
+		page STRING "Layer7"
+	[attr name7]
+		page STRING "Layer7"
+		gaffer.layout.activator STRING "layer7Enabled"
+	[attr input7]
+		page STRING "Layer7"
+		gaffer.layout.activator STRING "layer7Enabled"
+	[attr mix7]
+		page STRING "Layer7"
+		gaffer.layout.activator STRING "layer7Enabled"
+
+	[attr enable8]
+		page STRING "Layer8"
+	[attr name8]
+		page STRING "Layer8"
+		gaffer.layout.activator STRING "layer8Enabled"
+	[attr input8]
+		page STRING "Layer8"
+		gaffer.layout.activator STRING "layer8Enabled"
+	[attr mix8]
+		page STRING "Layer8"
+		gaffer.layout.activator STRING "layer8Enabled"
 
 
 [node layer_rgba]
 
 	gaffer.nodeMenu.category STRING "Utility"
+	gaffer.layout.section.Layer1.collapsed BOOL false
+
+	gaffer.layout.activator.layer1Enabled STRING "parameters['enable1'].getValue() == True"
+	gaffer.layout.activator.layer2Enabled STRING "parameters['enable2'].getValue() == True"
+	gaffer.layout.activator.layer3Enabled STRING "parameters['enable3'].getValue() == True"
+	gaffer.layout.activator.layer4Enabled STRING "parameters['enable4'].getValue() == True"
+	gaffer.layout.activator.layer5Enabled STRING "parameters['enable5'].getValue() == True"
+	gaffer.layout.activator.layer6Enabled STRING "parameters['enable6'].getValue() == True"
+	gaffer.layout.activator.layer7Enabled STRING "parameters['enable7'].getValue() == True"
+	gaffer.layout.activator.layer8Enabled STRING "parameters['enable8'].getValue() == True"
+
+	[attr enable1]
+		page STRING "Layer1"
+	[attr name1]
+		page STRING "Layer1"
+		gaffer.layout.activator STRING "layer1Enabled"
+	[attr input1]
+		page STRING "Layer1"
+		gaffer.layout.activator STRING "layer1Enabled"
+	[attr operation1]
+		page STRING "Layer1"
+		gaffer.layout.activator STRING "layer1Enabled"
+	[attr mix1]
+		page STRING "Layer1"
+		gaffer.layout.activator STRING "layer1Enabled"
+	[attr alpha_operation1]
+		page STRING "Layer1"
+		gaffer.layout.activator STRING "layer1Enabled"
+
+	[attr enable2]
+		page STRING "Layer2"
+	[attr name2]
+		page STRING "Layer2"
+		gaffer.layout.activator STRING "layer2Enabled"
+	[attr input2]
+		page STRING "Layer2"
+		gaffer.layout.activator STRING "layer2Enabled"
+	[attr operation2]
+		page STRING "Layer2"
+		gaffer.layout.activator STRING "layer2Enabled"
+	[attr mix2]
+		page STRING "Layer2"
+		gaffer.layout.activator STRING "layer2Enabled"
+	[attr alpha_operation2]
+		page STRING "Layer2"
+		gaffer.layout.activator STRING "layer2Enabled"
+
+	[attr enable3]
+		page STRING "Layer3"
+	[attr name3]
+		page STRING "Layer3"
+		gaffer.layout.activator STRING "layer3Enabled"
+	[attr input3]
+		page STRING "Layer3"
+		gaffer.layout.activator STRING "layer3Enabled"
+	[attr operation3]
+		page STRING "Layer3"
+		gaffer.layout.activator STRING "layer3Enabled"
+	[attr mix3]
+		page STRING "Layer3"
+		gaffer.layout.activator STRING "layer3Enabled"
+	[attr alpha_operation3]
+		page STRING "Layer3"
+		gaffer.layout.activator STRING "layer3Enabled"
+
+	[attr enable4]
+		page STRING "Layer4"
+	[attr name4]
+		page STRING "Layer4"
+		gaffer.layout.activator STRING "layer4Enabled"
+	[attr input4]
+		page STRING "Layer4"
+		gaffer.layout.activator STRING "layer4Enabled"
+	[attr operation4]
+		page STRING "Layer4"
+		gaffer.layout.activator STRING "layer4Enabled"
+	[attr mix4]
+		page STRING "Layer4"
+		gaffer.layout.activator STRING "layer4Enabled"
+	[attr alpha_operation4]
+		page STRING "Layer4"
+		gaffer.layout.activator STRING "layer4Enabled"
+
+	[attr enable5]
+		page STRING "Layer5"
+	[attr name5]
+		page STRING "Layer5"
+		gaffer.layout.activator STRING "layer5Enabled"
+	[attr input5]
+		page STRING "Layer5"
+		gaffer.layout.activator STRING "layer5Enabled"
+	[attr operation5]
+		page STRING "Layer5"
+		gaffer.layout.activator STRING "layer5Enabled"
+	[attr mix5]
+		page STRING "Layer5"
+		gaffer.layout.activator STRING "layer5Enabled"
+	[attr alpha_operation5]
+		page STRING "Layer5"
+		gaffer.layout.activator STRING "layer5Enabled"
+
+	[attr enable6]
+		page STRING "Layer6"
+	[attr name6]
+		page STRING "Layer6"
+		gaffer.layout.activator STRING "layer6Enabled"
+	[attr input6]
+		page STRING "Layer6"
+		gaffer.layout.activator STRING "layer6Enabled"
+	[attr operation6]
+		page STRING "Layer6"
+		gaffer.layout.activator STRING "layer6Enabled"
+	[attr mix6]
+		page STRING "Layer6"
+		gaffer.layout.activator STRING "layer6Enabled"
+	[attr alpha_operation6]
+		page STRING "Layer6"
+		gaffer.layout.activator STRING "layer6Enabled"
+
+	[attr enable7]
+		page STRING "Layer7"
+	[attr name7]
+		page STRING "Layer7"
+		gaffer.layout.activator STRING "layer7Enabled"
+	[attr input7]
+		page STRING "Layer7"
+		gaffer.layout.activator STRING "layer7Enabled"
+	[attr operation7]
+		page STRING "Layer7"
+		gaffer.layout.activator STRING "layer7Enabled"
+	[attr mix7]
+		page STRING "Layer7"
+		gaffer.layout.activator STRING "layer7Enabled"
+	[attr alpha_operation7]
+		page STRING "Layer7"
+		gaffer.layout.activator STRING "layer7Enabled"
+
+	[attr enable8]
+		page STRING "Layer8"
+	[attr name8]
+		page STRING "Layer8"
+		gaffer.layout.activator STRING "layer8Enabled"
+	[attr input8]
+		page STRING "Layer8"
+		gaffer.layout.activator STRING "layer8Enabled"
+	[attr operation8]
+		page STRING "Layer8"
+		gaffer.layout.activator STRING "layer8Enabled"
+	[attr mix8]
+		page STRING "Layer8"
+		gaffer.layout.activator STRING "layer8Enabled"
+	[attr alpha_operation8]
+		page STRING "Layer8"
+		gaffer.layout.activator STRING "layer8Enabled"
+	[attr clamp]
+		page STRING "Clamp"
 
 
 [node layer_shader]
 
 	gaffer.nodeMenu.category STRING "Surface"
+	gaffer.layout.section.Layer1.collapsed BOOL false
+
+	gaffer.layout.activator.layer1Enabled STRING "parameters['enable1'].getValue() == True"
+	gaffer.layout.activator.layer2Enabled STRING "parameters['enable2'].getValue() == True"
+	gaffer.layout.activator.layer3Enabled STRING "parameters['enable3'].getValue() == True"
+	gaffer.layout.activator.layer4Enabled STRING "parameters['enable4'].getValue() == True"
+	gaffer.layout.activator.layer5Enabled STRING "parameters['enable5'].getValue() == True"
+	gaffer.layout.activator.layer6Enabled STRING "parameters['enable6'].getValue() == True"
+	gaffer.layout.activator.layer7Enabled STRING "parameters['enable7'].getValue() == True"
+	gaffer.layout.activator.layer8Enabled STRING "parameters['enable8'].getValue() == True"
+
+	[attr enable1]
+		page STRING "Layer1"
+	[attr name1]
+		page STRING "Layer1"
+		gaffer.layout.activator STRING "layer1Enabled"
+	[attr input1]
+		page STRING "Layer1"
+		gaffer.layout.activator STRING "layer1Enabled"
+	[attr mix1]
+		page STRING "Layer1"
+		gaffer.layout.activator STRING "layer1Enabled"
+
+	[attr enable2]
+		page STRING "Layer2"
+	[attr name2]
+		page STRING "Layer2"
+		gaffer.layout.activator STRING "layer2Enabled"
+	[attr input2]
+		page STRING "Layer2"
+		gaffer.layout.activator STRING "layer2Enabled"
+	[attr mix2]
+		page STRING "Layer2"
+		gaffer.layout.activator STRING "layer2Enabled"
+
+	[attr enable3]
+		page STRING "Layer3"
+	[attr name3]
+		page STRING "Layer3"
+		gaffer.layout.activator STRING "layer3Enabled"
+	[attr input3]
+		page STRING "Layer3"
+		gaffer.layout.activator STRING "layer3Enabled"
+	[attr mix3]
+		page STRING "Layer3"
+		gaffer.layout.activator STRING "layer3Enabled"
+
+	[attr enable4]
+		page STRING "Layer4"
+	[attr name4]
+		page STRING "Layer4"
+		gaffer.layout.activator STRING "layer4Enabled"
+	[attr input4]
+		page STRING "Layer4"
+		gaffer.layout.activator STRING "layer4Enabled"
+	[attr mix4]
+		page STRING "Layer4"
+		gaffer.layout.activator STRING "layer4Enabled"
+
+	[attr enable5]
+		page STRING "Layer5"
+	[attr name5]
+		page STRING "Layer5"
+		gaffer.layout.activator STRING "layer5Enabled"
+	[attr input5]
+		page STRING "Layer5"
+		gaffer.layout.activator STRING "layer5Enabled"
+	[attr mix5]
+		page STRING "Layer5"
+		gaffer.layout.activator STRING "layer5Enabled"
+
+	[attr enable6]
+		page STRING "Layer6"
+	[attr name6]
+		page STRING "Layer6"
+		gaffer.layout.activator STRING "layer6Enabled"
+	[attr input6]
+		page STRING "Layer6"
+		gaffer.layout.activator STRING "layer6Enabled"
+	[attr mix6]
+		page STRING "Layer6"
+		gaffer.layout.activator STRING "layer6Enabled"
+
+	[attr enable7]
+		page STRING "Layer7"
+	[attr name7]
+		page STRING "Layer7"
+		gaffer.layout.activator STRING "layer7Enabled"
+	[attr input7]
+		page STRING "Layer7"
+		gaffer.layout.activator STRING "layer7Enabled"
+	[attr mix7]
+		page STRING "Layer7"
+		gaffer.layout.activator STRING "layer7Enabled"
+
+	[attr enable8]
+		page STRING "Layer8"
+	[attr name8]
+		page STRING "Layer8"
+		gaffer.layout.activator STRING "layer8Enabled"
+	[attr input8]
+		page STRING "Layer8"
+		gaffer.layout.activator STRING "layer8Enabled"
+	[attr mix8]
+		page STRING "Layer8"
+		gaffer.layout.activator STRING "layer8Enabled"
 
 
 [node length]
@@ -1242,10 +1934,18 @@
 	gaffer.nodeMenu.category STRING "Light"
 	gaffer.graphEditorLayout.defaultVisibility BOOL false
 
+	gaffer.layout.activator.geometryIsPlane STRING "parameters['geometry_type'].getValue() == 'plane' and not parameters['shader'].getInput()"
+	gaffer.layout.activator.geometryIsBox STRING "parameters['geometry_type'].getValue() == 'box' if parameters['shader'].getInput() else True"
+
+	[attr roundness]
+		gaffer.layout.activator STRING "geometryIsPlane"
+
 	[attr width_edge]
 		page STRING "Falloff"
+		gaffer.layout.activator STRING "geometryIsBox"
 	[attr height_edge]
 		page STRING "Falloff"
+		gaffer.layout.activator STRING "geometryIsBox"
 	[attr ramp]
 		gaffer.graphEditorLayout.visible BOOL false
 		page STRING "Falloff"
@@ -1268,6 +1968,9 @@
 	gaffer.layout.section.Near.collapsed BOOL false
 	gaffer.layout.section.Far.collapsed BOOL false
 
+	gaffer.layout.activator.nearEnabled STRING "parameters['use_near_atten'].getValue() == True"
+	gaffer.layout.activator.farEnabled STRING "parameters['use_far_atten'].getValue() == True"
+
 	[attr use_near_atten]
 		page STRING "Near"
 		label STRING "Enable"
@@ -1279,18 +1982,22 @@
 	[attr near_start]
 		page STRING "Near"
 		label STRING "Start"
+		gaffer.layout.activator STRING "nearEnabled"
 
 	[attr near_end]
 		page STRING "Near"
 		label STRING "End"
+		gaffer.layout.activator STRING "nearEnabled"
 
 	[attr far_start]
 		page STRING "Far"
 		label STRING "Start"
+		gaffer.layout.activator STRING "farEnabled"
 
 	[attr far_end]
 		page STRING "Far"
 		label STRING "End"
+		gaffer.layout.activator STRING "farEnabled"
 
 
 [node log]
@@ -1370,10 +2077,43 @@
 
 	gaffer.nodeMenu.category STRING "Texture"
 
+	gaffer.layout.activator.coordSpaceIsPref STRING "parameters['coord_space'].getValue() == 'Pref'"
+
+	[attr pref_name]
+		gaffer.layout.activator STRING "coordSpaceIsPref"
+
 
 [node normal_map]
 
 	gaffer.nodeMenu.category STRING "Texture"
+
+	gaffer.graphEditorLayout.defaultVisibility BOOL false
+
+	gaffer.layout.activator.tangentEnabled STRING "parameters['tangent_space'].getValue() == True"
+
+	[attr input]
+		gaffer.layout.index INT 0
+		gaffer.graphEditorLayout.visible BOOL true
+	[attr strength]
+		gaffer.layout.index INT 1
+	[attr order]
+		gaffer.layout.index INT 2
+	[attr invert_x]
+		gaffer.layout.index INT 3
+	[attr invert_y]
+		gaffer.layout.index INT 4
+	[attr invert_z]
+		gaffer.layout.index INT 5
+	[attr color_to_signed]
+		gaffer.layout.index INT 6
+	[attr tangent_space]
+		gaffer.layout.index INT 7
+	[attr tangent]
+		gaffer.layout.index INT 8
+		gaffer.layout.activator STRING "tangentEnabled"
+	[attr normal]
+		gaffer.layout.index INT 9
+		gaffer.layout.activator STRING "tangentEnabled"
 
 
 [node normalize]
@@ -1399,6 +2139,46 @@
 
 	gaffer.nodeMenu.category STRING "Light"
 
+	gaffer.layout.activator.useDegrees STRING "parameters['use_degrees'].getValue() == True"
+	gaffer.layout.activator.useDirection STRING "parameters['use_degrees'].getValue() == False"
+	gaffer.layout.activator.sunEnabled STRING "parameters['enable_sun'].getValue() == True"
+
+	[attr intensity]
+		gaffer.layout.index INT 0
+	[attr turbidity]
+		gaffer.layout.index INT 1
+	[attr use_degrees]
+		gaffer.layout.index INT 2
+	[attr elevation]
+		gaffer.layout.index INT 3
+		gaffer.layout.activator STRING "useDegrees"
+	[attr azimuth]
+		gaffer.layout.index INT 4
+		gaffer.layout.activator STRING "useDegrees"
+	[attr sun_direction]
+		gaffer.layout.index INT 5
+		gaffer.layout.activator STRING "useDirection"
+	[attr enable_sun]
+		gaffer.layout.index INT 6
+	[attr sun_size]
+		gaffer.layout.index INT 7
+		gaffer.layout.activator STRING "sunEnabled"
+	[attr sun_tint]
+		gaffer.layout.index INT 8
+		gaffer.layout.activator STRING "sunEnabled"
+	[attr sky_tint]
+		gaffer.layout.index INT 9
+	[attr ground_albedo]
+		gaffer.layout.index INT 10
+	[attr X]
+		gaffer.layout.index INT 11
+		page STRING "Reference Axis"
+	[attr Y]
+		gaffer.layout.index INT 12
+		page STRING "Reference Axis"
+	[attr Z]
+		gaffer.layout.index INT 13
+		page STRING "Reference Axis"
 
 [node pow]
 
@@ -1421,6 +2201,16 @@
 	primaryInput STRING "input_color"
 	gaffer.nodeMenu.category STRING "Maths"
 
+	gaffer.layout.activator.isInt STRING "parameters['input_type'].getValue() == 'int'"
+	gaffer.layout.activator.isFloat STRING "parameters['input_type'].getValue() == 'float'"
+	gaffer.layout.activator.isColor STRING "parameters['input_type'].getValue() == 'color'"
+
+	[attr input_int]
+		gaffer.layout.activator STRING "isInt"
+	[attr input_float]
+		gaffer.layout.activator STRING "isFloat"
+	[attr input_color]
+		gaffer.layout.activator STRING "isColor"
 
 [node range]
 
@@ -1472,6 +2262,90 @@
 [node shadow_matte]
 
 	gaffer.nodeMenu.category STRING "Utility"
+	gaffer.layout.section.Background.collapsed BOOL false
+	gaffer.layout.section.Shadow.collapsed BOOL false
+
+	gaffer.graphEditorLayout.defaultVisibility BOOL false
+
+	gaffer.layout.activator.indirectSpecularOn STRING "parameters['indirect_specular_enable'].getValue() == True"
+	gaffer.layout.activator.indirectDiffuseOn STRING "parameters['indeirect_diffuse_enable'].getValue() == True"
+
+	[attr background]
+		page STRING "Background"
+		gaffer.layout.index INT 0
+	[attr background_color]
+		page STRING "Background"
+		gaffer.layout.index INT 1
+		gaffer.graphEditorLayout.visible BOOL true
+
+	[attr shadow_color]
+		page STRING "Shadow"
+		gaffer.layout.index INT 2
+		gaffer.graphEditorLayout.visible BOOL true
+	[attr shadow_opacity]
+		page STRING "Shadow"
+		gaffer.layout.index INT 3
+	[attr backlighting]
+		page STRING "Shadow"
+		gaffer.layout.index INT 4
+	[attr alpha_mask]
+		page STRING "Shadow"
+		gaffer.layout.index INT 5
+
+	[attr diffuse_color]
+		page STRING "Diffuse"
+		gaffer.layout.index INT 6
+		gaffer.graphEditorLayout.visible BOOL true
+	[attr diffuse_intensity]
+		page STRING "Diffuse"
+		gaffer.layout.index INT 7
+		gaffer.graphEditorLayout.visible BOOL true
+	[attr diffuse_use_background]
+		label STRING "Use Background"
+		page STRING "Diffuse"
+		gaffer.layout.index INT 8
+	[attr indirect_diffuse_enable]
+		label STRING "Indirect Diffuse"
+		page STRING "Diffuse"
+		gaffer.layout.index INT 9
+
+	[attr indirect_specular_enable]
+		label STRING "Indirect specular"
+		page STRING "Specular"
+		gaffer.layout.index INT 10
+	[attr specular_color]
+		page STRING "Specular"
+		gaffer.layout.index INT 11
+		gaffer.layout.activator STRING "indirectSpecularOn"
+	[attr specular_intensity]
+		page STRING "Specular"
+		gaffer.layout.index INT 12
+		gaffer.layout.activator STRING "indirectSpecularOn"
+	[attr specular_roughness]
+		page STRING "Specular"
+		gaffer.layout.index INT 13
+		gaffer.layout.activator STRING "indirectSpecularOn"
+	[attr specular_IOR]
+		page STRING "Specular"
+		gaffer.layout.index INT 14
+		gaffer.layout.activator STRING "indirectSpecularOn"
+
+	[attr aov_group]
+		page STRING "Lights"
+		gaffer.layout.index INT 15
+
+	[attr aov_shadow]
+		label STRING "Shadow"
+		page STRING "AOV"
+		gaffer.layout.index INT 16
+	[attr aov_shadow_diff]
+		label STRING "Shadow Diff"
+		page STRING "AOV"
+		gaffer.layout.index INT 17
+	[attr aov_shadow_mask]
+		label STRING "Shadow Mask"
+		page STRING "AOV"
+		gaffer.layout.index INT 18
 
 
 [node shuffle]
@@ -1770,6 +2644,9 @@
 	gaffer.nodeMenu.category STRING "Volume"
 	gaffer.graphEditorLayout.defaultVisibility BOOL false
 
+	gaffer.layout.activator.emissionModeCommon STRING "parameters['emission_mode'].getValue() != 'none'"
+	gaffer.layout.activator.emissionModeBlackbody STRING "parameters['emission_mode'].getValue() == 'blackbody'"
+
 	[attr density]
 		gaffer.graphEditorLayout.visible BOOL true
 		page STRING "Density"
@@ -1799,20 +2676,27 @@
 	[attr emission]
 		gaffer.graphEditorLayout.visible BOOL true
 		page STRING "Emission"
+		gaffer.layout.activator STRING "emissionModeCommon"
 	[attr emission_color]
 		gaffer.graphEditorLayout.visible BOOL true
 		page STRING "Emission"
+		gaffer.layout.activator STRING "emissionModeCommon"
 	[attr emission_channel]
 		page STRING "Emission"
+		gaffer.layout.activator STRING "emissionModeCommon"
 	[attr temperature]
 		gaffer.graphEditorLayout.visible BOOL true
 		page STRING "Emission"
+		gaffer.layout.activator STRING "emissionModeBlackbody"
 	[attr temperature_channel]
 		page STRING "Emission"
+		gaffer.layout.activator STRING "emissionModeBlackbody"
 	[attr blackbody_kelvin]
 		page STRING "Emission"
+		gaffer.layout.activator STRING "emissionModeBlackbody"
 	[attr blackbody_intensity]
 		page STRING "Emission"
+		gaffer.layout.activator STRING "emissionModeBlackbody"
 
 	[attr displacement]
 		gaffer.graphEditorLayout.visible BOOL true
@@ -1858,39 +2742,55 @@
 	gaffer.nodeMenu.category STRING "Surface"
 	gaffer.graphEditorLayout.defaultVisibility BOOL false
 
+	gaffer.layout.activator.edgeEnabled STRING "parameters['enable'].getValue() == True"
+	gaffer.layout.activator.silhouetteEnabled STRING "parameters['enable'].getValue() == True and parameters['enable_silhouette'].getValue() == True"
+
 		[attr enable]
 			page STRING "Edge"
 		[attr edge_color]
 			gaffer.graphEditorLayout.visible BOOL true
 			page STRING "Edge"
+			gaffer.layout.activator STRING "edgeEnabled"
 		[attr edge_tonemap]
 			gaffer.graphEditorLayout.visible BOOL true
 			page STRING "Edge"
+			gaffer.layout.activator STRING "edgeEnabled"
 		[attr edge_opacity]
 			page STRING "Edge"
+			gaffer.layout.activator STRING "edgeEnabled"
 		[attr edge_width_scale]
 			page STRING "Edge"
+			gaffer.layout.activator STRING "edgeEnabled"
 
 		[attr id_difference]
 			page STRING "Edge.Edge Detection"
+			gaffer.layout.activator STRING "edgeEnabled"
 		[attr user_id]
 			page STRING "Edge.Edge Detection"
+			gaffer.layout.activator STRING "edgeEnabled"
 		[attr shader_difference]
 			page STRING "Edge.Edge Detection"
+			gaffer.layout.activator STRING "edgeEnabled"
 		[attr mask_color]
 			gaffer.graphEditorLayout.visible BOOL true
 			page STRING "Edge.Edge Detection"
+			gaffer.layout.activator STRING "edgeEnabled"
 		[attr uv_threshold]
 			page STRING "Edge.Edge Detection"
+			gaffer.layout.activator STRING "edgeEnabled"
 		[attr angle_threshold]
 			page STRING "Edge.Edge Detection"
+			gaffer.layout.activator STRING "edgeEnabled"
 		[attr normal_type]
 			page STRING "Edge.Edge Detection"
+			gaffer.layout.activator STRING "edgeEnabled"
 
 		[attr priority]
 			page STRING "Edge.Advanced Edge Control"
+			gaffer.layout.activator STRING "edgeEnabled"
 		[attr ignore_throughput]
 			page STRING "Edge.Advanced Edge Control"
+			gaffer.layout.activator STRING "edgeEnabled"
 
 		[attr enable_silhouette]
 			page STRING "Silhouette"
@@ -1898,13 +2798,17 @@
 		[attr silhouette_color]
 			gaffer.graphEditorLayout.visible BOOL true
 			page STRING "Silhouette"
+			gaffer.layout.activator STRING "silhouetteEnabled"
 		[attr silhouette_tonemap]
 			gaffer.graphEditorLayout.visible BOOL true
 			page STRING "Silhouette"
+			gaffer.layout.activator STRING "silhouetteEnabled"
 		[attr silhouette_opacity]
 			page STRING "Silhouette"
+			gaffer.layout.activator STRING "silhouetteEnabled"
 		[attr silhouette_width_scale]
 			page STRING "Silhouette"
+			gaffer.layout.activator STRING "silhouetteEnabled"
 
 		[attr base]
 			gaffer.graphEditorLayout.visible BOOL true
@@ -2016,6 +2920,18 @@
 
 	gaffer.nodeMenu.category STRING "Texture"
 
+	gaffer.layout.activator.coordSpaceIsPref STRING "parameters['coord_space'].getValue() == 'Pref'"
+	gaffer.layout.activator.cellEnabled STRING "parameters['cell'].getValue() == True"
+
+	[attr pref_name]
+		gaffer.layout.activator STRING "coordSpaceIsPref"
+
+	[attr cell_rotate]
+		gaffer.layout.activator STRING "cellEnabled"
+	
+	[attr cell_blend]
+		gaffer.layout.activator STRING "cellEnabled"
+
 
 [node two_sided]
 
@@ -2051,11 +2967,39 @@
 
 	gaffer.nodeMenu.category STRING "Utility"
 
+	gaffer.layout.activator.colorModeIsColor STRING "parameters['color_mode'].getValue() == 'color'"
+	gaffer.layout.activator.shadeModeIsAO STRING "parameters['shade_mode'].getValue() == 'ambocc'"
+
+	[attr color]
+		gaffer.layout.activator STRING "colorModeIsColor"
+	[attr ao_distance]
+		gaffer.layout.activator STRING "shadeModeIsAO"
 
 [node uv_projection]
 
 	gaffer.nodeMenu.category STRING "Utility"
 
+	gaffer.graphEditorLayout.defaultVisibility BOOL false
+
+	gaffer.layout.activator.coordSpaceIsPref STRING "parameters['coord_space'].getValue() == 'Pref'"
+	gaffer.layout.activator.uEnabled STRING "parameters['projection_type'].getValue() == 'spherical' or parameters['projection_type'].getValue() == 'cylindrical'"
+	gaffer.layout.activator.vEnabled STRING "parameters['projection_type'].getValue() == 'spherical'"
+	gaffer.layout.activator.clampEnabled STRING "parameters['clamp'].getValue() == True"
+
+	[attr projection_color]
+		gaffer.graphEditorLayout.visible BOOL true
+	[attr pref_name]
+		gaffer.layout.activator STRING "coordSpaceIsPref"
+	[attr P]
+		gaffer.graphEditorLayout.visible BOOL true
+	[attr u_angle]
+		gaffer.layout.activator STRING "uEnabled"
+	[attr v_angle]
+		gaffer.layout.activator STRING "vEnabled"
+	[attr default_color]
+		gaffer.layout.activator STRING "clampEnabled"
+	[attr matrix]
+		gaffer.graphEditorLayout.visible BOOL true
 
 [node uv_transform]
 
@@ -2082,6 +3026,64 @@
 
 	gaffer.nodeMenu.category STRING "Utility"
 
+	gaffer.graphEditorLayout.defaultVisibility BOOL false
+
+	gaffer.layout.activator.isSDF STRING "parameters['volume_type'].getValue() == 'sdf'"
+
+	[attr channel]
+		gaffer.layout.index INT 0
+	[attr position_offset]
+		gaffer.layout.index INT 1
+		gaffer.graphEditorLayout.visible BOOL true
+	[attr interpolation]
+		gaffer.layout.index INT 2
+	[attr volume_type]
+		gaffer.layout.index INT 3
+
+	[attr sdf_offset]
+		gaffer.layout.index INT 4
+		page STRING "SDF"
+		gaffer.layout.activator STRING "isSDF"
+	[attr sdf_blend]
+		gaffer.layout.index INT 5
+		page STRING "SDF"
+		gaffer.layout.activator STRING "isSDF"
+	[attr sdf_invert]
+		gaffer.layout.index INT 6
+		page STRING "SDF"
+		gaffer.layout.activator STRING "isSDF"
+
+	[attr input_min]
+		gaffer.layout.index INT 7
+		page STRING "Remapping"
+	[attr input_max]
+		gaffer.layout.index INT 8
+		page STRING "Remapping"
+	[attr output_min]
+		gaffer.layout.index INT 9
+		page STRING "Remapping"
+	[attr output_max]
+		gaffer.layout.index INT 10
+		page STRING "Remapping"
+	[attr clamp_min]
+		gaffer.layout.index INT 11
+		page STRING "Remapping"
+	[attr clamp_max]
+		gaffer.layout.index INT 12
+		page STRING "Remapping"
+
+	[attr contrast]
+		gaffer.layout.index INT 13
+		page STRING "Adjustments"
+	[attr contrast_pivot]
+		gaffer.layout.index INT 14
+		page STRING "Adjustments"
+	[attr bias]
+		gaffer.layout.index INT 15
+		page STRING "Adjustments"
+	[attr gain]
+		gaffer.layout.index INT 16
+		page STRING "Adjustments"
 
 [node volume_sample_rgb]
 
@@ -2112,6 +3114,84 @@
 
 	primaryInput STRING "input"
 
+	gaffer.graphEditorLayout.defaultVisibility BOOL false
+
+	[attr input]
+		gaffer.layout.index INT 0
+		gaffer.graphEditorLayout.visible BOOL true
+	[attr enable]
+		gaffer.layout.index INT 1
+	[attr layer_selection]
+		gaffer.layout.index INT 2
+
+	[attr main_gain]
+		gaffer.layout.index INT 3
+		page STRING "Main"
+		gaffer.graphEditorLayout.visible BOOL true
+	[attr main_offset]
+		gaffer.layout.index INT 4
+		page STRING "Main"
+	[attr main_gamma]
+		gaffer.layout.index INT 5
+		page STRING "Main"
+	[attr main_saturation]
+		gaffer.layout.index INT 6
+		page STRING "Main"
+	[attr main_contrast]
+		gaffer.layout.index INT 7
+		page STRING "Main"
+
+	[attr shadows_gain]
+		gaffer.layout.index INT 8
+		page STRING "Shadows"
+		gaffer.graphEditorLayout.visible BOOL true
+	[attr shadows_offset]
+		gaffer.layout.index INT 9
+		page STRING "Shadows"
+	[attr shadows_gamma]
+		gaffer.layout.index INT 10
+		page STRING "Shadows"
+	[attr shadows_saturation]
+		gaffer.layout.index INT 11
+		page STRING "Shadows"
+	[attr shadows_contrast]
+		gaffer.layout.index INT 12
+		page STRING "Shadows"
+
+	[attr midtones_gain]
+		gaffer.layout.index INT 13
+		page STRING "Midtones"
+		gaffer.graphEditorLayout.visible BOOL true
+	[attr midtones_offset]
+		gaffer.layout.index INT 14
+		page STRING "Midtones"
+	[attr midtones_gamma]
+		gaffer.layout.index INT 15
+		page STRING "Midtones"
+	[attr midtones_saturation]
+		gaffer.layout.index INT 16
+		page STRING "Midtones"
+	[attr midtones_contrast]
+		gaffer.layout.index INT 17
+		page STRING "Midtones"
+
+	[attr highlights_gain]
+		gaffer.layout.index INT 18
+		page STRING "Highlights"
+		gaffer.graphEditorLayout.visible BOOL true
+	[attr highlights_offset]
+		gaffer.layout.index INT 19
+		page STRING "Highlights"
+	[attr highlights_gamma]
+		gaffer.layout.index INT 20
+		page STRING "Highlights"
+	[attr highlights_saturation]
+		gaffer.layout.index INT 21
+		page STRING "Highlights"
+	[attr highlights_contrast]
+		gaffer.layout.index INT 22
+		page STRING "Highlights"
+
 [node imager_color_curves]
 
 	primaryInput STRING "input"
@@ -2132,6 +3212,18 @@
 
 	primaryInput STRING "input"
 
+	gaffer.layout.activator.clamp STRING "parameters['clamp'].getValue() == True"
+
+	gaffer.graphEditorLayout.defaultVisibility BOOL false
+
+	[attr input]
+		gaffer.graphEditorLayout.visible BOOL true
+
+	[attr clamp_min]
+		gaffer.layout.activator STRING "clamp"
+	[attr clamp_max]
+		gaffer.layout.activator STRING "clamp"
+
 [node imager_exposure]
 
 	primaryInput STRING "input"
@@ -2151,6 +3243,99 @@
 
 	primaryInput STRING "input"
 
+	gaffer.layout.activator.modeIsFilmic STRING "parameters['mode'].getValue() == 'filmic'"
+	gaffer.layout.activator.modeIsReinhard STRING "parameters['mode'].getValue() == 'reinhard'"
+	gaffer.layout.activator.modeIsLut STRING "parameters['mode'].getValue() == 'lut'"
+
+	gaffer.graphEditorLayout.defaultVisibility BOOL false
+
+	[attr input]
+		gaffer.layout.index INT 0
+		gaffer.graphEditorLayout.visible BOOL true
+	[attr enable]
+		gaffer.layout.index INT 1
+	[attr layer_selection]
+		gaffer.layout.index INT 2
+	[attr mode]
+		gaffer.layout.index INT 3
+
+	[attr preserve_saturation]
+		gaffer.layout.index INT 4
+		page STRING "Adjustments"
+	[attr gamma]
+		gaffer.layout.index INT 5
+		page STRING "Adjustments"
+	[attr mix]
+		gaffer.layout.index INT 6
+		page STRING "Adjustments"
+
+	[attr filmic_toe_strength]
+		gaffer.layout.index INT 7
+		page STRING "Filmic"
+		gaffer.layout.activator STRING "modeIsFilmic"
+	[attr filmic_toe_length]
+		gaffer.layout.index INT 8
+		page STRING "Filmic"
+		gaffer.layout.activator STRING "modeIsFilmic"
+	[attr filmic_shoulder_strength]
+		gaffer.layout.index INT 9
+		page STRING "Filmic"
+		gaffer.layout.activator STRING "modeIsFilmic"
+	[attr filmic_shoulder_length]
+		gaffer.layout.index INT 10
+		page STRING "Filmic"
+		gaffer.layout.activator STRING "modeIsFilmic"
+	[attr filmic_shoulder_angle]
+		gaffer.layout.index INT 11
+		page STRING "Filmic"
+		gaffer.layout.activator STRING "modeIsFilmic"
+
+	[attr reinhard_highlights]
+		gaffer.layout.index INT 12
+		page STRING "Reinhard"
+		gaffer.layout.activator STRING "modeIsReinhard"
+	[attr reinhard_shadows]
+		gaffer.layout.index INT 13
+		page STRING "Reinhard"
+		gaffer.layout.activator STRING "modeIsReinhard"
+
+	[attr lut_filename]
+		gaffer.layout.index INT 14
+		widget STRING "filename"
+		page STRING "LUT"
+		gaffer.layout.activator STRING "modeIsLut"
+
+	[attr lut_working_color_space]
+		gaffer.layout.index INT 15
+		page STRING "LUT"
+		gaffer.layout.activator STRING "modeIsLut"
+
+
 [node imager_white_balance]
 
 	primaryInput STRING "input"
+
+	gaffer.layout.activator.modeIsTemperature STRING "parameters['mode'].getValue() == 'temperature'"
+	gaffer.layout.activator.modeIsIlluminant STRING "parameters['mode'].getValue() == 'illuminant'"
+	gaffer.layout.activator.modeIsCustom STRING "parameters['mode'].getValue() == 'custom'"
+
+	gaffer.graphEditorLayout.defaultVisibility BOOL false
+
+	[attr input]
+		gaffer.layout.index INT 0
+		gaffer.graphEditorLayout.visible BOOL true
+	[attr enable]
+		gaffer.layout.index INT 1
+	[attr layer_selection]
+		gaffer.layout.index INT 2
+	[attr mode]
+		gaffer.layout.index INT 3
+	[attr illuminant]
+		gaffer.layout.index INT 4
+		gaffer.layout.activator STRING "modeIsIlluminant"
+	[attr temperature]
+		gaffer.layout.index INT 5
+		gaffer.layout.activator STRING "modeIsTemperature"
+	[attr custom]
+		gaffer.layout.index INT 6
+		gaffer.layout.activator STRING "modeIsCustom"

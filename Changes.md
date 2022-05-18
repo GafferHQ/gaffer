@@ -5,6 +5,14 @@ Improvements
 ------------
 
 - Viewer : Tool hotkeys now work as toggles for non-exclusive tools. This is currently noticeable on the Camera Tool - pressing <kbd>T</kbd> again will deactivate it.
+- ArnoldShader and ArnoldLight : Added activators and sections to the UI.
+- ImageWriter : Options are only displayed for the file format being written. If the extension is unknown, all format options are shown.
+
+API
+---
+
+- Added support for `gaffer.layout.activator` and `gaffer.layout.visibilityActivator` in `.mtd` files.
+- User interface sections are now hidden if all plugs in that section are hidden.
 
 0.61.9.0 (relative to 0.61.8.0)
 ========
