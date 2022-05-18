@@ -511,3 +511,14 @@ Move keyboard focus                                :kbd:`Ctrl` + :kbd:`Up`, :kbd
 Toggle selection state of cell with keyboard focus :kbd:`Space`
 ================================================== ================================================================
 ```
+
+## Light Editor ##
+
+```eval_rst
+====================================================== =====================================
+Action                                                 Control or shortcut
+====================================================== =====================================
+Edit source node of selection                          :kbd:`Alt` + :kbd:`E`
+Edit tweaks node for selection                         :kbd:`Alt` + :kbd:`Shift` + :kbd:`E`
+====================================================== =====================================
+```
