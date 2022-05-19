@@ -1,3 +1,12 @@
+0.61.x.x (relative to 0.61.11.0)
+=========
+
+Fixes
+-----
+
+- Image Node Mix : Fixed incorrect results outside mask data window, and incorrect results when changing inputs.
+
+
 0.61.11.0 (relative to 0.61.10.0)
 =========
 
