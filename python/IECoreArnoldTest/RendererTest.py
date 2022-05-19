@@ -2740,7 +2740,6 @@ class RendererTest( GafferTest.TestCase ) :
 
 				self.assertEqual( [ m.message for m in fallbackHandler.messages ], [], msg=str(renderType) )
 
-	@unittest.skipIf( [ int( v ) for v in arnold.AiGetVersion()[:3] ] < [ 7, 0, 0 ], "Two renders not supported" )
 	# Arnold's message handling is broken. The errors from `AiNodeSetInt()` are sent
 	# to the render session for the default universe instead of the render session for
 	# the universe the node is in.

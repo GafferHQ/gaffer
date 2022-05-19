@@ -109,32 +109,11 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		s["r2"] = self._createInteractiveRender( failOnError = False )
 		s["r2"]["in"].setInput( s["o2"]["out"] )
 
-		if [ int( v ) for v in arnold.AiGetVersion()[:3] ] >= [ 7, 0, 0 ] :
+		s["r2"]["state"].setValue( s["r"].State.Running )
+		time.sleep( 0.5 )
 
-			s["r2"]["state"].setValue( s["r"].State.Running )
-			time.sleep( 0.5 )
-
-			image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere2" )
-			self.assertTrue( isinstance( image, IECoreImage.ImagePrimitive ) )
-
-		else :
-
-			# Only one universe available, so second render will fail.
-
-			try :
-				defaultHandler = IECore.MessageHandler.getDefaultHandler()
-				messageHandler = IECore.CapturingMessageHandler()
-				IECore.MessageHandler.setDefaultHandler( messageHandler )
-				s["r2"]["state"].setValue( s["r"].State.Running )
-			finally :
-				IECore.MessageHandler.setDefaultHandler( defaultHandler )
-
-			messages = s["r2"]["messages"].getValue().value
-			self.assertEqual( len( messages ), 1 )
-			self.assertEqual( messages[0].message, "Arnold is already in use" )
-
-			self.assertEqual( len( messageHandler.messages ), 1 )
-			self.assertEqual( messageHandler.messages[0].message, "Arnold is already in use" )
+		image = IECoreImage.ImageDisplayDriver.storedImage( "myLovelySphere2" )
+		self.assertTrue( isinstance( image, IECoreImage.ImagePrimitive ) )
 
 	def testEditSubdivisionAttributes( self ) :
 

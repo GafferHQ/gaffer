@@ -695,14 +695,10 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		for t in threads :
 			t.join()
 
-		if [ int( v ) for v in arnold.AiGetVersion()[:3] ] >= [ 7, 0, 0 ] :
-			with Gaffer.Context() as c :
-				for i in range( 0, 2 ) :
-					c.setFrame( i )
-					self.assertTrue( os.path.exists( c.substitute( render["fileName"].getValue() ) ) )
-		else :
-			self.assertEqual( len( errors ), 1 )
-			self.assertTrue( "Arnold is already in use" in errors[0] )
+		with Gaffer.Context() as c :
+			for i in range( 0, 2 ) :
+				c.setFrame( i )
+				self.assertTrue( os.path.exists( c.substitute( render["fileName"].getValue() ) ) )
 
 	def testTraceSets( self ) :
 
