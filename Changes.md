@@ -145,13 +145,36 @@ Build
   - OpenColorIO : Updated to version 2.1.1.
   - Cortex : Updated to version 10.4.0.0.
 
-0.61.x.x (relative to 0.61.9.0)
-========
+0.61.10.0 (relative to 0.61.9.0)
+=========
+
+Features
+--------
+
+- Tools Menu : Added item to populate the Arnold GPU cache, which may improve startup times for GPU renders.
 
 Improvements
 ------------
 
 - Viewer : Tool hotkeys now work as toggles for non-exclusive tools. This is currently noticeable on the Camera Tool - pressing <kbd>T</kbd> again will deactivate it.
+- ArnoldShader and ArnoldLight : Added activators and sections to the UI.
+- ImageWriter : Options are only displayed for the file format being written. If the extension is unknown, all format options are shown.
+- Light Editor : Added keyboard shortcuts for selected light.
+  - <kbd>Alt+E</kbd> : Edit source node.
+  - <kbd>Shift+Alt+E</kbd> : Edit tweaks node.
+- Edit Menu : Added item to rename one or more selected nodes, with accompanying keyboard shortcut (#4286).
+- Box : Rename plug dialogue now ensures names are valid as they are typed.
+
+Fixes
+-----
+
+- ArnoldMeshLight : Fixed illumination from textured mesh lights. This was broken in 0.61.2.0.
+
+API
+---
+
+- ArnoldShader : Added support for `gaffer.layout.activator` and `gaffer.layout.visibilityActivator` in `.mtd` files.
+- PlugLayout : User interface sections are now hidden if all plugs in that section are hidden.
 
 0.61.9.0 (relative to 0.61.8.0)
 ========

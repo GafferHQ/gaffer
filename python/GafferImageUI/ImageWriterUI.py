@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import os
+
 import IECore
 
 import Gaffer
@@ -41,7 +43,6 @@ import GafferUI
 import GafferImageUI
 import GafferImage
 from . import OpenColorIOTransformUI
-
 
 layoutVariableDesc = """
 			Special context variables available for setting layout plugs:
@@ -58,6 +59,15 @@ layoutVariableDesc = """
 
 """
 
+def __extension( parent ) :
+
+	fileNamePlug = parent["fileName"]
+	fileName = fileNamePlug.getValue()
+	ext = os.path.splitext( fileName )[1]
+	if ext :
+		return ext.lower()[1:]
+	return "" if fileNamePlug.isSetToDefault() else "unknown"
+
 Gaffer.Metadata.registerNode(
 
 	GafferImage.ImageWriter,
@@ -69,6 +79,19 @@ Gaffer.Metadata.registerNode(
 	ImageWriter.
 	""",
 
+	"layout:activator:dpx", lambda p : __extension( p ) in ( "dpx", "unknown" ),
+	"layout:activator:field3d", lambda p : __extension( p ) in ( "f3d", "unknown" ),
+	"layout:activator:fits", lambda p : __extension( p ) in ( "fits", "unknown" ),
+	"layout:activator:iff", lambda p : __extension( p ) in ( "iff", "unknown" ),
+	"layout:activator:jpeg", lambda p : __extension( p ) in ( "jpg", "jpe", "jpeg", "jif", "jfif", "jfi", "unknown" ),
+	"layout:activator:jpeg2000", lambda p : __extension( p ) in ( "jp2", "j2k", "unknown" ),
+	"layout:activator:openexr", lambda p : __extension( p ) in ( "exr", "unknown" ),
+	"layout:activator:png", lambda p : __extension( p ) in ( "png", "unknown" ),
+	"layout:activator:rla", lambda p : __extension( p ) in ( "rla", "unknown" ),
+	"layout:activator:sgi", lambda p : __extension( p ) in ( "sgi", "rgb", "rgba", "bw", "int", "inta", "unknown" ),
+	"layout:activator:targa", lambda p : __extension( p ) in ( "tga", "unknown" ),
+	"layout:activator:tiff", lambda p : __extension( p ) in ( "tif", "tiff", "unknown" ),
+	"layout:activator:webp", lambda p : __extension( p ) in ( "webp", "unknown" ),
 
 	plugs = {
 
@@ -220,6 +243,7 @@ Gaffer.Metadata.registerNode(
 
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 			"layout:section", "Settings.DPX",
+			"layout:visibilityActivator", "dpx",
 
 		],
 
@@ -248,6 +272,7 @@ Gaffer.Metadata.registerNode(
 			"nodule:type", "",
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 			"layout:section", "Settings.Field3D",
+			"layout:visibilityActivator", "field3d",
 
 		],
 
@@ -287,6 +312,7 @@ Gaffer.Metadata.registerNode(
 
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 			"layout:section", "Settings.FITS",
+			"layout:visibilityActivator", "fits",
 
 		],
 
@@ -315,6 +341,7 @@ Gaffer.Metadata.registerNode(
 
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 			"layout:section", "Settings.IFF",
+			"layout:visibilityActivator", "iff",
 
 		],
 
@@ -340,6 +367,7 @@ Gaffer.Metadata.registerNode(
 
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 			"layout:section", "Settings.Jpeg",
+			"layout:visibilityActivator", "jpeg",
 
 		],
 
@@ -379,6 +407,7 @@ Gaffer.Metadata.registerNode(
 
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 			"layout:section", "Settings.Jpeg2000",
+			"layout:visibilityActivator", "jpeg2000",
 
 		],
 
@@ -404,6 +433,7 @@ Gaffer.Metadata.registerNode(
 
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 			"layout:section", "Settings.OpenEXR",
+			"layout:visibilityActivator", "openexr",
 
 			"layout:activator:compressionIsDWA", lambda plug : plug["compression"].getValue() in ( "dwaa", "dwab" ),
 
@@ -491,6 +521,7 @@ Gaffer.Metadata.registerNode(
 
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 			"layout:section", "Settings.PNG",
+			"layout:visibilityActivator", "png",
 
 		],
 
@@ -529,6 +560,7 @@ Gaffer.Metadata.registerNode(
 
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 			"layout:section", "Settings.RLA",
+			"layout:visibilityActivator", "rla",
 
 		],
 
@@ -555,6 +587,7 @@ Gaffer.Metadata.registerNode(
 
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 			"layout:section", "Settings.SGI",
+			"layout:visibilityActivator", "sgi",
 
 		],
 
@@ -580,6 +613,7 @@ Gaffer.Metadata.registerNode(
 
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 			"layout:section", "Settings.Targa",
+			"layout:visibilityActivator", "targa",
 
 		],
 
@@ -605,6 +639,7 @@ Gaffer.Metadata.registerNode(
 
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 			"layout:section", "Settings.TIFF",
+			"layout:visibilityActivator", "tiff",
 
 		],
 
@@ -659,6 +694,7 @@ Gaffer.Metadata.registerNode(
 
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 			"layout:section", "Settings.WebP",
+			"layout:visibilityActivator", "webp",
 
 		],
 

@@ -764,6 +764,8 @@ class _CollapsibleLayout( _Layout ) :
 
 			collapsible.getChild().update( subsection )
 
+			collapsible.setVisible( any ( [ w.getVisible() for w in subsection.widgets ] ) )
+
 			collapsible.getCornerWidget().setText(
 				"<small>" + "&nbsp;( " + subsection.summary + " )</small>" if subsection.summary else ""
 			)
