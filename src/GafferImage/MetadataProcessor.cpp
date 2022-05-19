@@ -48,6 +48,7 @@ MetadataProcessor::MetadataProcessor( const std::string &name )
 	:	ImageProcessor( name )
 {
 	// Direct pass-through for the things we don't ever change.
+	outPlug()->viewNamesPlug()->setInput( inPlug()->viewNamesPlug() );
 	outPlug()->formatPlug()->setInput( inPlug()->formatPlug() );
 	outPlug()->dataWindowPlug()->setInput( inPlug()->dataWindowPlug() );
 	outPlug()->deepPlug()->setInput( inPlug()->deepPlug() );

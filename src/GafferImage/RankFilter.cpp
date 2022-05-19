@@ -64,6 +64,7 @@ RankFilter::RankFilter( const std::string &name, Mode mode )
 	addChild( new StringPlug( "masterChannel" ) );
 	addChild( new V2iVectorDataPlug( "__pixelOffsets", Plug::Out, new V2iVectorData ) );
 
+	outPlug()->viewNamesPlug()->setInput( inPlug()->viewNamesPlug() );
 	outPlug()->formatPlug()->setInput( inPlug()->formatPlug() );
 	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );
 	outPlug()->channelNamesPlug()->setInput( inPlug()->channelNamesPlug() );

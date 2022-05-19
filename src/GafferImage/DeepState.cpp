@@ -818,6 +818,7 @@ DeepState::DeepState( const std::string &name )
 	addChild( new CompoundObjectPlug( "__sampleMapping", Gaffer::Plug::Out, new IECore::CompoundObject ) );
 
 	// We don't ever want to change these, so we make pass-through connections.
+	outPlug()->viewNamesPlug()->setInput( inPlug()->viewNamesPlug() );
 	outPlug()->channelNamesPlug()->setInput( inPlug()->channelNamesPlug() );
 	outPlug()->dataWindowPlug()->setInput( inPlug()->dataWindowPlug() );
 	outPlug()->formatPlug()->setInput( inPlug()->formatPlug() );

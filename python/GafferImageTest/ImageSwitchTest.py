@@ -78,7 +78,7 @@ class ImageSwitchTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual(
 			a,
 			set( [
-				"out.format", "out.dataWindow", "out.metadata", "out.deep", "out.sampleOffsets", "out.channelNames", "out.channelData",
+				"out.viewNames", "out.format", "out.dataWindow", "out.metadata", "out.deep", "out.sampleOffsets", "out.channelNames", "out.channelData",
 			] ),
 		)
 

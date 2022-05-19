@@ -78,6 +78,7 @@ Blur::Blur( const std::string &name )
 	resampledDataWindowPlug()->setInput( resample->outPlug()->dataWindowPlug() );
 	resampledChannelDataPlug()->setInput( resample->outPlug()->channelDataPlug() );
 
+	outPlug()->viewNamesPlug()->setInput( inPlug()->viewNamesPlug() );
 	outPlug()->formatPlug()->setInput( inPlug()->formatPlug() );
 	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );
 	outPlug()->channelNamesPlug()->setInput( inPlug()->channelNamesPlug() );

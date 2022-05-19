@@ -111,6 +111,7 @@ Shuffle::Shuffle( const std::string &name )
 	addChild( new ValuePlug( "channels" ) );
 
 	// Pass-through the things we don't want to modify.
+	outPlug()->viewNamesPlug()->setInput( inPlug()->viewNamesPlug() );
 	outPlug()->formatPlug()->setInput( inPlug()->formatPlug() );
 	outPlug()->dataWindowPlug()->setInput( inPlug()->dataWindowPlug() );
 	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );

@@ -81,6 +81,7 @@ ColorProcessor::ColorProcessor( const std::string &name )
 	outPlug()->deepPlug()->setInput( inPlug()->deepPlug() );
 	outPlug()->sampleOffsetsPlug()->setInput( inPlug()->sampleOffsetsPlug() );
 	outPlug()->channelNamesPlug()->setInput( inPlug()->channelNamesPlug() );
+	outPlug()->viewNamesPlug()->setInput( inPlug()->viewNamesPlug() );
 }
 
 ColorProcessor::~ColorProcessor()
