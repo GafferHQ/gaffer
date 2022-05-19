@@ -57,6 +57,19 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"view" : [
+
+			"description",
+			"""
+			The view to be sampled.
+			""",
+
+			"nodule:type", "",
+			"plugValueWidget:type", "GafferImageUI.ViewPlugValueWidget",
+			"viewPlugValueWidget:allowUseCurrentContext", True,
+
+		],
+
 		"channels" : [
 
 			"description",

@@ -36,7 +36,9 @@
 
 import unittest
 import imath
+import os
 import random
+import six
 
 import IECore
 
@@ -88,9 +90,55 @@ class FormatQueryTest( GafferImageTest.ImageTestCase ) :
 			if f.getDisplayWindow().size()[0] * f.getDisplayWindow().size()[1] < 2000 * 2000:
 				self.assertImagesEqual( constantSource["out"], constantDest["out"] )
 
+	def testView( self ) :
+
+		constantSource = GafferImage.Constant()
+		constantSource["color"].setValue( imath.Color4f( 0.1, 0.2, 0.3, 0.4 ) )
+		constantSource["format"].setValue( GafferImage.Format( imath.Box2i( imath.V2i( 0 ), imath.V2i( 512 ) ), 1 ) )
+
+		reader = GafferImage.ImageReader()
+		reader["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checkerboard.100x100.exr" ) )
+
+		views = GafferImage.CreateViews()
+		views["views"].addChild( Gaffer.NameValuePlug( "left", GafferImage.ImagePlug(), True ) )
+		views["views"].addChild( Gaffer.NameValuePlug( "right", GafferImage.ImagePlug(), True ) )
+		views["views"][0]["value"].setInput( constantSource["out"] )
+		views["views"][1]["value"].setInput( reader["out"] )
+
+		formatQuery = GafferImage.FormatQuery()
+		formatQuery["image"].setInput( views["out"] )
+
+		for contextView, queryAndResults in [
+			( None, [ ( "", None ), ( "left", imath.V2i( 512 ) ), ( "right", imath.V2i( 100 ) ) ] ),
+			( "left", [ ( "", imath.V2i( 512 ) ), ( "left", imath.V2i( 512 ) ), ( "right", imath.V2i( 100 ) ) ] ),
+			("right", [ ( "", imath.V2i( 100 ) ), ( "left", imath.V2i( 512 ) ), ( "right", imath.V2i( 100 ) ) ] )
+
+		]:
+			for queryView, result in queryAndResults:
+				with Gaffer.Context( Gaffer.Context.current() ) as c:
+					formatQuery["view"].setValue( queryView )
+					if contextView:
+						c["image:viewName"] = contextView
+
+					if result is None:
+						# The result when contextView and queryView are both not overridden is an error,
+						# views has just left and right views, so it's illegal to ask for "default".
+						with six.assertRaisesRegex( self, Gaffer.ProcessException, 'View does not exist "default"' ):
+							formatQuery["format"]["displayWindow"]["max"].getValue()
+					else:
+						self.assertEqual( formatQuery["format"]["displayWindow"]["max"].getValue(), result )
+
+		# When reading from an image with a default view, we get the default when requesting a view that
+		# doesn't exist
+		formatQuery["image"].setInput( reader["out"] )
+		formatQuery["view"].setValue( "left" )
+		self.assertEqual( formatQuery["format"]["displayWindow"]["max"].getValue(), imath.V2i( 100 ) )
+		formatQuery["view"].setValue( "right" )
+		self.assertEqual( formatQuery["format"]["displayWindow"]["max"].getValue(), imath.V2i( 100 ) )
+
 	def testCleanContext( self ) :
 		# This test checks that formatQuery removes tile origin and channel name from the context before
-		# pulling on the input inmage format.
+		# pulling on the input image format.
 		# It does this by connecting to a Checkerboard, and computing the tiles, knowing that ContextSanitiser
 		# will throw if there is bad variable in the context when pulling on constantSource["format"].
 		# Checkerboard should actually be using a global scope for its size parameter anyway, if this is fixed,

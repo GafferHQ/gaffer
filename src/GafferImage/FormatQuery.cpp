@@ -81,6 +81,7 @@ FormatQuery::FormatQuery( std::string const& name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ImagePlug( "image" ) );
+	addChild( new Gaffer::StringPlug( "view", Gaffer::Plug::In, "" ) );
 	addChild( new GafferImage::FormatPlug( "format", Gaffer::Plug::Out ) );
 	addChild( new Gaffer::V2fPlug( "center", Gaffer::Plug::Out ) );
 	addChild( new Gaffer::V2iPlug( "size", Gaffer::Plug::Out ) );
@@ -100,6 +101,16 @@ ImagePlug const* FormatQuery::imagePlug() const
 	return getChild< ImagePlug >( g_firstPlugIndex );
 }
 
+Gaffer::StringPlug* FormatQuery::viewPlug()
+{
+	return const_cast< Gaffer::StringPlug* >( static_cast< FormatQuery const* >( this )->viewPlug() );
+}
+
+Gaffer::StringPlug const* FormatQuery::viewPlug() const
+{
+	return getChild< Gaffer::StringPlug >( g_firstPlugIndex + 1 );
+}
+
 FormatPlug* FormatQuery::formatPlug()
 {
 	return const_cast< FormatPlug* >( static_cast< FormatQuery const* >( this )->formatPlug() );
@@ -107,7 +118,7 @@ FormatPlug* FormatQuery::formatPlug()
 
 FormatPlug const* FormatQuery::formatPlug() const
 {
-	return getChild< FormatPlug >( g_firstPlugIndex + 1 );
+	return getChild< FormatPlug >( g_firstPlugIndex + 2 );
 }
 
 Gaffer::V2fPlug* FormatQuery::centerPlug()
@@ -118,7 +129,7 @@ Gaffer::V2fPlug* FormatQuery::centerPlug()
 
 Gaffer::V2fPlug const* FormatQuery::centerPlug() const
 {
-	return getChild< Gaffer::V2fPlug >( g_firstPlugIndex + 2 );
+	return getChild< Gaffer::V2fPlug >( g_firstPlugIndex + 3 );
 }
 
 Gaffer::V2iPlug* FormatQuery::sizePlug()
@@ -129,14 +140,14 @@ Gaffer::V2iPlug* FormatQuery::sizePlug()
 
 Gaffer::V2iPlug const* FormatQuery::sizePlug() const
 {
-	return getChild< Gaffer::V2iPlug >( g_firstPlugIndex + 3 );
+	return getChild< Gaffer::V2iPlug >( g_firstPlugIndex + 4 );
 }
 
 void FormatQuery::affects( Gaffer::Plug const* const input, AffectedPlugsContainer& outputs ) const
 {
 	ComputeNode::affects( input, outputs );
 
-	if( input == imagePlug()->formatPlug() )
+	if( input == imagePlug()->formatPlug() || input == imagePlug()->viewNamesPlug() || input == viewPlug() )
 	{
 		outputs.push_back( formatPlug()->displayWindowPlug()->minPlug()->getChild( 0 ) );
 		outputs.push_back( formatPlug()->displayWindowPlug()->minPlug()->getChild( 1 ) );
@@ -153,14 +164,33 @@ void FormatQuery::affects( Gaffer::Plug const* const input, AffectedPlugsContain
 void FormatQuery::hash( Gaffer::ValuePlug const* const output, Gaffer::Context const* const context, IECore::MurmurHash& h ) const
 {
 	ComputeNode::hash( output, context, h );
+
+	std::string view = viewPlug()->getValue();
+	if( !view.size() )
+	{
+		view = context->get<std::string>( ImagePlug::viewNameContextName );
+	}
+
+	ImagePlug::ViewScope viewScope( context );
+	viewScope.setViewNameChecked( &view, imagePlug()->viewNames().get() );
 	h.append( imagePlug()->formatHash() );
+
 }
 
 void FormatQuery::compute( Gaffer::ValuePlug* const output, Gaffer::Context const* const context ) const
 {
 	Gaffer::GraphComponent* const parent = output->parent();
 
+	std::string view = viewPlug()->getValue();
+	if( !view.size() )
+	{
+		view = context->get<std::string>( ImagePlug::viewNameContextName );
+	}
+
+	ImagePlug::ViewScope viewScope( context );
+	viewScope.setViewNameChecked( &view, imagePlug()->viewNames().get() );
 	Format f = imagePlug()->format();
+
 	if( output == formatPlug()->pixelAspectPlug() )
 	{
 		static_cast< Gaffer::FloatPlug *>( output )->setValue( f.getPixelAspect() );
