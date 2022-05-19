@@ -4,7 +4,7 @@
 Features
 --------
 
-- Main Menu : Added item to populate the Arnold GPU cache, which may improve startup times for GPU renders.
+- Tools Menu : Added item to populate the Arnold GPU cache, which may improve startup times for GPU renders.
 
 Improvements
 ------------
@@ -16,8 +16,8 @@ Improvements
 API
 ---
 
-- Added support for `gaffer.layout.activator` and `gaffer.layout.visibilityActivator` in `.mtd` files.
-- User interface sections are now hidden if all plugs in that section are hidden.
+- ArnoldShader : Added support for `gaffer.layout.activator` and `gaffer.layout.visibilityActivator` in `.mtd` files.
+- PlugLayout : User interface sections are now hidden if all plugs in that section are hidden.
 
 0.61.9.0 (relative to 0.61.8.0)
 ========
