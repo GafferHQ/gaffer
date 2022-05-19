@@ -136,6 +136,7 @@ IECore::StringVectorDataPtr getSelectionMask( const SceneGadget &g )
 
 IECore::InternedStringVectorDataPtr objectAt( SceneGadget &g, IECore::LineSegment3f &l )
 {
+	ScopedGILRelease gilRelease;
 	IECore::InternedStringVectorDataPtr result = new IECore::InternedStringVectorData;
 	if( g.objectAt( l, result->writable() ) )
 	{
@@ -148,11 +149,34 @@ tuple objectAndIntersectionAt( SceneGadget &g, IECore::LineSegment3f &l )
 {
 	IECore::InternedStringVectorDataPtr result = new IECore::InternedStringVectorData;
 	Imath::V3f hitPos( 0.0f );
-	if( g.objectAt( l, result->writable(), hitPos ) )
+
 	{
-		return boost::python::make_tuple( result, hitPos );
+		ScopedGILRelease gilRelease;
+		if( !g.objectAt( l, result->writable(), hitPos ) )
+		{
+			result = nullptr;
+		}
 	}
-	return boost::python::make_tuple( object(), hitPos );
+
+	return boost::python::make_tuple( result, hitPos );
+}
+
+size_t objectsAt( SceneGadget &g, const Imath::V3f &corner0InGadgetSpace, const Imath::V3f &corner1InGadgetSpace, IECore::PathMatcher &paths )
+{
+	ScopedGILRelease gilRelease;
+	return g.objectsAt( corner0InGadgetSpace, corner1InGadgetSpace, paths );
+}
+
+Imath::Box3f selectionBound( SceneGadget &g )
+{
+	ScopedGILRelease gilRelease;
+	return g.selectionBound();
+}
+
+Imath::Box3f bound( SceneGadget &g, bool selected, const IECore::PathMatcher *omitted )
+{
+	ScopedGILRelease gilRelease;
+	return g.bound( selected, omitted );
 }
 
 } // namespace
@@ -183,13 +207,11 @@ void GafferSceneUIModule::bindSceneGadget()
 		.def( "getSelectionMask", &getSelectionMask )
 		.def( "objectAt", &objectAt )
 		.def( "objectAndIntersectionAt", &objectAndIntersectionAt )
-		.def( "objectsAt", &SceneGadget::objectsAt )
+		.def( "objectsAt", &objectsAt )
 		.def( "setSelection", &SceneGadget::setSelection )
 		.def( "getSelection", &SceneGadget::getSelection, return_value_policy<copy_const_reference>() )
-		.def( "selectionBound", &SceneGadget::selectionBound )
-		.def( "bound", (Imath::Box3f (SceneGadget::*)(bool,const IECore::PathMatcher*) const)&SceneGadget::bound,
-			( arg( "selected" ), arg( "omitted" ) = object() )
-		)
+		.def( "selectionBound", &selectionBound )
+		.def( "bound", &bound, ( arg( "selected" ), arg( "omitted" ) = object() ) )
 	;
 
 	enum_<SceneGadget::State>( "State" )
