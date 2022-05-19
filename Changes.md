@@ -12,6 +12,9 @@ Improvements
 - Viewer : Tool hotkeys now work as toggles for non-exclusive tools. This is currently noticeable on the Camera Tool - pressing <kbd>T</kbd> again will deactivate it.
 - ArnoldShader and ArnoldLight : Added activators and sections to the UI.
 - ImageWriter : Options are only displayed for the file format being written. If the extension is unknown, all format options are shown.
+- Light Editor : Added keyboard shortcuts for selected light.
+  - <kbd>Alt+E</kbd> : Edit source node.
+  - <kbd>Shift+Alt+E</kbd> : Edit tweaks node.
 
 Fixes
 -----

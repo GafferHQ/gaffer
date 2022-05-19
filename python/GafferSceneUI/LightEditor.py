@@ -123,6 +123,10 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 
 	__columnRegistry = collections.OrderedDict()
 
+	def scene( self ) :
+
+		return self.__plug
+
 	@classmethod
 	def registerParameter( cls, attribute, parameter, section = None ) :
 

@@ -394,6 +394,8 @@ Draw new region anywhere              :kbd:`Shift` + click and drag
 Action                               Control or shorcut
 ==================================== ================================================
 Copy selected paths                  :kbd:`Ctrl` + :kbd:`C`
+Edit source node of selection        :kbd:`Alt` + :kbd:`E`
+Edit tweaks node for selection       :kbd:`Alt` + :kbd:`Shift` + :kbd:`E`
 ==================================== ================================================
 ```
 
@@ -510,4 +512,15 @@ Extend cell selection                              :kbd:`Shift` + :kbd:`Up`, :kb
 Move keyboard focus                                :kbd:`Ctrl` + :kbd:`Up`, :kbd:`Down`, :kbd:`Left`, :kbd:`Right`
 Toggle selection state of cell with keyboard focus :kbd:`Space`
 ================================================== ================================================================
+```
+
+## Light Editor ##
+
+```eval_rst
+====================================================== =====================================
+Action                                                 Control or shortcut
+====================================================== =====================================
+Edit source node of selection                          :kbd:`Alt` + :kbd:`E`
+Edit tweaks node for selection                         :kbd:`Alt` + :kbd:`Shift` + :kbd:`E`
+====================================================== =====================================
 ```
