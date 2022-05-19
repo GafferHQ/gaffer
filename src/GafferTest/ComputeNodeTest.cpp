@@ -109,7 +109,7 @@ void GafferTest::testComputeNodeThreading()
 {
 	// Set up a background thread that creates and
 	// deletes node graphs.
-	std::atomic_bool stop;
+	std::atomic_bool stop( false );
 	Edit edit( stop );
 	std::thread thread( edit );
 
