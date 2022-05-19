@@ -13,6 +13,11 @@ Improvements
 - ArnoldShader and ArnoldLight : Added activators and sections to the UI.
 - ImageWriter : Options are only displayed for the file format being written. If the extension is unknown, all format options are shown.
 
+Fixes
+-----
+
+- ArnoldMeshLight : Fixed illumination from textured mesh lights. This was broken in 0.61.2.0.
+
 API
 ---
 
