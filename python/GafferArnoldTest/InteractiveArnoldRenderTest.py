@@ -427,6 +427,86 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		s["render"]["state"].setValue( s["render"].State.Stopped )
 
+	def testMeshLightTexture( self ) :
+
+		# Build scene with textures mesh light `/group/sphere1`
+		# on left, illuminating a sphere `/group/sphere2` on right.
+
+		s = Gaffer.ScriptNode()
+
+		s["catalogue"] = GafferImage.Catalogue()
+
+		s["sphere1"] = GafferScene.Sphere()
+		s["sphere1"]["name"].setValue( "sphere1" )
+		s["sphere1"]["radius"].setValue( 10 )
+		s["sphere1"]["transform"]["translate"].setValue( imath.V3f( -10, 0, -2 ) )
+
+		s["sphere2"] = GafferScene.Sphere()
+		s["sphere2"]["name"].setValue( "sphere2" )
+		s["sphere2"]["transform"]["translate"].setValue( imath.V3f( 1, 0, -2 ) )
+
+		s["group"] = GafferScene.Group()
+		s["group"]["in"][0].setInput( s["sphere1"]["out"] )
+		s["group"]["in"][1].setInput( s["sphere2"]["out"] )
+
+		s["sphere1Filter"] = GafferScene.PathFilter()
+		s["sphere1Filter"]["paths"].setValue( IECore.StringVectorData( [ '/group/sphere1' ] ) )
+
+		s["checkerboard"] = GafferArnold.ArnoldShader()
+		s["checkerboard"].loadShader( "checkerboard" )
+
+		s["meshLight"] = GafferArnold.ArnoldMeshLight()
+		s["meshLight"]["in"].setInput( s["group"]["out"] )
+		s["meshLight"]["filter"].setInput( s["sphere1Filter"]["out"] )
+		s["meshLight"]["parameters"]["color"].setInput( s["checkerboard"]["out"] )
+		s["meshLight"]["parameters"]["exposure"].setValue( 11 )
+
+		s["lambert"] = GafferArnold.ArnoldShader()
+		s["lambert"].loadShader( "lambert" )
+
+		s["sphere2Filter"] = GafferScene.PathFilter()
+		s["sphere2Filter"]["paths"].setValue( IECore.StringVectorData( [ '/group/sphere2' ] ) )
+
+		s["shaderAssignment"] = GafferScene.ShaderAssignment()
+		s["shaderAssignment"]["in"].setInput( s["meshLight"]["out"] )
+		s["shaderAssignment"]["filter"].setInput( s["sphere2Filter"]["out"] )
+		s["shaderAssignment"]["shader"].setInput( s["lambert"]["out"] )
+
+		s["outputs"] = GafferScene.Outputs()
+		s["outputs"]["in"].setInput( s["shaderAssignment"]["out"] )
+		s["outputs"].addOutput(
+			"beauty",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ClientDisplayDriver",
+					"displayHost" : "localhost",
+					"displayPort" : str( s['catalogue'].displayDriverServer().portNumber() ),
+					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+				}
+			)
+		)
+
+		s["options"] = GafferArnold.ArnoldOptions()
+		s["options"]["in"].setInput( s["outputs"]["out"] )
+		s["options"]["options"]["aaSamples"]["enabled"].setValue( True )
+		s["options"]["options"]["aaSamples"]["value"].setValue( 5 )
+
+		s["render"] = self._createInteractiveRender()
+		s["render"]["in"].setInput( s["options"]["out"] )
+
+		# Render, and check `sphere2`` is receiving illumination.
+
+		s["render"]["state"].setValue( s["render"].State.Running )
+		self.uiThreadCallHandler.waitFor( 1.0 )
+
+		litColor = self._color4fAtUV( s["catalogue"], imath.V2f( 0.75, 0.5 ) )
+		self.assertGreater( litColor.r, 0.1 )
+		self.assertGreater( litColor.g, 0.1 )
+		self.assertGreater( litColor.b, 0.1 )
+
 	def _createConstantShader( self ) :
 
 		shader = GafferArnold.ArnoldShader()
