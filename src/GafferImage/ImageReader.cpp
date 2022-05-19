@@ -400,6 +400,18 @@ void ImageReader::compute( ValuePlug *output, const Context *context ) const
 	}
 }
 
+void ImageReader::hashViewNames( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	FrameMaskScope scope( context, this, /* clampBlack = */ true );
+	h = intermediateImagePlug()->viewNamesPlug()->hash();
+}
+
+IECore::ConstStringVectorDataPtr ImageReader::computeViewNames( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	FrameMaskScope scope( context, this, /* clampBlack = */ true );
+	return intermediateImagePlug()->viewNamesPlug()->getValue();
+}
+
 void ImageReader::hashFormat( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	FrameMaskScope scope( context, this, /* clampBlack = */ true );
