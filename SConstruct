@@ -777,6 +777,9 @@ basePythonEnv["PYTHON_VERSION"] = subprocess.check_output(
 	env=commandEnv["ENV"], universal_newlines=True
 ).strip()
 
+if basePythonEnv["PLATFORM"] == "win32" :
+	basePythonEnv["PYTHON_VERSION"] = basePythonEnv["PYTHON_VERSION"].replace( ".", "" )
+
 basePythonEnv["PYTHON_ABI_VERSION"] = basePythonEnv["PYTHON_VERSION"]
 basePythonEnv["PYTHON_ABI_VERSION"] += subprocess.check_output(
 	[ "python", "-c", "import sysconfig; print( sysconfig.get_config_var( 'abiflags' ) or '' )" ],
