@@ -63,7 +63,7 @@ bool convert( const IECoreScenePreview::Geometry *geometry, NSIContext_t context
 	{
 		const double angle = angleData->readable();
 		ParameterList parameters;
-		parameters.add( { "angle", &angle, NSITypeDouble, 0, 1 } );
+		parameters.add( { "angle", &angle, NSITypeDouble, 0, 1, 0 } );
 		NSISetAttribute( context, handle, parameters.size(), parameters.data() );
 	}
 

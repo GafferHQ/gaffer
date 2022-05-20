@@ -60,7 +60,8 @@ void staticParameters( const IECoreScene::MeshPrimitive *mesh, ParameterList &pa
 			&g_catmullClark,
 			NSITypeString,
 			0,
-			1
+			1,
+			0
 		} );
 	}
 }

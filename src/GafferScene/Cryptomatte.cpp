@@ -115,8 +115,10 @@ uint32_t MurmurHash3_x86_32( const void *key, size_t len, uint32_t seed )
 	{
 	case 3:
 		k1 ^= tail[2] << 16;
+		[[fallthrough]];
 	case 2:
 		k1 ^= tail[1] << 8;
+		[[fallthrough]];
 	case 1:
 		k1 ^= tail[0];
 		k1 *= c1;

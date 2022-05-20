@@ -228,6 +228,7 @@ void convertPrimitiveVariable( const IECoreScene::Primitive *primitive, const Pr
 			}
 			// "indexed" data only makes sense for meshes - fall
 			// through to Vertex case,
+			[[fallthrough]];
 		case PrimitiveVariable::Vertex :
 			// Arnold doesn't appear to have vertex storage, but
 			// fortunately for many primitives it is equivalent to varying.

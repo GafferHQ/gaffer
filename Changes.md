@@ -8,6 +8,11 @@ API
 
 - RenderController : Added `pathForID()`, `pathsForIDs()`, `idForPath()` and `idsForPaths()` methods. These make it possible to identify an object in the scene from a `uint id` AOV.
 
+Fixes
+-----
+
+- TransformQuery : Removed unnecessary elements from hash.
+
 Breaking Changes
 ----------------
 

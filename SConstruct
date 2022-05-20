@@ -88,7 +88,10 @@ options.Add(
 options.Add(
 	"CXXFLAGS",
 	"The extra flags to pass to the C++ compiler during compilation.",
-	[ "-pipe", "-Wall" ] if Environment()["PLATFORM"] != "win32" else [],
+	# We want `-Wextra` because some of its warnings are useful, and further useful
+	# warnings may be added in future. But it does introduce warnings we find unhelpful - see
+	# the compiler sections below where we turn them back off again.
+	[ "-pipe", "-Wall", "-Wextra" ] if Environment()["PLATFORM"] != "win32" else [],
 )
 
 options.Add(
@@ -386,11 +389,6 @@ for path in [
 		CXXFLAGS = [ systemIncludeArgument, path ]
 	)
 
-if "clang++" in os.path.basename( env["CXX"] ):
-	env.Append(
-		CXXFLAGS = [ "-Wno-unused-local-typedef" ]
-	)
-
 env["BUILD_DIR"] = os.path.abspath( env["BUILD_DIR"] )
 
 for e in env["ENV_VARS_TO_IMPORT"].split() :
@@ -410,6 +408,8 @@ if env["PLATFORM"] != "win32" :
 		if e in os.environ :
 			env["ENV"][e] = os.environ[e]
 
+	# Platform-specific config
+
 	if env["PLATFORM"] == "darwin" :
 
 		env.Append( CXXFLAGS = [ "-D__USE_ISOC99" ] )
@@ -418,49 +418,54 @@ if env["PLATFORM"] != "win32" :
 		osxVersion = [ int( v ) for v in platform.mac_ver()[0].split( "." ) ]
 		if osxVersion[0] == 10 and osxVersion[1] > 7 :
 			# Fix problems with Boost 1.55 and recent versions of Clang.
-			env.Append( CXXFLAGS = [ "-DBOOST_HAS_INT128", "-Wno-unused-local-typedef" ] )
+			env.Append( CXXFLAGS = [ "-DBOOST_HAS_INT128" ] )
 
 	else :
 
-		if "g++" in os.path.basename( env["CXX"] ) :
-
-			# Get GCC version.
-			gccVersion = subprocess.check_output( [ env["CXX"], "-dumpversion" ], env=env["ENV"], universal_newlines=True ).strip()
-			if "." not in gccVersion :
-				# GCC 7 onwards requires `-dumpfullversion` to get minor/patch, but this
-				# flag does not exist on earlier GCCs, where minor/patch was provided by `-dumpversion`.
-				gccVersion = subprocess.check_output( [ env["CXX"], "-dumpfullversion" ], env=env["ENV"], universal_newlines=True ).strip()
-			gccVersion = [ int( v ) for v in gccVersion.split( "." ) ]
-
-			# GCC 4.1.2 in conjunction with boost::flat_map produces crashes when
-			# using the -fstrict-aliasing optimisation (which defaults to on with -O2),
-			# so we turn the optimisation off here, only for that specific GCC version.
-			if gccVersion == [ 4, 1, 2 ] :
-				env.Append( CXXFLAGS = [ "-fno-strict-aliasing" ] )
-
-			# GCC emits spurious "assuming signed overflow does not occur"
-			# warnings, typically triggered by the comparisons in Box3f::isEmpty().
-			# Downgrade these back to warning status.
-			if gccVersion >= [ 4, 2 ] :
-				env.Append( CXXFLAGS = [ "-Wno-error=strict-overflow" ] )
-
-			# Old GCC emits spurious "maybe uninitialized" warnings when using
-			# boost::optional
-			if gccVersion < [ 5, 1 ] :
-				env.Append( CXXFLAGS = [ "-Wno-error=maybe-uninitialized" ] )
-
-			if gccVersion >= [ 5, 1 ] :
-				env.Append( CXXFLAGS = [ "-D_GLIBCXX_USE_CXX11_ABI=0" ] )
-
-			if gccVersion >= [ 9, 2 ] :
-				env.Append( CXXFLAGS = [ "-Wsuggest-override" ] )
-
-			env.Append(
-				CXXFLAGS = [ "-pthread" ],
-				SHLINKFLAGS = [ "-pthread", "-Wl,--no-undefined" ],
-			)
-
 		env["GAFFER_PLATFORM"] = "linux"
+
+	# Compiler-specific config
+
+	if "clang++" in os.path.basename( env["CXX"] ) :
+
+		env.Append(
+			CXXFLAGS = [ "-Wno-unused-local-typedef" ]
+		)
+
+		# Turn off the parts of `-Wextra` that we don't like.
+		env.Append( CXXFLAGS = [ "-Wno-unused-parameter" ] )
+
+	elif "g++" in os.path.basename( env["CXX"] ) :
+
+		# Get GCC version.
+		gccVersion = subprocess.check_output( [ env["CXX"], "-dumpversion" ], env=env["ENV"], universal_newlines=True ).strip()
+		if "." not in gccVersion :
+			# GCC 7 onwards requires `-dumpfullversion` to get minor/patch, but this
+			# flag does not exist on earlier GCCs, where minor/patch was provided by `-dumpversion`.
+			gccVersion = subprocess.check_output( [ env["CXX"], "-dumpfullversion" ], env=env["ENV"], universal_newlines=True ).strip()
+		gccVersion = [ int( v ) for v in gccVersion.split( "." ) ]
+
+		# GCC emits spurious "assuming signed overflow does not occur"
+		# warnings, typically triggered by the comparisons in Box3f::isEmpty().
+		# Downgrade these back to warning status.
+		if gccVersion >= [ 4, 2 ] :
+			env.Append( CXXFLAGS = [ "-Wno-error=strict-overflow" ] )
+
+		if gccVersion >= [ 5, 1 ] :
+			env.Append( CXXFLAGS = [ "-D_GLIBCXX_USE_CXX11_ABI=0" ] )
+
+		if gccVersion >= [ 9, 2 ] :
+			env.Append( CXXFLAGS = [ "-Wsuggest-override" ] )
+
+		# Turn off the parts of `-Wextra` that we don't like.
+		env.Append( CXXFLAGS = [ "-Wno-cast-function-type", "-Wno-unused-parameter" ] )
+
+		env.Append(
+			CXXFLAGS = [ "-pthread" ],
+			SHLINKFLAGS = [ "-pthread", "-Wl,--no-undefined" ],
+		)
+
+	# Shared config
 
 	env.Append( CXXFLAGS = [ "-std=$CXXSTD", "-fvisibility=hidden" ] )
 
