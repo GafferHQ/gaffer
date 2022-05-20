@@ -191,19 +191,6 @@ def __spreadsheetTargetNode( plug ) :
 
 	return outputs[ 0 ].node()
 
-def __downstreamNodes( plug ) :
-
-	result = set()
-	outputs = plug.outputs()
-	if outputs :
-		for output in outputs :
-			result |= __downstreamNodes( output )
-	else :
-		if plug.node() :
-			result.add( plug.node() )
-
-	return result
-
 def __scenePlugs( node ) :
 
 	result = []
@@ -255,7 +242,7 @@ def __setsPopupMenu( menuDefinition, plugValueWidget ) :
 		node = __spreadsheetTargetNode( plug ) or node
 
 	if isinstance( node, GafferScene.Filter ) :
-		nodes = __downstreamNodes( node["out"] )
+		nodes = GafferScene.SceneAlgo.filteredNodes( node )
 	else :
 		nodes = { node }
 
