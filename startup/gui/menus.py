@@ -322,6 +322,7 @@ nodeMenu.append( "/Scene/Attributes/Delete Attributes", GafferScene.DeleteAttrib
 nodeMenu.append( "/Scene/Attributes/Shuffle Attributes", GafferScene.ShuffleAttributes, searchText = "ShuffleAttributes" )
 nodeMenu.append( "/Scene/Attributes/Localise Attributes", GafferScene.LocaliseAttributes, searchText = "LocaliseAttributes" )
 nodeMenu.append( "/Scene/Attributes/Attribute Visualiser", GafferScene.AttributeVisualiser, searchText = "AttributeVisualiser" )
+nodeMenu.append( "/Scene/Attributes/Attribute Tweaks", GafferScene.AttributeTweaks, searchText = "AttributeTweaks" )
 nodeMenu.append( "/Scene/Attributes/Copy Attributes", GafferScene.CopyAttributes, searchText = "CopyAttributes" )
 nodeMenu.append( "/Scene/Attributes/Collect Transforms", GafferScene.CollectTransforms, searchText = "CollectTransforms" )
 nodeMenu.append( "/Scene/Filters/Set Filter", GafferScene.SetFilter, searchText = "SetFilter" )

@@ -174,6 +174,7 @@ from . import AttributeQueryUI
 from . import UVSamplerUI
 from . import CryptomatteUI
 from . import ShaderQueryUI
+from . import AttributeTweaksUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.

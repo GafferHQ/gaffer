@@ -14,6 +14,7 @@ Features
 --------
 
 - Tools Menu : Added item to populate the Arnold GPU cache, which may improve startup times for GPU renders.
+- AttributeTweaks : Added node to tweak scene location attributes.
 
 Improvements
 ------------
