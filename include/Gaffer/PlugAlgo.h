@@ -75,8 +75,9 @@ GAFFER_API bool setValueFromData( ValuePlug *plug, const IECore::Data *value );
 /// be set on leaf plugs.
 GAFFER_API bool setValueFromData( const ValuePlug *plug, ValuePlug *leafPlug, const IECore::Data *value );
 
-/// Returns true if the given plug's value can be set from Data
-GAFFER_API bool canSetValueFromData( const ValuePlug *plug );
+/// Returns true if the given plug's value can be set from Data.
+/// If value is provided, then return true if it can be set from Data with this type id
+GAFFER_API bool canSetValueFromData( const ValuePlug *plug, const IECore::Data *value = nullptr );
 
 /// Promotion
 /// =========

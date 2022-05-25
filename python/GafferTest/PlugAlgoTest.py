@@ -817,6 +817,56 @@ class PlugAlgoTest( GafferTest.TestCase ) :
 
 		self.assertFalse( Gaffer.PlugAlgo.canSetValueFromData( Gaffer.NameValuePlug() ) )
 
+	def testCanSetPlugFromValueWithType( self ) :
+
+		n = Gaffer.Node()
+		n.addChild( Gaffer.BoolPlug( "boolPlug" ) )
+		n.addChild( Gaffer.IntPlug( "intPlug" ) )
+		n.addChild( Gaffer.FloatPlug( "floatPlug" ) )
+		n.addChild( Gaffer.Color3fPlug( "color3fPlug" ) )
+		n.addChild( Gaffer.Color4fPlug( "color4fPlug" ) )
+		n.addChild( Gaffer.V3fPlug( "v3fPlug" ) )
+		n.addChild( Gaffer.V2iPlug( "v2iPlug" ) )
+		n.addChild( Gaffer.Box2iPlug( "box2iPlug" ) )
+		n.addChild( Gaffer.Box2fPlug( "box2fPlug" ) )
+		n.addChild( Gaffer.StringPlug( "stringPlug" ) )
+		n.addChild( Gaffer.BoolVectorDataPlug( "boolVectorPlug", defaultValue = IECore.BoolVectorData() ) )
+		n.addChild( Gaffer.IntVectorDataPlug( "intVectorPlug", defaultValue = IECore.IntVectorData() ) )
+		n.addChild( Gaffer.StringVectorDataPlug( "stringVectorPlug", defaultValue = IECore.StringVectorData() ) )
+
+		testData = [
+			IECore.BoolData( True ),
+			IECore.IntData( 42 ),
+			IECore.FloatData( 5.0 ),
+			IECore.Color3fData( imath.Color3f( 1.0, 2.0, 3.0 ) ),
+			IECore.Color4fData( imath.Color4f( 1.0, 2.0, 3.0, 4.0) ),
+			IECore.V2fData( imath.V2f( 1.0, 2.0 ) ),
+			IECore.V3iData( imath.V3i( 3, 4, 5 ) ),
+			IECore.Box2iData( imath.Box2i( imath.V2i (1.0 ), imath.V2i( 2.0 ) ) ),
+			IECore.StringData( "foo" ),
+			IECore.InternedStringData( "bar" ),
+			IECore.BoolVectorData( [ True, False, False ] ),
+			IECore.IntVectorData( [ 7, 8, 9 ] ),
+			IECore.FloatVectorData( [ 7.0, 8.0, 9.0, 10.0 ] ),
+			]
+
+		# Make sure canSet doesn't accidentally actually change something
+		for data in testData:
+			for plug in n.children():
+				if plug == n["user"]:
+					continue
+				Gaffer.PlugAlgo.canSetValueFromData( plug, data )
+				self.assertEqual( plug.getValue(), plug.defaultValue() )
+
+		# Make sure canSet matches set setValue
+		for data in testData:
+			for plug in n.children():
+				if plug == n["user"]:
+					continue
+				self.assertEqual(
+					Gaffer.PlugAlgo.canSetValueFromData( plug, data ),
+					Gaffer.PlugAlgo.setValueFromData( plug, data )
+				)
 
 if __name__ == "__main__":
 	unittest.main()
