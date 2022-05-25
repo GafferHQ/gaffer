@@ -600,7 +600,7 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 	readOnlyUI = plugValueWidget.getReadOnly()
 	plug = plugValueWidget.getPlug().ancestor( Gaffer.NameValuePlug )
 
-	if plug is not None :
+	if plug is not None and isinstance( plug.node(), GafferScene.ShaderQuery ) :
 
 		if len( menuDefinition.items() ) :
 			menuDefinition.append( "/DeleteDivider", { "divider" : True } )
