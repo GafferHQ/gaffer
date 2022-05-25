@@ -74,6 +74,7 @@ namespace
 {
 
 const InternedString g_openGLRendererName( "OpenGL" );
+const InternedString g_compoundRendererName( "Compound" );
 
 // Copied from RendererAlgo.cpp
 
@@ -1717,10 +1718,12 @@ void RenderController::updateInternal( const ProgressCallback &callback, const I
 
 void RenderController::updateDefaultCamera()
 {
-	if( m_renderer->name() == g_openGLRendererName )
+	if( m_renderer->name() == g_openGLRendererName || m_renderer->name() == g_compoundRendererName )
 	{
-		// Don't need a default camera for OpenGL, because in interactive mode the
-		// renderer currently expects the camera to be provided externally.
+		// Don't need a default camera for OpenGL, because in interactive mode
+		// the renderer currently expects the camera to be provided externally.
+		// Don't currently need one for compound renderers either, because then
+		// SceneGadget provides a camera.
 		return;
 	}
 

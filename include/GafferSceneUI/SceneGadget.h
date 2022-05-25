@@ -38,6 +38,7 @@
 #define GAFFERSCENEUI_SCENEGADGET_H
 
 #include "GafferSceneUI/Export.h"
+#include "GafferSceneUI/Private/OutputBuffer.h"
 #include "GafferSceneUI/TypeIds.h"
 
 #include "GafferScene/RenderController.h"
@@ -90,6 +91,17 @@ class GAFFERSCENEUI_API SceneGadget : public GafferUI::Gadget
 		/// Sets the selection.
 		void setSelection( const IECore::PathMatcher &selection );
 
+		/// Renderer
+		/// ========
+		///
+		/// By default, the SceneGadget renders using OpenGL, but it can
+		/// optionally be used in a hybrid mode where OpenGL is used for
+		/// bounding boxes and visualisations, and a raytraced renderer
+		/// is used for expanded objects.
+
+		void setRenderer( IECore::InternedString name );
+		IECore::InternedString getRenderer();
+
 		/// Specifies options to control the OpenGL renderer. These are used
 		/// to specify wireframe/point drawing and colours etc. A copy of
 		/// `options` is taken.
@@ -104,6 +116,7 @@ class GAFFERSCENEUI_API SceneGadget : public GafferUI::Gadget
 		/// results as they become available. These methods control
 		/// that process.
 
+		/// Pauses the processing of scene edits.
 		void setPaused( bool paused );
 		bool getPaused() const;
 
@@ -182,18 +195,28 @@ class GAFFERSCENEUI_API SceneGadget : public GafferUI::Gadget
 
 	private :
 
+		bool openGLObjectAt( const IECore::LineSegment3f &lineInGadgetSpace, GafferScene::ScenePlug::ScenePath &path, float &depth ) const;
+
 		void updateRenderer();
-		void renderScene() const;
+		void updateCamera();
 		IECore::PathMatcher convertSelection( IECore::UIntVectorDataPtr ids ) const;
+		void bufferChanged();
 		void visibilityChanged();
+		void cancelUpdateAndPauseRenderer();
+
+		Gaffer::Signals::Connection m_viewportChangedConnection;
+		Gaffer::Signals::Connection m_viewportCameraChangedConnection;
 
 		bool m_paused;
 		IECore::PathMatcher m_blockingPaths;
 		IECore::PathMatcher m_priorityPaths;
 		SceneGadgetSignal m_stateChangedSignal;
 
+		IECore::InternedString m_rendererName;
 		IECoreScenePreview::RendererPtr m_renderer;
-		mutable GafferScene::RenderController m_controller;
+		IECoreScenePreview::Renderer::ObjectInterfacePtr m_camera;
+		std::unique_ptr<OutputBuffer> m_outputBuffer;
+		std::unique_ptr<GafferScene::RenderController> m_controller;
 		mutable std::shared_ptr<Gaffer::BackgroundTask> m_updateTask;
 		bool m_updateErrored;
 		std::atomic_bool m_renderRequestPending;
