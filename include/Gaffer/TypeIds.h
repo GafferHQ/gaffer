@@ -143,6 +143,7 @@ enum TypeId
 	ScriptNodeFocusSetTypeId = 110096,
 	AnimationKeyTypeId = 110097,
 	RandomChoiceTypeId = 110098,
+	ContextQueryTypeId = 110099,
 
 	LastTypeId = 110159,
 

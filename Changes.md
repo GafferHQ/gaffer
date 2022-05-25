@@ -1,6 +1,11 @@
 0.62.x.x (relative to 0.62.0.0a3)
 ==========
 
+Features
+--------
+
+- ContextQuery : Added node to access a context variable value directly without needing to use an expression
+
 API
 ---
 
