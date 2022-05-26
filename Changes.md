@@ -17,6 +17,10 @@ Breaking Changes
 ----------------
 
 - Arnold : Removed support for Arnold versions prior to 7.1.0.0.
+- PopupWindow :
+  - Removed `sizeMode` and `closeOnLeave` constructor arguments.
+  - Removed visibility animation.
+  - Removed drag&drop positioning.
 
 0.62.0.0a2 (relative to 0.62.0.0a1)
 ==========
