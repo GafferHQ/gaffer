@@ -2491,6 +2491,11 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 			return false;
 		}
 
+		void assignID( uint32_t id ) override
+		{
+			/// \todo Implement me
+		}
+
 	private :
 
 		ccl::Session *m_session;
@@ -2567,6 +2572,11 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 		void nodesCreated( NodesCreated &nodes ) const
 		{
 			nodes.push_back( m_light.get() );
+		}
+
+		void assignID( uint32_t id ) override
+		{
+			/// \todo Implement me
 		}
 
 	private :
@@ -2694,6 +2704,11 @@ class CyclesCamera : public IECoreScenePreview::Renderer::ObjectInterface
 		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
 		{
 			return false;
+		}
+
+		void assignID( uint32_t id ) override
+		{
+			/// \todo Implement me
 		}
 
 	private :
