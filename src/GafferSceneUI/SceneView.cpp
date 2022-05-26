@@ -133,7 +133,9 @@ class SceneView::SelectionMask : public Signals::Trackable
 
 		void updateSelectionMask()
 		{
-			sceneGadget()->setSelectionMask( selectionMaskPlug()->getValue().get() );
+			sceneGadget()->setSelectionMask(
+				selectionMaskPlug()->isSetToDefault() ? nullptr : selectionMaskPlug()->getValue().get()
+			);
 		}
 
 		SceneView *m_view;

@@ -574,6 +574,7 @@ class _SelectionMaskPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __menuDefinition( self ) :
 
 		currentTypes = set().union( *[ _leafTypes( t ) for t in self.getPlug().getValue() ] )
+		defaultTypes = set().union( *[ _leafTypes( t ) for t in self.getPlug().defaultValue() ] )
 
 		result = IECore.MenuDefinition()
 		for label, types, invert in self.__menuItems() :
@@ -587,6 +588,15 @@ class _SelectionMaskPlugValueWidget( GafferUI.PlugValueWidget ) :
 				else :
 					checked = currentTypes.issuperset( types )
 					newTypes = currentTypes | types if not checked else currentTypes - types
+
+				if newTypes == defaultTypes :
+					# We generate `newTypes` using leaf typeIds, because it makes
+					# addition and removal easier. But when `newTypes` is equivalent
+					# to the default value (which uses base types), we want to collapse
+					# them back to the default value. This results in a call to
+					# `SceneGadget.setSelectionMask( nullptr )`, which puts us on the
+					# fast path where we don't use a mask at all.
+					newTypes = self.getPlug().defaultValue()
 
 				result.append(
 					label,
