@@ -3,15 +3,15 @@
 
 > Note : This release requires Arnold version 7.1.0.0 or newer.
 
-API
----
-
-- RenderController : Added `pathForID()`, `pathsForIDs()`, `idForPath()` and `idsForPaths()` methods. These make it possible to identify an object in the scene from a `uint id` AOV.
-
 Fixes
 -----
 
 - TransformQuery : Removed unnecessary elements from hash.
+
+API
+---
+
+- RenderController : Added `pathForID()`, `pathsForIDs()`, `idForPath()` and `idsForPaths()` methods. These make it possible to identify an object in the scene from a `uint id` AOV.
 
 Breaking Changes
 ----------------
