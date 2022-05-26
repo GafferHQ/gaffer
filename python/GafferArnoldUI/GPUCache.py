@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2019, Image Engine. All rights reserved.
+#  Copyright (c) 2022, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,55 +34,44 @@
 #
 ##########################################################################
 
+import arnold
+
+import IECore
+
 import Gaffer
+import GafferUI
 import GafferArnold
 
-def __parameterUserDefault( plug ) :
+class _ArnoldGPUCache( object ) :
 
-	lightFilter = plug.node()
-	return Gaffer.Metadata.value(
-		"ai:lightFilter:filter:light_blocker" + ":" + plug.relativeName( lightFilter["parameters"] ),
-		"userDefault"
+	currentStatus = None
+
+	def __cachePopulateCallback( self, userData, status, fractionDone, msg ) :
+
+		self.currentStatus = status
+
+		IECore.msg( IECore.Msg.Level.Debug, "populateGPUCache", str( msg ) )
+
+	def _populateCache( self ) :
+
+		canceller = Gaffer.Context.current().canceller()
+		arnold.AiGPUCachePopulate(
+			arnold.AI_GPU_CACHE_POPULATE_NON_BLOCKING,
+			0,  # num_proc
+			self.__cachePopulateCallback
+		)
+		try :
+			while self.currentStatus != arnold.AI_RENDER_STATUS_FINISHED.value :
+				IECore.Canceller.check( canceller )
+		except Exception as e :
+			arnold.AiGPUCachePopulateTerminate()
+
+def populateGPUCache( menu ) :
+
+	dialogue = GafferUI.BackgroundTaskDialogue( "Populating Arnold GPU Cache" )
+	cache = _ArnoldGPUCache()
+
+	dialogue.waitForBackgroundTask(
+		cache._populateCache,
+		parentWindow = menu.ancestor( GafferUI.Window )
 	)
-
-
-Gaffer.Metadata.registerNode(
-
-	GafferArnold.ArnoldLightFilter,
-
-	"description",
-
-	"""
-	LightFilter that can be positioned in space to filter light in a particular
-	region. Note that this is a non-physical effect. LightFilters need to get
-	linked to lights which you can do via a StandardAttributes node.
-	""",
-
-	plugs = {
-
-		"parameters..." : [
-
-			"userDefault", __parameterUserDefault,
-
-		],
-
-		# Parameters specific to Arnold's "light_blocker" shader
-
-		"parameters.shader" : [
-
-			"description",
-			"""
-			Shader to be used for the light_blocker filter. UVs are only
-			available if the geometry type is set to "box". Shading will need
-			to be based on P otherwise.
-			""",
-
-		],
-
-		"parameters.density" : [
-
-			"userDefault", 1
-
-		],
-	}
-)

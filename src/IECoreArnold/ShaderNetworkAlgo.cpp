@@ -198,7 +198,7 @@ AtNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECo
 			sourceName = partitionEnd( sourceName, '.' );
 		}
 
-		if( parameterName == "color" && ( shader->getName() == "quad_light" || shader->getName() == "skydome_light" ) )
+		if( parameterName == "color" && ( shader->getName() == "quad_light" || shader->getName() == "skydome_light" || shader->getName() == "mesh_light" ) )
 		{
 			// In general, Arnold should be able to form a connection onto a parameter even if the
 			// parameter already has a value.  Something weird happens with the "color" parameter

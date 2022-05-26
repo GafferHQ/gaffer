@@ -51,6 +51,9 @@
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/bind/bind.hpp"
 #include "boost/container/flat_set.hpp"
+#include "boost/multi_index/member.hpp"
+#include "boost/multi_index/ordered_index.hpp"
+#include "boost/multi_index_container.hpp"
 
 #include "tbb/task.h"
 
@@ -71,6 +74,7 @@ namespace
 {
 
 const InternedString g_openGLRendererName( "OpenGL" );
+const InternedString g_compoundRendererName( "Compound" );
 
 // Copied from RendererAlgo.cpp
 
@@ -218,6 +222,70 @@ struct ObjectInterfaceHandle : public boost::noncopyable
 //////////////////////////////////////////////////////////////////////////
 // Internal implementation details
 //////////////////////////////////////////////////////////////////////////
+
+// Maps between scene locations and integer IDs.
+class RenderController::IDMap
+{
+
+	public :
+
+		// Creates an ID if no ID has been created yet.
+		uint32_t acquireID( const ScenePlug::ScenePath &path )
+		{
+			Mutex::scoped_lock lock( m_mutex, /* write = */ false );
+			auto it = m_map.find( path );
+			if( it != m_map.end() )
+			{
+				return it->second;
+			}
+
+			lock.upgrade_to_writer();
+			return m_map.insert( PathAndID( path, m_map.size() + 1 ) ).first->second;
+		}
+
+		uint32_t idForPath( const ScenePlug::ScenePath &path ) const
+		{
+			Mutex::scoped_lock lock( m_mutex, /* write = */ false );
+			auto it = m_map.find( path );
+			if( it != m_map.end() )
+			{
+				return it->second;
+			}
+			return 0;
+		}
+
+		std::optional<ScenePlug::ScenePath> pathForID( uint32_t id ) const
+		{
+			Mutex::scoped_lock lock( m_mutex, /* write = */ false );
+			auto &index = m_map.get<1>();
+			auto it = index.find( id );
+			if( it != index.end() )
+			{
+				return it->first;
+			}
+			return std::nullopt;
+		}
+
+	private :
+
+		using PathAndID = std::pair<ScenePlug::ScenePath, uint32_t>;
+		using Map = boost::multi_index::multi_index_container<
+			PathAndID,
+			boost::multi_index::indexed_by<
+				boost::multi_index::ordered_unique<
+					boost::multi_index::member<PathAndID, ScenePlug::ScenePath, &PathAndID::first>
+				>,
+				boost::multi_index::ordered_unique<
+					boost::multi_index::member<PathAndID, uint32_t, &PathAndID::second>
+				>
+			>
+		>;
+		using Mutex = tbb::spin_rw_mutex;
+
+		Map m_map;
+		mutable Mutex m_mutex;
+
+};
 
 // Represents a location in the Gaffer scene as specified to the
 // renderer. We use this to build up a persistent representation of
@@ -426,6 +494,18 @@ class RenderController::SceneGraph
 					else
 					{
 						m_objectInterface->transform( m_fullTransform, *m_transformTimesOutput );
+					}
+				}
+
+				// Assign an ID
+				if( m_changedComponents & ObjectComponent )
+				{
+					// We don't assign IDs for OpenGL renders, because the OpenGL renderer
+					// assigns its own lightweight IDs.
+					/// \todo Measure overhead and consider using same IDs everywhere.
+					if( controller->m_renderer->name() != g_openGLRendererName )
+					{
+						m_objectInterface->assignID( controller->m_idMap->acquireID( path ) );
 					}
 				}
 
@@ -1213,6 +1293,7 @@ class RenderController::SceneGraphUpdateTask : public tbb::task
 
 RenderController::RenderController( const ConstScenePlugPtr &scene, const Gaffer::ConstContextPtr &context, const IECoreScenePreview::RendererPtr &renderer )
 	:	m_renderer( renderer ),
+		m_idMap( std::make_unique<IDMap>() ),
 		m_minimumExpansionDepth( 0 ),
 		m_updateRequired( false ),
 		m_updateRequested( false ),
@@ -1637,10 +1718,12 @@ void RenderController::updateInternal( const ProgressCallback &callback, const I
 
 void RenderController::updateDefaultCamera()
 {
-	if( m_renderer->name() == g_openGLRendererName )
+	if( m_renderer->name() == g_openGLRendererName || m_renderer->name() == g_compoundRendererName )
 	{
-		// Don't need a default camera for OpenGL, because in interactive mode the
-		// renderer currently expects the camera to be provided externally.
+		// Don't need a default camera for OpenGL, because in interactive mode
+		// the renderer currently expects the camera to be provided externally.
+		// Don't currently need one for compound renderers either, because then
+		// SceneGadget provides a camera.
 		return;
 	}
 
@@ -1666,4 +1749,40 @@ void RenderController::cancelBackgroundTask()
 		m_backgroundTask->cancelAndWait();
 		m_backgroundTask.reset();
 	}
+}
+
+std::optional<ScenePlug::ScenePath> RenderController::pathForID( uint32_t id ) const
+{
+	return m_idMap->pathForID( id );
+}
+
+IECore::PathMatcher RenderController::pathsForIDs( const std::vector<uint32_t> &ids ) const
+{
+	IECore::PathMatcher result;
+	for( auto id : ids )
+	{
+		if( auto path = m_idMap->pathForID( id ) )
+		{
+			result.addPath( *path );
+		}
+	}
+	return result;
+}
+
+uint32_t RenderController::idForPath( const ScenePlug::ScenePath &path ) const
+{
+	return m_idMap->idForPath( path );
+}
+
+std::vector<uint32_t> RenderController::idsForPaths( const IECore::PathMatcher &paths ) const
+{
+	std::vector<uint32_t> result;
+	for( PathMatcher::Iterator it = paths.begin(), eIt = paths.end(); it != eIt; ++it )
+	{
+		if( auto id = idForPath( *it ) )
+		{
+			result.push_back( id );
+		}
+	}
+	return result;
 }

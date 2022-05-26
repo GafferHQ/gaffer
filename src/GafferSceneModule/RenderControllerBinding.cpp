@@ -103,6 +103,20 @@ void updateMatchingPaths( RenderController &r, const IECore::PathMatcher &pathsT
 	r.updateMatchingPaths( pathsToUpdate );
 }
 
+object pathForID( RenderController &r, uint32_t id )
+{
+	if( auto path = r.pathForID( id ) )
+	{
+		return object( ScenePlug::pathToString( *path ) );
+	}
+	return object();
+}
+
+IECore::UIntVectorDataPtr idsForPaths( RenderController &r, const IECore::PathMatcher &paths )
+{
+	return new IECore::UIntVectorData( r.idsForPaths( paths ) );
+}
+
 } // namespace
 
 void GafferSceneModule::bindRenderController()
@@ -122,6 +136,10 @@ void GafferSceneModule::bindRenderController()
 		.def( "updateRequiredSignal", &RenderController::updateRequiredSignal, return_internal_reference<1>() )
 		.def( "update", &update )
 		.def( "updateMatchingPaths", &updateMatchingPaths )
+		.def( "pathForID", &pathForID )
+		.def( "pathsForIDs", &RenderController::pathsForIDs )
+		.def( "idForPath", &RenderController::idForPath )
+		.def( "idsForPaths", &idsForPaths )
 	;
 
 	SignalClass<RenderController::UpdateRequiredSignal>( "UpdateRequiredSignal" );

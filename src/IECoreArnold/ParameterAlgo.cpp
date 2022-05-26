@@ -234,37 +234,6 @@ IECore::DataPtr arrayToDataInternal( AtArray *array, F f )
 	return data;
 }
 
-#if ARNOLD_VERSION_NUM < 70000
-
-// Prior to Arnold 7, `AiArrayGet*` is implemented using macros.
-// Replace them with function equivalent to the ones in Arnold 7.
-
-#undef AiArrayGetBool
-bool AiArrayGetBool( const AtArray *a, uint32_t i )
-{
-	return AiArrayGetBoolFunc( a, i, __AI_FILE__, __AI_LINE__ );
-}
-
-#undef AiArrayGetInt
-int AiArrayGetInt( const AtArray *a, uint32_t i )
-{
-	return AiArrayGetIntFunc( a, i, __AI_FILE__, __AI_LINE__ );
-}
-
-#undef AiArrayGetUInt
-uint32_t AiArrayGetUInt( const AtArray *a, uint32_t i )
-{
-	return AiArrayGetUIntFunc( a, i, __AI_FILE__, __AI_LINE__ );
-}
-
-#undef AiArrayGetFlt
-float AiArrayGetFlt( const AtArray *a, uint32_t i )
-{
-	return AiArrayGetFltFunc( a, i, __AI_FILE__, __AI_LINE__ );
-}
-
-#endif
-
 const char* getStrWrapper( const AtArray* a, uint32_t i )
 {
 	return AiArrayGetStr( a, i ).c_str();

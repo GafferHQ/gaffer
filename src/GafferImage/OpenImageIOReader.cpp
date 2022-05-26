@@ -62,8 +62,6 @@
 #include "boost/filesystem/path.hpp"
 #include "boost/regex.hpp"
 
-#include "tbb/mutex.h"
-
 #include <memory>
 
 OIIO_NAMESPACE_USING
@@ -276,7 +274,8 @@ class File
 			// the same for layers iff the layers are stored in separate parts.
 			ImageSpec currentSpec = m_imageSpec;
 			int subImageIndex = 0;
-			do {
+			while( currentSpec.format != TypeUnknown )
+			{
 				if( !(
 					currentSpec.x == m_imageSpec.x &&
 					currentSpec.y == m_imageSpec.y &&
@@ -294,7 +293,10 @@ class File
 						boost::format( "Ignoring subimage %i of \"%s\" because spec does not match first subimage." )
 						% subImageIndex % infoFileName
 					);
+
 					subImageIndex++;
+					currentSpec = m_imageInput->spec( subImageIndex, 0 );
+
 					continue;
 				}
 
@@ -350,8 +352,11 @@ class File
 					// all channels, so we don't really support multiple subimages for deep.
 					break;
 				}
+
 				subImageIndex++;
-			} while( m_imageInput->seek_subimage( subImageIndex, 0, currentSpec ) );
+				currentSpec = m_imageInput->spec( subImageIndex, 0 );
+
+			}
 
 			m_channelNamesData = new StringVectorData( channelNames );
 
@@ -633,13 +638,7 @@ class File
 		// channel data.
 		int readRegion( int subImage, const Box2i &targetRegion, std::vector<float> &data, DeepData &deepData, Box2i &dataRegion )
 		{
-			/// \todo OIIO 2.0 introduces thread-safe `read_*()` methods that
-			/// are passed the subimage directly. Upgrade to use those and remove
-			/// this lock entirely.
-			tbb::mutex::scoped_lock lock( m_mutex );
-
-			ImageSpec subImageSpec;
-			m_imageInput->seek_subimage( subImage, 0, subImageSpec );
+			ImageSpec subImageSpec = m_imageInput->spec( subImage, 0 );
 
 			const V2i fileDataOrigin( m_imageSpec.x, m_imageSpec.y );
 			const Box2i fileDataWindow( fileDataOrigin,
@@ -663,12 +662,14 @@ class File
 				{
 					data.resize( subImageSpec.nchannels * fileDataRegion.size().x * fileDataRegion.size().y );
 					success = m_imageInput->read_scanlines(
-						fileDataRegion.min.y, fileDataRegion.max.y, 0, TypeDesc::FLOAT, &data[0]
+						subImage, 0,
+						fileDataRegion.min.y, fileDataRegion.max.y, 0, 0, subImageSpec.nchannels, TypeDesc::FLOAT, &data[0]
 					);
 				}
 				else
 				{
 					success = m_imageInput->read_native_deep_scanlines(
+						subImage, 0,
 						fileDataRegion.min.y, fileDataRegion.max.y, 0, 0, subImageSpec.nchannels, deepData
 					);
 				}
@@ -704,13 +705,15 @@ class File
 				{
 					data.resize( subImageSpec.nchannels * fileDataRegion.size().x * fileDataRegion.size().y );
 					success = m_imageInput->read_tiles (
+						subImage, 0,
 						fileDataRegion.min.x, fileDataRegion.max.x,
-						fileDataRegion.min.y, fileDataRegion.max.y, 0, 1, TypeDesc::FLOAT, &data[0]
+						fileDataRegion.min.y, fileDataRegion.max.y, 0, 1, 0, subImageSpec.nchannels, TypeDesc::FLOAT, &data[0]
 					);
 				}
 				else
 				{
 					success = m_imageInput->read_native_deep_tiles (
+						subImage, 0,
 						fileDataRegion.min.x, fileDataRegion.max.x,
 						fileDataRegion.min.y, fileDataRegion.max.y, 0, 1, 0, subImageSpec.nchannels, deepData
 					);
@@ -767,11 +770,8 @@ class File
 		ConstStringVectorDataPtr m_channelNamesData;
 		std::map<std::string, ChannelMapEntry> m_channelMap;
 		Imath::V2i m_tileBatchSize;
-		tbb::mutex m_mutex;
 		bool m_tiled;
 };
-
-
 
 using FilePtr = std::shared_ptr<File>;
 

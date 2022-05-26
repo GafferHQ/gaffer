@@ -35,6 +35,7 @@
 ##########################################################################
 
 import os
+import time
 import unittest
 
 import imath
@@ -52,6 +53,8 @@ import GafferSceneUI
 
 class SceneGadgetTest( GafferUITest.TestCase ) :
 
+	renderer = "OpenGL"
+
 	def testBound( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -61,27 +64,28 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		s["g"]["transform"]["translate"]["x"].setValue( 2 )
 
 		sg = GafferSceneUI.SceneGadget()
+		sg.setRenderer( self.renderer )
 		sg.setScene( s["g"]["out"] )
 
-		sg.waitForCompletion()
+		self.waitForRender( sg )
 		self.assertEqual( sg.bound(), s["g"]["out"].bound( "/" ) )
 
 		s["g"]["transform"]["translate"]["y"].setValue( 4 )
-		sg.waitForCompletion()
+		self.waitForRender( sg )
 		self.assertEqual( sg.bound(), s["g"]["out"].bound( "/" ) )
 
 		s["g"]["transform"]["translate"].setValue( imath.V3f( 0 ) )
 		s["s"] = GafferScene.Sphere()
 		s["g"]["in"][1].setInput( s["s"]["out"] )
 		s["p"]["transform"]["translate"]["z"].setValue( 10 )
-		sg.waitForCompletion()
+		self.waitForRender( sg )
 		self.assertEqual( sg.bound(), s["g"]["out"].bound( "/" ) )
 		# Nothing selected, so selected bound is empty
 		self.assertEqual( sg.bound( True ), imath.Box3f() )
 
 		sg.setExpandedPaths( IECore.PathMatcher( ["/group/"] ) )
 		sg.setSelection( IECore.PathMatcher( ["/group/plane"] ) )
-		sg.waitForCompletion()
+		self.waitForRender( sg )
 
 		self.assertEqual( sg.bound(), s["g"]["out"].bound( "/" ) )
 		# Only plane is selected
@@ -117,6 +121,17 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		expectedObjects = set( IECore.PathMatcher( paths ).paths() )
 		self.assertEqual( objects, expectedObjects )
 
+	def waitForRender( self, gadget ) :
+
+		gadget.waitForCompletion()
+		if self.renderer != "OpenGL" :
+			# `waitForCompletion()` only covers scene translation
+			# to the renderer. Provide a grace period for pixels
+			# to get into the buffers.
+			timeout = time.time() + 1
+			while time.time() < timeout :
+				self.waitForIdle()
+
 	def testObjectVisibility( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -127,6 +142,7 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		s["a"]["in"].setInput( s["g"]["out"] )
 
 		sg = GafferSceneUI.SceneGadget()
+		sg.setRenderer( self.renderer )
 		sg.setMinimumExpansionDepth( 1 )
 		sg.setScene( s["a"]["out"] )
 
@@ -138,19 +154,20 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 
 		sg.waitForCompletion()
 		gw.getViewportGadget().frame( sg.bound() )
+		self.waitForRender( sg )
 
 		self.assertObjectAt( sg, imath.V2f( 0.5 ), IECore.InternedStringVectorData( [ "group", "sphere" ] ) )
 
 		s["a"]["attributes"]["visibility"]["enabled"].setValue( True )
 		s["a"]["attributes"]["visibility"]["value"].setValue( False )
 
-		sg.waitForCompletion()
+		self.waitForRender( sg )
 		self.assertObjectAt( sg, imath.V2f( 0.5 ), None )
 
 		s["a"]["attributes"]["visibility"]["enabled"].setValue( True )
 		s["a"]["attributes"]["visibility"]["value"].setValue( True )
 
-		sg.waitForCompletion()
+		self.waitForRender( sg )
 		self.assertObjectAt( sg, imath.V2f( 0.5 ), IECore.InternedStringVectorData( [ "group", "sphere" ] ) )
 
 	@unittest.skipIf( GafferTest.inCI(), "Unknown problem running in cloud" )
@@ -164,6 +181,7 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		s["a"]["in"].setInput( s["g"]["out"] )
 
 		sg = GafferSceneUI.SceneGadget()
+		sg.setRenderer( self.renderer )
 		sg.setScene( s["a"]["out"] )
 
 		with GafferUI.Window() as w :
@@ -174,19 +192,19 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 
 		sg.waitForCompletion()
 		gw.getViewportGadget().frame( sg.bound() )
-		self.waitForIdle( 10000 )
+		self.waitForRender( sg )
 
 		self.assertObjectAt( sg, imath.V2f( 0.5 ), None )
 		self.assertObjectsAt( sg, imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ), [ "/group" ] )
 
 		sg.setExpandedPaths( IECore.PathMatcher( [ "/group" ] ) )
-		sg.waitForCompletion()
+		self.waitForRender( sg )
 
 		self.assertObjectAt( sg, imath.V2f( 0.5 ), IECore.InternedStringVectorData( [ "group", "sphere" ] ) )
 		self.assertObjectsAt( sg, imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ), [ "/group/sphere" ] )
 
 		sg.setExpandedPaths( IECore.PathMatcher( [] ) )
-		sg.waitForCompletion()
+		self.waitForRender( sg )
 
 		self.assertObjectAt( sg, imath.V2f( 0.5 ), None )
 		self.assertObjectsAt( sg, imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ), [ "/group" ] )
@@ -204,6 +222,7 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		s["e"].setExpression( "parent['p']['dimensions']['x'] = 1 + context.getFrame() * 0.1" )
 
 		g = GafferSceneUI.SceneGadget()
+		g.setRenderer( self.renderer )
 		g.setScene( s["g"]["out"] )
 		g.bound()
 
@@ -218,6 +237,7 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		s["g"]["in"][3].setInput( s["p"]["out"] )
 
 		sg = GafferSceneUI.SceneGadget()
+		sg.setRenderer( self.renderer )
 		sg.setScene( s["g"]["out"] )
 		sg.setMinimumExpansionDepth( 2 )
 
@@ -271,6 +291,7 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		# Try to view it
 
 		sg = GafferSceneUI.SceneGadget()
+		sg.setRenderer( self.renderer )
 		sg.setScene( s["a"]["out"] )
 		sg.setMinimumExpansionDepth( 4 )
 
@@ -319,7 +340,7 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 			# Fix the problem with the scene, and check that we can see something now
 
 			s["f"]["enabled"].setValue( False )
-			sg.waitForCompletion()
+			self.waitForRender( sg )
 
 			self.assertEqual( len( mh.messages ), 1 )
 			self.assertFalse( sg.bound().isEmpty() )
@@ -346,6 +367,7 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		subTree["root"].setValue( "/plane" )
 
 		sg = GafferSceneUI.SceneGadget()
+		sg.setRenderer( self.renderer )
 		sg.setScene( subTree["out"] )
 		sg.setMinimumExpansionDepth( 100 )
 
@@ -355,7 +377,7 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		self.waitForIdle( 10000 )
 
 		gw.getViewportGadget().frame( sg.bound() )
-		self.waitForIdle( 10000 )
+		self.waitForRender( sg )
 
 		self.assertObjectsAt(
 			sg,
@@ -387,6 +409,12 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 			[ "/instances/sphere/1" ]
 		)
 
+		self.assertObjectsAt(
+			sg,
+			imath.Box2f( imath.V2f( 10 ), imath.V2f( 20 ) ),
+			[]
+		)
+
 	def testObjectAtLine( self ) :
 
 		cubes = []
@@ -402,6 +430,7 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 			group["in"][i].setInput( cube["out"] )
 
 		sg = GafferSceneUI.SceneGadget()
+		sg.setRenderer( self.renderer )
 		sg.setScene( group["out"] )
 		sg.setMinimumExpansionDepth( 100 )
 
@@ -427,7 +456,7 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		cameraTransform.translate( imath.V3f( 0, 0, 2 ) )
 		vp.setCameraTransform( cameraTransform )
 
-		self.waitForIdle( 10000 )
+		self.waitForRender( sg )
 
 		# We assume in this case, that gadget space is world space
 
@@ -473,6 +502,7 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		sphere = GafferScene.Sphere()
 
 		sg = GafferSceneUI.SceneGadget()
+		sg.setRenderer( self.renderer )
 		self.assertEqual( sg.getScene(), None )
 
 		sg.setScene( plane["out"] )
@@ -488,14 +518,16 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		group2["in"][0].setInput( group1["out"] )
 
 		sg = GafferSceneUI.SceneGadget()
+		sg.setRenderer( self.renderer )
 		sg.setScene( group2["out"] )
 
-		sg.waitForCompletion()
+		self.waitForRender( sg )
 		self.assertEqual( sg.bound(), imath.Box3f() )
 
 	def testSelectionMaskAccessors( self ) :
 
 		sg = GafferSceneUI.SceneGadget()
+		sg.setRenderer( self.renderer )
 		self.assertEqual( sg.getSelectionMask(), None )
 
 		m = IECore.StringVectorData( [ "MeshPrimitive" ] )
@@ -522,6 +554,7 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		group["in"][1].setInput( camera["out"] )
 
 		sg = GafferSceneUI.SceneGadget()
+		sg.setRenderer( self.renderer )
 		sg.setScene( group["out"] )
 		sg.setMinimumExpansionDepth( 100 )
 
@@ -532,7 +565,13 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 
 		sg.waitForCompletion()
 		gw.getViewportGadget().frame( sg.bound(), imath.V3f( 0, 0, -1 ) )
-		self.waitForIdle( 10000 )
+		self.waitForRender( sg )
+
+		self.assertObjectAt(
+			sg,
+			imath.V2f( 0.6 ),
+			IECore.InternedStringVectorData( [ "group", "plane" ] )
+		)
 
 		self.assertObjectsAt(
 			sg,
@@ -542,6 +581,12 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 
 		sg.setSelectionMask( IECore.StringVectorData( [ "MeshPrimitive" ] ) )
 
+		self.assertObjectAt(
+			sg,
+			imath.V2f( 0.6 ),
+			IECore.InternedStringVectorData( [ "group", "plane" ] )
+		)
+
 		self.assertObjectsAt(
 			sg,
 			imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ),
@@ -549,6 +594,12 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		)
 
 		sg.setSelectionMask( IECore.StringVectorData( [ "Camera" ] ) )
+
+		self.assertObjectAt(
+			sg,
+			imath.V2f( 0.6 ),
+			None
+		)
 
 		self.assertObjectsAt(
 			sg,

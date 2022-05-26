@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2019, Image Engine. All rights reserved.
+#  Copyright (c) 2022, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,55 +34,17 @@
 #
 ##########################################################################
 
-import Gaffer
-import GafferArnold
+import unittest
 
-def __parameterUserDefault( plug ) :
+import GafferTest
+import GafferSceneUITest
 
-	lightFilter = plug.node()
-	return Gaffer.Metadata.value(
-		"ai:lightFilter:filter:light_blocker" + ":" + plug.relativeName( lightFilter["parameters"] ),
-		"userDefault"
-	)
+@unittest.skipIf( GafferTest.inCI(), "Insufficient OpenGL features - need GLSL 330" )
+class ArnoldSceneGadgetTest( GafferSceneUITest.SceneGadgetTest ) :
 
+	# Tests are inherited from base class. We just need to
+	# override the renderer being used.
+	renderer = "Arnold"
 
-Gaffer.Metadata.registerNode(
-
-	GafferArnold.ArnoldLightFilter,
-
-	"description",
-
-	"""
-	LightFilter that can be positioned in space to filter light in a particular
-	region. Note that this is a non-physical effect. LightFilters need to get
-	linked to lights which you can do via a StandardAttributes node.
-	""",
-
-	plugs = {
-
-		"parameters..." : [
-
-			"userDefault", __parameterUserDefault,
-
-		],
-
-		# Parameters specific to Arnold's "light_blocker" shader
-
-		"parameters.shader" : [
-
-			"description",
-			"""
-			Shader to be used for the light_blocker filter. UVs are only
-			available if the geometry type is set to "box". Shading will need
-			to be based on P otherwise.
-			""",
-
-		],
-
-		"parameters.density" : [
-
-			"userDefault", 1
-
-		],
-	}
-)
+if __name__ == "__main__":
+	unittest.main()

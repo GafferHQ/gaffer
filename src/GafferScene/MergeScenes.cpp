@@ -591,6 +591,7 @@ void MergeScenes::hashAttributes( const ScenePath &path, const Gaffer::Context *
 				case InputType::First :
 					// Initialise hash and fall through
 					SceneProcessor::hashAttributes( path, context, parent, h );
+					[[fallthrough]];
 				case InputType::Other :
 					// Merge input hash
 					scene->attributesPlug()->hash( h );
@@ -619,6 +620,7 @@ IECore::ConstCompoundObjectPtr MergeScenes::computeAttributes( const ScenePath &
 					// fall through.
 					merged = new CompoundObject();
 					result = merged;
+					[[fallthrough]];
 				case InputType::Other :
 					// Merge input attributes into result.
 					ConstCompoundObjectPtr attributes = scene->attributesPlug()->getValue();
@@ -649,6 +651,7 @@ void MergeScenes::hashObject( const ScenePath &path, const Gaffer::Context *cont
 				case InputType::First :
 					// Initialise hash and fall through.
 					SceneProcessor::hashObject( path, context, parent, h );
+					[[fallthrough]];
 				case InputType::Other :
 					// Merge input hash.
 					scene->objectPlug()->hash( h );
@@ -696,6 +699,7 @@ void MergeScenes::hashChildNames( const ScenePath &path, const Gaffer::Context *
 					break;
 				case InputType::First :
 					SceneProcessor::hashChildNames( path, context, parent, h );
+					[[fallthrough]];
 				case InputType::Other :
 					scene->childNamesPlug()->hash( h );
 			}
@@ -760,6 +764,7 @@ void MergeScenes::hashGlobals( const Gaffer::Context *context, const ScenePlug *
 				case InputType::First :
 					// Initialise hash and fall through.
 					SceneProcessor::hashGlobals( context, parent, h );
+					[[fallthrough]];
 				case InputType::Other :
 					// Merge input hash.
 					scene->globalsPlug()->hash( h );
@@ -788,6 +793,7 @@ IECore::ConstCompoundObjectPtr MergeScenes::computeGlobals( const Gaffer::Contex
 					// fall through.
 					merged = new CompoundObject();
 					result = merged;
+					[[fallthrough]];
 				case InputType::Other :
 					// Merge input globals into result.
 					ConstCompoundObjectPtr globals = scene->globalsPlug()->getValue();
@@ -818,6 +824,7 @@ void MergeScenes::hashSetNames( const Gaffer::Context *context, const ScenePlug 
 				case InputType::First :
 					// Initialise hash and fall through.
 					SceneProcessor::hashSetNames( context, parent, h );
+					[[fallthrough]];
 				case InputType::Other :
 					// Merge input hash.
 					scene->setNamesPlug()->hash( h );
@@ -845,6 +852,7 @@ IECore::ConstInternedStringVectorDataPtr MergeScenes::computeSetNames( const Gaf
 					// fall through.
 					merged = new InternedStringVectorData();
 					result = merged;
+					[[fallthrough]];
 				case InputType::Other :
 					// This naive approach to merging set names preserves the order of the incoming names,
 					// but at the expense of using linear search. We assume that the number of sets is small
@@ -879,6 +887,7 @@ void MergeScenes::hashSet( const IECore::InternedString &setName, const Gaffer::
 				case InputType::First :
 					// Initialise hash and fall through.
 					SceneProcessor::hashSet( setName, context, parent, h );
+					[[fallthrough]];
 				case InputType::Other :
 					// Merge input hash.
 					scene->setPlug()->hash( h );
@@ -906,6 +915,7 @@ IECore::ConstPathMatcherDataPtr MergeScenes::computeSet( const IECore::InternedS
 					// fall through.
 					merged = new PathMatcherData();
 					result = merged;
+					[[fallthrough]];
 				case InputType::Other :
 					ConstPathMatcherDataPtr paths = scene->setPlug()->getValue();
 					merged->writable().addPaths( paths->readable() );

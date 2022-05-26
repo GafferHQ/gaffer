@@ -59,7 +59,8 @@ void staticParameters( const IECoreScene::PointsPrimitive *object, ParameterList
 			&g_one,
 			NSITypeFloat,
 			0,
-			1
+			1,
+			0
 		} );
 	}
 }

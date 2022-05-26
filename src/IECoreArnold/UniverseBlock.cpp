@@ -46,14 +46,8 @@
 #include "ai_render.h"
 #include "ai_universe.h"
 
-#include "tbb/spin_mutex.h"
-
 using namespace IECore;
 using namespace IECoreArnold;
-
-#if ARNOLD_VERSION_NUM >= 70000
-#define IECOREARNOLD_MULTIPLE_UNIVERSES
-#endif
 
 namespace
 {
@@ -94,11 +88,7 @@ void begin()
 	// Default to logging errors / warnings only - we may not even be using this universe block to perform a render,
 	// we might just be loading some shader metadata or something, so we don't want to be dumping lots of
 	// unnecessary output.
-#ifdef IECOREARNOLD_MULTIPLE_UNIVERSES
 	AiMsgSetConsoleFlags( nullptr, AI_LOG_ERRORS | AI_LOG_WARNINGS );
-#else
-	AiMsgSetConsoleFlags( AI_LOG_ERRORS | AI_LOG_WARNINGS );
-#endif
 
 	AiBegin();
 
@@ -109,8 +99,6 @@ void begin()
 		loadMetadata( pluginPaths );
 	}
 }
-
-#ifdef IECOREARNOLD_MULTIPLE_UNIVERSES
 
 class ArnoldAPIScope
 {
@@ -160,82 +148,19 @@ class ArnoldAPIScope
 		AtUniverse *m_sharedUniverse;
 };
 
-#else
-
-tbb::spin_mutex g_mutex;
-int g_count = 0;
-bool g_haveWriter = false;
-
-#endif
-
 } // namespace
 
 UniverseBlock::UniverseBlock( bool writable )
 	:	m_writable( writable )
 {
-#ifdef IECOREARNOLD_MULTIPLE_UNIVERSES
 	ArnoldAPIScope &apiScope = ArnoldAPIScope::acquire();
 	m_universe = m_writable ? AiUniverse() : apiScope.sharedUniverse();
-#else
-	// Careful management of the default universe, so that there
-	// can be multiple readers but only one writer.
-	tbb::spin_mutex::scoped_lock lock( g_mutex );
-
-	if( writable )
-	{
-		if( g_haveWriter )
-		{
-			throw IECore::Exception( "Arnold is already in use" );
-		}
-		else
-		{
-			g_haveWriter = true;
-		}
-	}
-	m_universe = nullptr;
-
-	g_count++;
-	if( AiUniverseIsActive() )
-	{
-		return;
-	}
-
-	begin();
-#endif
 }
 
 UniverseBlock::~UniverseBlock()
 {
-#ifdef IECOREARNOLD_MULTIPLE_UNIVERSES
 	if( m_writable )
 	{
 		AiUniverseDestroy( m_universe );
 	}
-#else
-	tbb::spin_mutex::scoped_lock lock( g_mutex );
-
-	g_count--;
-	if( m_writable )
-	{
-		g_haveWriter = false;
-		// We _must_ call AiEnd() to clean up ready
-		// for the next writer, regardless of whether
-		// or not readers still exist.
-		AiEnd();
-		if( g_count )
-		{
-			// If readers do exist, restart the universe.
-			// This is not threadsafe, since a reader on
-			// another thread could be making Ai calls
-			// in between shutdown and startup. But it is
-			// the best we can do given that Arnold has
-			// only one universe. The alternative is to
-			// only shutdown when g_count reaches 0, but
-			// then a long-lived reader can cause Arnold
-			// state to be carried over from one writer
-			// to the next.
-			begin();
-		}
-	}
-#endif
 }

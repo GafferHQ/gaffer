@@ -789,5 +789,48 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertIsNone( renderer.capturedObject( "/sphere" ) )
 
+	def testIDs( self ) :
+
+		cube = GafferScene.Cube()
+		sphere = GafferScene.Sphere()
+		plane = GafferScene.Plane()
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( cube["out"] )
+		group["in"][1].setInput( sphere["out"] )
+		group["in"][2].setInput( plane["out"] )
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer()
+		controller = GafferScene.RenderController( group["out"], Gaffer.Context(), renderer )
+		controller.setMinimumExpansionDepth( 2 )
+		controller.update()
+
+		paths = [ "/group/cube", "/group/sphere", "/group/plane" ]
+		for path in paths :
+			self.assertEqual(
+				controller.pathForID( renderer.capturedObject( path ).id() ),
+				path
+			)
+			self.assertEqual(
+				controller.idForPath( path ),
+				renderer.capturedObject( path ).id()
+			)
+
+		self.assertIsNone( controller.pathForID( 0 ) )
+		self.assertIsNone( controller.pathForID( 4 ) )
+		self.assertEqual( 0, controller.idForPath( "/no/object/here" ) )
+
+		self.assertEqual(
+			controller.pathsForIDs( [
+				renderer.capturedObject( p ).id() for p in paths
+			] ),
+			IECore.PathMatcher( paths )
+		)
+
+		self.assertEqual(
+			set( controller.idsForPaths( IECore.PathMatcher( paths ) ) ),
+			{ renderer.capturedObject( p ).id() for p in paths }
+		)
+
 if __name__ == "__main__":
 	unittest.main()

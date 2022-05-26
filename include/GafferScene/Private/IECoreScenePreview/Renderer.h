@@ -203,6 +203,9 @@ class GAFFERSCENE_API Renderer : public IECore::RefCounted
 				/// - "lightFilters" : specifies the set of light filters that should
 				///   be applied to a light.
 				virtual void link( const IECore::InternedString &type, const ConstObjectSetPtr &objects ) = 0;
+				/// Assigns an integer ID that should be made available via a `uint id`
+				/// AOV that can be referenced via `output()`.
+				virtual void assignID( uint32_t id ) = 0;
 
 			protected :
 

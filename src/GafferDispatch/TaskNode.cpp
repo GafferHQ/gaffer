@@ -58,10 +58,6 @@ TaskNode::Task::Task( ConstTaskPlugPtr plug, const Gaffer::Context *context )
 {
 }
 
-TaskNode::Task::Task( const Task &t ) : m_plug( t.m_plug ), m_context( t.m_context )
-{
-}
-
 TaskNode::Task::Task( TaskNodePtr n, const Context *c ) : m_plug( n->taskPlug() ), m_context( new Context( *c ) )
 {
 }

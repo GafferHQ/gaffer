@@ -371,6 +371,7 @@ IECore::ConstPathMatcherDataPtr Set::computeSet( const IECore::InternedString &s
 				return result;
 			}
 			// Input set empty - fall through to create mode.
+			[[fallthrough]];
 		}
 		case Create : {
 			return pathMatcher;

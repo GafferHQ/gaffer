@@ -445,6 +445,16 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 		{
 		}
 
+		void assignID( uint32_t id ) override
+		{
+			// The GL renderer provides a more lightweight ID mechanism where
+			// IDs are just the index in the object list, and don't need
+			// assigning. This is exposed via the `gl:querySelection` command.
+			// So we don't implement `assignID()` for now.
+			/// \todo Evaluate overhead of the more general ID mechanism, and
+			/// consider dropping the custom OpenGL one.
+		}
+
 		Box3f transformedBound() const
 		{
 			Box3f b;
@@ -862,7 +872,12 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 
 			if( m_renderType == Interactive )
 			{
-				renderInteractive();
+				// We currently don't have any use for interactively rendering
+				// to outputs defined by the `output()` function. To facilitate
+				// interactive use in a CompoundRenderer (where the other
+				// renderer _is_ rendering to the outputs), we instead define a
+				// separate `gl:renderToCurrentContext` command which renders
+				// into a framebuffer managed by the client.
 			}
 			else
 			{
@@ -892,6 +907,11 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 			{
 				return querySelectedObjects( parameters );
 			}
+			else if( name == "gl:renderToCurrentContext" )
+			{
+				renderToCurrentContext();
+				return nullptr;
+			}
 			else if( boost::starts_with( name.string(), "gl:" ) || name.string().find( ":" ) == string::npos )
 			{
 				IECore::msg( IECore::Msg::Warning, "IECoreGL::Renderer::command", boost::format( "Unknown command \"%s\"." ) % name.c_str() );
@@ -902,7 +922,7 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 
 	private :
 
-		void renderInteractive()
+		void renderToCurrentContext()
 		{
 			processQueue();
 			removeDeletedObjects();

@@ -286,6 +286,7 @@ const AtString g_boxArnoldString("box");
 const AtString g_cameraArnoldString( "camera" );
 const AtString g_catclarkArnoldString("catclark");
 const AtString g_colorManagerArnoldString( "color_manager" );
+const AtString g_cortexIDArnoldString( "cortex:id" );
 const AtString g_customAttributesArnoldString( "custom_attributes" );
 const AtString g_curvesArnoldString("curves");
 const AtString g_dispMapArnoldString( "disp_map" );
@@ -654,6 +655,11 @@ class ArnoldOutput : public IECore::RefCounted
 		bool updateInteractively() const
 		{
 			return m_updateInteractively;
+		}
+
+		bool requiresIDAOV() const
+		{
+			return m_data == "id UINT";
 		}
 
 	private :
@@ -2170,6 +2176,20 @@ class ArnoldObjectBase : public IECoreScenePreview::Renderer::ObjectInterface
 		{
 		}
 
+		void assignID( uint32_t id ) override
+		{
+			if( AtNode *node = m_instance.node() )
+			{
+				/// \todo Ideally we might use the built-in `id` parameter here, rather
+				/// than make our own. But Arnold's `user_data_int` shader can't query
+				/// it for some reason.
+				if( AiNodeDeclare( node, g_cortexIDArnoldString, "constant UINT" ) )
+				{
+					AiNodeSetUInt( node, g_cortexIDArnoldString, id );
+				}
+			}
+		}
+
 		const Instance &instance() const
 		{
 			return m_instance;
@@ -2922,6 +2942,7 @@ IECore::InternedString g_backgroundOptionName( "ai:background" );
 IECore::InternedString g_colorManagerOptionName( "ai:color_manager" );
 IECore::InternedString g_subdivDicingCameraOptionName( "ai:subdiv_dicing_camera" );
 IECore::InternedString g_imagerOptionName( "ai:imager" );
+IECore::InternedString g_idAOVShaderOptionName( "ai:aov_shader:__cortexID" );
 
 std::string g_logFlagsOptionPrefix( "ai:log:" );
 std::string g_consoleFlagsOptionPrefix( "ai:console:" );
@@ -2949,156 +2970,6 @@ void throwError( int errorCode )
 			throw IECore::Exception( "No outputs" );
 		case AI_ERROR :
 			throw IECore::Exception( "Generic Arnold error" );
-	}
-}
-
-#if ARNOLD_VERSION_NUM < 70000
-
-// Arnold 6 doesn't have AtRenderSession, so we define forwards-compatibility wrappers
-// that let us write code to the new API only, rather than sprinkle `#ifdefs` throughout.
-
-class AtRenderSession;
-
-AtRenderSession *AiRenderSession( AtUniverse *universe, AtSessionMode mode )
-{
-	return nullptr;
-}
-
-AtRenderErrorCode AiRenderBegin( AtRenderSession *renderSession, AtRenderMode mode = AI_RENDER_MODE_CAMERA, AtRenderUpdateCallback callback = nullptr, void *callbackData = nullptr )
-{
-	return ::AiRenderBegin( mode, callback, callbackData );
-}
-
-void AiRenderInterrupt( AtRenderSession *renderSession, AtBlockingCall blocking )
-{
-	return ::AiRenderInterrupt( blocking );
-}
-
-void AiRenderRestart( AtRenderSession *renderSession )
-{
-	return ::AiRenderRestart();
-}
-
-AtRenderErrorCode AiRenderEnd( AtRenderSession *renderSession )
-{
-	return ::AiRenderEnd();
-}
-
-bool AiRenderSetHintInt( AtRenderSession *renderSession, AtString hint, int32_t value )
-{
-	return AiRenderSetHintInt( hint, value );
-}
-
-bool AiRenderSetHintBool( AtRenderSession *renderSession, AtString hint, bool value )
-{
-	return AiRenderSetHintBool( hint, value );
-}
-
-void AiRenderAddInteractiveOutput( AtRenderSession *renderSession, uint32_t outputIndex )
-{
-	::AiRenderAddInteractiveOutput( outputIndex );
-}
-
-void AiRenderRemoveAllInteractiveOutputs( AtRenderSession *renderSession )
-{
-	::AiRenderRemoveAllInteractiveOutputs();
-}
-
-void AiRenderSessionDestroy( AtRenderSession *renderSession )
-{
-}
-
-void AiMsgSetConsoleFlags( const AtRenderSession *renderSession, int flags )
-{
-	::AiMsgSetConsoleFlags( flags );
-}
-
-void AiMsgSetLogFileFlags( const AtRenderSession *renderSession, int flags )
-{
-	::AiMsgSetLogFileFlags( flags );
-}
-
-#endif
-
-// Arnold's `AiRender()` function does exactly what you want for a batch render :
-// starts a render and returns when it is complete. But it is deprecated. Here we
-// jump through hoops to re-implement the behaviour using non-deprecated API.
-void renderAndWait( AtRenderSession *renderSession )
-{
-
-	// Updated by `callback` to notify this thread when the render has
-	// completed.
-	struct Status {
-		std::mutex mutex;
-		std::condition_variable conditionVariable;
-		AtRenderStatus value = AI_RENDER_STATUS_NOT_STARTED;
-	} status;
-
-	// Called from one of the Arnold render threads to notify us of progress.
-	auto callback = []( void *voidStatus, AtRenderUpdateType updateType, const AtRenderUpdateInfo *updateInfo ) {
-
-		// We are required to return a new status for the render,
-		// following a table of values in `ai_render.h`.
-		AtRenderStatus newStatus = AI_RENDER_STATUS_FAILED;
-		switch( updateType )
-		{
-			case AI_RENDER_UPDATE_INTERRUPT :
-				newStatus = AI_RENDER_STATUS_PAUSED;
-				break;
-			case AI_RENDER_UPDATE_BEFORE_PASS :
-				newStatus = AI_RENDER_STATUS_RENDERING;
-				break;
-			case AI_RENDER_UPDATE_DURING_PASS :
-				newStatus = AI_RENDER_STATUS_RENDERING;
-				break;
-			case AI_RENDER_UPDATE_AFTER_PASS :
-				newStatus = AI_RENDER_STATUS_RENDERING;
-				break;
-			case AI_RENDER_UPDATE_IMAGERS :
-				// Documentation doesn't state the appropriate
-				// return value, so this is a guess.
-				newStatus = AI_RENDER_STATUS_RENDERING;
-				break;
-			case AI_RENDER_UPDATE_FINISHED :
-				newStatus = AI_RENDER_STATUS_FINISHED;
-				break;
-			case AI_RENDER_UPDATE_ERROR :
-				newStatus = AI_RENDER_STATUS_FAILED;
-				break;
-			// No `default` clause so that the compiler will warn us
-			// when new AtRenderUpdateType values are added.
-		}
-
-		if( newStatus == AI_RENDER_STATUS_FINISHED || newStatus == AI_RENDER_STATUS_FAILED )
-		{
-			// Notify the waiting thread that we're done.
-			Status *status = static_cast<Status *>( voidStatus );
-			{
-				std::lock_guard<std::mutex> lock( status->mutex );
-				status->value = newStatus;
-			}
-			status->conditionVariable.notify_one();
-		}
-
-		return newStatus;
-	};
-
-	// Start the render. `AiRenderBegin()` returns immediately.
-	AtRenderErrorCode result = AiRenderBegin( renderSession, AI_RENDER_MODE_CAMERA, callback, &status );
-	if( result != AI_SUCCESS )
-	{
-		throwError( result );
-	}
-
-	// Wait to be notified that the render has finished. We're using the
-	// condition variable approach to avoid busy-waiting on `AiRenderGetStatus()`.
-	std::unique_lock<std::mutex> lock( status.mutex );
-	status.conditionVariable.wait( lock, [&status]{ return status.value != AI_RENDER_STATUS_NOT_STARTED; } );
-
-	result = AiRenderEnd( renderSession );
-	if( result != AI_SUCCESS )
-	{
-		throwError( result );
 	}
 }
 
@@ -3130,26 +3001,14 @@ class ArnoldGlobals
 			if( m_messageHandler )
 			{
 				m_messageCallbackId = AiMsgRegisterCallback( &messageCallback, m_consoleFlags, this );
-#if ARNOLD_VERSION_NUM < 70100
-				AiMsgSetConsoleFlags( m_renderSession.get(), AI_LOG_NONE );
-#else
 				AiMsgSetConsoleFlags( m_universeBlock->universe(), AI_LOG_NONE );
-#endif
 			}
 			else
 			{
-#if ARNOLD_VERSION_NUM < 70100
-				AiMsgSetConsoleFlags( m_renderSession.get(), m_consoleFlags );
-#else
 				AiMsgSetConsoleFlags( m_universeBlock->universe(), m_consoleFlags );
-#endif
 			}
 
-#if ARNOLD_VERSION_NUM < 70100
-			AiMsgSetLogFileFlags( m_renderSession.get(), m_logFileFlags );
-#else
 			AiMsgSetLogFileFlags( m_universeBlock->universe(), m_logFileFlags );
-#endif
 			// Get OSL shaders onto the shader searchpath.
 			option( g_pluginSearchPathOptionName, new IECore::StringData( "" ) );
 		}
@@ -3570,6 +3429,7 @@ class ArnoldGlobals
 
 		void render()
 		{
+			updateIDAOV();
 			updateCameraMeshes();
 
 			AtNode *options = AiUniverseGetOptions( m_universeBlock->universe() );
@@ -3623,7 +3483,7 @@ class ArnoldGlobals
 					for( const auto &cameraOverride : cameraOverrides )
 					{
 						updateCamera( cameraOverride.size() ? cameraOverride : m_cameraName );
-						renderAndWait( m_renderSession.get() );
+						throwError( AiRender( m_renderSession.get() ) );
 					}
 					break;
 				}
@@ -3789,20 +3649,12 @@ class ArnoldGlobals
 				}
 				else
 				{
-#if ARNOLD_VERSION_NUM < 70100
-					AiMsgSetConsoleFlags( m_renderSession.get(), flags );
-#else
 					AiMsgSetConsoleFlags( m_universeBlock->universe(), flags );
-#endif
 				}
 			}
 			else
 			{
-#if ARNOLD_VERSION_NUM < 70100
-				AiMsgSetLogFileFlags( m_renderSession.get(), flags );
-#else
 				AiMsgSetLogFileFlags( m_universeBlock->universe(), flags );
-#endif
 			}
 
 			return true;
@@ -3939,11 +3791,49 @@ class ArnoldGlobals
 			}
 		}
 
+		void updateIDAOV()
+		{
+			// Arnold actually declares a built in `ID` AOV, but it doesn't seem to
+			// do anything. So we have to emulate one using an AOV shader of our own.
+			// See related comments in `ArnoldObject::assignID().
+
+			bool needAOV = false;
+			for( const auto &output : m_outputs )
+			{
+				if( output.second->requiresIDAOV() )
+				{
+					needAOV = true;
+					break;
+				}
+			}
+
+			const bool haveAOV = m_aovShaders.find( g_idAOVShaderOptionName ) != m_aovShaders.end();
+			if( needAOV && !haveAOV )
+			{
+				IECoreScene::ShaderNetworkPtr network = new IECoreScene::ShaderNetwork;
+				network->addShader(
+					"userData",
+					new IECoreScene::Shader( "user_data_int", "ai:shader", { { "attribute", new IECore::StringData( "cortex:id" ) } } )
+				);
+				network->addShader(
+					"aovWrite",
+					new IECoreScene::Shader( "aov_write_int", "ai:shader", { { "aov_name", new IECore::StringData( "id" ) } })
+				);
+				network->addConnection( { { "userData", "" }, { "aovWrite", "aov_input" } } );
+				network->setOutput( { "aovWrite", "" } );
+
+				option( g_idAOVShaderOptionName, network.get() );
+			}
+			else if( !needAOV && haveAOV )
+			{
+				option( g_idAOVShaderOptionName, nullptr );
+			}
+		}
+
 		static void messageCallback( int mask, int severity, const char *message, AtParamValueMap *metadata, void *userPtr )
 		{
 			const ArnoldGlobals *that = static_cast<ArnoldGlobals *>( userPtr );
 
-#if ARNOLD_VERSION_NUM >= 70100
 			// We get given messages from all render sessions, but can filter them based on the `universe` metadata.
 			void *universe = nullptr;
 			if( AiParamValueMapGetPtr( metadata, g_universeArnoldString, &universe ) )
@@ -3953,18 +3843,6 @@ class ArnoldGlobals
 					return;
 				}
 			}
-#elif ARNOLD_VERSION_NUM >= 70000
-			// We get given messages from all render sessions, but can filter them based on the
-			// `render_session` metadata.
-			void *renderSession = nullptr;
-			if( AiParamValueMapGetPtr( metadata, g_renderSessionArnoldString, &renderSession ) )
-			{
-				if( renderSession != that->m_renderSession.get() )
-				{
-					return;
-				}
-			}
-#endif
 
 			const IECore::Msg::Level level = \
 				( mask == AI_LOG_DEBUG ) ? IECore::Msg::Level::Debug : g_ieMsgLevels[ min( severity, 3 ) ];

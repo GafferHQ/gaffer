@@ -2740,7 +2740,6 @@ class RendererTest( GafferTest.TestCase ) :
 
 				self.assertEqual( [ m.message for m in fallbackHandler.messages ], [], msg=str(renderType) )
 
-	@unittest.skipIf( [ int( v ) for v in arnold.AiGetVersion()[:3] ] < [ 7, 0, 0 ], "Two renders not supported" )
 	# Arnold's message handling is broken. The errors from `AiNodeSetInt()` are sent
 	# to the render session for the default universe instead of the render session for
 	# the universe the node is in.
@@ -3615,6 +3614,32 @@ class RendererTest( GafferTest.TestCase ) :
 
 		# Must delete objects before the renderer.
 		del light
+
+	def testIDAOV( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+		)
+
+		fileName = os.path.join( self.temporaryDirectory(), "testID.exr" )
+		r.output( "testID", IECoreScene.Output( fileName, "exr", "uint id", { "filter" : "closest" } ) )
+
+		o = r.object(
+			"/sphere",
+				IECoreScene.SpherePrimitive(),
+				r.attributes( IECore.CompoundObject() )
+		)
+		o.transform( imath.M44f().translate( imath.V3f( 0, 0, -2 ) ) )
+		o.assignID( 101 )
+		del o
+
+		r.render()
+
+		imageReader = IECoreImage.ImageReader( fileName )
+		data = imageReader.readChannel( "Y", raw = True )
+		self.assertIsInstance( data, IECore.UIntVectorData )
+		self.assertEqual( data[len(data)//2], 101 )
 
 	@staticmethod
 	def __m44f( m ) :

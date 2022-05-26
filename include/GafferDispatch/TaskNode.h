@@ -93,7 +93,10 @@ class GAFFERDISPATCH_API TaskNode : public Gaffer::DependencyNode
 				/// `plug->execute()` in the specified context.
 				/// A copy of the context is stored.
 				Task( ConstTaskPlugPtr plug, const Gaffer::Context *context );
-				Task( const Task &t );
+				Task( const Task &t ) = default;
+				~Task() = default;
+				Task & operator = ( const Task &rhs ) = default;
+
 				/// Returns the TaskPlug component of the task.
 				const TaskPlug *plug() const;
 				/// Returns the Context component of the task.
