@@ -330,6 +330,7 @@ void setSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Da
 			break;
 		case ccl::SocketType::POINT2_ARRAY:
 			dataToArray<ccl::float2, V2fVectorData>( node, socket, value );
+			break;
 		case ccl::SocketType::STRING_ARRAY:
 			if( const StringVectorData *data = static_cast<const StringVectorData *>( value ) )
 			{

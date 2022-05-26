@@ -1358,7 +1358,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			boost::optional<V3f> velocity;
 			boost::optional<V3f> angular_velocity;
 
-			const bool hasParticleInfo() const
+			bool hasParticleInfo() const
 			{
 				if( index || age || lifetime || location || rotation || size || velocity || angular_velocity )
 				{
