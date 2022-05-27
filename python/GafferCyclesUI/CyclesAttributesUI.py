@@ -320,7 +320,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Value under which voxels are considered empty space to 
+			Value under which voxels are considered empty space to
 			optimize rendering.
 			""",
 
@@ -332,7 +332,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Distance between volume samples. When zero it is automatically 
+			Distance between volume samples. When zero it is automatically
 			estimated based on the voxel size.
 			""",
 
@@ -344,8 +344,8 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Specify volume density and step size in object or world space. 
-			By default object space is used, so that the volume opacity and 
+			Specify volume density and step size in object or world space.
+			By default object space is used, so that the volume opacity and
 			detail remains the same regardless of object scale.
 			""",
 
@@ -383,7 +383,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Use transparent shadows for this material if it contains a Transparent BSDF, 
+			Use transparent shadows for this material if it contains a Transparent BSDF,
 			disabling will render faster but not give accurate shadows.
 			""",
 
@@ -395,7 +395,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Disabling this when using volume rendering, assume volume has the same density 
+			Disabling this when using volume rendering, assume volume has the same density
 			everywhere (not using any textures), for faster rendering.
 			""",
 

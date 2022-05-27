@@ -92,7 +92,7 @@ ccl::Hair *convertCommon( const IECoreScene::CurvesPrimitive *curve )
 		float constantWidth = 1.0f;
 
 		if( const FloatData *cw = curve->variableData<FloatData>( "width", PrimitiveVariable::Constant ) )
-		{	
+		{
 			constantWidth = cw->readable();
 		}
 

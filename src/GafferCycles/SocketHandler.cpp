@@ -74,7 +74,7 @@ namespace
 template<typename PlugType>
 Gaffer::Plug *setupNumericPlug( const ccl::NodeType *nodeType, const ccl::SocketType socketType, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction )
 {
-	typedef typename PlugType::ValueType ValueType;
+	using ValueType = typename PlugType::ValueType;
 
 	ValueType defaultValue(0);
 	ValueType minValue = Imath::limits<ValueType>::min();
@@ -182,8 +182,8 @@ Gaffer::Plug *setupTypedPlug( const ccl::NodeType *nodeType, const ccl::SocketTy
 template<typename PlugType>
 Gaffer::Plug *setupColorPlug( const ccl::NodeType *nodeType, const ccl::SocketType socketType, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction )
 {
-	typedef typename PlugType::ValueType ValueType;
-	typedef typename ValueType::BaseType BaseType;
+	using ValueType = typename PlugType::ValueType;
+	using BaseType = typename ValueType::BaseType;
 
 	ValueType defaultValue( 1 );
 	ccl::float3 *defaultCValue = (ccl::float3*)socketType.default_value;

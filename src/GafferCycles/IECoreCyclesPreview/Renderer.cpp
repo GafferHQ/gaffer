@@ -128,22 +128,22 @@ namespace
 {
 
 //typedef std::unique_ptr<ccl::Camera> CCameraPtr;
-typedef std::unique_ptr<ccl::Integrator> CIntegratorPtr;
-typedef std::unique_ptr<ccl::Background> CBackgroundPtr;
-typedef std::unique_ptr<ccl::Film> CFilmPtr;
-typedef std::unique_ptr<ccl::Light> CLightPtr;
-typedef std::shared_ptr<ccl::Camera> SharedCCameraPtr;
-typedef std::shared_ptr<ccl::Object> SharedCObjectPtr;
-typedef std::shared_ptr<ccl::Light> SharedCLightPtr;
-typedef std::shared_ptr<ccl::Geometry> SharedCGeometryPtr;
-typedef std::shared_ptr<ccl::ParticleSystem> SharedCParticleSystemPtr;
+using CIntegratorPtr = std::unique_ptr<ccl::Integrator>;
+using CBackgroundPtr = std::unique_ptr<ccl::Background>;
+using CFilmPtr = std::unique_ptr<ccl::Film>;
+using CLightPtr = std::unique_ptr<ccl::Light>;
+using SharedCCameraPtr = std::shared_ptr<ccl::Camera>;
+using SharedCObjectPtr = std::shared_ptr<ccl::Object>;
+using SharedCLightPtr = std::shared_ptr<ccl::Light>;
+using SharedCGeometryPtr = std::shared_ptr<ccl::Geometry>;
+using SharedCParticleSystemPtr = std::shared_ptr<ccl::ParticleSystem>;
 // Need to defer shader assignments to the scene lock
 typedef std::pair<ccl::Node*, ccl::array<ccl::Node*>> ShaderAssignPair;
 // Defer adding the created nodes to the scene lock
-typedef tbb::concurrent_vector<ccl::Node *> NodesCreated;
+using NodesCreated = tbb::concurrent_vector<ccl::Node *>;
 
 // The shared pointer never deletes, we leave that up to Cycles to do the final delete
-typedef bool (*NodeDeleter)(ccl::Node *);
+using NodeDeleter = bool (*)( ccl::Node * );
 bool nullNodeDeleter( ccl::Node *node )
 {
 	return false;
@@ -192,7 +192,7 @@ T parameter( const IECore::CompoundDataMap &parameters, const IECore::InternedSt
 		return defaultValue;
 	}
 
-	typedef IECore::TypedData<T> DataType;
+	using DataType = IECore::TypedData<T>;
 	if( const DataType *d = reportedCast<const DataType>( it->second.get(), "parameter", name ) )
 	{
 		return d->readable();
@@ -434,9 +434,9 @@ class CyclesShader : public IECore::RefCounted
 					  const IECoreScene::ShaderNetwork *displacementShader,
 					  const IECoreScene::ShaderNetwork *volumeShader,
 					  ccl::Scene *scene,
-					  const std::string &name, 
+					  const std::string &name,
 					  const IECore::MurmurHash &h,
-					  const bool singleSided, 
+					  const bool singleSided,
 					  const IECore::InternedString displacementMethod,
 					  vector<const IECoreScene::ShaderNetwork *> &aovShaders )
 			:	m_hash( h )
@@ -518,7 +518,7 @@ class ShaderCache : public IECore::RefCounted
 			m_defaultSurface = new CyclesShader( m_scene );
 		}
 
-		~ShaderCache()
+		~ShaderCache() override
 		{
 		}
 
@@ -538,7 +538,7 @@ class ShaderCache : public IECore::RefCounted
 		CyclesShaderPtr get( const IECoreScene::ShaderNetwork *surfaceShader,
 							 const IECoreScene::ShaderNetwork *displacementShader,
 							 const IECoreScene::ShaderNetwork *volumeShader,
-							 const IECore::CompoundObject *attributes, 
+							 const IECore::CompoundObject *attributes,
 							 IECore::MurmurHash &h )
 		{
 			IECore::MurmurHash hSubst;
@@ -857,7 +857,7 @@ class ShaderCache : public IECore::RefCounted
 		Cache m_cache;
 		CyclesShaderPtr m_defaultSurface;
 		// Need to assign shaders in a deferred manner
-		typedef tbb::concurrent_vector<ShaderAssignPair> ShaderAssignVector;
+		using ShaderAssignVector = tbb::concurrent_vector<ShaderAssignPair>;
 		ShaderAssignVector m_shaderAssignPairs;
 
 };
@@ -1042,7 +1042,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 							// In Blender a shader->set_graph(graph); is called which handles the hashing similar to the code above. In GafferCycles
 							// we re-create a fresh shader which is easier to manage, however it misses this call to set need_update_mesh to false.
 							// We set false here, but we also need to make sure all the attribute requests are the same to prevent the flag to be set
-							// to true in another place of the code inside of Cycles. If we have made it this far in this area, we are just updating 
+							// to true in another place of the code inside of Cycles. If we have made it this far in this area, we are just updating
 							// the same shader so this should be safe.
 							shader->attributes = prevShader->attributes;
 							//m_shader->need_update_uvs = false;
@@ -1287,7 +1287,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		template<typename T>
 		static T attributeValue( const IECore::InternedString &name, const IECore::CompoundObject *attributes, const T &defaultValue )
 		{
-			typedef IECore::TypedData<T> DataType;
+			using DataType = IECore::TypedData<T>;
 			const DataType *data = attribute<DataType>( name, attributes );
 			return data ? data->readable() : defaultValue;
 		}
@@ -1295,7 +1295,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		template<typename T>
 		static boost::optional<T> optionalAttribute( const IECore::InternedString &name, const IECore::CompoundObject *attributes )
 		{
-			typedef IECore::TypedData<T> DataType;
+			using DataType = IECore::TypedData<T>;
 			const DataType *data = attribute<DataType>( name, attributes );
 			return data ? data->readable() : boost::optional<T>();
 		}
@@ -1855,10 +1855,10 @@ class InstanceCache : public IECore::RefCounted
 		}
 
 		// Can be called concurrently with other get() calls.
-		Instance get( const std::vector<const IECore::Object *> &samples, 
-					  const std::vector<float> &times, 
-					  const int frameIdx, 
-					  const IECoreScenePreview::Renderer::AttributesInterface *attributes, 
+		Instance get( const std::vector<const IECore::Object *> &samples,
+					  const std::vector<float> &times,
+					  const int frameIdx,
+					  const IECoreScenePreview::Renderer::AttributesInterface *attributes,
 					  const std::string &nodeName )
 		{
 			const CyclesAttributes *cyclesAttributes = static_cast<const CyclesAttributes *>( attributes );
@@ -1986,10 +1986,10 @@ class InstanceCache : public IECore::RefCounted
 
 	private :
 
-		SharedCObjectPtr convert( const IECore::Object *object, 
-								  const CyclesAttributes *attributes, 
-								  const std::string &nodeName, 
-								  SharedCParticleSystemPtr &cpsysPtr, 
+		SharedCObjectPtr convert( const IECore::Object *object,
+								  const CyclesAttributes *attributes,
+								  const std::string &nodeName,
+								  SharedCParticleSystemPtr &cpsysPtr,
 								  ccl::Geometry *cgeo = nullptr )
 		{
 			ccl::Object *cobject = nullptr;
@@ -2024,12 +2024,12 @@ class InstanceCache : public IECore::RefCounted
 			return SharedCObjectPtr( cobject, nullNodeDeleter );
 		}
 
-		SharedCObjectPtr convert( const std::vector<const IECore::Object *> &samples, 
-								  const std::vector<float> &times, 
-								  const int frame, 
-								  const CyclesAttributes *attributes, 
-								  const std::string &nodeName, 
-								  SharedCParticleSystemPtr &cpsysPtr, 
+		SharedCObjectPtr convert( const std::vector<const IECore::Object *> &samples,
+								  const std::vector<float> &times,
+								  const int frame,
+								  const CyclesAttributes *attributes,
+								  const std::string &nodeName,
+								  SharedCParticleSystemPtr &cpsysPtr,
 								  ccl::Geometry *cgeo = nullptr )
 		{
 			ccl::Object *cobject = nullptr;
@@ -2126,14 +2126,14 @@ class InstanceCache : public IECore::RefCounted
 		}
 
 		ccl::Scene *m_scene;
-		typedef tbb::concurrent_vector<SharedCObjectPtr> Objects;
+		using Objects = tbb::concurrent_vector<SharedCObjectPtr>;
 		Objects m_objects;
 		typedef tbb::concurrent_hash_map<IECore::MurmurHash, SharedCGeometryPtr> Geometry;
 		Geometry m_geometry;
-		typedef tbb::concurrent_vector<SharedCGeometryPtr> UniqueGeometry;
+		using UniqueGeometry = tbb::concurrent_vector<SharedCGeometryPtr>;
 		UniqueGeometry m_uniqueGeometry;
 		ParticleSystemsCachePtr m_particleSystemsCache;
-		typedef tbb::spin_mutex ParticlesMutex;
+		using ParticlesMutex = tbb::spin_mutex;
 		ParticlesMutex m_particlesMutex;
 
 
@@ -2228,7 +2228,7 @@ class LightCache : public IECore::RefCounted
 		}
 
 		ccl::Scene *m_scene;
-		typedef tbb::concurrent_vector<SharedCLightPtr> Lights;
+		using Lights = tbb::concurrent_vector<SharedCLightPtr>;
 		Lights m_lights;
 
 };
@@ -3624,7 +3624,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			ccl::DeviceInfo deviceFallback;
 
 			bool deviceAvailable = false;
-			for( const ccl::DeviceInfo& device : IECoreCycles::devices() ) 
+			for( const ccl::DeviceInfo& device : IECoreCycles::devices() )
 			{
 				if( deviceTypeFallback == device.type )
 				{
@@ -3646,9 +3646,9 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 			else
 			{
-				for( const ccl::DeviceInfo& device : IECoreCycles::devices() ) 
+				for( const ccl::DeviceInfo& device : IECoreCycles::devices() )
 				{
-					if( m_deviceName ==  device.id ) 
+					if( m_deviceName ==  device.id )
 					{
 						m_sessionParams.device = device;
 						deviceAvailable = true;
@@ -3834,12 +3834,12 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			if( !m_outputsChanged )
 				return;
 
-			Box2i displayWindow( 
+			Box2i displayWindow(
 				V2i( 0, 0 ),
 				V2i( width - 1, height - 1 )
 				);
 			Box2i dataWindow(
-				V2i( (int)(camera->get_border_left()   * (float)width ), 
+				V2i( (int)(camera->get_border_left()   * (float)width ),
 					 (int)(camera->get_border_bottom() * (float)height ) ),
 				V2i( (int)(camera->get_border_right()  * (float)width ) - 1,
 					 (int)(camera->get_border_top()    * (float)height - 1 ) )
@@ -4159,7 +4159,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				}
 			}
 
-			// Not sure what the best way is to inform that an interactive render has stopped other than this. 
+			// Not sure what the best way is to inform that an interactive render has stopped other than this.
 			// No way that I know of to inform Gaffer that the render has stopped either.
 			if( m_lastStatus == "Finished" )
 			{
@@ -4173,7 +4173,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			int indexHIP = 0;
 			int indexOptiX = 0;
 			int indexMetal = 0;
-			for( const ccl::DeviceInfo &device : IECoreCycles::devices() ) 
+			for( const ccl::DeviceInfo &device : IECoreCycles::devices() )
 			{
 				if( device.type == ccl::DEVICE_CPU )
 				{

@@ -69,7 +69,7 @@ struct MikkUserData {
 				  ccl::Mesh *mesh,
 				  ccl::float3 *tangent,
 				  float *tangent_sign )
-		: mesh( mesh ), texface( NULL ), tangent( tangent ), tangent_sign( tangent_sign )
+		: mesh( mesh ), texface( nullptr ), tangent( tangent ), tangent_sign( tangent_sign )
 	{
 		const ccl::AttributeSet &attributes = (mesh->get_num_subd_faces()) ? mesh->subd_attributes :
 																		  mesh->attributes;
@@ -104,7 +104,7 @@ struct MikkUserData {
 #endif
 
 		ccl::Attribute *attr_uv = attributes.find( ccl::ustring( layer_name ) );
-		if( attr_uv != NULL )
+		if( attr_uv != nullptr )
 		{
 			texface = attr_uv->data_float2();
 		}
@@ -123,7 +123,7 @@ struct MikkUserData {
 	float *tangent_sign;
 };
 
-static int mikk_get_num_faces( const SMikkTSpaceContext *context )
+int mikk_get_num_faces( const SMikkTSpaceContext *context )
 {
 	const MikkUserData *userdata = (const MikkUserData *)context->m_pUserData;
 	if( userdata->mesh->get_num_subd_faces() )
@@ -136,7 +136,7 @@ static int mikk_get_num_faces( const SMikkTSpaceContext *context )
 	}
 }
 
-static int mikk_get_num_verts_of_face( const SMikkTSpaceContext *context, const int face_num )
+int mikk_get_num_verts_of_face( const SMikkTSpaceContext *context, const int face_num )
 {
 	const MikkUserData *userdata = (const MikkUserData *)context->m_pUserData;
 	if( userdata->mesh->get_num_subd_faces() )
@@ -150,7 +150,7 @@ static int mikk_get_num_verts_of_face( const SMikkTSpaceContext *context, const 
 	}
 }
 
-static int mikk_vertex_index( const ccl::Mesh *mesh, const int face_num, const int vert_num )
+int mikk_vertex_index( const ccl::Mesh *mesh, const int face_num, const int vert_num )
 {
 	if( mesh->get_num_subd_faces() )
 	{
@@ -163,7 +163,7 @@ static int mikk_vertex_index( const ccl::Mesh *mesh, const int face_num, const i
 	}
 }
 
-static int mikk_corner_index( const ccl::Mesh *mesh, const int face_num, const int vert_num )
+int mikk_corner_index( const ccl::Mesh *mesh, const int face_num, const int vert_num )
 {
 	if( mesh->get_num_subd_faces() )
 	{
@@ -176,7 +176,7 @@ static int mikk_corner_index( const ccl::Mesh *mesh, const int face_num, const i
 	}
 }
 
-static void mikk_get_position( const SMikkTSpaceContext *context,
+void mikk_get_position( const SMikkTSpaceContext *context,
 							   float P[3],
 							   const int face_num,
 							   const int vert_num )
@@ -190,21 +190,21 @@ static void mikk_get_position( const SMikkTSpaceContext *context,
 	P[2] = vP.z;
 }
 
-static void mikk_get_texture_coordinate( const SMikkTSpaceContext *context,
+void mikk_get_texture_coordinate( const SMikkTSpaceContext *context,
 										 float uv[2],
 										 const int face_num,
 										 const int vert_num )
 {
 	const MikkUserData *userdata = (const MikkUserData *)context->m_pUserData;
 	const ccl::Mesh *mesh = userdata->mesh;
-	if( userdata->texface != NULL )
+	if( userdata->texface != nullptr )
 	{
 		const int corner_index = mikk_corner_index( mesh, face_num, vert_num );
 		ccl::float2 tfuv = userdata->texface[corner_index];
 		uv[0] = tfuv.x;
 		uv[1] = tfuv.y;
 	}
-	else if (userdata->orco != NULL)
+	else if (userdata->orco != nullptr)
 	{
 		const int vertex_index = mikk_vertex_index(mesh, face_num, vert_num);
 		const ccl::float3 orco_loc = userdata->orco_loc;
@@ -222,7 +222,7 @@ static void mikk_get_texture_coordinate( const SMikkTSpaceContext *context,
 	}
 }
 
-static void mikk_get_normal( const SMikkTSpaceContext *context,
+void mikk_get_normal( const SMikkTSpaceContext *context,
 							 float N[3],
 							 const int face_num,
 							 const int vert_num)
@@ -269,7 +269,7 @@ static void mikk_get_normal( const SMikkTSpaceContext *context,
 	N[2] = vN.z;
 }
 
-static void mikk_set_tangent_space(const SMikkTSpaceContext *context,
+void mikk_set_tangent_space(const SMikkTSpaceContext *context,
 								   const float T[],
 								   const float sign,
 								   const int face_num,
@@ -279,20 +279,20 @@ static void mikk_set_tangent_space(const SMikkTSpaceContext *context,
 	const ccl::Mesh *mesh = userdata->mesh;
 	const int corner_index = mikk_corner_index( mesh, face_num, vert_num );
 	userdata->tangent[corner_index] = ccl::make_float3( T[0], T[1], T[2] );
-	if (userdata->tangent_sign != NULL)
+	if (userdata->tangent_sign != nullptr)
 	{
 		userdata->tangent_sign[corner_index] = sign;
 	}
 }
 
-static void mikk_compute_tangents( const char *layer_name, ccl::Mesh *mesh, bool need_sign, bool active_render )
+void mikk_compute_tangents( const char *layer_name, ccl::Mesh *mesh, bool need_sign, bool active_render )
 {
 	/* Create tangent attributes. */
 	ccl::AttributeSet &attributes = ( mesh->get_num_subd_faces() ) ? mesh->subd_attributes : mesh->attributes;
 	ccl::Attribute *attr;
 	ccl::ustring name;
 
-	if (layer_name != NULL)
+	if (layer_name != nullptr)
 	{
 		name = ccl::ustring( ( std::string( layer_name ) + ".tangent" ).c_str() );
 	}
@@ -311,13 +311,13 @@ static void mikk_compute_tangents( const char *layer_name, ccl::Mesh *mesh, bool
 	}
 	ccl::float3 *tangent = attr->data_float3();
 	/* Create bitangent sign attribute. */
-	float *tangent_sign = NULL;
+	float *tangent_sign = nullptr;
 	if( need_sign )
 	{
 		ccl::Attribute *attr_sign;
 		ccl::ustring name_sign;
 
-		if (layer_name != NULL)
+		if (layer_name != nullptr)
 		{
 			name_sign = ccl::ustring( ( std::string( layer_name ) + ".tangent_sign" ).c_str() );
 		}
@@ -542,7 +542,7 @@ void convertN( const IECoreScene::MeshPrimitive *mesh, const V3fVectorData *norm
 			}
 		}
 	}
-	
+
 }
 
 void convertUVSet( const string &uvSet, const IECoreScene::PrimitiveVariable &uvVariable, const IECoreScene::MeshPrimitive *mesh, ccl::AttributeSet &attributes, bool subdivision_uvs, bool defaultUV )//, ccl::Mesh *cmesh )
@@ -707,7 +707,7 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 		int indexOffset = 0;
 		for( size_t i = 0; i < vertsPerFace.size(); i++ )
 		{
-			cmesh->add_subd_face( const_cast<int*>(&vertexIds[indexOffset]), vertsPerFace[i], 
+			cmesh->add_subd_face( const_cast<int*>(&vertexIds[indexOffset]), vertsPerFace[i],
 				f ? f->readable()[i] : 0, s ? s->readable()[i] : smooth ); // Last two args are shader sets and smooth
 			indexOffset += vertsPerFace[i];
 		}
@@ -769,7 +769,7 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 
 			int faceOffset = 0;
 			for( size_t i = 0; i < triVertexIds.size(); i+= 3, ++faceOffset )
-				cmesh->add_triangle( triVertexIds[i], triVertexIds[i+1], triVertexIds[i+2], 
+				cmesh->add_triangle( triVertexIds[i], triVertexIds[i+1], triVertexIds[i+2],
 					f ? f->readable()[faceOffset] : 0, s ? s->readable()[faceOffset] : smooth ); // Last two args are shader sets and smooth
 		}
 		else
@@ -788,7 +788,7 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 
 			int faceOffset = 0;
 			for( size_t i = 0; i < vertexIds.size(); i+= 3, ++faceOffset )
-				cmesh->add_triangle( vertexIds[i], vertexIds[i+1], vertexIds[i+2], 
+				cmesh->add_triangle( vertexIds[i], vertexIds[i+1], vertexIds[i+2],
 					f ? f->readable()[faceOffset] : 0, s ? s->readable()[faceOffset] : smooth ); // Last two args are shader sets and smooth
 		}
 	}

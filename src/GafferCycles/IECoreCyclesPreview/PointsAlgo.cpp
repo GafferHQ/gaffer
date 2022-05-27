@@ -113,13 +113,13 @@ ccl::PointCloud *convertCommon( const IECoreScene::PointsPrimitive *points )
 		float width = 1.0f;
 
 		if( const FloatData *w = points->variableData<FloatData>( "width", PrimitiveVariable::Constant ) )
-		{	
+		{
 			width = w->readable() * 0.5f;
 			variablesToConvert.erase( "width" );
 		}
 
 		if( const FloatData *w = points->variableData<FloatData>( "radius", PrimitiveVariable::Constant ) )
-		{	
+		{
 			width = w->readable();
 			variablesToConvert.erase( "radius" );
 		}

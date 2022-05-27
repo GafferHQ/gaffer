@@ -63,10 +63,10 @@ IECORECYCLES_API ccl::Object *convert( const IECore::Object *object, const std::
 IECORECYCLES_API ccl::Object *convert( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const int frame, const std::string &nodeName, ccl::Scene *scene = nullptr );
 
 /// Signature of a function which can convert into a Cycles Object.
-typedef ccl::Object * (*Converter)( const IECore::Object *, const std::string &nodeName, ccl::Scene *scene );
+using Converter = ccl::Object *(*)( const IECore::Object *, const std::string &, ccl::Scene * );
 /// Signature of a function which can convert a series of IECore::Object
 /// samples into a moving Cycles object.
-typedef ccl::Object * (*MotionConverter)( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const int frameIdx, const std::string &nodeName, ccl::Scene *scene );
+using MotionConverter = ccl::Object *(*)( const std::vector<const IECore::Object *> &, const std::vector<float> &, const int, const std::string &, ccl::Scene * );
 
 /// Registers a converter for a specific type.
 /// Use the ConverterDescription utility class in preference to
@@ -82,8 +82,8 @@ class ConverterDescription
 	public :
 
 		/// Type-specific conversion functions.
-		typedef ccl::Object *(*Converter)( const T *, const std::string&, ccl::Scene* );
-		typedef ccl::Object *(*MotionConverter)( const std::vector<const T *> &, const std::vector<float> &, const int, const std::string&, ccl::Scene* );
+		using Converter = ccl::Object *(*)( const T *, const std::string &, ccl::Scene * );
+		using MotionConverter = ccl::Object *(*)( const std::vector<const T *> &, const std::vector<float> &, const int, const std::string &, ccl::Scene * );
 
 		ConverterDescription( Converter converter, MotionConverter motionConverter = nullptr )
 		{

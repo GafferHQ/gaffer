@@ -53,7 +53,7 @@ class OIIOOutputDriver : public ccl::OutputDriver
 	public:
 
 		OIIOOutputDriver( const Imath::Box2i &displayWindow, const Imath::Box2i &dataWindow, IECore::ConstCompoundDataPtr parameters );
-		virtual ~OIIOOutputDriver();
+		~OIIOOutputDriver() override;
 
 		void write_render_tile( const Tile &tile ) override;
 
@@ -71,7 +71,7 @@ class OIIOOutputDriver : public ccl::OutputDriver
 
 		Imath::Box2i m_displayWindow;
 		Imath::Box2i m_dataWindow;
-		typedef std::vector<Layer> Layers;
+		using Layers = std::vector<Layer>;
 		Layers m_layers;
 };
 

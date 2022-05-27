@@ -374,16 +374,16 @@ def __devicesPreset() :
 		elif device["type"] == "METAL" :
 			index = metalIndex
 			metalIndex += 1
-		Gaffer.Metadata.registerValue( 
-			GafferCycles.CyclesOptions, 
-			"options.device.value", 
-			"preset:%s:%02i - %s" % ( device["type"], index, device["description"] ), 
+		Gaffer.Metadata.registerValue(
+			GafferCycles.CyclesOptions,
+			"options.device.value",
+			"preset:%s:%02i - %s" % ( device["type"], index, device["description"] ),
 			"%s:%02i" % ( device["type"], index )
 			)
-		Gaffer.Metadata.registerValue( 
-			GafferCycles.CyclesOptions, 
-			"options.device.value", 
-			"preset:CPU and %s:%02i - %s" % ( device["type"], index, device["description"] ), 
+		Gaffer.Metadata.registerValue(
+			GafferCycles.CyclesOptions,
+			"options.device.value",
+			"preset:CPU and %s:%02i - %s" % ( device["type"], index, device["description"] ),
 			"CPU %s:%02i" % ( device["type"], index )
 			)
 
@@ -470,7 +470,7 @@ Gaffer.Metadata.registerNode(
 			Feature set to use for rendering.
 			- Supported : Only use finished and supported features
 			- Experimental : Use experimental and incomplete features
-								that might be broken or change in the 
+								that might be broken or change in the
 								future.
 			""",
 
@@ -723,7 +723,7 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			Number of samples to render for each pixel. This is for the
-			path integrator, use the other sampling parameters for the 
+			path integrator, use the other sampling parameters for the
 			branched-path integrator.
 			""",
 
@@ -771,7 +771,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Noise level step to stop sampling at, lower values reduce noise the cost of render time. 
+			Noise level step to stop sampling at, lower values reduce noise the cost of render time.
 			Zero for automatic setting based on number of AA samples.
 			""",
 
@@ -783,7 +783,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Minimum AA samples for adaptive sampling, to discover noisy features before stopping sampling. 
+			Minimum AA samples for adaptive sampling, to discover noisy features before stopping sampling.
 			Zero for automatic setting based on number of AA samples.
 			""",
 
@@ -1020,7 +1020,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Use reflective caustics, resulting in a brighter image 
+			Use reflective caustics, resulting in a brighter image
 			(more noise but added realism).
 			""",
 
@@ -1033,7 +1033,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Use refractive caustics, resulting in a brighter image 
+			Use refractive caustics, resulting in a brighter image
 			(more noise but added realism).
 			""",
 
@@ -1093,9 +1093,9 @@ Gaffer.Metadata.registerNode(
 
 		#	"description",
 		#	"""
-		#	Multiplier for dicing rate of geometry outside of the camera view. 
-		#	The dicing rate of objects is gradually increased the further they 
-		#	are outside the camera view. Lower values provide higher quality 
+		#	Multiplier for dicing rate of geometry outside of the camera view.
+		#	The dicing rate of objects is gradually increased the further they
+		#	are outside the camera view. Lower values provide higher quality
 		#	reflections and shadows for off screen objects, while higher values
 		#	use less memory.
 		#	""",
@@ -1506,7 +1506,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Automatically convert textures to .tx files for optimal texture 
+			Automatically convert textures to .tx files for optimal texture
 			cache performance.
 			""",
 
@@ -1517,8 +1517,8 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Texture cached rendering without mip mapping is very expensive. 
-			Uncheck to prevent Cycles from using textures that are not mip 
+			Texture cached rendering without mip mapping is very expensive.
+			Uncheck to prevent Cycles from using textures that are not mip
 			mapped.
 			""",
 
@@ -1529,7 +1529,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Texture cached rendering without tiled textures is very expensive. 
+			Texture cached rendering without tiled textures is very expensive.
 			Uncheck to prevent Cycles from using textures that are not tiled.
 			""",
 
@@ -1540,7 +1540,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			On the fly creation of tiled versions of textures that are not 
+			On the fly creation of tiled versions of textures that are not
 			tiled. This can increase render time but helps reduce memory usage.
 			""",
 
@@ -1551,8 +1551,8 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			On the fly creation of mip maps of textures that are not mip 
-			mapped. This can increase render time but helps reduce memory 
+			On the fly creation of mip maps of textures that are not mip
+			mapped. This can increase render time but helps reduce memory
 			usage.
 			""",
 

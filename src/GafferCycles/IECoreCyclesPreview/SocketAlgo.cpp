@@ -75,8 +75,8 @@ void dataToArray( ccl::Node *node, const ccl::SocketType *socket, const IECore::
 template<typename T, typename U>
 IECore::DataPtr arrayToData( const ccl::array<U>& array )
 {
-	typedef vector<T> VectorType;
-	typedef IECore::TypedData<vector<T> > DataType;
+	using VectorType = vector<T>;
+	using DataType = IECore::TypedData<vector<T>>;
 	typename DataType::Ptr data = new DataType;
 	VectorType &v = data->writable();
 	v.reserve( array.size() );
@@ -92,8 +92,8 @@ IECore::DataPtr arrayToData( const ccl::array<U>& array )
 template<typename T>
 IECore::DataPtr arrayToData( const ccl::array<ccl::float3>& array )
 {
-	typedef vector<T> VectorType;
-	typedef IECore::TypedData<vector<T> > DataType;
+	using VectorType = vector<T>;
+	using DataType = IECore::TypedData<vector<T>>;
 	typename DataType::Ptr data = new DataType;
 	VectorType &v = data->writable();
 	v.reserve( array.size() );
@@ -194,7 +194,7 @@ Imath::Quatf getQuaternion( const ccl::float4 quat )
 
 Imath::M44f getTransform( const ccl::Transform transform )
 {
-	return Imath::M44f( 
+	return Imath::M44f(
 		transform.x.x, transform.y.x, transform.z.x, 0.0f,
 		transform.x.y, transform.y.y, transform.z.y, 0.0f,
 		transform.x.z, transform.y.z, transform.z.z, 0.0f,

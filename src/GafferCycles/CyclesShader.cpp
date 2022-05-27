@@ -71,7 +71,7 @@ namespace {
 
 #if GAFFER_MAJOR_VERSION > 58
 // This is to allow Cycles Shaders to be connected to OSL Shaders
-static bool g_oslRegistration = OSLShader::registerCompatibleShader( "ccl:surface" );
+bool g_oslRegistration = OSLShader::registerCompatibleShader( "ccl:surface" );
 #endif
 
 } // namespace

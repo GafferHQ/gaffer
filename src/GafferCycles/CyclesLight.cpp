@@ -116,7 +116,7 @@ IECoreScene::ShaderNetworkPtr CyclesLight::computeLight( const Gaffer::Context *
 	}
 	else if( ( shaderName == "quad_light" )
 	      || ( shaderName == "disk_light" )
-	      || ( shaderName == "portal" ) )	
+	      || ( shaderName == "portal" ) )
 	{
 		lightShader->parameters()["light_type"] = new StringData( "area" );
 	}
