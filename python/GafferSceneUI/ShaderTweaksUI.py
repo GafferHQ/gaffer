@@ -237,14 +237,14 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 		result = IECore.MenuDefinition()
 
 		result.append(
-			"/From Affected",
+			"/From Affected...",
 			{
 				"command" : Gaffer.WeakMethod( self.__browseAffectedShaders )
 			}
 		)
 
 		result.append(
-			"/From Selection",
+			"/From Selection...",
 			{
 				"command" : Gaffer.WeakMethod( self.__browseSelectedShaders )
 			}
