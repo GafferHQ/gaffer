@@ -92,7 +92,10 @@ class _DateTimePlugValueWidget( GafferUI.PlugValueWidget ) :
 		)
 
 		qDateTime = QtCore.QDateTime.fromString( delimited, QtCore.Qt.ISODate )
+		self._qtWidget().blockSignals( True )
 		self._qtWidget().setDateTime( qDateTime )
+		self._qtWidget().blockSignals( False )
+
 		self._qtWidget().setReadOnly( not self._editable() )
 
 	def __dateTimeChanged( self, qDateTime ) :
