@@ -466,7 +466,7 @@ class CapturingMonitor : public Monitor
 			return true;
 		}
 
-		virtual bool forceMonitoring( const Plug *plug, const IECore::InternedString &processType ) override
+		bool forceMonitoring( const Plug *plug, const IECore::InternedString &processType ) override
 		{
 			if(
 				processType == g_hashProcessType &&

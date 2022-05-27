@@ -47,7 +47,7 @@
 #include "ai_universe.h"
 #include "ai_version.h"
 
-#include <stdio.h>
+#include <cstdio>
 
 using namespace Imath;
 using namespace IECore;

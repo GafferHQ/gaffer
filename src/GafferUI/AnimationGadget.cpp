@@ -293,7 +293,7 @@ namespace GafferUI
 struct AnimationGadget::SelectionSet : public Gaffer::Set
 {
 	SelectionSet();
-	~SelectionSet();
+	~SelectionSet() override;
 
 	bool contains( const Gaffer::Set::Member *member ) const override;
 	Gaffer::Set::Member *member( size_t index ) override;
@@ -621,7 +621,7 @@ void AnimationGadget::renderLayer( Layer layer, const Style *style, RenderReason
 			const Imath::Color3f color3 = colorFromName( drivenPlugName( curvePlug ) );
 			const Imath::Color4f color4( color3.x, color3.y, color3.z, 1.0 );
 
-			Animation::Key* previousKey = 0;
+			Animation::Key* previousKey = nullptr;
 			V2f previousKeyPosition = V2f( 0 );
 			bool previousKeySelected = false;
 
@@ -1647,7 +1647,7 @@ std::pair<Gaffer::Animation::ConstKeyPtr, Gaffer::Animation::Direction> Animatio
 
 			++name; // NOTE : Name 0 is invalid, so start at 1, for each curve this skips in tangent of first key
 
-			const Animation::Key* previousKey = 0;
+			const Animation::Key* previousKey = nullptr;
 			bool previousKeySelected = false;
 			for( Animation::Key &key : *curvePlug )
 			{

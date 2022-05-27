@@ -48,7 +48,7 @@ IECORE_POP_DEFAULT_VISIBILITY
 
 #include "boost/bind/bind.hpp"
 
-#include "math.h"
+#include <cmath>
 
 using namespace boost::placeholders;
 using namespace Imath;
