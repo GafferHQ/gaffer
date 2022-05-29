@@ -228,7 +228,7 @@ float apertureSize( const IECoreScene::Camera *camera )
 template<typename F>
 auto parameterSamples( const std::vector<const IECoreScene::Camera *> &cameraSamples, F &&parameterFunction )
 {
-	using SampleType = typename std::result_of<F( const IECoreScene::Camera *)>::type;
+	using SampleType = std::invoke_result_t<F, const IECoreScene::Camera *>;
 	std::vector<SampleType> result;
 	result.reserve( cameraSamples.size() );
 	for( const auto &camera : cameraSamples )
