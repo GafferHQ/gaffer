@@ -58,6 +58,23 @@ using namespace Gaffer;
 using namespace GafferScene;
 
 //////////////////////////////////////////////////////////////////////////
+// Internal utilities
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+/// \todo - if these make sense, I guess they should be pushed back to cortex
+
+// IsColorTypedData
+template< typename T > struct IsColorTypedData : boost::mpl::and_< TypeTraits::IsTypedData<T>, TypeTraits::IsColor< typename TypeTraits::ValueType<T>::type > > {};
+
+// SupportsArithmeticData
+template< typename T > struct SupportsArithData : boost::mpl::or_<  TypeTraits::IsNumericSimpleTypedData<T>, TypeTraits::IsVecTypedData<T>, IsColorTypedData<T>> {};
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
 // TweakPlug
 //////////////////////////////////////////////////////////////////////////
 
@@ -204,65 +221,6 @@ IECore::MurmurHash TweakPlug::hash() const
 	return result;
 }
 
-// Utility methods need by applyTweak
-namespace
-{
-
-// TODO - if these make sense, I guess they should be pushed back to cortex
-
-// IsColorTypedData
-template< typename T > struct IsColorTypedData : boost::mpl::and_< TypeTraits::IsTypedData<T>, TypeTraits::IsColor< typename TypeTraits::ValueType<T>::type > > {};
-
-// SupportsArithmeticData
-template< typename T > struct SupportsArithData : boost::mpl::or_<  TypeTraits::IsNumericSimpleTypedData<T>, TypeTraits::IsVecTypedData<T>, IsColorTypedData<T>> {};
-
-class NumericTweak
-{
-public:
-	NumericTweak( const IECore::Data *sourceData, const IECore::Data *tweakData, TweakPlug::Mode mode, const std::string &tweakName )
-		: m_sourceData( sourceData ), m_tweakData( tweakData ), m_mode( mode ), m_tweakName( tweakName )
-	{
-	}
-
-	template<typename T>
-	void operator()( T * data, typename std::enable_if<SupportsArithData<T>::value>::type *enabler = nullptr ) const
-	{
-		const T *sourceDataCast = runTimeCast<const T>( m_sourceData );
-		const T *tweakDataCast = runTimeCast<const T>( m_tweakData );
-		switch( m_mode )
-		{
-			case TweakPlug::Add :
-				data->writable() = sourceDataCast->readable() + tweakDataCast->readable();
-				break;
-			case TweakPlug::Subtract :
-				data->writable() = sourceDataCast->readable() - tweakDataCast->readable();
-				break;
-			case TweakPlug::Multiply :
-				data->writable() = sourceDataCast->readable() * tweakDataCast->readable();
-				break;
-			case TweakPlug::Replace :
-			case TweakPlug::Remove :
-				// These cases are unused - we handle replace and remove mode outside of numericTweak.
-				// But the compiler gets unhappy if we don't handle some cases
-				break;
-		}
-	}
-
-	void operator()( Data * data ) const
-	{
-		throw IECore::Exception( boost::str( boost::format( "Cannot apply tweak with mode %s to \"%s\" : Data type %s not supported." ) % GafferScene::Detail::modeToString( m_mode ) % m_tweakName % m_sourceData->typeName() ) );
-	}
-
-private:
-
-	const IECore::Data *m_sourceData;
-	const IECore::Data *m_tweakData;
-	TweakPlug::Mode m_mode;
-	const std::string &m_tweakName;
-};
-
-} // namespace
-
 bool TweakPlug::applyTweak( IECore::CompoundData *parameters, MissingMode missingMode ) const
 {
 	return applyTweak(
@@ -406,7 +364,7 @@ bool TweakPlug::applyTweaks( const Plug *tweaksPlug, IECoreScene::ShaderNetwork 
 	return appliedTweaks || removedConnections;
 }
 
-void TweakPlug::modifyData(
+void TweakPlug::applyNumericTweak(
 	const IECore::Data *sourceData,
 	const IECore::Data *tweakData,
 	IECore::Data *destData,
@@ -414,8 +372,70 @@ void TweakPlug::modifyData(
 	const std::string &tweakName
 ) const
 {
-	NumericTweak t( sourceData, tweakData, mode, tweakName );
-	dispatch( destData, t );
+	dispatch(
+
+		destData,
+
+		[&] ( auto data ) {
+
+			using DataType = typename std::remove_pointer<decltype( data )>::type;
+
+			if constexpr( SupportsArithData<DataType>::value ) {
+
+				const DataType *sourceDataCast = runTimeCast<const DataType>( sourceData );
+				const DataType *tweakDataCast = runTimeCast<const DataType>( tweakData );
+
+				switch( mode )
+				{
+					case TweakPlug::Add :
+						data->writable() = sourceDataCast->readable() + tweakDataCast->readable();
+						break;
+					case TweakPlug::Subtract :
+						data->writable() = sourceDataCast->readable() - tweakDataCast->readable();
+						break;
+					case TweakPlug::Multiply :
+						data->writable() = sourceDataCast->readable() * tweakDataCast->readable();
+						break;
+					case TweakPlug::Replace :
+					case TweakPlug::Remove :
+						// These cases are unused - we handle replace and remove mode outside of numericTweak.
+						// But the compiler gets unhappy if we don't handle some cases.
+						assert( false );
+						break;
+				}
+			}
+			else
+			{
+				throw IECore::Exception( boost::str(
+					boost::format( "Cannot apply tweak with mode %s to \"%s\" : Data type %s not supported." )
+						% modeToString( mode )
+						% tweakName
+						% sourceData->typeName()
+					)
+				);
+			}
+		}
+
+	);
+}
+
+const char *TweakPlug::modeToString( GafferScene::TweakPlug::Mode mode )
+{
+	switch( mode )
+	{
+		case GafferScene::TweakPlug::Replace :
+			return "Replace";
+		case GafferScene::TweakPlug::Add :
+			return "Add";
+		case GafferScene::TweakPlug::Subtract :
+			return "Subtract";
+		case GafferScene::TweakPlug::Multiply :
+			return "Multiply";
+		case GafferScene::TweakPlug::Remove :
+			return "Remove";
+		default :
+			return "Invalid";
+	}
 }
 
 std::pair<const GafferScene::Shader *, const Gaffer::Plug *> TweakPlug::shaderOutput() const

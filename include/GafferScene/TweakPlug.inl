@@ -42,30 +42,6 @@
 namespace GafferScene
 {
 
-namespace Detail
-{
-
-inline const char *modeToString( GafferScene::TweakPlug::Mode mode )
-{
-	switch( mode )
-	{
-		case GafferScene::TweakPlug::Replace :
-			return "Replace";
-		case GafferScene::TweakPlug::Add :
-			return "Add";
-		case GafferScene::TweakPlug::Subtract :
-			return "Subtract";
-		case GafferScene::TweakPlug::Multiply :
-			return "Multiply";
-		case GafferScene::TweakPlug::Remove :
-			return "Remove";
-		default :
-			return "Invalid";
-	}
-}
-
-}  // namespace Detail
-
 template<typename T>
 T *TweakPlug::valuePlug()
 {
@@ -126,7 +102,7 @@ bool TweakPlug::applyTweak(
 		}
 		else if( !( mode == GafferScene::TweakPlug::Replace && missingMode == GafferScene::TweakPlug::MissingMode::IgnoreOrReplace) )
 		{
-			throw IECore::Exception( boost::str( boost::format( "Cannot apply tweak with mode %s to \"%s\" : This parameter does not exist" ) % Detail::modeToString( mode ) % name ) );
+			throw IECore::Exception( boost::str( boost::format( "Cannot apply tweak with mode %s to \"%s\" : This parameter does not exist" ) % modeToString( mode ) % name ) );
 		}
 	}
 
@@ -136,7 +112,7 @@ bool TweakPlug::applyTweak(
 		mode == GafferScene::TweakPlug::Multiply
 	)
 	{
-		modifyData( currentValue, newData.get(), newData.get(), mode, name );
+		applyNumericTweak( currentValue, newData.get(), newData.get(), mode, name );
 	}
 
 	setDataFunctor( name, newData );
