@@ -34,8 +34,6 @@
 #
 ##########################################################################
 
-import imath
-
 import Gaffer
 import GafferUI
 
@@ -45,47 +43,7 @@ from Qt import QtCore
 from Qt import QtGui
 from Qt import QtWidgets
 
-## \todo Replace `GafferUI.PopupWindow` with this. It isn't used anywhere in Gaffer,
-# and it has various unwanted behaviours.
-class _PopupWindow( GafferUI.Window ) :
-
-	def __init__( self, title = "GafferUI.Window", borderWidth = 8, child = None, **kw ) :
-
-		GafferUI.Window.__init__( self, title, borderWidth, child = child, sizeMode = GafferUI.Window.SizeMode.Automatic, **kw )
-
-		self._qtWidget().setWindowFlags( QtCore.Qt.Popup )
-		self._qtWidget().setAttribute( QtCore.Qt.WA_TranslucentBackground )
-		self._qtWidget().paintEvent = Gaffer.WeakMethod( self.__paintEvent )
-
-		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
-
-	def popup( self, center = None ) :
-
-		if center is None :
-			center = GafferUI.Widget.mousePosition()
-
-		self.setVisible( True )
-		size = self._qtWidget().sizeHint()
-		self.setPosition( center - imath.V2i( size.width() / 2, size.height() / 2 ) )
-
-	def __paintEvent( self, event ) :
-
-		painter = QtGui.QPainter( self._qtWidget() )
-		painter.setRenderHint( QtGui.QPainter.Antialiasing )
-
-		painter.setBrush( QtGui.QColor( 35, 35, 35 ) )
-		painter.setPen( QtGui.QColor( 0, 0, 0, 0 ) )
-
-		radius = self._qtWidget().layout().contentsMargins().left()
-		size = self.size()
-		painter.drawRoundedRect( QtCore.QRectF( 0, 0, size.x, size.y ), radius, radius )
-
-	def __keyPress( self, widget, event ) :
-
-		if event.key == "Return" :
-			self.close()
-
-class PlugPopup( _PopupWindow ) :
+class PlugPopup( GafferUI.PopupWindow ) :
 
 	def __init__( self, plugs, title = None, warning = None, **kw ) :
 
@@ -94,7 +52,7 @@ class PlugPopup( _PopupWindow ) :
 		assert( script is not None )
 
 		column = GafferUI.ListContainer( spacing = 4 )
-		_PopupWindow.__init__( self, "", child = column, **kw )
+		GafferUI.PopupWindow.__init__( self, "", child = column, **kw )
 
 		with column :
 
@@ -158,7 +116,7 @@ class PlugPopup( _PopupWindow ) :
 
 	def popup( self, center = None ) :
 
-		_PopupWindow.popup( self, center )
+		GafferUI.PopupWindow.popup( self, center )
 
 		# Attempt to focus the first text widget. This is done after making
 		# the window visible, as we check child widget visibility to avoid

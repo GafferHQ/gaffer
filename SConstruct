@@ -1522,7 +1522,7 @@ for libraryName, libraryDef in libraries.items() :
 	# startup files
 
 	for startupDir in libraryDef.get( "apps", [] ) + [ libraryName ] :
-		for startupFile in glob.glob( "startup/{startupDir}/*.py".format( startupDir=startupDir ) ) :
+		for startupFile in glob.glob( "startup/{startupDir}/*.py".format( startupDir=startupDir ) ) + glob.glob( "startup/{startupDir}/*.gfr".format( startupDir=startupDir ) ) :
 			startupFileInstall = env.InstallAs( os.path.join( installRoot, startupFile ), startupFile )
 			env.Alias( "build", startupFileInstall )
 

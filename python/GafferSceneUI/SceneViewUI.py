@@ -49,6 +49,20 @@ import GafferSceneUI
 
 from ._SceneViewInspector import _SceneViewInspector
 
+def __rendererPlugActivator( plug ) :
+
+	if plug.getName() == "name" :
+		return True
+
+	# Plug is the parent for some renderer-specific
+	# settings. Only show it if has some worthwhile settings
+	# and it is for the current renderer.
+
+	if plug.keys() == [ "enabled" ] :
+		return False
+
+	return plug.parent()["name"].getValue().lower() == plug.getName().lower()
+
 Gaffer.Metadata.registerNode(
 
 	GafferSceneUI.SceneView,
@@ -88,6 +102,33 @@ Gaffer.Metadata.registerNode(
 
 			"toolbarLayout:index", -1,
 			"plugValueWidget:type", "GafferUI.EditScopeUI.EditScopePlugValueWidget",
+
+		],
+
+		"renderer" : [
+
+			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+			"layoutPlugValueWidget:orientation", "horizontal",
+			"toolbarLayout:index", 1,
+			"toolbarLayout:label", "",
+			"toolbarLayout:width", 100,
+
+		],
+
+		"renderer.name" : [
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"layout:label", "",
+			"presetNames", lambda plug : IECore.StringVectorData( GafferSceneUI.SceneView.registeredRenderers() ),
+			"presetValues", lambda plug : IECore.StringVectorData( GafferSceneUI.SceneView.registeredRenderers() ),
+
+		],
+
+		"renderer.*" : [
+
+			"plugValueWidget:type", "GafferSceneUI.SceneViewUI._RendererSettingsPlugValueWidget",
+			"layout:visibilityActivator", __rendererPlugActivator,
+			"layout:label", "",
 
 		],
 
@@ -262,6 +303,40 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
+
+##########################################################################
+# _RendererSettingsPlugValueWidget
+##########################################################################
+
+class _RendererSettingsPlugValueWidget( GafferUI.PlugValueWidget ) :
+
+	def __init__( self, plug, **kw ) :
+
+		button = GafferUI.Button( image = "tabScrollMenu.png", hasFrame = False )
+		GafferUI.PlugValueWidget.__init__( self, button, plug, **kw )
+
+		self.__window = None
+
+		button.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ), scoped = False )
+
+	def _updateFromPlug( self ) :
+
+		pass
+
+	def __clicked( self, button ) :
+
+		if self.__window is None :
+			with GafferUI.PopupWindow( IECore.CamelCase.toSpaced( self.getPlug().getName() + "Settings" ) ) as self.__window :
+				GafferUI.PlugLayout( self.getPlug(), rootSection = "Settings" )
+			self.__window.resizeToFitChild()
+
+		bound = self.bound()
+		self.__window.popup(
+			center = imath.V2i(
+				bound.center().x,
+				bound.max().y + self.__window.bound().size().y / 2 + 8,
+			)
+		)
 
 ##########################################################################
 # _DrawingModePlugValueWidget
@@ -574,6 +649,7 @@ class _SelectionMaskPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __menuDefinition( self ) :
 
 		currentTypes = set().union( *[ _leafTypes( t ) for t in self.getPlug().getValue() ] )
+		defaultTypes = set().union( *[ _leafTypes( t ) for t in self.getPlug().defaultValue() ] )
 
 		result = IECore.MenuDefinition()
 		for label, types, invert in self.__menuItems() :
@@ -587,6 +663,15 @@ class _SelectionMaskPlugValueWidget( GafferUI.PlugValueWidget ) :
 				else :
 					checked = currentTypes.issuperset( types )
 					newTypes = currentTypes | types if not checked else currentTypes - types
+
+				if newTypes == defaultTypes :
+					# We generate `newTypes` using leaf typeIds, because it makes
+					# addition and removal easier. But when `newTypes` is equivalent
+					# to the default value (which uses base types), we want to collapse
+					# them back to the default value. This results in a call to
+					# `SceneGadget.setSelectionMask( nullptr )`, which puts us on the
+					# fast path where we don't use a mask at all.
+					newTypes = self.getPlug().defaultValue()
 
 				result.append(
 					label,
@@ -1002,8 +1087,8 @@ class _EditScopeBalancingSpacer( GafferUI.Spacer ) :
 
 	def __init__( self, sceneView, **kw ) :
 
-		# EditScope width - pause button - spacer - spinner
-		width = 200 - 25 - 4 - 20
+		# EditScope width - pause button - spacer - spinner - renderer
+		width = 200 - 25 - 4 - 20 - 100
 
 		GafferUI.Spacer.__init__(
 			self,
