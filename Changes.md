@@ -1,6 +1,11 @@
 0.61.x.x (relative to 0.61.10.0)
 ========
 
+Features
+--------
+
+- AttributeTweaks : Added node to tweak scene location attributes.
+
 Improvements
 ------------
 
@@ -12,6 +17,11 @@ Fixes
 - SetFilter : Fixed missing set names in `setExpression` context menu. Sets were being listed for nodes directly connected to the filter, but not for nodes downstream of an intermediate filter such as a UnionFilter (#2678).
 - Fixed `NameValue` plugs having a `delete` menu item in their popup menu when they shouldn't. This was broken in 0.61.9.0.
 
+API
+---
+
+- TweakPlug : Added functor-based variation of `applyTweak` allowing greater control of how users get and set the data being tweaked. `TweaksPlug::applyTweaks` now uses that method and can be used as a reference implementation.
+
 0.61.10.0 (relative to 0.61.9.0)
 =========
 
@@ -19,7 +29,6 @@ Features
 --------
 
 - Tools Menu : Added item to populate the Arnold GPU cache, which may improve startup times for GPU renders.
-- AttributeTweaks : Added node to tweak scene location attributes.
 
 Improvements
 ------------
@@ -43,7 +52,6 @@ API
 
 - ArnoldShader : Added support for `gaffer.layout.activator` and `gaffer.layout.visibilityActivator` in `.mtd` files.
 - PlugLayout : User interface sections are now hidden if all plugs in that section are hidden.
-- TweakPlug : Added functor-based variation of `applyTweak` allowing greater control of how users get and set the data being tweaked. `TweaksPlug::applyTweaks` now uses that method and can be used as a reference implementation.
 
 0.61.9.0 (relative to 0.61.8.0)
 ========
