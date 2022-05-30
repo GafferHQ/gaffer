@@ -189,9 +189,6 @@ for nodeType in ( GafferCycles.CyclesShader, GafferCycles.CyclesLight ) :
 
 	Gaffer.Metadata.registerValue( nodeType, "description", __nodeDescription )
 
-Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "attributeSuffix", "plugValueWidget:type", "GafferUI.StringPlugValueWidget" )
-Gaffer.Metadata.registerValue( GafferCycles.CyclesShader, "attributeSuffix", "layout:visibilityActivator", "suffixActivator" )
-
 Gaffer.Metadata.registerNode(
 
 	GafferCycles.CyclesShader,
