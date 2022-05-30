@@ -45,6 +45,7 @@
 #include "GafferScene/ScenePlug.h"
 
 #include "GafferUI/Gadget.h"
+#include "GafferUI/ViewportGadget.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/ParallelAlgo.h"
@@ -198,7 +199,7 @@ class GAFFERSCENEUI_API SceneGadget : public GafferUI::Gadget
 		bool openGLObjectAt( const IECore::LineSegment3f &lineInGadgetSpace, GafferScene::ScenePlug::ScenePath &path, float &depth ) const;
 
 		void updateRenderer();
-		void updateCamera();
+		void updateCamera( GafferUI::ViewportGadget::CameraFlags changes );
 		IECore::PathMatcher convertSelection( IECore::UIntVectorDataPtr ids ) const;
 		void bufferChanged();
 		void visibilityChanged();
