@@ -12,6 +12,7 @@ Fixes
 -----
 
 - TransformQuery : Removed unnecessary elements from hash.
+- ViewportGadget : Fixed bug which could cause `setCamera()` to emit `cameraChangedSignal()` even when the camera was unchanged.
 
 API
 ---

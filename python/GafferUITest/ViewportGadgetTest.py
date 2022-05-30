@@ -91,6 +91,18 @@ class ViewportGadgetTest( GafferUITest.TestCase ) :
 			]
 		)
 
+		c = IECoreScene.Camera()
+		c.setProjection( "perspective" )
+
+		del cs[:]
+		v.setCamera( c )
+		self.assertEqual( cs, [ ( v, GafferUI.ViewportGadget.CameraFlags.Camera ) ] )
+
+		# Should be a no-op, because it's the same camera as before.
+		del cs[:]
+		v.setCamera( c )
+		self.assertEqual( cs, [] )
+
 	def testChangeResolutionPerspective( self ) :
 
 		v = GafferUI.ViewportGadget()

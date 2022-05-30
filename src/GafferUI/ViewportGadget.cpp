@@ -135,16 +135,21 @@ class ViewportGadget::CameraController : public boost::noncopyable
 			m_camera->setResolution( m_camera->getResolution() );
 		}
 
-		void setCamera( IECoreScene::CameraPtr camera )
+		bool setCamera( const IECoreScene::Camera *camera )
 		{
 			// Public API treats viewport resolution as independent of camera,
 			// but we store it on the camera so must transfer it over.
-			camera->setResolution( m_camera->getResolution() );
+			IECoreScene::CameraPtr cameraWithResolution = camera->copy();
+			cameraWithResolution->setResolution( m_camera->getResolution() );
+			const bool changed = !cameraWithResolution->isEqualTo( m_camera.get() );
+
 			if( m_planarMovement )
 			{
-				m_planarScale = planarScaleFromCamera( camera.get() );
+				m_planarScale = planarScaleFromCamera( camera );
 			}
-			m_camera = camera;
+			m_camera = cameraWithResolution;
+
+			return changed;
 		}
 
 		IECoreScene::ConstCameraPtr getCamera() const
@@ -855,13 +860,11 @@ void ViewportGadget::setCamera( IECoreScene::CameraPtr camera )
 		throw Exception( "Cannot use null camera in ViewportGadget." );
 	}
 
-	if( m_cameraController->getCamera()->isEqualTo( camera.get() ) )
+	if( m_cameraController->setCamera( camera.get() ) )
 	{
-		return;
+		m_cameraChangedSignal( this, CameraFlags::Camera );
+		dirty( DirtyType::Render );
 	}
-	m_cameraController->setCamera( camera->copy() );
-	m_cameraChangedSignal( this, CameraFlags::Camera );
-	dirty( DirtyType::Render );
 }
 
 const Imath::M44f &ViewportGadget::getCameraTransform() const
