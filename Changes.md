@@ -153,11 +153,26 @@ Build
 0.61.x.x (relative to 0.61.10.0)
 ========
 
+Features
+--------
+
+- AttributeTweaks : Added node to tweak scene location attributes.
+
+Improvements
+------------
+
+- ShaderQuery and ShaderTweaks : Improved labels of menu items that open shader browsers by adding "..." to the item name.
+
 Fixes
 -----
 
 - SetFilter : Fixed missing set names in `setExpression` context menu. Sets were being listed for nodes directly connected to the filter, but not for nodes downstream of an intermediate filter such as a UnionFilter (#2678).
 - Fixed `NameValue` plugs having a `delete` menu item in their popup menu when they shouldn't. This was broken in 0.61.9.0.
+
+API
+---
+
+- TweakPlug : Added functor-based variation of `applyTweak` allowing greater control of how users get and set the data being tweaked. `TweaksPlug::applyTweaks` now uses that method and can be used as a reference implementation.
 
 0.61.10.0 (relative to 0.61.9.0)
 =========
