@@ -167,6 +167,7 @@ enum TypeId
 	UVSamplerTypeId = 110622,
 	CryptomatteTypeId = 110623,
 	ShaderQueryTypeId = 110624,
+	AttributeTweaksTypeId = 110625,
 
 	PreviewGeometryTypeId = 110648,
 	PreviewProceduralTypeId = 110649,
