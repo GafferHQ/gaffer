@@ -1,6 +1,11 @@
 0.61.x.x (relative to 0.61.10.0)
 ========
 
+Improvements
+------------
+
+- ShaderQuery and ShaderTweaks : Improved labels of menu items that open shader browsers by adding "..." to the item name.
+
 Fixes
 -----
 

@@ -451,7 +451,7 @@ class _ShaderQueryFooter( GafferUI.PlugValueWidget ) :
 		result = IECore.MenuDefinition()
 
 		result.append(
-			"/From Location",
+			"/From Location...",
 			{
 				"command" : Gaffer.WeakMethod( self.__browseLocationShaders )
 			}
