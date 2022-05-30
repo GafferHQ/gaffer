@@ -65,6 +65,7 @@ class ViewportGadgetTest( GafferUITest.TestCase ) :
 	def testCameraChangedSignal( self ) :
 
 		v = GafferUI.ViewportGadget()
+		v.setPlanarMovement( False )
 
 		cs = GafferTest.CapturingSlot( v.cameraChangedSignal() )
 
@@ -72,14 +73,23 @@ class ViewportGadgetTest( GafferUITest.TestCase ) :
 		self.assertEqual( len( cs ), 0 )
 
 		c = v.getCamera()
-		c.parameters()["perspective:fov"] = IECore.FloatData( 10 )
+		c.setProjection( "perspective" )
+		c.setFocalLengthFromFieldOfView( 10 )
 
 		v.setCamera( c )
 		self.assertEqual( len( cs ), 1 )
-		self.assertEqual( cs[0], ( v, ) )
+		self.assertEqual( cs[0], ( v, GafferUI.ViewportGadget.CameraFlags.Camera ) )
 
 		v.setCamera( v.getCamera() )
 		self.assertEqual( len( cs ), 1 )
+
+		del cs[:]
+		v.frame( imath.Box3f( imath.V3f( -1 ), imath.V3f( 1 ) ) )
+		self.assertEqual(
+			cs, [
+				( v, GafferUI.ViewportGadget.CameraFlags.Transform | GafferUI.ViewportGadget.CameraFlags.CenterOfInterest )
+			]
+		)
 
 	def testChangeResolutionPerspective( self ) :
 

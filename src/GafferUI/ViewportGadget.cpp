@@ -248,19 +248,19 @@ class ViewportGadget::CameraController : public boost::noncopyable
 
 		/// Moves the camera to frame the specified box, keeping the
 		/// current viewing direction unchanged.
-		void frame( const Imath::Box3f &box, bool variableAspectZoom = false )
+		ViewportGadget::CameraFlags frame( const Imath::Box3f &box, bool variableAspectZoom = false )
 		{
 			V3f z( 0, 0, -1 );
 			V3f y( 0, 1, 0 );
 			M44f t = m_transform;
 			t.multDirMatrix( z, z );
 			t.multDirMatrix( y, y );
-			frame( box, z, y, variableAspectZoom );
+			return frame( box, z, y, variableAspectZoom );
 		}
 
 		/// Moves the camera to frame the specified box, viewing it from the
 		/// specified direction, and with the specified up vector.
-		void frame( const Imath::Box3f &box, const Imath::V3f &viewDirection,
+		ViewportGadget::CameraFlags frame( const Imath::Box3f &box, const Imath::V3f &viewDirection,
 			const Imath::V3f &upVector = Imath::V3f( 0, 1, 0 ), bool variableAspectZoom = false )
 		{
 			// Make a matrix to center the camera on the box, with the appropriate view direction.
@@ -273,6 +273,8 @@ class ViewportGadget::CameraController : public boost::noncopyable
 			// we do this exactly depends on the camera projection.
 			M44f inverseCameraMatrix = cameraMatrix.inverse();
 			Box3f cBox = transform( box, inverseCameraMatrix );
+
+			CameraFlags result = CameraFlags::Transform | CameraFlags::CenterOfInterest;
 
 			if( m_planarMovement )
 			{
@@ -291,6 +293,8 @@ class ViewportGadget::CameraController : public boost::noncopyable
 				{
 					m_planarScale = V2f( std::max( ratio.x, ratio.y ) );
 				}
+
+				result |= CameraFlags::Camera;
 			}
 			else
 			{
@@ -331,6 +335,7 @@ class ViewportGadget::CameraController : public boost::noncopyable
 					if( getDollyingEnabled() )
 					{
 						m_camera->setAperture( V2f( cBox.size().x, cBox.size().y ) );
+						result |= CameraFlags::Camera;
 					}
 				}
 			}
@@ -338,6 +343,7 @@ class ViewportGadget::CameraController : public boost::noncopyable
 			cameraMatrix.translate( V3f( 0.0f, 0.0f, m_centerOfInterest ) );
 			m_transform = cameraMatrix;
 
+			return result;
 		}
 
 		/// Computes the points on the near and far clipping planes that correspond
@@ -447,39 +453,43 @@ class ViewportGadget::CameraController : public boost::noncopyable
 			m_motionOrthoAperture = m_camera->getAperture();
 		}
 
-		/// Updates the camera position based on a changed mouse position. Can only
-		/// be called after motionStart() and before motionEnd().
-		void motionUpdate( const Imath::V2f &newPosition, bool variableAspect = false )
+		/// Updates the camera position based on a changed mouse position. Can
+		/// only be called after motionStart() and before motionEnd(). Returns a
+		/// CameraFlags bitmask to indicate what has changed.
+		CameraFlags motionUpdate( const Imath::V2f &newPosition, bool variableAspect = false )
 		{
 			switch( m_motionType )
 			{
 				case Track :
-					track( newPosition );
+					return track( newPosition );
 					break;
 				case Tumble :
-					tumble( newPosition );
+					return tumble( newPosition );
 					break;
 				case Dolly :
-					dolly( newPosition, variableAspect );
+					return dolly( newPosition, variableAspect );
 					break;
 				default :
 					throw Exception( "CameraController not in motion." );
 			}
 		}
 
-		/// End the current motion, ready to call motionStart() again if required.
-		void motionEnd( const Imath::V2f &endPosition, bool variableAspect = false )
+		/// End the current motion, ready to call motionStart() again if
+		/// required. Returns a CameraFlags bitmask to indicate what has
+		/// changed.
+		CameraFlags motionEnd( const Imath::V2f &endPosition, bool variableAspect = false )
 		{
+			CameraFlags result = CameraFlags::None;
 			switch( m_motionType )
 			{
 				case Track :
-					track( endPosition );
+					result = track( endPosition );
 					break;
 				case Tumble :
-					tumble( endPosition );
+					result = tumble( endPosition );
 					break;
 				case Dolly :
-					dolly( endPosition, variableAspect );
+					result = dolly( endPosition, variableAspect );
 					break;
 				default :
 					break;
@@ -487,6 +497,7 @@ class ViewportGadget::CameraController : public boost::noncopyable
 			m_motionType = None;
 			m_zoomAxis = ZoomAxis::Undefined;
 			Pointer::setCurrent( "" );
+			return result;
 		}
 
 		/// Determine the type of motion based on current events
@@ -525,7 +536,7 @@ class ViewportGadget::CameraController : public boost::noncopyable
 
 	private:
 
-		void track( const Imath::V2f &p )
+		CameraFlags track( const Imath::V2f &p )
 		{
 			V2f d = p - m_motionStart;
 
@@ -549,13 +560,15 @@ class ViewportGadget::CameraController : public boost::noncopyable
 			M44f t = m_motionMatrix;
 			t.translate( translate );
 			m_transform = t;
+
+			return CameraFlags::Transform;
 		}
 
-		void tumble( const Imath::V2f &p )
+		CameraFlags tumble( const Imath::V2f &p )
 		{
 			if( !m_tumblingEnabled )
 			{
-				return;
+				return CameraFlags::None;
 			}
 
 			V2f d = p - m_motionStart;
@@ -578,13 +591,15 @@ class ViewportGadget::CameraController : public boost::noncopyable
 			t.translate( -centerOfInterestInWorld );
 
 			m_transform = m_motionMatrix * t;
+
+			return CameraFlags::Transform;
 		}
 
-		void dolly( const Imath::V2f &p, bool variableAspect )
+		CameraFlags dolly( const Imath::V2f &p, bool variableAspect )
 		{
 			if( !m_dollyingEnabled )
 			{
-				return;
+				return CameraFlags::None;
 			}
 
 			const V2i resolution = m_camera->getResolution();
@@ -631,6 +646,7 @@ class ViewportGadget::CameraController : public boost::noncopyable
 				M44f t = m_motionMatrix;
 				t.translate( V3f( offset.x, offset.y, 0 ) );
 				m_transform = t;
+				return CameraFlags::Transform | CameraFlags::Camera;
 			}
 			else if( m_camera->getProjection()=="perspective" )
 			{
@@ -640,6 +656,7 @@ class ViewportGadget::CameraController : public boost::noncopyable
 				t.translate( V3f( 0, 0, m_centerOfInterest - m_motionCenterOfInterest ) );
 
 				m_transform = t;
+				return CameraFlags::Transform | CameraFlags::CenterOfInterest;
 			}
 			else
 			{
@@ -647,6 +664,7 @@ class ViewportGadget::CameraController : public boost::noncopyable
 				const float oldWidth = m_camera->getAperture().x;
 				const float newWidth = std::max( oldWidth * expf( -1.9f * d ), 0.01f );
 				m_camera->setAperture( m_motionOrthoAperture * newWidth / oldWidth );
+				return CameraFlags::Camera;
 			}
 		}
 
@@ -842,7 +860,7 @@ void ViewportGadget::setCamera( IECoreScene::CameraPtr camera )
 		return;
 	}
 	m_cameraController->setCamera( camera->copy() );
-	m_cameraChangedSignal( this );
+	m_cameraChangedSignal( this, CameraFlags::Camera );
 	dirty( DirtyType::Render );
 }
 
@@ -859,11 +877,11 @@ void ViewportGadget::setCameraTransform( const Imath::M44f &transform )
 		return;
 	}
 	m_cameraController->setTransform( viewTransform );
-	m_cameraChangedSignal( this );
+	m_cameraChangedSignal( this, CameraFlags::Transform );
 	dirty( DirtyType::Render );
 }
 
-ViewportGadget::UnarySignal &ViewportGadget::cameraChangedSignal()
+ViewportGadget::CameraChangedSignal &ViewportGadget::cameraChangedSignal()
 {
 	return m_cameraChangedSignal;
 }
@@ -885,7 +903,7 @@ void ViewportGadget::setCenterOfInterest( float centerOfInterest )
 		return;
 	}
 	m_cameraController->setCenterOfInterest( centerOfInterest );
-	m_cameraChangedSignal( this );
+	m_cameraChangedSignal( this, CameraFlags::CenterOfInterest );
 }
 
 float ViewportGadget::getCenterOfInterest() const
@@ -935,16 +953,14 @@ Imath::V2f ViewportGadget::getMaxPlanarZoom()
 
 void ViewportGadget::frame( const Imath::Box3f &box )
 {
-	m_cameraController->frame( box, m_variableAspectZoom );
-	m_cameraChangedSignal( this );
+	m_cameraChangedSignal( this, m_cameraController->frame( box, m_variableAspectZoom ) );
 	dirty( DirtyType::Render );
 }
 
 void ViewportGadget::frame( const Imath::Box3f &box, const Imath::V3f &viewDirection,
 	const Imath::V3f &upVector )
 {
-	m_cameraController->frame( box, viewDirection, upVector );
-	m_cameraChangedSignal( this );
+	m_cameraChangedSignal( this, m_cameraController->frame( box, viewDirection, upVector ) );
 	dirty( DirtyType::Render );
 }
 
@@ -980,7 +996,7 @@ void ViewportGadget::fitClippingPlanes( const Imath::Box3f &box )
 	near = std::max( 0.01f, near );
 
 	m_cameraController->setClippingPlanes( V2f( near, far ) );
-	m_cameraChangedSignal( this );
+	m_cameraChangedSignal( this, CameraFlags::Camera );
 	dirty( DirtyType::Render );
 }
 
@@ -1312,8 +1328,11 @@ bool ViewportGadget::buttonRelease( GadgetPtr gadget, const ButtonEvent &event )
 		if( getCameraEditable() )
 		{
 			updateMotionState( event );
-			m_cameraController->motionEnd( motionPositionFromEvent( event ), m_variableAspectZoom && ( event.modifiers & ModifiableEvent::Control ) != 0 );
-			m_cameraChangedSignal( this );
+			const CameraFlags changes = m_cameraController->motionEnd( motionPositionFromEvent( event ), m_variableAspectZoom && ( event.modifiers & ModifiableEvent::Control ) != 0 );
+			if( changes != CameraFlags::None )
+			{
+				m_cameraChangedSignal( this, changes );
+			}
 			m_preciseMotionEnabled = false;
 			dirty( DirtyType::Render );
 		}
@@ -1521,8 +1540,11 @@ bool ViewportGadget::dragMove( GadgetPtr gadget, const DragDropEvent &event )
 		if( getCameraEditable() )
 		{
 			updateMotionState( event );
-			m_cameraController->motionUpdate( motionPositionFromEvent( event ), m_variableAspectZoom && ( event.modifiers & ModifiableEvent::Control ) != 0 );
-			m_cameraChangedSignal( this );
+			const CameraFlags changes = m_cameraController->motionUpdate( motionPositionFromEvent( event ), m_variableAspectZoom && ( event.modifiers & ModifiableEvent::Control ) != 0 );
+			if( changes != CameraFlags::None )
+			{
+				m_cameraChangedSignal( this, changes );
+			}
 			dirty( DirtyType::Render );
 		}
 		return true;
@@ -1663,7 +1685,7 @@ void ViewportGadget::trackDragIdle()
 	// visual representation of the drag.
 	dragMove( this, m_dragTrackingEvent );
 
-	m_cameraChangedSignal( this );
+	m_cameraChangedSignal( this, CameraFlags::Transform );
 	dirty( DirtyType::Render );
 }
 
@@ -1805,8 +1827,11 @@ bool ViewportGadget::dragEnd( GadgetPtr gadget, const DragDropEvent &event )
 		if( getCameraEditable() )
 		{
 			updateMotionState( event );
-			m_cameraController->motionEnd( motionPositionFromEvent( event ), m_variableAspectZoom && ( event.modifiers & ModifiableEvent::Control ) != 0 );
-			m_cameraChangedSignal( this );
+			const CameraFlags changes = m_cameraController->motionEnd( motionPositionFromEvent( event ), m_variableAspectZoom && ( event.modifiers & ModifiableEvent::Control ) != 0 );
+			if( changes != CameraFlags::None )
+			{
+				m_cameraChangedSignal( this, changes );
+			}
 			m_preciseMotionEnabled = false;
 			dirty( DirtyType::Render );
 		}
@@ -1843,10 +1868,10 @@ bool ViewportGadget::wheel( GadgetPtr gadget, const ButtonEvent &event )
 	m_cameraController->motionStart( CameraController::Dolly, position );
 	const float scaleFactor = event.modifiers & ModifiableEvent::Modifiers::Shift ? 1400.0f : 140.0f;
 	position.x += event.wheelRotation * getViewport().x / scaleFactor ;
-	m_cameraController->motionUpdate( position );
-	m_cameraController->motionEnd( position );
+	CameraFlags changes = m_cameraController->motionUpdate( position );
+	changes |= m_cameraController->motionEnd( position );
 
-	m_cameraChangedSignal( this );
+	m_cameraChangedSignal( this, changes );
 	dirty( DirtyType::Render );
 
 	return true;
