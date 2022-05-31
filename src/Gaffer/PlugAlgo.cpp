@@ -638,7 +638,7 @@ bool setBoxPlugValue( PlugType *plug, const Data *value )
 	bool success = true;
 	for( size_t i = 0, eI = plug->children().size(); i < eI; ++i )
 	{
-		V2iPlug *c = plug->template getChild<V2iPlug>( i );
+		typename PlugType::ChildType *c = plug->template getChild<typename PlugType::ChildType>( i );
 		for( size_t j = 0, eJ = c->children().size(); j < eJ; ++j )
 		{
 			ValuePlug *gc = c->template getChild<ValuePlug>( j );

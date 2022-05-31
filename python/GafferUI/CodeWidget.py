@@ -553,6 +553,10 @@ class PythonCompleter( Completer ) :
 
 		result = []
 		for name, value in items :
+			if not isinstance( name, str ):
+				# This could be called when trying to index a dict with non string keys,
+				# and we don't want an exception when we try to call startswith
+				continue
 			if name.startswith( "_" ) and not partialName :
 				# We only provide completions for protected and private
 				# names if they have been explicitly started by the user.

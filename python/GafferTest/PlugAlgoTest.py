@@ -676,6 +676,7 @@ class PlugAlgoTest( GafferTest.TestCase ) :
 		n.addChild( Gaffer.Color4fPlug( "color4fPlug" ) )
 		n.addChild( Gaffer.V3fPlug( "v3fPlug" ) )
 		n.addChild( Gaffer.Box2iPlug( "box2iPlug" ) )
+		n.addChild( Gaffer.Box3fPlug( "box3fPlug" ) )
 
 		r = Gaffer.PlugAlgo.setValueFromData( n["floatPlug"], IECore.FloatData( 5.0 ) )
 		self.assertTrue( r )
@@ -723,6 +724,13 @@ class PlugAlgoTest( GafferTest.TestCase ) :
 		)
 		self.assertTrue( r )
 		self.assertEqual( n["box2iPlug"].getValue(), imath.Box2i( imath.V2i( 1.0 ), imath.V2i( 2.0 ) ) )
+
+		r = Gaffer.PlugAlgo.setValueFromData(
+			n["box3fPlug"],
+			IECore.Box3fData( imath.Box3f( imath.V3f( 3.0 ), imath.V3f( 7.0 ) ) )
+		)
+		self.assertTrue( r )
+		self.assertEqual( n["box3fPlug"].getValue(), imath.Box3f( imath.V3f( 3.0 ), imath.V3f( 7.0 ) ) )
 
 		r = Gaffer.PlugAlgo.setValueFromData(
 			n["floatPlug"],

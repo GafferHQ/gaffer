@@ -70,9 +70,15 @@ class ColorSwatchPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def _updateFromPlugs( self ) :
 
+		errored = False
+		value = imath.Color4f( 0 )
 		with self.getContext() :
-			value = _colorFromPlugs( self.getPlugs() )
+			try :
+				value = _colorFromPlugs( self.getPlugs() )
+			except :
+				errored = True
 
+		self.__swatch.setErrored( errored )
 		self.__swatch.setColor( value )
 
 	def __buttonPress( self, widget, event ) :

@@ -69,7 +69,14 @@ class ColorChooserPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def _updateFromPlugs( self ) :
 
 		with Gaffer.Signals.BlockedConnection( self.__colorChangedConnection ) :
-			self.__colorChooser.setColor( self.__colorFromPlugs() )
+			value = imath.Color4f( 0 )
+			errored = False
+			try:
+				value = self.__colorFromPlugs()
+			except:
+				errored = True
+			self.__colorChooser.setColor( value )
+			self.__colorChooser.setErrored( errored )
 
 		self.__colorChooser.setEnabled( self.__allComponentsEditable() )
 
