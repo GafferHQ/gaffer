@@ -561,17 +561,15 @@ class ArnoldOutput : public IECore::RefCounted
 			// Convert the data specification to the form
 			// supported by Arnold.
 
-			m_data = output->getData();
-			m_lpeName = "ieCoreArnold:lpe:" + name.string();
-			m_lpeValue = "";
-
-			if( m_data=="rgb" )
+			if( output->getData()=="rgb" )
 			{
-				m_data = "RGB RGB";
+				m_data = "RGB";
+				m_type = "RGB";
 			}
-			else if( m_data=="rgba" )
+			else if( output->getData()=="rgba" )
 			{
-				m_data = "RGBA RGBA";
+				m_data = "RGBA";
+				m_type = "RGBA";
 			}
 			else
 			{
@@ -582,36 +580,41 @@ class ArnoldOutput : public IECore::RefCounted
 				}
 
 				vector<std::string> tokens;
-				IECore::StringAlgo::tokenize( m_data, ' ', tokens );
+				IECore::StringAlgo::tokenize( output->getData(), ' ', tokens );
 
 				if( tokens.size() == 2 )
 				{
 					if( tokens[0] == "color" )
 					{
-						m_data = tokens[1] + " " + colorType;
+						m_data = tokens[1];
+						m_type = colorType;
 					}
 					else if( tokens[0] == "lpe" )
 					{
+						m_lpeName = "ieCoreArnold:lpe:" + name.string();
 						m_lpeValue = tokens[1];
-						m_data = m_lpeName + " " + colorType;
+						m_data = m_lpeName;
+						m_type = colorType;
 					}
 					else if( tokens[0] == "float" || tokens[0] == "int" || tokens[0] == "uint" )
 					{
 						// Cortex convention is `<type> <name>`. Arnold
 						// convention is `<name> <TYPE>`.
-						m_data = tokens[1] + " " + boost::to_upper_copy( tokens[0] );
+						m_data = tokens[1];
+						m_type = boost::to_upper_copy( tokens[0] );
 					}
 					else
 					{
 						/// \todo Omit this output completely. We currently give it to Arnold
-						/// with `m_data == output->getData()`, to provide backward compatibility
-						/// for old scenes that passed an Arnold-formatted data string directly.
-						/// In future, we want all outputs to use the standard Cortex formatting
-						/// instead.
+						/// verbatim, to provide backward compatibility for old scenes that passed
+						/// an Arnold-formatted data string directly. In future, we want all outputs
+						/// to use the standard Cortex formatting instead.
 						IECore::msg(
 							IECore::Msg::Warning, "ArnoldRenderer",
 							boost::format( "Unknown data type \"%1%\" for output \"%2%\"" ) % tokens[0] % name
 						);
+						m_data = tokens[0];
+						m_type = tokens[1];
 					}
 				}
 				else
@@ -619,8 +622,10 @@ class ArnoldOutput : public IECore::RefCounted
 					/// \todo See above.
 					IECore::msg(
 						IECore::Msg::Warning, "ArnoldRenderer",
-						boost::format( "Unknown data specification \"%1%\" for output \"%2%\"" ) % m_data % name
+						boost::format( "Unknown data specification \"%1%\" for output \"%2%\"" ) % output->getData() % name
 					);
+					m_data = output->getData();
+					m_type = "";
 				}
 			}
 
@@ -629,7 +634,7 @@ class ArnoldOutput : public IECore::RefCounted
 			// allow others to be overridden using a parameter.
 			m_updateInteractively = parameter<bool>(
 				output->parameters(), "updateInteractively",
-				boost::starts_with( m_data, "RGBA " ) || boost::starts_with( m_data, "RGB " )
+				m_data == "RGBA" || m_data == "RGB"
 			);
 		}
 
@@ -640,7 +645,7 @@ class ArnoldOutput : public IECore::RefCounted
 
 		void append( std::vector<std::string> &outputs, std::vector<std::string> &lightPathExpressions ) const
 		{
-			outputs.push_back( boost::str( boost::format( "%s %s %s" ) % m_data % AiNodeGetName( m_filter.get() ) % AiNodeGetName( m_driver.get() ) ) );
+			outputs.push_back( boost::str( boost::format( "%s %s %s %s" ) % m_data % m_type % AiNodeGetName( m_filter.get() ) % AiNodeGetName( m_driver.get() ) ) );
 			if( m_lpeValue.size() )
 			{
 				lightPathExpressions.push_back( m_lpeName + " " + m_lpeValue );
@@ -659,7 +664,7 @@ class ArnoldOutput : public IECore::RefCounted
 
 		bool requiresIDAOV() const
 		{
-			return m_data == "id UINT";
+			return m_data == "id";
 		}
 
 	private :
@@ -667,6 +672,7 @@ class ArnoldOutput : public IECore::RefCounted
 		SharedAtNodePtr m_driver;
 		SharedAtNodePtr m_filter;
 		std::string m_data;
+		std::string m_type;
 		std::string m_lpeName;
 		std::string m_lpeValue;
 		std::string m_cameraOverride;
