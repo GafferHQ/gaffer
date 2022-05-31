@@ -294,6 +294,7 @@ const AtString g_dispHeightArnoldString( "disp_height" );
 const AtString g_dispPaddingArnoldString( "disp_padding" );
 const AtString g_dispZeroValueArnoldString( "disp_zero_value" );
 const AtString g_dispAutoBumpArnoldString( "disp_autobump" );
+const AtString g_driverEXRArnoldString( "driver_exr" );
 const AtString g_enableProgressiveRenderString( "enable_progressive_render" );
 const AtString g_fileNameArnoldString( "filename" );
 const AtString g_filtersArnoldString( "filters" );
@@ -317,6 +318,7 @@ const AtString g_nameArnoldString( "name" );
 const AtString g_nodeArnoldString("node");
 const AtString g_objectArnoldString( "object" );
 const AtString g_opaqueArnoldString( "opaque" );
+const AtString g_preserveLayerNameArnoldString( "preserve_layer_name" );
 const AtString g_proceduralArnoldString( "procedural" );
 const AtString g_pinCornersArnoldString( "pin_corners" );
 const AtString g_pixelAspectRatioArnoldString( "pixel_aspect_ratio" );
@@ -561,6 +563,17 @@ class ArnoldOutput : public IECore::RefCounted
 			// Convert the data specification to the form
 			// supported by Arnold.
 
+			m_layerName = parameter<std::string>( output->parameters(), "layerName", "" );
+			if( m_layerName.size() && AiNodeIs( m_driver.get(), g_driverEXRArnoldString ) )
+			{
+				// If a custom `layerName` has been requested, then default to using it
+				// in the EXR driver (otherwise there would have been no point specifying it).
+				if( !output->parametersData()->member( "preserve_layer_name" ) )
+				{
+					AiNodeSetBool( m_driver.get(), g_preserveLayerNameArnoldString, true );
+				}
+			}
+
 			if( output->getData()=="rgb" )
 			{
 				m_data = "RGB";
@@ -591,7 +604,7 @@ class ArnoldOutput : public IECore::RefCounted
 					}
 					else if( tokens[0] == "lpe" )
 					{
-						m_lpeName = "ieCoreArnold:lpe:" + name.string();
+						m_lpeName = m_layerName.size() ? m_layerName : "ieCoreArnold:lpe:" + name.string();
 						m_lpeValue = tokens[1];
 						m_data = m_lpeName;
 						m_type = colorType;
@@ -645,7 +658,8 @@ class ArnoldOutput : public IECore::RefCounted
 
 		void append( std::vector<std::string> &outputs, std::vector<std::string> &lightPathExpressions ) const
 		{
-			outputs.push_back( boost::str( boost::format( "%s %s %s %s" ) % m_data % m_type % AiNodeGetName( m_filter.get() ) % AiNodeGetName( m_driver.get() ) ) );
+			const string layerNameSuffix = m_layerName.size() ? " " + m_layerName : "";
+			outputs.push_back( boost::str( boost::format( "%s %s %s %s%s" ) % m_data % m_type % AiNodeGetName( m_filter.get() ) % AiNodeGetName( m_driver.get() ) % layerNameSuffix ) );
 			if( m_lpeValue.size() )
 			{
 				lightPathExpressions.push_back( m_lpeName + " " + m_lpeValue );
@@ -673,6 +687,7 @@ class ArnoldOutput : public IECore::RefCounted
 		SharedAtNodePtr m_filter;
 		std::string m_data;
 		std::string m_type;
+		std::string m_layerName;
 		std::string m_lpeName;
 		std::string m_lpeValue;
 		std::string m_cameraOverride;

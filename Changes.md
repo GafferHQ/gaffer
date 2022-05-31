@@ -6,6 +6,11 @@ Features
 
 - ContextQuery : Added node to access a context variable value directly without needing to use an expression.
 
+Improvements
+------------
+
+- Outputs : Added support for `layerName` string parameter, which can be used to customise the naming of channels in EXR outputs. Currently only supported for Arnold renders.
+
 API
 ---
 

@@ -3641,6 +3641,47 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertIsInstance( data, IECore.UIntVectorData )
 		self.assertEqual( data[len(data)//2], 101 )
 
+	def testOutputLayerNames( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+		)
+
+		beautyFileName = os.path.join( self.temporaryDirectory(), "beauty.exr" )
+		r.output(
+			"whatABeauty", IECoreScene.Output(
+				beautyFileName, "exr", "rgba",
+				{
+					"layerName" : "beauty",
+				}
+			)
+		)
+
+		diffuseFileName = os.path.join( self.temporaryDirectory(), "diffuse.exr" )
+		r.output(
+			"diffuseLPE", IECoreScene.Output(
+				diffuseFileName, "exr", "lpe C<RD>.*",
+				{
+					"layerName" : "diffuse",
+				}
+			)
+		)
+
+		r.render()
+
+		beautyImage = IECore.Reader.create( beautyFileName ).read()
+		self.assertEqual(
+			set( beautyImage.keys() ),
+			{ "beauty.{}".format( c ) for c in "RGBA" }
+		)
+
+		diffuseImage = IECore.Reader.create( diffuseFileName ).read()
+		self.assertEqual(
+			set( diffuseImage.keys() ),
+			{ "diffuse.{}".format( c ) for c in "RGB" }
+		)
+
 	@staticmethod
 	def __m44f( m ) :
 
