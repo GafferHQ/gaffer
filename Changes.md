@@ -14,6 +14,11 @@ Fixes
   - Fixed error `ShaderQuery : "outPlug" is missing` when promoting a child plug of a query to a `Spreadsheet`.
   - Adding a child plug of a query to a `Spreadsheet` now uses the default name for the spreadsheet column.
 
+API
+---
+
+- SceneAlgo : `attributeHistory` now calculates the correct history of an attribute passing through an `AttributeTweaks` node with `localise` enabled.
+
 0.61.12.0 (relative to 0.61.11.0)
 =========
 
