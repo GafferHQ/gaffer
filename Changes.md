@@ -11,6 +11,7 @@ Features
 Fixes
 -----
 
+- CollectScenes : An empty `rootNameVariable` value no longer causes the creation of a context variable named `""`. Instead, no context variable is created (but the scenes are still collected).
 - TransformQuery : Removed unnecessary elements from hash.
 
 API
@@ -27,6 +28,7 @@ Breaking Changes
 ----------------
 
 - Arnold : Removed support for Arnold versions prior to 7.1.0.0.
+- CollectScenes : Changed behaviour when `rootNameVariable` is empty.
 - PopupWindow :
   - Removed `sizeMode` and `closeOnLeave` constructor arguments.
   - Removed visibility animation.
