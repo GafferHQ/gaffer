@@ -134,13 +134,15 @@ class GAFFERSCENE_API TweakPlug : public Gaffer::ValuePlug
 
 		std::pair<const Shader *, const Gaffer::Plug *> shaderOutput() const;
 
-		void modifyData(
+		void applyNumericTweak(
 			const IECore::Data *sourceData,
 			const IECore::Data *tweakData,
 			IECore::Data *destData,
 			TweakPlug::Mode mode,
 			const std::string &tweakName
 		) const;
+
+		static const char *modeToString( GafferScene::TweakPlug::Mode mode );
 
 };
 
