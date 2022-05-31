@@ -191,6 +191,14 @@ class ColorChooser( GafferUI.Widget ) :
 
 		return self.__swatchRow.getVisible()
 
+	def setErrored( self, errored ) :
+
+		for n in self.__numericWidgets.values():
+			n.setErrored( errored )
+
+	def getErrored( self ) :
+		return any( w.getErrored() for w in self.__numericWidgets.values() )
+
 	## A signal emitted whenever the color is changed. Slots should
 	# have the signature slot( ColorChooser, reason ). The reason
 	# argument may be passed either a ColorChooser.ColorChangedReason,
