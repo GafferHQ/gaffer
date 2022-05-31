@@ -3682,6 +3682,75 @@ class RendererTest( GafferTest.TestCase ) :
 			{ "diffuse.{}".format( c ) for c in "RGB" }
 		)
 
+	def testLightGroupOutputs( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+		)
+
+		beautyFileName = os.path.join( self.temporaryDirectory(), "beauty.exr" )
+		r.output(
+			"perLightRGBA", IECoreScene.Output(
+				beautyFileName, "exr", "rgba",
+				{
+					"layerPerLightGroup" : True,
+				}
+			)
+		)
+
+		diffuseFileName = os.path.join( self.temporaryDirectory(), "diffuse.exr" )
+		r.output(
+			"perLightLPE", IECoreScene.Output(
+				diffuseFileName, "exr", "lpe C<RD>.*",
+				{
+					"layerName" : "diffuse",
+					"layerPerLightGroup" : True,
+				}
+			)
+		)
+
+		lightGroups = [ "lightGroup1", "myLightGroup", "keyGroup" ]
+		for group in lightGroups :
+
+			lightShader = IECoreScene.ShaderNetwork(
+				shaders = {
+					"light" : IECoreScene.Shader(
+						"point_light", "ai:light",
+						{ "aov" : group }
+					),
+				},
+				output = "light"
+			)
+
+			r.light(
+				"/testLight/" + group,
+				None,
+				r.attributes(
+					IECore.CompoundObject( {
+						"ai:light" : lightShader
+					} )
+				)
+			)
+
+		r.render()
+
+		# Arnold always makes an annoying `default` group, even if no lights
+		# belong in it.
+		lightGroups.append( "default" )
+
+		beautyImage = IECore.Reader.create( beautyFileName ).read()
+		self.assertEqual(
+			set( beautyImage.keys() ),
+			{ "RGBA_{}.{}".format( g, c ) for g in lightGroups for c in "RGBA" }
+		)
+
+		diffuseImage = IECore.Reader.create( diffuseFileName ).read()
+		self.assertEqual(
+			set( diffuseImage.keys() ),
+			{ "diffuse_{}.{}".format( g, c ) for g in lightGroups for c in "RGB" }
+		)
+
 	@staticmethod
 	def __m44f( m ) :
 

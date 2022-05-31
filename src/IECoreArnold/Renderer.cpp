@@ -642,6 +642,35 @@ class ArnoldOutput : public IECore::RefCounted
 				}
 			}
 
+			if( parameter<bool>( output->parameters(), "layerPerLightGroup", false ) )
+			{
+				// This is Arnold's special syntax for requesting multiple light groups.
+				// We present it as a `layerPerLightGroup` parameter as it is a little
+				// easier to discover/use, and it should be easier to generalise to other
+				// renderers.
+				m_data += "_*";
+				if( m_layerName.size() )
+				{
+					// Work around Arnold bug #12282. If a layer name is specified, then Arnold
+					// will fail to apply the light group suffix to it. This causes the EXR driver
+					// to write duplicate channels with the same name, resulting in errors and/or
+					// crashes.
+					m_layerName = "";
+					if( m_lpeName.empty() )
+					{
+						IECore::msg( IECore::Msg::Warning, "ArnoldRenderer",
+							boost::format( "Cannot use `layerName` with `layerPerLightGroup` for non-LPE output \"%1%\", due to Arnold bug #12882" ) % name
+						);
+					}
+					else
+					{
+						// Although we've had to clear the layer name, we'll actually still
+						// get what we want, because the layer name is used as the name of the
+						// LPE.
+					}
+				}
+			}
+
 			// Decide if this render should be updated at interactive rates or
 			// not. We update all beauty outputs interactively by default, and
 			// allow others to be overridden using a parameter.
