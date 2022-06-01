@@ -18,6 +18,7 @@ API
 ---
 
 - SceneAlgo : `attributeHistory` now calculates the correct history of an attribute passing through an `AttributeTweaks` node with `localise` enabled.
+- EditScopeAlgo : Added support for editing attributes.
 
 0.61.12.0 (relative to 0.61.11.0)
 =========

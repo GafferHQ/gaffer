@@ -491,6 +491,8 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 	def testParameterEditExceptions( self ) :
 
 		light = GafferSceneTest.TestLight()
+		light["visualiserAttributes"]["scale"]["enabled"].setValue( True )
+
 		editScope = Gaffer.EditScope()
 		editScope.setup( light["out"] )
 		editScope["in"].setInput( light["out"] )
@@ -502,6 +504,10 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		with six.assertRaisesRegex( self, RuntimeError, 'Attribute "bogus" does not exist' ) :
 			GafferScene.EditScopeAlgo.acquireParameterEdit( editScope, "/light", "bogus", ( "", "intensity" ) )
+		self.assertEqual( editScope.keys(), emptyKeys )
+
+		with six.assertRaisesRegex( self, RuntimeError, 'Attribute "gl:visualiser:scale" is not a shader' ) :
+			GafferScene.EditScopeAlgo.acquireParameterEdit( editScope, "/light", "gl:visualiser:scale", ( "", "intensity" ) )
 		self.assertEqual( editScope.keys(), emptyKeys )
 
 		with six.assertRaisesRegex( self, RuntimeError, 'Shader "bogus" does not exist' ) :
@@ -621,6 +627,385 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 			editScope["out"].attributes( "/light" )["test:light"].outputShader().parameters["intensity"].value,
 			imath.Color3f( 0 )
 		)
+
+	def testAttributeEdits( self ) :
+
+		light = GafferSceneTest.TestLight()
+		light["visualiserAttributes"]["scale"]["enabled"].setValue( True )
+
+		editScope = Gaffer.EditScope()
+		editScope.setup( light["out"] )
+		editScope["in"].setInput( light["out"] )
+		self.assertEqual( editScope["out"].attributes( "/light" )["gl:visualiser:scale"].value, 1.0 )
+
+		self.assertFalse(
+			GafferScene.EditScopeAlgo.hasAttributeEdit( editScope, "/light", "gl:visualiser:scale" )
+		)
+		self.assertIsNone(
+			GafferScene.EditScopeAlgo.acquireAttributeEdit(
+				editScope,
+				"/light",
+				"gl:visualiser:scale",
+				createIfNecessary = False
+			)
+		)
+
+		edit = GafferScene.EditScopeAlgo.acquireAttributeEdit(
+			editScope,
+			"/light",
+			"gl:visualiser:scale"
+		)
+		self.assertIsInstance( edit, GafferScene.TweakPlug )
+		self.assertIsInstance( edit["value"], Gaffer.FloatPlug )
+		self.assertEqual( edit["mode"].getValue(), GafferScene.TweakPlug.Mode.Replace )
+		self.assertEqual( edit["value"].getValue(), 1.0 )
+		self.assertEqual( edit["enabled"].getValue(), False )
+
+		edit["enabled"].setValue( True )
+		edit["value"].setValue( 2.0 )
+		self.assertEqual( editScope["out"].attributes( "/light" )["gl:visualiser:scale"].value, 2.0 )
+
+		self.assertEqual(
+			GafferScene.EditScopeAlgo.acquireAttributeEdit( editScope, "/light", "gl:visualiser:scale" ),
+			edit
+		)
+
+		light["visualiserAttributes"]["scale"]["value"].setValue( 0.5 )
+		edit["enabled"].setValue( False )
+		self.assertEqual( editScope["out"].attributes( "/light" )["gl:visualiser:scale"].value, 0.5 )
+
+		self.assertIsNone(
+			GafferScene.EditScopeAlgo.acquireAttributeEdit(
+				editScope,
+				"/light",
+				"gl:visualiser:maxTextureResolution",
+				createIfNecessary = False
+			)
+		)
+
+	def testAttributeEditReadOnlyReason( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["light"] = GafferSceneTest.TestLight()
+		s["light"]["visualiserAttributes"]["scale"]["enabled"].setValue( True )
+
+		s["scope"] = Gaffer.EditScope()
+		s["scope"].setup( s["light"]["out"] )
+		s["scope"]["in"].setInput( s["light"]["out"] )
+
+		s["box"] = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["light"], s["scope"] ] ) )
+
+		self.assertIsNone(
+			GafferScene.EditScopeAlgo.attributeEditReadOnlyReason(
+				s["box"]["scope"],
+				"/light",
+				"gl:visualiser:scale"
+			)
+		)
+
+		for component in ( s["box"], s["box"]["scope"] ) :
+			Gaffer.MetadataAlgo.setReadOnly( component, True )
+			self.assertEqual(
+				GafferScene.EditScopeAlgo.attributeEditReadOnlyReason(
+					s["box"]["scope"],
+					"/light",
+					"gl:visualiser:scale"
+				),
+				s["box"]
+			)
+
+		Gaffer.MetadataAlgo.setReadOnly( s["box"], False )
+		self.assertEqual(
+			GafferScene.EditScopeAlgo.attributeEditReadOnlyReason(
+				s["box"]["scope"],
+				"/light",
+				"gl:visualiser:scale"
+			),
+			s["box"]["scope"]
+		)
+
+		Gaffer.MetadataAlgo.setReadOnly( s["box"]["scope"], False )
+		GafferScene.EditScopeAlgo.acquireAttributeEdit(
+			s["box"]["scope"],
+			"/light",
+			"gl:visualiser:scale"
+		)
+
+		self.assertIsNone(
+			GafferScene.EditScopeAlgo.attributeEditReadOnlyReason(
+				s["box"]["scope"],
+				"/light",
+				"gl:visualiser:scale"
+			)
+		)
+
+		candidateComponents = (
+			s["box"]["scope"]["AttributeEdits"]["edits"][1]["cells"]["gl_visualiser_scale"]["value"]["value"],
+			s["box"]["scope"]["AttributeEdits"]["edits"][1]["cells"]["gl_visualiser_scale"]["value"]["mode"],
+			s["box"]["scope"]["AttributeEdits"]["edits"][1]["cells"]["gl_visualiser_scale"]["value"]["enabled"],
+			s["box"]["scope"]["AttributeEdits"]["edits"][1]["cells"]["gl_visualiser_scale"]["value"]["name"],
+			s["box"]["scope"]["AttributeEdits"]["edits"][1]["cells"]["gl_visualiser_scale"]["value"],
+			s["box"]["scope"]["AttributeEdits"]["edits"][1]["cells"]["gl_visualiser_scale"],
+			s["box"]["scope"]["AttributeEdits"]["edits"][1]["cells"],
+			s["box"]["scope"]["AttributeEdits"]["edits"][1],
+			s["box"]["scope"]["AttributeEdits"]["edits"],
+			s["box"]["scope"]["AttributeEdits"],
+			s["box"]["scope"],
+			s["box"]
+		)
+
+		for component in candidateComponents :
+			Gaffer.MetadataAlgo.setReadOnly( component, True )
+			self.assertEqual(
+				GafferScene.EditScopeAlgo.attributeEditReadOnlyReason(
+					s["box"]["scope"],
+					"/light",
+					"gl:visualiser:scale"
+				),
+				component
+			)
+
+		for component in candidateComponents :
+			Gaffer.MetadataAlgo.setReadOnly( component, False )
+
+		# We can't remove attribute edits, they're just disabled (as the row is shared with
+		# other attributes), so we try to create one for another light instead.
+		s["box"]["light"]["name"].setValue( "light2" )
+
+		self.assertIsNone(
+			GafferScene.EditScopeAlgo.acquireAttributeEdit(
+				s["box"]["scope"],
+				"/light2",
+				"gl:visualiser:scale",
+				createIfNecessary = False
+			)
+		)
+
+		for component in (
+			s["box"]["scope"]["AttributeEdits"]["edits"],
+			s["box"]["scope"]["AttributeEdits"]
+		) :
+			Gaffer.MetadataAlgo.setReadOnly( component, True )
+			self.assertEqual(
+				GafferScene.EditScopeAlgo.attributeEditReadOnlyReason(
+					s["box"]["scope"],
+					"/light2",
+					"gl:visualiser:scale"
+				),
+				component
+			)
+
+	def testAttributeEditsDontAffectOtherObjects( self ) :
+
+		# Make two lights and an EditScope
+
+		light1 = GafferSceneTest.TestLight()
+		light1["name"].setValue( "light1" )
+		light1["visualiserAttributes"]["scale"]["enabled"].setValue( True )
+		light1["visualiserAttributes"]["scale"]["value"].setValue( 2.0 )
+
+		light2 = GafferSceneTest.TestLight()
+		light2["name"].setValue( "light2" )
+		light2["visualiserAttributes"]["scale"]["enabled"].setValue( True )
+		light2["visualiserAttributes"]["scale"]["value"].setValue( 0.5 )
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( light1["out"] )
+		group["in"][1].setInput( light2["out"] )
+
+		editScope = Gaffer.EditScope()
+		editScope.setup( group["out"] )
+		editScope["in"].setInput( group["out"] )
+		self.assertEqual( editScope["out"].attributes( "/group/light1" )["gl:visualiser:scale"].value, 2.0 )
+		self.assertEqual( editScope["out"].attributes( "/group/light2" )["gl:visualiser:scale"].value, 0.5 )
+
+		# Edit light1
+
+		scaleEdit1 = GafferScene.EditScopeAlgo.acquireAttributeEdit(
+			editScope,
+			"/group/light1",
+			"gl:visualiser:scale"
+		)
+		scaleEdit1["enabled"].setValue( True )
+		scaleEdit1["value"].setValue( 4.0 )
+
+		self.assertEqual( editScope["out"].attributes( "/group/light1" )["gl:visualiser:scale"].value, 4.0 )
+
+		# This shouldn't create an edit for light2
+
+		self.assertIsNone(
+			GafferScene.EditScopeAlgo.acquireAttributeEdit(
+				editScope,
+				"/group/light2",
+				"gl:visualiser:scale",
+				createIfNecessary = False
+			)
+		)
+		self.assertEqual(
+			editScope["in"].attributes( "/group/light2" ),
+			editScope["out"].attributes( "/group/light2" )
+		)
+
+		# But if we edit a _different_ attribute on light2, then both lights are in the
+		# spreadsheet, and we must therefore expect both to have edits for both
+		# attributes. We just need to make sure that the extra edits are disabled.
+
+		light1["visualiserAttributes"]["maxTextureResolution"]["enabled"].setValue( True )
+		light2["visualiserAttributes"]["maxTextureResolution"]["enabled"].setValue( True )
+
+		resEdit2 = GafferScene.EditScopeAlgo.acquireAttributeEdit(
+			editScope,
+			"/group/light2",
+			"gl:visualiser:maxTextureResolution"
+		)
+		resEdit2["enabled"].setValue( True )
+		resEdit2["value"].setValue( 128 )
+
+		resEdit1 = GafferScene.EditScopeAlgo.acquireAttributeEdit(
+			editScope,
+			"/group/light1",
+			"gl:visualiser:maxTextureResolution",
+			createIfNecessary = False
+		)
+		self.assertEqual( resEdit1["enabled"].getValue(), False )
+
+		scaleEdit2 = GafferScene.EditScopeAlgo.acquireAttributeEdit(
+			editScope,
+			"/group/light2",
+			"gl:visualiser:scale",
+			createIfNecessary = False
+		)
+		self.assertEqual( scaleEdit2["enabled"].getValue(), False )
+
+		self.assertEqual( editScope["out"].attributes( "/group/light1" )["gl:visualiser:scale"].value, 4.0 )
+		self.assertEqual( editScope["out"].attributes( "/group/light2" )["gl:visualiser:scale"].value, 0.5 )
+		self.assertEqual( editScope["out"].attributes( "/group/light1" )["gl:visualiser:maxTextureResolution"].value, 512 )
+		self.assertEqual( editScope["out"].attributes( "/group/light2" )["gl:visualiser:maxTextureResolution"].value, 128 )
+
+	def testAttributeEditExceptions( self ) :
+
+		light = GafferSceneTest.TestLight()
+		editScope = Gaffer.EditScope()
+		editScope.setup( light["out"] )
+		editScope["in"].setInput( light["out"] )
+		emptyKeys = editScope.keys()
+
+		with six.assertRaisesRegex( self, RuntimeError, 'Location "/bogus" does not exist' ) :
+			GafferScene.EditScopeAlgo.acquireAttributeEdit( editScope, "/bogus", "gl:visualiser:scale" )
+		self.assertEqual( editScope.keys(), emptyKeys )
+
+		with six.assertRaisesRegex( self, RuntimeError, 'Attribute "light" cannot be tweaked' ) :
+			GafferScene.EditScopeAlgo.acquireAttributeEdit( editScope, "/light", "light" )
+		self.assertEqual( editScope.keys(), emptyKeys )
+
+		with six.assertRaisesRegex( self, RuntimeError, 'Attribute "bogus" does not exist' ) :
+			GafferScene.EditScopeAlgo.acquireAttributeEdit( editScope, "/light", "bogus" )
+		self.assertEqual( editScope.keys(), emptyKeys )
+
+	def testAttributeEditLocalisation( self ) :
+
+		light = GafferSceneTest.TestLight()
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( light["out"] )
+
+		groupFilter = GafferScene.PathFilter()
+		groupFilter["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
+
+		customAttributes = GafferScene.CustomAttributes()
+		customAttributes["in"].setInput( group["out"] )
+		customAttributes["filter"].setInput( groupFilter["out"] )
+		customAttributes["attributes"].addMember( "test:hello", "hi" )
+
+		editScope = Gaffer.EditScope()
+		editScope.setup( customAttributes["out"] )
+		editScope["in"].setInput( customAttributes["out"] )
+
+		self.assertIn( "test:hello", editScope["out"].attributes( "/group" ) )
+		self.assertNotIn( "test:hello", editScope["out"].attributes( "/group/light" ) )
+
+		edit = GafferScene.EditScopeAlgo.acquireAttributeEdit( editScope, "/group/light", "test:hello" )
+		edit["enabled"].setValue( True )
+		edit["value"].setValue( "aloha" )
+
+		self.assertEqual( editScope["out"].attributes( "/group" ), editScope["in"].attributes( "/group" ) )
+		self.assertIn( "test:hello", editScope["out"].attributes( "/group/light" ) )
+		self.assertEqual( editScope["out"].attributes( "/group/light" )["test:hello"].value, "aloha" )
+
+	def testAttributeEditSerialisation( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["light1"] = GafferSceneTest.TestLight()
+		script["light1"]["name"].setValue( "light1" )
+		script["light1"]["visualiserAttributes"]["scale"]["enabled"].setValue( True )
+		script["light1"]["visualiserAttributes"]["maxTextureResolution"]["enabled"].setValue( True )
+
+		script["light2"] = GafferSceneTest.TestLight()
+		script["light2"]["name"].setValue( "light2" )
+		script["light2"]["visualiserAttributes"]["scale"]["enabled"].setValue( True )
+		script["light2"]["visualiserAttributes"]["maxTextureResolution"]["enabled"].setValue( True )
+
+		script["group"] = GafferScene.Group()
+		script["group"]["in"][0].setInput( script["light1"]["out"] )
+		script["group"]["in"][1].setInput( script["light2"]["out"] )
+
+		script["editScope"] = Gaffer.EditScope()
+		script["editScope"].setup( script["group"]["out"] )
+		script["editScope"]["in"].setInput( script["group"]["out"] )
+
+		edit1 = GafferScene.EditScopeAlgo.acquireAttributeEdit( script["editScope"], "/group/light1", "gl:visualiser:scale" )
+		edit1["enabled"].setValue( True )
+		edit1["value"].setValue( 2.0 )
+
+		edit2 = GafferScene.EditScopeAlgo.acquireAttributeEdit( script["editScope"], "/group/light2", "gl:visualiser:maxTextureResolution" )
+		edit2["enabled"].setValue( True )
+		edit2["value"].setValue( 128 )
+
+		script2 = Gaffer.ScriptNode()
+		script2.execute( script.serialise() )
+
+		self.assertScenesEqual( script2["editScope"]["out"], script["editScope"]["out"] )
+
+		for path, attribute, enabled, value in [
+			( "/group/light1", "gl:visualiser:scale", True, 2.0 ),
+			( "/group/light1", "gl:visualiser:maxTextureResolution", False, 512 ),
+			( "/group/light2", "gl:visualiser:scale", False, 1.0 ),
+			( "/group/light2", "gl:visualiser:maxTextureResolution", True, 128 ),
+		] :
+			edit = GafferScene.EditScopeAlgo.acquireAttributeEdit(
+				script2["editScope"], path, attribute, createIfNecessary = False
+			)
+			self.assertIsNotNone( edit )
+			self.assertEqual( edit["enabled"].getValue(), enabled )
+			self.assertEqual( edit["value"].getValue(), value )
+
+	def testAttributeEditsDontAffectOtherAttributes( self ) :
+
+		light = GafferSceneTest.TestLight()
+		light["visualiserAttributes"]["scale"]["enabled"].setValue( True )
+
+		lightFilter = GafferScene.PathFilter()
+		lightFilter["paths"].setValue( IECore.StringVectorData( [ "/light" ] ) )
+
+		shuffleAttributes = GafferScene.ShuffleAttributes()
+		shuffleAttributes["in"].setInput( light["out"] )
+		shuffleAttributes["filter"].setInput( lightFilter["out"] )
+
+		editScope = Gaffer.EditScope()
+		editScope.setup( shuffleAttributes["out"] )
+		editScope["in"].setInput( shuffleAttributes["out"] )
+
+		edit = GafferScene.EditScopeAlgo.acquireAttributeEdit( editScope, "/light", "gl:visualiser:scale" )
+		edit["enabled"].setValue( True )
+		edit["value"].setValue( 2.0 )
+		self.assertEqual( editScope["out"].attributes( "/light" )["gl:visualiser:scale"].value, 2.0 )
+
+		# Shuffle "gl:visualiser:scale" to another attribute. It should not be affected by the edit.
+
+		shuffleAttributes["shuffles"].addChild( Gaffer.ShufflePlug( "gl:visualiser:scale", "test:scale" ) )
+		self.assertEqual( editScope["out"].attributes( "/light" )["test:scale"].value, 1.0 )
 
 	def testProcessorNames( self ) :
 
