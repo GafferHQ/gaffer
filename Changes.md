@@ -13,6 +13,7 @@ Fixes
 
 - CollectScenes : An empty `rootNameVariable` value no longer causes the creation of a context variable named `""`. Instead, no context variable is created (but the scenes are still collected).
 - TransformQuery : Removed unnecessary elements from hash.
+- ViewportGadget : Fixed bug which could cause `setCamera()` to emit `cameraChangedSignal()` even when the camera was unchanged.
 
 API
 ---
@@ -23,6 +24,7 @@ API
   - Added `renderer.arnold` plug to control Arnold render settings.
 - RenderController : Added `pathForID()`, `pathsForIDs()`, `idForPath()` and `idsForPaths()` methods. These make it possible to identify an object in the scene from a `uint id` AOV.
 - PlugLayout : Improved activator support. The `layout:activator` and `layout:visibilityActivator` metadata may now take boolean values to control activation directly. This is useful when an activator only applies to one plug, or it applies to several but depends on properties of each plug. String values are treated as before, referring to a predefined activator.
+- ViewportGadget : Added a `CameraFlags` enum, which is used in `cameraChangedSignal()` to specify what aspects of the camera have changed.
 
 Breaking Changes
 ----------------
@@ -33,6 +35,7 @@ Breaking Changes
   - Removed `sizeMode` and `closeOnLeave` constructor arguments.
   - Removed visibility animation.
   - Removed drag&drop positioning.
+- ViewportGadget : Added a `changes` argument to CameraChangedSignal.
 
 0.62.0.0a2 (relative to 0.62.0.0a1)
 ==========

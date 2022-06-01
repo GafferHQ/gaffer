@@ -117,10 +117,6 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		/// Return whether the viewport currently allows precise motion.
 		bool getPreciseMotionAllowed() const;
 
-		/// A signal emitted when the camera is changed, either via the API
-		/// or through user interaction.
-		UnarySignal &cameraChangedSignal();
-
 		/// Modifies the camera so that the specified box is in view.
 		void frame( const Imath::Box3f &box );
 
@@ -184,6 +180,21 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		float getCenterOfInterest() const;
 		/// \todo Remove.
 		float getCenterOfInterest();
+
+		enum class CameraFlags
+		{
+			None = 0,
+			Camera = 1,
+			Transform = 2,
+			CenterOfInterest = 4,
+			All = Camera | Transform | CenterOfInterest
+		};
+
+		using CameraChangedSignal = Gaffer::Signals::Signal<void ( ViewportGadget *, CameraFlags ), Gaffer::Signals::CatchingCombiner<void>>;
+		/// A signal emitted when the camera is changed, either via the API or
+		/// through user interaction. The CameraFlags bitmask is used to specify
+		/// what aspects of the camera changed.
+		CameraChangedSignal &cameraChangedSignal();
 
 		/// If tumbling is enabled, the user can rotate the camera
 		/// freely using Alt+left-drag.
@@ -404,13 +415,33 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		bool m_cameraMotionDuringDrag;
 
 		UnarySignal m_viewportChangedSignal;
-		UnarySignal m_cameraChangedSignal;
+		CameraChangedSignal m_cameraChangedSignal;
 		UnarySignal m_preRenderSignal;
 		UnarySignal m_renderRequestSignal;
 
 };
 
 IE_CORE_DECLAREPTR( ViewportGadget );
+
+/// Bitwise operators for CameraFlags
+/// \todo Perhaps it's time we introduced a standard way of implementing bitmask enums. Currently I'm
+/// favouring simple operators over a separate `template class Flags<Enum>`.
+inline ViewportGadget::CameraFlags operator| ( ViewportGadget::CameraFlags a, ViewportGadget::CameraFlags b )
+{
+	using Underlying = std::underlying_type_t<ViewportGadget::CameraFlags>;
+	return static_cast<ViewportGadget::CameraFlags>( static_cast<Underlying>( a ) | static_cast<Underlying>( b ) );
+}
+
+inline ViewportGadget::CameraFlags operator& ( ViewportGadget::CameraFlags a, ViewportGadget::CameraFlags b )
+{
+	using Underlying = std::underlying_type_t<ViewportGadget::CameraFlags>;
+	return static_cast<ViewportGadget::CameraFlags>( static_cast<Underlying>( a ) & static_cast<Underlying>( b ) );
+}
+
+inline ViewportGadget::CameraFlags operator|= ( ViewportGadget::CameraFlags &a, ViewportGadget::CameraFlags b )
+{
+	return a = a | b;
+}
 
 } // namespace GafferUI
 
