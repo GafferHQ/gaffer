@@ -20,16 +20,11 @@ Fixes
 - ColorChooserPlugValueWidget/ColorSwatchPlugValueWidget : Fixed handling of errors when computing the plug value.
 - PlugAlgo : Fixed crash in `setValueFromData()` when setting the value of a BoxPlug (other than a Box2iPlug).
 
-
-API
----
-
-- ColorChooser/ColorSwatch : Added `setErrored()` and `getErrored()` methods.
-
 API
 ---
 
 - TweakPlug : Added functor-based variation of `applyTweak` allowing greater control of how users get and set the data being tweaked. `TweaksPlug::applyTweaks` now uses that method and can be used as a reference implementation.
+- ColorChooser/ColorSwatch : Added `setErrored()` and `getErrored()` methods.
 
 0.61.10.0 (relative to 0.61.9.0)
 =========
