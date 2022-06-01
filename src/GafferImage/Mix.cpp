@@ -289,7 +289,8 @@ void Mix::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::C
 		{
 			maskValidBound = boxIntersection( tileBound, maskPlug()->dataWindowPlug()->getValue() );
 		}
-		h.append( maskValidBound );
+		h.append( maskValidBound.min - tileOrigin );
+		h.append( maskValidBound.max - tileOrigin );
 
 		for( int i = 0; i < 2; i++ )
 		{
@@ -311,7 +312,12 @@ void Mix::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::C
 			// input data windows, we may be using/revealing the invalid parts of a tile. We
 			// deal with this in computeChannelData() by treating the invalid parts as black,
 			// and must therefore hash in the valid bound here to take that into account.
-			h.append( validBound[i] );
+			//
+			// Note that validBound only matters in relation to the channel data for this tile though,
+			// so we can hash it in relation to the tile origin, providing a small speedup by allowing
+			// reuse of constant tiles ( 20% speedup in testFuzzDataWindows )
+			h.append( validBound[i].min - tileOrigin );
+			h.append( validBound[i].max - tileOrigin );
 		}
 		outPlug()->deepPlug()->hash( h );
 		maskPlug()->deepPlug()->hash( h );
