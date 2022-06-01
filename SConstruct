@@ -55,7 +55,7 @@ gafferMilestoneVersion = 0 # for announcing major milestones - may contain all o
 gafferMajorVersion = 62 # backwards-incompatible changes
 gafferMinorVersion = 0 # new backwards-compatible features
 gafferPatchVersion = 0 # bug fixes
-gafferVersionSuffix = "a2" # used for alpha/beta releases : "a1", "b2", etc.
+gafferVersionSuffix = "a3" # used for alpha/beta releases : "a1", "b2", etc.
 
 # All of the following must be considered when determining
 # whether or not a change is backwards-compatible

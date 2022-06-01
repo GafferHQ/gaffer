@@ -1,5 +1,5 @@
-0.62.x.x (relative to 0.62.0.0a2)
-========
+0.62.0.0a3 (relative to 0.62.0.0a2)
+==========
 
 > Note : This release requires Arnold version 7.1.0.0 or newer.
 
