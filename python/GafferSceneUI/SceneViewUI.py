@@ -752,7 +752,7 @@ class _CameraPlugValueWidget( GafferUI.PlugValueWidget ) :
 		m.append(
 			"/Render Camera",
 			{
-				"checkBox" : currentLookThrough is "",
+				"checkBox" : currentLookThrough == "",
 				"command" : functools.partial( Gaffer.WeakMethod( self.__lookThrough ), "" )
 			}
 		)
