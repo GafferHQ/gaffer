@@ -1,6 +1,11 @@
 0.61.x.x (relative to 0.61.11.0)
 =========
 
+Improvements
+------------
+
+- Spreadsheet : Added ability to load files saved in Gaffer 0.62.0.0a2 and later.
+
 Fixes
 -----
 
