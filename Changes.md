@@ -11,6 +11,7 @@ Fixes
 
 - PlugLayout : Fixed visibility of collapsible layouts with nesting (#4694).
 - Image Node Mix : Fixed incorrect results outside mask data window, and incorrect results when changing inputs.
+- ColorSwatchPlugValueWidget : Fixed popup dialogue for plugs belonging to Tools.
 
 0.61.11.0 (relative to 0.61.10.0)
 =========
