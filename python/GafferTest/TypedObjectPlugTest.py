@@ -335,5 +335,31 @@ class TypedObjectPlugTest( GafferTest.TestCase ) :
 		plug2 = eval( repr( plug ) )
 		self.assertEqual( plug2.defaultValue(), plug.defaultValue() )
 
+	def testStringVectorDataPlugWithStringInput( self ) :
+
+		node = Gaffer.Node()
+		node["user"]["string"] = Gaffer.StringPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		node["user"]["stringVector"] = Gaffer.StringVectorDataPlug( defaultValue = IECore.StringVectorData(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		self.assertTrue( node["user"]["stringVector"].acceptsInput( node["user"]["string"] ) )
+		node["user"]["stringVector"].setInput( node["user"]["string"] )
+
+		hashes = set()
+		for input, output in [
+			( "", [] ),
+			( "test", [ "test" ] ),
+			( "a b c", [ "a", "b", "c" ] ),
+			( "dog cat", [ "dog", "cat" ] ),
+			( "a b  c", [ "a", "b", "", "c" ] )
+		] :
+
+			node["user"]["string"].setValue( input )
+
+			h = node["user"]["stringVector"].hash()
+			self.assertNotIn( h, hashes )
+			hashes.add( h )
+
+			self.assertEqual( node["user"]["stringVector"].getValue(), IECore.StringVectorData( output ) )
+
 if __name__ == "__main__":
 	unittest.main()

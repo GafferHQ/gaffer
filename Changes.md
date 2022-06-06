@@ -1,5 +1,11 @@
 0.61.x.x (relative to 0.61.11.0)
-=========
+========
+
+Improvements
+------------
+
+- StringPlug : Added support for input connections from StringVectorDataPlugs. The string value is formed by joining the string array using spaces.
+- StringVectorDataPlug : Added support for input connections from StringPlugs. The array value is formed by splitting the string on spaces.
 
 Improvements
 ------------

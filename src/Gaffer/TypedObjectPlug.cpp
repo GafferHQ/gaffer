@@ -37,7 +37,11 @@
 
 #include "Gaffer/TypedObjectPlug.h"
 
+#include "Gaffer/StringPlug.h"
 #include "Gaffer/TypedObjectPlug.inl"
+
+#include "boost/algorithm/string/classification.hpp"
+#include "boost/algorithm/string/split.hpp"
 
 namespace Gaffer
 {
@@ -95,6 +99,49 @@ void CompoundObjectPlug::setFrom( const ValuePlug *other )
 		}
 		default :
 			throw IECore::Exception( "Unsupported plug type" );
+	}
+}
+
+// Specialise StringVectorDataPlug to accept connections from StringPlug
+
+template<>
+bool StringVectorDataPlug::acceptsInput( const Plug *input ) const
+{
+	if( !ValuePlug::acceptsInput( input ) )
+	{
+		return false;
+	}
+
+	if( input )
+	{
+		return
+			input->isInstanceOf( staticTypeId() ) ||
+			input->isInstanceOf( StringPlug::staticTypeId() )
+		;
+	}
+	return true;
+}
+
+template<>
+void StringVectorDataPlug::setFrom( const ValuePlug *other )
+{
+	if( auto stringVectorPlug = IECore::runTimeCast<const StringVectorDataPlug >( other ) )
+	{
+		setValue( stringVectorPlug->getValue() );
+	}
+	else if( auto stringPlug = IECore::runTimeCast<const StringPlug >( other ) )
+	{
+		IECore::StringVectorDataPtr value = new IECore::StringVectorData;
+		std::string s = stringPlug->getValue();
+		if( !s.empty() )
+		{
+			boost::split( value->writable(), s, boost::is_any_of( " " ) );
+		}
+		setValue( value );
+	}
+	else
+	{
+		throw IECore::Exception( "Unsupported plug type" );
 	}
 }
 
