@@ -107,7 +107,7 @@ class ImageTestCase( GafferTest.TestCase ) :
 
 			stats = GafferImage.ImageStats()
 			stats["in"].setInput( difference["out"] )
-			stats["area"].setValue( imageA["format"].getValue().getDisplayWindow() )
+			stats["area"].setValue( imageA["dataWindow"].getValue() )
 
 			for channelName in imageA["channelNames"].getValue() :
 
