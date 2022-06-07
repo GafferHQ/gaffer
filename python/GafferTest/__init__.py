@@ -165,6 +165,7 @@ from .SpreadsheetTest import SpreadsheetTest
 from .ShufflePlugTest import ShufflePlugTest
 from .EditScopeTest import EditScopeTest
 from .RandomChoiceTest import RandomChoiceTest
+from .ContextQueryTest import ContextQueryTest
 
 from .IECorePreviewTest import *
 

@@ -50,6 +50,7 @@
 
 #include "Gaffer/ArrayPlug.h"
 #include "Gaffer/Context.h"
+#include "Gaffer/ContextQuery.h"
 #include "Gaffer/DeleteContextVariables.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/BoxPlug.h"
@@ -195,191 +196,6 @@ namespace
 {
 
 IECore::InternedString g_hoveredKey( "__hovered" );
-
-class V2fContextVariable : public Gaffer::ComputeNode
-{
-
-	public :
-
-		V2fContextVariable( const std::string &name = "V2fContextVariable" )
-			:	ComputeNode( name )
-		{
-			storeIndexOfNextChild( g_firstPlugIndex );
-			addChild( new StringPlug( "name" ) );
-			addChild( new V2fPlug( "out", Plug::Out ) );
-		}
-
-		GAFFER_NODE_DECLARE_TYPE( V2fContextVariable, V2fContextVariableTypeId, ComputeNode );
-
-		StringPlug *namePlug()
-		{
-			return getChild<StringPlug>( g_firstPlugIndex );
-		}
-
-		const StringPlug *namePlug() const
-		{
-			return getChild<StringPlug>( g_firstPlugIndex );
-		}
-
-		V2fPlug *outPlug()
-		{
-			return getChild<V2fPlug>( g_firstPlugIndex + 1 );
-		}
-
-		const V2fPlug *outPlug() const
-		{
-			return getChild<V2fPlug>( g_firstPlugIndex + 1 );
-		}
-
-		void affects( const Plug *input, AffectedPlugsContainer &outputs ) const override
-		{
-			ComputeNode::affects( input, outputs );
-
-			if( input == namePlug() )
-			{
-				outputs.push_back( outPlug()->getChild( 0 ) );
-				outputs.push_back( outPlug()->getChild( 1 ) );
-			}
-		}
-
-	protected :
-
-		void hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const override
-		{
-			ComputeNode::hash( output, context, h );
-			if( output->parent() == outPlug() )
-			{
-				// TODO - replace with context->variableHash in Gaffer 0.60
-				const std::string name = namePlug()->getValue();
-				h.append( context->get<V2f>( name, V2f( 0 ) ) );
-			}
-		}
-
-		void compute( ValuePlug *output, const Context *context ) const override
-		{
-			if( output->parent() == outPlug() )
-			{
-				const std::string name = namePlug()->getValue();
-				const V2f value = context->get<V2f>( name, V2f( 0 ) );
-				const size_t index = output == outPlug()->getChild( 0 ) ? 0 : 1;
-				static_cast<FloatPlug *>( output )->setValue( value[index] );
-			}
-			else
-			{
-				ComputeNode::compute( output, context );
-			}
-		}
-
-	private :
-
-		static size_t g_firstPlugIndex;
-
-};
-
-size_t V2fContextVariable::g_firstPlugIndex = 0;
-GAFFER_NODE_DEFINE_TYPE( V2fContextVariable )
-
-IE_CORE_DECLAREPTR( V2fContextVariable )
-
-class Box2iContextVariable : public Gaffer::ComputeNode
-{
-
-	public :
-
-		Box2iContextVariable( const std::string &name = "Box2iContextVariable" )
-			:	ComputeNode( name )
-		{
-			storeIndexOfNextChild( g_firstPlugIndex );
-			addChild( new StringPlug( "name" ) );
-			addChild( new Box2iPlug( "out", Plug::Out ) );
-		}
-
-		GAFFER_NODE_DECLARE_TYPE( Box2iContextVariable, Box2iContextVariableTypeId, ComputeNode );
-
-		StringPlug *namePlug()
-		{
-			return getChild<StringPlug>( g_firstPlugIndex );
-		}
-
-		const StringPlug *namePlug() const
-		{
-			return getChild<StringPlug>( g_firstPlugIndex );
-		}
-
-		Box2iPlug *outPlug()
-		{
-			return getChild<Box2iPlug>( g_firstPlugIndex + 1 );
-		}
-
-		const Box2iPlug *outPlug() const
-		{
-			return getChild<Box2iPlug>( g_firstPlugIndex + 1 );
-		}
-
-		void affects( const Plug *input, AffectedPlugsContainer &outputs ) const override
-		{
-			ComputeNode::affects( input, outputs );
-
-			if( input == namePlug() )
-			{
-				outputs.push_back( outPlug()->minPlug()->getChild( 0 ) );
-				outputs.push_back( outPlug()->minPlug()->getChild( 1 ) );
-				outputs.push_back( outPlug()->maxPlug()->getChild( 0 ) );
-				outputs.push_back( outPlug()->maxPlug()->getChild( 1 ) );
-			}
-		}
-
-	protected :
-
-		void hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const override
-		{
-			ComputeNode::hash( output, context, h );
-			const GraphComponent *parent = output->parent();
-			if( parent->parent() == outPlug() )
-			{
-				// TODO - replace with context->variableHash in Gaffer 0.60
-				const std::string name = namePlug()->getValue();
-				h.append( context->get<Box2i>( name, Box2i() ) );
-			}
-		}
-
-		void compute( ValuePlug *output, const Context *context ) const override
-		{
-			const GraphComponent *parent = output->parent();
-			if( parent->parent() == outPlug() )
-			{
-				const std::string name = namePlug()->getValue();
-				const Box2i value = context->get<Box2i>( name, Box2i() );
-
-				const size_t index = output == parent->getChild( 0 ) ? 0 : 1;
-				float result;
-				if( parent == outPlug()->minPlug() )
-				{
-					result = value.min[index];
-				}
-				else
-				{
-					result = value.max[index];
-				}
-				static_cast<IntPlug *>( output )->setValue( result );
-			}
-			else
-			{
-				ComputeNode::compute( output, context );
-			}
-		}
-
-	private :
-
-		static size_t g_firstPlugIndex;
-
-};
-
-
-size_t Box2iContextVariable::g_firstPlugIndex = 0;
-GAFFER_NODE_DEFINE_TYPE( Box2iContextVariable )
-
-IE_CORE_DECLAREPTR( Box2iContextVariable )
 
 void renderLine2D( const Style *style, V2f a, V2f b, float width, const Color4f &col )
 {
@@ -1214,8 +1030,7 @@ class ImageView::ColorInspector : public Signals::Trackable
 
 		ColorInspector( ImageView *view )
 			:	m_view( view ),
-				m_pixel( new V2fContextVariable ),
-				m_area( new Box2iContextVariable ),
+				m_contextQuery( new ContextQuery ),
 				m_deleteContextVariables( new DeleteContextVariables ),
 				m_sampler( new ImageSampler ),
 				m_areaSampler( new ImageStats )
@@ -1236,11 +1051,13 @@ class ImageView::ColorInspector : public Signals::Trackable
 			// would cause cancellation of the ImageView background compute every
 			// time the mouse was moved. The "colorInspector:source" variable is
 			// created in ImageViewUI's `_ColorInspectorPlugValueWidget`.
-			m_pixel->namePlug()->setValue( "colorInspector:source" );
+			V2iPlugPtr v2iTemplate = new Gaffer::V2iPlug();
+			m_contextQuery->addQuery( v2iTemplate.get(), "colorInspector:source" );
 
 			// The same thing, but when we need an area to evaluate areaColor
 			// instead of a pixel to evaluate pixelColor
-			m_area->namePlug()->setValue( "colorInspector:source" );
+			Box2iPlugPtr box2iTemplate = new Gaffer::Box2iPlug();
+			m_contextQuery->addQuery( box2iTemplate.get(), "colorInspector:source" );
 
 			// And we use a DeleteContextVariables node to make sure that our
 			// private context variable doesn't become visible to the upstream
@@ -1256,13 +1073,15 @@ class ImageView::ColorInspector : public Signals::Trackable
 			ImagePlug *image = view->getPreprocessor()->getChild<ImagePlug>( "out" );
 			m_deleteContextVariables->inPlug()->setInput( image );
 			m_sampler->imagePlug()->setInput( m_deleteContextVariables->outPlug() );
-			m_sampler->pixelPlug()->setInput( m_pixel->outPlug() );
+
+			ValuePlugPtr v2iValuePlug = m_contextQuery->valuePlugFromQueryPlug( m_contextQuery->queriesPlug()->getChild<NameValuePlug>( 0 ) );
+			m_sampler->pixelPlug()->setInput( v2iValuePlug );
 
 			evaluatorPlug->getChild<Color4fPlug>( "pixelColor" )->setInput( m_sampler->colorPlug() );
 
-
 			m_areaSampler->inPlug()->setInput( m_deleteContextVariables->outPlug() );
-			m_areaSampler->areaPlug()->setInput( m_area->outPlug() );
+			ValuePlugPtr box2iValuePlug = m_contextQuery->valuePlugFromQueryPlug( m_contextQuery->queriesPlug()->getChild<NameValuePlug>( 1 ) );
+			m_areaSampler->areaPlug()->setInput( box2iValuePlug );
 			evaluatorPlug->getChild<Color4fPlug>( "areaColor" )->setInput( m_areaSampler->averagePlug() );
 
 			ImageGadget *imageGadget = static_cast<ImageGadget *>( m_view->viewportGadget()->getPrimaryChild() );
@@ -1373,8 +1192,7 @@ class ImageView::ColorInspector : public Signals::Trackable
 		}
 
 		ImageView *m_view;
-		V2fContextVariablePtr m_pixel;
-		Box2iContextVariablePtr m_area;
+		ContextQueryPtr m_contextQuery;
 		DeleteContextVariablesPtr m_deleteContextVariables;
 		ImageSamplerPtr m_sampler;
 		ImageStatsPtr m_areaSampler;
