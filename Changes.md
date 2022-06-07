@@ -6,6 +6,11 @@ Features
 
 - USDLayerWriter : Added a new node for baking the difference between two Gaffer scenes into a minimal USD layer on disk.
 
+Improvements
+------------
+
+- Light Editor : Added support for editing visualisation attributes of lights.
+
 Fixes
 -----
 
