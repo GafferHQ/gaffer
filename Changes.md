@@ -7,17 +7,13 @@ Improvements
 - StringPlug : Added support for input connections from StringVectorDataPlugs. The string value is formed by joining the string array using spaces.
 - StringVectorDataPlug : Added support for input connections from StringPlugs. The array value is formed by splitting the string on spaces.
 
-Improvements
-------------
-
-- Spreadsheet : Added ability to load files saved in Gaffer 0.62.0.0a2 and later.
-
 Fixes
 -----
 
 - PlugLayout : Fixed visibility of collapsible layouts with nesting (#4694).
 - Image Node Mix : Fixed incorrect results outside mask data window, and incorrect results when changing inputs.
 - ColorSwatchPlugValueWidget : Fixed popup dialogue for plugs belonging to Tools.
+- Spreadsheet : Fixed loading of files saved in Gaffer 0.62.0.0a2 and later.
 
 0.61.11.0 (relative to 0.61.10.0)
 =========
