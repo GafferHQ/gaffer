@@ -575,7 +575,7 @@ class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 			# show that it is legitimate : differences in filtering are that great.
 			# The threshold is still significantly lower than the differences between
 			# checker tiles, so does guarantee that tiles aren't getting out of alignment.
-			self.assertImagesEqual( tc2["out"], t2["out"], maxDifference = 0.11, ignoreDataWindow = True )
+			self.assertImagesEqual( tc2["out"], t2["out"], maxDifference = 0.17, ignoreDataWindow = True )
 
 	def testDisabledAndNonConcatenating( self ) :
 

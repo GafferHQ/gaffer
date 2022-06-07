@@ -377,5 +377,31 @@ class StringPlugTest( GafferTest.TestCase ) :
 		for i in range( 10, 20 ) :
 			self.assertEqual( hashes[i], hashes[10] )
 
+	def testStringVectorDataInput( self ) :
+
+		node = Gaffer.Node()
+		node["user"]["string"] = Gaffer.StringPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		node["user"]["stringVector"] = Gaffer.StringVectorDataPlug( defaultValue = IECore.StringVectorData(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		self.assertTrue( node["user"]["string"].acceptsInput( node["user"]["stringVector"] ) )
+		node["user"]["string"].setInput( node["user"]["stringVector"] )
+
+		hashes = set()
+		for input, output in [
+			( [], "", ),
+			( [ "test" ], "test" ),
+			( [ "a", "b", "c" ], "a b c" ),
+			( [ "dog", "cat" ], "dog cat" ),
+			( [ "a", "b", "", "c" ], "a b  c" ),
+		] :
+
+			node["user"]["stringVector"].setValue( IECore.StringVectorData( input ) )
+
+			h = node["user"]["string"].hash()
+			self.assertNotIn( h, hashes )
+			hashes.add( h )
+
+			self.assertEqual( node["user"]["string"].getValue(), output )
+
 if __name__ == "__main__":
 	unittest.main()

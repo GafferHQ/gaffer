@@ -39,6 +39,9 @@
 
 #include "Gaffer/Context.h"
 #include "Gaffer/Process.h"
+#include "Gaffer/TypedObjectPlug.h"
+
+#include "boost/algorithm/string/join.hpp"
 
 using namespace IECore;
 using namespace Gaffer;
@@ -73,7 +76,7 @@ bool StringPlug::acceptsInput( const Plug *input ) const
 	}
 	if( input )
 	{
-		return input->isInstanceOf( staticTypeId() );
+		return input->isInstanceOf( staticTypeId() ) || input->isInstanceOf( StringVectorDataPlug::staticTypeId() );
 	}
 	return true;
 }
@@ -109,10 +112,14 @@ std::string StringPlug::getValue( const IECore::MurmurHash *precomputedHash ) co
 
 void StringPlug::setFrom( const ValuePlug *other )
 {
-	const StringPlug *tOther = IECore::runTimeCast<const StringPlug >( other );
-	if( tOther )
+	if( auto stringPlug = IECore::runTimeCast<const StringPlug >( other ) )
 	{
-		setValue( tOther->getValue() );
+		setValue( stringPlug->getValue() );
+	}
+	else if( auto stringVectorPlug = IECore::runTimeCast<const StringVectorDataPlug >( other ) )
+	{
+		ConstStringVectorDataPtr data = stringVectorPlug->getValue();
+		setValue( boost::algorithm::join( data->readable(), " " ) );
 	}
 	else
 	{
