@@ -349,6 +349,34 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 			nonEditableReason = "editScope2.AttributeEdits is locked."
 		)
 
+	def testAttributesWarning( self ) :
+
+		sphere = GafferScene.Sphere()
+
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		customAttributes = GafferScene.CustomAttributes()
+		customAttributes["in"].setInput( sphere["out"] )
+		customAttributes["filter"].setInput( sphereFilter["out"] )
+		customAttributes["attributes"].addChild(
+			Gaffer.NameValuePlug(
+				"test:attr",
+				IECore.FloatData( 1.0 ),
+				Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic,
+				"testPlug"
+			)
+		)
+
+		self.__assertExpectedResult(
+			self.__inspect( customAttributes["out"], "/sphere", "test:attr", None ),
+			source = customAttributes["attributes"]["testPlug"],
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			editable = True,
+			edit = customAttributes["attributes"]["testPlug"],
+			editWarning = "Edits to \"test:attr\" may affect other locations in the scene."
+		)
+
 	def testEditScopeNotInHistory( self ) :
 
 		light = GafferSceneTest.TestLight()

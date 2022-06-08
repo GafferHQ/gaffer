@@ -266,6 +266,13 @@ Gaffer::ValuePlugPtr AttributeInspector::source( const GafferScene::SceneAlgo::H
 				plug->enabledPlug()->getValue()
 			)
 			{
+				/// \todo This is overly conservative. We should test to see if there is more than
+				/// one filter match (but make sure to early-out once two are found, rather than test
+				/// the rest of the scene).
+				editWarning = boost::str(
+					boost::format( "Edits to \"%s\" may affect other locations in the scene." )
+						% m_attribute.string()
+				);
 				return plug;
 			}
 		}
