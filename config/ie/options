@@ -491,5 +491,12 @@ os.environ["GAFFER_JEMALLOC"] = "0"
 os.environ["QT_VERSION"] = qtVersion
 os.environ["QT_QPA_PLATFORM_PLUGIN_PATH"] = os.path.join( IEEnv.Environment.rootPath(), "apps", "qt", qtVersion, IEEnv.platform(), compiler, compilerVersion, "plugins" )
 
+# also prepend the qt bin path to the search path so that we get `moc` directly from it, instead of the wrapper
+# this is so that the moc file creation creates a proper dependency to the qt version being used
+# via the moc binary path
+os.environ["PATH"] = os.path.join( IEEnv.Environment.rootPath(), "apps", "qt", qtVersion, IEEnv.platform(), compiler, compilerVersion, "bin" ) + ":" + os.environ["PATH"]
+# Required to run `moc` without the wrapper
+LOCATE_DEPENDENCY_LIBPATH.append( os.path.join( IEEnv.Environment.rootPath(), "apps", compiler, compilerVersion, IEEnv.platform(), "lib64" ) )
+
 # speed up the build a bit hopefully.
 BUILD_CACHEDIR = os.environ["IEBUILD_CACHEDIR"]
