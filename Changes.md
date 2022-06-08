@@ -1,6 +1,11 @@
 0.61.x.x (relative to 0.61.12.0)
 ========
 
+Features
+--------
+
+- USDLayerWriter : Added a new node for baking the difference between two Gaffer scenes into a minimal USD layer on disk.
+
 Fixes
 -----
 

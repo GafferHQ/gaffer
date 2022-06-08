@@ -35,6 +35,7 @@
 ##########################################################################
 
 from .ModuleTest import ModuleTest
+from .USDLayerWriterTest import USDLayerWriterTest
 
 if __name__ == "__main__":
 	import unittest

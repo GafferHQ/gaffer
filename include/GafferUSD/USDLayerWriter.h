@@ -15,7 +15,7 @@
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
 //
-//      * Neither the name of Image Engine Design nor the names of
+//      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
@@ -34,18 +34,65 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERUSD_USDLAYERWRITER_H
+#define GAFFERUSD_USDLAYERWRITER_H
 
-#include "GafferUSD/USDLayerWriter.h"
+#include "GafferUSD/Export.h"
+#include "GafferUSD/TypeIds.h"
 
-#include "GafferDispatchBindings/TaskNodeBinding.h"
+#include "GafferScene/ScenePlug.h"
+#include "GafferScene/SceneWriter.h"
 
-using namespace boost::python;
-using namespace GafferUSD;
+#include "GafferDispatch/TaskNode.h"
 
-BOOST_PYTHON_MODULE( _GafferUSD )
+#include "Gaffer/TypedPlug.h"
+#include "Gaffer/StringPlug.h"
+
+namespace GafferUSD
 {
 
-	GafferDispatchBindings::TaskNodeClass<USDLayerWriter>();
+class GAFFERUSD_API USDLayerWriter : public GafferDispatch::TaskNode
+{
 
-}
+	public :
+
+		USDLayerWriter( const std::string &name=defaultName<USDLayerWriter>() );
+		~USDLayerWriter() override;
+
+		GAFFER_NODE_DECLARE_TYPE( GafferUSD::USDLayerWriter, USDLayerWriterTypeId, GafferDispatch::TaskNode );
+
+		Gaffer::StringPlug *fileNamePlug();
+		const Gaffer::StringPlug *fileNamePlug() const;
+
+		GafferScene::ScenePlug *basePlug();
+		const GafferScene::ScenePlug *basePlug() const;
+
+		GafferScene::ScenePlug *layerPlug();
+		const GafferScene::ScenePlug *layerPlug() const;
+
+		GafferScene::ScenePlug *outPlug();
+		const GafferScene::ScenePlug *outPlug() const;
+
+	protected :
+
+		IECore::MurmurHash hash( const Gaffer::Context *context ) const override;
+		bool requiresSequenceExecution() const override;
+		void execute() const override;
+		void executeSequence( const std::vector<float> &frames ) const override;
+
+	private :
+
+		const GafferScene::SceneWriter *sceneWriter() const;
+
+		static size_t g_firstPlugIndex;
+
+		// Friendship for the bindings
+		friend struct GafferDispatchBindings::Detail::TaskNodeAccessor;
+
+};
+
+IE_CORE_DECLAREPTR( USDLayerWriter )
+
+} // namespace GafferUSD
+
+#endif // GAFFERUSD_USDLAYERWRITER_H
