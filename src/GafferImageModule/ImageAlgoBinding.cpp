@@ -174,22 +174,25 @@ void parallelGatherTiles2( const GafferImage::ImagePlug &image, object pythonCha
 	);
 }
 
-IECoreImage::ImagePrimitivePtr imageWrapper( const ImagePlug *plug )
+IECoreImage::ImagePrimitivePtr imageWrapper( const ImagePlug *plug, const char *viewName )
 {
 	IECorePython::ScopedGILRelease gilRelease;
-	return ImageAlgo::image( plug );
+	std::string viewNameStr( viewName ? viewName : "" );
+	return ImageAlgo::image( plug, viewName ? &viewNameStr : nullptr );
 }
 
-IECore::MurmurHash imageHashWrapper( const ImagePlug *plug )
+IECore::MurmurHash imageHashWrapper( const ImagePlug *plug, const char *viewName )
 {
 	IECorePython::ScopedGILRelease gilRelease;
-	return ImageAlgo::imageHash( plug );
+	std::string viewNameStr( viewName ? viewName : "" );
+	return ImageAlgo::imageHash( plug, viewName ? &viewNameStr : nullptr );
 }
 
-IECore::CompoundObjectPtr tilesWrapper( const ImagePlug *plug, bool copy )
+IECore::CompoundObjectPtr tilesWrapper( const ImagePlug *plug, bool copy, const char *viewName )
 {
 	IECorePython::ScopedGILRelease gilRelease;
-	IECore::ConstCompoundObjectPtr d = ImageAlgo::tiles( plug );
+	std::string viewNameStr( viewName ? viewName : "" );
+	IECore::ConstCompoundObjectPtr d = ImageAlgo::tiles( plug, viewName ? &viewNameStr : nullptr );
 	return copy ? d->copy() : boost::const_pointer_cast<IECore::CompoundObject>( d );
 }
 
@@ -240,9 +243,9 @@ void GafferImageModule::bindImageAlgo()
 		)
 	);
 
-	def( "image", &imageWrapper );
-	def( "imageHash", &imageHashWrapper );
-	def( "tiles", &tilesWrapper, ( boost::python::arg( "_copy" ) = true ) );
+	def( "image", &imageWrapper, ( boost::python::arg( "viewName" ) = object() ) );
+	def( "imageHash", &imageHashWrapper, ( boost::python::arg( "viewName" ) = object() ) );
+	def( "tiles", &tilesWrapper, ( boost::python::arg( "_copy" ) = true, boost::python::arg( "viewName" ) = object() ) );
 
 	StringVectorFromStringVectorData();
 

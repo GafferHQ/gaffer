@@ -182,11 +182,24 @@ void ImageAlgo::sortChannelNames( std::vector< std::string > &channelNames )
 
 }
 
-IECoreImage::ImagePrimitivePtr GafferImage::ImageAlgo::image( const ImagePlug *imagePlug )
+IECoreImage::ImagePrimitivePtr GafferImage::ImageAlgo::image( const ImagePlug *imagePlug, const std::string *viewName )
 {
+	GafferImage::ImagePlug::ViewScope viewScope( Gaffer::Context::current() );
+	if( viewName )
+	{
+		viewScope.setViewName( viewName );
+	}
+	if( !viewIsValid( viewScope.context(), imagePlug->viewNames()->readable() ) )
+	{
+		throw IECore::Exception(
+			"ImageAlgo::image() : No view \"" +
+			viewScope.context()->get<std::string>( ImagePlug::viewNameContextName ) + "\""
+		);
+	}
+
 	if( imagePlug->deepPlug()->getValue() )
 	{
-		throw( IECore::Exception( "ImageAlgo::image() only works on flat image data ") );
+		throw IECore::Exception( "ImageAlgo::image() only works on flat image data ");
 	}
 
 	Format format = imagePlug->formatPlug()->getValue();
@@ -229,13 +242,27 @@ IECoreImage::ImagePrimitivePtr GafferImage::ImageAlgo::image( const ImagePlug *i
 
 }
 
-IECore::MurmurHash GafferImage::ImageAlgo::imageHash( const ImagePlug *imagePlug )
+IECore::MurmurHash GafferImage::ImageAlgo::imageHash( const ImagePlug *imagePlug, const std::string *viewName )
 {
+	GafferImage::ImagePlug::ViewScope viewScope( Gaffer::Context::current() );
+	if( viewName )
+	{
+		viewScope.setViewName( viewName );
+	}
+	if( !viewIsValid( viewScope.context(), imagePlug->viewNames()->readable() ) )
+	{
+		throw IECore::Exception(
+			"ImageAlgo::imageHash() : No view \"" +
+			viewScope.context()->get<std::string>( ImagePlug::viewNameContextName ) + "\""
+		);
+	}
+
+	IECore::MurmurHash result;
 	const Imath::Box2i dataWindow = imagePlug->dataWindowPlug()->getValue();
 	IECore::ConstStringVectorDataPtr channelNamesData = imagePlug->channelNamesPlug()->getValue();
 	const vector<string> &channelNames = channelNamesData->readable();
 
-	IECore::MurmurHash result = imagePlug->formatPlug()->hash();
+	result.append( imagePlug->formatPlug()->hash() );
 	result.append( imagePlug->dataWindowPlug()->hash() );
 	result.append( imagePlug->metadataPlug()->hash() );
 	result.append( imagePlug->channelNamesPlug()->hash() );
@@ -276,12 +303,24 @@ IECore::MurmurHash GafferImage::ImageAlgo::imageHash( const ImagePlug *imagePlug
 		dataWindow,
 		ImageAlgo::BottomToTop
 	);
-
 	return result;
 }
 
-IECore::ConstCompoundObjectPtr GafferImage::ImageAlgo::tiles( const ImagePlug *imagePlug )
+IECore::ConstCompoundObjectPtr GafferImage::ImageAlgo::tiles( const ImagePlug *imagePlug, const std::string *viewName )
 {
+	GafferImage::ImagePlug::ViewScope viewScope( Gaffer::Context::current() );
+	if( viewName )
+	{
+		viewScope.setViewName( viewName );
+	}
+	if( !viewIsValid( viewScope.context(), imagePlug->viewNames()->readable() ) )
+	{
+		throw IECore::Exception(
+			"ImageAlgo::tiles() : No view \"" +
+			viewScope.context()->get<std::string>( ImagePlug::viewNameContextName ) + "\""
+		);
+	}
+
 	const Imath::Box2i dataWindow = imagePlug->dataWindowPlug()->getValue();
 	IECore::ConstStringVectorDataPtr channelNamesData = imagePlug->channelNamesPlug()->getValue();
 	const vector<string> &channelNames = channelNamesData->readable();
@@ -384,4 +423,21 @@ void GafferImage::ImageAlgo::throwIfSampleOffsetsMismatch( const IECore::IntVect
 			}
 		}
 	}
+}
+
+bool GafferImage::ImageAlgo::viewIsValid( const Gaffer::Context *context, const std::vector< std::string > &viewNames )
+{
+	const std::string &viewName = context->get<std::string>( ImagePlug::viewNameContextName );
+
+	if( std::find( viewNames.begin(), viewNames.end(), viewName ) != viewNames.end() )
+	{
+		return true;
+	}
+
+	if( std::find( viewNames.begin(), viewNames.end(), ImagePlug::defaultViewName) != viewNames.end() )
+	{
+		return true;
+	}
+
+	return false;
 }

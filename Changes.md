@@ -42,6 +42,7 @@ API
   - Added Python binding for `updateInBackground()`.
 - TestCase : Added `assertNodeIsDocumented()` method.
 - ImagePlug : Added viewNames plug and ViewScope for working with multi-view images
+- ImageAlgo : Added viewName arguments and viewIsValid helper method
 
 Breaking Changes
 ----------------
