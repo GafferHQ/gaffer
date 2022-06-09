@@ -143,9 +143,9 @@ ShaderQuery::ShaderQuery( const std::string &name ) : Gaffer::ComputeNode( name 
 	addChild( new StringPlug( "location" ) );
 	addChild( new StringPlug( "shader" ) );
 	addChild( new BoolPlug( "inherit", Plug::In, false ) );
-	addChild( new ArrayPlug( "queries" ) );
+	addChild( new ArrayPlug( "queries", Plug::Direction::In, nullptr, 1, std::numeric_limits<size_t>::max(), Plug::Flags::Default, false ) );
 
-	addChild( new ArrayPlug( "out", Plug::Direction::Out ) );
+	addChild( new ArrayPlug( "out", Plug::Direction::Out, nullptr, 1, std::numeric_limits<size_t>::max(), Plug::Flags::Default, false ) );
 
 	AttributeQueryPtr attributeQuery = new AttributeQuery( "__attributeQuery" );
 	addChild( attributeQuery );
@@ -487,7 +487,7 @@ const Gaffer::ValuePlug *ShaderQuery::outPlugFromQuery( const Gaffer::NameValueP
 	if( childIndex < outPlug()->children().size() )
 	{
 		const ValuePlug *oPlug = outPlug()->getChild<const ValuePlug>( childIndex );
-		if( oPlug->typeId() != Gaffer::ValuePlug::staticTypeId() )
+		if( oPlug != nullptr && oPlug->typeId() != Gaffer::ValuePlug::staticTypeId() )
 		{
 			throw IECore::Exception( "ShaderQuery : \"outPlug\" must be a `ValuePlug`."  );
 		}
