@@ -85,6 +85,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 	import GafferArnold
 
 	for aov in [
+		"beauty",
 		"direct",
 		"indirect",
 		"emission",
@@ -114,15 +115,11 @@ with IECore.IgnoredExceptions( ImportError ) :
 		"volume_direct",
 		"volume_indirect",
 		"volume_albedo",
-		"light_groups",
 		"motionvector",
 	] :
 
 		label = aov.replace( "_", " " ).title().replace( " ", "_" )
-
-		data = aov
-		if data == "light_groups":
-			data = "RGBA_*"
+		data = "color " + aov if aov != "beauty" else "rgba"
 
 		if aov == "motionvector" :
 			parameters = {
@@ -130,6 +127,9 @@ with IECore.IgnoredExceptions( ImportError ) :
 			}
 		else :
 			parameters = {}
+
+		if aov not in { "motionvector", "emission", "background" } :
+			parameters["layerPerLightGroup"] = False
 
 		interactiveParameters = parameters.copy()
 		interactiveParameters.update(
@@ -146,7 +146,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 			IECoreScene.Output(
 				aov,
 				"ieDisplay",
-				"color " + data,
+				data,
 				interactiveParameters
 			)
 		)
@@ -156,7 +156,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 			IECoreScene.Output(
 				"${project:rootDirectory}/renders/${script:name}/%s/%s.####.exr" % ( aov, aov ),
 				"exr",
-				"color " + data,
+				data,
 				parameters,
 			)
 		)

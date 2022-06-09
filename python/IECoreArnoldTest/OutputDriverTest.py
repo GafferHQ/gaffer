@@ -88,5 +88,21 @@ class OutputDriverTest( unittest.TestCase ) :
 		self.assertTrue( "N.G" in channelNames )
 		self.assertTrue( "N.B" in channelNames )
 
+	def testLayerName( self ) :
+
+		server = IECoreImage.DisplayDriverServer( 1559 )
+		time.sleep( 2 )
+
+		subprocess.check_call( [
+			"kick", "-v", "0", "-dw", "-dp",
+			os.path.join( os.path.dirname( __file__ ), "assFiles", "outputWithLayerName.ass" )
+		] )
+
+		image = IECoreImage.ImageDisplayDriver.removeStoredImage( "layerNameImage" )
+		self.assertEqual(
+			set( image.keys() ),
+			{ "diffuseLayer.{}".format( c ) for c in "RGBA" }
+		)
+
 if __name__ == "__main__":
 	unittest.main()

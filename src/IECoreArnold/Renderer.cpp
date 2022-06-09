@@ -294,6 +294,7 @@ const AtString g_dispHeightArnoldString( "disp_height" );
 const AtString g_dispPaddingArnoldString( "disp_padding" );
 const AtString g_dispZeroValueArnoldString( "disp_zero_value" );
 const AtString g_dispAutoBumpArnoldString( "disp_autobump" );
+const AtString g_driverEXRArnoldString( "driver_exr" );
 const AtString g_enableProgressiveRenderString( "enable_progressive_render" );
 const AtString g_fileNameArnoldString( "filename" );
 const AtString g_filtersArnoldString( "filters" );
@@ -317,6 +318,7 @@ const AtString g_nameArnoldString( "name" );
 const AtString g_nodeArnoldString("node");
 const AtString g_objectArnoldString( "object" );
 const AtString g_opaqueArnoldString( "opaque" );
+const AtString g_preserveLayerNameArnoldString( "preserve_layer_name" );
 const AtString g_proceduralArnoldString( "procedural" );
 const AtString g_pinCornersArnoldString( "pin_corners" );
 const AtString g_pixelAspectRatioArnoldString( "pixel_aspect_ratio" );
@@ -561,17 +563,26 @@ class ArnoldOutput : public IECore::RefCounted
 			// Convert the data specification to the form
 			// supported by Arnold.
 
-			m_data = output->getData();
-			m_lpeName = "ieCoreArnold:lpe:" + name.string();
-			m_lpeValue = "";
-
-			if( m_data=="rgb" )
+			m_layerName = parameter<std::string>( output->parameters(), "layerName", "" );
+			if( m_layerName.size() && AiNodeIs( m_driver.get(), g_driverEXRArnoldString ) )
 			{
-				m_data = "RGB RGB";
+				// If a custom `layerName` has been requested, then default to using it
+				// in the EXR driver (otherwise there would have been no point specifying it).
+				if( !output->parametersData()->member( "preserve_layer_name" ) )
+				{
+					AiNodeSetBool( m_driver.get(), g_preserveLayerNameArnoldString, true );
+				}
 			}
-			else if( m_data=="rgba" )
+
+			if( output->getData()=="rgb" )
 			{
-				m_data = "RGBA RGBA";
+				m_data = "RGB";
+				m_type = "RGB";
+			}
+			else if( output->getData()=="rgba" )
+			{
+				m_data = "RGBA";
+				m_type = "RGBA";
 			}
 			else
 			{
@@ -582,36 +593,41 @@ class ArnoldOutput : public IECore::RefCounted
 				}
 
 				vector<std::string> tokens;
-				IECore::StringAlgo::tokenize( m_data, ' ', tokens );
+				IECore::StringAlgo::tokenize( output->getData(), ' ', tokens );
 
 				if( tokens.size() == 2 )
 				{
 					if( tokens[0] == "color" )
 					{
-						m_data = tokens[1] + " " + colorType;
+						m_data = tokens[1];
+						m_type = colorType;
 					}
 					else if( tokens[0] == "lpe" )
 					{
+						m_lpeName = m_layerName.size() ? m_layerName : "ieCoreArnold:lpe:" + name.string();
 						m_lpeValue = tokens[1];
-						m_data = m_lpeName + " " + colorType;
+						m_data = m_lpeName;
+						m_type = colorType;
 					}
 					else if( tokens[0] == "float" || tokens[0] == "int" || tokens[0] == "uint" )
 					{
 						// Cortex convention is `<type> <name>`. Arnold
 						// convention is `<name> <TYPE>`.
-						m_data = tokens[1] + " " + boost::to_upper_copy( tokens[0] );
+						m_data = tokens[1];
+						m_type = boost::to_upper_copy( tokens[0] );
 					}
 					else
 					{
 						/// \todo Omit this output completely. We currently give it to Arnold
-						/// with `m_data == output->getData()`, to provide backward compatibility
-						/// for old scenes that passed an Arnold-formatted data string directly.
-						/// In future, we want all outputs to use the standard Cortex formatting
-						/// instead.
+						/// verbatim, to provide backward compatibility for old scenes that passed
+						/// an Arnold-formatted data string directly. In future, we want all outputs
+						/// to use the standard Cortex formatting instead.
 						IECore::msg(
 							IECore::Msg::Warning, "ArnoldRenderer",
 							boost::format( "Unknown data type \"%1%\" for output \"%2%\"" ) % tokens[0] % name
 						);
+						m_data = tokens[0];
+						m_type = tokens[1];
 					}
 				}
 				else
@@ -619,8 +635,39 @@ class ArnoldOutput : public IECore::RefCounted
 					/// \todo See above.
 					IECore::msg(
 						IECore::Msg::Warning, "ArnoldRenderer",
-						boost::format( "Unknown data specification \"%1%\" for output \"%2%\"" ) % m_data % name
+						boost::format( "Unknown data specification \"%1%\" for output \"%2%\"" ) % output->getData() % name
 					);
+					m_data = output->getData();
+					m_type = "";
+				}
+			}
+
+			if( parameter<bool>( output->parameters(), "layerPerLightGroup", false ) )
+			{
+				// This is Arnold's special syntax for requesting multiple light groups.
+				// We present it as a `layerPerLightGroup` parameter as it is a little
+				// easier to discover/use, and it should be easier to generalise to other
+				// renderers.
+				m_data += "_*";
+				if( m_layerName.size() )
+				{
+					// Work around Arnold bug #12282. If a layer name is specified, then Arnold
+					// will fail to apply the light group suffix to it. This causes the EXR driver
+					// to write duplicate channels with the same name, resulting in errors and/or
+					// crashes.
+					m_layerName = "";
+					if( m_lpeName.empty() )
+					{
+						IECore::msg( IECore::Msg::Warning, "ArnoldRenderer",
+							boost::format( "Cannot use `layerName` with `layerPerLightGroup` for non-LPE output \"%1%\", due to Arnold bug #12882" ) % name
+						);
+					}
+					else
+					{
+						// Although we've had to clear the layer name, we'll actually still
+						// get what we want, because the layer name is used as the name of the
+						// LPE.
+					}
 				}
 			}
 
@@ -629,7 +676,7 @@ class ArnoldOutput : public IECore::RefCounted
 			// allow others to be overridden using a parameter.
 			m_updateInteractively = parameter<bool>(
 				output->parameters(), "updateInteractively",
-				boost::starts_with( m_data, "RGBA " ) || boost::starts_with( m_data, "RGB " )
+				m_data == "RGBA" || m_data == "RGB"
 			);
 		}
 
@@ -640,7 +687,8 @@ class ArnoldOutput : public IECore::RefCounted
 
 		void append( std::vector<std::string> &outputs, std::vector<std::string> &lightPathExpressions ) const
 		{
-			outputs.push_back( boost::str( boost::format( "%s %s %s" ) % m_data % AiNodeGetName( m_filter.get() ) % AiNodeGetName( m_driver.get() ) ) );
+			const string layerNameSuffix = m_layerName.size() ? " " + m_layerName : "";
+			outputs.push_back( boost::str( boost::format( "%s %s %s %s%s" ) % m_data % m_type % AiNodeGetName( m_filter.get() ) % AiNodeGetName( m_driver.get() ) % layerNameSuffix ) );
 			if( m_lpeValue.size() )
 			{
 				lightPathExpressions.push_back( m_lpeName + " " + m_lpeValue );
@@ -659,7 +707,7 @@ class ArnoldOutput : public IECore::RefCounted
 
 		bool requiresIDAOV() const
 		{
-			return m_data == "id UINT";
+			return m_data == "id";
 		}
 
 	private :
@@ -667,6 +715,8 @@ class ArnoldOutput : public IECore::RefCounted
 		SharedAtNodePtr m_driver;
 		SharedAtNodePtr m_filter;
 		std::string m_data;
+		std::string m_type;
+		std::string m_layerName;
 		std::string m_lpeName;
 		std::string m_lpeValue;
 		std::string m_cameraOverride;
