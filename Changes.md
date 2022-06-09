@@ -189,8 +189,8 @@ Build
   - OpenColorIO : Updated to version 2.1.1.
   - Cortex : Updated to version 10.4.0.0.
 
-0.61.x.x (relative to 0.61.11.0)
-========
+0.61.12.0 (relative to 0.61.11.0)
+=========
 
 Improvements
 ------------
