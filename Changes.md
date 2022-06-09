@@ -4,10 +4,10 @@
 Fixes
 -----
 
-- ShaderQuery : 
+- SceneWriter : Fixed bug which caused sibling locations to be reordered.
+- ShaderQuery :
   - Fix error `ShaderQuery : "outPlug" is missing` when promoting a child plug of a query to a `Spreadsheet`.
   - Adding a child plug of a query to a `Spreadsheet` now uses the default name for the spreadsheet column.
-
 
 0.61.12.0 (relative to 0.61.11.0)
 =========

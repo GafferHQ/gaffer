@@ -45,7 +45,6 @@
 
 #include "boost/filesystem.hpp"
 
-#include "tbb/concurrent_unordered_map.h"
 #include "tbb/mutex.h"
 
 using namespace std;
@@ -114,11 +113,13 @@ struct LocationWriter
 			}
 		}
 
+		ConstInternedStringVectorDataPtr childNames = scene->childNamesPlug()->getValue();
+
 		tbb::mutex::scoped_lock scopedLock( m_mutex );
 
 		if( !scenePath.empty() )
 		{
-			m_output = m_output->child( scenePath.back(), SceneInterface::CreateIfMissing );
+			m_output = m_output->child( scenePath.back() );
 		}
 
 		if( object->typeId() != IECore::NullObjectTypeId && scenePath.size() > 0 )
@@ -146,6 +147,14 @@ struct LocationWriter
 		if( !locationSets.empty() )
 		{
 			m_output->writeTags( locationSets );
+		}
+
+		for( const auto &childName : childNames->readable() )
+		{
+			// `SceneAlgo::parallelProcessLocations()` may visit children in any
+			// order. Pre-create SceneInterface children here so that they are
+			// created in the correct order.
+			m_output->child( childName, SceneInterface::CreateIfMissing );
 		}
 
 		return true;
