@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2022, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,57 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_SHADERTWEAKS_H
-#define GAFFERSCENE_SHADERTWEAKS_H
+#ifndef GAFFERMODULE_TWEAKPLUGBINDING_H
+#define GAFFERMODULE_TWEAKPLUGBINDING_H
 
-#include "GafferScene/AttributeProcessor.h"
-
-#include "Gaffer/StringPlug.h"
-#include "Gaffer/TweakPlug.h"
-
-#include "IECoreScene/ShaderNetwork.h"
-
-namespace GafferScene
+namespace GafferModule
 {
 
-class GAFFERSCENE_API ShaderTweaks : public AttributeProcessor
-{
+void bindTweakPlugs();
 
-	public :
+} // namespace GafferSceneModule
 
-		ShaderTweaks( const std::string &name=defaultName<ShaderTweaks>() );
-		~ShaderTweaks() override;
-
-		GAFFER_NODE_DECLARE_TYPE( GafferScene::ShaderTweaks, ShaderTweaksTypeId, AttributeProcessor );
-
-		Gaffer::StringPlug *shaderPlug();
-		const Gaffer::StringPlug *shaderPlug() const;
-
-		Gaffer::BoolPlug *ignoreMissingPlug();
-		const Gaffer::BoolPlug *ignoreMissingPlug() const;
-
-		Gaffer::TweaksPlug *tweaksPlug();
-		const Gaffer::TweaksPlug *tweaksPlug() const;
-
-		Gaffer::BoolPlug *localisePlug();
-		const Gaffer::BoolPlug *localisePlug() const;
-
-	protected :
-
-		bool affectsProcessedAttributes( const Gaffer::Plug *input ) const override;
-		void hashProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		IECore::ConstCompoundObjectPtr computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const override;
-
-		static size_t g_firstPlugIndex;
-
-	private :
-
-		bool applyTweaks( IECoreScene::ShaderNetwork *shaderNetwork, Gaffer::TweakPlug::MissingMode missingMode ) const;
-
-};
-
-IE_CORE_DECLAREPTR( ShaderTweaks )
-
-} // namespace GafferScene
-
-#endif // GAFFERSCENE_SHADERTWEAKS_H
+#endif // GAFFERMODULE_TWEAKPLUGBINDING_H

@@ -73,7 +73,7 @@ enum TypeId
 	AttributesTypeId = 110528,
 	GlobalShaderTypeId = 110529,
 	ClippingPlaneTypeId = 110530,
-	TweaksPlugTypeId = 110531,
+	TweaksPlugTypeId = 110531,   // Obsolete - available for reuse
 	StandardOptionsTypeId = 110532,
 	SubTreeTypeId = 110533,
 	OpenGLAttributesTypeId = 110534,
@@ -130,7 +130,7 @@ enum TypeId
 	RenderTypeId = 110585,
 	FilterPlugTypeId = 110586,
 	ShaderTweaksTypeId = 110587,
-	TweakPlugTypeId = 110588,
+	TweakPlugTypeId = 110588,   // Obsolete - available for reuse
 	CopyOptionsTypeId = 110589,
 	LightToCameraTypeId = 110590,
 	FilterResultsTypeId = 110591,

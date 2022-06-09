@@ -34,27 +34,28 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_TWEAKPLUG_H
-#define GAFFERSCENE_TWEAKPLUG_H
+#ifndef GAFFER_TWEAKPLUG_H
+#define GAFFER_TWEAKPLUG_H
 
-#include "GafferScene/Shader.h"
-
+#include "Gaffer/Export.h"
+#include "Gaffer/CompoundDataPlug.h"
+#include "Gaffer/NumericPlug.h"
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/TypedPlug.h"
 
-#include "IECoreScene/ShaderNetwork.h"
 
-namespace GafferScene
+namespace Gaffer
 {
 
 /// Represents a "tweak" - an adjustment with a name, a mode, and a value,
 /// and an enable flag.  Can be used to add/subtract/multiply/replace or
 /// remove parameters, for example in the ShaderTweaks or CameraTweaks nodes.
-class GAFFERSCENE_API TweakPlug : public Gaffer::ValuePlug
+class GAFFER_API TweakPlug : public Gaffer::ValuePlug
 {
 
 	public :
 
-		GAFFER_PLUG_DECLARE_TYPE( GafferScene::TweakPlug, TweakPlugTypeId, Gaffer::ValuePlug );
+		GAFFER_PLUG_DECLARE_TYPE( Gaffer::TweakPlug, TweakPlugTypeId, Gaffer::ValuePlug );
 
 		enum Mode
 		{
@@ -87,10 +88,6 @@ class GAFFERSCENE_API TweakPlug : public Gaffer::ValuePlug
 
 		bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const override;
 		Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
-		IECore::MurmurHash hash() const override;
-		/// Ensures the method above doesn't mask
-		/// ValuePlug::hash( h )
-		using ValuePlug::hash;
 
 		/// Controls behaviour when the parameter to be
 		/// tweaked cannot be found.
@@ -122,17 +119,10 @@ class GAFFERSCENE_API TweakPlug : public Gaffer::ValuePlug
 			MissingMode missingMode = MissingMode::Error
 		) const;
 
-		/// \deprecated
-		/// \todo Remove when `ShaderTweaks::applyTweaks` has been refactored.
-		/// \returns true if any tweaks were applied
-		static bool applyTweaks( const Plug *tweaksPlug, IECoreScene::ShaderNetwork *shaderNetwork, MissingMode missingMode = MissingMode::Error );
-
 	private :
 
 		Gaffer::ValuePlug *valuePlugInternal();
 		const Gaffer::ValuePlug *valuePlugInternal() const;
-
-		std::pair<const Shader *, const Gaffer::Plug *> shaderOutput() const;
 
 		void applyNumericTweak(
 			const IECore::Data *sourceData,
@@ -142,7 +132,7 @@ class GAFFERSCENE_API TweakPlug : public Gaffer::ValuePlug
 			const std::string &tweakName
 		) const;
 
-		static const char *modeToString( GafferScene::TweakPlug::Mode mode );
+		static const char *modeToString( Gaffer::TweakPlug::Mode mode );
 
 };
 
@@ -152,12 +142,12 @@ IE_CORE_DECLAREPTR( TweakPlug )
 /// to parameters lists and shader networks.
 /// \todo Consider how TweaksPlug/TweakPlug relates to CompoundDataPlug/CompoundDataPlug::MemberPlug
 /// and others. We should make these consistent with one another.
-class GAFFERSCENE_API TweaksPlug : public Gaffer::ValuePlug
+class GAFFER_API TweaksPlug : public Gaffer::ValuePlug
 {
 
 	public :
 
-		GAFFER_PLUG_DECLARE_TYPE( GafferScene::TweaksPlug, TweaksPlugTypeId, Gaffer::ValuePlug );
+		GAFFER_PLUG_DECLARE_TYPE( Gaffer::TweaksPlug, TweaksPlugTypeId, Gaffer::ValuePlug );
 
 		TweaksPlug( const std::string &name=defaultName<TweaksPlug>(), Direction direction=In, unsigned flags=Default );
 
@@ -170,9 +160,6 @@ class GAFFERSCENE_API TweaksPlug : public Gaffer::ValuePlug
 		/// Functions return true if any tweaks were applied.
 
 		bool applyTweaks( IECore::CompoundData *parameters, TweakPlug::MissingMode missingMode = TweakPlug::MissingMode::Error ) const;
-		/// \deprecated
-		/// \todo Refactor into `ShaderTweaks` and move `TweakPlug` to `Gaffer` module.
-		bool applyTweaks( IECoreScene::ShaderNetwork *shaderNetwork, TweakPlug::MissingMode missingMode = TweakPlug::MissingMode::Error ) const;
 
 		/// Applies the tweak using functors to get and set the data.
 		/// \returns true if any tweaks were applied
@@ -189,8 +176,8 @@ class GAFFERSCENE_API TweaksPlug : public Gaffer::ValuePlug
 		) const;
 };
 
-} // namespace GafferScene
+} // namespace Gaffer
 
-#include "GafferScene/TweakPlug.inl"
+#include "Gaffer/TweakPlug.inl"
 
-#endif // GAFFERSCENE_TWEAKPLUG_H
+#endif // GAFFER_TWEAKPLUG_H

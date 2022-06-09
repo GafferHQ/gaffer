@@ -36,10 +36,9 @@
 
 #include "GafferSceneUI/Private/Inspector.h"
 
-#include "GafferScene/TweakPlug.h"
-
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/Spreadsheet.h"
+#include "Gaffer/TweakPlug.h"
 
 #include "boost/bind/bind.hpp"
 

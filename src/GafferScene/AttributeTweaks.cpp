@@ -35,11 +35,11 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GafferScene/AttributeTweaks.h"
-#include "GafferScene/TweakPlug.h"
+
+#include "Gaffer/TweakPlug.h"
 
 using namespace std;
 using namespace IECore;
-using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
 
@@ -80,14 +80,14 @@ const Gaffer::BoolPlug *AttributeTweaks::ignoreMissingPlug() const
 	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 1 );
 }
 
-GafferScene::TweaksPlug *AttributeTweaks::tweaksPlug()
+Gaffer::TweaksPlug *AttributeTweaks::tweaksPlug()
 {
-	return getChild<GafferScene::TweaksPlug>( g_firstPlugIndex + 2 );
+	return getChild<Gaffer::TweaksPlug>( g_firstPlugIndex + 2 );
 }
 
-const GafferScene::TweaksPlug *AttributeTweaks::tweaksPlug() const
+const Gaffer::TweaksPlug *AttributeTweaks::tweaksPlug() const
 {
-	return getChild<GafferScene::TweaksPlug>( g_firstPlugIndex + 2 );
+	return getChild<Gaffer::TweaksPlug>( g_firstPlugIndex + 2 );
 }
 
 bool AttributeTweaks::affectsProcessedAttributes( const Gaffer::Plug *input) const

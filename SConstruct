@@ -903,7 +903,11 @@ if env["ARNOLD_ROOT"] :
 
 libraries = {
 
-	"Gaffer" : {},
+	"Gaffer" : {
+		"envAppends" : {
+			"LIBS" : [ "Half" ],
+		}
+	},
 
 	"GafferTest" : {
 		"envAppends" : {

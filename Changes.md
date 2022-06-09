@@ -23,6 +23,9 @@ Breaking Changes
 
 - ImageWriter/SceneWriter : The overrides for TaskNode virtual methods are now `protected` rather than `public`. Use the `TaskPlug` API instead.
 - ShaderQuery : `addQuery()` now creates `query` and `out` plugs with numeric suffixes starting at 0 (rather than 1).
+- TweakPlug and TweaksPlug :
+  - Moved to `Gaffer` module.
+  - Removed methods for tweaking shader networks.
 
 0.62.0.0a3 (relative to 0.62.0.0a2)
 ==========

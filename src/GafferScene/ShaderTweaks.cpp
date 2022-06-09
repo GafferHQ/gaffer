@@ -36,21 +36,46 @@
 
 #include "GafferScene/ShaderTweaks.h"
 
-#include "GafferScene/TweakPlug.h"
+#include "GafferScene/Shader.h"
 
 #include "Gaffer/CompoundDataPlug.h"
+#include "Gaffer/TweakPlug.h"
+#include "Gaffer/ValuePlug.h"
 
 #include "IECoreScene/Shader.h"
-#include "IECoreScene/ShaderNetwork.h"
+#include "IECoreScene/ShaderNetworkAlgo.h"
 
 #include "IECore/SimpleTypedData.h"
 #include "IECore/StringAlgo.h"
+
+#include <unordered_map>
 
 using namespace std;
 using namespace IECore;
 using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
+
+namespace
+{
+
+std::pair<const GafferScene::Shader *, const Gaffer::Plug *> shaderOutput( const Gaffer::TweakPlug *tweakPlug )
+{
+	const Plug *source = tweakPlug->valuePlug()->source();
+	if( source != tweakPlug->valuePlug() )
+	{
+		if( auto shader = runTimeCast<const GafferScene::Shader>( source->node() ) )
+		{
+			if( source == shader->outPlug() || shader->outPlug()->isAncestorOf( source ) )
+			{
+				return { shader, source };
+			}
+		}
+	}
+	return { nullptr, nullptr };
+}
+
+}  // namespace
 
 GAFFER_NODE_DEFINE_TYPE( ShaderTweaks );
 
@@ -90,14 +115,14 @@ const Gaffer::BoolPlug *ShaderTweaks::ignoreMissingPlug() const
 	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 1 );
 }
 
-GafferScene::TweaksPlug *ShaderTweaks::tweaksPlug()
+Gaffer::TweaksPlug *ShaderTweaks::tweaksPlug()
 {
-	return getChild<GafferScene::TweaksPlug>( g_firstPlugIndex + 2 );
+	return getChild<Gaffer::TweaksPlug>( g_firstPlugIndex + 2 );
 }
 
-const GafferScene::TweaksPlug *ShaderTweaks::tweaksPlug() const
+const Gaffer::TweaksPlug *ShaderTweaks::tweaksPlug() const
 {
-	return getChild<GafferScene::TweaksPlug>( g_firstPlugIndex + 2 );
+	return getChild<Gaffer::TweaksPlug>( g_firstPlugIndex + 2 );
 }
 
 Gaffer::BoolPlug *ShaderTweaks::localisePlug()
@@ -134,6 +159,15 @@ void ShaderTweaks::hashProcessedAttributes( const ScenePath &path, const Gaffer:
 		tweaksPlug()->hash( h );
 		ignoreMissingPlug()->hash( h );
 		localisePlug()->hash( h );
+
+		for( auto &tweak : TweakPlug::Range( *tweaksPlug() ) )
+		{
+			const auto shaderOutput = ::shaderOutput( tweak.get() );
+			if( shaderOutput.first )
+			{
+				shaderOutput.first->attributesHash( shaderOutput.second, h );
+			}
+		}
 
 		if( localisePlug()->getValue() )
 		{
@@ -189,11 +223,139 @@ IECore::ConstCompoundObjectPtr ShaderTweaks::computeProcessedAttributes( const S
 		}
 
 		ShaderNetworkPtr tweakedNetwork = network->copy();
-		if( tweaksPlug->applyTweaks( tweakedNetwork.get(), ignoreMissing ? TweakPlug::MissingMode::Ignore : TweakPlug::MissingMode::Error ) )
+		if( applyTweaks( tweakedNetwork.get(), ignoreMissing ? TweakPlug::MissingMode::Ignore : TweakPlug::MissingMode::Error ) )
 		{
 			out[attribute.first] = tweakedNetwork;
 		}
 	}
 
 	return result;
+}
+
+bool ShaderTweaks::applyTweaks( IECoreScene::ShaderNetwork *shaderNetwork, TweakPlug::MissingMode missingMode ) const
+{
+	unordered_map<InternedString, IECoreScene::ShaderPtr> modifiedShaders;
+
+	const Plug *tweaksPlug = this->tweaksPlug();
+
+	bool appliedTweaks = false;
+	bool removedConnections = false;
+	for( const auto &tweakPlug : TweakPlug::Range( *tweaksPlug ) )
+	{
+		const std::string name = tweakPlug->namePlug()->getValue();
+		if( name.empty() )
+		{
+			continue;
+		}
+
+		if( !tweakPlug->enabledPlug()->getValue() )
+		{
+			continue;
+		}
+
+		ShaderNetwork::Parameter parameter;
+		size_t dotPos = name.find_last_of( '.' );
+		if( dotPos == string::npos )
+		{
+			parameter.shader = shaderNetwork->getOutput().shader;
+			parameter.name = name;
+		}
+		else
+		{
+			parameter.shader = InternedString( name.c_str(), dotPos );
+			parameter.name = InternedString( name.c_str() + dotPos + 1 );
+		}
+
+		const IECoreScene::Shader *shader = shaderNetwork->getShader( parameter.shader );
+		if( !shader )
+		{
+			if( missingMode != TweakPlug::MissingMode::Ignore )
+			{
+				throw IECore::Exception( boost::str(
+					boost::format( "Cannot apply tweak \"%1%\" because shader \"%2%\" does not exist" ) % name % parameter.shader
+				) );
+			}
+			else
+			{
+				continue;
+			}
+		}
+
+		const TweakPlug::Mode mode = static_cast<TweakPlug::Mode>( tweakPlug->modePlug()->getValue() );
+
+		if( auto input = shaderNetwork->input( parameter )  )
+		{
+			if( mode != TweakPlug::Mode::Replace )
+			{
+				throw IECore::Exception( boost::str( boost::format( "Cannot apply tweak to \"%s\" : Mode must be \"Replace\" when a previous connection exists" ) % name ) );
+			}
+			shaderNetwork->removeConnection( { input, parameter } );
+			removedConnections = true;
+		}
+
+		const auto shaderOutput = ::shaderOutput( tweakPlug.get() );
+		if( shaderOutput.first )
+		{
+			// New connection
+			ConstCompoundObjectPtr shaderAttributes = shaderOutput.first->attributes( shaderOutput.second );
+			const ShaderNetwork *inputNetwork = nullptr;
+			for( const auto &a : shaderAttributes->members() )
+			{
+				if( ( inputNetwork = runTimeCast<const ShaderNetwork>( a.second.get() ) ) )
+				{
+					break;
+				}
+			}
+
+			if( inputNetwork && inputNetwork->getOutput() )
+			{
+				if( mode != TweakPlug::Mode::Replace )
+				{
+					throw IECore::Exception( boost::str( boost::format( "Cannot apply tweak to \"%s\" : Mode must be \"Replace\" when inserting a connection" ) % name ) );
+				}
+				const auto inputParameter = ShaderNetworkAlgo::addShaders( shaderNetwork, inputNetwork );
+				shaderNetwork->addConnection( { inputParameter, parameter } );
+				appliedTweaks = true;
+			}
+		}
+		else
+		{
+			// Regular tweak
+			auto modifiedShader = modifiedShaders.insert( { parameter.shader, nullptr } );
+			if( modifiedShader.second )
+			{
+				modifiedShader.first->second = shader->copy();
+			}
+
+			if(
+				tweakPlug->applyTweak(
+					[&parameter, &modifiedShader]( const std::string &valueName )
+					{
+						return modifiedShader.first->second->parametersData()->member( parameter.name );
+					},
+					[&parameter, &modifiedShader]( const std::string &valueName, DataPtr newData )
+					{
+						modifiedShader.first->second->parameters()[parameter.name] = newData;
+						return true;
+					},
+					missingMode
+				)
+			)
+			{
+				appliedTweaks = true;
+			}
+		}
+	}
+
+	for( auto &x : modifiedShaders )
+	{
+		shaderNetwork->setShader( x.first, std::move( x.second ) );
+	}
+
+	if( removedConnections )
+	{
+		ShaderNetworkAlgo::removeUnusedShaders( shaderNetwork );
+	}
+
+	return appliedTweaks || removedConnections;
 }

@@ -37,9 +37,8 @@
 import six
 
 import Gaffer
-import GafferScene
 
-originalInit = GafferScene.TweakPlug.__init__
+originalInit = Gaffer.TweakPlug.__init__
 
 def initSupportingOldSerialisation( self, *args, **kwargs ) :
 
@@ -55,4 +54,4 @@ def initSupportingOldSerialisation( self, *args, **kwargs ) :
 
 		originalInit( self, *args, **kwargs )
 
-GafferScene.TweakPlug.__init__ = initSupportingOldSerialisation
+Gaffer.TweakPlug.__init__ = initSupportingOldSerialisation

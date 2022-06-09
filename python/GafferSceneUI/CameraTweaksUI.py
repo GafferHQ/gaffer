@@ -135,7 +135,7 @@ def __registerCameraParameters() :
 
 		def creator( name, value ) :
 
-			tweak = GafferScene.TweakPlug( name, value )
+			tweak = Gaffer.TweakPlug( name, value )
 			tweak.setName( name )
 			return tweak
 
@@ -219,7 +219,7 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 			else :
 
 				def creator( plugType ) :
-					tweak = GafferScene.TweakPlug( "", plugType() )
+					tweak = Gaffer.TweakPlug( "", plugType() )
 					tweak.setName( "tweak1" )
 					return tweak
 
