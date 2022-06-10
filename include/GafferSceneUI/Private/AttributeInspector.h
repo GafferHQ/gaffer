@@ -69,6 +69,8 @@ class GAFFERSCENEUI_API AttributeInspector : public Inspector
 		Gaffer::ValuePlugPtr source( const GafferScene::SceneAlgo::History *history, std::string &editWarning ) const override;
 		EditFunctionOrFailure editFunction( Gaffer::EditScope *scope, const GafferScene::SceneAlgo::History *history) const override;
 
+		bool attributeExists() const;
+
 	private :
 
 		void plugDirtied( Gaffer::Plug *plug );

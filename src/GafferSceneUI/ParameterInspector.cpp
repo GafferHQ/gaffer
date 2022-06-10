@@ -64,6 +64,18 @@ ParameterInspector::ParameterInspector(
 
 }
 
+GafferScene::SceneAlgo::History::ConstPtr ParameterInspector::history() const
+{
+	// Computing histories is expensive, and there's no point doing it
+	// if the specific attribute we want doesn't exist.
+	if( !attributeExists() )
+	{
+		return nullptr;
+	}
+
+	return AttributeInspector::history();
+}
+
 IECore::ConstObjectPtr ParameterInspector::value( const GafferScene::SceneAlgo::History *history ) const
 {
 	auto attribute = AttributeInspector::value( history );

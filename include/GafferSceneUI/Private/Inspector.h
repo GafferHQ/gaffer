@@ -132,6 +132,8 @@ class GAFFERSCENEUI_API Inspector : public IECore::RefCounted, public boost::sig
 		/// `editWarning` may be assigned a warning that will be shown to the
 		/// user when editing this plug. Called with `history->context` as the
 		/// current context. Default implementation returns null.
+		/// \todo Perhaps this should also be available directly from the
+		/// history class?
 		virtual Gaffer::ValuePlugPtr source( const GafferScene::SceneAlgo::History *history, std::string &editWarning ) const;
 
 		using EditFunction = std::function<Gaffer::ValuePlugPtr ()>;

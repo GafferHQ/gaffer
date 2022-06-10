@@ -149,20 +149,30 @@ size_t hash_value( const AttributeHistoryCacheKey &key )
 	return result;
 }
 
-using AttributeHistoryCache = IECorePreview::LRUCache<AttributeHistoryCacheKey, SceneAlgo::AttributeHistory::ConstPtr>;
+using AttributeHistoryCache = IECorePreview::LRUCache<AttributeHistoryCacheKey, SceneAlgo::History::ConstPtr>;
 
 AttributeHistoryCache g_attributeHistoryCache(
 	// Getter
-	[] ( const AttributeHistoryCacheKey &key, size_t &cost, const IECore::Canceller *canceller ) {
+	[] ( const AttributeHistoryCacheKey &key, size_t &cost, const IECore::Canceller *canceller ) -> SceneAlgo::History::ConstPtr {
 		assert( canceller == Context::current()->canceller() );
 		cost = 1;
 		SceneAlgo::History::ConstPtr attributesHistory = g_historyCache.get( key, canceller );
-		return SceneAlgo::attributeHistory( attributesHistory.get(), key.attribute );
+		if( auto h = SceneAlgo::attributeHistory( attributesHistory.get(), key.attribute ) )
+		{
+			return h;
+		}
+		else
+		{
+			// The specific attribute doesn't exist. But we return the history for the
+			// whole CompoundObject so we get a chance to discover nodes that could
+			// _create_ the attribute.
+			return attributesHistory;
+		}
 	},
 	// Max cost
 	1000,
 	// Removal callback
-	[] ( const AttributeHistoryCacheKey &key, const SceneAlgo::AttributeHistory::ConstPtr &history ) {
+	[] ( const AttributeHistoryCacheKey &key, const SceneAlgo::History::ConstPtr &history ) {
 		// See comment in g_historyCache
 		ParallelAlgo::callOnUIThread(
 			[history] () {}
@@ -215,23 +225,17 @@ GafferScene::SceneAlgo::History::ConstPtr AttributeInspector::history() const
 		return nullptr;
 	}
 
-	ConstCompoundObjectPtr attributes = m_scene->attributesPlug()->getValue();
-	auto m = attributes->members();
-	if( m.find( m_attribute ) == m.end() )
-	{
-		// Computing histories is expensive, and there's no point doing it
-		// if the specific attribute we want doesn't exist.
-		return nullptr;
-	}
-
 	return g_attributeHistoryCache.get( AttributeHistoryCacheKey( m_scene.get(), m_attribute ), Context::current()->canceller() );
 }
 
 IECore::ConstObjectPtr AttributeInspector::value( const GafferScene::SceneAlgo::History *history ) const
 {
-	auto attributeHistory = static_cast<const SceneAlgo::AttributeHistory *>( history );
-
-	return attributeHistory->attributeValue;
+	if( auto attributeHistory = dynamic_cast<const SceneAlgo::AttributeHistory *>( history ) )
+	{
+		return attributeHistory->attributeValue;
+	}
+	// Attribute doesn't exist.
+	return nullptr;
 }
 
 Gaffer::ValuePlugPtr AttributeInspector::source( const GafferScene::SceneAlgo::History *history, std::string &editWarning ) const
@@ -302,12 +306,16 @@ Gaffer::ValuePlugPtr AttributeInspector::source( const GafferScene::SceneAlgo::H
 
 Inspector::EditFunctionOrFailure AttributeInspector::editFunction( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history ) const
 {
-	auto attributeHistory = static_cast<const SceneAlgo::AttributeHistory *>( history );
+	InternedString attributeName = m_attribute;
+	if( auto attributeHistory = dynamic_cast<const SceneAlgo::AttributeHistory *>( history ) )
+	{
+		attributeName = attributeHistory->attributeName;
+	}
 
 	const GraphComponent *readOnlyReason = EditScopeAlgo::attributeEditReadOnlyReason(
 		editScope,
 		history->context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ),
-		attributeHistory->attributeName
+		attributeName
 	);
 
 	if( readOnlyReason )
@@ -323,8 +331,8 @@ Inspector::EditFunctionOrFailure AttributeInspector::editFunction( Gaffer::EditS
 	{
 		return [
 			editScope = EditScopePtr( editScope ),
-			attributeName = attributeHistory->attributeName,
-			context = attributeHistory->context
+			attributeName,
+			context = history->context
 		] () {
 			Context::Scope scope( context.get() );
 			return EditScopeAlgo::acquireAttributeEdit(
@@ -381,4 +389,13 @@ void AttributeInspector::nodeMetadataChanged( IECore::InternedString key, const 
 		/// doing that currently.
 		dirtiedSignal()( this );
 	}
+}
+
+bool AttributeInspector::attributeExists() const
+{
+
+	ConstCompoundObjectPtr attributes = m_scene->attributesPlug()->getValue();
+	auto m = attributes->members();
+	return m.find( m_attribute ) != m.end();
+
 }

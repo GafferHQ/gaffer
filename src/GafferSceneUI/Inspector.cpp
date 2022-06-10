@@ -138,10 +138,6 @@ Inspector::ResultPtr Inspector::inspect() const
 	}
 
 	ConstObjectPtr value = this->value( history.get() );
-	if( !value )
-	{
-		return nullptr;
-	}
 
 	ResultPtr result = new Result( value, targetEditScope() );
 	inspectHistoryWalk( history.get(), result.get() );
@@ -153,6 +149,13 @@ Inspector::ResultPtr Inspector::inspect() const
 				% result->editScope()->relativeName( result->editScope()->scriptNode() )
 		);
 		result->m_sourceType = Result::SourceType::Other;
+	}
+
+	if( !result->m_value && !result->editable() )
+	{
+		// The property doesn't exist, and there's no
+		// way of making it.
+		return nullptr;
 	}
 
 	return result;
@@ -329,7 +332,7 @@ Inspector::Result::SourceType Inspector::Result::sourceType() const
 
 bool Inspector::Result::editable() const
 {
-	return m_editFunction.which() == 0;
+	return m_editFunction.which() == 0 && boost::get<EditFunction>( m_editFunction ) != nullptr;
 }
 
 std::string Inspector::Result::nonEditableReason() const

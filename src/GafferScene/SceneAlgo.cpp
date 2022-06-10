@@ -612,7 +612,11 @@ void addLocaliseAttributesPredecessors( const SceneAlgo::History::Predecessors &
 		}
 	}
 
-	assert( predecessor );
+	if( !predecessor )
+	{
+		return;
+	}
+
 	destination->predecessors.push_back( predecessor );
 }
 

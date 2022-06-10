@@ -572,7 +572,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 	def testNonExistentAttribute( self ) :
 
 		light = GafferSceneTest.TestLight()
-		self.assertIsNone( self.__inspect( light["out"], "/light", "gl:visualiser:scale" ) )
+		self.assertIsNone( self.__inspect( light["out"], "/light", "bad:attribute" ) )
 
 	def testReadOnlyMetadataSignalling( self ) :
 
@@ -640,6 +640,32 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 			editable = True,
 			edit = customAttributes["attributes"]["testPlug"],
 			editWarning = "Edits to \"test:attr\" may affect other locations in the scene."
+		)
+
+	def testDisabledAttribute( self ) :
+
+		light = GafferSceneTest.TestLight()
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( light["out"] )
+
+		# The value of the attribute isn't editable in this case, but the `enabled`
+		# plug is, so it is considered editable.
+		self.__assertExpectedResult(
+			self.__inspect( light["out"], "/light", "gl:visualiser:scale", None ),
+			source = light["visualiserAttributes"]["scale"],
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			editable = True,
+			edit = light["visualiserAttributes"]["scale"]
+		)
+
+		# Values should be inherited from predecessors in the history.
+		self.__assertExpectedResult(
+			self.__inspect( group["out"], "/group/light", "gl:visualiser:scale", None ),
+			source = light["visualiserAttributes"]["scale"],
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			editable = True,
+			edit = light["visualiserAttributes"]["scale"]
 		)
 
 

@@ -61,6 +61,10 @@ class GAFFERSCENEUI_API ParameterInspector : public AttributeInspector
 
 		IE_CORE_DECLAREMEMBERPTR( ParameterInspector );
 
+	protected :
+
+		GafferScene::SceneAlgo::History::ConstPtr history() const override;
+
 	private :
 
 		IECore::ConstObjectPtr value( const GafferScene::SceneAlgo::History *history ) const override;
