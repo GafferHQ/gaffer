@@ -84,7 +84,6 @@ class ShaderQueryTest( GafferSceneTest.SceneTestCase ):
 		n1 = q.addQuery( Gaffer.IntPlug() )
 		n2 = q.addQuery( Gaffer.Color3fPlug() )
 		n3 = q.addQuery( Gaffer.Box2iPlug() )
-		n4 = q.addQuery( Gaffer.IntPlug() )
 		badPlug = Gaffer.NameValuePlug( "missing", Gaffer.Color3fPlug(), "badPlug" )
 
 		self.assertEqual( q.outPlugFromQuery( n1 ), q["out"][0] )
@@ -106,15 +105,6 @@ class ShaderQueryTest( GafferSceneTest.SceneTestCase ):
 		self.assertEqual( q.queryPlug( q["out"][2]["value"]["min"] ), n3 )
 		self.assertEqual( q.queryPlug( q["out"][2]["value"]["min"]["x"] ), n3 )
 		self.assertRaises( IECore.Exception, q.queryPlug, badPlug )
-
-		q["out"][3].removeChild( q["out"][3]["exists"] )
-		q["out"][3].removeChild( q["out"][3]["value"] )
-
-		self.assertIsNone( q.existsPlugFromQuery( n4 ) )
-		self.assertIsNone( q.valuePlugFromQuery( n4 ) )
-
-		q["out"][3].addChild( Gaffer.FloatPlug( "exists", Gaffer.Plug.Direction.Out ) )
-		self.assertIsNone( q.existsPlugFromQuery( n4 ) )
 
 	def testAddRemoveQuery( self ) :
 
