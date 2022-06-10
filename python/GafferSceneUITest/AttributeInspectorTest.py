@@ -668,6 +668,43 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 			edit = light["visualiserAttributes"]["scale"]
 		)
 
+	def testRegisteredAttribute( self ) :
+
+		light = GafferSceneTest.TestLight()
+
+		editScope = Gaffer.EditScope()
+		editScope.setup( light["out"] )
+		editScope["in"].setInput( light["out"] )
+
+		self.__assertExpectedResult(
+			self.__inspect( editScope["out"], "/light", "gl:visualiser:scale", None ),
+			source = light["visualiserAttributes"]["scale"],
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			editable = True,
+			edit = light["visualiserAttributes"]["scale"]
+		)
+
+		inspection = self.__inspect( editScope["out"], "/light", "gl:visualiser:scale", editScope )
+		edit = inspection.acquireEdit()
+		self.assertEqual(
+			edit,
+			GafferScene.EditScopeAlgo.acquireAttributeEdit(
+				editScope, "/light", "gl:visualiser:scale", createIfNecessary = False
+			)
+		)
+
+		edit["enabled"].setValue( True )
+
+		# With the tweak in place in `editScope`, force the history to be checked again
+		# to make sure we get the right source back.
+
+		self.__assertExpectedResult(
+			self.__inspect( editScope["out"], "/light", "gl:visualiser:scale", editScope ),
+			source = edit,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.EditScope,
+			editable = True,
+			edit = edit
+		)
 
 if __name__ == "__main__" :
 	unittest.main()

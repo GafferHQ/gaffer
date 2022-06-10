@@ -73,6 +73,19 @@ using namespace GafferScene;
 namespace
 {
 
+/// \todo Make this into an API for clients to register attributes and corresponding
+/// default values they want to make available. This is needed to get the value of an
+/// attribute that _could_ exist if the user activates it, allowing it to be discovered
+/// in clients of history related APIs such as `AttributeInspector`.
+typedef std::unordered_map<std::string, const IECore::DataPtr> AttributeRegistry;
+AttributeRegistry g_attributeRegistry {
+	{ "gl:visualiser:scale", new IECore::FloatData( 1.0f ) },
+	{ "gl:visualiser:maxTextureResolution", new IECore::IntData( 512 ) },
+	{ "gl:visualiser:frustum", new IECore::StringData( "whenSelected" ) },
+	{ "gl:light:frustumScale", new IECore::FloatData( 1.0f ) },
+	{ "gl:light:drawingMode", new IECore::StringData( "texture" ) }
+};
+
 SceneProcessorPtr pruningProcessor()
 {
 	SceneProcessorPtr result = new SceneProcessor( "PruningEdits" );
@@ -424,6 +437,12 @@ ConstObjectPtr attributeValue( const ScenePlug *scene, const ScenePlug::ScenePat
 
 	if( !result )
 	{
+		AttributeRegistry::const_iterator registeredAttribute = g_attributeRegistry.find( attribute );
+		if( registeredAttribute != g_attributeRegistry.end() )
+		{
+			return registeredAttribute->second;
+		}
+
 		throw IECore::Exception( boost::str( boost::format( "Attribute \"%s\" does not exist" ) % attribute ) );
 	}
 
@@ -759,7 +778,7 @@ TweakPlug *GafferScene::EditScopeAlgo::acquireAttributeEdit( Gaffer::EditScope *
 
 	ValuePlugPtr valuePlug = PlugAlgo::createPlugFromData( "value", Plug::In, Plug::Default, attributeValue.get() );
 
-	TweakPlugPtr tweakPlug = new TweakPlug( attribute, valuePlug, TweakPlug::Replace, false );
+	TweakPlugPtr tweakPlug = new TweakPlug( attribute, valuePlug, TweakPlug::Create, false );
 
 	auto *attributeTweaks = processor->getChild<AttributeTweaks>( "AttributeTweaks" );
 	attributeTweaks->tweaksPlug()->addChild( tweakPlug );

@@ -657,7 +657,7 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 		)
 		self.assertIsInstance( edit, GafferScene.TweakPlug )
 		self.assertIsInstance( edit["value"], Gaffer.FloatPlug )
-		self.assertEqual( edit["mode"].getValue(), GafferScene.TweakPlug.Mode.Replace )
+		self.assertEqual( edit["mode"].getValue(), GafferScene.TweakPlug.Mode.Create )
 		self.assertEqual( edit["value"].getValue(), 1.0 )
 		self.assertEqual( edit["enabled"].getValue(), False )
 
