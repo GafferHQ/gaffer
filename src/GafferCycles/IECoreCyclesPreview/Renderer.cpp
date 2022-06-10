@@ -2639,7 +2639,7 @@ class CyclesCamera : public IECoreScenePreview::Renderer::ObjectInterface
 			const Imath::V3f scale = Imath::V3f( 1.0f, -1.0f, -1.0f );
 			Imath::M44f matrix;
 
-			if( m_camera->get_motion_position() == ccl::Camera::MOTION_POSITION_START )
+			if( m_camera->get_motion_position() == ccl::MOTION_POSITION_START )
 			{
 				matrix = samples.front();
 				matrix.scale( scale );
@@ -2656,7 +2656,7 @@ class CyclesCamera : public IECoreScenePreview::Renderer::ObjectInterface
 					motion[2] = SocketAlgo::setTransform( matrix );
 				}
 			}
-			else if( m_camera->get_motion_position() == ccl::Camera::MOTION_POSITION_END )
+			else if( m_camera->get_motion_position() == ccl::MOTION_POSITION_END )
 			{
 				matrix = samples.back();
 				matrix.scale( scale );
@@ -3518,11 +3518,11 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 
 			int frameIdx = -1;
-			if( m_scene->camera->get_motion_position() == ccl::Camera::MOTION_POSITION_START )
+			if( m_scene->camera->get_motion_position() == ccl::MOTION_POSITION_START )
 			{
 				frameIdx = 0;
 			}
-			else if( m_scene->camera->get_motion_position() == ccl::Camera::MOTION_POSITION_END )
+			else if( m_scene->camera->get_motion_position() == ccl::MOTION_POSITION_END )
 			{
 				frameIdx = times.size()-1;
 			}
