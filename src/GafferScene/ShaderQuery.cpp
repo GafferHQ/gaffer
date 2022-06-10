@@ -258,13 +258,13 @@ Gaffer::NameValuePlug *ShaderQuery::addQuery(
 {
 	NameValuePlugPtr childQueryPlug = new NameValuePlug(
 		"",
-		plug->createCounterpart( "query", Gaffer::Plug::Direction::In ),
-		"query1",
+		plug->createCounterpart( "query0", Gaffer::Plug::Direction::In ),
+		"query0",
 		Gaffer::Plug::Flags::Default
 	);
 	childQueryPlug->namePlug()->setValue( parameter );
 
-	ValuePlugPtr newOutPlug = new ValuePlug( "out1", Gaffer::Plug::Direction::Out );
+	ValuePlugPtr newOutPlug = new ValuePlug( "out0", Gaffer::Plug::Direction::Out );
 	newOutPlug->addChild(
 		new BoolPlug(
 			"exists",
