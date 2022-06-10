@@ -15,7 +15,7 @@
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
 //
-//      * Neither the name of Image Engine Design nor the names of
+//      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
@@ -34,20 +34,31 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERUSD_USDATTRIBUTES_H
+#define GAFFERUSD_USDATTRIBUTES_H
 
-#include "GafferUSD/USDAttributes.h"
-#include "GafferUSD/USDLayerWriter.h"
+#include "GafferUSD/Export.h"
+#include "GafferUSD/TypeIds.h"
 
-#include "GafferDispatchBindings/TaskNodeBinding.h"
+#include "GafferScene/Attributes.h"
 
-using namespace boost::python;
-using namespace GafferUSD;
-
-BOOST_PYTHON_MODULE( _GafferUSD )
+namespace GafferUSD
 {
 
-	GafferBindings::DependencyNodeClass<USDAttributes>();
-	GafferDispatchBindings::TaskNodeClass<USDLayerWriter>();
+class GAFFERUSD_API USDAttributes : public GafferScene::Attributes
+{
 
-}
+	public :
+
+		USDAttributes( const std::string &name=defaultName<USDAttributes>() );
+		~USDAttributes() override;
+
+		GAFFER_NODE_DECLARE_TYPE( GafferUSD::USDAttributes, USDAttributesTypeId, GafferScene::Attributes );
+
+};
+
+IE_CORE_DECLAREPTR( USDAttributes )
+
+} // namespace GafferUSD
+
+#endif // GAFFERUSD_USDATTRIBUTES_H
