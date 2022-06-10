@@ -17,7 +17,11 @@ API
 ---
 
 - PlugAlgo : Added optional `value` argument to `canSetValueFromData()`.
-- ShaderQuery : Rename `query` and `out` plugs to use indices starting at 0.
+
+Breaking Changes
+----------------
+
+- ShaderQuery : `addQuery()` now creates `query` and `out` plugs with numeric suffixes starting at 0 (rather than 1).
 
 0.62.0.0a3 (relative to 0.62.0.0a2)
 ==========
