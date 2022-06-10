@@ -480,7 +480,7 @@ class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertEqual(
 			set( cm.combinedStatistics().variableNames() ),
-			{ "frame", "framesPerSecond", "image:channelName", "image:tileOrigin" },
+			{ "frame", "framesPerSecond", "image:channelName", "image:tileOrigin", "image:viewName" },
 		)
 
 	def testMatrixPlugConnection( self ) :
