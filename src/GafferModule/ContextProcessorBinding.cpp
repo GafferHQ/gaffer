@@ -44,6 +44,7 @@
 #include "Gaffer/DeleteContextVariables.h"
 #include "Gaffer/TimeWarp.h"
 #include "Gaffer/Loop.h"
+#include "Gaffer/ContextQuery.h"
 
 using namespace boost::python;
 using namespace IECorePython;
@@ -119,6 +120,67 @@ class SetupBasedNodeSerialiser : public NodeSerialiser
 
 };
 
+NameValuePlugPtr addQuery(
+	Gaffer::ContextQuery &query,
+	const ValuePlug &plug,
+	const std::string &variable
+)
+{
+	IECorePython::ScopedGILRelease gilRelease;
+
+	NameValuePlug *result = query.addQuery( &plug, variable );
+
+	return result;
+}
+
+void removeQuery( Gaffer::ContextQuery &query, NameValuePlug &plug )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	query.removeQuery( &plug );
+}
+
+const ValuePlugPtr outPlugFromQueryPlug( const Gaffer::ContextQuery &q, const NameValuePlug &p )
+{
+	return const_cast<ValuePlug *>( q.outPlugFromQueryPlug( &p ) );
+}
+
+const NameValuePlugPtr queryPlugFromOutPlug( const Gaffer::ContextQuery &q, const ValuePlug &p )
+{
+	return const_cast<NameValuePlug *>( q.queryPlugFromOutPlug( &p ) );
+}
+
+const BoolPlugPtr existsPlugFromQueryPlug( Gaffer::ContextQuery &q, const NameValuePlug &p )
+{
+	return const_cast<BoolPlug *>( q.existsPlugFromQueryPlug( &p ) );
+}
+
+const ValuePlugPtr valuePlugFromQueryPlug( Gaffer::ContextQuery &q, const NameValuePlug &p )
+{
+	return const_cast<ValuePlug *>( q.valuePlugFromQueryPlug( &p ) );
+}
+
+class ContextQuerySerialiser : public NodeSerialiser
+{
+	std::string postConstructor( const GraphComponent* component, const std::string& identifier, Serialisation& serialisation ) const override
+	{
+		std::string result = NodeSerialiser::postConstructor( component, identifier, serialisation );
+
+		const Gaffer::ContextQuery* const query = IECore::runTimeCast< const Gaffer::ContextQuery >( component );
+
+		for( const auto &queryPlug : NameValuePlug::Range( *query->queriesPlug() ) )
+		{
+			const Serialisation::Serialiser* serialiser = Serialisation::acquireSerialiser( queryPlug->valuePlug() );
+			result +=
+				identifier + ".addQuery( " +
+				serialiser->constructor( queryPlug->valuePlug(), serialisation ) +
+				" )\n"
+			;
+		}
+
+		return result;
+	}
+};
+
 } // namespace
 
 void GafferModule::bindContextProcessor()
@@ -139,5 +201,15 @@ void GafferModule::bindContextProcessor()
 
 	Serialisation::registerSerialiser( Loop::staticTypeId(), new SetupBasedNodeSerialiser );
 	Serialisation::registerSerialiser( ContextProcessor::staticTypeId(), new SetupBasedNodeSerialiser );
+
+	DependencyNodeClass< Gaffer::ContextQuery >()
+		.def( "addQuery", &addQuery, ( arg( "plug" ), arg( "variable" ) = "" ) )
+		.def( "removeQuery", &removeQuery )
+		.def( "outPlugFromQueryPlug", &outPlugFromQueryPlug )
+		.def( "queryPlugFromOutPlug", &queryPlugFromOutPlug )
+		.def( "existsPlugFromQueryPlug", &existsPlugFromQueryPlug )
+		.def( "valuePlugFromQueryPlug", &valuePlugFromQueryPlug )
+	;
+	Serialisation::registerSerialiser( Gaffer::ContextQuery::staticTypeId(), new ContextQuerySerialiser() );
 
 }

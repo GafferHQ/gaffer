@@ -1,22 +1,66 @@
-0.62.x.x (relative to 0.62.0.0a2)
+0.62.x.x (relative to 0.62.0.0a3)
 ========
 
-> Note : This release requires Arnold version 7.1.0.0 or newer.
+Features
+--------
 
-Fixes
------
+- ContextQuery : Added node to access a context variable value directly without needing to use an expression.
 
-- TransformQuery : Removed unnecessary elements from hash.
+Improvements
+------------
+
+- Outputs :
+  - Added support for `layerName` string parameter, which can be used to customise the naming of channels in EXR outputs. Currently only supported for Arnold renders.
+  - Added support for `layerPerLightGroup` boolean parameter, which automatically splits the outputs into separate layers, one for each light group.
 
 API
 ---
 
+- PlugAlgo : Added optional `value` argument to `canSetValueFromData()`.
+
+Breaking Changes
+----------------
+
+- ShaderQuery : `addQuery()` now creates `query` and `out` plugs with numeric suffixes starting at 0 (rather than 1).
+
+0.62.0.0a3 (relative to 0.62.0.0a2)
+==========
+
+> Note : This release requires Arnold version 7.1.0.0 or newer.
+
+Features
+--------
+
+- Viewer : Added optional raytraced rendering, to provide high quality preview of lighting and shading. Initially only Arnold is supported, but other renderers will be added in future.
+
+Fixes
+-----
+
+- CollectScenes : An empty `rootNameVariable` value no longer causes the creation of a context variable named `""`. Instead, no context variable is created (but the scenes are still collected).
+- TransformQuery : Removed unnecessary elements from hash.
+- ViewportGadget : Fixed bug which could cause `setCamera()` to emit `cameraChangedSignal()` even when the camera was unchanged.
+
+API
+---
+
+- SceneView :
+  - Added `registerRenderer()` and `registeredRenderers()` methods. These allow any suitable `IECoreScenePreview::Renderer` to be used to draw the scene.
+  - Added `renderer.name` plug to control which renderer is used.
+  - Added `renderer.arnold` plug to control Arnold render settings.
 - RenderController : Added `pathForID()`, `pathsForIDs()`, `idForPath()` and `idsForPaths()` methods. These make it possible to identify an object in the scene from a `uint id` AOV.
+- PlugLayout : Improved activator support. The `layout:activator` and `layout:visibilityActivator` metadata may now take boolean values to control activation directly. This is useful when an activator only applies to one plug, or it applies to several but depends on properties of each plug. String values are treated as before, referring to a predefined activator.
+- ViewportGadget : Added a `CameraFlags` enum, which is used in `cameraChangedSignal()` to specify what aspects of the camera have changed.
 
 Breaking Changes
 ----------------
 
 - Arnold : Removed support for Arnold versions prior to 7.1.0.0.
+- CollectScenes : Changed behaviour when `rootNameVariable` is empty.
+- PopupWindow :
+  - Removed `sizeMode` and `closeOnLeave` constructor arguments.
+  - Removed visibility animation.
+  - Removed drag&drop positioning.
+- ViewportGadget : Added a `changes` argument to CameraChangedSignal.
 
 0.62.0.0a2 (relative to 0.62.0.0a1)
 ==========
@@ -149,6 +193,51 @@ Build
   - OpenVDB : Updated to version 9.0.0.
   - OpenColorIO : Updated to version 2.1.1.
   - Cortex : Updated to version 10.4.0.0.
+
+0.61.12.0 (relative to 0.61.11.0)
+=========
+
+Improvements
+------------
+
+- StringPlug : Added support for input connections from StringVectorDataPlugs. The string value is formed by joining the string array using spaces.
+- StringVectorDataPlug : Added support for input connections from StringPlugs. The array value is formed by splitting the string on spaces.
+
+Fixes
+-----
+
+- PlugLayout : Fixed visibility of collapsible layouts with nesting (#4694).
+- Image Node Mix : Fixed incorrect results outside mask data window, and incorrect results when changing inputs.
+- ColorSwatchPlugValueWidget : Fixed popup dialogue for plugs belonging to Tools.
+- Spreadsheet : Fixed loading of files saved in Gaffer 0.62.0.0a2 and later.
+
+0.61.11.0 (relative to 0.61.10.0)
+=========
+
+Features
+--------
+
+- AttributeTweaks : Added node to tweak scene location attributes.
+
+Improvements
+------------
+
+- ShaderQuery and ShaderTweaks : Improved labels of menu items that open shader browsers by adding "..." to the item name.
+
+Fixes
+-----
+
+- SetFilter : Fixed missing set names in `setExpression` context menu. Sets were being listed for nodes directly connected to the filter, but not for nodes downstream of an intermediate filter such as a UnionFilter (#2678).
+- Fixed `NameValue` plugs having a `delete` menu item in their popup menu when they shouldn't. This was broken in 0.61.9.0.
+- PythonEditor : Fixed autocompletion errors triggered by dictionaries with non-string keys.
+- ColorChooserPlugValueWidget/ColorSwatchPlugValueWidget : Fixed handling of errors when computing the plug value.
+- PlugAlgo : Fixed crash in `setValueFromData()` when setting the value of a BoxPlug (other than a Box2iPlug).
+
+API
+---
+
+- TweakPlug : Added functor-based variation of `applyTweak` allowing greater control of how users get and set the data being tweaked. `TweaksPlug::applyTweaks` now uses that method and can be used as a reference implementation.
+- ColorChooser/ColorSwatch : Added `setErrored()` and `getErrored()` methods.
 
 0.61.10.0 (relative to 0.61.9.0)
 =========

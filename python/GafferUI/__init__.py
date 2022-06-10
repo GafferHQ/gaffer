@@ -281,6 +281,7 @@ from . import DependencyNodeUI
 from . import ComputeNodeUI
 from . import RandomUI
 from . import RandomChoiceUI
+from . import ContextQueryUI
 from . import SpreadsheetUI
 from . import ExpressionUI
 from . import BoxUI

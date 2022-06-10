@@ -108,6 +108,10 @@ class GAFFERSCENEUI_API SceneView : public GafferUI::View
 		static void registerShadingMode( const std::string &name, ShadingModeCreator );
 		static void registeredShadingModes( std::vector<std::string> &names );
 
+		using RendererSettingsCreator = std::function<GafferScene::SceneProcessorPtr ()>;
+		static void registerRenderer( const std::string &name, const RendererSettingsCreator &settingsCreator );
+		static std::vector<std::string> registeredRenderers();
+
 	protected :
 
 		void contextChanged( const IECore::InternedString &name ) override;
@@ -128,6 +132,8 @@ class GAFFERSCENEUI_API SceneView : public GafferUI::View
 
 		SceneGadgetPtr m_sceneGadget;
 
+		class Renderer;
+		std::unique_ptr<Renderer> m_renderer;
 		class SelectionMask;
 		std::unique_ptr<SelectionMask> m_selectionMask;
 		class DrawingMode;

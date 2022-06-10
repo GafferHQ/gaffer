@@ -42,6 +42,7 @@
 #include "GafferScene/AttributeQuery.h"
 #include "GafferScene/CustomAttributes.h"
 #include "GafferScene/DeleteObject.h"
+#include "GafferScene/DeleteOutputs.h"
 #include "GafferScene/Grid.h"
 #include "GafferScene/LightToCamera.h"
 #include "GafferScene/PathFilter.h"
@@ -54,6 +55,8 @@
 #include "GafferUI/Style.h"
 
 #include "Gaffer/Context.h"
+#include "Gaffer/MetadataAlgo.h"
+#include "Gaffer/NameSwitch.h"
 #include "Gaffer/StringPlug.h"
 
 #include "IECoreGL/Camera.h"
@@ -85,6 +88,132 @@ using namespace Gaffer;
 using namespace GafferUI;
 using namespace GafferScene;
 using namespace GafferSceneUI;
+
+//////////////////////////////////////////////////////////////////////////
+// SceneView::Render implementation
+//////////////////////////////////////////////////////////////////////////
+
+class SceneView::Renderer : public Gaffer::Signals::Trackable
+{
+
+	public :
+
+		Renderer( SceneView *view )
+			:	m_view( view )
+		{
+			view->addChild( new Plug( "renderer" ) );
+			rendererPlug()->addChild( new StringPlug( "name", Plug::In, "OpenGL" ) );
+
+			m_sceneProcessor = new SceneProcessor;
+			m_sceneProcessor->inPlug()->setInput( m_view->inPlug() );
+
+			NameSwitchPtr settingsSwitch = new NameSwitch( "SettingsSwitch" );
+			settingsSwitch->setup( m_sceneProcessor->inPlug() );
+			settingsSwitch->inPlugs()->getChild<NameValuePlug>( 0 )->valuePlug()->setInput( m_sceneProcessor->inPlug() );
+			settingsSwitch->selectorPlug()->setInput( rendererNamePlug() );
+			m_sceneProcessor->addChild( settingsSwitch );
+
+			for( auto &r : rendererMap() )
+			{
+				SceneProcessorPtr settingsNode = r.second();
+				settingsNode->setName( r.first + "Settings" );
+				settingsNode->inPlug()->setInput( m_sceneProcessor->inPlug() );
+				NameValuePlug *next = static_cast<NameValuePlug *>( settingsSwitch->inPlugs()->next() );
+				next->namePlug()->setValue( r.first );
+				next->valuePlug()->setInput( settingsNode->outPlug() );
+				m_sceneProcessor->addChild( settingsNode );
+
+				string settingsPlugName = r.first;
+				settingsPlugName[0] = std::tolower( settingsPlugName[0] );
+				PlugPtr settingsPlug = new Plug( settingsPlugName );
+				for( auto &plug : Plug::InputRange( *settingsNode ) )
+				{
+					if( plug == settingsNode->inPlug() || !plug->getFlags( Plug::AcceptsInputs ) )
+					{
+						continue;
+					}
+					PlugPtr promoted = plug->createCounterpart( plug->getName(), plug->direction() );
+					settingsPlug->addChild( promoted );
+					plug->setInput( promoted );
+					MetadataAlgo::copy( plug.get(), promoted.get() );
+				}
+				rendererPlug()->addChild( settingsPlug );
+			}
+
+			DeleteOutputsPtr deleteOutputs = new DeleteOutputs;
+			deleteOutputs->inPlug()->setInput( static_cast<NameValuePlug *>( settingsSwitch->outPlug() )->valuePlug() );
+			deleteOutputs->namesPlug()->setValue( "*" );
+			m_sceneProcessor->addChild( deleteOutputs );
+
+			m_sceneProcessor->outPlug()->setInput( deleteOutputs->outPlug() );
+
+			m_view->plugSetSignal().connect( boost::bind( &Renderer::plugSet, this, ::_1 ) );
+		}
+
+		using SettingsCreator = std::function<GafferScene::SceneProcessorPtr ()>;
+
+		static void registerRenderer( const std::string &name, const SettingsCreator &settingsCreator )
+		{
+			rendererMap()[name] = settingsCreator;
+		}
+
+		static std::vector<std::string> registeredRenderers()
+		{
+			vector<string> result;
+			for( const auto &r : rendererMap() )
+			{
+				result.push_back( r.first );
+			}
+			return result;
+		}
+
+		GafferScene::SceneProcessor *preprocessor()
+		{
+			return m_sceneProcessor.get();
+		}
+
+	private :
+
+		Plug *rendererPlug()
+		{
+			return m_view->getChild<Plug>( "renderer" );
+		}
+
+		StringPlug *rendererNamePlug()
+		{
+			return rendererPlug()->getChild<StringPlug>( "name" );
+		}
+
+		void plugSet( const Gaffer::Plug *plug )
+		{
+			if( plug == rendererNamePlug() )
+			{
+				static_cast<SceneGadget *>( m_view->viewportGadget()->getPrimaryChild() )->setRenderer(
+					rendererNamePlug()->getValue()
+				);
+			}
+		}
+
+		using RendererMap = unordered_map<string, SettingsCreator>;
+		static RendererMap &rendererMap()
+		{
+			static RendererMap g_m = {
+				{
+					"OpenGL",
+					[] {
+						SceneProcessorPtr result = new SceneProcessor;
+						result->outPlug()->setInput( result->inPlug() );
+						return result;
+					}
+				}
+			};
+			return g_m;
+		}
+
+		GafferScene::SceneProcessorPtr m_sceneProcessor;
+		SceneView *m_view;
+
+};
 
 //////////////////////////////////////////////////////////////////////////
 // SceneView::SelectionMask implementation
@@ -133,7 +262,9 @@ class SceneView::SelectionMask : public Signals::Trackable
 
 		void updateSelectionMask()
 		{
-			sceneGadget()->setSelectionMask( selectionMaskPlug()->getValue().get() );
+			sceneGadget()->setSelectionMask(
+				selectionMaskPlug()->isSetToDefault() ? nullptr : selectionMaskPlug()->getValue().get()
+			);
 		}
 
 		SceneView *m_view;
@@ -1823,6 +1954,7 @@ SceneView::SceneView( const std::string &name )
 
 	m_sceneGadget->setContext( getContext() );
 
+	m_renderer.reset( new Renderer( this ) );
 	m_selectionMask.reset( new SelectionMask( this ) );
 	m_drawingMode.reset( new DrawingMode( this ) );
 	m_shadingMode.reset( new ShadingMode( this ) );
@@ -1866,6 +1998,10 @@ SceneView::SceneView( const std::string &name )
 	preprocessor->addChild( m_drawingMode->preprocessor() );
 	m_drawingMode->preprocessor()->inPlug()->setInput( m_shadingMode->preprocessor()->outPlug() );
 
+	// add in the node from the Renderer
+
+	preprocessor->addChild( m_renderer->preprocessor() );
+	m_renderer->preprocessor()->inPlug()->setInput( m_drawingMode->preprocessor()->outPlug() );
 
 	// remove motion blur, because the opengl renderer doesn't support it.
 
@@ -1876,7 +2012,7 @@ SceneView::SceneView( const std::string &name )
 	standardOptions->optionsPlug()->getChild<NameValuePlug>( "deformationBlur" )->valuePlug<BoolPlug>()->setValue( false );
 
 	preprocessor->addChild( standardOptions );
-	standardOptions->inPlug()->setInput( m_drawingMode->preprocessor()->outPlug() );
+	standardOptions->inPlug()->setInput( m_renderer->preprocessor()->outPlug() );
 
 	// make the output for the preprocessor
 
@@ -1965,6 +2101,16 @@ void SceneView::registerShadingMode( const std::string &name, ShadingModeCreator
 void SceneView::registeredShadingModes( std::vector<std::string> &names )
 {
 	ShadingMode::registeredShadingModes( names );
+}
+
+void SceneView::registerRenderer( const std::string &name, const RendererSettingsCreator &settingsCreator )
+{
+	return Renderer::registerRenderer( name, settingsCreator );
+}
+
+std::vector<std::string> SceneView::registeredRenderers()
+{
+	return Renderer::registeredRenderers();
 }
 
 void SceneView::contextChanged( const IECore::InternedString &name )

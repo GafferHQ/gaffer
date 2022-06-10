@@ -187,7 +187,10 @@ class CollectScenes::SourceScope : public Context::EditableScope
 
 		void setRoot( const std::string *root )
 		{
-			set( m_rootVariable, root );
+			if( !m_rootVariable.string().empty() )
+			{
+				set( m_rootVariable, root );
+			}
 		}
 
 	private :

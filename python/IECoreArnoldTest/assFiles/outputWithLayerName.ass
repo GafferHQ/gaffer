@@ -1,0 +1,43 @@
+options
+{
+	name options
+	outputs 1 1 STRING
+		"diffuse RGBA filter display diffuseLayer"
+	xres 640
+	yres 480
+	camera camera
+}
+
+gaussian_filter
+{
+	name filter
+}
+
+ieDisplay
+{
+	name display
+	driverType "ClientDisplayDriver"
+	declare displayHost CONSTANT STRING
+	displayHost "localhost"
+	declare displayPort CONSTANT STRING
+	displayPort "1559"
+	declare remoteDisplayType CONSTANT STRING
+	remoteDisplayType "ImageDisplayDriver"
+	declare handle CONSTANT STRING
+	handle "layerNameImage"
+}
+
+persp_camera
+{
+	name camera
+}
+
+sphere
+{
+	name lovelySphere
+	matrix
+	1 0 0 0
+	0 1 0 0
+	0 0 1 0
+	0 0 -3 1
+}

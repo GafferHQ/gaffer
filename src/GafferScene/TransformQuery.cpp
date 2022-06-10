@@ -41,7 +41,7 @@
 
 #include <cassert>
 #include <cmath>
-#include <math.h> // NOTE : M_PI
+#include <cmath> // NOTE : M_PI
 
 namespace
 {

@@ -348,6 +348,7 @@ nodeMenu.append( "/Scene/Attributes/Delete Attributes", GafferScene.DeleteAttrib
 nodeMenu.append( "/Scene/Attributes/Shuffle Attributes", GafferScene.ShuffleAttributes, searchText = "ShuffleAttributes" )
 nodeMenu.append( "/Scene/Attributes/Localise Attributes", GafferScene.LocaliseAttributes, searchText = "LocaliseAttributes" )
 nodeMenu.append( "/Scene/Attributes/Attribute Visualiser", GafferScene.AttributeVisualiser, searchText = "AttributeVisualiser" )
+nodeMenu.append( "/Scene/Attributes/Attribute Tweaks", GafferScene.AttributeTweaks, searchText = "AttributeTweaks" )
 nodeMenu.append( "/Scene/Attributes/Copy Attributes", GafferScene.CopyAttributes, searchText = "CopyAttributes" )
 nodeMenu.append( "/Scene/Attributes/Collect Transforms", GafferScene.CollectTransforms, searchText = "CollectTransforms" )
 nodeMenu.append( "/Scene/Filters/Set Filter", GafferScene.SetFilter, searchText = "SetFilter" )
@@ -553,6 +554,7 @@ nodeMenu.append( "/Utility/Context Variables", Gaffer.ContextVariables, searchTe
 nodeMenu.append( "/Utility/Delete Context Variables", Gaffer.DeleteContextVariables, searchText = "DeleteContextVariables" )
 nodeMenu.append( "/Utility/Time Warp", Gaffer.TimeWarp, searchText = "TimeWarp" )
 nodeMenu.append( "/Utility/Spreadsheet", Gaffer.Spreadsheet )
+nodeMenu.append( "/Utility/Context Query", Gaffer.ContextQuery, searchText = "ContextQuery" )
 
 ## Miscellaneous UI
 ###########################################################################

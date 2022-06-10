@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2022, Cinesite VFX Ltd. All rights reserved.
+#  Copyright (c) 2022, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -39,12 +39,9 @@ import functools
 import six
 
 import IECore
-import IECoreScene
 
 import Gaffer
 import GafferUI
-import GafferScene
-import GafferSceneUI
 
 ##########################################################################
 # Internal utilities
@@ -56,12 +53,12 @@ def __getLabel( plug, parentPlug = None, sanitise = False ) :
 	suffix = ""
 
 	n = plug.node()
-	qPlug = n.queryPlug( plug )
+	qPlug = n.queryPlugFromOutPlug( plug )
 
 	prefix = qPlug["name"].getValue() if qPlug["name"].getValue() != "" else "none"
 
 	if parentPlug is not None :
-		oPlug = n.outPlugFromQuery( qPlug )
+		oPlug = n.outPlugFromQueryPlug( qPlug )
 
 		currentPlug = plug
 		while (
@@ -168,91 +165,36 @@ class _OutputWidget( GafferUI.PlugValueWidget ) :
 
 Gaffer.Metadata.registerNode(
 
-	GafferScene.ShaderQuery,
+	Gaffer.ContextQuery,
 
 	"description",
 	"""
-	Queries shader parameters from a scene location, creating outputs
-	for each parameter.
+	Queries variables from the current context, creating outputs for each variable.
 	""",
 
+	"nodeGadget:type", "GafferUI::AuxiliaryNodeGadget",
+	"nodeGadget:shape", "oval",
+	"uiEditor:nodeGadgetTypes", IECore.StringVectorData( [ "GafferUI::AuxiliaryNodeGadget", "GafferUI::StandardNodeGadget" ] ),
+	"auxiliaryNodeGadget:label", "c",
+	"nodeGadget:focusGadgetVisible", False,
+
 	plugs = {
-
-		"scene" : [
-
-			"description",
-			"""
-			The scene to query the shader for.
-			""",
-
-		],
-
-		"location" : [
-
-			"description",
-			"""
-			The location within the scene to query the shader at.
-			> Note : If the location does not exist then the query will not be
-			> performed and all outputs will be set to their default values.
-			""",
-
-			"plugValueWidget:type", "GafferSceneUI.ScenePathPlugValueWidget",
-			"scenePathPlugValueWidget:scene", "scene",
-			"nodule:type", "",
-
-		],
-
-		"shader" : [
-
-			"description",
-			"""
-			The name of the shader to query.
-			> Note : If the shader does not exist then the query will not be
-			> performed and all outputs will be set to their default values.
-			""",
-
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"presetsPlugValueWidget:allowCustom", True,
-
-			"preset:None", "",
-			"nodule:type", "",
-
-		],
-
-		"inherit" : [
-
-			"description",
-			"""
-			Queries inherited shader assignments if the location has no local
-			assignment of its own.
-			""",
-
-			"nodule:type", "",
-
-		],
 
 		"queries" : [
 
 			"description",
 			"""
-			The shader parameters to be queried - arbitrary numbers of shader
-			parameters may be added as children of this plug via the user interface,
+			The context variables to be queried - arbitrary numbers of context
+			variables may be added as children of this plug via the user interface,
 			or via python. Each child is a `NameValuePlug` whose `name` plug is
-			the shader parameter to query, and whose `value` plug is the default
-			value to use if the shader parameter can not be retrieved.
-
-			The full network of the shader given by `shader` is available
-			to be queried. Parameters on shaders in the network other than the
-			output shader can be specified as `shaderName.parameterName`.
-
-			> Note : If either the shader or parameter does not exist then the
-			> query will not be performed and all outputs will be set to their
-			> default values.
+			the context variable to query, and whose `value` plug is the default
+			value to use if the variable does not exist in the context with an
+			appropriate type.
 			""",
 
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 
-			"layout:customWidget:footer:widgetType", "GafferSceneUI.ShaderQueryUI._ShaderQueryFooter",
+			"layout:customWidget:footer:widgetType", "GafferUI.ContextQueryUI._ContextQueryFooter",
 			"layout:customWidget:footer:index", -1,
 
 			"nodule:type", "",
@@ -263,10 +205,8 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The default value to output if the parameter does not exist.
+			A pair of variable name to query and default value.
 			""",
-
-			"spreadsheet:columnName", functools.partial( __getLabel, parentPlug = "queries", sanitise = True ),
 
 		],
 
@@ -274,7 +214,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The name of the parameter to query.
+			The name of the variable to query.
 			""",
 
 		],
@@ -283,7 +223,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The value to output if the parameter does not exist.
+			The value to output if the variable does not exist.
 			""",
 
 		],
@@ -301,8 +241,8 @@ Gaffer.Metadata.registerNode(
 			"layout:section", "Settings.Outputs",
 
 			"nodule:type", "GafferUI::CompoundNodule",
-			"noduleLayout:section", "right",
 			"noduleLayout:spacing", 0.4,
+			"noduleLayout:customGadget:addButton:gadgetType", ""
 
 		],
 
@@ -315,10 +255,9 @@ Gaffer.Metadata.registerNode(
 
 			"label", functools.partial( __getLabel, parentPlug = ""),
 
-			"plugValueWidget:type", "GafferSceneUI.ShaderQueryUI._OutputWidget",
+			"plugValueWidget:type", "GafferUI.ContextQueryUI._OutputWidget",
 
 			"nodule:type", "GafferUI::CompoundNodule",
-			"noduleLayout:section", "right",
 
 		],
 
@@ -326,13 +265,10 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Outputs true if the shader, location and parameter exist, otherwise
-			false.
+			Outputs true if the variable exists in the context, and is a compatible type.
 			""",
 
 			"noduleLayout:label", functools.partial( __getLabel, parentPlug = "exists" ),
-
-			"noduleLayout:section", "right",
 
 		],
 
@@ -340,12 +276,9 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Outputs the value of the specified parameter, or the default value
-			if the parameter does not exist.
+			Outputs the value of the specified variable, or the default value
+			if the variable does not exist ( or is incompatible ).
 			""",
-
-			"noduleLayout:section", "right",
-			"noduleLayout:spacing", 0.2,
 
 		],
 
@@ -353,71 +286,16 @@ Gaffer.Metadata.registerNode(
 
 			"noduleLayout:label", functools.partial( __getLabel, parentPlug = "values" ),
 
-			"noduleLayout:section", "right",
-
 		],
 
 	}
 )
 
 ##########################################################################
-# Internal utilities
+# _ContextQueryFooter
 ##########################################################################
 
-def _shaderQueryNode( plugValueWidget ) :
-
-	# The plug may not belong to a ShaderQuery node
-	# directly. Instead it may have been promoted
-	# elsewhere and be driving a target plug on a
-	# ShaderQuery node.
-
-	def walkOutputs( plug ) :
-
-		if isinstance( plug.node(), GafferScene.ShaderQuery ) :
-			return plug.node()
-
-		for output in plug.outputs() :
-			node = walkOutputs( output )
-			if node is not None :
-				return node
-
-	return walkOutputs( plugValueWidget.getPlug() )
-
-def _pathsFromLocation( plugValueWidget ) :
-
-	node = _shaderQueryNode( plugValueWidget )
-	if node is None :
-		return []
-
-	return [ node["location"].getValue() ]
-
-def _shaderAttributes( plugValueWidget, paths, affectedOnly ) :
-
-	result = {}
-	node = _shaderQueryNode( plugValueWidget )
-	if node is None :
-		return result
-
-	with plugValueWidget.getContext() :
-		useFullAttr = node["inherit"].getValue()
-		attributeNamePatterns = node["shader"].getValue() if affectedOnly else "*"
-		for path in paths :
-			attributes = node["scene"].fullAttributes( path ) if useFullAttr else node["scene"].attributes( path )
-			for name, attribute in attributes.items() :
-				if not IECore.StringAlgo.matchMultiple( name, attributeNamePatterns ) :
-					continue
-				if not isinstance( attribute, IECoreScene.ShaderNetwork ) or not len( attribute ) :
-					continue
-				result.setdefault( path, {} )[name] = attribute
-
-	return result
-
-
-##########################################################################
-# _ShaderQueryFooter
-##########################################################################
-
-class _ShaderQueryFooter( GafferUI.PlugValueWidget ) :
+class _ContextQueryFooter( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug ) :
 
@@ -450,35 +328,40 @@ class _ShaderQueryFooter( GafferUI.PlugValueWidget ) :
 
 		result = IECore.MenuDefinition()
 
-		result.append(
-			"/From Location...",
-			{
-				"command" : Gaffer.WeakMethod( self.__browseLocationShaders )
-			}
-		)
-
-		result.append( "/FromPathsDivider", { "divider" : True } )
-
 		for item in [
-			Gaffer.BoolPlug,
-			Gaffer.FloatPlug,
-			Gaffer.IntPlug,
+			Gaffer.BoolPlug(),
+			Gaffer.FloatPlug(),
+			Gaffer.IntPlug(),
 			"NumericDivider",
-			Gaffer.StringPlug,
+			Gaffer.StringPlug(),
 			"StringDivider",
-			Gaffer.V2iPlug,
-			Gaffer.V3iPlug,
-			Gaffer.V2fPlug,
-			Gaffer.V3fPlug,
+			Gaffer.V2iPlug(),
+			Gaffer.V3iPlug(),
+			Gaffer.V2fPlug(),
+			Gaffer.V3fPlug(),
 			"VectorDivider",
-			Gaffer.Color3fPlug,
-			Gaffer.Color4fPlug,
+			Gaffer.Color3fPlug(),
+			Gaffer.Color4fPlug(),
+			"ColorDivider",
+			Gaffer.Box2iPlug(),
+			Gaffer.Box2fPlug(),
+			Gaffer.Box3iPlug(),
+			Gaffer.Box3fPlug(),
+			"BoxDivider",
+			Gaffer.FloatVectorDataPlug( defaultValue = IECore.FloatVectorData() ),
+			Gaffer.IntVectorDataPlug( defaultValue = IECore.IntVectorData() ),
+			Gaffer.StringVectorDataPlug( defaultValue = IECore.StringVectorData() )
 		] :
 			if isinstance( item, six.string_types ) :
 				result.append( "/" + item, { "divider": True } )
 			else :
+				name = type( item ).__name__.replace( "Plug", "" )
+				if name == "StringVectorData":
+					result.append( "/Array/NumericDivider", { "divider": True } )
+				if "Vector" in name:
+					name = "Array/" + name.split( "Vector" )[0]
 				result.append(
-					"/" + item.__name__.replace( "Plug", "" ),
+					"/" + name,
 					{
 						"command" : functools.partial( Gaffer.WeakMethod( self.__addQuery ), "", item ),
 					}
@@ -486,45 +369,13 @@ class _ShaderQueryFooter( GafferUI.PlugValueWidget ) :
 
 		return result
 
-	def __browseLocationShaders( self ) :
-
-		paths = _pathsFromLocation( self )
-
-		shaderAttributes = _shaderAttributes( self, paths, affectedOnly = True )
-
-		shaderNetworks = set().union( *[ set( a.values() ) for a in shaderAttributes.values() ] )
-
-		browser = GafferSceneUI.ShaderUI._ShaderParameterDialogue( shaderNetworks, "Location Shaders" )
-
-		queries = browser.waitForParameters( parentWindow = self.ancestor( GafferUI.ScriptWindow ) )
-
-		if queries is not None :
-			for shaderName, parameter in queries :
-				for network in shaderNetworks :
-					if shaderName in network.shaders() and parameter in network.shaders()[shaderName].parameters :
-						self.__addQuery(
-							shaderName + "." + parameter,
-							network.shaders()[shaderName].parameters[parameter]
-						)
-
-						break
-
-	def __addQuery( self, name, plugTypeOrValue ) :
+	def __addQuery( self, name, templatePlug ) :
 
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 
 			node = self.getPlug().node()
 
-			if isinstance( plugTypeOrValue, IECore.Data ) :
-				dummyPlug = Gaffer.PlugAlgo.createPlugFromData(
-					"dummyPlug",
-					Gaffer.Plug.Direction.In,
-					Gaffer.Plug.Flags.Default,
-					plugTypeOrValue
-				)
-				node.addQuery( dummyPlug, name)
-			else:
-				node.addQuery( plugTypeOrValue(), name)
+			node.addQuery( templatePlug, name )
 
 	def __updateQueryMetadata( self, plug ) :
 
@@ -537,79 +388,68 @@ class _ShaderQueryFooter( GafferUI.PlugValueWidget ) :
 			if qPlug is not None and qPlug["name"] == plug :
 
 				Gaffer.Metadata.plugValueChangedSignal( node )(
-					node.outPlugFromQuery( qPlug ),
+					node.outPlugFromQueryPlug( qPlug ),
 					"label",
 					Gaffer.Metadata.ValueChangedReason.StaticRegistration
 				)
 
 ##########################################################################
-# PlugValueWidget context menu
+# Popup menus
 ##########################################################################
-
-def __setShaderFromLocationMenuDefinition( menu ) :
-
-	plugValueWidget = menu.ancestor( GafferUI.PlugValueWidget )
-	paths = _pathsFromLocation( plugValueWidget )
-
-	shaderAttributes = _shaderAttributes( plugValueWidget, paths, affectedOnly = False )
-	names = set().union( *[ set( a.keys() ) for a in shaderAttributes.values() ] )
-
-	result = IECore.MenuDefinition()
-	for name in sorted( names ) :
-		result.append(
-			"/" + name,
-			{
-				"command" : functools.partial( __setShader, plugValueWidget.getPlug(), name ),
-				"active" : not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( plugValueWidget.getPlug() ),
-			}
-		)
-
-	return result
-
-def __setShader( plug, value ) :
-
-	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
-		plug.setValue( value )
-
-def __plugPopupMenu( menuDefinition, plugValueWidget ) :
-
-	plug = plugValueWidget.getPlug()
-	if plug is None :
-		return
-
-	node = plug.node()
-	if not isinstance( node, GafferScene.ShaderQuery ) :
-		return
-
-	if plug != node["shader"] :
-		return
-
-	menuDefinition.prepend( "/ShaderQueryDivider/", { "divider" : True } )
-	menuDefinition.prepend( "/From Location/", { "subMenu" : __setShaderFromLocationMenuDefinition } )
-
-GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu, scoped = False )
-
-
-##########################################################################
-# Delete Plug
-##########################################################################
-
-
-def __plugPopupMenu( menuDefinition, plugValueWidget ) :
-
-	readOnlyUI = plugValueWidget.getReadOnly()
-	plug = plugValueWidget.getPlug().ancestor( Gaffer.NameValuePlug )
-
-	if plug is not None and isinstance( plug.node(), GafferScene.ShaderQuery ) :
-
-		if len( menuDefinition.items() ) :
-			menuDefinition.append( "/DeleteDivider", { "divider" : True } )
-
-		menuDefinition.append( "/Delete", { "command" : functools.partial( __deletePlug, plug ), "active" : not readOnlyUI and not Gaffer.MetadataAlgo.readOnly( plug ) } )
 
 def __deletePlug( plug ) :
 
 	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
 		plug.node().removeQuery( plug )
+
+def __createContextQuery( plug ) :
+
+	node = plug.node()
+	parentNode = node.ancestor( Gaffer.Node )
+
+	with Gaffer.UndoScope( node.scriptNode() ) :
+
+		contextQueryNode = Gaffer.ContextQuery()
+		parentNode.addChild( contextQueryNode )
+
+		contextQueryNode.addQuery( plug, "" )
+		plug.setInput( contextQueryNode["out"][0]["value"] )
+
+	GafferUI.NodeEditor.acquire( contextQueryNode )
+
+def __plugPopupMenu( menuDefinition, plugValueWidget ) :
+
+	readOnlyUI = plugValueWidget.getReadOnly()
+	queryPlug = plugValueWidget.getPlug().ancestor( Gaffer.NameValuePlug )
+
+	# For Query plugs on a ContextQuery, we allow deleting them
+	if queryPlug is not None and isinstance( queryPlug.node(), Gaffer.ContextQuery ) :
+
+		if len( menuDefinition.items() ) :
+			menuDefinition.append( "/DeleteDivider", { "divider" : True } )
+
+		menuDefinition.append( "/Delete", { "command" : functools.partial( __deletePlug, queryPlug ), "active" : not readOnlyUI and not Gaffer.MetadataAlgo.readOnly( queryPlug ) } )
+		return
+
+	# For ValuePlug in general, we offer the option to drive them with ContextQuery
+	plug = plugValueWidget.getPlug()
+	if not isinstance( plug, Gaffer.ValuePlug ) :
+		return
+
+	node = plug.node()
+	if node is None or node.parent() is None :
+		return
+
+	input = plug.getInput()
+	if input is not None or not plugValueWidget._editable() or Gaffer.MetadataAlgo.readOnly( plug ) or readOnlyUI:
+		return
+
+	menuDefinition.prepend( "/ContextQueryDivider", { "divider" : True } )
+	menuDefinition.prepend(
+		"/Create Context Query...",
+		{
+			"command" : functools.partial( __createContextQuery, plug )
+		}
+	)
 
 GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu, scoped = False )

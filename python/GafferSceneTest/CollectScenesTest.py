@@ -487,5 +487,28 @@ class CollectScenesTest( GafferSceneTest.SceneTestCase ) :
 		collect = GafferScene.CollectScenes()
 		self.assertScenesEqual( collect["out"], GafferScene.ScenePlug() )
 
+	def testNoContextVariable( self ) :
+
+		sphere = GafferScene.Sphere()
+
+		collect = GafferScene.CollectScenes()
+		collect["in"].setInput( sphere["out"] )
+		collect["rootNames"].setValue( IECore.StringVectorData( [ "/sphere1", "/group/sphere2", "/group/sphere3" ] ) )
+		collect["sourceRoot"].setValue( "/sphere" )
+
+		collect["rootNameVariable"].setValue( "" )
+
+		with Gaffer.ContextMonitor( sphere ) as contextMonitor :
+
+			self.assertSceneValid( collect["out"] )
+			for path in collect["rootNames"].getValue() :
+				self.assertPathHashesEqual( collect["out"], path, sphere["out"], "/sphere" )
+				self.assertPathsEqual( collect["out"], path, sphere["out"], "/sphere" )
+
+		self.assertEqual(
+			set( contextMonitor.combinedStatistics().variableNames() ),
+			{ "frame", "framesPerSecond", "scene:path" }
+		)
+
 if __name__ == "__main__":
 	unittest.main()

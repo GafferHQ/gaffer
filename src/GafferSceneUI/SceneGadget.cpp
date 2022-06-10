@@ -44,10 +44,12 @@
 #include "Gaffer/BackgroundTask.h"
 
 #include "boost/bind/bind.hpp"
+#include "boost/bind/placeholders.hpp"
 
 #include "tbb/enumerable_thread_specific.h"
 
 using namespace std;
+using namespace boost::placeholders;
 using namespace Imath;
 using namespace IECore;
 using namespace IECoreGL;
@@ -406,7 +408,7 @@ void SceneGadget::setRenderer( IECore::InternedString name )
 
 	if( ancestor<ViewportGadget>() )
 	{
-		updateCamera();
+		updateCamera( ViewportGadget::CameraFlags::All );
 	}
 }
 
@@ -879,15 +881,24 @@ void SceneGadget::updateRenderer()
 	m_updateTask->waitFor( 0.1 );
 }
 
-void SceneGadget::updateCamera()
+void SceneGadget::updateCamera( GafferUI::ViewportGadget::CameraFlags changes )
 {
 	cancelUpdateAndPauseRenderer();
 
-	m_camera.reset();
 	const ViewportGadget *viewport = ancestor<ViewportGadget>();
 	IECoreScenePreview::Renderer::AttributesInterfacePtr cameraAttributes = m_renderer->attributes( g_emptyCompoundObject.get() );
-	m_camera = m_renderer->camera( g_cameraName->readable(), viewport->getCamera().get(), cameraAttributes.get() );
-	m_camera->transform( viewport->getCameraTransform() );
+
+	if( !m_camera || static_cast<bool>( changes & ViewportGadget::CameraFlags::Camera ) )
+	{
+		m_camera.reset();
+		m_camera = m_renderer->camera( g_cameraName->readable(), viewport->getCamera().get(), cameraAttributes.get() );
+		changes |= ViewportGadget::CameraFlags::Transform;
+	}
+
+	if( static_cast<bool>( changes & ViewportGadget::CameraFlags::Transform ) )
+	{
+		m_camera->transform( viewport->getCameraTransform() );
+	}
 
 	if( !m_controller->updateRequired() )
 	{
@@ -918,10 +929,10 @@ void SceneGadget::visibilityChanged()
 		if( auto viewport = ancestor<ViewportGadget>() )
 		{
 			m_viewportChangedConnection = viewport->viewportChangedSignal().connect(
-				boost::bind( &SceneGadget::updateCamera, this )
+				boost::bind( &SceneGadget::updateCamera, this, ViewportGadget::CameraFlags::Camera )
 			);
 			m_viewportCameraChangedConnection = viewport->cameraChangedSignal().connect(
-				boost::bind( &SceneGadget::updateCamera, this )
+				boost::bind( &SceneGadget::updateCamera, this, ::_2 )
 			);
 		}
 	}

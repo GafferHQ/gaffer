@@ -54,8 +54,10 @@ from Qt import QtWidgets
 #	- "<layoutName>:index" controls ordering of plugs within the layout
 #	- "<layoutName>:section" places the plug in a named section of the layout
 #	- "<layoutName>:divider" specifies whether or not a plug should be followed by a divider
-#	- "<layoutName>:activator" the name of an activator to control editability
-#	- "<layoutName>:visibilityActivator" the name of an activator to control visibility
+#	- "<layoutName>:activator" the name of an activator to control editability,
+#	  or a boolean value to control it directly
+#	- "<layoutName>:visibilityActivator" the name of an activator to control visibility,
+#	  or a boolean value to control it directly
 #	- "<layoutName>:accessory" groups as an accessory to the previous widget
 #	- "<layoutName>:width" gives a specific width to the plug's widget
 #
@@ -328,10 +330,15 @@ class PlugLayout( GafferUI.Widget ) :
 
 		activators = { k : v.value for k, v in activators.items() } # convert CompoundData of BoolData to dict of booleans
 
-		def active( activatorName ) :
+		def active( activatorMetadata ) :
 
-			result = True
-			if activatorName :
+			if activatorMetadata is None or activatorMetadata == "" :
+				return True
+			elif isinstance( activatorMetadata, bool ) :
+				return activatorMetadata
+			else :
+				assert( isinstance( activatorMetadata, str ) )
+				activatorName = activatorMetadata
 				result = activators.get( activatorName )
 				if result is None :
 					with self.getContext() :
@@ -345,7 +352,7 @@ class PlugLayout( GafferUI.Widget ) :
 					result = result if result is not None else False
 					activators[activatorName] = result
 
-			return result
+				return result
 
 		for item, widget in self.__widgets.items() :
 			if widget is not None :
@@ -764,7 +771,10 @@ class _CollapsibleLayout( _Layout ) :
 
 			collapsible.getChild().update( subsection )
 
-			collapsible.setVisible( any ( [ w.getVisible() for w in subsection.widgets ] ) )
+			collapsible.setVisible(
+				any( [ w.getVisible() for w in subsection.widgets ] ) or
+				any( [ w.getVisible() for w in collapsible.getChild().__collapsibles.values() ] )
+			)
 
 			collapsible.getCornerWidget().setText(
 				"<small>" + "&nbsp;( " + subsection.summary + " )</small>" if subsection.summary else ""

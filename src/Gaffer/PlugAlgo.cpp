@@ -638,7 +638,7 @@ bool setBoxPlugValue( PlugType *plug, const Data *value )
 	bool success = true;
 	for( size_t i = 0, eI = plug->children().size(); i < eI; ++i )
 	{
-		V2iPlug *c = plug->template getChild<V2iPlug>( i );
+		typename PlugType::ChildType *c = plug->template getChild<typename PlugType::ChildType>( i );
 		for( size_t j = 0, eJ = c->children().size(); j < eJ; ++j )
 		{
 			ValuePlug *gc = c->template getChild<ValuePlug>( j );
@@ -646,6 +646,82 @@ bool setBoxPlugValue( PlugType *plug, const Data *value )
 		}
 	}
 	return success;
+}
+
+bool canSetNumericPlugValue( const Data *value )
+{
+	if( !value )
+	{
+		return true;  // Data type not specified, so it could be a match
+	}
+
+	switch( value->typeId() )
+	{
+		case FloatDataTypeId :
+		case IntDataTypeId :
+		case BoolDataTypeId :
+			return true;
+		default :
+			return false;
+	}
+}
+
+template<typename PlugType>
+bool canSetTypedDataPlugValue( const Data *value )
+{
+	if( !value )
+	{
+		return true;  // Data type not specified, so it could be a match
+	}
+
+	if( runTimeCast<const typename PlugType::ValueType>( value ) )
+	{
+		return true;
+	}
+	return false;
+}
+
+bool canSetCompoundNumericPlugValue( const Data *value )
+{
+	if( !value )
+	{
+		return true;  // Data type not specified, so it could be a match
+	}
+
+	switch( value->typeId() )
+	{
+		case Color4fDataTypeId :
+		case Color3fDataTypeId :
+		case V3fDataTypeId :
+		case V2fDataTypeId :
+		case V3iDataTypeId :
+		case V2iDataTypeId :
+		case FloatDataTypeId :
+		case IntDataTypeId :
+		case BoolDataTypeId :
+			return true;
+		default :
+			return false;
+	}
+}
+
+bool canSetBoxPlugValue( const Data *value )
+{
+	if( !value )
+	{
+		return true;  // Data type not specified, so it could be a match
+	}
+
+	switch( value->typeId() )
+	{
+		case Box3fDataTypeId :
+		case Box2fDataTypeId :
+		case Box3iDataTypeId :
+		case Box2iDataTypeId :
+			return true;
+		default :
+			return false;
+	}
 }
 
 }  // namespace
@@ -656,32 +732,51 @@ namespace Gaffer
 namespace PlugAlgo
 {
 
-bool canSetValueFromData( const ValuePlug *plug )
+bool canSetValueFromData( const ValuePlug *plug, const IECore::Data *value )
 {
-	switch( (Gaffer::TypeId)plug->typeId() )
+	switch( static_cast<Gaffer::TypeId>( plug->typeId() ) )
 	{
 		case Gaffer::BoolPlugTypeId:
 		case Gaffer::FloatPlugTypeId:
 		case Gaffer::IntPlugTypeId:
+			return canSetNumericPlugValue( value );
 		case Gaffer::BoolVectorDataPlugTypeId:
+			return canSetTypedDataPlugValue<BoolVectorDataPlug>( value );
 		case Gaffer::FloatVectorDataPlugTypeId:
+			return canSetTypedDataPlugValue<FloatVectorDataPlug>( value );
 		case Gaffer::IntVectorDataPlugTypeId:
+			return canSetTypedDataPlugValue<IntVectorDataPlug>( value );
 		case Gaffer::StringPlugTypeId:
+			if( !value )
+			{
+				return true;  // Data type not specified, so it could be a match
+			}
+			switch( value->typeId() )
+			{
+				case IECore::StringDataTypeId:
+				case IECore::InternedStringDataTypeId:
+					return true;
+				default:
+					return false;
+			}
 		case Gaffer::StringVectorDataPlugTypeId:
+			return canSetTypedDataPlugValue<StringVectorDataPlug>( value );
 		case Gaffer::InternedStringVectorDataPlugTypeId:
+			return canSetTypedDataPlugValue<InternedStringVectorDataPlug>( value );
 		case Gaffer::Color3fPlugTypeId:
 		case Gaffer::Color4fPlugTypeId:
 		case Gaffer::V3fPlugTypeId:
 		case Gaffer::V3iPlugTypeId:
 		case Gaffer::V2fPlugTypeId:
 		case Gaffer::V2iPlugTypeId:
+			return canSetCompoundNumericPlugValue( value );
 		case Gaffer::Box3fPlugTypeId:
 		case Gaffer::Box3iPlugTypeId:
 		case Gaffer::Box2fPlugTypeId:
 		case Gaffer::Box2iPlugTypeId:
-			return true;
+			return canSetBoxPlugValue( value );
 		default:
-			break;
+			return false;
 	}
 
 	return false;

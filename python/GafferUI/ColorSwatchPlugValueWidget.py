@@ -70,9 +70,15 @@ class ColorSwatchPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def _updateFromPlugs( self ) :
 
+		errored = False
+		value = imath.Color4f( 0 )
 		with self.getContext() :
-			value = _colorFromPlugs( self.getPlugs() )
+			try :
+				value = _colorFromPlugs( self.getPlugs() )
+			except :
+				errored = True
 
+		self.__swatch.setErrored( errored )
 		self.__swatch.setColor( value )
 
 	def __buttonPress( self, widget, event ) :
@@ -159,6 +165,14 @@ class _ColorPlugValueDialogue( GafferUI.ColorChooserDialogue ) :
 		plug = next( iter( plugs ) )
 
 		script = plug.node().scriptNode()
+		if script is None :
+			# Plug might be part of the UI rather than the node graph (e.g. a
+			# Tool or View setting). Find the script.
+			view = plug.ancestor( GafferUI.View )
+			if view is not None :
+				script = view["in"].getInput().node().scriptNode()
+
+		assert( script is not None )
 		scriptWindow = GafferUI.ScriptWindow.acquire( script )
 
 		for window in scriptWindow.childWindows() :

@@ -124,13 +124,14 @@ list gadgetsAt2( ViewportGadget &v, const Imath::Box2f &region, Gadget::Layer fi
 	return result;
 }
 
-struct UnarySlotCaller
+struct ViewportGadgetSlotCaller
 {
-	void operator()( boost::python::object slot, ViewportGadgetPtr g )
+	template<typename... Args>
+	void operator()( boost::python::object slot, ViewportGadgetPtr g, Args&&... args )
 	{
 		try
 		{
-			slot( g );
+			slot( g, std::forward<Args>( args )... );
 		}
 		catch( const error_already_set &e )
 		{
@@ -194,12 +195,21 @@ void GafferUIModule::bindViewportGadget()
 		.def( "renderRequestSignal", &ViewportGadget::renderRequestSignal, return_internal_reference<1>() )
 	;
 
+	enum_<ViewportGadget::CameraFlags>( "CameraFlags" )
+		.value( "None_", ViewportGadget::CameraFlags::None )
+		.value( "Camera", ViewportGadget::CameraFlags::Camera )
+		.value( "Transform", ViewportGadget::CameraFlags::Transform )
+		.value( "CenterOfInterest", ViewportGadget::CameraFlags::CenterOfInterest )
+		.value( "All", ViewportGadget::CameraFlags::All )
+	;
+
 	enum_<ViewportGadget::DragTracking>( "DragTracking" )
 		.value( "NoDragTracking", ViewportGadget::NoDragTracking )
 		.value( "XDragTracking", ViewportGadget::XDragTracking )
 		.value( "YDragTracking", ViewportGadget::YDragTracking )
 	;
 
-	SignalClass<ViewportGadget::UnarySignal, DefaultSignalCaller<ViewportGadget::UnarySignal>, UnarySlotCaller>( "UnarySignal" );
+	SignalClass<ViewportGadget::UnarySignal, DefaultSignalCaller<ViewportGadget::UnarySignal>, ViewportGadgetSlotCaller>( "UnarySignal" );
+	SignalClass<ViewportGadget::CameraChangedSignal, DefaultSignalCaller<ViewportGadget::CameraChangedSignal>, ViewportGadgetSlotCaller>( "UnarySignal" );
 
 }

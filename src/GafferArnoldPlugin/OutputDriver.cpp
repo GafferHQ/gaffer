@@ -47,7 +47,7 @@
 #include "ai_universe.h"
 #include "ai_version.h"
 
-#include <stdio.h>
+#include <cstdio>
 
 using namespace Imath;
 using namespace IECore;
@@ -159,10 +159,10 @@ void driverOpen( AtNode *node, struct AtOutputIterator *iterator, AtBBox2 displa
 			namePrefix = std::string( name ) + ".";
 		}
 
-		const StringData *layerName = parameters->member< StringData >( "layerName" );
-		if( layerName && layerName->readable() != "" )
+		const AtString layerName = AiOutputIteratorGetLayerName( iterator );
+		if( layerName.length() )
 		{
-			namePrefix = layerName->readable() + ".";
+			namePrefix = std::string( layerName.c_str() ) + ".";
 		}
 
 		switch( pixelType )

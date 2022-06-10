@@ -414,10 +414,7 @@ class _InspectorWidget( GafferUI.Widget ) :
 
 		else :
 
-			# See todo in `PlugPopup._PopupWindow`
-			PopupWindow = GafferUI.PlugPopup.__bases__[0]
-
-			with PopupWindow() as self.__popup :
+			with GafferUI.PopupWindow() as self.__popup :
 				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 					GafferUI.Image( "warningSmall.png" )
 					GafferUI.Label( "<h4>{}</h4>".format(

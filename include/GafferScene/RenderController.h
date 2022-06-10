@@ -61,7 +61,7 @@ class GAFFERSCENE_API RenderController : public Gaffer::Signals::Trackable
 	public :
 
 		RenderController( const ConstScenePlugPtr &scene, const Gaffer::ConstContextPtr &context, const IECoreScenePreview::RendererPtr &renderer );
-		~RenderController();
+		~RenderController() override;
 
 		// Renderer, scene and expansion
 		// =============================

@@ -160,6 +160,7 @@ from .AttributeQueryTest import AttributeQueryTest
 from .NameSwitchTest import NameSwitchTest
 from .CryptomatteTest import CryptomatteTest
 from .ShaderQueryTest import ShaderQueryTest
+from .AttributeTweaksTest import AttributeTweaksTest
 
 from .IECoreScenePreviewTest import *
 from .IECoreGLPreviewTest import *

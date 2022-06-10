@@ -1579,7 +1579,7 @@ Animation::Key *Animation::Key::prevKey()
 
 const Animation::Key *Animation::Key::nextKey() const
 {
-	const Key* k = 0;
+	const Key* k = nullptr;
 
 	if( m_parent && m_active )
 	{
@@ -1598,7 +1598,7 @@ const Animation::Key *Animation::Key::nextKey() const
 
 const Animation::Key *Animation::Key::prevKey() const
 {
-	const Key* k = 0;
+	const Key* k = nullptr;
 
 	if( m_parent && m_active )
 	{
@@ -2311,7 +2311,7 @@ Animation::Key *Animation::CurvePlug::finalKey()
 
 const Animation::Key *Animation::CurvePlug::firstKey() const
 {
-	const Key* k = 0;
+	const Key* k = nullptr;
 
 	if( ! m_keys.empty() )
 	{
@@ -2323,7 +2323,7 @@ const Animation::Key *Animation::CurvePlug::firstKey() const
 
 const Animation::Key *Animation::CurvePlug::finalKey() const
 {
-	const Key* k = 0;
+	const Key* k = nullptr;
 
 	if( ! m_keys.empty() )
 	{
@@ -2629,7 +2629,7 @@ const char* Animation::toString( const Animation::Interpolation interpolation )
 			return "Bezier";
 		default:
 			assert( 0 );
-			return 0;
+			return nullptr;
 	}
 }
 
@@ -2643,7 +2643,7 @@ const char* Animation::toString( const Animation::Direction direction )
 			return "Out";
 		default:
 			assert( 0 );
-			return 0;
+			return nullptr;
 	}
 }
 
@@ -2660,7 +2660,7 @@ const char* Animation::toString( const Animation::TieMode mode )
 			return "Scale";
 		default:
 			assert( 0 );
-			return 0;
+			return nullptr;
 	}
 }
 

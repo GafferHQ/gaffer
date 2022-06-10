@@ -37,6 +37,8 @@
 #ifndef GAFFERSCENE_TWEAKPLUG_INL
 #define GAFFERSCENE_TWEAKPLUG_INL
 
+#include "Gaffer/PlugAlgo.h"
+
 namespace GafferScene
 {
 
@@ -50,6 +52,92 @@ template<typename T>
 const T *TweakPlug::valuePlug() const
 {
 	return IECore::runTimeCast<const T>( valuePlugInternal() );
+}
+
+template<class GetDataFunctor, class SetDataFunctor>
+bool TweakPlug::applyTweak(
+	GetDataFunctor &&getDataFunctor,
+	SetDataFunctor &&setDataFunctor,
+	MissingMode missingMode
+) const
+{
+	if( !enabledPlug()->getValue() )
+	{
+		return false;
+	}
+
+	const std::string name = namePlug()->getValue();
+	if( name.empty() )
+	{
+		return false;
+	}
+
+	const Mode mode = static_cast<Mode>( modePlug()->getValue() );
+
+	if( mode == GafferScene::TweakPlug::Remove )
+	{
+		return setDataFunctor( name,  nullptr );
+	}
+
+	const IECore::Data *currentValue = getDataFunctor( name );
+	IECore::DataPtr newData = Gaffer::PlugAlgo::getValueAsData( valuePlug() );
+	if( !newData )
+	{
+		throw IECore::Exception(
+			boost::str( boost::format( "Cannot apply tweak to \"%s\" : Value plug has unsupported type \"%s\"" ) % name % valuePlug()->typeName() )
+		);
+	}
+	if( currentValue && currentValue->typeId() != newData->typeId() )
+	{
+		throw IECore::Exception(
+			boost::str( boost::format( "Cannot apply tweak to \"%s\" : Value of type \"%s\" does not match parameter of type \"%s\"" ) % name % currentValue->typeName() % newData->typeName() )
+		);
+	}
+
+	if( !currentValue )
+	{
+		if( missingMode == GafferScene::TweakPlug::MissingMode::Ignore )
+		{
+			return false;
+		}
+		else if( !( mode == GafferScene::TweakPlug::Replace && missingMode == GafferScene::TweakPlug::MissingMode::IgnoreOrReplace) )
+		{
+			throw IECore::Exception( boost::str( boost::format( "Cannot apply tweak with mode %s to \"%s\" : This parameter does not exist" ) % modeToString( mode ) % name ) );
+		}
+	}
+
+	if(
+		mode == GafferScene::TweakPlug::Add ||
+		mode == GafferScene::TweakPlug::Subtract ||
+		mode == GafferScene::TweakPlug::Multiply
+	)
+	{
+		applyNumericTweak( currentValue, newData.get(), newData.get(), mode, name );
+	}
+
+	setDataFunctor( name, newData );
+
+	return true;
+}
+
+template<class GetDataFunctor, class SetDataFunctor>
+bool TweaksPlug::applyTweaks(
+	GetDataFunctor &&getDataFunctor,
+	SetDataFunctor &&setDataFunctor,
+	TweakPlug::MissingMode missingMode
+) const
+{
+	bool tweakApplied = false;
+
+	for( auto &tweakPlug : TweakPlug::Range( *this ) )
+	{
+		if( tweakPlug->applyTweak( getDataFunctor, setDataFunctor, missingMode ) )
+		{
+			tweakApplied = true;
+		}
+	}
+
+	return tweakApplied;
 }
 
 } // namespace GafferScene
