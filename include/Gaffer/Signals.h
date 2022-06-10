@@ -69,6 +69,8 @@ class Connection
 		/// Returns true if the connection has not been disconnected yet.
 		bool connected() const;
 
+		Connection &operator=( const Connection &rhs ) = default;
+
 	private :
 
 		template<typename Signature, typename Combiner>
