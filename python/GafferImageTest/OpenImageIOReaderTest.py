@@ -38,6 +38,7 @@
 import os
 import shutil
 import unittest
+import glob
 import imath
 import random
 import six
@@ -690,6 +691,21 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		self.assertNotIn( "name", metadata )
 		self.assertNotIn( "oiio:subimagename", metadata )
 		self.assertNotIn( "oiio:subimages", metadata )
+
+	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testImageOpenPerformance( self ):
+		# Test the overhead of opening images by opening lots of images, but only reading the view count
+		files = glob.glob( os.path.expandvars( "${GAFFER_ROOT}/python/GafferImageTest/images/*.exr" ) )
+		files = filter( lambda f : not ( "ChannelsOverlap" in f or "NukeSinglePart" in f ), files )
+		files = sorted( files )
+		filesWithResult = [ (i, 2 if "channelTestMultiView" in i else 1 ) for i in files ]
+		reader = GafferImage.ImageReader()
+		with GafferTest.TestRunner.PerformanceScope() :
+			for f, r in filesWithResult:
+				reader["fileName"].setValue( f )
+				self.assertEqual( len( reader["out"].viewNames() ), r )
+
 
 if __name__ == "__main__":
 	unittest.main()

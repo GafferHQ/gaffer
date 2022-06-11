@@ -271,17 +271,27 @@ class File
 	public:
 
 		// Create a File handle object for an image input and image spec
-		File( std::unique_ptr<ImageInput> imageInput, const ImageSpec &firstPartSpec, const std::string &infoFileName, ImageReader::ChannelInterpretation channelNaming )
+		File( std::unique_ptr<ImageInput> imageInput, const std::string &infoFileName, ImageReader::ChannelInterpretation channelNaming )
 			: m_imageInput( std::move( imageInput ) )
 		{
-			ImageSpec currentSpec = firstPartSpec;
-
 			m_viewNamesData = new StringVectorData();
 			auto &viewNames = m_viewNamesData->writable();
 
 			bool singlePartMultiView = false;
-			for( int subImageIndex = 0; currentSpec.format != TypeUnknown; subImageIndex++, currentSpec = m_imageInput->spec( subImageIndex, 0 ) )
+			ImageSpec currentSpec;
+			for( int subImageIndex = 0; ; subImageIndex++ )
 			{
+				currentSpec = m_imageInput->spec( subImageIndex, 0 );
+				if( currentSpec.format == TypeUnknown )
+				{
+					// Gone past last subimage
+					break;
+				}
+
+				if( currentSpec.depth != 1 )
+				{
+					throw IECore::Exception( "OpenImageIOReader : " + infoFileName + " : GafferImage does not support 3D pixel arrays " );
+				}
 
 				std::string viewName = currentSpec.get_string_attribute( "view", "" );
 
@@ -791,11 +801,6 @@ class File
 		// channel data.
 		int readRegion( int subImage, const Box2i &targetRegion, std::vector<float> &data, DeepData &deepData, Box2i &exrDataRegion )
 		{
-			// TODO - In other places, we twist around ridiculously to avoid calling spec() twice ( ie. passing
-			// firstPartSpec into File() which is quite an ugly API ), and then we go ahead and call it
-			// repeatedly here.  We should be consistent with whether we try to avoid this or not.  It looks
-			// like EXR does cache the specs itself, and we probably don't care about perf of any other format,
-			// so we could probably just stop worrying about calling spec()?
 			ImageSpec spec = m_imageInput->spec( subImage, 0 );
 
 			const V2i fileDataOrigin( spec.x, spec.y );
@@ -960,7 +965,6 @@ CacheEntry fileCacheGetter( const std::pair< std::string, ImageReader::ChannelIn
 
 	const std::string &fileName = fileNameAndChannelInterpretation.first;
 
-	ImageSpec firstPartSpec;
 	std::unique_ptr<ImageInput> imageInput( ImageInput::create( fileName ) );
 	if( !imageInput )
 	{
@@ -968,18 +972,14 @@ CacheEntry fileCacheGetter( const std::pair< std::string, ImageReader::ChannelIn
 		return result;
 	}
 
+	ImageSpec firstPartSpec;
 	if( !imageInput->open( fileName, firstPartSpec ) )
 	{
 		result.error.reset( new std::string( "OpenImageIOReader : Could not open ImageInput : " + imageInput->geterror() ) );
 		return result;
 	}
 
-	if( firstPartSpec.depth != 1 )
-	{
-		throw IECore::Exception( "OpenImageIOReader : " + fileName + " : GafferImage does not support 3D pixel arrays " );
-	}
-
-	result.file.reset( new File( std::move( imageInput ), firstPartSpec, fileName, fileNameAndChannelInterpretation.second ) );
+	result.file.reset( new File( std::move( imageInput ), fileName, fileNameAndChannelInterpretation.second ) );
 
 	return result;
 }
