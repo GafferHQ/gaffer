@@ -1195,6 +1195,26 @@ libraries = {
 
 	"GafferTractorUITest" : {},
 
+	"GafferUSD" : {
+		"envAppends" : {
+			"LIBS" : [ "Gaffer", "GafferDispatch", "GafferScene", "IECoreScene$CORTEX_LIB_SUFFIX", "sdf", "arch", "tf", "vt" ],
+			# USD includes "at least one deprecated or antiquated header", so we
+			# have to drop our usual strict warning levels.
+			"CXXFLAGS" : [ "-Wno-deprecated"],
+		},
+		"pythonEnvAppends" : {
+			"LIBS" : [ "GafferUSD", "GafferDispatch", "GafferBindings" ],
+		},
+		# USD's Python bindings are intrusive to the main library.
+		"libraryDependsOnPython" : True,
+	},
+
+	"GafferUSDTest" : {},
+
+	"GafferUSDUI" : {},
+
+	"GafferUSDUITest" : {},
+
 	"GafferVDB" : {
 		"envAppends" : {
 			"LIBS" : [ "Gaffer", "GafferScene", "Half", "openvdb$VDB_LIB_SUFFIX", "IECoreVDB$CORTEX_LIB_SUFFIX", "IECoreScene$CORTEX_LIB_SUFFIX" ],
@@ -1382,6 +1402,9 @@ for libraryName, libraryDef in libraries.items() :
 	# environment
 
 	libEnv = baseLibEnv.Clone()
+	if libraryDef.get( "libraryDependsOnPython" ) :
+		libEnv = basePythonEnv.Clone()
+
 	libEnv.Append( CXXFLAGS = "-D{0}_EXPORTS".format( libraryName ) )
 	libEnv.Append( **(libraryDef.get( "envAppends", {} )) )
 	libEnv.Replace( **(libraryDef.get( "envReplacements", {} )) )

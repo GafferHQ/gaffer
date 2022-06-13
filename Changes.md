@@ -194,6 +194,22 @@ Build
   - OpenColorIO : Updated to version 2.1.1.
   - Cortex : Updated to version 10.4.0.0.
 
+0.61.x.x (relative to 0.61.12.0)
+========
+
+Features
+--------
+
+- USDLayerWriter : Added a new node for baking the difference between two Gaffer scenes into a minimal USD layer on disk.
+
+Fixes
+-----
+
+- SceneWriter : Fixed bug which caused sibling locations to be reordered.
+- ShaderQuery :
+  - Fixed error `ShaderQuery : "outPlug" is missing` when promoting a child plug of a query to a `Spreadsheet`.
+  - Adding a child plug of a query to a `Spreadsheet` now uses the default name for the spreadsheet column.
+
 0.61.12.0 (relative to 0.61.11.0)
 =========
 

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2022, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,21 +34,65 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERTEST_TYPEIDS_H
-#define GAFFERTEST_TYPEIDS_H
+#ifndef GAFFERUSD_USDLAYERWRITER_H
+#define GAFFERUSD_USDLAYERWRITER_H
 
-namespace GafferTest
+#include "GafferUSD/Export.h"
+#include "GafferUSD/TypeIds.h"
+
+#include "GafferScene/ScenePlug.h"
+#include "GafferScene/SceneWriter.h"
+
+#include "GafferDispatch/TaskNode.h"
+
+#include "Gaffer/TypedPlug.h"
+#include "Gaffer/StringPlug.h"
+
+namespace GafferUSD
 {
 
-enum TypeId
+class GAFFERUSD_API USDLayerWriter : public GafferDispatch::TaskNode
 {
 
-	MultiplyNodeTypeId = 110201,
+	public :
 
-	LastTypeId = 110224,
+		USDLayerWriter( const std::string &name=defaultName<USDLayerWriter>() );
+		~USDLayerWriter() override;
+
+		GAFFER_NODE_DECLARE_TYPE( GafferUSD::USDLayerWriter, USDLayerWriterTypeId, GafferDispatch::TaskNode );
+
+		Gaffer::StringPlug *fileNamePlug();
+		const Gaffer::StringPlug *fileNamePlug() const;
+
+		GafferScene::ScenePlug *basePlug();
+		const GafferScene::ScenePlug *basePlug() const;
+
+		GafferScene::ScenePlug *layerPlug();
+		const GafferScene::ScenePlug *layerPlug() const;
+
+		GafferScene::ScenePlug *outPlug();
+		const GafferScene::ScenePlug *outPlug() const;
+
+	protected :
+
+		IECore::MurmurHash hash( const Gaffer::Context *context ) const override;
+		bool requiresSequenceExecution() const override;
+		void execute() const override;
+		void executeSequence( const std::vector<float> &frames ) const override;
+
+	private :
+
+		const GafferScene::SceneWriter *sceneWriter() const;
+
+		static size_t g_firstPlugIndex;
+
+		// Friendship for the bindings
+		friend struct GafferDispatchBindings::Detail::TaskNodeAccessor;
 
 };
 
-} // namespace GafferTest
+IE_CORE_DECLAREPTR( USDLayerWriter )
 
-#endif // GAFFERTEST_TYPEIDS_H
+} // namespace GafferUSD
+
+#endif // GAFFERUSD_USDLAYERWRITER_H
