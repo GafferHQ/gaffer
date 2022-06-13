@@ -138,7 +138,23 @@ bool createDiff( const SdfPrimSpecHandle &prim, SdfLayer &layer, const SdfPrimSp
 		}
 	}
 
-	// Remove any attributes that are identical to those in the base prim.
+	// Author a blocking value for any attributes which exist in the base prim
+	// but not on this prim.
+
+	for( const auto &baseAttribute : basePrim->GetAttributes() )
+	{
+		if( !prim->GetAttributeAtPath( SdfPath::ReflexiveRelativePath().AppendProperty( baseAttribute->GetNameToken() ) ) )
+		{
+			SdfAttributeSpecHandle attribute = SdfAttributeSpec::New(
+				prim, baseAttribute->GetName(), baseAttribute->GetTypeName(),
+				baseAttribute->GetVariability(), baseAttribute->IsCustom()
+			);
+			attribute->SetDefaultValue( VtValue( SdfValueBlock() ) );
+			keepThisPrim = true;
+		}
+	}
+
+	// Remove any properties that are identical to those in the base prim.
 
 	for( const auto &property : prim->GetProperties().values() )
 	{
