@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2022, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,21 +34,21 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERTEST_TYPEIDS_H
-#define GAFFERTEST_TYPEIDS_H
+#ifndef GAFFERUSD_TYPEIDS_H
+#define GAFFERUSD_TYPEIDS_H
 
-namespace GafferTest
+namespace GafferUSD
 {
 
 enum TypeId
 {
 
-	MultiplyNodeTypeId = 110201,
+	USDLayerWriterTypeId = 110225,
 
-	LastTypeId = 110224,
+	LastTypeId = 110250,
 
 };
 
-} // namespace GafferTest
+} // namespace GafferUSD
 
-#endif // GAFFERTEST_TYPEIDS_H
+#endif // GAFFERUSD_TYPEIDS_H
