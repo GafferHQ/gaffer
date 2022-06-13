@@ -134,6 +134,8 @@ class CameraTweaksTest( GafferSceneTest.SceneTestCase ) :
 						ref = orig * value
 					elif mode == GafferScene.TweakPlug.Mode.Subtract:
 						ref = orig - value
+					elif mode == GafferScene.TweakPlug.Mode.Create:
+						ref = value
 
 					if name == "fieldOfView":
 						modified = tweaks["out"].object( "/camera" ).calculateFieldOfView()[0]
