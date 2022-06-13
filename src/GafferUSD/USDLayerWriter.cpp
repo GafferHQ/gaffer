@@ -186,15 +186,27 @@ bool createDiff( const SdfPrimSpecHandle &prim, SdfLayer &layer, const SdfPrimSp
 		}
 	}
 
-	// Convert to an "over" if we have the same type as the
-	// base prim.
+	// Remove any metadata that is identical to the metadata on the base prim.
+	// Since a prim's type and specifier is stored as metadata, this has the
+	// side effect of converting our prim to an "over" if we have the same type
+	// as the base prim.
+	//
+	// I haven't been able to find a way to "deactivate" or "block" metadata like
+	// we can for prims and attributes, so we can't block any metadata that exists
+	// on the base prim but not this one. The closest I've been able to get is
+	// to use `prim->GetSchema().GetFieldDefinition( key )->GetFallbackValue()` to
+	// revert to the default value for the field, but that ends up producing things like
+	// `kind == ""`, which isn't ideal. So for now we punt on that.
 
-	if( keepThisPrim && prim != layer.GetPseudoRoot() )
+	for( const auto &key : prim->ListInfoKeys() )
 	{
-		if( prim->GetTypeName() == basePrim->GetTypeName() )
+		if( prim->GetField( key ) == basePrim->GetField( key ) )
 		{
-			prim->SetSpecifier( SdfSpecifierOver );
-			prim->SetTypeName( TfToken() );
+			prim->ClearField( key );
+		}
+		else
+		{
+			keepThisPrim = true;
 		}
 	}
 

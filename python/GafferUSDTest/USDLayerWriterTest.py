@@ -199,5 +199,37 @@ class USDLayerWriterTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertScenesEqual( reader["out"], sphere["out"], checks = self.allSceneChecks - { "sets" } )
 
+	def testKind( self ) :
+
+		sphere = GafferScene.Sphere()
+		sphere["type"].setValue( sphere.Type.Primitive )
+
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		attributes = GafferUSD.USDAttributes()
+		attributes["in"].setInput( sphere["out"] )
+		attributes["filter"].setInput( sphereFilter["out"] )
+		attributes["attributes"]["kind"]["enabled"].setValue( True )
+
+		layerFileName, compositionFileName = self.__writeLayerAndComposition( sphere["out"], attributes["out"] )
+
+		reader = GafferScene.SceneReader()
+		reader["fileName"].setValue( compositionFileName )
+		self.assertScenesEqual( reader["out"], attributes["out"], checks = self.allSceneChecks - { "sets" } )
+
+	def testChangePrimitiveType( self ) :
+
+		sphereMesh = GafferScene.Sphere()
+
+		spherePrimitive = GafferScene.Sphere()
+		spherePrimitive["type"].setValue( spherePrimitive.Type.Primitive )
+
+		layerFileName, compositionFileName = self.__writeLayerAndComposition( sphereMesh["out"], spherePrimitive["out"] )
+
+		reader = GafferScene.SceneReader()
+		reader["fileName"].setValue( compositionFileName )
+		self.assertScenesEqual( reader["out"], spherePrimitive["out"], checks = self.allSceneChecks - { "sets" } )
+
 if __name__ == "__main__":
 	unittest.main()
