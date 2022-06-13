@@ -43,9 +43,11 @@
 
 #include "IECoreScene/SceneInterface.h"
 
+IECORE_PUSH_DEFAULT_VISIBILITY
 #include "pxr/usd/sdf/attributeSpec.h"
 #include "pxr/usd/sdf/layer.h"
 #include "pxr/usd/sdf/primSpec.h"
+IECORE_POP_DEFAULT_VISIBILITY
 
 #include "boost/filesystem.hpp"
 

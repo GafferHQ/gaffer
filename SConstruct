@@ -1084,7 +1084,7 @@ libraries = {
 			"CXXFLAGS" : [ "-Wno-deprecated"],
 		},
 		"pythonEnvAppends" : {
-			"LIBS" : [ "GafferUSD", "GafferDispatch", "GafferBindings" ],
+			"LIBS" : [ "GafferUSD", "GafferScene", "GafferDispatch", "GafferBindings" ],
 		},
 		# USD's Python bindings are intrusive to the main library.
 		"libraryDependsOnPython" : True,
