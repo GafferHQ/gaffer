@@ -26,6 +26,7 @@ Breaking Changes
 - TweakPlug and TweaksPlug :
   - Moved to `Gaffer` module.
   - Removed methods for tweaking shader networks.
+  - Backwards compatibility is provided when loading old `.gfr` files.
 
 0.62.0.0a3 (relative to 0.62.0.0a2)
 ==========
