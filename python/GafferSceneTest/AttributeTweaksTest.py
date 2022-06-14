@@ -69,7 +69,7 @@ class AttributeTweaksTest( GafferSceneTest.SceneTestCase ) :
 		self.assertScenesEqual( t["out"], l["out"] )
 		self.assertSceneHashesEqual( t["out"], l["out"] )
 
-		scaleTweak = GafferScene.TweakPlug( "gl:visualiser:scale", 10.0 )
+		scaleTweak = Gaffer.TweakPlug( "gl:visualiser:scale", 10.0 )
 		t["tweaks"].addChild( scaleTweak )
 
 		self.assertSceneValid( t["out"] )
@@ -98,8 +98,8 @@ class AttributeTweaksTest( GafferSceneTest.SceneTestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["t"] = GafferScene.AttributeTweaks()
-		s["t"]["tweaks"].addChild( GafferScene.TweakPlug( "test", 1.0 ) )
-		s["t"]["tweaks"].addChild( GafferScene.TweakPlug( "test", imath.Color3f( 1, 2, 3 ) ) )
+		s["t"]["tweaks"].addChild( Gaffer.TweakPlug( "test", 1.0 ) )
+		s["t"]["tweaks"].addChild( Gaffer.TweakPlug( "test", imath.Color3f( 1, 2, 3 ) ) )
 
 		ss = Gaffer.ScriptNode()
 		ss.execute( s.serialise() )
@@ -121,7 +121,7 @@ class AttributeTweaksTest( GafferSceneTest.SceneTestCase ) :
 		t["in"].setInput( l["out"] )
 		t["filter"].setInput( f["out"] )
 
-		tweak = GafferScene.TweakPlug( "badAttribute", 1.0 )
+		tweak = Gaffer.TweakPlug( "badAttribute", 1.0 )
 		t["tweaks"].addChild( tweak )
 
 		with six.assertRaisesRegex( self, RuntimeError, "Cannot apply tweak with mode Replace to \"badAttribute\" : This parameter does not exist" ) :
@@ -163,7 +163,7 @@ class AttributeTweaksTest( GafferSceneTest.SceneTestCase ) :
 		tweaks["in"].setInput( attributes["out"] )
 		tweaks["filter"].setInput( planeFilter["out"] )
 
-		segmentsTweak = GafferScene.TweakPlug( "gaffer:transformBlurSegments", 2 )
+		segmentsTweak = Gaffer.TweakPlug( "gaffer:transformBlurSegments", 2 )
 		tweaks["tweaks"].addChild( segmentsTweak )
 
 		self.assertEqual( tweaks["localise"].getValue(), False )
@@ -197,8 +197,8 @@ class AttributeTweaksTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertNotIn( "test:attribute", tweaks["out"].attributes( "/plane" ) )
 
-		testTweak = GafferScene.TweakPlug( "test:attribute", 2 )
-		testTweak["mode"].setValue( GafferScene.TweakPlug.Mode.Create )
+		testTweak = Gaffer.TweakPlug( "test:attribute", 2 )
+		testTweak["mode"].setValue( Gaffer.TweakPlug.Mode.Create )
 		tweaks["tweaks"].addChild( testTweak )
 
 		self.assertEqual( tweaks["out"].attributes( "/plane" )["test:attribute"], IECore.IntData( 2 ) )

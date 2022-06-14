@@ -40,6 +40,7 @@ import imath
 import six
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferScene
@@ -70,7 +71,7 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 		self.assertScenesEqual( t["out"], l["out"] )
 		self.assertSceneHashesEqual( t["out"], l["out"] )
 
-		intensityTweak = GafferScene.TweakPlug( "intensity", imath.Color3f( 1, 0, 0 ) )
+		intensityTweak = Gaffer.TweakPlug( "intensity", imath.Color3f( 1, 0, 0 ) )
 		t["tweaks"].addChild( intensityTweak )
 
 		self.assertSceneValid( t["out"] )
@@ -102,8 +103,8 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["t"] = GafferScene.ShaderTweaks()
-		s["t"]["tweaks"].addChild( GafferScene.TweakPlug( "test", 1.0 ) )
-		s["t"]["tweaks"].addChild( GafferScene.TweakPlug( "test", imath.Color3f( 1, 2, 3 ) ) )
+		s["t"]["tweaks"].addChild( Gaffer.TweakPlug( "test", 1.0 ) )
+		s["t"]["tweaks"].addChild( Gaffer.TweakPlug( "test", imath.Color3f( 1, 2, 3 ) ) )
 
 		ss = Gaffer.ScriptNode()
 		ss.execute( s.serialise() )
@@ -179,7 +180,7 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 		tweaks["filter"].setInput( planeFilter["out"] )
 		tweaks["shader"].setValue( "surface" )
 
-		tweaks["tweaks"].addChild( GafferScene.TweakPlug( "c", Gaffer.Color3fPlug() ) )
+		tweaks["tweaks"].addChild( Gaffer.TweakPlug( "c", Gaffer.Color3fPlug() ) )
 		tweaks["tweaks"][0]["value"].setInput( textureShader["out"] )
 
 		tweakedNetwork = tweaks["out"].attributes( "/plane" )["surface"]
@@ -193,7 +194,7 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 		tweakedNetwork = tweaks["out"].attributes( "/plane" )["surface"]
 		self.assertEqual( tweakedNetwork.getShader( "texture" ).parameters["c"].value, imath.Color3f( 1, 2, 3 ) )
 
-		tweaks["tweaks"][0]["mode"].setValue( GafferScene.TweakPlug.Mode.Multiply )
+		tweaks["tweaks"][0]["mode"].setValue( Gaffer.TweakPlug.Mode.Multiply )
 		with six.assertRaisesRegex( self, RuntimeError, "Mode must be \"Replace\" when inserting a connection" ) :
 			tweaks["out"].attributes( "/plane" )
 
@@ -224,7 +225,7 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 		tweaks["filter"].setInput( planeFilter["out"] )
 		tweaks["shader"].setValue( "surface" )
 
-		tweaks["tweaks"].addChild( GafferScene.TweakPlug( "c", Gaffer.Color3fPlug() ) )
+		tweaks["tweaks"].addChild( Gaffer.TweakPlug( "c", Gaffer.Color3fPlug() ) )
 		tweaks["tweaks"][0]["value"].setInput( textureShader["out"]["opacity"] )
 
 		tweakedNetwork = tweaks["out"].attributes( "/plane" )["surface"]
@@ -266,7 +267,7 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 		tweaks["filter"].setInput( planeFilter["out"] )
 		tweaks["shader"].setValue( "surface" )
 
-		tweaks["tweaks"].addChild( GafferScene.TweakPlug( "c", Gaffer.Color3fPlug() ) )
+		tweaks["tweaks"].addChild( Gaffer.TweakPlug( "c", Gaffer.Color3fPlug() ) )
 		tweaks["tweaks"][0]["value"].setInput( textureShader2["out"] )
 
 		tweakedNetwork = tweaks["out"].attributes( "/plane" )["surface"]
@@ -304,11 +305,11 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 		tweaks["filter"].setInput( planeFilter["out"] )
 		tweaks["shader"].setValue( "surface" )
 
-		tweaks["tweaks"].addChild( GafferScene.TweakPlug( "c", Gaffer.Color3fPlug() ) )
+		tweaks["tweaks"].addChild( Gaffer.TweakPlug( "c", Gaffer.Color3fPlug() ) )
 
-		for mode in GafferScene.TweakPlug.Mode.values :
+		for mode in Gaffer.TweakPlug.Mode.values :
 
-			if mode == GafferScene.TweakPlug.Mode.Replace :
+			if mode == Gaffer.TweakPlug.Mode.Replace :
 				continue
 
 			tweaks["tweaks"][0]["mode"].setValue( mode )
@@ -337,7 +338,7 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 		box["tweaks"]["shader"].setValue( "surface" )
 
 		p = Gaffer.PlugAlgo.promote( box["tweaks"]["tweaks"] )
-		p.addChild( GafferScene.TweakPlug( "c", imath.Color3f( 0.1, 5, 9 ) ) )
+		p.addChild( Gaffer.TweakPlug( "c", imath.Color3f( 0.1, 5, 9 ) ) )
 
 		network = box["tweaks"]["out"].attributes( "/plane" )["surface"]
 		self.assertEqual( network.getShader( "shader" ).parameters["c"].value, imath.Color3f( 0.1, 5, 9 ) )
@@ -355,7 +356,7 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 		t["shader"].setValue( "light" )
 		t["filter"].setInput( f["out"] )
 
-		badTweak = GafferScene.TweakPlug( "badParameter", 1.0 )
+		badTweak = Gaffer.TweakPlug( "badParameter", 1.0 )
 		t["tweaks"].addChild( badTweak )
 
 		with six.assertRaisesRegex( self, RuntimeError, "Cannot apply tweak with mode Replace to \"badParameter\" : This parameter does not exist" ) :
@@ -400,7 +401,7 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 		tweaks["shader"].setValue( "light" )
 		tweaks["filter"].setInput( planeFilter["out"] )
 
-		colorTweak = GafferScene.TweakPlug( "c", imath.Color3f( 3, 2, 1 ) )
+		colorTweak = Gaffer.TweakPlug( "c", imath.Color3f( 3, 2, 1 ) )
 		tweaks["tweaks"].addChild( colorTweak )
 
 		self.assertEqual( tweaks["localise"].getValue(), False )

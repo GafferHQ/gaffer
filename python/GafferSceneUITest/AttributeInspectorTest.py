@@ -252,7 +252,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		s["editScope1"]["tweakLight2"]["filter"].setInput( s["editScope1"]["tweakLight2Filter"]["out"] )
 		s["editScope1"]["BoxOut"]["in"].setInput( s["editScope1"]["tweakLight2"]["out"] )
 
-		editScopeAttributeTweak = GafferScene.TweakPlug( "gl:visualiser:scale", 4.0 )
+		editScopeAttributeTweak = Gaffer.TweakPlug( "gl:visualiser:scale", 4.0 )
 		s["editScope1"]["tweakLight2"]["tweaks"].addChild( editScopeAttributeTweak )
 
 		self.__assertExpectedResult(
@@ -271,7 +271,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		s["independentAttributeTweakFilter"]["paths"].setValue( IECore.StringVectorData( [ "/group/light" ] ) )
 		s["independentAttributeTweak"]["filter"].setInput( s["independentAttributeTweakFilter"]["out"] )
 
-		independentAttributeTweakPlug = GafferScene.TweakPlug( "gl:visualiser:scale", 8.0 )
+		independentAttributeTweakPlug = Gaffer.TweakPlug( "gl:visualiser:scale", 8.0 )
 		independentAttributeTweakPlug["enabled"].setValue( True )
 		s["independentAttributeTweak"]["tweaks"].addChild( independentAttributeTweakPlug )
 
@@ -388,7 +388,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		attributeTweaks = GafferScene.AttributeTweaks()
 		attributeTweaks["in"].setInput( light["out"] )
 		attributeTweaks["filter"].setInput( lightFilter["out"] )
-		attributeTweaks["tweaks"].addChild( GafferScene.TweakPlug( "gl:visualiser:scale", 2.0 ) )
+		attributeTweaks["tweaks"].addChild( Gaffer.TweakPlug( "gl:visualiser:scale", 2.0 ) )
 
 		editScope = Gaffer.EditScope()
 		editScope.setup( light["out"] )
@@ -430,7 +430,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		attributeTweaks = GafferScene.AttributeTweaks()
 		attributeTweaks["in"].setInput( light["out"] )
 		attributeTweaks["filter"].setInput( lightFilter["out"] )
-		scaleTweak = GafferScene.TweakPlug( "gl:visualiser:scale", 2.0 )
+		scaleTweak = Gaffer.TweakPlug( "gl:visualiser:scale", 2.0 )
 		attributeTweaks["tweaks"].addChild( scaleTweak )
 
 		SourceType = GafferSceneUI.Private.Inspector.Result.SourceType
@@ -498,7 +498,7 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 		attributeTweaks = GafferScene.AttributeTweaks()
 		attributeTweaks["in"].setInput( editScope["out"] )
 		attributeTweaks["filter"].setInput( lightFilter["out"] )
-		scaleTweak = GafferScene.TweakPlug( "gl:visualiser:scale", 2.0 )
+		scaleTweak = Gaffer.TweakPlug( "gl:visualiser:scale", 2.0 )
 		attributeTweaks["tweaks"].addChild( scaleTweak )
 
 		self.__assertExpectedResult(

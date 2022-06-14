@@ -87,8 +87,8 @@ class CameraTweaksTest( GafferSceneTest.SceneTestCase ) :
 
 			self.assertEqual( c["out"].object( "/camera" ), tweaks["out"].object( "/camera" ) )
 
-			for mode in GafferScene.TweakPlug.Mode.names.values():
-			#for mode in [ GafferScene.TweakPlug.Mode.Replace ]:
+			for mode in Gaffer.TweakPlug.Mode.names.values():
+			#for mode in [ Gaffer.TweakPlug.Mode.Replace ]:
 				for name, value in [
 						("projection", "orthographic" ),
 						( "aperture", imath.V2f( 10, 20 ) ),
@@ -105,11 +105,11 @@ class CameraTweaksTest( GafferSceneTest.SceneTestCase ) :
 						( "apertureAspectRatio", 0.15 ),
 					]:
 
-					if type( value ) in [ str ] and mode in [ GafferScene.TweakPlug.Mode.Add, GafferScene.TweakPlug.Mode.Subtract, GafferScene.TweakPlug.Mode.Multiply ] :
+					if type( value ) in [ str ] and mode in [ Gaffer.TweakPlug.Mode.Add, Gaffer.TweakPlug.Mode.Subtract, Gaffer.TweakPlug.Mode.Multiply ] :
 						continue
 
 					tweaks["tweaks"].clearChildren()
-					tweaks["tweaks"].addChild( GafferScene.TweakPlug( name, value ) )
+					tweaks["tweaks"].addChild( Gaffer.TweakPlug( name, value ) )
 					tweaks["tweaks"]["tweak"]["mode"].setValue( mode )
 
 					if name == "fieldOfView":
@@ -122,19 +122,19 @@ class CameraTweaksTest( GafferSceneTest.SceneTestCase ) :
 					else:
 						orig = c["out"].object( "/camera" ).parameters()[name].value
 
-					if mode == GafferScene.TweakPlug.Mode.Remove:
+					if mode == Gaffer.TweakPlug.Mode.Remove:
 						if not name in [ "fieldOfView", "apertureAspectRatio" ]:
 							self.assertFalse( name in tweaks["out"].object( "/camera" ).parameters() )
 						continue
-					elif mode == GafferScene.TweakPlug.Mode.Replace:
+					elif mode == Gaffer.TweakPlug.Mode.Replace:
 						ref = value
-					elif mode == GafferScene.TweakPlug.Mode.Add:
+					elif mode == Gaffer.TweakPlug.Mode.Add:
 						ref = orig + value
-					elif mode == GafferScene.TweakPlug.Mode.Multiply:
+					elif mode == Gaffer.TweakPlug.Mode.Multiply:
 						ref = orig * value
-					elif mode == GafferScene.TweakPlug.Mode.Subtract:
+					elif mode == Gaffer.TweakPlug.Mode.Subtract:
 						ref = orig - value
-					elif mode == GafferScene.TweakPlug.Mode.Create:
+					elif mode == Gaffer.TweakPlug.Mode.Create:
 						ref = value
 
 					if name == "fieldOfView":
