@@ -798,9 +798,17 @@ if basePythonEnv["PLATFORM"]=="darwin" :
 
 	basePythonEnv.Append(
 		CPPPATH = [ "$BUILD_DIR/lib/Python.framework/Versions/$PYTHON_VERSION/include/python$PYTHON_VERSION" ],
-		LIBPATH = [ "$BUILD_DIR/lib/Python.framework/Versions/$PYTHON_VERSION/lib/python$PYTHON_VERSION/config" ],
 		LIBS = [ "python$PYTHON_VERSION" ],
 	)
+
+	if basePythonEnv["PYTHON_VERSION"].split( "." )[0] == "2" :
+		basePythonEnv.Append(
+			LIBPATH = [ "$BUILD_DIR/lib/Python.framework/Versions/$PYTHON_VERSION/lib/python$PYTHON_VERSION/config" ]
+		)
+	else :
+		basePythonEnv.Append(
+			LIBPATH = [ "$BUILD_DIR/lib/Python.framework/Versions/$PYTHON_VERSION/lib" ]
+		)
 
 else :
 
