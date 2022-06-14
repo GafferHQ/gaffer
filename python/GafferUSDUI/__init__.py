@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+from . import USDAttributesUI
 from . import USDLayerWriterUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferUSDUI" )

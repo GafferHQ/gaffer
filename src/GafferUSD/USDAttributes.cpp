@@ -15,7 +15,7 @@
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
 //
-//      * Neither the name of Image Engine Design nor the names of
+//      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
@@ -34,20 +34,24 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
-
 #include "GafferUSD/USDAttributes.h"
-#include "GafferUSD/USDLayerWriter.h"
 
-#include "GafferDispatchBindings/TaskNodeBinding.h"
+#include "Gaffer/StringPlug.h"
 
-using namespace boost::python;
+using namespace Gaffer;
 using namespace GafferUSD;
 
-BOOST_PYTHON_MODULE( _GafferUSD )
+GAFFER_NODE_DEFINE_TYPE( USDAttributes );
+
+USDAttributes::USDAttributes( const std::string &name )
+	:	GafferScene::Attributes( name )
 {
+	Gaffer::CompoundDataPlug *attributes = attributesPlug();
 
-	GafferBindings::DependencyNodeClass<USDAttributes>();
-	GafferDispatchBindings::TaskNodeClass<USDLayerWriter>();
+	attributes->addChild( new Gaffer::NameValuePlug( "usd:purpose", new StringPlug( "value", Plug::In, "default" ), false, "purpose" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "usd:kind", new StringPlug( "value", Plug::In, "assembly" ), false, "kind" ) );
+}
 
+USDAttributes::~USDAttributes()
+{
 }

@@ -5,6 +5,7 @@ Features
 --------
 
 - USDLayerWriter : Added a new node for baking the difference between two Gaffer scenes into a minimal USD layer on disk.
+- USDAttributes : Added a new node for setting USD's `kind` and `purpose`.
 
 Fixes
 -----
