@@ -94,6 +94,8 @@ struct GAFFERSCENE_API TransformEdit
 	bool operator == ( const TransformEdit &rhs ) const;
 	bool operator != ( const TransformEdit &rhs ) const;
 
+	TransformEdit &operator=( const TransformEdit &rhs ) = default;
+
 };
 
 GAFFERSCENE_API bool hasTransformEdit( const Gaffer::EditScope *scope, const ScenePlug::ScenePath &path );

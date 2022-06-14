@@ -91,6 +91,8 @@ struct ChannelMapEntry
 		: subImage( 0 ), channelIndex( 0 )
 	{}
 
+	ChannelMapEntry& operator=( const ChannelMapEntry &rhs ) = default;
+
 	int subImage;
 	int channelIndex;
 };

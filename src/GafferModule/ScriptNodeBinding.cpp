@@ -56,25 +56,20 @@
 
 #include "IECore/MessageHandler.h"
 
-#ifdef _MSC_VER
 #include "boost/algorithm/string/classification.hpp"
 #include "boost/algorithm/string/find_iterator.hpp"
-#endif
 #include "boost/algorithm/string/replace.hpp"
 #include "boost/lexical_cast.hpp"
 #include "boost/regex.hpp"
 
 #include <memory>
 
-#ifdef _MSC_VER
-using namespace std;
 using namespace boost;
-#endif
-
 using namespace Gaffer;
 using namespace GafferBindings;
 
-#ifndef _MSC_VER
+#if !defined( _MSC_VER ) && PY_VERSION_HEX < 0x03080000
+
 //////////////////////////////////////////////////////////////////////////
 // Access to Python AST
 //////////////////////////////////////////////////////////////////////////
@@ -131,7 +126,7 @@ const std::string formattedErrorContext( int lineNumber, const std::string &cont
 	);
 }
 
-#ifndef _MSC_VER
+#if !defined( _MSC_VER ) && PY_VERSION_HEX < 0x03080000
 // Execute the script one top level statement at a time,
 // reporting errors that occur, but otherwise continuing
 // with execution.
@@ -212,7 +207,7 @@ bool tolerantExec( const std::string &pythonScript, boost::python::object global
 #else
 // Execute the script one line at a time, reporting errors that occur,
 // but otherwise continuing with execution.
-bool tolerantExec( const string &pythonScript, boost::python::object globals, boost::python::object locals, const std::string &context )
+bool tolerantExec( const std::string &pythonScript, boost::python::object globals, boost::python::object locals, const std::string &context )
 {
 	bool result = false;
 	int lineNumber = 1;
@@ -220,18 +215,18 @@ bool tolerantExec( const string &pythonScript, boost::python::object globals, bo
 	const IECore::Canceller *canceller = Context::current()->canceller();
 
 	auto it = make_split_iterator( pythonScript, token_finder( is_any_of( "\n" ) ) );
-	while( it != split_iterator<string::const_iterator>() )
+	while( it != split_iterator<std::string::const_iterator>() )
 	{
 		IECore::Canceller::check( canceller );
 
-		const string line( it->begin(), it->end() );
+		const std::string line( it->begin(), it->end() );
 		try
 		{
 			exec( line.c_str(), globals, locals );
 		}
 		catch( const boost::python::error_already_set &e )
 		{
-			const string message = IECorePython::ExceptionAlgo::formatPythonException( /* withTraceback = */ false );
+			const std::string message = IECorePython::ExceptionAlgo::formatPythonException( /* withTraceback = */ false );
 			IECore::msg( IECore::Msg::Error, formattedErrorContext( lineNumber, context ), message );
 			result = true;
 		}
