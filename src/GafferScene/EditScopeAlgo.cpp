@@ -55,6 +55,7 @@
 
 #include "OpenEXR/ImathMatrixAlgo.h"
 
+#include "boost/algorithm/string/predicate.hpp"
 #include "boost/algorithm/string/replace.hpp"
 #include "boost/container/flat_map.hpp"
 #include "boost/tokenizer.hpp"
@@ -784,6 +785,13 @@ TweakPlug *GafferScene::EditScopeAlgo::acquireAttributeEdit( Gaffer::EditScope *
 	attributeTweaks->tweaksPlug()->addChild( tweakPlug );
 
 	size_t columnIndex = rows->addColumn( tweakPlug.get(), columnName, /* adoptEnabledPlug */ true );
+	MetadataAlgo::copyIf(
+		tweakPlug.get(), rows->defaultRow()->cellsPlug()->getChild<Spreadsheet::CellPlug>( columnIndex )->valuePlug(),
+		[] ( const GraphComponent *from, const GraphComponent *to, const std::string &name ) {
+			return boost::starts_with( name, "tweakPlugValueWidget:" );
+		}
+	);
+
 	tweakPlug->setInput( processor->getChild<Spreadsheet>( "Spreadsheet" )->outPlug()->getChild<Plug>( columnIndex ) );
 
 	return row->cellsPlug()->getChild<Spreadsheet::CellPlug>( columnIndex )->valuePlug<TweakPlug>();
