@@ -18,6 +18,7 @@ Fixes
 - ShaderQuery :
   - Fixed error `ShaderQuery : "outPlug" is missing` when promoting a child plug of a query to a `Spreadsheet`.
   - Adding a child plug of a query to a `Spreadsheet` now uses the default name for the spreadsheet column.
+- Spreadsheet : Fixed missing `Remove` TweakPlug mode presets.
 
 API
 ---
