@@ -69,8 +69,15 @@ class GAFFERCORTEX_API ExecutableOpHolder : public ParameterisedHolderTaskNode
 		IECore::Op *getOp( std::string *className = nullptr, int *classVersion = nullptr );
 		const IECore::Op *getOp( std::string *className = nullptr, int *classVersion = nullptr ) const;
 
+	protected :
+
 		IECore::MurmurHash hash( const Gaffer::Context *context ) const override;
 		void execute() const override;
+
+	private :
+
+		// Friendship for the bindings
+		friend struct GafferDispatchBindings::Detail::TaskNodeAccessor;
 
 };
 

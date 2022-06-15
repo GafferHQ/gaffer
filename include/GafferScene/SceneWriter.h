@@ -71,6 +71,8 @@ class GAFFERSCENE_API SceneWriter : public GafferDispatch::TaskNode
 
 		IECore::MurmurHash hash( const Gaffer::Context *context ) const override;
 
+	protected :
+
 		void execute() const override;
 
 		/// Re-implemented to open the file for writing, then iterate through the
@@ -87,6 +89,10 @@ class GAFFERSCENE_API SceneWriter : public GafferDispatch::TaskNode
 		static size_t g_firstPlugIndex;
 
 		static const double g_frameRate;
+
+		// Friendship for the bindings
+		friend struct GafferDispatchBindings::Detail::TaskNodeAccessor;
+
 };
 
 IE_CORE_DECLAREPTR( SceneWriter )
