@@ -48,6 +48,29 @@ import GafferSceneTest
 
 class USDLayerWriterTest( GafferSceneTest.SceneTestCase ) :
 
+	def __writeLayerAndComposition( self, base, layer ) :
+
+		baseWriter = GafferScene.SceneWriter()
+		baseWriter["in"].setInput( base )
+		baseWriter["fileName"].setValue( os.path.join( self.temporaryDirectory(), "base.usda" ) )
+		baseWriter["task"].execute()
+
+		layerWriter = GafferUSD.USDLayerWriter()
+		layerWriter["base"].setInput( base )
+		layerWriter["layer"].setInput( layer )
+		layerWriter["fileName"].setValue( os.path.join( self.temporaryDirectory(), "layer.usda" ) )
+		layerWriter["task"].execute()
+
+		compositionFileName = os.path.join( self.temporaryDirectory(), "composed.usda" )
+		composition = pxr.Usd.Stage.CreateNew( compositionFileName )
+		composition.GetRootLayer().subLayerPaths = [
+			layerWriter["fileName"].getValue(),
+			baseWriter["fileName"].getValue(),
+		]
+		composition.GetRootLayer().Save()
+
+		return layerWriter["fileName"].getValue(), compositionFileName
+
 	def test( self ) :
 
 		# Make a simple scene, and write it to a USD file.
@@ -67,11 +90,6 @@ class USDLayerWriterTest( GafferSceneTest.SceneTestCase ) :
 		group["in"][1].setInput( plane["out"] )
 		group["in"][2].setInput( sphere["out"] )
 		group["in"][3].setInput( sphere["out"] )
-
-		sceneWriter = GafferScene.SceneWriter()
-		sceneWriter["in"].setInput( group["out"] )
-		sceneWriter["fileName"].setValue( os.path.join( self.temporaryDirectory(), "base.usda" ) )
-		sceneWriter["task"].execute()
 
 		# Make downstream modifications to the scene :
 		#
@@ -122,36 +140,20 @@ class USDLayerWriterTest( GafferSceneTest.SceneTestCase ) :
 		prune["in"].setInput( parent["out"] )
 		prune["filter"].setInput( plane1Filter["out"] )
 
-		# Write the differences to a new USD layer.
-
-		layerWriter = GafferUSD.USDLayerWriter()
-		layerWriter["base"].setInput( group["out"] )
-		layerWriter["layer"].setInput( prune["out"] )
-		layerWriter["fileName"].setValue( os.path.join( self.temporaryDirectory(), "layer.usda" ) )
-		layerWriter["task"].execute()
-
-		# Compose the layer with the original scene using the USD
-		# API, and write the composition to a new file.
-
-		compositionFileName = os.path.join( self.temporaryDirectory(), "composed.usda" )
-		composition = pxr.Usd.Stage.CreateNew( compositionFileName )
-		composition.GetRootLayer().subLayerPaths = [
-			layerWriter["fileName"].getValue(),
-			sceneWriter["fileName"].getValue(),
-		]
-		composition.GetRootLayer().Save()
-
+		# Write the differences into a USD layer, and compose them back with the original.
 		# The composed result should be identical to the Gaffer scene.
+
+		layerFileName, compositionFileName = self.__writeLayerAndComposition( group["out"], prune["out"] )
 
 		reader = GafferScene.SceneReader()
 		reader["fileName"].setValue( compositionFileName )
-		self.assertScenesEqual( reader["out"], layerWriter["layer"], checks = self.allSceneChecks - { "sets" } )
+		self.assertScenesEqual( reader["out"], prune["out"], checks = self.allSceneChecks - { "sets" } )
 
 		# Check that we've actually got a minimal set of opinions in the
 		# layer. We could pass the tests above just by writing
 		# _everything_!
 
-		layer = pxr.Sdf.Layer.OpenAsAnonymous( layerWriter["fileName"].getValue() )
+		layer = pxr.Sdf.Layer.OpenAsAnonymous( layerFileName )
 
 		# We didn't modify `/group/sphere1`, so it shouldn't even be present in the layer.
 		self.assertIsNone( layer.GetPrimAtPath( "/group/sphere1" ) )
@@ -178,6 +180,56 @@ class USDLayerWriterTest( GafferSceneTest.SceneTestCase ) :
 
 		writer["task"].execute()
 		self.assertTrue( os.path.isfile( writer["fileName"].getValue() ) )
+
+	def testRemoveAttribute( self ) :
+
+		sphere = GafferScene.Sphere()
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		attributes = GafferScene.StandardAttributes()
+		attributes["in"].setInput( sphere["out"] )
+		attributes["filter"].setInput( sphereFilter["out"] )
+		attributes["attributes"]["visibility"]["enabled"].setValue( True )
+
+		layer, composition = self.__writeLayerAndComposition( base = attributes["out"], layer = sphere["out"] )
+
+		reader = GafferScene.SceneReader()
+		reader["fileName"].setValue( composition )
+
+		self.assertScenesEqual( reader["out"], sphere["out"], checks = self.allSceneChecks - { "sets" } )
+
+	def testKind( self ) :
+
+		sphere = GafferScene.Sphere()
+		sphere["type"].setValue( sphere.Type.Primitive )
+
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		attributes = GafferUSD.USDAttributes()
+		attributes["in"].setInput( sphere["out"] )
+		attributes["filter"].setInput( sphereFilter["out"] )
+		attributes["attributes"]["kind"]["enabled"].setValue( True )
+
+		layerFileName, compositionFileName = self.__writeLayerAndComposition( sphere["out"], attributes["out"] )
+
+		reader = GafferScene.SceneReader()
+		reader["fileName"].setValue( compositionFileName )
+		self.assertScenesEqual( reader["out"], attributes["out"], checks = self.allSceneChecks - { "sets" } )
+
+	def testChangePrimitiveType( self ) :
+
+		sphereMesh = GafferScene.Sphere()
+
+		spherePrimitive = GafferScene.Sphere()
+		spherePrimitive["type"].setValue( spherePrimitive.Type.Primitive )
+
+		layerFileName, compositionFileName = self.__writeLayerAndComposition( sphereMesh["out"], spherePrimitive["out"] )
+
+		reader = GafferScene.SceneReader()
+		reader["fileName"].setValue( compositionFileName )
+		self.assertScenesEqual( reader["out"], spherePrimitive["out"], checks = self.allSceneChecks - { "sets" } )
 
 if __name__ == "__main__":
 	unittest.main()

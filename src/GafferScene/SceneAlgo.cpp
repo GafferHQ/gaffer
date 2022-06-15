@@ -36,6 +36,7 @@
 
 #include "GafferScene/SceneAlgo.h"
 
+#include "GafferScene/AttributeTweaks.h"
 #include "GafferScene/CameraTweaks.h"
 #include "GafferScene/CopyAttributes.h"
 #include "GafferScene/Filter.h"
@@ -607,7 +608,7 @@ void addShuffleAttributesPredecessors( const ShuffleAttributes *shuffleAttribute
 	destination->predecessors.push_back( SceneAlgo::attributeHistory( source[0].get(), sourceAttributeName ) );
 }
 
-void addLocaliseAttributesPredecessors( const LocaliseAttributes *localiseAttributes, const SceneAlgo::History::Predecessors &source, SceneAlgo::AttributeHistory *destination )
+void addLocaliseAttributesPredecessors( const SceneAlgo::History::Predecessors &source, SceneAlgo::AttributeHistory *destination )
 {
 	// No need to check if the node is filtered to this location.
 	// Filtered or unfiltered, it's all the same : the predecessor
@@ -630,7 +631,11 @@ void addLocaliseAttributesPredecessors( const LocaliseAttributes *localiseAttrib
 		}
 	}
 
-	assert( predecessor );
+	if( !predecessor )
+	{
+		return;
+	}
+
 	destination->predecessors.push_back( predecessor );
 }
 
@@ -769,13 +774,17 @@ SceneAlgo::AttributeHistory::Ptr SceneAlgo::attributeHistory( const SceneAlgo::H
 		{
 			addShuffleAttributesPredecessors( shuffleAttributes, attributesHistory->predecessors, result.get() );
 		}
-		else if( auto localiseAttributes = runTimeCast<const LocaliseAttributes>( node ) )
+		else if( runTimeCast<const LocaliseAttributes>( node ) )
 		{
-			addLocaliseAttributesPredecessors( localiseAttributes, attributesHistory->predecessors, result.get() );
+			addLocaliseAttributesPredecessors( attributesHistory->predecessors, result.get() );
 		}
 		else if( auto mergeScenes = runTimeCast<const MergeScenes>( node ) )
 		{
 			addMergeScenesPredecessors( mergeScenes, attributesHistory->predecessors, result.get() );
+		}
+		else if( runTimeCast<const AttributeTweaks>( node ) )
+		{
+			addLocaliseAttributesPredecessors( attributesHistory->predecessors, result.get() );
 		}
 		else
 		{

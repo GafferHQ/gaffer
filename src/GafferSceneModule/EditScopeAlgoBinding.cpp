@@ -124,6 +124,10 @@ Imath::M44f matrixWrapper( EditScopeAlgo::TransformEdit &e )
 	return e.matrix();
 }
 
+
+// Shaders
+// =======
+
 bool hasParameterEditWrapper( const Gaffer::EditScope &scope, const ScenePlug::ScenePath &path, const std::string &attribute, const IECoreScene::ShaderNetwork::Parameter &parameter )
 {
 	return EditScopeAlgo::hasParameterEdit( &scope, path, attribute, parameter );
@@ -144,6 +148,32 @@ void removeParameterEditWrapper( Gaffer::EditScope &scope, const ScenePlug::Scen
 GraphComponentPtr parameterEditReadOnlyReasonWrapper( Gaffer::EditScope &scope, const ScenePlug::ScenePath &path, const std::string &attribute, const IECoreScene::ShaderNetwork::Parameter &parameter )
 {
 	return const_cast<GraphComponent *>( EditScopeAlgo::parameterEditReadOnlyReason( &scope, path, attribute, parameter ) );
+}
+
+
+// Attributes
+// ==========
+
+bool hasAttributeEditWrapper( const Gaffer::EditScope &scope, const ScenePlug::ScenePath &path, const std::string &attribute )
+{
+	return EditScopeAlgo::hasAttributeEdit( &scope, path, attribute );
+}
+
+TweakPlugPtr acquireAttributeEditWrapper( Gaffer::EditScope &scope, const ScenePlug::ScenePath &path, const std::string &attribute, bool createIfNecessary )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return EditScopeAlgo::acquireAttributeEdit( &scope, path, attribute, createIfNecessary );
+}
+
+void removeAttributeEditWrapper( Gaffer::EditScope &scope, const ScenePlug::ScenePath &path, const std::string &attribute )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return EditScopeAlgo::removeAttributeEdit( &scope, path, attribute );
+}
+
+GraphComponentPtr attributeEditReadOnlyReasonWrapper( Gaffer::EditScope &scope, const ScenePlug::ScenePath &path, const std::string &attribute )
+{
+	return const_cast<GraphComponent *>( EditScopeAlgo::attributeEditReadOnlyReason( &scope, path, attribute ) );
 }
 
 } // namespace
@@ -182,6 +212,11 @@ void bindEditScopeAlgo()
 	def( "hasParameterEdit", &hasParameterEditWrapper, ( arg( "scope" ), arg( "path" ), arg( "attribute" ), arg( "parameter" ) ) );
 	def( "removeParameterEdit", &removeParameterEditWrapper, ( arg( "scope" ), arg( "path" ), arg( "attribute" ), arg( "parameter" ) ) );
 	def( "parameterEditReadOnlyReason", &parameterEditReadOnlyReasonWrapper, ( arg( "scope" ), arg( "path" ), arg( "attribute" ), arg( "parameter" ) ) );
+
+	def( "acquireAttributeEdit", &acquireAttributeEditWrapper, ( arg( "scope" ), arg( "path" ), arg( "attribute" ), arg( "createIfNecessary" ) = true ) );
+	def( "hasAttributeEdit", &hasAttributeEditWrapper, ( arg( "scope" ), arg( "path" ), arg( "attribute" ) ) );
+	def( "removeAttributeEdit", &removeAttributeEditWrapper, ( arg( "scope" ), arg( "path" ), arg( "attribute" ) ) );
+	def( "attributeEditReadOnlyReason", &attributeEditReadOnlyReasonWrapper, ( arg( "scope" ), arg( "path" ), arg( "attribute" ) ) );
 
 }
 

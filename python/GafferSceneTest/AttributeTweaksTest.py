@@ -184,6 +184,25 @@ class AttributeTweaksTest( GafferSceneTest.SceneTestCase ) :
 		segmentsTweak["enabled"].setValue( False )
 		self.assertNotIn( "gaffer:transformBlurSegments", tweaks["out"].attributes( "/group/plane" ) )
 
+	def testCreateMode( self ) :
+
+		plane = GafferScene.Plane()
+
+		planeFilter = GafferScene.PathFilter()
+		planeFilter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		tweaks = GafferScene.AttributeTweaks()
+		tweaks["in"].setInput( plane["out"] )
+		tweaks["filter"].setInput( planeFilter["out"] )
+
+		self.assertNotIn( "test:attribute", tweaks["out"].attributes( "/plane" ) )
+
+		testTweak = GafferScene.TweakPlug( "test:attribute", 2 )
+		testTweak["mode"].setValue( GafferScene.TweakPlug.Mode.Create )
+		tweaks["tweaks"].addChild( testTweak )
+
+		self.assertEqual( tweaks["out"].attributes( "/plane" )["test:attribute"], IECore.IntData( 2 ) )
+
 
 if __name__ == "__main__" :
 	unittest.main()

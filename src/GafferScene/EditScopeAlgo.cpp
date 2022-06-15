@@ -36,6 +36,7 @@
 
 #include "GafferScene/EditScopeAlgo.h"
 
+#include "GafferScene/AttributeTweaks.h"
 #include "GafferScene/Prune.h"
 #include "GafferScene/PathFilter.h"
 #include "GafferScene/SceneProcessor.h"
@@ -54,6 +55,7 @@
 
 #include "OpenEXR/ImathMatrixAlgo.h"
 
+#include "boost/algorithm/string/predicate.hpp"
 #include "boost/algorithm/string/replace.hpp"
 #include "boost/container/flat_map.hpp"
 #include "boost/tokenizer.hpp"
@@ -71,6 +73,19 @@ using namespace GafferScene;
 
 namespace
 {
+
+/// \todo Make this into an API for clients to register attributes and corresponding
+/// default values they want to make available. This is needed to get the value of an
+/// attribute that _could_ exist if the user activates it, allowing it to be discovered
+/// in clients of history related APIs such as `AttributeInspector`.
+typedef std::unordered_map<std::string, const IECore::DataPtr> AttributeRegistry;
+AttributeRegistry g_attributeRegistry {
+	{ "gl:visualiser:scale", new IECore::FloatData( 1.0f ) },
+	{ "gl:visualiser:maxTextureResolution", new IECore::IntData( 512 ) },
+	{ "gl:visualiser:frustum", new IECore::StringData( "whenSelected" ) },
+	{ "gl:light:frustumScale", new IECore::FloatData( 1.0f ) },
+	{ "gl:light:drawingMode", new IECore::StringData( "texture" ) }
+};
 
 SceneProcessorPtr pruningProcessor()
 {
@@ -409,7 +424,7 @@ SceneProcessor *acquireParameterProcessor( EditScope *editScope, const std::stri
 	return editScope->acquireProcessor<SceneProcessor>( inserted.first->second, createIfNecessary );
 }
 
-ConstDataPtr parameterValue( const ScenePlug *scene, const ScenePlug::ScenePath &path, const std::string &attribute, const IECoreScene::ShaderNetwork::Parameter &parameter )
+ConstObjectPtr attributeValue( const ScenePlug *scene, const ScenePlug::ScenePath &path, const std::string &attribute )
 {
 	if( !scene->exists( path ) )
 	{
@@ -418,10 +433,31 @@ ConstDataPtr parameterValue( const ScenePlug *scene, const ScenePlug::ScenePath 
 	}
 
 	auto attributes = scene->fullAttributes( path );
-	auto shaderNetwork = attributes->member<IECoreScene::ShaderNetwork>( attribute );
+
+	ConstObjectPtr result = attributes->members()[attribute];
+
+	if( !result )
+	{
+		AttributeRegistry::const_iterator registeredAttribute = g_attributeRegistry.find( attribute );
+		if( registeredAttribute != g_attributeRegistry.end() )
+		{
+			return registeredAttribute->second;
+		}
+
+		throw IECore::Exception( boost::str( boost::format( "Attribute \"%s\" does not exist" ) % attribute ) );
+	}
+
+	return result;
+}
+
+ConstDataPtr parameterValue( const ScenePlug *scene, const ScenePlug::ScenePath &path, const std::string &attribute, const IECoreScene::ShaderNetwork::Parameter &parameter )
+{
+	auto attributeShader = attributeValue( scene, path, attribute );
+
+	auto shaderNetwork = runTimeCast<const IECoreScene::ShaderNetwork>( attributeShader.get() );
 	if( !shaderNetwork )
 	{
-		throw IECore::Exception( boost::str( boost::format( "Attribute \"%1%\" does not exist" ) % attribute ) );
+		throw IECore::Exception( boost::str( boost::format( "Attribute \"%1%\" is not a shader" ) % attribute ) );
 	}
 
 	const IECoreScene::Shader *shader;
@@ -588,6 +624,215 @@ const GraphComponent *GafferScene::EditScopeAlgo::parameterEditReadOnlyReason( c
 		tweakName = parameter.shader.string() + "." + tweakName;
 	}
 	string columnName = boost::replace_all_copy( tweakName, ".", "_" );
+	if( auto *cell = row->cellsPlug()->getChild<Spreadsheet::CellPlug>( columnName ) )
+	{
+		if( MetadataAlgo::getReadOnly( cell ) )
+		{
+			return cell;
+		}
+
+		for( const auto &plug : Plug::RecursiveRange( *cell ) )
+		{
+			if( MetadataAlgo::getReadOnly( plug.get() ) )
+			{
+				return plug.get();
+			}
+		}
+	}
+
+	return nullptr;
+}
+
+// Attributes
+// ==========
+
+namespace
+{
+
+const std::string g_attributeProcessorName = "AttributeEdits";
+
+SceneProcessorPtr attributeProcessor( const std::string &name )
+{
+	SceneProcessorPtr result = new SceneProcessor( name );
+
+	SpreadsheetPtr spreadsheet = new Spreadsheet;
+	result->addChild( spreadsheet );
+	spreadsheet->selectorPlug()->setValue( "${scene:path}" );
+
+	PathFilterPtr pathFilter = new PathFilter;
+	result->addChild( pathFilter );
+	pathFilter->pathsPlug()->setInput( spreadsheet->enabledRowNamesPlug() );
+
+	AttributeTweaksPtr attributeTweaks = new AttributeTweaks;
+	result->addChild( attributeTweaks );
+	attributeTweaks->inPlug()->setInput( result->inPlug() );
+	attributeTweaks->filterPlug()->setInput( pathFilter->outPlug() );
+	attributeTweaks->enabledPlug()->setValue( result->enabledPlug() );
+	attributeTweaks->localisePlug()->setValue( true );
+	attributeTweaks->ignoreMissingPlug()->setValue( true );
+
+	auto rowsPlug = static_cast<Spreadsheet::RowsPlug *>(
+		PlugAlgo::promoteWithName( spreadsheet->rowsPlug(), "edits" )
+	);
+	Metadata::registerValue( rowsPlug, "spreadsheet:defaultRowVisible", new BoolData( false ) );
+	Metadata::registerValue( rowsPlug->defaultRow(), "spreadsheet:rowNameWidth", new IntData( 300 ) );
+
+	result->outPlug()->setInput( attributeTweaks->outPlug() );
+
+	return result;
+}
+
+SceneProcessor *acquireAttributeProcessor( EditScope *editScope, bool createIfNecessary )
+{
+	static bool isRegistered = false;
+	if( !isRegistered )
+	{
+		EditScope::registerProcessor(
+			g_attributeProcessorName,
+			[]() {
+				return attributeProcessor( g_attributeProcessorName );
+			}
+		);
+
+		isRegistered = true;
+	}
+
+	return editScope->acquireProcessor<SceneProcessor>( g_attributeProcessorName, createIfNecessary );
+}
+
+}  // namespace
+
+
+bool GafferScene::EditScopeAlgo::hasAttributeEdit( const Gaffer::EditScope *scope, const ScenePlug::ScenePath &path, const std::string &attribute )
+{
+	return acquireAttributeEdit( const_cast<EditScope *>( scope ), path, attribute, /* createIfNecessary = */ false );
+}
+
+TweakPlug *GafferScene::EditScopeAlgo::acquireAttributeEdit( Gaffer::EditScope *scope, const ScenePlug::ScenePath &path, const std::string &attribute, bool createIfNecessary )
+{
+	const std::string pathString = ScenePlug::pathToString( path );
+
+	// If we need to create an edit, we'll need to do a compute to figure our the attribute
+	// type and value. But we don't want to do that if we already have an edit. And since the
+	// compute could error, we need to get the attribute value before making _any_ changes, so we
+	// don't leave things in a partial state. We use `ensureAttributeValue()` to get the value
+	// lazily at the first point we know it will be needed.
+	ConstDataPtr attributeValue;
+	auto ensureAttributeValue = [&] {
+		if( !attributeValue )
+		{
+			attributeValue = runTimeCast<const Data>(
+				::attributeValue( scope->outPlug<ScenePlug>(), path, attribute )
+			);
+			if( !attributeValue )
+			{
+				throw IECore::Exception( boost::str( boost::format( "Attribute \"%s\" cannot be tweaked" ) % attribute ) );
+			}
+		}
+	};
+
+	// Find processor, and row for `path`.
+
+	auto *processor = acquireAttributeProcessor( scope, /* createIfNecessary */ false );
+	if( !processor )
+	{
+		if( !createIfNecessary )
+		{
+			return nullptr;
+		}
+		else
+		{
+			ensureAttributeValue();
+			processor = acquireAttributeProcessor( scope, /* createIfNecessary */ true );
+		}
+	}
+
+	auto *rows = processor->getChild<Spreadsheet::RowsPlug>( "edits" );
+	Spreadsheet::RowPlug *row = rows->row( pathString );
+	if( !row )
+	{
+		if( !createIfNecessary )
+		{
+			return nullptr;
+		}
+		ensureAttributeValue();
+		row = rows->addRow();
+		row->namePlug()->setValue( pathString );
+	}
+
+	// Find cell for attribute
+
+	std::string columnName = boost::replace_all_copy( attribute, ":", "_" );
+	if( auto *cell = row->cellsPlug()->getChild<Spreadsheet::CellPlug>( columnName ) )
+	{
+		return cell->valuePlug<TweakPlug>();
+	}
+
+	if( !createIfNecessary )
+	{
+		return nullptr;
+	}
+
+	// No tweak for the attribute yet. Create it.
+
+	ensureAttributeValue();
+
+	ValuePlugPtr valuePlug = PlugAlgo::createPlugFromData( "value", Plug::In, Plug::Default, attributeValue.get() );
+
+	TweakPlugPtr tweakPlug = new TweakPlug( attribute, valuePlug, TweakPlug::Create, false );
+
+	auto *attributeTweaks = processor->getChild<AttributeTweaks>( "AttributeTweaks" );
+	attributeTweaks->tweaksPlug()->addChild( tweakPlug );
+
+	size_t columnIndex = rows->addColumn( tweakPlug.get(), columnName, /* adoptEnabledPlug */ true );
+	MetadataAlgo::copyIf(
+		tweakPlug.get(), rows->defaultRow()->cellsPlug()->getChild<Spreadsheet::CellPlug>( columnIndex )->valuePlug(),
+		[] ( const GraphComponent *from, const GraphComponent *to, const std::string &name ) {
+			return boost::starts_with( name, "tweakPlugValueWidget:" );
+		}
+	);
+
+	tweakPlug->setInput( processor->getChild<Spreadsheet>( "Spreadsheet" )->outPlug()->getChild<Plug>( columnIndex ) );
+
+	return row->cellsPlug()->getChild<Spreadsheet::CellPlug>( columnIndex )->valuePlug<TweakPlug>();
+}
+
+void GafferScene::EditScopeAlgo::removeAttributeEdit( Gaffer::EditScope *scope, const ScenePlug::ScenePath &path, const std::string &attribute )
+{
+	TweakPlug *edit = acquireAttributeEdit( scope, path, attribute, /* createIfNecessary */ false );
+	if( !edit )
+	{
+		return;
+	}
+	// We're unlikely to be able to delete the row or column,
+	// because that would affect other edits, so we simply disable
+	// the edit instead.
+	edit->enabledPlug()->setValue( false );
+}
+
+const Gaffer::GraphComponent *GafferScene::EditScopeAlgo::attributeEditReadOnlyReason( const Gaffer::EditScope *scope, const ScenePlug::ScenePath &path, const std::string &attribute )
+{
+	auto *processor = acquireAttributeProcessor( const_cast<EditScope *>( scope ), /*createIfNecessary */ false );
+	if( !processor )
+	{
+		return MetadataAlgo::readOnlyReason( scope );
+	}
+
+	const std::string pathString = ScenePlug::pathToString( path );
+
+	auto *rows = processor->getChild<Spreadsheet::RowsPlug>( "edits" );
+	Spreadsheet::RowPlug *row = rows->row( pathString );
+	if( !row )
+	{
+		return MetadataAlgo::readOnlyReason( rows );
+	}
+
+	if( const auto reason = MetadataAlgo::readOnlyReason( row->cellsPlug() ) )
+	{
+		return reason;
+	}
+
+	std::string columnName = boost::replace_all_copy( attribute, ":", "_" );
 	if( auto *cell = row->cellsPlug()->getChild<Spreadsheet::CellPlug>( columnName ) )
 	{
 		if( MetadataAlgo::getReadOnly( cell ) )

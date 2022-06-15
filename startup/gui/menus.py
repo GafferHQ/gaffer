@@ -503,6 +503,7 @@ nodeMenu.append( "/VDB/Sphere Level Set", GafferVDB.SphereLevelSet, searchText="
 import GafferUSD
 import GafferUSDUI
 
+nodeMenu.append( "/USD/Attributes", GafferUSD.USDAttributes, searchText = "USDAttributes" )
 nodeMenu.append( "/USD/Layer Writer", GafferUSD.USDLayerWriter, searchText = "USDLayerWriter" )
 
 # Dispatch nodes

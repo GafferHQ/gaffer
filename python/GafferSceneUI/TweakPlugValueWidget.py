@@ -49,7 +49,8 @@ from Qt import QtWidgets
 # and CameraTweaks.  Shows a value plug that you can use to specify a tweak value, along with
 # a target parameter name, an enabled plug, and a mode.  The mode can be "Replace",
 # or "Add"/"Subtract"/"Multiply" if the plug is numeric,
-# or "Remove" if the metadata "tweakPlugValueWidget:allowRemove" is set
+# or "Remove" if the metadata "tweakPlugValueWidget:allowRemove" is set,
+# or "Create" if the metadata "tweakPlugValueWidget:allowCreate" is set.
 class TweakPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plugs ) :
@@ -165,7 +166,11 @@ Gaffer.Metadata.registerValue(
 
 def __validModes( plug ) :
 
-	result = [ GafferScene.TweakPlug.Mode.Replace ]
+	result = []
+	if Gaffer.Metadata.value( plug.parent(), "tweakPlugValueWidget:allowCreate" ) :
+		result += [ GafferScene.TweakPlug.Mode.Create ]
+
+	result += [ GafferScene.TweakPlug.Mode.Replace ]
 	if hasattr( plug.parent()["value"], "hasMinValue" ) :
 		result += [
 			GafferScene.TweakPlug.Mode.Add,

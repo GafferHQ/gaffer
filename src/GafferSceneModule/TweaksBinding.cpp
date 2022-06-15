@@ -125,6 +125,7 @@ void GafferSceneModule::bindTweaks()
 			.value( "Subtract", TweakPlug::Subtract )
 			.value( "Multiply", TweakPlug::Multiply )
 			.value( "Remove", TweakPlug::Remove )
+			.value( "Create", TweakPlug::Create )
 		;
 
 		enum_<TweakPlug::MissingMode>( "MissingMode" )

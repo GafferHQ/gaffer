@@ -15,7 +15,7 @@
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
 //
-//      * Neither the name of Image Engine Design nor the names of
+//      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
@@ -34,20 +34,58 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERSCENEUI_ATTRIBUTEINSPECTOR_H
+#define GAFFERSCENEUI_ATTRIBUTEINSPECTOR_H
 
-#include "GafferUSD/USDAttributes.h"
-#include "GafferUSD/USDLayerWriter.h"
+#include "GafferSceneUI/Export.h"
 
-#include "GafferDispatchBindings/TaskNodeBinding.h"
+#include "GafferSceneUI/Private/Inspector.h"
 
-using namespace boost::python;
-using namespace GafferUSD;
-
-BOOST_PYTHON_MODULE( _GafferUSD )
+namespace GafferSceneUI
 {
 
-	GafferBindings::DependencyNodeClass<USDAttributes>();
-	GafferDispatchBindings::TaskNodeClass<USDLayerWriter>();
+namespace Private
+{
 
-}
+class GAFFERSCENEUI_API AttributeInspector : public Inspector
+{
+
+	public :
+
+		AttributeInspector(
+			const GafferScene::ScenePlugPtr &scene,
+			const Gaffer::PlugPtr &editScope,
+			IECore::InternedString attribute,
+			const std::string &name = "",
+			const std::string &type = "attribute"
+		);
+
+		IE_CORE_DECLAREMEMBERPTR( AttributeInspector );
+
+	protected :
+
+		GafferScene::SceneAlgo::History::ConstPtr history() const override;
+		IECore::ConstObjectPtr value( const GafferScene::SceneAlgo::History *history) const override;
+		Gaffer::ValuePlugPtr source( const GafferScene::SceneAlgo::History *history, std::string &editWarning ) const override;
+		EditFunctionOrFailure editFunction( Gaffer::EditScope *scope, const GafferScene::SceneAlgo::History *history) const override;
+
+		bool attributeExists() const;
+
+	private :
+
+		void plugDirtied( Gaffer::Plug *plug );
+		void plugMetadataChanged( IECore::InternedString key, const Gaffer::Plug *plug );
+		void nodeMetadataChanged( IECore::InternedString key, const Gaffer::Node *node );
+
+		const GafferScene::ScenePlugPtr m_scene;
+		const IECore::InternedString m_attribute;
+
+};
+
+IE_CORE_DECLAREPTR( AttributeInspector )
+
+}  // namespace Private
+
+}  // namespace GafferSceneUI
+
+#endif // GAFFERSCENEUI_ATTRIBUTEINSPECTOR_H

@@ -98,7 +98,7 @@ TweakPlug::TweakPlug( Gaffer::ValuePlugPtr valuePlug, const std::string &name, D
 {
 	addChild( new StringPlug( "name", direction ) );
 	addChild( new BoolPlug( "enabled", direction, true ) );
-	addChild( new IntPlug( "mode", direction, Replace, Replace, Remove ) );
+	addChild( new IntPlug( "mode", direction, Replace, Replace, Create ) );
 
 	if( valuePlug )
 	{
@@ -398,6 +398,7 @@ void TweakPlug::applyNumericTweak(
 						break;
 					case TweakPlug::Replace :
 					case TweakPlug::Remove :
+					case TweakPlug::Create :
 						// These cases are unused - we handle replace and remove mode outside of numericTweak.
 						// But the compiler gets unhappy if we don't handle some cases.
 						assert( false );

@@ -39,6 +39,7 @@
 #include "InspectorBinding.h"
 
 #include "GafferSceneUI/Private/Inspector.h"
+#include "GafferSceneUI/Private/AttributeInspector.h"
 #include "GafferSceneUI/Private/ParameterInspector.h"
 
 #include "GafferBindings/SignalBinding.h"
@@ -130,6 +131,14 @@ void GafferSceneUIModule::bindInspector()
 		.def(
 			init<const ScenePlugPtr &, const PlugPtr &, IECore::InternedString, const ShaderNetwork::Parameter &>(
 				( arg( "scene" ), arg( "attribute" ), arg( "parameter" ) )
+			)
+		)
+	;
+
+	RefCountedClass<AttributeInspector, Inspector>( "AttributeInspector" )
+		.def(
+			init<const ScenePlugPtr &, const PlugPtr &, IECore::InternedString, const std::string &>(
+				( arg( "scene" ), arg( "editScope" ), arg( "attribute" ), arg( "name" ) = "" )
 			)
 		)
 	;

@@ -34,10 +34,44 @@
 #
 ##########################################################################
 
-from .ModuleTest import ModuleTest
-from .USDAttributesTest import USDAttributesTest
-from .USDLayerWriterTest import USDLayerWriterTest
+import os
+import collections
+import unittest
+
+import IECore
+
+import GafferUSD
+import GafferScene
+import GafferSceneTest
+
+class USDAttributesTest( GafferSceneTest.SceneTestCase ) :
+
+	def test( self ) :
+
+		plane = GafferScene.Plane()
+		planeFilter = GafferScene.PathFilter()
+		planeFilter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		attributes = GafferUSD.USDAttributes()
+		attributes["in"].setInput( plane["out"] )
+		attributes["filter"].setInput( planeFilter["out"] )
+
+		self.assertEqual( attributes["out"].attributes( "/plane" ), IECore.CompoundObject() )
+
+		expected = collections.OrderedDict( [
+			( "purpose", IECore.StringData( "default" ) ),
+			( "kind", IECore.StringData( "assembly" ) ),
+		] )
+
+		self.assertEqual( attributes["attributes"].keys(), list( expected.keys() ) )
+
+		for name, value in expected.items() :
+			self.assertEqual( attributes["attributes"][name]["name"].getValue(), "usd:" + name )
+			self.assertEqual( attributes["attributes"][name]["enabled"].getValue(), False )
+			self.assertEqual( attributes["attributes"][name]["value"].getValue(), value.value )
+			attributes["attributes"][name]["enabled"].setValue( True )
+
+		self.assertEqual( attributes["out"].attributes( "/plane" ), IECore.CompoundObject( { "usd:" + k : v for k, v in expected.items() } ) )
 
 if __name__ == "__main__":
-	import unittest
 	unittest.main()

@@ -94,7 +94,13 @@ Gaffer.Metadata.registerNode(
 
 			"nodule:type", "",
 
-		]
+		],
+
+		"tweaks.*" : [
+
+			"tweakPlugValueWidget:allowCreate", True,
+
+		],
 
 	}
 )
