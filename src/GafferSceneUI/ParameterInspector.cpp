@@ -36,16 +36,14 @@
 
 #include "GafferSceneUI/Private/ParameterInspector.h"
 
+#include "GafferSceneUI/Private/AttributeInspector.h"
+
 #include "GafferScene/EditScopeAlgo.h"
 #include "GafferScene/Light.h"
 #include "GafferScene/LightFilter.h"
 #include "GafferScene/ShaderAssignment.h"
 #include "GafferScene/ShaderTweaks.h"
 
-#include "Gaffer/Metadata.h"
-#include "Gaffer/MetadataAlgo.h"
-#include "Gaffer/ParallelAlgo.h"
-#include "Gaffer/Private/IECorePreview/LRUCache.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/Switch.h"
 
@@ -57,161 +55,31 @@ using namespace Gaffer;
 using namespace GafferScene;
 using namespace GafferSceneUI::Private;
 
-//////////////////////////////////////////////////////////////////////////
-// History cache
-//////////////////////////////////////////////////////////////////////////
-
-namespace
-{
-
-// This uses the same strategy that ValuePlug uses for the hash cache,
-// using `plug->dirtyCount()` to invalidate previous cache entries when
-// a plug is dirtied.
-struct HistoryCacheKey
-{
-	HistoryCacheKey() {};
-	HistoryCacheKey( const ValuePlug *plug )
-		:	plug( plug ), contextHash( Context::current()->hash() ), dirtyCount( plug->dirtyCount() )
-	{
-	}
-
-	bool operator==( const HistoryCacheKey &rhs ) const
-	{
-		return
-			plug == rhs.plug &&
-			contextHash == rhs.contextHash &&
-			dirtyCount == rhs.dirtyCount
-		;
-	}
-
-	const ValuePlug *plug;
-	IECore::MurmurHash contextHash;
-	uint64_t dirtyCount;
-};
-
-size_t hash_value( const HistoryCacheKey &key )
-{
-	size_t result = 0;
-	boost::hash_combine( result, key.plug );
-	boost::hash_combine( result, key.contextHash );
-	boost::hash_combine( result, key.dirtyCount );
-	return result;
-}
-
-using HistoryCache = IECorePreview::LRUCache<HistoryCacheKey, SceneAlgo::History::ConstPtr>;
-
-HistoryCache g_historyCache(
-	// Getter
-	[] ( const HistoryCacheKey &key, size_t &cost, const IECore::Canceller *canceller ) {
-		assert( canceller == Context::current()->canceller() );
-		cost = 1;
-		return SceneAlgo::history(
-			key.plug, Context::current()->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName )
-		);
-	},
-	// Max cost
-	1000,
-	// Removal callback
-	[] ( const HistoryCacheKey &key, const SceneAlgo::History::ConstPtr &history ) {
-		// Histories contain PlugPtrs, which could potentially be the sole
-		// owners. Destroying plugs can trigger dirty propagation, so as a
-		// precaution we destroy the history on the UI thread, where this would
-		// be OK.
-		ParallelAlgo::callOnUIThread(
-			[history] () {}
-		);
-	}
-
-);
-
-struct AttributeHistoryCacheKey : public HistoryCacheKey
-{
-	AttributeHistoryCacheKey() {};
-	AttributeHistoryCacheKey( const ScenePlug *plug, IECore::InternedString attribute )
-		:	HistoryCacheKey( plug->attributesPlug() ), attribute( attribute )
-	{
-	}
-
-	bool operator==( const AttributeHistoryCacheKey &rhs ) const
-	{
-		return HistoryCacheKey::operator==( rhs ) && attribute == rhs.attribute;
-	}
-
-	IECore::InternedString attribute;
-};
-
-size_t hash_value( const AttributeHistoryCacheKey &key )
-{
-	size_t result = 0;
-	boost::hash_combine( result, static_cast<const HistoryCacheKey &>( key ) );
-	boost::hash_combine( result, key.attribute.c_str() );
-	return result;
-}
-
-using AttributeHistoryCache = IECorePreview::LRUCache<AttributeHistoryCacheKey, SceneAlgo::AttributeHistory::ConstPtr>;
-
-AttributeHistoryCache g_attributeHistoryCache(
-	// Getter
-	[] ( const AttributeHistoryCacheKey &key, size_t &cost, const IECore::Canceller *canceller ) {
-		assert( canceller == Context::current()->canceller() );
-		cost = 1;
-		SceneAlgo::History::ConstPtr attributesHistory = g_historyCache.get( key, canceller );
-		return SceneAlgo::attributeHistory( attributesHistory.get(), key.attribute );
-	},
-	// Max cost
-	1000,
-	// Removal callback
-	[] ( const AttributeHistoryCacheKey &key, const SceneAlgo::AttributeHistory::ConstPtr &history ) {
-		// See comment in g_historyCache
-		ParallelAlgo::callOnUIThread(
-			[history] () {}
-		);
-	}
-
-);
-
-} // namespace
-
-//////////////////////////////////////////////////////////////////////////
-// ParameterInspector
-//////////////////////////////////////////////////////////////////////////
-
 ParameterInspector::ParameterInspector(
 	const GafferScene::ScenePlugPtr &scene, const Gaffer::PlugPtr &editScope,
 	IECore::InternedString attribute, const IECoreScene::ShaderNetwork::Parameter &parameter
 )
-	: Inspector( parameter.name.string(), editScope ), m_scene( scene ), m_attribute( attribute ), m_parameter( parameter )
+	: AttributeInspector( scene, editScope, attribute, parameter.name.string(), "parameter" ), m_parameter( parameter )
 {
-	m_scene->node()->plugDirtiedSignal().connect(
-		boost::bind( &ParameterInspector::plugDirtied, this, ::_1 )
-	);
 
-	Metadata::plugValueChangedSignal().connect( boost::bind( &ParameterInspector::plugMetadataChanged, this, ::_3, ::_4 ) );
-	Metadata::nodeValueChangedSignal().connect( boost::bind( &ParameterInspector::nodeMetadataChanged, this, ::_2, ::_3 ) );
 }
 
 GafferScene::SceneAlgo::History::ConstPtr ParameterInspector::history() const
 {
-	if( !m_scene->exists() )
+	// Computing histories is expensive, and there's no point doing it
+	// if the specific attribute we want doesn't exist.
+	if( !attributeExists() )
 	{
 		return nullptr;
 	}
 
-	ConstCompoundObjectPtr attributes = m_scene->attributesPlug()->getValue();
-	if( attributes->members().find( m_attribute ) == attributes->members().end() )
-	{
-		// Computing histories is expensive, and there's no point doing it
-		// if the specific attribute we want doesn't exist.
-		return nullptr;
-	}
-
-	return g_attributeHistoryCache.get( AttributeHistoryCacheKey( m_scene.get(), m_attribute ), Context::current()->canceller() );
+	return AttributeInspector::history();
 }
 
 IECore::ConstObjectPtr ParameterInspector::value( const GafferScene::SceneAlgo::History *history ) const
 {
-	auto attributeHistory = static_cast<const SceneAlgo::AttributeHistory *>( history );
-	auto shaderNetwork = runTimeCast<const ShaderNetwork>( attributeHistory->attributeValue.get() );
+	auto attribute = AttributeInspector::value( history );
+	auto shaderNetwork = runTimeCast<const ShaderNetwork>( attribute.get() );
 	if( !shaderNetwork )
 	{
 		return nullptr;
@@ -329,52 +197,5 @@ Inspector::EditFunctionOrFailure ParameterInspector::editFunction( Gaffer::EditS
 					parameter
 				);
 		};
-	}
-}
-
-void ParameterInspector::plugDirtied( Gaffer::Plug *plug )
-{
-	if( plug == m_scene->attributesPlug() )
-	{
-		dirtiedSignal()( this );
-	}
-}
-
-void ParameterInspector::plugMetadataChanged( IECore::InternedString key, const Gaffer::Plug *plug )
-{
-	if( !plug )
-	{
-		// Assume readOnly metadata is only registered on instances.
-		return;
-	}
-	nodeMetadataChanged( key, plug->node() );
-}
-
-void ParameterInspector::nodeMetadataChanged( IECore::InternedString key, const Gaffer::Node *node )
-{
-	if( !node )
-	{
-		// Assume readOnly metadata is only registered on instances.
-		return;
-	}
-
-	EditScope *scope = targetEditScope();
-	if( !scope )
-	{
-		return;
-	}
-
-	if(
-		MetadataAlgo::readOnlyAffectedByChange( scope, node, key ) ||
-		( MetadataAlgo::readOnlyAffectedByChange( key ) && scope->isAncestorOf( node ) )
-	)
-	{
-		// Might affect `EditScopeAlgo::parameterEditReadOnlyReason()`
-		// which we call in `editFunction()`.
-		/// \todo Can we ditch the signal processing and call `parameterEditReadOnlyReason()`
-		/// just-in-time from `editable()`? In the past that wasn't possible
-		/// because editability changed the appearance of the UI, but it isn't
-		/// doing that currently.
-		dirtiedSignal()( this );
 	}
 }

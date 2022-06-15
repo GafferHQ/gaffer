@@ -111,6 +111,16 @@ GAFFERSCENE_API TweakPlug *acquireParameterEdit( Gaffer::EditScope *scope, const
 GAFFERSCENE_API void removeParameterEdit( Gaffer::EditScope *scope, const ScenePlug::ScenePath &path, const std::string &attribute, const IECoreScene::ShaderNetwork::Parameter &parameter );
 GAFFERSCENE_API const Gaffer::GraphComponent *parameterEditReadOnlyReason( const Gaffer::EditScope *scope, const ScenePlug::ScenePath &path, const std::string &attribute, const IECoreScene::ShaderNetwork::Parameter &parameter );
 
+// Attributes
+// ==========
+//
+// These methods edit attributes for a particular location.
+
+GAFFERSCENE_API bool hasAttributeEdit( const Gaffer::EditScope *scope, const ScenePlug::ScenePath &path, const std::string &attribute );
+GAFFERSCENE_API TweakPlug *acquireAttributeEdit( Gaffer::EditScope *scope, const ScenePlug::ScenePath &path, const std::string &attribute, bool createIfNecessary = true );
+GAFFERSCENE_API void removeAttributeEdit( Gaffer::EditScope *scope, const ScenePlug::ScenePath &path, const std::string &attribute );
+GAFFERSCENE_API const Gaffer::GraphComponent *attributeEditReadOnlyReason( const Gaffer::EditScope *scope, const ScenePlug::ScenePath &path, const std::string &attribute );
+
 } // namespace EditScopeAlgo
 
 } // namespace GafferScene

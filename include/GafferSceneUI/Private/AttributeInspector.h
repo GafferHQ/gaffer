@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2021, Cinesite VFX Ltd. All rights reserved.
+//  Copyright (c) 2022, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,14 +34,12 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUI_PARAMETERINSPECTOR_H
-#define GAFFERSCENEUI_PARAMETERINSPECTOR_H
+#ifndef GAFFERSCENEUI_ATTRIBUTEINSPECTOR_H
+#define GAFFERSCENEUI_ATTRIBUTEINSPECTOR_H
 
 #include "GafferSceneUI/Export.h"
 
-#include "GafferSceneUI/Private/AttributeInspector.h"
-
-#include "IECoreScene/ShaderNetwork.h"
+#include "GafferSceneUI/Private/Inspector.h"
 
 namespace GafferSceneUI
 {
@@ -49,36 +47,45 @@ namespace GafferSceneUI
 namespace Private
 {
 
-class GAFFERSCENEUI_API ParameterInspector : public AttributeInspector
+class GAFFERSCENEUI_API AttributeInspector : public Inspector
 {
 
 	public :
 
-		ParameterInspector(
-			const GafferScene::ScenePlugPtr &scene, const Gaffer::PlugPtr &editScope,
-			IECore::InternedString attribute, const IECoreScene::ShaderNetwork::Parameter &parameter
+		AttributeInspector(
+			const GafferScene::ScenePlugPtr &scene,
+			const Gaffer::PlugPtr &editScope,
+			IECore::InternedString attribute,
+			const std::string &name = "",
+			const std::string &type = "attribute"
 		);
 
-		IE_CORE_DECLAREMEMBERPTR( ParameterInspector );
+		IE_CORE_DECLAREMEMBERPTR( AttributeInspector );
 
 	protected :
 
 		GafferScene::SceneAlgo::History::ConstPtr history() const override;
+		IECore::ConstObjectPtr value( const GafferScene::SceneAlgo::History *history) const override;
+		Gaffer::ValuePlugPtr source( const GafferScene::SceneAlgo::History *history, std::string &editWarning ) const override;
+		EditFunctionOrFailure editFunction( Gaffer::EditScope *scope, const GafferScene::SceneAlgo::History *history) const override;
+
+		bool attributeExists() const;
 
 	private :
 
-		IECore::ConstObjectPtr value( const GafferScene::SceneAlgo::History *history ) const override;
-		Gaffer::ValuePlugPtr source( const GafferScene::SceneAlgo::History *history, std::string &editWarning ) const override;
-		EditFunctionOrFailure editFunction( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history ) const override;
+		void plugDirtied( Gaffer::Plug *plug );
+		void plugMetadataChanged( IECore::InternedString key, const Gaffer::Plug *plug );
+		void nodeMetadataChanged( IECore::InternedString key, const Gaffer::Node *node );
 
-		const IECoreScene::ShaderNetwork::Parameter m_parameter;
+		const GafferScene::ScenePlugPtr m_scene;
+		const IECore::InternedString m_attribute;
 
 };
 
-IE_CORE_DECLAREPTR( ParameterInspector )
+IE_CORE_DECLAREPTR( AttributeInspector )
 
-} // namespace Private
+}  // namespace Private
 
-} // namespace GafferSceneUI
+}  // namespace GafferSceneUI
 
-#endif // GAFFERSCENEUI_PARAMETERINSPECTOR_H
+#endif // GAFFERSCENEUI_ATTRIBUTEINSPECTOR_H

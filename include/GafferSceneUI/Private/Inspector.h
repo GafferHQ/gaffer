@@ -86,6 +86,9 @@ class GAFFERSCENEUI_API Inspector : public IECore::RefCounted, public boost::sig
 		IE_CORE_DECLAREMEMBERPTR( Inspector );
 		IE_CORE_FORWARDDECLARE( Result );
 
+		/// The type of property being inspected (for instance "attribute" or "parameter").
+		const std::string &type() const;
+
 		/// The name of the property being inspected, as it is referred to in
 		/// the API. It is the UI's responsibility to format this appropriately
 		/// (for example, by converting from "camelCase" or "snake_case").
@@ -103,7 +106,7 @@ class GAFFERSCENEUI_API Inspector : public IECore::RefCounted, public boost::sig
 
 		/// Protected constructor for use by derived classes. The `name` argument
 		/// will be returned verbatim by the `name()` method.
-		Inspector( const std::string &name, const Gaffer::PlugPtr &editScope );
+		Inspector( const std::string &type, const std::string &name, const Gaffer::PlugPtr &editScope );
 
 		/// Methods to be implemented in derived classes
 		/// ============================================
@@ -129,6 +132,8 @@ class GAFFERSCENEUI_API Inspector : public IECore::RefCounted, public boost::sig
 		/// `editWarning` may be assigned a warning that will be shown to the
 		/// user when editing this plug. Called with `history->context` as the
 		/// current context. Default implementation returns null.
+		/// \todo Perhaps this should also be available directly from the
+		/// history class?
 		virtual Gaffer::ValuePlugPtr source( const GafferScene::SceneAlgo::History *history, std::string &editWarning ) const;
 
 		using EditFunction = std::function<Gaffer::ValuePlugPtr ()>;
@@ -153,6 +158,7 @@ class GAFFERSCENEUI_API Inspector : public IECore::RefCounted, public boost::sig
 		void inspectHistoryWalk( const GafferScene::SceneAlgo::History *history, Result *result ) const;
 		void editScopeInputChanged( const Gaffer::Plug *plug );
 
+		const std::string m_type;
 		const std::string m_name;
 		const Gaffer::PlugPtr m_editScope;
 		InspectorSignal m_dirtiedSignal;

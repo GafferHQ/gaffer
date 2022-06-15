@@ -7,6 +7,11 @@ Features
 - USDLayerWriter : Added a new node for baking the difference between two Gaffer scenes into a minimal USD layer on disk.
 - USDAttributes : Added a new node for setting USD's `kind` and `purpose`.
 
+Improvements
+------------
+
+- Light Editor : Added support for editing visualisation attributes of lights.
+
 Fixes
 -----
 
@@ -14,6 +19,13 @@ Fixes
 - ShaderQuery :
   - Fixed error `ShaderQuery : "outPlug" is missing` when promoting a child plug of a query to a `Spreadsheet`.
   - Adding a child plug of a query to a `Spreadsheet` now uses the default name for the spreadsheet column.
+- Spreadsheet : Fixed missing `Remove` TweakPlug mode presets.
+
+API
+---
+
+- SceneAlgo : `attributeHistory` now calculates the correct history of an attribute passing through an `AttributeTweaks` node with `localise` enabled.
+- EditScopeAlgo : Added support for editing attributes.
 
 0.61.12.0 (relative to 0.61.11.0)
 =========

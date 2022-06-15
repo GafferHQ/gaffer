@@ -62,7 +62,8 @@ class GAFFERSCENE_API TweakPlug : public Gaffer::ValuePlug
 			Add,
 			Subtract,
 			Multiply,
-			Remove
+			Remove,
+			Create
 		};
 
 		TweakPlug( const std::string &tweakName, Gaffer::ValuePlugPtr valuePlug, Mode mode = Replace, bool enabled = true );
@@ -100,8 +101,7 @@ class GAFFERSCENE_API TweakPlug : public Gaffer::ValuePlug
 			/// Legacy mode used by CameraTweaks. Same as
 			/// Ignore mode except when `Mode == Replace`, in
 			/// which case a new parameter is created.
-			/// \deprecated Do not use in new code. If you find
-			/// yourself wanting to, add Mode::Create instead.
+			/// \deprecated Do not use in new code.
 			IgnoreOrReplace,
 		};
 

@@ -42,6 +42,9 @@ import GafferSceneUI
 
 if os.environ.get( "GAFFERAPPLESEED_HIDE_UI", "" ) != "1" :
 
+	# Register Light Editor sections for Appleseed before the generic "Visualisation" section
+	import GafferAppleseedUI
+
 	Gaffer.Metadata.registerValue( GafferSceneUI.LightEditor.Settings, "attribute", "preset:Appleseed", "as:light" )
 	# Default to showing Appleseed lights, since that is the renderer we ship with.
 	Gaffer.Metadata.registerValue( GafferSceneUI.LightEditor.Settings, "attribute", "userDefault", "as:light" )
@@ -75,7 +78,19 @@ with IECore.IgnoredExceptions( ImportError ) :
 with IECore.IgnoredExceptions( ImportError ) :
 
 	import GafferArnold
+	# Register Light Editor sections for Arnold before the generic "Visualisation" section
+	import GafferArnoldUI
 
 	Gaffer.Metadata.registerValue( GafferSceneUI.LightEditor.Settings, "attribute", "preset:Arnold", "ai:light" )
 	# If Arnold is available, then assume it is the renderer of choice.
 	Gaffer.Metadata.registerValue( GafferSceneUI.LightEditor.Settings, "attribute", "userDefault", "ai:light" )
+
+# Register generic light attributes
+for attributeName in [
+	"gl:visualiser:scale",
+	"gl:visualiser:maxTextureResolution",
+	"gl:visualiser:frustum",
+	"gl:light:frustumScale",
+	"gl:light:drawingMode",
+] :
+	GafferSceneUI.LightEditor.registerAttribute( "*", attributeName, "Visualisation" )

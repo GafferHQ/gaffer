@@ -103,7 +103,6 @@ bool TweakPlug::applyTweak(
 		return setDataFunctor( name,  nullptr );
 	}
 
-	const IECore::Data *currentValue = getDataFunctor( name );
 	IECore::DataPtr newData = Gaffer::PlugAlgo::getValueAsData( valuePlug() );
 	if( !newData )
 	{
@@ -111,32 +110,42 @@ bool TweakPlug::applyTweak(
 			boost::str( boost::format( "Cannot apply tweak to \"%s\" : Value plug has unsupported type \"%s\"" ) % name % valuePlug()->typeName() )
 		);
 	}
-	if( currentValue && currentValue->typeId() != newData->typeId() )
-	{
-		throw IECore::Exception(
-			boost::str( boost::format( "Cannot apply tweak to \"%s\" : Value of type \"%s\" does not match parameter of type \"%s\"" ) % name % currentValue->typeName() % newData->typeName() )
-		);
-	}
-
-	if( !currentValue )
-	{
-		if( missingMode == GafferScene::TweakPlug::MissingMode::Ignore )
-		{
-			return false;
-		}
-		else if( !( mode == GafferScene::TweakPlug::Replace && missingMode == GafferScene::TweakPlug::MissingMode::IgnoreOrReplace) )
-		{
-			throw IECore::Exception( boost::str( boost::format( "Cannot apply tweak with mode %s to \"%s\" : This parameter does not exist" ) % Detail::modeToString( mode ) % name ) );
-		}
-	}
 
 	if(
+		mode == GafferScene::TweakPlug::Replace ||
 		mode == GafferScene::TweakPlug::Add ||
 		mode == GafferScene::TweakPlug::Subtract ||
 		mode == GafferScene::TweakPlug::Multiply
 	)
 	{
-		modifyData( currentValue, newData.get(), newData.get(), mode, name );
+		const IECore::Data *currentValue = getDataFunctor( name );
+		if( currentValue && currentValue->typeId() != newData->typeId() )
+		{
+			throw IECore::Exception(
+				boost::str( boost::format( "Cannot apply tweak to \"%s\" : Value of type \"%s\" does not match parameter of type \"%s\"" ) % name % currentValue->typeName() % newData->typeName() )
+			);
+		}
+
+		if( !currentValue )
+		{
+			if( missingMode == GafferScene::TweakPlug::MissingMode::Ignore )
+			{
+				return false;
+			}
+			else if( !( mode == GafferScene::TweakPlug::Replace && missingMode == GafferScene::TweakPlug::MissingMode::IgnoreOrReplace) )
+			{
+				throw IECore::Exception( boost::str( boost::format( "Cannot apply tweak with mode %s to \"%s\" : This parameter does not exist" ) % Detail::modeToString( mode ) % name ) );
+			}
+		}
+
+		if(
+			mode == GafferScene::TweakPlug::Add ||
+			mode == GafferScene::TweakPlug::Subtract ||
+			mode == GafferScene::TweakPlug::Multiply
+		)
+		{
+			modifyData( currentValue, newData.get(), newData.get(), mode, name );
+		}
 	}
 
 	setDataFunctor( name, newData );

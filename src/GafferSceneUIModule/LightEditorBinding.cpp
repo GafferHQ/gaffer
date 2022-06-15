@@ -149,8 +149,8 @@ class InspectorColumn : public PathColumn
 
 		IE_CORE_DECLAREMEMBERPTR( InspectorColumn )
 
-		InspectorColumn( GafferSceneUI::Private::InspectorPtr inspector )
-			:	m_inspector( inspector ), m_headerValue( headerValue( inspector->name() ) )
+		InspectorColumn( GafferSceneUI::Private::InspectorPtr inspector, const std::string &columnName )
+			:	m_inspector( inspector ), m_headerValue( headerValue( columnName != "" ? columnName : inspector->name() ) )
 		{
 			m_inspector->dirtiedSignal().connect( boost::bind( &InspectorColumn::inspectorDirtied, this ) );
 		}
@@ -235,7 +235,12 @@ void GafferSceneUIModule::bindLightEditor()
 	;
 
 	IECorePython::RefCountedClass<InspectorColumn, GafferUI::PathColumn>( "_LightEditorInspectorColumn" )
-		.def( init<GafferSceneUI::Private::InspectorPtr>() )
+		.def( init<GafferSceneUI::Private::InspectorPtr, const std::string &>(
+			(
+				arg_( "inspector" ),
+				arg_( "columName" ) = ""
+			)
+		) )
 		.def( "inspector", &InspectorColumn::inspector, return_value_policy<IECorePython::CastToIntrusivePtr>() )
 	;
 

@@ -108,8 +108,8 @@ Gaffer::Plug *spreadsheetAwareSource( Gaffer::Plug *plug )
 // Inspector
 //////////////////////////////////////////////////////////////////////////
 
-Inspector::Inspector( const std::string &name, const Gaffer::PlugPtr &editScope )
-	:	m_name( name ), m_editScope( editScope )
+Inspector::Inspector( const std::string &type, const std::string &name, const Gaffer::PlugPtr &editScope )
+	:	m_type( type ), m_name( name ), m_editScope( editScope )
 {
 	if( editScope && editScope->node() )
 	{
@@ -117,6 +117,11 @@ Inspector::Inspector( const std::string &name, const Gaffer::PlugPtr &editScope 
 			boost::bind( &Inspector::editScopeInputChanged, this, ::_1 )
 		);
 	}
+}
+
+const std::string &Inspector::type() const
+{
+	return m_type;
 }
 
 const std::string &Inspector::name() const
@@ -133,10 +138,6 @@ Inspector::ResultPtr Inspector::inspect() const
 	}
 
 	ConstObjectPtr value = this->value( history.get() );
-	if( !value )
-	{
-		return nullptr;
-	}
 
 	ResultPtr result = new Result( value, targetEditScope() );
 	inspectHistoryWalk( history.get(), result.get() );
@@ -148,6 +149,13 @@ Inspector::ResultPtr Inspector::inspect() const
 				% result->editScope()->relativeName( result->editScope()->scriptNode() )
 		);
 		result->m_sourceType = Result::SourceType::Other;
+	}
+
+	if( !result->m_value && !result->editable() )
+	{
+		// The property doesn't exist, and there's no
+		// way of making it.
+		return nullptr;
 	}
 
 	return result;
@@ -236,7 +244,8 @@ void Inspector::inspectHistoryWalk( const GafferScene::SceneAlgo::History *histo
 					const auto *downstreamEditScope = downstreamNode->ancestor<EditScope>();
 					downstreamNode = downstreamEditScope ? downstreamEditScope : downstreamNode;
 					result->m_editWarning = boost::str(
-						boost::format( "Parameter has edits downstream in %1%." )
+						boost::format( "%1% has edits downstream in %2%." )
+							% ( std::string( 1, std::toupper( type()[0] ) ) + type().substr( 1 ) )
 							% downstreamNode->relativeName( downstreamNode->scriptNode() )
 					);
 				}
@@ -323,7 +332,7 @@ Inspector::Result::SourceType Inspector::Result::sourceType() const
 
 bool Inspector::Result::editable() const
 {
-	return m_editFunction.which() == 0;
+	return m_editFunction.which() == 0 && boost::get<EditFunction>( m_editFunction ) != nullptr;
 }
 
 std::string Inspector::Result::nonEditableReason() const
