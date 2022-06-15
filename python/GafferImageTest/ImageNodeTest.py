@@ -66,7 +66,7 @@ class ImageNodeTest( GafferImageTest.ImageTestCase ) :
 		def grader() :
 
 			try :
-				images.append( GafferImage.ImageAlgo.image( g["out"] ) )
+				images.append( GafferImage.ImageAlgo.image( g["out"], viewName = "default" ) )
 			except Exception as e :
 				exceptions.append( e )
 
