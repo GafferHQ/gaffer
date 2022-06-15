@@ -257,13 +257,14 @@ template <class TileFunctor>
 void parallelProcessTiles( const ImagePlug *imagePlug, TileFunctor &&functor, const Imath::Box2i &window, TileOrder tileOrder )
 {
 	Imath::Box2i processWindow = window;
-	if( BufferAlgo::empty( processWindow ) )
+	if( processWindow == Imath::Box2i() )
 	{
 		processWindow = imagePlug->dataWindowPlug()->getValue();
-		if( BufferAlgo::empty( processWindow ) )
-		{
-			return;
-		}
+	}
+
+	if( BufferAlgo::empty( processWindow ) )
+	{
+		return;
 	}
 
 	Detail::TileInputIterator tileIterator( processWindow, tileOrder );
@@ -335,13 +336,14 @@ template <class TileFunctor, class GatherFunctor>
 void parallelGatherTiles( const ImagePlug *imagePlug, const TileFunctor &tileFunctor, GatherFunctor &&gatherFunctor, const Imath::Box2i &window, TileOrder tileOrder )
 {
 	Imath::Box2i processWindow = window;
-	if( BufferAlgo::empty( processWindow ) )
+	if( processWindow == Imath::Box2i() )
 	{
 		processWindow = imagePlug->dataWindowPlug()->getValue();
-		if( BufferAlgo::empty( processWindow ) )
-		{
-			return;
-		}
+	}
+
+	if( BufferAlgo::empty( processWindow ) )
+	{
+		return;
 	}
 
 	using TileFunctorResult = std::invoke_result_t<TileFunctor, const ImagePlug *, const Imath::V2i &>;
