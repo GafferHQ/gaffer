@@ -96,7 +96,8 @@ class SceneNodeTest( GafferSceneTest.SceneTestCase ) :
 			namesToIgnore = {
 				"PathMatcherData", "Gaffer::PathMatcherDataPlug", "Gaffer::Switch",
 				"Gaffer::ContextVariables", "Gaffer::DeleteContextVariables", "Gaffer::TimeWarp",
-				"Gaffer::Loop", "GafferScene::ShaderTweaks"
+				"Gaffer::Loop", "GafferScene::ShaderTweaks", "Gaffer::TweakPlug",
+				"Gaffer::TweaksPlug",
 			}
 		)
 
