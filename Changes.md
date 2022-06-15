@@ -11,6 +11,7 @@ Improvements
 ------------
 
 - Light Editor : Added support for editing visualisation attributes of lights.
+- CameraTweaks : Added `Create` mode. This should be used in preference to `Replace` mode when the parameter may not exist.
 
 Fixes
 -----
@@ -20,12 +21,13 @@ Fixes
   - Fixed error `ShaderQuery : "outPlug" is missing` when promoting a child plug of a query to a `Spreadsheet`.
   - Adding a child plug of a query to a `Spreadsheet` now uses the default name for the spreadsheet column.
 - Spreadsheet : Fixed missing `Remove` TweakPlug mode presets.
+- SceneAlgo : Fixed `attributeHistory()` results involving an `AttributeTweaks` node with `localise` enabled.
 
 API
 ---
 
-- SceneAlgo : `attributeHistory` now calculates the correct history of an attribute passing through an `AttributeTweaks` node with `localise` enabled.
 - EditScopeAlgo : Added support for editing attributes.
+- TweakPlug : Added `Create` mode.
 
 0.61.12.0 (relative to 0.61.11.0)
 =========
