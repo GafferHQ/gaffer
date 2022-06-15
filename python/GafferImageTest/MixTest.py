@@ -137,7 +137,7 @@ class MixTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( mix["out"]["channelNames"].hash(), g["out"]["channelNames"].hash() )
 
 		# Just check the first tile of the data to make sure hashes are passing through
-		with Gaffer.Context() as c :
+		with Gaffer.Context( Gaffer.Context.current() ) as c :
 			c[ "image:channelName" ] = IECore.StringData( "G" )
 			c[ "image:tileOrigin" ] = IECore.V2iData( imath.V2i( 0, 0 ) )
 			self.assertEqual( mix["out"]["channelData"].hash(), g["out"]["channelData"].hash() )

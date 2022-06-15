@@ -159,7 +159,7 @@ class CopyImageMetadataTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( i["out"]["dataWindow"].getValue(), m["out"]["dataWindow"].getValue() )
 		self.assertEqual( i["out"]["channelNames"].getValue(), m["out"]["channelNames"].getValue() )
 
-		context = Gaffer.Context()
+		context = Gaffer.Context( Gaffer.Context.current() )
 		context["image:tileOrigin"] = imath.V2i( 0 )
 		with context :
 			for c in [ "G", "B", "A" ] :

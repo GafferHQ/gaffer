@@ -181,7 +181,7 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 				self.assertEqual( reader["out"].channelData( "R", imath.V2i( 0 ) ), oiio["out"].channelData( "R", imath.V2i( 0 ) ) )
 			self.assertImagesEqual( reader["out"], oiio["out"] )
 
-		context = Gaffer.Context()
+		context = Gaffer.Context( Gaffer.Context.current() )
 
 		# set to a missing frame
 		context.setFrame( 2 )
@@ -276,7 +276,7 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 		oiio["fileName"].setValue( testSequence.fileName )
 		oiio["missingFrameMode"].setValue( GafferImage.ImageReader.MissingFrameMode.Hold )
 
-		context = Gaffer.Context()
+		context = Gaffer.Context( Gaffer.Context.current() )
 
 		# make sure the tile we're comparing isn't black
 		# so we can tell if BlackOutside is working.
@@ -309,7 +309,7 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 
 		def assertHold( holdFrame ) :
 
-			context = Gaffer.Context()
+			context = Gaffer.Context( Gaffer.Context.current() )
 			context.setFrame( holdFrame )
 			with context :
 				holdImage = GafferImage.ImageAlgo.image( reader["out"] )

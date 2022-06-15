@@ -293,7 +293,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		reader = GafferImage.OpenImageIOReader()
 		reader["fileName"].setValue( testSequence.fileName )
 
-		context = Gaffer.Context()
+		context = Gaffer.Context( Gaffer.Context.current() )
 
 		# get frame 1 data for comparison
 		context.setFrame( 1 )
@@ -438,7 +438,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		reader = GafferImage.OpenImageIOReader()
 		reader["fileName"].setValue( testSequence.fileName )
 
-		context = Gaffer.Context()
+		context = Gaffer.Context( Gaffer.Context.current() )
 
 		# get frame 0 data for comparison
 		context.setFrame( 0 )
@@ -528,7 +528,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		with Gaffer.ContextMonitor( root = s["expression"] ) as cm :
 			GafferImage.ImageAlgo.tiles( s["reader"]["out"] )
 
-		self.assertEqual( set( cm.combinedStatistics().variableNames() ), set( ['frame', 'framesPerSecond'] ) )
+		self.assertEqual( set( cm.combinedStatistics().variableNames() ), set( ['frame', 'framesPerSecond', 'image:viewName' ] ) )
 
 	def testMultipartRead( self ) :
 
@@ -657,7 +657,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 
 		r = GafferImage.OpenImageIOReader()
 
-		with Gaffer.Context() as c :
+		with Gaffer.Context( Gaffer.Context.current() ) as c :
 
 			GafferImage.FormatPlug.setDefaultFormat( c, GafferImage.Format( 100, 200 ) )
 			h1 = r["out"].formatHash()

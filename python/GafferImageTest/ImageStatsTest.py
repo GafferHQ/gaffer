@@ -182,9 +182,9 @@ class ImageStatsTest( GafferImageTest.ImageTestCase ) :
 			s["area"].setValue( a )
 
 			hashes = {}
+			c = Gaffer.Context( Gaffer.Context.current() )
 			for x in range( 0, 300, 64 ):
 				for y in range( 0, 300, 64 ):
-					c = Gaffer.Context()
 					c["image:channelName"] = "R"
 					c["image:tileOrigin"] = imath.V2i( x, y )
 					with c:

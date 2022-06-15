@@ -542,7 +542,7 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 				# the value cached and evaluating values first
 				Gaffer.ValuePlug.clearCache()
 
-				with Gaffer.Context() as c :
+				with Gaffer.Context( Gaffer.Context.current() ) as c :
 					c["image:tileOrigin"] = tileOrigin
 					c["image:channelName"] = "R"
 
