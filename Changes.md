@@ -32,6 +32,7 @@ Fixes
 -----
 
 - RenderController : Fixed duplicate `callback( Completed )` calls from `updateInBackground()` when priority paths are specified.
+- PresetsPlugValueWidget : Fixed handling of evaluation errors ( now turns red instead of failing to draw ).
 
 API
 ---
