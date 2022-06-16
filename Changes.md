@@ -31,6 +31,7 @@ API
 - RenderController :
   - Added Python bindings for optional `callback` argument to `update()` and `updateMatchingPaths()`.
   - Added Python binding for `updateInBackground()`.
+- TestCase : Added `assertNodeIsDocumented()` method.
 
 Breaking Changes
 ----------------
