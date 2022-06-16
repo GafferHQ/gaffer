@@ -28,6 +28,7 @@ API
 
 - EditScopeAlgo : Added support for editing attributes.
 - TweakPlug : Added `Create` mode.
+- VectorDataWidget : Added `dataMenuSignal` for constructing the context menu. Derived classes can add their own slots to this signal to modify the context menu and should use it in favor of `_createRows()`.
 
 0.61.12.0 (relative to 0.61.11.0)
 =========
