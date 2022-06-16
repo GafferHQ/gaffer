@@ -507,7 +507,7 @@ class CollectScenesTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual(
 			set( contextMonitor.combinedStatistics().variableNames() ),
-			{ "frame", "framesPerSecond", "scene:path" }
+			{ "frame", "framesPerSecond", "scene:path", "image:viewName" }
 		)
 
 if __name__ == "__main__":
