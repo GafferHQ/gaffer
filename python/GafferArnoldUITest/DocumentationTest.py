@@ -34,6 +34,9 @@
 #
 ##########################################################################
 
+import os
+
+import Gaffer
 import GafferUITest
 import GafferScene
 import GafferSceneUI
@@ -54,6 +57,14 @@ class DocumentationTest( GafferUITest.TestCase ) :
 
 		self.assertExampleFilesExist()
 		self.assertExampleFilesDontReferenceUnstablePaths()
+
+	def testViewerSettings( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["fileName"].setValue( os.path.join( os.environ["GAFFER_ROOT"], "startup", "gui", "arnoldViewerSettings.gfr" ) )
+		script.load()
+
+		self.assertNodeIsDocumented( script["ViewerSettings"], additionalTerminalPlugTypes = ( GafferScene.ScenePlug, ) )
 
 if __name__ == "__main__":
 	unittest.main()
