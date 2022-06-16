@@ -235,7 +235,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		s["editScope1"]["BoxOut"]["in"].setInput( s["editScope1"]["tweakLight2"]["out"] )
 
 		s["editScope1"]["tweakLight2"]["shader"].setValue( "light" )
-		editScopeShaderTweak = GafferScene.TweakPlug( "intensity", imath.Color3f( 1, 0, 0 ) )
+		editScopeShaderTweak = Gaffer.TweakPlug( "intensity", imath.Color3f( 1, 0, 0 ) )
 		s["editScope1"]["tweakLight2"]["tweaks"].addChild( editScopeShaderTweak )
 
 		self.__assertExpectedResult(
@@ -254,7 +254,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		s["independentLightTweak"]["filter"].setInput( s["independentLightTweakFilter"]["out"] )
 
 		s["independentLightTweak"]["shader"].setValue( "light" )
-		independentLightTweakPlug = GafferScene.TweakPlug( "intensity", imath.Color3f( 1, 1, 0 ) )
+		independentLightTweakPlug = Gaffer.TweakPlug( "intensity", imath.Color3f( 1, 1, 0 ) )
 		s["independentLightTweak"]["tweaks"].addChild( independentLightTweakPlug )
 
 		self.__assertExpectedResult(
@@ -358,7 +358,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		shaderTweaks = GafferScene.ShaderTweaks()
 		shaderTweaks["in"].setInput( light["out"] )
 		shaderTweaks["filter"].setInput( lightFilter["out"] )
-		shaderTweaks["tweaks"].addChild( GafferScene.TweakPlug( "exposure", 3 ) )
+		shaderTweaks["tweaks"].addChild( Gaffer.TweakPlug( "exposure", 3 ) )
 
 		editScope = Gaffer.EditScope()
 		editScope.setup( light["out"] )
@@ -393,7 +393,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		shaderTweaks = GafferScene.ShaderTweaks()
 		shaderTweaks["in"].setInput( light["out"] )
 		shaderTweaks["filter"].setInput( lightFilter["out"] )
-		exposureTweak = GafferScene.TweakPlug( "exposure", 10 )
+		exposureTweak = Gaffer.TweakPlug( "exposure", 10 )
 		shaderTweaks["tweaks"].addChild( exposureTweak )
 
 		self.__assertExpectedResult(
@@ -486,7 +486,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		shaderTweaks = GafferScene.ShaderTweaks()
 		shaderTweaks["in"].setInput( editScope["out"] )
 		shaderTweaks["filter"].setInput( lightFilter["out"] )
-		exposureTweak = GafferScene.TweakPlug( "exposure", 10 )
+		exposureTweak = Gaffer.TweakPlug( "exposure", 10 )
 		shaderTweaks["tweaks"].addChild( exposureTweak )
 
 		self.__assertExpectedResult(

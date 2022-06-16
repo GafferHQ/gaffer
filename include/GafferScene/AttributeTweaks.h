@@ -39,8 +39,9 @@
 
 #include "GafferScene/AttributeProcessor.h"
 #include "GafferScene/Export.h"
-#include "GafferScene/TweakPlug.h"
 #include "GafferScene/TypeIds.h"
+
+#include "Gaffer/TweakPlug.h"
 
 namespace GafferScene
 {
@@ -61,8 +62,8 @@ class GAFFERSCENE_API AttributeTweaks : public AttributeProcessor
 		Gaffer::BoolPlug *ignoreMissingPlug();
 		const Gaffer::BoolPlug *ignoreMissingPlug() const;
 
-		GafferScene::TweaksPlug *tweaksPlug();
-		const GafferScene::TweaksPlug *tweaksPlug() const;
+		Gaffer::TweaksPlug *tweaksPlug();
+		const Gaffer::TweaksPlug *tweaksPlug() const;
 
 	protected :
 

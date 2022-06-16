@@ -49,6 +49,7 @@
 #include "GafferScene/ShaderTweaks.h"
 #include "GafferScene/ShuffleAttributes.h"
 
+#include "Gaffer/ArrayPlug.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/Monitor.h"
 #include "Gaffer/Private/IECorePreview/LRUCache.h"

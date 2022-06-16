@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2019, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,37 +34,24 @@
 #
 ##########################################################################
 
+import six
+
 import Gaffer
-import GafferScene
 
-# Compatibility with old tweak plugs with unnecessary stuff serialized
-def __tweakPlugAddChild( originalAddChild ) :
+originalInit = Gaffer.TweakPlug.__init__
 
-	def addChild( self, child ) :
-		if child.getName() in [ "name", "enabled", "mode" ] and child.getName() in self.keys():
-			pass # Old scripts have serialized addChilds for these non-dynamic plugs
-		else:
-			return originalAddChild( self, child )
+def initSupportingOldSerialisation( self, *args, **kwargs ) :
 
-	return addChild
+	if len( args ) == 1 and isinstance( args[0], six.string_types ) :
 
-Gaffer.TweakPlug.addChild = __tweakPlugAddChild( Gaffer.TweakPlug.addChild )
+		# Constructor calls that provide only a name but no value plug or
+		# data need to be rerouted. These calls occur when
+		# deserialising old scripts.
 
-# Compatibility for old LightTweaks nodes
+		originalInit( self, None, args[0], **kwargs )
 
-class LightTweaks( GafferScene.ShaderTweaks ) :
+	else :
 
-	def __init__( self, name = "LightTweaks" ) :
+		originalInit( self, *args, **kwargs )
 
-		GafferScene.ShaderTweaks.__init__( self, name )
-		self["shader"].setValue( "light *:light" )
-
-	def __getitem__( self, key ) :
-
-		if key == "type" :
-			key = "shader"
-
-		return GafferScene.ShaderTweaks.__getitem__( self, key )
-
-GafferScene.LightTweaks = LightTweaks
-GafferScene.LightTweaks.TweakPlug = Gaffer.TweakPlug
+Gaffer.TweakPlug.__init__ = initSupportingOldSerialisation

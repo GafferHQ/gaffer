@@ -301,7 +301,7 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 		if inspection.editable() :
 
 			self.__popup = GafferUI.PlugPopup( [ inspection.acquireEdit() ], warning = inspection.editWarning() )
-			if isinstance( self.__popup.plugValueWidget(), GafferSceneUI.TweakPlugValueWidget ) :
+			if isinstance( self.__popup.plugValueWidget(), GafferUI.TweakPlugValueWidget ) :
 				self.__popup.plugValueWidget().setNameVisible( False )
 			self.__popup.popup()
 

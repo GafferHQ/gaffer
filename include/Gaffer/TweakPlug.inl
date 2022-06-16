@@ -34,12 +34,12 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_TWEAKPLUG_INL
-#define GAFFERSCENE_TWEAKPLUG_INL
+#ifndef GAFFER_TWEAKPLUG_INL
+#define GAFFER_TWEAKPLUG_INL
 
 #include "Gaffer/PlugAlgo.h"
 
-namespace GafferScene
+namespace Gaffer
 {
 
 template<typename T>
@@ -74,7 +74,7 @@ bool TweakPlug::applyTweak(
 
 	const Mode mode = static_cast<Mode>( modePlug()->getValue() );
 
-	if( mode == GafferScene::TweakPlug::Remove )
+	if( mode == Gaffer::TweakPlug::Remove )
 	{
 		return setDataFunctor( name,  nullptr );
 	}
@@ -88,10 +88,10 @@ bool TweakPlug::applyTweak(
 	}
 
 	if(
-		mode == GafferScene::TweakPlug::Replace ||
-		mode == GafferScene::TweakPlug::Add ||
-		mode == GafferScene::TweakPlug::Subtract ||
-		mode == GafferScene::TweakPlug::Multiply
+		mode == Gaffer::TweakPlug::Replace ||
+		mode == Gaffer::TweakPlug::Add ||
+		mode == Gaffer::TweakPlug::Subtract ||
+		mode == Gaffer::TweakPlug::Multiply
 	)
 	{
 		const IECore::Data *currentValue = getDataFunctor( name );
@@ -104,20 +104,20 @@ bool TweakPlug::applyTweak(
 
 		if( !currentValue )
 		{
-			if( missingMode == GafferScene::TweakPlug::MissingMode::Ignore )
+			if( missingMode == Gaffer::TweakPlug::MissingMode::Ignore )
 			{
 				return false;
 			}
-			else if( !( mode == GafferScene::TweakPlug::Replace && missingMode == GafferScene::TweakPlug::MissingMode::IgnoreOrReplace) )
+			else if( !( mode == Gaffer::TweakPlug::Replace && missingMode == Gaffer::TweakPlug::MissingMode::IgnoreOrReplace) )
 			{
 				throw IECore::Exception( boost::str( boost::format( "Cannot apply tweak with mode %s to \"%s\" : This parameter does not exist" ) % modeToString( mode ) % name ) );
 			}
 		}
 
 		if(
-			mode == GafferScene::TweakPlug::Add ||
-			mode == GafferScene::TweakPlug::Subtract ||
-			mode == GafferScene::TweakPlug::Multiply
+			mode == Gaffer::TweakPlug::Add ||
+			mode == Gaffer::TweakPlug::Subtract ||
+			mode == Gaffer::TweakPlug::Multiply
 		)
 		{
 			applyNumericTweak( currentValue, newData.get(), newData.get(), mode, name );
@@ -149,6 +149,6 @@ bool TweaksPlug::applyTweaks(
 	return tweakApplied;
 }
 
-} // namespace GafferScene
+} // namespace Gaffer
 
-#endif // GAFFERSCENE_TWEAKPLUG_INL
+#endif // GAFFER_TWEAKPLUG_INL

@@ -274,6 +274,7 @@ from .ShufflePlugValueWidget import ShufflePlugValueWidget
 from .ShufflePlugValueWidget import ShufflesPlugValueWidget
 from .BackgroundTaskDialogue import BackgroundTaskDialogue
 from . import AnnotationsUI
+from .TweakPlugValueWidget import TweakPlugValueWidget
 
 # and then specific node uis
 

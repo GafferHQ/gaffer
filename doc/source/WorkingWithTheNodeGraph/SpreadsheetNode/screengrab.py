@@ -476,7 +476,7 @@ tempImagePathMenu = __getTempFilePath( "{tempName}.png".format( tempName = image
 tempImagePathSubmenu = __getTempFilePath( "{tempName}.png".format( tempName = imageName + "Submenu" ) )
 imagePath = os.path.abspath( "images/{imageName}.png".format( imageName = imageName ) )
 script["CameraTweaks"] = GafferScene.CameraTweaks()
-script["CameraTweaks"]["tweaks"].addChild( GafferScene.TweakPlug( Gaffer.V2iPlug( "value", defaultValue = imath.V2i( 1920, 1050 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ), "resolution", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+script["CameraTweaks"]["tweaks"].addChild( Gaffer.TweakPlug( Gaffer.V2iPlug( "value", defaultValue = imath.V2i( 1920, 1050 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ), "resolution", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
 script["CameraTweaks"]["tweaks"]["resolution"]["name"].setValue( 'resolution' )
 # Screengrab the Node Editor
 nodeEditorWindow = GafferUI.NodeEditor.acquire( script["CameraTweaks"], floating = True )

@@ -1411,7 +1411,7 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		# Add tweak on plane attribute
 
-		tweakA = GafferScene.TweakPlug( "a", "tweakA" )
+		tweakA = Gaffer.TweakPlug( "a", "tweakA" )
 		tweaks["tweaks"].addChild( tweakA )
 
 		history = GafferScene.SceneAlgo.history( tweaks["out"]["attributes"], "/outer/inner/plane" )
@@ -1434,8 +1434,8 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		# Add tweaks to inherited attributes
 
-		tweakB = GafferScene.TweakPlug( "b", "tweakB" )
-		tweakC = GafferScene.TweakPlug( "c", "tweakC" )
+		tweakB = Gaffer.TweakPlug( "b", "tweakB" )
+		tweakC = Gaffer.TweakPlug( "c", "tweakC" )
 
 		tweaks["tweaks"].addChild( tweakB )
 		tweaks["tweaks"].addChild( tweakC )

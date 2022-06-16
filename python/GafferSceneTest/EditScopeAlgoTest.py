@@ -310,9 +310,9 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.assertIsNone( GafferScene.EditScopeAlgo.acquireParameterEdit( editScope, "/light", "light", ( "", "intensity" ), createIfNecessary = False ) )
 
 		edit = GafferScene.EditScopeAlgo.acquireParameterEdit( editScope, "/light", "light", ( "", "intensity" ) )
-		self.assertIsInstance( edit, GafferScene.TweakPlug )
+		self.assertIsInstance( edit, Gaffer.TweakPlug )
 		self.assertIsInstance( edit["value"], Gaffer.Color3fPlug )
-		self.assertEqual( edit["mode"].getValue(), GafferScene.TweakPlug.Mode.Replace )
+		self.assertEqual( edit["mode"].getValue(), Gaffer.TweakPlug.Mode.Replace )
 		self.assertEqual( edit["value"].getValue(), imath.Color3f( 0 ) )
 		self.assertEqual( edit["enabled"].getValue(), False )
 
@@ -655,9 +655,9 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 			"/light",
 			"gl:visualiser:scale"
 		)
-		self.assertIsInstance( edit, GafferScene.TweakPlug )
+		self.assertIsInstance( edit, Gaffer.TweakPlug )
 		self.assertIsInstance( edit["value"], Gaffer.FloatPlug )
-		self.assertEqual( edit["mode"].getValue(), GafferScene.TweakPlug.Mode.Create )
+		self.assertEqual( edit["mode"].getValue(), Gaffer.TweakPlug.Mode.Create )
 		self.assertEqual( edit["value"].getValue(), 1.0 )
 		self.assertEqual( edit["enabled"].getValue(), False )
 
