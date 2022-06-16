@@ -1017,8 +1017,7 @@ void TransformTool::plugDirtied( const Gaffer::Plug *plug )
 		{
 			m_preRenderConnection.disconnect();
 			m_handles->setVisible( false );
-			SceneGadget *sceneGadget = static_cast<SceneGadget *>( view()->viewportGadget()->getPrimaryChild() );
-			sceneGadget->setPriorityPaths( IECore::PathMatcher() );
+			sceneGadget()->setPriorityPaths( IECore::PathMatcher() );
 		}
 	}
 }
@@ -1192,14 +1191,14 @@ void TransformTool::preRender()
 		if( m_priorityPathsDirty )
 		{
 			m_priorityPathsDirty = false;
-			SceneGadget *sceneGadget = static_cast<SceneGadget *>( view()->viewportGadget()->getPrimaryChild() );
+			SceneGadget *sg = sceneGadget();
 			if( selection().size() )
 			{
-				sceneGadget->setPriorityPaths( ContextAlgo::getSelectedPaths( view()->getContext() ) );
+				sg->setPriorityPaths( ContextAlgo::getSelectedPaths( view()->getContext() ) );
 			}
 			else
 			{
-				sceneGadget->setPriorityPaths( IECore::PathMatcher() );
+				sg->setPriorityPaths( IECore::PathMatcher() );
 			}
 		}
 	}

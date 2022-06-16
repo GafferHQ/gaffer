@@ -175,7 +175,13 @@ SelectionTool::~SelectionTool()
 
 SceneGadget *SelectionTool::sceneGadget()
 {
-	return runTimeCast<SceneGadget>( view()->viewportGadget()->getPrimaryChild() );
+	return const_cast<SceneGadget *>(
+		static_cast<const SelectionTool *>( this )->sceneGadget() );
+}
+
+const SceneGadget *SelectionTool::sceneGadget() const
+{
+	return runTimeCast<SceneGadget const>( view()->viewportGadget()->getPrimaryChild() );
 }
 
 SelectionTool::DragOverlay *SelectionTool::dragOverlay()

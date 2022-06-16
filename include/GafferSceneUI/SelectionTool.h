@@ -60,11 +60,14 @@ class GAFFERSCENEUI_API SelectionTool : public GafferUI::Tool
 
 		GAFFER_NODE_DECLARE_TYPE( GafferSceneUI::SelectionTool, SelectionToolTypeId, GafferUI::Tool );
 
+	protected :
+
+		SceneGadget *sceneGadget();
+		const SceneGadget *sceneGadget() const;
+
 	private :
 
 		static ToolDescription<SelectionTool, SceneView> g_toolDescription;
-
-		SceneGadget *sceneGadget();
 
 		class DragOverlay;
 		DragOverlay *dragOverlay();
