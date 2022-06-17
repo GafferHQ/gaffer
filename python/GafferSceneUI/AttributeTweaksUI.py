@@ -94,7 +94,13 @@ Gaffer.Metadata.registerNode(
 
 			"nodule:type", "",
 
-		]
+		],
+
+		"tweaks.*" : [
+
+			"tweakPlugValueWidget:allowCreate", True,
+
+		],
 
 	}
 )
@@ -273,9 +279,9 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 	def __addTweak( self, name, plugTypeOrValue ) :
 
 		if isinstance( plugTypeOrValue, IECore.Data ) :
-			plug = GafferScene.TweakPlug( name, plugTypeOrValue )
+			plug = Gaffer.TweakPlug( name, plugTypeOrValue )
 		else :
-			plug = GafferScene.TweakPlug( name, plugTypeOrValue() )
+			plug = Gaffer.TweakPlug( name, plugTypeOrValue() )
 
 		if name :
 			plug.setName( name.replace( ':', '_' ) )

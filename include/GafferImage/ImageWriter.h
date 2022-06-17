@@ -101,10 +101,6 @@ class GAFFERIMAGE_API ImageWriter : public GafferDispatch::TaskNode
 		Gaffer::ValuePlug *fileFormatSettingsPlug( const std::string &fileFormat );
 		const Gaffer::ValuePlug *fileFormatSettingsPlug( const std::string &fileFormat ) const;
 
-		IECore::MurmurHash hash( const Gaffer::Context *context ) const override;
-
-		void execute() const override;
-
 		const std::string currentFileFormat() const;
 
 		/// Note that this is intentionally identical to the ImageReader's DefaultColorSpaceFunction
@@ -112,6 +108,11 @@ class GAFFERIMAGE_API ImageWriter : public GafferDispatch::TaskNode
 		using DefaultColorSpaceFunction = std::function<const std::string ( const std::string &fileName, const std::string &fileFormat, const std::string &dataType, const IECore::CompoundData *metadata )>;
 		static void setDefaultColorSpaceFunction( DefaultColorSpaceFunction f );
 		static DefaultColorSpaceFunction getDefaultColorSpaceFunction();
+
+	protected :
+
+		IECore::MurmurHash hash( const Gaffer::Context *context ) const override;
+		void execute() const override;
 
 	private :
 
@@ -128,6 +129,10 @@ class GAFFERIMAGE_API ImageWriter : public GafferDispatch::TaskNode
 		static size_t g_firstPlugIndex;
 
 		static DefaultColorSpaceFunction &defaultColorSpaceFunction();
+
+		// Friendship for the bindings
+		friend struct GafferDispatchBindings::Detail::TaskNodeAccessor;
+
 };
 
 IE_CORE_DECLAREPTR( ImageWriter )

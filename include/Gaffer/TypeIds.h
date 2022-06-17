@@ -144,6 +144,8 @@ enum TypeId
 	AnimationKeyTypeId = 110097,
 	RandomChoiceTypeId = 110098,
 	ContextQueryTypeId = 110099,
+	TweakPlugTypeId = 110100,
+	TweaksPlugTypeId = 110101,
 
 	LastTypeId = 110159,
 

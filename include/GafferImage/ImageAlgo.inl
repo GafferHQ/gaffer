@@ -344,7 +344,7 @@ void parallelGatherTiles( const ImagePlug *imagePlug, const TileFunctor &tileFun
 		}
 	}
 
-	using TileFunctorResult = typename std::result_of<TileFunctor( const ImagePlug *, const Imath::V2i & )>::type;
+	using TileFunctorResult = std::invoke_result_t<TileFunctor, const ImagePlug *, const Imath::V2i &>;
 	using TileFilterResult = std::pair<Imath::V2i, TileFunctorResult>;
 
 	Detail::TileInputIterator tileIterator( processWindow, tileOrder );
@@ -398,7 +398,7 @@ void parallelGatherTiles( const ImagePlug *imagePlug, const TileFunctor &tileFun
 template <class TileFunctor, class GatherFunctor>
 void parallelGatherTiles( const ImagePlug *imagePlug, const std::vector<std::string> &channelNames, const TileFunctor &tileFunctor, GatherFunctor &&gatherFunctor, const Imath::Box2i &window, TileOrder tileOrder )
 {
-	using TileFunctorResult = typename std::result_of<TileFunctor( const ImagePlug *, const std::string &, const Imath::V2i & )>::type;
+	using TileFunctorResult = std::invoke_result_t<TileFunctor, const ImagePlug *, const std::string &, const Imath::V2i &>;
 	using WholeTileResult = std::vector<TileFunctorResult>;
 
 	if( channelNames.size() == 0 )

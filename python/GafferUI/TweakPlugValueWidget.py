@@ -41,7 +41,6 @@ import IECore
 
 import Gaffer
 import GafferUI
-import GafferScene
 
 from Qt import QtWidgets
 
@@ -49,7 +48,8 @@ from Qt import QtWidgets
 # and CameraTweaks.  Shows a value plug that you can use to specify a tweak value, along with
 # a target parameter name, an enabled plug, and a mode.  The mode can be "Replace",
 # or "Add"/"Subtract"/"Multiply" if the plug is numeric,
-# or "Remove" if the metadata "tweakPlugValueWidget:allowRemove" is set
+# or "Remove" if the metadata "tweakPlugValueWidget:allowRemove" is set,
+# or "Create" if the metadata "tweakPlugValueWidget:allowCreate" is set.
 class TweakPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plugs ) :
@@ -147,50 +147,54 @@ class TweakPlugValueWidget( GafferUI.PlugValueWidget ) :
 			# use this all the time.
 			return { p[childName] for p in plugs }
 
-GafferUI.PlugValueWidget.registerType( GafferScene.TweakPlug, TweakPlugValueWidget )
+GafferUI.PlugValueWidget.registerType( Gaffer.TweakPlug, TweakPlugValueWidget )
 
 # Metadata
 
-Gaffer.Metadata.registerValue( GafferScene.TweakPlug, "deletable", lambda plug : plug.getFlags( Gaffer.Plug.Flags.Dynamic ) )
+Gaffer.Metadata.registerValue( Gaffer.TweakPlug, "deletable", lambda plug : plug.getFlags( Gaffer.Plug.Flags.Dynamic ) )
 
 Gaffer.Metadata.registerValue(
-	GafferScene.TweakPlug, "name",
+	Gaffer.TweakPlug, "name",
 	"description", "The name of the parameter to apply the tweak to."
 )
 
 Gaffer.Metadata.registerValue(
-	GafferScene.TweakPlug, "mode",
+	Gaffer.TweakPlug, "mode",
 	"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget"
 )
 
 def __validModes( plug ) :
 
-	result = [ GafferScene.TweakPlug.Mode.Replace ]
+	result = []
+	if Gaffer.Metadata.value( plug.parent(), "tweakPlugValueWidget:allowCreate" ) :
+		result += [ Gaffer.TweakPlug.Mode.Create ]
+
+	result += [ Gaffer.TweakPlug.Mode.Replace ]
 	if hasattr( plug.parent()["value"], "hasMinValue" ) :
 		result += [
-			GafferScene.TweakPlug.Mode.Add,
-			GafferScene.TweakPlug.Mode.Subtract,
-			GafferScene.TweakPlug.Mode.Multiply
+			Gaffer.TweakPlug.Mode.Add,
+			Gaffer.TweakPlug.Mode.Subtract,
+			Gaffer.TweakPlug.Mode.Multiply
 		]
 
 	if Gaffer.Metadata.value( plug.parent(), "tweakPlugValueWidget:allowRemove" ) :
-		result += [ GafferScene.TweakPlug.Mode.Remove ]
+		result += [ Gaffer.TweakPlug.Mode.Remove ]
 
 	return result
 
 Gaffer.Metadata.registerValue(
-	GafferScene.TweakPlug, "mode",
+	Gaffer.TweakPlug, "mode",
 	"presetNames", lambda plug : IECore.StringVectorData( [ str( x ) for x in __validModes( plug ) ] )
 )
 
 Gaffer.Metadata.registerValue(
-	GafferScene.TweakPlug, "mode",
+	Gaffer.TweakPlug, "mode",
 	"presetValues", lambda plug : IECore.IntVectorData( [ int( x ) for x in __validModes( plug ) ] )
 )
 
 def __noduleLabel( plug ) :
 
-	if not isinstance( plug, GafferScene.TweakPlug ) :
+	if not isinstance( plug, Gaffer.TweakPlug ) :
 		plug = plug.parent()
 
 	name = None
@@ -199,21 +203,21 @@ def __noduleLabel( plug ) :
 
 	return name or plug.getName()
 
-Gaffer.Metadata.registerValue( GafferScene.TweakPlug, "nodule:type", "GafferUI::CompoundNodule" )
-Gaffer.Metadata.registerValue( GafferScene.TweakPlug, "*", "nodule:type", "" )
-Gaffer.Metadata.registerValue( GafferScene.TweakPlug, "value", "nodule:type", "GafferUI::StandardNodule" )
-Gaffer.Metadata.registerValue( GafferScene.TweakPlug, "noduleLayout:label", __noduleLabel )
-Gaffer.Metadata.registerValue( GafferScene.TweakPlug, "value", "noduleLayout:label", __noduleLabel )
+Gaffer.Metadata.registerValue( Gaffer.TweakPlug, "nodule:type", "GafferUI::CompoundNodule" )
+Gaffer.Metadata.registerValue( Gaffer.TweakPlug, "*", "nodule:type", "" )
+Gaffer.Metadata.registerValue( Gaffer.TweakPlug, "value", "nodule:type", "GafferUI::StandardNodule" )
+Gaffer.Metadata.registerValue( Gaffer.TweakPlug, "noduleLayout:label", __noduleLabel )
+Gaffer.Metadata.registerValue( Gaffer.TweakPlug, "value", "noduleLayout:label", __noduleLabel )
 
 # Spreadsheet Interoperability
 # ============================
 
-Gaffer.Metadata.registerValue( GafferScene.TweakPlug, "spreadsheet:plugMenu:includeAsAncestor", True )
-Gaffer.Metadata.registerValue( GafferScene.TweakPlug, "spreadsheet:plugMenu:ancestorLabel", "Tweak" )
+Gaffer.Metadata.registerValue( Gaffer.TweakPlug, "spreadsheet:plugMenu:includeAsAncestor", True )
+Gaffer.Metadata.registerValue( Gaffer.TweakPlug, "spreadsheet:plugMenu:ancestorLabel", "Tweak" )
 
 def __spreadsheetColumnName( plug ) :
 
-	if isinstance( plug, GafferScene.TweakPlug ) :
+	if isinstance( plug, Gaffer.TweakPlug ) :
 		tweakPlug = plug
 	else :
 		tweakPlug = plug.parent()
@@ -234,10 +238,10 @@ def __spreadsheetColumnName( plug ) :
 	else :
 		return name + plug.getName().title()
 
-Gaffer.Metadata.registerValue( GafferScene.TweakPlug, "spreadsheet:columnName", __spreadsheetColumnName )
-Gaffer.Metadata.registerValue( GafferScene.TweakPlug, "enabled", "spreadsheet:columnName", __spreadsheetColumnName )
-Gaffer.Metadata.registerValue( GafferScene.TweakPlug, "mode", "spreadsheet:columnName", __spreadsheetColumnName )
-Gaffer.Metadata.registerValue( GafferScene.TweakPlug, "value", "spreadsheet:columnName", __spreadsheetColumnName )
+Gaffer.Metadata.registerValue( Gaffer.TweakPlug, "spreadsheet:columnName", __spreadsheetColumnName )
+Gaffer.Metadata.registerValue( Gaffer.TweakPlug, "enabled", "spreadsheet:columnName", __spreadsheetColumnName )
+Gaffer.Metadata.registerValue( Gaffer.TweakPlug, "mode", "spreadsheet:columnName", __spreadsheetColumnName )
+Gaffer.Metadata.registerValue( Gaffer.TweakPlug, "value", "spreadsheet:columnName", __spreadsheetColumnName )
 
 def __spreadsheetFormatter( plug, forToolTip ) :
 
@@ -245,7 +249,7 @@ def __spreadsheetFormatter( plug, forToolTip ) :
 	if "enabled" in plug.parent() :
 		result = "On, " if plug["enabled"].getValue() else "Off, "
 
-	result += str( GafferScene.TweakPlug.Mode.values[plug["mode"].getValue()] )
+	result += str( Gaffer.TweakPlug.Mode.values[plug["mode"].getValue()] )
 
 	value = GafferUI.SpreadsheetUI.formatValue( plug["value"], forToolTip )
 	separator = " : \n" if forToolTip and "\n" in value else " : "
@@ -253,13 +257,13 @@ def __spreadsheetFormatter( plug, forToolTip ) :
 
 	return result
 
-GafferUI.SpreadsheetUI.registerValueFormatter( GafferScene.TweakPlug, __spreadsheetFormatter )
+GafferUI.SpreadsheetUI.registerValueFormatter( Gaffer.TweakPlug, __spreadsheetFormatter )
 
 def __spreadsheetDecorator( plug ) :
 
 	return GafferUI.SpreadsheetUI.decoration( plug["value"] )
 
-GafferUI.SpreadsheetUI.registerDecoration( GafferScene.TweakPlug, __spreadsheetDecorator )
+GafferUI.SpreadsheetUI.registerDecoration( Gaffer.TweakPlug, __spreadsheetDecorator )
 
 def __spreadsheetValueWidget( plug ) :
 
@@ -267,4 +271,4 @@ def __spreadsheetValueWidget( plug ) :
 	w.setNameVisible( False )
 	return w
 
-GafferUI.SpreadsheetUI.registerValueWidget( GafferScene.TweakPlug, __spreadsheetValueWidget )
+GafferUI.SpreadsheetUI.registerValueWidget( Gaffer.TweakPlug, __spreadsheetValueWidget )

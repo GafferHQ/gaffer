@@ -21,7 +21,12 @@ API
 Breaking Changes
 ----------------
 
+- ImageWriter/SceneWriter : The overrides for TaskNode virtual methods are now `protected` rather than `public`. Use the `TaskPlug` API instead.
 - ShaderQuery : `addQuery()` now creates `query` and `out` plugs with numeric suffixes starting at 0 (rather than 1).
+- TweakPlug and TweaksPlug :
+  - Moved to `Gaffer` module.
+  - Removed methods for tweaking shader networks.
+  - Backwards compatibility is provided when loading old `.gfr` files.
 
 0.62.0.0a3 (relative to 0.62.0.0a2)
 ==========
@@ -193,6 +198,37 @@ Build
   - OpenVDB : Updated to version 9.0.0.
   - OpenColorIO : Updated to version 2.1.1.
   - Cortex : Updated to version 10.4.0.0.
+
+0.61.x.x (relative to 0.61.12.0)
+========
+
+Features
+--------
+
+- USDLayerWriter : Added a new node for baking the difference between two Gaffer scenes into a minimal USD layer on disk.
+- USDAttributes : Added a new node for setting USD's `kind` and `purpose`.
+
+Improvements
+------------
+
+- Light Editor : Added support for editing visualisation attributes of lights.
+- CameraTweaks : Added `Create` mode. This should be used in preference to `Replace` mode when the parameter may not exist.
+
+Fixes
+-----
+
+- SceneWriter : Fixed bug which caused sibling locations to be reordered.
+- ShaderQuery :
+  - Fixed error `ShaderQuery : "outPlug" is missing` when promoting a child plug of a query to a `Spreadsheet`.
+  - Adding a child plug of a query to a `Spreadsheet` now uses the default name for the spreadsheet column.
+- Spreadsheet : Fixed missing `Remove` TweakPlug mode presets.
+- SceneAlgo : Fixed `attributeHistory()` results involving an `AttributeTweaks` node with `localise` enabled.
+
+API
+---
+
+- EditScopeAlgo : Added support for editing attributes.
+- TweakPlug : Added `Create` mode.
 
 0.61.12.0 (relative to 0.61.11.0)
 =========

@@ -311,6 +311,7 @@ struct CellVariants
 
 	CellVariants() = default;
 	CellVariants( const CellVariants &other ) = default;
+	CellVariants& operator=( const CellVariants &rhs ) = default;
 
 	QVariant variant( int qtRole ) const
 	{

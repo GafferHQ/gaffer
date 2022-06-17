@@ -524,6 +524,14 @@ nodeMenu.append( "/VDB/Level Set Offset", GafferVDB.LevelSetOffset, searchText =
 nodeMenu.append( "/VDB/Points Grid To Points", GafferVDB.PointsGridToPoints, searchText = "PointsGridToPoints" )
 nodeMenu.append( "/VDB/Sphere Level Set", GafferVDB.SphereLevelSet, searchText="SphereLevelSet")
 
+# USD nodes
+
+import GafferUSD
+import GafferUSDUI
+
+nodeMenu.append( "/USD/Attributes", GafferUSD.USDAttributes, searchText = "USDAttributes" )
+nodeMenu.append( "/USD/Layer Writer", GafferUSD.USDLayerWriter, searchText = "USDLayerWriter" )
+
 # Dispatch nodes
 
 import GafferDispatch

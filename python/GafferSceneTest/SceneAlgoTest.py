@@ -1318,6 +1318,166 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertIsNone( GafferScene.SceneAlgo.attributeHistory( history, "c" ) )
 
+	def testAttributeHistoryWithAttributeTweaks( self ) :
+
+		# Graph
+		# -----
+		#
+		#        plane
+		#          |
+		#    planeAttributes
+		#          |
+		#      innerGroup
+		#          |
+		#      outerGroup
+		#          |
+		#    innerAttributes
+		#          |
+		#    outerAttributes
+		#
+		# Hierarchy and attributes
+		# ------------------------
+		#
+		#  /outer         a b c
+		#    /inner       a b
+		#       /plane    a
+		#
+
+		plane = GafferScene.Plane()
+
+		planeFilter = GafferScene.PathFilter()
+		planeFilter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		planeAttributes = GafferScene.CustomAttributes()
+		planeAttributes["in"].setInput( plane["out"] )
+		planeAttributes["filter"].setInput( planeFilter["out"] )
+		planeAttributes["attributes"].addChild( Gaffer.NameValuePlug( "a", "planeA" ) )
+
+		innerGroup = GafferScene.Group()
+		innerGroup["in"][0].setInput( planeAttributes["out"] )
+		innerGroup["name"].setValue( "inner" )
+
+		outerGroup = GafferScene.Group()
+		outerGroup["in"][0].setInput( innerGroup["out"] )
+		outerGroup["name"].setValue( "outer" )
+
+		innerFilter = GafferScene.PathFilter()
+		innerFilter["paths"].setValue( IECore.StringVectorData( [ "/outer/inner" ] ) )
+
+		innerAttributes = GafferScene.CustomAttributes()
+		innerAttributes["in"].setInput( outerGroup["out"] )
+		innerAttributes["filter"].setInput( innerFilter["out"] )
+		innerAttributes["attributes"].addChild( Gaffer.NameValuePlug( "a", "innerA" ) )
+		innerAttributes["attributes"].addChild( Gaffer.NameValuePlug( "b", "innerB" ) )
+
+		outerFilter = GafferScene.PathFilter()
+		outerFilter["paths"].setValue( IECore.StringVectorData( [ "/outer" ] ) )
+
+		outerAttributes = GafferScene.CustomAttributes()
+		outerAttributes["in"].setInput( innerAttributes["out"] )
+		outerAttributes["filter"].setInput( outerFilter["out"] )
+		outerAttributes["attributes"].addChild( Gaffer.NameValuePlug( "a", "outerA" ) )
+		outerAttributes["attributes"].addChild( Gaffer.NameValuePlug( "b", "outerB" ) )
+		outerAttributes["attributes"].addChild( Gaffer.NameValuePlug( "c", "outerC" ) )
+
+		tweaksFilter = GafferScene.PathFilter()
+		tweaksFilter["paths"].setValue( IECore.StringVectorData( [ "/outer/inner/plane" ] ) )
+
+		tweaks = GafferScene.AttributeTweaks()
+		tweaks["in"].setInput( outerAttributes["out"] )
+		tweaks["filter"].setInput( tweaksFilter["out"] )
+
+		# No tweaks yet
+
+		history = GafferScene.SceneAlgo.history( tweaks["out"]["attributes"], "/outer/inner/plane" )
+		attributeHistory = GafferScene.SceneAlgo.attributeHistory( history, "a" )
+
+		self.__assertAttributeHistory( attributeHistory, [], tweaks["out"], "/outer/inner/plane", "a", IECore.StringData( "planeA" ), 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0 ], tweaks["in"], "/outer/inner/plane", "a", IECore.StringData( "planeA" ), 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0 ], outerAttributes["out"], "/outer/inner/plane", "a", IECore.StringData( "planeA" ), 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0 ], outerAttributes["in"], "/outer/inner/plane", "a", IECore.StringData( "planeA" ), 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0 ], innerAttributes["out"], "/outer/inner/plane", "a", IECore.StringData( "planeA" ), 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0 ], innerAttributes["in"], "/outer/inner/plane", "a", IECore.StringData( "planeA" ), 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0 ], outerGroup["out"], "/outer/inner/plane", "a", IECore.StringData( "planeA" ), 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0 ], outerGroup["in"][0], "/inner/plane", "a", IECore.StringData( "planeA" ), 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0, 0 ], innerGroup["out"], "/inner/plane", "a", IECore.StringData( "planeA" ), 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0, 0, 0 ], innerGroup["in"][0], "/plane", "a", IECore.StringData( "planeA" ), 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ], planeAttributes["out"], "/plane", "a", IECore.StringData( "planeA" ), 0 )
+
+		# Without localisation, "b" and "c" have no history
+
+		self.assertIsNone( GafferScene.SceneAlgo.attributeHistory( history, "b" ) )
+		self.assertIsNone( GafferScene.SceneAlgo.attributeHistory( history, "c" ) )
+
+		# Add tweak on plane attribute
+
+		tweakA = Gaffer.TweakPlug( "a", "tweakA" )
+		tweaks["tweaks"].addChild( tweakA )
+
+		history = GafferScene.SceneAlgo.history( tweaks["out"]["attributes"], "/outer/inner/plane" )
+		attributeHistory = GafferScene.SceneAlgo.attributeHistory( history, "a" )
+
+		self.__assertAttributeHistory( attributeHistory, [], tweaks["out"], "/outer/inner/plane", "a", IECore.StringData( "tweakA" ), 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0 ], tweaks["in"], "/outer/inner/plane", "a", IECore.StringData( "planeA" ), 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0 ], outerAttributes["out"], "/outer/inner/plane", "a", IECore.StringData( "planeA" ), 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0 ], outerAttributes["in"], "/outer/inner/plane", "a", IECore.StringData( "planeA" ), 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0 ], innerAttributes["out"], "/outer/inner/plane", "a", IECore.StringData( "planeA" ), 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0 ], innerAttributes["in"], "/outer/inner/plane", "a", IECore.StringData( "planeA" ), 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0 ], outerGroup["out"], "/outer/inner/plane", "a", IECore.StringData( "planeA" ), 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0 ], outerGroup["in"][0], "/inner/plane", "a", IECore.StringData( "planeA" ), 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0, 0 ], innerGroup["out"], "/inner/plane", "a", IECore.StringData( "planeA" ), 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0, 0, 0 ], innerGroup["in"][0], "/plane", "a", IECore.StringData( "planeA" ), 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ], planeAttributes["out"], "/plane", "a", IECore.StringData( "planeA" ), 0 )
+
+		self.assertIsNone( GafferScene.SceneAlgo.attributeHistory( history, "b" ) )
+		self.assertIsNone( GafferScene.SceneAlgo.attributeHistory( history, "c" ) )
+
+		# Add tweaks to inherited attributes
+
+		tweakB = Gaffer.TweakPlug( "b", "tweakB" )
+		tweakC = Gaffer.TweakPlug( "c", "tweakC" )
+
+		tweaks["tweaks"].addChild( tweakB )
+		tweaks["tweaks"].addChild( tweakC )
+
+		# Fail while `localise` and `ignoreMissing` are off
+
+		with six.assertRaisesRegex( self, RuntimeError, "Cannot apply tweak with mode Replace to \"b\" : This parameter does not exist" ) :
+			history = GafferScene.SceneAlgo.history( tweaks["out"]["attributes"], "/outer/inner/plane" )
+			GafferScene.SceneAlgo.attributeHistory( history, "b" )
+
+		# Localise will get the attributes from parent locations
+
+		tweaks["localise"].setValue( True )
+
+		# Test attribute "b"
+
+		history = GafferScene.SceneAlgo.history( tweaks["out"]["attributes"], "/outer/inner/plane" )
+		attributeHistory = GafferScene.SceneAlgo.attributeHistory( history, "b" )
+
+		self.__assertAttributeHistory( attributeHistory, [], tweaks["out"], "/outer/inner/plane", "b", IECore.StringData( "tweakB" ), 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0 ], tweaks["in"], "/outer/inner", "b", IECore.StringData( "innerB" ), 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0 ], outerAttributes["out"], "/outer/inner", "b", IECore.StringData( "innerB" ), 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0 ], outerAttributes["in"], "/outer/inner", "b", IECore.StringData( "innerB" ), 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0, 0, 0 ], innerAttributes["out"], "/outer/inner", "b", IECore.StringData( "innerB" ), 0 )
+
+		# Test attribute "c"
+
+		attributeHistory = GafferScene.SceneAlgo.attributeHistory( history, "c" )
+
+		self.__assertAttributeHistory( attributeHistory, [], tweaks["out"], "/outer/inner/plane", "c", IECore.StringData( "tweakC" ), 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0 ], tweaks["in"], "/outer", "c", IECore.StringData( "outerC" ), 1 )
+		self.__assertAttributeHistory( attributeHistory, [ 0, 0 ], outerAttributes["out"], "/outer", "c", IECore.StringData( "outerC" ), 0 )
+
+		# Localise is on, remove parent attribute tweak "b"
+
+		tweaks["tweaks"].removeChild( tweakB )
+
+		history = GafferScene.SceneAlgo.history( tweaks["out"]["attributes"], "/outer/inner/plane" )
+		attributeHistory = GafferScene.SceneAlgo.attributeHistory( history, "b" )
+
+		self.assertIsNone( GafferScene.SceneAlgo.attributeHistory( history, "b" ) )
+
 	def testAttributeHistoryWithMissingAttribute( self ) :
 
 		# Attribute doesn't exist, so we return None.

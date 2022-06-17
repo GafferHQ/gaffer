@@ -127,8 +127,11 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 
 		return self.__plug
 
+	# Registers a parameter to be available for editing. `rendererKey` is a pattern
+	# that will be matched against `self.__settingsNode["attribute"]` to determine if
+	# the column should be shown.
 	@classmethod
-	def registerParameter( cls, attribute, parameter, section = None ) :
+	def registerParameter( cls, rendererKey, parameter, section = None ) :
 
 		# We use `tuple` to store `ShaderNetwork.Parameter`, because
 		# the latter isn't hashable and we need to use it as a dict key.
@@ -138,11 +141,40 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 			assert( isinstance( parameter, IECoreScene.ShaderNetwork.Parameter ) )
 			parameter = ( parameter.shader, parameter.name )
 
-		sections = cls.__columnRegistry.setdefault( attribute, collections.OrderedDict() )
-		section = sections.setdefault( section, collections.OrderedDict() )
-		section[parameter] = lambda scene, editScope : _GafferSceneUI._LightEditorInspectorColumn(
-			GafferSceneUI.Private.ParameterInspector( scene, editScope, attribute, parameter )
+		GafferSceneUI.LightEditor.registerColumn(
+			rendererKey,
+			parameter,
+			lambda scene, editScope : _GafferSceneUI._LightEditorInspectorColumn(
+				GafferSceneUI.Private.ParameterInspector( scene, editScope, rendererKey, parameter )
+			),
+			section
 		)
+
+	@classmethod
+	def registerAttribute( cls, rendererKey, attributeName, section = None ) :
+
+		displayName = attributeName.split( ':' )[-1]
+		GafferSceneUI.LightEditor.registerColumn(
+			rendererKey,
+			attributeName,
+			lambda scene, editScope : _GafferSceneUI._LightEditorInspectorColumn(
+				GafferSceneUI.Private.AttributeInspector( scene, editScope, attributeName ),
+				displayName
+			),
+			section
+		)
+
+	# Registers a column in the Light Editor.
+	# `inspectorFunction` is a callable object of the form
+	# `inspectorFunction( scene, editScope )` returning a
+	# `GafferSceneUI._LightEditorInspectorColumn` object.
+	@classmethod
+	def registerColumn( cls, rendererKey, columnKey, inspectorFunction, section = None ) :
+
+		sections = cls.__columnRegistry.setdefault( rendererKey, collections.OrderedDict() )
+		section = sections.setdefault( section, collections.OrderedDict() )
+
+		section[columnKey] = inspectorFunction
 
 	def __repr__( self ) :
 
@@ -192,9 +224,15 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 	@GafferUI.LazyMethod()
 	def __updateColumns( self ) :
 
-		sections = self.__columnRegistry[self.__settingsNode["attribute"].getValue()]
-		section = sections[self.__settingsNode["section"].getValue() or None]
-		sectionColumns = [ c( self.__settingsNode["in"], self.__settingsNode["editScope"] ) for c in section.values() ]
+		attribute = self.__settingsNode["attribute"].getValue()
+		currentSection = self.__settingsNode["section"].getValue()
+
+		sectionColumns = []
+
+		for rendererKey, sections in self.__columnRegistry.items() :
+			if IECore.StringAlgo.match( attribute, rendererKey ) :
+				section = sections.get( currentSection or None, {} )
+				sectionColumns += [ c( self.__settingsNode["in"], self.__settingsNode["editScope"] ) for c in section.values() ]
 
 		nameColumn = self.__pathListing.getColumns()[0]
 		self.__pathListing.setColumns( [ nameColumn ] + sectionColumns )
@@ -263,7 +301,7 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 		if inspection.editable() :
 
 			self.__popup = GafferUI.PlugPopup( [ inspection.acquireEdit() ], warning = inspection.editWarning() )
-			if isinstance( self.__popup.plugValueWidget(), GafferSceneUI.TweakPlugValueWidget ) :
+			if isinstance( self.__popup.plugValueWidget(), GafferUI.TweakPlugValueWidget ) :
 				self.__popup.plugValueWidget().setNameVisible( False )
 			self.__popup.popup()
 
@@ -379,10 +417,13 @@ class _SectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__ignoreCurrentChanged = True
 			while self._qtWidget().count() :
 				self._qtWidget().removeTab( 0 )
+
 			attribute = self.getPlug().node()["attribute"].getValue()
-			if attribute in LightEditor._LightEditor__columnRegistry :
-				for section in LightEditor._LightEditor__columnRegistry[attribute].keys() :
-					self._qtWidget().addTab( section or "Main" )
+
+			for rendererKey, sections in LightEditor._LightEditor__columnRegistry.items() :
+				if IECore.StringAlgo.match( attribute, rendererKey ) :
+					for section in sections.keys() :
+						self._qtWidget().addTab( section or "Main" )
 		finally :
 			self.__ignoreCurrentChanged = False
 

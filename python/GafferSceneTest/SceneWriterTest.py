@@ -392,5 +392,26 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( sceneReader["out"].attributes( "/sphere" ), sceneWriter["in"].attributes( "/sphere" ) )
 
+	def testChildNamesOrder( self ) :
+
+		sphere = GafferScene.Sphere()
+
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		duplicate = GafferScene.Duplicate()
+		duplicate["in"].setInput( sphere["out"] )
+		duplicate["filter"].setInput( sphereFilter["out"] )
+		duplicate["copies"].setValue( 100 )
+
+		writer = GafferScene.SceneWriter()
+		writer["in"].setInput( duplicate["out"] )
+		writer["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.abc" ) )
+		writer["task"].execute()
+
+		reader = GafferScene.SceneReader()
+		reader["fileName"].setInput( writer["fileName"] )
+		self.assertScenesEqual( reader["out"], writer["in"] )
+
 if __name__ == "__main__":
 	unittest.main()

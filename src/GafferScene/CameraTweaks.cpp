@@ -36,7 +36,7 @@
 
 #include "GafferScene/CameraTweaks.h"
 
-#include "GafferScene/TweakPlug.h"
+#include "Gaffer/TweakPlug.h"
 
 #include "IECoreScene/Camera.h"
 
@@ -61,14 +61,14 @@ CameraTweaks::~CameraTweaks()
 {
 }
 
-GafferScene::TweaksPlug *CameraTweaks::tweaksPlug()
+Gaffer::TweaksPlug *CameraTweaks::tweaksPlug()
 {
-	return getChild<GafferScene::TweaksPlug>( g_firstPlugIndex );
+	return getChild<Gaffer::TweaksPlug>( g_firstPlugIndex );
 }
 
-const GafferScene::TweaksPlug *CameraTweaks::tweaksPlug() const
+const Gaffer::TweaksPlug *CameraTweaks::tweaksPlug() const
 {
-	return getChild<GafferScene::TweaksPlug>( g_firstPlugIndex );
+	return getChild<Gaffer::TweaksPlug>( g_firstPlugIndex );
 }
 
 bool CameraTweaks::affectsProcessedObject( const Gaffer::Plug *input ) const

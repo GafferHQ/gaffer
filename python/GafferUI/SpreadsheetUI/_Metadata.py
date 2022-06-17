@@ -258,7 +258,9 @@ for key in [
 	"presetsPlugValueWidget:allowCustom",
 	"ui:scene:acceptsSetName",
 	"ui:scene:acceptsSetNames",
-	"ui:scene:acceptsSetExpression"
+	"ui:scene:acceptsSetExpression",
+	"tweakPlugValueWidget:allowRemove",
+	"tweakPlugValueWidget:allowCreate",
 ] :
 
 	Gaffer.Metadata.registerValue(

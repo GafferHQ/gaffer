@@ -266,8 +266,6 @@ Gaffer.Metadata.registerNode(
 			The default value to output if the parameter does not exist.
 			""",
 
-			"spreadsheet:columnName", functools.partial( __getLabel, parentPlug = "queries", sanitise = True ),
-
 		],
 
 		"queries.*.name" : [
@@ -303,6 +301,7 @@ Gaffer.Metadata.registerNode(
 			"nodule:type", "GafferUI::CompoundNodule",
 			"noduleLayout:section", "right",
 			"noduleLayout:spacing", 0.4,
+			"noduleLayout:customGadget:addButton:gadgetType", "",
 
 		],
 

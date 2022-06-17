@@ -39,7 +39,7 @@
 
 #include "GafferSceneUI/Export.h"
 
-#include "GafferSceneUI/Private/Inspector.h"
+#include "GafferSceneUI/Private/AttributeInspector.h"
 
 #include "IECoreScene/ShaderNetwork.h"
 
@@ -49,7 +49,7 @@ namespace GafferSceneUI
 namespace Private
 {
 
-class GAFFERSCENEUI_API ParameterInspector : public Inspector
+class GAFFERSCENEUI_API ParameterInspector : public AttributeInspector
 {
 
 	public :
@@ -61,19 +61,16 @@ class GAFFERSCENEUI_API ParameterInspector : public Inspector
 
 		IE_CORE_DECLAREMEMBERPTR( ParameterInspector );
 
-	private :
+	protected :
 
 		GafferScene::SceneAlgo::History::ConstPtr history() const override;
+
+	private :
+
 		IECore::ConstObjectPtr value( const GafferScene::SceneAlgo::History *history ) const override;
 		Gaffer::ValuePlugPtr source( const GafferScene::SceneAlgo::History *history, std::string &editWarning ) const override;
 		EditFunctionOrFailure editFunction( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history ) const override;
 
-		void plugDirtied( Gaffer::Plug *plug );
-		void plugMetadataChanged( IECore::InternedString key, const Gaffer::Plug *plug );
-		void nodeMetadataChanged( IECore::InternedString key, const Gaffer::Node *node );
-
-		const GafferScene::ScenePlugPtr m_scene;
-		const IECore::InternedString m_attribute;
 		const IECoreScene::ShaderNetwork::Parameter m_parameter;
 
 };

@@ -38,9 +38,11 @@
 #define GAFFERSCENE_SHADERTWEAKS_H
 
 #include "GafferScene/AttributeProcessor.h"
-#include "GafferScene/TweakPlug.h"
 
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/TweakPlug.h"
+
+#include "IECoreScene/ShaderNetwork.h"
 
 namespace GafferScene
 {
@@ -61,8 +63,8 @@ class GAFFERSCENE_API ShaderTweaks : public AttributeProcessor
 		Gaffer::BoolPlug *ignoreMissingPlug();
 		const Gaffer::BoolPlug *ignoreMissingPlug() const;
 
-		GafferScene::TweaksPlug *tweaksPlug();
-		const GafferScene::TweaksPlug *tweaksPlug() const;
+		Gaffer::TweaksPlug *tweaksPlug();
+		const Gaffer::TweaksPlug *tweaksPlug() const;
 
 		Gaffer::BoolPlug *localisePlug();
 		const Gaffer::BoolPlug *localisePlug() const;
@@ -74,6 +76,10 @@ class GAFFERSCENE_API ShaderTweaks : public AttributeProcessor
 		IECore::ConstCompoundObjectPtr computeProcessedAttributes( const ScenePath &path, const Gaffer::Context *context, const IECore::CompoundObject *inputAttributes ) const override;
 
 		static size_t g_firstPlugIndex;
+
+	private :
+
+		bool applyTweaks( IECoreScene::ShaderNetwork *shaderNetwork, Gaffer::TweakPlug::MissingMode missingMode ) const;
 
 };
 

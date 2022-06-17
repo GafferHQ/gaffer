@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import Gaffer
 import GafferScene
 
 # Compatibility with old tweak plugs with unnecessary stuff serialized
@@ -47,7 +48,7 @@ def __tweakPlugAddChild( originalAddChild ) :
 
 	return addChild
 
-GafferScene.TweakPlug.addChild = __tweakPlugAddChild( GafferScene.TweakPlug.addChild )
+Gaffer.TweakPlug.addChild = __tweakPlugAddChild( Gaffer.TweakPlug.addChild )
 
 # Compatibility for old LightTweaks nodes
 
@@ -66,4 +67,4 @@ class LightTweaks( GafferScene.ShaderTweaks ) :
 		return GafferScene.ShaderTweaks.__getitem__( self, key )
 
 GafferScene.LightTweaks = LightTweaks
-GafferScene.LightTweaks.TweakPlug = GafferScene.TweakPlug
+GafferScene.LightTweaks.TweakPlug = Gaffer.TweakPlug

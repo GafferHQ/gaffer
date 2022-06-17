@@ -408,7 +408,7 @@ class _InspectorWidget( GafferUI.Widget ) :
 					[ r.editWarning() for r in self.__inspectorResults ]
 				)
 			)
-			if isinstance( self.__popup.plugValueWidget(), GafferSceneUI.TweakPlugValueWidget ) :
+			if isinstance( self.__popup.plugValueWidget(), GafferUI.TweakPlugValueWidget ) :
 				self.__popup.plugValueWidget().setNameVisible( False )
 			self.__popup.popup()
 

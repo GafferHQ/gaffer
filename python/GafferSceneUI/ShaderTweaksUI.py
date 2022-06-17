@@ -317,9 +317,9 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 	def __addTweak( self, name, plugTypeOrValue ) :
 
 		if isinstance( plugTypeOrValue, IECore.Data ) :
-			plug = GafferScene.TweakPlug( name, plugTypeOrValue )
+			plug = Gaffer.TweakPlug( name, plugTypeOrValue )
 		else :
-			plug = GafferScene.TweakPlug( name, plugTypeOrValue() )
+			plug = Gaffer.TweakPlug( name, plugTypeOrValue() )
 
 		if name :
 			plug.setName( name.replace( ".", "_" ) )
@@ -397,7 +397,7 @@ def __graphEditorPlugContextMenu( graphEditor, plug, menuDefinition ) :
 		return
 
 	tweakPlug = plug.parent()
-	if not isinstance( tweakPlug, GafferScene.TweakPlug ) :
+	if not isinstance( tweakPlug, Gaffer.TweakPlug ) :
 		return False
 
 	if tweakPlug.parent() != plug.node()["tweaks"] :

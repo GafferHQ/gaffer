@@ -146,7 +146,7 @@ void copyDeepArea(
 		int outIndex = outStartIndex + ( size.y - y - 1 ) * outStride;
 
 		assert( outData.samples( outIndex ) == offsetData[ offsetPos ] - offset );
-		int sum = 0;
+		[[maybe_unused]] int sum = 0;
 		for( int x = 0; x < size.x; x++ )
 		{
 			assert( outIndex < outData.pixels() );

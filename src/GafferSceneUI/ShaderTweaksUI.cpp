@@ -36,8 +36,6 @@
 
 #include "GafferScene/ShaderTweaks.h"
 
-#include "GafferScene/TweakPlug.h"
-
 #include "GafferUI/Nodule.h"
 #include "GafferUI/NoduleLayout.h"
 #include "GafferUI/PlugAdder.h"
@@ -45,6 +43,7 @@
 #include "Gaffer/Metadata.h"
 #include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/ScriptNode.h"
+#include "Gaffer/TweakPlug.h"
 #include "Gaffer/UndoScope.h"
 
 #include "boost/bind/bind.hpp"

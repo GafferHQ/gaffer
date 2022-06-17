@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2019, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2022, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,25 +34,8 @@
 #
 ##########################################################################
 
-import six
-
 import Gaffer
 import GafferScene
 
-originalInit = GafferScene.TweakPlug.__init__
-
-def initSupportingOldSerialisation( self, *args, **kwargs ) :
-
-	if len( args ) == 1 and isinstance( args[0], six.string_types ) :
-
-		# Constructor calls that provide only a name but no value plug or
-		# data need to be rerouted. These calls occur when
-		# deserialising old scripts.
-
-		originalInit( self, None, args[0], **kwargs )
-
-	else :
-
-		originalInit( self, *args, **kwargs )
-
-GafferScene.TweakPlug.__init__ = initSupportingOldSerialisation
+GafferScene.TweakPlug = Gaffer.TweakPlug
+GafferScene.TweaksPlug = Gaffer.TweaksPlug
