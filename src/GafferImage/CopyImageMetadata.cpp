@@ -36,6 +36,8 @@
 
 #include "GafferImage/CopyImageMetadata.h"
 
+#include "GafferImage/ImageAlgo.h"
+
 #include "Gaffer/StringPlug.h"
 
 #include "IECore/StringAlgo.h"
@@ -97,7 +99,7 @@ void CopyImageMetadata::affects( const Gaffer::Plug *input, AffectedPlugsContain
 {
 	MetadataProcessor::affects( input, outputs );
 
-	if ( input == copyFromPlug()->metadataPlug() || input == namesPlug() || input == invertNamesPlug() )
+	if ( input == inPlug()->viewNamesPlug() || input == copyFromPlug()->metadataPlug() || input == namesPlug() || input == invertNamesPlug() )
 	{
 		outputs.push_back( outPlug()->metadataPlug() );
 	}
@@ -105,14 +107,24 @@ void CopyImageMetadata::affects( const Gaffer::Plug *input, AffectedPlugsContain
 
 void CopyImageMetadata::hashProcessedMetadata( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	copyFromPlug()->metadataPlug()->hash( h );
 	namesPlug()->hash( h );
 	invertNamesPlug()->hash( h );
+
+	if( ImageAlgo::viewIsValid( context, copyFromPlug()->viewNames()->readable() ) )
+	{
+		copyFromPlug()->metadataPlug()->hash( h );
+	}
 }
 
 IECore::ConstCompoundDataPtr CopyImageMetadata::computeProcessedMetadata( const Gaffer::Context *context, const IECore::CompoundData *inputMetadata ) const
 {
+	if( !ImageAlgo::viewIsValid( context, copyFromPlug()->viewNames()->readable() ) )
+	{
+		return inputMetadata;
+	}
+
 	ConstCompoundDataPtr copyFrom = copyFromPlug()->metadataPlug()->getValue();
+
 	if( copyFrom->readable().empty() )
 	{
 		return inputMetadata;
