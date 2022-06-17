@@ -148,12 +148,10 @@ class _PathsPlugValueWidget( GafferUI.VectorDataPlugValueWidget ) :
 		filterNode = self.getPlug().node()
 
 		filterData = self.vectorDataWidget().getData()[0]
-		selectedStrings = [ filterData[row] for column, row in selectedIndices ]
-		selectedStrings = list( set( selectedStrings ) )
 
 		pathMatcher = IECore.PathMatcher()
-		for p in selectedStrings :
-			pathMatcher.addPath( p )
+		for column, row in selectedIndices :
+			pathMatcher.addPath( filterData[row] )
 
 		scenes = [ n["in"] for n in GafferScene.SceneAlgo.filteredNodes( filterNode ) ]
 		scenes = [ s[0] if isinstance( s, Gaffer.ArrayPlug ) else s for s in scenes ]
