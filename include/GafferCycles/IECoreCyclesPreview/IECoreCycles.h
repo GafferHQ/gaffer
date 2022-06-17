@@ -38,7 +38,9 @@
 #include "GafferCycles/IECoreCyclesPreview/Export.h"
 
 // Cycles
+IECORE_PUSH_DEFAULT_VISIBILITY
 #include "device/device.h"
+IECORE_POP_DEFAULT_VISIBILITY
 
 #include <string>
 

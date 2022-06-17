@@ -55,10 +55,12 @@
 #include "boost/container/flat_set.hpp"
 
 // Cycles
+IECORE_PUSH_DEFAULT_VISIBILITY
 #include "kernel/types.h"
 #include "util/transform.h"
 #include "util/types_float2.h"
 #include "util/types_float3.h"
+IECORE_POP_DEFAULT_VISIBILITY
 
 using namespace std;
 using namespace Imath;

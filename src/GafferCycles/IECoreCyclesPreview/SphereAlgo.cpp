@@ -45,8 +45,10 @@
 #include "IECore/SimpleTypedData.h"
 
 // Cycles
+IECORE_PUSH_DEFAULT_VISIBILITY
 #include "scene/geometry.h"
 #include "scene/pointcloud.h"
+IECORE_POP_DEFAULT_VISIBILITY
 
 using namespace std;
 using namespace Imath;

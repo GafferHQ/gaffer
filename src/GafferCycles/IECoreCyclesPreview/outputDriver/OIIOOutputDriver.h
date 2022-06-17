@@ -34,16 +34,22 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
+#include "IECore/Export.h"
+
 // Cycles
+IECORE_PUSH_DEFAULT_VISIBILITY
 #include "kernel/types.h"
 #include "session/output_driver.h"
+IECORE_POP_DEFAULT_VISIBILITY
 
 // Cortex
 #include "IECore/CompoundData.h"
 #include "IECore/InternedString.h"
 
 // OIIO
+IECORE_PUSH_DEFAULT_VISIBILITY
 #include "OpenImageIO/typedesc.h"
+IECORE_POP_DEFAULT_VISIBILITY
 
 namespace IECoreCycles
 {

@@ -82,6 +82,7 @@
 #include <unordered_map>
 
 // Cycles
+IECORE_PUSH_DEFAULT_VISIBILITY
 #include "bvh/params.h"
 #include "device/device.h"
 #include "graph/node.h"
@@ -111,6 +112,7 @@
 #include "util/path.h"
 #include "util/time.h"
 #include "util/vector.h"
+IECORE_POP_DEFAULT_VISIBILITY
 
 using namespace std;
 using namespace Imath;

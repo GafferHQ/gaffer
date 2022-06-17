@@ -32,15 +32,17 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-// Cycles (for ustring)
-#include "util/param.h"
-#undef fmix // OpenImageIO's farmhash inteferes with IECore::MurmurHash
-
 #include "GafferCycles/IECoreCyclesPreview/ObjectAlgo.h"
 
 #include "IECore/MessageHandler.h"
 
 #include "IECoreScene/PrimitiveVariable.h"
+
+IECORE_PUSH_DEFAULT_VISIBILITY
+// Cycles (for ustring)
+#include "util/param.h"
+#undef fmix // OpenImageIO's farmhash inteferes with IECore::MurmurHash
+IECORE_POP_DEFAULT_VISIBILITY
 
 #include <unordered_map>
 

@@ -38,10 +38,12 @@
 #include "IECore/VectorTypedData.h"
 
 // Cycles
+IECORE_PUSH_DEFAULT_VISIBILITY
 #include "kernel/types.h" // for RAMP_TABLE_SIZE
 #include "util/transform.h"
 #include "util/types.h"
 #include "util/vector.h"
+IECORE_POP_DEFAULT_VISIBILITY
 
 using namespace std;
 using namespace Imath;
