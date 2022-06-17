@@ -1240,7 +1240,11 @@ libraries = {
 		"requiredOptions" : [ "CYCLES_ROOT" ],
 	},
 
+	"GafferCyclesTest" : { "requiredOptions" : [ "CYCLES_ROOT" ], },
+
 	"GafferCyclesUI" : { "requiredOptions" : [ "CYCLES_ROOT" ], },
+
+	"GafferCyclesUITest" : { "requiredOptions" : [ "CYCLES_ROOT" ], },
 
 	"GafferTractor" : {},
 
