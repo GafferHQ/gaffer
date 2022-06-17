@@ -143,8 +143,6 @@ class _PathsPlugValueWidget( GafferUI.VectorDataPlugValueWidget ) :
 				}
 			)
 
-		return menuDefinition
-
 	def __selectAffected( self, selectedIndices ) :
 
 		filterNode = self.getPlug().node()
