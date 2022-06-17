@@ -136,7 +136,7 @@ class _PathsPlugValueWidget( GafferUI.VectorDataPlugValueWidget ) :
 
 		menuDefinition.append( "/selectDivider", { "divider" : True } )
 		menuDefinition.append(
-			"/Select Filtered Objects",
+			"/Select Affected Objects",
 			{
 				"command" : functools.partial( Gaffer.WeakMethod( self.__selectAffected ), selectedIndices ),
 				"active" : len( selectedIndices ) > 0,
