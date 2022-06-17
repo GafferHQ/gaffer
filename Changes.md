@@ -12,6 +12,7 @@ Improvements
 
 - Light Editor : Added support for editing visualisation attributes of lights.
 - CameraTweaks : Added `Create` mode. This should be used in preference to `Replace` mode when the parameter may not exist.
+- PathFilter : Added the ability to select scene locations from currently selected filter entries.
 
 Fixes
 -----
