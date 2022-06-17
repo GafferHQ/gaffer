@@ -36,6 +36,7 @@
 
 import types
 import imath
+import functools
 
 import IECore
 
@@ -43,6 +44,7 @@ import Gaffer
 import GafferUI
 
 import GafferScene
+import GafferSceneUI
 
 ##########################################################################
 # Metadata
@@ -93,6 +95,8 @@ Gaffer.Metadata.registerNode(
 
 			"vectorDataPlugValueWidget:dragPointer", "objects",
 
+			"plugValueWidget:type", "GafferSceneUI.PathFilterUI._PathsPlugValueWidget",
+
 		],
 
 		"roots" : [
@@ -113,6 +117,56 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
+
+##########################################################################
+# VectorDataPlugValueWidget customisation
+###########################################################################
+
+class _PathsPlugValueWidget( GafferUI.VectorDataPlugValueWidget ) :
+
+	def __init__( self, plug, **kw ) :
+
+		GafferUI.VectorDataPlugValueWidget.__init__( self, plug, **kw )
+
+		self.vectorDataWidget().dataMenuSignal().connect( Gaffer.WeakMethod( self.__dataMenu ), scoped = False )
+
+	def __dataMenu( self, vectorDataWidget, menuDefinition ) :
+
+		selectedIndices = vectorDataWidget.selectedIndices()
+
+		if len( selectedIndices ) > 0 :
+			menuDefinition.append( "/divider", { "divider" : True } )
+			menuDefinition.append(
+				"/Select Filtered Objects",
+				{
+					"command" : functools.partial( self.__selectAffected, selectedIndices )
+				}
+			)
+
+		return menuDefinition
+
+	def __selectAffected( self, selectedIndices ) :
+
+		filterNode = self.getPlug().node()
+
+		filterData = self.vectorDataWidget().getData()[0]
+		selectedStrings = [ filterData[row] for column, row in selectedIndices ]
+		selectedStrings = list( set( selectedStrings ) )
+
+		pathMatcher = IECore.PathMatcher()
+		for p in selectedStrings :
+			pathMatcher.addPath( p )
+
+		scenes = [ n["in"] for n in GafferScene.SceneAlgo.filteredNodes( filterNode ) ]
+		scenes = [ s[0] if isinstance( s, Gaffer.ArrayPlug ) else s for s in scenes ]
+
+		result = IECore.PathMatcher()
+		context = filterNode.ancestor( Gaffer.ScriptNode ).context()
+		with context :
+			for scene in scenes :
+				GafferScene.SceneAlgo.matchingPaths( pathMatcher, scene, result )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( context, result )
 
 ##########################################################################
 # NodeGadget drop handler
