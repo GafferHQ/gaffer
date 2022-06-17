@@ -500,7 +500,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 
 		# build the menu and pop it up
 		m = self._contextMenuDefinition( self.__selectedRows() )
-		m = self.dataMenuSignal()( self, m )
+		self.dataMenuSignal()( self, m )
 		self.__popupMenu = GafferUI.Menu( m )
 		self.__popupMenu.popup( self )
 
