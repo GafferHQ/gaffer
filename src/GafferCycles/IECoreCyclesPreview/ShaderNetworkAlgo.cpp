@@ -37,8 +37,6 @@
 
 #include "GafferCycles/IECoreCyclesPreview/ShaderNetworkAlgo.h"
 
-#include "GafferOSL/OSLShader.h"
-
 #include "GafferCycles/IECoreCyclesPreview/SocketAlgo.h"
 
 #include "IECoreScene/Shader.h"
@@ -69,12 +67,6 @@ using namespace IECoreCycles;
 
 namespace
 {
-
-#if GAFFER_MAJOR_VERSION > 58
-static bool g_oslRegistrationSurface = OSLShader::registerCompatibleShader( "ccl:surface" );
-static bool g_oslRegistrationVolume = OSLShader::registerCompatibleShader( "ccl:volume" );
-static bool g_oslRegistrationDisplacement = OSLShader::registerCompatibleShader( "ccl:displacement" );
-#endif
 
 std::string shaderCacheGetter( const std::string &shaderName, size_t &cost )
 {
