@@ -489,7 +489,7 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 			self.assertEqual( g1["out"].transformHash( path1 ), g2["out"].transformHash( path2 ) )
 			self.assertEqual( g1["out"].objectHash( path1 ), g2["out"].objectHash( path2 ) )
 			self.assertEqual( g1["out"].attributesHash( path1 ), g2["out"].attributesHash( path2 ) )
-			if path1 is not "/" :
+			if path1 != "/" :
 				self.assertEqual( g1["out"].childNamesHash( path1 ), g2["out"].childNamesHash( path2 ) )
 			else :
 				self.assertNotEqual( g1["out"].childNamesHash( path1 ), g2["out"].childNamesHash( path2 ) )
