@@ -66,6 +66,15 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"lightGroup" : [
+
+			"description",
+			"""
+			The light group that the mesh light will contribute to.
+			""",
+
+		],
+
 		"parameters" : [
 
 			"description",
