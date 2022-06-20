@@ -1,6 +1,14 @@
 0.61.x.x (relative to 0.61.13.1)
 =========
 
+Improvements
+------------
+
+- Light Editor :
+  - Added the ability to edit multiple values at one time. With multiple cells selected, pressing <kbd>Return</kbd> or <kbd>Enter</kbd> will open a popup to edit the values for all cells.
+  - Added the ability to drag from a cell and drop that cell's value on an appropriate target.
+  - Added the ability to select individual cells with the mouse and keyboard. Cells can be selected by clicking or using the up <kbd>&uarr;</kbd>, down <kbd>&darr;</kbd>, left <kbd>&larr;</kbd> and right <kbd>&rarr;</kbd> keys. For both the keyboard and mouse, holding <kbd>Control</kbd> toggles the next selection. Holding <kbd>Shift</kbd> range-selects the next selection.
+
 Fixes
 -----
 
