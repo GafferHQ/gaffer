@@ -318,13 +318,35 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		return self._qtWidget().isSortingEnabled()
 
-	## Sets the currently selected paths using an
-	# `IECore.PathMatcher` object.
+	## Sets the currently selected paths from either a list of
+	# `IECore.PathMatcher` objects, one per column, or a single
+	# `PathMatcher` that will be used for all columns.
 	def setSelection( self, paths, scrollToFirst=True, expandNonLeaf=True ) :
 
-		assert( isinstance( paths, IECore.PathMatcher ) )
-		if self.__selectionMode == self.SelectionMode.Row and paths.size() > 1 :
-			raise ValueError( "More than one path selected" )
+		assert( isinstance( paths, list ) or isinstance( paths, IECore.PathMatcher ) )
+		paths = paths if isinstance( paths, list ) else [paths] * len( self.getColumns() )
+
+		assert( all( isinstance( p, IECore.PathMatcher ) for p in paths  ) )
+
+		if len( self.getColumns() ) != len( paths ) :
+			raise ValueError( "Number of PathMatchers must match the number of columns" )
+
+		if (
+			self.__selectionMode == self.SelectionMode.Row or
+			self.__selectionMode == self.SelectionMode.Cell
+		) and sum( [ p.size() for p in  set( [ p for p in paths ] ) ] ) > 1 :
+			raise ValueError(
+				"More than one {} selected".format(
+					"cell" if self.__selectionMode == self.SelectionMode.Cell else "row"
+				)
+			)
+
+		if (
+			self.__selectionMode == self.SelectionMode.Rows and
+			len( set( [ p for p in paths ] ) ) > 1
+		) :
+			raise ValueError( "Selection must be the same for all columns" )
+
 
 		_GafferUI._pathListingWidgetSetSelection(
 			GafferUI._qtAddress( self._qtWidget() ),
@@ -332,10 +354,23 @@ class PathListingWidget( GafferUI.Widget ) :
 		)
 
 	## Returns an `IECore.PathMatcher` object containing
-	# the currently selected paths.
+	# the currently selected paths if `__selectionMode` is
+	# `Row` or `Rows`, or a list of `IECore.PathMatcher`
+	# objects, one for each column, if `__selectionMode` is
+	# `Cell` or `Cells`
+	#
+	# Within `PathListingWidget` we standardise on using a
+	# list of `PathMatcher`. Returning a single `PathMatcher`
+	# is provided for compatibility.
 	def getSelection( self ) :
 
-		return _GafferUI._pathListingWidgetGetSelection( GafferUI._qtAddress( self._qtWidget() ) )
+		selection = _GafferUI._pathListingWidgetGetSelection( GafferUI._qtAddress( self._qtWidget() ) )
+
+		if self.__selectionMode == self.SelectionMode.Row or self.__selectionMode == self.SelectionMode.Rows :
+			return selection[0] if len( selection ) > 0 else IECore.PathMatcher()
+
+		return selection
+
 
 	## \deprecated
 	def getSelectedPaths( self ) :
@@ -499,16 +534,24 @@ class PathListingWidget( GafferUI.Widget ) :
 			if not newIndex.isValid() :
 				return True
 
+			newColumnIndex = newIndex.column()
 			newPath = str( self.__pathForIndex( newIndex ) )
-			if event.modifiers == event.Modifiers.Shift and self.__selectionMode == self.SelectionMode.Rows :
+			if event.modifiers == event.Modifiers.Shift and (
+				self.__selectionMode == self.SelectionMode.Rows or
+				self.__selectionMode == self.SelectionMode.Cells
+			) :
 				selection = self.getSelection()
-				selected = selection.match( newPath ) & IECore.PathMatcher.Result.ExactMatch
+				selection = selection if isinstance( selection, list ) else [selection] * len( self.getColumns() )
+				selected = selection[newColumnIndex].match( newPath ) & IECore.PathMatcher.Result.ExactMatch
 				if selected :
-					selection.removePath( str( self.__pathForIndex( index ) ) )
+					selection[newColumnIndex].removePath( str( self.__pathForIndex( index ) ) )
 				else :
-					selection.addPath( newPath )
+					selection[newColumnIndex].addPath( newPath )
 			else :
-				selection = IECore.PathMatcher( [ newPath ] )
+				if self.__selectionMode == self.SelectionMode.Row or self.__selectionMode == self.SelectionMode.Rows :
+					selection = [ IECore.PathMatcher( [ newPath ] ) ] * len( self.getColumns() )
+				elif self.__selectionMode == self.SelectionMode.Cell or self.__selectionMode == self.SelectionMode.Cells :
+					selection = [ IECore.PathMatcher( [ newPath ] ) if i == newColumnIndex else IECore.PathMatcher() for i in range( 0, len( self.getColumns() ) ) ]
 
 			self._qtWidget().setCurrentIndex( newIndex )
 			self.setSelection( selection, scrollToFirst=False, expandNonLeaf=False )
@@ -518,12 +561,14 @@ class PathListingWidget( GafferUI.Widget ) :
 
 			lastVisibleIndex = self._qtWidget().lastVisibleIndex()
 			if lastVisibleIndex.isValid() :
-				selection = self.__pathsForIndexRange(
-					self._qtWidget().model().index( 0, 0 ),
-					lastVisibleIndex
-				)
+				selection = [
+					self.__pathsForIndexRange(
+						self._qtWidget().model().index( 0, 0 ),
+						lastVisibleIndex
+					)
+				] * len( self.getColumns() )
 			else :
-				selection = IECore.PathMatcher()
+				selection = [IECore.PathMatcher()] * len( self.getColumns() )
 
 			self.setSelection( selection, scrollToFirst=False, expandNonLeaf=False )
 			return True
@@ -564,8 +609,12 @@ class PathListingWidget( GafferUI.Widget ) :
 		# Do range selection if Shift is held.
 
 		selection = self.getSelection()
+		selection = selection if isinstance( selection, list ) else [selection] * len( self.getColumns() )
 
-		if event.modifiers & event.Modifiers.Shift and self.__selectionMode == self.SelectionMode.Rows :
+		if event.modifiers & event.Modifiers.Shift and (
+			self.__selectionMode == self.SelectionMode.Rows or
+			self.__selectionMode == self.SelectionMode.Cells
+		) :
 			last = self.__lastShiftSelectedIndex
 			if last is not None and last.isValid() :
 				# Convert from persistent index
@@ -573,9 +622,22 @@ class PathListingWidget( GafferUI.Widget ) :
 			else :
 				last = self._qtWidget().currentIndex()
 
-			if last.isValid() and self._qtWidget().currentIndex().isValid() :
-				selection.removePaths( self.__pathsForIndexRange( last, self._qtWidget().currentIndex() ) )
-				selection.addPaths( self.__pathsForIndexRange( index, self._qtWidget().currentIndex() ) )
+			currentIndex = self._qtWidget().currentIndex()
+			if last.isValid() and currentIndex.isValid() :
+				lastPaths = self.__pathsForIndexRange( last, currentIndex )
+				for i in range(
+					min( currentIndex.column(), last.column() ),
+					max( currentIndex.column(), last.column() ) + 1
+				) :
+					selection[i].removePaths( lastPaths )
+
+				newPaths = self.__pathsForIndexRange( index, currentIndex )
+				for i in range(
+					min( currentIndex.column(), index.column() ),
+					max( currentIndex.column(), index.column() ) + 1
+				) :
+					selection[i].addPaths( newPaths )
+
 				self.setSelection( selection, scrollToFirst=False, expandNonLeaf=False )
 				self.__lastShiftSelectedIndex = QtCore.QPersistentModelIndex( index )
 				return True
@@ -588,15 +650,15 @@ class PathListingWidget( GafferUI.Widget ) :
 		# Toggle item selection if Control is held.
 
 		path = str( self.__pathForIndex( index ) )
-		selected = selection.match( path ) & IECore.PathMatcher.Result.ExactMatch
+		pathSelected = selection[ index.column() ].match( path ) & IECore.PathMatcher.Result.ExactMatch
 
 		if event.modifiers & event.Modifiers.Control :
-			if selected :
-				selection.removePath( path )
+			if pathSelected :
+				selection[index.column()].removePath( path )
 			else :
-				if self.__selectionMode != self.SelectionMode.Rows :
-					selection.clear()
-				selection.addPath( path )
+				if self.__selectionMode == self.SelectionMode.Row or self.__selectionMode == self.SelectionMode.Cell :
+					selection = [ IECore.PathMatcher() ] * len( self.getColumns() )
+				selection[index.column()].addPath( path )
 			# Although we're managing our own selection state, we
 			# do still update the current index because Qt uses it
 			# for doing keyboard-based expansion, and we can make use
@@ -607,9 +669,13 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		# Select item if not already selected.
 
-		if not selected :
+		if not pathSelected :
 			self._qtWidget().setCurrentIndex( index )
-			self.setSelection( IECore.PathMatcher( [ path ] ), scrollToFirst=False, expandNonLeaf=False )
+			if self.__selectionMode == self.SelectionMode.Row or self.__selectionMode == self.SelectionMode.Rows :
+				paths = [ IECore.PathMatcher( [ path ] ) ] * len( self.getColumns() )
+			elif self.__selectionMode == self.SelectionMode.Cell or self.__selectionMode == self.SelectionMode.Cells :
+				paths = [ IECore.PathMatcher( [ path ] ) if i == index.column() else IECore.PathMatcher() for i in range( 0, len( self.getColumns() ) ) ]
+			self.setSelection( paths, scrollToFirst=False, expandNonLeaf=False )
 			return True
 
 		# The item is selected, Return True so that we have the option of
@@ -634,7 +700,11 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		path = self.__pathForIndex( index )
 		self._qtWidget().setCurrentIndex( index )
-		self.setSelection( IECore.PathMatcher( [ str( path ) ] ), scrollToFirst=False, expandNonLeaf=False )
+		self.setSelection(
+			[ IECore.PathMatcher( [ str( path ) ] ) if i == index.column() else IECore.PathMatcher() for i in range( 0, len( self.getColumns() ) ) ],
+			scrollToFirst=False,
+			expandNonLeaf=False
+		)
 		return True
 
 	def __buttonDoubleClick( self, widget, event ) :
@@ -792,33 +862,33 @@ class _TreeView( QtWidgets.QTreeView ) :
 
 		QtWidgets.QTreeView.drawRow( self, painter, option, index )
 
-	def drawBranches( self, painter, rect, index ) :
-
-		# Qt has a bug whereby it double-draws the row background in the branch
-		# area, once in `drawRow()` and then once in `drawBranches()`. This causes
-		# partially-transparent backgrounds to be drawn too heavy. Refill with the
-		# default background colour before drawing our highlight and deferring the
-		# rest to Qt.
-		painter.fillRect( rect, QtGui.QColor( *(_styleColors["backgroundRaised"]) ) )
-
-		self.__drawSelectionHighlight( painter, rect, index )
-
-		QtWidgets.QTreeView.drawBranches( self, painter, rect, index )
-
 	def __drawSelectionHighlight( self, painter, rect, index ) :
 
-		match = index.model().data( index, QtCore.Qt.UserRole )
-		if match & IECore.PathMatcher.Result.ExactMatch :
-			alpha = 200
-		elif match & IECore.PathMatcher.Result.DescendantMatch :
-			alpha = 50
-		else :
-			alpha = None
+		header = self.header()
+		descendantMatch = False
 
-		if alpha :
+		for i in range( 0, header.count() ) :
+			columnIndex = index.siblingAtColumn( i )
+			match = columnIndex.model().data( columnIndex, QtCore.Qt.UserRole )
+
+			if match & IECore.PathMatcher.Result.DescendantMatch :
+				descendantMatch = True
+
+			activeRect = rect
+
+			if match & IECore.PathMatcher.Result.ExactMatch :
+				left = header.sectionViewportPosition( i )
+				width = ( header.sectionViewportPosition( i + 1 ) - left ) if ( i < header.count() - 1 ) else ( rect.right() - left )
+				activeRect = QtCore.QRectF( left, rect.top(), width, rect.height() )
+
+				color = QtGui.QColor( *(_styleColors["brightColor"]) )
+				color.setAlpha( 200 )
+				painter.fillRect( activeRect, color )
+
+		if descendantMatch :
 			color = QtGui.QColor( *(_styleColors["brightColor"]) )
-			color.setAlpha( alpha )
-			painter.fillRect( rect, color )
+			color.setAlpha( 50 )
+			painter.fillRect( activeRect, color )
 
 	def __sectionResized( self, index, oldWidth, newWidth ) :
 

@@ -21,6 +21,7 @@ Improvements
 - Light Editor : Added support for editing visualisation attributes of lights.
 - CameraTweaks : Added `Create` mode. This should be used in preference to `Replace` mode when the parameter may not exist.
 - PathFilter : Added the ability to select scene locations from currently selected filter entries.
+- PathListingWidget : Added an option to `selectionMode` allowing single and multiple cell selections.
 
 Fixes
 -----
@@ -38,7 +39,9 @@ API
 - EditScopeAlgo : Added support for editing attributes.
 - TweakPlug : Added `Create` mode.
 - VectorDataWidget : Added `dataMenuSignal` for constructing the context menu. Classes can add their own slots to this signal to modify the context menu. Derived classes should use it in favor of `_contextMenuDefinition()`.
-- PathListingWidget : Deprecated `allowMultipleSelection` constructor argument. Use `selectionMode` argument instead.
+- PathListingWidget :
+  - Deprecated `allowMultipleSelection` constructor argument. Use `selectionMode` argument instead.
+  - `setSelection` and `getSelection` can now accept either a single `PathMatcher` that represents the selection for all columns, or a list of `PathMatcher` objects, one for each column. If `selectionMode` is `Row` or `Rows`, `getSelection` returns a single `PatchMatcher` for backwards compatibility.
 
 0.61.12.0 (relative to 0.61.11.0)
 =========

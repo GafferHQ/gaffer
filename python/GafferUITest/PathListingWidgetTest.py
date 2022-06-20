@@ -224,7 +224,7 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		w.setExpandedPaths( e )
 		self.assertEqual( len( c ), 4 )
 
-	def testSelection( self ) :
+	def testRowSelection( self ) :
 
 		d = {}
 		for i in range( 0, 10 ) :
@@ -270,6 +270,61 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		w.setSelection( s1 )
 		w.setSelection( s2 )
 		self.assertEqual( w.getSelection(), s2 )
+
+	def testCellsSelection( self ) :
+
+		d = {}
+		for i in range( 0, 10 ) :
+			dd = {}
+			for j in range( 0, 10 ) :
+				dd[str(j)] = j
+			d[str(i)] = dd
+
+		p = Gaffer.DictPath( d, "/" )
+
+		w = GafferUI.PathListingWidget(
+			p,
+			selectionMode = GafferUI.PathListingWidget.SelectionMode.Cells,
+			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree
+		)
+		_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( w._qtWidget() ) )
+
+		self.assertEqual( w.getColumns(), list( w.defaultFileSystemColumns ) )
+
+		c = [ w.defaultNameColumn, w.StandardColumn( "h", "a" ) ]
+
+		w.setColumns( c )
+		self.assertEqual( w.getColumns(), c )
+
+		self.assertEqual( len( w.getSelection() ), 2 )
+
+		# Set selection. This should be immediately reflected in
+		# the `selectionChangedSignal` and the result of `getSelection()`.
+
+		cs = GafferTest.CapturingSlot( w.selectionChangedSignal() )
+		s11 = IECore.PathMatcher( [ "/1", "/2", "/9", "/2/5", "/3/1" ] )
+		s12 = IECore.PathMatcher( [ "/1", "/3", "/9", "/2/5", "/4/6" ] )
+
+		w.setSelection( [ s11, s12 ] )
+		self.assertEqual( w.getSelection(), [ s11, s12 ] )
+		self.assertEqual( len( cs ), 1 )
+
+		# Delete a path that was selected.
+		d2 = d["2"]
+		del d["2"]
+		self.__emitPathChanged( w )
+		# We don't expect this to affect the result of `getSelection()` because
+		# the selection state is independent of the model contents.
+		self.assertEqual( w.getSelection(), [ s11, s12 ] )
+
+		# Now try to set selection twice in succession, so the model doesn't have
+		# chance to finish one update before starting the next.
+
+		s21 = IECore.PathMatcher( [ "/9", "/9/10", "/8/6" ] )
+		s31 = IECore.PathMatcher( [ "/9", "/9/9", "/5/6", "3" ] )
+		w.setSelection( [ s21, s12 ] )
+		w.setSelection( [ s31, s12 ] )
+		self.assertEqual( w.getSelection(), [ s31, s12 ] )
 
 	def testSelectionScrolling( self ) :
 
@@ -354,7 +409,7 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 
 		self.assertEqual( len( c ), 1 )
 
-	def testChangingDirectoryClearsSelection( self ) :
+	def testChangingDirectoryClearsRowSelection( self ) :
 
 		path = Gaffer.DictPath( { "a" : { "b" : { "c" : 10 } } }, "/" )
 		widget = GafferUI.PathListingWidget( path )
@@ -364,6 +419,42 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 
 		path.append( "a" )
 		self.assertEqual( widget.getSelection(), IECore.PathMatcher() )
+
+	def testChangingDirectoryClearsCellSelection( self ) :
+
+		path = Gaffer.DictPath( { "a" : { "b" : { "c" : 10 } } }, "/" )
+		widget = GafferUI.PathListingWidget(
+			path,
+			selectionMode = GafferUI.PathListingWidget.SelectionMode.Cells
+		)
+		# The default widget has multiple columns preset for file browsing,
+		# just use two to simply testing.
+		c = [ widget.defaultNameColumn, widget.StandardColumn( "h", "a" ) ]
+		widget.setColumns( c )
+		self.assertEqual( widget.getColumns(), c )
+
+		widget.setSelection(
+			[
+				IECore.PathMatcher( [ "/a" ] ),
+				IECore.PathMatcher( [ "/a/b" ] ),
+			]
+		)
+		self.assertEqual(
+			widget.getSelection(),
+			[
+				IECore.PathMatcher( [ "/a" ] ),
+				IECore.PathMatcher( [ "/a/b" ] ),
+			]
+		)
+
+		path.append( "a" )
+		self.assertEqual(
+			widget.getSelection(),
+			[
+				IECore.PathMatcher(),
+				IECore.PathMatcher(),
+			]
+		)
 
 	def testExpandedPathsWhenPathChanges( self ) :
 
