@@ -91,16 +91,36 @@ void setMinimumExpansionDepth( RenderController &r, size_t depth )
 	r.setMinimumExpansionDepth( depth );
 }
 
-void update( RenderController &r )
+RenderController::ProgressCallback progressCallbackFromPython( object &callback )
 {
-	IECorePython::ScopedGILRelease gilRelease;
-	r.update();
+	if( callback.is_none() )
+	{
+		return RenderController::ProgressCallback();
+	}
+
+	return [callback] ( Gaffer::BackgroundTask::Status status ) {
+		IECorePython::ScopedGILLock gilLock;
+		callback( status );
+	};
 }
 
-void updateMatchingPaths( RenderController &r, const IECore::PathMatcher &pathsToUpdate )
+void update( RenderController &r, object &pythonCallback )
 {
-	IECorePython::ScopedGILRelease gilRelease;
-	r.updateMatchingPaths( pathsToUpdate );
+	// Callback owns a Python object, so must be destroyed outside of the GIL release scope.
+	RenderController::ProgressCallback callback = progressCallbackFromPython( pythonCallback );
+	{
+		IECorePython::ScopedGILRelease gilRelease;
+		r.update( callback );
+	}
+}
+
+void updateMatchingPaths( RenderController &r, const IECore::PathMatcher &pathsToUpdate, object &pythonCallback )
+{
+	RenderController::ProgressCallback callback = progressCallbackFromPython( pythonCallback );
+	{
+		IECorePython::ScopedGILRelease gilRelease;
+		r.updateMatchingPaths( pathsToUpdate, callback );
+	}
 }
 
 object pathForID( RenderController &r, uint32_t id )
@@ -134,8 +154,8 @@ void GafferSceneModule::bindRenderController()
 		.def( "setMinimumExpansionDepth", &setMinimumExpansionDepth )
 		.def( "getMinimumExpansionDepth", &RenderController::getMinimumExpansionDepth )
 		.def( "updateRequiredSignal", &RenderController::updateRequiredSignal, return_internal_reference<1>() )
-		.def( "update", &update )
-		.def( "updateMatchingPaths", &updateMatchingPaths )
+		.def( "update", &update, ( arg( "callback" ) = object() ) )
+		.def( "updateMatchingPaths", &updateMatchingPaths, ( arg( "pathsToUpdate" ), arg( "callback" ) = object() ) )
 		.def( "pathForID", &pathForID )
 		.def( "pathsForIDs", &RenderController::pathsForIDs )
 		.def( "idForPath", &RenderController::idForPath )

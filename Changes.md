@@ -17,6 +17,7 @@ API
 ---
 
 - PlugAlgo : Added optional `value` argument to `canSetValueFromData()`.
+- RenderController : Added Python bindings for optional `callback` argument to `update()` and `updateMatchingPaths()`.
 
 Breaking Changes
 ----------------
