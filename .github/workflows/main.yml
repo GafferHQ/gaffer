@@ -32,7 +32,6 @@ jobs:
           linux-python2,
           linux-python2-debug,
           linux-python3,
-          macos-python2,
         ]
 
         include:
@@ -70,15 +69,6 @@ jobs:
             testRunner: su testUser -c
             sconsCacheMegabytes: 400
 
-          - name: macos-python2
-            os: macos-10.15
-            buildType: RELEASE
-            publish: true
-            containerImage:
-            dependenciesURL: https://github.com/GafferHQ/dependencies/releases/download/5.0.0a4/gafferDependencies-5.0.0a4-Python2-osx.tar.gz
-            testRunner: bash -c
-            sconsCacheMegabytes: 400
-
     runs-on: ${{ matrix.os }}
 
     container: ${{ matrix.containerImage }}
@@ -91,23 +81,6 @@ jobs:
     steps:
 
     - uses: actions/checkout@v2
-
-    - name: Install toolchain (MacOS)
-      # Prefer `pip install` where possible because it is faster
-      # than `brew install`.
-      run: |
-        sudo pip3 install scons==4.3.0
-        sudo pip3 install sphinx==4.3.1 sphinx_rtd_theme==1.0.0 myst-parser==0.15.2 docutils==0.17.1
-        # Force inkscape < 1.0 until SConstruct is updated
-        brew install --cask xquartz &&
-        brew install --cask ./config/brew/Casks/inkscape.rb
-        # Brew installs all manner of headers into `/usr/local/include`, including
-        # OpenEXR and Imath versions that conflict with our own. We can't stop Clang
-        # finding them because Clang is hardcoded to look in `/usr/local/include`
-        # _before_ anything we specify with `-isystem`, despite documentation to the
-        # contrary. So we nuke the headers.
-        rm -rf /usr/local/include/*
-      if: runner.os == 'macOS'
 
     - name: Install toolchain (Linux)
       run: |
@@ -141,12 +114,6 @@ jobs:
       env:
        GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
        GAFFER_BUILD_VARIANT: ${{ matrix.name }}
-
-    - name: Disable macOS PR Docs
-      run: |
-        echo GAFFER_SPHINX=doesNotExist >> $GITHUB_ENV
-        echo GAFFER_VALIDATE_EXTRA_FLAGS=--skipDocs >> $GITHUB_ENV
-      if: runner.os == 'macOS' && env.GAFFER_GITHUB_RELEASEID == ''
 
     - name: Install dependencies
       # The `$GITHUB_ENV` shenanigans creates an environment variable
@@ -215,7 +182,7 @@ jobs:
       shell: python
 
     - name: Build Docs and Package
-      # We currently experience sporadic hangs in the docs builds (mac), this
+      # Docs builds should be relatively quick. If there is a problem, this
       # aborts them in a more timely fashion than the default 6hr timeout.
       timeout-minutes: 20
       run: |
@@ -254,11 +221,9 @@ jobs:
 
     - name: Debug Failures
       run: |
-        # Give MacOS crash reporter time to do its thing
-        sleep 20
-        # Print SCons logs and MacOS crash logs
+        # Print SCons logs
         shopt -s nullglob
-        for logFile in config.log ~/Library/Logs/DiagnosticReports/*.crash
+        for logFile in config.log
         do
          echo $logFile
          cat $logFile
