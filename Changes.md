@@ -8,6 +8,14 @@ Fixes
   - Fixed bug when attempting to browse shader parameters for a non-existent location.
   - Fixed bug when attempting to use the context menu to set the name of the shader to query for a non-existent location.
 
+API
+---
+
+- PathListingWidget :
+  - Deprecated `allowMultipleSelection` constructor argument. Use `selectionMode` argument instead.
+  - Added modes to `selectionMode` allowing single and multiple cell selections.
+  - `setSelection` and `getSelection` now accept and return different types depending on the `selectionMode`. For `Row` and `Rows` modes, a single `PathMatcher` object represents the selection for all columns, maintaining backwards compatiblity. For `Cell` and `Cells` modes, a list of `PatchMatcher` objects, one per column, represents the selection.
+
 0.61.13.1 (relative to 0.61.13.0)
 =========
 
@@ -55,7 +63,6 @@ API
 - EditScopeAlgo : Added support for editing attributes.
 - TweakPlug : Added `Create` mode.
 - VectorDataWidget : Added `dataMenuSignal` for constructing the context menu. Classes can add their own slots to this signal to modify the context menu. Derived classes should use it in favor of `_contextMenuDefinition()`.
-- PathListingWidget : Deprecated `allowMultipleSelection` constructor argument. Use `selectionMode` argument instead.
 
 0.61.12.0 (relative to 0.61.11.0)
 =========

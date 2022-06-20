@@ -37,6 +37,7 @@
 
 import unittest
 import six
+import weakref
 
 import IECore
 
@@ -114,6 +115,21 @@ class PlugValueWidgetTest( GafferUITest.TestCase ) :
 		w = GafferUI.NumericPlugValueWidget( n["user"]["p1"] )
 		with six.assertRaisesRegex( self, ValueError, "Plugs have different types" ) :
 			w.setPlugs( n["user"].children() )
+
+	def testCreateReleasesReferenceWithMismatchedPlugs( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["p1"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["p2"] = Gaffer.StringPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		p = GafferUI.PlugPopup( s["n"]["user"].children() )
+
+		w = weakref.ref( p )
+
+		del p
+
+		self.assertEqual( w(), None )
 
 	def testGetPlugWithMultiplePlugs( self ) :
 
