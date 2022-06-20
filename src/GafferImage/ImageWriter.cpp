@@ -47,6 +47,7 @@
 
 #include "Gaffer/Context.h"
 #include "Gaffer/ContextQuery.h"
+#include "Gaffer/DeleteContextVariables.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
@@ -1509,7 +1510,6 @@ ImageWriter::ImageWriter( const std::string &name )
 	addChild( new ImagePlug( "out", Plug::Out, Plug::Default & ~Plug::Serialisable ) );
 	outPlug()->setInput( inPlug() );
 
-
 	ColorSpacePtr colorSpaceChild = new ColorSpace( "__colorSpace" );
 	addChild( colorSpaceChild );
 
@@ -1528,6 +1528,16 @@ ImageWriter::ImageWriter( const std::string &name )
 
 	createFileFormatOptionsPlugs();
 
+	// Delete the context variables we use to control our internal network before we access inPlug().
+	// We don't want them leaking out upstream.
+	Gaffer::DeleteContextVariablesPtr inDeleteContextVariables = new DeleteContextVariables( "__inDeleteContextVariables" );
+	addChild( inDeleteContextVariables );
+	inDeleteContextVariables->setup( inPlug() );
+	inDeleteContextVariables->inPlug()->setInput( inPlug() );
+	inDeleteContextVariables->variablesPlug()->setValue(
+		"__imageWriter:colorSpace __imageWriter:processUnpremultiplied __imageWriter:expandDataWindow"
+	);
+
 	ContextQueryPtr contextQuery = new ContextQuery( "__contextQuery" );
 	addChild( contextQuery );
 
@@ -1537,7 +1547,7 @@ ImageWriter::ImageWriter( const std::string &name )
 
 	GafferImage::MergePtr expandedDataWindowMerge = new Merge( "__expandedDataWindowMerge" );
 	addChild( expandedDataWindowMerge  );
-	expandedDataWindowMerge->inPlugs()->getChild<ImagePlug>( 0 )->setInput( inPlug() );
+	expandedDataWindowMerge->inPlugs()->getChild<ImagePlug>( 0 )->setInput( inDeleteContextVariables->outPlug() );
 	expandedDataWindowMerge->inPlugs()->getChild<ImagePlug>( 1 )->setInput( expandedDataWindow->outPlug() );
 
 	Box2iPlugPtr box2iTemplate = new Box2iPlug();
