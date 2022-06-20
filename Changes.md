@@ -25,6 +25,7 @@ Improvements
   - Added an option to `selectionMode` allowing single and multiple cell selections.
   - Added the ability to select cells in different columns with the left <kbd>&larr;</kbd> and right <kbd>&rarr;</kbd> keys.
   - Added the ability to drag from a cell and drop that cell's value on an appropriate target.
+- Light Editor : Added the ability to edit multiple values at one time. With multiple cells selected, pressing <kbd>Return</kbd> or <kbd>Enter</kbd> will open a popup to edit the values for all cells.
 
 Fixes
 -----
