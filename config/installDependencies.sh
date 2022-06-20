@@ -47,7 +47,7 @@ gafferPatchVersion=`grep "gafferPatchVersion = " SConstruct | cut -d" " -f 3`
 if [[ `uname` = "Linux" ]] ; then
 	platform=linux
 else
-	platform=osx
+	platform=macos
 fi
 
 # The first argument can be used to specify a directory to install to
