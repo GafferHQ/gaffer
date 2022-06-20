@@ -678,7 +678,7 @@ void SceneGadget::setSelection( const IECore::PathMatcher &selection )
 	m_renderer->option( "gl:selection", d.get() );
 	if( m_outputBuffer )
 	{
-		m_outputBuffer->setSelection( m_controller->idsForPaths( selection ) );
+		m_outputBuffer->setSelection( m_controller->idsForPaths( selection, /* createIfMissing = */ true ) );
 	}
 	dirty( DirtyType::Render );
 }

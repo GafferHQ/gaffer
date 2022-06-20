@@ -105,9 +105,9 @@ class GAFFERSCENE_API RenderController : public Gaffer::Signals::Trackable
 		IECore::PathMatcher pathsForIDs( const std::vector<uint32_t> &ids ) const;
 
 		// Returns the ID associated with the specified path, or `0` if that
-		// path has not been rendered.
-		uint32_t idForPath( const ScenePlug::ScenePath &path ) const;
-		std::vector<uint32_t> idsForPaths( const IECore::PathMatcher &paths ) const;
+		// path has not been rendered and `createIfNecessary` is `false`.
+		uint32_t idForPath( const ScenePlug::ScenePath &path, bool createIfNecessary = false ) const;
+		std::vector<uint32_t> idsForPaths( const IECore::PathMatcher &paths, bool createIfNecessary = false ) const;
 
 	private :
 

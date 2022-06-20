@@ -803,10 +803,18 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer()
 		controller = GafferScene.RenderController( group["out"], Gaffer.Context(), renderer )
 		controller.setMinimumExpansionDepth( 2 )
-		controller.update()
 
 		paths = [ "/group/cube", "/group/sphere", "/group/plane" ]
 		for path in paths :
+			self.assertEqual(
+				controller.idForPath( path, createIfNecessary = False ), 0
+			)
+
+		controller.update()
+		for path in paths :
+			self.assertNotEqual(
+				controller.idForPath( path, createIfNecessary = False ), 0
+			)
 			self.assertEqual(
 				controller.pathForID( renderer.capturedObject( path ).id() ),
 				path
@@ -819,6 +827,8 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertIsNone( controller.pathForID( 0 ) )
 		self.assertIsNone( controller.pathForID( 4 ) )
 		self.assertEqual( 0, controller.idForPath( "/no/object/here" ) )
+		self.assertEqual( 0, controller.idForPath( "/no/object/here", createIfNecessary = False ) )
+		self.assertNotEqual( 0, controller.idForPath( "/might/exist/later/and/want/id/now", createIfNecessary = True ) )
 
 		self.assertEqual(
 			controller.pathsForIDs( [

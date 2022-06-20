@@ -31,7 +31,9 @@ Fixes
 - Seeds : Fixed point distribution generated on MacOS to match the point distribution generated on Linux.
 - RenderController : Fixed duplicate `callback( Completed )` calls from `updateInBackground()` when priority paths are specified.
 - PresetsPlugValueWidget/FormatPlugValueWidget : Fixed handling of evaluation errors (now turns red instead of failing to draw).
-- Viewer : Fixed `cannot declare constant UINT cortex:id` errors. [^1]
+- Viewer :
+  - Fixed loss of selection when switching from OpenGL to Arnold renderer. [^1]
+  - Fixed `cannot declare constant UINT cortex:id` errors. [^1]
 
 API
 ---
