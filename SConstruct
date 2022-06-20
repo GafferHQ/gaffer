@@ -413,12 +413,7 @@ if env["PLATFORM"] != "win32" :
 	if env["PLATFORM"] == "darwin" :
 
 		env.Append( CXXFLAGS = [ "-D__USE_ISOC99" ] )
-		env["GAFFER_PLATFORM"] = "osx"
-
-		osxVersion = [ int( v ) for v in platform.mac_ver()[0].split( "." ) ]
-		if osxVersion[0] == 10 and osxVersion[1] > 7 :
-			# Fix problems with Boost 1.55 and recent versions of Clang.
-			env.Append( CXXFLAGS = [ "-DBOOST_HAS_INT128" ] )
+		env["GAFFER_PLATFORM"] = "macos"
 
 	else :
 
@@ -1508,7 +1503,7 @@ for libraryName, libraryDef in libraries.items() :
 
 		pythonModuleEnv["SHLIBPREFIX"] = ""
 		if pythonModuleEnv["PLATFORM"] == "darwin" :
-			# On OSX, we must build Python modules with the ".so"
+			# On MacOS, we must build Python modules with the ".so"
 			# prefix rather than the ".dylib" you might expect.
 			# This is done by changing the SHLIBSUFFIX variable.
 			# But this causes a problem with SCons' automatic

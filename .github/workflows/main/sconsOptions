@@ -39,8 +39,6 @@ import sys
 import glob
 import subprocess
 
-platform = {"darwin" : "osx", "win32" : "windows"}.get(sys.platform, "linux")
-
 ENV_VARS_TO_IMPORT = "PATH"
 
 BUILD_CACHEDIR = os.environ["GAFFER_CACHE_DIR"]
