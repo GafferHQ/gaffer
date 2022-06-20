@@ -43,7 +43,6 @@
 #include "Gaffer/Metadata.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/StringPlug.h"
-#include "Gaffer/Version.h"
 
 #include "GafferOSL/OSLShader.h"
 
@@ -67,12 +66,13 @@ using namespace GafferCycles;
 using namespace Gaffer;
 using namespace GafferOSL;
 
-namespace {
+namespace
+{
 
-#if GAFFER_MAJOR_VERSION > 58
 // This is to allow Cycles Shaders to be connected to OSL Shaders
-bool g_oslRegistration = OSLShader::registerCompatibleShader( "ccl:surface" );
-#endif
+bool g_oslRegistrationSurface = OSLShader::registerCompatibleShader( "ccl:surface" );
+bool g_oslRegistrationVolume = OSLShader::registerCompatibleShader( "ccl:volume" );
+bool g_oslRegistrationDisplacement = OSLShader::registerCompatibleShader( "ccl:displacement" );
 
 } // namespace
 

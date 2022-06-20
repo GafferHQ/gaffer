@@ -201,7 +201,7 @@ IEDisplayOutputDriver::IEDisplayOutputDriver( const Imath::Box2i &displayWindow,
 
 IEDisplayOutputDriver::~IEDisplayOutputDriver()
 {
-	if( m_displayDriver ) //&& !m_displayDriver->acceptsRepeatedData() )
+	if( m_displayDriver )
 	{
 		try
 		{
