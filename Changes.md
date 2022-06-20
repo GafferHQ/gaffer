@@ -31,6 +31,7 @@ Fixes
 - Seeds : Fixed point distribution generated on MacOS to match the point distribution generated on Linux.
 - RenderController : Fixed duplicate `callback( Completed )` calls from `updateInBackground()` when priority paths are specified.
 - PresetsPlugValueWidget/FormatPlugValueWidget : Fixed handling of evaluation errors (now turns red instead of failing to draw).
+- Viewer : Fixed `cannot declare constant UINT cortex:id` errors. [^1]
 
 API
 ---
@@ -77,6 +78,8 @@ Build
 - PySide : Updated to 5.15.4.
 - Python : Updated to 3.8.13 (MacOS only).
 - Qt : Updated to 5.15.4.
+
+[^1]: Fixes for bugs introduced in earlier preview releases. These should be omitted from the final release notes for `0.62.0.0`, which will only include changes relative to `0.61.x.x`.
 
 0.62.0.0a3 (relative to 0.62.0.0a2)
 ==========
