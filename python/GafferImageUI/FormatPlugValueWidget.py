@@ -96,8 +96,13 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if self.getPlug() is not None :
 
 			mode = Gaffer.Metadata.value( self.getPlug(), "formatPlugValueWidget:mode" )
+			errored = False
+			fmt = GafferImage.Format()
 			with self.getContext() :
-				fmt = self.getPlug().getValue()
+				try:
+					fmt = self.getPlug().getValue()
+				except:
+					errored = True
 
 			text = self.__formatLabel( fmt )
 
@@ -111,7 +116,12 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 				# asked for explicitly.
 				mode = "custom"
 
-		self.__menuButton.setText( text if mode != "custom" else "Custom" )
+		if not errored:
+			self.__menuButton.setText( text if mode != "custom" else "Custom" )
+			self.__menuButton.setErrored( False )
+		else:
+			self.__menuButton.setText( "---" )
+			self.__menuButton.setErrored( True )
 
 		nonZeroOrigin = fmt.getDisplayWindow().min() != imath.V2i( 0 )
 		for widget in ( self.__minLabel, self.__minWidget ) :
