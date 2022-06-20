@@ -50,7 +50,7 @@ else :
 # Determine default archive URL.
 
 platform = { "darwin" : "osx", "win32" : "windows" }.get( sys.platform, "linux" )
-defaultURL = "https://github.com/GafferHQ/dependencies/releases/download/4.0.0/gafferDependencies-4.0.0-Python2-" + platform + ".tar.gz"
+defaultURL = "https://github.com/GafferHQ/dependencies/releases/download/5.0.0a5/gafferDependencies-5.0.0a5-Python3-" + platform + ".tar.gz"
 
 # Parse command line arguments.
 
