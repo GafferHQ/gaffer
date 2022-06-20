@@ -114,6 +114,15 @@ void update( RenderController &r, object &pythonCallback )
 	}
 }
 
+std::shared_ptr<Gaffer::BackgroundTask> updateInBackground( RenderController &r, object &pythonCallback, const IECore::PathMatcher &priorityPaths )
+{
+	RenderController::ProgressCallback callback = progressCallbackFromPython( pythonCallback );
+	{
+		IECorePython::ScopedGILRelease gilRelease;
+		return r.updateInBackground( callback, priorityPaths );
+	}
+}
+
 void updateMatchingPaths( RenderController &r, const IECore::PathMatcher &pathsToUpdate, object &pythonCallback )
 {
 	RenderController::ProgressCallback callback = progressCallbackFromPython( pythonCallback );
@@ -156,6 +165,7 @@ void GafferSceneModule::bindRenderController()
 		.def( "updateRequiredSignal", &RenderController::updateRequiredSignal, return_internal_reference<1>() )
 		.def( "update", &update, ( arg( "callback" ) = object() ) )
 		.def( "updateMatchingPaths", &updateMatchingPaths, ( arg( "pathsToUpdate" ), arg( "callback" ) = object() ) )
+		.def( "updateInBackground", &updateInBackground, ( arg( "callback" ) = object(), arg( "priorityPaths" ) = IECore::PathMatcher() ) )
 		.def( "pathForID", &pathForID )
 		.def( "pathsForIDs", &RenderController::pathsForIDs )
 		.def( "idForPath", &RenderController::idForPath )

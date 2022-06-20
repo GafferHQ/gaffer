@@ -876,5 +876,14 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		controller.updateMatchingPaths( IECore.PathMatcher( [ "/group/sphere" ] ), callback )
 		self.assertEqual( statuses, [ Status.Running ] * 2 + [ Status.Completed ] )
 
+		# Move everything again and do a background update with a priority path.
+		# We expect updates to all locations (except the root, because its transform
+		# hasn't changed).
+		del statuses[:]
+		transform["transform"]["translate"]["x"].setValue( 2 )
+		task = controller.updateInBackground( callback, priorityPaths = IECore.PathMatcher( [ "/group/sphere" ] ) )
+		task.wait()
+		self.assertEqual( statuses, [ Status.Running ] * 4 + [ Status.Completed ] )
+
 if __name__ == "__main__":
 	unittest.main()

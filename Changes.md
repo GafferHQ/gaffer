@@ -13,11 +13,18 @@ Improvements
   - Added support for `layerName` string parameter, which can be used to customise the naming of channels in EXR outputs. Currently only supported for Arnold renders.
   - Added support for `layerPerLightGroup` boolean parameter, which automatically splits the outputs into separate layers, one for each light group.
 
+Fixes
+-----
+
+- RenderController : Fixed duplicate `callback( Completed )` calls from `updateInBackground()` when priority paths are specified.
+
 API
 ---
 
 - PlugAlgo : Added optional `value` argument to `canSetValueFromData()`.
-- RenderController : Added Python bindings for optional `callback` argument to `update()` and `updateMatchingPaths()`.
+- RenderController :
+  - Added Python bindings for optional `callback` argument to `update()` and `updateMatchingPaths()`.
+  - Added Python binding for `updateInBackground()`.
 
 Breaking Changes
 ----------------

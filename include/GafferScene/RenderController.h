@@ -137,7 +137,7 @@ class GAFFERSCENE_API RenderController : public Gaffer::Signals::Trackable
 		void dirtyGlobals( unsigned components );
 		void dirtySceneGraphs( unsigned components );
 
-		void updateInternal( const ProgressCallback &callback = ProgressCallback(), const IECore::PathMatcher *pathsToUpdate = nullptr );
+		void updateInternal( const ProgressCallback &callback = ProgressCallback(), const IECore::PathMatcher *pathsToUpdate = nullptr, bool signalCompletion = true );
 		void updateDefaultCamera();
 		void cancelBackgroundTask();
 

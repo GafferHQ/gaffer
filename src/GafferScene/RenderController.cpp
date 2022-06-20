@@ -1551,7 +1551,7 @@ std::shared_ptr<Gaffer::BackgroundTask> RenderController::updateInBackground( co
 		[this, callback, priorityPaths] {
 			if( !priorityPaths.isEmpty() )
 			{
-				updateInternal( callback, &priorityPaths );
+				updateInternal( callback, &priorityPaths, /* signalCompletion = */ false );
 			}
 			updateInternal( callback );
 		}
@@ -1573,7 +1573,7 @@ void RenderController::updateMatchingPaths( const IECore::PathMatcher &pathsToUp
 	updateInternal( callback, &pathsToUpdate );
 }
 
-void RenderController::updateInternal( const ProgressCallback &callback, const IECore::PathMatcher *pathsToUpdate )
+void RenderController::updateInternal( const ProgressCallback &callback, const IECore::PathMatcher *pathsToUpdate, bool signalCompletion )
 {
 	try
 	{
@@ -1690,7 +1690,7 @@ void RenderController::updateInternal( const ProgressCallback &callback, const I
 			}
 		}
 
-		if( callback )
+		if( callback && signalCompletion )
 		{
 			callback( BackgroundTask::Completed );
 		}
