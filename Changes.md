@@ -199,8 +199,8 @@ Build
   - OpenColorIO : Updated to version 2.1.1.
   - Cortex : Updated to version 10.4.0.0.
 
-0.61.x.x (relative to 0.61.12.0)
-========
+0.61.13.0 (relative to 0.61.12.0)
+=========
 
 Features
 --------
@@ -213,6 +213,7 @@ Improvements
 
 - Light Editor : Added support for editing visualisation attributes of lights.
 - CameraTweaks : Added `Create` mode. This should be used in preference to `Replace` mode when the parameter may not exist.
+- PathFilter : Added the ability to select scene locations from currently selected filter entries.
 
 Fixes
 -----
@@ -229,6 +230,7 @@ API
 
 - EditScopeAlgo : Added support for editing attributes.
 - TweakPlug : Added `Create` mode.
+- VectorDataWidget : Added `dataMenuSignal` for constructing the context menu. Classes can add their own slots to this signal to modify the context menu. Derived classes should use it in favor of `_contextMenuDefinition()`.
 
 0.61.12.0 (relative to 0.61.11.0)
 =========

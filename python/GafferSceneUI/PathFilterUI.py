@@ -36,6 +36,7 @@
 
 import types
 import imath
+import functools
 
 import IECore
 
@@ -43,6 +44,7 @@ import Gaffer
 import GafferUI
 
 import GafferScene
+import GafferSceneUI
 
 ##########################################################################
 # Metadata
@@ -93,6 +95,8 @@ Gaffer.Metadata.registerNode(
 
 			"vectorDataPlugValueWidget:dragPointer", "objects",
 
+			"plugValueWidget:type", "GafferSceneUI.PathFilterUI._PathsPlugValueWidget",
+
 		],
 
 		"roots" : [
@@ -113,6 +117,52 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
+
+##########################################################################
+# VectorDataPlugValueWidget customisation
+###########################################################################
+
+class _PathsPlugValueWidget( GafferUI.VectorDataPlugValueWidget ) :
+
+	def __init__( self, plug, **kw ) :
+
+		GafferUI.VectorDataPlugValueWidget.__init__( self, plug, **kw )
+
+		self.vectorDataWidget().dataMenuSignal().connect( Gaffer.WeakMethod( self.__dataMenu ), scoped = False )
+
+	def __dataMenu( self, vectorDataWidget, menuDefinition ) :
+
+		selectedIndices = vectorDataWidget.selectedIndices()
+
+		menuDefinition.append( "/selectDivider", { "divider" : True } )
+		menuDefinition.append(
+			"/Select Affected Objects",
+			{
+				"command" : functools.partial( Gaffer.WeakMethod( self.__selectAffected ), selectedIndices ),
+				"active" : len( selectedIndices ) > 0,
+			}
+		)
+
+	def __selectAffected( self, selectedIndices ) :
+
+		filterNode = self.getPlug().node()
+
+		filterData = self.vectorDataWidget().getData()[0]
+
+		pathMatcher = IECore.PathMatcher()
+		for column, row in selectedIndices :
+			pathMatcher.addPath( filterData[row] )
+
+		scenes = [ n["in"] for n in GafferScene.SceneAlgo.filteredNodes( filterNode ) ]
+		scenes = [ s[0] if isinstance( s, Gaffer.ArrayPlug ) else s for s in scenes ]
+
+		result = IECore.PathMatcher()
+		context = filterNode.ancestor( Gaffer.ScriptNode ).context()
+		with context :
+			for scene in scenes :
+				GafferScene.SceneAlgo.matchingPaths( pathMatcher, scene, result )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( context, result )
 
 ##########################################################################
 # NodeGadget drop handler
