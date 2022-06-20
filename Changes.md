@@ -12,6 +12,12 @@ Improvements
 - Outputs :
   - Added support for `layerName` string parameter, which can be used to customise the naming of channels in EXR outputs. Currently only supported for Arnold renders.
   - Added support for `layerPerLightGroup` boolean parameter, which automatically splits the outputs into separate layers, one for each light group.
+- USD : Added support for purpose-based material assignments in SceneReader and SceneWriter. To render or author such assignments, a ShuffleAttributes node must currently be used to shuffle to and from the standard shader attributes.
+
+Fixes
+-----
+
+- Seeds : Fixed point distribution generated on MacOS to match the point distribution generated on Linux.
 
 API
 ---
@@ -27,6 +33,21 @@ Breaking Changes
   - Moved to `Gaffer` module.
   - Removed methods for tweaking shader networks.
   - Backwards compatibility is provided when loading old `.gfr` files.
+
+Build
+-----
+
+- Blosc : Updated to 1.21.1.
+- CMark : Updated to 0.29.0.
+- Cortex : Updated to 10.4.0.0a6.
+- HDF5 : Updated to 1.12.0.
+- LibFFI : Updated to 3.4.2.
+- LibPNG : Updated to 1.6.37.
+- OpenSSL : Updated to 1.1.1i.
+- OpenVDB : Updated to version 9.1.0, and added nanovdb.
+- PySide : Updated to 5.15.4.
+- Python : Updated to 3.8.13 (MacOS only).
+- Qt : Updated to 5.15.4.
 
 0.62.0.0a3 (relative to 0.62.0.0a2)
 ==========
@@ -199,8 +220,8 @@ Build
   - OpenColorIO : Updated to version 2.1.1.
   - Cortex : Updated to version 10.4.0.0.
 
-0.61.x.x (relative to 0.61.12.0)
-========
+0.61.13.0 (relative to 0.61.12.0)
+=========
 
 Features
 --------
@@ -213,6 +234,7 @@ Improvements
 
 - Light Editor : Added support for editing visualisation attributes of lights.
 - CameraTweaks : Added `Create` mode. This should be used in preference to `Replace` mode when the parameter may not exist.
+- PathFilter : Added the ability to select scene locations from currently selected filter entries.
 
 Fixes
 -----
@@ -229,6 +251,7 @@ API
 
 - EditScopeAlgo : Added support for editing attributes.
 - TweakPlug : Added `Create` mode.
+- VectorDataWidget : Added `dataMenuSignal` for constructing the context menu. Classes can add their own slots to this signal to modify the context menu. Derived classes should use it in favor of `_contextMenuDefinition()`.
 
 0.61.12.0 (relative to 0.61.11.0)
 =========

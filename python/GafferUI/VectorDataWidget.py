@@ -158,6 +158,10 @@ class VectorDataWidget( GafferUI.Widget ) :
 
 		self.__tableViewHolder.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
 
+		# popup menu for data
+
+		self.__dataMenuSignal = Gaffer.Signal2()
+
 		# final setup
 
 		self.__dataChangedSignal = GafferUI.WidgetSignal()
@@ -418,7 +422,15 @@ class VectorDataWidget( GafferUI.Widget ) :
 
 		return self.__editSignal
 
-	## Returns a definition for the popup menu - this is called each time
+	## A signal emitted when the user right clicks selected cells.
+	# Slots should accept ( VectorDataWidget, IECore.MenuDefinition ) arguments,
+	# modify the given menu and return it.
+	def dataMenuSignal( self ) :
+
+		return self.__dataMenuSignal
+
+	## \deprecated Use dataMenuSignal() instead.
+	# Returns a definition for the popup menu - this is called each time
 	# the menu is displayed to allow menus to be built dynamically. May be
 	# overridden in derived classes to modify the menu.
 	## \todo We should remove this as part of implementing #217, and just
@@ -488,6 +500,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 
 		# build the menu and pop it up
 		m = self._contextMenuDefinition( self.__selectedRows() )
+		self.dataMenuSignal()( self, m )
 		self.__popupMenu = GafferUI.Menu( m )
 		self.__popupMenu.popup( self )
 
