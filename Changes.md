@@ -19,10 +19,18 @@ Fixes
 
 - Seeds : Fixed point distribution generated on MacOS to match the point distribution generated on Linux.
 
+Fixes
+-----
+
+- RenderController : Fixed duplicate `callback( Completed )` calls from `updateInBackground()` when priority paths are specified.
+
 API
 ---
 
 - PlugAlgo : Added optional `value` argument to `canSetValueFromData()`.
+- RenderController :
+  - Added Python bindings for optional `callback` argument to `update()` and `updateMatchingPaths()`.
+  - Added Python binding for `updateInBackground()`.
 
 Breaking Changes
 ----------------

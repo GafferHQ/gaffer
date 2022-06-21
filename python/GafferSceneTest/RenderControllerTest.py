@@ -832,5 +832,58 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 			{ renderer.capturedObject( p ).id() for p in paths }
 		)
 
+	def testProgressCallback( self ) :
+
+		sphere = GafferScene.Sphere()
+		group = GafferScene.Group()
+		group["in"][0].setInput( sphere["out"] )
+		group["in"][1].setInput( sphere["out"] )
+		group["in"][2].setInput( sphere["out"] )
+
+		allFilter = GafferScene.PathFilter()
+		allFilter["paths"].setValue( IECore.StringVectorData( [ "/*", "/*/*" ] ) )
+
+		transform = GafferScene.Transform()
+		transform["in"].setInput( group["out"] )
+		transform["filter"].setInput( allFilter["out"] )
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer()
+		controller = GafferScene.RenderController( transform["out"], Gaffer.Context(), renderer )
+		controller.setMinimumExpansionDepth( 2 )
+
+		statuses = []
+		def callback( status ) :
+
+			statuses.append( status )
+
+		# First update should yield one call per location (including the root),
+		# plus one for completion.
+		controller.update( callback )
+		Status = Gaffer.BackgroundTask.Status
+		self.assertEqual( statuses, [ Status.Running ] * 5 + [ Status.Completed ] )
+
+		# Next update should go straight to completion, because nothing has
+		# changed.
+		del statuses[:]
+		controller.update( callback )
+		self.assertEqual( statuses, [ Status.Completed ] )
+
+		# Move everything and do a partial update. We expect updates only to the
+		# path we requested, and it's ancestors (not including the root, because
+		# its transform hasn't changed).
+		del statuses[:]
+		transform["transform"]["translate"]["x"].setValue( 1 )
+		controller.updateMatchingPaths( IECore.PathMatcher( [ "/group/sphere" ] ), callback )
+		self.assertEqual( statuses, [ Status.Running ] * 2 + [ Status.Completed ] )
+
+		# Move everything again and do a background update with a priority path.
+		# We expect updates to all locations (except the root, because its transform
+		# hasn't changed).
+		del statuses[:]
+		transform["transform"]["translate"]["x"].setValue( 2 )
+		task = controller.updateInBackground( callback, priorityPaths = IECore.PathMatcher( [ "/group/sphere" ] ) )
+		task.wait()
+		self.assertEqual( statuses, [ Status.Running ] * 4 + [ Status.Completed ] )
+
 if __name__ == "__main__":
 	unittest.main()
