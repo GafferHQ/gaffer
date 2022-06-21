@@ -1011,8 +1011,9 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			m_lightAttribute = attribute<IECoreScene::ShaderNetwork>( g_lightAttributeName, attributes );
 			if( m_lightAttribute )
 			{
+				ShaderNetworkPtr lightShader = ShaderNetworkAlgo::convertLightShader( m_lightAttribute.get() );
 				IECore::MurmurHash h;
-				m_lightShader = m_shaderCache->get( m_lightAttribute.get(), nullptr, nullptr, attributes, h );
+				m_lightShader = m_shaderCache->get( lightShader.get(), nullptr, nullptr, attributes, h );
 			}
 		}
 

@@ -36,7 +36,10 @@
 
 import unittest
 
+import imath
+
 import IECore
+import IECoreScene
 
 import GafferSceneTest
 import GafferCycles
@@ -70,6 +73,29 @@ class CyclesLightTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertNotIn( "penumbraAngle", shader.parameters )
 		self.assertNotIn( "coneAngle", shader.parameters )
+
+	def testLightAttribute( self ) :
+
+		light = GafferCycles.CyclesLight()
+		light.loadShader( "point_light" )
+
+		light["parameters"]["intensity"].setValue( 10 )
+		light["parameters"]["exposure"].setValue( 1 )
+		light["parameters"]["color"].setValue( imath.Color3f( 1, 2, 3 ) )
+		light["parameters"]["size"].setValue( 2 )
+
+		attributes = light["out"].attributes( "/light" )
+		self.assertEqual( attributes.keys(), [ "ccl:light" ] )
+
+		shaderNetwork = attributes["ccl:light"]
+		self.assertIsInstance( shaderNetwork, IECoreScene.ShaderNetwork )
+		self.assertEqual( len( shaderNetwork.shaders() ), 1 )
+
+		shader = shaderNetwork.outputShader()
+		self.assertEqual( shader.parameters["intensity"], IECore.FloatData( 10 ) )
+		self.assertEqual( shader.parameters["exposure"], IECore.FloatData( 1 ) )
+		self.assertEqual( shader.parameters["color"], IECore.Color3fData( imath.Color3f( 1, 2, 3 ) ) )
+		self.assertEqual( shader.parameters["size"], IECore.FloatData( 2 ) )
 
 if __name__ == "__main__":
 	unittest.main()

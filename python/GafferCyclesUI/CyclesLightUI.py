@@ -45,7 +45,7 @@ def __parameterUserDefault( plug ) :
 
 	light = plug.node()
 	return Gaffer.Metadata.value(
-		"ccl:light:" + light["__shaderName"].getValue() + ":" + plug.relativeName( light["parameters"] ),
+		"ccl:light:" + light["__shader"]["name"].getValue() + ":" + plug.relativeName( light["parameters"] ),
 		"userDefault"
 	)
 
@@ -68,10 +68,13 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"parameters.color" : [
+		# Metadata for "virtual" parameters that don't exist
+		# in the Cycles API, and therefore won't have metadata
+		# provided via CyclesShaderUI.
 
-			# The color parameter on quad and skydome lights is connectable.
-			"nodule:type", lambda plug : "GafferUI::StandardNodule" if plug.node()["__shaderName"].getValue() in ( "quad_light", "background_light" ) else ""
+		"parameters.exposure" : [
+
+			"nodule:type", ""
 
 		],
 
@@ -79,14 +82,6 @@ Gaffer.Metadata.registerNode(
 
 			# The shader parameter, which only exists on skydome lights, is connectable.
 			"nodule:type", "GafferUI::StandardNodule"
-
-		],
-
-		"parameters.image" : [
-
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
-			"path:leaf", True,
-			"path:bookmarks", "image",
 
 		],
 

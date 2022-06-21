@@ -130,7 +130,7 @@ def __nodeDescription( node ) :
 			"""Loads shaders for use in Cycles renders. Use the ShaderAssignment node to assign shaders to objects in the scene.""",
 		)
 	else :
-		return __metadata[node["__shaderName"].getValue()].get(
+		return __metadata[node["__shader"]["name"].getValue()].get(
 			"description",
 			"""Loads an Cycles light shader and uses it to output a scene with a single light."""
 		)
@@ -141,7 +141,7 @@ def __nodeMetadata( node, name ) :
 		key = node["name"].getValue()
 	else :
 		# Node type is CyclesLight.
-		key = node["__shaderName"].getValue()
+		key = node["__shader"]["name"].getValue()
 
 	return __metadata[key].get( name )
 
@@ -160,7 +160,7 @@ def __plugMetadata( plug, name ) :
 		key = plug.node()["name"].getValue() + "." + plug.relativeName( node )
 	else :
 		# Node type is CyclesLight.
-		key = plug.node()["__shaderName"].getValue() + "." + plug.relativeName( node )
+		key = plug.node()["__shader"]["name"].getValue() + "." + plug.relativeName( node )
 
 	return __metadata[key].get( name )
 

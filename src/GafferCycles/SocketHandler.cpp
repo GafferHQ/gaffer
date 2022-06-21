@@ -556,18 +556,15 @@ void setupLightPlugs( const std::string &shaderName, const ccl::NodeType *nodeTy
 	}
 	else if( shaderName == "quad_light" )
 	{
-		validPlugs.insert( setupTypedPlug<StringPlug>( "image", plugsParent, Gaffer::Plug::In, "" ) );
 		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "spread" ) )), plugsParent, Gaffer::Plug::In ) );
 	}
 	else if( shaderName == "disk_light" )
 	{
-		validPlugs.insert( setupTypedPlug<StringPlug>( "image", plugsParent, Gaffer::Plug::In, "" ) );
 		validPlugs.insert( setupTypedPlug<FloatPlug>( "size", plugsParent, Gaffer::Plug::In, 2.0f ) );
 		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "spread" ) )), plugsParent, Gaffer::Plug::In ) );
 	}
 	else if( shaderName == "background_light" )
 	{
-		validPlugs.insert( setupTypedPlug<StringPlug>( "image", plugsParent, Gaffer::Plug::In, "" ) );
 		validPlugs.insert( setupTypedPlug<IntPlug>( "map_resolution", plugsParent, Gaffer::Plug::In, 1024 ) );
 	}
 	else if( shaderName == "distant_light" )

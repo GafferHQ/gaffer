@@ -37,6 +37,7 @@
 from .CyclesLightTest import CyclesLightTest
 from .InteractiveCyclesRenderTest import InteractiveCyclesRenderTest
 from .ModuleTest import ModuleTest
+from .CyclesLightTest import CyclesLightTest
 
 from .IECoreCyclesPreviewTest import *
 

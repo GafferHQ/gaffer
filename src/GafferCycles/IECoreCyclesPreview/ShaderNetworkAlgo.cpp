@@ -485,6 +485,19 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 	return node;
 }
 
+template<typename T>
+T parameterValue( const IECore::Data *data, const IECore::InternedString &name, const T &defaultValue )
+{
+	using DataType = IECore::TypedData<T>;
+	if( auto d = runTimeCast<const DataType>( data ) )
+	{
+		return d->readable();
+	}
+
+	IECore::msg( IECore::Msg::Warning, "IECoreCycles::ShaderNetworkAlgo", boost::format( "Expected %s but got %s for parameter \"%s\"." ) % DataType::staticTypeName() % data->typeName() % name.c_str() );
+	return defaultValue;
+}
+
 } // namespace
 
 namespace IECoreCycles
@@ -550,43 +563,20 @@ ccl::ShaderGraph *convertGraph( const IECoreScene::ShaderNetwork *surfaceShader,
 	}
 	else
 	{
-		if( surfaceShader && surfaceShader->outputShader()->getType() == "ccl:light" )
+		if( surfaceShader )
 		{
-			const InternedString output = surfaceShader->getOutput().shader;
 			ShaderMap converted;
-			// The first shader is either an emission node or background node
-			for( const auto &connection : surfaceShader->inputConnections( output ) )
-			{
-				ccl::ShaderNode *outputNode = convertWalk( connection.source, surfaceShader, namePrefix, shaderManager, graph, converted );
-				ccl::ShaderNode *inputNode = (ccl::ShaderNode*)graph->output();
-				InternedString sourceName = connection.source.name;
-				if( ccl::ShaderOutput *shaderOutput = IECoreCycles::ShaderNetworkAlgo::output( outputNode, sourceName ) )
-				{
-					if( ccl::ShaderInput *shaderInput = IECoreCycles::ShaderNetworkAlgo::input( inputNode, "surface" ) )
-					{
-						graph->connect( shaderOutput, shaderInput );
-						break;
-					}
-				}
-			}
+			convertWalk( surfaceShader->getOutput(), surfaceShader, namePrefix, shaderManager, graph, converted );
 		}
-		else
+		if( displacementShader )
 		{
-			if( surfaceShader )
-			{
-				ShaderMap converted;
-				convertWalk( surfaceShader->getOutput(), surfaceShader, namePrefix, shaderManager, graph, converted );
-			}
-			if( displacementShader )
-			{
-				ShaderMap converted;
-				convertWalk( displacementShader->getOutput(), displacementShader, namePrefix, shaderManager, graph, converted );
-			}
-			if( volumeShader )
-			{
-				ShaderMap converted;
-				convertWalk( volumeShader->getOutput(), volumeShader, namePrefix, shaderManager, graph, converted );
-			}
+			ShaderMap converted;
+			convertWalk( displacementShader->getOutput(), displacementShader, namePrefix, shaderManager, graph, converted );
+		}
+		if( volumeShader )
+		{
+			ShaderMap converted;
+			convertWalk( volumeShader->getOutput(), volumeShader, namePrefix, shaderManager, graph, converted );
 		}
 	}
 
@@ -695,36 +685,121 @@ void convertLight( const IECoreScene::ShaderNetwork *light, ccl::Light *cyclesLi
 		return;
 	}
 
+	// Convert type
+
+	if( lightShader->getName() == "spot_light" )
+	{
+		cyclesLight->set_light_type( ccl::LIGHT_SPOT );
+	}
+	else if( lightShader->getName() == "distant_light" )
+	{
+		cyclesLight->set_light_type( ccl::LIGHT_DISTANT );
+	}
+	else if( lightShader->getName() == "background_light" )
+	{
+		cyclesLight->set_light_type( ccl::LIGHT_BACKGROUND );
+	}
+	else if(
+		lightShader->getName() == "quad_light" ||
+		lightShader->getName() == "portal"
+	)
+	{
+		cyclesLight->set_light_type( ccl::LIGHT_AREA );
+		cyclesLight->set_size( 2.0f );
+	}
+	else if( lightShader->getName() == "disk_light" )
+	{
+		cyclesLight->set_light_type( ccl::LIGHT_AREA );
+		cyclesLight->set_size( 2.0f );
+		cyclesLight->set_round( true );
+	}
+	else
+	{
+		cyclesLight->set_light_type( ccl::LIGHT_POINT );
+	}
+
+	// Convert parameters
+
+	Imath::Color3f strength( 1.0f );
 	for( const auto &[name, value] : lightShader->parameters() )
 	{
-		// Skip "virtual" parameters which don't actually exist in Cycles.
-		if(
-			name == "exposure" ||
-			name == "intensity" ||
-			name == "color" ||
-			name == "image"
-		)
+		// Convert "virtual" parameters to strength, unless they have input connections,
+		// in which case they will be dealt with in `convertLightShader()`.
+		if( name == "intensity" )
 		{
-			continue;
-		}
-
-		if( name == "angle" || name == "spot_angle" )
-		{
-			// The Cycles API uses radians, but we use degrees, as anything else is
-			// just baffling for users.
-			if( const FloatData *data = static_cast<const FloatData *>( value.get() ) )
+			if( !light->input( { light->getOutput().shader, name } ) )
 			{
-				cyclesLight->set(
-					*( cyclesLight->type->find_input( ccl::ustring( name.c_str() ) ) ),
-					IECore::degreesToRadians( data->readable() )
-				);
+				strength *= parameterValue<float>( value.get(), name, 1.0f );
 			}
 		}
+		else if( name == "color" )
+		{
+			if( !light->input( { light->getOutput().shader, name } ) )
+			{
+				strength *= parameterValue<Imath::Color3f>( value.get(), name, Imath::Color3f( 1.0f ) );
+			}
+		}
+		else if( name == "exposure" )
+		{
+			// We don't support input connections to exposure - it seems unlikely that
+			// you'd want to texture that.
+			strength *= powf( 2.0f, parameterValue<float>( value.get(), name, 0.0f ) );
+		}
+		// Convert angle-based parameters, where we use degress and Cycles uses radians.
+		else if( name == "angle" )
+		{
+			cyclesLight->set_angle( IECore::degreesToRadians( parameterValue<float>( value.get(), name, 0.0f ) ) );
+		}
+		else if( name == "spot_angle" )
+		{
+			cyclesLight->set_spot_angle( IECore::degreesToRadians( parameterValue<float>( value.get(), name, 45.0f ) ) );
+		}
+		// Convert generic parameters.
 		else
 		{
 			SocketAlgo::setSocket( cyclesLight, name, value.get() );
 		}
 	}
+
+	cyclesLight->set_strength( ccl::make_float3( strength[0], strength[1], strength[2] ) );
+}
+
+IECoreScene::ShaderNetworkPtr convertLightShader( const IECoreScene::ShaderNetwork *light )
+{
+	// Take a copy and replace the output shader (the light itself) with a
+	// Cycles emission or background shader as appropriate.
+
+	ShaderNetworkPtr result = light->copy();
+	result->removeShader( result->getOutput().shader );
+
+	IECoreScene::ShaderPtr outputShader;
+	if( light->outputShader()->getName() == "background_light" )
+	{
+		outputShader = new IECoreScene::Shader( "background_shader", "ccl:surface" );
+	}
+	else
+	{
+		outputShader = new IECoreScene::Shader( "emission", "ccl:surface" );
+	}
+
+	outputShader->parameters()["color"] = new Color3fData( Imath::Color3f( 1.0f ) );
+	outputShader->parameters()["strength"] = new FloatData( 1.0f );
+	InternedString outputHandle = result->addShader( "output", std::move( outputShader ) );
+	result->setOutput( outputHandle );
+
+	// Connect up intensity and color to the emission shader if necessary.
+
+	if( auto intensityInput = light->input( { light->getOutput().shader, "intensity" } ) )
+	{
+		result->addConnection( { intensityInput, { outputHandle, "strength" } } );
+	}
+
+	if( auto colorInput = light->input( { light->getOutput().shader, "color" } ) )
+	{
+		result->addConnection( { colorInput, { outputHandle, "color" } } );
+	}
+
+	return result;
 }
 
 } // namespace ShaderNetworkAlgo
