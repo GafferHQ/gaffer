@@ -1,3 +1,11 @@
+0.61.x.x (relative to 0.61.13.0)
+========
+
+Fixes
+-----
+
+- SelectionTool : Fixed bug where the drawing mode overrides (Wireframe, Solid and Points) were ignored when selecting objects. This could cause a wireframe (or invisible) object to be selected instead of the visible object behind it.
+
 0.61.13.0 (relative to 0.61.12.0)
 =========
 

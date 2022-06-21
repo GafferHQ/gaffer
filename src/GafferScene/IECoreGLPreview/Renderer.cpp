@@ -911,6 +911,10 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 					/// \todo Change IECoreGL::Selector so it provides a partial state object
 					/// containing only the things it needs to change.
 					IECoreGL::StatePtr shapeState = new IECoreGL::State( /* complete = */ false );
+					shapeState->add( state->get<IECoreGL::Primitive::DrawWireframe>() );
+					shapeState->add( state->get<IECoreGL::Primitive::DrawSolid>() );
+					shapeState->add( state->get<IECoreGL::Primitive::DrawOutline>() );
+					shapeState->add( state->get<IECoreGL::Primitive::DrawPoints>() );
 					shapeState->add( state->get<IECoreGL::PointsPrimitive::UseGLPoints>() );
 					shapeState->add( state->get<IECoreGL::PointsPrimitive::GLPointWidth>() );
 					shapeState->add( state->get<IECoreGL::CurvesPrimitive::UseGLLines>() );
