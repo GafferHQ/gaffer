@@ -21,7 +21,10 @@ Improvements
 - Light Editor : Added support for editing visualisation attributes of lights.
 - CameraTweaks : Added `Create` mode. This should be used in preference to `Replace` mode when the parameter may not exist.
 - PathFilter : Added the ability to select scene locations from currently selected filter entries.
-- PathListingWidget : Added an option to `selectionMode` allowing single and multiple cell selections.
+- PathListingWidget :
+  - Added an option to `selectionMode` allowing single and multiple cell selections.
+  - Added the ability to select cells in different columns with the left <kbd>&larr;</kbd> and right <kbd>&rarr;</kbd> keys.
+  - Added the ability to drag from a cell and drop that cell's value on an appropriate target.
 
 Fixes
 -----

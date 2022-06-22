@@ -179,13 +179,8 @@ class PathListingWidget( GafferUI.Widget ) :
 	# exists at that position.
 	def pathAt( self, position ) :
 
-		point = self._qtWidget().viewport().mapFrom(
-			self._qtWidget(),
-			QtCore.QPoint( position.x, position.y )
-		)
-
-		index = self._qtWidget().indexAt( point )
-		if not index.isValid() :
+		index = self.__indexAt( position )
+		if index is None :
 			return None
 
 		return self.__pathForIndex( index )
@@ -522,15 +517,27 @@ class PathListingWidget( GafferUI.Widget ) :
 
 	def __keyPress( self, widget, event ) :
 
-		if event.key in ( "Up", "Down" ) :
+		if (
+			event.key in ( "Up", "Down" ) or (
+				event.key in ( "Left", "Right" ) and (
+					self.__selectionMode == self.SelectionMode.Cell or 
+					self.__selectionMode == self.SelectionMode.Cells
+				)
+			)
+		):
 
 			index = self._qtWidget().currentIndex()
 			if not index.isValid() :
 				return True
 			if event.key == "Up" :
 				newIndex = self._qtWidget().indexAbove( index )
-			else :
+			elif event.key == "Down" :
 				newIndex = self._qtWidget().indexBelow( index )
+			elif event.key == "Left" :
+				newIndex = index.siblingAtColumn( index.column() - 1 )
+			else :
+				newIndex = index.siblingAtColumn( index.column() + 1 )
+
 			if not newIndex.isValid() :
 				return True
 
@@ -690,12 +697,8 @@ class PathListingWidget( GafferUI.Widget ) :
 		if not self.__updateSelectionInButtonRelease :
 			return False
 
-		qPoint = self._qtWidget().viewport().mapFrom(
-			self._qtWidget(),
-			QtCore.QPoint( event.line.p0.x, event.line.p0.y )
-		)
-		index = self._qtWidget().indexAt( qPoint )
-		if not index.isValid() :
+		index = self.__indexAt( event.line.p0 )
+		if index is None :
 			return False
 
 		path = self.__pathForIndex( index )
@@ -712,12 +715,8 @@ class PathListingWidget( GafferUI.Widget ) :
 		if event.buttons != event.Buttons.Left :
 			return False
 
-		qPoint = self._qtWidget().viewport().mapFrom(
-			self._qtWidget(),
-			QtCore.QPoint( event.line.p0.x, event.line.p0.y )
-		)
-		index = self._qtWidget().indexAt( qPoint )
-		if index.isValid() :
+		index = self.__indexAt( event.line.p0 )
+		if index is not None :
 			self.__activated( index )
 			return True
 
@@ -732,9 +731,15 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		path = self.pathAt( imath.V2f( event.line.p0.x, event.line.p0.y ) )
 		selection = self.getSelection()
-		if selection.match( str( path ) ) & IECore.PathMatcher.Result.ExactMatch :
+		selection = selection if isinstance( selection, list ) else [selection] * len( self.getColumns() )
+		if selection[0].match( str( path ) ) & IECore.PathMatcher.Result.ExactMatch :
 			GafferUI.Pointer.setCurrent( self.__dragPointer )
-			return IECore.StringVectorData( selection.paths() )
+			return IECore.StringVectorData( selection[0].paths() )
+
+		index = self.__indexAt( event.line.p0 )
+		if index is not None :
+			GafferUI.Pointer.setCurrent( self.__dragPointer )
+			return self._qtWidget().model().data( index, QtCore.Qt.DisplayRole )
 
 		return None
 
@@ -747,6 +752,19 @@ class PathListingWidget( GafferUI.Widget ) :
 		# The PathModel bakes the display transform into icon colours,
 		# so when the transform changes we need to trigger an update.
 		self.__path.pathChangedSignal()( self.__path )
+
+	def __indexAt( self, position ) :
+
+		point = self._qtWidget().viewport().mapFrom(
+			self._qtWidget(),
+			QtCore.QPoint( position.x, position.y )
+		)
+
+		index = self._qtWidget().indexAt( point )
+		if not index.isValid() :
+			return None
+
+		return index
 
 # Private implementation - a QTreeView with some specific size behaviour,
 # and knowledge of how to draw our PathMatcher selection.
