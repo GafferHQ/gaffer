@@ -120,11 +120,11 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		# Turn off selection in Qt. QItemSelectionModel is full of quadratic performance
 		# hazards so we rely entirely on our own PathMatcher instead. We update the PathMatcher
-		# directly in `__buttonPress`, `__buttonRelease` and `__keyPress`.
+		# directly in `__buttonPress`, and `__keyPress`.
 
 		self._qtWidget().setSelectionMode( QtWidgets.QAbstractItemView.NoSelection )
 		self.__selectionMode = selectionMode
-		self.__lastShiftSelectedIndex = None
+		self.__lastSelectedIndex = None
 
 		# Set up our various signals.
 
@@ -139,7 +139,6 @@ class PathListingWidget( GafferUI.Widget ) :
 		# Connections for implementing selection and drag and drop.
 		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
 		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ), scoped = False )
-		self.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ), scoped = False )
 		self.buttonDoubleClickSignal().connect( Gaffer.WeakMethod( self.__buttonDoubleClick ), scoped = False )
 		self.mouseMoveSignal().connect( Gaffer.WeakMethod( self.__mouseMove ), scoped = False )
 		self.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ), scoped = False )
@@ -520,13 +519,20 @@ class PathListingWidget( GafferUI.Widget ) :
 		if (
 			event.key in ( "Up", "Down" ) or (
 				event.key in ( "Left", "Right" ) and (
-					self.__selectionMode == self.SelectionMode.Cell or 
+					self.__selectionMode == self.SelectionMode.Cell or
 					self.__selectionMode == self.SelectionMode.Cells
 				)
 			)
 		):
+			# Use `__lastSelectedIndex` if available so that shift + keypress
+			# accumulates selection.
+			index = self.__lastSelectedIndex
+			if index is not None and index.isValid() :
+				# Convert from persistent index
+				index = QtCore.QModelIndex( index )
+			else :
+				index = self._qtWidget().currentIndex()
 
-			index = self._qtWidget().currentIndex()
 			if not index.isValid() :
 				return True
 			if event.key == "Up" :
@@ -541,27 +547,18 @@ class PathListingWidget( GafferUI.Widget ) :
 			if not newIndex.isValid() :
 				return True
 
-			newColumnIndex = newIndex.column()
-			newPath = str( self.__pathForIndex( newIndex ) )
-			if event.modifiers == event.Modifiers.Shift and (
-				self.__selectionMode == self.SelectionMode.Rows or
-				self.__selectionMode == self.SelectionMode.Cells
-			) :
-				selection = self.getSelection()
-				selection = selection if isinstance( selection, list ) else [selection] * len( self.getColumns() )
-				selected = selection[newColumnIndex].match( newPath ) & IECore.PathMatcher.Result.ExactMatch
-				if selected :
-					selection[newColumnIndex].removePath( str( self.__pathForIndex( index ) ) )
-				else :
-					selection[newColumnIndex].addPath( newPath )
-			else :
-				if self.__selectionMode == self.SelectionMode.Row or self.__selectionMode == self.SelectionMode.Rows :
-					selection = [ IECore.PathMatcher( [ newPath ] ) ] * len( self.getColumns() )
-				elif self.__selectionMode == self.SelectionMode.Cell or self.__selectionMode == self.SelectionMode.Cells :
-					selection = [ IECore.PathMatcher( [ newPath ] ) if i == newColumnIndex else IECore.PathMatcher() for i in range( 0, len( self.getColumns() ) ) ]
+			if self.__selectionMode == self.SelectionMode.Rows or self.__selectionMode == self.SelectionMode.Cells :
 
-			self._qtWidget().setCurrentIndex( newIndex )
-			self.setSelection( selection, scrollToFirst=False, expandNonLeaf=False )
+				if event.modifiers & event.Modifiers.Shift :
+					self.__rangeSelect( newIndex )
+					return True
+
+				if event.modifiers == event.Modifiers.Control :
+					self.__toggleSelect( newIndex )
+					return True
+
+			self.__singleSelect( newIndex )
+
 			return True
 
 		elif event.key == "A" and event.modifiers == event.Modifiers.Control :
@@ -587,7 +584,6 @@ class PathListingWidget( GafferUI.Widget ) :
 	# for compatibility with `GafferUI.Widget.dragBeginSignal()`.
 	def __buttonPress( self, widget, event ) :
 
-		self.__updateSelectionInButtonRelease = False
 		if event.buttons != event.Buttons.Left :
 			return False
 
@@ -613,101 +609,20 @@ class PathListingWidget( GafferUI.Widget ) :
 				# from here rather than `PathModel::treeViewExpanded()`.
 				return True
 
-		# Do range selection if Shift is held.
-
-		selection = self.getSelection()
-		selection = selection if isinstance( selection, list ) else [selection] * len( self.getColumns() )
-
-		if event.modifiers & event.Modifiers.Shift and (
-			self.__selectionMode == self.SelectionMode.Rows or
-			self.__selectionMode == self.SelectionMode.Cells
-		) :
-			last = self.__lastShiftSelectedIndex
-			if last is not None and last.isValid() :
-				# Convert from persistent index
-				last = QtCore.QModelIndex( last )
-			else :
-				last = self._qtWidget().currentIndex()
-
-			currentIndex = self._qtWidget().currentIndex()
-			if last.isValid() and currentIndex.isValid() :
-				lastPaths = self.__pathsForIndexRange( last, currentIndex )
-				for i in range(
-					min( currentIndex.column(), last.column() ),
-					max( currentIndex.column(), last.column() ) + 1
-				) :
-					selection[i].removePaths( lastPaths )
-
-				newPaths = self.__pathsForIndexRange( index, currentIndex )
-				for i in range(
-					min( currentIndex.column(), index.column() ),
-					max( currentIndex.column(), index.column() ) + 1
-				) :
-					selection[i].addPaths( newPaths )
-
-				self.setSelection( selection, scrollToFirst=False, expandNonLeaf=False )
-				self.__lastShiftSelectedIndex = QtCore.QPersistentModelIndex( index )
+		if self.__selectionMode == self.SelectionMode.Rows or self.__selectionMode == self.SelectionMode.Cells :
+			if event.modifiers & event.Modifiers.Shift :
+				self.__rangeSelect( index )
 				return True
-			else :
-				# Fall through to regular selection case.
-				pass
 
-		self.__lastShiftSelectedIndex = None
+			if event.modifiers & event.Modifiers.Control :
+				self.__toggleSelect( index )
+				return True
 
-		# Toggle item selection if Control is held.
-
-		path = str( self.__pathForIndex( index ) )
-		pathSelected = selection[ index.column() ].match( path ) & IECore.PathMatcher.Result.ExactMatch
-
-		if event.modifiers & event.Modifiers.Control :
-			if pathSelected :
-				selection[index.column()].removePath( path )
-			else :
-				if self.__selectionMode == self.SelectionMode.Row or self.__selectionMode == self.SelectionMode.Cell :
-					selection = [ IECore.PathMatcher() ] * len( self.getColumns() )
-				selection[index.column()].addPath( path )
-			# Although we're managing our own selection state, we
-			# do still update the current index because Qt uses it
-			# for doing keyboard-based expansion, and we can make use
-			# of if in our Shift-click range selection.
-			self._qtWidget().setCurrentIndex( index )
-			self.setSelection( selection, scrollToFirst=False, expandNonLeaf=False )
-			return True
-
-		# Select item if not already selected.
-
-		if not pathSelected :
-			self._qtWidget().setCurrentIndex( index )
-			if self.__selectionMode == self.SelectionMode.Row or self.__selectionMode == self.SelectionMode.Rows :
-				paths = [ IECore.PathMatcher( [ path ] ) ] * len( self.getColumns() )
-			elif self.__selectionMode == self.SelectionMode.Cell or self.__selectionMode == self.SelectionMode.Cells :
-				paths = [ IECore.PathMatcher( [ path ] ) if i == index.column() else IECore.PathMatcher() for i in range( 0, len( self.getColumns() ) ) ]
-			self.setSelection( paths, scrollToFirst=False, expandNonLeaf=False )
-			return True
+		self.__singleSelect( index )
 
 		# The item is selected, Return True so that we have the option of
-		# starting a drag if we want. If a drag doesn't follow, we'll adjust
-		# selection in `__buttonRelease`.
-		self.__updateSelectionInButtonRelease = True
+		# starting a drag if we want.
 
-		return True
-
-	def __buttonRelease( self, widget, event ) :
-
-		if not self.__updateSelectionInButtonRelease :
-			return False
-
-		index = self.__indexAt( event.line.p0 )
-		if index is None :
-			return False
-
-		path = self.__pathForIndex( index )
-		self._qtWidget().setCurrentIndex( index )
-		self.setSelection(
-			[ IECore.PathMatcher( [ str( path ) ] ) if i == index.column() else IECore.PathMatcher() for i in range( 0, len( self.getColumns() ) ) ],
-			scrollToFirst=False,
-			expandNonLeaf=False
-		)
 		return True
 
 	def __buttonDoubleClick( self, widget, event ) :
@@ -765,6 +680,71 @@ class PathListingWidget( GafferUI.Widget ) :
 			return None
 
 		return index
+
+	def __rangeSelect( self, index ) :
+
+		selection = self.getSelection()
+		selection = selection if isinstance( selection, list ) else [selection] * len( self.getColumns() )
+
+		last = self.__lastSelectedIndex
+		if last is not None and last.isValid() :
+			# Convert from persistent index
+			last = QtCore.QModelIndex( last )
+		else :
+			last = self._qtWidget().currentIndex()
+
+		currentIndex = self._qtWidget().currentIndex()
+		if last.isValid() and currentIndex.isValid() :
+			lastPaths = self.__pathsForIndexRange( last, currentIndex )
+			for i in range(
+				min( currentIndex.column(), last.column() ),
+				max( currentIndex.column(), last.column() ) + 1
+			) :
+				selection[i].removePaths( lastPaths )
+
+			newPaths = self.__pathsForIndexRange( index, currentIndex )
+			for i in range(
+				min( currentIndex.column(), index.column() ),
+				max( currentIndex.column(), index.column() ) + 1
+			) :
+				selection[i].addPaths( newPaths )
+
+			self.setSelection( selection, scrollToFirst=False, expandNonLeaf=False )
+			self.__lastSelectedIndex = QtCore.QPersistentModelIndex( index )
+
+	def __toggleSelect( self, index ) :
+
+		selection = self.getSelection()
+		selection = selection if isinstance( selection, list ) else [selection] * len( self.getColumns() )
+
+		path = str( self.__pathForIndex( index ) )
+		pathSelected = selection[ index.column() ].match( path ) & IECore.PathMatcher.Result.ExactMatch
+
+		if pathSelected :
+			selection[index.column()].removePath( path )
+		else :
+			selection[index.column()].addPath( path )
+		# Although we're managing our own selection state, we
+		# do still update the current index because Qt uses it
+		# for doing keyboard-based expansion, and we can make use
+		# of if in our Shift-click range selection.
+		self._qtWidget().setCurrentIndex( index )
+		self.setSelection( selection, scrollToFirst=False, expandNonLeaf=False )
+
+		self.__lastSelectedIndex = index
+
+	def __singleSelect( self, index ) :
+
+		path = str( self.__pathForIndex( index ) )
+
+		self._qtWidget().setCurrentIndex( index )
+		if self.__selectionMode == self.SelectionMode.Row or self.__selectionMode == self.SelectionMode.Rows :
+			paths = [ IECore.PathMatcher( [ path ] ) ] * len( self.getColumns() )
+		elif self.__selectionMode == self.SelectionMode.Cell or self.__selectionMode == self.SelectionMode.Cells :
+			paths = [ IECore.PathMatcher( [ path ] ) if i == index.column() else IECore.PathMatcher() for i in range( 0, len( self.getColumns() ) ) ]
+		self.setSelection( paths, scrollToFirst=False, expandNonLeaf=False )
+
+		self.__lastSelectedIndex = index
 
 # Private implementation - a QTreeView with some specific size behaviour,
 # and knowledge of how to draw our PathMatcher selection.
