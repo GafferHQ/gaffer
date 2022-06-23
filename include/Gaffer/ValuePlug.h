@@ -248,8 +248,11 @@ class GAFFER_API ValuePlug : public Plug
 		/// and then have been immediately removed by another thread.
 		///
 		/// If a precomputed hash is available it may be passed to avoid computing
-		/// it again unnecessarily. Passing an incorrect hash has dire consequences, so
-		/// use with care.
+		/// it again unnecessarily.
+		///
+		/// > Caution : Passing an incorrect `precomputedHash` has dire consequences,
+		/// so use with care. The hash must be the direct result of `ValuePlug::hash()`,
+		/// so this feature is not suitable for use in classes that override that method.
 		template<typename T = IECore::Object>
 		boost::intrusive_ptr<const T> getObjectValue( const IECore::MurmurHash *precomputedHash = nullptr ) const;
 		/// Should be called by derived classes when they wish to set the plug
