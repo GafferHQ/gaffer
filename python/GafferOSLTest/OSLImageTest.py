@@ -178,8 +178,8 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 
 			image["in"].setInput( None )
 			checkDirtiness( [
-					'in.format', 'in.dataWindow', 'in.metadata', 'in.deep', 'in.sampleOffsets', 'in.channelNames', 'in.channelData', 'in',
-					'__shading', '__affectedChannels',
+					'in.viewNames', 'in.format', 'in.dataWindow', 'in.metadata', 'in.deep', 'in.sampleOffsets', 'in.channelNames', 'in.channelData', 'in',
+					'out.viewNames', '__shading', '__affectedChannels',
 					'out.channelNames', 'out.channelData', 'out.format', 'out.dataWindow', 'out.metadata', 'out.deep', 'out.sampleOffsets', 'out'
 			] )
 
@@ -194,8 +194,8 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 			image["in"].setInput( constant["out"] )
 
 			checkDirtiness( [
-					'in.format', 'in.dataWindow', 'in.metadata', 'in.deep', 'in.sampleOffsets', 'in.channelNames', 'in.channelData', 'in',
-					'__shading', '__affectedChannels',
+					'in.viewNames', 'in.format', 'in.dataWindow', 'in.metadata', 'in.deep', 'in.sampleOffsets', 'in.channelNames', 'in.channelData', 'in',
+					'out.viewNames', '__shading', '__affectedChannels',
 					'out.channelNames', 'out.channelData', 'out.format', 'out.dataWindow', 'out.metadata', 'out.deep', 'out.sampleOffsets', 'out'
 			] )
 
