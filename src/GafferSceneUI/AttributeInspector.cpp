@@ -394,6 +394,11 @@ void AttributeInspector::nodeMetadataChanged( IECore::InternedString key, const 
 bool AttributeInspector::attributeExists() const
 {
 
+	if( !m_scene->existsPlug()->getValue() )
+	{
+		return false;
+	}
+
 	ConstCompoundObjectPtr attributes = m_scene->attributesPlug()->getValue();
 	auto m = attributes->members();
 	return m.find( m_attribute ) != m.end();

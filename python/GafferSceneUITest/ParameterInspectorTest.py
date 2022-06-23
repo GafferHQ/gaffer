@@ -550,6 +550,11 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		light = GafferSceneTest.TestLight()
 		self.assertIsNone( self.__inspect( light["out"], "/nothingHere", "exposure" ) )
 
+		group = GafferScene.Group()
+		group["in"][0].setInput( light["out"] )
+
+		self.assertIsNone( self.__inspect( group["out"], "/group/nothingHere", "exposure" ) )
+
 	def testNonExistentAttribute( self ) :
 
 		light = GafferSceneTest.TestLight()

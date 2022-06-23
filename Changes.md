@@ -5,6 +5,7 @@ Fixes
 -----
 
 - SelectionTool : Fixed bug where the drawing mode overrides (Wireframe, Solid and Points) were ignored when selecting objects. This could cause a wireframe (or invisible) object to be selected instead of the visible object behind it.
+- AttributeInspector : Fixed bug where a non-existent child scene location's parameters were being inspected. This fixes `Error on out.attributes : Invalid child name...` resulting from the `SceneViewInspector` attempting to inspect a location that no longer exists, for example during focus changes.
 
 0.61.13.0 (relative to 0.61.12.0)
 =========
