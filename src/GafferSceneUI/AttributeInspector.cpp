@@ -220,7 +220,7 @@ m_attribute( attribute )
 
 GafferScene::SceneAlgo::History::ConstPtr AttributeInspector::history() const
 {
-	if( !m_scene->exists() )
+	if( !m_scene->existsPlug()->getValue() )
 	{
 		return nullptr;
 	}
@@ -400,7 +400,6 @@ bool AttributeInspector::attributeExists() const
 	}
 
 	ConstCompoundObjectPtr attributes = m_scene->attributesPlug()->getValue();
-	auto m = attributes->members();
-	return m.find( m_attribute ) != m.end();
+	return attributes->member<Object>( m_attribute );
 
 }
