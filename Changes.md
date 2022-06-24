@@ -39,6 +39,7 @@ Fixes
   - Fixed crashes when making interactive edits to the contents of capsules. [^1]
   - Fixed bug which prevented the viewer from updating after an error had occurred, even when the error was subsequently fixed in the node graph. [^1]
 - ImageTestCase : Fixed bug in `assertImagesEqual()` where bad pixel data could go undetected when using `ignoreDataWindow`.
+- Merge : Fixed rare failure to update when changing which channels exist on input.
 
 API
 ---

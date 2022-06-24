@@ -829,6 +829,10 @@ void Merge::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer:
 			{
 				alphaHash =  (*it)->channelDataHash( "A", tileOrigin );
 				h.append( alphaHash );
+
+				// Make sure we differentiate this hash from the hash above, so that an image with just RGB
+				// and an image with just alpha don't hash the same
+				h.append( true );
 			}
 
 			if( validBound != finalTileDataWindowLocal )
