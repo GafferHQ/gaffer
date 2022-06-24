@@ -5,14 +5,16 @@ Features
 --------
 
 - GafferImage : Added support for multi-view images.
-  - Multi-view images allow you to store multiple views in the same image.  Views are effectively independent images, and may have separate data windows, or different formats, or even be mixtures of deep and flat images.
-  - The multi-view feature was originally intended for storing stereo renders, but may also may used for general processing where you want to group multiple images into one stream.
-  - Multi-view images can be read from and written to EXR files.
-  - Added 4 nodes specifically for working with multi-view images:
-    - CreateViews : For combining single view images into a multi-view image 
-    - SelectView : For choosing one view from a multi-view image as a single view image
-    - CopyViews : For combining views from multi-view sources
-    - DeleteViews : For removing views from multi-view images
+  - ImageNodes can now output multiple "views". Views are effectively independent images, and may have separate data windows, formats, channels and metadata, and even be mixtures of deep and flat images.
+  - The multi-view feature was originally intended for storing stereo renders, but may also may used for general processing where it is convenient to group multiple images into one stream.
+  - A new `image:viewName` context variable specifies which view is currently being processed. This can be used to process each view with different settings, for instance via an Expression or Spreadsheet.
+  - Multi-view images can be read from and written to EXR files via the ImageReader and ImageWriter nodes.
+  - Added new nodes specifically for working with multi-view images :
+    - CreateViews : For combining single view images into a multi-view image.
+    - SelectView : For choosing one view from a multi-view image as a single view image.
+    - CopyViews : For combining views from multi-view sources.
+    - DeleteViews : For removing views from multi-view images.
+  - A new dropdown menu in the Viewer chooses which view is being displayed.
 - ContextQuery : Added node to access a context variable value directly without needing to use an expression.
 
 Improvements
@@ -27,12 +29,8 @@ Fixes
 -----
 
 - Seeds : Fixed point distribution generated on MacOS to match the point distribution generated on Linux.
-
-Fixes
------
-
 - RenderController : Fixed duplicate `callback( Completed )` calls from `updateInBackground()` when priority paths are specified.
-- PresetsPlugValueWidget : Fixed handling of evaluation errors ( now turns red instead of failing to draw ).
+- PresetsPlugValueWidget/FormatPlugValueWidget : Fixed handling of evaluation errors (now turns red instead of failing to draw).
 
 API
 ---
@@ -42,20 +40,28 @@ API
   - Added Python bindings for optional `callback` argument to `update()` and `updateMatchingPaths()`.
   - Added Python binding for `updateInBackground()`.
 - TestCase : Added `assertNodeIsDocumented()` method.
-- ImagePlug : Added viewNames plug and ViewScope for working with multi-view images.
-- ImageAlgo : Added viewName arguments and viewIsValid helper method.
+- ImagePlug :
+  - Added `viewNames` plug for outputting the names of the views in an image.
+  - Added ViewScope class for specifying the `image:viewName` context variable.
+  - Added optional `viewName` arguments to the convenience accessors such as `channelNames()` and `channelData()`.
+- ImageNode : Added virtual `hashViewNames()` and `computeViewNames()` methods which must be implemented by derived
+  classes (unless an input connection is made for `out.viewNames`).
+- ImageAlgo :
+  - Added optional `viewName` arguments to `image()`, `imageHash()` and `tiles()`.
+  - Added `viewIsValid()` function.
 - ImageTestCase.assertImagesEqual : Added `metadataBlacklist` argument for ignoring certain metadata.
+- MenuButton : Added `setErrored()` and `getErrored()` methods.
 
 Breaking Changes
 ----------------
 
+- ImagePlug : The `image:viewName` context variable must now be set when evaluating plugs other than `viewNamesPlug()`. The `gui` app provides a default, but standalone scripts may need to be adjusted to specify `image:viewName` explicitly.
 - ImageWriter/SceneWriter : The overrides for TaskNode virtual methods are now `protected` rather than `public`. Use the `TaskPlug` API instead.
 - ShaderQuery : `addQuery()` now creates `query` and `out` plugs with numeric suffixes starting at 0 (rather than 1).
 - TweakPlug and TweaksPlug :
   - Moved to `Gaffer` module.
   - Removed methods for tweaking shader networks.
   - Backwards compatibility is provided when loading old `.gfr` files.
-- ImagePlug : The viewName must now be set when accessing image plugs other than viewNamesPlug().  There is a default viewName set in Gaffer, so this is usually not an issue, but if manually evaluating image plugs in scripts, you may need to adjust.
 
 Build
 -----
