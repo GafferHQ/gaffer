@@ -234,6 +234,7 @@ ImageTransform::ImageTransform( const std::string &name )
 	resampledInPlug()->setInput( resample->outPlug() );
 
 	// Pass through the things we don't change at all.
+	outPlug()->viewNamesPlug()->setInput( inPlug()->viewNamesPlug() );
 	outPlug()->formatPlug()->setInput( inPlug()->formatPlug() );
 	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );
 	outPlug()->channelNamesPlug()->setInput( inPlug()->channelNamesPlug() );

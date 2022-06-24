@@ -101,6 +101,11 @@ class CatalogueUITest( GafferUITest.TestCase ) :
 
 		script = Gaffer.ScriptNode()
 
+		# Why don't we include the UI startup files for the UI tests?
+		# We need to set the default view in order to be able to read images from the UI
+		script["variables"].addChild( Gaffer.NameValuePlug( "image:viewName", IECore.StringData( "default" ), "defaultViewName", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+
+
 		script["constant"] = GafferImage.Constant()
 
 		script["metadata"] = GafferImage.ImageMetadata()

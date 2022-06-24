@@ -181,6 +181,21 @@ Gaffer.Metadata.registerNode(
 			"layout:index", lambda plug : 1024-int( "".join( ['0'] + [ i for i in plug.getName() if i.isdigit() ] ) )
 		],
 
+		"view" : [
+
+			"description",
+			"""
+			Chooses view to display from a multi-view image.  The "default" view is used for normal images
+			that don't have specific views.
+			""",
+
+			"plugValueWidget:type", "GafferImageUI.ImageViewUI._ImageView_ViewPlugValueWidget",
+			"toolbarLayout:index", 2,
+			"toolbarLayout:width", 175,
+			"label", "",
+
+		],
+
 		"channels" : [
 
 			"description",
@@ -671,6 +686,93 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 		return True
 
 ##########################################################################
+# _ViewPlugValueWidget
+##########################################################################
+
+# Note the weird prefix - a natural name for this would be _ViewPlugValueWidget, but Python appears
+# to have an undocumented feature where because GafferImageUI.ViewPlugValueWidget and
+# GafferImageUI.ImageViewUI._ViewPlugValueWidget vary only in the namespace and the leading underscore,
+# this is similar enough that Python suddenly starts allowing subclasses to override private superclass
+# functions.
+class _ImageView_ViewPlugValueWidget( GafferImageUI.ViewPlugValueWidget ) :
+
+	def __init__( self, plug, **kw ) :
+
+		GafferImageUI.ViewPlugValueWidget.__init__( self, plug, **kw )
+
+		plug.node().viewportGadget().keyPressSignal().connect(
+			Gaffer.WeakMethod( self.__keyPress ),
+			scoped = False
+		)
+
+	def _menuDefinition( self ) :
+
+		result = GafferImageUI.ViewPlugValueWidget._menuDefinition( self )
+
+		result.append( "/__PreviousNextDivider__", { "divider" : True } )
+
+		try :
+			currentValue = self.getPlug().getValue()
+		except Gaffer.ProcessException :
+			currentValue = None
+
+		previousValue = self.__incrementedValue( -1 )
+		result.append(
+			"/Previous",
+			{
+				"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), value = previousValue ),
+				"shortCut" : "[",
+				"active" : previousValue is not None and previousValue != currentValue,
+			}
+		)
+
+		nextValue = self.__incrementedValue( 1 )
+		result.append(
+			"/Next",
+			{
+				"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), value = nextValue ),
+				"shortCut" : "]",
+				"active" : nextValue is not None and nextValue != currentValue,
+			}
+		)
+
+		return result
+
+	def __keyPress( self, gadget, event ) :
+
+		if event.key in ( "BracketLeft", "BracketRight" ) :
+			value = self.__incrementedValue( -1 if event.key == "BracketLeft" else 1 )
+			if value is not None :
+				self.__setValue( value )
+			return True
+
+		return False
+
+	def __setValue( self, value ) :
+
+		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+			self.getPlug().setValue( value )
+
+	def __incrementedValue( self, increment ) :
+
+		try :
+			currentValue = self.getPlug().getValue()
+		except Gaffer.ProcessException :
+			return None
+
+		values = self._views()
+		if not values :
+			return currentValue
+
+		try :
+			index = values.index( currentValue ) + increment
+		except ValueError :
+			return values[0]
+
+		index = max( 0, min( index, len( values ) - 1 ) )
+		return values[index]
+
+##########################################################################
 # _ChannelsPlugValueWidget
 ##########################################################################
 
@@ -684,6 +786,11 @@ class _ChannelsPlugValueWidget( GafferImageUI.RGBAChannelsPlugValueWidget ) :
 			Gaffer.WeakMethod( self.__keyPress ),
 			scoped = False
 		)
+
+	def _image( self ):
+		# \todo Assuming that we can find an image plug in this specific location
+		# may need updating when we add wipes
+		return self.getPlug().node()._getPreprocessor()["_selectView"]["out"]
 
 	def _menuDefinition( self ) :
 

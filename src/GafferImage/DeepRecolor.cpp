@@ -91,6 +91,11 @@ void DeepRecolor::affects( const Gaffer::Plug *input, AffectedPlugsContainer &ou
 {
 	ImageProcessor::affects( input, outputs );
 
+	if( input == inPlug()->viewNamesPlug() || input == colorSourcePlug()->viewNamesPlug() )
+	{
+		outputs.push_back( outPlug()->viewNamesPlug() );
+	}
+
 	if( input == inPlug()->channelDataPlug() ||
 		input == inPlug()->channelNamesPlug() ||
 		input == inPlug()->sampleOffsetsPlug() ||
@@ -104,12 +109,31 @@ void DeepRecolor::affects( const Gaffer::Plug *input, AffectedPlugsContainer &ou
 		outputs.push_back( outPlug()->channelDataPlug() );
 	}
 
-
 	if( input == inPlug()->channelNamesPlug() ||
 		input == colorSourcePlug()->channelNamesPlug() )
 	{
 		outputs.push_back( outPlug()->channelNamesPlug() );
 	}
+}
+
+void DeepRecolor::hashViewNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ImageProcessor::hashViewNames( output, context, h );
+
+	inPlug()->viewNamesPlug()->hash( h );
+	colorSourcePlug()->viewNamesPlug()->hash( h );
+}
+
+IECore::ConstStringVectorDataPtr DeepRecolor::computeViewNames( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	IECore::ConstStringVectorDataPtr inViewsData = inPlug()->viewNamesPlug()->getValue();
+
+	if( inViewsData->readable() != colorSourcePlug()->viewNamesPlug()->getValue()->readable() )
+	{
+		throw IECore::Exception( "DeepRecolor : colorSource views must match in plug views" );
+	}
+
+	return inViewsData;
 }
 
 void DeepRecolor::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const

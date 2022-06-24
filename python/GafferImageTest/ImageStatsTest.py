@@ -37,6 +37,7 @@
 import os
 import unittest
 import imath
+import six
 
 import IECore
 
@@ -181,9 +182,9 @@ class ImageStatsTest( GafferImageTest.ImageTestCase ) :
 			s["area"].setValue( a )
 
 			hashes = {}
+			c = Gaffer.Context( Gaffer.Context.current() )
 			for x in range( 0, 300, 64 ):
 				for y in range( 0, 300, 64 ):
-					c = Gaffer.Context()
 					c["image:channelName"] = "R"
 					c["image:tileOrigin"] = imath.V2i( x, y )
 					with c:
@@ -240,6 +241,51 @@ class ImageStatsTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertEqual( s["min"].getValue(), imath.Color4f( 1 ) )
 		self.assertEqual( s["max"].getValue(), imath.Color4f( 1 ) )
+
+	def testView( self ) :
+
+		constantSource = GafferImage.Constant()
+		constantSource["color"].setValue( imath.Color4f( 0.1, 0.2, 0.3, 0.4 ) )
+
+		reader = GafferImage.ImageReader()
+		reader["fileName"].setValue( self.__rgbFilePath )
+
+		views = GafferImage.CreateViews()
+		views["views"].addChild( Gaffer.NameValuePlug( "left", GafferImage.ImagePlug(), True ) )
+		views["views"].addChild( Gaffer.NameValuePlug( "right", GafferImage.ImagePlug(), True ) )
+		views["views"][0]["value"].setInput( constantSource["out"] )
+		views["views"][1]["value"].setInput( reader["out"] )
+
+		s = GafferImage.ImageStats()
+		s["in"].setInput( views["out"] )
+		s["area"].setValue( reader["out"]["format"].getValue().getDisplayWindow() )
+
+		for contextView, queryAndResults in [
+			( None, [ ( "", None ), ( "left", imath.Color4f( 0.1, 0.2, 0.3, 0.4 ) ), ( "right", imath.Color4f( 0.5, 0.5, 0.5, 0.875 ) ) ] ),
+			( "left", [ ( "", imath.Color4f( 0.1, 0.2, 0.3, 0.4 ) ), ( "left", imath.Color4f( 0.1, 0.2, 0.3, 0.4 ) ), ( "right", imath.Color4f( 0.5, 0.5, 0.5, 0.875 ) ) ] ),
+			("right", [ ( "", imath.Color4f( 0.5, 0.5, 0.5, 0.875 ) ), ( "left", imath.Color4f( 0.1, 0.2, 0.3, 0.4 ) ), ( "right", imath.Color4f( 0.5, 0.5, 0.5, 0.875 ) ) ] )
+
+		]:
+			for queryView, result in queryAndResults:
+				with Gaffer.Context( Gaffer.Context.current() ) as c:
+					s["view"].setValue( queryView )
+					if contextView:
+						c["image:viewName"] = contextView
+					if result is None:
+						# The result when contextView and queryView are both not overridden is an error,
+						# views has just left and right views, so it's illegal to ask for "default".
+						with six.assertRaisesRegex( self, Gaffer.ProcessException, 'View does not exist "default"' ):
+							self.assertEqual( s["max"].getValue(), result )
+					else:
+						self.assertEqual( s["max"].getValue(), result )
+
+		# When reading from an image with a default view, we get the default when requesting a view that
+		# doesn't exist
+		s["in"].setInput( reader["out"] )
+		s["view"].setValue( "left" )
+		self.assertEqual( s["max"].getValue(), imath.Color4f( 0.5, 0.5, 0.5, 0.875 ) )
+		s["view"].setValue( "right" )
+		self.assertEqual( s["max"].getValue(), imath.Color4f( 0.5, 0.5, 0.5, 0.875 ) )
 
 	def __assertColour( self, colour1, colour2 ) :
 		for i in range( 0, 4 ):

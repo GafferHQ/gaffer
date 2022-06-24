@@ -190,6 +190,7 @@ bool VectorWarp::affectsEngine( const Gaffer::Plug *input ) const
 {
 	return
 		Warp::affectsEngine( input ) ||
+		input == inPlug()->viewNamesPlug() ||
 		input == inPlug()->formatPlug() ||
 		input == vectorPlug()->channelNamesPlug() ||
 		input == vectorPlug()->channelDataPlug() ||
@@ -202,6 +203,14 @@ void VectorWarp::hashEngine( const Imath::V2i &tileOrigin, const Gaffer::Context
 	Warp::hashEngine( tileOrigin, context, h );
 
 	h.append( tileOrigin );
+
+	vectorModePlug()->hash( h );
+	vectorUnitsPlug()->hash( h );
+
+	if( !ImageAlgo::viewIsValid( context, vectorPlug()->viewNames()->readable() ) )
+	{
+		return;
+	}
 
 	ConstStringVectorDataPtr channelNames;
 
@@ -233,8 +242,6 @@ void VectorWarp::hashEngine( const Imath::V2i &tileOrigin, const Gaffer::Context
 		vectorPlug()->channelDataPlug()->hash( h );
 	}
 
-	vectorModePlug()->hash( h );
-	vectorUnitsPlug()->hash( h );
 }
 
 const Warp::Engine *VectorWarp::computeEngine( const Imath::V2i &tileOrigin, const Gaffer::Context *context ) const
@@ -246,41 +253,48 @@ const Warp::Engine *VectorWarp::computeEngine( const Imath::V2i &tileOrigin, con
 	ConstStringVectorDataPtr channelNames;
 	Box2i displayWindow;
 
-	{
-		ImagePlug::GlobalScope c( context );
-		validTileBound = BufferAlgo::intersection( tileBound, vectorPlug()->dataWindowPlug()->getValue() );
-		channelNames = vectorPlug()->channelNamesPlug()->getValue();
-		displayWindow = inPlug()->formatPlug()->getValue().getDisplayWindow();
-	}
-
-	ImagePlug::ChannelDataScope channelDataScope( context );
-
 	ConstFloatVectorDataPtr xData = ImagePlug::blackTile();
-	if( ImageAlgo::channelExists( channelNames->readable(), ImageAlgo::channelNameR ) )
-	{
-		channelDataScope.setChannelName( &ImageAlgo::channelNameR );
-		xData = vectorPlug()->channelDataPlug()->getValue();
-	}
-
 	ConstFloatVectorDataPtr yData = ImagePlug::blackTile();
-	if( ImageAlgo::channelExists( channelNames->readable(), ImageAlgo::channelNameG ) )
-	{
-		channelDataScope.setChannelName( &ImageAlgo::channelNameG );
-		yData = vectorPlug()->channelDataPlug()->getValue();
-	}
-
 	ConstFloatVectorDataPtr aData = ImagePlug::whiteTile();
-	if( ImageAlgo::channelExists( channelNames->readable(), ImageAlgo::channelNameA ) )
-	{
-		channelDataScope.setChannelName( &ImageAlgo::channelNameA );
-		aData = vectorPlug()->channelDataPlug()->getValue();
-	}
 
-	if( xData->readable().size() != (unsigned int)ImagePlug::tilePixels() ||
-		yData->readable().size() != (unsigned int)ImagePlug::tilePixels() ||
-		aData->readable().size() != (unsigned int)ImagePlug::tilePixels() )
 	{
-		throw IECore::Exception( "VectorWarp::computeEngine : Bad channel data size on vector plug.  Maybe it's deep?" );
+		if( ImageAlgo::viewIsValid( context, vectorPlug()->viewNames()->readable() ) )
+		{
+
+			{
+				ImagePlug::GlobalScope c( context );
+				validTileBound = BufferAlgo::intersection( tileBound, vectorPlug()->dataWindowPlug()->getValue() );
+				channelNames = vectorPlug()->channelNamesPlug()->getValue();
+				displayWindow = inPlug()->formatPlug()->getValue().getDisplayWindow();
+			}
+
+			ImagePlug::ChannelDataScope channelDataScope( context );
+
+			if( ImageAlgo::channelExists( channelNames->readable(), ImageAlgo::channelNameR ) )
+			{
+				channelDataScope.setChannelName( &ImageAlgo::channelNameR );
+				xData = vectorPlug()->channelDataPlug()->getValue();
+			}
+
+			if( ImageAlgo::channelExists( channelNames->readable(), ImageAlgo::channelNameG ) )
+			{
+				channelDataScope.setChannelName( &ImageAlgo::channelNameG );
+				yData = vectorPlug()->channelDataPlug()->getValue();
+			}
+
+			if( ImageAlgo::channelExists( channelNames->readable(), ImageAlgo::channelNameA ) )
+			{
+				channelDataScope.setChannelName( &ImageAlgo::channelNameA );
+				aData = vectorPlug()->channelDataPlug()->getValue();
+			}
+
+			if( xData->readable().size() != (unsigned int)ImagePlug::tilePixels() ||
+				yData->readable().size() != (unsigned int)ImagePlug::tilePixels() ||
+				aData->readable().size() != (unsigned int)ImagePlug::tilePixels() )
+			{
+				throw IECore::Exception( "VectorWarp::computeEngine : Bad channel data size on vector plug.  Maybe it's deep?" );
+			}
+		}
 	}
 
 	return new Engine(
@@ -298,14 +312,20 @@ const Warp::Engine *VectorWarp::computeEngine( const Imath::V2i &tileOrigin, con
 void VectorWarp::hashDeep( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	FlatImageProcessor::hashDeep( parent, context, h );
-	h.append( vectorPlug()->deepPlug()->hash() );
+	if( ImageAlgo::viewIsValid( context, vectorPlug()->viewNames()->readable() ) )
+	{
+		h.append( vectorPlug()->deepPlug()->hash() );
+	}
 }
 
 bool VectorWarp::computeDeep( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	if( vectorPlug()->deepPlug()->getValue() )
+	if( ImageAlgo::viewIsValid( context, vectorPlug()->viewNames()->readable() ) )
 	{
-		throw IECore::Exception( "Deep data not supported in input \"vector\"" );
+		if( vectorPlug()->deepPlug()->getValue() )
+		{
+			throw IECore::Exception( "Deep data not supported in input \"vector\"" );
+		}
 	}
 	return false;
 }

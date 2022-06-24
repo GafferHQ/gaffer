@@ -255,10 +255,12 @@ Resample::Resample( const std::string &name )
 
 	// We don't ever want to change these, so we make pass-through connections.
 
+	outPlug()->viewNamesPlug()->setInput( inPlug()->viewNamesPlug() );
 	outPlug()->formatPlug()->setInput( inPlug()->formatPlug() );
 	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );
 	outPlug()->channelNamesPlug()->setInput( inPlug()->channelNamesPlug() );
 
+	horizontalPassPlug()->viewNamesPlug()->setInput( inPlug()->viewNamesPlug() );
 	horizontalPassPlug()->formatPlug()->setInput( inPlug()->formatPlug() );
 	horizontalPassPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );
 	horizontalPassPlug()->channelNamesPlug()->setInput( inPlug()->channelNamesPlug() );

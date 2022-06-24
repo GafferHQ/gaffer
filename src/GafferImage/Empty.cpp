@@ -90,6 +90,16 @@ void Empty::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs 
 	}
 }
 
+void Empty::hashViewNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ImageNode::hashViewNames( output, context, h );
+}
+
+IECore::ConstStringVectorDataPtr Empty::computeViewNames( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	return ImagePlug::defaultViewNames();
+}
+
 void Empty::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ImageNode::hashFormat( output, context, h );

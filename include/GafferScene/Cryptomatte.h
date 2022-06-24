@@ -93,6 +93,9 @@ class GAFFERSCENE_API Cryptomatte : public GafferImage::FlatImageProcessor
 		void compute(Gaffer::ValuePlug *output, const Gaffer::Context *context) const override;
 		Gaffer::ValuePlug::CachePolicy computeCachePolicy( const Gaffer::ValuePlug *output ) const override;
 
+		void hashViewNames( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstStringVectorDataPtr computeViewNames( const Gaffer::Context *context, const GafferImage::ImagePlug *parent ) const override;
+
 		void hashChannelNames(const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h) const override;
 		IECore::ConstStringVectorDataPtr computeChannelNames(const Gaffer::Context *context, const GafferImage::ImagePlug *parent) const override;
 

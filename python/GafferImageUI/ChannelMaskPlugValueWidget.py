@@ -121,7 +121,9 @@ class ChannelMaskPlugValueWidget( GafferUI.PlugValueWidget ) :
 				value = self.getPlug().getValue()
 			with IECore.IgnoredExceptions( Exception ) :
 				for imagePlug in self.__imagePlugs() :
-					availableChannels.extend( imagePlug["channelNames"].getValue() )
+					views = imagePlug.viewNames()
+					for v in views:
+						availableChannels.extend( imagePlug.channelNames( viewName = v ) )
 
 		value = _CanonicalValue( value )
 		matchPatterns = value.matchPatterns()

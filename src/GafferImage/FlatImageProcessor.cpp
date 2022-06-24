@@ -95,7 +95,10 @@ void FlatImageProcessor::hashDeep( const GafferImage::ImagePlug *parent, const G
 			// behaviour for merge, and hopefully any other deep nodes that use inPlugs()
 			if( (*it)->getInput<ValuePlug>() )
 			{
-				h.append( (*it)->deepPlug()->hash() );
+				if( ImageAlgo::viewIsValid( context, (*it)->viewNames()->readable() ) )
+				{
+					h.append( (*it)->deepPlug()->hash() );
+				}
 			}
 		}
 	}
@@ -114,7 +117,10 @@ bool FlatImageProcessor::computeDeep( const Gaffer::Context *context, const Imag
 	{
 		for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 		{
-			if( (*it)->deepPlug()->getValue() )
+			if(
+				ImageAlgo::viewIsValid( context, (*it)->viewNames()->readable() ) &&
+				(*it)->deepPlug()->getValue()
+			)
 			{
 				badInput = it->get();
 			}

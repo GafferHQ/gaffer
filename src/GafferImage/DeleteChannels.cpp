@@ -60,6 +60,7 @@ DeleteChannels::DeleteChannels( const std::string &name )
 	// Direct pass-through for the things we don't ever change.
 	// This not only simplifies our implementation, but it is also
 	// faster to compute.
+	outPlug()->viewNamesPlug()->setInput( inPlug()->viewNamesPlug() );
 	outPlug()->formatPlug()->setInput( inPlug()->formatPlug() );
 	outPlug()->dataWindowPlug()->setInput( inPlug()->dataWindowPlug() );
 	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );
@@ -121,7 +122,7 @@ IECore::ConstStringVectorDataPtr DeleteChannels::computeChannelNames( const Gaff
 	const string channels = channelsPlug()->getValue();
 
 	ConstStringVectorDataPtr inChannelNamesData = inPlug()->channelNamesPlug()->getValue();
-	const vector<string> inChannelNames = inChannelNamesData->readable();
+	const vector<string> &inChannelNames = inChannelNamesData->readable();
 
 	StringVectorDataPtr resultData = new StringVectorData();
 	vector<string> &result = resultData->writable();

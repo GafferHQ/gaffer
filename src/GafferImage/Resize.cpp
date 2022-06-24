@@ -75,6 +75,7 @@ Resize::Resize( const std::string &name )
 
 	resampledInPlug()->setInput( resample->outPlug() );
 
+	outPlug()->viewNamesPlug()->setInput( inPlug()->viewNamesPlug() );
 	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );
 	outPlug()->channelNamesPlug()->setInput( inPlug()->channelNamesPlug() );
 }

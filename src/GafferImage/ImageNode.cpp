@@ -104,7 +104,11 @@ void ImageNode::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *co
 		// hash will get overwritten anyway). Instead we call ComputeNode::hash() in our
 		// hash*() implementations, and allow subclass implementations to not call the base class
 		// if they intend to overwrite the hash.
-		if( output == imagePlug->channelDataPlug() )
+		if( output == imagePlug->viewNamesPlug() )
+		{
+			hashViewNames( imagePlug, context, h );
+		}
+		else if( output == imagePlug->channelDataPlug() )
 		{
 			const std::string &channel = context->get<std::string>( ImagePlug::channelNameContextName );
 			if( channelEnabled( channel ) )
@@ -145,6 +149,11 @@ void ImageNode::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *co
 	{
 		ComputeNode::hash( output, context, h );
 	}
+}
+
+void ImageNode::hashViewNames( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ComputeNode::hash( parent->viewNamesPlug(), context, h );
 }
 
 void ImageNode::hashFormat( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -208,7 +217,13 @@ void ImageNode::compute( ValuePlug *output, const Context *context ) const
 
 	// node is enabled - defer to our derived classes to perform the appropriate computation
 
-	if( output == imagePlug->formatPlug() )
+	if( output == imagePlug->viewNamesPlug() )
+	{
+		static_cast<StringVectorDataPlug *>( output )->setValue(
+			computeViewNames( context, imagePlug )
+		);
+	}
+	else if( output == imagePlug->formatPlug() )
 	{
 		static_cast<AtomicFormatPlug *>( output )->setValue(
 			computeFormat( context, imagePlug )
@@ -269,6 +284,12 @@ void ImageNode::compute( ValuePlug *output, const Context *context ) const
 		}
 	}
 }
+
+IECore::ConstStringVectorDataPtr ImageNode::computeViewNames( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	throw IECore::NotImplementedException( string( typeName() ) + "::computeViewNames" );
+}
+
 
 GafferImage::Format ImageNode::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
 {

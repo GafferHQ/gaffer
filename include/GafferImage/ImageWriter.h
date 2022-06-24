@@ -50,6 +50,7 @@ namespace Gaffer
 {
 	IE_CORE_FORWARDDECLARE( ValuePlug )
 	IE_CORE_FORWARDDECLARE( StringPlug )
+	IE_CORE_FORWARDDECLARE( ContextQuery )
 } // namespace Gaffer
 
 namespace GafferImage
@@ -89,14 +90,14 @@ class GAFFERIMAGE_API ImageWriter : public GafferDispatch::TaskNode
 		Gaffer::StringPlug *colorSpacePlug();
 		const Gaffer::StringPlug *colorSpacePlug() const;
 
-		Gaffer::StringPlug *layoutViewNamePlug();
-		const Gaffer::StringPlug *layoutViewNamePlug() const;
-
 		Gaffer::StringPlug *layoutPartNamePlug();
 		const Gaffer::StringPlug *layoutPartNamePlug() const;
 
 		Gaffer::StringPlug *layoutChannelNamePlug();
 		const Gaffer::StringPlug *layoutChannelNamePlug() const;
+
+		Gaffer::BoolPlug *matchDataWindowsPlug();
+		const Gaffer::BoolPlug *matchDataWindowsPlug() const;
 
 		Gaffer::ValuePlug *fileFormatSettingsPlug( const std::string &fileFormat );
 		const Gaffer::ValuePlug *fileFormatSettingsPlug( const std::string &fileFormat ) const;
@@ -117,9 +118,6 @@ class GAFFERIMAGE_API ImageWriter : public GafferDispatch::TaskNode
 	private :
 
 		std::string colorSpace() const;
-
-		ColorSpace *colorSpaceUnpremultedNode();
-		const ColorSpace *colorSpaceUnpremultedNode() const;
 
 		ColorSpace *colorSpaceNode();
 		const ColorSpace *colorSpaceNode() const;

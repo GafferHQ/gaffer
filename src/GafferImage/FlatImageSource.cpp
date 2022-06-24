@@ -83,3 +83,13 @@ IECore::ConstIntVectorDataPtr FlatImageSource::computeSampleOffsets( const Imath
 {
 	return ImagePlug::flatTileSampleOffsets();
 }
+
+void FlatImageSource::hashViewNames( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ImageNode::hashViewNames( parent, context, h );
+}
+
+IECore::ConstStringVectorDataPtr FlatImageSource::computeViewNames( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	return ImagePlug::defaultViewNames();
+}

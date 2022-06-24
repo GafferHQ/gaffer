@@ -79,16 +79,22 @@ class PresetsPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__menuButton.setText( "" )
 			return
 
+		errored = False
 		with self.getContext() :
+			try:
+				currentPreset = sole( ( Gaffer.NodeAlgo.currentPreset( p ) or "" for p in self.getPlugs() ) )
+			except:
+				errored = True
 
-			currentPreset = sole( ( Gaffer.NodeAlgo.currentPreset( p ) or "" for p in self.getPlugs() ) )
 			allowCustom = sole( ( Gaffer.Metadata.value( p, "presetsPlugValueWidget:allowCustom" ) for p in self.getPlugs() ) )
 			isCustom = any( Gaffer.Metadata.value( p, "presetsPlugValueWidget:isCustom" ) for p in self.getPlugs() )
 			isCustom = allowCustom and ( isCustom or currentPreset == "" )
 
 		self.__customValuePlugWidget.setVisible( isCustom )
 
-		if isCustom :
+		if errored:
+			self.__menuButton.setText( "" )
+		elif isCustom :
 			self.__menuButton.setText( "Custom" )
 		elif currentPreset :
 			self.__menuButton.setText( currentPreset )
@@ -96,6 +102,9 @@ class PresetsPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__menuButton.setText( "---" )
 		else :
 			self.__menuButton.setText( "Invalid" )
+
+		self.__menuButton.setErrored( errored )
+
 
 	def __menuDefinition( self ) :
 

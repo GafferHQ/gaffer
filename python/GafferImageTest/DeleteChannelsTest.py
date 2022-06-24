@@ -181,7 +181,7 @@ class DeleteChannelsTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( i["out"]["dataWindow"].getValue(), d["out"]["dataWindow"].getValue() )
 		self.assertEqual( i["out"]["metadata"].getValue(), d["out"]["metadata"].getValue() )
 
-		context = Gaffer.Context()
+		context = Gaffer.Context( Gaffer.Context.current() )
 		context["image:tileOrigin"] = imath.V2i( 0 )
 		with context :
 			for c in [ "G", "B", "A" ] :

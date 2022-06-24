@@ -53,6 +53,7 @@ DeepSampleCounts::DeepSampleCounts( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
+	outPlug()->viewNamesPlug()->setInput( inPlug()->viewNamesPlug() );
 	outPlug()->formatPlug()->setInput( inPlug()->formatPlug() );
 	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );
 	outPlug()->dataWindowPlug()->setInput( inPlug()->dataWindowPlug() );

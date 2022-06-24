@@ -855,10 +855,22 @@ std::string SceneAlgo::sourceSceneName( const GafferImage::ImagePlug *image )
 
 	// See if the image has the `gaffer:sourceScene` metadata entry that gives
 	// the root-relative path to the source scene plug
-	const ConstCompoundDataPtr metadata = image->metadata();
-	const StringData *plugPathData = metadata->member<StringData>( "gaffer:sourceScene" );
 
-	return plugPathData ? plugPathData->readable() : "";
+	ConstStringVectorDataPtr views = image->viewNames();
+
+	for( const std::string &view : views->readable() )
+	{
+		GafferImage::ImagePlug::ViewScope viewScope( Context::current() );
+		viewScope.setViewName( &view );
+		ConstCompoundDataPtr metadata = image->metadata();
+		const StringData *plugPathData = metadata->member<StringData>( "gaffer:sourceScene" );
+		if( plugPathData )
+		{
+			return plugPathData->readable();
+		}
+	}
+
+	return "";
 }
 
 ScenePlug *SceneAlgo::sourceScene( GafferImage::ImagePlug *image )

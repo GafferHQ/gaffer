@@ -72,6 +72,7 @@ Crop::Crop( const std::string &name )
 	offset->inPlug()->dataWindowPlug()->setInput( cropDataWindowPlug() );
 	offset->enabledPlug()->setInput( enabledPlug() );
 	offset->offsetPlug()->setInput( offsetPlug() );
+	outPlug()->viewNamesPlug()->setInput( offset->outPlug()->viewNamesPlug() );
 	outPlug()->dataWindowPlug()->setInput( offset->outPlug()->dataWindowPlug() );
 	outPlug()->channelDataPlug()->setInput( offset->outPlug()->channelDataPlug() );
 	outPlug()->sampleOffsetsPlug()->setInput( offset->outPlug()->sampleOffsetsPlug() );

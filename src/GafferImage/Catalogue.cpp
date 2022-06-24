@@ -252,8 +252,21 @@ class Catalogue::InternalImage : public ImageNode
 			// so if the channels in the new driver clash
 			// with the existing channels, we must assume
 			// they're from another render.
+
 			const vector<string> &channels = driver->channelNames();
-			ConstStringVectorDataPtr existingChannelsData = copyChannels()->outPlug()->channelNamesPlug()->getValue();
+
+			if( copyChannels()->outPlug()->viewNames()->readable() != ImagePlug::defaultViewNames()->readable() )
+			{
+				throw IECore::Exception( "Catalogue::insertDriver : Multi-view images not supported" );
+			}
+
+			ConstStringVectorDataPtr existingChannelsData;
+			{
+				ImagePlug::ViewScope viewScope( Context::current() );
+				viewScope.setViewName( &ImagePlug::defaultViewName );
+				existingChannelsData = copyChannels()->outPlug()->channelNamesPlug()->getValue();
+			}
+
 			const vector<string> &existingChannels = existingChannelsData->readable();
 			for( vector<string>::const_iterator it = channels.begin(), eIt = channels.end(); it != eIt; ++it )
 			{
@@ -535,20 +548,29 @@ class Catalogue::InternalImage : public ImageNode
 
 				void save( WeakPtr forWrapUp )
 				{
-					ImageAlgo::parallelGatherTiles(
-						m_imageCopy->copyChannels()->outPlug(),
-						m_imageCopy->copyChannels()->outPlug()->channelNamesPlug()->getValue()->readable(),
-						// Tile
-						[] ( const ImagePlug *imagePlug, const string &channelName, const Imath::V2i &tileOrigin )
-						{
-							return imagePlug->channelDataPlug()->hash();
-						},
-						// Gather
-						[ this ] ( const ImagePlug *imagePlug, const string &channelName, const Imath::V2i &tileOrigin, const IECore::MurmurHash &tileHash )
-						{
-							channelDataHashes[TileIndex(channelName, tileOrigin)] = tileHash;
-						}
-					);
+					if( m_imageCopy->copyChannels()->outPlug()->viewNames()->readable() != ImagePlug::defaultViewNames()->readable() )
+					{
+						IECore::msg( IECore::Msg::Error, "Saving Catalogue image", "Catalogue does not yet support multi-view images." );
+					}
+
+					{
+						ImagePlug::ViewScope viewScope( Context::current() );
+						viewScope.setViewName( &ImagePlug::defaultViewName );
+						ImageAlgo::parallelGatherTiles(
+							m_imageCopy->copyChannels()->outPlug(),
+							m_imageCopy->copyChannels()->outPlug()->channelNamesPlug()->getValue()->readable(),
+							// Tile
+							[] ( const ImagePlug *imagePlug, const string &channelName, const Imath::V2i &tileOrigin )
+							{
+								return imagePlug->channelDataPlug()->hash();
+							},
+							// Gather
+							[ this ] ( const ImagePlug *imagePlug, const string &channelName, const Imath::V2i &tileOrigin, const IECore::MurmurHash &tileHash )
+							{
+								channelDataHashes[TileIndex(channelName, tileOrigin)] = tileHash;
+							}
+						);
+					}
 
 					try
 					{

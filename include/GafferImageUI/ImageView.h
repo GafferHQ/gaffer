@@ -105,6 +105,9 @@ class GAFFERIMAGEUI_API ImageView : public GafferUI::View
 		Gaffer::BoolPlug *lutGPUPlug();
 		const Gaffer::BoolPlug *lutGPUPlug() const;
 
+		Gaffer::StringPlug *viewPlug();
+		const Gaffer::StringPlug *viewPlug() const;
+
 		/// The gadget responsible for displaying the image.
 		ImageGadget *imageGadget();
 		const ImageGadget *imageGadget() const;

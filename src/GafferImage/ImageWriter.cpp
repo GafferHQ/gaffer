@@ -39,11 +39,15 @@
 
 #include "GafferImage/BufferAlgo.h"
 #include "GafferImage/ColorSpace.h"
+#include "GafferImage/Constant.h"
 #include "GafferImage/FormatPlug.h"
 #include "GafferImage/ImageAlgo.h"
 #include "GafferImage/ImagePlug.h"
+#include "GafferImage/Merge.h"
 
 #include "Gaffer/Context.h"
+#include "Gaffer/ContextQuery.h"
+#include "Gaffer/DeleteContextVariables.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
@@ -181,12 +185,33 @@ class TileChannelDataProcessor
 	public:
 		using Result = ConstFloatVectorDataPtr;
 
-		TileChannelDataProcessor() {}
+		TileChannelDataProcessor( const std::map< std::string, std::pair< std::string, bool > > &colorSpaceByView )
+			: m_colorSpaceByView( colorSpaceByView )
+		{
+		}
 
 		ConstFloatVectorDataPtr operator()( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin ) const
 		{
+			ImagePlug::ChannelDataScope scope( Context::current() );
+
+			size_t index = channelName.find( "." );
+			assert( index != std::string::npos );
+			const std::string viewName = channelName.substr( 0, index );
+			const std::string actualChannel = channelName.substr( index + 1 );
+
+			scope.setChannelName( &actualChannel );
+			scope.set( ImagePlug::viewNameContextName, &viewName );
+
+			// TODO - test colorspace for multi-view
+			const std::pair< std::string, bool > &colorSpaceAndUnpremult = m_colorSpaceByView.at( viewName );
+			scope.set( "__imageWriter:colorSpace", &colorSpaceAndUnpremult.first );
+			scope.set( "__imageWriter:processUnpremultiplied", &colorSpaceAndUnpremult.second );
+
 			return imagePlug->channelDataPlug()->getValue();
 		}
+
+	private:
+		const std::map< std::string, std::pair< std::string, bool > > &m_colorSpaceByView;
 };
 
 struct V2iHash
@@ -1212,10 +1237,9 @@ void setImageSpecFormatOptions( const ImageWriter *node, ImageSpec *spec, const 
 	}
 }
 
-ImageSpec createImageSpec( const ImageWriter *node, const ImageOutput *out, const Imath::Box2i &dataWindow, const Imath::Box2i &displayWindow )
+ImageSpec createImageSpec( const ImageWriter *node, const ImageOutput *out, const Imath::Box2i &displayWindow )
 {
 	const std::string fileFormatName = out->format_name();
-	const bool supportsDisplayWindow = out->supports( "displaywindow" ) && fileFormatName != "dpx";
 
 	ImageSpec spec( TypeDesc::UNKNOWN );
 
@@ -1224,21 +1248,6 @@ ImageSpec createImageSpec( const ImageWriter *node, const ImageOutput *out, cons
 	spec.full_y = displayWindow.min.y;
 	spec.full_width = displayWindow.size().x + 1;
 	spec.full_height = displayWindow.size().y + 1;
-
-	if ( supportsDisplayWindow )
-	{
-		spec.x = dataWindow.min.x;
-		spec.y = dataWindow.min.y;
-		spec.width = dataWindow.size().x + 1;
-		spec.height = dataWindow.size().y + 1;
-	}
-	else
-	{
-		spec.x = spec.full_x;
-		spec.y = spec.full_y;
-		spec.width = spec.full_width;
-		spec.height = spec.full_height;
-	}
 
 	// Add the metadata to the spec, removing metadata that could affect the resulting channel data,
 	// and file-format-specific metadata created by the OpenImageIOReader.
@@ -1249,6 +1258,11 @@ ImageSpec createImageSpec( const ImageWriter *node, const ImageOutput *out, cons
 	metadata->writable().erase( "oiio:UnassociatedAlpha" );
 	metadata->writable().erase( "fileFormat" );
 	metadata->writable().erase( "dataType" );
+
+	// Also erase multiView metadata - if you want to create multi-view images, use CreateViews
+	// instead of just setting metadata.
+	metadata->writable().erase( "view" );
+	metadata->writable().erase( "multiView" );
 
 	metadataToImageSpecAttributes( metadata.get(), spec );
 
@@ -1296,6 +1310,41 @@ ImageSpec createImageSpec( const ImageWriter *node, const ImageOutput *out, cons
 	return spec;
 }
 
+void setImageSpecDataWindow( ImageSpec &spec, Imath::Box2i &dataWindow, const ImageOutput *out, const Format &imageFormat )
+{
+	const std::string fileFormatName = out->format_name();
+	const bool supportsDisplayWindow = out->supports( "displaywindow" ) && fileFormatName != "dpx";
+
+	Imath::Box2i exrDataWindow;
+	if( !BufferAlgo::empty( dataWindow ) )
+	{
+		exrDataWindow = imageFormat.toEXRSpace( dataWindow );
+	}
+	else
+	{
+		// Exr doesn't allow images with no pixel, so if the actual data window is empty,
+		// we make one pixel at the origin
+		exrDataWindow = Imath::Box2i( Imath::V2i( 0 ) );
+	}
+
+	if( supportsDisplayWindow )
+	{
+		spec.x = exrDataWindow.min.x;
+		spec.y = exrDataWindow.min.y;
+		spec.width = exrDataWindow.size().x + 1;
+		spec.height = exrDataWindow.size().y + 1;
+	}
+	else
+	{
+		spec.x = spec.full_x;
+		spec.y = spec.full_y;
+		spec.width = spec.full_width;
+		spec.height = spec.full_height;
+
+		dataWindow = BufferAlgo::intersection( dataWindow, imageFormat.getDisplayWindow() );
+	}
+}
+
 // Remove leading, trailing, or repeated dot seperators
 std::string cleanExcessDots( std::string name )
 {
@@ -1311,12 +1360,24 @@ std::string cleanExcessDots( std::string name )
 }
 
 // Get the EXR names for the view, part, and channel for a Gaffer channel
-std::tuple< std::string, std::string, std::string > viewPartChannelName( const ImageWriter *node, const std::string &view, const std::string &gafferChannel )
+std::tuple< std::string, std::string > partChannelName( const ImageWriter *node, const std::string &view, const std::string &gafferChannel, const std::vector< std::string > &viewNames, bool isDeep )
 {
 	std::string layer = ImageAlgo::layerName( gafferChannel );
 	std::string baseName = ImageAlgo::baseName( gafferChannel );
 
-	std::string nukeViewName = view;
+	std::string viewName = view;
+	if( viewName == ImagePlug::defaultViewName )
+	{
+		viewName = "";
+	}
+
+	std::string singlePartViewName = viewName;
+	if( viewNames.size() && singlePartViewName == viewNames[0] && layer == "" )
+	{
+		singlePartViewName = "";
+	}
+
+	std::string nukeViewName = viewName;
 	if( nukeViewName == "" )
 	{
 		nukeViewName = "main";
@@ -1335,7 +1396,11 @@ std::tuple< std::string, std::string, std::string > viewPartChannelName( const I
 	}
 	else
 	{
-		if( baseName == "Z" )
+		if( isDeep && ( baseName == "Z" || baseName == "ZBack" ) )
+		{
+			// Nuke doesn't screw up the names of Z and ZBack when the image is deep
+		}
+		else if( baseName == "Z" )
 		{
 			nukeLayerName = "depth";
 		}
@@ -1360,7 +1425,8 @@ std::tuple< std::string, std::string, std::string > viewPartChannelName( const I
 	std::string nukePartName = nukeLayerName.size() ? nukeLayerName : "rgba";
 
 	Context::EditableScope namingContext( Context::current() );
-	namingContext.set( "imageWriter:viewName", &view );
+	namingContext.set( "imageWriter:viewName", &viewName );
+	namingContext.set( "imageWriter:singlePartViewName", &singlePartViewName );
 	namingContext.set( "imageWriter:channelName", &gafferChannel );
 	namingContext.set( "imageWriter:standardPartName", &standardPartName );
 	namingContext.set( "imageWriter:layerName", &layer );
@@ -1371,7 +1437,6 @@ std::tuple< std::string, std::string, std::string > viewPartChannelName( const I
 	namingContext.set( "imageWriter:nukeBaseName", &nukeBaseName );
 
 	return std::make_tuple(
-		cleanExcessDots( node->layoutViewNamePlug()->getValue() ),
 		cleanExcessDots( node->layoutPartNamePlug()->getValue() ),
 		cleanExcessDots( node->layoutChannelNamePlug()->getValue() )
 	);
@@ -1379,9 +1444,8 @@ std::tuple< std::string, std::string, std::string > viewPartChannelName( const I
 
 struct MetadataRegistration
 {
-	void registerPreset( const std::string &name, const std::string &view, const std::string &part, const std::string &channel )
+	void registerPreset( const std::string &name, const std::string &part, const std::string &channel )
 	{
-		Gaffer::Metadata::registerValue( ImageWriter::staticTypeId(), "layout.viewName", name, new IECore::StringData( view ) );
 		Gaffer::Metadata::registerValue( ImageWriter::staticTypeId(), "layout.partName", name, new IECore::StringData( part ) );
 		Gaffer::Metadata::registerValue( ImageWriter::staticTypeId(), "layout.channelName", name, new IECore::StringData( channel ) );
 	}
@@ -1392,37 +1456,31 @@ struct MetadataRegistration
 		// them here instead of in the UI file
 
 		registerPreset( "preset:Part per Layer",
-			"${imageWriter:viewName}",
 			"${imageWriter:standardPartName}.${imageWriter:viewName}",
 			"${imageWriter:layerName}.${imageWriter:baseName}"
 		);
 
 		registerPreset( "preset:Part per View",
 			"${imageWriter:viewName}",
-			"${imageWriter:viewName}",
 			"${imageWriter:layerName}.${imageWriter:baseName}"
 		);
 
 		registerPreset( "preset:Single Part",
 			"",
-			"",
-			"${imageWriter:layerName}.${imageWriter:viewName}.${imageWriter:baseName}"
+			"${imageWriter:layerName}.${imageWriter:singlePartViewName}.${imageWriter:baseName}"
 		);
 
 		registerPreset( "preset:Nuke/Interleave Channels",
-			"${imageWriter:viewName}",
 			"${imageWriter:nukePartName}.${imageWriter:nukeViewName}",
 			"${imageWriter:nukeBaseName}"
 		);
 
 		registerPreset( "preset:Nuke/Interleave Channels and Layers",
-			"${imageWriter:viewName}",
 			"${imageWriter:nukeViewName}",
 			"${imageWriter:nukeLayerName}.${imageWriter:nukeBaseName}"
 		);
 
 		registerPreset( "preset:Nuke/Interleave Channels, Layers and Views",
-			"",
 			"",
 			"${imageWriter:viewName}.${imageWriter:nukeLayerName}.${imageWriter:nukeBaseName}"
 		);
@@ -1452,30 +1510,56 @@ ImageWriter::ImageWriter( const std::string &name )
 	addChild( new ImagePlug( "out", Plug::Out, Plug::Default & ~Plug::Serialisable ) );
 	outPlug()->setInput( inPlug() );
 
-	ColorSpacePtr colorSpaceUnpremultedChild = new ColorSpace( "__colorSpaceUnpremulted" );
-	colorSpaceUnpremultedChild->processUnpremultipliedPlug()->setValue( true );
-	addChild( colorSpaceUnpremultedChild );
-
 	ColorSpacePtr colorSpaceChild = new ColorSpace( "__colorSpace" );
 	addChild( colorSpaceChild );
 
 	OCIO_NAMESPACE::ConstConfigRcPtr config = OCIO_NAMESPACE::GetCurrentConfig();
-	colorSpaceUnpremultedChild->inputSpacePlug()->setValue( config->getColorSpace( OCIO_NAMESPACE::ROLE_SCENE_LINEAR )->getName() );
-	colorSpaceUnpremultedChild->inPlug()->setInput( inPlug() );
-	colorSpaceUnpremultedChild->outputSpacePlug()->setValue( "${__imageWriter:colorSpace}" );
 
 	colorSpaceChild->inputSpacePlug()->setValue( config->getColorSpace( OCIO_NAMESPACE::ROLE_SCENE_LINEAR )->getName() );
-	colorSpaceChild->inPlug()->setInput( inPlug() );
 
 	colorSpaceChild->outputSpacePlug()->setValue( "${__imageWriter:colorSpace}" );
 
 	ValuePlugPtr layoutPlug = new ValuePlug( "layout" );
-	layoutPlug->addChild( new StringPlug( "viewName", Plug::In, "${imageWriter:viewName}" ) );
 	layoutPlug->addChild( new StringPlug( "partName", Plug::In, "${imageWriter:standardPartName}.${imageWriter:viewName}" ) );
 	layoutPlug->addChild( new StringPlug( "channelName", Plug::In, "${imageWriter:layerName}.${imageWriter:baseName}" ) );
 	addChild( layoutPlug );
 
+	addChild( new BoolPlug( "matchDataWindows", Plug::In, false ) );
+
 	createFileFormatOptionsPlugs();
+
+	// Delete the context variables we use to control our internal network before we access inPlug().
+	// We don't want them leaking out upstream.
+	Gaffer::DeleteContextVariablesPtr inDeleteContextVariables = new DeleteContextVariables( "__inDeleteContextVariables" );
+	addChild( inDeleteContextVariables );
+	inDeleteContextVariables->setup( inPlug() );
+	inDeleteContextVariables->inPlug()->setInput( inPlug() );
+	inDeleteContextVariables->variablesPlug()->setValue(
+		"__imageWriter:colorSpace __imageWriter:processUnpremultiplied __imageWriter:expandDataWindow"
+	);
+
+	ContextQueryPtr contextQuery = new ContextQuery( "__contextQuery" );
+	addChild( contextQuery );
+
+	GafferImage::ConstantPtr expandedDataWindow = new Constant( "__expandedDataWindow" );
+	expandedDataWindow->colorPlug()->setValue( Imath::Color4f( 0.0f ) );
+	addChild( expandedDataWindow );
+
+	GafferImage::MergePtr expandedDataWindowMerge = new Merge( "__expandedDataWindowMerge" );
+	addChild( expandedDataWindowMerge  );
+	expandedDataWindowMerge->inPlugs()->getChild<ImagePlug>( 0 )->setInput( inDeleteContextVariables->outPlug() );
+	expandedDataWindowMerge->inPlugs()->getChild<ImagePlug>( 1 )->setInput( expandedDataWindow->outPlug() );
+
+	Box2iPlugPtr box2iTemplate = new Box2iPlug();
+	NameValuePlug *dataWindowQuery = contextQuery->addQuery( box2iTemplate.get(), "__imageWriter:expandDataWindow" );
+	expandedDataWindow->formatPlug()->displayWindowPlug()->setInput( contextQuery->valuePlugFromQueryPlug( dataWindowQuery ) );
+	expandedDataWindowMerge->enabledPlug()->setInput( contextQuery->existsPlugFromQueryPlug( dataWindowQuery ) );
+
+	NameValuePlug *unpremultQuery = contextQuery->addQuery(
+		colorSpaceChild->processUnpremultipliedPlug(), "__imageWriter:processUnpremultiplied"
+	);
+	colorSpaceChild->processUnpremultipliedPlug()->setInput( contextQuery->valuePlugFromQueryPlug( unpremultQuery ) );
+	colorSpaceChild->inPlug()->setInput( expandedDataWindowMerge->outPlug() );
 }
 
 ImageWriter::~ImageWriter()
@@ -1597,54 +1681,44 @@ const GafferImage::ImagePlug *ImageWriter::outPlug() const
 	return getChild<ImagePlug>( g_firstPlugIndex+4 );
 }
 
-GafferImage::ColorSpace *ImageWriter::colorSpaceUnpremultedNode()
-{
-	return getChild<ColorSpace>( g_firstPlugIndex+5 );
-}
-
-const GafferImage::ColorSpace *ImageWriter::colorSpaceUnpremultedNode() const
-{
-	return getChild<ColorSpace>( g_firstPlugIndex+5 );
-}
-
 GafferImage::ColorSpace *ImageWriter::colorSpaceNode()
 {
-	return getChild<ColorSpace>( g_firstPlugIndex+6 );
+	return getChild<ColorSpace>( g_firstPlugIndex+5 );
 }
 
 const GafferImage::ColorSpace *ImageWriter::colorSpaceNode() const
 {
-	return getChild<ColorSpace>( g_firstPlugIndex+6 );
-}
-
-Gaffer::StringPlug *ImageWriter::layoutViewNamePlug()
-{
-	return getChild<ValuePlug>( g_firstPlugIndex+7 )->getChild<StringPlug>( 0 );
-}
-
-const Gaffer::StringPlug *ImageWriter::layoutViewNamePlug() const
-{
-	return getChild<ValuePlug>( g_firstPlugIndex+7 )->getChild<StringPlug>( 0 );
+	return getChild<ColorSpace>( g_firstPlugIndex+5 );
 }
 
 Gaffer::StringPlug *ImageWriter::layoutPartNamePlug()
 {
-	return getChild<ValuePlug>( g_firstPlugIndex+7 )->getChild<StringPlug>( 1 );
+	return getChild<ValuePlug>( g_firstPlugIndex+6 )->getChild<StringPlug>( 0 );
 }
 
 const Gaffer::StringPlug *ImageWriter::layoutPartNamePlug() const
 {
-	return getChild<ValuePlug>( g_firstPlugIndex+7 )->getChild<StringPlug>( 1 );
+	return getChild<ValuePlug>( g_firstPlugIndex+6 )->getChild<StringPlug>( 0 );
 }
 
 Gaffer::StringPlug *ImageWriter::layoutChannelNamePlug()
 {
-	return getChild<ValuePlug>( g_firstPlugIndex+7 )->getChild<StringPlug>( 2 );
+	return getChild<ValuePlug>( g_firstPlugIndex+6 )->getChild<StringPlug>( 1 );
 }
 
 const Gaffer::StringPlug *ImageWriter::layoutChannelNamePlug() const
 {
-	return getChild<ValuePlug>( g_firstPlugIndex+7 )->getChild<StringPlug>( 2 );
+	return getChild<ValuePlug>( g_firstPlugIndex+6 )->getChild<StringPlug>( 1 );
+}
+
+Gaffer::BoolPlug *ImageWriter::matchDataWindowsPlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex+7 );
+}
+
+const Gaffer::BoolPlug *ImageWriter::matchDataWindowsPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex+7 );
 }
 
 Gaffer::ValuePlug *ImageWriter::fileFormatSettingsPlug( const std::string &fileFormat )
@@ -1751,13 +1825,6 @@ IECore::MurmurHash ImageWriter::hash( const Context *context ) const
 
 void ImageWriter::execute() const
 {
-	// Set up a context to pass the right colorspace to
-	// `colorSpaceNode()`.
-
-	Context::EditableScope colorSpaceScope( Context::current() );
-	std::string colorSpaceStr = colorSpace();
-	colorSpaceScope.set( "__imageWriter:colorSpace", &colorSpaceStr );
-
 	// Create an OIIO::ImageOutput
 
 	if( !inPlug()->getInput<ImagePlug>() )
@@ -1773,68 +1840,143 @@ void ImageWriter::execute() const
 		throw IECore::Exception( OIIO::geterror() );
 	}
 
-	bool deep = inPlug()->deep();
-	if( deep && !out->supports( "deepdata" ) )
+	struct Part
 	{
-		throw IECore::Exception( boost::str( boost::format( "Deep data is not supported by %s files." ) % out->format_name() ) );
+		const std::string name;
+		std::vector< std::string > views;
+		ImageSpec spec;
+		const Format imageFormat;
+		Imath::Box2i processDataWindow;
+
+		// The Gaffer channels to export in this part ( including a prefix for the view if there are views
+		// defined )
+		std::vector< std::string > channels;
+
+		// The EXR names corresponding to each channel
+		std::vector< std::string > channelNames;
+	};
+
+	std::vector< Part > parts;
+
+	ConstStringVectorDataPtr viewNamesData = inPlug()->viewNames();
+	const std::vector< std::string > &viewNames = viewNamesData->readable();
+
+	if( !viewNames.size() )
+	{
+		throw IECore::Exception( "Nothing to write, there are no views." );
 	}
 
-	// Create an OIIO::ImageSpec describing what we'll write
-	const Format imageFormat = inPlug()->formatPlug()->getValue();
-	const Imath::Box2i dataWindow = inPlug()->dataWindowPlug()->getValue();
-	Imath::Box2i exrDataWindow;
+	bool matchDataWindows = matchDataWindowsPlug()->getValue();
 
-	if( !BufferAlgo::empty( dataWindow ) )
+	std::map< std::string, std::pair< std::string, bool > > colorSpaceByView;
+
+	// Set up a context for setting the view name, and the internal colorspace variable
+	Context::EditableScope executeScope( Context::current() );
+
+	std::string constantColorSpaceStr;
+
+	for( const std::string &viewName : viewNames )
 	{
-		exrDataWindow = imageFormat.toEXRSpace( dataWindow );
-	}
-	else
-	{
-		// Exr doesn't allow images with no pixel, so if the actual data window is empty,
-		// we make one pixel at the origin
-		exrDataWindow = Imath::Box2i( Imath::V2i( 0 ) );
-	}
+		executeScope.set( ImagePlug::viewNameContextName, &viewName );
 
-	const Imath::Box2i exrDisplayWindow = imageFormat.toEXRSpace( imageFormat.getDisplayWindow() );
-
-	ImageSpec spec = createImageSpec( this, out.get(), exrDataWindow, exrDisplayWindow );
-	spec.deep = deep;
-
-	// Decide what channels to write and update the spec with them
-
-	IECore::ConstStringVectorDataPtr channelNamesData = inPlug()->channelNamesPlug()->getValue();
-	const vector<string> &channelNames = channelNamesData->readable();
-	const string channels = channelsPlug()->getValue();
-
-	const bool supportsNChannels = out->supports( "nchannels" );
-	const bool supportsAlpha = out->supports( "alpha" );
-
-	vector<string> channelsToWrite;
-	for( vector<string>::const_iterator it = channelNames.begin(), eIt = channelNames.end(); it != eIt; ++it )
-	{
-		if( !StringAlgo::matchMultiple( *it, channels ) )
+		bool deep = inPlug()->deep();
+		if( deep && !out->supports( "deepdata" ) )
 		{
-			continue;
+			throw IECore::Exception( boost::str( boost::format( "Deep data is not supported by %s files." ) % out->format_name() ) );
 		}
-		if( !supportsNChannels && *it != "R" && *it != "G" && *it != "B" && *it != "A" )
+
+		// Create an OIIO::ImageSpec describing what we'll write
+		const Format imageFormat = inPlug()->formatPlug()->getValue();
+		const Imath::Box2i dataWindow = inPlug()->dataWindowPlug()->getValue();
+		const Imath::Box2i exrDisplayWindow = imageFormat.toEXRSpace( imageFormat.getDisplayWindow() );
+
+		ImageSpec defaultSpec = createImageSpec( this, out.get(), exrDisplayWindow );
+		defaultSpec.deep = deep;
+
+		// Decide what channels to write and update the spec with them
+
+		IECore::ConstStringVectorDataPtr channelNamesData = inPlug()->channelNamesPlug()->getValue();
+		const vector<string> &channelNames = channelNamesData->readable();
+		const string channels = channelsPlug()->getValue();
+
+		const bool supportsNChannels = out->supports( "nchannels" );
+		const bool supportsAlpha = out->supports( "alpha" );
+
+		vector<string> channelsToWrite;
+		for( vector<string>::const_iterator it = channelNames.begin(), eIt = channelNames.end(); it != eIt; ++it )
 		{
-			continue;
+			if( !StringAlgo::matchMultiple( *it, channels ) )
+			{
+				continue;
+			}
+			if( !supportsNChannels && *it != "R" && *it != "G" && *it != "B" && *it != "A" )
+			{
+				continue;
+			}
+			if( !supportsAlpha && *it == "A" )
+			{
+				continue;
+			}
+			channelsToWrite.push_back( *it );
 		}
-		if( !supportsAlpha && *it == "A" )
+
+		if( channelsToWrite.empty() )
 		{
-			continue;
+			throw IECore::Exception( "No channels to write" );
 		}
-		channelsToWrite.push_back( *it );
+
+		// Sort the channel names so that they get written in a consistent order, with the
+		// basic RGBA channels coming first
+		ImageAlgo::sortChannelNames( channelsToWrite );
+
+		for( const string &i : channelsToWrite )
+		{
+			const auto & [ partName, channelName ] = partChannelName( this, viewName, i, viewNames, defaultSpec.deep );
+
+			// Note that `partName = partName` is a hack to get around an issue with capturing from a
+			// structured binding.  GCC allows it, but the C++17 spec doesn't, and it doesn't work in our
+			// Mac compiler.  Once we're on C++20, it is explicitly supported, and we can remove the ` = partName`
+			size_t partIndex = std::distance(
+				parts.begin(),
+				std::find_if( parts.begin(), parts.end(), [partName = partName] (Part const& p) { return p.name == partName; } )
+			);
+
+			if( partIndex >= parts.size() )
+			{
+				parts.push_back( { partName, { viewName }, defaultSpec, imageFormat, dataWindow, {}, {} } );
+			}
+			else
+			{
+				Part &part = parts[partIndex];
+
+				if( std::find( part.views.begin(), part.views.end(), viewName ) == part.views.end() )
+				{
+					if( defaultSpec.deep || part.spec.deep )
+					{
+						throw IECore::Exception( boost::str( boost::format( "Cannot write views \"%s\" and \"%s\" both to same image part when dealing with deep images" ) % part.views.back() % viewName ) );
+					}
+
+					part.views.push_back( viewName );
+				}
+
+				part.processDataWindow.extendBy( dataWindow );
+			}
+
+			parts[ partIndex ].channels.push_back( viewName + "." + i );
+			parts[ partIndex ].channelNames.push_back( channelName );
+			bool hasAlpha = false;
+			if( channelName == "A" )
+			{
+				hasAlpha = true;
+			}
+			colorSpaceByView[ viewName ] = std::make_pair( colorSpace(), hasAlpha );
+		}
 	}
 
-	if( channelsToWrite.empty() )
-	{
-		throw IECore::Exception( "No channels to write" );
-	}
+	// viewNameContext is set to a different value on each loop - don't leave an orphaned context value
+	// with a bad pointer, just in case this context is reused before the next loop
+	executeScope.remove( ImagePlug::viewNameContextName );
 
-	// Sort the channel names so that they get written in a consistent order, with the
-	// basic RGBA channels coming first
-	ImageAlgo::sortChannelNames( channelsToWrite );
 
 	// Create the directory we need and open the file
 
@@ -1844,101 +1986,100 @@ void ImageWriter::execute() const
 		boost::filesystem::create_directories( directory );
 	}
 
-	// Write out the channel data
-
-	const Imath::Box2i extImageDataWindow( Imath::V2i( spec.x, spec.y ), Imath::V2i( spec.x + spec.width - 1, spec.y + spec.height - 1 ) );
-	const Imath::Box2i imageDataWindow( imageFormat.fromEXRSpace( extImageDataWindow ) );
-	const Imath::Box2i processDataWindow( BufferAlgo::intersection( imageDataWindow, dataWindow ) );
-
-	struct Part
-	{
-		std::string name;
-		std::string view;
-		std::vector< std::string > channels;
-		std::vector< std::string > channelNames;
-	};
-
-	std::vector< Part > parts;
-
-	std::string currentView = "";
-
-	for( const string &i : channelsToWrite )
-	{
-		const auto & [ viewName, partName, channelName ] = viewPartChannelName( this, currentView, i );
-
-		// Note that `partName = partName` is a hack to get around an issue with capturing from a
-		// structured binding.  GCC allows it, but the C++17 spec doesn't, and it doesn't work in our
-		// Mac compiler.  Once we're on C++20, it is explicitly supported, and we can remove the ` = partName`
-		size_t partIndex = std::distance(
-			parts.begin(),
-			std::find_if( parts.begin(), parts.end(), [partName = partName] (Part const& p) { return p.name == partName; } )
-		);
-
-		if( partIndex >= parts.size() )
-		{
-			parts.push_back( { partName, viewName, {}, {} } );
-		}
-		else
-		{
-			if( parts[partIndex].view != viewName )
-			{
-				throw IECore::Exception( boost::str( boost::format( "Cannot write views \"%s\" and \"%s\" both to image part \"%s\"" ) % parts[partIndex].view % viewName % partName ) );
-			}
-		}
-
-		parts[ partIndex ].channels.push_back( i );
-		parts[ partIndex ].channelNames.push_back( channelName );
-	}
 
 	if( parts.size() > 1 && !out->supports( "multiimage" ) )
 	{
 		throw IECore::Exception( boost::str( boost::format( "Cannot write multiple parts to this image format: \"%s\"" ) % fileName ) );
 	}
 
-	bool hasAlpha = false;
-	std::vector< ImageSpec > specs;
-	for( const Part &part : parts )
+	if( matchDataWindows )
 	{
-		specs.push_back( spec );
-		if( part.view.size() )
+		// Force all parts for all views to have the same data window by finding the
+		// maximum extent and assigning to everything
+		Box2i maxDataWindow;
+		for( Part &part : parts )
 		{
-			specs.back().attribute("view", part.view );
+			maxDataWindow.extendBy( part.processDataWindow );
 		}
+
+		for( Part &part : parts )
+		{
+			part.processDataWindow = maxDataWindow;
+		}
+	}
+
+	for( Part &part : parts )
+	{
+		if( part.views.size() > 1 )
+		{
+			if( parts.size() > 1 )
+			{
+				throw IECore::Exception( "If you want to write single part multi-view, you must write all channnels to the same part - when writing multi-part files, write different views to different parts" );
+			}
+
+			std::vector< const char* > rawPtrNames;
+			for( const std::string &v : part.views )
+			{
+				if( v != ImagePlug::defaultViewName )
+				{
+					rawPtrNames.push_back( v.c_str() );
+				}
+			}
+
+			part.spec.attribute("multiView", TypeDesc( TypeDesc::STRING, rawPtrNames.size() ), &rawPtrNames[0] );
+		}
+		else if( part.views[0] != ImagePlug::defaultViewName )
+		{
+			part.spec.attribute("view", part.views[0] );
+		}
+
 		if( part.name.size() )
 		{
-			specs.back().attribute("oiio:subimagename", part.name );
+			part.spec.attribute("oiio:subimagename", part.name );
 		}
-		specs.back().nchannels = part.channels.size();
-		specs.back().channelnames.clear();
+
+		part.spec.nchannels = part.channels.size();
+		part.spec.channelnames.clear();
 		for( size_t channelIndex = 0; channelIndex < part.channelNames.size(); channelIndex++ )
 		{
 			const std::string& channelName = part.channelNames[channelIndex];
-			specs.back().channelnames.push_back( channelName );
+			part.spec.channelnames.push_back( channelName );
 			// OIIO has a special attribute for the Alpha and Z channels. If we find some, we should tag them...
 			if( channelName == "A" )
 			{
-				hasAlpha = true;
-				specs.back().alpha_channel = channelIndex;
+				part.spec.alpha_channel = channelIndex;
 			}
 			else if( channelName == "Z" )
 			{
-				specs.back().z_channel = channelIndex;
+				part.spec.z_channel = channelIndex;
 			}
 		}
 
-		setImageSpecFormatChannelOptions( this, &specs.back(), out->format_name() );
-	}
+		setImageSpecFormatChannelOptions( this, &part.spec, out->format_name() );
 
-	const ColorSpace *appropriateColorSpaceNode = hasAlpha ? colorSpaceUnpremultedNode() : colorSpaceNode();
+
+		setImageSpecDataWindow( part.spec, part.processDataWindow, out.get(), part.imageFormat );
+
+	}
 
 	bool success;
 	if( parts.size() > 1 )
 	{
+		// Storing the spec in the Part makes the rest of the code simpler and clearer, but requires
+		// copying the specs into a flat list to pass into open(), so maybe it would be better to store
+		// them as a separate vector?
+		std::vector< ImageSpec > specs;
+		specs.reserve( parts.size() );
+		for( const Part &part : parts )
+		{
+			specs.push_back( part.spec );
+		}
+
 		success = out->open( fileName, specs.size(), &specs[0] );
 	}
 	else
 	{
-		success = out->open( fileName, specs[0] );
+		success = out->open( fileName, parts[0].spec );
 	}
 
 	if( success )
@@ -1950,27 +2091,32 @@ void ImageWriter::execute() const
 		throw IECore::Exception( boost::str( boost::format( "Could not open \"%s\", error = %s" ) % fileName % out->geterror() ) );
 	}
 
-	for( size_t partIndex = 0; partIndex < parts.size(); partIndex++ )
+	for( const Part &part : parts )
 	{
-		if( partIndex != 0 )
+		if( &part != &parts.front() )
 		{
-			out->open( fileName, specs[partIndex], ImageOutput::AppendSubimage );
+			out->open( fileName, part.spec, ImageOutput::AppendSubimage );
 		}
 
-		if( !deep )
+		if( part.views.size() > 1 || matchDataWindows )
 		{
-			TileChannelDataProcessor processor;
+			executeScope.set( "__imageWriter:expandDataWindow", &part.processDataWindow );
+		}
 
-			if ( specs[partIndex].tile_width == 0 )
+		TileChannelDataProcessor channelDataProcessor( colorSpaceByView );
+		if( !part.spec.deep )
+		{
+
+			if ( part.spec.tile_width == 0 )
 			{
-				FlatScanlineWriter flatScanlineWriter( out, fileName, processDataWindow, imageFormat, parts[partIndex].channels );
-				ImageAlgo::parallelGatherTiles( appropriateColorSpaceNode->outPlug(), parts[partIndex].channels, processor, flatScanlineWriter, processDataWindow, ImageAlgo::TopToBottom );
+				FlatScanlineWriter flatScanlineWriter( out, fileName, part.processDataWindow, part.imageFormat, part.channels );
+				ImageAlgo::parallelGatherTiles( colorSpaceNode()->outPlug(), part.channels, channelDataProcessor, flatScanlineWriter, part.processDataWindow, ImageAlgo::TopToBottom );
 				flatScanlineWriter.finish();
 			}
 			else
 			{
-				FlatTileWriter flatTileWriter( out, fileName, processDataWindow, imageFormat, parts[partIndex].channels );
-				ImageAlgo::parallelGatherTiles( appropriateColorSpaceNode->outPlug(), parts[partIndex].channels, processor, flatTileWriter, processDataWindow, ImageAlgo::TopToBottom );
+				FlatTileWriter flatTileWriter( out, fileName, part.processDataWindow, part.imageFormat, part.channels );
+				ImageAlgo::parallelGatherTiles( colorSpaceNode()->outPlug(), part.channels, channelDataProcessor, flatTileWriter, part.processDataWindow, ImageAlgo::TopToBottom );
 				flatTileWriter.finish();
 			}
 
@@ -1980,19 +2126,22 @@ void ImageWriter::execute() const
 			TileSampleOffsetsProcessor sampleOffsetsProcessor;
 
 			SampleOffsetsAccumulator sampleOffsetsAccumulator;
-			ImageAlgo::parallelGatherTiles( appropriateColorSpaceNode->outPlug(), sampleOffsetsProcessor, sampleOffsetsAccumulator, processDataWindow );
-
-			TileChannelDataProcessor channelDataProcessor = TileChannelDataProcessor();
-
-			if( specs[partIndex].tile_width == 0 )
 			{
-				DeepScanlineWriter deepScanlineWriter( out, fileName, processDataWindow, imageFormat, parts[partIndex].channels, sampleOffsetsAccumulator.m_sampleOffsets );
-				ImageAlgo::parallelGatherTiles( appropriateColorSpaceNode->outPlug(), parts[partIndex].channels, channelDataProcessor, deepScanlineWriter, processDataWindow, ImageAlgo::TopToBottom );
+				assert( part.views.size() == 1 ); // We don't allow multiple entries to part.views for deep
+				Context::EditableScope offsetsScope( executeScope.context() );
+				offsetsScope.set( ImagePlug::viewNameContextName, &part.views[0] );
+				ImageAlgo::parallelGatherTiles( colorSpaceNode()->outPlug(), sampleOffsetsProcessor, sampleOffsetsAccumulator, part.processDataWindow );
+			}
+
+			if( part.spec.tile_width == 0 )
+			{
+				DeepScanlineWriter deepScanlineWriter( out, fileName, part.processDataWindow, part.imageFormat, part.channels, sampleOffsetsAccumulator.m_sampleOffsets );
+				ImageAlgo::parallelGatherTiles( colorSpaceNode()->outPlug(), part.channels, channelDataProcessor, deepScanlineWriter, part.processDataWindow, ImageAlgo::TopToBottom );
 			}
 			else
 			{
-				DeepTileWriter deepTileWriter( out, fileName, processDataWindow, imageFormat, parts[partIndex].channels, sampleOffsetsAccumulator.m_sampleOffsets );
-				ImageAlgo::parallelGatherTiles( appropriateColorSpaceNode->outPlug(), parts[partIndex].channels, channelDataProcessor, deepTileWriter, processDataWindow, ImageAlgo::TopToBottom );
+				DeepTileWriter deepTileWriter( out, fileName, part.processDataWindow, part.imageFormat, part.channels, sampleOffsetsAccumulator.m_sampleOffsets );
+				ImageAlgo::parallelGatherTiles( colorSpaceNode()->outPlug(), part.channels, channelDataProcessor, deepTileWriter, part.processDataWindow, ImageAlgo::TopToBottom );
 			}
 		}
 	}

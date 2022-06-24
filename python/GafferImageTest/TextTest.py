@@ -178,7 +178,7 @@ class TextTest( GafferImageTest.ImageTestCase ) :
 		text["out"]["channelNames"].getValue()
 		self.assertFalse( text["out"]["deep"].getValue() )
 
-		c = Gaffer.Context()
+		c = Gaffer.Context( Gaffer.Context.current() )
 		c["image:channelName"] = "R"
 		c["image:tileOrigin"] = imath.V2i( 0 )
 

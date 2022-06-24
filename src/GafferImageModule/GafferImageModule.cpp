@@ -48,6 +48,7 @@
 #include "ImageAlgoBinding.h"
 #include "ImageProcessorBinding.h"
 #include "MetadataBinding.h"
+#include "MultiViewBinding.h"
 #include "OpenColorIOTransformBinding.h"
 #include "ShapeBinding.h"
 #include "TransformBinding.h"
@@ -76,5 +77,6 @@ BOOST_PYTHON_MODULE( _GafferImage )
 	bindImageAlgo();
 	bindBufferAlgo();
 	bindFilterAlgo();
+	bindMultiView();
 
 }

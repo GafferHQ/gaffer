@@ -69,12 +69,20 @@ struct TilesEvaluateFunctor
 void processTiles( const GafferImage::ImagePlug *imagePlug )
 {
 	TilesEvaluateFunctor f;
-	ImageAlgo::parallelProcessTiles(
-		imagePlug, imagePlug->channelNamesPlug()->getValue()->readable(),
-		f,
-		imagePlug->dataWindowPlug()->getValue(),
-		ImageAlgo::TopToBottom
-	);
+
+	IECore::ConstStringVectorDataPtr viewNames = imagePlug->viewNames();
+	ImagePlug::ViewScope viewScope( Context::current() );
+
+	for( const std::string &viewName : viewNames->readable() )
+	{
+		viewScope.setViewName( &viewName );
+		ImageAlgo::parallelProcessTiles(
+			imagePlug, imagePlug->channelNamesPlug()->getValue()->readable(),
+			f,
+			imagePlug->dataWindowPlug()->getValue(),
+			ImageAlgo::TopToBottom
+		);
+	}
 }
 
 void processTilesOnDirty( const Gaffer::Plug *dirtiedPlug, ConstImagePlugPtr image )

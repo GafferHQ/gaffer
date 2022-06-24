@@ -69,10 +69,10 @@ enum TypeId
 	CatalogueImageTypeId = 110773,
 	CheckerboardTypeId = 110774,
 	FlatImageSourceTypeId = 110775,
-	BSplineFilterTypeId = 110776, // Obsolete - available for reuse
-	HermiteFilterTypeId = 110777, // Obsolete - available for reuse
-	CubicFilterTypeId = 110778, // Obsolete - available for reuse
-	MitchellFilterTypeId = 110779, // Obsolete - available for reuse
+	CreateViewsTypeId = 110776,
+	SelectViewTypeId = 110777,
+	DeleteViewsTypeId = 110778,
+	CopyViewsTypeId = 110779,
 	CatmullRomFilterTypeId = 110780, // Obsolete - available for reuse
 	SincFilterTypeId = 110781, // Obsolete - available for reuse
 	LanczosFilterTypeId = 110782, // Obsolete - available for reuse

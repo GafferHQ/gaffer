@@ -60,9 +60,15 @@ def __scriptAdded( container, script ) :
 		projectName = variables.addChild( Gaffer.NameValuePlug( "project:name", IECore.StringData( "default" ), "projectName", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 	if "projectRootDirectory" not in variables :
 		projectRoot = variables.addChild( Gaffer.NameValuePlug( "project:rootDirectory", IECore.StringData( "$HOME/gaffer/projects/${project:name}" ), "projectRootDirectory", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+	if "defaultViewName" not in variables :
+		variables.addChild( Gaffer.NameValuePlug( "image:viewName", IECore.StringData( "default" ), "defaultViewName", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+
 
 	Gaffer.MetadataAlgo.setReadOnly( variables["projectName"]["name"], True )
 	Gaffer.MetadataAlgo.setReadOnly( variables["projectRootDirectory"]["name"], True )
+	Gaffer.MetadataAlgo.setReadOnly( variables["defaultViewName"]["name"], True )
+	Gaffer.MetadataAlgo.setReadOnly( variables["defaultViewName"]["value"], True )
+	Gaffer.Metadata.registerValue( variables["defaultViewName"], "layout:visibilityActivator", False )
 
 	GafferImage.FormatPlug.acquireDefaultFormatPlug( script )
 
