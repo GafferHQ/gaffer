@@ -54,11 +54,15 @@ class BleedFill( GafferImage.ImageProcessor ) :
 		self.addChild( Gaffer.IntPlug( "__blurIterations" ) )
 		self['__blurIterations'].setFlags(Gaffer.Plug.Flags.Serialisable, False)
 
+		self['__formatQuery'] = GafferImage.FormatQuery()
+		self['__formatQuery']["image"].setInput( self["in"] )
+		self['__formatQuery']["view"].setValue( "default" )
+
 		self["__blurIterationsExpression"] = Gaffer.Expression()
 		self["__blurIterationsExpression"].setExpression( inspect.cleandoc(
 			"""
 			import math
-			f = parent["in"]["format"]
+			f = parent["__formatQuery"]["format"]
 			parent["__blurIterations"] = int( math.log( min( f.width(), f.height() ), 2 ) )
 			"""
 		), "python" )
@@ -67,7 +71,7 @@ class BleedFill( GafferImage.ImageProcessor ) :
 		self["__displayWindowConstant"]["color"].setValue( imath.Color4f( 0, 0, 0, 0 ) )
 
 		self["__displayWindowExpression"] = Gaffer.Expression()
-		self["__displayWindowExpression"].setExpression( 'parent["__displayWindowConstant"]["format"] = parent["in"]["format"]', "python" )
+		self["__displayWindowExpression"].setExpression( 'parent["__displayWindowConstant"]["format"] = parent["__formatQuery"]["format"]', "python" )
 
 		self["__expandMerge"] = GafferImage.Merge()
 		self["__expandMerge"]["in"][0].setInput( self["in"] )
@@ -95,7 +99,7 @@ class BleedFill( GafferImage.ImageProcessor ) :
 			import GafferImage
 			import IECore
 
-			f = parent["in"]["format"]
+			f = parent["__formatQuery"]["format"]
 
 			divisor = 2 <<  context.get("loop:index", 0)
 
@@ -144,7 +148,7 @@ class BleedFill( GafferImage.ImageProcessor ) :
 			import GafferImage
 			import IECore
 
-			f = parent["in"]["format"]
+			f = parent["__formatQuery"]["format"]
 
 			divisor = 1 <<  (  parent["__blurIterations"] - context.get("loop:index", 0) )
 
