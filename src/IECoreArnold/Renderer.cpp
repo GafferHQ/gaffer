@@ -2233,7 +2233,10 @@ class ArnoldObjectBase : public IECoreScenePreview::Renderer::ObjectInterface
 				/// \todo Ideally we might use the built-in `id` parameter here, rather
 				/// than make our own. But Arnold's `user_data_int` shader can't query
 				/// it for some reason.
-				if( AiNodeDeclare( node, g_cortexIDArnoldString, "constant UINT" ) )
+				if(
+					AiNodeLookUpUserParameter( node, g_cortexIDArnoldString ) ||
+					AiNodeDeclare( node, g_cortexIDArnoldString, "constant UINT" )
+				)
 				{
 					AiNodeSetUInt( node, g_cortexIDArnoldString, id );
 				}

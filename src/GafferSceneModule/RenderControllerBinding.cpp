@@ -141,9 +141,9 @@ object pathForID( RenderController &r, uint32_t id )
 	return object();
 }
 
-IECore::UIntVectorDataPtr idsForPaths( RenderController &r, const IECore::PathMatcher &paths )
+IECore::UIntVectorDataPtr idsForPaths( RenderController &r, const IECore::PathMatcher &paths, bool createIfNecessary )
 {
-	return new IECore::UIntVectorData( r.idsForPaths( paths ) );
+	return new IECore::UIntVectorData( r.idsForPaths( paths, createIfNecessary ) );
 }
 
 } // namespace
@@ -168,8 +168,8 @@ void GafferSceneModule::bindRenderController()
 		.def( "updateInBackground", &updateInBackground, ( arg( "callback" ) = object(), arg( "priorityPaths" ) = IECore::PathMatcher() ) )
 		.def( "pathForID", &pathForID )
 		.def( "pathsForIDs", &RenderController::pathsForIDs )
-		.def( "idForPath", &RenderController::idForPath )
-		.def( "idsForPaths", &idsForPaths )
+		.def( "idForPath", &RenderController::idForPath, ( arg( "path" ), arg( "createIfNecessary" ) = false ) )
+		.def( "idsForPaths", &idsForPaths, ( arg( "paths" ), arg( "createIfNecessary" ) = false ) )
 	;
 
 	SignalClass<RenderController::UpdateRequiredSignal>( "UpdateRequiredSignal" );

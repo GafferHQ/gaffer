@@ -3641,6 +3641,32 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertIsInstance( data, IECore.UIntVectorData )
 		self.assertEqual( data[len(data)//2], 101 )
 
+	def testReplaceID( self ) :
+
+		mh = IECore.CapturingMessageHandler()
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+			messageHandler = mh
+		)
+
+		o = r.object(
+			"/sphere",
+			IECoreScene.SpherePrimitive(),
+			r.attributes( IECore.CompoundObject() )
+		)
+		o.assignID( 1 )
+		o.assignID( 2 )
+
+		universe = ctypes.cast( r.command( "ai:queryUniverse", {} ), ctypes.POINTER( arnold.AtUniverse ) )
+		node = arnold.AiNodeLookUpByName( universe, "/sphere" )
+		self.assertEqual( arnold.AiNodeGetUInt( node, "cortex:id" ), 2 )
+
+		del o
+		del r
+
+		self.assertEqual( len( mh.messages ), 0 )
+
 	def testOutputLayerNames( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
