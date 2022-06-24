@@ -14,6 +14,7 @@ Features
     - SelectView : For choosing one view from a multi-view image as a single view image.
     - CopyViews : For combining views from multi-view sources.
     - DeleteViews : For removing views from multi-view images.
+    - Anaglyph : For viewing stereo images in a format appropriate for red-blue anaglyph glasses.
   - A new dropdown menu in the Viewer chooses which view is being displayed.
 - ContextQuery : Added node to access a context variable value directly without needing to use an expression.
 

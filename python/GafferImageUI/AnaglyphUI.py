@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2022, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,22 +34,19 @@
 #
 ##########################################################################
 
-__import__( "IECoreImage" )
-__import__( "Gaffer" )
-__import__( "GafferDispatch" )
+import Gaffer
+import GafferImage
 
-def __setupEnvironment() :
+Gaffer.Metadata.registerNode(
 
-	import os
-	if "OCIO" not in os.environ :
-		os.environ["OCIO"] = os.path.expandvars( "$GAFFER_ROOT/openColorIO/config.ocio" )
+	GafferImage.Anaglyph,
 
-__setupEnvironment()
+	"description",
+	"""
+	Converts a multi-view image with "left" and "right" views
+	into a single view image with the two views combined in
+	different colors, suitable for viewing through red-blue
+	anaglyph glasses.
+	""",
 
-from ._GafferImage import *
-from .CatalogueSelect import CatalogueSelect
-from .BleedFill import BleedFill
-from .DeepTidy import DeepTidy
-from .Anaglyph import Anaglyph
-
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferImage" )
+)

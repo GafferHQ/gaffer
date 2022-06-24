@@ -421,6 +421,7 @@ nodeMenu.append( "/Image/MultiView/Create Views", GafferImage.CreateViews, searc
 nodeMenu.append( "/Image/MultiView/Select View", GafferImage.SelectView, searchText = "SelectView" )
 nodeMenu.append( "/Image/MultiView/Delete Views", GafferImage.DeleteViews, searchText = "DeleteViews" )
 nodeMenu.append( "/Image/MultiView/Copy Views", GafferImage.CopyViews, searchText = "CopyViews" )
+nodeMenu.append( "/Image/MultiView/Anaglyph", GafferImage.Anaglyph, searchText = "Anaglyph" )
 
 # OSL nodes
 
