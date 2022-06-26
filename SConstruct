@@ -299,6 +299,14 @@ options.Add(
 )
 
 options.Add(
+	BoolVariable(
+		"GAFFERUSD",
+		"Builds and installs the GafferUSD modules.",
+		True
+	)
+)
+
+options.Add(
 	"ENV_VARS_TO_IMPORT",
 	"By default SCons ignores the environment it is run in, to avoid it contaminating the "
 	"build process. This can be problematic if some of the environment is critical for "
@@ -1096,13 +1104,20 @@ libraries = {
 		},
 		# USD's Python bindings are intrusive to the main library.
 		"libraryDependsOnPython" : True,
+		"requiredOptions" : [ "GAFFERUSD" ],
 	},
 
-	"GafferUSDTest" : {},
+	"GafferUSDTest" : {
+		"requiredOptions" : [ "GAFFERUSD" ],
+	},
 
-	"GafferUSDUI" : {},
+	"GafferUSDUI" : {
+		"requiredOptions" : [ "GAFFERUSD" ],
+	},
 
-	"GafferUSDUITest" : {},
+	"GafferUSDUITest" : {
+		"requiredOptions" : [ "GAFFERUSD" ],
+	},
 
 	"GafferVDB" : {
 		"envAppends" : {
