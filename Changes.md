@@ -264,6 +264,7 @@ Fixes
 
 - SelectionTool : Fixed bug where the drawing mode overrides (Wireframe, Solid and Points) were ignored when selecting objects. This could cause a wireframe (or invisible) object to be selected instead of the visible object behind it.
 - StringPlug : Fixed crashes caused by incoming connections from StringVectorDataPlugs.
+- SceneViewInspector : Fixed bug where a non-existent location's parameters were being inspected. This caused `Invalid child name` errors, typically when switching focus to a node where the currently selected locations didn't exist.
 
 API
 ---
