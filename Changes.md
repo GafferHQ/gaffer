@@ -1,3 +1,13 @@
+0.61.x.x (relative to 0.61.13.1)
+=========
+
+Fixes
+-----
+
+- ShaderQuery :
+  - Fixed bug when attempting to browse shader parameters for a non-existent location.
+  - Fixed bug when attempting to use the context menu to set the name of the shader to query for a non-existent location.
+
 0.61.13.1 (relative to 0.61.13.0)
 =========
 
