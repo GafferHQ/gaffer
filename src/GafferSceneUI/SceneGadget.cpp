@@ -754,17 +754,17 @@ void SceneGadget::renderLayer( Layer layer, const GafferUI::Style *style, Render
 		return;
 	}
 
-	if( m_updateErrored )
-	{
-		return;
-	}
-
 	if( isSelectionRender( reason ) )
 	{
 		return;
 	}
 
 	const_cast<SceneGadget *>( this )->updateRenderer();
+	if( m_updateErrored )
+	{
+		return;
+	}
+
 	if( m_outputBuffer )
 	{
 		m_outputBuffer->render();
