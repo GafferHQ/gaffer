@@ -319,7 +319,6 @@ LOCATE_DEPENDENCY_LIBPATH = [
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "qt", qtVersion, IEEnv.platform(), compiler, compilerVersion, "lib" ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "PySide", pysideVersion, "qt" + qtVersion, "python" + pythonVersion, IEEnv.platform(), compiler, compilerVersion, "lib" ),
 	os.path.join( OSLHOME, "lib64" ),
-	os.path.join( IEEnv.Environment.rootPath(), "apps", "usd", usdVersion, IEEnv.platform(), compiler, compilerVersion, "cortex", cortexCompatibilityVersion, "lib" ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "Alembic", alembicVersion, IEEnv.platform(), compiler, compilerVersion, "lib" ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenVDB", vdbVersion, IEEnv.platform(), compiler, compilerVersion, "lib" ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenVDB", vdbVersion, IEEnv.platform(), compiler, compilerVersion, "python", "lib", "python{0}".format( pythonVersion ) ),
@@ -409,6 +408,57 @@ if getOption( "RELEASE", "0" )=="0" :
 			0,
 			os.path.join( os.path.expanduser( "~" ), "apps", "cortex", cortexVersion, IEEnv.platform(), targetApp, targetAppMajorVersion, "lib" ),
 		)
+
+##########################################################################
+# USD
+##########################################################################
+
+# base values
+if distutils.version.LooseVersion( usdVersion ) < distutils.version.LooseVersion( "21" ) :
+	usdLibPath = os.path.join( IEEnv.Environment.rootPath(), "apps", "usd", usdVersion, IEEnv.platform(), compiler, compilerVersion, "cortex", cortexCompatibilityVersion, "lib" )
+	usdIncludePath = os.path.join( IEEnv.Environment.rootPath(), "apps", "usd", usdVersion, IEEnv.platform(), compiler, compilerVersion, "cortex", cortexCompatibilityVersion, "include" )
+
+else :
+	usdLibPath = os.path.join( IEEnv.Environment.rootPath(), "apps", "usd", usdVersion, IEEnv.platform(), compiler, compilerVersion, "python", pythonVersion, "cortex", cortexCompatibilityVersion, "lib" )
+	usdIncludePath = os.path.join( IEEnv.Environment.rootPath(), "apps", "usd", usdVersion, IEEnv.platform(), compiler, compilerVersion, "python", pythonVersion, "cortex", cortexCompatibilityVersion, "include" )
+
+# targetApp-specific values
+if targetApp == "maya" :
+	mayaUsdVersion = targetAppReg.get( "mayaUsdVersion" )
+	mayaUsdReg = IEEnv.registry["apps"]["mayaUsd"].get( mayaUsdVersion, {} ).get( IEEnv.platform() )
+	if mayaUsdReg :
+		pluginUsdVersion = mayaUsdReg["usdVersion"]
+		# Pixar introduced a library prefix `usd_` in USD v21.11, which Autodesk does not use yet, so we have to reset the prefix.
+		# See https://github.com/Autodesk/maya-usd/issues/2108 for reference
+		if mayaUsdReg.get( "usdLibPrefix" ) is not None :
+			USD_LIB_PREFIX = mayaUsdReg[ "usdLibPrefix" ]
+
+		mayaLooseVersion = distutils.version.LooseVersion( targetAppVersion )
+		mayaPythonMajorVersion = ""
+		if mayaLooseVersion >= "2022" and mayaLooseVersion < "2023" :
+			# Maya 2022 installs the USD libs and the maya plugin itself for python 2 and 3. This is not the case for the 2020 version
+			# We make the assumption, that the python version suffix is for Maya 2022 only, because Maya 2023 will be python 3 exclusively.
+			mayaPythonMajorVersion = targetAppReg["pythonVersion"].split(".")[0]
+
+		mayaMajorVersion = targetAppVersion.split(".")[0]
+		usdIncludePath = os.path.join( mayaUsdReg["location"], mayaMajorVersion, "mayausd", "USD{}".format( mayaPythonMajorVersion ), "include" )
+		usdLibPath = os.path.join( mayaUsdReg["location"], mayaMajorVersion, "mayausd", "USD{}".format( mayaPythonMajorVersion ), "lib" )
+
+elif targetApp in ( "houdini", "nuke" ) :
+	# Both nuke and houdini provide USD in their distribution.
+	# However, nuke doesn't provide includes, and the libs don't have python support, which prevents us from using them.
+	# And houdini has a mangled boost install which includes an "h" prefix which also messes up the GafferUSD build
+	# apparently because their USD includes have references to that mangled boost, which are needed by GafferUSD.
+	# As such, we are disabling GafferUSD build for those applications until we know we need to support that feature
+	# inside those dccs.
+	GAFFERUSD = False
+
+# We insert the include at the start because USD 20.11 defines a HALF_DIG macro that is also defined elsewhere and was raising a warning otherwise
+if usdIncludePath:
+	LOCATE_DEPENDENCY_SYSTEMPATH.insert(0, usdIncludePath)
+
+if usdLibPath:
+	LOCATE_DEPENDENCY_LIBPATH.insert(0, usdLibPath)
 
 ##########################################################################
 # get compiler and other build tools set up

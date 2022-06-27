@@ -263,6 +263,12 @@ Fixes
 -----
 
 - SelectionTool : Fixed bug where the drawing mode overrides (Wireframe, Solid and Points) were ignored when selecting objects. This could cause a wireframe (or invisible) object to be selected instead of the visible object behind it.
+- StringPlug : Fixed crashes caused by incoming connections from StringVectorDataPlugs.
+
+API
+---
+
+- StringPlug : Deprecated `precomputedHash` argument to `getValue()` method.
 
 0.61.13.0 (relative to 0.61.12.0)
 =========

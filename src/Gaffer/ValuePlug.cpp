@@ -540,7 +540,13 @@ struct ComputeProcessKey
 	{
 		if( m_hash == g_nullHash )
 		{
-			m_hash = plug->hash();
+			// Note : We call `plug->ValuePlug::hash()` rather than
+			// `plug->hash()` because we only want to represent the result of
+			// the private `getValueInternal()` method. Overrides such as
+			// `StringPlug::hash()` account for additional processing (such as
+			// substitutions) performed in public `getValue()` methods _after_
+			// calling `getValueInternal()`.
+			m_hash = plug->ValuePlug::hash();
 		}
 		return m_hash;
 	}
