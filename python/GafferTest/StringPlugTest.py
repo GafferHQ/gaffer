@@ -379,7 +379,7 @@ class StringPlugTest( GafferTest.TestCase ) :
 
 	def testStringVectorDataInput( self ) :
 
-		node = Gaffer.Node()
+		node = Gaffer.ComputeNode()
 		node["user"]["string"] = Gaffer.StringPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		node["user"]["stringVector"] = Gaffer.StringVectorDataPlug( defaultValue = IECore.StringVectorData(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
@@ -402,6 +402,36 @@ class StringPlugTest( GafferTest.TestCase ) :
 			hashes.add( h )
 
 			self.assertEqual( node["user"]["string"].getValue(), output )
+
+	def testStringVectorDataConversionCachedOnce( self ) :
+
+		# StringVectorDataPlug driving StringPlug, with a variable
+		# substitution in the value.
+
+		node = Gaffer.ComputeNode()
+		node["user"]["string"] = Gaffer.StringPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		node["user"]["stringVector"] = Gaffer.StringVectorDataPlug( defaultValue = IECore.StringVectorData( [ "${test}" ] ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		node["user"]["string"].setInput( node["user"]["stringVector"] )
+
+		# The conversion from StringVectorData to StringData is performed once and
+		# cached. It doesn't depend on the context because the variable substitutions
+		# are performed later in `StringPlug.getValue()`. Assert this by checking that
+		# cache memory usage doesn't grow after the first call.
+		cacheUsage = None
+		hashes = set()
+		with Gaffer.Context() as context :
+			for v in [ "cat", "dog", "fish" ] :
+				context["test"] = v
+				node["user"]["string"].getValue()
+				if cacheUsage is None :
+					cacheUsage = Gaffer.ValuePlug.cacheMemoryUsage()
+				else :
+					self.assertEqual( Gaffer.ValuePlug.cacheMemoryUsage(), cacheUsage )
+				hashes.add( node["user"]["string"].hash() )
+
+		# We do expect a different result from `StringPlug.hash()` for each context though,
+		# because the hash accounts for the substitutions.
+		self.assertEqual( len( hashes ), 3 )
 
 if __name__ == "__main__":
 	unittest.main()
