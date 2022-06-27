@@ -107,8 +107,10 @@ class ImageTestCase( GafferTest.TestCase ) :
 				context["image:viewName"] = view
 
 				self.assertEqual( imageA["format"].getValue(), imageB["format"].getValue() )
+				dataWindowA = imageA["dataWindow"].getValue()
+				dataWindowB = imageB["dataWindow"].getValue()
 				if not ignoreDataWindow :
-					self.assertEqual( imageA["dataWindow"].getValue(), imageB["dataWindow"].getValue() )
+					self.assertEqual( dataWindowA, dataWindowB )
 				if not ignoreMetadata :
 					# Converting to dict allows us to remove some items, and also gives a more informative
 					# exception if they don't match, since assertEqual has a special case for dicts
@@ -135,10 +137,12 @@ class ImageTestCase( GafferTest.TestCase ) :
 					difference["in"][1].setInput( imageB )
 					difference["operation"].setValue( GafferImage.Merge.Operation.Difference )
 
+					unionDataWindow = imath.Box2i( dataWindowA )
+					unionDataWindow.extendBy( dataWindowB )
 					stats = GafferImage.ImageStats()
 					stats["view"].setValue( view )
 					stats["in"].setInput( difference["out"] )
-					stats["area"].setValue( imageA["dataWindow"].getValue() )
+					stats["area"].setValue( unionDataWindow )
 
 					for channelName in imageA["channelNames"].getValue() :
 
