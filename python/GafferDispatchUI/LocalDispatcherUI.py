@@ -218,7 +218,7 @@ class _LocalJobsWindow( GafferUI.Window ) :
 						GafferUI.PathListingWidget.StandardColumn( "CPU", "localDispatcher:cpu" ),
 						GafferUI.PathListingWidget.StandardColumn( "Memory", "localDispatcher:memory" ),
 					),
-					allowMultipleSelection=True
+					selectionMode = GafferUI.PathListingWidget.SelectionMode.Rows,
 				)
 				self.__jobListingWidget._qtWidget().header().setSortIndicator( 1, QtCore.Qt.AscendingOrder )
 				self.__jobListingWidget.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__jobSelectionChanged ), scoped = False )

@@ -27,6 +27,12 @@ Improvements
 - Light Editor : Added support for editing visualisation attributes of lights.
 - CameraTweaks : Added `Create` mode. This should be used in preference to `Replace` mode when the parameter may not exist.
 - PathFilter : Added the ability to select scene locations from currently selected filter entries.
+- PathListingWidget :
+  - Added an option to `selectionMode` allowing single and multiple cell selections.
+  - Added the ability to select cells in different columns with the left <kbd>&larr;</kbd> and right <kbd>&rarr;</kbd> keys.
+  - Added the ability to drag from a cell and drop that cell's value on an appropriate target.
+  - Improved the range selection behavior when using <kbd>Shift</kbd> + arrow keys. It now selects cells in a similar way to <kbd>Shift</kbd> + Click.
+- Light Editor : Added the ability to edit multiple values at one time. With multiple cells selected, pressing <kbd>Return</kbd> or <kbd>Enter</kbd> will open a popup to edit the values for all cells.
 
 Fixes
 -----
@@ -44,6 +50,9 @@ API
 - EditScopeAlgo : Added support for editing attributes.
 - TweakPlug : Added `Create` mode.
 - VectorDataWidget : Added `dataMenuSignal` for constructing the context menu. Classes can add their own slots to this signal to modify the context menu. Derived classes should use it in favor of `_contextMenuDefinition()`.
+- PathListingWidget :
+  - Deprecated `allowMultipleSelection` constructor argument. Use `selectionMode` argument instead.
+  - `setSelection` and `getSelection` can now accept either a single `PathMatcher` that represents the selection for all columns, or a list of `PathMatcher` objects, one for each column. If `selectionMode` is `Row` or `Rows`, `getSelection` returns a single `PatchMatcher` for backwards compatibility.
 
 0.61.12.0 (relative to 0.61.11.0)
 =========

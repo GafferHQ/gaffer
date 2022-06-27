@@ -387,6 +387,11 @@ class PathModel : public QAbstractItemModel
 			disconnectColumnChanged();
 		}
 
+		// Selection is stored as a single `IECore::PathMatcher` per column, allowing
+		// per-cell selections. An empty selection is represented by a vector of empty
+		// `PathMatcher()` equal in size to the number of columns.
+		typedef std::vector<IECore::PathMatcher> Selection;
+
 		///////////////////////////////////////////////////////////////////
 		// Our public methods - these don't mean anything to Qt
 		///////////////////////////////////////////////////////////////////
@@ -409,6 +414,15 @@ class PathModel : public QAbstractItemModel
 				c->changedSignal().connect( boost::bind( &PathModel::columnChanged, this ) );
 			}
 
+			IECore::PathMatcher rowSelection;
+			if( m_selection.size() > 0 )
+			{
+				rowSelection = IECore::PathMatcher( m_selection[0] );
+			}
+
+			setSelection( Selection( columns.size(), IECore::PathMatcher() ) );
+			m_selection[0] = rowSelection;
+
 			m_rootItem = new Item( IECore::InternedString(), nullptr );
 			endResetModel();
 		}
@@ -429,7 +443,7 @@ class PathModel : public QAbstractItemModel
 			{
 				// We're changing directory. Our current selection won't make sense
 				// relative to the new directory, so we clear it.
-				setSelection( IECore::PathMatcher() );
+				setSelection( Selection( getColumns().size(), IECore::PathMatcher() ) );
 			}
 
 			// Cancel update and flush edit queue before we dirty
@@ -485,25 +499,35 @@ class PathModel : public QAbstractItemModel
 			return m_expandedPaths;
 		}
 
-		// See comments for `setExpansion()`. The PathMatcher is our source of
+		// See comments for `setExpansion()`. The PathMatcher vector is our source of
 		// truth, and we don't even use the QItemSelectionModel.
-		void setSelection( const IECore::PathMatcher &selectedPaths, bool scrollToFirst = true, bool expandNonLeaf = true )
+		void setSelection( const Selection &selectedPaths, bool scrollToFirst = true, bool expandNonLeaf = true )
 		{
 			cancelUpdate();
 
 			m_expandNonLeafSelection = expandNonLeaf;
+
+			IECore::PathMatcher mergedPaths;
+			for( auto &p : selectedPaths )
+			{
+				mergedPaths.addPaths( p );
+			}
+
 			if( scrollToFirst )
 			{
 				// Only scroll to previously unselected paths.
-				m_scrollToCandidates = selectedPaths;
+				m_scrollToCandidates = mergedPaths;
 				m_scrollToCandidates->removePaths( m_selectedPaths );
 			}
 			else
 			{
 				m_scrollToCandidates.reset();
 			}
+
+			m_selectedPaths = mergedPaths;
+
 			// Copy, so can't be modified without `setSelection()` call.
-			m_selectedPaths = IECore::PathMatcher( selectedPaths );
+			m_selection = Selection( selectedPaths );
 
 			if( m_expandNonLeafSelection || m_scrollToCandidates )
 			{
@@ -514,9 +538,9 @@ class PathModel : public QAbstractItemModel
 			selectionChanged();
 		}
 
-		const IECore::PathMatcher &getSelection() const
+		const Selection &getSelection() const
 		{
-			return m_selectedPaths;
+			return m_selection;
 		}
 
 		void attachTester()
@@ -664,7 +688,12 @@ class PathModel : public QAbstractItemModel
 			{
 				// We use the user role for communicating the
 				// selection state to the drawing code.
-				return m_selectedPaths.match( namesForIndex( index ) );
+				const int c = index.column();
+				if( (int)m_selection.size() > c )
+				{
+					return m_selection[c].match( namesForIndex( index ) );
+				}
+				return false;
 			}
 
 			Item *item = static_cast<Item *>( index.internalPointer() );
@@ -1685,6 +1714,10 @@ class PathModel : public QAbstractItemModel
 		bool m_modifyingTreeViewExpansion;
 		boost::optional<Path::Names> m_recursiveExpansionPath;
 
+		// A vector of `IECore::PathMatcher` objects, one for each column
+		Selection m_selection;
+		// All of the `PathMatchers` from `m_selection` merged into one
+		// to avoid merging every time paths are expanded.
 		IECore::PathMatcher m_selectedPaths;
 		// Parameters used to control expansion update following call to
 		// `setSelection()`.
@@ -1761,20 +1794,38 @@ IECore::PathMatcher getExpansion( uint64_t treeViewAddress )
 	return model ? model->getExpansion() : IECore::PathMatcher();
 }
 
-void setSelection( uint64_t treeViewAddress, const IECore::PathMatcher &paths, bool scrollToFirst, bool expandNonLeaf )
+void setSelection( uint64_t treeViewAddress, object paths, bool scrollToFirst, bool expandNonLeaf )
 {
 	IECorePython::ScopedGILRelease gilRelease;
 
 	QTreeView *treeView = reinterpret_cast<QTreeView *>( treeViewAddress );
 	PathModel *model = dynamic_cast<PathModel *>( treeView->model() );
-	model->setSelection( paths, scrollToFirst, expandNonLeaf );
+
+	list pythonPaths = extract<list>( paths );
+	PathModel::Selection selection;
+	for( ssize_t i = 0, e = boost::python::len( pythonPaths ); i < e; ++i )
+	{
+		const IECore::PathMatcher &p = extract<const IECore::PathMatcher &>( pythonPaths[i] );
+		selection.push_back( p );
+	}
+
+	model->setSelection( selection, scrollToFirst, expandNonLeaf );
 }
 
-IECore::PathMatcher getSelection( uint64_t treeViewAddress )
+list getSelection( uint64_t treeViewAddress )
 {
 	QTreeView *treeView = reinterpret_cast<QTreeView *>( treeViewAddress );
 	PathModel *model = dynamic_cast<PathModel *>( treeView->model() );
-	return model->getSelection();
+
+	list result;
+
+	PathModel::Selection selection = model->getSelection();
+	for( auto &p : selection )
+	{
+		result.append( p );
+	}
+
+	return result;
 }
 
 PathPtr pathForIndex( uint64_t treeViewAddress, uint64_t modelIndexAddress )

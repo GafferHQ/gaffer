@@ -104,7 +104,7 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 			self.__pathListing = GafferUI.PathListingWidget(
 				Gaffer.DictPath( {}, "/" ), # Temp till we make a ScenePath
 				columns = [ _GafferSceneUI._LightEditorLocationNameColumn() ],
-				allowMultipleSelection = True,
+				selectionMode = GafferUI.PathListingWidget.SelectionMode.Cells,
 				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
 			)
 			self.__pathListing.setDragPointer( "objects" )
@@ -113,6 +113,7 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 				Gaffer.WeakMethod( self.__selectionChanged )
 			)
 			self.__pathListing.buttonDoubleClickSignal().connect( 0, Gaffer.WeakMethod( self.__buttonDoubleClick ), scoped = False )
+			self.__pathListing.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
 
 		self.__settingsNode.plugSetSignal().connect( Gaffer.WeakMethod( self.__settingsPlugSet ), scoped = False )
 
@@ -269,7 +270,7 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 		assert( pathListing is self.__pathListing )
 
 		with Gaffer.BlockedConnection( self._contextChangedConnection() ) :
-			ContextAlgo.setSelectedPaths( self.getContext(), pathListing.getSelection() )
+			ContextAlgo.setSelectedPaths( self.getContext(), pathListing.getSelection()[0] )
 
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
 	def __transferSelectionFromContext( self ) :
@@ -318,6 +319,57 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 			self.__popup.popup()
 
 		return True
+
+	def __keyPress( self, pathListing, event ) :
+
+		if event.key == "Return" or event.key == "Enter" :
+
+			selection = pathListing.getSelection()
+			columns = pathListing.getColumns()
+
+			inspections = []
+
+			with Gaffer.Context( self.getContext() ) as context :
+				for i in range( 0, len( columns ) ) :
+					column = columns[ i ]
+					if not isinstance( column, _GafferSceneUI._LightEditorInspectorColumn ) :
+						continue
+					for path in selection[i].paths() :
+						context["scene:path"] = GafferScene.ScenePlug.stringToPath( path )
+						inspection = column.inspector().inspect()
+
+						if inspection is not None :
+							inspections.append( inspection )
+
+			nonEditable = [ i for i in inspections if not i.editable() ]
+
+			if len( nonEditable ) == 0 :
+				edits = [ i.acquireEdit() for i in inspections ]
+				warnings = "\n".join( [ i.editWarning() for i in inspections if i.editWarning() != "" ] )
+
+				self.__popup = GafferUI.PlugPopup( edits, warning = warnings )
+
+				if isinstance( self.__popup.plugValueWidget(), GafferSceneUI.TweakPlugValueWidget ) :
+					self.__popup.plugValueWidget().setNameVisible( False )
+
+				self.__popup.popup()
+			else :
+
+				# See todo in `PlugPopup._PopupWindow`
+				PopupWindow = GafferUI.PlugPopup.__bases__[0]
+
+				with PopupWindow() as self.__popup :
+					with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+						GafferUI.Image( "warningSmall.png" )
+						GafferUI.Label( "<h4>{}</h4>".format( nonEditable[0].nonEditableReason() ) )
+
+				self.__popup.popup()
+
+			return True
+
+		return False
+
+
 
 GafferUI.Editor.registerType( "LightEditor", LightEditor )
 
