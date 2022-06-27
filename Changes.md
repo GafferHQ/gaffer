@@ -34,6 +34,8 @@ Fixes
 - Viewer :
   - Fixed loss of selection when switching from OpenGL to Arnold renderer. [^1]
   - Fixed `cannot declare constant UINT cortex:id` errors. [^1]
+  - Fixed crashes when edits made by the TransformTools affected additional objects in the scene (either through constraints or edits to an ancestor of the selection). [^1]
+  - Fixed crashes when making interactive edits to the contents of capsules. [^1]
 
 API
 ---

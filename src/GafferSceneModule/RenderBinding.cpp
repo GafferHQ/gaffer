@@ -224,30 +224,40 @@ class ProceduralWrapper : public IECorePython::RunTimeTypedWrapper<IECoreScenePr
 		Imath::Box3f bound() const final
 		{
 			IECorePython::ScopedGILLock gilLock;
-			boost::python::object f = this->methodOverride( "bound" );
-			if( f )
+			try
 			{
-				return extract<Imath::Box3f>( f() );
+				boost::python::object f = this->methodOverride( "bound" );
+				if( f )
+				{
+					return extract<Imath::Box3f>( f() );
+				}
 			}
-			else
+			catch( const boost::python::error_already_set &e )
 			{
-				throw IECore::Exception( "No bound method defined" );
+				IECorePython::ExceptionAlgo::translatePythonException();
 			}
+
+			throw IECore::Exception( "No bound method defined" );
 		}
 
 		void render( IECoreScenePreview::Renderer *renderer ) const final
 		{
 			IECorePython::ScopedGILLock gilLock;
-			boost::python::object f = this->methodOverride( "render" );
-			if( f )
+			try
 			{
-				f( IECoreScenePreview::RendererPtr( renderer ) );
-				return;
+				boost::python::object f = this->methodOverride( "render" );
+				if( f )
+				{
+					f( IECoreScenePreview::RendererPtr( renderer ) );
+					return;
+				}
 			}
-			else
+			catch( const boost::python::error_already_set &e )
 			{
-				throw IECore::Exception( "No render method defined" );
+				IECorePython::ExceptionAlgo::translatePythonException();
 			}
+
+			throw IECore::Exception( "No render method defined" );
 		}
 
 };
