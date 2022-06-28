@@ -293,6 +293,14 @@ options.Add(
 	"",
 )
 
+options.Add(
+	"USD_LIB_PREFIX",
+	"The prefix to prepend to the names of the USD libraries. You can modify this "
+	"to link against libraries installed with non-default names. "
+	"Should match the USD build option PXR_LIB_PREFIX",
+	"usd_"
+)
+
 # general variables
 
 options.Add(
@@ -301,6 +309,14 @@ options.Add(
 		"Builds and installs the GafferCortex modules. These are deprecated and will "
 		"be removed completely in a future version.",
 		False
+	)
+)
+
+options.Add(
+	BoolVariable(
+		"GAFFERUSD",
+		"Builds and installs the GafferUSD modules.",
+		True
 	)
 )
 
@@ -1251,23 +1267,30 @@ libraries = {
 
 	"GafferUSD" : {
 		"envAppends" : {
-			"LIBS" : [ "Gaffer", "GafferDispatch", "GafferScene", "IECoreScene$CORTEX_LIB_SUFFIX", "usd_sdf", "usd_arch", "usd_tf", "usd_vt" ],
+			"LIBS" : [ "Gaffer", "GafferDispatch", "GafferScene", "IECoreScene$CORTEX_LIB_SUFFIX" ] + [ "${USD_LIB_PREFIX}" + x for x in [ "sdf", "arch", "tf", "vt" ] ],
 			# USD includes "at least one deprecated or antiquated header", so we
 			# have to drop our usual strict warning levels.
-			"CXXFLAGS" : [ "-Wno-deprecated"],
+			"CXXFLAGS" : [ "-Wno-deprecated" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferUSD", "GafferScene", "GafferDispatch", "GafferBindings" ],
 		},
 		# USD's Python bindings are intrusive to the main library.
 		"libraryDependsOnPython" : True,
+		"requiredOptions" : [ "GAFFERUSD" ],
 	},
 
-	"GafferUSDTest" : {},
+	"GafferUSDTest" : {
+		"requiredOptions" : [ "GAFFERUSD" ],
+	},
 
-	"GafferUSDUI" : {},
+	"GafferUSDUI" : {
+		"requiredOptions" : [ "GAFFERUSD" ],
+	},
 
-	"GafferUSDUITest" : {},
+	"GafferUSDUITest" : {
+		"requiredOptions" : [ "GAFFERUSD" ],
+	},
 
 	"GafferVDB" : {
 		"envAppends" : {

@@ -171,7 +171,7 @@ class ImagePlugTest( GafferImageTest.ImageTestCase ) :
 
 		constant = GafferImage.Constant()
 
-		with Gaffer.Context() as c :
+		with Gaffer.Context( Gaffer.Context.current() ) as c :
 
 			GafferImage.FormatPlug.setDefaultFormat( c, GafferImage.Format( 100, 200 ) )
 			self.assertEqual( GafferImage.ImageAlgo.image( constant["out"] ).displayWindow, imath.Box2i( imath.V2i( 0 ), imath.V2i( 99, 199 ) ) )

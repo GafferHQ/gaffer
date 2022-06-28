@@ -227,6 +227,20 @@ void Shape::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs 
 
 }
 
+void Shape::hashViewNames( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	assert( parent == shapePlug() );
+	FlatImageProcessor::hashViewNames( parent, context, h );
+	// Because our view names are constant, we don't need to add
+	// anything else to the hash.
+}
+
+IECore::ConstStringVectorDataPtr Shape::computeViewNames( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	assert( parent == shapePlug() );
+	return ImagePlug::defaultViewNames();
+}
+
 void Shape::hashDataWindow( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	assert( parent == shapePlug() );

@@ -494,6 +494,16 @@ const IECoreImage::DisplayDriver *Display::getDriver() const
 	return m_driver.get();
 }
 
+void Display::hashViewNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ImageNode::hashViewNames( output, context, h );
+}
+
+IECore::ConstStringVectorDataPtr Display::computeViewNames( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+	return ImagePlug::defaultViewNames();
+}
+
 void Display::hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ImageNode::hashFormat( output, context, h );

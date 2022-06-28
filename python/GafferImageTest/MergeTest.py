@@ -542,7 +542,7 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 				# the value cached and evaluating values first
 				Gaffer.ValuePlug.clearCache()
 
-				with Gaffer.Context() as c :
+				with Gaffer.Context( Gaffer.Context.current() ) as c :
 					c["image:tileOrigin"] = tileOrigin
 					c["image:channelName"] = "R"
 
@@ -714,6 +714,156 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 			constant2["format"].setValue( GafferImage.Format( 512, i, 1.000 ) )
 			frac = i / 512.0
 			self.assertEqual( stats["average"].getValue(), imath.Color4f( 1 - frac, frac, 0, 1 ) )
+
+	def testNoChannelsAffectsBug( self ) :
+
+		r = GafferImage.ImageReader()
+		r["fileName"].setValue( self.checkerPath )
+
+		resized = GafferImage.Resize()
+		resized["in"].setInput( r["out"] )
+		resized["format"].setValue( GafferImage.Format( 512, 512, 1.0 ) )
+
+		c = GafferImage.Constant()
+		c["format"].setValue( GafferImage.Format( 512, 512, 1.000 ) )
+
+		d = GafferImage.DeleteChannels()
+		d["enabled"].setValue( False )
+		d["channels"].setValue( "*" )
+		d["in"].setInput( c["out"] )
+
+		merge = GafferImage.Merge()
+		merge["operation"].setValue( GafferImage.Merge.Operation.Over )
+
+		merge["in"][0].setInput( resized["out"] )
+		merge["in"][1].setInput( d["out"] )
+
+		# Merging with a black image should produce black
+		self.assertImagesEqual( merge["out"], c["out"], ignoreMetadata = True )
+
+		d["enabled"].setValue( True )
+
+		# Merging with an image with no channels should have no effect
+		self.assertImagesEqual( merge["out"], resized["out"] )
+
+	def testOnlyAlphaVsOnlyRGBBug( self ) :
+
+		r = GafferImage.ImageReader()
+		r["fileName"].setValue( self.checkerRGBPath )
+
+		shuf = GafferImage.Shuffle()
+		shuf["in"].setInput( r["out"] )
+		shuf["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "A", "R" ) )
+
+		delete = GafferImage.DeleteChannels()
+		delete["in"].setInput( shuf["out"] )
+		delete["channels"].setValue( "R" )
+
+		c = GafferImage.Constant()
+		c["format"].setValue( GafferImage.Format( 100, 100, 1.000 ) )
+		c["color"].setValue( imath.Color4f( 0.0 ) )
+
+		merge = GafferImage.Merge()
+		merge["in"][0].setInput( c["out"] )
+		merge["in"][1].setInput( delete["out"] )
+
+		referenceShuf = GafferImage.Shuffle()
+		referenceShuf["in"].setInput( delete["out"] )
+		referenceShuf["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "", "__black" ) )
+		referenceShuf["channels"][0]["out"].setInput( delete["channels"] )
+
+		# We're comparing two ways of filling in the deleted channels with black - either by
+		# merging with a black image, or by shuffling in black.  These should be equivalent.
+		#
+		# This test is only here because of a weird special case bug in Merge where an input
+		# with an R channel and no alpha , and an input with the same channel data but as
+		# alpha with no R, would hash the same
+
+		self.assertImagesEqual( referenceShuf["out"], merge["out"], ignoreMetadata = True, ignoreChannelNamesOrder = True )
+
+		delete["channels"].setValue( "A" )
+
+		self.assertImagesEqual( referenceShuf["out"], merge["out"], ignoreMetadata = True, ignoreChannelNamesOrder = True )
+
+	def testMultiView( self ) :
+
+		c1 = GafferImage.Constant()
+		c1["color"].setValue( imath.Color4f( 1, 0, 0, 0 ) )
+		c1["format"]["displayWindow"].setValue( imath.Box2i( imath.V2i( 0 ), imath.V2i( 128 ) ) )
+		c2 = GafferImage.Constant()
+		c2["color"].setValue( imath.Color4f( 0, 1, 0, 0 ) )
+		c2["format"]["displayWindow"].setValue( imath.Box2i( imath.V2i( 0 ), imath.V2i( 128 ) ) )
+		c3 = GafferImage.Constant()
+		c3["color"].setValue( imath.Color4f( 0, 0, 1, 0 ) )
+		c3["format"]["displayWindow"].setValue( imath.Box2i( imath.V2i( 0 ), imath.V2i( 64 ) ) )
+		c4 = GafferImage.Constant()
+		c4["color"].setValue( imath.Color4f( 1, 0, 1, 0 ) )
+		c4["format"]["displayWindow"].setValue( imath.Box2i( imath.V2i( 0 ), imath.V2i( 64 ) ) )
+
+		createViews1 = GafferImage.CreateViews()
+		createViews1["views"].addChild( Gaffer.NameValuePlug( "left", GafferImage.ImagePlug(), True, "view0", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		createViews1["views"].addChild( Gaffer.NameValuePlug( "right", GafferImage.ImagePlug(), True, "view1", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		createViews1["views"][0]["value"].setInput( c1["out"] )
+		createViews1["views"][1]["value"].setInput( c2["out"] )
+
+		createViews2 = GafferImage.CreateViews()
+		createViews2["views"].addChild( Gaffer.NameValuePlug( "left", GafferImage.ImagePlug(), True, "view0", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		createViews2["views"].addChild( Gaffer.NameValuePlug( "right", GafferImage.ImagePlug(), True, "view1", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		createViews2["views"][0]["value"].setInput( c3["out"] )
+		createViews2["views"][1]["value"].setInput( c4["out"] )
+
+		merge = GafferImage.Merge()
+		merge["operation"].setValue( GafferImage.Merge.Operation.Over )
+
+		referenceMerge = GafferImage.Merge()
+		referenceMerge["operation"].setValue( GafferImage.Merge.Operation.Over )
+
+		# Test a default view over multiple views
+		merge["in"][0].setInput( createViews1["out"] )
+		merge["in"][1].setInput( c3["out"] )
+
+		referenceMerge["in"][0].setInput( c1["out"] )
+		referenceMerge["in"][1].setInput( c3["out"] )
+
+		self.assertEqual( merge["out"].viewNames(), IECore.StringVectorData( [ "left", "right" ] ) )
+
+		self.assertEqual( GafferImage.ImageAlgo.tiles( merge["out"], True, "left" ), GafferImage.ImageAlgo.tiles( referenceMerge["out"] ) )
+
+		referenceMerge["in"][0].setInput( c2["out"] )
+
+		self.assertEqual( GafferImage.ImageAlgo.tiles( merge["out"], True, "right" ), GafferImage.ImageAlgo.tiles( referenceMerge["out"] ) )
+
+		# No default view in first input
+		with six.assertRaisesRegex( self, RuntimeError, '.*No view "default"' ):
+			GafferImage.ImageAlgo.tiles( merge["out"], True, "default" )
+
+		# Merge stereo
+		merge["in"][1].setInput( createViews2["out"] )
+		self.assertEqual( merge["out"].viewNames(), IECore.StringVectorData( [ "left", "right" ] ) )
+		referenceMerge["in"][0].setInput( c1["out"] )
+		referenceMerge["in"][1].setInput( c3["out"] )
+		self.assertEqual( GafferImage.ImageAlgo.tiles( merge["out"], True, "left" ), GafferImage.ImageAlgo.tiles( referenceMerge["out"] ) )
+
+		referenceMerge["in"][0].setInput( c2["out"] )
+		referenceMerge["in"][1].setInput( c4["out"] )
+		self.assertEqual( GafferImage.ImageAlgo.tiles( merge["out"], True, "right" ), GafferImage.ImageAlgo.tiles( referenceMerge["out"] ) )
+
+		# Test functionality of default
+		createViews1["views"][0]["name"].setValue( "default" )
+		self.assertEqual( merge["out"].viewNames(), IECore.StringVectorData( [ "default", "right" ] ) )
+		self.assertEqual( GafferImage.ImageAlgo.tiles( merge["out"], True, "default" ), GafferImage.ImageAlgo.tiles( c1["out"] ) )
+		self.assertEqual( GafferImage.ImageAlgo.tiles( merge["out"], True, "undeclared" ), GafferImage.ImageAlgo.tiles( c1["out"] ) )
+
+		createViews2["views"][1]["name"].setValue( "default" )
+		referenceMerge["in"][0].setInput( c1["out"] )
+		referenceMerge["in"][1].setInput( c4["out"] )
+		self.assertEqual( GafferImage.ImageAlgo.tiles( merge["out"], True, "default" ), GafferImage.ImageAlgo.tiles( referenceMerge["out"] ) )
+		self.assertEqual( GafferImage.ImageAlgo.tiles( merge["out"], True, "undeclared" ), GafferImage.ImageAlgo.tiles( referenceMerge["out"] ) )
+
+		# Test merging in views that aren't in the first image, which does nothing
+		createViews2["views"][1]["name"].setValue( "right" )
+		merge["in"][0].setInput( c1["out"] )
+		self.assertImagesEqual( merge["out"], c1["out"] )
 
 	def mergePerf( self, operation, mismatch ):
 		r = GafferImage.Checkerboard( "Checkerboard" )

@@ -41,6 +41,8 @@
 
 #include "GafferImage/Export.h"
 
+#include "Gaffer/Context.h"
+
 #include "IECore/CompoundObject.h"
 #include "IECore/Export.h"
 
@@ -138,7 +140,7 @@ template <class TileFunctor>
 void parallelProcessTiles(
 	const ImagePlug *imagePlug,
 	TileFunctor &&functor, // Signature : void functor( const ImagePlug *imagePlug, const V2i &tileOrigin )
-	const Imath::Box2i &window = Imath::Box2i(), // Uses dataWindow if not specified.
+	const Imath::Box2i &window = Imath::Box2i(), // Uses dataWindow if not specified ( requires a valid view in the context )
 	TileOrder tileOrder = Unordered
 );
 
@@ -148,7 +150,7 @@ void parallelProcessTiles(
 	const ImagePlug *imagePlug,
 	const std::vector<std::string> &channelNames,
 	TileFunctor &&functor, // Signature : void functor( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin )
-	const Imath::Box2i &window = Imath::Box2i(), // Uses dataWindow if not specified.
+	const Imath::Box2i &window = Imath::Box2i(), // Uses dataWindow if not specified ( requires a valid view in the context )
 	TileOrder tileOrder = Unordered
 );
 
@@ -159,7 +161,7 @@ void parallelGatherTiles(
 	const ImagePlug *image,
 	const TileFunctor &tileFunctor, // Signature : T tileFunctor( const ImagePlug *imagePlug, const V2i &tileOrigin )
 	GatherFunctor &&gatherFunctor, // Signature : void gatherFunctor( const ImagePlug *imagePlug, const V2i &tileOrigin, T &tileFunctorResult )
-	const Imath::Box2i &window = Imath::Box2i(), // Uses dataWindow if not specified.
+	const Imath::Box2i &window = Imath::Box2i(), // Uses dataWindow if not specified ( requires a valid view in the context )
 	TileOrder tileOrder = Unordered
 );
 
@@ -171,15 +173,16 @@ void parallelGatherTiles(
 	const std::vector<std::string> &channelNames,
 	const TileFunctor &tileFunctor, // Signature : T tileFunctor( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin )
 	GatherFunctor &&gatherFunctor, // Signature : void gatherFunctor( const ImagePlug *imagePlug, const string &channelName, const V2i &tileOrigin, T &tileFunctorResult )
-	const Imath::Box2i &window = Imath::Box2i(), // Uses dataWindow if not specified.
+	const Imath::Box2i &window = Imath::Box2i(), // Uses dataWindow if not specified ( requires a valid view in the context )
 	TileOrder tileOrder = Unordered
 );
 
-/// Whole image operations
+/// Whole view operations
 /// ==============================
 ///
-/// The functions process the whole image at once.  Not generally used in core Gaffer processing, since we
-/// prefer to process just one tile at a time, but useful for testing and interoperability
+/// The functions process a whole view of an image at once.  Not generally used in core Gaffer processing, since we
+/// prefer to process just one tile at a time, but useful for testing and interoperability.
+/// If the view is not specified, it must be set in the current Context.
 
 /// Returns a pointer to an IECore::ImagePrimitive. Note that the image's
 /// coordinate system will be converted to the OpenEXR and Cortex specification
@@ -187,22 +190,29 @@ void parallelGatherTiles(
 /// Y axis pointing downwards rather than Gaffer's internal representation where
 /// the origin is in the bottom left of the display window with the Y axis
 /// ascending towards the top of the display window.
-GAFFERIMAGE_API IECoreImage::ImagePrimitivePtr image( const ImagePlug *imagePlug );
+GAFFERIMAGE_API IECoreImage::ImagePrimitivePtr image( const ImagePlug *imagePlug, const std::string *viewName = nullptr );
 
 /// Return a hash that will vary if any aspect of the return from image( ... ) varies
-GAFFERIMAGE_API IECore::MurmurHash imageHash( const ImagePlug *imagePlug );
+GAFFERIMAGE_API IECore::MurmurHash imageHash( const ImagePlug *imagePlug, const std::string *viewName = nullptr );
 
 /// Return all pixel data as a big CompoundData with entries for each channel
 /// and tile.  Among other things, this makes it possible to efficiently test
 /// from Python whether two ImagePlugs have identical pixel data.  Unlike the
 /// image() method above, it works on deep images.
-GAFFERIMAGE_API IECore::ConstCompoundObjectPtr tiles( const ImagePlug *imagePlug );
+GAFFERIMAGE_API IECore::ConstCompoundObjectPtr tiles( const ImagePlug *imagePlug, const std::string *viewName = nullptr );
 
 /// Deep Utils
 /// ==============================
 
 /// If the provided sample offsets do not match, raise an exception that indicates where the mismatch occured.
 GAFFERIMAGE_API void throwIfSampleOffsetsMismatch( const IECore::IntVectorData* sampleOffsetsA, const IECore::IntVectorData* sampleOffsetsB, const Imath::V2i &tileOrigin, const std::string &message );
+
+
+/// Multi-View Utils
+/// ==============================
+
+// Return true if the current view in the context is one of the viewNames, or is covered by a default view
+GAFFERIMAGE_API bool viewIsValid( const Gaffer::Context *context, const std::vector< std::string > &viewNames );
 
 } // namespace ImageAlgo
 

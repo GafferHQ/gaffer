@@ -102,6 +102,8 @@ ImageStats::ImageStats( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new ImagePlug( "in", Gaffer::Plug::In ) );
 
+	addChild( new StringPlug( "view", Plug::In, "" ) );
+
 	IECore::StringVectorDataPtr defaultChannelsData = new IECore::StringVectorData;
 	vector<string> &defaultChannels = defaultChannelsData->writable();
 	defaultChannels.push_back( "R" );
@@ -142,85 +144,95 @@ const ImagePlug *ImageStats::inPlug() const
 	return getChild<ImagePlug>( g_firstPlugIndex );
 }
 
+Gaffer::StringPlug *ImageStats::viewPlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+}
+
+const Gaffer::StringPlug *ImageStats::viewPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+}
+
 Gaffer::StringVectorDataPlug *ImageStats::channelsPlug()
 {
-	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 1 );
+	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 2 );
 }
 
 const Gaffer::StringVectorDataPlug *ImageStats::channelsPlug() const
 {
-	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 1 );
+	return getChild<StringVectorDataPlug>( g_firstPlugIndex + 2 );
 }
 
 Box2iPlug *ImageStats::areaPlug()
 {
-	return getChild<Box2iPlug>( g_firstPlugIndex + 2 );
+	return getChild<Box2iPlug>( g_firstPlugIndex + 3 );
 }
 
 const Box2iPlug *ImageStats::areaPlug() const
 {
-	return getChild<Box2iPlug>( g_firstPlugIndex + 2 );
+	return getChild<Box2iPlug>( g_firstPlugIndex + 3 );
 }
 
 Color4fPlug *ImageStats::averagePlug()
 {
-	return getChild<Color4fPlug>( g_firstPlugIndex + 3 );
+	return getChild<Color4fPlug>( g_firstPlugIndex + 4 );
 }
 
 const Color4fPlug *ImageStats::averagePlug() const
 {
-	return getChild<Color4fPlug>( g_firstPlugIndex + 3 );
+	return getChild<Color4fPlug>( g_firstPlugIndex + 4 );
 }
 
 Color4fPlug *ImageStats::minPlug()
 {
-	return getChild<Color4fPlug>( g_firstPlugIndex + 4 );
+	return getChild<Color4fPlug>( g_firstPlugIndex + 5 );
 }
 
 const Color4fPlug *ImageStats::minPlug() const
 {
-	return getChild<Color4fPlug>( g_firstPlugIndex + 4 );
+	return getChild<Color4fPlug>( g_firstPlugIndex + 5 );
 }
 
 Color4fPlug *ImageStats::maxPlug()
 {
-	return getChild<Color4fPlug>( g_firstPlugIndex + 5 );
+	return getChild<Color4fPlug>( g_firstPlugIndex + 6 );
 }
 
 const Color4fPlug *ImageStats::maxPlug() const
 {
-	return getChild<Color4fPlug>( g_firstPlugIndex + 5 );
+	return getChild<Color4fPlug>( g_firstPlugIndex + 6 );
 }
 
 ObjectPlug *ImageStats::tileStatsPlug()
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 6 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 7 );
 }
 
 const ObjectPlug *ImageStats::tileStatsPlug() const
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 6 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 7 );
 }
 
 ObjectPlug *ImageStats::allStatsPlug()
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 7 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 8 );
 }
 
 const ObjectPlug *ImageStats::allStatsPlug() const
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 7 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 8 );
 }
 
 
 ImagePlug *ImageStats::flattenedInPlug()
 {
-	return getChild<ImagePlug>( g_firstPlugIndex + 8 );
+	return getChild<ImagePlug>( g_firstPlugIndex + 9 );
 }
 
 const ImagePlug *ImageStats::flattenedInPlug() const
 {
-	return getChild<ImagePlug>( g_firstPlugIndex + 8 );
+	return getChild<ImagePlug>( g_firstPlugIndex + 9 );
 }
 
 void ImageStats::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -228,6 +240,8 @@ void ImageStats::affects( const Gaffer::Plug *input, AffectedPlugsContainer &out
 	ComputeNode::affects( input, outputs );
 
 	if(
+		input == viewPlug() ||
+		input == flattenedInPlug()->viewNamesPlug() ||
 		input == flattenedInPlug()->dataWindowPlug() ||
 		input == flattenedInPlug()->channelDataPlug() ||
 		areaPlug()->isAncestorOf( input )
@@ -237,6 +251,8 @@ void ImageStats::affects( const Gaffer::Plug *input, AffectedPlugsContainer &out
 	}
 
 	if(
+		input == viewPlug() ||
+		input == flattenedInPlug()->viewNamesPlug() ||
 		input == tileStatsPlug() ||
 		input == flattenedInPlug()->dataWindowPlug() ||
 		areaPlug()->isAncestorOf( input )
@@ -246,6 +262,8 @@ void ImageStats::affects( const Gaffer::Plug *input, AffectedPlugsContainer &out
 	}
 
 	if(
+		input == viewPlug() ||
+		input == flattenedInPlug()->viewNamesPlug() ||
 		input == allStatsPlug() ||
 		input == flattenedInPlug()->channelNamesPlug() ||
 		input == channelsPlug()
@@ -263,6 +281,15 @@ void ImageStats::affects( const Gaffer::Plug *input, AffectedPlugsContainer &out
 void ImageStats::hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const
 {
 	ComputeNode::hash( output, context, h);
+
+	ImagePlug::ViewScope viewScope( context );
+
+	std::string view = viewPlug()->getValue();
+	if( !view.size() )
+	{
+		view = context->get<std::string>( ImagePlug::viewNameContextName );
+	}
+	viewScope.setViewNameChecked( &view, inPlug()->viewNames().get() );
 
 	const Plug *parent = output->parent<Plug>();
 	if( parent == minPlug() || parent == maxPlug() || parent == averagePlug() )
@@ -289,7 +316,7 @@ void ImageStats::hash( const ValuePlug *output, const Context *context, IECore::
 	double areaMult;
 
 	{
-		ImagePlug::GlobalScope s( context );
+		ImagePlug::GlobalScope s( viewScope.context() );
 		const Imath::Box2i area = areaPlug()->getValue();
 		const Imath::Box2i dataWindow = flattenedInPlug()->dataWindowPlug()->getValue();
 		boundsIntersection = BufferAlgo::intersection( area, dataWindow );
@@ -337,6 +364,15 @@ void ImageStats::hash( const ValuePlug *output, const Context *context, IECore::
 
 void ImageStats::compute( ValuePlug *output, const Context *context ) const
 {
+	ImagePlug::ViewScope viewScope( context );
+
+	std::string view = viewPlug()->getValue();
+	if( !view.size() )
+	{
+		view = context->get<std::string>( ImagePlug::viewNameContextName );
+	}
+	viewScope.setViewNameChecked( &view, inPlug()->viewNames().get() );
+
 	const Plug *parent = output->parent<Plug>();
 	if(
 		parent == minPlug() ||
@@ -366,7 +402,7 @@ void ImageStats::compute( ValuePlug *output, const Context *context ) const
 	double areaMult;
 
 	{
-		ImagePlug::GlobalScope s( context );
+		ImagePlug::GlobalScope s( viewScope.context() );
 		const Imath::Box2i area = areaPlug()->getValue();
 		const Imath::Box2i dataWindow = flattenedInPlug()->dataWindowPlug()->getValue();
 		boundsIntersection = BufferAlgo::intersection( area, dataWindow );

@@ -4,6 +4,18 @@
 Features
 --------
 
+- GafferImage : Added support for multi-view images.
+  - ImageNodes can now output multiple "views". Views are effectively independent images, and may have separate data windows, formats, channels and metadata, and even be mixtures of deep and flat images.
+  - The multi-view feature was originally intended for storing stereo renders, but may also may used for general processing where it is convenient to group multiple images into one stream.
+  - A new `image:viewName` context variable specifies which view is currently being processed. This can be used to process each view with different settings, for instance via an Expression or Spreadsheet.
+  - Multi-view images can be read from and written to EXR files via the ImageReader and ImageWriter nodes.
+  - Added new nodes specifically for working with multi-view images :
+    - CreateViews : For combining single view images into a multi-view image.
+    - SelectView : For choosing one view from a multi-view image as a single view image.
+    - CopyViews : For combining views from multi-view sources.
+    - DeleteViews : For removing views from multi-view images.
+    - Anaglyph : For viewing stereo images in a format appropriate for red-blue anaglyph glasses.
+  - A new dropdown menu in the Viewer chooses which view is being displayed.
 - ContextQuery : Added node to access a context variable value directly without needing to use an expression.
 
 Improvements
@@ -18,15 +30,41 @@ Fixes
 -----
 
 - Seeds : Fixed point distribution generated on MacOS to match the point distribution generated on Linux.
+- RenderController : Fixed duplicate `callback( Completed )` calls from `updateInBackground()` when priority paths are specified.
+- PresetsPlugValueWidget/FormatPlugValueWidget : Fixed handling of evaluation errors (now turns red instead of failing to draw).
+- Viewer :
+  - Fixed loss of selection when switching from OpenGL to Arnold renderer. [^1]
+  - Fixed `cannot declare constant UINT cortex:id` errors. [^1]
+  - Fixed crashes when edits made by the TransformTools affected additional objects in the scene (either through constraints or edits to an ancestor of the selection). [^1]
+  - Fixed crashes when making interactive edits to the contents of capsules. [^1]
+  - Fixed bug which prevented the viewer from updating after an error had occurred, even when the error was subsequently fixed in the node graph. [^1]
+- ImageTestCase : Fixed bug in `assertImagesEqual()` where bad pixel data could go undetected when using `ignoreDataWindow`.
+- Merge : Fixed rare failure to update when changing which channels exist on input.
 
 API
 ---
 
 - PlugAlgo : Added optional `value` argument to `canSetValueFromData()`.
+- RenderController :
+  - Added Python bindings for optional `callback` argument to `update()` and `updateMatchingPaths()`.
+  - Added Python binding for `updateInBackground()`.
+- TestCase : Added `assertNodeIsDocumented()` method.
+- ImagePlug :
+  - Added `viewNames` plug for outputting the names of the views in an image.
+  - Added ViewScope class for specifying the `image:viewName` context variable.
+  - Added optional `viewName` arguments to the convenience accessors such as `channelNames()` and `channelData()`.
+- ImageNode : Added virtual `hashViewNames()` and `computeViewNames()` methods which must be implemented by derived
+  classes (unless an input connection is made for `out.viewNames`).
+- ImageAlgo :
+  - Added optional `viewName` arguments to `image()`, `imageHash()` and `tiles()`.
+  - Added `viewIsValid()` function.
+- ImageTestCase.assertImagesEqual : Added `metadataBlacklist` argument for ignoring certain metadata.
+- MenuButton : Added `setErrored()` and `getErrored()` methods.
 
 Breaking Changes
 ----------------
 
+- ImagePlug : The `image:viewName` context variable must now be set when evaluating plugs other than `viewNamesPlug()`. The `gui` app provides a default, but standalone scripts may need to be adjusted to specify `image:viewName` explicitly.
 - ImageWriter/SceneWriter : The overrides for TaskNode virtual methods are now `protected` rather than `public`. Use the `TaskPlug` API instead.
 - ShaderQuery : `addQuery()` now creates `query` and `out` plugs with numeric suffixes starting at 0 (rather than 1).
 - TweakPlug and TweaksPlug :
@@ -48,6 +86,8 @@ Build
 - PySide : Updated to 5.15.4.
 - Python : Updated to 3.8.13 (MacOS only).
 - Qt : Updated to 5.15.4.
+
+[^1]: Fixes for bugs introduced in earlier preview releases. These should be omitted from the final release notes for `0.62.0.0`, which will only include changes relative to `0.61.x.x`.
 
 0.62.0.0a3 (relative to 0.62.0.0a2)
 ==========
@@ -219,6 +259,21 @@ Build
   - OpenVDB : Updated to version 9.0.0.
   - OpenColorIO : Updated to version 2.1.1.
   - Cortex : Updated to version 10.4.0.0.
+
+0.61.x.x (relative to 0.61.13.0)
+========
+
+Fixes
+-----
+
+- SelectionTool : Fixed bug where the drawing mode overrides (Wireframe, Solid and Points) were ignored when selecting objects. This could cause a wireframe (or invisible) object to be selected instead of the visible object behind it.
+- StringPlug : Fixed crashes caused by incoming connections from StringVectorDataPlugs.
+- SceneViewInspector : Fixed bug where a non-existent location's parameters were being inspected. This caused `Invalid child name` errors, typically when switching focus to a node where the currently selected locations didn't exist.
+
+API
+---
+
+- StringPlug : Deprecated `precomputedHash` argument to `getValue()` method.
 
 0.61.13.0 (relative to 0.61.12.0)
 =========

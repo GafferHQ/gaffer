@@ -45,6 +45,7 @@ from .FormatPlugValueWidget import FormatPlugValueWidget
 from .ChannelMaskPlugValueWidget import ChannelMaskPlugValueWidget
 from .RGBAChannelsPlugValueWidget import RGBAChannelsPlugValueWidget
 from .ChannelPlugValueWidget import ChannelPlugValueWidget
+from .ViewPlugValueWidget import ViewPlugValueWidget
 
 from . import ImageReaderPathPreview
 
@@ -112,5 +113,10 @@ from . import DeepHoldoutUI
 from . import DeepRecolorUI
 from . import SaturationUI
 from . import FormatQueryUI
+from . import CreateViewsUI
+from . import SelectViewUI
+from . import DeleteViewsUI
+from . import CopyViewsUI
+from . import AnaglyphUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferImageUI" )

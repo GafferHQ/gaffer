@@ -61,6 +61,7 @@ ChannelDataProcessor::ChannelDataProcessor( const std::string &name, bool hasUnp
 	}
 
 	// We don't ever want to change these, so we make pass-through connections.
+	outPlug()->viewNamesPlug()->setInput( inPlug()->viewNamesPlug() );
 	outPlug()->formatPlug()->setInput( inPlug()->formatPlug() );
 	outPlug()->dataWindowPlug()->setInput( inPlug()->dataWindowPlug() );
 	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );

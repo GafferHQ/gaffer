@@ -819,6 +819,18 @@ Gaffer::ValuePlug::CachePolicy Cryptomatte::computeCachePolicy( const Gaffer::Va
 	return ImageNode::computeCachePolicy( output );
 }
 
+void Cryptomatte::hashViewNames( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	FlatImageProcessor::hashViewNames( parent, context, h );
+	// Because our view names are constant, we don't need to add
+	// anything else to the hash.
+}
+
+IECore::ConstStringVectorDataPtr Cryptomatte::computeViewNames( const Gaffer::Context *context, const GafferImage::ImagePlug *parent ) const
+{
+	return GafferImage::ImagePlug::defaultViewNames();
+}
+
 void Cryptomatte::hashChannelNames( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	FlatImageProcessor::hashChannelNames( parent, context, h );

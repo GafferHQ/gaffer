@@ -66,7 +66,7 @@ class ImageNodeTest( GafferImageTest.ImageTestCase ) :
 		def grader() :
 
 			try :
-				images.append( GafferImage.ImageAlgo.image( g["out"] ) )
+				images.append( GafferImage.ImageAlgo.image( g["out"], viewName = "default" ) )
 			except Exception as e :
 				exceptions.append( e )
 
@@ -108,13 +108,13 @@ class ImageNodeTest( GafferImageTest.ImageTestCase ) :
 
 	def setUp( self ) :
 
-		GafferTest.TestCase.setUp( self )
+		GafferImageTest.ImageTestCase.setUp( self )
 
 		self.__previousCacheMemoryLimit = Gaffer.ValuePlug.getCacheMemoryLimit()
 
 	def tearDown( self ) :
 
-		GafferTest.TestCase.tearDown( self )
+		GafferImageTest.ImageTestCase.tearDown( self )
 
 		Gaffer.ValuePlug.setCacheMemoryLimit( self.__previousCacheMemoryLimit )
 

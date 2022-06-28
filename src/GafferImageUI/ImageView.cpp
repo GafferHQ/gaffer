@@ -42,6 +42,7 @@
 #include "GafferImage/ImagePlug.h"
 #include "GafferImage/ImageSampler.h"
 #include "GafferImage/ImageStats.h"
+#include "GafferImage/SelectView.h"
 
 #include "GafferUI/Gadget.h"
 #include "GafferUI/Pointer.h"
@@ -1238,7 +1239,11 @@ ImageView::ImageView( const std::string &name )
 
 	ImagePlugPtr preprocessorOutput = new ImagePlug( "out", Plug::Out );
 	preprocessor->addChild( preprocessorOutput );
-	preprocessorOutput->setInput( preprocessorInput );
+
+	SelectViewPtr selectView = new SelectView( "_selectView" );
+	preprocessor->addChild( selectView );
+	selectView->inPlug()->setInput( preprocessorInput );
+	preprocessorOutput->setInput( selectView->outPlug() );
 
 	// tell the base class about all the preprocessing we want to do
 
@@ -1260,6 +1265,10 @@ ImageView::ImageView( const std::string &name )
 	m_imageGadget->setImage( preprocessedInPlug<ImagePlug>() );
 	m_imageGadget->setContext( getContext() );
 	viewportGadget()->setPrimaryChild( m_imageGadget );
+
+	addChild( new StringPlug( "view", Plug::In, "default", Plug::Default & ~Plug::AcceptsInputs ) );
+
+	selectView->viewPlug()->setInput( viewPlug() );
 
 	m_channelChooser.reset( new ChannelChooser( this ) );
 	m_colorInspector.reset( new ColorInspector( this ) );
@@ -1372,6 +1381,16 @@ Gaffer::BoolPlug *ImageView::lutGPUPlug()
 const Gaffer::BoolPlug *ImageView::lutGPUPlug() const
 {
 	return getChild<BoolPlug>( "lutGPU" );
+}
+
+Gaffer::StringPlug *ImageView::viewPlug()
+{
+	return getChild<StringPlug>( "view" );
+}
+
+const Gaffer::StringPlug *ImageView::viewPlug() const
+{
+	return getChild<StringPlug>( "view" );
 }
 
 ImageGadget *ImageView::imageGadget()

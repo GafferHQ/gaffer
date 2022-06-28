@@ -80,6 +80,9 @@ class GAFFERIMAGE_API Display : public ImageNode
 
 	protected :
 
+		void hashViewNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstStringVectorDataPtr computeViewNames( const Gaffer::Context *context, const ImagePlug *parent ) const override;
+
 		void hashFormat( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		GafferImage::Format computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const override;
 

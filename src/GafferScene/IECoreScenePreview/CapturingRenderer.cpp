@@ -88,15 +88,18 @@ IECore::InternedString CapturingRenderer::name() const
 void CapturingRenderer::option( const IECore::InternedString &name, const IECore::Object *value )
 {
 	/// \todo Implement
+	checkPaused();
 }
 
 void CapturingRenderer::output( const IECore::InternedString &name, const IECoreScene::Output *output )
 {
 	/// \todo Implement
+	checkPaused();
 }
 
 Renderer::AttributesInterfacePtr CapturingRenderer::attributes( const IECore::CompoundObject *attributes )
 {
+	checkPaused();
 	return new CapturedAttributes( ConstCompoundObjectPtr( attributes ) );
 }
 
@@ -338,5 +341,6 @@ void CapturingRenderer::CapturedObject::link( const IECore::InternedString &type
 
 void CapturingRenderer::CapturedObject::assignID( uint32_t id )
 {
+	m_renderer->checkPaused();
 	m_id = id;
 }

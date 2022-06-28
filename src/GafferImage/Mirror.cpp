@@ -101,6 +101,7 @@ Mirror::Mirror( const std::string &name )
 	addChild( new BoolPlug( "horizontal" ) );
 	addChild( new BoolPlug( "vertical" ) );
 
+	outPlug()->viewNamesPlug()->setInput( inPlug()->viewNamesPlug() );
 	outPlug()->formatPlug()->setInput( inPlug()->formatPlug() );
 	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );
 	outPlug()->channelNamesPlug()->setInput( inPlug()->channelNamesPlug() );

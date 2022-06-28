@@ -44,6 +44,7 @@
 
 #include "Gaffer/ComputeNode.h"
 #include "Gaffer/CompoundNumericPlug.h"
+#include "Gaffer/StringPlug.h"
 
 namespace GafferImage
 {
@@ -58,6 +59,9 @@ struct GAFFERIMAGE_API FormatQuery : Gaffer::ComputeNode
 
 	GafferImage::ImagePlug* imagePlug();
 	GafferImage::ImagePlug const* imagePlug() const;
+
+	Gaffer::StringPlug *viewPlug();
+	const Gaffer::StringPlug *viewPlug() const;
 
 	GafferImage::FormatPlug* formatPlug();
 	GafferImage::FormatPlug const* formatPlug() const;

@@ -467,6 +467,10 @@ _styleSheet = string.Template(
 		text-align: left;
 	}
 
+	*[gafferPlugValueWidget="true"] QPushButton[gafferClass="GafferUI.MenuButton"][gafferError="true"] {
+		background-color : $errorColor;
+	}
+
 	QPushButton[gafferWithFrame="true"]:focus {
 		border: 1px solid $brightColor;
 	}

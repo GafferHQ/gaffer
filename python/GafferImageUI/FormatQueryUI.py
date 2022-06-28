@@ -46,6 +46,7 @@ Gaffer.Metadata.registerNode(
 	Extracts the format of an input image, for driving the format input of another image node, or
 	driving expressions.
 	""",
+	"layout:section:Settings.Out:collapsed", False,
 
 	plugs = {
 
@@ -58,6 +59,19 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"view" : [
+
+			"description",
+			"""
+			The view to be queried.
+			""",
+
+			"nodule:type", "",
+			"plugValueWidget:type", "GafferImageUI.ViewPlugValueWidget",
+			"viewPlugValueWidget:allowUseCurrentContext", True,
+
+		],
+
 		"format" : [
 
 			"description",
@@ -65,6 +79,7 @@ Gaffer.Metadata.registerNode(
 			The format of the image ( as a FormatPlug, compatible with inputs on Constant or Resize ).
 			""",
 			"nodule:type", "GafferUI::CompoundNodule",
+			"layout:section", "Settings.Out",
 
 		],
 		"format.displayWindow" : [
@@ -77,6 +92,7 @@ Gaffer.Metadata.registerNode(
 			"""
 			The middle of the displayWindow.  Stored as V2f, since it could be a half-pixel.
 			""",
+			"layout:section", "Settings.Out",
 
 		],
 
@@ -86,6 +102,7 @@ Gaffer.Metadata.registerNode(
 			"""
 			The size of the displayWindow as V2i.
 			""",
+			"layout:section", "Settings.Out",
 
 		],
 

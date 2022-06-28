@@ -88,6 +88,7 @@ DeepHoldout::DeepHoldout( const std::string &name )
 	flattenedPlug()->setInput( flatten->outPlug() );
 
 	// The intermediate inPlug is mostly just connected through to the input
+	intermediateInPlug()->viewNamesPlug()->setInput( inPlug()->viewNamesPlug() );
 	intermediateInPlug()->formatPlug()->setInput( inPlug()->formatPlug() );
 	intermediateInPlug()->dataWindowPlug()->setInput( inPlug()->dataWindowPlug() );
 	intermediateInPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );
@@ -95,9 +96,11 @@ DeepHoldout::DeepHoldout( const std::string &name )
 	intermediateInPlug()->sampleOffsetsPlug()->setInput( inPlug()->sampleOffsetsPlug() );
 
 	// We don't ever want to change these, so we make pass-through connections.
+	outPlug()->viewNamesPlug()->setInput( inPlug()->viewNamesPlug() );
 	outPlug()->dataWindowPlug()->setInput( inPlug()->dataWindowPlug() );
 	outPlug()->formatPlug()->setInput( inPlug()->formatPlug() );
 	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );
+
 }
 
 DeepHoldout::~DeepHoldout()

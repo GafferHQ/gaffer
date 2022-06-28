@@ -623,6 +623,8 @@ Merge::Merge( const std::string &name )
 	);
 
 	// We don't ever want to change these, so we make pass-through connections.
+	// Note that they are hard-coded to take the first input
+	outPlug()->viewNamesPlug()->setInput( inPlug()->viewNamesPlug() );
 	outPlug()->formatPlug()->setInput( inPlug()->formatPlug() );
 	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );
 }
@@ -656,10 +658,16 @@ void Merge::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs 
 		{
 			outputs.push_back( outPlug()->getChild<ValuePlug>( input->getName() ) );
 
-			// The input data window affects the output channel data
-			if( input == inputImage->dataWindowPlug() )
+			// The input data window and channelNames affects the output channel data
+			if( input == inputImage->dataWindowPlug() || input == inputImage->channelNamesPlug() )
 			{
 				outputs.push_back( outPlug()->channelDataPlug() );
+			}
+
+			if( input == inputImage->viewNamesPlug() )
+			{
+				outputs.push_back( outPlug()->channelDataPlug() );
+				outputs.push_back( outPlug()->dataWindowPlug() );
 			}
 		}
 	}
@@ -669,10 +677,15 @@ void Merge::hashDataWindow( const GafferImage::ImagePlug *output, const Gaffer::
 {
 	FlatImageProcessor::hashDataWindow( output, context, h );
 
+
 	operationPlug()->hash( h );
 	for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 	{
-		if( (*it)->getInput<ValuePlug>() )
+		// It's technically a bit wasteful to be running this on the first iteration - we don't
+		// need to check viewNames on the first iteration, since the output viewNames are identical to
+		// the first iteration viewNames, so the view is guaranteed to be valid, unless the downstream
+		// node has a bug
+		if( (*it)->getInput<ValuePlug>() && ImageAlgo::viewIsValid( context, (*it)->viewNames()->readable() ) )
 		{
 			(*it)->dataWindowPlug()->hash( h );
 		}
@@ -686,7 +699,7 @@ Imath::Box2i Merge::computeDataWindow( const Gaffer::Context *context, const Ima
 	bool first = true;
 	for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 	{
-		if( (*it)->getInput<ValuePlug>() )
+		if( (*it)->getInput<ValuePlug>() && ImageAlgo::viewIsValid( context, (*it)->viewNames()->readable() ) )
 		{
 			dispatchOperation( op, MergeDataWindowFunctor(), dataWindow, (*it)->dataWindowPlug()->getValue(), first );
 			first = false;
@@ -702,7 +715,7 @@ void Merge::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer
 
 	for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 	{
-		if( (*it)->getInput<ValuePlug>() )
+		if( (*it)->getInput<ValuePlug>() && ImageAlgo::viewIsValid( context, (*it)->viewNames()->readable() ) )
 		{
 			(*it)->channelNamesPlug()->hash( h );
 		}
@@ -716,15 +729,14 @@ IECore::ConstStringVectorDataPtr Merge::computeChannelNames( const Gaffer::Conte
 
 	for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 	{
-		if( (*it)->getInput<ValuePlug>() )
+		if( (*it)->getInput<ValuePlug>() && ImageAlgo::viewIsValid( context, (*it)->viewNames()->readable() ) )
 		{
 			IECore::ConstStringVectorDataPtr inChannelStrVectorData((*it)->channelNamesPlug()->getValue() );
-			const std::vector<std::string> &inChannels( inChannelStrVectorData->readable() );
-			for ( std::vector<std::string>::const_iterator cIt( inChannels.begin() ); cIt != inChannels.end(); ++cIt )
+			for ( const std::string &c : inChannelStrVectorData->readable() )
 			{
-				if ( std::find( outChannels.begin(), outChannels.end(), *cIt ) == outChannels.end() )
+				if ( std::find( outChannels.begin(), outChannels.end(), c ) == outChannels.end() )
 				{
-					outChannels.push_back( *cIt );
+					outChannels.push_back( c );
 				}
 			}
 		}
@@ -764,7 +776,7 @@ void Merge::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer:
 
 	for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 	{
-		if( !(*it)->getInput<ValuePlug>() )
+		if( !(*it)->getInput<ValuePlug>() || !ImageAlgo::viewIsValid( context, (*it)->viewNames()->readable() ) )
 		{
 			continue;
 		}
@@ -817,6 +829,10 @@ void Merge::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer:
 			{
 				alphaHash =  (*it)->channelDataHash( "A", tileOrigin );
 				h.append( alphaHash );
+
+				// Make sure we differentiate this hash from the hash above, so that an image with just RGB
+				// and an image with just alpha don't hash the same
+				h.append( true );
 			}
 
 			if( validBound != finalTileDataWindowLocal )
@@ -867,7 +883,7 @@ IECore::ConstFloatVectorDataPtr Merge::computeChannelData( const std::string &ch
 
 	for( ImagePlug::Iterator it( inPlugs() ); !it.done(); ++it )
 	{
-		if( !(*it)->getInput<ValuePlug>() )
+		if( !(*it)->getInput<ValuePlug>() || !ImageAlgo::viewIsValid( context, (*it)->viewNames()->readable() ) )
 		{
 			continue;
 		}

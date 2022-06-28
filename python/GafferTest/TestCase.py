@@ -226,7 +226,21 @@ class TestCase( unittest.TestCase ) :
 
 			self.assertEqual( instance.getName(), cls.staticTypeName().rpartition( ":" )[2] )
 
-	def assertNodesAreDocumented( self, module, additionalTerminalPlugTypes = (), nodesToIgnore = None ) :
+	def __nodeHasDescription( self, node ) :
+
+		description = Gaffer.Metadata.value( node, "description" )
+		if (not description) or description.isspace() :
+			# No description.
+			return False
+
+		try :
+			baseNode = [x for x in cls.__bases__ if issubclass( x, Gaffer.Node )][0]()
+		except :
+			return True
+
+		return description != Gaffer.Metadata.value( baseNode, "description" )
+
+	def __undocumentedPlugs( self, node, additionalTerminalPlugTypes = () ) :
 
 		terminalPlugTypes = (
 			Gaffer.ArrayPlug,
@@ -240,6 +254,28 @@ class TestCase( unittest.TestCase ) :
 			Gaffer.CompoundDataPlug.MemberPlug,
 			additionalTerminalPlugTypes
 		)
+
+		result = []
+		def checkPlugs( graphComponent ) :
+
+			if isinstance( graphComponent, Gaffer.Plug ) and not graphComponent.getName().startswith( "__" ) :
+				description = Gaffer.Metadata.value( graphComponent, "description" )
+				if (not description) or description.isspace() :
+					result.append( graphComponent.fullName() )
+
+			if not isinstance( graphComponent, terminalPlugTypes ) :
+				for plug in graphComponent.children( Gaffer.Plug ) :
+					checkPlugs( plug )
+
+		checkPlugs( node )
+		return result
+
+	def assertNodeIsDocumented( self, node, additionalTerminalPlugTypes = () ) :
+
+		self.assertTrue( self.__nodeHasDescription( node ) )
+		self.assertEqual( self.__undocumentedPlugs( node, additionalTerminalPlugTypes ), [] )
+
+	def assertNodesAreDocumented( self, module, additionalTerminalPlugTypes = (), nodesToIgnore = None ) :
 
 		undocumentedNodes = []
 		undocumentedPlugs = []
@@ -263,33 +299,10 @@ class TestCase( unittest.TestCase ) :
 			except :
 				continue
 
-			description = Gaffer.Metadata.value( node, "description" )
-			if (not description) or description.isspace() :
-				# No description.
+			if not self.__nodeHasDescription( node ) :
 				undocumentedNodes.append( node.getName() )
-			else :
-				baseNode = None
-				try :
-					baseNode = [x for x in cls.__bases__ if issubclass( x, Gaffer.Node )][0]()
-				except :
-					pass
-				if baseNode is not None :
-					if description == Gaffer.Metadata.value( baseNode, "description" ) :
-						# Same description as base class
-						undocumentedNodes.append( node.getName() )
 
-			def checkPlugs( graphComponent ) :
-
-				if isinstance( graphComponent, Gaffer.Plug ) and not graphComponent.getName().startswith( "__" ) :
-					description = Gaffer.Metadata.value( graphComponent, "description" )
-					if (not description) or description.isspace() :
-						undocumentedPlugs.append( graphComponent.fullName() )
-
-				if not isinstance( graphComponent, terminalPlugTypes ) :
-					for plug in graphComponent.children( Gaffer.Plug ) :
-						checkPlugs( plug )
-
-			checkPlugs( node )
+			undocumentedPlugs.extend( self.__undocumentedPlugs( node, additionalTerminalPlugTypes ) )
 
 		self.assertEqual( undocumentedPlugs, [] )
 		self.assertEqual( undocumentedNodes, [] )

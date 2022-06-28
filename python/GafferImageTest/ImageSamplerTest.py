@@ -35,6 +35,8 @@
 ##########################################################################
 
 import imath
+import os
+import six
 
 import IECore
 import IECoreImage
@@ -90,6 +92,52 @@ class ImageSamplerTest( GafferImageTest.ImageTestCase ) :
 
 		sampler["channels"].setValue( IECore.StringVectorData( [ "diffuse.R", "diffuse.G", "diffuse.B", "diffuse.A" ] ) )
 		self.assertEqual( sampler["color"].getValue(), imath.Color4f( 1, 0.5, 0.25, 1 ) )
+
+	def testView( self ) :
+
+		constantSource = GafferImage.Constant()
+		constantSource["color"].setValue( imath.Color4f( 0.1, 0.2, 0.3, 0.4 ) )
+
+		reader = GafferImage.ImageReader()
+		reader["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/blueWithDataWindow.100x100.exr" ) )
+
+		views = GafferImage.CreateViews()
+		views["views"].addChild( Gaffer.NameValuePlug( "left", GafferImage.ImagePlug(), True ) )
+		views["views"].addChild( Gaffer.NameValuePlug( "right", GafferImage.ImagePlug(), True ) )
+		views["views"][0]["value"].setInput( constantSource["out"] )
+		views["views"][1]["value"].setInput( reader["out"] )
+
+		sampler = GafferImage.ImageSampler()
+		sampler["image"].setInput( views["out"] )
+		sampler["pixel"].setValue( imath.V2f( 50.5 ) )
+
+		for contextView, queryAndResults in [
+			( None, [ ( "", None ), ( "left", imath.Color4f( 0.1, 0.2, 0.3, 0.4 ) ), ( "right", imath.Color4f( 0, 0, 0.5, 0.5 ) ) ] ),
+			( "left", [ ( "", imath.Color4f( 0.1, 0.2, 0.3, 0.4 ) ), ( "left", imath.Color4f( 0.1, 0.2, 0.3, 0.4 ) ), ( "right", imath.Color4f( 0, 0, 0.5, 0.5 ) ) ] ),
+			("right", [ ( "", imath.Color4f( 0, 0, 0.5, 0.5 ) ), ( "left", imath.Color4f( 0.1, 0.2, 0.3, 0.4 ) ), ( "right", imath.Color4f( 0, 0, 0.5, 0.5 ) ) ] )
+
+		]:
+			for queryView, result in queryAndResults:
+				with Gaffer.Context( Gaffer.Context.current() ) as c:
+					sampler["view"].setValue( queryView )
+					if contextView:
+						c["image:viewName"] = contextView
+
+					if result is None:
+						# The result when contextView and queryView are both not overridden is an error,
+						# views has just left and right views, so it's illegal to ask for "default".
+						with six.assertRaisesRegex( self, Gaffer.ProcessException, 'View does not exist "default"' ):
+							sampler["color"].getValue()
+					else:
+						self.assertEqual( sampler["color"].getValue(), result )
+
+		# When reading from an image with a default view, we get the default when requesting a view that
+		# doesn't exist
+		sampler["image"].setInput( reader["out"] )
+		sampler["view"].setValue( "left" )
+		self.assertEqual( sampler["color"].getValue(), imath.Color4f( 0, 0, 0.5, 0.5 ) )
+		sampler["view"].setValue( "right" )
+		self.assertEqual( sampler["color"].getValue(), imath.Color4f( 0, 0, 0.5, 0.5 ) )
 
 if __name__ == "__main__":
 	unittest.main()

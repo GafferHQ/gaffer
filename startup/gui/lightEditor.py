@@ -42,12 +42,14 @@ import GafferSceneUI
 
 if os.environ.get( "GAFFERAPPLESEED_HIDE_UI", "" ) != "1" :
 
-	# Register Light Editor sections for Appleseed before the generic "Visualisation" section
-	import GafferAppleseedUI
+	with IECore.IgnoredExceptions( ImportError ) :
 
-	Gaffer.Metadata.registerValue( GafferSceneUI.LightEditor.Settings, "attribute", "preset:Appleseed", "as:light" )
-	# Default to showing Appleseed lights, since that is the renderer we ship with.
-	Gaffer.Metadata.registerValue( GafferSceneUI.LightEditor.Settings, "attribute", "userDefault", "as:light" )
+		# Register Light Editor sections for Appleseed before the generic "Visualisation" section
+		import GafferAppleseedUI
+
+		Gaffer.Metadata.registerValue( GafferSceneUI.LightEditor.Settings, "attribute", "preset:Appleseed", "as:light" )
+		# Default to showing Appleseed lights, since that is the renderer we ship with.
+		Gaffer.Metadata.registerValue( GafferSceneUI.LightEditor.Settings, "attribute", "userDefault", "as:light" )
 
 with IECore.IgnoredExceptions( ImportError ) :
 

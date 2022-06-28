@@ -2019,7 +2019,18 @@ class InstanceCache : public IECore::RefCounted
 				Cache::accessor writeAccessor;
 				if( m_cache.insert( writeAccessor, h ) )
 				{
-					writeAccessor->second = convert( object, arnoldAttributes, "instance:" + h.toString() );
+					try
+					{
+						writeAccessor->second = convert( object, arnoldAttributes, "instance:" + h.toString() );
+					}
+					catch( const IECore::Cancelled & )
+					{
+						// Procedural expansion was cancelled. Erase `nullptr`
+						// result from the cache so that we redo the expansion
+						// if given the same procedural another time.
+						m_cache.erase( writeAccessor );
+						throw;
+					}
 				}
 				node = writeAccessor->second;
 				writeAccessor.release();
@@ -2060,7 +2071,14 @@ class InstanceCache : public IECore::RefCounted
 				Cache::accessor writeAccessor;
 				if( m_cache.insert( writeAccessor, h ) )
 				{
-					writeAccessor->second = convert( samples, times, arnoldAttributes, "instance:" + h.toString() );
+					try
+					{
+						writeAccessor->second = convert( samples, times, arnoldAttributes, "instance:" + h.toString() );
+					}
+					catch( const IECore::Cancelled & )
+					{
+						m_cache.erase( writeAccessor );
+					}
 				}
 				node = writeAccessor->second;
 				writeAccessor.release();
@@ -2233,7 +2251,10 @@ class ArnoldObjectBase : public IECoreScenePreview::Renderer::ObjectInterface
 				/// \todo Ideally we might use the built-in `id` parameter here, rather
 				/// than make our own. But Arnold's `user_data_int` shader can't query
 				/// it for some reason.
-				if( AiNodeDeclare( node, g_cortexIDArnoldString, "constant UINT" ) )
+				if(
+					AiNodeLookUpUserParameter( node, g_cortexIDArnoldString ) ||
+					AiNodeDeclare( node, g_cortexIDArnoldString, "constant UINT" )
+				)
 				{
 					AiNodeSetUInt( node, g_cortexIDArnoldString, id );
 				}
@@ -2938,11 +2959,17 @@ int procFunc( AtProceduralNodeMethods *methods )
 
 AtNode *convertProcedural( IECoreScenePreview::ConstProceduralPtr procedural, const ArnoldAttributes *attributes, AtUniverse *universe, const std::string &nodeName, AtNode *parentNode )
 {
-	AtNode *node = AiNode( universe, g_proceduralArnoldString, AtString( nodeName.c_str() ), parentNode );
+	// Hold via unique_pointer so that we destroy the node if
+	// `procedural->render()` throws.
+	using UniqueAtNodePtr = std::unique_ptr<AtNode, NodeDeleter>;
+	UniqueAtNodePtr node(
+		AiNode( universe, g_proceduralArnoldString, AtString( nodeName.c_str() ), parentNode ),
+		AiNodeDestroy
+	);
 
-	AiNodeSetPtr( node, g_funcPtrArnoldString, (void *)procFunc );
+	AiNodeSetPtr( node.get(), g_funcPtrArnoldString, (void *)procFunc );
 
-	ProceduralRendererPtr renderer = new ProceduralRenderer( node, attributes->allAttributes() );
+	ProceduralRendererPtr renderer = new ProceduralRenderer( node.get(), attributes->allAttributes() );
 	tbb::this_task_arena::isolate(
 		// Isolate in case procedural spawns TBB tasks, because
 		// `convertProcedural()` is called behind a lock in
@@ -2954,9 +2981,9 @@ AtNode *convertProcedural( IECoreScenePreview::ConstProceduralPtr procedural, co
 
 	ProceduralData *data = new ProceduralData;
 	renderer->nodesCreated( data->nodesCreated );
-	AiNodeSetPtr( node, g_userPtrArnoldString, data );
+	AiNodeSetPtr( node.get(), g_userPtrArnoldString, data );
 
-	return node;
+	return node.release();
 }
 
 bool isConvertedProcedural( const AtNode *node )

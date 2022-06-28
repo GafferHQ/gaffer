@@ -229,29 +229,22 @@ class RenderController::IDMap
 
 	public :
 
-		// Creates an ID if no ID has been created yet.
-		uint32_t acquireID( const ScenePlug::ScenePath &path )
+		uint32_t idForPath( const ScenePlug::ScenePath &path, bool createIfNecessary = false )
 		{
 			Mutex::scoped_lock lock( m_mutex, /* write = */ false );
 			auto it = m_map.find( path );
 			if( it != m_map.end() )
 			{
 				return it->second;
+			}
+
+			if( !createIfNecessary)
+			{
+				return 0;
 			}
 
 			lock.upgrade_to_writer();
 			return m_map.insert( PathAndID( path, m_map.size() + 1 ) ).first->second;
-		}
-
-		uint32_t idForPath( const ScenePlug::ScenePath &path ) const
-		{
-			Mutex::scoped_lock lock( m_mutex, /* write = */ false );
-			auto it = m_map.find( path );
-			if( it != m_map.end() )
-			{
-				return it->second;
-			}
-			return 0;
 		}
 
 		std::optional<ScenePlug::ScenePath> pathForID( uint32_t id ) const
@@ -505,7 +498,7 @@ class RenderController::SceneGraph
 					/// \todo Measure overhead and consider using same IDs everywhere.
 					if( controller->m_renderer->name() != g_openGLRendererName )
 					{
-						m_objectInterface->assignID( controller->m_idMap->acquireID( path ) );
+						m_objectInterface->assignID( controller->m_idMap->idForPath( path, /* createIfNecessary = */ true ) );
 					}
 				}
 
@@ -1551,7 +1544,7 @@ std::shared_ptr<Gaffer::BackgroundTask> RenderController::updateInBackground( co
 		[this, callback, priorityPaths] {
 			if( !priorityPaths.isEmpty() )
 			{
-				updateInternal( callback, &priorityPaths );
+				updateInternal( callback, &priorityPaths, /* signalCompletion = */ false );
 			}
 			updateInternal( callback );
 		}
@@ -1573,7 +1566,7 @@ void RenderController::updateMatchingPaths( const IECore::PathMatcher &pathsToUp
 	updateInternal( callback, &pathsToUpdate );
 }
 
-void RenderController::updateInternal( const ProgressCallback &callback, const IECore::PathMatcher *pathsToUpdate )
+void RenderController::updateInternal( const ProgressCallback &callback, const IECore::PathMatcher *pathsToUpdate, bool signalCompletion )
 {
 	try
 	{
@@ -1690,7 +1683,7 @@ void RenderController::updateInternal( const ProgressCallback &callback, const I
 			}
 		}
 
-		if( callback )
+		if( callback && signalCompletion )
 		{
 			callback( BackgroundTask::Completed );
 		}
@@ -1769,17 +1762,17 @@ IECore::PathMatcher RenderController::pathsForIDs( const std::vector<uint32_t> &
 	return result;
 }
 
-uint32_t RenderController::idForPath( const ScenePlug::ScenePath &path ) const
+uint32_t RenderController::idForPath( const ScenePlug::ScenePath &path, bool createIfNecessary ) const
 {
-	return m_idMap->idForPath( path );
+	return m_idMap->idForPath( path, createIfNecessary );
 }
 
-std::vector<uint32_t> RenderController::idsForPaths( const IECore::PathMatcher &paths ) const
+std::vector<uint32_t> RenderController::idsForPaths( const IECore::PathMatcher &paths, bool createIfNecessary ) const
 {
 	std::vector<uint32_t> result;
 	for( PathMatcher::Iterator it = paths.begin(), eIt = paths.end(); it != eIt; ++it )
 	{
-		if( auto id = idForPath( *it ) )
+		if( auto id = idForPath( *it, createIfNecessary ) )
 		{
 			result.push_back( id );
 		}

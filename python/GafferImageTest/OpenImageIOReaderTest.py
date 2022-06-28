@@ -38,6 +38,7 @@
 import os
 import shutil
 import unittest
+import glob
 import imath
 import random
 import six
@@ -54,6 +55,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 
 	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" )
 	offsetDataWindowFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/rgb.100x100.exr" )
+	fullDataWindowFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checkerboard.100x100.exr" )
 	negativeDataWindowFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checkerWithNegativeDataWindow.200x150.exr" )
 	negativeDisplayWindowFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/negativeDisplayWindow.exr" )
 	circlesExrFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/circles.exr" )
@@ -291,7 +293,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		reader = GafferImage.OpenImageIOReader()
 		reader["fileName"].setValue( testSequence.fileName )
 
-		context = Gaffer.Context()
+		context = Gaffer.Context( Gaffer.Context.current() )
 
 		# get frame 1 data for comparison
 		context.setFrame( 1 )
@@ -436,7 +438,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		reader = GafferImage.OpenImageIOReader()
 		reader["fileName"].setValue( testSequence.fileName )
 
-		context = Gaffer.Context()
+		context = Gaffer.Context( Gaffer.Context.current() )
 
 		# get frame 0 data for comparison
 		context.setFrame( 0 )
@@ -526,7 +528,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		with Gaffer.ContextMonitor( root = s["expression"] ) as cm :
 			GafferImage.ImageAlgo.tiles( s["reader"]["out"] )
 
-		self.assertEqual( set( cm.combinedStatistics().variableNames() ), set( ['frame', 'framesPerSecond'] ) )
+		self.assertEqual( set( cm.combinedStatistics().variableNames() ), set( ['frame', 'framesPerSecond', 'image:viewName' ] ) )
 
 	def testMultipartRead( self ) :
 
@@ -577,32 +579,30 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		compareDelete['channels'].setValue( "R B A" )
 		self.assertImagesEqual( compareDelete["out"], multipartDelete["out"], ignoreMetadata = True )
 
-	def testUnsupportedMultipartRead( self ) :
-
-		rgbReader = GafferImage.OpenImageIOReader()
-		rgbReader["fileName"].setValue( self.offsetDataWindowFileName )
-
+	def testDifferentDataWindowsMultipartRead( self ) :
 		# This test multipart file contains a "rgba" subimage, and a second subimage with a
-		# differing data window.  The second part can currently not be loaded, because Gaffer images
-		# have a single data window for the whole image.
-		#
-		# In the future, should we union the data windows?  Are subimages with differing data windows common?
-		# This would probably happen with stereo images, but we should probably put work into handling stereo
-		# images differently - with a context variable to control which eye we get, rather than loading everything
-		# as channels.
+		# differing data window.  The data windows need to be unioned to read the file.
 		#
 		# It was created using this command:
 		# > oiiotool rgb.100x100.exr --attrib "oiio:subimagename" rgba checkerboard.100x100.exr --attrib "oiio:subimagename" fullDataWindow --siappendall -o unsupportedMultipart.exr
 		multipartReader = GafferImage.OpenImageIOReader()
 		multipartReader["fileName"].setValue( self.unsupportedMultipartFileName )
 
-		# When we compare to the single part comparison file, the image will come out the same, because
-		# the second part is ignored - and we should get a message about it being ignored
-		with IECore.CapturingMessageHandler() as mh :
-			self.assertImagesEqual( rgbReader["out"], multipartReader["out"], ignoreMetadata = True )
+		rgbReader = GafferImage.OpenImageIOReader()
+		rgbReader["fileName"].setValue( self.offsetDataWindowFileName )
 
-		self.assertEqual( len( mh.messages ), 1 )
-		self.assertTrue( mh.messages[0].message.startswith( "Ignoring subimage 1 of " ) )
+		checkerboardReader = GafferImage.OpenImageIOReader()
+		checkerboardReader["fileName"].setValue( self.fullDataWindowFileName )
+
+		shuffleLayer = GafferImage.CollectImages()
+		shuffleLayer["rootLayers"].setValue( IECore.StringVectorData( [ 'fullDataWindow' ] ) )
+		shuffleLayer["in"].setInput( checkerboardReader["out"] )
+
+		merge = GafferImage.Merge()
+		merge["in"][0].setInput( rgbReader["out"] )
+		merge["in"][1].setInput( shuffleLayer["out"] )
+
+		self.assertImagesEqual( merge["out"], multipartReader["out"], ignoreMetadata = True )
 
 	def testDefaultChannelMultipartRead( self ) :
 
@@ -648,7 +648,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		self.assertTrue( mh.messages[1].message.startswith( 'Ignoring channel "G" in subimage "1"' ) )
 		self.assertTrue( mh.messages[2].message.startswith( 'Ignoring channel "B" in subimage "1"' ) )
 		for i in range( 3 ):
-			self.assertTrue( mh.messages[i].message.endswith( 'already in subimage "0".' ) )
+			self.assertTrue( mh.messages[i].message.endswith( 'already in subimage "0" for view <default>.' ) )
 
 		sampler['channels'].setToDefault()
 		self.assertEqual( sampler["color"].getValue(), imath.Color4f( 0.1, 0.2, 0.3, 0.7 ) )
@@ -657,7 +657,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 
 		r = GafferImage.OpenImageIOReader()
 
-		with Gaffer.Context() as c :
+		with Gaffer.Context( Gaffer.Context.current() ) as c :
 
 			GafferImage.FormatPlug.setDefaultFormat( c, GafferImage.Format( 100, 200 ) )
 			h1 = r["out"].formatHash()
@@ -691,6 +691,21 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		self.assertNotIn( "name", metadata )
 		self.assertNotIn( "oiio:subimagename", metadata )
 		self.assertNotIn( "oiio:subimages", metadata )
+
+	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testImageOpenPerformance( self ):
+		# Test the overhead of opening images by opening lots of images, but only reading the view count
+		files = glob.glob( os.path.expandvars( "${GAFFER_ROOT}/python/GafferImageTest/images/*.exr" ) )
+		files = filter( lambda f : not ( "ChannelsOverlap" in f or "NukeSinglePart" in f ), files )
+		files = sorted( files )
+		filesWithResult = [ (i, 2 if "channelTestMultiView" in i else 1 ) for i in files ]
+		reader = GafferImage.ImageReader()
+		with GafferTest.TestRunner.PerformanceScope() :
+			for f, r in filesWithResult:
+				reader["fileName"].setValue( f )
+				self.assertEqual( len( reader["out"].viewNames() ), r )
+
 
 if __name__ == "__main__":
 	unittest.main()

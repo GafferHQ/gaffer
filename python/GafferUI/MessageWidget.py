@@ -1347,7 +1347,7 @@ class _MessageTableFilterModel( QtCore.QSortFilterProxyModel ) :
 
 	def filterAcceptsRow( self, sourceRow, sourceParent ) :
 
-		levelIndex = self.sourceModel().index( sourceRow, _MessageTableModel.Column.Level, sourceParent )
+		levelIndex = self.sourceModel().index( sourceRow, int( _MessageTableModel.Column.Level ), sourceParent )
 		return self.sourceModel().data( levelIndex, _MessageTableModel.ValueRole ) <= self.__maxLevel
 
 # The base TabelModel representing the underlying message data.

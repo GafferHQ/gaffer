@@ -90,6 +90,14 @@ void ContextSanitiser::processStarted( const Gaffer::Process *process )
 			}
 		}
 
+		if( process->plug() == image->viewNamesPlug() )
+		{
+			if( process->context()->getIfExists<std::string>( ImagePlug::viewNameContextName ) )
+			{
+				warn( *process, ImagePlug::viewNameContextName );
+			}
+		}
+
 	}
 }
 

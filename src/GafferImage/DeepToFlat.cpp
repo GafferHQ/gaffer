@@ -78,6 +78,7 @@ DeepToFlat::DeepToFlat( const std::string &name )
 	flattenedChannelDataPlug()->setInput( deepState()->outPlug()->channelDataPlug() );
 
 	// We don't ever want to change these, so we make pass-through connections.
+	outPlug()->viewNamesPlug()->setInput( inPlug()->viewNamesPlug() );
 	outPlug()->dataWindowPlug()->setInput( inPlug()->dataWindowPlug() );
 	outPlug()->formatPlug()->setInput( inPlug()->formatPlug() );
 	outPlug()->metadataPlug()->setInput( inPlug()->metadataPlug() );

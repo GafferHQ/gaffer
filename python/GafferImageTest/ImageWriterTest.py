@@ -43,6 +43,7 @@ import datetime
 import six
 import subprocess
 import imath
+import inspect
 
 import IECore
 import IECoreImage
@@ -85,8 +86,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		w["in"].setInput( r["out"] )
 		w["fileName"].setValue( testFile )
 		w["channels"].setValue( "R B" )
-		with Gaffer.Context() :
-			w["task"].execute()
+		w["task"].execute()
 
 		writerOutput = GafferImage.ImageReader()
 		writerOutput["fileName"].setValue( testFile )
@@ -382,8 +382,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 					o["offset"].setValue( offset )
 
-					with Gaffer.Context() :
-						w["task"].execute()
+					w["task"].execute()
 
 					reRead["refreshCount"].setValue( reRead["refreshCount"].getValue() + 1 )
 					if area.size() != imath.V2i( 0 ):
@@ -573,8 +572,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		w["channels"].setValue( "*" )
 
 		# Execute
-		with Gaffer.Context() :
-			w["task"].execute()
+		w["task"].execute()
 		self.assertTrue( os.path.exists( testFile ), "Failed to create file : {} : {}".format( ext, testFile ) )
 
 		# Check the output.
@@ -656,9 +654,8 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		s["w"] = GafferImage.ImageWriter()
 		s["w"]["in"].setInput( s["c"]["out"] )
 
-		with s.context() :
-			ci = GafferImage.ImageAlgo.image( s["c"]["out"] )
-			wi = GafferImage.ImageAlgo.image( s["w"]["out"] )
+		ci = GafferImage.ImageAlgo.image( s["c"]["out"] )
+		wi = GafferImage.ImageAlgo.image( s["w"]["out"] )
 
 		self.assertEqual( ci, wi )
 
@@ -682,8 +679,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		w["in"].setInput( r["out"] )
 		w["fileName"].setValue( testFile )
 
-		with Gaffer.Context() :
-			w["task"].execute()
+		w["task"].execute()
 		self.assertTrue( os.path.exists( testFile ) )
 
 		result = GafferImage.ImageReader()
@@ -696,8 +692,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		s = Gaffer.ScriptNode()
 		s.addChild( w )
 
-		with Gaffer.Context() :
-			w["task"].execute()
+		w["task"].execute()
 
 		result["refreshCount"].setValue( result["refreshCount"].getValue() + 1 )
 		self.assertEqual( result["out"]["metadata"].getValue()["DocumentName"].value, "untitled" )
@@ -705,8 +700,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		# actually set the script's file name
 		s["fileName"].setValue( "/my/gaffer/script.gfr" )
 
-		with Gaffer.Context() :
-			w["task"].execute()
+		w["task"].execute()
 
 		result["refreshCount"].setValue( result["refreshCount"].getValue() + 1 )
 		self.assertEqual( result["out"]["metadata"].getValue()["DocumentName"].value, "/my/gaffer/script.gfr" )
@@ -852,7 +846,6 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		)
 
 	def testSinglePixelThatUsedToCrash( self ) :
-
 		i = GafferImage.Constant()
 		i["format"].setValue( GafferImage.Format( 4096, 2304, 1.000 ) )
 
@@ -873,8 +866,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		w["in"].setInput( c["out"] )
 		w["fileName"].setValue( testFile )
 
-		with Gaffer.Context():
-			w["task"].execute()
+		w["task"].execute()
 		self.assertTrue( os.path.exists( testFile ) )
 
 		after = GafferImage.ImageReader()
@@ -901,8 +893,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		w["in"].setInput( c["out"] )
 		w["fileName"].setValue( testFile )
 
-		with Gaffer.Context():
-			w["task"].execute()
+		w["task"].execute()
 		self.assertTrue( os.path.exists( testFile ) )
 
 		after = GafferImage.ImageReader()
@@ -933,8 +924,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		w["fileName"].setValue( testFile )
 		w["channels"].setValue( "*" )
 
-		with Gaffer.Context() :
-			w["task"].execute()
+		w["task"].execute()
 		self.assertTrue( os.path.exists( testFile ) )
 
 		after = GafferImage.ImageReader()
@@ -1146,8 +1136,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 			w["fileName"].setValue( testFile )
 			w["jpeg"]["chromaSubSampling"].setValue( chromaSubSampling )
 
-			with Gaffer.Context() :
-				w["task"].execute()
+			w["task"].execute()
 
 			self.assertTrue( os.path.exists( testFile ), "Failed to create file : {} : {}".format( chromaSubSampling, testFile ) )
 
@@ -1436,7 +1425,6 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		writer = GafferImage.ImageWriter()
 		writer["in"].setInput( collect["out"] )
 		writer["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.exr" ) )
-		writer["layout"]["viewName"].setValue( 'main' )
 		writer["layout"]["partName"].setValue( '${imageWriter:standardPartName}.main' )
 		writer["layout"]["channelName"].setValue( '${imageWriter:nukeBaseName}' )
 		writer["task"].execute()
@@ -1463,7 +1451,6 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		writer["in"].setInput( deleteChannels["out"] )
 		writer["openexr"]["dataType"].setValue( 'float' )
 
-		writer["layout"]["viewName"].setValue( 'main' )
 		writer["layout"]["partName"].setValue( '${imageWriter:standardPartName}_main' )
 		writer["expression"] = Gaffer.Expression()
 		writer["expression"].setExpression(
@@ -1516,55 +1503,47 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		refReader["channelInterpretation"].setValue( GafferImage.ImageReader.ChannelInterpretation.Legacy )
 		self.assertImagesEqual( rereader["out"], refReader["out"], ignoreMetadata = True )
 
+	# Helper function that extracts the part of the header we care about from exrheader
+	def usefulHeader( self, path ):
+		r = subprocess.check_output( ["exrheader", path ], universal_newlines=True ).splitlines()[2:]
+
+		# Skip header lines that change every run, or between software, and compression ( since we're
+		# not testing for that ), and chunkCount ( since it depends on compression ).  "version" is
+		# something Nuke sets that we're not worrying about.  "ResolutionUnit" is sometimes set by OIIO
+		# automatically if it sees other metadata ... it always sets it to "in" for inches
+		r = [ i for i in r if not (
+			( i + " " ).split( " " )[0] in [ "Artist", "DocumentName", "HostComputer", "Software", "capDate", "compression", "chunkCount", "version", "ResolutionUnit", "textureformat", "preview", "openexr:chunkCount" ] or i.startswith( "nuke" )
+		) ]
+
+		# We don't care about the difference between 16 and 32 bit floats
+		r = [ i.replace( "32-bit floating-point", "16-bit floating-point" ) for i in r ]
+
+		# Now a very hacky part - we need the main part to be first, but otherwise, the order
+		# of parts doesn't matter, so sort the later parts by name
+		parts = [ [] ]
+		partNames = [ "X" ]
+
+		for i in r:
+			if i.startswith( " part " ):
+				if i[6] != "0":
+					parts.append( [] )
+					partNames.append( "X" )
+					continue
+			parts[-1].append( i )
+			if i.startswith( "name " ):
+				partNames[-1] = i
+		parts[-1].append( "" ) # An extra empty line at the end keeps things consistent for the last part
+
+		r = parts[0]
+		partNum = 1
+		for n, p in sorted( zip( partNames[1:], parts[1:] ) ):
+			r.append( " part %i:" % partNum )
+			r += p
+			partNum += 1
+
+		return r
+
 	def testWithChannelTestImage( self ):
-
-		# Helper function that extracts the part of the header we care about from exrheader
-		def usefulHeader( path ):
-			r = subprocess.check_output( ["exrheader", path ], universal_newlines=True ).splitlines()[2:]
-
-			# Skip header lines that change every run, or between software, and compression ( since we're
-			# not testing for that ), and chunkCount ( since it depends on compression ).  "version" is
-			# something Nuke sets that we're not worrying about
-			#
-			# TODO - We currently omit view, because Nuke is setting it even in non-stereo files.
-			# This suggests a problem for the next PR where we actually deal with stereo - I had planned
-			# to differentiate between files with "stereo supported, one current view", and "no stereo".
-			# Since Nuke is setting the view by default, the reader shouldn't create a view if there
-			# is one view in the file.  Perhaps if channelInterpretation = Specification, then having one
-			# view set should put us in stereo-active mode?
-			r = [ i for i in r if not (
-				( i + " " ).split( " " )[0] in [ "Artist", "DocumentName", "HostComputer", "Software", "capDate", "compression", "chunkCount", "version", "view" ] or i.startswith( "nuke" )
-			) ]
-
-			# We don't care about the difference between 16 and 32 bit floats
-			r = [ i.replace( "32-bit floating-point", "16-bit floating-point" ) for i in r ]
-
-
-			# Now a very hacky part - we need the main part to be first, but otherwise, the order
-			# of parts doesn't matter, so sort the later parts by name
-			parts = [ [] ]
-			partNames = [ "X" ]
-
-			for i in r:
-				if i.startswith( " part " ):
-					if i[6] != "0":
-						parts.append( [] )
-						partNames.append( "X" )
-						continue
-				parts[-1].append( i )
-				if i.startswith( "name " ):
-					partNames[-1] = i
-			parts[-1].append( "" ) # An extra empty line at the end keeps things consistent for the last part
-
-			r = parts[0]
-			partNum = 1
-			for n, p in sorted( zip( partNames[1:], parts[1:] ) ):
-				r.append( " part %i:" % partNum )
-				r += p
-				partNum += 1
-
-			return r
-
 
 		reference = self.channelTestImage()
 
@@ -1589,10 +1568,204 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 			writer["task"].execute()
 			rereader["refreshCount"].setValue( rereader["refreshCount"].getValue() + 1 )
 			self.assertImagesEqual( rereader["out"], reference["out"], ignoreMetadata = True, maxDifference = 0.0002, ignoreChannelNamesOrder = layout.startswith( "Nuke" ) )
-			header = usefulHeader( writePath )
-			refHeader = usefulHeader( os.path.expandvars( "${GAFFER_ROOT}/python/GafferImageTest/images/channelTest" + referenceFile + ".exr" ) )
+			header = self.usefulHeader( writePath )
+			refHeader = self.usefulHeader( os.path.expandvars( "${GAFFER_ROOT}/python/GafferImageTest/images/channelTest" + referenceFile + ".exr" ) )
+
+			if layout == "Nuke/Interleave Channels":
+				# We don't match the view metadata which Nuke sticks on files without specific views
+				refHeader = list( filter( lambda i : i != 'view (type string): "main"', refHeader ) )
+			self.assertEqual( header, refHeader )
+
+	def testWithMultiViewChannelTestImage( self ):
+
+		reference = self.channelTestImageMultiView()
+
+		writePath = os.path.join( self.temporaryDirectory(), "multiViewTest.exr" )
+		writer = GafferImage.ImageWriter()
+		writer["in"].setInput( reference["out"] )
+		writer["fileName"].setValue( writePath )
+
+		rereader = GafferImage.ImageReader()
+		rereader["fileName"].setValue( writePath )
+		rereader["channelInterpretation"].setValue( GafferImage.ImageReader.ChannelInterpretation.Default )
+
+		# Test that the presets produce the expected files
+		for layout, referenceFile in [
+				( "Single Part", "SinglePart" ), ( "Part per View", "PartPerView" ), ( "Part per Layer", "PartPerLayer" ),
+			]:
+
+			Gaffer.NodeAlgo.applyPreset( writer["layout"], layout )
+
+			writer["task"].execute()
+			rereader["refreshCount"].setValue( rereader["refreshCount"].getValue() + 1 )
+
+			# In "Single Part", we must expand the dataWindow to encompass all views, so we can't get
+			# exactly matching data windows
+			self.assertImagesEqual( rereader["out"], reference["out"], ignoreMetadata = True, maxDifference = 0.0002, ignoreChannelNamesOrder = layout == "Single Part", ignoreDataWindow = layout == "Single Part" )
+
+			header = self.usefulHeader( writePath )
+			refHeader = self.usefulHeader( os.path.expandvars( "${GAFFER_ROOT}/python/GafferImageTest/images/channelTestMultiView" + referenceFile + ".exr" ) )
 
 			self.assertEqual( header, refHeader )
+
+		# Test for Nuke, which requires expanding data window to match for all views, so we use referenceExpanded
+
+		# Nuke isn't very flexible in handling multiView images.  Don't use different channels in different views
+		reference["DeleteChannels"]["enabled"].setValue( False )
+
+		# Nuke also doesn't support different data windows for different views
+		writer["matchDataWindows"].setValue( True )
+
+		# Note that there is no test for Nuke/Interleave Channels, because Nuke just crashes when
+		# I try to export in that mode to get a reference image
+		for layout, referenceFile in [
+				( "Part per Layer", "NukeCompat" ), ( "Nuke/Interleave Channels, Layers and Views", "NukeSinglePart" ), ( "Nuke/Interleave Channels and Layers", "NukePartPerView" ), ( "Nuke/Interleave Channels", None )
+			]:
+
+			Gaffer.NodeAlgo.applyPreset( writer["layout"], layout )
+
+			writer["task"].execute()
+			rereader["refreshCount"].setValue( rereader["refreshCount"].getValue() + 1 )
+			self.assertImagesEqual( rereader["out"], reference["out"], ignoreMetadata = True, maxDifference = 0.0002, ignoreChannelNamesOrder = layout.startswith( "Nuke" ), ignoreDataWindow = True )
+
+			if layout == "Nuke/Interleave Channels, Layers and Views":
+				# Nuke's implementation of single part multi-view has channel names that don't match the
+				# spec at all, don't bother trying to match them
+				continue
+			if layout == "Nuke/Interleave Channels":
+				# I can't get Nuke to export in this mode without segfaulting, so we don't have "ground truth"
+				# to compare our channel naming too
+				continue
+
+			header = self.usefulHeader( writePath )
+			refHeader = self.usefulHeader( os.path.expandvars( "${GAFFER_ROOT}/python/GafferImageTest/images/channelTestMultiView" + referenceFile + ".exr" ) )
+
+			if layout == "Nuke/Interleave Channels and Layers":
+				# Swap the order of left and right to match Nuke having arbitrarily reordered
+				# ( We should probably have an actual way of reordering views in Gaffer
+				refHeader = [ i.replace( "left", "right" ) if "left" in i else i.replace( "right", "left" ) for i in refHeader ]
+			self.assertEqual( header, refHeader )
+
+	@unittest.skipIf( not "OPENEXR_IMAGES_DIR" in os.environ, "If you want to run tests using the OpenEXR sample images, then download https://github.com/AcademySoftwareFoundation/openexr-images and set the env var OPENEXR_IMAGES_DIR to the directory" )
+	def testWithEXRSampleImages( self ):
+		self.maxDiff = None
+
+		directory = os.environ["OPENEXR_IMAGES_DIR"] + "/"
+
+		reader = GafferImage.ImageReader()
+
+		writer = GafferImage.ImageWriter()
+		writer["in"].setInput( reader["out"] )
+		writer["openexr"]["dataType"].setValue( 'float' )
+
+		writer["partNameForSeparateZ"] = Gaffer.StringPlug()
+		writer["partNameExpression"] = Gaffer.Expression()
+		writer["partNameExpression"].setExpression( inspect.cleandoc(
+			"""
+			v = context.get( "imageWriter:viewName" )
+			parent["partNameForSeparateZ"] = ( "depth" if context.get( "imageWriter:channelName" ) == "Z" else context.get( "imageWriter:standardPartName" ) ) + ( ( "_" + v ) if v else "" )
+			"""
+		) )
+
+		rereader = GafferImage.ImageReader()
+
+		tempFileIndex = 0
+
+
+		for name in [
+			"Beachball/multipart.0001.exr", "Beachball/singlepart.0001.exr", "Chromaticities/Rec709.exr", "Chromaticities/XYZ.exr", "DisplayWindow/t01.exr", "DisplayWindow/t02.exr", "DisplayWindow/t03.exr", "DisplayWindow/t04.exr", "DisplayWindow/t05.exr", "DisplayWindow/t06.exr", "DisplayWindow/t07.exr", "DisplayWindow/t08.exr", "DisplayWindow/t09.exr", "DisplayWindow/t10.exr", "DisplayWindow/t11.exr", "DisplayWindow/t12.exr", "DisplayWindow/t13.exr", "DisplayWindow/t14.exr", "DisplayWindow/t15.exr", "DisplayWindow/t16.exr", "MultiResolution/Bonita.exr", "MultiResolution/ColorCodedLevels.exr", "MultiResolution/Kapaa.exr", "MultiResolution/KernerEnvCube.exr", "MultiResolution/KernerEnvLatLong.exr", "MultiResolution/MirrorPattern.exr", "MultiResolution/OrientationCube.exr", "MultiResolution/OrientationLatLong.exr", "MultiResolution/PeriodicPattern.exr", "MultiResolution/StageEnvCube.exr", "MultiResolution/StageEnvLatLong.exr", "MultiResolution/WavyLinesCube.exr", "MultiResolution/WavyLinesLatLong.exr", "MultiResolution/WavyLinesSphere.exr", "MultiView/Adjuster.exr", "MultiView/Balls.exr", "MultiView/Fog.exr", "MultiView/Impact.exr", "MultiView/LosPadres.exr", "ScanLines/Blobbies.exr", "ScanLines/CandleGlass.exr", "ScanLines/Cannon.exr", "ScanLines/Desk.exr", "ScanLines/MtTamWest.exr", "ScanLines/PrismsLenses.exr", "ScanLines/StillLife.exr", "ScanLines/Tree.exr", "TestImages/AllHalfValues.exr", "TestImages/BrightRings.exr", "TestImages/BrightRingsNanInf.exr", "TestImages/GammaChart.exr", "TestImages/GrayRampsDiagonal.exr", "TestImages/GrayRampsHorizontal.exr", "TestImages/RgbRampsDiagonal.exr", "TestImages/SquaresSwirls.exr", "TestImages/WideColorGamut.exr", "TestImages/WideFloatRange.exr", "Tiles/GoldenGate.exr", "Tiles/Ocean.exr", "Tiles/Spirals.exr", "v2/LeftView/Balls.exr", "v2/LeftView/Ground.exr", "v2/LeftView/Leaves.exr", "v2/LeftView/Trunks.exr", "v2/LowResLeftView/Balls.exr", "v2/LowResLeftView/composited.exr", "v2/LowResLeftView/Ground.exr", "v2/LowResLeftView/Leaves.exr", "v2/LowResLeftView/Trunks.exr", "v2/Stereo/Balls.exr", "v2/Stereo/composited.exr", "v2/Stereo/Ground.exr", "v2/Stereo/Leaves.exr", "v2/Stereo/Trunks.exr"
+		]:
+			reader["fileName"].setValue( directory + name )
+
+			isDeep = reader["out"].deep( reader["out"].viewNames()[0] )
+
+			matchingLayout = "Part per View" if isDeep else "Single Part"
+			if name == "Beachball/singlepart.0001.exr":
+				matchingLayout = "Single Part"
+			if name == "Beachball/multipart.0001.exr":
+				matchingLayout = "Part per Layer"
+			elif name.startswith( "MultiResolution" ):
+				# We can read multi-resolution files, but we don't write them as multi-res, so the headers
+				# won't match
+				matchingLayout = None
+			elif name == "v2/Stereo/composited.exr" :
+				# We don't have a convenient way to write Z in the base layer, but a separate part, so the
+				# headers won't match.  ( We could actually write a matching format using a custom expression
+				# on writer["layout"]["partName"], but I won't worry about that currently )
+				matchingLayout = None
+
+			for layout in [
+					"Single Part", "Part per View", "Part per Layer", "Nuke/Interleave Channels, Layers and Views", "Nuke/Interleave Channels and Layers", "Nuke/Interleave Channels"
+			]:
+				isSinglePart = layout in [ "Single Part", "Nuke/Interleave Channels, Layers and Views" ]
+
+				writer["layout"]["partName"].setInput( None )
+
+				Gaffer.NodeAlgo.applyPreset( writer["layout"], layout )
+
+				if name.startswith( "v2" ) and not name == "v2/LowResLeftView/composited.exr":
+					# Match part naming in sample files
+					writer["layout"]["partName"].setValue( "rgba." + writer["layout"]["partName"].getValue() )
+
+				if name == "Beachball/multipart.0001.exr" and layout == "Part per Layer":
+					writer["layout"]["partName"].setInput( writer["partNameForSeparateZ"] )
+
+				tempFileIndex += 1
+				tempFile = os.path.join( self.temporaryDirectory(), "sampleImageTestFile%i.exr" % tempFileIndex )
+				writer["fileName"].setValue( tempFile )
+				rereader["fileName"].setValue( tempFile )
+
+				tiled = name in [ "MultiView/Impact.exr" ] or name.startswith( "Tiles/" )
+				writer['openexr']['mode'].setValue( tiled )
+
+				if isDeep and len( reader["out"].viewNames() ) > 1 and isSinglePart:
+					six.assertRaisesRegex( self, Gaffer.ProcessException, '^ImageWriter.task : Cannot write views "left" and "right" both to same image part when dealing with deep images$', writer["task"].execute )
+					continue
+				else:
+					writer["task"].execute()
+
+				# If one of our layout presets matches how the file is laid out, the header should match
+				if layout == matchingLayout:
+					header = self.usefulHeader( tempFile )
+					# Some aspects of EXR files we don't currently control, so we hack those aspects to make
+					# sure everything else matches.  It might be nice to be able to actually set tile size
+					# on the writer
+					if name == "MultiView/Impact.exr":
+						header = [ i.replace( "tile size 128 by 128 pixels", "tile size 64 by 64 pixels" ) for i in header ]
+					if name == "Tiles/Spirals.exr":
+						header = [ i.replace( "tile size 128 by 128 pixels", "tile size 287 by 126 pixels" ) for i in header ]
+					if name == "ScanLines/Blobbies.exr":
+						header = [ i.replace( "increasing y", "decreasing y" ) for i in header ]
+
+					refHeader = self.usefulHeader( directory + name )
+
+					# In this example, there is an unnecessary name, plus disparity channels outside of views
+					# that we currently can't load
+					if name == "Beachball/singlepart.0001.exr":
+						refHeader = [ i for i in refHeader if not i.startswith( "name" ) ]
+
+					if name == "Beachball/multipart.0001.exr":
+						# Account for data window being expanded to match for different parts that share a view
+						refHeader = list( map( lambda l :
+							l.replace( "(1070 245) - (1455 1013)", "(654 245) - (1530 1120)" ).replace(
+								"(1106 245) - (1490 1013)", "(688 245) - (1564 1120)" ),
+							refHeader
+						) )
+
+					self.assertEqual( header, refHeader )
+
+				# If we're writing from a multi-part to a single-part, we won't be able to preserve the data
+				# window
+				expandDataWindow = name == "Beachball/multipart.0001.exr" and isSinglePart
+
+				ignoreOrder = name == "Beachball/multipart.0001.exr" or ( name == "Beachball/singlepart.0001.exr" and layout != "Single Part" )
+				rereader["channelInterpretation"].setValue( GafferImage.ImageReader.ChannelInterpretation.Default )
+				self.assertImagesEqual( rereader["out"], reader["out"], ignoreMetadata = True, ignoreChannelNamesOrder = ignoreOrder, ignoreDataWindow = expandDataWindow )
+
+				if not layout.startswith( "Nuke" ):
+					rereader["channelInterpretation"].setValue( GafferImage.ImageReader.ChannelInterpretation.Specification )
+					self.assertImagesEqual( rereader["out"], reader["out"], ignoreMetadata = True, ignoreChannelNamesOrder = ignoreOrder, ignoreDataWindow = expandDataWindow )
+
 
 if __name__ == "__main__":
 	unittest.main()

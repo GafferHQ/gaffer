@@ -446,7 +446,6 @@ class SetTest( GafferSceneTest.SceneTestCase ) :
 		setNode = GafferScene.Set()
 		setNode["in"].setInput( group["out"] )
 		setNode["filter"].setInput( pathFilter["out"] )
-		setNode["name"].setValue( "round square" )
 		setNode["setVariable"].setValue( "set" )
 
 		spreadsheet = Gaffer.Spreadsheet()
@@ -458,6 +457,7 @@ class SetTest( GafferSceneTest.SceneTestCase ) :
 		spreadsheet["rows"][2]["name"].setValue( "square" )
 		spreadsheet["rows"][2]["cells"]["paths"]["value"].setValue( IECore.StringVectorData( [ "/group/cube" ] ) )
 
+		setNode["name"].setInput( spreadsheet["enabledRowNames"] )
 		pathFilter["paths"].setInput( spreadsheet["out"]["paths"] )
 
 		self.assertEqual( { str( x ) for x in setNode["out"].setNames() }, { "round", "square" } )

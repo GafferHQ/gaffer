@@ -109,9 +109,9 @@ class GAFFER_API StringPlug : public ValuePlug
 
 		/// \undoable
 		void setValue( const std::string &value );
-		/// Returns the value. See comments in TypedObjectPlug::getValue()
-		/// for details of the optional precomputedHash argument - and use
-		/// with care!
+		/// Returns the value. The `precomputedHash` argument is deprecated, and
+		/// will be removed in a future release.
+		/// \todo Remove `precomputedHash` argument.
 		std::string getValue( const IECore::MurmurHash *precomputedHash = nullptr ) const;
 
 		void setFrom( const ValuePlug *other ) override;

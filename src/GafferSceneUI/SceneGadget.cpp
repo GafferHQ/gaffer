@@ -678,7 +678,7 @@ void SceneGadget::setSelection( const IECore::PathMatcher &selection )
 	m_renderer->option( "gl:selection", d.get() );
 	if( m_outputBuffer )
 	{
-		m_outputBuffer->setSelection( m_controller->idsForPaths( selection ) );
+		m_outputBuffer->setSelection( m_controller->idsForPaths( selection, /* createIfMissing = */ true ) );
 	}
 	dirty( DirtyType::Render );
 }
@@ -754,17 +754,17 @@ void SceneGadget::renderLayer( Layer layer, const GafferUI::Style *style, Render
 		return;
 	}
 
-	if( m_updateErrored )
-	{
-		return;
-	}
-
 	if( isSelectionRender( reason ) )
 	{
 		return;
 	}
 
 	const_cast<SceneGadget *>( this )->updateRenderer();
+	if( m_updateErrored )
+	{
+		return;
+	}
+
 	if( m_outputBuffer )
 	{
 		m_outputBuffer->render();

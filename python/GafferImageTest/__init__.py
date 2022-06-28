@@ -105,6 +105,11 @@ from .DeepRecolorTest import DeepRecolorTest
 from .ContextSanitiserTest import ContextSanitiserTest
 from .SaturationTest import SaturationTest
 from .FormatQueryTest import FormatQueryTest
+from .CreateViewsTest import CreateViewsTest
+from .SelectViewTest import SelectViewTest
+from .DeleteViewsTest import DeleteViewsTest
+from .CopyViewsTest import CopyViewsTest
+from .AnaglyphTest import AnaglyphTest
 
 if __name__ == "__main__":
 	import unittest

@@ -43,6 +43,7 @@
 
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/ComputeNode.h"
+#include "Gaffer/StringPlug.h"
 #include "Gaffer/TypedObjectPlug.h"
 
 namespace GafferImage
@@ -63,6 +64,9 @@ class GAFFERIMAGE_API ImageSampler : public Gaffer::ComputeNode
 
 		ImagePlug *imagePlug();
 		const ImagePlug *imagePlug() const;
+
+		Gaffer::StringPlug *viewPlug();
+		const Gaffer::StringPlug *viewPlug() const;
 
 		Gaffer::StringVectorDataPlug *channelsPlug();
 		const Gaffer::StringVectorDataPlug *channelsPlug() const;

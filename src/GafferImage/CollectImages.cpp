@@ -43,6 +43,8 @@
 #include "Gaffer/ArrayPlug.h"
 #include "Gaffer/Context.h"
 
+#include <numeric>
+
 using namespace std;
 using namespace Imath;
 using namespace IECore;
@@ -196,6 +198,67 @@ void CollectImages::affects( const Gaffer::Plug *input, AffectedPlugsContainer &
 		outputs.push_back( outPlug()->deepPlug() );
 	}
 
+}
+
+void CollectImages::hashViewNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ImageProcessor::hashViewNames( output, context, h );
+
+	const std::string layerVariable = layerVariablePlug()->getValue();
+
+	ConstStringVectorDataPtr rootLayersData = rootLayersPlug()->getValue();
+	const vector<string> &rootLayers = rootLayersData->readable();
+
+	Context::EditableScope editScope( context );
+	for( unsigned int i = 0; i < rootLayers.size(); i++ )
+	{
+		editScope.set( layerVariable, &( rootLayers[i] ) );
+		inPlug()->viewNamesPlug()->hash( h );
+	}
+}
+
+IECore::ConstStringVectorDataPtr CollectImages::computeViewNames( const Gaffer::Context *context, const ImagePlug *parent ) const
+{
+
+	const std::string layerVariable = layerVariablePlug()->getValue();
+
+	ConstStringVectorDataPtr rootLayersData = rootLayersPlug()->getValue();
+	const vector<string> &rootLayers = rootLayersData->readable();
+
+	if( rootLayers.size() == 0 )
+	{
+		return ImagePlug::defaultViewNames();
+	}
+
+	Context::EditableScope editScope( context );
+	editScope.set( layerVariable, &( rootLayers[0] ) );
+	ConstStringVectorDataPtr firstViewNamesData = inPlug()->viewNamesPlug()->getValue();
+	const std::vector<string> &firstViewNames = firstViewNamesData->readable();
+	for( unsigned int i = 1; i < rootLayers.size(); i++ )
+	{
+		editScope.set( layerVariable, &( rootLayers[i] ) );
+		ConstStringVectorDataPtr layerViewNamesData = inPlug()->viewNamesPlug()->getValue();
+		if( firstViewNames != layerViewNamesData->readable() )
+		{
+			// Requiring all contexts to have matching view names is quite restrictive, but is the simplest.
+			// The most thorough solution might be to union the view names across all contexts, but then
+			// computing something like the format plug gets more complex, since you have to search for
+			// the first context where it is set.  Perhaps taking the views of the first context could be a
+			// reasonable compromise, which I think would just require clearing out the channel names
+			// when looking at a view that doesn't existing for that context value
+
+			throw IECore::Exception( boost::str( boost::format(
+					"Root layer \"%s\" does not match views for \"%s\" : <%s> vs <%s>"
+				) %
+					rootLayers[i] %
+					rootLayers[0] %
+					std::accumulate( layerViewNamesData->readable().begin(), layerViewNamesData->readable().end(), std::string(" ")) %
+					std::accumulate( firstViewNames.begin(), firstViewNames.end(), std::string(" "))
+			) );
+		}
+	}
+
+	return firstViewNamesData;
 }
 
 void CollectImages::hashFormat( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const

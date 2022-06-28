@@ -3087,6 +3087,74 @@ class RendererTest( GafferTest.TestCase ) :
 			color = imath.Color3f( image["R"][centreIndex], image["G"][centreIndex], image["B"][centreIndex] )
 			self.assertEqual( color, imath.Color3f( 1 ) )
 
+	def testProceduralCancellation( self ) :
+
+		class CancellingProcedural( GafferScene.Private.IECoreScenePreview.Procedural ) :
+
+			def __init__( self, cancel ) :
+
+				GafferScene.Private.IECoreScenePreview.Procedural.__init__( self )
+
+				self.__cancel = cancel
+
+			def render( self, renderer ) :
+
+				renderer.object(
+					"/sphere1",
+					IECoreScene.SpherePrimitive( 1 ),
+					renderer.attributes( IECore.CompoundObject() ),
+				)
+
+				if self.__cancel :
+					raise IECore.Cancelled()
+
+				renderer.object(
+					"/sphere2",
+					IECoreScene.SpherePrimitive( 1 ),
+					renderer.attributes( IECore.CompoundObject() ),
+				)
+
+		IECore.registerRunTimeTyped( CancellingProcedural )
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		# Render a procedural that will throw part-way through expansion.
+		# We expect everything to be cleaned up so that there are no stray
+		# shape nodes in the scene.
+
+		with self.assertRaises( IECore.Cancelled ) :
+			renderer.object(
+				"/procedural",
+				CancellingProcedural( cancel = True ),
+				renderer.attributes( IECore.CompoundObject() )
+			)
+
+		universe = ctypes.cast( renderer.command( "ai:queryUniverse", {} ), ctypes.POINTER( arnold.AtUniverse ) )
+		self.assertEqual( self.__allNodes( universe, type = arnold.AI_NODE_SHAPE ), [] )
+
+		# Render the same procedural without throwing. We expect two shapes
+		# now - one for the procedural and one for the `ginstance`. The sphere
+		# nodes are children of the procedural and there doesn't appear to be
+		# any Arnold API to query them.
+
+		o = renderer.object(
+			"/procedural",
+			CancellingProcedural( cancel = False ),
+			renderer.attributes( IECore.CompoundObject() )
+		)
+
+		self.assertEqual( len( self.__allNodes( universe, type = arnold.AI_NODE_SHAPE ) ), 2 )
+
+		instance = arnold.AiNodeLookUpByName( universe, "/procedural" )
+		self.assertTrue( arnold.AiNodeIs( instance, "ginstance" ) )
+		procedural = arnold.AiNodeGetPtr( instance, "node" )
+		self.assertTrue( arnold.AiNodeIs( procedural, "procedural" ) )
+
+		del o
+
 	@staticmethod
 	def __aovShaders( universe ) :
 
@@ -3640,6 +3708,32 @@ class RendererTest( GafferTest.TestCase ) :
 		data = imageReader.readChannel( "Y", raw = True )
 		self.assertIsInstance( data, IECore.UIntVectorData )
 		self.assertEqual( data[len(data)//2], 101 )
+
+	def testReplaceID( self ) :
+
+		mh = IECore.CapturingMessageHandler()
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+			messageHandler = mh
+		)
+
+		o = r.object(
+			"/sphere",
+			IECoreScene.SpherePrimitive(),
+			r.attributes( IECore.CompoundObject() )
+		)
+		o.assignID( 1 )
+		o.assignID( 2 )
+
+		universe = ctypes.cast( r.command( "ai:queryUniverse", {} ), ctypes.POINTER( arnold.AtUniverse ) )
+		node = arnold.AiNodeLookUpByName( universe, "/sphere" )
+		self.assertEqual( arnold.AiNodeGetUInt( node, "cortex:id" ), 2 )
+
+		del o
+		del r
+
+		self.assertEqual( len( mh.messages ), 0 )
 
 	def testOutputLayerNames( self ) :
 

@@ -60,7 +60,10 @@ GAFFER_PLUG_DEFINE_TYPE( ImagePlug );
 //////////////////////////////////////////////////////////////////////////
 
 const IECore::InternedString ImagePlug::channelNameContextName = "image:channelName";
+const IECore::InternedString ImagePlug::viewNameContextName = "image:viewName";
 const IECore::InternedString ImagePlug::tileOriginContextName = "image:tileOrigin";
+
+const std::string ImagePlug::defaultViewName = "default";
 
 static ContextAlgo::GlobalScope::Registration g_globalScopeRegistration(
 	ImagePlug::staticTypeId(),
@@ -79,6 +82,15 @@ ImagePlug::ImagePlug( const std::string &name, Direction direction, unsigned fla
 	// want to store their values because they are meaningless without an input
 	// connection, so they aren't Serialisable either.
 	unsigned childFlags = flags & ~(Dynamic | Serialisable);
+
+	addChild(
+		new StringVectorDataPlug(
+			"viewNames",
+			direction,
+			defaultViewNames(),
+			childFlags
+		)
+	);
 
 	addChild(
 		new AtomicFormatPlug(
@@ -160,6 +172,12 @@ const IECore::IntVectorData *ImagePlug::flatTileSampleOffsets()
 	return g_flatTileSampleOffsets.get();
 };
 
+const IECore::StringVectorData *ImagePlug::defaultViewNames()
+{
+	static IECore::ConstStringVectorDataPtr g_defaultViewNames( new IECore::StringVectorData( { defaultViewName } ) );
+	return g_defaultViewNames.get();
+};
+
 const IECore::IntVectorData *ImagePlug::emptyTileSampleOffsets()
 {
 	static IECore::ConstIntVectorDataPtr g_emptyTileSampleOffsets(
@@ -192,7 +210,7 @@ bool ImagePlug::acceptsChild( const GraphComponent *potentialChild ) const
 	{
 		return false;
 	}
-	return children().size() != 7;
+	return children().size() != 8;
 }
 
 bool ImagePlug::acceptsInput( const Gaffer::Plug *input ) const
@@ -213,74 +231,85 @@ Gaffer::PlugPtr ImagePlug::createCounterpart( const std::string &name, Direction
 	return new ImagePlug( name, direction, getFlags() );
 }
 
+Gaffer::StringVectorDataPlug *ImagePlug::viewNamesPlug()
+{
+	return getChild<StringVectorDataPlug>( g_firstPlugIndex );
+}
+
+const Gaffer::StringVectorDataPlug *ImagePlug::viewNamesPlug() const
+{
+	return getChild<StringVectorDataPlug>( g_firstPlugIndex );
+}
+
+
 GafferImage::AtomicFormatPlug *ImagePlug::formatPlug()
 {
-	return getChild<AtomicFormatPlug>( g_firstPlugIndex );
+	return getChild<AtomicFormatPlug>( g_firstPlugIndex+1 );
 }
 
 const GafferImage::AtomicFormatPlug *ImagePlug::formatPlug() const
 {
-	return getChild<AtomicFormatPlug>( g_firstPlugIndex );
+	return getChild<AtomicFormatPlug>( g_firstPlugIndex+1 );
 }
 
 Gaffer::AtomicBox2iPlug *ImagePlug::dataWindowPlug()
 {
-	return getChild<AtomicBox2iPlug>( g_firstPlugIndex+1 );
+	return getChild<AtomicBox2iPlug>( g_firstPlugIndex+2 );
 }
 
 const Gaffer::AtomicBox2iPlug *ImagePlug::dataWindowPlug() const
 {
-	return getChild<AtomicBox2iPlug>( g_firstPlugIndex+1 );
+	return getChild<AtomicBox2iPlug>( g_firstPlugIndex+2 );
 }
 
 Gaffer::AtomicCompoundDataPlug *ImagePlug::metadataPlug()
 {
-	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex+2 );
+	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex+3 );
 }
 
 const Gaffer::AtomicCompoundDataPlug *ImagePlug::metadataPlug() const
 {
-	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex+2 );
+	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex+3 );
 }
 
 Gaffer::BoolPlug *ImagePlug::deepPlug()
 {
-	return getChild<BoolPlug>( g_firstPlugIndex+3 );
+	return getChild<BoolPlug>( g_firstPlugIndex+4 );
 }
 
 const Gaffer::BoolPlug *ImagePlug::deepPlug() const
 {
-	return getChild<BoolPlug>( g_firstPlugIndex+3 );
+	return getChild<BoolPlug>( g_firstPlugIndex+4 );
 }
 
 Gaffer::IntVectorDataPlug *ImagePlug::sampleOffsetsPlug()
 {
-	return getChild<IntVectorDataPlug>( g_firstPlugIndex+4 );
+	return getChild<IntVectorDataPlug>( g_firstPlugIndex+5 );
 }
 
 const Gaffer::IntVectorDataPlug *ImagePlug::sampleOffsetsPlug() const
 {
-	return getChild<IntVectorDataPlug>( g_firstPlugIndex+4 );
+	return getChild<IntVectorDataPlug>( g_firstPlugIndex+5 );
 }
 
 Gaffer::StringVectorDataPlug *ImagePlug::channelNamesPlug()
 {
-	return getChild<StringVectorDataPlug>( g_firstPlugIndex+5 );
+	return getChild<StringVectorDataPlug>( g_firstPlugIndex+6 );
 }
 
 const Gaffer::StringVectorDataPlug *ImagePlug::channelNamesPlug() const
 {
-	return getChild<StringVectorDataPlug>( g_firstPlugIndex+5 );
+	return getChild<StringVectorDataPlug>( g_firstPlugIndex+6 );
 }
 
 Gaffer::FloatVectorDataPlug *ImagePlug::channelDataPlug()
 {
-	return getChild<FloatVectorDataPlug>( g_firstPlugIndex+6 );
+	return getChild<FloatVectorDataPlug>( g_firstPlugIndex+7 );
 }
 
 const Gaffer::FloatVectorDataPlug *ImagePlug::channelDataPlug() const
 {
-	return getChild<FloatVectorDataPlug>( g_firstPlugIndex+6 );
+	return getChild<FloatVectorDataPlug>( g_firstPlugIndex+7 );
 }
 
 ImagePlug::GlobalScope::GlobalScope( const Gaffer::Context *context )
@@ -297,13 +326,42 @@ ImagePlug::GlobalScope::GlobalScope( const Gaffer::ThreadState &threadState )
 	remove( tileOriginContextName );
 }
 
-ImagePlug::ChannelDataScope::ChannelDataScope( const Gaffer::Context *context )
+ImagePlug::ViewScope::ViewScope( const Gaffer::Context *context )
 	:   EditableScope( context )
 {
 }
 
-ImagePlug::ChannelDataScope::ChannelDataScope( const Gaffer::ThreadState &threadState )
+ImagePlug::ViewScope::ViewScope( const Gaffer::ThreadState &threadState )
 	:	EditableScope( threadState )
+{
+}
+
+void ImagePlug::ViewScope::setViewName( const std::string *viewName )
+{
+	set( viewNameContextName, viewName );
+}
+
+void ImagePlug::ViewScope::setViewNameChecked( const std::string *viewName, const IECore::StringVectorData *viewNamesData )
+{
+	const std::vector< std::string > &viewNames = viewNamesData->readable();
+	if( std::find( viewNames.begin(), viewNames.end(), *viewName ) == viewNames.end() )
+	{
+		if( std::find( viewNames.begin(), viewNames.end(), ImagePlug::defaultViewName) == viewNames.end() )
+		{
+			throw IECore::Exception( "View does not exist \"" + *viewName + "\"" );
+		}
+	}
+
+	set( viewNameContextName, viewName );
+}
+
+ImagePlug::ChannelDataScope::ChannelDataScope( const Gaffer::Context *context )
+	:   ViewScope( context )
+{
+}
+
+ImagePlug::ChannelDataScope::ChannelDataScope( const Gaffer::ThreadState &threadState )
+	:	ViewScope( threadState )
 {
 }
 
@@ -327,93 +385,176 @@ void ImagePlug::ChannelDataScope::setChannelName( const std::string *channelName
 	set( channelNameContextName, channelName );
 }
 
-IECore::ConstFloatVectorDataPtr ImagePlug::channelData( const std::string &channelName, const Imath::V2i &tile ) const
+IECore::ConstFloatVectorDataPtr ImagePlug::channelData( const std::string &channelName, const Imath::V2i &tile, const std::string *viewName ) const
 {
 	ChannelDataScope channelDataScope( Context::current() );
 	channelDataScope.setChannelName( &channelName );
 	channelDataScope.setTileOrigin( &tile );
+	if( viewName )
+	{
+		channelDataScope.set( ImagePlug::viewNameContextName, viewName );
+	}
 
 	return channelDataPlug()->getValue();
 }
 
-IECore::MurmurHash ImagePlug::channelDataHash( const std::string &channelName, const Imath::V2i &tile ) const
+IECore::MurmurHash ImagePlug::channelDataHash( const std::string &channelName, const Imath::V2i &tile, const std::string *viewName ) const
 {
 	ChannelDataScope channelDataScope( Context::current() );
 	channelDataScope.setChannelName( &channelName );
 	channelDataScope.setTileOrigin( &tile );
+	if( viewName )
+	{
+		channelDataScope.set( ImagePlug::viewNameContextName, viewName );
+	}
+
 	return channelDataPlug()->hash();
 }
 
-GafferImage::Format ImagePlug::format() const
+IECore::ConstStringVectorDataPtr ImagePlug::viewNames( const std::string *viewName ) const
 {
 	GlobalScope globalScope( Context::current() );
+	globalScope.remove( ImagePlug::viewNameContextName );
+	return viewNamesPlug()->getValue();
+}
+
+IECore::MurmurHash ImagePlug::viewNamesHash( const std::string *viewName ) const
+{
+	GlobalScope globalScope( Context::current() );
+	globalScope.remove( ImagePlug::viewNameContextName );
+	return viewNamesPlug()->hash();
+}
+
+GafferImage::Format ImagePlug::format( const std::string *viewName ) const
+{
+	GlobalScope globalScope( Context::current() );
+	if( viewName )
+	{
+		globalScope.set( ImagePlug::viewNameContextName, viewName );
+	}
+
 	return formatPlug()->getValue();
 }
 
-IECore::MurmurHash ImagePlug::formatHash() const
+IECore::MurmurHash ImagePlug::formatHash( const std::string *viewName ) const
 {
 	GlobalScope globalScope( Context::current() );
+	if( viewName )
+	{
+		globalScope.set( ImagePlug::viewNameContextName, viewName );
+	}
+
 	return formatPlug()->hash();
 }
 
-Imath::Box2i ImagePlug::dataWindow() const
+Imath::Box2i ImagePlug::dataWindow( const std::string *viewName ) const
 {
 	GlobalScope globalScope( Context::current() );
+	if( viewName )
+	{
+		globalScope.set( ImagePlug::viewNameContextName, viewName );
+	}
+
 	return dataWindowPlug()->getValue();
 }
 
-IECore::MurmurHash ImagePlug::dataWindowHash() const
+IECore::MurmurHash ImagePlug::dataWindowHash( const std::string *viewName ) const
 {
 	GlobalScope globalScope( Context::current() );
+	if( viewName )
+	{
+		globalScope.set( ImagePlug::viewNameContextName, viewName );
+	}
+
 	return dataWindowPlug()->hash();
 }
 
-IECore::ConstStringVectorDataPtr ImagePlug::channelNames() const
+IECore::ConstStringVectorDataPtr ImagePlug::channelNames( const std::string *viewName ) const
 {
 	GlobalScope globalScope( Context::current() );
+	if( viewName )
+	{
+		globalScope.set( ImagePlug::viewNameContextName, viewName );
+	}
+
 	return channelNamesPlug()->getValue();
 }
 
-IECore::MurmurHash ImagePlug::channelNamesHash() const
+IECore::MurmurHash ImagePlug::channelNamesHash( const std::string *viewName ) const
 {
 	GlobalScope globalScope( Context::current() );
+	if( viewName )
+	{
+		globalScope.set( ImagePlug::viewNameContextName, viewName );
+	}
+
 	return channelNamesPlug()->hash();
 }
 
-IECore::ConstCompoundDataPtr ImagePlug::metadata() const
+IECore::ConstCompoundDataPtr ImagePlug::metadata( const std::string *viewName ) const
 {
 	GlobalScope globalScope( Context::current() );
+	if( viewName )
+	{
+		globalScope.set( ImagePlug::viewNameContextName, viewName );
+	}
+
 	return metadataPlug()->getValue();
 }
 
-IECore::MurmurHash ImagePlug::metadataHash() const
+IECore::MurmurHash ImagePlug::metadataHash( const std::string *viewName ) const
 {
 	GlobalScope globalScope( Context::current() );
+	if( viewName )
+	{
+		globalScope.set( ImagePlug::viewNameContextName, viewName );
+	}
+
 	return metadataPlug()->hash();
 }
 
-bool ImagePlug::deep() const
+bool ImagePlug::deep( const std::string *viewName ) const
 {
 	GlobalScope globalScope( Context::current() );
+	if( viewName )
+	{
+		globalScope.set( ImagePlug::viewNameContextName, viewName );
+	}
+
 	return deepPlug()->getValue();
 }
 
-IECore::MurmurHash ImagePlug::deepHash() const
+IECore::MurmurHash ImagePlug::deepHash( const std::string *viewName ) const
 {
 	GlobalScope globalScope( Context::current() );
+	if( viewName )
+	{
+		globalScope.set( ImagePlug::viewNameContextName, viewName );
+	}
+
 	return deepPlug()->hash();
 }
 
-IECore::ConstIntVectorDataPtr ImagePlug::sampleOffsets( const Imath::V2i &tile ) const
+IECore::ConstIntVectorDataPtr ImagePlug::sampleOffsets( const Imath::V2i &tile, const std::string *viewName ) const
 {
 	ChannelDataScope channelDataScope( Context::current() );
 	channelDataScope.setTileOrigin( &tile );
+	if( viewName )
+	{
+		channelDataScope.set( ImagePlug::viewNameContextName, viewName );
+	}
+
 	return sampleOffsetsPlug()->getValue();
 }
 
-IECore::MurmurHash ImagePlug::sampleOffsetsHash( const Imath::V2i &tile ) const
+IECore::MurmurHash ImagePlug::sampleOffsetsHash( const Imath::V2i &tile, const std::string *viewName ) const
 {
 	ChannelDataScope channelDataScope( Context::current() );
 	channelDataScope.setTileOrigin( &tile );
+	if( viewName )
+	{
+		channelDataScope.set( ImagePlug::viewNameContextName, viewName );
+	}
+
 	return sampleOffsetsPlug()->hash();
 }
