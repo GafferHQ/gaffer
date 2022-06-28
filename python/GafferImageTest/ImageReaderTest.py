@@ -571,16 +571,6 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 	def testWithMultiViewChannelTestImage( self ):
 		reference = self.channelTestImageMultiView()
 
-		# In some mode, we don't support differing data windows for different views, and must expand
-		# the dataWindow to encompass all views
-		constant = GafferImage.Constant()
-		constant["format"].setValue( GafferImage.Format( imath.Box2i( imath.V2i( -10, 0 ), imath.V2i( 16, 16 ) ) ) )
-		constant["color"].setValue( imath.Color4f( 0, 0, 0, 0 ) )
-
-		expandedReference = GafferImage.Merge( "Merge" )
-		expandedReference["in"][0].setInput( reference["out"] )
-		expandedReference["in"][1].setInput( constant["out"] )
-
 		reader = GafferImage.ImageReader()
 
 		# Note that we have no test file to compare to for NukePartPerLayer, because Nuke just crashes when
@@ -602,12 +592,15 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 			# cases, including one view with some channels deleted so the channels aren't the same between views.
 			# Nuke can't handle this, so disable the Delete for the test where we compare with Nuke
 			reference["DeleteChannels"]["enabled"].setValue( not n.startswith( "Nuke" ) )
-			r = expandedReference if ( n == "SinglePart" or n.startswith( "Nuke" ) ) else reference
+
+			# If the data window couldn't be stored separately, due to using an out of date version of OpenEXR,
+			# or Nuke not supporting it, then we can't expect the data windows to match
+			windowExpanded = n == "SinglePart" or n.startswith( "Nuke" )
 
 			# The default channel interpretation should work fine with files coming from Nuke, or from a
 			# spec compliant writer ( like Gaffer's new default )
 			reader["channelInterpretation"].setValue( GafferImage.ImageReader.ChannelInterpretation.Default )
-			self.assertImagesEqual( reader["out"], r["out"], ignoreMetadata = True, ignoreChannelNamesOrder = True, ignoreViewNamesOrder = True, maxDifference = 0.0002 )
+			self.assertImagesEqual( reader["out"], reference["out"], ignoreMetadata = True, ignoreChannelNamesOrder = True, ignoreViewNamesOrder = True, maxDifference = 0.0002, ignoreDataWindow = windowExpanded )
 
 			if n.startswith( "Nuke" ):
 				# Reading Nuke files according to the spec produces weird results - we check exactly how
@@ -615,7 +608,7 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 				continue
 
 			reader["channelInterpretation"].setValue( GafferImage.ImageReader.ChannelInterpretation.Specification )
-			self.assertImagesEqual( reader["out"], r["out"], ignoreMetadata = True, maxDifference = 0.0002, ignoreChannelNamesOrder = True, ignoreViewNamesOrder = True  )
+			self.assertImagesEqual( reader["out"], reference["out"], ignoreMetadata = True, maxDifference = 0.0002, ignoreChannelNamesOrder = True, ignoreViewNamesOrder = True, ignoreDataWindow = windowExpanded )
 
 	@unittest.skipIf( not "OPENEXR_IMAGES_DIR" in os.environ, "If you want to run tests using the OpenEXR sample images, then download https://github.com/AcademySoftwareFoundation/openexr-images and set the env var OPENEXR_IMAGES_DIR to the directory" )
 	def testWithEXRSampleImages( self ):
@@ -858,26 +851,9 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 			self.assertEqual( singlePartReader["out"].dataWindow( "right" ), imath.Box2i( imath.V2i( 654, 435 ), imath.V2i( 1565, 1311 ) ) )
 			self.assertEqual( singlePartReader["out"].dataWindow( "default" ), imath.Box2i( imath.V2i( 654, 435 ), imath.V2i( 1565, 1311 ) ) )
 
-
-			# The single part file must have a data window encompassing both views, so we expand the
-			# data window of the multiPartReader in order to compare the images
-			unionDataWindow = multiPartReader["out"].dataWindow( "left" )
-			unionDataWindow.extendBy( multiPartReader["out"].dataWindow( "right" ) )
-
-			dataWindowConstant = GafferImage.Constant()
-			dataWindowConstant["format"].setValue( GafferImage.Format( unionDataWindow ) )
-
-			dataWindowDeleteChannels = GafferImage.DeleteChannels()
-			dataWindowDeleteChannels["channels"].setValue( "*" )
-			dataWindowDeleteChannels["in"].setInput( dataWindowConstant["out"] )
-
-			# Should we have a better way to manually set the data window other than merging with a
-			# larger image with no channels?
-			dataWindowMerge = GafferImage.Merge()
-			dataWindowMerge["in"][0].setInput( multiPartReader["out"] )
-			dataWindowMerge["in"][1].setInput( dataWindowDeleteChannels["out"] )
-
-			self.assertImagesEqual( dataWindowMerge["out"], singlePartReader["out"], metadataBlacklist = [ "openexr:chunkCount" ], ignoreChannelNamesOrder = True )
+			# The single part file must have a data window encompassing both views, so we ignore the
+			# data window when comparing
+			self.assertImagesEqual( multiPartReader["out"], singlePartReader["out"], metadataBlacklist = [ "openexr:chunkCount" ], ignoreChannelNamesOrder = True, ignoreDataWindow = True )
 
 if __name__ == "__main__":
 	unittest.main()
