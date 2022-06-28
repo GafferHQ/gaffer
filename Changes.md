@@ -42,6 +42,7 @@ Improvements
 - PresetsPlugValueWidget : The children of compound plugs are now shown when in "Custom" mode.
 - LightEditor/SceneViewInspector : Improved performance when viewing complex scenes, by improving cache usage during history queries.
 - Node menu : Removed unsupported Arnold shaders `ramp_rgb` and `ramp_float`. The OSL `ColorSpline` and `FloatSpline` shaders should be used instead.
+- Image Channel Selectors : Channel names are now shown in "natural order". This means a numerical part of the name is compared numerically, instead of alphabetically (so "channel13" comes after "channel2").
 
 Fixes
 -----
