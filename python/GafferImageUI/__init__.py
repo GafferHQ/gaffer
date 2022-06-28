@@ -117,5 +117,6 @@ from . import CreateViewsUI
 from . import SelectViewUI
 from . import DeleteViewsUI
 from . import CopyViewsUI
+from . import AnaglyphUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferImageUI" )

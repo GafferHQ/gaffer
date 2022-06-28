@@ -14,6 +14,7 @@ Features
     - SelectView : For choosing one view from a multi-view image as a single view image.
     - CopyViews : For combining views from multi-view sources.
     - DeleteViews : For removing views from multi-view images.
+    - Anaglyph : For viewing stereo images in a format appropriate for red-blue anaglyph glasses.
   - A new dropdown menu in the Viewer chooses which view is being displayed.
 - ContextQuery : Added node to access a context variable value directly without needing to use an expression.
 
@@ -37,6 +38,8 @@ Fixes
   - Fixed crashes when edits made by the TransformTools affected additional objects in the scene (either through constraints or edits to an ancestor of the selection). [^1]
   - Fixed crashes when making interactive edits to the contents of capsules. [^1]
   - Fixed bug which prevented the viewer from updating after an error had occurred, even when the error was subsequently fixed in the node graph. [^1]
+- ImageTestCase : Fixed bug in `assertImagesEqual()` where bad pixel data could go undetected when using `ignoreDataWindow`.
+- Merge : Fixed rare failure to update when changing which channels exist on input.
 
 API
 ---

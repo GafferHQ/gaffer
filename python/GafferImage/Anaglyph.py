@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2022, Image Engine Design Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,22 +34,43 @@
 #
 ##########################################################################
 
-__import__( "IECoreImage" )
-__import__( "Gaffer" )
-__import__( "GafferDispatch" )
+import IECore
 
-def __setupEnvironment() :
+import Gaffer
+import GafferImage
 
-	import os
-	if "OCIO" not in os.environ :
-		os.environ["OCIO"] = os.path.expandvars( "$GAFFER_ROOT/openColorIO/config.ocio" )
+class Anaglyph( GafferImage.ImageProcessor ) :
 
-__setupEnvironment()
+	def __init__(self, name = 'Anaglyph' ) :
+		GafferImage.ImageProcessor.__init__( self, name )
 
-from ._GafferImage import *
-from .CatalogueSelect import CatalogueSelect
-from .BleedFill import BleedFill
-from .DeepTidy import DeepTidy
-from .Anaglyph import Anaglyph
+		self["__SelectLeft"] = GafferImage.SelectView()
+		self["__SelectLeft"]["in"].setInput( self["in"] )
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferImage" )
+		self["__DeleteChannelsLeft"] = GafferImage.DeleteChannels()
+		self["__DeleteChannelsLeft"]["in"].setInput( self["__SelectLeft"]["out"] )
+		self["__DeleteChannelsLeft"]["channels"].setValue( '[GB] *.[GB]' )
+
+		self["__SelectRight"] = GafferImage.SelectView()
+		self["__SelectRight"]["in"].setInput( self["in"] )
+		self["__SelectRight"]["view"].setValue( 'right' )
+
+		self["__DeleteChannelsRight"] = GafferImage.DeleteChannels()
+		self["__DeleteChannelsRight"]["in"].setInput( self["__SelectRight"]["out"] )
+		self["__DeleteChannelsRight"]["channels"].setValue( '[R] *.[R]' )
+
+		self["__Merge"] = GafferImage.Merge()
+		self["__Merge"]["in"][0].setInput( self["__DeleteChannelsLeft"]["out"] )
+		self["__Merge"]["in"][1].setInput( self["__DeleteChannelsRight"]["out"] )
+		self["__Merge"]["operation"].setValue( GafferImage.Merge.Operation.Max )
+
+		self["__disableSwitch"] = Gaffer.Switch()
+		self["__disableSwitch"].setup( self["in"] )
+		self["__disableSwitch"]["in"][0].setInput( self["in"] )
+		self["__disableSwitch"]["in"][1].setInput( self["__Merge"]["out"] )
+		self["__disableSwitch"]["index"].setInput( self["enabled"] )
+
+		self['out'].setFlags(Gaffer.Plug.Flags.Serialisable, False)
+		self["out"].setInput( self["__disableSwitch"]["out"] )
+
+IECore.registerRunTimeTyped( Anaglyph, typeName = "GafferImage::Anaglyph" )

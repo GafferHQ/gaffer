@@ -746,6 +746,45 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		# Merging with an image with no channels should have no effect
 		self.assertImagesEqual( merge["out"], resized["out"] )
 
+	def testOnlyAlphaVsOnlyRGBBug( self ) :
+
+		r = GafferImage.ImageReader()
+		r["fileName"].setValue( self.checkerRGBPath )
+
+		shuf = GafferImage.Shuffle()
+		shuf["in"].setInput( r["out"] )
+		shuf["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "A", "R" ) )
+
+		delete = GafferImage.DeleteChannels()
+		delete["in"].setInput( shuf["out"] )
+		delete["channels"].setValue( "R" )
+
+		c = GafferImage.Constant()
+		c["format"].setValue( GafferImage.Format( 100, 100, 1.000 ) )
+		c["color"].setValue( imath.Color4f( 0.0 ) )
+
+		merge = GafferImage.Merge()
+		merge["in"][0].setInput( c["out"] )
+		merge["in"][1].setInput( delete["out"] )
+
+		referenceShuf = GafferImage.Shuffle()
+		referenceShuf["in"].setInput( delete["out"] )
+		referenceShuf["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "", "__black" ) )
+		referenceShuf["channels"][0]["out"].setInput( delete["channels"] )
+
+		# We're comparing two ways of filling in the deleted channels with black - either by
+		# merging with a black image, or by shuffling in black.  These should be equivalent.
+		#
+		# This test is only here because of a weird special case bug in Merge where an input
+		# with an R channel and no alpha , and an input with the same channel data but as
+		# alpha with no R, would hash the same
+
+		self.assertImagesEqual( referenceShuf["out"], merge["out"], ignoreMetadata = True, ignoreChannelNamesOrder = True )
+
+		delete["channels"].setValue( "A" )
+
+		self.assertImagesEqual( referenceShuf["out"], merge["out"], ignoreMetadata = True, ignoreChannelNamesOrder = True )
+
 	def testMultiView( self ) :
 
 		c1 = GafferImage.Constant()

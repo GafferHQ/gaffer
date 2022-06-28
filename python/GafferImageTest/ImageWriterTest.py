@@ -1580,16 +1580,6 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 		reference = self.channelTestImageMultiView()
 
-		# In some modes, we don't support differing data windows for different views, and must expand
-		# the dataWindow to encompass all views
-		constant = GafferImage.Constant()
-		constant["format"].setValue( GafferImage.Format( imath.Box2i( imath.V2i( -10, 0 ), imath.V2i( 16, 16 ) ) ) )
-		constant["color"].setValue( imath.Color4f( 0, 0, 0, 0 ) )
-
-		expandedReference = GafferImage.Merge( "Merge" )
-		expandedReference["in"][0].setInput( reference["out"] )
-		expandedReference["in"][1].setInput( constant["out"] )
-
 		writePath = os.path.join( self.temporaryDirectory(), "multiViewTest.exr" )
 		writer = GafferImage.ImageWriter()
 		writer["in"].setInput( reference["out"] )
@@ -1609,8 +1599,9 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 			writer["task"].execute()
 			rereader["refreshCount"].setValue( rereader["refreshCount"].getValue() + 1 )
 
-			r = expandedReference if layout == "Single Part" else reference
-			self.assertImagesEqual( rereader["out"], r["out"], ignoreMetadata = True, maxDifference = 0.0002, ignoreChannelNamesOrder = layout == "Single Part" )
+			# In "Single Part", we must expand the dataWindow to encompass all views, so we can't get
+			# exactly matching data windows
+			self.assertImagesEqual( rereader["out"], reference["out"], ignoreMetadata = True, maxDifference = 0.0002, ignoreChannelNamesOrder = layout == "Single Part", ignoreDataWindow = layout == "Single Part" )
 
 			header = self.usefulHeader( writePath )
 			refHeader = self.usefulHeader( os.path.expandvars( "${GAFFER_ROOT}/python/GafferImageTest/images/channelTestMultiView" + referenceFile + ".exr" ) )
@@ -1635,7 +1626,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 			writer["task"].execute()
 			rereader["refreshCount"].setValue( rereader["refreshCount"].getValue() + 1 )
-			self.assertImagesEqual( rereader["out"], expandedReference["out"], ignoreMetadata = True, maxDifference = 0.0002, ignoreChannelNamesOrder = layout.startswith( "Nuke" ) )
+			self.assertImagesEqual( rereader["out"], reference["out"], ignoreMetadata = True, maxDifference = 0.0002, ignoreChannelNamesOrder = layout.startswith( "Nuke" ), ignoreDataWindow = True )
 
 			if layout == "Nuke/Interleave Channels, Layers and Views":
 				# Nuke's implementation of single part multi-view has channel names that don't match the
@@ -1662,24 +1653,6 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		directory = os.environ["OPENEXR_IMAGES_DIR"] + "/"
 
 		reader = GafferImage.ImageReader()
-
-		# \todo - I now repeat this pattern of needing to create a constant and merge in order to expand
-		# data window in several places.  There are a couple of ways this could be improved, like a new
-		# SetDataWindow node or mode on Crop that would set the data window to a specific size even if
-		# larger than the previous data window ... or we could add an ignoreDataWindow option to
-		# assertImagesEqual that would pass if one input has black pixels outside the dataWindow of the
-		# other image.  Don't want to hold up multi-view while working on that though.
-		expandConstant = GafferImage.Constant()
-		expandConstant["format"].setValue( GafferImage.Format( imath.Box2i( imath.V2i( -10, 0 ), imath.V2i( 16, 16 ) ) ) )
-		expandConstant["color"].setValue( imath.Color4f( 0, 0, 0, 0 ) )
-
-		expandDeleteChannels = GafferImage.DeleteChannels()
-		expandDeleteChannels["channels"].setValue( "*" )
-		expandDeleteChannels["in"].setInput( expandConstant["out"] )
-
-		expandedMerge = GafferImage.Merge( "Merge" )
-		expandedMerge["in"][0].setInput( reader["out"] )
-		expandedMerge["in"][1].setInput( expandDeleteChannels["out"] )
 
 		writer = GafferImage.ImageWriter()
 		writer["in"].setInput( reader["out"] )
@@ -1781,18 +1754,17 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 					self.assertEqual( header, refHeader )
 
-				currentReader = reader
-				if name == "Beachball/multipart.0001.exr" and isSinglePart:
-					currentReader = expandedMerge
-					expandConstant["format"]["displayWindow"].setValue( imath.Box2i( imath.V2i(654, 435),  imath.V2i(1565, 1311)) )
+				# If we're writing from a multi-part to a single-part, we won't be able to preserve the data
+				# window
+				expandDataWindow = name == "Beachball/multipart.0001.exr" and isSinglePart
 
 				ignoreOrder = name == "Beachball/multipart.0001.exr" or ( name == "Beachball/singlepart.0001.exr" and layout != "Single Part" )
 				rereader["channelInterpretation"].setValue( GafferImage.ImageReader.ChannelInterpretation.Default )
-				self.assertImagesEqual( rereader["out"], currentReader["out"], ignoreMetadata = True, ignoreChannelNamesOrder = ignoreOrder )
+				self.assertImagesEqual( rereader["out"], reader["out"], ignoreMetadata = True, ignoreChannelNamesOrder = ignoreOrder, ignoreDataWindow = expandDataWindow )
 
 				if not layout.startswith( "Nuke" ):
 					rereader["channelInterpretation"].setValue( GafferImage.ImageReader.ChannelInterpretation.Specification )
-					self.assertImagesEqual( rereader["out"], currentReader["out"], ignoreMetadata = True, ignoreChannelNamesOrder = ignoreOrder )
+					self.assertImagesEqual( rereader["out"], reader["out"], ignoreMetadata = True, ignoreChannelNamesOrder = ignoreOrder, ignoreDataWindow = expandDataWindow )
 
 
 if __name__ == "__main__":
