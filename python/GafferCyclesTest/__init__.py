@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+from .InteractiveCyclesRenderTest import InteractiveCyclesRenderTest
 from .ModuleTest import ModuleTest
 
 if __name__ == "__main__":

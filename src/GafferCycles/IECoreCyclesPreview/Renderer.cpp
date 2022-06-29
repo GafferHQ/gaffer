@@ -988,7 +988,6 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			const IECoreScene::ShaderNetwork *surfaceShaderAttribute = attribute<IECoreScene::ShaderNetwork>( g_cyclesSurfaceShaderAttributeName, attributes );
 			surfaceShaderAttribute = surfaceShaderAttribute ? surfaceShaderAttribute : attribute<IECoreScene::ShaderNetwork>( g_oslSurfaceShaderAttributeName, attributes );
 			surfaceShaderAttribute = surfaceShaderAttribute ? surfaceShaderAttribute : attribute<IECoreScene::ShaderNetwork>( g_oslShaderAttributeName, attributes );
-			surfaceShaderAttribute = surfaceShaderAttribute ? surfaceShaderAttribute : attribute<IECoreScene::ShaderNetwork>( g_lightAttributeName, attributes );
 			const IECoreScene::ShaderNetwork *displacementShaderAttribute = attribute<IECoreScene::ShaderNetwork>( g_cyclesDisplacementShaderAttributeName, attributes );
 			const IECoreScene::ShaderNetwork *volumeShaderAttribute = attribute<IECoreScene::ShaderNetwork>( g_cyclesVolumeShaderAttributeName, attributes );
 			if( surfaceShaderAttribute || volumeShaderAttribute )
@@ -1006,11 +1005,16 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				m_shader = m_shaderCache->defaultSurface();
 			}
 
-			// Light attributes
+			// Light shader
+
 			const IECoreScene::ShaderNetwork *lightShaderAttribute = attribute<IECoreScene::ShaderNetwork>( g_lightAttributeName, attributes );
 			if( lightShaderAttribute )
 			{
+				IECore::MurmurHash h;
+				m_lightShader = m_shaderCache->get( lightShaderAttribute, nullptr, nullptr, attributes, h );
 				// This is just to store data that is attached to the lights.
+				/// \todo Not sure there's any benefit to using a `ccl:light` just as a container here?
+				/// Can't we just store the CompoundData?
 				m_light = CLightPtr( IECoreCycles::ShaderNetworkAlgo::convert( lightShaderAttribute ) );
 			}
 		}
@@ -1170,15 +1174,17 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				light->set_lightgroup( clight->get_lightgroup() );
 #endif
 			}
-			if( m_shader )
+			if( m_lightShader )
 			{
 				ShaderAssignPair pair = ShaderAssignPair( light, ccl::array<ccl::Node*>() );
-				pair.second.push_back_slow( m_shader->shader() );
+				pair.second.push_back_slow( m_lightShader->shader() );
 				m_shaderCache->addShaderAssignment( pair );
 			}
 			else
 			{
 				// Use default shader
+				/// \todo If we don't have a light shader, then shouldn't we be disabling the
+				/// light completely, rather than assigning an emissive facing-ratio shader to it?
 				ShaderAssignPair pair = ShaderAssignPair( light, ccl::array<ccl::Node*>() );
 				pair.second.push_back_slow( nullptr );
 				m_shaderCache->addShaderAssignment( pair );
@@ -1499,6 +1505,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		};
 
 		CLightPtr m_light;
+		CyclesShaderPtr m_lightShader;
 		CyclesShaderPtr m_shader;
 		IECore::MurmurHash m_shaderHash;
 		int m_visibility;
