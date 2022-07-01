@@ -108,6 +108,7 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 				columns = [ _GafferSceneUI._LightEditorLocationNameColumn() ],
 				selectionMode = GafferUI.PathListingWidget.SelectionMode.Cells,
 				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
+				horizontalScrollMode = GafferUI.ScrollMode.Automatic
 			)
 			self.__pathListing.setDragPointer( "objects" )
 			self.__pathListing.setSortable( False )
