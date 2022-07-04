@@ -114,7 +114,7 @@ class RGBAChannelsPlugValueWidget( GafferUI.PlugValueWidget ) :
 			if GafferImage.ImageAlgo.baseName( c ) not in [ "R", "G", "B", "A" ]
 		}
 
-		for channelName in GafferImage.ImageAlgo.sortChannelNames( channelNames ) :
+		for channelName in GafferImage.ImageAlgo.sortedChannelNames( channelNames ) :
 
 			if GafferImage.ImageAlgo.baseName( channelName ) in [ "R", "G", "B", "A" ] :
 				layerName = GafferImage.ImageAlgo.layerName( channelName )

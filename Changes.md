@@ -80,7 +80,7 @@ API
 - ImageAlgo :
   - Added optional `viewName` arguments to `image()`, `imageHash()` and `tiles()`.
   - Added `viewIsValid()` function.
-  - Added `sortChannelNames()` function.
+  - Added `sortedChannelNames()` function.
 - PlugAlgo : Added optional `value` argument to `canSetValueFromData()`.
 - RenderController :
   - Added Python bindings for optional `callback` argument to `update()` and `updateMatchingPaths()`.

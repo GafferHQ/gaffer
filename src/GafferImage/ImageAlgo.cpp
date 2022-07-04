@@ -235,10 +235,12 @@ const std::string GafferImage::ImageAlgo::channelNameB( "B" );
 const std::string GafferImage::ImageAlgo::channelNameZ( "Z" );
 const std::string GafferImage::ImageAlgo::channelNameZBack( "ZBack" );
 
-void ImageAlgo::sortChannelNames( std::vector< std::string > &channelNames )
+std::vector<std::string> ImageAlgo::sortedChannelNames( const std::vector<std::string> &channelNames )
 {
+	std::vector<std::string> result = channelNames;
+
 	NaturalOrder s;
-	std::sort( channelNames.begin(), channelNames.end(), [ &s ]( const std::string &a, const std::string &b ){
+	std::sort( result.begin(), result.end(), [ &s ]( const std::string &a, const std::string &b ){
 
 		std::string layerA = layerName( a );
 		std::string layerB = layerName( b );
@@ -272,6 +274,7 @@ void ImageAlgo::sortChannelNames( std::vector< std::string > &channelNames )
 		return s( baseA, baseB );
 	} );
 
+	return result;
 }
 
 IECoreImage::ImagePrimitivePtr GafferImage::ImageAlgo::image( const ImagePlug *imagePlug, const std::string *viewName )

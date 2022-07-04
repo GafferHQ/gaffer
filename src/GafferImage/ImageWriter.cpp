@@ -1927,7 +1927,7 @@ void ImageWriter::execute() const
 
 		// Sort the channel names so that they get written in a consistent order, with the
 		// basic RGBA channels coming first
-		ImageAlgo::sortChannelNames( channelsToWrite );
+		channelsToWrite = ImageAlgo::sortedChannelNames( channelsToWrite );
 
 		for( const string &i : channelsToWrite )
 		{
