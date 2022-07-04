@@ -260,8 +260,15 @@ Build
   - OpenColorIO : Updated to version 2.1.1.
   - Cortex : Updated to version 10.4.0.0.
 
-0.61.x.x (relative to 0.61.13.0)
-========
+0.61.x.x (relative to 0.61.13.1)
+=========
+
+- ShaderQuery :
+  - Fixed bug when attempting to browse shader parameters for a non-existent location.
+  - Fixed bug when attempting to use the context menu to set the name of the shader to query for a non-existent location.
+
+0.61.13.1 (relative to 0.61.13.0)
+=========
 
 Fixes
 -----
