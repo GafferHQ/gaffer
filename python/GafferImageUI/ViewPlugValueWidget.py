@@ -63,7 +63,7 @@ class ViewPlugValueWidget( GafferUI.PlugValueWidget ) :
 				value = self.getPlug().getValue()
 			except:
 				errored = True
-		viewNames = IECore.StringVectorData()
+		viewNames = GafferImage.ImagePlug.defaultViewNames()
 		try:
 			viewNames = self.__firstInputImagePlug().viewNames()
 		except:
@@ -96,7 +96,8 @@ class ViewPlugValueWidget( GafferUI.PlugValueWidget ) :
 		return None
 
 	def __imagePlugDirtied( self, plug ):
-		if plug == self.__firstInputImagePlug()["viewNames"]:
+		i = self.__firstInputImagePlug()
+		if i and plug == self.__firstInputImagePlug()["viewNames"]:
 			self._updateFromPlug()
 
 	def _views( self ) :
@@ -104,11 +105,9 @@ class ViewPlugValueWidget( GafferUI.PlugValueWidget ) :
 		try :
 			with self.getContext() :
 				viewNames = self.__firstInputImagePlug()["viewNames"].getValue()
-				viewNames = sorted( viewNames )
-		except Gaffer.ProcessException :
-			return []
-
-		return viewNames
+				return IECore.StringVectorData( sorted( viewNames ) )
+		except:
+			return GafferImage.ImagePlug.defaultViewNames()
 
 	def _menuDefinition( self ) :
 
