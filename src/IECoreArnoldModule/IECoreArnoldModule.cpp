@@ -213,6 +213,7 @@ BOOST_PYTHON_MODULE( _IECoreArnold )
 
 		def( "convert", &shaderNetworkAlgoConvert );
 		def( "update", &shaderNetworkAlgoUpdate );
+		def( "convertUSDShaders", &ShaderNetworkAlgo::convertUSDShaders );
 	}
 
 }

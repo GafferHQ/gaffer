@@ -62,6 +62,11 @@ IECOREARNOLD_API std::vector<AtNode *> convert( const IECoreScene::ShaderNetwork
 /// `AiNodeDestroy`. Returns true if the output shader node is reused.
 IECOREARNOLD_API bool update( std::vector<AtNode *> &nodes, const IECoreScene::ShaderNetwork *shaderNetwork );
 
+/// Converts any UsdPreviewSurface shaders and UsdLuxLights into native Arnold shaders. This conversion
+/// is performed automatically by `convert()` and `update()` and is mainly just exposed for the unit
+/// tests.
+IECOREARNOLD_API void convertUSDShaders( IECoreScene::ShaderNetwork *shaderNetwork );
+
 } // namespace ShaderNetworkAlgo
 
 } // namespace IECoreArnold
