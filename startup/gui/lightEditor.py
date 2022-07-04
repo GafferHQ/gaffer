@@ -87,6 +87,38 @@ with IECore.IgnoredExceptions( ImportError ) :
 	# If Arnold is available, then assume it is the renderer of choice.
 	Gaffer.Metadata.registerValue( GafferSceneUI.LightEditor.Settings, "attribute", "userDefault", "ai:light" )
 
+# UsdLux lights
+
+Gaffer.Metadata.registerValue( GafferSceneUI.LightEditor.Settings, "attribute", "preset:USD", "light" )
+
+GafferSceneUI.LightEditor.registerParameter( "light", "color" )
+GafferSceneUI.LightEditor.registerParameter( "light", "intensity" )
+GafferSceneUI.LightEditor.registerParameter( "light", "exposure" )
+GafferSceneUI.LightEditor.registerParameter( "light", "colorTemperature" )
+GafferSceneUI.LightEditor.registerParameter( "light", "enableColorTemperature" )
+GafferSceneUI.LightEditor.registerParameter( "light", "normalize" )
+GafferSceneUI.LightEditor.registerParameter( "light", "diffuse" )
+GafferSceneUI.LightEditor.registerParameter( "light", "specular" )
+
+GafferSceneUI.LightEditor.registerParameter( "light", "width", "Geometry" )
+GafferSceneUI.LightEditor.registerParameter( "light", "height", "Geometry" )
+GafferSceneUI.LightEditor.registerParameter( "light", "radius", "Geometry" )
+GafferSceneUI.LightEditor.registerParameter( "light", "treatAsPoint", "Geometry" )
+GafferSceneUI.LightEditor.registerParameter( "light", "length", "Geometry" )
+GafferSceneUI.LightEditor.registerParameter( "light", "treatAsLine", "Geometry" )
+GafferSceneUI.LightEditor.registerParameter( "light", "angle", "Geometry" )
+
+GafferSceneUI.LightEditor.registerParameter( "light", "texture:file", "Texture" )
+GafferSceneUI.LightEditor.registerParameter( "light", "texture:format", "Texture" )
+
+GafferSceneUI.LightEditor.registerParameter( "light", "shaping:cone:angle", "Shaping" )
+GafferSceneUI.LightEditor.registerParameter( "light", "shaping:cone:softness", "Shaping" )
+GafferSceneUI.LightEditor.registerParameter( "light", "shaping:focus", "Shaping" )
+GafferSceneUI.LightEditor.registerParameter( "light", "shaping:focusTint", "Shaping" )
+GafferSceneUI.LightEditor.registerParameter( "light", "shaping:ies:file", "Shaping" )
+GafferSceneUI.LightEditor.registerParameter( "light", "shaping:ies:angleScale", "Shaping" )
+GafferSceneUI.LightEditor.registerParameter( "light", "shaping:ies:normalize", "Shaping" )
+
 # Register generic light attributes
 for attributeName in [
 	"gl:visualiser:scale",
