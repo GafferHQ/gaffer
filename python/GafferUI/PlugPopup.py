@@ -144,9 +144,13 @@ class PlugPopup( _PopupWindow ) :
 				# PlugValueWidget, or label explaining why we can't show one
 				try :
 					self.__plugValueWidget = GafferUI.PlugValueWidget.create( plugs )
-				except :
+				except (
+					GafferUI.PlugValueWidget.MultipleWidgetCreatorsError,
+					GafferUI.PlugValueWidget.MultiplePlugTypesError
+				) as e :
 					self.__plugValueWidget = None
 					GafferUI.Label( "Unable to edit plugs with mixed types" )
+					e.__traceback__ = None
 
 		# If we have a ColorPlugValueWidget, expand it to show the chooser.
 		colorPlugValueWidget = self.__colorPlugValueWidget( self.__plugValueWidget )

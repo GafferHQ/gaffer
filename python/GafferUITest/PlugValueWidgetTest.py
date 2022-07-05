@@ -109,11 +109,11 @@ class PlugValueWidgetTest( GafferUITest.TestCase ) :
 		n["user"]["p1"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		n["user"]["p2"] = Gaffer.StringPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
-		with six.assertRaisesRegex( self, ValueError, "Plugs have different types" ) :
+		with self.assertRaises( GafferUI.PlugValueWidget.MultiplePlugTypesError ) :
 			GafferUI.NumericPlugValueWidget( n["user"].children() )
 
 		w = GafferUI.NumericPlugValueWidget( n["user"]["p1"] )
-		with six.assertRaisesRegex( self, ValueError, "Plugs have different types" ) :
+		with self.assertRaises( GafferUI.PlugValueWidget.MultiplePlugTypesError ) :
 			w.setPlugs( n["user"].children() )
 
 	def testCreateReleasesReferenceWithMismatchedPlugs( self ) :
@@ -148,7 +148,7 @@ class PlugValueWidgetTest( GafferUITest.TestCase ) :
 
 		Gaffer.Metadata.registerValue( n["user"]["p1"], "plugValueWidget:type", "GafferUI.ConnectionPlugValueWidget" )
 
-		with six.assertRaisesRegex( self, Exception, "Multiple widget creators" ) :
+		with self.assertRaises( GafferUI.PlugValueWidget.MultipleWidgetCreatorsError ) :
 			GafferUI.PlugValueWidget.create( n["user"].children() )
 
 	def testCreateSupportsLegacyWidgetsWithSinglePlugs( self ) :
