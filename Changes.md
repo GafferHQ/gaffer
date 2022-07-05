@@ -67,6 +67,7 @@ Fixes
 - ArnoldRender : Fixed rendering of single-channel AOVs specified using Gaffer's generic `float|int|uint <name>` syntax. Outputs specified using Arnold's `<name> FLOAT|INT|UINT` syntax will now issue a warning, and should be updated to use the generic syntax.
 - Constraint : Restricted `targetVertex` to positive integers.
 - ScriptContainer : Fixed `typeName()`, which was omitting the `Gaffer::` prefix.
+- Text : Fixed wrapping bug that caused blank lines to be inserted if a single word was too long for the line.
 
 API
 ---
