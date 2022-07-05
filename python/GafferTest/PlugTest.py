@@ -1095,5 +1095,36 @@ class PlugTest( GafferTest.TestCase ) :
 		del n["p1"]  # Removal alone should be enough to do that.
 		self.assertIsNone( n["p2"]["x"].getInput() )
 
+	def testUndoFailureDoesntAffectDirtyPropagation( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n1"] = Gaffer.Node()
+		s["n1"]["p1"] = Gaffer.IntPlug()
+
+		dirtiedPlugs = set()
+		def plugDirtied( plug ) :
+
+			dirtiedPlugs.add( plug )
+
+		s["n1"].plugDirtiedSignal().connect( plugDirtied, scoped = False )
+
+		s["n1"]["p1"].setValue( 1 )
+
+		self.assertEqual( dirtiedPlugs, set( [ s["n1"]["p1"] ] ) )
+
+		with Gaffer.UndoScope( s ):
+			s["n1"]["p2"] = Gaffer.IntPlug()
+
+		del s["n1"]["p2"]
+
+		# Because p2 has been created in an undo scope, but deleted outside an undo scope, undoing now will fail
+		self.assertRaises( RuntimeError, s.undo )
+
+		# Make sure dirty propagation still works
+		dirtiedPlugs = set()
+		s["n1"]["p1"].setValue( 2 )
+		self.assertEqual( dirtiedPlugs, set( [ s["n1"]["p1"] ] ) )
+
 if __name__ == "__main__":
 	unittest.main()

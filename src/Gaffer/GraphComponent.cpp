@@ -387,6 +387,7 @@ void GraphComponent::throwIfChildRejected( const GraphComponent *potentialChild 
 
 void GraphComponent::addChildInternal( GraphComponentPtr child, size_t index )
 {
+	DirtyPropagationScope dirtyPropagationScope;
 	child->parentChanging( this );
 	GraphComponent *previousParent = child->m_parent;
 	if( previousParent )
@@ -435,6 +436,7 @@ void GraphComponent::removeChild( GraphComponentPtr child )
 
 void GraphComponent::removeChildInternal( GraphComponentPtr child, bool emitParentChanged )
 {
+	DirtyPropagationScope dirtyPropagationScope;
 	if( emitParentChanged )
 	{
 		child->parentChanging( nullptr );

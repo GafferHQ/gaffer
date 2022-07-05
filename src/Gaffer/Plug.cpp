@@ -568,15 +568,13 @@ PlugPtr Plug::createCounterpart( const std::string &name, Direction direction ) 
 
 void Plug::parentChanging( Gaffer::GraphComponent *newParent )
 {
-	// When a plug is removed from a node, we need to propagate
-	// dirtiness based on that. We must call `DependencyNode::affects()`
-	// now, while the plug is still a child of the node, but we push
-	// scope so that the emission of `plugDirtiedSignal()` is deferred
-	// until `parentChanged()` when the operation is complete. It is
-	// essential that exceptions don't prevent us getting to `parentChanged()`
-	// where we pop scope, so propateDirtiness() takes care of handling
-	// exceptions thrown by `DependencyNode::affects()`.
-	pushDirtyPropagationScope();
+	// When a plug is removed from a node, we need to propagate dirtiness for
+	// it. We must call `DependencyNode::affects()` now, while the plug is still
+	// a child of the node.
+	//
+	// Before calling `parentChanging()`, GraphComponent has scoped a
+	// DirtyPropagationScope so that the emission of `plugDirtiedSignal()` is
+	// deferred until after `parentChanged()`, when the operation is complete.
 	if( node() )
 	{
 		propagateDirtinessForParentChange( this );
@@ -668,8 +666,6 @@ void Plug::parentChanged( Gaffer::GraphComponent *oldParent )
 		// propagate dirtiness.
 		propagateDirtinessForParentChange( this );
 	}
-	// Pop the scope pushed in `parentChanging()`.
-	popDirtyPropagationScope();
 }
 
 void Plug::childrenReordered( const std::vector<size_t> &oldIndices )

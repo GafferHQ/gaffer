@@ -1,6 +1,11 @@
 1.x.x.x
 =======
 
+Fixes
+-----
+
+- Plug : Fixed bug that could prevent `plugDirtiedSignal()` from ever being emitted again if an exception was thrown during parenting. This could cause the UI to stop updating.
+
 API
 ---
 
