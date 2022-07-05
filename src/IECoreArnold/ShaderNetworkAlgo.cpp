@@ -46,6 +46,7 @@
 #include "IECore/AngleConversion.h"
 #include "IECore/MessageHandler.h"
 #include "IECore/SimpleTypedData.h"
+#include "IECore/Spline.h"
 #include "IECore/VectorTypedData.h"
 
 #include "boost/algorithm/string/predicate.hpp"
@@ -440,6 +441,42 @@ struct DataTraits<Vec3<T> >
 
 };
 
+Color3f blackbody( float kelvins )
+{
+	// Table borrowed from `UsdLuxBlackbodyTemperatureAsRgb()`, which in
+	// turn is borrowed from Colour Rendering of Spectra by John Walker.
+	static SplinefColor3f g_spline(
+		CubicBasisf::catmullRom(),
+		{
+			{  1000.0f, Color3f( 1.000000f, 0.027490f, 0.000000f ) },
+			{  1000.0f, Color3f( 1.000000f, 0.027490f, 0.000000f ) },
+			{  1500.0f, Color3f( 1.000000f, 0.149664f, 0.000000f ) },
+			{  2000.0f, Color3f( 1.000000f, 0.256644f, 0.008095f ) },
+			{  2500.0f, Color3f( 1.000000f, 0.372033f, 0.067450f ) },
+			{  3000.0f, Color3f( 1.000000f, 0.476725f, 0.153601f ) },
+			{  3500.0f, Color3f( 1.000000f, 0.570376f, 0.259196f ) },
+			{  4000.0f, Color3f( 1.000000f, 0.653480f, 0.377155f ) },
+			{  4500.0f, Color3f( 1.000000f, 0.726878f, 0.501606f ) },
+			{  5000.0f, Color3f( 1.000000f, 0.791543f, 0.628050f ) },
+			{  5500.0f, Color3f( 1.000000f, 0.848462f, 0.753228f ) },
+			{  6000.0f, Color3f( 1.000000f, 0.898581f, 0.874905f ) },
+			{  6500.0f, Color3f( 1.000000f, 0.942771f, 0.991642f ) },
+			{  7000.0f, Color3f( 0.906947f, 0.890456f, 1.000000f ) },
+			{  7500.0f, Color3f( 0.828247f, 0.841838f, 1.000000f ) },
+			{  8000.0f, Color3f( 0.765791f, 0.801896f, 1.000000f ) },
+			{  8500.0f, Color3f( 0.715255f, 0.768579f, 1.000000f ) },
+			{  9000.0f, Color3f( 0.673683f, 0.740423f, 1.000000f ) },
+			{  9500.0f, Color3f( 0.638992f, 0.716359f, 1.000000f ) },
+			{ 10000.0f, Color3f( 0.609681f, 0.695588f, 1.000000f ) },
+			{ 10000.0f, Color3f( 0.609681f, 0.695588f, 1.000000f ) },
+		}
+	);
+
+	Color3f c = g_spline( kelvins );
+	c /= c.dot( V3f( 0.2126f, 0.7152f, 0.0722f ) ); // Normalise luminance
+	return Color3f( max( c[0], 0.0f ), max( c[1], 0.0f ), max( c[2], 0.0f ) );
+}
+
 template<typename T>
 T parameterValue( const Shader *shader, InternedString parameterName, const T &defaultValue )
 {
@@ -483,9 +520,11 @@ void transferUSDParameter( ShaderNetwork *network, InternedString shaderHandle, 
 }
 
 const InternedString g_aParameter( "a" );
+const InternedString g_angleParameter( "angle" );
 const InternedString g_attributeParameter( "attribute" );
 const InternedString g_bParameter( "b" );
 const InternedString g_baseColorParameter( "base_color" );
+const InternedString g_bottomParameter( "bottom" );
 const InternedString g_clearcoatParameter( "clearcoat" );
 const InternedString g_clearcoatRoughnessParameter( "clearcoatRoughness" );
 const InternedString g_coatParameter( "coat" );
@@ -493,17 +532,23 @@ const InternedString g_coatRoughnessParameter( "coat_roughness" );
 const InternedString g_colorParameter( "color" );
 const InternedString g_colorModeParameter( "color_mode" );
 const InternedString g_colorSpaceParameter( "color_space" );
+const InternedString g_colorTemperatureParameter( "colorTemperature" );
+const InternedString g_coneAngleParameter( "cone_angle" );
+const InternedString g_cosinePowerParameter( "cosine_power" );
 const InternedString g_defaultParameter( "default" );
 const InternedString g_diffuseParameter( "diffuse" );
 const InternedString g_diffuseColorParameter( "diffuseColor" );
 const InternedString g_emissionParameter( "emission" );
 const InternedString g_emissiveColorParameter( "emissiveColor" );
 const InternedString g_emissionColorParameter( "emission_color" );
+const InternedString g_enableColorTemperatureParameter( "enableColorTemperature" );
+const InternedString g_exposureParameter( "exposure" );
 const InternedString g_fallbackParameter( "fallback" );
 const InternedString g_fileParameter( "file" );
 const InternedString g_filenameParameter( "filename" );
 const InternedString g_formatParameter( "format" );
 const InternedString g_gParameter( "g" );
+const InternedString g_heightParameter( "height" );
 const InternedString g_ignoreMissingTexturesParameter( "ignore_missing_textures" );
 const InternedString g_inParameter( "in" );
 const InternedString g_inputParameter( "input" );
@@ -512,19 +557,28 @@ const InternedString g_input2Parameter( "input2" );
 const InternedString g_input2RParameter( "input2.r" );
 const InternedString g_input2GParameter( "input2.g" );
 const InternedString g_input2BParameter( "input2.b" );
+const InternedString g_intensityParameter( "intensity" );
 const InternedString g_iorParameter( "ior" );
+const InternedString g_lengthParameter( "length" );
 const InternedString g_matrixParameter( "matrix" );
 const InternedString g_metallicParameter( "metallic" );
 const InternedString g_metalnessParameter( "metalness" );
 const InternedString g_missingTextureColorParameter( "missing_texture_color" );
+const InternedString g_normalizeParameter( "normalize" );
 const InternedString g_opacityParameter( "opacity" );
 const InternedString g_opacityThresholdParameter( "opacityThreshold" );
+const InternedString g_penumbraAngleParameter( "penumbra_angle" );
 const InternedString g_rParameter( "r" );
+const InternedString g_radiusParameter( "radius" );
 const InternedString g_roughnessParameter( "roughness" );
 const InternedString g_rotationParameter( "rotation" );
 const InternedString g_scaleParameter( "scale" );
 const InternedString g_shadeModeParameter( "shade_mode" );
+const InternedString g_shapingConeAngleParameter( "shaping:cone:angle" );
+const InternedString g_shapingConeSoftnessParameter( "shaping:cone:softness" );
+const InternedString g_shapingSoftnessParameter( "shaping:softness" );
 const InternedString g_sourceColorSpaceParameter( "sourceColorSpace" );
+const InternedString g_specularParameter( "specular" );
 const InternedString g_specularColorParameter( "specularColor" );
 const InternedString g_specularColorArnoldParameter( "specular_color" );
 const InternedString g_specularIORParameter( "specular_IOR" );
@@ -532,15 +586,99 @@ const InternedString g_specularRoughnessParameter( "specular_roughness" );
 const InternedString g_stParameter( "st" );
 const InternedString g_sWrapParameter( "swrap" );
 const InternedString g_testParameter( "test" );
+const InternedString g_textureFileParameter( "texture:file" );
+const InternedString g_textureFormatParameter( "texture:format" );
 const InternedString g_topParameter( "top" );
 const InternedString g_translationParameter( "translation" );
+const InternedString g_treatAsLineParameter( "treatAsLine" );
+const InternedString g_treatAsPointParameter( "treatAsPoint" );
 const InternedString g_tWrapParameter( "twrap" );
 const InternedString g_useSpecularWorkflowParameter( "useSpecularWorkflow" );
 const InternedString g_uvCoordsParameter( "uvcoords" );
 const InternedString g_uvSetParameter( "uvset" );
 const InternedString g_varnameParameter( "varname" );
+const InternedString g_verticesParameter( "vertices" );
+const InternedString g_widthParameter( "width" );
 const InternedString g_wrapSParameter( "wrapS" );
 const InternedString g_wrapTParameter( "wrapT" );
+
+void transferUSDLightParameters( ShaderNetwork *network, InternedString shaderHandle, const Shader *usdShader, Shader *shader )
+{
+	Color3f color = parameterValue( usdShader, g_colorParameter, Color3f( 1 ) );
+	if( parameterValue( usdShader, g_enableColorTemperatureParameter, false ) )
+	{
+		color *= blackbody( parameterValue( usdShader, g_colorTemperatureParameter, 6500.0f ) );
+	}
+	shader->parameters()[g_colorParameter] = new Color3fData( color );
+
+	transferUSDParameter( network, shaderHandle, usdShader, g_diffuseParameter, shader, g_diffuseParameter, 1.0f );
+	transferUSDParameter( network, shaderHandle, usdShader, g_exposureParameter, shader, g_exposureParameter, 0.0f );
+	transferUSDParameter( network, shaderHandle, usdShader, g_intensityParameter, shader, g_intensityParameter, 1.0f );
+	transferUSDParameter( network, shaderHandle, usdShader, g_normalizeParameter, shader, g_normalizeParameter, false );
+	transferUSDParameter( network, shaderHandle, usdShader, g_specularParameter, shader, g_specularParameter, 1.0f );
+}
+
+void transferUSDShapingParameters( ShaderNetwork *network, InternedString shaderHandle, const Shader *usdShader, Shader *shader )
+{
+	if( auto d = usdShader->parametersData()->member<FloatData>( g_shapingConeAngleParameter ) )
+	{
+		shader->setName( "spot_light" );
+		shader->parameters()[g_coneAngleParameter] = new FloatData( d->readable() * 2.0f );
+		// USD docs don't currently specify any semantics for `shaping:cone:softness`, but we assume
+		// the semantics documented for RenderMan's PxrSphereLight, where it's basically specifying
+		// a penumbra as a 0-1 proportion of the cone. Relevant conversations on usd-interest :
+		//
+		// - https://groups.google.com/u/1/g/usd-interest/c/A6bc4OZjSB0/m/hwUL7Wf1AwAJ, in
+		//   which the opportunity to define semantics is declined.
+		// - https://groups.google.com/u/1/g/usd-interest/c/Ybe4aroAKbc/m/0Ui3DKMyCgAJ, in
+		//   which folks take their best guess.
+		const float softness = parameterValue( usdShader, g_shapingConeSoftnessParameter, 0.0f );
+		if( softness > 1.0 )
+		{
+			// Houdini apparently has (or had?) its own interpretation of softness, with the "bar scene"
+			// containing lights with an angle of 20 degrees and a softness of 60! We have no idea how
+			// to interpret that, so punt for now.
+			/// \todo Hopefully things get more standardised and we can remove this, because the RenderMan
+			/// docs do imply that values above one are allowed.
+			IECore::msg( IECore::Msg::Warning, "transferUSDShapingParameters", "Ignoring `shaping:cone:softness` as it is greater than 1" );
+		}
+		else
+		{
+			shader->parameters()[g_penumbraAngleParameter] = new FloatData( d->readable() * 2.0f * softness );
+		}
+		// Same here.
+		shader->parameters()[g_cosinePowerParameter] = new FloatData( parameterValue( usdShader, g_shapingSoftnessParameter, 0.0f ) );
+	}
+}
+
+// Should be called after `transferUSDLightParameters()`, as it needs to examine
+// the transferred `color` parameter.
+void transferUSDTextureFile( ShaderNetwork *network, InternedString shaderHandle, const Shader *usdShader, const Shader *shader )
+{
+	const string textureFile = parameterValue( usdShader, g_textureFileParameter, string() );
+	if( !textureFile.empty() )
+	{
+		ShaderPtr imageShader = new Shader( "image" );
+		imageShader->parameters()[g_filenameParameter] = new StringData( textureFile );
+		const InternedString imageHandle = network->addShader( shaderHandle.string() + "Image", std::move( imageShader ) );
+
+		const Color3f color = parameterValue( shader, g_colorParameter, Color3f( 1 ) );
+		if( color != Color3f( 1 ) )
+		{
+			// Multiply image with color
+			ShaderPtr multiplyShader = new Shader( "multiply" );
+			multiplyShader->parameters()[g_input2Parameter] = new Color3fData( color );
+			const InternedString multiplyHandle = network->addShader( shaderHandle.string() + "Multiply", std::move( multiplyShader ) );
+			network->addConnection( ShaderNetwork::Connection( multiplyHandle, { shaderHandle, g_colorParameter } ) );
+			network->addConnection( ShaderNetwork::Connection( imageHandle, { multiplyHandle, g_input1Parameter } ) );
+		}
+		else
+		{
+			// Connect image directly
+			network->addConnection( ShaderNetwork::Connection( imageHandle, { shaderHandle, g_colorParameter } ) );
+		}
+	}
+}
 
 template<typename VecType, typename ColorType>
 void convertVecToColor( Shader *shader, InternedString parameterName )
@@ -794,6 +932,81 @@ void IECoreArnold::ShaderNetworkAlgo::convertUSDShaders( ShaderNetwork *shaderNe
 			newShader = new Shader( "user_data_string" );
 			transferUSDParameter( shaderNetwork, handle, shader.get(), g_varnameParameter, newShader.get(), g_attributeParameter, string() );
 			transferUSDParameter( shaderNetwork, handle, shader.get(), g_fallbackParameter, newShader.get(), g_defaultParameter, string() );
+		}
+		else if( shader->getName() == "SphereLight" )
+		{
+			newShader = new Shader( "point_light", "ai:light" );
+			transferUSDLightParameters( shaderNetwork, handle, shader.get(), newShader.get() );
+			transferUSDShapingParameters( shaderNetwork, handle, shader.get(), newShader.get() );
+			transferUSDParameter( shaderNetwork, handle, shader.get(), g_radiusParameter, newShader.get(), g_radiusParameter, 0.5f );
+			if( parameterValue( shader.get(), g_treatAsPointParameter, false ) )
+			{
+				newShader->parameters()[g_radiusParameter] = new FloatData( 0.0 );
+				newShader->parameters()[g_normalizeParameter] = new BoolData( true );
+			}
+		}
+		else if( shader->getName() == "DiskLight" )
+		{
+			newShader = new Shader( "disk_light", "ai:light" );
+			transferUSDLightParameters( shaderNetwork, handle, shader.get(), newShader.get() );
+			transferUSDShapingParameters( shaderNetwork, handle, shader.get(), newShader.get() );
+			transferUSDParameter( shaderNetwork, handle, shader.get(), g_radiusParameter, newShader.get(), g_radiusParameter, 0.5f );
+		}
+		else if( shader->getName() == "CylinderLight" )
+		{
+			newShader = new Shader( "cylinder_light", "ai:light" );
+			transferUSDLightParameters( shaderNetwork, handle, shader.get(), newShader.get() );
+			transferUSDShapingParameters( shaderNetwork, handle, shader.get(), newShader.get() );
+			transferUSDParameter( shaderNetwork, handle, shader.get(), g_radiusParameter, newShader.get(), g_radiusParameter, 0.5f );
+			const float length = parameterValue( shader.get(), g_lengthParameter, 1.0f );
+			// From USD schema : "The cylinder is centered at the origin and has its major axis on the X axis"
+			newShader->parameters()[g_topParameter] = new V3fData( V3f( length/2, 0, 0 ) );
+			newShader->parameters()[g_bottomParameter] = new V3fData( V3f( -length/2, 0, 0 ) );
+			if( parameterValue( shader.get(), g_treatAsLineParameter, false ) )
+			{
+				// Should be 0.0, but that triggers an Arnold bug that loses the
+				// shape of the cylinder completely.
+				newShader->parameters()[g_radiusParameter] = new FloatData( 0.001 );
+				newShader->parameters()[g_normalizeParameter] = new BoolData( true );
+			}
+		}
+		else if( shader->getName() == "DistantLight" )
+		{
+			newShader = new Shader( "distant_light", "ai:light" );
+			transferUSDLightParameters( shaderNetwork, handle, shader.get(), newShader.get() );
+			transferUSDShapingParameters( shaderNetwork, handle, shader.get(), newShader.get() );
+			transferUSDParameter( shaderNetwork, handle, shader.get(), g_angleParameter, newShader.get(), g_angleParameter, 0.53f );
+		}
+		else if( shader->getName() == "DomeLight" )
+		{
+			newShader = new Shader( "skydome_light", "ai:light" );
+			transferUSDLightParameters( shaderNetwork, handle, shader.get(), newShader.get() );
+			transferUSDTextureFile( shaderNetwork, handle, shader.get(), newShader.get() );
+			string format = parameterValue( shader.get(), g_textureFormatParameter, string( "automatic" ) );
+			if( format == "mirroredBall" )
+			{
+				format = "mirrored_ball";
+			}
+			else if( format != "angular" && format != "latlong" )
+			{
+				IECore::msg( IECore::Msg::Warning, "convertUSDShaders", boost::format( "Unsupported value \"%1%\" for DomeLight.format" ) % format );
+				format = "latlong";
+			}
+			newShader->parameters()[g_formatParameter] = new StringData( format );
+		}
+		else if( shader->getName() == "RectLight" )
+		{
+			newShader = new Shader( "quad_light", "ai:light" );
+			transferUSDLightParameters( shaderNetwork, handle, shader.get(), newShader.get() );
+			const float width = parameterValue( shader.get(), g_widthParameter, 1.0f );
+			const float height = parameterValue( shader.get(), g_heightParameter, 1.0f );
+			newShader->parameters()[g_verticesParameter] = new V3fVectorData( {
+				V3f( width / 2, height / 2, 0 ),
+				V3f( width / 2, -height / 2, 0 ),
+				V3f( -width / 2, -height / 2, 0 ),
+				V3f( -width / 2, height / 2, 0 )
+			} );
+			transferUSDTextureFile( shaderNetwork, handle, shader.get(), newShader.get() );
 		}
 
 		if( newShader )

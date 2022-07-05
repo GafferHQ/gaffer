@@ -628,5 +628,384 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 			self.assertEqual( reader.parameters["attribute"].value, "test" )
 			self.assertEqual( reader.parameters["default"].value, arnoldDefault )
 
+	def testConvertUSDSphereLight( self ) :
+
+		network = IECoreScene.ShaderNetwork(
+			shaders = {
+				"light" : IECoreScene.Shader(
+					"SphereLight", "light",
+					{
+						"exposure" : 1.0,
+						"intensity" : 2.0,
+						"color" : imath.Color3f( 1, 2, 3 ),
+						"diffuse" : 0.25,
+						"specular" : 0.5,
+						"normalize" : True,
+						"radius" : 0.25,
+						"unknown" : "unknown",
+					}
+				),
+			},
+			output = "light",
+		)
+
+		IECoreArnold.ShaderNetworkAlgo.convertUSDShaders( network )
+
+		light = network.getShader( "light" )
+		self.assertEqual( light.name, "point_light" )
+		self.assertEqual( light.parameters["exposure"].value, 1.0 )
+		self.assertEqual( light.parameters["intensity"].value, 2.0 )
+		self.assertEqual( light.parameters["color"].value, imath.Color3f( 1, 2, 3 ) )
+		self.assertEqual( light.parameters["diffuse"].value, 0.25 )
+		self.assertEqual( light.parameters["specular"].value, 0.5 )
+		self.assertEqual( light.parameters["normalize"].value, True )
+		self.assertEqual( light.parameters["radius"].value, 0.25 )
+		self.assertNotIn( "unknown", light.parameters )
+
+	## \todo Register this via `unittest.addTypeEqualityFunc()`, once we've
+	# ditched Python 2.
+	def __assertShadersEqual( self, shader1, shader2, message = None ) :
+
+		self.assertEqual( shader1.name, shader2.name, message )
+		self.assertEqual( shader1.parameters.keys(), shader2.parameters.keys(), message )
+		for k in shader1.parameters.keys() :
+			self.assertEqual(
+				shader1.parameters[k], shader2.parameters[k],
+				"{}(Parameter = {})".format( message or "", k )
+			)
+
+	def testConvertUSDLights( self ) :
+
+		def expectedLightParameters( parameters ) :
+
+			# Start with defaults
+			result = {
+				"intensity" : 1.0,
+				"exposure" : 0.0,
+				"color" : imath.Color3f( 1, 1, 1 ),
+				"diffuse" : 1.0,
+				"specular" : 1.0,
+				"normalize" : False,
+			}
+			result.update( parameters )
+			return result
+
+		for testName, shaders in {
+
+			# Basic SphereLight -> point_light conversion
+
+			"sphereLightToPointLight" : [
+
+				IECoreScene.Shader(
+					"SphereLight", "light",
+					{
+						"intensity" : 2.5,
+						"exposure" : 1.1,
+						"color" : imath.Color3f( 1, 2, 3 ),
+						"diffuse" : 0.5,
+						"specular" : 0.75,
+						"radius" : 0.5,
+						"normalize" : True,
+					}
+				),
+
+				IECoreScene.Shader(
+					"point_light", "light",
+					expectedLightParameters( {
+						"intensity" : 2.5,
+						"exposure" : 1.1,
+						"color" : imath.Color3f( 1, 2, 3 ),
+						"diffuse" : 0.5,
+						"specular" : 0.75,
+						"radius" : 0.5,
+						"normalize" : True,
+					} )
+				),
+
+			],
+
+			# Basic SphereLight -> point_light conversion, testing default values
+
+			"defaultParameters" : [
+
+				IECoreScene.Shader( "SphereLight", "light", {} ),
+
+				IECoreScene.Shader(
+					"point_light", "light",
+					expectedLightParameters( {
+						"radius" : 0.5,
+					} )
+				),
+
+			],
+
+			# SphereLight with `treatAsPoint = true`. We must normalize these
+			# otherwise we lose all the energy in Arnold.
+
+			"treatAsPoint" : [
+
+				IECoreScene.Shader(
+					"SphereLight", "light",
+					{
+						"treatAsPoint" : True,
+					}
+				),
+
+				IECoreScene.Shader(
+					"point_light", "light",
+					expectedLightParameters( {
+						"radius" : 0.0,
+						"normalize" : True,
+					} )
+				),
+
+			],
+
+			# SphereLight (with shaping) -> spot_light conversion
+
+			"sphereLightToSpotLight" : [
+
+				IECoreScene.Shader(
+					"SphereLight", "light",
+					{
+						"shaping:cone:angle" : 20.0,
+						"shaping:cone:softness" : 0.5,
+					}
+				),
+
+				IECoreScene.Shader(
+					"spot_light", "light",
+					expectedLightParameters( {
+						"cone_angle" : 40.0,
+						"penumbra_angle" : 20.0,
+						"cosine_power" : 0.0,
+						"radius" : 0.5,
+					} )
+				),
+
+			],
+
+			# SphereLight (with bogus out-of-range Houdini softness)
+
+			"houdiniPenumbra" : [
+
+				IECoreScene.Shader(
+					"SphereLight", "light",
+					{
+						"shaping:cone:angle" : 20.0,
+						"shaping:cone:softness" : 60.0,
+					}
+				),
+
+				IECoreScene.Shader(
+					"spot_light", "light",
+					expectedLightParameters( {
+						"cone_angle" : 40.0,
+						"cosine_power" : 0.0,
+						"radius" : 0.5,
+					} )
+				),
+
+			],
+
+			# RectLight -> quad_light
+
+			"rectLight" : [
+
+				IECoreScene.Shader(
+					"RectLight", "light",
+					{
+						"width" : 20.0,
+						"height" : 60.0,
+					}
+				),
+
+				IECoreScene.Shader(
+					"quad_light", "light",
+					expectedLightParameters( {
+						"vertices" : IECore.V3fVectorData( [
+							imath.V3f( 10, 30, 0 ),
+							imath.V3f( 10, -30, 0 ),
+							imath.V3f( -10, -30, 0 ),
+							imath.V3f( -10, 30, 0 ),
+						] )
+					} )
+				),
+
+			],
+
+			# DistantLight -> distant_light
+
+			"distantLight" : [
+
+				IECoreScene.Shader(
+					"DistantLight", "light",
+					{
+						"angle" : 1.0,
+					}
+				),
+
+				IECoreScene.Shader(
+					"distant_light", "light",
+					expectedLightParameters( {
+						"angle" : 1.0
+					} )
+				),
+
+			],
+
+			# CylinderLight -> cylinder_light
+
+			"cylinderLight" : [
+
+				IECoreScene.Shader(
+					"CylinderLight", "light",
+					{
+						"intensity" : 2.5,
+						"exposure" : 1.1,
+						"radius" : 0.5,
+						"length" : 2.0,
+						"normalize" : True,
+					}
+				),
+
+				IECoreScene.Shader(
+					"cylinder_light", "light",
+					expectedLightParameters( {
+						"intensity" : 2.5,
+						"exposure" : 1.1,
+						"radius" : 0.5,
+						"top" : imath.V3f( 1, 0, 0 ),
+						"bottom" : imath.V3f( -1, 0, 0 ),
+						"normalize" : True,
+					} )
+				),
+
+			],
+
+			# CylinderLight with `treatAsLine = true`. We must normalize these
+			# otherwise we lose all the energy in Arnold.
+
+			"cylinderLight" : [
+
+				IECoreScene.Shader(
+					"CylinderLight", "light",
+					{
+						"radius" : 1.0,
+						"length" : 2.0,
+						"treatAsLine" : True,
+					}
+				),
+
+				IECoreScene.Shader(
+					"cylinder_light", "light",
+					expectedLightParameters( {
+						"radius" : 0.001,
+						"top" : imath.V3f( 1, 0, 0 ),
+						"bottom" : imath.V3f( -1, 0, 0 ),
+						"normalize" : True,
+					} )
+				),
+
+			],
+
+
+		}.items() :
+
+			network = IECoreScene.ShaderNetwork(
+				shaders = {
+					"light" : shaders[0],
+				},
+				output = "light",
+			)
+
+			IECoreArnold.ShaderNetworkAlgo.convertUSDShaders( network )
+
+			light = network.getShader( "light" )
+			self.__assertShadersEqual( network.getShader( "light" ), shaders[1], "Testing {}".format( testName ) )
+
+	def testConvertUSDRectLightTexture( self ) :
+
+		network = IECoreScene.ShaderNetwork(
+			shaders = {
+				"light" : IECoreScene.Shader(
+					"RectLight", "light",
+					{
+						"texture:file" : "myFile.tx"
+					}
+				)
+			},
+			output = "light"
+		)
+
+		IECoreArnold.ShaderNetworkAlgo.convertUSDShaders( network )
+
+		output = network.outputShader()
+		self.assertEqual( output.name, "quad_light" )
+
+		colorInput = network.input( ( "light", "color" ) )
+		texture = network.getShader( colorInput.shader )
+		self.assertEqual( texture.name, "image" )
+		self.assertEqual( texture.parameters["filename"].value, "myFile.tx" )
+
+	def testConvertUSDDomeLightTexture( self ) :
+
+		network = IECoreScene.ShaderNetwork(
+			shaders = {
+				"light" : IECoreScene.Shader(
+					"DomeLight", "light",
+					{
+						"texture:file" : "myFile.tx",
+						"texture:format" : "mirroredBall",
+					}
+				)
+			},
+			output = "light"
+		)
+
+		IECoreArnold.ShaderNetworkAlgo.convertUSDShaders( network )
+
+		output = network.outputShader()
+		self.assertEqual( output.name, "skydome_light" )
+		self.assertEqual( output.parameters["format"].value, "mirrored_ball" )
+
+		colorInput = network.input( ( "light", "color" ) )
+		texture = network.getShader( colorInput.shader )
+		self.assertEqual( texture.name, "image" )
+		self.assertEqual( texture.parameters["filename"].value, "myFile.tx" )
+
+	def testConvertUSDRectLightTextureWithColor( self ) :
+
+		network = IECoreScene.ShaderNetwork(
+			shaders = {
+				"light" : IECoreScene.Shader(
+					"RectLight", "light",
+					{
+						"texture:file" : "myFile.tx",
+						"color" : imath.Color3f( 1, 2, 3 ),
+					}
+				)
+			},
+			output = "light"
+		)
+
+		IECoreArnold.ShaderNetworkAlgo.convertUSDShaders( network )
+
+		output = network.outputShader()
+		self.assertEqual( output.name, "quad_light" )
+
+		# When using a colour and a texture, we need to multiply
+		# them together using a shader in Arnold.
+
+		colorInput = network.input( ( "light", "color" ) )
+		colorInputShader = network.getShader( colorInput.shader )
+		self.assertEqual( colorInputShader.name, "multiply" )
+		self.assertEqual( colorInputShader.parameters["input2"].value, imath.Color3f( 1, 2, 3 ) )
+
+		colorInput1 = network.input( ( colorInput.shader, "input1" ) )
+		texture = network.getShader( colorInput1.shader )
+		self.assertEqual( texture.name, "image" )
+		self.assertEqual( texture.parameters["filename"].value, "myFile.tx" )
+
 if __name__ == "__main__":
 	unittest.main()
