@@ -55,6 +55,8 @@ class TweakPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plugs ) :
 
+		valueWidget = GafferUI.PlugValueWidget.create( self.__childPlugs( plugs, "value" ) )
+
 		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
 
 		GafferUI.PlugValueWidget.__init__( self, self.__row, plugs )
@@ -79,7 +81,7 @@ class TweakPlugValueWidget( GafferUI.PlugValueWidget ) :
 		modeWidget._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetDefaultConstraint )
 		self.__row.append( modeWidget, verticalAlignment = GafferUI.Label.VerticalAlignment.Top )
 
-		self.__row.append( GafferUI.PlugValueWidget.create( self.__childPlugs( plugs, "value" ) ), expand = True )
+		self.__row.append( valueWidget, expand = True )
 
 		self._updateFromPlugs()
 
