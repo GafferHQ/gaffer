@@ -100,11 +100,11 @@ inline bool channelExistsWrapper( const GafferImage::ImagePlug *image, const std
 	return GafferImage::ImageAlgo::channelExists( image, channelName );
 }
 
-boost::python::list sortChannelNamesWrapper( object pythonChannelNames )
+boost::python::list sortedChannelNamesWrapper( object pythonChannelNames )
 {
 	vector<string> channelNames;
 	container_utils::extend_container( channelNames, pythonChannelNames );
-	GafferImage::ImageAlgo::sortChannelNames( channelNames );
+	channelNames = GafferImage::ImageAlgo::sortedChannelNames( channelNames );
 	boost::python::list result;
 	for( const auto &it : channelNames )
 	{
@@ -212,7 +212,7 @@ void GafferImageModule::bindImageAlgo()
 	def( "colorIndex", &GafferImage::ImageAlgo::colorIndex );
 	def( "channelExists", &channelExistsWrapper );
 	def( "channelExists", ( bool (*)( const std::vector<std::string> &channelNames, const std::string &channelName ) )&GafferImage::ImageAlgo::channelExists );
-	def( "sortChannelNames", &sortChannelNamesWrapper );
+	def( "sortedChannelNames", &sortedChannelNamesWrapper );
 
 	enum_<ImageAlgo::TileOrder>( "TileOrder" )
 		.value( "Unordered", ImageAlgo::Unordered )

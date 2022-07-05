@@ -109,8 +109,8 @@ bool channelExists( const std::vector<std::string> &channelNames, const std::str
 /// Our sort rules are:
 /// * channels not in a layer come first
 /// * the channels RGBA are sorted in that order, and come before any other channels in the same layer
-/// * otherwise, things are sorted alphabetically
-GAFFERIMAGE_API void sortChannelNames( std::vector< std::string > &channelNames );
+/// * otherwise, things are sorted using a natural ordering
+GAFFERIMAGE_API std::vector<std::string> sortedChannelNames( const std::vector<std::string> &channelNames );
 
 /// Default channel names
 /// ==============================
