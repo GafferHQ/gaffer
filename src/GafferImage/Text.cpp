@@ -427,7 +427,7 @@ IECore::ConstCompoundObjectPtr Text::computeLayout( const Gaffer::Context *conte
 		{
 			const u32string word = fromUTF8( *it );
 			int width = ::width( word, face.get() );
-			if( pen.x + width > area.max.x )
+			if( pen.x + width > area.max.x && pen.x > area.min.x )
 			{
 				pen.x = area.min.x;
 
