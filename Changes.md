@@ -7,6 +7,7 @@ Fixes
 - ShaderQuery :
   - Fixed bug when attempting to browse shader parameters for a non-existent location.
   - Fixed bug when attempting to use the context menu to set the name of the shader to query for a non-existent location.
+- LightEditor : Removed non-functional "Name" column from Arnold section.
 
 0.61.13.1 (relative to 0.61.13.0)
 =========

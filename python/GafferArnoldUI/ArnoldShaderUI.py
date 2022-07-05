@@ -235,6 +235,10 @@ def __translateNodeMetadata( nodeEntry ) :
 		# arnold metadata entries.
 		param = arnold.AiParamIteratorGetNext( paramIt )
 		paramName = arnold.AiParamGetName( param )
+		if paramName == "name" :
+			# Arnold node name, never represented as a plug in Gaffer
+			continue
+
 		paramPath = nodeName + ".parameters." + paramName
 		paramType = arnold.AiParamGetType( param )
 
