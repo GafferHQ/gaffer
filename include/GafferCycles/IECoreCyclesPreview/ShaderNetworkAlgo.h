@@ -42,10 +42,12 @@
 #include "IECoreScene/ShaderNetwork.h"
 
 // Cycles
+IECORE_PUSH_DEFAULT_VISIBILITY
 #include "scene/shader_graph.h"
 #include "scene/light.h"
 #include "scene/shader.h"
 #include "scene/scene.h"
+IECORE_POP_DEFAULT_VISIBILITY
 
 namespace IECoreCycles
 {

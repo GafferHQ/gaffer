@@ -37,10 +37,14 @@
 
 #include "GafferCycles/IECoreCyclesPreview/Export.h"
 
+IECORE_PUSH_DEFAULT_VISIBILITY
 #include "IECoreVDB/VDBObject.h"
+IECORE_POP_DEFAULT_VISIBILITY
 
 // Cycles
+IECORE_PUSH_DEFAULT_VISIBILITY
 #include "scene/object.h"
+IECORE_POP_DEFAULT_VISIBILITY
 
 namespace IECoreCycles
 {

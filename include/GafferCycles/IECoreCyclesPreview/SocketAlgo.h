@@ -43,9 +43,11 @@
 #include "IECore/Spline.h"
 
 // Cycles
+IECORE_PUSH_DEFAULT_VISIBILITY
 #include "graph/node.h"
 #include "graph/node_type.h"
 #include "util/transform.h"
+IECORE_POP_DEFAULT_VISIBILITY
 
 namespace IECoreCycles
 {

@@ -40,7 +40,9 @@
 #include "IECoreScene/Primitive.h"
 
 // Cycles
+IECORE_PUSH_DEFAULT_VISIBILITY
 #include "scene/attribute.h"
+IECORE_POP_DEFAULT_VISIBILITY
 
 namespace IECoreCycles
 {

@@ -56,9 +56,11 @@
 #include "boost/unordered_map.hpp"
 
 // Cycles
+IECORE_PUSH_DEFAULT_VISIBILITY
 #include "scene/shader_nodes.h"
 #include "scene/osl.h"
 #include "util/path.h"
+IECORE_POP_DEFAULT_VISIBILITY
 
 using namespace std;
 using namespace IECore;

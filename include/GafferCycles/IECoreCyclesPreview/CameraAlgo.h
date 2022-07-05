@@ -42,7 +42,9 @@
 #include <vector>
 
 // Cycles
+IECORE_PUSH_DEFAULT_VISIBILITY
 #include "scene/camera.h"
+IECORE_POP_DEFAULT_VISIBILITY
 
 namespace IECoreCycles
 {

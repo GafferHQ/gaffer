@@ -38,7 +38,9 @@
 #include "boost/algorithm/string.hpp"
 
 // Cycles
+IECORE_PUSH_DEFAULT_VISIBILITY
 #include "device/device.h"
+IECORE_POP_DEFAULT_VISIBILITY
 
 using namespace Imath;
 using namespace GafferCycles;

@@ -37,15 +37,19 @@
 #include "GafferCycles/IECoreCyclesPreview/ObjectAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/SocketAlgo.h"
 
+IECORE_PUSH_DEFAULT_VISIBILITY
 #include "openvdb/openvdb.h"
+IECORE_POP_DEFAULT_VISIBILITY
 
 // Cycles
+IECORE_PUSH_DEFAULT_VISIBILITY
 #include "kernel/types.h"
 #include "scene/image.h"
 #include "scene/image_vdb.h"
 #include "scene/volume.h"
 #include "util/param.h"
 #include "util/types.h"
+IECORE_POP_DEFAULT_VISIBILITY
 
 using namespace std;
 using namespace Imath;

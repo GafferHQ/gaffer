@@ -36,9 +36,11 @@
 
 #include "IEDisplayOutputDriver.h"
 
+IECORE_PUSH_DEFAULT_VISIBILITY
 #include "scene/pass.h"
 #include "util/murmurhash.h"
 #include "util/string.h"
+IECORE_POP_DEFAULT_VISIBILITY
 
 #include "IECore/MessageHandler.h"
 #include "IECore/SimpleTypedData.h"
