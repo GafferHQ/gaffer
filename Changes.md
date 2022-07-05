@@ -11,6 +11,7 @@ Fixes
 -----
 
 - ImageWriter : Fix bug with color space unpremulting when alpha channel not the last channel.
+- Viewer : Fix images not displaying when display window is offscreen.
 
 1.0.1.0 (relative to 1.0.0.0)
 =======
