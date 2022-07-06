@@ -69,6 +69,7 @@ Fixes
 - Constraint : Restricted `targetVertex` to positive integers.
 - ScriptContainer : Fixed `typeName()`, which was omitting the `Gaffer::` prefix.
 - Text : Fixed wrapping bug that caused blank lines to be inserted if a single word was too long for the line.
+- SceneReader : Fixed loading of USD asset paths containing `<UDIM>` tokens.
 
 API
 ---
@@ -166,6 +167,7 @@ Build
   - Boost : Updated to version 1.76.0.
   - CMark : Updated to 0.29.0.
   - Cortex : Updated to 10.4.0.0.
+  - CMark : Updated to 0.29.0.
   - HDF5 : Updated to 1.12.0.
   - LibFFI : Updated to 3.4.2.
   - LibPNG : Updated to 1.6.37.
