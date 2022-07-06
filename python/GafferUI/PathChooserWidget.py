@@ -97,7 +97,10 @@ class PathChooserWidget( GafferUI.Widget ) :
 					parenting = { "expand" : True }
 				) as splitContainer :
 
-					self.__directoryListing = GafferUI.PathListingWidget( tmpPath, allowMultipleSelection=allowMultipleSelection )
+					self.__directoryListing = GafferUI.PathListingWidget(
+						tmpPath,
+						selectionMode = GafferUI.PathListingWidget.SelectionMode.Rows if allowMultipleSelection else GafferUI.PathListingWidget.SelectionMode.Row
+					)
 					self.__directoryListing.displayModeChangedSignal().connect( Gaffer.WeakMethod( self.__displayModeChanged ), scoped = False )
 					if len( previewTypes ) :
 						self.__previewWidget = GafferUI.CompoundPathPreview( tmpPath, childTypes=previewTypes )

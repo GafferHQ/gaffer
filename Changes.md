@@ -1,12 +1,29 @@
 0.61.x.x (relative to 0.61.13.1)
 =========
 
+Improvements
+------------
+
+- Light Editor :
+  - Added the ability to edit multiple values at one time. With multiple cells selected, pressing <kbd>Return</kbd> or <kbd>Enter</kbd> will open a popup to edit the values for all cells.
+  - Added the ability to drag from a cell and drop that cell's value on an appropriate target.
+  - Added the ability to select individual cells with the mouse and keyboard. Cells can be selected by clicking or using the up <kbd>&uarr;</kbd>, down <kbd>&darr;</kbd>, left <kbd>&larr;</kbd> and right <kbd>&rarr;</kbd> keys. For both the keyboard and mouse, holding <kbd>Control</kbd> toggles the next selection. Holding <kbd>Shift</kbd> range-selects the next selection.
+
 Fixes
 -----
 
 - ShaderQuery :
   - Fixed bug when attempting to browse shader parameters for a non-existent location.
   - Fixed bug when attempting to use the context menu to set the name of the shader to query for a non-existent location.
+
+API
+---
+
+- PathListingWidget :
+  - Deprecated `allowMultipleSelection` constructor argument. Use `selectionMode` argument instead.
+  - Added modes to `selectionMode` allowing single and multiple cell selections.
+  - `setSelection` and `getSelection` now accept and return different types depending on the `selectionMode`. For `Row` and `Rows` modes, a single `PathMatcher` object represents the selection for all columns, maintaining backwards compatiblity. For `Cell` and `Cells` modes, a list of `PatchMatcher` objects, one per column, represents the selection.
+- PlugValueWidget : Added new exception types `MultipleWidgetCreatorsError` and `MultiplePlugTypesError`.
 
 0.61.13.1 (relative to 0.61.13.0)
 =========

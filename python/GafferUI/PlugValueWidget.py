@@ -61,6 +61,8 @@ import GafferUI
 class PlugValueWidget( GafferUI.Widget ) :
 
 	class MultiplePlugsError( ValueError ) : pass
+	class MultipleWidgetCreatorsError( ValueError ) : pass
+	class MultiplePlugTypesError( ValueError ) : pass
 
 	def __init__( self, topLevelWidget, plugs, **kw ) :
 
@@ -249,7 +251,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 				plugs = next( iter( plugs ) )
 
 		if len( creators ) > 1 :
-			raise Exception( "Multiple widget creators" )
+			raise cls.MultipleWidgetCreatorsError()
 
 		creator = next( iter( creators ) )
 		if creator is not None :
@@ -490,7 +492,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		assert( isinstance( plugs, set ) )
 		if len( plugs ) and sole( p.__class__ for p in plugs ) is None :
-			raise ValueError( "Plugs have different types" )
+			raise self.MultiplePlugTypesError()
 
 		nodes = set()
 		scriptNodes = set()

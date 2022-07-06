@@ -142,12 +142,15 @@ class PlugPopup( _PopupWindow ) :
 					warningBadge.setToolTip( warning )
 
 				# PlugValueWidget, or label explaining why we can't show one
-
-				if sole( p.__class__ for p in plugs ) :
+				try :
 					self.__plugValueWidget = GafferUI.PlugValueWidget.create( plugs )
-				else :
+				except (
+					GafferUI.PlugValueWidget.MultipleWidgetCreatorsError,
+					GafferUI.PlugValueWidget.MultiplePlugTypesError
+				) as e :
 					self.__plugValueWidget = None
 					GafferUI.Label( "Unable to edit plugs with mixed types" )
+					e.__traceback__ = None
 
 		# If we have a ColorPlugValueWidget, expand it to show the chooser.
 		colorPlugValueWidget = self.__colorPlugValueWidget( self.__plugValueWidget )

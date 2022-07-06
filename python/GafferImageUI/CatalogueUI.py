@@ -651,7 +651,7 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 			self.__pathListing = GafferUI.PathListingWidget(
 				_ImagesPath( self.__images(), [] ),
 				columns = self.__listingColumns(),
-				allowMultipleSelection = True,
+				selectionMode = GafferUI.PathListingWidget.SelectionMode.Rows,
 				sortable = False,
 				horizontalScrollMode = GafferUI.ScrollMode.Automatic
 			)
