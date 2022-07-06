@@ -1,3 +1,16 @@
+1.0.x.x (relative to 1.0.0.0)
+=======
+
+Improvements
+------------
+
+- TweakPlug : Added new tweak modes.
+  - Min : Resulting value will be the lesser of the existing value and the tweak value. For values with multiple components, such as `Color3f`, each component is compared individually.
+  - Max : Same as `Min` except the resulting value is the greater of the existing value and the tweak value.
+  - ListAppend : Values in the tweak list are added to the end of the existing list. If a value is in both the existing list and the tweak list, it is removed from the existing list before being added.
+  - ListPrepend : Same as `ListAppend` except the tweak list is added to the beginning of the existing list.
+  - ListRemove : Values in the tweak list are removed from the existing list.
+
 1.0.0.0 (relative to 0.61.x.x)
 =======
 

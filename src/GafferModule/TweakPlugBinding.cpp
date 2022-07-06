@@ -112,6 +112,11 @@ void GafferModule::bindTweakPlugs()
 			.value( "Multiply", TweakPlug::Multiply )
 			.value( "Remove", TweakPlug::Remove )
 			.value( "Create", TweakPlug::Create )
+			.value( "Min", TweakPlug::Min )
+			.value( "Max", TweakPlug::Max )
+			.value( "ListAppend", TweakPlug::ListAppend )
+			.value( "ListPrepend", TweakPlug::ListPrepend )
+			.value( "ListRemove", TweakPlug::ListRemove )
 		;
 
 		enum_<TweakPlug::MissingMode>( "MissingMode" )

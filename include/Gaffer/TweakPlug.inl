@@ -87,41 +87,48 @@ bool TweakPlug::applyTweak(
 		);
 	}
 
+	if( mode == Gaffer::TweakPlug::Create )
+	{
+		return setDataFunctor( name, newData );
+	}
+
+	const IECore::Data *currentValue = getDataFunctor( name );
+	if( currentValue && currentValue->typeId() != newData->typeId() )
+	{
+		throw IECore::Exception(
+			boost::str( boost::format( "Cannot apply tweak to \"%s\" : Value of type \"%s\" does not match parameter of type \"%s\"" ) % name % currentValue->typeName() % newData->typeName() )
+		);
+	}
+
+	if( !currentValue )
+	{
+		if( missingMode == Gaffer::TweakPlug::MissingMode::Ignore )
+		{
+			return false;
+		}
+		else if( !( mode == Gaffer::TweakPlug::Replace && missingMode == Gaffer::TweakPlug::MissingMode::IgnoreOrReplace) )
+		{
+			throw IECore::Exception( boost::str( boost::format( "Cannot apply tweak with mode %s to \"%s\" : This parameter does not exist" ) % modeToString( mode ) % name ) );
+		}
+	}
+
 	if(
-		mode == Gaffer::TweakPlug::Replace ||
 		mode == Gaffer::TweakPlug::Add ||
 		mode == Gaffer::TweakPlug::Subtract ||
-		mode == Gaffer::TweakPlug::Multiply
+		mode == Gaffer::TweakPlug::Multiply ||
+		mode == Gaffer::TweakPlug::Min ||
+		mode == Gaffer::TweakPlug::Max
 	)
 	{
-		const IECore::Data *currentValue = getDataFunctor( name );
-		if( currentValue && currentValue->typeId() != newData->typeId() )
-		{
-			throw IECore::Exception(
-				boost::str( boost::format( "Cannot apply tweak to \"%s\" : Value of type \"%s\" does not match parameter of type \"%s\"" ) % name % currentValue->typeName() % newData->typeName() )
-			);
-		}
-
-		if( !currentValue )
-		{
-			if( missingMode == Gaffer::TweakPlug::MissingMode::Ignore )
-			{
-				return false;
-			}
-			else if( !( mode == Gaffer::TweakPlug::Replace && missingMode == Gaffer::TweakPlug::MissingMode::IgnoreOrReplace) )
-			{
-				throw IECore::Exception( boost::str( boost::format( "Cannot apply tweak with mode %s to \"%s\" : This parameter does not exist" ) % modeToString( mode ) % name ) );
-			}
-		}
-
-		if(
-			mode == Gaffer::TweakPlug::Add ||
-			mode == Gaffer::TweakPlug::Subtract ||
-			mode == Gaffer::TweakPlug::Multiply
-		)
-		{
-			applyNumericTweak( currentValue, newData.get(), newData.get(), mode, name );
-		}
+		applyNumericTweak( currentValue, newData.get(), newData.get(), mode, name );
+	}
+	else if(
+		mode == TweakPlug::ListAppend ||
+		mode == TweakPlug::ListPrepend ||
+		mode == TweakPlug::ListRemove
+	)
+	{
+		applyListTweak( currentValue, newData.get(), newData.get(), mode, name );
 	}
 
 	setDataFunctor( name, newData );
