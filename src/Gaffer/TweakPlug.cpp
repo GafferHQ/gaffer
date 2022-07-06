@@ -288,9 +288,10 @@ const char *TweakPlug::modeToString( Gaffer::TweakPlug::Mode mode )
 			return "Multiply";
 		case Gaffer::TweakPlug::Remove :
 			return "Remove";
-		default :
-			return "Invalid";
+		case Gaffer::TweakPlug::Create : 
+			return  "Create";
 	}
+	return  "Invalid";
 }
 
 //////////////////////////////////////////////////////////////////////////
