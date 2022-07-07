@@ -437,12 +437,23 @@ class SignalsTest( GafferTest.TestCase ) :
 
 		c = s.connect( Gaffer.WeakMethod( t.f ), scoped = False )
 
+		# Deleting `t` should automatically disconnect the slots that refer to
+		# it.
+
 		self.assertTrue( c.connected() )
 		del t
 		self.assertIsNone( w() )
 		self.assertFalse( c.connected() )
 
 		s() # Would throw if an expired WeakMethod remained connected
+
+		# Slots can also be manually disconnected with `_disconnectTrackedConnections()`.
+
+		t = TrackableTest()
+		c = s.connect( Gaffer.WeakMethod( t.f ), scoped = False )
+		self.assertTrue( c.connected() )
+		t._disconnectTrackedConnections()
+		self.assertFalse( c.connected() )
 
 	@GafferTest.TestRunner.PerformanceTestMethod()
 	def testConstructionPerformance( self ) :

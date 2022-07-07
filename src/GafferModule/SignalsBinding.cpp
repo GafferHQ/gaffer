@@ -186,7 +186,9 @@ void GafferModule::bindSignals()
 		.def( init<const Connection &>() )
 	;
 
-	class_<Gaffer::Signals::Trackable, boost::noncopyable>( "Trackable" );
+	class_<Gaffer::Signals::Trackable, boost::noncopyable>( "Trackable" )
+		.def( "_disconnectTrackedConnections", &Trackable::disconnectTrackedConnections )
+	;
 
 	using Signal0 = Gaffer::Signals::Signal<object (), PythonResultCombiner>;
 	using Signal1 = Gaffer::Signals::Signal<object ( object ), PythonResultCombiner>;

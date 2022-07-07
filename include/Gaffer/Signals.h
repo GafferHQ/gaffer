@@ -246,7 +246,13 @@ class Trackable : boost::noncopyable
 
 		virtual ~Trackable();
 
+	protected :
+
+		void disconnectTrackedConnections();
+
 	private :
+
+		friend void GafferModule::bindSignals();
 
 		template<typename Signature, typename Combiner>
 		friend class Signal;

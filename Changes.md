@@ -1,3 +1,11 @@
+1.x.x.x
+=======
+
+API
+---
+
+- Signals : Added `Trackable::disconnectTrackedConnections()` method.
+
 1.0.2.1 (relative to 1.0.2.0)
 =======
 
