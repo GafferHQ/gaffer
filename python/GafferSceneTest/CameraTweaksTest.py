@@ -87,8 +87,13 @@ class CameraTweaksTest( GafferSceneTest.SceneTestCase ) :
 
 			self.assertEqual( c["out"].object( "/camera" ), tweaks["out"].object( "/camera" ) )
 
-			for mode in Gaffer.TweakPlug.Mode.names.values():
-			#for mode in [ Gaffer.TweakPlug.Mode.Replace ]:
+			for mode in [
+				m for m in Gaffer.TweakPlug.Mode.names.values() if m not in [
+					Gaffer.TweakPlug.Mode.ListAppend,
+					Gaffer.TweakPlug.Mode.ListPrepend,
+					Gaffer.TweakPlug.Mode.ListRemove
+				]
+			] :
 				for name, value in [
 						("projection", "orthographic" ),
 						( "aperture", imath.V2f( 10, 20 ) ),
@@ -105,7 +110,13 @@ class CameraTweaksTest( GafferSceneTest.SceneTestCase ) :
 						( "apertureAspectRatio", 0.15 ),
 					]:
 
-					if type( value ) in [ str ] and mode in [ Gaffer.TweakPlug.Mode.Add, Gaffer.TweakPlug.Mode.Subtract, Gaffer.TweakPlug.Mode.Multiply ] :
+					if type( value ) in [ str ] and mode in [
+						Gaffer.TweakPlug.Mode.Add,
+						Gaffer.TweakPlug.Mode.Subtract,
+						Gaffer.TweakPlug.Mode.Multiply,
+						Gaffer.TweakPlug.Mode.Min,
+						Gaffer.TweakPlug.Mode.Max
+					] :
 						continue
 
 					tweaks["tweaks"].clearChildren()
@@ -136,6 +147,16 @@ class CameraTweaksTest( GafferSceneTest.SceneTestCase ) :
 						ref = orig - value
 					elif mode == Gaffer.TweakPlug.Mode.Create:
 						ref = value
+					elif mode == GafferScene.TweakPlug.Mode.Min:
+						if type( value ) == imath.V2f:
+							ref = imath.V2f( min( orig[0], value[0] ), min( orig[1], value[1] ) )
+						else:
+							ref = min( orig, value )
+					elif mode == GafferScene.TweakPlug.Mode.Max:
+						if type( value ) == imath.V2f:
+							ref = imath.V2f( max( orig[0], value[0] ), max( orig[1], value[1] ) )
+						else:
+							ref = max( orig, value )
 
 					if name == "fieldOfView":
 						modified = tweaks["out"].object( "/camera" ).calculateFieldOfView()[0]
