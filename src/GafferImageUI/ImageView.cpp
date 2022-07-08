@@ -1052,12 +1052,12 @@ class ImageView::ColorInspector : public Signals::Trackable
 			// would cause cancellation of the ImageView background compute every
 			// time the mouse was moved. The "colorInspector:source" variable is
 			// created in ImageViewUI's `_ColorInspectorPlugValueWidget`.
-			V2iPlugPtr v2iTemplate = new Gaffer::V2iPlug();
+			V2iPlugPtr v2iTemplate = new Gaffer::V2iPlug( "v2iTemplate" );
 			m_contextQuery->addQuery( v2iTemplate.get(), "colorInspector:source" );
 
 			// The same thing, but when we need an area to evaluate areaColor
 			// instead of a pixel to evaluate pixelColor
-			Box2iPlugPtr box2iTemplate = new Gaffer::Box2iPlug();
+			Box2iPlugPtr box2iTemplate = new Gaffer::Box2iPlug( "box2iTemplate" );
 			m_contextQuery->addQuery( box2iTemplate.get(), "colorInspector:source" );
 
 			// And we use a DeleteContextVariables node to make sure that our
