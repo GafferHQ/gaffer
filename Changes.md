@@ -12,6 +12,13 @@ Improvements
   - ListRemove : Values in the tweak list are removed from the existing list.
 - Added horizontal scroll bars to the Light Editor, Scene Inspector and Shader Browser when their content is too wide to fit within the widget.
 
+Fixes
+-----
+
+- Fixed errors in Light Editor :
+  - Error when pressing <kbd>Return</kbd> or <kbd>Enter</kbd> with no cells selected.
+  - Error when double-clicking the `Name` column.
+
 1.0.0.0 (relative to 0.61.x.x)
 =======
 

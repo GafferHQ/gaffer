@@ -285,6 +285,12 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 
 	def __buttonDoubleClick( self, pathListing, event ) :
 
+		# A small corner area below the vertical scroll bar may pass through
+		# to us, causing odd selection behavior. Check that we're within the
+		# scroll area.
+		if pathListing.pathAt( event.line.p0 ) is None :
+			return False
+
 		if event.button == event.Buttons.Left :
 			self.__editSelectedCells( pathListing )
 
@@ -304,6 +310,7 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 	def __editSelectedCells( self, pathListing ) :
 
 		selection = pathListing.getSelection()
+
 		columns = pathListing.getColumns()
 
 		inspections = []
@@ -319,6 +326,9 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 
 					if inspection is not None :
 						inspections.append( inspection )
+
+		if len( inspections ) == 0 :
+			return
 
 		nonEditable = [ i for i in inspections if not i.editable() ]
 
