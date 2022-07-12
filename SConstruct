@@ -517,6 +517,7 @@ else:
 			"/permissive-", # Disable permissive mode, which also enables standard compliant two phase name lookup
 			"/D_USE_MATH_DEFINES",  # Required when permissive mode is off, for defining constants like M_PI used by OpenVDB
 			"/std:$CXXSTD",
+			"/DHAVE_SNPRINTF",  # Fix a legacy issue for MSVC versions < 2019
 		]
 	)
 
@@ -776,6 +777,9 @@ basePythonEnv["PYTHON_VERSION"] = subprocess.check_output(
 	[ "python", "-c", "import sys; print( '{}.{}'.format( *sys.version_info[:2] ) )" ],
 	env=commandEnv["ENV"], universal_newlines=True
 ).strip()
+
+if basePythonEnv["PLATFORM"] == "win32" :
+	basePythonEnv["PYTHON_VERSION"] = basePythonEnv["PYTHON_VERSION"].replace( ".", "" )
 
 basePythonEnv["PYTHON_ABI_VERSION"] = basePythonEnv["PYTHON_VERSION"]
 basePythonEnv["PYTHON_ABI_VERSION"] += subprocess.check_output(
@@ -1225,7 +1229,7 @@ libraries = {
 			"LIBS" : [ "Gaffer", "GafferDispatch", "GafferScene", "IECoreScene$CORTEX_LIB_SUFFIX" ] + [ "${USD_LIB_PREFIX}" + x for x in [ "sdf", "arch", "tf", "vt" ] ],
 			# USD includes "at least one deprecated or antiquated header", so we
 			# have to drop our usual strict warning levels.
-			"CXXFLAGS" : [ "-Wno-deprecated" ],
+			"CXXFLAGS" : [ "-Wno-deprecated" if env["PLATFORM"] != "win32" else "/wd4996" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferUSD", "GafferScene", "GafferDispatch", "GafferBindings" ],
