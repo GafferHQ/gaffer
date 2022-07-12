@@ -65,6 +65,42 @@ template< typename T > struct IsColorTypedData : boost::mpl::and_< TypeTraits::I
 // SupportsArithmeticData
 template< typename T > struct SupportsArithData : boost::mpl::or_<  TypeTraits::IsNumericSimpleTypedData<T>, TypeTraits::IsVecTypedData<T>, IsColorTypedData<T>> {};
 
+template<typename T>
+T vectorAwareMin( const T &v1, const T &v2 )
+{
+	if constexpr( TypeTraits::IsVec<T>::value || TypeTraits::IsColor<T>::value )
+	{
+		T result;
+		for( size_t i = 0; i < T::dimensions(); ++i )
+		{
+			result[i] = std::min( v1[i], v2[i] );
+		}
+		return result;
+	}
+	else
+	{
+		return std::min( v1, v2 );
+	}
+}
+
+template<typename T>
+T vectorAwareMax( const T &v1, const T &v2 )
+{
+	if constexpr( TypeTraits::IsVec<T>::value || TypeTraits::IsColor<T>::value )
+	{
+		T result;
+		for( size_t i = 0; i < T::dimensions(); ++i )
+		{
+			result[i] = std::max( v1[i], v2[i] );
+		}
+		return result;
+	}
+	else
+	{
+		return std::max( v1, v2 );
+	}
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -91,7 +127,7 @@ TweakPlug::TweakPlug( Gaffer::ValuePlugPtr valuePlug, const std::string &name, D
 {
 	addChild( new StringPlug( "name", direction ) );
 	addChild( new BoolPlug( "enabled", direction, true ) );
-	addChild( new IntPlug( "mode", direction, Replace, Replace, Create ) );
+	addChild( new IntPlug( "mode", direction, Replace, First, Last ) );
 
 	if( valuePlug )
 	{
@@ -250,10 +286,19 @@ void TweakPlug::applyNumericTweak(
 					case TweakPlug::Multiply :
 						data->writable() = sourceDataCast->readable() * tweakDataCast->readable();
 						break;
+					case TweakPlug::Min :
+						data->writable() = vectorAwareMin( sourceDataCast->readable(), tweakDataCast->readable() );
+						break;
+					case TweakPlug::Max :
+						data->writable() = vectorAwareMax( sourceDataCast->readable(), tweakDataCast->readable() );
+						break;
+					case TweakPlug::ListAppend :
+					case TweakPlug::ListPrepend :
+					case TweakPlug::ListRemove :
 					case TweakPlug::Replace :
 					case TweakPlug::Remove :
 					case TweakPlug::Create :
-						// These cases are unused - we handle replace and remove mode outside of numericTweak.
+						// These cases are unused - we handle them outside of numericTweak.
 						// But the compiler gets unhappy if we don't handle some cases.
 						assert( false );
 						break;
@@ -270,7 +315,60 @@ void TweakPlug::applyNumericTweak(
 				);
 			}
 		}
+	);
+}
 
+void TweakPlug::applyListTweak(
+	const IECore::Data *sourceData,
+	const IECore::Data *tweakData,
+	IECore::Data *destData,
+	TweakPlug::Mode mode,
+	const std::string &tweakName
+) const
+{
+	dispatch(
+
+		destData,
+
+		[&] ( auto data ) {
+
+			using DataType = typename std::remove_pointer<decltype( data )>::type;
+
+			if constexpr( TypeTraits::IsVectorTypedData<DataType>::value )
+			{
+				const DataType *sourceDataCast = runTimeCast<const DataType>( sourceData );
+				const DataType *tweakDataCast = runTimeCast<const DataType>( tweakData );
+
+				const auto &currentElements = sourceDataCast->readable();
+				const auto &newElements = tweakDataCast->readable();
+
+				data->writable() = typename DataType::ValueType( currentElements );
+				data->writable().erase(
+					std::remove_if(
+						data->writable().begin(),
+						data->writable().end(),
+						[&newElements]( const auto &elem )
+						{
+							return std::find(
+								newElements.begin(),
+								newElements.end(),
+								elem
+							) != newElements.end();
+						}
+					),
+					data->writable().end()
+				);
+
+				if( mode == TweakPlug::ListAppend )
+				{
+					data->writable().insert( data->writable().end(), newElements.begin(), newElements.end() );
+				}
+				else if( mode == TweakPlug::ListPrepend )
+				{
+					data->writable().insert( data->writable().begin(), newElements.begin(), newElements.end() );
+				}
+			}
+		}
 	);
 }
 
@@ -288,9 +386,20 @@ const char *TweakPlug::modeToString( Gaffer::TweakPlug::Mode mode )
 			return "Multiply";
 		case Gaffer::TweakPlug::Remove :
 			return "Remove";
-		default :
-			return "Invalid";
+		case Gaffer::TweakPlug::Create :
+			return  "Create";
+		case Gaffer::TweakPlug::Min :
+			return "Min";
+		case Gaffer::TweakPlug::Max :
+			return "Max";
+		case Gaffer::TweakPlug::ListAppend :
+			return "ListAppend";
+		case Gaffer::TweakPlug::ListPrepend :
+			return "ListPrepend";
+		case Gaffer::TweakPlug::ListRemove :
+			return "ListRemove";
 	}
+	return  "Invalid";
 }
 
 //////////////////////////////////////////////////////////////////////////

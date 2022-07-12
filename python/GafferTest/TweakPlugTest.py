@@ -202,5 +202,117 @@ class TweakPlugTest( GafferTest.TestCase ) :
 			self.assertEqual( p2.direction(), Gaffer.Plug.Direction.Out )
 			self.assertIsInstance( p2[n], p[n].__class__ )
 
+	def testTweakModes( self ) :
+
+		originalParameters = IECore.CompoundData(
+			{
+				"a" : 2.0,
+				"b" : imath.Color3f( 4.0, 5.0, 6.0 ),
+				"c" : imath.V2f( 3.0, 4.0 ),
+				"d" : IECore.StringVectorData( [ "gouda", "cheddar", "cheddar", "swiss" ] )
+			}
+		)
+
+		tweaks = Gaffer.TweaksPlug()
+		tweaks.addChild( Gaffer.TweakPlug( "a", 1.0 ) )
+		tweaks.addChild( Gaffer.TweakPlug( "b", imath.Color3f( 1.0, 2.0, 3.0 ) ) )
+		tweaks.addChild( Gaffer.TweakPlug( "c", imath.V2f( 1.0, 2.0 ) ) )
+		tweaks.addChild( Gaffer.TweakPlug( "d", IECore.StringVectorData( [ "brie" ] ) ) )
+
+		# Simple Arithmetic, min and max
+
+		for value, mode, expectedValue in [
+			( 1.0, Gaffer.TweakPlug.Mode.Replace, 1.0 ),
+			( 1.0, Gaffer.TweakPlug.Mode.Add, 3.0 ),
+			( 1.0, Gaffer.TweakPlug.Mode.Subtract, 1.0 ),
+			( 2.0, Gaffer.TweakPlug.Mode.Multiply, 4.0 ),
+			( 1.0, Gaffer.TweakPlug.Mode.Min, 1.0 ),
+			( 1.0, Gaffer.TweakPlug.Mode.Max, 2.0 ),
+		] :
+			tweaks[0]["mode"].setValue( mode )
+			tweaks[0]["value"].setValue( value )
+
+			parameters = originalParameters.copy()
+
+			self.assertTrue( tweaks.applyTweaks( parameters ) )
+			self.assertEqual( parameters["a"].value, expectedValue )
+
+		# Arithmetic on a color
+
+		for value, mode, expectedValue in [
+			( imath.Color3f( 1.0, 2.0, 3.0 ), Gaffer.TweakPlug.Mode.Replace, imath.Color3f( 1.0, 2.0, 3.0 ) ),
+			( imath.Color3f( 1.0, 2.0, 3.0 ), Gaffer.TweakPlug.Mode.Add, imath.Color3f( 5.0, 7.0, 9.0 ) ),
+			( imath.Color3f( 1.0, 2.0, 3.0 ), Gaffer.TweakPlug.Mode.Subtract, imath.Color3f( 3.0, 3.0, 3.0 ) ),
+			( imath.Color3f( 1.0, 2.0, 3.0 ), Gaffer.TweakPlug.Mode.Multiply, imath.Color3f( 4.0, 10.0, 18.0 ) ),
+			( imath.Color3f( 1.0, 8.0, 3.0 ), Gaffer.TweakPlug.Mode.Min, imath.Color3f( 1.0, 5.0, 3.0 ) ),
+			( imath.Color3f( 1.0, 8.0, 3.0 ), Gaffer.TweakPlug.Mode.Max, imath.Color3f( 4.0, 8.0, 6.0 ) ),
+		] :
+			tweaks[1]["mode"].setValue( mode )
+			tweaks[1]["value"].setValue( value )
+
+			parameters = originalParameters.copy()
+
+			self.assertTrue( tweaks.applyTweaks( parameters ) )
+			self.assertEqual( parameters["b"].value, expectedValue )
+
+		# Arithmetic on a V2f
+
+		for value, mode, expectedValue in [
+			( imath.V2f( 1.0, 2.0 ), Gaffer.TweakPlug.Mode.Replace, imath.V2f( 1.0, 2.0 ) ),
+			( imath.V2f( 1.0, 2.0 ), Gaffer.TweakPlug.Mode.Add, imath.V2f( 4.0, 6.0 ) ),
+			( imath.V2f( 1.0, 2.0 ), Gaffer.TweakPlug.Mode.Subtract, imath.V2f( 2.0, 2.0 ) ),
+			( imath.V2f( 1.0, 2.0 ), Gaffer.TweakPlug.Mode.Multiply, imath.V2f( 3.0, 8.0 ) ),
+			( imath.V2f( 1.0, 5.0 ), Gaffer.TweakPlug.Mode.Min, imath.V2f( 1.0, 4.0 ) ),
+			( imath.V2f( 1.0, 5.0 ), Gaffer.TweakPlug.Mode.Max, imath.V2f( 3.0, 5.0 ) ),
+		] :
+			tweaks[2]["mode"].setValue( mode )
+			tweaks[2]["value"].setValue( value )
+
+			parameters = originalParameters.copy()
+
+			self.assertTrue( tweaks.applyTweaks( parameters ) )
+			self.assertEqual( parameters["c"].value, expectedValue )
+
+		# List operations
+
+		for value, mode, expectedValue in [
+			( [ "brie" ], Gaffer.TweakPlug.Mode.ListAppend, [ "gouda", "cheddar", "cheddar", "swiss", "brie" ] ),
+			( [ "brie", "cheddar", "muenster" ], Gaffer.TweakPlug.Mode.ListAppend, [ "gouda", "swiss", "brie", "cheddar", "muenster" ] ),
+			( [ "cheddar" ], Gaffer.TweakPlug.Mode.ListAppend, [ "gouda", "swiss", "cheddar" ] ),
+			( [ "edam" ], Gaffer.TweakPlug.Mode.ListPrepend, [ "edam", "gouda", "cheddar", "cheddar", "swiss" ] ),
+			( [ "edam", "cheddar", "muenster" ], Gaffer.TweakPlug.Mode.ListPrepend, [ "edam", "cheddar", "muenster", "gouda", "swiss" ] ),
+			( [ "swiss" ], Gaffer.TweakPlug.Mode.ListPrepend, [ "swiss", "gouda", "cheddar", "cheddar" ] ),
+			( [ "gouda" ], Gaffer.TweakPlug.Mode.ListRemove, [ "cheddar", "cheddar", "swiss" ] ),
+			( [ "gouda", "swiss" ], Gaffer.TweakPlug.Mode.ListRemove, [ "cheddar", "cheddar" ] ),
+		] :
+			tweaks[3]["mode"].setValue( mode )
+			tweaks[3]["value"].setValue( IECore.StringVectorData( value ) )
+
+			parameters = originalParameters.copy()
+
+			self.assertTrue( tweaks.applyTweaks( parameters ) )
+			self.assertEqual( parameters["d"], IECore.StringVectorData( expectedValue ) )
+
+		# Create and remove
+
+		parameters = originalParameters.copy()
+		self.assertTrue( tweaks.applyTweaks( parameters ) )
+		self.assertNotIn( "e", parameters )
+
+		tweaks.addChild( Gaffer.TweakPlug( "e", "greetings", Gaffer.TweakPlug.Mode.Create ) )
+		parameters = originalParameters.copy()
+		self.assertTrue( tweaks.applyTweaks( parameters ) )
+		self.assertEqual( parameters["e"].value, "greetings" )
+
+		parameters = originalParameters.copy()
+		self.assertTrue( tweaks.applyTweaks( parameters ) )
+		self.assertIn( "a", parameters )
+
+		tweaks.addChild( Gaffer.TweakPlug( "a", 1.0, Gaffer.TweakPlug.Mode.Remove ) )
+		parameters = originalParameters.copy()
+		self.assertTrue( tweaks.applyTweaks( parameters ) )
+		self.assertNotIn( "a", parameters )
+
+
 if __name__ == "__main__":
 	unittest.main()

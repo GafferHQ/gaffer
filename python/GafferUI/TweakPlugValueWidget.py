@@ -47,7 +47,8 @@ from Qt import QtWidgets
 # Widget for TweakPlug, which is used to build tweak nodes such as ShaderTweaks
 # and CameraTweaks.  Shows a value plug that you can use to specify a tweak value, along with
 # a target parameter name, an enabled plug, and a mode.  The mode can be "Replace",
-# or "Add"/"Subtract"/"Multiply" if the plug is numeric,
+# or "Add"/"Subtract"/"Multiply"/"Min"/"Max" if the plug is numeric,
+# or "ListAppend"/"ListPrepend"/"ListRemove" if the plug is a list,
 # or "Remove" if the metadata "tweakPlugValueWidget:allowRemove" is set,
 # or "Create" if the metadata "tweakPlugValueWidget:allowCreate" is set.
 class TweakPlugValueWidget( GafferUI.PlugValueWidget ) :
@@ -179,6 +180,24 @@ def __validModes( plug ) :
 			Gaffer.TweakPlug.Mode.Multiply
 		]
 
+	if type( plug.parent()["value"] ) in [
+		Gaffer.BoolVectorDataPlug,
+		Gaffer.IntVectorDataPlug,
+		Gaffer.FloatVectorDataPlug,
+		Gaffer.StringVectorDataPlug,
+		Gaffer.InternedStringVectorDataPlug,
+		Gaffer.V2iVectorDataPlug,
+		Gaffer.V3fVectorDataPlug,
+		Gaffer.Color3fVectorDataPlug,
+		Gaffer.M44fVectorDataPlug,
+		Gaffer.M33fVectorDataPlug,
+	] :
+		result += [
+			Gaffer.TweakPlug.Mode.ListAppend,
+			Gaffer.TweakPlug.Mode.ListPrepend,
+			Gaffer.TweakPlug.Mode.ListRemove
+		]
+
 	if Gaffer.Metadata.value( plug.parent(), "tweakPlugValueWidget:allowRemove" ) :
 		result += [ Gaffer.TweakPlug.Mode.Remove ]
 
@@ -186,7 +205,7 @@ def __validModes( plug ) :
 
 Gaffer.Metadata.registerValue(
 	Gaffer.TweakPlug, "mode",
-	"presetNames", lambda plug : IECore.StringVectorData( [ str( x ) for x in __validModes( plug ) ] )
+	"presetNames", lambda plug : IECore.StringVectorData( [ IECore.CamelCase.toSpaced( str( x ) ) for x in __validModes( plug ) ] )
 )
 
 Gaffer.Metadata.registerValue(
