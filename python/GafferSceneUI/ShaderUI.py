@@ -732,6 +732,9 @@ class _ShaderParameterDialogue( GafferUI.Dialogue ) :
 			inputRootPath = path.parent().parent()
 			inputs = path.property( "shader:inputs" )
 
+			if inputs is None :
+				return False
+
 			if len( inputs ) == 0 :
 				return False
 
