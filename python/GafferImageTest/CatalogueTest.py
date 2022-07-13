@@ -856,5 +856,56 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( catalogue["images"][1].getName(), "_invalid_Name_" )
 		self.assertEqual( catalogue["images"][2].getName(), "_IsntAValidStartingCharacter" )
 
+	def testGenerateFileName( self ):
+
+		s = Gaffer.ScriptNode()
+		s["variables"].addChild( Gaffer.NameValuePlug( "CV", Gaffer.StringPlug( "value", defaultValue = "foo" ) ) )
+		catalogue = GafferImage.Catalogue()
+		catalogue["directory"].setValue( "${CV}/dir/" )
+		s.addChild( catalogue )
+		constant1 = GafferImage.Constant()
+		constant1["format"].setValue( GafferImage.Format( imath.Box2i( imath.V2i(0), imath.V2i( 100 ) ) ) )
+
+		# Check that two images match only if identical
+		f1 = catalogue.generateFileName( constant1["out"] )
+
+		self.assertEqual( f1.split( "/" )[:2], [ "foo", "dir" ] )
+		self.assertEqual( f1.split( "." )[-1], "exr" )
+
+		constant2 = GafferImage.Constant()
+		constant2["format"].setValue( GafferImage.Format( imath.Box2i( imath.V2i(0), imath.V2i( 100 ) ) ) )
+
+		f2 = catalogue.generateFileName( constant2["out"] )
+
+		self.assertEqual( f1, f2 )
+
+		constant2["format"]["displayWindow"]["max"]["x"].setValue( 101 )
+		f2 = catalogue.generateFileName( constant2["out"] )
+
+		self.assertNotEqual( f1, f2 )
+
+		# Check that two multi-view images match only if all views are identical
+		createViews = GafferImage.CreateViews()
+		createViews["views"].addChild( Gaffer.NameValuePlug( "left", GafferImage.ImagePlug(), True, "view0", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		createViews["views"].addChild( Gaffer.NameValuePlug( "right", GafferImage.ImagePlug(), True, "view1", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		createViews["views"][0]["value"].setInput( constant1["out"] )
+		createViews["views"][1]["value"].setInput( constant2["out"] )
+
+		f3 = catalogue.generateFileName( createViews["out"] )
+		self.assertNotIn( f3, [f1, f2] )
+
+		constant2["format"]["displayWindow"]["max"]["x"].setValue( 102 )
+		f4 = catalogue.generateFileName( createViews["out"] )
+		self.assertNotIn( f4, [f1, f2, f3] )
+
+		constant1["format"]["displayWindow"]["max"]["x"].setValue( 101 )
+		f5 = catalogue.generateFileName( createViews["out"] )
+		self.assertNotIn( f5, [f1, f2, f3, f4] )
+
+		constant1["format"]["displayWindow"]["max"]["x"].setValue( 100 )
+		constant2["format"]["displayWindow"]["max"]["x"].setValue( 101 )
+		f6 = catalogue.generateFileName( createViews["out"] )
+		self.assertEqual( f6, f3 )
+
 if __name__ == "__main__":
 	unittest.main()

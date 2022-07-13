@@ -18,6 +18,7 @@ Fixes
 - Fixed errors in Light Editor :
   - Error when pressing <kbd>Return</kbd> or <kbd>Enter</kbd> with no cells selected.
   - Error when double-clicking the `Name` column.
+- Fix issue with CatalogueUI that prevented saving of images.  Also improved support for multi-view images in the catalog
 
 1.0.0.0 (relative to 0.61.x.x)
 =======
