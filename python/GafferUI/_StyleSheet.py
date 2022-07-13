@@ -984,6 +984,10 @@ _styleSheet = string.Template(
 		border: none;
 	}
 
+	QAbstractScrollArea::corner {
+		background: transparent;
+	}
+
 	QCheckBox {
 		spacing: 5px;
 	}

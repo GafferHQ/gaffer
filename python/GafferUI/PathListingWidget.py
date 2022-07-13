@@ -587,17 +587,18 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		# Get model index under cursor.
 
-		qPoint = self._qtWidget().viewport().mapFrom(
-			self._qtWidget(),
-			QtCore.QPoint( event.line.p0.x, event.line.p0.y )
-		)
-		index = self._qtWidget().indexAt( qPoint )
-		if not index.isValid() :
+		index = self.__indexAt( event.line.p0 )
+		if index is None :
 			return False
 
 		# Do expansion/collapsing if the arrow was clicked on. QTreeView doesn't
 		# expose any queries for the arrow position, but we know it is to the
 		# left of the rect used to draw the item.
+
+		qPoint = self._qtWidget().viewport().mapFrom(
+			self._qtWidget(),
+			QtCore.QPoint( event.line.p0.x, event.line.p0.y )
+		)
 
 		if self._qtWidget().model().hasChildren( index ) :
 			rect = self._qtWidget().visualRect( index )
@@ -688,6 +689,12 @@ class PathListingWidget( GafferUI.Widget ) :
 		self.__path.pathChangedSignal()( self.__path )
 
 	def __indexAt( self, position ) :
+
+		# A small corner area below the vertical scroll bar may pass through
+		# to us, causing odd selection behavior. Check that we're within the
+		# scroll area.
+		if position.x > self._qtWidget().viewport().size().width() or position.y > self._qtWidget().viewport().size().height() :
+			return None
 
 		point = self._qtWidget().viewport().mapFrom(
 			self._qtWidget(),

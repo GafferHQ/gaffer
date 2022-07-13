@@ -10,6 +10,14 @@ Improvements
   - ListAppend : Values in the tweak list are added to the end of the existing list. If a value is in both the existing list and the tweak list, it is removed from the existing list before being added.
   - ListPrepend : Same as `ListAppend` except the tweak list is added to the beginning of the existing list.
   - ListRemove : Values in the tweak list are removed from the existing list.
+- Added horizontal scroll bars to the Light Editor, Scene Inspector and Shader Browser when their content is too wide to fit within the widget.
+
+Fixes
+-----
+
+- Fixed errors in Light Editor :
+  - Error when pressing <kbd>Return</kbd> or <kbd>Enter</kbd> with no cells selected.
+  - Error when double-clicking the `Name` column.
 
 1.0.0.0 (relative to 0.61.x.x)
 =======

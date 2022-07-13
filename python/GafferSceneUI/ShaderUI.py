@@ -648,7 +648,8 @@ class _ShaderParameterDialogue( GafferUI.Dialogue ) :
 			),
 			allowMultipleSelection = True,
 			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
-			sortable = False
+			sortable = False,
+			horizontalScrollMode = GafferUI.ScrollMode.Automatic
 		)
 
 		self.__inputNavigateColumn = self.__pathListingWidget.getColumns()[3]
