@@ -107,6 +107,14 @@ class Column( GafferUI.PathColumn ) :
 			# to output the image of interest.
 			with Gaffer.Context( catalogue.scriptNode().context() ) as context :
 				context["catalogue:imageName"] = image.getName()
+
+				# Our cells can only display data from one view, so we need to pick one.
+				# If the "default" view is present use that, otherwise use the first view
+				viewNames = catalogue["out"].viewNames()
+				if not len( viewNames ):
+					raise Exception( "Catalogue : Image has no views, no data to display" )
+				context["image:viewName"] = "default" if "default" in viewNames else viewNames[0]
+
 				try :
 					return self._imageCellData( image, catalogue )
 				except NotImplementedError :
