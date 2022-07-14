@@ -480,6 +480,11 @@ class RendererServices : public OSL::RendererServices
 
 			if( object == g_contextVariableAttributeScope )
 			{
+				if( derivatives )
+				{
+					memset( (char*)value + type.size(), 0, 2 * type.size() );
+				}
+
 				return threadRenderState->renderState.contextVariable( name, type, value );
 			}
 
@@ -500,6 +505,12 @@ class RendererServices : public OSL::RendererServices
 			{
 				return false;
 			}
+
+			if( derivatives )
+			{
+				memset( (char*)value + type.size(), 0, 2 * type.size() );
+			}
+
 			return threadRenderState->renderState.userData( threadRenderState->pointIndex,  name, type, value );
 		}
 
