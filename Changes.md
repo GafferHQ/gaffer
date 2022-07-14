@@ -20,6 +20,7 @@ Improvements
 - Arnold : Added metadata for new `standard_volume` shader parameters introduced in Arnold 7.1.3.0.
 - VectorDataWidget : Added a color swatch column for `Color3f` and `Color4f` elements. These are currently included in the `RandomChoice` node when `choices` is set to a list of colors, and for color primitive variables in the Primitive Inspector.
 - NameWidget : Added a check to prevent users from setting a node or plug name to a value starting with a double underscore.
+- ShaderTweaks : Added Create and Remove tweak modes.
 
 Fixes
 -----
