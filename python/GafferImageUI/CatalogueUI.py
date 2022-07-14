@@ -1052,25 +1052,28 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 
 	def __pathListingDrop( self, widget, event ) :
 
-		image = self.__dropImage( event.data )
-		if image is None :
-			return False
+		try:
+			image = self.__dropImage( event.data )
+			if image is None :
+				return False
 
-		with self.getContext() :
-			fileName = self.__catalogue().generateFileName( image )
-			imageWriter = GafferImage.ImageWriter()
-			imageWriter["in"].setInput( image )
-			imageWriter["fileName"].setValue( fileName )
-			imageWriter["task"].execute()
+			with self.getContext() :
+				fileName = self.__catalogue().generateFileName( image )
+				imageWriter = GafferImage.ImageWriter()
+				imageWriter["in"].setInput( image )
+				imageWriter["fileName"].setValue( fileName )
+				imageWriter["task"].execute()
 
-		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-			loadedImage = GafferImage.Catalogue.Image.load( fileName )
-			loadedImage.setName( image.node().getName() )
-			self.__images().addChild( loadedImage )
-			self.getPlug().setValue( len( self.__images() ) - 1 )
+			with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+				loadedImage = GafferImage.Catalogue.Image.load( fileName )
+				loadedImage.setName( image.node().getName() )
+				self.__images().addChild( loadedImage )
+				self.getPlug().setValue( len( self.__images() ) - 1 )
 
-		self.__pathListing.setHighlighted( False )
-		GafferUI.Pointer.setCurrent( None )
+			self.__pathListing.setHighlighted( False )
+			GafferUI.Pointer.setCurrent( None )
+		except Exception as e:
+			IECore.msg( IECore.Msg.Level.Warning, "CatalogueUI", 'Failed to add image during drag, exception: ' + str( e ) )
 
 		return True
 
