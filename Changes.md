@@ -6,6 +6,7 @@ Fixes
 
 - TweakPlug : Fixed loading of files saved from Gaffer 1.0.0.0 and above.
 - ShaderQuery and ShaderTweaks : Fixed error `TypeError: object of type 'NoneType' has no len()` when clicking "Input" column of a shader row.
+- OSLObject/OSLImage : Fixed bug which resulted in undefined values for derivatives.
 
 0.61.14.0 (relative to 0.61.13.1)
 =========
