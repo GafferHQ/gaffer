@@ -341,6 +341,12 @@ options.Add(
 )
 
 options.Add(
+	"PYBIND11",
+	"The directory in which pybind11 is installed."
+	"",
+)
+
+options.Add(
 	"INSTALL_POST_COMMAND",
 	"A command which is run following a successful install process. "
 	"This could be used to customise installation further for a "
@@ -1063,6 +1069,7 @@ libraries = {
 			"LIBS" : [ "IECoreGL$CORTEX_LIB_SUFFIX", "Gaffer", "GafferImage", "GafferUI", "OpenColorIO$OCIO_LIB_SUFFIX", "IECoreScene$CORTEX_LIB_SUFFIX" ],
 		},
 		"pythonEnvAppends" : {
+			"CPPPATH" : [ "$PYBIND11/include" ],
 			"LIBS" : [ "GafferBindings", "GafferUI", "GafferImage", "GafferImageUI" ],
 		},
 	},

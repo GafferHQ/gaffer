@@ -11,6 +11,7 @@ API
 
 - Signals : Added `Trackable::disconnectTrackedConnections()` method.
 - ViewportGadget : Added `setPostProcessShader()`.  This allows the main layer to be rendered to a framebuffer, and processed by a shader before being displayed.  Useful for applying color transforms on the GPU after rendering.
+- GafferImageUI : Added `OpenColorIOAlgo::displayTransformToFramebufferShader()`.  Converts an OCIO processor to a shader suitable for use with `setPostProcessShader()`.
 
 1.0.x.x (relative to 1.0.2.1)
 =======

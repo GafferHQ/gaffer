@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2022, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -37,19 +36,35 @@
 
 #include "boost/python.hpp"
 
-#include "ImageGadgetBinding.h"
-#include "ImageViewBinding.h"
+#include "pybind11/pybind11.h"
+
 #include "OpenColorIOAlgoBinding.h"
 
+#include "GafferImageUI/OpenColorIOAlgo.h"
+
 using namespace boost::python;
+using namespace GafferImageUI;
 
-using namespace GafferImageUIModule;
+namespace {
 
-BOOST_PYTHON_MODULE( _GafferImageUI )
+IECoreGL::Shader::SetupPtr displayTransformToFramebufferShaderWrapper( PyObject* pyProcessor )
 {
+	pybind11::handle bindHandle( pyProcessor );
+	OCIO_NAMESPACE::Processor* processor = bindHandle.cast< OCIO_NAMESPACE::Processor* >();
+	if( !processor )
+	{
+		throw IECore::Exception( "Argument is not an OCIO::Processor" );
+	}
+	return OpenColorIOAlgo::displayTransformToFramebufferShader( processor );
+}
 
-	bindImageView();
-	bindImageGadget();
-	bindOpenColorIOAlgo();
+} // namespace
 
+void GafferImageUIModule::bindOpenColorIOAlgo()
+{
+	object module( borrowed( PyImport_AddModule( "GafferImageUI.OpenColorIOAlgo" ) ) );
+	scope().attr( "OpenColorIOAlgo" ) = module;
+	scope moduleScope( module );
+
+	def( "displayTransformToFramebufferShader", &displayTransformToFramebufferShaderWrapper );
 }
