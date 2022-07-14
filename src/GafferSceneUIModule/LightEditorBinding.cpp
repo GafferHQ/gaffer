@@ -221,6 +221,12 @@ class InspectorColumn : public PathColumn
 
 };
 
+PathColumn::CellData headerDataWrapper( PathColumn &pathColumn, const Canceller *canceller )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return pathColumn.headerData( canceller );
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -242,6 +248,7 @@ void GafferSceneUIModule::bindLightEditor()
 			)
 		) )
 		.def( "inspector", &InspectorColumn::inspector, return_value_policy<IECorePython::CastToIntrusivePtr>() )
+		.def( "headerData", &headerDataWrapper, ( arg_( "canceller" ) = object() ) )
 	;
 
 }

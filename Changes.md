@@ -1,6 +1,14 @@
 1.0.x.x (relative to 1.0.2.1)
 =======
 
+Features
+--------
+
+- Light Editor : Added a non-modal dialog to view the history of a parameter. It can be accessed by right-clicking a parameter in the Light Editor and selecting `Show History...`. Within the dialogue :
+  - Double clicking a node name will open a Node Editor popup.
+  - Dragging a node name into the Graph Editor will zoom to the node.
+  - Double clicking, pressing <kbd>Return</kbd> or <kbd>Enter</kbd> on a parameter value or operation will open a plug popup to edit the value.
+
 Improvements
 ------------
 
