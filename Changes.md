@@ -33,6 +33,13 @@ Fixes
 - Fixed a bug in `SceneAlgo::attributeHistory` that would return a branching history from a `ShaderTweaks` node with `inherit` enabled.
 - Arnold : Fixed errors when making interactive render edits to lights with component-level connections between OSL shaders.
 
+API
+---
+
+- StandardLightVisualiser :
+  - Added support for parameters specifying the width and height of quad lights, and the length of cylinder lights.
+  - The `coneAngleParameter` metadata is now supported for all light types.
+
 Documentation
 -------------
 

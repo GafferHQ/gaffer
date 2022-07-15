@@ -97,7 +97,7 @@ class GAFFERSCENEUI_API StandardLightVisualiser : public IECoreGLPreview::LightV
 
 		/// \todo Expose publicly once we have enough uses to dictate
 		/// the most general set of parameters.
-		static IECoreGL::ConstRenderablePtr cylinderShape( float radius, bool filled = false, const Imath::Color3f &color = Imath::Color3f( 1.0f ) );
+		static IECoreGL::ConstRenderablePtr cylinderShape( float radius, float length, bool filled = false, const Imath::Color3f &color = Imath::Color3f( 1.0f ) );
 		static IECoreGL::ConstRenderablePtr pointShape( float radius );
 		static IECoreGL::ConstRenderablePtr cylinderRays( float radius );
 
