@@ -6,6 +6,11 @@ Improvements
 
 - TweakPlug : Using the modes `listAppend` and `listPrepend` to modify a list that does not exist now results in a list with the new values. Using the mode `listRemove` to modify a non-existent list results in a non-existent list. All other modes retain their current `missingMode` behavior.
 
+Fixes
+-----
+
+- ImageWriter : Fix bug with color space unpremulting when alpha channel not the last channel.
+
 1.0.1.0 (relative to 1.0.0.0)
 =======
 

@@ -1250,14 +1250,22 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		reader = GafferImage.ImageReader()
 		reader["fileName"].setValue( self.__rgbFilePath + ".exr" )
 
+		extraChannel = GafferImage.Shuffle()
+		extraChannel["in"].setInput( reader["out"] )
+		extraChannel["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "Q", "R" ) )
+
 		writer = GafferImage.ImageWriter()
-		writer["in"].setInput( reader["out"] )
 
 		resultReader = GafferImage.ImageReader()
 		resultReader["fileName"].setInput( writer["fileName"] )
 
+		resultWithoutExtra = GafferImage.DeleteChannels()
+		resultWithoutExtra["in"].setInput( resultReader["out"] )
+		resultWithoutExtra["channels"].setValue( "Q" )
+
 		for colorSpace in [ "Cineon", "rec709", "AlexaV3LogC" ] :
 
+			writer["in"].setInput( reader["out"] )
 			writer["fileName"].setValue( "{0}/{1}.exr".format( self.temporaryDirectory(), colorSpace ) )
 			writer["colorSpace"].setValue( colorSpace )
 
@@ -1267,6 +1275,19 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 			resultReader["colorSpace"].setValue( colorSpace )
 			self.assertImagesEqual( resultReader["out"], reader["out"], ignoreMetadata=True, maxDifference=0.0008 )
+
+			# This is a kinda weird test for a very specific bug:  an earlier version of ImageWriter would
+			# only unpremultiply during color processing if the alpha channel came last.  To verify we've
+			#fixed this, we add a channel named Q, write to file, then read back and delete it, and make
+			# sure we unpremulted properly
+			writer["in"].setInput( extraChannel["out"] )
+			writer["task"].execute()
+
+			resultReader["refreshCount"].setValue( resultReader["refreshCount"].getValue() + 1 )
+
+			self.assertEqual( list( resultReader["out"].channelNames() ), [ "R", "G", "B", "A", "Q" ] )
+
+			self.assertImagesEqual( resultWithoutExtra["out"], reader["out"], ignoreMetadata=True, maxDifference=0.0008 )
 
 	def testDependencyNode( self ) :
 

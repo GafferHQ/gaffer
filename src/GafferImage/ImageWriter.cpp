@@ -1929,6 +1929,8 @@ void ImageWriter::execute() const
 		// basic RGBA channels coming first
 		channelsToWrite = ImageAlgo::sortedChannelNames( channelsToWrite );
 
+		bool hasAlpha = false;
+
 		for( const string &i : channelsToWrite )
 		{
 			const auto & [ partName, channelName ] = partChannelName( this, viewName, i, viewNames, defaultSpec.deep );
@@ -1964,13 +1966,13 @@ void ImageWriter::execute() const
 
 			parts[ partIndex ].channels.push_back( viewName + "." + i );
 			parts[ partIndex ].channelNames.push_back( channelName );
-			bool hasAlpha = false;
 			if( channelName == "A" )
 			{
 				hasAlpha = true;
 			}
-			colorSpaceByView[ viewName ] = std::make_pair( colorSpace(), hasAlpha );
 		}
+
+		colorSpaceByView[ viewName ] = std::make_pair( colorSpace(), hasAlpha );
 	}
 
 	// viewNameContext is set to a different value on each loop - don't leave an orphaned context value
