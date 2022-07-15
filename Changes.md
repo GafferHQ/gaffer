@@ -12,7 +12,9 @@ Features
 Improvements
 ------------
 
-- USD : Added automatic render-time translation of UsdPreviewSurface shaders and UsdLuxLights for Arnold.
+- USD :
+  - Added automatic render-time translation of UsdPreviewSurface shaders and UsdLuxLights for Arnold.
+  - The SceneReader now loads all UsdLuxLights into the `defaultLights` set so that they are linked by default.
 - SceneReader :
   - Added support for Alembic visibility attributes.
   - Added loading of `treatAsPoint` and `treatAsLine` parameters from UsdLux lights.

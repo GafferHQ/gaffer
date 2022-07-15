@@ -1,0 +1,19 @@
+#usda 1.0
+
+def SphereLight "SpotLight23" (
+	apiSchemas = ["ShapingAPI"]
+)
+{
+	color3f inputs:color = (1, 1, 1)
+	float inputs:colorTemperature = 6500
+	bool inputs:enableColorTemperature = 0
+	float inputs:exposure = 0
+	float inputs:intensity = 30000
+	float inputs:radius = 0
+	float inputs:shaping:cone:angle = 66
+	float inputs:shaping:cone:softness = 1
+	bool treatAsPoint = 1
+	token visibility = "inherited"
+	matrix4d xformOp:transform = ( (0.9672808051109314, -0.21715188026428223, 0.1311977356672287, 0), (-0.05085674673318863, 0.3406679034233093, 0.9388070106506348, 0), (-0.24855859577655792, -0.9147622585296631, 0.3184778690338135, 0), (20949.08203125, 2227.8759765625, 528.5748901367188, 1) )
+	uniform token[] xformOpOrder = ["xformOp:transform"]
+}
