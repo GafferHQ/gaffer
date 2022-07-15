@@ -45,6 +45,11 @@ import shutil
 import subprocess
 import distutils.dir_util
 
+if os.name == "nt":
+	import _locale
+	_locale._getdefaultlocale_backup = _locale._getdefaultlocale
+	_locale._getdefaultlocale = (lambda *args: (_locale._getdefaultlocale_backup()[0], 'utf8'))
+
 EnsureSConsVersion( 3, 0, 2 )  # Substfile is a default builder as of 3.0.2
 
 ###############################################################################################
