@@ -303,6 +303,15 @@ void resetNode( AtNode *node )
 	AiUserParamIteratorDestroy( itUser );
 }
 
+ShaderNetworkPtr preprocessedNetwork( const IECoreScene::ShaderNetwork *shaderNetwork )
+{
+	/// \todo : remove this conversion once Arnold supports it natively
+	ShaderNetworkPtr result = shaderNetwork->copy();
+	IECoreScene::ShaderNetworkAlgo::convertOSLComponentConnections( result.get() );
+	return result;
+}
+
+
 } // namespace
 
 namespace IECoreArnold
@@ -313,14 +322,11 @@ namespace ShaderNetworkAlgo
 
 std::vector<AtNode *> convert( const IECoreScene::ShaderNetwork *shaderNetwork, AtUniverse *universe, const std::string &name, const AtNode *parentNode )
 {
-	// \todo: remove this conversion once Arnold supports it natively
-	ShaderNetworkPtr networkCopy = shaderNetwork->copy();
-	IECoreScene::ShaderNetworkAlgo::convertOSLComponentConnections( networkCopy.get() );
-	shaderNetwork = networkCopy.get();
+	ConstShaderNetworkPtr network = preprocessedNetwork( shaderNetwork );
 
 	ShaderMap converted;
 	vector<AtNode *> result;
-	const InternedString output = shaderNetwork->getOutput().shader;
+	const InternedString output = network->getOutput().shader;
 	if( output.string().empty() )
 	{
 		msg( Msg::Warning, "IECoreArnold::ShaderNetworkAlgo", "Shader has no output" );
@@ -330,8 +336,8 @@ std::vector<AtNode *> convert( const IECoreScene::ShaderNetwork *shaderNetwork, 
 		auto nodeCreator = [universe, parentNode]( const AtString &nodeType, const AtString &nodeName ) {
 			return AiNode( universe, nodeType, nodeName, parentNode );
 		};
-		convertWalk( shaderNetwork->getOutput(), shaderNetwork, name, nodeCreator, result, converted );
-		for( const auto &kv : shaderNetwork->outputShader()->blindData()->readable() )
+		convertWalk( network->getOutput(), network.get(), name, nodeCreator, result, converted );
+		for( const auto &kv : network->outputShader()->blindData()->readable() )
 		{
 			ParameterAlgo::setParameter( result.back(), AtString( kv.first.c_str() ), kv.second.get() );
 		}
@@ -345,6 +351,8 @@ bool update( std::vector<AtNode *> &nodes, const IECoreScene::ShaderNetwork *sha
 	{
 		return false;
 	}
+
+	ConstShaderNetworkPtr network = preprocessedNetwork( shaderNetwork );
 
 	AtUniverse *universe = AiNodeGetUniverse( nodes.back() );
 	AtNode *parentNode = AiNodeGetParent( nodes.back() );
@@ -383,7 +391,7 @@ bool update( std::vector<AtNode *> &nodes, const IECoreScene::ShaderNetwork *sha
 	};
 
 	ShaderMap converted;
-	convertWalk( shaderNetwork->getOutput(), shaderNetwork, name, nodeCreator, nodes, converted );
+	convertWalk( network->getOutput(), network.get(), name, nodeCreator, nodes, converted );
 
 	for( const auto &n : originalNodes )
 	{
