@@ -683,36 +683,34 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 		for i, c in enumerate( r["Ci"] ) :
 			self.assertAlmostEqual( c[1], p["v"][i], delta = 0.02 )
 
-	def testArea( self ) :
-
-		s = self.compileShader( os.path.dirname( __file__ ) +  "/shaders/area.osl" )
-
-		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
-			shaders = {
-				"output" : IECoreScene.Shader( s, "osl:surface", {} )
-			},
-			output = "output"
-		) )
-
-		p = e.shade( self.rectanglePoints() )
-
-		self.assertEqual( p["Ci"], IECore.Color3fVectorData( [ imath.Color3f( 0 ) ] * 100 ) )
-
 	def testDerivatives( self ) :
 
 		s = self.compileShader( os.path.dirname( __file__ ) +  "/shaders/derivatives.osl" )
 
-		for direction in [ "X", "Y", "Z" ] :
+		with Gaffer.Context() as c :
 
-			e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
-				shaders = {
-					"output" : IECoreScene.Shader( s, "osl:surface", { "direction" : direction } ),
-				},
-				output = "output"
-			) )
+			c["colorUserData"] = imath.Color3f( 0.25, 0.7, 0.6 )
 
-			p = e.shade( self.rectanglePoints() )
-			self.assertEqual( p["Ci"], IECore.Color3fVectorData( [ imath.Color3f( 0 ) ] * 100 ) )
+			for obj in [ "gaffer:context", "" ] :
+
+				for name in [ "colorUserData", "P" ] :
+
+					for direction in [ "X", "Y", "Z" ] :
+
+						e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+							shaders = {
+								"output" : IECoreScene.Shader( s, "osl:surface",
+								{
+									"object"    : obj,
+									"name"      : name,
+									"direction" : direction
+								} ),
+							},
+							output = "output"
+						) )
+
+						p = e.shade( self.rectanglePoints() )
+						self.assertEqual( p["Ci"], IECore.Color3fVectorData( [ imath.Color3f( 0 ) ] * 100 ) )
 
 	def testTime( self ) :
 

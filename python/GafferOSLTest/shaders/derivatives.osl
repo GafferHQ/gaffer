@@ -36,22 +36,42 @@
 
 surface derivatives
 (
+	string object = "",
+	string name = "",
 	string direction = ""
 )
 {
-	color c = 1;
-	if( direction == "X" )
+	int success = 1;
+	color a = 0;
+	if( name == "P" )
 	{
-		c = color( Dx( P ) );
+		a = color( P );
 	}
-	else if( direction == "Y" )
+	else
 	{
-		c = color( Dy( P ) );
-	}
-	else if( direction == "Z" )
-	{
-		c = color( Dz( P ) );
+		success = getattribute( object, name, a );
 	}
 
-	Ci = c * emission();
+	if( success == 0 )
+	{
+		Ci = color( 1 ) * emission();
+	}
+	else
+	{
+		color c = 1;
+		if( direction == "X" )
+		{
+			c = color( Dx( a ) );
+		}
+		else if( direction == "Y" )
+		{
+			c = color( Dy( a ) );
+		}
+		else if( direction == "Z" )
+		{
+			c = color( Dz( a ) );
+		}
+
+		Ci = c * emission();
+	}
 }
