@@ -5,6 +5,7 @@ Improvements
 ------------
 
 - TweakPlug : Using the modes `listAppend` and `listPrepend` to modify a list that does not exist now results in a list with the new values. Using the mode `listRemove` to modify a non-existent list results in a non-existent list. All other modes retain their current `missingMode` behavior.
+- ImageWriter : The exr dataType plug now accepts an expression or spreadsheet to set per channel data types.
 
 Fixes
 -----

@@ -40,6 +40,7 @@ import unittest
 import shutil
 import functools
 import datetime
+import re
 import six
 import subprocess
 import imath
@@ -1787,6 +1788,113 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 					rereader["channelInterpretation"].setValue( GafferImage.ImageReader.ChannelInterpretation.Specification )
 					self.assertImagesEqual( rereader["out"], reader["out"], ignoreMetadata = True, ignoreChannelNamesOrder = ignoreOrder, ignoreDataWindow = expandDataWindow )
 
+	def channelTypesFromHeader( self, path ):
+		r = subprocess.check_output( ["exrheader", path ], universal_newlines=True )
+
+		channelText = re.findall( re.compile( r'channels \(type chlist\):\n((    .*\n)+)', re.MULTILINE ), r )
+
+		return [ i.split()[:2] for part in channelText for i in part[0].splitlines()  ]
+
+	def testPerChannelDataType( self ):
+
+		reference = self.channelTestImage()
+
+		writer = GafferImage.ImageWriter()
+		writer["in"].setInput( reference["out"] )
+		writer["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.tif" ) )
+
+		# Start with some formats that don't support per channel data types, and check that they fail as
+		# expected
+		writer["dataTypeExpression"] = Gaffer.Expression()
+		writer["dataTypeExpression"].setExpression( 'parent["tiff"]["dataType"] = "uint8" if context.get( "imageWriter:channelName" ) == "R" else "uint16"' )
+
+		with six.assertRaisesRegex( self, Gaffer.ProcessException, "File format tiff does not support per-channel data types" ) :
+			writer["task"].execute()
+
+		writer["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.dpx" ) )
+		writer["dataTypeExpression"].setExpression( 'parent["dpx"]["dataType"] = "uint8" if context.get( "imageWriter:channelName" ) == "R" else "uint16"' )
+
+		with six.assertRaisesRegex( self, Gaffer.ProcessException, "File format dpx does not support per-channel data types" ) :
+			writer["task"].execute()
+
+		writePath = os.path.join( self.temporaryDirectory(), "test.exr" )
+		writer["fileName"].setValue( writePath )
+
+		writer["task"].execute()
+
+		# Default channel types - depthDataType forces Z and ZBack to 32-bit, but not character.Z
+		self.assertEqual( self.channelTypesFromHeader( writePath ), [
+			['A,', '16-bit'], ['B,', '16-bit'], ['G,', '16-bit'], ['R,', '16-bit'],
+			['Z,', '32-bit'], ['ZBack,', '32-bit'], ['custom,', '16-bit'], ['mask,', '16-bit'],
+			['character.A,', '16-bit'], ['character.B,', '16-bit'], ['character.G,', '16-bit'], ['character.R,', '16-bit'],
+			['character.Z,', '16-bit'], ['character.ZBack,', '16-bit'], ['character.custom,', '16-bit'], ['character.mask,', '16-bit']
+		] )
+
+		writer["openexr"]["depthDataType"].setValue( "" )
+		writer["task"].execute()
+
+		self.assertEqual( self.channelTypesFromHeader( writePath ), [
+			['A,', '16-bit'], ['B,', '16-bit'], ['G,', '16-bit'], ['R,', '16-bit'],
+			['Z,', '16-bit'], ['ZBack,', '16-bit'], ['custom,', '16-bit'], ['mask,', '16-bit'],
+			['character.A,', '16-bit'], ['character.B,', '16-bit'], ['character.G,', '16-bit'], ['character.R,', '16-bit'],
+			['character.Z,', '16-bit'], ['character.ZBack,', '16-bit'], ['character.custom,', '16-bit'], ['character.mask,', '16-bit']
+		] )
+
+		writer["openexr"]["dataType"].setValue( "float" )
+		writer["task"].execute()
+
+		self.assertEqual( self.channelTypesFromHeader( writePath ), [
+			['A,', '32-bit'], ['B,', '32-bit'], ['G,', '32-bit'], ['R,', '32-bit'],
+			['Z,', '32-bit'], ['ZBack,', '32-bit'], ['custom,', '32-bit'], ['mask,', '32-bit'],
+			['character.A,', '32-bit'], ['character.B,', '32-bit'], ['character.G,', '32-bit'], ['character.R,', '32-bit'],
+			['character.Z,', '32-bit'], ['character.ZBack,', '32-bit'], ['character.custom,', '32-bit'], ['character.mask,', '32-bit']
+		] )
+
+		# Now, lets actually use some per-channel data types
+		writer["dataTypeExpression"].setExpression( 'parent["openexr"]["dataType"] = "half" if context.get( "imageWriter:channelName" ) == "R" else "float"' )
+		writer["task"].execute()
+
+		self.assertEqual( self.channelTypesFromHeader( writePath ), [
+			['A,', '32-bit'], ['B,', '32-bit'], ['G,', '32-bit'], ['R,', '16-bit'],
+			['Z,', '32-bit'], ['ZBack,', '32-bit'], ['custom,', '32-bit'], ['mask,', '32-bit'],
+			['character.A,', '32-bit'], ['character.B,', '32-bit'], ['character.G,', '32-bit'], ['character.R,', '32-bit'],
+			['character.Z,', '32-bit'], ['character.ZBack,', '32-bit'], ['character.custom,', '32-bit'], ['character.mask,', '32-bit']
+		] )
+
+		# A weird expression that is basically random
+		# ( Note that I have to read the context outside the call to ord(), somehow our expression parser
+		# fails to find it if it's inside )
+		writer["dataTypeExpression"].setExpression( 'c = context.get( "imageWriter:channelName" ); parent["openexr"]["dataType"] = "float" if ord( c[-1] ) % 2 else "half"' )
+		writer["task"].execute()
+
+		self.assertEqual( self.channelTypesFromHeader( writePath ), [
+			['A,', '32-bit'], ['B,', '16-bit'], ['G,', '32-bit'], ['R,', '16-bit'],
+			['Z,', '16-bit'], ['ZBack,', '32-bit'], ['custom,', '32-bit'], ['mask,', '32-bit'],
+			['character.A,', '32-bit'], ['character.B,', '16-bit'], ['character.G,', '32-bit'], ['character.R,', '16-bit'],
+			['character.Z,', '16-bit'], ['character.ZBack,', '32-bit'], ['character.custom,', '32-bit'], ['character.mask,', '32-bit']
+		] )
+
+		# A more useful expression might affect one layer
+		writer["dataTypeExpression"].setExpression( 'parent["openexr"]["dataType"] = "float" if context.get( "imageWriter:layerName" ) == "character" else "half"' )
+		writer["task"].execute()
+
+		self.assertEqual( self.channelTypesFromHeader( writePath ), [
+			['A,', '16-bit'], ['B,', '16-bit'], ['G,', '16-bit'], ['R,', '16-bit'],
+			['Z,', '16-bit'], ['ZBack,', '16-bit'], ['custom,', '16-bit'], ['mask,', '16-bit'],
+			['character.A,', '32-bit'], ['character.B,', '32-bit'], ['character.G,', '32-bit'], ['character.R,', '32-bit'],
+			['character.Z,', '32-bit'], ['character.ZBack,', '32-bit'], ['character.custom,', '32-bit'], ['character.mask,', '32-bit']
+		] )
+
+		# depthDataType still overrides the expression on dataType
+		writer["openexr"]["depthDataType"].setValue( "float" )
+		writer["task"].execute()
+
+		self.assertEqual( self.channelTypesFromHeader( writePath ), [
+			['A,', '16-bit'], ['B,', '16-bit'], ['G,', '16-bit'], ['R,', '16-bit'],
+			['Z,', '32-bit'], ['ZBack,', '32-bit'], ['custom,', '16-bit'], ['mask,', '16-bit'],
+			['character.A,', '32-bit'], ['character.B,', '32-bit'], ['character.G,', '32-bit'], ['character.R,', '32-bit'],
+			['character.Z,', '32-bit'], ['character.ZBack,', '32-bit'], ['character.custom,', '32-bit'], ['character.mask,', '32-bit']
+		] )
 
 if __name__ == "__main__":
 	unittest.main()
