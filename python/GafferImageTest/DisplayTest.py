@@ -38,7 +38,11 @@ import os
 import unittest
 import random
 import threading
-import subprocess32 as subprocess
+import sys
+if os.name == 'posix' and sys.version_info[0] < 3:
+	import subprocess32 as subprocess
+else:
+	import subprocess
 import imath
 
 import IECore
