@@ -1,4 +1,4 @@
-1.0.x.x (relative to 1.0.0.0)
+1.0.1.0 (relative to 1.0.0.0)
 =======
 
 Improvements
@@ -15,10 +15,12 @@ Improvements
 Fixes
 -----
 
-- Fixed errors in Light Editor :
-  - Error when pressing <kbd>Return</kbd> or <kbd>Enter</kbd> with no cells selected.
-  - Error when double-clicking the `Name` column.
-- Fix issue with CatalogueUI that prevented saving of images.  Also improved support for multi-view images in the catalog
+- LightEditor :
+  - Fixed error when pressing <kbd>Return</kbd> or <kbd>Enter</kbd> with no cells selected.
+  - Fixed error when double-clicking the `Name` column.
+- Catalogue :
+  - Fixed bug that prevented saving of images.
+  - Fixed bugs in column listing for multi-view images.
 - ShaderQuery and ShaderTweaks : Fixed error `TypeError: object of type 'NoneType' has no len()` when clicking "Input" column of a shader row.
 - OSLObject/OSLImage : Fixed bug which resulted in undefined values for derivatives.
 
