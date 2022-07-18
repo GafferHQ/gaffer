@@ -118,6 +118,11 @@ double maxScale( const double slope )
 	return std::sqrt( std::fma( slope, slope, 1.0 ) );
 }
 
+double ensurePositiveZero( const double value )
+{
+	return ( value == 0.0 ) ? 0.0 : value;
+}
+
 double slopeFromPosition( const Imath::V2d& position, const Gaffer::Animation::Direction direction )
 {
 	static_assert( std::numeric_limits< double >::is_iec559, "IEEE 754 required to represent negative infinity" );
@@ -136,7 +141,7 @@ double slopeFromPosition( const Imath::V2d& position, const Gaffer::Animation::D
 	}
 	else
 	{
-		return position.y / position.x;
+		return ensurePositiveZero( position.y / position.x );
 	}
 }
 
@@ -589,7 +594,7 @@ Animation::Tangent::Tangent( Animation::Key& key, const Animation::Direction dir
 , m_direction( direction )
 , m_dt( 0.0 )
 , m_dv( 0.0 )
-, m_slope( slope )
+, m_slope( ensurePositiveZero( slope ) )
 , m_scale( Imath::clamp( scale, 0.0, maxScale( m_slope ) ) )
 {}
 
@@ -642,7 +647,7 @@ void Animation::Tangent::setSlopeFromPosition( const Imath::V2d& pos, const bool
 	setSlope( slopeFromPosition( position, m_direction ) );
 }
 
-void Animation::Tangent::setSlopeAndScale( double slope, double scale )
+void Animation::Tangent::setSlopeAndScale( const double slope, const double scale )
 {
 	setSlopeAndScale( slope, scale, false );
 }
@@ -658,6 +663,7 @@ void Animation::Tangent::setSlopeAndScale( double slope, double scale, const boo
 
 	// clamp scale based on slope
 
+	slope = ensurePositiveZero( slope );
 	scale = std::min( scale, maxScale( slope ) );
 
 	// tie slope and scale of opposite tangent
@@ -767,7 +773,7 @@ bool Animation::Tangent::slopeIsConstrained() const
 	return false;
 }
 
-void Animation::Tangent::setScale( double scale )
+void Animation::Tangent::setScale( const double scale )
 {
 	setScale( scale, false );
 }

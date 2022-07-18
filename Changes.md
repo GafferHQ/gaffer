@@ -1,3 +1,11 @@
+0.61.x.x (relative to 0.61.14.1)
+=========
+
+Fixes
+-----
+
+- Animation : Prevent negative zero slope.
+
 0.61.14.1 (relative to 0.61.14.0)
 =========
 
