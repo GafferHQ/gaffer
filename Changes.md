@@ -19,6 +19,8 @@ Fixes
   - Error when pressing <kbd>Return</kbd> or <kbd>Enter</kbd> with no cells selected.
   - Error when double-clicking the `Name` column.
 - Fix issue with CatalogueUI that prevented saving of images.  Also improved support for multi-view images in the catalog
+- ShaderQuery and ShaderTweaks : Fixed error `TypeError: object of type 'NoneType' has no len()` when clicking "Input" column of a shader row.
+- OSLObject/OSLImage : Fixed bug which resulted in undefined values for derivatives.
 
 1.0.0.0 (relative to 0.61.x.x)
 =======
@@ -206,6 +208,16 @@ Build
   - Subprocess32 : Now packaged as a regular module rather than as a `.egg` package.
   - TBB : Updated to version 2020.3.
   - USD : Updated to version 21.11.
+
+0.61.14.1 (relative to 0.61.14.0)
+=========
+
+Fixes
+-----
+
+- TweakPlug : Fixed loading of files saved from Gaffer 1.0.0.0 and above.
+- ShaderQuery and ShaderTweaks : Fixed error `TypeError: object of type 'NoneType' has no len()` when clicking "Input" column of a shader row.
+- OSLObject/OSLImage : Fixed bug which resulted in undefined values for derivatives.
 
 0.61.14.0 (relative to 0.61.13.1)
 =========

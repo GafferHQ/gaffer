@@ -141,6 +141,11 @@ class RendererServices : public OSL::RendererServices
 				return false;
 			}
 
+			if( derivatives )
+			{
+				memset( (char*)value + type.size(), 0, 2 * type.size() );
+			}
+
 			IECoreImage::OpenImageIOAlgo::DataView dataView( data.get(), /* createUStrings = */ true );
 			if( !dataView.data )
 			{
@@ -182,6 +187,11 @@ class RendererServices : public OSL::RendererServices
 
 			if( value )
 			{
+				if( derivatives )
+				{
+					memset( (char*)value + type.size(), 0, 2 * type.size() );
+				}
+
 				try
 				{
 					const size_t index = it - renderState->inParameters->begin();
