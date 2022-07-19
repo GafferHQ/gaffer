@@ -14,6 +14,11 @@ API
 - GafferImageUI : Added `OpenColorIOAlgo::displayTransformToFramebufferShader()`.  Converts an OCIO processor to a shader suitable for use with `setPostProcessShader()`.
 - ImageView : ImageView now uses a color transform on the viewport instead of ImageGadget.  Should not impact user visible behaviour, but paves the way for future work.
 
+Breaking Changes
+----------------
+
+- ImageGadget : Removed `setDisplayTransform()` and `getDisplayTransform()`, and `setUseGPU()` and `getUseGPU()`. Use `ViewportGadget::setPostProcessShader()` instead. There is temporarily a `setCPUDisplayTransform()` function for setting up display transforms on the CPU path, but that will be removed shortly.
+
 1.0.x.x (relative to 1.0.2.1)
 =======
 

@@ -113,156 +113,23 @@ void findUsableTextureFormats( GLenum &monochromeFormat, GLenum &colorFormat )
 
 uint64_t g_tileUpdateCount;
 
-bool getOcioGLLegacyMode()
-{
-	if( const char *e = getenv( "GAFFER_OCIO_GL_MODE" ) )
-	{
-		if( !strcmp( e, "Legacy" ) )
-		{
-			return true;
-		}
-	}
-
-	return false;
-}
-
-const bool g_ocioGLLegacyMode( getOcioGLLegacyMode() );
-
-
-/// These 3 functions are copied from: OpenColorIO/blob/main/src/libutils/oglapphelpers/glsl.cpp
-/// in order to match how OpenColorIO expects textures to be loaded
-void SetTextureParameters(GLenum textureType, OCIO_NAMESPACE::Interpolation interpolation)
-{
-	if(interpolation==OCIO_NAMESPACE::INTERP_NEAREST)
-	{
-		glTexParameteri(textureType, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(textureType, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	}
-	else
-	{
-		glTexParameteri(textureType, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(textureType, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	}
-
-	glTexParameteri(textureType, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(textureType, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(textureType, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-}
-
-void AllocateTexture3D(
-	unsigned index, unsigned & texId,
-	OCIO_NAMESPACE::Interpolation interpolation,
-	unsigned edgelen, const float * values
-)
-{
-	if(values==nullptr)
-	{
-		throw Exception("Missing texture data");
-	}
-
-	glGenTextures(1, &texId);
-
-	glActiveTexture(GL_TEXTURE0 + index);
-
-	glBindTexture(GL_TEXTURE_3D, texId);
-
-	SetTextureParameters(GL_TEXTURE_3D, interpolation);
-
-	glTexImage3D(GL_TEXTURE_3D, 0, GL_RGB32F_ARB,
-					edgelen, edgelen, edgelen, 0, GL_RGB, GL_FLOAT, values);
-}
-
-void AllocateTexture2D(
-	unsigned index, unsigned & texId,
-	unsigned width, unsigned height,
-	OCIO_NAMESPACE::GpuShaderDesc::TextureType channel,
-	OCIO_NAMESPACE::Interpolation interpolation, const float * values
-)
-{
-	if (values == nullptr)
-	{
-		throw Exception("Missing texture data.");
-	}
-
-	GLint internalformat = GL_RGB32F_ARB;
-	GLenum format = GL_RGB;
-
-	if (channel == OCIO_NAMESPACE::GpuShaderCreator::TEXTURE_RED_CHANNEL)
-	{
-		internalformat = GL_R32F;
-		format = GL_RED;
-	}
-
-	glGenTextures(1, &texId);
-
-	glActiveTexture(GL_TEXTURE0 + index);
-
-	if (height > 1)
-	{
-		glBindTexture(GL_TEXTURE_2D, texId);
-
-		SetTextureParameters(GL_TEXTURE_2D, interpolation);
-
-		glTexImage2D(GL_TEXTURE_2D, 0, internalformat, width, height, 0, format, GL_FLOAT, values);
-	}
-	else
-	{
-		glBindTexture(GL_TEXTURE_1D, texId);
-
-		SetTextureParameters(GL_TEXTURE_1D, interpolation);
-
-		glTexImage1D(GL_TEXTURE_1D, 0, internalformat, width, 0, format, GL_FLOAT, values);
-	}
-}
-
-}
+} // namespace
 
 //////////////////////////////////////////////////////////////////////////
 // ImageGadget::TileShader implementation
 //////////////////////////////////////////////////////////////////////////
 
-// Manages an OpenGL shader suitable for rendering tiles,
-// with optional GPU implementation for OCIO transforms.
+// Manages an OpenGL shader suitable for rendering tiles
 class ImageGadget::TileShader : public IECore::RefCounted
 {
 
 	public :
 
-		TileShader( const ImageProcessor *displayTransform )
-			:	m_hash( staticHash( displayTransform ) )
+		TileShader()
 		{
 
 			std::string colorTransformCode;
 			OCIO_NAMESPACE::GpuShaderDescRcPtr shaderDesc;
-			if( displayTransform )
-			{
-				auto ocioDisplayTransform = static_cast<const OpenColorIOTransform *>( displayTransform );
-				OCIO_NAMESPACE::ConstProcessorRcPtr processor = ocioDisplayTransform->processor();
-
-				shaderDesc = OCIO_NAMESPACE::GpuShaderDesc::CreateShaderDesc();
-				shaderDesc->setLanguage( OCIO_NAMESPACE::GPU_LANGUAGE_GLSL_1_3 );
-				shaderDesc->setFunctionName( "OCIODisplay" );
-
-
-				OCIO_NAMESPACE::ConstGPUProcessorRcPtr gpuProc;
-				if( g_ocioGLLegacyMode )
-				{
-					const int LUT3D_EDGE_SIZE = 128;
-					gpuProc = processor->getOptimizedLegacyGPUProcessor( OCIO_NAMESPACE::OPTIMIZATION_VERY_GOOD, LUT3D_EDGE_SIZE );
-				}
-				else
-				{
-					gpuProc = processor->getOptimizedGPUProcessor( OCIO_NAMESPACE::OPTIMIZATION_VERY_GOOD );
-				}
-				gpuProc->extractGpuShaderInfo(shaderDesc);
-
-				colorTransformCode = shaderDesc->getShaderText();
-			}
-			else
-			{
-				colorTransformCode = "vec4 OCIODisplay(vec4 inPixel) { return inPixel; }\n";
-
-			}
 
 			// Build and compile GLSL shader
 			std::string combinedFragmentCode;
@@ -284,122 +151,10 @@ class ImageGadget::TileShader : public IECore::RefCounted
 			m_channelTextureUnits[3] = m_shader->uniformParameter( "alphaTexture" )->textureUnit;
 
 			m_activeParameterLocation = m_shader->uniformParameter( "activeParam" )->location;
-
-			// If we have a LUT, load any required OpenGL textures
-
-			if( shaderDesc )
-			{
-				const unsigned maxTexture3D = shaderDesc->getNum3DTextures();
-				for(unsigned idx=0; idx<maxTexture3D; ++idx)
-				{
-					// 1. Get the information of the 3D LUT.
-
-					const char * textureName = nullptr; // textureName is unused, we load the data using get3DTextureValues
-					const char * samplerName = nullptr;
-					unsigned edgelen = 0;
-					OCIO_NAMESPACE::Interpolation interpolation = OCIO_NAMESPACE::INTERP_LINEAR;
-					shaderDesc->get3DTexture(idx, textureName, samplerName, edgelen, interpolation);
-
-					if(!textureName || !*textureName
-						|| !samplerName || !*samplerName
-						|| edgelen==0)
-					{
-						throw Exception("The texture data is corrupted");
-					}
-
-					const float * values = nullptr;
-					shaderDesc->get3DTextureValues(idx, values);
-					if(!values)
-					{
-						throw Exception("The texture values are missing");
-					}
-
-					// 2. Allocate the 3D LUT.
-
-					GLuint currIndex = m_shader->uniformParameter( samplerName )->textureUnit;
-					unsigned texId = 0;
-					AllocateTexture3D(currIndex, texId, interpolation, edgelen, values);
-
-					// 3. Keep the texture id & name for the later enabling.
-
-					m_lutTextures.push_back( { texId, samplerName, GL_TEXTURE_3D, currIndex } );
-
-				}
-
-				// Process the 1D LUTs.
-
-				const unsigned maxTexture2D = shaderDesc->getNumTextures();
-				for(unsigned idx=0; idx<maxTexture2D; ++idx)
-				{
-					// 1. Get the information of the 1D LUT.
-
-					const char * textureName = nullptr; // textureName is unused, we load the data using get1DTextureValues
-					const char * samplerName = nullptr;
-					unsigned width = 0;
-					unsigned height = 0;
-					OCIO_NAMESPACE::GpuShaderDesc::TextureType channel = OCIO_NAMESPACE::GpuShaderDesc::TEXTURE_RGB_CHANNEL;
-					OCIO_NAMESPACE::Interpolation interpolation = OCIO_NAMESPACE::INTERP_LINEAR;
-					shaderDesc->getTexture(idx, textureName, samplerName, width, height, channel, interpolation);
-
-					if (!textureName || !*textureName
-						|| !samplerName || !*samplerName
-						|| width==0)
-					{
-						throw Exception("The texture data is corrupted");
-					}
-
-					const float * values = nullptr;
-					shaderDesc->getTextureValues(idx, values);
-					if(!values)
-					{
-						throw Exception("The texture values are missing");
-					}
-
-					// 2. Allocate the 1D LUT (a 2D texture is needed to hold large LUTs).
-
-					GLuint currIndex = m_shader->uniformParameter( samplerName )->textureUnit;
-					unsigned texId = 0;
-					AllocateTexture2D(currIndex, texId, width, height, channel, interpolation, values);
-
-					// 3. Keep the texture id & name for the later enabling.
-
-					unsigned type = (height > 1) ? GL_TEXTURE_2D : GL_TEXTURE_1D;
-					m_lutTextures.push_back( { texId, samplerName, type, currIndex } );
-				}
-			}
 		}
 
 		~TileShader() override
 		{
-			for( auto &t : m_lutTextures )
-			{
-				glDeleteTextures( 1, &t.textureID );
-			}
-		}
-
-		const IECore::MurmurHash &hash() const
-		{
-			return m_hash;
-		}
-
-		static IECore::MurmurHash staticHash( const ImageProcessor *displayTransform )
-		{
-			IECore::MurmurHash result;
-			if( displayTransform )
-			{
-				if( !hasGPUSupport( displayTransform ) )
-				{
-					throw IECore::Exception( "Display transform not supported" );
-				}
-				auto ocioDisplayTransform = static_cast<const OpenColorIOTransform *>( displayTransform );
-				result.append( ocioDisplayTransform->processorHash() );
-			}
-			return result;
-		}
-
-		static bool hasGPUSupport( const ImageProcessor *displayTransform )
-		{
-			return !displayTransform || runTimeCast<const OpenColorIOTransform>( displayTransform );
 		}
 
 		// Binds shader and provides `loadTile()` method to update
@@ -427,12 +182,6 @@ class ImageGadget::TileShader : public IECore::RefCounted
 				glUniform1i( tileShader.m_shader->uniformParameter( "blueTexture" )->location, tileShader.m_channelTextureUnits[2] );
 				glUniform1i( tileShader.m_shader->uniformParameter( "alphaTexture" )->location, tileShader.m_channelTextureUnits[3] );
 
-				for( auto & i : tileShader.m_lutTextures )
-				{
-					glActiveTexture( GL_TEXTURE0 + i.textureUnit );
-					glBindTexture( i.type, i.textureID );
-					glUniform1i( tileShader.m_shader->uniformParameter( i.samplerName )->location, i.textureUnit );
-				}
 			}
 
 			~ScopedBinding()
@@ -458,22 +207,10 @@ class ImageGadget::TileShader : public IECore::RefCounted
 
 	private :
 
-
-		struct LutTexture
-		{
-			unsigned textureID;
-			std::string samplerName;
-			unsigned type;
-			GLuint textureUnit;
-		};
-		std::vector<LutTexture> m_lutTextures;
-
 		IECoreGL::ShaderPtr m_shader;
 
 		GLuint m_channelTextureUnits[4];
 		GLint m_activeParameterLocation;
-
-		IECore::MurmurHash m_hash;
 
 		static const char *vertexSource()
 		{
@@ -498,8 +235,6 @@ class ImageGadget::TileShader : public IECore::RefCounted
 				"uniform sampler2D greenTexture;\n"
 				"uniform sampler2D blueTexture;\n"
 				"uniform sampler2D alphaTexture;\n"
-
-				"uniform sampler3D lutTexture;\n"
 
 				"uniform bool activeParam;\n"
 				"uniform float multiply;\n"
@@ -543,7 +278,6 @@ class ImageGadget::TileShader : public IECore::RefCounted
 				"		);\n"
 				"	}\n"
 				"	OUTCOLOR = vec4( pow( OUTCOLOR.rgb * multiply, vec3( power ) ), OUTCOLOR.a );\n"
-				"	OUTCOLOR = OCIODisplay( OUTCOLOR );\n"
 				"	if( activeParam )\n"
 				"	{\n"
 				"		vec2 pixelWidth = vec2( dFdx( gl_TexCoord[0].x ), dFdy( gl_TexCoord[0].y ) );\n"
@@ -572,12 +306,11 @@ ImageGadget::ImageGadget()
 		m_clipping( false ),
 		m_exposure( 0.0f ),
 		m_gamma( 1.0f ),
-		m_useGPU( true ),
 		m_labelsVisible( true ),
 		m_paused( false ),
 		m_dirtyFlags( AllDirty ),
 		m_renderRequestPending( false ),
-		m_shaderDirty( true )
+		m_shader( new TileShader() )
 {
 	m_rgbaChannels[0] = "R";
 	m_rgbaChannels[1] = "G";
@@ -658,7 +391,6 @@ void ImageGadget::setContext( Gaffer::ContextPtr context )
 	m_context = context;
 	m_contextChangedConnection = m_context->changedSignal().connect( boost::bind( &ImageGadget::contextChanged, this, ::_2 ) );
 
-	m_shaderDirty = true;
 	dirty( AllDirty );
 }
 
@@ -728,7 +460,7 @@ void ImageGadget::setClipping( bool clipping )
 {
 	m_clipping = clipping;
 
-	if( usingGPU() )
+	if( !m_cpuDisplayTransform )
 	{
 		Gadget::dirty( DirtyType::Render );
 	}
@@ -746,7 +478,7 @@ bool ImageGadget::getClipping() const
 void ImageGadget::setExposure( float exposure )
 {
 	m_exposure = exposure;
-	if( usingGPU() )
+	if( !m_cpuDisplayTransform )
 	{
 		Gadget::dirty( DirtyType::Render );
 	}
@@ -765,7 +497,7 @@ void ImageGadget::setGamma( float gamma )
 {
 	m_gamma = gamma;
 
-	if( usingGPU() )
+	if( !m_cpuDisplayTransform )
 	{
 		Gadget::dirty( DirtyType::Render );
 	}
@@ -780,51 +512,36 @@ float ImageGadget::getGamma() const
 	return m_gamma;
 }
 
-void ImageGadget::setDisplayTransform( ImageProcessorPtr displayTransform )
+void ImageGadget::setCPUDisplayTransform( ImageProcessorPtr displayTransform )
 {
+
+	if( !m_cpuDisplayTransform && !displayTransform )
+	{
+		return;
+	}
+
 	auto displayTransformDirtiedBinding = boost::bind(
 		&ImageGadget::displayTransformPlugDirtied, this, ::_1
 	);
 
-	const bool wasUsingGPU = usingGPU();
-	if( m_displayTransform )
+	if( m_cpuDisplayTransform )
 	{
-		m_displayTransform->plugDirtiedSignal().disconnect( displayTransformDirtiedBinding );
+		m_cpuDisplayTransform->plugDirtiedSignal().disconnect( displayTransformDirtiedBinding );
 	}
 
-	m_displayTransform = displayTransform;
-	if( m_displayTransform )
+	m_cpuDisplayTransform = displayTransform;
+	if( m_cpuDisplayTransform )
 	{
-		m_displayTransform->inPlug()->setInput( m_gradeNode->outPlug() );
-		m_displayTransform->plugDirtiedSignal().connect( displayTransformDirtiedBinding );
+		m_cpuDisplayTransform->inPlug()->setInput( m_gradeNode->outPlug() );
+		m_cpuDisplayTransform->plugDirtiedSignal().connect( displayTransformDirtiedBinding );
 	}
 
-	m_shaderDirty = true;
-	if( usingGPU() && wasUsingGPU )
-	{
-		Gadget::dirty( DirtyType::Render );
-	}
-	else
-	{
-		dirty( TilesDirty );
-	}
-}
-
-ConstImageProcessorPtr ImageGadget::getDisplayTransform() const
-{
-	return m_displayTransform;
-}
-
-void ImageGadget::setUseGPU( bool useGPU )
-{
-	m_useGPU = useGPU;
-	m_shaderDirty = true;
 	dirty( TilesDirty );
 }
 
-bool ImageGadget::getUseGPU() const
+ConstImageProcessorPtr ImageGadget::getCPUDisplayTransform() const
 {
-	return m_useGPU;
+	return m_cpuDisplayTransform;
 }
 
 void ImageGadget::setLabelsVisible( bool visible )
@@ -949,36 +666,16 @@ void ImageGadget::contextChanged( const IECore::InternedString &name )
 {
 	if( !boost::starts_with( name.string(), "ui:" ) )
 	{
-		m_shaderDirty = true; // Display transforms may be context-sensitive
 		dirty( AllDirty );
 	}
 }
 
 void ImageGadget::displayTransformPlugDirtied( const Gaffer::Plug *plug )
 {
-	if( usingGPU() )
-	{
-		if(
-			// Heuristic so that we don't dirty the shader just because
-			// the image upstream of the display transform was dirtied.
-			!runTimeCast<const ImagePlug>( plug ) &&
-			!plug->ancestor<ImagePlug>() &&
-			!boost::starts_with( plug->getName().c_str(), "__" )
-		)
-		{
-			m_shaderDirty = true;
-			Gadget::dirty( DirtyType::Render );
-		}
-	}
-	else
+	if( m_cpuDisplayTransform )
 	{
 		dirty( TilesDirty );
 	}
-}
-
-bool ImageGadget::usingGPU() const
-{
-	return m_useGPU && TileShader::hasGPUSupport( m_displayTransform.get() );
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -1212,7 +909,7 @@ void ImageGadget::updateTiles()
 	removeOutOfBoundsTiles();
 
 	ImagePlug *tilesImage;
-	if( usingGPU() )
+	if( !m_cpuDisplayTransform )
 	{
 		tilesImage = m_deepStateNode->outPlug();
 	}
@@ -1232,7 +929,7 @@ void ImageGadget::updateTiles()
 		const float m = pow( 2.0f, m_exposure );
 		m_gradeNode->multiplyPlug()->setValue( Color4f( m, m, m, 1.0f ) );
 		m_gradeNode->gammaPlug()->setValue( Color4f( m_gamma, m_gamma, m_gamma, 1.0f ) );
-		tilesImage = m_displayTransform ? m_displayTransform->outPlug() : m_gradeNode->outPlug();
+		tilesImage = m_cpuDisplayTransform ? m_cpuDisplayTransform->outPlug() : m_gradeNode->outPlug();
 	}
 
 	// Decide which channels to compute. This is the intersection
@@ -1350,32 +1047,14 @@ void ImageGadget::visibilityChanged()
 	}
 }
 
-ImageGadget::TileShader *ImageGadget::shader() const
-{
-	if( !m_shaderDirty )
-	{
-		return m_shader.get();
-	}
-
-	Context::Scope scopedContext( m_context.get() );
-	const ImageProcessor *displayTransform = usingGPU() ? m_displayTransform.get() : nullptr;
-	if( !m_shader || m_shader->hash() != TileShader::staticHash( displayTransform ) )
-	{
-		m_shader = new TileShader( displayTransform );
-	}
-
-	m_shaderDirty = false;
-	return m_shader.get();
-}
-
 void ImageGadget::renderTiles() const
 {
 	TileShader::ScopedBinding shaderBinding(
-		*shader(),
-		usingGPU() ? m_clipping : false,
-		usingGPU() ? m_exposure : 0.0f,
-		usingGPU() ? m_gamma : 1.0f,
-		usingGPU() ? m_soloChannel == -2 : false
+		*m_shader,
+		!m_cpuDisplayTransform ? m_clipping : false,
+		!m_cpuDisplayTransform ? m_exposure : 0.0f,
+		!m_cpuDisplayTransform ? m_gamma : 1.0f,
+		!m_cpuDisplayTransform ? m_soloChannel == -2 : false
 	);
 
 	const Box2i dataWindow = this->dataWindow();
@@ -1455,7 +1134,7 @@ void ImageGadget::renderText( const std::string &text, const Imath::V2f &positio
 
 void ImageGadget::renderLayer( Layer layer, const GafferUI::Style *style, RenderReason reason ) const
 {
-	if( layer != Layer::Main )
+	if( !( layer == Layer::Back || layer == Layer::Main || layer == Layer::Front )  )
 	{
 		return;
 	}
@@ -1499,11 +1178,15 @@ void ImageGadget::renderLayer( Layer layer, const GafferUI::Style *style, Render
 		V2f( dataWindow.max ) * V2f( format.getPixelAspect(), 1.0f )
 	);
 
-	glColor3f( 0.0f, 0.0f, 0.0f );
-	style->renderSolidRectangle( displayWindowF );
-	if( !BufferAlgo::empty( dataWindow ) )
+	if( layer == Layer::Back )
 	{
-		style->renderSolidRectangle( dataWindowF );
+		glColor3f( 0.0f, 0.0f, 0.0f );
+		style->renderSolidRectangle( displayWindowF );
+		if( !BufferAlgo::empty( dataWindow ) )
+		{
+			style->renderSolidRectangle( dataWindowF );
+		}
+		return;
 	}
 
 	// Draw the image tiles over the top.
@@ -1515,7 +1198,14 @@ void ImageGadget::renderLayer( Layer layer, const GafferUI::Style *style, Render
 		return;
 	}
 
-	renderTiles();
+	if( layer == Layer::Main )
+	{
+		renderTiles();
+		return;
+	}
+
+	// We've already handled Back and Main, so this must be the Front Layer
+	// Time for overlays and labels
 
 	// And add overlays for the display and data windows.
 
@@ -1565,7 +1255,7 @@ void ImageGadget::renderLayer( Layer layer, const GafferUI::Style *style, Render
 
 unsigned ImageGadget::layerMask() const
 {
-	return (unsigned)Layer::Main;
+	return (unsigned)Layer::Back | Layer::Main | Layer::Front;
 }
 
 Imath::Box3f ImageGadget::renderBound() const
