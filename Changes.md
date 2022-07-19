@@ -23,6 +23,7 @@ Fixes
 
 - Qt : Added missing QtUiTools module.
 - SceneReader : Fixed shader type for UsdLux lights. It was `surface` and is now `light`.
+- Fixed a bug in `SceneAlgo::attributeHistory` that would return a branching history from a `ShaderTweaks` node with `inherit` enabled.
 
 Build
 -----
