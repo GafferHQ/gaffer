@@ -250,12 +250,20 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 		editablePlugs = set()
 		for name in self.__curveList.getSelection().paths() :
 			path.setFromString( name )
-			graphComponent = path.property( "graphComponent:graphComponent" )
-			if isinstance( graphComponent, Gaffer.ValuePlug ) and Gaffer.Animation.isAnimated( graphComponent ) :
-				editablePlugs.add( graphComponent )
-			for child in graphComponent.children() :
-				if isinstance( child, Gaffer.ValuePlug ) and Gaffer.Animation.isAnimated( child ) :
-					editablePlugs.add( child )
+			try :
+				# NOTE : path.property() will throw a KeyError exception if the parent
+				#        node has been deleted since we last updated in which case we
+				#        dont want to add the curve to the editable set so we pass.
+				# TODO : Could path.property() return None instead of raising an exception?
+				graphComponent = path.property( "graphComponent:graphComponent" )
+			except KeyError :
+				pass
+			else :
+				if isinstance( graphComponent, Gaffer.ValuePlug ) and Gaffer.Animation.isAnimated( graphComponent ) :
+					editablePlugs.add( graphComponent )
+				for child in graphComponent.children() :
+					if isinstance( child, Gaffer.ValuePlug ) and Gaffer.Animation.isAnimated( child ) :
+						editablePlugs.add( child )
 
 		editable = self.__animationGadget.editablePlugs()
 		curves = set( self.__sourceCurvePlug( plug ) for plug in editablePlugs & visiblePlugs )
