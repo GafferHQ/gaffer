@@ -868,7 +868,7 @@ void AnimationGadget::insertKeyframes()
 		return;
 	}
 
-	m_selectedKeys->m_keys.clear();
+	m_selectedKeys->clear();
 
 	for( auto &runtimeTyped : *m_editablePlugs )
 	{
