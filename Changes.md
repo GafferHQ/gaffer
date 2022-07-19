@@ -6,6 +6,8 @@ Fixes
 
 - Animation : Prevent negative zero slope.
 - AnimationGadget : Fixed bug that prevented signals from being disconnected when key deleted.
+- Animation Editor :
+  - Fixed glitch when dragging tangent handle with opposite tangent with (+/-) inf slope.
 
 0.61.14.1 (relative to 0.61.14.0)
 =========
