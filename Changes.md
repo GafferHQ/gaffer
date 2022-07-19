@@ -5,6 +5,7 @@ Fixes
 -----
 
 - Animation : Prevent negative zero slope.
+- AnimationGadget : Fixed bug that prevented signals from being disconnected when key deleted.
 
 0.61.14.1 (relative to 0.61.14.0)
 =========
