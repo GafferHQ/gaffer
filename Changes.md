@@ -8,6 +8,7 @@ Fixes
 - AnimationGadget : Fixed bug that prevented signals from being disconnected when key deleted.
 - Animation Editor :
   - Fixed glitch when dragging tangent handle with opposite tangent with (+/-) inf slope.
+  - Fixed bug that caused exception to be raised when parent node of editable curve removed.
 
 0.61.14.1 (relative to 0.61.14.0)
 =========
