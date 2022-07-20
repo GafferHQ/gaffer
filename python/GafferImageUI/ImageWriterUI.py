@@ -487,12 +487,18 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The data type to be written to the OpenEXR file.
+			The data type to be written to the OpenEXR file.  If you want to use different
+			data types for different channels, you can drive this with an expression or spreadsheet,
+			which may use the same context variables as the layout plugs ( the useful ones are
+			`${imageWriter:channelName}`, `${imageWriter:layerName}` and `${imageWriter:baseName}`,
+			for the whole channel name, and for the prefix and suffix respectively ).
 			""",
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 			"preset:Float", "float",
 			"preset:Half Float", "half",
+
+			"ui:spreadsheet:selectorValue", "${imageWriter:channelName}",
 
 		],
 
@@ -501,7 +507,9 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			Overriding the data type for depth channels is useful because many of the things depth is used
-			for require greater precision.
+			for require greater precision.  This is a simple override which sets Z and ZBack to float precision.
+			If you want to do something more complex, set this to `Use Default`, and connect an expression or
+			spreadsheet to the `Data Type` plug.
 			""",
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",

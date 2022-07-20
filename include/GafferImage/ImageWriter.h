@@ -117,7 +117,7 @@ class GAFFERIMAGE_API ImageWriter : public GafferDispatch::TaskNode
 
 	private :
 
-		std::string colorSpace() const;
+		std::string colorSpace( const std::string &dataType ) const;
 
 		ColorSpace *colorSpaceNode();
 		const ColorSpace *colorSpaceNode() const;
