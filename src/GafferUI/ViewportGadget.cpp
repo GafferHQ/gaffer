@@ -40,6 +40,7 @@
 #include "GafferUI/Style.h"
 #include "GafferUI/Pointer.h"
 
+#include "IECoreGL/Buffer.h"
 #include "IECoreGL/Camera.h"
 #include "IECoreGL/Selector.h"
 #include "IECoreGL/State.h"
@@ -60,6 +61,7 @@
 
 #include <chrono>
 #include <cmath>
+#include <regex>
 
 using namespace boost::placeholders;
 using namespace Imath;
@@ -114,6 +116,29 @@ const Box3f initInfiniteBox()
 }
 
 Box3f g_infiniteBox( initInfiniteBox() );
+
+float rectPBufferData[12] = { -1, -1, 0,  -1, 1, 0,  1, -1, 0,  1, 1, 0 };
+IECoreGL::BufferPtr rectPBuffer()
+{
+	static IECoreGL::BufferPtr g_rectPBuffer = new IECoreGL::Buffer( rectPBufferData, sizeof( float ) * 12 );
+	return g_rectPBuffer;
+}
+
+float rectUvBufferData[12] = { 0, 0,  0, 1,  1, 0,  1, 1 };
+IECoreGL::BufferPtr rectUvBuffer()
+{
+	static IECoreGL::BufferPtr g_rectUvBuffer = new IECoreGL::Buffer( rectUvBufferData, sizeof( float ) * 8 );
+	return g_rectUvBuffer;
+}
+
+bool checkGLArbTextureFloat()
+{
+	bool supported = std::regex_match( std::string( (const char*)glGetString( GL_EXTENSIONS ) ), std::regex( R"(.*GL_ARB_texture_float( |\n).*)" ) );
+
+	// Really ought to warn here if supported is false, but currently we already warn in ImageGadget
+	// if GL_ARB_texture_float is not found, and there's probably not much point in duplicate warnings
+	return supported;
+}
 
 } // namespace
 
@@ -716,7 +741,9 @@ ViewportGadget::ViewportGadget( GadgetPtr primaryChild )
 		m_dragTracking( DragTracking::NoDragTracking ),
 		m_variableAspectZoom( false ),
 		m_dragButton( ButtonEvent::None ),
-		m_cameraMotionDuringDrag( false )
+		m_cameraMotionDuringDrag( false ),
+		m_fbo( 0 ),
+		m_framebufferSize( -1 )
 {
 
 	// Viewport visibility is managed by GadgetWidgets,
@@ -741,11 +768,21 @@ ViewportGadget::ViewportGadget( GadgetPtr primaryChild )
 	wheelSignal().connect( boost::bind( &ViewportGadget::wheel, this, ::_1, ::_2 ) );
 	keyPressSignal().connect( boost::bind( &ViewportGadget::keyPress, this, ::_1, ::_2 ) );
 	keyReleaseSignal().connect( boost::bind( &ViewportGadget::keyRelease, this, ::_1, ::_2 ) );
-
 }
 
 ViewportGadget::~ViewportGadget()
 {
+	if( m_framebufferSize != Imath::V2i( -1 ) )
+	{
+		// We should technically ensure that the GL context is current when making these calls, but it
+		// seems to be working to just make them in the destructor.
+		// John says "I think we're just generally lucky because all our GL contexts are sharing
+		// the same resources, so it doesn't matter which is current"
+
+		glDeleteTextures(1, &m_framebufferTexture);
+		glDeleteRenderbuffers(1, &m_rbo);
+		glDeleteFramebuffers(1, &m_fbo);
+	}
 }
 
 bool ViewportGadget::acceptsParent( const Gaffer::GraphComponent *potentialParent ) const
@@ -1148,6 +1185,39 @@ void ViewportGadget::childDirtied( DirtyType dirtyType )
 	renderRequestSignal()( this );
 }
 
+void ViewportGadget::renderLayerInternal( RenderReason reason, Gadget::Layer layer, const M44f &viewTransform, const Box3f &bound, const Style *&currentStyle, IECoreGL::Selector *selector ) const
+{
+	for( unsigned int i = 0; i < m_renderItems.size(); i++ )
+	{
+		const RenderItem &renderItem = m_renderItems[i];
+		if( !( renderItem.layerMask & ( (unsigned int)layer ) ) )
+		{
+			continue;
+		}
+
+		if( !renderItem.bound.intersects( bound ) )
+		{
+			continue;
+		}
+
+		glLoadMatrixf( viewTransform.getValue() );
+		glMultMatrixf( renderItem.transform.getValue() );
+		if( selector )
+		{
+			// 0 is a reserved name for when nothing is selected, so start at 1
+			selector->loadName( i + 1 );
+		}
+
+		if( renderItem.style != currentStyle )
+		{
+			renderItem.style->bind( currentStyle );
+			currentStyle = renderItem.style;
+		}
+
+		renderItem.gadget->renderLayer( layer, currentStyle, reason );
+	}
+}
+
 void ViewportGadget::renderInternal( RenderReason reason, Gadget::Layer filterLayer ) const
 {
 
@@ -1165,9 +1235,93 @@ void ViewportGadget::renderInternal( RenderReason reason, Gadget::Layer filterLa
 
 	M44f combinedInverse = projectionTransform.inverse() * viewTransform.inverse();
 	Box3f bound = transform( Box3f( V3f( -1 ), V3f( 1 ) ), combinedInverse );
-	IECoreGL::Selector *selector = IECoreGL::Selector::currentSelector();
+
 
 	const Style *currentStyle = nullptr;
+
+	// If we are using a post process shader, and the render reason is Draw ( ie. not selection ),
+	// then we render the Main layer to a framebuffer, so it can be post processed before being
+	// displayed
+	if(
+		m_postProcessShader && reason == RenderReason::Draw &&
+		!( filterLayer != Layer::None && filterLayer != Layer::Main )
+	)
+	{
+		int currentViewport[4];
+		glGetIntegerv( GL_VIEWPORT, currentViewport );
+		V2i res( currentViewport[2] - currentViewport[0], currentViewport[3] - currentViewport[1] );
+
+		if( res == V2i( 0 ) )
+		{
+			// If there is no resolution, we don't need to draw anything, and it would trigger a GL error
+			// if we tried to create a zero-sized frame buffer
+			return;
+		}
+
+		if( m_framebufferSize != res )
+		{
+			static bool hasTextureFloat = checkGLArbTextureFloat();
+
+			if( m_fbo == 0 )
+			{
+				// Create Framebuffer Texture
+				glGenTextures(1, &m_framebufferTexture);
+				glBindTexture(GL_TEXTURE_2D, m_framebufferTexture);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+				// Create Render Buffer Object
+				glGenRenderbuffers(1, &m_rbo);
+			}
+			else
+			{
+				// Delete framebuffer ( There is contradictory information out there about whether a
+				// framebuffer can handle the attached textures and render buffers being resized ...
+				// sounds like it depends on the driver.  Should be safest to just recreate it ).
+				glDeleteFramebuffers( 1, &m_fbo);
+			}
+
+			// Create Frame Buffer Object
+			glGenFramebuffers(1, &m_fbo);
+			glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
+
+			// Resize Framebuffer Texture
+			glBindTexture(GL_TEXTURE_2D, m_framebufferTexture);
+			glTexImage2D(
+				GL_TEXTURE_2D, 0, hasTextureFloat ? GL_RGBA16F : GL_RGBA8,
+				res.x, res.y, 0, GL_RGBA, GL_FLOAT, NULL
+			);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_framebufferTexture, 0);
+
+			// Resize Render Buffer Object
+			glBindRenderbuffer(GL_RENDERBUFFER, m_rbo);
+			glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, res.x, res.y );
+			glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_rbo );
+
+			// Error checking framebuffer
+			GLenum fboStatus = glCheckFramebufferStatus( GL_FRAMEBUFFER );
+			if( fboStatus != GL_FRAMEBUFFER_COMPLETE )
+			{
+				IECore::msg( IECore::Msg::Warning, "GafferUI::ViewportGadget", "Framebuffer error: " + std::to_string( fboStatus ) );
+			}
+
+			m_framebufferSize = res;
+		}
+
+		glBindFramebuffer( GL_FRAMEBUFFER, m_fbo );
+		// Specify the color of the background
+		glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
+		// Clean the back buffer and depth buffer
+		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
+		renderLayerInternal( RenderReason::Draw, Layer::Main, viewTransform, bound, currentStyle, nullptr );
+
+		glBindFramebuffer( GL_FRAMEBUFFER, 0 );
+	}
+
+	IECoreGL::Selector *selector = IECoreGL::Selector::currentSelector();
 
 	for( int layerIndex = (int)Layer::Back; layerIndex <= (int)Layer::Front; layerIndex <<= 1 )
 	{
@@ -1177,35 +1331,46 @@ void ViewportGadget::renderInternal( RenderReason reason, Gadget::Layer filterLa
 			continue;
 		}
 
-		for( unsigned int i = 0; i < m_renderItems.size(); i++ )
+		// If we're using the post process shader, then instead of drawing everything on the layer now,
+		// we just draw a rect over the whole viewport, reading everything from the framebuffer we
+		// rendered earlier, using the shader that applies the post process
+		if( m_postProcessShader && reason == RenderReason::Draw && layer == Layer::Main )
 		{
-			const RenderItem &renderItem = m_renderItems[i];
-			if( !( renderItem.layerMask & layerIndex ) )
+			IECoreGL::Shader::Setup::ScopedBinding shaderBinding( *m_postProcessShader );
+			glActiveTexture( GL_TEXTURE0 + m_postProcessShaderTextureParm->textureUnit );
+			glBindTexture( GL_TEXTURE_2D, m_framebufferTexture );
+			glUniform1i( m_postProcessShaderTextureParm->location, m_postProcessShaderTextureParm->textureUnit );
+
+			GLint prevBlendSrc, prevBlendDst;
+			glGetIntegerv( GL_BLEND_SRC, &prevBlendSrc );
+			glGetIntegerv( GL_BLEND_DST, &prevBlendDst );
+			// The framebuffer is already premulted
+			glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA );
+
+			glEnableVertexAttribArrayARB( m_postProcessShaderVertexP->location );
+
 			{
-				continue;
+				IECoreGL::Buffer::ScopedBinding bufferBinding( *rectPBuffer() );
+				glVertexAttribPointerARB( m_postProcessShaderVertexP->location, 3, GL_FLOAT, false, 0, nullptr );
 			}
 
-			if( !renderItem.bound.intersects( bound ) )
+			glEnableVertexAttribArrayARB( m_postProcessShaderVertexUv->location );
+
 			{
-				continue;
+				IECoreGL::Buffer::ScopedBinding bufferBinding( *rectUvBuffer() );
+				glVertexAttribPointerARB( m_postProcessShaderVertexUv->location, 2, GL_FLOAT, false, 0, nullptr );
 			}
 
-			glLoadMatrixf( viewTransform.getValue() );
-			glMultMatrixf( renderItem.transform.getValue() );
-			if( selector )
-			{
-				// 0 is a reserved name for when nothing is selected, so start at 1
-				selector->loadName( i + 1 );
-			}
+			glDrawArrays( GL_TRIANGLE_STRIP, 0, 4 );
 
-			if( renderItem.style != currentStyle )
-			{
-				renderItem.style->bind( currentStyle );
-				currentStyle = renderItem.style;
-			}
+			glDisableVertexAttribArrayARB( m_postProcessShaderVertexP->location );
+			glDisableVertexAttribArrayARB( m_postProcessShaderVertexUv->location );
 
-			renderItem.gadget->renderLayer( layer, currentStyle, reason );
+			glBlendFunc( prevBlendSrc, prevBlendDst );
+			continue;
 		}
+
+		renderLayerInternal( reason, layer, viewTransform, bound, currentStyle, selector );
 	}
 	glLoadMatrixf( viewTransform.getValue() );
 }
@@ -1250,6 +1415,41 @@ void ViewportGadget::getRenderItems( const Gadget *gadget, M44f transform, const
 ViewportGadget::UnarySignal &ViewportGadget::preRenderSignal()
 {
 	return m_preRenderSignal;
+}
+
+void ViewportGadget::setPostProcessShader( const IECoreGL::Shader::ConstSetupPtr &postProcessShader )
+{
+	if( postProcessShader )
+	{
+		const IECoreGL::Shader::Parameter *texParm = postProcessShader->shader()->uniformParameter( "framebufferTexture" );
+		if( texParm && texParm->type == GL_SAMPLER_2D )
+		{
+			m_postProcessShaderTextureParm = texParm;
+		}
+		else
+		{
+			throw Exception("Post process shader must have 2D sampler uniform named \"framebufferTexture\"");
+		}
+
+		m_postProcessShaderVertexP = postProcessShader->shader()->vertexAttribute( "vertexP" );
+		if( !m_postProcessShaderVertexP )
+		{
+			throw Exception("Post process shader must have a vertex attribute named \"vertexP\"");
+		}
+
+		m_postProcessShaderVertexUv = postProcessShader->shader()->vertexAttribute( "vertexuv" );
+		if( !m_postProcessShaderVertexUv )
+		{
+			throw Exception("Post process shader must have a vertex attribute named \"vertexuv\"");
+		}
+	}
+
+	m_postProcessShader = postProcessShader;
+}
+
+IECoreGL::Shader::ConstSetupPtr ViewportGadget::getPostProcessShader() const
+{
+	return m_postProcessShader;
 }
 
 ViewportGadget::UnarySignal &ViewportGadget::renderRequestSignal()

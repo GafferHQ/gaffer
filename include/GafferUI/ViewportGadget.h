@@ -41,6 +41,7 @@
 #include "GafferUI/IndividualContainer.h"
 
 #include "IECoreGL/Selector.h"
+#include "IECoreGL/Shader.h"
 
 #include "IECoreScene/Camera.h"
 
@@ -262,6 +263,21 @@ class GAFFERUI_API ViewportGadget : public Gadget
 
 		};
 
+		// A post processing shader can be used to process all the pixels rendered in  the "Main"
+		// layer before they transferred to the screen.  The main use case for this is applying a
+		// color transform.
+		//
+		// The postProcessShader must have a specific interface in order to be used in this way,
+		// consisting of:
+		//
+		// uniform sampler2D framebufferTexture; // Will be set to a texture containing everything that
+		//                                       // has been rendered to the Main Layer
+		// in vec3 vertexP; // This should be passed through directly to gl_Position
+		// in vec2 vertexuv; // This should be used to access framebufferTexture
+		void setPostProcessShader( const IECoreGL::Shader::ConstSetupPtr &postProcessShader );
+
+		IECoreGL::Shader::ConstSetupPtr getPostProcessShader() const;
+
 		/// Selection
 		/// =========
 		///
@@ -345,6 +361,7 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		static void getRenderItems( const Gadget *gadget,  Imath::M44f transform, const Style *parentStyle, std::vector<RenderItem> &renderItems );
 
 		void renderInternal( RenderReason reason, Layer filterLayer = Layer::None ) const;
+		void renderLayerInternal( RenderReason reason, Layer layer, const Imath::M44f &viewTransform, const Imath::Box3f &bound, const Style *&currentStyle, IECoreGL::Selector *selector ) const;
 
 		void childRemoved( GraphComponent *parent, GraphComponent *child );
 
@@ -419,6 +436,15 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		UnarySignal m_preRenderSignal;
 		UnarySignal m_renderRequestSignal;
 
+		mutable GLuint m_fbo;
+		mutable Imath::V2i m_framebufferSize;
+		mutable GLuint m_framebufferTexture;
+		mutable GLuint m_rbo;
+
+		IECoreGL::Shader::ConstSetupPtr m_postProcessShader;
+		const IECoreGL::Shader::Parameter* m_postProcessShaderTextureParm;
+		const IECoreGL::Shader::Parameter* m_postProcessShaderVertexP;
+		const IECoreGL::Shader::Parameter* m_postProcessShaderVertexUv;
 };
 
 IE_CORE_DECLAREPTR( ViewportGadget );
