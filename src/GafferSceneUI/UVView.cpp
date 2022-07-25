@@ -51,6 +51,7 @@
 #include "GafferImage/Resize.h"
 
 #include "GafferImageUI/ImageView.h"
+#include "GafferImageUI/OpenColorIOAlgo.h"
 
 #include "GafferUI/Style.h"
 #include "GafferUI/ViewportGadget.h"
@@ -516,13 +517,6 @@ class TextureGadget : public GafferUI::Gadget
 
 			setChild( g_imageGadgetName, new ImageGadget );
 			imageGadget()->setLabelsVisible( false );
-			// ImageGadget currently does no sharing of GPU shaders between
-			// instances, and GPU shaders for OCIO take a prohibitively long
-			// time to construct for the numbers of gadgets we make for typical
-			// UDIM counts. Disable GPU path until this is sorted. Since the
-			// texture images are static, we really don't need GPU performance
-			// anyway.
-			imageGadget()->setUseGPU( false );
 			imageGadget()->setImage( m_resize->outPlug() );
 		}
 
@@ -553,33 +547,6 @@ class TextureGadget : public GafferUI::Gadget
 			return m_imageReader->fileNamePlug()->getValue();
 		}
 
-		void setDisplayTransform( const std::string &name )
-		{
-			ImageProcessorPtr processor;
-			const auto it = m_displayTransforms.find( name );
-			if( it == m_displayTransforms.end() )
-			{
-				processor = ImageView::createDisplayTransform( name );
-				m_displayTransforms[name] = processor;
-				if( processor )
-				{
-					processor->inPlug()->setInput( m_resize->outPlug() );
-				}
-			}
-			else
-			{
-				processor = it->second;
-			}
-
-			imageGadget()->setDisplayTransform( processor );
-			m_displayTransform = name;
-		}
-
-		const std::string &getDisplayTransform()
-		{
-			return m_displayTransform;
-		}
-
 		std::string getToolTip( const IECore::LineSegment3f &position ) const override
 		{
 			const std::string t = Gadget::getToolTip( position );
@@ -595,10 +562,6 @@ class TextureGadget : public GafferUI::Gadget
 
 		ImageReaderPtr m_imageReader;
 		ResizePtr m_resize;
-		std::string m_displayTransform;
-
-		using DisplayTransformMap = std::unordered_map<std::string, GafferImage::ImageProcessorPtr>;
-		DisplayTransformMap m_displayTransforms;
 
 };
 
@@ -619,7 +582,7 @@ static InternedString g_gridGadgetName( "gridGadget" );
 GAFFER_NODE_DEFINE_TYPE( UVView )
 
 UVView::UVView( const std::string &name )
-	:	View( name, new ScenePlug ), m_textureGadgetsDirty( true ), m_framed( false )
+	:	View( name, new ScenePlug ), m_textureGadgetsDirty( true ), m_framed( false ), m_displayTransformDirty( true )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
@@ -653,8 +616,6 @@ UVView::UVView( const std::string &name )
 	plugDirtiedSignal().connect( boost::bind( &UVView::plugDirtied, this, ::_1 ) );
 	viewportGadget()->preRenderSignal().connect( boost::bind( &UVView::preRender, this ) );
 	viewportGadget()->visibilityChangedSignal().connect( boost::bind( &UVView::visibilityChanged, this ) );
-
-	updateDisplayTransform();
 }
 
 UVView::~UVView()
@@ -799,7 +760,7 @@ void UVView::plugSet( const Gaffer::Plug *plug )
 {
 	if( plug == displayTransformPlug() )
 	{
-		updateDisplayTransform();
+		m_displayTransformDirty = true;
 	}
 }
 
@@ -817,6 +778,14 @@ void UVView::preRender()
 	{
 		viewportGadget()->frame( Box3f( V3f( -0.05 ), V3f( 1.05 ) ) );
 		m_framed = true;
+	}
+
+	// We use an OpenGL display transform, so we can't set it up until GL is initialized - once
+	// we get the preRender call, we should be good.
+	if( m_displayTransformDirty )
+	{
+		updateDisplayTransform();
+		m_displayTransformDirty = false;
 	}
 
 	if( getPaused() || !m_textureGadgetsDirty )
@@ -886,7 +855,6 @@ void UVView::updateTextureGadgets( const IECore::ConstCompoundObjectPtr &texture
 			const int v = ( udim - 1001 ) / 10;
 
 			g->setTransform( M44f().translate( V3f( u, v, 0 ) ) );
-			g->setDisplayTransform( displayTransformPlug()->getValue() );
 
 			g->imageGadget()->stateChangedSignal().connect(
 				[this]( ImageGadget *g ) { this->gadgetStateChanged( g, g->state() == ImageGadget::Running ); }
@@ -916,11 +884,31 @@ void UVView::updateTextureGadgets( const IECore::ConstCompoundObjectPtr &texture
 
 void UVView::updateDisplayTransform()
 {
-	const string displayTransform = displayTransformPlug()->getValue();
-	for( TextureGadgetIterator it( textureGadgets() ); !it.done(); ++it )
+	const string displayTransformName = displayTransformPlug()->getValue();
+
+	const ImageProcessor *displayTransform;
+
+	const auto it = m_displayTransforms.find( displayTransformName );
+	if( it == m_displayTransforms.end() )
 	{
-		(*it)->setDisplayTransform( displayTransform );
+		ImageProcessorPtr newDisplayTransform = ImageView::createDisplayTransform( displayTransformName );
+		m_displayTransforms[displayTransformName] = newDisplayTransform;
+		displayTransform = newDisplayTransform.get();
 	}
+	else
+	{
+		displayTransform = it->second.get();
+	}
+
+	const OpenColorIOTransform *ocioTrans = runTimeCast<const OpenColorIOTransform>( displayTransform );
+
+	const OCIO_NAMESPACE::Processor *ocioProcessor = nullptr;
+	if( ocioTrans )
+	{
+		ocioProcessor = ocioTrans->processor().get();
+	}
+
+	viewportGadget()->setPostProcessShader( OpenColorIOAlgo::displayTransformToFramebufferShader( ocioProcessor ) );
 }
 
 void UVView::gadgetStateChanged( const Gadget *gadget, bool running )
