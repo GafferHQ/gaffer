@@ -159,6 +159,8 @@ class GAFFERIMAGEUI_API ImageView : public GafferUI::View
 		/// preprocessor is managed by the ImageView base class.
 		void insertConverter( Gaffer::NodePtr converter );
 
+		void setSoloChannel( int soloChannel );
+
 	private :
 
 		void plugSet( Gaffer::Plug *plug );
@@ -166,9 +168,21 @@ class GAFFERIMAGEUI_API ImageView : public GafferUI::View
 		void preRender();
 
 		void insertDisplayTransform();
+		void updateDisplayTransform();
 
-		using DisplayTransformMap = std::map<std::string, GafferImage::ImageProcessorPtr>;
+		struct DisplayTransformEntry
+		{
+			GafferImage::ImageProcessorPtr displayTransform;
+			IECoreGL::Shader::SetupPtr shader;
+			bool supportsShader;
+		};
+
+		using DisplayTransformMap = std::map<std::string, DisplayTransformEntry>;
 		DisplayTransformMap m_displayTransforms;
+		DisplayTransformEntry *m_displayTransformAndShader;
+
+		IECore::IntDataPtr m_soloChannel;
+		bool m_lutGPU;
 
 		ImageGadgetPtr m_imageGadget;
 		bool m_framed;

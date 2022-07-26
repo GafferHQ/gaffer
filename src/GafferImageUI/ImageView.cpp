@@ -38,10 +38,12 @@
 #include "GafferImageUI/ImageView.h"
 
 #include "GafferImageUI/ImageGadget.h"
+#include "GafferImageUI/OpenColorIOAlgo.h"
 
 #include "GafferImage/ImagePlug.h"
 #include "GafferImage/ImageSampler.h"
 #include "GafferImage/ImageStats.h"
+#include "GafferImage/OpenColorIOTransform.h"
 #include "GafferImage/SelectView.h"
 
 #include "GafferUI/Gadget.h"
@@ -140,10 +142,7 @@ class ImageView::ChannelChooser : public Signals::Trackable
 		{
 			if( plug == soloChannelPlug() )
 			{
-				ImageGadget *imageGadget = static_cast<ImageGadget *>(
-					m_view->viewportGadget()->getPrimaryChild()
-				);
-				imageGadget->setSoloChannel( soloChannelPlug()->getValue() );
+				m_view->setSoloChannel( soloChannelPlug()->getValue() );
 			}
 			else if( plug == channelsPlug() )
 			{
@@ -1210,6 +1209,8 @@ GAFFERIMAGEUI_API ImageView::ViewDescription<ImageView> ImageView::g_viewDescrip
 
 ImageView::ImageView( const std::string &name )
 	:	View( name, new GafferImage::ImagePlug() ),
+		m_soloChannel( new IntData( -1 ) ),
+		m_lutGPU( true ),
 		m_imageGadget( new ImageGadget() ),
 		m_framed( false )
 {
@@ -1429,7 +1430,8 @@ void ImageView::plugSet( Gaffer::Plug *plug )
 	}
 	else if( plug == lutGPUPlug() )
 	{
-		m_imageGadget->setUseGPU( lutGPUPlug()->getValue() );
+		m_lutGPU = lutGPUPlug()->getValue();
+		updateDisplayTransform();
 	}
 }
 
@@ -1471,6 +1473,34 @@ bool ImageView::keyPress( const GafferUI::KeyEvent &event )
 
 void ImageView::preRender()
 {
+	if( !m_displayTransformAndShader->supportsShader || !m_lutGPU )
+	{
+		viewportGadget()->setPostProcessShader( nullptr );
+	}
+	else
+	{
+		if( m_displayTransformAndShader->shader == nullptr )
+		{
+			if( !m_displayTransformAndShader->displayTransform )
+			{
+				m_displayTransformAndShader->shader = OpenColorIOAlgo::displayTransformToFramebufferShader( nullptr );
+			}
+			else
+			{
+				const OpenColorIOTransform *ocioTrans = runTimeCast<const OpenColorIOTransform>(
+					m_displayTransformAndShader->displayTransform.get()
+				);
+
+				m_displayTransformAndShader->shader = OpenColorIOAlgo::displayTransformToFramebufferShader(
+					ocioTrans->processor().get()
+				);
+			}
+		}
+
+		m_displayTransformAndShader->shader->addUniformParameter( "soloChannel", m_soloChannel );
+		viewportGadget()->setPostProcessShader( m_displayTransformAndShader->shader );
+	}
+
 	if( m_framed )
 	{
 		return;
@@ -1486,30 +1516,56 @@ void ImageView::preRender()
 	m_framed = true;
 }
 
+void ImageView::setSoloChannel( int soloChannel )
+{
+	ImageGadget *imageGadget = static_cast<ImageGadget *>( viewportGadget()->getPrimaryChild() );
+	imageGadget->setSoloChannel( soloChannel );
+	m_soloChannel->writable() = soloChannel;
+	updateDisplayTransform();
+}
+
 void ImageView::insertDisplayTransform()
 {
 	const std::string name = displayTransformPlug()->getValue();
 
-	ImageProcessorPtr displayTransform;
-	DisplayTransformMap::const_iterator it = m_displayTransforms.find( name );
+	DisplayTransformMap::iterator it = m_displayTransforms.find( name );
 	if( it != m_displayTransforms.end() )
 	{
-		displayTransform = it->second;
+		m_displayTransformAndShader = &(it->second);
 	}
 	else
 	{
-		displayTransform = createDisplayTransform( name );
-		if( displayTransform )
+		m_displayTransformAndShader = &m_displayTransforms.insert(
+			std::make_pair( name, DisplayTransformEntry() )
+		).first->second;
+
+		m_displayTransformAndShader->displayTransform = createDisplayTransform( name );
+		const OpenColorIOTransform *ocioTrans = runTimeCast<const OpenColorIOTransform>( m_displayTransformAndShader->displayTransform.get() );
+		m_displayTransformAndShader->supportsShader = ocioTrans != nullptr || !m_displayTransformAndShader->displayTransform;
+		m_displayTransformAndShader->shader = nullptr;
+
+		// Even though technically the ImageGadget will own `displayTransform`,
+		// we must parent it into our preprocessor so that `BackgroundTask::cancelAffectedTasks()`
+		// can find the relevant tasks to cancel if plugs on `displayTransform` are edited.
+		if( m_displayTransformAndShader->displayTransform )
 		{
-			m_displayTransforms[name] = displayTransform;
-			// Even though technically the ImageGadget will own `displayTransform`,
-			// we must parent it into our preprocessor so that `BackgroundTask::cancelAffectedTasks()`
-			// can find the relevant tasks to cancel if plugs on `displayTransform` are edited.
-			getPreprocessor()->addChild( displayTransform );
+			getPreprocessor()->addChild( m_displayTransformAndShader->displayTransform );
 		}
 	}
 
-	m_imageGadget->setDisplayTransform( displayTransform );
+	updateDisplayTransform();
+}
+
+void ImageView::updateDisplayTransform()
+{
+	if( !m_displayTransformAndShader->supportsShader || !m_lutGPU )
+	{
+		m_imageGadget->setCPUDisplayTransform( m_displayTransformAndShader->displayTransform );
+	}
+	else
+	{
+		m_imageGadget->setCPUDisplayTransform( nullptr );
+	}
 }
 
 void ImageView::registerDisplayTransform( const std::string &name, DisplayTransformCreator creator )
