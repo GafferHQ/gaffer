@@ -1,3 +1,11 @@
+0.61.x.x (relative to 0.61.14.2)
+=========
+
+Fixes
+-----
+
+- CurvesAlgo : fix Arnold rendering error for non-linear curves with Vertex interpolation Quatf primitive variable.
+
 0.61.14.2 (relative to 0.61.14.1)
 =========
 
