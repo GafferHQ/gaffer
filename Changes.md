@@ -1,18 +1,18 @@
-1.0.x.x (relative to 1.0.1.0)
+1.0.2.0 (relative to 1.0.1.0)
 =======
 
 Improvements
 ------------
 
-- TweakPlug : Using the modes `listAppend` and `listPrepend` to modify a list that does not exist now results in a list with the new values. Using the mode `listRemove` to modify a non-existent list results in a non-existent list. All other modes retain their current `missingMode` behavior.
-- ImageWriter : The exr dataType plug now accepts an expression or spreadsheet to set per channel data types.
+- TweakPlug : Using the `ListAppend` and `ListPrepend` modes to add to a non-existent list now creates a list with the new values. Using the `ListRemove` mode to modify a non-existent list results in a non-existent list. All other modes retain their current `missingMode` behavior.
+- ImageWriter : The `openexr.dataType` plug now accepts an expression or spreadsheet input to set per-channel data types.
 
 Fixes
 -----
 
-- ImageWriter : Fix bug with color space unpremulting when alpha channel not the last channel.
-- Viewer : Fix images not displaying when display window is offscreen.
-- UV Inspector : Fix texture display ( broken in 1.0.0.0 ).
+- ImageWriter : Fixed bug with color transform alpha handling when the alpha channel was not the last channel.
+- Viewer : Fixed images not displaying when the display window was offscreen.
+- UV Inspector : Fixed texture display (broken in 1.0.0.0).
 - Animation : Prevented negative zero slope.
 - Animation Editor :
   - Fixed glitch when dragging a tangent having an opposite tangent with (+/-) inf slope.
