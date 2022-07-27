@@ -13,6 +13,11 @@ Fixes
 - ImageWriter : Fix bug with color space unpremulting when alpha channel not the last channel.
 - Viewer : Fix images not displaying when display window is offscreen.
 - UV Inspector : Fix texture display ( broken in 1.0.0.0 ).
+- Animation : Prevented negative zero slope.
+- Animation Editor :
+  - Fixed glitch when dragging a tangent having an opposite tangent with (+/-) inf slope.
+  - Fixed bug that caused exception to be raised when the parent node of an editable curve was removed.
+  - Fixed bug that prevented signals from being disconnected when a key was deleted.
 
 1.0.1.0 (relative to 1.0.0.0)
 =======
@@ -226,6 +231,18 @@ Build
   - Subprocess32 : Now packaged as a regular module rather than as a `.egg` package.
   - TBB : Updated to version 2020.3.
   - USD : Updated to version 21.11.
+
+0.61.14.2 (relative to 0.61.14.1)
+=========
+
+Fixes
+-----
+
+- Animation : Prevented negative zero slope.
+- Animation Editor :
+  - Fixed glitch when dragging a tangent having an opposite tangent with (+/-) inf slope.
+  - Fixed bug that caused exception to be raised when the parent node of an editable curve was removed.
+  - Fixed bug that prevented signals from being disconnected when a key was deleted.
 
 0.61.14.1 (relative to 0.61.14.0)
 =========

@@ -118,6 +118,11 @@ double maxScale( const double slope )
 	return std::sqrt( std::fma( slope, slope, 1.0 ) );
 }
 
+double ensurePositiveZero( const double value )
+{
+	return ( value == 0.0 ) ? 0.0 : value;
+}
+
 double slopeFromPosition( const Imath::V2d& position, const Gaffer::Animation::Direction direction )
 {
 	static_assert( std::numeric_limits< double >::is_iec559, "IEEE 754 required to represent negative infinity" );
@@ -136,7 +141,7 @@ double slopeFromPosition( const Imath::V2d& position, const Gaffer::Animation::D
 	}
 	else
 	{
-		return position.y / position.x;
+		return ensurePositiveZero( position.y / position.x );
 	}
 }
 
@@ -392,8 +397,10 @@ private:
 
 	double solveForTime( const double tl, const double th, const double time ) const
 	{
-		if( time <= 0.0 ) return 0.0;
-		if( time >= 1.0 ) return 1.0;
+		// NOTE : keeping tl and th in the range [0,1] ensures f is monotonic increasing over interval [0,1].
+
+		assert( 0.0 <= tl && tl <= 1.0 );
+		assert( 0.0 <= th && th <= 1.0 );
 
 		// compute coeffs
 
@@ -404,26 +411,21 @@ private:
 		const double bt2 = bt + bt;
 		const double at3 = at + at + at;
 
-		// check that f is monotonic and therefore has one (possibly repeated) real root.
+		// check that f is monotonic increasing over interval [0,1] and therefore has one (possibly repeated) real root.
 		//
-		// NOTE : f is monotonic over the interval [0,1] when the solutions of f' either,
-		//        both lie outside the interval (0,1) or lie in the interval (0,1) and are equal
-		//        in which case the discriminant of f' is zero.
-		// NOTE : keeping tl and th in the range [0,1] ensures f is monotonic over interval [0,1].
+		// NOTE : As f(0) = 0 and f(1) = 1, f is monotonic increasing iff f'(0) >= 0 and f'(1) >= 0
+		//
+		//        f'(0) =                 c(t)
+		//        f'(1) = 3a(t) + 2b(t) + c(t)
+		//
+		//        when th == 1 floating point imprecision gives f'(1) as slighty less than 0.
 
-		const double discriminant = bt2 * bt2 - 4.0 * at3 * ct;
+		assert( ( ct >= 0.0 ) && ( at3 + bt2 + ct >= ( ( th == 1.0 ) ? -1e-15 : 0.0 ) ) );
 
-		if( discriminant > 1e-13 )
-		{
-			const double q = - 0.5 * ( bt2 + std::copysign( std::sqrt( discriminant ), bt2 ) );
-			const double s1 = q / at3;
-			const double s2 = ct / q;
+		// simple cases
 
-			if( ( 0.0 < s1 && s1 < 1.0 ) || ( 0.0 < s2 && s2 < 1.0 ) )
-			{
-				throw IECore::Exception( "Animation : Bezier interpolation mode : curve segment has multiple values for given time." );
-			}
-		}
+		if( time <= 0.0 ) return 0.0;
+		if( time >= 1.0 ) return 1.0;
 
 		// root bracketed in interval [0,1]
 
@@ -589,7 +591,7 @@ Animation::Tangent::Tangent( Animation::Key& key, const Animation::Direction dir
 , m_direction( direction )
 , m_dt( 0.0 )
 , m_dv( 0.0 )
-, m_slope( slope )
+, m_slope( ensurePositiveZero( slope ) )
 , m_scale( Imath::clamp( scale, 0.0, maxScale( m_slope ) ) )
 {}
 
@@ -642,7 +644,7 @@ void Animation::Tangent::setSlopeFromPosition( const Imath::V2d& pos, const bool
 	setSlope( slopeFromPosition( position, m_direction ) );
 }
 
-void Animation::Tangent::setSlopeAndScale( double slope, double scale )
+void Animation::Tangent::setSlopeAndScale( const double slope, const double scale )
 {
 	setSlopeAndScale( slope, scale, false );
 }
@@ -658,6 +660,7 @@ void Animation::Tangent::setSlopeAndScale( double slope, double scale, const boo
 
 	// clamp scale based on slope
 
+	slope = ensurePositiveZero( slope );
 	scale = std::min( scale, maxScale( slope ) );
 
 	// tie slope and scale of opposite tangent
@@ -767,7 +770,7 @@ bool Animation::Tangent::slopeIsConstrained() const
 	return false;
 }
 
-void Animation::Tangent::setScale( double scale )
+void Animation::Tangent::setScale( const double scale )
 {
 	setScale( scale, false );
 }
