@@ -1,14 +1,14 @@
-0.61.x.x (relative to 0.61.14.1)
+0.61.14.2 (relative to 0.61.14.1)
 =========
 
 Fixes
 -----
 
-- Animation : Prevent negative zero slope.
-- AnimationGadget : Fixed bug that prevented signals from being disconnected when key deleted.
+- Animation : Prevented negative zero slope.
 - Animation Editor :
-  - Fixed glitch when dragging tangent handle with opposite tangent with (+/-) inf slope.
-  - Fixed bug that caused exception to be raised when parent node of editable curve removed.
+  - Fixed glitch when dragging a tangent having an opposite tangent with (+/-) inf slope.
+  - Fixed bug that caused exception to be raised when the parent node of an editable curve was removed.
+  - Fixed bug that prevented signals from being disconnected when a key was deleted.
 
 0.61.14.1 (relative to 0.61.14.0)
 =========
