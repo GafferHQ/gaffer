@@ -113,14 +113,12 @@ void findUsableTextureFormats( GLenum &monochromeFormat, GLenum &colorFormat )
 
 uint64_t g_tileUpdateCount;
 
-} // namespace
-
 //////////////////////////////////////////////////////////////////////////
-// ImageGadget::TileShader implementation
+// TileShader
 //////////////////////////////////////////////////////////////////////////
 
 // Manages an OpenGL shader suitable for rendering tiles
-class ImageGadget::TileShader : public IECore::RefCounted
+class TileShader
 {
 
 	public :
@@ -153,7 +151,7 @@ class ImageGadget::TileShader : public IECore::RefCounted
 			m_activeParameterLocation = m_shader->uniformParameter( "activeParam" )->location;
 		}
 
-		~TileShader() override
+		~TileShader()
 		{
 		}
 
@@ -295,6 +293,15 @@ class ImageGadget::TileShader : public IECore::RefCounted
 
 };
 
+const TileShader *tileShader()
+{
+	static const TileShader *g_tileShader = new TileShader();
+	return g_tileShader;
+}
+
+} // namespace
+
+
 //////////////////////////////////////////////////////////////////////////
 // ImageGadget implementation
 //////////////////////////////////////////////////////////////////////////
@@ -309,8 +316,7 @@ ImageGadget::ImageGadget()
 		m_labelsVisible( true ),
 		m_paused( false ),
 		m_dirtyFlags( AllDirty ),
-		m_renderRequestPending( false ),
-		m_shader( new TileShader() )
+		m_renderRequestPending( false )
 {
 	m_rgbaChannels[0] = "R";
 	m_rgbaChannels[1] = "G";
@@ -1050,7 +1056,7 @@ void ImageGadget::visibilityChanged()
 void ImageGadget::renderTiles() const
 {
 	TileShader::ScopedBinding shaderBinding(
-		*m_shader,
+		*tileShader(),
 		!m_cpuDisplayTransform ? m_clipping : false,
 		!m_cpuDisplayTransform ? m_exposure : 0.0f,
 		!m_cpuDisplayTransform ? m_gamma : 1.0f,

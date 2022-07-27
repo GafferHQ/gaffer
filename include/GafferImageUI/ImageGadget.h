@@ -327,13 +327,6 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 		void visibilityChanged();
 		void renderTiles() const;
 		void renderText( const std::string &text, const Imath::V2f &position, const Imath::V2f &alignment, const GafferUI::Style *style ) const;
-
-		// \todo - this shader is now constant, and could be stored globally instead of per-instance.
-		// However, I haven't observed any noticeable slowdown with compiling this simple shader multiple
-		// times, even on UVView's with hundreds of ImageGadgets for different tiles, so I haven't bothered
-		// with this yet.
-		IE_CORE_FORWARDDECLARE( TileShader )
-		TileShaderPtr m_shader;
 };
 
 IE_CORE_DECLAREPTR( ImageGadget )
