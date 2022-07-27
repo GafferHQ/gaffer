@@ -209,7 +209,9 @@ class TweakPlugTest( GafferTest.TestCase ) :
 				"a" : 2.0,
 				"b" : imath.Color3f( 4.0, 5.0, 6.0 ),
 				"c" : imath.V2f( 3.0, 4.0 ),
-				"d" : IECore.StringVectorData( [ "gouda", "cheddar", "cheddar", "swiss" ] )
+				"d" : IECore.StringVectorData( [ "gouda", "cheddar", "cheddar", "swiss" ] ),
+				# "e" reserved for testing `Create` mode
+				# "f" reserved for testing list operations on non-existent value
 			}
 		)
 
@@ -218,6 +220,7 @@ class TweakPlugTest( GafferTest.TestCase ) :
 		tweaks.addChild( Gaffer.TweakPlug( "b", imath.Color3f( 1.0, 2.0, 3.0 ) ) )
 		tweaks.addChild( Gaffer.TweakPlug( "c", imath.V2f( 1.0, 2.0 ) ) )
 		tweaks.addChild( Gaffer.TweakPlug( "d", IECore.StringVectorData( [ "brie" ] ) ) )
+		tweaks.addChild( Gaffer.TweakPlug( "f", IECore.StringVectorData( [] ), Gaffer.TweakPlug.Mode.ListAppend ) )
 
 		# Simple Arithmetic, min and max
 
@@ -312,6 +315,29 @@ class TweakPlugTest( GafferTest.TestCase ) :
 		parameters = originalParameters.copy()
 		self.assertTrue( tweaks.applyTweaks( parameters ) )
 		self.assertNotIn( "a", parameters )
+
+		# List operations on an empty list
+
+		for value, mode, expectedValue in [
+			( [ "brie" ], Gaffer.TweakPlug.Mode.ListAppend, [ "brie" ] ),
+			( [ "cheddar" ], Gaffer.TweakPlug.Mode.ListPrepend, [ "cheddar" ] ),
+		] :
+			tweaks[4]["mode"].setValue( mode )
+			tweaks[4]["value"].setValue( IECore.StringVectorData( value ) )
+
+			parameters = originalParameters.copy()
+
+			self.assertTrue( tweaks.applyTweaks( parameters ) )
+			self.assertEqual( parameters["f"], IECore.StringVectorData( expectedValue ) )
+
+		# `tweaksPlug.applyTweaks()` will return true if any of the tweaks were applied.
+		# Reset it to make sure our `True` / `False` test is valid.
+		tweaks = Gaffer.TweaksPlug()
+		tweaks.addChild( Gaffer.TweakPlug( "f", IECore.StringVectorData( [ "swiss" ] ), Gaffer.TweakPlug.Mode.ListRemove ) )
+		parameters = originalParameters.copy()
+
+		self.assertFalse( tweaks.applyTweaks( parameters ) )
+		self.assertNotIn( "f", parameters )
 
 
 if __name__ == "__main__":

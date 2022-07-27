@@ -668,6 +668,10 @@ void UVView::setContext( Gaffer::ContextPtr context )
 {
 	View::setContext( context );
 	sceneGadget()->setContext( context );
+	for( TextureGadgetIterator it( textureGadgets() ); !it.done(); ++it )
+	{
+		(*it)->imageGadget()->setContext( context );
+	}
 }
 
 void UVView::contextChanged( const IECore::InternedString &name )
@@ -873,6 +877,7 @@ void UVView::updateTextureGadgets( const IECore::ConstCompoundObjectPtr &texture
 		if( !textureGadget )
 		{
 			TextureGadgetPtr g = new TextureGadget();
+			g->imageGadget()->setContext( this->getContext() );
 			textureGadgets()->setChild( gadgetName, g );
 			textureGadget = g.get();
 

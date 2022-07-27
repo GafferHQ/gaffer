@@ -102,7 +102,12 @@ bool TweakPlug::applyTweak(
 
 	if( !currentValue )
 	{
-		if( missingMode == Gaffer::TweakPlug::MissingMode::Ignore )
+		if( mode == Gaffer::TweakPlug::ListAppend || mode == Gaffer::TweakPlug::ListPrepend )
+		{
+			setDataFunctor( name, newData );
+			return true;
+		}
+		else if( missingMode == Gaffer::TweakPlug::MissingMode::Ignore || mode == Gaffer::TweakPlug::ListRemove )
 		{
 			return false;
 		}

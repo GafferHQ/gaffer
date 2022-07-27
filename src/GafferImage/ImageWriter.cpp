@@ -1093,95 +1093,12 @@ void metadataToImageSpecAttributes( const CompoundData *metadata, ImageSpec &spe
 	}
 }
 
-void setImageSpecFormatChannelOptions( const ImageWriter *node, ImageSpec *spec, const std::string &fileFormatName )
+void setImageSpecTilingAndCompressionOptions( const ImageWriter *node, ImageSpec *spec, const std::string &fileFormatName )
 {
 	const ValuePlug *optionsPlug = node->getChild<ValuePlug>( fileFormatName );
-
 	if( optionsPlug == nullptr)
 	{
 		return;
-	}
-
-	const StringPlug *deepDataTypePlug = optionsPlug->getChild<StringPlug>( g_depthDataTypePlugName );
-
-	if( deepDataTypePlug != nullptr )
-	{
-		if( deepDataTypePlug->getValue() == "float" )
-		{
-			spec->channelformats.resize( spec->nchannels, spec->format );
-
-			for( int i = 0; i < spec->nchannels; i++ )
-			{
-				if( spec->channelnames[ i ] == "Z" || spec->channelnames[ i ] == "ZBack" )
-				{
-					spec->channelformats[ i ] = TypeDesc::FLOAT;
-				}
-			}
-		}
-	}
-}
-
-
-void setImageSpecFormatOptions( const ImageWriter *node, ImageSpec *spec, const std::string &fileFormatName )
-{
-	const ValuePlug *optionsPlug = node->getChild<ValuePlug>( fileFormatName );
-
-	if( optionsPlug == nullptr)
-	{
-		return;
-	}
-
-	const StringPlug *dataTypePlug = optionsPlug->getChild<StringPlug>( g_dataTypePlugName );
-	std::string dataType;
-
-	if( dataTypePlug != nullptr )
-	{
-		dataType = dataTypePlug->getValue();
-
-		if( dataType == "int8" )
-		{
-			spec->set_format( TypeDesc::INT8 );
-		}
-		else if( dataType == "int16" )
-		{
-			spec->set_format( TypeDesc::INT16 );
-		}
-		else if( dataType == "int32" )
-		{
-			spec->set_format( TypeDesc::INT32 );
-		}
-		else if( dataType == "int64" )
-		{
-			spec->set_format( TypeDesc::INT64 );
-		}
-		else if( dataType == "uint8" )
-		{
-			spec->set_format( TypeDesc::UINT8 );
-		}
-		else if( dataType == "uint16" )
-		{
-			spec->set_format( TypeDesc::UINT16 );
-		}
-		else if( dataType == "uint32" )
-		{
-			spec->set_format( TypeDesc::UINT32 );
-		}
-		else if( dataType == "uint64" )
-		{
-			spec->set_format( TypeDesc::UINT64 );
-		}
-		else if( dataType == "half" )
-		{
-			spec->set_format( TypeDesc::HALF );
-		}
-		else if( dataType == "float" )
-		{
-			spec->set_format( TypeDesc::FLOAT );
-		}
-		else if( dataType == "double" )
-		{
-			spec->set_format( TypeDesc::DOUBLE );
-		}
 	}
 
 	const IntPlug *modePlug = optionsPlug->getChild<IntPlug>( g_modePlugName );
@@ -1214,19 +1131,6 @@ void setImageSpecFormatOptions( const ImageWriter *node, ImageSpec *spec, const 
 			spec->attribute( "jpeg:subsampling", subSampling );
 		}
 	}
-	else if( fileFormatName == "dpx" )
-	{
-		if( dataType == "uint10" )
-		{
-			spec->set_format( TypeDesc::UINT16 );
-			spec->attribute ("oiio:BitsPerSample", 10);
-		}
-		else if( dataType == "uint12" )
-		{
-			spec->set_format( TypeDesc::UINT16 );
-			spec->attribute ("oiio:BitsPerSample", 12);
-		}
-	}
 	else if( fileFormatName == "png" )
 	{
 		spec->attribute( "png:compressionLevel", optionsPlug->getChild<IntPlug>( g_compressionLevelPlugName )->getValue() );
@@ -1234,6 +1138,111 @@ void setImageSpecFormatOptions( const ImageWriter *node, ImageSpec *spec, const 
 	else if( fileFormatName == "webp" )
 	{
 		spec->attribute( "CompressionQuality", optionsPlug->getChild<IntPlug>( g_compressionQualityPlugName )->getValue() );
+	}
+}
+
+TypeDesc dataTypeToOiioType( const std::string &dataType, const std::string &infoFormatName )
+{
+	if( dataType == "int8" )
+	{
+		return TypeDesc::INT8;
+	}
+	else if( dataType == "int16" )
+	{
+		return TypeDesc::INT16;
+	}
+	else if( dataType == "int32" )
+	{
+		return TypeDesc::INT32;
+	}
+	else if( dataType == "int64" )
+	{
+		return TypeDesc::INT64;
+	}
+	else if( dataType == "uint8" )
+	{
+		return TypeDesc::UINT8;
+	}
+	else if( dataType == "uint16" )
+	{
+		return TypeDesc::UINT16;
+	}
+	else if( dataType == "uint32" )
+	{
+		return TypeDesc::UINT32;
+	}
+	else if( dataType == "uint64" )
+	{
+		return TypeDesc::UINT64;
+	}
+	else if( dataType == "half" )
+	{
+		return TypeDesc::HALF;
+	}
+	else if( dataType == "float" )
+	{
+		return TypeDesc::FLOAT;
+	}
+	else if( dataType == "double" )
+	{
+		return TypeDesc::DOUBLE;
+	}
+
+	throw IECore::Exception( "Unknown data type for " + infoFormatName + " file write : " + dataType );
+}
+
+void setImageSpecFormatOptions( const ImageWriter *node, const ImageOutput *out, ImageSpec *spec, const std::vector<std::string> &channelDataTypes, const std::string &fileFormatName )
+{
+	if( !channelDataTypes.size() )
+	{
+		return;
+	}
+
+	bool allSame = std::all_of( channelDataTypes.begin(), channelDataTypes.end(),
+		[channelDataTypes] ( const std::string& t ) { return t == channelDataTypes.front(); }
+	);
+
+	if( allSame )
+	{
+		std::string allDataType = channelDataTypes.front();
+		if( allDataType == "" )
+		{
+			return;  // Nothing is setting a data type
+		}
+
+		// dpx has some special data types that don't have an oiio TypeDesc, and must be set as a global
+		// flag in the spec
+		if( fileFormatName == "dpx" && allDataType == "uint10" )
+		{
+			spec->attribute ("oiio:BitsPerSample", 10);
+			allDataType = "uint16";
+		}
+		else if( fileFormatName == "dpx" && allDataType == "uint12" )
+		{
+			spec->attribute ("oiio:BitsPerSample", 12);
+			allDataType = "uint16";
+		}
+
+
+		// Since all the channels have the same data type, it's OK if the data type affects
+		// other parts of the spec, so we pass the spec in for possible modification
+		spec->set_format( dataTypeToOiioType( allDataType, fileFormatName ) );
+	}
+	else
+	{
+		if( !out->supports( "channelformats" ) )
+		{
+			throw IECore::Exception( "File format " + fileFormatName + " does not support per-channel data types" );
+		}
+
+		assert( spec->nchannels == (int)channelDataTypes.size() );
+
+		spec->channelformats.resize( spec->nchannels );
+
+		for( int i = 0; i < spec->nchannels; i++ )
+		{
+			spec->channelformats[ i ] = dataTypeToOiioType( channelDataTypes[i], fileFormatName );
+		}
 	}
 }
 
@@ -1266,10 +1275,10 @@ ImageSpec createImageSpec( const ImageWriter *node, const ImageOutput *out, cons
 
 	metadataToImageSpecAttributes( metadata.get(), spec );
 
-	// Apply the spec format options. Note this must happen
+	// Apply the spec tiling and compression options. Note this must happen
 	// after we transfer the input metadata to ensure the
 	// settings override anything from upstream data.
-	setImageSpecFormatOptions( node, &spec, fileFormatName );
+	setImageSpecTilingAndCompressionOptions( node, &spec, fileFormatName );
 
 	// Add common attribs to the spec
 	spec.attribute( "Software", std::string( "Gaffer " ) + Gaffer::versionString() );
@@ -1359,8 +1368,8 @@ std::string cleanExcessDots( std::string name )
 	return name;
 }
 
-// Get the EXR names for the view, part, and channel for a Gaffer channel
-std::tuple< std::string, std::string > partChannelName( const ImageWriter *node, const std::string &view, const std::string &gafferChannel, const std::vector< std::string > &viewNames, bool isDeep )
+// Get the EXR names for the part, and channel for a Gaffer channel, along with the channel's data type
+std::tuple< std::string, std::string, std::string > partChannelNameDataType( const ImageWriter *node, const StringPlug *dataTypePlug, const std::string &view, const std::string &gafferChannel, const std::vector< std::string > &viewNames, bool isDeep )
 {
 	std::string layer = ImageAlgo::layerName( gafferChannel );
 	std::string baseName = ImageAlgo::baseName( gafferChannel );
@@ -1438,7 +1447,8 @@ std::tuple< std::string, std::string > partChannelName( const ImageWriter *node,
 
 	return std::make_tuple(
 		cleanExcessDots( node->layoutPartNamePlug()->getValue() ),
-		cleanExcessDots( node->layoutChannelNamePlug()->getValue() )
+		cleanExcessDots( node->layoutChannelNamePlug()->getValue() ),
+		dataTypePlug ? dataTypePlug->getValue() : ""
 	);
 }
 
@@ -1764,7 +1774,7 @@ ImageWriter::DefaultColorSpaceFunction &ImageWriter::defaultColorSpaceFunction()
 	return *g_colorSpaceFunction;
 }
 
-std::string ImageWriter::colorSpace() const
+std::string ImageWriter::colorSpace( const std::string &dataType ) const
 {
 	std::string colorSpace = colorSpacePlug()->getValue();
 	if( colorSpace != "" )
@@ -1776,15 +1786,6 @@ std::string ImageWriter::colorSpace() const
 	if( fileFormat.empty() )
 	{
 		return "";
-	}
-
-	std::string dataType;
-	if( const ValuePlug *optionsPlug = this->getChild<ValuePlug>( fileFormat ) )
-	{
-		if( const StringPlug *dataTypePlug = optionsPlug->getChild<StringPlug>( g_dataTypePlugName ) )
-		{
-			dataType = dataTypePlug->getValue();
-		}
 	}
 
 	ConstCompoundDataPtr metadata = inPlug()->metadataPlug()->getValue();
@@ -1854,6 +1855,9 @@ void ImageWriter::execute() const
 
 		// The EXR names corresponding to each channel
 		std::vector< std::string > channelNames;
+
+		// The data type names corresponding to each channel
+		std::vector< std::string > channelDataTypes;
 	};
 
 	std::vector< Part > parts;
@@ -1874,6 +1878,11 @@ void ImageWriter::execute() const
 	Context::EditableScope executeScope( Context::current() );
 
 	std::string constantColorSpaceStr;
+
+	const ValuePlug *optionsPlug = this->getChild<ValuePlug>( out->format_name() );
+	const StringPlug *dataTypePlug = optionsPlug ? optionsPlug->getChild<StringPlug>( g_dataTypePlugName ) : nullptr;
+	const StringPlug *depthDataTypePlug = optionsPlug ? optionsPlug->getChild<StringPlug>( g_depthDataTypePlugName ) : nullptr;
+	std::string depthDataTypeOverride = depthDataTypePlug ? depthDataTypePlug->getValue() : "";
 
 	for( const std::string &viewName : viewNames )
 	{
@@ -1929,9 +1938,27 @@ void ImageWriter::execute() const
 		// basic RGBA channels coming first
 		channelsToWrite = ImageAlgo::sortedChannelNames( channelsToWrite );
 
+		bool hasAlpha = false;
+
+		std::string viewDataType = "";
+
 		for( const string &i : channelsToWrite )
 		{
-			const auto & [ partName, channelName ] = partChannelName( this, viewName, i, viewNames, defaultSpec.deep );
+			const auto & [ partName, channelName, requestedDataType ] = partChannelNameDataType( this, dataTypePlug, viewName, i, viewNames, defaultSpec.deep );
+
+			std::string dataType = requestedDataType;
+			if( depthDataTypeOverride != "" && ( i == "Z" || i == "ZBack" ) )
+			{
+				dataType = depthDataTypeOverride;
+			}
+
+			// It's kinda weird for the colorspace to depend on the data type, when the data type could potentially
+			// be different for every channel.  We just take the data type from the first channel, which is at
+			// least backwards compatible to work fine for images where all channels have the same data type.
+			if( viewDataType == "" )
+			{
+				viewDataType = dataType;
+			}
 
 			// Note that `partName = partName` is a hack to get around an issue with capturing from a
 			// structured binding.  GCC allows it, but the C++17 spec doesn't, and it doesn't work in our
@@ -1943,7 +1970,7 @@ void ImageWriter::execute() const
 
 			if( partIndex >= parts.size() )
 			{
-				parts.push_back( { partName, { viewName }, defaultSpec, imageFormat, dataWindow, {}, {} } );
+				parts.push_back( { partName, { viewName }, defaultSpec, imageFormat, dataWindow, {}, {}, {} } );
 			}
 			else
 			{
@@ -1964,13 +1991,15 @@ void ImageWriter::execute() const
 
 			parts[ partIndex ].channels.push_back( viewName + "." + i );
 			parts[ partIndex ].channelNames.push_back( channelName );
-			bool hasAlpha = false;
+			parts[ partIndex ].channelDataTypes.push_back( dataType );
+
 			if( channelName == "A" )
 			{
 				hasAlpha = true;
 			}
-			colorSpaceByView[ viewName ] = std::make_pair( colorSpace(), hasAlpha );
 		}
+
+		colorSpaceByView[ viewName ] = std::make_pair( colorSpace( viewDataType ), hasAlpha );
 	}
 
 	// viewNameContext is set to a different value on each loop - don't leave an orphaned context value
@@ -2055,7 +2084,7 @@ void ImageWriter::execute() const
 			}
 		}
 
-		setImageSpecFormatChannelOptions( this, &part.spec, out->format_name() );
+		setImageSpecFormatOptions( this, out.get(), &part.spec, part.channelDataTypes, out->format_name() );
 
 
 		setImageSpecDataWindow( part.spec, part.processDataWindow, out.get(), part.imageFormat );
