@@ -1570,5 +1570,9 @@ unsigned ImageGadget::layerMask() const
 
 Imath::Box3f ImageGadget::renderBound() const
 {
-	return bound();
+	// The render bound can extend beyond the display window, and there isn't much to gain by
+	// culling ImageGadgets, so just return an infinite bound
+	Box3f b;
+	b.makeInfinite();
+	return b;
 }
