@@ -82,6 +82,46 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
+		"view" : [
+
+			"description",
+			"""
+			Chooses view to display from a multi-view image.  The "default" view is used for normal images
+			that don't have specific views.
+			""",
+
+			"plugValueWidget:type", "GafferImageUI.ImageViewUI._ImageView_ViewPlugValueWidget",
+			"toolbarLayout:width", 175,
+			"label", "",
+
+		],
+
+		"channels" : [
+
+			"description",
+			"""
+			Chooses an RGBA layer or an auxiliary channel to display.
+			""",
+
+			"plugValueWidget:type", "GafferImageUI.ImageViewUI._ChannelsPlugValueWidget",
+			"toolbarLayout:width", 175,
+			"label", "",
+
+		],
+
+		"soloChannel" : [
+
+			"description",
+			"""
+			Chooses a channel to show in isolation.
+			""",
+
+			"plugValueWidget:type", "GafferImageUI.ImageViewUI._SoloChannelPlugValueWidget",
+			"toolbarLayout:divider", True,
+			"label", "",
+
+		],
+
 		"clipping" : [
 
 			"description",
@@ -93,7 +133,6 @@ Gaffer.Metadata.registerNode(
 			"togglePlugValueWidget:imagePrefix", "clipping",
 			"togglePlugValueWidget:defaultToggleValue", True,
 			"toolbarLayout:divider", True,
-			"toolbarLayout:index", 4,
 
 		],
 
@@ -107,7 +146,6 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type", "GafferImageUI.ImageViewUI._TogglePlugValueWidget",
 			"togglePlugValueWidget:imagePrefix", "exposure",
 			"togglePlugValueWidget:defaultToggleValue", 1,
-			"toolbarLayout:index", 5,
 
 		],
 
@@ -121,7 +159,6 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type", "GafferImageUI.ImageViewUI._TogglePlugValueWidget",
 			"togglePlugValueWidget:imagePrefix", "gamma",
 			"togglePlugValueWidget:defaultToggleValue", 2,
-			"toolbarLayout:index", 6,
 
 		],
 
@@ -135,7 +172,6 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 			"label", "",
 			"toolbarLayout:width", 100,
-			"toolbarLayout:index", 7,
 
 			"presetNames", lambda plug : IECore.StringVectorData( GafferImageUI.ImageView.registeredDisplayTransforms() ),
 			"presetValues", lambda plug : IECore.StringVectorData( GafferImageUI.ImageView.registeredDisplayTransforms() ),
@@ -149,16 +185,13 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"plugValueWidget:type", "GafferImageUI.ImageViewUI._LutGPUPlugValueWidget",
-			"toolbarLayout:index", 8,
 			"label", "",
 			"layout:activator", "gpuAvailable",
 		],
 
-
 		"colorInspector" : [
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 			"toolbarLayout:section", "Bottom",
-			"toolbarLayout:index", 1,
 		],
 
 		"colorInspector.evaluator" : [
@@ -179,49 +212,6 @@ Gaffer.Metadata.registerNode(
 			"label", "",
 			"plugValueWidget:type", "GafferImageUI.ImageViewUI._ColorInspectorPlugValueWidget",
 			"layout:index", lambda plug : 1024-int( "".join( ['0'] + [ i for i in plug.getName() if i.isdigit() ] ) )
-		],
-
-		"view" : [
-
-			"description",
-			"""
-			Chooses view to display from a multi-view image.  The "default" view is used for normal images
-			that don't have specific views.
-			""",
-
-			"plugValueWidget:type", "GafferImageUI.ImageViewUI._ImageView_ViewPlugValueWidget",
-			"toolbarLayout:index", 2,
-			"toolbarLayout:width", 175,
-			"label", "",
-
-		],
-
-		"channels" : [
-
-			"description",
-			"""
-			Chooses an RGBA layer or an auxiliary channel to display.
-			""",
-
-			"plugValueWidget:type", "GafferImageUI.ImageViewUI._ChannelsPlugValueWidget",
-			"toolbarLayout:index", 2,
-			"toolbarLayout:width", 175,
-			"label", "",
-
-		],
-
-		"soloChannel" : [
-
-			"description",
-			"""
-			Chooses a channel to show in isolation.
-			""",
-
-			"plugValueWidget:type", "GafferImageUI.ImageViewUI._SoloChannelPlugValueWidget",
-			"toolbarLayout:index", 3,
-			"toolbarLayout:divider", True,
-			"label", "",
-
 		],
 
 	}

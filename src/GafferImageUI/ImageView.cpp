@@ -91,104 +91,6 @@ using namespace GafferImage;
 using namespace GafferImageUI;
 
 //////////////////////////////////////////////////////////////////////////
-/// Implementation of ImageView::ChannelChooser
-//////////////////////////////////////////////////////////////////////////
-
-class ImageView::ChannelChooser : public Signals::Trackable
-{
-
-	public :
-
-		ChannelChooser( ImageView *view )
-			:	m_view( view )
-		{
-			StringVectorDataPtr channelsDefaultData = new StringVectorData;
-			std::vector<std::string> &channelsDefault = channelsDefaultData->writable();
-			channelsDefault.push_back( "R" );
-			channelsDefault.push_back( "G" );
-			channelsDefault.push_back( "B" );
-			channelsDefault.push_back( "A" );
-
-			view->addChild( new StringVectorDataPlug( "channels", Plug::In, channelsDefaultData ) );
-
-			view->addChild(
-				new IntPlug(
-					"soloChannel",
-					Plug::In,
-					/* defaultValue = */ -1,
-					/* minValue = */ -2,
-					/* maxValue = */ 3
-				)
-			);
-
-			m_view->plugSetSignal().connect( boost::bind( &ChannelChooser::plugSet, this, ::_1 ) );
-			m_view->viewportGadget()->keyPressSignal().connect( boost::bind( &ChannelChooser::keyPress, this, ::_2 ) );
-
-		}
-
-	private :
-
-		StringVectorDataPlug *channelsPlug()
-		{
-			return m_view->getChild<StringVectorDataPlug>( "channels" );
-		}
-
-		IntPlug *soloChannelPlug()
-		{
-			return m_view->getChild<IntPlug>( "soloChannel" );
-		}
-
-		void plugSet( const Gaffer::Plug *plug )
-		{
-			if( plug == soloChannelPlug() )
-			{
-				m_view->setSoloChannel( soloChannelPlug()->getValue() );
-			}
-			else if( plug == channelsPlug() )
-			{
-				ConstStringVectorDataPtr channelsData = channelsPlug()->getValue();
-				const std::vector<std::string> &channels = channelsData->readable();
-				ImageGadget::Channels c;
-				for( size_t i = 0; i < std::min( channels.size(), (size_t)4 ); ++i )
-				{
-					c[i] = channels[i];
-				}
-
-				ImageGadget *imageGadget = static_cast<ImageGadget *>(
-					m_view->viewportGadget()->getPrimaryChild()
-				);
-				imageGadget->setChannels( c );
-			}
-		}
-
-		bool keyPress( const GafferUI::KeyEvent &event )
-		{
-			if( event.modifiers )
-			{
-				return false;
-			}
-
-			const char *rgbal[5] = { "R", "G", "B", "A", "L" };
-			for( int i = 0; i < 5; ++i )
-			{
-				if( event.key == rgbal[i] )
-				{
-					int soloChannel = i < 4 ? i : -2;
-					soloChannelPlug()->setValue(
-						soloChannelPlug()->getValue() == soloChannel ? -1 : soloChannel
-					);
-					return true;
-				}
-			}
-
-			return false;
-		}
-
-		ImageView *m_view;
-
-};
-
-//////////////////////////////////////////////////////////////////////////
 /// Implementation of ImageView::ColorInspector
 //////////////////////////////////////////////////////////////////////////
 
@@ -1222,6 +1124,22 @@ ImageView::ImageView( const std::string &name )
 	ImagePlugPtr preprocessorInput = new ImagePlug( "in" );
 	preprocessor->addChild( preprocessorInput );
 
+	addChild( new StringPlug( "view", Plug::In, "default", Plug::Default & ~Plug::AcceptsInputs ) );
+
+	StringVectorDataPtr channelsDefaultData = new StringVectorData;
+	channelsDefaultData->writable() = { "R", "G", "B", "A" };
+	addChild( new StringVectorDataPlug( "channels", Plug::In, channelsDefaultData ) );
+
+	addChild(
+		new IntPlug(
+			"soloChannel",
+			Plug::In,
+			/* defaultValue = */ -1,
+			/* minValue = */ -2,
+			/* maxValue = */ 3
+		)
+	);
+
 	BoolPlugPtr clippingPlug = new BoolPlug( "clipping", Plug::In, false, Plug::Default & ~Plug::AcceptsInputs );
 	addChild( clippingPlug );
 
@@ -1267,11 +1185,8 @@ ImageView::ImageView( const std::string &name )
 	m_imageGadget->setContext( getContext() );
 	viewportGadget()->setPrimaryChild( m_imageGadget );
 
-	addChild( new StringPlug( "view", Plug::In, "default", Plug::Default & ~Plug::AcceptsInputs ) );
-
 	selectView->viewPlug()->setInput( viewPlug() );
 
-	m_channelChooser.reset( new ChannelChooser( this ) );
 	m_colorInspector.reset( new ColorInspector( this ) );
 }
 
@@ -1332,6 +1247,26 @@ ImageView::~ImageView()
 	// https://github.com/GafferHQ/gaffer/issues/4221
 	plugInputChangedSignal().disconnectAllSlots();
 	plugDirtiedSignal().disconnectAllSlots();
+}
+
+StringVectorDataPlug *ImageView::channelsPlug()
+{
+	return getChild<StringVectorDataPlug>( "channels" );
+}
+
+const StringVectorDataPlug *ImageView::channelsPlug() const
+{
+	return getChild<StringVectorDataPlug>( "channels" );
+}
+
+IntPlug *ImageView::soloChannelPlug()
+{
+	return getChild<IntPlug>( "soloChannel" );
+}
+
+const IntPlug *ImageView::soloChannelPlug() const
+{
+	return getChild<IntPlug>( "soloChannel" );
 }
 
 Gaffer::BoolPlug *ImageView::clippingPlug()
@@ -1412,7 +1347,26 @@ void ImageView::setContext( Gaffer::ContextPtr context )
 
 void ImageView::plugSet( Gaffer::Plug *plug )
 {
-	if( plug == clippingPlug() )
+	if( plug == soloChannelPlug() )
+	{
+		int soloChannel = soloChannelPlug()->getValue();
+		m_imageGadget->setSoloChannel( soloChannel );
+		m_soloChannel->writable() = soloChannel;
+		updateDisplayTransform();
+	}
+	else if( plug == channelsPlug() )
+	{
+		ConstStringVectorDataPtr channelsData = channelsPlug()->getValue();
+		const std::vector<std::string> &channels = channelsData->readable();
+		ImageGadget::Channels c;
+		for( size_t i = 0; i < std::min( channels.size(), (size_t)4 ); ++i )
+		{
+			c[i] = channels[i];
+		}
+
+		m_imageGadget->setChannels( c );
+	}
+	else if( plug == clippingPlug() )
 	{
 		m_imageGadget->setClipping( clippingPlug()->getValue() );
 	}
@@ -1437,6 +1391,24 @@ void ImageView::plugSet( Gaffer::Plug *plug )
 
 bool ImageView::keyPress( const GafferUI::KeyEvent &event )
 {
+
+	// Check all the solo hotkeys
+	if( !event.modifiers )
+	{
+		const char *rgbal[5] = { "R", "G", "B", "A", "L" };
+		for( int i = 0; i < 5; ++i )
+		{
+			if( event.key == rgbal[i] )
+			{
+				int soloChannel = i < 4 ? i : -2;
+				soloChannelPlug()->setValue(
+					soloChannelPlug()->getValue() == soloChannel ? -1 : soloChannel
+				);
+				return true;
+			}
+		}
+	}
+
 	if( event.key == "F" && !event.modifiers )
 	{
 		const Box3f b = m_imageGadget->bound();
@@ -1514,14 +1486,6 @@ void ImageView::preRender()
 
 	viewportGadget()->frame( b );
 	m_framed = true;
-}
-
-void ImageView::setSoloChannel( int soloChannel )
-{
-	ImageGadget *imageGadget = static_cast<ImageGadget *>( viewportGadget()->getPrimaryChild() );
-	imageGadget->setSoloChannel( soloChannel );
-	m_soloChannel->writable() = soloChannel;
-	updateDisplayTransform();
 }
 
 void ImageView::insertDisplayTransform()

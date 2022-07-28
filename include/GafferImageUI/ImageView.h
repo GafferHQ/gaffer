@@ -47,6 +47,7 @@
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/TypedPlug.h"
+#include "Gaffer/TypedObjectPlug.h"
 
 #include <functional>
 #include <memory>
@@ -88,6 +89,12 @@ class GAFFERIMAGEUI_API ImageView : public GafferUI::View
 		~ImageView() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImageUI::ImageView, ImageViewTypeId, GafferUI::View );
+
+		Gaffer::StringVectorDataPlug *channelsPlug();
+		const Gaffer::StringVectorDataPlug *channelsPlug() const;
+
+		Gaffer::IntPlug *soloChannelPlug();
+		const Gaffer::IntPlug *soloChannelPlug() const;
 
 		Gaffer::BoolPlug *clippingPlug();
 		const Gaffer::BoolPlug *clippingPlug() const;
@@ -159,8 +166,6 @@ class GAFFERIMAGEUI_API ImageView : public GafferUI::View
 		/// preprocessor is managed by the ImageView base class.
 		void insertConverter( Gaffer::NodePtr converter );
 
-		void setSoloChannel( int soloChannel );
-
 	private :
 
 		void plugSet( Gaffer::Plug *plug );
@@ -187,8 +192,6 @@ class GAFFERIMAGEUI_API ImageView : public GafferUI::View
 		ImageGadgetPtr m_imageGadget;
 		bool m_framed;
 
-		class ChannelChooser;
-		std::unique_ptr<ChannelChooser> m_channelChooser;
 		class ColorInspector;
 		std::unique_ptr<ColorInspector> m_colorInspector;
 
