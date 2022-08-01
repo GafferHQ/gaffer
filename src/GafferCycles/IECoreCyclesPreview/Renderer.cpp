@@ -1008,15 +1008,11 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 			// Light shader
 
-			const IECoreScene::ShaderNetwork *lightShaderAttribute = attribute<IECoreScene::ShaderNetwork>( g_lightAttributeName, attributes );
-			if( lightShaderAttribute )
+			m_lightAttribute = attribute<IECoreScene::ShaderNetwork>( g_lightAttributeName, attributes );
+			if( m_lightAttribute )
 			{
 				IECore::MurmurHash h;
-				m_lightShader = m_shaderCache->get( lightShaderAttribute, nullptr, nullptr, attributes, h );
-				// This is just to store data that is attached to the lights.
-				/// \todo Not sure there's any benefit to using a `ccl:light` just as a container here?
-				/// Can't we just store the CompoundData?
-				m_light = CLightPtr( IECoreCycles::ShaderNetworkAlgo::convert( lightShaderAttribute ) );
+				m_lightShader = m_shaderCache->get( m_lightAttribute.get(), nullptr, nullptr, attributes, h );
 			}
 		}
 
@@ -1153,28 +1149,8 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 		bool applyLight( ccl::Light *light, const CyclesAttributes *previousAttributes ) const
 		{
-			if( ccl::Light *clight = m_light.get() )
-			{
-				light->set_light_type( clight->get_light_type() );
-				light->set_size( clight->get_size() );
-				light->set_map_resolution( clight->get_map_resolution() );
-				light->set_spot_angle( clight->get_spot_angle() );
-				light->set_spot_smooth( clight->get_spot_smooth() );
-				light->set_cast_shadow( clight->get_cast_shadow() );
-				light->set_use_mis( clight->get_use_mis() );
-				light->set_use_diffuse( clight->get_use_diffuse() );
-				light->set_use_glossy( clight->get_use_glossy() );
-				light->set_use_transmission( clight->get_use_transmission() );
-				light->set_use_scatter( clight->get_use_scatter() );
-				light->set_max_bounces( clight->get_max_bounces() );
-				light->set_is_portal( clight->get_is_portal() );
-				light->set_is_enabled( clight->get_is_enabled() );
-				light->set_strength( clight->get_strength() );
-				light->set_angle( clight->get_angle() );
-#ifdef WITH_CYCLES_LIGHTGROUPS
-				light->set_lightgroup( clight->get_lightgroup() );
-#endif
-			}
+			ShaderNetworkAlgo::convertLight( m_lightAttribute.get(), light );
+
 			if( m_lightShader )
 			{
 				ShaderAssignPair pair = ShaderAssignPair( light, ccl::array<ccl::Node*>() );
@@ -1505,7 +1481,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			}
 		};
 
-		CLightPtr m_light;
+		IECoreScene::ConstShaderNetworkPtr m_lightAttribute;
 		CyclesShaderPtr m_lightShader;
 		CyclesShaderPtr m_shader;
 		IECore::MurmurHash m_shaderHash;

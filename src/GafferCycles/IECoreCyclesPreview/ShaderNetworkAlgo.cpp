@@ -612,56 +612,6 @@ ccl::Shader *convert( const IECoreScene::ShaderNetwork *surfaceShader,
 	return result;
 }
 
-ccl::Light *convert( const IECoreScene::ShaderNetwork *shaderNetwork )
-{
-	ShaderNetworkPtr networkCopy;
-	if( true ) // todo : make conditional on OSL < 1.10
-	{
-		networkCopy = shaderNetwork->copy();
-		IECoreScene::ShaderNetworkAlgo::convertOSLComponentConnections( networkCopy.get() );
-		shaderNetwork = networkCopy.get();
-	}
-
-	ccl::Light *result = new ccl::Light();
-
-	const InternedString output = shaderNetwork->getOutput().shader;
-	if( output.string().empty() )
-	{
-		msg( Msg::Warning, "IECoreCycles::ShaderNetworkAlgo", "Output has no light shader" );
-	}
-	else
-	{
-		// First apply the parameters to the light
-		const IECoreScene::Shader *lightShader = shaderNetwork->getShader( output );
-		for( const auto &namedParameter : lightShader->parameters() )
-		{
-			// Skip the ones which don't exist but we need for the Gaffer UI widget updates
-			if( namedParameter.first == "exposure" ||
-				namedParameter.first == "intensity" ||
-				namedParameter.first == "color" ||
-				namedParameter.first == "image" ||
-				namedParameter.first == "coneAngle" ||
-				namedParameter.first == "penumbraAngle" )
-				{
-					continue;
-				}
-			if( namedParameter.first == "angle" )
-			{
-				if( const FloatData *data = static_cast<const FloatData *>( namedParameter.second.get() ) )
-				{
-					result->set_angle( 2 * M_PI * ( data->readable() / 360.0f ) );
-				}
-				continue;
-			}
-			else
-			{
-				SocketAlgo::setSocket( (ccl::Node*)result, namedParameter.first, namedParameter.second.get() );
-			}
-		}
-	}
-	return result;
-}
-
 void convertAOV( const IECoreScene::ShaderNetwork *shaderNetwork, ccl::ShaderGraph *graph, ccl::ShaderManager *shaderManager, const std::string &namePrefix )
 {
 	ShaderMap converted;
@@ -733,6 +683,44 @@ bool hasOSL( const ccl::Shader *cshader )
 			return true;
 	}
 	return false;
+}
+
+void convertLight( const IECoreScene::ShaderNetwork *light, ccl::Light *cyclesLight )
+{
+	const IECoreScene::Shader *lightShader = light->outputShader();
+	if( !lightShader )
+	{
+		msg( Msg::Warning, "IECoreCycles::ShaderNetworkAlgo::convertLight", "ShaderNetwork has no output shader" );
+		return;
+	}
+
+	for( const auto &[name, value] : lightShader->parameters() )
+	{
+		// Skip "virtual" parameters which don't actually exist in Cycles.
+		if(
+			name == "exposure" ||
+			name == "intensity" ||
+			name == "color" ||
+			name == "image" ||
+			name == "coneAngle" ||
+			name == "penumbraAngle"
+		)
+		{
+			continue;
+		}
+
+		if( name == "angle" )
+		{
+			if( const FloatData *data = static_cast<const FloatData *>( value.get() ) )
+			{
+				cyclesLight->set_angle( 2 * M_PI * ( data->readable() / 360.0f ) );
+			}
+		}
+		else
+		{
+			SocketAlgo::setSocket( cyclesLight, name, value.get() );
+		}
+	}
 }
 
 } // namespace ShaderNetworkAlgo

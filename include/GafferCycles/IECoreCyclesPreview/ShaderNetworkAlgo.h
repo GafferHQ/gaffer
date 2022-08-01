@@ -70,11 +70,15 @@ IECORECYCLES_API ccl::Shader *convert( const IECoreScene::ShaderNetwork *surface
                                        const IECoreScene::ShaderNetwork *volumeShader,
                                        ccl::ShaderManager *shaderManager,
                                        const std::string &namePrefix = "" );
-IECORECYCLES_API ccl::Light  *convert( const IECoreScene::ShaderNetwork *shaderNetwork );
 IECORECYCLES_API void convertAOV( const IECoreScene::ShaderNetwork *shaderNetwork, ccl::ShaderGraph *graph, ccl::ShaderManager *shaderManager, const std::string &namePrefix = "" );
 IECORECYCLES_API void setSingleSided( ccl::ShaderGraph *graph );
 IECORECYCLES_API ccl::Shader *createDefaultShader();
 IECORECYCLES_API bool hasOSL( const ccl::Shader *cshader );
+
+// Light conversion
+// ----------------
+
+IECORECYCLES_API void convertLight( const IECoreScene::ShaderNetwork *light, ccl::Light *cyclesLight );
 
 } // namespace ShaderNetworkAlgo
 
