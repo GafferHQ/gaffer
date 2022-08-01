@@ -267,7 +267,7 @@ if os.environ.get( "GAFFERAPPLESEED_HIDE_UI", "" ) != "1" :
 
 # Add standard cycles AOVs
 
-if os.environ.get( "GAFFERCYCLES_HIDE_UI", "" ) != "1" :
+if os.environ.get( "CYCLES_ROOT" ) and os.environ.get( "GAFFERCYCLES_HIDE_UI", "" ) != "1" :
 
 	with IECore.IgnoredExceptions( ImportError ) :
 

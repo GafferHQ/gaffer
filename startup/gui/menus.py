@@ -273,7 +273,7 @@ if "APPLESEED" in os.environ :
 
 # Cycles nodes
 
-if moduleSearchPath.find( "GafferCycles" ) :
+if os.environ.get( "CYCLES_ROOT" ) and moduleSearchPath.find( "GafferCycles" ) :
 
 	try :
 
