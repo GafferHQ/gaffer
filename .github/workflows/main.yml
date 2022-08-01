@@ -71,7 +71,7 @@ jobs:
             sconsCacheMegabytes: 400
 
           - name: windows-python3
-            os: windows-2016
+            os: windows-2019
             buildType: RELEASE
             variant: windows-python3
             publish: false
