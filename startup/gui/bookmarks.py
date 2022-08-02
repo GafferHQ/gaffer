@@ -43,6 +43,17 @@ bookmarks.setDefault( os.getcwd() )
 bookmarks.add( "Home", os.path.expandvars( "$HOME" ) )
 bookmarks.add( "Desktop", os.path.expandvars( "$HOME/Desktop" ) )
 
+if os.name == "nt" :
+	import string
+	from ctypes import windll
+
+	driveMask = windll.kernel32.GetLogicalDrives()
+	for letter in string.ascii_uppercase :
+		if driveMask & 1 :
+			bookmarks.add( "Drives/" + letter + ":", letter + ":/" )
+
+		driveMask >>= 1
+
 fontBookmarks = GafferUI.Bookmarks.acquire( application, category="font" )
 fontBookmarks.add( "Gaffer Fonts", os.path.expandvars( "$GAFFER_ROOT/fonts" ) )
 
