@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2022, Cinesite VFX Ltd. All rights reserved.
+#  Copyright (c) 2022, John Haddon. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
 #
-#      * Neither the name of Image Engine Design Inc nor the names of
+#      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
@@ -34,12 +34,22 @@
 #
 ##########################################################################
 
-from .CyclesLightTest import CyclesLightTest
-from .InteractiveCyclesRenderTest import InteractiveCyclesRenderTest
-from .ModuleTest import ModuleTest
+import unittest
 
-from .IECoreCyclesPreviewTest import *
+import IECore
+
+import GafferSceneTest
+import GafferCycles
+
+class CyclesLightTest( GafferSceneTest.SceneTestCase ) :
+
+	def testLoadAllLightsWithoutWarnings( self ) :
+
+		for light in GafferCycles.lights :
+			with IECore.CapturingMessageHandler() as mh :
+				node = GafferCycles.CyclesLight()
+				node.loadShader( light )
+				self.assertEqual( [ m.message for m in mh.messages ], [], "Error loading %s" % light )
 
 if __name__ == "__main__":
-	import unittest
 	unittest.main()
