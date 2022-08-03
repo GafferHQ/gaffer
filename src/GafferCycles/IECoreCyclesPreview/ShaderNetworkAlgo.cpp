@@ -42,6 +42,7 @@
 #include "IECoreScene/Shader.h"
 #include "IECoreScene/ShaderNetworkAlgo.h"
 
+#include "IECore/AngleConversion.h"
 #include "IECore/LRUCache.h"
 #include "IECore/MessageHandler.h"
 #include "IECore/SearchPath.h"
@@ -701,19 +702,22 @@ void convertLight( const IECoreScene::ShaderNetwork *light, ccl::Light *cyclesLi
 			name == "exposure" ||
 			name == "intensity" ||
 			name == "color" ||
-			name == "image" ||
-			name == "coneAngle" ||
-			name == "penumbraAngle"
+			name == "image"
 		)
 		{
 			continue;
 		}
 
-		if( name == "angle" )
+		if( name == "angle" || name == "spot_angle" )
 		{
+			// The Cycles API uses radians, but we use degrees, as anything else is
+			// just baffling for users.
 			if( const FloatData *data = static_cast<const FloatData *>( value.get() ) )
 			{
-				cyclesLight->set_angle( 2 * M_PI * ( data->readable() / 360.0f ) );
+				cyclesLight->set(
+					*( cyclesLight->type->find_input( ccl::ustring( name.c_str() ) ) ),
+					IECore::degreesToRadians( data->readable() )
+				);
 			}
 		}
 		else

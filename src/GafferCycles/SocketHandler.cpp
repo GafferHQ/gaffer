@@ -49,6 +49,7 @@
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/TypedPlug.h"
 
+#include "IECore/AngleConversion.h"
 #include "IECore/MessageHandler.h"
 
 #include "boost/algorithm/string.hpp"
@@ -74,44 +75,14 @@ namespace
 {
 
 template<typename PlugType>
-Gaffer::Plug *setupNumericPlug( const ccl::NodeType *nodeType, const ccl::SocketType socketType, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction )
+Gaffer::Plug *setupNumericPlug( const ccl::NodeType *nodeType, const ccl::SocketType &socketType, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction, typename PlugType::ValueType defaultValue )
 {
 	using ValueType = typename PlugType::ValueType;
 
-	ValueType defaultValue(0);
 	ValueType minValue = Imath::limits<ValueType>::min();
-	ValueType maxValue = Imath::limits<ValueType>::max();
-
-	switch( socketType.type )
+	if( socketType.type == ccl::SocketType::UINT )
 	{
-		case ccl::SocketType::INT:
-		case ccl::SocketType::ENUM:
-		{
-			const int *var = (int*)socketType.default_value;
-			defaultValue = ValueType( *var );
-			break;
-		}
-		case ccl::SocketType::UINT:
-		{
-			const unsigned *var = (unsigned*)socketType.default_value;
-			defaultValue = ValueType( *var );
-			minValue = 0;
-			break;
-		}
-		case ccl::SocketType::FLOAT:
-		{
-			const float *var = (float*)socketType.default_value;
-			defaultValue = ValueType( *var );
-			break;
-		}
-		case ccl::SocketType::BOOLEAN:
-		{
-			const bool *var = (bool*)socketType.default_value;
-			defaultValue = ValueType( *var );
-			break;
-		}
-		default:
-			break;
+		minValue = 0;
 	}
 
 	string name = boost::replace_first_copy( string( socketType.name.c_str() ), ".", "__" );
@@ -120,15 +91,13 @@ Gaffer::Plug *setupNumericPlug( const ccl::NodeType *nodeType, const ccl::Socket
 		existingPlug &&
 		existingPlug->direction() == direction &&
 		existingPlug->defaultValue() == defaultValue &&
-		existingPlug->minValue() == minValue &&
-		existingPlug->maxValue() == maxValue
+		existingPlug->minValue() == minValue
 	)
 	{
-		existingPlug->setFlags( Gaffer::Plug::Dynamic, false );
 		return existingPlug;
 	}
 
-	typename PlugType::Ptr plug = new PlugType( name, direction, defaultValue, minValue, maxValue, Plug::Default );
+	typename PlugType::Ptr plug = new PlugType( name, direction, defaultValue, minValue, Imath::limits<ValueType>::max(), Plug::Default );
 	PlugAlgo::replacePlug( plugParent, plug );
 
 	return plug.get();
@@ -331,12 +300,18 @@ Gaffer::Plug *setupPlug( const ccl::NodeType *nodeType, const ccl::SocketType so
 		case ccl::SocketType::INT :
 		case ccl::SocketType::UINT :
 
-			plug = setupNumericPlug<IntPlug>( nodeType, socketType, plugParent, direction );
+			plug = setupNumericPlug<IntPlug>(
+				nodeType, socketType, plugParent, direction,
+				*static_cast<const int *>( socketType.default_value )
+			);
 			break;
 
 		case ccl::SocketType::FLOAT :
 
-			plug = setupNumericPlug<FloatPlug>( nodeType, socketType, plugParent, direction );
+			plug = setupNumericPlug<FloatPlug>(
+				nodeType, socketType, plugParent, direction,
+				*static_cast<const float *>( socketType.default_value )
+			);
 			break;
 
 		case ccl::SocketType::BOOLEAN :
@@ -564,11 +539,16 @@ void setupLightPlugs( const std::string &shaderName, const ccl::NodeType *nodeTy
 	if( shaderName == "spot_light" )
 	{
 		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "size" ) )), plugsParent, Gaffer::Plug::In ) );
-		//validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "spot_angle" ) )), plugsParent, Gaffer::Plug::In ) );
-		//validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "spot_smooth" ) )), plugsParent, Gaffer::Plug::In ) );
-		// We make the light cone act more like Arnold
-		validPlugs.insert( setupTypedPlug<FloatPlug>( "coneAngle", plugsParent, Gaffer::Plug::In, 30.0f ) );
-		validPlugs.insert( setupTypedPlug<FloatPlug>( "penumbraAngle", plugsParent, Gaffer::Plug::In, 0.0f ) );
+		const ccl::SocketType *angleSocket = nodeType->find_input( ccl::ustring( "spot_angle" ) );
+		validPlugs.insert(
+			setupNumericPlug<FloatPlug>(
+				nodeType, *angleSocket, plugsParent, Gaffer::Plug::In,
+				// Cycles API uses radians, but that isn't user-friendly so we convert to degrees.
+				// We convert back to radians in the renderer backend.
+				IECore::radiansToDegrees( *static_cast<const float *>( angleSocket->default_value ) )
+			)
+		);
+		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "spot_smooth" ) )), plugsParent, Gaffer::Plug::In ) );
 	}
 	else if( shaderName == "point_light" )
 	{

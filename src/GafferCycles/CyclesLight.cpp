@@ -164,8 +164,6 @@ IECoreScene::ConstShaderNetworkPtr CyclesLight::computeLight( const Gaffer::Cont
 	float exposure = 0.0f;
 	float intensity = 1.0f;
 	bool textureInput = false;
-	float coneAngle = 30.0f;
-	float penumbraAngle = 0.0f;
 	Imath::Color3f color = Imath::Color3f( 1.0f );
 	for( Plug::Iterator it( parametersPlug() ); !it.done(); ++it )
 	{
@@ -223,18 +221,6 @@ IECoreScene::ConstShaderNetworkPtr CyclesLight::computeLight( const Gaffer::Cont
 				// For the UI
 				lightShader->parameters()[parameterName] = PlugAlgo::extractDataFromPlug( valuePlug );
 			}
-			else if( parameterName == "coneAngle" )
-			{
-				coneAngle = static_cast<const FloatPlug *>( valuePlug )->getValue();
-				// For the UI
-				lightShader->parameters()[parameterName] = PlugAlgo::extractDataFromPlug( valuePlug );
-			}
-			else if( parameterName == "penumbraAngle" )
-			{
-				penumbraAngle = static_cast<const FloatPlug *>( valuePlug )->getValue();
-				// For the UI
-				lightShader->parameters()[parameterName] = PlugAlgo::extractDataFromPlug( valuePlug );
-			}
 			else if( parameterName == "lightGroup" )
 			{
 				std::string lightGroup = static_cast<const StringPlug *>( valuePlug )->getValue();
@@ -245,14 +231,6 @@ IECoreScene::ConstShaderNetworkPtr CyclesLight::computeLight( const Gaffer::Cont
 				lightShader->parameters()[parameterName] = PlugAlgo::extractDataFromPlug( valuePlug );
 			}
 		}
-	}
-
-	if( shaderNamePlug()->getValue() == "spot_light" )
-	{
-		float sumAngle = coneAngle + penumbraAngle;
-		float spotAngle = 2 * M_PI * ( sumAngle / 360.0f );
-        lightShader->parameters()["spot_angle"] = new FloatData( spotAngle );
-		lightShader->parameters()["spot_smooth"] = new FloatData( Imath::clamp( penumbraAngle / sumAngle, 0.0f, 1.0f ) );
 	}
 
 	if( shaderNamePlug()->getValue() == "background_light" )

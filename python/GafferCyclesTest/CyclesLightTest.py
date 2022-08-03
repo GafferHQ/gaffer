@@ -51,5 +51,25 @@ class CyclesLightTest( GafferSceneTest.SceneTestCase ) :
 				node.loadShader( light )
 				self.assertEqual( [ m.message for m in mh.messages ], [], "Error loading %s" % light )
 
+	def testSpotlightCone( self ) :
+
+		node = GafferCycles.CyclesLight()
+		node.loadShader( "spot_light" )
+
+		self.assertEqual( node["parameters"]["spot_angle"].defaultValue(), 45.0 )
+		self.assertTrue( node["parameters"]["spot_angle"].isSetToDefault() )
+		self.assertEqual( node["parameters"]["spot_smooth"].defaultValue(), 0.0 )
+		self.assertTrue( node["parameters"]["spot_smooth"].isSetToDefault() )
+
+		self.assertNotIn( "penumbraAngle", node["parameters"] )
+		self.assertNotIn( "coneAngle", node["parameters"] )
+
+		shader = node["out"].attributes( "/light" )["ccl:light"].outputShader()
+		self.assertEqual( shader.parameters["spot_angle"].value, 45.0 )
+		self.assertEqual( shader.parameters["spot_smooth"].value, 0.0 )
+
+		self.assertNotIn( "penumbraAngle", shader.parameters )
+		self.assertNotIn( "coneAngle", shader.parameters )
+
 if __name__ == "__main__":
 	unittest.main()
