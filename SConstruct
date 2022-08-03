@@ -45,17 +45,22 @@ import shutil
 import subprocess
 import distutils.dir_util
 
+if os.name == "nt":
+	import _locale
+	_locale._getdefaultlocale_backup = _locale._getdefaultlocale
+	_locale._getdefaultlocale = (lambda *args: (_locale._getdefaultlocale_backup()[0], 'utf8'))
+
 EnsureSConsVersion( 3, 0, 2 )  # Substfile is a default builder as of 3.0.2
 
 ###############################################################################################
 # Version
 ###############################################################################################
 
-gafferMilestoneVersion = 0 # for announcing major milestones - may contain all of the below
-gafferMajorVersion = 62 # backwards-incompatible changes
-gafferMinorVersion = 0 # new backwards-compatible features
+gafferMilestoneVersion = 1 # for announcing major milestones - may contain all of the below
+gafferMajorVersion = 0 # backwards-incompatible changes
+gafferMinorVersion = 2 # new backwards-compatible features
 gafferPatchVersion = 0 # bug fixes
-gafferVersionSuffix = "a3" # used for alpha/beta releases : "a1", "b2", etc.
+gafferVersionSuffix = "" # used for alpha/beta releases : "a1", "b2", etc.
 
 # All of the following must be considered when determining
 # whether or not a change is backwards-compatible
@@ -523,6 +528,7 @@ else:
 			"/permissive-", # Disable permissive mode, which also enables standard compliant two phase name lookup
 			"/D_USE_MATH_DEFINES",  # Required when permissive mode is off, for defining constants like M_PI used by OpenVDB
 			"/std:$CXXSTD",
+			"/DHAVE_SNPRINTF",  # Fix a legacy issue for MSVC versions < 2019
 		]
 	)
 
@@ -782,6 +788,9 @@ basePythonEnv["PYTHON_VERSION"] = subprocess.check_output(
 	[ "python", "-c", "import sys; print( '{}.{}'.format( *sys.version_info[:2] ) )" ],
 	env=commandEnv["ENV"], universal_newlines=True
 ).strip()
+
+if basePythonEnv["PLATFORM"] == "win32" :
+	basePythonEnv["PYTHON_VERSION"] = basePythonEnv["PYTHON_VERSION"].replace( ".", "" )
 
 basePythonEnv["PYTHON_ABI_VERSION"] = basePythonEnv["PYTHON_VERSION"]
 basePythonEnv["PYTHON_ABI_VERSION"] += subprocess.check_output(
@@ -1271,7 +1280,7 @@ libraries = {
 			"LIBS" : [ "Gaffer", "GafferDispatch", "GafferScene", "IECoreScene$CORTEX_LIB_SUFFIX" ] + [ "${USD_LIB_PREFIX}" + x for x in [ "sdf", "arch", "tf", "vt" ] ],
 			# USD includes "at least one deprecated or antiquated header", so we
 			# have to drop our usual strict warning levels.
-			"CXXFLAGS" : [ "-Wno-deprecated" ],
+			"CXXFLAGS" : [ "-Wno-deprecated" if env["PLATFORM"] != "win32" else "/wd4996" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferUSD", "GafferScene", "GafferDispatch", "GafferBindings" ],
@@ -1344,6 +1353,9 @@ libraries = {
 	},
 
 }
+
+if env["PLATFORM"] == "win32" :
+	libraries["scripts"]["additionalFiles"].append( "bin/gaffer.cmd" )
 
 # Add on OpenGL libraries to definitions - these vary from platform to platform
 for library in ( "GafferUI", "GafferScene", "GafferSceneUI", "GafferImageUI" ) :

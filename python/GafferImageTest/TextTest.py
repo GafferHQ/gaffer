@@ -113,6 +113,36 @@ class TextTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertImagesEqual( text["out"], reader["out"], ignoreMetadata = True, maxDifference = 0.001 )
 
+	def testArea( self ) :
+
+		text = GafferImage.Text()
+		text["text"].setValue( "a a a a a a a a" )
+		text["size"].setValue( imath.V2i( 20 ) )
+		text["area"].setValue( imath.Box2i( imath.V2i( 0 ), imath.V2i( 100 ) ) )
+
+		self.assertEqual( text["out"].dataWindow(), imath.Box2i( imath.V2i( 1, 58 ), imath.V2i( 83, 92 ) ) )
+
+		text["area"].setValue( imath.Box2i( imath.V2i( 0 ), imath.V2i( 200 ) ) )
+		self.assertEqual( text["out"].dataWindow(), imath.Box2i( imath.V2i( 1, 181 ), imath.V2i( 137, 192 ) ) )
+
+		text["area"].setValue( imath.Box2i( imath.V2i( 0 ), imath.V2i( 5, 200 ) ) )
+		self.assertEqual( text["out"].dataWindow(), imath.Box2i( imath.V2i( 1, 20 ), imath.V2i( 11, 192 ) ) )
+
+		text["text"].setValue( "longWord\nlongWord\nlongWord" )
+		text["area"].setValue( imath.Box2i( imath.V2i( 0 ), imath.V2i( 100 ) ) )
+
+		self.assertEqual( text["out"].dataWindow(), imath.Box2i( imath.V2i( 1, 31 ), imath.V2i( 95, 96 ) ) )
+
+		# If the text box is too short horizontally to fit a single word in, this doesn't affect anything,
+		# since we don't wrap individual words ( this test ensures that we don't add vertical space in
+		# this case, which wouldn't help fit the text in
+		shortText = GafferImage.Text()
+		shortText["text"].setValue( "longWord\nlongWord\nlongWord" )
+		shortText["size"].setValue( imath.V2i( 20 ) )
+		shortText["area"].setValue( imath.Box2i( imath.V2i( 0 ), imath.V2i( 5, 100 ) ) )
+		shortText["text"].setValue( "longWord\nlongWord\nlongWord" )
+		self.assertImagesEqual( text["out"], shortText["out"], ignoreMetadata = True, maxDifference = 0.001 )
+
 	def testHorizontalAlignment( self ) :
 
 		text = GafferImage.Text()

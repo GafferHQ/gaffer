@@ -382,32 +382,29 @@ def _shaderQueryNode( plugValueWidget ) :
 
 	return walkOutputs( plugValueWidget.getPlug() )
 
-def _pathsFromLocation( plugValueWidget ) :
+def _shaderAttributes( plugValueWidget, affectedOnly ) :
 
 	node = _shaderQueryNode( plugValueWidget )
 	if node is None :
-		return []
+		return None
 
-	return [ node["location"].getValue() ]
-
-def _shaderAttributes( plugValueWidget, paths, affectedOnly ) :
+	path = node["location"].getValue()
+	if not node["scene"].exists( path ) :
+		return None
 
 	result = {}
-	node = _shaderQueryNode( plugValueWidget )
-	if node is None :
-		return result
 
 	with plugValueWidget.getContext() :
 		useFullAttr = node["inherit"].getValue()
 		attributeNamePatterns = node["shader"].getValue() if affectedOnly else "*"
-		for path in paths :
-			attributes = node["scene"].fullAttributes( path ) if useFullAttr else node["scene"].attributes( path )
-			for name, attribute in attributes.items() :
-				if not IECore.StringAlgo.matchMultiple( name, attributeNamePatterns ) :
-					continue
-				if not isinstance( attribute, IECoreScene.ShaderNetwork ) or not len( attribute ) :
-					continue
-				result.setdefault( path, {} )[name] = attribute
+
+		attributes = node["scene"].fullAttributes( path ) if useFullAttr else node["scene"].attributes( path )
+		for name, attribute in attributes.items() :
+			if not IECore.StringAlgo.matchMultiple( name, attributeNamePatterns ) :
+				continue
+			if not isinstance( attribute, IECoreScene.ShaderNetwork ) or not len( attribute ) :
+				continue
+			result.setdefault( path, {} )[name] = attribute
 
 	return result
 
@@ -487,9 +484,15 @@ class _ShaderQueryFooter( GafferUI.PlugValueWidget ) :
 
 	def __browseLocationShaders( self ) :
 
-		paths = _pathsFromLocation( self )
+		shaderAttributes = _shaderAttributes( self, affectedOnly = True )
+		if shaderAttributes is None :
+			dialogue = GafferUI.ConfirmationDialogue(
+				"Shader Browser",
+				"Location does not exist."
+			)
+			dialogue.waitForConfirmation()
 
-		shaderAttributes = _shaderAttributes( self, paths, affectedOnly = True )
+			return None
 
 		shaderNetworks = set().union( *[ set( a.values() ) for a in shaderAttributes.values() ] )
 
@@ -548,12 +551,15 @@ class _ShaderQueryFooter( GafferUI.PlugValueWidget ) :
 def __setShaderFromLocationMenuDefinition( menu ) :
 
 	plugValueWidget = menu.ancestor( GafferUI.PlugValueWidget )
-	paths = _pathsFromLocation( plugValueWidget )
-
-	shaderAttributes = _shaderAttributes( plugValueWidget, paths, affectedOnly = False )
-	names = set().union( *[ set( a.keys() ) for a in shaderAttributes.values() ] )
 
 	result = IECore.MenuDefinition()
+
+	shaderAttributes = _shaderAttributes( plugValueWidget, affectedOnly = False )
+	if shaderAttributes is None :
+		return result
+
+	names = set().union( *[ set( a.keys() ) for a in shaderAttributes.values() ] )
+
 	for name in sorted( names ) :
 		result.append(
 			"/" + name,

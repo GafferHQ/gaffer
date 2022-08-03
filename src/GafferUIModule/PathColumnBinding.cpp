@@ -156,6 +156,12 @@ void cellDataSetToolTip( PathColumn::CellData &cellData, const ConstDataPtr &dat
 	cellData.toolTip = data;
 }
 
+PathColumn::CellData cellDataWrapper( PathColumn &pathColumn, const Path &path, const Canceller *canceller )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return pathColumn.cellData( path, canceller );
+}
+
 struct ChangedSignalSlotCaller
 {
 	void operator()( boost::python::object slot, PathColumnPtr c )
@@ -179,6 +185,7 @@ void GafferUIModule::bindPathColumn()
 		scope s = IECorePython::RefCountedClass<PathColumn, IECore::RefCounted, PathColumnWrapper>( "PathColumn" )
 			.def( init<>() )
 			.def( "changedSignal", &PathColumn::changedSignal, return_internal_reference<1>() )
+			.def( "cellData", &cellDataWrapper, ( arg( "path" ), arg( "canceller" ) = object() ) )
 		;
 
 		class_<PathColumn::CellData>( "CellData" )

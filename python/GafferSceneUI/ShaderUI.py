@@ -648,7 +648,8 @@ class _ShaderParameterDialogue( GafferUI.Dialogue ) :
 			),
 			allowMultipleSelection = True,
 			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
-			sortable = False
+			sortable = False,
+			horizontalScrollMode = GafferUI.ScrollMode.Automatic
 		)
 
 		self.__inputNavigateColumn = self.__pathListingWidget.getColumns()[3]
@@ -731,6 +732,9 @@ class _ShaderParameterDialogue( GafferUI.Dialogue ) :
 		if column == self.__inputNavigateColumn :
 			inputRootPath = path.parent().parent()
 			inputs = path.property( "shader:inputs" )
+
+			if inputs is None :
+				return False
 
 			if len( inputs ) == 0 :
 				return False

@@ -139,7 +139,7 @@ _themeVariables = {
 }
 
 substitutions = {
-	"GAFFER_ROOT" : os.environ["GAFFER_ROOT"]
+	"GAFFER_ROOT" : os.environ["GAFFER_ROOT"].replace("\\", "/"),
 }
 
 for k, v in _styleColors.items() :
@@ -982,6 +982,10 @@ _styleSheet = string.Template(
 
 	QScrollArea {
 		border: none;
+	}
+
+	QAbstractScrollArea::corner {
+		background: transparent;
 	}
 
 	QCheckBox {

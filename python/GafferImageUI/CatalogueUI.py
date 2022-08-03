@@ -107,6 +107,14 @@ class Column( GafferUI.PathColumn ) :
 			# to output the image of interest.
 			with Gaffer.Context( catalogue.scriptNode().context() ) as context :
 				context["catalogue:imageName"] = image.getName()
+
+				# Our cells can only display data from one view, so we need to pick one.
+				# If the "default" view is present use that, otherwise use the first view
+				viewNames = catalogue["out"].viewNames()
+				if not len( viewNames ):
+					raise Exception( "Catalogue : Image has no views, no data to display" )
+				context["image:viewName"] = "default" if "default" in viewNames else viewNames[0]
+
 				try :
 					return self._imageCellData( image, catalogue )
 				except NotImplementedError :
@@ -651,7 +659,7 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 			self.__pathListing = GafferUI.PathListingWidget(
 				_ImagesPath( self.__images(), [] ),
 				columns = self.__listingColumns(),
-				allowMultipleSelection = True,
+				selectionMode = GafferUI.PathListingWidget.SelectionMode.Rows,
 				sortable = False,
 				horizontalScrollMode = GafferUI.ScrollMode.Automatic
 			)
@@ -1052,25 +1060,28 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 
 	def __pathListingDrop( self, widget, event ) :
 
-		image = self.__dropImage( event.data )
-		if image is None :
-			return False
+		try:
+			image = self.__dropImage( event.data )
+			if image is None :
+				return False
 
-		with self.getContext() :
-			fileName = self.__catalogue().generateFileName( image )
-			imageWriter = GafferImage.ImageWriter()
-			imageWriter["in"].setInput( image )
-			imageWriter["fileName"].setValue( fileName )
-			imageWriter["task"].execute()
+			with self.getContext() :
+				fileName = self.__catalogue().generateFileName( image )
+				imageWriter = GafferImage.ImageWriter()
+				imageWriter["in"].setInput( image )
+				imageWriter["fileName"].setValue( fileName )
+				imageWriter["task"].execute()
 
-		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-			loadedImage = GafferImage.Catalogue.Image.load( fileName )
-			loadedImage.setName( image.node().getName() )
-			self.__images().addChild( loadedImage )
-			self.getPlug().setValue( len( self.__images() ) - 1 )
+			with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+				loadedImage = GafferImage.Catalogue.Image.load( fileName )
+				loadedImage.setName( image.node().getName() )
+				self.__images().addChild( loadedImage )
+				self.getPlug().setValue( len( self.__images() ) - 1 )
 
-		self.__pathListing.setHighlighted( False )
-		GafferUI.Pointer.setCurrent( None )
+			self.__pathListing.setHighlighted( False )
+			GafferUI.Pointer.setCurrent( None )
+		except Exception as e:
+			IECore.msg( IECore.Msg.Level.Warning, "CatalogueUI", 'Failed to add image during drag, exception: ' + str( e ) )
 
 		return True
 

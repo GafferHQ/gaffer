@@ -41,6 +41,7 @@
 #include "OpenEXR/ImathBox.h"
 
 #include <set>
+#include <regex>
 
 using namespace std;
 using namespace GafferImage;
@@ -118,6 +119,96 @@ int tileIndex( const Imath::V2i &tileOrigin, const Imath::Box2i &tileRange )
 	return offset.y * ( tileRange.size().x + 1 ) + offset.x;
 }
 
+// A comparison functor that tokenizes the string apart into numeric and non-numeric parts, and compares
+// the numeric parts according to the order of integers ( ie.  "x100x" > "x9x" )
+struct NaturalOrder
+{
+	bool operator()( const std::string &l, const std::string &r )
+	{
+		int moreZeros = 0;
+		std::sregex_iterator lit( l.begin(), l.end(), g_naturalSortRegex );
+		std::sregex_iterator rit( r.begin(), r.end(), g_naturalSortRegex );
+		std::sregex_iterator end;
+		for( ; lit != end && rit != end; ++lit, ++rit )
+		{
+			int c = compareToken( *lit, *rit );
+			if( c != 0 )
+			{
+				// We've found a difference in this set of tokens, and can return
+				return c < 0;
+			}
+
+			if( lit->str().size() != rit->str().size() )
+			{
+				// This is a weird special case - the strings have compared equal, but their lengths aren't
+				// the same.  This must be due to one having numbers with different zero padding.  If we
+				// find a significant difference, we'll go by that ( ie "0B" comes after "000A" ), but if
+				// we get to the end without finding a difference, we'll sort the string with more padding
+				// after, just to make sure we do something consistent.
+				moreZeros = lit->str().size() > rit->str().size() ? 1 : -1;
+			}
+		}
+
+		if( lit != end || rit != end )
+		{
+			// One of the strings still has tokens left, the string with more tokens is greater
+			return rit != end;
+		}
+
+		if( moreZeros != 0 )
+		{
+			return moreZeros < 0;
+		}
+
+		return false;
+	}
+
+private:
+
+	int compareToken( const std::smatch &l, const std::smatch &r )
+	{
+		// We only need to do anything special if both tokens are a number - otherwise, the standard
+		// string compare will just put the number before the letters
+		if ( !l[ 1 ].str().empty() && !r[ 1 ].str().empty() )
+		{
+			// We also only need to do something special if the lengths don't match - if the lengths
+			// match, then string comparison is equivalent to numerical comparison
+			if( l.str().size() < r.str().size() )
+			{
+				return -compareLongerNumber( r.str(), l.str() );
+			}
+			else if( l.str().size() > r.str().size() )
+			{
+				return compareLongerNumber( l.str(), r.str() );
+			}
+		}
+
+		return l.str().compare( r.str() );
+	}
+
+	int compareLongerNumber( const std::string &longer, const std::string &shorter )
+	{
+		int diff = longer.size() - shorter.size();
+		// If the longer string has any non-zero digits in the longer portion, it is greater.
+		for( int i = 0; i < diff; i++ )
+		{
+			if( longer[i] != '0' )
+			{
+				return 1;
+			}
+		}
+
+		// If the mismatched portion is all zeros, ignore it, and compare the matching portion
+		return longer.compare( diff, string::npos, shorter );
+	}
+
+	static const std::regex g_naturalSortRegex;
+
+};
+
+const std::regex NaturalOrder::g_naturalSortRegex( R"((\d+)|([^\d]+))" );
+
+
 } // namespace
 
 
@@ -144,15 +235,18 @@ const std::string GafferImage::ImageAlgo::channelNameB( "B" );
 const std::string GafferImage::ImageAlgo::channelNameZ( "Z" );
 const std::string GafferImage::ImageAlgo::channelNameZBack( "ZBack" );
 
-void ImageAlgo::sortChannelNames( std::vector< std::string > &channelNames )
+std::vector<std::string> ImageAlgo::sortedChannelNames( const std::vector<std::string> &channelNames )
 {
-	std::sort( channelNames.begin(), channelNames.end(), []( const std::string &a, const std::string &b ){
+	std::vector<std::string> result = channelNames;
+
+	NaturalOrder s;
+	std::sort( result.begin(), result.end(), [ &s ]( const std::string &a, const std::string &b ){
 
 		std::string layerA = layerName( a );
 		std::string layerB = layerName( b );
 		if( layerA != layerB )
 		{
-			return layerA < layerB;
+			return s( layerA, layerB );
 		}
 
 		// The channels are in the same layer, so we need to compare the base names
@@ -177,9 +271,10 @@ void ImageAlgo::sortChannelNames( std::vector< std::string > &channelNames )
 		}
 
 		// Both channels are custom names, so use alphabetical order based on channel name
-		return baseA < baseB;
+		return s( baseA, baseB );
 	} );
 
+	return result;
 }
 
 IECoreImage::ImagePrimitivePtr GafferImage::ImageAlgo::image( const ImagePlug *imagePlug, const std::string *viewName )

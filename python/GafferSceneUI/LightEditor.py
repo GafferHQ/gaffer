@@ -47,6 +47,8 @@ import GafferUI
 import GafferScene
 import GafferSceneUI
 
+from GafferUI.PlugValueWidget import sole
+
 from . import ContextAlgo
 from . import _GafferSceneUI
 
@@ -104,8 +106,9 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 			self.__pathListing = GafferUI.PathListingWidget(
 				Gaffer.DictPath( {}, "/" ), # Temp till we make a ScenePath
 				columns = [ _GafferSceneUI._LightEditorLocationNameColumn() ],
-				allowMultipleSelection = True,
+				selectionMode = GafferUI.PathListingWidget.SelectionMode.Cells,
 				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
+				horizontalScrollMode = GafferUI.ScrollMode.Automatic
 			)
 			self.__pathListing.setDragPointer( "objects" )
 			self.__pathListing.setSortable( False )
@@ -113,6 +116,7 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 				Gaffer.WeakMethod( self.__selectionChanged ), scoped = False
 			)
 			self.__pathListing.buttonDoubleClickSignal().connectFront( Gaffer.WeakMethod( self.__buttonDoubleClick ), scoped = False )
+			self.__pathListing.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
 
 		self.__settingsNode.plugSetSignal().connect( Gaffer.WeakMethod( self.__settingsPlugSet ), scoped = False )
 
@@ -269,40 +273,74 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 		assert( pathListing is self.__pathListing )
 
 		with Gaffer.Signals.BlockedConnection( self._contextChangedConnection() ) :
-			ContextAlgo.setSelectedPaths( self.getContext(), pathListing.getSelection() )
+			ContextAlgo.setSelectedPaths( self.getContext(), pathListing.getSelection()[0] )
 
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
 	def __transferSelectionFromContext( self ) :
 
-		selection = ContextAlgo.getSelectedPaths( self.getContext() )
+		selectedPaths = ContextAlgo.getSelectedPaths( self.getContext() )
 		with Gaffer.Signals.BlockedConnection( self.__selectionChangedConnection ) :
+			selection = [selectedPaths] + ( [IECore.PathMatcher()] * ( len( self.__pathListing.getColumns() ) - 1 ) )
 			self.__pathListing.setSelection( selection, scrollToFirst=True, expandNonLeaf=False )
 
 	def __buttonDoubleClick( self, pathListing, event ) :
 
-		if event.button != event.Buttons.Left :
+		# A small corner area below the vertical scroll bar may pass through
+		# to us, causing odd selection behavior. Check that we're within the
+		# scroll area.
+		if pathListing.pathAt( event.line.p0 ) is None :
 			return False
 
-		path = pathListing.pathAt( event.line.p0 )
-		if path is None :
-			return False
+		if event.button == event.Buttons.Left :
+			self.__editSelectedCells( pathListing )
 
-		column = pathListing.columnAt( event.line.p0 )
-		if not isinstance( column, _GafferSceneUI._LightEditorInspectorColumn ) :
-			return False
+			return True
+
+		return False
+
+	def __keyPress( self, pathListing, event ) :
+
+		if event.key == "Return" or event.key == "Enter" :
+			self.__editSelectedCells( pathListing )
+
+			return True
+
+		return False
+
+	def __editSelectedCells( self, pathListing ) :
+
+		selection = pathListing.getSelection()
+
+		columns = pathListing.getColumns()
+
+		inspections = []
 
 		with Gaffer.Context( self.getContext() ) as context :
-			context["scene:path"] = IECore.InternedStringVectorData( path[:] )
-			inspection = column.inspector().inspect()
+			for i in range( 0, len( columns ) ) :
+				column = columns[ i ]
+				if not isinstance( column, _GafferSceneUI._LightEditorInspectorColumn ) :
+					continue
+				for path in selection[i].paths() :
+					context["scene:path"] = GafferScene.ScenePlug.stringToPath( path )
+					inspection = column.inspector().inspect()
 
-		if inspection is None :
-			return False
+					if inspection is not None :
+						inspections.append( inspection )
 
-		if inspection.editable() :
+		if len( inspections ) == 0 :
+			return
 
-			self.__popup = GafferUI.PlugPopup( [ inspection.acquireEdit() ], warning = inspection.editWarning() )
+		nonEditable = [ i for i in inspections if not i.editable() ]
+
+		if len( nonEditable ) == 0 :
+			edits = [ i.acquireEdit() for i in inspections ]
+			warnings = "\n".join( [ i.editWarning() for i in inspections if i.editWarning() != "" ] )
+
+			self.__popup = GafferUI.PlugPopup( edits, warning = warnings )
+
 			if isinstance( self.__popup.plugValueWidget(), GafferUI.TweakPlugValueWidget ) :
 				self.__popup.plugValueWidget().setNameVisible( False )
+
 			self.__popup.popup()
 
 		else :
@@ -310,11 +348,10 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 			with GafferUI.PopupWindow() as self.__popup :
 				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 					GafferUI.Image( "warningSmall.png" )
-					GafferUI.Label( "<h4>{}</h4>".format( inspection.nonEditableReason() ) )
+					GafferUI.Label( "<h4>{}</h4>".format( nonEditable[0].nonEditableReason() ) )
 
 			self.__popup.popup()
 
-		return True
 
 GafferUI.Editor.registerType( "LightEditor", LightEditor )
 

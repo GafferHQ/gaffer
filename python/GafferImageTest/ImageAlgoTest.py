@@ -36,6 +36,8 @@
 
 import unittest
 import imath
+import itertools
+import re
 
 import IECore
 
@@ -273,23 +275,68 @@ class ImageAlgoTest( GafferImageTest.ImageTestCase ) :
 			numTilesX * numTilesY * 4
 		)
 
-	def testSortChannelNames( self ):
+	def testSortedChannelNames( self ):
 
 		# Sort RGBA
-		self.assertEqual( GafferImage.ImageAlgo.sortChannelNames( [ "R", "A", "B", "G" ] ), [ "R", "G", "B", "A" ] )
+		self.assertEqual( GafferImage.ImageAlgo.sortedChannelNames( [ "R", "A", "B", "G" ] ), [ "R", "G", "B", "A" ] )
 
 		# Sort RGBA	before other channels
-		self.assertEqual( GafferImage.ImageAlgo.sortChannelNames( [ "A", "Arc", "Z", "ZSomethingElse", "H", "Bark", "G", "ZBack", "custom", "F", "R", "B" ] ), [ "R", "G", "B", "A", "Arc", "Bark", "F", "H", "Z", "ZBack", "ZSomethingElse", "custom" ] )
+		self.assertEqual( GafferImage.ImageAlgo.sortedChannelNames( [ "A", "Arc", "Z", "ZSomethingElse", "H", "Bark", "G", "ZBack", "custom", "F", "R", "B" ] ), [ "R", "G", "B", "A", "Arc", "Bark", "F", "H", "Z", "ZBack", "ZSomethingElse", "custom" ] )
 
 		# Sort default layer before named layers
-		self.assertEqual( GafferImage.ImageAlgo.sortChannelNames( [ "A", "G", "A.G", "B.B", "A.R", "B.R", "B", "R", "A.B", "B.G" ] ), [ "R", "G", "B", "A", "A.R", "A.G", "A.B", "B.R", "B.G", "B.B" ] )
+		self.assertEqual( GafferImage.ImageAlgo.sortedChannelNames( [ "A", "G", "A.G", "B.B", "A.R", "B.R", "B", "R", "A.B", "B.G" ] ), [ "R", "G", "B", "A", "A.R", "A.G", "A.B", "B.R", "B.G", "B.B" ] )
 
 		# Sort hierarchical layers
-		self.assertEqual( GafferImage.ImageAlgo.sortChannelNames( [ "Y.X.Y", "Y.X.X", "Y", "X", "X.X", "X.Y" ] ), [ "X", "Y", "X.X", "X.Y", "Y.X.X", "Y.X.Y" ] )
+		self.assertEqual( GafferImage.ImageAlgo.sortedChannelNames( [ "Y.X.Y", "Y.X.X", "Y", "X", "X.X", "X.Y" ] ), [ "X", "Y", "X.X", "X.Y", "Y.X.X", "Y.X.Y" ] )
 
 		# Default alphabetical sort puts capital letters before lowercase ( dunno if this is good or not, but
 		# worth documenting )
-		self.assertEqual( GafferImage.ImageAlgo.sortChannelNames( [ "x", "X", "x.x", "X.X", "X.x", "x.X" ] ), ["X", "x", "X.X", "X.x", "x.X", "x.x"] )
+		self.assertEqual( GafferImage.ImageAlgo.sortedChannelNames( [ "x", "X", "x.x", "X.X", "X.x", "x.X" ] ), ["X", "x", "X.X", "X.x", "x.X", "x.x"] )
+
+		# Test that our natural sort handles numbers
+		self.assertEqual(
+			GafferImage.ImageAlgo.sortedChannelNames( [ "12", "4", "1", "14", "2", "3", "13", "99" ] ),
+			[ "1", "2", "3", "4", "12", "13", "14", "99" ]
+		)
+
+		self.assertEqual(
+			GafferImage.ImageAlgo.sortedChannelNames( [ str( 999 - i ) for i in range( 1000 ) ] ),
+			[ str( i ) for i in range( 1000 ) ]
+		)
+
+		# And numbers with varying padding
+		self.assertEqual(
+			GafferImage.ImageAlgo.sortedChannelNames( [ "03", "00012", "4", "01", "0000014", "2", "00003", "13", "3", "99" ] ),
+			[ "01", "2", "3", "03", "00003", "4", "00012", "13", "0000014", "99" ]
+		)
+
+		# Test large numbers ( larger than the size of an integer )
+		largeNums = [ str( ( i % 9 ) + 1 ) + "0" * i for i in range( 30 ) ]
+		self.assertEqual( GafferImage.ImageAlgo.sortedChannelNames( largeNums ), largeNums )
+
+		# Test something like how we see this being used in production
+		realistic = [ "channel0", "channel1", "channel2", "channel2alt", "channel2alt2", "channel2alt13", "channel04", "channel13" ]
+		self.assertEqual( GafferImage.ImageAlgo.sortedChannelNames( realistic ), realistic )
+
+		# And test every length 4 possibility for alternating letters and digits
+		permutations = [ "".join( i ) for j in [1,2,3,4 ] for i in itertools.product( *["012acC"] * j ) ]
+		permutationsGaffer = GafferImage.ImageAlgo.sortedChannelNames( permutations )
+
+
+		# The most debatable order here is between "00C0" and "0C00", which conceptually mean the same thing, and
+		# are the same length.  Our ordering is consistent, which is all that matters in this corner case.
+		self.assertEqual( permutationsGaffer[:10], ['0', '00', '000', '0000', '0C', '00C', '000C', '0C0', '00C0', '0C00'] )
+		self.assertEqual( permutationsGaffer[-10:], ['ccaC', 'ccaa', 'ccac', 'ccc', 'ccc0', 'ccc1', 'ccc2', 'cccC', 'ccca', 'cccc'] )
+
+		# We don't want to check all of these manually, so just make sure we agree with an independent
+		# implementation of a basic Python natural sort ( as long as we stay away from "." and RGBA which
+		# have a special meaning for channel names )
+		pythonRegex = re.compile('([0-9]+)')
+		def pythonNaturalSortKey( s ):
+			return [int(text) if text.isdigit() else text for text in pythonRegex.split(s)]
+		permutationsPython = sorted( permutations, key = pythonNaturalSortKey )
+		self.assertEqual( permutationsGaffer, permutationsPython )
+
 
 if __name__ == "__main__":
 	unittest.main()

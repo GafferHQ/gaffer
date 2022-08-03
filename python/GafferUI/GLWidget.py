@@ -246,12 +246,12 @@ class _GLGraphicsView( QtWidgets.QGraphicsView ) :
 			self.scene().setSceneRect( 0, 0, event.size().width(), event.size().height() )
 			owner = GafferUI.Widget._owner( self )
 
+			owner._makeCurrent()
+
 			# clear any existing errors that may trigger
 			# error checking code in _resize implementations.
 			while GL.glGetError() :
 				pass
-
-			owner._makeCurrent()
 
 			# We need to call the init method after a GL context has been
 			# created, but before any events requiring GL have been triggered.

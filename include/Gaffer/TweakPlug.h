@@ -64,7 +64,15 @@ class GAFFER_API TweakPlug : public Gaffer::ValuePlug
 			Subtract,
 			Multiply,
 			Remove,
-			Create
+			Create,
+			Min,
+			Max,
+			ListAppend,
+			ListPrepend,
+			ListRemove,
+
+			First = Replace,
+			Last = ListRemove,
 		};
 
 		TweakPlug( const std::string &tweakName, Gaffer::ValuePlugPtr valuePlug, Mode mode = Replace, bool enabled = true );
@@ -125,6 +133,14 @@ class GAFFER_API TweakPlug : public Gaffer::ValuePlug
 		const Gaffer::ValuePlug *valuePlugInternal() const;
 
 		void applyNumericTweak(
+			const IECore::Data *sourceData,
+			const IECore::Data *tweakData,
+			IECore::Data *destData,
+			TweakPlug::Mode mode,
+			const std::string &tweakName
+		) const;
+
+		void applyListTweak(
 			const IECore::Data *sourceData,
 			const IECore::Data *tweakData,
 			IECore::Data *destData,

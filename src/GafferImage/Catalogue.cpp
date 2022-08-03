@@ -962,7 +962,14 @@ std::string Catalogue::generateFileName( const ImagePlug *image ) const
 	}
 
 	boost::filesystem::path result( directory );
-	result /= ImageAlgo::imageHash( image ).toString();
+
+	// Hash all views of the image
+	IECore::MurmurHash h;
+	for( const std::string &v : image->viewNames()->readable() )
+	{
+		h.append( ImageAlgo::imageHash( image, &v ) );
+	}
+	result /= h.toString();
 	result.replace_extension( "exr" );
 
 	return result.string();

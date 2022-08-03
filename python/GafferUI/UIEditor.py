@@ -197,7 +197,7 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 			else :
 				# We want to present the options above as a simple "Show Name" checkbox, and haven't yet
 				# decided how to present other combinations of allowable gadgets.
-				IECore.msg( IECore.msg.Warning, "UIEditor", 'Unknown combination of "uiEditor:nodeGadgetTypes"' )
+				IECore.msg( IECore.Msg.Level.Warning, "UIEditor", 'Unknown combination of "uiEditor:nodeGadgetTypes"' )
 
 	@classmethod
 	def appendNodeEditorToolMenuDefinitions( cls, nodeEditor, node, menuDefinition ) :

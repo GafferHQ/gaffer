@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2021, Cinesite VFX Ltd. All rights reserved.
+#  Copyright (c) 2022, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,21 +34,22 @@
 #
 ##########################################################################
 
-try :
+import GafferUI
 
-	# See comments in `GafferArnold/__init__.py`
-	import sys
-	import ctypes
-	if hasattr( sys, "getdlopenflags" ):
-		originalDLOpenFlags = sys.getdlopenflags()
-		sys.setdlopenflags( originalDLOpenFlags & ~ctypes.RTLD_GLOBAL )
+def __initWrapper( originalInit ) :
 
-	from ._IECoreArnold import *
+	def init( self, *args, **kw ) :
 
-finally :
-	if hasattr( sys, "getdlopenflags" ):
-		sys.setdlopenflags( originalDLOpenFlags )
-		del originalDLOpenFlags
-	del sys, ctypes
+		if len( args ) >= 3 :
+			if isinstance( args[2], bool ) :
+				args[2] = self.SelectionMode.Rows if args[2] else self.SelectionMode.Row
+		elif "allowMultipleSelection" in kw :
+			kw = kw.copy()
+			kw["selectionMode"] = self.SelectionMode.Rows if kw["allowMultipleSelection"] else self.SelectionMode.Row
+			del kw["allowMultipleSelection"]
 
-from .UniverseBlock import UniverseBlock
+		originalInit( self, *args, **kw )
+
+	return init
+
+GafferUI.PathListingWidget.__init__ = __initWrapper( GafferUI.PathListingWidget.__init__ )
