@@ -61,12 +61,11 @@ class IEDisplayOutputDriver : public ccl::OutputDriver
 		{
 			std::string name;
 			int numChannels;
+			IECoreImage::DisplayDriverPtr displayDriver;
 		};
 
-		IECoreImage::DisplayDriverPtr m_displayDriver;
 		using Layers = std::vector<Layer>;
 		Layers m_layers;
-		int m_numChannels;
 };
 
 } // namespace

@@ -366,15 +366,15 @@ py::dict getLights()
 			in["size"] = _in["size"];
 			in["cast_shadow"] = _in["cast_shadow"];
 			in["use_mis"] = _in["use_mis"];
+			in["use_camera"] = _in["use_camera"];
 			in["use_diffuse"] = _in["use_diffuse"];
 			in["use_glossy"] = _in["use_glossy"];
 			in["use_transmission"] = _in["use_transmission"];
 			in["use_scatter"] = _in["use_scatter"];
+			in["use_caustics"] = _in["use_caustics"];
 			in["max_bounces"] = _in["max_bounces"];
 			in["strength"] = _in["strength"];
-#ifdef WITH_CYCLES_LIGHTGROUPS
 			in["lightgroup"] = _in["lightgroup"];
-#endif
 
 			if( type == "background_light" )
 			{
@@ -464,11 +464,6 @@ BOOST_PYTHON_MODULE( _GafferCycles )
 	py::scope().attr( "withTextureCache" ) = true;
 #else
 	py::scope().attr( "withTextureCache" ) = false;
-#endif
-#ifdef WITH_CYCLES_LIGHTGROUPS
-	py::scope().attr( "withLightGroups" ) = true;
-#else
-	py::scope().attr( "withLightGroups" ) = false;
 #endif
 	if( ccl::openimagedenoise_supported() )
 		py::scope().attr( "hasOpenImageDenoise" ) = true;

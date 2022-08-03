@@ -343,8 +343,6 @@ with IECore.IgnoredExceptions( ImportError ) :
 			}
 
 			if data == "lightgroup":
-				if not GafferCycles.withLightGroups :
-					continue
 				data = "lg lightgroup"
 				label = "Light_Group"
 

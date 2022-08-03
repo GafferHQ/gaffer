@@ -137,6 +137,10 @@ IECoreScene::ConstShaderNetworkPtr CyclesLight::computeLight( const Gaffer::Cont
 	{
 		lightShader->parameters()["size"] = new FloatData( 2.0f );
 	}
+	else if( shaderName == "disk_light" )
+	{
+		lightShader->parameters()["round"] = new BoolData( true );
+	}
 
 	// Emit shader (color/strength)
 	IECoreScene::ShaderPtr emitShader = new IECoreScene::Shader( "emission", "ccl:surface" );

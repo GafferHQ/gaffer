@@ -212,6 +212,29 @@ if os.environ.get( "GAFFERAPPLESEED_HIDE_UI", "" ) != "1" :
 
 		] )
 
+with IECore.IgnoredExceptions( ImportError ) :
+
+	import GafferCycles
+
+	__registerShadingModes( [
+
+		( "Diagnostic/Cycles/Shader Assignment", GafferScene.AttributeVisualiser, { "attributeName" : "ccl:surface", "mode" : GafferScene.AttributeVisualiser.Mode.ShaderNodeColor } ),
+		( "Diagnostic/Cycles/Camera Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "ccl:visibility:camera" } ),
+		( "Diagnostic/Cycles/Shadow Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "ccl:visibility:shadow" } ),
+		( "Diagnostic/Cycles/Diffuse Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "ccl:visibility:diffuse" } ),
+		( "Diagnostic/Cycles/Glossy Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "ccl:visibility:glossy" } ),
+		( "Diagnostic/Cycles/Transmission Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "ccl:visibility:transmission" } ),
+		( "Diagnostic/Cycles/Scatter Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "ccl:visibility:scatter" } ),
+		( "Diagnostic/Cycles/Holdout", GafferScene.AttributeVisualiser, { "attributeName" : "ccl:use_holdout" } ),
+		( "Diagnostic/Cycles/Shadow Catcher", GafferScene.AttributeVisualiser, { "attributeName" : "ccl:is_shadow_catcher" } ),
+
+	] )
+
+	GafferSceneUI.SceneView.registerRenderer(
+		"Cycles",
+		functools.partial( __loadRendererSettings, os.path.join( os.path.dirname( __file__ ), "cyclesViewerSettings.gfr" ) )
+	)
+
 
 # Add catalogue hotkeys to viewers, eg: up/down navigation
 GafferUI.Editor.instanceCreatedSignal().connect( GafferImageUI.CatalogueUI.addCatalogueHotkeys, scoped = False )

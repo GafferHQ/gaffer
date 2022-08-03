@@ -332,6 +332,20 @@ class CyclesOutput : public IECore::RefCounted
 					p["type"] = new StringData( tokens[0] );
 					passType = tokens[0];
 				}
+				else if( tokens[0] == "float" && tokens[1] == "Z" )
+				{
+					m_data = tokens[1];
+					p["name"] = new StringData( tokens[1] );
+					p["type"] = new StringData( "depth" );
+					passType = "depth";
+				}
+				else if( tokens[0] == "uint" && tokens[1] == "id" )
+				{
+					m_data = tokens[1];
+					p["name"] = new StringData( tokens[1] );
+					p["type"] = new StringData( "object_id" );
+					passType = "object_id";
+				}
 			}
 
 			if( typeEnum.exists( passType ) )
@@ -877,6 +891,7 @@ namespace
 
 // Standard Attributes
 IECore::InternedString g_visibilityAttributeName( "visibility" );
+IECore::InternedString g_displayColorAttributeName( "render:displayColor" );
 IECore::InternedString g_transformBlurAttributeName( "transformBlur" );
 IECore::InternedString g_transformBlurSegmentsAttributeName( "transformBlurSegments" );
 IECore::InternedString g_deformationBlurAttributeName( "deformationBlur" );
@@ -889,8 +904,6 @@ IECore::InternedString g_shadowTerminatorShadingOffsetAttributeName( "ccl:shadow
 IECore::InternedString g_shadowTerminatorGeometryOffsetAttributeName( "ccl:shadow_terminator_geometry_offset" );
 IECore::InternedString g_maxLevelAttributeName( "ccl:max_level" );
 IECore::InternedString g_dicingRateAttributeName( "ccl:dicing_rate" );
-// Per-object color
-IECore::InternedString g_colorAttributeName( "Cs" );
 // Cycles Light
 IECore::InternedString g_lightAttributeName( "ccl:light" );
 // Dupli
@@ -957,7 +970,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				m_shadowTerminatorGeometryOffset( 0.0f ),
 				m_maxLevel( 1 ),
 				m_dicingRate( 1.0f ),
-				m_color( Color3f( 0.0f ) ),
+				m_color( Color3f( 0.5f ) ),
 				m_dupliGenerated( V3f( 0.0f ) ),
 				m_dupliUV( V2f( 0.0f) ),
 				m_particle( attributes ),
@@ -980,7 +993,17 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			m_shadowTerminatorGeometryOffset = attributeValue<float>( g_shadowTerminatorGeometryOffsetAttributeName, attributes, m_shadowTerminatorGeometryOffset );
 			m_maxLevel = attributeValue<int>( g_maxLevelAttributeName, attributes, m_maxLevel );
 			m_dicingRate = attributeValue<float>( g_dicingRateAttributeName, attributes, m_dicingRate );
-			m_color = attributeValue<Color3f>( g_colorAttributeName, attributes, m_color );
+			const IECore::Color3fVectorData *colorData = attribute<Color3fVectorData>( g_displayColorAttributeName, attributes );
+			if( colorData )
+			{
+				const std::vector<Color3f> color = colorData->readable();
+				if( color.size() )
+					m_color = Color3f( color[0].x, color[0].y, color[0].z );
+			}
+			else
+			{
+				m_color = attributeValue<Color3f>( g_displayColorAttributeName, attributes, m_color );
+			}
 			m_dupliGenerated = attributeValue<V3f>( g_dupliGeneratedAttributeName, attributes, m_dupliGenerated );
 			m_dupliUV = attributeValue<V2f>( g_dupliUVAttributeName, attributes, m_dupliUV );
 			m_lightGroup = attributeValue<std::string>( g_lightGroupAttributeName, attributes, m_lightGroup );
@@ -1134,9 +1157,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			if( !m_volume.apply( object ) )
 				return false;
 
-#ifdef WITH_CYCLES_LIGHTGROUPS
 			object->set_lightgroup( ccl::ustring( m_lightGroup.c_str() ) );
-#endif
 
 			return true;
 		}
@@ -1163,18 +1184,19 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				light->set_spot_smooth( clight->get_spot_smooth() );
 				light->set_cast_shadow( clight->get_cast_shadow() );
 				light->set_use_mis( clight->get_use_mis() );
+				light->set_use_camera( clight->get_use_camera() );
 				light->set_use_diffuse( clight->get_use_diffuse() );
 				light->set_use_glossy( clight->get_use_glossy() );
 				light->set_use_transmission( clight->get_use_transmission() );
 				light->set_use_scatter( clight->get_use_scatter() );
+				light->set_use_caustics( clight->get_use_caustics() );
 				light->set_max_bounces( clight->get_max_bounces() );
 				light->set_is_portal( clight->get_is_portal() );
 				light->set_is_enabled( clight->get_is_enabled() );
 				light->set_strength( clight->get_strength() );
 				light->set_angle( clight->get_angle() );
-#ifdef WITH_CYCLES_LIGHTGROUPS
 				light->set_lightgroup( clight->get_lightgroup() );
-#endif
+				light->set_round( clight->get_round() );
 			}
 			if( m_lightShader )
 			{
@@ -1845,6 +1867,10 @@ class InstanceCache : public IECore::RefCounted
 				if( m_geometry.insert( writeAccessor, h ) )
 				{
 					cobject = convert( object, cyclesAttributes, nodeName, cpsysPtr );
+					if( !cobject )
+					{
+						return Instance( nullptr, nullptr, nullptr, false );
+					}
 					writeAccessor->second = SharedCGeometryPtr( cobject->get_geometry(), nullNodeDeleter );
 					cgeo = writeAccessor->second;
 					cgeo->name = h.toString();
@@ -1854,6 +1880,10 @@ class InstanceCache : public IECore::RefCounted
 				{
 					cgeo = writeAccessor->second;
 					cobject = convert( object, cyclesAttributes, nodeName, cpsysPtr, cgeo.get() );
+					if( !cobject )
+					{
+						return Instance( nullptr, nullptr, nullptr, false );
+					}
 				}
 				writeAccessor.release();
 			}
@@ -1911,6 +1941,10 @@ class InstanceCache : public IECore::RefCounted
 				if( m_geometry.insert( writeAccessor, h ) )
 				{
 					cobject = convert( samples, times, frameIdx, cyclesAttributes, nodeName, cpsysPtr );
+					if( !cobject )
+					{
+						return Instance( nullptr, nullptr, nullptr, false );
+					}
 					writeAccessor->second = SharedCGeometryPtr( cobject->get_geometry(), nullNodeDeleter );
 					cgeo = writeAccessor->second;
 					cgeo->name = h.toString();
@@ -1920,6 +1954,10 @@ class InstanceCache : public IECore::RefCounted
 				{
 					cgeo = writeAccessor->second;
 					cobject = convert( samples, times, frameIdx, cyclesAttributes, nodeName, cpsysPtr, cgeo.get() );
+					if( !cobject )
+					{
+						return Instance( nullptr, nullptr, nullptr, false );
+					}
 				}
 				writeAccessor.release();
 			}
@@ -2001,11 +2039,20 @@ class InstanceCache : public IECore::RefCounted
 								  SharedCParticleSystemPtr &cpsysPtr,
 								  ccl::Geometry *cgeo = nullptr )
 		{
+			if( !object )
+			{
+				return SharedCObjectPtr();
+			}
+
 			ccl::Object *cobject = nullptr;
 
 			if( !cgeo )
 			{
 				cobject = ObjectAlgo::convert( object, nodeName, m_scene );
+				if( !cobject )
+				{
+					return SharedCObjectPtr();
+				}
 				attributes->applyGeometry( object, cobject );
 				ccl::Geometry *cgeo = cobject->get_geometry();
 				cgeo->set_owner( m_scene );
@@ -2041,11 +2088,20 @@ class InstanceCache : public IECore::RefCounted
 								  SharedCParticleSystemPtr &cpsysPtr,
 								  ccl::Geometry *cgeo = nullptr )
 		{
+			if( !samples.front() )
+			{
+				return SharedCObjectPtr();
+			}
+
 			ccl::Object *cobject = nullptr;
 
 			if( !cgeo )
 			{
 				cobject = ObjectAlgo::convert( samples, times, frame, nodeName, m_scene );
+				if( !cobject )
+				{
+					return SharedCObjectPtr();
+				}
 				attributes->applyGeometry( samples.front(), cobject );
 				ccl::Geometry *cgeo = cobject->get_geometry();
 				cgeo->set_owner( m_scene );
@@ -2493,7 +2549,8 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 			if( !object || cyclesAttributes->applyObject( object, m_attributes.get() ) )
 			{
 				m_attributes = cyclesAttributes;
-				object->tag_update( m_session->scene );
+				if( object )
+					object->tag_update( m_session->scene );
 				return true;
 			}
 
@@ -2502,7 +2559,10 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 
 		void assignID( uint32_t id ) override
 		{
-			/// \todo Implement me
+			ccl::Object *object = m_instance.object();
+			if( !object )
+				return;
+			object->set_pass_id( id );
 		}
 
 	private :
@@ -2571,7 +2631,8 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 			if( !light || cyclesAttributes->applyLight( light, m_attributes.get() ) )
 			{
 				m_attributes = cyclesAttributes;
-				light->tag_update( m_session->scene );
+				if( light )
+					light->tag_update( m_session->scene );
 				return true;
 			}
 
@@ -2898,6 +2959,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_bufferParamsModified = m_bufferParams;
 
 			m_sessionParams.shadingsystem = ccl::SHADINGSYSTEM_OSL;
+			m_sessionParams.use_resolution_divider = false;
 			m_sceneParams.shadingsystem = m_sessionParams.shadingsystem;
 			m_sceneParams.bvh_layout = ccl::BVH_LAYOUT_AUTO;
 
@@ -3505,6 +3567,10 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 
 			Instance instance = m_instanceCache->get( object, attributes, name );
+			if( !instance.object() || !instance.object() )
+			{
+				return nullptr;
+			}
 
 			ObjectInterfacePtr result = new CyclesObject( m_session, instance, m_frame );
 			result->attributes( attributes );
@@ -3536,6 +3602,11 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				frameIdx = times.size()-1;
 			}
 			Instance instance = m_instanceCache->get( samples, times, frameIdx, attributes, name );
+
+			if( !instance.object() || !instance.object() )
+			{
+				return nullptr;
+			}
 
 			ObjectInterfacePtr result = new CyclesObject( m_session, instance, m_frame );
 			result->attributes( attributes );
@@ -3859,7 +3930,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			CompoundDataPtr paramData = new CompoundData();
 
-			paramData->writable()["default"] = new StringData( "rgba" );
+			paramData->writable()["default"] = new StringData( "beauty" );
 
 			ccl::CryptomatteType crypto = ccl::CRYPT_NONE;
 			if( m_cryptomatteAccurate )
@@ -3984,7 +4055,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				}
 			}
 
-#ifdef WITH_CYCLES_LIGHTGROUPS
 			// Add lightgroups on the end
 			for( auto &coutput : m_outputs )
 			{
@@ -4011,7 +4081,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				const IECore::CompoundDataPtr layer = coutput.second->m_parameters->copy();
 				layersData->writable()[name] = layer;
 			}
-#endif
 
 			paramData->writable()["layers"] = layersData;
 
@@ -4019,9 +4088,13 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			film->set_use_approximate_shadow_catcher( !hasShadowCatcher );
 			m_scene->integrator->set_use_denoise( hasDenoise );
 			if( m_renderType == Interactive )
+			{
 				m_session->set_output_driver( ccl::make_unique<IEDisplayOutputDriver>( displayWindow, dataWindow, paramData ) );
+			}
 			else
+			{
 				m_session->set_output_driver( ccl::make_unique<OIIOOutputDriver>( displayWindow, dataWindow, paramData ) );
+			}
 			m_session->reset( m_sessionParams, m_bufferParams );
 
 			m_outputsChanged = false;
