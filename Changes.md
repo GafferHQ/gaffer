@@ -1,3 +1,11 @@
+1.0.x.x (relative to 1.0.2.0)
+=======
+
+Fixes
+-----
+
+- TweakPlug : Added `Min` and `Max` tweak modes to the UI for numeric tweaks. These were previously only available through Python.
+
 1.0.2.0 (relative to 1.0.1.0)
 =======
 
