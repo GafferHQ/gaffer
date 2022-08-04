@@ -468,7 +468,3 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
-
-if not GafferCycles.withLightGroups :
-
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "attributes.lightGroup", "plugValueWidget:type", "" )

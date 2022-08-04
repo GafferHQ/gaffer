@@ -345,8 +345,6 @@ if os.environ.get( "CYCLES_ROOT" ) and os.environ.get( "GAFFERCYCLES_HIDE_UI", "
 				}
 
 				if data == "lightgroup":
-					if not GafferCycles.withLightGroups :
-						continue
 					data = "lg lightgroup"
 					label = "Light_Group"
 
