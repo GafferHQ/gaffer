@@ -1,3 +1,11 @@
+1.0.x.x (relative to 1.0.2.1)
+=======
+
+Improvements
+------------
+
+- ColorPlugValueWidget : Hid the color chooser button (sliders) for output plugs.
+
 1.0.2.1 (relative to 1.0.2.0)
 =======
 

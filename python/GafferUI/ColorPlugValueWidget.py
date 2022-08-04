@@ -70,11 +70,19 @@ class ColorPlugValueWidget( GafferUI.PlugValueWidget ) :
 			sole( Gaffer.Metadata.value( plug, "colorPlugValueWidget:colorChooserVisible" ) for plug in self.getPlugs() )
 		)
 
+		self.__chooserButton.setVisible( not any( p.direction() == Gaffer.Plug.Direction.Out for p in self.getPlugs() ) )
+
 		self.__blinkBehaviour = None
 
 	def setColorChooserVisible( self, visible ) :
 
-		self.__colorChooser.setVisible( visible )
+		self.__colorChooserVisible = visible
+
+		self.__colorChooser.setVisible(
+			self.__colorChooserVisible and
+			not any( p.direction() == Gaffer.Plug.Direction.Out for p in self.getPlugs() )
+		)
+
 		self.__chooserButton.setImage(
 			"colorPlugValueWidgetSliders{}.png".format( "On" if visible else "Off" )
 		)
@@ -90,6 +98,10 @@ class ColorPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__compoundNumericWidget.setPlugs( plugs )
 		self.__colorChooser.setPlugs( plugs )
 		self.__swatch.setPlugs( plugs )
+
+		# Update widget visibility if the plug directions changed
+		self.__chooserButton.setVisible( not any( p.direction() == Gaffer.Plug.Direction.Out for p in self.getPlugs() ) )
+		self.setColorChooserVisible( self.__colorChooserVisible )
 
 	def setHighlighted( self, highlighted ) :
 
