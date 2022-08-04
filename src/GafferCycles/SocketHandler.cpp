@@ -554,7 +554,15 @@ void setupLightPlugs( const std::string &shaderName, const ccl::NodeType *nodeTy
 	}
 	else if( shaderName == "quad_light" )
 	{
-		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "spread" ) )), plugsParent, Gaffer::Plug::In ) );
+		const ccl::SocketType *spreadSocket = nodeType->find_input( ccl::ustring( "spread" ) );
+		validPlugs.insert(
+			setupNumericPlug<FloatPlug>(
+				nodeType, *spreadSocket, plugsParent, Gaffer::Plug::In,
+				// Cycles API uses radians, but that isn't user-friendly so we convert to degrees.
+				// We convert back to radians in the renderer backend.
+				IECore::radiansToDegrees( *static_cast<const float *>( spreadSocket->default_value ) )
+			)
+		);
 	}
 	else if( shaderName == "disk_light" )
 	{

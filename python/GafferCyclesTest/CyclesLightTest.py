@@ -74,6 +74,17 @@ class CyclesLightTest( GafferSceneTest.SceneTestCase ) :
 		self.assertNotIn( "penumbraAngle", shader.parameters )
 		self.assertNotIn( "coneAngle", shader.parameters )
 
+	def testQuadSpread( self ) :
+
+		node = GafferCycles.CyclesLight()
+		node.loadShader( "quad_light" )
+
+		self.assertEqual( node["parameters"]["spread"].defaultValue(), 180.0 )
+		self.assertTrue( node["parameters"]["spread"].isSetToDefault() )
+
+		shader = node["out"].attributes( "/light" )["ccl:light"].outputShader()
+		self.assertEqual( shader.parameters["spread"].value, 180.0 )
+
 	def testLightAttribute( self ) :
 
 		light = GafferCycles.CyclesLight()

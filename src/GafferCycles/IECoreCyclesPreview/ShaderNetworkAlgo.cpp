@@ -754,6 +754,10 @@ void convertLight( const IECoreScene::ShaderNetwork *light, ccl::Light *cyclesLi
 		{
 			cyclesLight->set_spot_angle( IECore::degreesToRadians( parameterValue<float>( value.get(), name, 45.0f ) ) );
 		}
+		else if( name == "spread" )
+		{
+			cyclesLight->set_spread( IECore::degreesToRadians( parameterValue<float>( value.get(), name, 180.0f ) ) );
+		}
 		// Convert generic parameters.
 		else
 		{
