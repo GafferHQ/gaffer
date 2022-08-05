@@ -1,10 +1,10 @@
-0.61.14.x (relative to 0.61.14.2)
+0.61.14.3 (relative to 0.61.14.2)
 =========
 
 Fixes
 -----
 
-- CurvesAlgo : fix Arnold rendering error for non-linear curves with Vertex interpolation Quatf primitive variable.
+- Arnold : Fixed rendering error for cubic curves with Vertex interpolation Quatf primitive variables.
 - ImageReader : Fixed reading of signed integer TIFF files, which were failing due to a missing colorspace configuration. Signed integer files are now assumed to contain linear data (#4772).
 
 0.61.14.2 (relative to 0.61.14.1)
