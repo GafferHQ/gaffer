@@ -79,6 +79,95 @@ using namespace Gaffer;
 namespace
 {
 
+#ifdef _MSC_VER
+
+std::string getFileSecurityInfo( const std::string &pathString, SECURITY_INFORMATION info )
+{
+	/// \todo : There may be optimizations to be had by caching credentials such
+	/// as the results of `LookupAccountSid` to avoid costly Windows API calls.
+	PSID pSidOwner = NULL;
+	PSID pSidGroup = NULL;
+	PSID pSid = NULL;
+	BOOL bRtnBool = TRUE;
+	LPTSTR AcctName = NULL;
+	LPTSTR DomainName = NULL;
+	DWORD dwAcctName = 1;
+	DWORD dwDomainName = 1;
+	SID_NAME_USE eUse = SidTypeUnknown;
+
+	DWORD result = GetNamedSecurityInfo(
+		pathString.c_str(),
+		SE_FILE_OBJECT,
+		OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION,
+		&pSidOwner,
+		&pSidGroup,
+		NULL,  // Out : DACL
+		NULL,  // Out : SACL
+		NULL  // Out : Security Descriptor
+	);
+
+	if( info == OWNER_SECURITY_INFORMATION )
+	{
+		pSid = pSidOwner;
+	}
+	else if( info == GROUP_SECURITY_INFORMATION )
+	{
+		pSid = pSidGroup;
+	}
+	else
+	{
+		return "";
+	}
+
+	// First call to LookupAccountSid to get the buffer sizes.
+	bRtnBool = LookupAccountSid(
+		NULL,
+		pSid,
+		AcctName,
+		( LPDWORD )&dwAcctName,
+		DomainName,
+		( LPDWORD )&dwDomainName,
+		&eUse
+	);
+
+	// Reallocate memory for the buffers.
+	AcctName = ( LPTSTR )GlobalAlloc( GMEM_FIXED, dwAcctName );
+
+	// Check GetLastError for GlobalAlloc error condition.
+	if (AcctName == NULL)
+	{
+		return "";
+	}
+
+	DomainName = ( LPTSTR )GlobalAlloc( GMEM_FIXED, dwDomainName );
+
+	// Check GetLastError for GlobalAlloc error condition.
+	if ( DomainName == NULL )
+	{
+		return "";
+	}
+
+	// Second call to LookupAccountSid to get the account name.
+	bRtnBool = LookupAccountSid(
+		NULL,
+		pSid,
+		AcctName,
+		(LPDWORD)&dwAcctName,
+		DomainName,
+		(LPDWORD)&dwDomainName,
+		&eUse
+	);
+
+	if ( bRtnBool == FALSE )
+	{
+		return "";
+	}
+
+	return AcctName;
+}
+
+#endif
+
 std::string getFileOwner( const std::string &pathString )
 {
 	std::string value;
@@ -86,82 +175,29 @@ std::string getFileOwner( const std::string &pathString )
 	struct stat s;
 	stat(pathString.c_str(), &s);
 	struct passwd *pw = getpwuid(s.st_uid);
-	value = pw ? pw->pw_name : "";
+	return pw ? pw->pw_name : "";
 
-	return value;
 #else
 
-	/// \todo : There may be optimizations to be had by caching credentials such
-	/// as the results of `LookupAccountSid` to avoid costly Windows API calls.
-	PSID pSidOwner = NULL;
-	BOOL bRtnBool = TRUE;
-	LPTSTR AcctName = NULL;
-	LPTSTR DomainName = NULL;
-	DWORD dwAcctName = 1;
-	DWORD dwDomainName = 1;
-	SID_NAME_USE eUse = SidTypeUnknown;
-	PSECURITY_DESCRIPTOR pSD = NULL;
+	return getFileSecurityInfo( pathString, OWNER_SECURITY_INFORMATION );
 
-	// First get the size of the data
-	DWORD dwSize;
-	if( GetFileSecurity( pathString.c_str(), OWNER_SECURITY_INFORMATION, pSD, 0, &dwSize ) )
-	{
-		return "";
-	}
+#endif
 
-	pSD = ( PSECURITY_DESCRIPTOR ) malloc( dwSize );
+}
 
-	if( pSD == NULL)
-	{
-		return "";
-	}
+std::string getFileGroup( const std::string &pathString )
+{
+	std::string value;
+#ifndef _MSC_VER
+	struct stat s;
+	stat(pathString.c_str(), &s);
+	struct group *gr = getgrgid( s.st_gid );
 
-	if( !GetFileSecurity( pathString.c_str(), OWNER_SECURITY_INFORMATION, pSD, dwSize, &dwSize ) )
-	{
-		free( pSD );
-		return "";
-	}
+	return gr ? gr->gr_name : "";
 
-	BOOL defaulted = false;
-	GetSecurityDescriptorOwner( pSD, &pSidOwner, &defaulted);
-	if( defaulted )
-	{
-		free( pSD );
-		return "";
-	}
+#else
 
-	// First call to LookupAccountSid to get the buffer sizes.
-	bRtnBool = LookupAccountSid(NULL, pSidOwner, AcctName, (LPDWORD)&dwAcctName, DomainName, (LPDWORD)&dwDomainName, &eUse);
-
-	// Reallocate memory for the buffers.
-	AcctName = (LPTSTR)GlobalAlloc(GMEM_FIXED, dwAcctName);
-
-	// Check GetLastError for GlobalAlloc error condition.
-	if (AcctName == NULL) {
-		free( pSD );
-		return "";
-	}
-
-	DomainName = (LPTSTR)GlobalAlloc(GMEM_FIXED, dwDomainName);
-
-	// Check GetLastError for GlobalAlloc error condition.
-	if (DomainName == NULL) {
-		free( pSD );
-		return "";
-	}
-
-	// Second call to LookupAccountSid to get the account name.
-	bRtnBool = LookupAccountSid(NULL, pSidOwner, AcctName, (LPDWORD)&dwAcctName, DomainName, (LPDWORD)&dwDomainName, &eUse);
-
-	if (bRtnBool == FALSE) {
-		free( pSD );
-		return "";
-	}
-
-	free( pSD );
-	value = AcctName;
-
-	return value;
+	return getFileSecurityInfo( pathString, GROUP_SECURITY_INFORMATION );
 
 #endif
 
@@ -335,14 +371,7 @@ IECore::ConstRunTimeTypedPtr FileSystemPath::property( const IECore::InternedStr
 				for( std::vector<std::string>::iterator it = files.begin(); it != files.end(); ++it )
 				{
 					IECore::Canceller::check( canceller );
-					struct stat s;
-					stat( it->c_str(), &s );
-#ifndef _MSC_VER
-					struct group *gr = getgrgid( s.st_gid );
-					std::string value = gr ? gr->gr_name : "";
-#else
-					std::string value = "";
-#endif
+					std::string value = getFileGroup( *it );
 					std::pair<std::map<std::string,size_t>::iterator,bool> oIt = ownerCounter.insert( std::pair<std::string,size_t>( value, 0 ) );
 					oIt.first->second++;
 					if( oIt.first->second > maxCount )
@@ -356,14 +385,7 @@ IECore::ConstRunTimeTypedPtr FileSystemPath::property( const IECore::InternedStr
 		}
 
 		std::string n = this->string();
-		struct stat s;
-		stat( n.c_str(), &s );
-#ifndef _MSC_VER
-		struct group *gr = getgrgid( s.st_gid );
-		return new StringData( gr ? gr->gr_name : "" );
-#else
-		return new StringData( "" );
-#endif
+		return new StringData( getFileGroup( n ) );
 	}
 	else if( name == g_modificationTimePropertyName )
 	{
