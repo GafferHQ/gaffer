@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import os
+
 import IECore
 
 import GafferSceneUI
@@ -76,24 +78,26 @@ with IECore.IgnoredExceptions( ImportError ) :
 
 	GafferSceneUI.ShaderView.registerScene( "ai", "Default", __arnoldShaderBall )
 
-with IECore.IgnoredExceptions( ImportError ) :
+if os.environ.get( "CYCLES_ROOT" ) :
 
-	import GafferCycles
+	with IECore.IgnoredExceptions( ImportError ) :
 
-	GafferSceneUI.ShaderView.registerRenderer( "ccl", GafferCycles.InteractiveCyclesRender )
+		import GafferCycles
 
-	def __cyclesShaderBall() :
+		GafferSceneUI.ShaderView.registerRenderer( "ccl", GafferCycles.InteractiveCyclesRender )
 
-		result = GafferCycles.CyclesShaderBall()
+		def __cyclesShaderBall() :
 
-		# Reserve some cores for the rest of the UI
-		result["threads"]["enabled"].setValue( True )
-		result["threads"]["value"].setValue( -3 )
+			result = GafferCycles.CyclesShaderBall()
 
-		# Less issues when mixing around OSL shaders
-		result["shadingSystem"]["enabled"].setValue( True )
-		result["shadingSystem"]["value"].setValue( "OSL" )
+			# Reserve some cores for the rest of the UI
+			result["threads"]["enabled"].setValue( True )
+			result["threads"]["value"].setValue( -3 )
 
-		return result
+			# Less issues when mixing around OSL shaders
+			result["shadingSystem"]["enabled"].setValue( True )
+			result["shadingSystem"]["value"].setValue( "OSL" )
 
-	GafferSceneUI.ShaderView.registerScene( "ccl", "Default", __cyclesShaderBall )
+			return result
+
+		GafferSceneUI.ShaderView.registerScene( "ccl", "Default", __cyclesShaderBall )

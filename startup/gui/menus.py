@@ -273,24 +273,26 @@ if "APPLESEED" in os.environ :
 
 # Cycles nodes
 
-if moduleSearchPath.find( "GafferCycles" ) :
+if os.environ.get( "CYCLES_ROOT" ) and moduleSearchPath.find( "GafferCycles" ) :
 
 	try :
 
 		import GafferCycles
 		import GafferCyclesUI
 
-		GafferCyclesUI.ShaderMenu.appendShaders( nodeMenu.definition() )
+		if os.environ.get( "GAFFERCYCLES_HIDE_UI", "" ) != "1" :
 
-		nodeMenu.append( "/Cycles/Globals/Options", GafferCycles.CyclesOptions, searchText = "CyclesOptions" )
-		nodeMenu.append( "/Cycles/Globals/Background", GafferCycles.CyclesBackground, searchText = "CyclesBackground" )
-		nodeMenu.append( "/Cycles/Attributes", GafferCycles.CyclesAttributes, searchText = "CyclesAttributes" )
-		nodeMenu.append(
-			"/Cycles/Render", GafferCycles.CyclesRender,
-			searchText = "CyclesRender"
-		)
-		nodeMenu.append( "/Cycles/Interactive Render", GafferCycles.InteractiveCyclesRender, searchText = "InteractiveCyclesRender" )
-		nodeMenu.append( "/Cycles/Shader Ball", GafferCycles.CyclesShaderBall, searchText = "CyclesShaderBall" )
+			GafferCyclesUI.ShaderMenu.appendShaders( nodeMenu.definition() )
+
+			nodeMenu.append( "/Cycles/Globals/Options", GafferCycles.CyclesOptions, searchText = "CyclesOptions" )
+			nodeMenu.append( "/Cycles/Globals/Background", GafferCycles.CyclesBackground, searchText = "CyclesBackground" )
+			nodeMenu.append( "/Cycles/Attributes", GafferCycles.CyclesAttributes, searchText = "CyclesAttributes" )
+			nodeMenu.append(
+				"/Cycles/Render", GafferCycles.CyclesRender,
+				searchText = "CyclesRender"
+			)
+			nodeMenu.append( "/Cycles/Interactive Render", GafferCycles.InteractiveCyclesRender, searchText = "InteractiveCyclesRender" )
+			nodeMenu.append( "/Cycles/Shader Ball", GafferCycles.CyclesShaderBall, searchText = "CyclesShaderBall" )
 
 	except Exception as m :
 
