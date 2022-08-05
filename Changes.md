@@ -1,4 +1,4 @@
-1.0.x.x (relative to 1.0.2.0)
+1.0.2.1 (relative to 1.0.2.0)
 =======
 
 Fixes
