@@ -42,6 +42,8 @@ import os
 if os.name is not "nt" :
 	import pwd
 	import grp
+else :
+	from . import _WindowsUtils
 
 import IECore
 
@@ -515,17 +517,23 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 
 		GafferTest.TestCase.tearDown( self )
 
-	def getFileOwner( self, filepath ):
+	def getFileOwner( self, filePath ):
 
-		# Windows Python does not have a reliable native method to get the owner
-		# without installing the Win32 package. Since the files being tested
-		# are created within the test process, assume the current user is
-		# an acceptable standin for the file owner
 		if os.name is not "nt" :
-			return pwd.getpwuid( os.stat( filepath ).st_uid ).pw_name
+			return pwd.getpwuid( os.stat( filePath ).st_uid ).pw_name
 		else :
-			return os.environ["USERNAME"]
+			securityDescriptor = GafferTest._WindowsUtils.getFileSecurity( filePath )
+			owner, domain = securityDescriptor.owner()
+			return owner
 
+	def getFileGroup( self, filePath ) :
+
+		if os.name is not "nt" :
+			return grp.getgrgid( os.stat( filePath ).st_gid ).gr_name
+		else :
+			securityDescriptor = GafferTest._WindowsUtils.getFileSecurity( filePath )
+			group, domain = securityDescriptor.group()
+			return group
 
 if __name__ == "__main__":
 	unittest.main()
