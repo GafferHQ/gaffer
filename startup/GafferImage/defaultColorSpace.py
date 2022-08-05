@@ -52,6 +52,9 @@ def defaultColorSpace( fileName, fileFormat, dataType, metadata ) :
 			"uint16" : display,
 			"uint32" : linear,
 			"float"  : linear,
+			"int8"  : linear,
+			"int16"  : linear,
+			"int"  : linear,
 		},
 
 		"zfile" : linear,

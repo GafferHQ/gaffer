@@ -177,7 +177,9 @@ def __validModes( plug ) :
 		result += [
 			Gaffer.TweakPlug.Mode.Add,
 			Gaffer.TweakPlug.Mode.Subtract,
-			Gaffer.TweakPlug.Mode.Multiply
+			Gaffer.TweakPlug.Mode.Multiply,
+			Gaffer.TweakPlug.Mode.Min,
+			Gaffer.TweakPlug.Mode.Max,
 		]
 
 	if type( plug.parent()["value"] ) in [
