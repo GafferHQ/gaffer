@@ -236,7 +236,9 @@ struct CatchingCombiner;
 ///
 /// \todo Perhaps we should add a protected `track( const Connection &connection )`
 /// method that could be used to track any sort of connection? Then we could replace
-/// our usage of `boost::bind()` with `std::bind()`.
+/// our usage of `boost::bind()` with `std::bind()`. Or perhaps `Signal::connect()`
+/// should take multiple arguments and do the binding for you, so it naturally gets
+/// to introspect the arguments looking for Trackables?
 class Trackable : boost::noncopyable
 {
 
