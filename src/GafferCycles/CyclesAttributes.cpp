@@ -66,9 +66,6 @@ CyclesAttributes::CyclesAttributes( const std::string &name )
 	attributes->addChild( new Gaffer::NameValuePlug( "ccl:max_level", new IECore::IntData( 1 ), false, "maxLevel" ) );
 	attributes->addChild( new Gaffer::NameValuePlug( "ccl:dicing_rate", new IECore::FloatData( 1.0f ), false, "dicingScale" ) );
 
-	// Color
-	attributes->addChild( new Gaffer::NameValuePlug( "Cs", new IECore::Color3fData( Imath::Color3f( 0.0f ) ), false, "color" ) );
-
 	// Light-Group
 	attributes->addChild( new Gaffer::NameValuePlug( "ccl:lightgroup", new IECore::StringData( "" ), false, "lightGroup" ) );
 
