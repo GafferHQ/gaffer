@@ -1,3 +1,11 @@
+0.61.14.x (relative to 0.61.14.3)
+=========
+
+Fixes
+-----
+
+- PathFilter : Improved positioning of PathFilters created by dropping paths onto a node.
+
 0.61.14.3 (relative to 0.61.14.2)
 =========
 
