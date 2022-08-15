@@ -129,6 +129,8 @@ class GAFFERUI_API Tool : public Gaffer::Node
 			}
 		};
 
+		void parentChanged( GraphComponent *oldParent ) override;
+
 	private :
 
 		static size_t g_firstPlugIndex;

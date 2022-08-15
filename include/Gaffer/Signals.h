@@ -236,7 +236,9 @@ struct CatchingCombiner;
 ///
 /// \todo Perhaps we should add a protected `track( const Connection &connection )`
 /// method that could be used to track any sort of connection? Then we could replace
-/// our usage of `boost::bind()` with `std::bind()`.
+/// our usage of `boost::bind()` with `std::bind()`. Or perhaps `Signal::connect()`
+/// should take multiple arguments and do the binding for you, so it naturally gets
+/// to introspect the arguments looking for Trackables?
 class Trackable : boost::noncopyable
 {
 
@@ -244,7 +246,13 @@ class Trackable : boost::noncopyable
 
 		virtual ~Trackable();
 
+	protected :
+
+		void disconnectTrackedConnections();
+
 	private :
+
+		friend void GafferModule::bindSignals();
 
 		template<typename Signature, typename Combiner>
 		friend class Signal;

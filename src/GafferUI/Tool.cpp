@@ -162,6 +162,18 @@ void Tool::registeredTools( IECore::TypeId viewType, std::vector<std::string> &t
 	} while( viewType != (IECore::TypeId)NodeTypeId && viewType != IECore::InvalidTypeId );
 }
 
+void Tool::parentChanged( GraphComponent *oldParent )
+{
+	if( oldParent != nullptr )
+	{
+		// Tools are bound to a particular ToolContainer, and can't be reparented.  If we already
+		// had a parent, and it's changing, that can only mean we're being destroyed.
+		// Disable signals while we're being destroyed, so that Tools don't have to handle
+		// plugDirtiedSignal while their parent is invalid.
+		disconnectTrackedConnections();
+	}
+}
+
 //////////////////////////////////////////////////////////////////////////
 // ToolContainer
 //////////////////////////////////////////////////////////////////////////

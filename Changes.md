@@ -1,3 +1,16 @@
+1.x.x.x
+=======
+
+Fixes
+-----
+
+- Plug : Fixed bug that could prevent `plugDirtiedSignal()` from ever being emitted again if an exception was thrown during parenting. This could cause the UI to stop updating.
+
+API
+---
+
+- Signals : Added `Trackable::disconnectTrackedConnections()` method.
+
 1.0.2.1 (relative to 1.0.2.0)
 =======
 

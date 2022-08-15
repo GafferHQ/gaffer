@@ -452,13 +452,7 @@ struct CatchingCombiner
 
 inline Trackable::~Trackable()
 {
-	if( m_connections )
-	{
-		for( auto &c : *m_connections )
-		{
-			c.disconnect();
-		}
-	}
+	disconnectTrackedConnections();
 }
 
 struct Trackable::TrackableVisitor
@@ -507,6 +501,17 @@ void Trackable::trackConnection( const SlotFunctor &slotFunctor, const Connectio
 		slotFunctor,
 		0
 	);
+}
+
+inline void Trackable::disconnectTrackedConnections()
+{
+	if( m_connections )
+	{
+		for( auto &c : *m_connections )
+		{
+			c.disconnect();
+		}
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////

@@ -165,4 +165,13 @@ inline void intrusive_ptr_release( SlotBase *r )
 
 } // namespace Gaffer::Signals::Private
 
+// Forward declaration to allow friendship with the Python bindings.
+
+namespace GafferModule
+{
+
+void bindSignals();
+
+};
+
 #endif // GAFFER_SLOTBASE_H
