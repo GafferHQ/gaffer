@@ -34,10 +34,7 @@
 #
 ##########################################################################
 
-from .InteractiveCyclesRenderTest import InteractiveCyclesRenderTest
-from .ModuleTest import ModuleTest
-
-from .IECoreCyclesPreviewTest import *
+from .RendererTest import RendererTest
 
 if __name__ == "__main__":
 	import unittest
