@@ -972,7 +972,7 @@ class ImageView::ColorInspector : public Signals::Trackable
 			// because derived classes may have called insertConverter(),
 			// so we take it from the input to the display transform chain.
 
-			ImagePlug *image = view->getPreprocessor()->getChild<ImagePlug>( "out" );
+			ImagePlug *image = view->getPreprocessor()->getChild<DeepState>( "__flattenedImage" )->getChild<ImagePlug>( "out" );
 			m_deleteContextVariables->inPlug()->setInput( image );
 			m_sampler->imagePlug()->setInput( m_deleteContextVariables->outPlug() );
 
@@ -1111,7 +1111,10 @@ GAFFERIMAGEUI_API ImageView::ViewDescription<ImageView> ImageView::g_viewDescrip
 
 ImageView::ImageView( const std::string &name )
 	:	View( name, new GafferImage::ImagePlug() ),
-		m_soloChannel( new IntData( -1 ) ),
+		m_clippingParameter( new BoolData( false ) ),
+		m_multiplyParameter( new Color3fData( Color3f( 1 ) ) ),
+		m_powerParameter( new Color3fData( Color3f( 1 ) ) ),
+		m_soloChannelParameter( new IntData( -1 ) ),
 		m_lutGPU( true ),
 		m_imageGadget( new ImageGadget() ),
 		m_framed( false )
@@ -1162,7 +1165,46 @@ ImageView::ImageView( const std::string &name )
 	SelectViewPtr selectView = new SelectView( "_selectView" );
 	preprocessor->addChild( selectView );
 	selectView->inPlug()->setInput( preprocessorInput );
-	preprocessorOutput->setInput( selectView->outPlug() );
+
+	// All of the ways we want to interact with the image here require it to be flattened first ( ImageGadget,
+	// ImageStats, ImageSampler ).  By flattening it before any of these things, we ensure it only gets
+	// flattened once ( the flattens inside ImageStats and ImageSamplers will simply pass through when they
+	// notice the image is already flat ).
+	DeepStatePtr deepState = new DeepState( "__flattenedImage" );
+	preprocessor->addChild( deepState );
+	deepState->deepStatePlug()->setValue( int( DeepState::TargetState::Flat ) );
+	deepState->inPlug()->setInput( selectView->outPlug() );
+
+	SaturationPtr saturationNode = new Saturation;
+	preprocessor->addChild( saturationNode );
+	saturationNode->inPlug()->setInput( deepState->outPlug() );
+	m_cpuSaturationPlug = saturationNode->saturationPlug();
+
+	ClampPtr clampNode = new Clamp();
+	preprocessor->addChild( clampNode );
+	clampNode->inPlug()->setInput( saturationNode->outPlug() );
+	clampNode->channelsPlug()->setValue( "*" );
+	clampNode->minClampToEnabledPlug()->setValue( true );
+	clampNode->maxClampToEnabledPlug()->setValue( true );
+	clampNode->minClampToPlug()->setValue( Color4f( 1.0f, 1.0f, 1.0f, 0.0f ) );
+	clampNode->maxClampToPlug()->setValue( Color4f( 0.0f, 0.0f, 0.0f, 1.0f ) );
+	m_cpuClippingPlug = clampNode->enabledPlug();
+
+	GradePtr gradeNode = new Grade();
+	preprocessor->addChild( gradeNode );
+	gradeNode->inPlug()->setInput( clampNode->outPlug() );
+	gradeNode->channelsPlug()->setValue( "*" );
+	m_cpuMultiplyPlug = gradeNode->multiplyPlug();
+	m_cpuGammaPlug = gradeNode->gammaPlug();
+
+	m_imageBeforeColorTransform = gradeNode->outPlug();
+
+	m_colorTransformSwitch = new Switch();
+	preprocessor->addChild( m_colorTransformSwitch );
+	m_colorTransformSwitch->setup( preprocessorInput.get() );
+	m_colorTransformSwitch->inPlugs()->getChild<Gaffer::Plug>(0)->setInput( deepState->outPlug() );
+
+	preprocessorOutput->setInput( m_colorTransformSwitch->outPlug() );
 
 	// tell the base class about all the preprocessing we want to do
 
@@ -1351,8 +1393,8 @@ void ImageView::plugSet( Gaffer::Plug *plug )
 	{
 		int soloChannel = soloChannelPlug()->getValue();
 		m_imageGadget->setSoloChannel( soloChannel );
-		m_soloChannel->writable() = soloChannel;
-		updateDisplayTransform();
+		m_soloChannelParameter->writable() = soloChannel;
+		m_cpuSaturationPlug->setValue( soloChannel != -2 );
 	}
 	else if( plug == channelsPlug() )
 	{
@@ -1368,15 +1410,22 @@ void ImageView::plugSet( Gaffer::Plug *plug )
 	}
 	else if( plug == clippingPlug() )
 	{
-		m_imageGadget->setClipping( clippingPlug()->getValue() );
+		bool clipping = clippingPlug()->getValue();
+		m_cpuClippingPlug->setValue( clipping );
+		m_clippingParameter->writable() = clipping;
 	}
 	else if( plug == exposurePlug() )
 	{
-		m_imageGadget->setExposure( exposurePlug()->getValue() );
+		float multiply = pow( 2.0f, exposurePlug()->getValue() );
+		m_cpuMultiplyPlug->setValue( Color4f( multiply, multiply, multiply, 1.0f ) );
+		m_multiplyParameter->writable() = Color3f( multiply );
 	}
 	else if( plug == gammaPlug() )
 	{
-		m_imageGadget->setGamma( gammaPlug()->getValue() );
+		float gamma = gammaPlug()->getValue();
+		float power = gamma > 0.0 ? 1.0f / gamma : 1.0f;
+		m_cpuGammaPlug->setValue( Color4f( gamma, gamma, gamma, 1.0f ) );
+		m_powerParameter->writable() = Color3f( power );
 	}
 	else if( plug == displayTransformPlug() )
 	{
@@ -1469,7 +1518,10 @@ void ImageView::preRender()
 			}
 		}
 
-		m_displayTransformAndShader->shader->addUniformParameter( "soloChannel", m_soloChannel );
+		m_displayTransformAndShader->shader->addUniformParameter( "clipping", m_clippingParameter );
+		m_displayTransformAndShader->shader->addUniformParameter( "multiply", m_multiplyParameter );
+		m_displayTransformAndShader->shader->addUniformParameter( "power", m_powerParameter );
+		m_displayTransformAndShader->shader->addUniformParameter( "soloChannel", m_soloChannelParameter );
 		viewportGadget()->setPostProcessShader( m_displayTransformAndShader->shader );
 	}
 
@@ -1508,13 +1560,20 @@ void ImageView::insertDisplayTransform()
 		m_displayTransformAndShader->supportsShader = ocioTrans != nullptr || !m_displayTransformAndShader->displayTransform;
 		m_displayTransformAndShader->shader = nullptr;
 
-		// Even though technically the ImageGadget will own `displayTransform`,
-		// we must parent it into our preprocessor so that `BackgroundTask::cancelAffectedTasks()`
-		// can find the relevant tasks to cancel if plugs on `displayTransform` are edited.
 		if( m_displayTransformAndShader->displayTransform )
 		{
 			getPreprocessor()->addChild( m_displayTransformAndShader->displayTransform );
+			m_displayTransformAndShader->displayTransform->inPlug()->setInput( m_imageBeforeColorTransform );
 		}
+	}
+
+	if( m_displayTransformAndShader->displayTransform )
+	{
+		m_colorTransformSwitch->inPlugs()->getChild<Gaffer::Plug>(1)->setInput( m_displayTransformAndShader->displayTransform->outPlug() );
+	}
+	else
+	{
+		m_colorTransformSwitch->inPlugs()->getChild<Gaffer::Plug>(1)->setInput( m_imageBeforeColorTransform );
 	}
 
 	updateDisplayTransform();
@@ -1522,14 +1581,8 @@ void ImageView::insertDisplayTransform()
 
 void ImageView::updateDisplayTransform()
 {
-	if( !m_displayTransformAndShader->supportsShader || !m_lutGPU )
-	{
-		m_imageGadget->setCPUDisplayTransform( m_displayTransformAndShader->displayTransform );
-	}
-	else
-	{
-		m_imageGadget->setCPUDisplayTransform( nullptr );
-	}
+	// Enable the CPU path if necessary
+	m_colorTransformSwitch->indexPlug()->setValue( !m_displayTransformAndShader->supportsShader || !m_lutGPU );
 }
 
 void ImageView::registerDisplayTransform( const std::string &name, DisplayTransformCreator creator )
