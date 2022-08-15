@@ -10,6 +10,7 @@ Improvements
 - SceneWriter : Added support for Alembic visibility attributes.
 - ColorPlugValueWidget : Hid the color chooser button (sliders) for output plugs.
 - Arnold : Added metadata for new `standard_volume` shader parameters introduced in Arnold 7.1.3.0.
+- VectorDataWidget : Added a color swatch column for `Color3f` and `Color4f` elements. These are currently included in the `RandomChoice` node when `choices` is set to a list of colors, and for color primitive variables in the Primitive Inspector.
 
 Fixes
 -----
