@@ -200,6 +200,10 @@ class CurvesAlgoTest( unittest.TestCase ) :
 			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
 			IECore.FloatVectorData( [ 1.5 ] * 4 )
 		)
+		c["orient"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECore.QuatfVectorData( [ imath.Quatf() ] * 4 )
+		)
 		self.assertTrue( c.arePrimitiveVariablesValid() )
 
 		c2 = c.copy()
@@ -239,6 +243,10 @@ class CurvesAlgoTest( unittest.TestCase ) :
 			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
 			IECore.FloatVectorData( [ 1.5 ] * 16 )
 		)
+		c3["orient"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECore.QuatfVectorData( [ imath.Quatf() ] * 16 )
+		)
 		self.assertTrue( c3.arePrimitiveVariablesValid() )
 
 		c4 = c3.copy()
@@ -257,6 +265,7 @@ class CurvesAlgoTest( unittest.TestCase ) :
 			foo = arnold.AiNodeGetArray( n, "foo" )
 			self.assertEqual( arnold.AiArrayGetNumElements( foo.contents ), 4 )
 			self.assertEqual( arnold.AiArrayGetNumKeys( foo.contents ), 1 )
+			self.assertIsNone( arnold.AiNodeGetArray( n, "orient" ) )
 			for i in range( 0, 4 ) :
 				self.assertEqual( arnold.AiArrayGetFlt( r, i ), 0.5 )
 				self.assertEqual( arnold.AiArrayGetFlt( foo, i ), 1.5 )
@@ -284,6 +293,7 @@ class CurvesAlgoTest( unittest.TestCase ) :
 			foo3 = arnold.AiNodeGetArray( n3, "foo" )
 			self.assertEqual( arnold.AiArrayGetNumElements( foo3.contents ), 12 )
 			self.assertEqual( arnold.AiArrayGetNumKeys( foo3.contents ), 1 )
+			self.assertIsNone( arnold.AiNodeGetArray( n3, "orient" ) )
 			for i in range( 0, 12 ) :
 				self.assertEqual( arnold.AiArrayGetFlt( r3, i ), 0.5 )
 				self.assertEqual( arnold.AiArrayGetFlt( foo3, i ), 1.5 )

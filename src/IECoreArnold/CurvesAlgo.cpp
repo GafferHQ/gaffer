@@ -89,6 +89,20 @@ ConstCurvesPrimitivePtr resampleCurves( const CurvesPrimitive *curves )
 				updatedCurves = curves->copy();
 			}
 
+			// NOTE : Arnold does not support quaternion data and we don't know how to resample it
+			//        so remove the primitive variable and issue a warning as we do for linear curves.
+
+			if( it.second.data->typeId() == IECore::QuatfVectorDataTypeId )
+			{
+				updatedCurves->variables.erase( it.first );
+				msg(
+					Msg::Warning,
+					"ShapeAlgo::convertPrimitiveVariable",
+					boost::format( "Unable to create user parameter \"%s\" for primitive variable of type \"%s\"" ) % it.first % it.second.data->typeName()
+				);
+				continue;
+			}
+
 			IECoreScene::CurvesAlgo::resamplePrimitiveVariable( updatedCurves.get(), updatedCurves->variables[it.first], PrimitiveVariable::Varying );
 		}
 	}

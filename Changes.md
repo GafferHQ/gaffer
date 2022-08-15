@@ -1,3 +1,13 @@
+1.0.2.1 (relative to 1.0.2.0)
+=======
+
+Fixes
+-----
+
+- TweakPlug : Added `Min` and `Max` tweak modes to the UI for numeric tweaks. These were previously only available through Python.
+- Arnold : Fixed rendering error for cubic curves with Vertex interpolation Quatf primitive variables.
+- ImageReader : Fixed reading of signed integer TIFF files, which were failing due to a missing colorspace configuration. Signed integer files are now assumed to contain linear data (#4772).
+
 1.0.2.0 (relative to 1.0.1.0)
 =======
 
@@ -231,6 +241,15 @@ Build
   - Subprocess32 : Now packaged as a regular module rather than as a `.egg` package.
   - TBB : Updated to version 2020.3.
   - USD : Updated to version 21.11.
+
+0.61.14.3 (relative to 0.61.14.2)
+=========
+
+Fixes
+------
+
+- Arnold : Fixed rendering error for cubic curves with Vertex interpolation Quatf primitive variables.
+- ImageReader : Fixed reading of signed integer TIFF files, which were failing due to a missing colorspace configuration. Signed integer files are now assumed to contain linear data (#4772).
 
 0.61.14.2 (relative to 0.61.14.1)
 =========
