@@ -511,6 +511,11 @@ float luminance( const Color3f &c )
 	return c.dot( V3f( 0.2126, 0.7152, 0.0722 ) );
 }
 
+void removeNonAscii( std::string &s )
+{
+	s.erase( std::remove_if( s.begin(),s.end(), [](char c) { return c < 0; } ), s.end() );
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -599,7 +604,10 @@ Imath::Box3f StandardStyle::characterBound( TextType textType ) const
 
 Imath::Box3f StandardStyle::textBound( TextType textType, const std::string &text ) const
 {
-	Imath::Box2f b = m_fonts[textType]->coreFont()->bound( text );
+	std::string safeText = text;
+	removeNonAscii( safeText );
+
+	Imath::Box2f b = m_fonts[textType]->coreFont()->bound( safeText );
 	return Imath::Box3f(
 		m_fontScales[textType] * Imath::V3f( b.min.x, b.min.y, 0 ),
 		m_fontScales[textType] * Imath::V3f( b.max.x, b.max.y, 0 )
@@ -634,10 +642,13 @@ void StandardStyle::renderText( TextType textType, const std::string &text, Stat
 		glColor( colorForState( ForegroundColor, state ) );
 	}
 
+	std::string safeText = text;
+	removeNonAscii( safeText );
+
 	glPushMatrix();
 
 		glScalef( m_fontScales[textType], m_fontScales[textType], m_fontScales[textType] );
-		m_fonts[textType]->renderSprites( text );
+		m_fonts[textType]->renderSprites( safeText );
 
 	glPopMatrix();
 }
@@ -674,7 +685,10 @@ void StandardStyle::renderWrappedText( TextType textType, const std::string &tex
 		}
 		else
 		{
-			const float width = coreFont->bound( *it ).size().x;
+			std::string safeText = *it;
+			removeNonAscii( safeText );
+
+			const float width = coreFont->bound( safeText ).size().x;
 			if( cursor.x + width > bound.max.x )
 			{
 				cursor.x = bound.min.x;
@@ -689,7 +703,7 @@ void StandardStyle::renderWrappedText( TextType textType, const std::string &tex
 
 			glPushMatrix();
 				glTranslatef( cursor.x, cursor.y, 0.0f );
-				renderText( textType, *it, state );
+				renderText( textType, safeText, state );
 				cursor.x += width;
 			glPopMatrix();
 		}
