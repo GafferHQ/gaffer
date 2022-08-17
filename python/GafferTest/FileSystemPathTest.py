@@ -39,7 +39,8 @@ import unittest
 import time
 import datetime
 import os
-if os.name is not "nt" :
+if os.name !="nt" :
+
 	import pwd
 	import grp
 else :
@@ -518,7 +519,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 
 	def getFileOwner( self, filePath ):
 
-		if os.name is not "nt" :
+		if os.name != "nt" :
 			return pwd.getpwuid( os.stat( filePath ).st_uid ).pw_name
 		else :
 			securityDescriptor = GafferTest._WindowsUtils.getFileSecurity( filePath )
@@ -527,7 +528,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 
 	def getFileGroup( self, filePath ) :
 
-		if os.name is not "nt" :
+		if os.name != "nt" :
 			return grp.getgrgid( os.stat( filePath ).st_gid ).gr_name
 		else :
 			securityDescriptor = GafferTest._WindowsUtils.getFileSecurity( filePath )
