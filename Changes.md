@@ -4,7 +4,22 @@
 Improvements
 ------------
 
+- SceneReader :
+  - Added support for Alembic visibility attributes.
+  - Added loading of `treatAsPoint` and `treatAsLine` parameters from UsdLux lights.
+- SceneWriter : Added support for Alembic visibility attributes.
 - ColorPlugValueWidget : Hid the color chooser button (sliders) for output plugs.
+
+Fixes
+-----
+
+- Qt : Added missing QtUiTools module.
+- SceneReader : Fixed shader type for UsdLux lights. It was `surface` and is now `light`.
+
+Build
+-----
+
+- Cortex : Updated to 10.4.1.0.
 
 1.0.2.1 (relative to 1.0.2.0)
 =======
