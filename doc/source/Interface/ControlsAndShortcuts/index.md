@@ -35,9 +35,9 @@ Hide tabs of current panel           | {kbd}`Ctrl` + {kbd}`T`
 Action                               | Control or shortcut
 -------------------------------------|--------------------
 Follow the focus node                | Hover cursor over editor, <kbd>&#96;</kbd>
-Pin the node selection               | Hover cursor over editor, {kbd}`p`
+Pin the node selection               | Hover cursor over editor, {kbd}`P`
 Pin numeric bookmark 1-9             | Hover cursor over editor, {kbd}`1` - {kbd}`9`
-Follow to the node selection         | Hover cursor over editor, {kbd}`n`
+Follow to the node selection         | Hover cursor over editor, {kbd}`N`
 
 ## Graph Editor ##
 
@@ -217,7 +217,7 @@ Decrease manipulator size                           | {kbd}`-`
 Add animation key to transform of selected object(s)| {kbd}`S`
 Adjust, fine precision                              | Hold {kbd}`Shift` during action
 Adjust, snapping to rounded increments              | Hold {kbd}`Ctrl` + during action
-Target mode (Translate and Rotate only)             | Hold {kbd}`v`
+Target mode (Translate and Rotate only)             | Hold {kbd}`V`
 
 
 ### 2D images ###
@@ -309,8 +309,8 @@ Adjust value(s) of selected key(s)             | {kbd}`Shift` + {{leftClick}} an
 
 Action                              | Control or shorcut
 ------------------------------------|-------------------
-Next message of level               | {kbd}`e`, {kbd}`w`, {kbd}`i`, {kbd}`d`
-Previous message of level           | {kbd}`Shift` + {kbd}`e`, {kbd}`w`, {kbd}`i`, {kbd}`d`
+Next message of level               | {kbd}`E`, {kbd}`W`, {kbd}`I`, {kbd}`D`
+Previous message of level           | {kbd}`Shift` + {kbd}`E`, {kbd}`W`, {kbd}`I`, {kbd}`D`
 Search                              | {kbd}`Ctrl` + {kbd}`F`
   Next match (search field focus)   | {kbd}`Enter`
   Next match (log focus)            | {kbd}`N`
