@@ -45,36 +45,36 @@ import GafferUI
 import GafferTest
 import GafferUITest
 
-class LayoutNode( Gaffer.Node ) :
-
-	def __init__( self, name = "LayoutNode" ) :
-
-		Gaffer.Node.__init__( self, name )
-
-		self["top0"] = Gaffer.IntPlug()
-		self["top1"] = Gaffer.IntPlug()
-		self["top2"] = Gaffer.IntPlug()
-
-		self["left0"] = Gaffer.IntPlug()
-		self["left1"] = Gaffer.IntPlug()
-		self["left2"] = Gaffer.IntPlug()
-
-		self["bottom0"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
-		self["bottom1"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
-		self["bottom2"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
-
-		self["right0"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
-		self["right1"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
-		self["right2"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
-
-IECore.registerRunTimeTyped( LayoutNode )
-
-Gaffer.Metadata.registerValue( LayoutNode, "left*", "noduleLayout:section", "left" )
-Gaffer.Metadata.registerValue( LayoutNode, "right*", "noduleLayout:section", "right" )
-Gaffer.Metadata.registerValue( LayoutNode, "top*", "noduleLayout:section", "top" )
-Gaffer.Metadata.registerValue( LayoutNode, "bottom*", "noduleLayout:section", "bottom" )
-
 class StandardGraphLayoutTest( GafferUITest.TestCase ) :
+
+	class LayoutNode( Gaffer.Node ) :
+
+		def __init__( self, name = "LayoutNode" ) :
+
+			Gaffer.Node.__init__( self, name )
+
+			self["top0"] = Gaffer.IntPlug()
+			self["top1"] = Gaffer.IntPlug()
+			self["top2"] = Gaffer.IntPlug()
+
+			self["left0"] = Gaffer.IntPlug()
+			self["left1"] = Gaffer.IntPlug()
+			self["left2"] = Gaffer.IntPlug()
+
+			self["bottom0"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
+			self["bottom1"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
+			self["bottom2"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
+
+			self["right0"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
+			self["right1"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
+			self["right2"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
+
+	IECore.registerRunTimeTyped( LayoutNode )
+
+	Gaffer.Metadata.registerValue( LayoutNode, "left*", "noduleLayout:section", "left" )
+	Gaffer.Metadata.registerValue( LayoutNode, "right*", "noduleLayout:section", "right" )
+	Gaffer.Metadata.registerValue( LayoutNode, "top*", "noduleLayout:section", "top" )
+	Gaffer.Metadata.registerValue( LayoutNode, "bottom*", "noduleLayout:section", "bottom" )
 
 	def testConnectNode( self ) :
 
@@ -209,8 +209,8 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 	def testLayoutDirection( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["top"] = LayoutNode()
-		s["bottom"] = LayoutNode()
+		s["top"] = self.LayoutNode()
+		s["bottom"] = self.LayoutNode()
 		s["bottom"]["top0"].setInput( s["top"]["bottom0"] )
 
 		g = GafferUI.GraphGadget( s )
@@ -218,8 +218,8 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 
 		self.assertTrue( g.getNodePosition( s["top"] ).y > g.getNodePosition( s["bottom"] ).y )
 
-		s["left"] = LayoutNode()
-		s["right"] = LayoutNode()
+		s["left"] = self.LayoutNode()
+		s["right"] = self.LayoutNode()
 		s["right"]["left0"].setInput( s["left"]["right0"] )
 
 		g.getLayout().layoutNodes( g )
@@ -230,10 +230,10 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 
-		s["top0"] = LayoutNode()
-		s["top1"] = LayoutNode()
-		s["top2"] = LayoutNode()
-		s["bottom"] = LayoutNode()
+		s["top0"] = self.LayoutNode()
+		s["top1"] = self.LayoutNode()
+		s["top2"] = self.LayoutNode()
+		s["bottom"] = self.LayoutNode()
 		s["bottom"]["top0"].setInput( s["top0"]["bottom0"] )
 		s["bottom"]["top1"].setInput( s["top1"]["bottom0"] )
 		s["bottom"]["top2"].setInput( s["top2"]["bottom0"] )
@@ -250,10 +250,10 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 
-		s["left0"] = LayoutNode()
-		s["left1"] = LayoutNode()
-		s["left2"] = LayoutNode()
-		s["right"] = LayoutNode()
+		s["left0"] = self.LayoutNode()
+		s["left1"] = self.LayoutNode()
+		s["left2"] = self.LayoutNode()
+		s["right"] = self.LayoutNode()
 		s["right"]["left0"].setInput( s["left0"]["right0"] )
 		s["right"]["left1"].setInput( s["left1"]["right0"] )
 		s["right"]["left2"].setInput( s["left2"]["right0"] )
@@ -270,8 +270,8 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 
-		s["bottom"] = LayoutNode()
-		s["top"] = LayoutNode()
+		s["bottom"] = self.LayoutNode()
+		s["top"] = self.LayoutNode()
 		s["bottom"]["top0"].setInput( s["top"]["bottom0"] )
 
 		g = GafferUI.GraphGadget( s )
@@ -287,8 +287,8 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 
-		s["bottom"] = LayoutNode()
-		s["top"] = LayoutNode()
+		s["bottom"] = self.LayoutNode()
+		s["top"] = self.LayoutNode()
 		s["bottom"]["top0"].setInput( s["top"]["bottom0"] )
 
 		g = GafferUI.GraphGadget( s )
@@ -306,8 +306,8 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 
-		s["bottom"] = LayoutNode()
-		s["top"] = LayoutNode()
+		s["bottom"] = self.LayoutNode()
+		s["top"] = self.LayoutNode()
 		s["bottom"]["top0"].setInput( s["top"]["bottom0"] )
 
 		g = GafferUI.GraphGadget( s )
@@ -325,8 +325,8 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 
-		s["one"] = LayoutNode()
-		s["two"] = LayoutNode()
+		s["one"] = self.LayoutNode()
+		s["two"] = self.LayoutNode()
 
 		g = GafferUI.GraphGadget( s )
 		g.getLayout().layoutNodes( g )
@@ -337,12 +337,12 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 
-		s["top1"] = LayoutNode()
-		s["bottom1"] = LayoutNode()
+		s["top1"] = self.LayoutNode()
+		s["bottom1"] = self.LayoutNode()
 		s["bottom1"]["top0"].setInput( s["top1"]["bottom0"] )
 
-		s["top2"] = LayoutNode()
-		s["bottom2"] = LayoutNode()
+		s["top2"] = self.LayoutNode()
+		s["bottom2"] = self.LayoutNode()
 		s["bottom2"]["top0"].setInput( s["top2"]["bottom0"] )
 
 		g = GafferUI.GraphGadget( s )
@@ -354,10 +354,10 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 
-		s["top"] = LayoutNode()
-		s["middle"] = LayoutNode()
-		s["bottom"] = LayoutNode()
-		s["left"] = LayoutNode()
+		s["top"] = self.LayoutNode()
+		s["middle"] = self.LayoutNode()
+		s["bottom"] = self.LayoutNode()
+		s["left"] = self.LayoutNode()
 
 		s["middle"]["top0"].setInput( s["top"]["bottom0"] )
 		s["bottom"]["top0"].setInput( s["middle"]["bottom0"] )
@@ -375,14 +375,14 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 
-		s["topLeft"] = LayoutNode()
-		s["topRight"] = LayoutNode()
+		s["topLeft"] = self.LayoutNode()
+		s["topRight"] = self.LayoutNode()
 
 		g = GafferUI.GraphGadget( s )
 		g.setNodePosition( s["topLeft"], imath.V2f( 10, 0 ) )
 		g.setNodePosition( s["topRight"], imath.V2f( 40, 0 ) )
 
-		s["new"] = LayoutNode()
+		s["new"] = self.LayoutNode()
 		s["new"]["top0"].setInput( s["topLeft"]["bottom1"] )
 		s["new"]["top2"].setInput( s["topRight"]["bottom1"] )
 
@@ -400,8 +400,8 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 
-		s["node1"] = LayoutNode()
-		s["node2"] = LayoutNode()
+		s["node1"] = self.LayoutNode()
+		s["node2"] = self.LayoutNode()
 
 		g = GafferUI.GraphGadget( s )
 		g.setNodePosition( s["node1"], imath.V2f( 10, 0 ) )
@@ -420,9 +420,9 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 		#       v
 		#       3
 
-		s["node1"] = LayoutNode()
-		s["node2"] = LayoutNode()
-		s["node3"] = LayoutNode()
+		s["node1"] = self.LayoutNode()
+		s["node2"] = self.LayoutNode()
+		s["node3"] = self.LayoutNode()
 
 		s["node2"]["left1"].setInput( s["node1"]["right1"] )
 		s["node3"]["top1"].setInput( s["node2"]["bottom1"] )
@@ -448,8 +448,8 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 
-		s["node1"] = LayoutNode()
-		s["node2"] = LayoutNode()
+		s["node1"] = self.LayoutNode()
+		s["node2"] = self.LayoutNode()
 
 		s["node2"]["left0"].setInput( s["node1"]["right0"] )
 
@@ -474,12 +474,12 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 
-		s["s1"] = LayoutNode()
-		s["s2"] = LayoutNode()
-		s["s3"] = LayoutNode()
+		s["s1"] = self.LayoutNode()
+		s["s2"] = self.LayoutNode()
+		s["s3"] = self.LayoutNode()
 
-		s["o1"] = LayoutNode()
-		s["o2"] = LayoutNode()
+		s["o1"] = self.LayoutNode()
+		s["o2"] = self.LayoutNode()
 
 		s["o1"]["top0"].setInput( s["s1"]["bottom1"] )
 		s["o1"]["top1"].setInput( s["s2"]["bottom1"] )
@@ -504,12 +504,12 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 
-		s["s1"] = LayoutNode()
-		s["s2"] = LayoutNode()
-		s["s3"] = LayoutNode()
+		s["s1"] = self.LayoutNode()
+		s["s2"] = self.LayoutNode()
+		s["s3"] = self.LayoutNode()
 
-		s["o1"] = LayoutNode()
-		s["o2"] = LayoutNode()
+		s["o1"] = self.LayoutNode()
+		s["o2"] = self.LayoutNode()
 
 		s["o1"]["left0"].setInput( s["s1"]["right1"] )
 		s["o1"]["left1"].setInput( s["s2"]["right1"] )
@@ -534,10 +534,10 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 
-		s["t"] = LayoutNode()
-		s["b"] = LayoutNode()
-		s["bb"] = LayoutNode()
-		s["bbb"] = LayoutNode()
+		s["t"] = self.LayoutNode()
+		s["b"] = self.LayoutNode()
+		s["bb"] = self.LayoutNode()
+		s["bbb"] = self.LayoutNode()
 
 		s["b"]["top1"].setInput( s["t"]["bottom1"] )
 		s["bb"]["top1"].setInput( s["t"]["bottom1"] )
@@ -560,10 +560,10 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 
-		s["s"] = LayoutNode()
-		s["t1"] = LayoutNode()
-		s["t2"] = LayoutNode()
-		s["t3"] = LayoutNode()
+		s["s"] = self.LayoutNode()
+		s["t1"] = self.LayoutNode()
+		s["t2"] = self.LayoutNode()
+		s["t3"] = self.LayoutNode()
 
 		s["t1"]["left0"].setInput( s["s"]["bottom1"] )
 		s["t2"]["left0"].setInput( s["s"]["bottom1"] )
@@ -581,8 +581,8 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 
-		s["i"] = LayoutNode()
-		s["o"] = LayoutNode()
+		s["i"] = self.LayoutNode()
+		s["o"] = self.LayoutNode()
 
 		s["o"]["top1"].setInput( s["i"]["bottom1"] )
 
@@ -606,9 +606,9 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 
-		s["t1"] = LayoutNode()
-		s["t2"] = LayoutNode()
-		s["b"] = LayoutNode()
+		s["t1"] = self.LayoutNode()
+		s["t2"] = self.LayoutNode()
+		s["b"] = self.LayoutNode()
 
 		s["b"]["top0"].setInput( s["t1"]["bottom1"] )
 		s["b"]["top1"].setInput( s["t2"]["bottom1"] )
@@ -633,11 +633,11 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 
-		s["t1"] = LayoutNode()
-		s["t2"] = LayoutNode()
-		s["m"] = LayoutNode()
-		s["b1"] = LayoutNode()
-		s["b2"] = LayoutNode()
+		s["t1"] = self.LayoutNode()
+		s["t2"] = self.LayoutNode()
+		s["m"] = self.LayoutNode()
+		s["b1"] = self.LayoutNode()
+		s["b2"] = self.LayoutNode()
 
 		s["m"]["top0"].setInput( s["t1"]["bottom1"] )
 		s["m"]["top1"].setInput( s["t2"]["bottom1"] )
@@ -737,7 +737,7 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 	def testSimpleAuxiliaryConnectionToNode( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["n"] = LayoutNode()
+		s["n"] = self.LayoutNode()
 		Gaffer.Metadata.registerValue( s["n"]["top0"], "nodule:type", "" )
 
 		s["e"] = Gaffer.Expression()
@@ -759,7 +759,7 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 		# If the expression has an input, we don't want that to affect the
 		# expression's position if it has only one output like in this case.
 
-		s["n2"] = LayoutNode()
+		s["n2"] = self.LayoutNode()
 		g.setNodePosition( s["n2"], g.getNodePosition( s["n"] ) + imath.V2f( 0, 10 ) )
 
 		s["e"].setExpression( "parent['n']['top0'] = parent['n2']['bottom0']" )
@@ -775,7 +775,7 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 		# opposed to top to bottom
 
 		s = Gaffer.ScriptNode()
-		s["n"] = LayoutNode()
+		s["n"] = self.LayoutNode()
 
 		Gaffer.Metadata.registerValue( s["n"]["left0"], "nodule:type", "" )
 
@@ -807,7 +807,7 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 		# The nodule's tangent will determine how the auxiliary node is positioned.
 
 		s = Gaffer.ScriptNode()
-		s["n"] = LayoutNode()
+		s["n"] = self.LayoutNode()
 
 		s["e"] = Gaffer.Expression()
 		s["e"].setExpression( "parent['n']['top1'] = 0" )
@@ -832,7 +832,7 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 	def testMultipleAuxiliaryConnectionsToNode( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["n"] = LayoutNode()
+		s["n"] = self.LayoutNode()
 
 		Gaffer.Metadata.registerValue( s["n"]["left0"], "nodule:type", "" )
 		Gaffer.Metadata.registerValue( s["n"]["left1"], "nodule:type", "" )
@@ -865,13 +865,13 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 
-		s["o"] = LayoutNode()
+		s["o"] = self.LayoutNode()
 		Gaffer.Metadata.registerValue( s["o"]["left0"], "nodule:type", "" )
 
-		s["i1"] = LayoutNode()
+		s["i1"] = self.LayoutNode()
 		Gaffer.Metadata.registerValue( s["i1"]["left0"], "nodule:type", "" )
 
-		s["i2"] = LayoutNode()
+		s["i2"] = self.LayoutNode()
 		Gaffer.Metadata.registerValue( s["i2"]["left0"], "nodule:type", "" )
 
 		s["e"] = Gaffer.Expression()
