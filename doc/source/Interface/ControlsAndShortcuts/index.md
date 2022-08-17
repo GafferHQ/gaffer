@@ -324,9 +324,9 @@ Action                                             | Control or shortcut
 Toggle/edit selected cells                         | {kbd}`Return` or {{leftClick}} {{leftClick}}
 Toggle Enabled state of selected cells             | {kbd}`D`
 Copy/Paste selected cells or rows                  | {kbd}`Ctrl` + {kbd}`C`/{kbd}`V`
-Move cell selection                                | {kbd}`Up`, {kbd}`Down`, {kbd}`Left`, {kbd}`Right`
-Extend cell selection                              | {kbd}`Shift` + {kbd}`Up`, {kbd}`Down`, {kbd}`Left`, {kbd}`Right`
-Move keyboard focus                                | {kbd}`Ctrl` + {kbd}`Up`, {kbd}`Down`, {kbd}`Left`, {kbd}`Right`
+Move cell selection                                | {kbd}`↑`, {kbd}`↓`, {kbd}`←`, {kbd}`→`
+Extend cell selection                              | {kbd}`Shift` + {kbd}`↑`, {kbd}`↓`, {kbd}`←`, {kbd}`→`
+Move keyboard focus                                | {kbd}`Ctrl` + {kbd}`↑`, {kbd}`↓`, {kbd}`←`, {kbd}`→`
 Toggle selection state of cell with keyboard focus | {kbd}`Space`
 
 ## Light Editor ##
