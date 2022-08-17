@@ -181,5 +181,28 @@ class RendererTest( GafferTest.TestCase ) :
 
 		del plane, light
 
+	def testLightWithoutAttribute( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+		)
+
+		# Light destined for another renderer - we want to ignore this, and not crash.
+
+		light = renderer.light(
+			"/light",
+			None,
+			renderer.attributes( IECore.CompoundObject ( {
+				"ai:light" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader( "quad_light", "ai:light" ),
+					},
+					output = "output",
+				),
+			} ) )
+		)
+		light.transform( imath.M44f().rotate( imath.V3f( 0, math.pi, 0 ) ) )
+
 if __name__ == "__main__":
 	unittest.main()

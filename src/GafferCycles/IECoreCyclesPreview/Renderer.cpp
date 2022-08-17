@@ -1148,22 +1148,22 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 		bool applyLight( ccl::Light *light, const CyclesAttributes *previousAttributes ) const
 		{
-			ShaderNetworkAlgo::convertLight( m_lightAttribute.get(), light );
-
-			if( m_lightShader )
+			if( m_lightAttribute )
 			{
+				ShaderNetworkAlgo::convertLight( m_lightAttribute.get(), light );
 				ShaderAssignPair pair = ShaderAssignPair( light, ccl::array<ccl::Node*>() );
 				pair.second.push_back_slow( m_lightShader->shader() );
 				m_shaderCache->addShaderAssignment( pair );
 			}
 			else
 			{
-				// Use default shader
-				/// \todo If we don't have a light shader, then shouldn't we be disabling the
-				/// light completely, rather than assigning an emissive facing-ratio shader to it?
-				ShaderAssignPair pair = ShaderAssignPair( light, ccl::array<ccl::Node*>() );
-				pair.second.push_back_slow( nullptr );
-				m_shaderCache->addShaderAssignment( pair );
+				// No `ccl:light` shader assignment. Most likely a light
+				// intended for another renderer, so we turn off the Cycles
+				// light.
+				light->set_is_enabled( false );
+				// Alas, `ccl::LightManager::test_enabled_lights()` will
+				// re-enable the light unless we also set its strength to zero.
+				light->set_strength( ccl::zero_float3() );
 			}
 
 			return true;
