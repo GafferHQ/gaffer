@@ -13,6 +13,10 @@ API
 - ViewportGadget : Added `setPostProcessShader()`.  This allows the main layer to be rendered to a framebuffer, and processed by a shader before being displayed.  Useful for applying color transforms on the GPU after rendering.
 - GafferImageUI : Added `OpenColorIOAlgo::displayTransformToFramebufferShader()`.  Converts an OCIO processor to a shader suitable for use with `setPostProcessShader()`.
 - ImageView : ImageView now uses a color transform on the viewport instead of ImageGadget.  Should not impact user visible behaviour, but paves the way for future work.
+- Path : Added virtual `rootAndNames()` method. This can be overridden to modify the `root` and `names` values as set by `setFromString()`.
+- FileSystemPath :
+  - Added support for Windows paths.
+  - Added `nativeString()` function to return the path as an OS-specific string.
 
 Breaking Changes
 ----------------

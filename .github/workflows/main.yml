@@ -77,6 +77,8 @@ jobs:
             publish: false
             containerImage:
             dependenciesURL: https://github.com/hypothetical-inc/gafferDependencies/releases/download/6.1.0/gafferDependencies-6.1.0-Python3-windows.zip
+            testRunner: Invoke-Expression
+            testArguments: GafferTest.FileSystemPathTest
 
     runs-on: ${{ matrix.os }}
 
@@ -166,9 +168,8 @@ jobs:
       timeout-minutes: 60
       run: |
         echo "::add-matcher::./.github/workflows/main/problemMatchers/unittest.json"
-        ${{ matrix.testRunner }} "${{ env.GAFFER_BUILD_DIR }}/bin/gaffer test"
+        ${{ matrix.testRunner }} "${{ env.GAFFER_BUILD_DIR }}/bin/gaffer test ${{ matrix.testArguments }}"
         echo "::remove-matcher owner=unittest::"
-      if: runner.os == 'macOS' || runner.os == 'Linux'
 
     - name: Build and test Arnold extension
       run: |

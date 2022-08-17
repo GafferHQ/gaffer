@@ -219,6 +219,8 @@ class GAFFER_API Path : public IECore::RunTimeTyped
 
 	private :
 
+		virtual void rootAndNames( const std::string &s, IECore::InternedString &root, Names &names ) const;
+
 		void filterChanged();
 		void checkName( const IECore::InternedString &name ) const;
 

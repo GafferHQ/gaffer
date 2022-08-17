@@ -222,14 +222,10 @@ void Path::setFromPath( const Path *path )
 
 void Path::setFromString( const std::string &string )
 {
-	Names newNames;
-	StringAlgo::tokenize<InternedString>( string, '/', back_inserter( newNames ) );
-
 	InternedString newRoot;
-	if( string.size() && string[0] == '/' )
-	{
-		newRoot = "/";
-	}
+	Names newNames;
+
+	rootAndNames( string, newRoot, newNames );
 
 	if( newRoot == m_root && newNames == m_names )
 	{
@@ -240,6 +236,16 @@ void Path::setFromString( const std::string &string )
 	m_root = newRoot;
 
 	emitPathChanged();
+}
+
+void Path::rootAndNames( const std::string &string, InternedString &root, Names &names ) const
+{
+	StringAlgo::tokenize<InternedString>( string, '/', back_inserter( names ) );
+
+	if( string.size() && string[0] == '/' )
+	{
+		root = "/";
+	}
 }
 
 PathPtr Path::copy() const
