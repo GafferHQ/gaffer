@@ -85,6 +85,17 @@ class CyclesLightTest( GafferSceneTest.SceneTestCase ) :
 		shader = node["out"].attributes( "/light" )["ccl:light"].outputShader()
 		self.assertEqual( shader.parameters["spread"].value, 180.0 )
 
+	def testDiskSpread( self ) :
+
+		node = GafferCycles.CyclesLight()
+		node.loadShader( "disk_light" )
+
+		self.assertEqual( node["parameters"]["spread"].defaultValue(), 180.0 )
+		self.assertTrue( node["parameters"]["spread"].isSetToDefault() )
+
+		shader = node["out"].attributes( "/light" )["ccl:light"].outputShader()
+		self.assertEqual( shader.parameters["spread"].value, 180.0 )
+
 	def testLightAttribute( self ) :
 
 		light = GafferCycles.CyclesLight()

@@ -552,7 +552,20 @@ void setupLightPlugs( const std::string &shaderName, const ccl::NodeType *nodeTy
 	{
 		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "size" ) )), plugsParent, Gaffer::Plug::In ) );
 	}
-	else if( shaderName == "quad_light" )
+	else if( shaderName == "disk_light" )
+	{
+		validPlugs.insert( setupTypedPlug<FloatPlug>( "size", plugsParent, Gaffer::Plug::In, 2.0f ) );
+	}
+	else if( shaderName == "background_light" )
+	{
+		validPlugs.insert( setupTypedPlug<IntPlug>( "map_resolution", plugsParent, Gaffer::Plug::In, 1024 ) );
+	}
+	else if( shaderName == "distant_light" )
+	{
+		validPlugs.insert( setupTypedPlug<FloatPlug>( "angle", plugsParent, Gaffer::Plug::In, 0.0f ) );
+	}
+
+	if( shaderName == "quad_light" || shaderName == "disk_light" )
 	{
 		const ccl::SocketType *spreadSocket = nodeType->find_input( ccl::ustring( "spread" ) );
 		validPlugs.insert(
@@ -563,19 +576,6 @@ void setupLightPlugs( const std::string &shaderName, const ccl::NodeType *nodeTy
 				IECore::radiansToDegrees( *static_cast<const float *>( spreadSocket->default_value ) )
 			)
 		);
-	}
-	else if( shaderName == "disk_light" )
-	{
-		validPlugs.insert( setupTypedPlug<FloatPlug>( "size", plugsParent, Gaffer::Plug::In, 2.0f ) );
-		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "spread" ) )), plugsParent, Gaffer::Plug::In ) );
-	}
-	else if( shaderName == "background_light" )
-	{
-		validPlugs.insert( setupTypedPlug<IntPlug>( "map_resolution", plugsParent, Gaffer::Plug::In, 1024 ) );
-	}
-	else if( shaderName == "distant_light" )
-	{
-		validPlugs.insert( setupTypedPlug<FloatPlug>( "angle", plugsParent, Gaffer::Plug::In, 0.0f ) );
 	}
 
 	// Remove any old plugs which it turned out we didn't need.
