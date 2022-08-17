@@ -137,11 +137,11 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 		void setGamma( float gamma );
 		float getGamma() const;
 
-		void setDisplayTransform( GafferImage::ImageProcessorPtr displayTransform );
-		GafferImage::ConstImageProcessorPtr getDisplayTransform() const;
-
-		void setUseGPU( bool useGPU );
-		bool getUseGPU() const;
+		// Use for setting a display color transform that is a Gaffer image processing node that
+		// will run on the CPU.  This approach is deprecated, it is better to set a GPU OCIO
+		// transform on the ViewportGadget that contains the ImageGadget.
+		void setCPUDisplayTransform( GafferImage::ImageProcessorPtr displayTransform );
+		GafferImage::ConstImageProcessorPtr getCPUDisplayTransform() const;
 
 		void setLabelsVisible( bool visible );
 		bool getLabelsVisible() const;
@@ -188,7 +188,6 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 		// Settings to control how the image is displayed.
 
 		void displayTransformPlugDirtied( const Gaffer::Plug *plug );
-		bool usingGPU() const;
 
 		Channels m_rgbaChannels;
 		int m_soloChannel;
@@ -202,9 +201,8 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 		GafferImage::SaturationPtr m_saturationNode;
 		GafferImage::ClampPtr m_clampNode;
 		GafferImage::GradePtr m_gradeNode;
-		GafferImage::ImageProcessorPtr m_displayTransform;
+		GafferImage::ImageProcessorPtr m_cpuDisplayTransform;
 
-		bool m_useGPU;
 		bool m_labelsVisible;
 		bool m_paused;
 		ImageGadgetSignal m_stateChangedSignal;
@@ -329,12 +327,6 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 		void visibilityChanged();
 		void renderTiles() const;
 		void renderText( const std::string &text, const Imath::V2f &position, const Imath::V2f &alignment, const GafferUI::Style *style ) const;
-
-		IE_CORE_FORWARDDECLARE( TileShader )
-		TileShader *shader() const;
-		mutable TileShaderPtr m_shader;
-		mutable bool m_shaderDirty;
-
 };
 
 IE_CORE_DECLAREPTR( ImageGadget )

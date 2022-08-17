@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2022, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,21 +34,14 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERIMAGEUIMODULE_OPENCOLORIOALGOBINDING_H
+#define GAFFERIMAGEUIMODULE_OPENCOLORIOALGOBINDING_H
 
-#include "ImageGadgetBinding.h"
-#include "ImageViewBinding.h"
-#include "OpenColorIOAlgoBinding.h"
-
-using namespace boost::python;
-
-using namespace GafferImageUIModule;
-
-BOOST_PYTHON_MODULE( _GafferImageUI )
+namespace GafferImageUIModule
 {
 
-	bindImageView();
-	bindImageGadget();
-	bindOpenColorIOAlgo();
+void bindOpenColorIOAlgo();
 
-}
+} // namespace GafferUIModule
+
+#endif // GAFFERIMAGEUIMODULE_OPENCOLORIOALGOBINDING_H

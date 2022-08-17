@@ -210,6 +210,8 @@ except :
 
 sphinxRoot = os.path.join( IEEnv.Environment.rootPath(), "apps", "sphinx", "1.4.1" )
 
+PYBIND11 = os.path.join( IEEnv.Environment.rootPath(), "apps", "pybind11", "2.8.1", IEEnv.platform(), compiler, compilerVersion )
+
 ##########################################################################
 # set where we'll put things
 ##########################################################################

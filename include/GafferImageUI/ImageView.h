@@ -47,6 +47,7 @@
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/TypedPlug.h"
+#include "Gaffer/TypedObjectPlug.h"
 
 #include <functional>
 #include <memory>
@@ -88,6 +89,12 @@ class GAFFERIMAGEUI_API ImageView : public GafferUI::View
 		~ImageView() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImageUI::ImageView, ImageViewTypeId, GafferUI::View );
+
+		Gaffer::StringVectorDataPlug *channelsPlug();
+		const Gaffer::StringVectorDataPlug *channelsPlug() const;
+
+		Gaffer::IntPlug *soloChannelPlug();
+		const Gaffer::IntPlug *soloChannelPlug() const;
 
 		Gaffer::BoolPlug *clippingPlug();
 		const Gaffer::BoolPlug *clippingPlug() const;
@@ -166,15 +173,25 @@ class GAFFERIMAGEUI_API ImageView : public GafferUI::View
 		void preRender();
 
 		void insertDisplayTransform();
+		void updateDisplayTransform();
 
-		using DisplayTransformMap = std::map<std::string, GafferImage::ImageProcessorPtr>;
+		struct DisplayTransformEntry
+		{
+			GafferImage::ImageProcessorPtr displayTransform;
+			IECoreGL::Shader::SetupPtr shader;
+			bool supportsShader;
+		};
+
+		using DisplayTransformMap = std::map<std::string, DisplayTransformEntry>;
 		DisplayTransformMap m_displayTransforms;
+		DisplayTransformEntry *m_displayTransformAndShader;
+
+		IECore::IntDataPtr m_soloChannel;
+		bool m_lutGPU;
 
 		ImageGadgetPtr m_imageGadget;
 		bool m_framed;
 
-		class ChannelChooser;
-		std::unique_ptr<ChannelChooser> m_channelChooser;
 		class ColorInspector;
 		std::unique_ptr<ColorInspector> m_colorInspector;
 

@@ -38,10 +38,12 @@
 #include "GafferImageUI/ImageView.h"
 
 #include "GafferImageUI/ImageGadget.h"
+#include "GafferImageUI/OpenColorIOAlgo.h"
 
 #include "GafferImage/ImagePlug.h"
 #include "GafferImage/ImageSampler.h"
 #include "GafferImage/ImageStats.h"
+#include "GafferImage/OpenColorIOTransform.h"
 #include "GafferImage/SelectView.h"
 
 #include "GafferUI/Gadget.h"
@@ -87,107 +89,6 @@ using namespace Gaffer;
 using namespace GafferUI;
 using namespace GafferImage;
 using namespace GafferImageUI;
-
-//////////////////////////////////////////////////////////////////////////
-/// Implementation of ImageView::ChannelChooser
-//////////////////////////////////////////////////////////////////////////
-
-class ImageView::ChannelChooser : public Signals::Trackable
-{
-
-	public :
-
-		ChannelChooser( ImageView *view )
-			:	m_view( view )
-		{
-			StringVectorDataPtr channelsDefaultData = new StringVectorData;
-			std::vector<std::string> &channelsDefault = channelsDefaultData->writable();
-			channelsDefault.push_back( "R" );
-			channelsDefault.push_back( "G" );
-			channelsDefault.push_back( "B" );
-			channelsDefault.push_back( "A" );
-
-			view->addChild( new StringVectorDataPlug( "channels", Plug::In, channelsDefaultData ) );
-
-			view->addChild(
-				new IntPlug(
-					"soloChannel",
-					Plug::In,
-					/* defaultValue = */ -1,
-					/* minValue = */ -2,
-					/* maxValue = */ 3
-				)
-			);
-
-			m_view->plugSetSignal().connect( boost::bind( &ChannelChooser::plugSet, this, ::_1 ) );
-			m_view->viewportGadget()->keyPressSignal().connect( boost::bind( &ChannelChooser::keyPress, this, ::_2 ) );
-
-		}
-
-	private :
-
-		StringVectorDataPlug *channelsPlug()
-		{
-			return m_view->getChild<StringVectorDataPlug>( "channels" );
-		}
-
-		IntPlug *soloChannelPlug()
-		{
-			return m_view->getChild<IntPlug>( "soloChannel" );
-		}
-
-		void plugSet( const Gaffer::Plug *plug )
-		{
-			if( plug == soloChannelPlug() )
-			{
-				ImageGadget *imageGadget = static_cast<ImageGadget *>(
-					m_view->viewportGadget()->getPrimaryChild()
-				);
-				imageGadget->setSoloChannel( soloChannelPlug()->getValue() );
-			}
-			else if( plug == channelsPlug() )
-			{
-				ConstStringVectorDataPtr channelsData = channelsPlug()->getValue();
-				const std::vector<std::string> &channels = channelsData->readable();
-				ImageGadget::Channels c;
-				for( size_t i = 0; i < std::min( channels.size(), (size_t)4 ); ++i )
-				{
-					c[i] = channels[i];
-				}
-
-				ImageGadget *imageGadget = static_cast<ImageGadget *>(
-					m_view->viewportGadget()->getPrimaryChild()
-				);
-				imageGadget->setChannels( c );
-			}
-		}
-
-		bool keyPress( const GafferUI::KeyEvent &event )
-		{
-			if( event.modifiers )
-			{
-				return false;
-			}
-
-			const char *rgbal[5] = { "R", "G", "B", "A", "L" };
-			for( int i = 0; i < 5; ++i )
-			{
-				if( event.key == rgbal[i] )
-				{
-					int soloChannel = i < 4 ? i : -2;
-					soloChannelPlug()->setValue(
-						soloChannelPlug()->getValue() == soloChannel ? -1 : soloChannel
-					);
-					return true;
-				}
-			}
-
-			return false;
-		}
-
-		ImageView *m_view;
-
-};
 
 //////////////////////////////////////////////////////////////////////////
 /// Implementation of ImageView::ColorInspector
@@ -1210,6 +1111,8 @@ GAFFERIMAGEUI_API ImageView::ViewDescription<ImageView> ImageView::g_viewDescrip
 
 ImageView::ImageView( const std::string &name )
 	:	View( name, new GafferImage::ImagePlug() ),
+		m_soloChannel( new IntData( -1 ) ),
+		m_lutGPU( true ),
 		m_imageGadget( new ImageGadget() ),
 		m_framed( false )
 {
@@ -1220,6 +1123,22 @@ ImageView::ImageView( const std::string &name )
 	NodePtr preprocessor = new Node;
 	ImagePlugPtr preprocessorInput = new ImagePlug( "in" );
 	preprocessor->addChild( preprocessorInput );
+
+	addChild( new StringPlug( "view", Plug::In, "default", Plug::Default & ~Plug::AcceptsInputs ) );
+
+	StringVectorDataPtr channelsDefaultData = new StringVectorData;
+	channelsDefaultData->writable() = { "R", "G", "B", "A" };
+	addChild( new StringVectorDataPlug( "channels", Plug::In, channelsDefaultData ) );
+
+	addChild(
+		new IntPlug(
+			"soloChannel",
+			Plug::In,
+			/* defaultValue = */ -1,
+			/* minValue = */ -2,
+			/* maxValue = */ 3
+		)
+	);
 
 	BoolPlugPtr clippingPlug = new BoolPlug( "clipping", Plug::In, false, Plug::Default & ~Plug::AcceptsInputs );
 	addChild( clippingPlug );
@@ -1266,11 +1185,8 @@ ImageView::ImageView( const std::string &name )
 	m_imageGadget->setContext( getContext() );
 	viewportGadget()->setPrimaryChild( m_imageGadget );
 
-	addChild( new StringPlug( "view", Plug::In, "default", Plug::Default & ~Plug::AcceptsInputs ) );
-
 	selectView->viewPlug()->setInput( viewPlug() );
 
-	m_channelChooser.reset( new ChannelChooser( this ) );
 	m_colorInspector.reset( new ColorInspector( this ) );
 }
 
@@ -1331,6 +1247,26 @@ ImageView::~ImageView()
 	// https://github.com/GafferHQ/gaffer/issues/4221
 	plugInputChangedSignal().disconnectAllSlots();
 	plugDirtiedSignal().disconnectAllSlots();
+}
+
+StringVectorDataPlug *ImageView::channelsPlug()
+{
+	return getChild<StringVectorDataPlug>( "channels" );
+}
+
+const StringVectorDataPlug *ImageView::channelsPlug() const
+{
+	return getChild<StringVectorDataPlug>( "channels" );
+}
+
+IntPlug *ImageView::soloChannelPlug()
+{
+	return getChild<IntPlug>( "soloChannel" );
+}
+
+const IntPlug *ImageView::soloChannelPlug() const
+{
+	return getChild<IntPlug>( "soloChannel" );
 }
 
 Gaffer::BoolPlug *ImageView::clippingPlug()
@@ -1411,7 +1347,26 @@ void ImageView::setContext( Gaffer::ContextPtr context )
 
 void ImageView::plugSet( Gaffer::Plug *plug )
 {
-	if( plug == clippingPlug() )
+	if( plug == soloChannelPlug() )
+	{
+		int soloChannel = soloChannelPlug()->getValue();
+		m_imageGadget->setSoloChannel( soloChannel );
+		m_soloChannel->writable() = soloChannel;
+		updateDisplayTransform();
+	}
+	else if( plug == channelsPlug() )
+	{
+		ConstStringVectorDataPtr channelsData = channelsPlug()->getValue();
+		const std::vector<std::string> &channels = channelsData->readable();
+		ImageGadget::Channels c;
+		for( size_t i = 0; i < std::min( channels.size(), (size_t)4 ); ++i )
+		{
+			c[i] = channels[i];
+		}
+
+		m_imageGadget->setChannels( c );
+	}
+	else if( plug == clippingPlug() )
 	{
 		m_imageGadget->setClipping( clippingPlug()->getValue() );
 	}
@@ -1429,12 +1384,31 @@ void ImageView::plugSet( Gaffer::Plug *plug )
 	}
 	else if( plug == lutGPUPlug() )
 	{
-		m_imageGadget->setUseGPU( lutGPUPlug()->getValue() );
+		m_lutGPU = lutGPUPlug()->getValue();
+		updateDisplayTransform();
 	}
 }
 
 bool ImageView::keyPress( const GafferUI::KeyEvent &event )
 {
+
+	// Check all the solo hotkeys
+	if( !event.modifiers )
+	{
+		const char *rgbal[5] = { "R", "G", "B", "A", "L" };
+		for( int i = 0; i < 5; ++i )
+		{
+			if( event.key == rgbal[i] )
+			{
+				int soloChannel = i < 4 ? i : -2;
+				soloChannelPlug()->setValue(
+					soloChannelPlug()->getValue() == soloChannel ? -1 : soloChannel
+				);
+				return true;
+			}
+		}
+	}
+
 	if( event.key == "F" && !event.modifiers )
 	{
 		const Box3f b = m_imageGadget->bound();
@@ -1471,6 +1445,34 @@ bool ImageView::keyPress( const GafferUI::KeyEvent &event )
 
 void ImageView::preRender()
 {
+	if( !m_displayTransformAndShader->supportsShader || !m_lutGPU )
+	{
+		viewportGadget()->setPostProcessShader( nullptr );
+	}
+	else
+	{
+		if( m_displayTransformAndShader->shader == nullptr )
+		{
+			if( !m_displayTransformAndShader->displayTransform )
+			{
+				m_displayTransformAndShader->shader = OpenColorIOAlgo::displayTransformToFramebufferShader( nullptr );
+			}
+			else
+			{
+				const OpenColorIOTransform *ocioTrans = runTimeCast<const OpenColorIOTransform>(
+					m_displayTransformAndShader->displayTransform.get()
+				);
+
+				m_displayTransformAndShader->shader = OpenColorIOAlgo::displayTransformToFramebufferShader(
+					ocioTrans->processor().get()
+				);
+			}
+		}
+
+		m_displayTransformAndShader->shader->addUniformParameter( "soloChannel", m_soloChannel );
+		viewportGadget()->setPostProcessShader( m_displayTransformAndShader->shader );
+	}
+
 	if( m_framed )
 	{
 		return;
@@ -1490,26 +1492,44 @@ void ImageView::insertDisplayTransform()
 {
 	const std::string name = displayTransformPlug()->getValue();
 
-	ImageProcessorPtr displayTransform;
-	DisplayTransformMap::const_iterator it = m_displayTransforms.find( name );
+	DisplayTransformMap::iterator it = m_displayTransforms.find( name );
 	if( it != m_displayTransforms.end() )
 	{
-		displayTransform = it->second;
+		m_displayTransformAndShader = &(it->second);
 	}
 	else
 	{
-		displayTransform = createDisplayTransform( name );
-		if( displayTransform )
+		m_displayTransformAndShader = &m_displayTransforms.insert(
+			std::make_pair( name, DisplayTransformEntry() )
+		).first->second;
+
+		m_displayTransformAndShader->displayTransform = createDisplayTransform( name );
+		const OpenColorIOTransform *ocioTrans = runTimeCast<const OpenColorIOTransform>( m_displayTransformAndShader->displayTransform.get() );
+		m_displayTransformAndShader->supportsShader = ocioTrans != nullptr || !m_displayTransformAndShader->displayTransform;
+		m_displayTransformAndShader->shader = nullptr;
+
+		// Even though technically the ImageGadget will own `displayTransform`,
+		// we must parent it into our preprocessor so that `BackgroundTask::cancelAffectedTasks()`
+		// can find the relevant tasks to cancel if plugs on `displayTransform` are edited.
+		if( m_displayTransformAndShader->displayTransform )
 		{
-			m_displayTransforms[name] = displayTransform;
-			// Even though technically the ImageGadget will own `displayTransform`,
-			// we must parent it into our preprocessor so that `BackgroundTask::cancelAffectedTasks()`
-			// can find the relevant tasks to cancel if plugs on `displayTransform` are edited.
-			getPreprocessor()->addChild( displayTransform );
+			getPreprocessor()->addChild( m_displayTransformAndShader->displayTransform );
 		}
 	}
 
-	m_imageGadget->setDisplayTransform( displayTransform );
+	updateDisplayTransform();
+}
+
+void ImageView::updateDisplayTransform()
+{
+	if( !m_displayTransformAndShader->supportsShader || !m_lutGPU )
+	{
+		m_imageGadget->setCPUDisplayTransform( m_displayTransformAndShader->displayTransform );
+	}
+	else
+	{
+		m_imageGadget->setCPUDisplayTransform( nullptr );
+	}
 }
 
 void ImageView::registerDisplayTransform( const std::string &name, DisplayTransformCreator creator )

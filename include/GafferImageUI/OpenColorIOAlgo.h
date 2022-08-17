@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2022, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,21 +34,30 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERIMAGEUI_OPENCOLORIOALGO_H
+#define GAFFERIMAGEUI_OPENCOLORIOALGO_H
 
-#include "ImageGadgetBinding.h"
-#include "ImageViewBinding.h"
-#include "OpenColorIOAlgoBinding.h"
+#include "GafferImageUI/Export.h"
 
-using namespace boost::python;
+#include "OpenColorIO/OpenColorIO.h"
 
-using namespace GafferImageUIModule;
+#include "IECoreGL/Shader.h"
 
-BOOST_PYTHON_MODULE( _GafferImageUI )
+namespace GafferImageUI
 {
 
-	bindImageView();
-	bindImageGadget();
-	bindOpenColorIOAlgo();
+namespace OpenColorIOAlgo
+{
 
-}
+// Given a OpenColorIO processor, return a shader appropriate for applying this color transform to a framebuffer.
+// The shader has a frameBufferTexture uniform so it is appropriate to use with ViewportGadget::setPostProcessShader.
+// There are also additional uniforms:
+//   bool unpremultiply : temporarily unpremultiply while applying the color transform
+//   bool soloChannel : Set to 0-3 to pick channels RGBA, or -2 for luminance.  Default -1 uses all channels as a color.
+GAFFERIMAGEUI_API IECoreGL::Shader::SetupPtr displayTransformToFramebufferShader( const OCIO_NAMESPACE::Processor *processor );
+
+} // namespace OpenColorIOAlgo
+
+} // namespace GafferImageUI
+
+#endif // GAFFERIMAGEUI_OPENCOLORIOALGO_H

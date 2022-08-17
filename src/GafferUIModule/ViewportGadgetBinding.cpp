@@ -193,6 +193,8 @@ void GafferUIModule::bindViewportGadget()
 		.def( "render", &render )
 		.def( "preRenderSignal", &ViewportGadget::preRenderSignal, return_internal_reference<1>() )
 		.def( "renderRequestSignal", &ViewportGadget::renderRequestSignal, return_internal_reference<1>() )
+		.def( "setPostProcessShader", &ViewportGadget::setPostProcessShader )
+		.def( "getPostProcessShader", &ViewportGadget::getPostProcessShader )
 	;
 
 	enum_<ViewportGadget::CameraFlags>( "CameraFlags" )

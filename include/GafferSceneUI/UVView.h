@@ -50,6 +50,7 @@
 #include "Gaffer/StringPlug.h"
 
 #include <unordered_set>
+#include <unordered_map>
 
 namespace GafferSceneUI
 {
@@ -126,6 +127,10 @@ class GAFFERSCENEUI_API UVView : public GafferUI::View
 		std::unique_ptr<Gaffer::BackgroundTask> m_texturesTask;
 
 		bool m_framed;
+
+		using DisplayTransformMap = std::unordered_map<std::string, GafferImage::ImageProcessorPtr>;
+		DisplayTransformMap m_displayTransforms;
+		bool m_displayTransformDirty;
 
 		static size_t g_firstPlugIndex;
 
