@@ -16,6 +16,11 @@ Fixes
 - Qt : Added missing QtUiTools module.
 - SceneReader : Fixed shader type for UsdLux lights. It was `surface` and is now `light`.
 
+Documentation
+-------------
+
+- Improved "Controls and Shortcuts" and added link in help menu.
+
 Build
 -----
 
