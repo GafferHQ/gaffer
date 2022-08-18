@@ -30,6 +30,14 @@ Step one frame backward              | {kbd}`←`
 Fullscreen mode                      | {kbd}`F11`
 Hide tabs of current panel           | {kbd}`Ctrl` + {kbd}`T`
 
+> Note :
+> Gaffer has many interactions requiring drag and drop of UI elements. As an alternative to holding {{leftClick}} for the duration of a drag, {kbd}`G` can be pressed once to start a drag and then once again to complete the drag.
+
+Action                               | Control or shortcut
+-------------------------------------|--------------------
+Begin a {{leftClick}} drag           | Hover cursor over drag target, {kbd}`G`
+Complete a {{leftClick}} drag        | While dragging, hover cursor over drop target, {kbd}`G`
+
 ### Pinnable Editors and Inspectors ###
 
 Action                               | Control or shortcut
