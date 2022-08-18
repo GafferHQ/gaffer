@@ -128,7 +128,7 @@ Duplicate outgoing connection        | {kbd}`Shift` + {{leftClick}} and drag con
 
 Action                               | Control or shortcut
 -------------------------------------|-------------------
-Jump to focus node                   | Hover cursor over editor, <kbd>&#96;</kbd><br>or<br>{{leftClick}} {{editorFocusMenu}}, select *Focus Node* > ...
+Jump to focus node                   | Hover cursor over editor, <kbd>&#96;</kbd><br>or<br>{{leftClick}} {{editorFocusMenu}}, select *Focus Node*
 Assign focus to selected node        | Hover cursor over node graph, {kbd}`Ctrl` + <kbd>&#96;</kbd><br>or<br>Click on top right of node
 
 ### Node bookmarks ###
@@ -228,8 +228,8 @@ Increase manipulator size                           | {kbd}`+`
 Decrease manipulator size                           | {kbd}`-`
 Add animation key to transform of selected object(s)| {kbd}`S`
 Adjust, fine precision                              | Hold {kbd}`Shift` during action
-Adjust, snapping to rounded increments              | Hold {kbd}`Ctrl` + during action
-Target mode (Translate and Rotate only)             | Hold {kbd}`V`
+Adjust, snapping to rounded increments              | Hold {kbd}`Ctrl` during action
+Target mode (Translate and Rotate only)             | Hold {kbd}`V` then {{leftClick}} on target geometry
 
 
 ### 2D images ###
@@ -309,8 +309,8 @@ Pan                                            | {kbd}`Alt` + {{leftClick}} and 
 Zoom                                           | {kbd}`Alt` + {{rightClick}} and drag<br>or<br>{{mouseWheel}}
 Zoom x/y axes independently                    | Hold {kbd}`Ctrl` during action
 Pan/Zoom, fine precision                       | Hold {kbd}`Shift` during action
-Adjust frame range                             | {kbd}`Alt` + {kbd}`Shift` + {{rightClick}} and drag left/right
-Adjust key value range                         | {kbd}`Alt` + {kbd}`Shift` + {{rightClick}} and drag up/down
+Adjust frame range                             | {kbd}`Ctrl` + {kbd}`Alt` + {{rightClick}} and drag left/right
+Adjust key value range                         | {kbd}`Ctrl` + {kbd}`Alt` + {{rightClick}} and drag up/down
 Frame all curves (no selection)                | {kbd}`F`
 Frame selected key(s)                          | {kbd}`F`
 Add key to a curve                             | {kbd}`Ctrl` + {{leftClick}}
