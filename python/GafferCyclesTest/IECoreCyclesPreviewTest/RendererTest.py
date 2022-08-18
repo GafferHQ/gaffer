@@ -204,5 +204,77 @@ class RendererTest( GafferTest.TestCase ) :
 		)
 		light.transform( imath.M44f().rotate( imath.V3f( 0, math.pi, 0 ) ) )
 
+	@unittest.expectedFailure
+	def testBackgroundLightWithoutTexture( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		renderer.output(
+			"testOutput",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testBackgroundLightWithoutTexture",
+				}
+			)
+		)
+
+		plane = renderer.object(
+			"/plane",
+			IECoreScene.MeshPrimitive.createPlane(
+				imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ),
+			),
+			renderer.attributes( IECore.CompoundObject ( {
+				"ccl:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader( "principled_bsdf", "ccl:surface" )
+					},
+					output = "output",
+				)
+			} ) )
+		)
+		## \todo Default camera is facing down +ve Z but should be facing
+		# down -ve Z.
+		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
+
+		# Pure red light, with the colour being provided by a parameter value,
+		# not an input connection. This requires workarounds for the fact that
+		# Cycles will ignore the light's strength unless a texture is connected.
+
+		light = renderer.light(
+			"/light",
+			None,
+			renderer.attributes( IECore.CompoundObject ( {
+				"ccl:light" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader( "background_light", "ccl:light", { "color" : imath.Color3f( 1, 0, 0 ) } ),
+					},
+					output = "output",
+				),
+			} ) )
+		)
+		light.transform( imath.M44f().rotate( imath.V3f( 0, math.pi, 0 ) ) )
+
+		renderer.render()
+		time.sleep( 2.0 )
+
+		# Check that we have a pure red image.
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testBackgroundLightWithoutTexture" )
+		self.assertTrue( isinstance( image, IECoreImage.ImagePrimitive ) )
+
+		middlePixel = image["R"].size() // 2
+		self.assertGreater( image["R"][middlePixel], 0 )
+		self.assertEqual( image["G"][middlePixel], 0 )
+		self.assertEqual( image["B"][middlePixel], 0 )
+
+		del plane
+
 if __name__ == "__main__":
 	unittest.main()
