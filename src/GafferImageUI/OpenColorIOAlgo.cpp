@@ -166,8 +166,13 @@ vec4 luminance( vec4 c )
 	return vec4( vec3( c.r * 0.2126 + c.g * 0.7152 + c.b * 0.0722 ), c.a );
 }
 
-vec4 colorTransformWithSolo( vec4 inPixel, bool clipping, vec3 multiply, vec3 power, int soloChannel )
+vec4 colorTransformWithSolo( vec4 inPixel, bool absoluteValue, bool clipping, vec3 multiply, vec3 power, int soloChannel )
 {
+	if( absoluteValue )
+	{
+		inPixel = vec4( abs( inPixel.r ), abs( inPixel.g ), abs( inPixel.b ), abs( inPixel.a ) );
+	}
+
 	if( clipping )
 	{
 		inPixel = vec4(
@@ -206,7 +211,7 @@ vec4 colorTransformWithSolo( vec4 inPixel, bool clipping, vec3 multiply, vec3 po
 	}
 }
 
-vec4 colorTransform( vec4 inPixel, bool unpremultiply, bool clipping, vec3 multiply, vec3 power, int soloChannel )
+vec4 colorTransform( vec4 inPixel, bool unpremultiply, bool absoluteValue, bool clipping, vec3 multiply, vec3 power, int soloChannel )
 {
 	if( inPixel == vec4( 0.0 ) )
 	{
@@ -214,11 +219,11 @@ vec4 colorTransform( vec4 inPixel, bool unpremultiply, bool clipping, vec3 multi
 	}
 	else if( inPixel.a == 0.0 || !unpremultiply || soloChannel == 3 )
 	{
-		return colorTransformWithSolo( inPixel, clipping, multiply, power, soloChannel );
+		return colorTransformWithSolo( inPixel, absoluteValue, clipping, multiply, power, soloChannel );
 	}
 	else
 	{
-		return inPixel.a * colorTransformWithSolo( inPixel / inPixel.a, clipping, multiply, power, soloChannel );
+		return inPixel.a * colorTransformWithSolo( inPixel / inPixel.a, absoluteValue, clipping, multiply, power, soloChannel );
 	}
 })";
 
@@ -247,6 +252,7 @@ void main()
 		static const char *g_fragmentSuffixNew = R"(
 uniform sampler2D framebufferTexture;
 uniform bool unpremultiply;
+uniform bool absoluteValue;
 uniform bool clipping;
 uniform vec3 multiply;
 uniform vec3 power;
@@ -255,7 +261,7 @@ in vec2 fragmentuv;
 layout( location=0 ) out vec4 outColor;
 void main()
 {
-	outColor = colorTransform( texture2D( framebufferTexture, fragmentuv ), unpremultiply, clipping, multiply, power, soloChannel );
+	outColor = colorTransform( texture2D( framebufferTexture, fragmentuv ), unpremultiply, absoluteValue, clipping, multiply, power, soloChannel );
 })";
 		combinedFragmentCode = "#version 330 compatibility\n" + colorTransformCode + g_fragmentSuffixNew;
 	}
@@ -264,6 +270,7 @@ void main()
 		static const char *g_fragmentSuffixOld = R"(
 uniform sampler2D framebufferTexture;
 uniform bool unpremultiply;
+uniform bool absoluteValue;
 uniform bool clipping;
 uniform vec3 multiply;
 uniform vec3 power;
@@ -271,7 +278,7 @@ uniform int soloChannel;
 varying vec2 fragmentuv;
 void main()
 {
-	gl_FragColor = colorTransform( texture2D( framebufferTexture, fragmentuv ), unpremultiply, clipping, multiply, power, soloChannel );
+	gl_FragColor = colorTransform( texture2D( framebufferTexture, fragmentuv ), unpremultiply, absoluteValue, clipping, multiply, power, soloChannel );
 })";
 		combinedFragmentCode = colorTransformCode + g_fragmentSuffixOld;
 	}
@@ -281,6 +288,7 @@ void main()
 	);
 
 	shaderSetup->addUniformParameter( "unpremultiply", new IECore::BoolData( false ) );
+	shaderSetup->addUniformParameter( "absoluteValue", new IECore::BoolData( false ) );
 	shaderSetup->addUniformParameter( "clipping", new IECore::BoolData( false ) );
 	shaderSetup->addUniformParameter( "multiply", new IECore::Color3fData( Imath::Color3f( 1 ) ) );
 	shaderSetup->addUniformParameter( "power", new IECore::Color3fData( Imath::Color3f( 1 ) ) );
