@@ -23,12 +23,14 @@ New node graph                       | {kbd}`Ctrl` + {kbd}`N`
 Open node graph                      | {kbd}`Ctrl` + {kbd}`O`
 Save node graph                      | {kbd}`Ctrl` + {kbd}`S`
 Save node graph as                   | {kbd}`Ctrl` + {kbd}`Shift` + {kbd}`S`
+Quit the application                 | {kbd}`Ctrl` + {kbd}`Q`
 Undo                                 | {kbd}`Ctrl` + {kbd}`Z`
 Redo                                 | {kbd}`Ctrl` + {kbd}`Shift` + {kbd}`Z`
 Step one frame forward               | {kbd}`→`
 Step one frame backward              | {kbd}`←`
 Fullscreen mode                      | {kbd}`F11`
 Hide tabs of current panel           | {kbd}`Ctrl` + {kbd}`T`
+Maximise current panel               | {kbd}`Space`
 
 > Note :
 > Gaffer has many interactions requiring drag and drop of UI elements. As an alternative to holding {{leftClick}} for the duration of a drag, {kbd}`G` can be pressed once to start a drag and then once again to complete the drag.
@@ -110,6 +112,7 @@ Copy node(s)                         | {kbd}`Ctrl` + {kbd}`C`
 Paste node(s)                        | {kbd}`Ctrl` + {kbd}`V`
 Delete node(s)                       | {kbd}`Backspace`<br>or<br>{kbd}`Delete`
 Enable/disable node(s)               | {kbd}`D`
+Rename node(s)                       | {kbd}`F2`
 
 ### Node connections and layout ###
 
@@ -212,6 +215,7 @@ Fit clipping planes to selection                     | {{rightClick}} > *Clippin
 Frame view, and fit clipping planes                  | {kbd}`Ctrl` + {kbd}`F`
 Reset clipping planes                                | {{rightClick}} > *Clipping Planes* > *Default*
 Toggle Inspector                                     | {kbd}`I`
+Prune selected objects from current EditScope        | {kbd}`Ctrl` + {kbd}`Delete`
 
 ### Transform tools ###
 
@@ -255,6 +259,10 @@ Draw new region anywhere             | {kbd}`Shift` + click and drag
 
 Action                              | Control or shorcut
 ------------------------------------|-------------------
+Expand selected location            | {kbd}`→`
+Fully expand selected location      | {kbd}`Shift` + {kbd}`→`
+Collapse selected location          | {kbd}`←`
+Fully collapse selected location    | {kbd}`Shift` + {kbd}`←`
 Copy selected paths                 | {kbd}`Ctrl` + {kbd}`C`
 Edit source node of selection       | {kbd}`Alt` + {kbd}`E`
 Edit tweaks node for selection      | {kbd}`Alt` + {kbd}`Shift` + {kbd}`E`
