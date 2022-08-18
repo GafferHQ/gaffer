@@ -241,11 +241,13 @@ Isolate green channel                | {kbd}`G`
 Isolate blue channel                 | {kbd}`B`
 Isolate alpha channel                | {kbd}`A`
 View luminance of RGB                | {kbd}`L`
-Previous layer                       | {kbd}`PgDn`
-Next layer                           | {kbd}`PgUp`
+Previous layer                       | {kbd}`PgUp`
+Next layer                           | {kbd}`PgDn`
+Previous view                        | {kbd}`[`
+Next view                            | {kbd}`]`
 Center image at 1:1 scale            | {kbd}`Home`
-Next Catalogue image                 | {kbd}`↓`
 Previous Catalogue image             | {kbd}`↑`
+Next Catalogue image                 | {kbd}`↓`
 Duplicate current Catalogue image    | {kbd}`Ctrl` + {kbd}`D`
 
 
