@@ -335,3 +335,7 @@ Action                                               | Control or shortcut
 -----------------------------------------------------|---------------------
 Edit source node of selection                        | {kbd}`Alt` + {kbd}`E`
 Edit tweaks node for selection                       | {kbd}`Alt` + {kbd}`Shift` + {kbd}`E`
+Move cell selection                                  | {kbd}`↑`, {kbd}`↓`, {kbd}`←`, {kbd}`→`
+Extend cell selection                                | {kbd}`Shift` + {{leftClick}}<br>or<br>{kbd}`Shift` + {kbd}`↑`, {kbd}`↓`, {kbd}`←`, {kbd}`→`
+Toggle cell selection                                | {kbd}`Ctrl` + {{leftClick}}<br>or<br>{kbd}`Ctrl` + {kbd}`↑`, {kbd}`↓`, {kbd}`←`, {kbd}`→`
+Edit selected cells                                  | {kbd}`Return`<br>or<br>{kbd}`Enter`
