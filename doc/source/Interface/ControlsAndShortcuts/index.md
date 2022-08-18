@@ -9,11 +9,35 @@ substitutions :
 
 # Controls and Shortcuts #
 
-The following is a list of input device controls and shortcuts for manipulating the Graph Editor, Viewer, and Python Editor.
+The following is a list of input device controls and shortcuts providing quick access to functionality in Gaffer's Viewers and Editors.
+
+## Guide ##
+
+### Keyboard Shortcuts ###
+
+Keyboard shortcuts, or hotkeys, are shown as they would typically appear on a keyboard:
+
+Example Action                       | Shortcut
+-------------------------------------|--------------------
+Type the letter `g`                  | {kbd}`G`
+Press a modifier key                 | {kbd}`Ctrl`
+Press multiple keys together         | {kbd}`Ctrl` + {kbd}`C`
+Press one of the following keys      | {kbd}`A`, {kbd}`B`, {kbd}`C`, {kbd}`D`
+Press either of the following keys   | {kbd}`Enter`<br>or<br>{kbd}`Return`
 
 > Tip :
 > macOS users: replace <kbd>Ctrl</kbd> with <kbd>Command ⌘</kbd>.
 
+### Mouse Controls ###
+
+Mouse controls are shown as icons representing the action to perform:
+
+Example Action                       | Mouse control
+-------------------------------------|--------------------
+Press the left mouse button          | {{leftClick}}
+Press the middle mouse button        | {{middleClick}}
+Press the right mouse button         | {{rightClick}}
+Scroll the mouse wheel               | {{mouseWheel}}
 
 ## General ##
 
