@@ -881,6 +881,7 @@ IECore::InternedString g_transformBlurAttributeName( "transformBlur" );
 IECore::InternedString g_transformBlurSegmentsAttributeName( "transformBlurSegments" );
 IECore::InternedString g_deformationBlurAttributeName( "deformationBlur" );
 IECore::InternedString g_deformationBlurSegmentsAttributeName( "deformationBlurSegments" );
+IECore::InternedString g_displayColorAttributeName( "render:displayColor" );
 // Cycles Attributes
 IECore::InternedString g_cclVisibilityAttributeName( "ccl:visibility" );
 IECore::InternedString g_useHoldoutAttributeName( "ccl:use_holdout" );
@@ -889,8 +890,6 @@ IECore::InternedString g_shadowTerminatorShadingOffsetAttributeName( "ccl:shadow
 IECore::InternedString g_shadowTerminatorGeometryOffsetAttributeName( "ccl:shadow_terminator_geometry_offset" );
 IECore::InternedString g_maxLevelAttributeName( "ccl:max_level" );
 IECore::InternedString g_dicingRateAttributeName( "ccl:dicing_rate" );
-// Per-object color
-IECore::InternedString g_colorAttributeName( "Cs" );
 // Cycles Light
 IECore::InternedString g_lightAttributeName( "ccl:light" );
 // Dupli
@@ -957,7 +956,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				m_shadowTerminatorGeometryOffset( 0.0f ),
 				m_maxLevel( 1 ),
 				m_dicingRate( 1.0f ),
-				m_color( Color3f( 0.0f ) ),
+				m_color( Color3f( 1.0f ) ),
 				m_dupliGenerated( V3f( 0.0f ) ),
 				m_dupliUV( V2f( 0.0f) ),
 				m_particle( attributes ),
@@ -980,7 +979,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			m_shadowTerminatorGeometryOffset = attributeValue<float>( g_shadowTerminatorGeometryOffsetAttributeName, attributes, m_shadowTerminatorGeometryOffset );
 			m_maxLevel = attributeValue<int>( g_maxLevelAttributeName, attributes, m_maxLevel );
 			m_dicingRate = attributeValue<float>( g_dicingRateAttributeName, attributes, m_dicingRate );
-			m_color = attributeValue<Color3f>( g_colorAttributeName, attributes, m_color );
+			m_color = attributeValue<Color3f>( g_displayColorAttributeName, attributes, m_color );
 			m_dupliGenerated = attributeValue<V3f>( g_dupliGeneratedAttributeName, attributes, m_dupliGenerated );
 			m_dupliUV = attributeValue<V2f>( g_dupliUVAttributeName, attributes, m_dupliUV );
 			m_lightGroup = attributeValue<std::string>( g_lightGroupAttributeName, attributes, m_lightGroup );

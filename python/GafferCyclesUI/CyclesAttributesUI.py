@@ -51,7 +51,7 @@ def __visibilitySummary( plug ) :
 def __renderingSummary( plug ) :
 
 	info = []
-	for childName in ( "useHoldout", "isShadowCatcher", "color", "dupliGenerated", "dupliUV", "lightGroup" ) :
+	for childName in ( "useHoldout", "isShadowCatcher", "dupliGenerated", "dupliUV", "lightGroup" ) :
 		if plug[childName]["enabled"].getValue() :
 			info.append( IECore.CamelCase.toSpaced( childName ) + ( " On" if plug[childName]["value"].getValue() else " Off" ) )
 
@@ -243,18 +243,6 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Rendering",
 
-		],
-
-		"attributes.color" : [
-
-			"description",
-			"""
-			Set a unique color per-object. This is intended for setting
-			a unique constant color that can be accessed from an object_info
-			shader, even if the object is being instanced.
-			""",
-
-			"layout:section", "Rendering",
 		],
 
 		"attributes.dupliGenerated" : [
