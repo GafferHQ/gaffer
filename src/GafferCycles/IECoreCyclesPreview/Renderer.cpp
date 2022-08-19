@@ -2795,7 +2795,7 @@ IECore::InternedString g_squareSamplesOptionName( "ccl:square_samples" );
 IECore::InternedString g_logLevelOptionName( "ccl:log_level" );
 IECore::InternedString g_progressLevelOptionName( "ccl:progress_level" );
 // Session
-IECore::InternedString g_featureSetOptionName( "ccl:session:experimental" );
+IECore::InternedString g_experimentalOptionName( "ccl:session:experimental" );
 IECore::InternedString g_samplesOptionName( "ccl:session:samples" );
 IECore::InternedString g_pixelSizeOptionName( "ccl:session:pixel_size" );
 IECore::InternedString g_threadsOptionName( "ccl:session:threads" );
@@ -3214,7 +3214,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 			else if( boost::starts_with( name.string(), "ccl:session:" ) )
 			{
-				OPTION(bool,  m_sessionParams, g_featureSetOptionName,   experimental);
+				OPTION(bool,  m_sessionParams, g_experimentalOptionName,   experimental);
 				OPTION(int,   m_sessionParams, g_samplesOptionName,      samples);
 				OPTION(int,   m_sessionParams, g_pixelSizeOptionName,    pixel_size);
 				OPTION(float, m_sessionParams, g_timeLimitOptionName,    time_limit);
