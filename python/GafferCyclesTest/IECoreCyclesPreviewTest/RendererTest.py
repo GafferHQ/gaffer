@@ -275,5 +275,31 @@ class RendererTest( GafferTest.TestCase ) :
 
 		del plane
 
+	def testCrashWhenNoBackgroundLight( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		renderer.option( "ccl:shadingsystem", IECore.StringData( "SVM" ) )
+
+		renderer.output(
+			"testOutput",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testCrashWhenNoBackgroundLight",
+				}
+			)
+		)
+
+		# This used to crash. If it doesn't crash now, then we are happy.
+		renderer.render()
+		time.sleep( 2.0 )
+
 if __name__ == "__main__":
 	unittest.main()

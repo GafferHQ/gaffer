@@ -3744,7 +3744,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 			else
 			{
-				background->set_shader( m_scene->default_empty );
+				background->set_shader( m_scene->default_background );
 			}
 
 			if( integrator->is_modified() )
