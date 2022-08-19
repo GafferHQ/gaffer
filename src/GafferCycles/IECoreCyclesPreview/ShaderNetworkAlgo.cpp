@@ -498,6 +498,52 @@ T parameterValue( const IECore::Data *data, const IECore::InternedString &name, 
 	return defaultValue;
 }
 
+template<typename T>
+T parameterValue( const IECore::CompoundDataMap &parameters, const IECore::InternedString &name, const T &defaultValue )
+{
+	auto it = parameters.find( name );
+	if( it != parameters.end() )
+	{
+		return parameterValue<T>( it->second.get(), name, defaultValue );
+	}
+
+	return defaultValue;
+}
+
+// Cycles lights just have a single `strength` parameter which
+// we want to present as separate "virtual" parameters for
+// intensity, color and exposure.
+bool contributesToLightStrength( InternedString parameterName )
+{
+	return
+		parameterName == "intensity" ||
+		parameterName == "color" ||
+		parameterName == "exposure"
+	;
+}
+
+Imath::Color3f constantLightStrength( const IECoreScene::ShaderNetwork *light )
+{
+	const IECoreScene::Shader *lightShader = light->outputShader();
+
+	Imath::Color3f strength( 1 );
+	if( !light->input( { light->getOutput().shader, "intensity" } ) )
+	{
+		strength *= parameterValue<float>( lightShader->parameters(), "intensity", 1.0f );
+	}
+
+	if( !light->input( { light->getOutput().shader, "color" } ) )
+	{
+		strength *= parameterValue<Imath::Color3f>( lightShader->parameters(), "color", Imath::Color3f( 1.0f ) );
+	}
+
+	// We don't support input connections to exposure - it seems unlikely that
+	// you'd want to texture that.
+	strength *= powf( 2.0f, parameterValue<float>( lightShader->parameters(), "exposure", 0.0f ) );
+
+	return strength;;
+}
+
 } // namespace
 
 namespace IECoreCycles
@@ -720,30 +766,11 @@ void convertLight( const IECoreScene::ShaderNetwork *light, ccl::Light *cyclesLi
 
 	// Convert parameters
 
-	Imath::Color3f strength( 1.0f );
 	for( const auto &[name, value] : lightShader->parameters() )
 	{
-		// Convert "virtual" parameters to strength, unless they have input connections,
-		// in which case they will be dealt with in `convertLightShader()`.
-		if( name == "intensity" )
+		if( contributesToLightStrength( name ) )
 		{
-			if( !light->input( { light->getOutput().shader, name } ) )
-			{
-				strength *= parameterValue<float>( value.get(), name, 1.0f );
-			}
-		}
-		else if( name == "color" )
-		{
-			if( !light->input( { light->getOutput().shader, name } ) )
-			{
-				strength *= parameterValue<Imath::Color3f>( value.get(), name, Imath::Color3f( 1.0f ) );
-			}
-		}
-		else if( name == "exposure" )
-		{
-			// We don't support input connections to exposure - it seems unlikely that
-			// you'd want to texture that.
-			strength *= powf( 2.0f, parameterValue<float>( value.get(), name, 0.0f ) );
+			continue;
 		}
 		// Convert angle-based parameters, where we use degress and Cycles uses radians.
 		else if( name == "angle" )
@@ -765,7 +792,18 @@ void convertLight( const IECoreScene::ShaderNetwork *light, ccl::Light *cyclesLi
 		}
 	}
 
-	cyclesLight->set_strength( ccl::make_float3( strength[0], strength[1], strength[2] ) );
+	// Convert "virtual" parameters to strength. We can't do this for background
+	// lights because Cycles will ignore it - we deal with that in
+	// `convertLightShader()` instead.
+	if( cyclesLight->get_light_type() != ccl::LIGHT_BACKGROUND )
+	{
+		const Imath::Color3f strength = constantLightStrength( light );
+		cyclesLight->set_strength( ccl::make_float3( strength[0], strength[1], strength[2] ) );
+	}
+	else
+	{
+		cyclesLight->set_strength( ccl::one_float3() );
+	}
 }
 
 IECoreScene::ShaderNetworkPtr convertLightShader( const IECoreScene::ShaderNetwork *light )
@@ -798,9 +836,37 @@ IECoreScene::ShaderNetworkPtr convertLightShader( const IECoreScene::ShaderNetwo
 		result->addConnection( { intensityInput, { outputHandle, "strength" } } );
 	}
 
-	if( auto colorInput = light->input( { light->getOutput().shader, "color" } ) )
+	const auto colorInput = light->input( { light->getOutput().shader, "color" } );
+	if( colorInput )
 	{
 		result->addConnection( { colorInput, { outputHandle, "color" } } );
+	}
+
+	// Workaround for Cycles ignoring strength for background lights - insert a
+	// shader to multiply it into the input `color`. Hopefully we can remove
+	// this at some point.
+	if( light->outputShader()->getName() == "background_light" )
+	{
+		const Imath::Color3f strength = constantLightStrength( light );
+		if( strength != Imath::Color3f( 1 ) )
+		{
+			if( colorInput )
+			{
+				IECoreScene::ShaderPtr tintShader = new IECoreScene::Shader( "vector_math", "ccl:surface" );
+				tintShader->parameters()["math_type"] = new StringData( "multiply" );
+				tintShader->parameters()["vector2"] = new V3fData( strength );
+				const IECore::InternedString tintHandle = result->addShader( "tint", std::move( tintShader ) );
+				result->addConnection( { colorInput, { tintHandle, "vector1" } } );
+				result->removeConnection( { colorInput, { outputHandle, "color" } } );
+				result->addConnection( { { tintHandle, "vector" }, { outputHandle, "color" } } );
+			}
+			else
+			{
+				outputShader = result->getShader( outputHandle )->copy();
+				outputShader->parameters()["color"] = new Color3fData( strength );
+				result->setShader( outputHandle, std::move( outputShader ) );
+			}
+		}
 	}
 
 	return result;

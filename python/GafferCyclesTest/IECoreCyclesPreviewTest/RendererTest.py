@@ -204,7 +204,6 @@ class RendererTest( GafferTest.TestCase ) :
 		)
 		light.transform( imath.M44f().rotate( imath.V3f( 0, math.pi, 0 ) ) )
 
-	@unittest.expectedFailure
 	def testBackgroundLightWithoutTexture( self ) :
 
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
