@@ -47,12 +47,6 @@ def __sessionSummary( plug ) :
 	if plug["device"]["enabled"].getValue() :
 		info.append( "Device(s) {}".format( plug["device"]["value"].getValue() ) )
 
-	if plug["featureSet"]["enabled"].getValue() :
-		if plug["featureSet"]["value"].getValue() :
-			info.append( "Experimental Features" )
-		else :
-			info.append( "Standard Features" )
-
 	if plug["shadingSystem"]["enabled"].getValue() :
 		info.append( "Shading System {}".format( plug["shadingSystem"]["value"].getValue() ) )
 
@@ -460,30 +454,6 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Session",
 			"label", "Device(s)",
-
-		],
-
-		"options.featureSet" : [
-
-			"description",
-			"""
-			Feature set to use for rendering.
-			- Supported : Only use finished and supported features
-			- Experimental : Use experimental and incomplete features
-								that might be broken or change in the
-								future.
-			""",
-
-			"layout:section", "Session",
-
-		],
-
-		"options.featureSet.value" : [
-
-			"preset:Supported", False,
-			"preset:Experimental", True,
-
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
 		],
 

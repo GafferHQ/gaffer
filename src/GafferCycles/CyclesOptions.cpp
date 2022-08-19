@@ -62,7 +62,6 @@ CyclesOptions::CyclesOptions( const std::string &name )
 	options->addChild( new Gaffer::NameValuePlug( "ccl:shadingsystem", new IECore::StringData( "OSL" ), false, "shadingSystem" ) );
 
 	// Session/Render
-	options->addChild( new Gaffer::NameValuePlug( "ccl:session:experimental", new IECore::BoolData( false ), false, "featureSet" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:session:samples", new IECore::IntData( 1024 ), false, "samples" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:session:pixel_size", new IECore::IntData( 1 ), false, "pixelSize" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ccl:session:threads", new IECore::IntData( 0 ), false, "numThreads" ) );
