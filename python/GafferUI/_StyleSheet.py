@@ -263,6 +263,10 @@ _styleSheet = string.Template(
 		background-color: $backgroundLight;
 	}
 
+	QMenu::icon {
+		padding-left: 10px;
+	}
+
 	QMenu[gafferHasTitle="true"],
 	QMenu[gafferHasLeadingLabelledDivider="true"] {
 		/* make sure the title widget sits at the very top.
