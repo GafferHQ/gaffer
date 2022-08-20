@@ -51,6 +51,32 @@ if os.environ.get( "GAFFERAPPLESEED_HIDE_UI", "" ) != "1" :
 		# Default to showing Appleseed lights, since that is the renderer we ship with.
 		Gaffer.Metadata.registerValue( GafferSceneUI.LightEditor.Settings, "attribute", "userDefault", "as:light" )
 
+
+if os.environ.get( "CYCLES_ROOT" ) and os.environ.get( "GAFFERCYCLES_HIDE_UI", "" ) != "1" :
+
+	Gaffer.Metadata.registerValue( GafferSceneUI.LightEditor.Settings, "attribute", "preset:Cycles", "ccl:light" )
+
+	GafferSceneUI.LightEditor.registerParameter( "ccl:light", "color" )
+	GafferSceneUI.LightEditor.registerParameter( "ccl:light", "intensity" )
+	GafferSceneUI.LightEditor.registerParameter( "ccl:light", "exposure" )
+	GafferSceneUI.LightEditor.registerParameter( "ccl:light", "lightgroup" )
+
+	GafferSceneUI.LightEditor.registerParameter( "ccl:light", "cast_shadow", "Contribution" )
+	GafferSceneUI.LightEditor.registerParameter( "ccl:light", "use_diffuse", "Contribution" )
+	GafferSceneUI.LightEditor.registerParameter( "ccl:light", "use_glossy", "Contribution" )
+	GafferSceneUI.LightEditor.registerParameter( "ccl:light", "use_transmission", "Contribution" )
+	GafferSceneUI.LightEditor.registerParameter( "ccl:light", "use_scatter", "Contribution" )
+	GafferSceneUI.LightEditor.registerParameter( "ccl:light", "max_bounces", "Contribution" )
+
+	GafferSceneUI.LightEditor.registerParameter( "ccl:light", "size", "Shape" )
+	GafferSceneUI.LightEditor.registerParameter( "ccl:light", "spot_angle", "Shape" )
+	GafferSceneUI.LightEditor.registerParameter( "ccl:light", "spot_smooth", "Shape" )
+	GafferSceneUI.LightEditor.registerParameter( "ccl:light", "spread", "Shape" )
+	GafferSceneUI.LightEditor.registerParameter( "ccl:light", "angle", "Shape" )
+
+	# Assume that Cycles would be preferred to Appleseed.
+	Gaffer.Metadata.registerValue( GafferSceneUI.LightEditor.Settings, "attribute", "userDefault", "ccl:light" )
+
 with IECore.IgnoredExceptions( ImportError ) :
 
 	# This import appears unused, but it is intentional; it prevents us from

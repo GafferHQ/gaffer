@@ -15,7 +15,7 @@
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
 #
-#      * Neither the name of Image Engine Design Inc nor the names of
+#      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
@@ -34,13 +34,11 @@
 #
 ##########################################################################
 
-from .CyclesLightTest import CyclesLightTest
-from .InteractiveCyclesRenderTest import InteractiveCyclesRenderTest
-from .ModuleTest import ModuleTest
-from .CyclesLightTest import CyclesLightTest
+import Gaffer
 
-from .IECoreCyclesPreviewTest import *
+# Correction for Blender's Z-up default mapping.
 
-if __name__ == "__main__":
-	import unittest
-	unittest.main()
+Gaffer.Metadata.registerValue( "ccl:surface:environment_texture:tex_mapping__scale.x", "userDefault", -1.0 )
+Gaffer.Metadata.registerValue( "ccl:surface:environment_texture:tex_mapping__y_mapping", "userDefault", "z" )
+Gaffer.Metadata.registerValue( "ccl:surface:environment_texture:tex_mapping__z_mapping", "userDefault", "y" )
+

@@ -1008,15 +1008,12 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 			// Light shader
 
-			const IECoreScene::ShaderNetwork *lightShaderAttribute = attribute<IECoreScene::ShaderNetwork>( g_lightAttributeName, attributes );
-			if( lightShaderAttribute )
+			m_lightAttribute = attribute<IECoreScene::ShaderNetwork>( g_lightAttributeName, attributes );
+			if( m_lightAttribute )
 			{
+				ShaderNetworkPtr lightShader = ShaderNetworkAlgo::convertLightShader( m_lightAttribute.get() );
 				IECore::MurmurHash h;
-				m_lightShader = m_shaderCache->get( lightShaderAttribute, nullptr, nullptr, attributes, h );
-				// This is just to store data that is attached to the lights.
-				/// \todo Not sure there's any benefit to using a `ccl:light` just as a container here?
-				/// Can't we just store the CompoundData?
-				m_light = CLightPtr( IECoreCycles::ShaderNetworkAlgo::convert( lightShaderAttribute ) );
+				m_lightShader = m_shaderCache->get( lightShader.get(), nullptr, nullptr, attributes, h );
 			}
 		}
 
@@ -1133,9 +1130,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			if( !m_volume.apply( object ) )
 				return false;
 
-#ifdef WITH_CYCLES_LIGHTGROUPS
 			object->set_lightgroup( ccl::ustring( m_lightGroup.c_str() ) );
-#endif
 
 			return true;
 		}
@@ -1153,42 +1148,22 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 		bool applyLight( ccl::Light *light, const CyclesAttributes *previousAttributes ) const
 		{
-			if( ccl::Light *clight = m_light.get() )
+			if( m_lightAttribute )
 			{
-				light->set_light_type( clight->get_light_type() );
-				light->set_size( clight->get_size() );
-				light->set_map_resolution( clight->get_map_resolution() );
-				light->set_spot_angle( clight->get_spot_angle() );
-				light->set_spot_smooth( clight->get_spot_smooth() );
-				light->set_cast_shadow( clight->get_cast_shadow() );
-				light->set_use_mis( clight->get_use_mis() );
-				light->set_use_diffuse( clight->get_use_diffuse() );
-				light->set_use_glossy( clight->get_use_glossy() );
-				light->set_use_transmission( clight->get_use_transmission() );
-				light->set_use_scatter( clight->get_use_scatter() );
-				light->set_max_bounces( clight->get_max_bounces() );
-				light->set_is_portal( clight->get_is_portal() );
-				light->set_is_enabled( clight->get_is_enabled() );
-				light->set_strength( clight->get_strength() );
-				light->set_angle( clight->get_angle() );
-#ifdef WITH_CYCLES_LIGHTGROUPS
-				light->set_lightgroup( clight->get_lightgroup() );
-#endif
-			}
-			if( m_lightShader )
-			{
+				ShaderNetworkAlgo::convertLight( m_lightAttribute.get(), light );
 				ShaderAssignPair pair = ShaderAssignPair( light, ccl::array<ccl::Node*>() );
 				pair.second.push_back_slow( m_lightShader->shader() );
 				m_shaderCache->addShaderAssignment( pair );
 			}
 			else
 			{
-				// Use default shader
-				/// \todo If we don't have a light shader, then shouldn't we be disabling the
-				/// light completely, rather than assigning an emissive facing-ratio shader to it?
-				ShaderAssignPair pair = ShaderAssignPair( light, ccl::array<ccl::Node*>() );
-				pair.second.push_back_slow( nullptr );
-				m_shaderCache->addShaderAssignment( pair );
+				// No `ccl:light` shader assignment. Most likely a light
+				// intended for another renderer, so we turn off the Cycles
+				// light.
+				light->set_is_enabled( false );
+				// Alas, `ccl::LightManager::test_enabled_lights()` will
+				// re-enable the light unless we also set its strength to zero.
+				light->set_strength( ccl::zero_float3() );
 			}
 
 			return true;
@@ -1505,7 +1480,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			}
 		};
 
-		CLightPtr m_light;
+		IECoreScene::ConstShaderNetworkPtr m_lightAttribute;
 		CyclesShaderPtr m_lightShader;
 		CyclesShaderPtr m_shader;
 		IECore::MurmurHash m_shaderHash;
@@ -3769,7 +3744,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 			else
 			{
-				background->set_shader( m_scene->default_empty );
+				background->set_shader( m_scene->default_background );
 			}
 
 			if( integrator->is_modified() )
@@ -3983,7 +3958,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				}
 			}
 
-#ifdef WITH_CYCLES_LIGHTGROUPS
 			// Add lightgroups on the end
 			for( auto &coutput : m_outputs )
 			{
@@ -4010,7 +3984,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				const IECore::CompoundDataPtr layer = coutput.second->m_parameters->copy();
 				layersData->writable()[name] = layer;
 			}
-#endif
 
 			paramData->writable()["layers"] = layersData;
 

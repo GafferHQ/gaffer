@@ -74,7 +74,7 @@ py::list getDevices()
 
 	std::vector<ccl::DeviceInfo> devices = IECoreCycles::devices();
 
-	for( const ccl::DeviceInfo &device : devices ) 
+	for( const ccl::DeviceInfo &device : devices )
 	{
 		py::dict d;
 		d["type"] = ccl::Device::string_from_type( device.type );
@@ -372,9 +372,7 @@ py::dict getLights()
 			in["use_scatter"] = _in["use_scatter"];
 			in["max_bounces"] = _in["max_bounces"];
 			in["strength"] = _in["strength"];
-#ifdef WITH_CYCLES_LIGHTGROUPS
 			in["lightgroup"] = _in["lightgroup"];
-#endif
 
 			if( type == "background_light" )
 			{
@@ -464,11 +462,6 @@ BOOST_PYTHON_MODULE( _GafferCycles )
 	py::scope().attr( "withTextureCache" ) = true;
 #else
 	py::scope().attr( "withTextureCache" ) = false;
-#endif
-#ifdef WITH_CYCLES_LIGHTGROUPS
-	py::scope().attr( "withLightGroups" ) = true;
-#else
-	py::scope().attr( "withLightGroups" ) = false;
 #endif
 	if( ccl::openimagedenoise_supported() )
 		py::scope().attr( "hasOpenImageDenoise" ) = true;

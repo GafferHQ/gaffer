@@ -64,266 +64,64 @@ CyclesLight::CyclesLight( const std::string &name )
 	:	GafferScene::Light( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new StringPlug( "__shaderName", Plug::In, "", Plug::Default & ~Plug::Serialisable ) );
+	/// \todo Perhaps we can make CyclesShader support the loading of lights directly,
+	/// and use one here?
+	addChild( new GafferScene::Shader( "__shader" ) );
+	addChild( new ShaderPlug( "__shaderIn", Plug::In, Plug::Default & ~Plug::Serialisable ) );
+	shaderNode()->parametersPlug()->setFlags( Plug::AcceptsInputs, true );
+	shaderNode()->parametersPlug()->setInput( parametersPlug() );
 }
 
 CyclesLight::~CyclesLight()
 {
 }
 
+GafferScene::Shader *CyclesLight::shaderNode()
+{
+	return getChild<GafferScene::Shader>( g_firstPlugIndex );
+}
+
+const GafferScene::Shader *CyclesLight::shaderNode() const
+{
+	return getChild<GafferScene::Shader>( g_firstPlugIndex );
+}
+
+GafferScene::ShaderPlug *CyclesLight::shaderInPlug()
+{
+	return getChild<ShaderPlug>( g_firstPlugIndex + 1 );
+}
+
+const GafferScene::ShaderPlug *CyclesLight::shaderInPlug() const
+{
+	return getChild<ShaderPlug>( g_firstPlugIndex + 1 );
+}
+
 void CyclesLight::loadShader( const std::string &shaderName )
 {
-	// First populate all the Gaffer plugs for lights
-	const ccl::NodeType *lightNodeType = ccl::NodeType::find( ccl::ustring( "light" ) );
+	shaderNode()->namePlug()->setValue( shaderName );
+	shaderNode()->typePlug()->setValue( "ccl:light" );
+	SocketHandler::setupLightPlugs( shaderName, ccl::NodeType::find( ccl::ustring( "light" ) ), parametersPlug() );
+	shaderNode()->setChild( "out", new Gaffer::Plug( "out", Gaffer::Plug::Direction::Out ) );
+	shaderInPlug()->setInput( shaderNode()->outPlug() );
+}
 
-	if( lightNodeType )
+void CyclesLight::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
+{
+	Light::affects( input, outputs );
+
+	if( input == shaderInPlug() )
 	{
-		SocketHandler::setupLightPlugs( shaderName, lightNodeType, parametersPlug() );
-		shaderNamePlug()->setValue( shaderName );
+		outputs.push_back( outPlug()->attributesPlug() );
 	}
 }
 
 void CyclesLight::hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	for( ValuePlug::Iterator it( parametersPlug() ); !it.done(); ++it )
-	{
-		if( const Shader *shader = IECore::runTimeCast<const Shader>( (*it)->source()->node() ) )
-		{
-			shader->attributesHash( h );
-		}
-		else
-		{
-			(*it)->hash( h );
-		}
-	}
-	shaderNamePlug()->hash( h );
+	h.append( shaderInPlug()->attributesHash() );
 }
 
 IECoreScene::ConstShaderNetworkPtr CyclesLight::computeLight( const Gaffer::Context *context ) const
 {
-	IECoreScene::ShaderNetworkPtr result = new IECoreScene::ShaderNetwork;
-	// Light shader
-	IECoreScene::ShaderPtr lightShader = new IECoreScene::Shader( shaderNamePlug()->getValue(), "ccl:light" );
-
-	auto shaderName = shaderNamePlug()->getValue();
-	if( shaderName == "spot_light" )
-	{
-		lightShader->parameters()["light_type"] = new StringData( "spot" );
-	}
-	else if( ( shaderName == "quad_light" )
-	      || ( shaderName == "disk_light" )
-	      || ( shaderName == "portal" ) )
-	{
-		lightShader->parameters()["light_type"] = new StringData( "area" );
-	}
-	else if( shaderName == "background_light" )
-	{
-		lightShader->parameters()["light_type"] = new StringData( "background" );
-	}
-	else if( shaderName == "distant_light" )
-	{
-		lightShader->parameters()["light_type"] = new StringData( "distant" );
-	}
-	else
-	{
-		lightShader->parameters()["light_type"] = new StringData( "point" );
-	}
-
-	if( shaderName == "portal" )
-	{
-		lightShader->parameters()["is_portal"] = new BoolData( true );
-	}
-	else if( shaderName == "quad_light" )
-	{
-		lightShader->parameters()["size"] = new FloatData( 2.0f );
-	}
-
-	// Emit shader (color/strength)
-	IECoreScene::ShaderPtr emitShader = new IECoreScene::Shader( "emission", "ccl:surface" );
-	emitShader->parameters()["color"] = new Color3fData( Imath::Color3f( 1.0f ) );
-	emitShader->parameters()["strength"] = new FloatData( 1.0f );
-	// Bg shader
-	IECoreScene::ShaderPtr bgShader = new IECoreScene::Shader( "background_shader", "ccl:surface" );
-	bgShader->parameters()["color"] = new Color3fData( Imath::Color3f( 1.0f ) );
-	bgShader->parameters()["strength"] = new FloatData( 1.0f );
-	// Environment texture
-	IECoreScene::ShaderPtr envShader = new IECoreScene::Shader( "environment_texture", "ccl:surface" );
-	// Blender is Z-up, so we need to switcheroo
-	envShader->parameters()["tex_mapping__y_mapping"] = new StringData( "z" );
-	envShader->parameters()["tex_mapping__z_mapping"] = new StringData( "y" );
-	envShader->parameters()["tex_mapping__scale"] = new V3fData( Imath::V3f( -1.0f, 1.0f, 1.0f ) );
-	// Image texture
-	IECoreScene::ShaderPtr texShader = new IECoreScene::Shader( "image_texture", "ccl:surface" );
-	IECoreScene::ShaderPtr geoShader = new IECoreScene::Shader( "geometry", "ccl:surface" );
-	// Mult
-	IECoreScene::ShaderPtr tintShader = new IECoreScene::Shader( "vector_math", "ccl:surface" );
-	tintShader->parameters()["math_type"] = new StringData( "multiply" );
-	// If we want to connect a texture to color
-	IECoreScene::ShaderNetwork::Connection colorEmitConnection;
-	// Parameters we need to modify depending on other parameters found.
-	float exposure = 0.0f;
-	float intensity = 1.0f;
-	bool textureInput = false;
-	float coneAngle = 30.0f;
-	float penumbraAngle = 0.0f;
-	Imath::Color3f color = Imath::Color3f( 1.0f );
-	for( Plug::Iterator it( parametersPlug() ); !it.done(); ++it )
-	{
-		if( const Shader *shader = IECore::runTimeCast<const Shader>( (*it)->source()->node() ) )
-		{
-			// We only allow shaders to connect to color
-			auto parameterName = (*it)->getName();
-			if( parameterName != "color" )
-				continue;
-
-			IECore::ConstCompoundObjectPtr inputAttributes = shader->attributes();
-			const IECoreScene::ShaderNetwork *inputNetwork = inputAttributes->member<const IECoreScene::ShaderNetwork>( "ccl:surface" );
-			if( !inputNetwork || !inputNetwork->size() )
-			{
-				continue;
-			}
-
-			// Add input network into our emission color
-			IECoreScene::ShaderNetwork::Parameter sourceParameter = IECoreScene::ShaderNetworkAlgo::addShaders( result.get(), inputNetwork );
-			colorEmitConnection = { sourceParameter, { IECore::InternedString(), parameterName } };
-		}
-		else if( ValuePlug *valuePlug = IECore::runTimeCast<ValuePlug>( it->get() ) )
-		{
-			auto parameterName = valuePlug->getName();
-
-			if( parameterName == "exposure" )
-			{
-				exposure = static_cast<const FloatPlug *>( valuePlug )->getValue();
-				// For the UI
-				lightShader->parameters()[parameterName] = PlugAlgo::extractDataFromPlug( valuePlug );
-			}
-			else if( parameterName == "intensity" )
-			{
-				intensity = static_cast<const FloatPlug *>( valuePlug )->getValue();
-				// For the UI
-				lightShader->parameters()[parameterName] = PlugAlgo::extractDataFromPlug( valuePlug );
-			}
-			else if( parameterName == "color" )
-			{
-				color = static_cast<const Color3fPlug *>( valuePlug )->getValue();
-				// For the UI
-				lightShader->parameters()[parameterName] = PlugAlgo::extractDataFromPlug( valuePlug );
-				tintShader->parameters()["vector2"] = PlugAlgo::extractDataFromPlug( valuePlug );
-			}
-			else if( parameterName == "image" )
-			{
-				std::string image = static_cast<const StringPlug *>( valuePlug )->getValue();
-				if( image == "" )
-				{
-					continue;
-				}
-				textureInput = true;
-				texShader->parameters()["filename"] = PlugAlgo::extractDataFromPlug( valuePlug );
-				envShader->parameters()["filename"] = PlugAlgo::extractDataFromPlug( valuePlug );
-				// For the UI
-				lightShader->parameters()[parameterName] = PlugAlgo::extractDataFromPlug( valuePlug );
-			}
-			else if( parameterName == "coneAngle" )
-			{
-				coneAngle = static_cast<const FloatPlug *>( valuePlug )->getValue();
-				// For the UI
-				lightShader->parameters()[parameterName] = PlugAlgo::extractDataFromPlug( valuePlug );
-			}
-			else if( parameterName == "penumbraAngle" )
-			{
-				penumbraAngle = static_cast<const FloatPlug *>( valuePlug )->getValue();
-				// For the UI
-				lightShader->parameters()[parameterName] = PlugAlgo::extractDataFromPlug( valuePlug );
-			}
-			else if( parameterName == "lightGroup" )
-			{
-				std::string lightGroup = static_cast<const StringPlug *>( valuePlug )->getValue();
-				lightShader->parameters()[parameterName] = PlugAlgo::extractDataFromPlug( valuePlug );
-			}
-			else
-			{
-				lightShader->parameters()[parameterName] = PlugAlgo::extractDataFromPlug( valuePlug );
-			}
-		}
-	}
-
-	if( shaderNamePlug()->getValue() == "spot_light" )
-	{
-		float sumAngle = coneAngle + penumbraAngle;
-		float spotAngle = 2 * M_PI * ( sumAngle / 360.0f );
-        lightShader->parameters()["spot_angle"] = new FloatData( spotAngle );
-		lightShader->parameters()["spot_smooth"] = new FloatData( Imath::clamp( penumbraAngle / sumAngle, 0.0f, 1.0f ) );
-	}
-
-	if( shaderNamePlug()->getValue() == "background_light" )
-	{
-		// Neutralise the light, when the shader applies to the background it won't have these values
-		// and we don't want to multiply the strength twice.
-		lightShader->parameters()["strength"] = new Color3fData( Imath::Color3f( 1.0f ) );
-		if( textureInput )
-		{
-			tintShader->parameters()["vector2"] = new Color3fData( color * ( intensity * pow( 2.0f, exposure ) ) );
-		}
-	}
-	else
-	{
-		lightShader->parameters()["strength"] = new Color3fData( color * ( intensity * pow( 2.0f, exposure ) ) );
-	}
-
-	const IECore::InternedString handle = result->addShader( "light", std::move( lightShader ) );
-	const IECore::InternedString emitHandle = result->addShader( "emission", std::move( emitShader ) );
-
-	if( colorEmitConnection.source )
-	{
-		result->addConnection( { colorEmitConnection.source, { emitHandle, "color" } } );
-	}
-	else if( textureInput )
-	{
-		if( shaderNamePlug()->getValue() == "background_light" )
-		{
-			const IECore::InternedString envHandle = result->addShader( "environment_texture", std::move( envShader ) );
-			const IECore::InternedString tintHandle = result->addShader( "vector_math", std::move( tintShader ) );
-			const IECore::InternedString bgHandle = result->addShader( "background_shader", std::move( bgShader ) );
-			result->addConnection( { { envHandle, "color" }, { tintHandle, "vector1" } } );
-			result->addConnection( { { tintHandle, "vector" }, { bgHandle, "color" } } );
-			result->addConnection( { { bgHandle, "background" }, { handle, "shader" } } );
-		}
-		else
-		{
-			// https://developer.blender.org/rB1272ee455e7aeed3f6acb0b8a8366af5ad6aec99
-			const IECore::InternedString geoHandle = result->addShader( "geometry", std::move( geoShader ) );
-			const IECore::InternedString texHandle = result->addShader( "image_texture", std::move( texShader ) );
-			result->addConnection( { { geoHandle, "parametric" }, { texHandle, "vector" } } );
-			result->addConnection( { { texHandle, "color" }, { emitHandle, "color" } } );
-
-			result->addConnection( { { emitHandle, "emission" }, { handle, "shader" } } );
-		}
-	}
-	else if( shaderNamePlug()->getValue() == "background_light" )
-	{
-		// When there's no texture on the background light
-		bgShader->parameters()["color"] = new Color3fData( color );
-		bgShader->parameters()["strength"] = new FloatData( intensity * pow( 2.0f, exposure ) );
-
-		const IECore::InternedString bgHandle = result->addShader( "background_shader", std::move( bgShader ) );
-		result->addConnection( { { bgHandle, "background" }, { handle, "shader" } } );
-	}
-	else
-	{
-		result->addConnection( { { emitHandle, "emission" }, { handle, "shader" } } );
-	}
-
-	result->setOutput( handle );
-
-	return result;
-}
-
-Gaffer::StringPlug *CyclesLight::shaderNamePlug()
-{
-	return getChild<StringPlug>( g_firstPlugIndex );
-}
-
-const Gaffer::StringPlug *CyclesLight::shaderNamePlug() const
-{
-	return getChild<StringPlug>( g_firstPlugIndex );
+	IECore::ConstCompoundObjectPtr shaderAttributes = shaderInPlug()->attributes();
+	return shaderAttributes->member<const IECoreScene::ShaderNetwork>( "ccl:light" );
 }
