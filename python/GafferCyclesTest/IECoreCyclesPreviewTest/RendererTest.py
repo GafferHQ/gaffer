@@ -301,5 +301,46 @@ class RendererTest( GafferTest.TestCase ) :
 		renderer.render()
 		time.sleep( 2.0 )
 
+	def testMultipleOutputs( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		renderer.output(
+			"testOutput:beauty",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testMultipleOutputs:beauty",
+				}
+			)
+		)
+
+		renderer.output(
+			"testOutput:normal",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"normal",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testMultipleOutputs:normal",
+				}
+			)
+		)
+
+		renderer.render()
+
+		beauty = IECoreImage.ImageDisplayDriver.storedImage( "testMultipleOutputs:beauty" )
+		self.assertTrue( isinstance( beauty, IECoreImage.ImagePrimitive ) )
+
+		normal = IECoreImage.ImageDisplayDriver.storedImage( "testMultipleOutputs:normal" )
+		self.assertTrue( isinstance( normal, IECoreImage.ImagePrimitive ) )
+
 if __name__ == "__main__":
 	unittest.main()
