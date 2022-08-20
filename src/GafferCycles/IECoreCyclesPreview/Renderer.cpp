@@ -332,6 +332,13 @@ class CyclesOutput : public IECore::RefCounted
 					p["type"] = new StringData( tokens[0] );
 					passType = tokens[0];
 				}
+				else if( tokens[0] == "float" && tokens[1] == "Z" )
+				{
+					m_data = tokens[1];
+					p["name"] = new StringData( tokens[1] );
+					p["type"] = new StringData( "depth" );
+					passType = "depth";
+				}
 			}
 
 			if( typeEnum.exists( passType ) )
