@@ -3606,6 +3606,16 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 		}
 
+		IECore::DataPtr command( const IECore::InternedString name, const IECore::CompoundDataMap &parameters ) override
+		{
+			if( boost::starts_with( name.string(), "cycles:" ) || name.string().find( ":" ) == string::npos )
+			{
+				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::command", boost::format( "Unknown command \"%s\"" ) % name.c_str() );
+			}
+
+			return nullptr;
+		}
+
 	private :
 
 		void init()

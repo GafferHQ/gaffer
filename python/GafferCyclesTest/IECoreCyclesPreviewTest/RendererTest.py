@@ -342,5 +342,39 @@ class RendererTest( GafferTest.TestCase ) :
 		normal = IECoreImage.ImageDisplayDriver.storedImage( "testMultipleOutputs:normal" )
 		self.assertTrue( isinstance( normal, IECoreImage.ImagePrimitive ) )
 
+	def testCommand( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		# Unknown commands that claim to be for Cycles should emit a warning.
+
+		with IECore.CapturingMessageHandler() as mh :
+			self.assertIsNone( renderer.command( "cycles:thisCommandDoesNotExist", {} ) )
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].level, IECore.MessageHandler.Level.Warning )
+		self.assertEqual( mh.messages[0].context, "CyclesRenderer::command" )
+		self.assertEqual( mh.messages[0].message, 'Unknown command "cycles:thisCommandDoesNotExist"' )
+
+		# Unknown commands without a renderer prefix should also emit a warning.
+
+		with IECore.CapturingMessageHandler() as mh :
+			self.assertIsNone( renderer.command( "thisCommandDoesNotExist", {} ) )
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].level, IECore.MessageHandler.Level.Warning )
+		self.assertEqual( mh.messages[0].context, "CyclesRenderer::command" )
+		self.assertEqual( mh.messages[0].message, 'Unknown command "thisCommandDoesNotExist"' )
+
+		# Unknown commands for some other renderer should be silently ignored.
+
+		with IECore.CapturingMessageHandler() as mh :
+			self.assertIsNone( renderer.command( "gl:renderToCurrentContext", {} ) )
+
+		self.assertEqual( len( mh.messages ), 0 )
+
 if __name__ == "__main__":
 	unittest.main()
