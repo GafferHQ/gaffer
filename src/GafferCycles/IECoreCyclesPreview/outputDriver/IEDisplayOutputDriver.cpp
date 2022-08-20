@@ -157,6 +157,19 @@ void IEDisplayOutputDriver::write_render_tile( const Tile &tile )
 			memset( &pixels[0], 0, pixels.size() * sizeof(float) );
 		}
 
+		if( layer.name == "id" )
+		{
+			// Cycles renders IDs as float values, but Gaffer's OutputBuffer
+			// expects them to be integers, type-punned into a float for passing
+			// through the DisplayDriver interface.
+			for( auto &p : pixels )
+			{
+				/// \todo Use `std::bit_cast` when C++20 is available to us.
+				const uint32_t id = p;
+				memcpy( &p, &id, sizeof( p ) );
+			}
+		}
+
 		try
 		{
 			layer.displayDriver->imageData( _tile, pixels.data(), w * h * layer.numChannels );

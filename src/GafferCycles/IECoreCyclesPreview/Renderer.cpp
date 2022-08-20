@@ -339,6 +339,13 @@ class CyclesOutput : public IECore::RefCounted
 					p["type"] = new StringData( "depth" );
 					passType = "depth";
 				}
+				else if( tokens[0] == "uint" && tokens[1] == "id" )
+				{
+					m_data = tokens[1];
+					p["name"] = new StringData( tokens[1] );
+					p["type"] = new StringData( "object_id" );
+					passType = "object_id";
+				}
 			}
 
 			if( typeEnum.exists( passType ) )
@@ -2483,7 +2490,10 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 
 		void assignID( uint32_t id ) override
 		{
-			/// \todo Implement me
+			if( m_instance.object() )
+			{
+				m_instance.object()->set_pass_id( id );
+			}
 		}
 
 	private :
