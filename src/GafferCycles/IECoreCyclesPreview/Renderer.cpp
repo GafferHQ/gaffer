@@ -48,8 +48,8 @@
 #include "GafferCycles/IECoreCyclesPreview/ShaderNetworkAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/SocketAlgo.h"
 
-#include "outputDriver/IEDisplayOutputDriver.h"
-#include "outputDriver/OIIOOutputDriver.h"
+#include "IEDisplayOutputDriver.h"
+#include "OIIOOutputDriver.h"
 
 #include "IECoreScene/Camera.h"
 #include "IECoreScene/CurvesPrimitive.h"
