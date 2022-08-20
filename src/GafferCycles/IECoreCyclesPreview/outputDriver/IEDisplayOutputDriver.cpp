@@ -48,12 +48,14 @@ IECORE_POP_DEFAULT_VISIBILITY
 namespace
 {
 
-int interleave( float *tileData,
-				const int width, const int height,
-				const int numChannels,
-				const int numOutputChannels,
-				const int outChannelOffset,
-				float *interleavedData )
+int interleave(
+	float *tileData,
+	const int width, const int height,
+	const int numChannels,
+	const int numOutputChannels,
+	const int outChannelOffset,
+	float *interleavedData
+)
 {
 	int offset = outChannelOffset;
 	for( int c = 0; c < numChannels; c++ )
@@ -193,11 +195,11 @@ IEDisplayOutputDriver::IEDisplayOutputDriver( const Imath::Box2i &displayWindow,
 	const IECore::StringData *driverType = params->member<IECore::StringData>( "driverType", true );
 
 	m_displayDriver = IECoreImage::DisplayDriver::create(
-						  driverType->readable(),
-						  displayWindow,
-						  dataWindow,
-						  channelNames,
-						  params
+		driverType->readable(),
+		displayWindow,
+		dataWindow,
+		channelNames,
+		params
 	);
 }
 
