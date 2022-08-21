@@ -1824,6 +1824,11 @@ class InstanceCache : public IECore::RefCounted
 			if( m_geometry.find( readAccessor, h ) )
 			{
 				cgeo = readAccessor->second;
+				/// \todo See comments in `convert()` - why do we call it again when
+				/// the geometry was converted already? Can't we lift `ccl::Object`
+				/// creation out of `convert()`?
+				///
+				/// Note : When passing `cgeo`, we are guaranteed a non-null return.
 				cobject = convert( object, cyclesAttributes, nodeName, cpsysPtr, cgeo.get() );
 				readAccessor.release();
 			}
@@ -1833,6 +1838,10 @@ class InstanceCache : public IECore::RefCounted
 				if( m_geometry.insert( writeAccessor, h ) )
 				{
 					cobject = convert( object, cyclesAttributes, nodeName, cpsysPtr );
+					if( !cobject )
+					{
+						return Instance( nullptr, nullptr, nullptr, false );
+					}
 					writeAccessor->second = SharedCGeometryPtr( cobject->get_geometry(), nullNodeDeleter );
 					cgeo = writeAccessor->second;
 					cgeo->name = h.toString();
@@ -1899,6 +1908,10 @@ class InstanceCache : public IECore::RefCounted
 				if( m_geometry.insert( writeAccessor, h ) )
 				{
 					cobject = convert( samples, times, frameIdx, cyclesAttributes, nodeName, cpsysPtr );
+					if( !cobject )
+					{
+						return Instance( nullptr, nullptr, nullptr, false );
+					}
 					writeAccessor->second = SharedCGeometryPtr( cobject->get_geometry(), nullNodeDeleter );
 					cgeo = writeAccessor->second;
 					cgeo->name = h.toString();
@@ -1983,6 +1996,12 @@ class InstanceCache : public IECore::RefCounted
 
 	private :
 
+		/// \todo Figure out if this can be refactored to return `ccl::Geometry`
+		/// (meaning `ObjectAlgo::convert()` should too), and then have the
+		/// wrapping in `ccl:Object` be performed in `get()` or the `Instance`
+		/// constructor. It seems backwards that this function sometimes creates
+		/// new geometry but also is sometimes given previously-created geometry
+		/// via `cgeo`.
 		SharedCObjectPtr convert( const IECore::Object *object,
 								  const CyclesAttributes *attributes,
 								  const std::string &nodeName,
@@ -1994,6 +2013,10 @@ class InstanceCache : public IECore::RefCounted
 			if( !cgeo )
 			{
 				cobject = ObjectAlgo::convert( object, nodeName, m_scene );
+				if( !cobject )
+				{
+					return nullptr;
+				}
 				attributes->applyGeometry( object, cobject );
 				ccl::Geometry *cgeo = cobject->get_geometry();
 				cgeo->set_owner( m_scene );
@@ -2034,6 +2057,10 @@ class InstanceCache : public IECore::RefCounted
 			if( !cgeo )
 			{
 				cobject = ObjectAlgo::convert( samples, times, frame, nodeName, m_scene );
+				if( !cobject )
+				{
+					return nullptr;
+				}
 				attributes->applyGeometry( samples.front(), cobject );
 				ccl::Geometry *cgeo = cobject->get_geometry();
 				cgeo->set_owner( m_scene );
@@ -2481,7 +2508,10 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 			if( !object || cyclesAttributes->applyObject( object, m_attributes.get() ) )
 			{
 				m_attributes = cyclesAttributes;
-				object->tag_update( m_session->scene );
+				if( object )
+				{
+					object->tag_update( m_session->scene );
+				}
 				return true;
 			}
 
@@ -3497,6 +3527,10 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 
 			Instance instance = m_instanceCache->get( object, attributes, name );
+			if( !instance.object() )
+			{
+				return nullptr;
+			}
 
 			ObjectInterfacePtr result = new CyclesObject( m_session, instance, m_frame );
 			result->attributes( attributes );
@@ -3528,6 +3562,10 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				frameIdx = times.size()-1;
 			}
 			Instance instance = m_instanceCache->get( samples, times, frameIdx, attributes, name );
+			if( !instance.object() )
+			{
+				return nullptr;
+			}
 
 			ObjectInterfacePtr result = new CyclesObject( m_session, instance, m_frame );
 			result->attributes( attributes );

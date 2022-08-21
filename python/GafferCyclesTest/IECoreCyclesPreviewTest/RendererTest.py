@@ -376,5 +376,24 @@ class RendererTest( GafferTest.TestCase ) :
 
 		self.assertEqual( len( mh.messages ), 0 )
 
+	def testUnconvertibleObject( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		# We don't expect renderers other than OpenGL to have any support
+		# for the Placeholder object. Here we're just checking that the Cycles
+		# renderer doesn't crash if given a placeholder.
+
+		o = renderer.object(
+			"/test",
+			GafferScene.Private.IECoreScenePreview.Placeholder(),
+			renderer.attributes( IECore.CompoundObject ( {} ) )
+		)
+
+		del o
+
 if __name__ == "__main__":
 	unittest.main()
