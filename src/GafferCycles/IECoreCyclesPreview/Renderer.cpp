@@ -2872,6 +2872,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_bufferParamsModified = m_bufferParams;
 
 			m_sessionParams.shadingsystem = ccl::SHADINGSYSTEM_OSL;
+			m_sessionParams.use_resolution_divider = false;
 			m_sceneParams.shadingsystem = m_sessionParams.shadingsystem;
 			m_sceneParams.bvh_layout = ccl::BVH_LAYOUT_AUTO;
 
