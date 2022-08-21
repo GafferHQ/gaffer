@@ -607,6 +607,30 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 			[ "/group/camera" ]
 		)
 
+	def testResizeWindow( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["s"] = GafferScene.Sphere()
+
+		sg = GafferSceneUI.SceneGadget()
+		sg.setRenderer( self.renderer )
+		sg.setMinimumExpansionDepth( 999 )
+		sg.setScene( s["s"]["out"] )
+
+		with GafferUI.Window() as w :
+			gw = GafferUI.GadgetWidget( sg )
+
+		w.setVisible( True )
+		self.waitForIdle( 1000 )
+
+		sg.waitForCompletion()
+		gw.getViewportGadget().frame( sg.bound() )
+		self.waitForRender( sg )
+
+		for i in range( 0, 20 ) :
+			gw._qtWidget().setFixedWidth( 200 + ( i % 2 ) * 200 )
+			self.waitForIdle( 100 )
+
 	def setUp( self ) :
 
 		GafferUITest.TestCase.setUp( self )
