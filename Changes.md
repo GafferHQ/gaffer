@@ -26,6 +26,14 @@ Breaking Changes
 1.0.x.x (relative to 1.0.2.1)
 =======
 
+Features
+--------
+
+- Light Editor : Added a non-modal dialog to view the history of a parameter. It can be accessed by right-clicking a parameter in the Light Editor and selecting `Show History...`. Within the dialogue :
+  - Double clicking a node name will open a Node Editor popup.
+  - Dragging a node name into the Graph Editor will zoom to the node.
+  - Double clicking, pressing <kbd>Return</kbd> or <kbd>Enter</kbd> on a parameter value or operation will open a plug popup to edit the value.
+
 Improvements
 ------------
 
@@ -34,12 +42,15 @@ Improvements
   - Added loading of `treatAsPoint` and `treatAsLine` parameters from UsdLux lights.
 - SceneWriter : Added support for Alembic visibility attributes.
 - ColorPlugValueWidget : Hid the color chooser button (sliders) for output plugs.
+- Arnold : Added metadata for new `standard_volume` shader parameters introduced in Arnold 7.1.3.0.
+- VectorDataWidget : Added a color swatch column for `Color3f` and `Color4f` elements. These are currently included in the `RandomChoice` node when `choices` is set to a list of colors, and for color primitive variables in the Primitive Inspector.
 
 Fixes
 -----
 
 - Qt : Added missing QtUiTools module.
 - SceneReader : Fixed shader type for UsdLux lights. It was `surface` and is now `light`.
+- Fixed a bug in `SceneAlgo::attributeHistory` that would return a branching history from a `ShaderTweaks` node with `inherit` enabled.
 
 Build
 -----

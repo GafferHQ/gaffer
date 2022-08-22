@@ -38,21 +38,43 @@
 #define GAFFERSCENEUI_INSPECTOR_H
 
 #include "GafferSceneUI/Export.h"
+#include "GafferSceneUI/TypeIds.h"
 
 #include "GafferScene/SceneAlgo.h"
 #include "GafferScene/ScenePlug.h"
 
 #include "Gaffer/EditScope.h"
+#include "Gaffer/Path.h"
 
 #include "IECore/RefCounted.h"
 
+#include "boost/multi_index/hashed_index.hpp"
+#include "boost/multi_index/member.hpp"
+#include "boost/multi_index/random_access_index.hpp"
+#include "boost/multi_index_container.hpp"
 #include "boost/variant.hpp"
+
+#include <unordered_set>
+#include <unordered_map>
+
+namespace GafferSceneUIModule
+{
+
+// Forward declaration for friendship declared below.
+// We don't include InspectorBinding.h because we don't want
+// python involved in any way when building the pure C++
+// modules.
+void bindInspector();
+
+} // namespace GafferSceneUIModule
 
 namespace GafferSceneUI
 {
 
 namespace Private
 {
+
+IE_CORE_FORWARDDECLARE( Inspector );
 
 /// Inspectors provide an abstraction for querying properties of a scene, and
 /// optionally making node graph edits to change those properties. They allow a
@@ -78,6 +100,7 @@ namespace Private
 ///   This has additional requirements such as knowing the `transformSpace` that a node
 ///   works in. We think this information can be stored in a dedicated TransformHistory
 ///   class provided by SceneAlgo, avoiding any need to specialise Inspector::Result.
+
 class GAFFERSCENEUI_API Inspector : public IECore::RefCounted, public Gaffer::Signals::Trackable
 {
 
@@ -101,6 +124,12 @@ class GAFFERSCENEUI_API Inspector : public IECore::RefCounted, public Gaffer::Si
 		/// Emitted when the property queried by the inspector has changed.
 		/// The UI should use this to schedule a refresh.
 		InspectorSignal &dirtiedSignal();
+
+		/// Returns a `Path` representing the history for the inspected property
+		/// in the current context. The path has a child for each predecessor in
+		/// the history, and properties `history:value`, `history:operation`,
+		/// `history:source`, `history:editWarning` and `history:nodeName`.
+		Gaffer::PathPtr historyPath();
 
 	protected :
 
@@ -158,14 +187,88 @@ class GAFFERSCENEUI_API Inspector : public IECore::RefCounted, public Gaffer::Si
 		void inspectHistoryWalk( const GafferScene::SceneAlgo::History *history, Result *result ) const;
 		void editScopeInputChanged( const Gaffer::Plug *plug );
 
+		/// Utility class representing the history of the property in a
+		/// convenient form for use in `PathListingWidget`.
+		/// The `names()` of the path are combined hashes of the plug pointer value
+		/// and the context at that point in history, which are used as keys into `PlugMap`.
+		class GAFFERSCENEUI_API HistoryPath : public Gaffer::Path
+		{
+			public :
+
+				HistoryPath(
+					const InspectorPtr inspector,
+					Gaffer::ConstContextPtr context,
+					const std::string &path = "/",
+					Gaffer::PathFilterPtr filter = nullptr
+				);
+
+				IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Inspector::HistoryPath, HistoryPathTypeId, Path );
+
+				~HistoryPath();
+
+				void propertyNames( std::vector<IECore::InternedString> &names, const IECore::Canceller *canceller = nullptr) const override;
+				IECore::ConstRunTimeTypedPtr property( const IECore::InternedString &name, const IECore::Canceller *canceller = nullptr ) const override;
+
+				bool isValid( const IECore::Canceller *canceller = nullptr ) const override;
+				bool isLeaf( const IECore::Canceller *canceller = nullptr ) const override;
+				Gaffer::PathPtr copy() const override;
+
+				void pathChanged( Path *path );
+
+			protected :
+
+				void doChildren( std::vector<Gaffer::PathPtr> &children, const IECore::Canceller *canceller = nullptr ) const override;
+
+			private :
+
+				// Index history entries using :
+				// 1. The hash of the source plug pointer and the context. A plug could have
+				// multiple values affecting the history in different contexts, making the
+				// plug alone insufficient for uniqueness.
+				// 2. Random access for maintaining the order of the history.
+				struct PlugHistoryEntry
+				{
+					std::string hashString;
+					GafferScene::SceneAlgo::History::ConstPtr history;
+				};
+				using PlugMap = boost::multi_index::multi_index_container<
+					PlugHistoryEntry,
+					boost::multi_index::indexed_by<
+						boost::multi_index::hashed_unique<
+							boost::multi_index::member<PlugHistoryEntry, std::string, &PlugHistoryEntry::hashString>
+						>,
+						boost::multi_index::random_access<>
+					>
+				>;
+
+				// Private constructor for creating children and copies. We reuse the
+				// acceleration structure `plugMap` to avoid computing history more than once.
+				HistoryPath(
+					const InspectorPtr inspector,
+					Gaffer::ConstContextPtr context,
+					PlugMap plugMap,
+					const std::string &path = "/",
+					Gaffer::PathFilterPtr filter = nullptr
+				);
+
+				void updatePlugMap() const;
+
+				const InspectorPtr m_inspector;
+				Gaffer::ConstContextPtr m_context;
+
+				mutable PlugMap m_plugMap;
+
+		};
+
 		const std::string m_type;
 		const std::string m_name;
 		const Gaffer::PlugPtr m_editScope;
 		InspectorSignal m_dirtiedSignal;
 
-};
+		// So we can access HistoryPath.
+		friend void GafferSceneUIModule::bindInspector();
 
-IE_CORE_DECLAREPTR( Inspector )
+};
 
 /// The result of a call to `Inspector::inspect()`. Contains everything
 /// needed to display a property in the UI and optionally allow it to

@@ -36,6 +36,7 @@
 
 #include "GafferSceneUI/Private/Inspector.h"
 
+#include "Gaffer/PathFilter.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/Spreadsheet.h"
 #include "Gaffer/TweakPlug.h"
@@ -47,6 +48,14 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 using namespace GafferSceneUI::Private;
+
+using ConstPredecessors = std::vector<const SceneAlgo::History *>;
+
+static InternedString g_valuePropertyName( "history:value" );
+static InternedString g_operationPropertyName( "history:operation" );
+static InternedString g_sourcePropertyName( "history:source" );
+static InternedString g_editWarningPropertyName( "history:editWarning" );
+static InternedString g_nodePropertyName( "history:node" );
 
 //////////////////////////////////////////////////////////////////////////
 // Internal utilities
@@ -299,6 +308,225 @@ void Inspector::editScopeInputChanged( const Gaffer::Plug *plug )
 	{
 		dirtiedSignal()( this );
 	}
+}
+
+PathPtr Inspector::historyPath()
+{
+	return new Inspector::HistoryPath( this, new Context( *Context::current() ) );
+}
+
+//////////////////////////////////////////////////////////////////////////
+// HistoryPath
+//////////////////////////////////////////////////////////////////////////
+
+Inspector::HistoryPath::HistoryPath(
+	const InspectorPtr inspector,
+	ConstContextPtr context,
+	const std::string &path,
+	PathFilterPtr filter
+) :
+	Path( path, filter ),
+	m_inspector( inspector ),
+	m_context( context ),
+	m_plugMap()
+{
+	assert( m_inspector );
+	assert( m_context );
+
+	pathChangedSignal().connectFront( boost::bind( &Inspector::HistoryPath::pathChanged, this, ::_1 ) );
+}
+
+Inspector::HistoryPath::HistoryPath(
+	const InspectorPtr inspector,
+	ConstContextPtr context,
+	PlugMap plugMap,
+	const std::string &path,
+	PathFilterPtr filter
+) : Path( path, filter ),
+	m_inspector( inspector ),
+	m_context( context ),
+	m_plugMap( plugMap )
+{
+	assert( m_inspector );
+	assert( m_context );
+}
+
+Inspector::HistoryPath::~HistoryPath()
+{
+
+}
+
+void Inspector::HistoryPath::propertyNames( std::vector<InternedString> &names, const Canceller *canceller) const
+{
+	Path::propertyNames( names );
+
+	if( isLeaf() )
+	{
+		names.push_back( g_valuePropertyName );
+		names.push_back( g_operationPropertyName);
+		names.push_back( g_sourcePropertyName );
+		names.push_back( g_editWarningPropertyName );
+		names.push_back( g_nodePropertyName );
+	}
+}
+
+ConstRunTimeTypedPtr Inspector::HistoryPath::property( const InternedString &name, const Canceller *canceller) const
+{
+	if( m_plugMap.size() == 0 )
+	{
+		updatePlugMap();
+	}
+
+	if( isLeaf() && name == g_nodePropertyName )
+	{
+		// Remove the plug name from the end.
+		PlugMap::iterator it = m_plugMap.find( names()[0].string() );
+
+		return it->history->scene->node();
+	}
+
+	if(
+		isLeaf() && (
+			name == g_valuePropertyName ||
+			name == g_operationPropertyName ||
+			name == g_sourcePropertyName ||
+			name == g_editWarningPropertyName
+		)
+	)
+	{
+		PlugMap::iterator it = m_plugMap.find( names()[0].string() );
+
+		std::string editWarning;
+
+		Context::Scope currentScope( it->history->context.get() );
+
+		if( ValuePlugPtr immediateSource = m_inspector->source( it->history.get(), editWarning ) )
+		{
+			ValuePlug *source = static_cast<ValuePlug *>( spreadsheetAwareSource( immediateSource.get() ) );
+
+			if( name == g_valuePropertyName )
+			{
+				return runTimeCast<const IECore::Data>( m_inspector->value( it->history.get() ) );
+			}
+			else if( name == g_operationPropertyName )
+			{
+				if( auto tweakPlug = runTimeCast<const TweakPlug>( source ) )
+				{
+					return new IntData( tweakPlug->modePlug()->getValue() );
+				}
+				return new IntData( TweakPlug::Mode::Create );
+			}
+			else if( name == g_sourcePropertyName )
+			{
+				return source;
+			}
+			else if( name == g_editWarningPropertyName )
+			{
+				return new StringData( editWarning );
+			}
+		}
+	}
+
+	return Path::property( name );
+}
+
+bool Inspector::HistoryPath::isValid( const Canceller *canceller ) const
+{
+	if( names().size() == 0 )
+	{
+		return true;
+	}
+	return m_plugMap.find( names()[0].string() ) != m_plugMap.end();
+}
+
+bool Inspector::HistoryPath::isLeaf( const Canceller *canceller ) const
+{
+	return isValid() && names().size() > 0;
+}
+
+PathPtr Inspector::HistoryPath::copy() const
+{
+	return new Inspector::HistoryPath( m_inspector, m_context, m_plugMap, string(), const_cast<PathFilter *>( getFilter() ) );
+}
+
+void Inspector::HistoryPath::pathChanged( Path *path )
+{
+	updatePlugMap();
+}
+
+void Inspector::HistoryPath::doChildren( std::vector<PathPtr> &children, const Canceller *canceller) const
+{
+	if( m_plugMap.size() == 0 )
+	{
+		updatePlugMap();
+	}
+
+	if( isLeaf() || m_plugMap.size() == 0 )
+	{
+		return;
+	}
+
+	std::string editWarning;
+	const auto &rand_index = m_plugMap.get<1>();
+	for( size_t i = 0; i < rand_index.size(); ++i )
+	{
+		children.push_back(
+			new Inspector::HistoryPath(
+				m_inspector,
+				m_context,
+				m_plugMap,
+				std::string( "/" ) + rand_index[i].hashString
+			)
+		);
+	}
+}
+
+void Inspector::HistoryPath::updatePlugMap() const
+{
+	m_plugMap.clear();
+
+	Context::Scope currentScope( m_context.get() );
+	SceneAlgo::History::ConstPtr history = m_inspector->history();
+
+	if( !history )
+	{
+		return;
+	}
+	assert( history->scene );
+
+	std::string editWarning;
+
+	while( true )
+	{
+		Context::Scope currentScope( history->context.get() );
+
+		if( ValuePlugPtr immediateSource = m_inspector->source( history.get(), editWarning ) )
+		{
+			ValuePlugPtr source = runTimeCast<ValuePlug>( spreadsheetAwareSource( immediateSource.get() ) );
+			MurmurHash h;
+			h.append( (uintptr_t)source.get() );
+			h.append( history->context->hash() );
+			m_plugMap.insert( { h.toString(), history } );
+		}
+
+		if( history->predecessors.size() == 0 )
+		{
+			break;
+		}
+
+		else if( history->predecessors.size() > 1 )
+		{
+			IECore::msg(
+				IECore::Msg::Warning,
+				"Inspector::HistoryPath",
+				"Branching histories are not supported, using first predecessor history only."
+			);
+		}
+
+		history = history->predecessors[0];
+	}
+
+	m_plugMap.get<1>().reverse();
 }
 
 //////////////////////////////////////////////////////////////////////////

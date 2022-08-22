@@ -891,6 +891,17 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( ah.attributeValue, attributeValue )
 		self.assertEqual( len( ah.predecessors ), numPredecessors )
 
+	def __assertParameterHistory( self, attributeHistory, predecessorIndices, scene, path, attributeName, shaderName, parameterName, parameterValue, numPredecessors ) :
+
+		ah = self.__predecessor( attributeHistory, predecessorIndices )
+
+		self.assertIsInstance( ah, GafferScene.SceneAlgo.AttributeHistory )
+		self.assertEqual( ah.scene, scene )
+		self.assertEqual( GafferScene.ScenePlug.pathToString( ah.context["scene:path"] ), path )
+		self.assertEqual( ah.attributeName, attributeName )
+		self.assertEqual( ah.attributeValue.shaders()[shaderName].parameters[parameterName].value, parameterValue )
+		self.assertEqual( len( ah.predecessors ), numPredecessors )
+
 	def testAttributeHistory( self ) :
 
 		# Build network
@@ -1477,6 +1488,45 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		attributeHistory = GafferScene.SceneAlgo.attributeHistory( history, "b" )
 
 		self.assertIsNone( GafferScene.SceneAlgo.attributeHistory( history, "b" ) )
+
+	def testParameterHistoryWithShaderTweaks( self ) :
+
+		# Graph
+		# -----
+		#
+		#       light
+		#         |
+		#       group
+		#         |
+		#    shaderTweaks
+		#
+
+		testLight = GafferSceneTest.TestLight()
+		testLight["visualiserAttributes"]["scale"]["enabled"].setValue( True )
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( testLight["out"] )
+
+		lightFilter = GafferScene.PathFilter()
+		lightFilter["paths"].setValue( IECore.StringVectorData( [ "/group/light" ] ) )
+
+		tweaks = GafferScene.ShaderTweaks()
+		tweaks["in"].setInput( group["out"] )
+		tweaks["filter"].setInput( lightFilter["out"] )
+		tweaks["shader"].setValue( "light" )
+		tweaks["localise"].setValue( True )
+
+		tweak = Gaffer.TweakPlug( "exposure", 2.0 )
+		tweaks["tweaks"].addChild( tweak )
+
+		history = GafferScene.SceneAlgo.history( tweaks["out"]["attributes"], "/group/light" )
+		attributeHistory = GafferScene.SceneAlgo.attributeHistory( history, "light" )
+
+		self.__assertParameterHistory( attributeHistory, [], tweaks["out"], "/group/light", "light", "light", "exposure", 2.0, 1 )
+		self.__assertParameterHistory( attributeHistory, [ 0 ], tweaks["in"], "/group/light", "light", "light", "exposure", 0.0, 1 )
+		self.__assertParameterHistory( attributeHistory, [ 0, 0 ], group["out"], "/group/light", "light", "light", "exposure", 0.0, 1 )
+		self.__assertParameterHistory( attributeHistory, [ 0, 0, 0 ], group["in"][0], "/light", "light", "light", "exposure", 0.0, 1 )
+		self.__assertParameterHistory( attributeHistory, [ 0, 0, 0, 0 ], testLight["out"], "/light", "light", "light", "exposure", 0.0, 0 )
 
 	def testAttributeHistoryWithMissingAttribute( self ) :
 

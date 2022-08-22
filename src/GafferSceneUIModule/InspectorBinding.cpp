@@ -42,6 +42,7 @@
 #include "GafferSceneUI/Private/AttributeInspector.h"
 #include "GafferSceneUI/Private/ParameterInspector.h"
 
+#include "GafferBindings/PathBinding.h"
 #include "GafferBindings/SignalBinding.h"
 
 #include "IECorePython/ExceptionAlgo.h"
@@ -104,9 +105,12 @@ void GafferSceneUIModule::bindInspector()
 			.def( "name", &Inspector::name, return_value_policy<copy_const_reference>() )
 			.def( "inspect", &inspectWrapper )
 			.def( "dirtiedSignal", &Inspector::dirtiedSignal, return_internal_reference<1>() )
+			.def( "historyPath", &Inspector::historyPath )
 		;
 
 		SignalClass<Inspector::InspectorSignal, DefaultSignalCaller<Inspector::InspectorSignal>, DirtiedSlotCaller>( "ChangedSignal" );
+
+		PathClass<Inspector::HistoryPath>();
 
 		scope resultScope = RefCountedClass<Inspector::Result, IECore::RefCounted>( "Result" )
 			.def( "value", &valueWrapper )

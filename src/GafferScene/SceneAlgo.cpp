@@ -787,6 +787,10 @@ SceneAlgo::AttributeHistory::Ptr SceneAlgo::attributeHistory( const SceneAlgo::H
 		{
 			addLocaliseAttributesPredecessors( attributesHistory->predecessors, result.get() );
 		}
+		else if( runTimeCast<const ShaderTweaks>( node ) )
+		{
+			addLocaliseAttributesPredecessors( attributesHistory->predecessors, result.get() );
+		}
 		else
 		{
 			addGenericAttributePredecessors( attributesHistory->predecessors, result.get() );

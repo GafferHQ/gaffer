@@ -61,25 +61,27 @@ class VectorDataWidgetTest( GafferUITest.TestCase ) :
 		self.assertEqual( w.columnToDataIndex( 1 ), ( 1, 0 ) )
 		self.assertEqual( w.columnToDataIndex( 2 ), ( 1, 1 ) )
 		self.assertEqual( w.columnToDataIndex( 3 ), ( 1, 2 ) )
-		self.assertEqual( w.columnToDataIndex( 4 ), ( 2, -1 ) )
-		self.assertEqual( w.columnToDataIndex( 5 ), ( 3, -1 ) )
-		self.assertEqual( w.columnToDataIndex( 6 ), ( 4, 0 ) )
-		self.assertEqual( w.columnToDataIndex( 7 ), ( 4, 1 ) )
-		self.assertEqual( w.columnToDataIndex( 8 ), ( 4, 2 ) )
+		self.assertEqual( w.columnToDataIndex( 4 ), ( 1, 3 ) )
+		self.assertEqual( w.columnToDataIndex( 5 ), ( 2, -1 ) )
+		self.assertEqual( w.columnToDataIndex( 6 ), ( 3, -1 ) )
+		self.assertEqual( w.columnToDataIndex( 7 ), ( 4, 0 ) )
+		self.assertEqual( w.columnToDataIndex( 8 ), ( 4, 1 ) )
+		self.assertEqual( w.columnToDataIndex( 9 ), ( 4, 2 ) )
 
-		self.assertRaises( IndexError, w.columnToDataIndex, 9 )
+		self.assertRaises( IndexError, w.columnToDataIndex, 10 )
 
 		self.assertEqual( w.dataToColumnIndex( 0, -1 ), 0 )
 		self.assertEqual( w.dataToColumnIndex( 1, 0 ), 1 )
 		self.assertEqual( w.dataToColumnIndex( 1, 1 ), 2 )
 		self.assertEqual( w.dataToColumnIndex( 1, 2 ), 3 )
-		self.assertEqual( w.dataToColumnIndex( 2, -1 ), 4 )
-		self.assertEqual( w.dataToColumnIndex( 3, -1 ), 5 )
-		self.assertEqual( w.dataToColumnIndex( 4, 0 ), 6 )
-		self.assertEqual( w.dataToColumnIndex( 4, 1 ), 7 )
-		self.assertEqual( w.dataToColumnIndex( 4, 2 ), 8 )
+		self.assertEqual( w.dataToColumnIndex( 1, 3 ), 4 )
+		self.assertEqual( w.dataToColumnIndex( 2, -1 ), 5 )
+		self.assertEqual( w.dataToColumnIndex( 3, -1 ), 6 )
+		self.assertEqual( w.dataToColumnIndex( 4, 0 ), 7 )
+		self.assertEqual( w.dataToColumnIndex( 4, 1 ), 8 )
+		self.assertEqual( w.dataToColumnIndex( 4, 2 ), 9 )
 
-		self.assertRaises( IndexError, w.dataToColumnIndex, 5, 0 )
+		self.assertRaises( IndexError, w.dataToColumnIndex, 6, 0 )
 
 	def testColumnEditability( self ) :
 
@@ -91,10 +93,10 @@ class VectorDataWidgetTest( GafferUITest.TestCase ) :
 
 		w = GafferUI.VectorDataWidget( data )
 
-		for i in range( 0, 5 ) :
+		for i in range( 0, 6 ) :
 			self.assertEqual( w.getColumnEditable( i ), True )
 
-		self.assertRaises( IndexError, w.getColumnEditable, 5 )
+		self.assertRaises( IndexError, w.getColumnEditable, 7 )
 		self.assertRaises( IndexError, w.getColumnEditable, -1 )
 
 		w.setColumnEditable( 1, False )
@@ -103,7 +105,7 @@ class VectorDataWidgetTest( GafferUITest.TestCase ) :
 		data[0][0] += 1.0
 		w.setData( data )
 
-		for i in range( 0, 5 ) :
+		for i in range( 0, 6 ) :
 			self.assertEqual( w.getColumnEditable( i ), i != 1 )
 
 		cs = GafferTest.CapturingSlot( w.dataChangedSignal() )
@@ -114,6 +116,37 @@ class VectorDataWidgetTest( GafferUITest.TestCase ) :
 
 		# changing editability shouldn't emit dataChangedSignal.
 		self.assertEqual( len( cs ), 0 )
+
+	def testColorColumn( self ) :
+
+		data = [
+			IECore.Color3fVectorData( [ imath.Color3f( x ) for x in range( 0, 3 ) ] ),
+			IECore.Color4fVectorData( [ imath.Color4f( x ) for x in range( 0, 3 ) ] ),
+		]
+
+		w = GafferUI.VectorDataWidget( data )
+		self.assertEqual( w.columnToDataIndex( 0 ), ( 0, 0 ) )
+		self.assertEqual( w.columnToDataIndex( 1 ), ( 0, 1 ) )
+		self.assertEqual( w.columnToDataIndex( 2 ), ( 0, 2 ) )
+		self.assertEqual( w.columnToDataIndex( 3 ), ( 0, 3 ) )
+
+		self.assertEqual( w.columnToDataIndex( 4 ), ( 1, 0 ) )
+		self.assertEqual( w.columnToDataIndex( 5 ), ( 1, 1 ) )
+		self.assertEqual( w.columnToDataIndex( 6 ), ( 1, 2 ) )
+		self.assertEqual( w.columnToDataIndex( 7 ), ( 1, 3 ) )
+		self.assertEqual( w.columnToDataIndex( 8 ), ( 1, 4 ) )
+
+		for i in range( 0, 3 ) :
+			self.assertEqual( w.getData()[0][i][0], i )
+			self.assertEqual( w.getData()[0][i][1], i )
+			self.assertEqual( w.getData()[0][i][2], i )
+			self.assertEqual( w.getData()[0][i], imath.Color3f( i, i, i ) )
+
+			self.assertEqual( w.getData()[1][i][0], i )
+			self.assertEqual( w.getData()[1][i][1], i )
+			self.assertEqual( w.getData()[1][i][2], i )
+			self.assertEqual( w.getData()[1][i][3], i )
+			self.assertEqual( w.getData()[1][i], imath.Color4f( i, i, i, i ) )
 
 if __name__ == "__main__":
 	unittest.main()
