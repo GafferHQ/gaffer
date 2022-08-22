@@ -27,6 +27,11 @@ Fixes
 - SceneReader : Fixed shader type for UsdLux lights. It was `surface` and is now `light`.
 - Fixed a bug in `SceneAlgo::attributeHistory` that would return a branching history from a `ShaderTweaks` node with `inherit` enabled.
 
+Documentation
+-------------
+
+- Improved "Controls and Shortcuts" and added link in help menu.
+
 Build
 -----
 
