@@ -166,41 +166,67 @@ class _Checker( QtWidgets.QWidget ) :
 
 	def paintEvent( self, event ) :
 
-		painter = QtGui.QPainter( self )
-		rect = event.rect()
+		_Checker._paintRectangle(
+			QtGui.QPainter( self ),
+			event.rect(),
+			self.color0,
+			self.color1,
+			self.borderColor,
+			self.__borderTop,
+			self.__borderBottom,
+			self.width(),
+			self.height()
+		)
 
-		if self.color0 != self.color1 :
+	@staticmethod
+	def _paintRectangle(
+		painter,
+		rect,
+		color0,
+		color1,
+		borderColor = None,
+		borderTop = False,
+		borderBottom = False,
+		borderWidth = 0,
+		borderHeight = 0
+	) :
+
+		if color0 != color1 :
 
 			# draw checkerboard if colours differ
 			checkSize = 6
 
-			min = imath.V2i( rect.x() / checkSize, rect.y() / checkSize )
-			max = imath.V2i( 1 + (rect.x() + rect.width()) / checkSize, 1 + (rect.y() + rect.height()) / checkSize )
+			gridSize = imath.V2i( rect.width() / checkSize + 1, rect.height() / checkSize + 1 )
 
-			for x in range( min.x, max.x ) :
-				for y in range( min.y, max.y ) :
-					if ( x + y ) % 2 :
-						painter.fillRect( QtCore.QRectF( x * checkSize, y * checkSize, checkSize, checkSize ), self.color0 )
+			for i in range( 0, gridSize.x ) :
+				for j in range( 0, gridSize.y ) :
+					offset = imath.V2i( i * checkSize, j * checkSize )
+					square = QtCore.QRectF(
+						rect.x() + offset.x,
+						rect.y() + offset.y,
+						min( rect.width() - offset.x, checkSize ),
+						min( rect.height() - offset.y, checkSize )
+					)
+					if ( i + j ) % 2 :
+						painter.fillRect( square, color0 )
 					else :
-						painter.fillRect( QtCore.QRectF( x * checkSize, y * checkSize, checkSize, checkSize ), self.color1 )
+						painter.fillRect( square, color1 )
 
 		else :
 
 			# otherwise just draw a flat colour cos it'll be quicker
-			painter.fillRect( QtCore.QRectF( rect.x(), rect.y(), rect.x() + rect.width(), rect.y() + rect.height() ), self.color0 )
+			painter.fillRect( QtCore.QRectF( rect.x(), rect.y(), rect.width(), rect.height() ), color0 )
 
-		if self.borderColor is not None :
-			w = self.width()
-			h = self.height()
-			pen = QtGui.QPen( self.borderColor )
+		if borderColor is not None :
+			pen = QtGui.QPen( borderColor )
 			lines = [
-				QtCore.QLine( 0, 0, 0, h ),
-				QtCore.QLine( w, 0, w, h ),
+				QtCore.QLine( 0, 0, 0, borderHeight ),
+				QtCore.QLine( borderWidth, 0, borderWidth, borderHeight ),
 			]
-			if self.__borderTop :
-				lines.append( QtCore.QLine( 0, 0, w, 0 ) )
-			if self.__borderBottom :
-				lines.append( QtCore.QLine( 0, h, w, h ) )
+			if borderTop :
+				lines.append( QtCore.QLine( 0, 0, borderWidth, 0 ) )
+			if borderBottom :
+				lines.append( QtCore.QLine( 0, borderHeight, borderWidth, borderHeight ) )
 			pen.setWidth( 4 )
 			painter.setPen( pen )
 			painter.drawLines( lines )
