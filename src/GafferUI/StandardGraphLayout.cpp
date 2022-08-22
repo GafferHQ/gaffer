@@ -144,8 +144,8 @@ class Constraint
 		};
 
 		// Enforces p - q ( ==, >=, <= ) d in direction v
-		Constraint( V2f *p, V2f *q, Type type, float d, const V2f &v, float w = 0.5 )
-			:	m_p( p ), m_q( q ), m_type( type ), m_d( d ), m_v( v ), m_w( w )
+		Constraint( V2f *p, V2f *q, Type type, float d, const V2f &v, float w = 0.5, int category = 0 )
+			:	m_p( p ), m_q( q ), m_type( type ), m_d( d ), m_v( v ), m_w( w ), m_category( category )
 		{
 		}
 
@@ -169,6 +169,11 @@ class Constraint
 			*m_q -= r * (1.0f - m_w);
 		}
 
+		int category() const
+		{
+			return m_category;
+		}
+
 	private :
 
 		V2f *m_p;
@@ -177,6 +182,7 @@ class Constraint
 		float m_d;
 		V2f m_v;
 		float m_w;
+		int m_category;
 
 };
 
@@ -461,7 +467,9 @@ class LayoutEngine
 			}
 		}
 
-		void addConnectionDirectionConstraints()
+		// The `category` is just a user-provided identifier to allow
+		// the constraints to be subsequently removed by `removeConstraints( category )`.
+		void addConnectionDirectionConstraints( int category = 0 )
 		{
 
 			EdgeIteratorRange e = edges( m_graph );
@@ -488,20 +496,23 @@ class LayoutEngine
 						src,
 						Constraint::GreaterThanOrEqualTo,
 						separation,
-						d == 0 ? V2f( edge.idealDirection[d], 0 ) : V2f( 0, edge.idealDirection[d] )					);
+						d == 0 ? V2f( edge.idealDirection[d], 0 ) : V2f( 0, edge.idealDirection[d] ),
+						/* w = */ 0.5,
+						category
+					);
 
 				}
 			}
 
 		}
 
-		void addSiblingConstraints()
+		void addSiblingConstraints( int category = 0 )
 		{
 			VertexIteratorRange v = vertices( m_graph );
 			for( VertexIterator it = v.first; it != v.second; ++it )
 			{
-				addSiblingConstraints( *it, Direction( 0, -1 ) );
-				addSiblingConstraints( *it, Direction( 1, 0 ) );
+				addSiblingConstraints( *it, Direction( 0, -1 ), category );
+				addSiblingConstraints( *it, Direction( 1, 0 ), category );
 			}
 		}
 
@@ -591,6 +602,17 @@ class LayoutEngine
 
 				addAuxiliaryConnection( plugs.first, plugs.second );
 			}
+		}
+
+		void removeConstraints( int category )
+		{
+			m_constraints.erase(
+				std::remove_if(
+					m_constraints.begin(), m_constraints.end(),
+					[category] ( const Constraint &c ) { return c.category() == category; }
+				),
+				m_constraints.end()
+			);
 		}
 
 		void clearConstraints()
@@ -732,7 +754,7 @@ class LayoutEngine
 
 		typedef std::map<const Node *, VertexDescriptor> NodesToVertices;
 
-		void addSiblingConstraints( VertexDescriptor vertex, const Direction &edgeDirection )
+		void addSiblingConstraints( VertexDescriptor vertex, const Direction &edgeDirection, int category )
 		{
 			// find all the edges pointing in the specified direction.
 
@@ -770,7 +792,9 @@ class LayoutEngine
 						*prev,
 						Constraint::GreaterThanOrEqualTo,
 						separation,
-						dimension == 0 ? V2f( 1, 0 ) : V2f( 0, 1 )
+						dimension == 0 ? V2f( 1, 0 ) : V2f( 0, 1 ),
+						/* w = */ 0.5,
+						category
 					);
 				}
 				prev = curr;
@@ -778,7 +802,7 @@ class LayoutEngine
 		}
 
 		// Adds a constraint between p and q, adjusting w based on their pinning status.
-		void addConstraint( Vertex &p, Vertex &q, Constraint::Type type, float d, const V2f &v, float w = 0.5f )
+		void addConstraint( Vertex &p, Vertex &q, Constraint::Type type, float d, const V2f &v, float w = 0.5f, int category = 0 )
 		{
 			if( p.pinned && q.pinned )
 			{
@@ -801,7 +825,8 @@ class LayoutEngine
 					type,
 					d,
 					v,
-					w
+					w,
+					category
 				)
 			);
 		}
@@ -1233,7 +1258,7 @@ void StandardGraphLayout::layoutNodes( GraphGadget *graph, Gaffer::Set *nodes ) 
 	// collisions between nodes.
 
 	layout.addConnectionDirectionConstraints();
-	layout.addSiblingConstraints();
+	layout.addSiblingConstraints( /* category = */ 1 );
 	layout.solve( false );
 
 	// do a second round of layout, now resolving collisions.
@@ -1243,8 +1268,7 @@ void StandardGraphLayout::layoutNodes( GraphGadget *graph, Gaffer::Set *nodes ) 
 	// collisions detection from working. a better alternative
 	// might be to remove conflicting constraints before applying them.
 
-	layout.clearConstraints();
-	layout.addConnectionDirectionConstraints();
+	layout.removeConstraints( /* category = */ 1 );
 	layout.solve( true );
 
 	layout.applyPositions();
