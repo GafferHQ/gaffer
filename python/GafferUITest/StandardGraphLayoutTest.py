@@ -951,5 +951,118 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 		self.assertIsInstance( s["c"]["in"], Gaffer.IntPlug )
 		self.assertEqual( s["c"]["in"].getInput(), s["s"]["out"]["value"] )
 
+	def testLayoutNodeIntoBackdrop( self ) :
+
+		# ---backdrop-----------------------------------
+		# |                                            |
+		# |   node1----node2                           |
+		# |                                            |
+		# ----------------------------------------------
+
+		script = Gaffer.ScriptNode()
+		script["backdrop"] = Gaffer.Backdrop()
+		script["node1"] = self.LayoutNode()
+
+		graphGadget = GafferUI.GraphGadget( script )
+		graphGadget.getLayout().positionNode( graphGadget, script["node1"] )
+
+		# Frame `node1` with the backdrop and then extend the backdrop to the
+		# right to make room for our new node.
+
+		backdropGadget = graphGadget.nodeGadget( script["backdrop"] )
+		backdropGadget.frame( [ script["node1"] ] )
+		backdropGadget.setBound(
+			imath.Box2f(
+				backdropGadget.getBound().min(),
+				backdropGadget.getBound().max() + imath.V2f( 100, 0 )
+			)
+		)
+
+		# Connect `node2` to the right of `node1` and lay it out.
+		# We want it to nestle nicely next to `node1`, and not get
+		# pushed outside of the backdrop.
+
+		script["node2"] = self.LayoutNode()
+		script["node2"]["left0"].setInput( script["node1"]["right0"] )
+		graphGadget.getLayout().layoutNodes( graphGadget, Gaffer.StandardSet( [ script["node2"] ] ) )
+
+		self.assertAlmostEqual(
+			graphGadget.getNodePosition( script["node1"] ).y,
+			graphGadget.getNodePosition( script["node2"] ).y,
+		)
+
+		self.assertAlmostEqual(
+			graphGadget.getNodePosition( script["node2"] ).x,
+			graphGadget.getNodePosition( script["node1"] ).x + 15,
+			delta = 1.0
+		)
+
+	def testLayoutBackdrops( self ) :
+
+		#	             topNode
+		#                  / \
+		#                 /   \
+		#                /     \
+		#  ---backdrop1----   ---backdrop2----
+		#  |           /  |   |  \           |
+		#  |  bottomNode1 |   |  bottomNode2 |
+		#  |              |   |              |
+		#  ----------------   ----------------
+
+		# Build graph above, paying no attention to where nodes go,
+		# apart from ensuring that the backdrops don't overlap.
+
+		script = Gaffer.ScriptNode()
+		script["topNode"] = self.LayoutNode()
+		script["bottomNode1"] = self.LayoutNode()
+		script["bottomNode2"] = self.LayoutNode()
+		script["backdrop1"] = Gaffer.Backdrop()
+		script["backdrop2"] = Gaffer.Backdrop()
+
+		script["bottomNode1"]["top1"].setInput( script["topNode"]["bottom0"] )
+		script["bottomNode2"]["top1"].setInput( script["topNode"]["bottom2"] )
+
+		graphGadget = GafferUI.GraphGadget( script )
+		graphGadget.setNodePosition( script["topNode"], imath.V2f( 0, 80 ) )
+		graphGadget.setNodePosition( script["bottomNode1"], imath.V2f( -11, 40 ) )
+		graphGadget.setNodePosition( script["bottomNode2"], imath.V2f( 20, -20 ) )
+
+		backdropGadget1 = graphGadget.nodeGadget( script["backdrop1"] )
+		backdropGadget1.frame( [ script["bottomNode1"] ] )
+		backdropGadget2 = graphGadget.nodeGadget( script["backdrop2"] )
+		backdropGadget2.frame( [ script["bottomNode2"] ] )
+
+		# Now lay out all the nodes. We want the nodes to remain static
+		# relative to their backdrops, and the backdrops to have been layed
+		# out to avoid collisions and respect the connections between the
+		# nodes they own.
+
+		def relativePosition( node, backdrop ) :
+
+			return graphGadget.getNodePosition( node ) - graphGadget.getNodePosition( backdrop )
+
+		relativePosition1 = relativePosition( script["bottomNode1"], script["backdrop1"] )
+		relativePosition2 = relativePosition( script["bottomNode2"], script["backdrop2"] )
+
+		graphGadget.getLayout().layoutNodes( graphGadget )
+		graphGadget.getLayout().layoutNodes( graphGadget ) ## TODO : REMOVE ME!!!!
+
+		self.assertEqual( relativePosition( script["bottomNode1"], script["backdrop1"] ), relativePosition1 )
+		self.assertEqual( relativePosition( script["bottomNode2"], script["backdrop2"] ), relativePosition2 )
+		self.assertLess(
+			graphGadget.getNodePosition( script["backdrop1"] ).y,
+			graphGadget.nodeGadget( script["topNode"] ).transformedBound().min().y
+		)
+		self.assertAlmostEqual(
+			graphGadget.getNodePosition( script["backdrop1"] ).y,
+			graphGadget.getNodePosition( script["backdrop2"] ).y,
+			delta = 0.01
+		)
+		self.assertFalse(
+			graphGadget.nodeGadget( script["backdrop1"] ).transformedBound().intersects(
+				graphGadget.nodeGadget( script["backdrop2"] ).transformedBound()
+			)
+		)
+
 if __name__ == "__main__":
 	unittest.main()

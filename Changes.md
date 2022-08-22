@@ -5,7 +5,9 @@ Fixes
 -----
 
 - PathFilter : Improved positioning of PathFilters created by dropping paths onto a node.
-- GraphEditor : Improved positioning of pasted nodes, so that they are less likely to overlap with any node they are automatically connected to.
+- GraphEditor :
+  - Improved handling of Backdrops when laying out nodes. Individual nodes are no longer pushed outside backdrops, and backdrops themselves are positioned as a group containing all their child nodes.
+  - Improved positioning of pasted nodes, so that they are less likely to overlap with any node they are automatically connected to.
 
 0.61.14.3 (relative to 0.61.14.2)
 =========

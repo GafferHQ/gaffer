@@ -37,6 +37,7 @@
 
 #include "GafferUI/StandardGraphLayout.h"
 
+#include "GafferUI/BackdropNodeGadget.h"
 #include "GafferUI/CompoundNodule.h"
 #include "GafferUI/ConnectionGadget.h"
 #include "GafferUI/GraphGadget.h"
@@ -1275,6 +1276,43 @@ void StandardGraphLayout::layoutNodes( GraphGadget *graph, Gaffer::Set *nodes ) 
 	if( nodes )
 	{
 		layout.pinNodes( nodes, true /* invert */ );
+	}
+
+	// If there are any backdrops to be positioned, group
+	// them with their children so that they move as one.
+
+	bool affectingBackdrops = false;
+	for( auto &node : Node::Range( *graph->getRoot() ) )
+	{
+		if( nodes && !nodes->contains( node.get() ) )
+		{
+			continue;
+		}
+		auto backdrop = runTimeCast<BackdropNodeGadget>( graph->nodeGadget( node.get() ) );
+		if( !backdrop )
+		{
+			continue;
+		}
+
+		affectingBackdrops = true;
+
+		vector<Node *> framedNodes;
+		backdrop->framed( framedNodes );
+		if( framedNodes.size() )
+		{
+			StandardSetPtr groupSet = new StandardSet;
+			groupSet->add( NodePtr( node ) );
+			groupSet->add( framedNodes.begin(), framedNodes.end() );
+			const V3f groupCenter = backdrop->transformedBound().center();
+			layout.groupNodes( groupSet.get(), V2f( groupCenter.x, groupCenter.y ) );
+		}
+	}
+
+	if( !affectingBackdrops )
+	{
+		// Disable collisions with backdrops, since we don't want to prevent
+		// individual nodes from finding a suitable home inside them.
+		layout.assignCollisionGroup( (IECore::TypeId)Gaffer::BackdropTypeId, -1 );
 	}
 
 	// do a first round of layout without worrying about
