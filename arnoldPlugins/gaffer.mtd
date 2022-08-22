@@ -2650,6 +2650,7 @@
 	gaffer.nodeMenu.category STRING "Volume"
 	gaffer.graphEditorLayout.defaultVisibility BOOL false
 
+	gaffer.layout.activator.secondaryAnisotropyEnabled STRING "parameters['scatter_secondary_anisotropy_mix'].getValue() > 0.0"
 	gaffer.layout.activator.emissionModeCommon STRING "parameters['emission_mode'].getValue() != 'none'"
 	gaffer.layout.activator.emissionModeBlackbody STRING "parameters['emission_mode'].getValue() == 'blackbody'"
 
@@ -2669,6 +2670,13 @@
 		page STRING "Scatter"
 	[attr scatter_anisotropy]
 		page STRING "Scatter"
+	[attr scatter_secondary_anisotropy]
+		page STRING "Scatter"
+		label STRING "Secondary Anisotropy"
+		gaffer.layout.activator STRING "secondaryAnisotropyEnabled"
+	[attr scatter_secondary_anisotropy_mix]
+		page STRING "Scatter"
+		label STRING "Secondary Anisotropy Mix"
 
 	[attr transparent]
 		page STRING "Transparent"
@@ -2679,6 +2687,9 @@
 
 	[attr emission_mode]
 		page STRING "Emission"
+	[attr emission_scaling]
+		page STRING "Emission"
+		gaffer.layout.activator STRING "emissionModeCommon"
 	[attr emission]
 		gaffer.graphEditorLayout.visible BOOL true
 		page STRING "Emission"
@@ -2703,7 +2714,9 @@
 	[attr blackbody_intensity]
 		page STRING "Emission"
 		gaffer.layout.activator STRING "emissionModeBlackbody"
-
+	[attr blackbody_contrast]
+		page STRING "Emission"
+		gaffer.layout.activator STRING "emissionModeBlackbody"
 	[attr displacement]
 		gaffer.graphEditorLayout.visible BOOL true
 		page STRING "Sampling"

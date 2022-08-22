@@ -9,6 +9,7 @@ Improvements
   - Added loading of `treatAsPoint` and `treatAsLine` parameters from UsdLux lights.
 - SceneWriter : Added support for Alembic visibility attributes.
 - ColorPlugValueWidget : Hid the color chooser button (sliders) for output plugs.
+- Arnold : Added metadata for new `standard_volume` shader parameters introduced in Arnold 7.1.3.0.
 
 Fixes
 -----
