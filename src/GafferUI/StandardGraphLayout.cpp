@@ -143,12 +143,6 @@ class Constraint
 			LessThanOrEqualTo
 		};
 
-		/// \todo Remove - it's only here so we can call m_constraints.resize()
-		/// to remove the collision constraints.
-		Constraint()
-		{
-		}
-
 		// Enforces p - q ( ==, >=, <= ) d in direction v
 		Constraint( V2f *p, V2f *q, Type type, float d, const V2f &v, float w = 0.5 )
 			:	m_p( p ), m_q( q ), m_type( type ), m_d( d ), m_v( v ), m_w( w )
@@ -608,7 +602,7 @@ class LayoutEngine
 		{
 			VertexIteratorRange v = vertices( m_graph );
 
-			size_t numConstraints = m_constraints.size();
+			const size_t firstCollisionConstraintIndex = m_constraints.size();
 			for( int i = 0; i < m_maxIterations; ++i )
 			{
 				for( VertexIterator it = v.first; it != v.second; ++it )
@@ -624,7 +618,7 @@ class LayoutEngine
 				{
 					addCollisionConstraints();
 					applyConstraints( m_constraintsIterations );
-					m_constraints.resize( numConstraints );
+					m_constraints.erase( m_constraints.begin() + firstCollisionConstraintIndex, m_constraints.end() );
 				}
 
 				float maxMovement = 0;
