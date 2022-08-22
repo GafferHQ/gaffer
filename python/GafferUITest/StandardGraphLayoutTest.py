@@ -444,6 +444,39 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 		self.assertTrue( g.getNodePosition( s["node2"] ).x > g.getNodePosition( s["node1"] ).x )
 		self.assertAlmostEqual( g.getNodePosition( s["node1"] ).y, g.getNodePosition( s["node2"] ).y, 2 )
 
+	def testPositionNodesPutsAllNodesDownstream( self ) :
+
+		# When positioning `b` and `c` relative to `a`, we want to
+		# make sure that both nodes end up to the right of `a`,
+		# even though only `c` has a connection from it.
+		#
+		#  a ------> ---------
+		#            |   c   |
+		#       b -> ---------
+
+		s = Gaffer.ScriptNode()
+
+		s["a"] = self.LayoutNode()
+		s["b"] = self.LayoutNode()
+		s["c"] = self.LayoutNode()
+
+		s["c"]["left0"].setInput( s["a"]["right2"] )
+		s["c"]["left2"].setInput( s["b"]["right0"] )
+
+		g = GafferUI.GraphGadget( s )
+
+		g.setNodePosition( s["a"], imath.V2f( 0, 0 ) )
+		g.setNodePosition( s["b"], imath.V2f( -100, 0 ) )
+		g.setNodePosition( s["c"], imath.V2f( -50, 20 ) )
+
+		bcOffset = g.getNodePosition( s["c"] ) - g.getNodePosition( s["b"] )
+
+		g.getLayout().positionNodes( g, Gaffer.StandardSet( [ s["b"], s["c"] ] ) )
+
+		self.assertEqual( g.getNodePosition( s["a"] ), imath.V2f( 0 ) )
+		self.assertEqual( g.getNodePosition( s["c"] ) - g.getNodePosition( s["b"] ), bcOffset )
+		self.assertGreater( g.getNodePosition( s["b"] ).x, g.getNodePosition( s["a"] ).x )
+
 	def testPositionNodesFallback( self ) :
 
 		s = Gaffer.ScriptNode()

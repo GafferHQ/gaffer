@@ -379,8 +379,9 @@ class LayoutEngine
 
 				if( sInternal != tInternal )
 				{
-					// edge connects group to outside world, move
-					// the edge to the group.
+					// Edge connects group to outside world. Move the edge to
+					// the group, and adjust the offsets so that they lie on
+					// the group's bound.
 
 					VertexDescriptor newS = sInternal ? groupDescriptor : s;
 					VertexDescriptor newT = tInternal ? groupDescriptor : t;
@@ -393,10 +394,12 @@ class LayoutEngine
 					if( sInternal )
 					{
 						newEdge.sourceOffset = ( newEdge.sourceOffset + m_graph[s].position ) - group.position;
+						newEdge.sourceOffset = exitPoint( newEdge.sourceOffset, newEdge.sourceTangent, group.bound );
 					}
 					else
 					{
 						newEdge.targetOffset = ( newEdge.targetOffset + m_graph[t].position ) - group.position;
+						newEdge.targetOffset = exitPoint( newEdge.targetOffset, newEdge.targetTangent, group.bound );
 					}
 				}
 
@@ -413,6 +416,7 @@ class LayoutEngine
 			for( vector<VertexDescriptor>::const_iterator it = childVertexDescriptors.begin(), eIt = childVertexDescriptors.end(); it != eIt; ++it )
 			{
 				Vertex &child = m_graph[*it];
+				child.collisionGroup = -1;
 				for( int d = 0; d < 2; ++d )
 				{
 					addConstraint(
@@ -694,6 +698,25 @@ class LayoutEngine
 			V3f vn( v.x, v.y, 0.0f );
 			vn.normalize();
 			return Direction( int( round( vn.x ) ), int( round( vn.y ) ) );
+		}
+
+		// Projects `origin` in `direction` until it exits `box`, and returns
+		// the exit point. `origin` must be contained by `box`.
+		V2f exitPoint( const V2f &origin, const V2f &direction, const Box2f &box )
+		{
+			float t = numeric_limits<float>::max();
+			for( int d = 0; d < 2; ++d )
+			{
+				if( direction[d] > 0.0f )
+				{
+					t = std::min( t, (box.max[d] - origin[d]) / direction[d] );
+				}
+				else if( direction[d] < 0.0f )
+				{
+					t = std::min( t, (box.min[d] - origin[d]) / direction[d] );
+				}
+			}
+			return origin + direction * t;
 		}
 
 		// We convert the visible graph of nodes and connections into a boost
