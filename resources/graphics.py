@@ -314,6 +314,28 @@
 			]
 		},
 
+		"tweakModes" : {
+
+			"options" : {
+				"requiredWidth" : 14,
+				"requiredHeight" : 14,
+				"validatePixelAlignment" : True
+			},
+
+			"ids" : [
+				"plusSmall",
+				"minusSmall",
+				"multiplySmall",
+				"replaceSmall",
+				"createSmall",
+				"lessThanSmall",
+				"greaterThanSmall",
+				"listAppendSmall",
+				"listPrependSmall",
+				"listRemoveSmall",
+			]
+		}
+
 	},
 
 	"ids" : [

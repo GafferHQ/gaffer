@@ -130,11 +130,13 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		self._qtWidget().model().selectionChanged.connect( Gaffer.WeakMethod( self.__selectionChanged ) )
 		self._qtWidget().model().expansionChanged.connect( Gaffer.WeakMethod( self.__expansionChanged ) )
+		self._qtWidget().model().updateFinished.connect( Gaffer.WeakMethod( self.__updateFinished ) )
 
 		self.__pathSelectedSignal = GafferUI.WidgetSignal()
 		self.__selectionChangedSignal = GafferUI.WidgetSignal()
 		self.__displayModeChangedSignal = GafferUI.WidgetSignal()
 		self.__expansionChangedSignal = GafferUI.WidgetSignal()
+		self.__updateFinishedSignal = GafferUI.WidgetSignal()
 
 		# Connections for implementing selection and drag and drop.
 		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
@@ -247,6 +249,10 @@ class PathListingWidget( GafferUI.Widget ) :
 	def expansionChangedSignal( self ) :
 
 		return self.__expansionChangedSignal
+
+	def updateFinishedSignal( self ) :
+
+		return self.__updateFinishedSignal
 
 	def getDisplayMode( self ) :
 
@@ -513,6 +519,10 @@ class PathListingWidget( GafferUI.Widget ) :
 	def __expansionChanged( self ) :
 
 		self.__expansionChangedSignal( self )
+
+	def __updateFinished( self ) :
+
+		self.__updateFinishedSignal( self )
 
 	def __keyPress( self, widget, event ) :
 
