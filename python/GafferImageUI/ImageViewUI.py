@@ -78,7 +78,7 @@ Gaffer.Metadata.registerNode(
 	"toolbarLayout:customWidget:BottomRightSpacer:section", "Bottom",
 	"toolbarLayout:customWidget:BottomRightSpacer:index", 2,
 
-	"layout:activator:gpuAvailable", lambda node : ImageViewUI.createDisplayTransform( node["displayTransform"].getValue() ).isinstance( GafferImage.OpenColorIOTransform ),
+	"toolbarLayout:activator:gpuAvailable", lambda node : isinstance( GafferImageUI.ImageView.createDisplayTransform( node["displayTransform"].getValue() ), GafferImage.OpenColorIOTransform ),
 
 	plugs = {
 
@@ -186,7 +186,7 @@ Gaffer.Metadata.registerNode(
 
 			"plugValueWidget:type", "GafferImageUI.ImageViewUI._LutGPUPlugValueWidget",
 			"label", "",
-			"layout:activator", "gpuAvailable",
+			"toolbarLayout:activator", "gpuAvailable",
 		],
 
 		"colorInspector" : [
