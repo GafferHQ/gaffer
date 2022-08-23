@@ -97,26 +97,23 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 		g.getLayout().connectNode( g, s["compound"], Gaffer.StandardSet( [ s["add2"] ] ) )
 		self.assertEqual( s["compound"]["p"]["f"].getInput(), None )
 
-		Gaffer.Metadata.registerValue( GafferTest.CompoundPlugNode, "p", "nodule:type", "GafferUI::CompoundNodule" )
+		Gaffer.Metadata.registerValue( s["compound"]["p"], "nodule:type", "GafferUI::CompoundNodule" )
 
-		s["compound2"] = GafferTest.CompoundPlugNode()
-		g.getLayout().connectNode( g, s["compound2"], Gaffer.StandardSet( [ s["add2"] ] ) )
-		self.assertTrue( s["compound2"]["p"]["f"].getInput().isSame( s["add2"]["sum"] ) )
+		g.getLayout().connectNode( g, s["compound"], Gaffer.StandardSet( [ s["add2"] ] ) )
+		self.assertTrue( s["compound"]["p"]["f"].getInput().isSame( s["add2"]["sum"] ) )
 
 		# check we can connect from a nested plug, but only provided it is represented
 		# in the node graph by a nodule for that exact plug.
 
 		s["add3"] = GafferTest.AddNode()
 
-		g.getLayout().connectNode( g, s["add3"], Gaffer.StandardSet( [ s["compound2"] ] ) )
+		g.getLayout().connectNode( g, s["add3"], Gaffer.StandardSet( [ s["compound"] ] ) )
 		self.assertEqual( s["add3"]["op1"].getInput(), None )
 
-		Gaffer.Metadata.registerValue( GafferTest.CompoundPlugNode, "o", "nodule:type", "GafferUI::CompoundNodule" )
+		Gaffer.Metadata.registerValue( s["compound"]["o"], "nodule:type", "GafferUI::CompoundNodule" )
 
-		s["compound3"] = GafferTest.CompoundPlugNode()
-
-		g.getLayout().connectNode( g, s["add3"], Gaffer.StandardSet( [ s["compound3"] ] ) )
-		self.assertTrue( s["add3"]["op1"].getInput().isSame( s["compound3"]["o"]["f"] ) )
+		g.getLayout().connectNode( g, s["add3"], Gaffer.StandardSet( [ s["compound"] ] ) )
+		self.assertTrue( s["add3"]["op1"].getInput().isSame( s["compound"]["o"]["f"] ) )
 
 	def testConnectNodes( self ) :
 
