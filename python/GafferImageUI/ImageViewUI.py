@@ -883,8 +883,14 @@ class _SoloChannelPlugValueWidget( GafferUI.PlugValueWidget ) :
 			soloChannel = self.getPlug().getValue()
 
 		m = IECore.MenuDefinition()
+		m.append(
+			"/All",
+			{
+				"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), -1 ),
+				"checkBox" : soloChannel == -1
+			}
+		)
 		for name, value in [
-			( "All", -1 ),
 			( "R", 0 ),
 			( "G", 1 ),
 			( "B", 2 ),
@@ -894,7 +900,8 @@ class _SoloChannelPlugValueWidget( GafferUI.PlugValueWidget ) :
 				"/" + name,
 				{
 					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), value ),
-					"checkBox" : soloChannel == value
+					"checkBox" : soloChannel == value,
+					"shortCut" : name
 				}
 			)
 
@@ -904,7 +911,8 @@ class _SoloChannelPlugValueWidget( GafferUI.PlugValueWidget ) :
 				"/Luminance",
 				{
 					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), -2 ),
-					"checkBox" : soloChannel == -2
+					"checkBox" : soloChannel == -2,
+					"shortCut" : "L"
 				}
 			)
 
