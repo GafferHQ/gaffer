@@ -70,9 +70,9 @@ namespace
 {
 
 // This is to allow Cycles Shaders to be connected to OSL Shaders
-bool g_oslRegistrationSurface = OSLShader::registerCompatibleShader( "ccl:surface" );
-bool g_oslRegistrationVolume = OSLShader::registerCompatibleShader( "ccl:volume" );
-bool g_oslRegistrationDisplacement = OSLShader::registerCompatibleShader( "ccl:displacement" );
+bool g_oslRegistrationSurface = OSLShader::registerCompatibleShader( "cycles:surface" );
+bool g_oslRegistrationVolume = OSLShader::registerCompatibleShader( "cycles:volume" );
+bool g_oslRegistrationDisplacement = OSLShader::registerCompatibleShader( "cycles:displacement" );
 
 } // namespace
 
@@ -152,23 +152,23 @@ void CyclesShader::loadShader( const std::string &shaderName, bool keepExistingV
 
 	if( boost::ends_with( shaderName, "volume" ) )
 	{
-		typePlug()->setValue( "ccl:volume" );
+		typePlug()->setValue( "cycles:volume" );
 	}
 	else if( boost::ends_with( shaderName, "displacement" ) )
 	{
-		typePlug()->setValue( "ccl:displacement" );
+		typePlug()->setValue( "cycles:displacement" );
 	}
 	else if( shaderName == "aov_output" )
 	{
-		typePlug()->setValue( "ccl:aov:" );
+		typePlug()->setValue( "cycles:aov:" );
 	}
 	else if( shaderName == "emission" )
 	{
-		typePlug()->setValue( "ccl:light" );
+		typePlug()->setValue( "cycles:light" );
 	}
 	else
 	{
-		typePlug()->setValue( "ccl:surface" );
+		typePlug()->setValue( "cycles:surface" );
 	}
 
 	SocketHandler::setupPlugs( shaderNodeType, parametersPlug() );
@@ -200,7 +200,7 @@ void CyclesShader::loadShader( const std::string &shaderName, bool keepExistingV
 IECore::ConstCompoundObjectPtr CyclesShader::attributes( const Gaffer::Plug *output ) const
 {
 	ConstCompoundObjectPtr original = Shader::attributes( output );
-	const IECoreScene::ShaderNetwork *network = original->member<const IECoreScene::ShaderNetwork>( "ccl:aov:" );
+	const IECoreScene::ShaderNetwork *network = original->member<const IECoreScene::ShaderNetwork>( "cycles:aov:" );
 	if( !network || !network->size() )
 	{
 		return original;
@@ -216,12 +216,12 @@ IECore::ConstCompoundObjectPtr CyclesShader::attributes( const Gaffer::Plug *out
 			break;
 		}
 	}
-	std::string aovTypeName = ( boost::format( "ccl:aov:%s" ) % aovName ).str();
+	std::string aovTypeName = ( boost::format( "cycles:aov:%s" ) % aovName ).str();
 	CompoundObjectPtr result = original->copy();
 
 	result->member<IECoreScene::ShaderNetwork>( aovTypeName, false, true );
-	std::swap( result->members()[aovTypeName], result->members()["ccl:aov:"] );
-	result->members().erase( "ccl:aov:" );
+	std::swap( result->members()[aovTypeName], result->members()["cycles:aov:"] );
+	result->members().erase( "cycles:aov:" );
 
 	return result;
 }

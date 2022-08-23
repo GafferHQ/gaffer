@@ -85,7 +85,7 @@ class InteractiveCyclesRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 	def _cameraVisibilityAttribute( self ) :
 
-		return "ccl:visibility:camera"
+		return "cycles:visibility:camera"
 
 	def _createPointLight( self ) :
 

@@ -67,7 +67,7 @@ class CyclesLightTest( GafferSceneTest.SceneTestCase ) :
 		self.assertNotIn( "penumbraAngle", node["parameters"] )
 		self.assertNotIn( "coneAngle", node["parameters"] )
 
-		shader = node["out"].attributes( "/light" )["ccl:light"].outputShader()
+		shader = node["out"].attributes( "/light" )["cycles:light"].outputShader()
 		self.assertEqual( shader.parameters["spot_angle"].value, 45.0 )
 		self.assertEqual( shader.parameters["spot_smooth"].value, 0.0 )
 
@@ -82,7 +82,7 @@ class CyclesLightTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( node["parameters"]["spread"].defaultValue(), 180.0 )
 		self.assertTrue( node["parameters"]["spread"].isSetToDefault() )
 
-		shader = node["out"].attributes( "/light" )["ccl:light"].outputShader()
+		shader = node["out"].attributes( "/light" )["cycles:light"].outputShader()
 		self.assertEqual( shader.parameters["spread"].value, 180.0 )
 
 	def testDiskSpread( self ) :
@@ -93,7 +93,7 @@ class CyclesLightTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( node["parameters"]["spread"].defaultValue(), 180.0 )
 		self.assertTrue( node["parameters"]["spread"].isSetToDefault() )
 
-		shader = node["out"].attributes( "/light" )["ccl:light"].outputShader()
+		shader = node["out"].attributes( "/light" )["cycles:light"].outputShader()
 		self.assertEqual( shader.parameters["spread"].value, 180.0 )
 
 	def testLightAttribute( self ) :
@@ -107,9 +107,9 @@ class CyclesLightTest( GafferSceneTest.SceneTestCase ) :
 		light["parameters"]["size"].setValue( 2 )
 
 		attributes = light["out"].attributes( "/light" )
-		self.assertEqual( attributes.keys(), [ "ccl:light" ] )
+		self.assertEqual( attributes.keys(), [ "cycles:light" ] )
 
-		shaderNetwork = attributes["ccl:light"]
+		shaderNetwork = attributes["cycles:light"]
 		self.assertIsInstance( shaderNetwork, IECoreScene.ShaderNetwork )
 		self.assertEqual( len( shaderNetwork.shaders() ), 1 )
 

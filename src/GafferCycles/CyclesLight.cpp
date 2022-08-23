@@ -99,7 +99,7 @@ const GafferScene::ShaderPlug *CyclesLight::shaderInPlug() const
 void CyclesLight::loadShader( const std::string &shaderName )
 {
 	shaderNode()->namePlug()->setValue( shaderName );
-	shaderNode()->typePlug()->setValue( "ccl:light" );
+	shaderNode()->typePlug()->setValue( "cycles:light" );
 	SocketHandler::setupLightPlugs( shaderName, ccl::NodeType::find( ccl::ustring( "light" ) ), parametersPlug() );
 	shaderNode()->setChild( "out", new Gaffer::Plug( "out", Gaffer::Plug::Direction::Out ) );
 	shaderInPlug()->setInput( shaderNode()->outPlug() );
@@ -123,5 +123,5 @@ void CyclesLight::hashLight( const Gaffer::Context *context, IECore::MurmurHash 
 IECoreScene::ConstShaderNetworkPtr CyclesLight::computeLight( const Gaffer::Context *context ) const
 {
 	IECore::ConstCompoundObjectPtr shaderAttributes = shaderInPlug()->attributes();
-	return shaderAttributes->member<const IECoreScene::ShaderNetwork>( "ccl:light" );
+	return shaderAttributes->member<const IECoreScene::ShaderNetwork>( "cycles:light" );
 }

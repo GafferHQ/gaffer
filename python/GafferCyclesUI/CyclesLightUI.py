@@ -45,7 +45,7 @@ def __parameterUserDefault( plug ) :
 
 	light = plug.node()
 	return Gaffer.Metadata.value(
-		"ccl:light:" + light["__shader"]["name"].getValue() + ":" + plug.relativeName( light["parameters"] ),
+		"cycles:light:" + light["__shader"]["name"].getValue() + ":" + plug.relativeName( light["parameters"] ),
 		"userDefault"
 	)
 

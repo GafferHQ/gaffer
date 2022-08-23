@@ -81,7 +81,7 @@ def appendShaders( menuDefinition, prefix="/Cycles" ) :
 			prefix + "/" + menuItem.menuPath,
 			{
 				"command" : GafferUI.NodeMenu.nodeCreatorWrapper( menuItem.nodeCreator ),
-				"searchText" : "ccl" + menuItem.menuPath.rpartition( "/" )[2].replace( " ", "" ),
+				"searchText" : "cycles" + menuItem.menuPath.rpartition( "/" )[2].replace( " ", "" ),
 			}
 		)
 

@@ -255,10 +255,10 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 	// requirement. Regardless, we look out for this special node as it already
 	// exists in the graph and we simply point to it.
 	const IECoreScene::Shader *shader = shaderNetwork->getShader( outputParameter.shader );
-	const bool isOutput = ( boost::starts_with( shader->getType(), "ccl:" ) ) && ( shader->getName() == "output" );
+	const bool isOutput = ( boost::starts_with( shader->getType(), "cycles:" ) ) && ( shader->getName() == "output" );
 	const bool isOSLShader = boost::starts_with( shader->getType(), "osl:" );
 	const bool isConverter = boost::starts_with( shader->getName(), "convert" );
-	const bool isAOV = boost::starts_with( shader->getType(), "ccl:aov:" );
+	const bool isAOV = boost::starts_with( shader->getType(), "cycles:aov:" );
 	const bool isImageTexture = shader->getName() == "image_texture";
 
 	auto inserted = converted.insert( { outputParameter.shader, nullptr } );
@@ -474,9 +474,9 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 	{
 		// In the cases where there is no cycles output attached in the network
 		// we just connect to the main output node of the cycles shader graph.
-		// Either ccl:surface, ccl:volume or ccl:displacement.
+		// Either cycles:surface, cycles:volume or cycles:displacement.
 		ccl::ShaderNode *outputNode = (ccl::ShaderNode*)shaderGraph->output();
-		string input = string( shader->getType().c_str() + 4 );
+		string input = string( shader->getType().c_str() + 7 );
 		if( ccl::ShaderOutput *shaderOutput = IECoreCycles::ShaderNetworkAlgo::output( node, outputParameter.name ) )
 		    if( ccl::ShaderInput *shaderInput = IECoreCycles::ShaderNetworkAlgo::input( outputNode, input ) )
 				shaderGraph->connect( shaderOutput, shaderInput );
@@ -817,11 +817,11 @@ IECoreScene::ShaderNetworkPtr convertLightShader( const IECoreScene::ShaderNetwo
 	IECoreScene::ShaderPtr outputShader;
 	if( light->outputShader()->getName() == "background_light" )
 	{
-		outputShader = new IECoreScene::Shader( "background_shader", "ccl:surface" );
+		outputShader = new IECoreScene::Shader( "background_shader", "cycles:surface" );
 	}
 	else
 	{
-		outputShader = new IECoreScene::Shader( "emission", "ccl:surface" );
+		outputShader = new IECoreScene::Shader( "emission", "cycles:surface" );
 	}
 
 	outputShader->parameters()["color"] = new Color3fData( Imath::Color3f( 1.0f ) );
@@ -852,7 +852,7 @@ IECoreScene::ShaderNetworkPtr convertLightShader( const IECoreScene::ShaderNetwo
 		{
 			if( colorInput )
 			{
-				IECoreScene::ShaderPtr tintShader = new IECoreScene::Shader( "vector_math", "ccl:surface" );
+				IECoreScene::ShaderPtr tintShader = new IECoreScene::Shader( "vector_math", "cycles:surface" );
 				tintShader->parameters()["math_type"] = new StringData( "multiply" );
 				tintShader->parameters()["vector2"] = new V3fData( strength );
 				const IECore::InternedString tintHandle = result->addShader( "tint", std::move( tintShader ) );

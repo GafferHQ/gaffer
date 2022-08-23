@@ -78,10 +78,10 @@ class RendererTest( GafferTest.TestCase ) :
 			),
 			renderer.attributes( IECore.CompoundObject ( {
 				"render:displayColor" : IECore.Color3fData( imath.Color3f( 1, 0.5, 0.25 ) ),
-				"ccl:surface" : IECoreScene.ShaderNetwork(
+				"cycles:surface" : IECoreScene.ShaderNetwork(
 					shaders = {
-						"output" : IECoreScene.Shader( "principled_bsdf", "ccl:surface" ),
-						"info" : IECoreScene.Shader( "object_info", "ccl:shader" )
+						"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface" ),
+						"info" : IECoreScene.Shader( "object_info", "cycles:shader" )
 					},
 					connections = [
 						( ( "info", "color" ), ( "output", "emission" ) )
@@ -133,9 +133,9 @@ class RendererTest( GafferTest.TestCase ) :
 				imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ),
 			),
 			renderer.attributes( IECore.CompoundObject ( {
-				"ccl:surface" : IECoreScene.ShaderNetwork(
+				"cycles:surface" : IECoreScene.ShaderNetwork(
 					shaders = {
-						"output" : IECoreScene.Shader( "principled_bsdf", "ccl:surface" )
+						"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface" )
 					},
 					output = "output",
 				)
@@ -152,10 +152,10 @@ class RendererTest( GafferTest.TestCase ) :
 			"/light",
 			None,
 			renderer.attributes( IECore.CompoundObject ( {
-				"ccl:light" : IECoreScene.ShaderNetwork(
+				"cycles:light" : IECoreScene.ShaderNetwork(
 					shaders = {
-						"output" : IECoreScene.Shader( "quad_light", "ccl:light", { "exposure" : 5.0 } ),
-						"color" : IECoreScene.Shader( "color", "ccl:shader", { "value" : imath.Color3f( 1, 0, 0 ) } ),
+						"output" : IECoreScene.Shader( "quad_light", "cycles:light", { "exposure" : 5.0 } ),
+						"color" : IECoreScene.Shader( "color", "cycles:shader", { "value" : imath.Color3f( 1, 0, 0 ) } ),
 					},
 					connections = [
 						( "color", ( "output", "color" ) )
@@ -230,9 +230,9 @@ class RendererTest( GafferTest.TestCase ) :
 				imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ),
 			),
 			renderer.attributes( IECore.CompoundObject ( {
-				"ccl:surface" : IECoreScene.ShaderNetwork(
+				"cycles:surface" : IECoreScene.ShaderNetwork(
 					shaders = {
-						"output" : IECoreScene.Shader( "principled_bsdf", "ccl:surface" )
+						"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface" )
 					},
 					output = "output",
 				)
@@ -250,9 +250,9 @@ class RendererTest( GafferTest.TestCase ) :
 			"/light",
 			None,
 			renderer.attributes( IECore.CompoundObject ( {
-				"ccl:light" : IECoreScene.ShaderNetwork(
+				"cycles:light" : IECoreScene.ShaderNetwork(
 					shaders = {
-						"output" : IECoreScene.Shader( "background_light", "ccl:light", { "color" : imath.Color3f( 1, 0, 0 ) } ),
+						"output" : IECoreScene.Shader( "background_light", "cycles:light", { "color" : imath.Color3f( 1, 0, 0 ) } ),
 					},
 					output = "output",
 				),
@@ -282,7 +282,7 @@ class RendererTest( GafferTest.TestCase ) :
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
 		)
 
-		renderer.option( "ccl:shadingsystem", IECore.StringData( "SVM" ) )
+		renderer.option( "cycles:shadingsystem", IECore.StringData( "SVM" ) )
 
 		renderer.output(
 			"testOutput",
