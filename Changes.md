@@ -1,6 +1,11 @@
 1.x.x.x
 =======
 
+Features
+--------
+
+- Image Viewer : Added UI for comparing two images.  Press in Image Viewer <kbd>Q</kbd> to enable.  <kbd>Ctrl</kbd>+<kbd>[</kbd> or <kbd>]</kbd> select a view of the current image to compare to.  Comparison modes can be selected from a dropdown, including `Over`, `Under`, `Difference` and `Replace`.  A wipe can be positioned by dragging in the viewer, and toggled using <kbd>W</kbd>.
+
 Fixes
 -----
 
@@ -8,6 +13,9 @@ Fixes
 - FileSystemPath (Windows only) :
   - `.` characters are now excluded from the path entries. These were being inserted in some cases even when the user did not input one.
   - Fix browsing UNC paths in file browsers.
+- UI :
+	- Fixed one pixel alignment issue with highlighted and disabled icons.
+	- Improved appearance of adjoined widgets.
 
 API
 ---
@@ -16,6 +24,7 @@ API
 - ViewportGadget : Added `setPostProcessShader()`.  This allows the main layer to be rendered to a framebuffer, and processed by a shader before being displayed.  Useful for applying color transforms on the GPU after rendering.
 - GafferImageUI : Added `OpenColorIOAlgo::displayTransformToFramebufferShader()`.  Converts an OCIO processor to a shader suitable for use with `setPostProcessShader()`.
 - ImageView : ImageView now uses a color transform on the viewport instead of ImageGadget.  Should not impact user visible behaviour, but paves the way for future work.
+- ImageGadget : Added functions for setting wipe and blend mode.
 - Path : Added virtual `rootAndNames()` method. This can be overridden to modify the `root` and `names` values as set by `setFromString()`.
 - FileSystemPath :
   - Added support for Windows paths.
@@ -27,6 +36,7 @@ Breaking Changes
 ----------------
 
 - ImageGadget : Removed setters and getters for `DisplayTransform`, `UseGPU`, `Clipping`, `Exposure`, `Gamma`.  Instead use `ViewportGadget::setPostProcessShader()` to set up a GPU color transform, or set the plug values on `ImageView`.
+- ImageView : Using CPU color transforms is now deprecated.  We can't properly support wipes in CPU mode, and OCIO now offers full quality on the GPU, in addition to the performance being much better.  While the CPU functionality still exists, the UI has been hidden.
 
 1.0.3.0 (relative to 1.0.2.1)
 =======

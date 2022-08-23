@@ -121,7 +121,6 @@ ImageProcessorPtr createDisplayTransform( const std::string &name )
 
 void GafferImageUIModule::bindImageView()
 {
-
 	scope s = GafferBindings::NodeClass<ImageView, ImageViewWrapper>()
 		.def( init<const std::string &>() )
 		.def( "imageGadget", (ImageGadget *(ImageView::*)())&ImageView::imageGadget, return_value_policy<IECorePython::CastToIntrusivePtr>() )
