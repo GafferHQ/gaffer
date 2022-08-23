@@ -217,15 +217,11 @@ class LayoutEngine
 
 				Box3f bb = nodeGadget->bound();
 
-				bool auxiliary = bool( runTimeCast<const AuxiliaryNodeGadget>( nodeGadget ) );
-
 				VertexDescriptor v = add_vertex( m_graph );
 				m_graph[v].node = node;
 				m_graph[v].position = graphGadget->getNodePosition( node );
 				m_graph[v].bound = Box2f( V2f( bb.min.x, bb.min.y ), V2f( bb.max.x, bb.max.y ) );
-				m_graph[v].pinned = false;
-				m_graph[v].collisionGroup = 0;
-				m_graph[v].auxiliary = auxiliary;
+				m_graph[v].auxiliary = runTimeCast<const AuxiliaryNodeGadget>( nodeGadget );
 				m_nodesToVertices[node] = v;
 			}
 
@@ -351,9 +347,6 @@ class LayoutEngine
 
 			VertexDescriptor groupDescriptor = add_vertex( m_graph );
 			Vertex &group = m_graph[groupDescriptor];
-			group.node = nullptr;
-			group.pinned = false;
-			group.collisionGroup = 0;
 			group.position = bound.center();
 			group.bound = Box2f( bound.min - group.position, bound.max - group.position );
 
@@ -729,22 +722,21 @@ class LayoutEngine
 			// The node this vertex represents.
 			// May be nullptr for vertices introduced
 			// by groupNodes().
-			Node *node;
+			Node *node = nullptr;
 			// Node position within graph.
-			V2f position;
+			V2f position = V2f( 0.0f );
 			// Node bound in local space.
-			Box2f bound;
+			Box2f bound = Box2f( V2f( 0.0f ) );
 			// True if node is not to be moved.
-			bool pinned;
+			bool pinned = false;
 			// Provides finer control over collision avoidance.
-			int collisionGroup;
+			int collisionGroup = 0;
+			// True if node is represented by a (smaller) AuxiliaryNodeGadget
+			bool auxiliary = false;
 
 			// State variables for use in solve().
-			V2f previousPosition;
-			V2f force;
-
-			// True if node is represented by a (smaller) AuxiliaryNodeGadget
-			bool auxiliary;
+			V2f previousPosition = V2f( 0.0f );
+			V2f force = V2f( 0.0f );
 		};
 
 		struct Edge
