@@ -2906,7 +2906,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_sceneChanged( true ),
 				m_sessionReset( false ),
 				m_outputsChanged( true ),
-				m_pause( false ),
 				m_cryptomatteAccurate( true ),
 				m_cryptomatteDepth( 0 ),
 				m_seed( 0 ),
@@ -3623,8 +3622,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			if( m_renderState == RENDERSTATE_RENDERING )
 			{
-				m_pause = false;
-				m_session->set_pause( m_pause );
+				m_session->set_pause( false );
 				return;
 			}
 
@@ -3649,8 +3647,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			if( m_renderState == RENDERSTATE_RENDERING )
 			{
-				m_pause = true;
-				m_session->set_pause( m_pause );
+				m_session->set_pause( true );
 			}
 		}
 
@@ -4303,7 +4300,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		bool m_sceneChanged;
 		bool m_sessionReset;
 		bool m_outputsChanged;
-		bool m_pause;
 		bool m_cryptomatteAccurate;
 		int m_cryptomatteDepth;
 		int m_seed;
