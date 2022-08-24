@@ -473,7 +473,7 @@ if env["PLATFORM"] != "win32" :
 		if gccVersion >= [ 4, 2 ] :
 			env.Append( CXXFLAGS = [ "-Wno-error=strict-overflow" ] )
 
-		if gccVersion >= [ 5, 1 ] :
+		if gccVersion >= [ 5, 1 ] and gccVersion < [ 11, 2 ] :
 			env.Append( CXXFLAGS = [ "-D_GLIBCXX_USE_CXX11_ABI=0" ] )
 
 		if gccVersion >= [ 9, 2 ] :
