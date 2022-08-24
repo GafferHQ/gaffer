@@ -128,21 +128,6 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 		void setSoloChannel( int index );
 		int getSoloChannel() const;
 
-		void setClipping( bool clipping );
-		bool getClipping() const;
-
-		void setExposure( float exposure );
-		float getExposure() const;
-
-		void setGamma( float gamma );
-		float getGamma() const;
-
-		// Use for setting a display color transform that is a Gaffer image processing node that
-		// will run on the CPU.  This approach is deprecated, it is better to set a GPU OCIO
-		// transform on the ViewportGadget that contains the ImageGadget.
-		void setCPUDisplayTransform( GafferImage::ImageProcessorPtr displayTransform );
-		GafferImage::ConstImageProcessorPtr getCPUDisplayTransform() const;
-
 		void setLabelsVisible( bool visible );
 		bool getLabelsVisible() const;
 
@@ -192,16 +177,6 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 		Channels m_rgbaChannels;
 		int m_soloChannel;
 		ImageGadgetSignal m_channelsChangedSignal;
-
-		bool m_clipping;
-		float m_exposure;
-		float m_gamma;
-
-		GafferImage::DeepStatePtr m_deepStateNode;
-		GafferImage::SaturationPtr m_saturationNode;
-		GafferImage::ClampPtr m_clampNode;
-		GafferImage::GradePtr m_gradeNode;
-		GafferImage::ImageProcessorPtr m_cpuDisplayTransform;
 
 		bool m_labelsVisible;
 		bool m_paused;

@@ -46,6 +46,7 @@
 #include "Gaffer/BoxPlug.h"
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/NumericPlug.h"
+#include "Gaffer/Switch.h"
 #include "Gaffer/TypedPlug.h"
 #include "Gaffer/TypedObjectPlug.h"
 
@@ -186,7 +187,10 @@ class GAFFERIMAGEUI_API ImageView : public GafferUI::View
 		DisplayTransformMap m_displayTransforms;
 		DisplayTransformEntry *m_displayTransformAndShader;
 
-		IECore::IntDataPtr m_soloChannel;
+		IECore::BoolDataPtr m_clippingParameter;
+		IECore::Color3fDataPtr m_multiplyParameter;
+		IECore::Color3fDataPtr m_powerParameter;
+		IECore::IntDataPtr m_soloChannelParameter;
 		bool m_lutGPU;
 
 		ImageGadgetPtr m_imageGadget;
@@ -194,6 +198,13 @@ class GAFFERIMAGEUI_API ImageView : public GafferUI::View
 
 		class ColorInspector;
 		std::unique_ptr<ColorInspector> m_colorInspector;
+
+		GafferImage::ImagePlugPtr m_imageBeforeColorTransform;
+		Gaffer::FloatPlugPtr m_cpuSaturationPlug;
+		Gaffer::BoolPlugPtr m_cpuClippingPlug;
+		Gaffer::Color4fPlugPtr m_cpuMultiplyPlug;
+		Gaffer::Color4fPlugPtr m_cpuGammaPlug;
+		Gaffer::SwitchPtr m_colorTransformSwitch;
 
 		using DisplayTransformCreatorMap = std::map<std::string, DisplayTransformCreator>;
 		static DisplayTransformCreatorMap &displayTransformCreators();

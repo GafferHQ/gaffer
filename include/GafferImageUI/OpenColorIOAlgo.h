@@ -53,6 +53,9 @@ namespace OpenColorIOAlgo
 // The shader has a frameBufferTexture uniform so it is appropriate to use with ViewportGadget::setPostProcessShader.
 // There are also additional uniforms:
 //   bool unpremultiply : temporarily unpremultiply while applying the color transform
+//   bool clipping : mark regions outside 0 - 1
+//   color multiply : apply a multiplier before the color transform
+//   color power : apply a power curve before the color transform
 //   bool soloChannel : Set to 0-3 to pick channels RGBA, or -2 for luminance.  Default -1 uses all channels as a color.
 GAFFERIMAGEUI_API IECoreGL::Shader::SetupPtr displayTransformToFramebufferShader( const OCIO_NAMESPACE::Processor *processor );
 

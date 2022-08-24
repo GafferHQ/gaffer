@@ -160,7 +160,7 @@ class TileShader
 		struct ScopedBinding : PushAttrib
 		{
 
-			ScopedBinding( const TileShader &tileShader, bool clipping, float exposure, float gamma, bool luminance )
+			ScopedBinding( const TileShader &tileShader )
 				:	PushAttrib( GL_COLOR_BUFFER_BIT ), m_tileShader( tileShader )
 			{
 				glGetIntegerv( GL_CURRENT_PROGRAM, &m_previousProgram );
@@ -169,11 +169,6 @@ class TileShader
 				glEnable( GL_TEXTURE_2D );
 				glEnable( GL_BLEND );
 				glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA );
-
-				glUniform1f( tileShader.m_shader->uniformParameter( "multiply" )->location, pow( 2.0f, exposure ) );
-				glUniform1f( tileShader.m_shader->uniformParameter( "power" )->location, gamma > 0.0 ? 1.0f / gamma : 1.0f );
-				glUniform1f( tileShader.m_shader->uniformParameter( "clipping" )->location, clipping );
-				glUniform1f( tileShader.m_shader->uniformParameter( "luminance" )->location, luminance );
 
 				glUniform1i( tileShader.m_shader->uniformParameter( "redTexture" )->location, tileShader.m_channelTextureUnits[0] );
 				glUniform1i( tileShader.m_shader->uniformParameter( "greenTexture" )->location, tileShader.m_channelTextureUnits[1] );
@@ -235,10 +230,6 @@ class TileShader
 				"uniform sampler2D alphaTexture;\n"
 
 				"uniform bool activeParam;\n"
-				"uniform float multiply;\n"
-				"uniform float power;\n"
-				"uniform bool clipping;\n"
-				"uniform bool luminance;\n"
 
 				"#if __VERSION__ >= 330\n"
 
@@ -261,21 +252,6 @@ class TileShader
 				"		texture2D( blueTexture, gl_TexCoord[0].xy ).r,\n"
 				"		texture2D( alphaTexture, gl_TexCoord[0].xy ).r\n"
 				"	);\n"
-				"	if( luminance )\n"
-				"	{\n"
-				"		float lum = OUTCOLOR.r * 0.2126 + OUTCOLOR.g * 0.7152 + OUTCOLOR.b * 0.0722;\n"
-				"		OUTCOLOR = vec4( lum, lum, lum, OUTCOLOR.a );\n"
-				"	}\n"
-				"	if( clipping )\n"
-				"	{\n"
-				"		OUTCOLOR = vec4(\n"
-				"			OUTCOLOR.r < 0.0 ? 1.0 : ( OUTCOLOR.r > 1.0 ? 0.0 : OUTCOLOR.r ),\n"
-				"			OUTCOLOR.g < 0.0 ? 1.0 : ( OUTCOLOR.g > 1.0 ? 0.0 : OUTCOLOR.g ),\n"
-				"			OUTCOLOR.b < 0.0 ? 1.0 : ( OUTCOLOR.b > 1.0 ? 0.0 : OUTCOLOR.b ),\n"
-				"			OUTCOLOR.a\n"
-				"		);\n"
-				"	}\n"
-				"	OUTCOLOR = vec4( pow( OUTCOLOR.rgb * multiply, vec3( power ) ), OUTCOLOR.a );\n"
 				"	if( activeParam )\n"
 				"	{\n"
 				"		vec2 pixelWidth = vec2( dFdx( gl_TexCoord[0].x ), dFdy( gl_TexCoord[0].y ) );\n"
@@ -310,9 +286,6 @@ ImageGadget::ImageGadget()
 	:	Gadget( defaultName<ImageGadget>() ),
 		m_image( nullptr ),
 		m_soloChannel( -1 ),
-		m_clipping( false ),
-		m_exposure( 0.0f ),
-		m_gamma( 1.0f ),
 		m_labelsVisible( true ),
 		m_paused( false ),
 		m_dirtyFlags( AllDirty ),
@@ -326,25 +299,6 @@ ImageGadget::ImageGadget()
 	setContext( new Context() );
 
 	visibilityChangedSignal().connect( boost::bind( &ImageGadget::visibilityChanged, this ) );
-
-	m_deepStateNode = new DeepState();
-	m_deepStateNode->deepStatePlug()->setValue( int( DeepState::TargetState::Flat ) );
-
-	m_saturationNode = new Saturation;
-	m_saturationNode->inPlug()->setInput( m_deepStateNode->outPlug() );
-
-	m_clampNode = new Clamp();
-	m_clampNode->inPlug()->setInput( m_saturationNode->outPlug() );
-	m_clampNode->enabledPlug()->setValue( false );
-	m_clampNode->channelsPlug()->setValue( "*" );
-	m_clampNode->minClampToEnabledPlug()->setValue( true );
-	m_clampNode->maxClampToEnabledPlug()->setValue( true );
-	m_clampNode->minClampToPlug()->setValue( Color4f( 1.0f, 1.0f, 1.0f, 0.0f ) );
-	m_clampNode->maxClampToPlug()->setValue( Color4f( 0.0f, 0.0f, 0.0f, 1.0f ) );
-
-	m_gradeNode = new Grade;
-	m_gradeNode->inPlug()->setInput( m_clampNode->outPlug() );
-	m_gradeNode->channelsPlug()->setValue( "*" );
 }
 
 ImageGadget::~ImageGadget()
@@ -362,13 +316,6 @@ void ImageGadget::setImage( GafferImage::ImagePlugPtr image )
 	}
 
 	m_image = image;
-
-	// IMPORTANT : This DeepState node must be the first node in the processing chain.  Otherwise, we
-	// would not be able to share hashes with the DeepState node at the beginning of the ImageSampler
-	// also used by ImageView.
-	/// \todo This is fragile. If we removed all the nodes from ImageGadget we would no longer need to
-	/// worry about this sort of thing.
-	m_deepStateNode->inPlug()->setInput( m_image );
 
 	if( Gaffer::Node *node = const_cast<Gaffer::Node *>( image->node() ) )
 	{
@@ -460,94 +407,6 @@ void ImageGadget::setSoloChannel( int index )
 int ImageGadget::getSoloChannel() const
 {
 	return m_soloChannel;
-}
-
-void ImageGadget::setClipping( bool clipping )
-{
-	m_clipping = clipping;
-
-	if( !m_cpuDisplayTransform )
-	{
-		Gadget::dirty( DirtyType::Render );
-	}
-	else
-	{
-		dirty( TilesDirty );
-	}
-}
-
-bool ImageGadget::getClipping() const
-{
-	return m_clipping;
-}
-
-void ImageGadget::setExposure( float exposure )
-{
-	m_exposure = exposure;
-	if( !m_cpuDisplayTransform )
-	{
-		Gadget::dirty( DirtyType::Render );
-	}
-	else
-	{
-		dirty( TilesDirty );
-	}
-}
-
-float ImageGadget::getExposure() const
-{
-	return m_exposure;
-}
-
-void ImageGadget::setGamma( float gamma )
-{
-	m_gamma = gamma;
-
-	if( !m_cpuDisplayTransform )
-	{
-		Gadget::dirty( DirtyType::Render );
-	}
-	else
-	{
-		dirty( TilesDirty );
-	}
-}
-
-float ImageGadget::getGamma() const
-{
-	return m_gamma;
-}
-
-void ImageGadget::setCPUDisplayTransform( ImageProcessorPtr displayTransform )
-{
-
-	if( !m_cpuDisplayTransform && !displayTransform )
-	{
-		return;
-	}
-
-	auto displayTransformDirtiedBinding = boost::bind(
-		&ImageGadget::displayTransformPlugDirtied, this, ::_1
-	);
-
-	if( m_cpuDisplayTransform )
-	{
-		m_cpuDisplayTransform->plugDirtiedSignal().disconnect( displayTransformDirtiedBinding );
-	}
-
-	m_cpuDisplayTransform = displayTransform;
-	if( m_cpuDisplayTransform )
-	{
-		m_cpuDisplayTransform->inPlug()->setInput( m_gradeNode->outPlug() );
-		m_cpuDisplayTransform->plugDirtiedSignal().connect( displayTransformDirtiedBinding );
-	}
-
-	dirty( TilesDirty );
-}
-
-ConstImageProcessorPtr ImageGadget::getCPUDisplayTransform() const
-{
-	return m_cpuDisplayTransform;
 }
 
 void ImageGadget::setLabelsVisible( bool visible )
@@ -673,14 +532,6 @@ void ImageGadget::contextChanged( const IECore::InternedString &name )
 	if( !boost::starts_with( name.string(), "ui:" ) )
 	{
 		dirty( AllDirty );
-	}
-}
-
-void ImageGadget::displayTransformPlugDirtied( const Gaffer::Plug *plug )
-{
-	if( m_cpuDisplayTransform )
-	{
-		dirty( TilesDirty );
 	}
 }
 
@@ -914,30 +765,6 @@ void ImageGadget::updateTiles()
 	stateChangedSignal()( this );
 	removeOutOfBoundsTiles();
 
-	ImagePlug *tilesImage;
-	if( !m_cpuDisplayTransform )
-	{
-		tilesImage = m_deepStateNode->outPlug();
-	}
-	else
-	{
-		// The background task is only passed m_image as the subject, which means edits to the internal
-		// network won't cancel it.  This means it is only safe to edit the internal network here,
-		// where we have already checked above that m_tilesTask->status() is not running.
-		/// \todo This is too error prone. Perhaps it was a mistake to have a Gadget own nodes in the first place.
-		/// Generally Gadgets and Widgets observe and/or edit the node graph, but are not part of it.
-		/// An alternative approach would be to move all these nodes back to ImageView, and then just have
-		/// ImageGadget introspect the last node(s) in the chain to see if they can be implemented via the
-		/// GPU path. ImageGadget could perhaps provide a utility that provides a bundle of grade/clamp/displayTransform
-		/// that it guarantees can be introspected.
-		m_saturationNode->saturationPlug()->setValue( m_soloChannel == -2 ? 0.0f : 1.0f );
-		m_clampNode->enabledPlug()->setValue( m_clipping );
-		const float m = pow( 2.0f, m_exposure );
-		m_gradeNode->multiplyPlug()->setValue( Color4f( m, m, m, 1.0f ) );
-		m_gradeNode->gammaPlug()->setValue( Color4f( m_gamma, m_gamma, m_gamma, 1.0f ) );
-		tilesImage = m_cpuDisplayTransform ? m_cpuDisplayTransform->outPlug() : m_gradeNode->outPlug();
-	}
-
 	// Decide which channels to compute. This is the intersection
 	// of the available channels (channelNames) and the channels
 	// we want to display (m_rgbaChannels).
@@ -992,15 +819,15 @@ void ImageGadget::updateTiles()
 	// can work with this by passing in m_image, which is passed to us by ImageView.
 	// This means that any internal nodes of ImageGadget are not part of the automatic
 	// task cancellation and we must ensure that we never modify internal nodes while
-	// the background task is running.
+	// the background task is running ( this is easier now that there are no internal nodes ).
 	Context::Scope scopedContext( m_context.get() );
 	m_tilesTask = ParallelAlgo::callOnBackgroundThread(
 		// Subject
 		m_image.get(),
 		// OK to capture `this` via raw pointer, because ~ImageGadget waits for
 		// the background process to complete.
-		[this, channelsToCompute, dataWindow, tileFunctor, tilesImage] {
-			ImageAlgo::parallelProcessTiles( tilesImage, tileFunctor, dataWindow );
+		[ this, channelsToCompute, dataWindow, tileFunctor ] {
+			ImageAlgo::parallelProcessTiles( m_image.get(), tileFunctor, dataWindow );
 			m_dirtyFlags &= ~TilesDirty;
 			if( refCount() )
 			{
@@ -1055,13 +882,7 @@ void ImageGadget::visibilityChanged()
 
 void ImageGadget::renderTiles() const
 {
-	TileShader::ScopedBinding shaderBinding(
-		*tileShader(),
-		!m_cpuDisplayTransform ? m_clipping : false,
-		!m_cpuDisplayTransform ? m_exposure : 0.0f,
-		!m_cpuDisplayTransform ? m_gamma : 1.0f,
-		!m_cpuDisplayTransform ? m_soloChannel == -2 : false
-	);
+	TileShader::ScopedBinding shaderBinding( *tileShader() );
 
 	const Box2i dataWindow = this->dataWindow();
 	const float pixelAspect = this->format().getPixelAspect();

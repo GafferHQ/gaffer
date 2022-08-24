@@ -21,7 +21,7 @@ API
 Breaking Changes
 ----------------
 
-- ImageGadget : Removed `setDisplayTransform()` and `getDisplayTransform()`, and `setUseGPU()` and `getUseGPU()`. Use `ViewportGadget::setPostProcessShader()` instead. There is temporarily a `setCPUDisplayTransform()` function for setting up display transforms on the CPU path, but that will be removed shortly.
+- ImageGadget : Removed setters and getters for `DisplayTransform`, `UseGPU`, `Clipping`, `Exposure`, `Gamma`.  Instead use `ViewportGadget::setPostProcessShader()` to set up a GPU color transform, or set the plug values on `ImageView`.
 
 1.0.x.x (relative to 1.0.2.1)
 =======
