@@ -4050,6 +4050,16 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			paramData->writable()["layers"] = layersData;
 
+			// When we reset the session, it cancels the internal PathTrace and
+			// waits for it to finish. We need to do this _before_ calling
+			// `set_output_driver()`, because otherwise the rendering threads
+			// may try to send data to an output driver that was just destroyed
+			// on the main thread.
+			/// \todo `Renderer::pause()` really shouldn't return until after
+			/// the PathTrace has been cancelled, so we shouldn't need to worry
+			/// about that here.
+			m_session->reset( m_sessionParams, m_bufferParams );
+
 			film->set_cryptomatte_passes( crypto );
 			film->set_use_approximate_shadow_catcher( !hasShadowCatcher );
 			m_scene->integrator->set_use_denoise( hasDenoise );
@@ -4057,7 +4067,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_session->set_output_driver( ccl::make_unique<IEDisplayOutputDriver>( displayWindow, dataWindow, paramData ) );
 			else
 				m_session->set_output_driver( ccl::make_unique<OIIOOutputDriver>( displayWindow, dataWindow, paramData ) );
-			m_session->reset( m_sessionParams, m_bufferParams );
 
 			m_outputsChanged = false;
 		}
