@@ -299,9 +299,6 @@ def __drop( nodeGadget, event ) :
 			nodeGadget.node().parent().addChild( pathFilter )
 			nodeGadget.node()["filter"].setInput( pathFilter["out"] )
 
-			graphGadget = nodeGadget.ancestor( GafferUI.GraphGadget )
-			graphGadget.getLayout().positionNode( graphGadget, pathFilter )
-
 			pathsPlug = pathFilter["paths"]
 
 		pathsPlug.setValue( IECore.StringVectorData( paths ) )

@@ -37,6 +37,7 @@
 
 #include "GafferUI/StandardGraphLayout.h"
 
+#include "GafferUI/BackdropNodeGadget.h"
 #include "GafferUI/CompoundNodule.h"
 #include "GafferUI/ConnectionGadget.h"
 #include "GafferUI/GraphGadget.h"
@@ -143,15 +144,9 @@ class Constraint
 			LessThanOrEqualTo
 		};
 
-		/// \todo Remove - it's only here so we can call m_constraints.resize()
-		/// to remove the collision constraints.
-		Constraint()
-		{
-		}
-
 		// Enforces p - q ( ==, >=, <= ) d in direction v
-		Constraint( V2f *p, V2f *q, Type type, float d, const V2f &v, float w = 0.5 )
-			:	m_p( p ), m_q( q ), m_type( type ), m_d( d ), m_v( v ), m_w( w )
+		Constraint( V2f *p, V2f *q, Type type, float d, const V2f &v, float w = 0.5, int category = 0 )
+			:	m_p( p ), m_q( q ), m_type( type ), m_d( d ), m_v( v ), m_w( w ), m_category( category )
 		{
 		}
 
@@ -175,6 +170,11 @@ class Constraint
 			*m_q -= r * (1.0f - m_w);
 		}
 
+		int category() const
+		{
+			return m_category;
+		}
+
 	private :
 
 		V2f *m_p;
@@ -183,6 +183,7 @@ class Constraint
 		float m_d;
 		V2f m_v;
 		float m_w;
+		int m_category;
 
 };
 
@@ -216,15 +217,11 @@ class LayoutEngine
 
 				Box3f bb = nodeGadget->bound();
 
-				bool auxiliary = bool( runTimeCast<const AuxiliaryNodeGadget>( nodeGadget ) );
-
 				VertexDescriptor v = add_vertex( m_graph );
 				m_graph[v].node = node;
 				m_graph[v].position = graphGadget->getNodePosition( node );
 				m_graph[v].bound = Box2f( V2f( bb.min.x, bb.min.y ), V2f( bb.max.x, bb.max.y ) );
-				m_graph[v].pinned = false;
-				m_graph[v].collisionGroup = 0;
-				m_graph[v].auxiliary = auxiliary;
+				m_graph[v].auxiliary = runTimeCast<const AuxiliaryNodeGadget>( nodeGadget );
 				m_nodesToVertices[node] = v;
 			}
 
@@ -350,9 +347,6 @@ class LayoutEngine
 
 			VertexDescriptor groupDescriptor = add_vertex( m_graph );
 			Vertex &group = m_graph[groupDescriptor];
-			group.node = nullptr;
-			group.pinned = false;
-			group.collisionGroup = 0;
 			group.position = bound.center();
 			group.bound = Box2f( bound.min - group.position, bound.max - group.position );
 
@@ -379,8 +373,9 @@ class LayoutEngine
 
 				if( sInternal != tInternal )
 				{
-					// edge connects group to outside world, move
-					// the edge to the group.
+					// Edge connects group to outside world. Move the edge to
+					// the group, and adjust the offsets so that they lie on
+					// the group's bound.
 
 					VertexDescriptor newS = sInternal ? groupDescriptor : s;
 					VertexDescriptor newT = tInternal ? groupDescriptor : t;
@@ -393,10 +388,12 @@ class LayoutEngine
 					if( sInternal )
 					{
 						newEdge.sourceOffset = ( newEdge.sourceOffset + m_graph[s].position ) - group.position;
+						newEdge.sourceOffset = exitPoint( newEdge.sourceOffset, newEdge.sourceTangent, group.bound );
 					}
 					else
 					{
 						newEdge.targetOffset = ( newEdge.targetOffset + m_graph[t].position ) - group.position;
+						newEdge.targetOffset = exitPoint( newEdge.targetOffset, newEdge.targetTangent, group.bound );
 					}
 				}
 
@@ -413,6 +410,7 @@ class LayoutEngine
 			for( vector<VertexDescriptor>::const_iterator it = childVertexDescriptors.begin(), eIt = childVertexDescriptors.end(); it != eIt; ++it )
 			{
 				Vertex &child = m_graph[*it];
+				child.collisionGroup = -1;
 				for( int d = 0; d < 2; ++d )
 				{
 					addConstraint(
@@ -467,7 +465,9 @@ class LayoutEngine
 			}
 		}
 
-		void addConnectionDirectionConstraints()
+		// The `category` is just a user-provided identifier to allow
+		// the constraints to be subsequently removed by `removeConstraints( category )`.
+		void addConnectionDirectionConstraints( int category = 0 )
 		{
 
 			EdgeIteratorRange e = edges( m_graph );
@@ -494,20 +494,23 @@ class LayoutEngine
 						src,
 						Constraint::GreaterThanOrEqualTo,
 						separation,
-						d == 0 ? V2f( edge.idealDirection[d], 0 ) : V2f( 0, edge.idealDirection[d] )					);
+						d == 0 ? V2f( edge.idealDirection[d], 0 ) : V2f( 0, edge.idealDirection[d] ),
+						/* w = */ 0.5,
+						category
+					);
 
 				}
 			}
 
 		}
 
-		void addSiblingConstraints()
+		void addSiblingConstraints( int category = 0 )
 		{
 			VertexIteratorRange v = vertices( m_graph );
 			for( VertexIterator it = v.first; it != v.second; ++it )
 			{
-				addSiblingConstraints( *it, Direction( 0, -1 ) );
-				addSiblingConstraints( *it, Direction( 1, 0 ) );
+				addSiblingConstraints( *it, Direction( 0, -1 ), category );
+				addSiblingConstraints( *it, Direction( 1, 0 ), category );
 			}
 		}
 
@@ -599,6 +602,17 @@ class LayoutEngine
 			}
 		}
 
+		void removeConstraints( int category )
+		{
+			m_constraints.erase(
+				std::remove_if(
+					m_constraints.begin(), m_constraints.end(),
+					[category] ( const Constraint &c ) { return c.category() == category; }
+				),
+				m_constraints.end()
+			);
+		}
+
 		void clearConstraints()
 		{
 			m_constraints.clear();
@@ -608,7 +622,7 @@ class LayoutEngine
 		{
 			VertexIteratorRange v = vertices( m_graph );
 
-			size_t numConstraints = m_constraints.size();
+			const size_t firstCollisionConstraintIndex = m_constraints.size();
 			for( int i = 0; i < m_maxIterations; ++i )
 			{
 				for( VertexIterator it = v.first; it != v.second; ++it )
@@ -624,7 +638,7 @@ class LayoutEngine
 				{
 					addCollisionConstraints();
 					applyConstraints( m_constraintsIterations );
-					m_constraints.resize( numConstraints );
+					m_constraints.erase( m_constraints.begin() + firstCollisionConstraintIndex, m_constraints.end() );
 				}
 
 				float maxMovement = 0;
@@ -680,6 +694,25 @@ class LayoutEngine
 			return Direction( int( round( vn.x ) ), int( round( vn.y ) ) );
 		}
 
+		// Projects `origin` in `direction` until it exits `box`, and returns
+		// the exit point. `origin` must be contained by `box`.
+		V2f exitPoint( const V2f &origin, const V2f &direction, const Box2f &box )
+		{
+			float t = numeric_limits<float>::max();
+			for( int d = 0; d < 2; ++d )
+			{
+				if( direction[d] > 0.0f )
+				{
+					t = std::min( t, (box.max[d] - origin[d]) / direction[d] );
+				}
+				else if( direction[d] < 0.0f )
+				{
+					t = std::min( t, (box.min[d] - origin[d]) / direction[d] );
+				}
+			}
+			return origin + direction * t;
+		}
+
 		// We convert the visible graph of nodes and connections into a boost
 		// graph of vertices and edges, to give us a better representation
 		// for querying and manipulation.
@@ -689,22 +722,21 @@ class LayoutEngine
 			// The node this vertex represents.
 			// May be nullptr for vertices introduced
 			// by groupNodes().
-			Node *node;
+			Node *node = nullptr;
 			// Node position within graph.
-			V2f position;
+			V2f position = V2f( 0.0f );
 			// Node bound in local space.
-			Box2f bound;
+			Box2f bound = Box2f( V2f( 0.0f ) );
 			// True if node is not to be moved.
-			bool pinned;
+			bool pinned = false;
 			// Provides finer control over collision avoidance.
-			int collisionGroup;
+			int collisionGroup = 0;
+			// True if node is represented by a (smaller) AuxiliaryNodeGadget
+			bool auxiliary = false;
 
 			// State variables for use in solve().
-			V2f previousPosition;
-			V2f force;
-
-			// True if node is represented by a (smaller) AuxiliaryNodeGadget
-			bool auxiliary;
+			V2f previousPosition = V2f( 0.0f );
+			V2f force = V2f( 0.0f );
 		};
 
 		struct Edge
@@ -738,7 +770,7 @@ class LayoutEngine
 
 		typedef std::map<const Node *, VertexDescriptor> NodesToVertices;
 
-		void addSiblingConstraints( VertexDescriptor vertex, const Direction &edgeDirection )
+		void addSiblingConstraints( VertexDescriptor vertex, const Direction &edgeDirection, int category )
 		{
 			// find all the edges pointing in the specified direction.
 
@@ -776,7 +808,9 @@ class LayoutEngine
 						*prev,
 						Constraint::GreaterThanOrEqualTo,
 						separation,
-						dimension == 0 ? V2f( 1, 0 ) : V2f( 0, 1 )
+						dimension == 0 ? V2f( 1, 0 ) : V2f( 0, 1 ),
+						/* w = */ 0.5,
+						category
 					);
 				}
 				prev = curr;
@@ -784,7 +818,7 @@ class LayoutEngine
 		}
 
 		// Adds a constraint between p and q, adjusting w based on their pinning status.
-		void addConstraint( Vertex &p, Vertex &q, Constraint::Type type, float d, const V2f &v, float w = 0.5f )
+		void addConstraint( Vertex &p, Vertex &q, Constraint::Type type, float d, const V2f &v, float w = 0.5f, int category = 0 )
 		{
 			if( p.pinned && q.pinned )
 			{
@@ -807,7 +841,8 @@ class LayoutEngine
 					type,
 					d,
 					v,
-					w
+					w,
+					category
 				)
 			);
 		}
@@ -1235,11 +1270,48 @@ void StandardGraphLayout::layoutNodes( GraphGadget *graph, Gaffer::Set *nodes ) 
 		layout.pinNodes( nodes, true /* invert */ );
 	}
 
+	// If there are any backdrops to be positioned, group
+	// them with their children so that they move as one.
+
+	bool affectingBackdrops = false;
+	for( auto &node : Node::Range( *graph->getRoot() ) )
+	{
+		if( nodes && !nodes->contains( node.get() ) )
+		{
+			continue;
+		}
+		auto backdrop = runTimeCast<BackdropNodeGadget>( graph->nodeGadget( node.get() ) );
+		if( !backdrop )
+		{
+			continue;
+		}
+
+		affectingBackdrops = true;
+
+		vector<Node *> framedNodes;
+		backdrop->framed( framedNodes );
+		if( framedNodes.size() )
+		{
+			StandardSetPtr groupSet = new StandardSet;
+			groupSet->add( NodePtr( node ) );
+			groupSet->add( framedNodes.begin(), framedNodes.end() );
+			const V3f groupCenter = backdrop->transformedBound().center();
+			layout.groupNodes( groupSet.get(), V2f( groupCenter.x, groupCenter.y ) );
+		}
+	}
+
+	if( !affectingBackdrops )
+	{
+		// Disable collisions with backdrops, since we don't want to prevent
+		// individual nodes from finding a suitable home inside them.
+		layout.assignCollisionGroup( (IECore::TypeId)Gaffer::BackdropTypeId, -1 );
+	}
+
 	// do a first round of layout without worrying about
 	// collisions between nodes.
 
 	layout.addConnectionDirectionConstraints();
-	layout.addSiblingConstraints();
+	layout.addSiblingConstraints( /* category = */ 1 );
 	layout.solve( false );
 
 	// do a second round of layout, now resolving collisions.
@@ -1249,8 +1321,7 @@ void StandardGraphLayout::layoutNodes( GraphGadget *graph, Gaffer::Set *nodes ) 
 	// collisions detection from working. a better alternative
 	// might be to remove conflicting constraints before applying them.
 
-	layout.clearConstraints();
-	layout.addConnectionDirectionConstraints();
+	layout.removeConstraints( /* category = */ 1 );
 	layout.solve( true );
 
 	layout.applyPositions();
