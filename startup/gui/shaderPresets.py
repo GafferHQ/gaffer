@@ -81,8 +81,8 @@ if os.environ.get( "CYCLES_ROOT" ) and os.environ.get( "GAFFERCYCLES_HIDE_UI", "
 		import GafferCycles
 
 		__registerShaderPresets( [
-			( "Cycles Surface", "ccl:surface" ),
-			( "Cycles Light", "ccl:light" ),
+			( "Cycles Surface", "cycles:surface" ),
+			( "Cycles Light", "cycles:light" ),
 		] )
 
 with IECore.IgnoredExceptions( ImportError ) :

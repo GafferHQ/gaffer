@@ -65,7 +65,7 @@ class GAFFERCYCLES_API CyclesShader : public GafferScene::Shader
 	protected :
 
 		/// Overrides attributes for when an AOV is assigned and we need to set the name of
-		/// the AOV name eg. ccl:aov:customName
+		/// the AOV name eg. cycles:aov:customName
 		IECore::ConstCompoundObjectPtr attributes( const Gaffer::Plug *output ) const override;
 
 	private :

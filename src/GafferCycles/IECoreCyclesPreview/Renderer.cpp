@@ -363,8 +363,8 @@ namespace
 
 // Needs to be placed here as it's an attribute to be set at the shader level
 IECore::InternedString g_doubleSidedAttributeName( "doubleSided" );
-IECore::InternedString g_cyclesDisplacementShaderAttributeName( "ccl:displacement" );
-IECore::InternedString g_shaderDisplacementMethodAttributeName( "ccl:shader:displacement_method" );
+IECore::InternedString g_cyclesDisplacementShaderAttributeName( "cycles:displacement" );
+IECore::InternedString g_shaderDisplacementMethodAttributeName( "cycles:shader:displacement_method" );
 std::array<IECore::InternedString, ccl::DISPLACE_NUM_METHODS> g_displacementMethodEnumNames = { {
 	"bump",
 	"true",
@@ -382,12 +382,12 @@ ccl::DisplacementMethod nameToDisplacementMethodEnum( const IECore::InternedStri
 	return ccl::DISPLACE_BUMP;
 }
 
-IECore::InternedString g_shaderUseMisAttributeName( "ccl:shader:use_mis" );
-IECore::InternedString g_shaderUseTransparentShadowAttributeName( "ccl:shader:use_transparent_shadow" );
-IECore::InternedString g_shaderHeterogeneousVolumeAttributeName( "ccl:shader:heterogeneous_volume" );
-IECore::InternedString g_shaderVolumeSamplingMethodAttributeName( "ccl:shader:volume_sampling_method" );
-IECore::InternedString g_shaderVolumeInterpolationMethodAttributeName( "ccl:shader:volume_interpolation_method" );
-IECore::InternedString g_shaderVolumeStepRateAttributeName( "ccl:shader:volume_step_rate" );
+IECore::InternedString g_shaderUseMisAttributeName( "cycles:shader:use_mis" );
+IECore::InternedString g_shaderUseTransparentShadowAttributeName( "cycles:shader:use_transparent_shadow" );
+IECore::InternedString g_shaderHeterogeneousVolumeAttributeName( "cycles:shader:heterogeneous_volume" );
+IECore::InternedString g_shaderVolumeSamplingMethodAttributeName( "cycles:shader:volume_sampling_method" );
+IECore::InternedString g_shaderVolumeInterpolationMethodAttributeName( "cycles:shader:volume_interpolation_method" );
+IECore::InternedString g_shaderVolumeStepRateAttributeName( "cycles:shader:volume_step_rate" );
 
 std::array<IECore::InternedString, ccl::VOLUME_NUM_SAMPLING> g_volumeSamplingEnumNames = { {
 	"distance",
@@ -615,7 +615,7 @@ class ShaderCache : public IECore::RefCounted
 			{
 				for( const auto &member : attributes->members() )
 				{
-					if( boost::starts_with( member.first.string(), "ccl:aov:" ) )
+					if( boost::starts_with( member.first.string(), "cycles:aov:" ) )
 					{
 						const IECoreScene::ShaderNetwork *aovShader = runTimeCast<IECoreScene::ShaderNetwork>( member.second.get() );
 						if( aovShader )
@@ -883,18 +883,18 @@ IECore::InternedString g_deformationBlurAttributeName( "deformationBlur" );
 IECore::InternedString g_deformationBlurSegmentsAttributeName( "deformationBlurSegments" );
 IECore::InternedString g_displayColorAttributeName( "render:displayColor" );
 // Cycles Attributes
-IECore::InternedString g_cclVisibilityAttributeName( "ccl:visibility" );
-IECore::InternedString g_useHoldoutAttributeName( "ccl:use_holdout" );
-IECore::InternedString g_isShadowCatcherAttributeName( "ccl:is_shadow_catcher" );
-IECore::InternedString g_shadowTerminatorShadingOffsetAttributeName( "ccl:shadow_terminator_shading_offset" );
-IECore::InternedString g_shadowTerminatorGeometryOffsetAttributeName( "ccl:shadow_terminator_geometry_offset" );
-IECore::InternedString g_maxLevelAttributeName( "ccl:max_level" );
-IECore::InternedString g_dicingRateAttributeName( "ccl:dicing_rate" );
+IECore::InternedString g_cclVisibilityAttributeName( "cycles:visibility" );
+IECore::InternedString g_useHoldoutAttributeName( "cycles:use_holdout" );
+IECore::InternedString g_isShadowCatcherAttributeName( "cycles:is_shadow_catcher" );
+IECore::InternedString g_shadowTerminatorShadingOffsetAttributeName( "cycles:shadow_terminator_shading_offset" );
+IECore::InternedString g_shadowTerminatorGeometryOffsetAttributeName( "cycles:shadow_terminator_geometry_offset" );
+IECore::InternedString g_maxLevelAttributeName( "cycles:max_level" );
+IECore::InternedString g_dicingRateAttributeName( "cycles:dicing_rate" );
 // Cycles Light
-IECore::InternedString g_lightAttributeName( "ccl:light" );
+IECore::InternedString g_lightAttributeName( "cycles:light" );
 // Dupli
-IECore::InternedString g_dupliGeneratedAttributeName( "ccl:dupli_generated" );
-IECore::InternedString g_dupliUVAttributeName( "ccl:dupli_uv" );
+IECore::InternedString g_dupliGeneratedAttributeName( "cycles:dupli_generated" );
+IECore::InternedString g_dupliUVAttributeName( "cycles:dupli_uv" );
 // Particle
 std::array<IECore::InternedString, 2> g_particleIndexAttributeNames = { {
 	"index",
@@ -919,28 +919,28 @@ IECore::InternedString g_particleVelocityAttributeName( "velocity" );
 IECore::InternedString g_particleAngularVelocityAttributeName( "angular_velocity" );
 
 // Shader Assignment
-IECore::InternedString g_cyclesSurfaceShaderAttributeName( "ccl:surface" );
+IECore::InternedString g_cyclesSurfaceShaderAttributeName( "cycles:surface" );
 IECore::InternedString g_oslSurfaceShaderAttributeName( "osl:surface" );
 IECore::InternedString g_oslShaderAttributeName( "osl:shader" );
-IECore::InternedString g_cyclesVolumeShaderAttributeName( "ccl:volume" );
+IECore::InternedString g_cyclesVolumeShaderAttributeName( "cycles:volume" );
 // Ray visibility
-IECore::InternedString g_cameraVisibilityAttributeName( "ccl:visibility:camera" );
-IECore::InternedString g_diffuseVisibilityAttributeName( "ccl:visibility:diffuse" );
-IECore::InternedString g_glossyVisibilityAttributeName( "ccl:visibility:glossy" );
-IECore::InternedString g_transmissionVisibilityAttributeName( "ccl:visibility:transmission" );
-IECore::InternedString g_shadowVisibilityAttributeName( "ccl:visibility:shadow" );
-IECore::InternedString g_scatterVisibilityAttributeName( "ccl:visibility:scatter" );
+IECore::InternedString g_cameraVisibilityAttributeName( "cycles:visibility:camera" );
+IECore::InternedString g_diffuseVisibilityAttributeName( "cycles:visibility:diffuse" );
+IECore::InternedString g_glossyVisibilityAttributeName( "cycles:visibility:glossy" );
+IECore::InternedString g_transmissionVisibilityAttributeName( "cycles:visibility:transmission" );
+IECore::InternedString g_shadowVisibilityAttributeName( "cycles:visibility:shadow" );
+IECore::InternedString g_scatterVisibilityAttributeName( "cycles:visibility:scatter" );
 
 // Cryptomatte asset
-IECore::InternedString g_cryptomatteAssetAttributeName( "ccl:asset_name" );
+IECore::InternedString g_cryptomatteAssetAttributeName( "cycles:asset_name" );
 
 // Light-group
-IECore::InternedString g_lightGroupAttributeName( "ccl:lightgroup" );
+IECore::InternedString g_lightGroupAttributeName( "cycles:lightgroup" );
 
 // Volume
-IECore::InternedString g_volumeClippingAttributeName( "ccl:volume_clipping" );
-IECore::InternedString g_volumeStepSizeAttributeName( "ccl:volume_step_size" );
-IECore::InternedString g_volumeObjectSpaceAttributeName( "ccl:volume_object_space" );
+IECore::InternedString g_volumeClippingAttributeName( "cycles:volume_clipping" );
+IECore::InternedString g_volumeStepSizeAttributeName( "cycles:volume_step_size" );
+IECore::InternedString g_volumeObjectSpaceAttributeName( "cycles:volume_object_space" );
 
 class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterface
 {
@@ -1157,7 +1157,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			}
 			else
 			{
-				// No `ccl:light` shader assignment. Most likely a light
+				// No `cycles:light` shader assignment. Most likely a light
 				// intended for another renderer, so we turn off the Cycles
 				// light.
 				light->set_is_enabled( false );
@@ -2763,35 +2763,35 @@ IECore::InternedString g_defaultDeviceName( "CPU" );
 IECore::InternedString g_frameOptionName( "frame" );
 IECore::InternedString g_cameraOptionName( "camera" );
 IECore::InternedString g_sampleMotionOptionName( "sampleMotion" );
-IECore::InternedString g_deviceOptionName( "ccl:device" );
-IECore::InternedString g_shadingsystemOptionName( "ccl:shadingsystem" );
-IECore::InternedString g_squareSamplesOptionName( "ccl:square_samples" );
+IECore::InternedString g_deviceOptionName( "cycles:device" );
+IECore::InternedString g_shadingsystemOptionName( "cycles:shadingsystem" );
+IECore::InternedString g_squareSamplesOptionName( "cycles:square_samples" );
 // Logging
-IECore::InternedString g_logLevelOptionName( "ccl:log_level" );
-IECore::InternedString g_progressLevelOptionName( "ccl:progress_level" );
+IECore::InternedString g_logLevelOptionName( "cycles:log_level" );
+IECore::InternedString g_progressLevelOptionName( "cycles:progress_level" );
 // Session
-IECore::InternedString g_experimentalOptionName( "ccl:session:experimental" );
-IECore::InternedString g_samplesOptionName( "ccl:session:samples" );
-IECore::InternedString g_pixelSizeOptionName( "ccl:session:pixel_size" );
-IECore::InternedString g_threadsOptionName( "ccl:session:threads" );
-IECore::InternedString g_timeLimitOptionName( "ccl:session:time_limit" );
-IECore::InternedString g_useProfilingOptionName( "ccl:session:use_profiling" );
-IECore::InternedString g_useAutoTileOptionName( "ccl:session:use_auto_tile" );
-IECore::InternedString g_tileSizeOptionName( "ccl:session:tile_size" );
+IECore::InternedString g_experimentalOptionName( "cycles:session:experimental" );
+IECore::InternedString g_samplesOptionName( "cycles:session:samples" );
+IECore::InternedString g_pixelSizeOptionName( "cycles:session:pixel_size" );
+IECore::InternedString g_threadsOptionName( "cycles:session:threads" );
+IECore::InternedString g_timeLimitOptionName( "cycles:session:time_limit" );
+IECore::InternedString g_useProfilingOptionName( "cycles:session:use_profiling" );
+IECore::InternedString g_useAutoTileOptionName( "cycles:session:use_auto_tile" );
+IECore::InternedString g_tileSizeOptionName( "cycles:session:tile_size" );
 // Scene
-IECore::InternedString g_bvhTypeOptionName( "ccl:scene:bvh_type" );
-IECore::InternedString g_bvhLayoutOptionName( "ccl:scene:bvh_layout" );
-IECore::InternedString g_useBvhSpatialSplitOptionName( "ccl:scene:use_bvh_spatial_split" );
-IECore::InternedString g_useBvhUnalignedNodesOptionName( "ccl:scene:use_bvh_unaligned_nodes" );
-IECore::InternedString g_numBvhTimeStepsOptionName( "ccl:scene:num_bvh_time_steps" );
-IECore::InternedString g_hairSubdivisionsOptionName( "ccl:scene:hair_subdivisions" );
-IECore::InternedString g_hairShapeOptionName( "ccl:scene:hair_shape" );
-IECore::InternedString g_textureLimitOptionName( "ccl:scene:texture_limit" );
+IECore::InternedString g_bvhTypeOptionName( "cycles:scene:bvh_type" );
+IECore::InternedString g_bvhLayoutOptionName( "cycles:scene:bvh_layout" );
+IECore::InternedString g_useBvhSpatialSplitOptionName( "cycles:scene:use_bvh_spatial_split" );
+IECore::InternedString g_useBvhUnalignedNodesOptionName( "cycles:scene:use_bvh_unaligned_nodes" );
+IECore::InternedString g_numBvhTimeStepsOptionName( "cycles:scene:num_bvh_time_steps" );
+IECore::InternedString g_hairSubdivisionsOptionName( "cycles:scene:hair_subdivisions" );
+IECore::InternedString g_hairShapeOptionName( "cycles:scene:hair_shape" );
+IECore::InternedString g_textureLimitOptionName( "cycles:scene:texture_limit" );
 // Background shader
-IECore::InternedString g_backgroundShaderOptionName( "ccl:background:shader" );
+IECore::InternedString g_backgroundShaderOptionName( "cycles:background:shader" );
 //
-IECore::InternedString g_useFrameAsSeedOptionName( "ccl:integrator:useFrameAsSeed" );
-IECore::InternedString g_seedOptionName( "ccl:integrator:seed" );
+IECore::InternedString g_useFrameAsSeedOptionName( "cycles:integrator:useFrameAsSeed" );
+IECore::InternedString g_seedOptionName( "cycles:integrator:seed" );
 
 ccl::PathRayFlag nameToRayType( const std::string &name )
 {
@@ -2808,25 +2808,25 @@ ccl::PathRayFlag nameToRayType( const std::string &name )
 }
 
 // Dicing camera
-IECore::InternedString g_dicingCameraOptionName( "ccl:dicing_camera" );
+IECore::InternedString g_dicingCameraOptionName( "cycles:dicing_camera" );
 
 // Cryptomatte
-IECore::InternedString g_cryptomatteAccurateOptionName( "ccl:film:cryptomatte_accurate" );
-IECore::InternedString g_cryptomatteDepthOptionName( "ccl:film:cryptomatte_depth");
+IECore::InternedString g_cryptomatteAccurateOptionName( "cycles:film:cryptomatte_accurate" );
+IECore::InternedString g_cryptomatteDepthOptionName( "cycles:film:cryptomatte_depth");
 
 // Texture cache
-IECore::InternedString g_useTextureCacheOptionName( "ccl:texture:use_texture_cache" );
-IECore::InternedString g_textureCacheSizeOptionName( "ccl:texture:cache_size" );
-IECore::InternedString g_textureAutoConvertOptionName( "ccl:texture:auto_convert" );
-IECore::InternedString g_textureAcceptUnmippedOptionName( "ccl:texture:accept_unmipped" );
-IECore::InternedString g_textureAcceptUntiledOptionName( "ccl:texture:accept_untiled" );
-IECore::InternedString g_textureAutoTileOptionName( "ccl:texture:auto_tile" );
-IECore::InternedString g_textureAutoMipOptionName( "ccl:texture:auto_mip" );
-IECore::InternedString g_textureTileSizeOptionName( "ccl:texture:tile_size" );
-IECore::InternedString g_textureBlurDiffuseOptionName( "ccl:texture:blur_diffuse" );
-IECore::InternedString g_textureBlurGlossyOptionName( "ccl:texture:blur_glossy" );
-IECore::InternedString g_textureUseCustomCachePathOptionName( "ccl:texture:use_custom_cache_path" );
-IECore::InternedString g_textureCustomCachePathOptionName( "ccl:texture:custom_cache_path" );
+IECore::InternedString g_useTextureCacheOptionName( "cycles:texture:use_texture_cache" );
+IECore::InternedString g_textureCacheSizeOptionName( "cycles:texture:cache_size" );
+IECore::InternedString g_textureAutoConvertOptionName( "cycles:texture:auto_convert" );
+IECore::InternedString g_textureAcceptUnmippedOptionName( "cycles:texture:accept_unmipped" );
+IECore::InternedString g_textureAcceptUntiledOptionName( "cycles:texture:accept_untiled" );
+IECore::InternedString g_textureAutoTileOptionName( "cycles:texture:auto_tile" );
+IECore::InternedString g_textureAutoMipOptionName( "cycles:texture:auto_mip" );
+IECore::InternedString g_textureTileSizeOptionName( "cycles:texture:tile_size" );
+IECore::InternedString g_textureBlurDiffuseOptionName( "cycles:texture:blur_diffuse" );
+IECore::InternedString g_textureBlurGlossyOptionName( "cycles:texture:blur_glossy" );
+IECore::InternedString g_textureUseCustomCachePathOptionName( "cycles:texture:use_custom_cache_path" );
+IECore::InternedString g_textureCustomCachePathOptionName( "cycles:texture:custom_cache_path" );
 
 IE_CORE_FORWARDDECLARE( CyclesRenderer )
 
@@ -2937,9 +2937,9 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			{
 				if( name == g_deviceOptionName ||
 					name == g_shadingsystemOptionName ||
-					boost::starts_with( name.string(), "ccl:session:" ) ||
-					boost::starts_with( name.string(), "ccl:scene:" ) ||
-					boost::starts_with( name.string(), "ccl:texture:" ) )
+					boost::starts_with( name.string(), "cycles:session:" ) ||
+					boost::starts_with( name.string(), "cycles:scene:" ) ||
+					boost::starts_with( name.string(), "cycles:texture:" ) )
 				{
 					IECore::msg( IECore::Msg::Error, "CyclesRenderer::option", boost::format( "\"%s\" requires a manual render restart." ) % name );
 				}
@@ -3187,7 +3187,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					return;
 				}
 			}
-			else if( boost::starts_with( name.string(), "ccl:session:" ) )
+			else if( boost::starts_with( name.string(), "cycles:session:" ) )
 			{
 				OPTION(bool,  m_sessionParams, g_experimentalOptionName,   experimental);
 				OPTION(int,   m_sessionParams, g_samplesOptionName,      samples);
@@ -3200,7 +3200,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown option \"%s\"." ) % name.string() );
 				return;
 			}
-			else if( boost::starts_with( name.string(), "ccl:scene:" ) )
+			else if( boost::starts_with( name.string(), "cycles:scene:" ) )
 			{
 				if( name == g_bvhLayoutOptionName )
 				{
@@ -3235,7 +3235,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown option \"%s\"." ) % name.string() );
 				return;
 			}
-			else if( boost::starts_with( name.string(), "ccl:texture:" ) )
+			else if( boost::starts_with( name.string(), "cycles:texture:" ) )
 			{
 #ifdef WITH_CYCLES_TEXTURE_CACHE
 				OPTION(bool,  m_textureCacheParams, g_useTextureCacheOptionName,           use_cache );
@@ -3256,19 +3256,19 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				return;
 			}
 			// The last 3 are subclassed internally from ccl::Node so treat their params like Cycles sockets
-			else if( boost::starts_with( name.string(), "ccl:background:" ) )
+			else if( boost::starts_with( name.string(), "cycles:background:" ) )
 			{
-				const ccl::SocketType *input = background->node_type->find_input( ccl::ustring( name.string().c_str() + 15 ) );
+				const ccl::SocketType *input = background->node_type->find_input( ccl::ustring( name.string().c_str() + 18 ) );
 				if( value && input )
 				{
-					if( boost::starts_with( name.string(), "ccl:background:visibility:" ) )
+					if( boost::starts_with( name.string(), "cycles:background:visibility:" ) )
 					{
 						if( const Data *d = reportedCast<const IECore::Data>( value, "option", name ) )
 						{
 							if( const IntData *data = static_cast<const IntData *>( d ) )
 							{
 								auto &vis = data->readable();
-								auto ray = nameToRayType( name.string().c_str() + 26 );
+								auto ray = nameToRayType( name.string().c_str() + 29 );
 								uint prevVis = background->get_visibility();
 								background->set_visibility( vis ? prevVis |= ray : prevVis & ~ray );
 							}
@@ -3301,7 +3301,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				}
 				return;
 			}
-			else if( boost::starts_with( name.string(), "ccl:film:" ) )
+			else if( boost::starts_with( name.string(), "cycles:film:" ) )
 			{
 				if( name == g_cryptomatteAccurateOptionName )
 				{
@@ -3333,7 +3333,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					}
 				}
 
-				const ccl::SocketType *input = film->node_type->find_input( ccl::ustring( name.string().c_str() + 9 ) );
+				const ccl::SocketType *input = film->node_type->find_input( ccl::ustring( name.string().c_str() + 12 ) );
 				if( value && input )
 				{
 					if( const Data *data = reportedCast<const Data>( value, "option", name ) )
@@ -3351,9 +3351,9 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				}
 				return;
 			}
-			else if( boost::starts_with( name.string(), "ccl:integrator:" ) )
+			else if( boost::starts_with( name.string(), "cycles:integrator:" ) )
 			{
-				const ccl::SocketType *input = integrator->node_type->find_input( ccl::ustring( name.string().c_str() + 15 ) );
+				const ccl::SocketType *input = integrator->node_type->find_input( ccl::ustring( name.string().c_str() + 18 ) );
 				if( value && input )
 				{
 					if( const Data *data = reportedCast<const Data>( value, "option", name ) )
@@ -3371,7 +3371,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				}
 				return;
 			}
-			else if( boost::starts_with( name.string(), "ccl:" ) )
+			else if( boost::starts_with( name.string(), "cycles:" ) )
 			{
 				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown option \"%s\"." ) % name.string() );
 				return;

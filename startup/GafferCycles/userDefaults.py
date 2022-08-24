@@ -38,7 +38,7 @@ import Gaffer
 
 # Correction for Blender's Z-up default mapping.
 
-Gaffer.Metadata.registerValue( "ccl:surface:environment_texture:tex_mapping__scale.x", "userDefault", -1.0 )
-Gaffer.Metadata.registerValue( "ccl:surface:environment_texture:tex_mapping__y_mapping", "userDefault", "z" )
-Gaffer.Metadata.registerValue( "ccl:surface:environment_texture:tex_mapping__z_mapping", "userDefault", "y" )
+Gaffer.Metadata.registerValue( "cycles:surface:environment_texture:tex_mapping__scale.x", "userDefault", -1.0 )
+Gaffer.Metadata.registerValue( "cycles:surface:environment_texture:tex_mapping__y_mapping", "userDefault", "z" )
+Gaffer.Metadata.registerValue( "cycles:surface:environment_texture:tex_mapping__z_mapping", "userDefault", "y" )
 

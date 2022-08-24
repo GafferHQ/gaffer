@@ -61,6 +61,6 @@ void CyclesBackground::hashOptionName( const Gaffer::Context *context, IECore::M
 
 std::string CyclesBackground::computeOptionName( const Gaffer::Context *context ) const
 {
-	return "ccl:background:shader";
+	return "cycles:background:shader";
 }
 

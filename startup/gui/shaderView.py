@@ -84,7 +84,7 @@ if os.environ.get( "CYCLES_ROOT" ) :
 
 		import GafferCycles
 
-		GafferSceneUI.ShaderView.registerRenderer( "ccl", GafferCycles.InteractiveCyclesRender )
+		GafferSceneUI.ShaderView.registerRenderer( "cycles", GafferCycles.InteractiveCyclesRender )
 
 		def __cyclesShaderBall() :
 
@@ -100,4 +100,4 @@ if os.environ.get( "CYCLES_ROOT" ) :
 
 			return result
 
-		GafferSceneUI.ShaderView.registerScene( "ccl", "Default", __cyclesShaderBall )
+		GafferSceneUI.ShaderView.registerScene( "cycles", "Default", __cyclesShaderBall )
