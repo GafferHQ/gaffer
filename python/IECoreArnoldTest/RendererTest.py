@@ -1021,6 +1021,11 @@ class RendererTest( GafferTest.TestCase ) :
 		subdivPlane.interpolation = "catmullClark"
 
 		defaultAttributes = r.attributes( IECore.CompoundObject() )
+		noInstanceAttributes = r.attributes(
+			IECore.CompoundObject( {
+				"gaffer:automaticInstancing" : IECore.BoolData( 0 ),
+			} )
+		)
 		adaptiveAttributes = r.attributes(
 			IECore.CompoundObject( {
 				"ai:polymesh:subdiv_adaptive_error" : IECore.FloatData( 0.1 ),
@@ -1063,6 +1068,10 @@ class RendererTest( GafferTest.TestCase ) :
 
 		r.object( "polyAdaptiveAttributes1", polyPlane.copy(), adaptiveAttributes )
 		r.object( "polyAdaptiveAttributes2", polyPlane.copy(), adaptiveAttributes )
+
+		# Try explicitly turning off instancing
+		r.object( "noInstanceAttributes1", polyPlane.copy(), noInstanceAttributes )
+		r.object( "noInstanceAttributes2", polyPlane.copy(), noInstanceAttributes )
 
 		# And we should be able to instance subdiv meshes with
 		# non-adaptive subdivision.
@@ -1108,7 +1117,7 @@ class RendererTest( GafferTest.TestCase ) :
 			numInstances = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "ginstance" ] )
 			numPolyMeshes = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "polymesh" ] )
 
-			self.assertEqual( numPolyMeshes, 9 )
+			self.assertEqual( numPolyMeshes, 11 )
 			self.assertEqual( numInstances, 13 )
 
 			self.__assertInstanced(
@@ -1117,6 +1126,12 @@ class RendererTest( GafferTest.TestCase ) :
 				"polyDefaultAttributes2",
 				"polyAdaptiveAttributes1",
 				"polyAdaptiveAttributes2",
+			)
+
+			self.__assertNotInstanced(
+				universe,
+				"noInstanceAttributes1",
+				"noInstanceAttributes2"
 			)
 
 			self.__assertInstanced(

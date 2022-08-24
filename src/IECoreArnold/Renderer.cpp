@@ -888,6 +888,7 @@ IECore::InternedString g_surfaceShaderAttributeName( "surface" );
 IECore::InternedString g_lightShaderAttributeName( "light" );
 IECore::InternedString g_doubleSidedAttributeName( "doubleSided" );
 IECore::InternedString g_setsAttributeName( "sets" );
+IECore::InternedString g_automaticInstancingAttributeName( "gaffer:automaticInstancing" );
 
 IECore::InternedString g_oslSurfaceShaderAttributeName( "osl:surface" );
 IECore::InternedString g_oslShaderAttributeName( "osl:shader" );
@@ -1036,6 +1037,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 			m_traceSets = attribute<IECore::InternedStringVectorData>( g_setsAttributeName, attributes );
 			m_transformType = attribute<IECore::StringData>( g_transformTypeAttributeName, attributes );
+			m_automaticInstancing = attributeValue<bool>( g_automaticInstancingAttributeName, attributes, true );
 			m_stepSize = attributeValue<float>( g_shapeVolumeStepSizeAttributeName, attributes, 0.0f );
 			m_stepScale = attributeValue<float>( g_shapeVolumeStepScaleAttributeName, attributes, 1.0f );
 			m_volumePadding = attributeValue<float>( g_shapeVolumePaddingAttributeName, attributes, 0.0f );
@@ -1145,7 +1147,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		// will be applied in `applyGeometry()`.
 		bool canInstanceGeometry( const IECore::Object *object ) const
 		{
-			if( !IECore::runTimeCast<const IECoreScene::VisibleRenderable>( object ) )
+			if( !IECore::runTimeCast<const IECoreScene::VisibleRenderable>( object ) || !m_automaticInstancing )
 			{
 				return false;
 			}
@@ -1783,6 +1785,8 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 		void hashGeometryInternal( IECore::TypeId objectType, bool meshInterpolationIsLinear, bool proceduralIsVolumetric, IECore::MurmurHash &h ) const
 		{
+			h.append( m_automaticInstancing );
+
 			switch( (int)objectType )
 			{
 				case IECoreScene::MeshPrimitiveTypeId :
@@ -1882,6 +1886,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		std::vector<ArnoldShaderPtr> m_lightFilterShaders;
 		IECore::ConstInternedStringVectorDataPtr m_traceSets;
 		IECore::ConstStringDataPtr m_transformType;
+		bool m_automaticInstancing;
 		float m_stepSize;
 		float m_stepScale;
 		float m_volumePadding;
