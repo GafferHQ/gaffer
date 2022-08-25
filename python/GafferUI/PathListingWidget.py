@@ -633,11 +633,11 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		if not pathSelected :
 			self.__singleSelect( index )
-
-		# The item is selected, Return True so that we have the option of
-		# starting a drag if we want. If a drag doesn't follow, we'll adjust
-		# selection in `__buttonRelease`.
-		self.__updateSelectionInButtonRelease = True
+		else :
+			# The item is selected, Return True so that we have the option of
+			# starting a drag if we want. If a drag doesn't follow, we'll adjust
+			# selection in `__buttonRelease`.
+			self.__updateSelectionInButtonRelease = True
 
 		return True
 
