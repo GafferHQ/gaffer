@@ -700,16 +700,16 @@ class PathListingWidget( GafferUI.Widget ) :
 
 	def __indexAt( self, position ) :
 
-		# A small corner area below the vertical scroll bar may pass through
-		# to us, causing odd selection behavior. Check that we're within the
-		# scroll area.
-		if position.x > self._qtWidget().viewport().size().width() or position.y > self._qtWidget().viewport().size().height() :
-			return None
-
 		point = self._qtWidget().viewport().mapFrom(
 			self._qtWidget(),
 			QtCore.QPoint( position.x, position.y )
 		)
+
+		# A small corner area below the vertical scroll bar may pass through
+		# to us, causing odd selection behavior. Check that we're within the
+		# scroll area.
+		if point.x() > self._qtWidget().viewport().size().width() or point.y() > self._qtWidget().viewport().size().height() :
+			return None
 
 		index = self._qtWidget().indexAt( point )
 		if not index.isValid() :

@@ -32,6 +32,7 @@ Fixes
 - SceneReader : Fixed shader type for UsdLux lights. It was `surface` and is now `light`.
 - Fixed a bug in `SceneAlgo::attributeHistory` that would return a branching history from a `ShaderTweaks` node with `inherit` enabled.
 - Arnold : Fixed errors when making interactive render edits to lights with component-level connections between OSL shaders.
+- PathListingWidget : Fixed bug where one more rows at the bottom of the list could not be selected.
 
 API
 ---
