@@ -368,7 +368,7 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 			if cellColumn == columns[i] :
 				columnIndex = i
 
-		if columnIndex == -1 :
+		if columnIndex <= 0 :
 			return False
 
 		cellPath = pathListing.pathAt( event.line.p0 )
