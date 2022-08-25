@@ -93,7 +93,7 @@ class Column( GafferUI.PathColumn ) :
 		return self.__title.value
 
 	## Calls `_imageCellData()`.
-	def cellData( self, path, canceller ) :
+	def cellData( self, path, canceller = None ) :
 
 		image = path.property( "catalogue:image" )
 		catalogue = path.property( "catalogue" )
@@ -126,7 +126,7 @@ class Column( GafferUI.PathColumn ) :
 
 		return self.CellData()
 
-	def headerData( self, canceller ) :
+	def headerData( self, canceller = None ) :
 
 		return self.CellData( value = self.__title )
 

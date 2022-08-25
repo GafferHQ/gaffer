@@ -1080,7 +1080,7 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 
 				GafferUI.PathColumn.__init__( self )
 
-			def cellData( self, path, canceller ) :
+			def cellData( self, path, canceller = None ) :
 
 				SleepingColumn.cellDataCalled = True
 
@@ -1088,7 +1088,7 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 					time.sleep( 0.01 )
 					IECore.Canceller.check( canceller )
 
-			def headerData( self, canceller ) :
+			def headerData( self, canceller = None ) :
 
 				return self.CellData( value = "Title" )
 
