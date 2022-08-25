@@ -851,7 +851,7 @@ void ImageGadget::updateTiles()
 	{
 		if( find( m_rgbaChannels.begin(), m_rgbaChannels.end(), *it ) != m_rgbaChannels.end() )
 		{
-			if( m_soloChannel < 0 || m_rgbaChannels[m_soloChannel] == *it )
+			if( m_soloChannel < 0 || m_rgbaChannels[m_soloChannel] == *it || m_rgbaChannels[3] == *it )
 			{
 				channelsToCompute.push_back( *it );
 			}
@@ -979,7 +979,7 @@ void ImageGadget::renderTiles() const
 			IECoreGL::ConstTexturePtr channelTextures[4];
 			for( int i = 0; i < 4; ++i )
 			{
-				const InternedString channelName = ( m_soloChannel < 0 ) ? m_rgbaChannels[i] : m_rgbaChannels[m_soloChannel];
+				const InternedString channelName = ( m_soloChannel < 0 || i == 3 ) ? m_rgbaChannels[i] : m_rgbaChannels[m_soloChannel];
 				Tiles::const_iterator it = m_tiles.find( TileIndex( tileOrigin, channelName ) );
 				if( it != m_tiles.end() )
 				{
