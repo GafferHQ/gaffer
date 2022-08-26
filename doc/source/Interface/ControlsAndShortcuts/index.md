@@ -9,11 +9,35 @@ substitutions :
 
 # Controls and Shortcuts #
 
-The following is a list of input device controls and shortcuts for manipulating the Graph Editor, Viewer, and Python Editor.
+The following is a list of input device controls and shortcuts providing quick access to functionality in Gaffer's Viewers and Editors.
+
+## Guide ##
+
+### Keyboard Shortcuts ###
+
+Keyboard shortcuts, or hotkeys, are shown as they would typically appear on a keyboard:
+
+Example Action                       | Shortcut
+-------------------------------------|--------------------
+Type the letter `g`                  | {kbd}`G`
+Press a modifier key                 | {kbd}`Ctrl`
+Press multiple keys together         | {kbd}`Ctrl` + {kbd}`C`
+Press one of the following keys      | {kbd}`A`, {kbd}`B`, {kbd}`C`, {kbd}`D`
+Press either of the following keys   | {kbd}`Enter`<br>or<br>{kbd}`Return`
 
 > Tip :
 > macOS users: replace <kbd>Ctrl</kbd> with <kbd>Command ⌘</kbd>.
 
+### Mouse Controls ###
+
+Mouse controls are shown as icons representing the action to perform:
+
+Example Action                       | Mouse control
+-------------------------------------|--------------------
+Press the left mouse button          | {{leftClick}}
+Press the middle mouse button        | {{middleClick}}
+Press the right mouse button         | {{rightClick}}
+Scroll the mouse wheel               | {{mouseWheel}}
 
 ## General ##
 
@@ -23,21 +47,31 @@ New node graph                       | {kbd}`Ctrl` + {kbd}`N`
 Open node graph                      | {kbd}`Ctrl` + {kbd}`O`
 Save node graph                      | {kbd}`Ctrl` + {kbd}`S`
 Save node graph as                   | {kbd}`Ctrl` + {kbd}`Shift` + {kbd}`S`
+Quit the application                 | {kbd}`Ctrl` + {kbd}`Q`
 Undo                                 | {kbd}`Ctrl` + {kbd}`Z`
 Redo                                 | {kbd}`Ctrl` + {kbd}`Shift` + {kbd}`Z`
 Step one frame forward               | {kbd}`→`
 Step one frame backward              | {kbd}`←`
 Fullscreen mode                      | {kbd}`F11`
 Hide tabs of current panel           | {kbd}`Ctrl` + {kbd}`T`
+Maximise current panel               | {kbd}`Space`
+
+> Note :
+> Gaffer has many interactions requiring drag and drop of UI elements. As an alternative to holding {{leftClick}} for the duration of a drag, {kbd}`G` can be pressed once to start a drag and then once again to complete the drag.
+
+Action                               | Control or shortcut
+-------------------------------------|--------------------
+Begin a {{leftClick}} drag           | Hover cursor over drag target, {kbd}`G`
+Complete a {{leftClick}} drag        | While dragging, hover cursor over drop target, {kbd}`G`
 
 ### Pinnable Editors and Inspectors ###
 
 Action                               | Control or shortcut
 -------------------------------------|--------------------
 Follow the focus node                | Hover cursor over editor, <kbd>&#96;</kbd>
-Pin the node selection               | Hover cursor over editor, {kbd}`p`
+Pin the node selection               | Hover cursor over editor, {kbd}`P`
 Pin numeric bookmark 1-9             | Hover cursor over editor, {kbd}`1` - {kbd}`9`
-Follow to the node selection         | Hover cursor over editor, {kbd}`n`
+Follow to the node selection         | Hover cursor over editor, {kbd}`N`
 
 ## Graph Editor ##
 
@@ -102,6 +136,7 @@ Copy node(s)                         | {kbd}`Ctrl` + {kbd}`C`
 Paste node(s)                        | {kbd}`Ctrl` + {kbd}`V`
 Delete node(s)                       | {kbd}`Backspace`<br>or<br>{kbd}`Delete`
 Enable/disable node(s)               | {kbd}`D`
+Rename node(s)                       | {kbd}`F2`
 
 ### Node connections and layout ###
 
@@ -117,7 +152,7 @@ Duplicate outgoing connection        | {kbd}`Shift` + {{leftClick}} and drag con
 
 Action                               | Control or shortcut
 -------------------------------------|-------------------
-Jump to focus node                   | Hover cursor over editor, <kbd>&#96;</kbd><br>or<br>{{leftClick}} {{editorFocusMenu}}, select *Focus Node* > ...
+Jump to focus node                   | Hover cursor over editor, <kbd>&#96;</kbd><br>or<br>{{leftClick}} {{editorFocusMenu}}, select *Focus Node*
 Assign focus to selected node        | Hover cursor over node graph, {kbd}`Ctrl` + <kbd>&#96;</kbd><br>or<br>Click on top right of node
 
 ### Node bookmarks ###
@@ -204,6 +239,7 @@ Fit clipping planes to selection                     | {{rightClick}} > *Clippin
 Frame view, and fit clipping planes                  | {kbd}`Ctrl` + {kbd}`F`
 Reset clipping planes                                | {{rightClick}} > *Clipping Planes* > *Default*
 Toggle Inspector                                     | {kbd}`I`
+Prune selected objects from current EditScope        | {kbd}`Ctrl` + {kbd}`Delete`
 
 ### Transform tools ###
 
@@ -216,8 +252,8 @@ Increase manipulator size                           | {kbd}`+`
 Decrease manipulator size                           | {kbd}`-`
 Add animation key to transform of selected object(s)| {kbd}`S`
 Adjust, fine precision                              | Hold {kbd}`Shift` during action
-Adjust, snapping to rounded increments              | Hold {kbd}`Ctrl` + during action
-Target mode (Translate and Rotate only)             | Hold {kbd}`v`
+Adjust, snapping to rounded increments              | Hold {kbd}`Ctrl` during action
+Target mode (Translate and Rotate only)             | Hold {kbd}`V` then {{leftClick}} on target geometry
 
 
 ### 2D images ###
@@ -229,11 +265,13 @@ Isolate green channel                | {kbd}`G`
 Isolate blue channel                 | {kbd}`B`
 Isolate alpha channel                | {kbd}`A`
 View luminance of RGB                | {kbd}`L`
-Previous layer                       | {kbd}`PgDn`
-Next layer                           | {kbd}`PgUp`
+Previous layer                       | {kbd}`PgUp`
+Next layer                           | {kbd}`PgDn`
+Previous view                        | {kbd}`[`
+Next view                            | {kbd}`]`
 Center image at 1:1 scale            | {kbd}`Home`
-Next Catalogue image                 | {kbd}`↓`
 Previous Catalogue image             | {kbd}`↑`
+Next Catalogue image                 | {kbd}`↓`
 Duplicate current Catalogue image    | {kbd}`Ctrl` + {kbd}`D`
 
 
@@ -247,6 +285,10 @@ Draw new region anywhere             | {kbd}`Shift` + click and drag
 
 Action                              | Control or shorcut
 ------------------------------------|-------------------
+Expand selected location            | {kbd}`→`
+Fully expand selected location      | {kbd}`Shift` + {kbd}`→`
+Collapse selected location          | {kbd}`←`
+Fully collapse selected location    | {kbd}`Shift` + {kbd}`←`
 Copy selected paths                 | {kbd}`Ctrl` + {kbd}`C`
 Edit source node of selection       | {kbd}`Alt` + {kbd}`E`
 Edit tweaks node for selection      | {kbd}`Alt` + {kbd}`Shift` + {kbd}`E`
@@ -293,8 +335,8 @@ Pan                                            | {kbd}`Alt` + {{leftClick}} and 
 Zoom                                           | {kbd}`Alt` + {{rightClick}} and drag<br>or<br>{{mouseWheel}}
 Zoom x/y axes independently                    | Hold {kbd}`Ctrl` during action
 Pan/Zoom, fine precision                       | Hold {kbd}`Shift` during action
-Adjust frame range                             | {kbd}`Alt` + {kbd}`Shift` + {{rightClick}} and drag left/right
-Adjust key value range                         | {kbd}`Alt` + {kbd}`Shift` + {{rightClick}} and drag up/down
+Adjust frame range                             | {kbd}`Ctrl` + {kbd}`Alt` + {{rightClick}} and drag left/right
+Adjust key value range                         | {kbd}`Ctrl` + {kbd}`Alt` + {{rightClick}} and drag up/down
 Frame all curves (no selection)                | {kbd}`F`
 Frame selected key(s)                          | {kbd}`F`
 Add key to a curve                             | {kbd}`Ctrl` + {{leftClick}}
@@ -309,8 +351,8 @@ Adjust value(s) of selected key(s)             | {kbd}`Shift` + {{leftClick}} an
 
 Action                              | Control or shorcut
 ------------------------------------|-------------------
-Next message of level               | {kbd}`e`, {kbd}`w`, {kbd}`i`, {kbd}`d`
-Previous message of level           | {kbd}`Shift` + {kbd}`e`, {kbd}`w`, {kbd}`i`, {kbd}`d`
+Next message of level               | {kbd}`E`, {kbd}`W`, {kbd}`I`, {kbd}`D`
+Previous message of level           | {kbd}`Shift` + {kbd}`E`, {kbd}`W`, {kbd}`I`, {kbd}`D`
 Search                              | {kbd}`Ctrl` + {kbd}`F`
   Next match (search field focus)   | {kbd}`Enter`
   Next match (log focus)            | {kbd}`N`
@@ -324,9 +366,9 @@ Action                                             | Control or shortcut
 Toggle/edit selected cells                         | {kbd}`Return` or {{leftClick}} {{leftClick}}
 Toggle Enabled state of selected cells             | {kbd}`D`
 Copy/Paste selected cells or rows                  | {kbd}`Ctrl` + {kbd}`C`/{kbd}`V`
-Move cell selection                                | {kbd}`Up`, {kbd}`Down`, {kbd}`Left`, {kbd}`Right`
-Extend cell selection                              | {kbd}`Shift` + {kbd}`Up`, {kbd}`Down`, {kbd}`Left`, {kbd}`Right`
-Move keyboard focus                                | {kbd}`Ctrl` + {kbd}`Up`, {kbd}`Down`, {kbd}`Left`, {kbd}`Right`
+Move cell selection                                | {kbd}`↑`, {kbd}`↓`, {kbd}`←`, {kbd}`→`
+Extend cell selection                              | {kbd}`Shift` + {kbd}`↑`, {kbd}`↓`, {kbd}`←`, {kbd}`→`
+Move keyboard focus                                | {kbd}`Ctrl` + {kbd}`↑`, {kbd}`↓`, {kbd}`←`, {kbd}`→`
 Toggle selection state of cell with keyboard focus | {kbd}`Space`
 
 ## Light Editor ##
@@ -335,3 +377,7 @@ Action                                               | Control or shortcut
 -----------------------------------------------------|---------------------
 Edit source node of selection                        | {kbd}`Alt` + {kbd}`E`
 Edit tweaks node for selection                       | {kbd}`Alt` + {kbd}`Shift` + {kbd}`E`
+Move cell selection                                  | {kbd}`↑`, {kbd}`↓`, {kbd}`←`, {kbd}`→`
+Extend cell selection                                | {kbd}`Shift` + {{leftClick}}<br>or<br>{kbd}`Shift` + {kbd}`↑`, {kbd}`↓`, {kbd}`←`, {kbd}`→`
+Toggle cell selection                                | {kbd}`Ctrl` + {{leftClick}}<br>or<br>{kbd}`Ctrl` + {kbd}`↑`, {kbd}`↓`, {kbd}`←`, {kbd}`→`
+Edit selected cells                                  | {kbd}`Return`<br>or<br>{kbd}`Enter`

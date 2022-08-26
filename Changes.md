@@ -1,3 +1,62 @@
+1.0.x.x (relative to 1.0.2.1)
+=======
+
+Features
+--------
+
+- Light Editor : Added a non-modal dialog to view the history of a parameter. It can be accessed by right-clicking a parameter in the Light Editor and selecting `Show History...`. Within the dialogue :
+  - Double clicking a node name will open a Node Editor popup.
+  - Dragging a node name into the Graph Editor will zoom to the node.
+  - Double clicking, pressing <kbd>Return</kbd> or <kbd>Enter</kbd> on a parameter value or operation will open a plug popup to edit the value.
+
+Improvements
+------------
+
+- USD :
+  - Added automatic render-time translation of UsdPreviewSurface shaders and UsdLuxLights for Arnold.
+  - The SceneReader now loads all UsdLuxLights into the `defaultLights` set so that they are linked by default.
+- SceneReader :
+  - Added support for Alembic visibility attributes.
+  - Added loading of `treatAsPoint` and `treatAsLine` parameters from UsdLux lights.
+- SceneWriter : Added support for Alembic visibility attributes.
+- ColorPlugValueWidget : Hid the color chooser button (sliders) for output plugs.
+- Arnold : Added metadata for new `standard_volume` shader parameters introduced in Arnold 7.1.3.0.
+- VectorDataWidget : Added a color swatch column for `Color3f` and `Color4f` elements. These are currently included in the `RandomChoice` node when `choices` is set to a list of colors, and for color primitive variables in the Primitive Inspector.
+- NameWidget : Added a check to prevent users from setting a node or plug name to a value starting with a double underscore.
+- ShaderTweaks : Added Create and Remove tweak modes.
+
+Fixes
+-----
+
+- Qt : Added missing QtUiTools module.
+- SceneReader : Fixed shader type for UsdLux lights. It was `surface` and is now `light`.
+- Fixed a bug in `SceneAlgo::attributeHistory` that would return a branching history from a `ShaderTweaks` node with `inherit` enabled.
+- Arnold : Fixed errors when making interactive render edits to lights with component-level connections between OSL shaders.
+- PathListingWidget :
+  - Fixed bug where one more rows at the bottom of the list could not be selected.
+  - Fixed error when dragging from shader browser name columns, shader browser input columns and Catalogue columns.
+- PathFilter : Improved positioning of PathFilters created by dropping paths onto a node.
+- GraphEditor :
+  - Improved handling of Backdrops when laying out nodes. Individual nodes are no longer pushed outside backdrops, and backdrops themselves are positioned as a group containing all their child nodes.
+  - Improved positioning of pasted nodes, so that they are less likely to overlap with any node they are automatically connected to.
+
+API
+---
+
+- StandardLightVisualiser :
+  - Added support for parameters specifying the width and height of quad lights, and the length of cylinder lights.
+  - The `coneAngleParameter` metadata is now supported for all light types.
+
+Documentation
+-------------
+
+- Improved "Controls and Shortcuts" and added link in help menu.
+
+Build
+-----
+
+- Cortex : Updated to 10.4.1.0.
+
 1.0.2.1 (relative to 1.0.2.0)
 =======
 
@@ -241,6 +300,17 @@ Build
   - Subprocess32 : Now packaged as a regular module rather than as a `.egg` package.
   - TBB : Updated to version 2020.3.
   - USD : Updated to version 21.11.
+
+0.61.14.4 (relative to 0.61.14.3)
+=========
+
+Fixes
+-----
+
+- PathFilter : Improved positioning of PathFilters created by dropping paths onto a node.
+- GraphEditor :
+  - Improved handling of Backdrops when laying out nodes. Individual nodes are no longer pushed outside backdrops, and backdrops themselves are positioned as a group containing all their child nodes.
+  - Improved positioning of pasted nodes, so that they are less likely to overlap with any node they are automatically connected to.
 
 0.61.14.3 (relative to 0.61.14.2)
 =========

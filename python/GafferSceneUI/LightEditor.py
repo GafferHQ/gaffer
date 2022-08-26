@@ -48,6 +48,7 @@ import GafferScene
 import GafferSceneUI
 
 from GafferUI.PlugValueWidget import sole
+from GafferSceneUI._HistoryWindow import _HistoryWindow
 
 from . import ContextAlgo
 from . import _GafferSceneUI
@@ -117,6 +118,7 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 			)
 			self.__pathListing.buttonDoubleClickSignal().connectFront( Gaffer.WeakMethod( self.__buttonDoubleClick ), scoped = False )
 			self.__pathListing.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
+			self.__pathListing.buttonPressSignal().connectFront( Gaffer.WeakMethod( self.__buttonPress ), scoped = False )
 
 		self.__settingsNode.plugSetSignal().connect( Gaffer.WeakMethod( self.__settingsPlugSet ), scoped = False )
 
@@ -351,6 +353,67 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 					GafferUI.Label( "<h4>{}</h4>".format( nonEditable[0].nonEditableReason() ) )
 
 			self.__popup.popup()
+
+	def __buttonPress( self, pathListing, event ) :
+
+		if event.button != event.Buttons.Right or event.modifiers != event.Modifiers.None_ :
+			return False
+
+		selection = pathListing.getSelection()
+
+		columns = pathListing.getColumns()
+		cellColumn = pathListing.columnAt( event.line.p0 )
+		columnIndex = -1
+		for i in range( 0, len( columns ) ) :
+			if cellColumn == columns[i] :
+				columnIndex = i
+
+		if columnIndex <= 0 :
+			return False
+
+		cellPath = pathListing.pathAt( event.line.p0 )
+
+		if not selection[columnIndex].match( str( cellPath ) ) & IECore.PathMatcher.Result.ExactMatch :
+			for p in selection :
+				p.clear()
+			selection[columnIndex].addPath( str( cellPath ) )
+			pathListing.setSelection( selection )
+
+		menuDefinition = IECore.MenuDefinition()
+
+		menuDefinition.append(
+			"Show History...",
+			{
+				"command" : Gaffer.WeakMethod( self.__showHistory ),
+				"active" : any( not i.isEmpty() for i in selection )
+			}
+		)
+
+		self.__contextMenu = GafferUI.Menu( menuDefinition )
+		self.__contextMenu.popup( pathListing )
+
+		return True
+
+	def __showHistory( self, *unused ) :
+
+		selection = self.__pathListing.getSelection()
+		columns = self.__pathListing.getColumns()
+
+		for i in range( 0, len( columns ) ) :
+			column = columns[ i ]
+			if not isinstance( column, _GafferSceneUI._LightEditorInspectorColumn ) :
+				continue
+
+			for path in selection[i].paths() :
+				window = _HistoryWindow(
+					column.inspector(),
+					path,
+					self.getContext(),
+					self.ancestor( GafferUI.ScriptWindow ).scriptNode(),
+					"History : {} : {}".format( path, column.headerData().value )
+				)
+				self.ancestor( GafferUI.Window ).addChildWindow( window, removeOnClose = True )
+				window.setVisible( True )
 
 
 GafferUI.Editor.registerType( "LightEditor", LightEditor )

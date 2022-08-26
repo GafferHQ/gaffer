@@ -596,5 +596,37 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Warning )
 		self.assertEqual( mh.messages[0].message, 'Failed to load attribute "test:double4" at location "/sphere"' )
 
+	def testImplicitUSDDefaultLights( self ) :
+
+		reader = GafferScene.SceneReader()
+		reader["fileName"].setValue( "${GAFFER_ROOT}/python/GafferSceneTest/usdFiles/sphereLight.usda" )
+
+		self.assertIn( "defaultLights", reader["out"].setNames() )
+		self.assertEqual( reader["out"].set( "defaultLights" ).value, IECore.PathMatcher( [ "/SpotLight23" ] ) )
+
+	def testExplicitUSDDefaultLights( self ) :
+
+		light1 = GafferSceneTest.TestLight()
+		light1["name"].setValue( "light1" )
+		light1["defaultLight"].setValue( False )
+
+		light2 = GafferSceneTest.TestLight()
+		light2["name"].setValue( "light2" )
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( light1["out"] )
+		group["in"][1].setInput( light2["out"] )
+
+		writer = GafferScene.SceneWriter()
+		writer["in"].setInput( group["out"] )
+		writer["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.usda" ) )
+		writer["task"].execute()
+
+		reader = GafferScene.SceneReader()
+		reader["fileName"].setInput( writer["fileName"] )
+
+		self.assertIn( "defaultLights", reader["out"].setNames() )
+		self.assertEqual( reader["out"].set( "defaultLights" ).value, IECore.PathMatcher( [ "/group/light2" ] ) )
+
 if __name__ == "__main__":
 	unittest.main()

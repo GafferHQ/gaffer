@@ -130,11 +130,13 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		self._qtWidget().model().selectionChanged.connect( Gaffer.WeakMethod( self.__selectionChanged ) )
 		self._qtWidget().model().expansionChanged.connect( Gaffer.WeakMethod( self.__expansionChanged ) )
+		self._qtWidget().model().updateFinished.connect( Gaffer.WeakMethod( self.__updateFinished ) )
 
 		self.__pathSelectedSignal = GafferUI.WidgetSignal()
 		self.__selectionChangedSignal = GafferUI.WidgetSignal()
 		self.__displayModeChangedSignal = GafferUI.WidgetSignal()
 		self.__expansionChangedSignal = GafferUI.WidgetSignal()
+		self.__updateFinishedSignal = GafferUI.WidgetSignal()
 
 		# Connections for implementing selection and drag and drop.
 		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
@@ -247,6 +249,10 @@ class PathListingWidget( GafferUI.Widget ) :
 	def expansionChangedSignal( self ) :
 
 		return self.__expansionChangedSignal
+
+	def updateFinishedSignal( self ) :
+
+		return self.__updateFinishedSignal
 
 	def getDisplayMode( self ) :
 
@@ -514,6 +520,10 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		self.__expansionChangedSignal( self )
 
+	def __updateFinished( self ) :
+
+		self.__updateFinishedSignal( self )
+
 	def __keyPress( self, widget, event ) :
 
 		if (
@@ -623,11 +633,11 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		if not pathSelected :
 			self.__singleSelect( index )
-
-		# The item is selected, Return True so that we have the option of
-		# starting a drag if we want. If a drag doesn't follow, we'll adjust
-		# selection in `__buttonRelease`.
-		self.__updateSelectionInButtonRelease = True
+		else :
+			# The item is selected, Return True so that we have the option of
+			# starting a drag if we want. If a drag doesn't follow, we'll adjust
+			# selection in `__buttonRelease`.
+			self.__updateSelectionInButtonRelease = True
 
 		return True
 
@@ -690,16 +700,16 @@ class PathListingWidget( GafferUI.Widget ) :
 
 	def __indexAt( self, position ) :
 
-		# A small corner area below the vertical scroll bar may pass through
-		# to us, causing odd selection behavior. Check that we're within the
-		# scroll area.
-		if position.x > self._qtWidget().viewport().size().width() or position.y > self._qtWidget().viewport().size().height() :
-			return None
-
 		point = self._qtWidget().viewport().mapFrom(
 			self._qtWidget(),
 			QtCore.QPoint( position.x, position.y )
 		)
+
+		# A small corner area below the vertical scroll bar may pass through
+		# to us, causing odd selection behavior. Check that we're within the
+		# scroll area.
+		if point.x() > self._qtWidget().viewport().size().width() or point.y() > self._qtWidget().viewport().size().height() :
+			return None
 
 		index = self._qtWidget().indexAt( point )
 		if not index.isValid() :

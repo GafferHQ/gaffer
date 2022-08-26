@@ -133,7 +133,7 @@ class _Validator( QtGui.QValidator ) :
 
 		input = input.replace( " ", "_" )
 		if len( input ) :
-			if re.match( "^[A-Za-z_]+[A-Za-z_0-9]*$", input ) :
+			if re.match( "^(?!__)[A-Za-z_]+[A-Za-z_0-9]*$", input ) :
 				result = QtGui.QValidator.Acceptable
 			else :
 				result = QtGui.QValidator.Invalid

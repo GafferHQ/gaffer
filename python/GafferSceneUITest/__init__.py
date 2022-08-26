@@ -54,6 +54,7 @@ from .CropWindowToolTest import CropWindowToolTest
 from .NodeUITest import NodeUITest
 from .ParameterInspectorTest import ParameterInspectorTest
 from .AttributeInspectorTest import AttributeInspectorTest
+from .HistoryPathTest import HistoryPathTest
 
 if __name__ == "__main__":
 	unittest.main()

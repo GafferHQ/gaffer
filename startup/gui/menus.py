@@ -87,7 +87,8 @@ def addHelpMenuItems( items ) :
 
 addHelpMenuItems( [
 		( "User Guide", "$GAFFER_ROOT/doc/gaffer/html/index.html" ),
-		( "Node Reference", "$GAFFER_ROOT/doc/gaffer/html/Reference/NodeReference/index.html" )
+		( "Node Reference", "$GAFFER_ROOT/doc/gaffer/html/Reference/NodeReference/index.html" ),
+		( "Keyboard Shortcuts", "$GAFFER_ROOT/doc/gaffer/html/Interface/ControlsAndShortcuts/index.html" )
 ] )
 
 GafferUI.Examples.appendExamplesSubmenuDefinition( scriptWindowMenu, "/Help/Examples" )
