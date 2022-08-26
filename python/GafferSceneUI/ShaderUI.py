@@ -383,7 +383,7 @@ class _DuplicateIconColumn ( GafferUI.PathColumn ) :
 		self.__title = title
 		self.__property = property
 
-	def cellData( self, path, canceller ) :
+	def cellData( self, path, canceller = None ) :
 
 		cellValue = path.property( self.__property )
 		# \todo : Remove this check when Arnold lights don't use `__shader`
@@ -403,7 +403,7 @@ class _DuplicateIconColumn ( GafferUI.PathColumn ) :
 
 		return data
 
-	def headerData( self, canceller ) :
+	def headerData( self, canceller = None ) :
 
 		return self.CellData( self.__title )
 
@@ -415,7 +415,7 @@ class _ShaderInputColumn ( GafferUI.PathColumn ) :
 
 		self.__title = title
 
-	def cellData( self, path, canceller ) :
+	def cellData( self, path, canceller = None ) :
 
 		data = self.CellData()
 
@@ -439,7 +439,7 @@ class _ShaderInputColumn ( GafferUI.PathColumn ) :
 
 		return data
 
-	def headerData( self, canceller ) :
+	def headerData( self, canceller = None ) :
 
 		return self.CellData( self.__title )
 
