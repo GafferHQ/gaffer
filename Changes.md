@@ -12,6 +12,9 @@ Features
 Improvements
 ------------
 
+- USD :
+  - Added automatic render-time translation of UsdPreviewSurface shaders and UsdLuxLights for Arnold.
+  - The SceneReader now loads all UsdLuxLights into the `defaultLights` set so that they are linked by default.
 - SceneReader :
   - Added support for Alembic visibility attributes.
   - Added loading of `treatAsPoint` and `treatAsLine` parameters from UsdLux lights.
@@ -20,6 +23,7 @@ Improvements
 - Arnold : Added metadata for new `standard_volume` shader parameters introduced in Arnold 7.1.3.0.
 - VectorDataWidget : Added a color swatch column for `Color3f` and `Color4f` elements. These are currently included in the `RandomChoice` node when `choices` is set to a list of colors, and for color primitive variables in the Primitive Inspector.
 - NameWidget : Added a check to prevent users from setting a node or plug name to a value starting with a double underscore.
+- ShaderTweaks : Added Create and Remove tweak modes.
 
 Fixes
 -----
@@ -27,6 +31,14 @@ Fixes
 - Qt : Added missing QtUiTools module.
 - SceneReader : Fixed shader type for UsdLux lights. It was `surface` and is now `light`.
 - Fixed a bug in `SceneAlgo::attributeHistory` that would return a branching history from a `ShaderTweaks` node with `inherit` enabled.
+- Arnold : Fixed errors when making interactive render edits to lights with component-level connections between OSL shaders.
+
+API
+---
+
+- StandardLightVisualiser :
+  - Added support for parameters specifying the width and height of quad lights, and the length of cylinder lights.
+  - The `coneAngleParameter` metadata is now supported for all light types.
 
 Documentation
 -------------

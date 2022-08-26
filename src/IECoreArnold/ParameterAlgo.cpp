@@ -121,7 +121,11 @@ void setParameterInternal( AtNode *node, AtString name, int parameterType, bool 
 				}
 				break;
 			case AI_TYPE_STRING :
-				if( const StringData *data = dataCast<StringData>( name, value ) )
+				if( const InternedStringData *data = runTimeCast<const InternedStringData>( value ) )
+				{
+					AiNodeSetStr( node, name, AtString( data->readable().c_str() ) );
+				}
+				else if( const StringData *data = dataCast<StringData>( name, value ) )
 				{
 					AiNodeSetStr( node, name, AtString( data->readable().c_str() ) );
 				}
