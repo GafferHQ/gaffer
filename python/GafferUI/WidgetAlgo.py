@@ -61,18 +61,24 @@ def joinEdges( widgets, orientation = None ) :
 		lowProperty = "gafferAdjoinedTop"
 		highProperty = "gafferAdjoinedBottom"
 
+	joinableTypes = ( QtWidgets.QAbstractButton, QtWidgets.QFrame )
+
 	visibleWidgets = [ w for w in widgets if w.getVisible() ]
 	l = len( visibleWidgets )
 	for i, widget in enumerate( visibleWidgets ) :
 
-		if isinstance( widget, GafferUI.BoolPlugValueWidget ) :
-			# Special case - we need to apply the rounding to
-			# the internal widget.
-			## \todo Is there a better approach here, perhaps
-			# using the stylesheet?
-			qtWidget = widget.boolWidget()._qtWidget()
-		else :
-			qtWidget = widget._qtWidget()
+		qtWidget = widget._qtWidget()
+		# The top-level `QWidget` may be a non-drawable container that
+		# doesn't respond to styling - one common example is when
+		# `GafferUI.Widget.__init__` wraps a `GafferUI.Widget` in a `QWidget``.
+		# In this case, search for a child that does accept styling,
+		# and style that instead.
+		while not isinstance( qtWidget, joinableTypes ) :
+			children = [ c for c in qtWidget.children() if isinstance( c, QtWidgets.QWidget ) ]
+			if len( children ) == 1 :
+				qtWidget = children[0]
+			else :
+				break
 
 		qtWidget.setProperty( lowProperty, i > 0 )
 		qtWidget.setProperty( highProperty, i < l - 1 )

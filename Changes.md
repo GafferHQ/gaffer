@@ -17,6 +17,7 @@ API
 - FileSystemPath :
   - Added support for Windows paths.
   - Added `nativeString()` function to return the path as an OS-specific string.
+- WidgetAlgo : Improved `joinEdges()` to support a wider range of widget types.
 
 Breaking Changes
 ----------------
