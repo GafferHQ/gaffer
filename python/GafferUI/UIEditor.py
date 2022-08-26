@@ -951,6 +951,7 @@ class _PlugListing( GafferUI.Widget ) :
 		m.append( "/Add Plug/NumericDivider", { "divider" : True } )
 
 		m.append( "/Add Plug/String", { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.StringPlug ) } )
+		m.append( "/Add Plug/FilePath", { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.FilePathPlug ) } )
 		m.append( "/Add Plug/StringDivider", { "divider" : True } )
 
 		m.append( "/Add Plug/V2i", { "command" : functools.partial( Gaffer.WeakMethod( self.__addPlug ), Gaffer.V2iPlug ) } )
@@ -1516,6 +1517,10 @@ class _PlugEditor( GafferUI.Widget ) :
 			return
 
 		widgetType = Gaffer.Metadata.value( self.getPlug(), "plugValueWidget:type" ) or ""
+
+		# \todo Can this be generalized by getting the default widget type?
+		if widgetType == "" and isinstance( self.getPlug(), Gaffer.FilePathPlug ) :
+			widgetType = "GafferUI.FileSystemPathPlugValueWidget"
 
 		with self.__widgetSettingsContainer :
 
