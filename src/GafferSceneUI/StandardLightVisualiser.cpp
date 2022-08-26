@@ -480,6 +480,23 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	V3fVectorDataPtr ornamentWireframePoints = new V3fVectorData();
 	IntVectorDataPtr ornamentWireframeVertsPerCurve = new IntVectorData();
 
+	// UsdLux allows a shaping cone to be applied to _any_ light, so we visualise those here
+	// before dealing with specific light types.
+
+	const bool haveCone =
+		( type && type->readable() == "spot" ) ||
+		parameter<float>( metadataTarget, shaderParameters, "coneAngleParameter", -1.0f ) >= 0.0f
+	;
+	if( haveCone )
+	{
+		float innerAngle, outerAngle, radius, lensRadius;
+		spotlightParameters( attributeName, shaderNetwork, innerAngle, outerAngle, radius, lensRadius );
+		boundOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( spotlightCone( innerAngle, outerAngle, lensRadius / visualiserScale, 1.0f, 1.0f ) ) );
+		frustum->addChild( const_pointer_cast<IECoreGL::Renderable>( spotlightCone( innerAngle, outerAngle, lensRadius / visualiserScale, 10.0f * frustumScale, 0.5f ) ) );
+	}
+
+	// Now do visualisations based on light type.
+
 	if( type && type->readable() == "environment" )
 	{
 		if( drawShaded )
@@ -491,13 +508,10 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	}
 	else if( type && type->readable() == "spot" )
 	{
-		float innerAngle, outerAngle, radius, lensRadius;
-		spotlightParameters( attributeName, shaderNetwork, innerAngle, outerAngle, radius, lensRadius );
-		boundOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( spotlightCone( innerAngle, outerAngle, lensRadius / visualiserScale, 1.0f, 1.0f ) ) );
+		const float radius = parameter<float>( metadataTarget, shaderParameters, "radiusParameter", 0.0f );
 		fixedScaleOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( sphereWireframe( radius, Vec3<bool>( false, false, true ), 0.5f, V3f( 0.0f, 0.0f, 0.1f * visualiserScale ) ) ) );
 		addRay( V3f( 0 ), V3f( 0, 0, -1 ), ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color ) ) );
-		frustum->addChild( const_pointer_cast<IECoreGL::Renderable>( spotlightCone( innerAngle, outerAngle, lensRadius / visualiserScale, 10.0f * frustumScale, 0.5f ) ) );
 	}
 	else if( type && type->readable() == "distant" )
 	{
@@ -506,7 +520,11 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	}
 	else if( type && type->readable() == "quad" )
 	{
-		const V2f size( 2 );
+		const V2f size(
+			parameter<float>( metadataTarget, shaderParameters, "widthParameter", 2.0f ),
+			parameter<float>( metadataTarget, shaderParameters, "heightParameter", 2.0f )
+		);
+
 		// Cycles/Arnold define portals via a parameter on a quad, rather than as it's own light type.
 		if( parameter<bool>( metadataTarget, shaderParameters, "portalParameter", false ) )
 		{
@@ -536,7 +554,8 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	}
 	else if( type && type->readable() == "disk" )
 	{
-		const float radius = parameter<float>( metadataTarget, shaderParameters, "radiusParameter", 1 );
+		float radius = parameter<float>( metadataTarget, shaderParameters, "widthParameter", 2.0f ) / 2.0f;
+		radius = parameter<float>( metadataTarget, shaderParameters, "radiusParameter", radius );
 
 		if( drawShaded )
 		{
@@ -559,7 +578,8 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	else if( type && type->readable() == "cylinder" )
 	{
 		const float radius = parameter<float>( metadataTarget, shaderParameters, "radiusParameter", 1 );
-		geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( cylinderShape( radius, drawShaded, color * tint ) ) );
+		const float length = parameter<float>( metadataTarget, shaderParameters, "lengthParameter", 2 );
+		geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( cylinderShape( radius, length, drawShaded, color * tint ) ) );
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( cylinderRays( radius ) ) );
 		if( !drawShaded )
 		{
@@ -595,7 +615,10 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 			fixedScaleOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( pointShape( radius ) ) );
 		}
 
-		boundOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( pointRays( radius / visualiserScale ) ) );
+		if( !haveCone )
+		{
+			boundOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( pointRays( radius / visualiserScale ) ) );
+		}
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color ) ) );
 	}
 
@@ -814,11 +837,13 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::colorIndicator( const Imat
 	return group;
 }
 
-IECoreGL::ConstRenderablePtr StandardLightVisualiser::cylinderShape( float radius, bool filled, const Color3f &color )
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::cylinderShape( float radius, float length, bool filled, const Color3f &color )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
 	addWireframeCurveState( group.get() );
 	addConstantShader( group.get(), false, 0 );
+
+	const float halfLength = length / 2.0f;
 
 	if( filled )
 	{
@@ -829,14 +854,14 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::cylinderShape( float radiu
 		vector<int> &vertIds = vertIdsData->writable();
 		vector<V3f> &p = pData->writable();
 
-		addSolidArc( Axis::Z, V3f( 0, 0, -1 ), radius, 0, 0, 1, vertsPerPolyData->writable(), vertIds, p );
-		addSolidArc( Axis::Z, V3f( 0, 0, 1 ), radius, 0, 0, 1, vertsPerPolyData->writable(), vertIds, p );
+		addSolidArc( Axis::Z, V3f( 0, 0, -halfLength ), radius, 0, 0, 1, vertsPerPolyData->writable(), vertIds, p );
+		addSolidArc( Axis::Z, V3f( 0, 0, halfLength ), radius, 0, 0, 1, vertsPerPolyData->writable(), vertIds, p );
 
 		size_t lastIndex = p.size();
-		p.push_back( V3f( 0, radius, -1 ) );
-		p.push_back( V3f( 0, radius, 1 ) );
-		p.push_back( V3f( 0, -radius, 1 ) );
-		p.push_back( V3f( 0, -radius, -1 ) );
+		p.push_back( V3f( 0, radius, -halfLength ) );
+		p.push_back( V3f( 0, radius, halfLength ) );
+		p.push_back( V3f( 0, -radius, halfLength ) );
+		p.push_back( V3f( 0, -radius, -halfLength ) );
 		vertIds.push_back( lastIndex++ );
 		vertIds.push_back( lastIndex++ );
 		vertIds.push_back( lastIndex++ );
@@ -855,15 +880,15 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::cylinderShape( float radiu
 	V3fVectorDataPtr pData = new V3fVectorData;
 	vector<V3f> &p = pData->writable();
 
-	addCircle( Axis::Z, V3f( 0, 0, -1 ), radius, vertsPerCurve, p );
-	addCircle( Axis::Z, V3f( 0, 0, 1 ), radius, vertsPerCurve, p );
+	addCircle( Axis::Z, V3f( 0, 0, -halfLength ), radius, vertsPerCurve, p );
+	addCircle( Axis::Z, V3f( 0, 0, halfLength ), radius, vertsPerCurve, p );
 
-	p.push_back( V3f( 0, radius, -1 ) );
-	p.push_back( V3f( 0, radius, 1 ) );
+	p.push_back( V3f( 0, radius, -halfLength ) );
+	p.push_back( V3f( 0, radius, halfLength ) );
 	vertsPerCurve.push_back( 2 );
 
-	p.push_back( V3f( 0, -radius, -1 ) );
-	p.push_back( V3f( 0, -radius, 1 ) );
+	p.push_back( V3f( 0, -radius, -halfLength ) );
+	p.push_back( V3f( 0, -radius, halfLength ) );
 	vertsPerCurve.push_back( 2 );
 
 	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurveData );

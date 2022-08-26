@@ -66,7 +66,31 @@ GAFFER_NODE_DEFINE_TYPE( SceneReader );
 
 size_t SceneReader::g_firstPlugIndex = 0;
 
-static IECore::BoolDataPtr g_trueBoolData = new IECore::BoolData( true );
+namespace
+{
+
+IECore::ConstBoolDataPtr g_trueBoolData = new IECore::BoolData( true );
+const InternedString g_lights( "__lights" );
+const InternedString g_defaultLights( "defaultLights" );
+
+bool shouldEmulateDefaultLightsSet( const IECoreScene::SceneInterface *scene, const vector<InternedString> &setNames )
+{
+	// When loading a USD file that wasn't authored by Gaffer, there will be no `defaultLights`
+	// set, because USD uses a different mechanism for light linking. In this case, we want to
+	// put all the lights in the `defaultLights` set because having everything linked is typically
+	// better than having nothing linked. We do that by loading the `__lights` set in its place.
+	//
+	// When a `defaultLights` set has been authored explicitly, presumably because the file was
+	// written from Gaffer, we prefer that to any automatic behaviour. This allows us to round-trip
+	// light linking within Gaffer itself.
+	return
+		!strcmp( scene->typeName(), "USDScene" ) &&
+		std::find( setNames.begin(), setNames.end(), g_defaultLights ) == setNames.end() &&
+		std::find( setNames.begin(), setNames.end(), g_lights ) != setNames.end()
+	;
+}
+
+} // namespace
 
 SceneReader::SceneReader( const std::string &name )
 	:	SceneNode( name )
@@ -457,7 +481,13 @@ IECore::ConstInternedStringVectorDataPtr SceneReader::computeSetNames( const Gaf
 	}
 
 	InternedStringVectorDataPtr result = new InternedStringVectorData();
+
 	s->readTags( result->writable(), SceneInterface::LocalTag | SceneInterface::DescendantTag );
+
+	if( shouldEmulateDefaultLightsSet( s.get(), result->readable() ) )
+	{
+		result->writable().push_back( g_defaultLights );
+	}
 
 	return result;
 }
@@ -503,12 +533,26 @@ static void loadSetWalk( const SceneInterface *s, const InternedString &setName,
 
 IECore::ConstPathMatcherDataPtr SceneReader::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
-	PathMatcherDataPtr result = new PathMatcherData;
 	ConstSceneInterfacePtr rootScene = scene( ScenePath() );
-	if( rootScene )
+	if( !rootScene )
 	{
-		loadSetWalk( rootScene.get(), setName, context, result->writable(), ScenePath() );
+		return outPlug()->setPlug()->defaultValue();
 	}
+
+	InternedString setNameToRead = setName;
+	if( setName == g_defaultLights )
+	{
+		vector<InternedString> setNames;
+		rootScene->readTags( setNames, SceneInterface::LocalTag | SceneInterface::DescendantTag );
+		if( shouldEmulateDefaultLightsSet( rootScene.get(), setNames ) )
+		{
+			setNameToRead = g_lights;
+		}
+	}
+
+	PathMatcherDataPtr result = new PathMatcherData;
+	loadSetWalk( rootScene.get(), setNameToRead, context, result->writable(), ScenePath() );
+
 	return result;
 }
 

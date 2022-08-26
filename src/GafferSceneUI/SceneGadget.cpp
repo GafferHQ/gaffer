@@ -818,8 +818,11 @@ void SceneGadget::updateRenderer()
 		{
 			// Start render now, rather than on UI thread, to avoid latency.
 			// We want pixels to be available as soon as possible.
-			m_renderer->option( "camera", g_cameraName.get() );
-			m_renderer->render();
+			if( m_camera )
+			{
+				m_renderer->option( "camera", g_cameraName.get() );
+				m_renderer->render();
+			}
 		}
 
 		bool shouldRequestRender = !m_renderRequestPending.exchange( true );
