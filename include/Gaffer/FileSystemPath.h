@@ -39,6 +39,7 @@
 #define GAFFER_FILESYSTEMPATH_H
 
 #include "Gaffer/Path.h"
+#include "Gaffer/PathFilter.h"
 
 #include "IECore/FileSequence.h"
 
