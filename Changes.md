@@ -35,6 +35,10 @@ Fixes
 - PathListingWidget :
   - Fixed bug where one more rows at the bottom of the list could not be selected.
   - Fixed error when dragging from shader browser name columns, shader browser input columns and Catalogue columns.
+- PathFilter : Improved positioning of PathFilters created by dropping paths onto a node.
+- GraphEditor :
+  - Improved handling of Backdrops when laying out nodes. Individual nodes are no longer pushed outside backdrops, and backdrops themselves are positioned as a group containing all their child nodes.
+  - Improved positioning of pasted nodes, so that they are less likely to overlap with any node they are automatically connected to.
 
 API
 ---
@@ -296,6 +300,17 @@ Build
   - Subprocess32 : Now packaged as a regular module rather than as a `.egg` package.
   - TBB : Updated to version 2020.3.
   - USD : Updated to version 21.11.
+
+0.61.14.4 (relative to 0.61.14.3)
+=========
+
+Fixes
+-----
+
+- PathFilter : Improved positioning of PathFilters created by dropping paths onto a node.
+- GraphEditor :
+  - Improved handling of Backdrops when laying out nodes. Individual nodes are no longer pushed outside backdrops, and backdrops themselves are positioned as a group containing all their child nodes.
+  - Improved positioning of pasted nodes, so that they are less likely to overlap with any node they are automatically connected to.
 
 0.61.14.3 (relative to 0.61.14.2)
 =========
