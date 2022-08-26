@@ -45,66 +45,21 @@ IECORE_POP_DEFAULT_VISIBILITY
 #include "IECore/MessageHandler.h"
 #include "IECore/SimpleTypedData.h"
 
-namespace
-{
-
-int interleave( float *tileData,
-				const int width, const int height,
-				const int numChannels,
-				const int numOutputChannels,
-				const int outChannelOffset,
-				float *interleavedData )
-{
-	int offset = outChannelOffset;
-	for( int c = 0; c < numChannels; c++ )
-	{
-		float *in = &(tileData[0]) + c;
-		float *out = interleavedData + offset;
-		for( int j = 0; j < height; j++ )
-		{
-			for( int i = 0; i < width; i++ )
-			{
-				*out = *in;
-				out += numOutputChannels;
-				in += numChannels;
-			}
-		}
-		offset += 1;
-	}
-	return offset;
-}
-
-void copyCryptomatteMetadata( IECore::CompoundData *metadata, std::string name, IECore::ConstCompoundDataPtr cryptomatte )
-{
-	std::string identifier = ccl::string_printf( "%08x", ccl::util_murmur_hash3( name.c_str(), name.length(), 0 ) );
-	std::string prefix = "cryptomatte/" + identifier.substr( 0, 7 ) + "/";
-	metadata->member<IECore::StringData>( prefix + "name", false, true )->writable() = cryptomatte->member<IECore::StringData>( prefix + "name", true )->readable();
-	metadata->member<IECore::StringData>( prefix + "hash", false, true )->writable() = cryptomatte->member<IECore::StringData>( prefix + "hash", true )->readable();
-	metadata->member<IECore::StringData>( prefix + "conversion", false, true )->writable() = cryptomatte->member<IECore::StringData>( prefix + "conversion", true )->readable();
-	metadata->member<IECore::StringData>( prefix + "manifest", false, true )->writable() = cryptomatte->member<IECore::StringData>( prefix + "manifest", true )->readable();
-}
-
-} // namespace
-
 namespace IECoreCycles
 {
 
 IEDisplayOutputDriver::IEDisplayOutputDriver( const Imath::Box2i &displayWindow, const Imath::Box2i &dataWindow, IECore::ConstCompoundDataPtr parameters )
-	: m_numChannels( 0 )
 {
 	const IECore::CompoundData *layersData = parameters->member<IECore::CompoundData>( "layers", true );
-	const IECore::StringData *defaultPass = parameters->member<IECore::StringData>( "default", false );
 	const IECore::CompoundDataMap &layers = layersData->readable();
 	const ccl::NodeEnum &typeEnum = *ccl::Pass::get_type_enum();
-	std::vector<std::string> channelNames;
-	IECore::CompoundDataPtr params;
-	bool defaultFound = false;
 
 	for( IECore::CompoundDataMap::const_iterator it = layers.begin(), eIt = layers.end(); it != eIt; ++it )
 	{
+		std::vector<std::string> channelNames;
 		Layer layer;
-		layer.name = it->first.string();
 		const IECore::CompoundData *layerData = IECore::runTimeCast<IECore::CompoundData>( it->second.get() );
+		layer.name = layerData->member<IECore::StringData>( "name", true )->readable();
 
 		const IECore::StringData *passTypeData = layerData->member<IECore::StringData>( "type", true );
 		ccl::ustring passType( passTypeData->readable() );
@@ -116,16 +71,6 @@ IEDisplayOutputDriver::IEDisplayOutputDriver( const Imath::Box2i &displayWindow,
 		{
 			ccl::PassInfo passInfo = ccl::Pass::get_info( static_cast<ccl::PassType>( typeEnum[passType] ) );
 			layer.numChannels = passInfo.num_components;
-		}
-
-		if( !defaultFound )
-		{
-			if( defaultPass && layer.name == defaultPass->readable() )
-			{
-				// Get params from default pass
-				params = layerData->copy();
-				defaultFound = true;
-			}
 		}
 
 		if( layer.name == "rgba" )
@@ -165,49 +110,25 @@ IEDisplayOutputDriver::IEDisplayOutputDriver( const Imath::Box2i &displayWindow,
 			channelNames.push_back( layer.name + ".A" );
 		}
 
+		layer.displayDriver = IECoreImage::DisplayDriver::create(
+			layerData->member<IECore::StringData>( "driverType", true )->readable(),
+			displayWindow,
+			dataWindow,
+			channelNames,
+			layerData
+		);
+
 		m_layers.push_back( layer );
-		m_numChannels += layer.numChannels;
 	}
-
-	if( !defaultFound )
-	{
-		// Just pick the first one
-		const IECore::CompoundData *layerData = IECore::runTimeCast<IECore::CompoundData>( layers.begin()->second.get() );
-		params = layerData->copy();
-	}
-
-	for( auto layer : m_layers )
-	{
-		if( ccl::string_startswith( layer.name, "cryptomatte" ) && ccl::string_endswith( layer.name, "00" ) )
-		{
-			IECore::CompoundDataMap::const_iterator it = layers.find( layer.name );
-			if( it != layers.end() )
-			{
-				IECore::ConstCompoundDataPtr layerData = IECore::runTimeCast<IECore::CompoundData>( it->second.get() );
-				copyCryptomatteMetadata( params.get(), layer.name.substr(0, layer.name.length() - 2), layerData );
-				continue;
-			}
-		}
-	}
-
-	const IECore::StringData *driverType = params->member<IECore::StringData>( "driverType", true );
-
-	m_displayDriver = IECoreImage::DisplayDriver::create(
-						  driverType->readable(),
-						  displayWindow,
-						  dataWindow,
-						  channelNames,
-						  params
-	);
 }
 
 IEDisplayOutputDriver::~IEDisplayOutputDriver()
 {
-	if( m_displayDriver )
+	for( const auto &layer : m_layers )
 	{
 		try
 		{
-			m_displayDriver->imageClose();
+			layer.displayDriver->imageClose();
 		}
 		catch( const std::exception &e )
 		{
@@ -215,14 +136,11 @@ IEDisplayOutputDriver::~IEDisplayOutputDriver()
 			// just causes aborts.
 			IECore::msg( IECore::Msg::Error, "IEDisplayOutputDriver:driverClose", e.what() );
 		}
-		m_displayDriver = nullptr;
 	}
 }
 
 void IEDisplayOutputDriver::write_render_tile( const Tile &tile )
 {
-	const float *imageData = nullptr;
-
 	const int x = tile.offset.x;
 	const int y = tile.offset.y;
 	const int w = tile.size.x;
@@ -231,59 +149,52 @@ void IEDisplayOutputDriver::write_render_tile( const Tile &tile )
 	Imath::Box2i _tile( Imath::V2i( x, y ), Imath::V2i( x + w - 1, y + h - 1 ) );
 
 	std::vector<float> pixels( w * h * 4 );
-	std::vector<float> interleavedData;
 
-	if( m_layers.size() == 1 )
+	for( const auto &layer : m_layers )
 	{
-		if( !tile.get_pass_pixels( m_layers[0].name, m_layers[0].numChannels, &pixels[0] ) )
+		if( !tile.get_pass_pixels( layer.name, layer.numChannels, &pixels[0] ) )
 		{
 			memset( &pixels[0], 0, pixels.size() * sizeof(float) );
 		}
 
-		imageData = &pixels[0];
-	}
-	else
-	{
-		interleavedData.resize( w * h * m_numChannels );
-
-		int outChannelOffset = 0;
-
-		for ( Layer layer : m_layers )
+		if( layer.name == "id" )
 		{
-			if( !tile.get_pass_pixels( layer.name, layer.numChannels, &pixels[0] ) )
+			// Cycles renders IDs as float values, but Gaffer's OutputBuffer
+			// expects them to be integers, type-punned into a float for passing
+			// through the DisplayDriver interface.
+			for( auto &p : pixels )
 			{
-				memset( &pixels[0], 0, pixels.size() * sizeof(float) );
+				/// \todo Use `std::bit_cast` when C++20 is available to us.
+				const uint32_t id = p;
+				memcpy( &p, &id, sizeof( p ) );
 			}
-
-			outChannelOffset = interleave( &pixels[0], w, h, layer.numChannels, m_numChannels, outChannelOffset, &interleavedData[0] );
-
-			imageData = &interleavedData[0];
 		}
-	}
 
-	try
-	{
-		m_displayDriver->imageData( _tile, imageData, w * h * m_numChannels );
-	}
-	catch( const std::exception &e )
-	{
-		// we have to catch and report exceptions because letting them out into pure c land
-		// just causes aborts.
-		IECore::msg( IECore::Msg::Error, "IEDisplayOutputDriver:write_render_tile", e.what() );
+		try
+		{
+			layer.displayDriver->imageData( _tile, pixels.data(), w * h * layer.numChannels );
+		}
+		catch( const std::exception &e )
+		{
+			// we have to catch and report exceptions because letting them out into pure c land
+			// just causes aborts.
+			IECore::msg( IECore::Msg::Error, "IEDisplayOutputDriver:write_render_tile", e.what() );
+		}
 	}
 }
 
 bool IEDisplayOutputDriver::update_render_tile( const Tile &tile )
 {
-	if( m_displayDriver && m_displayDriver->acceptsRepeatedData() )
+	for( const auto &layer : m_layers )
 	{
-		write_render_tile( tile );
-		return true;
+		if( !layer.displayDriver->acceptsRepeatedData() )
+		{
+			return false;
+		}
 	}
-	else
-	{
-		return false;
-	}
+
+	write_render_tile( tile );
+	return true;
 }
 
 } // namespace IECoreCycles

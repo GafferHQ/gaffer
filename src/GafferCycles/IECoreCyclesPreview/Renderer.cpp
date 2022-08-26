@@ -48,8 +48,8 @@
 #include "GafferCycles/IECoreCyclesPreview/ShaderNetworkAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/SocketAlgo.h"
 
-#include "outputDriver/IEDisplayOutputDriver.h"
-#include "outputDriver/OIIOOutputDriver.h"
+#include "IEDisplayOutputDriver.h"
+#include "OIIOOutputDriver.h"
 
 #include "IECoreScene/Camera.h"
 #include "IECoreScene/CurvesPrimitive.h"
@@ -331,6 +331,20 @@ class CyclesOutput : public IECore::RefCounted
 					p["name"] = new StringData( m_data );
 					p["type"] = new StringData( tokens[0] );
 					passType = tokens[0];
+				}
+				else if( tokens[0] == "float" && tokens[1] == "Z" )
+				{
+					m_data = tokens[1];
+					p["name"] = new StringData( tokens[1] );
+					p["type"] = new StringData( "depth" );
+					passType = "depth";
+				}
+				else if( tokens[0] == "uint" && tokens[1] == "id" )
+				{
+					m_data = tokens[1];
+					p["name"] = new StringData( tokens[1] );
+					p["type"] = new StringData( "object_id" );
+					passType = "object_id";
 				}
 			}
 
@@ -1810,6 +1824,11 @@ class InstanceCache : public IECore::RefCounted
 			if( m_geometry.find( readAccessor, h ) )
 			{
 				cgeo = readAccessor->second;
+				/// \todo See comments in `convert()` - why do we call it again when
+				/// the geometry was converted already? Can't we lift `ccl::Object`
+				/// creation out of `convert()`?
+				///
+				/// Note : When passing `cgeo`, we are guaranteed a non-null return.
 				cobject = convert( object, cyclesAttributes, nodeName, cpsysPtr, cgeo.get() );
 				readAccessor.release();
 			}
@@ -1819,6 +1838,10 @@ class InstanceCache : public IECore::RefCounted
 				if( m_geometry.insert( writeAccessor, h ) )
 				{
 					cobject = convert( object, cyclesAttributes, nodeName, cpsysPtr );
+					if( !cobject )
+					{
+						return Instance( nullptr, nullptr, nullptr, false );
+					}
 					writeAccessor->second = SharedCGeometryPtr( cobject->get_geometry(), nullNodeDeleter );
 					cgeo = writeAccessor->second;
 					cgeo->name = h.toString();
@@ -1885,6 +1908,10 @@ class InstanceCache : public IECore::RefCounted
 				if( m_geometry.insert( writeAccessor, h ) )
 				{
 					cobject = convert( samples, times, frameIdx, cyclesAttributes, nodeName, cpsysPtr );
+					if( !cobject )
+					{
+						return Instance( nullptr, nullptr, nullptr, false );
+					}
 					writeAccessor->second = SharedCGeometryPtr( cobject->get_geometry(), nullNodeDeleter );
 					cgeo = writeAccessor->second;
 					cgeo->name = h.toString();
@@ -1969,6 +1996,12 @@ class InstanceCache : public IECore::RefCounted
 
 	private :
 
+		/// \todo Figure out if this can be refactored to return `ccl::Geometry`
+		/// (meaning `ObjectAlgo::convert()` should too), and then have the
+		/// wrapping in `ccl:Object` be performed in `get()` or the `Instance`
+		/// constructor. It seems backwards that this function sometimes creates
+		/// new geometry but also is sometimes given previously-created geometry
+		/// via `cgeo`.
 		SharedCObjectPtr convert( const IECore::Object *object,
 								  const CyclesAttributes *attributes,
 								  const std::string &nodeName,
@@ -1980,6 +2013,10 @@ class InstanceCache : public IECore::RefCounted
 			if( !cgeo )
 			{
 				cobject = ObjectAlgo::convert( object, nodeName, m_scene );
+				if( !cobject )
+				{
+					return nullptr;
+				}
 				attributes->applyGeometry( object, cobject );
 				ccl::Geometry *cgeo = cobject->get_geometry();
 				cgeo->set_owner( m_scene );
@@ -2020,6 +2057,10 @@ class InstanceCache : public IECore::RefCounted
 			if( !cgeo )
 			{
 				cobject = ObjectAlgo::convert( samples, times, frame, nodeName, m_scene );
+				if( !cobject )
+				{
+					return nullptr;
+				}
 				attributes->applyGeometry( samples.front(), cobject );
 				ccl::Geometry *cgeo = cobject->get_geometry();
 				cgeo->set_owner( m_scene );
@@ -2467,7 +2508,10 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 			if( !object || cyclesAttributes->applyObject( object, m_attributes.get() ) )
 			{
 				m_attributes = cyclesAttributes;
-				object->tag_update( m_session->scene );
+				if( object )
+				{
+					object->tag_update( m_session->scene );
+				}
 				return true;
 			}
 
@@ -2476,7 +2520,10 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 
 		void assignID( uint32_t id ) override
 		{
-			/// \todo Implement me
+			if( m_instance.object() )
+			{
+				m_instance.object()->set_pass_id( id );
+			}
 		}
 
 	private :
@@ -2859,7 +2906,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_sceneChanged( true ),
 				m_sessionReset( false ),
 				m_outputsChanged( true ),
-				m_pause( false ),
 				m_cryptomatteAccurate( true ),
 				m_cryptomatteDepth( 0 ),
 				m_seed( 0 ),
@@ -2872,6 +2918,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_bufferParamsModified = m_bufferParams;
 
 			m_sessionParams.shadingsystem = ccl::SHADINGSYSTEM_OSL;
+			m_sessionParams.use_resolution_divider = false;
 			m_sceneParams.shadingsystem = m_sessionParams.shadingsystem;
 			m_sceneParams.bvh_layout = ccl::BVH_LAYOUT_AUTO;
 
@@ -3479,6 +3526,10 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 
 			Instance instance = m_instanceCache->get( object, attributes, name );
+			if( !instance.object() )
+			{
+				return nullptr;
+			}
 
 			ObjectInterfacePtr result = new CyclesObject( m_session, instance, m_frame );
 			result->attributes( attributes );
@@ -3510,6 +3561,10 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				frameIdx = times.size()-1;
 			}
 			Instance instance = m_instanceCache->get( samples, times, frameIdx, attributes, name );
+			if( !instance.object() )
+			{
+				return nullptr;
+			}
 
 			ObjectInterfacePtr result = new CyclesObject( m_session, instance, m_frame );
 			result->attributes( attributes );
@@ -3567,8 +3622,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			if( m_renderState == RENDERSTATE_RENDERING )
 			{
-				m_pause = false;
-				m_session->set_pause( m_pause );
+				m_session->set_pause( false );
 				return;
 			}
 
@@ -3593,9 +3647,18 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			if( m_renderState == RENDERSTATE_RENDERING )
 			{
-				m_pause = true;
-				m_session->set_pause( m_pause );
+				m_session->set_pause( true );
 			}
+		}
+
+		IECore::DataPtr command( const IECore::InternedString name, const IECore::CompoundDataMap &parameters ) override
+		{
+			if( boost::starts_with( name.string(), "cycles:" ) || name.string().find( ":" ) == string::npos )
+			{
+				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::command", boost::format( "Unknown command \"%s\"" ) % name.c_str() );
+			}
+
+			return nullptr;
 		}
 
 	private :
@@ -3987,6 +4050,16 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			paramData->writable()["layers"] = layersData;
 
+			// When we reset the session, it cancels the internal PathTrace and
+			// waits for it to finish. We need to do this _before_ calling
+			// `set_output_driver()`, because otherwise the rendering threads
+			// may try to send data to an output driver that was just destroyed
+			// on the main thread.
+			/// \todo `Renderer::pause()` really shouldn't return until after
+			/// the PathTrace has been cancelled, so we shouldn't need to worry
+			/// about that here.
+			m_session->reset( m_sessionParams, m_bufferParams );
+
 			film->set_cryptomatte_passes( crypto );
 			film->set_use_approximate_shadow_catcher( !hasShadowCatcher );
 			m_scene->integrator->set_use_denoise( hasDenoise );
@@ -3994,7 +4067,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_session->set_output_driver( ccl::make_unique<IEDisplayOutputDriver>( displayWindow, dataWindow, paramData ) );
 			else
 				m_session->set_output_driver( ccl::make_unique<OIIOOutputDriver>( displayWindow, dataWindow, paramData ) );
-			m_session->reset( m_sessionParams, m_bufferParams );
 
 			m_outputsChanged = false;
 		}
@@ -4237,7 +4309,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		bool m_sceneChanged;
 		bool m_sessionReset;
 		bool m_outputsChanged;
-		bool m_pause;
 		bool m_cryptomatteAccurate;
 		int m_cryptomatteDepth;
 		int m_seed;

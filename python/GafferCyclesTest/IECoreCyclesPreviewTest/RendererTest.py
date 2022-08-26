@@ -301,5 +301,99 @@ class RendererTest( GafferTest.TestCase ) :
 		renderer.render()
 		time.sleep( 2.0 )
 
+	def testMultipleOutputs( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		renderer.output(
+			"testOutput:beauty",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testMultipleOutputs:beauty",
+				}
+			)
+		)
+
+		renderer.output(
+			"testOutput:normal",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"normal",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testMultipleOutputs:normal",
+				}
+			)
+		)
+
+		renderer.render()
+
+		beauty = IECoreImage.ImageDisplayDriver.storedImage( "testMultipleOutputs:beauty" )
+		self.assertTrue( isinstance( beauty, IECoreImage.ImagePrimitive ) )
+
+		normal = IECoreImage.ImageDisplayDriver.storedImage( "testMultipleOutputs:normal" )
+		self.assertTrue( isinstance( normal, IECoreImage.ImagePrimitive ) )
+
+	def testCommand( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		# Unknown commands that claim to be for Cycles should emit a warning.
+
+		with IECore.CapturingMessageHandler() as mh :
+			self.assertIsNone( renderer.command( "cycles:thisCommandDoesNotExist", {} ) )
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].level, IECore.MessageHandler.Level.Warning )
+		self.assertEqual( mh.messages[0].context, "CyclesRenderer::command" )
+		self.assertEqual( mh.messages[0].message, 'Unknown command "cycles:thisCommandDoesNotExist"' )
+
+		# Unknown commands without a renderer prefix should also emit a warning.
+
+		with IECore.CapturingMessageHandler() as mh :
+			self.assertIsNone( renderer.command( "thisCommandDoesNotExist", {} ) )
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].level, IECore.MessageHandler.Level.Warning )
+		self.assertEqual( mh.messages[0].context, "CyclesRenderer::command" )
+		self.assertEqual( mh.messages[0].message, 'Unknown command "thisCommandDoesNotExist"' )
+
+		# Unknown commands for some other renderer should be silently ignored.
+
+		with IECore.CapturingMessageHandler() as mh :
+			self.assertIsNone( renderer.command( "gl:renderToCurrentContext", {} ) )
+
+		self.assertEqual( len( mh.messages ), 0 )
+
+	def testUnconvertibleObject( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		# We don't expect renderers other than OpenGL to have any support
+		# for the Placeholder object. Here we're just checking that the Cycles
+		# renderer doesn't crash if given a placeholder.
+
+		o = renderer.object(
+			"/test",
+			GafferScene.Private.IECoreScenePreview.Placeholder(),
+			renderer.attributes( IECore.CompoundObject ( {} ) )
+		)
+
+		del o
+
 if __name__ == "__main__":
 	unittest.main()
