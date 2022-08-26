@@ -1064,8 +1064,11 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["o"]["options"]["renderCamera"]["enabled"].setValue( True )
 		s["o"]["in"].setInput( s["d"]["out"] )
 
+		s["ro"] = self._createOptions()
+		s["ro"]["in"].setInput( s["o"]["out"] )
+
 		s["r"] = self._createInteractiveRender()
-		s["r"]["in"].setInput( s["o"]["out"] )
+		s["r"]["in"].setInput( s["ro"]["out"] )
 
 		# Start a render, give it time to finish, and check the output.
 
@@ -1086,10 +1089,12 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		# Give it time to update, and check the output.
 
-		self.uiThreadCallHandler.waitFor( 1 )
+		self.uiThreadCallHandler.waitFor( 2 )
 
 		c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
-		self.assertEqual( c / c[0], imath.Color3f( 1, 1, 0 ) )
+		# Tolerance is high due to sampling noise in Cycles, but is more than sufficient to
+		# be sure that the new light has been added (otherwise there would be no green at all).
+		self.assertTrue( ( c / c[0] ).equalWithAbsError( imath.Color3f( 1, 1, 0 ), 0.2 ) )
 
 		s["r"]["state"].setValue( s["r"].State.Stopped )
 
@@ -2167,6 +2172,12 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 	def _createLightFilter( self ) :
 
 		raise NotImplementedError
+
+	# May be implemented to return a node to set any renderer-specific
+	# options that should be used by the tests.
+	def _createOptions( self ) :
+
+		return GafferScene.CustomOptions()
 
 	def _color4fAtUV( self, image, uv ) :
 

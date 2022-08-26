@@ -74,6 +74,17 @@ if os.environ.get( "GAFFERAPPLESEED_HIDE_UI", "" ) != "1" :
 
 		] )
 
+if os.environ.get( "CYCLES_ROOT" ) and os.environ.get( "GAFFERCYCLES_HIDE_UI", "" ) != "1" :
+
+	with IECore.IgnoredExceptions( ImportError ) :
+
+		import GafferCycles
+
+		__registerShaderPresets( [
+			( "Cycles Surface", "cycles:surface" ),
+			( "Cycles Light", "cycles:light" ),
+		] )
+
 with IECore.IgnoredExceptions( ImportError ) :
 
 	import GafferOSL

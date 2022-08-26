@@ -554,7 +554,8 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	}
 	else if( type && type->readable() == "disk" )
 	{
-		const float radius = parameter<float>( metadataTarget, shaderParameters, "radiusParameter", 1 );
+		float radius = parameter<float>( metadataTarget, shaderParameters, "widthParameter", 2.0f ) / 2.0f;
+		radius = parameter<float>( metadataTarget, shaderParameters, "radiusParameter", radius );
 
 		if( drawShaded )
 		{

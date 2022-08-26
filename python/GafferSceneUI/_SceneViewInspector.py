@@ -68,7 +68,7 @@ _rendererAttributePrefixes = {
 	"as" : "Appleseed",
 	"gl" : "OpenGL",
 	"osl" : "OSL",
-	"ccl" : "Cycles"
+	"cycles" : "Cycles"
 };
 
 __registeredShaderParameters = OrderedDict()

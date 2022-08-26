@@ -232,6 +232,29 @@ if [[ $APPLESEED ]] ; then
 
 fi
 
+# Set up Cycles
+##########################################################################
+
+if [[ -n $GAFFERCYCLES_FEATURE_PREVIEW ]] ; then
+
+	if [[ -z $CYCLES_ROOT && -d $GAFFER_ROOT/cycles ]] ; then
+
+		export CYCLES_ROOT="$GAFFER_ROOT/cycles"
+
+	fi
+
+	if [[ $CYCLES_ROOT ]] ; then
+
+		prependToPath "$CYCLES_ROOT/bin" PATH
+
+	fi
+
+else
+
+	unset CYCLES_ROOT
+
+fi
+
 # Set up Arnold
 ##########################################################################
 

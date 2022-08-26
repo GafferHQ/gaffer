@@ -272,6 +272,34 @@ if "APPLESEED" in os.environ :
 		stacktrace = traceback.format_exc()
 		IECore.msg( IECore.Msg.Level.Error, "startup/gui/menus.py", "Error loading Appleseed module - \"%s\".\n %s" % ( m, stacktrace ) )
 
+# Cycles nodes
+
+if os.environ.get( "CYCLES_ROOT" ) and moduleSearchPath.find( "GafferCycles" ) :
+
+	try :
+
+		import GafferCycles
+		import GafferCyclesUI
+
+		if os.environ.get( "GAFFERCYCLES_HIDE_UI", "" ) != "1" :
+
+			GafferCyclesUI.ShaderMenu.appendShaders( nodeMenu.definition() )
+
+			nodeMenu.append( "/Cycles/Globals/Options", GafferCycles.CyclesOptions, searchText = "CyclesOptions" )
+			nodeMenu.append( "/Cycles/Globals/Background", GafferCycles.CyclesBackground, searchText = "CyclesBackground" )
+			nodeMenu.append( "/Cycles/Attributes", GafferCycles.CyclesAttributes, searchText = "CyclesAttributes" )
+			nodeMenu.append(
+				"/Cycles/Render", GafferCycles.CyclesRender,
+				searchText = "CyclesRender"
+			)
+			nodeMenu.append( "/Cycles/Interactive Render", GafferCycles.InteractiveCyclesRender, searchText = "InteractiveCyclesRender" )
+			nodeMenu.append( "/Cycles/Shader Ball", GafferCycles.CyclesShaderBall, searchText = "CyclesShaderBall" )
+
+	except Exception as m :
+
+		stacktrace = traceback.format_exc()
+		IECore.msg( IECore.Msg.Level.Error, "startup/gui/menus.py", "Error loading Cycles module - \"%s\".\n %s" % ( m, stacktrace ) )
+
 # Scene nodes
 
 nodeMenu.append( "/Scene/File/Reader", GafferScene.SceneReader, searchText = "SceneReader" )

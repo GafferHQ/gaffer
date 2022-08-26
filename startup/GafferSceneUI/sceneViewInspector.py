@@ -59,3 +59,11 @@ for p in [ "exposure", "intensity", "radiance", "irradiance", "inner_angle", "ou
 
 for p in [ "exposure", "i_color", "radius", "roundness", "spread", "coneAngle", "penumbraAngle", "image" ] :
 	GafferSceneUI._SceneViewInspector.registerShaderParameter( "osl:light", p )
+
+# Cycles
+
+for p in [ "intensity", "exposure", "color", "size", "spot_angle", "samples" ] :
+	GafferSceneUI._SceneViewInspector.registerShaderParameter( "cycles:light", p )
+
+for p in ["base_color", "subsurface_color", "metallic", "subsurface", "subsurface_radius", "specular", "roughness", "specular_tint" ] :
+	GafferSceneUI._SceneViewInspector.registerShaderParameter( "cycles:surface", p )

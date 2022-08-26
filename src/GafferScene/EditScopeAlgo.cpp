@@ -378,7 +378,7 @@ const boost::container::flat_map<string, string> g_rendererAttributePrefixes = {
 	{ "as", "Appleseed" },
 	{ "gl", "OpenGL" },
 	{ "osl", "OSL" },
-	{ "ccl", "Cycles" }
+	{ "cycles", "Cycles" }
 };
 
 string parameterProcessorName( const std::string &attribute )

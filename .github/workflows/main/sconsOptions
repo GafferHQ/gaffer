@@ -50,17 +50,18 @@ BUILD_DIR = os.environ["GAFFER_BUILD_DIR"]
 INSTALL_DIR = os.path.join( "install", os.environ["GAFFER_BUILD_NAME"] )
 
 PACKAGE_FILE = "{}.{}".format(
-    os.environ["GAFFER_BUILD_NAME"],
-    {"win32" : "zip"}.get( sys.platform, "tar.gz" )
+	os.environ["GAFFER_BUILD_NAME"],
+	{"win32" : "zip"}.get( sys.platform, "tar.gz" )
 )
 
 SPHINX = os.environ["GAFFER_SPHINX"]
 
-if sys.platform == "win32" :    
-    LOCATE_DEPENDENCY_LIBPATH=os.path.join(os.environ["GAFFER_BUILD_DIR"], "lib")
-    LOCATE_DEPENDENCY_PYTHONPATH=os.path.join(os.environ["GAFFER_BUILD_DIR"], "python")
-    GLEW_LIB_SUFFIX = "32"
-    INKSCAPE = "C:\\Program Files\\Inkscape\\inkscape.com"
-    WARNINGS_AS_ERRORS = False
-    APPLESEED_ROOT = None
-    CXXFLAGS = "\"-DBOOST_ALL_NO_LIB\""
+if sys.platform == "win32" :
+	LOCATE_DEPENDENCY_LIBPATH=os.path.join(os.environ["GAFFER_BUILD_DIR"], "lib")
+	LOCATE_DEPENDENCY_PYTHONPATH=os.path.join(os.environ["GAFFER_BUILD_DIR"], "python")
+	GLEW_LIB_SUFFIX = "32"
+	INKSCAPE = "C:\\Program Files\\Inkscape\\inkscape.com"
+	WARNINGS_AS_ERRORS = False
+	APPLESEED_ROOT = None
+	CYCLES_ROOT = None
+	CXXFLAGS = "\"-DBOOST_ALL_NO_LIB\""

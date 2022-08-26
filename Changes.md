@@ -1,9 +1,16 @@
 1.0.x.x (relative to 1.0.2.1)
 =======
 
+This release introduces support for the open source [Cycles](https://www.cycles-renderer.org/) renderer. This is introduced as an opt-in feature preview intended for early testing and feedback as breaking changes can be expected while we continue to improve Cycles integration in future releases. As such, the use of Cycles is disabled by default but can be enabled via an environment variable. Additionally we've added support for viewing parameter history in the Light Editor, automatic render-time translation of UsdPreviewSurface shaders and UsdLuxLights for Arnold and made the usual small fixes and improvements.
+
+> Note :
+>
+> The Cycles feature preview can be enabled by setting the `GAFFERCYCLES_FEATURE_PREVIEW` environment variable to `1`.
+
 Features
 --------
 
+- Cycles : Added initial support for the Cycles renderer.
 - Light Editor : Added a non-modal dialog to view the history of a parameter. It can be accessed by right-clicking a parameter in the Light Editor and selecting `Show History...`. Within the dialogue :
   - Double clicking a node name will open a Node Editor popup.
   - Dragging a node name into the Graph Editor will zoom to the node.
