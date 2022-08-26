@@ -1,4 +1,4 @@
-1.0.x.x (relative to 1.0.2.1)
+1.0.3.0 (relative to 1.0.2.1)
 =======
 
 This release introduces support for the open source [Cycles](https://www.cycles-renderer.org/) renderer. This is introduced as an opt-in feature preview intended for early testing and feedback as breaking changes can be expected while we continue to improve Cycles integration in future releases. As such, the use of Cycles is disabled by default but can be enabled via an environment variable. Additionally we've added support for viewing parameter history in the Light Editor, automatic render-time translation of UsdPreviewSurface shaders and UsdLuxLights for Arnold and made the usual small fixes and improvements.
