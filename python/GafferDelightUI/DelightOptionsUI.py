@@ -308,7 +308,6 @@ Gaffer.Metadata.registerNode(
 
 		"options.networkCacheDirectory.value" : [
 
-			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
 			"path:leaf", False,
 
 		],

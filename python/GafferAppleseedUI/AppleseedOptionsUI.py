@@ -822,7 +822,6 @@ Gaffer.Metadata.registerNode(
 
 		"options.logFileName.value" : [
 
-		"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
 		"pathPlugValueWidget:leaf", True,
 		"fileSystemPath:extensions", "txt log",
 		"fileSystemPath:extensionsLabel", "Show only log files",

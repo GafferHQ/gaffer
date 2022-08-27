@@ -36,6 +36,8 @@
 
 #include "GafferDelight/DelightOptions.h"
 
+#include "Gaffer/FilePathPlug.h"
+
 using namespace Imath;
 using namespace GafferDelight;
 
@@ -70,7 +72,7 @@ DelightOptions::DelightOptions( const std::string &name )
 	// Network cache
 
 	options->addChild( new Gaffer::NameValuePlug( "dl:networkcache.size", new IECore::IntData( 15 ), false, "networkCacheSize" ) );
-	options->addChild( new Gaffer::NameValuePlug( "dl:networkcache.directory", new IECore::StringData( "" ), false, "networkCacheDirectory" ) );
+	options->addChild( new Gaffer::NameValuePlug( "dl:networkcache.directory", new Gaffer::FilePathPlug(), false, "networkCacheDirectory" ) );
 
 	// Licensing
 

@@ -36,6 +36,8 @@
 
 #include "GafferAppleseed/AppleseedOptions.h"
 
+#include "Gaffer/FilePathPlug.h"
+
 using namespace Imath;
 using namespace GafferAppleseed;
 
@@ -102,7 +104,7 @@ AppleseedOptions::AppleseedOptions( const std::string &name )
 
 	// logging
 	options->addChild( new Gaffer::NameValuePlug( "as:log:level", new IECore::StringData( "info" ), false, "logLevel" ) );
-	options->addChild( new Gaffer::NameValuePlug( "as:log:filename", new IECore::StringData( "" ), false, "logFileName" ) );
+	options->addChild( new Gaffer::NameValuePlug( "as:log:filename", new Gaffer::FilePathPlug(), false, "logFileName" ) );
 
 	// currently being used by the ShaderBall preview,
 	// not exposed in the options node UI,

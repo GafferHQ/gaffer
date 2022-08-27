@@ -37,6 +37,8 @@
 
 #include "GafferArnold/ArnoldOptions.h"
 
+#include "Gaffer/FilePathPlug.h"
+
 using namespace Imath;
 using namespace GafferArnold;
 
@@ -129,7 +131,7 @@ ArnoldOptions::ArnoldOptions( const std::string &name )
 
 	// Logging
 
-	options->addChild( new Gaffer::NameValuePlug( "ai:log:filename", new IECore::StringData( "" ), false, "logFileName" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:log:filename", new Gaffer::FilePathPlug(), false, "logFileName" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ai:log:max_warnings", new IECore::IntData( 100 ), false, "logMaxWarnings" ) );
 
 	options->addChild( new Gaffer::NameValuePlug( "ai:log:info", new IECore::BoolData( true ), false, "logInfo" ) );

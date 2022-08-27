@@ -41,6 +41,7 @@ API
   - `FilePathPlug` is compatible with `StringPlug` - `FilePathPlug` can be used as input for `StringPlug` and `StringPlug` can be used as input for `FilePathPlug`.
   - Converted existing `StringPlug` used for file paths to `FilePathPlug`.
   - Added `FilePathPlug` to the list of User Plugs.
+  - Converted options for 3Delight, Arnold, Appleseed and Cycles using `StringPlug` for file paths to `FilePathPlug`.
 
 Breaking Changes
 ----------------

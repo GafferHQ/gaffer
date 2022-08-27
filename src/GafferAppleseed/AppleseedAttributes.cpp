@@ -36,6 +36,8 @@
 
 #include "GafferAppleseed/AppleseedAttributes.h"
 
+#include "Gaffer/FilePathPlug.h"
+
 using namespace Imath;
 using namespace Gaffer;
 using namespace GafferAppleseed;
@@ -61,7 +63,7 @@ AppleseedAttributes::AppleseedAttributes( const std::string &name )
 	attributes->addChild( new Gaffer::NameValuePlug( "as:medium_priority", new IECore::IntData( 0 ), false, "mediumPriority" ) );
 
 	// alpha map parameters
-	attributes->addChild( new Gaffer::NameValuePlug( "as:alpha_map", new IECore::StringData(), false, "alphaMap" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "as:alpha_map", new Gaffer::FilePathPlug(), false, "alphaMap" ) );
 
 	// mesh parameters
 	attributes->addChild( new Gaffer::NameValuePlug( "as:smooth_normals", new IECore::BoolData(), false, "smoothNormals" ) );
