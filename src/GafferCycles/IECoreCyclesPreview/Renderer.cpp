@@ -105,6 +105,7 @@ IECORE_PUSH_DEFAULT_VISIBILITY
 #include "util/murmurhash.h"
 #include "util/path.h"
 #include "util/time.h"
+#include "util/types.h"
 #include "util/vector.h"
 IECORE_POP_DEFAULT_VISIBILITY
 
@@ -2936,7 +2937,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 							{
 								auto &vis = data->readable();
 								auto ray = nameToRayType( name.string().c_str() + 29 );
-								uint prevVis = background->get_visibility();
+								uint32_t prevVis = background->get_visibility();
 								background->set_visibility( vis ? prevVis |= ray : prevVis & ~ray );
 							}
 						}
