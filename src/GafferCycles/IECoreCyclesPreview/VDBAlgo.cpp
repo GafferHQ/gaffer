@@ -60,43 +60,15 @@ using namespace IECoreCycles;
 namespace
 {
 
-class GafferVolumeLoader : public ccl::VDBImageLoader
+class IEVolumeLoader : public ccl::VDBImageLoader
 {
 	public:
-		GafferVolumeLoader( const IECoreVDB::VDBObject *ieVolume, const string &gridName )
+		IEVolumeLoader( const IECoreVDB::VDBObject *ieVolume, const string &gridName )
 		: VDBImageLoader( gridName ),
 		  m_ieVolume( ieVolume )
 		{
-		}
-
-		~GafferVolumeLoader() override
-		{
-		}
-
-		bool load_metadata(const ccl::ImageDeviceFeatures &features, ccl::ImageMetaData &metadata) override
-		{
-			return ccl::VDBImageLoader::load_metadata( features, metadata );
-		}
-
-		bool load_pixels( const ccl::ImageMetaData &metadata,
-						  void *pixels,
-						  const size_t pixel_size,
-						  const bool associate_alpha ) override
-		{
-			if( m_ieVolume )
-				return ccl::VDBImageLoader::load_pixels( metadata, pixels, pixel_size, associate_alpha );
-			else
-				return false;
-		}
-
-		bool equals(const ccl::ImageLoader &other) const override
-		{
-			const GafferVolumeLoader &otherLoader = (const GafferVolumeLoader &)other;
-			return ( m_ieVolume == otherLoader.m_ieVolume ) && ( name() == otherLoader.name() );
-		}
-
-		void cleanup() override
-		{
+			grid = m_ieVolume->findGrid( gridName );
+			/// \todo For Cycles 3.3.x there is a precision value we can set for memory savings
 		}
 
 		const IECoreVDB::VDBObject *m_ieVolume;
@@ -159,6 +131,18 @@ ccl::Object *convert( const IECoreVDB::VDBObject *vdbObject, const std::string &
 		{
 			std = ccl::ATTR_STD_VOLUME_VELOCITY;
 		}
+		else if( ccl::ustring( gridName.c_str() ) == ccl::Attribute::standard_name( ccl::ATTR_STD_VOLUME_VELOCITY_X ) )
+		{
+			std = ccl::ATTR_STD_VOLUME_VELOCITY_X;
+		}
+		else if( ccl::ustring( gridName.c_str() ) == ccl::Attribute::standard_name( ccl::ATTR_STD_VOLUME_VELOCITY_Y ) )
+		{
+			std = ccl::ATTR_STD_VOLUME_VELOCITY_Y;
+		}
+		else if( ccl::ustring( gridName.c_str() ) == ccl::Attribute::standard_name( ccl::ATTR_STD_VOLUME_VELOCITY_Z ) )
+		{
+			std = ccl::ATTR_STD_VOLUME_VELOCITY_Z;
+		}
 		else
 		{
 			openvdb::GridBase::ConstPtr grid = vdbObject->findGrid( gridName );
@@ -200,11 +184,11 @@ ccl::Object *convert( const IECoreVDB::VDBObject *vdbObject, const std::string &
 							volume->attributes.add( std ) :
 							volume->attributes.add( ccl::ustring( gridName.c_str() ), ctype, ccl::ATTR_ELEMENT_VOXEL );
 
-		ccl::ImageLoader *loader = new GafferVolumeLoader( vdbObject, gridName );
+		ccl::ImageLoader *loader = new IEVolumeLoader( vdbObject, gridName );
 		ccl::ImageParams params;
 		params.frame = 0.0f;
 
-		attr->data_voxel() = scene->image_manager->add_image( loader, params );
+		attr->data_voxel() = scene->image_manager->add_image( loader, params, false );
 	}
 
 	cobject->set_geometry( volume );
