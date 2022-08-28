@@ -1249,7 +1249,11 @@ libraries = {
 			"CPPDEFINES" : [
 				( "CCL_NAMESPACE_BEGIN", "namespace ccl {" ),
 				( "CCL_NAMESPACE_END", "}" ),
+				( "WITH_OCIO", "1"),
 				( "WITH_OSL", "1" ),
+				( "WITH_OPENSUBDIV", "1"),
+				( "WITH_OPENVDB", "1"),
+				( "WITH_NANOVDB", "1")
 			],
 			"FRAMEWORKS" : [ "Foundation", "Metal" ],
 		},
