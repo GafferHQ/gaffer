@@ -33,7 +33,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GafferCycles/IECoreCyclesPreview/AttributeAlgo.h"
-#include "GafferCycles/IECoreCyclesPreview/ObjectAlgo.h"
+#include "GafferCycles/IECoreCyclesPreview/GeometryAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/SocketAlgo.h"
 
 #include "IECore/SimpleTypedData.h"
