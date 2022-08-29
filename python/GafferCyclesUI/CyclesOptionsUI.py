@@ -75,7 +75,7 @@ def __sceneSummary( plug ) :
 	info = []
 
 	if plug["bvhLayout"]["enabled"].getValue() :
-		info.append( "BVH Layout {}".format( Gaffer.NodeAlgo.currentPreset( plug["bvhLayout"]["value"].getValue() ) ) )
+		info.append( "BVH Layout {}".format( Gaffer.NodeAlgo.currentPreset( plug["bvhLayout"]["value"] ) ) )
 
 	if plug["useBvhSpatialSplit"]["enabled"].getValue() :
 		info.append( "Use BVH Spatial Splits {}".format( plug["useBvhSpatialSplit"]["value"].getValue() ) )
@@ -90,7 +90,7 @@ def __sceneSummary( plug ) :
 		info.append( "Num hair subdivisions {}".format( plug["hairSubdivisions"]["value"].getValue() ) )
 
 	if plug["hairShape"]["enabled"].getValue() :
-		info.append( "Hair shape {}".format( Gaffer.NodeAlgo.currentPreset( plug["hairShape"]["value"].getValue() ) ) )
+		info.append( "Hair shape {}".format( Gaffer.NodeAlgo.currentPreset( plug["hairShape"]["value"] ) ) )
 
 	if plug["textureLimit"]["enabled"].getValue() :
 			info.append( "Texture Limit - {}".format( plug["textureLimit"]["value"].getValue() ) )
@@ -108,7 +108,7 @@ def __samplingSummary( plug ) :
 		info.append( "Samples {}".format( plug["samples"]["value"].getValue() ) )
 
 	if plug["samplingPattern"]["enabled"].getValue() :
-		info.append( "Sampling Pattern {}".format( Gaffer.NodeAlgo.currentPreset( plug["samplingPattern"]["value"].getValue() ) ) )
+		info.append( "Sampling Pattern {}".format( Gaffer.NodeAlgo.currentPreset( plug["samplingPattern"]["value"] ) ) )
 
 	if plug["lightSamplingThreshold"]["enabled"].getValue() :
 		info.append( "Light Sampling Threshold {}".format( plug["lightSamplingThreshold"]["value"].getValue() ) )
@@ -220,7 +220,7 @@ def __filmSummary( plug ) :
 		info.append( "Pass Alpha Threshold {}".format( plug["passAlphaThreshold"]["value"].getValue() ) )
 
 	if plug["filterType"]["enabled"].getValue() :
-		info.append( "Filter Type {}".format( Gaffer.NodeAlgo.currentPreset( plug["filterType"]["value"].getValue() ) ) )
+		info.append( "Filter Type {}".format( Gaffer.NodeAlgo.currentPreset( plug["filterType"]["value"] ) ) )
 
 	if plug["filterWidth"]["enabled"].getValue() :
 		info.append( "Filter Width {}".format( plug["filterWidth"]["value"].getValue() ) )
