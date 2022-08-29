@@ -578,11 +578,21 @@ void FileSystemPath::rootAndNames(const std::string &string, InternedString &roo
 {
 	std::string sanitizedString = string;
 
-	// If `string` is coming from a PathMatcher, it will always have a single leading slash.
-	// On Windows, check to see if the first element is a drive letter path and strip the leading
-	// slash if so.
-	if( sanitizedString.size() && sanitizedString[0] == '/' )
+	if( sanitizedString == "/" || sanitizedString == "\\" )
 	{
+		// We consider a single forward or back slash to be invalid, and convert it to the start
+		// of a UNC path. Windows will return a directory listing of the current drive root contents
+		// given a single slash, but with the permutations below, the child paths of that
+		// listing will have roots but `names()` will be empty. This causes a crash when listing
+		// such directories in `PathListingWidget`.
+		sanitizedString = "//";
+	}
+	else if( sanitizedString.size() && sanitizedString[0] == '/' )
+	{
+		// If `string` is coming from a PathMatcher, it will always have a single leading slash.
+		// On Windows, check to see if the first element is a drive letter path and strip the leading
+		// slash if so. If it's not a drive letter path, interpret it as a UNC path.
+
 		Names splitPath;
 		StringAlgo::tokenize(sanitizedString, '/', splitPath);
 		if( splitPath.size() )
@@ -591,6 +601,10 @@ void FileSystemPath::rootAndNames(const std::string &string, InternedString &roo
 			if( std::regex_match( firstElement, g_driveLetterPattern ) )
 			{
 				sanitizedString.erase( sanitizedString.begin(), sanitizedString.begin() + 1 );
+			}
+			else if( sanitizedString.size() > 1 && sanitizedString[1] != '/' )
+			{
+				sanitizedString = "/" + sanitizedString;
 			}
 		}
 	}
@@ -613,7 +627,10 @@ void FileSystemPath::rootAndNames(const std::string &string, InternedString &roo
 
 	for( path::const_iterator it = startIt, eIt = convertedPath.end(); it != eIt; ++it )
 	{
-		names.push_back( it->string() );
+		if( it->string() != "." )
+		{
+			names.push_back( it->string() );
+		}
 	}
 }
 

@@ -5,6 +5,9 @@ Fixes
 -----
 
 - Plug : Fixed bug that could prevent `plugDirtiedSignal()` from ever being emitted again if an exception was thrown during parenting. This could cause the UI to stop updating.
+- FileSystemPath (Windows only) :
+  - `.` characters are now excluded from the path entries. These were being inserted in some cases even when the user did not input one.
+  - Fix browsing UNC paths in file browsers.
 
 API
 ---
@@ -17,6 +20,7 @@ API
 - FileSystemPath :
   - Added support for Windows paths.
   - Added `nativeString()` function to return the path as an OS-specific string.
+  - (Windows only) Paths beginning with a single `/` or `\` not followed by a drive letter are interpreted as UNC paths.
 - WidgetAlgo : Improved `joinEdges()` to support a wider range of widget types.
 
 Breaking Changes

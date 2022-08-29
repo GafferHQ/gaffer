@@ -215,16 +215,51 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 		self.assertFalse( p.isEmpty() )
 		self.assertFalse( p.isValid() )
 
+		p = Gaffer.FileSystemPath( r"/this.server/share/does/not/exist.ext" )
+		if os.name == "nt" :
+			self.assertEqual( list( p ), [ "share", "does", "not", "exist.ext" ] )
+			self.assertEqual( p.root(), "//this.server/" )
+			self.assertEqual( str( p ), "//this.server/share/does/not/exist.ext" )
+			self.assertEqual( p.nativeString(), r"\\this.server\share\does\not\exist.ext")
+		else :
+			self.assertEqual( list( p ), [ "this.server", "share", "does", "not", "exist.ext" ] )
+			self.assertEqual( p.root(), "/" )
+			self.assertEqual( str( p ), "/this.server/share/does/not/exist.ext" )
+			self.assertEqual( p.nativeString(), "/this.server/share/does/not/exist.ext" )
+
+		f = Gaffer.FileSystemPath( "/" )
+		b = Gaffer.FileSystemPath( "\\" )
+		if os.name == "nt" :
+			self.assertEqual( list( f ), [] )
+			self.assertEqual( list( b ), [] )
+			self.assertEqual( f.root(), "//" )
+			self.assertEqual( b.root(), "//" )
+			self.assertEqual( str( f ), "//" )
+			self.assertEqual( str( b ), "//" )
+			self.assertEqual( f.nativeString(), r"\\" )
+			self.assertEqual( b.nativeString(), r"\\" )
+		else :
+			self.assertEqual( list( f ), [] )
+			self.assertEqual( list( b ), [ "\\" ] )
+			self.assertEqual( f.root(), "/" )
+			self.assertEqual( b.root(), "" )
+			self.assertEqual( str( f ), "/" )
+			self.assertEqual( str( b ), "\\" )
+			self.assertEqual( f.nativeString(), "/" )
+			self.assertEqual( b.nativeString(), "\\" )
+
 	def testPosixPath( self ) :
 		p = Gaffer.FileSystemPath( "/this/path/does/not/exist.ext" )
 
-		self.assertEqual( p.root(), "/")
-		self.assertEqual( str( p ), "/this/path/does/not/exist.ext" )
-		self.assertEqual( list( p ), [ "this", "path", "does", "not", "exist.ext" ] )
-
 		if os.name == "nt" :
-			self.assertEqual( p.nativeString(), r"\this\path\does\not\exist.ext" )
+			self.assertEqual( list( p ), [ "path", "does", "not", "exist.ext" ] )
+			self.assertEqual( p.root(), "//this/")
+			self.assertEqual( str( p ), "//this/path/does/not/exist.ext" )
+			self.assertEqual( p.nativeString(), r"\\this\path\does\not\exist.ext" )
 		else :
+			self.assertEqual( list( p ), [ "this", "path", "does", "not", "exist.ext" ] )
+			self.assertEqual( p.root(), "/")
+			self.assertEqual( str( p ), "/this/path/does/not/exist.ext" )
 			self.assertEqual( p.nativeString(), "/this/path/does/not/exist.ext")
 
 		self.assertFalse( p.isEmpty() )
