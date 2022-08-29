@@ -9,6 +9,11 @@ Features
 - OptionTweaks : Added node for tweaking options in a scene.
 - OptionQuery : Added node for querying options from a scene.
 
+Improvements
+------------
+
+- TweakPlug : Added the ability to set `InternedStringData` from `StringData`.
+
 Fixes
 -----
 
