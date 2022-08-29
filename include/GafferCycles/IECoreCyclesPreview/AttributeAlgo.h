@@ -37,11 +37,13 @@
 
 #include "GafferCycles/IECoreCyclesPreview/Export.h"
 
+#include "IECoreScene/MeshPrimitive.h"
 #include "IECoreScene/Primitive.h"
 
 // Cycles
 IECORE_PUSH_DEFAULT_VISIBILITY
 #include "scene/attribute.h"
+#include "scene/mesh.h"
 IECORE_POP_DEFAULT_VISIBILITY
 
 namespace IECoreCycles
@@ -54,6 +56,8 @@ IECORECYCLES_API ccl::TypeDesc typeFromGeometricDataInterpretation( IECore::Geom
 
 /// Converts a primitive variable to a ccl::Attribute inside of a ccl::AttributeSet
 IECORECYCLES_API void convertPrimitiveVariable( const std::string &name, const IECoreScene::PrimitiveVariable &primitiveVariable, ccl::AttributeSet &attributes );
+/// Compute tangents.
+IECORECYCLES_API void computeTangents( ccl::Mesh *cmesh, const IECoreScene::MeshPrimitive *mesh, bool needsign );
 
 } // namespace AttributeAlgo
 

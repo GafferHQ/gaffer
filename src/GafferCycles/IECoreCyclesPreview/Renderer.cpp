@@ -1155,7 +1155,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			{
 				if( const IECoreScene::MeshPrimitive *mesh = IECore::runTimeCast<const IECoreScene::MeshPrimitive>( object ) )
 				{
-					MeshAlgo::computeTangents( static_cast<ccl::Mesh*>( cobject->get_geometry() ), mesh, needTangentSign() );
+					AttributeAlgo::computeTangents( static_cast<ccl::Mesh*>( cobject->get_geometry() ), mesh, needTangentSign() );
 				}
 			}
 		}
