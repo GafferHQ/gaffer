@@ -7,6 +7,11 @@ Features
 - Edit Menu : Added "Duplicate with Inputs" menu item, with <kbd>Ctrl</kbd>+<kbd>D</kbd> shortcut.
 - StandardAttributes : Added `automaticInstancing` plug to allow instancing to be disabled on selected locations. Currently supported only by the Arnold renderer.
 
+Improvements
+------------
+
+- Light Editor : Added explanation to cell popup when a parameter cannot be edited because there are no editable sources.
+
 Fixes
 -----
 

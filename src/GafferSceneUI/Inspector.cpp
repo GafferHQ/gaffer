@@ -151,6 +151,13 @@ Inspector::ResultPtr Inspector::inspect() const
 	ResultPtr result = new Result( value, targetEditScope() );
 	inspectHistoryWalk( history.get(), result.get() );
 
+	if( !result->m_value && !result->editable() )
+	{
+		// The property doesn't exist, and there's no
+		// way of making it.
+		return nullptr;
+	}
+
 	if( result->editScope() && !result->m_editScopeInHistory )
 	{
 		result->m_editFunction = boost::str(
@@ -160,11 +167,11 @@ Inspector::ResultPtr Inspector::inspect() const
 		result->m_sourceType = Result::SourceType::Other;
 	}
 
-	if( !result->m_value && !result->editable() )
+	else if( !result->m_source && !result->editable() )
 	{
-		// The property doesn't exist, and there's no
-		// way of making it.
-		return nullptr;
+		// There's no source plug and no way of making
+		// the property.
+		result->m_editFunction = "No editable source found in history.";
 	}
 
 	return result;

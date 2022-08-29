@@ -591,5 +591,38 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		Gaffer.MetadataAlgo.setReadOnly( editScope, True )
 		self.assertEqual( len( cs ), 2 ) # Change affects the result of `inspect().editable()`
 
+	def testUnsupportedSourceNode( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["sceneReader"] = GafferScene.SceneReader()
+		s["sceneReader"]["fileName"].setValue( "${GAFFER_ROOT}/python/GafferSceneTest/usdFiles/sphereLight.usda" )
+
+		s["editScope"] = Gaffer.EditScope()
+		s["editScope"].setup( s["sceneReader"]["out"] )
+		s["editScope"]["in"].setInput( s["sceneReader"]["out"] )
+
+		self.__assertExpectedResult(
+			self.__inspect( s["sceneReader"]["out"], "/SpotLight23", "intensity", None ),
+			source = None,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			editable = False,
+			nonEditableReason = "No editable source found in history."
+		)
+
+		inspection = self.__inspect( s["editScope"]["out"], "/SpotLight23", "intensity", s["editScope"] )
+		edit = inspection.acquireEdit()
+
+		self.assertIsNotNone( edit )
+
+		self.__assertExpectedResult(
+			inspection,
+			source = None,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			editable = True,
+			edit = edit
+		)
+
+
 if __name__ == "__main__":
 	unittest.main()
