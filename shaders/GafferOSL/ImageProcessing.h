@@ -81,4 +81,73 @@ closure color outLayer( string layerName, color layerColor )
 	return outChannel( redName, layerColor[0] ) + outChannel( greenName, layerColor[1] ) + outChannel( blueName, layerColor[2] );
 }
 
+
+string gafferFilterToOiioFilter( string s )
+{
+	if( s == "gaussian" )
+	{
+		return "smartcubic";
+	}
+	else if( s == "disk" )
+	{
+		return "cubic";
+	}
+	else
+	{
+		return "linear";
+	}
+}
+
+// TODO - figure out defaultValue
+// TODO - figure out alpha
+float pixel( string channelName, point p )
+{
+	return texture( concat( "gaffer:in.", channelName ), p[0] * Dx(u), p[1] * Dy(v), 0, 0, 0, 0, "interp", "closest" );
+}
+
+float pixelBilinear( string channelName, point p )
+{
+	return texture( concat( "gaffer:in.", channelName ), p[0] * Dx(u), p[1] * Dy(v), 0, 0, 0, 0, "interp", "bilinear" );
+}
+
+float pixelFiltered( string channelName, point p, float dx, float dy, string filter )
+{
+	return texture( concat( "gaffer:in.", channelName ), p[0] * Dx(u), p[1] * Dy(v),
+		dx * Dx(u), 0, 0, dy * Dy(v), "interp", gafferFilterToOiioFilter( filter )
+	);
+}
+
+float pixelFilteredWithDirections( string channelName, point p, vector dpdx, vector dpdy, string filter )
+{
+	return texture( concat( "gaffer:in.", channelName ), p[0] * Dx(u), p[1] * Dy(v),
+		dpdx[0] * Dx(u), dpdx[1] * Dx(u), dpdy[0] * Dy(v), dpdy[1] * Dy(v),
+		"interp", gafferFilterToOiioFilter( filter )
+	);
+}
+
+color pixel( string layerName, point p )
+{
+	return texture( concat( "gaffer:in.", layerName ), p[0] * Dx(u), p[1] * Dy(v), 0, 0, 0, 0, "interp", "closest" );
+}
+
+color pixelBilinear( string layerName, point p )
+{
+	return texture( concat( "gaffer:in.", layerName ), p[0] * Dx(u), p[1] * Dy(v), 0, 0, 0, 0, "interp", "bilinear" );
+}
+
+color pixelFiltered( string layerName, point p, float dx, float dy, string filter )
+{
+	return texture( concat( "gaffer:in.", layerName ), p[0] * Dx(u), p[1] * Dy(v),
+		dx * Dx(u), 0, 0, dy * Dy(v), "interp", gafferFilterToOiioFilter( filter )
+	);
+}
+
+color pixelFilteredWithDirections( string layerName, point p, vector dpdx, vector dpdy, string filter )
+{
+	return texture( concat( "gaffer:in.", layerName ), p[0] * Dx(u), p[1] * Dy(v),
+		dpdx[0] * Dx(u), dpdx[1] * Dx(u), dpdy[0] * Dy(v), dpdy[1] * Dy(v),
+		"interp", gafferFilterToOiioFilter( filter )
+	);
+}
+
 #endif // GAFFEROSL_IMAGEPROCESSING_H
