@@ -77,7 +77,7 @@ jobs:
             containerImage:
             dependenciesURL: https://github.com/ImageEngine/cortex/releases/download/10.4.2.1/cortex-10.4.2.1-windows-python3.zip
             testRunner: Invoke-Expression
-            testArguments: GafferTest.FileSystemPathTest
+            testArguments: GafferTest.FileSystemPathTest GafferTest.FilePathPlugTest GafferTest.StringPlugTest
 
     runs-on: ${{ matrix.os }}
 
