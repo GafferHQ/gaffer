@@ -79,8 +79,6 @@ class GAFFERSCENE_API ShaderQuery : public Gaffer::ComputeNode
 		/// The returned NameValuePlug is parented to queriesPlug() and may be edited
 		/// subsequently to modify the parameter name and default. Corresponding children
 		/// are added to existsPlug() and valuePlug() to provide the output from the query.
-		/// Note : `querySuffixOverride` should only be used by the serialiser. It should be
-		/// omitted from calls for normal usage.
 		Gaffer::NameValuePlug *addQuery(
 			const Gaffer::ValuePlug *plug,
 			const std::string &parameter = ""
