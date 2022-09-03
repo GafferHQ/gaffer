@@ -1132,7 +1132,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		chromaSubSamplings = ( "4:4:4", "4:2:2", "4:2:0", "4:1:1", "" )
 		for chromaSubSampling in chromaSubSamplings:
 
-			testFile = self.temporaryDirectory() / "chromaSubSampling.{0}.jpg".format( chromaSubSampling )
+			testFile = self.temporaryDirectory() / "chromaSubSampling.{0}.jpg".format( chromaSubSampling.replace( ':', '_' ) )
 
 			w["fileName"].setValue( testFile )
 			w["jpeg"]["chromaSubSampling"].setValue( chromaSubSampling )
