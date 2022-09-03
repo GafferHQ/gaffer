@@ -40,6 +40,7 @@ import stat
 import shutil
 import imath
 import pathlib
+import unittest
 
 import IECore
 
@@ -65,6 +66,16 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		return result
 
 	__catalogueIsRenderingMetadataKey = "gaffer:isRendering"
+
+	def tearDown( self ) :
+
+		for root, dirs, files in os.walk( os.path.join( self.temporaryDirectory() ) ) :
+			for fileName in files :
+				os.chmod( os.path.join( root, fileName ), stat.S_IWUSR )
+			for dirName in dirs :
+				os.chmod( os.path.join( root, dirName ), stat.S_IWUSR )
+
+		GafferImageTest.ImageTestCase.tearDown( self )
 
 	def testImages( self ) :
 
@@ -623,6 +634,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 			pass
 		self.assertFalse( fullDirectory.exists() )
 
+	@unittest.skipIf( os.name == "nt", "Windows allows new files in read-only directories" )
 	def testNonWritableDirectory( self ) :
 
 		s = Gaffer.ScriptNode()
