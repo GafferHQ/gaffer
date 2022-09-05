@@ -53,6 +53,7 @@ def appendDefinitions( menuDefinition, prefix="" ) :
 	menuDefinition.append( prefix + "/Cut", { "command" : cut, "shortCut" : "Ctrl+X", "active" : __mutableSelectionAvailable } )
 	menuDefinition.append( prefix + "/Copy", { "command" : copy, "shortCut" : "Ctrl+C", "active" : selectionAvailable } )
 	menuDefinition.append( prefix + "/Paste", { "command" : paste, "shortCut" : "Ctrl+V", "active" : __pasteAvailable } )
+	menuDefinition.append( prefix + "/Duplicate with Inputs", { "command" : duplicateWithInputs, "shortCut" : "Ctrl+D", "active" : selectionAvailable } )
 	menuDefinition.append( prefix + "/Delete", { "command" : delete, "shortCut" : "Backspace, Delete", "active" : __mutableSelectionAvailable } )
 	menuDefinition.append( prefix + "/Rename", { "command" : rename, "shortCut" : "F2", "active" : selectionAvailable } )
 	menuDefinition.append( prefix + "/CutCopyPasteDeleteDivider", { "divider" : True } )
@@ -189,6 +190,69 @@ def paste( menu ) :
 		# Second, do an auto-layout for any nodes which weren't laid out properly when they
 		# were cut/copied.
 		s.graphEditor.graphGadget().getLayout().layoutNodes( s.graphEditor.graphGadget(), Gaffer.StandardSet( nodesNeedingLayout ) )
+
+		s.graphEditor.frame( s.script.selection(), extend = True )
+
+def duplicateWithInputs( menu ) :
+
+	nodeOffset = imath.V2f( 2.25, -2.25 )  # Half of a standard node's height
+
+	s = scope( menu )
+
+	errorHandler = GafferUI.ErrorDialogue.ErrorHandler(
+		title = "Errors Occurred During Duplication",
+		closeLabel = "Oy vey",
+		parentWindow = s.scriptWindow
+	)
+
+	with Gaffer.UndoScope( s.script ), errorHandler :
+		source = s.script.serialise( s.parent, s.script.selection() )
+
+		# Paste the selected nodes into an empty script to determine the order
+		# in which they are serialized.
+		dummyNodes = []
+		dummyScript = Gaffer.ScriptNode()
+		caDummy = dummyScript.childAddedSignal().connect( lambda parent, child : dummyNodes.append( child ), scoped = True )
+		dummyScript.execute( source )
+
+		# Paste them again into the destination script, which will create them
+		# in the same order as `dummyScript`, but with different names due to
+		# name collision handling.
+		newNodes = []
+		caScript = s.parent.childAddedSignal().connect( lambda parent, child : newNodes.append( child ), scoped = True )
+		s.script.execute( source, s.parent )
+
+		def duplicateInputs( source, dest ) :
+
+			if isinstance( dest, Gaffer.Plug ) :
+				if dest.direction == Gaffer.Plug.Direction.Out :
+					return
+
+				if source.getInput() is not None and dest.getInput() is None:
+					if isinstance( source.getInput().node(), Gaffer.Expression ) :
+						# If the source input is an expression, we'd be connecting
+						# to a potentially ephemeral plug on the expression that may
+						# change with expression output changes. We connect to the source
+						# directly for better reliability at the expense of consistency.
+						dest.setInput( source )
+					else :
+						dest.setInput( source.getInput() )
+					return
+
+			for i in range( 0, len( source.children() ) ) :
+				duplicateInputs( source[i], dest[i] )
+
+		for i in range( 0, len( newNodes ) ) :
+			duplicateInputs(
+				s.parent[dummyNodes[i].getName()],
+				newNodes[i]
+			)
+
+		s.script.selection().clear()
+		for n in newNodes :
+			s.script.selection().add( n )
+			p = s.graphEditor.graphGadget().getNodePosition( n ) + nodeOffset
+			s.graphEditor.graphGadget().setNodePosition( n, p )
 
 		s.graphEditor.frame( s.script.selection(), extend = True )
 

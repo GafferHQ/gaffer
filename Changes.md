@@ -1,3 +1,11 @@
+1.0.x.x (relative to 1.0.3.0)
+=======
+
+Features
+--------
+
+- Edit Menu : Added "Duplicate with Inputs" menu item, with <kbd>Ctrl</kbd>+<kbd>D</kbd> shortcut.
+
 1.0.3.0 (relative to 1.0.2.1)
 =======
 
