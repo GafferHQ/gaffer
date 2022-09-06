@@ -56,6 +56,17 @@ class ImageTestCase( GafferTest.TestCase ) :
 		sanitiser.__enter__()
 		self.addCleanup( sanitiser.__exit__, None, None, None )
 
+	def tearDown( self ) :
+
+		# Clear the file cache to prevent Windows from refusing to delete open files,
+		# then reset it to the original value to allow caching within subsequent tests.
+		fLimit = GafferImage.OpenImageIOReader.getOpenFilesLimit()
+		GafferImage.OpenImageIOReader.setOpenFilesLimit( 0 )
+		GafferImage.OpenImageIOReader.setOpenFilesLimit( fLimit )
+
+
+		GafferTest.TestCase.tearDown( self )
+
 	def assertImageHashesEqual( self, imageA, imageB ) :
 
 		self.assertEqual( imageA.viewNamesHash(), imageB.viewNamesHash() )
