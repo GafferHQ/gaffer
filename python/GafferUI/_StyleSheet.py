@@ -470,6 +470,11 @@ _styleSheet = string.Template(
 		padding: 2px;
 	}
 
+	QPushButton[gafferWithFrame="true"][gafferThinButton="true"] {
+		background-color : qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 $backgroundLighter, stop: 0.1 $backgroundLightHighlight, stop: 0.90 $backgroundLightLowlight);
+		padding: 2px;
+	}
+
 	*[gafferPlugValueWidget="true"] QPushButton[gafferWithFrame="true"][gafferClass="GafferUI.MenuButton"] {
 		background-color : qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 $backgroundLighter, stop: 0.1 $backgroundLightHighlight, stop: 0.90 $backgroundLightLowlight);
 		font-weight: normal;
