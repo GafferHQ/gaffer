@@ -162,6 +162,7 @@ from .ShaderQueryTest import ShaderQueryTest
 from .AttributeTweaksTest import AttributeTweaksTest
 from .OptionTweaksTest import OptionTweaksTest
 from .OptionQueryTest import OptionQueryTest
+from .RenameTest import RenameTest
 
 from .IECoreScenePreviewTest import *
 from .IECoreGLPreviewTest import *

@@ -73,7 +73,7 @@ enum TypeId
 	AttributesTypeId = 110528,
 	GlobalShaderTypeId = 110529,
 	ClippingPlaneTypeId = 110530,
-	TweaksPlugTypeId = 110531,   // Obsolete - available for reuse
+	RenameTypeId = 110531,
 	StandardOptionsTypeId = 110532,
 	SubTreeTypeId = 110533,
 	OpenGLAttributesTypeId = 110534,

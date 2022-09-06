@@ -1,6 +1,11 @@
 1.0.x.x (relative to 1.0.4.0)
 =======
 
+Features
+--------
+
+- Rename : Added a new node for renaming scene locations (#1201).
+
 Improvements
 ------------
 
