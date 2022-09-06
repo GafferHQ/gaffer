@@ -102,7 +102,18 @@ class LocationNameColumn : public StandardPathColumn
 			Context::EditableScope scope( scenePath->getContext() );
 			scope.setCanceller( canceller );
 
-			ConstCompoundObjectPtr attributes = scenePath->getScene()->fullAttributes( scenePath->names() );
+			ConstCompoundObjectPtr attributes;
+			try
+			{
+				attributes = scenePath->getScene()->fullAttributes( scenePath->names() );
+			}
+			catch( const std::exception &e )
+			{
+				result.icon = new IECore::StringData( "errorSmall.png" );
+				result.toolTip = new IECore::StringData( e.what() );
+				return result;
+			}
+
 			for( const auto &attribute : attributes->members() )
 			{
 				if( attribute.first != "light" && !boost::ends_with( attribute.first.c_str(), ":light" ) )

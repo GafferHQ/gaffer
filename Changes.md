@@ -10,7 +10,9 @@ Features
 Improvements
 ------------
 
-- Light Editor : Added explanation to cell popup when a parameter cannot be edited because there are no editable sources.
+- Light Editor :
+  - Added explanation to cell popup when a parameter cannot be edited because there are no editable sources.
+  - Added an error icon to a cell with an explanation in the tooltip when there is an error computing its value (#4805).
 
 Fixes
 -----
