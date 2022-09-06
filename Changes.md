@@ -5,6 +5,7 @@ Fixes
 -----
 
 - EditScope : Fixed mislocated plug nodules when connecting a new `EditScope` to a `BoxIn`, `BoxOut` or `Box` node.
+- Backdrop : Fixed bug selecting or moving a backdrop when zoomed out in the GraphEditor, where drag-resizing the top edge was incorrectly being given precedence.
 
 1.0.4.0 (relative to 1.0.3.0)
 =======
