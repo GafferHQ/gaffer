@@ -13,6 +13,7 @@ Improvements
 ------------
 
 - TweakPlug : Added the ability to set `InternedStringData` from `StringData`.
+- GraphEditor : Added a warning for attempts to open the node creation menu in a read-only graph.
 
 Fixes
 -----
