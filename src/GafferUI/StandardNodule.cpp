@@ -122,11 +122,11 @@ bool StandardNodule::canCreateConnection( const Gaffer::Plug *endpoint ) const
 
 	if( localPlug->direction() == Gaffer::Plug::Direction::In )
 	{
-		return localPlug->acceptsInput( endpoint );
+		return localPlug->acceptsInput( endpoint ) && !Gaffer::MetadataAlgo::readOnly( localPlug );
 	}
 	else
 	{
-		return endpoint->acceptsInput( localPlug );
+		return endpoint->acceptsInput( localPlug ) && !Gaffer::MetadataAlgo::readOnly( endpoint );
 	}
 }
 
