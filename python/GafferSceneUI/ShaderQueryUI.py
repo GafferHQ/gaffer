@@ -263,7 +263,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The default value to output if the parameter does not exist.
+			A pair of parameter name to query and default value.
 			""",
 
 		],
