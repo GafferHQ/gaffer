@@ -1,3 +1,11 @@
+0.61.14.x (relative to 0.61.14.4)
+=========
+
+Fixes
+-----
+
+- NoduleLayout : Fixed shutdown crashes triggered by custom gadgets implemented in Python.
+
 0.61.14.4 (relative to 0.61.14.3)
 =========
 

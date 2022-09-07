@@ -85,37 +85,25 @@ static void registerNodule( const std::string &noduleTypeName, object creator, I
 	Nodule::registerNodule( noduleTypeName, NoduleCreator( creator ), plugType );
 }
 
-struct CustomGadgetCreator
-{
-
-	CustomGadgetCreator( object fn )
-		:	m_fn( fn )
-	{
-	}
-
-	GadgetPtr operator()( Gaffer::GraphComponentPtr parent )
-	{
-		IECorePython::ScopedGILLock gilLock;
-		try
-		{
-			return extract<GadgetPtr>( m_fn( parent ) );
-		}
-		catch( const error_already_set & )
-		{
-			ExceptionAlgo::translatePythonException();
-		}
-		return nullptr;
-	}
-
-	private :
-
-		object m_fn;
-
-};
-
 void registerCustomGadget( const std::string &gadgetName, object creator )
 {
-	NoduleLayout::registerCustomGadget( gadgetName, CustomGadgetCreator( creator ) );
+	NoduleLayout::registerCustomGadget(
+		gadgetName,
+		// Deliberately "leaking" `creator` since it will be stored in a
+		// static map that will be destroyed _after_ Python has shut down,
+		// and deleting the PyObject at that point could cause a crash.
+		[creator = new object( creator )] ( Gaffer::GraphComponentPtr parent ) -> GadgetPtr {
+			IECorePython::ScopedGILLock gilLock;
+			try
+			{
+				return extract<GadgetPtr>( (*creator)( parent ) );
+			}
+			catch( const error_already_set & )
+			{
+				ExceptionAlgo::translatePythonException();
+			}
+		}
+	);
 }
 
 } // namespace
