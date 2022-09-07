@@ -187,6 +187,13 @@ Gaffer.Metadata.registerNode(
 			"plugValueWidget:type", "GafferImageUI.ImageViewUI._LutGPUPlugValueWidget",
 			"label", "",
 			"toolbarLayout:activator", "gpuAvailable",
+
+			# Turning off GPU mode means we can't properly support efficient wipes.  Since we no longer
+			# have feature parity, we're deprecating CPU mode, and expecting everyone to use the GPU path.
+			# With new OCIO, the GPU path now gives high quality on any even vaguely recent GPU.
+			# The only use case I can think of for the CPU path is checking that the GPU path is working correctly.
+			# If you need to do that, set this metadata to True, and then create a new Viewer to force a refresh.
+			"toolbarLayout:visibilityActivator", False,
 		],
 
 		"colorInspector" : [
