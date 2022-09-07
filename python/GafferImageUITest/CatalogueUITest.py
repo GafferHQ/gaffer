@@ -47,6 +47,16 @@ import IECore
 
 class CatalogueUITest( GafferUITest.TestCase ) :
 
+	def tearDown( self ) :
+
+		# Clear the file cache to prevent Windows from refusing to delete open files,
+		# then reset it to the original value to allow caching within subsequent tests.
+		fLimit = GafferImage.OpenImageIOReader.getOpenFilesLimit()
+		GafferImage.OpenImageIOReader.setOpenFilesLimit( 0 )
+		GafferImage.OpenImageIOReader.setOpenFilesLimit( fLimit )
+
+		GafferUITest.TestCase.tearDown( self )
+
 	def testStandardColumns( self ) :
 
 		self.assertTrue( "Status" in CatalogueUI.registeredColumns() )
