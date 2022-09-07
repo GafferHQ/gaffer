@@ -1,3 +1,11 @@
+1.0.x.x (relative to 1.0.4.0)
+=======
+
+Fixes
+-----
+
+- EditScope : Fixed mislocated plug nodules when connecting a new `EditScope` to a `BoxIn`, `BoxOut` or `Box` node.
+
 1.0.4.0 (relative to 1.0.3.0)
 =======
 

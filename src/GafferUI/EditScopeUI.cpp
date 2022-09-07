@@ -99,6 +99,9 @@ class EditScopePlugAdder : public PlugAdder
 			{
 				m_editScope->inPlug()->setInput( endpoint );
 			}
+
+			applyEdgeMetadata( m_editScope->inPlug(), endpoint->direction() == Plug::In );
+			applyEdgeMetadata( m_editScope->outPlug(), endpoint->direction() == Plug::Out );
 		}
 
 	private :
