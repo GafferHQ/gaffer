@@ -40,6 +40,7 @@
 
 #include "Gaffer/ArrayPlug.h"
 #include "Gaffer/Metadata.h"
+#include "Gaffer/MetadataAlgo.h"
 
 #include "boost/bind/bind.hpp"
 
@@ -65,6 +66,11 @@ class ArrayPlugAdder : public PlugAdder
 		bool canCreateConnection( const Plug *endpoint ) const override
 		{
 			if( !PlugAdder::canCreateConnection( endpoint ) )
+			{
+				return false;
+			}
+
+			if( MetadataAlgo::readOnly( m_plug.get() ) )
 			{
 				return false;
 			}
