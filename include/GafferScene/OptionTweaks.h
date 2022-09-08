@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2016, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2022, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,30 +34,48 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include <boost/algorithm/string.hpp>
-#include "boost/python.hpp"
+#ifndef GAFFERSCENE_OPTIONTWEAKS_H
+#define GAFFERSCENE_OPTIONTWEAKS_H
 
-#include "TweaksBinding.h"
+#include "GafferScene/Export.h"
+#include "GafferScene/GlobalsProcessor.h"
+#include "GafferScene/TypeIds.h"
 
-#include "GafferScene/AttributeTweaks.h"
-#include "GafferScene/CameraTweaks.h"
-#include "GafferScene/OptionTweaks.h"
-#include "GafferScene/ShaderTweaks.h"
+#include "Gaffer/TweakPlug.h"
 
-#include "GafferBindings/DependencyNodeBinding.h"
-#include "GafferBindings/PlugBinding.h"
-#include "GafferBindings/SerialisationBinding.h"
-#include "GafferBindings/ValuePlugBinding.h"
-
-using namespace boost::python;
-using namespace Gaffer;
-using namespace GafferBindings;
-using namespace GafferScene;
-
-void GafferSceneModule::bindTweaks()
+namespace GafferScene
 {
-	DependencyNodeClass<ShaderTweaks>();
-	DependencyNodeClass<CameraTweaks>();
-	DependencyNodeClass<AttributeTweaks>();
-	DependencyNodeClass<OptionTweaks>();
-}
+
+class GAFFERSCENE_API OptionTweaks : public GlobalsProcessor
+{
+
+	public :
+
+		OptionTweaks( const std::string &name=defaultName<OptionTweaks>() );
+		~OptionTweaks() override;
+
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::OptionTweaks, OptionTweaksTypeId, GlobalsProcessor );
+
+		Gaffer::BoolPlug *ignoreMissingPlug();
+		const Gaffer::BoolPlug *ignoreMissingPlug() const;
+
+		Gaffer::TweaksPlug *tweaksPlug();
+		const Gaffer::TweaksPlug *tweaksPlug() const;
+
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
+
+	protected :
+
+		void hashProcessedGlobals( const Gaffer::Context *context, IECore::MurmurHash &h) const override;
+		IECore::ConstCompoundObjectPtr computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const override;
+
+	private :
+
+		static size_t g_firstPlugIndex;
+};
+
+IE_CORE_DECLAREPTR( OptionTweaks )
+
+}  // namespace GafferScene
+
+#endif // GAFFERSCENE_OPTIONTWEAKS_H

@@ -6,6 +6,8 @@ Features
 
 - Edit Menu : Added "Duplicate with Inputs" menu item, with <kbd>Ctrl</kbd>+<kbd>D</kbd> shortcut.
 - StandardAttributes : Added `automaticInstancing` plug to allow instancing to be disabled on selected locations. Currently supported only by the Arnold renderer.
+- OptionTweaks : Added node for tweaking options in a scene.
+- OptionQuery : Added node for querying options from a scene.
 
 Fixes
 -----
