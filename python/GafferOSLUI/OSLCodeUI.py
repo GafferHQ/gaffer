@@ -330,6 +330,9 @@ class _ErrorWidget( GafferUI.Widget ) :
 
 		self.__messageWidget.clear()
 		self.__messageWidget.messageHandler().handle( IECore.Msg.Level.Error, "Compilation error", error )
+
+		# TODO - for me, this does not actually trigger a redraw - I need to mouse over something that highlights
+		# in order to trigger a redraw and see the message
 		self.__messageWidget.setVisible( True )
 
 	def __shaderCompiled( self ) :
