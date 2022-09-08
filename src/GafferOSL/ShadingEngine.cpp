@@ -484,18 +484,20 @@ class RenderState
 			return false;
 		}
 
-		bool texture( size_t gafferTextureIndex,
-                          TextureOpt& options, float s,
-                          float t, float dsdx, float dtdx, float dsdy,
-                          float dtdy, int nchannels, float* result,
-                          float* dresultds, float* dresultdt,
-                          ustring* errormessage ) const
+		bool texture(
+			size_t gafferTextureIndex,
+			TextureOpt& options, float s,
+			float t, float dsdx, float dtdx, float dsdy,
+			float dtdy, int nchannels, float* result,
+			float* dresultds, float* dresultdt,
+			ustring* errormessage
+		) const
 		{
 			if( gafferTextureIndex >= m_gafferTextures.size() )
 			{
 				throw IECore::Exception( "Internal Gaffer error, out of bound texture index" );
 			}
-					
+
 			const GafferTextureData &tex = m_gafferTextures[ gafferTextureIndex ];
 			// TODO - why is nchannels always 4?  It should be 1 or 3
 			// TODO - alpha
@@ -524,9 +526,10 @@ class RenderState
 						else if( ( dsdx == 0 && dtdy == 0 ) || ( dtdx == 0 && dsdy == 0 ) )
 						{
 							result[i] = GafferImage::FilterAlgo::sampleBox( *tex.channels[i], p,
-								( dsdx ? dsdx : dtdx ) * tex.dataWindowSize.x, ( dsdy ? dsdy : dtdy ) * tex.dataWindowSize.y,
+								( dsdx ? dsdx : dtdx ) * tex.dataWindowSize.x,
+								( dsdy ? dsdy : dtdy ) * tex.dataWindowSize.y,
 								g_filtersForInterpModes[ options.interpmode ], m_scratchMemory
-							 );
+							);
 						}
 						else
 						{
@@ -619,7 +622,6 @@ public:
 
 private:
 
-	
 	const OIIO::atomic_int m_oiioTexSysRefCount;
 };
 
@@ -733,7 +735,6 @@ class RendererServices : public OSL::RendererServices
 			return threadRenderState->renderState.userData( threadRenderState->pointIndex, name, type, nullptr );
 		}
 
-		
 		TextureHandle * get_texture_handle( ustring filename, ShadingContext *context ) override
 		{
 			if( boost::starts_with( filename, g_gafferImagePrefix ) )
@@ -759,17 +760,18 @@ class RendererServices : public OSL::RendererServices
 
 			return OSL::RendererServices::get_texture_handle( filename, context );
 
-			
 			//return texturesys()->get_texture_handle( filename, context->texture_thread_info() );
 		}
 
-		bool texture( ustring filename, TextureHandle* texture_handle,
-                          TexturePerthread* texture_thread_info,
-                          TextureOpt& options, ShaderGlobals* sg, float s,
-                          float t, float dsdx, float dtdx, float dsdy,
-                          float dtdy, int nchannels, float* result,
-                          float* dresultds, float* dresultdt,
-                          ustring* errormessage) override
+		bool texture(
+			ustring filename, TextureHandle* texture_handle,
+			TexturePerthread* texture_thread_info,
+			TextureOpt& options, ShaderGlobals* sg, float s,
+			float t, float dsdx, float dtdx, float dsdy,
+			float dtdy, int nchannels, float* result,
+			float* dresultds, float* dresultdt,
+			ustring* errormessage
+		) override
 		{
 			if( texture_handle )
 			{
@@ -779,7 +781,7 @@ class RendererServices : public OSL::RendererServices
 				{
 					const ThreadRenderState *threadRenderState = sg ? static_cast<ThreadRenderState *>( sg->renderstate ) : nullptr;
 					if( threadRenderState->renderState.texture(
-						gafferTextureIndex, options, 
+						gafferTextureIndex, options,
 						s, t, dsdx, dtdx, dsdy, dtdy,
 						nchannels, result, dresultds, dresultdt, errormessage
 					) )
@@ -792,7 +794,7 @@ class RendererServices : public OSL::RendererServices
 			{
 				throw IECore::Exception( "Cannot access Gaffer image, it was not visible during compilation: " + filename.string() );
 			}
-			
+
 			return OSL::RendererServices::texture( filename, texture_handle, texture_thread_info, options, sg, s, t, dsdx, dtdx, dsdy, dtdy, nchannels, result, dresultds, dresultdt, errormessage );
 		}
 
@@ -1362,9 +1364,6 @@ void ShadingEngine::queryShaderGroup()
 			}
 		}
 	}
-
-	
-	
 
 }
 
