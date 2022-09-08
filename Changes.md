@@ -9,11 +9,17 @@ Features
 - OptionTweaks : Added node for tweaking options in a scene.
 - OptionQuery : Added node for querying options from a scene.
 
+Improvements
+------------
+
+- TweakPlug : Added the ability to set `InternedStringData` from `StringData`.
+
 Fixes
 -----
 
 - CyclesOptions : Fixed errors in section summaries.
 - NoduleLayout : Fixed shutdown crashes triggered by custom gadgets implemented in Python.
+- ShaderTweaks : Fixed error when attempting to use a `:` in a parameter name.
 
 1.0.3.0 (relative to 1.0.2.1)
 =======

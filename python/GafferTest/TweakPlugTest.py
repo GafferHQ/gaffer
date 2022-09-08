@@ -339,6 +339,21 @@ class TweakPlugTest( GafferTest.TestCase ) :
 		self.assertFalse( tweaks.applyTweaks( parameters ) )
 		self.assertNotIn( "f", parameters )
 
+	def testTweakInternedString( self ) :
+
+		data = IECore.CompoundData(
+			{
+				"a" : IECore.InternedStringData( "testInternedString" ),
+			}
+		)
+		self.assertEqual( data["a"], IECore.InternedStringData( "testInternedString" ) )
+
+		tweak = Gaffer.TweakPlug( "a", "stringValue" )
+
+		result = tweak.applyTweak( data )
+		self.assertTrue( result )
+		self.assertEqual( data["a"], IECore.InternedStringData( "stringValue" ) )
+
 
 if __name__ == "__main__":
 	unittest.main()

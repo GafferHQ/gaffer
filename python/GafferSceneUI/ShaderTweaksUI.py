@@ -324,7 +324,9 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 			plug = Gaffer.TweakPlug( name, plugTypeOrValue() )
 
 		if name :
-			plug.setName( name.replace( ".", "_" ) )
+			for i in ( ".", ":", ) :
+				name = name.replace( i, "_" )
+			plug.setName( name )
 
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			self.getPlug().addChild( plug )
