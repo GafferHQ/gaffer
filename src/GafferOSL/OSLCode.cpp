@@ -164,6 +164,7 @@ string generate( const OSLCode *shader, string &shaderName )
 	{
 		IECore::MurmurHash hash;
 		hash.append( result );
+		hash.append( 14 ); // Bump whenever headers change to avoid using stale oso's
 		shaderName = "oslCode" + hash.toString();
 	}
 
