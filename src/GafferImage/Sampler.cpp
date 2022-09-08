@@ -41,13 +41,15 @@ using namespace Imath;
 using namespace Gaffer;
 using namespace GafferImage;
 
-Sampler::Sampler( const GafferImage::ImagePlug *plug, const std::string &channelName, const Imath::Box2i &sampleWindow, BoundingMode boundingMode )
+Sampler::Sampler( const GafferImage::ImagePlug *plug, const std::string &channelName, const Imath::Box2i &sampleWindow, BoundingMode boundingMode, bool rememberContext )
 	: m_plug( plug ),
 	m_channelName( channelName ),
 	m_boundingMode( boundingMode )
 {
+	const Context *currentContext = Context::current();
+
 	{
-		ImagePlug::GlobalScope c( Context::current() );
+		ImagePlug::GlobalScope c( currentContext );
 
 		if( m_plug->deepPlug()->getValue() )
 		{
@@ -55,6 +57,11 @@ Sampler::Sampler( const GafferImage::ImagePlug *plug, const std::string &channel
 		}
 
 		m_dataWindow = m_plug->dataWindowPlug()->getValue();
+	}
+
+	if( rememberContext )
+	{
+		m_overrideContext = new Context( *currentContext );
 	}
 
 	// We only store the sample window to be able to perform
@@ -109,6 +116,12 @@ Sampler::Sampler( const GafferImage::ImagePlug *plug, const std::string &channel
 
 void Sampler::hash( IECore::MurmurHash &h ) const
 {
+	std::unique_ptr< Context::Scope > contextScope;
+	if( m_overrideContext )
+	{
+		contextScope = std::make_unique<Context::Scope>( m_overrideContext.get() );
+	}
+
 	for ( int x = m_cacheWindow.min.x; x < m_cacheWindow.max.x; x += GafferImage::ImagePlug::tileSize() )
 	{
 		for ( int y = m_cacheWindow.min.y; y < m_cacheWindow.max.y; y += GafferImage::ImagePlug::tileSize() )

@@ -111,7 +111,15 @@ inline void Sampler::cachedData( Imath::V2i p, const float *& tileData, Imath::V
 		Imath::V2i tileOrigin = ( ImagePlug::tileIndex( m_cacheWindow.min ) + cacheIndex ) * ImagePlug::tileSize();
 
 		IECore::ConstFloatVectorDataPtr &cacheTilePtr = m_dataCache[ cacheI ];
-		cacheTilePtr = m_plug->channelData( m_channelName, tileOrigin );
+		if( m_overrideContext )
+		{
+			Gaffer::Context::Scope s( m_overrideContext.get() );
+			cacheTilePtr = m_plug->channelData( m_channelName, tileOrigin );
+		}
+		else
+		{
+			cacheTilePtr = m_plug->channelData( m_channelName, tileOrigin );
+		}
 		cacheTileRawPtr = &cacheTilePtr->readable()[0];
 	}
 

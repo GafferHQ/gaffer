@@ -73,7 +73,7 @@ class GAFFERIMAGE_API Sampler
 		/// @param channelName The channel to sample.
 		/// @param sampleWindow The area from which samples may be requested. It is an error to request samples outside this area.
 		/// @param boundingMode The method of handling samples that fall outside the data window.
-		Sampler( const GafferImage::ImagePlug *plug, const std::string &channelName, const Imath::Box2i &sampleWindow, BoundingMode boundingMode = Black );
+		Sampler( const GafferImage::ImagePlug *plug, const std::string &channelName, const Imath::Box2i &sampleWindow, BoundingMode boundingMode = Black, bool rememberContext = false );
 
 		/// Samples the channel value at the specified
 		/// integer pixel coordinate. It is the caller's
@@ -114,6 +114,7 @@ class GAFFERIMAGE_API Sampler
 		const std::string m_channelName;
 		Imath::Box2i m_sampleWindow;
 		Imath::Box2i m_dataWindow;
+		Gaffer::ContextPtr m_overrideContext;
 
 		std::vector< IECore::ConstFloatVectorDataPtr > m_dataCache;
 		std::vector< const float * > m_dataCacheRaw;
