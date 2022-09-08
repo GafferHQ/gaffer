@@ -602,12 +602,14 @@ class RenderState
 			return false;
 		}
 
-		bool texture( size_t gafferTextureIndex,
-                          TextureOpt& options, float s,
-                          float t, float dsdx, float dtdx, float dsdy,
-                          float dtdy, int nchannels, float* result,
-                          float* dresultds, float* dresultdt,
-                          ustring* errormessage ) const
+		bool texture(
+			size_t gafferTextureIndex,
+			TextureOpt& options, float s,
+			float t, float dsdx, float dtdx, float dsdy,
+			float dtdy, int nchannels, float* result,
+			float* dresultds, float* dresultdt,
+			ustring* errormessage
+		) const
 		{
 			if( gafferTextureIndex >= m_gafferTextures.size() )
 			{
@@ -642,9 +644,10 @@ class RenderState
 						else if( ( dsdx == 0 && dtdy == 0 ) || ( dtdx == 0 && dsdy == 0 ) )
 						{
 							result[i] = GafferImage::FilterAlgo::sampleBox( *tex.channels[i], p,
-								( dsdx ? dsdx : dtdx ) * tex.dataWindowSize.x, ( dsdy ? dsdy : dtdy ) * tex.dataWindowSize.y,
+								( dsdx ? dsdx : dtdx ) * tex.dataWindowSize.x,
+								( dsdy ? dsdy : dtdy ) * tex.dataWindowSize.y,
 								g_filtersForInterpModes[ options.interpmode ], m_scratchMemory
-							 );
+							);
 						}
 						else
 						{
@@ -1049,13 +1052,15 @@ public:
 			//return texturesys()->get_texture_handle( filename, context->texture_thread_info() );
 		}
 
-		bool texture( ustring filename, TextureHandle* texture_handle,
-                          TexturePerthread* texture_thread_info,
-                          TextureOpt& options, ShaderGlobals* sg, float s,
-                          float t, float dsdx, float dtdx, float dsdy,
-                          float dtdy, int nchannels, float* result,
-                          float* dresultds, float* dresultdt,
-                          ustring* errormessage) override
+		bool texture(
+			ustring filename, TextureHandle* texture_handle,
+			TexturePerthread* texture_thread_info,
+			TextureOpt& options, ShaderGlobals* sg, float s,
+			float t, float dsdx, float dtdx, float dsdy,
+			float dtdy, int nchannels, float* result,
+			float* dresultds, float* dresultdt,
+			ustring* errormessage
+		) override
 		{
 			if( texture_handle )
 			{
