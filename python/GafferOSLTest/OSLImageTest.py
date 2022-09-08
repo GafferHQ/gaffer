@@ -122,7 +122,7 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 				]
 
 			checkDirtiness( channelsDirtied + [
-					"channels", "__shader", "__shading",
+					"channels", "__shader", "__allImageDataNeeded", "__shading",
 					"__affectedChannels", "out.channelNames", "out.channelData", "out"
 			] )
 
@@ -156,13 +156,13 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 
 			getGreen["parameters"]["channelName"].setValue( "R" )
 			checkDirtiness( channelsDirtied + [
-					"channels", "__shader", "__shading",
+					"channels", "__shader", "__allImageDataNeeded", "__shading",
 					"__affectedChannels", "out.channelNames", "out.channelData", "out"
 			] )
 
 			floatToColor["parameters"]["r"].setInput( getRed["out"]["channelValue"] )
 			checkDirtiness( channelsDirtied + [
-					"channels", "__shader", "__shading",
+					"channels", "__shader", "__allImageDataNeeded", "__shading",
 					"__affectedChannels", "out.channelNames", "out.channelData", "out"
 			] )
 
@@ -179,14 +179,14 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 			image["in"].setInput( None )
 			checkDirtiness( [
 					'in.viewNames', 'in.format', 'in.dataWindow', 'in.metadata', 'in.deep', 'in.sampleOffsets', 'in.channelNames', 'in.channelData', 'in',
-					'out.viewNames', '__shading', '__affectedChannels',
+					'out.viewNames', '__allImageDataNeeded', '__shading', '__affectedChannels',
 					'out.channelNames', 'out.channelData', 'out.format', 'out.dataWindow', 'out.metadata', 'out.deep', 'out.sampleOffsets', 'out'
 			] )
 
 			image["defaultFormat"]["displayWindow"]["max"]["x"].setValue( 200 )
 			checkDirtiness( [
 					'defaultFormat.displayWindow.max.x', 'defaultFormat.displayWindow.max', 'defaultFormat.displayWindow', 'defaultFormat',
-					'__defaultIn.format', '__defaultIn.dataWindow', '__defaultIn', '__shading', '__affectedChannels',
+					'__defaultIn.format', '__defaultIn.dataWindow', '__defaultIn', '__allImageDataNeeded', '__shading', '__affectedChannels',
 					'out.channelNames', 'out.channelData', 'out.format', 'out.dataWindow', 'out'
 			] )
 
@@ -195,7 +195,7 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 
 			checkDirtiness( [
 					'in.viewNames', 'in.format', 'in.dataWindow', 'in.metadata', 'in.deep', 'in.sampleOffsets', 'in.channelNames', 'in.channelData', 'in',
-					'out.viewNames', '__shading', '__affectedChannels',
+					'out.viewNames', '__allImageDataNeeded', '__shading', '__affectedChannels',
 					'out.channelNames', 'out.channelData', 'out.format', 'out.dataWindow', 'out.metadata', 'out.deep', 'out.sampleOffsets', 'out'
 			] )
 
@@ -235,7 +235,6 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 				self.assertEqual( image["out"].channelNames(), IECore.StringVectorData(
 					[ "A", "B", "G", "R", "newLayer.B", "newLayer.G", "newLayer.R", "unchangedR" ]
 				) )
-
 
 
 	def testAcceptsShaderSwitch( self ) :
@@ -854,6 +853,197 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 
 		with GafferTest.TestRunner.PerformanceScope() :
 			GafferImage.ImageAlgo.image( resize["out"] )
+
+
+	def testImageSampling( self ):
+
+		reader = GafferImage.ImageReader()
+		reader["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/rgbOverChecker.100x100.exr" ) )
+
+		switchWindow = GafferImage.Crop()
+		switchWindow["in"].setInput( reader["out"] )
+		switchWindow["area"].setValue( imath.Box2i( imath.V2i( 50, 50 ), imath.V2i( 100, 100 ) ) )
+		switchWindow["affectDataWindow"].setValue( False )
+		switchWindow["affectDisplayWindow"].setValue( False )
+
+		deleteChannels = GafferImage.DeleteChannels()
+		deleteChannels["in"].setInput( switchWindow["out"] )
+		deleteChannels["channels"].setValue( 'A' )
+
+		code = GafferOSL.OSLCode()
+		code["out"].addChild( Gaffer.Color3fPlug( "out", direction = Gaffer.Plug.Direction.Out ) )
+
+		# It can be pretty confusing to make syntax errors in this file unless we actually catch and report
+		# the errors manually.  I wonder if we could refactor OSLCode to not swallow exceptions ... I think
+		# we've moved to more CatchingSiganlCombiner since the comment there was written?
+		checkErrors = GafferTest.CapturingSlot( code.errorSignal() )
+
+		code["code"].setValue( """
+			out = pixel( "", P + vector( -5, -3, 0 ) );
+			out.g = pixel( "G", P + vector( -5, -3, 0 ) );
+		""")
+		self.assertEqual( list( checkErrors ), [] )
+
+		oslImage = GafferOSL.OSLImage()
+		oslImage["in"].setInput( deleteChannels["out"] )
+		oslImage["channels"].addChild( Gaffer.NameValuePlug( "", Gaffer.Color3fPlug( "value" ), True, "channel", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		oslImage["channels"]["channel"]["value"].setInput( code["out"]["out"] )
+
+		crop = GafferImage.Crop()
+		crop["in"].setInput( oslImage["out"] )
+		crop["area"].setValue( imath.Box2i( imath.V2i( 5, 3 ), imath.V2i( 100, 100 ) ) )
+		crop["affectDisplayWindow"].setValue( False )
+
+		offset = GafferImage.Offset()
+		offset["in"].setInput( deleteChannels["out"] )
+		offset["offset"].setValue( imath.V2i( 5, 3 ) )
+
+		referenceCrop = GafferImage.Crop()
+		referenceCrop["in"].setInput( offset["out"] )
+		referenceCrop["area"].setInput( crop["area"] )
+		referenceCrop["affectDisplayWindow"].setValue( False )
+
+		self.assertImagesEqual( crop["out"], referenceCrop["out"], ignoreChannelNamesOrder = True )
+
+		code["code"].setValue( """
+			out = pixel( "", P + vector( -4.6, -3.4, 0 ) );
+			out.g = pixel( "G", P + vector( -4.6, -3.4, 0 ) );
+		""" )
+		self.assertEqual( list( checkErrors ), [] )
+
+		self.assertImagesEqual( crop["out"], referenceCrop["out"], ignoreChannelNamesOrder = True )
+
+		code["code"].setValue( """
+			out = pixel( "", P + vector( -5.4, -2.6, 0 ) );
+			out.g = pixel( "G", P + vector( -5.4, -2.6, 0 ) );
+		""" )
+		self.assertEqual( list( checkErrors ), [] )
+
+		self.assertImagesEqual( crop["out"], referenceCrop["out"], ignoreChannelNamesOrder = True )
+
+		code["code"].setValue( """
+			out = pixel( "", P + vector( -5.6, -2.6, 0 ) );
+			out.g = pixel( "G", P + vector( -5.6, -2.6, 0 ) );
+		""" )
+		self.assertEqual( list( checkErrors ), [] )
+
+		with self.assertRaises( Exception ):
+			self.assertImagesEqual( crop["out"], referenceCrop["out"], ignoreChannelNamesOrder = True )
+
+		code["code"].setValue( """
+			out = pixel( "", P + vector( -5.3, -2.6, 0 ) );
+			out.g = pixel( "G", P + vector( -5.3, -2.6, 0 ) );
+		""" )
+		self.assertEqual( list( checkErrors ), [] )
+
+		switchWindow["affectDisplayWindow"].setValue( True )
+		crop["area"].setValue( imath.Box2i( imath.V2i( 5, 3 ), imath.V2i( 50, 50 ) ) )
+		self.assertImagesEqual( crop["out"], referenceCrop["out"], ignoreChannelNamesOrder = True )
+
+		switchWindow["affectDisplayWindow"].setValue( False )
+		switchWindow["affectDataWindow"].setValue( True )
+		crop["area"].setValue( imath.Box2i( imath.V2i( 55, 53 ), imath.V2i( 100, 100 ) ) )
+		self.assertImagesEqual( crop["out"], referenceCrop["out"], ignoreChannelNamesOrder = True )
+
+		switchWindow["affectDataWindow"].setValue( False )
+
+		resample = GafferImage.Resample()
+		resample["in"].setInput( deleteChannels["out"] )
+		resample["filter"].setValue( "triangle" )
+		resample["matrix"].setValue( imath.M33f().translate( imath.V2f( 5, 3 ) ) )
+
+		referenceCrop["in"].setInput( resample["out"] )
+
+		crop["area"].setValue( imath.Box2i( imath.V2i( 5, 3 ), imath.V2i( 100, 100 ) ) )
+
+		self.assertImagesEqual( crop["out"], referenceCrop["out"], ignoreChannelNamesOrder = True, maxDifference = 0.000001 )
+
+		resample["matrix"].setValue( imath.M33f().translate( imath.V2f( 4.7, 9.1 ) ) )
+
+		crop["area"].setValue( imath.Box2i( imath.V2i( 10, 10 ), imath.V2i( 100, 100 ) ) )
+
+		code["code"].setValue( """
+			out = pixelBilinear( "", P + vector( -4.7, -9.1, 0 ) );
+			out.g = pixelBilinear( "G", P + vector( -4.7, -9.1, 0 ) );
+		""" )
+		self.assertEqual( list( checkErrors ), [] )
+
+		self.assertImagesEqual( crop["out"], referenceCrop["out"], ignoreChannelNamesOrder = True, maxDifference = 0.00001 )
+
+		resample["matrix"].setValue( imath.M33f().scale( 1.5 ) * imath.M33f().translate( imath.V2f( -11.6, -13.3 ) ) )
+
+		code["code"].setValue( """
+			out = pixelBilinear( "", ( P + vector( 11.6, 13.3, 0 ) ) / 1.5 );
+			out.g = pixelBilinear( "G", ( P + vector( 11.6, 13.3, 0 ) ) / 1.5 );
+		""" )
+		self.assertEqual( list( checkErrors ), [] )
+		crop["area"].setValue( imath.Box2i( imath.V2i( 0, 0 ), imath.V2i( 100, 100 ) ) )
+
+		self.assertImagesEqual( crop["out"], referenceCrop["out"], ignoreChannelNamesOrder = True, maxDifference = 0.00001 )
+
+		code["code"].setValue( """
+			out = pixelFiltered( "", ( P + vector( 11.6, 13.3, 0 ) ) / 1.5, 7, 7, "gaussian" );
+			out.g = pixelFiltered( "G", ( P + vector( 11.6, 13.3, 0 ) ) / 1.5, 7, 7, "gaussian" );
+		""" )
+		self.assertEqual( list( checkErrors ), [] )
+		resample["filter"].setValue( "sharp-gaussian" )
+		resample["filterScale"].setValue( imath.V2f( 7 ) )
+
+		self.assertImagesEqual( crop["out"], referenceCrop["out"], ignoreChannelNamesOrder = True, maxDifference = 0.00001 )
+
+		resample["filter"].setValue( "disk" )
+		code["code"].setValue( """
+			out = pixelFiltered( "", ( P + vector( 11.6, 13.3, 0 ) ) / 1.5, 7, 7, "disk" );
+			out.g = pixelFiltered( "G", ( P + vector( 11.6, 13.3, 0 ) ) / 1.5, 7, 7, "disk" );
+		""" )
+		self.assertEqual( list( checkErrors ), [] )
+		self.assertImagesEqual( crop["out"], referenceCrop["out"], ignoreChannelNamesOrder = True, maxDifference = 0.00001 )
+
+		resample["filterScale"].setValue( imath.V2f( 7, 2 ) )
+		code["code"].setValue( """
+			out = pixelFiltered( "", ( P + vector( 11.6, 13.3, 0 ) ) / 1.5, 7, 2, "disk" );
+			out.g = pixelFiltered( "G", ( P + vector( 11.6, 13.3, 0 ) ) / 1.5, 7, 2, "disk" );
+		""" )
+		self.assertEqual( list( checkErrors ), [] )
+		self.assertImagesEqual( crop["out"], referenceCrop["out"], ignoreChannelNamesOrder = True, maxDifference = 0.00001 )
+
+
+		# Test a weird angled filter by rotating to an angle, applying an anisotropic filter, and rotating
+		# back
+		imageTransform = GafferImage.ImageTransform()
+		imageTransform["transform"]["rotate"].setValue( 30 )
+		imageTransform["in"].setInput( deleteChannels["out"] )
+
+		resample["in"].setInput( imageTransform["out"] )
+		resample["matrix"].setValue( imath.M33f() )
+		resample["filter"].setValue( "sharp-gaussian" )
+
+		imageTransformReverse = GafferImage.ImageTransform()
+		imageTransformReverse["in"].setInput( resample["out"] )
+		imageTransformReverse["transform"]["rotate"].setValue( -30 )
+		imageTransformReverse["transform"]["translate"].setValue( imath.V2f( 5.5, 7.5 ) )
+
+		referenceCrop["in"].setInput( imageTransformReverse["out"] )
+
+		# Note that the filter is larger than <7, 2>, in order to compensate for the extra smearing from
+		# the rotates
+		code["code"].setValue( """
+			vector dir = rotate( vector( 1, 0, 0 ), 30 * M_PI / 180, vector( 0, 0, -1 ) );
+			vector perp = vector( dir.y, -dir.x, 0 );
+			out = pixelFilteredWithDirections(
+				"", ( P + vector( -5.5, -7.5, 0 ) ), dir * 7.3, perp * 2.9, "gaussian"
+			);
+			out.g = pixelFilteredWithDirections(
+				"G", ( P + vector( -5.5, -7.5, 0 ) ), dir * 7.3, perp * 2.9, "gaussian"
+			);
+		""" )
+		self.assertEqual( list( checkErrors ), [] )
+
+		crop["area"].setValue( imath.Box2i( imath.V2i( 12, 12 ), imath.V2i( 95, 95 ) ) )
+
+		# With the imprecision of the rotate/smear/rotate approach, this isn't an exact match, but it's close
+		self.assertImagesEqual( crop["out"], referenceCrop["out"], ignoreChannelNamesOrder = True, maxDifference = 0.01 )
+
 
 if __name__ == "__main__":
 	unittest.main()
