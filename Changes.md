@@ -13,6 +13,7 @@ Fixes
 -----
 
 - CyclesOptions : Fixed errors in section summaries.
+- NoduleLayout : Fixed shutdown crashes triggered by custom gadgets implemented in Python.
 
 1.0.3.0 (relative to 1.0.2.1)
 =======
@@ -323,6 +324,14 @@ Build
   - Subprocess32 : Now packaged as a regular module rather than as a `.egg` package.
   - TBB : Updated to version 2020.3.
   - USD : Updated to version 21.11.
+
+0.61.14.x (relative to 0.61.14.4)
+=========
+
+Fixes
+------
+
+- NoduleLayout : Fixed shutdown crashes triggered by custom gadgets implemented in Python.
 
 0.61.14.4 (relative to 0.61.14.3)
 =========
