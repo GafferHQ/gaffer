@@ -38,6 +38,9 @@
 
 #include "GafferOSL/OSLShader.h"
 
+#include "GafferImage/FilterAlgo.h"
+#include "GafferImage/Sampler.h"
+
 #include "Gaffer/Context.h"
 
 #include "IECoreScene/ShaderNetworkAlgo.h"
@@ -277,6 +280,24 @@ bool convertValue( void *dst, TypeDesc dstType, const void *src, TypeDesc srcTyp
 	return false;
 }
 
+// Addresses within this buffer are used for texture handle pointer that correspond to Gaffer textures.  The
+// data within the buffer isn't used - just the index within the buffer indicates which Gaffer texture is used.
+const std::vector< char > g_gafferTextureIndicesBuffer( 1000 );
+tbb::spin_mutex g_gafferTextureIndicesMutex;
+const container::flat_map<ustring, int> *g_gafferTextureIndices;
+
+// TODO - this mapping is probably kinda hacky - should we pass the actual filter as part of the texture name instead?
+std::vector<const OIIO::Filter2D*> setupFiltersForInterpModes()
+{
+	std::vector<const OIIO::Filter2D*> result( TextureOpt::InterpSmartBicubic ); // Currently SmartBicubic is max value
+	result[ TextureOpt::InterpBilinear ] = GafferImage::FilterAlgo::acquireFilter( "box" );
+	result[ TextureOpt::InterpBicubic ] = GafferImage::FilterAlgo::acquireFilter( "disk" );
+	result[ TextureOpt::InterpSmartBicubic ] = GafferImage::FilterAlgo::acquireFilter( "sharp-gaussian" );
+	// Note that for TextureOpt::InterpClosest we go straight to Sampler instead of using a filter at all
+	return result;
+}
+const std::vector<const OIIO::Filter2D*> g_filtersForInterpModes = setupFiltersForInterpModes();
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -286,6 +307,7 @@ bool convertValue( void *dst, TypeDesc dstType, const void *src, TypeDesc srcTyp
 namespace
 {
 
+const std::string g_gafferImagePrefix = "gaffer:";
 OIIO::ustring gIndex( "shading:index" );
 ustring g_contextVariableAttributeScope( "gaffer:context" );
 
@@ -306,6 +328,56 @@ void maskedDataInitWithZeroDerivs( MaskedData<WidthT> &wval )
 }
 #endif
 
+struct ChannelsRequested
+{
+	ChannelsRequested( const std::string &gafferTextureName, const ShadingEngine::ImagePlugs &imagePlugs )
+	{
+		imagePlug = nullptr;
+
+		vector<string> nameTokens;
+		boost::split( nameTokens, gafferTextureName.substr( g_gafferImagePrefix.size() ), boost::is_any_of(".") );
+		const auto imagePlugIter = imagePlugs.find( nameTokens[0] );
+		if( imagePlugIter != imagePlugs.end() )
+		{
+			imagePlug = imagePlugIter->second;
+			ConstStringVectorDataPtr channelNamesData = imagePlug->channelNames( &GafferImage::ImagePlug::defaultViewName ); // TODO view
+			const std::vector< std::string > &channelNames = channelNamesData->readable();
+
+			std::string channelOrLayer = boost::join( std::vector< string >( nameTokens.begin() + 1, nameTokens.end() ), "." );
+			bool found = false;
+			if( std::find( channelNames.begin(), channelNames.end(), channelOrLayer ) != channelNames.end() )
+			{
+				channels[0] = channels[1] = channels[2] = channels[3] = channelOrLayer;
+				found = true;
+			}
+			else
+			{
+				for( int i = 0; i < 4; i++ )
+				{
+					std::string channel = ( channelOrLayer.size() ? channelOrLayer + "." : "" ) + std::string( 1, "RGBA"[i] );
+					if( std::find( channelNames.begin(), channelNames.end(), channel ) != channelNames.end() )
+					{
+						channels[i] = channel;
+						found = true;
+					}
+				}
+			}
+
+			if( !found )
+			{
+				throw IECore::Exception( "Cannot access Gaffer image, cannot find channels matching: " + channelOrLayer + ", available channels are: " + boost::algorithm::join( channelNames, "," ) );
+			}
+		}
+		else
+		{
+			throw IECore::Exception( "Cannot access Gaffer image, cannot find image plug: " + nameTokens[0] );
+		}
+	}
+
+	const GafferImage::ImagePlug* imagePlug;
+	std::string channels[4];
+};
+
 class RenderState
 {
 
@@ -315,7 +387,9 @@ class RenderState
 			const IECore::CompoundData *shadingPoints,
 			const ShadingEngine::Transforms &transforms,
 			const std::vector<InternedString> &contextVariablesNeeded,
-			const Gaffer::Context *context
+			const Gaffer::Context *context,
+			const std::vector< OIIO::ustring > &gafferTexturesRequested,
+			const ShadingEngine::ImagePlugs &imagePlugs
 		)
 		{
 			for(
@@ -355,6 +429,32 @@ class RenderState
 						}
 					)
 				);
+			}
+
+			m_gafferTextures.reserve( gafferTexturesRequested.size() );
+			Box2i infiniteBound;
+			infiniteBound.makeInfinite();
+			infiniteBound.min += V2i( 1 ); // Make sure overscan doesn't trigger wraparound
+			infiniteBound.max -= V2i( 1 );
+
+			for( const auto &textureName : gafferTexturesRequested )
+			{
+				size_t textureIndex = m_gafferTextures.size();
+				m_gafferTextures.resize( textureIndex + 1 );
+
+				// TODO - should this throw, or should we handle it not matching anything?
+				ChannelsRequested cr( textureName.string(), imagePlugs );
+
+				Box2i display = cr.imagePlug->format( &GafferImage::ImagePlug::defaultViewName ).getDisplayWindow();
+				m_gafferTextures[ textureIndex ].dataWindowSize = display.size();
+				for( int i = 0; i < 4; i++ )
+				{
+					if( cr.channels[i] != "" )
+					{
+						// Initialize Sampler
+						m_gafferTextures[ textureIndex ].channels[i].emplace( cr.imagePlug, cr.channels[i], infiniteBound, GafferImage::Sampler::BoundingMode::Clamp, true ); // TODO select view TODO choose clamp
+					}
+				}
 			}
 		}
 
@@ -502,6 +602,83 @@ class RenderState
 			return false;
 		}
 
+		bool texture( size_t gafferTextureIndex,
+                          TextureOpt& options, float s,
+                          float t, float dsdx, float dtdx, float dsdy,
+                          float dtdy, int nchannels, float* result,
+                          float* dresultds, float* dresultdt,
+                          ustring* errormessage ) const
+		{
+			if( gafferTextureIndex >= m_gafferTextures.size() )
+			{
+				throw IECore::Exception( "Internal Gaffer error, out of bound texture index" );
+			}
+
+			const GafferTextureData &tex = m_gafferTextures[ gafferTextureIndex ];
+			// TODO - why is nchannels always 4?  It should be 1 or 3
+			// TODO - alpha
+			memset( result, 0, sizeof( float ) * nchannels );
+			try
+			{
+				V2f p = V2f( s, t ) * tex.dataWindowSize;
+				for( int i = 0; i < nchannels; i++ )
+				{
+					if( tex.channels[i] )
+					{
+						// TODO - optimize case where someone accidentally accesses channel as layer?
+						/*if( i > 0 && tex.channels[i] == tex.channels[i - 1] )
+						{
+							result[i] = result[i-1];
+						}*/
+						if( options.interpmode == TextureOpt::InterpClosest )
+						{
+							// TODO - default floor is incredibly slow - these two calls are actually quite prominent in profiles
+							result[i] = tex.channels[i]->sample( int( floor( p[0] ) ), int( floor( p[1] ) ) );
+						}
+						else if( dsdx == 0 && dtdx == 0 && dsdy == 0 && dtdy == 0 )
+						{
+							result[i] = tex.channels[i]->sample( p[0], p[1] );
+						}
+						else if( ( dsdx == 0 && dtdy == 0 ) || ( dtdx == 0 && dsdy == 0 ) )
+						{
+							result[i] = GafferImage::FilterAlgo::sampleBox( *tex.channels[i], p,
+								( dsdx ? dsdx : dtdx ) * tex.dataWindowSize.x, ( dsdy ? dsdy : dtdy ) * tex.dataWindowSize.y,
+								g_filtersForInterpModes[ options.interpmode ], m_scratchMemory
+							 );
+						}
+						else
+						{
+							// TODO - confirm scaling is correct on non-square image
+							result[i] = GafferImage::FilterAlgo::sampleParallelogram( *tex.channels[i], p,
+								V2f( dsdx, dtdx ) * tex.dataWindowSize.x, V2f( dsdy, dtdy ) * tex.dataWindowSize.y,
+								g_filtersForInterpModes[ options.interpmode ]
+							);
+						}
+					}
+				}
+			}
+			catch( IECore::Cancelled const &c )
+			{
+				// TODO - figure out why letting this exception through causes std::terminate
+			}
+			catch( std::exception  const &e )
+			{
+				msg( Msg::Warning, "ShadingEngine", "Error during Gaffer texture() eval: " + std::string( e.what() ) );
+			}
+
+			if( dresultds )
+			{
+				memset( dresultds, 0, sizeof( float ) * nchannels );
+			}
+
+			if( dresultdt )
+			{
+				memset( dresultds, 0, sizeof( float ) * nchannels );
+			}
+
+			return true;
+		}
+
 	private :
 
 		using RenderStateTransforms = boost::unordered_map< OIIO::ustring, ShadingEngine::Transform, OIIO::ustringHash>;
@@ -519,9 +696,23 @@ class RenderState
 			ConstDataPtr dataStorage;
 		};
 
+		struct GafferTextureData
+		{
+			// TODO - mutable doesn't make sense here, but it kind of would make sense if the stuff that
+			// updates during a call to sample() was mutable, so sample() on a Sampler could be const
+			//
+			// TODO - we probably want to share samplers between threads, but currently, Sampler isn't threadsafe?
+			mutable std::optional<GafferImage::Sampler> channels[4];
+			V2f dataWindowSize;
+		};
+
 		container::flat_map<ustring, UserData, OIIO::ustringPtrIsLess> m_userData;
 		container::flat_map<ustring, ContextData, OIIO::ustringPtrIsLess> m_contextVariables;
 
+		std::vector<GafferTextureData> m_gafferTextures;
+
+		// Each thread gets its own copy of RenderState, so we can safely put scratch memory here
+		mutable std::vector< float > m_scratchMemory;
 };
 
 struct ThreadRenderState
@@ -529,6 +720,25 @@ struct ThreadRenderState
 	ThreadRenderState(const RenderState& renderState) : pointIndex(0), renderState ( renderState ) {}
 	size_t pointIndex;
 	const RenderState& renderState;
+};
+
+int g_gafferTextureHandleMagicNumber = -42;
+class GafferTextureHandle
+{
+public:
+	GafferTextureHandle() : m_oiioTexSysRefCount( g_gafferTextureHandleMagicNumber )
+	{
+	}
+
+	bool isGafferTextureHandle()
+	{
+		return m_oiioTexSysRefCount == g_gafferTextureHandleMagicNumber;
+	}
+
+private:
+
+
+	const OIIO::atomic_int m_oiioTexSysRefCount;
 };
 
 } // namespace
@@ -798,6 +1008,80 @@ private:
 		GafferBatchedRendererServices<8> m_batchedRendererServices8;
 		GafferBatchedRendererServices<16> m_batchedRendererServices16;
 #endif
+
+public:
+		virtual bool has_userdata( ustring name, TypeDesc type, OSL::ShaderGlobals *sg )
+		{
+			const ThreadRenderState *threadRenderState = sg ? static_cast<ThreadRenderState *>( sg->renderstate ) : nullptr;
+			if( !threadRenderState )
+			{
+				return false;
+			}
+			return threadRenderState->renderState.userData( threadRenderState->pointIndex, name, type, nullptr );
+		}
+
+		TextureHandle * get_texture_handle( ustring filename, ShadingContext *context ) override
+		{
+			if( boost::starts_with( filename, g_gafferImagePrefix ) )
+			{
+				if( !g_gafferTextureIndices )
+				{
+					throw IECore::Exception( "Should not be possible\n" );
+				}
+				auto i = g_gafferTextureIndices->find( filename );
+				if( i == g_gafferTextureIndices->end() )
+				{
+					throw IECore::Exception( "Cannot access Gaffer image, it was not visible during compilation: " + filename.string() );
+				}
+				else
+				{
+					if( i->second > (int)g_gafferTextureIndicesBuffer.size() )
+					{
+						throw IECore::Exception( "GafferOSL::ShadingEngine Too many unique Gaffer images used." );
+					}
+					return (TextureHandle*)( &g_gafferTextureIndicesBuffer[ i->second ] );
+				}
+			}
+
+			return OSL::RendererServices::get_texture_handle( filename, context );
+
+
+			//return texturesys()->get_texture_handle( filename, context->texture_thread_info() );
+		}
+
+		bool texture( ustring filename, TextureHandle* texture_handle,
+                          TexturePerthread* texture_thread_info,
+                          TextureOpt& options, ShaderGlobals* sg, float s,
+                          float t, float dsdx, float dtdx, float dsdy,
+                          float dtdy, int nchannels, float* result,
+                          float* dresultds, float* dresultdt,
+                          ustring* errormessage) override
+		{
+			if( texture_handle )
+			{
+				size_t gafferTextureIndex = ((char*)texture_handle) - &g_gafferTextureIndicesBuffer[0];
+
+				if( gafferTextureIndex <= g_gafferTextureIndicesBuffer.size() )
+				{
+					const ThreadRenderState *threadRenderState = sg ? static_cast<ThreadRenderState *>( sg->renderstate ) : nullptr;
+					if( threadRenderState->renderState.texture(
+						gafferTextureIndex, options,
+						s, t, dsdx, dtdx, dsdy, dtdy,
+						nchannels, result, dresultds, dresultdt, errormessage
+					) )
+					{
+						return true;
+					}
+				}
+			}
+			else if( boost::starts_with( filename, g_gafferImagePrefix ) )
+			{
+				throw IECore::Exception( "Cannot access Gaffer image, it was not visible during compilation: " + filename.string() );
+			}
+
+			return OSL::RendererServices::texture( filename, texture_handle, texture_thread_info, options, sg, s, t, dsdx, dtdx, dsdy, dtdy, nchannels, result, dresultds, dresultdt, errormessage );
+		}
+
 };
 
 } // namespace
@@ -1412,6 +1696,23 @@ void ShadingEngine::queryShaderGroup()
 			}
 		}
 	}
+
+	int numTextures = 0;
+	shadingSystem->getattribute( &shaderGroup, "num_textures_needed", numTextures );
+	if( numTextures )
+	{
+		ustring *textureNames = nullptr;
+		shadingSystem->getattribute(  &shaderGroup, "textures_needed", TypeDesc::PTR, &textureNames );
+		for( int i = 0; i < numTextures; ++i )
+		{
+			if( boost::starts_with( textureNames[i], g_gafferImagePrefix ) )
+			{
+				m_gafferTextureIndices[ textureNames[i] ] = m_gafferTexturesRequested.size();
+				m_gafferTexturesRequested.push_back( textureNames[i] );
+
+			}
+		}
+	}
 }
 
 ShadingEngine::~ShadingEngine()
@@ -1455,10 +1756,20 @@ struct ExecuteShadeParameters
 	mutable tbb::enumerable_thread_specific<ThreadInfo> threadInfoCache;
 };
 
+
 IECore::CompoundDataPtr executeShade( const ExecuteShadeParameters &params, const RenderState &renderState, ShaderGroup &shaderGroup, ShadingSystem *shadingSystem )
 {
 	// Allocate data for the result
 	ShadingResults results( params.numPoints );
+
+	{
+		// Do a quick init of the shading system while setting the global map of texture indices
+		// to map the correct textures for this ShadingEngine
+		tbb::spin_mutex::scoped_lock lock( g_gafferTextureIndicesMutex );
+		g_gafferTextureIndices = &m_gafferTextureIndices;
+		shadingSystem->execute_init( *params.threadInfoCache.local().shadingContext, shaderGroup, shaderGlobals, false );
+		g_gafferTextureIndices = nullptr;
+	}
 
 	// Iterate over the input points, doing the shading as we go
 	auto f = [&params, &renderState, &shaderGroup, &shadingSystem, &results]( const tbb::blocked_range<size_t> &r )
@@ -1512,7 +1823,12 @@ IECore::CompoundDataPtr executeShade( const ExecuteShadeParameters &params, cons
 	// tasks from propagating down and stopping our tasks from being started.
 	// Otherwise we silently return results with black gaps where tasks were omitted.
 	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
-	tbb::parallel_for( tbb::blocked_range<size_t>( 0, params.numPoints, 5000 ), f, taskGroupContext );
+
+	// TODO TODO TODO - since we haven't yet figured out how to multithread Sampler, currently we just crash
+	// if multiple threads pick up here while we're sampling images.  We can hack around this temporarily
+	// since we're only sampling images when processing image tiles, so we can just set the block size larger than
+	// an image tile, but this is not at all sustainable.
+	tbb::parallel_for( tbb::blocked_range<size_t>( 0, params.numPoints, 50000 ), f, taskGroupContext );
 
 	return results.results();
 }
@@ -1634,7 +1950,7 @@ IECore::CompoundDataPtr executeShadeBatched( const ExecuteShadeParameters &param
 
 } // namespace
 
-IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points, const ShadingEngine::Transforms &transforms ) const
+IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points, const ShadingEngine::Transforms &transforms, const ImagePlugs &imagePlugs ) const
 {
 	ShaderGroup &shaderGroup = **static_cast<ShaderGroupRef *>( m_shaderGroupRef );
 
@@ -1701,7 +2017,7 @@ IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points
 	// Add a RenderState to the ShaderGlobals. This will
 	// get passed to our RendererServices queries.
 
-	RenderState renderState( points, transforms, m_contextVariablesNeeded, context );
+	RenderState renderState( points, transforms, m_contextVariablesNeeded, context, m_gafferTexturesRequested, imagePlugs );
 
 #if OSL_USE_BATCHED
 	if( batchSize == 1 )
@@ -1751,4 +2067,37 @@ bool ShadingEngine::needsAttribute( const std::string &name ) const
 bool ShadingEngine::hasDeformation() const
 {
 	return m_hasDeformation;
+}
+
+bool ShadingEngine::needsImageSamples() const
+{
+	return m_gafferTexturesRequested.size() > 0;
+}
+
+IECore::MurmurHash ShadingEngine::hashPossibleImageSamples( const ImagePlugs &imagePlugs ) const
+{
+	IECore::MurmurHash h;
+
+
+	for( const auto &textureName : m_gafferTexturesRequested )
+	{
+		ChannelsRequested cr( textureName.string(), imagePlugs );
+		Box2i dw = cr.imagePlug->dataWindow( &GafferImage::ImagePlug::defaultViewName );
+		h.append( dw );
+		for( int i = 0; i < 4; i++ )
+		{
+			if( cr.channels[i] != "" )
+			{
+				// TODO - parallelize
+				for ( int x = dw.min.x; x < dw.max.x; x += GafferImage::ImagePlug::tileSize() )
+				{
+					for ( int y = dw.min.y; y < dw.max.y; y += GafferImage::ImagePlug::tileSize() )
+					{
+						h.append( cr.imagePlug->channelDataHash( cr.channels[i], Imath::V2i( x, y ) ) );
+					}
+				}
+			}
+		}
+	}
+	return h;
 }
