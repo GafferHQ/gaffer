@@ -1526,11 +1526,11 @@ for libraryName, libraryDef in libraries.items() :
 	# header install
 
 	fileSubstitutions = {
-		"!GAFFER_MILESTONE_VERSION!" : "$GAFFER_MILESTONE_VERSION",
-		"!GAFFER_MAJOR_VERSION!" : "$GAFFER_MAJOR_VERSION",
-		"!GAFFER_MINOR_VERSION!" : "$GAFFER_MINOR_VERSION",
-		"!GAFFER_PATCH_VERSION!" : "$GAFFER_PATCH_VERSION",
-		"!GAFFER_VERSION_SUFFIX!" : "$GAFFER_VERSION_SUFFIX",
+		"!GAFFER_MILESTONE_VERSION!" : libEnv.subst( "$GAFFER_MILESTONE_VERSION" ),
+		"!GAFFER_MAJOR_VERSION!" : libEnv.subst( "$GAFFER_MAJOR_VERSION" ),
+		"!GAFFER_MINOR_VERSION!" : libEnv.subst( "$GAFFER_MINOR_VERSION" ),
+		"!GAFFER_PATCH_VERSION!" : libEnv.subst( "$GAFFER_PATCH_VERSION" ),
+		"!GAFFER_VERSION_SUFFIX!" : libEnv.subst( "$GAFFER_VERSION_SUFFIX" ),
 	}
 
 	def processHeaders( env, libraryName ) :

@@ -134,6 +134,7 @@ Action                               | Control or shortcut
 Cut node(s)                          | {kbd}`Ctrl` + {kbd}`X`
 Copy node(s)                         | {kbd}`Ctrl` + {kbd}`C`
 Paste node(s)                        | {kbd}`Ctrl` + {kbd}`V`
+Duplicate node(s) with inputs        | {kbd}`Ctrl` + {kbd}`D`
 Delete node(s)                       | {kbd}`Backspace`<br>or<br>{kbd}`Delete`
 Enable/disable node(s)               | {kbd}`D`
 Rename node(s)                       | {kbd}`F2`

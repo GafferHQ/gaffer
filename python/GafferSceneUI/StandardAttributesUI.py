@@ -50,6 +50,14 @@ def __attributesSummary( plug ) :
 
 	return ", ".join( info )
 
+def __instancingSummary( plug ) :
+
+	info = []
+	if plug["automaticInstancing"]["enabled"].getValue() :
+		info.append( "Automatic Instancing " + ( "On" if plug["automaticInstancing"]["value"].getValue() else "Off" ) )
+
+	return ", ".join( info )
+
 def __motionBlurSummary( plug ) :
 
 	info = []
@@ -83,6 +91,7 @@ Gaffer.Metadata.registerNode(
 		"attributes" : [
 
 			"layout:section:Attributes:summary", __attributesSummary,
+			"layout:section:Instancing:summary", __instancingSummary,
 			"layout:section:Motion Blur:summary", __motionBlurSummary,
 
 		],
@@ -247,6 +256,24 @@ Gaffer.Metadata.registerNode(
 		"attributes.filteredLights.value" : [
 
 			"ui:scene:acceptsSetExpression", True,
+
+		],
+
+		# Instancing
+
+		"attributes.automaticInstancing" : [
+
+			"description",
+			"""
+			By default, if Gaffer sees two objects are identical, it will pass them
+			to the renderer only once, saving a lot of memory. You can set this to
+			false to disable that, losing the memory savings. This can be useful
+			in certain cases like using world space displacement and wanting multiple
+			copies to displace differently. Disabling is currently only supported by
+			the Arnold render backend.
+			""",
+
+			"layout:section", "Instancing",
 
 		],
 

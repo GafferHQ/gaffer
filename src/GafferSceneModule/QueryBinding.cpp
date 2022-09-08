@@ -45,6 +45,7 @@
 #include "GafferScene/BoundQuery.h"
 #include "GafferScene/ExistenceQuery.h"
 #include "GafferScene/FilterQuery.h"
+#include "GafferScene/OptionQuery.h"
 #include "GafferScene/TransformQuery.h"
 #include "GafferScene/ShaderQuery.h"
 
@@ -100,11 +101,8 @@ class AttributeQuerySerialiser : public GafferBindings::NodeSerialiser
 	}
 };
 
-NameValuePlugPtr addQuery(
-	GafferScene::ShaderQuery &query,
-	const ValuePlug &plug,
-	const std::string &parameter
-)
+template<typename T>
+NameValuePlugPtr addQuery( T &query, const ValuePlug &plug, const std::string &parameter )
 {
 	IECorePython::ScopedGILRelease gilRelease;
 
@@ -113,39 +111,45 @@ NameValuePlugPtr addQuery(
 	return result;
 }
 
-void removeQuery( GafferScene::ShaderQuery &query, NameValuePlug &plug )
+template<typename T>
+void removeQuery( T &query, NameValuePlug &plug )
 {
 	IECorePython::ScopedGILRelease gilRelease;
 	query.removeQuery( &plug );
 }
 
-const BoolPlugPtr existsPlugFromQuery( const GafferScene::ShaderQuery &q, const NameValuePlug &p )
+template<typename T>
+const BoolPlugPtr existsPlugFromQuery( const T &q, const NameValuePlug &p )
 {
 	return const_cast<BoolPlug *>( q.existsPlugFromQuery( &p ) );
 }
 
-const ValuePlugPtr valuePlugFromQuery( const GafferScene::ShaderQuery &q, const NameValuePlug &p )
+template<typename T>
+const ValuePlugPtr valuePlugFromQuery( const T &q, const NameValuePlug &p )
 {
 	return const_cast<ValuePlug *>( q.valuePlugFromQuery( &p ) );
 }
 
-const ValuePlugPtr outPlugFromQuery( const GafferScene::ShaderQuery &q, const NameValuePlug &p )
+template<typename T>
+const ValuePlugPtr outPlugFromQuery( const T &q, const NameValuePlug &p )
 {
 	return const_cast<ValuePlug *>( q.outPlugFromQuery( &p ) );
 }
 
-const NameValuePlugPtr queryPlug( const GafferScene::ShaderQuery &q, const ValuePlug &p )
+template<typename T>
+const NameValuePlugPtr queryPlug( const T &q, const ValuePlug &p )
 {
 	return const_cast<NameValuePlug *>( q.queryPlug( &p ) );
 }
 
-class ShaderQuerySerialiser : public NodeSerialiser
+template<typename T>
+class MultiQuerySerialiser : public NodeSerialiser
 {
 	std::string postConstructor( const GraphComponent* component, const std::string& identifier, Serialisation& serialisation ) const override
 	{
 		std::string result = NodeSerialiser::postConstructor( component, identifier, serialisation );
 
-		const GafferScene::ShaderQuery* const query = IECore::runTimeCast< const GafferScene::ShaderQuery >( component );
+		const T* const query = IECore::runTimeCast< const T >( component );
 
 		for( const auto &queryPlug : NameValuePlug::Range( *query->queriesPlug() ) )
 		{
@@ -161,6 +165,20 @@ class ShaderQuerySerialiser : public NodeSerialiser
 	}
 };
 
+template<typename T>
+void bindMultiQuery()
+{
+	DependencyNodeClass<T>()
+		.def( "addQuery", &addQuery<T>, ( arg( "plug" ), arg( "parameter" ) = "" ) )
+		.def( "removeQuery", &removeQuery<T> )
+		.def( "existsPlugFromQuery", &existsPlugFromQuery<T> )
+		.def( "valuePlugFromQuery", &valuePlugFromQuery<T> )
+		.def( "outPlugFromQuery", &outPlugFromQuery<T> )
+		.def( "queryPlug", &queryPlug<T> )
+	;
+	Serialisation::registerSerialiser( T::staticTypeId(), new MultiQuerySerialiser<T>() );
+}
+
 } // namespace
 
 void GafferSceneModule::bindQueries()
@@ -173,16 +191,8 @@ void GafferSceneModule::bindQueries()
 
 	GafferBindings::Serialisation::registerSerialiser( GafferScene::AttributeQuery::staticTypeId(), new AttributeQuerySerialiser() );
 
-	DependencyNodeClass< GafferScene::ShaderQuery >()
-		.def( "addQuery", &addQuery, ( arg( "plug" ), arg( "parameter" ) = "" ) )
-		.def( "removeQuery", &removeQuery )
-		.def( "existsPlugFromQuery", &existsPlugFromQuery )
-		.def( "valuePlugFromQuery", &valuePlugFromQuery )
-		.def( "outPlugFromQuery", &outPlugFromQuery )
-		.def( "queryPlug", &queryPlug )
-	;
-
-	Serialisation::registerSerialiser( GafferScene::ShaderQuery::staticTypeId(), new ShaderQuerySerialiser() );
+	bindMultiQuery<GafferScene::ShaderQuery>();
+	bindMultiQuery<GafferScene::OptionQuery>();
 
 	{
 		boost::python::scope s = GafferBindings::DependencyNodeClass< GafferScene::BoundQuery >();

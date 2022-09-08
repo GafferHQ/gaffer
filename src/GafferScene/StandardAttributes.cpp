@@ -71,6 +71,10 @@ StandardAttributes::StandardAttributes( const std::string &name )
 
 	attributes->addChild( new Gaffer::NameValuePlug( "filteredLights", new IECore::StringData( "" ), false, "filteredLights" ) );
 
+	// instancing
+
+	attributes->addChild( new Gaffer::NameValuePlug( "gaffer:automaticInstancing", new IECore::BoolData( true ), false, "automaticInstancing" ) );
+
 	plugSetSignal().connect( boost::bind( &StandardAttributes::plugSet, this, ::_1 ) );
 
 }

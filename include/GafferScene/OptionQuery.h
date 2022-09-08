@@ -34,40 +34,34 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_SHADERQUERY_H
-#define GAFFERSCENE_SHADERQUERY_H
+#ifndef GAFFERSCENE_OPTIONQUERY_H
+#define GAFFERSCENE_OPTIONQUERY_H
 
-#include "GafferScene/AttributeQuery.h"
 #include "GafferScene/Export.h"
+#include "GafferScene/ScenePlug.h"
 #include "GafferScene/TypeIds.h"
 
 #include "Gaffer/ArrayPlug.h"
+#include "Gaffer/ComputeNode.h"
 #include "Gaffer/NameValuePlug.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/TypedObjectPlug.h"
 
+#include <string>
+
 namespace GafferScene
 {
 
-class GAFFERSCENE_API ShaderQuery : public Gaffer::ComputeNode
+class GAFFERSCENE_API OptionQuery : public Gaffer::ComputeNode
 {
-	public:
-		ShaderQuery( const std::string &name = defaultName<ShaderQuery>() );
-		~ShaderQuery() override;
+	public :
+		OptionQuery( const std::string& name = defaultName< OptionQuery >() );
+		~OptionQuery() override;
 
-		GAFFER_NODE_DECLARE_TYPE( GafferScene::ShaderQuery, ShaderQueryTypeId, Gaffer::ComputeNode );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::OptionQuery, OptionQueryTypeId, Gaffer::ComputeNode );
 
 		ScenePlug *scenePlug();
 		const ScenePlug *scenePlug() const;
-
-		Gaffer::StringPlug *locationPlug();
-		const Gaffer::StringPlug *locationPlug() const;
-
-		Gaffer::StringPlug *shaderPlug();
-		const Gaffer::StringPlug *shaderPlug() const;
-
-		Gaffer::BoolPlug *inheritPlug();
-		const Gaffer::BoolPlug *inheritPlug() const;
 
 		Gaffer::ArrayPlug *queriesPlug();
 		const Gaffer::ArrayPlug *queriesPlug() const;
@@ -75,19 +69,19 @@ class GAFFERSCENE_API ShaderQuery : public Gaffer::ComputeNode
 		Gaffer::ArrayPlug *outPlug();
 		const Gaffer::ArrayPlug *outPlug() const;
 
-		/// Adds a query for parameter, with a type and default value specified by plug.
+		/// Adds a query for option, with a type and default value specified by plug.
 		/// The returned NameValuePlug is parented to queriesPlug() and may be edited
-		/// subsequently to modify the parameter name and default. Corresponding children
+		/// subsequently to modify the option name and default. Corresponding children
 		/// are added to existsPlug() and valuePlug() to provide the output from the query.
 		Gaffer::NameValuePlug *addQuery(
 			const Gaffer::ValuePlug *plug,
-			const std::string &parameter = ""
+			const std::string &option = ""
 		);
 		/// Removes a query. Throws an Exception if the query or corresponding children
 		/// of `valuesPlug()` and `existsPlug()` can not be deleted.
 		void removeQuery( Gaffer::NameValuePlug *plug );
 
-		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
+		void affects( const Gaffer::Plug* input, AffectedPlugsContainer& outputs ) const override;
 
 		/// Returns the `exists`, `value` or child of `out` corresponding to the specified
 		/// query plug. Throws an exception if the query does not exist or the corresponding output
@@ -102,23 +96,18 @@ class GAFFERSCENE_API ShaderQuery : public Gaffer::ComputeNode
 		const Gaffer::NameValuePlug *queryPlug( const Gaffer::ValuePlug *outputPlug ) const;
 		const Gaffer::ValuePlug *outPlug( const Gaffer::ValuePlug *outputPlug ) const;
 
-	protected:
-		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context) const override;
+	protected :
 
-	private:
+		void hash( const Gaffer::ValuePlug* output, const Gaffer::Context* context, IECore::MurmurHash& h ) const override;
+		void compute( Gaffer::ValuePlug* output, const Gaffer::Context* context ) const override;
 
-		AttributeQuery *attributeQuery();
-		const AttributeQuery *attributeQuery() const;
-
-		Gaffer::ObjectPlug *intermediateObjectPlug();
-		const Gaffer::ObjectPlug *intermediateObjectPlug() const;
-
-		const IECore::Data *parameterData( const IECore::Object *object, const std::string &parameterName ) const;
+	private :
 
 		static size_t g_firstPlugIndex;
 };
 
-}  // namespace GafferScene
+IE_CORE_DECLAREPTR( OptionQuery )
 
-#endif // GAFFERSCENE_SHADERQUERY_H
+} // GafferScene
+
+#endif // GAFFERSCENE_OPTIONQUERY_H

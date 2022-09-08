@@ -38,6 +38,23 @@ Breaking Changes
 - ImageGadget : Removed setters and getters for `DisplayTransform`, `UseGPU`, `Clipping`, `Exposure`, `Gamma`.  Instead use `ViewportGadget::setPostProcessShader()` to set up a GPU color transform, or set the plug values on `ImageView`.
 - ImageView : Using CPU color transforms is now deprecated.  We can't properly support wipes in CPU mode, and OCIO now offers full quality on the GPU, in addition to the performance being much better.  While the CPU functionality still exists, the UI has been hidden.
 
+1.0.x.x (relative to 1.0.3.0)
+=======
+
+Features
+--------
+
+- Edit Menu : Added "Duplicate with Inputs" menu item, with <kbd>Ctrl</kbd>+<kbd>D</kbd> shortcut.
+- StandardAttributes : Added `automaticInstancing` plug to allow instancing to be disabled on selected locations. Currently supported only by the Arnold renderer.
+- OptionTweaks : Added node for tweaking options in a scene.
+- OptionQuery : Added node for querying options from a scene.
+
+Fixes
+-----
+
+- CyclesOptions : Fixed errors in section summaries.
+- NoduleLayout : Fixed shutdown crashes triggered by custom gadgets implemented in Python.
+
 1.0.3.0 (relative to 1.0.2.1)
 =======
 
@@ -347,6 +364,14 @@ Build
   - Subprocess32 : Now packaged as a regular module rather than as a `.egg` package.
   - TBB : Updated to version 2020.3.
   - USD : Updated to version 21.11.
+
+0.61.14.x (relative to 0.61.14.4)
+=========
+
+Fixes
+------
+
+- NoduleLayout : Fixed shutdown crashes triggered by custom gadgets implemented in Python.
 
 0.61.14.4 (relative to 0.61.14.3)
 =========

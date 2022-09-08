@@ -1241,7 +1241,7 @@ Box3f GraphGadget::renderBound() const
 
 bool GraphGadget::keyPressed( GadgetPtr gadget, const KeyEvent &event )
 {
-	if( event.key == "D" )
+	if( event.key == "D" && !event.modifiers )
 	{
 		/// \todo This functionality would be better provided by a config file,
 		/// rather than being hardcoded in here. For that to be done easily we
