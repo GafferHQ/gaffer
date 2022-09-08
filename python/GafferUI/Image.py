@@ -105,9 +105,14 @@ class Image( GafferUI.Widget ) :
 			graphicsView.render(
 				painter,
 				QtCore.QRectF(),
+				# Note the silly off-by-one issue here that requires a -1.  From the Qt docs:
+				# "There is a third constructor that creates a QRect using the top-left and bottom-right
+				# coordinates, but we recommend that you avoid using it. The rationale is that for historical
+				# reasons the values returned by the bottom() and right() functions deviate from the true
+				# bottom-right corner of the rectangle."
 				QtCore.QRect(
 					graphicsView.mapFromScene( pixmapItem.boundingRect().topLeft() ),
-					graphicsView.mapFromScene( pixmapItem.boundingRect().bottomRight() )
+					graphicsView.mapFromScene( pixmapItem.boundingRect().bottomRight() ) - QtCore.QPoint(1,1)
 				)
 			)
 			del painter # must delete painter before image
@@ -143,9 +148,14 @@ class Image( GafferUI.Widget ) :
 			graphicsView.render(
 				painter,
 				QtCore.QRectF(),
+				# Note the silly off-by-one issue here that requires a -1.  From the Qt docs:
+				# "There is a third constructor that creates a QRect using the top-left and bottom-right
+				# coordinates, but we recommend that you avoid using it. The rationale is that for historical
+				# reasons the values returned by the bottom() and right() functions deviate from the true
+				# bottom-right corner of the rectangle."
 				QtCore.QRect(
 					graphicsView.mapFromScene( pixmapItem.boundingRect().topLeft() ),
-					graphicsView.mapFromScene( pixmapItem.boundingRect().bottomRight() )
+					graphicsView.mapFromScene( pixmapItem.boundingRect().bottomRight() ) - QtCore.QPoint(1,1)
 				)
 			)
 			del painter # must delete painter before image

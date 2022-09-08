@@ -144,10 +144,30 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 			Complete
 		};
 
+		enum class BlendMode
+		{
+			Replace,
+			Over,
+			Under,
+			Difference
+		};
+
+		void setBlendMode( BlendMode blendMode );
+		BlendMode getBlendMode() const;
+
 		State state() const;
 		ImageGadgetSignal &stateChangedSignal();
 
 		Imath::V2f pixelAt( const IECore::LineSegment3f &lineInGadgetSpace ) const;
+
+		void setWipeEnabled( bool enabled );
+		bool getWipeEnabled() const;
+
+		void setWipePosition( const Imath::V2f &position );
+		const Imath::V2f &getWipePosition() const;
+
+		void setWipeAngle( float angle );
+		float getWipeAngle() const;
 
 	protected :
 
@@ -181,6 +201,10 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 		bool m_labelsVisible;
 		bool m_paused;
 		ImageGadgetSignal m_stateChangedSignal;
+
+		bool m_wipeEnabled;
+		Imath::V2f m_wipePos;
+		float m_wipeAngle;
 
 		// Image access.
 		//
@@ -302,6 +326,8 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 		void visibilityChanged();
 		void renderTiles() const;
 		void renderText( const std::string &text, const Imath::V2f &position, const Imath::V2f &alignment, const GafferUI::Style *style ) const;
+
+		BlendMode m_blendMode;
 };
 
 IE_CORE_DECLAREPTR( ImageGadget )

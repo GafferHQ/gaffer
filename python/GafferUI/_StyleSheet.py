@@ -121,6 +121,11 @@ _styleColors = {
 	"tintDarkerStrong" :    ( 0, 0, 0, 40 ),
 	"tintDarkerStronger" :    ( 0, 0, 0, 70 ),
 
+	# Adjoined edges need to be opaque so they don't  show through to the
+	# background behind the control.
+	"backgroundLightHighlightAdjoined" :  ( 88, 88, 88 ),
+	"backgroundDarkHighlightAdjoined" : ( 78, 78, 78 ),
+
 	# Value Inspectors
 
 	"inspectorSourceUpstream" : ( 255, 255, 255, 20 ),
@@ -261,6 +266,10 @@ _styleSheet = string.Template(
 		padding-bottom: 5px;
 		padding-top: 5px;
 		background-color: $backgroundLight;
+	}
+
+	QMenu::icon {
+		padding-left: 10px;
 	}
 
 	QMenu[gafferHasTitle="true"],
@@ -458,6 +467,11 @@ _styleSheet = string.Template(
 	}
 
 	QPushButton[gafferWithFrame="true"][gafferClass="GafferUI.MenuButton"] {
+		padding: 2px;
+	}
+
+	QPushButton[gafferWithFrame="true"][gafferThinButton="true"] {
+		background-color : qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 $backgroundLighter, stop: 0.1 $backgroundLightHighlight, stop: 0.90 $backgroundLightLowlight);
 		padding: 2px;
 	}
 
@@ -1479,8 +1493,8 @@ _styleSheet = string.Template(
 	/* relevant adjoining properties to false, rather than omitting them   */
 
 	*[gafferAdjoinedTop="true"] {
-		border-top-left-radius: 0px;
-		border-top-right-radius: 0px;
+		border-top-left-radius: 1px;
+		border-top-right-radius: 1px;
 	}
 
 	*[gafferAdjoinedTop="false"] {
@@ -1489,8 +1503,8 @@ _styleSheet = string.Template(
 	}
 
 	*[gafferAdjoinedBottom="true"] {
-		border-bottom-left-radius: 0px;
-		border-bottom-right-radius: 0px;
+		border-bottom-left-radius: 1px;
+		border-bottom-right-radius: 1px;
 	}
 
 	*[gafferAdjoinedBottom="false"] {
@@ -1499,8 +1513,8 @@ _styleSheet = string.Template(
 	}
 
 	*[gafferAdjoinedLeft="true"] {
-		border-top-left-radius: 0px;
-		border-bottom-left-radius: 0px;
+		border-top-left-radius: 1px;
+		border-bottom-left-radius: 1px;
 	}
 
 	*[gafferAdjoinedLeft="false"] {
@@ -1509,8 +1523,8 @@ _styleSheet = string.Template(
 	}
 
 	*[gafferAdjoinedRight="true"] {
-		border-top-right-radius: 0px;
-		border-bottom-right-radius: 0px;
+		border-top-right-radius: 1px;
+		border-bottom-right-radius: 1px;
 	}
 
 	*[gafferAdjoinedRight="false"] {
@@ -1523,30 +1537,30 @@ _styleSheet = string.Template(
 	/* QPushButton[gafferWithFrame="true"] radius overrides those above. */
 
 	QPushButton[gafferAdjoinedTop="true"] {
-		border-top-left-radius: 0px;
-		border-top-right-radius: 0px;
-		border-top-color: $tintLighter;
+		border-top-left-radius: 1px;
+		border-top-right-radius: 1px;
+		border-top-color: $backgroundLightHighlightAdjoined;
 		margin-top: 0;
 	}
 
 	QPushButton[gafferAdjoinedBottom="true"] {
-		border-bottom-left-radius: 0px;
-		border-bottom-right-radius: 0px;
-		border-bottom-color: $tintDarkerSubtle;
+		border-bottom-left-radius: 1px;
+		border-bottom-right-radius: 1px;
+		border-bottom-color: $backgroundDarkHighlightAdjoined;
 		margin-bottom: 0;
 	}
 
 	QPushButton[gafferAdjoinedLeft="true"] {
-		border-top-left-radius: 0px;
-		border-bottom-left-radius: 0px;
-		border-left-color: $tintLighter;
+		border-top-left-radius: 1px;
+		border-bottom-left-radius: 1px;
+		border-left-color: $backgroundLightHighlightAdjoined;
 		margin-left: 0;
 	}
 
 	QPushButton[gafferAdjoinedRight="true"] {
-		border-top-right-radius: 0px;
-		border-bottom-right-radius: 0px;
-		border-right-color: $tintDarkerSubtle;
+		border-top-right-radius: 1px;
+		border-bottom-right-radius: 1px;
+		border-right-color: $backgroundDarkHighlightAdjoined;
 		margin-right: 0;
 	}
 

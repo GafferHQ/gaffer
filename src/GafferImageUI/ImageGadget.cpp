@@ -160,26 +160,51 @@ class TileShader
 		struct ScopedBinding : PushAttrib
 		{
 
-			ScopedBinding( const TileShader &tileShader )
+			ScopedBinding( const TileShader &tileShader, V2f wipePos, V2f wipeDir, ImageGadget::BlendMode blendMode )
 				:	PushAttrib( GL_COLOR_BUFFER_BIT ), m_tileShader( tileShader )
 			{
 				glGetIntegerv( GL_CURRENT_PROGRAM, &m_previousProgram );
 				glUseProgram( m_tileShader.m_shader->program() );
 
 				glEnable( GL_TEXTURE_2D );
-				glEnable( GL_BLEND );
-				glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA );
+
+				glGetIntegerv( GL_BLEND_SRC, &m_prevBlendSrc );
+				glGetIntegerv( GL_BLEND_DST, &m_prevBlendDst );
+
+				bool negative = false;
+				if( blendMode == ImageGadget::BlendMode::Over )
+				{
+					glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA );
+				}
+				else if( blendMode == ImageGadget::BlendMode::Under )
+				{
+					glBlendFunc( GL_ONE_MINUS_DST_ALPHA, GL_ONE );
+				}
+				else if( blendMode == ImageGadget::BlendMode::Difference )
+				{
+					negative = true;
+					glBlendFunc( GL_ONE, GL_ONE );
+				}
+				else
+				{
+					glBlendFunc( GL_ONE, GL_ZERO );
+				}
+
+				glUniform2f( tileShader.m_shader->uniformParameter( "wipePos" )->location, wipePos.x, wipePos.y );
+				glUniform2f( tileShader.m_shader->uniformParameter( "wipeDir" )->location, wipeDir.x, wipeDir.y );
 
 				glUniform1i( tileShader.m_shader->uniformParameter( "redTexture" )->location, tileShader.m_channelTextureUnits[0] );
 				glUniform1i( tileShader.m_shader->uniformParameter( "greenTexture" )->location, tileShader.m_channelTextureUnits[1] );
 				glUniform1i( tileShader.m_shader->uniformParameter( "blueTexture" )->location, tileShader.m_channelTextureUnits[2] );
 				glUniform1i( tileShader.m_shader->uniformParameter( "alphaTexture" )->location, tileShader.m_channelTextureUnits[3] );
+				glUniform1i( tileShader.m_shader->uniformParameter( "negative" )->location, negative );
 
 			}
 
 			~ScopedBinding()
 			{
 				glUseProgram( m_previousProgram );
+				glBlendFunc( m_prevBlendSrc, m_prevBlendDst );
 			}
 
 			void loadTile( IECoreGL::ConstTexturePtr channelTextures[4], bool active )
@@ -196,6 +221,7 @@ class TileShader
 
 				const TileShader &m_tileShader;
 				GLint m_previousProgram;
+				GLint m_prevBlendSrc, m_prevBlendDst;
 		};
 
 	private :
@@ -212,6 +238,7 @@ class TileShader
 			"{"
 			"	gl_Position = gl_ProjectionMatrix * gl_ModelViewMatrix * gl_Vertex;"
 			"	gl_TexCoord[0] = gl_MultiTexCoord0;"
+			"	gl_TexCoord[1] = gl_MultiTexCoord1;"
 			"}";
 
 			return g_vertexSource;
@@ -230,6 +257,9 @@ class TileShader
 				"uniform sampler2D alphaTexture;\n"
 
 				"uniform bool activeParam;\n"
+				"uniform bool negative;\n"
+				"uniform vec2 wipePos;\n"
+				"uniform vec2 wipeDir;\n"
 
 				"#if __VERSION__ >= 330\n"
 
@@ -246,12 +276,17 @@ class TileShader
 
 				"void main()"
 				"{"
+				"	if( dot( gl_TexCoord[1].xy - wipePos, wipeDir ) > 0.0 )\n"
+				"	{\n"
+				"		discard;\n"
+				"	}\n"
 				"	OUTCOLOR = vec4(\n"
 				"		texture2D( redTexture, gl_TexCoord[0].xy ).r,\n"
 				"		texture2D( greenTexture, gl_TexCoord[0].xy ).r,\n"
 				"		texture2D( blueTexture, gl_TexCoord[0].xy ).r,\n"
 				"		texture2D( alphaTexture, gl_TexCoord[0].xy ).r\n"
 				"	);\n"
+				"	OUTCOLOR *= negative ? -1.0 : 1.0;\n"
 				"	if( activeParam )\n"
 				"	{\n"
 				"		vec2 pixelWidth = vec2( dFdx( gl_TexCoord[0].x ), dFdy( gl_TexCoord[0].y ) );\n"
@@ -288,8 +323,10 @@ ImageGadget::ImageGadget()
 		m_soloChannel( -1 ),
 		m_labelsVisible( true ),
 		m_paused( false ),
+		m_wipeEnabled( false ),
 		m_dirtyFlags( AllDirty ),
-		m_renderRequestPending( false )
+		m_renderRequestPending( false ),
+		m_blendMode( BlendMode::Over )
 {
 	m_rgbaChannels[0] = "R";
 	m_rgbaChannels[1] = "G";
@@ -457,6 +494,16 @@ void ImageGadget::resetTileUpdateCount()
 	g_tileUpdateCount = 0;
 }
 
+void ImageGadget::setBlendMode( BlendMode blendMode )
+{
+	m_blendMode = blendMode;
+}
+
+ImageGadget::BlendMode ImageGadget::getBlendMode() const
+{
+	return m_blendMode;
+}
+
 ImageGadget::State ImageGadget::state() const
 {
 	if( m_paused )
@@ -480,6 +527,36 @@ Imath::V2f ImageGadget::pixelAt( const IECore::LineSegment3f &lineInGadgetSpace 
 	}
 
 	return V2f( i.x / format().getPixelAspect(), i.y );
+}
+
+void ImageGadget::setWipeEnabled( bool enabled )
+{
+	m_wipeEnabled = enabled;
+}
+
+bool ImageGadget::getWipeEnabled() const
+{
+	return m_wipeEnabled;
+}
+
+void ImageGadget::setWipePosition( const Imath::V2f &position )
+{
+	m_wipePos = position;
+}
+
+const Imath::V2f &ImageGadget::getWipePosition() const
+{
+	return m_wipePos;
+}
+
+void ImageGadget::setWipeAngle( float angle )
+{
+	m_wipeAngle = angle;
+}
+
+float  ImageGadget::getWipeAngle() const
+{
+	return m_wipeAngle;
 }
 
 Imath::Box3f ImageGadget::bound() const
@@ -774,7 +851,7 @@ void ImageGadget::updateTiles()
 	{
 		if( find( m_rgbaChannels.begin(), m_rgbaChannels.end(), *it ) != m_rgbaChannels.end() )
 		{
-			if( m_soloChannel < 0 || m_rgbaChannels[m_soloChannel] == *it )
+			if( m_soloChannel < 0 || m_rgbaChannels[m_soloChannel] == *it || m_rgbaChannels[3] == *it )
 			{
 				channelsToCompute.push_back( *it );
 			}
@@ -882,7 +959,13 @@ void ImageGadget::visibilityChanged()
 
 void ImageGadget::renderTiles() const
 {
-	TileShader::ScopedBinding shaderBinding( *tileShader() );
+	float radians = m_wipeAngle * M_PI / 180.0f;
+	TileShader::ScopedBinding shaderBinding(
+		*tileShader(),
+		m_wipeEnabled ? m_wipePos : V2f( 0 ),
+		m_wipeEnabled ? V2f( cosf( radians ), sinf( radians ) ) : V2f( -1, 0 ),
+		m_blendMode
+	);
 
 	const Box2i dataWindow = this->dataWindow();
 	const float pixelAspect = this->format().getPixelAspect();
@@ -896,7 +979,7 @@ void ImageGadget::renderTiles() const
 			IECoreGL::ConstTexturePtr channelTextures[4];
 			for( int i = 0; i < 4; ++i )
 			{
-				const InternedString channelName = ( m_soloChannel < 0 ) ? m_rgbaChannels[i] : m_rgbaChannels[m_soloChannel];
+				const InternedString channelName = ( m_soloChannel < 0 || i == 3 ) ? m_rgbaChannels[i] : m_rgbaChannels[m_soloChannel];
 				Tiles::const_iterator it = m_tiles.find( TileIndex( tileOrigin, channelName ) );
 				if( it != m_tiles.end() )
 				{
@@ -925,15 +1008,19 @@ void ImageGadget::renderTiles() const
 			glBegin( GL_QUADS );
 
 				glTexCoord2f( uvBound.min.x, uvBound.min.y  );
+				glMultiTexCoord2f( GL_TEXTURE1, validBound.min.x, validBound.min.y  );
 				glVertex2f( validBound.min.x * pixelAspect, validBound.min.y );
 
 				glTexCoord2f( uvBound.min.x, uvBound.max.y  );
+				glMultiTexCoord2f( GL_TEXTURE1, validBound.min.x, validBound.max.y  );
 				glVertex2f( validBound.min.x * pixelAspect, validBound.max.y );
 
 				glTexCoord2f( uvBound.max.x, uvBound.max.y  );
+				glMultiTexCoord2f( GL_TEXTURE1, validBound.max.x, validBound.max.y  );
 				glVertex2f( validBound.max.x * pixelAspect, validBound.max.y );
 
 				glTexCoord2f( uvBound.max.x, uvBound.min.y  );
+				glMultiTexCoord2f( GL_TEXTURE1, validBound.max.x, validBound.min.y  );
 				glVertex2f( validBound.max.x * pixelAspect, validBound.min.y );
 
 			glEnd();

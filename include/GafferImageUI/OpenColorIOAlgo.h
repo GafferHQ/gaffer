@@ -53,6 +53,7 @@ namespace OpenColorIOAlgo
 // The shader has a frameBufferTexture uniform so it is appropriate to use with ViewportGadget::setPostProcessShader.
 // There are also additional uniforms:
 //   bool unpremultiply : temporarily unpremultiply while applying the color transform
+//   bool absoluteValue : flip negative values to positive ( useful when viewing a difference value )
 //   bool clipping : mark regions outside 0 - 1
 //   color multiply : apply a multiplier before the color transform
 //   color power : apply a power curve before the color transform

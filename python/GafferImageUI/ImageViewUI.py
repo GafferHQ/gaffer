@@ -47,6 +47,7 @@ import GafferImageUI
 
 from Qt import QtGui
 from Qt import QtWidgets
+from Qt import QtCore
 
 ##########################################################################
 # Metadata registration.
@@ -78,7 +79,7 @@ Gaffer.Metadata.registerNode(
 	"toolbarLayout:customWidget:BottomRightSpacer:section", "Bottom",
 	"toolbarLayout:customWidget:BottomRightSpacer:index", 2,
 
-	"layout:activator:gpuAvailable", lambda node : ImageViewUI.createDisplayTransform( node["displayTransform"].getValue() ).isinstance( GafferImage.OpenColorIOTransform ),
+	"toolbarLayout:activator:gpuAvailable", lambda node : isinstance( GafferImageUI.ImageView.createDisplayTransform( node["displayTransform"].getValue() ), GafferImage.OpenColorIOTransform ),
 
 	plugs = {
 
@@ -91,8 +92,52 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"plugValueWidget:type", "GafferImageUI.ImageViewUI._ImageView_ViewPlugValueWidget",
-			"toolbarLayout:width", 175,
+			"toolbarLayout:width", 125,
 			"label", "",
+			"toolbarLayout:divider", True,
+
+		],
+
+		"compare" : [
+			"plugValueWidget:type", "GafferImageUI.ImageViewUI._CompareParentPlugValueWidget",
+			"toolbarLayout:divider", True,
+			"label", "",
+		],
+
+		"compare.mode" : [
+
+			"description",
+			"""
+			Enables a comparison mode to view two images at once - they can be composited under or over, or
+			subtracted for a difference view.  Or replace mode just shows the front image, which is useful
+			in combination with the Wipe tool.
+			""",
+
+			"plugValueWidget:type", "GafferImageUI.ImageViewUI._CompareModePlugValueWidget",
+
+		],
+
+		"compare.wipe" : [
+
+			"description",
+			"""
+			Enables a wipe tool to hide part of the image, for comparing with the background image.
+			Hotkey W.
+			""",
+
+			"plugValueWidget:type", "GafferImageUI.ImageViewUI._CompareWipePlugValueWidget",
+
+		],
+
+		"compare.view" : [
+
+			"description",
+			"""
+			The view to compare with.
+			""",
+
+			"plugValueWidget:type", "GafferImageUI.ImageViewUI._ImageView_ViewPlugValueWidget",
+			"imageViewViewPlugWidget:ctrlModifier", True,
 
 		],
 
@@ -186,7 +231,14 @@ Gaffer.Metadata.registerNode(
 
 			"plugValueWidget:type", "GafferImageUI.ImageViewUI._LutGPUPlugValueWidget",
 			"label", "",
-			"layout:activator", "gpuAvailable",
+			"toolbarLayout:activator", "gpuAvailable",
+
+			# Turning off GPU mode means we can't properly support efficient wipes.  Since we no longer
+			# have feature parity, we're deprecating CPU mode, and expecting everyone to use the GPU path.
+			# With new OCIO, the GPU path now gives high quality on any even vaguely recent GPU.
+			# The only use case I can think of for the CPU path is checking that the GPU path is working correctly.
+			# If you need to do that, set this metadata to True, and then create a new Viewer to force a refresh.
+			"toolbarLayout:visibilityActivator", False,
 		],
 
 		"colorInspector" : [
@@ -695,6 +747,8 @@ class _ImageView_ViewPlugValueWidget( GafferImageUI.ViewPlugValueWidget ) :
 			scoped = False
 		)
 
+		self.__ctrlModifier = Gaffer.Metadata.value( plug, "imageViewViewPlugWidget:ctrlModifier" ) or False
+
 	def _menuDefinition( self ) :
 
 		result = GafferImageUI.ViewPlugValueWidget._menuDefinition( self )
@@ -711,7 +765,7 @@ class _ImageView_ViewPlugValueWidget( GafferImageUI.ViewPlugValueWidget ) :
 			"/Previous",
 			{
 				"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), value = previousValue ),
-				"shortCut" : "[",
+				"shortCut" : "Ctrl+[" if self.__ctrlModifier else "[",
 				"active" : previousValue is not None and previousValue != currentValue,
 			}
 		)
@@ -721,7 +775,7 @@ class _ImageView_ViewPlugValueWidget( GafferImageUI.ViewPlugValueWidget ) :
 			"/Next",
 			{
 				"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), value = nextValue ),
-				"shortCut" : "]",
+				"shortCut" : "Ctrl+]" if self.__ctrlModifier else "]",
 				"active" : nextValue is not None and nextValue != currentValue,
 			}
 		)
@@ -730,7 +784,9 @@ class _ImageView_ViewPlugValueWidget( GafferImageUI.ViewPlugValueWidget ) :
 
 	def __keyPress( self, gadget, event ) :
 
-		if event.key in ( "BracketLeft", "BracketRight" ) :
+		if event.key in ( "BracketLeft", "BracketRight" ) and (
+			bool( event.modifiers & event.modifiers.Control ) == self.__ctrlModifier
+		):
 			value = self.__incrementedValue( -1 if event.key == "BracketLeft" else 1 )
 			if value is not None :
 				self.__setValue( value )
@@ -883,8 +939,14 @@ class _SoloChannelPlugValueWidget( GafferUI.PlugValueWidget ) :
 			soloChannel = self.getPlug().getValue()
 
 		m = IECore.MenuDefinition()
+		m.append(
+			"/All",
+			{
+				"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), -1 ),
+				"checkBox" : soloChannel == -1
+			}
+		)
 		for name, value in [
-			( "All", -1 ),
 			( "R", 0 ),
 			( "G", 1 ),
 			( "B", 2 ),
@@ -894,7 +956,8 @@ class _SoloChannelPlugValueWidget( GafferUI.PlugValueWidget ) :
 				"/" + name,
 				{
 					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), value ),
-					"checkBox" : soloChannel == value
+					"checkBox" : soloChannel == value,
+					"shortCut" : name
 				}
 			)
 
@@ -904,7 +967,8 @@ class _SoloChannelPlugValueWidget( GafferUI.PlugValueWidget ) :
 				"/Luminance",
 				{
 					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), -2 ),
-					"checkBox" : soloChannel == -2
+					"checkBox" : soloChannel == -2,
+					"shortCut" : "L"
 				}
 			)
 
@@ -1041,11 +1105,15 @@ class _StateWidget( GafferUI.Widget ) :
 			self.__button = GafferUI.Button( hasFrame = False )
 			self.__busyWidget = GafferUI.BusyWidget( size = 20 )
 
-		self.__imageGadget = imageView.viewportGadget().getPrimaryChild()
+		# Find all ImageGadgets
+		self.__imageGadgets = [ i for i in imageView.viewportGadget().children() if isinstance( i, GafferImageUI.ImageGadget ) ]
+		# Put the primary ImageGadget first in the list
+		self.__imageGadgets.sort( key = lambda i :  i != imageView.viewportGadget().getPrimaryChild() )
 
 		self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClick ), scoped = False )
 
-		self.__imageGadget.stateChangedSignal().connect( Gaffer.WeakMethod( self.__stateChanged ), scoped = False )
+		# We use the paused state of the primary ImageGadget to drive our UI
+		self.__imageGadgets[0].stateChangedSignal().connect( Gaffer.WeakMethod( self.__stateChanged ), scoped = False )
 
 		self.__update()
 
@@ -1055,11 +1123,197 @@ class _StateWidget( GafferUI.Widget ) :
 
 	def __buttonClick( self, button ) :
 
-		self.__imageGadget.setPaused( not self.__imageGadget.getPaused() )
+		newPaused = not self.__imageGadgets[0].getPaused()
+		for i in self.__imageGadgets:
+			i.setPaused( newPaused )
 
 	def __update( self ) :
 
-		paused = self.__imageGadget.getPaused()
+		paused = self.__imageGadgets[0].getPaused()
 		self.__button.setImage( "viewPause.png" if not paused else "viewPaused.png" )
-		self.__busyWidget.setBusy( self.__imageGadget.state() == self.__imageGadget.State.Running )
+		self.__busyWidget.setBusy( self.__imageGadgets[0].state() == GafferImageUI.ImageGadget.State.Running )
 		self.__button.setToolTip( "Viewer updates suspended, click to resume" if paused else "Click to suspend viewer updates [esc]" )
+
+
+
+##########################################################################
+# Compare Widgets
+##########################################################################
+
+class _CompareParentPlugValueWidget( GafferUI.PlugValueWidget ) :
+
+	def __init__( self, plug, **kw ) :
+		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 0 )
+
+		GafferUI.PlugValueWidget.__init__( self, self.__row, plug, **kw )
+
+		widgets = [ GafferUI.PlugValueWidget.create( p ) for p in plug.children( Gaffer.Plug ) ]
+
+		widgets[0]._qtWidget().setFixedWidth( 25 ) # Mode selector is just an icon
+		widgets[0]._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetDefaultConstraint )
+		widgets[-1]._qtWidget().setFixedWidth( 125 ) # View selector should match main view selector
+		widgets[-1]._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetDefaultConstraint )
+
+		self.__row[:] = widgets
+
+		self._updateFromPlug()
+
+	def _updateFromPlug( self ) :
+
+		with Gaffer.Context() :
+			m = self.getPlug()["mode"].getValue()
+
+		# Hide all but mode plug if mode is "" ( comparison disabled )
+		for i in self.__row[1:]:
+			i.setVisible( m != "" )
+			# Don't need to repolish here, since joinEdges does a repolish
+
+		# Need to update edge joining after changing visibility
+		GafferUI.WidgetAlgo.joinEdges( self.__row[:], GafferUI.ListContainer.Orientation.Horizontal )
+
+class _CompareModePlugValueWidget( GafferUI.PlugValueWidget ) :
+
+	def __init__( self, plug, **kw ) :
+
+		self.__button = GafferUI.MenuButton(
+			image = "compareModeNone.png",
+			menu = GafferUI.Menu(
+				Gaffer.WeakMethod( self.__menuDefinition ),
+				title = "Compare Mode",
+			)
+		)
+		self.__button._qtWidget().setMaximumWidth( 25 )
+
+		GafferUI.PlugValueWidget.__init__( self, self.__button, plug, **kw )
+
+		self.__iconDict = {
+			"" : "compareModeNone.png",
+			"over" : "compareModeOver.png",
+			"under" : "compareModeUnder.png",
+			"difference" : "compareModeDifference.png",
+			"sideBySide" : "compareModeSideBySide.png",
+			"replace" : "compareModeReplace.png",
+		}
+
+		plug.node().viewportGadget().keyPressSignal().connect(
+			Gaffer.WeakMethod( self.__keyPress ),
+			scoped = False
+		)
+
+		self._updateFromPlug()
+
+	def _updateFromPlug( self ) :
+
+		with Gaffer.Context() :
+			v = self.getPlug().getValue()
+
+		if v != "":
+			Gaffer.Metadata.registerValue( self.getPlug(), "imageViewer:lastCompareMode", v )
+
+		icon = self.__iconDict[v] if v in self.__iconDict else "compareModeNone.png"
+		self.__button.setImage( icon )
+
+	def __hotkeyTarget( self ):
+		with Gaffer.Context() :
+			v = self.getPlug().getValue()
+
+		if v == "":
+			return Gaffer.Metadata.value( self.getPlug(), "imageViewer:lastCompareMode" ) or "over"
+		else:
+			return ""
+
+	def __keyPress( self, gadget, event ) :
+
+		if event.key == "Q" and not event.modifiers :
+			self.__setValue( self.__hotkeyTarget() )
+			return True
+
+		return False
+
+	def __menuDefinition( self ) :
+
+		with self.getContext() :
+			compareMode = self.getPlug().getValue()
+
+		hotkeyTarget = self.__hotkeyTarget()
+
+		m = IECore.MenuDefinition()
+		for name, value in [
+			( "None", "" ),
+			( "Over", "over" ),
+			( "Under", "under" ),
+			( "Difference", "difference" ),
+			( "Replace", "replace" ),
+		] :
+			m.append(
+				"/" + name,
+				{
+					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), value ),
+					"icon" : self.__iconDict[value] if value != compareMode else None,
+					"checkBox" : value == compareMode,
+					"shortCut" : "Q" if value == hotkeyTarget else None,
+				}
+			)
+
+		return m
+
+	def __setValue( self, value, *unused ) :
+
+		turningOn = value and not self.getPlug().getValue()
+
+		self.getPlug().setValue( value )
+
+		with self.getContext():
+			inputImage = self.getPlug().node()._getPreprocessor()["_selectView"]["out"]
+			viewNames = inputImage.viewNames()
+
+		if turningOn and len( viewNames ) > 1:
+			if node["compare"]["view"].getValue() == node["view"].getValue() or not node["compare"]["view"].getValue() in viewNames :
+				# We're turning on comparison, but currently the comparison view is identical to the
+				# default view - pick a different view, so we actually get a meaningful comparison
+				for v in viewNames:
+					if v != node["view"].getValue():
+						node["compare"]["view"].setValue( v )
+
+class _CompareWipePlugValueWidget( GafferUI.PlugValueWidget ) :
+
+	def __init__( self, plug, **kw ) :
+
+		self.__button = GafferUI.Button(
+			image = "wipeEnabled.png"
+		)
+		self.__button._qtWidget().setMaximumWidth( 25 )
+		self.__button._qtWidget().setProperty( "gafferThinButton", True )
+
+		GafferUI.PlugValueWidget.__init__( self, self.__button, plug, **kw )
+
+		self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.__toggle  ), scoped = False)
+		plug.node().viewportGadget().keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
+
+		self._updateFromPlug()
+
+	def _updateFromPlug( self ) :
+
+		with Gaffer.Context() :
+			v = self.getPlug().getValue()
+
+		icon = "wipeEnabled.png" if v else "wipeDisabled.png"
+		self.__button.setImage( icon )
+
+	def __keyPress( self, gadget, event ) :
+
+		if event.key == "W" and not event.modifiers :
+			self.__toggle()
+			return True
+
+		return False
+
+	def __toggle( self, *args ):
+		with Gaffer.Context() :
+			mode = self.getPlug().parent()["mode"].getValue()
+			if mode == "":
+				# Can't toggle wipe when comparison is disabled
+				return
+			v = self.getPlug().getValue()
+
+		self.getPlug().setValue( not v )

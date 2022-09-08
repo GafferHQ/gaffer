@@ -115,6 +115,12 @@ class GAFFERIMAGEUI_API ImageView : public GafferUI::View
 
 		Gaffer::StringPlug *viewPlug();
 		const Gaffer::StringPlug *viewPlug() const;
+		Gaffer::StringPlug *compareModePlug();
+		const Gaffer::StringPlug *compareModePlug() const;
+		Gaffer::BoolPlug *compareWipePlug();
+		const Gaffer::BoolPlug *compareWipePlug() const;
+		Gaffer::StringPlug *compareViewPlug();
+		const Gaffer::StringPlug *compareViewPlug() const;
 
 		/// The gadget responsible for displaying the image.
 		ImageGadget *imageGadget();
@@ -183,18 +189,24 @@ class GAFFERIMAGEUI_API ImageView : public GafferUI::View
 			bool supportsShader;
 		};
 
+		void setWipeActive( bool active );
+
 		using DisplayTransformMap = std::map<std::string, DisplayTransformEntry>;
 		DisplayTransformMap m_displayTransforms;
 		DisplayTransformEntry *m_displayTransformAndShader;
 
+		IECore::BoolDataPtr m_absoluteValueParameter;
 		IECore::BoolDataPtr m_clippingParameter;
 		IECore::Color3fDataPtr m_multiplyParameter;
 		IECore::Color3fDataPtr m_powerParameter;
 		IECore::IntDataPtr m_soloChannelParameter;
 		bool m_lutGPU;
 
-		ImageGadgetPtr m_imageGadget;
+		ImageGadgetPtr m_imageGadgets[2];
 		bool m_framed;
+
+		IE_CORE_FORWARDDECLARE( WipeHandle );
+		WipeHandlePtr m_wipeHandle;
 
 		class ColorInspector;
 		std::unique_ptr<ColorInspector> m_colorInspector;

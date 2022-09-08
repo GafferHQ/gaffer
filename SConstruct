@@ -1072,7 +1072,7 @@ libraries = {
 
 	"GafferImageUI" : {
 		"envAppends" : {
-			"LIBS" : [ "IECoreGL$CORTEX_LIB_SUFFIX", "Gaffer", "GafferImage", "GafferUI", "OpenColorIO$OCIO_LIB_SUFFIX", "IECoreScene$CORTEX_LIB_SUFFIX" ],
+			"LIBS" : [ "IECoreGL$CORTEX_LIB_SUFFIX", "Gaffer", "GafferImage", "GafferUI", "OpenColorIO$OCIO_LIB_SUFFIX", "IECoreScene$CORTEX_LIB_SUFFIX", "Iex$OPENEXR_LIB_SUFFIX" ],
 		},
 		"pythonEnvAppends" : {
 			"CPPPATH" : [ "$PYBIND11/include" ],

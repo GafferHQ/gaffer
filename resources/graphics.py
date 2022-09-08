@@ -32,6 +32,7 @@
 				'pointerCrossHair',
 				"pointerAdd",
 				"pointerRemove",
+				"pointerRotate",
 			]
 		},
 
@@ -138,7 +139,28 @@
 				'soloChannel1',
 				'soloChannel2',
 				'soloChannel3',
-				'soloChannel-2'
+				'soloChannel-2',
+			]
+
+		},
+
+		"imageButtonIcons" : {
+
+			"options" : {
+				"requiredWidth" : 13,
+				"requiredHeight" : 13,
+				"validatePixelAlignment" : True
+			},
+
+			"ids" : [
+				'compareModeNone',
+				'compareModeReplace',
+				'compareModeOver',
+				'compareModeUnder',
+				'compareModeDifference',
+				'compareModeSideBySide',
+				'wipeDisabled',
+				'wipeEnabled',
 			]
 
 		},
