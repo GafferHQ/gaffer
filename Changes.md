@@ -19,6 +19,7 @@ Fixes
 -----
 
 - GraphEditor : Fixed bugs which allowed new connections to be made in read-only graphs.
+- NodeEditor : Fixed bugs which allowed plugs to be added to read-only tweaks nodes.
 - CyclesOptions : Fixed errors in section summaries.
 - NoduleLayout : Fixed shutdown crashes triggered by custom gadgets implemented in Python.
 - ShaderTweaks : Fixed error when attempting to use a `:` in a parameter name.

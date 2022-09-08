@@ -222,7 +222,7 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 
 				GafferUI.Spacer( imath.V2i( GafferUI.PlugWidget.labelWidth(), 1 ) )
 
-				GafferUI.MenuButton(
+				self.__button = GafferUI.MenuButton(
 					image = "plus.png",
 					hasFrame = False,
 					menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) )
@@ -230,9 +230,11 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 
 				GafferUI.Spacer( imath.V2i( 1 ), imath.V2i( 999999, 1 ), parenting = { "expand" : True } )
 
+		self._updateFromPlug()
+
 	def _updateFromPlug( self ) :
 
-		self.setEnabled( self._editable() )
+		self.__button.setEnabled( self._editable() )
 
 	def __menuDefinition( self ) :
 
