@@ -36,6 +36,7 @@
 
 import collections
 
+import functools
 import imath
 import six
 
@@ -368,9 +369,6 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 			if cellColumn == columns[i] :
 				columnIndex = i
 
-		if columnIndex <= 0 :
-			return False
-
 		cellPath = pathListing.pathAt( event.line.p0 )
 
 		if not selection[columnIndex].match( str( cellPath ) ) & IECore.PathMatcher.Result.ExactMatch :
@@ -381,18 +379,51 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 
 		menuDefinition = IECore.MenuDefinition()
 
-		menuDefinition.append(
-			"Show History...",
-			{
-				"command" : Gaffer.WeakMethod( self.__showHistory ),
-				"active" : any( not i.isEmpty() for i in selection )
-			}
-		)
+		if columnIndex == 0 :
+			# Whole light operations
+
+			menuDefinition.append(
+				"Select Linked Objects",
+				{
+					"command" : Gaffer.WeakMethod( self.__selectLinked )
+				}
+			)
+
+		else :
+			# Parameter cells
+
+			menuDefinition.append(
+				"Show History...",
+				{
+					"command" : Gaffer.WeakMethod( self.__showHistory )
+				}
+			)
 
 		self.__contextMenu = GafferUI.Menu( menuDefinition )
 		self.__contextMenu.popup( pathListing )
 
 		return True
+
+	def __selectLinked (self, *unused ) :
+
+		context = self.getContext()
+
+		dialogue = GafferUI.BackgroundTaskDialogue( "Selecting Linked Objects" )
+
+		# There may be multiple columns with a selection, but we only operate on the name column.
+		selectedLights = self.__pathListing.getSelection()[0]
+
+		with context :
+			result = dialogue.waitForBackgroundTask(
+				functools.partial(
+					GafferScene.SceneAlgo.linkedObjects,
+					self.__settingsNode["in"],
+					selectedLights
+				)
+			)
+
+		if not isinstance( result, Exception ) :
+			GafferSceneUI.ContextAlgo.setSelectedPaths( context, result )
 
 	def __showHistory( self, *unused ) :
 
