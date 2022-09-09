@@ -18,11 +18,19 @@ Improvements
 Fixes
 -----
 
+- SceneReader :
+  - Fixed reading of Alembic files with animated visibility.
+  - Fixed reading of primitive variables from UsdGeomPointInstancers.
 - GraphEditor : Fixed bugs which allowed new connections to be made in read-only graphs.
 - NodeEditor : Fixed bugs which allowed plugs to be added to read-only tweaks nodes.
 - CyclesOptions : Fixed errors in section summaries.
 - NoduleLayout : Fixed shutdown crashes triggered by custom gadgets implemented in Python.
 - ShaderTweaks : Fixed error when attempting to use a `:` in a parameter name.
+
+Build
+-----
+
+- Cortex : Updated to 10.4.1.2.
 
 1.0.3.0 (relative to 1.0.2.1)
 =======
