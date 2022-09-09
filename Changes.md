@@ -4,7 +4,13 @@
 Fixes
 -----
 
+- SceneReader : Fixed reading of primitive variables from UsdGeomPointInstancers.
 - NoduleLayout : Fixed shutdown crashes triggered by custom gadgets implemented in Python.
+
+Build
+-----
+
+- Updated to Cortex 10.3.7.2.
 
 0.61.14.4 (relative to 0.61.14.3)
 =========
