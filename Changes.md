@@ -349,13 +349,19 @@ Build
   - TBB : Updated to version 2020.3.
   - USD : Updated to version 21.11.
 
-0.61.14.x (relative to 0.61.14.4)
+0.61.14.5 (relative to 0.61.14.4)
 =========
 
 Fixes
 ------
 
+- SceneReader : Fixed reading of primitive variables from UsdGeomPointInstancers.
 - NoduleLayout : Fixed shutdown crashes triggered by custom gadgets implemented in Python.
+
+Build
+-----
+
+- Updated to Cortex 10.3.7.2.
 
 0.61.14.4 (relative to 0.61.14.3)
 =========
