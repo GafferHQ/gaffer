@@ -57,6 +57,7 @@
 
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/algorithm/string/replace.hpp"
+#include "boost/range/algorithm/replace_copy_if.hpp"
 #include "boost/container/flat_map.hpp"
 #include "boost/tokenizer.hpp"
 
@@ -551,7 +552,8 @@ TweakPlug *GafferScene::EditScopeAlgo::acquireParameterEdit( Gaffer::EditScope *
 		tweakName = parameter.shader.string() + "." + tweakName;
 	}
 
-	string columnName = boost::replace_all_copy( tweakName, ".", "_" );
+	string columnName;
+	boost::replace_copy_if( tweakName, std::back_inserter( columnName ), boost::is_any_of( ".:" ), '_' );
 	if( auto *cell = row->cellsPlug()->getChild<Spreadsheet::CellPlug>( columnName ) )
 	{
 		return cell->valuePlug<TweakPlug>();
@@ -623,7 +625,8 @@ const GraphComponent *GafferScene::EditScopeAlgo::parameterEditReadOnlyReason( c
 	{
 		tweakName = parameter.shader.string() + "." + tweakName;
 	}
-	string columnName = boost::replace_all_copy( tweakName, ".", "_" );
+	string columnName;
+	boost::replace_copy_if( tweakName, std::back_inserter( columnName ), boost::is_any_of( ".:" ), '_' );
 	if( auto *cell = row->cellsPlug()->getChild<Spreadsheet::CellPlug>( columnName ) )
 	{
 		if( MetadataAlgo::getReadOnly( cell ) )

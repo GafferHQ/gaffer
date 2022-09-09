@@ -46,6 +46,7 @@
 #include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/UndoScope.h"
+#include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/NameValuePlug.h"
 #include "Gaffer/PlugAlgo.h"
 
@@ -80,6 +81,16 @@ class OSLObjectPlugAdder : public PlugAdder
 
 		bool canCreateConnection( const Plug *endpoint ) const override
 		{
+			if( !PlugAdder::canCreateConnection( endpoint ) )
+			{
+				return false;
+			}
+
+			if( MetadataAlgo::readOnly( m_plugsParent.get() ) )
+			{
+				return false;
+			}
+
 			IECore::ConstCompoundDataPtr plugAdderOptions = Metadata::value<IECore::CompoundData>( m_plugsParent->node(), "plugAdderOptions" );
 			return !availablePrimVars( plugAdderOptions.get(), endpoint ).empty();
 		}
@@ -156,6 +167,11 @@ class OSLObjectPlugAdder : public PlugAdder
 
 		bool buttonRelease( const ButtonEvent &event )
 		{
+			if( MetadataAlgo::readOnly( m_plugsParent.get() ) )
+			{
+				return false;
+			}
+
 			IECore::ConstCompoundDataPtr plugAdderOptions = Metadata::value<IECore::CompoundData>( m_plugsParent->node(), "plugAdderOptions" );
 			vector<std::string> origNames = availablePrimVars( plugAdderOptions.get() );
 			map<std::string, std::string> nameMapping;

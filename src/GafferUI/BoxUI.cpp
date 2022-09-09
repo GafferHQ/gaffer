@@ -41,6 +41,7 @@
 #include "Gaffer/Box.h"
 #include "Gaffer/BoxIn.h"
 #include "Gaffer/BoxOut.h"
+#include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/UndoScope.h"
 
@@ -73,6 +74,11 @@ class BoxPlugAdder : public PlugAdder
 			}
 
 			if( endpoint->node() == m_box )
+			{
+				return false;
+			}
+
+			if( MetadataAlgo::readOnly( m_box.get() ) )
 			{
 				return false;
 			}

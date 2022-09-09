@@ -38,6 +38,7 @@
 #include "GafferUI/PlugAdder.h"
 
 #include "Gaffer/Loop.h"
+#include "Gaffer/MetadataAlgo.h"
 
 #include "boost/bind/bind.hpp"
 
@@ -70,6 +71,12 @@ class LoopPlugAdder : public PlugAdder
 			{
 				return false;
 			}
+
+			if( MetadataAlgo::readOnly( m_node.get() ) )
+			{
+				return false;
+			}
+
 			return runTimeCast<const ValuePlug>( endpoint );
 		}
 

@@ -38,22 +38,46 @@ Breaking Changes
 - ImageGadget : Removed setters and getters for `DisplayTransform`, `UseGPU`, `Clipping`, `Exposure`, `Gamma`.  Instead use `ViewportGadget::setPostProcessShader()` to set up a GPU color transform, or set the plug values on `ImageView`.
 - ImageView : Using CPU color transforms is now deprecated.  We can't properly support wipes in CPU mode, and OCIO now offers full quality on the GPU, in addition to the performance being much better.  While the CPU functionality still exists, the UI has been hidden.
 
-1.0.x.x (relative to 1.0.3.0)
+1.0.4.0 (relative to 1.0.3.0)
 =======
 
 Features
 --------
 
 - Edit Menu : Added "Duplicate with Inputs" menu item, with <kbd>Ctrl</kbd>+<kbd>D</kbd> shortcut.
-- StandardAttributes : Added `automaticInstancing` plug to allow instancing to be disabled on selected locations. Currently supported only by the Arnold renderer.
 - OptionTweaks : Added node for tweaking options in a scene.
 - OptionQuery : Added node for querying options from a scene.
+- StandardAttributes : Added `automaticInstancing` plug to allow instancing to be disabled on selected locations. Currently supported only by the Arnold renderer.
+
+Improvements
+------------
+
+- TweakPlug : Added the ability to set `InternedStringData` from `StringData`.
+- GraphEditor : Added a warning for attempts to open the node creation menu in a read-only graph.
+
+Improvements
+------------
+
+- Light Editor :
+  - Added explanation to cell popup when a parameter cannot be edited because there are no editable sources.
+  - Added an error icon to a cell with an explanation in the tooltip when there is an error computing its value (#4805).
 
 Fixes
 -----
 
+- SceneReader :
+  - Fixed reading of Alembic files with animated visibility.
+  - Fixed reading of primitive variables from UsdGeomPointInstancers.
+- GraphEditor : Fixed bugs which allowed new connections to be made in read-only graphs.
+- NodeEditor : Fixed bugs which allowed plugs to be added to read-only tweaks nodes.
 - CyclesOptions : Fixed errors in section summaries.
 - NoduleLayout : Fixed shutdown crashes triggered by custom gadgets implemented in Python.
+- ShaderTweaks : Fixed error when attempting to use a `:` in a parameter name.
+
+Build
+-----
+
+- Cortex : Updated to 10.4.1.2.
 
 1.0.3.0 (relative to 1.0.2.1)
 =======
@@ -365,13 +389,19 @@ Build
   - TBB : Updated to version 2020.3.
   - USD : Updated to version 21.11.
 
-0.61.14.x (relative to 0.61.14.4)
+0.61.14.5 (relative to 0.61.14.4)
 =========
 
 Fixes
 ------
 
+- SceneReader : Fixed reading of primitive variables from UsdGeomPointInstancers.
 - NoduleLayout : Fixed shutdown crashes triggered by custom gadgets implemented in Python.
+
+Build
+-----
+
+- Updated to Cortex 10.3.7.2.
 
 0.61.14.4 (relative to 0.61.14.3)
 =========

@@ -93,6 +93,15 @@ bool TweakPlug::applyTweak(
 	}
 
 	const IECore::Data *currentValue = getDataFunctor( name );
+
+	if( IECore::runTimeCast<const IECore::InternedStringData>( currentValue ) )
+	{
+		if( const IECore::StringData *s = IECore::runTimeCast<const IECore::StringData>( newData.get() ) )
+		{
+			newData = new IECore::InternedStringData( s->readable() );
+		}
+	}
+
 	if( currentValue && currentValue->typeId() != newData->typeId() )
 	{
 		throw IECore::Exception(

@@ -1188,7 +1188,14 @@ class PathModel : public QAbstractItemModel
 						{
 							// Qt doesn't use exceptions for error handling,
 							// so we must suppress them.
-							IECore::msg( IECore::Msg::Warning, "PathListingWidget", e.what() );
+							cellVariants = CellVariants(
+								GafferUI::PathColumn::CellData(
+									nullptr,  // value
+									new IECore::StringData( "errorSmall.png" ),  // icon
+									nullptr,  // background
+									new IECore::StringData( e.what() )  // toolTip
+								)
+							);
 						}
 						catch( ... )
 						{

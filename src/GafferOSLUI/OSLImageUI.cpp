@@ -88,6 +88,16 @@ class OSLImagePlugAdder : public PlugAdder
 
 		bool canCreateConnection( const Plug *endpoint ) const override
 		{
+			if( !PlugAdder::canCreateConnection( endpoint ) )
+			{
+				return false;
+			}
+
+			if( MetadataAlgo::readOnly( m_plugsParent.get() ) )
+			{
+				return false;
+			}
+
 			IECore::ConstCompoundDataPtr plugAdderOptions = Metadata::value<IECore::CompoundData>( m_plugsParent->node(), "plugAdderOptions" );
 			return !availableChannels( plugAdderOptions.get(), endpoint ).empty();
 		}
@@ -182,6 +192,11 @@ class OSLImagePlugAdder : public PlugAdder
 
 		bool buttonRelease( const ButtonEvent &event )
 		{
+			if( MetadataAlgo::readOnly( m_plugsParent.get() ) )
+			{
+				return false;
+			}
+
 			IECore::ConstCompoundDataPtr plugAdderOptions = Metadata::value<IECore::CompoundData>( m_plugsParent->node(), "plugAdderOptions" );
 			vector<std::string> origNames = availableChannels( plugAdderOptions.get() );
 			map<std::string, std::string> nameMapping;

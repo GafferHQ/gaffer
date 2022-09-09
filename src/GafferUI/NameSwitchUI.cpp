@@ -70,6 +70,11 @@ class NameSwitchPlugAdder : public PlugAdder
 				return false;
 			}
 
+			if( MetadataAlgo::readOnly( m_plug.get() ) )
+			{
+				return false;
+			}
+
 			// Assume that if the first plug wouldn't accept the input,
 			// then neither would the new one that we add.
 
