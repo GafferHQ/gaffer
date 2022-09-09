@@ -77,7 +77,7 @@ Gaffer.Metadata.registerNode(
 
 	"toolbarLayout:customWidget:BottomRightSpacer:widgetType", "GafferImageUI.ImageViewUI._ExpandingSpacer",
 	"toolbarLayout:customWidget:BottomRightSpacer:section", "Bottom",
-	"toolbarLayout:customWidget:BottomRightSpacer:index", 2,
+	"toolbarLayout:customWidget:BottomRightSpacer:index", -1,
 
 	"toolbarLayout:activator:gpuAvailable", lambda node : isinstance( GafferImageUI.ImageView.createDisplayTransform( node["displayTransform"].getValue() ), GafferImage.OpenColorIOTransform ),
 
