@@ -78,6 +78,8 @@ class GAFFERUI_API PlugAdder : public ConnectionCreator
 
 	private :
 
+		bool couldCreateConnection() const;
+
 		void enter( GadgetPtr gadget, const ButtonEvent &event );
 		void leave( GadgetPtr gadget, const ButtonEvent &event );
 		bool buttonPress( GadgetPtr gadget, const ButtonEvent &event );

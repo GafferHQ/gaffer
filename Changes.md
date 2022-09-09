@@ -13,10 +13,13 @@ Improvements
 ------------
 
 - TweakPlug : Added the ability to set `InternedStringData` from `StringData`.
+- GraphEditor : Added a warning for attempts to open the node creation menu in a read-only graph.
 
 Fixes
 -----
 
+- GraphEditor : Fixed bugs which allowed new connections to be made in read-only graphs.
+- NodeEditor : Fixed bugs which allowed plugs to be added to read-only tweaks nodes.
 - CyclesOptions : Fixed errors in section summaries.
 - NoduleLayout : Fixed shutdown crashes triggered by custom gadgets implemented in Python.
 - ShaderTweaks : Fixed error when attempting to use a `:` in a parameter name.

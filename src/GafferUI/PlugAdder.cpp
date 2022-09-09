@@ -44,6 +44,7 @@
 
 #include "Gaffer/ArrayPlug.h"
 #include "Gaffer/Metadata.h"
+#include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/UndoScope.h"
 #include "Gaffer/ScriptNode.h"
 
@@ -187,6 +188,11 @@ Imath::Box3f PlugAdder::bound() const
 
 bool PlugAdder::canCreateConnection( const Gaffer::Plug *endpoint ) const
 {
+	if( endpoint->direction() == Plug::In && MetadataAlgo::readOnly( endpoint ) )
+	{
+		return false;
+	}
+
 	ConstStringDataPtr noduleType = Gaffer::Metadata::value<StringData>( endpoint, IECore::InternedString( "nodule:type" ) );
 	if( noduleType )
 	{
@@ -268,9 +274,38 @@ void PlugAdder::applyEdgeMetadata( Gaffer::Plug *plug, bool opposite ) const
 	updateMetadata( plug, "noduleLayout:section", edgeName( opposite ? oppositeEdge( edge ) : edge ) );
 }
 
+bool PlugAdder::couldCreateConnection() const
+{
+	// We actually have no idea which parent the plug will be added to -
+	// that is known only by subclasses. But when it is read-only, we want to
+	// avoid starting or accepting drags, because they will only end in
+	// disappointment. Subclasses do consider their own read-onliness in
+	// `canCreateConnection()`, but we can't call that until we've got a plug
+	// to pass to it. We want to know if we could _ever_ create a connection
+	// given the right plug. The best we can do right now is to cover the most
+	// common case, where the root node in the GraphGadget is read-only, making
+	// it impossible to edit _anything_ within.
+	//
+	/// \todo Extend the API so that we can detect the case where only the specific node
+	/// the plug will be added to is read-only. Perhaps we could could just pass
+	/// `nullptr` to `canCreateConnection()` since it should be checking read-onliness
+	/// already?
+	if( auto graphGadget = ancestor<GraphGadget>() )
+	{
+		if( Gaffer::MetadataAlgo::readOnly( graphGadget->getRoot() ) )
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
 void PlugAdder::enter( GadgetPtr gadget, const ButtonEvent &event )
 {
-	setHighlighted( true );
+	if( couldCreateConnection() )
+	{
+		setHighlighted( true );
+	}
 }
 
 void PlugAdder::leave( GadgetPtr gadget, const ButtonEvent &event )
@@ -285,7 +320,7 @@ bool PlugAdder::buttonPress( GadgetPtr gadget, const ButtonEvent &event )
 
 IECore::RunTimeTypedPtr PlugAdder::dragBegin( GadgetPtr gadget, const ButtonEvent &event )
 {
-	return this;
+	return couldCreateConnection() ? this : nullptr;
 }
 
 bool PlugAdder::dragEnter( const DragDropEvent &event )

@@ -38,6 +38,7 @@
 #include "GafferUI/PlugAdder.h"
 
 #include "Gaffer/ContextProcessor.h"
+#include "Gaffer/MetadataAlgo.h"
 
 #include "boost/bind/bind.hpp"
 
@@ -62,7 +63,10 @@ class ContextProcessorPlugAdder : public PlugAdder
 			updateVisibility();
 		}
 
-	protected :
+		bool canCreateConnection( const Gaffer::Plug *endpoint ) const override
+		{
+			return PlugAdder::canCreateConnection( endpoint ) && !MetadataAlgo::readOnly( m_node.get() );
+		}
 
 		void createConnection( Plug *endpoint ) override
 		{

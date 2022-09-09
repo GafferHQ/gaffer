@@ -96,6 +96,7 @@ class GraphEditor( GafferUI.Editor ) :
 		self.__gadgetWidget.addOverlay( overlay )
 
 		self.__nodeMenu = None
+		self.__readOnlyPopup = None
 
 	## Returns the internal GadgetWidget holding the GraphGadget.
 	def graphGadgetWidget( self ) :
@@ -309,6 +310,7 @@ class GraphEditor( GafferUI.Editor ) :
 
 		return "GafferUI.GraphEditor( scriptNode )"
 
+	## \todo Why is this exposed? Move it into `__popupNodeMenu()`.
 	def _nodeMenu( self ) :
 
 		if self.__nodeMenu is None :
@@ -316,6 +318,32 @@ class GraphEditor( GafferUI.Editor ) :
 			self.__nodeMenu.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__nodeMenuVisibilityChanged ), scoped = False )
 
 		return self.__nodeMenu
+
+	def __popupNodeMenu( self ) :
+
+		# When the node graph is editable, we show a regular Menu for node creation,
+		# but when it is read-only, we show a PopupWindow alerting the user to that
+		# fact.
+
+		readOnly = (
+			Gaffer.MetadataAlgo.getChildNodesAreReadOnly( self.graphGadget().getRoot() ) or
+			Gaffer.MetadataAlgo.readOnly( self.graphGadget().getRoot() )
+		)
+
+		if not readOnly :
+
+			self._nodeMenu().popup( self )
+
+		else :
+
+			if self.__readOnlyPopup is None :
+
+				with GafferUI.PopupWindow() as self.__readOnlyPopup :
+					with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+						GafferUI.Image( "warningSmall.png" )
+						GafferUI.Label( "Node Graph Not Editable" )
+
+			self.__readOnlyPopup.popup( center = self.bound().center() )
 
 	def __nodeMenuVisibilityChanged( self, widget ) :
 
@@ -362,12 +390,8 @@ class GraphEditor( GafferUI.Editor ) :
 					self._m.popup( self )
 					return True
 
-			if not (
-				Gaffer.MetadataAlgo.getChildNodesAreReadOnly( self.graphGadget().getRoot() ) or
-				Gaffer.MetadataAlgo.readOnly( self.graphGadget().getRoot() )
-			):
-				self._nodeMenu().popup( self )
-				return True
+			self.__popupNodeMenu()
+			return True
 
 		return False
 
@@ -405,12 +429,8 @@ class GraphEditor( GafferUI.Editor ) :
 				self.graphGadget().setRoot( root.parent() )
 				return True
 		elif event.key == "Tab" :
-			if not (
-				Gaffer.MetadataAlgo.getChildNodesAreReadOnly( self.graphGadget().getRoot() ) or
-				Gaffer.MetadataAlgo.readOnly( self.graphGadget().getRoot() )
-			):
-				self._nodeMenu().popup( self )
-				return True
+			self.__popupNodeMenu()
+			return True
 
 		return False
 

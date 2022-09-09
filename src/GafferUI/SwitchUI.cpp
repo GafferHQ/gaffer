@@ -39,6 +39,7 @@
 #include "GafferUI/PlugAdder.h"
 
 #include "Gaffer/ArrayPlug.h"
+#include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/NameSwitch.h"
 #include "Gaffer/NameValuePlug.h"
 #include "Gaffer/ScriptNode.h"
@@ -72,7 +73,7 @@ class SwitchPlugAdder : public PlugAdder
 
 		bool canCreateConnection( const Plug *endpoint ) const override
 		{
-			return PlugAdder::canCreateConnection( endpoint );
+			return PlugAdder::canCreateConnection( endpoint ) && !Gaffer::MetadataAlgo::readOnly( m_switch.get() );
 		}
 
 		void createConnection( Plug *endpoint ) override
