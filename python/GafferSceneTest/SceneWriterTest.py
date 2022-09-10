@@ -142,6 +142,11 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 		writer["in"].setInput( reader["out"] )
 		writer["fileName"].setValue( self.temporaryDirectory() / "test.scc" )
 		writer.execute()
+
+		# On Windows, we need to make sure we clear our file handles before we try deleting
+		del reader
+		IECoreScene.SharedSceneInterfaces.clear()
+
 		( self.temporaryDirectory() / "fromPython.scc" ).unlink()
 
 		testCacheFile( self.temporaryDirectory() / "test.scc" )
