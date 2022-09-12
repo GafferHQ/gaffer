@@ -389,6 +389,43 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 				}
 			)
 
+			menuDefinition.append( "/deleteDivider", { "divider" : True } )
+
+			# Filter out a number of scenarios where deleting would be impossible
+			# or unintuitive
+			deleteEnabled = True
+			inputNode = self.__settingsNode["in"].getInput().node()
+			editScopeInput = self.__settingsNode["editScope"].getInput()
+			if editScopeInput is not None :
+				editScopeNode = editScopeInput.node()
+				if inputNode != editScopeNode and editScopeNode not in Gaffer.NodeAlgo.upstreamNodes( inputNode ) :
+					# Edit scope is downstream of input
+					deleteEnabled = False
+				elif GafferScene.EditScopeAlgo.prunedReadOnlyReason( editScopeNode ) is not None :
+					# Pruning or the edit scope is read only
+					deleteEnabled = False
+				else :
+					with self.getContext() :
+						if not editScopeNode["enabled"].getValue() :
+							# Edit scope is disabled
+							deleteEnabled = False
+						else :
+							pruningProcessor = editScopeNode.acquireProcessor( "PruningEdits", createIfNecessary = False )
+							if pruningProcessor is not None and not pruningProcessor["enabled"].getValue() :
+								# Pruning processor is disabled
+								deleteEnabled = False
+			else :
+				# No edit scope selected
+				deleteEnabled = False
+
+			menuDefinition.append(
+				"Delete",
+				{
+					"command" : Gaffer.WeakMethod( self.__deleteLights ),
+					"active" : deleteEnabled
+				}
+			)
+
 		else :
 			# Parameter cells
 
@@ -424,6 +461,16 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 
 		if not isinstance( result, Exception ) :
 			GafferSceneUI.ContextAlgo.setSelectedPaths( context, result )
+
+	def __deleteLights( self, *unused ) :
+
+		# There may be multiple columns with a selection, but we only operate on the name column.
+		selection = self.__pathListing.getSelection()[0]
+
+		editScope = self.__settingsNode["editScope"].getInput().node()
+
+		with Gaffer.UndoScope( editScope.ancestor( Gaffer.ScriptNode ) ) :
+			GafferScene.EditScopeAlgo.setPruned( editScope, selection, True )
 
 	def __showHistory( self, *unused ) :
 
