@@ -55,6 +55,7 @@ class Button( GafferUI.Widget ) :
 		self.__highlightForHover = False
 
 		self._qtWidget().setAttribute( QtCore.Qt.WA_LayoutUsesWidgetRect )
+		self._qtWidget().setFocusPolicy( QtCore.Qt.TabFocus )
 		# allow return and enter keys to click button
 		self._qtWidget().setAutoDefault( True )
 
