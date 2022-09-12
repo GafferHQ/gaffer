@@ -58,9 +58,9 @@ CDL::CDL( const std::string &name )
 
 	addChild( new IntPlug(
 		"direction", Plug::In,
-		OCIO_NAMESPACE::TRANSFORM_DIR_FORWARD,
-		OCIO_NAMESPACE::TRANSFORM_DIR_FORWARD,
-		OCIO_NAMESPACE::TRANSFORM_DIR_INVERSE
+		Forward,
+		Forward,
+		Inverse
 	) );
 }
 
@@ -158,7 +158,7 @@ OCIO_NAMESPACE::ConstTransformRcPtr CDL::transform() const
 	result->setOffset( Color3d( offsetPlug()->getValue() ).getValue() );
 	result->setPower( Color3d( powerPlug()->getValue() ).getValue() );
 	result->setSat( saturationPlug()->getValue() );
-	result->setDirection( (OCIO_NAMESPACE::TransformDirection)directionPlug()->getValue() );
+	result->setDirection( directionPlug()->getValue() == CDL::Direction::Forward ? OCIO_NAMESPACE::TRANSFORM_DIR_FORWARD : OCIO_NAMESPACE::TRANSFORM_DIR_INVERSE );
 
 	return result;
 }

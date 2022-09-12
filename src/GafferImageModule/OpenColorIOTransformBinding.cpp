@@ -132,6 +132,11 @@ void GafferImageModule::bindOpenColorIOTransform()
 			.value( "Forward", LUT::Forward )
 			.value( "Inverse", LUT::Inverse )
 		;
+
+		enum_<CDL::Direction>( "Direction" )
+				.value( "Forward", CDL::Forward )
+				.value( "Inverse", CDL::Inverse )
+		;
 	}
 
 }

@@ -55,6 +55,12 @@ class GAFFERIMAGE_API CDL : public OpenColorIOTransform
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::CDL, CDLTypeId, OpenColorIOTransform );
 
+		enum Direction
+		{
+			Forward = 1,
+			Inverse = 2
+		};
+
 		Gaffer::Color3fPlug *slopePlug();
 		const Gaffer::Color3fPlug *slopePlug() const;
 
