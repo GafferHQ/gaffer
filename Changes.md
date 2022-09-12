@@ -17,7 +17,6 @@ Fixes
 	- Fixed one pixel alignment issue with highlighted and disabled icons.
 	- Improved appearance of adjoined widgets.
 	- Clicking on a button no longer assigns focus to it.
-	- Moved the color inspector back to the left of the Image Viewer.
 
 API
 ---
