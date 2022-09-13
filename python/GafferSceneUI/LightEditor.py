@@ -370,12 +370,14 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 				columnIndex = i
 
 		cellPath = pathListing.pathAt( event.line.p0 )
+		if cellPath is None :
+			return False
 
 		if not selection[columnIndex].match( str( cellPath ) ) & IECore.PathMatcher.Result.ExactMatch :
 			for p in selection :
 				p.clear()
 			selection[columnIndex].addPath( str( cellPath ) )
-			pathListing.setSelection( selection )
+			pathListing.setSelection( selection, expandNonLeaf = False, scrollToFirst = False )
 
 		menuDefinition = IECore.MenuDefinition()
 
