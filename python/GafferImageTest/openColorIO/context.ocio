@@ -1,6 +1,6 @@
 ocio_profile_version: 1
 
-search_path: luts
+search_path: luts:looks
 strictparsing: true
 luma: [0.2126, 0.7152, 0.0722]
 
@@ -21,6 +21,12 @@ displays:
 
 active_displays: [default]
 active_views: [sRGB]
+
+looks:
+  - !<Look>
+    name: primary
+    process_space: context
+    transform: !<FileTransform> {src: 'primary', interpolation: linear}
 
 colorspaces:
   - !<ColorSpace>
