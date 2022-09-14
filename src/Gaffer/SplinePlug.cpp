@@ -208,6 +208,10 @@ T SplineDefinition<T>::spline() const
 			monotoneCubicCVsToBezierCurve<T>( points, result.points );
 		}
 	}
+	else if( interpolation == SplineDefinitionInterpolationConstant )
+	{
+		result.basis = T::Basis::constant();
+	}
 
 	int multiplicity = endPointMultiplicity();
 
@@ -294,7 +298,7 @@ SplinePlug<T>::SplinePlug( const std::string &name, Direction direction, const V
 	:	ValuePlug( name, direction, flags ), m_defaultValue( defaultValue )
 {
 	addChild( new IntPlug( "interpolation", direction, SplineDefinitionInterpolationCatmullRom,
-		SplineDefinitionInterpolationLinear, SplineDefinitionInterpolationMonotoneCubic ) );
+		SplineDefinitionInterpolationLinear, SplineDefinitionInterpolationConstant ) );
 
 	setToDefault();
 }

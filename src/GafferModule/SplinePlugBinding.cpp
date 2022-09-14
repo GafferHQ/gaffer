@@ -269,6 +269,7 @@ void GafferModule::bindSplinePlug()
 		.value( "CatmullRom", SplineDefinitionInterpolationCatmullRom )
 		.value( "BSpline", SplineDefinitionInterpolationBSpline )
 		.value( "MonotoneCubic", SplineDefinitionInterpolationMonotoneCubic )
+		.value( "Constant", SplineDefinitionInterpolationConstant )
 	;
 
 	bindSplineDefinition<SplineDefinitionff >( "SplineDefinitionff" );

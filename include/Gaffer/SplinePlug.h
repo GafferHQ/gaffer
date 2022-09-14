@@ -55,6 +55,7 @@ enum SplineDefinitionInterpolation
 	SplineDefinitionInterpolationCatmullRom,
 	SplineDefinitionInterpolationBSpline,
 	SplineDefinitionInterpolationMonotoneCubic,
+	SplineDefinitionInterpolationConstant,
 };
 
 
