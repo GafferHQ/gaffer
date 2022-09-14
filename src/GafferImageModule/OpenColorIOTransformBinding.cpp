@@ -141,4 +141,14 @@ void GafferImageModule::bindOpenColorIOTransform()
 			.value( "Inverse", CDL::Inverse )
 		;
 	}
+
+	{
+		scope s = GafferBindings::DependencyNodeClass<LookTransform>()
+		;
+
+		enum_<LookTransform::Direction>( "Direction" )
+				.value( "Forward", LookTransform::Forward )
+				.value( "Inverse", LookTransform::Inverse )
+		;
+	}
 }
