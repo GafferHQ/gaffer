@@ -55,6 +55,14 @@ class GAFFERIMAGE_API CDL : public OpenColorIOTransform
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::CDL, CDLTypeId, OpenColorIOTransform );
 
+		// Required due to the change between the TRANSFORM_DIR_FORWARD and
+		// TRANSFORM_DIR_INVERSE enum values between OCIO 1.0 and 2.0
+		enum Direction
+		{
+			Forward = 1,
+			Inverse = 2
+		};
+
 		Gaffer::Color3fPlug *slopePlug();
 		const Gaffer::Color3fPlug *slopePlug() const;
 
