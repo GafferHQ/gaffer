@@ -52,7 +52,7 @@ enum TypeId
 	ImageProcessorTypeId = 110756,
 	ChannelDataProcessorTypeId = 110757,
 	ColorSpaceTypeId = 110758,
-	ObjectToImageTypeId = 110759, // Obsolete - available for reuse
+	LookTransformTypeId = 110759,
 	FormatDataTypeId = 110760,
 	AtomicFormatPlugTypeId = 110761,
 	MergeTypeId = 110762,
