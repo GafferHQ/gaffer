@@ -385,6 +385,19 @@ class RenameTest( GafferSceneTest.SceneTestCase ) :
 		assertRename( "littleSphereBouncing", "littleBallBouncing", find = "Sphere", replace = "Ball" )
 		assertRename( "ababab", "acacac", find = "b", replace = "c" )
 
+		# Strings can be found and replaced using regular expressions.
+
+		assertRename( "01_sphere10", "01_sphere10", find = r"[0-9]{2}", replace = "" )
+		assertRename( "01_sphere10", "sphere10", find = r"[0-9]{2}_", replace = "", useRegularExpressions = True )
+
+		# You can even reference captured groups in the replacement string, although
+		# it's a little awkward as you have to escape the `$` so that it doesn't get
+		# treated as a Gaffer string substitution.
+
+		assertRename( "a_b_c", "c_b_a", find = r"(.+)_(.+)_(.+)", replace = r"\$3_\$2_\$1", useRegularExpressions = True )
+		assertRename( "sphere10", "sphere", find = r"[[:digit:]]+", replace = "", useRegularExpressions = True )
+		assertRename( "sphere10", "sphere10", find = r"[[:digit:]]{3}", replace = "", useRegularExpressions = True )
+
 		# If the result is an empty name, no matter how it was arrived at,
 		# then we refuse to rename. We can't be having empty names.
 

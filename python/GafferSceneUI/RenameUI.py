@@ -100,7 +100,39 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			A string to search for within the original name. All occurrences of this string
-			will be replaced with the value of `replace`.
+			will be replaced with the value of `replace`. When `useRegularExpressions`
+			is on, the search string is treated as a regular expression, with the
+			following syntax :
+
+			Matching
+			--------
+
+			- `.` : Matches any character.
+			- `[aef]` : Matches any character in the set.
+			- `[^aef]` : Matches any character not in the set.
+			- `[a-z]` : Matches any character in the specified range.
+			- `[[:digit:]]` : Matches any numeric digit.
+			- `[[:space:]]` : Matches any whitespace character.
+
+			Repetition
+			----------
+
+			- `*` : Matches the preceding pattern any number of times (including none).
+			- `+` : Matches the preceding pattern 1 or more times.
+			- `{N}` : Matches the preceding pattern N times.
+			- `{M,N}` : Matches the preceding pattern between M and N times.
+
+			Alternatives
+			------------
+
+			- `A|B` : Matches either pattern A or pattern B.
+
+			Captures
+			--------
+
+			- `()` : Captures the pattern within the brackets, allowing it to be
+			  referenced in the `replace` string.
+
 			""",
 
 			"layout:activator", "nameIsSetToDefault",
@@ -110,8 +142,27 @@ Gaffer.Metadata.registerNode(
 		"replace" : [
 
 			"description",
-			"""
+			r"""
 			The replacement for strings matched by the `find` plug.
+			When `useRegularExpressions` is on, this can refer to
+			captured patterns using the following syntax :
+
+			- `\$N` : the Nth pattern captured by the `find` string.
+			  Note the `\`, which is necessary to prevent Gaffer from
+			  treating the `$` as a context variable substitution.
+			""",
+
+			"layout:activator", "nameIsSetToDefault",
+
+		],
+
+		"useRegularExpressions" : [
+
+			"description",
+			"""
+			When on, the `find` string is treated as a regular expression,
+			allowing it to perform complex pattern matching and to capture sections
+			of the match to be referenced by the `replace` string.
 			""",
 
 			"layout:activator", "nameIsSetToDefault",

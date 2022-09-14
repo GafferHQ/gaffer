@@ -69,6 +69,9 @@ class GAFFERSCENE_API Rename : public FilteredSceneProcessor
 		Gaffer::StringPlug *replacePlug();
 		const Gaffer::StringPlug *replacePlug() const;
 
+		Gaffer::BoolPlug *useRegularExpressionsPlug();
+		const Gaffer::BoolPlug *useRegularExpressionsPlug() const;
+
 		Gaffer::StringPlug *addPrefixPlug();
 		const Gaffer::StringPlug *addPrefixPlug() const;
 

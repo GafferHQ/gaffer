@@ -48,6 +48,7 @@
 
 #include "tbb/enumerable_thread_specific.h"
 
+#include <regex>
 #include <unordered_set>
 
 using namespace std;
@@ -145,6 +146,7 @@ Rename::Rename( const std::string &name )
 	addChild( new StringPlug( "deleteSuffix", Plug::In, "" ) );
 	addChild( new StringPlug( "find", Plug::In, "" ) );
 	addChild( new StringPlug( "replace", Plug::In, "" ) );
+	addChild( new BoolPlug( "useRegularExpressions", Plug::In, false ) );
 	addChild( new StringPlug( "addPrefix", Plug::In, "" ) );
 	addChild( new StringPlug( "addSuffix", Plug::In, "" ) );
 	addChild( new ObjectPlug( "__nameMap", Plug::Out, NullObject::defaultNullObject() ) );
@@ -207,33 +209,43 @@ const Gaffer::StringPlug *Rename::replacePlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 4 );
 }
 
+Gaffer::BoolPlug *Rename::useRegularExpressionsPlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 5 );
+}
+
+const Gaffer::BoolPlug *Rename::useRegularExpressionsPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 5 );
+}
+
 Gaffer::StringPlug *Rename::addPrefixPlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 5 );
+	return getChild<StringPlug>( g_firstPlugIndex + 6 );
 }
 
 const Gaffer::StringPlug *Rename::addPrefixPlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 5 );
+	return getChild<StringPlug>( g_firstPlugIndex + 6 );
 }
 
 Gaffer::StringPlug *Rename::addSuffixPlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 6 );
+	return getChild<StringPlug>( g_firstPlugIndex + 7 );
 }
 const Gaffer::StringPlug *Rename::addSuffixPlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 6 );
+	return getChild<StringPlug>( g_firstPlugIndex + 7 );
 }
 
 const Gaffer::ObjectPlug *Rename::nameMapPlug() const
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 7 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 8 );
 }
 
 const Gaffer::InternedStringVectorDataPlug *Rename::inputPathPlug() const
 {
-	return getChild<InternedStringVectorDataPlug>( g_firstPlugIndex + 8 );
+	return getChild<InternedStringVectorDataPlug>( g_firstPlugIndex + 9 );
 }
 
 void Rename::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -350,6 +362,7 @@ bool Rename::affectsOutputName( const Gaffer::Plug *input ) const
 		input == deleteSuffixPlug() ||
 		input == findPlug() ||
 		input == replacePlug() ||
+		input == useRegularExpressionsPlug() ||
 		input == addPrefixPlug() ||
 		input == addSuffixPlug()
 	;
@@ -362,6 +375,7 @@ void Rename::hashOutputName( IECore::MurmurHash &h ) const
 	deleteSuffixPlug()->hash( h );
 	findPlug()->hash( h );
 	replacePlug()->hash( h );
+	useRegularExpressionsPlug()->hash( h );
 	addPrefixPlug()->hash( h );
 	addSuffixPlug()->hash( h );
 }
@@ -391,7 +405,14 @@ std::string Rename::outputName( IECore::InternedString inputName ) const
 	const string find = findPlug()->getValue();
 	if( find.size() )
 	{
-		boost::replace_all( result, find, replacePlug()->getValue() );
+		if( useRegularExpressionsPlug()->getValue() )
+		{
+			result = regex_replace( result, regex( find ), replacePlug()->getValue() );
+		}
+		else
+		{
+			boost::replace_all( result, find, replacePlug()->getValue() );
+		}
 	}
 
 	result.insert( 0, addPrefixPlug()->getValue() );
