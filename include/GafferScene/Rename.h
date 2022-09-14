@@ -57,6 +57,24 @@ class GAFFERSCENE_API Rename : public FilteredSceneProcessor
 		Gaffer::StringPlug *namePlug();
 		const Gaffer::StringPlug *namePlug() const;
 
+		Gaffer::StringPlug *deletePrefixPlug();
+		const Gaffer::StringPlug *deletePrefixPlug() const;
+
+		Gaffer::StringPlug *deleteSuffixPlug();
+		const Gaffer::StringPlug *deleteSuffixPlug() const;
+
+		Gaffer::StringPlug *findPlug();
+		const Gaffer::StringPlug *findPlug() const;
+
+		Gaffer::StringPlug *replacePlug();
+		const Gaffer::StringPlug *replacePlug() const;
+
+		Gaffer::StringPlug *addPrefixPlug();
+		const Gaffer::StringPlug *addPrefixPlug() const;
+
+		Gaffer::StringPlug *addSuffixPlug();
+		const Gaffer::StringPlug *addSuffixPlug() const;
+
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
@@ -93,6 +111,10 @@ class GAFFERSCENE_API Rename : public FilteredSceneProcessor
 		// Used to compute the input location for a particular output location.
 		// Must be evaluated in a context suitable for the _output_ scene.
 		const Gaffer::InternedStringVectorDataPlug *inputPathPlug() const;
+
+		bool affectsOutputName( const Gaffer::Plug *input ) const;
+		void hashOutputName( IECore::MurmurHash &h ) const;
+		std::string outputName( IECore::InternedString inputName ) const;
 
 		bool affectsNameMap( const Gaffer::Plug *input ) const;
 		void hashNameMap( const Gaffer::Context *context, IECore::MurmurHash &h ) const;

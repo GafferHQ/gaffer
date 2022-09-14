@@ -338,5 +338,61 @@ class RenameTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( len( hashes ), 1 )
 
+	def testNameProcessing( self ) :
+
+		sphere = GafferScene.Sphere()
+
+		allFilter = GafferScene.PathFilter()
+		allFilter["paths"].setValue( IECore.StringVectorData( [ "/*" ] ) )
+
+		rename = GafferScene.Rename()
+		rename["in"].setInput( sphere["out"] )
+		rename["filter"].setInput( allFilter["out"] )
+
+		def assertRename( inputName, outputName, **kw ) :
+
+			sphere["name"].setValue( inputName )
+
+			for plug in Gaffer.ValuePlug.InputRange( rename ) :
+				if plug.getInput() is None :
+					plug.setToDefault()
+
+			for name, value in kw.items() :
+				rename[name].setValue( value )
+
+			self.assertEqual( rename["out"].childNames( "/" )[0], outputName )
+			self.assertSceneValid( rename["out"] )
+
+		# If `name` is specified, then all other options are ignored.
+
+		assertRename( "sphere", "ball", name = "ball" )
+		assertRename( "sphere", "ball", name = "ball", deletePrefix = "sph" )
+		assertRename( "sphere", "ball", name = "ball", addPrefix = "aaa" )
+		assertRename( "sphere", "ball", name = "ball", deleteSuffix = "ere" )
+		assertRename( "sphere", "ball", name = "ball", addSuffix = "zzz" )
+		assertRename( "sphere", "ball", name = "ball", find = "s", replace = "t" )
+
+		# Prefixes can be added and removed.
+
+		assertRename( "bigSphereRolling", "Sphere", deletePrefix = "big", deleteSuffix = "Rolling" )
+		assertRename( "bigBallRolling", "Ball", deletePrefix = "big", deleteSuffix = "Rolling" )
+		assertRename( "bigSphereRolling", "littleSphereBouncing", deletePrefix = "big", addPrefix = "little", deleteSuffix = "Rolling", addSuffix = "Bouncing" )
+		assertRename( "bigBallRolling", "littleBallBouncing", deletePrefix = "big", addPrefix = "little", deleteSuffix = "Rolling", addSuffix = "Bouncing" )
+
+		# Strings can be found and replaced.
+
+		assertRename( "bigSphereRolling", "bigBallRolling", find = "Sphere", replace = "Ball" )
+		assertRename( "littleSphereBouncing", "littleBallBouncing", find = "Sphere", replace = "Ball" )
+		assertRename( "ababab", "acacac", find = "b", replace = "c" )
+
+		# If the result is an empty name, no matter how it was arrived at,
+		# then we refuse to rename. We can't be having empty names.
+
+		assertRename( "aaa", "aaa", name = "" )
+		assertRename( "aaa", "aaa", deletePrefix = "aaa" )
+		assertRename( "aaa", "aaa", deleteSuffix = "aaa" )
+		assertRename( "aaa", "aaa", deletePrefix = "aa", deleteSuffix = "a" )
+		assertRename( "aaa", "aaa", find = "a", replace = "" )
+
 if __name__ == "__main__":
 	unittest.main()

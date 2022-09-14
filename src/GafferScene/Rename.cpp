@@ -40,6 +40,8 @@
 
 #include "IECore/NullObject.h"
 
+#include "boost/algorithm/string/predicate.hpp"
+#include "boost/algorithm/string/replace.hpp"
 #include "boost/multi_index/hashed_index.hpp"
 #include "boost/multi_index/member.hpp"
 #include "boost/multi_index_container.hpp"
@@ -139,6 +141,12 @@ Rename::Rename( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringPlug( "name", Plug::In, "" ) );
+	addChild( new StringPlug( "deletePrefix", Plug::In, "" ) );
+	addChild( new StringPlug( "deleteSuffix", Plug::In, "" ) );
+	addChild( new StringPlug( "find", Plug::In, "" ) );
+	addChild( new StringPlug( "replace", Plug::In, "" ) );
+	addChild( new StringPlug( "addPrefix", Plug::In, "" ) );
+	addChild( new StringPlug( "addSuffix", Plug::In, "" ) );
 	addChild( new ObjectPlug( "__nameMap", Plug::Out, NullObject::defaultNullObject() ) );
 	addChild( new InternedStringVectorDataPlug( "__inputPath", Plug::Out, new InternedStringVectorData() ) );
 
@@ -160,14 +168,72 @@ const Gaffer::StringPlug *Rename::namePlug() const
 	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
+Gaffer::StringPlug *Rename::deletePrefixPlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+}
+
+const Gaffer::StringPlug *Rename::deletePrefixPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+}
+
+Gaffer::StringPlug *Rename::deleteSuffixPlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 2 );
+}
+
+const Gaffer::StringPlug *Rename::deleteSuffixPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 2 );
+}
+
+Gaffer::StringPlug *Rename::findPlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 3 );
+}
+
+const Gaffer::StringPlug *Rename::findPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 3 );
+}
+
+Gaffer::StringPlug *Rename::replacePlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 4 );
+}
+const Gaffer::StringPlug *Rename::replacePlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 4 );
+}
+
+Gaffer::StringPlug *Rename::addPrefixPlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 5 );
+}
+
+const Gaffer::StringPlug *Rename::addPrefixPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 5 );
+}
+
+Gaffer::StringPlug *Rename::addSuffixPlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 6 );
+}
+const Gaffer::StringPlug *Rename::addSuffixPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 6 );
+}
+
 const Gaffer::ObjectPlug *Rename::nameMapPlug() const
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 1 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 7 );
 }
 
 const Gaffer::InternedStringVectorDataPlug *Rename::inputPathPlug() const
 {
-	return getChild<InternedStringVectorDataPlug>( g_firstPlugIndex + 2 );
+	return getChild<InternedStringVectorDataPlug>( g_firstPlugIndex + 8 );
 }
 
 void Rename::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -276,12 +342,70 @@ Gaffer::ValuePlug::CachePolicy Rename::computeCachePolicy( const Gaffer::ValuePl
 	return FilteredSceneProcessor::computeCachePolicy( output );
 }
 
+bool Rename::affectsOutputName( const Gaffer::Plug *input ) const
+{
+	return
+		input == namePlug() ||
+		input == deletePrefixPlug() ||
+		input == deleteSuffixPlug() ||
+		input == findPlug() ||
+		input == replacePlug() ||
+		input == addPrefixPlug() ||
+		input == addSuffixPlug()
+	;
+}
+
+void Rename::hashOutputName( IECore::MurmurHash &h ) const
+{
+	namePlug()->hash( h );
+	deletePrefixPlug()->hash( h );
+	deleteSuffixPlug()->hash( h );
+	findPlug()->hash( h );
+	replacePlug()->hash( h );
+	addPrefixPlug()->hash( h );
+	addSuffixPlug()->hash( h );
+}
+
+std::string Rename::outputName( IECore::InternedString inputName ) const
+{
+	string result = namePlug()->getValue();
+	if( result.size() )
+	{
+		return result;
+	}
+
+	result = inputName.string();
+
+	const string deletePrefix = deletePrefixPlug()->getValue();
+	if( boost::starts_with( result, deletePrefix ) )
+	{
+		result.erase( 0, deletePrefix.size() );
+	}
+
+	const string deleteSuffix = deleteSuffixPlug()->getValue();
+	if( boost::ends_with( result, deleteSuffix ) )
+	{
+		result.erase( result.size() - deleteSuffix.size() );
+	}
+
+	const string find = findPlug()->getValue();
+	if( find.size() )
+	{
+		boost::replace_all( result, find, replacePlug()->getValue() );
+	}
+
+	result.insert( 0, addPrefixPlug()->getValue() );
+	result.insert( result.size(), addSuffixPlug()->getValue() );
+
+	return result.size() ? result : inputName.string();
+}
+
 bool Rename::affectsNameMap( const Gaffer::Plug *input ) const
 {
 	return
 		input == filterPlug() ||
 		input == inPlug()->childNamesPlug() ||
-		input == namePlug()
+		affectsOutputName( input )
 	;
 }
 
@@ -308,7 +432,7 @@ void Rename::hashNameMap( const Gaffer::Context *context, IECore::MurmurHash &h 
 		if( filterValue( childScope.context() ) & PathMatcher::ExactMatch )
 		{
 			haveRenames = true;
-			namePlug()->hash( renamesHash );
+			hashOutputName( renamesHash );
 		}
 		renamesHash.append( childName );
 	}
@@ -346,8 +470,8 @@ IECore::ConstObjectPtr Rename::computeNameMap( const Gaffer::Context *context ) 
 		childScope.setPath( &inputChildPath );
 		if( filterValue( childScope.context() ) & PathMatcher::ExactMatch )
 		{
-			const string outputChildName = namePlug()->getValue();
-			if( outputChildName.size() && outputChildName != inputChildName.string() )
+			const string outputChildName = outputName( inputChildName );
+			if( outputChildName != inputChildName.string() )
 			{
 				renames.push_back( { inputChildName, outputChildName } );
 				continue;

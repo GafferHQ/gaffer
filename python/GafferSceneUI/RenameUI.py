@@ -46,13 +46,16 @@ Gaffer.Metadata.registerNode(
 	Renames locations in the scene.
 	""",
 
+	"layout:activator:nameIsSetToDefault", lambda node : node["name"].isSetToDefault(),
+
 	plugs = {
 
 		"name" : [
 
 			"description",
 			"""
-			The new name for the location.
+			The new name for the location. If this name is non-empty then it
+			takes precedence, and all other renaming operations are ignored.
 
 			> Tip : The `${scene:path}` context variable contains the
 			> location's original name, and can be used in a Spreadsheet's
@@ -60,9 +63,88 @@ Gaffer.Metadata.registerNode(
 			> particular location.
 			""",
 
+			"layout:divider", True,
+
 			"ui:spreadsheet:selectorValue", "${scene:path}",
 
-		]
+		],
+
+		"deletePrefix" : [
+
+			"description",
+			"""
+			A prefix to remove from the start of the original name. Prefixes are removed
+			before the suffixes and before the find and replace operation is
+			performed.
+			""",
+
+			"layout:activator", "nameIsSetToDefault",
+
+		],
+
+		"deleteSuffix" : [
+
+			"description",
+			"""
+			A suffix to remove from the start of the original name. Suffixes are removed
+			before the find and replace operation is performed.
+			""",
+
+			"layout:activator", "nameIsSetToDefault",
+			"layout:divider", True,
+
+		],
+
+		"find" : [
+
+			"description",
+			"""
+			A string to search for within the original name. All occurrences of this string
+			will be replaced with the value of `replace`.
+			""",
+
+			"layout:activator", "nameIsSetToDefault",
+
+		],
+
+		"replace" : [
+
+			"description",
+			"""
+			The replacement for strings matched by the `find` plug.
+			""",
+
+			"layout:activator", "nameIsSetToDefault",
+			"layout:divider", True,
+
+		],
+
+		"addPrefix" : [
+
+			"description",
+			"""
+			A string to add at the start of the name. Prefixes are
+			added last, after the find and replace operation has
+			been performed.
+			""",
+
+			"layout:activator", "nameIsSetToDefault",
+
+		],
+
+		"addSuffix" : [
+
+			"description",
+			"""
+			A string to add at the end of the name. Suffixes are
+			added last, after the find and replace operation has
+			been performed.
+			""",
+
+
+			"layout:activator", "nameIsSetToDefault",
+
+		],
 
 	}
 )
