@@ -518,9 +518,6 @@ float BackdropNodeGadget::hoverWidth() const
 
 void BackdropNodeGadget::hoveredEdges( const ButtonEvent &event, int &horizontal, int &vertical ) const
 {
-	const Backdrop *backdrop = static_cast<const Backdrop *>( node() );
-	const float scale = backdrop->scalePlug()->getValue();
-
 	const Box2f b = getBound();
 
 	const V3f &p = event.line.p0;
@@ -541,7 +538,7 @@ void BackdropNodeGadget::hoveredEdges( const ButtonEvent &event, int &horizontal
 	{
 		vertical = -1;
 	}
-	else if( fabs( p.y - b.max.y ) < std::min( width, 0.25f * g_margin * scale ) )
+	else if( fabs( p.y - b.max.y ) < std::min( width, g_titleBarMargin ) )
 	{
 		vertical = 1;
 	}

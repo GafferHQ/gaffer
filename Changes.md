@@ -39,6 +39,15 @@ Breaking Changes
 - ImageGadget : Removed setters and getters for `DisplayTransform`, `UseGPU`, `Clipping`, `Exposure`, `Gamma`.  Instead use `ViewportGadget::setPostProcessShader()` to set up a GPU color transform, or set the plug values on `ImageView`.
 - ImageView : Using CPU color transforms is now deprecated.  We can't properly support wipes in CPU mode, and OCIO now offers full quality on the GPU, in addition to the performance being much better.  While the CPU functionality still exists, the UI has been hidden.
 
+1.0.x.x (relative to 1.0.4.0)
+=======
+
+Fixes
+-----
+
+- EditScope : Fixed mislocated plug nodules when connecting a new `EditScope` to a `BoxIn`, `BoxOut` or `Box` node.
+- Backdrop : Fixed bug selecting or moving a backdrop when zoomed out in the GraphEditor, where drag-resizing the top edge was incorrectly being given precedence.
+
 1.0.4.0 (relative to 1.0.3.0)
 =======
 
@@ -55,10 +64,6 @@ Improvements
 
 - TweakPlug : Added the ability to set `InternedStringData` from `StringData`.
 - GraphEditor : Added a warning for attempts to open the node creation menu in a read-only graph.
-
-Improvements
-------------
-
 - Light Editor :
   - Added explanation to cell popup when a parameter cannot be edited because there are no editable sources.
   - Added an error icon to a cell with an explanation in the tooltip when there is an error computing its value (#4805).
