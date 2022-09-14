@@ -112,7 +112,6 @@ void GafferImageModule::bindOpenColorIOTransform()
 	;
 
 	GafferBindings::DependencyNodeClass<ColorSpace>();
-	GafferBindings::DependencyNodeClass<CDL>();
 	GafferBindings::DependencyNodeClass<DisplayTransform>();
 	GafferBindings::DependencyNodeClass<LookTransform>();
 
@@ -132,10 +131,15 @@ void GafferImageModule::bindOpenColorIOTransform()
 			.value( "Forward", LUT::Forward )
 			.value( "Inverse", LUT::Inverse )
 		;
+	}
+
+	{
+		scope s = GafferBindings::DependencyNodeClass<CDL>()
+		;
 
 		enum_<CDL::Direction>( "Direction" )
-				.value( "Forward", CDL::Forward )
-				.value( "Inverse", CDL::Inverse )
+			.value( "Forward", CDL::Forward )
+			.value( "Inverse", CDL::Inverse )
 		;
 	}
 
