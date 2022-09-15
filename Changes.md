@@ -1,3 +1,11 @@
+1.0.x.x (relative to 1.0.5.1)
+=======
+
+Improvements
+------------
+
+- Constraint : Improved performance for UV constraints where the target has static geometry but an animated transform. One such benchmark shows a greater than 40x speedup.
+
 1.0.5.1 (relative to 1.0.5.0)
 =======
 

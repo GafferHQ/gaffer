@@ -94,6 +94,9 @@ class GAFFERSCENE_API Constraint : public SceneElementProcessor
 
 	protected :
 
+		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
+
 		/// Reimplemented from SceneElementProcessor to call the constraint functions below.
 		bool processesTransform() const override;
 		void hashProcessedTransform( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
@@ -108,6 +111,16 @@ class GAFFERSCENE_API Constraint : public SceneElementProcessor
 		virtual Imath::M44f computeConstraint( const Imath::M44f &fullTargetTransform, const Imath::M44f &fullInputTransform, const Imath::M44f &inputTransform ) const = 0;
 
 	private :
+
+		// Plug used to cache the matrix computed from the `TargetMode`
+		// separately. The UV mode in particular is expensive, and caching it
+		// separately allows us to avoid repeating that part of the computation
+		// when the geometry is static but the transform is animated.
+		const Gaffer::M44fPlug *targetModeMatrixPlug() const;
+
+		bool affectsTargetModeMatrix( const Gaffer::Plug *input ) const;
+		void hashTargetModeMatrix( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		Imath::M44f computeTargetModeMatrix( const Gaffer::Context *context ) const;
 
 		struct Target
 		{
