@@ -48,6 +48,12 @@
 
 #include "tbb/enumerable_thread_specific.h"
 
+/// \todo Add the latest `fmtlib` to GafferHQ/dependencies
+/// and get it from there. We don't want to rely on OpenImageIO
+/// here, especially not its implementation details.
+#define FMT_HEADER_ONLY
+#include "OpenImageIO/detail/fmt/format.h"
+
 #include <regex>
 #include <unordered_set>
 
@@ -62,6 +68,65 @@ using namespace GafferScene;
 
 namespace
 {
+
+// Equivalent to `std::regex_replace`, but using `fmtlib` as the formatter
+// rather than the default `\N` or `$N` formatting. We prefer `fmtlib` for
+// several reasons :
+//
+// - It shares syntax with Python's string formatting, which is more likely
+//   to already be familiar to our users.
+// - It doesn't require escaping, whereas both `\N` and `$N` syntaxes require
+//   escaping to sneak past StringPlug's built in substitutions.
+// - It is much more flexible, providing things like padding and fill.
+string regexReplace( const std::string &s, const std::regex &r, const std::string &f )
+{
+	// Iterator for all regex matches within `s`.
+	sregex_iterator matchIt( s.begin(), s.end(), r );
+	sregex_iterator matchEnd;
+
+	if( matchIt == matchEnd )
+	{
+		// No matches
+		return s;
+	}
+
+	ssub_match suffix;
+	std::string result;
+	for( ; matchIt != matchEnd; ++matchIt )
+	{
+		// Add any unmatched text from before this match.
+		result.insert( result.end(), matchIt->prefix().first, matchIt->prefix().second );
+
+		// Format this match using the format string provided, and
+		// add it to our result.
+		fmt::format_args formatArgs;
+		fmt::dynamic_format_arg_store<fmt::format_context> store;
+		for( const auto &subMatch : *matchIt )
+		{
+			store.push_back( subMatch.str() );
+		}
+
+		try
+		{
+			result += fmt::vformat( f, store );
+		}
+		catch( fmt::format_error &e )
+		{
+			// Augment the error with a little bit more information, to
+			// give people half a chance of figuring out the problem.
+			throw IECore::Exception(
+				fmt::format( "Error applying replacement `{}` : {}", f, e.what() )
+			);
+		}
+
+		suffix = matchIt->suffix();
+	}
+	// The suffix for one match is the same as the prefix for the next
+	// match. So we only need to add the suffix from the last match.
+	result.insert( result.end(), suffix.first, suffix.second );
+
+	return result;
+}
 
 struct InternedStringAddressHash
 {
@@ -407,7 +472,7 @@ std::string Rename::outputName( IECore::InternedString inputName ) const
 	{
 		if( useRegularExpressionsPlug()->getValue() )
 		{
-			result = regex_replace( result, regex( find ), replacePlug()->getValue() );
+			result = regexReplace( result, regex( find ), replacePlug()->getValue() );
 		}
 		else
 		{

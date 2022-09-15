@@ -130,8 +130,8 @@ Gaffer.Metadata.registerNode(
 			Captures
 			--------
 
-			- `()` : Captures the pattern within the brackets, allowing it to be
-			  referenced in the `replace` string.
+			- `()` : Captures the subgroup of the pattern within the brackets,
+			  allowing it to be referenced by `{}` in the `replace` string.
 
 			""",
 
@@ -142,14 +142,16 @@ Gaffer.Metadata.registerNode(
 		"replace" : [
 
 			"description",
-			r"""
+			"""
 			The replacement for strings matched by the `find` plug.
 			When `useRegularExpressions` is on, this can refer to
-			captured patterns using the following syntax :
+			captured patterns using Python's standard string formatting
+			syntax :
 
-			- `\$N` : the Nth pattern captured by the `find` string.
-			  Note the `\`, which is necessary to prevent Gaffer from
-			  treating the `$` as a context variable substitution.
+			- `{0}` : The entire string matched by the regular expresion.
+			- `{1}` : The 1st subgroup captured within `()` brackets by the `find` string.
+			- `{N}` : The Nth subgroup captured within `()` brackets by the `find` string.
+			- `{1:0>4}` : The 1st subgroup, aligned to the right and padded to width 4.
 			""",
 
 			"layout:activator", "nameIsSetToDefault",

@@ -35,6 +35,7 @@
 ##########################################################################
 
 import unittest
+import six
 
 import IECore
 
@@ -349,7 +350,7 @@ class RenameTest( GafferSceneTest.SceneTestCase ) :
 		rename["in"].setInput( sphere["out"] )
 		rename["filter"].setInput( allFilter["out"] )
 
-		def assertRename( inputName, outputName, **kw ) :
+		def outputName( inputName, **kw ) :
 
 			sphere["name"].setValue( inputName )
 
@@ -360,7 +361,11 @@ class RenameTest( GafferSceneTest.SceneTestCase ) :
 			for name, value in kw.items() :
 				rename[name].setValue( value )
 
-			self.assertEqual( rename["out"].childNames( "/" )[0], outputName )
+			return str( rename["out"].childNames( "/" )[0] )
+
+		def assertRename( inputName, expectedOutputName, **kw ) :
+
+			self.assertEqual( outputName( inputName, **kw ), expectedOutputName )
 			self.assertSceneValid( rename["out"] )
 
 		# If `name` is specified, then all other options are ignored.
@@ -388,15 +393,39 @@ class RenameTest( GafferSceneTest.SceneTestCase ) :
 		# Strings can be found and replaced using regular expressions.
 
 		assertRename( "01_sphere10", "01_sphere10", find = r"[0-9]{2}", replace = "" )
-		assertRename( "01_sphere10", "sphere10", find = r"[0-9]{2}_", replace = "", useRegularExpressions = True )
+		assertRename( "01_sphere10", "_sphere", find = r"[0-9]{2}", replace = "", useRegularExpressions = True )
+		assertRename( "a_b_c_d_a", "a_z_z_z_a", find = r"[b-d]", replace = "z", useRegularExpressions = True )
 
-		# You can even reference captured groups in the replacement string, although
-		# it's a little awkward as you have to escape the `$` so that it doesn't get
-		# treated as a Gaffer string substitution.
+		# You can reference captured groups in the replacement string, using
+		# Python's formatting syntax (which is the same as `std::format`).
 
-		assertRename( "a_b_c", "c_b_a", find = r"(.+)_(.+)_(.+)", replace = r"\$3_\$2_\$1", useRegularExpressions = True )
+		assertRename( "a_b_c", "c_b_a", find = r"(.+)_(.+)_(.+)", replace = "{3}_{2}_{1}", useRegularExpressions = True )
 		assertRename( "sphere10", "sphere", find = r"[[:digit:]]+", replace = "", useRegularExpressions = True )
 		assertRename( "sphere10", "sphere10", find = r"[[:digit:]]{3}", replace = "", useRegularExpressions = True )
+		assertRename( "sphere10", "sphere0010", find = r"[[:digit:]]+", replace = "{:0>4}", useRegularExpressions = True )
+		assertRename( "ab", "ab", find = "(a)(b)", replace = "{0}", useRegularExpressions = True )
+
+		# If you reference more capture groups than there are, then you
+		# are greeted by an exception.
+
+		with six.assertRaisesRegex(
+			self, Gaffer.ProcessException,
+			r".*Error applying replacement `\{2\}` : argument not found"
+		) :
+			outputName( "abc", find = "(a)", replace = "{2}", useRegularExpressions = True )
+
+		# Likewise, if you try to use a type-specific formatter.
+
+		with six.assertRaisesRegex(
+			self, Gaffer.ProcessException,
+			r".*Error applying replacement `\{1:\+\}` : format specifier requires numeric argument"
+		) :
+			outputName( "abc", find = "(a)", replace = "{1:+}", useRegularExpressions = True )
+
+		# If the regular expression doesn't match anything, then the name
+		# should be unchanged.
+
+		assertRename( "abc", "abc", find = "x", replace = "y", useRegularExpressions = True )
 
 		# If the result is an empty name, no matter how it was arrived at,
 		# then we refuse to rename. We can't be having empty names.
