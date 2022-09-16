@@ -339,6 +339,112 @@ class RenameTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( len( hashes ), 1 )
 
+	def testMixedSetProcessing( self ) :
+
+		reader = GafferScene.SceneReader()
+		reader["fileName"].setValue( "${GAFFER_ROOT}/resources/gafferBot/caches/gafferBot.scc" )
+
+		# Matches locations such that each leaf location will have a mixture of
+		# renamed and non-renamed ancestors.
+		pathFilter = GafferScene.PathFilter()
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ "/.../*_GRP" ] ) )
+
+		rename = GafferScene.Rename()
+		rename["in"].setInput( reader["out"] )
+		rename["filter"].setInput( pathFilter["out"] )
+		rename["find"].setValue( "_GRP" )
+		rename["replace"].setValue( "_GROUP" )
+
+		setName = "ObjectType:MeshPrimitive"
+
+		self.assertEqual(
+			rename["out"].set( setName ).value,
+			IECore.PathMatcher( [
+				p.replace( "_GRP", "_GROUP" )
+				for p in rename["in"].set( setName ).value.paths()
+			] )
+		)
+
+		# Repeat, but with the filter also matching some locations
+		# that won't end up being renamed (because the find/replace doesn't match).
+
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ "/.../*_GRP", "/.../*_REN" ] ) )
+
+		self.assertEqual(
+			rename["out"].set( setName ).value,
+			IECore.PathMatcher( [
+				p.replace( "_GRP", "_GROUP" )
+				for p in rename["in"].set( setName ).value.paths()
+			] )
+		)
+
+		# Now rename those locations too.
+
+		rename["find"].setValue( "(_GRP|_REN)" )
+		rename["replace"].setValue( "{1}R" )
+		rename["useRegularExpressions"].setValue( True )
+
+		self.assertEqual(
+			rename["out"].set( setName ).value,
+			IECore.PathMatcher( [
+				p.replace( "_GRP", "_GRPR" ).replace( "_REN", "_RENR" )
+				for p in rename["in"].set( setName ).value.paths()
+			] )
+		)
+
+		# All the set members were leaf objects. Try the same
+		# with a set consisting of some leaf and some non-leaf
+		# members.
+
+		setFilter = GafferScene.PathFilter()
+		setFilter["paths"].setValue( IECore.StringVectorData( [
+			"/GAFFERBOT/C_torso_GRP/C_head_GRP",
+			"/GAFFERBOT/C_torso_GRP/L_legUpper_GRP/L_legLower_GRP",
+			"/GAFFERBOT/C_torso_GRP/L_armUpper_GRP",
+			"/GAFFERBOT/C_torso_GRP/L_armUpper_GRP/L_armUpper_CPT"
+		] ) )
+
+		setNode = GafferScene.Set()
+		setNode["in"].setInput( reader["out"] )
+		setNode["filter"].setInput( setFilter["out"] )
+		setNode["name"].setValue( setName )
+		setNode["mode"].setValue( setNode.Mode.Add )
+		rename["in"].setInput( setNode["out"] )
+
+		self.assertEqual( rename["in"].set( setName ).value.size(), reader["out"].set( setName ).value.size() + 4 )
+
+		self.assertEqual(
+			rename["out"].set( setName ).value,
+			IECore.PathMatcher( [
+				p.replace( "_GRP", "_GRPR" ).replace( "_REN", "_RENR" )
+				for p in rename["in"].set( setName ).value.paths()
+			] )
+		)
+
+		# Repeat, but without the original leaf set members.
+
+		setNode["mode"].setValue( setNode.Mode.Create )
+		self.assertEqual( rename["in"].set( setName ).value.size(), 4 )
+
+		self.assertEqual(
+			rename["out"].set( setName ).value,
+			IECore.PathMatcher( [
+				p.replace( "_GRP", "_GRPR" ).replace( "_REN", "_RENR" )
+				for p in rename["in"].set( setName ).value.paths()
+			] )
+		)
+
+		# And then repeat but without renaming leaf locations.
+
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ "/.../*_GRP" ] ) )
+		self.assertEqual(
+			rename["out"].set( setName ).value,
+			IECore.PathMatcher( [
+				p.replace( "_GRP", "_GRPR" )
+				for p in rename["in"].set( setName ).value.paths()
+			] )
+		)
+
 	def testNameProcessing( self ) :
 
 		sphere = GafferScene.Sphere()
