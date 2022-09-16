@@ -1,11 +1,22 @@
 1.0.x.x (relative to 1.0.4.0)
 =======
 
+Improvements
+------------
+
+- SceneReader : Added reading of more Alembic GeomParam types. Specifically `unsigned char`, `uint16`, `int16` and `uint32` GeomParams are loaded as `UCharVectorData`, `UShortVectorData`, `ShortVectorData` and `UIntVectorData` PrimitiveVariables respectively.
+- SceneWriter : Added writing of more Alembic GeomParam types, mirroring the improved reading mentioned above.
+
 Fixes
 -----
 
 - EditScope : Fixed mislocated plug nodules when connecting a new `EditScope` to a `BoxIn`, `BoxOut` or `Box` node.
 - Backdrop : Fixed bug selecting or moving a backdrop when zoomed out in the GraphEditor, where drag-resizing the top edge was incorrectly being given precedence.
+
+Build
+-----
+
+- Cortex : Updated to 10.4.2.0.
 
 1.0.4.0 (relative to 1.0.3.0)
 =======
