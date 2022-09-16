@@ -533,14 +533,63 @@ class RenameTest( GafferSceneTest.SceneTestCase ) :
 
 		assertRename( "abc", "abc", find = "x", replace = "y", useRegularExpressions = True )
 
-		# If the result is an empty name, no matter how it was arrived at,
-		# then we refuse to rename. We can't be having empty names.
+		# If deletion/replacement yield an empty name, then we alert the
+		# user by renaming to "invalidName". We can't be having empty names.
+
+		assertRename( "aaa", "invalidName", deletePrefix = "aaa" )
+		assertRename( "aaa", "invalidName", deleteSuffix = "aaa" )
+		assertRename( "aaa", "invalidName", deletePrefix = "aa", deleteSuffix = "a" )
+		assertRename( "aaa", "invalidName", find = "a", replace = "" )
+
+		# But if there's no deletion/replacement and the `name` plug is
+		# simply empty, we take that to be a no-op. This keeps the node
+		# acting as a pass-through until the plugs are at non-default values.
 
 		assertRename( "aaa", "aaa", name = "" )
-		assertRename( "aaa", "aaa", deletePrefix = "aaa" )
-		assertRename( "aaa", "aaa", deleteSuffix = "aaa" )
-		assertRename( "aaa", "aaa", deletePrefix = "aa", deleteSuffix = "a" )
-		assertRename( "aaa", "aaa", find = "a", replace = "" )
+
+	def testSpreadsheetWithDisabledCell( self ) :
+
+		sphere = GafferScene.Sphere()
+		sphere["sets"].setValue( "setA" )
+
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		spreadsheet = self.__nameSpreadsheet( {
+			"/sphere" : "newSphere",
+		} )
+
+		rename = GafferScene.Rename()
+		rename["in"].setInput( sphere["out"] )
+		rename["filter"].setInput( sphereFilter["out"] )
+		rename["name"].setInput( spreadsheet["out"]["newName"] )
+
+		self.assertSceneValid( rename["out"] )
+		self.assertEqual( rename["out"].childNames( "/" )[0], "newSphere" )
+
+		spreadsheet["rows"][1]["enabled"].setValue( False )
+		self.assertSceneValid( rename["out"] )
+		self.assertEqual( rename["out"].childNames( "/" )[0], "sphere" )
+
+		spreadsheet["rows"].defaultRow()["cells"]["newName"]["value"].setValue( "spreadsheetDefault" )
+		self.assertSceneValid( rename["out"] )
+		self.assertEqual( rename["out"].childNames( "/" )[0], "spreadsheetDefault" )
+
+		spreadsheet["rows"][1]["enabled"].setValue( True )
+		self.assertSceneValid( rename["out"] )
+		self.assertEqual( rename["out"].childNames( "/" )[0], "newSphere" )
+
+		spreadsheet["rows"][1]["cells"]["newName"]["enabled"].setValue( False )
+		self.assertSceneValid( rename["out"] )
+		self.assertEqual( rename["out"].childNames( "/" )[0], "spreadsheetDefault" )
+
+		spreadsheet["rows"].defaultRow()["cells"]["newName"]["value"].setValue( "" )
+		self.assertSceneValid( rename["out"] )
+		self.assertEqual( rename["out"].childNames( "/" )[0], "sphere" )
+
+		spreadsheet["rows"][1]["cells"]["newName"]["enabled"].setValue( True )
+		self.assertSceneValid( rename["out"] )
+		self.assertEqual( rename["out"].childNames( "/" )[0], "newSphere" )
 
 if __name__ == "__main__":
 	unittest.main()

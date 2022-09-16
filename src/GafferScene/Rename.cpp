@@ -483,7 +483,7 @@ std::string Rename::outputName( IECore::InternedString inputName ) const
 	result.insert( 0, addPrefixPlug()->getValue() );
 	result.insert( result.size(), addSuffixPlug()->getValue() );
 
-	return result.size() ? result : inputName.string();
+	return result.size() ? result : "invalidName";
 }
 
 bool Rename::affectsNameMap( const Gaffer::Plug *input ) const
