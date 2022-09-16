@@ -36,6 +36,7 @@
 
 import unittest
 import imath
+import inspect
 import six
 
 import IECore
@@ -79,7 +80,7 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 
 		# Test behaviour for missing target
 		plane1["name"].setValue( "targetX" )
-		with six.assertRaisesRegex( self, RuntimeError, 'ParentConstraint.out.transform : Constraint target does not exist: "/group/target"' ):
+		with six.assertRaisesRegex( self, RuntimeError, 'ParentConstraint.__constrainedTransform : Constraint target does not exist: "/group/target"' ):
 			constraint["out"].fullTransform( "/group/constrained" )
 
 		constraint["ignoreMissingTarget"].setValue( True )
@@ -2074,6 +2075,135 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 		constraint[ "ignoreMissingTarget" ].setValue( True )
 		constraint[ "targetUV" ].setValue( imath.V2f( 0.5, 0.5 ) )
 		self.assertEqual( constraint[ "out" ].fullTransform( "/" + cube[ "name" ].getValue() ), imath.M44f() )
+
+	def testKeepReferencePosition( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["sphere"] = GafferScene.Sphere()
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression( inspect.cleandoc(
+			"""
+			parent["sphere"]["transform"]["translate"]["x"] = context.getFrame()
+			"""
+		) )
+
+		script["cube"] = GafferScene.Cube()
+
+		script["parent"] = GafferScene.Parent()
+		script["parent"]["in"].setInput( script["sphere"]["out"] )
+		script["parent"]["child"][0].setInput( script["cube"]["out"] )
+		script["parent"]["parent"].setValue( "/" )
+
+		script["cubeFilter"] = GafferScene.PathFilter()
+		script["cubeFilter"]["paths"].setValue( IECore.StringVectorData( [ "/cube" ] ) )
+
+		script["constraint"] = GafferScene.ParentConstraint()
+		script["constraint"]["in"].setInput( script["parent"]["out"] )
+		script["constraint"]["filter"].setInput( script["cubeFilter"]["out"] )
+		script["constraint"]["target"].setValue( "/sphere" )
+
+		script["constraint"]["keepReferencePosition"].setValue( True )
+
+		for frame in range( 0, 10 ) :
+
+			script["constraint"]["referenceFrame"].setValue( frame )
+
+			with Gaffer.Context( script.context() ) as c :
+
+				c.setFrame( frame )
+
+				cubeTransform = script["constraint"]["out"].transform( "/cube" )
+				self.assertEqual( cubeTransform, script["constraint"]["in"].transform( "/cube" ) )
+
+				c.setFrame( frame + 1 )
+				self.assertEqual(
+					script["constraint"]["out"].transform( "/cube" ),
+					cubeTransform.translate( imath.V3f( 1, 0, 0 ) )
+				)
+
+	def testObjectNonExistentAtReferenceFrame( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["sphere"] = GafferScene.Sphere()
+		script["cube"] = GafferScene.Cube()
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression( inspect.cleandoc(
+			"""
+			parent["sphere"]["transform"]["translate"]["x"] = context.getFrame()
+			parent["cube"]["enabled"] = context.getFrame() > 10
+			"""
+		) )
+
+		script["group"] = GafferScene.Group()
+		script["group"]["in"][0].setInput( script["sphere"]["out"] )
+		script["group"]["in"][1].setInput( script["cube"]["out"] )
+
+		script["cubeFilter"] = GafferScene.PathFilter()
+		script["cubeFilter"]["paths"].setValue( IECore.StringVectorData( [ "/group/cube" ] ) )
+
+		script["constraint"] = GafferScene.ParentConstraint()
+		script["constraint"]["in"].setInput( script["group"]["out"] )
+		script["constraint"]["filter"].setInput( script["cubeFilter"]["out"] )
+		script["constraint"]["target"].setValue( "/group/sphere" )
+
+		script["constraint"]["keepReferencePosition"].setValue( True )
+		script["constraint"]["referenceFrame"].setValue( 4 )
+
+		with Gaffer.Context( script.context() ) as context :
+
+			context.setFrame( script["constraint"]["referenceFrame"].getValue() )
+			self.assertFalse( script["constraint"]["in"].exists( "/group/cube" ) )
+
+			context.setFrame( 20 )
+			self.assertTrue( script["constraint"]["in"].exists( "/group/cube" ) )
+
+			with six.assertRaisesRegex( self, Gaffer.ProcessException, ".*Constrained object \"/group/cube\" does not exist at reference frame 4" ) :
+				script["constraint"]["out"].transform( "/group/cube" )
+
+	def testTargetNonexistentAtReferenceFrame( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["sphere"] = GafferScene.Sphere()
+		script["cube"] = GafferScene.Cube()
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression( inspect.cleandoc(
+			"""
+			parent["sphere"]["transform"]["translate"]["x"] = context.getFrame()
+			parent["cube"]["enabled"] = context.getFrame() > 10
+			"""
+		) )
+
+		script["group"] = GafferScene.Group()
+		script["group"]["in"][0].setInput( script["sphere"]["out"] )
+		script["group"]["in"][1].setInput( script["cube"]["out"] )
+
+		script["cubeFilter"] = GafferScene.PathFilter()
+		script["cubeFilter"]["paths"].setValue( IECore.StringVectorData( [ "/group/cube" ] ) )
+
+		script["constraint"] = GafferScene.ParentConstraint()
+		script["constraint"]["in"].setInput( script["group"]["out"] )
+		script["constraint"]["filter"].setInput( script["cubeFilter"]["out"] )
+		script["constraint"]["target"].setValue( "/group/sphere" )
+
+		script["constraint"]["keepReferencePosition"].setValue( True )
+		script["constraint"]["referenceFrame"].setValue( 4 )
+
+		with Gaffer.Context( script.context() ) as context :
+
+			context.setFrame( script["constraint"]["referenceFrame"].getValue() )
+			self.assertFalse( script["constraint"]["in"].exists( "/group/cube" ) )
+
+			context.setFrame( 20 )
+			self.assertTrue( script["constraint"]["in"].exists( "/group/cube" ) )
+
+			with six.assertRaisesRegex( self, Gaffer.ProcessException, ".*Constrained object \"/group/cube\" does not exist at reference frame 4" ) :
+				script["constraint"]["out"].transform( "/group/cube" )
 
 if __name__ == "__main__":
 	unittest.main()

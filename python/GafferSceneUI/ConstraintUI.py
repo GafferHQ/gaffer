@@ -151,6 +151,26 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"keepReferencePosition" : [
+
+			"description",
+			"""
+			Adjusts the constraint so that the original position of the object
+			at the `referenceFrame` is maintained.
+			""",
+
+		],
+
+		"referenceFrame" : [
+
+			"description",
+			"""
+			The reference frame used by the `keepReferencePosition` mode. The constraint
+			is adjusted so that the original position at this frame is maintained.
+			""",
+
+		],
+
 	},
 
 )

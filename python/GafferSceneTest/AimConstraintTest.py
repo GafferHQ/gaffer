@@ -85,7 +85,7 @@ class AimConstraintTest( GafferSceneTest.SceneTestCase ) :
 
 		# Test behaviour for missing target
 		plane1["name"].setValue( "targetX" )
-		with six.assertRaisesRegex( self, RuntimeError, 'AimConstraint.out.transform : Constraint target does not exist: "/group/target"' ):
+		with six.assertRaisesRegex( self, RuntimeError, 'AimConstraint.__constrainedTransform : Constraint target does not exist: "/group/target"' ):
 			aim["out"].fullTransform( "/group/constrained" )
 
 		aim["ignoreMissingTarget"].setValue( True )
