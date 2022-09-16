@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2022, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2022, Cinesite VFX Inc. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -43,16 +43,21 @@ Gaffer.Metadata.registerNode(
 
 	"description",
 	"""
-	OpenColorIO LookTransform\n"
+	OpenColorIO LookTransform
+	
 	A 'look' is a named color transform, intended to modify the look of an
-	image in a 'creative' manner (as opposed to a colorspace definion which
-	tends to be technically/mathematically defined).\n
+	image in a 'creative' manner (as opposed to a colorspace definition which
+	tends to be technically/mathematically defined).
+	
 	Examples of looks may be a neutral grade, to be applied to film scans
 	prior to VFX work, or a per-shot DI grade decided on by the director,
-	to be applied just before the viewing transform.\n
+	to be applied just before the viewing transform.
+	
 	OCIOLooks must be predefined in the OpenColorIO configuration before usage,
-	often reference per-shot/sequence LUTs/CCs and are applied in scene linear colorspace.\n
-	See the look plug for further syntax details.\n
+	often reference per-shot/sequence LUTs/CCs and are applied in scene linear colorspace.
+	
+	See the look plug for further syntax details.
+	
 	See opencolorio.org for look configuration customization examples.
 	""",
 
@@ -62,9 +67,12 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Look Syntax:\n
-			Multiple looks are combined with commas: 'neutral, primary'\n
-			Direction is specified with +/- prefixes: '+neutral, -primary'\n
+			Look Syntax:
+
+			Multiple looks are combined with commas: 'neutral, primary'
+
+			Direction is specified with +/- prefixes: '+neutral, -primary'
+
 			Missing look 'fallbacks' specified with |: 'neutral, -primary | -primary'
 			""",
 
@@ -76,14 +84,14 @@ Gaffer.Metadata.registerNode(
 
 			"description", "Specify the look transform direction",
 
-			"presetNames", IECore.StringVectorData(["Forward", "Inverse"]),
-
-			"presetValues", IECore.IntVectorData(
-				[GafferImage.LookTransform.Direction.Forward, GafferImage.LookTransform.Direction.Inverse]),
+			"preset:Forward", GafferImage.LookTransform.Direction.Forward,
+			"preset:Inverse", GafferImage.LookTransform.Direction.Inverse,
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
-			"nodule:type", "", "layout:index", 1,
+			"nodule:type", "",
+
+			"layout:index", 1,
 
 		]
 
