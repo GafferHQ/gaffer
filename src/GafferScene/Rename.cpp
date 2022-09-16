@@ -575,8 +575,6 @@ IECore::ConstObjectPtr Rename::computeNameMap( const Gaffer::Context *context ) 
 	// We've renamed some things, but we need to make sure the new
 	// names are unique with respect to everything that wasn't renamed.
 
-	boost::format namePrefixSuffixFormatter( "%s%d" );
-
 	NameMapDataPtr nameMapData = new NameMapData;
 	for( auto &[inputName, outputName] : renames )
 	{
@@ -588,7 +586,7 @@ IECore::ConstObjectPtr Rename::computeNameMap( const Gaffer::Context *context ) 
 
 			do
 			{
-				outputName = boost::str( namePrefixSuffixFormatter % prefix % suffix );
+				outputName = prefix + to_string( suffix );
 				suffix++;
 			} while( usedNames.find( outputName ) != usedNames.end() );
 		}
