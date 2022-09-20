@@ -36,6 +36,7 @@
 
 import collections
 
+import functools
 import imath
 import six
 
@@ -368,31 +369,110 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 			if cellColumn == columns[i] :
 				columnIndex = i
 
-		if columnIndex <= 0 :
-			return False
-
 		cellPath = pathListing.pathAt( event.line.p0 )
+		if cellPath is None :
+			return False
 
 		if not selection[columnIndex].match( str( cellPath ) ) & IECore.PathMatcher.Result.ExactMatch :
 			for p in selection :
 				p.clear()
 			selection[columnIndex].addPath( str( cellPath ) )
-			pathListing.setSelection( selection )
+			pathListing.setSelection( selection, expandNonLeaf = False, scrollToFirst = False )
 
 		menuDefinition = IECore.MenuDefinition()
 
-		menuDefinition.append(
-			"Show History...",
-			{
-				"command" : Gaffer.WeakMethod( self.__showHistory ),
-				"active" : any( not i.isEmpty() for i in selection )
-			}
-		)
+		if columnIndex == 0 :
+			# Whole light operations
+
+			menuDefinition.append(
+				"Select Linked Objects",
+				{
+					"command" : Gaffer.WeakMethod( self.__selectLinked )
+				}
+			)
+
+			menuDefinition.append( "/deleteDivider", { "divider" : True } )
+
+			# Filter out a number of scenarios where deleting would be impossible
+			# or unintuitive
+			deleteEnabled = True
+			inputNode = self.__settingsNode["in"].getInput().node()
+			editScopeInput = self.__settingsNode["editScope"].getInput()
+			if editScopeInput is not None :
+				editScopeNode = editScopeInput.node()
+				if inputNode != editScopeNode and editScopeNode not in Gaffer.NodeAlgo.upstreamNodes( inputNode ) :
+					# Edit scope is downstream of input
+					deleteEnabled = False
+				elif GafferScene.EditScopeAlgo.prunedReadOnlyReason( editScopeNode ) is not None :
+					# Pruning or the edit scope is read only
+					deleteEnabled = False
+				else :
+					with self.getContext() :
+						if not editScopeNode["enabled"].getValue() :
+							# Edit scope is disabled
+							deleteEnabled = False
+						else :
+							pruningProcessor = editScopeNode.acquireProcessor( "PruningEdits", createIfNecessary = False )
+							if pruningProcessor is not None and not pruningProcessor["enabled"].getValue() :
+								# Pruning processor is disabled
+								deleteEnabled = False
+			else :
+				# No edit scope selected
+				deleteEnabled = False
+
+			menuDefinition.append(
+				"Delete",
+				{
+					"command" : Gaffer.WeakMethod( self.__deleteLights ),
+					"active" : deleteEnabled
+				}
+			)
+
+		else :
+			# Parameter cells
+
+			menuDefinition.append(
+				"Show History...",
+				{
+					"command" : Gaffer.WeakMethod( self.__showHistory )
+				}
+			)
 
 		self.__contextMenu = GafferUI.Menu( menuDefinition )
 		self.__contextMenu.popup( pathListing )
 
 		return True
+
+	def __selectLinked (self, *unused ) :
+
+		context = self.getContext()
+
+		dialogue = GafferUI.BackgroundTaskDialogue( "Selecting Linked Objects" )
+
+		# There may be multiple columns with a selection, but we only operate on the name column.
+		selectedLights = self.__pathListing.getSelection()[0]
+
+		with context :
+			result = dialogue.waitForBackgroundTask(
+				functools.partial(
+					GafferScene.SceneAlgo.linkedObjects,
+					self.__settingsNode["in"],
+					selectedLights
+				)
+			)
+
+		if not isinstance( result, Exception ) :
+			GafferSceneUI.ContextAlgo.setSelectedPaths( context, result )
+
+	def __deleteLights( self, *unused ) :
+
+		# There may be multiple columns with a selection, but we only operate on the name column.
+		selection = self.__pathListing.getSelection()[0]
+
+		editScope = self.__settingsNode["editScope"].getInput().node()
+
+		with Gaffer.UndoScope( editScope.ancestor( Gaffer.ScriptNode ) ) :
+			GafferScene.EditScopeAlgo.setPruned( editScope, selection, True )
 
 	def __showHistory( self, *unused ) :
 

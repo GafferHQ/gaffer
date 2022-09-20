@@ -6,6 +6,7 @@ Improvements
 
 - SceneReader : Added reading of more Alembic GeomParam types. Specifically `unsigned char`, `uint16`, `int16` and `uint32` GeomParams are loaded as `UCharVectorData`, `UShortVectorData`, `ShortVectorData` and `UIntVectorData` PrimitiveVariables respectively.
 - SceneWriter : Added writing of more Alembic GeomParam types, mirroring the improved reading mentioned above.
+- Light Editor : Added the ability to select linked objects and to delete lights. Both commands can can be accessed by right-clicking a light name and selecting either 'Select Linked Objects' or 'Delete'.
 
 Fixes
 -----
