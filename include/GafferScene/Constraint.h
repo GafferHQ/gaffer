@@ -115,6 +115,7 @@ class GAFFERSCENE_API Constraint : public SceneElementProcessor
 			const ScenePlug *scene;
 		};
 
+		bool affectsTarget( const Gaffer::Plug *input ) const;
 		std::optional<Target> target() const;
 
 		static size_t g_firstPlugIndex;

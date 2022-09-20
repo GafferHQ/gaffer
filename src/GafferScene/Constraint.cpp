@@ -901,12 +901,9 @@ void Constraint::affects( const Gaffer::Plug *input, AffectedPlugsContainer &out
 	SceneElementProcessor::affects( input, outputs );
 
 	if(
-		input == targetPlug() ||
-		input == ignoreMissingTargetPlug() ||
-		input == inPlug()->existsPlug() ||
+		affectsTarget( input ) ||
 		input == inPlug()->transformPlug() ||
 		input == inPlug()->boundPlug() ||
-		input == targetScenePlug()->existsPlug() ||
 		input == targetScenePlug()->transformPlug() ||
 		input == targetScenePlug()->boundPlug() ||
 		input == targetScenePlug()->objectPlug() ||
@@ -1048,6 +1045,16 @@ Imath::M44f Constraint::computeProcessedTransform( const ScenePath &path, const 
 
 	const M44f fullConstrainedTransform = computeConstraint( fullTargetTransform, fullInputTransform, inputTransform );
 	return fullConstrainedTransform * parentTransform.inverse();
+}
+
+bool Constraint::affectsTarget( const Gaffer::Plug *input ) const
+{
+	return
+		input == targetPlug() ||
+		input == targetScenePlug()->existsPlug() ||
+		input == inPlug()->existsPlug() ||
+		input == ignoreMissingTargetPlug()
+	;
 }
 
 std::optional<Constraint::Target> Constraint::target() const
