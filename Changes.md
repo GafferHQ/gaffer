@@ -28,6 +28,7 @@ Fixes
   - Fixed bug which caused images to be evaluated in the wrong context.
   - Fixed bug handling images with non-default views.
 - Cycles : Fixed rendering with a non-default crop window.
+- Arnold : Fixed handling of closure shader connections in USD materials exported from Maya.
 
 Build
 -----
