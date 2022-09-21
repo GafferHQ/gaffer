@@ -83,7 +83,6 @@ ChildNamesMap::ChildNamesMap( const std::vector<IECore::ConstInternedStringVecto
 	:	m_childNames( new InternedStringVectorData() )
 {
 	vector<InternedString> &outputChildNames = m_childNames->writable();
-	boost::format namePrefixSuffixFormatter( "%s%d" );
 
 	unordered_set<InternedString> allNames;
 	size_t index = 0;
@@ -100,7 +99,7 @@ ChildNamesMap::ChildNamesMap( const std::vector<IECore::ConstInternedStringVecto
 
 				do
 				{
-					outputChildName = boost::str( namePrefixSuffixFormatter % prefix % suffix );
+					outputChildName = prefix + to_string( suffix );
 					suffix++;
 				} while( allNames.find( outputChildName ) != allNames.end() );
 			}
