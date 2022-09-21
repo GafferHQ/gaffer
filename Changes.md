@@ -32,6 +32,7 @@ API
   - Added `nativeString()` function to return the path as an OS-specific string.
   - (Windows only) Paths beginning with a single `/` or `\` not followed by a drive letter are interpreted as UNC paths.
 - WidgetAlgo : Improved `joinEdges()` to support a wider range of widget types.
+- OpenColorIOTransform : Consolidated the duplicate `Direction` enums from CDL, LookTransform and LUT in to a single `OpenColorIOTransform::Direction` enum.
 
 Breaking Changes
 ----------------

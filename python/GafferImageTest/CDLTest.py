@@ -83,7 +83,7 @@ class CDLTest( GafferImageTest.ImageTestCase ) :
 		self.assertNotEqual( offset, saturation )
 		self.assertNotEqual( power, saturation )
 
-		o["direction"].setValue( GafferImage.CDL.Direction.Inverse ) # inverse
+		o["direction"].setValue( GafferImage.OpenColorIOTransform.Direction.Inverse ) # inverse
 		inverse = GafferImage.ImageAlgo.image( o["out"] )
 		self.assertNotEqual( orig, inverse )
 		self.assertNotEqual( slope, inverse )

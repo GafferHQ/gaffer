@@ -177,7 +177,7 @@ class LookTransformTest( GafferImageTest.ImageTestCase ) :
 		s["lt"] = GafferImage.LookTransform()
 		s["lt"]["in"].setInput( s["reader"]["out"] )
 		s["lt"]["look"].setValue( "primary" )
-		s["lt"]["direction"].setValue( GafferImage.LookTransform.Direction.Inverse )
+		s["lt"]["direction"].setValue( GafferImage.OpenColorIOTransform.Direction.Inverse )
 
 		s["writer"] = GafferImage.ImageWriter()
 		s["writer"]["fileName"].setValue( contextImageFile )

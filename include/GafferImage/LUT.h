@@ -69,12 +69,6 @@ class GAFFERIMAGE_API LUT : public OpenColorIOTransform
 			Tetrahedral
 		};
 
-		enum Direction
-		{
-			Forward = 0,
-			Inverse
-		};
-
 		Gaffer::StringPlug *fileNamePlug();
 		const Gaffer::StringPlug *fileNamePlug() const;
 

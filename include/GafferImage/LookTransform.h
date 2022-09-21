@@ -52,12 +52,6 @@ class GAFFERIMAGE_API LookTransform : public OpenColorIOTransform
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::LookTransform, LookTransformTypeId, OpenColorIOTransform );
 
-		enum Direction
-		{
-			Forward = 0,
-			Inverse
-		};
-
 		Gaffer::StringPlug *lookPlug();
 		const Gaffer::StringPlug *lookPlug() const;
 		Gaffer::IntPlug *directionPlug();

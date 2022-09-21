@@ -68,7 +68,7 @@ class LUTTest( GafferImageTest.ImageTestCase ) :
 		forward = GafferImage.ImageAlgo.image( o["out"] )
 		self.assertNotEqual( GafferImage.ImageAlgo.image( n["out"] ), forward )
 
-		o["direction"].setValue( GafferImage.LUT.Direction.Inverse )
+		o["direction"].setValue( GafferImage.OpenColorIOTransform.Direction.Inverse )
 		inverse = GafferImage.ImageAlgo.image( o["out"] )
 		self.assertNotEqual( GafferImage.ImageAlgo.image( n["out"] ), inverse )
 		self.assertNotEqual( forward, inverse )
