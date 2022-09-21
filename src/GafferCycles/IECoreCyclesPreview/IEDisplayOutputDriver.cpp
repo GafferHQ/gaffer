@@ -49,6 +49,7 @@ namespace IECoreCycles
 {
 
 IEDisplayOutputDriver::IEDisplayOutputDriver( const Imath::Box2i &displayWindow, const Imath::Box2i &dataWindow, IECore::ConstCompoundDataPtr parameters )
+	:	m_dataWindow( dataWindow )
 {
 	const IECore::CompoundData *layersData = parameters->member<IECore::CompoundData>( "layers", true );
 	const IECore::CompoundDataMap &layers = layersData->readable();
@@ -146,7 +147,13 @@ void IEDisplayOutputDriver::write_render_tile( const Tile &tile )
 	const int w = tile.size.x;
 	const int h = tile.size.y;
 
-	Imath::Box2i _tile( Imath::V2i( x, y ), Imath::V2i( x + w - 1, y + h - 1 ) );
+	// Cycles passes coordinates relative to the data window origin, but
+	// Cortex wants them relative to the true origin, independent of either
+	// data or display windows.
+	const Imath::Box2i cortexBound(
+		m_dataWindow.min + Imath::V2i( x, y ),
+		m_dataWindow.min + Imath::V2i( x + w - 1, y + h - 1 )
+	);
 
 	std::vector<float> pixels( w * h * 4 );
 
@@ -172,7 +179,7 @@ void IEDisplayOutputDriver::write_render_tile( const Tile &tile )
 
 		try
 		{
-			layer.displayDriver->imageData( _tile, pixels.data(), w * h * layer.numChannels );
+			layer.displayDriver->imageData( cortexBound, pixels.data(), w * h * layer.numChannels );
 		}
 		catch( const std::exception &e )
 		{

@@ -395,5 +395,52 @@ class RendererTest( GafferTest.TestCase ) :
 
 		del o
 
+	def testDisplayDriverCropWindow( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive
+		)
+
+		renderer.camera(
+			"testCamera",
+			IECoreScene.Camera(
+				parameters = {
+					"resolution" : imath.V2i( 2000, 1000 ),
+					"cropWindow" : imath.Box2f( imath.V2f( 0.25 ), imath.V2f( 0.75 ) ),
+				}
+			),
+			renderer.attributes( IECore.CompoundObject() )
+		)
+
+		renderer.output(
+			"testOutput",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					# This driver type will throw if it receives tiles
+					# outside the data window.
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testCropWindow",
+				}
+			)
+		)
+
+		renderer.option( "camera", IECore.StringData( "testCamera" ) )
+		renderer.render()
+		## \todo We could just be running this test with a Batch mode render,
+		# in which case `render()` would block until the image was complete.
+		# But CyclesRenderer is currently hardcoded to only use IEDisplayOutputDriver
+		# for interactive renders.
+		time.sleep( 2.0 )
+		del renderer
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testCropWindow" )
+		self.assertIsNotNone( image )
+		self.assertEqual( image.dataWindow, imath.Box2i( imath.V2i( 500, 250 ), imath.V2i( 1499, 749 ) ) )
+		self.assertEqual( image.displayWindow, imath.Box2i( imath.V2i( 0 ), imath.V2i( 1999, 999 ) ) )
+
 if __name__ == "__main__":
 	unittest.main()

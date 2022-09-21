@@ -27,6 +27,7 @@ Fixes
 - CropWindowTool :
   - Fixed bug which caused images to be evaluated in the wrong context.
   - Fixed bug handling images with non-default views.
+- Cycles : Fixed rendering with a non-default crop window.
 
 Build
 -----
