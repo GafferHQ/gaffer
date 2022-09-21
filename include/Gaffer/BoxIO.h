@@ -173,6 +173,7 @@ class GAFFER_API BoxIO : public Node
 
 		Signals::ScopedConnection m_promotedPlugNameChangedConnection;
 		Signals::ScopedConnection m_promotedPlugParentChangedConnection;
+		Signals::ScopedConnection m_boxPlugInputChangedConnection;
 
 		void setupPassThrough();
 		void setupBoxEnabledPlug();
