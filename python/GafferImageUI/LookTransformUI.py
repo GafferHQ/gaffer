@@ -43,21 +43,21 @@ Gaffer.Metadata.registerNode(
 
 	"description",
 	"""
-	OpenColorIO LookTransform
-	
+	Applies OpenColorIO "looks" to an image.
+
 	A 'look' is a named color transform, intended to modify the look of an
 	image in a 'creative' manner (as opposed to a colorspace definition which
 	tends to be technically/mathematically defined).
-	
+
 	Examples of looks may be a neutral grade, to be applied to film scans
 	prior to VFX work, or a per-shot DI grade decided on by the director,
 	to be applied just before the viewing transform.
-	
+
 	OCIOLooks must be predefined in the OpenColorIO configuration before usage,
 	often reference per-shot/sequence LUTs/CCs and are applied in scene linear colorspace.
-	
+
 	See the look plug for further syntax details.
-	
+
 	See opencolorio.org for look configuration customization examples.
 	""",
 
