@@ -44,6 +44,7 @@
 
 #include "Gaffer/Dot.h"
 #include "Gaffer/MetadataAlgo.h"
+#include "Gaffer/Process.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/UndoScope.h"
@@ -167,23 +168,30 @@ void DotNodeGadget::updateLabel()
 {
 	const Dot *dot = dotNode();
 
-	const Dot::LabelType labelType = (Dot::LabelType)dot->labelTypePlug()->getValue();
-	if( labelType == Dot::None )
+	try
 	{
-		m_label.clear();
+		const Dot::LabelType labelType = (Dot::LabelType)dot->labelTypePlug()->getValue();
+		if( labelType == Dot::None )
+		{
+			m_label.clear();
+		}
+		else if( labelType == Dot::NodeName )
+		{
+			m_label = dot->getName();
+		}
+		else if( labelType == Dot::UpstreamNodeName )
+		{
+			const Node *n = upstreamNode();
+			m_label = n ? n->getName() : "";
+		}
+		else
+		{
+			m_label = dot->labelPlug()->getValue();
+		}
 	}
-	else if( labelType == Dot::NodeName )
+	catch( const Gaffer::ProcessException &e )
 	{
-		m_label = dot->getName();
-	}
-	else if( labelType == Dot::UpstreamNodeName )
-	{
-		const Node *n = upstreamNode();
-		m_label = n ? n->getName() : "";
-	}
-	else
-	{
-		m_label = dot->labelPlug()->getValue();
+		m_label = "Error";
 	}
 
 	Edge labelEdge = RightEdge;
