@@ -50,6 +50,7 @@
 
 #include "IECoreImage/OpenImageIOAlgo.h"
 
+#include "IECore/SearchPath.h"
 #include "IECore/StringAlgo.h"
 
 #include "OSL/oslcomp.h"
@@ -830,10 +831,10 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 			vector<string> options;
 			if( const char *includePaths = getenv( "OSL_SHADER_PATHS" ) )
 			{
-				StringAlgo::tokenize( includePaths, ':', options );
-				for( vector<string>::iterator it = options.begin(), eIt = options.end(); it != eIt; ++it )
+				SearchPath searchPaths( includePaths );
+				for( const auto &p : searchPaths.paths )
 				{
-					it->insert( 0, "-I" );
+					options.push_back( string( "-I" ) + p.generic_string() );
 				}
 			}
 
