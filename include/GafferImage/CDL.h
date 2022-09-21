@@ -55,15 +55,6 @@ class GAFFERIMAGE_API CDL : public OpenColorIOTransform
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::CDL, CDLTypeId, OpenColorIOTransform );
 
-		// Direction enum is inline with the other OCIO nodes and will work
-		// with OCIO 1.x and 2.x now. Compatibility will be maintained except
-		// where expressions may have been used to set the direction plug.
-		enum Direction
-		{
-			Forward = 0,
-			Inverse = 1
-		};
-
 		Gaffer::Color3fPlug *slopePlug();
 		const Gaffer::Color3fPlug *slopePlug() const;
 

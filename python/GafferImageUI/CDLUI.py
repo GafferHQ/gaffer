@@ -96,8 +96,8 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"preset:Forward", GafferImage.CDL.Direction.Forward,
-			"preset:Inverse", GafferImage.CDL.Direction.Inverse,
+			"preset:Forward", GafferImage.OpenColorIOTransform.Direction.Forward,
+			"preset:Inverse", GafferImage.OpenColorIOTransform.Direction.Inverse,
 
 		],
 

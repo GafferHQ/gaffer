@@ -84,8 +84,8 @@ Gaffer.Metadata.registerNode(
 
 			"description", "Specify the look transform direction",
 
-			"preset:Forward", GafferImage.LookTransform.Direction.Forward,
-			"preset:Inverse", GafferImage.LookTransform.Direction.Inverse,
+			"preset:Forward", GafferImage.OpenColorIOTransform.Direction.Forward,
+			"preset:Inverse", GafferImage.OpenColorIOTransform.Direction.Inverse,
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 

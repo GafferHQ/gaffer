@@ -54,6 +54,14 @@ class GAFFERIMAGE_API OpenColorIOTransform : public ColorProcessor
 
 		~OpenColorIOTransform() override;
 
+		/// Defines values for use in `direction` plugs
+		/// created by derived classes.
+		enum Direction
+		{
+			Forward = 0,
+			Inverse
+		};
+
 		/// Fills the vector will the available color spaces,
 		/// as defined by the current OpenColorIO config.
 		static void availableColorSpaces( std::vector<std::string> &colorSpaces );
