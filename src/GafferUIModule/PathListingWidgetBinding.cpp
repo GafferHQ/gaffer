@@ -385,7 +385,6 @@ class PathModel : public QAbstractItemModel
 			// No need to flush pending edits, because Qt won't deliver the events
 			// to us after we're destructed anyway.
 			cancelUpdate( /* flushPendingEdits = */ false );
-			disconnectColumnChanged();
 		}
 
 		// Selection is stored as a single `IECore::PathMatcher` per column, allowing
@@ -408,7 +407,7 @@ class PathModel : public QAbstractItemModel
 
 			beginResetModel();
 
-			disconnectColumnChanged();
+			m_columnChangedConnections.clear();
 
 			// Keep track of selections that are common between the current and incoming columns
 			Selection newSelection( columns.size(), IECore::PathMatcher() );
@@ -425,7 +424,9 @@ class PathModel : public QAbstractItemModel
 			m_columns = columns;
 			for( const auto &c : m_columns )
 			{
-				c->changedSignal().connect( boost::bind( &PathModel::columnChanged, this ) );
+				m_columnChangedConnections.push_back(
+					c->changedSignal().connect( boost::bind( &PathModel::columnChanged, this ) )
+				);
 			}
 
 			m_rootItem = new Item( IECore::InternedString(), nullptr );
@@ -1703,14 +1704,6 @@ class PathModel : public QAbstractItemModel
 			setRoot( getRoot() );
 		}
 
-		void disconnectColumnChanged()
-		{
-			for( const auto &c : m_columns )
-			{
-				c->changedSignal().disconnect( boost::bind( &PathModel::columnChanged, this ) );
-			}
-		}
-
 		// Member data
 
 		Gaffer::PathPtr m_rootPath;
@@ -1718,6 +1711,7 @@ class PathModel : public QAbstractItemModel
 		Item::Ptr m_rootItem;
 		bool m_flat;
 		std::vector<GafferUI::PathColumnPtr> m_columns;
+		std::vector<Gaffer::Signals::ScopedConnection> m_columnChangedConnections;
 		int m_sortColumn;
 		Qt::SortOrder m_sortOrder;
 		std::unique_ptr<QAbstractItemModelTester> m_tester;
