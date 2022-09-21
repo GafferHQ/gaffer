@@ -110,6 +110,7 @@ from .SelectViewTest import SelectViewTest
 from .DeleteViewsTest import DeleteViewsTest
 from .CopyViewsTest import CopyViewsTest
 from .AnaglyphTest import AnaglyphTest
+from .LookTransformTest import LookTransformTest
 
 if __name__ == "__main__":
 	import unittest

@@ -42,11 +42,30 @@ Breaking Changes
 1.0.x.x (relative to 1.0.4.0)
 =======
 
+Features
+--------
+
+- Rename : Added a new node for renaming scene locations (#1201).
+- LookTransform : Added a new node for applying OpenColorIO looks to images.
+
+Improvements
+------------
+
+- SceneReader : Added reading of more Alembic GeomParam types. Specifically `unsigned char`, `uint16`, `int16` and `uint32` GeomParams are loaded as `UCharVectorData`, `UShortVectorData`, `ShortVectorData` and `UIntVectorData` PrimitiveVariables respectively.
+- SceneWriter : Added writing of more Alembic GeomParam types, mirroring the improved reading mentioned above.
+- Light Editor : Added the ability to select linked objects and to delete lights. Both commands can can be accessed by right-clicking a light name and selecting either 'Select Linked Objects' or 'Delete'.
+
 Fixes
 -----
 
 - EditScope : Fixed mislocated plug nodules when connecting a new `EditScope` to a `BoxIn`, `BoxOut` or `Box` node.
 - Backdrop : Fixed bug selecting or moving a backdrop when zoomed out in the GraphEditor, where drag-resizing the top edge was incorrectly being given precedence.
+- CDL : Fixed handling of values for the `direction` plug. Previously, `OCIO::TransformDirection` enum values were being used directly as plug values, but OpenColorIO 2 broke compatibility by changing the enum. A new `GafferImage::CDL::Direction` enum provides stable values for use in the `CDL.direction` plug, insulating Gaffer from future changes.
+
+Build
+-----
+
+- Cortex : Updated to 10.4.2.0.
 
 1.0.4.0 (relative to 1.0.3.0)
 =======
@@ -394,6 +413,14 @@ Build
   - Subprocess32 : Now packaged as a regular module rather than as a `.egg` package.
   - TBB : Updated to version 2020.3.
   - USD : Updated to version 21.11.
+
+0.61.14.x (relative to 0.61.14.5)
+=========
+
+Fixes
+-----
+
+- GraphEditor : Fixed handling of errors on `Dot.labelType` and `Dot.label` plugs.
 
 0.61.14.5 (relative to 0.61.14.4)
 =========

@@ -179,7 +179,7 @@ class SceneTestCase( GafferImageTest.ImageTestCase ) :
 
 		assert( checks.issubset( self.allPathChecks ) )
 
-		for childPlugName in checks :
+		for childPlugName in sorted( checks ) :
 			value1 = getattr( scenePlug1, childPlugName )( scenePath1 )
 			value2 = getattr( scenePlug2, childPlugName )( scenePath2 )
 			self.assertEqual(
@@ -242,7 +242,7 @@ class SceneTestCase( GafferImageTest.ImageTestCase ) :
 
 		assert( checks.issubset( self.allPathChecks ) )
 
-		for childPlugName in checks :
+		for childPlugName in sorted( checks ) :
 			hash1 = getattr( scenePlug1, childPlugName + "Hash" )( scenePath1 )
 			hash2 = getattr( scenePlug2, childPlugName + "Hash" )( scenePath2 )
 			self.assertEqual(
@@ -257,7 +257,7 @@ class SceneTestCase( GafferImageTest.ImageTestCase ) :
 
 		assert( checks.issubset( self.allPathChecks ) )
 
-		for childPlugName in checks :
+		for childPlugName in sorted( checks ) :
 			hash1 = getattr( scenePlug1, childPlugName + "Hash" )( scenePath1 )
 			hash2 = getattr( scenePlug2, childPlugName + "Hash" )( scenePath2 )
 			self.assertNotEqual(

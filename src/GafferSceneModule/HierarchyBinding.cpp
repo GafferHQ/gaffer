@@ -48,6 +48,7 @@
 #include "GafferScene/MergeScenes.h"
 #include "GafferScene/Parent.h"
 #include "GafferScene/Prune.h"
+#include "GafferScene/Rename.h"
 #include "GafferScene/Seeds.h"
 #include "GafferScene/SubTree.h"
 #include "GafferScene/Unencapsulate.h"
@@ -116,6 +117,7 @@ void GafferSceneModule::bindHierarchy()
 	GafferBindings::DependencyNodeClass<Seeds>();
 	GafferBindings::DependencyNodeClass<Encapsulate>();
 	GafferBindings::DependencyNodeClass<Unencapsulate>();
+	GafferBindings::DependencyNodeClass<Rename>();
 
 	{
 		scope s = GafferBindings::DependencyNodeClass<MergeScenes>();
