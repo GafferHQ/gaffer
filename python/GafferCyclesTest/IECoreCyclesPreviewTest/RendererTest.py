@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import os
 import math
 import time
 import unittest
@@ -439,6 +440,42 @@ class RendererTest( GafferTest.TestCase ) :
 
 		image = IECoreImage.ImageDisplayDriver.storedImage( "testCropWindow" )
 		self.assertIsNotNone( image )
+		self.assertEqual( image.dataWindow, imath.Box2i( imath.V2i( 500, 250 ), imath.V2i( 1499, 749 ) ) )
+		self.assertEqual( image.displayWindow, imath.Box2i( imath.V2i( 0 ), imath.V2i( 1999, 999 ) ) )
+
+	def testOutputFileCropWindow( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+		)
+
+		renderer.camera(
+			"testCamera",
+			IECoreScene.Camera(
+				parameters = {
+					"resolution" : imath.V2i( 2000, 1000 ),
+					"cropWindow" : imath.Box2f( imath.V2f( 0.25 ), imath.V2f( 0.75 ) ),
+				}
+			),
+			renderer.attributes( IECore.CompoundObject() )
+		)
+
+		fileName = os.path.join( self.temporaryDirectory(), "test.exr" )
+		renderer.output(
+			"testOutput",
+			IECoreScene.Output(
+				fileName,
+				"exr",
+				"rgba",
+				{}
+			)
+		)
+
+		renderer.option( "camera", IECore.StringData( "testCamera" ) )
+		renderer.render()
+
+		image = IECoreImage.ImageReader( fileName ).read()
 		self.assertEqual( image.dataWindow, imath.Box2i( imath.V2i( 500, 250 ), imath.V2i( 1499, 749 ) ) )
 		self.assertEqual( image.displayWindow, imath.Box2i( imath.V2i( 0 ), imath.V2i( 1999, 999 ) ) )
 
