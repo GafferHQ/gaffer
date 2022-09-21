@@ -523,6 +523,12 @@ inline ScopedConnection::ScopedConnection( const Connection &connection )
 {
 }
 
+inline ScopedConnection::ScopedConnection( ScopedConnection &&scopedConnection )
+	:	Connection( scopedConnection )
+{
+	scopedConnection.Connection::operator=( Connection() );
+}
+
 inline ScopedConnection::~ScopedConnection()
 {
 	disconnect();
@@ -532,6 +538,14 @@ inline ScopedConnection &ScopedConnection::operator=( const Connection &connecti
 {
 	disconnect();
 	Connection::operator=( connection );
+	return *this;
+}
+
+inline ScopedConnection &ScopedConnection::operator=( ScopedConnection &&scopedConnection )
+{
+	disconnect();
+	Connection::operator=( scopedConnection );
+	scopedConnection.Connection::operator=( Connection() );
 	return *this;
 }
 

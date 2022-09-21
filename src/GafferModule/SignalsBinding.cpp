@@ -182,7 +182,7 @@ void GafferModule::bindSignals()
 		.def( "connected", &Connection::connected )
 	;
 
-	class_<ScopedConnection, bases<Connection> >( "ScopedConnection", no_init )
+	class_<ScopedConnection, bases<Connection>, boost::noncopyable>( "ScopedConnection", no_init )
 		.def( init<const Connection &>() )
 	;
 

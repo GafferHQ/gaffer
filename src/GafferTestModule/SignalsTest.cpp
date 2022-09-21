@@ -190,6 +190,94 @@ void testSelfDisconnectingSlot()
 	GAFFERTEST_ASSERTEQUAL( callCount, 1 );
 }
 
+void testScopedConnectionMoveConstructor()
+{
+	static_assert( !std::is_copy_constructible_v<Signals::ScopedConnection> );
+
+	Signals::Signal<void()> signal;
+
+	Signals::Connection c = signal.connect( []{} );
+
+	{
+		Signals::ScopedConnection sc1( c );
+		GAFFERTEST_ASSERT( c.connected() );
+		GAFFERTEST_ASSERT( sc1.connected() );
+
+		Signals::ScopedConnection sc2( std::move( sc1 ) );
+		GAFFERTEST_ASSERT( c.connected() );
+		GAFFERTEST_ASSERT( !sc1.connected() );
+		GAFFERTEST_ASSERT( sc2.connected() );
+	}
+
+	GAFFERTEST_ASSERT( !c.connected() );
+}
+
+void testScopedConnectionMoveAssignment()
+{
+	static_assert( !std::is_copy_assignable_v<Signals::ScopedConnection> );
+
+	Signals::Signal<void()> signal;
+
+	Signals::Connection c = signal.connect( []{} );
+	Signals::ScopedConnection sc1;
+
+	{
+		Signals::ScopedConnection sc2( c );
+		GAFFERTEST_ASSERT( c.connected() );
+		GAFFERTEST_ASSERT( !sc1.connected() );
+		GAFFERTEST_ASSERT( sc2.connected() );
+
+		sc1 = std::move( sc2 );
+		GAFFERTEST_ASSERT( c.connected() );
+		GAFFERTEST_ASSERT( !sc2.connected() );
+		GAFFERTEST_ASSERT( sc1.connected() );
+	}
+
+	GAFFERTEST_ASSERT( c.connected() );
+	GAFFERTEST_ASSERT( sc1.connected() );
+
+	sc1 = Signals::Connection();
+	GAFFERTEST_ASSERT( !c.connected() );
+	GAFFERTEST_ASSERT( !sc1.connected() );
+}
+
+void testVectorOfScopedConnections()
+{
+	Signals::Signal<void()> signal;
+
+	std::vector<Signals::Connection> connections;
+	std::vector<Signals::ScopedConnection> scopedConnections;
+
+	scopedConnections.reserve( 4 );
+	const size_t initialCapacity = scopedConnections.capacity();
+
+	// Will trigger reallocation/copying of `scopedConnections`, testing
+	// move operations on ScopedConnection.
+	while( scopedConnections.size() < initialCapacity * 4 )
+	{
+		Signals::Connection c = signal.connect( []{} );
+		connections.push_back( c );
+		scopedConnections.push_back( c );
+	}
+
+	for( auto &c : connections )
+	{
+		GAFFERTEST_ASSERT( c.connected() );
+	}
+
+	for( auto &c : scopedConnections )
+	{
+		GAFFERTEST_ASSERT( c.connected() );
+	}
+
+	scopedConnections.clear();
+
+	for( auto &c : connections )
+	{
+		GAFFERTEST_ASSERT( !c.connected() );
+	}
+}
+
 } // namespace
 
 void GafferTestModule::bindSignalsTest()
@@ -200,4 +288,7 @@ void GafferTestModule::bindSignalsTest()
 	def( "testSignalDisconnectMatchingLambda", &testDisconnectMatchingLambda );
 	def( "testSignalDisconnectMatchingBind", &testDisconnectMatchingBind );
 	def( "testSignalSelfDisconnectingSlot", &testSelfDisconnectingSlot );
+	def( "testSignalScopedConnectionMoveConstructor", &testScopedConnectionMoveConstructor );
+	def( "testSignalScopedConnectionMoveAssignment", &testScopedConnectionMoveAssignment );
+	def( "testSignalVectorOfScopedConnections", &testVectorOfScopedConnections );
 }
