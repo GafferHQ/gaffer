@@ -41,6 +41,7 @@
 #include "GafferImage/CDL.h"
 #include "GafferImage/ColorSpace.h"
 #include "GafferImage/DisplayTransform.h"
+#include "GafferImage/LookTransform.h"
 #include "GafferImage/LUT.h"
 #include "GafferImage/OpenColorIOTransform.h"
 #include "GafferImage/Saturation.h"
@@ -111,7 +112,6 @@ void GafferImageModule::bindOpenColorIOTransform()
 	;
 
 	GafferBindings::DependencyNodeClass<ColorSpace>();
-	GafferBindings::DependencyNodeClass<CDL>();
 	GafferBindings::DependencyNodeClass<DisplayTransform>();
 
 	{
@@ -132,4 +132,23 @@ void GafferImageModule::bindOpenColorIOTransform()
 		;
 	}
 
+	{
+		scope s = GafferBindings::DependencyNodeClass<CDL>()
+		;
+
+		enum_<CDL::Direction>( "Direction" )
+			.value( "Forward", CDL::Forward )
+			.value( "Inverse", CDL::Inverse )
+		;
+	}
+
+	{
+		scope s = GafferBindings::DependencyNodeClass<LookTransform>()
+		;
+
+		enum_<LookTransform::Direction>( "Direction" )
+				.value( "Forward", LookTransform::Forward )
+				.value( "Inverse", LookTransform::Inverse )
+		;
+	}
 }
