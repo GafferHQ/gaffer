@@ -411,14 +411,14 @@ IECore::MurmurHash ImagePlug::channelDataHash( const std::string &channelName, c
 	return channelDataPlug()->hash();
 }
 
-IECore::ConstStringVectorDataPtr ImagePlug::viewNames( const std::string *viewName ) const
+IECore::ConstStringVectorDataPtr ImagePlug::viewNames() const
 {
 	GlobalScope globalScope( Context::current() );
 	globalScope.remove( ImagePlug::viewNameContextName );
 	return viewNamesPlug()->getValue();
 }
 
-IECore::MurmurHash ImagePlug::viewNamesHash( const std::string *viewName ) const
+IECore::MurmurHash ImagePlug::viewNamesHash() const
 {
 	GlobalScope globalScope( Context::current() );
 	globalScope.remove( ImagePlug::viewNameContextName );
