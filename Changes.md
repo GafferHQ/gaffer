@@ -21,6 +21,9 @@ Fixes
 - EditScope : Fixed mislocated plug nodules when connecting a new `EditScope` to a `BoxIn`, `BoxOut` or `Box` node.
 - Backdrop : Fixed bug selecting or moving a backdrop when zoomed out in the GraphEditor, where drag-resizing the top edge was incorrectly being given precedence.
 - CDL : Fixed handling of values for the `direction` plug. Previously, `OCIO::TransformDirection` enum values were being used directly as plug values, but OpenColorIO 2 broke compatibility by changing the enum. A new `GafferImage::CDL::Direction` enum provides stable values for use in the `CDL.direction` plug, insulating Gaffer from future changes.
+- ViewPlugValueWidget :
+  - Fixed bug which caused images to be evaluated in the wrong context.
+  - Fixed error handling bug which could prevent the NodeEditor from building.
 
 Build
 -----
