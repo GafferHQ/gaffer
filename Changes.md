@@ -24,6 +24,9 @@ Fixes
 - ViewPlugValueWidget :
   - Fixed bug which caused images to be evaluated in the wrong context.
   - Fixed error handling bug which could prevent the NodeEditor from building.
+- CropWindowTool :
+  - Fixed bug which caused images to be evaluated in the wrong context.
+  - Fixed bug handling images with non-default views.
 
 Build
 -----
