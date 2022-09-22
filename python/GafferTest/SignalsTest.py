@@ -600,5 +600,17 @@ class SignalsTest( GafferTest.TestCase ) :
 
 		GafferTest.testSignalSelfDisconnectingSlot()
 
+	def testScopedConnectionMoveConstructor( self ) :
+
+		GafferTest.testSignalScopedConnectionMoveConstructor()
+
+	def testScopedConnectionMoveAssignment( self ) :
+
+		GafferTest.testSignalScopedConnectionMoveAssignment()
+
+	def testVectorOfScopedConnections( self ) :
+
+		GafferTest.testSignalVectorOfScopedConnections()
+
 if __name__ == "__main__":
 	unittest.main()

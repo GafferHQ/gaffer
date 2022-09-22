@@ -192,10 +192,17 @@ class ScopedConnection : public Connection
 
 		ScopedConnection() = default;
 		ScopedConnection( const Connection &connection );
+		/// Move constructor, which transfers ownership from an existing
+		/// ScopedConnection (which will subsequently be empty).
+		ScopedConnection( ScopedConnection &&scopedConnection );
 		/// Disconnects the slot.
 		~ScopedConnection();
 		/// Disconnects the current connection and assigns a new one.
 		ScopedConnection &operator=( const Connection &connection );
+		/// Disconnects the current connection and takes ownership of
+		/// the connection held by `scopedConnection` (which will
+		/// subsequently be empty).
+		ScopedConnection &operator=( ScopedConnection &&scopedConnection );
 
 };
 

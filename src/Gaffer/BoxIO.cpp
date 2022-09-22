@@ -411,15 +411,11 @@ void BoxIO::parentChanged( GraphComponent *oldParent )
 	// Manage inputChanged connections on our parent box,
 	// so we can discover our promoted plug when an output
 	// connection is made to it.
-	if( Box *box = runTimeCast<Box>( oldParent ) )
-	{
-		box->plugInputChangedSignal().disconnect(
-			boost::bind( &BoxIO::plugInputChanged, this, ::_1 )
-		);
-	}
+
+	m_boxPlugInputChangedConnection.disconnect();
 	if( Box *box = parent<Box>() )
 	{
-		box->plugInputChangedSignal().connect(
+		m_boxPlugInputChangedConnection = box->plugInputChangedSignal().connect(
 			boost::bind( &BoxIO::plugInputChanged, this, ::_1 )
 		);
 	}

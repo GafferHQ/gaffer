@@ -641,6 +641,23 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		w.setColumns( c2 )
 		self.assertEqual( w.getColumns(), c2 )
 
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
+		updates = []
+		w._qtWidget().model().updateFinished.connect( lambda : updates.append( True ) )
+
+		# When a column signals it has been changed, the model should update.
+		c2[1].changedSignal()( c2[1] )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
+		self.assertEqual( len( updates ), 1 )
+
+		# But not when that column has been removed from the model.
+		w.setColumns( c1 )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
+		del updates[:]
+		c2[1].changedSignal()( c2[1] )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
+		self.assertEqual( len( updates ), 0 )
+
 	def testSortable( self ) :
 
 		w = GafferUI.PathListingWidget( Gaffer.DictPath( {}, "/" ) )
