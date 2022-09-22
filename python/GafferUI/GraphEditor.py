@@ -561,9 +561,9 @@ class GraphEditor( GafferUI.Editor ) :
 		# save/restore the current framing so jumping in
 		# and out of Boxes isn't a confusing experience.
 
-		Gaffer.Metadata.registerValue( previousRoot, "ui:graphEditor:framing", self.__currentFrame(), persistent = False )
+		Gaffer.Metadata.registerValue( previousRoot, "ui:graphEditor{}:framing".format( id( self ) ), self.__currentFrame(), persistent = False )
 
-		frame = Gaffer.Metadata.value( self.graphGadget().getRoot(), "ui:graphEditor:framing" )
+		frame = Gaffer.Metadata.value( self.graphGadget().getRoot(), "ui:graphEditor{}:framing".format( id( self ) ) )
 		if frame is not None :
 			self.graphGadgetWidget().getViewportGadget().frame(
 				imath.Box3f( imath.V3f( frame.min().x, frame.min().y, 0 ), imath.V3f( frame.max().x, frame.max().y, 0 ) )
