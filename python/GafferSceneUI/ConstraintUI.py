@@ -149,6 +149,8 @@ Gaffer.Metadata.registerNode(
 			the offset is measured relative to the local surface coordinate frame.
 			""",
 
+			"divider", True,
+
 		],
 
 		"keepReferencePosition" : [

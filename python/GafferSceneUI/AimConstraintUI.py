@@ -49,6 +49,12 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
+		"referenceFrame" : [
+
+			"divider", True,
+
+		],
+
 		"aim" : [
 
 			"description",
