@@ -60,6 +60,7 @@ const std::string basisName( StandardCubicBasis basis )
 		case StandardCubicBasis::BSpline : return "BSpline"; break;
 		case StandardCubicBasis::CatmullRom : return "CatmullRom"; break;
 		case StandardCubicBasis::Linear : return "Linear"; break;
+		case StandardCubicBasis::Constant : return "Constant"; break;
 		default: break;
 	}
 
