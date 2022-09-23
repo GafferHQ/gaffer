@@ -48,6 +48,8 @@ namespace Gaffer
 ///
 /// Inherit from StringPlug for string substitution support and backwards
 /// compatibility.
+/// Note that `getValue()` will always return a string using forward slashes.
+/// The Windows API allows paths to be specified with forward slashes.
 
 class GAFFER_API FilePathPlug : public StringPlug
 {
@@ -69,10 +71,6 @@ class GAFFER_API FilePathPlug : public StringPlug
 
 		/// \undoable
 		void setValue( const std::string &value ) override;
-		/// Returns the value in OS-specific format. See comments in
-		/// TypedObjectPlug::getValue() for details of the optional
-		/// precomputedHash argument - and use with care!
-		std::string getValue( const IECore::MurmurHash *precomputedHash = nullptr ) const override;
 };
 
 IE_CORE_DECLAREPTR( FilePathPlug );

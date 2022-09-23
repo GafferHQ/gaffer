@@ -52,7 +52,7 @@ FilePathPlug::FilePathPlug(
 	const std::string &defaultValue,
 	unsigned flags,
 	unsigned substitutions
-) : StringPlug( name, direction, defaultValue, flags, substitutions )
+) : StringPlug( name, direction, Gaffer::FileSystemPath( defaultValue ).string(), flags, substitutions )
 {
 }
 
@@ -69,10 +69,4 @@ void FilePathPlug::setValue(const std::string &value)
 {
 	const std::string genericValue = Gaffer::FileSystemPath( value ).string();
 	StringPlug::setValue( genericValue );
-}
-
-std::string FilePathPlug::getValue( const IECore::MurmurHash *precomputedHash ) const
-{
-	const std::string genericValue = StringPlug::getValue( precomputedHash );
-	return Gaffer::FileSystemPath( genericValue ).nativeString();
 }

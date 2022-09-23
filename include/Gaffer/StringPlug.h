@@ -112,7 +112,7 @@ class GAFFER_API StringPlug : public ValuePlug
 		/// Returns the value. The `precomputedHash` argument is deprecated, and
 		/// will be removed in a future release.
 		/// \todo Remove `precomputedHash` argument.
-		virtual std::string getValue( const IECore::MurmurHash *precomputedHash = nullptr ) const;
+		std::string getValue( const IECore::MurmurHash *precomputedHash = nullptr ) const;
 
 		void setFrom( const ValuePlug *other ) override;
 

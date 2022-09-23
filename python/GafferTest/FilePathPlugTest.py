@@ -55,10 +55,10 @@ class FilePathPlugTest( GafferTest.StringPlugTest ) :
 
 		# nothing should be expanded when we're in a non-computation context
 		n["in"].setValue( "testy/Testy.##.exr" )
-		self.assertEqual( n["in"].getValue(), os.path.join( "testy", "Testy.##.exr" ) )
+		self.assertEqual( n["in"].getValue(), "testy/Testy.##.exr" )
 
 		n["in"].setValue( "${a}/$b/${a:b}" )
-		self.assertEqual( n["in"].getValue(), os.path.join( "${a}", "$b", "${a:b}" ) )
+		self.assertEqual( n["in"].getValue(), "${a}/$b/${a:b}" )
 
 		# but expansions should happen magically when the compute()
 		# calls getValue().
@@ -67,22 +67,22 @@ class FilePathPlugTest( GafferTest.StringPlugTest ) :
 		context["env:dir"] = "a/path"
 		n["in"].setValue( "a/${env:dir}/b" )
 		with context :
-			self.assertEqual( n["out"].getValue(), os.path.join( "a", "a", "path", "b" ) )
+			self.assertEqual( n["out"].getValue(), "a/a/path/b" )
 
 		# once again, nothing should be expanded when we're in a
 		# non-computation context
 		n["in"].setValue( "testy/Testy.##.exr" )
-		self.assertEqual( n["in"].getValue(), os.path.join( "testy", "Testy.##.exr" ) )
+		self.assertEqual( n["in"].getValue(), "testy/Testy.##.exr" )
 
 	def testTildeExpansion( self ) :
 
 		n = self.inOutNode()
 
 		n["in"].setValue( "~" )
-		self.assertEqual( n["out"].getValue(), os.path.expanduser( "~" ) )
+		self.assertEqual( n["out"].getValue(), os.path.expanduser( "~" ).replace( "\\", "/" ) )
 
 		n["in"].setValue( "~/something.tif" )
-		self.assertEqual( n["out"].getValue(), os.path.join( os.path.expanduser( "~" ), "something.tif" ) )
+		self.assertEqual( n["out"].getValue(), os.path.expanduser( "~" ).replace( "\\", "/" ) + "/something.tif" )
 
 		# ~ shouldn't be expanded unless it's at the front - it would
 		# be meaningless in other cases.
@@ -93,9 +93,9 @@ class FilePathPlugTest( GafferTest.StringPlugTest ) :
 
 		n = self.inOutNode()
 
-		n["in"].setValue( os.path.join( "C:", "path", "test.ext" ) )
+		n["in"].setValue( os.path.join( "C:\\", "path", "test.ext" ) )
 
-		self.assertEqual( n["out"].getValue(), os.path.join( "C:", "path", "test.ext" ) )
+		self.assertEqual( n["out"].getValue(), "C:/path/test.ext" )
 
 	def testStringPlugCompatibility( self ):
 
@@ -115,13 +115,29 @@ class FilePathPlugTest( GafferTest.StringPlugTest ) :
 		s2["in"].setInput( n["out"] )
 
 		self.assertEqual( s1["out"].getValue(), "test/string.ext" )
-		self.assertEqual( n["out"].getValue(), os.path.join( "test", "string.ext" ) )
+		self.assertEqual( n["out"].getValue(), "test/string.ext" )
+		self.assertEqual( s2["out"].getValue(), "test/string.ext" )
+
+	def testDefaultValue( self ) :
+
+		n = self.inOutNode( defaultValue = os.path.join( "C:\\", "test", "path.ext" ) )
+
 		if os.name == "nt" :
-			# We lose a `\` every time we do a string subsitution with `EscapeSubstitutions`
-			# enabled.
-			self.assertEqual( s2["out"].getValue(), "teststring.ext" )
+			self.assertEqual( n["in"].defaultValue(), "C:/test/path.ext" )
 		else :
-			self.assertEqual( s2["out"].getValue(), "test/string.ext" )
+			# We are not in a compute, so string substitutions are not performed
+			self.assertEqual( n["in"].defaultValue(), "C:\\/test/path.ext" )
+		self.assertEqual( n["out"].getValue(), "C:/test/path.ext" )
+
+	def testCreateCounterpart( self ) :
+
+		p = Gaffer.FilePathPlug( "test", Gaffer.Plug.Direction.In, os.path.join( "C:\\", "test", "path.ext" ) )
+
+		if os.name == "nt" :
+			self.assertEqual( p.createCounterpart( "c", Gaffer.Plug.Direction.In ).getValue(), "C:/test/path.ext" )
+		else :
+			# We are not in a compute, so string substitutions are not performed
+			self.assertEqual( p.createCounterpart( "c", Gaffer.Plug.Direction.In ).getValue(), "C:\\/test/path.ext" )
 
 
 if __name__ == "__main__":
