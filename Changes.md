@@ -1,4 +1,4 @@
-1.0.x.x (relative to 1.0.4.0)
+1.0.5.0 (relative to 1.0.4.0)
 =======
 
 Features
