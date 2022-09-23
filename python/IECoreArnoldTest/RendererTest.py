@@ -3860,6 +3860,92 @@ class RendererTest( GafferTest.TestCase ) :
 			{ "diffuse_{}.{}".format( g, c ) for g in lightGroups for c in "RGB" }
 		)
 
+	def testNamedOutputParameter( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		r.object(
+			"testPlane",
+			IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) ),
+			r.attributes( IECore.CompoundObject( {
+				"ai:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"layerShader" : IECoreScene.Shader( "layer_shader" ),
+						"standardShader1" : IECoreScene.Shader( "standard_surface" ),
+						"standardShader2" : IECoreScene.Shader( "standard_surface" ),
+					},
+					connections = [
+						# Our original convention for the source of these connections was
+						# `( "standardShader1", "" )`, because originally Arnold didn't
+						# have multiple named shader outputs (just a single default one).
+						# But now Arnold shaders can have multiple named outputs, and Autodesk's
+						# convention for referring to the default one in USD files is to call
+						# it `out`. So we need to make sure we handle that.
+						( ( "standardShader1", "out" ), ( "layerShader", "input1" ) ),
+						( ( "standardShader2", "out" ), ( "layerShader", "input2" ) ),
+					],
+					output = "layerShader"
+				)
+			} ) ),
+		)
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+
+			layerShader = arnold.AiNodeGetPtr( arnold.AiNodeLookUpByName( universe, "testPlane" ), "shader" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( layerShader ) ), "layer_shader" )
+
+			input1 = arnold.AiNodeGetLink( layerShader, "input1" )
+			self.assertIn( "standardShader1", arnold.AiNodeGetName( input1 ) )
+			input2= arnold.AiNodeGetLink( layerShader, "input2" )
+			self.assertIn( "standardShader2", arnold.AiNodeGetName( input2 ) )
+
+	def testOSLOutParameter( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			self.temporaryDirectory() + "/test.ass"
+		)
+
+		r.object(
+			"testPlane",
+			IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) ),
+			r.attributes( IECore.CompoundObject( {
+				"ai:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"standardSurface" : IECoreScene.Shader( "standard_surface" ),
+						"colorSwitch" : IECoreScene.Shader( "Utility/SwitchColor", "osl:shader" ),
+					},
+					connections = [
+						( ( "colorSwitch", "out" ), ( "standardSurface", "base_color" ) ),
+					],
+					output = "standardSurface"
+				)
+			} ) ),
+		)
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+
+			surfaceShader = arnold.AiNodeGetPtr( arnold.AiNodeLookUpByName( universe, "testPlane" ), "shader" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( surfaceShader ) ), "standard_surface" )
+
+			input = arnold.AiNodeGetLink( surfaceShader, "base_color" )
+			self.assertIn( "colorSwitch", arnold.AiNodeGetName( input ) )
+
 	@staticmethod
 	def __m44f( m ) :
 

@@ -696,6 +696,10 @@ Plug *loadSplineParameters( const OSLQuery::Parameter *positionsParameter, const
 	{
 		defaultValue.interpolation = SplineDefinitionInterpolationLinear;
 	}
+	else if( basis == "constant" )
+	{
+		defaultValue.interpolation = SplineDefinitionInterpolationConstant;
+	}
 
 	updatePoints( defaultValue.points, positionsParameter, valuesParameter );
 

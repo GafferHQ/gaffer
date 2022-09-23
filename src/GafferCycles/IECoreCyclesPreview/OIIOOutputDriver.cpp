@@ -130,15 +130,17 @@ OIIOOutputDriver::OIIOOutputDriver( const Imath::Box2i &displayWindow, const Ima
 		layer.path = pathData->readable();
 
 		layer.typeDesc = OIIO::TypeDesc::FLOAT;
-		const IECore::IntVectorData *quantizeData = layerData->member<IECore::IntVectorData>( "quantize", false );
-		const std::vector<int> quantize = quantizeData->readable();
-		if( quantize == std::vector<int>( { 0, 255, 0, 255 } ) )
+		if( const IECore::IntVectorData *quantizeData = layerData->member<IECore::IntVectorData>( "quantize", false ) )
 		{
-			layer.typeDesc = OIIO::TypeDesc::UINT8;
-		}
-		else if( quantize == std::vector<int>( { 0, 65536, 0, 65536 } ) )
-		{
-			layer.typeDesc = OIIO::TypeDesc::UINT16;
+			const std::vector<int> &quantize = quantizeData->readable();
+			if( quantize == std::vector<int>( { 0, 255, 0, 255 } ) )
+			{
+				layer.typeDesc = OIIO::TypeDesc::UINT8;
+			}
+			else if( quantize == std::vector<int>( { 0, 65536, 0, 65536 } ) )
+			{
+				layer.typeDesc = OIIO::TypeDesc::UINT16;
+			}
 		}
 
 		const IECore::BoolData *half = layerData->member<IECore::BoolData>( "halfFloat", false );
@@ -217,12 +219,12 @@ void OIIOOutputDriver::write_render_tile( const Tile &tile )
 				spec.channelnames.push_back( g_channels[i] );
 			}
 		}
-		//spec.full_x = m_displayWindow.min.x;
-		//spec.full_y = m_displayWindow.min.y;
-		//spec.full_width = m_displayWindow.max.x;
-		//spec.full_height = m_displayWindow.max.y;
-		//spec.x = x;
-		//spec.y = y;
+		spec.full_x = m_displayWindow.min.x;
+		spec.full_y = m_displayWindow.min.y;
+		spec.full_width = m_displayWindow.size().x + 1;
+		spec.full_height = m_displayWindow.size().y + 1;
+		spec.x = m_dataWindow.min.x;
+		spec.y = m_dataWindow.min.y;
 		if( !imageOutput->open( layer.path, spec ) )
 		{
 			IECore::msg( IECore::Msg::Error, "OIIOOutputDriver:write_render_tile", "Failed to create image file." );

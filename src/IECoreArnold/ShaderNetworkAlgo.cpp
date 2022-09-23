@@ -224,7 +224,12 @@ AtNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECo
 		}
 		else
 		{
-			AiNodeLinkOutput( sourceNode, sourceName.c_str(), node, parameterName.c_str() );
+			const char *output = sourceName.c_str();
+			if( sourceName.string() == "out" && AiNodeEntryGetNumOutputs( AiNodeGetNodeEntry( sourceNode ) ) == 0 )
+			{
+				output = "";
+			}
+			AiNodeLinkOutput( sourceNode, output, node, parameterName.c_str() );
 		}
 	}
 

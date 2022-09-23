@@ -57,6 +57,8 @@ class IEDisplayOutputDriver : public ccl::OutputDriver
 
 	protected:
 
+		Imath::Box2i m_dataWindow;
+
 		struct Layer
 		{
 			std::string name;

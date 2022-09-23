@@ -39,13 +39,22 @@
 
 float floatSpline( float positions[], float values[], string basis, float x )
 {
-	float t = splineinverse( basis, x, positions  );
+	// When using "constant" as the inverse basis, all the values being searched
+	// are the same, so the search moves basically randomly.  In the rare case
+	// that it comes within floating point precision of the next step, this can
+	// cause us to incorrectly get a value for the next step.  It's a lot more
+	// robust if we swap to a linear basis in this case, so we only approach the
+	// edges when the X value is actually near the edge.
+	string inversebasis = basis != "constant" ? basis : "linear";
+	float t = splineinverse( inversebasis, x, positions  );
 	return spline( basis, t, values );
 }
 
 color colorSpline( float positions[], color values[], string basis, float x )
 {
-	float t = splineinverse( basis, x, positions  );
+	// As above
+	string inversebasis = basis != "constant" ? basis : "linear";
+	float t = splineinverse( inversebasis, x, positions  );
 	return spline( basis, t, values );
 }
 

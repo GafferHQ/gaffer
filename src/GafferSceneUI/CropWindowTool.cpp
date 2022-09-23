@@ -841,6 +841,7 @@ void CropWindowTool::findScenePlug()
 
 		try
 		{
+			Context::Scope scopedContext( view()->getContext() );
 			scene = findSceneForImage( imagePlug(), msg );
 		}
 		catch( const std::exception &e )
@@ -1010,7 +1011,8 @@ Box2f CropWindowTool::resolutionGate() const
 		if( const ImagePlug *in = imageView->inPlug<ImagePlug>() )
 		{
 			Context::Scope contextScope( imageView->getContext() );
-			const Format format = in->format();
+			const std::string view = imageView->viewPlug()->getValue();
+			const Format format = in->format( &view );
 			resolutionGate = Box2f( V2f( 0 ), V2f( format.width() * format.getPixelAspect(), format.height() ) );
 		}
 	}

@@ -855,5 +855,56 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 		with GafferTest.TestRunner.PerformanceScope() :
 			GafferImage.ImageAlgo.image( resize["out"] )
 
+	def testOSLSplineMatch( self ):
+
+		g = GafferOSL.OSLShader()
+		g.loadShader( "Utility/Globals" )
+		colorSpline = GafferOSL.OSLShader()
+		colorSpline.loadShader( "Pattern/ColorSpline" )
+		colorSpline["parameters"]["x"].setInput( g["out"]["globalU"] )
+
+		# Values chosen to trigger a precision issue with OSL's splineinverse on a constant basis
+		# if it is not avoided.  The values have also been selected a little to avoid showing
+		# issues we don't want to deal with:
+		#  * The X values are non-decreasing when evaluated as catmullRom ( non-monotonic X values
+		#    are a weird special case that can't be handled well, and OSL and Cortex deal with it
+		#    differently badly
+		#  * The values are chosen so that the discontinuities in "constant" mode don't lie
+		#    directly on a pixel center - if they did, it's comes down solely to floating point
+		#    precision which side we lie on.
+		colorSpline["parameters"]["spline"].setValue(
+			Gaffer.SplineDefinitionfColor3f(
+				(
+					( 0.1580, imath.Color3f( 0.71, 0.21, 0.39 ) ),
+					( 0.2249, imath.Color3f( 0, 0.30, 0 ) ),
+					( 0.2631, imath.Color3f( 0, 0.46, 0 ) ),
+					( 0.3609, imath.Color3f( 0.71, 0.39, 0.054 ) ),
+					( 0.3826, imath.Color3f( 0, 0, 0 ) ),
+					( 0.4116, imath.Color3f( 0.87, 0.31, 1 ) ),
+					( 0.4300, imath.Color3f( 0, 0, 0 ) ),
+					( 0.4607, imath.Color3f( 0.71, 0.21, 0.39 ) ),
+					( 0.5996, imath.Color3f( 0, 1, 1 ) ),
+					( 0.9235, imath.Color3f( 1, 0.25, 0.25 ) )
+				), Gaffer.SplineDefinitionInterpolation.Constant
+			)
+		)
+
+		oslImage = GafferOSL.OSLImage( "OSLImage" )
+		oslImage["channels"].addChild( Gaffer.NameValuePlug( "", Gaffer.Color3fPlug( "value" ), True, "channel" ) )
+		oslImage["channels"]["channel"]["value"].setInput( colorSpline["out"]["c"] )
+		oslImage["defaultFormat"].setValue( GafferImage.Format( 3000, 64, 1.000 ) )
+
+		for i in Gaffer.SplineDefinitionInterpolation.names.values():
+			colorSpline["parameters"]["spline"]["interpolation"].setValue( i )
+			cortexSpline = colorSpline["parameters"]["spline"].getValue().spline()
+			samplers = [
+				GafferImage.Sampler( oslImage["out"], c, imath.Box2i( imath.V2i( 0 ), imath.V2i( 3000, 1 ) ) )
+				for c in [ "R", "G", "B" ]
+			]
+			for x in range( 3000 ):
+				result = cortexSpline( ( x + 0.5 ) / 3000.0 )
+				for c in range(3):
+					self.assertAlmostEqual( samplers[c].sample( x, 0 ), result[c], places = 3 )
+
 if __name__ == "__main__":
 	unittest.main()
