@@ -101,7 +101,12 @@ def scope( menu ) :
 	graphEditor = None
 
 	if isinstance( scriptWindow.getLayout(), GafferUI.CompoundEditor ) :
-		graphEditor = scriptWindow.getLayout().editor( GafferUI.GraphEditor, focussedOnly = False )
+		# Prefer the graph editor that is the current focus
+		graphEditor = scriptWindow.getLayout().editor( GafferUI.GraphEditor, focussedOnly = True )
+		if graphEditor is None :
+			# Fall back to the first graph editor found if we're focused on the `ScriptMenu`, as
+			# is the case when we're called from the Edit Menu.
+			graphEditor = scriptWindow.getLayout().editor( GafferUI.GraphEditor, focusSourceTypes = GafferUI.ScriptWindow )
 
 	if graphEditor is not None :
 		parent = graphEditor.graphGadget().getRoot()
@@ -134,6 +139,9 @@ def redo( menu ) :
 def cut( menu ) :
 
 	s = scope( menu )
+	if s.graphEditor is None :
+		return
+
 	with Gaffer.UndoScope( s.script ) :
 		s.script.cut( s.parent, s.script.selection() )
 
@@ -142,6 +150,9 @@ def cut( menu ) :
 def copy( menu ) :
 
 	s = scope( menu )
+	if s.graphEditor is None :
+		return
+
 	s.script.copy( s.parent, s.script.selection() )
 
 ## A function suitable as the command for an Edit/Paste menu item. It must
@@ -149,6 +160,9 @@ def copy( menu ) :
 def paste( menu ) :
 
 	s = scope( menu )
+	if s.graphEditor is None :
+		return
+
 	originalSelection = Gaffer.StandardSet( iter( s.script.selection() ) )
 
 	errorHandler = GafferUI.ErrorDialogue.ErrorHandler(
@@ -160,10 +174,6 @@ def paste( menu ) :
 	with Gaffer.UndoScope( s.script ), errorHandler :
 
 		s.script.paste( s.parent, continueOnError = True )
-
-		# try to get the new nodes connected to the original selection
-		if s.graphEditor is None :
-			return
 
 		s.graphEditor.graphGadget().getLayout().connectNodes( s.graphEditor.graphGadget(), s.script.selection(), originalSelection )
 
@@ -198,6 +208,8 @@ def duplicateWithInputs( menu ) :
 	nodeOffset = imath.V2f( 2.25, -2.25 )  # Half of a standard node's height
 
 	s = scope( menu )
+	if s.graphEditor is None :
+		return
 
 	errorHandler = GafferUI.ErrorDialogue.ErrorHandler(
 		title = "Errors Occurred During Duplication",
@@ -261,6 +273,9 @@ def duplicateWithInputs( menu ) :
 def delete( menu ) :
 
 	s = scope( menu )
+	if s.graphEditor is None :
+		return
+
 	with Gaffer.UndoScope( s.script ) :
 		s.script.deleteNodes( s.parent, s.script.selection() )
 
@@ -269,6 +284,8 @@ def delete( menu ) :
 def rename( menu ) :
 
 	s = scope( menu )
+	if s.graphEditor is None :
+		return
 
 	d = GafferUI.TextInputDialogue(
 		initialText = s.script.selection()[-1].getName(),

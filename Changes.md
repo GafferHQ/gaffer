@@ -1,3 +1,11 @@
+1.0.x.x (relative to 1.0.5.0)
+=======
+
+Improvements
+------------
+
+- Edit Menu : Disabled keyboard shortcuts for Cut, Copy, Paste, Delete, Duplicate with Inputs and Rename when a Graph Editor is not in focus.
+
 1.0.5.0 (relative to 1.0.4.0)
 =======
 

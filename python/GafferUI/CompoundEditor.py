@@ -85,8 +85,10 @@ class CompoundEditor( GafferUI.Editor ) :
 	# Returns the editor of the specified type that the user is most likely to
 	# be interested in. If `focussedOnly` is true, only editors with the keyboard
 	# focus are considered. If `visibleOnly` is true, only visible editors are
-	# considered. Returns None if no suitable editor can be found.
-	def editor( self, type = GafferUI.Editor, focussedOnly = False, visibleOnly = False ) :
+	# considered. If `focusSourceTypes` is not `None`, an editor will only be considered
+	# if the focussed widget's type is in `focusSourceTypes`.
+	# Returns None if no suitable editor can be found.
+	def editor( self, type = GafferUI.Editor, focussedOnly = False, visibleOnly = False, focusSourceTypes = None ) :
 
 		candidates = []
 
@@ -103,6 +105,9 @@ class CompoundEditor( GafferUI.Editor ) :
 			hasWindowFocus = editor == windowFocusWidget or editor.isAncestorOf( windowFocusWidget )
 
 			if focussedOnly and not ( windowIsActive and hasWindowFocus ) :
+				continue
+
+			if focusSourceTypes is not None and not isinstance( windowFocusWidget, focusSourceTypes ) :
 				continue
 
 			candidates.append( {
