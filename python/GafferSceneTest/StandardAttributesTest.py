@@ -76,14 +76,6 @@ class StandardAttributesTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( s2["a"]["attributes"]["visibility"]["value"].getValue(), False )
 		self.assertEqual( s2["a"]["attributes"]["visibility"]["value"].defaultValue(), True )
 
-	def testVisibilityBackwardCompatibility( self ) :
-
-		s = Gaffer.ScriptNode()
-		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/standardAttributesBeforeVisibilityRename.gfr" )
-		s.load()
-
-		self.assertEqual( s["attributes"]["out"].attributes( "/plane" )["scene:visible"], IECore.BoolData( False ) )
-
 	def testGlobal( self ) :
 
 		p = GafferScene.Plane()

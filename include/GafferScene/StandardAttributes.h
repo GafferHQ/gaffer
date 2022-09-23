@@ -52,10 +52,6 @@ class GAFFERSCENE_API StandardAttributes : public Attributes
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::StandardAttributes, StandardAttributesTypeId, Attributes );
 
-	private:
-
-		void plugSet( Gaffer::Plug *plug );
-
 };
 
 IE_CORE_DECLAREPTR( StandardAttributes )

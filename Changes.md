@@ -43,6 +43,7 @@ Breaking Changes
 - ImageView : Using CPU color transforms is now deprecated.  We can't properly support wipes in CPU mode, and OCIO now offers full quality on the GPU, in addition to the performance being much better.  While the CPU functionality still exists, the UI has been hidden.
 - Signals : Removed flawed `ScopedConnection` copy constructor and assignment operator. Use move construction and assignment instead.
 - ImagePlug : Removed unused `viewName` argument from `viewNames()` and `viewNamesHash()` methods.
+- StandardAttributes : Removed backwards compatibility for StandardAttributes nodes saved from Gaffer `0.95.0` (May 2014) and earlier. If necessary, resave affected files using a recent Gaffer version.
 
 1.0.5.0 (relative to 1.0.4.0)
 =======
