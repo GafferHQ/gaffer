@@ -382,7 +382,7 @@ Build
   - TBB : Updated to version 2020.3.
   - USD : Updated to version 21.11.
 
-0.61.14.x (relative to 0.61.14.5)
+0.61.14.6 (relative to 0.61.14.5)
 =========
 
 Fixes
