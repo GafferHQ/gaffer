@@ -3,6 +3,7 @@
 setlocal EnableDelayedExpansion
 
 set GAFFER_ROOT=%~dp0%..
+set "GAFFER_ROOT=%GAFFER_ROOT:\=/%"
 
 set HOME=%USERPROFILE%
 
