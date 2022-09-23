@@ -217,9 +217,9 @@ class GAFFERIMAGE_API ImagePlug : public Gaffer::ValuePlug
 		/// Calls `channelDataPlug()->hash()` using a ChannelDataScope.
 		IECore::MurmurHash channelDataHash( const std::string &channelName, const Imath::V2i &tileOrigin, const std::string *viewName = nullptr ) const;
 		/// Calls `viewNamesPlug()->getValue()` using a GlobalScope.
-		IECore::ConstStringVectorDataPtr viewNames( const std::string *viewName = nullptr ) const;
+		IECore::ConstStringVectorDataPtr viewNames() const;
 		/// Calls `viewNamesPlug()->hash()` using a GlobalScope.
-		IECore::MurmurHash viewNamesHash( const std::string *viewName = nullptr ) const;
+		IECore::MurmurHash viewNamesHash() const;
 		/// Calls `formatPlug()->getValue()` using a GlobalScope.
 		GafferImage::Format format( const std::string *viewName = nullptr ) const;
 		/// Calls `formatPlug()->hash()` using a GlobalScope.
