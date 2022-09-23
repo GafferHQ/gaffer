@@ -61,32 +61,31 @@ class ViewPlugValueWidget( GafferUI.PlugValueWidget ) :
 		with self.getContext() :
 			try:
 				value = self.getPlug().getValue()
+				image = self.__firstInputImagePlug()
+				if image is not None :
+					viewNames = image.viewNames()
+				else :
+					viewNames = GafferImage.ImagePlug.defaultViewNames()
 			except:
 				errored = True
-		viewNames = GafferImage.ImagePlug.defaultViewNames()
-		try:
-			viewNames = self.__firstInputImagePlug().viewNames()
-		except:
-			pass
-
-		name = value
-		if value == "":
-			name = "(Use Current Context)"
-		elif not value in viewNames:
-			if not GafferImage.ImagePlug.defaultViewName in viewNames:
-				name += " (invalid)"
-			else:
-				name += " (default)"
-
-
-		if not errored:
-			self.__menuButton.setText( name )
-		else:
-			self.__menuButton.setText( "" )
 
 		self.__menuButton.setErrored( errored )
-		self.__menuButton.setEnabled( self._editable() )
 
+		if not errored :
+			if value == "" :
+				text = "(Use Current Context)"
+			elif value in viewNames :
+				text = value
+			else :
+				text = "{}{}".format(
+					value,
+					" (invalid)" if GafferImage.ImagePlug.defaultViewName not in viewNames else " (default)"
+				)
+			self.__menuButton.setText( text )
+		else :
+			self.__menuButton.setText( "" )
+
+		self.__menuButton.setEnabled( self._editable() )
 
 	def __firstInputImagePlug( self ):
 		for i in self.getPlug().node().children( GafferImage.ImagePlug ):
