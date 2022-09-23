@@ -35,7 +35,7 @@ Fixes
 Build
 -----
 
-- Cortex : Updated to 10.4.2.0.
+- Cortex : Updated to 10.4.2.1.
 
 1.0.4.0 (relative to 1.0.3.0)
 =======
