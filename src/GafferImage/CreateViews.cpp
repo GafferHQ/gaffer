@@ -170,7 +170,7 @@ void CreateViews::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *
 		return;
 	}
 
-	h.append( context->variableHash( ImagePlug::viewNameContextName ) );
+	h.append( context->get<std::string>( ImagePlug::viewNameContextName, ImagePlug::defaultViewName ) );
 
 	Context::EditableScope s( context );
 	s.remove( ImagePlug::viewNameContextName );
@@ -194,7 +194,7 @@ void CreateViews::compute( Gaffer::ValuePlug *output, const Gaffer::Context *con
 		return;
 	}
 
-	const std::string &currentView = context->get<std::string>( ImagePlug::viewNameContextName );
+	const std::string &currentView = context->get<std::string>( ImagePlug::viewNameContextName, ImagePlug::defaultViewName );
 
 	Context::EditableScope s( context );
 	s.remove( ImagePlug::viewNameContextName );

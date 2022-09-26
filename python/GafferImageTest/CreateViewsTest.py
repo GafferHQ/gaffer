@@ -36,6 +36,7 @@
 
 import unittest
 import imath
+import inspect
 import os
 import six
 
@@ -182,6 +183,47 @@ class CreateViewsTest( GafferImageTest.ImageTestCase ) :
 		with six.assertRaisesRegex( self, Gaffer.ProcessException, ".*CreateViews : Inputs must have just a default view."):
 			createViews["out"].format( "right" )
 
+	def testInputToExpressionDrivingEnabledPlug( self ) :
+
+		# This is a distilled version of a production node network in which the
+		# `enabled` plug on one ImageNode was driven by an expression querying
+		# the existence of channels in another image.
+
+		script = Gaffer.ScriptNode()
+
+		script["checkerboard"] = GafferImage.Checkerboard()
+
+		# `default` view with RGBA channels, and `notDefault` view with no channels
+		script["createViews"] = GafferImage.CreateViews()
+		script["createViews"]["views"].addChild( Gaffer.NameValuePlug( "default", GafferImage.ImagePlug(), True, "view0", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		script["createViews"]["views"].addChild( Gaffer.NameValuePlug( "notDefault", GafferImage.ImagePlug(), True, "view1", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		script["createViews"]["views"][0]["value"].setInput( script["checkerboard"]["out"] )
+		self.assertEqual( script["createViews"]["out"].channelNames( "default" ), IECore.StringVectorData( [ "R", "G", "B", "A" ] ) )
+		self.assertEqual( script["createViews"]["out"].channelNames( "notDefault" ), IECore.StringVectorData() )
+
+		script["constant"] = GafferImage.Constant()
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression( inspect.cleandoc(
+			"""
+			parent["constant"]["enabled"] = bool( parent["createViews"]["out"]["channelNames"] )
+			"""
+		) )
+
+		# The `viewNames()` call removes `image:viewName` from the context, and the `enabled` plug
+		# is used as part of the subsequent compute. This means that `createViews.out.channelNames`
+		# will be queried by the expression in a context without `image:viewName`. For backwards
+		# compatibility, we want this to fall back to querying the default view.
+		self.assertEqual( script["constant"]["out"].viewNames(), GafferImage.ImagePlug.defaultViewNames() )
+		self.assertTrue( script["constant"]["enabled"].getValue() )
+
+		with Gaffer.Context() as c :
+			# It's irrelevant if we specify the view explicitly, because again `image:viewName` is removed.
+			c["image:viewName"] = "notDefault"
+			self.assertEqual( script["constant"]["out"].viewNames(), GafferImage.ImagePlug.defaultViewNames() )
+			# Although the `enabled` plug itself does see the new context, so the node is disabled
+			# for this particular view.
+			self.assertFalse( script["constant"]["enabled"].getValue() )
 
 if __name__ == "__main__":
 	unittest.main()
