@@ -528,7 +528,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		with Gaffer.ContextMonitor( root = s["expression"] ) as cm :
 			GafferImage.ImageAlgo.tiles( s["reader"]["out"] )
 
-		self.assertEqual( set( cm.combinedStatistics().variableNames() ), set( ['frame', 'framesPerSecond', 'image:viewName' ] ) )
+		self.assertEqual( set( cm.combinedStatistics().variableNames() ), set( ['frame', 'framesPerSecond' ] ) )
 
 	def testMultipartRead( self ) :
 

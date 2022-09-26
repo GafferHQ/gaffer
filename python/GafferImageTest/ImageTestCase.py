@@ -55,11 +55,6 @@ class ImageTestCase( GafferTest.TestCase ) :
 		sanitiser.__enter__()
 		self.addCleanup( sanitiser.__exit__, None, None, None )
 
-		defaultViewContext = Gaffer.Context()
-		defaultViewContext["image:viewName"] = GafferImage.ImagePlug.defaultViewName
-		defaultViewContext.__enter__()
-		self.addCleanup( defaultViewContext.__exit__, None, None, None )
-
 	def assertImageHashesEqual( self, imageA, imageB ) :
 
 		self.assertEqual( imageA.viewNamesHash(), imageB.viewNamesHash() )
