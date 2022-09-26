@@ -36,6 +36,8 @@
 
 import functools
 
+import IECore
+
 import Gaffer
 import GafferUI
 
@@ -204,7 +206,18 @@ def __scenePlugs( node ) :
 
 	return result
 
-def __setsPopupMenu( menuDefinition, plugValueWidget ) :
+def __selectAffected( context, nodes, setExpression ) :
+
+	result = IECore.PathMatcher()
+
+	with context :
+		for node in nodes :
+			for scenePlug in __scenePlugs( node ) :
+				result.addPaths( GafferScene.SetAlgo.evaluateSetExpression( setExpression, scenePlug ) )
+
+	GafferSceneUI.ContextAlgo.setSelectedPaths( context, result )
+
+def __popupMenu( menuDefinition, plugValueWidget ) :
 
 	plug = plugValueWidget.getPlug()
 	if plug is None :
@@ -221,15 +234,11 @@ def __setsPopupMenu( menuDefinition, plugValueWidget ) :
 		return
 
 	with plugValueWidget.getContext() :
-		if acceptsSetNames :
-			currentNames = set( plug.getValue().split() )
-		elif acceptsSetName :
-			currentNames = set( [ plug.getValue() ] )
-		else :
-			currentExpression = plug.getValue()
+		plugValue = plug.getValue()
+
+	textSelection = plugValueWidget.textWidget().getSelection() if hasTextWidget else ( 0, 0 )
 
 	if acceptsSetExpression :
-		textSelection = plugValueWidget.textWidget().getSelection()
 		cursorPosition = plugValueWidget.textWidget().getCursorPosition()
 
 		insertAt = textSelection
@@ -258,17 +267,43 @@ def __setsPopupMenu( menuDefinition, plugValueWidget ) :
 	# build the menus
 	menuDefinition.prepend( "/SetsDivider", { "divider" : True } )
 
+	# `Select Affected` command
+
+	selectionSetExpression = plugValue[textSelection[0]: textSelection[1]] if textSelection != ( 0, 0 ) else plugValue
+
+	if selectionSetExpression != "" :
+		menuDefinition.prepend(
+			"Select Affected Objects",
+			{
+				"command" : functools.partial(
+					__selectAffected,
+					plugValueWidget.getContext(),
+					nodes,
+					selectionSetExpression
+				)
+			}
+		)
+
+	# `Operators` menu
+
 	if acceptsSetExpression:
 		for name, operator in zip( ("Union", "Intersection", "Difference"), ("|", "&", "-") ) :
-			newValue = ''.join( [ currentExpression[:insertAt[0]], operator, currentExpression[insertAt[1]:] ] )
+			newValue = ''.join( [ plugValue[:insertAt[0]], operator, plugValue[insertAt[1]:] ] )
 			menuDefinition.prepend( "/Operators/%s" % name, { "command" : functools.partial( __setValue, plug, newValue ) } )
 
+	# `Sets` menu
+
 	pathFn = getMenuPathFunction()
+
+	if acceptsSetNames :
+		currentNames = set( plugValue.split() )
+	elif acceptsSetName :
+		currentNames = set( [ plugValue ] )
 
 	for setName in reversed( sorted( list( setNames ) ) ) :
 
 		if acceptsSetExpression :
-			newValue = ''.join( [ currentExpression[:insertAt[0]], setName, currentExpression[insertAt[1]:]] )
+			newValue = ''.join( [ plugValue[:insertAt[0]], setName, plugValue[insertAt[1]:]] )
 			parameters = { "command" : functools.partial( __setValue, plug, newValue ) }
 
 		else :
@@ -287,7 +322,7 @@ def __setsPopupMenu( menuDefinition, plugValueWidget ) :
 
 		menuDefinition.prepend( "/Sets/%s" % pathFn( setName ), parameters )
 
-GafferUI.PlugValueWidget.popupMenuSignal().connect( __setsPopupMenu, scoped = False )
+GafferUI.PlugValueWidget.popupMenuSignal().connect( __popupMenu, scoped = False )
 
 ##########################################################################
 # Gadgets

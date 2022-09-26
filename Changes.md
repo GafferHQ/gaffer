@@ -8,6 +8,7 @@ Improvements
   - Improved performance when interacting with large Catalogues.
   - Added hover state to the output index column, to indicate clickability.
   - Improved default column layout, so output index column is more compact.
+- Sets : Added "Select Affected Objects" menu item to set expression and set name plugs.
 
 Fixes
 -----
