@@ -168,7 +168,7 @@ void FormatQuery::hash( Gaffer::ValuePlug const* const output, Gaffer::Context c
 	std::string view = viewPlug()->getValue();
 	if( !view.size() )
 	{
-		view = context->get<std::string>( ImagePlug::viewNameContextName );
+		view = context->get<std::string>( ImagePlug::viewNameContextName, ImagePlug::defaultViewName );
 	}
 
 	ImagePlug::ViewScope viewScope( context );
@@ -184,7 +184,7 @@ void FormatQuery::compute( Gaffer::ValuePlug* const output, Gaffer::Context cons
 	std::string view = viewPlug()->getValue();
 	if( !view.size() )
 	{
-		view = context->get<std::string>( ImagePlug::viewNameContextName );
+		view = context->get<std::string>( ImagePlug::viewNameContextName, ImagePlug::defaultViewName );
 	}
 
 	ImagePlug::ViewScope viewScope( context );

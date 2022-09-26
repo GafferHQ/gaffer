@@ -1,3 +1,11 @@
+1.0.x.x (relative to 1.0.5.0)
+=======
+
+Fixes
+-----
+
+- GafferImage : Fixed `Context has no variable named "image:viewName"` errors. If `image:viewName` is not provided by a context, GafferImage automatically falls back to a value of `default`.
+
 1.0.5.0 (relative to 1.0.4.0)
 =======
 

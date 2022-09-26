@@ -185,7 +185,7 @@ void ImageSampler::hash( const Gaffer::ValuePlug *output, const Gaffer::Context 
 		std::string view = viewPlug()->getValue();
 		if( !view.size() )
 		{
-			view = context->get<std::string>( ImagePlug::viewNameContextName );
+			view = context->get<std::string>( ImagePlug::viewNameContextName, ImagePlug::defaultViewName );
 		}
 		viewScope.setViewNameChecked( &view, flattenedInPlug()->viewNames().get() );
 
@@ -213,7 +213,7 @@ void ImageSampler::compute( Gaffer::ValuePlug *output, const Gaffer::Context *co
 		std::string view = viewPlug()->getValue();
 		if( !view.size() )
 		{
-			view = context->get<std::string>( ImagePlug::viewNameContextName );
+			view = context->get<std::string>( ImagePlug::viewNameContextName, ImagePlug::defaultViewName );
 		}
 		viewScope.setViewNameChecked( &view, flattenedInPlug()->viewNames().get() );
 
