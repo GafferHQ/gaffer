@@ -36,6 +36,7 @@
 
 import os
 import time
+import re
 import sys
 if os.name == 'posix' and sys.version_info[0] < 3:
 	import subprocess32 as subprocess
@@ -59,7 +60,9 @@ class ApplicationTest( GafferTest.TestCase ) :
 
 	def testWrapperDoesntDuplicatePaths( self ) :
 
-		output = subprocess.check_output( [ "gaffer", "env", "env" ], universal_newlines = True )
+		executable = "gaffer" if os.name != "nt" else "gaffer.cmd"
+		output = subprocess.check_output( [ executable, "env", "env" if os.name != "nt" else "set" ], universal_newlines = True )
+
 		externalEnv = {}
 		for line in output.split( '\n' ) :
 			partition = line.partition( "=" )
@@ -70,14 +73,48 @@ class ApplicationTest( GafferTest.TestCase ) :
 
 	def testProcessName( self ) :
 
-		process = subprocess.Popen( [ "gaffer", "env", "sleep", "100" ] )
-		time.sleep( 1 )
-		command = subprocess.check_output( [ "ps", "-p", str( process.pid ), "-o", "command=" ], universal_newlines = True ).strip()
-		name = subprocess.check_output( [ "ps", "-p", str( process.pid ), "-o", "comm=" ], universal_newlines = True ).strip()
-		process.kill()
+		if os.name == "nt" :
+			process = subprocess.Popen( [ "gaffer.cmd", "env", "timeout", "100" ] )
 
-		self.assertEqual( command, "gaffer env sleep 100" )
-		self.assertEqual( name, "gaffer" )
+			time.sleep( 1 )
+
+			command = subprocess.check_output(
+				[
+					"powershell",
+					"-command",
+					"Get-WmiObject -Query \"SELECT CommandLine FROM Win32_Process WHERE ProcessID={}\" | Format-List -Property CommandLine".format( process.pid )
+				],
+				universal_newlines = True
+			)
+			command = " ".join( [ i.strip() for i in command.strip().split( "\n" ) ] )
+			command = command.replace( "CommandLine : ", "" )
+
+			name = subprocess.check_output(
+				[
+					"powershell",
+					"-command",
+					"Get-WmiObject -Query \"SELECT Name FROM Win32_Process WHERE ProcessID={}\" | Format-List -Property Name".format( process.pid )
+				],
+				universal_newlines = True
+			)
+			name = name.strip().replace( "Name : ", "" )
+
+			subprocess.Popen( "TASKKILL /F /PID {} /T".format( process.pid ), stdout = sys.stderr )
+
+			self.assertEqual( command, "C:\\Windows\\system32\\cmd.exe /c gaffer.cmd env timeout 100" )
+			self.assertEqual( name, "cmd.exe" )
+
+		else :
+			process = subprocess.Popen( [ "gaffer", "env", "sleep", "100" ] )
+			time.sleep( 1 )
+
+			command = subprocess.check_output( [ "ps", "-p", str( process.pid ), "-o", "command=" ], universal_newlines = True ).strip()
+			name = subprocess.check_output( [ "ps", "-p", str( process.pid ), "-o", "comm=" ], universal_newlines = True ).strip()
+
+			process.kill()
+
+			self.assertEqual( command, "gaffer env sleep 100" )
+			self.assertEqual( name, "gaffer" )
 
 if __name__ == "__main__":
 	unittest.main()
