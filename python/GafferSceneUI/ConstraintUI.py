@@ -55,6 +55,7 @@ Gaffer.Metadata.registerNode(
 
 	"layout:activator:targetModeIsUV", lambda node : node["targetMode"].getValue() == GafferScene.Constraint.TargetMode.UV,
 	"layout:activator:targetModeIsVertex", lambda node : node["targetMode"].getValue() == GafferScene.Constraint.TargetMode.Vertex,
+	"layout:activator:keepReferencePositionIsOff", lambda node : not node["keepReferencePosition"].getValue(),
 
 	plugs = {
 

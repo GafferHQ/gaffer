@@ -103,6 +103,7 @@ const Gaffer::BoolPlug *PointConstraint::zEnabledPlug() const
 bool PointConstraint::affectsConstraint( const Gaffer::Plug *input ) const
 {
 	return
+		input == keepReferencePositionPlug() ||
 		input->parent<Plug>() == offsetPlug() ||
 		input == xEnabledPlug() ||
 		input == yEnabledPlug() ||
@@ -111,7 +112,10 @@ bool PointConstraint::affectsConstraint( const Gaffer::Plug *input ) const
 
 void PointConstraint::hashConstraint( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	offsetPlug()->hash( h );
+	if( !keepReferencePositionPlug()->getValue() )
+	{
+		offsetPlug()->hash( h );
+	}
 	xEnabledPlug()->hash( h );
 	yEnabledPlug()->hash( h );
 	zEnabledPlug()->hash( h );
@@ -119,7 +123,11 @@ void PointConstraint::hashConstraint( const Gaffer::Context *context, IECore::Mu
 
 Imath::M44f PointConstraint::computeConstraint( const Imath::M44f &fullTargetTransform, const Imath::M44f &fullInputTransform, const Imath::M44f &inputTransform ) const
 {
-	const V3f worldPosition = fullTargetTransform.translation() + offsetPlug()->getValue();
+	V3f worldPosition = fullTargetTransform.translation();
+	if( !keepReferencePositionPlug()->getValue() )
+	{
+		worldPosition += offsetPlug()->getValue();
+	}
 	M44f result = fullInputTransform;
 
 	if( xEnabledPlug()->getValue() )

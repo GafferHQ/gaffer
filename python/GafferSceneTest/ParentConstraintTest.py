@@ -2205,5 +2205,96 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 			with six.assertRaisesRegex( self, Gaffer.ProcessException, ".*Constrained object \"/group/cube\" does not exist at reference frame 4" ) :
 				script["constraint"]["out"].transform( "/group/cube" )
 
+	def testRelativeTransformIgnoredWhenKeepingReferencePosition( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["sphere"] = GafferScene.Sphere()
+		script["cube"] = GafferScene.Cube()
+
+		script["parent"] = GafferScene.Parent()
+		script["parent"]["in"].setInput( script["sphere"]["out"] )
+		script["parent"]["child"][0].setInput( script["cube"]["out"] )
+		script["parent"]["parent"].setValue( "/" )
+
+		script["cubeFilter"] = GafferScene.PathFilter()
+		script["cubeFilter"]["paths"].setValue( IECore.StringVectorData( [ "/cube" ] ) )
+
+		script["constraint"] = GafferScene.ParentConstraint()
+		script["constraint"]["in"].setInput( script["parent"]["out"] )
+		script["constraint"]["filter"].setInput( script["cubeFilter"]["out"] )
+		script["constraint"]["target"].setValue( "/sphere" )
+
+		script["sphereExpression"] = Gaffer.Expression()
+		script["sphereExpression"].setExpression( inspect.cleandoc(
+			"""
+			parent["sphere"]["transform"]["translate"]["x"] = context.getFrame()
+			"""
+		) )
+
+		# With `keepReferencePosition == False`. The `relativeTransform` is applied.
+		# This was essentially a poor man's way of trying to maintain a reference
+		# position, where the reference position needed to be manually specified.
+
+		relativeY = 2
+		script["constraint"]["relativeTransform"]["translate"]["y"].setValue( relativeY )
+
+		with Gaffer.Context( script.context() ) as context :
+			for frame in range( 0, 10 ) :
+				context.setFrame( frame )
+				self.assertEqual(
+					script["constraint"]["out"].transform( "/cube" ),
+					imath.M44f().translate( imath.V3f(
+						script["sphere"]["transform"]["translate"]["x"].getValue(),
+						relativeY,
+						0
+					) )
+				)
+
+		# With `keepReferencePosition == True`. We don't apply the `relativeTransform`.
+		# In this mode it is easier to just use the transform tools to interactively
+		# adjust the original object's transform until you get what you want. We disable
+		# `relativeTransform` in the interests of keeping things simple for the user,
+		# and the future possibility of being able to remove it entirely.
+
+		script["constraint"]["keepReferencePosition"].setValue( True )
+		script["cube"]["transform"]["translate"]["y"].setValue( 1 )
+
+		with Gaffer.Context( script.context() ) as context :
+			for frame in range( 0, 10 ) :
+				context.setFrame( frame )
+				self.assertEqual(
+					script["constraint"]["out"].transform( "/cube" ),
+					imath.M44f().translate( imath.V3f(
+						script["sphere"]["transform"]["translate"]["x"].getValue() - 1, # Maintaining `x==0`` at frame 1.
+						1, # From input transform, _not_ `relativeTransform`.
+						0
+					) )
+				)
+
+		# But of course, that is just what would happen naturally in a naive implementation,
+		# because even if the `relativeTransform` was applied, it would be negated by the
+		# code that maintains the reference position. Animate the `relativeTransform` so we
+		# can be sure it really isn't being applied.
+
+		script["relativeTransformExpression"] = Gaffer.Expression()
+		script["relativeTransformExpression"].setExpression( inspect.cleandoc(
+			"""
+			parent["constraint"]["relativeTransform"]["translate"]["y"] = context.getFrame() * 2
+			"""
+		) )
+
+		with Gaffer.Context( script.context() ) as context :
+			for frame in range( 0, 10 ) :
+				context.setFrame( frame )
+				self.assertEqual(
+					script["constraint"]["out"].transform( "/cube" ),
+					imath.M44f().translate( imath.V3f(
+						script["sphere"]["transform"]["translate"]["x"].getValue() - 1, # Maintaining `x==0`` at frame 1.
+						1, # From input transform, _not_ `relativeTransform`.
+						0
+					) )
+				)
+
 if __name__ == "__main__":
 	unittest.main()

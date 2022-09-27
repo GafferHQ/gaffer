@@ -60,9 +60,13 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			Transforms the constrained object relative to the target location.
+
+			> Note : This is ignored when `keepReferencePosition` is on. In this case it is easier
+			> to modify the reference position instead.
 			""",
 
 			"layout:section", "Transform",
+			"layout:activator", "keepReferencePositionIsOff",
 
 		],
 

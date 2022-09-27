@@ -62,7 +62,12 @@ Gaffer.Metadata.registerNode(
 			"""
 			A world space translation offset applied on top
 			of the target position.
+
+			> Note : This is ignored when `keepReferencePosition` is on. In this case it is easier
+			> to modify the reference position instead.
 			""",
+
+			"layout:activator", "keepReferencePositionIsOff",
 
 		],
 
