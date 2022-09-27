@@ -264,7 +264,7 @@ class ScriptNode::FocusSet : public Gaffer::Set
 				{
 					NodePtr oldNode = m_node;
 					m_node.reset();
-					oldNode->parentChangedSignal().disconnect( boost::bind( &FocusSet::parentChanged, this, ::_1, ::_2 ) );
+					m_nodeParentChangedConnection.disconnect();
 					memberRemovedSignal()( this, oldNode.get() );
 				}
 
@@ -272,7 +272,9 @@ class ScriptNode::FocusSet : public Gaffer::Set
 
 				if( node )
 				{
-					node->parentChangedSignal().connect( boost::bind( &FocusSet::parentChanged, this, ::_1, ::_2 ) );
+					m_nodeParentChangedConnection = node->parentChangedSignal().connect(
+						boost::bind( &FocusSet::parentChanged, this, ::_1, ::_2 )
+					);
 					memberAddedSignal()( this, node );
 				}
 			}
@@ -328,6 +330,7 @@ class ScriptNode::FocusSet : public Gaffer::Set
 		}
 
 		Gaffer::NodePtr m_node;
+		Signals::ScopedConnection m_nodeParentChangedConnection;
 };
 
 
