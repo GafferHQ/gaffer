@@ -110,7 +110,7 @@ class ApplicationRootTest( GafferTest.TestCase ) :
 
 		a = Gaffer.ApplicationRoot( "testApp" )
 
-		self.assertEqual( a.preferencesLocation(), os.path.dirname( self.__defaultPreferencesFile ) )
+		self.assertEqual( a.preferencesLocation(), os.path.dirname( self.__defaultPreferencesFile ).replace( "\\", "/" ) )
 		self.assertTrue( os.path.isdir( a.preferencesLocation() ) )
 
 	def testClipboard( self ) :

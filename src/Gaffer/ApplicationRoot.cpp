@@ -130,6 +130,8 @@ std::string ApplicationRoot::preferencesLocation() const
 	}
 
 	std::string result = home;
+	std::replace( result.begin(), result.end(), '\\', '/' );
+
 	result += "/gaffer/startup/" + getName().string();
 
 	boost::filesystem::create_directories( result );
