@@ -37,6 +37,7 @@
 import types
 import imath
 import functools
+from collections import deque
 
 import IECore
 
@@ -122,6 +123,44 @@ Gaffer.Metadata.registerNode(
 # VectorDataPlugValueWidget customisation
 ###########################################################################
 
+def __targetPlug( plug ) :
+
+	stack = deque( [ plug ] )
+
+	while stack :
+		plug = stack.popleft()
+
+		cellPlug = plug.ancestor( Gaffer.Spreadsheet.CellPlug )
+		if cellPlug is not None and isinstance( plug.node(), Gaffer.Spreadsheet ) :
+			plug = plug.node()["out"][cellPlug.getName()]
+
+		node = plug.node()
+
+		if isinstance( node, GafferScene.PathFilter ) and plug == node["paths"] :
+			return plug
+
+		stack.extend( plug.outputs() )
+
+	return None
+
+def _selectAffected( plug, selection ) :
+
+	filterPlug = __targetPlug( plug )
+	if filterPlug is None :
+		return
+	filterNode = filterPlug.node()
+
+	scenes = [ n["in"] for n in GafferScene.SceneAlgo.filteredNodes( filterNode ) ]
+	scenes = [ s[0] if isinstance( s, Gaffer.ArrayPlug ) else s for s in scenes ]
+
+	result = IECore.PathMatcher()
+	context = filterNode.ancestor( Gaffer.ScriptNode ).context()
+	with context :
+		for scene in scenes :
+			GafferScene.SceneAlgo.matchingPaths( selection, scene, result )
+
+	GafferSceneUI.ContextAlgo.setSelectedPaths( context, result )
+
 class _PathsPlugValueWidget( GafferUI.VectorDataPlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
@@ -134,35 +173,58 @@ class _PathsPlugValueWidget( GafferUI.VectorDataPlugValueWidget ) :
 
 		selectedIndices = vectorDataWidget.selectedIndices()
 
+		filterData = vectorDataWidget.getData()[0]
+		selection = IECore.PathMatcher( [ filterData[row] for column, row in selectedIndices ] )
+
 		menuDefinition.append( "/selectDivider", { "divider" : True } )
 		menuDefinition.append(
 			"/Select Affected Objects",
 			{
-				"command" : functools.partial( Gaffer.WeakMethod( self.__selectAffected ), selectedIndices ),
+				"command" : functools.partial( _selectAffected, self.getPlug(), selection ),
 				"active" : len( selectedIndices ) > 0,
 			}
 		)
 
-	def __selectAffected( self, selectedIndices ) :
+##########################################################################
+# Popup menu for Spreadsheet cells
+##########################################################################
 
-		filterNode = self.getPlug().node()
+def __popupMenu( menuDefinition, plugValueWidget ) :
 
-		filterData = self.vectorDataWidget().getData()[0]
+	if not isinstance( plugValueWidget, GafferUI.VectorDataPlugValueWidget ) :
+		return
 
-		pathMatcher = IECore.PathMatcher()
-		for column, row in selectedIndices :
-			pathMatcher.addPath( filterData[row] )
+	plug = plugValueWidget.getPlug()
+	if plug is None:
+		return
 
-		scenes = [ n["in"] for n in GafferScene.SceneAlgo.filteredNodes( filterNode ) ]
-		scenes = [ s[0] if isinstance( s, Gaffer.ArrayPlug ) else s for s in scenes ]
+	node = plug.node()
 
-		result = IECore.PathMatcher()
-		context = filterNode.ancestor( Gaffer.ScriptNode ).context()
-		with context :
-			for scene in scenes :
-				GafferScene.SceneAlgo.matchingPaths( pathMatcher, scene, result )
+	if isinstance( node, Gaffer.Spreadsheet ) :
+		if __targetFilterPlug( plug ) is not None :
+			cellPlug = plug.ancestor( Gaffer.Spreadsheet.CellPlug )
+			if cellPlug is None :
+				return
 
-		GafferSceneUI.ContextAlgo.setSelectedPaths( context, result )
+			selection = IECore.PathMatcher( plugValueWidget.vectorDataWidget().getData()[0] )
+
+		elif plug.ancestor( Gaffer.Spreadsheet.RowPlug ) and "scene:path" in node["selector"].getValue() :
+			selection = IECore.PathMatcher( [ plugValueWidget.getPlug().getValue() ] )
+
+	if selection is None :
+		return
+
+	selection = IECore.PathMatcher( plugValueWidget.vectorDataWidget().getData()[0] )
+
+	menuDefinition.prepend( "/selectAffectedDivider", { "divider" : True } )
+	menuDefinition.prepend(
+		"/Select Affected Objects",
+		{
+			"command" : functools.partial( _selectAffected, plug, selection )
+		}
+	)
+
+GafferUI.PlugValueWidget.popupMenuSignal().connect( __popupMenu, scoped = False )
 
 ##########################################################################
 # NodeGadget drop handler

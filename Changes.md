@@ -12,6 +12,14 @@ Improvements
   - Set expression and set name plugs
   - Spreadsheet cells connected to a set expression or set name plug
   - Plugs promoted from a set expression or set name plug
+- PathFilter : Added "Select Affected Objects" to the following plugs' right click menu :
+  - Plugs promoted from a `PathFilter.paths` plug (an unpromoted `PathFilter.paths` plug supports this since 0.61.13.0)
+  - Spreadsheet cells connected to a `PathFilter.paths` plug.
+
+Fixes
+-----
+
+- PathFilter : Fixed error when selecting a path element from a promoted `PathFilter.paths` plug introduced in 0.61.13.0.
 
 Fixes
 -----
