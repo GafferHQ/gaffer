@@ -8,7 +8,10 @@ Improvements
   - Improved performance when interacting with large Catalogues.
   - Added hover state to the output index column, to indicate clickability.
   - Improved default column layout, so output index column is more compact.
-- Sets : Added "Select Affected Objects" menu item to set expression and set name plugs.
+- Sets : Added "Select Affected Objects" to the following plugs' right click menu :
+  - Set expression and set name plugs
+  - Spreadsheet cells connected to a set expression or set name plug
+  - Plugs promoted from a set expression or set name plug
 
 Fixes
 -----
