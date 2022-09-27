@@ -314,9 +314,9 @@ class FileSequencePathFilterTest( GafferTest.TestCase ) :
 			ctypes.windll.kernel32.GetLongPathNameW( self.__dir, buffer, 4096 )
 			self.__dir = buffer.value
 
-		os.mkdir( self.__dir + "/dir" )
+		os.mkdir( os.path.join( self.__dir, "dir" ) )
 		for n in [ "singleFile.txt", "a.001.txt", "a.002.txt", "a.004.txt", "b.003.txt" ] :
-			with open( self.__dir + "/" + n, "w" ) as f :
+			with open( os.path.join( self.__dir, n ), "w" ) as f :
 				f.write( "AAAA" )
 
 	def tearDown( self ) :
