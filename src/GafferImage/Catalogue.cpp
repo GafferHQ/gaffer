@@ -40,6 +40,7 @@
 #include "GafferImage/CopyChannels.h"
 #include "GafferImage/DeleteImageMetadata.h"
 #include "GafferImage/Display.h"
+#include "GafferImage/FormatQuery.h"
 #include "GafferImage/ImageAlgo.h"
 #include "GafferImage/ImageMetadata.h"
 #include "GafferImage/ImageReader.h"
@@ -88,6 +89,9 @@ IMATH_INTERNAL_NAMESPACE_HEADER_EXIT
 namespace
 {
 	std::string g_isRenderingMetadataName = "gaffer:isRendering";
+	std::string g_emptyString( "" );
+	std::string g_outputPrefix( "output:" );
+	IECore::InternedString g_imageNameContextName( "catalogue:imageName" );
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -654,6 +658,7 @@ Catalogue::Image::Image( const std::string &name, Direction direction, unsigned 
 {
 	addChild( new StringPlug( "fileName" ) );
 	addChild( new StringPlug( "description" ) );
+	addChild( new IntPlug( "outputIndex" ) );
 	addChild( new StringPlug( "__name", Plug::In, name, Plug::Default & ~Plug::Serialisable ) );
 
 	nameChangedSignal().connect( boost::bind( &Image::nameChanged, this ) );
@@ -679,14 +684,24 @@ const Gaffer::StringPlug *Catalogue::Image::descriptionPlug() const
 	return getChild<StringPlug>( 1 );
 }
 
+Gaffer::IntPlug *Catalogue::Image::outputIndexPlug()
+{
+	return getChild<IntPlug>( 2 );
+}
+
+const Gaffer::IntPlug *Catalogue::Image::outputIndexPlug() const
+{
+	return getChild<IntPlug>( 2 );
+}
+
 Gaffer::StringPlug *Catalogue::Image::namePlug()
 {
-	return getChild<StringPlug>( 2 );
+	return getChild<StringPlug>( 3 );
 }
 
 const Gaffer::StringPlug *Catalogue::Image::namePlug() const
 {
-	return getChild<StringPlug>( 2 );
+	return getChild<StringPlug>( 3 );
 }
 
 void Catalogue::Image::copyFrom( const Image *other )
@@ -757,6 +772,7 @@ void Catalogue::Image::nameChanged()
 	}
 }
 
+
 //////////////////////////////////////////////////////////////////////////
 // Catalogue
 //////////////////////////////////////////////////////////////////////////
@@ -794,11 +810,29 @@ Catalogue::Catalogue( const std::string &name )
 	addChild( new StringPlug( "name" ) );
 	addChild( new StringPlug( "directory" ) );
 	addChild( new IntPlug( "__imageIndex", Plug::Out ) );
+	addChild( new StringPlug( "__invalidImageText", Plug::Out ) );
 
 	// Switch used to choose which image to output
 	addChild( new Switch( "__switch" ) );
 	imageSwitch()->setup( outPlug() );
 	imageSwitch()->indexPlug()->setInput( internalImageIndexPlug() );
+
+
+
+	GafferImage::TextPtr errorText = new GafferImage::Text( "__errorText" );
+	addChild( errorText );
+	errorText->textPlug()->setInput( invalidImageTextPlug() );
+	errorText->sizePlug()->setValue( Imath::V2i( 100 ) );
+	errorText->horizontalAlignmentPlug()->setValue( GafferImage::Text::HorizontalCenter );
+	errorText->verticalAlignmentPlug()->setValue( GafferImage::Text::VerticalCenter );
+
+	GafferImage::FormatQueryPtr textFormatQuery = new GafferImage::FormatQuery( "__errorTextFormatQuery" );
+	addChild( textFormatQuery );
+	textFormatQuery->imagePlug()->setInput( errorText->outPlug() );
+	errorText->areaPlug()->setInput( textFormatQuery->formatPlug()->displayWindowPlug() );
+
+	imageSwitch()->inPlugs()->getChild< Plug >( 0 )->setInput( errorText->outPlug() );
+
 
 	// Switch and constant used to implement disabled output
 	ConstantPtr disabled = new Constant( "__disabled" );
@@ -820,6 +854,8 @@ Catalogue::Catalogue( const std::string &name )
 
 	Display::driverCreatedSignal().connect( boost::bind( &Catalogue::driverCreated, this, ::_1, ::_2 ) );
 	Display::imageReceivedSignal().connect( boost::bind( &Catalogue::imageReceived, this, ::_1 ) );
+
+	plugSetSignal().connect( boost::bind( &Catalogue::plugSet, this, ::_1 ) );
 }
 
 Catalogue::~Catalogue()
@@ -876,14 +912,24 @@ const Gaffer::IntPlug *Catalogue::internalImageIndexPlug() const
 	return getChild<IntPlug>( g_firstPlugIndex + 4 );
 }
 
+Gaffer::StringPlug *Catalogue::invalidImageTextPlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 5 );
+}
+
+const Gaffer::StringPlug *Catalogue::invalidImageTextPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 5 );
+}
+
 Switch *Catalogue::imageSwitch()
 {
-	return getChild<Switch>( g_firstPlugIndex + 5 );
+	return getChild<Switch>( g_firstPlugIndex + 6 );
 }
 
 const Switch *Catalogue::imageSwitch() const
 {
-	return getChild<Switch>( g_firstPlugIndex + 5 );
+	return getChild<Switch>( g_firstPlugIndex + 6 );
 }
 
 Catalogue::InternalImage *Catalogue::imageNode( Image *image )
@@ -1131,6 +1177,32 @@ void Catalogue::imageReceived( Gaffer::Plug *plug )
 	internalImage->driverClosed();
 }
 
+
+void Catalogue::plugSet( const Plug *plug )
+{
+	// Enforce that only one image may have a particular output index
+	//
+	// We consider this code to enforce uniqueness to be easier than needing to sync indices during
+	// deletion / reordering.  \todo - handle selection this same way?
+	auto currentImage = plug->parent<Image>();
+	if( currentImage && currentImage->parent() == imagesPlug() && plug == currentImage->outputIndexPlug() )
+	{
+		int newIndex = currentImage->outputIndexPlug()->getValue();
+		if( newIndex == 0 )
+		{
+			return;
+		}
+
+		for( const auto &image : Image::Range( *imagesPlug() ) )
+		{
+			if( image != currentImage && image->outputIndexPlug()->getValue() == newIndex )
+			{
+				image->outputIndexPlug()->source<IntPlug>()->setValue( 0 );
+			}
+		}
+	}
+}
+
 void Catalogue::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ImageNode::affects( input, outputs );
@@ -1138,7 +1210,7 @@ void Catalogue::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outp
 	auto image = input->parent<Image>();
 	if(
 		input == imageIndexPlug() ||
-		( image && image->parent() == imagesPlug() && input == image->namePlug() )
+		( image && image->parent() == imagesPlug() && ( input == image->namePlug() || input == image->outputIndexPlug() ) )
 	)
 	{
 		outputs.push_back( internalImageIndexPlug() );
@@ -1148,19 +1220,34 @@ void Catalogue::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outp
 void Catalogue::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ImageNode::hash( output, context, h );
-	if( output == internalImageIndexPlug() )
+	if( output == invalidImageTextPlug() )
 	{
-		const std::string imageName = context->get<std::string>( "catalogue:imageName", "" );
+		h.append( context->get<std::string>( g_imageNameContextName, g_emptyString ) );
+	}
+	else if( output == internalImageIndexPlug() )
+	{
+		const std::string &imageName = context->get<std::string>( g_imageNameContextName, g_emptyString );
 		if( imageName.empty() )
 		{
 			imageIndexPlug()->hash( h );
 		}
 		else
 		{
-			h.append( imageName );
-			for( const auto &image : Image::Range( *imagesPlug() ) )
+			if( boost::starts_with( imageName, g_outputPrefix ) )
 			{
-				image->namePlug()->hash( h );
+				h.append( imageName.substr( g_outputPrefix.size() ) );
+				for( const auto &image : Image::Range( *imagesPlug() ) )
+				{
+					image->outputIndexPlug()->hash( h );
+				}
+			}
+			else
+			{
+				h.append( imageName );
+				for( const auto &image : Image::Range( *imagesPlug() ) )
+				{
+					image->namePlug()->hash( h );
+				}
 			}
 		}
 	}
@@ -1168,6 +1255,28 @@ void Catalogue::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *co
 
 void Catalogue::compute( ValuePlug *output, const Context *context ) const
 {
+	if( output == invalidImageTextPlug() )
+	{
+		const std::string &imageName = context->get<std::string>( g_imageNameContextName, g_emptyString );
+		int outputIndex = 0;
+
+		if( boost::starts_with( imageName, g_outputPrefix ) )
+		{
+			outputIndex = std::stoi( imageName.substr( g_outputPrefix.size() ) );
+		}
+
+		std::string result;
+		if( outputIndex > 0 )
+		{
+			result = "Catalogue : Unassigned Output " + std::to_string( outputIndex );
+		}
+		else
+		{
+			result = "Catalogue : Unknown Image \"" + imageName + "\"";
+		}
+		static_cast<StringPlug *>( output )->setValue( result );
+	}
+
 	if( output != internalImageIndexPlug() )
 	{
 		ImageNode::compute( output, context );
@@ -1175,7 +1284,7 @@ void Catalogue::compute( ValuePlug *output, const Context *context ) const
 	}
 
 	int index = -1;
-	const std::string imageName = context->get<std::string>( "catalogue:imageName", "" );
+	const std::string &imageName = context->get<std::string>( g_imageNameContextName, g_emptyString );
 	if( imageName.empty() )
 	{
 		index = imageIndexPlug()->getValue();
@@ -1183,22 +1292,28 @@ void Catalogue::compute( ValuePlug *output, const Context *context ) const
 	else
 	{
 		size_t childIndex = 0;
+		int outputIndex = 0;
+
+		if( boost::starts_with( imageName, g_outputPrefix ) )
+		{
+			outputIndex = std::stoi( imageName.substr( g_outputPrefix.size() ) );
+		}
+
 		for( const auto &image : Image::Range( *imagesPlug() ) )
 		{
-			if( image->namePlug()->getValue() == imageName )
+			if( ( outputIndex > 0 ) ?
+				image->outputIndexPlug()->getValue() == outputIndex :
+				image->namePlug()->getValue() == imageName
+			)
 			{
 				index = childIndex;
 				break;
 			}
 			childIndex++;
 		}
-		if( index < 0 )
-		{
-			throw IECore::Exception( "Unknown image name \"" + imageName + "\"." );
-		}
 	}
 
-	static_cast<IntPlug *>( output )->setValue( index );
+	static_cast<IntPlug *>( output )->setValue( index + 1 );
 
 }
 

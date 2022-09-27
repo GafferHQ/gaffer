@@ -83,6 +83,9 @@ class GAFFERIMAGE_API Catalogue : public ImageNode
 				Gaffer::StringPlug *descriptionPlug();
 				const Gaffer::StringPlug *descriptionPlug() const;
 
+				Gaffer::IntPlug *outputIndexPlug();
+				const Gaffer::IntPlug *outputIndexPlug() const;
+
 				/// Primarily used to take a snapshot of a live render.
 				/// This image must have have been added to a Catalogue
 				/// before calling. The snapshot will be saved to disk
@@ -102,6 +105,7 @@ class GAFFERIMAGE_API Catalogue : public ImageNode
 				// so we transfer the name into this private plug
 				// each time it changes.
 				void nameChanged();
+
 				Gaffer::StringPlug *namePlug();
 				const Gaffer::StringPlug *namePlug() const;
 				friend class Catalogue;
@@ -139,6 +143,9 @@ class GAFFERIMAGE_API Catalogue : public ImageNode
 		Gaffer::IntPlug *internalImageIndexPlug();
 		const Gaffer::IntPlug *internalImageIndexPlug() const;
 
+		Gaffer::StringPlug *invalidImageTextPlug();
+		const Gaffer::StringPlug *invalidImageTextPlug() const;
+
 		Gaffer::Switch *imageSwitch();
 		const Gaffer::Switch *imageSwitch() const;
 
@@ -151,6 +158,8 @@ class GAFFERIMAGE_API Catalogue : public ImageNode
 
 		void driverCreated( IECoreImage::DisplayDriver *driver, const IECore::CompoundData *parameters );
 		void imageReceived( Gaffer::Plug *plug );
+
+		void plugSet( const Gaffer::Plug *plug );
 
 		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
