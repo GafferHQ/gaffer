@@ -869,7 +869,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 
 		shutil.copyfile(
 			os.path.dirname( __file__ ) + "/references/version-0.14.0.0.grf",
-			"/tmp/test.grf"
+			os.path.join( self.temporaryDirectory(), "test.grf" )
 		)
 
 		os.environ["GAFFER_REFERENCE_PATHS"] = self.temporaryDirectory()
@@ -1812,12 +1812,6 @@ class ReferenceTest( GafferTest.TestCase ) :
 		GafferTest.TestCase.tearDown( self )
 
 		GafferTest.StringInOutNode = self.__StringInOutNode
-
-		for f in (
-			"/tmp/test.grf",
-		) :
-			if os.path.exists( f ) :
-				os.remove( f )
 
 if __name__ == "__main__":
 	unittest.main()

@@ -824,7 +824,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		s["fileName"].setValue( self.temporaryDirectory() + "/test2.gfr" )
 		s.load()
 
-		self.assertEqual( s["fileName"].getValue(), self.temporaryDirectory() + "/test2.gfr" )
+		self.assertEqual( s["fileName"].getValue(), str( Gaffer.FileSystemPath( self.temporaryDirectory() + "/test2.gfr" ) ) )
 
 	def testUnsavedChanges( self ) :
 
@@ -1306,7 +1306,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 
 	def testFileNameInExecutionError( self ) :
 
-		fileName = self.temporaryDirectory() + "/test.gfr"
+		fileName = str( Gaffer.FileSystemPath( self.temporaryDirectory() + "/test.gfr" ) )
 		with open( fileName, "w" ) as f :
 			f.write( "a = 10\n" )
 			f.write( "a = iDontExist\n" )
@@ -1326,7 +1326,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 				method( continueOnError = True )
 
 			self.assertEqual( len( mh.messages ), 1 )
-			self.assertEqual( mh.messages[0].context, "Line 2 of " + fileName )
+			self.assertEqual( mh.messages[0].context, "Line 2 of " + str( Gaffer.FileSystemPath( fileName ) ) )
 			self.assertTrue( "NameError: name 'iDontExist' is not defined" in mh.messages[0].message )
 
 	def testIsExecuting( self ) :

@@ -37,13 +37,13 @@
 import os
 import shutil
 import unittest
+import ctypes
+import tempfile
 
 import Gaffer
 import GafferTest
 
 class FileSequencePathFilterTest( GafferTest.TestCase ) :
-
-	__dir = "/tmp/gafferFileSequencePathFilterTest"
 
 	def test( self ) :
 
@@ -293,11 +293,26 @@ class FileSequencePathFilterTest( GafferTest.TestCase ) :
 
 		GafferTest.TestCase.setUp( self )
 
+		self.__dir = str( Gaffer.FileSystemPath( os.path.join( tempfile.gettempdir(), "gafferFileSequencePathFilterTest" ) ) )
+
 		# clear out old files and make empty directory
 		# to work in
 		if os.path.exists( self.__dir ) :
 			shutil.rmtree( self.__dir )
 		os.mkdir( self.__dir )
+
+		# On Windows, Python returns a temporary directory in Windows 8.3 file
+		# naming format, which is a shortened version of the full filename.
+		# This name contains numbers, which causes the test to fail when
+		# IECore::findSequences thinks it finds a sequence due to the number
+		# in the directory name.
+		# The only way to expand the shortened name is either the Win32 Python
+		# extensions, or calling the needed function through ctypes. We choose
+		# ctypes to eliminate the need for additional modules.
+		if os.name == "nt" :
+			buffer = ctypes.create_unicode_buffer( 4096 )
+			ctypes.windll.kernel32.GetLongPathNameW( self.__dir, buffer, 4096 )
+			self.__dir = buffer.value
 
 		os.mkdir( self.__dir + "/dir" )
 		for n in [ "singleFile.txt", "a.001.txt", "a.002.txt", "a.004.txt", "b.003.txt" ] :

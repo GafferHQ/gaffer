@@ -45,8 +45,12 @@ import GafferTest
 
 class ApplicationRootTest( GafferTest.TestCase ) :
 
-	__defaultPreferencesFile = os.path.expanduser( "~/gaffer/startup/testApp/preferences.py" )
-	__preferencesFile = "/tmp/testPreferences.py"
+	def setUp( self ) :
+
+		GafferTest.TestCase.setUp( self )
+
+		self.__defaultPreferencesFile = os.path.expanduser( "~/gaffer/startup/testApp/preferences.py" )
+		self.__preferencesFile = self.temporaryDirectory() + "/testPreferences.py"
 
 	class testApp( Gaffer.Application ) :
 
@@ -108,7 +112,7 @@ class ApplicationRootTest( GafferTest.TestCase ) :
 
 		a = Gaffer.ApplicationRoot( "testApp" )
 
-		self.assertEqual( a.preferencesLocation(), os.path.dirname( self.__defaultPreferencesFile ) )
+		self.assertEqual( a.preferencesLocation(), str( Gaffer.FileSystemPath( os.path.dirname( self.__defaultPreferencesFile ) ) ) )
 		self.assertTrue( os.path.isdir( a.preferencesLocation() ) )
 
 	def testClipboard( self ) :
