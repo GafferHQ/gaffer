@@ -88,6 +88,7 @@ class GAFFEROSL_API OSLCode : public OSLShader
 		static size_t g_firstPlugIndex;
 
 		ShaderCompiledSignal m_shaderCompiledSignal;
+		std::unordered_map<Gaffer::ConstGraphComponentPtr, Gaffer::Signals::ScopedConnection> m_nameChangedConnections;
 
 };
 
