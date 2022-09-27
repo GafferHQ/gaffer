@@ -39,6 +39,7 @@ import unittest
 import weakref
 import functools
 import imath
+import os
 
 import IECore
 
@@ -588,10 +589,12 @@ class SignalsTest( GafferTest.TestCase ) :
 
 		self.assertFalse( connection.connected() )
 
+	@unittest.skipIf( os.name == "nt", "Signals::disconnect( slot ) not working on Windows" )
 	def testDisconnectMatchingLambda( self ) :
 
 		GafferTest.testSignalDisconnectMatchingLambda()
 
+	@unittest.skipIf( os.name == "nt", "Signals::disconnect( slot ) not working on Windows" )
 	def testDisconnectMatchingBind( self ) :
 
 		GafferTest.testSignalDisconnectMatchingBind()
