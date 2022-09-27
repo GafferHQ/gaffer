@@ -36,7 +36,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "Gaffer/ApplicationRoot.h"
-
+#include "Gaffer/FileSystemPath.h"
 #include "Gaffer/Preferences.h"
 
 #include "boost/filesystem.hpp"
@@ -130,7 +130,8 @@ std::string ApplicationRoot::preferencesLocation() const
 	}
 
 	std::string result = home;
-	result += "/gaffer/startup/" + getName().string();
+
+	result = FileSystemPath( result + "/gaffer/startup/" + getName().string() ).string();
 
 	boost::filesystem::create_directories( result );
 
