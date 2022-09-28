@@ -922,7 +922,7 @@ class File
 
 		inline const View &lookupView( const Context *c ) const
 		{
-			std::string viewName = c->get<std::string>( ImagePlug::viewNameContextName );
+			std::string viewName = c->get<std::string>( ImagePlug::viewNameContextName, ImagePlug::defaultViewName );
 			try
 			{
 				return *m_views.at( viewName );
@@ -1180,7 +1180,7 @@ void OpenImageIOReader::hash( const ValuePlug *output, const Context *context, I
 	else if( output == tileBatchPlug() )
 	{
 		h.append( context->get<V3i>( g_tileBatchIndexContextName ) );
-		h.append( context->get<std::string>( ImagePlug::viewNameContextName ) );
+		h.append( context->get<std::string>( ImagePlug::viewNameContextName, ImagePlug::defaultViewName ) );
 
 		Gaffer::Context::EditableScope c( context );
 		c.remove( g_tileBatchIndexContextName );
@@ -1297,7 +1297,7 @@ void OpenImageIOReader::hashFormat( const GafferImage::ImagePlug *output, const 
 	GafferImage::Format format = FormatPlug::getDefaultFormat( context );
 	h.append( format.getDisplayWindow() );
 	h.append( format.getPixelAspect() );
-	h.append( context->get<std::string>( ImagePlug::viewNameContextName ) );
+	h.append( context->get<std::string>( ImagePlug::viewNameContextName, ImagePlug::defaultViewName ) );
 }
 
 GafferImage::Format OpenImageIOReader::computeFormat( const Gaffer::Context *context, const ImagePlug *parent ) const
@@ -1326,7 +1326,7 @@ void OpenImageIOReader::hashDataWindow( const GafferImage::ImagePlug *output, co
 	hashFileName( context, h );
 	refreshCountPlug()->hash( h );
 	missingFrameModePlug()->hash( h );
-	h.append( context->get<std::string>( ImagePlug::viewNameContextName ) );
+	h.append( context->get<std::string>( ImagePlug::viewNameContextName, ImagePlug::defaultViewName ) );
 }
 
 Imath::Box2i OpenImageIOReader::computeDataWindow( const Gaffer::Context *context, const ImagePlug *parent ) const
@@ -1349,7 +1349,7 @@ void OpenImageIOReader::hashMetadata( const GafferImage::ImagePlug *output, cons
 	hashFileName( context, h );
 	refreshCountPlug()->hash( h );
 	missingFrameModePlug()->hash( h );
-	h.append( context->get<std::string>( ImagePlug::viewNameContextName ) );
+	h.append( context->get<std::string>( ImagePlug::viewNameContextName, ImagePlug::defaultViewName ) );
 }
 
 IECore::ConstCompoundDataPtr OpenImageIOReader::computeMetadata( const Gaffer::Context *context, const ImagePlug *parent ) const
@@ -1410,7 +1410,7 @@ void OpenImageIOReader::hashChannelNames( const GafferImage::ImagePlug *output, 
 	refreshCountPlug()->hash( h );
 	missingFrameModePlug()->hash( h );
 	channelInterpretationPlug()->hash( h );
-	h.append( context->get<std::string>( ImagePlug::viewNameContextName ) );
+	h.append( context->get<std::string>( ImagePlug::viewNameContextName, ImagePlug::defaultViewName ) );
 }
 
 IECore::ConstStringVectorDataPtr OpenImageIOReader::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
@@ -1429,7 +1429,7 @@ void OpenImageIOReader::hashDeep( const GafferImage::ImagePlug *output, const Ga
 	hashFileName( context, h );
 	refreshCountPlug()->hash( h );
 	missingFrameModePlug()->hash( h );
-	h.append( context->get<std::string>( ImagePlug::viewNameContextName ) );
+	h.append( context->get<std::string>( ImagePlug::viewNameContextName, ImagePlug::defaultViewName ) );
 }
 
 bool OpenImageIOReader::computeDeep( const Gaffer::Context *context, const ImagePlug *parent ) const
@@ -1447,7 +1447,7 @@ void OpenImageIOReader::hashSampleOffsets( const GafferImage::ImagePlug *output,
 	ImageNode::hashSampleOffsets( output, context, h );
 
 	h.append( context->get<V2i>( ImagePlug::tileOriginContextName ) );
-	h.append( context->get<std::string>( ImagePlug::viewNameContextName ) );
+	h.append( context->get<std::string>( ImagePlug::viewNameContextName, ImagePlug::defaultViewName ) );
 
 	{
 		ImagePlug::GlobalScope c( context );
@@ -1500,7 +1500,7 @@ void OpenImageIOReader::hashChannelData( const GafferImage::ImagePlug *output, c
 	ImageNode::hashChannelData( output, context, h );
 	h.append( context->get<V2i>( ImagePlug::tileOriginContextName ) );
 	h.append( context->get<std::string>( ImagePlug::channelNameContextName ) );
-	h.append( context->get<std::string>( ImagePlug::viewNameContextName ) );
+	h.append( context->get<std::string>( ImagePlug::viewNameContextName, ImagePlug::defaultViewName ) );
 
 	{
 		ImagePlug::GlobalScope c( context );

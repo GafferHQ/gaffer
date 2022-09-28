@@ -288,7 +288,7 @@ IECoreImage::ImagePrimitivePtr GafferImage::ImageAlgo::image( const ImagePlug *i
 	{
 		throw IECore::Exception(
 			"ImageAlgo::image() : No view \"" +
-			viewScope.context()->get<std::string>( ImagePlug::viewNameContextName ) + "\""
+			viewScope.context()->get<std::string>( ImagePlug::viewNameContextName, ImagePlug::defaultViewName ) + "\""
 		);
 	}
 
@@ -348,7 +348,7 @@ IECore::MurmurHash GafferImage::ImageAlgo::imageHash( const ImagePlug *imagePlug
 	{
 		throw IECore::Exception(
 			"ImageAlgo::imageHash() : No view \"" +
-			viewScope.context()->get<std::string>( ImagePlug::viewNameContextName ) + "\""
+			viewScope.context()->get<std::string>( ImagePlug::defaultViewName ) + "\""
 		);
 	}
 
@@ -412,7 +412,7 @@ IECore::ConstCompoundObjectPtr GafferImage::ImageAlgo::tiles( const ImagePlug *i
 	{
 		throw IECore::Exception(
 			"ImageAlgo::tiles() : No view \"" +
-			viewScope.context()->get<std::string>( ImagePlug::viewNameContextName ) + "\""
+			viewScope.context()->get<std::string>( ImagePlug::viewNameContextName, ImagePlug::defaultViewName ) + "\""
 		);
 	}
 
@@ -522,7 +522,7 @@ void GafferImage::ImageAlgo::throwIfSampleOffsetsMismatch( const IECore::IntVect
 
 bool GafferImage::ImageAlgo::viewIsValid( const Gaffer::Context *context, const std::vector< std::string > &viewNames )
 {
-	const std::string &viewName = context->get<std::string>( ImagePlug::viewNameContextName );
+	const std::string &viewName = context->get<std::string>( ImagePlug::viewNameContextName, ImagePlug::defaultViewName );
 
 	if( std::find( viewNames.begin(), viewNames.end(), viewName ) != viewNames.end() )
 	{
