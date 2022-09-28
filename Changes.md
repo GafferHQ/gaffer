@@ -15,6 +15,7 @@ Improvements
 - PathFilter : Added "Select Affected Objects" to the following plugs' right click menu :
   - Plugs promoted from a `PathFilter.paths` plug (an unpromoted `PathFilter.paths` plug supports this since 0.61.13.0)
   - Spreadsheet cells connected to a `PathFilter.paths` plug.
+  - Spreadsheet row names when the spreadsheet selector is set to `scene:path`.
 
 Fixes
 -----

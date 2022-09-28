@@ -123,7 +123,7 @@ Gaffer.Metadata.registerNode(
 # VectorDataPlugValueWidget customisation
 ###########################################################################
 
-def __targetPlug( plug ) :
+def __targetFilterPlug( plug ) :
 
 	stack = deque( [ plug ] )
 
@@ -143,18 +143,44 @@ def __targetPlug( plug ) :
 
 	return None
 
+def __targetSceneOutPlug( plug ) :
+
+	stack = deque( [ plug ] )
+
+	while stack :
+		plug = stack.popleft()
+		node = plug.node()
+		if isinstance( plug.node(), GafferScene.SceneNode ) :
+			return node["out"]
+
+		stack.extend( plug.outputs() )
+
+	return None
+
 def _selectAffected( plug, selection ) :
 
-	filterPlug = __targetPlug( plug )
-	if filterPlug is None :
-		return
-	filterNode = filterPlug.node()
+	inPlugs = []
 
-	scenes = [ n["in"] for n in GafferScene.SceneAlgo.filteredNodes( filterNode ) ]
-	scenes = [ s[0] if isinstance( s, Gaffer.ArrayPlug ) else s for s in scenes ]
+	rowPlug = plug.ancestor( Gaffer.Spreadsheet.RowPlug )
+
+	targetPlug = __targetFilterPlug( plug )
+
+	if targetPlug is not None :
+		inPlugs = [ n["in"] for n in GafferScene.SceneAlgo.filteredNodes( targetPlug.node() ) ]
+	elif rowPlug is not None :
+		for output in rowPlug.node()["out"] :
+			targetPlug = __targetSceneOutPlug( output )
+			if targetPlug is not None :
+				inPlugs = [ targetPlug ]
+				break
+
+	if targetPlug is None :
+		return
+
+	scenes = [ s[0] if isinstance( s, Gaffer.ArrayPlug ) else s for s in inPlugs ]
 
 	result = IECore.PathMatcher()
-	context = filterNode.ancestor( Gaffer.ScriptNode ).context()
+	context = targetPlug.ancestor( Gaffer.ScriptNode ).context()
 	with context :
 		for scene in scenes :
 			GafferScene.SceneAlgo.matchingPaths( selection, scene, result )
@@ -191,8 +217,7 @@ class _PathsPlugValueWidget( GafferUI.VectorDataPlugValueWidget ) :
 
 def __popupMenu( menuDefinition, plugValueWidget ) :
 
-	if not isinstance( plugValueWidget, GafferUI.VectorDataPlugValueWidget ) :
-		return
+	selection = None
 
 	plug = plugValueWidget.getPlug()
 	if plug is None:
@@ -201,20 +226,21 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 	node = plug.node()
 
 	if isinstance( node, Gaffer.Spreadsheet ) :
-		if __targetFilterPlug( plug ) is not None :
-			cellPlug = plug.ancestor( Gaffer.Spreadsheet.CellPlug )
-			if cellPlug is None :
-				return
+		rowPlug = plug.ancestor( Gaffer.Spreadsheet.RowPlug )
 
-			selection = IECore.PathMatcher( plugValueWidget.vectorDataWidget().getData()[0] )
+		with plugValueWidget.getContext() :
+			if __targetFilterPlug( plug ) is not None :
+				cellPlug = plug.ancestor( Gaffer.Spreadsheet.CellPlug )
+				if cellPlug is None :
+					return
 
-		elif plug.ancestor( Gaffer.Spreadsheet.RowPlug ) and "scene:path" in node["selector"].getValue() :
-			selection = IECore.PathMatcher( [ plugValueWidget.getPlug().getValue() ] )
+				selection = IECore.PathMatcher( plugValueWidget.vectorDataWidget().getData()[0] )
+
+			elif rowPlug and plug == rowPlug["name"] and node["selector"].getValue() == "${scene:path}" :
+				selection = IECore.PathMatcher( [ plugValueWidget.getPlug().getValue() ] )
 
 	if selection is None :
 		return
-
-	selection = IECore.PathMatcher( plugValueWidget.vectorDataWidget().getData()[0] )
 
 	menuDefinition.prepend( "/selectAffectedDivider", { "divider" : True } )
 	menuDefinition.prepend(
