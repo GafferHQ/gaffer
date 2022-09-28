@@ -11,6 +11,11 @@ Fixes
 
 - Catalogue : Removed incorrect error message on empty Catalogues.
 
+API
+---
+
+- PathColumn : Added support for a different icon to be shown when a cell is hovered.
+
 1.1.1.0 (relative to 1.1.0.0)
 =======
 
