@@ -1107,27 +1107,6 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 						mesh->set_subd_dicing_rate( m_dicingRate );
 						mesh->set_subd_max_level( m_maxLevel );
 					}
-
-					if( m_shader )
-					{
-						ccl::Shader *shader = m_shader->shader();
-						if( shader->attributes.find( ccl::ATTR_STD_UV_TANGENT ) )
-						{
-							if( !mesh->attributes.find( ccl::ATTR_STD_UV_TANGENT ) )
-							{
-								// Re-issue new mesh with tangents
-								return false;
-							}
-						}
-						if( shader->attributes.find( ccl::ATTR_STD_UV_TANGENT_SIGN ) )
-						{
-							if( !mesh->attributes.find( ccl::ATTR_STD_UV_TANGENT_SIGN ) )
-							{
-								// Re-issue new mesh with tangent-sign
-								return false;
-							}
-						}
-					}
 				}
 
 				if( m_shader->shader() )
@@ -1147,17 +1126,6 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			object->set_lightgroup( ccl::ustring( m_lightGroup.c_str() ) );
 
 			return true;
-		}
-
-		void applyGeometry( const IECore::Object *object, ccl::Object *cobject ) const
-		{
-			if( needTangents() )
-			{
-				if( const IECoreScene::MeshPrimitive *mesh = IECore::runTimeCast<const IECoreScene::MeshPrimitive>( object ) )
-				{
-					MeshAlgo::computeTangents( static_cast<ccl::Mesh*>( cobject->get_geometry() ), mesh, needTangentSign() );
-				}
-			}
 		}
 
 		bool applyLight( ccl::Light *light, const CyclesAttributes *previousAttributes ) const
@@ -1184,6 +1152,10 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		}
 
 		// Generates a signature for the work done by applyGeometry.
+		/// \todo This description is inaccurate. There used to be a method called `applyGeometry()`,
+		/// but it was removed. We didn't remove `hashGeometry()` at the same time because it hashes
+		/// things that were never used by `applyGeometry()` in the first place. Figure out why there
+		/// was this mismatch, and if this function is really needed or not.
 		void hashGeometry( const IECore::Object *object, IECore::MurmurHash &h ) const
 		{
 			// Currently Cycles can only have a shader assigned uniquely and not instanced...
@@ -1196,13 +1168,6 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					{
 						h.append( m_dicingRate );
 						h.append( m_maxLevel );
-					}
-					if( m_shader )
-					{
-						if( needTangents() )
-							h.append( "tangent" );
-						if( needTangentSign() )
-							h.append( "tangent_sign" );
 					}
 					break;
 				default :
@@ -1238,20 +1203,6 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		bool hasParticleInfo() const
 		{
 			return m_particle.hasParticleInfo();
-		}
-
-		bool needTangents() const
-		{
-			if( !m_shader )
-				return false;
-			return m_shader->shader()->attributes.find( ccl::ATTR_STD_UV_TANGENT );
-		}
-
-		bool needTangentSign() const
-		{
-			if( !m_shader )
-				return false;
-			return m_shader->shader()->attributes.find( ccl::ATTR_STD_UV_TANGENT_SIGN );
 		}
 
 		void nodesCreated( NodesCreated &nodes )
@@ -2009,7 +1960,6 @@ class InstanceCache : public IECore::RefCounted
 				{
 					return nullptr;
 				}
-				attributes->applyGeometry( object, cobject );
 				ccl::Geometry *cgeo = cobject->get_geometry();
 				cgeo->set_owner( m_scene );
 			}
@@ -2053,7 +2003,6 @@ class InstanceCache : public IECore::RefCounted
 				{
 					return nullptr;
 				}
-				attributes->applyGeometry( samples.front(), cobject );
 				ccl::Geometry *cgeo = cobject->get_geometry();
 				cgeo->set_owner( m_scene );
 			}
