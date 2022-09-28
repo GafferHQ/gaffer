@@ -36,13 +36,9 @@
 
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 
-#include "GafferCycles/IECoreCyclesPreview/VDBAlgo.h"
-
 #include "GafferCycles/IECoreCyclesPreview/AttributeAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/CameraAlgo.h"
-#include "GafferCycles/IECoreCyclesPreview/CurvesAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/IECoreCycles.h"
-#include "GafferCycles/IECoreCyclesPreview/MeshAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/ObjectAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/ParticleAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/ShaderNetworkAlgo.h"

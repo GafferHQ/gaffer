@@ -32,8 +32,6 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferCycles/IECoreCyclesPreview/MeshAlgo.h"
-
 #include "GafferCycles/IECoreCyclesPreview/AttributeAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/ObjectAlgo.h"
 
@@ -621,22 +619,6 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 	return cmesh;
 }
 
-ObjectAlgo::ConverterDescription<MeshPrimitive> g_description( IECoreCycles::MeshAlgo::convert, IECoreCycles::MeshAlgo::convert );
-
-} // namespace
-
-//////////////////////////////////////////////////////////////////////////
-// Implementation of public API
-//////////////////////////////////////////////////////////////////////////
-
-namespace IECoreCycles
-
-{
-
-namespace MeshAlgo
-
-{
-
 ccl::Object *convert( const IECoreScene::MeshPrimitive *mesh, const std::string &nodeName, ccl::Scene *scene )
 {
 	ccl::Object *cobject = new ccl::Object();
@@ -804,6 +786,6 @@ ccl::Object *convert( const std::vector<const IECoreScene::MeshPrimitive *> &mes
 	return cobject;
 }
 
-} // namespace MeshAlgo
+ObjectAlgo::ConverterDescription<MeshPrimitive> g_description( convert, convert );
 
-} // namespace IECoreCycles
+} // namespace

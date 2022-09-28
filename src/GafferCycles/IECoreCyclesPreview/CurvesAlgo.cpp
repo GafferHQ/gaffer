@@ -32,8 +32,6 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferCycles/IECoreCyclesPreview/CurvesAlgo.h"
-
 #include "GafferCycles/IECoreCyclesPreview/AttributeAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/ObjectAlgo.h"
 
@@ -118,22 +116,6 @@ ccl::Hair *convertCommon( const IECoreScene::CurvesPrimitive *curve )
 	}
 	return hair;
 }
-
-ObjectAlgo::ConverterDescription<CurvesPrimitive> g_description( CurvesAlgo::convert, CurvesAlgo::convert );
-
-} // namespace
-
-//////////////////////////////////////////////////////////////////////////
-// Implementation of public API
-//////////////////////////////////////////////////////////////////////////
-
-namespace IECoreCycles
-
-{
-
-namespace CurvesAlgo
-
-{
 
 ccl::Object *convert( const IECoreScene::CurvesPrimitive *curve, const std::string &nodeName, ccl::Scene *scene )
 {
@@ -257,6 +239,6 @@ ccl::Object *convert( const vector<const IECoreScene::CurvesPrimitive *> &curves
 	return cobject;
 }
 
-} // namespace CurvesAlgo
+ObjectAlgo::ConverterDescription<CurvesPrimitive> g_description( convert, convert );
 
-} // namespace IECoreCycles
+} // namespace
