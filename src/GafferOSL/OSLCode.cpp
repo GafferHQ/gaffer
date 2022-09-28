@@ -481,7 +481,9 @@ void OSLCode::parameterAdded( const Gaffer::GraphComponent *parent, Gaffer::Grap
 		Metadata::plugValueChangedSignal( this )( outPlug(), "nodule:type", Metadata::ValueChangedReason::StaticRegistration );
 	}
 
-	child->nameChangedSignal().connect( boost::bind( &OSLCode::parameterNameChanged, this ) );
+	m_nameChangedConnections[child] = child->nameChangedSignal().connect(
+		boost::bind( &OSLCode::parameterNameChanged, this )
+	);
 	updateShader();
 }
 
@@ -495,7 +497,7 @@ void OSLCode::parameterRemoved( const Gaffer::GraphComponent *parent, Gaffer::Gr
 		Metadata::plugValueChangedSignal( this )( outPlug(), "nodule:type", Metadata::ValueChangedReason::StaticRegistration );
 	}
 
-	child->nameChangedSignal().disconnect( boost::bind( &OSLCode::parameterNameChanged, this ) );
+	m_nameChangedConnections.erase( child );
 	updateShader();
 }
 
