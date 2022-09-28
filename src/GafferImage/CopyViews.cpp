@@ -188,7 +188,7 @@ const ImagePlug *CopyViews::inputImage( const Gaffer::Context *context ) const
 		return inPlugs()->getChild<ImagePlug>( 0 );
 	}
 
-	const std::string &viewName = context->get<std::string>( ImagePlug::viewNameContextName );
+	const std::string &viewName = context->get<std::string>( ImagePlug::viewNameContextName, ImagePlug::defaultViewName );
 
 	ConstCompoundObjectPtr mapping;
 	{

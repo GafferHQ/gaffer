@@ -1,3 +1,16 @@
+1.0.x.x (relative to 1.0.5.0)
+=======
+
+Fixes
+-----
+
+- GafferImage : Fixed `Context has no variable named "image:viewName"` errors. If `image:viewName` is not provided by a context, GafferImage automatically falls back to a value of `default`.
+
+API
+---
+
+- GUI config : Stopped adding an `image:viewName` variable to `Script.variables`. This was an attempt to provide fallbacks for legacy code that didn't provide the `image:viewName` context variable, but it was only partially effective. It is unnecessary now that GafferImage has internal fallbacks instead.
+
 1.0.5.0 (relative to 1.0.4.0)
 =======
 

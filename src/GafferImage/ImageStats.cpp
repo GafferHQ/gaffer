@@ -287,7 +287,7 @@ void ImageStats::hash( const ValuePlug *output, const Context *context, IECore::
 	std::string view = viewPlug()->getValue();
 	if( !view.size() )
 	{
-		view = context->get<std::string>( ImagePlug::viewNameContextName );
+		view = context->get<std::string>( ImagePlug::viewNameContextName, ImagePlug::defaultViewName );
 	}
 	viewScope.setViewNameChecked( &view, inPlug()->viewNames().get() );
 
@@ -369,7 +369,7 @@ void ImageStats::compute( ValuePlug *output, const Context *context ) const
 	std::string view = viewPlug()->getValue();
 	if( !view.size() )
 	{
-		view = context->get<std::string>( ImagePlug::viewNameContextName );
+		view = context->get<std::string>( ImagePlug::viewNameContextName, ImagePlug::defaultViewName );
 	}
 	viewScope.setViewNameChecked( &view, inPlug()->viewNames().get() );
 

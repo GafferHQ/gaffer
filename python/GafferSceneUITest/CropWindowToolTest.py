@@ -115,15 +115,9 @@ class CropWindowToolTest( GafferUITest.TestCase ) :
 	def testImageViewStatus( self ) :
 
 		script = Gaffer.ScriptNode()
-		# We haven't loaded the gui config, so need to manually set up the default image view
-		script["variables"].addChild( Gaffer.NameValuePlug( "image:viewName", IECore.StringData( "default" ), "defaultViewName" ) )
 		script["image"] = GafferImage.ImageReader()
 
 		view = GafferUI.View.create( script["image"]["out"] )
-
-		# When views are created within the standard UIs, something takes care of making sure they inherit
-		# the context from the script
-		view.setContext( script.context() )
 
 		tool = GafferSceneUI.CropWindowTool( view )
 		tool["active"].setValue( True )
