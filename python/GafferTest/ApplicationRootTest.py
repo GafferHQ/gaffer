@@ -45,7 +45,6 @@ import GafferTest
 class ApplicationRootTest( GafferTest.TestCase ) :
 
 	__defaultPreferencesFile = os.path.expanduser( "~/gaffer/startup/testApp/preferences.py" )
-	__preferencesFile = "/tmp/testPreferences.py"
 
 	class testApp( Gaffer.Application ) :
 
@@ -76,9 +75,11 @@ class ApplicationRootTest( GafferTest.TestCase ) :
 		applicationRoot.savePreferences()
 		self.assertTrue( os.path.exists( self.__defaultPreferencesFile ) )
 
-		self.assertFalse( os.path.exists( self.__preferencesFile ) )
-		applicationRoot.savePreferences( self.__preferencesFile )
-		self.assertTrue( os.path.exists( self.__preferencesFile ) )
+		fileName = os.path.join( self.temporaryDirectory(), "testPreferences.gfr" )
+
+		self.assertFalse( os.path.exists( fileName ) )
+		applicationRoot.savePreferences( fileName )
+		self.assertTrue( os.path.exists( fileName ) )
 
 		p["category1"]["i"].setValue( 1 )
 		p["category2"]["s"].setValue( "beef" )
@@ -86,7 +87,7 @@ class ApplicationRootTest( GafferTest.TestCase ) :
 
 		executionContext = { "application" : application }
 		exec(
-			compile( open( self.__preferencesFile ).read(), self.__preferencesFile, "exec" ),
+			compile( open( fileName ).read(), fileName, "exec" ),
 			executionContext, executionContext
 		)
 
@@ -98,9 +99,10 @@ class ApplicationRootTest( GafferTest.TestCase ) :
 
 		a = Gaffer.ApplicationRoot( "testApp" )
 
-		a.savePreferences( self.__preferencesFile )
-		os.chmod( self.__preferencesFile, 0 )
-		self.assertRaises( RuntimeError, a.savePreferences, self.__preferencesFile )
+		fileName = os.path.join( self.temporaryDirectory(), "testPreferences.gfr" )
+		a.savePreferences( fileName )
+		os.chmod( fileName, 0 )
+		self.assertRaises( RuntimeError, a.savePreferences, fileName )
 
 	def testPreferencesLocation( self ) :
 
@@ -143,12 +145,10 @@ class ApplicationRootTest( GafferTest.TestCase ) :
 
 	def tearDown( self ) :
 
-		for f in [
-			self.__defaultPreferencesFile,
-			self.__preferencesFile,
-		] :
-			if os.path.exists( f ) :
-				os.remove( f )
+		GafferTest.TestCase.tearDown( self )
+
+		if os.path.exists( self.__defaultPreferencesFile ) :
+			os.remove( self.__defaultPreferencesFile )
 
 if __name__ == "__main__":
 	unittest.main()

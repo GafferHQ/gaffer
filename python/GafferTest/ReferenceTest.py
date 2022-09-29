@@ -865,26 +865,6 @@ class ReferenceTest( GafferTest.TestCase ) :
 
 		self.assertEqual( s["r"]["fileName"].getValue(), "iAmUsingThisForMyOwnPurposes" )
 
-	def testLoadScriptWithReferenceFromVersion0_14( self ) :
-
-		shutil.copyfile(
-			os.path.dirname( __file__ ) + "/references/version-0.14.0.0.grf",
-			"/tmp/test.grf"
-		)
-
-		s = Gaffer.ScriptNode()
-		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/referenceVersion-0.14.0.0.gfr" )
-
-		with IECore.CapturingMessageHandler() as mh :
-			s.load( continueOnError = True )
-
-		# Although we expect it to load OK, we do also expect to receive a
-		# warning message because we removed the fileName plug after version 0.14.
-		self.assertEqual( len( mh.messages ), 1 )
-		self.assertTrue( "KeyError: \"'fileName'" in mh.messages[0].message )
-
-		self.assertEqual( s["Reference"]["testPlug"].getValue(), 2 )
-
 	def testFileNameAccessor( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -1796,12 +1776,6 @@ class ReferenceTest( GafferTest.TestCase ) :
 		GafferTest.TestCase.tearDown( self )
 
 		GafferTest.StringInOutNode = self.__StringInOutNode
-
-		for f in (
-			"/tmp/test.grf",
-		) :
-			if os.path.exists( f ) :
-				os.remove( f )
 
 if __name__ == "__main__":
 	unittest.main()
