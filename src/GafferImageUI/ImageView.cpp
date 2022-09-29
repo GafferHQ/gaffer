@@ -54,6 +54,7 @@
 #include "Gaffer/ArrayPlug.h"
 #include "Gaffer/Context.h"
 #include "Gaffer/ContextQuery.h"
+#include "Gaffer/ContextVariables.h"
 #include "Gaffer/DeleteContextVariables.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/BoxPlug.h"
@@ -1458,7 +1459,7 @@ ImageView::ImageView( const std::string &name )
 	addChild( compareParent );
 	compareParent->addChild( new StringPlug( "mode", Plug::In, "", Plug::Default & ~Plug::AcceptsInputs ) );
 	compareParent->addChild( new BoolPlug( "wipe", Plug::In, true, Plug::Default & ~Plug::AcceptsInputs ) );
-	compareParent->addChild( new StringPlug( "view", Plug::In, "default", Plug::Default & ~Plug::AcceptsInputs ) );
+	compareParent->addChild( new StringPlug( "catalogueOutput", Plug::In, "output:1", Plug::Default & ~Plug::AcceptsInputs ) );
 
 	StringVectorDataPtr channelsDefaultData = new StringVectorData;
 	channelsDefaultData->writable() = { "R", "G", "B", "A" };
@@ -1557,12 +1558,14 @@ ImageView::ImageView( const std::string &name )
 	m_imageGadgets[0]->setImage( preprocessedInPlug<ImagePlug>() );
 	m_imageGadgets[0]->setContext( getContext() );
 
-	SelectViewPtr selectView2 = new SelectView();
-	addChild( selectView2 );
-	selectView2->inPlug()->setInput( preprocessorInput );
-	selectView2->viewPlug()->setInput( compareViewPlug() );
+	Gaffer::ContextVariablesPtr selectComparison = new Gaffer::ContextVariables();
+	addChild( selectComparison );
+	selectComparison->setup( preprocessedInPlug<ImagePlug>() );
+	selectComparison->inPlug()->setInput( preprocessedInPlug<ImagePlug>() );
+	selectComparison->variablesPlug()->addChild( new NameValuePlug( "catalogue:imageName",  new StringData( "output:1" ), true ) );
+	selectComparison->variablesPlug()->getChild<NameValuePlug>( 0 )->valuePlug<StringPlug>()->setInput( compareCatalogueOutputPlug() );
 
-	m_imageGadgets[1]->setImage( selectView2->outPlug() );
+	m_imageGadgets[1]->setImage( IECore::runTimeCast<GafferImage::ImagePlug>( selectComparison->outPlug() ) );
 	m_imageGadgets[1]->setContext( getContext() );
 	m_imageGadgets[1]->setLabelsVisible( false );
 	m_imageGadgets[1]->setVisible( false );
@@ -1740,14 +1743,14 @@ const Gaffer::BoolPlug *ImageView::compareWipePlug() const
 	return getChild<Plug>( "compare" )->getChild<BoolPlug>( "wipe" );
 }
 
-Gaffer::StringPlug *ImageView::compareViewPlug()
+Gaffer::StringPlug *ImageView::compareCatalogueOutputPlug()
 {
-	return getChild<Plug>( "compare" )->getChild<StringPlug>( "view" );
+	return getChild<Plug>( "compare" )->getChild<StringPlug>( "catalogueOutput" );
 }
 
-const Gaffer::StringPlug *ImageView::compareViewPlug() const
+const Gaffer::StringPlug *ImageView::compareCatalogueOutputPlug() const
 {
-	return getChild<Plug>( "compare" )->getChild<StringPlug>( "view" );
+	return getChild<Plug>( "compare" )->getChild<StringPlug>( "catalogueOutput" );
 }
 
 ImageGadget *ImageView::imageGadget()

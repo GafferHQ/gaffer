@@ -129,14 +129,14 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"compare.view" : [
+		"compare.catalogueOutput" : [
 
 			"description",
 			"""
-			The view to compare with.
+			The catalogue output to compare with.
 			""",
 
-			"plugValueWidget:type", "GafferImageUI.ImageViewUI._ImageView_ViewPlugValueWidget",
+			"plugValueWidget:type", "GafferImageUI.ImageViewUI._CompareCatalogueOutputPlugValueWidget",
 			"imageViewViewPlugWidget:ctrlModifier", True,
 
 		],
@@ -1151,10 +1151,10 @@ class _CompareParentPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		widgets[0]._qtWidget().setFixedWidth( 25 ) # Mode selector is just an icon
 		widgets[0]._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetDefaultConstraint )
-		widgets[-1]._qtWidget().setFixedWidth( 125 ) # View selector should match main view selector
-		widgets[-1]._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetDefaultConstraint )
 
 		self.__row[:] = widgets
+
+		GafferUI.WidgetAlgo.joinEdges( self.__row[:], GafferUI.ListContainer.Orientation.Horizontal )
 
 		self._updateFromPlug()
 
@@ -1163,13 +1163,9 @@ class _CompareParentPlugValueWidget( GafferUI.PlugValueWidget ) :
 		with Gaffer.Context() :
 			m = self.getPlug()["mode"].getValue()
 
-		# Hide all but mode plug if mode is "" ( comparison disabled )
+		# Disable all but mode plug if mode is "" ( comparison disabled )
 		for i in self.__row[1:]:
-			i.setVisible( m != "" )
-			# Don't need to repolish here, since joinEdges does a repolish
-
-		# Need to update edge joining after changing visibility
-		GafferUI.WidgetAlgo.joinEdges( self.__row[:], GafferUI.ListContainer.Orientation.Horizontal )
+			i.setEnabled( m != "" )
 
 class _CompareModePlugValueWidget( GafferUI.PlugValueWidget ) :
 
@@ -1317,3 +1313,50 @@ class _CompareWipePlugValueWidget( GafferUI.PlugValueWidget ) :
 			v = self.getPlug().getValue()
 
 		self.getPlug().setValue( not v )
+
+class _CompareCatalogueOutputPlugValueWidget( GafferUI.PlugValueWidget ) :
+
+	def __init__( self, plug, **kw ) :
+
+		self.__button = GafferUI.MenuButton(
+			image = "catalogueOutput1.png",
+			menu = GafferUI.Menu(
+				Gaffer.WeakMethod( self.__menuDefinition ),
+				title = "Catalogue Output",
+			)
+		)
+		self.__button._qtWidget().setMaximumWidth( 25 )
+
+		GafferUI.PlugValueWidget.__init__( self, self.__button, plug, **kw )
+
+		self._updateFromPlug()
+
+	def _updateFromPlug( self ) :
+
+		with Gaffer.Context() :
+			v = self.getPlug().getValue()
+
+		icon = "catalogueOutput%s.png"%v[-1]
+		self.__button.setImage( icon )
+
+	def __menuDefinition( self ) :
+
+		with self.getContext() :
+			catalogueOutput = self.getPlug().getValue()
+
+		m = IECore.MenuDefinition()
+		for i in range( 1, 5 ):
+			val = "output:%i"%i
+			m.append(
+				"/Catalogue Output %i" % i,
+				{
+					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), val ),
+					"icon" : "catalogueOutput%i.png"%i if val != catalogueOutput else None,
+					"checkBox" : val == catalogueOutput
+				}
+			)
+
+		return m
+
+	def __setValue( self, value, *unused ) :
+		self.getPlug().setValue( value )

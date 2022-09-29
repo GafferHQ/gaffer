@@ -4,7 +4,7 @@
 Features
 --------
 
-- Image Viewer : Added UI for comparing two images.  Press in Image Viewer <kbd>Q</kbd> to enable.  <kbd>Ctrl</kbd>+<kbd>[</kbd> or <kbd>]</kbd> select a view of the current image to compare to.  Comparison modes can be selected from a dropdown, including `Over`, `Under`, `Difference` and `Replace`.  A wipe can be positioned by dragging in the viewer, and toggled using <kbd>W</kbd>.
+- Image Viewer : Added UI for comparing two images.  Press in Image Viewer <kbd>Q</kbd> to enable.  Compares to an Ouptut Index set on the currently viewed catalogue ( comparing different nodes will be supported in the future ).  Comparison modes can be selected from a dropdown, including `Over`, `Under`, `Difference` and `Replace`.  A wipe can be positioned by dragging in the viewer, and toggled using <kbd>W</kbd>.
 - Catalogue : Added Output Index column which can be used to set particular images in the catalogue as outputs that can be referenced from CatalogueSelect nodes.
 
 Fixes
