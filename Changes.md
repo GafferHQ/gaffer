@@ -1,3 +1,11 @@
+0.61.14.x (relative to 0.61.14.6)
+=========
+
+Fixes
+-----
+
+- Shape : Fixed unnecessary serialisation of internal connection.
+
 0.61.14.6 (relative to 0.61.14.5)
 =========
 
