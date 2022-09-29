@@ -113,8 +113,15 @@ Imath::V3f ScaleHandle::scaling( const DragDropEvent &event )
 		// When performing uniform scales, the handle is at the origin, so the
 		// pattern we use above gets very twitchy. We instead need to treat the
 		// click point as scale=1 and relative movement in +ve x as a scale
-		// increase and anything in -ve x as a scale decrease.
-		scale = m_drag.updatedPosition( event ) - m_drag.startPosition();
+		// increase and anything in -ve x as a scale decrease. Coordinates are in
+		// gadget-space, which does not scale by camera position. Normalize
+		// by `rasterScaleFactor()` to prevent very large scaling when zoomed out
+		// and small scaling when zoomed in.
+		//
+		// Note that using `rasterScaleFactor()` here works as long as the handle
+		// transform is uniform, which is currently all cases. If that changes,
+		// a more sophisticated scale factor may need to be used.
+		scale = ( m_drag.updatedPosition( event ) - m_drag.startPosition() ) / rasterScaleFactor().x;
 	}
 
 	// snap
