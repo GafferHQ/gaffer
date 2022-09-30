@@ -1205,14 +1205,6 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 							h.append( "tangent_sign" );
 					}
 					break;
-				case IECoreScene::CurvesPrimitiveTypeId :
-					break;
-				case IECoreScene::SpherePrimitiveTypeId :
-					break;
-				case IECoreScene::ExternalProceduralTypeId :
-					break;
-				case IECoreVDB::VDBObjectTypeId :
-					break;
 				default :
 					// No geometry attributes for this type.
 					break;
