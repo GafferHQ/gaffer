@@ -333,6 +333,19 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 			promotedImageIndex.setValue( i )
 			self.assertImagesEqual( readers[i]["out"], promotedOut )
 
+		promotedImages[2]["outputIndex"].setValue( 1 )
+		promotedImages[0]["outputIndex"].setValue( 2 )
+
+		with Gaffer.Context( s.context() ) as c :
+			c["catalogue:imageName"] = "output:1"
+			self.assertImagesEqual( readers[2]["out"], promotedOut )
+			c["catalogue:imageName"] = "output:2"
+			self.assertImagesEqual( readers[0]["out"], promotedOut )
+
+			promotedImages[1]["outputIndex"].setValue( 1 )
+			c["catalogue:imageName"] = "output:1"
+			self.assertImagesEqual( readers[1]["out"], promotedOut )
+
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s.serialise() )
 
@@ -762,27 +775,39 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		red["color"]["r"].setValue( 1 )
 		self.sendImage( red["out"], box["catalogue"] )
 		images[-1].setName( "Red" )
+		images[-1]["outputIndex"].setValue( 1 )
 
 		green = GafferImage.Constant()
 		green["format"].setValue( GafferImage.Format( 64, 64 ) )
 		green["color"]["g"].setValue( 1 )
 		self.sendImage( green["out"], box["catalogue"] )
 		images[-1].setName( "Green" )
+		images[-1]["outputIndex"].setValue( 2 )
 
-		# Assert that images are accessible under those names.
+		# Assert that images are accessible under those names ( and output indices ).
 
 		with Gaffer.Context() as c :
 			c["catalogue:imageName"] = "Red"
 			self.assertImagesEqual( box["catalogue"]["out"], red["out"], ignoreMetadata = True )
 			c["catalogue:imageName"] = "Green"
 			self.assertImagesEqual( box["catalogue"]["out"], green["out"], ignoreMetadata = True )
+			c["catalogue:imageName"] = "output:1"
+			self.assertImagesEqual( box["catalogue"]["out"], red["out"], ignoreMetadata = True )
+			c["catalogue:imageName"] = "output:2"
+			self.assertImagesEqual( box["catalogue"]["out"], green["out"], ignoreMetadata = True )
 
 		# And that invalid names generate errors.
 
-		with six.assertRaisesRegex( self, RuntimeError, 'Unknown image name "Blue"' ) :
-			with Gaffer.Context() as c :
-				c["catalogue:imageName"] = "Blue"
-				box["catalogue"]["out"].metadata()
+		notFoundText = GafferImage.Text()
+		notFoundText["text"].setValue( 'Catalogue : Unknown Image "Blue"' )
+		notFoundText["size"].setValue( imath.V2i( 100 ) )
+		notFoundText["area"].setValue( imath.Box2i( imath.V2i( 0, 0 ), imath.V2i( 1920, 1080 ) ) )
+		notFoundText["horizontalAlignment"].setValue( GafferImage.Text.HorizontalAlignment.HorizontalCenter )
+		notFoundText["verticalAlignment"].setValue( GafferImage.Text.VerticalAlignment.VerticalCenter )
+
+		with Gaffer.Context() as c :
+			c["catalogue:imageName"] = "Blue"
+			self.assertImagesEqual( box["catalogue"]["out"], notFoundText["out"], ignoreMetadata = True )
 
 		# Assert that we can rename the images and get them under the new name.
 
@@ -794,13 +819,17 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 			self.assertImagesEqual( box["catalogue"]["out"], red["out"], ignoreMetadata = True )
 			c["catalogue:imageName"] = "Emerald"
 			self.assertImagesEqual( box["catalogue"]["out"], green["out"], ignoreMetadata = True )
+			c["catalogue:imageName"] = "output:1"
+			self.assertImagesEqual( box["catalogue"]["out"], red["out"], ignoreMetadata = True )
+			c["catalogue:imageName"] = "output:2"
+			self.assertImagesEqual( box["catalogue"]["out"], green["out"], ignoreMetadata = True )
 
 		# And that the old names are now invalid.
 
-		with six.assertRaisesRegex( self, RuntimeError, 'Unknown image name "Red"' ) :
-			with Gaffer.Context() as c :
-				c["catalogue:imageName"] = "Red"
-				box["catalogue"]["out"].metadata()
+		with Gaffer.Context() as c :
+			c["catalogue:imageName"] = "Red"
+			notFoundText["text"].setValue( 'Catalogue : Unknown Image "Red"' )
+			self.assertImagesEqual( box["catalogue"]["out"], notFoundText["out"], ignoreMetadata = True )
 
 	def testInternalImagePythonType( self ) :
 
@@ -906,6 +935,72 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		constant2["format"]["displayWindow"]["max"]["x"].setValue( 101 )
 		f6 = catalogue.generateFileName( createViews["out"] )
 		self.assertEqual( f6, f3 )
+
+	def testOutputIndex( self ) :
+
+		images = []
+		readers = []
+		for i, fileName in enumerate( [ "checker.exr", "blurRange.exr", "noisyRamp.exr", "resamplePatterns.exr" ] ) :
+			images.append( GafferImage.Catalogue.Image.load( "${GAFFER_ROOT}/python/GafferImageTest/images/" + fileName ) )
+			readers.append( GafferImage.ImageReader() )
+			readers[-1]["fileName"].setValue( images[-1]["fileName"].getValue() )
+
+		catalogue = GafferImage.Catalogue()
+
+		for image in images :
+			catalogue["images"].addChild( image )
+
+		catalogue["images"][0]["outputIndex"].setValue( 4 )
+		catalogue["images"][1]["outputIndex"].setValue( 3 )
+		catalogue["images"][2]["outputIndex"].setValue( 2 )
+		catalogue["images"][3]["outputIndex"].setValue( 1 )
+
+		with Gaffer.Context() as c :
+			c["catalogue:imageName"] = "output:1"
+			self.assertImagesEqual( readers[3]["out"], catalogue["out"] )
+			c["catalogue:imageName"] = "output:2"
+			self.assertImagesEqual( readers[2]["out"], catalogue["out"] )
+			c["catalogue:imageName"] = "output:3"
+			self.assertImagesEqual( readers[1]["out"], catalogue["out"] )
+			c["catalogue:imageName"] = "output:4"
+			self.assertImagesEqual( readers[0]["out"], catalogue["out"] )
+
+		# Test exclusivity
+		catalogue["images"][0]["outputIndex"].setValue( 1 )
+		self.assertEqual( catalogue["images"][3]["outputIndex"].getValue(), 0 )
+
+		with Gaffer.Context() as c :
+			c["catalogue:imageName"] = "output:1"
+			self.assertImagesEqual( readers[0]["out"], catalogue["out"] )
+
+		catalogue["images"][0]["outputIndex"].setValue( 2 )
+		self.assertEqual( catalogue["images"][2]["outputIndex"].getValue(), 0 )
+
+		with Gaffer.Context() as c :
+			c["catalogue:imageName"] = "output:2"
+			self.assertImagesEqual( readers[0]["out"], catalogue["out"] )
+
+		catalogue["images"][1]["outputIndex"].setValue( 2 )
+		self.assertEqual( catalogue["images"][0]["outputIndex"].getValue(), 0 )
+
+		notFoundText = GafferImage.Text()
+		notFoundText["text"].setValue( 'Catalogue : Unassigned Output 1' )
+		notFoundText["size"].setValue( imath.V2i( 100 ) )
+		notFoundText["area"].setValue( imath.Box2i( imath.V2i( 0, 0 ), imath.V2i( 1920, 1080 ) ) )
+		notFoundText["horizontalAlignment"].setValue( GafferImage.Text.HorizontalAlignment.HorizontalCenter )
+		notFoundText["verticalAlignment"].setValue( GafferImage.Text.VerticalAlignment.VerticalCenter )
+
+		with Gaffer.Context() as c :
+			c["catalogue:imageName"] = "output:2"
+			self.assertImagesEqual( readers[1]["out"], catalogue["out"] )
+
+			c["catalogue:imageName"] = "output:1"
+			self.assertImagesEqual( notFoundText["out"], catalogue["out"] )
+
+			notFoundText["text"].setValue( 'Catalogue : Unassigned Output 3' )
+			c["catalogue:imageName"] = "output:3"
+			self.assertImagesEqual( notFoundText["out"], catalogue["out"] )
+
 
 if __name__ == "__main__":
 	unittest.main()

@@ -93,7 +93,13 @@
 				'catalogueStatusDisk',
 				'catalogueStatusDisplay',
 				'catalogueStatusInteractiveRenderComplete',
-				'catalogueStatusInteractiveRenderRunning'
+				'catalogueStatusInteractiveRenderRunning',
+
+				'catalogueOutputHeader',
+				'catalogueOutput1',
+				'catalogueOutput2',
+				'catalogueOutput3',
+				'catalogueOutput4',
 			]
 
 		},

@@ -51,11 +51,17 @@ def __imageNames( plug ) :
 
 def __imagePresetNames( plug ) :
 
-	return IECore.StringVectorData( [ "Selected" ] + __imageNames( plug ) )
+	return IECore.StringVectorData(
+		[ "Selected", "Output/1", "Output/2", "Output/3", "Output/4" ] +
+		[ "Image/" + i for i in __imageNames( plug ) ]
+	)
 
 def __imagePresetValues( plug ) :
 
-	return IECore.StringVectorData( [ "" ] + __imageNames( plug ) )
+	return IECore.StringVectorData(
+		[ "", "output:1", "output:2", "output:3", "output:4" ] +
+		__imageNames( plug )
+	)
 
 Gaffer.Metadata.registerNode(
 
@@ -77,6 +83,8 @@ Gaffer.Metadata.registerNode(
 			# the promoted plug rather than being baked.
 			"presetNames:promotable", False,
 			"presetValues:promotable", False,
+			"presetsPlugValueWidget:allowCustom", True,
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
 		]
 	}

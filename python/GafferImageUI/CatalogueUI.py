@@ -310,11 +310,39 @@ registerColumn(
 	SimpleColumn( "Display Window", lambda _, c : __formatBox( c["out"].format().getDisplayWindow() ) )
 )
 
+def _imageFromName( catalogue, imageName ):
+	for i in catalogue["images"].source().children():
+		if i.getName() == imageName:
+			return i
+
+	return None
+
+# Column for setting which images to output as comparison views
+class OutputIndexColumn( Column ) :
+
+	def __init__( self, title ) :
+
+		Column.__init__( self, title )
+
+	def _imageCellData( self, image, catalogue ) :
+		tt = "Click to set this image as Output 1 so it can be referenced from CatalogueSelects or ImageView comparison.  Right-Click to set other output indexes."
+		i = image["outputIndex"].getValue()
+		if i > 0:
+			return self.CellData( icon = "catalogueOutput%i.png" % i, toolTip = tt )
+		else:
+			return self.CellData( value = "", toolTip = tt )
+
+	def headerData( self, canceller = None ) :
+
+		return self.CellData( icon = "catalogueOutputHeader.png", toolTip = "Output Index" )
+
+registerColumn( "Output Index", OutputIndexColumn( "Output Index" ) )
+
 # Default visible column set
 
 Gaffer.Metadata.registerValue(
 	GafferImage.Catalogue, "imageIndex", _columnsMetadataKey,
-	IECore.StringVectorData( [ "Status", "Name" ] )
+	IECore.StringVectorData( [ "Status", "Name", "Output Index" ] )
 )
 
 ##########################################################################
@@ -681,6 +709,8 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 				Gaffer.WeakMethod( self.__pathListingDrop ), scoped = False
 			)
 			self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
+			self.__pathListing.buttonPressSignal().connectFront( Gaffer.WeakMethod( self.__buttonPress ), scoped = False )
+			self.__pathListing.buttonReleaseSignal().connectFront( Gaffer.WeakMethod( self.__buttonRelease ), scoped = False )
 
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 
@@ -1022,13 +1052,7 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 		imageToReplace = None
 
 		if targetPath is not None :
-			targetName = str( targetPath )[1:]
-			for image in images :
-				if not image.getName() == targetName :
-					continue
-
-				imageToReplace = image
-				break
+			imageToReplace =  _imageFromName( self.getPlug().node(), str( targetPath )[1:] )
 		else :
 			# Drag has gone above or below all listed items. Use closest image.
 			imageToReplace = images[0] if event.line.p0.y < 1 else images[-1]
@@ -1096,6 +1120,32 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 
 		return False
 
+	def __buttonPress( self, pathListing, event ) :
+
+		cellColumn = pathListing.columnAt( event.line.p0 )
+		if not isinstance( cellColumn, OutputIndexColumn ):
+			return False
+
+		return True
+
+	def __buttonRelease( self, pathListing, event ) :
+
+		cellColumn = pathListing.columnAt( event.line.p0 )
+		if not isinstance( cellColumn, OutputIndexColumn ):
+			return False
+
+		if event.button == event.Buttons.Left and event.modifiers == event.Modifiers.None_ :
+			name = pathListing.pathAt( event.line.p0 )
+			if name:
+				image = _imageFromName( self.getPlug().node(), name[0] )
+				self.__setOutputIndex( image["outputIndex"].getValue() == 0, image )
+
+		return True
+
+	def __setOutputIndex( self, index, image, *unused ) :
+		with Gaffer.UndoScope( image.ancestor( Gaffer.ScriptNode ) ) :
+			image["outputIndex"].setValue( index )
+
 	def __columnContextMenuDefinition( self ) :
 
 		columns = self.__getColumns()
@@ -1116,20 +1166,40 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 
 		return menu
 
+	def __outputIndexContextMenuDefinition( self, image ) :
+
+		menu = IECore.MenuDefinition()
+		for i in range( 1, 5 ) :
+
+			menu.append( "/%i" % i, {
+				"checkBox" : image["outputIndex"].getValue() == i,
+				"command" : functools.partial( Gaffer.WeakMethod( self.__setOutputIndex ), i, image  ),
+			} )
+
+		return menu
+
 	def __contextMenu( self, *unused ) :
 
 		if self.getPlug() is None :
 			return False
 
+
 		# This signal is called anywhere in the listing, check we're over the header.
 		mousePosition = GafferUI.Widget.mousePosition( relativeTo = self.__pathListing )
 		headerRect = self.__pathListing._qtWidget().header().rect()
-		if not headerRect.contains( mousePosition[0], mousePosition[1] ) :
-			return False
+		if headerRect.contains( mousePosition[0], mousePosition[1] ) :
+			self.__popupMenu = GafferUI.Menu( self.__columnContextMenuDefinition(), title = "Columns" )
+			self.__popupMenu.popup( parent = self )
+			return True
+		elif isinstance( self.__pathListing.columnAt( mousePosition ), OutputIndexColumn ):
+			row = self.__pathListing.pathAt( mousePosition )
+			if row:
+				image = _imageFromName( self.getPlug().node(), row[0] )
+				if image:
+					self.__popupMenu = GafferUI.Menu( self.__outputIndexContextMenuDefinition( image ), title = "Output Index" )
+					self.__popupMenu.popup( parent = self )
+					return True
 
-		self.__popupMenu = GafferUI.Menu( self.__columnContextMenuDefinition(), "Columns" )
-		self.__popupMenu.popup( parent = self )
-
-		return True
+		return False
 
 GafferUI.Pointer.registerPointer( "plus", GafferUI.Pointer( "plus.png" ) )

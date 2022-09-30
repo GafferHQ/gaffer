@@ -55,7 +55,7 @@ class CatalogueUITest( GafferUITest.TestCase ) :
 		c = GafferImage.Catalogue()
 		self.assertEqual(
 			Gaffer.Metadata.value( c["imageIndex"], "catalogue:columns" ),
-			IECore.StringVectorData( [ "Status", "Name" ] )
+			IECore.StringVectorData( [ "Status", "Name", "Output Index" ] )
 		)
 
 	def testBoxedCatalogue( self ) :
