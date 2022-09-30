@@ -304,6 +304,40 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 			self.assertEqual( list( p ), [ r"unc\tshare", r"must\twork" ] )
 			self.assertEqual( p.nativeString(), r"/unc\tshare/must\twork")
 
+	def testEscapedCharacters( self ) :
+
+		p = Gaffer.FileSystemPath( r"/\~this/\#must/\$be/escaped.txt" )
+		if os.name == "nt" :
+			self.assertEqual( list( p ), [ r"\#must", r"\$be", "escaped.txt" ] )
+			self.assertEqual( p.root(), r"//\~this/")
+			self.assertEqual( str( p ), r"//\~this/\#must/\$be/escaped.txt" )
+			self.assertEqual( p.nativeString(), r"\\\~this\\#must\\$be\escaped.txt" )
+		else :
+			self.assertEqual( list( p ), [ "\\~this", "\\#must", "\\$be", "escaped.txt" ] )
+			self.assertEqual( p.root(), "/")
+			self.assertEqual( str( p ), "/\\~this/\\#must/\\$be/escaped.txt" )
+			self.assertEqual( p.nativeString(), "/\\~this/\\#must/\\$be/escaped.txt" )
+
+		# Make sure we don't get fooled by paths that start with a special character
+		for c in [ "$", "#", "~" ] :
+			for i in range( 0, 3 ) :
+				with open( os.path.join( self.temporaryDirectory(), "{}tricky.{}.txt".format( c, i ) ), "w" ) as outFile :
+					outFile.write( "AAAA" )
+
+		p = Gaffer.FileSystemPath( self.temporaryDirectory() )
+		children = [ str( c ) for c in p.children() ]
+		self.assertIn( self.temporaryDirectory().replace( "\\", "/" ) + "/$tricky.1.txt", children )
+		self.assertIn( self.temporaryDirectory().replace( "\\", "/" ) + "/~tricky.1.txt", children )
+		self.assertIn( self.temporaryDirectory().replace( "\\", "/" ) + "/#tricky.1.txt", children )
+
+		p = Gaffer.FileSystemPath( self.temporaryDirectory(), includeSequences = True )
+		children = [ str( c ) for c in p.children() ]
+		self.assertIn( self.temporaryDirectory().replace( "\\", "/" ) + "/~tricky.#.txt", children )
+		self.assertIn( self.temporaryDirectory().replace( "\\", "/" ) + "/$tricky.#.txt", children )
+		# `includeSequences` only allows $prefix#$suffix, so give this one a pass
+		self.assertIn( self.temporaryDirectory().replace( "\\", "/" ) + "/#tricky.1.txt", children )
+
+
 	def testSetFromStrings( self ) :
 
 		p = Gaffer.FileSystemPath( r"C:\this\path\does\not\exist" )

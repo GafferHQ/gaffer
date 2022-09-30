@@ -482,7 +482,7 @@ void FileSystemPath::doChildren( std::vector<PathPtr> &children, const IECore::C
 	for( directory_iterator it( p ), eIt; it != eIt; ++it )
 	{
 		IECore::Canceller::check( canceller );
-		children.push_back( new FileSystemPath( it->path().string(), const_cast<PathFilter *>( getFilter() ), m_includeSequences ) );
+		children.push_back( new FileSystemPath( it->path().generic_string(), const_cast<PathFilter *>( getFilter() ), m_includeSequences ) );
 	}
 
 	if( m_includeSequences )
@@ -497,7 +497,7 @@ void FileSystemPath::doChildren( std::vector<PathPtr> &children, const IECore::C
 			(*it)->getFrameList()->asList( frames );
 			if ( !is_directory( path( (*it)->fileNameForFrame( frames[0] ) ) ) )
 			{
-				children.push_back( new FileSystemPath( path( p / (*it)->getFileName() ).string(), const_cast<PathFilter *>( getFilter() ), m_includeSequences ) );
+				children.push_back( new FileSystemPath( path( p / (*it)->getFileName() ).generic_string(), const_cast<PathFilter *>( getFilter() ), m_includeSequences ) );
 			}
 		}
 	}
@@ -578,6 +578,17 @@ void FileSystemPath::rootAndNames(const std::string &string, InternedString &roo
 {
 	std::string sanitizedString = string;
 
+	// Parsing a filename with characters that are meant to be escaped by string substitution will cause
+	// unwanted path splits. We replace Gaffer's escaped special characters with characters that can't be
+	// used in Windows paths (so they won't be expected to be part of the input), then convert back after
+	// splitting the path.
+	using ReplacementPair = std::pair<std::string, std::string>;
+	std::vector<ReplacementPair> replacements = { { "\\~", "<" }, { "\\$", ">" }, { "\\#", "?" } };
+	for( std::vector<ReplacementPair>::const_iterator it = replacements.begin(), eIt = replacements.end(); it < eIt; ++it )
+	{
+		boost::replace_all( sanitizedString, it->first, it->second );
+	}
+
 	if( sanitizedString == "/" || sanitizedString == "\\" )
 	{
 		// We consider a single forward or back slash to be invalid, and convert it to the start
@@ -610,7 +621,12 @@ void FileSystemPath::rootAndNames(const std::string &string, InternedString &roo
 	}
 
 	const path convertedPath( sanitizedString );
-	root = convertedPath.root_path().generic_string();
+	std::string rootString = convertedPath.root_path().generic_string();
+	for( std::vector<ReplacementPair>::const_iterator it = replacements.begin(), eIt = replacements.end(); it < eIt; ++it )
+	{
+		boost::replace_all( rootString, it->second, it->first );
+	}
+	root = rootString;
 
 	path::const_iterator startIt = convertedPath.begin();
 
@@ -627,9 +643,14 @@ void FileSystemPath::rootAndNames(const std::string &string, InternedString &roo
 
 	for( path::const_iterator it = startIt, eIt = convertedPath.end(); it != eIt; ++it )
 	{
-		if( it->string() != "." )
+		std::string itString = it->string();
+		if( itString != "." )
 		{
-			names.push_back( it->string() );
+			for( std::vector<ReplacementPair>::const_iterator it = replacements.begin(), eIt = replacements.end(); it < eIt; ++it )
+			{
+				boost::replace_all( itString, it->second, it->first );
+			}
+			names.push_back( itString );
 		}
 	}
 }

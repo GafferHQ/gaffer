@@ -8,6 +8,11 @@ API
 
 - Capsule : Removed attempts to detect invalidated Capsules.
 
+Fixes
+-----
+
+FileSystemPath : (Windows only) Fixed escaped characters `\$`, `\#` and `\~` in paths. Previously, these would cause an incorrect directory split at the `\`. 
+
 Breaking Changes
 ----------------
 
