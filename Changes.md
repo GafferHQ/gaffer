@@ -18,6 +18,7 @@ Fixes
 	- Fixed one pixel alignment issue with highlighted and disabled icons.
 	- Improved appearance of adjoined widgets.
 	- Clicking on a button no longer assigns focus to it.
+  - Fixed appearance of disabled MenuButtons, so that they match the appearance of disabled Buttons.
 
 API
 ---

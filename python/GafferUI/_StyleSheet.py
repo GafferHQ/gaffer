@@ -510,7 +510,7 @@ _styleSheet = string.Template(
 		color: $tintLighterStrong;
 	}
 
-	QPushButton[gafferWithFrame="true"]:disabled {
+	QPushButton[gafferWithFrame="true"]:disabled, QPushButton[gafferWithFrame="true"][gafferClass="GafferUI.MenuButton"]:disabled {
 		color: $tintLighterStrong;
 		background-color: $backgroundHighlight;
 	}
