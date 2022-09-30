@@ -122,6 +122,10 @@ Imath::V3f ScaleHandle::scaling( const DragDropEvent &event )
 		// transform is uniform, which is currently all cases. If that changes,
 		// a more sophisticated scale factor may need to be used.
 		scale = ( m_drag.updatedPosition( event ) - m_drag.startPosition() ) / rasterScaleFactor().x;
+		if( scale < 0 )
+		{
+			scale = ( 1.f / ( 1.f - scale ) ) - 1.f;
+		}
 	}
 
 	// snap
