@@ -38,6 +38,7 @@ import IECore
 import GafferImage
 import GafferImageTest
 
+import imath
 
 class CatalogueSelectTest( GafferImageTest.ImageTestCase ) :
 
@@ -48,8 +49,12 @@ class CatalogueSelectTest( GafferImageTest.ImageTestCase ) :
 		images = []
 		readers = []
 		fileNames = [ "checker.exr", "blurRange.exr", "noisyRamp.exr", "resamplePatterns.exr" ]
+
+		outputIndex = 0
 		for fileName in fileNames :
 			images.append( GafferImage.Catalogue.Image.load( "${GAFFER_ROOT}/python/GafferImageTest/images/" + fileName ) )
+			outputIndex += 1
+			images[-1]["outputIndex"].setValue( outputIndex )
 			readers.append( GafferImage.ImageReader() )
 			readers[-1]["fileName"].setValue( images[-1]["fileName"].getValue() )
 
@@ -60,25 +65,34 @@ class CatalogueSelectTest( GafferImageTest.ImageTestCase ) :
 
 		# Pulling out images by name
 
-		for i, fileName in enumerate( fileNames ) :
-			catalogueSelect = GafferImage.CatalogueSelect()
-			catalogueSelect["in"].setInput( c["out"] )
-			catalogueSelect["imageName"].setValue( fileName.split( "." )[0] )
+		catalogueSelect = GafferImage.CatalogueSelect()
+		catalogueSelect["in"].setInput( c["out"] )
 
+		for i, fileName in enumerate( fileNames ) :
+			catalogueSelect["imageName"].setValue( fileName.split( "." )[0] )
 			self.assertImagesEqual( catalogueSelect["out"], readers[i]["out"], ignoreMetadata = True )
 
 		# Pulling out image that is selected in the Catalogue UI
 
-		catalogueSelect = GafferImage.CatalogueSelect()
-		catalogueSelect["in"].setInput( c["out"] )
 		catalogueSelect["imageName"].setValue( "" )
-
 		self.assertImagesEqual( catalogueSelect["out"], c["out"] )
+
+		# Pulling out image that is set as an output
+		catalogueSelect["imageName"].setValue( "output:1" )
+		self.assertImagesEqual( catalogueSelect["out"], readers[0]["out"], ignoreMetadata = True )
+
+		catalogueSelect["imageName"].setValue( "output:4" )
+		self.assertImagesEqual( catalogueSelect["out"], readers[3]["out"], ignoreMetadata = True )
 
 		# Pulling out invalid image
 
 		catalogueSelect["imageName"].setValue("nope")
-		with self.assertRaises( Exception ) as cm:
-			GafferImage.ImageAlgo.image( catalogueSelect["out"] )
 
-		self.assertEqual( str( cm.exception ), 'Catalogue.__imageIndex : Unknown image name "nope".' )
+		notFoundText = GafferImage.Text()
+		notFoundText["text"].setValue( 'Catalogue : Unknown Image "nope"' )
+		notFoundText["size"].setValue( imath.V2i( 100 ) )
+		notFoundText["area"].setValue( imath.Box2i( imath.V2i( 0, 0 ), imath.V2i( 1920, 1080 ) ) )
+		notFoundText["horizontalAlignment"].setValue( GafferImage.Text.HorizontalAlignment.HorizontalCenter )
+		notFoundText["verticalAlignment"].setValue( GafferImage.Text.VerticalAlignment.VerticalCenter )
+
+		self.assertImagesEqual( catalogueSelect["out"], notFoundText["out"], ignoreMetadata = True )
