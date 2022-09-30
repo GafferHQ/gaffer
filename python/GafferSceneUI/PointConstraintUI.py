@@ -56,21 +56,6 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"offset" : [
-
-			"description",
-			"""
-			A world space translation offset applied on top
-			of the target position.
-
-			> Note : This is ignored when `keepReferencePosition` is on. In this case it is easier
-			> to modify the reference position instead.
-			""",
-
-			"layout:activator", "keepReferencePositionIsOff",
-
-		],
-
 		"xEnabled" : [
 
 			"description",
@@ -95,6 +80,21 @@ Gaffer.Metadata.registerNode(
 			"""
 			Enables the constraint in the world space z axis.
 			""",
+
+		],
+
+		"offset" : [
+
+			"description",
+			"""
+			A world space translation offset applied on top
+			of the target position.
+
+			> Note : This is ignored when `keepReferencePosition` is on. In this case it is easier
+			> to modify the reference position instead.
+			""",
+
+			"layout:activator", "keepReferencePositionIsOff",
 
 		],
 
