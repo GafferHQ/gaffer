@@ -55,6 +55,7 @@ Gaffer.Metadata.registerNode(
 
 	"layout:activator:targetModeIsUV", lambda node : node["targetMode"].getValue() == GafferScene.Constraint.TargetMode.UV,
 	"layout:activator:targetModeIsVertex", lambda node : node["targetMode"].getValue() == GafferScene.Constraint.TargetMode.Vertex,
+	"layout:activator:keepReferencePositionIsOff", lambda node : not node["keepReferencePosition"].getValue(),
 
 	plugs = {
 
@@ -147,6 +148,28 @@ Gaffer.Metadata.registerNode(
 			is applied. The offset is measured in the object space of the
 			target location unless the target mode is UV or Vertex in which case
 			the offset is measured relative to the local surface coordinate frame.
+			""",
+
+			"divider", True,
+
+		],
+
+		"keepReferencePosition" : [
+
+			"description",
+			"""
+			Adjusts the constraint so that the original position of the object
+			at the `referenceFrame` is maintained.
+			""",
+
+		],
+
+		"referenceFrame" : [
+
+			"description",
+			"""
+			The reference frame used by the `keepReferencePosition` mode. The constraint
+			is adjusted so that the original position at this frame is maintained.
 			""",
 
 		],

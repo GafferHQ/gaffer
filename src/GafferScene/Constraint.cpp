@@ -799,6 +799,26 @@ void computeUVLocalFrame( const IECore::Object& object, Imath::M44f& m, const Im
 	}
 }
 
+struct ReferenceFrameScope : public Context::EditableScope
+{
+
+	ReferenceFrameScope( const Gaffer::Context *context, const Constraint *constraint )
+		: Context::EditableScope( context )
+	{
+		const float frame = constraint->referenceFramePlug()->getValue();
+		setFrame( frame );
+		if( !constraint->inPlug()->existsPlug()->getValue() )
+		{
+			const ScenePlug::ScenePath &path = context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
+			throw IECore::Exception( boost::str(
+				boost::format( "Constrained object \"%1%\" does not exist at reference frame %2%" )
+					% ScenePlug::pathToString( path ) % frame
+			) );
+		}
+	}
+
+};
+
 } // namespace
 
 GAFFER_NODE_DEFINE_TYPE( Constraint );
@@ -816,6 +836,10 @@ Constraint::Constraint( const std::string &name )
 	addChild( new V2fPlug( "targetUV" ) );
 	addChild( new IntPlug( "targetVertex", Plug::In, 0, 0 ) );
 	addChild( new V3fPlug( "targetOffset" ) );
+	addChild( new BoolPlug( "keepReferencePosition" ) );
+	addChild( new FloatPlug( "referenceFrame", Plug::In, 1.0 ) );
+	addChild( new M44fPlug( "__targetModeMatrix", Plug::Out ) );
+	addChild( new M44fPlug( "__constrainedTransform", Plug::Out ) );
 
 	// Pass through things we don't want to modify
 	outPlug()->attributesPlug()->setInput( inPlug()->attributesPlug() );
@@ -896,24 +920,54 @@ const Gaffer::V3fPlug *Constraint::targetOffsetPlug() const
 	return getChild<Gaffer::V3fPlug>( g_firstPlugIndex + 6 );
 }
 
+Gaffer::BoolPlug *Constraint::keepReferencePositionPlug()
+{
+	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 7 );
+}
+
+const Gaffer::BoolPlug *Constraint::keepReferencePositionPlug() const
+{
+	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 7 );
+}
+
+Gaffer::FloatPlug *Constraint::referenceFramePlug()
+{
+	return getChild<Gaffer::FloatPlug>( g_firstPlugIndex + 8 );
+}
+
+const Gaffer::FloatPlug *Constraint::referenceFramePlug() const
+{
+	return getChild<Gaffer::FloatPlug>( g_firstPlugIndex + 8 );
+}
+
+const Gaffer::M44fPlug *Constraint::targetModeMatrixPlug() const
+{
+	return getChild<Gaffer::M44fPlug>( g_firstPlugIndex + 9 );
+}
+
+const Gaffer::M44fPlug *Constraint::constrainedTransformPlug() const
+{
+	return getChild<Gaffer::M44fPlug>( g_firstPlugIndex + 10 );
+}
+
 void Constraint::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	SceneElementProcessor::affects( input, outputs );
 
+	if( affectsTargetModeMatrix( input ) )
+	{
+		outputs.push_back( targetModeMatrixPlug() );
+	}
+
+	if( affectsConstrainedTransform( input ) )
+	{
+		outputs.push_back( constrainedTransformPlug() );
+	}
+
 	if(
-		input == targetPlug() ||
-		input == ignoreMissingTargetPlug() ||
-		input == inPlug()->existsPlug() ||
-		input == inPlug()->transformPlug() ||
-		input == inPlug()->boundPlug() ||
-		input == targetScenePlug()->existsPlug() ||
-		input == targetScenePlug()->transformPlug() ||
-		input == targetScenePlug()->boundPlug() ||
-		input == targetScenePlug()->objectPlug() ||
-		input == targetModePlug() ||
-		input->parent<Plug>() == targetOffsetPlug() ||
-		input->parent<Plug>() == targetUVPlug() ||
-		input == targetVertexPlug() ||
+		input == constrainedTransformPlug() ||
+		input == keepReferencePositionPlug() ||
+		input == referenceFramePlug() ||
 		// TypeId comparison is necessary to avoid calling pure virtual
 		// if we're called before being fully constructed.
 		( typeId() != staticTypeId() && affectsConstraint( input ) )
@@ -924,6 +978,207 @@ void Constraint::affects( const Gaffer::Plug *input, AffectedPlugsContainer &out
 	}
 }
 
+void Constraint::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	if( output == targetModeMatrixPlug() )
+	{
+		hashTargetModeMatrix( context, h );
+	}
+	else if( output == constrainedTransformPlug() )
+	{
+		hashConstrainedTransform( context, h );
+	}
+	else
+	{
+		SceneElementProcessor::hash( output, context, h );
+	}
+}
+
+void Constraint::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const
+{
+	if( output == targetModeMatrixPlug() )
+	{
+		static_cast<M44fPlug *>( output )->setValue( computeTargetModeMatrix( context ) );
+	}
+	else if( output == constrainedTransformPlug() )
+	{
+		static_cast<M44fPlug *>( output )->setValue( computeConstrainedTransform( context ) );
+	}
+	else
+	{
+		SceneElementProcessor::compute( output, context);
+	}
+}
+
+bool Constraint::affectsTargetModeMatrix( const Gaffer::Plug *input ) const
+{
+	return
+		input == targetModePlug() ||
+		affectsTarget( input ) ||
+		input == inPlug()->boundPlug() ||
+		input == targetScenePlug()->boundPlug() ||
+		input == inPlug()->objectPlug() ||
+		input == targetScenePlug()->objectPlug() ||
+		input == ignoreMissingTargetPlug() ||
+		input->parent() == targetUVPlug() ||
+		input == targetVertexPlug()
+	;
+}
+
+void Constraint::hashTargetModeMatrix( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	SceneElementProcessor::hash( targetModePlug(), context, h );
+
+	const TargetMode targetMode = (TargetMode)targetModePlug()->getValue();
+	h.append( targetMode );
+
+	if( targetMode == Constraint::Origin )
+	{
+		return;
+	}
+
+	const Target target = this->target().value();
+
+	switch( targetMode )
+	{
+		case Constraint::BoundMin:
+		case Constraint::BoundMax:
+		case Constraint::BoundCenter:
+			h.append( target.scene->boundHash( target.path ) );
+			break;
+		case Constraint::UV:
+			h.append( target.scene->objectHash( target.path ) );
+			ignoreMissingTargetPlug()->hash( h );
+			targetUVPlug()->hash( h );
+			break;
+		case Constraint::Vertex:
+			h.append( target.scene->objectHash( target.path ) );
+			ignoreMissingTargetPlug()->hash( h );
+			targetVertexPlug()->hash( h );
+			break;
+		default:
+			break;
+	}
+}
+
+Imath::M44f Constraint::computeTargetModeMatrix( const Gaffer::Context *context ) const
+{
+	const TargetMode targetMode = (TargetMode)targetModePlug()->getValue();
+	if( targetMode == Constraint::Origin )
+	{
+		return M44f();
+	}
+
+	// This plug is never evaluated unless the target exists, so we
+	// don't need to consider the case where `optional<Target>` is empty.
+	const Target target = this->target().value();
+	switch( targetMode )
+	{
+		case Constraint::BoundMin:
+		case Constraint::BoundMax:
+		case Constraint::BoundCenter:
+		{
+			const Box3f targetBound = target.scene->bound( target.path );
+			if( !targetBound.isEmpty() )
+			{
+				switch( targetMode )
+				{
+					case Constraint::BoundMin : return M44f().translate( targetBound.min );
+					case Constraint::BoundMax : return M44f().translate( targetBound.max );
+					case Constraint::BoundCenter : return M44f().translate( targetBound.center() );
+					default : break;
+				}
+			}
+			return M44f();
+		}
+		case Constraint::UV:
+		{
+			const IECore::ConstObjectPtr object = target.scene->object( target.path );
+			Imath::M44f surfaceTransform;
+			const Imath::V2f uv = targetUVPlug()->getValue();
+			const bool throwOnError = !( ignoreMissingTargetPlug()->getValue() );
+			M44f result;
+			computeUVLocalFrame( *object, result, uv, "uv", throwOnError, context->canceller() );
+			return result;
+		}
+		case Constraint::Vertex:
+		{
+			const IECore::ConstObjectPtr object = target.scene->object( target.path );
+			Imath::M44f surfaceTransform;
+			const int vertexId = targetVertexPlug()->getValue();
+			const bool throwOnError = !( ignoreMissingTargetPlug()->getValue() );
+			M44f result;
+			computeVertexLocalFrame( *object, result, vertexId, "uv", throwOnError, context->canceller() );
+			return result;
+		}
+		default:
+			return M44f();
+	}
+}
+
+bool Constraint::affectsConstrainedTransform( const Gaffer::Plug *input ) const
+{
+	return
+		input == inPlug()->transformPlug() ||
+		input == targetPlug() ||
+		input == ignoreMissingTargetPlug() ||
+		input == targetScenePlug()->existsPlug() ||
+		input == inPlug()->existsPlug() ||
+		input == targetScenePlug()->transformPlug() ||
+		input == targetModeMatrixPlug() ||
+		input->parent() == targetOffsetPlug() ||
+		affectsConstraint( input )
+	;
+}
+
+void Constraint::hashConstrainedTransform( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	SceneElementProcessor::hash( constrainedTransformPlug(), context, h );
+
+	inPlug()->transformPlug()->hash( h );
+
+	auto targetOpt = target();
+	if( !targetOpt )
+	{
+		return;
+	}
+
+	const ScenePath &path = context->get<ScenePath>( ScenePlug::scenePathContextName );
+	const ScenePath parentPath( path.begin(), path.end() - 1 );
+
+	h.append( inPlug()->fullTransformHash( parentPath ) );
+
+	h.append( targetOpt->scene->fullTransformHash( targetOpt->path ) );
+	targetModeMatrixPlug()->hash( h );
+	targetOffsetPlug()->hash( h );
+
+	hashConstraint( context, h );
+}
+
+Imath::M44f Constraint::computeConstrainedTransform( const Gaffer::Context *context ) const
+{
+	const M44f inputTransform = inPlug()->transformPlug()->getValue();
+
+	auto targetOpt = target();
+	if( !targetOpt )
+	{
+		return inputTransform;
+	}
+
+	const ScenePath &path = context->get<ScenePath>( ScenePlug::scenePathContextName );
+	const ScenePath parentPath( path.begin(), path.end() - 1 );
+
+	const M44f parentTransform = inPlug()->fullTransform( parentPath );
+	const M44f fullInputTransform = inputTransform * parentTransform;
+
+	M44f fullTargetTransform = targetOpt->scene->fullTransform( targetOpt->path );
+	fullTargetTransform = targetModeMatrixPlug()->getValue() * fullTargetTransform;
+	fullTargetTransform.translate( targetOffsetPlug()->getValue() );
+
+	const M44f fullConstrainedTransform = computeConstraint( fullTargetTransform, fullInputTransform, inputTransform );
+	return fullConstrainedTransform * parentTransform.inverse();
+}
+
 bool Constraint::processesTransform() const
 {
 	return true;
@@ -931,123 +1186,40 @@ bool Constraint::processesTransform() const
 
 void Constraint::hashProcessedTransform( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	auto targetOpt = target();
-	if( !targetOpt )
+	constrainedTransformPlug()->hash( h );
+	if( keepReferencePositionPlug()->getValue() )
 	{
-		// Pass through input unchanged
-		h = inPlug()->transformPlug()->hash();
-		return;
+		ReferenceFrameScope referenceFrameScope( context, this );
+		constrainedTransformPlug()->hash( h );
+		inPlug()->transformPlug()->hash( h );
 	}
-
-	ScenePath parentPath = path;
-	parentPath.pop_back();
-	h.append( inPlug()->fullTransformHash( parentPath ) );
-
-	h.append( targetOpt->scene->fullTransformHash( targetOpt->path ) );
-
-	const TargetMode targetMode = (TargetMode)targetModePlug()->getValue();
-	h.append( targetMode );
-	switch( targetMode )
-	{
-		case Constraint::BoundMin:
-		case Constraint::BoundMax:
-		case Constraint::BoundCenter:
-			h.append( targetOpt->scene->boundHash( targetOpt->path ) );
-			break;
-		case Constraint::UV:
-			h.append( targetOpt->scene->objectHash( targetOpt->path ) );
-			ignoreMissingTargetPlug()->hash( h );
-			targetUVPlug()->hash( h );
-			break;
-		case Constraint::Vertex:
-			h.append( targetOpt->scene->objectHash( targetOpt->path ) );
-			ignoreMissingTargetPlug()->hash( h );
-			targetVertexPlug()->hash( h );
-			break;
-		default:
-			break;
-	}
-
-	targetOffsetPlug()->hash( h );
-
-	hashConstraint( context, h );
 }
 
 Imath::M44f Constraint::computeProcessedTransform( const ScenePath &path, const Gaffer::Context *context, const Imath::M44f &inputTransform ) const
 {
-	auto targetOpt = target();
-	if( !targetOpt )
+	M44f constrainedTransform = constrainedTransformPlug()->getValue();
+	if( keepReferencePositionPlug()->getValue() )
 	{
-		return inputTransform;
+		ReferenceFrameScope referenceFrameScope( context, this );
+
+		const M44f referenceConstrainedTransform = constrainedTransformPlug()->getValue();
+		const M44f referenceInputTransform = inPlug()->transformPlug()->getValue();
+
+		const M44f correction = referenceConstrainedTransform * referenceInputTransform.inverse();
+		constrainedTransform = correction.inverse() * constrainedTransform;
 	}
 
-	ScenePath parentPath = path;
-	parentPath.pop_back();
+	return constrainedTransform;
+}
 
-	const M44f parentTransform = inPlug()->fullTransform( parentPath );
-	const M44f fullInputTransform = inputTransform * parentTransform;
-
-	M44f fullTargetTransform = targetOpt->scene->fullTransform( targetOpt->path );
-
-	const TargetMode targetMode = (TargetMode)targetModePlug()->getValue();
-
-	switch( targetMode )
-	{
-		case Constraint::BoundMin:
-		{
-			const Box3f targetBound = targetOpt->scene->bound( targetOpt->path );
-			if( ! targetBound.isEmpty() )
-			{
-				fullTargetTransform.translate( targetBound.min );
-			}
-			break;
-		}
-		case Constraint::BoundMax:
-		{
-			const Box3f targetBound = targetOpt->scene->bound( targetOpt->path );
-			if( ! targetBound.isEmpty() )
-			{
-				fullTargetTransform.translate( targetBound.max );
-			}
-			break;
-		}
-		case Constraint::BoundCenter:
-		{
-			const Box3f targetBound = targetOpt->scene->bound( targetOpt->path );
-			if( ! targetBound.isEmpty() )
-			{
-				fullTargetTransform.translate( targetBound.center() );
-			}
-			break;
-		}
-		case Constraint::UV:
-		{
-			const IECore::ConstObjectPtr object = targetOpt->scene->object( targetOpt->path );
-			Imath::M44f surfaceTransform;
-			const Imath::V2f uv = targetUVPlug()->getValue();
-			const bool throwOnError = !( ignoreMissingTargetPlug()->getValue() );
-			computeUVLocalFrame( *object, surfaceTransform, uv, "uv", throwOnError, context->canceller() );
-			fullTargetTransform = surfaceTransform * fullTargetTransform;
-			break;
-		}
-		case Constraint::Vertex:
-		{
-			const IECore::ConstObjectPtr object = targetOpt->scene->object( targetOpt->path );
-			Imath::M44f surfaceTransform;
-			const int vertexId = targetVertexPlug()->getValue();
-			const bool throwOnError = !( ignoreMissingTargetPlug()->getValue() );
-			computeVertexLocalFrame( *object, surfaceTransform, vertexId, "uv", throwOnError, context->canceller() );
-			fullTargetTransform = surfaceTransform * fullTargetTransform;
-			break;
-		}
-		default:
-			break;
-	}
-
-	fullTargetTransform.translate( targetOffsetPlug()->getValue() );
-
-	const M44f fullConstrainedTransform = computeConstraint( fullTargetTransform, fullInputTransform, inputTransform );
-	return fullConstrainedTransform * parentTransform.inverse();
+bool Constraint::affectsTarget( const Gaffer::Plug *input ) const
+{
+	return
+		input == targetPlug() ||
+		input == targetScenePlug()->existsPlug() ||
+		input == inPlug()->existsPlug() ||
+		input == ignoreMissingTargetPlug()
+	;
 }
 
 std::optional<Constraint::Target> Constraint::target() const
