@@ -325,7 +325,7 @@ class OutputIndexColumn( Column ) :
 		Column.__init__( self, title )
 
 	def _imageCellData( self, image, catalogue ) :
-		tt = "Click to set this image as Output 1 so it can be referenced from CatalogueSelects or ImageView comparison.  Right-Click to set other output indexes."
+		tt = "Click to set this image as Output 1 so it can be referenced from the Viewer or by CatalogueSelect nodes. Right-click to set other output indexes."
 		i = image["outputIndex"].getValue()
 		if i > 0:
 			return self.CellData( icon = "catalogueOutput%i.png" % i, toolTip = tt )
