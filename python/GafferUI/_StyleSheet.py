@@ -515,11 +515,6 @@ _styleSheet = string.Template(
 		background-color: $backgroundHighlight;
 	}
 
-	QPushButton[gafferWithFrame="true"][gafferThinButton="true"]:disabled {
-		color: $tintLighterStrong;
-		background-color : qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 $backgroundLighter, stop: 0.1 $backgroundLightHighlight, stop: 0.90 $backgroundLightLowlight);
-	}
-
 	QPushButton::menu-indicator {
 		image: url($GAFFER_ROOT/graphics/arrowDown10.png);
 		subcontrol-position: right center;
