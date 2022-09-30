@@ -274,7 +274,8 @@ Center image at 1:1 scale            | {kbd}`Home`
 Previous Catalogue image             | {kbd}`↑`
 Next Catalogue image                 | {kbd}`↓`
 Duplicate current Catalogue image    | {kbd}`Ctrl` + {kbd}`D`
-
+Toggle image comparison              | {kbd}`Q`
+Toggle wipes                         | {kbd}`W`
 
 ### Crop window tool ###
 
