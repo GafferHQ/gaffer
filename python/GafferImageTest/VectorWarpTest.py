@@ -142,14 +142,7 @@ class VectorWarpTest( GafferImageTest.ImageTestCase ) :
 		vectorWarp["vector"].setInput( toAbsoluteMerge["out"] )
 
 		vectorWarp["filter"].setValue( "box" )
-
-		testWriter = GafferImage.ImageWriter()
-		testWriter["in"].setInput( vectorWarp["out"] )
-		testWriter["fileName"].setValue( "/tmp/TODO.exr" )
-		testWriter["task"].execute()
-
 		self.assertImagesEqual( vectorWarp["out"], dotGridReader["out"], maxDifference = 0.00001 )
-
 
 		# Test that a warp with distortion produces an expected output
 		warpPatternReader = GafferImage.ImageReader()

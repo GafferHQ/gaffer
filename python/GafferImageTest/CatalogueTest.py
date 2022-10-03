@@ -671,9 +671,6 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		self.sendImage( script["yellow"]["out"], script["catalogue"] )
 		script["catalogue"]["images"][-1].setName( "Yellow" )
 
-		script["fileName"].setValue( "/tmp/ttt.gfr" )
-		script.save()
-
 		# Check it worked
 
 		def assertPreconditions() :
