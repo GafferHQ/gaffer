@@ -57,6 +57,14 @@ Improvements
   - Added `maintainReferencePosition` plug. This allows the constraint to maintain the original position of the object at a specifed reference time.
   - Improved performance for UV constraints where the target has static geometry but an animated transform. One such benchmark shows a greater than 40x speedup.
 
+Fixes
+-----
+
+- Shape : Fixed unnecessary serialisation of internal connection.
+- ScaleTool :
+  - Fixed oversensitive scaling when zoomed out in the Viewer.
+  - Prevented uniform scaling from becoming negative.
+
 1.0.5.1 (relative to 1.0.5.0)
 =======
 
