@@ -5,6 +5,9 @@ Fixes
 -----
 
 - Shape : Fixed unnecessary serialisation of internal connection.
+- ScaleTool :
+  - Fixed oversensitive scaling when zoomed out in the Viewer.
+  - Prevented uniform scaling from becoming negative.
 
 0.61.14.6 (relative to 0.61.14.5)
 =========
