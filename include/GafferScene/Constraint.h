@@ -90,9 +90,18 @@ class GAFFERSCENE_API Constraint : public SceneElementProcessor
 		Gaffer::V3fPlug *targetOffsetPlug();
 		const Gaffer::V3fPlug *targetOffsetPlug() const;
 
+		Gaffer::BoolPlug *keepReferencePositionPlug();
+		const Gaffer::BoolPlug *keepReferencePositionPlug() const;
+
+		Gaffer::FloatPlug *referenceFramePlug();
+		const Gaffer::FloatPlug *referenceFramePlug() const;
+
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
+
+		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
 
 		/// Reimplemented from SceneElementProcessor to call the constraint functions below.
 		bool processesTransform() const override;
@@ -109,12 +118,31 @@ class GAFFERSCENE_API Constraint : public SceneElementProcessor
 
 	private :
 
+		// Plug used to cache the matrix computed from the `TargetMode`
+		// separately. The UV mode in particular is expensive, and caching it
+		// separately allows us to avoid repeating that part of the computation
+		// when the geometry is static but the transform is animated.
+		const Gaffer::M44fPlug *targetModeMatrixPlug() const;
+		/// Plug used to cache the local transform derived from
+		/// `computeConstraint()` but without considering `keepReferencePosition`.
+		/// We can then query it at the reference time from `computeProcessedTransform()`.
+		const Gaffer::M44fPlug *constrainedTransformPlug() const;
+
+		bool affectsTargetModeMatrix( const Gaffer::Plug *input ) const;
+		void hashTargetModeMatrix( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		Imath::M44f computeTargetModeMatrix( const Gaffer::Context *context ) const;
+
+		bool affectsConstrainedTransform( const Gaffer::Plug *input ) const;
+		void hashConstrainedTransform( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
+		Imath::M44f computeConstrainedTransform( const Gaffer::Context *context ) const;
+
 		struct Target
 		{
 			ScenePath path;
 			const ScenePlug *scene;
 		};
 
+		bool affectsTarget( const Gaffer::Plug *input ) const;
 		std::optional<Target> target() const;
 
 		static size_t g_firstPlugIndex;

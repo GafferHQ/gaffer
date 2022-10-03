@@ -47,6 +47,16 @@ Breaking Changes
 - ImagePlug : Removed unused `viewName` argument from `viewNames()` and `viewNamesHash()` methods.
 - StandardAttributes : Removed backwards compatibility for StandardAttributes nodes saved from Gaffer `0.95.0` (May 2014) and earlier. If necessary, resave affected files using a recent Gaffer version.
 
+1.0.6.0 (relative to 1.0.5.1)
+=======
+
+Improvements
+------------
+
+- Constraint :
+  - Added `maintainReferencePosition` plug. This allows the constraint to maintain the original position of the object at a specifed reference time.
+  - Improved performance for UV constraints where the target has static geometry but an animated transform. One such benchmark shows a greater than 40x speedup.
+
 1.0.5.1 (relative to 1.0.5.0)
 =======
 
@@ -445,6 +455,17 @@ Build
   - Subprocess32 : Now packaged as a regular module rather than as a `.egg` package.
   - TBB : Updated to version 2020.3.
   - USD : Updated to version 21.11.
+
+0.61.14.7 (relative to 0.61.14.6)
+=========
+
+Fixes
+-----
+
+- Shape : Fixed unnecessary serialisation of internal connection.
+- ScaleTool :
+  - Fixed oversensitive scaling when zoomed out in the Viewer.
+  - Prevented uniform scaling from becoming negative.
 
 0.61.14.6 (relative to 0.61.14.5)
 =========

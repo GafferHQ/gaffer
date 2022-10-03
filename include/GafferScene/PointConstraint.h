@@ -52,9 +52,6 @@ class GAFFERSCENE_API PointConstraint : public Constraint
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::PointConstraint, PointConstraintTypeId, Constraint );
 
-		Gaffer::V3fPlug *offsetPlug();
-		const Gaffer::V3fPlug *offsetPlug() const;
-
 		Gaffer::BoolPlug *xEnabledPlug();
 		const Gaffer::BoolPlug *xEnabledPlug() const;
 
@@ -63,6 +60,9 @@ class GAFFERSCENE_API PointConstraint : public Constraint
 
 		Gaffer::BoolPlug *zEnabledPlug();
 		const Gaffer::BoolPlug *zEnabledPlug() const;
+
+		Gaffer::V3fPlug *offsetPlug();
+		const Gaffer::V3fPlug *offsetPlug() const;
 
 	protected :
 

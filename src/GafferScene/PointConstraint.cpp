@@ -50,59 +50,60 @@ PointConstraint::PointConstraint( const std::string &name )
 	:	Constraint( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new V3fPlug( "offset", Plug::In, V3f( 0, 0, 0 ) ) );
 	addChild( new BoolPlug( "xEnabled", Plug::In, true ) );
 	addChild( new BoolPlug( "yEnabled", Plug::In, true ) );
 	addChild( new BoolPlug( "zEnabled", Plug::In, true ) );
+	addChild( new V3fPlug( "offset", Plug::In, V3f( 0, 0, 0 ) ) );
 }
 
 PointConstraint::~PointConstraint()
 {
 }
 
-Gaffer::V3fPlug *PointConstraint::offsetPlug()
-{
-	return getChild<Gaffer::V3fPlug>( g_firstPlugIndex );
-}
-
-const Gaffer::V3fPlug *PointConstraint::offsetPlug() const
-{
-	return getChild<Gaffer::V3fPlug>( g_firstPlugIndex );
-}
-
 Gaffer::BoolPlug *PointConstraint::xEnabledPlug()
 {
-	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 1 );
+	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex );
 }
 
 const Gaffer::BoolPlug *PointConstraint::xEnabledPlug() const
 {
-	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 1 );
+	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex );
 }
 
 Gaffer::BoolPlug *PointConstraint::yEnabledPlug()
 {
-	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 2 );
+	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 1 );
 }
 
 const Gaffer::BoolPlug *PointConstraint::yEnabledPlug() const
 {
-	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 2 );
+	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 1 );
 }
 
 Gaffer::BoolPlug *PointConstraint::zEnabledPlug()
 {
-	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 3 );
+	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 2 );
 }
 
 const Gaffer::BoolPlug *PointConstraint::zEnabledPlug() const
 {
-	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 3 );
+	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 2 );
+}
+
+Gaffer::V3fPlug *PointConstraint::offsetPlug()
+{
+	return getChild<Gaffer::V3fPlug>( g_firstPlugIndex + 3 );
+}
+
+const Gaffer::V3fPlug *PointConstraint::offsetPlug() const
+{
+	return getChild<Gaffer::V3fPlug>( g_firstPlugIndex + 3 );
 }
 
 bool PointConstraint::affectsConstraint( const Gaffer::Plug *input ) const
 {
 	return
+		input == keepReferencePositionPlug() ||
 		input->parent<Plug>() == offsetPlug() ||
 		input == xEnabledPlug() ||
 		input == yEnabledPlug() ||
@@ -111,7 +112,10 @@ bool PointConstraint::affectsConstraint( const Gaffer::Plug *input ) const
 
 void PointConstraint::hashConstraint( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	offsetPlug()->hash( h );
+	if( !keepReferencePositionPlug()->getValue() )
+	{
+		offsetPlug()->hash( h );
+	}
 	xEnabledPlug()->hash( h );
 	yEnabledPlug()->hash( h );
 	zEnabledPlug()->hash( h );
@@ -119,7 +123,11 @@ void PointConstraint::hashConstraint( const Gaffer::Context *context, IECore::Mu
 
 Imath::M44f PointConstraint::computeConstraint( const Imath::M44f &fullTargetTransform, const Imath::M44f &fullInputTransform, const Imath::M44f &inputTransform ) const
 {
-	const V3f worldPosition = fullTargetTransform.translation() + offsetPlug()->getValue();
+	V3f worldPosition = fullTargetTransform.translation();
+	if( !keepReferencePositionPlug()->getValue() )
+	{
+		worldPosition += offsetPlug()->getValue();
+	}
 	M44f result = fullInputTransform;
 
 	if( xEnabledPlug()->getValue() )
