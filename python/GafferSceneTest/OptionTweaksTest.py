@@ -36,7 +36,6 @@
 
 import imath
 import unittest
-import six
 
 import IECore
 
@@ -111,7 +110,7 @@ class OptionTweaksTest( GafferSceneTest.SceneTestCase ) :
 		tweak = Gaffer.TweakPlug( "badOption", 1 )
 		tweaks["tweaks"].addChild( tweak )
 
-		with six.assertRaisesRegex( self, RuntimeError, "Cannot apply tweak with mode Replace to \"badOption\" : This parameter does not exist" ) :
+		with self.assertRaisesRegex( RuntimeError, "Cannot apply tweak with mode Replace to \"badOption\" : This parameter does not exist" ) :
 			tweaks["out"]["globals"].getValue()
 
 		tweaks["ignoreMissing"].setValue( True )

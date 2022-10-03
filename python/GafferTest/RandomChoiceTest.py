@@ -36,7 +36,6 @@
 
 import collections
 import unittest
-import six
 import imath
 
 import IECore
@@ -71,7 +70,7 @@ class RandomChoiceTest( GafferTest.TestCase ) :
 			self.assertIsInstance( node["choices"]["values"], valuesPlugType )
 			self.assertEqual( len( node["choices"]["values"].getValue() ), 0 )
 
-			with six.assertRaisesRegex( self, Exception, "Already set up" ) :
+			with self.assertRaisesRegex( Exception, "Already set up" ) :
 				node.setup( examplePlug )
 
 		for unsupportedPlug in [
@@ -80,7 +79,7 @@ class RandomChoiceTest( GafferTest.TestCase ) :
 		] :
 			self.assertFalse( Gaffer.RandomChoice.canSetup( unsupportedPlug ) )
 			node = Gaffer.RandomChoice()
-			with six.assertRaisesRegex( self, RuntimeError, "Unsupported plug type" ) :
+			with self.assertRaisesRegex( RuntimeError, "Unsupported plug type" ) :
 				node.setup( unsupportedPlug )
 
 	def testChoice( self ) :
@@ -182,8 +181,8 @@ class RandomChoiceTest( GafferTest.TestCase ) :
 			IECore.StringVectorData( [ "a", "b", "c" ] )
 		)
 
-		with six.assertRaisesRegex(
-			self, Gaffer.ProcessException,
+		with self.assertRaisesRegex(
+			Gaffer.ProcessException,
 			r".*Length of `choices.weights` does not match length of `choices.values` \(0 but should be 3\).*"
 		) :
 			node["out"].getValue()

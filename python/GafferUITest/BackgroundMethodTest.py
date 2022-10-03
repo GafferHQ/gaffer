@@ -35,7 +35,7 @@
 ##########################################################################
 
 import time
-import six
+import _thread
 
 import IECore
 
@@ -68,7 +68,7 @@ class BackgroundMethodTest( GafferUITest.TestCase ) :
 
 			self.numBackgroundCalls += 1
 			self.backgroundCallArg = arg
-			self.backgroundCallThreadId = six.moves._thread.get_ident()
+			self.backgroundCallThreadId = _thread.get_ident()
 
 			canceller = Gaffer.Context.current().canceller()
 
@@ -88,7 +88,7 @@ class BackgroundMethodTest( GafferUITest.TestCase ) :
 		def __updateInBackgroundPreCall( self ) :
 
 			self.numPreCalls += 1
-			self.preCallThreadId = six.moves._thread.get_ident()
+			self.preCallThreadId = _thread.get_ident()
 
 			self.setEnabled( False )
 
@@ -97,7 +97,7 @@ class BackgroundMethodTest( GafferUITest.TestCase ) :
 
 			self.postCallArg = value
 			self.numPostCalls += 1
-			self.postCallThreadId = six.moves._thread.get_ident()
+			self.postCallThreadId = _thread.get_ident()
 
 			self.setValue( value if isinstance( value, int ) else -1 )
 			self.setEnabled( True )
@@ -153,9 +153,9 @@ class BackgroundMethodTest( GafferUITest.TestCase ) :
 		self.assertEqual( w.postCallArg, 1 )
 		self.assertEqual( w.backgroundCallArg, 100 )
 
-		self.assertNotEqual( w.backgroundCallThreadId, six.moves._thread.get_ident() )
-		self.assertEqual( w.preCallThreadId, six.moves._thread.get_ident() )
-		self.assertEqual( w.postCallThreadId, six.moves._thread.get_ident() )
+		self.assertNotEqual( w.backgroundCallThreadId, _thread.get_ident() )
+		self.assertEqual( w.preCallThreadId, _thread.get_ident() )
+		self.assertEqual( w.postCallThreadId, _thread.get_ident() )
 
 	def testCancelWhenHidden( self ) :
 

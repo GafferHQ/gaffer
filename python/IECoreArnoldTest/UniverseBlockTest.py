@@ -37,7 +37,6 @@ from __future__ import with_statement
 import os
 import unittest
 import ctypes
-import six
 import subprocess
 
 import arnold

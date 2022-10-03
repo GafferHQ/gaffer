@@ -36,7 +36,6 @@
 ##########################################################################
 
 import math
-import six
 
 import IECore
 
@@ -92,7 +91,7 @@ class Slider( GafferUI.Widget ) :
 		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
 
 		self.__values = []
-		if isinstance( values, ( six.integer_types, float ) ) :
+		if isinstance( values, ( int, float ) ) :
 			self.__setValuesInternal( [ values ], self.ValueChangedReason.SetValues )
 		else :
 			self.__setValuesInternal( values, self.ValueChangedReason.SetValues )

@@ -37,7 +37,6 @@
 import unittest
 
 import imath
-import six
 
 import IECore
 
@@ -178,7 +177,7 @@ class ShufflePlugTest( GafferTest.TestCase ) :
 		p.addChild( Gaffer.ShufflePlug( source = "bar", destination = "baz" ) )
 
 		source = IECore.CompoundObject( { "foo" : IECore.FloatData( 0.5 ), "bar" : IECore.FloatData( 1.0 ) } )
-		six.assertRaisesRegex( self, RuntimeError, '.*this destination was already written.*', p.shuffle, source )
+		self.assertRaisesRegex( RuntimeError, '.*this destination was already written.*', p.shuffle, source )
 
 	def testNoReShuffle( self ) :
 
@@ -241,11 +240,11 @@ class ShufflePlugTest( GafferTest.TestCase ) :
 
 		# without the ${source} variable in the destination, our "*" match causes collisions
 		p[0]["destination"].setValue( "allValuesCollide" )
-		six.assertRaisesRegex( self, RuntimeError, '.*this destination was already written.*', p.shuffle, source )
+		self.assertRaisesRegex( RuntimeError, '.*this destination was already written.*', p.shuffle, source )
 
 		# other substitution variables can also cause collisions
 		p[0]["destination"].setValue( "foo#" )
-		six.assertRaisesRegex( self, RuntimeError, '.*this destination was already written.*', p.shuffle, source )
+		self.assertRaisesRegex( RuntimeError, '.*this destination was already written.*', p.shuffle, source )
 
 	def testDrivenDestination( self ) :
 
@@ -274,7 +273,7 @@ class ShufflePlugTest( GafferTest.TestCase ) :
 		source = IECore.CompoundObject( { "foo" : IECore.FloatData( 0.5 ), "baz" : IECore.Color3fData( imath.Color3f( 1, 2, 3 ) ) } )
 		with Gaffer.Context() as c :
 			c["notSource"] = "bongo"
-			six.assertRaisesRegex( self, RuntimeError, '.*this destination was already written.*', script["n"]["p"].shuffle, source )
+			self.assertRaisesRegex( RuntimeError, '.*this destination was already written.*', script["n"]["p"].shuffle, source )
 
 	def testCantDeleteDestination( self ) :
 

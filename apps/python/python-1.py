@@ -36,7 +36,6 @@
 
 import traceback
 import sys
-import six
 
 import IECore
 import Gaffer
@@ -117,7 +116,7 @@ class python( Gaffer.Application ) :
 			sys.argv = [ args[ "file" ].value ] + list( args[ "arguments" ] )
 			try :
 				with open( args["file"].value ) as f :
-					six.exec_(
+					exec(
 						compile( f.read(), args["file"].value, "exec" ),
 						{
 							"argv" : args["arguments"],

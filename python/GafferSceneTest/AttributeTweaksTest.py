@@ -36,7 +36,6 @@
 
 import imath
 import unittest
-import six
 
 import IECore
 
@@ -124,7 +123,7 @@ class AttributeTweaksTest( GafferSceneTest.SceneTestCase ) :
 		tweak = Gaffer.TweakPlug( "badAttribute", 1.0 )
 		t["tweaks"].addChild( tweak )
 
-		with six.assertRaisesRegex( self, RuntimeError, "Cannot apply tweak with mode Replace to \"badAttribute\" : This parameter does not exist" ) :
+		with self.assertRaisesRegex( RuntimeError, "Cannot apply tweak with mode Replace to \"badAttribute\" : This parameter does not exist" ) :
 			t["out"].attributes( "/light" )
 
 		t["ignoreMissing"].setValue( True )
@@ -167,7 +166,7 @@ class AttributeTweaksTest( GafferSceneTest.SceneTestCase ) :
 		tweaks["tweaks"].addChild( segmentsTweak )
 
 		self.assertEqual( tweaks["localise"].getValue(), False )
-		with six.assertRaisesRegex( self, RuntimeError, "Cannot apply tweak with mode Replace to \"gaffer:transformBlurSegments\" : This parameter does not exist" ) :
+		with self.assertRaisesRegex( RuntimeError, "Cannot apply tweak with mode Replace to \"gaffer:transformBlurSegments\" : This parameter does not exist" ) :
 			tweaks["out"].attributes( "/group/plane" )
 
 		tweaks["localise"].setValue( True )

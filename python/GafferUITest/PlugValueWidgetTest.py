@@ -36,7 +36,6 @@
 ##########################################################################
 
 import unittest
-import six
 import weakref
 
 import IECore

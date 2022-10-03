@@ -35,8 +35,6 @@
 #
 ##########################################################################
 
-import six
-
 import IECore
 
 import Gaffer
@@ -106,7 +104,7 @@ class NodeSetEditor( GafferUI.Editor ) :
 
 		result = ""
 		for t in self.__titleFormat :
-			if isinstance( t, six.string_types ) :
+			if isinstance( t, str ) :
 				result += t
 			else :
 				result += t.getName()

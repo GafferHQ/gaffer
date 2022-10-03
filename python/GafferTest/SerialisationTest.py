@@ -36,7 +36,6 @@
 
 import imath
 import unittest
-import six
 
 import IECore
 
@@ -270,7 +269,7 @@ class SerialisationTest( GafferTest.TestCase ) :
 
 		# Test StringData with all possible byte values (except 0,
 		# because we can't construct a StringData with a null at the start).
-		allBytes = bytes().join( [ six.int2byte( i ) for i in range( 1, 256 ) ] )
+		allBytes = bytes().join( [ bytes( [ i ] ) for i in range( 1, 256 ) ] )
 		for i in range( 0, len( allBytes ) ) :
 			o = IECore.StringData( allBytes[:i] )
 			b = Gaffer.Serialisation.objectToBase64( o )

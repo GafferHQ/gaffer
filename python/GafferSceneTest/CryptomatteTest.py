@@ -39,7 +39,6 @@ import unittest
 import os
 import imath
 import json
-import six
 
 import IECore
 
@@ -141,7 +140,7 @@ class CryptomatteTest( GafferSceneTest.SceneTestCase ) :
 
 		c["in"].setInput( i["out"] )
 
-		with six.assertRaisesRegex( self, Gaffer.ProcessException, r'Error parsing manifest metadata:' ) as raised :
+		with self.assertRaisesRegex( Gaffer.ProcessException, r'Error parsing manifest metadata:' ) as raised :
 			self.compareValues( c, ["crypto_object"] )
 
 	def testManifestFromSidecarFile( self ) :
@@ -160,13 +159,13 @@ class CryptomatteTest( GafferSceneTest.SceneTestCase ) :
 
 		c["sidecarFile"].setValue( "" )
 
-		with six.assertRaisesRegex( self, Gaffer.ProcessException, r'No manifest file provided.' ) as raised :
+		with self.assertRaisesRegex( Gaffer.ProcessException, r'No manifest file provided.' ) as raised :
 			self.compareValues( c, ["crypto_object"] )
 
 		invalidPath = os.path.dirname( self.testImage ) + "/not/a/valid/path.json"
 		c["sidecarFile"].setValue( invalidPath )
 
-		with six.assertRaisesRegex( self, Gaffer.ProcessException, r'Manifest file not found: {}'.format( invalidPath ) ) as raised :
+		with self.assertRaisesRegex( Gaffer.ProcessException, r'Manifest file not found: {}'.format( invalidPath ) ) as raised :
 			self.compareValues( c, ["crypto_object"] )
 
 	def testManifestFromSidecarMetadata( self ) :
@@ -190,18 +189,18 @@ class CryptomatteTest( GafferSceneTest.SceneTestCase ) :
 
 		c["manifestDirectory"].setValue( "" )
 
-		with six.assertRaisesRegex( self, Gaffer.ProcessException, r'No manifest directory provided.' ) as raised :
+		with self.assertRaisesRegex( Gaffer.ProcessException, r'No manifest directory provided.' ) as raised :
 			self.compareValues( c, ["crypto_object"] )
 
 		invalidPath = os.path.dirname( self.testImage ) + "/not/a/valid/path"
 		c["manifestDirectory"].setValue( invalidPath )
 
-		with six.assertRaisesRegex( self, Gaffer.ProcessException, r'Manifest directory not found: {}'.format( invalidPath ) ) as raised :
+		with self.assertRaisesRegex( Gaffer.ProcessException, r'Manifest directory not found: {}'.format( invalidPath ) ) as raised :
 			self.compareValues( c, ["crypto_object"] )
 
 		d["names"].setValue( "cryptomatte/bda530a/manifest cryptomatte/bda530a/manif_file" )
 
-		with six.assertRaisesRegex( self, Gaffer.ProcessException, r'Image metadata entry not found. One of the following entries expected: cryptomatte/bda530a/manifest cryptomatte/bda530a/manif_file' ) as raised :
+		with self.assertRaisesRegex( Gaffer.ProcessException, r'Image metadata entry not found. One of the following entries expected: cryptomatte/bda530a/manifest cryptomatte/bda530a/manif_file' ) as raised :
 			self.compareValues( c, ["crypto_material"] )
 
 	def testPreviewChannels( self ) :

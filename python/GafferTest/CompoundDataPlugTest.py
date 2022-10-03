@@ -37,7 +37,6 @@
 
 import unittest
 import imath
-import six
 
 import IECore
 
@@ -489,11 +488,11 @@ class CompoundDataPlugTest( GafferTest.TestCase ) :
 		p = Gaffer.CompoundDataPlug()
 		p["test"] = Gaffer.NameValuePlug( "name", Gaffer.Plug() )
 
-		with six.assertRaisesRegex( self, RuntimeError, "Not a ValuePlug" ) :
+		with self.assertRaisesRegex( RuntimeError, "Not a ValuePlug" ) :
 			p.hash()
 
 		d = IECore.CompoundData()
-		with six.assertRaisesRegex( self, RuntimeError, "Not a ValuePlug" ) :
+		with self.assertRaisesRegex( RuntimeError, "Not a ValuePlug" ) :
 			p.fillCompoundData( d )
 
 if __name__ == "__main__":

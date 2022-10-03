@@ -36,7 +36,6 @@
 ##########################################################################
 
 import warnings
-import six
 
 import IECore
 
@@ -66,14 +65,7 @@ class TextWidget( GafferUI.Widget ) :
 
 	def getText( self ) :
 
-		if six.PY3 :
-			return self._qtWidget().text()
-		else :
-			# \todo We didn't return `unicode` here because
-			# we didn't want to break any client code. But perhaps
-			# now is the time, since everyone is transitioning to
-			# Python 3?
-			return self._qtWidget().text().encode( "utf-8" )
+		return self._qtWidget().text()
 
 	def setEditable( self, editable ) :
 

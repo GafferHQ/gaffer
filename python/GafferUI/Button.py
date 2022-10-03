@@ -35,8 +35,6 @@
 #
 ##########################################################################
 
-import six
-
 import Gaffer
 import GafferUI
 
@@ -90,7 +88,7 @@ class Button( GafferUI.Widget ) :
 
 	def setText( self, text ) :
 
-		assert( isinstance( text, six.string_types ) )
+		assert( isinstance( text, str ) )
 
 		self._qtWidget().setText( text )
 
@@ -100,9 +98,9 @@ class Button( GafferUI.Widget ) :
 
 	def setImage( self, imageOrImageFileName ) :
 
-		assert( isinstance( imageOrImageFileName, ( six.string_types, GafferUI.Image, type( None ) ) ) )
+		assert( isinstance( imageOrImageFileName, ( str, GafferUI.Image, type( None ) ) ) )
 
-		if isinstance( imageOrImageFileName, six.string_types ) :
+		if isinstance( imageOrImageFileName, str ) :
 			# Avoid our image getting parented to the wrong thing
 			# if our caller is in a `with container` block.
 			GafferUI.Widget._pushParent( None )

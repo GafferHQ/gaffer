@@ -36,7 +36,6 @@
 
 import imath
 import functools
-import six
 
 import IECore
 import IECoreScene
@@ -470,7 +469,7 @@ class _ShaderQueryFooter( GafferUI.PlugValueWidget ) :
 			Gaffer.Color3fPlug,
 			Gaffer.Color4fPlug,
 		] :
-			if isinstance( item, six.string_types ) :
+			if isinstance( item, str ) :
 				result.append( "/" + item, { "divider": True } )
 			else :
 				result.append(

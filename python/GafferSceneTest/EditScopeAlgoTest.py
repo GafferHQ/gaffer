@@ -36,7 +36,6 @@
 
 import math
 import unittest
-import six
 
 import imath
 
@@ -498,23 +497,23 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 		editScope["in"].setInput( light["out"] )
 		emptyKeys = editScope.keys()
 
-		with six.assertRaisesRegex( self, RuntimeError, 'Location "/bogus" does not exist' ) :
+		with self.assertRaisesRegex( RuntimeError, 'Location "/bogus" does not exist' ) :
 			GafferScene.EditScopeAlgo.acquireParameterEdit( editScope, "/bogus", "light", ( "", "intensity" ) )
 		self.assertEqual( editScope.keys(), emptyKeys )
 
-		with six.assertRaisesRegex( self, RuntimeError, 'Attribute "bogus" does not exist' ) :
+		with self.assertRaisesRegex( RuntimeError, 'Attribute "bogus" does not exist' ) :
 			GafferScene.EditScopeAlgo.acquireParameterEdit( editScope, "/light", "bogus", ( "", "intensity" ) )
 		self.assertEqual( editScope.keys(), emptyKeys )
 
-		with six.assertRaisesRegex( self, RuntimeError, 'Attribute "gl:visualiser:scale" is not a shader' ) :
+		with self.assertRaisesRegex( RuntimeError, 'Attribute "gl:visualiser:scale" is not a shader' ) :
 			GafferScene.EditScopeAlgo.acquireParameterEdit( editScope, "/light", "gl:visualiser:scale", ( "", "intensity" ) )
 		self.assertEqual( editScope.keys(), emptyKeys )
 
-		with six.assertRaisesRegex( self, RuntimeError, 'Shader "bogus" does not exist' ) :
+		with self.assertRaisesRegex( RuntimeError, 'Shader "bogus" does not exist' ) :
 			GafferScene.EditScopeAlgo.acquireParameterEdit( editScope, "/light", "light", ( "bogus", "intensity" ) )
 		self.assertEqual( editScope.keys(), emptyKeys )
 
-		with six.assertRaisesRegex( self, RuntimeError, 'Parameter "bogus" does not exist' ) :
+		with self.assertRaisesRegex( RuntimeError, 'Parameter "bogus" does not exist' ) :
 			GafferScene.EditScopeAlgo.acquireParameterEdit( editScope, "/light", "light", ( "", "bogus" ) )
 		self.assertEqual( editScope.keys(), emptyKeys )
 
@@ -891,15 +890,15 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 		editScope["in"].setInput( light["out"] )
 		emptyKeys = editScope.keys()
 
-		with six.assertRaisesRegex( self, RuntimeError, 'Location "/bogus" does not exist' ) :
+		with self.assertRaisesRegex( RuntimeError, 'Location "/bogus" does not exist' ) :
 			GafferScene.EditScopeAlgo.acquireAttributeEdit( editScope, "/bogus", "gl:visualiser:scale" )
 		self.assertEqual( editScope.keys(), emptyKeys )
 
-		with six.assertRaisesRegex( self, RuntimeError, 'Attribute "light" cannot be tweaked' ) :
+		with self.assertRaisesRegex( RuntimeError, 'Attribute "light" cannot be tweaked' ) :
 			GafferScene.EditScopeAlgo.acquireAttributeEdit( editScope, "/light", "light" )
 		self.assertEqual( editScope.keys(), emptyKeys )
 
-		with six.assertRaisesRegex( self, RuntimeError, 'Attribute "bogus" does not exist' ) :
+		with self.assertRaisesRegex( RuntimeError, 'Attribute "bogus" does not exist' ) :
 			GafferScene.EditScopeAlgo.acquireAttributeEdit( editScope, "/light", "bogus" )
 		self.assertEqual( editScope.keys(), emptyKeys )
 

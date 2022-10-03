@@ -41,7 +41,6 @@ import shutil
 import functools
 import datetime
 import re
-import six
 import subprocess
 import imath
 import inspect
@@ -1001,13 +1000,13 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 		with s.context() :
 
-			six.assertRaisesRegex( self, RuntimeError, "could not find a format writer for", s["w"].execute )
+			self.assertRaisesRegex( RuntimeError, "could not find a format writer for", s["w"].execute )
 
 			s["w"]["fileName"].setValue( self.temporaryDirectory() + "/test.tif" )
 			s["w"]["task"].execute()
 
 			os.chmod( self.temporaryDirectory() + "/test.tif", 0o444 )
-			six.assertRaisesRegex( self, RuntimeError, "Could not open", s["w"]["task"].execute )
+			self.assertRaisesRegex( RuntimeError, "Could not open", s["w"]["task"].execute )
 
 	def testWriteIntermediateFile( self ) :
 
@@ -1335,7 +1334,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		writer["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.exr" ) )
 		writer["channels"].setValue( "diffuse.[RGB]" )
 
-		with six.assertRaisesRegex( self, Gaffer.ProcessException, "No channels to write" ) :
+		with self.assertRaisesRegex( Gaffer.ProcessException, "No channels to write" ) :
 			writer["task"].execute()
 
 		self.assertFalse( os.path.exists( writer["fileName"].getValue() ) )
@@ -1741,7 +1740,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 				writer['openexr']['mode'].setValue( tiled )
 
 				if isDeep and len( reader["out"].viewNames() ) > 1 and isSinglePart:
-					six.assertRaisesRegex( self, Gaffer.ProcessException, '^ImageWriter.task : Cannot write views "left" and "right" both to same image part when dealing with deep images$', writer["task"].execute )
+					self.assertRaisesRegex( Gaffer.ProcessException, '^ImageWriter.task : Cannot write views "left" and "right" both to same image part when dealing with deep images$', writer["task"].execute )
 					continue
 				else:
 					writer["task"].execute()
@@ -1808,13 +1807,13 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		writer["dataTypeExpression"] = Gaffer.Expression()
 		writer["dataTypeExpression"].setExpression( 'parent["tiff"]["dataType"] = "uint8" if context.get( "imageWriter:channelName" ) == "R" else "uint16"' )
 
-		with six.assertRaisesRegex( self, Gaffer.ProcessException, "File format tiff does not support per-channel data types" ) :
+		with self.assertRaisesRegex( Gaffer.ProcessException, "File format tiff does not support per-channel data types" ) :
 			writer["task"].execute()
 
 		writer["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.dpx" ) )
 		writer["dataTypeExpression"].setExpression( 'parent["dpx"]["dataType"] = "uint8" if context.get( "imageWriter:channelName" ) == "R" else "uint16"' )
 
-		with six.assertRaisesRegex( self, Gaffer.ProcessException, "File format dpx does not support per-channel data types" ) :
+		with self.assertRaisesRegex( Gaffer.ProcessException, "File format dpx does not support per-channel data types" ) :
 			writer["task"].execute()
 
 		writePath = os.path.join( self.temporaryDirectory(), "test.exr" )

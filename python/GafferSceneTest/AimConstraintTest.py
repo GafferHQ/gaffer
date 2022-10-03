@@ -36,7 +36,6 @@
 
 import unittest
 import imath
-import six
 
 import IECore
 
@@ -85,7 +84,7 @@ class AimConstraintTest( GafferSceneTest.SceneTestCase ) :
 
 		# Test behaviour for missing target
 		plane1["name"].setValue( "targetX" )
-		with six.assertRaisesRegex( self, RuntimeError, 'AimConstraint.__constrainedTransform : Constraint target does not exist: "/group/target"' ):
+		with self.assertRaisesRegex( RuntimeError, 'AimConstraint.__constrainedTransform : Constraint target does not exist: "/group/target"' ):
 			aim["out"].fullTransform( "/group/constrained" )
 
 		aim["ignoreMissingTarget"].setValue( True )

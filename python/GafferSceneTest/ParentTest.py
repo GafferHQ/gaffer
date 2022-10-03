@@ -36,7 +36,6 @@
 
 import os.path
 import inspect
-import six
 
 import imath
 
@@ -827,14 +826,14 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 		spreadsheet["rows"][2]["name"].setValue( "/group/cube" )
 		spreadsheet["rows"][2]["cells"]["destination"]["value"].setValue( "/newOuterGroup/newInnerGroup" )
 
-		with six.assertRaisesRegex( self, Gaffer.ProcessException, 'Destination "/newOuterGroup" contains a nested destination' ) :
+		with self.assertRaisesRegex( Gaffer.ProcessException, 'Destination "/newOuterGroup" contains a nested destination' ) :
 			parent["out"].childNames( "/newOuterGroup" )
 
 		# Swap order, so they are likely visited the other way round when building the branches tree.
 		spreadsheet["rows"][1]["cells"]["destination"]["value"].setValue( "/newOuterGroup/newInnerGroup" )
 		spreadsheet["rows"][2]["cells"]["destination"]["value"].setValue( "/newOuterGroup" )
 
-		with six.assertRaisesRegex( self, Gaffer.ProcessException, 'Destination "/newOuterGroup" contains a nested destination' ) :
+		with self.assertRaisesRegex( Gaffer.ProcessException, 'Destination "/newOuterGroup" contains a nested destination' ) :
 			parent["out"].childNames( "/newOuterGroup" )
 
 	def testMultipleNewDestinationsBelowOneParent( self ) :

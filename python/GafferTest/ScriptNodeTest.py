@@ -44,7 +44,6 @@ import shutil
 import stat
 import inspect
 import functools
-import six
 import imath
 
 import IECore
@@ -124,13 +123,13 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		self.assertTrue( cs[1][0].isSame( s ) )
 		self.assertTrue( cs[1][1].isSame( s["n2"] ) )
 
-		with six.assertRaisesRegex( self, Exception, "Node is not a child of this script" ) :
+		with self.assertRaisesRegex( Exception, "Node is not a child of this script" ) :
 			s.setFocus( n3 )
 		self.assertEqual( set( f ), { s["n2"] } )
 
 		self.assertEqual( len( cs ), 2 )
 
-		with six.assertRaisesRegex( self, Exception, "Python argument types in.*" ) :
+		with self.assertRaisesRegex( Exception, "Python argument types in.*" ) :
 			s.setFocus( Gaffer.Plug() )
 		self.assertEqual( set( f ), { s["n2"] } )
 
@@ -325,7 +324,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		n = Gaffer.ScriptNode()
 
 		n.execute( "a = 10" )
-		six.assertRaisesRegex( self, Exception, "NameError: name 'a' is not defined", n.execute, "a * 10" )
+		self.assertRaisesRegex( Exception, "NameError: name 'a' is not defined", n.execute, "a * 10" )
 
 	def testClassScope( self ) :
 
@@ -1169,7 +1168,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 	def testExecuteExceptionsIncludeLineNumber( self ) :
 
 		s = Gaffer.ScriptNode()
-		six.assertRaisesRegex( self, RuntimeError, "Line 2 .* name 'iDontExist' is not defined", s.execute, "a = 10\na=iDontExist" )
+		self.assertRaisesRegex( RuntimeError, "Line 2 .* name 'iDontExist' is not defined", s.execute, "a = 10\na=iDontExist" )
 
 	def testFileVersioning( self ) :
 
@@ -1291,7 +1290,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 	def testLineNumberForExecutionSyntaxError( self ) :
 
 		s = Gaffer.ScriptNode()
-		six.assertRaisesRegex( self,
+		self.assertRaisesRegex(
 			IECore.Exception,
 			"^Line 2",
 			s.execute,
@@ -1316,7 +1315,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 
 		for method in ( s.load, functools.partial( s.executeFile, fileName ) ) :
 
-			six.assertRaisesRegex( self,
+			self.assertRaisesRegex(
 				RuntimeError,
 				"Line 2 of " + fileName + " : NameError: name 'iDontExist' is not defined",
 				method
@@ -1440,7 +1439,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 			)
 		) )
 
-		six.assertRaisesRegex( self, RuntimeError, "iAmAnError", script.paste )
+		self.assertRaisesRegex( RuntimeError, "iAmAnError", script.paste )
 		self.assertEqual( len( script.children( Gaffer.Node ) ), 0 )
 
 		with IECore.CapturingMessageHandler() as mh :

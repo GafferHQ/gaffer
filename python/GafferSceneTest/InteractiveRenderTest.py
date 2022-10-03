@@ -39,8 +39,6 @@ import inspect
 import unittest
 import imath
 
-import six
-
 import IECore
 import IECoreScene
 import IECoreImage
@@ -2084,7 +2082,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		r["renderer"].setInput( None )
 
 		s = GafferTest.StringInOutNode()
-		with six.assertRaisesRegex( self, Exception, 'Plug "%s.renderer" rejects input "StringInOutNode.out".' % r.getName() ) :
+		with self.assertRaisesRegex( Exception, 'Plug "%s.renderer" rejects input "StringInOutNode.out".' % r.getName() ) :
 			r["renderer"].setInput( s["out"] )
 
 		r = self._createInteractiveRender()
@@ -2094,7 +2092,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		r["state"].setInput( None )
 
 		a = GafferTest.AddNode()
-		with six.assertRaisesRegex( self, Exception, 'Plug "%s.state" rejects input "AddNode.sum".' % r.getName() ) :
+		with self.assertRaisesRegex( Exception, 'Plug "%s.state" rejects input "AddNode.sum".' % r.getName() ) :
 			r["state"].setInput( a["sum"] )
 
 	def tearDown( self ) :

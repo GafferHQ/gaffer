@@ -37,7 +37,6 @@
 import unittest
 import imath
 import inspect
-import six
 
 import IECore
 
@@ -122,7 +121,7 @@ class PointConstraintTest( GafferSceneTest.SceneTestCase ) :
 		constraint["xEnabled"].setValue( True )
 		constraint["yEnabled"].setValue( True )
 		constraint["zEnabled"].setValue( True )
-		with six.assertRaisesRegex( self, RuntimeError, 'PointConstraint.__constrainedTransform : Constraint target does not exist: "/group/target"' ):
+		with self.assertRaisesRegex( RuntimeError, 'PointConstraint.__constrainedTransform : Constraint target does not exist: "/group/target"' ):
 			constraint["out"].fullTransform( "/group/constrained" )
 
 		constraint["ignoreMissingTarget"].setValue( True )

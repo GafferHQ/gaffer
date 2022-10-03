@@ -35,7 +35,6 @@
 ##########################################################################
 
 import unittest
-import six
 
 import IECore
 
@@ -134,7 +133,7 @@ class CopyPrimitiveVariablesTest( GafferSceneTest.SceneTestCase ) :
 
 		bigSphere["divisions"][0].setValue( 100 )
 
-		with six.assertRaisesRegex( self, RuntimeError, 'Cannot copy .* from "/sphere" to "/sphere" because source and destination primitives have different topology' ) :
+		with self.assertRaisesRegex( RuntimeError, 'Cannot copy .* from "/sphere" to "/sphere" because source and destination primitives have different topology' ) :
 			copy["out"].object( "/sphere" )
 
 	def testMismatchedHierarchy( self ) :

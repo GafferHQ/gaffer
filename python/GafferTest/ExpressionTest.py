@@ -40,7 +40,6 @@ import inspect
 import unittest
 import imath
 import re
-import six
 
 import IECore
 
@@ -900,7 +899,7 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["e"] = Gaffer.Expression()
-		six.assertRaisesRegex( self, RuntimeError, ".*does not exist.*", s["e"].setExpression, 'parent["notANode"]["notAPlug"] = 2' )
+		self.assertRaisesRegex( RuntimeError, ".*does not exist.*", s["e"].setExpression, 'parent["notANode"]["notAPlug"] = 2' )
 
 	def testRemoveOneOutputOfTwo( self ) :
 
@@ -1150,7 +1149,7 @@ class ExpressionTest( GafferTest.TestCase ) :
 
 		with Gaffer.UndoScope( s ) :
 
-			six.assertRaisesRegex( self,
+			self.assertRaisesRegex(
 				Exception,
 				"SyntaxError",
 				s["e"].setExpression,
@@ -1174,7 +1173,7 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s["n"]["user"]["p"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
 		s["e"] = Gaffer.Expression()
-		six.assertRaisesRegex( self,
+		self.assertRaisesRegex(
 			RuntimeError,
 			"Cannot both read from and write to plug \"n.user.p\"",
 			s["e"].setExpression,
@@ -1189,7 +1188,7 @@ class ExpressionTest( GafferTest.TestCase ) :
 
 		s["e"] = Gaffer.Expression()
 		for language in ( "", "latin" ) :
-			six.assertRaisesRegex( self, RuntimeError, "Failed to create engine", s["e"].setExpression, "parent.n.user.p = 10", language )
+			self.assertRaisesRegex( RuntimeError, "Failed to create engine", s["e"].setExpression, "parent.n.user.p = 10", language )
 
 	def testContextIsReadOnly( self ) :
 
@@ -1208,7 +1207,7 @@ class ExpressionTest( GafferTest.TestCase ) :
 			( "context.setTime( 10 )", "AttributeError" ),
 		] :
 			s["e"].setExpression( mutationAttempt + """\nparent["n"]["user"]["p"] = 100""" )
-			six.assertRaisesRegex( self, RuntimeError, expectedError, s["n"]["user"]["p"].getValue )
+			self.assertRaisesRegex( RuntimeError, expectedError, s["n"]["user"]["p"].getValue )
 
 	def testDeleteCompoundDataPlug( self ) :
 
@@ -1462,14 +1461,14 @@ class ExpressionTest( GafferTest.TestCase ) :
 
 		s["e"] = Gaffer.Expression()
 		s["e"].setExpression( "parent['n']['user']['p'] = None" )
-		six.assertRaisesRegex( self,
+		self.assertRaisesRegex(
 			Gaffer.ProcessException,
 			".*TypeError: Unsupported type for result \"None\" for expression output \"n.user.p\"",
 			s["n"]["user"]["p"].getValue
 		)
 
 		s["e"].setExpression( "import math; parent['n']['user']['p'] = math" )
-		six.assertRaisesRegex( self,
+		self.assertRaisesRegex(
 			Gaffer.ProcessException,
 			".*TypeError: Unsupported type for result \"<module 'math' from .*\" for expression output \"n.user.p\"",
 			s["n"]["user"]["p"].getValue

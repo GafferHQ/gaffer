@@ -36,7 +36,6 @@
 ##########################################################################
 
 import functools
-import six
 import imath
 
 from collections import namedtuple, OrderedDict
@@ -208,7 +207,7 @@ class ImageMetadataColumn( Column ) :
 
 		Column.__init__( self, title )
 
-		if isinstance( nameOrNames, six.string_types ) :
+		if isinstance( nameOrNames, str ) :
 			nameOrNames = [ nameOrNames, ]
 
 		self.__names = nameOrNames
@@ -236,7 +235,7 @@ class ContextVariableColumn( ImageMetadataColumn ) :
 
 	def __init__( self, title, nameOrNames, defaultValue = None ) :
 
-		if isinstance( nameOrNames, six.string_types ) :
+		if isinstance( nameOrNames, str ) :
 			nameOrNames = [ nameOrNames, ]
 
 		names = [ "gaffer:context:%s" % name for name in nameOrNames ]

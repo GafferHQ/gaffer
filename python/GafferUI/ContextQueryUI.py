@@ -36,7 +36,6 @@
 
 import imath
 import functools
-import six
 
 import IECore
 
@@ -352,7 +351,7 @@ class _ContextQueryFooter( GafferUI.PlugValueWidget ) :
 			Gaffer.IntVectorDataPlug( defaultValue = IECore.IntVectorData() ),
 			Gaffer.StringVectorDataPlug( defaultValue = IECore.StringVectorData() )
 		] :
-			if isinstance( item, six.string_types ) :
+			if isinstance( item, str ) :
 				result.append( "/" + item, { "divider": True } )
 			else :
 				name = type( item ).__name__.replace( "Plug", "" )

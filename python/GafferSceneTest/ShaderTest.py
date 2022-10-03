@@ -36,7 +36,6 @@
 
 import unittest
 import imath
-import six
 
 import IECore
 
@@ -209,8 +208,8 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		# And a hard error when we attempt to actually generate
 		# the shader network.
 		for node in ( n1, n2, n3 ) :
-			six.assertRaisesRegex( self, RuntimeError, "cycle", node.attributesHash )
-			six.assertRaisesRegex( self, RuntimeError, "cycle", node.attributes )
+			self.assertRaisesRegex( RuntimeError, "cycle", node.attributesHash )
+			self.assertRaisesRegex( RuntimeError, "cycle", node.attributes )
 
 	def testSwitch( self ) :
 

@@ -37,7 +37,6 @@
 import os
 import unittest
 import imath
-import six
 
 import IECore
 
@@ -274,7 +273,7 @@ class ImageStatsTest( GafferImageTest.ImageTestCase ) :
 					if result is None:
 						# The result when contextView and queryView are both not overridden is an error,
 						# views has just left and right views, so it's illegal to ask for "default".
-						with six.assertRaisesRegex( self, Gaffer.ProcessException, 'View does not exist "default"' ):
+						with self.assertRaisesRegex( Gaffer.ProcessException, 'View does not exist "default"' ):
 							self.assertEqual( s["max"].getValue(), result )
 					else:
 						self.assertEqual( s["max"].getValue(), result )

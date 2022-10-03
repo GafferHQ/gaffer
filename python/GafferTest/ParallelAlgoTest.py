@@ -34,10 +34,11 @@
 #
 ##########################################################################
 
-import six
 import threading
 import unittest
 import timeit
+import queue
+import _thread
 
 import IECore
 
@@ -53,7 +54,7 @@ class ParallelAlgoTest( GafferTest.TestCase ) :
 		def __enter__( self ) :
 
 			self.__assertDone = False
-			self.__queue = six.moves.queue.Queue()
+			self.__queue = queue.Queue()
 			Gaffer.ParallelAlgo.pushUIThreadCallHandler( self.__callOnUIThread )
 			return self
 
@@ -63,7 +64,7 @@ class ParallelAlgoTest( GafferTest.TestCase ) :
 			while True :
 				try :
 					f = self.__queue.get( block = False )
-				except six.moves.queue.Empty:
+				except queue.Empty:
 					return
 				if self.__assertDone :
 					raise AssertionError( "UIThread call queue not empty" )
@@ -79,7 +80,7 @@ class ParallelAlgoTest( GafferTest.TestCase ) :
 
 			try :
 				f = self.__queue.get( block = True, timeout = timeout )
-			except six.moves.queue.Empty :
+			except queue.Empty :
 				raise AssertionError( "UIThread call not made within {} seconds".format( timeout ) )
 
 			f()
@@ -100,7 +101,7 @@ class ParallelAlgoTest( GafferTest.TestCase ) :
 			while elapsed < time:
 				try:
 					f = self.__queue.get( block = True, timeout = time - elapsed )
-				except six.moves.queue.Empty:
+				except queue.Empty:
 					return
 
 				f()
@@ -113,7 +114,7 @@ class ParallelAlgoTest( GafferTest.TestCase ) :
 		def uiThreadFunction() :
 
 			s.setName( "test" )
-			s.uiThreadId = six.moves._thread.get_ident()
+			s.uiThreadId = _thread.get_ident()
 
 		with self.UIThreadCallHandler() as h :
 
@@ -126,7 +127,7 @@ class ParallelAlgoTest( GafferTest.TestCase ) :
 			h.assertDone()
 
 		self.assertEqual( s.getName(), "test" )
-		self.assertEqual( s.uiThreadId, six.moves._thread.get_ident() )
+		self.assertEqual( s.uiThreadId, _thread.get_ident() )
 
 	def testNestedUIThreadCallHandler( self ) :
 
@@ -138,12 +139,12 @@ class ParallelAlgoTest( GafferTest.TestCase ) :
 		def uiThreadFunction1() :
 
 			s.setName( "test" )
-			s.uiThreadId1 = six.moves._thread.get_ident()
+			s.uiThreadId1 = _thread.get_ident()
 
 		def uiThreadFunction2() :
 
 			s["fileName"].setValue( "test" )
-			s.uiThreadId2 = six.moves._thread.get_ident()
+			s.uiThreadId2 = _thread.get_ident()
 
 		with self.UIThreadCallHandler() as h1 :
 
@@ -164,9 +165,9 @@ class ParallelAlgoTest( GafferTest.TestCase ) :
 				h2.assertDone()
 
 		self.assertEqual( s.getName(), "test" )
-		self.assertEqual( s.uiThreadId1, six.moves._thread.get_ident() )
+		self.assertEqual( s.uiThreadId1, _thread.get_ident() )
 		self.assertEqual( s["fileName"].getValue(), "test" )
-		self.assertEqual( s.uiThreadId2, six.moves._thread.get_ident() )
+		self.assertEqual( s.uiThreadId2, _thread.get_ident() )
 
 		t1.join()
 		t2.join()

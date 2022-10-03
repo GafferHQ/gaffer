@@ -36,7 +36,6 @@
 
 import os
 import unittest
-import six
 import imath
 
 import IECore
@@ -442,10 +441,10 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		self.assertNotEqual( GafferImage.ImageAlgo.imageHash( merge["out"] ), GafferImage.ImageAlgo.imageHash( flat["out"] ) )
 
 		merge["in"][0].setInput( deep["out"] )
-		six.assertRaisesRegex( self, RuntimeError, 'Deep data not supported in input "in.in0"', GafferImage.ImageAlgo.image, merge["out"] )
+		self.assertRaisesRegex( RuntimeError, 'Deep data not supported in input "in.in0"', GafferImage.ImageAlgo.image, merge["out"] )
 		merge["in"][0].setInput( flat["out"] )
 		merge["in"][1].setInput( deep["out"] )
-		six.assertRaisesRegex( self, RuntimeError, 'Deep data not supported in input "in.in1"', GafferImage.ImageAlgo.image, merge["out"] )
+		self.assertRaisesRegex( RuntimeError, 'Deep data not supported in input "in.in1"', GafferImage.ImageAlgo.image, merge["out"] )
 
 	def testDefaultFormat( self ) :
 
@@ -834,7 +833,7 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( GafferImage.ImageAlgo.tiles( merge["out"], True, "right" ), GafferImage.ImageAlgo.tiles( referenceMerge["out"] ) )
 
 		# No default view in first input
-		with six.assertRaisesRegex( self, RuntimeError, '.*No view "default"' ):
+		with self.assertRaisesRegex( RuntimeError, '.*No view "default"' ):
 			GafferImage.ImageAlgo.tiles( merge["out"], True, "default" )
 
 		# Merge stereo

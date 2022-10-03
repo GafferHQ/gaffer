@@ -42,7 +42,6 @@ import subprocess
 import threading
 import time
 import imath
-import six
 
 import IECore
 
@@ -882,7 +881,7 @@ class ValuePlugTest( GafferTest.TestCase ) :
 			"""
 		) )
 
-		with six.assertRaisesRegex( self, BaseException, "Foo" ):
+		with self.assertRaisesRegex( BaseException, "Foo" ):
 			GafferTest.parallelGetValue( m["product"], 10000, "testVar" )
 
 	def testCancellationOfSecondGetValueCall( self ) :

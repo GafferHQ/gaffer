@@ -38,7 +38,6 @@ import weakref
 import functools
 import types
 import re
-import six
 import collections
 import imath
 import inspect
@@ -248,7 +247,7 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 
 			widgetClass = MetadataWidget.BoolMetadataWidget
 
-		elif isinstance( defaultValue, six.string_types ) :
+		elif isinstance( defaultValue, str ) :
 
 			widgetClass = MetadataWidget.StringMetadataWidget
 
@@ -311,7 +310,7 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 		if selection is None or isinstance( selection, Gaffer.Plug ) :
 			self.__plugEditor.setPlug( selection )
 			self.__plugAndSectionEditorsContainer.setCurrent( self.__plugEditor )
-		elif isinstance( selection, six.string_types ) :
+		elif isinstance( selection, str ) :
 			self.__plugEditor.setPlug( None )
 			self.__sectionEditor.setSection( selection )
 			self.__plugAndSectionEditorsContainer.setCurrent( self.__sectionEditor )
@@ -677,7 +676,7 @@ class _PlugListing( GafferUI.Widget ) :
 				self.__pathListing.setSelectedPaths( [] )
 			else :
 				self.__pathListing.setSelectedPaths( [ path ] )
-		elif isinstance( selection, six.string_types ) :
+		elif isinstance( selection, str ) :
 			path = self.__pathListing.getPath().copy()
 			path[:] = selection.split( "." )
 			self.__pathListing.setSelectedPaths( [ path ] )
@@ -1288,8 +1287,7 @@ class _PresetsEditor( GafferUI.Widget ) :
 		# Sanitize name. Strictly speaking we should only need to replace '/',
 		# but PathListingWidget has a bug handling wildcards in selections, so
 		# we replace those too.
-		maketrans = str.maketrans if six.PY3 else string.maketrans
-		newName = newName.translate( maketrans( "/*?\\[", "_____" ) )
+		newName = newName.translate( str.maketrans( "/*?\\[", "_____" ) )
 
 		items = self.__pathListing.getPath().dict().items()
 		with Gaffer.Signals.BlockedConnection( self.__plugMetadataChangedConnection ) :
@@ -1653,7 +1651,7 @@ class _SectionEditor( GafferUI.Widget ) :
 
 	def setSection( self, section ) :
 
-		assert( isinstance( section, six.string_types ) )
+		assert( isinstance( section, str ) )
 
 		self.__section = section
 		self.__nameWidget.setText( section.rpartition( "." )[-1] )

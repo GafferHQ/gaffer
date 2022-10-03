@@ -35,7 +35,6 @@
 ##########################################################################
 
 import os
-import six
 
 import imath
 
@@ -88,9 +87,9 @@ class TransformToolTest( GafferUITest.TestCase ) :
 		self.assertEqual( selection.upstreamPath(), "/plane" )
 		self.assertEqual( selection.upstreamContext()["scene:path"], IECore.InternedStringVectorData( [ "plane" ] ) )
 		self.assertFalse( selection.editable() )
-		with six.assertRaisesRegex( self, RuntimeError, "Selection is not editable" ) :
+		with self.assertRaisesRegex( RuntimeError, "Selection is not editable" ) :
 			selection.editTarget()
-		with six.assertRaisesRegex( self, RuntimeError, "Selection is not editable" ) :
+		with self.assertRaisesRegex( RuntimeError, "Selection is not editable" ) :
 			selection.transformSpace()
 
 	def testSelectionEditScopes( self ) :
@@ -272,7 +271,7 @@ class TransformToolTest( GafferUITest.TestCase ) :
 		selection = GafferSceneUI.TransformTool.Selection( editScope["out"], "/plane2", Gaffer.Context(), editScope )
 		self.assertFalse( selection.editable() )
 		self.assertEqual( selection.warning(), "\"EditScope\" is locked" )
-		with six.assertRaisesRegex( self, RuntimeError, "Selection is not editable" ) :
+		with self.assertRaisesRegex( RuntimeError, "Selection is not editable" ) :
 			self.assertIsNone( selection.acquireTransformEdit() )
 
 		Gaffer.MetadataAlgo.setReadOnly( editScope, False )
@@ -287,7 +286,7 @@ class TransformToolTest( GafferUITest.TestCase ) :
 		selection = GafferSceneUI.TransformTool.Selection( editScope["out"], "/plane3", Gaffer.Context(), editScope )
 		self.assertFalse( selection.editable() )
 		self.assertEqual( selection.warning(), "\"EditScope.TransformEdits.edits\" is locked" )
-		with six.assertRaisesRegex( self, RuntimeError, "Selection is not editable" ) :
+		with self.assertRaisesRegex( RuntimeError, "Selection is not editable" ) :
 			self.assertIsNone( selection.acquireTransformEdit() )
 
 	def testDontEditUpstreamOfReference( self ) :

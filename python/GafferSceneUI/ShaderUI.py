@@ -40,7 +40,6 @@ import string
 import fnmatch
 import functools
 import imath
-import six
 from collections import deque
 
 import IECore
@@ -251,10 +250,7 @@ def hideShaders( pathMatcher ) :
 def __nodeName( shaderName ) :
 
 	nodeName = os.path.split( shaderName )[-1]
-	if six.PY3 :
-		nodeName = nodeName.translate( str.maketrans( ".-", "__" ) )
-	else :
-		nodeName = nodeName.translate( string.maketrans( ".-", "__" ) )
+	nodeName = nodeName.translate( str.maketrans( ".-", "__" ) )
 
 	return nodeName
 

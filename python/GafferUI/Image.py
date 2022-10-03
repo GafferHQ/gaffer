@@ -35,7 +35,6 @@
 ##########################################################################
 
 import os
-import six
 import imath
 
 import IECore
@@ -60,7 +59,7 @@ class Image( GafferUI.Widget ) :
 		# the same size.
 		self._qtWidget().setSizePolicy( QtWidgets.QSizePolicy( QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed ) )
 
-		if isinstance( imagePrimitiveOrFileName, six.string_types ) :
+		if isinstance( imagePrimitiveOrFileName, str ) :
 			pixmap = self._qtPixmapFromFile( str( imagePrimitiveOrFileName ) )
 		else :
 			pixmap = self._qtPixmapFromImagePrimitive( imagePrimitiveOrFileName )

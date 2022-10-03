@@ -38,7 +38,6 @@ import unittest
 import os
 
 import imath
-import six
 
 import IECore
 
@@ -77,7 +76,7 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.MetadataAlgo.readOnly( n ), True )
 		self.assertEqual( Gaffer.MetadataAlgo.readOnly( n["op1"] ), True )
 
-		with six.assertRaisesRegex( self, Exception, r"did not match C\+\+ signature" ) :
+		with self.assertRaisesRegex( Exception, r"did not match C\+\+ signature" ) :
 			Gaffer.MetadataAlgo.readOnly( None )
 
 	def testReadOnlyReason( self ) :
@@ -116,7 +115,7 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 		Gaffer.MetadataAlgo.setReadOnly( b["b"]["n"]["op1"], False )
 		self.assertIsNone( Gaffer.MetadataAlgo.readOnlyReason( n["op1"] ) )
 
-		with six.assertRaisesRegex( self, Exception, r"did not match C\+\+ signature" ) :
+		with self.assertRaisesRegex( Exception, r"did not match C\+\+ signature" ) :
 			Gaffer.MetadataAlgo.readOnlyReason( None )
 
 	def testChildNodesAreReadOnly( self ) :

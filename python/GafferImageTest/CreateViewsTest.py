@@ -38,7 +38,6 @@ import unittest
 import imath
 import inspect
 import os
-import six
 
 import IECore
 
@@ -121,7 +120,7 @@ class CreateViewsTest( GafferImageTest.ImageTestCase ) :
 		# Test enable/disable
 		createViews["views"]["view0"]["enabled"].setValue( False )
 		self.assertEqual( createViews["out"].viewNames(), IECore.StringVectorData( [ "right", "blah" ] ) )
-		with six.assertRaisesRegex( self, Gaffer.ProcessException, ".*CreateViews : Not outputting view \"left\"."):
+		with self.assertRaisesRegex( Gaffer.ProcessException, ".*CreateViews : Not outputting view \"left\"."):
 			createViews["out"].format( "left" )
 		createViews["views"]["view0"]["enabled"].setValue( True )
 		self.assertEqual( createViews["out"].viewNames(), IECore.StringVectorData( [ "left", "right", "blah" ] ) )
@@ -180,7 +179,7 @@ class CreateViewsTest( GafferImageTest.ImageTestCase ) :
 		stereoReader["fileName"].setValue( self.__stereoFilePath )
 		createViews["views"][0]["value"].setInput( stereoReader["out"] )
 
-		with six.assertRaisesRegex( self, Gaffer.ProcessException, ".*CreateViews : Inputs must have just a default view."):
+		with self.assertRaisesRegex( Gaffer.ProcessException, ".*CreateViews : Inputs must have just a default view."):
 			createViews["out"].format( "right" )
 
 	def testInputToExpressionDrivingEnabledPlug( self ) :

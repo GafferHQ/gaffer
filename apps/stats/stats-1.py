@@ -40,7 +40,6 @@ import sys
 import time
 import tempfile
 import collections
-import six
 
 if sys.platform != "win32":
 	import resource
@@ -718,22 +717,17 @@ class stats( Gaffer.Application ) :
 
 class _Timer( object ) :
 
-	if six.PY3 :
-		__cpuClock = time.process_time
-	else :
-		__cpuClock = time.clock
-
 	def __enter__( self ) :
 
 		self.__time = time.time()
-		self.__cpuTime = self.__cpuClock()
+		self.__cpuTime = time.process_time()
 
 		return self
 
 	def __exit__( self, type, value, traceBack ) :
 
 		self.__time = time.time() - self.__time
-		self.__cpuTime = self.__cpuClock() - self.__cpuTime
+		self.__cpuTime = time.process_time() - self.__cpuTime
 
 	def __str__( self ) :
 

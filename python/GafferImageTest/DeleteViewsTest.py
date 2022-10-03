@@ -37,7 +37,6 @@
 import unittest
 import imath
 import os
-import six
 
 import IECore
 

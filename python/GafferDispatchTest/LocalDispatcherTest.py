@@ -38,7 +38,6 @@ import os
 import stat
 import shutil
 import unittest
-import six
 import time
 import inspect
 import functools
@@ -493,7 +492,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		dispatcher = self.__createLocalDispatcher()
 
 		# fails because n2 doesn't have a valid fileName
-		six.assertRaisesRegex( self, RuntimeError, "No such file or directory", functools.partial( dispatcher.dispatch, [ s["n1"] ] ) )
+		self.assertRaisesRegex( RuntimeError, "No such file or directory", functools.partial( dispatcher.dispatch, [ s["n1"] ] ) )
 
 		# it still cleans up the JobPool
 		self.assertEqual( len(dispatcher.jobPool().jobs()), 0 )
@@ -773,22 +772,20 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		d["framesMode"].setValue( d.FramesMode.CustomRange )
 		d["frameRange"].setValue( "1-1000" )
 
-		clock = time.process_time if six.PY3 else time.clock
-
-		t = clock()
+		t = time.process_time()
 		d.dispatch( [ lastTask ] )
 		timeLimit = 6
 		if Gaffer.isDebug():
 			timeLimit *= 2
-		self.assertLess( clock() - t, timeLimit )
+		self.assertLess( time.process_time() - t, timeLimit )
 
 		d["executeInBackground"].setValue( True )
 
 		d.dispatch( [ lastTask ] )
 
-		t = clock()
+		t = time.process_time()
 		d.jobPool().jobs()[0].kill()
-		self.assertLess( clock() - t, 1 )
+		self.assertLess( time.process_time() - t, 1 )
 
 		d.jobPool().waitForAll()
 

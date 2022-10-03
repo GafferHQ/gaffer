@@ -44,7 +44,6 @@ import shutil
 import tempfile
 import traceback
 import functools
-import six
 
 import IECore
 
@@ -96,23 +95,11 @@ class TestCase( unittest.TestCase ) :
 		# shutdown tests that are run when the test application
 		# exits.
 
-		if six.PY2 :
-
-			if "_ExpectedFailure" in str( sys.exc_info()[0] ) :
-				# the expected failure exception in the unittest module
-				# unhelpfully also hangs on to exceptions, so we remove
-				# that before calling exc_clear().
-				sys.exc_info()[1].exc_info = ( None, None, None )
-
-			sys.exc_clear()
-
-		else :
-
-			if self._outcome.expectedFailure is not None :
-				# Clear the references to local variables in
-				# the traceback associated with the expected
-				# failure.
-				traceback.clear_frames( self._outcome.expectedFailure[1].__traceback__ )
+		if self._outcome.expectedFailure is not None :
+			# Clear the references to local variables in
+			# the traceback associated with the expected
+			# failure.
+			traceback.clear_frames( self._outcome.expectedFailure[1].__traceback__ )
 
 		if self.__temporaryDirectory is not None :
 			shutil.rmtree( self.__temporaryDirectory )

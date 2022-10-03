@@ -35,7 +35,7 @@
 #
 ##########################################################################
 
-import six
+import io
 import sys
 import unittest
 import warnings
@@ -447,7 +447,7 @@ class WindowTest( GafferUITest.TestCase ) :
 			# an already-deleted QObject, causing PySide to print an exception to
 			# `stderr`.
 
-			tmpStdErr = six.moves.cStringIO()
+			tmpStdErr = io.StringIO()
 			sys.stderr = tmpStdErr
 			try :
 				del child

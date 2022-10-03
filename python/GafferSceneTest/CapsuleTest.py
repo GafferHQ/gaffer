@@ -36,7 +36,6 @@
 
 import inspect
 import unittest
-import six
 
 import IECore
 

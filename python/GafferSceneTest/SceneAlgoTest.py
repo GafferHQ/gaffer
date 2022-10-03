@@ -37,7 +37,6 @@
 import imath
 import os
 import unittest
-import six
 
 import IECore
 
@@ -421,7 +420,7 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 	def testHistoryWithInvalidPlug( self ) :
 
 		plane = GafferScene.Plane()
-		with six.assertRaisesRegex( self, RuntimeError, "is not a child of a ScenePlug" ) :
+		with self.assertRaisesRegex( RuntimeError, "is not a child of a ScenePlug" ) :
 			GafferScene.SceneAlgo.history( plane["name"], "/plane" )
 
 	def testHistoryIncludesConnections( self ) :
@@ -1453,7 +1452,7 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		# Fail while `localise` and `ignoreMissing` are off
 
-		with six.assertRaisesRegex( self, RuntimeError, "Cannot apply tweak with mode Replace to \"b\" : This parameter does not exist" ) :
+		with self.assertRaisesRegex( RuntimeError, "Cannot apply tweak with mode Replace to \"b\" : This parameter does not exist" ) :
 			history = GafferScene.SceneAlgo.history( tweaks["out"]["attributes"], "/outer/inner/plane" )
 			GafferScene.SceneAlgo.attributeHistory( history, "b" )
 

@@ -38,7 +38,7 @@
 import unittest
 import os
 import glob
-import six
+import urllib
 
 import IECore
 
@@ -56,7 +56,7 @@ class AboutTest( GafferTest.TestCase ) :
 				self.assertTrue( os.path.exists( f ), "License file \"{0}\" does not exist".format( f ) )
 
 			if "source" in d :
-				self.assertTrue( six.moves.urllib.request.urlopen( d["source"] ) )
+				self.assertTrue( urllib.request.urlopen( d["source"] ) )
 
 # Image Engine internal builds don't package all the dependencies with
 # Gaffer, so the license tests above would fail. We try to detect such

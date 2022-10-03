@@ -38,7 +38,6 @@ import unittest
 import imath
 import os
 import random
-import six
 
 import IECore
 
@@ -123,7 +122,7 @@ class FormatQueryTest( GafferImageTest.ImageTestCase ) :
 					if result is None:
 						# The result when contextView and queryView are both not overridden is an error,
 						# views has just left and right views, so it's illegal to ask for "default".
-						with six.assertRaisesRegex( self, Gaffer.ProcessException, 'View does not exist "default"' ):
+						with self.assertRaisesRegex( Gaffer.ProcessException, 'View does not exist "default"' ):
 							formatQuery["format"]["displayWindow"]["max"].getValue()
 					else:
 						self.assertEqual( formatQuery["format"]["displayWindow"]["max"].getValue(), result )
