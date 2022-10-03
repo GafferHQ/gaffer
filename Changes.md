@@ -1,4 +1,4 @@
-1.0.x.x (relative to 1.0.5.1)
+1.0.6.0 (relative to 1.0.5.1)
 =======
 
 Improvements
