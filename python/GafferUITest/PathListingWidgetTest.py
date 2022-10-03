@@ -1054,9 +1054,15 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 			path = path1,
 			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree
 		)
-		_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( widget._qtWidget() ) )
 
-		self.__expandModel( widget._qtWidget().model(), depth = 4 )
+		# Not calling `_pathListingWidgetAttachTester()` for this test, as it
+		# queries child items that would push us past our expected expansion depth.
+		expansionDepth = 4
+		self.__expandModel( widget._qtWidget().model(), depth = expansionDepth )
+		self.assertEqual(
+			max( len( p[1:].split( "/" ) ) for p in path1.visitedPaths.paths() ),
+			expansionDepth
+		)
 
 		# Replace with a new path, to force the PathModel into evaluating
 		# it to see if there are any changes. The PathModel should only
