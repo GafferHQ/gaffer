@@ -265,5 +265,11 @@ class TextTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertNotEqual( shadowTile, tile )
 
+	def testNoSerialisationOfInternalConnections( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["text"] = GafferImage.Text()
+		self.assertNotIn( "setInput", script.serialise() )
+
 if __name__ == "__main__":
 	unittest.main()

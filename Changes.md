@@ -407,6 +407,17 @@ Build
   - TBB : Updated to version 2020.3.
   - USD : Updated to version 21.11.
 
+0.61.14.7 (relative to 0.61.14.6)
+=========
+
+Fixes
+-----
+
+- Shape : Fixed unnecessary serialisation of internal connection.
+- ScaleTool :
+  - Fixed oversensitive scaling when zoomed out in the Viewer.
+  - Prevented uniform scaling from becoming negative.
+
 0.61.14.6 (relative to 0.61.14.5)
 =========
 
