@@ -7836,7 +7836,7 @@
          transform="translate(4e-6,-3.4667084e-6)">
         <text
            xml:space="preserve"
-           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12.28407288px;line-height:125%;font-family:Arial;-inkscape-font-specification:'Sans Bold';letter-spacing:0px;word-spacing:0px;fill:url(#backgroundDark);fill-opacity:1;stroke:none;stroke-width:0.30710185px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12.28407288px;line-height:125%;font-family:Arial;-inkscape-font-specification:'Sans Bold';letter-spacing:0px;word-spacing:0px;fill:#aeaeae;fill-opacity:1;stroke:none;stroke-width:0.30710185px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;"
            x="402.98151"
            y="1761.36"
            id="text2183-6"><tspan
@@ -7844,14 +7844,14 @@
              id="tspan2181-8"
              x="402.98151"
              y="1761.36"
-             style="fill:url(#backgroundDark);fill-opacity:1;stroke-width:0.30710185px">A</tspan></text>
+             style="fill:#aeaeae;fill-opacity:1;stroke-width:0.30710185px;">A</tspan></text>
         <text
            id="text2187-8"
            y="1761.36"
            x="407.98151"
-           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12.28407288px;line-height:125%;font-family:Arial;-inkscape-font-specification:'Sans Bold';letter-spacing:0px;word-spacing:0px;fill:url(#backgroundDark);fill-opacity:1;stroke:none;stroke-width:0.30710185px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:12.28407288px;line-height:125%;font-family:Arial;-inkscape-font-specification:'Sans Bold';letter-spacing:0px;word-spacing:0px;fill:#aeaeae;fill-opacity:1;stroke:none;stroke-width:0.30710185px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;"
            xml:space="preserve"><tspan
-             style="fill:url(#backgroundDark);fill-opacity:1;stroke-width:0.30710185px"
+             style="fill:#aeaeae;fill-opacity:1;stroke-width:0.30710185px;"
              y="1761.36"
              x="407.98151"
              id="tspan2185-3"
