@@ -1991,9 +1991,18 @@ void ImageView::preRender()
 
 	m_imageGadgets[0]->setWipeEnabled( m_wipeHandle->getVisible() );
 	m_imageGadgets[0]->setWipePosition( m_wipeHandle->getPosition() );
-	m_imageGadgets[0]->setWipeAngle(
-		atan2f( m_wipeHandle->getDirection()[1], m_wipeHandle->getDirection()[0] ) * 180.0f / M_PI
-	);
+	float angle = atan2f( m_wipeHandle->getDirection()[1], m_wipeHandle->getDirection()[0] ) * 180.0f / M_PI;
+	m_imageGadgets[0]->setWipeAngle( angle );
+	if( m_wipeHandle->getVisible() && m_imageGadgets[0]->getBlendMode() == ImageGadget::BlendMode::Replace )
+	{
+		m_imageGadgets[1]->setWipeEnabled( true );
+		m_imageGadgets[1]->setWipePosition( m_wipeHandle->getPosition() );
+		m_imageGadgets[1]->setWipeAngle( angle + 180.0f );
+	}
+	else
+	{
+		m_imageGadgets[1]->setWipeEnabled( false );
+	}
 
 	if( m_framed )
 	{
