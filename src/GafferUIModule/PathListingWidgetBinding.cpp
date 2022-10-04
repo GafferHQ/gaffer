@@ -1023,12 +1023,12 @@ class PathModel : public QAbstractItemModel
 				return m_name;
 			}
 
-			void dirty()
+			void dirty( bool dirtyChildItems = true, bool dirtyData = true )
 			{
 				// This is just intended to be called on the root item by the
 				// PathModel when the path changes.
 				assert( !m_parent );
-				dirtyWalk();
+				dirtyWalk( dirtyChildItems, dirtyData );
 			}
 
 			void dirtyExpansion()
@@ -1110,19 +1110,19 @@ class PathModel : public QAbstractItemModel
 
 			private :
 
-				void dirtyWalk()
+				void dirtyWalk( bool dirtyChildItems, bool dirtyData )
 				{
-					if( m_dataState == State::Clean )
+					if( dirtyData && ( m_dataState == State::Clean ) )
 					{
 						m_dataState = State::Dirty;
 					}
-					if( m_childItemsState == State::Clean )
+					if( dirtyChildItems && ( m_childItemsState == State::Clean ) )
 					{
 						m_childItemsState = State::Dirty;
 					}
 					for( const auto &child : *m_childItems )
 					{
-						child->dirtyWalk();
+						child->dirtyWalk( dirtyChildItems, dirtyData );
 					}
 				}
 
@@ -1699,9 +1699,9 @@ class PathModel : public QAbstractItemModel
 
 		void columnChanged()
 		{
-			// Force update.
-			/// \todo Only dirty the data, not the child items.
-			setRoot( getRoot() );
+			cancelUpdate();
+			m_rootItem->dirty( /* dirtyChildItems = */ false, /* dirtyData = */ true );
+			scheduleUpdate();
 		}
 
 		// Member data
