@@ -40,6 +40,7 @@ import sys
 import time
 import tempfile
 import collections
+import contextlib
 
 if sys.platform != "win32":
 	import resource
@@ -506,7 +507,7 @@ class stats( Gaffer.Application ) :
 		memory = _Memory.maxRSS()
 		# We don't expect serialisation to trigger any processes that the monitors would see,
 		# but we definitely want to know if they do.
-		with self.__performanceMonitor or _NullContextManager(), self.__contextMonitor or _NullContextManager(), self.__vtuneMonitor or _NullContextManager() :
+		with self.__performanceMonitor or contextlib.nullcontext(), self.__contextMonitor or contextlib.nullcontext(), self.__vtuneMonitor or contextlib.nullcontext() :
 			with _Timer() as timer :
 				script.serialise()
 
@@ -529,7 +530,7 @@ class stats( Gaffer.Application ) :
 			IECore.msg( IECore.Msg.Level.Error, "stats", "Scene \"%s\" does not exist" % args["scene"].value )
 			return
 
-		contextSanitiser = _NullContextManager()
+		contextSanitiser = contextlib.nullcontext()
 		if args["contextSanitiser"].value :
 			contextSanitiser = GafferSceneTest.ContextSanitiser()
 
@@ -562,7 +563,7 @@ class stats( Gaffer.Application ) :
 			computeScene()
 
 		memory = _Memory.maxRSS()
-		with self.__performanceMonitor or _NullContextManager(), self.__contextMonitor or _NullContextManager(), self.__vtuneMonitor or _NullContextManager() :
+		with self.__performanceMonitor or contextlib.nullcontext(), self.__contextMonitor or contextlib.nullcontext(), self.__vtuneMonitor or contextlib.nullcontext() :
 			with contextSanitiser :
 				with _Timer() as sceneTimer :
 					computeScene()
@@ -587,7 +588,7 @@ class stats( Gaffer.Application ) :
 			IECore.msg( IECore.Msg.Level.Error, "stats", "Image \"%s\" does not exist" % args["image"].value )
 			return
 
-		contextSanitiser = _NullContextManager()
+		contextSanitiser = contextlib.nullcontext()
 		if args["contextSanitiser"].value :
 			contextSanitiser = GafferImageTest.ContextSanitiser()
 
@@ -604,7 +605,7 @@ class stats( Gaffer.Application ) :
 			computeImage()
 
 		memory = _Memory.maxRSS()
-		with self.__performanceMonitor or _NullContextManager(), self.__contextMonitor or _NullContextManager(), self.__vtuneMonitor or _NullContextManager() :
+		with self.__performanceMonitor or contextlib.nullcontext(), self.__contextMonitor or contextlib.nullcontext(), self.__vtuneMonitor or contextlib.nullcontext() :
 			with contextSanitiser :
 				with _Timer() as imageTimer :
 					computeImage()
@@ -639,7 +640,7 @@ class stats( Gaffer.Application ) :
 
 		memory = _Memory.maxRSS()
 		with _Timer() as taskTimer :
-			with self.__performanceMonitor or _NullContextManager(), self.__contextMonitor or _NullContextManager(), self.__vtuneMonitor or _NullContextManager() :
+			with self.__performanceMonitor or contextlib.nullcontext(), self.__contextMonitor or contextlib.nullcontext(), self.__vtuneMonitor or contextlib.nullcontext() :
 				with self.__context( script, args ) as context :
 					for frame in self.__frames( script, args ) :
 						context.setFrame( frame )
@@ -757,15 +758,5 @@ class _Memory( object ) :
 	def __sub__( self, other ) :
 
 		return _Memory( self.__bytes - other.__bytes )
-
-class _NullContextManager( object ) :
-
-	def __enter__( self ) :
-
-		pass
-
-	def __exit__( self, type, value, traceBack ) :
-
-		pass
 
 IECore.registerRunTimeTyped( stats )
