@@ -11,6 +11,11 @@ Fixes
 
 - Viewer : Fixed rendering of background in `Replace` comparison mode.
 
+Build
+-----
+
+- Fixed backwards compatibility with Boost 1.73 (broken in 1.1.0.0).
+
 1.1.0.0
 =======
 
