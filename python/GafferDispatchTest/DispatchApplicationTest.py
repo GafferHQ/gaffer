@@ -35,7 +35,7 @@
 ##########################################################################
 
 import os
-import subprocess32 as subprocess
+import subprocess
 import unittest
 
 import Gaffer

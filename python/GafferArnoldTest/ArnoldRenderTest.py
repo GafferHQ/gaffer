@@ -38,12 +38,7 @@
 import os
 import inspect
 import unittest
-import sys
-if os.name == 'posix' and sys.version_info[0] < 3:
-	import subprocess32 as subprocess
-else:
-	import subprocess
-import sys
+import subprocess
 import threading
 
 import arnold
