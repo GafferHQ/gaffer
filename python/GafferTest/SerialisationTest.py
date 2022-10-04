@@ -182,11 +182,9 @@ class SerialisationTest( GafferTest.TestCase ) :
 
 	class Outer( object ) :
 
-			class Inner( object ) :
+		class Inner( object ) :
 
-					# Emulate feature coming in Python 3.
-					# See https://www.python.org/dev/peps/pep-3155/
-					__qualname__ = "Outer.Inner"
+			pass
 
 	def testClassPathForNestedClasses( self ) :
 

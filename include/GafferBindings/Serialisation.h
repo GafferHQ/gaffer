@@ -84,11 +84,10 @@ class GAFFERBINDINGS_API Serialisation : boost::noncopyable
 		static std::string modulePath( const IECore::RefCounted *object );
 		/// As above, but returns the empty string for built in python types.
 		static std::string modulePath( const boost::python::object &object );
-		/// Convenience function to return the name of the class which object is an instance of.
-		/// \note Prior to Python 3.3 there is no way to automatically obtain a qualified name for
-		/// a nested class (see http://www.python.org/dev/peps/pep-3155). In the meantime,
-		/// you may manually add your own __qualname__ attribute, and it will be used by this
-		/// function.
+		/// Convenience function to return the name of the class which object is
+		/// an instance of. Uses the `__qualname__` class attribute to determine
+		/// namespace nesting - it may be necessary to override this in the
+		/// Python bindings for custom classes with non-default nesting.
 		static std::string classPath( const IECore::RefCounted *object );
 		/// Convenience function to return the name of the class which object is an instance of.
 		/// If object is a type object rather than an instance, then the path for the type
