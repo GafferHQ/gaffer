@@ -45,7 +45,6 @@
 
 #include <optional>
 
-
 namespace Gaffer::Signals
 {
 
@@ -167,21 +166,6 @@ Connection Signal<Result( Args... ), Combiner>::connectInternal( const SlotFunct
 	Trackable::trackConnection( slot, result );
 	return result;
 }
-
-template<typename Result, typename... Args, typename Combiner>
-template<typename SlotFunctor>
-void Signal<Result( Args... ), Combiner>::disconnect( const SlotFunctor &slotFunctor )
-{
-	Private::SlotBase::Ptr slot = m_firstSlot;
-	while( slot != lastSlot() )
-	{
-		if( static_cast<Slot *>( slot.get() )->function == slotFunctor )
-		{
-			slot->disconnect();
-		}
-		slot = slot->next;
-	}
-};
 
 template<typename Result, typename... Args, typename Combiner>
 Result Signal<Result( Args... ), Combiner>::operator() ( Args... args ) const

@@ -127,10 +127,6 @@ class Signal<Result( Args... ), Combiner> : boost::noncopyable
 		template<typename SlotFunctor>
 		Connection connectFront( const SlotFunctor &slot );
 
-		/// Disconnects all slots that compare equal to `slotFunctor`.
-		template<typename SlotFunctor>
-		void disconnect( const SlotFunctor &slotFunctor );
-
 		/// Disconnects all connected slots. Not recommended, because
 		/// it allows the disconnection of slots belonging to others.
 		void disconnectAllSlots();

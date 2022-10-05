@@ -12,6 +12,7 @@ API
 Breaking Changes
 ----------------
 
+- Signal : Removed `disconnect( slot )` method. This was a performance hazard because it was linear in the number of connections. Use `Connection::disconnect()` instead, which is constant time.
 - GafferTest : Removed `expectedFailure()` decorator. Use `unittest.expectedFailure()` instead.
 - Python : Removed support for Python 2.
 - CatalogueUI : Hid OutputIndexColumn from public API.

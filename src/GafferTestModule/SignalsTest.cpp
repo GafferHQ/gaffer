@@ -83,63 +83,6 @@ void testCallPerformance()
 	GAFFERTEST_ASSERTEQUAL( callsMade, callsToMake );
 }
 
-void testDisconnectMatchingLambda()
-{
-	Signals::Signal<void()> signal;
-
-	auto slot1 = [](){};
-	auto slot2 = [](){};
-
-	auto connection1 = signal.connect( slot1 );
-	auto connection2 = signal.connect( slot2 );
-	GAFFERTEST_ASSERTEQUAL( signal.numSlots(), 2 );
-
-	/// \todo Can this be dealt with internally in`Signal::disconnect()`?
-#ifdef _MSC_VER
-	signal.disconnect( static_cast<void( __cdecl * )()>( slot1 ) );
-#else
-	signal.disconnect( slot1 );
-#endif
-	GAFFERTEST_ASSERTEQUAL( signal.numSlots(), 1 );
-	GAFFERTEST_ASSERT( !connection1.connected() );
-	GAFFERTEST_ASSERT( connection2.connected() );
-
-#ifdef _MSC_VER
-	signal.disconnect( static_cast<void( __cdecl * )()>( slot2 ) );
-#else
-	signal.disconnect( slot2 );
-#endif
-	GAFFERTEST_ASSERTEQUAL( signal.numSlots(), 0 );
-	GAFFERTEST_ASSERT( signal.empty() );
-	GAFFERTEST_ASSERT( !connection1.connected() );
-	GAFFERTEST_ASSERT( !connection2.connected() );
-
-}
-
-void testSlot( const char *arg1 )
-{
-}
-
-void testDisconnectMatchingBind()
-{
-	Signals::Signal<void()> signal;
-
-	auto connection1 = signal.connect( boost::bind( testSlot, "hello" ) );
-	auto connection2 = signal.connect( boost::bind( testSlot, "there" ) );
-	GAFFERTEST_ASSERTEQUAL( signal.numSlots(), 2 );
-
-	signal.disconnect( boost::bind( testSlot, "there" ) );
-	GAFFERTEST_ASSERTEQUAL( signal.numSlots(), 1 );
-	GAFFERTEST_ASSERT( connection1.connected() );
-	GAFFERTEST_ASSERT( !connection2.connected() );
-
-	signal.disconnect( boost::bind( testSlot, "hello" ) );
-	GAFFERTEST_ASSERTEQUAL( signal.numSlots(), 0 );
-	GAFFERTEST_ASSERT( signal.empty() );
-	GAFFERTEST_ASSERT( !connection1.connected() );
-	GAFFERTEST_ASSERT( !connection2.connected() );
-}
-
 void testSelfDisconnectingSlot()
 {
 	// To be captured by our lambda slot. We use this to determine if the slot
@@ -285,8 +228,6 @@ void GafferTestModule::bindSignalsTest()
 	def( "testSignalConstructionPerformance", &testConstructionPerformance );
 	def( "testSignalConnectionPerformance", &testConnectionPerformance );
 	def( "testSignalCallPerformance", &testCallPerformance );
-	def( "testSignalDisconnectMatchingLambda", &testDisconnectMatchingLambda );
-	def( "testSignalDisconnectMatchingBind", &testDisconnectMatchingBind );
 	def( "testSignalSelfDisconnectingSlot", &testSelfDisconnectingSlot );
 	def( "testSignalScopedConnectionMoveConstructor", &testScopedConnectionMoveConstructor );
 	def( "testSignalScopedConnectionMoveAssignment", &testScopedConnectionMoveAssignment );
