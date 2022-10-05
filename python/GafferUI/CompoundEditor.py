@@ -1490,7 +1490,6 @@ class _PinningWidget( _Frame ) :
 		self.addChild( row )
 
 		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__showEditorFocusMenu ), scoped=False )
-		self.leaveSignal().connect( Gaffer.WeakMethod( self.__leave ), scoped = False )
 
 	@staticmethod
 	def editorKeyPress( editor, event ) :
@@ -1610,8 +1609,7 @@ class _PinningWidget( _Frame ) :
 
 	def __showEditorFocusMenu( self, *unused ) :
 
-		tabbedContainer = self.ancestor( _TabbedContainer )
-		e = tabbedContainer.getCurrent()
+		e = self.__getNodeSetEditor()
 
 		m = IECore.MenuDefinition()
 
@@ -1670,9 +1668,8 @@ class _PinningWidget( _Frame ) :
 
 	def __getBookmarkSet( self ) :
 
-		tabbedContainer = self.ancestor( _TabbedContainer )
-		editor = tabbedContainer.getCurrent()
-		if editor is None or not isinstance( editor, GafferUI.NodeSetEditor ) :
+		editor = self.__getNodeSetEditor()
+		if editor is None:
 			return None
 
 		nodeSet = editor.getNodeSet()
@@ -1680,10 +1677,3 @@ class _PinningWidget( _Frame ) :
 			return nodeSet
 
 		return None
-
-	def __leave( self, widget ) :
-
-		tabbedContainer = self.ancestor( _TabbedContainer )
-		editor = self.__getNodeSetEditor()
-		if editor is None :
-			return

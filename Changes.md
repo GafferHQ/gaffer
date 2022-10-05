@@ -1,3 +1,16 @@
+1.1.x.x (relative to 1.1.0.0)
+=======
+
+Improvements
+------------
+
+- LightEditor : Improved update performance, as a result of general improvements to the PathListingWidget that may improve performance elsewhere too.
+
+Fixes
+-----
+
+- Viewer : Fixed rendering of background in `Replace` comparison mode.
+
 1.1.0.0
 =======
 

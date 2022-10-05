@@ -1017,46 +1017,62 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		self.assertEqual( len( changes ), 1 )
 		self.assertEqual( model.data( model.index( 0, 1, QtCore.QModelIndex() ) ), 20 )
 
+	class InfinitePath( Gaffer.Path ) :
+
+		# `self.visitedPaths` is a PathMatcher that will be filled with all the
+		# children visited by the PathModel. Likewise `childrenCallPaths` is filled
+		# with all the paths for which `_children()` is called.
+		def __init__( self, path, root="/", filter=None, visitedPaths = None, childrenCallPaths = None ) :
+
+			Gaffer.Path.__init__( self, path, root, filter=filter )
+
+			self.visitedPaths = visitedPaths if visitedPaths is not None else IECore.PathMatcher()
+			self.childrenCallPaths = childrenCallPaths if childrenCallPaths is not None else IECore.PathMatcher()
+
+			self.visitedPaths.addPath( str( self ) )
+
+		def isValid( self, canceller = None ) :
+
+			return True
+
+		def isLeaf( self, canceller = None ) :
+
+			return False
+
+		def copy( self ) :
+
+			return PathListingWidgetTest.InfinitePath(
+				self[:], self.root(), self.getFilter(), self.visitedPaths, self.childrenCallPaths
+			)
+
+		def _children( self, canceller = None ) :
+
+			self.childrenCallPaths.addPath( str( self ) )
+
+			return [
+				PathListingWidgetTest.InfinitePath( self[:] + [ x ], self.root(), self.getFilter(), self.visitedPaths, self.childrenCallPaths )
+				for x in [ "a", "b" ]
+			]
+
 	def testModelDoesntUpdateUnexpandedPaths( self ) :
-
-		class InfinitePath( Gaffer.Path ) :
-
-			# `self.visitedPaths` is a PathMatcher that will be filled with all the
-			# children visited by the PathModel.
-			def __init__( self, path, root="/", filter=None, visitedPaths = None ) :
-
-				Gaffer.Path.__init__( self, path, root, filter=filter )
-
-				self.visitedPaths = visitedPaths if visitedPaths is not None else IECore.PathMatcher()
-				self.visitedPaths.addPath( str( self ) )
-
-			def isValid( self, canceller = None ) :
-
-				return True
-
-			def isLeaf( self, canceller = None ) :
-
-				return False
-
-			def copy( self ) :
-
-				return InfinitePath( self[:], self.root(), self.getFilter(), self.visitedPaths )
-
-			def _children( self, canceller = None ) :
-
-				return [ InfinitePath( self[:] + [ x ], self.root(), self.getFilter(), self.visitedPaths ) for x in [ "a", "b" ] ]
 
 		# Create an infinite model and expand it up to a fixed depth.
 
-		path1 = InfinitePath( "/" )
+		path1 = self.InfinitePath( "/" )
 
 		widget = GafferUI.PathListingWidget(
 			path = path1,
 			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree
 		)
-		_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( widget._qtWidget() ) )
 
-		self.__expandModel( widget._qtWidget().model(), depth = 4 )
+		# Not calling `_pathListingWidgetAttachTester()` for this test, as it
+		# queries child items that would push us past our expected expansion depth.
+		expansionDepth = 4
+		self.__expandModel( widget._qtWidget().model(), depth = expansionDepth )
+		self.assertEqual(
+			max( len( p[1:].split( "/" ) ) for p in path1.visitedPaths.paths() ),
+			expansionDepth
+		)
 
 		# Replace with a new path, to force the PathModel into evaluating
 		# it to see if there are any changes. The PathModel should only
@@ -1064,7 +1080,7 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		# need to notify Qt of layout or data changes for items that haven't
 		# been visited yet.
 
-		path2 = InfinitePath( "/" )
+		path2 = self.InfinitePath( "/" )
 		widget.setPath( path2 )
 		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( widget._qtWidget().model() ) )
 
@@ -1125,6 +1141,35 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 
 		# Cancel the update by hiding it.
 		window.setVisible( False )
+
+	def testColumnChangedOnlyDirtiesData( self ) :
+
+		# Create an infinite model and expand it up to a fixed depth.
+
+		childrenCallPaths = IECore.PathMatcher()
+		path = self.InfinitePath( "/", childrenCallPaths = childrenCallPaths )
+
+		widget = GafferUI.PathListingWidget(
+			path = path,
+			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
+			columns = [
+				GafferUI.PathListingWidget.defaultNameColumn,
+				GafferUI.PathListingWidget.StandardColumn( "Test", "test" )
+			],
+		)
+
+		self.__expandModel( widget._qtWidget().model(), depth = 4 )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( widget._qtWidget().model() ) )
+		self.assertFalse( childrenCallPaths.isEmpty() )
+
+		# Simulate a column change. This should trigger an update, but shouldn't
+		# need to reevaluate `path._children()` because columns only affect the
+		# data in the model, not the hierarchy.
+
+		childrenCallPaths.clear()
+		widget.getColumns()[1].changedSignal()( widget.getColumns()[1] )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( widget._qtWidget().model() ) )
+		self.assertTrue( childrenCallPaths.isEmpty() )
 
 	@staticmethod
 	def __emitPathChanged( widget ) :

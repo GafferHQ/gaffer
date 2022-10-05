@@ -1255,21 +1255,7 @@ class _CompareModePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __setValue( self, value, *unused ) :
 
-		turningOn = value and not self.getPlug().getValue()
-
 		self.getPlug().setValue( value )
-
-		with self.getContext():
-			inputImage = self.getPlug().node()._getPreprocessor()["_selectView"]["out"]
-			viewNames = inputImage.viewNames()
-
-		if turningOn and len( viewNames ) > 1:
-			if node["compare"]["view"].getValue() == node["view"].getValue() or not node["compare"]["view"].getValue() in viewNames :
-				# We're turning on comparison, but currently the comparison view is identical to the
-				# default view - pick a different view, so we actually get a meaningful comparison
-				for v in viewNames:
-					if v != node["view"].getValue():
-						node["compare"]["view"].setValue( v )
 
 class _CompareWipePlugValueWidget( GafferUI.PlugValueWidget ) :
 
