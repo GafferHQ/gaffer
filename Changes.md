@@ -1,3 +1,11 @@
+1.1.x.x ( relative to 1.1.1.0)
+=======
+
+Improvements
+------------
+
+- Catalogue : Improved performance when interacting with large Catalogues.
+
 1.1.1.0 (relative to 1.1.0.0)
 =======
 

@@ -143,6 +143,9 @@ class GAFFERIMAGE_API Catalogue : public ImageNode
 		Gaffer::IntPlug *internalImageIndexPlug();
 		const Gaffer::IntPlug *internalImageIndexPlug() const;
 
+		Gaffer::ObjectPlug *imageIndexMapPlug();
+		const Gaffer::ObjectPlug *imageIndexMapPlug() const;
+
 		Gaffer::StringPlug *invalidImageTextPlug();
 		const Gaffer::StringPlug *invalidImageTextPlug() const;
 
