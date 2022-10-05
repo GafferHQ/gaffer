@@ -88,14 +88,7 @@ class GAFFEROSL_API OSLCode : public OSLShader
 		static size_t g_firstPlugIndex;
 
 		ShaderCompiledSignal m_shaderCompiledSignal;
-
-		#if BOOST_VERSION < 107400
-		/// \todo Remove conditional and use this version instead. We are only using the `ConstGraphComponentPtr` version
-		/// below for ABI compatibility.
 		std::unordered_map<const Gaffer::GraphComponent *, Gaffer::Signals::ScopedConnection> m_nameChangedConnections;
-		#else
-		std::unordered_map<Gaffer::ConstGraphComponentPtr, Gaffer::Signals::ScopedConnection> m_nameChangedConnections;
-		#endif
 
 };
 
