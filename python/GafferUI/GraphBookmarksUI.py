@@ -130,7 +130,7 @@ def appendNodeSetMenuDefinitions( editor, menuDefinition ) :
 
 	n = editor.getNodeSet()
 
-	script = editor.ancestor( GafferUI.ScriptWindow ).scriptNode()
+	script = editor.scriptNode()
 
 	menuDefinition.append( "/NumericBookmarkDivider", { "divider" : True, "label" : "Follow Numeric Bookmark" } )
 
