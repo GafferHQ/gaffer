@@ -78,17 +78,6 @@ Path::Path( const Names &names, const IECore::InternedString &root, PathFilterPt
 
 Path::~Path()
 {
-	if( havePathChangedSignal() && m_filter )
-	{
-		// In an ideal world, we'd derive from Signals::Trackable, and wouldn't
-		// need to do this manual connection management. But we construct a lot of Path
-		// instances and trackable has significant overhead so we must avoid it. We must
-		// disconnect somehow though, otherwise when the filter changes, filterChanged()
-		// will be called on a dead Path instance.
-		/// \todo Review this decision - it was made when we were using `boost::signals::trackable`
-		/// and may not longer be valid.
-		m_filter->changedSignal().disconnect( boost::bind( &Path::filterChanged, this ) );
-	}
 	delete m_pathChangedSignal;
 }
 
@@ -173,13 +162,10 @@ void Path::setFilter( PathFilterPtr filter )
 	// the connection unless m_pathChangedSignal exists.
 	if( havePathChangedSignal() )
 	{
-		if( m_filter )
-		{
-			m_filter->changedSignal().disconnect( boost::bind( &Path::filterChanged, this ) );
-		}
+		m_filterChangedConnection.disconnect();
 		if( filter )
 		{
-			filter->changedSignal().connect( boost::bind( &Path::filterChanged, this ) );
+			m_filterChangedConnection = filter->changedSignal().connect( boost::bind( &Path::filterChanged, this ) );
 		}
 	}
 
@@ -410,7 +396,7 @@ void Path::pathChangedSignalCreated()
 {
 	if( m_filter )
 	{
-		m_filter->changedSignal().connect( boost::bind( &Path::filterChanged, this ) );
+		m_filterChangedConnection = m_filter->changedSignal().connect( boost::bind( &Path::filterChanged, this ) );
 	}
 }
 

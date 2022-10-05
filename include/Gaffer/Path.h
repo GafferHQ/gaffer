@@ -229,6 +229,7 @@ class GAFFER_API Path : public IECore::RunTimeTyped
 
 		PathFilterPtr m_filter;
 		PathChangedSignal *m_pathChangedSignal;
+		Signals::ScopedConnection m_filterChangedConnection;
 
 		// So we can bind the emitPathChanged() method.
 		friend void GafferModule::bindPath();

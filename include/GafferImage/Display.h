@@ -107,6 +107,8 @@ class GAFFERIMAGE_API Display : public ImageNode
 	private :
 
 		GafferDisplayDriverPtr m_driver;
+		Gaffer::Signals::Connection m_dataReceivedConnection;
+		Gaffer::Signals::Connection m_imageReceivedConnection;
 
 		Gaffer::IntPlug *driverCountPlug();
 		const Gaffer::IntPlug *driverCountPlug() const;

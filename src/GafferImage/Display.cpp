@@ -640,17 +640,15 @@ IECore::ConstFloatVectorDataPtr Display::computeChannelData( const std::string &
 
 void Display::setupDriver( GafferDisplayDriverPtr driver )
 {
-	if( m_driver )
-	{
-		m_driver->dataReceivedSignal().disconnect( boost::bind( &Display::dataReceived, this) );
-		m_driver->imageReceivedSignal().disconnect( boost::bind( &Display::imageReceived, this ) );
-	}
+	// Disconnect from previous driver.
+	m_dataReceivedConnection.disconnect();
+	m_imageReceivedConnection.disconnect();
 
 	m_driver = driver;
 	if( m_driver )
 	{
-		m_driver->dataReceivedSignal().connect( boost::bind( &Display::dataReceived, this ) );
-		m_driver->imageReceivedSignal().connect( boost::bind( &Display::imageReceived, this ) );
+		m_dataReceivedConnection = m_driver->dataReceivedSignal().connect( boost::bind( &Display::dataReceived, this ) );
+		m_imageReceivedConnection = m_driver->imageReceivedSignal().connect( boost::bind( &Display::imageReceived, this ) );
 	}
 }
 
