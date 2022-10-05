@@ -63,19 +63,19 @@ bool StandardSet::add( MemberPtr member )
 		throw IECore::Exception( "Member is not eligible for inclusion in StandardSet." );
 	}
 
-	bool result = m_members.insert( member ).second;
-	if( result )
+	auto [it, inserted] = m_members.insert( { member, {} } );
+	if( inserted )
 	{
 		if( m_removeOrphans )
 		{
 			if( GraphComponent *graphComponent = IECore::runTimeCast<GraphComponent>( member.get() ) )
 			{
-				graphComponent->parentChangedSignal().connect( boost::bind( &StandardSet::parentChanged, this, ::_1 ) );
+				it->parentChangedConnection = graphComponent->parentChangedSignal().connect( boost::bind( &StandardSet::parentChanged, this, ::_1 ) );
 			}
 		}
 		memberAddedSignal()( this, member.get() );
 	}
-	return result;
+	return inserted;
 }
 
 size_t StandardSet::add( const Set *other )
@@ -93,13 +93,6 @@ bool StandardSet::remove( Member *member )
 	MemberContainer::iterator it = m_members.find( member );
 	if( it != m_members.end() )
 	{
-		if( m_removeOrphans )
-		{
-			if( GraphComponent *graphComponent = IECore::runTimeCast<GraphComponent>( member ) )
-			{
-				graphComponent->parentChangedSignal().disconnect( boost::bind( &StandardSet::parentChanged, this, ::_1 ) );
-			}
-		}
 		// we may be the only owner of member, in which
 		// case it would die immediately upon removal
 		// from m_members. so we have to make a temporary
@@ -129,7 +122,7 @@ void StandardSet::clear()
 {
 	while( m_members.size() )
 	{
-		remove( m_members.begin()->get() );
+		remove( m_members.begin()->member.get() );
 	}
 }
 
@@ -143,18 +136,18 @@ void StandardSet::setRemoveOrphans( bool removeOrphans )
 	m_removeOrphans = removeOrphans;
 	for( auto &m : m_members )
 	{
-		GraphComponent *graphComponent = IECore::runTimeCast<GraphComponent>( m.get() );
+		GraphComponent *graphComponent = IECore::runTimeCast<GraphComponent>( m.member.get() );
 		if( !graphComponent )
 		{
 			continue;
 		}
 		if( m_removeOrphans )
 		{
-			graphComponent->parentChangedSignal().connect( boost::bind( &StandardSet::parentChanged, this, ::_1 ) );
+			m.parentChangedConnection = graphComponent->parentChangedSignal().connect( boost::bind( &StandardSet::parentChanged, this, ::_1 ) );
 		}
 		else
 		{
-			graphComponent->parentChangedSignal().disconnect( boost::bind( &StandardSet::parentChanged, this, ::_1 ) );
+			m.parentChangedConnection.disconnect();
 		}
 	}
 }
@@ -174,12 +167,12 @@ bool StandardSet::contains( const Member *object ) const
 
 Set::Member *StandardSet::member( size_t index )
 {
-	return m_members.get<1>()[index].get();
+	return m_members.get<1>()[index].member.get();
 }
 
 const Set::Member *StandardSet::member( size_t index ) const
 {
-	return m_members.get<1>()[index].get();
+	return m_members.get<1>()[index].member.get();
 }
 
 size_t StandardSet::size() const

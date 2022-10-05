@@ -425,5 +425,52 @@ class StandardSetTest( GafferTest.TestCase ) :
 		self.assertTrue( c1 in s2 )
 		self.assertTrue( c2 in s2 )
 
+	def testOrphanRemovalConnections( self ) :
+
+		p = Gaffer.GraphComponent()
+		c = Gaffer.GraphComponent()
+		p["c"] = c
+
+		self.assertEqual( c.parentChangedSignal().numSlots(), 0 )
+
+		s = Gaffer.StandardSet( p.children() )
+		self.assertEqual( c.parentChangedSignal().numSlots(), 0 )
+
+		s.setRemoveOrphans( False )
+		self.assertEqual( c.parentChangedSignal().numSlots(), 0 )
+
+		s.setRemoveOrphans( True )
+		self.assertEqual( c.parentChangedSignal().numSlots(), 1 )
+
+		s.setRemoveOrphans( True )
+		self.assertEqual( c.parentChangedSignal().numSlots(), 1 )
+
+		s.setRemoveOrphans( False )
+		self.assertEqual( c.parentChangedSignal().numSlots(), 0 )
+
+		s.setRemoveOrphans( True )
+		self.assertEqual( c.parentChangedSignal().numSlots(), 1 )
+
+		s.remove( c )
+		self.assertEqual( c.parentChangedSignal().numSlots(), 0 )
+
+		s.add( c )
+		self.assertEqual( c.parentChangedSignal().numSlots(), 1 )
+
+		p.removeChild( c )
+		self.assertEqual( c.parentChangedSignal().numSlots(), 0 )
+
+		s.add( c )
+		self.assertEqual( c.parentChangedSignal().numSlots(), 1 )
+
+		s.clear()
+		self.assertEqual( c.parentChangedSignal().numSlots(), 0 )
+
+		s.add( c )
+		self.assertEqual( c.parentChangedSignal().numSlots(), 1 )
+
+		del s
+		self.assertEqual( c.parentChangedSignal().numSlots(), 0 )
+
 if __name__ == "__main__":
 	unittest.main()

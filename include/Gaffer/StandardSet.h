@@ -40,6 +40,7 @@
 
 #include "Gaffer/Set.h"
 
+#include "boost/multi_index/member.hpp"
 #include "boost/multi_index/ordered_index.hpp"
 #include "boost/multi_index/random_access_index.hpp"
 #include "boost/multi_index_container.hpp"
@@ -152,13 +153,20 @@ class GAFFER_API StandardSet : public Gaffer::Set
 
 		MemberAcceptanceSignal m_memberAcceptanceSignal;
 
+		struct SetMember
+		{
+			MemberPtr member;
+			// OK to be mutable, because not used as key in `MemberContainer`.
+			mutable Signals::ScopedConnection parentChangedConnection;
+		};
+
 		using MemberContainer = boost::multi_index::multi_index_container<
-			MemberPtr,
+			SetMember,
 			boost::multi_index::indexed_by<
-				boost::multi_index::ordered_unique<boost::multi_index::identity<MemberPtr> >,
+				boost::multi_index::ordered_unique<boost::multi_index::member<SetMember, MemberPtr, &SetMember::member>>,
 				boost::multi_index::random_access<>
 			>
-		> ;
+		>;
 
 		using OrderedIndex = const MemberContainer::nth_index<0>::type;
 		using SequencedIndex = const MemberContainer::nth_index<1>::type;
