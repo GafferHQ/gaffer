@@ -76,14 +76,6 @@ ScenePath::ScenePath( ScenePlugPtr scene, Gaffer::ContextPtr context, const Name
 
 ScenePath::~ScenePath()
 {
-	if( havePathChangedSignal() )
-	{
-		m_context->changedSignal().disconnect( boost::bind( &ScenePath::contextChanged, this, ::_2 ) );
-		if( m_node )
-		{
-			m_node->plugDirtiedSignal().disconnect( boost::bind( &ScenePath::plugDirtied, this, ::_1 ) );
-		}
-	}
 }
 
 void ScenePath::setScene( ScenePlugPtr scene )
@@ -93,17 +85,14 @@ void ScenePath::setScene( ScenePlugPtr scene )
 		return;
 	}
 
-	if( havePathChangedSignal() )
-	{
-		m_node->plugDirtiedSignal().disconnect( boost::bind( &ScenePath::plugDirtied, this, ::_1 ) );
-	}
+	m_plugDirtiedConnection.disconnect();
 
 	m_scene = scene;
 	m_node = scene->node();
 
 	if( m_node && havePathChangedSignal() )
 	{
-		m_node->plugDirtiedSignal().connect( boost::bind( &ScenePath::plugDirtied, this, ::_1 ) );
+		m_plugDirtiedConnection = m_node->plugDirtiedSignal().connect( boost::bind( &ScenePath::plugDirtied, this, ::_1 ) );
 	}
 
 	emitPathChanged();
@@ -128,8 +117,7 @@ void ScenePath::setContext( Gaffer::ContextPtr context )
 
 	if( havePathChangedSignal() )
 	{
-		m_context->changedSignal().disconnect( boost::bind( &ScenePath::contextChanged, this, ::_2 ) );
-		context->changedSignal().connect( boost::bind( &ScenePath::contextChanged, this, ::_2 ) );
+		m_contextChangedConnection = context->changedSignal().connect( boost::bind( &ScenePath::contextChanged, this, ::_2 ) );
 	}
 
 	m_context = context;
@@ -202,9 +190,9 @@ void ScenePath::pathChangedSignalCreated()
 	Path::pathChangedSignalCreated();
 	if( m_node )
 	{
-		m_node->plugDirtiedSignal().connect( boost::bind( &ScenePath::plugDirtied, this, ::_1 ) );
+		m_plugDirtiedConnection = m_node->plugDirtiedSignal().connect( boost::bind( &ScenePath::plugDirtied, this, ::_1 ) );
 	}
-	m_context->changedSignal().connect( boost::bind( &ScenePath::contextChanged, this, ::_2 ) );
+	m_contextChangedConnection = m_context->changedSignal().connect( boost::bind( &ScenePath::contextChanged, this, ::_2 ) );
 }
 
 void ScenePath::contextChanged( const IECore::InternedString &key )

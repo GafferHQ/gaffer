@@ -99,6 +99,8 @@ class GAFFERSCENE_API ScenePath : public Gaffer::Path
 		Gaffer::NodePtr m_node;
 		ScenePlugPtr m_scene;
 		Gaffer::ContextPtr m_context;
+		Gaffer::Signals::ScopedConnection m_plugDirtiedConnection;
+		Gaffer::Signals::ScopedConnection m_contextChangedConnection;
 
 };
 
