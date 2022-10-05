@@ -1023,12 +1023,12 @@ class PathModel : public QAbstractItemModel
 				return m_name;
 			}
 
-			void dirty()
+			void dirty( bool dirtyChildItems = true, bool dirtyData = true )
 			{
 				// This is just intended to be called on the root item by the
 				// PathModel when the path changes.
 				assert( !m_parent );
-				dirtyWalk();
+				dirtyWalk( dirtyChildItems, dirtyData );
 			}
 
 			void dirtyExpansion()
@@ -1050,7 +1050,8 @@ class PathModel : public QAbstractItemModel
 				// We take a copy of `expandedPaths` because it may be modified
 				// on the UI thread by `treeViewExpanded()` while we run in the
 				// background.
-				updateWalk( model, model->m_rootPath.get(), IECore::PathMatcher( model->m_expandedPaths ), canceller );
+				PathPtr workingPath = model->m_rootPath->copy();
+				updateWalk( model, workingPath.get(), IECore::PathMatcher( model->m_expandedPaths ), canceller );
 			}
 
 			Item *parent()
@@ -1110,30 +1111,32 @@ class PathModel : public QAbstractItemModel
 
 			private :
 
-				void dirtyWalk()
+				void dirtyWalk( bool dirtyChildItems, bool dirtyData )
 				{
-					if( m_dataState == State::Clean )
+					if( dirtyData && ( m_dataState == State::Clean ) )
 					{
 						m_dataState = State::Dirty;
 					}
-					if( m_childItemsState == State::Clean )
+					if( dirtyChildItems && ( m_childItemsState == State::Clean ) )
 					{
 						m_childItemsState = State::Dirty;
 					}
 					for( const auto &child : *m_childItems )
 					{
-						child->dirtyWalk();
+						child->dirtyWalk( dirtyChildItems, dirtyData );
 					}
 				}
 
-				void updateWalk( PathModel *model, const Path *path, const IECore::PathMatcher &expandedPaths, const IECore::Canceller *canceller )
+				void updateWalk( PathModel *model, Path *path, const IECore::PathMatcher &expandedPaths, const IECore::Canceller *canceller )
 				{
 					IECore::Canceller::check( canceller );
 					updateData( model, path, canceller );
 					updateExpansion( model, path, expandedPaths );
 					std::shared_ptr<ChildContainer> updatedChildItems = updateChildItems( model, path, canceller );
-					PathPtr childPath = path->copy();
-					childPath->append( g_childPlaceholder );
+
+					const size_t pathSize = path->names().size();
+					Path::Names childName( 1 );
+
 					/// \todo We could consider using `parallel_for()` here for improved
 					/// performance. But given all the other modules vying for processor time
 					/// (the Viewer and Renderer in particular), perhaps limiting ourselves to
@@ -1142,8 +1145,12 @@ class PathModel : public QAbstractItemModel
 					/// we visit children in would no longer be deterministic.
 					for( const auto &child : *updatedChildItems )
 					{
-						childPath->set( childPath->names().size() - 1, child->name() );
-						child->updateWalk( model, childPath.get(), expandedPaths, canceller );
+						// Append child name to path, bearing in mind that recursion
+						// in `updateWalk()` may have left us with a longer path than
+						// we had before.
+						childName.back() = child->name();
+						path->set( pathSize, path->names().size(), childName );
+						child->updateWalk( model, path, expandedPaths, canceller );
 					}
 				}
 
@@ -1699,9 +1706,9 @@ class PathModel : public QAbstractItemModel
 
 		void columnChanged()
 		{
-			// Force update.
-			/// \todo Only dirty the data, not the child items.
-			setRoot( getRoot() );
+			cancelUpdate();
+			m_rootItem->dirty( /* dirtyChildItems = */ false, /* dirtyData = */ true );
+			scheduleUpdate();
 		}
 
 		// Member data
