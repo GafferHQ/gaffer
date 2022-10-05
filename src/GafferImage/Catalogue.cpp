@@ -1288,7 +1288,13 @@ void Catalogue::compute( ValuePlug *output, const Context *context ) const
 		}
 
 		std::string result;
-		if( outputIndex > 0 )
+		if( imageName.empty() )
+		{
+			// Failing to find an image even with no query set can happen on a freshly created
+			// catalog with no images.  This does not require an error.
+			result = "";
+		}
+		else if( outputIndex > 0 )
 		{
 			result = "Catalogue : Unassigned Output " + std::to_string( outputIndex );
 		}
