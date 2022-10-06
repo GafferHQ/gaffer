@@ -1,6 +1,8 @@
 1.x.x.x
 =======
 
+> Note : Python 2 support has been removed. All builds are now using Python 3.
+
 API
 ---
 
@@ -10,6 +12,7 @@ Breaking Changes
 ----------------
 
 - GafferTest : Removed `expectedFailure()` decorator. Use `unittest.expectedFailure()` instead.
+- Python : Removed support for Python 2.
 
 1.1.x.x ( relative to 1.1.1.0)
 =======
