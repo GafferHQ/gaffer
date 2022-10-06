@@ -40,19 +40,6 @@ from ._GafferTest import *
 import os
 import unittest
 
-# workaround lack of expectedFailure decorator for
-# python < 2.7.
-try :
-	expectedFailure = unittest.expectedFailure
-except AttributeError :
-	def expectedFailure( f ) :
-		def wrapper( self ) :
-			try :
-				f( self )
-			except :
-				print( "Expected failure" )
-		return wrapper
-
 ## Determines if the tests are running in a Continuous Integration
 # environment.
 def inCI( platforms = set() ) :

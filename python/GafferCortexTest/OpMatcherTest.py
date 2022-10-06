@@ -53,7 +53,7 @@ class OpMatcherTest( GafferTest.TestCase ) :
 		for f in self.__sequence.fileNames() :
 			os.system( "touch %s" % f )
 
-	@GafferTest.expectedFailure
+	@unittest.expectedFailure
 	def testFile( self ) :
 
 		# we need a suitable op as part of the gaffer install before we

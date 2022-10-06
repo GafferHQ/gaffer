@@ -6,6 +6,11 @@ API
 
 - Capsule : Removed attempts to detect invalidated Capsules.
 
+Breaking Changes
+----------------
+
+- GafferTest : Removed `expectedFailure()` decorator. Use `unittest.expectedFailure()` instead.
+
 1.1.x.x ( relative to 1.1.1.0)
 =======
 

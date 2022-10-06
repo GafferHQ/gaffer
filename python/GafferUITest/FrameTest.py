@@ -46,7 +46,7 @@ import GafferUITest
 
 class FrameTest( GafferUITest.TestCase ) :
 
-	@GafferTest.expectedFailure
+	@unittest.expectedFailure
 	def testGadget( self ) :
 
 		# because we're not putting gadgets and widgets in different namespaces,
