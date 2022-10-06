@@ -32,10 +32,10 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferCycles/IECoreCyclesPreview/VDBAlgo.h"
-
 #include "GafferCycles/IECoreCyclesPreview/ObjectAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/SocketAlgo.h"
+
+#include "IECoreVDB/VDBObject.h"
 
 IECORE_PUSH_DEFAULT_VISIBILITY
 #include "openvdb/openvdb.h"
@@ -101,23 +101,6 @@ class GafferVolumeLoader : public ccl::VDBImageLoader
 
 		const IECoreVDB::VDBObject *m_ieVolume;
 };
-
-ObjectAlgo::ConverterDescription<IECoreVDB::VDBObject> g_description( IECoreCycles::VDBAlgo::convert );
-
-} // namespace
-
-
-//////////////////////////////////////////////////////////////////////////
-// Implementation of public API
-//////////////////////////////////////////////////////////////////////////
-
-namespace IECoreCycles
-
-{
-
-namespace VDBAlgo
-
-{
 
 ccl::Object *convert( const IECoreVDB::VDBObject *vdbObject, const std::string &nodeName, ccl::Scene *scene )//, const float frame )
 {
@@ -217,6 +200,6 @@ ccl::Object *convert( const std::vector<const IECoreVDB::VDBObject *> &samples, 
 	return convert( samples.front(), nodeName, scene );
 }
 
-} // namespace VDBAlgo
+ObjectAlgo::ConverterDescription<IECoreVDB::VDBObject> g_description( convert, convert );
 
-} // namespace IECoreCycles
+} // namespace
