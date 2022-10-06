@@ -22,6 +22,10 @@ API
 ---
 
 - MatchPatternPathFilterWidget : Made the entries in the property menu configurable.
+- TweakPlug : Added `PathMatcherData` compatibility in `Replace`, `Create`, `ListAppend`, `ListPrepend` and `ListRemove` modes.
+- PlugAlgo :
+  - Added support for creating a `PathMatcherDataPlug` from `PathMatcherData` in `createPlugFromData()`.
+  - Added support for getting `PathMatcherData` from a `PathMatcherDataPlug` in `getValueAsData()`.
 
 1.2.8.0 (relative to 1.2.7.0)
 =======

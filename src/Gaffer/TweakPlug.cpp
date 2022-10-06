@@ -40,6 +40,7 @@
 #include "Gaffer/ScriptNode.h"
 
 #include "IECore/DataAlgo.h"
+#include "IECore/PathMatcherData.h"
 #include "IECore/SimpleTypedData.h"
 #include "IECore/StringAlgo.h"
 #include "IECore/TypeTraits.h"
@@ -328,6 +329,7 @@ void TweakPlug::applyListTweak(
 	const std::string &tweakName
 ) const
 {
+
 	dispatch(
 
 		destData,
@@ -370,7 +372,21 @@ void TweakPlug::applyListTweak(
 					data->writable().insert( data->writable().begin(), newElements.begin(), newElements.end() );
 				}
 			}
+			else if constexpr( std::is_same_v<DataType, PathMatcherData> )
+			{
+				const PathMatcher newPaths = runTimeCast<const DataType>( tweakData )->readable();
+				data->writable() = runTimeCast<const DataType>( sourceData )->readable();
+				if( mode == TweakPlug::ListRemove )
+				{
+					data->writable().removePaths( newPaths );
+				}
+				else
+				{
+					data->writable().addPaths( newPaths );
+				}
+			}
 		}
+
 	);
 }
 

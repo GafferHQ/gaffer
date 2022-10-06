@@ -404,6 +404,16 @@ ValuePlugPtr createPlugFromData( const std::string &name, Plug::Direction direct
 		{
 			return typedObjectValuePlug( name, direction, flags, static_cast<const M33fVectorData *>( value ) );
 		}
+		case PathMatcherDataTypeId :
+		{
+			PathMatcherDataPlugPtr valuePlug = new PathMatcherDataPlug(
+				name,
+				direction,
+				static_cast<const PathMatcherData *>( value ),
+				flags
+			);
+			return valuePlug;
+		}
 		default :
 			throw IECore::Exception(
 				fmt::format( "Data for \"{}\" has unsupported value data type \"{}\"", name, value->typeName() )
@@ -505,6 +515,8 @@ IECore::DataPtr getValueAsData( const ValuePlug *plug )
 			}
 			return result;
 		}
+		case PathMatcherDataPlugTypeId :
+			return static_cast<const PathMatcherDataPlug *>( plug )->getValue()->copy();
 		default :
 			throw IECore::Exception(
 				fmt::format( "Plug \"{}\" has unsupported type \"{}\"", plug->getName().string(), plug->typeName() )

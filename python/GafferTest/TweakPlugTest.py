@@ -353,6 +353,44 @@ class TweakPlugTest( GafferTest.TestCase ) :
 		self.assertTrue( result )
 		self.assertEqual( data["a"], IECore.InternedStringData( "stringValue" ) )
 
+	def testPathMatcherListOperations( self ) :
+
+		data = IECore.CompoundData(
+			{
+				"p" : IECore.PathMatcherData()
+			}
+		)
+
+		createTweak = Gaffer.TweakPlug( "p", IECore.PathMatcherData( IECore.PathMatcher( [ "/test/path", "/test/path2" ] ) ) )
+		result = createTweak.applyTweak( data )
+		self.assertTrue( result )
+		self.assertEqual( sorted( data["p"].value.paths() ), sorted( [ "/test/path", "/test/path2" ] ) )
+
+		addTweak = Gaffer.TweakPlug( "p", IECore.PathMatcherData( IECore.PathMatcher( [ "/new/path", "/new/path2" ] ) ), Gaffer.TweakPlug.Mode.ListAppend )
+
+		result = addTweak.applyTweak( data )
+		self.assertTrue( result )
+		self.assertEqual(
+			sorted( data["p"].value.paths() ),
+			sorted( [ "/test/path", "/test/path2", "/new/path", "/new/path2" ] )
+		)
+
+		removeTweak = Gaffer.TweakPlug( "p", IECore.PathMatcherData( IECore.PathMatcher( [ "/test/path", "/new/path2" ] ) ), Gaffer.TweakPlug.Mode.ListRemove )
+
+		result = removeTweak.applyTweak( data )
+		self.assertTrue( result )
+		self.assertEqual( sorted( data["p"].value.paths() ), sorted( [ "/test/path2", "/new/path" ] ) )
+
+		# PathMatchers are not sorted, so prepending is identical to appending
+		prependTweak = Gaffer.TweakPlug( "p", IECore.PathMatcherData( IECore.PathMatcher( [ "/test/path3", "/new/path3" ] ) ), Gaffer.TweakPlug.Mode.ListPrepend )
+
+		result = prependTweak.applyTweak( data )
+		self.assertTrue( result )
+		self.assertEqual(
+			sorted( data["p"].value.paths() ),
+			sorted( [ "/test/path2", "/new/path", "/test/path3", "/new/path3" ] )
+		)
+
 
 if __name__ == "__main__":
 	unittest.main()

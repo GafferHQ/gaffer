@@ -657,6 +657,7 @@ class PlugAlgoTest( GafferTest.TestCase ) :
 			Gaffer.SplineDefinitionInterpolation.CatmullRom
 		)
 		n.addChild( Gaffer.SplineffPlug( "splinePlug", defaultValue = s ) )
+		n.addChild( Gaffer.PathMatcherDataPlug( "pathMatcherPlug", defaultValue = IECore.PathMatcherData( IECore.PathMatcher( [ "/test/path", "/test/path2" ] ) ) ) )
 
 		self.assertEqual( Gaffer.PlugAlgo.getValueAsData( n["floatPlug"] ), IECore.FloatData( 2.0 ) )
 		self.assertEqual(
@@ -666,6 +667,7 @@ class PlugAlgoTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.PlugAlgo.getValueAsData( n["floatVectorPlug"] ), IECore.FloatVectorData( [ 1.0, 2.0, 3.0 ] ) )
 		self.assertEqual( Gaffer.PlugAlgo.getValueAsData( n["box2iPlug"] ), IECore.Box2iData( imath.Box2i( imath.V2i( 1.0 ), imath.V2i( 2.0 ) ) ) )
 		self.assertEqual( Gaffer.PlugAlgo.getValueAsData( n["splinePlug"] ), IECore.SplineffData( s.spline() ) )
+		self.assertEqual( Gaffer.PlugAlgo.getValueAsData( n["pathMatcherPlug"] ), IECore.PathMatcherData( IECore.PathMatcher( [ "/test/path", "/test/path2" ] ) ) )
 
 
 	def testSetValueFromData( self ) :
