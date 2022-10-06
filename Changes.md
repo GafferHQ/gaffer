@@ -1,3 +1,11 @@
+1.x.x.x
+=======
+
+API
+---
+
+- Capsule : Removed attempts to detect invalidated Capsules.
+
 1.1.1.0 (relative to 1.1.0.0)
 =======
 

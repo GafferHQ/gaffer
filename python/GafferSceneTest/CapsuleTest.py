@@ -73,9 +73,5 @@ class CapsuleTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( capsuleCopy.bound(), sphere["out"].bound( "/" ) )
 		self.assertEqual( capsuleCopy.hash(), capsule.hash() )
 
-		del sphere
-
-		six.assertRaisesRegex( self, RuntimeError, "Source scene plug no longer valid.", capsule.scene )
-
 if __name__ == "__main__":
 	unittest.main()
