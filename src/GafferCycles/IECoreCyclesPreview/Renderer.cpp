@@ -36,15 +36,10 @@
 
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 
-#include "GafferCycles/IECoreCyclesPreview/VDBAlgo.h"
-
 #include "GafferCycles/IECoreCyclesPreview/AttributeAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/CameraAlgo.h"
-#include "GafferCycles/IECoreCyclesPreview/CurvesAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/IECoreCycles.h"
-#include "GafferCycles/IECoreCyclesPreview/MeshAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/ObjectAlgo.h"
-#include "GafferCycles/IECoreCyclesPreview/ParticleAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/ShaderNetworkAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/SocketAlgo.h"
 
@@ -138,7 +133,6 @@ using SharedCCameraPtr = std::shared_ptr<ccl::Camera>;
 using SharedCObjectPtr = std::shared_ptr<ccl::Object>;
 using SharedCLightPtr = std::shared_ptr<ccl::Light>;
 using SharedCGeometryPtr = std::shared_ptr<ccl::Geometry>;
-using SharedCParticleSystemPtr = std::shared_ptr<ccl::ParticleSystem>;
 // Need to defer shader assignments to the scene lock
 typedef std::pair<ccl::Node*, ccl::array<ccl::Node*>> ShaderAssignPair;
 // Defer adding the created nodes to the scene lock
@@ -909,29 +903,6 @@ IECore::InternedString g_lightAttributeName( "cycles:light" );
 // Dupli
 IECore::InternedString g_dupliGeneratedAttributeName( "cycles:dupli_generated" );
 IECore::InternedString g_dupliUVAttributeName( "cycles:dupli_uv" );
-// Particle
-std::array<IECore::InternedString, 2> g_particleIndexAttributeNames = { {
-	"index",
-	"instanceIndex",
-} };
-IECore::InternedString g_particleAgeAttributeName( "age" );
-IECore::InternedString g_particleLifetimeAttributeName( "lifetime" );
-std::array<IECore::InternedString, 2> g_particleLocationAttributeNames = { {
-	"location",
-	"P",
-} };
-IECore::InternedString g_particleRotationAttributeName( "rotation" );
-std::array<IECore::InternedString, 2> g_particleRotationAttributeNames = { {
-	"rotation",
-	"orientation",
-} };
-std::array<IECore::InternedString, 2> g_particleSizeAttributeNames = { {
-	"size",
-	"width",
-} };
-IECore::InternedString g_particleVelocityAttributeName( "velocity" );
-IECore::InternedString g_particleAngularVelocityAttributeName( "angular_velocity" );
-
 // Shader Assignment
 IECore::InternedString g_cyclesSurfaceShaderAttributeName( "cycles:surface" );
 IECore::InternedString g_oslSurfaceShaderAttributeName( "osl:surface" );
@@ -973,7 +944,6 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				m_color( Color3f( 1.0f ) ),
 				m_dupliGenerated( V3f( 0.0f ) ),
 				m_dupliUV( V2f( 0.0f) ),
-				m_particle( attributes ),
 				m_volume( attributes ),
 				m_shaderAttributes( attributes ),
 				m_assetName( "" ),
@@ -1107,27 +1077,6 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 						mesh->set_subd_dicing_rate( m_dicingRate );
 						mesh->set_subd_max_level( m_maxLevel );
 					}
-
-					if( m_shader )
-					{
-						ccl::Shader *shader = m_shader->shader();
-						if( shader->attributes.find( ccl::ATTR_STD_UV_TANGENT ) )
-						{
-							if( !mesh->attributes.find( ccl::ATTR_STD_UV_TANGENT ) )
-							{
-								// Re-issue new mesh with tangents
-								return false;
-							}
-						}
-						if( shader->attributes.find( ccl::ATTR_STD_UV_TANGENT_SIGN ) )
-						{
-							if( !mesh->attributes.find( ccl::ATTR_STD_UV_TANGENT_SIGN ) )
-							{
-								// Re-issue new mesh with tangent-sign
-								return false;
-							}
-						}
-					}
 				}
 
 				if( m_shader->shader() )
@@ -1138,26 +1087,12 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				}
 			}
 
-			if( !m_particle.apply( object ) )
-				return false;
-
 			if( !m_volume.apply( object ) )
 				return false;
 
 			object->set_lightgroup( ccl::ustring( m_lightGroup.c_str() ) );
 
 			return true;
-		}
-
-		void applyGeometry( const IECore::Object *object, ccl::Object *cobject ) const
-		{
-			if( needTangents() )
-			{
-				if( const IECoreScene::MeshPrimitive *mesh = IECore::runTimeCast<const IECoreScene::MeshPrimitive>( object ) )
-				{
-					MeshAlgo::computeTangents( static_cast<ccl::Mesh*>( cobject->get_geometry() ), mesh, needTangentSign() );
-				}
-			}
 		}
 
 		bool applyLight( ccl::Light *light, const CyclesAttributes *previousAttributes ) const
@@ -1184,6 +1119,10 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		}
 
 		// Generates a signature for the work done by applyGeometry.
+		/// \todo This description is inaccurate. There used to be a method called `applyGeometry()`,
+		/// but it was removed. We didn't remove `hashGeometry()` at the same time because it hashes
+		/// things that were never used by `applyGeometry()` in the first place. Figure out why there
+		/// was this mismatch, and if this function is really needed or not.
 		void hashGeometry( const IECore::Object *object, IECore::MurmurHash &h ) const
 		{
 			// Currently Cycles can only have a shader assigned uniquely and not instanced...
@@ -1197,21 +1136,6 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 						h.append( m_dicingRate );
 						h.append( m_maxLevel );
 					}
-					if( m_shader )
-					{
-						if( needTangents() )
-							h.append( "tangent" );
-						if( needTangentSign() )
-							h.append( "tangent_sign" );
-					}
-					break;
-				case IECoreScene::CurvesPrimitiveTypeId :
-					break;
-				case IECoreScene::SpherePrimitiveTypeId :
-					break;
-				case IECoreScene::ExternalProceduralTypeId :
-					break;
-				case IECoreVDB::VDBObjectTypeId :
 					break;
 				default :
 					// No geometry attributes for this type.
@@ -1241,25 +1165,6 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			}
 
 			return true;
-		}
-
-		bool hasParticleInfo() const
-		{
-			return m_particle.hasParticleInfo();
-		}
-
-		bool needTangents() const
-		{
-			if( !m_shader )
-				return false;
-			return m_shader->shader()->attributes.find( ccl::ATTR_STD_UV_TANGENT );
-		}
-
-		bool needTangentSign() const
-		{
-			if( !m_shader )
-				return false;
-			return m_shader->shader()->attributes.find( ccl::ATTR_STD_UV_TANGENT_SIGN );
 		}
 
 		void nodesCreated( NodesCreated &nodes )
@@ -1310,98 +1215,6 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				}
 			}
 		}
-
-		struct Particle
-		{
-			Particle( const IECore::CompoundObject *attributes )
-			{
-				for( const auto &name : g_particleIndexAttributeNames )
-				{
-					index = optionalAttribute<int>( name, attributes );
-					if( index )
-						break;
-				}
-				age = optionalAttribute<float>( g_particleAgeAttributeName, attributes );
-				lifetime = optionalAttribute<float>( g_particleLifetimeAttributeName, attributes );
-				for( const auto &name : g_particleLocationAttributeNames )
-				{
-					location = optionalAttribute<V3f>( name, attributes );
-					if( location )
-						break;
-				}
-				for( const auto &name : g_particleRotationAttributeNames )
-				{
-					rotation = optionalAttribute<Quatf>( name, attributes );
-					if( rotation )
-						break;
-				}
-				for( const auto &name : g_particleSizeAttributeNames )
-				{
-					size = optionalAttribute<float>( name, attributes );
-					if( size )
-						break;
-				}
-				velocity = optionalAttribute<V3f>( g_particleVelocityAttributeName, attributes );
-				angular_velocity = optionalAttribute<V3f>( g_particleAngularVelocityAttributeName, attributes );
-			}
-
-			boost::optional<int> index;
-			boost::optional<float> age;
-			boost::optional<float> lifetime;
-			boost::optional<V3f> location;
-			boost::optional<Quatf> rotation;
-			boost::optional<float> size;
-			boost::optional<V3f> velocity;
-			boost::optional<V3f> angular_velocity;
-
-			bool hasParticleInfo() const
-			{
-				if( index || age || lifetime || location || rotation || size || velocity || angular_velocity )
-				{
-					return true;
-				}
-				else
-				{
-					return false;
-				}
-			}
-
-			bool apply( ccl::Object *object ) const
-			{
-				if( !hasParticleInfo() )
-				{
-					return true;
-				}
-				else if( ccl::ParticleSystem *psys = object->get_particle_system() )
-				{
-					size_t idx = object->get_particle_index();
-					if( idx < psys->particles.size() )
-					{
-						if( index )
-							psys->particles[idx].index = index.get();
-						if( age )
-							psys->particles[idx].age = age.get();
-						if( lifetime )
-							psys->particles[idx].lifetime = lifetime.get();
-						if( location )
-							psys->particles[idx].location = SocketAlgo::setVector( location.get() );
-						if( rotation )
-							psys->particles[idx].rotation = SocketAlgo::setQuaternion( rotation.get() );
-						if( size )
-							psys->particles[idx].size = size.get();
-						if( velocity )
-							psys->particles[idx].velocity = SocketAlgo::setVector( velocity.get() );
-						if( angular_velocity )
-							psys->particles[idx].angular_velocity = SocketAlgo::setVector( angular_velocity.get() );
-					}
-					return true;
-				}
-				else
-				{
-					return false;
-				}
-			}
-		};
 
 		struct Volume
 		{
@@ -1508,7 +1321,6 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		Color3f m_color;
 		V3f m_dupliGenerated;
 		V2f m_dupliUV;
-		Particle m_particle;
 		Volume m_volume;
 		ShaderAttributes m_shaderAttributes;
 		InternedString m_assetName;
@@ -1587,129 +1399,6 @@ IE_CORE_DECLAREPTR( AttributesCache )
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
-// ParticleSystemCache
-//////////////////////////////////////////////////////////////////////////
-
-namespace
-{
-
-class ParticleSystemsCache : public IECore::RefCounted
-{
-
-	public :
-
-		ParticleSystemsCache( ccl::Scene *scene ) : m_scene( scene )
-		{
-		}
-
-		void update( ccl::Scene *scene, NodesCreated &psys )
-		{
-			m_scene = scene;
-			updateParticleSystems( psys );
-		}
-
-		// Can be called concurrently with other get() calls.
-		SharedCParticleSystemPtr get( const IECoreScene::PointsPrimitive *points )
-		{
-			const IECore::MurmurHash hash = points->Object::hash();
-
-			Cache::accessor a;
-			m_cache.insert( a, hash );
-
-			if( !a->second )
-			{
-				a->second = SharedCParticleSystemPtr( ParticleAlgo::convert( points ), nullNodeDeleter );
-			}
-
-			return a->second;
-		}
-
-		// For unique attributes on instanced meshes.
-		SharedCParticleSystemPtr get( const IECore::MurmurHash hash )
-		{
-			Cache::accessor a;
-			m_cache.insert( a, hash );
-			ccl::Particle particle = {};
-
-			if( !a->second )
-			{
-				ccl::ParticleSystem *pSys = new ccl::ParticleSystem();
-				pSys->particles.push_back_slow( particle );
-				a->second = SharedCParticleSystemPtr( pSys, nullNodeDeleter );
-			}
-			else
-			{
-				a->second->particles.push_back_slow( particle );
-			}
-
-			a->second->tag_update( m_scene );
-
-			return a->second;
-		}
-
-		// Must not be called concurrently with anything.
-		void clearUnused()
-		{
-			vector<IECore::MurmurHash> toErase;
-			for( Cache::iterator it = m_cache.begin(), eIt = m_cache.end(); it != eIt; ++it )
-			{
-				if( it->second.unique() )
-				{
-					// Only one reference - this is ours, so
-					// nothing outside of the cache is using the
-					// camera.
-					toErase.push_back( it->first );
-				}
-			}
-			for( vector<IECore::MurmurHash>::const_iterator it = toErase.begin(), eIt = toErase.end(); it != eIt; ++it )
-			{
-				m_cache.erase( *it );
-			}
-
-			if( toErase.size() )
-			{
-				m_scene->particle_system_manager->tag_update( m_scene );
-			}
-		}
-
-		void nodesCreated( NodesCreated &nodes ) const
-		{
-			for( Cache::const_iterator it = m_cache.begin(), eIt = m_cache.end(); it != eIt; ++it )
-			{
-				if( it->second.get() )
-				{
-					nodes.push_back( it->second.get() );
-				}
-			}
-		}
-
-	private :
-
-		void updateParticleSystems( NodesCreated &nodes )
-		{
-			if( nodes.size() )
-			{
-				ccl::vector<ccl::ParticleSystem *> &particleSystems = m_scene->particle_systems;
-				for( ccl::Node *node : nodes )
-				{
-					particleSystems.push_back( static_cast<ccl::ParticleSystem *>( node ) );
-				}
-				m_scene->particle_system_manager->tag_update( m_scene );
-				nodes.clear();
-			}
-		}
-
-		ccl::Scene *m_scene;
-		typedef tbb::concurrent_hash_map<IECore::MurmurHash, SharedCParticleSystemPtr> Cache;
-		Cache m_cache;
-
-};
-
-IE_CORE_DECLAREPTR( ParticleSystemsCache )
-
-} // namespace
-
-//////////////////////////////////////////////////////////////////////////
 // InstanceCache
 //////////////////////////////////////////////////////////////////////////
 
@@ -1731,11 +1420,6 @@ class Instance
 			return m_geometry.get();
 		}
 
-		ccl::ParticleSystem *particleSystem()
-		{
-			return m_particleSystem.get();
-		}
-
 		void objectsCreated( NodesCreated &nodes ) const
 		{
 			nodes.push_back( m_object.get() );
@@ -1746,14 +1430,6 @@ class Instance
 			if( m_prototype )
 			{
 				nodes.push_back( m_geometry.get() );
-			}
-		}
-
-		void particleSystemsCreated( NodesCreated &nodes ) const
-		{
-			if( m_prototype && m_particleSystem )
-			{
-				nodes.push_back( m_particleSystem.get() );
 			}
 		}
 
@@ -1768,14 +1444,8 @@ class Instance
 		{
 		}
 
-		Instance( const SharedCObjectPtr &object, const SharedCGeometryPtr &geometry, const SharedCParticleSystemPtr &particleSystem, const bool prototype )
-			:	m_object( object ), m_geometry( geometry ), m_particleSystem( particleSystem ), m_prototype( prototype )
-		{
-		}
-
 		SharedCObjectPtr m_object;
 		SharedCGeometryPtr m_geometry;
-		SharedCParticleSystemPtr m_particleSystem;
 		bool m_prototype;
 
 };
@@ -1785,8 +1455,8 @@ class InstanceCache : public IECore::RefCounted
 
 	public :
 
-		InstanceCache( ccl::Scene *scene, ParticleSystemsCachePtr particleSystemsCache )
-			: m_scene( scene ), m_particleSystemsCache( particleSystemsCache )
+		InstanceCache( ccl::Scene *scene )
+			: m_scene( scene )
 		{
 		}
 
@@ -1804,12 +1474,11 @@ class InstanceCache : public IECore::RefCounted
 
 			if( !cyclesAttributes->canInstanceGeometry( object ) )
 			{
-				SharedCParticleSystemPtr cpsysPtr;
-				SharedCObjectPtr cobject = convert( object, cyclesAttributes, nodeName, cpsysPtr );
+				SharedCObjectPtr cobject = convert( object, cyclesAttributes, nodeName );
 				m_objects.push_back( cobject );
 				SharedCGeometryPtr cgeo = SharedCGeometryPtr( cobject.get()->get_geometry(), nullNodeDeleter );
 				m_uniqueGeometry.push_back( cgeo );
-				return Instance( cobject, cgeo, cpsysPtr, true );
+				return Instance( cobject, cgeo, true );
 			}
 
 			bool isPrototype = false;
@@ -1819,7 +1488,6 @@ class InstanceCache : public IECore::RefCounted
 
 			SharedCObjectPtr cobject;
 			SharedCGeometryPtr cgeo;
-			SharedCParticleSystemPtr cpsysPtr;
 			Geometry::const_accessor readAccessor;
 			if( m_geometry.find( readAccessor, h ) )
 			{
@@ -1829,7 +1497,7 @@ class InstanceCache : public IECore::RefCounted
 				/// creation out of `convert()`?
 				///
 				/// Note : When passing `cgeo`, we are guaranteed a non-null return.
-				cobject = convert( object, cyclesAttributes, nodeName, cpsysPtr, cgeo.get() );
+				cobject = convert( object, cyclesAttributes, nodeName, cgeo.get() );
 				readAccessor.release();
 			}
 			else
@@ -1837,10 +1505,10 @@ class InstanceCache : public IECore::RefCounted
 				Geometry::accessor writeAccessor;
 				if( m_geometry.insert( writeAccessor, h ) )
 				{
-					cobject = convert( object, cyclesAttributes, nodeName, cpsysPtr );
+					cobject = convert( object, cyclesAttributes, nodeName );
 					if( !cobject )
 					{
-						return Instance( nullptr, nullptr, nullptr, false );
+						return Instance( nullptr, nullptr, false );
 					}
 					writeAccessor->second = SharedCGeometryPtr( cobject->get_geometry(), nullNodeDeleter );
 					cgeo = writeAccessor->second;
@@ -1850,14 +1518,14 @@ class InstanceCache : public IECore::RefCounted
 				else
 				{
 					cgeo = writeAccessor->second;
-					cobject = convert( object, cyclesAttributes, nodeName, cpsysPtr, cgeo.get() );
+					cobject = convert( object, cyclesAttributes, nodeName, cgeo.get() );
 				}
 				writeAccessor.release();
 			}
 
 			m_objects.push_back( cobject );
 
-			return Instance( cobject, cgeo, cpsysPtr, isPrototype );
+			return Instance( cobject, cgeo, isPrototype );
 		}
 
 		// Can be called concurrently with other get() calls.
@@ -1871,12 +1539,11 @@ class InstanceCache : public IECore::RefCounted
 
 			if( !cyclesAttributes->canInstanceGeometry( samples.front() ) )
 			{
-				SharedCParticleSystemPtr cpsysPtr;
-				SharedCObjectPtr cobject = convert( samples, times, frameIdx, cyclesAttributes, nodeName, cpsysPtr );
+				SharedCObjectPtr cobject = convert( samples, times, frameIdx, cyclesAttributes, nodeName );
 				m_objects.push_back( cobject );
 				SharedCGeometryPtr cgeo = SharedCGeometryPtr( cobject.get()->get_geometry(), nullNodeDeleter );
 				m_uniqueGeometry.push_back( cgeo );
-				return Instance( cobject, cgeo, cpsysPtr, true );
+				return Instance( cobject, cgeo, true );
 			}
 
 			bool isPrototype = false;
@@ -1894,12 +1561,11 @@ class InstanceCache : public IECore::RefCounted
 
 			SharedCObjectPtr cobject;
 			SharedCGeometryPtr cgeo;
-			SharedCParticleSystemPtr cpsysPtr;
 			Geometry::const_accessor readAccessor;
 			if( m_geometry.find( readAccessor, h ) )
 			{
 				cgeo = readAccessor->second;
-				cobject = convert( samples, times, frameIdx, cyclesAttributes, nodeName, cpsysPtr, cgeo.get() );
+				cobject = convert( samples, times, frameIdx, cyclesAttributes, nodeName, cgeo.get() );
 				readAccessor.release();
 			}
 			else
@@ -1907,10 +1573,10 @@ class InstanceCache : public IECore::RefCounted
 				Geometry::accessor writeAccessor;
 				if( m_geometry.insert( writeAccessor, h ) )
 				{
-					cobject = convert( samples, times, frameIdx, cyclesAttributes, nodeName, cpsysPtr );
+					cobject = convert( samples, times, frameIdx, cyclesAttributes, nodeName );
 					if( !cobject )
 					{
-						return Instance( nullptr, nullptr, nullptr, false );
+						return Instance( nullptr, nullptr, false );
 					}
 					writeAccessor->second = SharedCGeometryPtr( cobject->get_geometry(), nullNodeDeleter );
 					cgeo = writeAccessor->second;
@@ -1920,14 +1586,14 @@ class InstanceCache : public IECore::RefCounted
 				else
 				{
 					cgeo = writeAccessor->second;
-					cobject = convert( samples, times, frameIdx, cyclesAttributes, nodeName, cpsysPtr, cgeo.get() );
+					cobject = convert( samples, times, frameIdx, cyclesAttributes, nodeName, cgeo.get() );
 				}
 				writeAccessor.release();
 			}
 
 			m_objects.push_back( cobject );
 
-			return Instance( cobject, cgeo, cpsysPtr, isPrototype );
+			return Instance( cobject, cgeo, isPrototype );
 		}
 
 		// Must not be called concurrently with anything.
@@ -2005,7 +1671,6 @@ class InstanceCache : public IECore::RefCounted
 		SharedCObjectPtr convert( const IECore::Object *object,
 								  const CyclesAttributes *attributes,
 								  const std::string &nodeName,
-								  SharedCParticleSystemPtr &cpsysPtr,
 								  ccl::Geometry *cgeo = nullptr )
 		{
 			ccl::Object *cobject = nullptr;
@@ -2017,7 +1682,6 @@ class InstanceCache : public IECore::RefCounted
 				{
 					return nullptr;
 				}
-				attributes->applyGeometry( object, cobject );
 				ccl::Geometry *cgeo = cobject->get_geometry();
 				cgeo->set_owner( m_scene );
 			}
@@ -2033,14 +1697,6 @@ class InstanceCache : public IECore::RefCounted
 			cobject->set_random_id( (unsigned)IECore::hash_value( rh ) );
 			cobject->set_owner( m_scene );
 
-			if( attributes->hasParticleInfo() )
-			{
-				ParticlesMutex::scoped_lock lock( m_particlesMutex );
-				cpsysPtr = m_particleSystemsCache->get( rh );
-				cobject->set_particle_system( cpsysPtr.get() );
-				cobject->set_particle_index( cpsysPtr.get()->particles.size() - 1 );
-			}
-
 			return SharedCObjectPtr( cobject, nullNodeDeleter );
 		}
 
@@ -2049,7 +1705,6 @@ class InstanceCache : public IECore::RefCounted
 								  const int frame,
 								  const CyclesAttributes *attributes,
 								  const std::string &nodeName,
-								  SharedCParticleSystemPtr &cpsysPtr,
 								  ccl::Geometry *cgeo = nullptr )
 		{
 			ccl::Object *cobject = nullptr;
@@ -2061,7 +1716,6 @@ class InstanceCache : public IECore::RefCounted
 				{
 					return nullptr;
 				}
-				attributes->applyGeometry( samples.front(), cobject );
 				ccl::Geometry *cgeo = cobject->get_geometry();
 				cgeo->set_owner( m_scene );
 			}
@@ -2076,14 +1730,6 @@ class InstanceCache : public IECore::RefCounted
 			rh.append( nodeName );
 			cobject->set_random_id( (unsigned)IECore::hash_value( rh ) );
 			cobject->set_owner( m_scene );
-
-			if( attributes->hasParticleInfo() )
-			{
-				ParticlesMutex::scoped_lock lock( m_particlesMutex );
-				cpsysPtr = m_particleSystemsCache->get( rh );
-				cobject->set_particle_system( cpsysPtr.get() );
-				cobject->set_particle_index( cpsysPtr.get()->particles.size() - 1 );
-			}
 
 			return SharedCObjectPtr( cobject, nullNodeDeleter );
 		}
@@ -2156,10 +1802,6 @@ class InstanceCache : public IECore::RefCounted
 		Geometry m_geometry;
 		using UniqueGeometry = tbb::concurrent_vector<SharedCGeometryPtr>;
 		UniqueGeometry m_uniqueGeometry;
-		ParticleSystemsCachePtr m_particleSystemsCache;
-		using ParticlesMutex = tbb::spin_mutex;
-		ParticlesMutex m_particlesMutex;
-
 
 };
 
@@ -2952,8 +2594,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_cameraCache = new CameraCache();
 			m_lightCache = new LightCache( m_scene );
 			m_shaderCache = new ShaderCache( m_scene );
-			m_particleSystemsCache = new ParticleSystemsCache( m_scene );
-			m_instanceCache = new InstanceCache( m_scene, m_particleSystemsCache );
+			m_instanceCache = new InstanceCache( m_scene );
 			m_attributesCache = new AttributesCache( m_shaderCache );
 
 		}
@@ -3537,7 +3178,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			instance.objectsCreated( m_objectsCreated );
 			// These will only accumulate if it's the prototype
 			instance.geometryCreated( m_geometryCreated );
-			instance.particleSystemsCreated( m_particleSystemsCreated );
 
 			return result;
 		}
@@ -3572,7 +3212,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			instance.objectsCreated( m_objectsCreated );
 			// These will only accumulate if it's the prototype
 			instance.geometryCreated( m_geometryCreated );
-			instance.particleSystemsCreated( m_particleSystemsCreated );
 
 			return result;
 		}
@@ -3741,7 +3380,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		{
 			m_cameraCache->clearUnused();
 			m_instanceCache->clearUnused();
-			m_particleSystemsCache->clearUnused();
 			m_lightCache->clearUnused();
 			m_attributesCache->clearUnused();
 		}
@@ -3753,14 +3391,12 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				// Get all objects held by Gaffer
 				m_instanceCache->nodesCreated( m_objectsCreated, m_geometryCreated );
 				m_lightCache->nodesCreated( m_lightsCreated );
-				m_particleSystemsCache->nodesCreated( m_particleSystemsCreated );
 			}
 
 			// Add every shader each time, less issues
 			m_shaderCache->nodesCreated( m_shadersCreated );
 
 			m_lightCache->update( m_scene, m_lightsCreated );
-			m_particleSystemsCache->update( m_scene, m_particleSystemsCreated );
 			m_instanceCache->update( m_scene, m_objectsCreated, m_geometryCreated );
 			m_shaderCache->update( m_scene, m_shadersCreated );
 		}
@@ -4081,7 +3717,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_shaderCache->flushTextures();
 			m_scene->shaders.resize( m_shaderCache->numDefaultShaders() );
 			m_scene->lights.clear();
-			m_scene->particle_systems.clear();
 
 			init();
 
@@ -4270,7 +3905,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_cameraCache.reset();
 			m_instanceCache.reset();
 			m_lightCache.reset();
-			m_particleSystemsCache.reset();
 			m_shaderCache.reset();
 			m_attributesCache.reset();
 		}
@@ -4325,14 +3959,12 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		ShaderCachePtr m_shaderCache;
 		LightCachePtr m_lightCache;
 		InstanceCachePtr m_instanceCache;
-		ParticleSystemsCachePtr m_particleSystemsCache;
 		AttributesCachePtr m_attributesCache;
 
 		// Nodes created to update to Cycles
 		NodesCreated m_objectsCreated;
 		NodesCreated m_lightsCreated;
 		NodesCreated m_geometryCreated;
-		NodesCreated m_particleSystemsCreated;
 		NodesCreated m_shadersCreated;
 
 		// Outputs

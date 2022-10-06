@@ -32,8 +32,6 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferCycles/IECoreCyclesPreview/PointsAlgo.h"
-
 #include "GafferCycles/IECoreCyclesPreview/AttributeAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/ObjectAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/SocketAlgo.h"
@@ -139,22 +137,6 @@ ccl::PointCloud *convertCommon( const IECoreScene::PointsPrimitive *points )
 	}
 	return pointcloud;
 }
-
-ObjectAlgo::ConverterDescription<PointsPrimitive> g_description( PointsAlgo::convert, PointsAlgo::convert );
-
-} // namespace
-
-//////////////////////////////////////////////////////////////////////////
-// Implementation of public API
-//////////////////////////////////////////////////////////////////////////
-
-namespace IECoreCycles
-
-{
-
-namespace PointsAlgo
-
-{
 
 ccl::Object *convert( const IECoreScene::PointsPrimitive *points, const std::string &nodeName, ccl::Scene *scene )
 {
@@ -278,6 +260,6 @@ ccl::Object *convert( const vector<const IECoreScene::PointsPrimitive *> &points
 	return cobject;
 }
 
-} // namespace PointsAlgo
+ObjectAlgo::ConverterDescription<PointsPrimitive> g_description( convert, convert );
 
-} // namespace IECoreCycles
+} // namespace

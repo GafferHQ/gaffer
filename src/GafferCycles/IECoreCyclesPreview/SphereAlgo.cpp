@@ -32,8 +32,6 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferCycles/IECoreCyclesPreview/SphereAlgo.h"
-
 #include "GafferCycles/IECoreCyclesPreview/AttributeAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/ObjectAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/SocketAlgo.h"
@@ -93,22 +91,6 @@ ccl::PointCloud *convertCommon( const IECoreScene::SpherePrimitive *sphere )
 	return pointcloud;
 }
 
-ObjectAlgo::ConverterDescription<SpherePrimitive> g_description( SphereAlgo::convert, SphereAlgo::convert );
-
-} // namespace
-
-//////////////////////////////////////////////////////////////////////////
-// Implementation of public API
-//////////////////////////////////////////////////////////////////////////
-
-namespace IECoreCycles
-
-{
-
-namespace SphereAlgo
-
-{
-
 ccl::Object *convert( const IECoreScene::SpherePrimitive *sphere, const std::string &nodeName, ccl::Scene *scene )
 {
 	ccl::Object *cobject = new ccl::Object();
@@ -125,6 +107,6 @@ ccl::Object *convert( const vector<const IECoreScene::SpherePrimitive *> &sample
 	return cobject;
 }
 
-} // namespace SphereAlgo
+ObjectAlgo::ConverterDescription<SpherePrimitive> g_description( convert, convert );
 
-} // namespace IECoreCycles
+} // namespace
