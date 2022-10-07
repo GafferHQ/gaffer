@@ -6,6 +6,19 @@ API
 
 - Capsule : Removed attempts to detect invalidated Capsules.
 
+1.1.x.x ( relative to 1.1.1.0)
+=======
+
+Improvements
+------------
+
+- Catalogue : Improved performance when interacting with large Catalogues.
+
+Fixes
+-----
+
+- Catalogue : Removed incorrect error message on empty Catalogues.
+
 1.1.1.0 (relative to 1.1.0.0)
 =======
 
