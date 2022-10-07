@@ -127,7 +127,7 @@ class GAFFERSCENE_API Rename : public FilteredSceneProcessor
 		void hashInputPath( const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 		IECore::ConstInternedStringVectorDataPtr computeInputPath( const Gaffer::Context *context ) const;
 
-		class InputScope;
+		struct InputScope;
 
 		static size_t g_firstPlugIndex;
 
