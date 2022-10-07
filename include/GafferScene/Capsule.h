@@ -58,11 +58,21 @@ class GAFFERSCENE_API Capsule : public IECoreScenePreview::Procedural
 		/// caller to provide a `hash` that uniquely identifies the entire
 		/// subtree from the root down, taking into account the context.
 		///
-		/// The capsule is invalidated by any subsequent graph edits
-		/// that dirty the scene (because the stored hash will no longer
-		/// match the scene).  We rely on the node creating the capsule
-		/// to flag it as dirty, and trigger a cancellation that will
-		/// prevent the invalid capsule from being used.
+		/// The capsule is invalidated by any subsequent graph edits that
+		/// modify the scene below `root`. Usage of an invalidated capsule
+		/// is undefined behaviour. In practice, nodes that create capsules
+		/// avoid such usage in two ways :
+		///
+		/// 1. Before any node graph edit is made, all existing processes
+		///    performing computes are cancelled. This prevents renderers
+		///    from continuing to use the capsule.
+		/// 2. After the node graph is edited, the capsule-generating
+		///    node generates a new `objectHash()` so that any new processes
+		///    will retrieve a new capsule from the node.
+		///
+		/// Invalidated capsules _do_ live on in the ValuePlug's compute cache,
+		/// but because the node's `objectHash()` has changed, they will not
+		/// be reused, and will eventually be evicted.
 		Capsule(
 			const ScenePlug *scene,
 			const ScenePlug::ScenePath &root,
@@ -83,18 +93,17 @@ class GAFFERSCENE_API Capsule : public IECoreScenePreview::Procedural
 
 	private :
 
-		void setScene( const ScenePlug *scene );
-		void parentChanged( const Gaffer::GraphComponent *graphComponent );
 		void throwIfNoScene() const;
 
 		IECore::MurmurHash m_hash;
 		Imath::Box3f m_bound;
-		// Note that we don't own a reference to m_scene because we expect
-		// the graph to remain unchanged, and holding a reference to a plug
-		// in something stored in the plug value cache can complicate the
-		// release of resources ( usually there is no way for a cache eviction
-		// to alter graph components ). Instead we use parentChanged to
-		// detect any unparenting and null out the scene.
+		// We don't own a reference to `m_scene` because it could cause its deletion
+		// when the capsule is evicted from the ValuePlug's compute cache. That would
+		// be equivalent to making a graph edit from within a compute, which is forbidden.
+		// Instead we rely on the invalidation rules documented on the constructor to
+		// ensure that `m_scene` is still alive at the point of use.
+		/// \todo If we had weak pointer support in `IECore::RefCounted` or `Gaffer::GraphComponent`,
+		/// then we could store a weak pointer, and use it to check for expiry of the scene.
 		const ScenePlug *m_scene;
 		ScenePlug::ScenePath m_root;
 		Gaffer::ConstContextPtr m_context;

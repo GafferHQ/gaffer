@@ -78,60 +78,12 @@ Capsule::Capsule(
 	const IECore::MurmurHash &hash,
 	const Imath::Box3f &bound
 )
-	:	m_hash( hash ), m_bound( bound ), m_scene( nullptr ), m_root( root ), m_context( capsuleContext( context ) )
+	:	m_hash( hash ), m_bound( bound ), m_scene( scene ), m_root( root ), m_context( capsuleContext( context ) )
 {
-	setScene( scene );
 }
 
 Capsule::~Capsule()
 {
-	// Disconnect from signals
-	setScene( nullptr );
-}
-
-void Capsule::setScene( const ScenePlug *scene )
-{
-	assert( !scene || scene->parent() );
-
-	// Connecting to and disconnecting from signals is not threadsafe,
-	// and neither is calling `GraphComponent::parentChangedSignal()`
-	// (because it constructs signals lazily on demand). Most (all?)
-	// other signal access occurs on the UI thread, but capsules are
-	// constructed concurrently on background threads when generating
-	// scenes. We use a mutex to serialise all signal access performed
-	// by capsules, but this is still not safe with respect to signal
-	// access that may be performed by UI components on the main thread.
-	//
-	// Todo : Make this watertight. Possibilities include :
-	//
-	// - Switching to boost::signals2, which is threadsafe by default,
-	//   and making the GraphComponent signal accessors threadsafe.
-	// - Writing our own threadsafe signals classes which do exactly what
-	//   we need, without the bloat of the boost versions. And making the
-	//   GraphComponent signal accessors threadsafe.
-	// - Ditching all the signal handling in capsules. It is only used
-	//   to track the erroneous usage of capsules where the source scene
-	//   plug has been moved, which can only arise from bugs elsewhere.
-	//   I can't recall seeing an expired capsule yet.
-	static tbb::spin_mutex g_signalMutex;
-	tbb::spin_mutex::scoped_lock signalLock( g_signalMutex );
-
-	if( m_scene )
-	{
-		const_cast<ScenePlug *>( m_scene )->parentChangedSignal().disconnect(
-			boost::bind( &Capsule::parentChanged, this, ::_1 )
-		);
-	}
-
-	m_scene = scene;
-
-	if( m_scene )
-	{
-		const_cast<ScenePlug *>( m_scene )->parentChangedSignal().connect(
-			boost::bind( &Capsule::parentChanged, this, ::_1 )
-		);
-	}
-
 }
 
 bool Capsule::isEqualTo( const IECore::Object *other ) const
@@ -160,9 +112,9 @@ void Capsule::copyFrom( const IECore::Object *other, IECore::Object::CopyContext
 	const Capsule *capsule = static_cast<const Capsule *>( other );
 	m_hash = capsule->m_hash;
 	m_bound = capsule->m_bound;
+	m_scene = capsule->m_scene;
 	m_root = capsule->m_root;
 	m_context = capsule->m_context;
-	setScene( capsule->m_scene );
 }
 
 void Capsule::save( IECore::Object::SaveContext *context ) const
@@ -218,16 +170,10 @@ const Gaffer::Context *Capsule::context() const
 	return m_context.get();
 }
 
-void Capsule::parentChanged( const Gaffer::GraphComponent *graphComponent )
-{
-	assert( graphComponent == m_scene );
-	setScene( nullptr );
-}
-
 void Capsule::throwIfNoScene() const
 {
 	if( !m_scene )
 	{
-		throw IECore::Exception( "Source scene plug no longer valid." );
+		throw IECore::Exception( "No scene" );
 	}
 }
