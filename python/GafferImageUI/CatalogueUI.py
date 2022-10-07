@@ -310,13 +310,6 @@ registerColumn(
 	SimpleColumn( "Display Window", lambda _, c : __formatBox( c["out"].format().getDisplayWindow() ) )
 )
 
-def _imageFromName( catalogue, imageName ):
-	for i in catalogue["images"].source().children():
-		if i.getName() == imageName:
-			return i
-
-	return None
-
 # Column for setting which images to output as comparison views
 class OutputIndexColumn( Column ) :
 
@@ -1052,7 +1045,7 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 		imageToReplace = None
 
 		if targetPath is not None :
-			imageToReplace =  _imageFromName( self.getPlug().node(), str( targetPath )[1:] )
+			imageToReplace = targetPath.property( "catalogue:image" )
 		else :
 			# Drag has gone above or below all listed items. Use closest image.
 			imageToReplace = images[0] if event.line.p0.y < 1 else images[-1]
@@ -1135,9 +1128,9 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 			return False
 
 		if event.button == event.Buttons.Left and event.modifiers == event.Modifiers.None_ :
-			name = pathListing.pathAt( event.line.p0 )
-			if name:
-				image = _imageFromName( self.getPlug().node(), name[0] )
+			path = pathListing.pathAt( event.line.p0 )
+			if path is not None :
+				image = path.property( "catalogue:image" )
 				self.__setOutputIndex( image["outputIndex"].getValue() == 0, image )
 
 		return True
@@ -1192,13 +1185,12 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 			self.__popupMenu.popup( parent = self )
 			return True
 		elif isinstance( self.__pathListing.columnAt( mousePosition ), OutputIndexColumn ):
-			row = self.__pathListing.pathAt( mousePosition )
-			if row:
-				image = _imageFromName( self.getPlug().node(), row[0] )
-				if image:
-					self.__popupMenu = GafferUI.Menu( self.__outputIndexContextMenuDefinition( image ), title = "Output Index" )
-					self.__popupMenu.popup( parent = self )
-					return True
+			path = self.__pathListing.pathAt( mousePosition )
+			if path is not None :
+				image = path.property( "catalogue:image" )
+				self.__popupMenu = GafferUI.Menu( self.__outputIndexContextMenuDefinition( image ), title = "Output Index" )
+				self.__popupMenu.popup( parent = self )
+				return True
 
 		return False
 
