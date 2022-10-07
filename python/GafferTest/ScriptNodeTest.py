@@ -1305,7 +1305,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 
 	def testFileNameInExecutionError( self ) :
 
-		fileName = self.temporaryDirectory() + "/test.gfr"
+		fileName = self.temporaryDirectory().replace( "\\", "/" ) + "/test.gfr"
 		with open( fileName, "w" ) as f :
 			f.write( "a = 10\n" )
 			f.write( "a = iDontExist\n" )
