@@ -61,6 +61,9 @@ IECORECYCLES_API ccl::Geometry *convert( const IECore::Object *object, const std
 IECORECYCLES_API ccl::Geometry *convert( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const int frame, const std::string &nodeName, ccl::Scene *scene = nullptr );
 
 /// Signature of a function which can convert to `ccl:Geometry`.
+/// \todo There's really no need to pass the node name here, because it's not a unique handle that
+/// needs to be provided when creating the Geometry (like it is in Arnold). The caller can just set the name
+/// afterwards if they want to.
 using Converter = ccl::Geometry *(*)( const IECore::Object *, const std::string &, ccl::Scene * );
 /// Signature of a function which can convert a series of IECore::Object
 /// samples into a moving `ccl:Geometry` object.
