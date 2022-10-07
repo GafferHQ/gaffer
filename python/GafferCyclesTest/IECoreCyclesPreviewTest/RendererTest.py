@@ -497,6 +497,76 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( image.dataWindow, imath.Box2i( imath.V2i( 500, 250 ), imath.V2i( 1499, 749 ) ) )
 		self.assertEqual( image.displayWindow, imath.Box2i( imath.V2i( 0 ), imath.V2i( 1999, 999 ) ) )
 
+	def testPointsWithNormals( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		renderer.output(
+			"pointsWithNormals",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "pointsWithNormals",
+				}
+			)
+		)
+
+		# Render a point with a custom normal.
+
+		points = IECoreScene.PointsPrimitive(
+			IECore.V3fVectorData( [ imath.V3f( 0 ) ] )
+		)
+		points["N"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECore.V3fVectorData(
+				[ imath.V3f( 1, 0.5, 0.25 ) ],
+				IECore.GeometricData.Interpretation.Normal
+			)
+		)
+
+		pointsObject = renderer.object(
+			"/pointsWithNormals",
+			points,
+			renderer.attributes( IECore.CompoundObject ( {
+				"cycles:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface" ),
+						"attribute" : IECoreScene.Shader( "attribute", "cycles:shader", { "attribute" : "N" } ),
+					},
+					connections = [
+						( ( "attribute", "color" ), ( "output", "emission" ) ),
+					],
+					output = "output",
+				)
+			} ) )
+		)
+
+		## \todo Default camera is facing down +ve Z but should be facing
+		# down -ve Z.
+		pointsObject.transform( imath.M44f().translate( imath.V3f( 0, 0, 2 ) ) )
+
+		renderer.render()
+		time.sleep( 2 )
+
+		del pointsObject
+		del renderer
+
+		# Check that the shader was able to read the normal.
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "pointsWithNormals" )
+		self.assertTrue( isinstance( image, IECoreImage.ImagePrimitive ) )
+
+		color = self.__colorAtUV( image, imath.V2f( 0.5 ) )
+		self.assertEqual( color.r, points["N"].data[0].x )
+		self.assertEqual( color.g, points["N"].data[0].y )
+		self.assertEqual( color.b, points["N"].data[0].z )
+
 	def __colorAtUV( self, image, uv ) :
 
 		dimensions = image.dataWindow.size() + imath.V2i( 1 )

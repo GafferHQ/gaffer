@@ -113,6 +113,8 @@ ccl::TypeDesc typeFromGeometricDataInterpretation( IECore::GeometricData::Interp
 
 void convertPrimitiveVariable( const std::string &name, const IECoreScene::PrimitiveVariable &primitiveVariable, ccl::AttributeSet &attributes )
 {
+	// Create attribute.
+
 	IECore::TypeId dataType = primitiveVariable.data.get()->typeId();
 	if( dataType == StringDataTypeId )
 	{
@@ -121,55 +123,56 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 	}
 	ccl::TypeDesc ctype = typeDesc( dataType );
 	ccl::Attribute *attr = nullptr;
-	if( name == "N" )
+
+	if( ctype != ccl::TypeDesc::TypeFloat )
 	{
-		attr = attributes.add( ccl::ATTR_STD_VERTEX_NORMAL, ccl::ustring( name.c_str() ) );
+		// We need to determine what kind of vector it is
+		const V3fVectorData *data = runTimeCast<const V3fVectorData>( primitiveVariable.data.get() );
+		if( data )
+			ctype = typeFromGeometricDataInterpretation( data->getInterpretation() );
 	}
-	else if( name == "uv" )
+	ccl::AttributeElement celem = ccl::ATTR_ELEMENT_NONE;
+	switch( primitiveVariable.interpolation )
 	{
-		attr = attributes.add( ccl::ATTR_STD_UV, ccl::ustring( name.c_str() ) );
+		case PrimitiveVariable::Constant :
+			celem = ccl::ATTR_ELEMENT_MESH;
+			break;
+		case PrimitiveVariable::Vertex :
+			if( attributes.geometry->geometry_type == ccl::Geometry::HAIR )
+			{
+				celem = ccl::ATTR_ELEMENT_CURVE_KEY;
+			}
+			else
+			{
+				celem = ccl::ATTR_ELEMENT_VERTEX;
+			}
+			break;
+		case PrimitiveVariable::Varying :
+		case PrimitiveVariable::FaceVarying :
+			celem = ccl::ATTR_ELEMENT_CORNER;
+			break;
+		case PrimitiveVariable::Uniform :
+			celem = ccl::ATTR_ELEMENT_FACE;
+			break;
+		default :
+			break;
 	}
-	else if( name == "uTangent" )
+	attr = attributes.add( ccl::ustring( name.c_str() ), ctype, celem );
+
+	// Tag as a standard attribute if possible. Note that we don't use `AttributeSet::add( AttributeStandard )`
+	// because that crashes for certain combinations of geometry type and attribute. But some of those "crashy"
+	// combinations are useful - see `RendererTest.testPointsWithNormals` for an example.
+	//
+	/// \todo Support more standard attributes here. Maybe then the geometry converters could
+	/// use `convertPrimitiveVariable()` for most data, instead of having
+	/// custom code paths for `P`, `uv` etc?
+
+	if( name == "N" && attr->element == ccl::ATTR_ELEMENT_VERTEX && attr->type == ccl::TypeDesc::TypeNormal )
 	{
-		attr = attributes.add( ccl::ATTR_STD_UV_TANGENT, ccl::ustring( name.c_str() ) );
+		attr->std = ccl::ATTR_STD_VERTEX_NORMAL;
 	}
-	else
-	{
-		if( ctype != ccl::TypeDesc::TypeFloat )
-		{
-			// We need to determine what kind of vector it is
-			const V3fVectorData *data = runTimeCast<const V3fVectorData>( primitiveVariable.data.get() );
-			if( data )
-				ctype = typeFromGeometricDataInterpretation( data->getInterpretation() );
-		}
-		ccl::AttributeElement celem = ccl::ATTR_ELEMENT_NONE;
-		switch( primitiveVariable.interpolation )
-		{
-			case PrimitiveVariable::Constant :
-				celem = ccl::ATTR_ELEMENT_MESH;
-				break;
-			case PrimitiveVariable::Vertex :
-				if( attributes.geometry->geometry_type == ccl::Geometry::HAIR )
-				{
-					celem = ccl::ATTR_ELEMENT_CURVE_KEY;
-				}
-				else
-				{
-					celem = ccl::ATTR_ELEMENT_VERTEX;
-				}
-				break;
-			case PrimitiveVariable::Varying :
-			case PrimitiveVariable::FaceVarying :
-				celem = ccl::ATTR_ELEMENT_CORNER;
-				break;
-			case PrimitiveVariable::Uniform :
-				celem = ccl::ATTR_ELEMENT_FACE;
-				break;
-			default :
-				break;
-		}
-		attr = attributes.add( ccl::ustring( name.c_str() ), ctype, celem );
-	}
+
+	// Fill attribute with data.
 
 	if( primitiveVariable.interpolation != PrimitiveVariable::Constant && ctype == ccl::TypeDesc::TypeFloat )
 	{
