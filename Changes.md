@@ -4,7 +4,9 @@
 Improvements
 ------------
 
-- Catalogue : Improved performance when interacting with large Catalogues.
+- Catalogue :
+  - Improved performance when interacting with large Catalogues.
+  - Added hover state to the output index column, to indicate clickability.
 
 Fixes
 -----

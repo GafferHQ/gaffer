@@ -310,24 +310,27 @@ registerColumn(
 	SimpleColumn( "Display Window", lambda _, c : __formatBox( c["out"].format().getDisplayWindow() ) )
 )
 
-# Column for setting which images to output as comparison views
+# Column for the `Image.outputIndex` plug.
 class OutputIndexColumn( Column ) :
 
 	def __init__( self, title ) :
 
 		Column.__init__( self, title )
 
-	def _imageCellData( self, image, catalogue ) :
-		tt = "Click to set this image as Output 1 so it can be referenced from the Viewer or by CatalogueSelect nodes. Right-click to set other output indexes."
-		i = image["outputIndex"].getValue()
-		if i > 0:
-			return self.CellData( icon = "catalogueOutput%i.png" % i, toolTip = tt )
-		else:
-			return self.CellData( value = "", toolTip = tt )
-
 	def headerData( self, canceller = None ) :
 
 		return self.CellData( icon = "catalogueOutputHeader.png", toolTip = "Output Index" )
+
+	def _imageCellData( self, image, catalogue ) :
+
+		i = image["outputIndex"].getValue()
+		return self.CellData(
+			icon = IECore.CompoundData( {
+				"state:normal" : "catalogueOutput{}.png".format( i ) if i else "",
+				"state:highlighted" : "catalogueOutput{}Highlighted{}.png".format( i or 1, "" if i else "Transparent" ),
+			} ),
+			toolTip = "Click to set this image as Output 1 so it can be referenced from the Viewer or by CatalogueSelect nodes. Right-click to set other output indexes."
+		)
 
 registerColumn( "Output Index", OutputIndexColumn( "Output Index" ) )
 
