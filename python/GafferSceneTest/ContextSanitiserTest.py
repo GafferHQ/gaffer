@@ -34,8 +34,6 @@
 #
 ##########################################################################
 
-import six
-
 import IECore
 
 import Gaffer
@@ -64,7 +62,7 @@ class ContextSanitiserTest( GafferSceneTest.SceneTestCase ) :
 
 				c["scene:setName"] = IECore.IntData( 5 )
 
-				with six.assertRaisesRegex( self, IECore.Exception, 'Context variable is not of type "InternedStringData"' ) :
+				with self.assertRaisesRegex( IECore.Exception, 'Context variable is not of type "InternedStringData"' ) :
 					plane["out"]["object"].getValue()
 
 		for message in mh.messages :

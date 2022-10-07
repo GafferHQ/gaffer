@@ -35,7 +35,6 @@
 ##########################################################################
 
 import imath
-import six
 
 import IECore
 
@@ -63,7 +62,7 @@ class ContextSanitiserTest( GafferImageTest.ImageTestCase ) :
 
 				c["image:channelName"] = IECore.IntData( 5 )
 
-				with six.assertRaisesRegex( self, IECore.Exception, 'Context variable is not of type "StringData"' ) :
+				with self.assertRaisesRegex( IECore.Exception, 'Context variable is not of type "StringData"' ) :
 					constant["out"]["metadata"].getValue()
 
 		for message in mh.messages :

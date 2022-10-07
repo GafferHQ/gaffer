@@ -36,7 +36,6 @@
 ##########################################################################
 
 import unittest
-import six
 import threading
 
 import IECore
@@ -281,7 +280,7 @@ class PathTest( GafferTest.TestCase ) :
 				Gaffer.Path.__init__( self, path, root, filter )
 
 		p = PathWithoutCopy( "/a" )
-		six.assertRaisesRegex( self, Exception, r".*Path.copy\(\) not implemented.*", p.parent )
+		self.assertRaisesRegex( Exception, r".*Path.copy\(\) not implemented.*", p.parent )
 
 	def testProperties( self ) :
 

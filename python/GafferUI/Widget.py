@@ -38,7 +38,6 @@
 import weakref
 import inspect
 import warnings
-import six
 import imath
 
 import IECore
@@ -596,7 +595,7 @@ class Widget( Gaffer.Signals.Trackable ) :
 	# is called.
 	def setToolTip( self, toolTip ) :
 
-		assert( isinstance( toolTip, six.string_types ) )
+		assert( isinstance( toolTip, str ) )
 
 		self._qtWidget().setToolTip( toolTip )
 

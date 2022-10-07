@@ -85,14 +85,6 @@ using namespace boost::python;
 using namespace boost::posix_time;
 using namespace Gaffer;
 
-#if PY_MAJOR_VERSION < 3
-static bool PyGILState_Check()
-{
-	extern PyThreadState *_PyThreadState_Current;
-	return PyGILState_GetThisThreadState() == _PyThreadState_Current;
-}
-#endif
-
 namespace
 {
 

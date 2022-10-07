@@ -35,7 +35,6 @@
 ##########################################################################
 
 import unittest
-import six
 
 import imath
 
@@ -94,7 +93,7 @@ class TweakPlugTest( GafferTest.TestCase ) :
 
 		d = IECore.CompoundData( { "test" : 1 } )
 
-		with six.assertRaisesRegex( self, RuntimeError, "Cannot apply tweak to \"test\" : Value of type \"IntData\" does not match parameter of type \"Color3fData\"" ) :
+		with self.assertRaisesRegex( RuntimeError, "Cannot apply tweak to \"test\" : Value of type \"IntData\" does not match parameter of type \"Color3fData\"" ) :
 			p.applyTweak( d )
 
 	def testMissingMode( self ) :
@@ -103,7 +102,7 @@ class TweakPlugTest( GafferTest.TestCase ) :
 		p["t"] = Gaffer.TweakPlug( "test", 0.5, Gaffer.TweakPlug.Mode.Replace )
 
 		d = IECore.CompoundData()
-		with six.assertRaisesRegex( self, RuntimeError, "Cannot apply tweak with mode Replace to \"test\" : This parameter does not exist" ) :
+		with self.assertRaisesRegex( RuntimeError, "Cannot apply tweak with mode Replace to \"test\" : This parameter does not exist" ) :
 			p.applyTweaks( d, missingMode = Gaffer.TweakPlug.MissingMode.Error )
 		self.assertEqual( d, IECore.CompoundData() )
 
@@ -117,11 +116,11 @@ class TweakPlugTest( GafferTest.TestCase ) :
 
 		d = IECore.CompoundData()
 		p["t"]["mode"].setValue( Gaffer.TweakPlug.Mode.Add )
-		with six.assertRaisesRegex( self, RuntimeError, "Cannot apply tweak with mode Add to \"test\" : This parameter does not exist" ) :
+		with self.assertRaisesRegex( RuntimeError, "Cannot apply tweak with mode Add to \"test\" : This parameter does not exist" ) :
 			p.applyTweaks( d, missingMode = Gaffer.TweakPlug.MissingMode.Error )
 		self.assertEqual( d, IECore.CompoundData() )
 
-		with six.assertRaisesRegex( self, RuntimeError, "Cannot apply tweak with mode Add to \"test\" : This parameter does not exist" ) :
+		with self.assertRaisesRegex( RuntimeError, "Cannot apply tweak with mode Add to \"test\" : This parameter does not exist" ) :
 			p.applyTweaks( d, missingMode = Gaffer.TweakPlug.MissingMode.IgnoreOrReplace )
 		self.assertEqual( d, IECore.CompoundData() )
 

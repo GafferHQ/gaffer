@@ -38,7 +38,6 @@ import inspect
 import os
 import unittest
 import imath
-import six
 
 import IECore
 
@@ -474,12 +473,12 @@ class CollectScenesTest( GafferSceneTest.SceneTestCase ) :
 		collect["in"].setInput( sphere["out"] )
 		collect["rootNames"].setValue( IECore.StringVectorData( [ "/root", "/root/nested" ] ) )
 
-		with six.assertRaisesRegex( self, Gaffer.ProcessException, '"/root" contains nested roots' ) :
+		with self.assertRaisesRegex( Gaffer.ProcessException, '"/root" contains nested roots' ) :
 			collect["out"].childNames( "/root" )
 
 		collect["rootNames"].setValue( IECore.StringVectorData( [ "/root/nested", "/root" ] ) )
 
-		with six.assertRaisesRegex( self, Gaffer.ProcessException, '"/root" contains nested roots' ) :
+		with self.assertRaisesRegex( Gaffer.ProcessException, '"/root" contains nested roots' ) :
 			collect["out"].childNames( "/root" )
 
 	def testDefaultScene( self ) :

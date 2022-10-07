@@ -38,8 +38,6 @@ import os
 import time
 import imath
 
-import six
-
 import IECore
 
 import Gaffer
@@ -249,7 +247,7 @@ class screengrab( Gaffer.Application ) :
 		if args["commandFile"].value :
 			commandFile = args["commandFile"].value
 			with open( commandFile ) as f :
-				six.exec_( compile( f.read(), commandFile, "exec" ), d, d )
+				exec( compile( f.read(), commandFile, "exec" ), d, d )
 
 		# Early out if we haven't been asked to save anything (we assume
 		# something meaningful was grabbed by one of the commands above).

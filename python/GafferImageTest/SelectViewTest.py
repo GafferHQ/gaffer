@@ -37,7 +37,6 @@
 import unittest
 import imath
 import os
-import six
 
 import IECore
 
@@ -91,7 +90,7 @@ class SelectViewTest( GafferImageTest.ImageTestCase ) :
 		)
 
 		selectView["view"].setValue( "undeclared" )
-		with six.assertRaisesRegex( self, Gaffer.ProcessException, ".*View does not exist \"undeclared\""):
+		with self.assertRaisesRegex( Gaffer.ProcessException, ".*View does not exist \"undeclared\""):
 			selectView["out"].format()
 
 		createViews["views"]["view2"]["enabled"].setValue( True )

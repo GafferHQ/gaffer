@@ -36,7 +36,6 @@ import unittest
 
 import arnold
 import imath
-import six
 
 import IECore
 import IECoreArnold
@@ -45,8 +44,7 @@ class ParameterAlgoTest( unittest.TestCase ) :
 
 	def testTypeErrors( self ) :
 
-		six.assertRaisesRegex(
-			self,
+		self.assertRaisesRegex(
 			TypeError,
 			"Expected an AtNode",
 			IECoreArnold.ParameterAlgo.setParameter, None, "test", IECore.IntData( 10 )

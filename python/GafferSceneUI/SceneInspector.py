@@ -37,18 +37,12 @@
 
 import math
 import difflib
+import html
 import itertools
 import collections
 import functools
-import six
-import imath
 
-# These modules are not interchangeable in general, but we only
-# use the `escape()` function which is present in both.
-if six.PY3 :
-	import html
-else :
-	import cgi as html
+import imath
 
 import IECore
 import IECoreScene
@@ -484,7 +478,7 @@ class TextDiff( SideBySideDiff ) :
 			return self.__formatShaders( values )
 		elif isinstance( values[0], ( float, int ) ) :
 			return self.__formatNumbers( values )
-		elif isinstance( values[0], six.string_types ) :
+		elif isinstance( values[0], str ) :
 			return self.__formatStrings( [ str( v ) for v in values ] )
 		else :
 			return [ html.escape( str( v ) ) for v in values ]

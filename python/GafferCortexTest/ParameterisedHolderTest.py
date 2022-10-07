@@ -38,7 +38,6 @@
 import os
 import unittest
 import datetime
-import six
 import imath
 
 import IECore

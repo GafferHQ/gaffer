@@ -39,7 +39,6 @@ import collections
 import functools
 import sys
 import weakref
-import six
 
 import imath
 
@@ -587,7 +586,7 @@ class _TabbedContainer( GafferUI.TabbedContainer ) :
 	# such as add/remove/insert directly or state tracking will fail.
 	def addEditor( self, nameOrEditor ) :
 
-		if isinstance( nameOrEditor, six.string_types ) :
+		if isinstance( nameOrEditor, str ) :
 			editor = GafferUI.Editor.create( nameOrEditor, self.ancestor( CompoundEditor ).scriptNode() )
 		else :
 			editor = nameOrEditor

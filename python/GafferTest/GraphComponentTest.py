@@ -39,7 +39,7 @@ import gc
 import weakref
 import unittest
 import threading
-import six
+import queue
 
 import IECore
 
@@ -308,7 +308,7 @@ class GraphComponentTest( GafferTest.TestCase ) :
 				q.put( e )
 
 		threads = []
-		q = six.moves.queue.Queue()
+		q = queue.Queue()
 		for i in range( 0, 500 ) :
 
 			t = threading.Thread( target = f, args = (q,) )
@@ -806,8 +806,8 @@ class GraphComponentTest( GafferTest.TestCase ) :
 	def testDescriptiveKeyErrors( self ) :
 
 		g = Gaffer.GraphComponent()
-		six.assertRaisesRegex( self, KeyError, "'a' is not a child of 'GraphComponent'", g.__getitem__, "a" )
-		six.assertRaisesRegex( self, KeyError, "'a' is not a child of 'GraphComponent'", g.__delitem__, "a" )
+		self.assertRaisesRegex( KeyError, "'a' is not a child of 'GraphComponent'", g.__getitem__, "a" )
+		self.assertRaisesRegex( KeyError, "'a' is not a child of 'GraphComponent'", g.__delitem__, "a" )
 
 	def testNoneIsNotAString( self ) :
 
@@ -998,13 +998,13 @@ class GraphComponentTest( GafferTest.TestCase ) :
 
 		g = Gaffer.GraphComponent()
 
-		with six.assertRaisesRegex( self, Exception, r"did not match C\+\+ signature" ) :
+		with self.assertRaisesRegex( Exception, r"did not match C\+\+ signature" ) :
 			g.addChild( None )
 
-		with six.assertRaisesRegex( self, Exception, r"did not match C\+\+ signature" ) :
+		with self.assertRaisesRegex( Exception, r"did not match C\+\+ signature" ) :
 			g.setChild( "x", None )
 
-		with six.assertRaisesRegex( self, Exception, r"did not match C\+\+ signature" ) :
+		with self.assertRaisesRegex( Exception, r"did not match C\+\+ signature" ) :
 			g.removeChild( None )
 
 	def testRanges( self ) :
@@ -1085,13 +1085,13 @@ class GraphComponentTest( GafferTest.TestCase ) :
 		p["c2"] = c2 = Gaffer.Plug()
 		p["c3"] = c3 = Gaffer.Plug()
 
-		with six.assertRaisesRegex( self, Exception, r"Wrong number of children specified \(2 but should be 3\)" ) :
+		with self.assertRaisesRegex( Exception, r"Wrong number of children specified \(2 but should be 3\)" ) :
 			p.reorderChildren( [ c1, c2 ] )
 
-		with six.assertRaisesRegex( self, Exception, r"Wrong number of children specified \(4 but should be 3\)" ) :
+		with self.assertRaisesRegex( Exception, r"Wrong number of children specified \(4 but should be 3\)" ) :
 			p.reorderChildren( [ c1, c2, c3, c1 ] )
 
-		with six.assertRaisesRegex( self, Exception, 'Child "c2" is in more than one position' ) :
+		with self.assertRaisesRegex( Exception, 'Child "c2" is in more than one position' ) :
 			p.reorderChildren( [ c1, c2, c2 ] )
 
 if __name__ == "__main__":

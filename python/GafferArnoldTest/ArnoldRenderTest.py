@@ -38,17 +38,11 @@
 import os
 import inspect
 import unittest
-import sys
-if os.name == 'posix' and sys.version_info[0] < 3:
-	import subprocess32 as subprocess
-else:
-	import subprocess
-import sys
+import subprocess
 import threading
 
 import arnold
 import imath
-import six
 
 import IECore
 import IECoreImage
@@ -641,14 +635,14 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		# The requested camera doesn't exist - this should raise an exception.
 
-		six.assertRaisesRegex( self, RuntimeError, "/i/dont/exist", s["render"]["task"].execute )
+		self.assertRaisesRegex( RuntimeError, "/i/dont/exist", s["render"]["task"].execute )
 
 		# And even the existence of a different camera shouldn't change that.
 
 		s["camera"] = GafferScene.Camera()
 		s["options"]["in"].setInput( s["camera"]["out"] )
 
-		six.assertRaisesRegex( self, RuntimeError, "/i/dont/exist", s["render"]["task"].execute )
+		self.assertRaisesRegex( RuntimeError, "/i/dont/exist", s["render"]["task"].execute )
 
 	def testManyCameras( self ) :
 
@@ -1099,7 +1093,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["render"] = GafferArnold.ArnoldRender()
 		s["render"]["in"].setInput( s["outputs"]["out"] )
 
-		six.assertRaisesRegex( self, RuntimeError, "Render aborted", s["render"]["task"].execute )
+		self.assertRaisesRegex( RuntimeError, "Render aborted", s["render"]["task"].execute )
 
 	def testOSLShaders( self ) :
 

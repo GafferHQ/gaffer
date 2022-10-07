@@ -40,7 +40,7 @@ import weakref
 import threading
 import traceback
 import functools
-import six
+import queue
 
 import IECore
 
@@ -338,7 +338,7 @@ class _UIThreadExecutor( QtCore.QObject ) :
 		# `invokeMethod()` and doing the equivalent via signals crashes PySide.
 		# So instead we pass the callables via this queue and just use
 		# `invokeMethod()` to schedule their removal on the UI thread.
-		self.__queue = six.moves.queue.Queue()
+		self.__queue = queue.Queue()
 		self.__blockedCallables = None
 
 	def execute( self, callable, waitForResult ) :

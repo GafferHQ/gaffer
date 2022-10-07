@@ -28,20 +28,19 @@ jobs:
         # and then use `include` to define their settings.
 
         name: [
-          linux-python2,
-          linux-python2-debug,
-          linux-python3,
-          windows-python3,
+          linux,
+          linux-debug,
+          windows,
         ]
 
         include:
 
-          - name: linux-python2
+          - name: linux
             os: ubuntu-20.04
             buildType: RELEASE
             publish: true
             containerImage: ghcr.io/gafferhq/build/build:2.0.0
-            dependenciesURL: https://github.com/ImageEngine/cortex/releases/download/10.4.2.1/cortex-10.4.2.1-linux-python2.tar.gz
+            dependenciesURL: https://github.com/ImageEngine/cortex/releases/download/10.4.2.1/cortex-10.4.2.1-linux-python3.tar.gz
             # GitHub container builds run as root. This causes failures for tests that
             # assert that filesystem permissions are respected, because root doesn't
             # respect permissions. So we run the final test suite as a dedicated
@@ -49,30 +48,20 @@ jobs:
             testRunner: su testUser -c
             sconsCacheMegabytes: 400
 
-          - name: linux-python2-debug
+          - name: linux-debug
             os: ubuntu-20.04
             buildType: DEBUG
             publish: false
             containerImage: ghcr.io/gafferhq/build/build:2.0.0
-            dependenciesURL: https://github.com/ImageEngine/cortex/releases/download/10.4.2.1/cortex-10.4.2.1-linux-python2.tar.gz
+            dependenciesURL: https://github.com/ImageEngine/cortex/releases/download/10.4.2.1/cortex-10.4.2.1-linux-python3.tar.gz
             testRunner: su testUser -c
             # Debug builds are ludicrously big, so we must use a larger cache
             # limit. In practice this compresses down to 4-500Mb.
             sconsCacheMegabytes: 2500
 
-          - name: linux-python3
-            os: ubuntu-20.04
-            buildType: RELEASE
-            publish: true
-            containerImage: ghcr.io/gafferhq/build/build:2.0.0
-            dependenciesURL: https://github.com/ImageEngine/cortex/releases/download/10.4.2.1/cortex-10.4.2.1-linux-python3.tar.gz
-            testRunner: su testUser -c
-            sconsCacheMegabytes: 400
-
-          - name: windows-python3
+          - name: windows
             os: windows-2019
             buildType: RELEASE
-            variant: windows-python3
             publish: false
             containerImage:
             dependenciesURL: https://github.com/ImageEngine/cortex/releases/download/10.4.2.1/cortex-10.4.2.1-windows-python3.zip

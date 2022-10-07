@@ -34,8 +34,6 @@
 #
 ##########################################################################
 
-import six
-
 import IECore
 
 import Gaffer
@@ -46,7 +44,7 @@ class IndexedIOPath( Gaffer.Path ) :
 
 		Gaffer.Path.__init__( self, path, root, filter=filter )
 
-		if isinstance( indexedIO, six.string_types ) :
+		if isinstance( indexedIO, str ) :
 			self.__indexedIO = IECore.IndexedIO.create( indexedIO, IECore.IndexedIO.OpenMode.Read )
 		else :
 			self.__indexedIO = indexedIO

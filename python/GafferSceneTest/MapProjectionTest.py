@@ -37,7 +37,6 @@
 import os
 import unittest
 import imath
-import six
 
 import IECore
 
@@ -216,7 +215,7 @@ class MapProjectionTest( GafferSceneTest.SceneTestCase ) :
 		projection["filter"].setInput( cubeFilter["out"] )
 		projection["position"].setValue( "uv" )
 
-		with six.assertRaisesRegex( self, RuntimeError, r'Position primitive variable "uv" on object "/group/cube" should be V3fVectorData \(but is V2fVectorData\)' ) :
+		with self.assertRaisesRegex( RuntimeError, r'Position primitive variable "uv" on object "/group/cube" should be V3fVectorData \(but is V2fVectorData\)' ) :
 			projection["out"].object( "/group/cube" )
 
 if __name__ == "__main__":

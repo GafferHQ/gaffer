@@ -35,7 +35,6 @@
 ##########################################################################
 
 import inspect
-import six
 import unittest
 
 import imath
@@ -524,12 +523,12 @@ class SpreadsheetTest( GafferTest.TestCase ) :
 		otherRow = s2["rows"].addRow()
 		self.assertEqual( len( s["rows"] ), 3 )
 
-		with six.assertRaisesRegex( self, RuntimeError, 'Cannot remove default row from "Spreadsheet.rows"' ) :
+		with self.assertRaisesRegex( RuntimeError, 'Cannot remove default row from "Spreadsheet.rows"' ) :
 			s["rows"].removeRow( defaultRow )
 
 		self.assertEqual( len( s["rows"] ), 3 )
 
-		with six.assertRaisesRegex( self, RuntimeError, 'Row "other.rows.row1" is not a child of "Spreadsheet.rows"' ) :
+		with self.assertRaisesRegex( RuntimeError, 'Row "other.rows.row1" is not a child of "Spreadsheet.rows"' ) :
 			s["rows"].removeRow( otherRow )
 
 		self.assertEqual( len( s["rows"] ), 3 )
@@ -830,7 +829,7 @@ class SpreadsheetTest( GafferTest.TestCase ) :
 	def testAdoptedEnabledPlugChecks( self ) :
 
 		s = Gaffer.Spreadsheet()
-		with six.assertRaisesRegex( self, RuntimeError, 'Value plug has no "enabled" plug to adopt' ) :
+		with self.assertRaisesRegex( RuntimeError, 'Value plug has no "enabled" plug to adopt' ) :
 			s["rows"].addColumn( Gaffer.IntPlug(), adoptEnabledPlug = True )
 
 	def testAdoptedEnabledPlugSerialisation( self ) :

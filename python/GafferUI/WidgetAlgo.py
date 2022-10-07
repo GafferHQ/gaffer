@@ -37,7 +37,6 @@
 import functools
 import os
 import sys
-import six
 
 import GafferUI
 
@@ -98,35 +97,26 @@ def grab( widget, imagePath ) :
 	if imageDir and not os.path.isdir( imageDir ) :
 		os.makedirs( imageDir )
 
-	if Qt.__binding__ in ( "PySide2", "PyQt5" ) :
-		# Qt 5
-		screen = QtWidgets.QApplication.primaryScreen()
-		windowHandle = widget._qtWidget().windowHandle()
-		if windowHandle :
-			screen = windowHandle.screen()
+	# Qt 5
+	screen = QtWidgets.QApplication.primaryScreen()
+	windowHandle = widget._qtWidget().windowHandle()
+	if windowHandle :
+		screen = windowHandle.screen()
 
-		qtVersion = [ int( x ) for x in Qt.__qt_version__.split( "." ) ]
-		if qtVersion >= [ 5, 12 ] or six.PY3 :
-			pixmap = screen.grabWindow( widget._qtWidget().winId() )
-		else :
-			pixmap = screen.grabWindow( long( widget._qtWidget().winId() ) )
+	pixmap = screen.grabWindow( widget._qtWidget().winId() )
 
-		if sys.platform == "darwin" and pixmap.size() == screen.size() * screen.devicePixelRatio() :
-			# A bug means that the entire screen will have been captured,
-			# not just the widget we requested. Copy out just the widget.
-			topLeft = widget._qtWidget().mapToGlobal( QtCore.QPoint( 0, 0 ) )
-			bottomRight = widget._qtWidget().mapToGlobal( QtCore.QPoint( widget._qtWidget().width(), widget._qtWidget().height() ) )
-			size = bottomRight - topLeft
-			pixmap = pixmap.copy(
-				QtCore.QRect(
-					topLeft * screen.devicePixelRatio(),
-					QtCore.QSize( size.x(), size.y() ) * screen.devicePixelRatio()
-				)
+	if sys.platform == "darwin" and pixmap.size() == screen.size() * screen.devicePixelRatio() :
+		# A bug means that the entire screen will have been captured,
+		# not just the widget we requested. Copy out just the widget.
+		topLeft = widget._qtWidget().mapToGlobal( QtCore.QPoint( 0, 0 ) )
+		bottomRight = widget._qtWidget().mapToGlobal( QtCore.QPoint( widget._qtWidget().width(), widget._qtWidget().height() ) )
+		size = bottomRight - topLeft
+		pixmap = pixmap.copy(
+			QtCore.QRect(
+				topLeft * screen.devicePixelRatio(),
+				QtCore.QSize( size.x(), size.y() ) * screen.devicePixelRatio()
 			)
-
-	else :
-		# Qt 4
-		pixmap = QtGui.QPixmap.grabWindow( long( widget._qtWidget().winId() ) )
+		)
 
 	pixmap.save( imagePath )
 

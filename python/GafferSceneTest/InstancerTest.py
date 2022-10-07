@@ -39,7 +39,6 @@ import math
 
 import imath
 import inspect
-import six
 import time
 import unittest
 
@@ -131,7 +130,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 		# Test paths that don't exist - the transform will trigger an error, the other functions don't depend on
 		# the index, so will just return a reasonable value
-		six.assertRaisesRegex( self,
+		self.assertRaisesRegex(
 			Gaffer.ProcessException,
 			'Instancer.out.transform : Instance id "77" is invalid, instancer produces only 4 children.  Topology may have changed during shutter.',
 			instancer["out"].transform, "/seeds/instances/sphere/77"
@@ -998,7 +997,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertRootsToRoot( script )
 
 		script["instancer"]["prototypeRootsList"].setValue( IECore.StringVectorData( [ "/foo", "/does/not/exist" ] ) )
-		six.assertRaisesRegex( self,
+		self.assertRaisesRegex(
 			Gaffer.ProcessException, '.*Prototype root "/does/not/exist" does not exist.*',
 			script["instancer"]["out"].childNames, "/object/instances",
 		)
@@ -1009,7 +1008,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		script["instancer"]["prototypeMode"].setValue( GafferScene.Instancer.PrototypeMode.IndexedRootsVariable )
 
 		script["variables"]["primitiveVariables"]["prototypeRoots"]["value"].setValue( IECore.StringVectorData( [] ) )
-		six.assertRaisesRegex( self,
+		self.assertRaisesRegex(
 			Gaffer.ProcessException, ".*must specify at least one root location.*",
 			script["instancer"]["out"].childNames, "/object/instances",
 		)
@@ -1044,20 +1043,20 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertRootsToRoot( script )
 
 		script["variables"]["primitiveVariables"]["prototypeRoots"]["value"].setValue( IECore.StringVectorData( [ "/foo", "/does/not/exist" ] ) )
-		six.assertRaisesRegex( self,
+		self.assertRaisesRegex(
 			Gaffer.ProcessException, '.*Prototype root "/does/not/exist" does not exist.*',
 			script["instancer"]["out"].childNames, "/object/instances",
 		)
 
 		script["instancer"]["prototypeRoots"].setValue( "notAPrimVar" )
-		six.assertRaisesRegex( self,
+		self.assertRaisesRegex(
 			Gaffer.ProcessException, ".*must be Constant StringVectorData when using IndexedRootsVariable mode.*does not exist.*",
 			script["instancer"]["out"].childNames, "/object/instances",
 		)
 
 		# the vertex primvar should fail
 		script["instancer"]["prototypeRoots"].setValue( "root" )
-		six.assertRaisesRegex( self,
+		self.assertRaisesRegex(
 			Gaffer.ProcessException, ".*must be Constant StringVectorData when using IndexedRootsVariable mode.*",
 			script["instancer"]["out"].childNames, "/object/instances",
 		)
@@ -1105,20 +1104,20 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertRootsToRoot( script )
 
 		updateRoots( IECore.StringVectorData( [ "/foo", "/does/not/exist" ] ), IECore.IntVectorData( [ 0, 1, 1, 0 ] ) )
-		six.assertRaisesRegex( self,
+		self.assertRaisesRegex(
 			Gaffer.ProcessException, '.*Prototype root "/does/not/exist" does not exist.*',
 			script["instancer"]["out"].childNames, "/object/instances",
 		)
 
 		script["instancer"]["prototypeRoots"].setValue( "notAPrimVar" )
-		six.assertRaisesRegex( self,
+		self.assertRaisesRegex(
 			Gaffer.ProcessException, ".*must be Vertex StringVectorData when using RootPerVertex mode.*does not exist.*",
 			script["instancer"]["out"].childNames, "/object/instances",
 		)
 
 		# the constant primvar should fail
 		script["instancer"]["prototypeRoots"].setValue( "prototypeRoots" )
-		six.assertRaisesRegex( self,
+		self.assertRaisesRegex(
 			Gaffer.ProcessException, ".*must be Vertex StringVectorData when using RootPerVertex mode.*",
 			script["instancer"]["out"].childNames, "/object/instances",
 		)
@@ -1299,7 +1298,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( instancer["out"].transform( "/object/instances/cube/100" ), imath.M44f().translate( imath.V3f( 1, 0, 0 ) ) )
 		self.assertEqual( instancer["out"].transform( "/object/instances/cube/5" ), imath.M44f().translate( imath.V3f( 3, 0, 0 ) ) )
 
-		six.assertRaisesRegex( self,
+		self.assertRaisesRegex(
 			Gaffer.ProcessException,
 			'Instancer.out.transform : Instance id "77" is invalid.  Topology may have changed during shutter.',
 			instancer["out"].transform, "/object/instances/cube/77"
@@ -1960,11 +1959,11 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( uniqueCounts(), { "floatVar" : 5, "stringVar" : 3, "" : 15 } )
 
 		instancer["contextVariables"][1]["quantize"].setValue( 10 )
-		six.assertRaisesRegex( self,
+		self.assertRaisesRegex(
 			Gaffer.ProcessException, 'Instancer.out.attributes : Context variable "0" : cannot quantize variable of type StringVectorData',
 			instancer['out'].attributes, "points/instances/withAttrs/0/sphere"
 		)
-		six.assertRaisesRegex( self,
+		self.assertRaisesRegex(
 			Gaffer.ProcessException, 'Instancer.variations : Context variable "0" : cannot quantize variable of type StringVectorData',
 			uniqueCounts
 		)
@@ -2108,7 +2107,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 		# Test invalid location
 		for func in [ instancer["out"].object, instancer["out"].childNames, instancer["out"].bound, instancer["out"].transform ]:
-			six.assertRaisesRegex( self,
+			self.assertRaisesRegex(
 				Gaffer.ProcessException,
 				'Instancer.out.' + func.__name__ + ' : Instance id "777" is invalid, instancer produces only 10 children.  Topology may have changed during shutter.',
 				func, "/points/instances/withAttrs/777"

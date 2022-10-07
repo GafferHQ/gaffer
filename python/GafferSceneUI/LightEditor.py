@@ -38,7 +38,6 @@ import collections
 
 import functools
 import imath
-import six
 
 import IECore
 import IECoreScene
@@ -142,7 +141,7 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 
 		# We use `tuple` to store `ShaderNetwork.Parameter`, because
 		# the latter isn't hashable and we need to use it as a dict key.
-		if isinstance( parameter, six.string_types ) :
+		if isinstance( parameter, str ) :
 			parameter = ( "", parameter )
 		else :
 			assert( isinstance( parameter, IECoreScene.ShaderNetwork.Parameter ) )

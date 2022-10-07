@@ -43,7 +43,7 @@ import GafferUITest
 
 class ScrolledContainerTest( GafferUITest.TestCase ) :
 
-	@GafferTest.expectedFailure
+	@unittest.expectedFailure
 	def testChildAccessors( self ) :
 
 		s = GafferUI.ScrolledContainer()

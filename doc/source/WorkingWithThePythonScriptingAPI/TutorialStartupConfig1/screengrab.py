@@ -4,11 +4,7 @@
 # BuildTarget: images/tutorialVariableSubstitutionTest.png
 
 import os
-import sys
-if os.name == 'posix' and sys.version_info[0] < 3:
-	import subprocess32 as subprocess
-else:
-	import subprocess
+import subprocess
 import tempfile
 import time
 

@@ -37,7 +37,6 @@
 import unittest
 import inspect
 import imath
-import six
 
 import IECore
 
@@ -227,10 +226,10 @@ class PythonCommandTest( GafferTest.TestCase ) :
 		s["n"]["command"].setValue( "self.frames = frames" )
 
 		d = self.__dispatcher( frameRange = "1-5" )
-		six.assertRaisesRegex( self, RuntimeError, "NameError: name 'frames' is not defined", d.dispatch, [ s["n"] ] )
+		self.assertRaisesRegex( RuntimeError, "NameError: name 'frames' is not defined", d.dispatch, [ s["n"] ] )
 
 		s["n"]["dispatcher"]["batchSize"].setValue( 5 )
-		six.assertRaisesRegex( self, RuntimeError, "NameError: name 'frames' is not defined", d.dispatch, [ s["n"] ] )
+		self.assertRaisesRegex( RuntimeError, "NameError: name 'frames' is not defined", d.dispatch, [ s["n"] ] )
 
 	def testSequenceMode( self ) :
 
@@ -278,7 +277,7 @@ class PythonCommandTest( GafferTest.TestCase ) :
 		s["n"]["command"].setValue( "\n".join( commandLines ) )
 
 		d = self.__dispatcher( frameRange = "1-5" )
-		six.assertRaisesRegex( self, Exception, "Context has no variable named \"frame\"", d.dispatch, [ s[ "n" ] ] )
+		self.assertRaisesRegex( Exception, "Context has no variable named \"frame\"", d.dispatch, [ s[ "n" ] ] )
 
 		commandLines = inspect.cleandoc(
 			"""
@@ -337,7 +336,7 @@ class PythonCommandTest( GafferTest.TestCase ) :
 			"""
 		) )
 
-		six.assertRaisesRegex( self, Exception, "Cannot access variables at frame outside range specified for PythonCommand", n.execute )
+		self.assertRaisesRegex( Exception, "Cannot access variables at frame outside range specified for PythonCommand", n.execute )
 
 	def testNonSequenceDispatch( self ) :
 

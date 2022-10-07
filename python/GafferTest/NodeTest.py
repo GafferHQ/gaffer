@@ -36,7 +36,6 @@
 ##########################################################################
 
 import unittest
-import six
 
 import IECore
 
@@ -401,7 +400,7 @@ class NodeTest( GafferTest.TestCase ) :
 		cs = GafferTest.CapturingSlot( node.errorSignal() )
 
 		with IECore.CapturingMessageHandler() as mh :
-			with six.assertRaisesRegex( self, RuntimeError, "Compute did not set plug value" ) :
+			with self.assertRaisesRegex( RuntimeError, "Compute did not set plug value" ) :
 				node["out3"].getValue()
 
 		self.assertEqual( len( mh.messages ), 1 )

@@ -35,7 +35,8 @@
 #
 ##########################################################################
 
-import six
+import contextlib
+import io
 import sys
 import unittest
 import warnings
@@ -426,7 +427,7 @@ class WindowTest( GafferUITest.TestCase ) :
 
 		# On Mac we get intermittent "Window position outside any known screen" messages
 		# from Qt, which we suppress since they're not what we're testing here.
-		contextManager = IECore.CapturingMessageHandler() if sys.platform == "darwin" else _NullContextManager()
+		contextManager = IECore.CapturingMessageHandler() if sys.platform == "darwin" else contextlib.nullcontext()
 
 		with contextManager :
 
@@ -447,7 +448,7 @@ class WindowTest( GafferUITest.TestCase ) :
 			# an already-deleted QObject, causing PySide to print an exception to
 			# `stderr`.
 
-			tmpStdErr = six.moves.cStringIO()
+			tmpStdErr = io.StringIO()
 			sys.stderr = tmpStdErr
 			try :
 				del child
@@ -457,18 +458,6 @@ class WindowTest( GafferUITest.TestCase ) :
 
 			# If the bug is fixed, nothing should have been printed.
 			self.assertEqual( tmpStdErr.getvalue(), "" )
-
-## \todo When we finally ditch Python 2, we can use `contextlib.nullcontext()`
-# instead of this.
-class _NullContextManager( object ) :
-
-	def __enter__( self ) :
-
-		pass
-
-	def __exit__( self, type, value, traceBack ) :
-
-		pass
 
 if __name__ == "__main__":
 	unittest.main()

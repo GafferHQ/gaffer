@@ -35,7 +35,6 @@
 #
 ##########################################################################
 
-import six
 import imath
 
 import IECore
@@ -85,14 +84,7 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 
 	def getText( self ) :
 
-		if six.PY3 :
-			return self._qtWidget().toPlainText()
-		else :
-			# \todo We didn't return `unicode` here because
-			# we didn't want to break any client code. But perhaps
-			# now is the time, since everyone is transitioning to
-			# Python 3?
-			return self._qtWidget().toPlainText().encode( "utf-8" )
+		return self._qtWidget().toPlainText()
 
 	def setText( self, text ) :
 
@@ -200,11 +192,7 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 	def selectedText( self ) :
 
 		cursor = self._qtWidget().textCursor()
-		text = cursor.selection().toPlainText()
-		if six.PY3 :
-			return text
-		else :
-			return text.encode( "utf-8" )
+		return cursor.selection().toPlainText()
 
 	def linkAt( self, position ) :
 

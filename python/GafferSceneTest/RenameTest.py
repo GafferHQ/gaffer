@@ -35,7 +35,6 @@
 ##########################################################################
 
 import unittest
-import six
 
 import IECore
 
@@ -514,16 +513,16 @@ class RenameTest( GafferSceneTest.SceneTestCase ) :
 		# If you reference more capture groups than there are, then you
 		# are greeted by an exception.
 
-		with six.assertRaisesRegex(
-			self, Gaffer.ProcessException,
+		with self.assertRaisesRegex(
+			Gaffer.ProcessException,
 			r".*Error applying replacement `\{2\}` : argument not found"
 		) :
 			outputName( "abc", find = "(a)", replace = "{2}", useRegularExpressions = True )
 
 		# Likewise, if you try to use a type-specific formatter.
 
-		with six.assertRaisesRegex(
-			self, Gaffer.ProcessException,
+		with self.assertRaisesRegex(
+			Gaffer.ProcessException,
 			r".*Error applying replacement `\{1:\+\}` : format specifier requires numeric argument"
 		) :
 			outputName( "abc", find = "(a)", replace = "{1:+}", useRegularExpressions = True )

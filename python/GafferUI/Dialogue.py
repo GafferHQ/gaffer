@@ -35,8 +35,6 @@
 #
 ##########################################################################
 
-import six
-
 import Gaffer
 import GafferUI
 
@@ -142,9 +140,9 @@ class Dialogue( GafferUI.Window ) :
 
 	def _addButton( self, textOrButton ) :
 
-		assert( isinstance( textOrButton, ( six.string_types, GafferUI.Button ) ) )
+		assert( isinstance( textOrButton, ( str, GafferUI.Button ) ) )
 
-		if isinstance( textOrButton, six.string_types ) :
+		if isinstance( textOrButton, str ) :
 			button = GafferUI.Button( textOrButton )
 		else :
 			button = textOrButton

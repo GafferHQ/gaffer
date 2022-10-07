@@ -34,7 +34,6 @@
 #
 ##########################################################################
 
-import six
 import types
 
 import IECore
@@ -77,7 +76,7 @@ class BoolWidget( GafferUI.Widget ) :
 
 	def setImage( self, image ) :
 
-		if isinstance( image, six.string_types ) :
+		if isinstance( image, str ) :
 			self.__image = GafferUI.Image( image )
 		else :
 			assert( isinstance( image, ( GafferUI.Image, type( None ) ) ) )

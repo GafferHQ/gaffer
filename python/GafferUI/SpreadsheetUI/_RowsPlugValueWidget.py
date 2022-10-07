@@ -36,7 +36,6 @@
 
 import functools
 import traceback
-import six
 
 import imath
 
@@ -451,6 +450,5 @@ class _AddButtonMenuSignal( Gaffer.Signals.Signal2 ) :
 					IECore.Msg.Level.Error,
 					"Spreadsheet Add Button menu", traceback.format_exc()
 				)
-				if six.PY3 :
-					# Remove circular references that would keep the widget in limbo.
-					e.__traceback__ = None
+				# Remove circular references that would keep the widget in limbo.
+				e.__traceback__ = None

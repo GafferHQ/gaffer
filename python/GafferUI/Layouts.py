@@ -38,7 +38,6 @@
 import collections
 import os
 import re
-import six
 import traceback
 import weakref
 
@@ -92,7 +91,7 @@ class Layouts( object ) :
 	# preferences and restored when the application next runs.
 	def add( self, name, editor, persistent = False ) :
 
-		if not isinstance( editor, six.string_types ) :
+		if not isinstance( editor, str ) :
 			editor = repr( editor )
 
 		if name.startswith( "user:" ) :

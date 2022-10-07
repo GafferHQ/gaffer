@@ -36,7 +36,6 @@
 
 import os
 import unittest
-import six
 import inspect
 import imath
 
@@ -218,10 +217,10 @@ class ScenePathTest( GafferSceneTest.SceneTestCase ) :
 
 		plane = GafferScene.Plane()
 
-		with six.assertRaisesRegex( self, Exception, "Python argument types" ) :
+		with self.assertRaisesRegex( Exception, "Python argument types" ) :
 			GafferScene.ScenePath( None, Gaffer.Context() )
 
-		with six.assertRaisesRegex( self, Exception, "Python argument types" ) :
+		with self.assertRaisesRegex( Exception, "Python argument types" ) :
 			GafferScene.ScenePath( plane["out"], None )
 
 	def testGILManagement( self ) :

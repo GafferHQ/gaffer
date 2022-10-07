@@ -37,7 +37,6 @@
 import unittest
 import imath
 import inspect
-import six
 
 import IECore
 import IECoreScene
@@ -80,7 +79,7 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 
 		# Test behaviour for missing target
 		plane1["name"].setValue( "targetX" )
-		with six.assertRaisesRegex( self, RuntimeError, 'ParentConstraint.__constrainedTransform : Constraint target does not exist: "/group/target"' ):
+		with self.assertRaisesRegex( RuntimeError, 'ParentConstraint.__constrainedTransform : Constraint target does not exist: "/group/target"' ):
 			constraint["out"].fullTransform( "/group/constrained" )
 
 		constraint["ignoreMissingTarget"].setValue( True )
@@ -2161,7 +2160,7 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 			context.setFrame( 20 )
 			self.assertTrue( script["constraint"]["in"].exists( "/group/cube" ) )
 
-			with six.assertRaisesRegex( self, Gaffer.ProcessException, ".*Constrained object \"/group/cube\" does not exist at reference frame 4" ) :
+			with self.assertRaisesRegex( Gaffer.ProcessException, ".*Constrained object \"/group/cube\" does not exist at reference frame 4" ) :
 				script["constraint"]["out"].transform( "/group/cube" )
 
 	def testTargetNonexistentAtReferenceFrame( self ) :
@@ -2202,7 +2201,7 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 			context.setFrame( 20 )
 			self.assertTrue( script["constraint"]["in"].exists( "/group/cube" ) )
 
-			with six.assertRaisesRegex( self, Gaffer.ProcessException, ".*Constrained object \"/group/cube\" does not exist at reference frame 4" ) :
+			with self.assertRaisesRegex( Gaffer.ProcessException, ".*Constrained object \"/group/cube\" does not exist at reference frame 4" ) :
 				script["constraint"]["out"].transform( "/group/cube" )
 
 	def testRelativeTransformIgnoredWhenKeepingReferencePosition( self ) :

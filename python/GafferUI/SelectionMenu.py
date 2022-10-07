@@ -34,7 +34,6 @@
 #
 ##########################################################################
 
-import six
 import warnings
 
 import Gaffer
@@ -104,9 +103,9 @@ class SelectionMenu( GafferUI.Widget ) :
 	def setIcon( self, index, imageOrImageFileName ):
 		icon = None
 
-		assert( isinstance( imageOrImageFileName, ( six.string_types, GafferUI.Image, type( None ) ) ) )
+		assert( isinstance( imageOrImageFileName, ( str, GafferUI.Image, type( None ) ) ) )
 
-		if isinstance( imageOrImageFileName, six.string_types ) :
+		if isinstance( imageOrImageFileName, str ) :
 			icon = GafferUI.Image( imageOrImageFileName )
 		else :
 			icon = imageOrImageFileName

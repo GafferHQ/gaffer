@@ -36,7 +36,6 @@
 
 import re
 import functools
-import six
 
 import IECore
 
@@ -298,7 +297,7 @@ class SetAlgoTest( GafferSceneTest.SceneTestCase ) :
 			"/spher[ef]",
 			"/spher?",
 		] :
-			with six.assertRaisesRegex( self, RuntimeError, 'Object name "{0}" contains wildcards'.format( re.escape( expression ) ) ) :
+			with self.assertRaisesRegex( RuntimeError, 'Object name "{0}" contains wildcards'.format( re.escape( expression ) ) ) :
 				GafferScene.SetAlgo.evaluateSetExpression( expression, sphere["out"] )
 
 	def testAffectsSetExpression( self ) :

@@ -38,8 +38,6 @@ import Gaffer
 import GafferUI
 import GafferUITest
 
-import six
-
 class NameLabelTest( GafferUITest.TestCase ) :
 
 	def test( self ) :
@@ -152,7 +150,7 @@ class NameLabelTest( GafferUITest.TestCase ) :
 		l = GafferUI.NameLabel( { n1, n2 } )
 
 		self.assertEqual( l.getGraphComponents(), { n1, n2 } )
-		with six.assertRaisesRegex( self, RuntimeError, "getGraphComponent called with multiple GraphComponents" ) :
+		with self.assertRaisesRegex( RuntimeError, "getGraphComponent called with multiple GraphComponents" ) :
 			l.getGraphComponent()
 
 		self.assertTrue( l.getText(), "---" )

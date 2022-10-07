@@ -6,15 +6,6 @@
 # BuildTarget: images/taskLightLinkingSetExpressionLocation.png
 # BuildTarget: images/taskLightLinkingSetExpressionSet.png
 
-import os
-import sys
-if os.name == 'posix' and sys.version_info[0] < 3:
-	import subprocess32 as subprocess
-else:
-	import subprocess
-import tempfile
-import time
-
 import imath
 import IECore
 import Gaffer

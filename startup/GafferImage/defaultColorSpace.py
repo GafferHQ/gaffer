@@ -1,5 +1,3 @@
-import six
-
 import PyOpenColorIO
 
 import GafferImage
@@ -62,7 +60,7 @@ def defaultColorSpace( fileName, fileFormat, dataType, metadata ) :
 	}
 
 	s = colorSpaces[fileFormat]
-	if isinstance( s, six.string_types ) :
+	if isinstance( s, str ) :
 		return s
 	else :
 		return s[dataType]

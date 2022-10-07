@@ -254,28 +254,18 @@ std::string Serialisation::classPath( const boost::python::object &object )
 		cls = object.attr( "__class__" );
 	}
 
-	if( PyObject_HasAttrString( cls.ptr(), "__qualname__" ) )
+	std::string qualName = extract<std::string>( cls.attr( "__qualname__" ) );
+	// The automatically generated name may contain a prefix made redundant
+	// by our `from .Foo import Foo` convention for building modules. Strip it.
+	const size_t dotPos = qualName.find( '.' );
+	if( dotPos != std::string::npos )
 	{
-		// In Python 3, __qualname__ is automatically generated to give us
-		// a qualified name for a nested class - see https://www.python.org/dev/peps/pep-3155.
-		// In Python 2, it may be provided manually by bindings as necessary.
-		std::string qualName = extract<std::string>( cls.attr( "__qualname__" ) );
-		// The automatically generated name may contain a prefix made redundant
-		// by our `from .Foo import Foo` convention for building modules. Strip it.
-		const size_t dotPos = qualName.find( '.' );
-		if( dotPos != std::string::npos )
+		if( boost::ends_with( result, "." + qualName.substr( 0, dotPos ) + "." ) )
 		{
-			if( boost::ends_with( result, "." + qualName.substr( 0, dotPos ) + "." ) )
-			{
-				qualName.erase( 0, dotPos + 1 );
-			}
+			qualName.erase( 0, dotPos + 1 );
 		}
-		result += qualName;
 	}
-	else
-	{
-		result += extract<std::string>( cls.attr( "__name__" ) );
-	}
+	result += qualName;
 
 	return result;
 }

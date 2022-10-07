@@ -35,7 +35,6 @@
 ##########################################################################
 
 import unittest
-import six
 
 import Gaffer
 import GafferTest
@@ -144,10 +143,10 @@ class EditScopeTest( GafferTest.TestCase ) :
 		self.assertEqual( e.processors(), [ p ] )
 
 		p["in"].setInput( None )
-		with six.assertRaisesRegex( self, RuntimeError, "Output not linked to input" ) :
+		with self.assertRaisesRegex( RuntimeError, "Output not linked to input" ) :
 			e.processors()
 
-		with six.assertRaisesRegex( self, RuntimeError, "Output not linked to input" ) :
+		with self.assertRaisesRegex( RuntimeError, "Output not linked to input" ) :
 			e.acquireProcessor( "Test" )
 
 		# Check internal connections of children
@@ -162,12 +161,12 @@ class EditScopeTest( GafferTest.TestCase ) :
 		e["b"]["in"].setInput( e["BoxIn"]["out"] )
 		e["BoxOut"]["in"].setInput( e["b"]["out"] )
 
-		with six.assertRaisesRegex( self, RuntimeError, "Node 'b' has no corresponding input" ) :
+		with self.assertRaisesRegex( RuntimeError, "Node 'b' has no corresponding input" ) :
 			e.processors()
 
 		box["BoxOut"]["in"].setInput( box["BoxIn"]["out"] )
 
-		with six.assertRaisesRegex( self, RuntimeError, "Node 'b' has no corresponding input" ) :
+		with self.assertRaisesRegex( RuntimeError, "Node 'b' has no corresponding input" ) :
 			e.processors()
 
 		e["b"]["BoxOut"]["passThrough"].setInput( e["b"]["BoxIn"]["out"] )

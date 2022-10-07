@@ -35,7 +35,6 @@
 ##########################################################################
 
 import gc
-import six
 import unittest
 
 import IECore
@@ -97,7 +96,7 @@ class ToolTest( GafferUITest.TestCase ) :
 		IECore.RefCounted.collectGarbage()
 
 		self.assertIsNone( tool.parent() )
-		with six.assertRaisesRegex( self, RuntimeError, "View not found" ) :
+		with self.assertRaisesRegex( RuntimeError, "View not found" ) :
 			tool.view()
 
 if __name__ == "__main__":

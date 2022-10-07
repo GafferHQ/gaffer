@@ -40,7 +40,6 @@ import functools
 import itertools
 import traceback
 import warnings
-import six
 
 import IECore
 
@@ -792,6 +791,5 @@ class _PopupMenuSignal( Gaffer.Signals.Signal2 ) :
 					IECore.Msg.Level.Error if "MultiplePlugsError" not in str( e ) else IECore.Msg.Level.Debug,
 					"Plug menu", traceback.format_exc()
 				)
-				if six.PY3 :
-					# Remove circular references that would keep the widget in limbo.
-					e.__traceback__ = None
+				# Remove circular references that would keep the widget in limbo.
+				e.__traceback__ = None

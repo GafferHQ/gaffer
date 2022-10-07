@@ -39,7 +39,6 @@ import inspect
 import unittest
 import threading
 import time
-import six
 
 import IECore
 
@@ -661,7 +660,7 @@ class ComputeNodeTest( GafferTest.TestCase ) :
 
 		with Gaffer.Context() as context :
 			context["test"] = 1
-			with six.assertRaisesRegex( self, Gaffer.ProcessException, r'thrower.out : [\s\S]*Eeek!' ) as raised :
+			with self.assertRaisesRegex( Gaffer.ProcessException, r'thrower.out : [\s\S]*Eeek!' ) as raised :
 				add["sum"].getValue()
 
 		# And we want to be able to retrieve details of the problem
@@ -676,7 +675,7 @@ class ComputeNodeTest( GafferTest.TestCase ) :
 		thrower.hashFail = True
 		with Gaffer.Context() as context :
 			context["test"] = 2
-			with six.assertRaisesRegex( self, Gaffer.ProcessException, r'thrower.out : [\s\S]*HashEeek!' ) as raised :
+			with self.assertRaisesRegex( Gaffer.ProcessException, r'thrower.out : [\s\S]*HashEeek!' ) as raised :
 				add["sum"].getValue()
 
 		self.assertEqual( raised.exception.plug(), thrower["out"] )
@@ -688,12 +687,12 @@ class ComputeNodeTest( GafferTest.TestCase ) :
 		thrower1 = self.ThrowingNode( "thrower1" )
 		thrower2 = self.ThrowingNode( "thrower2" )
 
-		with six.assertRaisesRegex( self, Gaffer.ProcessException, r'thrower1.out : [\s\S]*Eeek!' ) as raised :
+		with self.assertRaisesRegex( Gaffer.ProcessException, r'thrower1.out : [\s\S]*Eeek!' ) as raised :
 			thrower1["out"].getValue()
 
 		self.assertEqual( raised.exception.plug(), thrower1["out"] )
 
-		with six.assertRaisesRegex( self, Gaffer.ProcessException, r'thrower2.out : [\s\S]*Eeek!' ) as raised :
+		with self.assertRaisesRegex( Gaffer.ProcessException, r'thrower2.out : [\s\S]*Eeek!' ) as raised :
 			thrower2["out"].getValue()
 
 		self.assertEqual( raised.exception.plug(), thrower2["out"] )
@@ -701,13 +700,13 @@ class ComputeNodeTest( GafferTest.TestCase ) :
 	def testProcessExceptionRespectsNameChanges( self ) :
 
 		thrower = self.ThrowingNode( "thrower1" )
-		with six.assertRaisesRegex( self, Gaffer.ProcessException, r'thrower1.out : [\s\S]*Eeek!' ) as raised :
+		with self.assertRaisesRegex( Gaffer.ProcessException, r'thrower1.out : [\s\S]*Eeek!' ) as raised :
 			thrower["out"].getValue()
 
 		self.assertEqual( raised.exception.plug(), thrower["out"] )
 
 		thrower.setName( "thrower2" )
-		with six.assertRaisesRegex( self, Gaffer.ProcessException, r'thrower2.out : [\s\S]*Eeek!' ) as raised :
+		with self.assertRaisesRegex( Gaffer.ProcessException, r'thrower2.out : [\s\S]*Eeek!' ) as raised :
 			thrower["out"].getValue()
 
 		self.assertEqual( raised.exception.plug(), thrower["out"] )

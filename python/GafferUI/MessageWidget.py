@@ -37,7 +37,6 @@
 import bisect
 import functools
 import imath
-import six
 import weakref
 
 import IECore
@@ -309,7 +308,7 @@ class MessageSummaryWidget( GafferUI.Widget ) :
 
 				if isinstance( buttonToolTip, dict ) :
 					button.setToolTip( buttonToolTip[ level ] )
-				elif isinstance( buttonToolTip, six.string_types ) :
+				elif isinstance( buttonToolTip, str ) :
 					button.setToolTip( buttonToolTip )
 
 				self.__buttons[ level ] = button

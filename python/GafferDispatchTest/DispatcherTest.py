@@ -39,7 +39,6 @@ import stat
 import unittest
 import functools
 import itertools
-import six
 import time
 
 import IECore
@@ -272,7 +271,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		with IECore.CapturingMessageHandler() as mh :
 			dispatcher.dispatch( [ s["n1"] ] )
 		self.assertEqual( len( mh.messages ), 1 )
-		six.assertRegex( self, mh.messages[0].message, "bad slot!" )
+		self.assertRegex( mh.messages[0].message, "bad slot!" )
 		self.assertEqual( len( badConnection ), 1 )
 		self.assertEqual( len( s["n1"].log ), 1 )
 		self.assertEqual( len( cs ), 1 )
@@ -285,7 +284,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		with IECore.CapturingMessageHandler() as mh :
 			dispatcher.dispatch( [ s["n1"] ] )
 		self.assertEqual( len( mh.messages ), 1 )
-		six.assertRegex( self, mh.messages[0].message, "bad slot!" )
+		self.assertRegex( mh.messages[0].message, "bad slot!" )
 		self.assertEqual( len( badConnection ), 1 )
 		self.assertEqual( len( s["n1"].log ), 2 )
 		self.assertEqual( len( cs ), 2 )
@@ -417,7 +416,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		with IECore.CapturingMessageHandler() as mh :
 			s["n1"]["preTasks"][0].setInput( s["n4"]["task"] )
 		self.assertEqual( len( mh.messages ), 1 )
-		six.assertRegex( self, mh.messages[0].message, "Cycle detected between ScriptNode.n1.preTasks.preTask0 and ScriptNode.n1.task" )
+		self.assertRegex( mh.messages[0].message, "Cycle detected between ScriptNode.n1.preTasks.preTask0 and ScriptNode.n1.task" )
 
 		self.assertNotEqual( s["n1"]["task"].hash(), s["n2"]["task"].hash() )
 		self.assertNotEqual( s["n2"]["task"].hash(), s["n3"]["task"].hash() )
@@ -1084,10 +1083,10 @@ class DispatcherTest( GafferTest.TestCase ) :
 		with IECore.CapturingMessageHandler() as mh :
 			s["t"]["preTasks"][0].setInput( s["t"]["task"] )
 		self.assertEqual( len( mh.messages ), 1 )
-		six.assertRegex( self, mh.messages[0].message, "Cycle detected between ScriptNode.t.preTasks.preTask0 and ScriptNode.t.task" )
+		self.assertRegex( mh.messages[0].message, "Cycle detected between ScriptNode.t.preTasks.preTask0 and ScriptNode.t.task" )
 
 		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
-		six.assertRaisesRegex( self, RuntimeError, "cannot have cyclic dependencies", dispatcher.dispatch, [ s["t"] ] )
+		self.assertRaisesRegex( RuntimeError, "cannot have cyclic dependencies", dispatcher.dispatch, [ s["t"] ] )
 
 	def testPostTasks( self ) :
 
@@ -1211,7 +1210,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["t2"]["postTasks"][0].setInput( s["t1"]["task"] )
 
 		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
-		six.assertRaisesRegex( self, RuntimeError, "cannot have cyclic dependencies", dispatcher.dispatch, [ s["t2"] ] )
+		self.assertRaisesRegex( RuntimeError, "cannot have cyclic dependencies", dispatcher.dispatch, [ s["t2"] ] )
 
 	def testImmediateDispatch( self ) :
 
@@ -1449,16 +1448,14 @@ class DispatcherTest( GafferTest.TestCase ) :
 		d["framesMode"].setValue( d.FramesMode.CustomRange )
 		d["frameRange"].setValue( "1-1000" )
 
-		clock = time.process_time if six.PY3 else time.clock
-
-		t = clock()
+		t = time.process_time()
 		d.dispatch( [ lastTask ] )
 
 		timeLimit = 4
 		if Gaffer.isDebug():
 			timeLimit *= 2
 
-		self.assertLess( clock() - t, timeLimit )
+		self.assertLess( time.process_time() - t, timeLimit )
 
 	def testTaskListWaitForSequence( self ) :
 
@@ -1623,14 +1620,14 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		d = self.NullDispatcher()
 		d["framesMode"].setValue( d.FramesMode.FullRange )
-		with six.assertRaisesRegex( self, Exception, "Python argument types in" ) :
+		with self.assertRaisesRegex( Exception, "Python argument types in" ) :
 			d.frameRange( None, Gaffer.Context() )
 
 	def testNullContextInFrameRangeCall( self ) :
 
 		d = self.NullDispatcher()
 		d["framesMode"].setValue( d.FramesMode.CurrentFrame )
-		with six.assertRaisesRegex( self, Exception, "Python argument types in" ) :
+		with self.assertRaisesRegex( Exception, "Python argument types in" ) :
 			d.frameRange( Gaffer.ScriptNode(), None )
 
 	def testSwitch( self ) :
@@ -1827,7 +1824,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["taskList"]["preTasks"][0].setInput( s["badNode"]["task"] )
 
 		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
-		with six.assertRaisesRegex( self, RuntimeError, "TaskPlug \"ScriptNode.badNode.task\" has no TaskNode" ) :
+		with self.assertRaisesRegex( RuntimeError, "TaskPlug \"ScriptNode.badNode.task\" has no TaskNode" ) :
 			dispatcher.dispatch( [ s["taskList"] ] )
 
 	def testContextDrivingDispatcherPlugs( self ) :

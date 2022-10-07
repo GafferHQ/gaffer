@@ -34,7 +34,6 @@
 #
 ##########################################################################
 
-import six
 import imath
 
 import IECore
@@ -235,4 +234,4 @@ parent["color"] = imath.Color4f( 0.5, 0.6, 0.7, 0.8 ) if context.get( "collect:l
 
 		deep = GafferImage.Empty()
 		node["in"].setInput( deep["out"] )
-		six.assertRaisesRegex( self, RuntimeError, 'Deep data not supported in input "in*', GafferImage.ImageAlgo.image, node["out"] )
+		self.assertRaisesRegex( RuntimeError, 'Deep data not supported in input "in*', GafferImage.ImageAlgo.image, node["out"] )

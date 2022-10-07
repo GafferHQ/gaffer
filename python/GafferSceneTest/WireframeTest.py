@@ -35,7 +35,6 @@
 ##########################################################################
 
 import unittest
-import six
 
 import imath
 
@@ -131,15 +130,15 @@ class WireframeTest( GafferSceneTest.SceneTestCase ) :
 		wireframe["filter"].setInput( filter["out"] )
 
 		wireframe["position"].setValue( "notKnownHere" )
-		with six.assertRaisesRegex( self, RuntimeError, "MeshPrimitive has no primitive variable named \"notKnownHere\"" ) :
+		with self.assertRaisesRegex( RuntimeError, "MeshPrimitive has no primitive variable named \"notKnownHere\"" ) :
 			wireframe["out"].object( "/plane" )
 
 		wireframe["position"].setValue( "constantString" )
-		with six.assertRaisesRegex( self, RuntimeError, ".* \"constantString\" has unsupported type \"StringData\"" ) :
+		with self.assertRaisesRegex( RuntimeError, ".* \"constantString\" has unsupported type \"StringData\"" ) :
 			wireframe["out"].object( "/plane" )
 
 		wireframe["position"].setValue( "constantV3f" )
-		with six.assertRaisesRegex( self, RuntimeError, ".* \"constantV3f\" must have Vertex, Varying or FaceVarying interpolation" ) :
+		with self.assertRaisesRegex( RuntimeError, ".* \"constantV3f\" must have Vertex, Varying or FaceVarying interpolation" ) :
 			wireframe["out"].object( "/plane" )
 
 	def testAdjustBounds( self ) :

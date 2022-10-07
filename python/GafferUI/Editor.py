@@ -36,7 +36,6 @@
 ##########################################################################
 
 import types
-import six
 
 import IECore
 
@@ -59,7 +58,7 @@ class _EditorMetaclass( Gaffer.Signals.Trackable.__class__ ) :
 
 ## Base class for UI components which display or manipulate a ScriptNode
 # or its children. These make up the tabs in the UI layout.
-class Editor( six.with_metaclass( _EditorMetaclass, GafferUI.Widget ) ) :
+class Editor( GafferUI.Widget, metaclass = _EditorMetaclass ) :
 
 	def __init__( self, topLevelWidget, scriptNode, **kw ) :
 

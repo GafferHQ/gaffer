@@ -39,8 +39,6 @@ import math
 import re
 import operator
 
-import six
-
 import IECore
 
 import Gaffer
@@ -117,7 +115,7 @@ class NumericWidget( GafferUI.TextWidget ) :
 	@staticmethod
 	def valueToString( value ) :
 
-		if type( value ) in six.integer_types :
+		if type( value ) is int :
 			return str( value )
 		else :
 			return ( "%.4f" % value ).rstrip( '0' ).rstrip( '.' )
@@ -281,7 +279,7 @@ class NumericWidget( GafferUI.TextWidget ) :
 
 		# update our validator based on the type of the value
 		numericType = type( value )
-		assert( numericType in six.integer_types or numericType is float )
+		assert( numericType in ( int, float ) )
 		if self.__numericType is not numericType :
 
 			self.__numericType = numericType
@@ -321,7 +319,7 @@ class _ExpressionValidator( QtGui.QValidator ) :
 		QtGui.QValidator.__init__( self, parent )
 
 		self.__numericType = numericType
-		if self.__numericType in six.integer_types :
+		if self.__numericType is int :
 			operand = r"-?[0-9]*"
 		else :
 			operand = r"-?[0-9]*\.?[0-9]{0,4}"
@@ -353,7 +351,7 @@ class _ExpressionValidator( QtGui.QValidator ) :
 		# Evaluate expression
 
 		op = {
-			"/" : operator.floordiv if self.__numericType in six.integer_types else operator.truediv,
+			"/" : operator.floordiv if self.__numericType is int else operator.truediv,
 			"*" : operator.mul,
 			"+" : operator.add,
 			"-" : operator.sub,

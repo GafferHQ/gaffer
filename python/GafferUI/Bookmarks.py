@@ -36,7 +36,6 @@
 
 import os
 import weakref
-import six
 
 import IECore
 
@@ -133,7 +132,7 @@ class Bookmarks( object ) :
 	# option makes it possible to define context sensitive bookmarks.
 	def add( self, name, path, persistent=False ) :
 
-		assert( isinstance( path, six.string_types ) or ( callable( path ) and not persistent ) )
+		assert( isinstance( path, str ) or ( callable( path ) and not persistent ) )
 
 		# backwards compatibility with old mechanism for storing recents -
 		# convert to new form.
@@ -221,7 +220,7 @@ class Bookmarks( object ) :
 	# with recents().
 	def addRecent( self, path ) :
 
-		assert( isinstance( path, six.string_types ) )
+		assert( isinstance( path, str ) )
 
 		name = "__recent:" + path
 

@@ -38,7 +38,6 @@
 import unittest
 import threading
 import collections
-import six
 
 import IECore
 
@@ -710,7 +709,7 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 		self.assertEqual( len( mh.messages ), 1 )
 		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Error )
 		self.assertEqual( mh.messages[0].context, "Plug dirty propagation" )
-		six.assertRegex( self, mh.messages[0].message, r"Cycle detected between node.* and node.*" )
+		self.assertRegex( mh.messages[0].message, r"Cycle detected between node.* and node.*" )
 
 		del cs[:]
 		with IECore.CapturingMessageHandler() as mh :
@@ -724,7 +723,7 @@ class DependencyNodeTest( GafferTest.TestCase ) :
 		self.assertEqual( len( mh.messages ), 1 )
 		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Error )
 		self.assertEqual( mh.messages[0].context, "Plug dirty propagation" )
-		six.assertRegex( self, mh.messages[0].message, r"Cycle detected between node.* and node.*" )
+		self.assertRegex( mh.messages[0].message, r"Cycle detected between node.* and node.*" )
 
 if __name__ == "__main__":
 	unittest.main()

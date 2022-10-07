@@ -369,18 +369,12 @@ const char *getItem( Path &p, long index )
 	return items[index].c_str();
 }
 
-#if PY_MAJOR_VERSION > 2
-	using SliceType = PyObject;
-#else
-	using SliceType = PySliceObject;
-#endif
-
 list getSlice( Path &p, boost::python::slice s )
 {
 	const Path::Names &items = p.names();
 
 	Py_ssize_t start, stop, step, length;
-	if( PySlice_GetIndicesEx( (SliceType *)s.ptr(), items.size(), &start, &stop, &step, &length ) )
+	if( PySlice_GetIndicesEx( s.ptr(), items.size(), &start, &stop, &step, &length ) )
 	{
 		boost::python::throw_error_already_set();
 	}
@@ -396,7 +390,7 @@ list getSlice( Path &p, boost::python::slice s )
 void setSlice( Path &p, boost::python::slice s, boost::python::list l )
 {
 	Py_ssize_t start, stop, step, length;
-	if( PySlice_GetIndicesEx( (SliceType *)s.ptr(), p.names().size(), &start, &stop, &step, &length ) )
+	if( PySlice_GetIndicesEx( s.ptr(), p.names().size(), &start, &stop, &step, &length ) )
 	{
 		boost::python::throw_error_already_set();
 	}
@@ -425,7 +419,7 @@ void delItem( Path &p, long index )
 void delSlice( Path &p, boost::python::slice s )
 {
 	Py_ssize_t start, stop, step, length;
-	if( PySlice_GetIndicesEx( (SliceType *)s.ptr(), p.names().size(), &start, &stop, &step, &length ) )
+	if( PySlice_GetIndicesEx( s.ptr(), p.names().size(), &start, &stop, &step, &length ) )
 	{
 		boost::python::throw_error_already_set();
 	}

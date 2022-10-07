@@ -337,11 +337,7 @@ void GafferModule::bindGraphComponent()
 // people up as they expect `if graphComponent` to be equivalent to
 // `if graphComponent is not None`. So we provide a more specific conversion
 // which is always true.
-#if PY_MAJOR_VERSION > 2
 		.def( "__bool__", &toBool )
-#else
-		.def( "__nonzero__", &toBool )
-#endif
 		.def( "__repr__", &repr )
 		.def( "items", &items )
 		.def( "keys", &keys )

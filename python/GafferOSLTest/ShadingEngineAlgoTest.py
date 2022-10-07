@@ -36,7 +36,6 @@
 
 import imath
 import os
-import six
 import sys
 
 import IECore
@@ -78,7 +77,7 @@ class ShadingEngineAlgoTest( GafferOSLTest.OSLTestCase ) :
 
 		# Test None passed as ptr
 
-		with six.assertRaisesRegex( self, Exception, "Python argument types .*" ) :
+		with self.assertRaisesRegex( Exception, "Python argument types .*" ) :
 			GafferOSL.ShadingEngineAlgo.shadeUVTexture( None, resolution )
 
 		# Test network output

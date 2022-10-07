@@ -36,7 +36,6 @@
 
 import imath
 import functools
-import six
 import collections
 
 import IECore
@@ -380,7 +379,7 @@ class _OptionQueryFooter( GafferUI.PlugValueWidget ) :
 			Gaffer.Color3fPlug,
 			Gaffer.Color4fPlug,
 		] :
-			if isinstance( item, six.string_types ) :
+			if isinstance( item, str ) :
 				result.append( "/" + item, { "divider": True } )
 			else :
 				result.append(

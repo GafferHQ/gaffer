@@ -37,7 +37,6 @@
 import inspect
 import unittest
 import os
-import six
 import subprocess
 
 import IECore
@@ -132,10 +131,10 @@ class EncapsulateTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( encapsulate["out"].set( "sphereSet" ).value.paths(), [ "/groupA/sphere" ] )
 		self.assertEqual( encapsulate["out"].set( "cubeSet" ).value.paths(), [] )
 
-		with six.assertRaisesRegex( self, Gaffer.ProcessException, "Encapsulate.out.childNames : Tried to access path \"/groupA/groupB/sphere\", but its ancestor has been converted to a capsule" ):
+		with self.assertRaisesRegex( Gaffer.ProcessException, "Encapsulate.out.childNames : Tried to access path \"/groupA/groupB/sphere\", but its ancestor has been converted to a capsule" ):
 			encapsulate["out"].childNames( "/groupA/groupB/sphere" )
 
-		with six.assertRaisesRegex( self, Gaffer.ProcessException, "Encapsulate.out.object : Tried to access path \"/groupA/groupB/sphere\", but its ancestor has been converted to a capsule" ):
+		with self.assertRaisesRegex( Gaffer.ProcessException, "Encapsulate.out.object : Tried to access path \"/groupA/groupB/sphere\", but its ancestor has been converted to a capsule" ):
 			encapsulate["out"].object( "/groupA/groupB/sphere" )
 
 		# As a double check, test that this setup works properly with Unencapsulate

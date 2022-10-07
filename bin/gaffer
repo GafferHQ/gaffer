@@ -177,10 +177,6 @@ if [[ `uname` = "Linux" ]] ; then
 else
 	prependToPath "$GAFFER_ROOT/lib" DYLD_FRAMEWORK_PATH
 	prependToPath "$GAFFER_ROOT/lib" DYLD_LIBRARY_PATH
-	# PySide2 installs its libraries next to its python modules,
-	# and messes up the rpaths such that they can't be relocated.
-	# Work around this by putting them on the DYLD_LIBRARY_PATH.
-	prependToPath "$PYTHONHOME/lib/python2.7/site-packages/PySide2" DYLD_LIBRARY_PATH
 	prependToPath /System/Library/Frameworks/ApplicationServices.framework/Versions/A/Frameworks/ImageIO.framework/Resources/ DYLD_LIBRARY_PATH
 fi
 

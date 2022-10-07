@@ -35,7 +35,6 @@
 ##########################################################################
 
 import collections
-import six
 
 import IECore
 
@@ -106,7 +105,7 @@ class SequencePath( Gaffer.Path ) :
 		if combiner is None :
 			if isinstance( values[0], ( int, float ) ) :
 				combiner = average
-			elif isinstance( values[0], six.string_types ) :
+			elif isinstance( values[0], str ) :
 				combiner = mostCommon
 
 		if combiner is not None :
@@ -145,7 +144,7 @@ class SequencePath( Gaffer.Path ) :
 	def __basePath( self, path ) :
 
 		result = self.__basePathSeed.copy()
-		if isinstance( path, six.string_types ) :
+		if isinstance( path, str ) :
 			result.setFromString( path )
 		else :
 			result.setFromPath( path )

@@ -38,7 +38,6 @@ import re
 import copy
 import functools
 import collections
-import six
 
 import IECore
 
@@ -259,7 +258,7 @@ class _CanonicalValue( object ) :
 		self.layers = collections.defaultdict( self.Layer )
 
 		if value is not None :
-			if isinstance( value, six.string_types ) :
+			if isinstance( value, str ) :
 				value = value.split()
 			for v in value :
 				self.add( v )
