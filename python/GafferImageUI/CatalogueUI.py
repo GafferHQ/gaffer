@@ -338,7 +338,7 @@ registerColumn( "Output Index", OutputIndexColumn( "Output Index" ) )
 
 Gaffer.Metadata.registerValue(
 	GafferImage.Catalogue, "imageIndex", _columnsMetadataKey,
-	IECore.StringVectorData( [ "Status", "Name", "Output Index" ] )
+	IECore.StringVectorData( [ "Status", "Output Index", "Name" ] )
 )
 
 ##########################################################################
