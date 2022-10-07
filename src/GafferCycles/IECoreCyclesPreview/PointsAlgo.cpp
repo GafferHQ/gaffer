@@ -33,7 +33,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GafferCycles/IECoreCyclesPreview/AttributeAlgo.h"
-#include "GafferCycles/IECoreCyclesPreview/ObjectAlgo.h"
+#include "GafferCycles/IECoreCyclesPreview/GeometryAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/SocketAlgo.h"
 
 #include "IECoreScene/PointsPrimitive.h"
@@ -138,15 +138,14 @@ ccl::PointCloud *convertCommon( const IECoreScene::PointsPrimitive *points )
 	return pointcloud;
 }
 
-ccl::Object *convert( const IECoreScene::PointsPrimitive *points, const std::string &nodeName, ccl::Scene *scene )
+ccl::Geometry *convert( const IECoreScene::PointsPrimitive *points, const std::string &nodeName, ccl::Scene *scene )
 {
-	ccl::Object *cobject = new ccl::Object();
-	cobject->set_geometry( (ccl::Geometry*)convertCommon(points) );
-	cobject->name = ccl::ustring(nodeName.c_str());
-	return cobject;
+	ccl::PointCloud *pointCloud = convertCommon( points );
+	pointCloud->name = ccl::ustring( nodeName.c_str() );
+	return pointCloud;
 }
 
-ccl::Object *convert( const vector<const IECoreScene::PointsPrimitive *> &points, const std::vector<float> &times, const int frameIdx, const std::string &nodeName, ccl::Scene *scene )
+ccl::Geometry *convert( const vector<const IECoreScene::PointsPrimitive *> &points, const std::vector<float> &times, const int frameIdx, const std::string &nodeName, ccl::Scene *scene )
 {
 	const int numSamples = points.size();
 
@@ -254,12 +253,10 @@ ccl::Object *convert( const vector<const IECoreScene::PointsPrimitive *> &points
 	}
 	mP = attr_mP->data_float3();
 
-	ccl::Object *cobject = new ccl::Object();
-	cobject->set_geometry( pointcloud );
-	cobject->name = ccl::ustring(nodeName.c_str());
-	return cobject;
+	pointcloud->name = ccl::ustring( nodeName.c_str() );
+	return pointcloud;
 }
 
-ObjectAlgo::ConverterDescription<PointsPrimitive> g_description( convert, convert );
+GeometryAlgo::ConverterDescription<PointsPrimitive> g_description( convert, convert );
 
 } // namespace

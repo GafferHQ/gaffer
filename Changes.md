@@ -26,6 +26,7 @@ Fixes
 -----
 
 - Catalogue : Removed incorrect error message on empty Catalogues.
+- Cycles : Fixed crash rendering a scene containing a CoordinateSystem (#4865).
 
 API
 ---

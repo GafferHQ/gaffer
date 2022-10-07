@@ -33,7 +33,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GafferCycles/IECoreCyclesPreview/AttributeAlgo.h"
-#include "GafferCycles/IECoreCyclesPreview/ObjectAlgo.h"
+#include "GafferCycles/IECoreCyclesPreview/GeometryAlgo.h"
 
 #include "IECoreScene/MeshNormalsOp.h"
 #include "IECoreScene/MeshPrimitive.h"
@@ -619,15 +619,14 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 	return cmesh;
 }
 
-ccl::Object *convert( const IECoreScene::MeshPrimitive *mesh, const std::string &nodeName, ccl::Scene *scene )
+ccl::Geometry *convert( const IECoreScene::MeshPrimitive *mesh, const std::string &nodeName, ccl::Scene *scene )
 {
-	ccl::Object *cobject = new ccl::Object();
-	cobject->set_geometry( static_cast<ccl::Geometry*>( convertCommon( mesh ) ) );
-	cobject->name = ccl::ustring(nodeName.c_str());
-	return cobject;
+	ccl::Mesh *cmesh = convertCommon( mesh );
+	cmesh->name = ccl::ustring( nodeName.c_str() );
+	return cmesh;
 }
 
-ccl::Object *convert( const std::vector<const IECoreScene::MeshPrimitive *> &meshes, const std::vector<float> &times, const int frameIdx, const std::string &nodeName, ccl::Scene *scene )
+ccl::Geometry *convert( const std::vector<const IECoreScene::MeshPrimitive *> &meshes, const std::vector<float> &times, const int frameIdx, const std::string &nodeName, ccl::Scene *scene )
 {
 	const int numSamples = meshes.size();
 
@@ -780,12 +779,10 @@ ccl::Object *convert( const std::vector<const IECoreScene::MeshPrimitive *> &mes
 		}
 	}
 
-	ccl::Object *cobject = new ccl::Object();
-	cobject->set_geometry( static_cast<ccl::Geometry*>( cmesh ) );
-	cobject->name = ccl::ustring(nodeName.c_str());
-	return cobject;
+	cmesh->name = ccl::ustring( nodeName.c_str() );
+	return cmesh;
 }
 
-ObjectAlgo::ConverterDescription<MeshPrimitive> g_description( convert, convert );
+GeometryAlgo::ConverterDescription<MeshPrimitive> g_description( convert, convert );
 
 } // namespace
