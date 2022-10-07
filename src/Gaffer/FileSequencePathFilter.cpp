@@ -109,7 +109,7 @@ bool FileSequencePathFilter::remove( PathPtr path ) const
 		return false;
 	}
 
-	std::vector<std::string> names( 1, fileSystemPath->string() );
+	std::vector<std::string> names( 1, fileSystemPath->names().back().string() );
 	std::vector<FileSequencePtr> sequences;
 	IECore::findSequences( names, sequences, /* minSequenceSize = */ 1 );
 	bool isSequentialFile = !sequences.empty();

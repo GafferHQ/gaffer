@@ -43,12 +43,6 @@ import GafferTest
 
 class FileSequencePathFilterTest( GafferTest.TestCase ) :
 
-	## \todo We should be using `self.temporaryDirectory()` here, but
-	# doing so causes test failures. I believe that a number in the directory
-	# name convince the filter that files are part of a sequence when they are
-	# not. We should fix the filter for that case.
-	__dir = "/tmp/gafferFileSequencePathFilterTest"
-
 	def test( self ) :
 
 		p = Gaffer.FileSystemPath( self.__dir, includeSequences = True )
@@ -296,6 +290,8 @@ class FileSequencePathFilterTest( GafferTest.TestCase ) :
 	def setUp( self ) :
 
 		GafferTest.TestCase.setUp( self )
+
+		self.__dir = self.temporaryDirectory().replace( "\\", "/" )
 
 		# clear out old files and make empty directory
 		# to work in
