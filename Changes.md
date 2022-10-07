@@ -9,7 +9,7 @@ Improvements
 Fixes
 -----
 
-- Catalogue : Removed incorrect error message on empty Catalogues
+- Catalogue : Removed incorrect error message on empty Catalogues.
 
 1.1.1.0 (relative to 1.1.0.0)
 =======
