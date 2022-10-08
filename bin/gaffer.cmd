@@ -108,6 +108,19 @@ if "%DELIGHT%" NEQ "" (
 	call :appendToPath "%GAFFER_ROOT%\renderMan\displayDrivers" DL_RESOURCES_PATH
 )
 
+rem cycles
+
+if "%CYCLES_ROOT%" EQU "" (
+	if exist %GAFFER_ROOT%\cycles (
+		set CYCLES_ROOT=%GAFFER_ROOT%\cycles
+	)
+)
+
+if "%CYCLES_ROOT%" NEQ "" (
+	call :prependToPath "%CYCLES_ROOT%\bin" PATH
+)
+
+
 rem Set up 3rd party extensions
 rem Batch files are awkward at `for` loops. The default `for`, without `/f`
 rem uses semi-colons AND spaces as delimiters, meaning we would not be able
