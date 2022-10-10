@@ -70,6 +70,9 @@ class GAFFER_API ShufflePlug : public ValuePlug
 		BoolPlug *deleteSourcePlug();
 		const BoolPlug *deleteSourcePlug() const;
 
+		BoolPlug *replaceDestinationPlug();
+		const BoolPlug *replaceDestinationPlug() const;
+
 		bool acceptsChild( const GraphComponent *potentialChild ) const override;
 		Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
 

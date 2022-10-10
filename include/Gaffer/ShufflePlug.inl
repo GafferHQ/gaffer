@@ -55,6 +55,7 @@ struct ShuffleValues
 {
 	bool enabled;
 	bool deleteSource;
+	bool replaceDestination;
 	std::string sourcePattern;
 };
 
@@ -74,11 +75,11 @@ T ShufflesPlug::shuffle( const T &sourceContainer ) const
 	{
 		shuffleValues[i].enabled = plug->enabledPlug()->getValue();
 		shuffleValues[i].deleteSource = plug->deleteSourcePlug()->getValue();
+		shuffleValues[i].replaceDestination = plug->replaceDestinationPlug()->getValue();
 		shuffleValues[i].sourcePattern = plug->sourcePlug()->getValue();
 		++i;
 	}
 
-	std::unordered_set<std::string> toDelete;
 	std::unordered_set<std::string> newDestinations;
 
 	Gaffer::Context::EditableScope scope( Gaffer::Context::current() );
@@ -102,26 +103,28 @@ T ShufflesPlug::shuffle( const T &sourceContainer ) const
 				const std::string destination = scope.context()->substitute( plug->destinationPlug()->getValue() );
 				if( !destination.empty() && IECore::StringAlgo::match( sourceData.first, shuffle.sourcePattern ) )
 				{
-					destinationContainer[destination] = sourceData.second;
-					if( !newDestinations.insert( destination ).second )
+					if( shuffle.replaceDestination || sourceContainer.find( destination ) == sourceContainer.end() )
 					{
-						throw IECore::Exception(
-							boost::str(
-								boost::format(
-									"ShufflesPlug::shuffle : Destination plug \"%s\" is shuffling \"%s\" to \"%s\", " \
-									"but this destination was already written by a previous Shuffle."
-								) %
-								plug->destinationPlug()->relativeName( plug->node() ? plug->node()->parent() : nullptr ) %
-								sourceData.first %
-								destination
-							)
-						);
-					}
+						destinationContainer[destination] = sourceData.second;
+						if( !newDestinations.insert( destination ).second )
+						{
+							throw IECore::Exception(
+								boost::str(
+									boost::format(
+										"ShufflesPlug::shuffle : Destination plug \"%s\" is shuffling \"%s\" to \"%s\", " \
+										"but this destination was already written by a previous Shuffle."
+									) %
+									plug->destinationPlug()->relativeName( plug->node() ? plug->node()->parent() : nullptr ) %
+									sourceData.first %
+									destination
+								)
+							);
+						}
 
-					deleteSource |= shuffle.deleteSource;
+						deleteSource |= shuffle.deleteSource;
+					}
 				}
 			}
-
 		}
 
 		if( !deleteSource && newDestinations.find( sourceData.first ) == newDestinations.end() )

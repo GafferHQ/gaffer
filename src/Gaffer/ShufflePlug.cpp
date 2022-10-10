@@ -65,6 +65,7 @@ ShufflePlug::ShufflePlug( const std::string &name, Direction direction, unsigned
 	// during `ShufflesPlug::shuffle()`, in order to account for the ${source} variable.
 	addChild( new StringPlug( "destination", direction, "", Plug::Default, IECore::StringAlgo::NoSubstitutions ) );
 	addChild( new BoolPlug( "deleteSource", direction ) );
+	addChild( new BoolPlug( "replaceDestination", direction, true ) );
 }
 
 Gaffer::StringPlug *ShufflePlug::sourcePlug()
@@ -107,6 +108,16 @@ const Gaffer::BoolPlug *ShufflePlug::deleteSourcePlug() const
 	return getChild<BoolPlug>( 3 );
 }
 
+Gaffer::BoolPlug *ShufflePlug::replaceDestinationPlug()
+{
+	return getChild<BoolPlug>( 4 );
+}
+
+const Gaffer::BoolPlug *ShufflePlug::replaceDestinationPlug() const
+{
+	return getChild<BoolPlug>( 4 );
+}
+
 bool ShufflePlug::acceptsChild( const Gaffer::GraphComponent *potentialChild ) const
 {
 	if( !Plug::acceptsChild( potentialChild ) )
@@ -142,6 +153,14 @@ bool ShufflePlug::acceptsChild( const Gaffer::GraphComponent *potentialChild ) c
 		potentialChild->isInstanceOf( BoolPlug::staticTypeId() ) &&
 		potentialChild->getName() == "deleteSource" &&
 		!getChild<Plug>( "deleteSource" )
+	)
+	{
+		return true;
+	}
+	else if(
+		potentialChild->isInstanceOf( BoolPlug::staticTypeId() ) &&
+		potentialChild->getName() == "replaceDestination" &&
+		!getChild<Plug>( "replaceDestination" )
 	)
 	{
 		return true;
