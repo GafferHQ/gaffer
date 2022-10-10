@@ -166,6 +166,10 @@ Gaffer.Metadata.registerNode(
 
 )
 
+Gaffer.Metadata.registerValue( Gaffer.Plug, "ui:scene:acceptsSetName:promotable", False )
+Gaffer.Metadata.registerValue( Gaffer.Plug, "ui:scene:acceptsSetNames:promotable", False )
+Gaffer.Metadata.registerValue( Gaffer.Plug, "ui:scene:acceptsSetExpression:promotable", False )
+
 ##########################################################################
 # Right click menu for sets
 # This is driven by metadata so it can be used for plugs on other
