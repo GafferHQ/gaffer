@@ -80,6 +80,8 @@ class GAFFERUI_API PathColumn : public IECore::RefCounted, public Gaffer::Signal
 			///
 			/// - StringData (providing icon name)
 			/// - Color3fData (drawn as swatch)
+			/// - CompoundData (containing `state:normal` and/or `state:highlighted`
+			//    keys mapping to StringData providing an icon name for each state)
 			IECore::ConstDataPtr icon;
 			/// The background colour for the cell. Supported types :
 			///

@@ -20,12 +20,20 @@ Breaking Changes
 Improvements
 ------------
 
-- Catalogue : Improved performance when interacting with large Catalogues.
+- Catalogue :
+  - Improved performance when interacting with large Catalogues.
+  - Added hover state to the output index column, to indicate clickability.
+  - Improved default column layout, so output index column is more compact.
 
 Fixes
 -----
 
 - Catalogue : Removed incorrect error message on empty Catalogues.
+
+API
+---
+
+- PathColumn : Added support for a different icon to be shown when a cell is hovered.
 
 1.1.1.0 (relative to 1.1.0.0)
 =======
