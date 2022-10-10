@@ -52,8 +52,9 @@ class ShufflePlugTest( GafferTest.TestCase ) :
 		self.assertEqual( p["enabled"].defaultValue(), True )
 		self.assertEqual( p["destination"].defaultValue(), "" )
 		self.assertEqual( p["deleteSource"].defaultValue(), False )
+		self.assertEqual( p["replaceDestination"].defaultValue(), True )
 
-		p = Gaffer.ShufflePlug( source = "foo", destination = "bar", deleteSource = True, enabled = False )
+		p = Gaffer.ShufflePlug( source = "foo", destination = "bar", deleteSource = True, enabled = False, replaceDestination = False )
 		self.assertEqual( p["source"].defaultValue(), "" )
 		self.assertEqual( p["source"].getValue(), "foo" )
 		self.assertEqual( p["enabled"].defaultValue(), True )
@@ -62,6 +63,8 @@ class ShufflePlugTest( GafferTest.TestCase ) :
 		self.assertEqual( p["destination"].getValue(), "bar" )
 		self.assertEqual( p["deleteSource"].defaultValue(), False )
 		self.assertEqual( p["deleteSource"].getValue(), True )
+		self.assertEqual( p["replaceDestination"].defaultValue(), True )
+		self.assertEqual( p["replaceDestination"].getValue(), False )
 
 		p2 = Gaffer.ShufflesPlug()
 		self.assertFalse( p.acceptsChild( Gaffer.Plug() ) )
@@ -320,6 +323,24 @@ class ShufflePlugTest( GafferTest.TestCase ) :
 			IECore.CompoundData( {
 				"foo" : IECore.FloatData( 0.5 ),
 				"bar" : IECore.FloatData( 0.5 ),
+				"baz" : IECore.Color3fData( imath.Color3f( 1, 2, 3 ) ),
+				"bongo" : IECore.Color3fData( imath.Color3f( 1, 2, 3 ) ),
+			} )
+		)
+
+	def testReplaceDestination( self ) :
+
+		p = Gaffer.ShufflesPlug()
+		p.addChild( Gaffer.ShufflePlug( source = "foo", destination = "bar", replaceDestination = False ) )
+		p.addChild( Gaffer.ShufflePlug( source = "baz", destination = "bongo", replaceDestination = True ) )
+
+		source = IECore.CompoundData( { "foo" : 0.5, "bar" : 1.5, "baz" : imath.Color3f( 1, 2, 3 ), "bongo" : imath.Color3f( 4, 5, 6 ) } )
+		dest = p.shuffle( source )
+		self.assertEqual(
+			dest,
+			IECore.CompoundData( {
+				"foo" : IECore.FloatData( 0.5 ),
+				"bar" : IECore.FloatData( 1.5 ),
 				"baz" : IECore.Color3fData( imath.Color3f( 1, 2, 3 ) ),
 				"bongo" : IECore.Color3fData( imath.Color3f( 1, 2, 3 ) ),
 			} )

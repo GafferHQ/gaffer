@@ -92,12 +92,13 @@ void GafferModule::bindShuffles()
 			)
 		)
 		.def(
-			init<const std::string &, const std::string &, bool, bool>(
+			init<const std::string &, const std::string &, bool, bool, bool>(
 				(
 					arg_( "source" ),
 					arg_( "destination" ),
 					arg_( "deleteSource" ) = false,
-					arg_( "enabled" ) = true
+					arg_( "enabled" ) = true,
+					arg_( "replaceDestination" ) = true
 				)
 			)
 		)

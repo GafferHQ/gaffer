@@ -54,7 +54,7 @@ class GAFFER_API ShufflePlug : public ValuePlug
 
 		GAFFER_PLUG_DECLARE_TYPE( Gaffer::ShufflePlug, ShufflePlugTypeId, ValuePlug );
 
-		ShufflePlug( const std::string &source, const std::string &destination, bool deleteSource=false, bool enabled=true );
+		ShufflePlug( const std::string &source, const std::string &destination, bool deleteSource=false, bool enabled=true, bool replaceDestination=true );
 		/// Primarily used for serialisation.
 		ShufflePlug( const std::string &name = defaultName<ShufflePlug>(), Direction direction=In, unsigned flags = Default );
 
@@ -69,6 +69,9 @@ class GAFFER_API ShufflePlug : public ValuePlug
 
 		BoolPlug *deleteSourcePlug();
 		const BoolPlug *deleteSourcePlug() const;
+
+		BoolPlug *replaceDestinationPlug();
+		const BoolPlug *replaceDestinationPlug() const;
 
 		bool acceptsChild( const GraphComponent *potentialChild ) const override;
 		Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;

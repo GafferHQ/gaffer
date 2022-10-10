@@ -3,6 +3,12 @@
 
 > Note : Python 2 support has been removed. All builds are now using Python 3.
 
+Improvements
+------------
+
+- ShuffleAttributes : Added `replaceDestination` plugs that may be used to specify whether each shuffle replaces already written destination data with the same name.
+- ShufflePrimitiveVariables : Added `replaceDestination` plugs that may be used to specify whether each shuffle replaces already written destination data with the same name.
+
 API
 ---
 
@@ -17,7 +23,7 @@ Breaking Changes
 - Python : Removed support for Python 2.
 - CatalogueUI : Hid OutputIndexColumn from public API.
 
-1.1.x.x ( relative to 1.1.1.0)
+1.1.x.x (relative to 1.1.1.0)
 =======
 
 Improvements
