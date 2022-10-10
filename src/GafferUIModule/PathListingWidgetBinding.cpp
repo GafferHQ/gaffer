@@ -74,8 +74,9 @@
 
 #include "QtGui/QGuiApplication"
 
-#include "QtWidgets/QTreeView"
 #include "QtWidgets/QFileIconProvider"
+#include "QtWidgets/QTreeView"
+#include "QtWidgets/QStyledItemDelegate"
 
 #include <chrono>
 #include <unordered_map>
@@ -144,9 +145,9 @@ bool variantLess( const QVariant &left, const QVariant &right )
 	}
 }
 
-IECorePreview::LRUCache<std::string, QVariant> g_iconCache(
+IECorePreview::LRUCache<std::string, QPixmap> g_pixmapCache(
 	// Getter
-	[] ( const std::string &fileName, size_t &cost, const IECore::Canceller *canceller ) -> QVariant
+	[] ( const std::string &fileName, size_t &cost, const IECore::Canceller *canceller ) -> QPixmap
 	{
 		cost = 1;
 
@@ -156,7 +157,8 @@ IECorePreview::LRUCache<std::string, QVariant> g_iconCache(
 		if( boost::starts_with( fileName, g_fileIconPrefix ) )
 		{
 			static QFileIconProvider g_provider;
-			return g_provider.icon( QFileInfo( fileName.c_str() + g_fileIconPrefix.size() ) );
+			QIcon icon = g_provider.icon( QFileInfo( fileName.c_str() + g_fileIconPrefix.size() ) );
+			return icon.pixmap( 16 );
 		}
 
 		// Standard code path - load icon from file.
@@ -166,7 +168,7 @@ IECorePreview::LRUCache<std::string, QVariant> g_iconCache(
 		if( path.empty() )
 		{
 			IECore::msg( IECore::Msg::Warning, "PathListingWidget", boost::str( boost::format( "Could not find file \"%s\"" ) % fileName ) );
-			return QVariant();
+			return QPixmap();
 		}
 		return QPixmap( QString( path.string().c_str() ) );
 	},
@@ -231,9 +233,44 @@ QVariant dataToVariant( const IECore::Data *value, int role )
 		switch( value->typeId() )
 		{
 			case IECore::StringDataTypeId :
-				return g_iconCache.get( static_cast<const IECore::StringData *>( value )->readable() );
+				return g_pixmapCache.get( static_cast<const IECore::StringData *>( value )->readable() );
 			case IECore::Color3fDataTypeId :
 				return displayColor( static_cast<const IECore::Color3fData *>( value )->readable() );
+			case IECore::CompoundDataTypeId : {
+				auto d = static_cast<const IECore::CompoundData *>( value );
+				QIcon icon;
+				if( const auto *s = d->member<IECore::StringData>( "state:normal" ) )
+				{
+					if( s->readable().size() )
+					{
+						icon.addPixmap( g_pixmapCache.get( s->readable() ) );
+					}
+				}
+				if( const auto *s = d->member<IECore::StringData>( "state:highlighted" ) )
+				{
+					if( s->readable().size() )
+					{
+						QPixmap pixmap = g_pixmapCache.get( s->readable() );
+						if( !pixmap.isNull() )
+						{
+							if( icon.isNull() )
+							{
+								// We don't have a normal state, meaning we
+								// don't want to display anything unless
+								// hovered. But Qt interprets this differently,
+								// and will fall back (forwards?!) to the Active
+								// state if the Normal state isn't there.
+								// Provide a transparent pixmap to avoid this.
+								QPixmap empty( pixmap.size() );
+								empty.fill( QColor( 0, 0, 0, 0 ) );
+								icon.addPixmap( empty );
+							}
+							icon.addPixmap( pixmap, QIcon::Active );
+						}
+					}
+				}
+				return !icon.isNull() ? icon : QVariant();
+			}
 			default :
 				return QVariant();
 		}
@@ -1742,6 +1779,34 @@ class PathModel : public QAbstractItemModel
 
 };
 
+class PathListingWidgetItemDelegate : public QStyledItemDelegate
+{
+
+	public :
+
+		PathListingWidgetItemDelegate( QObject *parent = nullptr )
+			:	QStyledItemDelegate( parent )
+		{
+		}
+
+	protected :
+
+		void initStyleOption( QStyleOptionViewItem *option, const QModelIndex &index ) const override
+		{
+			QStyledItemDelegate::initStyleOption( option, index );
+			if( option->state & QStyle::State_MouseOver )
+			{
+				// Ideally the QStyle would automatically use `State_MouseOver`
+				// to draw the `QIcon::Active` version of an icon. But it
+				// doesn't do that. So instead, we switch in the active version
+				// of the icon here, before it gets passed to the style for
+				// drawing.
+				option->icon = QIcon( option->icon.pixmap( option->decorationSize, QIcon::Active ) );
+			}
+		}
+
+};
+
 void setColumns( uint64_t treeViewAddress, object pythonColumns )
 {
 	QTreeView *treeView = reinterpret_cast<QTreeView *>( treeViewAddress );
@@ -1772,6 +1837,7 @@ void updateModel( uint64_t treeViewAddress, Gaffer::PathPtr path )
 	if( !model )
 	{
 		model = new PathModel( treeView );
+		treeView->setItemDelegate( new PathListingWidgetItemDelegate( treeView ) );
 	}
 	model->setRoot( path );
 }

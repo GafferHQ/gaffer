@@ -126,6 +126,14 @@ class PathListingWidget( GafferUI.Widget ) :
 		self.__selectionMode = selectionMode
 		self.__lastSelectedIndex = None
 
+		# Enable item hover tracking, so `PathListingWidgetItemDelegate::initStyleOption()` is
+		# provided with hover state via the `QStyle::State_MouseOver` flag. Also set the selection
+		# behaviour to be per-item rather than per-row (even though we're not using Qt selection),
+		# because otherwise Qt sets `State_MouseOver` for entire rows.
+
+		self._qtWidget().viewport().setAttribute( QtCore.Qt.WA_Hover )
+		self._qtWidget().setSelectionBehavior( QtWidgets.QAbstractItemView.SelectItems )
+
 		# Set up our various signals.
 
 		self._qtWidget().model().selectionChanged.connect( Gaffer.WeakMethod( self.__selectionChanged ) )

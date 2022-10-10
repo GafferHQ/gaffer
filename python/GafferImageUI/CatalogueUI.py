@@ -310,31 +310,27 @@ registerColumn(
 	SimpleColumn( "Display Window", lambda _, c : __formatBox( c["out"].format().getDisplayWindow() ) )
 )
 
-def _imageFromName( catalogue, imageName ):
-	for i in catalogue["images"].source().children():
-		if i.getName() == imageName:
-			return i
-
-	return None
-
-# Column for setting which images to output as comparison views
+# Column for the `Image.outputIndex` plug.
 class OutputIndexColumn( Column ) :
 
 	def __init__( self, title ) :
 
 		Column.__init__( self, title )
 
-	def _imageCellData( self, image, catalogue ) :
-		tt = "Click to set this image as Output 1 so it can be referenced from the Viewer or by CatalogueSelect nodes. Right-click to set other output indexes."
-		i = image["outputIndex"].getValue()
-		if i > 0:
-			return self.CellData( icon = "catalogueOutput%i.png" % i, toolTip = tt )
-		else:
-			return self.CellData( value = "", toolTip = tt )
-
 	def headerData( self, canceller = None ) :
 
 		return self.CellData( icon = "catalogueOutputHeader.png", toolTip = "Output Index" )
+
+	def _imageCellData( self, image, catalogue ) :
+
+		i = image["outputIndex"].getValue()
+		return self.CellData(
+			icon = IECore.CompoundData( {
+				"state:normal" : "catalogueOutput{}.png".format( i ) if i else "",
+				"state:highlighted" : "catalogueOutput{}Highlighted{}.png".format( i or 1, "" if i else "Transparent" ),
+			} ),
+			toolTip = "Click to set this image as Output 1 so it can be referenced from the Viewer or by CatalogueSelect nodes. Right-click to set other output indexes."
+		)
 
 registerColumn( "Output Index", OutputIndexColumn( "Output Index" ) )
 
@@ -342,7 +338,7 @@ registerColumn( "Output Index", OutputIndexColumn( "Output Index" ) )
 
 Gaffer.Metadata.registerValue(
 	GafferImage.Catalogue, "imageIndex", _columnsMetadataKey,
-	IECore.StringVectorData( [ "Status", "Name", "Output Index" ] )
+	IECore.StringVectorData( [ "Status", "Output Index", "Name" ] )
 )
 
 ##########################################################################
@@ -1052,7 +1048,7 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 		imageToReplace = None
 
 		if targetPath is not None :
-			imageToReplace =  _imageFromName( self.getPlug().node(), str( targetPath )[1:] )
+			imageToReplace = targetPath.property( "catalogue:image" )
 		else :
 			# Drag has gone above or below all listed items. Use closest image.
 			imageToReplace = images[0] if event.line.p0.y < 1 else images[-1]
@@ -1135,9 +1131,9 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 			return False
 
 		if event.button == event.Buttons.Left and event.modifiers == event.Modifiers.None_ :
-			name = pathListing.pathAt( event.line.p0 )
-			if name:
-				image = _imageFromName( self.getPlug().node(), name[0] )
+			path = pathListing.pathAt( event.line.p0 )
+			if path is not None :
+				image = path.property( "catalogue:image" )
 				self.__setOutputIndex( image["outputIndex"].getValue() == 0, image )
 
 		return True
@@ -1192,13 +1188,12 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 			self.__popupMenu.popup( parent = self )
 			return True
 		elif isinstance( self.__pathListing.columnAt( mousePosition ), OutputIndexColumn ):
-			row = self.__pathListing.pathAt( mousePosition )
-			if row:
-				image = _imageFromName( self.getPlug().node(), row[0] )
-				if image:
-					self.__popupMenu = GafferUI.Menu( self.__outputIndexContextMenuDefinition( image ), title = "Output Index" )
-					self.__popupMenu.popup( parent = self )
-					return True
+			path = self.__pathListing.pathAt( mousePosition )
+			if path is not None :
+				image = path.property( "catalogue:image" )
+				self.__popupMenu = GafferUI.Menu( self.__outputIndexContextMenuDefinition( image ), title = "Output Index" )
+				self.__popupMenu.popup( parent = self )
+				return True
 
 		return False
 
