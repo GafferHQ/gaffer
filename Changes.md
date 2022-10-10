@@ -1,3 +1,11 @@
+1.0.6.x (relative to 1.0.6.0)
+=======
+
+Fixes
+-----
+
+- NodeEditor : Fixed updated of section summaries when they are changed in the UI Editor.
+
 1.0.6.0 (relative to 1.0.5.1)
 =======
 
