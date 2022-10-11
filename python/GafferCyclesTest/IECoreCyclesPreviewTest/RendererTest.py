@@ -101,10 +101,11 @@ class RendererTest( GafferTest.TestCase ) :
 		image = IECoreImage.ImageDisplayDriver.storedImage( "testObjectColor" )
 		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
 
-		middlePixel = image["R"].size() // 2
-		self.assertEqual( image["R"][middlePixel], 1 )
-		self.assertEqual( image["G"][middlePixel], 0.5 )
-		self.assertEqual( image["B"][middlePixel], 0.25 )
+		# Slightly off-centre, to avoid triangle edge artifact in centre of image.
+		testPixel = self.__colorAtUV( image, imath.V2f( 0.55 ) )
+		self.assertEqual( testPixel.r, 1 )
+		self.assertEqual( testPixel.g, 0.5 )
+		self.assertEqual( testPixel.b, 0.25 )
 
 		del plane
 
@@ -175,10 +176,11 @@ class RendererTest( GafferTest.TestCase ) :
 		image = IECoreImage.ImageDisplayDriver.storedImage( "testQuadLightColorTexture" )
 		self.assertTrue( isinstance( image, IECoreImage.ImagePrimitive ) )
 
-		middlePixel = image["R"].size() // 2
-		self.assertGreater( image["R"][middlePixel], 0 )
-		self.assertEqual( image["G"][middlePixel], 0 )
-		self.assertEqual( image["B"][middlePixel], 0 )
+		# Slightly off-centre, to avoid triangle edge artifact in centre of image.
+		testPixel = self.__colorAtUV( image, imath.V2f( 0.55 ) )
+		self.assertGreater( testPixel.r, 0 )
+		self.assertEqual( testPixel.g, 0 )
+		self.assertEqual( testPixel.b, 0 )
 
 		del plane, light
 
@@ -269,10 +271,10 @@ class RendererTest( GafferTest.TestCase ) :
 		image = IECoreImage.ImageDisplayDriver.storedImage( "testBackgroundLightWithoutTexture" )
 		self.assertTrue( isinstance( image, IECoreImage.ImagePrimitive ) )
 
-		middlePixel = image["R"].size() // 2
-		self.assertGreater( image["R"][middlePixel], 0 )
-		self.assertEqual( image["G"][middlePixel], 0 )
-		self.assertEqual( image["B"][middlePixel], 0 )
+		middlePixel = self.__colorAtUV( image, imath.V2f( 0.5 ) )
+		self.assertGreater( middlePixel.r, 0 )
+		self.assertEqual( middlePixel.g, 0 )
+		self.assertEqual( middlePixel.b, 0 )
 
 		del plane
 
@@ -494,6 +496,13 @@ class RendererTest( GafferTest.TestCase ) :
 		image = IECoreImage.ImageReader( fileName ).read()
 		self.assertEqual( image.dataWindow, imath.Box2i( imath.V2i( 500, 250 ), imath.V2i( 1499, 749 ) ) )
 		self.assertEqual( image.displayWindow, imath.Box2i( imath.V2i( 0 ), imath.V2i( 1999, 999 ) ) )
+
+	def __colorAtUV( self, image, uv ) :
+
+		dimensions = image.dataWindow.size() + imath.V2i( 1 )
+		i = dimensions.x * int( dimensions.y * uv.y ) + int( dimensions.x * uv.x )
+
+		return imath.Color4f( image["R"][i], image["G"][i], image["B"][i], image["A"][i] )
 
 if __name__ == "__main__":
 	unittest.main()
