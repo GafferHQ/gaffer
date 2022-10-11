@@ -1614,7 +1614,7 @@ void RenderController::updateInternal( const ProgressCallback &callback, const I
 
 		if( m_dirtyGlobalComponents & SetsGlobalComponent )
 		{
-			if( m_renderSets.update( m_scene.get() ) & Private::RendererAlgo::RenderSets::RenderSetsChanged )
+			if( m_renderSets.update( m_scene.get() ) & Private::RendererAlgo::RenderSets::AttributesChanged )
 			{
 				m_changedGlobalComponents |= RenderSetsGlobalComponent;
 			}

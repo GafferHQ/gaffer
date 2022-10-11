@@ -118,6 +118,7 @@ class GAFFERSCENE_API RenderSets : boost::noncopyable
 		const IECore::PathMatcher &camerasSet() const;
 		const IECore::PathMatcher &lightsSet() const;
 		const IECore::PathMatcher &lightFiltersSet() const;
+		const IECore::PathMatcher &soloLightsSet() const;
 
 		void attributes( IECore::CompoundObject::ObjectMap &attributes, const ScenePlug::ScenePath &path ) const;
 
@@ -141,6 +142,7 @@ class GAFFERSCENE_API RenderSets : boost::noncopyable
 		Set m_camerasSet;
 		Set m_lightsSet;
 		Set m_lightFiltersSet;
+		Set m_soloLightsSet;
 
 };
 

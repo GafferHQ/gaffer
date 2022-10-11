@@ -895,5 +895,384 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		task.wait()
 		self.assertEqual( statuses, [ Status.Running ] * 4 + [ Status.Completed ] )
 
+	def testLightMute( self ) :
+
+		#   Light					light:mute	Muted Result
+		#   --------------------------------------------------------
+		# - lightMute				True				True
+		# - light					undefined			undefined
+		# - lightMute2				True				True
+		# - lightMute3				True				True
+		# --- lightMute3Child		False				False
+		# - light2					undefined			undefined
+		# --- light2ChildMute		True				True
+		# --- light2Child			False				False
+		# - groupMute				True				--
+		# --- lightGroupMuteChild	undefined			True (inherited)
+
+		lightMute = GafferSceneTest.TestLight()
+		lightMute["name"].setValue( "lightMute" )
+		light = GafferSceneTest.TestLight()
+		light["name"].setValue( "light" )
+		lightMute2 = GafferSceneTest.TestLight()
+		lightMute2["name"].setValue( "lightMute2" )
+		lightMute3 = GafferSceneTest.TestLight()
+		lightMute3["name"].setValue( "lightMute3" )
+		lightMute3Child = GafferSceneTest.TestLight()
+		lightMute3Child["name"].setValue( "lightMute3Child" )
+		light2 = GafferSceneTest.TestLight()
+		light2["name"].setValue( "light2" )
+		light2ChildMute = GafferSceneTest.TestLight()
+		light2ChildMute["name"].setValue( "light2ChildMute" )
+		light2Child = GafferSceneTest.TestLight()
+		light2Child["name"].setValue( "light2Child" )
+		lightGroupMuteChild = GafferSceneTest.TestLight()
+		lightGroupMuteChild["name"].setValue( "lightGroupMuteChild" )
+
+		parent = GafferScene.Parent()
+		parent["parent"].setValue( "/" )
+		parent["children"][0].setInput( lightMute["out"] )
+		parent["children"][1].setInput( light["out"] )
+		parent["children"][2].setInput( lightMute2["out"] )
+		parent["children"][3].setInput( lightMute3["out"] )
+
+		lightMute3Parent = GafferScene.Parent()
+		lightMute3Parent["in"].setInput( parent["out"] )
+		lightMute3Parent["parent"].setValue( "/lightMute3" )
+		lightMute3Parent["children"][0].setInput( lightMute3Child["out"] )
+
+		parent["children"][4].setInput( light2["out"] )
+
+		light2Parent = GafferScene.Parent()
+		light2Parent["in"].setInput( lightMute3Parent["out"] )
+		light2Parent["parent"].setValue( "/light2" )
+		light2Parent["children"][0].setInput( light2ChildMute["out"] )
+		light2Parent["children"][1].setInput( light2Child["out"] )
+
+		groupMute = GafferScene.Group()
+		groupMute["name"].setValue( "groupMute" )
+		groupMute["in"][0].setInput( lightGroupMuteChild["out"] )
+
+		parent["children"][5].setInput( groupMute["out"] )
+
+		unMuteFilter = GafferScene.PathFilter()
+		unMuteFilter["paths"].setValue(
+			IECore.StringVectorData( [ "/lightMute3/lightMute3Child", "/light2/light2Child" ] )
+		)
+		unMuteAttributes = GafferScene.CustomAttributes()
+		unMuteAttributes["in"].setInput( light2Parent["out"] )
+		unMuteAttributes["filter"].setInput( unMuteFilter["out"] )
+		unMuteAttributes["attributes"].addChild( Gaffer.NameValuePlug( "light:mute", False ) )
+
+		muteFilter = GafferScene.PathFilter()
+		muteFilter["paths"].setValue(
+			IECore.StringVectorData( [ "/lightMute", "/lightMute2", "/lightMute3", "/light2/light2ChildMute", "/groupMute" ] )
+		)
+		muteAttributes = GafferScene.CustomAttributes()
+		muteAttributes["in"].setInput( unMuteAttributes["out"] )
+		muteAttributes["filter"].setInput( muteFilter["out"] )
+		muteAttributes["attributes"].addChild( Gaffer.NameValuePlug( "light:mute", True ) )
+
+		# Make sure we got the hierarchy and attributes right
+		self.assertEqual(
+			parent["out"].childNames( "/" ),
+			IECore.InternedStringVectorData( [ "lightMute", "light", "lightMute2", "lightMute3", "light2", "groupMute", ] )
+		)
+		self.assertEqual(
+			muteAttributes["out"].childNames( "/lightMute3" ),
+			IECore.InternedStringVectorData( [ "lightMute3Child", ] )
+		)
+		self.assertEqual(
+			muteAttributes["out"].childNames( "/light2" ),
+			IECore.InternedStringVectorData( [ "light2ChildMute", "light2Child", ] )
+		)
+		self.assertEqual(
+			muteAttributes["out"].childNames( "/groupMute" ),
+			IECore.InternedStringVectorData( [ "lightGroupMuteChild", ] )
+		)
+		self.assertTrue( muteAttributes["out"].attributes( "/lightMute" )["light:mute"].value )
+		self.assertNotIn( "light:mute", muteAttributes["out"].attributes( "/light" ) )
+		self.assertTrue( muteAttributes["out"].attributes( "/lightMute2" )["light:mute"].value )
+		self.assertTrue( muteAttributes["out"].attributes( "/lightMute3" )["light:mute"].value )
+		self.assertFalse( muteAttributes["out"].attributes( "/lightMute3/lightMute3Child" )["light:mute"].value )
+		self.assertNotIn( "light:mute", muteAttributes["out"].attributes( "/light2" ) )
+		self.assertTrue( muteAttributes["out"].attributes( "/light2/light2ChildMute" )["light:mute"].value )
+		self.assertFalse( muteAttributes["out"].attributes( "/light2/light2Child" )["light:mute"].value )
+		self.assertTrue( muteAttributes["out"].attributes( "/groupMute" )["light:mute"].value )
+		self.assertNotIn( "light:mute", muteAttributes["out"].attributes( "/groupMute/lightGroupMuteChild" ) )
+		self.assertTrue( muteAttributes["out"].fullAttributes( "/groupMute/lightGroupMuteChild" ) )
+
+		# Output the lights to the renderer
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer()
+		controller = GafferScene.RenderController( muteAttributes["out"], Gaffer.Context(), renderer )
+		controller.setMinimumExpansionDepth( 2 )
+		controller.update()
+
+		self.assertTrue( renderer.capturedObject( "/lightMute" ).capturedAttributes().attributes()["light:mute"].value )
+		self.assertNotIn( "light:mute", renderer.capturedObject( "/light" ).capturedAttributes().attributes() )
+		self.assertTrue( renderer.capturedObject( "/lightMute2" ).capturedAttributes().attributes()["light:mute"] .value)
+		self.assertTrue( renderer.capturedObject( "/lightMute3" ).capturedAttributes().attributes()["light:mute"].value )
+		self.assertFalse( renderer.capturedObject( "/lightMute3/lightMute3Child" ).capturedAttributes().attributes()["light:mute"].value )
+		self.assertNotIn( "light:mute", renderer.capturedObject( "/light2" ).capturedAttributes().attributes() )
+		self.assertTrue( renderer.capturedObject( "/light2/light2ChildMute" ).capturedAttributes().attributes()["light:mute"].value )
+		self.assertFalse( renderer.capturedObject( "/light2/light2Child" ).capturedAttributes().attributes()["light:mute"].value )
+		self.assertTrue( renderer.capturedObject( "/groupMute/lightGroupMuteChild" ).capturedAttributes().attributes()["light:mute"].value )
+
+		# Changing the muted lights should update
+
+		#   Light					light:mute	Muted Result
+		#   --------------------------------------------------------
+		# - lightMute				False				False
+		# - light					False				False
+		# - lightMute2				False				False
+		# - lightMute3				False				False
+		# --- lightMute3Child		True				True
+		# - light2					False				False
+		# --- light2ChildMute		False				False
+		# --- light2Child			True				True
+		# - groupMute				False				--
+		# --- lightGroupMuteChild	undefined			False
+
+		muteFilter["paths"].setValue(
+			IECore.StringVectorData(
+				[
+					"/lightMute3/lightMute3Child",
+					"/light2/light2Child"
+				]
+			)
+		)
+		unMuteFilter["paths"].setValue(
+			IECore.StringVectorData(
+				[
+					"/lightMute",
+					"/light",
+					"/lightMute2",
+					"/lightMute3",
+					"/light2",
+					"/light2/light2ChildMute",
+					"/groupMute",
+				]
+			)
+		)
+		controller.update()
+
+		self.assertFalse( renderer.capturedObject( "/lightMute" ).capturedAttributes().attributes()["light:mute"].value )
+		self.assertFalse( renderer.capturedObject( "/light" ).capturedAttributes().attributes()["light:mute"].value )
+		self.assertFalse( renderer.capturedObject( "/lightMute2" ).capturedAttributes().attributes()["light:mute"] .value)
+		self.assertFalse( renderer.capturedObject( "/lightMute3" ).capturedAttributes().attributes()["light:mute"].value )
+		self.assertTrue( renderer.capturedObject( "/lightMute3/lightMute3Child" ).capturedAttributes().attributes()["light:mute"].value )
+		self.assertFalse( renderer.capturedObject( "/light2" ).capturedAttributes().attributes()["light:mute"].value )
+		self.assertFalse( renderer.capturedObject( "/light2/light2ChildMute" ).capturedAttributes().attributes()["light:mute"].value )
+		self.assertTrue( renderer.capturedObject( "/light2/light2Child" ).capturedAttributes().attributes()["light:mute"].value )
+		self.assertFalse( renderer.capturedObject( "/groupMute/lightGroupMuteChild" ).capturedAttributes().attributes()["light:mute"].value )
+
+
+
+	def testLightSolo( self ) :
+
+		#   Light                       light:mute      soloLights  Mute Result
+		#   ---------------------------------------------------------------------------
+		# - lightSolo                   undefined       in          False
+		# - light                       undefined       out         True
+		# - lightSolo2                  False           in          False
+		# - lightMute                   True            out         True
+		# --- lightMuteChild            undefined       out         True
+		# --- lightMuteChildSolo        undefined       in          False
+		# - lightMuteSolo               True            in          False
+		# --- lightMuteSoloChild        undefined       out         False
+		# --- lightMuteSoloChildSolo    undefined       in          False
+		# - groupMute                   True            out         --
+		# --- lightGroupMuteChildSolo   undefined       in          False
+
+		lightSolo = GafferSceneTest.TestLight()
+		lightSolo["name"].setValue( "lightSolo" )
+		light = GafferSceneTest.TestLight()
+		light["name"].setValue( "light" )
+		lightSolo2 = GafferSceneTest.TestLight()
+		lightSolo2["name"].setValue( "lightSolo2" )
+		lightMute = GafferSceneTest.TestLight()
+		lightMute["name"].setValue( "lightMute" )
+		lightMuteChild = GafferSceneTest.TestLight()
+		lightMuteChild["name"].setValue( "lightMuteChild" )
+		lightMuteChildSolo = GafferSceneTest.TestLight()
+		lightMuteChildSolo["name"].setValue( "lightMuteChildSolo" )
+		lightMuteSolo = GafferSceneTest.TestLight()
+		lightMuteSolo["name"].setValue( "lightMuteSolo" )
+		lightMuteSoloChild = GafferSceneTest.TestLight()
+		lightMuteSoloChild["name"].setValue( "lightMuteSoloChild" )
+		lightMuteSoloChildSolo = GafferSceneTest.TestLight()
+		lightMuteSoloChildSolo["name"].setValue( "lightMuteSoloChildSolo" )
+		lightGroupMuteChildSolo = GafferSceneTest.TestLight()
+		lightGroupMuteChildSolo["name"].setValue( "lightGroupMuteChildSolo" )
+
+		parent = GafferScene.Parent()
+		parent["parent"].setValue( "/" )
+		parent["children"][0].setInput( lightSolo["out"] )
+		parent["children"][1].setInput( light["out"] )
+		parent["children"][2].setInput( lightSolo2["out"] )
+
+		parent["children"][3].setInput( lightMute["out"] )
+
+		lightMuteParent = GafferScene.Parent()
+		lightMuteParent["in"].setInput( parent["out"] )
+		lightMuteParent["parent"].setValue( "/lightMute" )
+		lightMuteParent["children"][0].setInput( lightMuteChild["out"] )
+		lightMuteParent["children"][1].setInput( lightMuteChildSolo["out"] )
+
+		parent["children"][4].setInput( lightMuteSolo["out"] )
+
+		lightMuteSoloParent = GafferScene.Parent()
+		lightMuteSoloParent["in"].setInput( lightMuteParent["out"] )
+		lightMuteSoloParent["parent"].setValue( "/lightMuteSolo" )
+		lightMuteSoloParent["children"][0].setInput( lightMuteSoloChild["out"] )
+		lightMuteSoloParent["children"][1].setInput( lightMuteSoloChildSolo["out"] )
+
+		groupMute = GafferScene.Group()
+		groupMute["name"].setValue( "groupMute" )
+		groupMute["in"][0].setInput( lightGroupMuteChildSolo["out"] )
+
+		parent["children"][5].setInput( groupMute["out"] )
+
+		unMuteFilter = GafferScene.PathFilter()
+		unMuteFilter["paths"].setValue(
+			IECore.StringVectorData( [ "/lightSolo2" ] )
+		)
+		unMuteAttributes = GafferScene.CustomAttributes()
+		unMuteAttributes["in"].setInput( lightMuteSoloParent["out"] )
+		unMuteAttributes["filter"].setInput( unMuteFilter["out"] )
+		unMuteAttributes["attributes"].addChild( Gaffer.NameValuePlug( "light:mute", False ) )
+
+		muteFilter = GafferScene.PathFilter()
+		muteFilter["paths"].setValue(
+			IECore.StringVectorData( [ "/lightMute", "/lightMuteSolo", "/groupMute" ] )
+		)
+		muteAttributes = GafferScene.CustomAttributes()
+		muteAttributes["in"].setInput( unMuteAttributes["out"] )
+		muteAttributes["filter"].setInput( muteFilter["out"] )
+		muteAttributes["attributes"].addChild( Gaffer.NameValuePlug( "light:mute", True ) )
+
+		soloFilter = GafferScene.PathFilter()
+		soloFilter["paths"].setValue(
+			IECore.StringVectorData(
+				[
+					"/lightSolo",
+					"/lightSolo2",
+					"/lightMute/lightMuteChildSolo",
+					"/lightMuteSolo",
+					"/lightMuteSolo/lightMuteSoloChildSolo",
+					"/groupMute/lightGroupMuteChildSolo",
+				]
+			)
+		)
+
+		soloSet = GafferScene.Set()
+		soloSet["in"].setInput( muteAttributes["out"])
+		soloSet["name"].setValue( "soloLights" )
+		soloSet["filter"].setInput( soloFilter["out"] )
+
+		# Make sure we got the hierarchy, attributes and set right
+		self.assertEqual(
+			parent["out"].childNames( "/" ),
+			IECore.InternedStringVectorData( [ "lightSolo", "light", "lightSolo2", "lightMute", "lightMuteSolo", "groupMute", ] )
+		)
+		self.assertEqual(
+			soloSet["out"].childNames( "/lightMute" ),
+			IECore.InternedStringVectorData( [ "lightMuteChild", "lightMuteChildSolo", ] )
+		)
+		self.assertEqual(
+			soloSet["out"].childNames( "/lightMuteSolo" ),
+			IECore.InternedStringVectorData( [ "lightMuteSoloChild", "lightMuteSoloChildSolo", ] )
+		)
+		self.assertEqual(
+			soloSet["out"].childNames( "/groupMute" ),
+			IECore.InternedStringVectorData( [ "lightGroupMuteChildSolo", ] )
+		)
+		self.assertNotIn( "light:mute", soloSet["out"].attributes( "/lightSolo" ) )
+		self.assertNotIn( "light:mute", soloSet["out"].attributes( "/light" ) )
+		self.assertFalse( soloSet["out"].attributes( "/lightSolo2" )["light:mute"].value )
+		self.assertTrue( soloSet["out"].attributes( "/lightMute" )["light:mute"].value )
+		self.assertNotIn( "light:mute", soloSet["out"].attributes( "/lightMute/lightMuteChild" ) )
+		self.assertNotIn( "light:mute", soloSet["out"].attributes( "/lightMute/lightMuteChildSolo" ) )
+		self.assertTrue( soloSet["out"].attributes( "/lightMuteSolo" )["light:mute"].value )
+		self.assertNotIn( "light:mute", soloSet["out"].attributes( "/lightMuteSolo/lightMuteSoloChild" ) )
+		self.assertNotIn( "light:mute", soloSet["out"].attributes( "/lightMuteSolo/lightMuteSoloChildSolo" ) )
+		self.assertTrue( soloSet["out"].attributes( "/groupMute" )["light:mute"].value )
+		self.assertNotIn( "light:mute", soloSet["out"].attributes( "/groupMute/lightGroupMuteChildSolo" ) )
+		self.assertTrue( "light:mute", soloSet["out"].fullAttributes( "/groupMute/lightGroupMuteChildSolo" ) )
+
+		self.assertEqual(
+			sorted( soloSet["out"].set( "soloLights" ).value.paths() ),
+			sorted(
+				[
+					"/lightSolo",
+					"/lightSolo2",
+					"/lightMute/lightMuteChildSolo",
+					"/lightMuteSolo",
+					"/lightMuteSolo/lightMuteSoloChildSolo",
+					"/groupMute/lightGroupMuteChildSolo",
+				]
+			)
+		)
+
+		# Output the lights to the renderer
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer()
+		controller = GafferScene.RenderController( soloSet["out"], Gaffer.Context(), renderer )
+		controller.setMinimumExpansionDepth( 2 )
+		controller.update()
+
+		# Check that the output is correct
+
+		self.assertFalse( renderer.capturedObject( "/lightSolo" ).capturedAttributes().attributes()["light:mute"].value )
+		self.assertTrue( renderer.capturedObject( "/light" ).capturedAttributes().attributes()["light:mute"].value )
+		self.assertFalse( renderer.capturedObject( "/lightSolo2" ).capturedAttributes().attributes()["light:mute"].value )
+		self.assertTrue( renderer.capturedObject( "/lightMute" ).capturedAttributes().attributes()["light:mute"].value )
+		self.assertTrue( renderer.capturedObject( "/lightMute/lightMuteChild" ).capturedAttributes().attributes()["light:mute"].value )
+		self.assertFalse( renderer.capturedObject( "/lightMute/lightMuteChildSolo" ).capturedAttributes().attributes()["light:mute"].value )
+		self.assertFalse( renderer.capturedObject( "/lightMuteSolo" ).capturedAttributes().attributes()["light:mute"].value )
+		self.assertFalse( renderer.capturedObject( "/lightMuteSolo/lightMuteSoloChild" ).capturedAttributes().attributes()["light:mute"].value )
+		self.assertFalse( renderer.capturedObject( "/lightMuteSolo/lightMuteSoloChildSolo" ).capturedAttributes().attributes()["light:mute"].value )
+		self.assertFalse( renderer.capturedObject( "/groupMute/lightGroupMuteChildSolo" ).capturedAttributes().attributes()["light:mute"].value )
+
+		#   Light                       light:mute      soloLights  Mute Result
+		#   ---------------------------------------------------------------------------
+		# - lightSolo                   undefined       out         True
+		# - light                       undefined       in          False
+		# - lightSolo2                  False           out         True
+		# - lightMute                   True            in          False
+		# --- lightMuteChild            undefined       in          False
+		# --- lightMuteChildSolo        undefined       out         False
+		# - lightMuteSolo               True            out         True
+		# --- lightMuteSoloChild        undefined       in          False
+		# --- lightMuteSoloChildSolo    undefined       out         True
+		# - groupMute                   True            in          --
+		# --- lightGroupMuteChildSolo   undefined       out         False
+
+		soloFilter["paths"].setValue(
+			IECore.StringVectorData(
+				[
+					"/light",
+					"/lightMute",
+					"/lightMute/lightMuteChild",
+					"/lightMuteSolo/lightMuteSoloChild",
+					"/groupMute",
+				]
+			)
+		)
+		controller.update()
+
+		self.assertTrue( renderer.capturedObject( "/lightSolo" ).capturedAttributes().attributes()["light:mute"].value )
+		self.assertFalse( renderer.capturedObject( "/light" ).capturedAttributes().attributes()["light:mute"].value )
+		self.assertTrue( renderer.capturedObject( "/lightSolo2" ).capturedAttributes().attributes()["light:mute"].value )
+		self.assertFalse( renderer.capturedObject( "/lightMute" ).capturedAttributes().attributes()["light:mute"].value )
+		self.assertFalse( renderer.capturedObject( "/lightMute/lightMuteChild" ).capturedAttributes().attributes()["light:mute"].value )
+		self.assertFalse( renderer.capturedObject( "/lightMute/lightMuteChildSolo" ).capturedAttributes().attributes()["light:mute"].value )
+		self.assertTrue( renderer.capturedObject( "/lightMuteSolo" ).capturedAttributes().attributes()["light:mute"].value )
+		self.assertFalse( renderer.capturedObject( "/lightMuteSolo/lightMuteSoloChild" ).capturedAttributes().attributes()["light:mute"].value )
+		self.assertTrue( renderer.capturedObject( "/lightMuteSolo/lightMuteSoloChildSolo" ).capturedAttributes().attributes()["light:mute"].value )
+		self.assertFalse( renderer.capturedObject( "/groupMute/lightGroupMuteChildSolo" ).capturedAttributes().attributes()["light:mute"].value )
+
+
 if __name__ == "__main__":
 	unittest.main()

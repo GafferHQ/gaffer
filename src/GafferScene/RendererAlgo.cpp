@@ -87,6 +87,9 @@ InternedString g_transformBlurSegmentsAttributeName( "gaffer:transformBlurSegmen
 InternedString g_deformationBlurAttributeName( "gaffer:deformationBlur" );
 InternedString g_deformationBlurSegmentsAttributeName( "gaffer:deformationBlurSegments" );
 
+static BoolDataPtr g_true = new BoolData( true );
+static BoolDataPtr g_false = new BoolData( false );
+
 } // namespace
 
 namespace GafferScene
@@ -420,7 +423,9 @@ namespace
 InternedString g_camerasSetName( "__cameras" );
 InternedString g_lightsSetName( "__lights" );
 InternedString g_lightFiltersSetName( "__lightFilters" );
+InternedString g_soloLightsSetName( "soloLights" );
 InternedString g_setsAttributeName( "sets" );
+InternedString g_lightMuteAttributeName( "light:mute" );
 std::string g_renderSetsPrefix( "render:" );
 ConstInternedStringVectorDataPtr g_emptySetsAttribute = new InternedStringVectorData;
 
@@ -476,12 +481,18 @@ struct RenderSets::Updater
 				n = g_lightFiltersSetName;
 				potentialChange = LightFiltersSetChanged;
 			}
-			else
+			else if( i == m_renderSets.m_sets.size() + 2 )
 			{
-				assert( i == m_renderSets.m_sets.size() + 2 );
 				s = &m_renderSets.m_lightsSet;
 				n = g_lightsSetName;
 				potentialChange = LightsSetChanged;
+			}
+			else
+			{
+				assert( i == m_renderSets.m_sets.size() + 3 );
+				s = &m_renderSets.m_soloLightsSet;
+				n = g_soloLightsSetName;
+				potentialChange = AttributesChanged;
 			}
 
 			setScope.setSetName( &n );
@@ -519,6 +530,7 @@ RenderSets::RenderSets( const ScenePlug *scene )
 	m_camerasSet.unprefixedName = g_camerasSetName;
 	m_lightsSet.unprefixedName = g_lightsSetName;
 	m_lightFiltersSet.unprefixedName = g_lightFiltersSetName;
+	m_soloLightsSet.unprefixedName = g_soloLightsSetName;
 	update( scene );
 }
 
@@ -561,7 +573,7 @@ unsigned RenderSets::update( const ScenePlug *scene )
 	Updater updater( scene, ThreadState::current(), *this, changed );
 	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
 	parallel_reduce(
-		tbb::blocked_range<size_t>( 0, m_sets.size() + 3 ),
+		tbb::blocked_range<size_t>( 0, m_sets.size() + 4 ),
 		updater,
 		tbb::auto_partitioner(),
 		// Prevents outer tasks silently cancelling our tasks
@@ -577,6 +589,7 @@ void RenderSets::clear()
 	m_camerasSet = Set();
 	m_lightsSet = Set();
 	m_lightFiltersSet = Set();
+	m_soloLightsSet = Set();
 }
 
 const PathMatcher &RenderSets::camerasSet() const
@@ -592,6 +605,11 @@ const PathMatcher &RenderSets::lightsSet() const
 const PathMatcher &RenderSets::lightFiltersSet() const
 {
 	return m_lightFiltersSet.set;
+}
+
+const PathMatcher &RenderSets::soloLightsSet() const
+{
+	return m_soloLightsSet.set;
 }
 
 ConstInternedStringVectorDataPtr RenderSets::setsAttribute( const std::vector<IECore::InternedString> &path ) const
@@ -618,6 +636,18 @@ void RenderSets::attributes( CompoundObject::ObjectMap &attributes, const SceneP
 	IECore::ConstInternedStringVectorDataPtr setsAttribute = this->setsAttribute( path );
 
 	attributes[g_setsAttributeName] = boost::const_pointer_cast<InternedStringVectorData>( setsAttribute );
+
+	if( !soloLightsSet().isEmpty() && lightsSet().match( path ) & ( PathMatcher::ExactMatch | PathMatcher::AncestorMatch ) )
+	{
+		if( soloLightsSet().match( path ) & ( PathMatcher::ExactMatch | PathMatcher::AncestorMatch ) )
+		{
+			attributes[g_lightMuteAttributeName] = g_false;
+		}
+		else
+		{
+			attributes[g_lightMuteAttributeName] = g_true;
+		}
+	}
 }
 
 } // namespace RendererAlgo
