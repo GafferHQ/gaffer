@@ -73,10 +73,10 @@ void setContext( SceneGadget &g, Context &context )
 	g.setContext( &context );
 }
 
-void setExpandedPaths( SceneGadget &g, const IECore::PathMatcher &expandedPaths )
+void setVisibleSet( SceneGadget &g, const GafferScene::VisibleSet &visibleSet )
 {
 	ScopedGILRelease gilRelease;
-	g.setExpandedPaths( expandedPaths );
+	g.setVisibleSet( visibleSet );
 }
 
 void setMinimumExpansionDepth( SceneGadget &g, size_t depth )
@@ -190,8 +190,8 @@ void GafferSceneUIModule::bindSceneGadget()
 		.def( "getScene", &getScene )
 		.def( "setContext", &setContext )
 		.def( "getContext", (Gaffer::Context *(SceneGadget::*)())&SceneGadget::getContext, return_value_policy<CastToIntrusivePtr>() )
-		.def( "setExpandedPaths", &setExpandedPaths )
-		.def( "getExpandedPaths", &SceneGadget::getExpandedPaths, return_value_policy<copy_const_reference>() )
+		.def( "setVisibleSet", &setVisibleSet )
+		.def( "getVisibleSet", &SceneGadget::getVisibleSet, return_value_policy<copy_const_reference>() )
 		.def( "setMinimumExpansionDepth", &setMinimumExpansionDepth )
 		.def( "getMinimumExpansionDepth", &SceneGadget::getMinimumExpansionDepth )
 		.def( "getPaused", &SceneGadget::getPaused )

@@ -35,6 +35,7 @@ API
 - Capsule : Removed attempts to detect invalidated Capsules.
 - VisibleSet/VisibleSetData : Added struct used to define a subset of the scene to be rendered based on expansions, inclusions, and exclusions. This is used to allow scene locations to be defined as always or never renderable, overriding the usual UI expansion behaviour.
 - ContextAlgo : Added `setVisiblesSet()`, `getVisibleSet()`, and `affectsVisibleSet()` methods.
+- SceneGadget : Added `setVisibleSet()`, and `getVisibleSet()` methods.
 
 Breaking Changes
 ----------------
@@ -48,6 +49,7 @@ Breaking Changes
 - SceneReader : `SceneInterface::readSet()` is now used in preference to `SceneInterface::readTags()` for all non-legacy formats.
 - CatalogueUI : Hid OutputIndexColumn from public API.
 - ContextAlgo : Removed use of the `ui:scene:expandedPaths` context variable. Any code directly accessing `ui:scene:expandedPaths` should instead use the `getExpandedPaths()/setExpandedPaths()/expand()/expandDescendants()` methods provided by `ContextAlgo`.
+- SceneGadget : Removed `setExpandedPaths()` and `getExpandedPaths()` methods. `setVisibleSet()` and `getVisibleSet()` are now used instead.
 
 1.1.x.x (relative to 1.1.2.0)
 =======

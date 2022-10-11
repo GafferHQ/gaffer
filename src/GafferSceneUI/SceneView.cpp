@@ -2120,9 +2120,9 @@ void SceneView::contextChanged( const IECore::InternedString &name )
 		m_sceneGadget->setSelection( ContextAlgo::getSelectedPaths( getContext() ) );
 		return;
 	}
-	else if( ContextAlgo::affectsExpandedPaths( name ) )
+	else if( ContextAlgo::affectsVisibleSet( name ) )
 	{
-		m_sceneGadget->setExpandedPaths( ContextAlgo::getExpandedPaths( getContext() ) );
+		m_sceneGadget->setVisibleSet( ContextAlgo::getVisibleSet( getContext() ) );
 		return;
 	}
 	else if( boost::starts_with( name.value(), "ui:" ) )
