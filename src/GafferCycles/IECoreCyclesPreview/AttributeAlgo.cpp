@@ -73,28 +73,30 @@ ccl::TypeDesc typeFromGeometricDataInterpretation( IECore::GeometricData::Interp
 	}
 }
 
-ccl::TypeDesc typeDesc( IECore::TypeId dataType )
+ccl::TypeDesc typeDesc( const IECoreScene::PrimitiveVariable &primitiveVariable )
 {
-	switch( dataType )
+	switch( primitiveVariable.data->typeId() )
 	{
 		case FloatVectorDataTypeId :
 		case IntVectorDataTypeId :
-		case IntDataTypeId:
+		case IntDataTypeId :
 			return ccl::TypeDesc::TypeFloat;
 		case Color3fVectorDataTypeId :
-		case Color4fVectorDataTypeId :
 			return ccl::TypeDesc::TypeColor;
 		case V2fVectorDataTypeId :
 		case V2iVectorDataTypeId :
 			return ccl::TypeFloat2;
 		case V3fVectorDataTypeId :
+			return typeFromGeometricDataInterpretation(
+				static_cast<const V3fVectorData *>( primitiveVariable.data.get() )->getInterpretation()
+			);
 		case V3iVectorDataTypeId :
 			return ccl::TypeDesc::TypeVector;
 		case M44fVectorDataTypeId :
 		case M44fDataTypeId :
 			return ccl::TypeDesc::TypeMatrix;
 		default :
-			return ccl::TypeDesc::TypeVector;
+			return ccl::TypeDesc::UNKNOWN;
 	}
 }
 
@@ -114,22 +116,13 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 {
 	// Create attribute.
 
-	IECore::TypeId dataType = primitiveVariable.data.get()->typeId();
-	if( dataType == StringDataTypeId )
+	const ccl::TypeDesc ctype = typeDesc( primitiveVariable );
+	if( ctype == ccl::TypeDesc::UNKNOWN )
 	{
-		//msg( Msg::Warning, "IECoreCyles::AttributeAlgo::convertPrimitiveVariable", boost::format( "Variable \"%s\" has unsupported type \"%s\"." ) % name % primitiveVariable.data->typeName() );
+		msg( Msg::Warning, "IECoreCyles::AttributeAlgo::convertPrimitiveVariable", boost::format( "Primitive variable \"%s\" has unsupported type \"%s\"." ) % name % primitiveVariable.data->typeName() );
 		return;
 	}
-	ccl::TypeDesc ctype = typeDesc( dataType );
-	ccl::Attribute *attr = nullptr;
 
-	if( ctype != ccl::TypeDesc::TypeFloat )
-	{
-		// We need to determine what kind of vector it is
-		const V3fVectorData *data = runTimeCast<const V3fVectorData>( primitiveVariable.data.get() );
-		if( data )
-			ctype = typeFromGeometricDataInterpretation( data->getInterpretation() );
-	}
 	ccl::AttributeElement celem = ccl::ATTR_ELEMENT_NONE;
 	switch( primitiveVariable.interpolation )
 	{
@@ -156,7 +149,8 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 		default :
 			break;
 	}
-	attr = attributes.add( ccl::ustring( name.c_str() ), ctype, celem );
+
+	ccl::Attribute *attr = attributes.add( ccl::ustring( name.c_str() ), ctype, celem );
 
 	// Tag as a standard attribute if possible. Note that we don't use `AttributeSet::add( AttributeStandard )`
 	// because that crashes for certain combinations of geometry type and attribute. But some of those "crashy"
@@ -171,7 +165,9 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 		attr->std = ccl::ATTR_STD_VERTEX_NORMAL;
 	}
 
-	// Fill attribute with data.
+	// Fill attribute with data
+	/// \todo I suspect there are only really two cases here : either we need to `memcpy()` some floats or
+	/// we need to convert some ints to floats. I don't think we need all these conditionals.
 
 	if( primitiveVariable.interpolation != PrimitiveVariable::Constant && ctype == ccl::TypeDesc::TypeFloat )
 	{
@@ -207,9 +203,6 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 			}
 		}
 
-		msg( Msg::Warning, "IECoreCyles::AttributeAlgo::convertPrimitiveVariable", boost::format( "Variable \"%s\" has unsupported type \"%s\" (expected FloatVectorData or IntVectorData)." ) % name % primitiveVariable.data->typeName() );
-		attributes.remove( attr );
-		return;
 	}
 	else if( primitiveVariable.interpolation != PrimitiveVariable::Constant )
 	{
@@ -288,8 +281,6 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 			}
 		}
 
-		msg( Msg::Warning, "IECoreCyles::AttributeAlgo::convertPrimitiveVariable", boost::format( "Variable \"%s\" has unsupported type \"%s\" (expected V3fVectorData, Color3fVectorData or V2fVectorData)." ) % name % primitiveVariable.data->typeName() );
-		attributes.remove( attr );
 		return;
 	}
 	else if( primitiveVariable.interpolation == PrimitiveVariable::Constant )
@@ -389,10 +380,6 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 				return;
 			}
 		}
-
-		msg( Msg::Warning, "IECoreCyles::AttributeAlgo::convertPrimitiveVariable", boost::format( "Variable \"%s\" has unsupported type \"%s\" (expected FloatData, IntData, V3fData, Color3fData or M44fData)." ) % name % primitiveVariable.data->typeName() );
-		attributes.remove( attr );
-		return;
 	}
 }
 

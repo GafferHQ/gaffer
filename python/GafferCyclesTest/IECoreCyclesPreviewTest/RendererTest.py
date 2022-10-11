@@ -38,6 +38,7 @@ import os
 import math
 import time
 import unittest
+import six
 
 import imath
 
@@ -566,6 +567,38 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( color.r, points["N"].data[0].x )
 		self.assertEqual( color.g, points["N"].data[0].y )
 		self.assertEqual( color.b, points["N"].data[0].z )
+
+	def testUnsupportedPrimitiveVariables( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+		)
+		attributes = renderer.attributes( IECore.CompoundObject() )
+
+		primitive = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [ imath.V3f( 0 ) ] ) )
+
+		for data in [
+			IECore.StringData(),
+			IECore.StringVectorData(),
+			IECore.Box3fData(),
+			IECore.Box3fVectorData()
+		] :
+
+			primitive = primitive.copy()
+			primitive["test"] = IECoreScene.PrimitiveVariable(
+				IECoreScene.PrimitiveVariable.Interpolation.Constant, data
+			)
+
+			with IECore.CapturingMessageHandler() as mh :
+
+				renderer.object( data.typeName(), primitive, attributes )
+
+				self.assertEqual( len( mh.messages ), 1 )
+				six.assertRegex(
+					self, mh.messages[0].message,
+					"Primitive variable \"test\" has unsupported type \"{}\"".format( data.typeName() )
+				)
 
 	def __colorAtUV( self, image, uv ) :
 
