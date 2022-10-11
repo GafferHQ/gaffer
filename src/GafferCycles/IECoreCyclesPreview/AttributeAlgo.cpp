@@ -51,19 +51,27 @@ using namespace IECoreCycles;
 
 namespace
 {
-} // namespace
 
-//////////////////////////////////////////////////////////////////////////
-// Implementation of public API
-//////////////////////////////////////////////////////////////////////////
-
-namespace IECoreCycles
-
+ccl::TypeDesc typeFromGeometricDataInterpretation( IECore::GeometricData::Interpretation dataType )
 {
-
-namespace AttributeAlgo
-
-{
+	switch( dataType )
+	{
+		case GeometricData::Numeric :
+			return ccl::TypeDesc::TypeVector;
+		case GeometricData::Point :
+			return ccl::TypeDesc::TypePoint;
+		case GeometricData::Normal :
+			return ccl::TypeDesc::TypeNormal;
+		case GeometricData::Vector :
+			return ccl::TypeDesc::TypeVector;
+		case GeometricData::Color :
+			return ccl::TypeDesc::TypeColor;
+		case GeometricData::UV :
+			return ccl::TypeDesc::TypePoint;
+		default :
+			return ccl::TypeDesc::TypeVector;
+	}
+}
 
 ccl::TypeDesc typeDesc( IECore::TypeId dataType )
 {
@@ -90,26 +98,17 @@ ccl::TypeDesc typeDesc( IECore::TypeId dataType )
 	}
 }
 
-ccl::TypeDesc typeFromGeometricDataInterpretation( IECore::GeometricData::Interpretation dataType )
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// Implementation of public API
+//////////////////////////////////////////////////////////////////////////
+
+namespace IECoreCycles
 {
-	switch( dataType )
-	{
-		case GeometricData::Numeric :
-			return ccl::TypeDesc::TypeVector;
-		case GeometricData::Point :
-			return ccl::TypeDesc::TypePoint;
-		case GeometricData::Normal :
-			return ccl::TypeDesc::TypeNormal;
-		case GeometricData::Vector :
-			return ccl::TypeDesc::TypeVector;
-		case GeometricData::Color :
-			return ccl::TypeDesc::TypeColor;
-		case GeometricData::UV :
-			return ccl::TypeDesc::TypePoint;
-		default :
-			return ccl::TypeDesc::TypeVector;
-	}
-}
+
+namespace AttributeAlgo
+{
 
 void convertPrimitiveVariable( const std::string &name, const IECoreScene::PrimitiveVariable &primitiveVariable, ccl::AttributeSet &attributes )
 {
