@@ -163,6 +163,8 @@ from .AttributeTweaksTest import AttributeTweaksTest
 from .OptionTweaksTest import OptionTweaksTest
 from .OptionQueryTest import OptionQueryTest
 from .RenameTest import RenameTest
+from .VisibleSetTest import VisibleSetTest
+from .VisibleSetDataTest import VisibleSetDataTest
 
 from .IECoreScenePreviewTest import *
 from .IECoreGLPreviewTest import *

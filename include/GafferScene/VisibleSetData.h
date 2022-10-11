@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
-//  Copyright (c) 2013, John Haddon. All rights reserved.
+//  Copyright (c) 2022, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,62 +34,25 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERSCENE_VISIBLESETDATA_H
+#define GAFFERSCENE_VISIBLESETDATA_H
 
-#include "AttributesBinding.h"
-#include "CoreBinding.h"
-#include "EditScopeAlgoBinding.h"
-#include "FilterBinding.h"
-#include "GlobalsBinding.h"
-#include "HierarchyBinding.h"
-#include "IECoreGLPreviewBinding.h"
-#include "IOBinding.h"
-#include "TweaksBinding.h"
-#include "ObjectProcessorBinding.h"
-#include "OptionsBinding.h"
-#include "PrimitiveSamplerBinding.h"
-#include "PrimitiveVariablesBinding.h"
-#include "PrimitivesBinding.h"
-#include "RenderBinding.h"
-#include "RenderControllerBinding.h"
-#include "SceneAlgoBinding.h"
-#include "ScenePathBinding.h"
-#include "SetAlgoBinding.h"
-#include "ShaderBinding.h"
-#include "TransformBinding.h"
-#include "QueryBinding.h"
-#include "CryptomatteBinding.h"
-#include "VisibleSetBinding.h"
+#include "GafferScene/VisibleSet.h"
+#include "GafferScene/TypeIds.h"
 
-using namespace boost::python;
-using namespace GafferSceneModule;
+#include "IECore/TypedData.h"
 
-BOOST_PYTHON_MODULE( _GafferScene )
+namespace IECore
+{
+	IECORE_DECLARE_TYPEDDATA( VisibleSetData, GafferScene::VisibleSet, void, IECore::SimpleDataHolder );
+} // namespace IECore
+
+namespace GafferScene
 {
 
-	bindCore();
-	bindFilter();
-	bindTransform();
-	bindGlobals();
-	bindOptions();
-	bindAttributes();
-	bindSceneAlgo();
-	bindSetAlgo();
-	bindPrimitives();
-	bindScenePath();
-	bindShader();
-	bindRender();
-	bindRenderController();
-	bindHierarchy();
-	bindObjectProcessor();
-	bindPrimitiveVariables();
-	bindTweaks();
-	bindIO();
-	bindPrimitiveSampler();
-	bindIECoreGLPreview();
-	bindEditScopeAlgo();
-	bindQueries();
-	bindCryptomatte();
-	bindVisibleSet();
+using VisibleSetData = IECore::VisibleSetData;
+IE_CORE_DECLAREPTR( VisibleSetData );
 
-}
+} // namespace GafferScene
+
+#endif // GAFFERSCENE_VISIBLESETDATA_H
