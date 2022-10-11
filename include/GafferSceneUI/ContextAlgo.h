@@ -39,6 +39,8 @@
 
 #include "GafferSceneUI/Export.h"
 
+#include "GafferScene/VisibleSet.h"
+
 #include "IECore/PathMatcher.h"
 
 #include "OpenEXR/ImathLimits.h"
@@ -101,6 +103,21 @@ GAFFERSCENEUI_API IECore::PathMatcher expandDescendants( Gaffer::Context *contex
 
 /// Clears the currently expanded paths
 GAFFERSCENEUI_API void clearExpansion( Gaffer::Context *context );
+
+/// VisibleSet
+/// ==========
+
+/// On top of the expansion mechanics described above (`expansions`), a VisibleSet
+/// allows subsets of the scene to be defined as _always_ rendered (`inclusions`),
+/// or _never_ rendered (`exclusions`).
+
+GAFFERSCENEUI_API void setVisibleSet( Gaffer::Context *context, const GafferScene::VisibleSet &visibleSet );
+GAFFERSCENEUI_API GafferScene::VisibleSet getVisibleSet( const Gaffer::Context *context );
+
+/// Returns true if the named context variable affects the result of `getVisibleSet()`.
+/// This can be used from `Context::changedSignal()` to determine if the VisibleSet has been
+/// changed.
+GAFFERSCENEUI_API bool affectsVisibleSet( const IECore::InternedString &name );
 
 /// Path Selection
 /// ==============

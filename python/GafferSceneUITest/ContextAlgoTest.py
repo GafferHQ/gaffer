@@ -136,6 +136,16 @@ class ContextAlgoTest( GafferUITest.TestCase ) :
 		GafferSceneUI.ContextAlgo.setSelectedPaths( context, IECore.PathMatcher( [ "/A/C", "/A/B/D" ] ) )
 		self.assertEqual( GafferSceneUI.ContextAlgo.getSelectedPaths( context ), IECore.PathMatcher( [ "/A/C", "/A/B/D" ] )  )
 
+	def testVisibleSet( self ) :
+
+		context = Gaffer.Context()
+
+		v = GafferScene.VisibleSet()
+		v.expansions = IECore.PathMatcher( [ "/A" ] )
+
+		GafferSceneUI.ContextAlgo.setVisibleSet( context, v )
+		self.assertEqual( GafferSceneUI.ContextAlgo.getVisibleSet( context ), v )
+
 	def testAffectsExpandedPaths( self ) :
 
 		c = Gaffer.Context()
@@ -159,6 +169,18 @@ class ContextAlgoTest( GafferUITest.TestCase ) :
 		self.assertTrue( GafferSceneUI.ContextAlgo.affectsSelectedPaths( cs[0][1] ) )
 
 		self.assertFalse( GafferSceneUI.ContextAlgo.affectsSelectedPaths( "frame" ) )
+
+	def testAffectsVisibleSet( self ) :
+
+		c = Gaffer.Context()
+		cs = GafferTest.CapturingSlot( c.changedSignal() )
+
+		GafferSceneUI.ContextAlgo.setVisibleSet( c, GafferScene.VisibleSet() )
+
+		self.assertEqual( len( cs ), 1 )
+		self.assertTrue( GafferSceneUI.ContextAlgo.affectsVisibleSet( cs[0][1] ) )
+
+		self.assertFalse( GafferSceneUI.ContextAlgo.affectsVisibleSet( "frame" ) )
 
 	def testSelectionIsCopied( self ) :
 
@@ -193,6 +215,52 @@ class ContextAlgoTest( GafferUITest.TestCase ) :
 
 		e.addPath( "/a/b" )
 		self.assertNotEqual( GafferSceneUI.ContextAlgo.getExpandedPaths( c ), e )
+
+	def testVisibleSetIsCopied( self ) :
+
+		c = Gaffer.Context()
+
+		v = GafferScene.VisibleSet()
+		v.expansions = IECore.PathMatcher( [ "/a" ] )
+
+		GafferSceneUI.ContextAlgo.setVisibleSet( c, v )
+		self.assertEqual( GafferSceneUI.ContextAlgo.getVisibleSet( c ), v )
+
+		v.expansions.addPath( "/a/b" )
+		self.assertNotEqual( GafferSceneUI.ContextAlgo.getVisibleSet( c ), v )
+
+		v = GafferSceneUI.ContextAlgo.getVisibleSet( c )
+		self.assertEqual( GafferSceneUI.ContextAlgo.getVisibleSet( c ), v )
+
+		v.expansions.addPath( "/a/b" )
+		self.assertNotEqual( GafferSceneUI.ContextAlgo.getVisibleSet( c ), v )
+
+	def testExpansionAffectsVisibleSet( self ) :
+
+		c = Gaffer.Context()
+
+		v = GafferScene.VisibleSet()
+		v.expansions = IECore.PathMatcher( [ "/a" ] )
+
+		GafferSceneUI.ContextAlgo.setVisibleSet( c, v )
+		self.assertEqual( GafferSceneUI.ContextAlgo.getVisibleSet( c ), v )
+		self.assertEqual( GafferSceneUI.ContextAlgo.getExpandedPaths( c ), v.expansions )
+
+		GafferSceneUI.ContextAlgo.setExpandedPaths( c, IECore.PathMatcher( [ "/b" ] ) )
+		self.assertNotEqual( GafferSceneUI.ContextAlgo.getExpandedPaths( c ), v.expansions )
+		self.assertEqual( GafferSceneUI.ContextAlgo.getExpandedPaths( c ), IECore.PathMatcher( [ "/b" ] ) )
+		v = GafferSceneUI.ContextAlgo.getVisibleSet( c )
+		self.assertEqual( v.expansions, IECore.PathMatcher( [ "/b" ] ) )
+
+		GafferSceneUI.ContextAlgo.expand( c, IECore.PathMatcher( [ "/a" ] ), False )
+		self.assertEqual( GafferSceneUI.ContextAlgo.getExpandedPaths( c ), IECore.PathMatcher( [ "/a", "/b" ] ) )
+		self.assertNotEqual( GafferSceneUI.ContextAlgo.getExpandedPaths( c ), v.expansions )
+		v = GafferSceneUI.ContextAlgo.getVisibleSet( c )
+		self.assertEqual( v.expansions, IECore.PathMatcher( [ "/a", "/b" ] ) )
+
+		GafferSceneUI.ContextAlgo.clearExpansion( c )
+		v = GafferSceneUI.ContextAlgo.getVisibleSet( c )
+		self.assertEqual( v.expansions, IECore.PathMatcher() )
 
 	def testLastSelectedPath( self ) :
 
