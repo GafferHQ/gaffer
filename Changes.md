@@ -32,6 +32,7 @@ API
 
 - PathColumn : Added support for a different icon to be shown when a cell is hovered.
 - SetUI : Removed `ui:scene:acceptsSet*` metadata from entries that are promoted along with a plug.
+- MetadataAlgo : Added `isPromotable()` method.
 
 1.1.1.0 (relative to 1.1.0.0)
 =======

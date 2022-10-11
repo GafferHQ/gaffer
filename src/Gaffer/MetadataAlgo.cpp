@@ -725,6 +725,32 @@ void copyColors( const Gaffer::Plug *srcPlug , Gaffer::Plug *dstPlug, bool overw
 	::copy(srcPlug, dstPlug, g_noduleColorKey, overwrite);
 }
 
+// Promotability
+// =============
+
+bool isPromotable( const GraphComponent *from, const GraphComponent *to, const InternedString &name )
+{
+	/// \todo Return false if the metadata entry already exists on the `to` plug.
+	/// Allowing those copies often overrides metadata that should be controlled
+	/// globally with per-instance metadata.
+
+	if( boost::ends_with( name.string(), ":promotable" ) )
+	{
+		// No need to promote "<name>:promotable". If it's true, that's the default
+		// which will apply to the promoted plug anyway. And if it's false, then we're not
+		// promoting.
+		return false;
+	}
+	if( auto promotable = Metadata::value<BoolData>( from, name.string() + ":promotable" ) )
+	{
+		if( !promotable->readable() )
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
 } // namespace MetadataAlgo
 
 } // namespace Gaffer
