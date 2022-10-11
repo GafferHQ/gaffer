@@ -1227,6 +1227,7 @@ class _PlugTableView( GafferUI.Widget ) :
 	def __modelReset( self ) :
 
 		self.__applyColumnVisibility()
+		self.__applyColumnOrderMetadata()
 		self.__applyColumnWidthMetadata()
 		self.__applyRowNamesWidth()
 
