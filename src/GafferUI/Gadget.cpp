@@ -126,14 +126,13 @@ void Gadget::setStyle( ConstStylePtr style )
 {
 	if( style!=m_style )
 	{
-		if( m_style )
-		{
-			const_cast<Style *>( m_style.get() )->changedSignal().disconnect( boost::bind( &Gadget::styleChanged, this ) );
-		}
+		m_styleChangedConnection.disconnect();
 		m_style = style;
 		if( m_style )
 		{
-			const_cast<Style *>( m_style.get() )->changedSignal().connect( boost::bind( &Gadget::styleChanged, this ) );
+			m_styleChangedConnection = const_cast<Style *>( style.get() )->changedSignal().connect(
+				boost::bind( &Gadget::styleChanged, this )
+			);
 		}
 		// Style affects the bounding box of text,
 		// so we need Layout rather than just Render.
