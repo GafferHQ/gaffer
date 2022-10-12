@@ -52,7 +52,7 @@ Loop::Loop( const std::string &name )
 	// Connect to `childAddedSignal()` so we can set ourselves up later when the
 	// appropriate plugs are added manually.
 	/// \todo Remove this and do all the work in `setup()`.
-	childAddedSignal().connect( boost::bind( &Loop::childAdded, this ) );
+	m_childAddedConnection = childAddedSignal().connect( boost::bind( &Loop::childAdded, this ) );
 }
 
 Loop::~Loop()
@@ -246,7 +246,7 @@ bool Loop::setupPlugs()
 		return false;
 	}
 
-	childAddedSignal().disconnect( boost::bind( &Loop::childAdded, this ) );
+	m_childAddedConnection.disconnect();
 
 	m_inPlugIndex = std::find( children().begin(), children().end(), in ) - children().begin();
 	m_outPlugIndex = std::find( children().begin(), children().end(), out ) - children().begin();
