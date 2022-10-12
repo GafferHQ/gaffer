@@ -256,9 +256,6 @@ for key in [
 	"spreadsheet:columnWidth",
 	"plugValueWidget:type",
 	"presetsPlugValueWidget:allowCustom",
-	"ui:scene:acceptsSetName",
-	"ui:scene:acceptsSetNames",
-	"ui:scene:acceptsSetExpression",
 	"tweakPlugValueWidget:allowRemove",
 	"tweakPlugValueWidget:allowCreate",
 ] :

@@ -1157,21 +1157,7 @@ Plug *promoteWithName( Plug *plug, const InternedString &name, Plug *parent, con
 				/// individual exclusions.
 				return false;
 			}
-			if( boost::ends_with( name.string(), ":promotable" ) )
-			{
-				// No need to promote "<name>:promotable". If it's true, that's the default
-				// which will apply to the promoted plug anyway. And if it's false, then we're not
-				// promoting.
-				return false;
-			}
-			if( auto promotable = Metadata::value<BoolData>( from, name.string() + ":promotable" ) )
-			{
-				if( !promotable->readable() )
-				{
-					return false;
-				}
-			}
-			return true;
+			return MetadataAlgo::isPromotable( from, to, name );
 		},
 		// We use `persistent = dynamic` so that `promoteWithName()` can be used in
 		// constructors for custom nodes, to promote a plug from an internal
