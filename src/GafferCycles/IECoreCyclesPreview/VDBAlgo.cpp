@@ -35,7 +35,9 @@
 #include "GafferCycles/IECoreCyclesPreview/ObjectAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/SocketAlgo.h"
 
+IECORE_PUSH_DEFAULT_VISIBILITY
 #include "IECoreVDB/VDBObject.h"
+IECORE_POP_DEFAULT_VISIBILITY
 
 IECORE_PUSH_DEFAULT_VISIBILITY
 #include "openvdb/openvdb.h"
