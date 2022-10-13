@@ -100,6 +100,21 @@ namespace GafferSceneUI
 namespace ContextAlgo
 {
 
+void setVisibleSet( Context *context, const GafferScene::VisibleSet &visibleSet )
+{
+	context->set( g_visibleSetName, visibleSet );
+}
+
+GafferScene::VisibleSet getVisibleSet( const Gaffer::Context *context )
+{
+	return context->get<VisibleSet>( g_visibleSetName, VisibleSet() );
+}
+
+bool affectsVisibleSet( const IECore::InternedString &name )
+{
+	return name == g_visibleSetName;
+}
+
 void setExpandedPaths( Context *context, const IECore::PathMatcher &paths )
 {
 	auto visibleSet = getVisibleSet( context );
@@ -178,21 +193,6 @@ IECore::PathMatcher expandDescendants( Context *context, const IECore::PathMatch
 void clearExpansion( Gaffer::Context *context )
 {
 	setExpandedPaths( context, IECore::PathMatcher() );
-}
-
-void setVisibleSet( Context *context, const GafferScene::VisibleSet &visibleSet )
-{
-	context->set( g_visibleSetName, visibleSet );
-}
-
-GafferScene::VisibleSet getVisibleSet( const Gaffer::Context *context )
-{
-	return context->get<VisibleSet>( g_visibleSetName, VisibleSet() );
-}
-
-bool affectsVisibleSet( const IECore::InternedString &name )
-{
-	return name == g_visibleSetName;
 }
 
 void setSelectedPaths( Context *context, const IECore::PathMatcher &paths )
