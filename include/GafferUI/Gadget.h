@@ -327,6 +327,7 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 		void emitDescendantVisibilityChanged();
 
 		ConstStylePtr m_style;
+		Gaffer::Signals::ScopedConnection m_styleChangedConnection;
 
 		bool m_visible;
 		bool m_enabled;

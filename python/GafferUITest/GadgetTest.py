@@ -184,6 +184,15 @@ class GadgetTest( GafferUITest.TestCase ) :
 		self.assertEqual( len( cs ), 3 )
 		self.assertTrue( cs[2][0].isSame( v ) )
 
+		s.setColor( GafferUI.StandardStyle.Color.BackgroundColor, imath.Color3f( 1 ) )
+		self.assertEqual( len( cs ), 3 )
+
+		g.setStyle( None )
+		self.assertEqual( len( cs ), 4 )
+
+		s2.setColor( GafferUI.StandardStyle.Color.BackgroundColor, imath.Color3f( 2 ) )
+		self.assertEqual( len( cs ), 4 )
+
 	def testHighlighting( self ) :
 
 		g = GafferUI.Gadget()
