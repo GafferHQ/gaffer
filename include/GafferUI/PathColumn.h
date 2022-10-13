@@ -37,14 +37,21 @@
 #ifndef GAFFERUI_PATHCOLUMN_H
 #define GAFFERUI_PATHCOLUMN_H
 
+#include "GafferUI/ButtonEvent.h"
+#include "GafferUI/EventSignalCombiner.h"
 #include "GafferUI/Export.h"
 
 #include "Gaffer/Path.h"
 
+#include "IECore/PathMatcher.h"
 #include "IECore/SimpleTypedData.h"
+
+#include <variant>
 
 namespace GafferUI
 {
+
+class PathListingWidget;
 
 /// Abstract class for extracting properties from a Path in a form
 /// suitable for display in a table column. Primarily intended for
@@ -55,6 +62,9 @@ class GAFFERUI_API PathColumn : public IECore::RefCounted, public Gaffer::Signal
 	public :
 
 		IE_CORE_DECLAREMEMBERPTR( PathColumn )
+
+		/// Display data
+		/// ============
 
 		struct CellData
 		{
@@ -111,9 +121,25 @@ class GAFFERUI_API PathColumn : public IECore::RefCounted, public Gaffer::Signal
 		/// or `headerValue()`.
 		PathColumnSignal &changedSignal();
 
+		/// Event handling
+		/// ==============
+		///
+		/// These signals are emitted when the user interacts with the
+		/// column. Subclasses may connect to them to implement custom
+		/// behaviours.
+
+		using ButtonSignal = Gaffer::Signals::Signal<bool ( Gaffer::Path &path, PathListingWidget &widget, const ButtonEvent &event ), EventSignalCombiner<bool>>;
+		ButtonSignal &buttonPressSignal();
+		ButtonSignal &buttonReleaseSignal();
+		ButtonSignal &buttonDoubleClickSignal();
+
 	private :
 
 		PathColumnSignal m_changedSignal;
+
+		ButtonSignal m_buttonPressSignal;
+		ButtonSignal m_buttonReleaseSignal;
+		ButtonSignal m_buttonDoubleClickSignal;
 
 };
 
@@ -193,6 +219,24 @@ class GAFFERUI_API FileIconPathColumn : public PathColumn
 };
 
 IE_CORE_DECLAREPTR( FileIconPathColumn )
+
+/// C++ interface for the `GafferUI.PathListingWidget` Python class. Provided for
+/// use in PathColumn event signals, so that event handling may be implemented
+/// from C++ if desired.
+class PathListingWidget
+{
+
+	public :
+
+		using Columns = std::vector<PathColumnPtr>;
+		virtual void setColumns( const Columns &columns ) = 0;
+		virtual Columns getColumns() const = 0;
+
+		using Selection = std::variant<IECore::PathMatcher, std::vector<IECore::PathMatcher>>;
+		virtual void setSelection( const Selection &selection ) = 0;
+		virtual Selection getSelection() const = 0;
+
+};
 
 } // namespace GafferUI
 

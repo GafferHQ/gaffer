@@ -39,6 +39,8 @@ import unittest
 import functools
 import time
 
+import imath
+
 import IECore
 
 import Gaffer
@@ -1170,6 +1172,44 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		widget.getColumns()[1].changedSignal()( widget.getColumns()[1] )
 		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( widget._qtWidget().model() ) )
 		self.assertTrue( childrenCallPaths.isEmpty() )
+
+	def testColumnButtonPress( self ) :
+
+		with GafferUI.Window() as window :
+			widget = GafferUI.PathListingWidget(
+				Gaffer.DictPath( { str( x ) : x for x in range( 0, 100 ) }, "/" ),
+				columns = [ GafferUI.PathListingWidget.defaultNameColumn ],
+			)
+
+		cs = GafferTest.CapturingSlot( widget.getColumns()[0].buttonPressSignal() )
+
+		window.setVisible( True )
+		self.waitForIdle()
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( widget._qtWidget().model() ) )
+
+		# Simulate click on PathListingWidget.
+
+		center = widget.bound().center()
+		centerPath = widget.pathAt( center )
+		self.assertIsInstance( centerPath, Gaffer.DictPath )
+
+		widget.buttonPressSignal()(
+			widget,
+			GafferUI.ButtonEvent(
+				GafferUI.ButtonEvent.Buttons.Left,
+				GafferUI.ButtonEvent.Buttons.Left,
+				IECore.LineSegment3f(
+					imath.V3f( center.x, center.y, 0 ),
+					imath.V3f( center.x, center.y, 1 ),
+				)
+			)
+		)
+
+		# Check that the column signal was emitted appropriately.
+
+		self.assertEqual( len( cs ), 1 )
+		self.assertEqual( cs[0][0], centerPath )
+		self.assertIs( cs[0][1], widget )
 
 	@staticmethod
 	def __emitPathChanged( widget ) :

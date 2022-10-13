@@ -6,6 +6,7 @@
 API
 ---
 
+- PathColumn : Added `buttonPressSignal()`, `buttonReleaseSignal()` and `buttonDoubleClickSignal()`. These allow a PathColumn to implement its own event handling.
 - Capsule : Removed attempts to detect invalidated Capsules.
 
 Breaking Changes
@@ -13,6 +14,7 @@ Breaking Changes
 
 - GafferTest : Removed `expectedFailure()` decorator. Use `unittest.expectedFailure()` instead.
 - Python : Removed support for Python 2.
+- CatalogueUI : Hid OutputIndexColumn from public API.
 
 1.1.x.x ( relative to 1.1.1.0)
 =======
