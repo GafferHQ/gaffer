@@ -26,6 +26,19 @@ Improvements
   - Improved performance when interacting with large Catalogues.
   - Added hover state to the output index column, to indicate clickability.
   - Improved default column layout, so output index column is more compact.
+- Sets : Added "Select Affected Objects" to the following plugs' right click menu :
+  - Set expression and set name plugs
+  - Spreadsheet cells connected to a set expression or set name plug
+  - Plugs promoted from a set expression or set name plug
+- PathFilter : Added "Select Affected Objects" to the following plugs' right click menu :
+  - Plugs promoted from a `PathFilter.paths` plug (an unpromoted `PathFilter.paths` plug supports this since 0.61.13.0)
+  - Spreadsheet cells connected to a `PathFilter.paths` plug.
+  - Spreadsheet row names when the spreadsheet selector is set to `scene:path`.
+
+Fixes
+-----
+
+- PathFilter : Fixed error when selecting a path element from a promoted `PathFilter.paths` plug introduced in 0.61.13.0.
 
 Fixes
 -----
@@ -36,6 +49,8 @@ API
 ---
 
 - PathColumn : Added support for a different icon to be shown when a cell is hovered.
+- SetUI : Removed `ui:scene:acceptsSet*` metadata from entries that are promoted along with a plug.
+- MetadataAlgo : Added `isPromotable()` method.
 
 1.1.1.0 (relative to 1.1.0.0)
 =======

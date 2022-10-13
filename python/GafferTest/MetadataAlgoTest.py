@@ -380,6 +380,21 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 		Gaffer.MetadataAlgo.copyIf( s, t, lambda f, t, n : n.startswith( "c" ) )
 		self.assertEqual( registeredTestValues( t ), { "c" } )
 
+	def testIsPromotable( self ) :
+
+		Gaffer.Metadata.registerValue( GafferTest.AddNode, "notPromotableTest:promotable", False )
+		Gaffer.Metadata.registerValue( GafferTest.AddNode, "notPromotableTest", "no")
+		Gaffer.Metadata.registerValue( GafferTest.AddNode, "promotableTest:promotable", True )
+		Gaffer.Metadata.registerValue( GafferTest.AddNode, "promotableTest", "yes" )
+
+		s = GafferTest.AddNode()
+		t = Gaffer.Node()
+
+		self.assertFalse( Gaffer.MetadataAlgo.isPromotable( s, t, "notPromotableTest" ) )
+		self.assertFalse( Gaffer.MetadataAlgo.isPromotable( s, t, "notPromotableTest:promotable" ) )
+		self.assertTrue( Gaffer.MetadataAlgo.isPromotable( s, t, "promotableTest") )
+		self.assertFalse( Gaffer.MetadataAlgo.isPromotable( s, t, "promotableTest:promotable" ) )
+
 	def testCopyColorKeepExisting( self ) :
 
 		plug1 = Gaffer.IntPlug()

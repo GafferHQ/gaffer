@@ -37,6 +37,7 @@
 import types
 import imath
 import functools
+from collections import deque
 
 import IECore
 
@@ -122,6 +123,70 @@ Gaffer.Metadata.registerNode(
 # VectorDataPlugValueWidget customisation
 ###########################################################################
 
+def __targetFilterPlug( plug ) :
+
+	stack = deque( [ plug ] )
+
+	while stack :
+		plug = stack.popleft()
+
+		cellPlug = plug.ancestor( Gaffer.Spreadsheet.CellPlug )
+		if cellPlug is not None and isinstance( plug.node(), Gaffer.Spreadsheet ) :
+			plug = plug.node()["out"][cellPlug.getName()]
+
+		node = plug.node()
+
+		if isinstance( node, GafferScene.PathFilter ) and plug == node["paths"] :
+			return plug
+
+		stack.extend( plug.outputs() )
+
+	return None
+
+def __targetSceneOutPlug( plug ) :
+
+	stack = deque( [ plug ] )
+
+	while stack :
+		plug = stack.popleft()
+		node = plug.node()
+		if isinstance( plug.node(), GafferScene.SceneNode ) :
+			return node["out"]
+
+		stack.extend( plug.outputs() )
+
+	return None
+
+def _selectAffected( plug, selection ) :
+
+	inPlugs = []
+
+	rowPlug = plug.ancestor( Gaffer.Spreadsheet.RowPlug )
+
+	targetPlug = __targetFilterPlug( plug )
+
+	if targetPlug is not None :
+		inPlugs = [ n["in"] for n in GafferScene.SceneAlgo.filteredNodes( targetPlug.node() ) ]
+	elif rowPlug is not None :
+		for output in rowPlug.node()["out"] :
+			targetPlug = __targetSceneOutPlug( output )
+			if targetPlug is not None :
+				inPlugs = [ targetPlug ]
+				break
+
+	if targetPlug is None :
+		return
+
+	scenes = [ s[0] if isinstance( s, Gaffer.ArrayPlug ) else s for s in inPlugs ]
+
+	result = IECore.PathMatcher()
+	context = targetPlug.ancestor( Gaffer.ScriptNode ).context()
+	with context :
+		for scene in scenes :
+			GafferScene.SceneAlgo.matchingPaths( selection, scene, result )
+
+	GafferSceneUI.ContextAlgo.setSelectedPaths( context, result )
+
 class _PathsPlugValueWidget( GafferUI.VectorDataPlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
@@ -134,35 +199,58 @@ class _PathsPlugValueWidget( GafferUI.VectorDataPlugValueWidget ) :
 
 		selectedIndices = vectorDataWidget.selectedIndices()
 
+		filterData = vectorDataWidget.getData()[0]
+		selection = IECore.PathMatcher( [ filterData[row] for column, row in selectedIndices ] )
+
 		menuDefinition.append( "/selectDivider", { "divider" : True } )
 		menuDefinition.append(
 			"/Select Affected Objects",
 			{
-				"command" : functools.partial( Gaffer.WeakMethod( self.__selectAffected ), selectedIndices ),
+				"command" : functools.partial( _selectAffected, self.getPlug(), selection ),
 				"active" : len( selectedIndices ) > 0,
 			}
 		)
 
-	def __selectAffected( self, selectedIndices ) :
+##########################################################################
+# Popup menu for Spreadsheet cells
+##########################################################################
 
-		filterNode = self.getPlug().node()
+def __popupMenu( menuDefinition, plugValueWidget ) :
 
-		filterData = self.vectorDataWidget().getData()[0]
+	selection = None
 
-		pathMatcher = IECore.PathMatcher()
-		for column, row in selectedIndices :
-			pathMatcher.addPath( filterData[row] )
+	plug = plugValueWidget.getPlug()
+	if plug is None:
+		return
 
-		scenes = [ n["in"] for n in GafferScene.SceneAlgo.filteredNodes( filterNode ) ]
-		scenes = [ s[0] if isinstance( s, Gaffer.ArrayPlug ) else s for s in scenes ]
+	node = plug.node()
 
-		result = IECore.PathMatcher()
-		context = filterNode.ancestor( Gaffer.ScriptNode ).context()
-		with context :
-			for scene in scenes :
-				GafferScene.SceneAlgo.matchingPaths( pathMatcher, scene, result )
+	if isinstance( node, Gaffer.Spreadsheet ) :
+		rowPlug = plug.ancestor( Gaffer.Spreadsheet.RowPlug )
 
-		GafferSceneUI.ContextAlgo.setSelectedPaths( context, result )
+		with plugValueWidget.getContext() :
+			if __targetFilterPlug( plug ) is not None :
+				cellPlug = plug.ancestor( Gaffer.Spreadsheet.CellPlug )
+				if cellPlug is None :
+					return
+
+				selection = IECore.PathMatcher( plugValueWidget.vectorDataWidget().getData()[0] )
+
+			elif rowPlug and plug == rowPlug["name"] and node["selector"].getValue() == "${scene:path}" :
+				selection = IECore.PathMatcher( [ plugValueWidget.getPlug().getValue() ] )
+
+	if selection is None :
+		return
+
+	menuDefinition.prepend( "/selectAffectedDivider", { "divider" : True } )
+	menuDefinition.prepend(
+		"/Select Affected Objects",
+		{
+			"command" : functools.partial( _selectAffected, plug, selection )
+		}
+	)
+
+GafferUI.PlugValueWidget.popupMenuSignal().connect( __popupMenu, scoped = False )
 
 ##########################################################################
 # NodeGadget drop handler

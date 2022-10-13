@@ -214,10 +214,20 @@ void BoxIO::setup( const Plug *plug )
 	applyDynamicFlag( inPlugInternal() );
 	applyDynamicFlag( outPlugInternal() );
 
-	MetadataAlgo::copy(
+	MetadataAlgo::copyIf(
 		plug,
 		m_direction == Plug::In ? inPlugInternal() : outPlugInternal(),
-		/* exclude = */ "layout:*"
+		[]( const GraphComponent *from, const GraphComponent *to, InternedString name )
+		{
+			if( StringAlgo::matchMultiple( name.string(), "layout:*" ) )
+			{
+				/// \todo Remove this condition and rely on registered exclusions only. An obstacle
+				/// to doing this is making it easy to exclude `layout:*` without lots and lots of
+				/// individual exclusions.
+				return false;
+			}
+			return MetadataAlgo::isPromotable( from, to, name );
+		}
 	);
 
 	setupNoduleSectionMetadata(

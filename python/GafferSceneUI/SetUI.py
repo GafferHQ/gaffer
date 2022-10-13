@@ -35,6 +35,9 @@
 ##########################################################################
 
 import functools
+from collections import deque
+
+import IECore
 
 import Gaffer
 import GafferUI
@@ -163,6 +166,10 @@ Gaffer.Metadata.registerNode(
 
 )
 
+Gaffer.Metadata.registerValue( Gaffer.Plug, "ui:scene:acceptsSetName:promotable", False )
+Gaffer.Metadata.registerValue( Gaffer.Plug, "ui:scene:acceptsSetNames:promotable", False )
+Gaffer.Metadata.registerValue( Gaffer.Plug, "ui:scene:acceptsSetExpression:promotable", False )
+
 ##########################################################################
 # Right click menu for sets
 # This is driven by metadata so it can be used for plugs on other
@@ -174,22 +181,27 @@ def __setValue( plug, value, *unused ) :
 	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
 		plug.setValue( value )
 
-def __spreadsheetTargetNode( plug ) :
+def __targetPlug( plug ) :
 
-	# Find the first node the plug's column is connected to
-	# if it is a spreadsheet cell.
+	stack = deque( [ plug ] )
 
-	cellPlug = plug.ancestor( Gaffer.Spreadsheet.CellPlug )
+	while stack :
+		plug = stack.popleft()
 
-	# Could be a user plug on a Spreadsheet node
-	if cellPlug is None :
-		return None
+		cellPlug = plug.ancestor( Gaffer.Spreadsheet.CellPlug )
+		if cellPlug is not None and isinstance( plug.node(), Gaffer.Spreadsheet ) :
+			plug = plug.node()["out"][cellPlug.getName()]
 
-	outputs = plug.node()[ "out" ][ cellPlug.getName() ].outputs()
-	if not outputs :
-		return None
+		# get required data
+		acceptsSetName = Gaffer.Metadata.value( plug, "ui:scene:acceptsSetName" )
+		acceptsSetNames = Gaffer.Metadata.value( plug, "ui:scene:acceptsSetNames" )
+		acceptsSetExpression = Gaffer.Metadata.value( plug, "ui:scene:acceptsSetExpression" )
+		if acceptsSetName or acceptsSetNames or acceptsSetExpression :
+			return plug
 
-	return outputs[ 0 ].node()
+		stack.extend( plug.outputs() )
+
+	return None
 
 def __scenePlugs( node ) :
 
@@ -204,42 +216,50 @@ def __scenePlugs( node ) :
 
 	return result
 
-def __setsPopupMenu( menuDefinition, plugValueWidget ) :
+def __selectAffected( context, nodes, setExpression ) :
+
+	result = IECore.PathMatcher()
+
+	with context :
+		for node in nodes :
+			for scenePlug in __scenePlugs( node ) :
+				result.addPaths( GafferScene.SetAlgo.evaluateSetExpression( setExpression, scenePlug ) )
+
+	GafferSceneUI.ContextAlgo.setSelectedPaths( context, result )
+
+def __popupMenu( menuDefinition, plugValueWidget ) :
 
 	plug = plugValueWidget.getPlug()
 	if plug is None :
+		return
+
+	targetPlug = __targetPlug( plug )
+	if targetPlug is None :
 		return
 
 	# Some operations require a text widget so we can manipulate insertion position, etc...
 	hasTextWidget = hasattr( plugValueWidget, 'textWidget' )
 
 	# get required data
-	acceptsSetName = Gaffer.Metadata.value( plug, "ui:scene:acceptsSetName" )
-	acceptsSetNames = Gaffer.Metadata.value( plug, "ui:scene:acceptsSetNames" )
-	acceptsSetExpression = hasTextWidget and Gaffer.Metadata.value( plug, "ui:scene:acceptsSetExpression" )
+	acceptsSetName = Gaffer.Metadata.value( targetPlug, "ui:scene:acceptsSetName" )
+	acceptsSetNames = Gaffer.Metadata.value( targetPlug, "ui:scene:acceptsSetNames" )
+	acceptsSetExpression = hasTextWidget and Gaffer.Metadata.value( targetPlug, "ui:scene:acceptsSetExpression" )
 	if not acceptsSetName and not acceptsSetNames and not acceptsSetExpression :
 		return
 
 	with plugValueWidget.getContext() :
-		if acceptsSetNames :
-			currentNames = set( plug.getValue().split() )
-		elif acceptsSetName :
-			currentNames = set( [ plug.getValue() ] )
-		else :
-			currentExpression = plug.getValue()
+		plugValue = plug.getValue()
+
+	textSelection = plugValueWidget.textWidget().getSelection() if hasTextWidget else ( 0, 0 )
 
 	if acceptsSetExpression :
-		textSelection = plugValueWidget.textWidget().getSelection()
 		cursorPosition = plugValueWidget.textWidget().getCursorPosition()
 
 		insertAt = textSelection
 		if insertAt == (0, 0) :  # if there's no selection to be replaced, use position of cursor
 			insertAt = (cursorPosition, cursorPosition)
 
-	node = plug.node()
-
-	if isinstance( node, Gaffer.Spreadsheet ) :
-		node = __spreadsheetTargetNode( plug ) or node
+	node = targetPlug.node()
 
 	if isinstance( node, GafferScene.Filter ) :
 		nodes = GafferScene.SceneAlgo.filteredNodes( node )
@@ -258,17 +278,43 @@ def __setsPopupMenu( menuDefinition, plugValueWidget ) :
 	# build the menus
 	menuDefinition.prepend( "/SetsDivider", { "divider" : True } )
 
+	# `Select Affected` command
+
+	selectionSetExpression = plugValue[textSelection[0]: textSelection[1]] if textSelection != ( 0, 0 ) else plugValue
+
+	if selectionSetExpression != "" :
+		menuDefinition.prepend(
+			"Select Affected Objects",
+			{
+				"command" : functools.partial(
+					__selectAffected,
+					plugValueWidget.getContext(),
+					nodes,
+					selectionSetExpression
+				)
+			}
+		)
+
+	# `Operators` menu
+
 	if acceptsSetExpression:
 		for name, operator in zip( ("Union", "Intersection", "Difference"), ("|", "&", "-") ) :
-			newValue = ''.join( [ currentExpression[:insertAt[0]], operator, currentExpression[insertAt[1]:] ] )
+			newValue = ''.join( [ plugValue[:insertAt[0]], operator, plugValue[insertAt[1]:] ] )
 			menuDefinition.prepend( "/Operators/%s" % name, { "command" : functools.partial( __setValue, plug, newValue ) } )
 
+	# `Sets` menu
+
 	pathFn = getMenuPathFunction()
+
+	if acceptsSetNames :
+		currentNames = set( plugValue.split() )
+	elif acceptsSetName :
+		currentNames = set( [ plugValue ] )
 
 	for setName in reversed( sorted( list( setNames ) ) ) :
 
 		if acceptsSetExpression :
-			newValue = ''.join( [ currentExpression[:insertAt[0]], setName, currentExpression[insertAt[1]:]] )
+			newValue = ''.join( [ plugValue[:insertAt[0]], setName, plugValue[insertAt[1]:]] )
 			parameters = { "command" : functools.partial( __setValue, plug, newValue ) }
 
 		else :
@@ -287,7 +333,7 @@ def __setsPopupMenu( menuDefinition, plugValueWidget ) :
 
 		menuDefinition.prepend( "/Sets/%s" % pathFn( setName ), parameters )
 
-GafferUI.PlugValueWidget.popupMenuSignal().connect( __setsPopupMenu, scoped = False )
+GafferUI.PlugValueWidget.popupMenuSignal().connect( __popupMenu, scoped = False )
 
 ##########################################################################
 # Gadgets

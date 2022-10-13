@@ -202,6 +202,16 @@ void copyColorsWrapper( const Gaffer::Plug &srcPlug, Gaffer::Plug &dstPlug, bool
 	copyColors( &srcPlug, &dstPlug, overwrite );
 }
 
+// Promotability
+// =============
+
+
+bool isPromotableWrapper( const GraphComponent &from, const GraphComponent &to, const IECore::InternedString &name )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return isPromotable( &from, &to, name );
+}
+
 } // namespace
 
 void GafferModule::bindMetadataAlgo()
@@ -323,5 +333,10 @@ void GafferModule::bindMetadataAlgo()
 	def( "copyIf", &copyIfWrapper, ( arg( "from" ), arg( "to" ), arg( "predicate" ), arg( "persistent" ) = true ) );
 
 	def( "copyColors", &copyColorsWrapper,  (arg( "srcPlug" ), arg( "dstPlug" ), arg( "overwrite") ));
+
+	// Promotability
+	// =============
+
+	def( "isPromotable", &isPromotableWrapper, ( arg( "from" ), arg( "to" ), arg( "name" ) ) );
 
 }

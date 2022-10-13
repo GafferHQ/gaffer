@@ -224,6 +224,12 @@ GAFFER_API void copy( const GraphComponent *from, GraphComponent *to, const IECo
 /// \undoable
 GAFFER_API void copyColors( const Gaffer::Plug *srcPlug, Gaffer::Plug *dstPlug, bool overwrite );
 
+/// Promotability
+/// =============
+
+/// Returns true if metadata can be promoted from one plug to another.
+GAFFER_API bool isPromotable( const GraphComponent *from, const GraphComponent *to, const IECore::InternedString &name );
+
 } // namespace MetadataAlgo
 
 } // namespace Gaffer
