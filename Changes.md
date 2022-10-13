@@ -7,6 +7,7 @@ Fixes
 - NodeEditor : Fixed updated of section summaries when they are changed in the UI Editor.
 - ArnoldColorManager : Fixed broken presets for `color_space_narrow` and `color_space_linear`.
 - ImageView : Fixed error with display of negative colors.
+- Spreadsheet : Fixed bugs with inconsistent column ordering.
 
 1.0.6.0 (relative to 1.0.5.1)
 =======

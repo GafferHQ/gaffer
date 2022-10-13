@@ -308,10 +308,37 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		rowsPlug = self._qtWidget().model().rowsPlug()
 		header = self._qtWidget().horizontalHeader()
-		for index, plug in enumerate( rowsPlug.defaultRow()["cells"] ) :
-			visualIndex = Gaffer.Metadata.value( plug, "spreadsheet:columnIndex" )
+
+		# Get the desired column indices ( may be None on columns with no metadata set )
+		columnIndices = [ Gaffer.Metadata.value( plug, "spreadsheet:columnIndex" ) for plug in rowsPlug.defaultRow()["cells"] ]
+
+		# Prepare a set to query if an index is used
+		usedColumnIndices = set( columnIndices )
+
+		# The index used for columns with no metadata
+		defaultIndex = 0
+
+		# Prepare a list of physical indices and target indices
+		# ( the target index goes first so it's easy to sort by )
+		rowSortList = []
+		for physicalIndex, targetIndex in enumerate( columnIndices ):
+			if not targetIndex is None:
+				# If we have metadata, use it
+				rowSortList.append( ( targetIndex, physicalIndex ) )
+			else:
+				# Nothing set, find the next available default index
+				while defaultIndex in usedColumnIndices:
+					defaultIndex += 1
+				rowSortList.append( ( defaultIndex, physicalIndex ) )
+				defaultIndex += 1
+
+		# Use the column target index as a key to sort the physical indices
+		sortedPhysicalIndices = [ i[1] for i in sorted( rowSortList ) ]
+
+		# Loop through the sorted physical indices in order, moving one to each consecutive index
+		for target, physicalIndex in enumerate( sortedPhysicalIndices ) :
 			self.__ignoreColumnMoved = True
-			header.moveSection( header.visualIndex( index ), visualIndex if visualIndex is not None else index )
+			header.moveSection( header.visualIndex( physicalIndex ), target )
 			self.__ignoreColumnMoved = False
 
 	def __applyColumnVisibility( self ) :
