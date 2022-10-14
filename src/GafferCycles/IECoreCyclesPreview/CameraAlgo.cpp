@@ -33,7 +33,6 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GafferCycles/IECoreCyclesPreview/CameraAlgo.h"
-#include "GafferCycles/IECoreCyclesPreview/ObjectAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/SocketAlgo.h"
 
 #include "IECoreScene/Camera.h"

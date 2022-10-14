@@ -38,8 +38,8 @@
 
 #include "GafferCycles/IECoreCyclesPreview/AttributeAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/CameraAlgo.h"
+#include "GafferCycles/IECoreCyclesPreview/GeometryAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/IECoreCycles.h"
-#include "GafferCycles/IECoreCyclesPreview/ObjectAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/ShaderNetworkAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/SocketAlgo.h"
 
@@ -1474,11 +1474,9 @@ class InstanceCache : public IECore::RefCounted
 
 			if( !cyclesAttributes->canInstanceGeometry( object ) )
 			{
-				SharedCObjectPtr cobject = convert( object, cyclesAttributes, nodeName );
-				m_objects.push_back( cobject );
-				SharedCGeometryPtr cgeo = SharedCGeometryPtr( cobject.get()->get_geometry(), nullNodeDeleter );
-				m_uniqueGeometry.push_back( cgeo );
-				return Instance( cobject, cgeo, true );
+				SharedCGeometryPtr geometry = convert( object, cyclesAttributes, nodeName );
+				m_uniqueGeometry.push_back( geometry );
+				return makeInstance( geometry, nodeName, /* prototype = */ true );
 			}
 
 			bool isPrototype = false;
@@ -1486,18 +1484,11 @@ class InstanceCache : public IECore::RefCounted
 			IECore::MurmurHash h = object->hash();
 			cyclesAttributes->hashGeometry( object, h );
 
-			SharedCObjectPtr cobject;
 			SharedCGeometryPtr cgeo;
 			Geometry::const_accessor readAccessor;
 			if( m_geometry.find( readAccessor, h ) )
 			{
 				cgeo = readAccessor->second;
-				/// \todo See comments in `convert()` - why do we call it again when
-				/// the geometry was converted already? Can't we lift `ccl::Object`
-				/// creation out of `convert()`?
-				///
-				/// Note : When passing `cgeo`, we are guaranteed a non-null return.
-				cobject = convert( object, cyclesAttributes, nodeName, cgeo.get() );
 				readAccessor.release();
 			}
 			else
@@ -1505,27 +1496,13 @@ class InstanceCache : public IECore::RefCounted
 				Geometry::accessor writeAccessor;
 				if( m_geometry.insert( writeAccessor, h ) )
 				{
-					cobject = convert( object, cyclesAttributes, nodeName );
-					if( !cobject )
-					{
-						return Instance( nullptr, nullptr, false );
-					}
-					writeAccessor->second = SharedCGeometryPtr( cobject->get_geometry(), nullNodeDeleter );
-					cgeo = writeAccessor->second;
-					cgeo->name = h.toString();
 					isPrototype = true;
+					writeAccessor->second = convert( object, cyclesAttributes, nodeName );
 				}
-				else
-				{
-					cgeo = writeAccessor->second;
-					cobject = convert( object, cyclesAttributes, nodeName, cgeo.get() );
-				}
-				writeAccessor.release();
+				cgeo = writeAccessor->second;
 			}
 
-			m_objects.push_back( cobject );
-
-			return Instance( cobject, cgeo, isPrototype );
+			return makeInstance( cgeo, nodeName, isPrototype );
 		}
 
 		// Can be called concurrently with other get() calls.
@@ -1539,11 +1516,9 @@ class InstanceCache : public IECore::RefCounted
 
 			if( !cyclesAttributes->canInstanceGeometry( samples.front() ) )
 			{
-				SharedCObjectPtr cobject = convert( samples, times, frameIdx, cyclesAttributes, nodeName );
-				m_objects.push_back( cobject );
-				SharedCGeometryPtr cgeo = SharedCGeometryPtr( cobject.get()->get_geometry(), nullNodeDeleter );
-				m_uniqueGeometry.push_back( cgeo );
-				return Instance( cobject, cgeo, true );
+				SharedCGeometryPtr geometry = convert( samples, times, frameIdx, cyclesAttributes, nodeName );
+				m_uniqueGeometry.push_back( geometry );
+				return makeInstance( geometry, nodeName, true );
 			}
 
 			bool isPrototype = false;
@@ -1559,13 +1534,11 @@ class InstanceCache : public IECore::RefCounted
 			}
 			cyclesAttributes->hashGeometry( samples.front(), h );
 
-			SharedCObjectPtr cobject;
 			SharedCGeometryPtr cgeo;
 			Geometry::const_accessor readAccessor;
 			if( m_geometry.find( readAccessor, h ) )
 			{
 				cgeo = readAccessor->second;
-				cobject = convert( samples, times, frameIdx, cyclesAttributes, nodeName, cgeo.get() );
 				readAccessor.release();
 			}
 			else
@@ -1573,27 +1546,13 @@ class InstanceCache : public IECore::RefCounted
 				Geometry::accessor writeAccessor;
 				if( m_geometry.insert( writeAccessor, h ) )
 				{
-					cobject = convert( samples, times, frameIdx, cyclesAttributes, nodeName );
-					if( !cobject )
-					{
-						return Instance( nullptr, nullptr, false );
-					}
-					writeAccessor->second = SharedCGeometryPtr( cobject->get_geometry(), nullNodeDeleter );
-					cgeo = writeAccessor->second;
-					cgeo->name = h.toString();
 					isPrototype = true;
+					writeAccessor->second = convert( samples, times, frameIdx, cyclesAttributes, nodeName );
 				}
-				else
-				{
-					cgeo = writeAccessor->second;
-					cobject = convert( samples, times, frameIdx, cyclesAttributes, nodeName, cgeo.get() );
-				}
-				writeAccessor.release();
+				cgeo = writeAccessor->second;
 			}
 
-			m_objects.push_back( cobject );
-
-			return Instance( cobject, cgeo, isPrototype );
+			return makeInstance( cgeo, nodeName, isPrototype );
 		}
 
 		// Must not be called concurrently with anything.
@@ -1662,76 +1621,46 @@ class InstanceCache : public IECore::RefCounted
 
 	private :
 
-		/// \todo Figure out if this can be refactored to return `ccl::Geometry`
-		/// (meaning `ObjectAlgo::convert()` should too), and then have the
-		/// wrapping in `ccl:Object` be performed in `get()` or the `Instance`
-		/// constructor. It seems backwards that this function sometimes creates
-		/// new geometry but also is sometimes given previously-created geometry
-		/// via `cgeo`.
-		SharedCObjectPtr convert( const IECore::Object *object,
-								  const CyclesAttributes *attributes,
-								  const std::string &nodeName,
-								  ccl::Geometry *cgeo = nullptr )
+		SharedCGeometryPtr convert( const IECore::Object *object, const CyclesAttributes *attributes, const std::string &nodeName ) const
 		{
-			ccl::Object *cobject = nullptr;
-
-			if( !cgeo )
+			ccl::Geometry *geometry = GeometryAlgo::convert( object, nodeName, m_scene );
+			if( geometry )
 			{
-				cobject = ObjectAlgo::convert( object, nodeName, m_scene );
-				if( !cobject )
-				{
-					return nullptr;
-				}
-				ccl::Geometry *cgeo = cobject->get_geometry();
-				cgeo->set_owner( m_scene );
+				geometry->set_owner( m_scene );
 			}
-			else
-			{
-				cobject = new ccl::Object();
-				cobject->name = ccl::ustring( nodeName.c_str() );
-				cobject->set_geometry( cgeo );
-			}
-
-			IECore::MurmurHash rh;
-			rh.append( nodeName );
-			cobject->set_random_id( (unsigned)IECore::hash_value( rh ) );
-			cobject->set_owner( m_scene );
-
-			return SharedCObjectPtr( cobject, nullNodeDeleter );
+			return SharedCGeometryPtr( geometry, nullNodeDeleter );
 		}
 
-		SharedCObjectPtr convert( const std::vector<const IECore::Object *> &samples,
-								  const std::vector<float> &times,
-								  const int frame,
-								  const CyclesAttributes *attributes,
-								  const std::string &nodeName,
-								  ccl::Geometry *cgeo = nullptr )
+		SharedCGeometryPtr convert(
+			const std::vector<const IECore::Object *> &samples,
+			const std::vector<float> &times,
+			const int frame,
+			const CyclesAttributes *attributes,
+			const std::string &nodeName
+		) const
 		{
-			ccl::Object *cobject = nullptr;
-
-			if( !cgeo )
+			ccl::Geometry *geometry = GeometryAlgo::convert( samples, times, frame, nodeName, m_scene );
+			if( geometry )
 			{
-				cobject = ObjectAlgo::convert( samples, times, frame, nodeName, m_scene );
-				if( !cobject )
-				{
-					return nullptr;
-				}
-				ccl::Geometry *cgeo = cobject->get_geometry();
-				cgeo->set_owner( m_scene );
+				geometry->set_owner( m_scene );
 			}
-			else
+			return SharedCGeometryPtr( geometry, nullNodeDeleter );
+		}
+
+		Instance makeInstance( const SharedCGeometryPtr &geometry, const std::string &name, bool prototype )
+		{
+			SharedCObjectPtr object;
+			if( geometry )
 			{
-				cobject = new ccl::Object();
-				cobject->name = ccl::ustring( nodeName.c_str() );
-				cobject->set_geometry( cgeo );
+				object = SharedCObjectPtr( new ccl::Object(), nullNodeDeleter );
+				object->name = ccl::ustring( name.c_str() );
+				object->set_random_id( std::hash<string>()( name ) );
+				object->set_owner( m_scene );
+				object->set_geometry( geometry.get() );
+				m_objects.push_back( object );
 			}
 
-			IECore::MurmurHash rh;
-			rh.append( nodeName );
-			cobject->set_random_id( (unsigned)IECore::hash_value( rh ) );
-			cobject->set_owner( m_scene );
-
-			return SharedCObjectPtr( cobject, nullNodeDeleter );
+			return Instance( object, geometry, prototype );
 		}
 
 		void updateObjects( NodesCreated &nodes )

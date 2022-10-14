@@ -39,12 +39,11 @@ Improvements
 Fixes
 -----
 
-- PathFilter : Fixed error when selecting a path element from a promoted `PathFilter.paths` plug introduced in 0.61.13.0.
-
-Fixes
------
-
 - Catalogue : Removed incorrect error message on empty Catalogues.
+- Cycles :
+  - Fixed crash rendering a scene containing a CoordinateSystem (#4865).
+  - Fixed crash rendering a PointPrimitive with `N` primitive variable (#4876).
+- PathFilter : Fixed error when selecting a path element from a promoted `PathFilter.paths` plug (introduced in 0.61.13.0).
 
 API
 ---

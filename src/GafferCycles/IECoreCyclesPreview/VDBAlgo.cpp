@@ -32,7 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferCycles/IECoreCyclesPreview/ObjectAlgo.h"
+#include "GafferCycles/IECoreCyclesPreview/GeometryAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/SocketAlgo.h"
 
 IECORE_PUSH_DEFAULT_VISIBILITY
@@ -104,12 +104,10 @@ class GafferVolumeLoader : public ccl::VDBImageLoader
 		const IECoreVDB::VDBObject *m_ieVolume;
 };
 
-ccl::Object *convert( const IECoreVDB::VDBObject *vdbObject, const std::string &nodeName, ccl::Scene *scene )//, const float frame )
+ccl::Geometry *convert( const IECoreVDB::VDBObject *vdbObject, const std::string &nodeName, ccl::Scene *scene )
 {
 	ccl::TypeDesc ctype;// = ccl::TypeDesc::TypeUnknown;
 
-	ccl::Object *cobject = new ccl::Object();
-	cobject->name = ccl::ustring( nodeName.c_str() );
 	ccl::Volume *volume = new ccl::Volume();
 
 	volume->set_object_space( true );
@@ -192,16 +190,15 @@ ccl::Object *convert( const IECoreVDB::VDBObject *vdbObject, const std::string &
 		attr->data_voxel() = scene->image_manager->add_image( loader, params );
 	}
 
-	cobject->set_geometry( volume );
-
-	return cobject;
+	volume->name = ccl::ustring( nodeName.c_str() );
+	return volume;
 }
 
-ccl::Object *convert( const std::vector<const IECoreVDB::VDBObject *> &samples, const std::vector<float> &times, const int frameIdx, const std::string &nodeName, ccl::Scene *scene )
+ccl::Geometry *convert( const std::vector<const IECoreVDB::VDBObject *> &samples, const std::vector<float> &times, const int frameIdx, const std::string &nodeName, ccl::Scene *scene )
 {
 	return convert( samples.front(), nodeName, scene );
 }
 
-ObjectAlgo::ConverterDescription<IECoreVDB::VDBObject> g_description( convert, convert );
+GeometryAlgo::ConverterDescription<IECoreVDB::VDBObject> g_description( convert, convert );
 
 } // namespace

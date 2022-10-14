@@ -32,7 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferCycles/IECoreCyclesPreview/ObjectAlgo.h"
+#include "GafferCycles/IECoreCyclesPreview/GeometryAlgo.h"
 
 #include "IECore/MessageHandler.h"
 
@@ -77,8 +77,8 @@ using namespace IECoreCycles;
 struct Converters
 {
 
-	ObjectAlgo::Converter converter;
-	ObjectAlgo::MotionConverter motionConverter;
+	GeometryAlgo::Converter converter;
+	GeometryAlgo::MotionConverter motionConverter;
 
 };
 
@@ -99,10 +99,10 @@ Registry &registry()
 namespace IECoreCycles
 {
 
-namespace ObjectAlgo
+namespace GeometryAlgo
 {
 
-ccl::Object *convert( const IECore::Object *object, const std::string &nodeName, ccl::Scene *scene )
+ccl::Geometry *convert( const IECore::Object *object, const std::string &nodeName, ccl::Scene *scene )
 {
 	const Registry &r = registry();
 	Registry::const_iterator it = r.find( object->typeId() );
@@ -113,7 +113,7 @@ ccl::Object *convert( const IECore::Object *object, const std::string &nodeName,
 	return it->second.converter( object, nodeName, scene );
 }
 
-ccl::Object *convert( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const int frameIdx, const std::string &nodeName, ccl::Scene *scene )
+ccl::Geometry *convert( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const int frameIdx, const std::string &nodeName, ccl::Scene *scene )
 {
 	if( samples.empty() )
 	{
@@ -151,6 +151,6 @@ void registerConverter( IECore::TypeId fromType, Converter converter, MotionConv
 	registry()[fromType] = { converter, motionConverter };
 }
 
-} // namespace ObjectAlgo
+} // namespace GeometryAlgo
 
 } // namespace IECoreCycles

@@ -33,7 +33,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GafferCycles/IECoreCyclesPreview/AttributeAlgo.h"
-#include "GafferCycles/IECoreCyclesPreview/ObjectAlgo.h"
+#include "GafferCycles/IECoreCyclesPreview/GeometryAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/SocketAlgo.h"
 
 #include "IECoreScene/SpherePrimitive.h"
@@ -91,22 +91,20 @@ ccl::PointCloud *convertCommon( const IECoreScene::SpherePrimitive *sphere )
 	return pointcloud;
 }
 
-ccl::Object *convert( const IECoreScene::SpherePrimitive *sphere, const std::string &nodeName, ccl::Scene *scene )
+ccl::Geometry *convert( const IECoreScene::SpherePrimitive *sphere, const std::string &nodeName, ccl::Scene *scene )
 {
-	ccl::Object *cobject = new ccl::Object();
-	cobject->set_geometry( convertCommon( sphere ) );
-	cobject->name = ccl::ustring(nodeName.c_str());
-	return cobject;
+	ccl::Geometry *result = convertCommon( sphere );
+	result->name = ccl::ustring( nodeName.c_str() );
+	return result;
 }
 
-ccl::Object *convert( const vector<const IECoreScene::SpherePrimitive *> &samples, const std::vector<float> &times, const int frameIdx, const std::string &nodeName, ccl::Scene *scene )
+ccl::Geometry *convert( const vector<const IECoreScene::SpherePrimitive *> &samples, const std::vector<float> &times, const int frameIdx, const std::string &nodeName, ccl::Scene *scene )
 {
-	ccl::Object *cobject = new ccl::Object();
-	cobject->set_geometry( convertCommon( samples.front() ) );
-	cobject->name = ccl::ustring(nodeName.c_str());
-	return cobject;
+	ccl::Geometry *result = convertCommon( samples.front() );
+	result->name = ccl::ustring( nodeName.c_str() );
+	return result;
 }
 
-ObjectAlgo::ConverterDescription<SpherePrimitive> g_description( convert, convert );
+GeometryAlgo::ConverterDescription<SpherePrimitive> g_description( convert, convert );
 
 } // namespace
