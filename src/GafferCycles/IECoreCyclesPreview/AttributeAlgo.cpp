@@ -112,7 +112,7 @@ namespace IECoreCycles
 namespace AttributeAlgo
 {
 
-void convertPrimitiveVariable( const std::string &name, const IECoreScene::PrimitiveVariable &primitiveVariable, ccl::AttributeSet &attributes )
+void convertPrimitiveVariable( const std::string &name, const IECoreScene::PrimitiveVariable &primitiveVariable, ccl::AttributeSet &attributes, ccl::AttributeElement attributeElement )
 {
 	// Create attribute.
 
@@ -123,34 +123,7 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 		return;
 	}
 
-	ccl::AttributeElement celem = ccl::ATTR_ELEMENT_NONE;
-	switch( primitiveVariable.interpolation )
-	{
-		case PrimitiveVariable::Constant :
-			celem = ccl::ATTR_ELEMENT_MESH;
-			break;
-		case PrimitiveVariable::Vertex :
-			if( attributes.geometry->geometry_type == ccl::Geometry::HAIR )
-			{
-				celem = ccl::ATTR_ELEMENT_CURVE_KEY;
-			}
-			else
-			{
-				celem = ccl::ATTR_ELEMENT_VERTEX;
-			}
-			break;
-		case PrimitiveVariable::Varying :
-		case PrimitiveVariable::FaceVarying :
-			celem = ccl::ATTR_ELEMENT_CORNER;
-			break;
-		case PrimitiveVariable::Uniform :
-			celem = ccl::ATTR_ELEMENT_FACE;
-			break;
-		default :
-			break;
-	}
-
-	ccl::Attribute *attr = attributes.add( ccl::ustring( name.c_str() ), ctype, celem );
+	ccl::Attribute *attr = attributes.add( ccl::ustring( name.c_str() ), ctype, attributeElement );
 
 	// Tag as a standard attribute if possible. Note that we don't use `AttributeSet::add( AttributeStandard )`
 	// because that crashes for certain combinations of geometry type and attribute. But some of those "crashy"

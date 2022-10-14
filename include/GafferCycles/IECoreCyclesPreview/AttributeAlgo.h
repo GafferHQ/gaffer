@@ -52,7 +52,7 @@ namespace AttributeAlgo
 
 /// Converts a primitive variable to a ccl::Attribute inside of a ccl::AttributeSet
 /// \todo Move to GeometryAlgo.
-IECORECYCLES_API void convertPrimitiveVariable( const std::string &name, const IECoreScene::PrimitiveVariable &primitiveVariable, ccl::AttributeSet &attributes );
+IECORECYCLES_API void convertPrimitiveVariable( const std::string &name, const IECoreScene::PrimitiveVariable &primitiveVariable, ccl::AttributeSet &attributes, ccl::AttributeElement attributeElement );
 
 } // namespace AttributeAlgo
 

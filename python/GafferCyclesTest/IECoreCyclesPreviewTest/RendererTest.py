@@ -600,10 +600,286 @@ class RendererTest( GafferTest.TestCase ) :
 					"Primitive variable \"test\" has unsupported type \"{}\"".format( data.typeName() )
 				)
 
+	def __testPrimitiveVariableInterpolation( self, primitive, primitiveVariable, expectedPixels, maxDifference = 0.0 ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+		)
+
+		# Frame the primitive so it fills the entire image.
+
+		renderer.camera(
+			"testCamera",
+			IECoreScene.Camera(
+				parameters = {
+					"resolution" : imath.V2i( 100, 100 ),
+					"projection" : "orthographic",
+					"screenWindow" : imath.Box2f( imath.V2f( -0.5 ), imath.V2f( 0.5 ) )
+				}
+			),
+			renderer.attributes( IECore.CompoundObject() )
+		)
+		renderer.option( "camera", IECore.StringData( "testCamera" ) )
+
+		fileName = os.path.join( self.temporaryDirectory(), "test.exr" )
+		renderer.output(
+			"testOutput",
+			IECoreScene.Output(
+				fileName,
+				"exr",
+				"rgba",
+				{}
+			)
+		)
+
+		# Render with a constant shader showing the primitive variable
+
+		shader = IECoreScene.ShaderNetwork(
+			shaders = {
+				"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", { "base_color" : imath.Color3f( 0 ) } ),
+				"attribute" : IECoreScene.Shader( "attribute", "cycles:shader", { "attribute" : primitiveVariable } ),
+			},
+			connections = [
+				( ( "attribute", "color" ), ( "output", "emission" ) ),
+			],
+			output = "output",
+		)
+
+		primitiveHandle = renderer.object( "primitive", primitive, renderer.attributes( IECore.CompoundObject( { "cycles:surface" : shader } ) ) )
+		primitiveHandle.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
+
+		renderer.render()
+
+		# Check we got what we expected
+
+		image = IECore.Reader.create( fileName ).read()
+
+		for uv, expectedColor in expectedPixels.items() :
+
+			if isinstance( expectedColor, imath.V3f ) :
+				expectedColor = imath.Color4f( expectedColor[0], expectedColor[1], expectedColor[2], 1 )
+
+			color = self.__colorAtUV( image, uv )
+			if maxDifference :
+				for i in range( 0, 4 ) :
+					self.assertAlmostEqual( color[i], expectedColor[i], delta = maxDifference )
+			else :
+				self.assertEqual( color, expectedColor )
+
+	def testMeshPrimitiveVariableInterpolation( self ) :
+
+		# Plane with 3x3 faces and primitive variables with various interpolations.
+
+		plane = IECoreScene.MeshPrimitive.createPlane(
+			imath.Box2f( imath.V2f( -0.5 ), imath.V2f( 0.5 ) ),
+			imath.V2i( 3 )
+		)
+
+		plane["uniformColor"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Uniform,
+			IECore.Color3fVectorData( [
+				imath.Color3f( i, i, i )
+				for i in range( 0, plane.variableSize( IECoreScene.PrimitiveVariable.Interpolation.Uniform ) )
+			] )
+		)
+
+		plane["vertexColor"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECore.Color3fVectorData( [
+				imath.Color3f( uv.x, uv.y, 0 ) for uv in plane["uv"].data
+			] )
+		)
+
+		plane["varyingColor"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Varying,
+			plane["vertexColor"].data
+		)
+
+		# Image UV coordinates of the center of particular faces.
+
+		topLeft = imath.V2f( 1/6.0, 1/6.0 )
+		topCenter = imath.V2f( 0.5, 1/6.0 )
+		center = imath.V2f( 0.5, 0.5 )
+		bottomRight = imath.V2f( 5/6.0 )
+
+		# Tests for each of the primitive variables.
+
+		self.__testPrimitiveVariableInterpolation(
+			plane, "uniformColor",
+			{
+				topLeft : imath.Color4f( 0, 0, 0, 1 ),
+				topCenter : imath.Color4f( 1, 1, 1, 1 ),
+				center : imath.Color4f( 4, 4, 4, 1 ),
+				bottomRight : imath.Color4f( 8, 8, 8, 1 ),
+			}
+		)
+
+		self.__testPrimitiveVariableInterpolation(
+			plane, "vertexColor",
+			{
+				topLeft : imath.Color4f( topLeft.x, topLeft.y, 0, 1 ),
+				topCenter : imath.Color4f( topCenter.x, topCenter.y, 0, 1 ),
+				center : imath.Color4f( center.x, center.y, 0, 1 ),
+				bottomRight : imath.Color4f( bottomRight.x, bottomRight.y, 0, 1 ),
+			},
+			maxDifference = 0.01
+		)
+
+		self.__testPrimitiveVariableInterpolation(
+			plane, "varyingColor",
+			{
+				topLeft : imath.Color4f( topLeft.x, topLeft.y, 0, 1 ),
+				topCenter : imath.Color4f( topCenter.x, topCenter.y, 0, 1 ),
+				center : imath.Color4f( center.x, center.y, 0, 1 ),
+				bottomRight : imath.Color4f( bottomRight.x, bottomRight.y, 0, 1 ),
+			},
+			maxDifference = 0.01
+		)
+
+	def testPointsPrimitiveVariableInterpolation( self ) :
+
+		# 3 points diagonally
+
+		points = IECoreScene.PointsPrimitive(
+			IECore.V3fVectorData( [ imath.V3f( -0.5, 0.5, 0 ), imath.V3f( 0 ), imath.V3f( 0.5, -0.5, 0 ) ] )
+		)
+		points["width"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Constant,
+			IECore.FloatData( 0.1 )
+		)
+
+		points["uniformColor"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Uniform,
+			IECore.Color3fVectorData( [ imath.Color3f( 1, 0.5, 0.25 ) ] )
+		)
+
+		points["vertexColor"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECore.Color3fVectorData( [
+				imath.Color3f( p.x + 0.5, p.y + 0.5, 0 ) for p in points["P"].data
+			] )
+		)
+
+		points["varyingColor"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Varying,
+			points["vertexColor"].data
+		)
+
+		# Image UV coordinates of each point
+
+		bottomLeft = imath.V2f( 0, 1 )
+		center = imath.V2f( 0.5 )
+		topRight = imath.V2f( 1, 0 )
+
+		# Tests for each of the primitive variables.
+
+		## \todo Fix and enable. As far as I can tell, we're passing the data
+		# to Cycles correctly, but it just doesn't make it through to the shader.
+		if False :
+			self.__testPrimitiveVariableInterpolation(
+				points, "uniformColor",
+				{
+					bottomLeft : points["uniformColor"].data[0],
+					center : points["uniformColor"].data[0],
+					topRight : points["uniformColor"].data[0],
+				}
+			)
+
+		self.__testPrimitiveVariableInterpolation(
+			points, "vertexColor",
+			{
+				bottomLeft : imath.Color4f( 0, 1, 0, 1 ),
+				center : imath.Color4f( 0.5, 0.5, 0, 1 ),
+				topRight : imath.Color4f( 1, 0, 0, 1 ),
+			}
+		)
+
+		self.__testPrimitiveVariableInterpolation(
+			points, "varyingColor",
+			{
+				bottomLeft : imath.Color4f( 0, 1, 0, 1 ),
+				center : imath.Color4f( 0.5, 0.5, 0, 1 ),
+				topRight : imath.Color4f( 1, 0, 0, 1 ),
+			}
+		)
+
+	def testCurvesPrimitiveVariableInterpolation( self ) :
+
+		# 3 vertical curves
+
+		curves = IECoreScene.CurvesPrimitive(
+			verticesPerCurve = IECore.IntVectorData( [ 2, 2, 2 ] ),
+			p = IECore.V3fVectorData( [
+				imath.V3f( -0.5, 0.5, 0 ), imath.V3f( -0.5, -0.5, 0 ),
+				imath.V3f( 0, 0.5, 0 ), imath.V3f( 0, -0.5, 0 ),
+				imath.V3f( 0.5, 0.5, 0 ), imath.V3f( 0.5, -0.5, 0 ),
+			] )
+		)
+		curves["width"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Constant,
+			IECore.FloatData( 0.1 )
+		)
+
+		curves["uniformColor"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Uniform,
+			IECore.Color3fVectorData( [ imath.Color3f( i + 1 ) for i in range( 0, 3 ) ] )
+		)
+
+		curves["vertexColor"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECore.Color3fVectorData( [
+				imath.Color3f( p.x + 0.5, p.y + 0.5, 0 ) for p in curves["P"].data
+			] )
+		)
+
+		# Image UV coordinates of top and bottom of each curve
+
+		leftTop = imath.V2f( 0, 0 )
+		leftBottom = imath.V2f( 0, 1 )
+		centerTop = imath.V2f( 0.5, 0 )
+		centerBottom = imath.V2f( 0.5, 1 )
+		rightTop = imath.V2f(1, 0 )
+		rightBottom = imath.V2f( 1, 1 )
+
+		# Tests for each of the primitive variables.
+
+		self.__testPrimitiveVariableInterpolation(
+			curves, "uniformColor",
+			{
+				leftTop : curves["uniformColor"].data[0],
+				leftBottom : curves["uniformColor"].data[0],
+				centerTop : curves["uniformColor"].data[1],
+				centerBottom : curves["uniformColor"].data[1],
+				rightTop : curves["uniformColor"].data[2],
+				rightBottom : curves["uniformColor"].data[2],
+			}
+		)
+
+		self.__testPrimitiveVariableInterpolation(
+			curves, "vertexColor",
+			{
+				## \todo I would expect the top of each curve to
+				# have the highest Y value (and therefore a
+				# green value of 1). But it's the other way around.
+				# Investigate possible camera inversion bug.
+				leftTop : imath.Color4f( 0, 0, 0, 1 ),
+				leftBottom : imath.Color4f( 0, 1, 0, 1 ),
+				centerTop : imath.Color4f( 0.5, 0, 0, 1 ),
+				centerBottom : imath.Color4f( 0.5, 1, 0, 1 ),
+				rightTop : imath.Color4f( 1, 0, 0, 1 ),
+				rightBottom : imath.Color4f( 1, 1, 0, 1 ),
+			},
+			maxDifference = 0.01
+		)
+
 	def __colorAtUV( self, image, uv ) :
 
 		dimensions = image.dataWindow.size() + imath.V2i( 1 )
-		i = dimensions.x * int( dimensions.y * uv.y ) + int( dimensions.x * uv.x )
+
+		ix = int( uv.x * ( dimensions.x - 1 ) )
+		iy = int( uv.y * ( dimensions.y - 1 ) )
+		i = iy * dimensions.x + ix
 
 		return imath.Color4f( image["R"][i], image["G"][i], image["B"][i], image["A"][i] )
 

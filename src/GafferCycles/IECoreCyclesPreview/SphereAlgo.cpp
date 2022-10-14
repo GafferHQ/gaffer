@@ -83,11 +83,20 @@ ccl::PointCloud *convertCommon( const IECoreScene::SpherePrimitive *sphere )
 	pointcloud->reserve( 1 );
 	pointcloud->add_point( ccl::make_float3( 0.0f, 0.0f, 0.0f ), sphere->radius(), 0);
 
-	PrimitiveVariableMap variablesToConvert = sphere->variables;
-	for( PrimitiveVariableMap::iterator it = variablesToConvert.begin(), eIt = variablesToConvert.end(); it != eIt; ++it )
+	for( const auto &[name, variable] : sphere->variables )
 	{
-		AttributeAlgo::convertPrimitiveVariable( it->first, it->second, pointcloud->attributes );
+		switch( variable.interpolation )
+		{
+			case PrimitiveVariable::Constant :
+			case PrimitiveVariable::Uniform :
+				AttributeAlgo::convertPrimitiveVariable( name, variable, pointcloud->attributes, ccl::ATTR_ELEMENT_OBJECT );
+			default :
+				// Other interpolation types define values for four corners
+				// of a quadric shape. Not supported by Cycle's point cloud.
+				break;
+		}
 	}
+
 	return pointcloud;
 }
 

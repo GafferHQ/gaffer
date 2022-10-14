@@ -113,10 +113,24 @@ ccl::PointCloud *convertCommon( const IECoreScene::PointsPrimitive *points )
 	// Convert primitive variables. P is done, and width/radius if found (removed above).
 	variablesToConvert.erase( "P" );
 
-	for( PrimitiveVariableMap::iterator it = variablesToConvert.begin(), eIt = variablesToConvert.end(); it != eIt; ++it )
+	for( const auto &[name, variable] : variablesToConvert )
 	{
-		AttributeAlgo::convertPrimitiveVariable( it->first, it->second, pointcloud->attributes );
+		switch( variable.interpolation )
+		{
+			case PrimitiveVariable::Constant :
+			case PrimitiveVariable::Uniform :
+				AttributeAlgo::convertPrimitiveVariable( name, variable, pointcloud->attributes, ccl::ATTR_ELEMENT_OBJECT );
+				break;
+			case PrimitiveVariable::Vertex :
+			case PrimitiveVariable::Varying :
+			case PrimitiveVariable::FaceVarying :
+				AttributeAlgo::convertPrimitiveVariable( name, variable, pointcloud->attributes, ccl::ATTR_ELEMENT_VERTEX );
+				break;
+			default :
+				break;
+		}
 	}
+
 	return pointcloud;
 }
 

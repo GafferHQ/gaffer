@@ -612,9 +612,26 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 	}
 
 	// Finally, do a generic conversion of anything that remains.
-	for( PrimitiveVariableMap::iterator it = variablesToConvert.begin(), eIt = variablesToConvert.end(); it != eIt; ++it )
+	for( const auto &[name, variable] : variablesToConvert )
 	{
-		AttributeAlgo::convertPrimitiveVariable( it->first, it->second, attributes );
+		switch( variable.interpolation )
+		{
+			case PrimitiveVariable::Constant :
+				AttributeAlgo::convertPrimitiveVariable( name, variable, cmesh->attributes, ccl::ATTR_ELEMENT_MESH );
+				break;
+			case PrimitiveVariable::Uniform :
+				AttributeAlgo::convertPrimitiveVariable( name, variable, cmesh->attributes, ccl::ATTR_ELEMENT_FACE );
+				break;
+			case PrimitiveVariable::Vertex :
+			case PrimitiveVariable::Varying :
+				AttributeAlgo::convertPrimitiveVariable( name, variable, cmesh->attributes, ccl::ATTR_ELEMENT_VERTEX );
+				break;
+			case PrimitiveVariable::FaceVarying :
+				AttributeAlgo::convertPrimitiveVariable( name, variable, cmesh->attributes, ccl::ATTR_ELEMENT_CORNER );
+				break;
+			default :
+				break;
+		}
 	}
 	return cmesh;
 }
