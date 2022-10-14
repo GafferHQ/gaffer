@@ -659,6 +659,10 @@ class RendererTest( GafferTest.TestCase ) :
 
 			if isinstance( expectedColor, imath.V3f ) :
 				expectedColor = imath.Color4f( expectedColor[0], expectedColor[1], expectedColor[2], 1 )
+			elif isinstance( expectedColor, ( imath.V2f, imath.V2i ) ) :
+				expectedColor = imath.Color4f( expectedColor[0], expectedColor[1], 0, 1 )
+			elif isinstance( expectedColor, ( int, float ) ) :
+				expectedColor = imath.Color4f( expectedColor, expectedColor, expectedColor, 1 )
 
 			color = self.__colorAtUV( image, uv )
 			if maxDifference :
@@ -674,6 +678,16 @@ class RendererTest( GafferTest.TestCase ) :
 		plane = IECoreScene.MeshPrimitive.createPlane(
 			imath.Box2f( imath.V2f( -0.5 ), imath.V2f( 0.5 ) ),
 			imath.V2i( 3 )
+		)
+
+		plane["constantColor"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Constant,
+			IECore.Color3fData( imath.Color3f( 0, 0.5, 1 ) ),
+		)
+
+		plane["constantInt"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Constant,
+			IECore.IntData( 1 ),
 		)
 
 		plane["uniformColor"] = IECoreScene.PrimitiveVariable(
@@ -704,6 +718,26 @@ class RendererTest( GafferTest.TestCase ) :
 		bottomRight = imath.V2f( 5/6.0 )
 
 		# Tests for each of the primitive variables.
+
+		self.__testPrimitiveVariableInterpolation(
+			plane, "constantColor",
+			{
+				topLeft : plane["constantColor"].data.value,
+				topCenter : plane["constantColor"].data.value,
+				center : plane["constantColor"].data.value,
+				bottomRight : plane["constantColor"].data.value,
+			}
+		)
+
+		self.__testPrimitiveVariableInterpolation(
+			plane, "constantInt",
+			{
+				topLeft : plane["constantInt"].data.value,
+				topCenter : plane["constantInt"].data.value,
+				center : plane["constantInt"].data.value,
+				bottomRight : plane["constantInt"].data.value,
+			}
+		)
 
 		self.__testPrimitiveVariableInterpolation(
 			plane, "uniformColor",
@@ -826,6 +860,21 @@ class RendererTest( GafferTest.TestCase ) :
 			IECore.Color3fVectorData( [ imath.Color3f( i + 1 ) for i in range( 0, 3 ) ] )
 		)
 
+		curves["uniformInt"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Uniform,
+			IECore.IntVectorData( range( 0, 3 ) )
+		)
+
+		curves["uniformV2f"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Uniform,
+			IECore.V2fVectorData( [ imath.V2f( i ) for i in range( 0, 3 ) ] )
+		)
+
+		curves["uniformV2i"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Uniform,
+			IECore.V2iVectorData( [ imath.V2i( i ) for i in range( 0, 3 ) ] )
+		)
+
 		curves["vertexColor"] = IECoreScene.PrimitiveVariable(
 			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
 			IECore.Color3fVectorData( [
@@ -853,6 +902,42 @@ class RendererTest( GafferTest.TestCase ) :
 				centerBottom : curves["uniformColor"].data[1],
 				rightTop : curves["uniformColor"].data[2],
 				rightBottom : curves["uniformColor"].data[2],
+			}
+		)
+
+		self.__testPrimitiveVariableInterpolation(
+			curves, "uniformInt",
+			{
+				leftTop : imath.Color3f( 0 ),
+				leftBottom : imath.Color3f( 0 ),
+				centerTop : imath.Color3f( 1 ),
+				centerBottom : imath.Color3f( 1 ),
+				rightTop : imath.Color3f( 2 ),
+				rightBottom : imath.Color3f( 2 ),
+			}
+		)
+
+		self.__testPrimitiveVariableInterpolation(
+			curves, "uniformV2f",
+			{
+				leftTop : curves["uniformV2f"].data[0],
+				leftBottom : curves["uniformV2f"].data[0],
+				centerTop : curves["uniformV2f"].data[1],
+				centerBottom : curves["uniformV2f"].data[1],
+				rightTop : curves["uniformV2f"].data[2],
+				rightBottom : curves["uniformV2f"].data[2],
+			}
+		)
+
+		self.__testPrimitiveVariableInterpolation(
+			curves, "uniformV2i",
+			{
+				leftTop : curves["uniformV2i"].data[0],
+				leftBottom : curves["uniformV2i"].data[0],
+				centerTop : curves["uniformV2i"].data[1],
+				centerBottom : curves["uniformV2i"].data[1],
+				rightTop : curves["uniformV2i"].data[2],
+				rightBottom : curves["uniformV2i"].data[2],
 			}
 		)
 

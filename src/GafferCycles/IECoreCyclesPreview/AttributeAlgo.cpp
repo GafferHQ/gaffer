@@ -73,31 +73,58 @@ ccl::TypeDesc typeFromGeometricDataInterpretation( IECore::GeometricData::Interp
 	}
 }
 
-ccl::TypeDesc typeDesc( const IECoreScene::PrimitiveVariable &primitiveVariable )
+template<typename T>
+size_t dataSize( const TypedData<std::vector<T>> *data )
 {
-	switch( primitiveVariable.data->typeId() )
+	return data->readable().size();
+}
+
+template<typename T>
+size_t dataSize( const TypedData<T> *data )
+{
+	return 1;
+}
+
+template<typename T>
+ccl::Attribute *convertTypedPrimitiveVariable( const std::string &name, const PrimitiveVariable &primitiveVariable, ccl::AttributeSet &attributes, ccl::TypeDesc typeDesc, ccl::AttributeElement attributeElement )
+{
+	// Create attribute. Cycles will allocate a buffer based on `attributeElement` and the information
+	// `attributes.geometry` contains.
+
+	ccl::Attribute *attribute = attributes.add( ccl::ustring( name.c_str() ), typeDesc, attributeElement );
+
+	// Sanity check the size of the buffer, so we don't run off the end when copying our data into it.
+
+	const T *data = static_cast<const T *>( primitiveVariable.data.get() );
+	const size_t expectedSize = attribute->element_size( attributes.geometry, attributes.prim );
+	if( dataSize( data ) != expectedSize )
 	{
-		case FloatVectorDataTypeId :
-		case IntVectorDataTypeId :
-		case IntDataTypeId :
-			return ccl::TypeDesc::TypeFloat;
-		case Color3fVectorDataTypeId :
-			return ccl::TypeDesc::TypeColor;
-		case V2fVectorDataTypeId :
-		case V2iVectorDataTypeId :
-			return ccl::TypeFloat2;
-		case V3fVectorDataTypeId :
-			return typeFromGeometricDataInterpretation(
-				static_cast<const V3fVectorData *>( primitiveVariable.data.get() )->getInterpretation()
-			);
-		case V3iVectorDataTypeId :
-			return ccl::TypeDesc::TypeVector;
-		case M44fVectorDataTypeId :
-		case M44fDataTypeId :
-			return ccl::TypeDesc::TypeMatrix;
-		default :
-			return ccl::TypeDesc::UNKNOWN;
+		msg(
+			Msg::Warning, "IECoreCyles::AttributeAlgo::convertPrimitiveVariable",
+			boost::format( "Primitive variable \"%1%\" has size %2% but Cycles expected size %3%." )
+				% name % dataSize( data ) % expectedSize
+		);
+		return nullptr;
 	}
+
+	// Copy data into buffer.
+
+	if constexpr( std::is_same_v<T, V3fVectorData> || std::is_same_v<T, Color3fVectorData> )
+	{
+		// Special case for arrays of `float3`, where each element actually contains 4 floats for alignment purposes.
+		ccl::float3 *f3 = attribute->data_float3();
+		for( const auto &v : data->readable() )
+		{
+			*f3++ = ccl::make_float3( v.x, v.y, v.z );
+		}
+	}
+	else
+	{
+		// All other cases, (including int to float conversion) are a simple element-by-element copy.
+		std::copy( data->baseReadable(), data->baseReadable() + data->baseSize(), attribute->data_float() );
+	}
+
+	return attribute;
 }
 
 } // namespace
@@ -114,16 +141,90 @@ namespace AttributeAlgo
 
 void convertPrimitiveVariable( const std::string &name, const IECoreScene::PrimitiveVariable &primitiveVariable, ccl::AttributeSet &attributes, ccl::AttributeElement attributeElement )
 {
-	// Create attribute.
-
-	const ccl::TypeDesc ctype = typeDesc( primitiveVariable );
-	if( ctype == ccl::TypeDesc::UNKNOWN )
+	ccl::Attribute *attr = nullptr;
+	switch( primitiveVariable.data->typeId() )
 	{
-		msg( Msg::Warning, "IECoreCyles::AttributeAlgo::convertPrimitiveVariable", boost::format( "Primitive variable \"%s\" has unsupported type \"%s\"." ) % name % primitiveVariable.data->typeName() );
-		return;
-	}
+		// Simple int-based data. Cycles doesn't support int attributes, so we promote to the equivalent float types.
 
-	ccl::Attribute *attr = attributes.add( ccl::ustring( name.c_str() ), ctype, attributeElement );
+		case IntDataTypeId :
+			attr = convertTypedPrimitiveVariable<IntData>( name, primitiveVariable, attributes, ccl::TypeDesc::TypeFloat, attributeElement );
+			break;
+		case V2iDataTypeId :
+			attr = convertTypedPrimitiveVariable<V2iData>( name, primitiveVariable, attributes, ccl::TypeFloat2, attributeElement );
+			break;
+		case V3iDataTypeId :
+			attr = convertTypedPrimitiveVariable<V3iData>(
+				name, primitiveVariable, attributes,
+				typeFromGeometricDataInterpretation(
+					static_cast<const V3iData *>( primitiveVariable.data.get() )->getInterpretation()
+				),
+				attributeElement
+			);
+			break;
+
+		// Vectors of int-based data. Cycles doesn't support int attributes, so we promote to the equivalent float types.
+
+		case IntVectorDataTypeId :
+			attr = convertTypedPrimitiveVariable<IntVectorData>( name, primitiveVariable, attributes, ccl::TypeDesc::TypeFloat, attributeElement );
+			break;
+		case V2iVectorDataTypeId :
+			attr = convertTypedPrimitiveVariable<V2iVectorData>( name, primitiveVariable, attributes, ccl::TypeFloat2, attributeElement );
+			break;
+		case V3iVectorDataTypeId :
+			attr = convertTypedPrimitiveVariable<V3iVectorData>(
+				name, primitiveVariable, attributes,
+				typeFromGeometricDataInterpretation(
+					static_cast<const V3iVectorData *>( primitiveVariable.data.get() )->getInterpretation()
+				),
+				attributeElement
+			);
+			break;
+
+		// Simple float-based data.
+
+		case FloatDataTypeId :
+			attr = convertTypedPrimitiveVariable<FloatData>( name, primitiveVariable, attributes, ccl::TypeDesc::TypeFloat, attributeElement );
+			break;
+		case V2fDataTypeId :
+			attr = convertTypedPrimitiveVariable<V2fData>( name, primitiveVariable, attributes, ccl::TypeFloat2, attributeElement );
+			break;
+		case V3fDataTypeId :
+			attr = convertTypedPrimitiveVariable<V3fData>(
+				name, primitiveVariable, attributes,
+				typeFromGeometricDataInterpretation(
+					static_cast<const V3fData *>( primitiveVariable.data.get() )->getInterpretation()
+				),
+				attributeElement
+			);
+			break;
+		case Color3fDataTypeId :
+			attr = convertTypedPrimitiveVariable<Color3fData>( name, primitiveVariable, attributes, ccl::TypeDesc::TypeColor, attributeElement );
+			break;
+
+		// Vectors of float-based data.
+
+		case FloatVectorDataTypeId :
+			attr = convertTypedPrimitiveVariable<FloatVectorData>( name, primitiveVariable, attributes, ccl::TypeDesc::TypeFloat, attributeElement );
+			break;
+		case V2fVectorDataTypeId :
+			attr = convertTypedPrimitiveVariable<V2fVectorData>( name, primitiveVariable, attributes, ccl::TypeFloat2, attributeElement );
+			break;
+		case V3fVectorDataTypeId :
+			attr = convertTypedPrimitiveVariable<V3fVectorData>(
+				name, primitiveVariable, attributes,
+				typeFromGeometricDataInterpretation(
+					static_cast<const V3fVectorData *>( primitiveVariable.data.get() )->getInterpretation()
+				),
+				attributeElement
+			);
+			break;
+		case Color3fVectorDataTypeId :
+			attr = convertTypedPrimitiveVariable<Color3fVectorData>( name, primitiveVariable, attributes, ccl::TypeDesc::TypeColor, attributeElement );
+			break;
+		default :
+			msg( Msg::Warning, "IECoreCyles::AttributeAlgo::convertPrimitiveVariable", boost::format( "Primitive variable \"%s\" has unsupported type \"%s\"." ) % name % primitiveVariable.data->typeName() );
+			return;
+	};
 
 	// Tag as a standard attribute if possible. Note that we don't use `AttributeSet::add( AttributeStandard )`
 	// because that crashes for certain combinations of geometry type and attribute. But some of those "crashy"
@@ -136,223 +237,6 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 	if( name == "N" && attr->element == ccl::ATTR_ELEMENT_VERTEX && attr->type == ccl::TypeDesc::TypeNormal )
 	{
 		attr->std = ccl::ATTR_STD_VERTEX_NORMAL;
-	}
-
-	// Fill attribute with data
-	/// \todo I suspect there are only really two cases here : either we need to `memcpy()` some floats or
-	/// we need to convert some ints to floats. I don't think we need all these conditionals.
-
-	if( primitiveVariable.interpolation != PrimitiveVariable::Constant && ctype == ccl::TypeDesc::TypeFloat )
-	{
-		if( const FloatVectorData *data = runTimeCast<const FloatVectorData>( primitiveVariable.data.get() ) )
-		{
-			const std::vector<float> &floatData = data->readable();
-
-			size_t num = floatData.size();
-			float *cdata = attr->data_float();
-
-			if( cdata )
-			{
-				for( size_t i = 0; i < num; ++i )
-					*(cdata++) = floatData[i];
-				cdata = attr->data_float();
-				return;
-			}
-		}
-
-		if( const IntVectorData *data = runTimeCast<const IntVectorData>( primitiveVariable.data.get() ) )
-		{
-			const std::vector<int> &intData = data->readable();
-
-			size_t num = intData.size();
-			float *cdata = attr->data_float();
-
-			if( cdata )
-			{
-				for( size_t i = 0; i < num; ++i )
-					*(cdata++) = (float)intData[i];
-				cdata = attr->data_float();
-				return;
-			}
-		}
-
-	}
-	else if( primitiveVariable.interpolation != PrimitiveVariable::Constant )
-	{
-		if( const V3fVectorData *data = runTimeCast<const V3fVectorData>( primitiveVariable.data.get() ) )
-		{
-			const std::vector<V3f> &v3fData = data->readable();
-			size_t num = v3fData.size();
-			ccl::float3 *cdata = attr->data_float3();
-
-			if( cdata )
-			{
-				for( size_t i = 0; i < num; ++i )
-					*(cdata++) = ccl::make_float3( v3fData[i].x, v3fData[i].y, v3fData[i].z );
-				cdata = attr->data_float3();
-				return;
-			}
-		}
-
-		if( const V3iVectorData *data = runTimeCast<const V3iVectorData>( primitiveVariable.data.get() ) )
-		{
-			const std::vector<V3i> &v3iData = data->readable();
-			size_t num = v3iData.size();
-			ccl::float3 *cdata = attr->data_float3();
-
-			if( cdata )
-			{
-				for( size_t i = 0; i < num; ++i )
-					*(cdata++) = ccl::make_float3( (float)v3iData[i].x, (float)v3iData[i].y, (float)v3iData[i].z );
-				cdata = attr->data_float3();
-				return;
-			}
-		}
-
-		if( const V2fVectorData *data = runTimeCast<const V2fVectorData>( primitiveVariable.data.get() ) )
-		{
-			const std::vector<V2f> &v2fData = data->readable();
-			size_t num = v2fData.size();
-			ccl::float2 *cdata = attr->data_float2();
-
-			if( cdata )
-			{
-				for( size_t i = 0; i < num; ++i )
-					*(cdata++) = ccl::make_float2( v2fData[i].x, v2fData[i].y );
-				cdata = attr->data_float2();
-				return;
-			}
-		}
-
-		if( const V2iVectorData *data = runTimeCast<const V2iVectorData>( primitiveVariable.data.get() ) )
-		{
-			const std::vector<V2i> &v2iData = data->readable();
-			size_t num = v2iData.size();
-			ccl::float2 *cdata = attr->data_float2();
-
-			if( cdata )
-			{
-				for( size_t i = 0; i < num; ++i )
-					*(cdata++) = ccl::make_float2( (float)v2iData[i].x, (float)v2iData[i].y );
-				cdata = attr->data_float2();
-				return;
-			}
-		}
-
-		if( const Color3fVectorData *data = runTimeCast<const Color3fVectorData>( primitiveVariable.data.get() ) )
-		{
-			const std::vector<Color3f> &colorData = data->readable();
-			size_t num = colorData.size();
-			ccl::float3 *cdata = attr->data_float3();
-
-			if( cdata )
-			{
-				for( size_t i = 0; i < num; ++i )
-					*(cdata++) = ccl::make_float3( colorData[i].x, colorData[i].y, colorData[i].z );
-				cdata = attr->data_float3();
-				return;
-			}
-		}
-
-		return;
-	}
-	else if( primitiveVariable.interpolation == PrimitiveVariable::Constant )
-	{
-		if( const FloatData *data = runTimeCast<const FloatData>( primitiveVariable.data.get() ) )
-		{
-			const float &floatData = data->readable();
-			float *cdata = attr->data_float();
-
-			if( cdata )
-			{
-				*(cdata) = floatData;
-				return;
-			}
-		}
-
-		if( const IntData *data = runTimeCast<const IntData>( primitiveVariable.data.get() ) )
-		{
-			const int &intData = data->readable();
-			float *cdata = attr->data_float();
-
-			if( cdata )
-			{
-				*(cdata) = (float)intData;
-				return;
-			}
-		}
-
-		if( const V2fData *data = runTimeCast<const V2fData>( primitiveVariable.data.get() ) )
-		{
-			const Imath::V2f &v2fData = data->readable();
-			ccl::float2 *cdata = attr->data_float2();
-
-			if( cdata )
-			{
-				*(cdata) = ccl::make_float2( v2fData.x, v2fData.y );
-				return;
-			}
-		}
-
-		if( const V2iData *data = runTimeCast<const V2iData>( primitiveVariable.data.get() ) )
-		{
-			const Imath::V2i &v2iData = data->readable();
-			ccl::float2 *cdata = attr->data_float2();
-
-			if( cdata )
-			{
-				*(cdata) = ccl::make_float2( (float)v2iData.x, (float)v2iData.y );
-				return;
-			}
-		}
-
-		if( const V3fData *data = runTimeCast<const V3fData>( primitiveVariable.data.get() ) )
-		{
-			const Imath::V3f &v3fData = data->readable();
-			ccl::float3 *cdata = attr->data_float3();
-
-			if( cdata )
-			{
-				*(cdata) = SocketAlgo::setVector( v3fData );
-				return;
-			}
-		}
-
-		if( const V3iData *data = runTimeCast<const V3iData>( primitiveVariable.data.get() ) )
-		{
-			const Imath::V3i &v3iData = data->readable();
-			ccl::float3 *cdata = attr->data_float3();
-
-			if( cdata )
-			{
-				*(cdata) = ccl::make_float3( (float)v3iData.x, (float)v3iData.y, (float)v3iData.z );
-				return;
-			}
-		}
-
-		if( const Color3fData *data = runTimeCast<const Color3fData>( primitiveVariable.data.get() ) )
-		{
-			const Imath::Color3f &colorData = data->readable();
-			ccl::float3 *cdata = attr->data_float3();
-
-			if( cdata )
-			{
-				*(cdata) = SocketAlgo::setColor( colorData );
-				return;
-			}
-		}
-
-		if( const M44fData *data = runTimeCast<const M44fData>( primitiveVariable.data.get() ) )
-		{
-			const Imath::M44f &m44fData = data->readable();
-			ccl::Transform *cdata = attr->data_transform();
-
-			if( cdata )
-			{
-				*(cdata) = SocketAlgo::setTransform( m44fData );
-				return;
-			}
-		}
 	}
 }
 
