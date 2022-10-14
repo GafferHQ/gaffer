@@ -345,6 +345,10 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 	{
 		attr->std = ccl::ATTR_STD_VERTEX_NORMAL;
 	}
+	else if( name == "uv" && attr->type == ccl::TypeFloat2 )
+	{
+		attr->std = ccl::ATTR_STD_UV;
+	}
 }
 
 } // namespace GeometryAlgo

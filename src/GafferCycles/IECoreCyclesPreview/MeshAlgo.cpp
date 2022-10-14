@@ -58,15 +58,6 @@ using namespace IECoreCycles;
 namespace
 {
 
-std::array<std::string, 6> g_defautUVsetCandidates = { {
-	"st_0",
-	"st0",
-	"uv_0",
-	"uv0",
-	"st",
-	"uv",
-} };
-
 const BoolVectorData *getSmooth( const IECoreScene::MeshPrimitive *mesh )
 {
 	PrimitiveVariableMap::const_iterator it = mesh->variables.find( "_smooth" );
@@ -99,108 +90,6 @@ const IntVectorData *getFaceset( const IECoreScene::MeshPrimitive *mesh )
 
 	const IntVectorData *f = runTimeCast<const IntVectorData>( it->second.data.get() );
 	return f;
-}
-
-void convertUVSet( const string &uvSet, const IECoreScene::PrimitiveVariable &uvVariable, const IECoreScene::MeshPrimitive *mesh, ccl::AttributeSet &attributes, bool subdivision_uvs, bool defaultUV )//, ccl::Mesh *cmesh )
-{
-	size_t numFaces = mesh->numFaces();
-	const V2fVectorData *uvData = runTimeCast<V2fVectorData>( uvVariable.data.get() );
-
-	if( !uvData )
-	{
-		return;
-	}
-
-	if( uvVariable.interpolation != PrimitiveVariable::Varying && uvVariable.interpolation != PrimitiveVariable::Vertex && uvVariable.interpolation != PrimitiveVariable::FaceVarying )
-	{
-		msg(
-			Msg::Warning, "IECoreCycles::MeshAlgo::convertUVSet",
-			boost::format( "Variable \"%s\" has an invalid interpolation type - not generating uvs." ) % uvSet
-		);
-		return;
-	}
-
-	const vector<Imath::V2f> &uvs = uvData->readable();
-	const std::vector<int> &vertexIds = mesh->vertexIds()->readable();
-
-	ccl::Attribute *uv_attr = nullptr;
-	if( defaultUV )
-		uv_attr = attributes.add( ccl::ATTR_STD_UV, ccl::ustring(uvSet.c_str()) );
-	else
-		uv_attr = attributes.add( ccl::ustring(uvSet.c_str()), ccl::TypeFloat2, ccl::ATTR_ELEMENT_CORNER );
-	ccl::float2 *fdata = uv_attr->data_float2();
-
-	if( subdivision_uvs )
-		uv_attr->flags |= ccl::ATTR_SUBDIVIDED;
-
-	// We need to know how many verts there are
-	const vector<int> &vertsPerFace = mesh->verticesPerFace()->readable();
-
-	size_t vertex = 0;
-	if( uvVariable.indices )
-	{
-		const vector<int> &indices = uvVariable.indices->readable();
-
-		size_t numVerts = 0;
-		for( auto vert : vertsPerFace )
-		{
-			numVerts += vert;
-		}
-
-		if( ( indices.size() < numVerts ) && uvVariable.interpolation != PrimitiveVariable::Vertex )
-		{
-			msg(
-				Msg::Warning, "IECoreCycles::MeshAlgo::convertUVSet",
-				boost::format( "Variable \"%s\" has an invalid index size \"%d\" to vertex size \"%d\"." ) % uvSet % indices.size() % numVerts
-			);
-			attributes.remove( uv_attr );
-			return;
-		}
-
-		if( uvVariable.interpolation == PrimitiveVariable::Vertex )
-		{
-			for( size_t i = 0; i < numFaces; ++i )
-			{
-				for( int j = 0; j < vertsPerFace[i]; ++j, ++vertex )
-				{
-					*(fdata++) = ccl::make_float2(uvs[indices[vertexIds[vertex]]].x, uvs[indices[vertexIds[vertex]]].y);
-				}
-			}
-		}
-		else // FaceVarying/Varying
-		{
-			for( size_t i = 0; i < numFaces; ++i )
-			{
-				for( int j = 0; j < vertsPerFace[i]; ++j, ++vertex )
-				{
-					*(fdata++) = ccl::make_float2(uvs[indices[vertex]].x, uvs[indices[vertex]].y);
-				}
-			}
-		}
-	}
-	else
-	{
-		if( uvVariable.interpolation == PrimitiveVariable::Vertex )
-		{
-			for( size_t i = 0; i < numFaces; ++i )
-			{
-				for( int j = 0; j < vertsPerFace[i]; ++j, ++vertex )
-				{
-					*(fdata++) = ccl::make_float2(uvs[vertexIds[vertex]].x, uvs[vertexIds[vertex]].y);
-				}
-			}
-		}
-		else // FaceVarying/Varying
-		{
-			for( size_t i = 0; i < numFaces; ++i )
-			{
-				for( int j = 0; j < vertsPerFace[i]; ++j, ++vertex )
-				{
-					*(fdata++) = ccl::make_float2(uvs[vertex].x, uvs[vertex].y);
-				}
-			}
-		}
-	}
 }
 
 ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
@@ -349,9 +238,6 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 		}
 	}
 
-	// Primitive Variables are Attributes in Cycles
-	ccl::AttributeSet& attributes = (subdivision) ? cmesh->subd_attributes : cmesh->attributes;
-
 	// Convert primitive variables.
 	PrimitiveVariableMap variablesToConvert;
 	if( subdivision || triangles )
@@ -361,60 +247,6 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 	variablesToConvert.erase( "P" ); // P is already done.
 	variablesToConvert.erase( "_smooth" ); // Was already processed (if it existed)
 	variablesToConvert.erase( "_facesetIndex" );
-
-	// Find all UV sets and convert them explicitly.
-	PrimitiveVariableMap uvsets;
-	for( auto it = variablesToConvert.begin(); it != variablesToConvert.end(); )
-	{
-		if( const V2fVectorData *data = runTimeCast<const V2fVectorData>( it->second.data.get() ) )
-		{
-			if( ( data->getInterpretation() == GeometricData::UV ) ||
-				( data->getInterpretation() == GeometricData::Numeric ) )
-			{
-				uvsets[it->first] = it->second;
-				it = variablesToConvert.erase( it );
-			}
-			else
-			{
-				++it;
-			}
-		}
-		else
-		{
-			++it;
-		}
-	}
-	// Find the best candidate for the first UVset.
-	int rank = -1;
-	for( auto it = uvsets.begin(); it != uvsets.end(); )
-	{
-		for( int i = 0; i < (int)g_defautUVsetCandidates.size(); ++i )
-		{
-			if( it->first == g_defautUVsetCandidates[i] )
-			{
-				if( i > rank )
-				{
-					rank = i;
-				}
-			}
-		}
-		++it;
-	}
-	if( rank != -1 )
-	{
-		convertUVSet( g_defautUVsetCandidates[rank], uvsets[g_defautUVsetCandidates[rank]], ( subdivision || triangles ) ? mesh : trimesh.get(), attributes, subdivision, true );
-		uvsets.erase( g_defautUVsetCandidates[rank] );
-	}
-
-	for( auto it = uvsets.begin(); it != uvsets.end(); )
-	{
-		// If we didn't find a default UVset, the first one we find will be the one.
-		convertUVSet( it->first, it->second, ( subdivision || triangles ) ? mesh : trimesh.get(), attributes, subdivision, (rank == -1) ? true : false );
-		// Just set rank to not be -1 so that the next UVs are not converted as a default one.
-		rank = 0;
-		uvsets.erase( it );
-		++it;
-	}
 
 	// Finally, do a generic conversion of anything that remains.
 	for( const auto &[name, variable] : variablesToConvert )

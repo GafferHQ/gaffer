@@ -977,6 +977,60 @@ class RendererTest( GafferTest.TestCase ) :
 			maxDifference = 0.01
 		)
 
+	def testMeshUVs( self ) :
+
+		plane = IECoreScene.MeshPrimitive.createPlane(
+			imath.Box2f( imath.V2f( -0.5 ), imath.V2f( 0.5 ) ),
+			imath.V2i( 3 )
+		)
+
+		# Image UV coordinates of the center of particular faces.
+
+		topLeft = imath.V2f( 1/6.0, 1/6.0 )
+		topCenter = imath.V2f( 0.5, 1/6.0 )
+		center = imath.V2f( 0.5, 0.5 )
+		bottomRight = imath.V2f( 5/6.0 )
+
+		# Test FaceVarying
+
+		self.assertEqual(
+			plane["uv"].interpolation, IECoreScene.PrimitiveVariable.Interpolation.FaceVarying
+		)
+
+		self.__testPrimitiveVariableInterpolation(
+			plane, "uv",
+			{
+				topLeft : imath.Color4f( topLeft.x, topLeft.y, 0, 1 ),
+				topCenter : imath.Color4f( topCenter.x, topCenter.y, 0, 1 ),
+				center : imath.Color4f( center.x, center.y, 0, 1 ),
+				bottomRight : imath.Color4f( bottomRight.x, bottomRight.y, 0, 1 ),
+			},
+			maxDifference = 0.01
+		)
+
+		# Test Vertex
+
+		uv = plane["uv"]
+		IECoreScene.MeshAlgo.resamplePrimitiveVariable(
+			plane, uv, IECoreScene.PrimitiveVariable.Interpolation.Vertex
+		)
+		plane["uv"] = uv
+
+		self.assertEqual(
+			plane["uv"].interpolation, IECoreScene.PrimitiveVariable.Interpolation.Vertex
+		)
+
+		self.__testPrimitiveVariableInterpolation(
+			plane, "uv",
+			{
+				topLeft : imath.Color4f( topLeft.x, topLeft.y, 0, 1 ),
+				topCenter : imath.Color4f( topCenter.x, topCenter.y, 0, 1 ),
+				center : imath.Color4f( center.x, center.y, 0, 1 ),
+				bottomRight : imath.Color4f( bottomRight.x, bottomRight.y, 0, 1 ),
+			},
+			maxDifference = 0.01
+		)
+
 	def __colorAtUV( self, image, uv ) :
 
 		dimensions = image.dataWindow.size() + imath.V2i( 1 )
