@@ -95,6 +95,8 @@ class IECORE_EXPORT Loop : public ComputeNode
 		size_t m_outPlugIndex;
 		size_t m_firstPlugIndex;
 
+		Signals::Connection m_childAddedConnection;
+
 		void childAdded();
 		bool setupPlugs();
 

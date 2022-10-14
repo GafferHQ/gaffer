@@ -45,7 +45,6 @@
 
 #include <optional>
 
-
 namespace Gaffer::Signals
 {
 
@@ -169,21 +168,6 @@ Connection Signal<Result( Args... ), Combiner>::connectInternal( const SlotFunct
 }
 
 template<typename Result, typename... Args, typename Combiner>
-template<typename SlotFunctor>
-void Signal<Result( Args... ), Combiner>::disconnect( const SlotFunctor &slotFunctor )
-{
-	Private::SlotBase::Ptr slot = m_firstSlot;
-	while( slot != lastSlot() )
-	{
-		if( static_cast<Slot *>( slot.get() )->function == slotFunctor )
-		{
-			slot->disconnect();
-		}
-		slot = slot->next;
-	}
-};
-
-template<typename Result, typename... Args, typename Combiner>
 Result Signal<Result( Args... ), Combiner>::operator() ( Args... args ) const
 {
 	ArgsTuple argsTuple( args... ); /// \todo : Capture by reference? Or forward_as_tuple?
@@ -248,11 +232,7 @@ template<typename Result, typename... Args, typename Combiner>
 struct Signal<Result( Args... ), Combiner>::Slot : public Private::SlotBase
 {
 
-	/// \todo We'd like to use `std::function` here, but it doesn't support
-	/// equality comparison, which makes implementing
-	/// `Signal::disconnect( const SlotFunctor & )` hard to implement. Perhaps
-	/// it's achievable using `function::target_type` and `function::target`?
-	using FunctionType = boost::function<Result( Args... )>;
+	using FunctionType = std::function<Result( Args... )>;
 
 	Slot( Private::SlotBase::Ptr &previous, const FunctionType &function = FunctionType() )
 		: 	SlotBase( previous ), function( function )
@@ -273,7 +253,7 @@ struct Signal<Result( Args... ), Combiner>::Slot : public Private::SlotBase
 			// destruction of ScopedConnections for this slot, causing reentrant
 			// calls to `this->disconnect()`. We use `wasConnected` to protect
 			// against the double-clear this could otherwise cause.
-			function.clear();
+			function = nullptr;
 		}
 	}
 
@@ -300,7 +280,7 @@ struct Signal<Result( Args... ), Combiner>::Slot : public Private::SlotBase
 				// Slot was disconnected during call, and we couldn't
 				// clear the function while it was being called. Clear
 				// it now instead.
-				slot.function.clear();
+				slot.function = nullptr;
 			}
 		}
 		Slot &slot;

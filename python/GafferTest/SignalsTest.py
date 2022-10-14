@@ -588,14 +588,6 @@ class SignalsTest( GafferTest.TestCase ) :
 
 		self.assertFalse( connection.connected() )
 
-	def testDisconnectMatchingLambda( self ) :
-
-		GafferTest.testSignalDisconnectMatchingLambda()
-
-	def testDisconnectMatchingBind( self ) :
-
-		GafferTest.testSignalDisconnectMatchingBind()
-
 	def testSelfDisconnectingSlot( self ) :
 
 		GafferTest.testSignalSelfDisconnectingSlot()
