@@ -32,7 +32,6 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferCycles/IECoreCyclesPreview/AttributeAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/GeometryAlgo.h"
 
 #include "IECoreScene/MeshNormalsOp.h"
@@ -617,17 +616,17 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 		switch( variable.interpolation )
 		{
 			case PrimitiveVariable::Constant :
-				AttributeAlgo::convertPrimitiveVariable( name, variable, cmesh->attributes, ccl::ATTR_ELEMENT_MESH );
+				GeometryAlgo::convertPrimitiveVariable( name, variable, cmesh->attributes, ccl::ATTR_ELEMENT_MESH );
 				break;
 			case PrimitiveVariable::Uniform :
-				AttributeAlgo::convertPrimitiveVariable( name, variable, cmesh->attributes, ccl::ATTR_ELEMENT_FACE );
+				GeometryAlgo::convertPrimitiveVariable( name, variable, cmesh->attributes, ccl::ATTR_ELEMENT_FACE );
 				break;
 			case PrimitiveVariable::Vertex :
 			case PrimitiveVariable::Varying :
-				AttributeAlgo::convertPrimitiveVariable( name, variable, cmesh->attributes, ccl::ATTR_ELEMENT_VERTEX );
+				GeometryAlgo::convertPrimitiveVariable( name, variable, cmesh->attributes, ccl::ATTR_ELEMENT_VERTEX );
 				break;
 			case PrimitiveVariable::FaceVarying :
-				AttributeAlgo::convertPrimitiveVariable( name, variable, cmesh->attributes, ccl::ATTR_ELEMENT_CORNER );
+				GeometryAlgo::convertPrimitiveVariable( name, variable, cmesh->attributes, ccl::ATTR_ELEMENT_CORNER );
 				break;
 			default :
 				break;

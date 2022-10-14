@@ -32,7 +32,6 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferCycles/IECoreCyclesPreview/AttributeAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/GeometryAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/SocketAlgo.h"
 
@@ -89,7 +88,7 @@ ccl::PointCloud *convertCommon( const IECoreScene::SpherePrimitive *sphere )
 		{
 			case PrimitiveVariable::Constant :
 			case PrimitiveVariable::Uniform :
-				AttributeAlgo::convertPrimitiveVariable( name, variable, pointcloud->attributes, ccl::ATTR_ELEMENT_OBJECT );
+				GeometryAlgo::convertPrimitiveVariable( name, variable, pointcloud->attributes, ccl::ATTR_ELEMENT_OBJECT );
 			default :
 				// Other interpolation types define values for four corners
 				// of a quadric shape. Not supported by Cycle's point cloud.

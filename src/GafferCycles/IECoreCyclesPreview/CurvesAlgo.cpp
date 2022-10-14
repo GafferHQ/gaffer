@@ -32,7 +32,6 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferCycles/IECoreCyclesPreview/AttributeAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/GeometryAlgo.h"
 
 #include "IECoreScene/CurvesPrimitive.h"
@@ -115,13 +114,13 @@ ccl::Hair *convertCommon( const IECoreScene::CurvesPrimitive *curve )
 		switch( variable.interpolation )
 		{
 			case PrimitiveVariable::Constant :
-				AttributeAlgo::convertPrimitiveVariable( name, variable, hair->attributes, ccl::ATTR_ELEMENT_OBJECT );
+				GeometryAlgo::convertPrimitiveVariable( name, variable, hair->attributes, ccl::ATTR_ELEMENT_OBJECT );
 				break;
 			case PrimitiveVariable::Uniform :
-				AttributeAlgo::convertPrimitiveVariable( name, variable, hair->attributes, ccl::ATTR_ELEMENT_CURVE );
+				GeometryAlgo::convertPrimitiveVariable( name, variable, hair->attributes, ccl::ATTR_ELEMENT_CURVE );
 				break;
 			case PrimitiveVariable::Vertex :
-				AttributeAlgo::convertPrimitiveVariable( name, variable, hair->attributes, ccl::ATTR_ELEMENT_CURVE_KEY );
+				GeometryAlgo::convertPrimitiveVariable( name, variable, hair->attributes, ccl::ATTR_ELEMENT_CURVE_KEY );
 				break;
 			default :
 				// Varying and FaceVarying define values at the end of each cubic curve

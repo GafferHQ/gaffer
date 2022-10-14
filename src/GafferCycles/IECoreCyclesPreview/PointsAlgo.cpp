@@ -32,7 +32,6 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferCycles/IECoreCyclesPreview/AttributeAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/GeometryAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/SocketAlgo.h"
 
@@ -119,12 +118,12 @@ ccl::PointCloud *convertCommon( const IECoreScene::PointsPrimitive *points )
 		{
 			case PrimitiveVariable::Constant :
 			case PrimitiveVariable::Uniform :
-				AttributeAlgo::convertPrimitiveVariable( name, variable, pointcloud->attributes, ccl::ATTR_ELEMENT_OBJECT );
+				GeometryAlgo::convertPrimitiveVariable( name, variable, pointcloud->attributes, ccl::ATTR_ELEMENT_OBJECT );
 				break;
 			case PrimitiveVariable::Vertex :
 			case PrimitiveVariable::Varying :
 			case PrimitiveVariable::FaceVarying :
-				AttributeAlgo::convertPrimitiveVariable( name, variable, pointcloud->attributes, ccl::ATTR_ELEMENT_VERTEX );
+				GeometryAlgo::convertPrimitiveVariable( name, variable, pointcloud->attributes, ccl::ATTR_ELEMENT_VERTEX );
 				break;
 			default :
 				break;

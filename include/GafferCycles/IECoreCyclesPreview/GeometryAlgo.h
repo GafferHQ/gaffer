@@ -37,6 +37,8 @@
 
 #include "GafferCycles/IECoreCyclesPreview/Export.h"
 
+#include "IECoreScene/PrimitiveVariable.h"
+
 #include "IECore/Object.h"
 
 #include <vector>
@@ -59,6 +61,9 @@ IECORECYCLES_API ccl::Geometry *convert( const IECore::Object *object, const std
 /// As above, but converting a moving object. If no motion converter
 /// is available, the first sample is converted instead.
 IECORECYCLES_API ccl::Geometry *convert( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const int frame, const std::string &nodeName, ccl::Scene *scene = nullptr );
+
+/// Converts a primitive variable to a `ccl::Attribute` inside of a `ccl::AttributeSet`.
+IECORECYCLES_API void convertPrimitiveVariable( const std::string &name, const IECoreScene::PrimitiveVariable &primitiveVariable, ccl::AttributeSet &attributes, ccl::AttributeElement attributeElement );
 
 /// Signature of a function which can convert to `ccl:Geometry`.
 /// \todo There's really no need to pass the node name here, because it's not a unique handle that
