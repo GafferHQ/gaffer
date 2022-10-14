@@ -61,25 +61,7 @@ ccl::PointCloud *convertCommon( const IECoreScene::PointsPrimitive *points )
 	ccl::PointCloud *pointcloud = new ccl::PointCloud();
 
 	PrimitiveVariableMap variablesToConvert = points->variables;
-/*
-	pointcloud->set_point_style( ccl::POINT_CLOUD_POINT_SPHERE );
-	if( const StringData *typeData = points->variableData<StringData>( "type", PrimitiveVariable::Constant ) )
-	{
-		std::string type = typeData->readable();
-		if( type == "disk" || type == "particle" || type == "patch" )
-		{
-			if( variablesToConvert.find("N") != variablesToConvert.end() &&
-				points->variableData<V3fVectorData>( "N", PrimitiveVariable::Vertex ) )
-			{
-				pointcloud->set_point_style( ccl::POINT_CLOUD_POINT_DISC_ORIENTED );
-			}
-			else
-			{
-				pointcloud->set_point_style( ccl::POINT_CLOUD_POINT_DISC );
-			}
-		}
-	}
-*/
+
 	size_t numPoints = points->getNumPoints();
 	pointcloud->reserve( numPoints );
 

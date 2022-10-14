@@ -51,44 +51,6 @@ using namespace IECoreCycles;
 
 namespace
 {
-} // namespace
-
-//////////////////////////////////////////////////////////////////////////
-// Implementation of public API
-//////////////////////////////////////////////////////////////////////////
-
-namespace IECoreCycles
-
-{
-
-namespace AttributeAlgo
-
-{
-
-ccl::TypeDesc typeDesc( IECore::TypeId dataType )
-{
-	switch( dataType )
-	{
-		case FloatVectorDataTypeId :
-		case IntVectorDataTypeId :
-		case IntDataTypeId:
-			return ccl::TypeDesc::TypeFloat;
-		case Color3fVectorDataTypeId :
-		case Color4fVectorDataTypeId :
-			return ccl::TypeDesc::TypeColor;
-		case V2fVectorDataTypeId :
-		case V2iVectorDataTypeId :
-			return ccl::TypeFloat2;
-		case V3fVectorDataTypeId :
-		case V3iVectorDataTypeId :
-			return ccl::TypeDesc::TypeVector;
-		case M44fVectorDataTypeId :
-		case M44fDataTypeId :
-			return ccl::TypeDesc::TypeMatrix;
-		default :
-			return ccl::TypeDesc::TypeVector;
-	}
-}
 
 ccl::TypeDesc typeFromGeometricDataInterpretation( IECore::GeometricData::Interpretation dataType )
 {
@@ -111,73 +73,101 @@ ccl::TypeDesc typeFromGeometricDataInterpretation( IECore::GeometricData::Interp
 	}
 }
 
+ccl::TypeDesc typeDesc( const IECoreScene::PrimitiveVariable &primitiveVariable )
+{
+	switch( primitiveVariable.data->typeId() )
+	{
+		case FloatVectorDataTypeId :
+		case IntVectorDataTypeId :
+		case IntDataTypeId :
+			return ccl::TypeDesc::TypeFloat;
+		case Color3fVectorDataTypeId :
+			return ccl::TypeDesc::TypeColor;
+		case V2fVectorDataTypeId :
+		case V2iVectorDataTypeId :
+			return ccl::TypeFloat2;
+		case V3fVectorDataTypeId :
+			return typeFromGeometricDataInterpretation(
+				static_cast<const V3fVectorData *>( primitiveVariable.data.get() )->getInterpretation()
+			);
+		case V3iVectorDataTypeId :
+			return ccl::TypeDesc::TypeVector;
+		case M44fVectorDataTypeId :
+		case M44fDataTypeId :
+			return ccl::TypeDesc::TypeMatrix;
+		default :
+			return ccl::TypeDesc::UNKNOWN;
+	}
+}
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// Implementation of public API
+//////////////////////////////////////////////////////////////////////////
+
+namespace IECoreCycles
+{
+
+namespace AttributeAlgo
+{
+
 void convertPrimitiveVariable( const std::string &name, const IECoreScene::PrimitiveVariable &primitiveVariable, ccl::AttributeSet &attributes )
 {
-	IECore::TypeId dataType = primitiveVariable.data.get()->typeId();
-	if( dataType == StringDataTypeId )
+	// Create attribute.
+
+	const ccl::TypeDesc ctype = typeDesc( primitiveVariable );
+	if( ctype == ccl::TypeDesc::UNKNOWN )
 	{
-		//msg( Msg::Warning, "IECoreCyles::AttributeAlgo::convertPrimitiveVariable", boost::format( "Variable \"%s\" has unsupported type \"%s\"." ) % name % primitiveVariable.data->typeName() );
+		msg( Msg::Warning, "IECoreCyles::AttributeAlgo::convertPrimitiveVariable", boost::format( "Primitive variable \"%s\" has unsupported type \"%s\"." ) % name % primitiveVariable.data->typeName() );
 		return;
 	}
-	ccl::TypeDesc ctype = typeDesc( dataType );
-	ccl::Attribute *attr = nullptr;
-	if( name == "N" )
+
+	ccl::AttributeElement celem = ccl::ATTR_ELEMENT_NONE;
+	switch( primitiveVariable.interpolation )
 	{
-		attr = attributes.find( ccl::ATTR_STD_VERTEX_NORMAL );
-		if(!attr)
-			attr = attributes.add( ccl::ATTR_STD_VERTEX_NORMAL, ccl::ustring(name.c_str()) );
+		case PrimitiveVariable::Constant :
+			celem = ccl::ATTR_ELEMENT_MESH;
+			break;
+		case PrimitiveVariable::Vertex :
+			if( attributes.geometry->geometry_type == ccl::Geometry::HAIR )
+			{
+				celem = ccl::ATTR_ELEMENT_CURVE_KEY;
+			}
+			else
+			{
+				celem = ccl::ATTR_ELEMENT_VERTEX;
+			}
+			break;
+		case PrimitiveVariable::Varying :
+		case PrimitiveVariable::FaceVarying :
+			celem = ccl::ATTR_ELEMENT_CORNER;
+			break;
+		case PrimitiveVariable::Uniform :
+			celem = ccl::ATTR_ELEMENT_FACE;
+			break;
+		default :
+			break;
 	}
-	else if( name == "uv" )
+
+	ccl::Attribute *attr = attributes.add( ccl::ustring( name.c_str() ), ctype, celem );
+
+	// Tag as a standard attribute if possible. Note that we don't use `AttributeSet::add( AttributeStandard )`
+	// because that crashes for certain combinations of geometry type and attribute. But some of those "crashy"
+	// combinations are useful - see `RendererTest.testPointsWithNormals` for an example.
+	//
+	/// \todo Support more standard attributes here. Maybe then the geometry converters could
+	/// use `convertPrimitiveVariable()` for most data, instead of having
+	/// custom code paths for `P`, `uv` etc?
+
+	if( name == "N" && attr->element == ccl::ATTR_ELEMENT_VERTEX && attr->type == ccl::TypeDesc::TypeNormal )
 	{
-		attr = attributes.find( ccl::ATTR_STD_UV );
-		if(!attr)
-			attr = attributes.add( ccl::ATTR_STD_UV, ccl::ustring(name.c_str()) );
+		attr->std = ccl::ATTR_STD_VERTEX_NORMAL;
 	}
-	else if( name == "uTangent" )
-	{
-		attr = attributes.find( ccl::ATTR_STD_UV_TANGENT );
-		if(!attr)
-			attr = attributes.add( ccl::ATTR_STD_UV_TANGENT, ccl::ustring(name.c_str()) );
-	}
-	else
-	{
-		if( ctype != ccl::TypeDesc::TypeFloat )
-		{
-			// We need to determine what kind of vector it is
-			const V3fVectorData *data = runTimeCast<const V3fVectorData>( primitiveVariable.data.get() );
-			if( data )
-				ctype = typeFromGeometricDataInterpretation( data->getInterpretation() );
-		}
-		ccl::AttributeElement celem = ccl::ATTR_ELEMENT_NONE;
-		switch( primitiveVariable.interpolation )
-		{
-			case PrimitiveVariable::Constant :
-				celem = ccl::ATTR_ELEMENT_MESH;
-				break;
-			case PrimitiveVariable::Vertex :
-				if( attributes.geometry->geometry_type == ccl::Geometry::HAIR )
-				{
-					celem = ccl::ATTR_ELEMENT_CURVE_KEY;
-				}
-				else
-				{
-					celem = ccl::ATTR_ELEMENT_VERTEX;
-				}
-				break;
-			case PrimitiveVariable::Varying :
-			case PrimitiveVariable::FaceVarying :
-				celem = ccl::ATTR_ELEMENT_CORNER;
-				break;
-			case PrimitiveVariable::Uniform :
-				celem = ccl::ATTR_ELEMENT_FACE;
-				break;
-			default :
-				break;
-		}
-		attr = attributes.find( ccl::ustring(name.c_str()) );
-		if( !attr )
-			attr = attributes.add( ccl::ustring(name.c_str()), ctype, celem );
-	}
+
+	// Fill attribute with data
+	/// \todo I suspect there are only really two cases here : either we need to `memcpy()` some floats or
+	/// we need to convert some ints to floats. I don't think we need all these conditionals.
 
 	if( primitiveVariable.interpolation != PrimitiveVariable::Constant && ctype == ccl::TypeDesc::TypeFloat )
 	{
@@ -213,9 +203,6 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 			}
 		}
 
-		msg( Msg::Warning, "IECoreCyles::AttributeAlgo::convertPrimitiveVariable", boost::format( "Variable \"%s\" has unsupported type \"%s\" (expected FloatVectorData or IntVectorData)." ) % name % primitiveVariable.data->typeName() );
-		attributes.remove( attr );
-		return;
 	}
 	else if( primitiveVariable.interpolation != PrimitiveVariable::Constant )
 	{
@@ -294,8 +281,6 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 			}
 		}
 
-		msg( Msg::Warning, "IECoreCyles::AttributeAlgo::convertPrimitiveVariable", boost::format( "Variable \"%s\" has unsupported type \"%s\" (expected V3fVectorData, Color3fVectorData or V2fVectorData)." ) % name % primitiveVariable.data->typeName() );
-		attributes.remove( attr );
 		return;
 	}
 	else if( primitiveVariable.interpolation == PrimitiveVariable::Constant )
@@ -395,10 +380,6 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 				return;
 			}
 		}
-
-		msg( Msg::Warning, "IECoreCyles::AttributeAlgo::convertPrimitiveVariable", boost::format( "Variable \"%s\" has unsupported type \"%s\" (expected FloatData, IntData, V3fData, Color3fData or M44fData)." ) % name % primitiveVariable.data->typeName() );
-		attributes.remove( attr );
-		return;
 	}
 }
 
