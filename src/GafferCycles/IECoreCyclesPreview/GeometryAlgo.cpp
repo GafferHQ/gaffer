@@ -175,7 +175,7 @@ ccl::Attribute *convertTypedPrimitiveVariable( const std::string &name, const Pr
 	else
 	{
 		// All other cases, (including int to float conversion) are a simple element-by-element copy.
-		std::copy( data->baseReadable(), data->baseReadable() + data->baseSize(), attribute->data_float() );
+		std::copy( data->baseReadable(), data->baseReadable() + data->baseSize(), (float *)attribute->data() );
 	}
 
 	return attribute;
