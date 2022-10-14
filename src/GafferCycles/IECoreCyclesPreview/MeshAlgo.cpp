@@ -34,7 +34,6 @@
 
 #include "GafferCycles/IECoreCyclesPreview/GeometryAlgo.h"
 
-#include "IECoreScene/MeshNormalsOp.h"
 #include "IECoreScene/MeshPrimitive.h"
 #include "IECoreScene/MeshAlgo.h"
 
@@ -61,22 +60,28 @@ namespace
 ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 {
 	assert( mesh->typeId() == IECoreScene::MeshPrimitive::staticTypeId() );
+
+	// Triangulate if necessary
+
+	ConstMeshPrimitivePtr triangulatedMesh;
+	if( mesh->interpolation() != "catmullClark" && mesh->maxVerticesPerFace() > 3 )
+	{
+		// Polygon meshes in Cycles must consist of triangles only.
+		triangulatedMesh = MeshAlgo::triangulate( mesh );
+		mesh = triangulatedMesh.get();
+	}
+
+	// Convert topology and points
+
 	ccl::Mesh *cmesh = new ccl::Mesh();
 
-	bool subdivision = false;
-	bool triangles = ( mesh->maxVerticesPerFace() == 3 ) ? true : false;
-
-	// If we need to convert
-	MeshPrimitivePtr trimesh;
-
-	if( ( mesh->interpolation() == "catmullClark" ) )//|| !triangles )
+	if( mesh->interpolation() == "catmullClark" )
 	{
 		const size_t numFaces = mesh->numFaces();
 		const V3fVectorData *p = mesh->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
 		const vector<Imath::V3f> &points = p->readable();
 		const vector<int> &vertexIds = mesh->vertexIds()->readable();
 		const size_t numVerts = points.size();
-		subdivision = true;
 		cmesh->set_subdivision_type( (mesh->interpolation() == "catmullClark") ? ccl::Mesh::SUBDIVISION_CATMULL_CLARK : ccl::Mesh::SUBDIVISION_LINEAR );
 
 		cmesh->reserve_mesh( numVerts, numFaces );
@@ -141,60 +146,33 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 	{
 		cmesh->set_subdivision_type( (mesh->interpolation() == "linear") ? ccl::Mesh::SUBDIVISION_LINEAR : ccl::Mesh::SUBDIVISION_NONE );
 
-		if( !triangles )
-		{
-			// triangulate primitive
-			trimesh = IECoreScene::MeshAlgo::triangulate( mesh );
-			const V3fVectorData *p = trimesh->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
-			const vector<Imath::V3f> &points = p->readable();
-			const size_t numVerts = points.size();
-			const std::vector<int> &triVertexIds = trimesh->vertexIds()->readable();
+		const V3fVectorData *p = mesh->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
+		const vector<Imath::V3f> &points = p->readable();
+		const size_t numVerts = points.size();
+		const std::vector<int> &vertexIds = mesh->vertexIds()->readable();
 
-			const size_t triNumFaces = trimesh->numFaces();
-			cmesh->reserve_mesh( numVerts, triNumFaces );
+		const size_t numFaces = mesh->numFaces();
+		cmesh->reserve_mesh( numVerts, numFaces );
 
-			for( size_t i = 0; i < numVerts; i++ )
-				cmesh->add_vertex( ccl::make_float3( points[i].x, points[i].y, points[i].z ) );
+		for( size_t i = 0; i < numVerts; i++ )
+			cmesh->add_vertex( ccl::make_float3( points[i].x, points[i].y, points[i].z ) );
 
-			int faceOffset = 0;
-			for( size_t i = 0; i < triVertexIds.size(); i+= 3, ++faceOffset )
-				cmesh->add_triangle(
-					triVertexIds[i], triVertexIds[i+1], triVertexIds[i+2],
-					/* shader = */ 0, /* smooth = */ true
-				);
-		}
-		else
-		{
-			const size_t numFaces = mesh->numFaces();
-			const V3fVectorData *p = mesh->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
-			const vector<Imath::V3f> &points = p->readable();
-			const vector<int> &vertexIds = mesh->vertexIds()->readable();
-			const size_t numVerts = points.size();
-			cmesh->reserve_mesh(numVerts, numFaces);
-
-			for( size_t i = 0; i < numVerts; i++ )
-				cmesh->add_vertex( ccl::make_float3( points[i].x, points[i].y, points[i].z ) );
-
-			int faceOffset = 0;
-			for( size_t i = 0; i < vertexIds.size(); i+= 3, ++faceOffset )
-				cmesh->add_triangle(
-					vertexIds[i], vertexIds[i+1], vertexIds[i+2],
-					/* shader = */ 0, /* smooth = */ true
-				);
-		}
+		for( size_t i = 0; i < vertexIds.size(); i+= 3 )
+			cmesh->add_triangle(
+				vertexIds[i], vertexIds[i+1], vertexIds[i+2],
+				/* shader = */ 0, /* smooth = */ true
+			);
 	}
 
 	// Convert primitive variables.
-	PrimitiveVariableMap variablesToConvert;
-	if( subdivision || triangles )
-		variablesToConvert = mesh->variables;
-	else
-		variablesToConvert = trimesh->variables;
-	variablesToConvert.erase( "P" ); // P is already done.
 
-	// Finally, do a generic conversion of anything that remains.
-	for( const auto &[name, variable] : variablesToConvert )
+	for( const auto &[name, variable] : mesh->variables )
 	{
+		if( name == "P" )
+		{
+			// Converted above already
+			continue;
+		}
 		switch( variable.interpolation )
 		{
 			case PrimitiveVariable::Constant :
