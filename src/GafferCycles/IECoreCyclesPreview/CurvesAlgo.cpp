@@ -33,7 +33,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GafferCycles/IECoreCyclesPreview/AttributeAlgo.h"
-#include "GafferCycles/IECoreCyclesPreview/ObjectAlgo.h"
+#include "GafferCycles/IECoreCyclesPreview/GeometryAlgo.h"
 
 #include "IECoreScene/CurvesPrimitive.h"
 
@@ -117,15 +117,14 @@ ccl::Hair *convertCommon( const IECoreScene::CurvesPrimitive *curve )
 	return hair;
 }
 
-ccl::Object *convert( const IECoreScene::CurvesPrimitive *curve, const std::string &nodeName, ccl::Scene *scene )
+ccl::Geometry *convert( const IECoreScene::CurvesPrimitive *curve, const std::string &nodeName, ccl::Scene *scene )
 {
-	ccl::Object *cobject = new ccl::Object();
-	cobject->set_geometry( convertCommon( curve ) );
-	cobject->name = ccl::ustring(nodeName.c_str());
-	return cobject;
+	ccl::Hair *hair = convertCommon( curve );
+	hair->name = ccl::ustring( nodeName.c_str() );
+	return hair;
 }
 
-ccl::Object *convert( const vector<const IECoreScene::CurvesPrimitive *> &curves, const std::vector<float> &times, const int frameIdx, const std::string &nodeName, ccl::Scene *scene )
+ccl::Geometry *convert( const vector<const IECoreScene::CurvesPrimitive *> &curves, const std::vector<float> &times, const int frameIdx, const std::string &nodeName, ccl::Scene *scene )
 {
 	const int numSamples = curves.size();
 
@@ -233,12 +232,10 @@ ccl::Object *convert( const vector<const IECoreScene::CurvesPrimitive *> &curves
 	}
 	mP = attr_mP->data_float3();
 
-	ccl::Object *cobject = new ccl::Object();
-	cobject->set_geometry( hair );
-	cobject->name = ccl::ustring(nodeName.c_str());
-	return cobject;
+	hair->name = ccl::ustring( nodeName.c_str() );
+	return hair;
 }
 
-ObjectAlgo::ConverterDescription<CurvesPrimitive> g_description( convert, convert );
+GeometryAlgo::ConverterDescription<CurvesPrimitive> g_description( convert, convert );
 
 } // namespace

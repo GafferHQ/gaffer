@@ -396,6 +396,22 @@ class RendererTest( GafferTest.TestCase ) :
 
 		del o
 
+		# Likewise for CoordinateSystems and NullObjects.
+
+		o = renderer.object(
+			"/coordinateSystem",
+			IECoreScene.CoordinateSystem(),
+			renderer.attributes( IECore.CompoundObject ( {} ) )
+		)
+		del o
+
+		o = renderer.object(
+			"/nullObject",
+			IECore.NullObject.defaultNullObject(),
+			renderer.attributes( IECore.CompoundObject ( {} ) )
+		)
+		del o
+
 	def testDisplayDriverCropWindow( self ) :
 
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(

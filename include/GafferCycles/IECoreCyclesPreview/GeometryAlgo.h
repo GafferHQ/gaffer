@@ -32,8 +32,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef IECORECYCLES_OBJECTALGO_H
-#define IECORECYCLES_OBJECTALGO_H
+#ifndef IECORECYCLES_GEOMETRYALGO_H
+#define IECORECYCLES_GEOMETRYALGO_H
 
 #include "GafferCycles/IECoreCyclesPreview/Export.h"
 
@@ -43,7 +43,7 @@
 
 // Cycles
 IECORE_PUSH_DEFAULT_VISIBILITY
-#include "scene/object.h"
+#include "scene/geometry.h"
 // Currently only VDBs need scene to get to the image manager
 #include "scene/scene.h"
 IECORE_POP_DEFAULT_VISIBILITY
@@ -51,24 +51,23 @@ IECORE_POP_DEFAULT_VISIBILITY
 namespace IECoreCycles
 {
 
-namespace ObjectAlgo
+namespace GeometryAlgo
 {
 
-/// A Cycles 'Object' is not necessarily a global thing for all objects, hence why Camera and Lights
-/// are treated separately. They all however subclass from ccl::Node so they all are compatible with
-/// Cycles' internal Node/Socket API to form connections or apply parameters.
-
-/// Converts the specified IECore::Object into a ccl::Object.
-IECORECYCLES_API ccl::Object *convert( const IECore::Object *object, const std::string &nodeName, ccl::Scene *scene = nullptr );
+/// Converts the specified `IECore::Object` into `ccl::Geometry`.
+IECORECYCLES_API ccl::Geometry *convert( const IECore::Object *object, const std::string &nodeName, ccl::Scene *scene = nullptr );
 /// As above, but converting a moving object. If no motion converter
 /// is available, the first sample is converted instead.
-IECORECYCLES_API ccl::Object *convert( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const int frame, const std::string &nodeName, ccl::Scene *scene = nullptr );
+IECORECYCLES_API ccl::Geometry *convert( const std::vector<const IECore::Object *> &samples, const std::vector<float> &times, const int frame, const std::string &nodeName, ccl::Scene *scene = nullptr );
 
-/// Signature of a function which can convert into a Cycles Object.
-using Converter = ccl::Object *(*)( const IECore::Object *, const std::string &, ccl::Scene * );
+/// Signature of a function which can convert to `ccl:Geometry`.
+/// \todo There's really no need to pass the node name here, because it's not a unique handle that
+/// needs to be provided when creating the Geometry (like it is in Arnold). The caller can just set the name
+/// afterwards if they want to.
+using Converter = ccl::Geometry *(*)( const IECore::Object *, const std::string &, ccl::Scene * );
 /// Signature of a function which can convert a series of IECore::Object
-/// samples into a moving Cycles object.
-using MotionConverter = ccl::Object *(*)( const std::vector<const IECore::Object *> &, const std::vector<float> &, const int, const std::string &, ccl::Scene * );
+/// samples into a moving `ccl:Geometry` object.
+using MotionConverter = ccl::Geometry *(*)( const std::vector<const IECore::Object *> &, const std::vector<float> &, const int, const std::string &, ccl::Scene * );
 
 /// Registers a converter for a specific type.
 /// Use the ConverterDescription utility class in preference to
@@ -84,22 +83,22 @@ class ConverterDescription
 	public :
 
 		/// Type-specific conversion functions.
-		using Converter = ccl::Object *(*)( const T *, const std::string &, ccl::Scene * );
-		using MotionConverter = ccl::Object *(*)( const std::vector<const T *> &, const std::vector<float> &, const int, const std::string &, ccl::Scene * );
+		using Converter = ccl::Geometry *(*)( const T *, const std::string &, ccl::Scene * );
+		using MotionConverter = ccl::Geometry *(*)( const std::vector<const T *> &, const std::vector<float> &, const int, const std::string &, ccl::Scene * );
 
 		ConverterDescription( Converter converter, MotionConverter motionConverter = nullptr )
 		{
 			registerConverter(
 				T::staticTypeId(),
-				reinterpret_cast<ObjectAlgo::Converter>( converter ),
-				reinterpret_cast<ObjectAlgo::MotionConverter>( motionConverter )
+				reinterpret_cast<GeometryAlgo::Converter>( converter ),
+				reinterpret_cast<GeometryAlgo::MotionConverter>( motionConverter )
 			);
 		}
 
 };
 
-} // namespace ObjectAlgo
+} // namespace GeometryAlgo
 
 } // namespace IECoreCycles
 
-#endif // IECORECYCLES_OBJECTALGO_H
+#endif // IECORECYCLES_GEOMETRYALGO_H
