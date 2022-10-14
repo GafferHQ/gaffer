@@ -326,8 +326,12 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 			break;
 		default :
 			msg( Msg::Warning, "IECoreCyles::GeometryAlgo::convertPrimitiveVariable", boost::format( "Primitive variable \"%s\" has unsupported type \"%s\"." ) % name % primitiveVariable.data->typeName() );
-			return;
 	};
+
+	if( !attr )
+	{
+		return;
+	}
 
 	// Tag as a standard attribute if possible. Note that we don't use `AttributeSet::add( AttributeStandard )`
 	// because that crashes for certain combinations of geometry type and attribute. But some of those "crashy"
