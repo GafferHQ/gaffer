@@ -77,12 +77,13 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 
 	if( mesh->interpolation() == "catmullClark" )
 	{
+		cmesh->set_subdivision_type( ccl::Mesh::SUBDIVISION_CATMULL_CLARK );
+
 		const size_t numFaces = mesh->numFaces();
 		const V3fVectorData *p = mesh->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
 		const vector<Imath::V3f> &points = p->readable();
 		const vector<int> &vertexIds = mesh->vertexIds()->readable();
 		const size_t numVerts = points.size();
-		cmesh->set_subdivision_type( (mesh->interpolation() == "catmullClark") ? ccl::Mesh::SUBDIVISION_CATMULL_CLARK : ccl::Mesh::SUBDIVISION_LINEAR );
 
 		cmesh->reserve_mesh( numVerts, numFaces );
 		for( size_t i = 0; i < numVerts; i++ )
