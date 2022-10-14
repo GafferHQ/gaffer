@@ -88,6 +88,21 @@ size_t dataSize( const TypedData<T> *data )
 template<typename T>
 ccl::Attribute *convertTypedPrimitiveVariable( const std::string &name, const PrimitiveVariable &primitiveVariable, ccl::AttributeSet &attributes, ccl::TypeDesc typeDesc, ccl::AttributeElement attributeElement )
 {
+	// Get the data to convert, expanding indexed data if necessary, since Cycles doesn't support it
+	// natively.
+
+	const T *data;
+	typename T::Ptr expandedData;
+	if( primitiveVariable.indices )
+	{
+		expandedData = boost::static_pointer_cast<T>( primitiveVariable.expandedData() );
+		data = expandedData.get();
+	}
+	else
+	{
+		data = static_cast<const T *>( primitiveVariable.data.get() );
+	}
+
 	// Create attribute. Cycles will allocate a buffer based on `attributeElement` and the information
 	// `attributes.geometry` contains.
 
@@ -95,7 +110,6 @@ ccl::Attribute *convertTypedPrimitiveVariable( const std::string &name, const Pr
 
 	// Sanity check the size of the buffer, so we don't run off the end when copying our data into it.
 
-	const T *data = static_cast<const T *>( primitiveVariable.data.get() );
 	const size_t expectedSize = attribute->element_size( attributes.geometry, attributes.prim );
 	if( dataSize( data ) != expectedSize )
 	{

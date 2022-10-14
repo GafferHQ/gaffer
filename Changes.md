@@ -26,6 +26,7 @@ Fixes
   - Fixed crash rendering a PointPrimitive with `N` primitive variable (#4876).
   - Fixed handling of `Varying` primitive variable interpolation (#4849).
   - Fixed handling of `Constant Color3f` primitive variables.
+  - Fixed handling of indexed primitive variables.
 - PathFilter : Fixed error when selecting a path element from a promoted `PathFilter.paths` plug (introduced in 0.61.13.0).
 
 API

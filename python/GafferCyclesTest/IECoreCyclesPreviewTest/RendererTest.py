@@ -698,6 +698,15 @@ class RendererTest( GafferTest.TestCase ) :
 			] )
 		)
 
+		plane["uniformIndexedColor"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Uniform,
+			IECore.Color3fVectorData( [ imath.Color3f( 1, 0, 0 ), imath.Color3f( 0, 1, 0 ) ] ),
+			IECore.IntVectorData( [
+				i % 2
+				for i in range( 0, plane.variableSize( IECoreScene.PrimitiveVariable.Interpolation.Uniform ) )
+			] )
+		)
+
 		plane["vertexColor"] = IECoreScene.PrimitiveVariable(
 			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
 			IECore.Color3fVectorData( [
@@ -746,6 +755,16 @@ class RendererTest( GafferTest.TestCase ) :
 				topCenter : imath.Color4f( 1, 1, 1, 1 ),
 				center : imath.Color4f( 4, 4, 4, 1 ),
 				bottomRight : imath.Color4f( 8, 8, 8, 1 ),
+			}
+		)
+
+		self.__testPrimitiveVariableInterpolation(
+			plane, "uniformIndexedColor",
+			{
+				topLeft : imath.Color4f( 1, 0, 0, 1 ),
+				topCenter : imath.Color4f( 0, 1, 0, 1 ),
+				center : imath.Color4f( 1, 0, 0, 1 ),
+				bottomRight : imath.Color4f( 1, 0, 0, 1 ),
 			}
 		)
 
