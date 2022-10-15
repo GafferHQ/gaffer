@@ -119,6 +119,10 @@ class PlugLayout( GafferUI.Widget ) :
 		# since our layout is driven by metadata, we must respond dynamically
 		# to changes in that metadata.
 		Gaffer.Metadata.plugValueChangedSignal( self.__node() ).connect( Gaffer.WeakMethod( self.__plugMetadataChanged ), scoped = False )
+		if isinstance( self.__parent, Gaffer.Node ) :
+			Gaffer.Metadata.nodeValueChangedSignal( self.__parent ).connect(
+				Gaffer.WeakMethod( self.__nodeMetadataChanged ), scoped = False
+			)
 
 		# and since our activations are driven by plug values, we must respond
 		# when the plugs are dirtied.
@@ -545,22 +549,30 @@ class PlugLayout( GafferUI.Widget ) :
 
 	def __plugMetadataChanged( self, plug, key, reason ) :
 
-		if plug != self.__parent and plug.parent() != self.__parent :
-			return
+		if plug.parent() == self.__parent :
+			if key in (
+				"divider",
+				self.__layoutName + ":divider",
+				self.__layoutName + ":index",
+				self.__layoutName + ":section",
+				self.__layoutName + ":accessory",
+				"plugValueWidget:type"
+			) :
+				# We often see sequences of several metadata changes, so
+				# we schedule a lazy update to batch them into one UI update.
+				self.__layoutDirty = True
+				self.__updateLazily()
+		elif plug == self.__parent :
+			self.__parentMetadataChanged( key )
 
-		if key in (
-			"divider",
-			self.__layoutName + ":divider",
-			self.__layoutName + ":index",
-			self.__layoutName + ":section",
-			self.__layoutName + ":accessory",
-			"plugValueWidget:type"
-		) :
-			# we often see sequences of several metadata changes - so
-			# we schedule a lazy update to batch them into one ui update.
-			self.__layoutDirty = True
-			self.__updateLazily()
-		elif re.match( self.__layoutName + ":section:.*:summary", key ) :
+	def __nodeMetadataChanged( self, node, key, reason ) :
+
+		assert( node == self.__parent )
+		self.__parentMetadataChanged( key )
+
+	def __parentMetadataChanged( self, key ) :
+
+		if re.match( self.__layoutName + ":section:.*:summary", key ) :
 			self.__summariesDirty = True
 			self.__updateLazily()
 

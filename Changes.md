@@ -100,6 +100,14 @@ Breaking Changes
 - ImagePlug : Removed unused `viewName` argument from `viewNames()` and `viewNamesHash()` methods.
 - StandardAttributes : Removed backwards compatibility for StandardAttributes nodes saved from Gaffer `0.95.0` (May 2014) and earlier. If necessary, resave affected files using a recent Gaffer version.
 
+1.0.6.x (relative to 1.0.6.0)
+=======
+
+Fixes
+-----
+
+- NodeEditor : Fixed updated of section summaries when they are changed in the UI Editor.
+
 1.0.6.0 (relative to 1.0.5.1)
 =======
 
