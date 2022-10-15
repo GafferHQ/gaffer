@@ -145,8 +145,6 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 	}
 	else
 	{
-		cmesh->set_subdivision_type( (mesh->interpolation() == "linear") ? ccl::Mesh::SUBDIVISION_LINEAR : ccl::Mesh::SUBDIVISION_NONE );
-
 		const V3fVectorData *p = mesh->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
 		const vector<Imath::V3f> &points = p->readable();
 		const size_t numVerts = points.size();
