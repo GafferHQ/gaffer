@@ -68,10 +68,7 @@ def __ocioConfig( plug ) :
 
 def __roles( config ) :
 
-	result = []
-	for i in range( 0, config.getNumRoles() ) :
-		result.append( config.getRoleName( i ) )
-	return result
+	return [ r[0] for r in config.getRoles() ]
 
 def __colorSpaces( config ) :
 
