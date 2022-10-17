@@ -83,7 +83,6 @@ const InternedString g_transformBlurOptionName( "option:render:transformBlur" );
 const InternedString g_deformationBlurOptionName( "option:render:deformationBlur" );
 
 const InternedString g_visibleAttributeName( "scene:visible" );
-const InternedString g_setsAttributeName( "sets" );
 const InternedString g_rendererContextName( "scene:renderer" );
 
 bool visible( const CompoundObject *attributes )
@@ -696,9 +695,7 @@ class RenderController::SceneGraph
 
 		bool updateRenderSets( const ScenePlug::ScenePath &path, const Private::RendererAlgo::RenderSets &renderSets )
 		{
-			m_fullAttributes->members()[g_setsAttributeName] = boost::const_pointer_cast<InternedStringVectorData>(
-				renderSets.setsAttribute( path )
-			);
+			renderSets.attributes( m_fullAttributes->members(), path );
 			m_attributesInterface = nullptr;
 			return true;
 		}

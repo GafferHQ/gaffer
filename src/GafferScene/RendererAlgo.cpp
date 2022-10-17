@@ -420,6 +420,7 @@ namespace
 InternedString g_camerasSetName( "__cameras" );
 InternedString g_lightsSetName( "__lights" );
 InternedString g_lightFiltersSetName( "__lightFilters" );
+InternedString g_setsAttributeName( "sets" );
 std::string g_renderSetsPrefix( "render:" );
 ConstInternedStringVectorDataPtr g_emptySetsAttribute = new InternedStringVectorData;
 
@@ -461,7 +462,7 @@ struct RenderSets::Updater
 				Sets::iterator it = m_renderSets.m_sets.begin() + i;
 				s = &(it->second);
 				n = it->first;
-				potentialChange = RenderSetsChanged;
+				potentialChange = AttributesChanged;
 			}
 			else if( i == m_renderSets.m_sets.size() )
 			{
@@ -547,7 +548,7 @@ unsigned RenderSets::update( const ScenePlug *scene )
 		if( std::find( setNames.begin(), setNames.end(), it->first ) == setNames.end() )
 		{
 			it = m_sets.erase( it );
-			changed |= RenderSetsChanged;
+			changed |= AttributesChanged;
 		}
 		else
 		{
@@ -610,6 +611,13 @@ ConstInternedStringVectorDataPtr RenderSets::setsAttribute( const std::vector<IE
 		}
 	}
 	return resultData ? resultData : g_emptySetsAttribute;
+}
+
+void RenderSets::attributes( CompoundObject::ObjectMap &attributes, const ScenePlug::ScenePath &path ) const
+{
+	IECore::ConstInternedStringVectorDataPtr setsAttribute = this->setsAttribute( path );
+
+	attributes[g_setsAttributeName] = boost::const_pointer_cast<InternedStringVectorData>( setsAttribute );
 }
 
 } // namespace RendererAlgo
@@ -958,7 +966,6 @@ const InternedString g_transformBlurOptionName( "option:render:transformBlur" );
 const InternedString g_deformationBlurOptionName( "option:render:deformationBlur" );
 const InternedString g_shutterOptionName( "option:render:shutter" );
 
-InternedString g_setsAttributeName( "sets" );
 InternedString g_visibleAttributeName( "scene:visible" );
 
 IECore::InternedString optionName( const IECore::InternedString &globalsName )
@@ -1078,10 +1085,14 @@ struct LocationOutput
 
 		void updateAttributes( const ScenePlug *scene, const ScenePlug::ScenePath &path )
 		{
-			IECore::ConstCompoundObjectPtr attributes = scene->attributesPlug()->getValue();
-			IECore::ConstInternedStringVectorDataPtr setsAttribute = m_renderSets.setsAttribute( path );
+			ConstCompoundObjectPtr attributes = scene->attributesPlug()->getValue();
+			CompoundObjectPtr processedAttributes = new CompoundObject;
 
-			if( attributes->members().empty() && !setsAttribute )
+			processedAttributes->members() = attributes->members();
+
+			m_renderSets.attributes( processedAttributes->members(), path );
+
+			if( processedAttributes->members().empty() )
 			{
 				return;
 			}
@@ -1089,14 +1100,9 @@ struct LocationOutput
 			IECore::CompoundObjectPtr updatedAttributes = new IECore::CompoundObject;
 			updatedAttributes->members() = m_attributes->members();
 
-			for( CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; ++it )
+			for( const auto &a : processedAttributes->members() )
 			{
-				updatedAttributes->members()[it->first] = it->second;
-			}
-
-			if( setsAttribute )
-			{
-				updatedAttributes->members()[g_setsAttributeName] = boost::const_pointer_cast<InternedStringVectorData>( setsAttribute );
+				updatedAttributes->members()[a.first] = a.second;
 			}
 
 			m_attributes = updatedAttributes;
