@@ -51,7 +51,40 @@ inline PathMatcher::Result VisibleSet::match( const ScenePlug::ScenePath &path )
 		return PathMatcher::Result::NoMatch;
 	}
 
-	return (PathMatcher::Result)( ( expansions.match( path ) & PathMatcher::ExactMatch ) | inclusions.match( path ) );
+	unsigned result = PathMatcher::NoMatch;
+	result |= inclusions.match( path );
+	if( result & PathMatcher::AncestorMatch )
+	{
+		// An ancestor in inclusions will cause this path to be visible so ensure that ExactMatch is also set
+		result |= PathMatcher::ExactMatch;
+	}
+
+	/// \todo For compatibility with existing RenderController behaviour we are returning an ExactMatch
+	/// only for locations that are expanded, rather than locations that are _visible_ as a result of expansion,
+	/// as that would currently result in an unnecessary additional level of expansion. This will be addressed as
+	/// part of future RenderController changes allowing for independent visibility of sibling locations.
+	const unsigned expansionsMatch = expansions.match( path );
+	if( expansionsMatch & PathMatcher::ExactMatch )
+	{
+		if( path.size() > 1 )
+		{
+			std::vector<InternedString> parentPath = path; parentPath.pop_back();
+			// Expansions also require an expanded parent to be visible
+			/// \todo This would be improved by testing all ancestors rather than only the immediate parent.
+			/// We'll need to consider how to handle `/` as the root location is implicitly expanded and would
+			/// need to be present in expansions for a successful AllAncestorsMatch.
+			if( expansions.match( parentPath ) & PathMatcher::ExactMatch )
+			{
+				result |= expansionsMatch;
+			}
+		}
+		else
+		{
+			result |= expansionsMatch;
+		}
+	}
+
+	return (PathMatcher::Result)result;
 
 }
 

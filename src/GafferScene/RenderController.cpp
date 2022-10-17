@@ -959,9 +959,9 @@ class RenderController::SceneGraph
 		{
 			const bool expanded =
 				( minimumExpansionDepth >= path.size() && !( visibleSet.exclusions.match( path ) & ( PathMatcher::ExactMatch | PathMatcher::AncestorMatch ) ) ) ||
-				/// \todo Using EveryMatch ensures the ancestors of paths in `visibleSet.inclusions` are also matched for expansion
+				/// \todo We also include DescendantMatch here to ensures the ancestors of included paths are also visible,
 				/// ideally we'd avoid expanding those ancestors and instead render only the included path and its descendants.
-				visibleSet.match( path ) & PathMatcher::EveryMatch
+				visibleSet.match( path ) & ( PathMatcher::ExactMatch | PathMatcher::DescendantMatch )
 			;
 
 			if( expanded == m_expanded )

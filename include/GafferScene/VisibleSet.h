@@ -65,11 +65,9 @@ struct GAFFERSCENE_API VisibleSet
 	PathMatcher inclusions;
 	PathMatcher exclusions;
 
-	/// Returns the result of a match made against the VisibleSet. This can be used to provide the behaviour described above :
-	/// NoMatch : The location does not match a member of `expansions` or `inclusions`, or is explicitly excluded by it or its ancestor being present in `exclusions`.
-	/// DescendantMatch : The location has one or more descendants present in `inclusions`.
-	/// ExactMatch : The location is present in `expansions` and/or `inclusions`.
-	/// AncestorMatch : The location has an ancestor present in `inclusions`.
+	/// Returns the result of a match made against the VisibleSet.
+	/// ExactMatch : The location should be rendered.
+	/// DescendantMatch : Some (but not necessarily all) descendants of the location should be rendered (but this location shouldn't be unless ExactMatch is also set).
 	PathMatcher::Result match( const ScenePlug::ScenePath &path ) const;
 
 	bool operator == ( const VisibleSet &rhs ) const;

@@ -44,18 +44,30 @@ class VisibleSetTest( GafferSceneTest.SceneTestCase ) :
 	def testExpansions( self ) :
 
 		e = GafferScene.VisibleSet()
-		e.expansions = IECore.PathMatcher( [ "/a", "/b", "/a/b", "/b/c", "/c/d/e" ] )
+		e.expansions = IECore.PathMatcher( [ "/a", "/b", "/a/b", "/b/c", "/a/b/c", "/c/d/e", "/c/d", "/d" ] )
 
-		self.assertEqual( e.match( "/a" ), IECore.PathMatcher.Result.ExactMatch )
-		self.assertEqual( e.match( "/b" ), IECore.PathMatcher.Result.ExactMatch )
-		self.assertEqual( e.match( "/a/b" ), IECore.PathMatcher.Result.ExactMatch )
-		self.assertEqual( e.match( "/b/c" ), IECore.PathMatcher.Result.ExactMatch )
-		self.assertEqual( e.match( "/c/d/e" ), IECore.PathMatcher.Result.ExactMatch )
+		self.assertEqual( e.match( "/a" ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.DescendantMatch ) )
+		self.assertEqual( e.match( "/b" ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.DescendantMatch ) )
+		self.assertEqual( e.match( "/d" ), IECore.PathMatcher.Result.ExactMatch )
+		self.assertEqual( e.match( "/a/b" ), IECore.PathMatcher.Result.EveryMatch )
+		self.assertEqual( e.match( "/b/c" ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.AncestorMatch ) )
+		self.assertEqual( e.match( "/a/b/c" ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.AncestorMatch ) )
 
-		self.assertEqual( e.match( "/" ), IECore.PathMatcher.Result.NoMatch )
-		self.assertEqual( e.match( "/c" ), IECore.PathMatcher.Result.NoMatch )
+		# Although "/c/d" is a member of `expansions` we return NoMatch as its parent "/c" is not expanded.
 		self.assertEqual( e.match( "/c/d" ), IECore.PathMatcher.Result.NoMatch )
-		self.assertEqual( e.match( "/a/b/c" ), IECore.PathMatcher.Result.NoMatch )
+
+		## \todo "/c/d/e" returns an ExactMatch and AncestorMatch as it and its parent "/c/d" are members of `expansions`, but in
+		# practice neither of these locations would be visible as "/c" is not in `expansions`.
+		# Updating IECore.PathMatcher to be able to test whether all ancestors match could give us an efficient way of
+		# returning NoMatch in this situation.
+		self.assertEqual( e.match( "/c/d/e" ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.AncestorMatch ) )
+
+		# While "/c" has descendants in `expansions`, we do not return a DescendantMatch as "/c" itself is not in `expansions` so
+		# its descendants cannot be visible.
+		## \todo We should be returning an ExactMatch here to show that "/c" is visible as "/" is implicitly expanded, but doing so
+		# currently would result in "/c" being expanded and its children being visible.
+		self.assertEqual( e.match( "/c" ), IECore.PathMatcher.Result.NoMatch )
+		self.assertEqual( e.match( "/" ), IECore.PathMatcher.Result.NoMatch )
 
 	def testInclusions( self ) :
 
@@ -70,9 +82,9 @@ class VisibleSetTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( e.match( "/" ), IECore.PathMatcher.Result.DescendantMatch )
 		self.assertEqual( e.match( "/b" ), IECore.PathMatcher.Result.DescendantMatch )
 
-		# Paths with included ancestors
-		self.assertEqual( e.match( "/a/b" ), IECore.PathMatcher.Result.AncestorMatch )
-		self.assertEqual( e.match( "/b/c/d/e" ), IECore.PathMatcher.Result.AncestorMatch )
+		# Paths with included ancestors, these locations are also an ExactMatch as all descendants of an included location are visible
+		self.assertEqual( e.match( "/a/b" ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.AncestorMatch ) )
+		self.assertEqual( e.match( "/b/c/d/e" ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.AncestorMatch ) )
 
 		# Paths unrelated to those in inclusions
 		self.assertEqual( e.match( "/c" ), IECore.PathMatcher.Result.NoMatch )
@@ -81,14 +93,28 @@ class VisibleSetTest( GafferSceneTest.SceneTestCase ) :
 	def testExpansionsCombineWithInclusions( self ) :
 
 		e = GafferScene.VisibleSet()
-		e.expansions = IECore.PathMatcher( [ "/a", "/b", "/a/b", "/b/c" ] )
+		e.expansions = IECore.PathMatcher( [ "/a", "/b", "/a/b" ] )
 		e.inclusions = IECore.PathMatcher( [ "/a", "/b/c", "/c" ] )
 
-		self.assertTrue( e.match( "/a" ) & IECore.PathMatcher.Result.ExactMatch )
-		self.assertTrue( e.match( "/a/b" ) & ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.AncestorMatch ) )
-		self.assertTrue( e.match( "/b" ) & ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.DescendantMatch ) )
-		self.assertTrue( e.match( "/c" ) & IECore.PathMatcher.Result.ExactMatch )
-		self.assertTrue( e.match( "/c/d" ) & IECore.PathMatcher.Result.AncestorMatch )
+		self.assertEqual( e.match( "/a" ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.DescendantMatch ) )
+		self.assertEqual( e.match( "/a/b" ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.AncestorMatch ) )
+		self.assertEqual( e.match( "/b" ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.DescendantMatch ) )
+		self.assertEqual( e.match( "/b/c" ), IECore.PathMatcher.Result.ExactMatch )
+		self.assertEqual( e.match( "/c" ), IECore.PathMatcher.Result.ExactMatch )
+		self.assertEqual( e.match( "/c/d" ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.AncestorMatch ) )
+
+		# Expanding "/d/e/f" without also expanding its ancestors results in none of those locations being visible.
+		e.expansions.addPath( "/d/e/f" )
+		self.assertEqual( e.match( "/d" ), IECore.PathMatcher.Result.NoMatch )
+		self.assertEqual( e.match( "/d/e" ), IECore.PathMatcher.Result.NoMatch )
+		self.assertEqual( e.match( "/d/e/f" ), IECore.PathMatcher.Result.NoMatch )
+
+		# Including "/d/g/h" without including its ancestors should not affect "/d/e/f"
+		e.inclusions.addPath( "/d/g/h" )
+		self.assertEqual( e.match( "/d" ), IECore.PathMatcher.Result.DescendantMatch )
+		self.assertEqual( e.match( "/d/g" ), IECore.PathMatcher.Result.DescendantMatch )
+		self.assertEqual( e.match( "/d/g/h" ), IECore.PathMatcher.Result.ExactMatch )
+		self.assertEqual( e.match( "/d/e/f" ), IECore.PathMatcher.Result.NoMatch )
 
 	def testExclusionsOverrideExpansions( self ) :
 
@@ -97,31 +123,34 @@ class VisibleSetTest( GafferSceneTest.SceneTestCase ) :
 
 		# Excluding "/b" should only affect "/b" and its descendants
 		e.exclusions = IECore.PathMatcher( [ "/b" ] )
-		self.assertEqual( e.match( "/a" ), IECore.PathMatcher.Result.ExactMatch )
-		self.assertEqual( e.match( "/a/b" ), IECore.PathMatcher.Result.ExactMatch )
-		self.assertEqual( e.match( "/a/b/c" ), IECore.PathMatcher.Result.ExactMatch )
+		self.assertEqual( e.match( "/a" ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.DescendantMatch ) )
+		self.assertEqual( e.match( "/a/b" ), IECore.PathMatcher.Result.EveryMatch )
+		self.assertEqual( e.match( "/a/b/c" ), IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.AncestorMatch )
 
 		self.assertEqual( e.match( "/b" ), IECore.PathMatcher.Result.NoMatch )
 		self.assertEqual( e.match( "/b/c" ), IECore.PathMatcher.Result.NoMatch )
 
 		# Removing the exclusion on "/b" should result in "/b" and "/b/c" matching
 		e.exclusions.removePath( "/b" )
-		self.assertEqual( e.match( "/a" ), IECore.PathMatcher.Result.ExactMatch )
-		self.assertEqual( e.match( "/a/b" ), IECore.PathMatcher.Result.ExactMatch )
-		self.assertEqual( e.match( "/a/b/c" ), IECore.PathMatcher.Result.ExactMatch )
+		self.assertEqual( e.match( "/a" ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.DescendantMatch ) )
+		self.assertEqual( e.match( "/a/b" ), IECore.PathMatcher.Result.EveryMatch )
+		self.assertEqual( e.match( "/a/b/c" ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.AncestorMatch ) )
 
-		self.assertEqual( e.match( "/b" ), IECore.PathMatcher.Result.ExactMatch )
-		self.assertEqual( e.match( "/b/c" ), IECore.PathMatcher.Result.ExactMatch )
+		self.assertEqual( e.match( "/b" ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.DescendantMatch ) )
+		self.assertEqual( e.match( "/b/c" ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.AncestorMatch ) )
 
 		# Excluding "/a/b" should not affect "/a", but also exclude "/a/b/c"
 		e.exclusions.addPath( "/a/b" )
-		self.assertEqual( e.match( "/a" ), IECore.PathMatcher.Result.ExactMatch )
-
+		# We still return a DescendantMatch here as descendants of "/a" are members of `expansions` though overridden by the exclusion
+		# of "/a/b"
+		self.assertEqual( e.match( "/a" ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.DescendantMatch ) )
+		# Testing the descendants directly clarifies the situation, with NoMatch returned as they have been excluded.
 		self.assertEqual( e.match( "/a/b" ), IECore.PathMatcher.Result.NoMatch )
 		self.assertEqual( e.match( "/a/b/c" ), IECore.PathMatcher.Result.NoMatch )
 
-		self.assertEqual( e.match( "/b" ), IECore.PathMatcher.Result.ExactMatch )
-		self.assertEqual( e.match( "/b/c" ), IECore.PathMatcher.Result.ExactMatch )
+		# Excluding "/a/b" should not have affected "/b" or its descendants.
+		self.assertEqual( e.match( "/b" ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.DescendantMatch ) )
+		self.assertEqual( e.match( "/b/c" ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.AncestorMatch ) )
 
 	def testExclusionsOverrideInclusions( self ) :
 
@@ -140,7 +169,7 @@ class VisibleSetTest( GafferSceneTest.SceneTestCase ) :
 		e.exclusions.removePath( "/d" )
 		self.assertEqual( e.match( "/a" ), IECore.PathMatcher.Result.ExactMatch )
 		self.assertEqual( e.match( "/d" ), IECore.PathMatcher.Result.ExactMatch )
-		self.assertEqual( e.match( "/d/e" ), IECore.PathMatcher.Result.AncestorMatch )
+		self.assertEqual( e.match( "/d/e" ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.AncestorMatch ) )
 
 		self.assertEqual( e.match( "/e" ), IECore.PathMatcher.Result.NoMatch )
 
