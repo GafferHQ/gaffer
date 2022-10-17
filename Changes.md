@@ -6,8 +6,12 @@
 Improvements
 ------------
 
-- ShuffleAttributes : Added `replaceDestination` plugs that may be used to specify whether each shuffle replaces already written destination data with the same name.
-- ShufflePrimitiveVariables : Added `replaceDestination` plugs that may be used to specify whether each shuffle replaces already written destination data with the same name.
+- ShuffleAttributes :
+  - Added `replaceDestination` plugs that may be used to specify whether each shuffle replaces already written destination data with the same name.
+  - Shuffles are now performed in the order they are defined, separate shuffles may write to the same destination.
+- ShufflePrimitiveVariables :
+  - Added `replaceDestination` plugs that may be used to specify whether each shuffle replaces already written destination data with the same name.
+  - Shuffles are now performed in the order they are defined, separate shuffles may write to the same destination.
 
 API
 ---
