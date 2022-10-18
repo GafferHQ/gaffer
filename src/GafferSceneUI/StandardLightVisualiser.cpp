@@ -71,6 +71,8 @@ namespace
 
 const Color3f g_lightWireframeColor = Color3f( 1.0f, 0.835f, 0.07f );
 const Color4f g_lightWireframeColor4 = Color4f( g_lightWireframeColor.x, g_lightWireframeColor.y, g_lightWireframeColor.z, 1.0f );
+const Color3f g_mutedLightWireframeColor = Color3f( 0.137f, 0.137f, 0.137f );
+const Color4f g_mutedLightWireframeColor4 = Color4f( g_mutedLightWireframeColor.x, g_mutedLightWireframeColor.y, g_mutedLightWireframeColor.z, 1.0f );
 
 enum Axis { X, Y, Z };
 
@@ -465,6 +467,9 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	const IntData *maxTextureResolutionData = attributes->member<IntData>( "gl:visualiser:maxTextureResolution" );
 	const int maxTextureResolution = maxTextureResolutionData ? maxTextureResolutionData->readable() : std::numeric_limits<int>::max();
 
+	const BoolData *muteData = attributes->member<BoolData>( "light:mute" );
+	const bool muted = muteData ? muteData->readable() : false;
+
 	Imath::M44f topTransform;
 	if( orientation )
 	{
@@ -491,8 +496,8 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	{
 		float innerAngle, outerAngle, radius, lensRadius;
 		spotlightParameters( attributeName, shaderNetwork, innerAngle, outerAngle, radius, lensRadius );
-		boundOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( spotlightCone( innerAngle, outerAngle, lensRadius / visualiserScale, 1.0f, 1.0f ) ) );
-		frustum->addChild( const_pointer_cast<IECoreGL::Renderable>( spotlightCone( innerAngle, outerAngle, lensRadius / visualiserScale, 10.0f * frustumScale, 0.5f ) ) );
+		boundOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( spotlightCone( innerAngle, outerAngle, lensRadius / visualiserScale, 1.0f, 1.0f, muted ) ) );
+		frustum->addChild( const_pointer_cast<IECoreGL::Renderable>( spotlightCone( innerAngle, outerAngle, lensRadius / visualiserScale, 10.0f * frustumScale, 0.5f, muted ) ) );
 	}
 
 	// Now do visualisations based on light type.
@@ -504,18 +509,18 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 			ConstDataPtr textureData = drawTextured ? surfaceTexture( shaderNetwork, attributes, maxTextureResolution ) : nullptr;
 			boundOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( environmentSphereSurface( textureData, tint, maxTextureResolution, color ) ) );
 		}
-		boundOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( sphereWireframe( 1.05f, Vec3<bool>( true ) ) ) );
+		boundOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( sphereWireframe( 1.05f, Vec3<bool>( true ), 1.0f, V3f( 0.0f ), muted ) ) );
 	}
 	else if( type && type->readable() == "spot" )
 	{
 		const float radius = parameter<float>( metadataTarget, shaderParameters, "radiusParameter", 0.0f );
-		fixedScaleOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( sphereWireframe( radius, Vec3<bool>( false, false, true ), 0.5f, V3f( 0.0f, 0.0f, 0.1f * visualiserScale ) ) ) );
+		fixedScaleOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( sphereWireframe( radius, Vec3<bool>( false, false, true ), 0.5f, V3f( 0.0f, 0.0f, 0.1f * visualiserScale ), muted ) ) );
 		addRay( V3f( 0 ), V3f( 0, 0, -1 ), ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color ) ) );
 	}
 	else if( type && type->readable() == "distant" )
 	{
-		boundOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( distantRays() ) );
+		boundOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( distantRays( muted ) ) );
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color ) ) );
 	}
 	else if( type && type->readable() == "quad" )
@@ -529,7 +534,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		if( parameter<bool>( metadataTarget, shaderParameters, "portalParameter", false ) )
 		{
 			// Because we don't support variable size lights, we keep a fixed hatching scale
-			geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( quadPortal( size ) ) );
+			geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( quadPortal( size, muted ) ) );
 		}
 		else
 		{
@@ -542,7 +547,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 			{
 				ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color * tint ) ) );
 			}
-			geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( quadWireframe( size ) ) );
+			geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( quadWireframe( size, muted ) ) );
 
 			const float spread = parameter<float>( metadataTarget, shaderParameters, "spreadParameter", -1 );
 			if( spread >= 0.0f )
@@ -566,7 +571,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		{
 			ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color * tint ) ) );
 		}
-		geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( diskWireframe( radius ) ) );
+		geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( diskWireframe( radius, muted ) ) );
 		addRay( V3f( 0 ), V3f( 0, 0, -1 ), ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
 
 		const float spread = parameter<float>( metadataTarget, shaderParameters, "spreadParameter", -1 );
@@ -579,8 +584,8 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	{
 		const float radius = parameter<float>( metadataTarget, shaderParameters, "radiusParameter", 1 );
 		const float length = parameter<float>( metadataTarget, shaderParameters, "lengthParameter", 2 );
-		geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( cylinderShape( radius, length, drawShaded, color * tint ) ) );
-		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( cylinderRays( radius ) ) );
+		geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( cylinderShape( radius, length, drawShaded, color * tint, muted ) ) );
+		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( cylinderRays( radius, muted ) ) );
 		if( !drawShaded )
 		{
 			ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color * tint ) ) );
@@ -593,7 +598,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		IECoreGL::StatePtr meshState = new IECoreGL::State( false );
 		meshState->add( new IECoreGL::Primitive::DrawOutline( true ) );
 		meshState->add( new IECoreGL::Primitive::OutlineWidth( 2.0f ) );
-		meshState->add( new IECoreGL::OutlineColorStateComponent( g_lightWireframeColor4 ) );
+		meshState->add( new IECoreGL::OutlineColorStateComponent( muted ? g_mutedLightWireframeColor4 : g_lightWireframeColor4 ) );
 		state = meshState;
 	}
 	else if( type && type->readable() == "photometric" )
@@ -601,7 +606,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		const float radius = parameter<float>( metadataTarget, shaderParameters, "radiusParameter", 0 );
 		if( radius > 0 )
 		{
-			fixedScaleOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( sphereWireframe( radius, Vec3<bool>( true, false, true ), 0.5f ) ) );
+			fixedScaleOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( sphereWireframe( radius, Vec3<bool>( true, false, true ), 0.5f, V3f( 0.0f ), muted ) ) );
 		}
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color ) ) );
 		addRay( V3f( 0 ), V3f( 0, 0, -1 ), ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
@@ -612,12 +617,12 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		const float radius = parameter<float>( metadataTarget, shaderParameters, "radiusParameter", 0 );
 		if( radius > 0 )
 		{
-			fixedScaleOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( pointShape( radius ) ) );
+			fixedScaleOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( pointShape( radius, muted ) ) );
 		}
 
 		if( !haveCone )
 		{
-			boundOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( pointRays( radius / visualiserScale ) ) );
+			boundOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( pointRays( radius / visualiserScale, muted ) ) );
 		}
 		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color ) ) );
 	}
@@ -626,7 +631,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	{
 		IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, ornamentWireframeVertsPerCurve );
 		curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, ornamentWireframePoints ) );
-		curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( g_lightWireframeColor ) ) );
+		curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( muted ? g_mutedLightWireframeColor : g_lightWireframeColor ) ) );
 		ornaments->addChild( curves );
 	}
 
@@ -718,7 +723,7 @@ void StandardLightVisualiser::spotlightParameters( const InternedString &attribu
 }
 
 
-IECoreGL::ConstRenderablePtr StandardLightVisualiser::ray()
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::ray( bool muted )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
 	addWireframeCurveState( group.get() );
@@ -730,14 +735,14 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::ray()
 
 	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurve );
 	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, p ) );
-	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( g_lightWireframeColor ) ) );
+	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( muted ? g_mutedLightWireframeColor : g_lightWireframeColor ) ) );
 
 	group->addChild( curves );
 
 	return group;
 }
 
-IECoreGL::ConstRenderablePtr StandardLightVisualiser::pointRays( float radius )
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::pointRays( float radius, bool muted )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
 	addWireframeCurveState( group.get() );
@@ -756,14 +761,14 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::pointRays( float radius )
 
 	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurve );
 	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, p ) );
-	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( g_lightWireframeColor ) ) );
+	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( muted ? g_mutedLightWireframeColor : g_lightWireframeColor ) ) );
 
 	group->addChild( curves );
 
 	return group;
 }
 
-IECoreGL::ConstRenderablePtr StandardLightVisualiser::distantRays()
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::distantRays( bool muted )
 {
 	GroupPtr result = new Group;
 	for( int i = 0; i < 3; i++ )
@@ -773,7 +778,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::distantRays()
 		Imath::M44f trans;
 		trans.rotate( V3f( 0, 0, 2.0 * M_PI / 3.0 * i ) );
 		trans.translate( V3f( 0, 0.4, 0.5 ) );
-		rayGroup->addChild( const_pointer_cast<IECoreGL::Renderable>( ray() ) );
+		rayGroup->addChild( const_pointer_cast<IECoreGL::Renderable>( ray( muted ) ) );
 		rayGroup->setTransform( trans );
 
 		result->addChild( rayGroup );
@@ -782,7 +787,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::distantRays()
 	return result;
 }
 
-IECoreGL::ConstRenderablePtr StandardLightVisualiser::spotlightCone( float innerAngle, float outerAngle, float lensRadius, float length, float lineWidthScale )
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::spotlightCone( float innerAngle, float outerAngle, float lensRadius, float length, float lineWidthScale, bool muted )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
 	addWireframeCurveState( group.get(), lineWidthScale );
@@ -803,7 +808,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::spotlightCone( float inner
 	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurve );
 	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, p ) );
 
-	const Color3fDataPtr color = new Color3fData( lineWidthScale < 1.0f ? Color3f( 0.627f, 0.580f, 0.352f ) : g_lightWireframeColor );
+	const Color3fDataPtr color = new Color3fData( lineWidthScale < 1.0f ? Color3f( 0.627f, 0.580f, 0.352f ) : ( muted ? g_mutedLightWireframeColor : g_lightWireframeColor ) );
 	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, color ) );
 
 	group->addChild( curves );
@@ -837,7 +842,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::colorIndicator( const Imat
 	return group;
 }
 
-IECoreGL::ConstRenderablePtr StandardLightVisualiser::cylinderShape( float radius, float length, bool filled, const Color3f &color )
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::cylinderShape( float radius, float length, bool filled, const Color3f &color, bool muted )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
 	addWireframeCurveState( group.get() );
@@ -893,14 +898,14 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::cylinderShape( float radiu
 
 	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurveData );
 	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
-	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( g_lightWireframeColor ) ) );
+	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( muted ? g_mutedLightWireframeColor : g_lightWireframeColor ) ) );
 
 	group->addChild( curves );
 
 	return group;
 }
 
-IECoreGL::ConstRenderablePtr StandardLightVisualiser::pointShape( float radius )
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::pointShape( float radius, bool muted )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
 	addWireframeCurveState( group.get(), 0.5f );
@@ -919,7 +924,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::pointShape( float radius )
 
 	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), /* periodic = */ false, vertsPerCurveData );
 	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
-	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( g_lightWireframeColor ) ) );
+	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( muted ? g_mutedLightWireframeColor : g_lightWireframeColor ) ) );
 
 	group->addChild( curves );
 
@@ -928,7 +933,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::pointShape( float radius )
 
 /// \todo Expose publicly when we've decided what the
 /// parameters should be.
-IECoreGL::ConstRenderablePtr StandardLightVisualiser::cylinderRays( float radius )
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::cylinderRays( float radius, bool muted )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
 	addWireframeCurveState( group.get() );
@@ -938,7 +943,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::cylinderRays( float radius
 	for( int i = 0; i < numRays; ++i )
 	{
 		GroupPtr rayGroup = new Group;
-		rayGroup->addChild( const_pointer_cast<IECoreGL::Renderable>( StandardLightVisualiser::ray() ) );
+		rayGroup->addChild( const_pointer_cast<IECoreGL::Renderable>( StandardLightVisualiser::ray( muted ) ) );
 
 		const float angle = M_PI * 2.0f * float(i)/(float)numRays;
 		M44f m;
@@ -979,7 +984,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::quadSurface( const Imath::
 	return group;
 }
 
-IECoreGL::ConstRenderablePtr StandardLightVisualiser::quadWireframe( const V2f &size )
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::quadWireframe( const V2f &size, bool muted )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
 	addWireframeCurveState( group.get() );
@@ -999,14 +1004,14 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::quadWireframe( const V2f &
 
 	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), /* periodic = */ true, vertsPerCurveData );
 	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
-	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( g_lightWireframeColor ) ) );
+	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( muted ? g_mutedLightWireframeColor : g_lightWireframeColor ) ) );
 
 	group->addChild( curves );
 
 	return group;
 }
 
-IECoreGL::ConstRenderablePtr StandardLightVisualiser::quadPortal( const V2f &size, float hatchingScale )
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::quadPortal( const V2f &size, float hatchingScale, bool muted )
 {
 	// Portals visualise differently as they only allow light through
 	// their area. Effectively a hole cut in a big plane. We try to
@@ -1105,13 +1110,13 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::quadPortal( const V2f &siz
 
 	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), true, vertsPerCurveData );
 	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
-	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( V3f( 0.0f ) ) ) );
+	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( muted ? g_mutedLightWireframeColor : Color3f( 0.07f ) ) ) );
 	return curves;
 }
 
 // Spheres
 
-IECoreGL::ConstRenderablePtr StandardLightVisualiser::sphereWireframe( float radius, const Vec3<bool> &axisRings, float lineWidthScale, const V3f &center )
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::sphereWireframe( float radius, const Vec3<bool> &axisRings, float lineWidthScale, const V3f &center, bool muted )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
 	addWireframeCurveState( group.get(), lineWidthScale );
@@ -1135,7 +1140,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::sphereWireframe( float rad
 
 	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, vertsPerCurve );
 	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, p ) );
-	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( Color3f( 1.0f, 0.835f, 0.07f ) ) ) );
+	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( muted ? g_mutedLightWireframeColor : g_lightWireframeColor ) ) );
 
 	group->addChild( curves );
 
@@ -1197,7 +1202,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::diskSurface( float radius,
 	return group;
 }
 
-IECoreGL::ConstRenderablePtr StandardLightVisualiser::diskWireframe( float radius )
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::diskWireframe( float radius, bool muted )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
 	addWireframeCurveState( group.get() );
@@ -1210,7 +1215,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::diskWireframe( float radiu
 
 	IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), /* periodic = */ false, vertsPerCurveData );
 	curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, pData ) );
-	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( g_lightWireframeColor ) ) );
+	curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( muted ? g_mutedLightWireframeColor : g_lightWireframeColor ) ) );
 
 	group->addChild( curves );
 
