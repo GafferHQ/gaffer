@@ -38,7 +38,6 @@
 #define GAFFERSCENE_VISIBLESET_H
 
 #include "GafferScene/Export.h"
-#include "GafferScene/ScenePlug.h"
 
 #include "IECore/PathMatcher.h"
 
@@ -68,7 +67,7 @@ struct GAFFERSCENE_API VisibleSet
 	/// Returns the result of a match made against the VisibleSet.
 	/// ExactMatch : The location should be rendered.
 	/// DescendantMatch : Some (but not necessarily all) descendants of the location should be rendered (but this location shouldn't be unless ExactMatch is also set).
-	PathMatcher::Result match( const ScenePlug::ScenePath &path ) const;
+	PathMatcher::Result match( const std::vector<InternedString> &path, const size_t minimumExpansionDepth = 0 ) const;
 
 	bool operator == ( const VisibleSet &rhs ) const;
 	bool operator != ( const VisibleSet &rhs ) const;

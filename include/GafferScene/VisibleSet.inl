@@ -42,7 +42,7 @@
 namespace GafferScene
 {
 
-inline PathMatcher::Result VisibleSet::match( const ScenePlug::ScenePath &path ) const
+inline PathMatcher::Result VisibleSet::match( const std::vector<InternedString> &path, const size_t minimumExpansionDepth ) const
 {
 
 	if( exclusions.match( path ) & ( PathMatcher::ExactMatch | PathMatcher::AncestorMatch ) )
@@ -52,6 +52,15 @@ inline PathMatcher::Result VisibleSet::match( const ScenePlug::ScenePath &path )
 	}
 
 	unsigned result = PathMatcher::NoMatch;
+	if( minimumExpansionDepth >= path.size() )
+	{
+		// Paths within minimumExpansionDepth are considered visible and having visible children
+		/// \todo Return ExactMatch for child locations of paths equal to the minimumExpansionDepth,
+		/// and AncestorMatch for locations with ancestors within the minimumExpansionDepth. We should
+		/// also be able to return early and avoid testing inclusions and expansions for these paths.
+		result |= ( PathMatcher::ExactMatch | PathMatcher::DescendantMatch );
+	}
+
 	result |= inclusions.match( path );
 	if( result & PathMatcher::AncestorMatch )
 	{

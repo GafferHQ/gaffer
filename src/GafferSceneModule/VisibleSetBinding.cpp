@@ -38,7 +38,6 @@
 
 #include "VisibleSetBinding.h"
 
-#include "GafferScene/ScenePlug.h"
 #include "GafferScene/VisibleSet.h"
 #include "GafferScene/VisibleSetData.h"
 
@@ -64,7 +63,7 @@ void GafferSceneModule::bindVisibleSet()
 	class_<VisibleSet>( "VisibleSet" )
 		.def( init<>() )
 		.def( init<const VisibleSet &>() )
-		.def( "match", (PathMatcher::Result (VisibleSet ::*)( const ScenePlug::ScenePath & ) const)&VisibleSet::match )
+		.def( "match", (PathMatcher::Result (VisibleSet ::*)( const std::vector<InternedString> &, const size_t ) const)&VisibleSet::match, arg( "minimumExpansionDepth" ) = 0 )
 		.def_readwrite( "expansions", &VisibleSet::expansions )
 		.def_readwrite( "inclusions", &VisibleSet::inclusions )
 		.def_readwrite( "exclusions", &VisibleSet::exclusions )
