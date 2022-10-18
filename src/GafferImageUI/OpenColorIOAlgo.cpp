@@ -182,8 +182,10 @@ vec4 colorTransformWithSolo( vec4 inPixel, bool absoluteValue, bool clipping, ve
 			inPixel.a
 		);
 	}
-	inPixel = vec4( pow( inPixel.rgb * multiply, power ), inPixel.a );
-
+	inPixel = vec4( inPixel.rgb * multiply, inPixel.a );
+	if( inPixel.r > 0.0 && power.r != 1.0 ) inPixel.r = pow( inPixel.r, power.r );
+	if( inPixel.g > 0.0 && power.g != 1.0 ) inPixel.g = pow( inPixel.g, power.g );
+	if( inPixel.b > 0.0 && power.b != 1.0 ) inPixel.b = pow( inPixel.b, power.b );
 
 	if( soloChannel == -1 )
 	{

@@ -1521,6 +1521,8 @@ ImageView::ImageView( const std::string &name )
 	clampNode->minClampToPlug()->setValue( Color4f( 1.0f, 1.0f, 1.0f, 0.0f ) );
 	clampNode->maxClampToPlug()->setValue( Color4f( 0.0f, 0.0f, 0.0f, 1.0f ) );
 	m_cpuClippingPlug = clampNode->enabledPlug();
+	// Default false to match the plug that drives it
+	m_cpuClippingPlug->setValue( false );
 
 	GradePtr gradeNode = new Grade();
 	preprocessor->addChild( gradeNode );
