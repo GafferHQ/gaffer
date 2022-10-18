@@ -70,7 +70,10 @@ class ShufflePlugValueWidget( GafferUI.PlugValueWidget ) :
 		destinationWidget.textWidget()._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
 		self.__row.append( destinationWidget, verticalAlignment = GafferUI.Label.VerticalAlignment.Top )
 
-		self.__row.append( GafferUI.PlugValueWidget.create( plug["deleteSource"] ), expand = True )
+		deleteSourceWidget = GafferUI.PlugValueWidget.create( plug["deleteSource"] )
+		deleteSourceWidget.boolWidget()._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() - 40 )
+		self.__row.append( deleteSourceWidget )
+		self.__row.append( GafferUI.PlugValueWidget.create( plug["replaceDestination"] ), expand = True )
 
 		self._updateFromPlug()
 
@@ -82,6 +85,7 @@ class ShufflePlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__row[1].setPlug( plug["enabled"] )
 		self.__row[2].setPlug( plug["destination"] )
 		self.__row[3].setPlug( plug["deleteSource"] )
+		self.__row[4].setPlug( plug["replaceDestination"] )
 
 	def hasLabel( self ) :
 
@@ -110,7 +114,7 @@ class ShufflePlugValueWidget( GafferUI.PlugValueWidget ) :
 		with self.getContext() :
 			enabled = self.getPlug()["enabled"].getValue()
 
-		for i in ( 0, 2, 3 ) :
+		for i in ( 0, 2, 3, 4 ) :
 			self.__row[i].setEnabled( enabled )
 
 GafferUI.PlugValueWidget.registerType( Gaffer.ShufflePlug, ShufflePlugValueWidget )
@@ -130,6 +134,7 @@ Gaffer.Metadata.registerValue( Gaffer.ShufflePlug,
 	"""
 )
 Gaffer.Metadata.registerValue( Gaffer.ShufflePlug, "deleteSource", "description", "Enable to delete the source data after shuffling to the destination(s)." )
+Gaffer.Metadata.registerValue( Gaffer.ShufflePlug, "replaceDestination", "description", "Enable to replace already written destination data with the same name as destination(s)." )
 Gaffer.Metadata.registerValue( Gaffer.ShufflePlug, "enabled", "description", "Used to enable/disable this shuffle operation." )
 Gaffer.Metadata.registerValue( Gaffer.ShufflePlug, "nodule:type", "" )
 Gaffer.Metadata.registerValue( Gaffer.ShufflePlug, "*", "nodule:type", "" )
@@ -152,7 +157,8 @@ class ShufflesPlugValueWidget( GafferUI.PlugValueWidget ) :
 				GafferUI.Label( "<h4><b>Source</b></h4>" )._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
 				GafferUI.Spacer( imath.V2i( 25, 2 ) ) # approximate width of a BoolWidget Switch
 				GafferUI.Label( "<h4><b>Destination</b></h4>" )._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
-				GafferUI.Label( "<h4><b>Delete Source</b></h4>" )._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
+				GafferUI.Label( "<h4><b>Delete Source</b></h4>" )._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() - 40 )
+				GafferUI.Label( "<h4><b>Replace</b></h4>" )._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
 
 			self.__plugLayout = GafferUI.PlugLayout( plug )
 			self.__addButton = GafferUI.Button( image = "plus.png", hasFrame = False )

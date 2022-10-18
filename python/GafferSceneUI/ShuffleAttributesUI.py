@@ -47,7 +47,9 @@ Gaffer.Metadata.registerNode(
 	"""
 	ShuffleAttributes is used to copy or rename arbitrary numbers of attributes at
 	the filtered locations. The deleteSource plugs may be used to remove the original
-	source attribute(s) after the shuffling has been completed.
+	source attribute(s) after the shuffling has been completed. The replaceDestination
+	plugs may be used to specify whether each shuffle should replace already written
+	destination data with the same name.
 
 	An additional context variable `${source}` can be used on the destination plugs
 	to insert the name of each source attribute. For example, to prefix all attributes
@@ -60,9 +62,10 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The attributes to be shuffled - arbitrary numbers of attributes may be
-			shuffled via the source/destination plugs. The deleteSource plug may be
-			used to remove the original attribute(s).
+			The attributes to be shuffled - arbitrary numbers of attributes may be shuffled
+			via the source/destination plugs. The deleteSource plug may be used to remove the
+			original attribute(s). The replaceDestination plug may be used to specify whether
+			each shuffle should replace already written destination data with the same name.
 			""",
 
 		],

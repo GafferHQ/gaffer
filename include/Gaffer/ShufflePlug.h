@@ -54,7 +54,7 @@ class GAFFER_API ShufflePlug : public ValuePlug
 
 		GAFFER_PLUG_DECLARE_TYPE( Gaffer::ShufflePlug, ShufflePlugTypeId, ValuePlug );
 
-		ShufflePlug( const std::string &source, const std::string &destination, bool deleteSource=false, bool enabled=true );
+		ShufflePlug( const std::string &source, const std::string &destination, bool deleteSource=false, bool enabled=true, bool replaceDestination=true );
 		/// Primarily used for serialisation.
 		ShufflePlug( const std::string &name = defaultName<ShufflePlug>(), Direction direction=In, unsigned flags = Default );
 
@@ -69,6 +69,9 @@ class GAFFER_API ShufflePlug : public ValuePlug
 
 		BoolPlug *deleteSourcePlug();
 		const BoolPlug *deleteSourcePlug() const;
+
+		BoolPlug *replaceDestinationPlug();
+		const BoolPlug *replaceDestinationPlug() const;
 
 		bool acceptsChild( const GraphComponent *potentialChild ) const override;
 		Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
@@ -92,11 +95,10 @@ class GAFFER_API ShufflesPlug : public ValuePlug
 		bool acceptsInput( const Plug *input ) const override;
 		PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
 
-		/// Shuffles the sources into a destination container. The container type must have a std::pair value_type
-		/// and string-compatible keys (eg std::string, IECore::InternedString).
+		/// Shuffles the sources into a destination container. The container type should have a map
+		/// compatible interface with string-compatible keys (eg std::string, IECore::InternedString).
 		template<typename T>
 		T shuffle( const T &sourceContainer ) const;
-
 };
 
 } // namespace Gaffer
