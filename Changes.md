@@ -17,6 +17,7 @@ Improvements
   - Spreadsheet cells connected to a `PathFilter.paths` plug.
   - Spreadsheet row names when the spreadsheet selector is set to `scene:path`.
 - Spreadsheet : Added support for metadata on the `name` and `enabled` plug of each row. Metadata registered on plugs in the default row is mirrored automatically onto all other rows.
+- ImageView : Added support for selecting a comparison node.  This can be accessed by selecting the focus or selected node from the comparison widget at the top of the  viewer, or by dragging an image node to the comparison widget.
 
 Fixes
 -----

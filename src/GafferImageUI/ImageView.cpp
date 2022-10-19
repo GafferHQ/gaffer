@@ -59,6 +59,7 @@
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/BoxPlug.h"
 #include "Gaffer/Metadata.h"
+#include "Gaffer/NameSwitch.h"
 
 #include "IECoreGL/IECoreGL.h"
 #include "IECoreGL/Shader.h"
@@ -1459,6 +1460,7 @@ ImageView::ImageView( const std::string &name )
 	addChild( compareParent );
 	compareParent->addChild( new StringPlug( "mode", Plug::In, "", Plug::Default & ~Plug::AcceptsInputs ) );
 	compareParent->addChild( new BoolPlug( "wipe", Plug::In, true, Plug::Default & ~Plug::AcceptsInputs ) );
+	compareParent->addChild( new ImagePlug( "image", Plug::In ) );
 	compareParent->addChild( new StringPlug( "catalogueOutput", Plug::In, "output:1", Plug::Default & ~Plug::AcceptsInputs ) );
 
 	StringVectorDataPtr channelsDefaultData = new StringVectorData;
@@ -1494,9 +1496,23 @@ ImageView::ImageView( const std::string &name )
 	ImagePlugPtr preprocessorOutput = new ImagePlug( "out", Plug::Out );
 	preprocessor->addChild( preprocessorOutput );
 
+	DeleteContextVariablesPtr comparisonDeleteContext = new DeleteContextVariables( "_comparisonDeleteContext" );
+	preprocessor->addChild( comparisonDeleteContext );
+	comparisonDeleteContext->setup( compareImagePlug() );
+	comparisonDeleteContext->variablesPlug()->setValue( "imageView:__useComparisonImage" );
+	comparisonDeleteContext->inPlug()->setInput( compareImagePlug() );
+
+	NameSwitchPtr comparisonSwitch = new NameSwitch( "_comparisonSwitch" );
+	preprocessor->addChild( comparisonSwitch );
+	comparisonSwitch->setup( preprocessorInput.get() );
+	comparisonSwitch->selectorPlug()->setValue( "${imageView:__useComparisonImage}" );
+	comparisonSwitch->inPlugs()->getChild<NameValuePlug>(0)->valuePlug()->setInput( preprocessorInput );
+	comparisonSwitch->inPlugs()->getChild<NameValuePlug>(1)->namePlug()->setValue( "True" );
+	comparisonSwitch->inPlugs()->getChild<NameValuePlug>(1)->valuePlug()->setInput( comparisonDeleteContext->outPlug() );
+
 	SelectViewPtr selectView = new SelectView( "_selectView" );
 	preprocessor->addChild( selectView );
-	selectView->inPlug()->setInput( preprocessorInput );
+	selectView->inPlug()->setInput( runTimeCast< NameValuePlug >( comparisonSwitch->outPlug() )->valuePlug() );
 
 	// All of the ways we want to interact with the image here require it to be flattened first ( ImageGadget,
 	// ImageStats, ImageSampler ).  By flattening it before any of these things, we ensure it only gets
@@ -1560,14 +1576,15 @@ ImageView::ImageView( const std::string &name )
 	m_imageGadgets[0]->setImage( preprocessedInPlug<ImagePlug>() );
 	m_imageGadgets[0]->setContext( getContext() );
 
-	Gaffer::ContextVariablesPtr selectComparison = new Gaffer::ContextVariables();
-	addChild( selectComparison );
-	selectComparison->setup( preprocessedInPlug<ImagePlug>() );
-	selectComparison->inPlug()->setInput( preprocessedInPlug<ImagePlug>() );
-	selectComparison->variablesPlug()->addChild( new NameValuePlug( "catalogue:imageName",  new StringData( "output:1" ), true ) );
-	selectComparison->variablesPlug()->getChild<NameValuePlug>( 0 )->valuePlug<StringPlug>()->setInput( compareCatalogueOutputPlug() );
+	m_comparisonSelect = new Gaffer::ContextVariables();
+	addChild( m_comparisonSelect );
+	m_comparisonSelect->setup( compareImagePlug() );
+	m_comparisonSelect->inPlug()->setInput( preprocessedInPlug<ImagePlug>() );
+	m_comparisonSelect->variablesPlug()->addChild( new NameValuePlug( "catalogue:imageName",  new StringData( "output:1" ), true ) );
+	m_comparisonSelect->variablesPlug()->getChild<NameValuePlug>( 0 )->valuePlug<StringPlug>()->setInput( compareCatalogueOutputPlug() );
+	m_comparisonSelect->variablesPlug()->addChild( new NameValuePlug( "imageView:__useComparisonImage",  new StringData( "True" ), true ) );
 
-	m_imageGadgets[1]->setImage( IECore::runTimeCast<GafferImage::ImagePlug>( selectComparison->outPlug() ) );
+	m_imageGadgets[1]->setImage( IECore::runTimeCast<GafferImage::ImagePlug>( m_comparisonSelect->outPlug() ) );
 	m_imageGadgets[1]->setContext( getContext() );
 	m_imageGadgets[1]->setLabelsVisible( false );
 	m_imageGadgets[1]->setVisible( false );
@@ -1745,6 +1762,16 @@ const Gaffer::BoolPlug *ImageView::compareWipePlug() const
 	return getChild<Plug>( "compare" )->getChild<BoolPlug>( "wipe" );
 }
 
+GafferImage::ImagePlug *ImageView::compareImagePlug()
+{
+	return getChild<Plug>( "compare" )->getChild<ImagePlug>( "image" );
+}
+
+const GafferImage::ImagePlug *ImageView::compareImagePlug() const
+{
+	return getChild<Plug>( "compare" )->getChild<ImagePlug>( "image" );
+}
+
 Gaffer::StringPlug *ImageView::compareCatalogueOutputPlug()
 {
 	return getChild<Plug>( "compare" )->getChild<StringPlug>( "catalogueOutput" );
@@ -1868,6 +1895,10 @@ void ImageView::plugSet( Gaffer::Plug *plug )
 	else if( plug == compareWipePlug() )
 	{
 		setWipeActive( compareModePlug()->getValue() != "" && compareWipePlug()->getValue() );
+	}
+	else if( plug == compareCatalogueOutputPlug() )
+	{
+		m_comparisonSelect->variablesPlug()->getChild<NameValuePlug>( 0 )->enabledPlug()->setValue( compareCatalogueOutputPlug()->getValue() != "" );
 	}
 }
 
