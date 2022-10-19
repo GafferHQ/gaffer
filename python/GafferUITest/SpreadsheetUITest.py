@@ -40,6 +40,7 @@ import GafferUITest
 
 import IECore
 
+import itertools
 import unittest
 
 import GafferUI.SpreadsheetUI._ClipboardAlgo as _ClipboardAlgo
@@ -764,6 +765,77 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 		s["rows"][1]["cells"][0]["value"].setInput( p )
 
 		self.assertFalse( _ClipboardAlgo.canPasteCells( IECore.IntData( 1 ), [ s["rows"][1]["cells"].children() ] ) )
+
+	def testColumnOrder( self ) :
+
+		s = Gaffer.Spreadsheet()
+
+		rowsPlug = s["rows"]
+
+		def visualOrder():
+			widget = GafferUI.SpreadsheetUI._RowsPlugValueWidget( rowsPlug )
+			qtHeader = widget._RowsPlugValueWidget__defaultTable._qtWidget().horizontalHeader()
+			return [ qtHeader.visualIndex( i ) for i in range( len( rowsPlug[0]["cells"] ) ) ]
+
+		for i in range( 4 ):
+			rowsPlug.addColumn( Gaffer.IntPlug(), "column%d" % i, adoptEnabledPlug = False )
+
+		self.assertEqual( visualOrder(), [ 0, 1, 2, 3 ] )
+
+		# Test setting a column index on some columns
+		Gaffer.Metadata.registerValue( rowsPlug[0]["cells"][2], 'spreadsheet:columnIndex', 1 )
+		Gaffer.Metadata.registerValue( rowsPlug[0]["cells"][3], 'spreadsheet:columnIndex', 0 )
+
+		self.assertEqual( visualOrder(), [ 2, 3, 1, 0 ] )
+
+		# Test setting a column index on all columns
+		Gaffer.Metadata.registerValue( rowsPlug[0]["cells"][0], 'spreadsheet:columnIndex', 3 )
+		Gaffer.Metadata.registerValue( rowsPlug[0]["cells"][1], 'spreadsheet:columnIndex', 2 )
+
+		self.assertEqual( visualOrder(), [ 3, 2, 1, 0 ] )
+
+		# We should be able to use the order of the columnIndex values even if they are larger
+		# than the number of columns
+		Gaffer.Metadata.registerValue( rowsPlug[0]["cells"][0], 'spreadsheet:columnIndex', 1002 )
+		Gaffer.Metadata.registerValue( rowsPlug[0]["cells"][1], 'spreadsheet:columnIndex', 1001 )
+		Gaffer.Metadata.registerValue( rowsPlug[0]["cells"][2], 'spreadsheet:columnIndex', 1003 )
+		Gaffer.Metadata.registerValue( rowsPlug[0]["cells"][3], 'spreadsheet:columnIndex', 1000 )
+
+		self.assertEqual( visualOrder(), [ 2, 1, 3, 0 ] )
+
+		# Test deleting a column while the UI exists
+		Gaffer.Metadata.registerValue( rowsPlug[0]["cells"][0], 'spreadsheet:columnIndex', 1 )
+		Gaffer.Metadata.registerValue( rowsPlug[0]["cells"][1], 'spreadsheet:columnIndex', 2 )
+		Gaffer.Metadata.registerValue( rowsPlug[0]["cells"][2], 'spreadsheet:columnIndex', 3 )
+		Gaffer.Metadata.registerValue( rowsPlug[0]["cells"][3], 'spreadsheet:columnIndex', 0 )
+
+		widget = GafferUI.SpreadsheetUI._RowsPlugValueWidget( rowsPlug )
+		qtHeader = widget._RowsPlugValueWidget__defaultTable._qtWidget().horizontalHeader()
+		self.assertEqual( [ qtHeader.visualIndex( i ) for i in range( len( rowsPlug[0]["cells"] ) ) ], [ 1, 2, 3, 0 ] )
+
+		del rowsPlug[0]["cells"][2]
+		self.assertEqual( [ qtHeader.visualIndex( i ) for i in range( len( rowsPlug[0]["cells"] ) ) ], [ 1, 2, 0 ] )
+
+	def testColumnOrderPermutations( self ) :
+
+		for l in range( 2, 7 ):
+			s = Gaffer.Spreadsheet()
+
+			rowsPlug = s["rows"]
+
+			for i in range( l ):
+				rowsPlug.addColumn( Gaffer.IntPlug(), "column%d" % i, adoptEnabledPlug = False )
+
+			# Test every possible order of columns
+			for p in itertools.permutations( range( l ) ):
+
+				for i in range( l ):
+					Gaffer.Metadata.registerValue( rowsPlug[0]["cells"][i], 'spreadsheet:columnIndex', p[i] )
+
+				widget = GafferUI.SpreadsheetUI._RowsPlugValueWidget( rowsPlug )
+				qtHeader = widget._RowsPlugValueWidget__defaultTable._qtWidget().horizontalHeader()
+
+				self.assertEqual( [ qtHeader.visualIndex( i ) for i in range( l ) ], list( p ) )
 
 if __name__ == "__main__":
 	unittest.main()

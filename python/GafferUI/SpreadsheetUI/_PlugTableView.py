@@ -65,7 +65,6 @@ class _PlugTableView( GafferUI.Widget ) :
 	Mode = IECore.Enum.create( "RowNames", "Defaults", "Cells" )
 
 	def __init__( self, selectionModel, mode, **kw ) :
-
 		tableView = _NavigableTable()
 		GafferUI.Widget.__init__( self, tableView, **kw )
 
@@ -168,7 +167,12 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		selection = self._qtWidget().selectionModel().selectedIndexes()
 		model = self._qtWidget().model()
-		return [ model.plugForIndex( i ) for i in selection ]
+		# Return plugs corresponding to selected indices
+		# Omit indices which are hidden ( John considers this a Qt bug that we need to work around:
+		# shift clicking two columns shouldn't select invisible columns in between them.  Using this
+		# code, we can prevent weird things from happening to columns you're not looking at, though
+		# you will still see weird selection changes when clicking between tabs ).
+		return [ model.plugForIndex( i ) for i in selection if not self._qtWidget().isIndexHidden( i ) ]
 
 	def editPlugs( self, plugs, scrollTo = True, allowDirectEditing = True, position = None ) :
 
@@ -308,10 +312,37 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		rowsPlug = self._qtWidget().model().rowsPlug()
 		header = self._qtWidget().horizontalHeader()
-		for index, plug in enumerate( rowsPlug.defaultRow()["cells"] ) :
-			visualIndex = Gaffer.Metadata.value( plug, "spreadsheet:columnIndex" )
+
+		# Get the desired column indices ( may be None on columns with no metadata set )
+		columnIndices = [ Gaffer.Metadata.value( plug, "spreadsheet:columnIndex" ) for plug in rowsPlug.defaultRow()["cells"] ]
+
+		# Prepare a set to query if an index is used
+		usedColumnIndices = set( columnIndices )
+
+		# The index used for columns with no metadata
+		defaultIndex = 0
+
+		# Prepare a list of physical indices and target indices
+		# ( the target index goes first so it's easy to sort by )
+		rowSortList = []
+		for physicalIndex, targetIndex in enumerate( columnIndices ):
+			if not targetIndex is None:
+				# If we have metadata, use it
+				rowSortList.append( ( targetIndex, physicalIndex ) )
+			else:
+				# Nothing set, find the next available default index
+				while defaultIndex in usedColumnIndices:
+					defaultIndex += 1
+				rowSortList.append( ( defaultIndex, physicalIndex ) )
+				defaultIndex += 1
+
+		# Use the column target index as a key to sort the physical indices
+		sortedPhysicalIndices = [ i[1] for i in sorted( rowSortList ) ]
+
+		# Loop through the sorted physical indices in order, moving one to each consecutive index
+		for target, physicalIndex in enumerate( sortedPhysicalIndices ) :
 			self.__ignoreColumnMoved = True
-			header.moveSection( header.visualIndex( index ), visualIndex if visualIndex is not None else index )
+			header.moveSection( header.visualIndex( physicalIndex ), target )
 			self.__ignoreColumnMoved = False
 
 	def __applyColumnVisibility( self ) :
@@ -725,7 +756,8 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		model = selectionModel.model()
 		if all( [ model.presentsCheckstate( i ) for i in selectedIndexes ] ) :
-			valuePlugs = [ model.valuePlugForIndex( i ) for i in selectedIndexes ]
+			# See comment in selectedPlugs() about needing to omit hidden indices
+			valuePlugs = [ model.valuePlugForIndex( i ) for i in selectedIndexes if not self._qtWidget().isIndexHidden( i ) ]
 			self.__toggleBooleans( valuePlugs )
 		else :
 			self.__editSelectedPlugs()
@@ -736,6 +768,11 @@ class _PlugTableView( GafferUI.Widget ) :
 		# focused cell, unless it has a checked state, and then it'll toggle
 		# that. As we support `return` to do that, then make sure space only
 		# ever toggles the selection state of the focused cell.
+		# \todo - is it possible that currentIndex could be on a hidden tab at the moment spacebar
+		# is pressed?  I haven't been able to test this really, because if I switch tabs and
+		# press space, the spreadsheet doesn't have focus, and it maximizes the tab instead.
+		# This prevents this code from running incorrectly, but it doesn't feel like good
+		# behaviour.
 		currentIndex = self._qtWidget().selectionModel().currentIndex()
 		if currentIndex.isValid() :
 			self._qtWidget().selectionModel().select( currentIndex, QtCore.QItemSelectionModel.Toggle )
@@ -1190,6 +1227,7 @@ class _PlugTableView( GafferUI.Widget ) :
 	def __modelReset( self ) :
 
 		self.__applyColumnVisibility()
+		self.__applyColumnOrderMetadata()
 		self.__applyColumnWidthMetadata()
 		self.__applyRowNamesWidth()
 
