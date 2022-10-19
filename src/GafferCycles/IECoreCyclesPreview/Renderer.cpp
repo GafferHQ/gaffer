@@ -916,6 +916,7 @@ IECore::InternedString g_maxLevelAttributeName( "cycles:max_level" );
 IECore::InternedString g_dicingRateAttributeName( "cycles:dicing_rate" );
 // Cycles Light
 IECore::InternedString g_lightAttributeName( "cycles:light" );
+IECore::InternedString g_muteLightAttributeName( "light:mute" );
 // Dupli
 IECore::InternedString g_dupliGeneratedAttributeName( "cycles:dupli_generated" );
 IECore::InternedString g_dupliUVAttributeName( "cycles:dupli_uv" );
@@ -1008,6 +1009,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 			// Light shader
 
+			m_muteLight = attributeValue<bool>( g_muteLightAttributeName, attributes, false );
 			m_lightAttribute = attribute<IECoreScene::ShaderNetwork>( g_lightAttributeName, attributes );
 			if( m_lightAttribute )
 			{
@@ -1119,6 +1121,8 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				ShaderAssignPair pair = ShaderAssignPair( light, ccl::array<ccl::Node*>() );
 				pair.second.push_back_slow( m_lightShader->shader() );
 				m_shaderCache->addShaderAssignment( pair );
+
+				light->set_is_enabled( !m_muteLight );
 			}
 			else
 			{
@@ -1126,6 +1130,10 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				// intended for another renderer, so we turn off the Cycles
 				// light.
 				light->set_is_enabled( false );
+			}
+
+			if( !light->get_is_enabled() )
+			{
 				// Alas, `ccl::LightManager::test_enabled_lights()` will
 				// re-enable the light unless we also set its strength to zero.
 				light->set_strength( ccl::zero_float3() );
@@ -1313,6 +1321,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		InternedString m_lightGroup;
 		// Need to assign shaders in a deferred manner
 		ShaderCache *m_shaderCache;
+		bool m_muteLight;
 
 };
 
