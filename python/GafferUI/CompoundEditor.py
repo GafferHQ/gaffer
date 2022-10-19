@@ -1527,11 +1527,7 @@ class _PinningWidget( _Frame ) :
 		else :
 			icon = "nodeSet%s.png"  % editor.getNodeSet().__class__.__name__
 
-		# Make sure we don't break if an image is missing when setImage throws
-		try :
-			self.__icon.setImage( icon )
-		except Exception as e :
-			sys.stderr.write( str(e) )
+		self.__icon.setImage( icon )
 
 		# Bookmark set numeric indicator
 
