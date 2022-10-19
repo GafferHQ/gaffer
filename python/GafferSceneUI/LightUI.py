@@ -111,6 +111,17 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"mute" : [
+
+			"description",
+			"""
+			Whether this light is muted. When toggled, the attribute \"light:mute\"
+			will be set to true. When not toggled, it will be omitted from the attributes.
+			""",
+
+			"layout:section", "Light Linking",
+		],
+
 		"visualiserAttributes" : [
 
 			"description",

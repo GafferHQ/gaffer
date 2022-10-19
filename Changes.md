@@ -9,6 +9,7 @@ Features
 - Mute/Solo : Added the ability to mute and solo lights.
   - A light can be muted by setting the `light:mute` attribute. If that attribute is not present, the light will not be muted.
   - One or more lights can be enabled exclusively via membership in the `soloLights` set. If that set has one or more members, only the lights in that set will emit. If the set is empty, all lights emit according to their mute state. If a light is both muted and in the `soloLights` set, it will emit.
+  - Lights : Added a `mute` toggle, which can be accessed in the node editor from the `Light Linking` tab.
 
 Fixes
 -----
