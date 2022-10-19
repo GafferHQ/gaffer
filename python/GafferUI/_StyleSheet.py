@@ -1564,7 +1564,6 @@ _styleSheet = string.Template(
 		margin-right: 0;
 	}
 
-
 	/* PathChooseWidget */
 
 	*[gafferClass="GafferUI.PathChooserWidget"] #gafferPathListingContainer {
@@ -1636,6 +1635,38 @@ _styleSheet = string.Template(
 		border-radius: 2px;
 		border: none;
 		background: $background;
+	}
+
+	QFrame[gafferClass="GafferImageUI.ImageViewUI._CompareImageWidget"] #menuDownArrow {
+		margin-top: 1px;
+		margin-left: 2px;
+		margin-right: 1px;
+	}
+
+	QFrame[gafferClass="GafferImageUI.ImageViewUI._CompareImageWidget"] {
+		padding: 2px;
+		padding-left: 4px;
+		border-radius: 2px;
+		border: 1px solid $backgroundDarkHighlight;
+		border-top-color: $backgroundLightHighlight;
+		background-color : qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 $backgroundLighter, stop: 0.1 $backgroundLightHighlight, stop: 0.90 $backgroundLightLowlight);
+		border-top-left-radius: 1px;
+		border-bottom-left-radius: 1px;
+		border-left-color: $backgroundLightHighlightAdjoined;
+		border-top-right-radius: 4px;
+		border-bottom-right-radius: 4px;
+	}
+
+	QFrame[gafferClass="GafferImageUI.ImageViewUI._CompareImageWidget"]:disabled {
+		background-color: $backgroundHighlight;
+	}
+
+	QFrame[gafferClass="GafferImageUI.ImageViewUI._CompareImageWidget"]:disabled {
+		background-color: $backgroundHighlight;
+	}
+
+	QFrame[gafferClass="GafferImageUI.ImageViewUI._CompareImageWidget"][gafferHighlighted="true"] {
+		border: 1px solid $brightColor;
 	}
 
 	"""
