@@ -261,7 +261,7 @@ for key in [
 ] :
 
 	Gaffer.Metadata.registerValue(
-		Gaffer.Spreadsheet.RowsPlug, "row*.cells...", key,
+		Gaffer.Spreadsheet.RowsPlug, "row*.*...", key,
 		functools.partial( __defaultCellMetadata, key = key ),
 	)
 
@@ -314,5 +314,5 @@ def __presetValuesMetadata( plug ) :
 	result.extend( Gaffer.Metadata.value( source, "presetValues" ) or [] )
 	return result
 
-Gaffer.Metadata.registerValue( Gaffer.Spreadsheet.RowsPlug, "row*.cells...", "presetNames", __presetNamesMetadata )
-Gaffer.Metadata.registerValue( Gaffer.Spreadsheet.RowsPlug, "row*.cells...", "presetValues", __presetValuesMetadata )
+Gaffer.Metadata.registerValue( Gaffer.Spreadsheet.RowsPlug, "row*.*...", "presetNames", __presetNamesMetadata )
+Gaffer.Metadata.registerValue( Gaffer.Spreadsheet.RowsPlug, "row*.*...", "presetValues", __presetValuesMetadata )

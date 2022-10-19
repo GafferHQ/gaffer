@@ -837,5 +837,20 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 
 				self.assertEqual( [ qtHeader.visualIndex( i ) for i in range( l ) ], list( p ) )
 
+	def testRowMetadata( self ) :
+
+		s = Gaffer.Spreadsheet()
+		s["rows"].addColumn( Gaffer.IntPlug( "a" ) )
+		s["rows"].addColumn( Gaffer.IntPlug( "b" ) )
+		s["rows"].addRow()
+
+		Gaffer.Metadata.registerValue( s["rows"].defaultRow()["name"], "plugValueWidget:type", "Test" )
+		Gaffer.Metadata.registerValue( s["rows"].defaultRow()["cells"]["a"]["value"], "plugValueWidget:type", "Test2" )
+		Gaffer.Metadata.registerValue( s["rows"].defaultRow()["cells"]["b"]["value"], "plugValueWidget:type", "Test3" )
+
+		self.assertEqual( Gaffer.Metadata.value( s["rows"][1]["name"], "plugValueWidget:type" ), "Test" )
+		self.assertEqual( Gaffer.Metadata.value( s["rows"][1]["cells"]["a"]["value"], "plugValueWidget:type" ), "Test2" )
+		self.assertEqual( Gaffer.Metadata.value( s["rows"][1]["cells"]["b"]["value"], "plugValueWidget:type" ), "Test3" )
+
 if __name__ == "__main__":
 	unittest.main()
