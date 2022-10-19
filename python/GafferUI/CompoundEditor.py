@@ -1483,7 +1483,7 @@ class _PinningWidget( _Frame ) :
 			self.__icon.buttonPressSignal().connect( Gaffer.WeakMethod( self.__showEditorFocusMenu ), scoped=False )
 
 
-			self.__menuButton = GafferUI.Button( image="collapsibleArrowDown.png", hasFrame=False, highlightOnOver=False )
+			self.__menuButton = GafferUI.Button( image="menuIndicator.png", hasFrame=False, highlightOnOver=False )
 			self.__menuButton._qtWidget().setObjectName( "menuDownArrow" )
 			self.__menuButton.buttonPressSignal().connect( Gaffer.WeakMethod( self.__showEditorFocusMenu ), scoped=False )
 
