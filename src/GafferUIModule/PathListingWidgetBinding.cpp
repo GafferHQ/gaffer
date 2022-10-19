@@ -1303,6 +1303,15 @@ class PathModel : public QAbstractItemModel
 						}
 					}
 
+					if( expanded )
+					{
+						// The QTreeView is inevitably going to query the
+						// children after we call `treeView->setExpanded()`.
+						// Get ahead of the game by creating them during this
+						// update.
+						dirtyIfUnrequested( m_childItemsState );
+					}
+
 					if( expanded != m_expandedInTreeView )
 					{
 						model->queueEdit(
@@ -1312,12 +1321,6 @@ class PathModel : public QAbstractItemModel
 								treeView->setExpanded( model->createIndex( m_row, 0, this ), expanded );
 							}
 						);
-					}
-
-					if( match & IECore::PathMatcher::DescendantMatch )
-					{
-						// Force creation of children so we can expand them.
-						dirtyIfUnrequested( m_childItemsState );
 					}
 
 					// Handle expansion for selection updates.

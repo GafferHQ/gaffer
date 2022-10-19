@@ -623,9 +623,13 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 
 		w.setPathExpanded( p.copy().setFromString( "/a/b/c" ), True )
 		self.assertTrue( w.getPathExpanded( p.copy().setFromString( "/a/b/c" ) ) )
+		self.assertEqual( w.getExpansion(), IECore.PathMatcher( [ "/a/b/c" ] ) )
 
 		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
-		self.assertEqual( self.__expansionFromQt( w ), IECore.PathMatcher( [ "/a/b/c" ] ) )
+
+		# We don't expect `/a/b/c` to have been expanded in Qt yet, because the ancestors
+		# aren't expanded and it won't be visible anyway.
+		self.assertEqual( self.__expansionFromQt( w ), IECore.PathMatcher() )
 
 	def testColumns( self ) :
 
@@ -1087,6 +1091,27 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( widget._qtWidget().model() ) )
 
 		self.assertEqual( path2.visitedPaths, path1.visitedPaths )
+
+	def testChildrenAreCreatedWhenParentIsExpanded( self ) :
+
+		# Create an infinite model and expand some specific parents.
+
+		path = self.InfinitePath( "/" )
+
+		widget = GafferUI.PathListingWidget(
+			path = path,
+			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree
+		)
+
+		widget.setExpansion( IECore.PathMatcher( [ "/", "/a", "/a/b" ] ) )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( widget._qtWidget().model() ) )
+
+		# We want the children to have been created for those parents
+		# during the first update, even without a specific query for
+		# them. This means we're ready for the inevitable query from
+		# the QTreeView without needing to launch a second update.
+
+		self.assertEqual( path.childrenCallPaths, IECore.PathMatcher( [ "/", "/a", "/a/b" ] ) )
 
 	def testLegacySelectionWithNonEmptyRootPath( self ) :
 
