@@ -889,6 +889,7 @@ IECore::InternedString g_lightShaderAttributeName( "light" );
 IECore::InternedString g_doubleSidedAttributeName( "doubleSided" );
 IECore::InternedString g_setsAttributeName( "sets" );
 IECore::InternedString g_automaticInstancingAttributeName( "gaffer:automaticInstancing" );
+IECore::InternedString g_muteLightAttributeName( "light:mute" );
 
 IECore::InternedString g_oslSurfaceShaderAttributeName( "osl:surface" );
 IECore::InternedString g_oslShaderAttributeName( "osl:shader" );
@@ -1031,6 +1032,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			m_lightShader = attribute<IECoreScene::ShaderNetwork>( g_arnoldLightShaderAttributeName, attributes );
 			m_lightShader = m_lightShader ? m_lightShader : attribute<IECoreScene::ShaderNetwork>( g_lightShaderAttributeName, attributes );
 			substituteShaderIfNecessary( m_lightShader, attributes );
+			m_muteLight = attributeValue<bool>( g_muteLightAttributeName, attributes, false );
 
 			m_lightFilterShader = attribute<IECoreScene::ShaderNetwork>( g_arnoldLightFilterShaderAttributeName, attributes );
 			substituteShaderIfNecessary( m_lightFilterShader, attributes );
@@ -1406,6 +1408,11 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		const IECoreScene::ShaderNetwork *lightShader() const
 		{
 			return m_lightShader.get();
+		}
+
+		bool muteLight() const
+		{
+			return m_muteLight;
 		}
 
 		/// Return the shader assigned to a world space light filter
@@ -1882,6 +1889,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		ArnoldShaderPtr m_filterMap;
 		ArnoldShaderPtr m_uvRemap;
 		IECoreScene::ConstShaderNetworkPtr m_lightShader;
+		bool m_muteLight;
 		IECoreScene::ConstShaderNetworkPtr m_lightFilterShader;
 		std::vector<ArnoldShaderPtr> m_lightFilterShaders;
 		IECore::ConstInternedStringVectorDataPtr m_traceSets;
@@ -2585,6 +2593,13 @@ class ArnoldLight : public ArnoldObjectBase
 			)
 			{
 				updateLightFilterLinks();
+			}
+
+			// Update mute state.
+
+			if( m_lightShader )
+			{
+				AiNodeSetDisabled( m_lightShader->root(), m_attributes->muteLight() );
 			}
 
 			return true;

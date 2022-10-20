@@ -12,6 +12,7 @@ Features
   - Lights : Added a `mute` toggle, which can be accessed in the node editor from the `Light Linking` tab.
   - Added a visual indication to lights in the viewport when they are muted. Muted lights use a dark gray outline instead of yellow.
   - Cycles : Muted lights are disabled in renders.
+  - Arnold : Muted lights are disabled in renders.
 
 Fixes
 -----
