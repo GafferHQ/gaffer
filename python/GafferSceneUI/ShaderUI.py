@@ -287,7 +287,8 @@ def __shaderSubMenu( searchPaths, extensions, nodeCreator, matchExpression, sear
 		for root, dirs, files in os.walk( path ) :
 			for file in files :
 				if os.path.splitext( file )[1][1:] in extensions :
-					shaderPath = os.path.join( root, file ).partition( path )[-1].lstrip( "/" )
+					shaderPath = os.path.join( root, file ).partition( path )[-1].lstrip( os.path.sep )
+					shaderPath = shaderPath.replace( "\\", "/" )
 					if __hiddenShadersPathMatcher.match( shaderPath ) & IECore.PathMatcher.Result.ExactMatch :
 						continue
 					if shaderPath not in shaders and matchExpression.match( shaderPath ) :
