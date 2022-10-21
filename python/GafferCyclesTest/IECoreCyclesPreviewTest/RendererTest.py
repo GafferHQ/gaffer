@@ -728,67 +728,71 @@ class RendererTest( GafferTest.TestCase ) :
 
 		# Tests for each of the primitive variables.
 
-		self.__testPrimitiveVariableInterpolation(
-			plane, "constantColor",
-			{
-				topLeft : plane["constantColor"].data.value,
-				topCenter : plane["constantColor"].data.value,
-				center : plane["constantColor"].data.value,
-				bottomRight : plane["constantColor"].data.value,
-			}
-		)
+		for interpolation in [ "linear", "catmullClark" ] :
 
-		self.__testPrimitiveVariableInterpolation(
-			plane, "constantInt",
-			{
-				topLeft : plane["constantInt"].data.value,
-				topCenter : plane["constantInt"].data.value,
-				center : plane["constantInt"].data.value,
-				bottomRight : plane["constantInt"].data.value,
-			}
-		)
+			plane.setInterpolation( interpolation )
 
-		self.__testPrimitiveVariableInterpolation(
-			plane, "uniformColor",
-			{
-				topLeft : imath.Color4f( 0, 0, 0, 1 ),
-				topCenter : imath.Color4f( 1, 1, 1, 1 ),
-				center : imath.Color4f( 4, 4, 4, 1 ),
-				bottomRight : imath.Color4f( 8, 8, 8, 1 ),
-			}
-		)
+			self.__testPrimitiveVariableInterpolation(
+				plane, "constantColor",
+				{
+					topLeft : plane["constantColor"].data.value,
+					topCenter : plane["constantColor"].data.value,
+					center : plane["constantColor"].data.value,
+					bottomRight : plane["constantColor"].data.value,
+				}
+			)
 
-		self.__testPrimitiveVariableInterpolation(
-			plane, "uniformIndexedColor",
-			{
-				topLeft : imath.Color4f( 1, 0, 0, 1 ),
-				topCenter : imath.Color4f( 0, 1, 0, 1 ),
-				center : imath.Color4f( 1, 0, 0, 1 ),
-				bottomRight : imath.Color4f( 1, 0, 0, 1 ),
-			}
-		)
+			self.__testPrimitiveVariableInterpolation(
+				plane, "constantInt",
+				{
+					topLeft : plane["constantInt"].data.value,
+					topCenter : plane["constantInt"].data.value,
+					center : plane["constantInt"].data.value,
+					bottomRight : plane["constantInt"].data.value,
+				}
+			)
 
-		self.__testPrimitiveVariableInterpolation(
-			plane, "vertexColor",
-			{
-				topLeft : imath.Color4f( topLeft.x, topLeft.y, 0, 1 ),
-				topCenter : imath.Color4f( topCenter.x, topCenter.y, 0, 1 ),
-				center : imath.Color4f( center.x, center.y, 0, 1 ),
-				bottomRight : imath.Color4f( bottomRight.x, bottomRight.y, 0, 1 ),
-			},
-			maxDifference = 0.01
-		)
+			self.__testPrimitiveVariableInterpolation(
+				plane, "uniformColor",
+				{
+					topLeft : imath.Color4f( 0, 0, 0, 1 ),
+					topCenter : imath.Color4f( 1, 1, 1, 1 ),
+					center : imath.Color4f( 4, 4, 4, 1 ),
+					bottomRight : imath.Color4f( 8, 8, 8, 1 ),
+				}
+			)
 
-		self.__testPrimitiveVariableInterpolation(
-			plane, "varyingColor",
-			{
-				topLeft : imath.Color4f( topLeft.x, topLeft.y, 0, 1 ),
-				topCenter : imath.Color4f( topCenter.x, topCenter.y, 0, 1 ),
-				center : imath.Color4f( center.x, center.y, 0, 1 ),
-				bottomRight : imath.Color4f( bottomRight.x, bottomRight.y, 0, 1 ),
-			},
-			maxDifference = 0.01
-		)
+			self.__testPrimitiveVariableInterpolation(
+				plane, "uniformIndexedColor",
+				{
+					topLeft : imath.Color4f( 1, 0, 0, 1 ),
+					topCenter : imath.Color4f( 0, 1, 0, 1 ),
+					center : imath.Color4f( 1, 0, 0, 1 ),
+					bottomRight : imath.Color4f( 1, 0, 0, 1 ),
+				}
+			)
+
+			self.__testPrimitiveVariableInterpolation(
+				plane, "vertexColor",
+				{
+					topLeft : imath.Color4f( topLeft.x, topLeft.y, 0, 1 ),
+					topCenter : imath.Color4f( topCenter.x, topCenter.y, 0, 1 ),
+					center : imath.Color4f( center.x, center.y, 0, 1 ),
+					bottomRight : imath.Color4f( bottomRight.x, bottomRight.y, 0, 1 ),
+				},
+				maxDifference = 0.01
+			)
+
+			self.__testPrimitiveVariableInterpolation(
+				plane, "varyingColor",
+				{
+					topLeft : imath.Color4f( topLeft.x, topLeft.y, 0, 1 ),
+					topCenter : imath.Color4f( topCenter.x, topCenter.y, 0, 1 ),
+					center : imath.Color4f( center.x, center.y, 0, 1 ),
+					bottomRight : imath.Color4f( bottomRight.x, bottomRight.y, 0, 1 ),
+				},
+				maxDifference = 0.01
+			)
 
 	def testPointsPrimitiveVariableInterpolation( self ) :
 
@@ -997,16 +1001,19 @@ class RendererTest( GafferTest.TestCase ) :
 			plane["uv"].interpolation, IECoreScene.PrimitiveVariable.Interpolation.FaceVarying
 		)
 
-		self.__testPrimitiveVariableInterpolation(
-			plane, "uv",
-			{
-				topLeft : imath.Color4f( topLeft.x, topLeft.y, 0, 1 ),
-				topCenter : imath.Color4f( topCenter.x, topCenter.y, 0, 1 ),
-				center : imath.Color4f( center.x, center.y, 0, 1 ),
-				bottomRight : imath.Color4f( bottomRight.x, bottomRight.y, 0, 1 ),
-			},
-			maxDifference = 0.01
-		)
+		for interpolation in [ "linear", "catmullClark" ] :
+
+			plane.setInterpolation( interpolation )
+			self.__testPrimitiveVariableInterpolation(
+				plane, "uv",
+				{
+					topLeft : imath.Color4f( topLeft.x, topLeft.y, 0, 1 ),
+					topCenter : imath.Color4f( topCenter.x, topCenter.y, 0, 1 ),
+					center : imath.Color4f( center.x, center.y, 0, 1 ),
+					bottomRight : imath.Color4f( bottomRight.x, bottomRight.y, 0, 1 ),
+				},
+				maxDifference = 0.01
+			)
 
 		# Test Vertex
 
@@ -1020,16 +1027,19 @@ class RendererTest( GafferTest.TestCase ) :
 			plane["uv"].interpolation, IECoreScene.PrimitiveVariable.Interpolation.Vertex
 		)
 
-		self.__testPrimitiveVariableInterpolation(
-			plane, "uv",
-			{
-				topLeft : imath.Color4f( topLeft.x, topLeft.y, 0, 1 ),
-				topCenter : imath.Color4f( topCenter.x, topCenter.y, 0, 1 ),
-				center : imath.Color4f( center.x, center.y, 0, 1 ),
-				bottomRight : imath.Color4f( bottomRight.x, bottomRight.y, 0, 1 ),
-			},
-			maxDifference = 0.01
-		)
+		for interpolation in [ "linear", "catmullClark" ] :
+
+			plane.setInterpolation( interpolation )
+			self.__testPrimitiveVariableInterpolation(
+				plane, "uv",
+				{
+					topLeft : imath.Color4f( topLeft.x, topLeft.y, 0, 1 ),
+					topCenter : imath.Color4f( topCenter.x, topCenter.y, 0, 1 ),
+					center : imath.Color4f( center.x, center.y, 0, 1 ),
+					bottomRight : imath.Color4f( bottomRight.x, bottomRight.y, 0, 1 ),
+				},
+				maxDifference = 0.01
+			)
 
 	def __colorAtUV( self, image, uv ) :
 

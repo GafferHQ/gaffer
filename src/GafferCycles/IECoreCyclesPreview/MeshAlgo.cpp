@@ -165,6 +165,7 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 
 	// Convert primitive variables.
 
+	ccl::AttributeSet &attributes = cmesh->get_subdivision_type() != ccl::Mesh::SUBDIVISION_NONE ? cmesh->subd_attributes : cmesh->attributes;
 	for( const auto &[name, variable] : mesh->variables )
 	{
 		if( name == "P" )
@@ -175,17 +176,17 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 		switch( variable.interpolation )
 		{
 			case PrimitiveVariable::Constant :
-				GeometryAlgo::convertPrimitiveVariable( name, variable, cmesh->attributes, ccl::ATTR_ELEMENT_MESH );
+				GeometryAlgo::convertPrimitiveVariable( name, variable, attributes, ccl::ATTR_ELEMENT_MESH );
 				break;
 			case PrimitiveVariable::Uniform :
-				GeometryAlgo::convertPrimitiveVariable( name, variable, cmesh->attributes, ccl::ATTR_ELEMENT_FACE );
+				GeometryAlgo::convertPrimitiveVariable( name, variable, attributes, ccl::ATTR_ELEMENT_FACE );
 				break;
 			case PrimitiveVariable::Vertex :
 			case PrimitiveVariable::Varying :
-				GeometryAlgo::convertPrimitiveVariable( name, variable, cmesh->attributes, ccl::ATTR_ELEMENT_VERTEX );
+				GeometryAlgo::convertPrimitiveVariable( name, variable, attributes, ccl::ATTR_ELEMENT_VERTEX );
 				break;
 			case PrimitiveVariable::FaceVarying :
-				GeometryAlgo::convertPrimitiveVariable( name, variable, cmesh->attributes, ccl::ATTR_ELEMENT_CORNER );
+				GeometryAlgo::convertPrimitiveVariable( name, variable, attributes, ccl::ATTR_ELEMENT_CORNER );
 				break;
 			default :
 				break;
