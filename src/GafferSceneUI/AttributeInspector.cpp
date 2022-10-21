@@ -200,6 +200,8 @@ Gaffer::ValuePlugPtr attributePlug( const Gaffer::CompoundDataPlug *parentPlug, 
 // AttributeInspector
 //////////////////////////////////////////////////////////////////////////
 
+static InternedString g_lightMuteAttributeName( "light:mute" );
+
 AttributeInspector::AttributeInspector(
 	const GafferScene::ScenePlugPtr &scene,
 	const Gaffer::PlugPtr &editScope,
@@ -249,6 +251,10 @@ Gaffer::ValuePlugPtr AttributeInspector::source( const GafferScene::SceneAlgo::H
 
 	if( auto light = runTimeCast<Light>( sceneNode ) )
 	{
+		if( m_attribute == g_lightMuteAttributeName )
+		{
+			return light->mutePlug();
+		}
 		return attributePlug( light->visualiserAttributesPlug(), m_attribute );
 	}
 

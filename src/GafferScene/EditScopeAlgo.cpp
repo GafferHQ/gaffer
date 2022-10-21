@@ -86,7 +86,8 @@ AttributeRegistry g_attributeRegistry {
 	{ "gl:visualiser:maxTextureResolution", new IECore::IntData( 512 ) },
 	{ "gl:visualiser:frustum", new IECore::StringData( "whenSelected" ) },
 	{ "gl:light:frustumScale", new IECore::FloatData( 1.0f ) },
-	{ "gl:light:drawingMode", new IECore::StringData( "texture" ) }
+	{ "gl:light:drawingMode", new IECore::StringData( "texture" ) },
+	{ "light:mute", new IECore::BoolData( false ) }
 };
 
 SceneProcessorPtr pruningProcessor()

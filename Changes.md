@@ -9,6 +9,7 @@ Features
 Improvements
 ------------
 
+- Light Editor : Added a "Mute" column for toggling a light's mute attribute on and off.
 - Cycles [^1] :
   - Replaced `size` on portals and quad lights with separate `width` and `height` parameters, and renamed `size` parameter of disk lights to `width`.
   - Added `use_camera`, `use_caustics` and `normalize` parameters to lights.

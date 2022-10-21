@@ -347,6 +347,15 @@
 				"meshLight",
 				"photometricLight",
 				"emptyLocation",
+				"muteLight",
+				"unMuteLight",
+				"muteLightFaded",
+				"unMuteLightFaded",
+				"muteLightHighlighted",
+				"unMuteLightHighlighted",
+				"muteLightFadedHighlighted",
+				"unMuteLightFadedHighlighted",
+				"muteLightUndefined",
 			]
 		},
 
