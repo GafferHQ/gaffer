@@ -90,104 +90,6 @@ std::string shaderCacheGetter( const std::string &shaderName, size_t &cost )
 typedef IECore::LRUCache<std::string, std::string> ShaderSearchPathCache;
 ShaderSearchPathCache g_shaderSearchPathCache( shaderCacheGetter, 10000 );
 
-ccl::ShaderNode *getShaderNode( ccl::ShaderGraph *graph, const std::string &name )
-{
-#define MAP_NODE(nodeTypeName, nodeType) if( name == nodeTypeName ){ auto *shaderNode = graph->create_node<nodeType>(); return (ccl::ShaderNode*)shaderNode; }
-	MAP_NODE( "rgb_curves", ccl::RGBCurvesNode );
-	MAP_NODE( "vector_curves", ccl::VectorCurvesNode );
-	MAP_NODE( "rgb_ramp", ccl::RGBRampNode );
-	MAP_NODE( "color", ccl::ColorNode );
-	MAP_NODE( "value", ccl::ValueNode );
-	MAP_NODE( "camera", ccl::CameraNode );
-	MAP_NODE( "invert", ccl::InvertNode );
-	MAP_NODE( "gamma", ccl::GammaNode );
-	MAP_NODE( "brightness_contrast", ccl::BrightContrastNode );
-	MAP_NODE( "mix", ccl::MixNode );
-	MAP_NODE( "separate_rgb", ccl::SeparateRGBNode );
-	MAP_NODE( "combine_rgb", ccl::CombineRGBNode );
-	MAP_NODE( "separate_hsv", ccl::SeparateHSVNode );
-	MAP_NODE( "combine_hsv", ccl::CombineHSVNode );
-	MAP_NODE( "separate_xyz", ccl::SeparateXYZNode );
-	MAP_NODE( "combine_xyz", ccl::CombineXYZNode );
-	MAP_NODE( "hsv", ccl::HSVNode );
-	MAP_NODE( "rgb_to_bw", ccl::RGBToBWNode );
-	MAP_NODE( "map_range", ccl::MapRangeNode );
-	MAP_NODE( "clamp", ccl::ClampNode );
-	MAP_NODE( "math", ccl::MathNode );
-	MAP_NODE( "vector_math", ccl::VectorMathNode );
-	MAP_NODE( "vector_rotate", ccl::VectorRotateNode );
-	MAP_NODE( "vector_transform", ccl::VectorTransformNode );
-	MAP_NODE( "normal", ccl::NormalNode );
-	MAP_NODE( "mapping", ccl::MappingNode );
-	MAP_NODE( "fresnel", ccl::FresnelNode );
-	MAP_NODE( "layer_weight", ccl::LayerWeightNode );
-	MAP_NODE( "add_closure", ccl::AddClosureNode );
-	MAP_NODE( "mix_closure", ccl::MixClosureNode );
-	MAP_NODE( "attribute", ccl::AttributeNode );
-	MAP_NODE( "background_shader", ccl::BackgroundNode );
-	MAP_NODE( "holdout", ccl::HoldoutNode );
-	MAP_NODE( "anisotropic_bsdf", ccl::AnisotropicBsdfNode );
-	MAP_NODE( "diffuse_bsdf", ccl::DiffuseBsdfNode );
-	MAP_NODE( "subsurface_scattering", ccl::SubsurfaceScatteringNode );
-	MAP_NODE( "glossy_bsdf", ccl::GlossyBsdfNode );
-	MAP_NODE( "glass_bsdf", ccl::GlassBsdfNode );
-	MAP_NODE( "refraction_bsdf", ccl::RefractionBsdfNode );
-	MAP_NODE( "toon_bsdf", ccl::ToonBsdfNode );
-	MAP_NODE( "hair_bsdf", ccl::HairBsdfNode );
-	MAP_NODE( "principled_hair_bsdf", ccl::PrincipledHairBsdfNode );
-	MAP_NODE( "principled_bsdf", ccl::PrincipledBsdfNode );
-	MAP_NODE( "translucent_bsdf", ccl::TranslucentBsdfNode );
-	MAP_NODE( "transparent_bsdf", ccl::TransparentBsdfNode );
-	MAP_NODE( "velvet_bsdf", ccl::VelvetBsdfNode );
-	MAP_NODE( "emission", ccl::EmissionNode );
-	MAP_NODE( "ambient_occlusion", ccl::AmbientOcclusionNode );
-	MAP_NODE( "scatter_volume", ccl::ScatterVolumeNode );
-	MAP_NODE( "absorption_volume", ccl::AbsorptionVolumeNode );
-	MAP_NODE( "principled_volume", ccl::PrincipledVolumeNode );
-	MAP_NODE( "geometry", ccl::GeometryNode );
-	MAP_NODE( "wireframe", ccl::WireframeNode );
-	MAP_NODE( "wavelength", ccl::WavelengthNode );
-	MAP_NODE( "blackbody", ccl::BlackbodyNode );
-	MAP_NODE( "light_path", ccl::LightPathNode );
-	MAP_NODE( "light_falloff", ccl::LightFalloffNode );
-	MAP_NODE( "object_info", ccl::ObjectInfoNode );
-	MAP_NODE( "particle_info", ccl::ParticleInfoNode );
-	MAP_NODE( "hair_info", ccl::HairInfoNode );
-	MAP_NODE( "volume_info", ccl::VolumeInfoNode );
-	MAP_NODE( "vertex_color", ccl::VertexColorNode );
-	MAP_NODE( "bump", ccl::BumpNode );
-	MAP_NODE( "image_texture", ccl::ImageTextureNode );
-	MAP_NODE( "environment_texture", ccl::EnvironmentTextureNode );
-	MAP_NODE( "gradient_texture", ccl::GradientTextureNode );
-	MAP_NODE( "voronoi_texture", ccl::VoronoiTextureNode );
-	MAP_NODE( "magic_texture", ccl::MagicTextureNode );
-	MAP_NODE( "wave_texture", ccl::WaveTextureNode );
-	MAP_NODE( "checker_texture", ccl::CheckerTextureNode );
-	MAP_NODE( "brick_texture", ccl::BrickTextureNode );
-	MAP_NODE( "noise_texture", ccl::NoiseTextureNode );
-	MAP_NODE( "musgrave_texture", ccl::MusgraveTextureNode );
-	MAP_NODE( "texture_coordinate", ccl::TextureCoordinateNode );
-	MAP_NODE( "sky_texture", ccl::SkyTextureNode );
-	MAP_NODE( "ies_light", ccl::IESLightNode );
-	MAP_NODE( "white_noise_texture", ccl::WhiteNoiseTextureNode );
-	MAP_NODE( "normal_map", ccl::NormalMapNode );
-	MAP_NODE( "tangent", ccl::TangentNode );
-	MAP_NODE( "uvmap", ccl::UVMapNode );
-	MAP_NODE( "point_density_texture", ccl::PointDensityTextureNode );
-	MAP_NODE( "bevel", ccl::BevelNode );
-	MAP_NODE( "displacement", ccl::DisplacementNode );
-	MAP_NODE( "vector_displacement", ccl::VectorDisplacementNode );
-	MAP_NODE( "aov_output", ccl::OutputAOVNode );
-	MAP_NODE( "set_normal", ccl::SetNormalNode );
-#if WITH_CYCLES_SDF
-	MAP_NODE( "sdf_primitive", ccl::SdfPrimitiveNode );
-	MAP_NODE( "sdf_op", ccl::SdfOpNode );
-	MAP_NODE( "sdf_vector_op", ccl::SdfVectorOpNode );
-#endif
-#undef MAP_NODE
-	return nullptr;
-}
-
 ccl::SocketType::Type getSocketType( const std::string &name )
 {
     if( name == "float" ) return ccl::SocketType::Type::FLOAT;
@@ -295,6 +197,10 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 	}
 	else if( isConverter )
 	{
+		/// \todo Why can't this be handled by the generic case below? There are NodeTypes
+		/// registered for each of these conversions, so `NodeType::find()` does work. The
+		/// only difference I can see is that this way we pass `autoconvert = true` to the
+		/// ConvertNode constructor, but it's not clear what benefit that has.
 		vector<string> split;
 		boost::split( split, shader->getName(), boost::is_any_of( "_" ) );
 		if( split.size() >= 4 ) // should be 4 eg. "convert, X, to, Y"
@@ -305,11 +211,14 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 				node = shaderGraph->add( node );
 		}
 	}
-	else
+	else if( const ccl::NodeType *nodeType = ccl::NodeType::find( ccl::ustring( shader->getName() ) ) )
 	{
-		node = getShaderNode( shaderGraph, shader->getName() );
-		if( node )
-			node = shaderGraph->add( node );
+		if( nodeType->type == ccl::NodeType::SHADER && nodeType->create )
+		{
+			node = static_cast<ccl::ShaderNode *>( nodeType->create( nodeType ) );
+			node->set_owner( shaderGraph );
+			shaderGraph->add( node );
+		}
 	}
 
 	if( !node )
