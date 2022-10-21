@@ -6,6 +6,7 @@ Features
 
 - Image Viewer :
   - Added "Match Display Windows" option to Compare Mode menu. This allows the comparison mode to directly view a low-res render over a high-res plate, providing better performance than scaling up the render using the node graph.
+  - The Color Inspector now shows color values for both images when comparing. Picking a color by dragging from the image now selects the composited on-screen color, taking into account  "Compare Mode" and the wipe.
 
 Fixes
 -----

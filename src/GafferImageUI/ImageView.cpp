@@ -1582,7 +1582,7 @@ ImageView::ImageView( const std::string &name )
 	m_imageGadgets[0]->setImage( preprocessedInPlug<ImagePlug>() );
 	m_imageGadgets[0]->setContext( getContext() );
 
-	m_comparisonSelect = new Gaffer::ContextVariables();
+	m_comparisonSelect = new Gaffer::ContextVariables( "__comparisonSelect" );
 	addChild( m_comparisonSelect );
 	m_comparisonSelect->setup( compareImagePlug() );
 	m_comparisonSelect->inPlug()->setInput( preprocessedInPlug<ImagePlug>() );
