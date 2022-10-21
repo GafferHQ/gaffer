@@ -472,7 +472,7 @@ if moduleSearchPath.find( "GafferOSL" ) :
 
 	GafferSceneUI.ShaderUI.appendShaders(
 		nodeMenu.definition(), "/OSL/Shader",
-		os.environ["OSL_SHADER_PATHS"].split( ":" ),
+		os.environ["OSL_SHADER_PATHS"].split( os.path.pathsep ),
 		[ "oso" ],
 		__shaderNodeCreator,
 		# Appleseed comes with a library of OSL shaders which we put
