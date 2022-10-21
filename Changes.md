@@ -28,6 +28,7 @@ Fixes
   - Fixed handling of `Varying` primitive variable interpolation (#4849).
   - Fixed handling of `Constant Color3f` primitive variables.
   - Fixed handling of indexed primitive variables.
+  - Fixed `"attribute edit required geometry to be regenerated"` error when changing attributes on a camera.
 - PathFilter : Fixed error when selecting a path element from a promoted `PathFilter.paths` plug (introduced in 0.61.13.0).
 - ImageView : Fixed error with display of negative colors.
 - NodeEditor : Fixed updated of section summaries when they are changed in the UI Editor.
