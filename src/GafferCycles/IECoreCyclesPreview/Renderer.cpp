@@ -671,9 +671,9 @@ class ShaderCache : public IECore::RefCounted
 				{
 					// Substitute surface (if needed)
 					IECoreScene::ShaderNetworkPtr substitutedSurfaceShader;
-					if( surfaceShader && hSubstDisp != IECore::MurmurHash() )
+					if( surfaceShader && hSubst != IECore::MurmurHash() )
 					{
-						IECoreScene::ShaderNetworkPtr substitutedSurfaceShader = surfaceShader->copy();
+						substitutedSurfaceShader = surfaceShader->copy();
 						substitutedSurfaceShader->applySubstitutions( attributes );
 						surfaceShader = substitutedSurfaceShader.get();
 					}
@@ -681,7 +681,7 @@ class ShaderCache : public IECore::RefCounted
 					IECoreScene::ShaderNetworkPtr substitutedDisplacementShader;
 					if( displacementShader && hSubstDisp != IECore::MurmurHash() )
 					{
-						IECoreScene::ShaderNetworkPtr substitutedDisplacementShader = displacementShader->copy();
+						substitutedDisplacementShader = displacementShader->copy();
 						substitutedDisplacementShader->applySubstitutions( attributes );
 						displacementShader = substitutedDisplacementShader.get();
 					}
@@ -689,7 +689,7 @@ class ShaderCache : public IECore::RefCounted
 					IECoreScene::ShaderNetworkPtr substitutedVolumeShader;
 					if( volumeShader && hSubstVol != IECore::MurmurHash() )
 					{
-						IECoreScene::ShaderNetworkPtr substitutedVolumeShader = volumeShader->copy();
+						substitutedVolumeShader = volumeShader->copy();
 						substitutedVolumeShader->applySubstitutions( attributes );
 						volumeShader = substitutedVolumeShader.get();
 					}

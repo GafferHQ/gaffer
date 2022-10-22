@@ -1064,6 +1064,72 @@ class RendererTest( GafferTest.TestCase ) :
 				maxDifference = 0.01
 			)
 
+	def testShaderSubstitutions( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+		)
+
+		fileName = os.path.join( self.temporaryDirectory(), "test.exr" )
+		renderer.output(
+			"testOutput",
+			IECoreScene.Output(
+				fileName,
+				"exr",
+				"rgba",
+				{}
+			)
+		)
+
+		# Render two planes, with the same shader on them both. Each
+		# plane has a different value for the `textureFileName` attribute,
+		# which should be successfully substituted in to make a unique shader
+		# per plane.
+
+		shader = IECoreScene.ShaderNetwork(
+			shaders = {
+				"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface" ),
+				"texture" : IECoreScene.Shader( "image_texture", "cycles:shader", { "filename" : "<attr:textureFileName>" } )
+			},
+			connections = [
+				( ( "texture", "color" ), ( "output", "emission" ) )
+			],
+			output = "output",
+		)
+
+		for translateX, name, color in [
+			( -0.1, "red", imath.Color3f( 1, 0, 0 ) ),
+			( 0.1, "green", imath.Color3f( 0, 1, 0 ) ),
+		] :
+
+			displayWindow = imath.Box2i( imath.V2i( 0 ), imath.V2i( 16 ) )
+			textureImage = IECoreImage.ImagePrimitive.createRGBFloat( color, displayWindow, displayWindow )
+			textureFileName = os.path.join( self.temporaryDirectory(), "{}.png".format( name ) )
+			IECoreImage.ImageWriter( textureImage, textureFileName ).write()
+
+			plane = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -0.1 ), imath.V2f( 0.1 ) ) )
+			# Workaround for #4890
+			plane["uniquefier"] = IECoreScene.PrimitiveVariable(
+				IECoreScene.PrimitiveVariable.Interpolation.Constant,
+				IECore.FloatData( translateX ),
+			)
+
+			cyclesPlane = renderer.object(
+				"{}Plane".format( name ), plane,
+				renderer.attributes( IECore.CompoundObject( {
+					"cycles:surface" : shader,
+					"textureFileName" : IECore.StringData( textureFileName ),
+				} ) )
+			)
+			cyclesPlane.transform( imath.M44f().translate( imath.V3f( translateX, 0, 1 ) ) )
+
+		renderer.render()
+		image = IECore.Reader.create( fileName ).read()
+
+		self.assertEqual( self.__colorAtUV( image, imath.V2f( 0.48, 0.5 ) ), imath.Color4f( 1, 0, 0, 1 ) )
+		self.assertEqual( self.__colorAtUV( image, imath.V2f( 0.52, 0.5 ) ), imath.Color4f( 0, 1, 0, 1 ) )
+
 	def __colorAtUV( self, image, uv ) :
 
 		dimensions = image.dataWindow.size() + imath.V2i( 1 )

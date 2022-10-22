@@ -34,6 +34,7 @@ Fixes
   - Fixed handling of indexed primitive variables.
   - Fixed `"attribute edit required geometry to be regenerated"` error when changing attributes on a camera.
   - Fixed `cycles:shader:displacement_method` attribute handling (#4893).
+  - Fixed shader attribute substitutions (#4921).
 - PathFilter : Fixed error when selecting a path element from a promoted `PathFilter.paths` plug (introduced in 0.61.13.0).
 - ImageView : Fixed error with display of negative colors.
 - NodeEditor : Fixed updated of section summaries when they are changed in the UI Editor.
