@@ -179,6 +179,38 @@ T *reportedCast( const IECore::RunTimeTyped *v, const char *type, const IECore::
 }
 
 template<typename T>
+const T *attribute( const IECore::InternedString &name, const IECore::CompoundObject *attributes )
+{
+	if( !attributes )
+	{
+		return nullptr;
+	}
+
+	IECore::CompoundObject::ObjectMap::const_iterator it = attributes->members().find( name );
+	if( it == attributes->members().end() )
+	{
+		return nullptr;
+	}
+	return reportedCast<const T>( it->second.get(), "attribute", name );
+}
+
+template<typename T>
+T attributeValue( const IECore::InternedString &name, const IECore::CompoundObject *attributes, const T &defaultValue )
+{
+	using DataType = IECore::TypedData<T>;
+	const DataType *data = attribute<DataType>( name, attributes );
+	return data ? data->readable() : defaultValue;
+}
+
+template<typename T>
+boost::optional<T> optionalAttribute( const IECore::InternedString &name, const IECore::CompoundObject *attributes )
+{
+	using DataType = IECore::TypedData<T>;
+	const DataType *data = attribute<DataType>( name, attributes );
+	return data ? data->readable() : boost::optional<T>();
+}
+
+template<typename T>
 T parameter( const IECore::CompoundDataMap &parameters, const IECore::InternedString &name, const T &defaultValue )
 {
 	IECore::CompoundDataMap::const_iterator it = parameters.find( name );
@@ -555,31 +587,22 @@ class ShaderCache : public IECore::RefCounted
 			IECore::MurmurHash hSubst;
 			IECore::MurmurHash hSubstDisp;
 			IECore::MurmurHash hSubstVol;
-			bool singleSided = false;
 			InternedString displacementMethod( "bump" );
 			vector<IECore::MurmurHash> hSubstAovs;
 			vector<const IECoreScene::ShaderNetwork*> aovShaders;
 
 			// Surface hash
+
+			const bool singleSided = !attributeValue<bool>( g_doubleSidedAttributeName, attributes, true );
+
 			if( surfaceShader )
 			{
 				h.append( surfaceShader->Object::hash() );
+				h.append( singleSided );
 				if( attributes )
 				{
 					surfaceShader->hashSubstitutions( attributes, hSubst );
 					h.append( hSubst );
-
-					// Sidedness hash
-					IECore::CompoundObject::ObjectMap::const_iterator it = attributes->members().find( g_doubleSidedAttributeName );
-					if( it != attributes->members().end() )
-					{
-						bool doubleSided = reportedCast<const BoolData>( it->second.get(), "attribute", g_doubleSidedAttributeName )->readable();
-						if( !doubleSided )
-						{
-							h.append( "singleSided" );
-							singleSided = true;
-						}
-					}
 				}
 			}
 
@@ -1174,33 +1197,6 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		}
 
 	private :
-
-		template<typename T>
-		static const T *attribute( const IECore::InternedString &name, const IECore::CompoundObject *attributes )
-		{
-			IECore::CompoundObject::ObjectMap::const_iterator it = attributes->members().find( name );
-			if( it == attributes->members().end() )
-			{
-				return nullptr;
-			}
-			return reportedCast<const T>( it->second.get(), "attribute", name );
-		}
-
-		template<typename T>
-		static T attributeValue( const IECore::InternedString &name, const IECore::CompoundObject *attributes, const T &defaultValue )
-		{
-			using DataType = IECore::TypedData<T>;
-			const DataType *data = attribute<DataType>( name, attributes );
-			return data ? data->readable() : defaultValue;
-		}
-
-		template<typename T>
-		static boost::optional<T> optionalAttribute( const IECore::InternedString &name, const IECore::CompoundObject *attributes )
-		{
-			using DataType = IECore::TypedData<T>;
-			const DataType *data = attribute<DataType>( name, attributes );
-			return data ? data->readable() : boost::optional<T>();
-		}
 
 		void updateVisibility( const IECore::InternedString &name, int rayType, const IECore::CompoundObject *attributes )
 		{
