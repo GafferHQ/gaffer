@@ -404,21 +404,18 @@ namespace
 IECore::InternedString g_doubleSidedAttributeName( "doubleSided" );
 IECore::InternedString g_cyclesDisplacementShaderAttributeName( "cycles:displacement" );
 IECore::InternedString g_shaderDisplacementMethodAttributeName( "cycles:shader:displacement_method" );
-std::array<IECore::InternedString, ccl::DISPLACE_NUM_METHODS> g_displacementMethodEnumNames = { {
-	"bump",
-	"true",
-	"both"
-} };
 
-ccl::DisplacementMethod nameToDisplacementMethodEnum( const IECore::InternedString &name )
+ccl::DisplacementMethod displacementMethodFromString( const string &name )
 {
-#define MAP_NAME(enumName, enum) if(name == enumName) return enum;
-	MAP_NAME(g_displacementMethodEnumNames[0], ccl::DISPLACE_BUMP);
-	MAP_NAME(g_displacementMethodEnumNames[1], ccl::DISPLACE_TRUE);
-	MAP_NAME(g_displacementMethodEnumNames[1], ccl::DISPLACE_BOTH);
-#undef MAP_NAME
-
-	return ccl::DISPLACE_BUMP;
+	if( name == "bump" )
+	{
+		return ccl::DisplacementMethod::DISPLACE_BUMP;
+	}
+	else if( name == "both" )
+	{
+		return ccl::DisplacementMethod::DISPLACE_BOTH;
+	}
+	return ccl::DisplacementMethod::DISPLACE_TRUE;
 }
 
 IECore::InternedString g_shaderUseMisAttributeName( "cycles:shader:use_mis" );
@@ -479,7 +476,7 @@ class CyclesShader : public IECore::RefCounted
 			const std::string &name,
 			const IECore::MurmurHash &h,
 			const bool singleSided,
-			const IECore::InternedString displacementMethod,
+			ccl::DisplacementMethod displacementMethod,
 			vector<const IECoreScene::ShaderNetwork *> &aovShaders
 		)
 			:	m_hash( h )
@@ -506,7 +503,7 @@ class CyclesShader : public IECore::RefCounted
 				string shaderName( name + volumeShader->getOutput().shader.string() );
 				m_shader->name = ccl::ustring( shaderName.c_str() );
 			}
-			m_shader->set_displacement_method( nameToDisplacementMethodEnum( displacementMethod ) );
+			m_shader->set_displacement_method( displacementMethod );
 			m_shader->set_owner( scene );
 			m_shader->set_graph( graph );
 			m_shader->tag_update( scene );
@@ -587,7 +584,6 @@ class ShaderCache : public IECore::RefCounted
 			IECore::MurmurHash hSubst;
 			IECore::MurmurHash hSubstDisp;
 			IECore::MurmurHash hSubstVol;
-			InternedString displacementMethod( "bump" );
 			vector<IECore::MurmurHash> hSubstAovs;
 			vector<const IECoreScene::ShaderNetwork*> aovShaders;
 
@@ -607,27 +603,23 @@ class ShaderCache : public IECore::RefCounted
 			}
 
 			// Displacement hash
+
+			ccl::DisplacementMethod displacementMethod = ccl::DisplacementMethod::DISPLACE_BUMP;
 			if( displacementShader )
 			{
-				IECore::MurmurHash disph = displacementShader->Object::hash();
+				displacementShader->hash( h );
 				if( attributes )
 				{
 					displacementShader->hashSubstitutions( attributes, hSubstDisp );
-					disph.append( hSubstDisp );
-
-					// Displacement method hash
-					IECore::CompoundObject::ObjectMap::const_iterator it = attributes->members().find( g_shaderDisplacementMethodAttributeName );
-					if( it != attributes->members().end() )
-					{
-						InternedString displacementMethodStr( reportedCast<const StringData>( it->second.get(), "attribute", g_shaderDisplacementMethodAttributeName )->readable() );
-						if( displacementMethodStr != displacementMethod )
-						{
-							disph.append( displacementMethodStr );
-							displacementMethod = displacementMethodStr;
-						}
-					}
+					h.append( hSubstDisp );
 				}
-				h.append( disph );
+				// Only look up the displacement shader attribute when we have a displacement shader,
+				// so that differences in the attribute don't needlessly change our hash when they're
+				// not relevant to the final shader.
+				displacementMethod = displacementMethodFromString(
+					attributeValue<string>( g_shaderDisplacementMethodAttributeName, attributes, "bump" )
+				);
+				h.append( displacementMethod );
 			}
 
 			// Volume hash
@@ -1243,6 +1235,12 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 		};
 
+		/// \todo Implementing this functionality here prevents us from properly
+		/// encapsulating the work of `ShaderCache::get()`, forcing us to pass an
+		/// extra hash for the things that we'll do to the shader _after_ we get
+		/// it from the cache. Instead, `ShaderCache` should apply these attributes
+		/// itself internally, and afterwards there should only be const access to
+		/// the `ccl::Shader`.
 		struct ShaderAttributes
 		{
 			ShaderAttributes( const IECore::CompoundObject *attributes )
@@ -1253,7 +1251,6 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				volumeSamplingMethod = optionalAttribute<InternedString>( g_shaderVolumeSamplingMethodAttributeName, attributes );
 				volumeInterpolationMethod = optionalAttribute<InternedString>( g_shaderVolumeInterpolationMethodAttributeName, attributes );
 				volumeStepRate = optionalAttribute<float>( g_shaderVolumeStepRateAttributeName, attributes );
-				displacementMethod = optionalAttribute<InternedString>( g_shaderDisplacementMethodAttributeName, attributes );
 			}
 
 			boost::optional<bool> useMIS;
@@ -1262,21 +1259,14 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			boost::optional<InternedString> volumeSamplingMethod;
 			boost::optional<InternedString> volumeInterpolationMethod;
 			boost::optional<float> volumeStepRate;
-			boost::optional<InternedString> displacementMethod;
 
 			void hash( IECore::MurmurHash &h, const IECore::CompoundObject *attributes ) const
 			{
 				if( useMIS && !useMIS.get() )
 					h.append( "no_mis" );
 
-				IECore::CompoundObject::ObjectMap::const_iterator it = attributes->members().find( g_cyclesDisplacementShaderAttributeName );
-				if( it != attributes->members().end() )
-				{
-					if( displacementMethod && displacementMethod.get() != "bump" )
-						h.append( displacementMethod.get() );
-				}
 				// Volume-related attributes hash
-				it = attributes->members().find( g_cyclesVolumeShaderAttributeName );
+				auto it = attributes->members().find( g_cyclesVolumeShaderAttributeName );
 				if( it != attributes->members().end() )
 				{
 					if( heterogeneousVolume && !heterogeneousVolume.get() )
@@ -1298,7 +1288,6 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				shader->set_volume_sampling_method( volumeSamplingMethod ? nameToVolumeSamplingMethodEnum( volumeSamplingMethod.get() ) : ccl::VOLUME_SAMPLING_MULTIPLE_IMPORTANCE );
 				shader->set_volume_interpolation_method( volumeInterpolationMethod ? nameToVolumeInterpolationMethodEnum( volumeInterpolationMethod.get() ) : ccl::VOLUME_INTERPOLATION_LINEAR );
 				shader->set_volume_step_rate( volumeStepRate ? volumeStepRate.get() : 1.0f );
-				shader->set_displacement_method( displacementMethod ? nameToDisplacementMethodEnum( displacementMethod.get() ) : ccl::DISPLACE_BUMP );
 
 				return true;
 			}
