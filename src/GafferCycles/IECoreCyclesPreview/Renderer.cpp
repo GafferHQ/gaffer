@@ -439,15 +439,17 @@ class CyclesShader : public IECore::RefCounted
 			m_shader->set_owner( scene );
 		}
 
-		CyclesShader( const IECoreScene::ShaderNetwork *surfaceShader,
-					  const IECoreScene::ShaderNetwork *displacementShader,
-					  const IECoreScene::ShaderNetwork *volumeShader,
-					  ccl::Scene *scene,
-					  const std::string &name,
-					  const IECore::MurmurHash &h,
-					  const bool singleSided,
-					  const IECore::InternedString displacementMethod,
-					  vector<const IECoreScene::ShaderNetwork *> &aovShaders )
+		CyclesShader(
+			const IECoreScene::ShaderNetwork *surfaceShader,
+			const IECoreScene::ShaderNetwork *displacementShader,
+			const IECoreScene::ShaderNetwork *volumeShader,
+			ccl::Scene *scene,
+			const std::string &name,
+			const IECore::MurmurHash &h,
+			const bool singleSided,
+			const IECore::InternedString displacementMethod,
+			vector<const IECoreScene::ShaderNetwork *> &aovShaders
+		)
 			:	m_hash( h )
 		{
 			ccl::ShaderGraph *graph = ShaderNetworkAlgo::convertGraph( surfaceShader, displacementShader, volumeShader, scene->shader_manager, name );
