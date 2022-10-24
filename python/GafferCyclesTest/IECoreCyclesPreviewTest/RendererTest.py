@@ -415,6 +415,22 @@ class RendererTest( GafferTest.TestCase ) :
 		)
 		del o
 
+	def testCameraAttributeEdits( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive
+		)
+
+		camera = renderer.camera( "test", IECoreScene.Camera(), renderer.attributes( IECore.CompoundObject() ) )
+
+		# Edit should succeed.
+		self.assertTrue( camera.attributes(
+			renderer.attributes( IECore.CompoundObject( { "user:test" : IECore.IntData( 10 ) } ) )
+		) )
+
+		del camera
+
 	def testDisplayDriverCropWindow( self ) :
 
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(

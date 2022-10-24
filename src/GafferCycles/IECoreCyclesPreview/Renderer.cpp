@@ -2303,7 +2303,8 @@ class CyclesCamera : public IECoreScenePreview::Renderer::ObjectInterface
 
 		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
 		{
-			return false;
+			// Attributes don't affect the camera, so the edit always "succeeds".
+			return true;
 		}
 
 		void assignID( uint32_t id ) override
@@ -2314,7 +2315,6 @@ class CyclesCamera : public IECoreScenePreview::Renderer::ObjectInterface
 	private :
 
 		SharedCCameraPtr m_camera;
-		//ConstCyclesAttributesPtr m_attributes;
 
 };
 
