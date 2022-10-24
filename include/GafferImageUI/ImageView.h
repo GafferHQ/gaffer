@@ -45,6 +45,7 @@
 
 #include "Gaffer/BoxPlug.h"
 #include "Gaffer/CompoundNumericPlug.h"
+#include "Gaffer/ContextVariables.h"
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/Switch.h"
 #include "Gaffer/TypedPlug.h"
@@ -119,6 +120,8 @@ class GAFFERIMAGEUI_API ImageView : public GafferUI::View
 		const Gaffer::StringPlug *compareModePlug() const;
 		Gaffer::BoolPlug *compareWipePlug();
 		const Gaffer::BoolPlug *compareWipePlug() const;
+		GafferImage::ImagePlug *compareImagePlug();
+		const GafferImage::ImagePlug *compareImagePlug() const;
 		Gaffer::StringPlug *compareCatalogueOutputPlug();
 		const Gaffer::StringPlug *compareCatalogueOutputPlug() const;
 
@@ -217,6 +220,7 @@ class GAFFERIMAGEUI_API ImageView : public GafferUI::View
 		Gaffer::Color4fPlugPtr m_cpuMultiplyPlug;
 		Gaffer::Color4fPlugPtr m_cpuGammaPlug;
 		Gaffer::SwitchPtr m_colorTransformSwitch;
+		Gaffer::ContextVariablesPtr m_comparisonSelect;
 
 		using DisplayTransformCreatorMap = std::map<std::string, DisplayTransformCreator>;
 		static DisplayTransformCreatorMap &displayTransformCreators();

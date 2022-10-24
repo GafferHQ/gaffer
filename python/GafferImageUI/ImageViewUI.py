@@ -129,17 +129,22 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"compare.catalogueOutput" : [
+		"compare.image" : [
 
 			"description",
 			"""
-			The catalogue output to compare with.
+			The image to compare with.
 			""",
 
-			"plugValueWidget:type", "GafferImageUI.ImageViewUI._CompareCatalogueOutputPlugValueWidget",
-			"imageViewViewPlugWidget:ctrlModifier", True,
+			"plugValueWidget:type", "GafferImageUI.ImageViewUI._CompareImageWidget",
 
 		],
+
+		"compare.catalogueOutput" : [
+			# catalogueOutput is also handled by _CompareImageWidget
+			"plugValueWidget:type", "",
+		],
+
 
 		"channels" : [
 
@@ -1140,6 +1145,12 @@ class _StateWidget( GafferUI.Widget ) :
 # Compare Widgets
 ##########################################################################
 
+def _firstValidImagePlug( node ):
+	for plug in GafferImage.ImagePlug.RecursiveOutputRange( node ) :
+		if not plug.getName().startswith( "__" ):
+			return plug
+	return None
+
 class _CompareParentPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
@@ -1148,6 +1159,9 @@ class _CompareParentPlugValueWidget( GafferUI.PlugValueWidget ) :
 		GafferUI.PlugValueWidget.__init__( self, self.__row, plug, **kw )
 
 		widgets = [ GafferUI.PlugValueWidget.create( p ) for p in plug.children( Gaffer.Plug ) ]
+
+		# Omit null widgets ( ie. for catalogueOutput which is handled by _CompareImageWidget )
+		widgets = [ w for w in widgets if w ]
 
 		widgets[0]._qtWidget().setFixedWidth( 25 ) # Mode selector is just an icon
 		widgets[0]._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetDefaultConstraint )
@@ -1158,6 +1172,12 @@ class _CompareParentPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self._updateFromPlug()
 
+		# We connect to the front, and unconditionally return True from all these methods, to
+		# ensure that we never run any of the default signal handlers from PlugValueWidget
+		self.dragEnterSignal().connectFront( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
+		self.dragLeaveSignal().connectFront( Gaffer.WeakMethod( self.__dragLeave ), scoped = False )
+		self.dropSignal().connectFront( Gaffer.WeakMethod( self.__drop ), scoped = False )
+
 	def _updateFromPlug( self ) :
 
 		with Gaffer.Context() :
@@ -1166,6 +1186,43 @@ class _CompareParentPlugValueWidget( GafferUI.PlugValueWidget ) :
 		# Disable all but mode plug if mode is "" ( comparison disabled )
 		for i in self.__row[1:]:
 			i.setEnabled( m != "" )
+
+	def __dropNode( self,  event ) :
+		if isinstance( event.data, Gaffer.Node ) :
+			return event.data
+		elif isinstance( event.data, Gaffer.Set ) :
+			for node in reversed( event.data ):
+				if isinstance( node, Gaffer.Node ) and _firstValidImagePlug( node ):
+					return node
+		else:
+			return None
+
+	def __dragEnter( self, tabbedContainer, event ) :
+
+		if self.__dropNode( event ) :
+			self.__row[-1].setHighlighted( True )
+
+		return True
+
+	def __dragLeave( self, tabbedContainer, event ) :
+
+		self.__row[-1].setHighlighted( False )
+
+		return True
+
+	def __drop( self, widget, event ) :
+
+		node = self.__dropNode( event )
+
+		if node:
+			self.__row[-1]._setState( Gaffer.StandardSet( [ node ] ), 0 )
+
+			if not self.getPlug()["mode"].getValue():
+				self.getPlug()["mode"].setValue( self.__row[0]._CompareModePlugValueWidget__hotkeyTarget() )
+
+		self.__row[-1].setHighlighted( False )
+
+		return True
 
 class _CompareModePlugValueWidget( GafferUI.PlugValueWidget ) :
 
@@ -1300,49 +1357,191 @@ class _CompareWipePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.getPlug().setValue( not v )
 
-class _CompareCatalogueOutputPlugValueWidget( GafferUI.PlugValueWidget ) :
+class _CompareImageWidget( GafferUI.Frame ) :
 
-	def __init__( self, plug, **kw ) :
+	def __init__( self, plug ) :
 
-		self.__button = GafferUI.MenuButton(
-			image = "catalogueOutput1.png",
-			menu = GafferUI.Menu(
-				Gaffer.WeakMethod( self.__menuDefinition ),
-				title = "Catalogue Output",
-			)
+		GafferUI.Frame.__init__( self, borderWidth = 0, borderStyle = GafferUI.Frame.BorderStyle.None_ )
+
+		self._qtWidget().setFixedHeight( 15 )
+		self.__node = plug.node()
+		self.__scriptNode = plug.node()["in"].getInput().node().scriptNode()
+		self.__defaultNodeSet = Gaffer.StandardSet( [] )
+		self.__nodeSet = self.__defaultNodeSet
+		self.__catalogueOutput = 0
+
+		row = GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal )
+		with row :
+
+			self.__bookmarkNumber = GafferUI.Label( horizontalAlignment=GafferUI.Label.HorizontalAlignment.Right )
+			self.__bookmarkNumber.buttonPressSignal().connect( Gaffer.WeakMethod( self.__showEditorFocusMenu ), scoped=False )
+
+			self.__icon = GafferUI.Button( hasFrame=False, highlightOnOver=False )
+			self.__icon._qtWidget().setFixedHeight( 13 )
+			self.__icon._qtWidget().setFixedWidth( 13 )
+			self.__icon.buttonPressSignal().connect( Gaffer.WeakMethod( self.__showEditorFocusMenu ), scoped=False )
+
+			self.__menuButton = GafferUI.Button( image="menuIndicator.png", hasFrame=False, highlightOnOver=False )
+			self.__menuButton._qtWidget().setObjectName( "menuDownArrow" )
+			self.__menuButton.buttonPressSignal().connect( Gaffer.WeakMethod( self.__showEditorFocusMenu ), scoped=False )
+
+		self.addChild( row )
+
+		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__showEditorFocusMenu ), scoped=False )
+
+		self._setState( self.__defaultNodeSet, 1 )
+
+	def _setState( self, nodeSet, outputIndex ):
+		self.__nodeSet = nodeSet
+		self.__catalogueOutput = outputIndex
+		self.__memberAddedConnection = self.__nodeSet.memberAddedSignal().connect(
+			Gaffer.WeakMethod( self._update ), scoped = True
 		)
-		self.__button._qtWidget().setMaximumWidth( 25 )
+		self.__memberRemovedConnection = self.__nodeSet.memberRemovedSignal().connect(
+			Gaffer.WeakMethod( self._update ), scoped = True
+		)
+		self._update()
 
-		GafferUI.PlugValueWidget.__init__( self, self.__button, plug, **kw )
+	def _update( self, *unused ) :
+		compareImage = None
 
-		self._updateFromPlug()
+		if self.__nodeSet is self.__defaultNodeSet:
+			compareImage = self.__node["in"]
+		elif len( self.__nodeSet ):
+			compareImage = _firstValidImagePlug( self.__nodeSet[-1] )
 
-	def _updateFromPlug( self ) :
+		self.__node["compare"]["image"].setInput( compareImage )
+		self.__node["compare"]["catalogueOutput"].setValue( "output:%i" % self.__catalogueOutput if self.__catalogueOutput > 0 else "" )
 
-		with Gaffer.Context() :
-			v = self.getPlug().getValue()
+		# Icon
 
-		icon = "catalogueOutput%s.png"%v[-1]
-		self.__button.setImage( icon )
+		if self.__catalogueOutput > 0:
+			icon = "catalogueOutput%i.png" % self.__catalogueOutput
+		elif self.__nodeSet.isSame( self.__scriptNode.selection() ) :
+			icon = "nodeSetNodeSelection.png"
+		elif self.__nodeSet.isSame( self.__scriptNode.focusSet() ) :
+			icon = "nodeSetFocusNode.png"
+		else :
+			icon = "nodeSet%s.png"  % self.__nodeSet.__class__.__name__
 
-	def __menuDefinition( self ) :
+		self.__icon.setImage( icon )
 
-		with self.getContext() :
-			catalogueOutput = self.getPlug().getValue()
+		# Bookmark set numeric indicator
+
+		if isinstance( self.__nodeSet, Gaffer.NumericBookmarkSet ) :
+			self.__bookmarkNumber.setText( "%d" % self.__nodeSet.getBookmark() )
+			self.__bookmarkNumber.setVisible( True )
+		else :
+			self.__bookmarkNumber.setVisible( False )
+			self.__bookmarkNumber.setText( "" )
+
+		self._repolish()
+
+	def getToolTip( self ) :
+
+		toolTipElements = []
+		if self.__catalogueOutput > 0:
+			toolTipElements.append( "" )
+			toolTipElements.append( "Comparing to Catalogue output %i." % self.__catalogueOutput )
+		elif self.__nodeSet == self.__scriptNode.selection() :
+			toolTipElements.append( "" )
+			toolTipElements.append( "Comparing to the node selection." )
+		elif self.__nodeSet == self.__scriptNode.focusSet() :
+			toolTipElements.append( "" )
+			toolTipElements.append( "Comparing to the Focus Node." )
+		elif isinstance( self.__nodeSet, Gaffer.NumericBookmarkSet ) :
+			toolTipElements.append( "" )
+			toolTipElements.append( "Comparing to Numeric Bookmark %d." % self.__nodeSet.getBookmark() )
+		elif isinstance( self.__nodeSet, Gaffer.StandardSet ) :
+			toolTipElements.append( "" )
+			n = len(self.__nodeSet)
+			if n == 0 :
+				s = "Comparing to nothing."
+			else :
+				s = "Comparing to pinned node: " + self.__nodeSet[-1].relativeName( self.__nodeSet[-1].scriptNode() )
+			toolTipElements.append( s )
+
+		toolTipElements.append( "Drag an image node here to pin a comparison node." )
+
+		return "\n".join( toolTipElements )
+
+	def __pinToNodeSelection( self, *unused ) :
+		self._setState( Gaffer.StandardSet( list( self.__scriptNode.selection() ) ), 0 )
+
+	def __followNodeSelection( self, *unused ) :
+		self._setState( self.__scriptNode.selection(), 0 )
+
+	def __followFocusNode( self, *unused ) :
+		self._setState( self.__scriptNode.focusSet(), 0 )
+
+	def __followCatalogueOutput( self, i, *unused ) :
+		self._setState( self.__defaultNodeSet, i )
+
+	def __followBookmark( self, i, *unused ) :
+		self._setState( Gaffer.NumericBookmarkSet( self.__scriptNode, i ), 0 )
+
+
+	def __showEditorFocusMenu( self, *unused ) :
 
 		m = IECore.MenuDefinition()
+
+		m.append( "/Catalogue Divider", { "divider" : True, "label" : "Follow Catalogue Output" } )
 		for i in range( 1, 5 ):
-			val = "output:%i"%i
-			m.append(
-				"/Catalogue Output %i" % i,
-				{
-					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), val ),
-					"icon" : "catalogueOutput%i.png"%i if val != catalogueOutput else None,
-					"checkBox" : val == catalogueOutput
-				}
-			)
+			m.append( "/%i"%i, {
+				"command" : functools.partial( Gaffer.WeakMethod( self.__followCatalogueOutput ), i ),
+				"checkBox" : self.__catalogueOutput == i
+				#"shortCut" : "`"
+			} )
+		m.append( "/Pin Divider", { "divider" : True, "label" : "Pin" } )
 
-		return m
+		selection = self.__scriptNode.selection()
 
-	def __setValue( self, value, *unused ) :
-		self.getPlug().setValue( value )
+		if len(selection) == 0 :
+			label = "Pin To Nothing"
+		elif len(selection) == 1 :
+			label = "Pin %s" % selection[0].getName()
+		else :
+			label = "Pin %d Selected Nodes" % len(selection)
+
+		m.append( "/Pin Node Selection", {
+			"command" : Gaffer.WeakMethod( self.__pinToNodeSelection ),
+			"label" : label,
+			"shortCut" : "p"
+		} )
+
+		m.append( "/Follow Divider", { "divider" : True, "label" : "Follow" } )
+
+		m.append( "/Focus Node", {
+			"command" : Gaffer.WeakMethod( self.__followFocusNode ),
+			"checkBox" : self.__nodeSet.isSame( self.__scriptNode.focusSet() ),
+			"shortCut" : "`"
+		} )
+
+		m.append( "/Node Selection", {
+			"command" : Gaffer.WeakMethod( self.__followNodeSelection ),
+			"checkBox" : self.__nodeSet.isSame( selection ),
+			"shortCut" : "n"
+		} )
+
+		m.append( "/NumericBookmarkDivider", { "divider" : True, "label" : "Follow Numeric Bookmark" } )
+
+		for i in range( 1, 10 ) :
+			bookmarkNode = Gaffer.MetadataAlgo.getNumericBookmark( self.__scriptNode, i )
+			title = "%d" % i
+			if bookmarkNode is not None :
+				title += " : %s" % bookmarkNode.getName()
+			isCurrent = isinstance( self.__nodeSet, Gaffer.NumericBookmarkSet ) and self.__nodeSet.getBookmark() == i
+			m.append( "%s" % title, {
+				"command" : functools.partial( Gaffer.WeakMethod( self.__followBookmark ), i ),
+				"checkBox" : isCurrent,
+			} )
+
+		self.__pinningMenu = GafferUI.Menu( m, title = "Comparison Image" )
+
+		buttonBound = self.__icon.bound()
+		self.__pinningMenu.popup(
+			parent = self.ancestor( GafferUI.Window ),
+			position = imath.V2i( buttonBound.min().x, buttonBound.max().y )
+		)
+
+		return True

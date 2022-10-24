@@ -35,6 +35,8 @@
 #
 ##########################################################################
 
+import IECore
+
 import Gaffer
 import GafferUI
 
@@ -104,7 +106,14 @@ class Button( GafferUI.Widget ) :
 			# Avoid our image getting parented to the wrong thing
 			# if our caller is in a `with container` block.
 			GafferUI.Widget._pushParent( None )
-			self.__image = GafferUI.Image( imageOrImageFileName )
+
+			# Make sure we don't break if an image is missing
+			try:
+				self.__image = GafferUI.Image( imageOrImageFileName )
+			except Exception as e:
+				IECore.msg( IECore.Msg.Level.Error, "GafferUI.Button",
+					"Could not read image for icon : " + str( e )
+				)
 			GafferUI.Widget._popParent()
 		else :
 			self.__image = imageOrImageFileName

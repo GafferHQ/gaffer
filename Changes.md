@@ -3,16 +3,6 @@
 
 > Note : Python 2 support has been removed. All builds are now using Python 3.
 
-Improvements
-------------
-
-- ShuffleAttributes :
-  - Added `replaceDestination` plugs that may be used to specify whether each shuffle replaces already written destination data with the same name.
-  - Shuffles are now performed in the order they are defined, separate shuffles may write to the same destination.
-- ShufflePrimitiveVariables :
-  - Added `replaceDestination` plugs that may be used to specify whether each shuffle replaces already written destination data with the same name.
-  - Shuffles are now performed in the order they are defined, separate shuffles may write to the same destination.
-
 API
 ---
 
@@ -45,6 +35,11 @@ Improvements
   - Plugs promoted from a `PathFilter.paths` plug (an unpromoted `PathFilter.paths` plug supports this since 0.61.13.0)
   - Spreadsheet cells connected to a `PathFilter.paths` plug.
   - Spreadsheet row names when the spreadsheet selector is set to `scene:path`.
+- Spreadsheet : Added support for metadata on the `name` and `enabled` plug of each row. Metadata registered on plugs in the default row is mirrored automatically onto all other rows.
+- ImageView : Added support for selecting a comparison node.  This can be accessed by selecting the focus or selected node from the comparison widget at the top of the  viewer, or by dragging an image node to the comparison widget.
+- ShuffleAttributes, ShufflePrimitiveVariables :
+  - Added `replaceDestination` plugs that may be used to specify whether each shuffle replaces existing destination data with the same name.
+  - Shuffles are now performed in the order they are defined, and separate shuffles may write to the same destination.
 
 Fixes
 -----
@@ -58,6 +53,11 @@ Fixes
   - Fixed handling of indexed primitive variables.
 - PathFilter : Fixed error when selecting a path element from a promoted `PathFilter.paths` plug (introduced in 0.61.13.0).
 - ImageView : Fixed error with display of negative colors.
+- NodeEditor : Fixed updated of section summaries when they are changed in the UI Editor.
+- ArnoldColorManager : Fixed broken presets for `color_space_narrow` and `color_space_linear`.
+- Spreadsheet :
+  - Fixed bugs with inconsistent column ordering.
+  - Fixed bug that allowed operations on hidden columns included through shift-selection (was seen by users as the disable hotkey unexpectedly affecting columns on other tabs).
 
 API
 ---
@@ -144,7 +144,7 @@ Fixes
 - ImageView : Fixed error with display of negative colors.
 - Spreadsheet :
   - Fixed bugs with inconsistent column ordering.
-  - Fixed bug that allowed operating on hidden columns included through shift-selection ( was seen by users as the disable hotkey unexpectedly affecting columns on other tabs )
+  - Fixed bug that allowed operations on hidden columns included through shift-selection (was seen by users as the disable hotkey unexpectedly affecting columns on other tabs).
 
 1.0.6.0 (relative to 1.0.5.1)
 =======

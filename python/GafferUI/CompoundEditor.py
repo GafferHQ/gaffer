@@ -1482,7 +1482,7 @@ class _PinningWidget( _Frame ) :
 			self.__icon.buttonPressSignal().connect( Gaffer.WeakMethod( self.__showEditorFocusMenu ), scoped=False )
 
 
-			self.__menuButton = GafferUI.Button( image="collapsibleArrowDown.png", hasFrame=False, highlightOnOver=False )
+			self.__menuButton = GafferUI.Button( image="menuIndicator.png", hasFrame=False, highlightOnOver=False )
 			self.__menuButton._qtWidget().setObjectName( "menuDownArrow" )
 			self.__menuButton.buttonPressSignal().connect( Gaffer.WeakMethod( self.__showEditorFocusMenu ), scoped=False )
 
@@ -1526,11 +1526,7 @@ class _PinningWidget( _Frame ) :
 		else :
 			icon = "nodeSet%s.png"  % editor.getNodeSet().__class__.__name__
 
-		# Make sure we don't break if an image is missing when setImage throws
-		try :
-			self.__icon.setImage( icon )
-		except Exception as e :
-			sys.stderr.write( str(e) )
+		self.__icon.setImage( icon )
 
 		# Bookmark set numeric indicator
 
