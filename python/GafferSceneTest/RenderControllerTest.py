@@ -1273,6 +1273,53 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( renderer.capturedObject( "/lightMuteSolo/lightMuteSoloChildSolo" ).capturedAttributes().attributes()["light:mute"].value )
 		self.assertFalse( renderer.capturedObject( "/groupMute/lightGroupMuteChildSolo" ).capturedAttributes().attributes()["light:mute"].value )
 
+	def testSoloLightsSetUpdate( self ) :
+
+		plane = GafferScene.Plane()
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( plane["out"] )
+
+		soloFilter = GafferScene.PathFilter()
+		soloFilter["paths"].setValue( IECore.StringVectorData() )
+
+		soloSet = GafferScene.Set()
+		soloSet["in"].setInput( group["out"])
+		soloSet["name"].setValue( "soloLights" )
+		soloSet["filter"].setInput( soloFilter["out"] )
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer()
+		controller = GafferScene.RenderController( soloSet["out"], Gaffer.Context(), renderer )
+		controller.setMinimumExpansionDepth( 2 )
+		controller.update()
+
+		# First time emitting the scene the attributes have been edited
+		self.assertEqual( renderer.capturedObject( "/group/plane" ).numAttributeEdits(), 1 )
+
+		# A scene update when the `soloLights` set was and is empty should not cause an update
+		group["in"][1].setInput( plane["out"] )
+		controller.update()
+
+		self.assertEqual( renderer.capturedObject( "/group/plane" ).numAttributeEdits(), 1 )
+
+		# Changing the `soloLights` set should cause an update
+		soloFilter["paths"].setValue( IECore.StringVectorData( [ "/group/plane" ] ) )
+		controller.update()
+
+		self.assertEqual( renderer.capturedObject( "/group/plane" ).numAttributeEdits(), 2 )
+
+		# Making it empty again should cause an update
+		soloFilter["paths"].setValue( IECore.StringVectorData() )
+		controller.update()
+
+		self.assertEqual( renderer.capturedObject( "/group/plane" ).numAttributeEdits(), 3 )
+
+		# Going back to `soloLights` having been empty and currently empty should result in no update
+		group["in"][2].setInput( plane["out"] )
+		controller.update()
+
+		self.assertEqual( renderer.capturedObject( "/group/plane" ).numAttributeEdits(), 3 )
+
 
 if __name__ == "__main__":
 	unittest.main()

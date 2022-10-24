@@ -499,9 +499,14 @@ struct RenderSets::Updater
 			const IECore::MurmurHash &hash = m_scene->setPlug()->hash();
 			if( s->hash != hash )
 			{
+				bool wasEmpty = s->set.isEmpty();
+
 				s->set = m_scene->setPlug()->getValue( &hash )->readable();
 				s->hash = hash;
-				changed |= potentialChange;
+				if( !( wasEmpty && s->set.isEmpty() ) )
+				{
+					changed |= potentialChange;
+				}
 			}
 		}
 	}
