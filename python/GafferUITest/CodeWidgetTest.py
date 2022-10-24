@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import pathlib
 import unittest
 
 import Gaffer
@@ -89,6 +90,16 @@ class CodeWidgetTest( GafferUITest.TestCase ) :
 				[ c.text for c in completer.completions( partial ) ],
 				completions
 			)
+
+	def testPathCompletions( self ) :
+
+		namespace = {
+			"path" : pathlib.Path( "/")
+		}
+
+		completer = GafferUI.CodeWidget.PythonCompleter( namespace )
+		completions = completer.completions( "path.absolut" )
+		self.assertEqual( [ c.text for c in completions ], [ "path.absolute(" ] )
 
 	def testDisabledGraphComponentAttributeCompletions( self ) :
 

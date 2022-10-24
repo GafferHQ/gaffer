@@ -3,6 +3,11 @@
 
 > Note : Python 2 support has been removed. All builds are now using Python 3.
 
+Fixes
+-----
+
+- CodeWidget : Fixed auto-complete for `pathlib.Path` objects, and any other classes which throw `AttributeError` for an attribute advertised by `dir()`.
+
 API
 ---
 
