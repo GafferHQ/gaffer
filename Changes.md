@@ -1,9 +1,10 @@
-1.1.x.x (relative to 1.1.1.0)
+1.1.2.0 (relative to 1.1.1.0)
 =======
 
 Improvements
 ------------
 
+- Viewer : Added support for selecting an image comparison node. This can be accessed by selecting the focus or selected node from the comparison widget at the top of the viewer, or by dragging an image node to the comparison widget.
 - Catalogue :
   - Improved performance when interacting with large Catalogues.
   - Added hover state to the output index column, to indicate clickability.
@@ -17,7 +18,6 @@ Improvements
   - Spreadsheet cells connected to a `PathFilter.paths` plug.
   - Spreadsheet row names when the spreadsheet selector is set to `scene:path`.
 - Spreadsheet : Added support for metadata on the `name` and `enabled` plug of each row. Metadata registered on plugs in the default row is mirrored automatically onto all other rows.
-- ImageView : Added support for selecting a comparison node.  This can be accessed by selecting the focus or selected node from the comparison widget at the top of the  viewer, or by dragging an image node to the comparison widget.
 - ShuffleAttributes, ShufflePrimitiveVariables :
   - Added `replaceDestination` plugs that may be used to specify whether each shuffle replaces existing destination data with the same name.
   - Shuffles are now performed in the order they are defined, and separate shuffles may write to the same destination.
