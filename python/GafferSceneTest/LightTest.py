@@ -252,5 +252,20 @@ class LightTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( a["gl:visualiser:frustum"], IECore.StringData( "off" ) )
 		self.assertEqual( a["gl:light:frustumScale"], IECore.FloatData( 1.23 ) )
 
+	def testMute( self ) :
+
+		l = GafferSceneTest.TestLight()
+
+		self.assertNotIn( "light:mute", l["out"].attributes( "/light" ) )
+
+		l["mute"].setValue( True )
+
+		self.assertIn( "light:mute", l["out"].attributes( "/light" ) )
+		self.assertEqual( l["out"].attributes( "/light" )["light:mute"], IECore.BoolData( True ) )
+
+		l["mute"].setValue( False )
+		self.assertNotIn( "light:mute", l["out"].attributes( "/light" ) )
+
+
 if __name__ == "__main__":
 	unittest.main()

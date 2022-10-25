@@ -107,7 +107,7 @@ class GAFFERSCENE_API RenderSets : boost::noncopyable
 			CamerasSetChanged = 1,
 			LightsSetChanged = 2,
 			LightFiltersSetChanged = 4,
-			RenderSetsChanged = 8
+			AttributesChanged = 8
 		};
 
 		/// Returns a bitmask describing which sets
@@ -118,10 +118,13 @@ class GAFFERSCENE_API RenderSets : boost::noncopyable
 		const IECore::PathMatcher &camerasSet() const;
 		const IECore::PathMatcher &lightsSet() const;
 		const IECore::PathMatcher &lightFiltersSet() const;
+		const IECore::PathMatcher &soloLightsSet() const;
 
-		IECore::ConstInternedStringVectorDataPtr setsAttribute( const std::vector<IECore::InternedString> &path ) const;
+		void attributes( IECore::CompoundObject::ObjectMap &attributes, const ScenePlug::ScenePath &path ) const;
 
 	private :
+
+		IECore::ConstInternedStringVectorDataPtr setsAttribute( const std::vector<IECore::InternedString> &path ) const;
 
 		struct Set
 		{
@@ -139,6 +142,7 @@ class GAFFERSCENE_API RenderSets : boost::noncopyable
 		Set m_camerasSet;
 		Set m_lightsSet;
 		Set m_lightFiltersSet;
+		Set m_soloLightsSet;
 
 };
 

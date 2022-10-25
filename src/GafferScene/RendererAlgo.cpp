@@ -87,6 +87,9 @@ InternedString g_transformBlurSegmentsAttributeName( "gaffer:transformBlurSegmen
 InternedString g_deformationBlurAttributeName( "gaffer:deformationBlur" );
 InternedString g_deformationBlurSegmentsAttributeName( "gaffer:deformationBlurSegments" );
 
+static BoolDataPtr g_true = new BoolData( true );
+static BoolDataPtr g_false = new BoolData( false );
+
 } // namespace
 
 namespace GafferScene
@@ -420,6 +423,9 @@ namespace
 InternedString g_camerasSetName( "__cameras" );
 InternedString g_lightsSetName( "__lights" );
 InternedString g_lightFiltersSetName( "__lightFilters" );
+InternedString g_soloLightsSetName( "soloLights" );
+InternedString g_setsAttributeName( "sets" );
+InternedString g_lightMuteAttributeName( "light:mute" );
 std::string g_renderSetsPrefix( "render:" );
 ConstInternedStringVectorDataPtr g_emptySetsAttribute = new InternedStringVectorData;
 
@@ -461,7 +467,7 @@ struct RenderSets::Updater
 				Sets::iterator it = m_renderSets.m_sets.begin() + i;
 				s = &(it->second);
 				n = it->first;
-				potentialChange = RenderSetsChanged;
+				potentialChange = AttributesChanged;
 			}
 			else if( i == m_renderSets.m_sets.size() )
 			{
@@ -475,21 +481,32 @@ struct RenderSets::Updater
 				n = g_lightFiltersSetName;
 				potentialChange = LightFiltersSetChanged;
 			}
-			else
+			else if( i == m_renderSets.m_sets.size() + 2 )
 			{
-				assert( i == m_renderSets.m_sets.size() + 2 );
 				s = &m_renderSets.m_lightsSet;
 				n = g_lightsSetName;
 				potentialChange = LightsSetChanged;
+			}
+			else
+			{
+				assert( i == m_renderSets.m_sets.size() + 3 );
+				s = &m_renderSets.m_soloLightsSet;
+				n = g_soloLightsSetName;
+				potentialChange = AttributesChanged;
 			}
 
 			setScope.setSetName( &n );
 			const IECore::MurmurHash &hash = m_scene->setPlug()->hash();
 			if( s->hash != hash )
 			{
+				bool wasEmpty = s->set.isEmpty();
+
 				s->set = m_scene->setPlug()->getValue( &hash )->readable();
 				s->hash = hash;
-				changed |= potentialChange;
+				if( !( wasEmpty && s->set.isEmpty() ) )
+				{
+					changed |= potentialChange;
+				}
 			}
 		}
 	}
@@ -518,6 +535,7 @@ RenderSets::RenderSets( const ScenePlug *scene )
 	m_camerasSet.unprefixedName = g_camerasSetName;
 	m_lightsSet.unprefixedName = g_lightsSetName;
 	m_lightFiltersSet.unprefixedName = g_lightFiltersSetName;
+	m_soloLightsSet.unprefixedName = g_soloLightsSetName;
 	update( scene );
 }
 
@@ -547,7 +565,7 @@ unsigned RenderSets::update( const ScenePlug *scene )
 		if( std::find( setNames.begin(), setNames.end(), it->first ) == setNames.end() )
 		{
 			it = m_sets.erase( it );
-			changed |= RenderSetsChanged;
+			changed |= AttributesChanged;
 		}
 		else
 		{
@@ -560,7 +578,7 @@ unsigned RenderSets::update( const ScenePlug *scene )
 	Updater updater( scene, ThreadState::current(), *this, changed );
 	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
 	parallel_reduce(
-		tbb::blocked_range<size_t>( 0, m_sets.size() + 3 ),
+		tbb::blocked_range<size_t>( 0, m_sets.size() + 4 ),
 		updater,
 		tbb::auto_partitioner(),
 		// Prevents outer tasks silently cancelling our tasks
@@ -576,6 +594,7 @@ void RenderSets::clear()
 	m_camerasSet = Set();
 	m_lightsSet = Set();
 	m_lightFiltersSet = Set();
+	m_soloLightsSet = Set();
 }
 
 const PathMatcher &RenderSets::camerasSet() const
@@ -591,6 +610,11 @@ const PathMatcher &RenderSets::lightsSet() const
 const PathMatcher &RenderSets::lightFiltersSet() const
 {
 	return m_lightFiltersSet.set;
+}
+
+const PathMatcher &RenderSets::soloLightsSet() const
+{
+	return m_soloLightsSet.set;
 }
 
 ConstInternedStringVectorDataPtr RenderSets::setsAttribute( const std::vector<IECore::InternedString> &path ) const
@@ -610,6 +634,25 @@ ConstInternedStringVectorDataPtr RenderSets::setsAttribute( const std::vector<IE
 		}
 	}
 	return resultData ? resultData : g_emptySetsAttribute;
+}
+
+void RenderSets::attributes( CompoundObject::ObjectMap &attributes, const ScenePlug::ScenePath &path ) const
+{
+	IECore::ConstInternedStringVectorDataPtr setsAttribute = this->setsAttribute( path );
+
+	attributes[g_setsAttributeName] = boost::const_pointer_cast<InternedStringVectorData>( setsAttribute );
+
+	if( !soloLightsSet().isEmpty() && lightsSet().match( path ) & ( PathMatcher::ExactMatch | PathMatcher::AncestorMatch ) )
+	{
+		if( soloLightsSet().match( path ) & ( PathMatcher::ExactMatch | PathMatcher::AncestorMatch ) )
+		{
+			attributes[g_lightMuteAttributeName] = g_false;
+		}
+		else
+		{
+			attributes[g_lightMuteAttributeName] = g_true;
+		}
+	}
 }
 
 } // namespace RendererAlgo
@@ -958,7 +1001,6 @@ const InternedString g_transformBlurOptionName( "option:render:transformBlur" );
 const InternedString g_deformationBlurOptionName( "option:render:deformationBlur" );
 const InternedString g_shutterOptionName( "option:render:shutter" );
 
-InternedString g_setsAttributeName( "sets" );
 InternedString g_visibleAttributeName( "scene:visible" );
 
 IECore::InternedString optionName( const IECore::InternedString &globalsName )
@@ -1078,10 +1120,14 @@ struct LocationOutput
 
 		void updateAttributes( const ScenePlug *scene, const ScenePlug::ScenePath &path )
 		{
-			IECore::ConstCompoundObjectPtr attributes = scene->attributesPlug()->getValue();
-			IECore::ConstInternedStringVectorDataPtr setsAttribute = m_renderSets.setsAttribute( path );
+			ConstCompoundObjectPtr attributes = scene->attributesPlug()->getValue();
+			CompoundObjectPtr processedAttributes = new CompoundObject;
 
-			if( attributes->members().empty() && !setsAttribute )
+			processedAttributes->members() = attributes->members();
+
+			m_renderSets.attributes( processedAttributes->members(), path );
+
+			if( processedAttributes->members().empty() )
 			{
 				return;
 			}
@@ -1089,14 +1135,9 @@ struct LocationOutput
 			IECore::CompoundObjectPtr updatedAttributes = new IECore::CompoundObject;
 			updatedAttributes->members() = m_attributes->members();
 
-			for( CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; ++it )
+			for( const auto &a : processedAttributes->members() )
 			{
-				updatedAttributes->members()[it->first] = it->second;
-			}
-
-			if( setsAttribute )
-			{
-				updatedAttributes->members()[g_setsAttributeName] = boost::const_pointer_cast<InternedStringVectorData>( setsAttribute );
+				updatedAttributes->members()[a.first] = a.second;
 			}
 
 			m_attributes = updatedAttributes;
