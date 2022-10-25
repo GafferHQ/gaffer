@@ -34,7 +34,6 @@
 
 #include "GafferCycles/IECoreCyclesPreview/GeometryAlgo.h"
 
-#include "IECoreScene/MeshNormalsOp.h"
 #include "IECoreScene/MeshPrimitive.h"
 #include "IECoreScene/MeshAlgo.h"
 
@@ -58,334 +57,33 @@ using namespace IECoreCycles;
 namespace
 {
 
-std::array<std::string, 6> g_defautUVsetCandidates = { {
-	"st_0",
-	"st0",
-	"uv_0",
-	"uv0",
-	"st",
-	"uv",
-} };
-
-const V3fVectorData *normal( const IECoreScene::MeshPrimitive *mesh, PrimitiveVariable::Interpolation &interpolation )
-{
-	PrimitiveVariableMap::const_iterator it = mesh->variables.find( "N" );
-	if( it == mesh->variables.end() )
-	{
-		return nullptr;
-	}
-
-	const V3fVectorData *n = runTimeCast<const V3fVectorData>( it->second.data.get() );
-	if( !n )
-	{
-		msg( Msg::Warning, "MeshAlgo", boost::format( "Variable \"N\" has unsupported type \"%s\" (expected V3fVectorData)." ) % it->second.data->typeName() );
-		return nullptr;
-	}
-
-	const PrimitiveVariable::Interpolation thisInterpolation = it->second.interpolation;
-	if( interpolation != PrimitiveVariable::Invalid && thisInterpolation != interpolation )
-	{
-		msg( Msg::Warning, "MeshAlgo", "Variable \"N\" has inconsistent interpolation types - not generating normals." );
-		return nullptr;
-	}
-
-	interpolation = thisInterpolation;
-	return n;
-}
-
-const BoolVectorData *getSmooth( const IECoreScene::MeshPrimitive *mesh )
-{
-	PrimitiveVariableMap::const_iterator it = mesh->variables.find( "_smooth" );
-	if( it == mesh->variables.end() )
-	{
-		return nullptr;
-	}
-
-	if( it->second.interpolation != PrimitiveVariable::Uniform )
-	{
-		return nullptr;
-	}
-
-	const BoolVectorData *s = runTimeCast<const BoolVectorData>( it->second.data.get() );
-	return s;
-}
-
-const IntVectorData *getFaceset( const IECoreScene::MeshPrimitive *mesh )
-{
-	PrimitiveVariableMap::const_iterator it = mesh->variables.find( "_facesetIndex" );
-	if( it == mesh->variables.end() )
-	{
-		return nullptr;
-	}
-
-	if( it->second.interpolation != PrimitiveVariable::Uniform )
-	{
-		return nullptr;
-	}
-
-	const IntVectorData *f = runTimeCast<const IntVectorData>( it->second.data.get() );
-	return f;
-}
-
-ccl::AttributeStandard normalAttributeStandard( PrimitiveVariable::Interpolation &interpolation )
-{
-#ifdef WITH_CYCLES_CORNER_NORMALS
-	if( interpolation == PrimitiveVariable::Uniform || interpolation == PrimitiveVariable::FaceVarying )
-	{
-		return ccl::ATTR_STD_CORNER_NORMAL;
-	}
-	else
-	{
-		return ccl::ATTR_STD_VERTEX_NORMAL;
-	}
-#else
-	return ccl::ATTR_STD_VERTEX_NORMAL;
-#endif
-}
-
-void convertN( const IECoreScene::MeshPrimitive *mesh, const V3fVectorData *normalData, ccl::Attribute *attr, PrimitiveVariable::Interpolation interpolation )
-{
-	const size_t numFaces = mesh->numFaces();
-	const std::vector<int> &vertsPerFace = mesh->verticesPerFace()->readable();
-	const vector<Imath::V3f> &normals = normalData->readable();
-	const IECore::IntVectorData* nIndices = mesh->variables.find( "N" )->second.indices.get();
-	ccl::float3 *cdata = attr->data_float3();
-
-	if( !nIndices )
-	{
-		if( interpolation == PrimitiveVariable::Constant )
-		{
-			for( size_t i = 0; i < normals.size(); ++i )
-			{
-				*(cdata++) = ccl::make_float3( normals[0].x, normals[0].y, normals[0].z );
-			}
-		}
-		else if( interpolation == PrimitiveVariable::Uniform )
-		{
-			for( size_t i = 0; i < numFaces; ++i )
-			{
-				for( int j = 0; j < vertsPerFace[i]; ++j )
-				{
-					*(cdata++) = ccl::make_float3( normals[i].x, normals[i].y, normals[i].z );
-				}
-			}
-		}
-#ifdef WITH_CYCLES_CORNER_NORMALS
-		else if( interpolation == PrimitiveVariable::FaceVarying )
-		{
-			for( size_t i = 0; i < numFaces; ++i )
-			{
-				for( size_t j = 0; j < vertsPerFace[i]; ++j, ++vertex )
-				{
-					*(cdata++) = ccl::make_float3( normals[vertex].x, normals[vertex].y, normals[vertex].z );
-				}
-			}
-		}
-#endif // WITH_CYCLES_CORNER_NORMALS
-		else // per-vertex
-		{
-			for( size_t i = 0; i < normals.size(); ++i )
-			{
-				*(cdata++) = ccl::make_float3( normals[i].x, normals[i].y, normals[i].z );
-			}
-		}
-	}
-	else
-	{
-		const vector<int> indices = nIndices->readable();
-
-		size_t numVerts = 0;
-		for( auto vert : vertsPerFace )
-		{
-			numVerts += vert;
-		}
-
-		if( ( indices.size() < numVerts ) && interpolation != PrimitiveVariable::Vertex )
-		{
-			msg(
-				Msg::Warning, "IECoreCycles::MeshAlgo::convertN",
-				boost::format( "Normal has an invalid index size \"%d\" to vertex size \"%d\"." ) % indices.size() % numVerts
-			);
-			return;
-		}
-
-		if( interpolation == PrimitiveVariable::Uniform )
-		{
-			for( size_t i = 0; i < numFaces; ++i )
-			{
-				for( int j = 0; j < vertsPerFace[i]; ++j )
-				{
-					*(cdata++) = ccl::make_float3( normals[indices[i]].x, normals[indices[i]].y, normals[indices[i]].z );
-				}
-			}
-		}
-#ifdef WITH_CYCLES_CORNER_NORMALS
-		else if( interpolation == PrimitiveVariable::FaceVarying )
-		{
-			for( size_t i = 0; i < numFaces; ++i )
-			{
-				for( size_t j = 0; j < vertsPerFace[i]; ++j, ++vertex )
-				{
-					*(cdata++) = ccl::make_float3( normals[indices[vertex]].x, normals[indices[vertex]].y, normals[indices[vertex]].z );
-				}
-			}
-		}
-#endif // WITH_CYCLES_CORNER_NORMALS
-		else // per-vertex
-		{
-			for( size_t i = 0; i < normals.size(); ++i )
-			{
-				*(cdata++) = ccl::make_float3( normals[indices[i]].x, normals[indices[i]].y, normals[indices[i]].z );
-			}
-		}
-	}
-
-}
-
-void convertUVSet( const string &uvSet, const IECoreScene::PrimitiveVariable &uvVariable, const IECoreScene::MeshPrimitive *mesh, ccl::AttributeSet &attributes, bool subdivision_uvs, bool defaultUV )//, ccl::Mesh *cmesh )
-{
-	size_t numFaces = mesh->numFaces();
-	const V2fVectorData *uvData = runTimeCast<V2fVectorData>( uvVariable.data.get() );
-
-	if( !uvData )
-	{
-		return;
-	}
-
-	if( uvVariable.interpolation != PrimitiveVariable::Varying && uvVariable.interpolation != PrimitiveVariable::Vertex && uvVariable.interpolation != PrimitiveVariable::FaceVarying )
-	{
-		msg(
-			Msg::Warning, "IECoreCycles::MeshAlgo::convertUVSet",
-			boost::format( "Variable \"%s\" has an invalid interpolation type - not generating uvs." ) % uvSet
-		);
-		return;
-	}
-
-	const vector<Imath::V2f> &uvs = uvData->readable();
-	const std::vector<int> &vertexIds = mesh->vertexIds()->readable();
-
-	ccl::Attribute *uv_attr = nullptr;
-	if( defaultUV )
-		uv_attr = attributes.add( ccl::ATTR_STD_UV, ccl::ustring(uvSet.c_str()) );
-	else
-		uv_attr = attributes.add( ccl::ustring(uvSet.c_str()), ccl::TypeFloat2, ccl::ATTR_ELEMENT_CORNER );
-	ccl::float2 *fdata = uv_attr->data_float2();
-
-	if( subdivision_uvs )
-		uv_attr->flags |= ccl::ATTR_SUBDIVIDED;
-
-	// We need to know how many verts there are
-	const vector<int> &vertsPerFace = mesh->verticesPerFace()->readable();
-
-	size_t vertex = 0;
-	if( uvVariable.indices )
-	{
-		const vector<int> &indices = uvVariable.indices->readable();
-
-		size_t numVerts = 0;
-		for( auto vert : vertsPerFace )
-		{
-			numVerts += vert;
-		}
-
-		if( ( indices.size() < numVerts ) && uvVariable.interpolation != PrimitiveVariable::Vertex )
-		{
-			msg(
-				Msg::Warning, "IECoreCycles::MeshAlgo::convertUVSet",
-				boost::format( "Variable \"%s\" has an invalid index size \"%d\" to vertex size \"%d\"." ) % uvSet % indices.size() % numVerts
-			);
-			attributes.remove( uv_attr );
-			return;
-		}
-
-		if( uvVariable.interpolation == PrimitiveVariable::Vertex )
-		{
-			for( size_t i = 0; i < numFaces; ++i )
-			{
-				for( int j = 0; j < vertsPerFace[i]; ++j, ++vertex )
-				{
-					*(fdata++) = ccl::make_float2(uvs[indices[vertexIds[vertex]]].x, uvs[indices[vertexIds[vertex]]].y);
-				}
-			}
-		}
-		else // FaceVarying/Varying
-		{
-			for( size_t i = 0; i < numFaces; ++i )
-			{
-				for( int j = 0; j < vertsPerFace[i]; ++j, ++vertex )
-				{
-					*(fdata++) = ccl::make_float2(uvs[indices[vertex]].x, uvs[indices[vertex]].y);
-				}
-			}
-		}
-	}
-	else
-	{
-		if( uvVariable.interpolation == PrimitiveVariable::Vertex )
-		{
-			for( size_t i = 0; i < numFaces; ++i )
-			{
-				for( int j = 0; j < vertsPerFace[i]; ++j, ++vertex )
-				{
-					*(fdata++) = ccl::make_float2(uvs[vertexIds[vertex]].x, uvs[vertexIds[vertex]].y);
-				}
-			}
-		}
-		else // FaceVarying/Varying
-		{
-			for( size_t i = 0; i < numFaces; ++i )
-			{
-				for( int j = 0; j < vertsPerFace[i]; ++j, ++vertex )
-				{
-					*(fdata++) = ccl::make_float2(uvs[vertex].x, uvs[vertex].y);
-				}
-			}
-		}
-	}
-}
-
 ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 {
 	assert( mesh->typeId() == IECoreScene::MeshPrimitive::staticTypeId() );
-	ccl::Mesh *cmesh = new ccl::Mesh();
 
-	bool subdivision = false;
-	bool triangles = ( mesh->maxVerticesPerFace() == 3 ) ? true : false;
+	// Triangulate if necessary
 
-	// If we need to convert
-	MeshPrimitivePtr trimesh;
-
-	// Smooth/hard normals
-	bool smooth = true;
-	PrimitiveVariable::Interpolation sInterpolation = PrimitiveVariable::Invalid;
-	PrimitiveVariableMap::const_iterator sIt = mesh->variables.find( "_smooth" );
-	if( sIt != mesh->variables.end() )
+	ConstMeshPrimitivePtr triangulatedMesh;
+	if( mesh->interpolation() != "catmullClark" && mesh->maxVerticesPerFace() > 3 )
 	{
-		if( sIt->second.interpolation == PrimitiveVariable::Constant ||
-			sIt->second.interpolation == PrimitiveVariable::Uniform )
-		{
-			sInterpolation = sIt->second.interpolation;
-		}
-		if( sInterpolation == PrimitiveVariable::Constant )
-		{
-			if( const BoolData *data = runTimeCast<const BoolData>( sIt->second.data.get() ) )
-			{
-				smooth = data->readable();
-			}
-		}
+		// Polygon meshes in Cycles must consist of triangles only.
+		triangulatedMesh = MeshAlgo::triangulate( mesh );
+		mesh = triangulatedMesh.get();
 	}
 
-	if( ( mesh->interpolation() == "catmullClark" ) )//|| !triangles )
+	// Convert topology and points
+
+	ccl::Mesh *cmesh = new ccl::Mesh();
+
+	if( mesh->interpolation() == "catmullClark" )
 	{
+		cmesh->set_subdivision_type( ccl::Mesh::SUBDIVISION_CATMULL_CLARK );
+
 		const size_t numFaces = mesh->numFaces();
 		const V3fVectorData *p = mesh->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
 		const vector<Imath::V3f> &points = p->readable();
 		const vector<int> &vertexIds = mesh->vertexIds()->readable();
 		const size_t numVerts = points.size();
-		subdivision = true;
-		cmesh->set_subdivision_type( (mesh->interpolation() == "catmullClark") ? ccl::Mesh::SUBDIVISION_CATMULL_CLARK : ccl::Mesh::SUBDIVISION_LINEAR );
-		const BoolVectorData *s = getSmooth( mesh );
-		const IntVectorData *f = getFaceset( mesh );
 
 		cmesh->reserve_mesh( numVerts, numFaces );
 		for( size_t i = 0; i < numVerts; i++ )
@@ -404,8 +102,10 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 		int indexOffset = 0;
 		for( size_t i = 0; i < vertsPerFace.size(); i++ )
 		{
-			cmesh->add_subd_face( const_cast<int*>(&vertexIds[indexOffset]), vertsPerFace[i],
-				f ? f->readable()[i] : 0, s ? s->readable()[i] : smooth ); // Last two args are shader sets and smooth
+			cmesh->add_subd_face(
+				const_cast<int*>(&vertexIds[indexOffset]), vertsPerFace[i],
+				/* shader = */ 0, /* smooth = */ true
+			);
 			indexOffset += vertsPerFace[i];
 		}
 
@@ -445,188 +145,48 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 	}
 	else
 	{
-		cmesh->set_subdivision_type( (mesh->interpolation() == "linear") ? ccl::Mesh::SUBDIVISION_LINEAR : ccl::Mesh::SUBDIVISION_NONE );
+		const V3fVectorData *p = mesh->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
+		const vector<Imath::V3f> &points = p->readable();
+		const size_t numVerts = points.size();
+		const std::vector<int> &vertexIds = mesh->vertexIds()->readable();
 
-		if( !triangles )
-		{
-			// triangulate primitive
-			trimesh = IECoreScene::MeshAlgo::triangulate( mesh );
-			const V3fVectorData *p = trimesh->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
-			const vector<Imath::V3f> &points = p->readable();
-			const size_t numVerts = points.size();
-			const std::vector<int> &triVertexIds = trimesh->vertexIds()->readable();
-			const BoolVectorData *s = getSmooth( trimesh.get() );
-			const IntVectorData *f = getFaceset( trimesh.get() );
+		const size_t numFaces = mesh->numFaces();
+		cmesh->reserve_mesh( numVerts, numFaces );
 
-			const size_t triNumFaces = trimesh->numFaces();
-			cmesh->reserve_mesh( numVerts, triNumFaces );
+		for( size_t i = 0; i < numVerts; i++ )
+			cmesh->add_vertex( ccl::make_float3( points[i].x, points[i].y, points[i].z ) );
 
-			for( size_t i = 0; i < numVerts; i++ )
-				cmesh->add_vertex( ccl::make_float3( points[i].x, points[i].y, points[i].z ) );
-
-			int faceOffset = 0;
-			for( size_t i = 0; i < triVertexIds.size(); i+= 3, ++faceOffset )
-				cmesh->add_triangle( triVertexIds[i], triVertexIds[i+1], triVertexIds[i+2],
-					f ? f->readable()[faceOffset] : 0, s ? s->readable()[faceOffset] : smooth ); // Last two args are shader sets and smooth
-		}
-		else
-		{
-			const size_t numFaces = mesh->numFaces();
-			const V3fVectorData *p = mesh->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
-			const vector<Imath::V3f> &points = p->readable();
-			const vector<int> &vertexIds = mesh->vertexIds()->readable();
-			const size_t numVerts = points.size();
-			cmesh->reserve_mesh(numVerts, numFaces);
-			const BoolVectorData *s = getSmooth( mesh );
-			const IntVectorData *f = getFaceset( mesh );
-
-			for( size_t i = 0; i < numVerts; i++ )
-				cmesh->add_vertex( ccl::make_float3( points[i].x, points[i].y, points[i].z ) );
-
-			int faceOffset = 0;
-			for( size_t i = 0; i < vertexIds.size(); i+= 3, ++faceOffset )
-				cmesh->add_triangle( vertexIds[i], vertexIds[i+1], vertexIds[i+2],
-					f ? f->readable()[faceOffset] : 0, s ? s->readable()[faceOffset] : smooth ); // Last two args are shader sets and smooth
-		}
-	}
-
-	// Primitive Variables are Attributes in Cycles
-	ccl::AttributeSet& attributes = (subdivision) ? cmesh->subd_attributes : cmesh->attributes;
-
-	// Convert Normals
-	PrimitiveVariable::Interpolation nInterpolation = PrimitiveVariable::Invalid;
-	if( ( !triangles ) && ( mesh->interpolation() == "catmullClark" ) )
-	{
-		if( const V3fVectorData *normals = normal( mesh, nInterpolation ) )
-		{
-			ccl::Attribute *attr_N = attributes.add( normalAttributeStandard( nInterpolation ) );
-			convertN( mesh, normals, attr_N, nInterpolation );
-		}
-	}
-	else if( !triangles )
-	{
-		if( const V3fVectorData *normals = normal( trimesh.get(), nInterpolation ) )
-		{
-			ccl::Attribute *attr_N = attributes.add( normalAttributeStandard( nInterpolation ) );
-			convertN( trimesh.get(), normals, attr_N, nInterpolation );
-		}
-		else
-		{
-			IECoreScene::MeshNormalsOpPtr normalOp = new IECoreScene::MeshNormalsOp();
-			normalOp->inputParameter()->setValue( trimesh );
-			normalOp->copyParameter()->setTypedValue( false );
-			normalOp->operate();
-			if( const V3fVectorData *normals = normal( trimesh.get(), nInterpolation ) )
-			{
-				ccl::Attribute *attr_N = attributes.add( normalAttributeStandard( nInterpolation ) );
-				convertN( trimesh.get(), normals, attr_N, nInterpolation );
-			}
-		}
-	}
-	else
-	{
-		if( const V3fVectorData *normals = normal( mesh, nInterpolation ) )
-		{
-			ccl::Attribute *attr_N = attributes.add( normalAttributeStandard( nInterpolation ) );
-			convertN( mesh, normals, attr_N, nInterpolation );
-		}
-		else if( mesh->interpolation() != "catmullClark" )
-		{
-			IECoreScene::MeshPrimitivePtr normalmesh = mesh->copy();
-			IECoreScene::MeshNormalsOpPtr normalOp = new IECoreScene::MeshNormalsOp();
-			normalOp->inputParameter()->setValue( normalmesh );
-			normalOp->copyParameter()->setTypedValue( false );
-			normalOp->operate();
-			if( const V3fVectorData *normals = normal( normalmesh.get(), nInterpolation ) )
-			{
-				ccl::Attribute *attr_N = attributes.add( normalAttributeStandard( nInterpolation ) );
-				convertN( normalmesh.get(), normals, attr_N, nInterpolation );
-			}
-		}
+		for( size_t i = 0; i < vertexIds.size(); i+= 3 )
+			cmesh->add_triangle(
+				vertexIds[i], vertexIds[i+1], vertexIds[i+2],
+				/* shader = */ 0, /* smooth = */ true
+			);
 	}
 
 	// Convert primitive variables.
-	PrimitiveVariableMap variablesToConvert;
-	if( subdivision || triangles )
-		variablesToConvert = mesh->variables;
-	else
-		variablesToConvert = trimesh->variables;
-	variablesToConvert.erase( "P" ); // P is already done.
-	variablesToConvert.erase( "N" ); // As well as N.
-	variablesToConvert.erase( "_smooth" ); // Was already processed (if it existed)
-	variablesToConvert.erase( "_facesetIndex" );
 
-	// Find all UV sets and convert them explicitly.
-	PrimitiveVariableMap uvsets;
-	for( auto it = variablesToConvert.begin(); it != variablesToConvert.end(); )
+	ccl::AttributeSet &attributes = cmesh->get_subdivision_type() != ccl::Mesh::SUBDIVISION_NONE ? cmesh->subd_attributes : cmesh->attributes;
+	for( const auto &[name, variable] : mesh->variables )
 	{
-		if( const V2fVectorData *data = runTimeCast<const V2fVectorData>( it->second.data.get() ) )
+		if( name == "P" )
 		{
-			if( ( data->getInterpretation() == GeometricData::UV ) ||
-				( data->getInterpretation() == GeometricData::Numeric ) )
-			{
-				uvsets[it->first] = it->second;
-				it = variablesToConvert.erase( it );
-			}
-			else
-			{
-				++it;
-			}
+			// Converted above already
+			continue;
 		}
-		else
-		{
-			++it;
-		}
-	}
-	// Find the best candidate for the first UVset.
-	int rank = -1;
-	for( auto it = uvsets.begin(); it != uvsets.end(); )
-	{
-		for( int i = 0; i < (int)g_defautUVsetCandidates.size(); ++i )
-		{
-			if( it->first == g_defautUVsetCandidates[i] )
-			{
-				if( i > rank )
-				{
-					rank = i;
-				}
-			}
-		}
-		++it;
-	}
-	if( rank != -1 )
-	{
-		convertUVSet( g_defautUVsetCandidates[rank], uvsets[g_defautUVsetCandidates[rank]], ( subdivision || triangles ) ? mesh : trimesh.get(), attributes, subdivision, true );
-		uvsets.erase( g_defautUVsetCandidates[rank] );
-	}
-
-	for( auto it = uvsets.begin(); it != uvsets.end(); )
-	{
-		// If we didn't find a default UVset, the first one we find will be the one.
-		convertUVSet( it->first, it->second, ( subdivision || triangles ) ? mesh : trimesh.get(), attributes, subdivision, (rank == -1) ? true : false );
-		// Just set rank to not be -1 so that the next UVs are not converted as a default one.
-		rank = 0;
-		uvsets.erase( it );
-		++it;
-	}
-
-	// Finally, do a generic conversion of anything that remains.
-	for( const auto &[name, variable] : variablesToConvert )
-	{
 		switch( variable.interpolation )
 		{
 			case PrimitiveVariable::Constant :
-				GeometryAlgo::convertPrimitiveVariable( name, variable, cmesh->attributes, ccl::ATTR_ELEMENT_MESH );
+				GeometryAlgo::convertPrimitiveVariable( name, variable, attributes, ccl::ATTR_ELEMENT_MESH );
 				break;
 			case PrimitiveVariable::Uniform :
-				GeometryAlgo::convertPrimitiveVariable( name, variable, cmesh->attributes, ccl::ATTR_ELEMENT_FACE );
+				GeometryAlgo::convertPrimitiveVariable( name, variable, attributes, ccl::ATTR_ELEMENT_FACE );
 				break;
 			case PrimitiveVariable::Vertex :
 			case PrimitiveVariable::Varying :
-				GeometryAlgo::convertPrimitiveVariable( name, variable, cmesh->attributes, ccl::ATTR_ELEMENT_VERTEX );
+				GeometryAlgo::convertPrimitiveVariable( name, variable, attributes, ccl::ATTR_ELEMENT_VERTEX );
 				break;
 			case PrimitiveVariable::FaceVarying :
-				GeometryAlgo::convertPrimitiveVariable( name, variable, cmesh->attributes, ccl::ATTR_ELEMENT_CORNER );
+				GeometryAlgo::convertPrimitiveVariable( name, variable, attributes, ccl::ATTR_ELEMENT_CORNER );
 				break;
 			default :
 				break;
@@ -663,16 +223,6 @@ ccl::Geometry *convert( const std::vector<const IECoreScene::MeshPrimitive *> &m
 				midMesh = meshes[frameIdx]->copy();
 				V3fVectorData *midP = midMesh->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
 				IECore::LinearInterpolator<std::vector<V3f>>()( p1->readable(), p2->readable(), 0.5f, midP->writable() );
-
-				PrimitiveVariable::Interpolation nInterpolation = PrimitiveVariable::Invalid;
-				if( normal( meshes[0], nInterpolation ) )
-				{
-					const V3fVectorData *n1 = meshes[0]->variableData<V3fVectorData>( "N", nInterpolation );
-					const V3fVectorData *n2 = meshes[1]->variableData<V3fVectorData>( "N", nInterpolation );
-					V3fVectorData *midN = midMesh->variableData<V3fVectorData>( "N", nInterpolation );
-					IECore::LinearInterpolator<std::vector<V3f>>()( n1->readable(), n2->readable(), 0.5f, midN->writable() );
-				}
-
 				samples.push_back( midMesh.get() );
 			}
 		}
@@ -706,16 +256,6 @@ ccl::Geometry *convert( const std::vector<const IECoreScene::MeshPrimitive *> &m
 			midMesh = meshes[_frameIdx]->copy();
 			V3fVectorData *midP = midMesh->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
 			IECore::LinearInterpolator<std::vector<V3f>>()( p1->readable(), p2->readable(), 0.5f, midP->writable() );
-
-			PrimitiveVariable::Interpolation nInterpolation = PrimitiveVariable::Invalid;
-			if( normal( meshes[0], nInterpolation ) )
-			{
-				const V3fVectorData *n1 = meshes[0]->variableData<V3fVectorData>( "N", nInterpolation );
-				const V3fVectorData *n2 = meshes[1]->variableData<V3fVectorData>( "N", nInterpolation );
-				V3fVectorData *midN = midMesh->variableData<V3fVectorData>( "N", nInterpolation );
-				IECore::LinearInterpolator<std::vector<V3f>>()( n1->readable(), n2->readable(), 0.5f, midN->writable() );
-			}
-
 			cmesh = convertCommon( midMesh.get() );
 		}
 
@@ -725,30 +265,11 @@ ccl::Geometry *convert( const std::vector<const IECoreScene::MeshPrimitive *> &m
 		}
 	}
 
-	// Add the motion position/normal attributes
+	// Add the motion position attributes
 	cmesh->set_use_motion_blur( true );
 	cmesh->set_motion_steps( samples.size() + 1 );
 	ccl::Attribute *attr_mP = cmesh->attributes.add( ccl::ATTR_STD_MOTION_VERTEX_POSITION, ccl::ustring("motion_P") );
 	ccl::float3 *mP = attr_mP->data_float3();
-	ccl::Attribute *attr_mN = nullptr;
-	PrimitiveVariable::Interpolation nInterpolation = PrimitiveVariable::Invalid;
-	if( normal( meshes[0], nInterpolation ) )
-	{
-		if( nInterpolation == PrimitiveVariable::Vertex )
-		{
-			attr_mN = cmesh->attributes.add( ccl::ATTR_STD_MOTION_VERTEX_NORMAL, ccl::ustring("motion_N") );
-		}
-#ifdef WITH_CYCLES_CORNER_NORMALS
-		else if( nInterpolation == PrimitiveVariable::FaceVarying )
-		{
-			attr_mN = cmesh->attributes.add( ccl::ATTR_STD_MOTION_CORNER_NORMAL, ccl::ustring("motion_Nc") );
-		}
-#endif
-		else
-		{
-			msg( Msg::Warning, "IECoreCyles::MeshAlgo::convert", "Variable \"N\" has unsupported interpolation type for motion steps - not generating normals." );
-		}
-	}
 
 	for( size_t i = 0; i < samples.size(); ++i )
 	{
@@ -783,14 +304,6 @@ ccl::Geometry *convert( const std::vector<const IECoreScene::MeshPrimitive *> &m
 				cmesh->attributes.remove( attr_mP );
 				cmesh->set_motion_steps( 0) ;
 				cmesh->set_use_motion_blur( true );
-			}
-		}
-
-		if( attr_mN )
-		{
-			if( const V3fVectorData *normals = normal( samples[i], nInterpolation ) )
-			{
-				convertN( samples[i], normals, attr_mN, nInterpolation );
 			}
 		}
 	}

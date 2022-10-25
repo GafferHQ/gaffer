@@ -149,14 +149,17 @@ ccl::Attribute *convertTypedPrimitiveVariable( const std::string &name, const Pr
 	ccl::Attribute *attribute = attributes.add( ccl::ustring( name.c_str() ), typeDesc, attributeElement );
 
 	// Sanity check the size of the buffer, so we don't run off the end when copying our data into it.
+	// Note that we do allow the buffer to be _bigger_ than we expect, because Cycles reserves additional
+	// space for its own usage. For instance, vertex attributes on subdivs reserve one extra element for
+	// each non-quad face.
 
-	const size_t expectedSize = attribute->element_size( attributes.geometry, attributes.prim );
-	if( dataSize( data ) != expectedSize )
+	const size_t allocatedSize = attribute->element_size( attributes.geometry, attributes.prim );
+	if( dataSize( data ) > allocatedSize )
 	{
 		msg(
 			Msg::Warning, "IECoreCyles::GeometryAlgo::convertPrimitiveVariable",
-			boost::format( "Primitive variable \"%1%\" has size %2% but Cycles expected size %3%." )
-				% name % dataSize( data ) % expectedSize
+			boost::format( "Primitive variable \"%1%\" has size %2% but Cycles allocated size %3%." )
+				% name % dataSize( data ) % allocatedSize
 		);
 		return nullptr;
 	}
@@ -344,6 +347,10 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 	if( name == "N" && attr->element == ccl::ATTR_ELEMENT_VERTEX && attr->type == ccl::TypeDesc::TypeNormal )
 	{
 		attr->std = ccl::ATTR_STD_VERTEX_NORMAL;
+	}
+	else if( name == "uv" && attr->type == ccl::TypeFloat2 )
+	{
+		attr->std = ccl::ATTR_STD_UV;
 	}
 }
 
