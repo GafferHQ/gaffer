@@ -38,7 +38,6 @@ import os
 import math
 import time
 import unittest
-import six
 
 import imath
 
@@ -611,8 +610,8 @@ class RendererTest( GafferTest.TestCase ) :
 				renderer.object( data.typeName(), primitive, attributes )
 
 				self.assertEqual( len( mh.messages ), 1 )
-				six.assertRegex(
-					self, mh.messages[0].message,
+				self.assertRegex(
+					mh.messages[0].message,
 					"Primitive variable \"test\" has unsupported type \"{}\"".format( data.typeName() )
 				)
 
