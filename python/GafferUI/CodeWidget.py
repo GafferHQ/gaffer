@@ -523,14 +523,16 @@ class PythonCompleter( Completer ) :
 
 		prefix = text[:-len(partial)]
 
-		names = []
 		if partial.startswith( "." ) :
 			# Attribute
 			if isinstance( rootObject, Gaffer.GraphComponent ) and not self.__includeGraphComponentAttributes :
 				return []
-			names = dir( rootObject )
+			items = []
+			for n in dir( rootObject ) :
+				with IECore.IgnoredExceptions( AttributeError ) :
+					items.append( ( n, getattr( rootObject, n ) ) )
 			return self.__completions(
-				items = [ ( n, getattr( rootObject, n ) ) for n in names ],
+				items = items,
 				prefix = prefix, partialName = partial[1:],
 				namePrefix = "."
 			)
