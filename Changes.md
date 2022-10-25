@@ -22,12 +22,13 @@ Breaking Changes
 - Python : Removed support for Python 2.
 - CatalogueUI : Hid OutputIndexColumn from public API.
 
-1.1.x.x (relative to 1.1.1.0)
+1.1.2.0 (relative to 1.1.1.0)
 =======
 
 Improvements
 ------------
 
+- Viewer : Added support for selecting an image comparison node. This can be accessed by selecting the focus or selected node from the comparison widget at the top of the viewer, or by dragging an image node to the comparison widget.
 - Catalogue :
   - Improved performance when interacting with large Catalogues.
   - Added hover state to the output index column, to indicate clickability.
@@ -41,7 +42,6 @@ Improvements
   - Spreadsheet cells connected to a `PathFilter.paths` plug.
   - Spreadsheet row names when the spreadsheet selector is set to `scene:path`.
 - Spreadsheet : Added support for metadata on the `name` and `enabled` plug of each row. Metadata registered on plugs in the default row is mirrored automatically onto all other rows.
-- ImageView : Added support for selecting a comparison node.  This can be accessed by selecting the focus or selected node from the comparison widget at the top of the  viewer, or by dragging an image node to the comparison widget.
 - ShuffleAttributes, ShufflePrimitiveVariables :
   - Added `replaceDestination` plugs that may be used to specify whether each shuffle replaces existing destination data with the same name.
   - Shuffles are now performed in the order they are defined, and separate shuffles may write to the same destination.
@@ -56,6 +56,9 @@ Fixes
   - Fixed handling of `Varying` primitive variable interpolation (#4849).
   - Fixed handling of `Constant Color3f` primitive variables.
   - Fixed handling of indexed primitive variables.
+  - Fixed `"attribute edit required geometry to be regenerated"` error when changing attributes on a camera.
+  - Fixed `cycles:shader:displacement_method` attribute handling (#4893).
+  - Fixed shader attribute substitutions (#4921).
 - PathFilter : Fixed error when selecting a path element from a promoted `PathFilter.paths` plug (introduced in 0.61.13.0).
 - ImageView : Fixed error with display of negative colors.
 - NodeEditor : Fixed updated of section summaries when they are changed in the UI Editor.
@@ -63,6 +66,7 @@ Fixes
 - Spreadsheet :
   - Fixed bugs with inconsistent column ordering.
   - Fixed bug that allowed operations on hidden columns included through shift-selection (was seen by users as the disable hotkey unexpectedly affecting columns on other tabs).
+- ArnoldDisplacement : Removed irrelevant shader name widget and `Reload` button.
 
 API
 ---
@@ -138,14 +142,15 @@ Breaking Changes
 - ImagePlug : Removed unused `viewName` argument from `viewNames()` and `viewNamesHash()` methods.
 - StandardAttributes : Removed backwards compatibility for StandardAttributes nodes saved from Gaffer `0.95.0` (May 2014) and earlier. If necessary, resave affected files using a recent Gaffer version.
 
-1.0.6.x (relative to 1.0.6.0)
+1.0.6.1 (relative to 1.0.6.0)
 =======
 
 Fixes
 -----
 
-- NodeEditor : Fixed updated of section summaries when they are changed in the UI Editor.
+- NodeEditor : Fixed update of section summaries when they are changed in the UI Editor.
 - ArnoldColorManager : Fixed broken presets for `color_space_narrow` and `color_space_linear`.
+- ArnoldDisplacement : Removed irrelevant shader name widget and `Reload` button.
 - ImageView : Fixed error with display of negative colors.
 - Spreadsheet :
   - Fixed bugs with inconsistent column ordering.

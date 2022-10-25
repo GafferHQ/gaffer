@@ -415,6 +415,22 @@ class RendererTest( GafferTest.TestCase ) :
 		)
 		del o
 
+	def testCameraAttributeEdits( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive
+		)
+
+		camera = renderer.camera( "test", IECoreScene.Camera(), renderer.attributes( IECore.CompoundObject() ) )
+
+		# Edit should succeed.
+		self.assertTrue( camera.attributes(
+			renderer.attributes( IECore.CompoundObject( { "user:test" : IECore.IntData( 10 ) } ) )
+		) )
+
+		del camera
+
 	def testDisplayDriverCropWindow( self ) :
 
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
@@ -728,67 +744,78 @@ class RendererTest( GafferTest.TestCase ) :
 
 		# Tests for each of the primitive variables.
 
-		self.__testPrimitiveVariableInterpolation(
-			plane, "constantColor",
-			{
-				topLeft : plane["constantColor"].data.value,
-				topCenter : plane["constantColor"].data.value,
-				center : plane["constantColor"].data.value,
-				bottomRight : plane["constantColor"].data.value,
-			}
-		)
+		for interpolation in [ "linear", "catmullClark" ] :
 
-		self.__testPrimitiveVariableInterpolation(
-			plane, "constantInt",
-			{
-				topLeft : plane["constantInt"].data.value,
-				topCenter : plane["constantInt"].data.value,
-				center : plane["constantInt"].data.value,
-				bottomRight : plane["constantInt"].data.value,
-			}
-		)
+			for triangulate in [ False, True ] :
 
-		self.__testPrimitiveVariableInterpolation(
-			plane, "uniformColor",
-			{
-				topLeft : imath.Color4f( 0, 0, 0, 1 ),
-				topCenter : imath.Color4f( 1, 1, 1, 1 ),
-				center : imath.Color4f( 4, 4, 4, 1 ),
-				bottomRight : imath.Color4f( 8, 8, 8, 1 ),
-			}
-		)
+				if triangulate :
+					testPlane = IECoreScene.MeshAlgo.triangulate( plane )
+				else :
+					testPlane = plane.copy()
 
-		self.__testPrimitiveVariableInterpolation(
-			plane, "uniformIndexedColor",
-			{
-				topLeft : imath.Color4f( 1, 0, 0, 1 ),
-				topCenter : imath.Color4f( 0, 1, 0, 1 ),
-				center : imath.Color4f( 1, 0, 0, 1 ),
-				bottomRight : imath.Color4f( 1, 0, 0, 1 ),
-			}
-		)
+				testPlane.setInterpolation( interpolation )
 
-		self.__testPrimitiveVariableInterpolation(
-			plane, "vertexColor",
-			{
-				topLeft : imath.Color4f( topLeft.x, topLeft.y, 0, 1 ),
-				topCenter : imath.Color4f( topCenter.x, topCenter.y, 0, 1 ),
-				center : imath.Color4f( center.x, center.y, 0, 1 ),
-				bottomRight : imath.Color4f( bottomRight.x, bottomRight.y, 0, 1 ),
-			},
-			maxDifference = 0.01
-		)
+				self.__testPrimitiveVariableInterpolation(
+					testPlane, "constantColor",
+					{
+						topLeft : plane["constantColor"].data.value,
+						topCenter : plane["constantColor"].data.value,
+						center : plane["constantColor"].data.value,
+						bottomRight : plane["constantColor"].data.value,
+					}
+				)
 
-		self.__testPrimitiveVariableInterpolation(
-			plane, "varyingColor",
-			{
-				topLeft : imath.Color4f( topLeft.x, topLeft.y, 0, 1 ),
-				topCenter : imath.Color4f( topCenter.x, topCenter.y, 0, 1 ),
-				center : imath.Color4f( center.x, center.y, 0, 1 ),
-				bottomRight : imath.Color4f( bottomRight.x, bottomRight.y, 0, 1 ),
-			},
-			maxDifference = 0.01
-		)
+				self.__testPrimitiveVariableInterpolation(
+					testPlane, "constantInt",
+					{
+						topLeft : plane["constantInt"].data.value,
+						topCenter : plane["constantInt"].data.value,
+						center : plane["constantInt"].data.value,
+						bottomRight : plane["constantInt"].data.value,
+					}
+				)
+
+				self.__testPrimitiveVariableInterpolation(
+					testPlane, "uniformColor",
+					{
+						topLeft : imath.Color4f( 0, 0, 0, 1 ),
+						topCenter : imath.Color4f( 1, 1, 1, 1 ),
+						center : imath.Color4f( 4, 4, 4, 1 ),
+						bottomRight : imath.Color4f( 8, 8, 8, 1 ),
+					}
+				)
+
+				self.__testPrimitiveVariableInterpolation(
+					testPlane, "uniformIndexedColor",
+					{
+						topLeft : imath.Color4f( 1, 0, 0, 1 ),
+						topCenter : imath.Color4f( 0, 1, 0, 1 ),
+						center : imath.Color4f( 1, 0, 0, 1 ),
+						bottomRight : imath.Color4f( 1, 0, 0, 1 ),
+					}
+				)
+
+				self.__testPrimitiveVariableInterpolation(
+					testPlane, "vertexColor",
+					{
+						topLeft : imath.Color4f( topLeft.x, topLeft.y, 0, 1 ),
+						topCenter : imath.Color4f( topCenter.x, topCenter.y, 0, 1 ),
+						center : imath.Color4f( center.x, center.y, 0, 1 ),
+						bottomRight : imath.Color4f( bottomRight.x, bottomRight.y, 0, 1 ),
+					},
+					maxDifference = 0.01
+				)
+
+				self.__testPrimitiveVariableInterpolation(
+					testPlane, "varyingColor",
+					{
+						topLeft : imath.Color4f( topLeft.x, topLeft.y, 0, 1 ),
+						topCenter : imath.Color4f( topCenter.x, topCenter.y, 0, 1 ),
+						center : imath.Color4f( center.x, center.y, 0, 1 ),
+						bottomRight : imath.Color4f( bottomRight.x, bottomRight.y, 0, 1 ),
+					},
+					maxDifference = 0.01
+				)
 
 	def testPointsPrimitiveVariableInterpolation( self ) :
 
@@ -976,6 +1003,132 @@ class RendererTest( GafferTest.TestCase ) :
 			},
 			maxDifference = 0.01
 		)
+
+	def testMeshUVs( self ) :
+
+		plane = IECoreScene.MeshPrimitive.createPlane(
+			imath.Box2f( imath.V2f( -0.5 ), imath.V2f( 0.5 ) ),
+			imath.V2i( 3 )
+		)
+
+		# Image UV coordinates of the center of particular faces.
+
+		topLeft = imath.V2f( 1/6.0, 1/6.0 )
+		topCenter = imath.V2f( 0.5, 1/6.0 )
+		center = imath.V2f( 0.5, 0.5 )
+		bottomRight = imath.V2f( 5/6.0 )
+
+		# Test FaceVarying
+
+		self.assertEqual(
+			plane["uv"].interpolation, IECoreScene.PrimitiveVariable.Interpolation.FaceVarying
+		)
+
+		for interpolation in [ "linear", "catmullClark" ] :
+
+			plane.setInterpolation( interpolation )
+			self.__testPrimitiveVariableInterpolation(
+				plane, "uv",
+				{
+					topLeft : imath.Color4f( topLeft.x, topLeft.y, 0, 1 ),
+					topCenter : imath.Color4f( topCenter.x, topCenter.y, 0, 1 ),
+					center : imath.Color4f( center.x, center.y, 0, 1 ),
+					bottomRight : imath.Color4f( bottomRight.x, bottomRight.y, 0, 1 ),
+				},
+				maxDifference = 0.01
+			)
+
+		# Test Vertex
+
+		uv = plane["uv"]
+		IECoreScene.MeshAlgo.resamplePrimitiveVariable(
+			plane, uv, IECoreScene.PrimitiveVariable.Interpolation.Vertex
+		)
+		plane["uv"] = uv
+
+		self.assertEqual(
+			plane["uv"].interpolation, IECoreScene.PrimitiveVariable.Interpolation.Vertex
+		)
+
+		for interpolation in [ "linear", "catmullClark" ] :
+
+			plane.setInterpolation( interpolation )
+			self.__testPrimitiveVariableInterpolation(
+				plane, "uv",
+				{
+					topLeft : imath.Color4f( topLeft.x, topLeft.y, 0, 1 ),
+					topCenter : imath.Color4f( topCenter.x, topCenter.y, 0, 1 ),
+					center : imath.Color4f( center.x, center.y, 0, 1 ),
+					bottomRight : imath.Color4f( bottomRight.x, bottomRight.y, 0, 1 ),
+				},
+				maxDifference = 0.01
+			)
+
+	def testShaderSubstitutions( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+		)
+
+		fileName = os.path.join( self.temporaryDirectory(), "test.exr" )
+		renderer.output(
+			"testOutput",
+			IECoreScene.Output(
+				fileName,
+				"exr",
+				"rgba",
+				{}
+			)
+		)
+
+		# Render two planes, with the same shader on them both. Each
+		# plane has a different value for the `textureFileName` attribute,
+		# which should be successfully substituted in to make a unique shader
+		# per plane.
+
+		shader = IECoreScene.ShaderNetwork(
+			shaders = {
+				"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface" ),
+				"texture" : IECoreScene.Shader( "image_texture", "cycles:shader", { "filename" : "<attr:textureFileName>" } )
+			},
+			connections = [
+				( ( "texture", "color" ), ( "output", "emission" ) )
+			],
+			output = "output",
+		)
+
+		for translateX, name, color in [
+			( -0.1, "red", imath.Color3f( 1, 0, 0 ) ),
+			( 0.1, "green", imath.Color3f( 0, 1, 0 ) ),
+		] :
+
+			displayWindow = imath.Box2i( imath.V2i( 0 ), imath.V2i( 16 ) )
+			textureImage = IECoreImage.ImagePrimitive.createRGBFloat( color, displayWindow, displayWindow )
+			textureFileName = os.path.join( self.temporaryDirectory(), "{}.png".format( name ) )
+			IECoreImage.ImageWriter( textureImage, textureFileName ).write()
+
+			plane = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -0.1 ), imath.V2f( 0.1 ) ) )
+			# Workaround for #4890
+			plane["uniquefier"] = IECoreScene.PrimitiveVariable(
+				IECoreScene.PrimitiveVariable.Interpolation.Constant,
+				IECore.FloatData( translateX ),
+			)
+
+			cyclesPlane = renderer.object(
+				"{}Plane".format( name ), plane,
+				renderer.attributes( IECore.CompoundObject( {
+					"cycles:surface" : shader,
+					"textureFileName" : IECore.StringData( textureFileName ),
+				} ) )
+			)
+			cyclesPlane.transform( imath.M44f().translate( imath.V3f( translateX, 0, 1 ) ) )
+
+		renderer.render()
+		image = IECore.Reader.create( fileName ).read()
+
+		self.assertEqual( self.__colorAtUV( image, imath.V2f( 0.48, 0.5 ) ), imath.Color4f( 1, 0, 0, 1 ) )
+		self.assertEqual( self.__colorAtUV( image, imath.V2f( 0.52, 0.5 ) ), imath.Color4f( 0, 1, 0, 1 ) )
 
 	def __colorAtUV( self, image, uv ) :
 
