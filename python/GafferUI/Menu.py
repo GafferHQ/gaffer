@@ -316,6 +316,16 @@ class Menu( GafferUI.Widget ) :
 						subMenu = _Menu( qtMenu, name )
 						active = self.__evaluateItemValue( item.active )
 						subMenu.setEnabled( active )
+
+						icon = getattr( item, "icon", None )
+						if icon is not None :
+							if isinstance( icon, str ) :
+								image = GafferUI.Image( icon )
+							else :
+								assert( isinstance( icon, GafferUI.Image ) )
+								image = icon
+							subMenu.setIcon( QtGui.QIcon( image._qtPixmap() ) )
+
 						qtMenu.addMenu( subMenu )
 
 						subMenu.__definition = item.subMenu
