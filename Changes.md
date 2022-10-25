@@ -40,6 +40,7 @@ Fixes
 - Spreadsheet :
   - Fixed bugs with inconsistent column ordering.
   - Fixed bug that allowed operations on hidden columns included through shift-selection (was seen by users as the disable hotkey unexpectedly affecting columns on other tabs).
+- ArnoldDisplacement : Removed irrelevant shader name widget and `Reload` button.
 
 API
 ---
@@ -123,6 +124,7 @@ Fixes
 
 - NodeEditor : Fixed updated of section summaries when they are changed in the UI Editor.
 - ArnoldColorManager : Fixed broken presets for `color_space_narrow` and `color_space_linear`.
+- ArnoldDisplacement : Removed irrelevant shader name widget and `Reload` button.
 - ImageView : Fixed error with display of negative colors.
 - Spreadsheet :
   - Fixed bugs with inconsistent column ordering.

@@ -59,6 +59,14 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
+		"name" : [
+
+			# The `name` plug is inherited from Shader, but unused by ArnoldDisplacement.
+			# Hide it to avoid confusion. See comments in ArnoldDisplacement.h.
+			"plugValueWidget:type", "",
+
+		],
+
 		"map" : [
 
 			"description",
