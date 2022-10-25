@@ -218,7 +218,7 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		result.append( "/__UpstreamDivider__", { "divider" : True, "label" : "Upstream" } )
 		if upstream :
-			for editScope in reversed( upstream ) :
+			for editScope in sorted( upstream, key = lambda e : e.relativeName( e.scriptNode() ) ) :
 				addItem( editScope )
 		else :
 			result.append( "/None Available", { "active" : False } )
@@ -227,7 +227,7 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 			downstream = Gaffer.NodeAlgo.findAllDownstream( node, self.__editScopePredicate )
 			if downstream :
 				result.append( "/__DownstreamDivider__", { "divider" : True, "label" : "Downstream" } )
-				for editScope in downstream :
+				for editScope in sorted( downstream, key = lambda e : e.relativeName( e.scriptNode() ) ) :
 					addItem( editScope, enabled = False )
 
 		result.append( "/__NoneDivider__", { "divider" : True } )
