@@ -118,13 +118,13 @@ Breaking Changes
 - ImagePlug : Removed unused `viewName` argument from `viewNames()` and `viewNamesHash()` methods.
 - StandardAttributes : Removed backwards compatibility for StandardAttributes nodes saved from Gaffer `0.95.0` (May 2014) and earlier. If necessary, resave affected files using a recent Gaffer version.
 
-1.0.6.x (relative to 1.0.6.0)
+1.0.6.1 (relative to 1.0.6.0)
 =======
 
 Fixes
 -----
 
-- NodeEditor : Fixed updated of section summaries when they are changed in the UI Editor.
+- NodeEditor : Fixed update of section summaries when they are changed in the UI Editor.
 - ArnoldColorManager : Fixed broken presets for `color_space_narrow` and `color_space_linear`.
 - ArnoldDisplacement : Removed irrelevant shader name widget and `Reload` button.
 - ImageView : Fixed error with display of negative colors.
