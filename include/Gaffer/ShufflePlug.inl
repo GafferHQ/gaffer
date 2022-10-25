@@ -77,7 +77,7 @@ T ShufflesPlug::shuffle( const T &sourceContainer ) const
 
 	NameContainer names;
 
-	for( const ConstShufflePlugPtr &plug : ShufflePlug::Range( *this ) )
+	for( auto &plug : ShufflePlug::Range( *this ) )
 	{
 		// NOTE : "source" context variable only applies to the destination plug.
 		//        So retrieve values of other plugs before setting context variable.
