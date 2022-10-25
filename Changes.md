@@ -6,6 +6,7 @@ Fixes
 
 - NodeEditor : Fixed updated of section summaries when they are changed in the UI Editor.
 - ArnoldColorManager : Fixed broken presets for `color_space_narrow` and `color_space_linear`.
+- ArnoldDisplacement : Removed irrelevant shader name widget and `Reload` button.
 - ImageView : Fixed error with display of negative colors.
 - Spreadsheet :
   - Fixed bugs with inconsistent column ordering.
