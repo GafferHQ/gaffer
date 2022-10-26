@@ -226,54 +226,6 @@
          id="path2605-7"
          inkscape:label="#path3910" />
     </mask>
-    <linearGradient
-       inkscape:collect="always"
-       xlink:href="#brightColor"
-       id="linearGradient2109"
-       gradientTransform="matrix(0.99899272,0,0,0.99899272,68.566606,1.7696343)"
-       gradientUnits="userSpaceOnUse" />
-    <linearGradient
-       inkscape:collect="always"
-       xlink:href="#brightColor"
-       id="linearGradient2111"
-       gradientTransform="matrix(0.99899272,0,0,0.99899272,-329.43339,-140.23037)"
-       gradientUnits="userSpaceOnUse" />
-    <linearGradient
-       inkscape:collect="always"
-       xlink:href="#brightColor"
-       id="linearGradient2113"
-       gradientTransform="matrix(0.99899272,0,0,0.99899272,68.566606,1.7696343)"
-       gradientUnits="userSpaceOnUse" />
-    <linearGradient
-       inkscape:collect="always"
-       xlink:href="#brightColor"
-       id="linearGradient2115"
-       gradientTransform="matrix(0.99899272,0,0,0.99899272,68.566606,1.7696343)"
-       gradientUnits="userSpaceOnUse" />
-    <linearGradient
-       inkscape:collect="always"
-       xlink:href="#brightColor"
-       id="linearGradient2151"
-       gradientUnits="userSpaceOnUse"
-       gradientTransform="matrix(0.99899272,0,0,0.99899272,-329.43339,-140.23037)" />
-    <linearGradient
-       inkscape:collect="always"
-       xlink:href="#brightColor"
-       id="linearGradient2153"
-       gradientUnits="userSpaceOnUse"
-       gradientTransform="matrix(0.99899272,0,0,0.99899272,68.566606,1.7696343)" />
-    <linearGradient
-       inkscape:collect="always"
-       xlink:href="#brightColor"
-       id="linearGradient2155"
-       gradientUnits="userSpaceOnUse"
-       gradientTransform="matrix(0.99899272,0,0,0.99899272,68.566606,1.7696343)" />
-    <linearGradient
-       inkscape:collect="always"
-       xlink:href="#brightColor"
-       id="linearGradient2157"
-       gradientUnits="userSpaceOnUse"
-       gradientTransform="matrix(0.99899272,0,0,0.99899272,68.566606,1.7696343)" />
   </defs>
   <sodipodi:namedview
      id="base"
@@ -288,17 +240,7 @@
      inkscape:guide-bbox="true"
      inkscape:object-paths="false"
      inkscape:bbox-paths="false"
-     inkscape:bbox-nodes="true"
-     showgrid="true"
-     inkscape:zoom="16"
-     inkscape:cx="322.27944"
-     inkscape:cy="-557.31979"
-     inkscape:window-width="3840"
-     inkscape:window-height="2031"
-     inkscape:window-x="0"
-     inkscape:window-y="55"
-     inkscape:window-maximized="1"
-     inkscape:current-layer="g2724">
+     inkscape:bbox-nodes="true">
     <inkscape:grid
        type="xygrid"
        id="grid3598"
@@ -5067,7 +5009,7 @@
            cy="1614.8622"
            r="6.4857712"
            id="circle2091"
-           style="display:inline;opacity:1;fill:url(#linearGradient2111);fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.68974006;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill" />
+           style="display:inline;opacity:1;fill:url(#brightColor);fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.68974006;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill" />
         <text
            xml:space="preserve"
            style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:10.66666698px;line-height:100.40000677%;font-family:Arial;-inkscape-font-specification:'Sans Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
@@ -5122,7 +5064,7 @@
            cx="562.5"
            cy="1756.8622"
            id="circle2070"
-           style="display:inline;opacity:1;fill:url(#linearGradient2113);fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.69515121;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+           style="display:inline;opacity:1;fill:url(#brightColor);fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.69515121;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
            r="6.4999876" />
         <text
            xml:space="preserve"
@@ -5148,7 +5090,7 @@
          style="display:inline"
          transform="translate(-330,-142)">
         <circle
-           style="display:inline;opacity:1;fill:url(#linearGradient2115);fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.68295431;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+           style="display:inline;opacity:1;fill:url(#brightColor);fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.68295431;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
            id="circle2080"
            r="6.4597254"
            cy="1756.8622"
@@ -5176,7 +5118,7 @@
          style="display:inline"
          transform="translate(-330,-142)">
         <circle
-           style="display:inline;opacity:1;fill:url(#linearGradient2109);fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.68295431;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+           style="display:inline;opacity:1;fill:url(#brightColor);fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.68295431;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
            id="circle2099"
            r="6.4597254"
            cy="1756.8622"
@@ -5204,7 +5146,7 @@
          transform="translate(68)"
          style="opacity:0.643">
         <circle
-           style="display:inline;opacity:1;fill:url(#linearGradient2151);fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.68974006;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+           style="display:inline;opacity:1;fill:url(#brightColor);fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.68974006;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
            id="circle2111"
            r="6.4857712"
            cy="1614.8622"
@@ -5233,7 +5175,7 @@
          id="g2129">
         <circle
            r="6.4999876"
-           style="display:inline;opacity:1;fill:url(#linearGradient2153);fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.69515121;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
+           style="display:inline;opacity:1;fill:url(#brightColor);fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.69515121;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill"
            id="circle2121"
            cy="1756.8622"
            cx="562.5" />
@@ -5265,7 +5207,7 @@
            cy="1756.8622"
            r="6.4597254"
            id="circle2131"
-           style="display:inline;opacity:1;fill:url(#linearGradient2155);fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.68295431;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill" />
+           style="display:inline;opacity:1;fill:url(#brightColor);fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.68295431;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill" />
         <text
            xml:space="preserve"
            style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:10.66666698px;line-height:100.40000677%;font-family:Arial;-inkscape-font-specification:'Sans Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
@@ -5293,7 +5235,7 @@
            cy="1756.8622"
            r="6.4597254"
            id="circle2141"
-           style="display:inline;opacity:1;fill:url(#linearGradient2157);fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.68295431;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill" />
+           style="display:inline;opacity:1;fill:url(#brightColor);fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.68295431;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:markers stroke fill" />
         <text
            xml:space="preserve"
            style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:10.66666698px;line-height:100.40000677%;font-family:Arial;-inkscape-font-specification:'Sans Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
