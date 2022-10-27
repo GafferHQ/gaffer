@@ -1,6 +1,12 @@
 1.1.x.x (relative to 1.1.2.0)
 =======
 
+Features
+--------
+
+- Image Viewer :
+  - Added "Match Display Windows" option to Compare Mode menu. This allows the comparison mode to directly view a low-res render over a high-res plate, providing better performance than scaling up the render using the node graph.
+
 Fixes
 -----
 

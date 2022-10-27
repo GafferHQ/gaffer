@@ -1459,6 +1459,7 @@ ImageView::ImageView( const std::string &name )
 	PlugPtr compareParent = new Plug( "compare" );
 	addChild( compareParent );
 	compareParent->addChild( new StringPlug( "mode", Plug::In, "", Plug::Default & ~Plug::AcceptsInputs ) );
+	compareParent->addChild( new BoolPlug( "matchDisplayWindows", Plug::In ) );
 	compareParent->addChild( new BoolPlug( "wipe", Plug::In, true, Plug::Default & ~Plug::AcceptsInputs ) );
 	compareParent->addChild( new ImagePlug( "image", Plug::In ) );
 	compareParent->addChild( new StringPlug( "catalogueOutput", Plug::In, "output:1", Plug::Default & ~Plug::AcceptsInputs ) );
@@ -1752,6 +1753,16 @@ const Gaffer::StringPlug *ImageView::compareModePlug() const
 	return getChild<Plug>( "compare" )->getChild<StringPlug>( "mode" );
 }
 
+Gaffer::BoolPlug *ImageView::compareMatchDisplayWindowsPlug()
+{
+	return getChild<Plug>( "compare" )->getChild<BoolPlug>( "matchDisplayWindows" );
+}
+
+const Gaffer::BoolPlug *ImageView::compareMatchDisplayWindowsPlug() const
+{
+	return getChild<Plug>( "compare" )->getChild<BoolPlug>( "matchDisplayWindows" );
+}
+
 Gaffer::BoolPlug *ImageView::compareWipePlug()
 {
 	return getChild<Plug>( "compare" )->getChild<BoolPlug>( "wipe" );
@@ -2035,6 +2046,21 @@ void ImageView::preRender()
 	else
 	{
 		m_imageGadgets[1]->setWipeEnabled( false );
+	}
+
+	if( compareMatchDisplayWindowsPlug()->getValue() )
+	{
+		Imath::Box3f mainBound = m_imageGadgets[0]->bound();
+		Imath::Box3f compareBound = m_imageGadgets[1]->bound();
+		float s = mainBound.size().x / compareBound.size().x;
+		Imath::M44f m;
+		m.translate( mainBound.center() - compareBound.center() * s );
+		m.scale( Imath::V3f( s, s, 0 ) );
+		m_imageGadgets[1]->setTransform( m );
+	}
+	else
+	{
+		m_imageGadgets[1]->setTransform( Imath::M44f() );
 	}
 
 	if( m_framed )

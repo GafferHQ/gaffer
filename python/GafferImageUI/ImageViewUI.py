@@ -117,6 +117,11 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"compare.matchDisplayWindows" : [
+			# matchDisplayWindows is also handled by _CompareModePlugValueWidget
+			"plugValueWidget:type", "",
+		],
+
 		"compare.wipe" : [
 
 			"description",
@@ -1308,11 +1313,25 @@ class _CompareModePlugValueWidget( GafferUI.PlugValueWidget ) :
 				}
 			)
 
+		m.append( "/MatchDisplayWindowsDivider", { "divider" : True } )
+		m.append(
+			"/Match Display Windows",
+			{
+				"command" : functools.partial( Gaffer.WeakMethod( self.__toggleMatchDisplayWindows ), value ),
+				"checkBox" : self.getPlug().parent()["matchDisplayWindows"].getValue()
+			}
+		)
+
 		return m
 
 	def __setValue( self, value, *unused ) :
 
 		self.getPlug().setValue( value )
+
+	def __toggleMatchDisplayWindows( self, *unused ) :
+
+		matchPlug = self.getPlug().parent()["matchDisplayWindows"]
+		matchPlug.setValue( not matchPlug.getValue() )
 
 class _CompareWipePlugValueWidget( GafferUI.PlugValueWidget ) :
 
