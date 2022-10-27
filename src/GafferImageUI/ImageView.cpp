@@ -1265,11 +1265,11 @@ class ImageView::ColorInspector : public Signals::Trackable
 		{
 			// ---- Create a plug on ImageView which will be used for evaluating colorInspectors
 
-			PlugPtr plug = new Plug( "colorInspector" );
-			view->addChild( plug );
+			PlugPtr colorInspectorPlug = new Plug( "colorInspector" );
+			view->addChild( colorInspectorPlug );
 
 			PlugPtr evaluatorPlug = new Plug( "evaluator" );
-			plug->addChild( evaluatorPlug );
+			colorInspectorPlug->addChild( evaluatorPlug );
 			evaluatorPlug->addChild( new Color4fPlug( "pixelColor" ) );
 			evaluatorPlug->addChild( new Color4fPlug( "areaColor" ) );
 
@@ -1317,7 +1317,7 @@ class ImageView::ColorInspector : public Signals::Trackable
 
 
 			// ---- Create a plug on ImageView for storing colorInspectors
-			plug->addChild( new ArrayPlug( "inspectors", Plug::In, new ColorInspectorPlug(), 1, 1024, Plug::Default & ~Plug::AcceptsInputs ) );
+			colorInspectorPlug->addChild( new ArrayPlug( "inspectors", Plug::In, new ColorInspectorPlug(), 1, 1024, Plug::Default & ~Plug::AcceptsInputs ) );
 			colorInspectorsPlug()->childAddedSignal().connect( boost::bind( &ColorInspector::colorInspectorAdded, this, ::_2 ) );
 			colorInspectorsPlug()->childRemovedSignal().connect( boost::bind( &ColorInspector::colorInspectorRemoved, this, ::_2 ) );
 
