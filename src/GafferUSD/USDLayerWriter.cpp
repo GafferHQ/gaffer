@@ -355,8 +355,8 @@ void USDLayerWriter::executeSequence( const std::vector<float> &frames ) const
 	const boost::filesystem::path tempDirectory = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
 	ScopedDirectory scopedTempDirectory( tempDirectory );
 
-	const string baseFileName = ( tempDirectory / "base.usdc" ).string();
-	const string layerFileName = ( tempDirectory / "layer.usdc" ).string();
+	const string baseFileName = ( tempDirectory / "base.usdc" ).generic_string();
+	const string layerFileName = ( tempDirectory / "layer.usdc" ).generic_string();
 
 	Context::EditableScope context( Context::current() );
 	for( const auto &fileName : { baseFileName, layerFileName } )

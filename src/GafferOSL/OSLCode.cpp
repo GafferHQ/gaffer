@@ -252,7 +252,7 @@ boost::filesystem::path compile( const std::string &shaderName, const std::strin
 
 	if( boost::filesystem::exists( osoFileName ) )
 	{
-		return osoFileName.string();
+		return osoFileName.generic_string();
 	}
 
 	// Make a temporary directory we can do our compilation in. The
@@ -264,7 +264,7 @@ boost::filesystem::path compile( const std::string &shaderName, const std::strin
 
 	// Write the source code out.
 
-	const std::string tempOSLFileName = ( tempDirectory / ( shaderName + ".osl" ) ).string();
+	const std::string tempOSLFileName = ( tempDirectory / ( shaderName + ".osl" ) ).generic_string();
 	std::ofstream f( tempOSLFileName.c_str() );
 	if( !f.good() )
 	{
@@ -292,7 +292,7 @@ boost::filesystem::path compile( const std::string &shaderName, const std::strin
 		}
 	}
 
-	const std::string tempOSOFileName = ( tempDirectory / ( shaderName + ".oso" ) ).string();
+	const std::string tempOSOFileName = ( tempDirectory / ( shaderName + ".oso" ) ).generic_string();
 	options.push_back( "-o" );
 	options.push_back( tempOSOFileName );
 
@@ -325,7 +325,7 @@ boost::filesystem::path compile( const std::string &shaderName, const std::strin
 		// Belt and braces. `rename()` should be reporting all errors,
 		// but on rare occasions we have still seen empty `.oso` files being
 		// produced. Detect this and warn so we can get to the bottom of it.
-		throw IECore::Exception( "Empty file after rename : \"" + osoFileName.string() + "\"" );
+		throw IECore::Exception( "Empty file after rename : \"" + osoFileName.generic_string() + "\"" );
 	}
 
 	return osoFileName;

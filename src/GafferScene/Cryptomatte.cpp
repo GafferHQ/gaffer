@@ -257,7 +257,7 @@ IECore::CompoundDataPtr parseManifestFromMetadataAndSidecar( const std::string &
 	// append manifest file to directory path
 	p /= manifestFile->readable();
 
-	return parseManifestFromSidecarFile( p.string() );
+	return parseManifestFromSidecarFile( p.generic_string() );
 }
 
 IECore::CompoundDataPtr parseManifestFromFirstMetadataEntry( const std::string &cryptomatteLayer, ConstCompoundDataPtr metadata, const std::string &manifestDirectory )

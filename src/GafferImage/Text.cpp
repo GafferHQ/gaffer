@@ -99,7 +99,7 @@ FacePtr faceLoader( const std::string &font, size_t &cost, const IECore::Cancell
 	const char *e = getenv( "IECORE_FONT_PATHS" );
 	IECore::SearchPath sp( e ? e : "" );
 
-	std::string file = sp.find( font ).string();
+	std::string file = sp.find( font ).generic_string();
 	if( !file.size() )
 	{
 		throw Exception( boost::str( boost::format( "Unable to find font \"%s\"." ) % font ) );

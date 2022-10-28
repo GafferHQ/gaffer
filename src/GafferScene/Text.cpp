@@ -65,7 +65,7 @@ FontPtr fontGetter( const std::string &fileName, size_t &cost, const IECore::Can
 	const char *e = getenv( "IECORE_FONT_PATHS" );
 	IECore::SearchPath sp( e ? e : "" );
 
-	std::string resolvedFileName = sp.find( fileName ).string();
+	std::string resolvedFileName = sp.find( fileName ).generic_string();
 	if( !resolvedFileName.size() )
 	{
 		throw Exception( "Unable to find font" );

@@ -1456,7 +1456,7 @@ class AppleseedPrimitive : public AppleseedEntity
 
 			// Write the mesh to a binarymesh file.
 			const asr::MeshObject *meshObj = static_cast<const asr::MeshObject *>( obj.get() );
-			if( !asr::MeshObjectWriter::write( *meshObj, "mesh", path.string().c_str() ) )
+			if( !asr::MeshObjectWriter::write( *meshObj, "mesh", path.generic_string().c_str() ) )
 			{
 				msg( Msg::Warning, "AppleseedRenderer::object", "Couldn't save mesh primitive." );
 			}

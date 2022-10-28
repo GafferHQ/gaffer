@@ -162,7 +162,7 @@ IECorePreview::LRUCache<std::string, QPixmap> g_pixmapCache(
 			IECore::msg( IECore::Msg::Warning, "PathListingWidget", boost::str( boost::format( "Could not find file \"%s\"" ) % fileName ) );
 			return QPixmap();
 		}
-		return QPixmap( QString( path.string().c_str() ) );
+		return QPixmap( QString( path.generic_string().c_str() ) );
 	},
 	/* maxCost = */ 10000
 );
