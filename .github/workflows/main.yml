@@ -243,4 +243,5 @@ jobs:
          cat $logFile
         done
       if: failure()
+      shell: bash
 
