@@ -413,5 +413,54 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 		reader["fileName"].setInput( writer["fileName"] )
 		self.assertScenesEqual( reader["out"], writer["in"] )
 
+	def testAnimatedSets( self ) :
+
+		# `IECoreScene::SceneInterface` doesn't support animated sets, so we
+		# only write sets on the first frame for each file we open.
+
+		script = Gaffer.ScriptNode()
+		script["sphere"] = GafferScene.Sphere()
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression( inspect.cleandoc(
+			"""
+			parent["sphere"]["sets"] = "A" if context.getFrame() % 2 else "B"
+			"""
+		) )
+
+		script["fileWriter"] = GafferScene.SceneWriter()
+		script["fileWriter"]["in"].setInput( script["sphere"]["out"] )
+		script["fileWriter"]["fileName"].setValue( os.path.join( self.temporaryDirectory(), "testSingle.usd" ) )
+		script["fileWriter"]["task"].executeSequence( range( 1, 10 ) )
+
+		script["sequenceWriter"] = GafferScene.SceneWriter()
+		script["sequenceWriter"]["in"].setInput( script["sphere"]["out"] )
+		script["sequenceWriter"]["fileName"].setValue( os.path.join( self.temporaryDirectory(), "testSingle.usd" ) )
+		script["sequenceWriter"]["task"].executeSequence( range( 1, 10 ) )
+		script["sequenceWriter"]["fileName"].setValue( os.path.join( self.temporaryDirectory(), "sequence.#.usd" ) )
+		script["sequenceWriter"]["task"].executeSequence( range( 1, 10 ) )
+
+		fileReader = GafferScene.SceneReader()
+		fileReader["fileName"].setInput( script["fileWriter"]["fileName"] )
+
+		sequenceReader = GafferScene.SceneReader()
+		sequenceReader["fileName"].setInput( script["sequenceWriter"]["fileName"] )
+
+		with Gaffer.Context() as c :
+			for f in range( 1, 10 ) :
+				c.setFrame( f )
+				# Sets were only written once for the single file, so we
+				# expect them to be taken from frame 1.
+				self.assertIn( "A", fileReader["out"].setNames() )
+				self.assertNotIn( "B", fileReader["out"].setNames() )
+				# For the file-per-frame sequence, we expect exactly the
+				# right sets.
+				if f % 2 :
+					self.assertIn( "A", sequenceReader["out"].setNames() )
+					self.assertNotIn( "B", sequenceReader["out"].setNames() )
+				else :
+					self.assertNotIn( "A", sequenceReader["out"].setNames() )
+					self.assertIn( "B", sequenceReader["out"].setNames() )
+
 if __name__ == "__main__":
 	unittest.main()

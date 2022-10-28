@@ -37,6 +37,7 @@
 #include "GafferScene/SceneWriter.h"
 
 #include "GafferScene/SceneAlgo.h"
+#include "GafferScene/SceneReader.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/StringPlug.h"
@@ -100,16 +101,18 @@ struct LocationWriter
 		}
 
 		SceneInterface::NameList locationSets;
-		const CompoundDataMap &setsMap = m_sets->readable();
-		locationSets.reserve( setsMap.size() );
-
-		for( CompoundDataMap::const_iterator it = setsMap.begin(); it != setsMap.end(); ++it)
+		if( m_sets )
 		{
-			ConstPathMatcherDataPtr pathMatcher = IECore::runTimeCast<PathMatcherData>( it->second );
+			const CompoundDataMap &setsMap = m_sets->readable();
+			locationSets.reserve( setsMap.size() );
 
-			if( pathMatcher->readable().match( scenePath ) & IECore::PathMatcher::ExactMatch )
+			for( const auto &[name, data] : setsMap )
 			{
-				locationSets.push_back( it->first );
+				auto pathMatcher = static_cast<const PathMatcherData *>( data.get() );
+				if( pathMatcher->readable().match( scenePath ) & IECore::PathMatcher::ExactMatch )
+				{
+					locationSets.push_back( name );
+				}
 			}
 		}
 
@@ -256,17 +259,27 @@ void SceneWriter::executeSequence( const std::vector<float> &frames ) const
 	{
 		context->setFrame( *it );
 
+		ConstCompoundDataPtr sets;
+		bool useSetsAPI = true;
 		const std::string fileName = fileNamePlug()->getValue();
 		if( !output || output->fileName() != fileName )
 		{
 			createDirectories( fileName );
 			output = SceneInterface::create( fileName, IndexedIO::Write );
+			sets = SceneAlgo::sets( scene );
+			useSetsAPI = SceneReader::useSetsAPI( output.get() );
 		}
 
-		ConstCompoundDataPtr sets = SceneAlgo::sets( scene );
-		LocationWriter locationWriter( output, sets, context->getTime(), mutex );
-
+		LocationWriter locationWriter( output, !useSetsAPI ? sets : nullptr, context->getTime(), mutex );
 		SceneAlgo::parallelProcessLocations( scene, locationWriter );
+
+		if( useSetsAPI && sets )
+		{
+			for( const auto &[name, data] : sets->readable() )
+			{
+				output->writeSet( name, static_cast<const PathMatcherData *>( data.get() )->readable() );
+			}
+		}
 	}
 }
 
