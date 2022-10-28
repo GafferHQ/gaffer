@@ -4,6 +4,7 @@
 Fixes
 -----
 
+- Shader Viewer : Fixed (was broken in 1.1.2.0).
 - Image Viewer :
   - Color Inspector :
     - Corrected half-pixel offset in measured pixel values.

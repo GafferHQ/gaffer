@@ -1406,7 +1406,7 @@ class _CompareImageWidget( GafferUI.Frame ) :
 		compareImage = None
 
 		if self.__nodeSet is self.__defaultNodeSet:
-			compareImage = self.__node["in"]
+			compareImage = self.__node["__preprocessor"]["_comparisonSwitch"]["in"][0]["value"]
 		elif len( self.__nodeSet ):
 			compareImage = _firstValidImagePlug( self.__nodeSet[-1] )
 
