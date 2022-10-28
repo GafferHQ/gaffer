@@ -139,7 +139,7 @@ jobs:
       shell: bash
 
     - name: Cache
-      uses: actions/cache@v1
+      uses: actions/cache@v3
       with:
         path: ${{ env.GAFFER_CACHE_DIR }}
         key: ${{ runner.os }}-${{ matrix.containerImage }}-${{env.GAFFER_DEPENDENCIES_HASH}}-${{ matrix.buildType }}-${{ github.sha }}
