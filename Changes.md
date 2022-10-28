@@ -12,6 +12,7 @@ Fixes
 
 - Shader Viewer : Fixed (was broken in 1.1.2.0).
 - Image Viewer :
+  - Fixed visual artifact when using a wipe with Replace compare mode on images with mismatched pixel aspect ratios.
   - Color Inspector :
     - Corrected half-pixel offset in measured pixel values.
     - Pixel location indicators are no longer affected by the display color transform.

@@ -140,6 +140,23 @@ void renderFilledCircle2D( const Style *style, V2f center, V2f radius, const Col
 	glEnd();
 }
 
+float pixelAspectFromImageGadget( const ImageGadget *imageGadget )
+{
+	// We want to grab the cached version of imageGadget->format(), but it's not exposed publicly, so we
+	// get it from pixelAt.
+	// In the future, it would be better if format() was public and we didn't have to worry about it
+	// throwing.
+	try
+	{
+		return 1.0f / imageGadget->pixelAt( LineSegment3f( V3f( 1, 0, 0 ), V3f( 1, 0, 1 ) ) ).x;
+	}
+	catch( ... )
+	{
+		// Not worried about rendering correctly for images which can't be evaluated properly
+		return 1.0f;
+	}
+}
+
 class Box2iGadget : public GafferUI::Gadget
 {
 
@@ -470,19 +487,7 @@ class Box2iGadget : public GafferUI::Gadget
 
 			const ImageGadget *imageGadget = static_cast<const ImageGadget *>( viewportGadget->getPrimaryChild() );
 
-			// We want to grab the cached version of imageGadget->format(), but it's not exposed publicly, so we
-			// get it from pixelAt.
-			// In the future, it would be better if format() was public and we didn't have to worry about it
-			// throwing.
-			float pixelAspect = 1.0f;
-			try
-			{
-				pixelAspect = 1.0f / imageGadget->pixelAt( LineSegment3f( V3f( 1, 0, 0 ), V3f( 1, 0, 1 ) ) ).x;
-			}
-			catch( ... )
-			{
-				// Not worried about rendering correctly for images which can't be evaluated properly
-			}
+			float pixelAspect = pixelAspectFromImageGadget( imageGadget );
 
 			if( pixelAspectOut )
 			{
@@ -2033,34 +2038,44 @@ void ImageView::preRender()
 		viewportGadget()->setPostProcessShader( m_displayTransformAndShader->shader );
 	}
 
-	m_imageGadgets[0]->setWipeEnabled( m_wipeHandle->getVisible() );
-	m_imageGadgets[0]->setWipePosition( m_wipeHandle->getPosition() );
-	float angle = atan2f( m_wipeHandle->getDirection()[1], m_wipeHandle->getDirection()[0] ) * 180.0f / M_PI;
-	m_imageGadgets[0]->setWipeAngle( angle );
-	if( m_wipeHandle->getVisible() && m_imageGadgets[0]->getBlendMode() == ImageGadget::BlendMode::Replace )
-	{
-		m_imageGadgets[1]->setWipeEnabled( true );
-		m_imageGadgets[1]->setWipePosition( m_wipeHandle->getPosition() );
-		m_imageGadgets[1]->setWipeAngle( angle + 180.0f );
-	}
-	else
-	{
-		m_imageGadgets[1]->setWipeEnabled( false );
-	}
-
+	V3f comparisonScale( 1.0f );
+	V3f comparisonTranslate( 0.0f );
 	if( compareMatchDisplayWindowsPlug()->getValue() )
 	{
 		Imath::Box3f mainBound = m_imageGadgets[0]->bound();
 		Imath::Box3f compareBound = m_imageGadgets[1]->bound();
 		float s = mainBound.size().x / compareBound.size().x;
+		comparisonScale = V3f( s, s, 1.0f );
+		comparisonTranslate = mainBound.center() - compareBound.center() * comparisonScale;
 		Imath::M44f m;
-		m.translate( mainBound.center() - compareBound.center() * s );
-		m.scale( Imath::V3f( s, s, 0 ) );
+		m.translate( comparisonTranslate );
+		m.scale( comparisonScale );
 		m_imageGadgets[1]->setTransform( m );
 	}
 	else
 	{
 		m_imageGadgets[1]->setTransform( Imath::M44f() );
+	}
+
+	V2f scale0( 1.0f / pixelAspectFromImageGadget( m_imageGadgets[0].get() ), 1.0f );
+	m_imageGadgets[0]->setWipeEnabled( m_wipeHandle->getVisible() );
+	m_imageGadgets[0]->setWipePosition( m_wipeHandle->getPosition() * scale0 );
+	m_imageGadgets[0]->setWipeAngle(
+		atan2f( m_wipeHandle->getDirection()[1] * scale0.x, m_wipeHandle->getDirection()[0] * scale0.y ) * 180.0f / M_PI
+	);
+
+	if( m_wipeHandle->getVisible() && m_imageGadgets[0]->getBlendMode() == ImageGadget::BlendMode::Replace )
+	{
+		V2f scale1( 1.0f / ( comparisonScale.x * pixelAspectFromImageGadget( m_imageGadgets[1].get() ) ), 1.0f / comparisonScale.y );
+		m_imageGadgets[1]->setWipeEnabled( true );
+		m_imageGadgets[1]->setWipePosition( ( m_wipeHandle->getPosition() - V2f( comparisonTranslate.x, comparisonTranslate.y ) ) * scale1 );
+		m_imageGadgets[1]->setWipeAngle(
+			atan2f( -m_wipeHandle->getDirection()[1] * scale1.x, -m_wipeHandle->getDirection()[0] * scale1.y ) * 180.0f / M_PI
+		);
+	}
+	else
+	{
+		m_imageGadgets[1]->setWipeEnabled( false );
 	}
 
 	if( m_framed )
