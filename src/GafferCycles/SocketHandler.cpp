@@ -533,10 +533,12 @@ void setupLightPlugs( const std::string &shaderName, const ccl::NodeType *nodeTy
 		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "cast_shadow" ) )), plugsParent, Gaffer::Plug::In ) );
 		//validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "use_mis" ) )), plugsParent, Gaffer::Plug::In ) );
 		validPlugs.insert( setupTypedPlug<BoolPlug>( "use_mis", plugsParent, Gaffer::Plug::In, true ) );
+		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "use_camera" ) )), plugsParent, Gaffer::Plug::In ) );
 		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "use_diffuse" ) )), plugsParent, Gaffer::Plug::In ) );
 		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "use_glossy" ) )), plugsParent, Gaffer::Plug::In ) );
 		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "use_transmission" ) )), plugsParent, Gaffer::Plug::In ) );
 		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "use_scatter" ) )), plugsParent, Gaffer::Plug::In ) );
+		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "use_caustics" ) )), plugsParent, Gaffer::Plug::In ) );
 		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "max_bounces" ) )), plugsParent, Gaffer::Plug::In ) );
 		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "lightgroup" ) )), plugsParent, Gaffer::Plug::In ) );
 		validPlugs.insert( setupTypedPlug<FloatPlug>( "intensity", plugsParent, Gaffer::Plug::In, 1.0f ) );
