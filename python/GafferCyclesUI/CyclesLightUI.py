@@ -90,6 +90,12 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"parameters.normalize" : [
+
+			"nodule:type", ""
+
+		],
+
 	}
 
 )

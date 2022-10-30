@@ -527,7 +527,6 @@ void setupLightPlugs( const std::string &shaderName, const ccl::NodeType *nodeTy
 	if( shaderName != "portal" )
 	{
 		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "cast_shadow" ) )), plugsParent, Gaffer::Plug::In ) );
-		//validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "use_mis" ) )), plugsParent, Gaffer::Plug::In ) );
 		validPlugs.insert( setupTypedPlug<BoolPlug>( "use_mis", plugsParent, Gaffer::Plug::In, true ) );
 		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "use_camera" ) )), plugsParent, Gaffer::Plug::In ) );
 		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "use_diffuse" ) )), plugsParent, Gaffer::Plug::In ) );
@@ -597,6 +596,11 @@ void setupLightPlugs( const std::string &shaderName, const ccl::NodeType *nodeTy
 				IECore::radiansToDegrees( *static_cast<const float *>( spreadSocket->default_value ) )
 			)
 		);
+	}
+
+	if( shaderName != "portal" && shaderName != "background_light" )
+	{
+		validPlugs.insert( setupTypedPlug<BoolPlug>( "normalize", plugsParent, Gaffer::Plug::In, true ) );
 	}
 
 	// Remove any old plugs which it turned out we didn't need.
