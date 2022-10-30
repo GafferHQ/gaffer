@@ -615,12 +615,19 @@ void convertLight( const IECoreScene::ShaderNetwork *light, ccl::Light *cyclesLi
 	)
 	{
 		cyclesLight->set_light_type( ccl::LIGHT_AREA );
-		cyclesLight->set_size( 2.0f );
+		cyclesLight->set_size( 1.0f );
+		cyclesLight->set_sizeu( 2.0f );
+		cyclesLight->set_sizev( 2.0f );
+
+		cyclesLight->set_round( false );
 	}
 	else if( lightShader->getName() == "disk_light" )
 	{
 		cyclesLight->set_light_type( ccl::LIGHT_AREA );
-		cyclesLight->set_size( 2.0f );
+		cyclesLight->set_size( 1.0f );
+		cyclesLight->set_sizeu( 2.0f );
+		cyclesLight->set_sizev( 2.0f );
+
 		cyclesLight->set_round( true );
 	}
 	else
@@ -648,6 +655,19 @@ void convertLight( const IECoreScene::ShaderNetwork *light, ccl::Light *cyclesLi
 		else if( name == "spread" )
 		{
 			cyclesLight->set_spread( IECore::degreesToRadians( parameterValue<float>( value.get(), name, 180.0f ) ) );
+		}
+		else if( name == "width" )
+		{
+			cyclesLight->set_sizeu( parameterValue<float>( value.get(), name, 2.0f ) );
+			// No oval support yet, just apply width to height.
+			if( lightShader->getName() == "disk_light" )
+			{
+				cyclesLight->set_sizev( parameterValue<float>( value.get(), name, 2.0f ) );
+			}
+		}
+		else if( name == "height" )
+		{
+			cyclesLight->set_sizev( parameterValue<float>( value.get(), name, 2.0f ) );
 		}
 		// Convert generic parameters.
 		else

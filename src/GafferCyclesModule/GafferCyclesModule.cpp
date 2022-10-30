@@ -414,7 +414,8 @@ py::dict getLights()
 		py::dict d;
 		py::dict in;
 		in["is_portal"] = _in["is_portal"];
-		in["size"] = _in["size"];
+		in["sizeu"] = _in["sizeu"];
+		in["sizev"] = _in["sizev"];
 		d["enum"] = result["quad_light"]["enum"];
 		d["in"] = in;
 		result["portal"] = d;

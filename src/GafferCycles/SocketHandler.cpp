@@ -524,11 +524,7 @@ void setupLightPlugs( const std::string &shaderName, const ccl::NodeType *nodeTy
 
 	std::set<const Plug *> validPlugs;
 
-	if( shaderName == "portal" )
-	{
-		validPlugs.insert( setupTypedPlug<FloatPlug>( "size", plugsParent, Gaffer::Plug::In, 2.0f ) );
-	}
-	else
+	if( shaderName != "portal" )
 	{
 		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "cast_shadow" ) )), plugsParent, Gaffer::Plug::In ) );
 		//validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "use_mis" ) )), plugsParent, Gaffer::Plug::In ) );
@@ -546,7 +542,12 @@ void setupLightPlugs( const std::string &shaderName, const ccl::NodeType *nodeTy
 		validPlugs.insert( setupTypedPlug<Color3fPlug>( "color", plugsParent, Gaffer::Plug::In, Color3f( 1.0f ) ) );
 	}
 
-	if( shaderName == "spot_light" )
+	if( shaderName == "portal" || shaderName == "quad_light" )
+	{
+		validPlugs.insert( setupTypedPlug<FloatPlug>( "width", plugsParent, Gaffer::Plug::In, 2.0f ) );
+		validPlugs.insert( setupTypedPlug<FloatPlug>( "height", plugsParent, Gaffer::Plug::In, 2.0f ) );
+	}
+	else if( shaderName == "spot_light" )
 	{
 		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "size" ) )), plugsParent, Gaffer::Plug::In ) );
 		const ccl::SocketType *angleSocket = nodeType->find_input( ccl::ustring( "spot_angle" ) );
@@ -566,7 +567,7 @@ void setupLightPlugs( const std::string &shaderName, const ccl::NodeType *nodeTy
 	}
 	else if( shaderName == "disk_light" )
 	{
-		validPlugs.insert( setupTypedPlug<FloatPlug>( "size", plugsParent, Gaffer::Plug::In, 2.0f ) );
+		validPlugs.insert( setupTypedPlug<FloatPlug>( "width", plugsParent, Gaffer::Plug::In, 2.0f ) );
 	}
 	else if( shaderName == "background_light" )
 	{

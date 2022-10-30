@@ -78,6 +78,18 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"parameters.width" : [
+
+			"nodule:type", ""
+
+		],
+
+		"parameters.height" : [
+
+			"nodule:type", ""
+
+		],
+
 	}
 
 )
