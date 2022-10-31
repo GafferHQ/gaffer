@@ -212,7 +212,7 @@ void ContextQuery::affects( const Gaffer::Plug *input, AffectedPlugsContainer &o
 		{
 			addChildPlugsToAffectedOutputs( valuePlug, outputs );
 
-			outputs.push_back( outputPlug->getChild<ValuePlug>( g_existsPlugIndex ) );
+			outputs.push_back( outputPlug->getChild<BoolPlug>( g_existsPlugIndex ) );
 		}
 		else if( childQueryPlug->valuePlug() == input || childQueryPlug->valuePlug()->isAncestorOf( input ) )
 		{
