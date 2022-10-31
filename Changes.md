@@ -1,3 +1,11 @@
+1.2.x.x (relative to 1.2.0.0a3)
+=======
+
+Improvements
+------------
+
+- OSL : Will use OSL's batched API if it is available. This improves performance up to 3X when running heavy OSL computations using OSLObject or OSLImage. This is slightly experimental, since it relies on recently added OSL features. Please let us know if you encounter any new issues with OSL. To disable this optimization, set the environment variable `GAFFEROSL_USE_BATCHED=0`.
+
 1.2.0.0a3 (relative to 1.2.0.0a2)
 =========
 
