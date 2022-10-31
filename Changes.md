@@ -1,3 +1,12 @@
+1.0.6.x (relative to 1.0.6.1)
+=======
+
+Fixes
+-----
+
+- UI : Fixed tooltips containing raw HTML.
+- DocumentationAlgo : Fixed handling of raw HTML by `markdownToHTML()`.
+
 1.0.6.1 (relative to 1.0.6.0)
 =======
 
