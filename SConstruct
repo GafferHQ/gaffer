@@ -1873,12 +1873,43 @@ def graphicsCommands( env, svg, outputDirectory ) :
 
 	return commands
 
+def buildQtResourceFile( source, target, env ) :
+
+	# Make `.qrc` file specifying what to include.
+	qrcFileName = os.path.splitext( str( target[0] ) )[0] + ".qrc"
+
+	with open( qrcFileName, "w" ) as qrcFile :
+		qrcFile.write( "<!DOCTYPE RCC><RCC version=\"1.0\">\n<qresource>\n" )
+		for s in source :
+			qrcFile.write( "\t<file>{}</file>\n".format( os.path.basename( str( s ) ) ) )
+		qrcFile.write( "</qresource>\n</RCC>\n" )
+
+	# Run `rcc` on that to generate the resource file, and then clean up.
+	subprocess.check_call(
+		[ shutil.which( "rcc", path = env["ENV"]["PATH"] ), qrcFileName, "--binary", "-o", str( target[0] ) ],
+		env = env["ENV"]
+	)
+	os.remove( qrcFileName )
+
 # Gaffer UI Images
 
 if haveInkscape :
 
 	for source in ( "resources/graphics.svg", "resources/GafferLogo.svg", "resources/GafferLogoMini.svg" ) :
 		env.Alias( "build", graphicsCommands( env, source, "$BUILD_DIR/graphics" ) )
+
+	resourceGraphics = set()
+	with open( "python/GafferUI/_StyleSheet.py" ) as styleSheet :
+		for line in styleSheet.readlines() :
+			m = re.search( r"^[^#]*url\((.*)\)", line )
+			if m :
+				url = m.group( 1 )
+				if not url.startswith( ":/" ) :
+					sys.stderr.write( "ERROR : URL \"{}\" does not point to a Qt resource file.\n".format( url ) )
+					Exit( 1 )
+				resourceGraphics.add( "$BUILD_DIR/graphics/{}".format( url[2:] ) )
+
+	env.Alias( "build", commandEnv.Command( "$BUILD_DIR/graphics/resources.rcc", sorted( resourceGraphics ), buildQtResourceFile ) )
 
 else :
 
