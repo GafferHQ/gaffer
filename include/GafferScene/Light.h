@@ -62,8 +62,8 @@ class GAFFERSCENE_API Light : public ObjectSource
 		Gaffer::BoolPlug *defaultLightPlug();
 		const Gaffer::BoolPlug *defaultLightPlug() const;
 
-		Gaffer::BoolPlug *mutePlug();
-		const Gaffer::BoolPlug *mutePlug() const;
+		Gaffer::NameValuePlug *mutePlug();
+		const Gaffer::NameValuePlug *mutePlug() const;
 
 		Gaffer::CompoundDataPlug *visualiserAttributesPlug();
 		const Gaffer::CompoundDataPlug *visualiserAttributesPlug() const;

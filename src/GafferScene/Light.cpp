@@ -55,6 +55,7 @@ static IECore::InternedString g_defaultLightsSetName( "defaultLights" );
 static IECore::InternedString g_lightMuteAttributeName( "light:mute" );
 
 static IECore::BoolDataPtr g_true = new IECore::BoolData( true );
+static IECore::BoolDataPtr g_false = new IECore::BoolData( false );
 
 GAFFER_NODE_DEFINE_TYPE( Light );
 
@@ -66,7 +67,7 @@ Light::Light( const std::string &name )
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new Plug( "parameters" ) );
 	addChild( new BoolPlug( "defaultLight", Gaffer::Plug::Direction::In, true ) );
-	addChild( new BoolPlug( "mute", Gaffer::Plug::Direction::In, false ) );
+	addChild( new Gaffer::NameValuePlug( "light:mute", new IECore::BoolData( false ), false, "mute" ) );
 
 	Gaffer::CompoundDataPlug *visualiserAttr = new CompoundDataPlug( "visualiserAttributes" );
 
@@ -113,14 +114,14 @@ const Gaffer::BoolPlug *Light::defaultLightPlug() const
 	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
 }
 
-Gaffer::BoolPlug *Light::mutePlug()
+Gaffer::NameValuePlug *Light::mutePlug()
 {
-	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 2 );
+	return getChild<Gaffer::NameValuePlug>( g_firstPlugIndex + 2 );
 }
 
-const Gaffer::BoolPlug *Light::mutePlug() const
+const Gaffer::NameValuePlug *Light::mutePlug() const
 {
-	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 2 );
+	return getChild<Gaffer::NameValuePlug>( g_firstPlugIndex + 2 );
 }
 
 Gaffer::CompoundDataPlug *Light::visualiserAttributesPlug()
@@ -140,7 +141,7 @@ void Light::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs 
 	if(
 		parametersPlug()->isAncestorOf( input )
 		|| visualiserAttributesPlug()->isAncestorOf( input )
-		|| input == mutePlug()
+		|| mutePlug()->isAncestorOf( input )
 	) {
 		outputs.push_back( outPlug()->attributesPlug() );
 	}
@@ -194,9 +195,11 @@ IECore::ConstCompoundObjectPtr Light::computeAttributes( const SceneNode::SceneP
 
 	visualiserAttributesPlug()->fillCompoundObject( result->members() );
 
-	if( mutePlug()->getValue() )
+	if( mutePlug()->enabledPlug()->getValue() )
 	{
-		result->members()[g_lightMuteAttributeName] = g_true;
+		auto p = mutePlug()->valuePlug<BoolPlug>();
+
+		result->members()[g_lightMuteAttributeName] = p->getValue() ? g_true : g_false;
 	}
 
 	return result;

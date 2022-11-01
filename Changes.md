@@ -16,6 +16,7 @@ Improvements
 - OSLObject : Added support for attribute substitutions using `<attr:myAttrName>` syntax in string parameters, provided that `useAttributes` is turned on [^1].
 - UIEditor : Increased maximum size of the "Button Click Code" editor [^1].
 - HierarchyView : Inclusions and Exclusions column header icons now update to show when one or more locations have been added to or excluded from the Visible Set [^2].
+- Light : Added an enable/disable toggle to the `mute` plug [^2].
 
 Fixes
 -----

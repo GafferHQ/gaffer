@@ -258,14 +258,18 @@ class LightTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertNotIn( "light:mute", l["out"].attributes( "/light" ) )
 
-		l["mute"].setValue( True )
+		l["mute"]["value"].setValue( True )
+		l["mute"]["enabled"].setValue( True )
 
 		self.assertIn( "light:mute", l["out"].attributes( "/light" ) )
 		self.assertEqual( l["out"].attributes( "/light" )["light:mute"], IECore.BoolData( True ) )
 
-		l["mute"].setValue( False )
-		self.assertNotIn( "light:mute", l["out"].attributes( "/light" ) )
+		l["mute"]["value"].setValue( False )
+		self.assertIn( "light:mute", l["out"].attributes( "/light" ) )
+		self.assertEqual( l["out"].attributes( "/light" )["light:mute"], IECore.BoolData( False ) )
 
+		l["mute"]["enabled"].setValue( False )
+		self.assertNotIn( "light:mute", l["out"].attributes( "/light" ) )
 
 if __name__ == "__main__":
 	unittest.main()
