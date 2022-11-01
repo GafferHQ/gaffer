@@ -1791,6 +1791,89 @@ class ReferenceTest( GafferTest.TestCase ) :
 
 		self.assertTrue( Gaffer.MetadataAlgo.getChildNodesAreReadOnly( s["r2"] ) )
 
+	def testInternalConnectionsNotSerialised( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["box"] = Gaffer.Box()
+		# Testing both `In` and `Out` plugs, because although logically
+		# outputs should have `direction == Out`, in practice the UI only
+		# lets folks make input plugs, so that's what they use.
+		script["box"]["p1"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		script["box"]["p2"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		script["box"]["__add1"] = GafferTest.AddNode()
+		script["box"]["__add2"] = GafferTest.AddNode()
+		script["box"]["p1"].setInput( script["box"]["__add1"]["sum"] )
+		script["box"]["p2"].setInput( script["box"]["__add2"]["sum"] )
+
+		fileName = os.path.join( self.temporaryDirectory(), "test.grf" )
+		script["box"].exportForReference( fileName )
+
+		script["reference"] = Gaffer.Reference()
+		script["reference"].load( fileName )
+
+		self.assertEqual( script["reference"]["p1"].getInput(), script["reference"]["__add1"]["sum"] )
+		self.assertEqual( script["reference"]["p2"].getInput(), script["reference"]["__add2"]["sum"] )
+
+		serialisation = script.serialise( filter = Gaffer.StandardSet( [ script["reference" ] ] ) )
+		self.assertNotIn( "setInput", serialisation )
+
+		script2 = Gaffer.ScriptNode()
+		script2.execute( serialisation )
+
+		self.assertEqual( script2["reference"]["p1"].getInput(), script2["reference"]["__add1"]["sum"] )
+		self.assertEqual( script2["reference"]["p2"].getInput(), script2["reference"]["__add2"]["sum"] )
+
+	def testChangeInternalConnection( self ) :
+
+		# Publish reference with internal connection to output plug, and check
+		# that it can be loaded by a Reference node.
+
+		script = Gaffer.ScriptNode()
+
+		script["box"] = Gaffer.Box()
+		script["box"]["p"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		script["box"]["__add1"] = GafferTest.AddNode()
+		script["box"]["__add2"] = GafferTest.AddNode()
+		script["box"]["p"].setInput( script["box"]["__add1"]["sum"] )
+
+		fileName = os.path.join( self.temporaryDirectory(), "test.grf" )
+		script["box"].exportForReference( fileName )
+
+		script["reference"] = Gaffer.Reference()
+		script["reference"].load( fileName )
+		self.assertEqual( script["reference"]["p"].getInput(), script["reference"]["__add1"]["sum"] )
+
+		# Republish the reference with a different internal connection.
+
+		script["box"]["p"].setInput( script["box"]["__add2"]["sum"] )
+		script["box"].exportForReference( fileName )
+
+		# Check that if we serialise and reload the Reference node, we
+		# pick up the new internal connection.
+
+		script2 = Gaffer.ScriptNode()
+		script2.execute( script.serialise() )
+		self.assertEqual( script2["reference"]["p"].getInput(), script2["reference"]["__add2"]["sum"] )
+
+	def testExternalSiblingConnectionsPreserved( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["box"] = Gaffer.Box()
+		script["box"]["p1"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		script["box"]["p2"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		fileName = os.path.join( self.temporaryDirectory(), "test.grf" )
+		script["box"].exportForReference( fileName )
+
+		script["reference"] = Gaffer.Reference()
+		script["reference"].load( fileName )
+		script["reference"]["p2"].setInput( script["reference"]["p1"] )
+
+		script2 = Gaffer.ScriptNode()
+		script2.execute( script.serialise() )
+		self.assertEqual( script2["reference"]["p2"].getInput(), script2["reference"]["p1"] )
+
 	def tearDown( self ) :
 
 		GafferTest.TestCase.tearDown( self )

@@ -6,6 +6,7 @@ Fixes
 
 - UI : Fixed tooltips containing raw HTML.
 - DocumentationAlgo : Fixed handling of raw HTML by `markdownToHTML()`.
+- Reference : Fixed unnecessary serialisation of connections from internal plugs to external plugs. These are serialised in the `.grf` file already, so do not need to be duplicated on the Reference node itself. This bug prevented changes to the internal connections from taking effect when reloading a modified `.grf` file, and could cause load failures when the connections were from an internal Expression (#4935).
 
 1.0.6.1 (relative to 1.0.6.0)
 =======
