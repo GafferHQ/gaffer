@@ -91,6 +91,9 @@ void InteractiveArnoldRender::flushCaches( int flags )
 
 		if( !instance->renderer() )
 		{
+			// No renderer found so flush global cache so that new renders spinning up later will see a refereshed
+			// texture cache. This is needed because apparently Arnold only has one texture cache between universes.
+			AiUniverseCacheFlush( nullptr, flags );
 			continue;
 		}
 
