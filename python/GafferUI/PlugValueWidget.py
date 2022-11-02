@@ -144,7 +144,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 	def setContext( self, context ) :
 
 		assert( isinstance( context, Gaffer.Context ) )
-		if context is self.__context :
+		if context.isSame( self.__context ) :
 			return
 
 		self.__context = context
