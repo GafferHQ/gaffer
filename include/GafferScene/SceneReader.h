@@ -133,6 +133,12 @@ class GAFFERSCENE_API SceneReader : public SceneNode
 		static const double g_frameRate;
 		static size_t g_firstPlugIndex;
 
+		// SceneInterface has two different APIs related to sets : the legacy tags API and the
+		// new sets API. We prefer the sets API for standard formats like Alembic and USD, but
+		// fall back to the tags API for legacy SceneInterfaces.
+		friend class SceneWriter;
+		static bool useSetsAPI( const IECoreScene::SceneInterface *scene );
+
 };
 
 IE_CORE_DECLAREPTR( SceneReader )

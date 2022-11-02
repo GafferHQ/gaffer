@@ -481,8 +481,14 @@ IECore::ConstInternedStringVectorDataPtr SceneReader::computeSetNames( const Gaf
 	}
 
 	InternedStringVectorDataPtr result = new InternedStringVectorData();
-
-	s->readTags( result->writable(), SceneInterface::LocalTag | SceneInterface::DescendantTag );
+	if( useSetsAPI( s.get() ) )
+	{
+		result->writable() = s->setNames();
+	}
+	else
+	{
+		s->readTags( result->writable(), SceneInterface::LocalTag | SceneInterface::DescendantTag );
+	}
 
 	if( shouldEmulateDefaultLightsSet( s.get(), result->readable() ) )
 	{
@@ -543,17 +549,30 @@ IECore::ConstPathMatcherDataPtr SceneReader::computeSet( const IECore::InternedS
 	if( setName == g_defaultLights )
 	{
 		vector<InternedString> setNames;
-		rootScene->readTags( setNames, SceneInterface::LocalTag | SceneInterface::DescendantTag );
+		if( useSetsAPI( rootScene.get() ) )
+		{
+			setNames = rootScene->setNames();
+		}
+		else
+		{
+			rootScene->readTags( setNames, SceneInterface::LocalTag | SceneInterface::DescendantTag );
+		}
 		if( shouldEmulateDefaultLightsSet( rootScene.get(), setNames ) )
 		{
 			setNameToRead = g_lights;
 		}
 	}
 
-	PathMatcherDataPtr result = new PathMatcherData;
-	loadSetWalk( rootScene.get(), setNameToRead, context, result->writable(), ScenePath() );
-
-	return result;
+	if( useSetsAPI( rootScene.get() ) )
+	{
+		return new PathMatcherData( rootScene->readSet( setNameToRead, /* readDescendantSets = */ true, context->canceller() ) );
+	}
+	else
+	{
+		PathMatcherDataPtr result = new PathMatcherData;
+		loadSetWalk( rootScene.get(), setNameToRead, context, result->writable(), ScenePath() );
+		return result;
+	}
 }
 
 void SceneReader::plugSet( Gaffer::Plug *plug )
@@ -599,4 +618,15 @@ ConstSceneInterfacePtr SceneReader::scene( const ScenePath &path ) const
 	lastScene.path = path;
 
 	return lastScene.pathScene;
+}
+
+bool SceneReader::useSetsAPI( const SceneInterface *scene )
+{
+	const char *typeName = scene->typeName();
+	// We use the tags API for the legacy interfaces listed below, and the sets API
+	// for everything else.
+	return
+		strcmp( typeName, "SceneCache" ) && strcmp( typeName, "MeshCacheSceneInterface" ) &&
+		strcmp( typeName, "LinkedScene" ) && strcmp( typeName, "LiveScene" )
+	;
 }

@@ -633,5 +633,39 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertIn( "defaultLights", reader["out"].setNames() )
 		self.assertEqual( reader["out"].set( "defaultLights" ).value, IECore.PathMatcher( [ "/group/light2" ] ) )
 
+	def testReadSets( self ) :
+
+		plane = GafferScene.Plane()
+		plane["sets"].setValue( "A B C" )
+
+		sphere = GafferScene.Sphere()
+		sphere["sets"].setValue( "B C D" )
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( plane["out"] )
+		group["in"][1].setInput( sphere["out"] )
+
+		writer = GafferScene.SceneWriter()
+		writer["in"].setInput( group["out"] )
+
+		reader = GafferScene.SceneReader()
+		reader["fileName"].setInput( writer["fileName"] )
+
+		for extension in IECoreScene.SceneInterface.supportedExtensions() :
+
+			if extension in { "abc", "usdz", "vdb" } :
+				# - `IECoreAlembic::AlembicScene::writeSet()` hasn't been implemented properly for
+				#   the root item yet.
+				# - `IECoreUSD::USDScene` can read `usdz`, but not write it.
+				# - `IECoreVDB::VDBScene` hasn't implemented sets or tags at all.
+				continue
+
+			writer["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.{}".format( extension ) ) )
+			writer["task"].execute()
+
+			for setName in writer["in"].setNames() :
+				self.assertIn( setName, reader["out"].setNames() )
+				self.assertEqual( reader["out"].set( setName ), writer["in"].set( setName ) )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -14,6 +14,14 @@ Features
   - Cycles : Muted lights are disabled in renders.
   - Arnold : Muted lights are disabled in renders.
 
+Improvements
+------------
+
+- SceneReader :
+  - Improved read performance for sets in USD files, with a benchmark reading a moderately large set seeing more than 2x speedup.
+  - Improved cancellation responsiveness when reading large sets from USD files.
+- SceneWriter : Improved performance when writing sets to USD files.
+
 Fixes
 -----
 
@@ -31,6 +39,10 @@ Breaking Changes
 - Signal : Removed `disconnect( slot )` method. This was a performance hazard because it was linear in the number of connections. Use `Connection::disconnect()` instead, which is constant time.
 - GafferTest : Removed `expectedFailure()` decorator. Use `unittest.expectedFailure()` instead.
 - Python : Removed support for Python 2.
+- SceneWriter :
+  - Sets are now only written on the first frame for each file written.
+  - `SceneInterface::writeSet()` is now used in preference to `SceneInterface::writeTags()` for all non-legacy file formats.
+- SceneReader : `SceneInterface::readSet()` is now used in preference to `SceneInterface::readTags()` for all non-legacy formats.
 - CatalogueUI : Hid OutputIndexColumn from public API.
 
 1.1.2.0 (relative to 1.1.1.0)
