@@ -49,6 +49,7 @@ enum TypeId
 	LevelSetOffsetTypeId = 110955,
 	PointsGridToPointsTypeId = 110956,
 	SphereLevelSetTypeId = 110957,
+	PointsToLevelSetTypeId = 110958,
 	LastTypeId = 110974
 };
 
