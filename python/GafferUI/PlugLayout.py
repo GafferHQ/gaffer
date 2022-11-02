@@ -90,9 +90,6 @@ from Qt import QtWidgets
 #
 class PlugLayout( GafferUI.Widget ) :
 
-	# We use this when we can't find a ScriptNode to provide the context.
-	__fallbackContext = Gaffer.Context()
-
 	def __init__( self, parent, orientation = GafferUI.ListContainer.Orientation.Vertical, layoutName = "layout", rootSection = "", embedded = False, **kw ) :
 
 		assert( isinstance( parent, ( Gaffer.Node, Gaffer.Plug ) ) )
@@ -141,8 +138,7 @@ class PlugLayout( GafferUI.Widget ) :
 		self.__rootSection = _Section( self.__parent )
 
 		# set up an appropriate default context in which to view the plugs.
-		scriptNode = self.__node() if isinstance( self.__node(), Gaffer.ScriptNode ) else self.__node().scriptNode()
-		self.setContext( scriptNode.context() if scriptNode is not None else self.__fallbackContext )
+		self.setContext( GafferUI.PlugValueWidget._PlugValueWidget__defaultContext( self.__parent ) )
 
 		# Build the layout
 		self.__update()

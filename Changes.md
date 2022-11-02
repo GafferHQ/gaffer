@@ -8,6 +8,7 @@ Fixes
 - UI :
   - Fixed tooltips containing raw HTML.
   - Fixed stalls caused by Qt repeatedly accessing the same icon files.
+- Viewer : Fixed context used to compute the view menu for the image being shown. On the first update, an empty context was being used instead of the script's context.
 - DocumentationAlgo : Fixed handling of raw HTML by `markdownToHTML()`.
 - Reference : Fixed unnecessary serialisation of connections from internal plugs to external plugs. These are serialised in the `.grf` file already, so do not need to be duplicated on the Reference node itself. This bug prevented changes to the internal connections from taking effect when reloading a modified `.grf` file, and could cause load failures when the connections were from an internal Expression (#4935).
 - MeshToLevelSet, LevelSetOffset : Fixed bug that could cause partial results to be returned if a previous operation was cancelled.
