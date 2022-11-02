@@ -18,6 +18,7 @@ Fixes
 -----
 
 - CodeWidget : Fixed auto-complete for `pathlib.Path` objects, and any other classes which throw `AttributeError` for an attribute advertised by `dir()`.
+- Expression : Fixed non-deterministic parsing order for Python expressions (#4935).
 
 API
 ---

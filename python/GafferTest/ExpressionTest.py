@@ -40,6 +40,7 @@ import inspect
 import unittest
 import imath
 import re
+import subprocess
 
 import IECore
 
@@ -1535,6 +1536,50 @@ class ExpressionTest( GafferTest.TestCase ) :
 				"""
 			)
 		)
+
+	def testReferenceOutputs( self ) :
+
+		# Load a reference that uses an internal expression to set the value
+		# of some external plugs.
+
+		script = Gaffer.ScriptNode()
+
+		script["reference"] = Gaffer.Reference()
+		script["reference"].load( os.path.join( os.path.dirname( __file__ ), "references", "multipleOutputExpression.grf" ) )
+
+		# Check all is well.
+
+		self.checkReferenceOutputs( script )
+
+		# Save script, and check all is well _in another process_. This exposes
+		# a bug where PythonExpressionEngine's parsing was sensitive to the
+		# iteration order of Python sets, which is non-deterministic since
+		# Python 3 (see `PYTHONHASHSEED`).
+
+		script["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.gfr" ) )
+		script.save()
+
+		env = os.environ.copy()
+		env["GAFFERTEST_SCRIPT_FILENAME"] = script["fileName"].getValue()
+		try :
+			subprocess.check_output(
+				[ "gaffer", "test", "GafferTest.ExpressionTest.checkReferenceOutputs" ],
+				env = env, stderr = subprocess.STDOUT
+			)
+		except subprocess.CalledProcessError as e :
+			self.fail( e.output )
+
+	def checkReferenceOutputs( self, script = None ) :
+
+		if script is None :
+			script = Gaffer.ScriptNode()
+			script["fileName"].setValue( os.environ["GAFFERTEST_SCRIPT_FILENAME"] )
+			script.load()
+
+		self.assertEqual( script["reference"]["StringPlug"].getValue(), "abcd" )
+		self.assertEqual( script["reference"]["BoolPlug"].getValue(), True )
+		self.assertEqual( script["reference"]["IntPlug"].getValue(), 99 )
+		self.assertEqual( script["reference"]["FloatPlug"].getValue(), 2.5 )
 
 if __name__ == "__main__":
 	unittest.main()
