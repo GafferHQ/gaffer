@@ -341,7 +341,8 @@ void activeWalkOutput(
 				}
 			}
 
-			if( const Gaffer::Switch *switchNode = runTimeCast<const Gaffer::Switch>( node ) )
+			auto switchNode = runTimeCast<const Gaffer::Switch>( node );
+			if( switchNode && switchNode->outPlug() && switchNode->inPlugs() )
 			{
 				const Gaffer::Plug *activeOutput = nullptr;
 
@@ -389,7 +390,10 @@ void activeWalkOutput(
 			}
 			else if( const Gaffer::ContextProcessor *contextProcessorNode = runTimeCast<const Gaffer::ContextProcessor>( node ) )
 			{
-				if( connectionStart == contextProcessorNode->outPlug() || contextProcessorNode->outPlug()->isAncestorOf( connectionStart ) )
+				if(
+					contextProcessorNode->outPlug() &&
+					( connectionStart == contextProcessorNode->outPlug() || contextProcessorNode->outPlug()->isAncestorOf( connectionStart ) )
+				)
 				{
 					Gaffer::Context::Scope s( context );
 					const Gaffer::ContextPtr newContext = contextProcessorNode->inPlugContext();
@@ -399,7 +403,8 @@ void activeWalkOutput(
 			}
 		}
 
-		if( const Gaffer::Loop *loopNode = runTimeCast<const Gaffer::Loop>( node ) )
+		auto loopNode = runTimeCast<const Gaffer::Loop>( node );
+		if( loopNode && loopNode->previousPlug() && loopNode->nextPlug() )
 		{
 			if(
 				!firstVisit &&

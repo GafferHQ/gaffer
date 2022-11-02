@@ -4,6 +4,7 @@
 Fixes
 -----
 
+- GraphEditor : Fixed crash when focussing an empty ContextVariables, NameSwitch or Loop node (#4944).
 - UI : Fixed tooltips containing raw HTML.
 - DocumentationAlgo : Fixed handling of raw HTML by `markdownToHTML()`.
 
