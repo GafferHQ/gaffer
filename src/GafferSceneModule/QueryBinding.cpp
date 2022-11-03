@@ -47,8 +47,9 @@
 #include "GafferScene/FilterQuery.h"
 #include "GafferScene/OptionQuery.h"
 #include "GafferScene/PrimitiveVariableQuery.h"
-#include "GafferScene/TransformQuery.h"
+#include "GafferScene/SetQuery.h"
 #include "GafferScene/ShaderQuery.h"
+#include "GafferScene/TransformQuery.h"
 
 #include "IECorePython/ScopedGILRelease.h"
 
@@ -233,4 +234,6 @@ void GafferSceneModule::bindQueries()
 			.value( "Relative", GafferScene::TransformQuery::Space::Relative )
 		;
 	}
+
+	GafferBindings::DependencyNodeClass<GafferScene::SetQuery>();
 }

@@ -171,6 +171,7 @@ enum TypeId
 	OptionTweaksTypeId = 110626,
 	OptionQueryTypeId = 110627,
 	PrimitiveVariableQueryTypeId = 110628,
+	SetQueryTypeId = 110629,
 
 	PreviewPlaceholderTypeId = 110647,
 	PreviewGeometryTypeId = 110648,
