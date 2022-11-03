@@ -36,6 +36,7 @@ API
 - VisibleSet/VisibleSetData : Added struct used to define a subset of the scene to be rendered based on expansions, inclusions, and exclusions. This is used to allow scene locations to be defined as always or never renderable, overriding the usual UI expansion behaviour.
 - ContextAlgo : Added `setVisiblesSet()`, `getVisibleSet()`, and `affectsVisibleSet()` methods.
 - SceneGadget : Added `setVisibleSet()`, and `getVisibleSet()` methods.
+- EditScopeAlgo : Added methods to modify and query modifications to set members in an Edit Scope.
 
 Breaking Changes
 ----------------

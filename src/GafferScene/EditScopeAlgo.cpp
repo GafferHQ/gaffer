@@ -40,6 +40,7 @@
 #include "GafferScene/Prune.h"
 #include "GafferScene/PathFilter.h"
 #include "GafferScene/SceneProcessor.h"
+#include "GafferScene/Set.h"
 #include "GafferScene/ShaderTweaks.h"
 #include "GafferScene/Transform.h"
 
@@ -849,6 +850,208 @@ const Gaffer::GraphComponent *GafferScene::EditScopeAlgo::attributeEditReadOnlyR
 			{
 				return plug.get();
 			}
+		}
+	}
+
+	return nullptr;
+}
+
+// Set Membership
+// ==============
+
+namespace
+{
+
+static int g_addSetColumnIndex = 0;
+static int g_removeSetColumnIndex = 1;
+
+SceneProcessorPtr setMembershipProcessor()
+{
+	SceneProcessorPtr result = new SceneProcessor( "SetMembershipEdits" );
+
+	SpreadsheetPtr spreadsheet = new Spreadsheet;
+	result->addChild( spreadsheet );
+	spreadsheet->selectorPlug()->setValue( "${setMembership:set}" );
+	spreadsheet->rowsPlug()->addColumn( new StringVectorDataPlug( "Added", Plug::Direction::In, new StringVectorData() ) );
+	spreadsheet->rowsPlug()->addColumn( new StringVectorDataPlug( "Removed", Plug::Direction::In, new StringVectorData() ) );
+
+	PathFilterPtr addPathFilter = new PathFilter;
+	result->addChild( addPathFilter );
+	addPathFilter->pathsPlug()->setInput( spreadsheet->outPlug()->getChild<StringVectorDataPlug>( g_addSetColumnIndex ) );
+
+	PathFilterPtr removePathFilter = new PathFilter;
+	result->addChild( removePathFilter );
+	removePathFilter->pathsPlug()->setInput( spreadsheet->outPlug()->getChild<StringVectorDataPlug>( g_removeSetColumnIndex ) );
+
+	GafferScene::SetPtr addSet = new GafferScene::Set();
+	result->addChild( addSet );
+	addSet->inPlug()->setInput( result->inPlug() );
+	addSet->filterPlug()->setInput( addPathFilter->outPlug() );
+	addSet->namePlug()->setInput( spreadsheet->enabledRowNamesPlug() );
+	addSet->modePlug()->setValue( GafferScene::Set::Mode::Add );
+	addSet->setVariablePlug()->setValue( "setMembership:set" );
+
+	GafferScene::SetPtr removeSet = new GafferScene::Set();
+	result->addChild( removeSet );
+	removeSet->inPlug()->setInput( addSet->outPlug() );
+	removeSet->filterPlug()->setInput( removePathFilter->outPlug() );
+	removeSet->namePlug()->setInput( spreadsheet->enabledRowNamesPlug() );
+	removeSet->modePlug()->setValue( GafferScene::Set::Mode::Remove );
+	removeSet->setVariablePlug()->setValue( "setMembership:set" );
+
+	auto rowsPlug = static_cast<Spreadsheet::RowsPlug *>(
+		PlugAlgo::promoteWithName( spreadsheet->rowsPlug(), "edits" )
+	);
+
+	Metadata::registerValue( rowsPlug, "spreadsheet:defaultRowVisible", new BoolData( false ) );
+	Metadata::registerValue( rowsPlug->defaultRow(), "spreadsheet:rowNameWidth", new IntData( 100 ) );
+
+	for( auto &cell : Spreadsheet::CellPlug::Range( *rowsPlug->defaultRow()->cellsPlug() ) )
+	{
+		Metadata::registerValue( cell.get(), "spreadsheet:columnWidth", new IntData( 300 ) );
+	}
+
+	result->outPlug()->setInput( removeSet->outPlug() );
+
+	return result;
+}
+
+EditScope::ProcessorRegistration g_setMembershipProcessorRegistration( "SetMembershipEdits", setMembershipProcessor );
+
+}  // namespace
+
+void EditScopeAlgo::setSetMembership( Gaffer::EditScope *scope, const IECore::PathMatcher &paths, const std::string &set, EditScopeAlgo::SetMembership state )
+{
+	Node *processor = scope->acquireProcessor( "SetMembershipEdits" );
+	auto rows = processor->getChild<Spreadsheet::RowsPlug>( "edits" );
+
+	auto row = rows->row( set );
+	if( !row )
+	{
+		row = rows->addRow();
+		row->namePlug()->setValue( set );
+	}
+
+	auto addCell = row->cellsPlug()->getChild<Spreadsheet::CellPlug>( g_addSetColumnIndex );
+	auto removeCell = row->cellsPlug()->getChild<Spreadsheet::CellPlug>( g_removeSetColumnIndex );
+
+	auto addStringPlug = addCell->valuePlug<StringVectorDataPlug>();
+	auto removeStringPlug = removeCell->valuePlug<StringVectorDataPlug>();
+
+	if( !row->enabledPlug()->getValue() )
+	{
+		row->enabledPlug()->setValue( true );
+		addStringPlug->setValue( new StringVectorData() );
+		removeStringPlug->setValue( new StringVectorData() );
+	}
+
+	ConstStringVectorDataPtr addData = addStringPlug->getValue();
+	ConstStringVectorDataPtr removeData = removeStringPlug->getValue();
+
+	PathMatcher addPaths( addData->readable().begin(), addData->readable().end() );
+	PathMatcher removePaths( removeData->readable().begin(), removeData->readable().end() );
+
+	if( state == EditScopeAlgo::SetMembership::Unchanged )
+	{
+		addPaths.removePaths( paths );
+		removePaths.removePaths( paths );
+	}
+	else if( state == EditScopeAlgo::SetMembership::Added )
+	{
+		addPaths.addPaths( paths );
+		removePaths.removePaths( paths );
+	}
+	else if( state == EditScopeAlgo::SetMembership::Removed )
+	{
+		addPaths.removePaths( paths );
+		removePaths.addPaths( paths );
+	}
+
+	StringVectorDataPtr addResult = new StringVectorData;
+	StringVectorDataPtr removeResult = new StringVectorData;
+
+	addPaths.paths( addResult->writable() );
+	removePaths.paths( removeResult->writable() );
+
+	sort( addResult->writable().begin(), addResult->writable().end() );
+	sort( removeResult->writable().begin(), removeResult->writable().end() );
+
+	addStringPlug->setValue( addResult );
+	removeStringPlug->setValue( removeResult );
+}
+
+EditScopeAlgo::SetMembership EditScopeAlgo::getSetMembership( Gaffer::EditScope *scope, const ScenePlug::ScenePath &path, const std::string &set )
+{
+	Node *processor = scope->acquireProcessor( "SetMembershipEdits", /* createIfNecessary */ false );
+	if( !processor )
+	{
+		return EditScopeAlgo::SetMembership::Unchanged;
+	}
+
+	auto rows = processor->getChild<Spreadsheet::RowsPlug>( "edits" );
+
+	auto row = rows->row( set );
+	if( !row || !row->enabledPlug()->getValue() )
+	{
+		return EditScopeAlgo::SetMembership::Unchanged;
+	}
+
+	auto removeCell = row->cellsPlug()->getChild<Spreadsheet::CellPlug>( g_removeSetColumnIndex );
+	auto removeStringPlug = removeCell->valuePlug<StringVectorDataPlug>();
+	ConstStringVectorDataPtr removeData = removeStringPlug->getValue();
+	PathMatcher removePaths( removeData->readable().begin(), removeData->readable().end() );
+
+	if( removePaths.match( path ) == PathMatcher::ExactMatch )
+	{
+		return EditScopeAlgo::SetMembership::Removed;
+	}
+
+	auto addCell = row->cellsPlug()->getChild<Spreadsheet::CellPlug>( g_addSetColumnIndex );
+	auto addStringPlug = addCell->valuePlug<StringVectorDataPlug>();
+	ConstStringVectorDataPtr addData = addStringPlug->getValue();
+	PathMatcher addPaths( addData->readable().begin(), addData->readable().end() );
+
+	if( addPaths.match( path ) == PathMatcher::ExactMatch )
+	{
+		return EditScopeAlgo::SetMembership::Added;
+	}
+
+	return EditScopeAlgo::SetMembership::Unchanged;
+}
+
+const Gaffer::GraphComponent *EditScopeAlgo::setMembershipReadOnlyReason( const Gaffer::EditScope *scope, const std::string &set, EditScopeAlgo::SetMembership state )
+{
+	auto processor = const_cast<EditScope *>( scope )->acquireProcessor( "SetMembershipEdits", /* createIfNecessary */ false );
+	if( !processor )
+	{
+		return MetadataAlgo::readOnlyReason( scope );
+	}
+
+	auto rows = processor->getChild<Spreadsheet::RowsPlug>( "edits" );
+
+	auto row = rows->row( set );
+	if( !row )
+	{
+		return MetadataAlgo::readOnlyReason( rows );
+	}
+
+	if( const auto reason = MetadataAlgo::readOnlyReason( row->cellsPlug() ) )
+	{
+		return reason;
+	}
+
+	for( auto columnIndex : { g_addSetColumnIndex, g_removeSetColumnIndex } )
+	{
+		auto cell = row->cellsPlug()->getChild<Spreadsheet::CellPlug>( columnIndex );
+		if( MetadataAlgo::getReadOnly( cell ) )
+		{
+			return cell;
+		}
+
+		auto plug = cell->valuePlug<StringVectorDataPlug>();
+		if( MetadataAlgo::getReadOnly( plug ) )
+		{
+			return plug;
 		}
 	}
 
