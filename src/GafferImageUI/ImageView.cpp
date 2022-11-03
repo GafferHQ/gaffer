@@ -187,7 +187,7 @@ class Box2iGadget : public GafferUI::Gadget
 
 		void renderLayer( Layer layer, const Style *style, RenderReason reason ) const override
 		{
-			if( layer != Layer::Main )
+			if( layer != Layer::Front )
 			{
 				return;
 			}
@@ -276,7 +276,7 @@ class Box2iGadget : public GafferUI::Gadget
 
 		unsigned layerMask() const override
 		{
-			return (unsigned)Layer::Main;
+			return (unsigned)Layer::Front;
 		}
 
 		Imath::Box3f renderBound() const override
@@ -603,7 +603,7 @@ class V2iGadget : public GafferUI::Gadget
 
 		void renderLayer( Layer layer, const Style *style, RenderReason reason ) const override
 		{
-			if( layer != Layer::Main )
+			if( layer != Layer::Front )
 			{
 				return;
 			}
@@ -670,7 +670,7 @@ class V2iGadget : public GafferUI::Gadget
 
 		unsigned layerMask() const override
 		{
-			return (unsigned)Layer::Main;
+			return (unsigned)Layer::Front;
 		}
 
 		Imath::Box3f renderBound() const override
