@@ -196,6 +196,30 @@ class ContextQueryTest( GafferTest.TestCase ):
 			self.assertTrue( q["out"][6]["exists"].getValue() )
 			self.assertEqual( q["out"][6]["value"].getValue(), imath.Color3f( 0.7, 0.8, 0.9 ) )
 
+	def testNameChange( self ) :
+
+		q = Gaffer.ContextQuery()
+
+		v1 = q.addQuery( Gaffer.IntPlug( "i", Gaffer.Plug.Direction.Out, 1 ), "foo" )
+
+		testC = Gaffer.Context()
+		testC["foo"] = 2
+		testC["baa"] = 5
+
+		with testC:
+			self.assertTrue( q["out"][0]["exists"].getValue() )
+			self.assertEqual( q["out"][0]["value"].getValue(), 2)
+
+			v1["name"].setValue("baa")
+
+			self.assertTrue( q["out"][0]["exists"].getValue() )
+			self.assertEqual( q["out"][0]["value"].getValue(), 5)
+
+			v1["name"].setValue("boo")
+
+			self.assertFalse( q["out"][0]["exists"].getValue() )
+			self.assertEqual( q["out"][0]["value"].getValue(), 1)
+
 	def testChangeDefault( self ) :
 
 		q = Gaffer.ContextQuery()
