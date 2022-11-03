@@ -3946,6 +3946,32 @@ class RendererTest( GafferTest.TestCase ) :
 			input = arnold.AiNodeGetLink( surfaceShader, "base_color" )
 			self.assertIn( "colorSwitch", arnold.AiNodeGetName( input ) )
 
+	def testInternedStringAttributes( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			os.path.join( self.temporaryDirectory(), "test.ass" )
+		)
+
+		r.object(
+			"testPlane",
+			IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) ),
+			r.attributes( IECore.CompoundObject( {
+				"user:myString" : IECore.InternedStringData( "test" ),
+			} ) ),
+		)
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+			arnold.AiSceneLoad( universe, os.path.join( self.temporaryDirectory(), "test.ass" ), None )
+
+			plane = arnold.AiNodeLookUpByName( universe, "testPlane" )
+			self.assertEqual( arnold.AiNodeGetStr( plane, "user:myString" ), "test" )
+
 	@staticmethod
 	def __m44f( m ) :
 
