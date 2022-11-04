@@ -1140,5 +1140,146 @@ class RendererTest( GafferTest.TestCase ) :
 
 		return imath.Color4f( image["R"][i], image["G"][i], image["B"][i], image["A"][i] )
 
+	def __testCustomAttributeType( self, primitive, prefix, customAttribute, outputPlug, data, expectedResult, maxDifference = 0.0 ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+		)
+
+		# Frame the primitive so it fills the entire image.
+
+		renderer.camera(
+			"testCamera",
+			IECoreScene.Camera(
+				parameters = {
+					"resolution" : imath.V2i( 100, 100 ),
+					"projection" : "orthographic",
+					"screenWindow" : imath.Box2f( imath.V2f( -0.5 ), imath.V2f( 0.5 ) )
+				}
+			),
+			renderer.attributes( IECore.CompoundObject() )
+		)
+		renderer.option( "camera", IECore.StringData( "testCamera" ) )
+
+		fileName = os.path.join( self.temporaryDirectory(), "test.exr" )
+		renderer.output(
+			"testOutput",
+			IECoreScene.Output(
+				fileName,
+				"exr",
+				"rgba",
+				{}
+			)
+		)
+
+		# Render with a constant shader showing the custom attribute
+
+		attribute = customAttribute
+		if prefix != "render:" :
+			attribute = prefix + attribute
+
+		shader = IECoreScene.ShaderNetwork(
+			shaders = {
+				"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", { "base_color" : imath.Color3f( 0 ) } ),
+				"attribute" : IECoreScene.Shader( "attribute", "cycles:shader", { "attribute" : attribute } ),
+			},
+			connections = [
+				( ( "attribute", outputPlug ), ( "output", "emission" ) ),
+				( ( "attribute", "alpha" ), ( "output", "alpha" ) )
+			],
+			output = "output",
+		)
+
+		primitiveHandle = renderer.object( "/primitive", primitive, renderer.attributes( IECore.CompoundObject( { prefix + customAttribute : data, "cycles:surface" : shader } ) ) )
+		primitiveHandle.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
+
+		renderer.render()
+		image = IECore.Reader.create( fileName ).read()
+
+		color = self.__colorAtUV( image, imath.V2f( 0.55 ) )
+		if maxDifference :
+			for i in range( 0, 4 ) :
+				self.assertAlmostEqual( color[i], expectedResult[i], delta = maxDifference )
+		else :
+			self.assertEqual( color, expectedResult )
+
+	def testCustomAttributes( self ) :
+
+		testData = [
+			{ "name" : "testBool", "outputPlug" : "fac", "data" : IECore.BoolData( True ), "expectedResult" : imath.Color4f( 1, 1, 1, 1 ), "maxDifference" : 0.0 },
+			{ "name" : "testInt", "outputPlug" : "fac", "data" : IECore.IntData( 7 ), "expectedResult" : imath.Color4f( 7, 7, 7, 1 ), "maxDifference" : 0.0 },
+			{ "name" : "testFloat", "outputPlug" : "fac", "data" : IECore.FloatData( 2.5 ), "expectedResult" : imath.Color4f( 2.5, 2.5, 2.5, 1 ), "maxDifference" : 0.0 },
+			{ "name" : "testV2f", "outputPlug" : "vector", "data" : IECore.V2fData( imath.V2f( 1, 2 ) ), "expectedResult" : imath.Color4f( 1, 2, 0, 1 ), "maxDifference" : 0.0 },
+			{ "name" : "testV3f", "outputPlug" : "vector", "data" : IECore.V3fData( imath.V3f( 1, 2, 3 ) ), "expectedResult" : imath.Color4f( 1, 2, 3, 1 ), "maxDifference" : 0.0 },
+			{ "name" : "testColor3f", "outputPlug" : "color", "data" : IECore.Color3fData( imath.Color3f( 4, 5, 6 ) ), "expectedResult" : imath.Color4f( 4, 5, 6, 1 ), "maxDifference" : 0.0 },
+			{ "name" : "testColor4f", "outputPlug" : "color", "data" : IECore.Color4fData( imath.Color4f( 7, 8, 9, 0.5 ) ), "expectedResult" : imath.Color4f( 3.5, 4, 4.5, 0.5 ), "maxDifference" : 0.01 },
+		]
+
+		plane = IECoreScene.MeshPrimitive.createPlane(
+			imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ),
+			imath.V2i( 1 )
+		)
+
+		for attribute in testData:
+			for prefix in [ "user:", "render:" ] :
+				self.__testCustomAttributeType(
+					plane, prefix, attribute["name"], attribute['outputPlug'], attribute["data"], attribute["expectedResult"], attribute["maxDifference"]
+				)
+
+	def testCustomAttributePrecedence( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		renderer.output(
+			"testOutput",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testCustomAttributePrecedence",
+				}
+			)
+		)
+
+		plane = renderer.object(
+			"/plane",
+			IECoreScene.MeshPrimitive.createPlane(
+				imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ),
+			),
+			renderer.attributes( IECore.CompoundObject ( {
+				"user:testColor" : IECore.Color3fData( imath.Color3f( 1, 0, 0 ) ),
+				"render:user:testColor" : IECore.Color3fData( imath.Color3f( 0, 1, 0 ) ),
+				"cycles:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", { "base_color" : imath.Color3f( 0 ) } ),
+						"attribute" : IECoreScene.Shader( "attribute", "cycles:shader", { "attribute" : "user:testColor" } ),
+					},
+					connections = [
+						( ( "attribute", "color" ), ( "output", "emission" ) )
+					],
+					output = "output",
+				)
+			} ) )
+		)
+
+		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
+
+		renderer.render()
+		time.sleep( 2 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testCustomAttributePrecedence" )
+		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+
+		self.assertEqual( self.__colorAtUV( image, imath.V2f( 0.55 ) ), imath.Color4f( 0, 1, 0, 1 ) )
+
+		del plane
+
+
 if __name__ == "__main__":
 	unittest.main()

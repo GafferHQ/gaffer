@@ -67,6 +67,7 @@
 
 #include "boost/algorithm/string.hpp"
 #include "boost/algorithm/string/predicate.hpp"
+#include "boost/container/flat_map.hpp"
 #include "boost/optional.hpp"
 
 #include "tbb/concurrent_unordered_map.h"
@@ -943,6 +944,23 @@ IECore::InternedString g_volumeClippingAttributeName( "cycles:volume_clipping" )
 IECore::InternedString g_volumeStepSizeAttributeName( "cycles:volume_step_size" );
 IECore::InternedString g_volumeObjectSpaceAttributeName( "cycles:volume_object_space" );
 
+const char *customAttributeName( const std::string &attributeName, bool &hasPrecedence )
+{
+	if( boost::starts_with( attributeName, "user:" ) )
+	{
+		hasPrecedence = false;
+		return attributeName.c_str();
+	}
+	else if( boost::starts_with( attributeName, "render:" ) )
+	{
+		hasPrecedence = true;
+		return attributeName.c_str() + 7;
+	}
+
+	// Not a custom attribute
+	return nullptr;
+}
+
 class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterface
 {
 
@@ -1014,6 +1032,40 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				ShaderNetworkPtr lightShader = ShaderNetworkAlgo::convertLightShader( m_lightAttribute.get() );
 				IECore::MurmurHash h;
 				m_lightShader = m_shaderCache->get( lightShader.get(), nullptr, nullptr, attributes, h );
+			}
+
+			// Custom attributes
+
+			using CustomAttributesMap = boost::container::flat_map<InternedString, IECore::ConstDataPtr>;
+			CustomAttributesMap customMap;
+
+			for( IECore::CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; ++it )
+			{
+				bool hasPrecedence = false;
+				if( const char *name = customAttributeName( it->first.string(), hasPrecedence ) )
+				{
+					if( const IECore::Data *data = IECore::runTimeCast<const IECore::Data>( it->second.get() ) )
+					{
+						auto inserted = customMap.insert( CustomAttributesMap::value_type( name, nullptr ) );
+						if( hasPrecedence || inserted.second )
+						{
+							inserted.first->second = data;
+						}
+					}
+				}
+			}
+
+			for( const auto &attr : customMap )
+			{
+				ccl::ParamValue paramValue = SocketAlgo::setParamValue( attr.first, attr.second.get() );
+				if( paramValue.data() )
+				{
+					m_custom.push_back( paramValue );
+				}
+				else
+				{
+					msg( Msg::Warning, "IECoreCycles::Renderer", boost::format( "Custom attribute \"%s\" has unsupported type \"%s\"." ) % attr.first.string() % attr.second->typeName() );
+				}
 			}
 		}
 
@@ -1107,6 +1159,9 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				return false;
 
 			object->set_lightgroup( ccl::ustring( m_lightGroup.c_str() ) );
+
+			// Custom attributes.
+			object->attributes = m_custom;
 
 			return true;
 		}
@@ -1313,6 +1368,9 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		InternedString m_lightGroup;
 		// Need to assign shaders in a deferred manner
 		ShaderCache *m_shaderCache;
+
+		using CustomAttributes = ccl::vector<ccl::ParamValue>;
+		CustomAttributes m_custom;
 
 };
 
