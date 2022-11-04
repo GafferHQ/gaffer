@@ -1,6 +1,13 @@
 1.1.x.x (relative to 1.1.4.0)
 =======
 
+Features
+--------
+
+- PrimitiveVariableQuery : Added new node to query multiple primitive variables from a scene location.
+  - Each query specifies the name and type of the primitive variable
+  - Each query has a corresponding output plug with `exists`, `interpolation`, `type` and `value` child plugs.
+
 Improvements
 ------------
 
