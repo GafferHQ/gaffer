@@ -12,6 +12,12 @@ Fixes
 
 - Arnold : Fixed deletion of `ai:transform_type` attribute during interactive renders. The object now reverts to the default transform type in this case.
 
+API
+---
+
+- Added V2fVectorDataPlug and V3iVectorDataPlug.
+- Added support for V3i and V2f vector data types to PlugAlgo `getValueAsData` functions.
+
 1.1.4.0 (relative to 1.1.3.0)
 =======
 

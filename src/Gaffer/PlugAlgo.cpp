@@ -449,6 +449,10 @@ IECore::DataPtr getValueAsData( const ValuePlug *plug )
 			return static_cast<const BoolVectorDataPlug *>( plug )->getValue()->copy();
 		case V2iVectorDataPlugTypeId :
 			return static_cast<const V2iVectorDataPlug *>( plug )->getValue()->copy();
+		case V3iVectorDataPlugTypeId :
+			return static_cast<const V3iVectorDataPlug *>( plug )->getValue()->copy();
+		case V2fVectorDataPlugTypeId :
+			return static_cast<const V2fVectorDataPlug *>( plug )->getValue()->copy();
 		case V3fVectorDataPlugTypeId :
 			return static_cast<const V3fVectorDataPlug *>( plug )->getValue()->copy();
 		case Color3fVectorDataPlugTypeId :
