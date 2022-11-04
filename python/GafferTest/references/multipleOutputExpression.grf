@@ -1,0 +1,39 @@
+import Gaffer
+import imath
+
+Gaffer.Metadata.registerValue( parent, "serialiser:milestoneVersion", 1, persistent=False )
+Gaffer.Metadata.registerValue( parent, "serialiser:majorVersion", 1, persistent=False )
+Gaffer.Metadata.registerValue( parent, "serialiser:minorVersion", 2, persistent=False )
+Gaffer.Metadata.registerValue( parent, "serialiser:patchVersion", 0, persistent=False )
+
+__children = {}
+
+__children["StringPlug"] = Gaffer.StringPlug( "StringPlug", direction = Gaffer.Plug.Direction.Out, defaultValue = '', flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, )
+parent.addChild( __children["StringPlug"] )
+__children["BoolPlug"] = Gaffer.BoolPlug( "BoolPlug", direction = Gaffer.Plug.Direction.Out, defaultValue = False, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, )
+parent.addChild( __children["BoolPlug"] )
+__children["IntPlug"] = Gaffer.IntPlug( "IntPlug", direction = Gaffer.Plug.Direction.Out, defaultValue = 0, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, )
+parent.addChild( __children["IntPlug"] )
+__children["FloatPlug"] = Gaffer.FloatPlug( "FloatPlug", direction = Gaffer.Plug.Direction.Out, defaultValue = 0.0, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, )
+parent.addChild( __children["FloatPlug"] )
+__children["Expression"] = Gaffer.Expression( "Expression" )
+parent.addChild( __children["Expression"] )
+__children["Expression"]["__out"].addChild( Gaffer.IntPlug( "p0", direction = Gaffer.Plug.Direction.Out, defaultValue = 0, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["Expression"]["__out"].addChild( Gaffer.FloatPlug( "p1", direction = Gaffer.Plug.Direction.Out, defaultValue = 0.0, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["Expression"]["__out"].addChild( Gaffer.BoolPlug( "p2", direction = Gaffer.Plug.Direction.Out, defaultValue = False, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["Expression"]["__out"].addChild( Gaffer.StringPlug( "p3", direction = Gaffer.Plug.Direction.Out, defaultValue = '', flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["Expression"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+__children["StringPlug"].setInput( __children["Expression"]["__out"]["p3"] )
+Gaffer.Metadata.registerValue( __children["StringPlug"], 'nodule:type', '' )
+__children["BoolPlug"].setInput( __children["Expression"]["__out"]["p2"] )
+Gaffer.Metadata.registerValue( __children["BoolPlug"], 'nodule:type', '' )
+__children["IntPlug"].setInput( __children["Expression"]["__out"]["p0"] )
+Gaffer.Metadata.registerValue( __children["IntPlug"], 'nodule:type', '' )
+__children["FloatPlug"].setInput( __children["Expression"]["__out"]["p1"] )
+Gaffer.Metadata.registerValue( __children["FloatPlug"], 'nodule:type', '' )
+__children["Expression"]["__uiPosition"].setValue( imath.V2f( 7.05570412, -1.56343818 ) )
+__children["Expression"]["__engine"].setValue( 'python' )
+__children["Expression"]["__expression"].setValue( 'parent["__out"]["p3"] = "abcd"\nparent["__out"]["p1"] = 2.5\nparent["__out"]["p0"] = 99\nparent["__out"]["p2"] = True\n\n' )
+
+
+del __children
