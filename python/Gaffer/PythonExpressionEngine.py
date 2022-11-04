@@ -56,8 +56,8 @@ class PythonExpressionEngine( Gaffer.Expression.Engine ) :
 		parser = _Parser( expression )
 
 		self.__expression = expression
-		self.__inPlugPaths = list( parser.plugReads )
-		self.__outPlugPaths = list( parser.plugWrites )
+		self.__inPlugPaths = sorted( parser.plugReads )
+		self.__outPlugPaths = sorted( parser.plugWrites )
 
 		inPlugs.extend( [ self.__plug( node, p ) for p in self.__inPlugPaths ] )
 		outPlugs.extend( [ self.__plug( node, p ) for p in self.__outPlugPaths ] )
