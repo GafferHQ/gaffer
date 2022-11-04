@@ -177,6 +177,7 @@ from . import AttributeTweaksUI
 from . import OptionTweaksUI
 from . import OptionQueryUI
 from . import RenameUI
+from . import PrimitiveVariableQueryUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.
