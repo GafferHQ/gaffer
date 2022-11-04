@@ -3200,8 +3200,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		{
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 
-			m_scene->mutex.lock();
 			{
+				std::scoped_lock sceneLock( m_scene->mutex );
 				if( m_renderState == RENDERSTATE_RENDERING && m_renderType == Interactive )
 				{
 					clearUnused();
@@ -3212,6 +3212,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				updateCamera();
 				updateOutputs();
 
+				m_sessionReset = false;
+
 				if( m_renderState == RENDERSTATE_RENDERING )
 				{
 					if( m_scene->need_reset() )
@@ -3219,23 +3221,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 						m_session->reset( m_sessionParams, m_bufferParams );
 					}
 				}
-
-				// Dirty flag here is so that we don't unlock on a re-created scene if a reset happened
-				if( !m_sessionReset )
-				{
-					m_scene->mutex.unlock();
-				}
-				else
-				{
-					m_sessionReset = false;
-				}
-
-				if( m_renderState == RENDERSTATE_RENDERING )
-				{
-					m_session->start();
-				}
 			}
-			m_scene->mutex.unlock();
 
 			if( m_renderState == RENDERSTATE_RENDERING )
 			{
