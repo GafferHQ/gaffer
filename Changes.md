@@ -17,6 +17,7 @@ API
 
 - Added V2fVectorDataPlug and V3iVectorDataPlug.
 - Added support for V3i and V2f vector data types to PlugAlgo `getValueAsData` functions.
+- Added support for V2i, V3i, V2f, V3f and Color3f vector data types to PlugAlgo `canSetValueFromData` and `setValueFromData` functions.
 
 1.1.4.0 (relative to 1.1.3.0)
 =======
