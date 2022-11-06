@@ -10,7 +10,9 @@ Fixes
 -----
 
 - Image Viewer : Fixed dragging a color from the image view using a context with the wrong time, and an error that could show up when deleting the currently viewed image.
-- Cycles : Fixed background shader bug that could cause a crash, or cause the initial render in the Cycles viewport to be blank.
+- Cycles :
+  - Fixed background shader bug that could cause a crash, or cause the initial render in the Cycles viewport to be blank.
+  - Fixed light bug that triggered an assertion in Cycles debug builds.
 
 1.1.3.0 (relative to 1.1.2.0)
 =======

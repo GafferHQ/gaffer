@@ -1809,6 +1809,7 @@ class LightCache : public IECore::RefCounted
 		{
 			ccl::Light *light = new ccl::Light();
 			light->name = nodeName.c_str();
+			light->set_owner( m_scene );
 			light->tag_update( m_scene );
 			auto clight = SharedCLightPtr( light, nullNodeDeleter );
 
