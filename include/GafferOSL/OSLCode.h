@@ -39,6 +39,8 @@
 
 #include "GafferOSL/OSLShader.h"
 
+#include <unordered_map>
+
 namespace GafferOSL
 {
 

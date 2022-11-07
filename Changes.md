@@ -118,6 +118,17 @@ Breaking Changes
 - ImagePlug : Removed unused `viewName` argument from `viewNames()` and `viewNamesHash()` methods.
 - StandardAttributes : Removed backwards compatibility for StandardAttributes nodes saved from Gaffer `0.95.0` (May 2014) and earlier. If necessary, resave affected files using a recent Gaffer version.
 
+1.0.6.x (relative to 1.0.6.1)
+=======
+
+Fixes
+-----
+
+- GraphEditor : Fixed crash when focussing an empty ContextVariables, NameSwitch or Loop node (#4944).
+- UI : Fixed tooltips containing raw HTML.
+- DocumentationAlgo : Fixed handling of raw HTML by `markdownToHTML()`.
+- Reference : Fixed unnecessary serialisation of connections from internal plugs to external plugs. These are serialised in the `.grf` file already, so do not need to be duplicated on the Reference node itself. This bug prevented changes to the internal connections from taking effect when reloading a modified `.grf` file, and could cause load failures when the connections were from an internal Expression (#4935).
+
 1.0.6.1 (relative to 1.0.6.0)
 =======
 
