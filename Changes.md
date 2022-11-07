@@ -57,6 +57,11 @@ Breaking Changes
 - ContextAlgo : Removed use of the `ui:scene:expandedPaths` context variable. Any code directly accessing `ui:scene:expandedPaths` should instead use the `getExpandedPaths()/setExpandedPaths()/expand()/expandDescendants()` methods provided by `ContextAlgo`.
 - SceneGadget : Removed `setExpandedPaths()` and `getExpandedPaths()` methods. `setVisibleSet()` and `getVisibleSet()` are now used instead.
 
+Build
+-----
+
+- Cortex : Updated to version 10.4.3.0.
+
 1.1.x.x (relative to 1.1.4.0)
 =======
 
