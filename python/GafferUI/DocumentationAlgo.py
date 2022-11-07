@@ -202,7 +202,7 @@ def markdownToHTML( markdown ) :
 		return markdown
 
 	markdown = markdown.encode( "UTF-8" )
-	return cmark.cmark_markdown_to_html( markdown, len( markdown ), 0 ).decode( "UTF-8" )
+	return cmark.cmark_markdown_to_html( markdown, len( markdown ), cmark.CMARK_OPT_UNSAFE ).decode( "UTF-8" )
 
 def __nodeDocumentation( node ) :
 
@@ -319,5 +319,7 @@ def __cmark() :
 
 	__cmarkDLL.cmark_markdown_to_html.restype = ctypes.c_char_p
 	__cmarkDLL.cmark_markdown_to_html.argtypes = [ctypes.c_char_p, ctypes.c_long, ctypes.c_long]
+
+	__cmarkDLL.CMARK_OPT_UNSAFE = 1 << 17
 
 	return __cmarkDLL

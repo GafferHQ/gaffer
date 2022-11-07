@@ -1821,5 +1821,40 @@ class GraphGadgetTest( GafferUITest.TestCase ) :
 		script["switch"]["index"].setValue( 1 )
 		self.assertHighlighting( graphGadget, { "switch" : True, "add1" : False, "add2" : True } )
 
+	def testFocusEmptyContextVariables( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["contextVariables"] = Gaffer.ContextVariables()
+		plugs, nodes = GafferUI.GraphGadget._activePlugsAndNodes(
+			next( Gaffer.Plug.OutputRange( s["contextVariables"] ) ), Gaffer.Context()
+		)
+
+		self.assertEqual( nodes, [ s["contextVariables" ] ] )
+
+	def testFocusEmptyNameSwitch( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["nameSwitch"] = Gaffer.NameSwitch()
+		plugs, nodes = GafferUI.GraphGadget._activePlugsAndNodes(
+			next( Gaffer.Plug.OutputRange( s["nameSwitch"] ) ), Gaffer.Context()
+		)
+
+		self.assertEqual( nodes, [ s["nameSwitch" ] ] )
+
+	def testFocusEmptyLoop( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["loop"] = Gaffer.Loop()
+		# Fake output plug used to trigger the search for active nodes.
+		# Unlikely to exist in practice (unless someone derived from Loop?),
+		# but useful to provide test coverage against bugs dealing with
+		# Loop nodes before `setUp()` has been called.
+		s["loop"]["__testOutput"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		plugs, nodes = GafferUI.GraphGadget._activePlugsAndNodes(
+			s["loop"]["__testOutput"], Gaffer.Context()
+		)
+
+		self.assertEqual( nodes, [ s["loop" ] ] )
+
 if __name__ == "__main__":
 	unittest.main()
