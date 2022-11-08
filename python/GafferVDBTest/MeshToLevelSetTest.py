@@ -34,14 +34,16 @@
 #
 ##########################################################################
 
+import time
+
 import GafferTest
 
+import Gaffer
 import GafferVDB
 import IECore
 import IECoreScene
 import IECoreVDB
 import GafferVDBTest
-import os
 import GafferScene
 
 class MeshToLevelSetTest( GafferVDBTest.VDBTestCase ) :
@@ -128,3 +130,41 @@ class MeshToLevelSetTest( GafferVDBTest.VDBTestCase ) :
 		meshToLevelSet["grid"].setValue( "fooBar" )
 		obj2 = meshToLevelSet['out'].object( "sphere" )
 		self.assertEqual( obj2.gridNames(), ["fooBar"] )
+
+	def testCancellation( self ) :
+
+		# Start a computation in the background, and
+		# then cancel it.
+
+		sphere = GafferScene.Sphere()
+
+		meshToLevelSet = GafferVDB.MeshToLevelSet()
+		meshToLevelSet["in"].setInput( sphere["out"] )
+		self.setFilter( meshToLevelSet, path = "/sphere" )
+		meshToLevelSet["voxelSize"].setValue( 0.01 )
+
+		def computeObject() :
+
+			meshToLevelSet["out"].object( "/sphere" )
+
+		backgroundTask = Gaffer.ParallelAlgo.callOnBackgroundThread(
+			meshToLevelSet["out"]["object"], computeObject
+		)
+		# Delay so that the computation actually starts, rather
+		# than being avoided entirely.
+		time.sleep( 0.01 )
+		backgroundTask.cancelAndWait()
+
+		# Get the value again. If cancellation has been managed properly, this
+		# will do a fresh compute to get a full result, and not pull a half-finished
+		# result out of the cache.
+		vdbAfterCancellation = meshToLevelSet["out"].object( "/sphere" )
+
+		# Compare against a result computed from scratch.
+		Gaffer.ValuePlug.clearCache()
+		vdb = meshToLevelSet["out"].object( "/sphere" )
+
+		self.assertEqual(
+			vdbAfterCancellation.findGrid( "surface" ).activeVoxelCount(),
+			vdb.findGrid( "surface" ).activeVoxelCount(),
+		)

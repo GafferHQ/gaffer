@@ -145,6 +145,10 @@ IECore::ConstObjectPtr LevelSetOffset::computeProcessedObject( const ScenePath &
 		throw IECore::Exception( boost::str( boost::format( "Unable to Offset LevelSet grid: '%1%' with type: %2% " ) % gridName % newGrid->type()) );
 	}
 
+	// If the interrupter has stopped the VDB operation, throw
+	// so that we don't return a partial result.
+	Canceller::check( context->canceller() );
+
 	VDBObjectPtr newVDBObject = vdbObject->copy();
 
 	newVDBObject->insertGrid( newGrid );
