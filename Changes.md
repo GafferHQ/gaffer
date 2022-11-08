@@ -34,6 +34,7 @@ Improvements
   - Improved numerical accuracy.
   - Improved performance.
 - VectorDataPlugValueWidget : Computation errors are now reflected by a red background colour.
+- Cycles : Added OpenImageDenoise support.
 
 Fixes
 -----
