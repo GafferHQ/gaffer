@@ -229,6 +229,12 @@ IECore::ConstObjectPtr MeshToLevelSet::computeProcessedObject( const ScenePath &
 		0 //conversionFlags
 	);
 
+	// If we've been cancelled, the interrupter will have stopped
+	// `meshToVolume()` and we'll have a partial result in the grid.
+	// We need to throw rather than allow this partial result to be
+	// returned.
+	Canceller::check( context->canceller() );
+
 	grid->setName( gridPlug()->getValue() );
 
 	VDBObjectPtr newVDBObject =  new VDBObject();

@@ -38,7 +38,15 @@
 import os
 import string
 
+from Qt import QtCore
 from Qt import QtGui
+
+# Load resource file containing all the files referenced by the stylesheet. In
+# an ideal world we'd be able to trust Qt to load regular `.png` files directly
+# from the filesystem. But we can't : QStyleSheetStyle repeatedly accesses the
+# same files over and over again, and this can lead to UI stalls when Gaffer is
+# installed on a server under heavy load.
+QtCore.QResource.registerResource( os.path.expandvars( "$GAFFER_ROOT/graphics/resources.rcc" ) )
 
 _styleColors = {
 
@@ -143,9 +151,7 @@ _themeVariables = {
 	"monospaceFontFamily" : '"Menlo", "SFMono-Regular", "Consolas", "Liberation Mono", monospace'
 }
 
-substitutions = {
-	"GAFFER_ROOT" : os.environ["GAFFER_ROOT"].replace("\\", "/"),
-}
+substitutions = {}
 
 for k, v in _styleColors.items() :
 	if len( v ) == 3 :
@@ -186,6 +192,11 @@ _styleSheet = string.Template(
 	#     styling of widgets based on their proximity to others, Gaffer sets the
 	#     appropriate `gafferAdjoined(Top|Bottom|Left|Right)` properties rather
 	#     than `gafferRounded`/`gafferFlat*`.
+	#
+	#   - All icons should be referenced as `url(:/<fileName>.png)`, where
+	#    `<fileName>` is one of the icons exported from `resources/graphics.svg`.
+	#    The build process will collect these icons and pack them into the `.rcc`
+	#    resource file automatically.
 	#
 	# We can't use `.<class>` selectors in the stylesheet in many cases as
 	# these reference the Qt Class hierarchy. To help here, GafferUI.Widgets
@@ -239,7 +250,7 @@ _styleSheet = string.Template(
 	}
 
 	QLabel#gafferPlugLabel[gafferValueChanged="true"] {
-		background-image: url($GAFFER_ROOT/graphics/valueChanged.png);
+		background-image: url(:/valueChanged.png);
 		background-repeat: no-repeat;
 		background-position: left;
 		padding-left: 16px;
@@ -322,7 +333,7 @@ _styleSheet = string.Template(
 	}
 
 	QMenu::right-arrow {
-		image: url($GAFFER_ROOT/graphics/subMenuArrow.png);
+		image: url(:/subMenuArrow.png);
 		padding: 0px 7px 0px 0px;
 	}
 
@@ -351,11 +362,11 @@ _styleSheet = string.Template(
 	}
 
 	QMenu::indicator:non-exclusive:checked {
-		image: url($GAFFER_ROOT/graphics/menuChecked.png);
+		image: url(:/menuChecked.png);
 	}
 
 	QMenu::indicator:exclusive:checked:selected {
-		image: url($GAFFER_ROOT/graphics/arrowRight10.png);
+		image: url(:/arrowRight10.png);
 	}
 
 	QLineEdit, QPlainTextEdit {
@@ -399,7 +410,7 @@ _styleSheet = string.Template(
 	}
 
 	#gafferSearchField {
-		background-image: url($GAFFER_ROOT/graphics/search.png);
+		background-image: url(:/search.png);
 		background-repeat:no-repeat;
 		background-position: left center;
 		padding-left: 20px;
@@ -426,7 +437,7 @@ _styleSheet = string.Template(
 
 	QDateTimeEdit::drop-down {
 		width: 15px;
-		image: url($GAFFER_ROOT/graphics/arrowDown10.png);
+		image: url(:/arrowDown10.png);
 	}
 
 	#qt_calendar_navigationbar {
@@ -516,14 +527,14 @@ _styleSheet = string.Template(
 	}
 
 	QPushButton::menu-indicator {
-		image: url($GAFFER_ROOT/graphics/arrowDown10.png);
+		image: url(:/arrowDown10.png);
 		subcontrol-position: right center;
 		subcontrol-origin: padding;
 		left: -4px;
 	}
 
 	QPushButton[gafferWithFrame="true"][gafferMenuIndicator="true"] {
-		background-image: url($GAFFER_ROOT/graphics/menuIndicator.png);
+		background-image: url(:/menuIndicator.png);
 		background-repeat: none;
 		background-position: center right;
 		padding-right: 20px
@@ -531,7 +542,7 @@ _styleSheet = string.Template(
 
 	QPushButton[gafferWithFrame="true"][gafferMenuIndicator="true"]:disabled {
 		color: $foregroundFaded;
-		background-image: url($GAFFER_ROOT/graphics/menuIndicatorDisabled.png);
+		background-image: url(:/menuIndicatorDisabled.png);
 	}
 
 	QComboBox {
@@ -541,7 +552,7 @@ _styleSheet = string.Template(
 
 	QComboBox::drop-down {
 		width: 15px;
-		image: url($GAFFER_ROOT/graphics/arrowDown10.png);
+		image: url(:/arrowDown10.png);
 	}
 
 	QComboBox QAbstractItemView {
@@ -748,19 +759,19 @@ _styleSheet = string.Template(
 	}
 
 	QTabBar[gafferClass="GafferUI.SpreadsheetUI._SectionChooser"] QToolButton::left-arrow {
-		image: url($GAFFER_ROOT/graphics/arrowLeft10.png);
+		image: url(:/arrowLeft10.png);
 	}
 
 	QTabBar[gafferClass="GafferUI.SpreadsheetUI._SectionChooser"] QToolButton::left-arrow:disabled {
-		image: url($GAFFER_ROOT/graphics/arrowLeftDisabled10.png);
+		image: url(:/arrowLeftDisabled10.png);
 	}
 
 	QTabBar[gafferClass="GafferUI.SpreadsheetUI._SectionChooser"] QToolButton::right-arrow { /* the arrow mark in the tool buttons */
-		image: url($GAFFER_ROOT/graphics/arrowRight10.png);
+		image: url(:/arrowRight10.png);
 	}
 
 	QTabBar[gafferClass="GafferUI.SpreadsheetUI._SectionChooser"] QToolButton::right-arrow:disabled { /* the arrow mark in the tool buttons */
-		image: url($GAFFER_ROOT/graphics/arrowRightDisabled10.png);
+		image: url(:/arrowRightDisabled10.png);
 	}
 
 	/* Splitters */
@@ -818,33 +829,33 @@ _styleSheet = string.Template(
 	}
 
 	QCheckBox#gafferCollapsibleToggle::indicator:unchecked {
-		image: url($GAFFER_ROOT/graphics/collapsibleArrowDown.png);
+		image: url(:/collapsibleArrowDown.png);
 	}
 
 	QCheckBox#gafferCollapsibleToggle::indicator:checked {
-		image: url($GAFFER_ROOT/graphics/collapsibleArrowRight.png);
+		image: url(:/collapsibleArrowRight.png);
 	}
 
 	QCheckBox#gafferCollapsibleToggle::indicator:unchecked:hover,
 	QCheckBox#gafferCollapsibleToggle::indicator:unchecked:focus {
-		image: url($GAFFER_ROOT/graphics/collapsibleArrowDownHover.png);
+		image: url(:/collapsibleArrowDownHover.png);
 	}
 
 	QCheckBox#gafferCollapsibleToggle::indicator:checked:hover,
 	QCheckBox#gafferCollapsibleToggle::indicator:checked:focus {
-		image: url($GAFFER_ROOT/graphics/collapsibleArrowRightHover.png);
+		image: url(:/collapsibleArrowRightHover.png);
 	}
 
 	*[gafferValueChanged="true"] > QCheckBox#gafferCollapsibleToggle::indicator:unchecked,
 	*[gafferValueChanged="true"] > QCheckBox#gafferCollapsibleToggle::indicator:unchecked:hover,
 	*[gafferValueChanged="true"] > CheckBox#gafferCollapsibleToggle::indicator:unchecked:focus {
-		image: url($GAFFER_ROOT/graphics/collapsibleArrowDownValueChanged.png);
+		image: url(:/collapsibleArrowDownValueChanged.png);
 	}
 
 	*[gafferValueChanged="true"] > QCheckBox#gafferCollapsibleToggle::indicator:checked,
 	*[gafferValueChanged="true"] > QCheckBox#gafferCollapsibleToggle::indicator:checked:hover,
 	*[gafferValueChanged="true"] > QCheckBox#gafferCollapsibleToggle::indicator:checked:focus {
-		image: url($GAFFER_ROOT/graphics/collapsibleArrowRightValueChanged.png);
+		image: url(:/collapsibleArrowRightValueChanged.png);
 	}
 
 	QHeaderView {
@@ -901,11 +912,11 @@ _styleSheet = string.Template(
 	}
 
 	QHeaderView::down-arrow {
-		image: url($GAFFER_ROOT/graphics/headerSortDown.png);
+		image: url(:/headerSortDown.png);
 	}
 
 	QHeaderView::up-arrow {
-		image: url($GAFFER_ROOT/graphics/headerSortUp.png);
+		image: url(:/headerSortUp.png);
 	}
 
 	QScrollBar {
@@ -982,16 +993,16 @@ _styleSheet = string.Template(
 	}
 
 	QScrollBar::down-arrow {
-		image: url($GAFFER_ROOT/graphics/arrowDown10.png);
+		image: url(:/arrowDown10.png);
 	}
 	QScrollBar::up-arrow {
-		image: url($GAFFER_ROOT/graphics/arrowUp10.png);
+		image: url(:/arrowUp10.png);
 	}
 	QScrollBar::left-arrow {
-		image: url($GAFFER_ROOT/graphics/arrowLeft10.png);
+		image: url(:/arrowLeft10.png);
 	}
 	QScrollBar::right-arrow {
-		image: url($GAFFER_ROOT/graphics/arrowRight10.png);
+		image: url(:/arrowRight10.png);
 	}
 
 	QScrollArea {
@@ -1049,12 +1060,12 @@ _styleSheet = string.Template(
 
 	QTreeView::branch:closed:has-children {
 		border-image : none;
-		image : url($GAFFER_ROOT/graphics/collapsibleArrowRight.png);
+		image : url(:/collapsibleArrowRight.png);
 	}
 
 	QTreeView::branch:open:has-children {
 		border-image : none;
-		image : url($GAFFER_ROOT/graphics/collapsibleArrowDown.png);
+		image : url(:/collapsibleArrowDown.png);
 	}
 
 	/* CheckBoxes */
@@ -1071,51 +1082,51 @@ _styleSheet = string.Template(
 	/* --------- */
 
 	QCheckBox::indicator:unchecked {
-		image: url($GAFFER_ROOT/graphics/checkBoxUnchecked.png);
+		image: url(:/checkBoxUnchecked.png);
 	}
 
 	QCheckBox::indicator:unchecked:hover,
 	QCheckBox::indicator:unchecked:focus,
 	QCheckBox[gafferHighlighted="true"]::indicator:unchecked {
-		image: url($GAFFER_ROOT/graphics/checkBoxUncheckedHover.png);
+		image: url(:/checkBoxUncheckedHover.png);
 	}
 
 	QCheckBox::indicator:unchecked:disabled {
-		image: url($GAFFER_ROOT/graphics/checkBoxUncheckedDisabled.png);
+		image: url(:/checkBoxUncheckedDisabled.png);
 	}
 
 	/* Checked */
 	/* ------- */
 
 	QCheckBox::indicator:checked {
-		image: url($GAFFER_ROOT/graphics/checkBoxChecked.png);
+		image: url(:/checkBoxChecked.png);
 	}
 
 	QCheckBox::indicator:checked:hover,
 	QCheckBox::indicator:checked:focus,
 	QCheckBox[gafferHighlighted="true"]::indicator:checked {
-		image: url($GAFFER_ROOT/graphics/checkBoxCheckedHover.png);
+		image: url(:/checkBoxCheckedHover.png);
 	}
 
 	QCheckBox::indicator:checked:disabled {
-		image: url($GAFFER_ROOT/graphics/checkBoxCheckedDisabled.png);
+		image: url(:/checkBoxCheckedDisabled.png);
 	}
 
 	/* Indeterminate */
 	/* ------------- */
 
 	QCheckBox::indicator:indeterminate {
-		image: url($GAFFER_ROOT/graphics/checkBoxIndeterminate.png);
+		image: url(:/checkBoxIndeterminate.png);
 	}
 
 	QCheckBox::indicator:indeterminate:hover,
 	QCheckBox::indicator:indeterminate:focus,
 	QCheckBox[gafferHighlighted="true"]::indicator:indeterminate {
-		image: url($GAFFER_ROOT/graphics/checkBoxIndeterminateHover.png);
+		image: url(:/checkBoxIndeterminateHover.png);
 	}
 
 	QCheckBox::indicator:indeterminate:disabled {
-		image: url($GAFFER_ROOT/graphics/checkBoxIndeterminateDisabled.png);
+		image: url(:/checkBoxIndeterminateDisabled.png);
 	}
 
 	/* Animated/Errored */
@@ -1136,51 +1147,51 @@ _styleSheet = string.Template(
 	/* --------- */
 
 	QCheckBox[gafferDisplayMode="Switch"]::indicator:unchecked {
-		image: url($GAFFER_ROOT/graphics/toggleOff.png);
+		image: url(:/toggleOff.png);
 	}
 
 	QCheckBox[gafferDisplayMode="Switch"]::indicator:unchecked:hover,
 	QCheckBox[gafferDisplayMode="Switch"]::indicator:unchecked:focus,
 	QCheckBox[gafferDisplayMode="Switch"][gafferHighlighted="true"]::indicator:unchecked {
-		image: url($GAFFER_ROOT/graphics/toggleOffHover.png);
+		image: url(:/toggleOffHover.png);
 	}
 
 	QCheckBox[gafferDisplayMode="Switch"]::indicator:unchecked:disabled {
-		image: url($GAFFER_ROOT/graphics/toggleOffDisabled.png);
+		image: url(:/toggleOffDisabled.png);
 	}
 
 	/* Checked */
 	/* ------- */
 
 	QCheckBox[gafferDisplayMode="Switch"]::indicator:checked {
-		image: url($GAFFER_ROOT/graphics/toggleOn.png);
+		image: url(:/toggleOn.png);
 	}
 
 	QCheckBox[gafferDisplayMode="Switch"]::indicator:checked:hover,
 	QCheckBox[gafferDisplayMode="Switch"]::indicator:checked:focus,
 	QCheckBox[gafferDisplayMode="Switch"][gafferHighlighted="true"]::indicator:checked {
-		image: url($GAFFER_ROOT/graphics/toggleOnHover.png);
+		image: url(:/toggleOnHover.png);
 	}
 
 	QCheckBox[gafferDisplayMode="Switch"]::indicator:checked:disabled {
-		image: url($GAFFER_ROOT/graphics/toggleOnDisabled.png);
+		image: url(:/toggleOnDisabled.png);
 	}
 
 	/* Indeterminate */
 	/* ------------- */
 
 	QCheckBox[gafferDisplayMode="Switch"]::indicator:indeterminate {
-		image: url($GAFFER_ROOT/graphics/toggleIndeterminate.png);
+		image: url(:/toggleIndeterminate.png);
 	}
 
 	QCheckBox[gafferDisplayMode="Switch"]::indicator:indeterminate:hover,
 	QCheckBox[gafferDisplayMode="Switch"]::indicator:indeterminate:focus,
 	QCheckBox[gafferDisplayMode="Switch"][gafferHighlighted="true"]::indicator:indeterminate {
-		image: url($GAFFER_ROOT/graphics/toggleIndeterminateHover.png);
+		image: url(:/toggleIndeterminateHover.png);
 	}
 
 	QCheckBox[gafferDisplayMode="Switch"]::indicator:indeterminate:disabled {
-		image: url($GAFFER_ROOT/graphics/toggleIndeterminateDisabled.png);
+		image: url(:/toggleIndeterminateDisabled.png);
 	}
 
 	/* BoolWidget drawn as tool */
@@ -1332,19 +1343,19 @@ _styleSheet = string.Template(
 	}
 
 	QTableView::indicator:unchecked {
-		image: url($GAFFER_ROOT/graphics/checkBoxUnchecked.png);
+		image: url(:/checkBoxUnchecked.png);
 	}
 
 	QTableView::indicator:unchecked:hover {
-		image: url($GAFFER_ROOT/graphics/checkBoxUncheckedHover.png);
+		image: url(:/checkBoxUncheckedHover.png);
 	}
 
 	QTableView::indicator:checked {
-		image: url($GAFFER_ROOT/graphics/checkBoxChecked.png);
+		image: url(:/checkBoxChecked.png);
 	}
 
 	QTableView::indicator:checked:hover {
-		image: url($GAFFER_ROOT/graphics/checkBoxCheckedHover.png);
+		image: url(:/checkBoxCheckedHover.png);
 	}
 
 	QTableView::indicator:selected {
@@ -1352,19 +1363,19 @@ _styleSheet = string.Template(
 	}
 
 	QTableView[gafferToggleIndicator="true"]::indicator:unchecked {
-		image: url($GAFFER_ROOT/graphics/toggleOff.png);
+		image: url(:/toggleOff.png);
 	}
 
 	QTableView[gafferToggleIndicator="true"]::indicator:unchecked:hover {
-		image: url($GAFFER_ROOT/graphics/toggleOffHover.png);
+		image: url(:/toggleOffHover.png);
 	}
 
 	QTableView[gafferToggleIndicator="true"]::indicator:checked {
-		image: url($GAFFER_ROOT/graphics/toggleOn.png);
+		image: url(:/toggleOn.png);
 	}
 
 	QTableView[gafferToggleIndicator="true"]::indicator:checked:hover {
-		image: url($GAFFER_ROOT/graphics/toggleOnHover.png);
+		image: url(:/toggleOnHover.png);
 	}
 
 	/* highlighted state for VectorDataWidget and tree views */
@@ -1672,4 +1683,3 @@ _styleSheet = string.Template(
 	"""
 
 ).substitute( substitutions )
-
