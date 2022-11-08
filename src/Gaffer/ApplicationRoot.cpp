@@ -39,7 +39,7 @@
 
 #include "Gaffer/Preferences.h"
 
-#include "boost/filesystem.hpp"
+#include <filesystem>
 
 using namespace Gaffer;
 
@@ -129,12 +129,12 @@ std::string ApplicationRoot::preferencesLocation() const
 		throw IECore::Exception( "$HOME environment variable not set" );
 	}
 
-	std::string result = home;
-	result += "/gaffer/startup/" + getName().string();
+	std::filesystem::path result = home;
+	result = result / "gaffer" / "startup" / getName().string();
 
-	boost::filesystem::create_directories( result );
+	std::filesystem::create_directories( result );
 
-	return result;
+	return result.generic_string();
 }
 
 std::string ApplicationRoot::defaultPreferencesFileName() const
