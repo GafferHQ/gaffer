@@ -21,6 +21,7 @@ Fixes
 - Arnold :
   - Fixed deletion of `ai:transform_type` attribute during interactive renders. The object now reverts to the default transform type in this case.
   - Fixed broken Viewer after Arnold encountered an error (such as a missing texture).
+  - Fixed `Tools/Arnold/Flush Cache` not working when no interactive renders are running.
 
 API
 ---

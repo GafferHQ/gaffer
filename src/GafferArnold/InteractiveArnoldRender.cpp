@@ -81,6 +81,7 @@ void InteractiveArnoldRender::flushCaches( int flags )
 {
 	/// \todo Perhaps this makes more sense as a non-static method
 	/// that can be called directly on individual instances?
+	bool flushed = false;
 	for( const auto &instance : instances() )
 	{
 		IntPlug *statePlug = instance->statePlug()->source<IntPlug>();
@@ -100,5 +101,15 @@ void InteractiveArnoldRender::flushCaches( int flags )
 		instance->renderer()->command( "ai:cacheFlush", { { "flags", new IECore::IntData( flags ) } } );
 
 		statePlug->setValue( state );
+
+		flushed = true;
+	}
+
+	if( !flushed )
+	{
+		// No renderer or instance found so flush default cache so that new renders spinning up
+		// later will see a refereshed texture cache.
+		// This is needed because Arnold only has one texture cache between universes.
+		AiUniverseCacheFlush( nullptr, flags );
 	}
 }
