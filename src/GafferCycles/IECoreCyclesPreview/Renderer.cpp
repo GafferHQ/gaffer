@@ -888,6 +888,8 @@ IECore::InternedString g_transformBlurSegmentsAttributeName( "transformBlurSegme
 IECore::InternedString g_deformationBlurAttributeName( "deformationBlur" );
 IECore::InternedString g_deformationBlurSegmentsAttributeName( "deformationBlurSegments" );
 IECore::InternedString g_displayColorAttributeName( "render:displayColor" );
+IECore::InternedString g_lightAttributeName( "light" );
+IECore::InternedString g_muteLightAttributeName( "light:mute" );
 // Cycles Attributes
 IECore::InternedString g_cclVisibilityAttributeName( "cycles:visibility" );
 IECore::InternedString g_useHoldoutAttributeName( "cycles:use_holdout" );
@@ -897,8 +899,7 @@ IECore::InternedString g_shadowTerminatorGeometryOffsetAttributeName( "cycles:sh
 IECore::InternedString g_maxLevelAttributeName( "cycles:max_level" );
 IECore::InternedString g_dicingRateAttributeName( "cycles:dicing_rate" );
 // Cycles Light
-IECore::InternedString g_lightAttributeName( "cycles:light" );
-IECore::InternedString g_muteLightAttributeName( "light:mute" );
+IECore::InternedString g_cyclesLightAttributeName( "cycles:light" );
 // Dupli
 IECore::InternedString g_dupliGeneratedAttributeName( "cycles:dupli_generated" );
 IECore::InternedString g_dupliUVAttributeName( "cycles:dupli_uv" );
@@ -1016,9 +1017,14 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			// Light shader
 
 			m_muteLight = attributeValue<bool>( g_muteLightAttributeName, attributes, false );
-			m_lightAttribute = attribute<IECoreScene::ShaderNetwork>( g_lightAttributeName, attributes );
+			m_lightAttribute = attribute<IECoreScene::ShaderNetwork>( g_cyclesLightAttributeName, attributes );
+			m_lightAttribute = m_lightAttribute ? m_lightAttribute : attribute<IECoreScene::ShaderNetwork>( g_lightAttributeName, attributes );
 			if( m_lightAttribute )
 			{
+				ShaderNetworkPtr converted = m_lightAttribute->copy();
+				ShaderNetworkAlgo::convertUSDShaders( converted.get() );
+				m_lightAttribute = converted;
+
 				ShaderNetworkPtr lightShader = ShaderNetworkAlgo::convertLightShader( m_lightAttribute.get() );
 				IECore::MurmurHash h;
 				m_lightShader = m_shaderCache->get( lightShader.get(), nullptr, nullptr, attributes, h );

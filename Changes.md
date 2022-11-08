@@ -11,6 +11,7 @@ Improvements
 ------------
 
 - LightEditor : Added section displaying UsdLux shadow parameters.
+- Cycles : Added support for UsdLux lights.
 - LightTool : Added support for editing animated plugs.
 
 Fixes
