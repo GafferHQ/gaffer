@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2022, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,45 +34,43 @@
 #
 ##########################################################################
 
+import IECore
+
+import Gaffer
+import GafferTest
 import GafferUI
+import GafferUITest
 
-class StandardNodeToolbar( GafferUI.NodeToolbar ) :
+class StandardNodeToolbarTest( GafferUITest.TestCase ) :
 
-	def __init__( self, node, edge = GafferUI.Edge.Top, **kw ) :
+	def testNoUnnecessaryUpdates( self ) :
 
-		self.__layout = GafferUI.PlugLayout(
-			node,
-			orientation = GafferUI.ListContainer.Orientation.Horizontal if edge in ( GafferUI.Edge.Top, GafferUI.Edge.Bottom ) else GafferUI.ListContainer.Orientation.Vertical,
-			layoutName = "toolbarLayout",
-			rootSection = str( edge )
+		script = Gaffer.ScriptNode()
+
+		script["node"] = GafferTest.AddNode()
+		Gaffer.Metadata.registerValue(
+			script["node"]["op1"], "plugValueWidget:type",
+			"GafferUITest.PlugValueWidgetTest.UpdateCountPlugValueWidget"
+		)
+		Gaffer.Metadata.registerValue( script["node"]["op1"], "toolbarLayout:section", "Top" )
+
+		view = GafferUITest.ViewTest.MyView( script["node"]["op1"] )
+		view.setContext( script.context() )
+		view["testPlug"] = Gaffer.IntPlug()
+		Gaffer.Metadata.registerValue(
+			view["testPlug"], "plugValueWidget:type",
+			"GafferUITest.PlugValueWidgetTest.UpdateCountPlugValueWidget"
 		)
 
-		GafferUI.NodeToolbar.__init__( self, node, self.__layout, **kw )
+		for node, plug in [
+			( script["node"], script["node"]["op1"] ),
+			( view, view["testPlug" ] ),
+		] :
 
-	def setContext( self, context ) :
+			toolbar = GafferUI.StandardNodeToolbar( node )
+			widget = toolbar._StandardNodeToolbar__layout.plugValueWidget( plug )
+			self.assertEqual( widget.updateCount, 1 )
+			self.assertTrue( widget.updateContexts[0].isSame( script.context() ) )
 
-		if context.isSame( self.getContext() ) :
-			return
-
-		GafferUI.NodeToolbar.setContext( self, context )
-		self.__layout.setContext( context )
-
-	@staticmethod
-	def top( node ) :
-
-		return StandardNodeToolbar( node, edge = GafferUI.Edge.Top )
-
-	@staticmethod
-	def bottom( node ) :
-
-		return StandardNodeToolbar( node, edge = GafferUI.Edge.Bottom )
-
-	@staticmethod
-	def left( node ) :
-
-		return StandardNodeToolbar( node, edge = GafferUI.Edge.Left )
-
-	@staticmethod
-	def right( node ) :
-
-		return StandardNodeToolbar( node, edge = GafferUI.Edge.Right )
+if __name__ == "__main__":
+	unittest.main()

@@ -141,10 +141,13 @@ class PlugValueWidget( GafferUI.Widget ) :
 	# for the script the plug belongs to. This function allows an alternative context
 	# to be provided, making it possible to view a plug at a custom frame (or with any
 	# other context modification).
+	## \todo To our knowledge, this has never been useful, and synchronising contexts
+	# between Editor/PlugLayout/PlugValueWidget has only been a pain. Consider
+	# removing it.
 	def setContext( self, context ) :
 
 		assert( isinstance( context, Gaffer.Context ) )
-		if context is self.__context :
+		if context.isSame( self.__context ) :
 			return
 
 		self.__context = context
@@ -500,6 +503,8 @@ class PlugValueWidget( GafferUI.Widget ) :
 			nodes.add( plug.node() )
 			scriptNodes.add( plug.ancestor( Gaffer.ScriptNode ) )
 
+		# We can only edit plugs under one ScriptNode, because UndoScope's
+		# are specific to ScriptNodes.
 		assert( len( scriptNodes ) <= 1 )
 
 		self.__plugs = plugs
@@ -517,8 +522,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 			for node in nodes
 		]
 
-		scriptNode = next( iter( scriptNodes ), None )
-		self.__context = scriptNode.context() if scriptNode is not None else self.__fallbackContext
+		self.__context = next( ( self.__defaultContext( p ) for p in self.__plugs ), self.__fallbackContext )
 		self.__updateContextConnection()
 
 		if callUpdateFromPlugs :
@@ -538,9 +542,25 @@ class PlugValueWidget( GafferUI.Widget ) :
 		else :
 			self.__contextChangedConnection = None
 
-	# we use this when the plugs being viewed doesn't have a ScriptNode ancestor
-	# to provide a context.
 	__fallbackContext = Gaffer.Context()
+
+	# Note : Despite being private (because we don't want to include it in the official API),
+	# This method is accessed by NodeToolbar and PlugLayout (because we do want to share the
+	# logic internally).
+	@classmethod
+	def __defaultContext( cls, graphComponent ) :
+
+		scriptNode = graphComponent if isinstance( graphComponent, Gaffer.ScriptNode ) else graphComponent.ancestor( Gaffer.ScriptNode )
+		if scriptNode is not None :
+			return scriptNode.context()
+
+		# Special case for plugs that form the settings for a view.
+
+		view = graphComponent if isinstance( graphComponent, GafferUI.View ) else graphComponent.ancestor( GafferUI.View )
+		if view is not None :
+			return view.getContext()
+
+		return cls.__fallbackContext
 
 	def __buttonPress( self, widget, event, buttonMask ) :
 

@@ -234,6 +234,44 @@ class PlugValueWidgetTest( GafferUITest.TestCase ) :
 		menu.item( "/presetTwo" ).command()
 		self.assertEqual( script["n"]["op1"].getValue(), 2 )
 
+	class UpdateCountPlugValueWidget( GafferUI.NumericPlugValueWidget ) :
+
+		def __init__( self, plugs, **kw ) :
+
+			self.updateCount = 0
+			self.updateContexts = []
+
+			GafferUI.NumericPlugValueWidget.__init__( self, plugs, **kw )
+
+		def _updateFromPlugs( self ) :
+
+			GafferUI.NumericPlugValueWidget._updateFromPlugs( self )
+
+			self.updateCount += 1
+			self.updateContexts.append( self.getContext() )
+
+	def testUpdates( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["add"] = GafferTest.AddNode()
+
+		# Should do one update during construction
+		widget = self.UpdateCountPlugValueWidget( script["add"]["op1"] )
+		self.assertEqual( widget.updateCount, 1 )
+		self.assertTrue( widget.updateContexts[0].isSame( script.context() ) )
+
+		# No need to do an update when calling `setContext()`
+		# with the same context as already held.
+		self.assertTrue( widget.getContext().isSame( script.context() ) )
+		widget.setContext( script.context() )
+		self.assertEqual( widget.updateCount, 1 )
+
+		# But changing to a different context should trigger an update.
+		context = Gaffer.Context()
+		widget.setContext( context )
+		self.assertEqual( widget.updateCount, 2 )
+		self.assertTrue( widget.updateContexts[1].isSame( context ) )
+
 	def tearDown( self ) :
 
 		GafferUITest.TestCase.tearDown( self )
