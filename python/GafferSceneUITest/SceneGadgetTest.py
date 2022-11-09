@@ -83,7 +83,9 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		# Nothing selected, so selected bound is empty
 		self.assertEqual( sg.bound( True ), imath.Box3f() )
 
-		sg.setExpandedPaths( IECore.PathMatcher( ["/group/"] ) )
+		v = GafferScene.VisibleSet()
+		v.expansions = IECore.PathMatcher( [ "/group" ] )
+		sg.setVisibleSet( v )
 		sg.setSelection( IECore.PathMatcher( ["/group/plane"] ) )
 		self.waitForRender( sg )
 
@@ -197,13 +199,30 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		self.assertObjectAt( sg, imath.V2f( 0.5 ), None )
 		self.assertObjectsAt( sg, imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ), [ "/group" ] )
 
-		sg.setExpandedPaths( IECore.PathMatcher( [ "/group" ] ) )
+		v = GafferScene.VisibleSet()
+		v.expansions = IECore.PathMatcher( [ "/group" ] )
+		sg.setVisibleSet( v )
 		self.waitForRender( sg )
 
 		self.assertObjectAt( sg, imath.V2f( 0.5 ), IECore.InternedStringVectorData( [ "group", "sphere" ] ) )
 		self.assertObjectsAt( sg, imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ), [ "/group/sphere" ] )
 
-		sg.setExpandedPaths( IECore.PathMatcher( [] ) )
+		v.expansions = IECore.PathMatcher( [] )
+		v.inclusions = IECore.PathMatcher( [ "/group" ] )
+		sg.setVisibleSet( v )
+		self.waitForRender( sg )
+
+		self.assertObjectAt( sg, imath.V2f( 0.5 ), IECore.InternedStringVectorData( [ "group", "sphere" ] ) )
+		self.assertObjectsAt( sg, imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ), [ "/group/sphere" ] )
+
+		v.exclusions = IECore.PathMatcher( [ "/group" ] )
+		sg.setVisibleSet( v )
+		self.waitForRender( sg )
+
+		self.assertObjectAt( sg, imath.V2f( 0.5 ), None )
+		self.assertObjectsAt( sg, imath.Box2f( imath.V2f( 0 ), imath.V2f( 1 ) ), [ "/group" ] )
+
+		sg.setVisibleSet( GafferScene.VisibleSet() )
 		self.waitForRender( sg )
 
 		self.assertObjectAt( sg, imath.V2f( 0.5 ), None )

@@ -524,7 +524,7 @@ class RenderController::SceneGraph
 
 			// Expansion
 
-			if( ( m_dirtyComponents & ExpansionComponent ) && updateExpansion( path, controller->m_expandedPaths, controller->m_minimumExpansionDepth ) )
+			if( ( m_dirtyComponents & ExpansionComponent ) && updateExpansion( path, controller->m_visibleSet, controller->m_minimumExpansionDepth ) )
 			{
 				m_changedComponents |= ExpansionComponent;
 			}
@@ -955,9 +955,12 @@ class RenderController::SceneGraph
 			m_objectHash = MurmurHash();
 		}
 
-		bool updateExpansion( const ScenePlug::ScenePath &path, const IECore::PathMatcher &expandedPaths, size_t minimumExpansionDepth )
+		bool updateExpansion( const ScenePlug::ScenePath &path, const GafferScene::VisibleSet &visibleSet, size_t minimumExpansionDepth )
 		{
-			const bool expanded = ( minimumExpansionDepth >= path.size() ) || ( expandedPaths.match( path ) & PathMatcher::ExactMatch );
+			/// \todo We also include DescendantMatch here to ensure the ancestors of visible paths are also visible,
+			/// ideally we'd avoid expanding those ancestors and instead render only the ExactMatch.
+			const bool expanded = visibleSet.match( path, minimumExpansionDepth ) & ( PathMatcher::ExactMatch | PathMatcher::DescendantMatch );
+
 			if( expanded == m_expanded )
 			{
 				return false;
@@ -1383,18 +1386,18 @@ const Gaffer::Context *RenderController::getContext() const
 	return m_context.get();
 }
 
-void RenderController::setExpandedPaths( const IECore::PathMatcher &expandedPaths )
+void RenderController::setVisibleSet( const GafferScene::VisibleSet &visibleSet )
 {
 	cancelBackgroundTask();
 
-	m_expandedPaths = expandedPaths;
+	m_visibleSet = visibleSet;
 	dirtySceneGraphs( SceneGraph::ExpansionComponent );
 	requestUpdate();
 }
 
-const IECore::PathMatcher &RenderController::getExpandedPaths() const
+const GafferScene::VisibleSet &RenderController::getVisibleSet() const
 {
-	return m_expandedPaths;
+	return m_visibleSet;
 }
 
 void RenderController::setMinimumExpansionDepth( size_t depth )

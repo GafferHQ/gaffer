@@ -80,9 +80,9 @@ class GAFFERSCENEUI_API SceneGadget : public GafferUI::Gadget
 		void setContext( Gaffer::ConstContextPtr context );
 		const Gaffer::Context *getContext() const;
 
-		/// Limits the expanded parts of the scene to those in the specified paths.
-		void setExpandedPaths( const IECore::PathMatcher &expandedPaths );
-		const IECore::PathMatcher &getExpandedPaths() const;
+		/// Limits the expanded parts of the scene to those in the specified VisibleSet.
+		void setVisibleSet( const GafferScene::VisibleSet &visibleSet );
+		const GafferScene::VisibleSet &getVisibleSet() const;
 
 		void setMinimumExpansionDepth( size_t depth );
 		size_t getMinimumExpansionDepth() const;

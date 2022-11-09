@@ -79,10 +79,10 @@ ContextPtr getContext( RenderController &r )
 	return const_cast<Context *>( r.getContext() );
 }
 
-void setExpandedPaths( RenderController &r, const IECore::PathMatcher &expandedPaths )
+void setVisibleSet( RenderController &r, const GafferScene::VisibleSet &visibleSet )
 {
 	IECorePython::ScopedGILRelease gilRelease;
-	r.setExpandedPaths( expandedPaths );
+	r.setVisibleSet( visibleSet );
 }
 
 void setMinimumExpansionDepth( RenderController &r, size_t depth )
@@ -158,8 +158,8 @@ void GafferSceneModule::bindRenderController()
 		.def( "getScene", &getScene )
 		.def( "setContext", &setContext )
 		.def( "getContext", &getContext )
-		.def( "setExpandedPaths", &setExpandedPaths )
-		.def( "getExpandedPaths", &RenderController::getExpandedPaths, return_value_policy<copy_const_reference>() )
+		.def( "setVisibleSet", &setVisibleSet )
+		.def( "getVisibleSet", &RenderController::getVisibleSet, return_value_policy<copy_const_reference>() )
 		.def( "setMinimumExpansionDepth", &setMinimumExpansionDepth )
 		.def( "getMinimumExpansionDepth", &RenderController::getMinimumExpansionDepth )
 		.def( "updateRequiredSignal", &RenderController::updateRequiredSignal, return_internal_reference<1>() )

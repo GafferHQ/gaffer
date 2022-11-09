@@ -237,14 +237,14 @@ const Gaffer::Context *SceneGadget::getContext() const
 	return m_controller->getContext();
 }
 
-void SceneGadget::setExpandedPaths( const IECore::PathMatcher &expandedPaths )
+void SceneGadget::setVisibleSet( const GafferScene::VisibleSet &visibleSet )
 {
-	m_controller->setExpandedPaths( expandedPaths );
+	m_controller->setVisibleSet( visibleSet );
 }
 
-const IECore::PathMatcher &SceneGadget::getExpandedPaths() const
+const GafferScene::VisibleSet &SceneGadget::getVisibleSet() const
 {
-	return m_controller->getExpandedPaths();
+	return m_controller->getVisibleSet();
 }
 
 void SceneGadget::setMinimumExpansionDepth( size_t depth )
@@ -381,7 +381,7 @@ void SceneGadget::setRenderer( IECore::InternedString name )
 
 	if( m_controller )
 	{
-		newController->setExpandedPaths( m_controller->getExpandedPaths() );
+		newController->setVisibleSet( m_controller->getVisibleSet() );
 		newController->setMinimumExpansionDepth( m_controller->getMinimumExpansionDepth() );
 	}
 

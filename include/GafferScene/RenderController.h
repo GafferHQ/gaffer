@@ -38,6 +38,7 @@
 #define GAFFERSCENE_RENDERCONTROLLER_H
 
 #include "GafferScene/Export.h"
+#include "GafferScene/VisibleSet.h"
 
 #include "Gaffer/Signals.h"
 
@@ -74,8 +75,8 @@ class GAFFERSCENE_API RenderController : public Gaffer::Signals::Trackable
 		void setContext( const Gaffer::ConstContextPtr &context );
 		const Gaffer::Context *getContext() const;
 
-		void setExpandedPaths( const IECore::PathMatcher &expandedPaths );
-		const IECore::PathMatcher &getExpandedPaths() const;
+		void setVisibleSet( const GafferScene::VisibleSet &visibleSet );
+		const GafferScene::VisibleSet &getVisibleSet() const;
 
 		void setMinimumExpansionDepth( size_t depth );
 		size_t getMinimumExpansionDepth() const;
@@ -150,7 +151,7 @@ class GAFFERSCENE_API RenderController : public Gaffer::Signals::Trackable
 		IECoreScenePreview::RendererPtr m_renderer;
 		std::unique_ptr<IDMap> m_idMap;
 
-		IECore::PathMatcher m_expandedPaths;
+		GafferScene::VisibleSet m_visibleSet;
 		size_t m_minimumExpansionDepth;
 
 		Gaffer::Signals::ScopedConnection m_plugDirtiedConnection;

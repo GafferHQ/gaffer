@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012-2014, Image Engine Design Inc. All rights reserved.
-//  Copyright (c) 2013, John Haddon. All rights reserved.
+//  Copyright (c) 2022, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,62 +34,50 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERSCENE_VISIBLESET_H
+#define GAFFERSCENE_VISIBLESET_H
 
-#include "AttributesBinding.h"
-#include "CoreBinding.h"
-#include "EditScopeAlgoBinding.h"
-#include "FilterBinding.h"
-#include "GlobalsBinding.h"
-#include "HierarchyBinding.h"
-#include "IECoreGLPreviewBinding.h"
-#include "IOBinding.h"
-#include "TweaksBinding.h"
-#include "ObjectProcessorBinding.h"
-#include "OptionsBinding.h"
-#include "PrimitiveSamplerBinding.h"
-#include "PrimitiveVariablesBinding.h"
-#include "PrimitivesBinding.h"
-#include "RenderBinding.h"
-#include "RenderControllerBinding.h"
-#include "SceneAlgoBinding.h"
-#include "ScenePathBinding.h"
-#include "SetAlgoBinding.h"
-#include "ShaderBinding.h"
-#include "TransformBinding.h"
-#include "QueryBinding.h"
-#include "CryptomatteBinding.h"
-#include "VisibleSetBinding.h"
+#include "GafferScene/Export.h"
 
-using namespace boost::python;
-using namespace GafferSceneModule;
+#include "IECore/PathMatcher.h"
 
-BOOST_PYTHON_MODULE( _GafferScene )
+using namespace IECore;
+
+namespace GafferScene
 {
 
-	bindCore();
-	bindFilter();
-	bindTransform();
-	bindGlobals();
-	bindOptions();
-	bindAttributes();
-	bindSceneAlgo();
-	bindSetAlgo();
-	bindPrimitives();
-	bindScenePath();
-	bindShader();
-	bindRender();
-	bindRenderController();
-	bindHierarchy();
-	bindObjectProcessor();
-	bindPrimitiveVariables();
-	bindTweaks();
-	bindIO();
-	bindPrimitiveSampler();
-	bindIECoreGLPreview();
-	bindEditScopeAlgo();
-	bindQueries();
-	bindCryptomatte();
-	bindVisibleSet();
+/// Defines a subset of the scene hierarchy to be rendered.
+/// A location will be rendered if _either_ of the following is true :
+///
+/// 1. All its ancestors appear in `expansions`. This maps neatly to "tree view" style navigation
+/// as provided by the HierarchyView.
+/// 2. At least one of its ancestors appears in `inclusions`. This allows entire subtrees of the
+/// scene to be included concisely, without them cluttering the `expansions` (and therefore the HierarchyView).
+///
+/// Regardless of all the above, a location will _never_ be rendered if it - or any ancestor -
+/// appears in `exclusions`. This allows expensive or irrelevant portions of the scene to be ignored,
+/// regardless of any other setting.
+struct GAFFERSCENE_API VisibleSet
+{
 
-}
+	PathMatcher expansions;
+	PathMatcher inclusions;
+	PathMatcher exclusions;
+
+	/// Returns the result of a match made against the VisibleSet.
+	/// ExactMatch : The location should be rendered.
+	/// DescendantMatch : Some (but not necessarily all) descendants of the location should be rendered (but this location shouldn't be unless ExactMatch is also set).
+	PathMatcher::Result match( const std::vector<InternedString> &path, const size_t minimumExpansionDepth = 0 ) const;
+
+	bool operator == ( const VisibleSet &rhs ) const;
+	bool operator != ( const VisibleSet &rhs ) const;
+
+};
+
+void murmurHashAppend( MurmurHash &h, const VisibleSet &data );
+
+} // namespace GafferScene
+
+#include "GafferScene/VisibleSet.inl"
+
+#endif // GAFFERSCENE_VISIBLESET_H
