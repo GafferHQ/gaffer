@@ -8,6 +8,14 @@ Features
   - Added "Match Display Windows" option to Compare Mode menu. This allows the comparison mode to directly view a low-res render over a high-res plate, providing better performance than scaling up the render using the node graph.
   - The Color Inspector now shows color values for both images when comparing. Picking a color by dragging from the image now selects the composited on-screen color, taking into account  "Compare Mode" and the wipe.
 
+Improvements
+------------
+
+- EditScope Menu :
+  - Changed the order of listed EditScopes to be alphabetical.
+  - Added an icon to menu items that are ancestors of the active EditScope.
+  - Menu items that only have a single item in their sub-menu are now collapsed into the parent item.
+
 Fixes
 -----
 
@@ -24,6 +32,11 @@ Fixes
 - DocumentationAlgo : Fixed handling of raw HTML by `markdownToHTML()`.
 - Reference : Fixed unnecessary serialisation of connections from internal plugs to external plugs. These are serialised in the `.grf` file already, so do not need to be duplicated on the Reference node itself. This bug prevented changes to the internal connections from taking effect when reloading a modified `.grf` file, and could cause load failures when the connections were from an internal Expression (#4935).
 - MeshToLevelSet, LevelSetOffset : Fixed bug that could cause partial results to be returned if a previous operation was cancelled.
+
+API
+---
+
+- MenuDefinition : Added `icon` attribute support to `subMenu` items.
 
 1.1.2.0 (relative to 1.1.1.0)
 =======

@@ -370,6 +370,20 @@
 				"listPrependSmall",
 				"listRemoveSmall",
 			]
+		},
+
+		"menu" : {
+
+			"options" : {
+				"validatePixelAlignment" : True
+			},
+
+			"ids" : [
+				"menuBreadCrumb",
+				"menuChecked",
+				"menuIndicator",
+				"menuIndicatorDisabled",
+			]
 		}
 
 	},
@@ -403,9 +417,6 @@
 		'localDispatcherStatusFailed',
 		'localDispatcherStatusKilled',
 		'localDispatcherStatusRunning',
-		'menuChecked',
-		'menuIndicator',
-		'menuIndicatorDisabled',
 		'minus',
 		'navigationArrow',
 		'nodeSetNodeSelection',
