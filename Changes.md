@@ -22,6 +22,7 @@ Fixes
 - Shader Viewer : Fixed (was broken in 1.1.2.0).
 - Image Viewer :
   - Fixed visual artifact when using a wipe with Replace compare mode on images with mismatched pixel aspect ratios.
+  - Fixed context used to compute the view menu for the image being shown. On the first update, an empty context was being used instead of the script's context.
   - Color Inspector :
     - Corrected half-pixel offset in measured pixel values.
     - Pixel location indicators are no longer affected by the display color transform.
@@ -32,6 +33,7 @@ Fixes
 - DocumentationAlgo : Fixed handling of raw HTML by `markdownToHTML()`.
 - Reference : Fixed unnecessary serialisation of connections from internal plugs to external plugs. These are serialised in the `.grf` file already, so do not need to be duplicated on the Reference node itself. This bug prevented changes to the internal connections from taking effect when reloading a modified `.grf` file, and could cause load failures when the connections were from an internal Expression (#4935).
 - MeshToLevelSet, LevelSetOffset : Fixed bug that could cause partial results to be returned if a previous operation was cancelled.
+- PlugValueWidget : Fixed unnecessary updates when calling `setContext()` with the same context.
 
 API
 ---
@@ -158,7 +160,7 @@ Breaking Changes
 - ImagePlug : Removed unused `viewName` argument from `viewNames()` and `viewNamesHash()` methods.
 - StandardAttributes : Removed backwards compatibility for StandardAttributes nodes saved from Gaffer `0.95.0` (May 2014) and earlier. If necessary, resave affected files using a recent Gaffer version.
 
-1.0.6.x (relative to 1.0.6.1)
+1.0.6.2 (relative to 1.0.6.1)
 =======
 
 Fixes
@@ -168,9 +170,11 @@ Fixes
 - UI :
   - Fixed tooltips containing raw HTML.
   - Fixed stalls caused by Qt repeatedly accessing the same icon files.
+- Viewer : Fixed context used to compute the view menu for the image being shown. On the first update, an empty context was being used instead of the script's context.
 - DocumentationAlgo : Fixed handling of raw HTML by `markdownToHTML()`.
 - Reference : Fixed unnecessary serialisation of connections from internal plugs to external plugs. These are serialised in the `.grf` file already, so do not need to be duplicated on the Reference node itself. This bug prevented changes to the internal connections from taking effect when reloading a modified `.grf` file, and could cause load failures when the connections were from an internal Expression (#4935).
 - MeshToLevelSet, LevelSetOffset : Fixed bug that could cause partial results to be returned if a previous operation was cancelled.
+- PlugValueWidget : Fixed unnecessary updates when calling `setContext()` with the same context.
 
 1.0.6.1 (relative to 1.0.6.0)
 =======
