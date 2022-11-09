@@ -1,9 +1,22 @@
 1.1.x.x (relative to 1.1.2.0)
 =======
 
+Features
+--------
+
+- Image Viewer :
+  - Added "Match Display Windows" option to Compare Mode menu. This allows the comparison mode to directly view a low-res render over a high-res plate, providing better performance than scaling up the render using the node graph.
+  - The Color Inspector now shows color values for both images when comparing. Picking a color by dragging from the image now selects the composited on-screen color, taking into account  "Compare Mode" and the wipe.
+
 Fixes
 -----
 
+- Shader Viewer : Fixed (was broken in 1.1.2.0).
+- Image Viewer :
+  - Fixed visual artifact when using a wipe with Replace compare mode on images with mismatched pixel aspect ratios.
+  - Color Inspector :
+    - Corrected half-pixel offset in measured pixel values.
+    - Pixel location indicators are no longer affected by the display color transform.
 - GraphEditor : Fixed crash when focussing an empty ContextVariables, NameSwitch or Loop node (#4944).
 - UI :
   - Fixed tooltips containing raw HTML.

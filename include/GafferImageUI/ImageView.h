@@ -124,6 +124,8 @@ class GAFFERIMAGEUI_API ImageView : public GafferUI::View
 		const GafferImage::ImagePlug *compareImagePlug() const;
 		Gaffer::StringPlug *compareCatalogueOutputPlug();
 		const Gaffer::StringPlug *compareCatalogueOutputPlug() const;
+		Gaffer::BoolPlug *compareMatchDisplayWindowsPlug();
+		const Gaffer::BoolPlug *compareMatchDisplayWindowsPlug() const;
 
 		/// The gadget responsible for displaying the image.
 		ImageGadget *imageGadget();

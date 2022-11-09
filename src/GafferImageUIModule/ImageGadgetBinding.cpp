@@ -80,6 +80,11 @@ Imath::V2f pixelAt( const ImageGadget &g, const IECore::LineSegment3f &lineInGad
 	return g.pixelAt( lineInGadgetSpace );
 }
 
+Imath::V2f getWipePosition( const ImageGadget &g )
+{
+	return g.getWipePosition();
+}
+
 struct ImageGadgetSlotCaller
 {
 	void operator()( boost::python::object slot, ImageGadgetPtr g )
@@ -116,6 +121,12 @@ void GafferImageUIModule::bindImageGadget()
 		.def( "state", &ImageGadget::state )
 		.def( "stateChangedSignal", &ImageGadget::stateChangedSignal, return_internal_reference<1>() )
 		.def( "pixelAt", &pixelAt )
+		.def( "setWipeEnabled", &ImageGadget::setWipeEnabled )
+		.def( "getWipeEnabled", &ImageGadget::getWipeEnabled )
+		.def( "setWipePosition", &ImageGadget::setWipePosition )
+		.def( "getWipePosition", &getWipePosition )
+		.def( "setWipeAngle", &ImageGadget::setWipeAngle )
+		.def( "getWipeAngle", &ImageGadget::getWipeAngle )
 	;
 
 	enum_<ImageGadget::State>( "State" )
