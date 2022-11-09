@@ -1,3 +1,11 @@
+1.1.x.x (relative to 1.1.3.0)
+=======
+
+Improvements
+------------
+
+- Cycles : Added support for custom attributes with either a `user:` or `render:` prefix. These can be authored in Gaffer and then read at render time using Cycle's attribute shader.
+
 1.1.3.0 (relative to 1.1.2.0)
 =======
 
