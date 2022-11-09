@@ -123,6 +123,9 @@ class Editor( six.with_metaclass( _EditorMetaclass, GafferUI.Widget ) ) :
 	## By default Editors operate in the main context held by the script node. This function
 	# allows an alternative context to be provided, making it possible for an editor to
 	# display itself at a custom frame (or with any other context modification).
+	## \todo To our knowledge, this has never been useful, and synchronising contexts
+	# between Editor/PlugLayout/PlugValueWidget has only been a pain. Consider
+	# removing it.
 	def setContext( self, context ) :
 
 		self.__setContextInternal( context, callUpdate=True )

@@ -160,6 +160,9 @@ class PlugLayout( GafferUI.Widget ) :
 
 		return self.__context
 
+	## \todo To our knowledge, this has never been useful, and synchronising contexts
+	# between Editor/PlugLayout/PlugValueWidget has only been a pain. Consider
+	# removing it.
 	def setContext( self, context ) :
 
 		self.__context = context

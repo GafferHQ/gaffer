@@ -141,6 +141,9 @@ class PlugValueWidget( GafferUI.Widget ) :
 	# for the script the plug belongs to. This function allows an alternative context
 	# to be provided, making it possible to view a plug at a custom frame (or with any
 	# other context modification).
+	## \todo To our knowledge, this has never been useful, and synchronising contexts
+	# between Editor/PlugLayout/PlugValueWidget has only been a pain. Consider
+	# removing it.
 	def setContext( self, context ) :
 
 		assert( isinstance( context, Gaffer.Context ) )
