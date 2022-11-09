@@ -127,6 +127,7 @@ from .AuxiliaryNodeGadgetTest import AuxiliaryNodeGadgetTest
 from .CodeWidgetTest import CodeWidgetTest
 from .PathColumnTest import PathColumnTest
 from .ToolTest import ToolTest
+from .StandardNodeToolbarTest import StandardNodeToolbarTest
 
 if __name__ == "__main__":
 	unittest.main()

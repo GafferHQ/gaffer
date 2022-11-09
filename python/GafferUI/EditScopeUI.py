@@ -35,6 +35,8 @@
 ##########################################################################
 
 import functools
+from collections import deque
+from collections import OrderedDict
 
 import imath
 
@@ -176,6 +178,56 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.getPlug().setInput( editScope["out"] )
 
+	def __buildMenu( self, result, path, currentEditScope ) :
+
+		result = IECore.MenuDefinition()
+
+		for childPath in path.children() :
+			itemName = childPath[-1]
+
+			if childPath.isLeaf() :
+				editScope = childPath.property( "dict:value" )
+			else :
+				singlesStack = deque( [ childPath ] )
+				while singlesStack :
+					childPath = singlesStack.popleft()
+					children = childPath.children()
+					if len( children ) == 1 :
+						itemName += "." + children[0][-1]
+						if children[0].isLeaf() :
+							childPath = children[0]
+							editScope = children[0].property( "dict:value" )
+						else :
+							singlesStack.extend( [ children[0] ] )
+
+			if currentEditScope is not None :
+				# Ignore the first entry, which is the menu category
+				node = currentEditScope.scriptNode().descendant( ".".join( childPath[1:] ) )
+				icon = "menuBreadCrumb.png" if node.isAncestorOf( currentEditScope ) else None
+			else :
+				icon = None
+
+			if childPath.isLeaf() :
+				result.append(
+					itemName,
+					{
+						"command" : functools.partial( Gaffer.WeakMethod( self.__connectEditScope ), editScope ),
+						"active" : path[0] != "Downstream",
+						"label" : itemName,
+						"checkBox" : editScope == currentEditScope,
+					}
+				)
+			else :
+				result.append(
+					itemName,
+					{
+						"subMenu" : functools.partial( Gaffer.WeakMethod( self.__buildMenu ), result, childPath, currentEditScope ),
+						"icon" : icon
+					}
+				)
+
+		return result
+
 	def __menuDefinition( self ) :
 
 		result = IECore.MenuDefinition()
@@ -195,40 +247,58 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 		if self.getPlug().getInput() is not None :
 			currentEditScope = self.getPlug().getInput().parent()
 
-		def addItem( editScope, enabled = True ) :
-
-			result.append(
-				# The underscore suffix prevents collisions with a node and
-				# it's submenu if it has nested edit scopes.
-				"/%s_" % editScope.relativeName( editScope.scriptNode() ).replace( ".", "/" ),
-				{
-					"command" : functools.partial( Gaffer.WeakMethod( self.__connectEditScope ), editScope ),
-					"active" : enabled,
-					"label" : editScope.getName(),
-					"checkBox" : editScope == currentEditScope,
-				}
-			)
-
 		if node is not None :
 			upstream = Gaffer.NodeAlgo.findAllUpstream( node, self.__editScopePredicate )
 			if self.__editScopePredicate( node ) :
 				upstream.insert( 0, node )
+
+			downstream = Gaffer.NodeAlgo.findAllDownstream( node, self.__editScopePredicate )
 		else :
 			upstream = []
+			downstream = []
 
-		result.append( "/__UpstreamDivider__", { "divider" : True, "label" : "Upstream" } )
+		# Each child of the root will get its own section in the menu
+		# if it has children. The section will be preceded by a divider
+		# with its name in the divider label.
+
+		menuHierarchy = OrderedDict()
+
+		def addToMenuHierarchy( editScope, root ) :
+			ancestorNodes = []
+			currentNode = editScope
+			while currentNode.parent() != editScope.scriptNode() :
+				currentNode = currentNode.parent()
+				ancestorNodes.append( currentNode )
+
+			ancestorNodes.reverse()
+
+			currentNode = menuHierarchy.setdefault( root, {} )
+			for n in ancestorNodes :
+				currentNode = currentNode.setdefault( n.getName(), {} )
+			currentNode[editScope.getName()] = editScope
+
 		if upstream :
-			for editScope in reversed( upstream ) :
-				addItem( editScope )
-		else :
-			result.append( "/None Available", { "active" : False } )
+			for editScope in sorted( upstream, key = lambda e : e.relativeName( e.scriptNode() ) ) :
+				addToMenuHierarchy( editScope, "Upstream" )
 
-		if node is not None :
-			downstream = Gaffer.NodeAlgo.findAllDownstream( node, self.__editScopePredicate )
-			if downstream :
-				result.append( "/__DownstreamDivider__", { "divider" : True, "label" : "Downstream" } )
-				for editScope in downstream :
-					addItem( editScope, enabled = False )
+		if downstream :
+			for editScope in sorted( downstream, key = lambda e : e.relativeName( e.scriptNode() ) ) :
+				addToMenuHierarchy( editScope, "Downstream" )
+
+		menuPath = Gaffer.DictPath( menuHierarchy, "/" )
+
+		for category in menuPath.children() :
+
+			if len( category.children() ) == 0 :
+				continue
+
+			result.append(
+				"/__{}Divider__".format( category[-1] ),
+				{ "divider" : True, "label" : category[-1] }
+			)
+
+			result.update( self.__buildMenu( result, category, currentEditScope ) )
+
 
 		result.append( "/__NoneDivider__", { "divider" : True } )
 		result.append(

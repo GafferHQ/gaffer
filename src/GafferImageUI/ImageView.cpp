@@ -140,6 +140,23 @@ void renderFilledCircle2D( const Style *style, V2f center, V2f radius, const Col
 	glEnd();
 }
 
+float pixelAspectFromImageGadget( const ImageGadget *imageGadget )
+{
+	// We want to grab the cached version of imageGadget->format(), but it's not exposed publicly, so we
+	// get it from pixelAt.
+	// In the future, it would be better if format() was public and we didn't have to worry about it
+	// throwing.
+	try
+	{
+		return 1.0f / imageGadget->pixelAt( LineSegment3f( V3f( 1, 0, 0 ), V3f( 1, 0, 1 ) ) ).x;
+	}
+	catch( ... )
+	{
+		// Not worried about rendering correctly for images which can't be evaluated properly
+		return 1.0f;
+	}
+}
+
 class Box2iGadget : public GafferUI::Gadget
 {
 
@@ -187,7 +204,7 @@ class Box2iGadget : public GafferUI::Gadget
 
 		void renderLayer( Layer layer, const Style *style, RenderReason reason ) const override
 		{
-			if( layer != Layer::Main )
+			if( layer != Layer::Front )
 			{
 				return;
 			}
@@ -276,7 +293,7 @@ class Box2iGadget : public GafferUI::Gadget
 
 		unsigned layerMask() const override
 		{
-			return (unsigned)Layer::Main;
+			return (unsigned)Layer::Front;
 		}
 
 		Imath::Box3f renderBound() const override
@@ -470,19 +487,7 @@ class Box2iGadget : public GafferUI::Gadget
 
 			const ImageGadget *imageGadget = static_cast<const ImageGadget *>( viewportGadget->getPrimaryChild() );
 
-			// We want to grab the cached version of imageGadget->format(), but it's not exposed publicly, so we
-			// get it from pixelAt.
-			// In the future, it would be better if format() was public and we didn't have to worry about it
-			// throwing.
-			float pixelAspect = 1.0f;
-			try
-			{
-				pixelAspect = 1.0f / imageGadget->pixelAt( LineSegment3f( V3f( 1, 0, 0 ), V3f( 1, 0, 1 ) ) ).x;
-			}
-			catch( ... )
-			{
-				// Not worried about rendering correctly for images which can't be evaluated properly
-			}
+			float pixelAspect = pixelAspectFromImageGadget( imageGadget );
 
 			if( pixelAspectOut )
 			{
@@ -603,7 +608,7 @@ class V2iGadget : public GafferUI::Gadget
 
 		void renderLayer( Layer layer, const Style *style, RenderReason reason ) const override
 		{
-			if( layer != Layer::Main )
+			if( layer != Layer::Front )
 			{
 				return;
 			}
@@ -670,7 +675,7 @@ class V2iGadget : public GafferUI::Gadget
 
 		unsigned layerMask() const override
 		{
-			return (unsigned)Layer::Main;
+			return (unsigned)Layer::Front;
 		}
 
 		Imath::Box3f renderBound() const override
@@ -1265,11 +1270,11 @@ class ImageView::ColorInspector : public Signals::Trackable
 		{
 			// ---- Create a plug on ImageView which will be used for evaluating colorInspectors
 
-			PlugPtr plug = new Plug( "colorInspector" );
-			view->addChild( plug );
+			PlugPtr colorInspectorPlug = new Plug( "colorInspector" );
+			view->addChild( colorInspectorPlug );
 
 			PlugPtr evaluatorPlug = new Plug( "evaluator" );
-			plug->addChild( evaluatorPlug );
+			colorInspectorPlug->addChild( evaluatorPlug );
 			evaluatorPlug->addChild( new Color4fPlug( "pixelColor" ) );
 			evaluatorPlug->addChild( new Color4fPlug( "areaColor" ) );
 
@@ -1279,8 +1284,8 @@ class ImageView::ColorInspector : public Signals::Trackable
 			// would cause cancellation of the ImageView background compute every
 			// time the mouse was moved. The "colorInspector:source" variable is
 			// created in ImageViewUI's `_ColorInspectorPlugValueWidget`.
-			V2iPlugPtr v2iTemplate = new Gaffer::V2iPlug( "v2iTemplate" );
-			m_contextQuery->addQuery( v2iTemplate.get(), "colorInspector:source" );
+			V2fPlugPtr v2fTemplate = new Gaffer::V2fPlug( "v2fTemplate" );
+			m_contextQuery->addQuery( v2fTemplate.get(), "colorInspector:source" );
 
 			// The same thing, but when we need an area to evaluate areaColor
 			// instead of a pixel to evaluate pixelColor
@@ -1317,7 +1322,7 @@ class ImageView::ColorInspector : public Signals::Trackable
 
 
 			// ---- Create a plug on ImageView for storing colorInspectors
-			plug->addChild( new ArrayPlug( "inspectors", Plug::In, new ColorInspectorPlug(), 1, 1024, Plug::Default & ~Plug::AcceptsInputs ) );
+			colorInspectorPlug->addChild( new ArrayPlug( "inspectors", Plug::In, new ColorInspectorPlug(), 1, 1024, Plug::Default & ~Plug::AcceptsInputs ) );
 			colorInspectorsPlug()->childAddedSignal().connect( boost::bind( &ColorInspector::colorInspectorAdded, this, ::_2 ) );
 			colorInspectorsPlug()->childRemovedSignal().connect( boost::bind( &ColorInspector::colorInspectorRemoved, this, ::_2 ) );
 
@@ -1459,6 +1464,7 @@ ImageView::ImageView( const std::string &name )
 	PlugPtr compareParent = new Plug( "compare" );
 	addChild( compareParent );
 	compareParent->addChild( new StringPlug( "mode", Plug::In, "", Plug::Default & ~Plug::AcceptsInputs ) );
+	compareParent->addChild( new BoolPlug( "matchDisplayWindows", Plug::In ) );
 	compareParent->addChild( new BoolPlug( "wipe", Plug::In, true, Plug::Default & ~Plug::AcceptsInputs ) );
 	compareParent->addChild( new ImagePlug( "image", Plug::In ) );
 	compareParent->addChild( new StringPlug( "catalogueOutput", Plug::In, "output:1", Plug::Default & ~Plug::AcceptsInputs ) );
@@ -1576,7 +1582,7 @@ ImageView::ImageView( const std::string &name )
 	m_imageGadgets[0]->setImage( preprocessedInPlug<ImagePlug>() );
 	m_imageGadgets[0]->setContext( getContext() );
 
-	m_comparisonSelect = new Gaffer::ContextVariables();
+	m_comparisonSelect = new Gaffer::ContextVariables( "__comparisonSelect" );
 	addChild( m_comparisonSelect );
 	m_comparisonSelect->setup( compareImagePlug() );
 	m_comparisonSelect->inPlug()->setInput( preprocessedInPlug<ImagePlug>() );
@@ -1750,6 +1756,16 @@ Gaffer::StringPlug *ImageView::compareModePlug()
 const Gaffer::StringPlug *ImageView::compareModePlug() const
 {
 	return getChild<Plug>( "compare" )->getChild<StringPlug>( "mode" );
+}
+
+Gaffer::BoolPlug *ImageView::compareMatchDisplayWindowsPlug()
+{
+	return getChild<Plug>( "compare" )->getChild<BoolPlug>( "matchDisplayWindows" );
+}
+
+const Gaffer::BoolPlug *ImageView::compareMatchDisplayWindowsPlug() const
+{
+	return getChild<Plug>( "compare" )->getChild<BoolPlug>( "matchDisplayWindows" );
 }
 
 Gaffer::BoolPlug *ImageView::compareWipePlug()
@@ -2022,15 +2038,40 @@ void ImageView::preRender()
 		viewportGadget()->setPostProcessShader( m_displayTransformAndShader->shader );
 	}
 
+	V3f comparisonScale( 1.0f );
+	V3f comparisonTranslate( 0.0f );
+	if( compareMatchDisplayWindowsPlug()->getValue() )
+	{
+		Imath::Box3f mainBound = m_imageGadgets[0]->bound();
+		Imath::Box3f compareBound = m_imageGadgets[1]->bound();
+		float s = mainBound.size().x / compareBound.size().x;
+		comparisonScale = V3f( s, s, 1.0f );
+		comparisonTranslate = mainBound.center() - compareBound.center() * comparisonScale;
+		Imath::M44f m;
+		m.translate( comparisonTranslate );
+		m.scale( comparisonScale );
+		m_imageGadgets[1]->setTransform( m );
+	}
+	else
+	{
+		m_imageGadgets[1]->setTransform( Imath::M44f() );
+	}
+
+	V2f scale0( 1.0f / pixelAspectFromImageGadget( m_imageGadgets[0].get() ), 1.0f );
 	m_imageGadgets[0]->setWipeEnabled( m_wipeHandle->getVisible() );
-	m_imageGadgets[0]->setWipePosition( m_wipeHandle->getPosition() );
-	float angle = atan2f( m_wipeHandle->getDirection()[1], m_wipeHandle->getDirection()[0] ) * 180.0f / M_PI;
-	m_imageGadgets[0]->setWipeAngle( angle );
+	m_imageGadgets[0]->setWipePosition( m_wipeHandle->getPosition() * scale0 );
+	m_imageGadgets[0]->setWipeAngle(
+		atan2f( m_wipeHandle->getDirection()[1] * scale0.x, m_wipeHandle->getDirection()[0] * scale0.y ) * 180.0f / M_PI
+	);
+
 	if( m_wipeHandle->getVisible() && m_imageGadgets[0]->getBlendMode() == ImageGadget::BlendMode::Replace )
 	{
+		V2f scale1( 1.0f / ( comparisonScale.x * pixelAspectFromImageGadget( m_imageGadgets[1].get() ) ), 1.0f / comparisonScale.y );
 		m_imageGadgets[1]->setWipeEnabled( true );
-		m_imageGadgets[1]->setWipePosition( m_wipeHandle->getPosition() );
-		m_imageGadgets[1]->setWipeAngle( angle + 180.0f );
+		m_imageGadgets[1]->setWipePosition( ( m_wipeHandle->getPosition() - V2f( comparisonTranslate.x, comparisonTranslate.y ) ) * scale1 );
+		m_imageGadgets[1]->setWipeAngle(
+			atan2f( -m_wipeHandle->getDirection()[1] * scale1.x, -m_wipeHandle->getDirection()[0] * scale1.y ) * 180.0f / M_PI
+		);
 	}
 	else
 	{

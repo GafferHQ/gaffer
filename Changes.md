@@ -51,12 +51,34 @@ Breaking Changes
 - ContextAlgo : Removed use of the `ui:scene:expandedPaths` context variable. Any code directly accessing `ui:scene:expandedPaths` should instead use the `getExpandedPaths()/setExpandedPaths()/expand()/expandDescendants()` methods provided by `ContextAlgo`.
 - SceneGadget : Removed `setExpandedPaths()` and `getExpandedPaths()` methods. `setVisibleSet()` and `getVisibleSet()` are now used instead.
 
-1.1.x.x (relative to 1.1.2.0)
+1.1.3.0 (relative to 1.1.2.0)
 =======
+
+Features
+--------
+
+- Image Viewer :
+  - Added "Match Display Windows" option to Compare Mode menu. This allows the comparison mode to directly view a low-res render over a high-res plate, providing better performance than scaling up the render using the node graph.
+  - The Color Inspector now shows color values for both images when comparing. Picking a color by dragging from the image now selects the composited on-screen color, taking into account  "Compare Mode" and the wipe.
+
+Improvements
+------------
+
+- EditScope Menu :
+  - Changed the order of listed EditScopes to be alphabetical.
+  - Added an icon to menu items that are ancestors of the active EditScope.
+  - Menu items that only have a single item in their sub-menu are now collapsed into the parent item.
 
 Fixes
 -----
 
+- Shader Viewer : Fixed (was broken in 1.1.2.0).
+- Image Viewer :
+  - Fixed visual artifact when using a wipe with Replace compare mode on images with mismatched pixel aspect ratios.
+  - Fixed context used to compute the view menu for the image being shown. On the first update, an empty context was being used instead of the script's context.
+  - Color Inspector :
+    - Corrected half-pixel offset in measured pixel values.
+    - Pixel location indicators are no longer affected by the display color transform.
 - GraphEditor : Fixed crash when focussing an empty ContextVariables, NameSwitch or Loop node (#4944).
 - UI :
   - Fixed tooltips containing raw HTML.
@@ -64,6 +86,12 @@ Fixes
 - DocumentationAlgo : Fixed handling of raw HTML by `markdownToHTML()`.
 - Reference : Fixed unnecessary serialisation of connections from internal plugs to external plugs. These are serialised in the `.grf` file already, so do not need to be duplicated on the Reference node itself. This bug prevented changes to the internal connections from taking effect when reloading a modified `.grf` file, and could cause load failures when the connections were from an internal Expression (#4935).
 - MeshToLevelSet, LevelSetOffset : Fixed bug that could cause partial results to be returned if a previous operation was cancelled.
+- PlugValueWidget : Fixed unnecessary updates when calling `setContext()` with the same context.
+
+API
+---
+
+- MenuDefinition : Added `icon` attribute support to `subMenu` items.
 
 1.1.2.0 (relative to 1.1.1.0)
 =======
@@ -186,7 +214,7 @@ Breaking Changes
 - ImagePlug : Removed unused `viewName` argument from `viewNames()` and `viewNamesHash()` methods.
 - StandardAttributes : Removed backwards compatibility for StandardAttributes nodes saved from Gaffer `0.95.0` (May 2014) and earlier. If necessary, resave affected files using a recent Gaffer version.
 
-1.0.6.x (relative to 1.0.6.1)
+1.0.6.2 (relative to 1.0.6.1)
 =======
 
 Fixes
@@ -196,9 +224,11 @@ Fixes
 - UI :
   - Fixed tooltips containing raw HTML.
   - Fixed stalls caused by Qt repeatedly accessing the same icon files.
+- Viewer : Fixed context used to compute the view menu for the image being shown. On the first update, an empty context was being used instead of the script's context.
 - DocumentationAlgo : Fixed handling of raw HTML by `markdownToHTML()`.
 - Reference : Fixed unnecessary serialisation of connections from internal plugs to external plugs. These are serialised in the `.grf` file already, so do not need to be duplicated on the Reference node itself. This bug prevented changes to the internal connections from taking effect when reloading a modified `.grf` file, and could cause load failures when the connections were from an internal Expression (#4935).
 - MeshToLevelSet, LevelSetOffset : Fixed bug that could cause partial results to be returned if a previous operation was cancelled.
+- PlugValueWidget : Fixed unnecessary updates when calling `setContext()` with the same context.
 
 1.0.6.1 (relative to 1.0.6.0)
 =======

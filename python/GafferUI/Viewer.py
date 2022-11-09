@@ -329,8 +329,6 @@ class _Toolbar( GafferUI.Frame ) :
 		self.__node = node
 		if self.__node is not None :
 			toolbar = self.__nodeToolbarCache.get( ( self.__node, self.__edge ) )
-			if toolbar is not None :
-				toolbar.setContext( self.__context )
 			self.setChild( toolbar )
 		else :
 			self.setChild( None )
