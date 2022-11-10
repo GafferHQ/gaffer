@@ -303,5 +303,46 @@ class SetQueryTest( GafferSceneTest.SceneTestCase ) :
 			IECore.StringData( "asset9" )
 		)
 
+	def testAsSpreadsheetSelector( self ) :
+
+		plane = GafferScene.Plane()
+		plane["sets"].setValue( "A" )
+
+		sphere = GafferScene.Sphere()
+		sphere["sets"].setValue( "B" )
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( plane["out"] )
+		group["in"][1].setInput( sphere["out"] )
+
+		childrenFilter = GafferScene.PathFilter()
+		childrenFilter["paths"].setValue( IECore.StringVectorData( [ "/group/*" ] ) )
+
+		attributes = GafferScene.StandardAttributes()
+		attributes["in"].setInput( group["out"] )
+		attributes["filter"].setInput( childrenFilter["out"] )
+		attributes["attributes"]["displayColor"]["enabled"].setValue( True )
+
+		setQuery = GafferScene.SetQuery()
+		setQuery["scene"].setInput( group["out"] )
+		setQuery["location"].setValue( "${scene:path}" )
+
+		spreadsheet = Gaffer.Spreadsheet()
+		spreadsheet["selector"].setInput( setQuery["firstMatch"] )
+		spreadsheet["rows"].addColumn( attributes["attributes"]["displayColor"]["value"], name = "displayColor" )
+		attributes["attributes"]["displayColor"]["value"].setInput( spreadsheet["out"]["displayColor"] )
+
+		rowA = spreadsheet["rows"].addRow()
+		rowB = spreadsheet["rows"].addRow()
+		rowA["name"].setValue( "A" )
+		rowA["cells"]["displayColor"]["value"].setValue( imath.Color3f( 1, 0, 0 ) )
+		rowB["name"].setValue( "B" )
+		rowB["cells"]["displayColor"]["value"].setValue( imath.Color3f( 0, 1, 0 ) )
+
+		setQuery["sets"].setInput( spreadsheet["enabledRowNames"] )
+
+		self.assertEqual( attributes["out"].attributes( "/group/plane" )["render:displayColor"].value, imath.Color3f( 1, 0, 0 ) )
+		self.assertEqual( attributes["out"].attributes( "/group/sphere" )["render:displayColor"].value, imath.Color3f( 0, 1, 0 ) )
+
 if __name__ == "__main__":
 	unittest.main()
