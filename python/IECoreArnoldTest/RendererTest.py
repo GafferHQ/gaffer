@@ -1261,6 +1261,27 @@ class RendererTest( GafferTest.TestCase ) :
 			)
 		)
 
+		r.object(
+			"planeInterned",
+			plane,
+			r.attributes(
+				IECore.CompoundObject( {
+					"ai:sss_setname" : IECore.InternedStringData( "testInternedSet" ),
+				} )
+			)
+		)
+
+		r.object(
+			"planeEmpty",
+			plane,
+			r.attributes(
+				IECore.CompoundObject( {
+					"ai:sss_setname" : IECore.StringData( "" ),
+				} )
+			)
+		)
+
+
 		r.render()
 		del r
 
@@ -1269,6 +1290,10 @@ class RendererTest( GafferTest.TestCase ) :
 			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
 			node = arnold.AiNodeLookUpByName( universe, "plane" )
 			self.assertEqual( arnold.AiNodeGetStr( node, "sss_setname" ), "testSet" )
+			node = arnold.AiNodeLookUpByName( universe, "planeInterned" )
+			self.assertEqual( arnold.AiNodeGetStr( node, "sss_setname" ), "testInternedSet" )
+			node = arnold.AiNodeLookUpByName( universe, "planeEmpty" )
+			self.assertIsNone( arnold.AiNodeLookUpUserParameter( node, "sss_setname" ) )
 
 	def testCustomAttributes( self ) :
 
