@@ -325,6 +325,7 @@ const AtString g_pixelAspectRatioArnoldString( "pixel_aspect_ratio" );
 const AtString g_pluginSearchPathArnoldString( "plugin_searchpath" );
 const AtString g_polymeshArnoldString("polymesh");
 const AtString g_rasterArnoldString( "raster" );
+const AtString g_rotateAboutCenterArnoldString( "rotate_about_center" );
 const AtString g_receiveShadowsArnoldString( "receive_shadows" );
 const AtString g_referenceTimeString( "reference_time" );
 const AtString g_regionMinXArnoldString( "region_min_x" );
@@ -1036,7 +1037,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			substituteShaderIfNecessary( m_lightFilterShader, attributes );
 
 			m_traceSets = attribute<IECore::InternedStringVectorData>( g_setsAttributeName, attributes );
-			m_transformType = attribute<IECore::StringData>( g_transformTypeAttributeName, attributes );
+			m_transformType = stringAttribute( g_transformTypeAttributeName, attributes, g_rotateAboutCenterArnoldString );
 			m_automaticInstancing = attributeValue<bool>( g_automaticInstancingAttributeName, attributes, true );
 			m_stepSize = attributeValue<float>( g_shapeVolumeStepSizeAttributeName, attributes, 0.0f );
 			m_stepScale = attributeValue<float>( g_shapeVolumeStepScaleAttributeName, attributes, 1.0f );
@@ -1307,18 +1308,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			{
 				AiNodeSetByte( node, g_visibilityArnoldString, m_visibility );
 				AiNodeSetByte( node, g_sidednessArnoldString, m_sidedness );
-
-				if( m_transformType )
-				{
-					// \todo : Arnold quite explicitly discourages constructing AtStrings repeatedly,
-					// but given the need to pass m_transformType around as a string for consistency
-					// reasons, it seems like there's not much else we can do here.
-					// If we start reusing ArnoldAttributes for multiple locations with identical attributes,
-					// it could be worth caching this, or possibly in the future we could come up with
-					// some way of cleanly exposing enum values as something other than strings.
-					AiNodeSetStr( node, g_transformTypeArnoldString, AtString( m_transformType->readable().c_str() ) );
-				}
-
+				AiNodeSetStr( node, g_transformTypeArnoldString, m_transformType );
 				AiNodeSetBool( node, g_receiveShadowsArnoldString, m_shadingFlags & ArnoldAttributes::ReceiveShadows );
 				AiNodeSetBool( node, g_selfShadowsArnoldString, m_shadingFlags & ArnoldAttributes::SelfShadows );
 				AiNodeSetBool( node, g_opaqueArnoldString, m_shadingFlags & ArnoldAttributes::Opaque );
@@ -1888,7 +1878,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				s->hash( h );
 			}
 			hashOptional( m_traceSets.get(), h );
-			hashOptional( m_transformType.get(), h );
+			h.append( m_transformType.c_str() );
 			h.append( m_stepSize );
 			h.append( m_stepScale );
 			h.append( m_volumePadding );
@@ -1911,7 +1901,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		IECoreScene::ConstShaderNetworkPtr m_lightFilterShader;
 		std::vector<ArnoldShaderPtr> m_lightFilterShaders;
 		IECore::ConstInternedStringVectorDataPtr m_traceSets;
-		IECore::ConstStringDataPtr m_transformType;
+		AtString m_transformType;
 		bool m_automaticInstancing;
 		float m_stepSize;
 		float m_stepScale;

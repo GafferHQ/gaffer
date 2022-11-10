@@ -1176,22 +1176,20 @@ class RendererTest( GafferTest.TestCase ) :
 
 		plane = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) )
 
-		r.object(
-			"planeDefault",
-			plane,
-			r.attributes( IECore.CompoundObject() )
-		)
-		r.object(
-			"planeLinear",
-			plane,
-			r.attributes(
-				IECore.CompoundObject( {
-					"ai:transform_type" : IECore.StringData( "linear" ),
-				} )
-			)
+		defaultAttributes = r.attributes( IECore.CompoundObject() )
+		linearAttributes = r.attributes(
+			IECore.CompoundObject( {
+				"ai:transform_type" : IECore.StringData( "linear" ),
+			} )
 		)
 
+		r.object( "planeDefault", plane, defaultAttributes )
+		r.object( "planeLinear", plane, linearAttributes )
+		p = r.object( "planeLinearThenDefault", plane, linearAttributes )
+		p.attributes( defaultAttributes )
+
 		r.render()
+		del defaultAttributes, linearAttributes, p
 		del r
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
@@ -1199,8 +1197,10 @@ class RendererTest( GafferTest.TestCase ) :
 			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
 			defaultNode = arnold.AiNodeLookUpByName( universe, "planeDefault" )
 			linearNode = arnold.AiNodeLookUpByName( universe, "planeLinear" )
+			linearThenDefaultNode = arnold.AiNodeLookUpByName( universe, "planeLinearThenDefault" )
 			self.assertEqual( arnold.AiNodeGetStr( defaultNode, "transform_type" ), "rotate_about_center" )
 			self.assertEqual( arnold.AiNodeGetStr( linearNode, "transform_type" ), "linear" )
+			self.assertEqual( arnold.AiNodeGetStr( linearThenDefaultNode, "transform_type" ), "rotate_about_center" )
 
 	def testSubdivisionAttributes( self ) :
 
