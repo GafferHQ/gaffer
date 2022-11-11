@@ -6,6 +6,11 @@ Improvements
 
 - Cycles : Added support for custom attributes with either a `user:` or `render:` prefix. These can be authored in Gaffer and then read at render time using Cycle's attribute shader.
 
+Fixes
+-----
+
+- Image Viewer : Fixed dragging a color from the image view using a context with the wrong time, and an error that could show up when deleting the currently viewed image.
+
 1.1.3.0 (relative to 1.1.2.0)
 =======
 
