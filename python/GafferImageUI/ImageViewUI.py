@@ -673,12 +673,12 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		inputImagePlug = self.getPlug().node()["in"].getInput()
 
+		sources = self.__getSampleSources( self.getPlug()["mode"].getValue() )
+
 		if not inputImagePlug:
 			# This can happen when the source is deleted - can't get pixel values if there's no input image
 			self.__updateLabels( sources, [ imath.Color4f( 0 ) ] * 2 )
 			return
-
-		sources = self.__getSampleSources( self.getPlug()["mode"].getValue() )
 
 		with inputImagePlug.node().scriptNode().context() :
 			self.__updateInBackground( sources )
@@ -854,7 +854,10 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 
 		sources = self.__getSampleSources( GafferImageUI.ImageView.ColorInspectorPlug.Mode.Cursor )
-		colors = self.__evaluateColors( sources )
+
+		inputImagePlug = self.getPlug().node()["in"].getInput()
+		with inputImagePlug.node().scriptNode().context() :
+			colors = self.__evaluateColors( sources )
 
 		ig = viewportGadget.getPrimaryChild()
 		wipeAngle = ig.getWipeAngle() * math.pi / 180.0
