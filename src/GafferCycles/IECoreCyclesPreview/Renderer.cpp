@@ -1809,6 +1809,7 @@ class LightCache : public IECore::RefCounted
 		{
 			ccl::Light *light = new ccl::Light();
 			light->name = nodeName.c_str();
+			light->set_owner( m_scene );
 			light->tag_update( m_scene );
 			auto clight = SharedCLightPtr( light, nullNodeDeleter );
 
@@ -3705,6 +3706,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			{
 				m_scene->film->copy_value(socketType, m_film, *m_film.type->find_input( socketType.name ) );
 			}
+
+			m_scene->background->set_shader( m_scene->default_background );
 
 			m_scene->shader_manager->tag_update( m_scene, ccl::ShaderManager::UPDATE_ALL );
 			m_scene->integrator->tag_update( m_scene, ccl::Integrator::UPDATE_ALL );
