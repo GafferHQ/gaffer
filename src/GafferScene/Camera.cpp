@@ -40,7 +40,6 @@
 #include "Gaffer/StringPlug.h"
 
 #include "IECoreScene/Camera.h"
-#include "IECoreScene/Transform.h"
 
 #include "IECore/AngleConversion.h"
 

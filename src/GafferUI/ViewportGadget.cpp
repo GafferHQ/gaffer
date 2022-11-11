@@ -46,8 +46,6 @@
 #include "IECoreGL/State.h"
 #include "IECoreGL/ToGLCameraConverter.h"
 
-#include "IECoreScene/Transform.h"
-
 #include "IECore/AngleConversion.h"
 #include "IECore/MessageHandler.h"
 #include "IECore/NullObject.h"

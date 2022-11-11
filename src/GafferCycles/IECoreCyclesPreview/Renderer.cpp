@@ -50,7 +50,6 @@
 #include "IECoreScene/MeshPrimitive.h"
 #include "IECoreScene/Shader.h"
 #include "IECoreScene/SpherePrimitive.h"
-#include "IECoreScene/Transform.h"
 
 #include "IECore/CompoundParameter.h"
 #include "IECore/LRUCache.h"

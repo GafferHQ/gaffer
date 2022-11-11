@@ -42,7 +42,6 @@
 #include "IECoreScene/Camera.h"
 #include "IECoreScene/Shader.h"
 #include "IECoreScene/ShaderNetwork.h"
-#include "IECoreScene/Transform.h"
 
 #include "IECore/CompoundData.h"
 #include "IECore/Export.h"

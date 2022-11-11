@@ -59,7 +59,6 @@
 #include "IECoreScene/Camera.h"
 #include "IECoreScene/ClippingPlane.h"
 #include "IECoreScene/CoordinateSystem.h"
-#include "IECoreScene/MatrixMotionTransform.h"
 #include "IECoreScene/VisibleRenderable.h"
 
 #include "IECore/MessageHandler.h"
