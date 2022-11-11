@@ -36,6 +36,7 @@
 ##########################################################################
 
 import os
+import pathlib
 import inspect
 import unittest
 
@@ -212,7 +213,7 @@ class StringPlugTest( GafferTest.TestCase ) :
 	def testLoadSubstitutionsVersion0_56( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["fileName"].setValue( os.path.join( os.path.dirname( __file__ ), "scripts", "stringPlugSubstitutions-0.56.0.0.gfr" ) )
+		s["fileName"].setValue( ( pathlib.Path( __file__ ).parent / "scripts" / "stringPlugSubstitutions-0.56.0.0.gfr" ).as_posix() )
 		s.load()
 
 		self.assertEqual( s["n"]["user"]["p"].substitutions(), IECore.StringAlgo.Substitutions.AllSubstitutions & ~IECore.StringAlgo.Substitutions.FrameSubstitutions )
@@ -220,7 +221,7 @@ class StringPlugTest( GafferTest.TestCase ) :
 	def testLoadSubstitutionsVersion0_55( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["fileName"].setValue( os.path.join( os.path.dirname( __file__ ), "scripts", "stringPlugSubstitutions-0.55.4.0.gfr" ) )
+		s["fileName"].setValue( ( pathlib.Path( __file__ ).parent / "scripts" / "stringPlugSubstitutions-0.55.4.0.gfr" ).as_posix() )
 		s.load()
 
 		self.assertEqual( s["n"]["user"]["p"].substitutions(), IECore.StringAlgo.Substitutions.AllSubstitutions & ~IECore.StringAlgo.Substitutions.FrameSubstitutions )

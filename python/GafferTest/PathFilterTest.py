@@ -50,28 +50,28 @@ class PathFilterTest( GafferTest.TestCase ) :
 
 		GafferTest.TestCase.setUp( self )
 
-		open( os.path.join( self.temporaryDirectory(), "a" ), "w" )
-		open( os.path.join( self.temporaryDirectory(), "b.txt" ), "w" )
+		open( self.temporaryDirectory() / "a", "w" )
+		open( self.temporaryDirectory() / "b.txt", "w" )
 
 	def test( self ) :
 
 		# First, check that we have a mix of extensions in
 		# our test directory. Otherwise we can't test anything.
 
-		self.assertTrue( len( glob.glob( os.path.join( self.temporaryDirectory(), "*" ) ) ) != len( glob.glob( os.path.join( self.temporaryDirectory(), "*.txt" ) ) ) )
+		self.assertTrue( len( list( self.temporaryDirectory().glob( "*" ) ) ) != len( list( self.temporaryDirectory().glob( "*.txt" ) ) ) )
 
 		# Check that an unfiltered path can see all the files
 
-		path = Gaffer.FileSystemPath( self.temporaryDirectory() )
+		path = Gaffer.FileSystemPath( self.temporaryDirectory().as_posix() )
 		children = path.children()
-		self.assertEqual( len( children ), len( glob.glob( os.path.join( self.temporaryDirectory(), "*" ) ) ) )
+		self.assertEqual( len( children ), len( list( self.temporaryDirectory().glob( "*" ) ) ) )
 
 		# Attach a filter, and check that the files are filtered
 		txtFilter = Gaffer.FileNamePathFilter( [ "*.txt" ] )
 		path.setFilter( txtFilter )
 
 		children = path.children()
-		self.assertEqual( len( children ), len( glob.glob( os.path.join( self.temporaryDirectory(), "*.txt" ) ) ) )
+		self.assertEqual( len( children ), len( list( self.temporaryDirectory().glob( "*.txt" ) ) ) )
 
 		# Copy the path and check the filter is working on the copy
 		pathCopy = path.copy()
@@ -80,25 +80,25 @@ class PathFilterTest( GafferTest.TestCase ) :
 		# Detach the filter and check that behaviour has reverted
 		path.setFilter( None )
 		children = path.children()
-		self.assertEqual( len( children ), len( glob.glob( os.path.join( self.temporaryDirectory(), "*" ) ) ) )
+		self.assertEqual( len( children ), len( list( self.temporaryDirectory().glob( "*" ) ) ) )
 
 	def testEnabledState( self ) :
 
-		path = Gaffer.FileSystemPath( self.temporaryDirectory() )
+		path = Gaffer.FileSystemPath( self.temporaryDirectory().as_posix() )
 
 		f = Gaffer.FileNamePathFilter( [ "*.txt" ] )
 		self.assertEqual( f.getEnabled(), True )
 
 		path.setFilter( f )
-		self.assertEqual( len( path.children() ), len( glob.glob( os.path.join( self.temporaryDirectory(), "*.txt" ) ) ) )
+		self.assertEqual( len( path.children() ), len( list( self.temporaryDirectory().glob( "*.txt" ) ) ) )
 
 		f.setEnabled( False )
 		self.assertEqual( f.getEnabled(), False )
-		self.assertEqual( len( path.children() ), len( glob.glob( os.path.join( self.temporaryDirectory(), "*" ) ) ) )
+		self.assertEqual( len( path.children() ), len( list( self.temporaryDirectory().glob( "*" ) ) ) )
 
 		f.setEnabled( True )
 		self.assertEqual( f.getEnabled(), True )
-		self.assertEqual( len( path.children() ), len( glob.glob( os.path.join( self.temporaryDirectory(), "*.txt" ) ) ) )
+		self.assertEqual( len( path.children() ), len( list( self.temporaryDirectory().glob( "*.txt" ) ) ) )
 
 	def testChangedSignal( self ) :
 

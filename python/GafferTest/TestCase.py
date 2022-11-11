@@ -44,6 +44,7 @@ import shutil
 import tempfile
 import traceback
 import functools
+import pathlib
 
 import IECore
 
@@ -118,7 +119,7 @@ class TestCase( unittest.TestCase ) :
 	def temporaryDirectory( self ) :
 
 		if self.__temporaryDirectory is None :
-			self.__temporaryDirectory = tempfile.mkdtemp( prefix = "gafferTest" )
+			self.__temporaryDirectory = pathlib.Path( tempfile.mkdtemp( prefix = "gafferTest" ) )
 
 		return self.__temporaryDirectory
 
@@ -340,7 +341,7 @@ class TestCase( unittest.TestCase ) :
 
 	def assertModuleDoesNotImportUI( self, moduleName ) :
 
-		script = os.path.join( self.temporaryDirectory(), "test.py" )
+		script = self.temporaryDirectory() / "test.py"
 		with open( script, "w" ) as f :
 			f.write( "import {}\n".format( moduleName ) )
 			f.write( "import sys\n" )

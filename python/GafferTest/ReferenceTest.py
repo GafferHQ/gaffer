@@ -67,10 +67,10 @@ class ReferenceTest( GafferTest.TestCase ) :
 
 		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n1"] ] ) )
 
-		b.exportForReference( self.temporaryDirectory() + "/test.grf" )
+		b.exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		s["r"] = Gaffer.Reference()
-		s["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		self.assertTrue( "n1" in s["r"] )
 		self.assertTrue( s["r"]["sum"].getInput().isSame( s["r"]["n1"]["sum"] ) )
@@ -85,11 +85,11 @@ class ReferenceTest( GafferTest.TestCase ) :
 		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n1"] ] ) )
 		Gaffer.PlugAlgo.promote( b["n1"]["op1"] )
 
-		b.exportForReference( self.temporaryDirectory() + "/test.grf" )
+		b.exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		s = Gaffer.ScriptNode()
 		s["r"] = Gaffer.Reference()
-		s["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		self.assertTrue( "n1" in s["r"] )
 		self.assertTrue( s["r"]["n1"]["op1"].getInput().isSame( s["r"]["op1"] ) )
@@ -126,14 +126,14 @@ class ReferenceTest( GafferTest.TestCase ) :
 		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n2"] ] ) )
 		Gaffer.PlugAlgo.promote( b["n2"]["op2"] )
 
-		b.exportForReference( self.temporaryDirectory() + "/test.grf" )
+		b.exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		s2 = Gaffer.ScriptNode()
 		s2["n1"] = GafferTest.AddNode()
 		s2["n3"] = GafferTest.AddNode()
 		s2["n4"] = GafferTest.AddNode()
 		s2["r"] = Gaffer.Reference()
-		s2["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s2["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		s2["r"]["op1"].setInput( s2["n1"]["sum"] )
 		s2["r"]["op2"].setValue( 1001 )
@@ -152,9 +152,9 @@ class ReferenceTest( GafferTest.TestCase ) :
 
 		b["anotherNode"] = GafferTest.AddNode()
 		Gaffer.PlugAlgo.promote( b["anotherNode"]["op2"] )
-		s.serialiseToFile( self.temporaryDirectory() + "/test.grf", b )
+		s.serialiseToFile( ( self.temporaryDirectory() / "test.grf" ).as_posix(), b )
 
-		s2["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s2["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		self.assertTrue( "n2" in s2["r"] )
 		self.assertEqual( set( s2["r"].keys() ), set( originalReferencedNames + [ "anotherNode", "op3" ] ) )
@@ -179,15 +179,15 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s["n2"]["op1"].setInput( s["n1"]["sum"] )
 
 		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n1"] ] ) )
-		b.exportForReference( self.temporaryDirectory() + "/test.grf" )
+		b.exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		s2 = Gaffer.ScriptNode()
 		s2["r"] = Gaffer.Reference()
-		s2["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s2["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		s2["r"]["__mySpecialPlug"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
-		s2["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s2["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		self.assertTrue( "__mySpecialPlug" in s2["r"] )
 
@@ -202,11 +202,11 @@ class ReferenceTest( GafferTest.TestCase ) :
 
 		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n2"] ] ) )
 		Gaffer.PlugAlgo.promote( b["n2"]["op2"] )
-		b.exportForReference( self.temporaryDirectory() + "/test.grf" )
+		b.exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		s2 = Gaffer.ScriptNode()
 		s2["r"] = Gaffer.Reference()
-		s2["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s2["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 		s2["a"] = GafferTest.AddNode()
 
 		s2["r"]["op2"].setValue( 123 )
@@ -216,11 +216,11 @@ class ReferenceTest( GafferTest.TestCase ) :
 		self.assertTrue( "sum" in s2["r"] )
 		self.assertTrue( s2["r"]["op1"].getInput().isSame( s2["a"]["sum"] ) )
 
-		s2["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
+		s2["fileName"].setValue( ( self.temporaryDirectory() / "test.gfr" ).as_posix() )
 		s2.save()
 
 		s3 = Gaffer.ScriptNode()
-		s3["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
+		s3["fileName"].setValue( ( self.temporaryDirectory() / "test.gfr" ).as_posix() )
 		s3.load()
 
 		self.assertEqual( s3["r"].keys(), s2["r"].keys() )
@@ -237,11 +237,11 @@ class ReferenceTest( GafferTest.TestCase ) :
 		b["myCustomPlug"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		b["__invisiblePlugThatShouldntGetExported"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
-		b.exportForReference( self.temporaryDirectory() + "/test.grf" )
+		b.exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		s2 = Gaffer.ScriptNode()
 		s2["r"] = Gaffer.Reference()
-		s2["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s2["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		self.assertTrue( "myCustomPlug" in s2["r"] )
 		self.assertTrue( "__invisiblePlugThatShouldntGetExported" not in s2["r"] )
@@ -256,11 +256,11 @@ class ReferenceTest( GafferTest.TestCase ) :
 
 		Gaffer.Metadata.registerValue( p, "description", "ppp" )
 
-		b.exportForReference( self.temporaryDirectory() + "/test.grf" )
+		b.exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		s2 = Gaffer.ScriptNode()
 		s2["r"] = Gaffer.Reference()
-		s2["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s2["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		self.assertEqual( Gaffer.Metadata.value( s2["r"].descendant( p.relativeName( b ) ), "description" ), "ppp" )
 
@@ -278,11 +278,11 @@ class ReferenceTest( GafferTest.TestCase ) :
 
 		Gaffer.Metadata.registerValue( p, "description", "ppp" )
 
-		b.exportForReference( self.temporaryDirectory() + "/test.grf" )
+		b.exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		s2 = Gaffer.ScriptNode()
 		s2["r"] = Gaffer.Reference()
-		s2["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s2["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		self.assertTrue( "description" not in s2.serialise() )
 
@@ -294,10 +294,10 @@ class ReferenceTest( GafferTest.TestCase ) :
 
 		Gaffer.Metadata.registerValue( s["b"]["p"], "description", "ddd" )
 
-		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+		s["b"].exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		s["r"] = Gaffer.Reference()
-		s["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		self.assertEqual( Gaffer.Metadata.value( s["r"]["p"], "description" ), "ddd" )
 
@@ -314,13 +314,13 @@ class ReferenceTest( GafferTest.TestCase ) :
 
 		Gaffer.Metadata.registerValue( p, "test", "referenced" )
 
-		b.exportForReference( self.temporaryDirectory() + "/test.grf" )
+		b.exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		# Reference it, and check it loaded.
 
 		s2 = Gaffer.ScriptNode()
 		s2["r"] = Gaffer.Reference()
-		s2["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s2["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		self.assertEqual( Gaffer.Metadata.value( s2["r"]["p"], "test" ), "referenced" )
 
@@ -337,7 +337,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 
 		# Reload the reference, and check the edit stays in place.
 
-		s3["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s3["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 		self.assertEqual( Gaffer.Metadata.value( s3["r"]["p"], "test" ), "edited" )
 
 	def testStaticMetadataRegistrationIsntAnEdit( self ) :
@@ -348,12 +348,12 @@ class ReferenceTest( GafferTest.TestCase ) :
 
 		s["b"] = Gaffer.Box()
 		s["b"]["staticMetadataTestPlug"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+		s["b"].exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		# Reference it
 
 		s["r"] = Gaffer.Reference()
-		s["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		# Make a static metadata registration. Although this will
 		# be signalled as a metadata change, it must not be considered
@@ -374,13 +374,13 @@ class ReferenceTest( GafferTest.TestCase ) :
 		p = Gaffer.PlugAlgo.promote( b["n1"]["op1"] )
 		p.setName( "p" )
 
-		b.exportForReference( self.temporaryDirectory() + "/test.grf" )
+		b.exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		# Reference it, and check it loaded.
 
 		s2 = Gaffer.ScriptNode()
 		s2["r"] = Gaffer.Reference()
-		s2["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s2["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		# Add some metadata to the Reference node (not the reference file)
 
@@ -395,7 +395,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 
 		# Reload the reference, and check the edit stays in place.
 
-		s3["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s3["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 		self.assertEqual( Gaffer.Metadata.value( s3["r"]["p"], "test" ), "added" )
 
 	def testReloadWithUnconnectedPlugs( self ) :
@@ -403,10 +403,10 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s["b"] = Gaffer.Box()
 		s["b"]["p"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+		s["b"].exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		s["r"] = Gaffer.Reference()
-		s["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		self.assertEqual( s["r"].keys(), [ "user", "p" ] )
 
@@ -420,17 +420,17 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s["b"] = Gaffer.Box()
 		s["b"]["p"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+		s["b"].exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		s["r"] = Gaffer.Reference()
-		s["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		self.assertEqual( Gaffer.Metadata.value( s["r"]["p"], "test" ), None )
 
 		Gaffer.Metadata.registerValue( s["b"]["p"], "test", 10 )
-		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+		s["b"].exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
-		s["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		self.assertEqual( Gaffer.Metadata.value( s["r"]["p"], "test" ), 10 )
 
@@ -440,7 +440,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s["b"] = Gaffer.Box()
 		s["b"]["n"] = GafferTest.StringInOutNode()
 
-		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+		s["b"].exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		del GafferTest.StringInOutNode # induce a failure during loading
 
@@ -448,7 +448,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s2["r"] = Gaffer.Reference()
 
 		with IECore.CapturingMessageHandler() as mh :
-			self.assertRaises( Exception, s2["r"].load, self.temporaryDirectory() + "/test.grf" )
+			self.assertRaises( Exception, s2["r"].load, ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		self.assertEqual( len( mh.messages ), 2 )
 		self.assertTrue( "has no attribute 'StringInOutNode'" in mh.messages[0].message )
@@ -463,13 +463,13 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s["b"]["s"] = GafferTest.StringInOutNode()
 		s["b"]["a"] = GafferTest.AddNode()
 
-		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+		s["b"].exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		# import it into a script.
 
 		s2 = Gaffer.ScriptNode()
 		s2["r"] = Gaffer.Reference()
-		s2["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s2["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		self.assertTrue( "a" in s2["r"] )
 		self.assertTrue( isinstance( s2["r"]["a"], GafferTest.AddNode ) )
@@ -477,7 +477,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		# save that script, and then mysteriously
 		# disable GafferTest.StringInOutNode.
 
-		s2["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
+		s2["fileName"].setValue( ( self.temporaryDirectory() / "test.gfr" ).as_posix() )
 		s2.save()
 
 		del GafferTest.StringInOutNode
@@ -486,7 +486,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		# load in the other referenced node.
 
 		s3 = Gaffer.ScriptNode()
-		s3["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
+		s3["fileName"].setValue( ( self.temporaryDirectory() / "test.gfr" ).as_posix() )
 		with IECore.CapturingMessageHandler() as mh :
 			s3.load( continueOnError=True )
 
@@ -511,38 +511,38 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s["b"] = Gaffer.Box()
 		s["b"]["n"] = GafferTest.AddNode()
 		Gaffer.PlugAlgo.promote( s["b"]["n"]["sum"] )
-		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+		s["b"].exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		# load onto reference:
-		s["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 		self.assertEqual( s["r"].correspondingInput( s["r"]["sum"] ), None )
 		self.assertEqual( s["r"].enabledPlug(), None )
 
 		# Wire it up to support enabledPlug() and correspondingInput()
 		Gaffer.PlugAlgo.promote( s["b"]["n"]["op1"] )
 		s["b"]["n"]["op2"].setValue( 10 )
-		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+		s["b"].exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		# reload reference and test:
-		s["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 		self.assertEqual( s["r"].correspondingInput( s["r"]["sum"] ), None )
 		self.assertEqual( s["r"].enabledPlug(), None )
 
 		# add an enabled plug:
 		s["b"]["enabled"] = Gaffer.BoolPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+		s["b"].exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		# reload reference and test that's now visible via enabledPlug():
-		s["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 		self.assertEqual( s["r"].correspondingInput( s["r"]["sum"] ), None )
 		self.assertTrue( s["r"].enabledPlug().isSame( s["r"]["enabled"] ) )
 
 		# hook up the enabled plug inside the box:
 		s["b"]["n"]["enabled"].setInput( s["b"]["enabled"] )
-		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+		s["b"].exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		# reload reference and test that's now visible via enabledPlug():
-		s["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 		self.assertTrue( s["r"].enabledPlug().isSame( s["r"]["enabled"] ) )
 		self.assertTrue( s["r"].correspondingInput( s["r"]["sum"] ).isSame( s["r"]["op1"] ) )
 
@@ -564,13 +564,13 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s["b"]["s"] = GafferTest.StringInOutNode()
 		s["b"]["a"] = GafferTest.AddNode()
 
-		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+		s["b"].exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		# import it into a script.
 
 		s2 = Gaffer.ScriptNode()
 		s2["r"] = Gaffer.Reference()
-		s2["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s2["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 		s2["r"]["__pluggy"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Default )
 		s2["r"]["__pluggy"]["int"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Default )
 		s2["r"]["__pluggy"]["compound"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Default )
@@ -581,7 +581,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		self.assertEqual( s2["r"]["__pluggy"]["compound"].getFlags(), Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Default )
 		self.assertEqual( s2["r"]["__pluggy"]["compound"]["int"].getFlags(), Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Default )
 
-		s2["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s2["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		self.assertEqual( s2["r"]["__pluggy"].getFlags(), Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Default )
 		self.assertEqual( s2["r"]["__pluggy"]["int"].getFlags(), Gaffer.Plug.Flags.Dynamic | Gaffer.Plug.Flags.Default )
@@ -596,10 +596,10 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s["b"]["p"].setValue( 2 )
 		s["b"]["c"] = Gaffer.Color3fPlug( defaultValue = imath.Color3f( 1 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		s["b"]["c"].setValue( imath.Color3f( 0.5 ) )
-		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+		s["b"].exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		s["r"] = Gaffer.Reference()
-		s["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		# The value at the time of box export should be ignored,
 		# and the box itself should not be modified by the export
@@ -618,7 +618,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		# And we should be able to save and reload the script
 		# and have that still be the case.
 
-		s["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
+		s["fileName"].setValue( ( self.temporaryDirectory() / "test.gfr" ).as_posix() )
 		s.save()
 		s.load()
 
@@ -641,8 +641,8 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s["b"]["p"].resetDefault()
 		s["b"]["c"].setValue( imath.Color3f( 0.25 ) )
 		s["b"]["c"].resetDefault()
-		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
-		s["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s["b"].exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
+		s["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		self.assertEqual( s["r"]["p"].getValue(), 3 )
 		self.assertEqual( s["r"]["p"].defaultValue(), 3 )
@@ -707,8 +707,8 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s["b"]["p"].resetDefault()
 		s["b"]["c"].setValue( imath.Color3f( 4 ) )
 		s["b"]["c"].resetDefault()
-		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
-		s["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s["b"].exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
+		s["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		self.assertEqual( s["r"]["p"].getValue(), 100 )
 		self.assertEqual( s["r"]["p"].defaultValue(), 4 )
@@ -737,7 +737,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 
 		# And there shouldn't be a single setValue() call in the exported file.
 
-		e = "".join( open( self.temporaryDirectory() + "/test.grf" ).readlines() )
+		e = "".join( open( self.temporaryDirectory() / "test.grf" ).readlines() )
 		self.assertTrue( "setValue" not in e )
 
 	def testInternalNodeDefaultValues( self ) :
@@ -747,10 +747,10 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s["b"]["n"] = Gaffer.Node()
 		s["b"]["n"]["p"] = Gaffer.IntPlug( defaultValue = 1, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		s["b"]["n"]["p"].setValue( 2 )
-		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+		s["b"].exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		s["r"] = Gaffer.Reference()
-		s["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		# Nothing at all should have changed about the
 		# values and defaults on the internal nodes.
@@ -761,7 +761,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		# And we should be able to save and reload the script
 		# and have that still be the case.
 
-		s["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
+		s["fileName"].setValue( ( self.temporaryDirectory() / "test.gfr" ).as_posix() )
 		s.save()
 		s.load()
 
@@ -776,10 +776,10 @@ class ReferenceTest( GafferTest.TestCase ) :
 		Gaffer.Metadata.registerValue( s["b"], "description", "Test description" )
 		Gaffer.Metadata.registerValue( s["b"], "nodeGadget:color", imath.Color3f( 1, 0, 0 ) )
 
-		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+		s["b"].exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		s["r"] = Gaffer.Reference()
-		s["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		self.assertEqual( Gaffer.Metadata.value( s["r"], "description" ), "Test description" )
 		self.assertEqual( Gaffer.Metadata.value( s["r"], "nodeGadget:color" ), imath.Color3f( 1, 0, 0 ) )
@@ -788,10 +788,10 @@ class ReferenceTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["b"] = Gaffer.Box()
-		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+		s["b"].exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		s["r"] = Gaffer.Reference()
-		s["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		self.assertEqual( Gaffer.Metadata.value( s["r"], "serialiser:milestoneVersion" ), Gaffer.About.milestoneVersion() )
 		self.assertEqual( Gaffer.Metadata.value( s["r"], "serialiser:majorVersion" ), Gaffer.About.majorVersion() )
@@ -857,10 +857,10 @@ class ReferenceTest( GafferTest.TestCase ) :
 
 		s["b"] = Gaffer.Box()
 		s["b"]["fileName"] = Gaffer.StringPlug( defaultValue = "iAmUsingThisForMyOwnPurposes", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+		s["b"].exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		s["r"] = Gaffer.Reference()
-		s["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		self.assertEqual( s["r"]["fileName"].getValue(), "iAmUsingThisForMyOwnPurposes" )
 
@@ -869,20 +869,20 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s["b"] = Gaffer.Box()
 		s["b"]["p"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+		s["b"].exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		s["r"] = Gaffer.Reference()
 		self.assertEqual( s["r"].fileName(), "" )
 
-		s["r"].load( self.temporaryDirectory() + "/test.grf" )
-		self.assertEqual( s["r"].fileName(), self.temporaryDirectory() + "/test.grf" )
+		s["r"].load( self.temporaryDirectory() / "test.grf" )
+		self.assertEqual( s["r"].fileName(), self.temporaryDirectory() / "test.grf" )
 
 	def testUndo( self ) :
 
 		s = Gaffer.ScriptNode()
 		s["b"] = Gaffer.Box()
 		s["b"]["p"] = Gaffer.Plug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+		s["b"].exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		s["r"] = Gaffer.Reference()
 		self.assertEqual( s["r"].fileName(), "" )
@@ -896,12 +896,12 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s["r"].referenceLoadedSignal().connect( referenceLoaded, scoped = False )
 
 		with Gaffer.UndoScope( s ) :
-			s["r"].load( self.temporaryDirectory() + "/test.grf" )
+			s["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		self.assertTrue( "p" in s["r"] )
-		self.assertEqual( s["r"].fileName(), self.temporaryDirectory() + "/test.grf" )
+		self.assertEqual( s["r"].fileName(), self.temporaryDirectory() / "test.grf" )
 		self.assertTrue( len( states ), 1 )
-		self.assertEqual( states[0], State( [ "user", "p" ], self.temporaryDirectory() + "/test.grf" ) )
+		self.assertEqual( states[0], State( [ "user", "p" ], self.temporaryDirectory() / "test.grf" ) )
 
 		s.undo()
 		self.assertEqual( s["r"].fileName(), "" )
@@ -911,9 +911,9 @@ class ReferenceTest( GafferTest.TestCase ) :
 
 		s.redo()
 		self.assertTrue( "p" in s["r"] )
-		self.assertEqual( s["r"].fileName(), self.temporaryDirectory() + "/test.grf" )
+		self.assertEqual( s["r"].fileName(), self.temporaryDirectory() / "test.grf" )
 		self.assertTrue( len( states ), 3 )
-		self.assertEqual( states[2], State( [ "user", "p" ], self.temporaryDirectory() + "/test.grf" ) )
+		self.assertEqual( states[2], State( [ "user", "p" ], self.temporaryDirectory() / "test.grf" ) )
 
 	def testUserPlugsNotReferenced( self ) :
 
@@ -922,10 +922,10 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s["b"] = Gaffer.Box()
 		s["b"]["user"]["a"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		self.assertTrue( "a" in s["b"]["user"] )
-		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+		s["b"].exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		s["r"] = Gaffer.Reference()
-		s["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 		self.assertTrue( "a" not in s["r"]["user"] )
 
 		a = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
@@ -935,7 +935,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		self.assertTrue( s["r"]["user"]["a"].isSame( a ) )
 		self.assertTrue( s["r"]["user"]["b"].isSame( b ) )
 
-		s["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 		self.assertTrue( s["r"]["user"]["a"].isSame( a ) )
 		self.assertTrue( s["r"]["user"]["b"].isSame( b ) )
 
@@ -954,10 +954,10 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s["b"]["a2"] = GafferTest.AddNode()
 		s["b"]["a2"]["op1"].setInput( s["b"]["a1"]["sum"] )
 		Gaffer.PlugAlgo.promote( s["b"]["a1"]["op1"] )
-		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+		s["b"].exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		s["r"] = Gaffer.Reference()
-		s["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		s.execute( s.serialise( parent = s["r"], filter = Gaffer.StandardSet( [ s["r"]["a1"], s["r"]["a2"] ] ) ) )
 
@@ -972,18 +972,18 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s["b"] = Gaffer.Box()
 		s["b"]["array"] = Gaffer.ArrayPlug( element = Gaffer.IntPlug(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		s["b"]["color"] = Gaffer.Color3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
-		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+		s["b"].exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		s["a"] = GafferTest.AddNode()
 
 		s["r"] = Gaffer.Reference()
-		s["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		s["r"]["array"][0].setInput( s["a"]["sum"] )
 		s["r"]["array"][1].setInput( s["a"]["sum"] )
 		s["r"]["color"]["g"].setInput( s["a"]["sum"] )
 
-		s["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		self.assertTrue( s["r"]["array"][0].getInput().isSame( s["a"]["sum"] ) )
 		self.assertTrue( s["r"]["array"][1].getInput().isSame( s["a"]["sum"] ) )
@@ -998,16 +998,16 @@ class ReferenceTest( GafferTest.TestCase ) :
 			direction = Gaffer.Plug.Direction.Out,
 			flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic
 		)
-		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+		s["b"].exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		s["a"] = GafferTest.AddNode()
 
 		s["r"] = Gaffer.Reference()
-		s["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		s["a"]["op1"].setInput( s["r"]["color"]["g"] )
 
-		s["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		self.assertTrue( s["a"]["op1"].getInput().isSame( s["r"]["color"]["g"] ) )
 
@@ -1028,7 +1028,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s["b"]["o"].setup( s["b"]["a"]["sum"] )
 		s["b"]["o"]["in"].setInput( s["b"]["a"]["sum"] )
 
-		referenceFileName = self.temporaryDirectory() + "/test.grf"
+		referenceFileName = ( self.temporaryDirectory() / "test.grf" ).as_posix()
 		s["b"].exportForReference( referenceFileName )
 
 		s["a1"] = GafferTest.AddNode()
@@ -1065,21 +1065,21 @@ class ReferenceTest( GafferTest.TestCase ) :
 		boxA = Gaffer.Box( "BoxA" )
 		boxA["p"] = Gaffer.StringPlug( defaultValue = "a", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		s.addChild( boxA )
-		boxPathA = os.path.join( self.temporaryDirectory(), "a" )
+		boxPathA = self.temporaryDirectory() / "a"
 		os.makedirs( boxPathA )
-		fileA = os.path.join( boxPathA, referenceFile )
-		boxA.exportForReference( fileA )
+		fileA = boxPathA / referenceFile
+		boxA.exportForReference( fileA.as_posix() )
 
 		boxB = Gaffer.Box( "BoxB" )
 		boxB["p"] = Gaffer.StringPlug( defaultValue = "b", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		s.addChild( boxB )
-		boxPathB = os.path.join(self.temporaryDirectory(), "b")
+		boxPathB = self.temporaryDirectory() / "b"
 		os.makedirs( boxPathB )
-		fileB = os.path.join( boxPathB, referenceFile )
-		boxB.exportForReference( fileB )
+		fileB = boxPathB / referenceFile
+		boxB.exportForReference( fileB.as_posix() )
 
-		searchPathA = ":".join( [boxPathA, boxPathB] )
-		searchPathB = ":".join( [boxPathB, boxPathA] )
+		searchPathA = os.pathsep.join( [boxPathA.as_posix(), boxPathB.as_posix()] )
+		searchPathB = os.pathsep.join( [boxPathB.as_posix(), boxPathA.as_posix()] )
 
 		os.environ["GAFFER_REFERENCE_PATHS"] = searchPathA
 		s["r"] = Gaffer.Reference()
@@ -1111,10 +1111,10 @@ class ReferenceTest( GafferTest.TestCase ) :
 		Gaffer.Metadata.registerValue( s["b"]["p1"], "referenced", "original" )
 		Gaffer.Metadata.registerValue( s["b"]["p2"], "referenced", "original" )
 
-		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+		s["b"].exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		s["r"] = Gaffer.Reference()
-		s["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		self.assertFalse( s["r"].hasMetadataEdit( s["r"]["p1"], "referenced" ) )
 		self.assertFalse( s["r"].hasMetadataEdit( s["r"]["p2"], "referenced" ) )
@@ -1180,10 +1180,10 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s["b"]["p"] = Gaffer.IntPlug( defaultValue = 1, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		Gaffer.Metadata.registerValue( s["b"]["p"], "referenced", "original" )
 
-		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+		s["b"].exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		s["r"] = Gaffer.Reference()
-		s["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 		self.assertFalse( s["r"].hasMetadataEdit( s["r"]["p"], "referenced" ) )
 		self.assertEqual( Gaffer.Metadata.value( s["r"]["p"], "referenced" ), "original" )
 
@@ -1193,7 +1193,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		self.assertTrue( s["r"].hasMetadataEdit( s["r"]["p"], "referenced" ) )
 		self.assertEqual( Gaffer.Metadata.value( s["r"]["p"], "referenced" ), "override" )
 
-		s["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		# The old plug doesn't have an edit any more, because
 		# it doesn't even belong to the reference any more.
@@ -1213,10 +1213,10 @@ class ReferenceTest( GafferTest.TestCase ) :
 		Gaffer.Metadata.registerValue( s["b"]["p"], "preset:Green", 1 )
 		Gaffer.Metadata.registerValue( s["b"]["p"], "preset:Blue", 2 )
 
-		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+		s["b"].exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		s["r"] = Gaffer.Reference()
-		s["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		# Make sure the metadata exported on the plug was loaded by the Reference
 		self.assertEqual( Gaffer.Metadata.value( s["r"]["p"], "preset:Red" ), 0 )
@@ -1234,8 +1234,8 @@ class ReferenceTest( GafferTest.TestCase ) :
 		# When creating new Reference, the data on the new instance is as per the referenced box.
 		Gaffer.Metadata.registerValue( s["b"]["p"], "preset:Blue", 42 )
 
-		s["b"].exportForReference( self.temporaryDirectory() + "/test2.grf" )
-		s["r"].load( self.temporaryDirectory() + "/test2.grf" )
+		s["b"].exportForReference( ( self.temporaryDirectory() / "test2.grf" ).as_posix() )
+		s["r"].load( ( self.temporaryDirectory() / "test2.grf").as_posix() )
 
 		self.assertEqual( Gaffer.Metadata.value( s["r"]["p"], "preset:Red" ), 0 )
 		self.assertEqual( Gaffer.Metadata.value( s["r"]["p"], "preset:Green" ), 100 )
@@ -1283,10 +1283,10 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s["b"] = Gaffer.Box()
 		s["b"]["p"] = Gaffer.Color3fPlug( defaultValue = imath.Color3f( 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
-		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+		s["b"].exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		s["r"] = Gaffer.Reference()
-		s["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		Gaffer.Metadata.registerValue( s["r"]["p"]["r"], "isRed", True )
 
@@ -1297,7 +1297,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.value( s2["r"]["p"]["r"], "isRed" ), True )
 
 		# It also needs to be transferred on reload
-		s["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 		self.assertEqual( Gaffer.Metadata.value( s["r"]["p"]["r"], "isRed" ), True )
 
 	def testUserPlugMetadataSerialisation( self ) :
@@ -1329,12 +1329,12 @@ class ReferenceTest( GafferTest.TestCase ) :
 		s["b"]["p"] = Gaffer.Color3fPlug( defaultValue = imath.Color3f( 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		Gaffer.Metadata.registerValue( s["b"]["p"], "isColor", True )
 
-		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+		s["b"].exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		s["b2"] = Gaffer.Box()
 
 		s["b2"]["r"] = Gaffer.Reference()
-		s["b2"]["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s["b2"]["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		Gaffer.PlugAlgo.promote( s["b2"]["r"]["p"] )
 
@@ -1363,10 +1363,10 @@ class ReferenceTest( GafferTest.TestCase ) :
 		Gaffer.PlugAlgo.promote( script["box"]["spreadsheet"]["rows"] )
 		script["box"]["rows"].resetDefault()
 
-		script["box"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+		script["box"].exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		script["reference"] = Gaffer.Reference()
-		script["reference"].load( self.temporaryDirectory() + "/test.grf" )
+		script["reference"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		self.assertEqual( len( script["reference"]["rows"] ), len( script["box"]["rows"] ) )
 		self.assertEqual( script["reference"]["rows"][0].keys(), script["box"]["rows"][0].keys() )
@@ -1405,10 +1405,10 @@ class ReferenceTest( GafferTest.TestCase ) :
 		script["box"]["spreadsheet"]["rows"].addRow()
 		Gaffer.PlugAlgo.promote( script["box"]["spreadsheet"]["rows"] )
 
-		script["box"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+		script["box"].exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		script["reference"] = Gaffer.Reference()
-		script["reference"].load( self.temporaryDirectory() + "/test.grf" )
+		script["reference"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 		script["reference"]["rows"][1]["cells"]["string"]["value"].setValue( "test" )
 
 		script.execute( script.serialise( filter = Gaffer.StandardSet( [ script["reference"] ] ) ) )
@@ -1427,10 +1427,10 @@ class ReferenceTest( GafferTest.TestCase ) :
 		script["box"]["t3"] = Gaffer.TransformPlug( defaultTranslate = imath.V3f( 10, 11, 12 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		script["box"]["t3"]["rotate"].setValue( imath.V3f( 1, 2, 3 ) )
 
-		script["box"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+		script["box"].exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		script["reference"] = Gaffer.Reference()
-		script["reference"].load( self.temporaryDirectory() + "/test.grf" )
+		script["reference"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		self.assertTrue( script["reference"]["t2"].isSetToDefault() )
 		for name in script["reference"]["t2"].keys() :
@@ -1454,10 +1454,10 @@ class ReferenceTest( GafferTest.TestCase ) :
 		script["box"]["p"]["m"]["value"].setValue( 11 )
 		script["box"]["p"]["m"]["enabled"].setValue( False )
 
-		script["box"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+		script["box"].exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		script["reference"] = Gaffer.Reference()
-		script["reference"].load( self.temporaryDirectory() + "/test.grf" )
+		script["reference"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		self.assertTrue( script["reference"]["p"].isSetToDefault() )
 		self.assertEqual( script["reference"]["p"].defaultHash(), script["box"]["p"].defaultHash() )
@@ -1476,13 +1476,13 @@ class ReferenceTest( GafferTest.TestCase ) :
 		Gaffer.PlugAlgo.promote( script["box"]["spreadsheet"]["rows"] )
 		script["box"]["rows"].resetDefault()
 
-		script["box"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+		script["box"].exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		# Reference and then duplicate as box. This is using the same
 		# method as used by the "Duplicate as Box" menu in the UI.
 
 		script["reference"] = Gaffer.Reference()
-		script["reference"].load( self.temporaryDirectory() + "/test.grf" )
+		script["reference"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		script["duplicate"] = Gaffer.Box()
 		script.executeFile( script["reference"].fileName(), parent = script["duplicate"] )
@@ -1516,10 +1516,10 @@ class ReferenceTest( GafferTest.TestCase ) :
 		promoted[1]["cells"]["c1"]["value"]["z"].setValue( 4 )
 		promoted[1]["cells"]["c1"]["value"]["z"].resetDefault() # Modified default. Should be preserved on export.
 
-		script["box"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+		script["box"].exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		script["reference"] = Gaffer.Reference()
-		script["reference"].load( self.temporaryDirectory() + "/test.grf" )
+		script["reference"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		self.assertTrue( script["reference"]["rows"].isSetToDefault() )
 		self.assertEqual( script["reference"]["rows"][1]["cells"]["c1"]["value"]["x"].getValue(), 1 )
@@ -1551,7 +1551,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 			)
 		]
 
-		fileName = os.path.join( self.temporaryDirectory(), "test.grf" )
+		fileName = self.temporaryDirectory() / "test.grf"
 
 		for nonDefaultAtExport in ( False, True ) :
 
@@ -1572,12 +1572,12 @@ class ReferenceTest( GafferTest.TestCase ) :
 				script["box"]["spline"] = Gaffer.SplineffPlug( defaultValue = defaultValue, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 				if nonDefaultAtExport :
 					script["box"]["spline"].setValue( otherValue )
-				script["box"].exportForReference( fileName )
+				script["box"].exportForReference( fileName.as_posix() )
 
 				# Reference it and check we get what we want
 
 				script["reference"] = Gaffer.Reference()
-				script["reference"].load( fileName )
+				script["reference"].load( fileName.as_posix() )
 
 				self.assertEqual( script["reference"]["spline"].getValue(), defaultValue )
 				self.assertEqual( script["reference"]["spline"].defaultValue(), defaultValue )
@@ -1619,7 +1619,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		script["box"]["spreadsheetInPlug"]["rows"].addColumn( Gaffer.IntPlug( "c1" ) )
 		Gaffer.PlugAlgo.promote( script["box"]["spreadsheetInPlug"]["rows"], parent = script["box"]["container"] )
 
-		fileName = os.path.join( self.temporaryDirectory(), "test.grf" )
+		fileName = ( self.temporaryDirectory() / "test.grf" ).as_posix()
 		script["box"].exportForReference( fileName )
 
 		# Load it onto a Reference, and add some members/rows.
@@ -1701,7 +1701,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		script["box"]["spreadsheet"]["rows"].addColumn( Gaffer.FloatPlug( "c2" ) )
 		Gaffer.PlugAlgo.promote( script["box"]["spreadsheet"]["rows"] )
 
-		fileName = os.path.join( self.temporaryDirectory(), "test.grf" )
+		fileName = ( self.temporaryDirectory() / "test.grf" ).as_posix()
 		script["box"].exportForReference( fileName )
 
 		script["reference"] = Gaffer.Reference()
@@ -1753,20 +1753,20 @@ class ReferenceTest( GafferTest.TestCase ) :
 
 		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n1"] ] ) )
 
-		b.exportForReference( self.temporaryDirectory() + "/test.grf" )
+		b.exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		s["r1"] = Gaffer.Reference()
-		s["r1"].load( self.temporaryDirectory() + "/test.grf" )
+		s["r1"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		self.assertTrue( Gaffer.MetadataAlgo.getChildNodesAreReadOnly( s["r1"] ) )
 
 		# bake in the metadata into the Box to test if it will be handled by the Reference
 		Gaffer.MetadataAlgo.setChildNodesAreReadOnly( b, False )
 
-		b.exportForReference( self.temporaryDirectory() + "/testWithMetadata.grf" )
+		b.exportForReference( ( self.temporaryDirectory() / "testWithMetadata.grf" ).as_posix() )
 
 		s["r2"] = Gaffer.Reference()
-		s["r2"].load( self.temporaryDirectory() + "/testWithMetadata.grf" )
+		s["r2"].load( ( self.temporaryDirectory() / "testWithMetadata.grf" ).as_posix() )
 
 		self.assertTrue( Gaffer.MetadataAlgo.getChildNodesAreReadOnly( s["r2"] ) )
 
@@ -1785,7 +1785,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		script["box"]["p1"].setInput( script["box"]["__add1"]["sum"] )
 		script["box"]["p2"].setInput( script["box"]["__add2"]["sum"] )
 
-		fileName = os.path.join( self.temporaryDirectory(), "test.grf" )
+		fileName = ( self.temporaryDirectory() / "test.grf" ).as_posix()
 		script["box"].exportForReference( fileName )
 
 		script["reference"] = Gaffer.Reference()
@@ -1816,7 +1816,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		script["box"]["__add2"] = GafferTest.AddNode()
 		script["box"]["p"].setInput( script["box"]["__add1"]["sum"] )
 
-		fileName = os.path.join( self.temporaryDirectory(), "test.grf" )
+		fileName = ( self.temporaryDirectory() / "test.grf" ).as_posix()
 		script["box"].exportForReference( fileName )
 
 		script["reference"] = Gaffer.Reference()
@@ -1842,7 +1842,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		script["box"]["p1"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		script["box"]["p2"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
-		fileName = os.path.join( self.temporaryDirectory(), "test.grf" )
+		fileName = ( self.temporaryDirectory() / "test.grf" ).as_posix()
 		script["box"].exportForReference( fileName )
 
 		script["reference"] = Gaffer.Reference()

@@ -35,6 +35,7 @@
 ##########################################################################
 
 import os
+import pathlib
 import subprocess
 import unittest
 
@@ -45,17 +46,17 @@ class HiddenFilePathFilterTest( GafferTest.TestCase ) :
 
 	def test( self ) :
 
-		hiddenFile = Gaffer.FileSystemPath( os.path.join( self.temporaryDirectory(), ".sneaky.txt" ) )
+		hiddenFile = Gaffer.FileSystemPath( self.temporaryDirectory().joinpath( ".sneaky.txt" ).as_posix() )
 		with open( hiddenFile.nativeString(), "w" ) as f :
 			f.write( "Can't see me" )
 		if os.name == "nt" :
 			subprocess.check_call( [ "attrib", "+H", hiddenFile.nativeString() ] )
 
-		visibleFile = Gaffer.FileSystemPath( os.path.join( self.temporaryDirectory(), "frank.txt" ) )
+		visibleFile = Gaffer.FileSystemPath( self.temporaryDirectory().joinpath( "frank.txt" ).as_posix() )
 		with open( visibleFile.nativeString(), "w" ) as f :
 			f.write( "Can see me" )
 
-		p = Gaffer.FileSystemPath( os.path.dirname( hiddenFile.nativeString() ) )
+		p = Gaffer.FileSystemPath( pathlib.Path( hiddenFile.nativeString() ).parent.as_posix() )
 
 		self.assertEqual(
 			sorted( [ str( i ) for i in p.children() ] ),
