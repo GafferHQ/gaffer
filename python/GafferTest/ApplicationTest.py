@@ -55,7 +55,7 @@ class ApplicationTest( GafferTest.TestCase ) :
 
 	def testWrapperDoesntDuplicatePaths( self ) :
 
-		output = subprocess.check_output( [ "gaffer", "env", "env" ], universal_newlines = True )
+		output = subprocess.check_output( [ str( Gaffer.executablePath( True ) ), "env", "env" ], universal_newlines = True )
 		externalEnv = {}
 		for line in output.split( '\n' ) :
 			partition = line.partition( "=" )

@@ -37,6 +37,9 @@
 
 __import__( "IECore" )
 
+import os
+import pathlib
+
 from ._Gaffer import *
 from .import _Range
 from .About import About
@@ -61,3 +64,19 @@ __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "Gaffe
 
 # Class-level non-UI metadata registration
 Metadata.registerValue( Reference, "childNodesAreReadOnly", True )
+
+def rootPath() :
+
+	return pathlib.Path( os.path.expandvars( "$GAFFER_ROOT" ) )
+
+# Returns the path of the Gaffer executable for the current platform.
+# If `resolve` is `True`, the full path will be returned, otherwise
+# only a path to the executable name and extension are returned.
+def executablePath( resolve = False ) :
+
+	executable = pathlib.Path( "gaffer" ) if os.name != "nt" else pathlib.Path( "gaffer.cmd" )
+
+	if resolve :
+		return rootPath() / "bin" / executable
+
+	return executable
