@@ -187,6 +187,7 @@ class SetQueryTest( GafferSceneTest.SceneTestCase ) :
 
 		script["query"] = GafferScene.SetQuery()
 		script["query"]["scene"].setInput( script["group"]["out"] )
+		script["query"]["location"].setValue( "/group/plane" )
 
 		script["expression"] = Gaffer.Expression()
 		script["expression"].setExpression( inspect.cleandoc(
@@ -343,6 +344,30 @@ class SetQueryTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( attributes["out"].attributes( "/group/plane" )["render:displayColor"].value, imath.Color3f( 1, 0, 0 ) )
 		self.assertEqual( attributes["out"].attributes( "/group/sphere" )["render:displayColor"].value, imath.Color3f( 0, 1, 0 ) )
+
+	def testEmptyLocationGivesEmptyResult( self ) :
+
+		plane = GafferScene.Plane()
+
+		rootFilter = GafferScene.PathFilter()
+		rootFilter["paths"].setValue( IECore.StringVectorData( [ "/" ] ) )
+
+		set = GafferScene.Set()
+		set["in"].setInput( plane["out"] )
+		set["filter"].setInput( rootFilter["out"] )
+		set["name"].setValue( "A" )
+
+		setQuery = GafferScene.SetQuery()
+		setQuery["scene"].setInput( set["out"] )
+		setQuery["sets"].setValue( "A" )
+
+		self.assertEqual( setQuery["location"].getValue(), "" )
+		self.assertEqual( setQuery["matches"].getValue(), IECore.StringVectorData() )
+		self.assertEqual( setQuery["firstMatch"].getValue(), "" )
+
+		setQuery["location"].setValue( "/" )
+		self.assertEqual( setQuery["matches"].getValue(), IECore.StringVectorData( [ "A" ] ) )
+		self.assertEqual( setQuery["firstMatch"].getValue(), "A" )
 
 if __name__ == "__main__":
 	unittest.main()

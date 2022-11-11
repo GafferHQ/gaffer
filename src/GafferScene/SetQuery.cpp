@@ -270,17 +270,33 @@ void SetQuery::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *con
 	}
 	else if( output == matchesPlug() )
 	{
-		ComputeNode::hash( output, context, h );
-		const ScenePlug::ScenePath location = ScenePlug::stringToPath( locationPlug()->getValue() );
-		ScenePlug::PathScope pathScope( context, &location );
-		matchesInternalPlug()->hash( h );
+		const std::string location = locationPlug()->getValue();
+		if( !location.empty() )
+		{
+			ComputeNode::hash( output, context, h );
+			auto locationPath = ScenePlug::stringToPath( location );
+			ScenePlug::PathScope pathScope( context, &locationPath );
+			matchesInternalPlug()->hash( h );
+		}
+		else
+		{
+			h = output->defaultHash();
+		}
 	}
 	else if( output == firstMatchPlug() )
 	{
-		ComputeNode::hash( output, context, h );
-		const ScenePlug::ScenePath location = ScenePlug::stringToPath( locationPlug()->getValue() );
-		ScenePlug::PathScope pathScope( context, &location );
-		matchesInternalPlug()->hash( h );
+		const std::string location = locationPlug()->getValue();
+		if( !location.empty() )
+		{
+			ComputeNode::hash( output, context, h );
+			auto locationPath = ScenePlug::stringToPath( location );
+			ScenePlug::PathScope pathScope( context, &locationPath );
+			matchesInternalPlug()->hash( h );
+		}
+		else
+		{
+			h = output->defaultHash();
+		}
 	}
 	else
 	{
@@ -296,17 +312,33 @@ void SetQuery::compute( Gaffer::ValuePlug *output, const Gaffer::Context *contex
 	}
 	else if( output == matchesPlug() )
 	{
-		const ScenePlug::ScenePath location = ScenePlug::stringToPath( locationPlug()->getValue() );
-		ScenePlug::PathScope pathScope( context, &location );
-		auto matchesData = boost::static_pointer_cast<const MatchesData>( matchesInternalPlug()->getValue() );
-		static_cast<StringVectorDataPlug *>( output )->setValue( matchesData->matches );
+		const std::string location = locationPlug()->getValue();
+		if( !location.empty() )
+		{
+			auto locationPath = ScenePlug::stringToPath( location );
+			ScenePlug::PathScope pathScope( context, &locationPath );
+			auto matchesData = boost::static_pointer_cast<const MatchesData>( matchesInternalPlug()->getValue() );
+			static_cast<StringVectorDataPlug *>( output )->setValue( matchesData->matches );
+		}
+		else
+		{
+			output->setToDefault();
+		}
 	}
 	else if( output == firstMatchPlug() )
 	{
-		const ScenePlug::ScenePath location = ScenePlug::stringToPath( locationPlug()->getValue() );
-		ScenePlug::PathScope pathScope( context, &location );
-		auto matchesData = boost::static_pointer_cast<const MatchesData>( matchesInternalPlug()->getValue() );
-		static_cast<StringPlug *>( output )->setValue( matchesData->matches->readable().size() ? matchesData->matches->readable().front() : "" );
+		const std::string location = locationPlug()->getValue();
+		if( !location.empty() )
+		{
+			auto locationPath = ScenePlug::stringToPath( location );
+			ScenePlug::PathScope pathScope( context, &locationPath );
+			auto matchesData = boost::static_pointer_cast<const MatchesData>( matchesInternalPlug()->getValue() );
+			static_cast<StringPlug *>( output )->setValue( matchesData->matches->readable().size() ? matchesData->matches->readable().front() : "" );
+		}
+		else
+		{
+			output->setToDefault();
+		}
 	}
 	else
 	{
