@@ -1,3 +1,12 @@
+1.0.6.x (relative to 1.0.6.2)
+=======
+
+Fixes
+-----
+
+- Catalogue : Fixed crashes when using the <kbd>↑</kbd> or <kbd>↓</kbd> keys immediately after adding or removing a column.
+- PathListingWidget : Fixed bug tracking the last selected path, which could cause crashes if the path was deleted or the columns were changed.
+
 1.0.6.2 (relative to 1.0.6.1)
 =======
 
