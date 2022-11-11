@@ -9,6 +9,8 @@ Improvements
 Fixes
 -----
 
+- Catalogue : Fixed crashes when using the <kbd>↑</kbd> or <kbd>↓</kbd> keys immediately after adding or removing a column.
+- PathListingWidget : Fixed bug tracking the last selected path, which could cause crashes if the path was deleted or the columns were changed.
 - Image Viewer : Fixed dragging a color from the image view using a context with the wrong time, and an error that could show up when deleting the currently viewed image.
 - Cycles :
   - Fixed background shader bug that could cause a crash, or cause the initial render in the Cycles viewport to be blank.
@@ -175,6 +177,15 @@ Breaking Changes
 - Signals : Removed flawed `ScopedConnection` copy constructor and assignment operator. Use move construction and assignment instead.
 - ImagePlug : Removed unused `viewName` argument from `viewNames()` and `viewNamesHash()` methods.
 - StandardAttributes : Removed backwards compatibility for StandardAttributes nodes saved from Gaffer `0.95.0` (May 2014) and earlier. If necessary, resave affected files using a recent Gaffer version.
+
+1.0.6.3 (relative to 1.0.6.2)
+=======
+
+Fixes
+-----
+
+- Catalogue : Fixed crashes when using the <kbd>↑</kbd> or <kbd>↓</kbd> keys immediately after adding or removing a column.
+- PathListingWidget : Fixed bug tracking the last selected path, which could cause crashes if the path was deleted or the columns were changed.
 
 1.0.6.2 (relative to 1.0.6.1)
 =======
