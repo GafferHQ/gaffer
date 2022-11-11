@@ -42,7 +42,6 @@
 #include "Gaffer/ParallelAlgo.h"
 
 #include "IECoreScene/CurvesPrimitive.h"
-#include "IECoreScene/Transform.h"
 #include "IECoreScene/VisibleRenderable.h"
 
 #include "IECore/Interpolator.h"

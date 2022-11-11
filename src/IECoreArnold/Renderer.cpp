@@ -49,7 +49,6 @@
 #include "IECoreScene/MeshPrimitive.h"
 #include "IECoreScene/Shader.h"
 #include "IECoreScene/SpherePrimitive.h"
-#include "IECoreScene/Transform.h"
 
 #include "IECoreVDB/VDBObject.h"
 #include "IECoreVDB/TypeIds.h"

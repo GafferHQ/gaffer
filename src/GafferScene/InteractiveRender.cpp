@@ -47,7 +47,6 @@
 
 #include "Gaffer/Private/IECorePreview/MessagesData.h"
 
-#include "IECoreScene/Transform.h"
 #include "IECoreScene/VisibleRenderable.h"
 
 #include "IECore/MessageHandler.h"

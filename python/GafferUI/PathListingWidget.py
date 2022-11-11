@@ -542,6 +542,7 @@ class PathListingWidget( GafferUI.Widget ) :
 			# Use `__lastSelectedIndex` if available so that shift + keypress
 			# accumulates selection.
 			index = self.__lastSelectedIndex
+			assert( isinstance( index, ( type( None ), QtCore.QPersistentModelIndex ) ) )
 			if index is not None and index.isValid() :
 				# Convert from persistent index
 				index = QtCore.QModelIndex( index )
@@ -747,6 +748,7 @@ class PathListingWidget( GafferUI.Widget ) :
 		selection = self.__getSelectionInternal()
 
 		last = self.__lastSelectedIndex
+		assert( isinstance( last, ( type( None ), QtCore.QPersistentModelIndex ) ) )
 		if last is not None and last.isValid() :
 			# Convert from persistent index
 			last = QtCore.QModelIndex( last )
@@ -806,7 +808,7 @@ class PathListingWidget( GafferUI.Widget ) :
 		self._qtWidget().setCurrentIndex( index )
 		self.__setSelectionInternal( selection, scrollToFirst=False, expandNonLeaf=False )
 
-		self.__lastSelectedIndex = index
+		self.__lastSelectedIndex = QtCore.QPersistentModelIndex( index )
 
 	def __singleSelect( self, index ) :
 
@@ -819,7 +821,7 @@ class PathListingWidget( GafferUI.Widget ) :
 			paths = [ IECore.PathMatcher( [ path ] ) if i == index.column() else IECore.PathMatcher() for i in range( 0, len( self.getColumns() ) ) ]
 		self.setSelection( paths, scrollToFirst=False, expandNonLeaf=False )
 
-		self.__lastSelectedIndex = index
+		self.__lastSelectedIndex = QtCore.QPersistentModelIndex( index )
 
 	def __rowSelectionMode( self ) :
 

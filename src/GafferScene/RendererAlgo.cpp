@@ -53,7 +53,6 @@
 #include "IECoreScene/PreWorldRenderable.h"
 #include "IECoreScene/Primitive.h"
 #include "IECoreScene/Shader.h"
-#include "IECoreScene/Transform.h"
 #include "IECoreScene/VisibleRenderable.h"
 
 #include "IECore/Data.h"

@@ -51,6 +51,24 @@ Breaking Changes
 - ContextAlgo : Removed use of the `ui:scene:expandedPaths` context variable. Any code directly accessing `ui:scene:expandedPaths` should instead use the `getExpandedPaths()/setExpandedPaths()/expand()/expandDescendants()` methods provided by `ContextAlgo`.
 - SceneGadget : Removed `setExpandedPaths()` and `getExpandedPaths()` methods. `setVisibleSet()` and `getVisibleSet()` are now used instead.
 
+1.1.4.0 (relative to 1.1.3.0)
+=======
+
+Improvements
+------------
+
+- Cycles : Added support for custom attributes with either a `user:` or `render:` prefix. These can be authored in Gaffer and then read at render time using Cycle's attribute shader.
+
+Fixes
+-----
+
+- Catalogue : Fixed crashes when using the <kbd>↑</kbd> or <kbd>↓</kbd> keys immediately after adding or removing a column.
+- PathListingWidget : Fixed bug tracking the last selected path, which could cause crashes if the path was deleted or the columns were changed.
+- Image Viewer : Fixed dragging a color from the image view using a context with the wrong time, and an error that could show up when deleting the currently viewed image.
+- Cycles :
+  - Fixed background shader bug that could cause a crash, or cause the initial render in the Cycles viewport to be blank.
+  - Fixed light bug that triggered an assertion in Cycles debug builds.
+
 1.1.3.0 (relative to 1.1.2.0)
 =======
 
@@ -213,6 +231,15 @@ Breaking Changes
 - Signals : Removed flawed `ScopedConnection` copy constructor and assignment operator. Use move construction and assignment instead.
 - ImagePlug : Removed unused `viewName` argument from `viewNames()` and `viewNamesHash()` methods.
 - StandardAttributes : Removed backwards compatibility for StandardAttributes nodes saved from Gaffer `0.95.0` (May 2014) and earlier. If necessary, resave affected files using a recent Gaffer version.
+
+1.0.6.3 (relative to 1.0.6.2)
+=======
+
+Fixes
+-----
+
+- Catalogue : Fixed crashes when using the <kbd>↑</kbd> or <kbd>↓</kbd> keys immediately after adding or removing a column.
+- PathListingWidget : Fixed bug tracking the last selected path, which could cause crashes if the path was deleted or the columns were changed.
 
 1.0.6.2 (relative to 1.0.6.1)
 =======

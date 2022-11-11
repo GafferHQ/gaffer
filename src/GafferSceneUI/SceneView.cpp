@@ -66,8 +66,6 @@
 #include "IECoreGL/Primitive.h"
 #include "IECoreGL/State.h"
 
-#include "IECoreScene/Transform.h"
-
 #include "IECore/AngleConversion.h"
 #include "IECore/VectorTypedData.h"
 
