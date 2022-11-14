@@ -1176,22 +1176,20 @@ class RendererTest( GafferTest.TestCase ) :
 
 		plane = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) )
 
-		r.object(
-			"planeDefault",
-			plane,
-			r.attributes( IECore.CompoundObject() )
-		)
-		r.object(
-			"planeLinear",
-			plane,
-			r.attributes(
-				IECore.CompoundObject( {
-					"ai:transform_type" : IECore.StringData( "linear" ),
-				} )
-			)
+		defaultAttributes = r.attributes( IECore.CompoundObject() )
+		linearAttributes = r.attributes(
+			IECore.CompoundObject( {
+				"ai:transform_type" : IECore.StringData( "linear" ),
+			} )
 		)
 
+		r.object( "planeDefault", plane, defaultAttributes )
+		r.object( "planeLinear", plane, linearAttributes )
+		p = r.object( "planeLinearThenDefault", plane, linearAttributes )
+		p.attributes( defaultAttributes )
+
 		r.render()
+		del defaultAttributes, linearAttributes, p
 		del r
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
@@ -1199,8 +1197,10 @@ class RendererTest( GafferTest.TestCase ) :
 			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
 			defaultNode = arnold.AiNodeLookUpByName( universe, "planeDefault" )
 			linearNode = arnold.AiNodeLookUpByName( universe, "planeLinear" )
+			linearThenDefaultNode = arnold.AiNodeLookUpByName( universe, "planeLinearThenDefault" )
 			self.assertEqual( arnold.AiNodeGetStr( defaultNode, "transform_type" ), "rotate_about_center" )
 			self.assertEqual( arnold.AiNodeGetStr( linearNode, "transform_type" ), "linear" )
+			self.assertEqual( arnold.AiNodeGetStr( linearThenDefaultNode, "transform_type" ), "rotate_about_center" )
 
 	def testSubdivisionAttributes( self ) :
 
@@ -1261,6 +1261,27 @@ class RendererTest( GafferTest.TestCase ) :
 			)
 		)
 
+		r.object(
+			"planeInterned",
+			plane,
+			r.attributes(
+				IECore.CompoundObject( {
+					"ai:sss_setname" : IECore.InternedStringData( "testInternedSet" ),
+				} )
+			)
+		)
+
+		r.object(
+			"planeEmpty",
+			plane,
+			r.attributes(
+				IECore.CompoundObject( {
+					"ai:sss_setname" : IECore.StringData( "" ),
+				} )
+			)
+		)
+
+
 		r.render()
 		del r
 
@@ -1269,6 +1290,10 @@ class RendererTest( GafferTest.TestCase ) :
 			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
 			node = arnold.AiNodeLookUpByName( universe, "plane" )
 			self.assertEqual( arnold.AiNodeGetStr( node, "sss_setname" ), "testSet" )
+			node = arnold.AiNodeLookUpByName( universe, "planeInterned" )
+			self.assertEqual( arnold.AiNodeGetStr( node, "sss_setname" ), "testInternedSet" )
+			node = arnold.AiNodeLookUpByName( universe, "planeEmpty" )
+			self.assertIsNone( arnold.AiNodeLookUpUserParameter( node, "sss_setname" ) )
 
 	def testCustomAttributes( self ) :
 
@@ -3945,6 +3970,32 @@ class RendererTest( GafferTest.TestCase ) :
 
 			input = arnold.AiNodeGetLink( surfaceShader, "base_color" )
 			self.assertIn( "colorSwitch", arnold.AiNodeGetName( input ) )
+
+	def testInternedStringAttributes( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			os.path.join( self.temporaryDirectory(), "test.ass" )
+		)
+
+		r.object(
+			"testPlane",
+			IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) ),
+			r.attributes( IECore.CompoundObject( {
+				"user:myString" : IECore.InternedStringData( "test" ),
+			} ) ),
+		)
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+			arnold.AiSceneLoad( universe, os.path.join( self.temporaryDirectory(), "test.ass" ), None )
+
+			plane = arnold.AiNodeLookUpByName( universe, "testPlane" )
+			self.assertEqual( arnold.AiNodeGetStr( plane, "user:myString" ), "test" )
 
 	@staticmethod
 	def __m44f( m ) :

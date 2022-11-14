@@ -5,6 +5,12 @@ Improvements
 ------------
 
 - Cycles : Added support for custom attributes with either a `user:` or `render:` prefix. These can be authored in Gaffer and then read at render time using Cycle's attribute shader.
+- Arnold : Added support for attributes containing InternedStringData, as would be obtained by loading `token` primvars from a USD file.
+
+Fixes
+-----
+
+- Arnold : Fixed deletion of `ai:transform_type` attribute during interactive renders. The object now reverts to the default transform type in this case.
 
 Fixes
 -----
