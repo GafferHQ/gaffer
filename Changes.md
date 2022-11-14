@@ -12,6 +12,7 @@ Features
 Improvements
 ------------
 
+- CollectScenes : Improved performance when computing sets, with a 3x speedup being seen in one particular benchmark.
 - LightTool : Changed spot light and quad light edge tool tip locations so that they follow the cone and edge during drag.
 - Arnold : Improved speed of translation of encapsulated scenes when using many threads.
 
