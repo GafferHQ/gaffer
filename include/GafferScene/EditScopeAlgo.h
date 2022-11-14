@@ -123,6 +123,22 @@ GAFFERSCENE_API Gaffer::TweakPlug *acquireAttributeEdit( Gaffer::EditScope *scop
 GAFFERSCENE_API void removeAttributeEdit( Gaffer::EditScope *scope, const ScenePlug::ScenePath &path, const std::string &attribute );
 GAFFERSCENE_API const Gaffer::GraphComponent *attributeEditReadOnlyReason( const Gaffer::EditScope *scope, const ScenePlug::ScenePath &path, const std::string &attribute );
 
+// Sets
+// ==========
+//
+// These methods edit set membership for one or more locations.
+
+enum class SetMembership
+{
+	Added,
+	Removed,
+	Unchanged
+};
+
+GAFFERSCENE_API void setSetMembership( Gaffer::EditScope *scope, const IECore::PathMatcher &paths, const std::string &set, SetMembership state );
+GAFFERSCENE_API SetMembership getSetMembership( Gaffer::EditScope *scope, const ScenePlug::ScenePath &path, const std::string &set );
+GAFFERSCENE_API const Gaffer::GraphComponent *setMembershipReadOnlyReason( const Gaffer::EditScope *scope, const std::string &set, SetMembership state );
+
 } // namespace EditScopeAlgo
 
 } // namespace GafferScene

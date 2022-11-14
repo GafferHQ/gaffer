@@ -1036,5 +1036,208 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 			edit = GafferScene.EditScopeAlgo.acquireParameterEdit( editScope, "/plane", attributeName, ( "", "i" ) )
 			self.assertEqual( edit.node().getName(), processorName )
 
+	def testSetMembership( self ) :
+
+		plane = GafferScene.Plane()
+		plane["sets"].setValue( "A B" )
+		cube = GafferScene.Cube()
+		cube["sets"].setValue( "B C" )
+		group = GafferScene.Group()
+
+		group["in"][0].setInput( plane["out"] )
+		group["in"][1].setInput( cube["out"] )
+
+		scope = Gaffer.EditScope()
+		scope.setup( group["out"] )
+		scope["in"].setInput( group["out"] )
+
+		membership = GafferScene.EditScopeAlgo.SetMembership
+
+		self.assertEqual( len( list( GafferScene.SceneProcessor.Range( scope ) ) ), 0 )
+		self.assertTrue( GafferScene.SceneAlgo.exists( scope["out"], "/group/plane" ) )
+		self.assertTrue( GafferScene.SceneAlgo.exists( scope["out"], "/group/cube" ) )
+
+		for path, set, status in (
+			( "/group/plane", "A", membership.Unchanged ),
+			( "/group/plane", "B", membership.Unchanged ),
+			( "/group/plane", "C", membership.Unchanged ),
+			( "/group/cube", "A", membership.Unchanged ),
+			( "/group/cube", "B", membership.Unchanged ),
+			( "/group/cube", "C", membership.Unchanged ),
+		) :
+			with self.subTest( path = path, set = set, status = status ) :
+				self.assertEqual( GafferScene.EditScopeAlgo.getSetMembership( scope, path, set ), status )
+
+		self.assertEqual( len( list( GafferScene.SceneProcessor.Range( scope ) ) ), 0 )
+		self.assertEqual( scope["out"].set( "A" ).value, IECore.PathMatcher( ["/group/plane"] ) )
+		self.assertEqual( scope["out"].set( "B" ).value, IECore.PathMatcher( ["/group/plane", "/group/cube"] ) )
+		self.assertEqual( scope["out"].set( "C" ).value, IECore.PathMatcher( ["/group/cube"] ) )
+		self.assertEqual( scope["out"].set( "test" ).value, IECore.PathMatcher( [] ) )
+
+		GafferScene.EditScopeAlgo.setSetMembership( scope, IECore.PathMatcher( ["/group/cube"] ), "A", membership.Added )
+
+		for path, set, status in (
+			( "/group/plane", "A", membership.Unchanged ),
+			( "/group/plane", "B", membership.Unchanged ),
+			( "/group/plane", "C", membership.Unchanged ),
+			( "/group/cube", "A", membership.Added ),
+			( "/group/cube", "B", membership.Unchanged ),
+			( "/group/cube", "C", membership.Unchanged ),
+		) :
+			with self.subTest( path = path, set = set, status = status ) :
+				self.assertEqual( GafferScene.EditScopeAlgo.getSetMembership( scope, path, set ), status )
+
+		self.assertEqual( len( list( GafferScene.SceneProcessor.Range( scope ) ) ), 1 )
+		self.assertEqual( scope["out"].set( "A" ).value, IECore.PathMatcher( ["/group/plane", "/group/cube"] ) )
+		self.assertEqual( scope["out"].set( "B" ).value, IECore.PathMatcher( ["/group/plane", "/group/cube"] ) )
+		self.assertEqual( scope["out"].set( "C" ).value, IECore.PathMatcher( ["/group/cube"] ) )
+
+		GafferScene.EditScopeAlgo.setSetMembership( scope, IECore.PathMatcher( ["/group/plane"] ), "B", membership.Removed )
+
+		for path, set, status in (
+			( "/group/plane", "A", membership.Unchanged ),
+			( "/group/plane", "B", membership.Removed ),
+			( "/group/plane", "C", membership.Unchanged ),
+			( "/group/cube", "A", membership.Added ),
+			( "/group/cube", "B", membership.Unchanged ),
+			( "/group/cube", "C", membership.Unchanged ),
+		) :
+			with self.subTest( path = path, set = set, status = status ) :
+				self.assertEqual( GafferScene.EditScopeAlgo.getSetMembership( scope, path, set ), status )
+
+		self.assertEqual( len( list( GafferScene.SceneProcessor.Range( scope ) ) ), 1 )
+		self.assertEqual( scope["out"].set( "A" ).value, IECore.PathMatcher( ["/group/plane", "/group/cube"] ) )
+		self.assertEqual( scope["out"].set( "B" ).value, IECore.PathMatcher( ["/group/cube"] ) )
+		self.assertEqual( scope["out"].set( "C" ).value, IECore.PathMatcher( ["/group/cube"] ) )
+
+		GafferScene.EditScopeAlgo.setSetMembership( scope, IECore.PathMatcher( ["/group/plane"] ), "B", membership.Unchanged )
+
+		for path, set, status in (
+			( "/group/plane", "A", membership.Unchanged ),
+			( "/group/plane", "B", membership.Unchanged ),
+			( "/group/plane", "C", membership.Unchanged ),
+			( "/group/cube", "A", membership.Added ),
+			( "/group/cube", "B", membership.Unchanged ),
+			( "/group/cube", "C", membership.Unchanged ),
+		) :
+			with self.subTest( path = path, set = set, status = status ) :
+				self.assertEqual( GafferScene.EditScopeAlgo.getSetMembership( scope, path, set ), status )
+
+		self.assertEqual( len( list( GafferScene.SceneProcessor.Range( scope ) ) ), 1 )
+		self.assertEqual( scope["out"].set( "A" ).value, IECore.PathMatcher( ["/group/plane", "/group/cube"] ) )
+		self.assertEqual( scope["out"].set( "B" ).value, IECore.PathMatcher( ["/group/plane", "/group/cube"] ) )
+		self.assertEqual( scope["out"].set( "C" ).value, IECore.PathMatcher( ["/group/cube"] ) )
+
+		# Test against manual edits
+
+		self.assertEqual( scope["SetMembershipEdits"]["edits"][1]["name"].getValue(), "A" )
+
+		scope["SetMembershipEdits"]["edits"][1]["enabled"].setValue( False )
+
+		for path, set, status in (
+			( "/group/plane", "A", membership.Unchanged ),
+			( "/group/plane", "B", membership.Unchanged ),
+			( "/group/plane", "C", membership.Unchanged ),
+			( "/group/cube", "A", membership.Unchanged ),
+			( "/group/cube", "B", membership.Unchanged ),
+			( "/group/cube", "C", membership.Unchanged ),
+		) :
+			with self.subTest( path = path, set = set, status = status ) :
+				self.assertEqual( GafferScene.EditScopeAlgo.getSetMembership( scope, path, set ), status )
+
+		GafferScene.EditScopeAlgo.setSetMembership( scope, IECore.PathMatcher( ["/group/plane"] ), "A", membership.Added )
+
+		for path, set, status in (
+			( "/group/plane", "A", membership.Added ),
+			( "/group/plane", "B", membership.Unchanged ),
+			( "/group/plane", "C", membership.Unchanged ),
+			( "/group/cube", "A", membership.Unchanged ),
+			( "/group/cube", "B", membership.Unchanged ),
+			( "/group/cube", "C", membership.Unchanged ),
+		) :
+			with self.subTest( path = path, set = set, status = status ) :
+				self.assertEqual( GafferScene.EditScopeAlgo.getSetMembership( scope, path, set ), status )
+
+		# Make sure conflicting manual edits don't confuse changing membership
+
+		aAdded = scope["SetMembershipEdits"]["edits"][1]["cells"]["Added"]["value"]
+		aRemoved = scope["SetMembershipEdits"]["edits"][1]["cells"]["Removed"]["value"]
+
+		aAdded.setValue( IECore.StringVectorData( ["/group/cube"] ) )
+		aRemoved.setValue( IECore.StringVectorData( ["/group/cube"] ) )
+
+		GafferScene.EditScopeAlgo.setSetMembership( scope, IECore.PathMatcher( ["/group/cube"] ), "A", membership.Added )
+
+		self.assertIn( "/group/cube", aAdded.getValue() )
+		self.assertNotIn( "/group/cube", aRemoved.getValue() )
+
+		aAdded.setValue( IECore.StringVectorData( ["/group/cube"] ) )
+		aRemoved.setValue( IECore.StringVectorData( ["/group/cube"] ) )
+
+		GafferScene.EditScopeAlgo.setSetMembership( scope, IECore.PathMatcher( ["/group/cube"] ), "A", membership.Removed )
+
+		self.assertNotIn( "/group/cube", aAdded.getValue() )
+		self.assertIn( "/group/cube", aRemoved.getValue() )
+
+		aAdded.setValue( IECore.StringVectorData( ["/group/cube"] ) )
+		aRemoved.setValue( IECore.StringVectorData( ["/group/cube"] ) )
+
+		GafferScene.EditScopeAlgo.setSetMembership( scope, IECore.PathMatcher( ["/group/cube"] ), "A", membership.Unchanged )
+
+		self.assertNotIn( "/group/cube", aAdded.getValue() )
+		self.assertNotIn( "/group/cube", aRemoved.getValue() )
+
+		aAdded.setValue( IECore.StringVectorData( ["/group/cube"] ) )
+		aRemoved.setValue( IECore.StringVectorData( ["/group/cube"] ) )
+
+		self.assertEqual(
+			GafferScene.EditScopeAlgo.getSetMembership( scope, "/group/cube", "A"),
+			membership.Removed
+		)
+
+	def testSetMembershipReadOnlyReason( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["cube"] = GafferScene.Cube()
+
+		s["scope"] = Gaffer.EditScope()
+		s["scope"].setup( s["cube"]["out"] )
+		s["scope"]["in"].setInput( s["cube"]["out"] )
+
+		s["box"] = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["cube"], s["scope"] ] ) )
+
+		membership = GafferScene.EditScopeAlgo.SetMembership
+
+		self.assertIsNone( GafferScene.EditScopeAlgo.setMembershipReadOnlyReason( s["box"]["scope"], "A", membership.Added ) )
+
+		for component in ( s["box"], s["box"]["scope"] ) :
+			Gaffer.MetadataAlgo.setReadOnly( component, True )
+			self.assertEqual( GafferScene.EditScopeAlgo.setMembershipReadOnlyReason( s["box"]["scope"], "A", membership.Added ), s["box"] )
+
+		Gaffer.MetadataAlgo.setReadOnly( s["box"], False )
+		self.assertEqual( GafferScene.EditScopeAlgo.setMembershipReadOnlyReason( s["box"]["scope"], "A", membership.Added ), s["box"]["scope"] )
+
+		Gaffer.MetadataAlgo.setReadOnly( s["box"]["scope"], False )
+		GafferScene.EditScopeAlgo.setSetMembership( s["box"]["scope"], IECore.PathMatcher( ["/cube"] ), "A", membership.Added )
+
+		self.assertIsNone( GafferScene.EditScopeAlgo.setMembershipReadOnlyReason( s["box"]["scope"], "A", membership.Added ) )
+
+		for component in (
+			s["box"]["scope"]["SetMembershipEdits"]["edits"][1]["cells"]["Added"]["value"],
+			s["box"]["scope"]["SetMembershipEdits"]["edits"][1]["cells"]["Added"],
+			s["box"]["scope"]["SetMembershipEdits"]["edits"][1]["cells"],
+			s["box"]["scope"]["SetMembershipEdits"]["edits"][1],
+			s["box"]["scope"]["SetMembershipEdits"]["edits"],
+			s["box"]["scope"]["SetMembershipEdits"],
+			s["box"]["scope"],
+			s["box"]
+		) :
+			Gaffer.MetadataAlgo.setReadOnly( component, True )
+			self.assertEqual(
+				GafferScene.EditScopeAlgo.setMembershipReadOnlyReason( s["box"]["scope"], "A", membership.Added ),
+				component
+			)
+
+
 if __name__ == "__main__":
 	unittest.main()

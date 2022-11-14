@@ -176,6 +176,26 @@ GraphComponentPtr attributeEditReadOnlyReasonWrapper( Gaffer::EditScope &scope, 
 	return const_cast<GraphComponent *>( EditScopeAlgo::attributeEditReadOnlyReason( &scope, path, attribute ) );
 }
 
+// Set Membership
+// ==============
+
+void setSetMembershipWrapper( Gaffer::EditScope &scope, const IECore::PathMatcher &paths, const std::string &set, EditScopeAlgo::SetMembership state )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	EditScopeAlgo::setSetMembership( &scope, paths, set, state );
+}
+
+EditScopeAlgo::SetMembership getSetMembershipWrapper( Gaffer::EditScope &scope, const ScenePlug::ScenePath &path, const std::string &set )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return EditScopeAlgo::getSetMembership( &scope, path, set );
+}
+
+GraphComponentPtr setMembershipReadOnlyReasonWrapper( Gaffer::EditScope &scope, const std::string &set, EditScopeAlgo::SetMembership state )
+{
+	return const_cast<GraphComponent *>( EditScopeAlgo::setMembershipReadOnlyReason( &scope, set, state ) );
+}
+
 } // namespace
 
 namespace GafferSceneModule
@@ -218,6 +238,14 @@ void bindEditScopeAlgo()
 	def( "removeAttributeEdit", &removeAttributeEditWrapper, ( arg( "scope" ), arg( "path" ), arg( "attribute" ) ) );
 	def( "attributeEditReadOnlyReason", &attributeEditReadOnlyReasonWrapper, ( arg( "scope" ), arg( "path" ), arg( "attribute" ) ) );
 
+	def( "setSetMembership", &setSetMembershipWrapper );
+	def( "getSetMembership", &getSetMembershipWrapper );
+	def( "setMembershipReadOnlyReason", &setMembershipReadOnlyReasonWrapper );
+	enum_<EditScopeAlgo::SetMembership>( "SetMembership" )
+		.value( "Added", EditScopeAlgo::SetMembership::Added )
+		.value( "Removed", EditScopeAlgo::SetMembership::Removed )
+		.value( "Unchanged", EditScopeAlgo::SetMembership::Unchanged )
+	;
 }
 
 } // namespace GafferSceneModule
