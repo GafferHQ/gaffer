@@ -53,6 +53,7 @@ API
     - `preferencesLocation()` now returns a `filesystem::path`.
   - StringPlug : Added a `setValue()` overload taking a `filesystem::path`.
   - Dispatcher : `jobDirectory()` now returns a `filesystem::path`.
+  - Backups : File names are now represented using `pathlib.Path`.
   - TestCase : `temporaryDirectory()` now returns a `pathlib.Path`.
 - PathColumn : Added `buttonPressSignal()`, `buttonReleaseSignal()` and `buttonDoubleClickSignal()`. These allow a PathColumn to implement its own event handling.
 - Capsule : Removed attempts to detect invalidated Capsules.
