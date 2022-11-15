@@ -124,7 +124,7 @@ class HierarchyView( GafferUI.NodeSetEditor ) :
 
 		if any( ContextAlgo.affectsSelectedPaths( x ) for x in modifiedItems ) :
 			self.__transferSelectionFromContext()
-		elif any( ContextAlgo.affectsExpandedPaths( x ) for x in modifiedItems ) :
+		elif any( ContextAlgo.affectsVisibleSet( x ) for x in modifiedItems ) :
 			self.__transferExpansionFromContext()
 
 		for item in modifiedItems :
@@ -174,7 +174,9 @@ class HierarchyView( GafferUI.NodeSetEditor ) :
 		assert( pathListing is self.__pathListing )
 
 		with Gaffer.Signals.BlockedConnection( self._contextChangedConnection() ) :
-			ContextAlgo.setExpandedPaths( self.getContext(), pathListing.getExpansion() )
+			visibleSet = ContextAlgo.getVisibleSet( self.getContext() )
+			visibleSet.expansions = pathListing.getExpansion()
+			ContextAlgo.setVisibleSet( self.getContext(), visibleSet )
 
 	def __selectionChanged( self, pathListing ) :
 
@@ -223,12 +225,9 @@ class HierarchyView( GafferUI.NodeSetEditor ) :
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
 	def __transferExpansionFromContext( self ) :
 
-		expandedPaths = ContextAlgo.getExpandedPaths( self.getContext() )
-		if expandedPaths is None :
-			return
-
+		visibleSet = ContextAlgo.getVisibleSet( self.getContext() )
 		with Gaffer.Signals.BlockedConnection( self.__expansionChangedConnection ) :
-			self.__pathListing.setExpansion( expandedPaths )
+			self.__pathListing.setExpansion( visibleSet.expansions )
 
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
 	def __transferSelectionFromContext( self ) :
