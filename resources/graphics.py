@@ -384,6 +384,31 @@
 				"menuIndicator",
 				"menuIndicatorDisabled",
 			]
+		},
+
+		"hierarchyView" : {
+
+			"options" : {
+				"requiredWidth" : 16,
+				"requiredHeight" : 16,
+				"validatePixelAlignment" : True
+			},
+
+			"ids" : [
+				"descendantExcluded",
+				"descendantIncluded",
+				"descendantIncludedTransparent",
+				"locationExcluded",
+				"locationExcludedHighlighted",
+				"locationExcludedHighlightedTransparent",
+				"locationExcludedTransparent",
+				"locationExpanded",
+				"locationIncluded",
+				"locationIncludedDisabled",
+				"locationIncludedHighlighted",
+				"locationIncludedHighlightedTransparent",
+				"locationIncludedTransparent",
+			]
 		}
 
 	},

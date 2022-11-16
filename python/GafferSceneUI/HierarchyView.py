@@ -74,7 +74,11 @@ class HierarchyView( GafferUI.NodeSetEditor ) :
 
 			self.__pathListing = GafferUI.PathListingWidget(
 				Gaffer.DictPath( {}, "/" ), # temp till we make a ScenePath
-				columns = [ GafferUI.PathListingWidget.defaultNameColumn ],
+				columns = [
+					GafferUI.PathListingWidget.defaultNameColumn,
+					_GafferSceneUI._HierarchyViewInclusionsColumn( scriptNode.context() ),
+					_GafferSceneUI._HierarchyViewExclusionsColumn( scriptNode.context() )
+				],
 				selectionMode = GafferUI.PathListingWidget.SelectionMode.Rows,
 				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
 			)
