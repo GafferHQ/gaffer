@@ -319,10 +319,6 @@ class _RendererSettingsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		button.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ), scoped = False )
 
-	def _updateFromPlug( self ) :
-
-		pass
-
 	def __clicked( self, button ) :
 
 		if self.__window is None :
@@ -354,10 +350,6 @@ class _DrawingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 	def hasLabel( self ) :
 
 		return True
-
-	def _updateFromPlug( self ) :
-
-		pass
 
 	def __menuDefinition( self ) :
 
@@ -508,10 +500,6 @@ class _ShadingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 			return True
 
-		def _updateFromPlug( self ) :
-
-			pass
-
 		def __menuDefinition( self ) :
 
 			m = IECore.MenuDefinition()
@@ -551,10 +539,6 @@ class _ExpansionPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def hasLabel( self ) :
 
 		return True
-
-	def _updateFromPlug( self ) :
-
-		pass
 
 	def __menuDefinition( self ) :
 
@@ -963,10 +947,6 @@ class _GridPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def hasLabel( self ) :
 
 		return True
-
-	def _updateFromPlug( self ) :
-
-		pass
 
 	def __menuDefinition( self ) :
 

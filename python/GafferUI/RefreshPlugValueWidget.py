@@ -49,10 +49,6 @@ class RefreshPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ), scoped = False )
 
-	def _updateFromPlug( self ) :
-
-		pass
-
 	def __clicked( self, widget ) :
 
 		# Deliberately not making this undoable, as once we've refreshed

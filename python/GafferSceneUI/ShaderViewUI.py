@@ -85,10 +85,6 @@ class _ScenePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return True
 
-	def _updateFromPlug( self ) :
-
-		pass
-
 	def __menuDefinition( self ) :
 
 		m = IECore.MenuDefinition()
