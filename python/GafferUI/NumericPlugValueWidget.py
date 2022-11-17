@@ -43,10 +43,6 @@ from GafferUI.PlugValueWidget import sole
 ## Supported metadata :
 #
 #  "numericPlugValueWidget:fixedCharacterWidth"
-##
-## \todo Maths expressions to modify the existing value
-## \todo Enter names of other plugs to create a connection
-## \todo Reject drag and drop of anything that's not a number
 class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plugs, **kw ) :
