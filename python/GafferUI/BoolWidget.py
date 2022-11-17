@@ -77,7 +77,11 @@ class BoolWidget( GafferUI.Widget ) :
 	def setImage( self, image ) :
 
 		if isinstance( image, str ) :
+			# Avoid our image getting parented to the wrong thing
+			# if our caller is in a `with container` block.
+			GafferUI.Widget._pushParent( None )
 			self.__image = GafferUI.Image( image )
+			GafferUI.Widget._popParent()
 		else :
 			assert( isinstance( image, ( GafferUI.Image, type( None ) ) ) )
 			self.__image = image
