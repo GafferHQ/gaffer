@@ -69,12 +69,14 @@ class PlugValueWidgetTest( GafferUITest.TestCase ) :
 		self.assertTrue( w.getContext().isSame( s.context() ) )
 
 		s.context().setFrame( 10 )
+		self.waitForUpdate( w )
 		self.assertEqual( w.numericWidget().getValue(), 10 )
 
 		context = Gaffer.Context()
 		context.setFrame( 20 )
 		w.setContext( context )
 		self.assertTrue( w.getContext().isSame( context ) )
+		self.waitForUpdate( w )
 		self.assertEqual( w.numericWidget().getValue(), 20 )
 
 	def testDisableCreationForSpecificTypes( self ) :
