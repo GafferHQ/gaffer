@@ -50,6 +50,15 @@ from Qt import QtCore
 from Qt import QtGui
 from Qt import QtWidgets
 
+class _WidgetMetaclass( Gaffer.Signals.Trackable.__class__ ) :
+
+	def __call__( cls, *args, **kw ) :
+
+		instance = type.__call__( cls, *args, **kw )
+		instance._postConstructor()
+
+		return instance
+
 ## The Widget class provides a base class for all widgets in GafferUI.
 #
 # When building UIs, you will typically derive from an existing Widget subclass such as Window,
@@ -99,7 +108,7 @@ from Qt import QtWidgets
 # have identical signatures in as many places as possible, with the possibility of perhaps having
 # a common base class in the future. Right now the signatures are the same for the event signals and
 # for the tool tips.
-class Widget( Gaffer.Signals.Trackable ) :
+class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 
 	## All GafferUI.Widget instances must hold a corresponding QtWidgets.QWidget instance
 	# which provides the top level implementation for the widget, and to which other
@@ -652,6 +661,14 @@ class Widget( Gaffer.Signals.Trackable ) :
 			widget = widget.ancestor( widgetType )
 
 		return widget
+
+	## Called after the Widget's `__init__` method has completed. Useful
+	# for performing operations from a base class after the subclass is
+	# fully constructed. Overrides should call the base class `_postConstructor()`
+	# before doing their own work.
+	def _postConstructor( self ) :
+
+		pass
 
 	## Returns the top level QWidget instance used to implement
 	# the GafferUI.Widget functionality.

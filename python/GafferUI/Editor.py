@@ -45,20 +45,9 @@ import GafferUI
 from Qt import QtCore
 from Qt import QtWidgets
 
-class _EditorMetaclass( Gaffer.Signals.Trackable.__class__ ) :
-
-	def __call__( cls, *args, **kw ) :
-
-		instance = type.__call__( cls, *args, **kw )
-		while hasattr( cls, "instanceCreatedSignal" ) :
-			cls.instanceCreatedSignal()( instance )
-			cls = cls.__bases__[0]
-
-		return instance
-
 ## Base class for UI components which display or manipulate a ScriptNode
 # or its children. These make up the tabs in the UI layout.
-class Editor( GafferUI.Widget, metaclass = _EditorMetaclass ) :
+class Editor( GafferUI.Widget ) :
 
 	def __init__( self, topLevelWidget, scriptNode, **kw ) :
 
@@ -205,6 +194,13 @@ class Editor( GafferUI.Widget, metaclass = _EditorMetaclass ) :
 		s = Gaffer.Signals.Signal1()
 		setattr( cls, "__instanceCreatedSignal", s )
 		return s
+
+	def _postConstructor( self ) :
+
+		cls = self.__class__
+		while hasattr( cls, "instanceCreatedSignal" ) :
+			cls.instanceCreatedSignal()( self )
+			cls = cls.__bases__[0]
 
 	def __enter( self, widget ) :
 

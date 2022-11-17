@@ -42,6 +42,7 @@ API
 - ContextAlgo : Added `setVisiblesSet()`, `getVisibleSet()`, and `affectsVisibleSet()` methods.
 - SceneGadget : Added `setVisibleSet()`, and `getVisibleSet()` methods.
 - EditScopeAlgo : Added methods to modify and query modifications to set members in an Edit Scope.
+- Widget : Added support for a `_postContructor()` method, which is called after the widget is fully constructed. This can be useful for performing post-initialisation work from a base class.
 
 Breaking Changes
 ----------------

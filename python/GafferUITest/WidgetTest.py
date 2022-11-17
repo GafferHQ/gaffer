@@ -475,5 +475,29 @@ class WidgetTest( GafferUITest.TestCase ) :
 			'GafferUI.Widget'
 		] )
 
+	def testPostConstructor( self ) :
+
+		class BaseWidget( GafferUI.Widget ) :
+
+			def __init__( self, **kw ) :
+
+				GafferUI.Widget.__init__( self, GafferUI.TextWidget(), **kw )
+
+			def _postConstructor( self ) :
+
+				assert( self.derivedConstructed )
+				self.postConstructed = True
+
+		class DerivedWidget( BaseWidget ) :
+
+			def __init__( self, **kw ) :
+
+				BaseWidget.__init__( self, **kw )
+
+				self.derivedConstructed = True
+
+		w = DerivedWidget()
+		self.assertTrue( w.postConstructed )
+
 if __name__ == "__main__":
 	unittest.main()
