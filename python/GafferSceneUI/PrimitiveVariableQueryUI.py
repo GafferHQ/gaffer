@@ -37,6 +37,7 @@
 import imath
 import functools
 import collections
+import six
 
 import IECore
 import IECoreScene
@@ -443,7 +444,7 @@ class _PrimitiveVariableQueryFooter( GafferUI.PlugValueWidget ) :
 			"Array/VectorDivider",
 			Gaffer.Color3fVectorDataPlug( defaultValue = IECore.Color3fVectorData() ),
 		] :
-			if isinstance( item, str ) :
+			if isinstance( item, six.string_types ) :
 				result.append( "/" + item, { "divider": True } )
 			else :
 				name = type( item ).__name__.replace( "Plug", "" )
