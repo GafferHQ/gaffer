@@ -77,8 +77,4 @@ class LayoutPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return self.__layout.plugValueWidget( childPlug )
 
-	def _updateFromPlug( self ) :
-
-		pass
-
 GafferUI.PlugValueWidget.registerType( Gaffer.TransformPlug, LayoutPlugValueWidget )

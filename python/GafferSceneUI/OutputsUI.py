@@ -145,10 +145,6 @@ class OutputsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return True
 
-	def _updateFromPlug( self ) :
-
-		pass
-
 	def __addMenuDefinition( self ) :
 
 		node = self.getPlug().node()

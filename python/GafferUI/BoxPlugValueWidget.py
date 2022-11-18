@@ -83,10 +83,6 @@ class BoxPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return None
 
-	def _updateFromPlug( self ) :
-
-		pass
-
 GafferUI.PlugValueWidget.registerType( Gaffer.Box2fPlug, BoxPlugValueWidget )
 GafferUI.PlugValueWidget.registerType( Gaffer.Box3fPlug, BoxPlugValueWidget )
 GafferUI.PlugValueWidget.registerType( Gaffer.Box2iPlug, BoxPlugValueWidget )

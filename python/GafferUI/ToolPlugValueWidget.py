@@ -54,7 +54,3 @@ class ToolPlugValueWidget( GafferUI.PlugValueWidget ) :
 				Gaffer.WeakMethod( self._popupMenuDefinition )
 			)
 		)
-
-	def _updateFromPlug( self ) :
-
-		pass

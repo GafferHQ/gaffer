@@ -136,8 +136,4 @@ class _ShuffleChannelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return True
 
-	def _updateFromPlug( self ) :
-
-		pass
-
 GafferUI.PlugValueWidget.registerType( GafferImage.Shuffle.ChannelPlug, _ShuffleChannelPlugValueWidget )
