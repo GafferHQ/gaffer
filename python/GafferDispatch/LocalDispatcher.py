@@ -291,7 +291,10 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			while process.poll() is None :
 
 				if batch.blindData().get( "killed" ) :
-					os.killpg( process.pid, signal.SIGTERM )
+					if os.name == "nt" :
+						subprocess.check_call( [ "TASKKILL", "/F", "/PID", str( process.pid ), "/T" ] )
+					else :
+						os.killpg( process.pid, signal.SIGTERM )
 					self.__reportKilled( batch )
 					return False
 

@@ -57,7 +57,7 @@ import GafferArnold
 
 def __aiMetadataGetStr( nodeEntry, paramName, name, defaultValue = None ) :
 
-	value = arnold.AtStringReturn()
+	value = arnold.AtStringStruct()
 	if arnold.AiMetaDataGetStr( nodeEntry, paramName, name, value ) :
 		return arnold.AtStringToStr( value )
 

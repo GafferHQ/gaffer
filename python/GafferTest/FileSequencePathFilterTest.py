@@ -35,19 +35,12 @@
 ##########################################################################
 
 import os
-import shutil
 import unittest
 
 import Gaffer
 import GafferTest
 
 class FileSequencePathFilterTest( GafferTest.TestCase ) :
-
-	## \todo We should be using `self.temporaryDirectory()` here, but
-	# doing so causes test failures. I believe that a number in the directory
-	# name convince the filter that files are part of a sequence when they are
-	# not. We should fix the filter for that case.
-	__dir = "/tmp/gafferFileSequencePathFilterTest"
 
 	def test( self ) :
 
@@ -297,23 +290,11 @@ class FileSequencePathFilterTest( GafferTest.TestCase ) :
 
 		GafferTest.TestCase.setUp( self )
 
-		# clear out old files and make empty directory
-		# to work in
-		if os.path.exists( self.__dir ) :
-			shutil.rmtree( self.__dir )
-		os.mkdir( self.__dir )
-
+		self.__dir = self.temporaryDirectory()
 		os.mkdir( os.path.join( self.__dir, "dir" ) )
 		for n in [ "singleFile.txt", "a.001.txt", "a.002.txt", "a.004.txt", "b.003.txt" ] :
 			with open( os.path.join( self.__dir, n ), "w" ) as f :
 				f.write( "AAAA" )
-
-	def tearDown( self ) :
-
-		GafferTest.TestCase.tearDown( self )
-
-		if os.path.exists( self.__dir ) :
-			shutil.rmtree( self.__dir )
 
 if __name__ == "__main__":
 	unittest.main()

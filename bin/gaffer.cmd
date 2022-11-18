@@ -5,7 +5,7 @@ setlocal EnableDelayedExpansion
 set GAFFER_ROOT=%~dp0%..
 set "GAFFER_ROOT=%GAFFER_ROOT:\=/%"
 
-set HOME=%USERPROFILE%
+set "HOME=%USERPROFILE:\=/%"
 
 set GAFFER_JEMALLOC=0
 
@@ -32,7 +32,7 @@ set OSLHOME=%GAFFER_ROOT%
 
 call :prependToPath "%USERPROFILE%\gaffer\shaders;%GAFFER_ROOT%\shaders" OSL_SHADER_PATHS
 
-set GAFFEROSL_CODE_DIRECTORY="%USERPROFILE%\gaffer\oslCode"
+set GAFFEROSL_CODE_DIRECTORY=%USERPROFILE%\gaffer\oslCode
 call :prependToPath %GAFFEROSL_CODE_DIRECTORY% PATH
 
 set PYTHONHOME=%GAFFER_ROOT%

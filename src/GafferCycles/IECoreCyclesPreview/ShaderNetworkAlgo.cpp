@@ -83,7 +83,7 @@ std::string shaderCacheGetter( const std::string &shaderName, size_t &cost )
 	}
 	else
 	{
-		return path.string();
+		return path.generic_string();
 	}
 }
 

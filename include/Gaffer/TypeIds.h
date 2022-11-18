@@ -146,6 +146,7 @@ enum TypeId
 	ContextQueryTypeId = 110099,
 	TweakPlugTypeId = 110100,
 	TweaksPlugTypeId = 110101,
+	HiddenFilePathFilterTypeId = 110102,
 
 	LastTypeId = 110159,
 

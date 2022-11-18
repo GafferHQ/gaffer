@@ -44,6 +44,7 @@
 #include "Gaffer/StringPlug.h"
 
 #include "IECore/Exception.h"
+#include "IECore/SearchPath.h"
 #include "IECore/StringAlgo.h"
 
 #include "OSL/oslcomp.h"
@@ -251,7 +252,7 @@ boost::filesystem::path compile( const std::string &shaderName, const std::strin
 
 	if( boost::filesystem::exists( osoFileName ) )
 	{
-		return osoFileName.string();
+		return osoFileName.generic_string();
 	}
 
 	// Make a temporary directory we can do our compilation in. The
@@ -263,7 +264,7 @@ boost::filesystem::path compile( const std::string &shaderName, const std::strin
 
 	// Write the source code out.
 
-	const std::string tempOSLFileName = ( tempDirectory / ( shaderName + ".osl" ) ).string();
+	const std::string tempOSLFileName = ( tempDirectory / ( shaderName + ".osl" ) ).generic_string();
 	std::ofstream f( tempOSLFileName.c_str() );
 	if( !f.good() )
 	{
@@ -284,14 +285,14 @@ boost::filesystem::path compile( const std::string &shaderName, const std::strin
 	vector<string> options;
 	if( const char *includePaths = getenv( "OSL_SHADER_PATHS" ) )
 	{
-		StringAlgo::tokenize( includePaths, ':', options );
-		for( vector<string>::iterator it = options.begin(), eIt = options.end(); it != eIt; ++it )
+		SearchPath searchPaths( includePaths );
+		for( const auto &p : searchPaths.paths )
 		{
-			it->insert( 0, "-I" );
+			options.push_back( string( "-I" ) + p.generic_string() );
 		}
 	}
 
-	const std::string tempOSOFileName = ( tempDirectory / ( shaderName + ".oso" ) ).string();
+	const std::string tempOSOFileName = ( tempDirectory / ( shaderName + ".oso" ) ).generic_string();
 	options.push_back( "-o" );
 	options.push_back( tempOSOFileName );
 
@@ -324,7 +325,7 @@ boost::filesystem::path compile( const std::string &shaderName, const std::strin
 		// Belt and braces. `rename()` should be reporting all errors,
 		// but on rare occasions we have still seen empty `.oso` files being
 		// produced. Detect this and warn so we can get to the bottom of it.
-		throw IECore::Exception( "Empty file after rename : \"" + osoFileName.string() + "\"" );
+		throw IECore::Exception( "Empty file after rename : \"" + osoFileName.generic_string() + "\"" );
 	}
 
 	return osoFileName;
@@ -343,7 +344,7 @@ class CompileProcess : public Gaffer::Process
 				string shaderName;
 				string shaderSource = generate( oslCode, shaderName );
 				boost::filesystem::path shaderFile = compile( shaderName, shaderSource );
-				oslCode->namePlug()->setValue( shaderFile.replace_extension().string() );
+				oslCode->namePlug()->setValue( shaderFile.replace_extension().generic_string() );
 				oslCode->typePlug()->setValue( "osl:shader" );
 			}
 			catch( ... )

@@ -72,10 +72,10 @@ Box3f boundGetter( const std::string &fileName, size_t &cost, const IECore::Canc
 		throw Exception( "Could not find file '" + fileName + "'" );
 	}
 
-	ReaderPtr reader = Reader::create( path.string() );
+	ReaderPtr reader = Reader::create( path.generic_string() );
 	if( !reader )
 	{
-		throw Exception( "Could not create reader for '" + path.string() + "'" );
+		throw Exception( "Could not create reader for '" + path.generic_string() + "'" );
 	}
 
 	ImageReaderPtr imageReader = IECore::runTimeCast<ImageReader>( reader );

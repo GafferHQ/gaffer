@@ -213,7 +213,7 @@ void Dispatcher::createJobDirectory( const Gaffer::ScriptNode *script, Gaffer::C
 
 		/// \todo I think it would be better to throw here, rather than
 		/// litter the current directory.
-		jobDirectory = boost::filesystem::current_path().string();
+		jobDirectory = boost::filesystem::current_path().generic_string();
 	}
 
 	boost::filesystem::create_directories( jobDirectory );
@@ -246,7 +246,7 @@ void Dispatcher::createJobDirectory( const Gaffer::ScriptNode *script, Gaffer::C
 		}
 	}
 
-	m_jobDirectory = numberedJobDirectory.string();
+	m_jobDirectory = numberedJobDirectory.generic_string();
 	context->set( g_jobDirectoryContextEntry, m_jobDirectory );
 
 	// Now figure out where we'll save the script in that directory, and
@@ -262,7 +262,7 @@ void Dispatcher::createJobDirectory( const Gaffer::ScriptNode *script, Gaffer::C
 		scriptFileName = numberedJobDirectory / "untitled.gfr";
 	}
 
-	context->set( g_scriptFileNameContextEntry, scriptFileName.string() );
+	context->set( g_scriptFileNameContextEntry, scriptFileName.generic_string() );
 }
 
 // Static functions

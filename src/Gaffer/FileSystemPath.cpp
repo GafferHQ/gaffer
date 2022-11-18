@@ -39,6 +39,7 @@
 
 #include "Gaffer/CompoundPathFilter.h"
 #include "Gaffer/FileSequencePathFilter.h"
+#include "Gaffer/HiddenFilePathFilter.h"
 #include "Gaffer/MatchPatternPathFilter.h"
 #include "Gaffer/PathFilter.h"
 
@@ -482,7 +483,7 @@ void FileSystemPath::doChildren( std::vector<PathPtr> &children, const IECore::C
 	for( directory_iterator it( p ), eIt; it != eIt; ++it )
 	{
 		IECore::Canceller::check( canceller );
-		children.push_back( new FileSystemPath( it->path().string(), const_cast<PathFilter *>( getFilter() ), m_includeSequences ) );
+		children.push_back( new FileSystemPath( it->path().generic_string(), const_cast<PathFilter *>( getFilter() ), m_includeSequences ) );
 	}
 
 	if( m_includeSequences )
@@ -497,7 +498,7 @@ void FileSystemPath::doChildren( std::vector<PathPtr> &children, const IECore::C
 			(*it)->getFrameList()->asList( frames );
 			if ( !is_directory( path( (*it)->fileNameForFrame( frames[0] ) ) ) )
 			{
-				children.push_back( new FileSystemPath( path( p / (*it)->getFileName() ).string(), const_cast<PathFilter *>( getFilter() ), m_includeSequences ) );
+				children.push_back( new FileSystemPath( path( p / (*it)->getFileName() ).generic_string(), const_cast<PathFilter *>( getFilter() ), m_includeSequences ) );
 			}
 		}
 	}
@@ -546,8 +547,7 @@ PathFilterPtr FileSystemPath::createStandardFilter( const std::vector<std::strin
 
 	// Filter for hidden files
 
-	std::vector<std::string> hiddenFilePatterns; hiddenFilePatterns.push_back( ".*" );
-	MatchPatternPathFilterPtr hiddenFilesFilter = new MatchPatternPathFilter( hiddenFilePatterns, "name", /* leafOnly = */ false );
+	HiddenFilePathFilterPtr hiddenFilesFilter = new HiddenFilePathFilter();
 	hiddenFilesFilter->setInverted( true );
 
 	CompoundDataPtr hiddenFilesUIUserData = new CompoundData;

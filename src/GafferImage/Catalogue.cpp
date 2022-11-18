@@ -1040,7 +1040,7 @@ std::string Catalogue::generateFileName( const ImagePlug *image ) const
 	result /= h.toString();
 	result.replace_extension( "exr" );
 
-	return result.string();
+	return result.generic_string();
 }
 
 void Catalogue::imageAdded( GraphComponent *graphComponent )
