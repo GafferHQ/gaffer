@@ -125,7 +125,7 @@ def __namesPopupMenu( menuDefinition, plugValueWidget ) :
 			menuPrefix + nameWithoutPrefix,
 			{
 				"command" : functools.partial( __toggleName, plug, nameWithoutPrefix ),
-				"active" : plug.settable() and not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( plug ),
+				"active" : plug.settable() and not Gaffer.MetadataAlgo.readOnly( plug ),
 				"checkBox" : nameWithoutPrefix in currentNames,
 			}
 		)

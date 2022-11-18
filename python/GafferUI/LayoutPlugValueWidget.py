@@ -68,11 +68,6 @@ class LayoutPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return self.__orientation == GafferUI.ListContainer.Orientation.Vertical
 
-	def setReadOnly( self, readOnly ) :
-
-		GafferUI.PlugValueWidget.setReadOnly( self, readOnly )
-		self.__layout.setReadOnly( readOnly )
-
 	def childPlugValueWidget( self, childPlug ) :
 
 		return self.__layout.plugValueWidget( childPlug )

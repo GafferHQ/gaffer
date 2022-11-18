@@ -178,11 +178,6 @@ class _InPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return True
 
-	def setReadOnly( self, readOnly ) :
-
-		GafferUI.PlugValueWidget.setReadOnly( self, readOnly )
-		self.__plugLayout.setReadOnly( readOnly )
-
 	def childPlugValueWidget( self, childPlug ) :
 
 		return self.__plugLayout.plugValueWidget( childPlug )
@@ -392,16 +387,6 @@ class _RowPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return None
 
-	def setReadOnly( self, readOnly ) :
-
-		if readOnly == self.getReadOnly() :
-			return
-
-		GafferUI.PlugValueWidget.setReadOnly( self, readOnly )
-
-		for w in self.__plugValueWidgets :
-			w.setReadOnly( readOnly )
-
 	def _updateFromPlug( self ) :
 
 		enabled = False
@@ -413,7 +398,7 @@ class _RowPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__plugValueWidgets[2].setEnabled( enabled )
 
 		self.__dragHandle.setEnabled(
-			not self.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( self.getPlug() )
+			not Gaffer.MetadataAlgo.readOnly( self.getPlug() )
 		)
 
 	def __updateWidgetVisibility( self ) :

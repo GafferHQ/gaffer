@@ -106,16 +106,6 @@ class TweakPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return None
 
-	def setReadOnly( self, readOnly ) :
-
-		if readOnly == self.getReadOnly() :
-			return
-
-		GafferUI.PlugValueWidget.setReadOnly( self, readOnly )
-
-		for w in self.__row :
-			w.setReadOnly( readOnly )
-
 	def setNameVisible( self, visible ) :
 
 		self.__row[0].setVisible( visible )

@@ -99,16 +99,6 @@ class ShufflePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return None
 
-	def setReadOnly( self, readOnly ) :
-
-		if readOnly == self.getReadOnly() :
-			return
-
-		GafferUI.PlugValueWidget.setReadOnly( self, readOnly )
-
-		for w in self.__row :
-			w.setReadOnly( readOnly )
-
 	def _updateFromPlug( self ) :
 
 		with self.getContext() :
@@ -168,11 +158,6 @@ class ShufflesPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def hasLabel( self ) :
 
 		return True
-
-	def setReadOnly( self, readOnly ) :
-
-		GafferUI.PlugValueWidget.setReadOnly( self, readOnly )
-		self.__plugLayout.setReadOnly( readOnly )
 
 	def childPlugValueWidget( self, childPlug ) :
 

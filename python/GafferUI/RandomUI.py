@@ -236,7 +236,7 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 			"/Randomise...",
 			{
 				"command" : functools.partial( __createRandom, plug ),
-				"active" : not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( plug ),
+				"active" : not Gaffer.MetadataAlgo.readOnly( plug ),
 			}
 		)
 

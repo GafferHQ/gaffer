@@ -147,17 +147,6 @@ class _OutputWidget( GafferUI.PlugValueWidget ) :
 
 		return None
 
-	def setReadOnly( self, readOnly ) :
-
-		if readOnly == self.getReadOnly() :
-			return
-
-		GafferUI.PlugValueWidget.setReadOnly( self, readOnly )
-
-		for w in self.__row :
-			w.setReadOnly( readOnly )
-
-
 ##########################################################################
 # Metadata
 ##########################################################################
@@ -418,7 +407,6 @@ def __createContextQuery( plug ) :
 
 def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 
-	readOnlyUI = plugValueWidget.getReadOnly()
 	queryPlug = plugValueWidget.getPlug().ancestor( Gaffer.NameValuePlug )
 
 	# For Query plugs on a ContextQuery, we allow deleting them
@@ -427,7 +415,7 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 		if len( menuDefinition.items() ) :
 			menuDefinition.append( "/DeleteDivider", { "divider" : True } )
 
-		menuDefinition.append( "/Delete", { "command" : functools.partial( __deletePlug, queryPlug ), "active" : not readOnlyUI and not Gaffer.MetadataAlgo.readOnly( queryPlug ) } )
+		menuDefinition.append( "/Delete", { "command" : functools.partial( __deletePlug, queryPlug ), "active" : not Gaffer.MetadataAlgo.readOnly( queryPlug ) } )
 		return
 
 	# For ValuePlug in general, we offer the option to drive them with ContextQuery
@@ -440,7 +428,7 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 		return
 
 	input = plug.getInput()
-	if input is not None or not plugValueWidget._editable() or Gaffer.MetadataAlgo.readOnly( plug ) or readOnlyUI:
+	if input is not None or not plugValueWidget._editable() or Gaffer.MetadataAlgo.readOnly( plug ) :
 		return
 
 	menuDefinition.prepend( "/ContextQueryDivider", { "divider" : True } )

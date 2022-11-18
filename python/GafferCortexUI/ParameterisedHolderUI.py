@@ -64,7 +64,7 @@ __nodeTypes = (
 
 class _ParameterisedHolderNodeUI( GafferUI.NodeUI ) :
 
-	def __init__( self, node, readOnly=False, **kw ) :
+	def __init__( self, node, **kw ) :
 
 		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4 )
 
@@ -81,22 +81,10 @@ class _ParameterisedHolderNodeUI( GafferUI.NodeUI ) :
 				with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal ) :
 					GafferUI.Spacer( imath.V2i( 10 ), parenting = { "expand"  : True } )
 					toolButton = GafferCortexUI.ToolParameterValueWidget( self.node().parameterHandler() )
-					toolButton.plugValueWidget().setReadOnly( readOnly )
 					_InfoButton( node )
 
 			with GafferUI.ScrolledContainer( horizontalMode=GafferUI.ScrollMode.Never, borderWidth=4 ) :
 				self.__parameterValueWidget = GafferCortexUI.CompoundParameterValueWidget( self.node().parameterHandler(), collapsible = False )
-
-		self.setReadOnly( readOnly )
-
-	def setReadOnly( self, readOnly ) :
-
-		if readOnly == self.getReadOnly() :
-			return
-
-		GafferUI.NodeUI.setReadOnly( self, readOnly )
-
-		self.__parameterValueWidget.plugValueWidget().setReadOnly( readOnly )
 
 for nodeType in __nodeTypes :
 	GafferUI.NodeUI.registerNodeUI( nodeType, _ParameterisedHolderNodeUI )

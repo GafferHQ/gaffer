@@ -150,17 +150,6 @@ class _OutputWidget( GafferUI.PlugValueWidget ) :
 
 		return None
 
-	def setReadOnly( self, readOnly ) :
-
-		if readOnly == self.getReadOnly() :
-			return
-
-		GafferUI.PlugValueWidget.setReadOnly( self, readOnly )
-
-		for w in self.__row :
-			w.setReadOnly( readOnly )
-
-
 ##########################################################################
 # Metadata
 ##########################################################################
@@ -564,7 +553,7 @@ def __setShaderFromLocationMenuDefinition( menu ) :
 			"/" + name,
 			{
 				"command" : functools.partial( __setShader, plugValueWidget.getPlug(), name ),
-				"active" : not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( plugValueWidget.getPlug() ),
+				"active" : not Gaffer.MetadataAlgo.readOnly( plugValueWidget.getPlug() ),
 			}
 		)
 
@@ -601,7 +590,6 @@ GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu, scoped = Fa
 
 def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 
-	readOnlyUI = plugValueWidget.getReadOnly()
 	plug = plugValueWidget.getPlug().ancestor( Gaffer.NameValuePlug )
 
 	if plug is not None and isinstance( plug.node(), GafferScene.ShaderQuery ) :
@@ -609,7 +597,7 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 		if len( menuDefinition.items() ) :
 			menuDefinition.append( "/DeleteDivider", { "divider" : True } )
 
-		menuDefinition.append( "/Delete", { "command" : functools.partial( __deletePlug, plug ), "active" : not readOnlyUI and not Gaffer.MetadataAlgo.readOnly( plug ) } )
+		menuDefinition.append( "/Delete", { "command" : functools.partial( __deletePlug, plug ), "active" : not Gaffer.MetadataAlgo.readOnly( plug ) } )
 
 def __deletePlug( plug ) :
 

@@ -74,15 +74,6 @@ class _ContextVariableListWidget( GafferUI.PlugValueWidget ) :
 		self.__layout = GafferUI.PlugLayout( plug )
 		self.__column[0] = self.__layout
 
-	def setReadOnly( self, readOnly ) :
-
-		if readOnly == self.getReadOnly() :
-			return
-
-		GafferUI.PlugValueWidget.setReadOnly( self, readOnly )
-
-		self.__layout.setReadOnly( readOnly )
-
 	def childPlugValueWidget( self, childPlug ) :
 
 		return self.__layout.plugValueWidget( childPlug )
@@ -135,16 +126,6 @@ class _ContextVariableWidget( GafferUI.PlugValueWidget ) :
 				return w
 
 		return None
-
-	def setReadOnly( self, readOnly ) :
-
-		if readOnly == self.getReadOnly() :
-			return
-
-		GafferUI.PlugValueWidget.setReadOnly( self, readOnly )
-
-		for w in self.__row :
-			w.setReadOnly( readOnly )
 
 	def _updateFromPlugs( self ) :
 

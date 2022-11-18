@@ -165,7 +165,7 @@ def __tagsPopupMenu( menuDefinition, plugValueWidget ) :
 			{
 				"command" : functools.partial( __toggleTag, plug, tag ),
 				"checkBox" : tag in currentTags,
-				"active" : plug.settable() and not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( plug ),
+				"active" : plug.settable() and not Gaffer.MetadataAlgo.readOnly( plug ),
 			}
 		)
 

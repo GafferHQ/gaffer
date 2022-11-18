@@ -367,7 +367,7 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 				"subMenu" : functools.partial(
 					_CodeMenu.commonFunctionMenu,
 					command = plugValueWidget.codeWidget().insertText,
-					activator = lambda : not plugValueWidget.getReadOnly() and not Gaffer.MetadataAlgo.readOnly( plug ),
+					activator = lambda : not Gaffer.MetadataAlgo.readOnly( plug ),
 				),
 			},
 		)

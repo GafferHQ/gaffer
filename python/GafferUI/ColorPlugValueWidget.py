@@ -108,15 +108,6 @@ class ColorPlugValueWidget( GafferUI.PlugValueWidget ) :
 		GafferUI.PlugValueWidget.setHighlighted( self, highlighted )
 		self.__compoundNumericWidget.setHighlighted( highlighted )
 
-	def setReadOnly( self, readOnly ) :
-
-		if readOnly == self.getReadOnly() :
-			return
-
-		GafferUI.PlugValueWidget.setReadOnly( self, readOnly )
-		self.__compoundNumericWidget.setReadOnly( readOnly )
-		self.__swatch.setReadOnly( readOnly )
-
 	def childPlugValueWidget( self, childPlug ) :
 
 		return self.__compoundNumericWidget.childPlugValueWidget( childPlug )

@@ -295,7 +295,7 @@ def __unpromote( plug ) :
 	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
 		Gaffer.PlugAlgo.unpromote( plug )
 
-def __appendPlugPromotionMenuItems( menuDefinition, plug, readOnlyUI = False ) :
+def __appendPlugPromotionMenuItems( menuDefinition, plug ) :
 
 	node = plug.node()
 	if node is None :
@@ -305,7 +305,7 @@ def __appendPlugPromotionMenuItems( menuDefinition, plug, readOnlyUI = False ) :
 	if box is None :
 		return
 
-	readOnly = readOnlyUI or Gaffer.MetadataAlgo.readOnly( plug )
+	readOnly = Gaffer.MetadataAlgo.readOnly( plug )
 
 	ancestorLabel = {
 		Gaffer.ArrayPlug : "Array",
@@ -360,12 +360,12 @@ def __appendPlugPromotionMenuItems( menuDefinition, plug, readOnlyUI = False ) :
 # PlugValueWidget menu
 ##########################################################################
 
-def __appendPlugResetDefaultMenuItems( menuDefinition, plug, readOnlyUI ) :
+def __appendPlugResetDefaultMenuItems( menuDefinition, plug ) :
 
 	if not isinstance( plug.node(), Gaffer.Box ) :
 		return
 
-	readOnly = readOnlyUI or Gaffer.MetadataAlgo.readOnly( plug )
+	readOnly = Gaffer.MetadataAlgo.readOnly( plug )
 
 	menuDefinition.append(
 		"/Reset Default Value",
@@ -377,8 +377,8 @@ def __appendPlugResetDefaultMenuItems( menuDefinition, plug, readOnlyUI ) :
 
 def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 
-	__appendPlugResetDefaultMenuItems( menuDefinition, plugValueWidget.getPlug(), readOnlyUI = plugValueWidget.getReadOnly() )
-	__appendPlugPromotionMenuItems( menuDefinition, plugValueWidget.getPlug(), readOnlyUI = plugValueWidget.getReadOnly() )
+	__appendPlugResetDefaultMenuItems( menuDefinition, plugValueWidget.getPlug() )
+	__appendPlugPromotionMenuItems( menuDefinition, plugValueWidget.getPlug() )
 
 GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu, scoped = False )
 
@@ -480,6 +480,6 @@ def __graphEditorPlugContextMenu( graphEditor, plug, menuDefinition ) :
 			}
 		)
 
-	__appendPlugPromotionMenuItems( menuDefinition, plug, readOnly )
+	__appendPlugPromotionMenuItems( menuDefinition, plug )
 
 GafferUI.GraphEditor.plugContextMenuSignal().connect( __graphEditorPlugContextMenu, scoped = False )

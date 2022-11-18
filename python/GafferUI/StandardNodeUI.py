@@ -70,13 +70,4 @@ class StandardNodeUI( GafferUI.NodeUI ) :
 
 		return widget
 
-	def setReadOnly( self, readOnly ) :
-
-		if readOnly == self.getReadOnly() :
-			return
-
-		GafferUI.NodeUI.setReadOnly( self, readOnly )
-
-		self.__plugLayout.setReadOnly( readOnly )
-
 GafferUI.NodeUI.registerNodeUI( Gaffer.Node, StandardNodeUI )

@@ -65,16 +65,6 @@ class BoxPlugValueWidget( GafferUI.PlugValueWidget ) :
 		for c in self.__column :
 			c.setHighlighted( highlighted )
 
-	def setReadOnly( self, readOnly ) :
-
-		if readOnly == self.getReadOnly() :
-			return
-
-		GafferUI.PlugValueWidget.setReadOnly( self, readOnly )
-
-		for c in self.__column :
-			c.setReadOnly( readOnly )
-
 	def childPlugValueWidget( self, childPlug ) :
 
 		for w in self.__column :
