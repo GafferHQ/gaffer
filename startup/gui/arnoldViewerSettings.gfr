@@ -245,6 +245,8 @@ __children["ViewerSettings"]["ArnoldOptions"]["options"]["aaSamples"]["enabled"]
 __children["ViewerSettings"]["ArnoldOptions"]["options"]["enableAdaptiveSampling"]["enabled"].setValue( True )
 __children["ViewerSettings"]["ArnoldOptions"]["options"]["enableProgressiveRender"]["enabled"].setValue( True )
 __children["ViewerSettings"]["ArnoldOptions"]["options"]["progressiveMinAASamples"]["enabled"].setValue( True )
+__children["ViewerSettings"]["ArnoldOptions"]["options"]["abortOnError"]["value"].setValue( False )
+__children["ViewerSettings"]["ArnoldOptions"]["options"]["abortOnError"]["enabled"].setValue( True )
 __children["ViewerSettings"]["ArnoldOptions"]["options"]["renderDevice"]["enabled"].setValue( True )
 __children["ViewerSettings"]["ArnoldOptions"]["options"]["aaSamples"]["value"].setInput( __children["ViewerSettings"]["aaSamples"] )
 __children["ViewerSettings"]["ArnoldOptions"]["options"]["progressiveMinAASamples"]["value"].setInput( __children["ViewerSettings"]["minAASamples"] )

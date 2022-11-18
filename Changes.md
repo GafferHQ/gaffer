@@ -10,7 +10,9 @@ Improvements
 Fixes
 -----
 
-- Arnold : Fixed deletion of `ai:transform_type` attribute during interactive renders. The object now reverts to the default transform type in this case.
+- Arnold :
+  - Fixed deletion of `ai:transform_type` attribute during interactive renders. The object now reverts to the default transform type in this case.
+  - Fixed broken Viewer after Arnold encountered an error (such as a missing texture).
 
 1.1.4.0 (relative to 1.1.3.0)
 =======
