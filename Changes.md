@@ -4,6 +4,7 @@
 Improvements
 ------------
 
+- ArnoldOptions : Added support for `texture_use_existing_tx`, `texture_auto_generate_tx` and `texture_auto_tx_path`.
 - Arnold : Added support for attributes containing InternedStringData, as would be obtained by loading `token` primvars from a USD file.
 - Random : Added the `outFloat` plug to the NodeEditor, and moved output plugs into their own `Outputs` section.
 
