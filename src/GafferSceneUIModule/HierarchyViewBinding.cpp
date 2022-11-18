@@ -38,8 +38,14 @@
 
 #include "HierarchyViewBinding.h"
 
+#include "GafferSceneUI/ContextAlgo.h"
+
 #include "GafferScene/SceneAlgo.h"
+#include "GafferScene/ScenePath.h"
 #include "GafferScene/ScenePlug.h"
+#include "GafferScene/VisibleSet.h"
+
+#include "GafferUI/PathColumn.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/Path.h"
@@ -57,7 +63,9 @@ using namespace boost::python;
 using namespace IECore;
 using namespace IECorePython;
 using namespace Gaffer;
+using namespace GafferUI;
 using namespace GafferScene;
+using namespace GafferSceneUI;
 
 namespace
 {
@@ -490,6 +498,441 @@ class HierarchyViewSearchFilter : public HierarchyViewFilter
 
 };
 
+//////////////////////////////////////////////////////////////////////////
+// InclusionsColumn - displays and modifies inclusions membership of the
+// VisibleSet in the provided context.
+//////////////////////////////////////////////////////////////////////////
+
+class InclusionsColumn : public PathColumn
+{
+
+	public :
+
+		IE_CORE_DECLAREMEMBERPTR( InclusionsColumn )
+
+		InclusionsColumn( ContextPtr context )
+			:	PathColumn(), m_context( context )
+		{
+			buttonPressSignal().connect( boost::bind( &InclusionsColumn::buttonPress, this, ::_3 ) );
+			buttonReleaseSignal().connect( boost::bind( &InclusionsColumn::buttonRelease, this, ::_1, ::_2, ::_3 ) );
+			m_context->changedSignal().connect( boost::bind( &InclusionsColumn::contextChanged, this, ::_2 ) );
+		}
+
+		CellData cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const override
+		{
+			CellData result;
+
+			auto scenePath = IECore::runTimeCast<const ScenePath>( &path );
+			if( !scenePath )
+			{
+				return result;
+			}
+
+			Context::EditableScope scope( m_context.get() );
+			scope.setCanceller( canceller );
+
+			if( scenePath->getScene()->childNames( scenePath->names() )->readable().empty() )
+			{
+				// To limit the amount of duplicate information presented we don't provide custom cellData to leaf locations
+				return result;
+			}
+
+			const auto visibleSet = ContextAlgo::getVisibleSet( m_context.get() );
+			const auto inclusionsMatch = visibleSet.inclusions.match( scenePath->names() );
+			const auto locationExcluded = visibleSet.exclusions.match( scenePath->names() ) & (IECore::PathMatcher::Result::ExactMatch | IECore::PathMatcher::Result::AncestorMatch);
+
+			auto iconData = new CompoundData;
+			iconData->writable()["state:highlighted"] = g_locationIncludedHighlightedTransparentIconName;
+			result.icon = iconData;
+
+			if( !locationExcluded )
+			{
+				if( inclusionsMatch & IECore::PathMatcher::Result::ExactMatch )
+				{
+					iconData->writable()["state:highlighted"] = g_locationIncludedHighlightedIconName;
+					iconData->writable()["state:normal"] = g_locationIncludedIconName;
+					result.toolTip = g_locationIncludedToolTip;
+				}
+				else if( inclusionsMatch & IECore::PathMatcher::Result::AncestorMatch )
+				{
+					iconData->writable()["state:normal"] = g_ancestorIncludedIconName;
+					result.toolTip = g_ancestorIncludedToolTip;
+				}
+				else if( inclusionsMatch & IECore::PathMatcher::Result::DescendantMatch )
+				{
+					iconData->writable()["state:normal"] =  g_descendantIncludedIconName;
+					result.toolTip = g_descendantIncludedToolTip;
+				}
+				else if( visibleSet.expansions.match( scenePath->names() ) & IECore::PathMatcher::Result::ExactMatch )
+				{
+					iconData->writable()["state:normal"] = g_locationExpandedIconName;
+					result.toolTip = g_locationExpandedToolTip;
+				}
+				else
+				{
+					result.toolTip = g_inclusionToolTip;
+				}
+			}
+			else
+			{
+				if( inclusionsMatch & IECore::PathMatcher::Result::ExactMatch )
+				{
+					iconData->writable()["state:highlighted"] = g_locationIncludedHighlightedIconName;
+					iconData->writable()["state:normal"] = g_locationIncludedDisabledIconName;
+					result.toolTip = g_locationIncludedOverrideToolTip;
+				}
+				else if( inclusionsMatch & IECore::PathMatcher::Result::DescendantMatch )
+				{
+					iconData->writable()["state:normal"] = g_descendantIncludedTransparentIconName;
+					result.toolTip = g_descendantIncludedOverrideToolTip;
+				}
+				else
+				{
+					result.toolTip = g_inclusionOverrideToolTip;
+				}
+			}
+
+			return result;
+		}
+
+		CellData headerData( const IECore::Canceller *canceller ) const override
+		{
+			return CellData( /* value = */ nullptr, /* icon = */ g_locationIncludedIconName, /* background = */ nullptr, /* tooltip = */ new StringData( "Visible Set Inclusions" ) );
+		}
+
+	private :
+
+		void contextChanged( const IECore::InternedString &name )
+		{
+			if( ContextAlgo::affectsVisibleSet( name ) )
+			{
+				changedSignal()( this );
+			}
+		}
+
+		bool buttonPress( const ButtonEvent &event )
+		{
+			if( event.buttons != ButtonEvent::Left )
+			{
+				return false;
+			}
+
+			return true;
+		}
+
+		bool buttonRelease( const Gaffer::Path &path, const GafferUI::PathListingWidget &widget, const ButtonEvent &event )
+		{
+			auto scenePath = IECore::runTimeCast<const ScenePath>( &path );
+			if( !scenePath )
+			{
+				return false;
+			}
+
+			Context::EditableScope scope( m_context.get() );
+
+			if( scenePath->getScene()->childNames( scenePath->names() )->readable().empty() )
+			{
+				// Leaf locations are not treated as clickable, user interaction should occur at the parent location
+				return false;
+			}
+
+			auto paths = IECore::PathMatcher();
+			paths.addPath( scenePath->names() );
+			const auto selection = widget.getSelection();
+			if( std::holds_alternative<IECore::PathMatcher>( selection ) )
+			{
+				// Permit bulk editing of a selection of paths when clicking on one of the selected paths
+				const auto selectedPaths = std::get<IECore::PathMatcher>( selection );
+				if( selectedPaths.match( scenePath->names() ) & IECore::PathMatcher::Result::ExactMatch )
+				{
+					paths = selectedPaths;
+				}
+			}
+
+			bool update = false;
+			auto visibleSet = ContextAlgo::getVisibleSet( m_context.get() );
+			if( event.button == ButtonEvent::Left && !event.modifiers )
+			{
+				if( visibleSet.inclusions.match( scenePath->names() ) & IECore::PathMatcher::Result::ExactMatch )
+				{
+					update = visibleSet.inclusions.removePaths( paths );
+				}
+				else
+				{
+					update = visibleSet.inclusions.addPaths( paths );
+				}
+			}
+			else if( event.button == ButtonEvent::Left && event.modifiers == ButtonEvent::Modifiers::Shift )
+			{
+				for( IECore::PathMatcher::Iterator it = paths.begin(), eIt = paths.end(); it != eIt; ++it )
+				{
+					update |= visibleSet.inclusions.prune( *it );
+				}
+			}
+
+			if( update )
+			{
+				ContextAlgo::setVisibleSet( m_context.get(), visibleSet );
+			}
+
+			return true;
+		}
+
+		ContextPtr m_context;
+
+		static IECore::StringDataPtr g_descendantIncludedIconName;
+		static IECore::StringDataPtr g_descendantIncludedTransparentIconName;
+		static IECore::StringDataPtr g_locationExpandedIconName;
+		static IECore::StringDataPtr g_locationIncludedIconName;
+		static IECore::StringDataPtr g_locationIncludedDisabledIconName;
+		static IECore::StringDataPtr g_ancestorIncludedIconName;
+		static IECore::StringDataPtr g_locationIncludedHighlightedIconName;
+		static IECore::StringDataPtr g_locationIncludedHighlightedTransparentIconName;
+
+		static IECore::StringDataPtr g_inclusionToolTip;
+		static IECore::StringDataPtr g_inclusionOverrideToolTip;
+		static IECore::StringDataPtr g_locationExpandedToolTip;
+		static IECore::StringDataPtr g_locationIncludedToolTip;
+		static IECore::StringDataPtr g_locationIncludedOverrideToolTip;
+		static IECore::StringDataPtr g_ancestorIncludedToolTip;
+		static IECore::StringDataPtr g_descendantIncludedToolTip;
+		static IECore::StringDataPtr g_descendantIncludedOverrideToolTip;
+
+};
+
+StringDataPtr InclusionsColumn::g_descendantIncludedIconName = new StringData( "descendantIncluded.png" );
+StringDataPtr InclusionsColumn::g_descendantIncludedTransparentIconName = new StringData( "descendantIncludedTransparent.png" );
+StringDataPtr InclusionsColumn::g_locationExpandedIconName = new StringData( "locationExpanded.png" );
+StringDataPtr InclusionsColumn::g_locationIncludedIconName = new StringData( "locationIncluded.png" );
+StringDataPtr InclusionsColumn::g_locationIncludedDisabledIconName = new StringData( "locationIncludedDisabled.png" );
+StringDataPtr InclusionsColumn::g_ancestorIncludedIconName = new StringData( "locationIncludedTransparent.png" );
+StringDataPtr InclusionsColumn::g_locationIncludedHighlightedIconName = new StringData( "locationIncludedHighlighted.png" );
+StringDataPtr InclusionsColumn::g_locationIncludedHighlightedTransparentIconName = new StringData( "locationIncludedHighlightedTransparent.png" );
+
+StringDataPtr InclusionsColumn::g_inclusionToolTip = new StringData( "Click to include this branch in the Visible Set, causing it to always appear in Viewers." );
+StringDataPtr InclusionsColumn::g_inclusionOverrideToolTip = new StringData(
+	"Click to include this branch in the Visible Set, even though it will be overridden by an existing exclusion."
+);
+StringDataPtr InclusionsColumn::g_locationExpandedToolTip = new StringData(
+	"Location expanded.\n\n"
+	"Click to include this branch in the Visible Set, causing it to always appear in Viewers even if collapsed."
+);
+StringDataPtr InclusionsColumn::g_locationIncludedToolTip = new StringData(
+	"This branch is in the Visible Set, causing it to always appear in Viewers.\n\n"
+	"Click to remove from the Visible Set.\n"
+	"Shift-click to remove all locations within this branch from the Visible Set."
+);
+StringDataPtr InclusionsColumn::g_locationIncludedOverrideToolTip = new StringData(
+	"This branch is in the Visible Set, but isn't visible due to being overridden by an exclusion.\n\n"
+	"Click to remove from the Visible Set.\n"
+	"Shift-click to remove all locations within this branch from the Visible Set."
+);
+StringDataPtr InclusionsColumn::g_ancestorIncludedToolTip = new StringData(
+	"An ancestor is in the Visible Set, causing this location and its descendants to always appear in Viewers.\n\n"
+	"Click to also include this branch in the Visible Set.\n"
+	"Shift-click to remove all locations within this branch from the Visible Set."
+);
+/// \todo Reword this once the RenderController is updated to allow for independent visibility of sibling locations.
+StringDataPtr InclusionsColumn::g_descendantIncludedToolTip = new StringData(
+	"One or more descendants are in the Visible Set, causing them to be visible even when this location is collapsed.\n\n"
+	"Click to also include this branch in the Visible Set.\n"
+	"Shift-click to remove all locations within this branch from the Visible Set."
+);
+StringDataPtr InclusionsColumn::g_descendantIncludedOverrideToolTip = new StringData(
+	"One or more descendants are in the Visible Set, but they aren't visible due to this location being overridden by an exclusion.\n\n"
+	"Click to include this branch in the Visible Set, even though it will also be overridden by an existing exclusion.\n"
+	"Shift-click to remove all locations within this branch from the Visible Set."
+);
+
+//////////////////////////////////////////////////////////////////////////
+// ExclusionsColumn - displays and modifies exclusions membership of the
+// VisibleSet in the provided context.
+//////////////////////////////////////////////////////////////////////////
+
+class ExclusionsColumn : public PathColumn
+{
+
+	public :
+
+		IE_CORE_DECLAREMEMBERPTR( ExclusionsColumn )
+
+		ExclusionsColumn( ContextPtr context )
+			:	PathColumn(), m_context( context )
+		{
+			buttonPressSignal().connect( boost::bind( &ExclusionsColumn::buttonPress, this, ::_3 ) );
+			buttonReleaseSignal().connect( boost::bind( &ExclusionsColumn::buttonRelease, this, ::_1, ::_2, ::_3 ) );
+			m_context->changedSignal().connect( boost::bind( &ExclusionsColumn::contextChanged, this, ::_2 ) );
+		}
+
+		CellData cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const override
+		{
+			CellData result;
+
+			auto scenePath = IECore::runTimeCast<const ScenePath>( &path );
+			if( !scenePath )
+			{
+				return result;
+			}
+
+			Context::EditableScope scope( m_context.get() );
+			scope.setCanceller( canceller );
+
+			if( scenePath->getScene()->childNames( scenePath->names() )->readable().empty() )
+			{
+				// To limit the amount of duplicate information presented we don't provide custom cellData to leaf locations
+				return result;
+			}
+
+			auto visibleSet = ContextAlgo::getVisibleSet( m_context.get() );
+			auto exclusionsMatch = visibleSet.exclusions.match( scenePath->names() );
+
+			auto iconData = new CompoundData;
+			iconData->writable()["state:highlighted"] = g_locationExcludedHighlightedTransparentIconName;
+			result.icon = iconData;
+
+			if( exclusionsMatch & IECore::PathMatcher::Result::ExactMatch )
+			{
+				iconData->writable()["state:highlighted"] = g_locationExcludedHighlightedIconName;
+				iconData->writable()["state:normal"] = g_locationExcludedIconName;
+				result.toolTip = g_locationExcludedToolTip;
+			}
+			else if( exclusionsMatch & IECore::PathMatcher::Result::AncestorMatch )
+			{
+				iconData->writable()["state:normal"] = g_ancestorExcludedIconName;
+				result.toolTip = g_ancestorExcludedToolTip;
+			}
+			else if( exclusionsMatch & IECore::PathMatcher::Result::DescendantMatch )
+			{
+				iconData->writable()["state:normal"] = g_descendantExcludedIconName;
+				result.toolTip = g_descendantExcludedToolTip;
+			}
+			else
+			{
+				result.toolTip = g_exclusionToolTip;
+			}
+
+			return result;
+		}
+
+		CellData headerData( const IECore::Canceller *canceller ) const override
+		{
+			return CellData( /* value = */ nullptr, /* icon = */ g_locationExcludedIconName, /* background = */ nullptr, /* tooltip = */ new StringData( "Visible Set Exclusions" ) );
+		}
+
+	private :
+
+		void contextChanged( const IECore::InternedString &name )
+		{
+			if( ContextAlgo::affectsVisibleSet( name ) )
+			{
+				changedSignal()( this );
+			}
+		}
+
+		bool buttonPress( const ButtonEvent &event )
+		{
+			if( event.buttons != ButtonEvent::Left )
+			{
+				return false;
+			}
+
+			return true;
+		}
+
+		bool buttonRelease( const Gaffer::Path &path, const GafferUI::PathListingWidget &widget, const ButtonEvent &event )
+		{
+			auto scenePath = IECore::runTimeCast<const ScenePath>( &path );
+			if( !scenePath )
+			{
+				return false;
+			}
+
+			Context::EditableScope scope( m_context.get() );
+
+			if( scenePath->getScene()->childNames( scenePath->names() )->readable().empty() )
+			{
+				// Leaf locations are not treated as clickable, user interaction should occur at the parent location
+				return false;
+			}
+
+			auto paths = IECore::PathMatcher();
+			paths.addPath( scenePath->names() );
+			const auto selection = widget.getSelection();
+			if( std::holds_alternative<IECore::PathMatcher>( selection ) )
+			{
+				// Permit bulk editing of a selection of paths when clicking on one of the selected paths
+				const auto selectedPaths = std::get<IECore::PathMatcher>( selection );
+				if( selectedPaths.match( scenePath->names() ) & IECore::PathMatcher::Result::ExactMatch )
+				{
+					paths = selectedPaths;
+				}
+			}
+
+			bool update = false;
+			auto visibleSet = ContextAlgo::getVisibleSet( m_context.get() );
+			if( event.button == ButtonEvent::Left && !event.modifiers )
+			{
+				if( visibleSet.exclusions.match( scenePath->names() ) & IECore::PathMatcher::Result::ExactMatch )
+				{
+					update = visibleSet.exclusions.removePaths( paths );
+				}
+				else
+				{
+					update = visibleSet.exclusions.addPaths( paths );
+				}
+			}
+			else if( event.button == ButtonEvent::Left && event.modifiers == ButtonEvent::Modifiers::Shift )
+			{
+				for( IECore::PathMatcher::Iterator it = paths.begin(), eIt = paths.end(); it != eIt; ++it )
+				{
+					update |= visibleSet.exclusions.prune( *it );
+				}
+			}
+
+			if( update )
+			{
+				ContextAlgo::setVisibleSet( m_context.get(), visibleSet );
+			}
+
+			return true;
+		}
+
+		ContextPtr m_context;
+
+		static IECore::StringDataPtr g_descendantExcludedIconName;
+		static IECore::StringDataPtr g_locationExcludedIconName;
+		static IECore::StringDataPtr g_ancestorExcludedIconName;
+		static IECore::StringDataPtr g_locationExcludedHighlightedIconName;
+		static IECore::StringDataPtr g_locationExcludedHighlightedTransparentIconName;
+
+		static IECore::StringDataPtr g_exclusionToolTip;
+		static IECore::StringDataPtr g_locationExcludedToolTip;
+		static IECore::StringDataPtr g_ancestorExcludedToolTip;
+		static IECore::StringDataPtr g_descendantExcludedToolTip;
+};
+
+StringDataPtr ExclusionsColumn::g_descendantExcludedIconName = new StringData( "descendantExcluded.png" );
+StringDataPtr ExclusionsColumn::g_locationExcludedIconName = new StringData( "locationExcluded.png" );
+StringDataPtr ExclusionsColumn::g_ancestorExcludedIconName = new StringData( "locationExcludedTransparent.png" );
+StringDataPtr ExclusionsColumn::g_locationExcludedHighlightedIconName = new StringData( "locationExcludedHighlighted.png" );
+StringDataPtr ExclusionsColumn::g_locationExcludedHighlightedTransparentIconName = new StringData( "locationExcludedHighlightedTransparent.png" );
+
+StringDataPtr ExclusionsColumn::g_exclusionToolTip = new StringData( "Click to exclude this branch from the Visible Set, causing it to not appear in Viewers." );
+StringDataPtr ExclusionsColumn::g_locationExcludedToolTip = new StringData(
+	"This branch is excluded from the Visible Set, causing it to not appear in Viewers.\n\n"
+	"Click to remove the exclusion.\n"
+	"Shift-click to remove all excluded locations within this branch."
+);
+StringDataPtr ExclusionsColumn::g_ancestorExcludedToolTip = new StringData(
+	"An ancestor is excluded from the Visible Set, causing this location and its descendants to not appear in Viewers.\n\n"
+	"Click to also exclude this branch."
+);
+StringDataPtr ExclusionsColumn::g_descendantExcludedToolTip = new StringData(
+	"One or more descendants are excluded from the Visible Set.\n\n"
+	"Click to also exclude this branch.\n"
+	"Shift-click to remove all excluded locations within this branch."
+);
+
 } // namespace
 
 void GafferSceneUIModule::bindHierarchyView()
@@ -519,6 +962,14 @@ void GafferSceneUIModule::bindHierarchyView()
 		.def( init<IECore::CompoundDataPtr>( ( boost::python::arg( "userData" ) = object() ) ) )
 		.def( "setMatchPattern", &HierarchyViewSearchFilter::setMatchPattern )
 		.def( "getMatchPattern", &HierarchyViewSearchFilter::getMatchPattern, return_value_policy<copy_const_reference>() )
+	;
+
+	RefCountedClass<InclusionsColumn, GafferUI::PathColumn>( "_HierarchyViewInclusionsColumn" )
+		.def( init< ContextPtr >() )
+	;
+
+	RefCountedClass<ExclusionsColumn, GafferUI::PathColumn>( "_HierarchyViewExclusionsColumn" )
+		.def( init< ContextPtr >() )
 	;
 
 }

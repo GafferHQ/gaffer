@@ -13,6 +13,10 @@ Features
   - Added a visual indication to lights in the viewport when they are muted. Muted lights use a dark gray outline instead of yellow.
   - Cycles : Muted lights are disabled in renders.
   - Arnold : Muted lights are disabled in renders.
+- HierarchyView : Added control over the Visible Set, which defines the locations within the scene that are loaded and rendered by the Viewer.
+  - The Inclusions column adds locations to the Visible Set, so that they and their descendants are rendered in the Viewer without needing to be expanded in the HierarchyView.
+  - The Exclusions column excludes locations from the Visible Set, so that they and their descendants are never rendered in the Viewer, regardless of any other expansions or inclusions.
+  - Locations can have their Visible Set inclusion or exclusion toggled by clicking within the appropriate column. <kbd>Shift</kbd>-clicking will remove the location and any of its descendants from the Visible Set. When multiple locations are selected, edits to any of the selected locations will affect all selected locations.
 
 Improvements
 ------------
