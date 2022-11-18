@@ -31,6 +31,7 @@ Fixes
 
 - CodeWidget : Fixed auto-complete for `pathlib.Path` objects, and any other classes which throw `AttributeError` for an attribute advertised by `dir()`.
 - Expression : Fixed non-deterministic parsing order for Python expressions (#4935).
+- FileSequencePathFilter : Fixed bug whereby files were considered to be part of a sequence if they were in a numbered directory. Now only numbers in the file's name are considered.
 
 API
 ---
