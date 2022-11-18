@@ -148,7 +148,7 @@ Gaffer.Metadata.registerNode(
 			and float range plugs.
 			""",
 
-			"plugValueWidget:type", "",
+			"layout:section", "Settings.Outputs",
 
 		],
 
@@ -159,6 +159,8 @@ Gaffer.Metadata.registerNode(
 			Random colour output derived from seed, Context Variable, base
 			colour, hue, saturation and value plugs.
 			""",
+
+			"layout:section", "Settings.Outputs",
 
 			"plugValueWidget:type", "GafferUI.RandomUI._RandomColorPlugValueWidget",
 

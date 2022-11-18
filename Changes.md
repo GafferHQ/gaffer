@@ -5,6 +5,7 @@ Improvements
 ------------
 
 - Arnold : Added support for attributes containing InternedStringData, as would be obtained by loading `token` primvars from a USD file.
+- Random : Added the `outFloat` plug to the NodeEditor, and moved output plugs into their own `Outputs` section.
 
 Fixes
 -----
