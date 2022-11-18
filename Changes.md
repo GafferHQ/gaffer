@@ -56,6 +56,20 @@ Breaking Changes
 - ContextAlgo : Removed use of the `ui:scene:expandedPaths` context variable. Any code directly accessing `ui:scene:expandedPaths` should instead use the `getExpandedPaths()/setExpandedPaths()/expand()/expandDescendants()` methods provided by `ContextAlgo`.
 - SceneGadget : Removed `setExpandedPaths()` and `getExpandedPaths()` methods. `setVisibleSet()` and `getVisibleSet()` are now used instead.
 
+1.1.x.x (relative to 1.1.4.0)
+=======
+
+Improvements
+------------
+
+- Arnold : Added support for attributes containing InternedStringData, as would be obtained by loading `token` primvars from a USD file.
+- Random : Added the `outFloat` plug to the NodeEditor, and moved output plugs into their own `Outputs` section.
+
+Fixes
+-----
+
+- Arnold : Fixed deletion of `ai:transform_type` attribute during interactive renders. The object now reverts to the default transform type in this case.
+
 1.1.4.0 (relative to 1.1.3.0)
 =======
 

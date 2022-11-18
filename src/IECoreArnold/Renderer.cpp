@@ -324,6 +324,7 @@ const AtString g_pixelAspectRatioArnoldString( "pixel_aspect_ratio" );
 const AtString g_pluginSearchPathArnoldString( "plugin_searchpath" );
 const AtString g_polymeshArnoldString("polymesh");
 const AtString g_rasterArnoldString( "raster" );
+const AtString g_rotateAboutCenterArnoldString( "rotate_about_center" );
 const AtString g_receiveShadowsArnoldString( "receive_shadows" );
 const AtString g_referenceTimeString( "reference_time" );
 const AtString g_regionMinXArnoldString( "region_min_x" );
@@ -1037,14 +1038,14 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			substituteShaderIfNecessary( m_lightFilterShader, attributes );
 
 			m_traceSets = attribute<IECore::InternedStringVectorData>( g_setsAttributeName, attributes );
-			m_transformType = attribute<IECore::StringData>( g_transformTypeAttributeName, attributes );
+			m_transformType = stringAttribute( g_transformTypeAttributeName, attributes, g_rotateAboutCenterArnoldString );
 			m_automaticInstancing = attributeValue<bool>( g_automaticInstancingAttributeName, attributes, true );
 			m_stepSize = attributeValue<float>( g_shapeVolumeStepSizeAttributeName, attributes, 0.0f );
 			m_stepScale = attributeValue<float>( g_shapeVolumeStepScaleAttributeName, attributes, 1.0f );
 			m_volumePadding = attributeValue<float>( g_shapeVolumePaddingAttributeName, attributes, 0.0f );
 
-			m_sssSetName = attribute<IECore::StringData>( g_sssSetNameName, attributes );
-			m_toonId = attribute<IECore::StringData>( g_toonIdName, attributes );
+			m_sssSetName = stringAttribute( g_sssSetNameName, attributes );
+			m_toonId = stringAttribute( g_toonIdName, attributes );
 
 			for( IECore::CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; ++it )
 			{
@@ -1308,18 +1309,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			{
 				AiNodeSetByte( node, g_visibilityArnoldString, m_visibility );
 				AiNodeSetByte( node, g_sidednessArnoldString, m_sidedness );
-
-				if( m_transformType )
-				{
-					// \todo : Arnold quite explicitly discourages constructing AtStrings repeatedly,
-					// but given the need to pass m_transformType around as a string for consistency
-					// reasons, it seems like there's not much else we can do here.
-					// If we start reusing ArnoldAttributes for multiple locations with identical attributes,
-					// it could be worth caching this, or possibly in the future we could come up with
-					// some way of cleanly exposing enum values as something other than strings.
-					AiNodeSetStr( node, g_transformTypeArnoldString, AtString( m_transformType->readable().c_str() ) );
-				}
-
+				AiNodeSetStr( node, g_transformTypeArnoldString, m_transformType );
 				AiNodeSetBool( node, g_receiveShadowsArnoldString, m_shadingFlags & ArnoldAttributes::ReceiveShadows );
 				AiNodeSetBool( node, g_selfShadowsArnoldString, m_shadingFlags & ArnoldAttributes::SelfShadows );
 				AiNodeSetBool( node, g_opaqueArnoldString, m_shadingFlags & ArnoldAttributes::Opaque );
@@ -1352,18 +1342,26 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					AiNodeSetArray( node, g_traceSetsArnoldString, AiArray( 1, 1, AI_TYPE_STRING, "__none__" ) );
 				}
 
-				if( m_sssSetName )
+				if( m_sssSetName.length() )
 				{
-					ParameterAlgo::setParameter( node, g_sssSetNameArnoldString, m_sssSetName.get() );
+					if( !AiNodeLookUpUserParameter( node, g_sssSetNameArnoldString ) )
+					{
+						AiNodeDeclare( node, g_sssSetNameArnoldString, "constant STRING" );
+					}
+					AiNodeSetStr( node, g_sssSetNameArnoldString, m_sssSetName );
 				}
 				else
 				{
 					AiNodeResetParameter( node, g_sssSetNameArnoldString );
 				}
 
-				if( m_toonId )
+				if( m_toonId.length() )
 				{
-					ParameterAlgo::setParameter( node, g_toonIdArnoldString, m_toonId.get() );
+					if( !AiNodeLookUpUserParameter( node, g_toonIdArnoldString ) )
+					{
+						AiNodeDeclare( node, g_toonIdArnoldString, "constant STRING" );
+					}
+					AiNodeSetStr( node, g_toonIdArnoldString, m_toonId );
 				}
 				else
 				{
@@ -1759,6 +1757,24 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			return data ? data->readable() : std::optional<T>();
 		}
 
+		static AtString stringAttribute( const IECore::InternedString &name, const IECore::CompoundObject *attributes, AtString defaultValue = AtString() )
+		{
+			IECore::CompoundObject::ObjectMap::const_iterator it = attributes->members().find( name );
+			if( it == attributes->members().end() )
+			{
+				return defaultValue;
+			}
+			if( auto isd = IECore::runTimeCast<const IECore::InternedStringData>( it->second.get() ) )
+			{
+				return AtString( isd->readable().c_str() );
+			}
+			else if( auto sd = reportedCast<const IECore::StringData>( it->second.get(), "attribute", name ) )
+			{
+				return AtString( sd->readable().c_str() );
+			};
+			return defaultValue;
+		}
+
 		static void updateVisibility( unsigned char &visibility, const IECore::InternedString &name, unsigned char rayType, const IECore::CompoundObject *attributes )
 		{
 			if( const IECore::BoolData *d = attribute<IECore::BoolData>( name, attributes ) )
@@ -1868,7 +1884,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				s->hash( h );
 			}
 			hashOptional( m_traceSets.get(), h );
-			hashOptional( m_transformType.get(), h );
+			h.append( m_transformType.c_str() );
 			h.append( m_stepSize );
 			h.append( m_stepScale );
 			h.append( m_volumePadding );
@@ -1877,8 +1893,8 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			m_displacement.hash( h );
 			m_curves.hash( h );
 			m_volume.hash( h );
-			hashOptional( m_toonId.get(), h );
-			hashOptional( m_sssSetName.get(), h );
+			h.append( m_toonId.c_str() ? m_toonId.c_str() : "" );
+			h.append( m_sssSetName.c_str() ? m_sssSetName.c_str() : "" );
 		}
 
 		unsigned char m_visibility;
@@ -1892,7 +1908,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		IECoreScene::ConstShaderNetworkPtr m_lightFilterShader;
 		std::vector<ArnoldShaderPtr> m_lightFilterShaders;
 		IECore::ConstInternedStringVectorDataPtr m_traceSets;
-		IECore::ConstStringDataPtr m_transformType;
+		AtString m_transformType;
 		bool m_automaticInstancing;
 		float m_stepSize;
 		float m_stepScale;
@@ -1901,8 +1917,8 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		Displacement m_displacement;
 		Curves m_curves;
 		Volume m_volume;
-		IECore::ConstStringDataPtr m_toonId;
-		IECore::ConstStringDataPtr m_sssSetName;
+		AtString m_toonId;
+		AtString m_sssSetName;
 		// When adding fields, please update `hashProceduralGeometry()`!
 
 		// AtString defines implicit cast to a (uniquefied) `const char *`,

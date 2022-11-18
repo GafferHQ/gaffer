@@ -457,6 +457,7 @@ int parameterType( IECore::TypeId dataType, bool &array )
 			array = false;
 			return AI_TYPE_FLOAT;
 		case StringDataTypeId :
+		case InternedStringDataTypeId :
 			array = false;
 			return AI_TYPE_STRING;
 		case Color3fDataTypeId :

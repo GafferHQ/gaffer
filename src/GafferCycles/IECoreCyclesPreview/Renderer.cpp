@@ -2527,7 +2527,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_renderType( renderType ),
 				m_frame( 1 ),
 				m_renderState( RENDERSTATE_READY ),
-				m_sceneChanged( true ),
 				m_sessionReset( false ),
 				m_outputsChanged( true ),
 				m_cryptomatteAccurate( true ),
@@ -2595,8 +2594,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		void option( const IECore::InternedString &name, const IECore::Object *value ) override
 		{
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
-
-			m_sceneChanged = true;
 
 			auto *integrator = m_scene->integrator;
 			auto *background = m_scene->background;
@@ -3236,8 +3233,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				{
 					m_session->start();
 				}
-
-				m_sceneChanged = false;
 			}
 			m_scene->mutex.unlock();
 
@@ -3924,7 +3919,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		int m_frame;
 		string m_camera;
 		RenderState m_renderState;
-		bool m_sceneChanged;
 		bool m_sessionReset;
 		bool m_outputsChanged;
 		bool m_cryptomatteAccurate;
