@@ -1078,11 +1078,13 @@ class ExpressionTest( GafferTest.TestCase ) :
 		s["n"]["user"].addChild( Gaffer.IntVectorDataPlug( defaultValue = IECore.IntVectorData( [ 0, 1 ] ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 		s["n"]["user"].addChild( Gaffer.FloatVectorDataPlug( defaultValue = IECore.FloatVectorData( [ 0, 1 ] ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 		s["n"]["user"].addChild( Gaffer.StringVectorDataPlug( defaultValue = IECore.StringVectorData( [ "a", "b" ] ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		s["n"]["user"].addChild( Gaffer.V2fVectorDataPlug( defaultValue = IECore.V2fVectorData( [ imath.V2f( 1 ) ] ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 		s["n"]["user"].addChild( Gaffer.V3fVectorDataPlug( defaultValue = IECore.V3fVectorData( [ imath.V3f( 1 ) ] ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 		s["n"]["user"].addChild( Gaffer.Color3fVectorDataPlug( defaultValue = IECore.Color3fVectorData( [ imath.Color3f( 1 ) ] ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 		s["n"]["user"].addChild( Gaffer.M44fVectorDataPlug( defaultValue = IECore.M44fVectorData( [ imath.M44f() ] ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 		s["n"]["user"].addChild( Gaffer.M33fVectorDataPlug( defaultValue = IECore.M33fVectorData( [ imath.M33f() ] ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 		s["n"]["user"].addChild( Gaffer.V2iVectorDataPlug( defaultValue = IECore.V2iVectorData( [ imath.V2i() ] ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		s["n"]["user"].addChild( Gaffer.V3iVectorDataPlug( defaultValue = IECore.V3iVectorData( [ imath.V3i() ] ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 
 		s["e"] = Gaffer.Expression()
 

@@ -189,6 +189,8 @@ def __validModes( plug ) :
 		Gaffer.StringVectorDataPlug,
 		Gaffer.InternedStringVectorDataPlug,
 		Gaffer.V2iVectorDataPlug,
+		Gaffer.V3iVectorDataPlug,
+		Gaffer.V2fVectorDataPlug,
 		Gaffer.V3fVectorDataPlug,
 		Gaffer.Color3fVectorDataPlug,
 		Gaffer.M44fVectorDataPlug,

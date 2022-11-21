@@ -141,4 +141,8 @@ GafferUI.PlugValueWidget.registerType( Gaffer.BoolVectorDataPlug, VectorDataPlug
 GafferUI.PlugValueWidget.registerType( Gaffer.IntVectorDataPlug, VectorDataPlugValueWidget )
 GafferUI.PlugValueWidget.registerType( Gaffer.FloatVectorDataPlug, VectorDataPlugValueWidget )
 GafferUI.PlugValueWidget.registerType( Gaffer.StringVectorDataPlug, VectorDataPlugValueWidget )
+GafferUI.PlugValueWidget.registerType( Gaffer.V2iVectorDataPlug, VectorDataPlugValueWidget )
+GafferUI.PlugValueWidget.registerType( Gaffer.V3iVectorDataPlug, VectorDataPlugValueWidget )
+GafferUI.PlugValueWidget.registerType( Gaffer.V2fVectorDataPlug, VectorDataPlugValueWidget )
 GafferUI.PlugValueWidget.registerType( Gaffer.V3fVectorDataPlug, VectorDataPlugValueWidget )
+GafferUI.PlugValueWidget.registerType( Gaffer.Color3fVectorDataPlug, VectorDataPlugValueWidget )

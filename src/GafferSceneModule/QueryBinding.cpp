@@ -46,6 +46,7 @@
 #include "GafferScene/ExistenceQuery.h"
 #include "GafferScene/FilterQuery.h"
 #include "GafferScene/OptionQuery.h"
+#include "GafferScene/PrimitiveVariableQuery.h"
 #include "GafferScene/TransformQuery.h"
 #include "GafferScene/ShaderQuery.h"
 
@@ -166,9 +167,10 @@ class MultiQuerySerialiser : public NodeSerialiser
 };
 
 template<typename T>
-void bindMultiQuery()
+GafferBindings::DependencyNodeClass<T> bindMultiQuery()
 {
-	DependencyNodeClass<T>()
+	GafferBindings::DependencyNodeClass<T> cls = GafferBindings::DependencyNodeClass<T>();
+	cls
 		.def( "addQuery", &addQuery<T>, ( arg( "plug" ), arg( "parameter" ) = "" ) )
 		.def( "removeQuery", &removeQuery<T> )
 		.def( "existsPlugFromQuery", &existsPlugFromQuery<T> )
@@ -177,6 +179,17 @@ void bindMultiQuery()
 		.def( "queryPlug", &queryPlug<T> )
 	;
 	Serialisation::registerSerialiser( T::staticTypeId(), new MultiQuerySerialiser<T>() );
+	return cls;
+}
+
+const IntPlugPtr interpolationPlugFromQuery( const GafferScene::PrimitiveVariableQuery &q, const NameValuePlug &p )
+{
+	return const_cast<IntPlug *>( q.interpolationPlugFromQuery( &p ) );
+}
+
+const StringPlugPtr typePlugFromQuery( const GafferScene::PrimitiveVariableQuery &q, const NameValuePlug &p )
+{
+	return const_cast<StringPlug *>( q.typePlugFromQuery( &p ) );
 }
 
 } // namespace
@@ -193,6 +206,10 @@ void GafferSceneModule::bindQueries()
 
 	bindMultiQuery<GafferScene::ShaderQuery>();
 	bindMultiQuery<GafferScene::OptionQuery>();
+	bindMultiQuery<GafferScene::PrimitiveVariableQuery>()
+		.def( "interpolationPlugFromQuery", & interpolationPlugFromQuery )
+		.def( "typePlugFromQuery", & typePlugFromQuery )
+		;
 
 	{
 		boost::python::scope s = GafferBindings::DependencyNodeClass< GafferScene::BoundQuery >();

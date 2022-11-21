@@ -1,6 +1,13 @@
 1.1.x.x (relative to 1.1.4.0)
 =======
 
+Features
+--------
+
+- PrimitiveVariableQuery : Added new node to query multiple primitive variables from a scene location.
+  - Each query specifies the name and type of the primitive variable
+  - Each query has a corresponding output plug with `exists`, `interpolation`, `type` and `value` child plugs.
+
 Improvements
 ------------
 
@@ -11,6 +18,14 @@ Fixes
 -----
 
 - Arnold : Fixed deletion of `ai:transform_type` attribute during interactive renders. The object now reverts to the default transform type in this case.
+
+API
+---
+
+- Added V2fVectorDataPlug and V3iVectorDataPlug.
+- Added support for V3i and V2f vector data types to PlugAlgo `getValueAsData` functions.
+- Added support for V2i, V3i, V2f, V3f and Color3f vector data types to PlugAlgo `canSetValueFromData` and `setValueFromData` functions.
+- Added support for V2i, V3i, V2f and Color3f vector data plug types to `VectorDataPlugValueWidget`.
 
 1.1.4.0 (relative to 1.1.3.0)
 =======

@@ -96,6 +96,12 @@ void dispatchPlugFunction( const ValuePlug *plug, F &&functor )
 		case V2iPlugTypeId :
 			functor( static_cast<const V2iPlug *>( plug ) );
 			break;
+		case V3iPlugTypeId :
+			functor( static_cast<const V3iPlug *>( plug ) );
+			break;
+		case V2fPlugTypeId :
+			functor( static_cast<const V2fPlug *>( plug ) );
+			break;
 		case V3fPlugTypeId :
 			functor( static_cast<const V3fPlug *>( plug ) );
 			break;
