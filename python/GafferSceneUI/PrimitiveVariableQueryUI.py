@@ -486,7 +486,6 @@ class _PrimitiveVariableQueryFooter( GafferUI.PlugValueWidget ) :
 
 def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 
-	readOnlyUI = plugValueWidget.getReadOnly()
 	plug = plugValueWidget.getPlug().ancestor( Gaffer.NameValuePlug )
 
 	if plug is not None and isinstance( plug.node(), GafferScene.PrimitiveVariableQuery ) :
@@ -494,7 +493,7 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 		if len( menuDefinition.items() ) :
 			menuDefinition.append( "/DeleteDivider", { "divider" : True } )
 
-		menuDefinition.append( "/Delete", { "command" : functools.partial( __deletePlug, plug ), "active" : not readOnlyUI and not Gaffer.MetadataAlgo.readOnly( plug ) } )
+		menuDefinition.append( "/Delete", { "command" : functools.partial( __deletePlug, plug ), "active" : not Gaffer.MetadataAlgo.readOnly( plug ) } )
 
 def __deletePlug( plug ) :
 
