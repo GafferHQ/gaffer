@@ -449,6 +449,10 @@ IECore::DataPtr getValueAsData( const ValuePlug *plug )
 			return static_cast<const BoolVectorDataPlug *>( plug )->getValue()->copy();
 		case V2iVectorDataPlugTypeId :
 			return static_cast<const V2iVectorDataPlug *>( plug )->getValue()->copy();
+		case V3iVectorDataPlugTypeId :
+			return static_cast<const V3iVectorDataPlug *>( plug )->getValue()->copy();
+		case V2fVectorDataPlugTypeId :
+			return static_cast<const V2fVectorDataPlug *>( plug )->getValue()->copy();
 		case V3fVectorDataPlugTypeId :
 			return static_cast<const V3fVectorDataPlug *>( plug )->getValue()->copy();
 		case Color3fVectorDataPlugTypeId :
@@ -770,6 +774,16 @@ bool canSetValueFromData( const ValuePlug *plug, const IECore::Data *value )
 		case Gaffer::V2fPlugTypeId:
 		case Gaffer::V2iPlugTypeId:
 			return canSetCompoundNumericPlugValue( value );
+		case Gaffer::Color3fVectorDataPlugTypeId:
+			return canSetTypedDataPlugValue<Color3fVectorDataPlug>( value );
+		case Gaffer::V3fVectorDataPlugTypeId:
+			return canSetTypedDataPlugValue<V3fVectorDataPlug>( value );
+		case Gaffer::V3iVectorDataPlugTypeId:
+			return canSetTypedDataPlugValue<V3iVectorDataPlug>( value );
+		case Gaffer::V2fVectorDataPlugTypeId:
+			return canSetTypedDataPlugValue<V2fVectorDataPlug>( value );
+		case Gaffer::V2iVectorDataPlugTypeId:
+			return canSetTypedDataPlugValue<V2iVectorDataPlug>( value );
 		case Gaffer::Box3fPlugTypeId:
 		case Gaffer::Box3iPlugTypeId:
 		case Gaffer::Box2fPlugTypeId:
@@ -829,6 +843,16 @@ bool setValueFromData( ValuePlug *plug, const IECore::Data *value )
 			return setCompoundNumericPlugValue( static_cast<V2fPlug *>( plug ), value );
 		case Gaffer::V2iPlugTypeId:
 			return setCompoundNumericPlugValue( static_cast<V2iPlug *>( plug ), value );
+		case Gaffer::V3fVectorDataPlugTypeId:
+			return setTypedDataPlugValue( static_cast<V3fVectorDataPlug *>( plug ), value );
+		case Gaffer::V3iVectorDataPlugTypeId:
+			return setTypedDataPlugValue( static_cast<V3iVectorDataPlug *>( plug ), value );
+		case Gaffer::V2fVectorDataPlugTypeId:
+			return setTypedDataPlugValue( static_cast<V2fVectorDataPlug *>( plug ), value );
+		case Gaffer::V2iVectorDataPlugTypeId:
+			return setTypedDataPlugValue( static_cast<V2iVectorDataPlug *>( plug ), value );
+		case Gaffer::Color3fVectorDataPlugTypeId:
+			return setTypedDataPlugValue( static_cast<Color3fVectorDataPlug *>( plug ), value );
 		case Gaffer::Box3fPlugTypeId:
 			return setBoxPlugValue( static_cast<Box3fPlug *>( plug ), value );
 		case Gaffer::Box3iPlugTypeId:

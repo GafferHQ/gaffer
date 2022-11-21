@@ -53,6 +53,8 @@ GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::FloatVectorDataPlug, FloatVectorDataPl
 GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::StringVectorDataPlug, StringVectorDataPlugTypeId )
 GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::InternedStringVectorDataPlug, InternedStringVectorDataPlugTypeId )
 GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::V2iVectorDataPlug, V2iVectorDataPlugTypeId )
+GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::V3iVectorDataPlug, V3iVectorDataPlugTypeId )
+GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::V2fVectorDataPlug, V2fVectorDataPlugTypeId )
 GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::V3fVectorDataPlug, V3fVectorDataPlugTypeId )
 GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::Color3fVectorDataPlug, Color3fVectorDataPlugTypeId )
 GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::M44fVectorDataPlug, M44fVectorDataPlugTypeId )
@@ -153,6 +155,8 @@ template class TypedObjectPlug<IECore::FloatVectorData>;
 template class TypedObjectPlug<IECore::StringVectorData>;
 template class TypedObjectPlug<IECore::InternedStringVectorData>;
 template class TypedObjectPlug<IECore::V2iVectorData>;
+template class TypedObjectPlug<IECore::V3iVectorData>;
+template class TypedObjectPlug<IECore::V2fVectorData>;
 template class TypedObjectPlug<IECore::V3fVectorData>;
 template class TypedObjectPlug<IECore::Color3fVectorData>;
 template class TypedObjectPlug<IECore::M44fVectorData>;

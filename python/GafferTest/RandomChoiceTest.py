@@ -53,6 +53,8 @@ class RandomChoiceTest( GafferTest.TestCase ) :
 			( Gaffer.FloatPlug, Gaffer.FloatVectorDataPlug ),
 			( Gaffer.StringPlug, Gaffer.StringVectorDataPlug ),
 			( Gaffer.V2iPlug, Gaffer.V2iVectorDataPlug ),
+			( Gaffer.V3iPlug, Gaffer.V3iVectorDataPlug ),
+			( Gaffer.V2fPlug, Gaffer.V2fVectorDataPlug ),
 			( Gaffer.V3fPlug, Gaffer.V3fVectorDataPlug ),
 			( Gaffer.Color3fPlug, Gaffer.Color3fVectorDataPlug ),
 		] :
