@@ -3025,21 +3025,21 @@ namespace
 IECore::InternedString g_frameOptionName( "frame" );
 IECore::InternedString g_cameraOptionName( "camera" );
 
-IECore::InternedString g_logFileNameOptionName( "ai:log:filename" );
-IECore::InternedString g_logMaxWarningsOptionName( "ai:log:max_warnings" );
-IECore::InternedString g_statisticsFileNameOptionName( "ai:statisticsFileName" );
-IECore::InternedString g_profileFileNameOptionName( "ai:profileFileName" );
-IECore::InternedString g_pluginSearchPathOptionName( "ai:plugin_searchpath" );
-IECore::InternedString g_aaSeedOptionName( "ai:AA_seed" );
-IECore::InternedString g_enableProgressiveRenderOptionName( "ai:enable_progressive_render" );
-IECore::InternedString g_progressiveMinAASamplesOptionName( "ai:progressive_min_AA_samples" );
-IECore::InternedString g_sampleMotionOptionName( "sampleMotion" );
-IECore::InternedString g_atmosphereOptionName( "ai:atmosphere" );
-IECore::InternedString g_backgroundOptionName( "ai:background" );
-IECore::InternedString g_colorManagerOptionName( "ai:color_manager" );
-IECore::InternedString g_subdivDicingCameraOptionName( "ai:subdiv_dicing_camera" );
-IECore::InternedString g_imagerOptionName( "ai:imager" );
-IECore::InternedString g_idAOVShaderOptionName( "ai:aov_shader:__cortexID" );
+const IECore::InternedString g_aaSeedOptionName( "ai:AA_seed" );
+const IECore::InternedString g_atmosphereOptionName( "ai:atmosphere" );
+const IECore::InternedString g_backgroundOptionName( "ai:background" );
+const IECore::InternedString g_colorManagerOptionName( "ai:color_manager" );
+const IECore::InternedString g_enableProgressiveRenderOptionName( "ai:enable_progressive_render" );
+const IECore::InternedString g_idAOVShaderOptionName( "ai:aov_shader:__cortexID" );
+const IECore::InternedString g_imagerOptionName( "ai:imager" );
+const IECore::InternedString g_logFileNameOptionName( "ai:log:filename" );
+const IECore::InternedString g_logMaxWarningsOptionName( "ai:log:max_warnings" );
+const IECore::InternedString g_pluginSearchPathOptionName( "ai:plugin_searchpath" );
+const IECore::InternedString g_profileFileNameOptionName( "ai:profileFileName" );
+const IECore::InternedString g_progressiveMinAASamplesOptionName( "ai:progressive_min_AA_samples" );
+const IECore::InternedString g_sampleMotionOptionName( "sampleMotion" );
+const IECore::InternedString g_statisticsFileNameOptionName( "ai:statisticsFileName" );
+const IECore::InternedString g_subdivDicingCameraOptionName( "ai:subdiv_dicing_camera" );
 
 std::string g_logFlagsOptionPrefix( "ai:log:" );
 std::string g_consoleFlagsOptionPrefix( "ai:console:" );
