@@ -350,6 +350,7 @@ const AtString g_subdivFrustumIgnoreArnoldString( "subdiv_frustum_ignore" );
 const AtString g_subdivSmoothDerivsArnoldString( "subdiv_smooth_derivs" );
 const AtString g_subdivTypeArnoldString( "subdiv_type" );
 const AtString g_subdivUVSmoothingArnoldString( "subdiv_uv_smoothing" );
+const AtString g_textureAutoGenerateArnoldString( "texture_auto_generate_tx" );
 const AtString g_toonIdArnoldString( "toon_id" );
 const AtString g_traceSetsArnoldString( "trace_sets" );
 const AtString g_transformTypeArnoldString( "transform_type" );
@@ -3040,6 +3041,7 @@ const IECore::InternedString g_progressiveMinAASamplesOptionName( "ai:progressiv
 const IECore::InternedString g_sampleMotionOptionName( "sampleMotion" );
 const IECore::InternedString g_statisticsFileNameOptionName( "ai:statisticsFileName" );
 const IECore::InternedString g_subdivDicingCameraOptionName( "ai:subdiv_dicing_camera" );
+const IECore::InternedString g_textureAutoGenerateOptionName( "ai:texture_auto_generate_tx" );
 
 std::string g_logFlagsOptionPrefix( "ai:log:" );
 std::string g_consoleFlagsOptionPrefix( "ai:console:" );
@@ -3108,6 +3110,13 @@ class ArnoldGlobals
 			AiMsgSetLogFileFlags( m_universeBlock->universe(), m_logFileFlags );
 			// Get OSL shaders onto the shader searchpath.
 			option( g_pluginSearchPathOptionName, new IECore::StringData( "" ) );
+			// Set the `texture_auto_generate_tx` option to our preferred default, which is
+			// not the Arnold default.
+			const AtNode *options = AiUniverseGetOptions( m_universeBlock->universe() );
+			if( AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( options ), g_textureAutoGenerateArnoldString ) )
+			{
+				option( g_textureAutoGenerateOptionName, nullptr );
+			}
 		}
 
 		~ArnoldGlobals()
@@ -3406,6 +3415,12 @@ class ArnoldGlobals
 				{
 					output.second->updateImager( m_imager ? m_imager->root() : nullptr );
 				}
+				return;
+			}
+			else if( name == g_textureAutoGenerateOptionName )
+			{
+				auto d = value ? reportedCast<const IECore::BoolData>( value, "option", name ) : nullptr;
+				AiNodeSetBool( options, g_textureAutoGenerateArnoldString, d ? d->readable() : false );
 				return;
 			}
 			else if( boost::starts_with( name.c_str(), "ai:aov_shader:" ) )

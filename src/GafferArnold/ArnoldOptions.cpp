@@ -101,7 +101,7 @@ ArnoldOptions::ArnoldOptions( const std::string &name )
 	options->addChild( new Gaffer::NameValuePlug( "ai:texture_per_file_stats", new IECore::BoolData( false ), false, "texturePerFileStats" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ai:texture_max_sharpen", new IECore::FloatData( 1.5 ), false, "textureMaxSharpen" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ai:texture_use_existing_tx", new IECore::BoolData( true ), false, "textureUseExistingTx" ) );
-	options->addChild( new Gaffer::NameValuePlug( "ai:texture_auto_generate_tx", new IECore::BoolData( true ), false, "textureAutoGenerateTx" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:texture_auto_generate_tx", new IECore::BoolData( false ), false, "textureAutoGenerateTx" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ai:texture_auto_tx_path", new IECore::StringData( "" ), false, "textureAutoTxPath" ) );
 
 	// Ignore parameters
