@@ -100,7 +100,7 @@ def __addScript( application, fileName, dialogueParentWindow = None, asNew = Fal
 
 	recoveryFileName = None
 	backups = GafferUI.Backups.acquire( application, createIfNecessary = False )
-	if backups is not None :
+	if backups is not None and "DISABLE_BACKUP" not in os.environ :
 		recoveryFileName = backups.recoveryFile( fileName )
 		if recoveryFileName :
 			dialogue = GafferUI.ConfirmationDialogue(
