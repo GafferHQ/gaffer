@@ -11,13 +11,16 @@ Features
 Improvements
 ------------
 
+- ArnoldOptions : Added support for `texture_use_existing_tx`, `texture_auto_generate_tx` and `texture_auto_tx_path`.
 - Arnold : Added support for attributes containing InternedStringData, as would be obtained by loading `token` primvars from a USD file.
 - Random : Added the `outFloat` plug to the NodeEditor, and moved output plugs into their own `Outputs` section.
 
 Fixes
 -----
 
-- Arnold : Fixed deletion of `ai:transform_type` attribute during interactive renders. The object now reverts to the default transform type in this case.
+- Arnold :
+  - Fixed deletion of `ai:transform_type` attribute during interactive renders. The object now reverts to the default transform type in this case.
+  - Fixed broken Viewer after Arnold encountered an error (such as a missing texture).
 
 API
 ---

@@ -350,6 +350,7 @@ const AtString g_subdivFrustumIgnoreArnoldString( "subdiv_frustum_ignore" );
 const AtString g_subdivSmoothDerivsArnoldString( "subdiv_smooth_derivs" );
 const AtString g_subdivTypeArnoldString( "subdiv_type" );
 const AtString g_subdivUVSmoothingArnoldString( "subdiv_uv_smoothing" );
+const AtString g_textureAutoGenerateArnoldString( "texture_auto_generate_tx" );
 const AtString g_toonIdArnoldString( "toon_id" );
 const AtString g_traceSetsArnoldString( "trace_sets" );
 const AtString g_transformTypeArnoldString( "transform_type" );
@@ -3025,21 +3026,22 @@ namespace
 IECore::InternedString g_frameOptionName( "frame" );
 IECore::InternedString g_cameraOptionName( "camera" );
 
-IECore::InternedString g_logFileNameOptionName( "ai:log:filename" );
-IECore::InternedString g_logMaxWarningsOptionName( "ai:log:max_warnings" );
-IECore::InternedString g_statisticsFileNameOptionName( "ai:statisticsFileName" );
-IECore::InternedString g_profileFileNameOptionName( "ai:profileFileName" );
-IECore::InternedString g_pluginSearchPathOptionName( "ai:plugin_searchpath" );
-IECore::InternedString g_aaSeedOptionName( "ai:AA_seed" );
-IECore::InternedString g_enableProgressiveRenderOptionName( "ai:enable_progressive_render" );
-IECore::InternedString g_progressiveMinAASamplesOptionName( "ai:progressive_min_AA_samples" );
-IECore::InternedString g_sampleMotionOptionName( "sampleMotion" );
-IECore::InternedString g_atmosphereOptionName( "ai:atmosphere" );
-IECore::InternedString g_backgroundOptionName( "ai:background" );
-IECore::InternedString g_colorManagerOptionName( "ai:color_manager" );
-IECore::InternedString g_subdivDicingCameraOptionName( "ai:subdiv_dicing_camera" );
-IECore::InternedString g_imagerOptionName( "ai:imager" );
-IECore::InternedString g_idAOVShaderOptionName( "ai:aov_shader:__cortexID" );
+const IECore::InternedString g_aaSeedOptionName( "ai:AA_seed" );
+const IECore::InternedString g_atmosphereOptionName( "ai:atmosphere" );
+const IECore::InternedString g_backgroundOptionName( "ai:background" );
+const IECore::InternedString g_colorManagerOptionName( "ai:color_manager" );
+const IECore::InternedString g_enableProgressiveRenderOptionName( "ai:enable_progressive_render" );
+const IECore::InternedString g_idAOVShaderOptionName( "ai:aov_shader:__cortexID" );
+const IECore::InternedString g_imagerOptionName( "ai:imager" );
+const IECore::InternedString g_logFileNameOptionName( "ai:log:filename" );
+const IECore::InternedString g_logMaxWarningsOptionName( "ai:log:max_warnings" );
+const IECore::InternedString g_pluginSearchPathOptionName( "ai:plugin_searchpath" );
+const IECore::InternedString g_profileFileNameOptionName( "ai:profileFileName" );
+const IECore::InternedString g_progressiveMinAASamplesOptionName( "ai:progressive_min_AA_samples" );
+const IECore::InternedString g_sampleMotionOptionName( "sampleMotion" );
+const IECore::InternedString g_statisticsFileNameOptionName( "ai:statisticsFileName" );
+const IECore::InternedString g_subdivDicingCameraOptionName( "ai:subdiv_dicing_camera" );
+const IECore::InternedString g_textureAutoGenerateOptionName( "ai:texture_auto_generate_tx" );
 
 std::string g_logFlagsOptionPrefix( "ai:log:" );
 std::string g_consoleFlagsOptionPrefix( "ai:console:" );
@@ -3108,6 +3110,13 @@ class ArnoldGlobals
 			AiMsgSetLogFileFlags( m_universeBlock->universe(), m_logFileFlags );
 			// Get OSL shaders onto the shader searchpath.
 			option( g_pluginSearchPathOptionName, new IECore::StringData( "" ) );
+			// Set the `texture_auto_generate_tx` option to our preferred default, which is
+			// not the Arnold default.
+			const AtNode *options = AiUniverseGetOptions( m_universeBlock->universe() );
+			if( AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( options ), g_textureAutoGenerateArnoldString ) )
+			{
+				option( g_textureAutoGenerateOptionName, nullptr );
+			}
 		}
 
 		~ArnoldGlobals()
@@ -3406,6 +3415,12 @@ class ArnoldGlobals
 				{
 					output.second->updateImager( m_imager ? m_imager->root() : nullptr );
 				}
+				return;
+			}
+			else if( name == g_textureAutoGenerateOptionName )
+			{
+				auto d = value ? reportedCast<const IECore::BoolData>( value, "option", name ) : nullptr;
+				AiNodeSetBool( options, g_textureAutoGenerateArnoldString, d ? d->readable() : false );
 				return;
 			}
 			else if( boost::starts_with( name.c_str(), "ai:aov_shader:" ) )
