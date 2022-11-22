@@ -3997,6 +3997,27 @@ class RendererTest( GafferTest.TestCase ) :
 			plane = arnold.AiNodeLookUpByName( universe, "testPlane" )
 			self.assertEqual( arnold.AiNodeGetStr( plane, "user:myString" ), "test" )
 
+	@unittest.skipIf( [ int( x ) for x in arnold.AiGetVersion() ] < [ 7, 1, 4, 0 ], "Option not available in Arnold" )
+	def testTextureAutoGenerate( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		universe = ctypes.cast( r.command( "ai:queryUniverse", {} ), ctypes.POINTER( arnold.AtUniverse ) )
+		options = arnold.AiUniverseGetOptions( universe )
+		self.assertEqual( arnold.AiNodeGetBool( options, "texture_auto_generate_tx" ), False )
+
+		r.option( "ai:texture_auto_generate_tx", IECore.BoolData( True ) )
+		self.assertEqual( arnold.AiNodeGetBool( options, "texture_auto_generate_tx" ), True )
+
+		r.option( "ai:texture_auto_generate_tx", None )
+		self.assertEqual( arnold.AiNodeGetBool( options, "texture_auto_generate_tx" ), False )
+
+		r.option( "ai:texture_auto_generate_tx", IECore.BoolData( False ) )
+		self.assertEqual( arnold.AiNodeGetBool( options, "texture_auto_generate_tx" ), False )
+
 	@staticmethod
 	def __m44f( m ) :
 

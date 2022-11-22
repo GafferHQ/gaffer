@@ -286,6 +286,12 @@ if [[ $ARNOLD_ROOT ]] ; then
 		echo "WARNING : Unable to determine Arnold version" >&2
 	fi
 
+	# Disable Autodesk Analytics, unless they have been explicitly
+	# opted in to already by setting `ARNOLD_ADP_OPTIN=1`.
+	if [[ -z $ARNOLD_ADP_OPTIN ]] ; then
+		export ARNOLD_ADP_OPTIN=0
+	fi
+
 fi
 
 # Set up 3Delight

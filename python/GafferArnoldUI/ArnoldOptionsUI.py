@@ -139,6 +139,12 @@ def __texturingSummary( plug ) :
 		info.append( "Per File Stats {0}".format( "On" if plug["texturePerFileStats"]["value"].getValue() else "Off" ) )
 	if plug["textureMaxSharpen"]["enabled"].getValue() :
 		info.append( "Sharpen {0}".format( GafferUI.NumericWidget.valueToString( plug["textureMaxSharpen"]["value"].getValue() ) ) )
+	if plug["textureUseExistingTx"]["enabled"].getValue() :
+		info.append( "Use `.tx` {0}".format( "On" if plug["textureUseExistingTx"]["value"].getValue() else "Off" ) )
+	if plug["textureAutoGenerateTx"]["enabled"].getValue() :
+		info.append( "Auto `.tx` {0}".format( "On" if plug["textureAutoGenerateTx"]["value"].getValue() else "Off" ) )
+	if plug["textureAutoTxPath"]["enabled"].getValue() :
+		info.append( "Auto `.tx` path" )
 	return ", ".join( info )
 
 def __featuresSummary( plug ) :
@@ -757,6 +763,65 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Texturing",
 			"label", "Max Sharpen",
+		],
+
+		"options.textureUseExistingTx" : [
+
+			"description",
+			"""
+			Automatically uses a `<filename>.tx` file if it exists, in
+			preference to a `<filename>.jpg` (or any other file format) that has
+			been specified. Particularly useful when used with
+			`textureAutoGenerateTx`, which will automatically create the `.tx`
+			file as necessary.
+
+			> Info : The `.tx` file format provides improved performance and
+			reduced memory usage, because it contains mip-mapped textures.
+			""",
+
+			"layout:section", "Texturing",
+			"label", "Use Existing `.tx`",
+
+		],
+
+		"options.textureAutoGenerateTx" : [
+
+			"description",
+			"""
+			Automatically generates a `<filename>.tx` when given
+			`<filename>.jpg` (or any other file format). Requires that
+			`textureUseExistingTx` is also turned on. By default, textures
+			are generated in the same folder as the source texture. Use
+			`textureAutoTxPath` to specify an alternative destination.
+
+			> Caution : This feature might cause problems if multiple render
+			farm nodes are trying to convert the same textures in the same
+			target folder at the same time, resulting in potential crashes,
+			corrupt textures, and poor performance.
+			""",
+
+			"layout:section", "Texturing",
+			"label", "Auto Generate `.tx`",
+
+		],
+
+		"options.textureAutoTxPath" : [
+
+			"description",
+			"""
+			Specifies an alternate destination folder for textures generated
+			by `textureAutoGenerateTx`.
+			""",
+
+			"layout:section", "Texturing",
+			"label", "Auto `.tx` Path",
+
+		],
+
+		"options.textureAutoTxPath.value" : [
+
+			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
+
 		],
 
 		# Features

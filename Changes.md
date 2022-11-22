@@ -67,7 +67,7 @@ Build
 
 - Cortex : Updated to version 10.4.3.0.
 
-1.1.x.x (relative to 1.1.4.0)
+1.1.5.0 (relative to 1.1.4.0)
 =======
 
 Features
@@ -80,13 +80,17 @@ Features
 Improvements
 ------------
 
+- ArnoldOptions : Added support for `texture_use_existing_tx`, `texture_auto_generate_tx` and `texture_auto_tx_path`.
 - Arnold : Added support for attributes containing InternedStringData, as would be obtained by loading `token` primvars from a USD file.
 - Random : Added the `outFloat` plug to the NodeEditor, and moved output plugs into their own `Outputs` section.
 
 Fixes
 -----
 
-- Arnold : Fixed deletion of `ai:transform_type` attribute during interactive renders. The object now reverts to the default transform type in this case.
+- Arnold :
+  - Fixed deletion of `ai:transform_type` attribute during interactive renders. The object now reverts to the default transform type in this case.
+  - Fixed broken Viewer after Arnold encountered an error (such as a missing texture).
+  - Fixed `Tools/Arnold/Flush Cache` not working when no interactive renders are running.
 
 API
 ---
