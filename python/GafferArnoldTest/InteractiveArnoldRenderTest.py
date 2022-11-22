@@ -37,6 +37,7 @@
 import os
 import sys
 import time
+import shutil
 import unittest
 import imath
 import arnold
@@ -353,6 +354,134 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		self.assertAlmostEqual( updateColor.g, 0.06, delta = 0.022 )
 
 		s["r"]["state"].setValue( s["r"].State.Stopped )
+
+	def testFlushCache( self ) :
+
+		# Arnold has a shared texture cache. We want to make sure that on a render stop
+		# that the cache gets reloaded from the default universe.
+
+		# Create tmp file for texture image
+		redTextureFile  = os.path.join( os.path.dirname( __file__ ), "images", "red.exr" )
+		blueTextureFile = os.path.join( os.path.dirname( __file__ ), "images", "blue.exr" )
+		tmpTextureFile  = os.path.join( self.temporaryDirectory(), "texture.exr" )
+		shutil.copyfile( redTextureFile, tmpTextureFile )
+
+		s = Gaffer.ScriptNode()
+		s["catalogue"] = GafferImage.Catalogue()
+
+		s["s"] = GafferScene.Sphere()
+
+		s["PathFilter"] = GafferScene.PathFilter( "PathFilter" )
+		s["PathFilter"]["paths"].setValue( IECore.StringVectorData( [ '/sphere' ] ) )
+
+		s["ShaderAssignment"] = GafferScene.ShaderAssignment( "ShaderAssignment" )
+		s["ShaderAssignment"]["in"].setInput( s["s"]["out"] )
+		s["ShaderAssignment"]["filter"].setInput( s["PathFilter"]["out"] )
+
+		# Add a texture
+		s["Tex"] = GafferArnold.ArnoldShader( "image" )
+		s["Tex"].loadShader( "image" )
+		s["Tex"]["parameters"]["filename"].setValue( tmpTextureFile )
+
+		# Create a constant shader
+		s["constant"], shaderColor = self._createConstantShader()
+		shaderColor.setInput( s["Tex"]["out"] )
+		s["ShaderAssignment"]["shader"].setInput( s["constant"]["out"] )
+
+		s["c"] = GafferScene.Camera()
+		s["c"]["transform"]["translate"]["z"].setValue( 2 )
+
+		s["group"] = GafferScene.Group()
+		s["group"]["in"][0].setInput( s["ShaderAssignment"]["out"] )
+		s["group"]["in"][1].setInput( s["c"]["out"] )
+
+		s["o"] = GafferScene.Outputs()
+		s["o"].addOutput(
+			"beauty",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ClientDisplayDriver",
+					"displayHost" : "localhost",
+					"displayPort" : str( s['catalogue'].displayDriverServer().portNumber() ),
+					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+				}
+			)
+		)
+		s["o"]["in"].setInput( s["group"]["out"] )
+
+		s["so"] = GafferScene.StandardOptions()
+		s["so"]["options"]["renderCamera"]["value"].setValue( "/group/camera" )
+		s["so"]["options"]["renderCamera"]["enabled"].setValue( True )
+		s["so"]["in"].setInput( s["o"]["out"] )
+
+		s["r"] = self._createInteractiveRender()
+		s["r"]["in"].setInput( s["so"]["out"] )
+
+		# Start render 1 and save the image output.
+		s["r"]["state"].setValue( s["r"].State.Running )
+		self.uiThreadCallHandler.waitFor( 1.0 )
+		s["r"]["state"].setValue( s["r"].State.Stopped )
+		redTexture = self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
+
+		# Copy new texture
+		shutil.copyfile( blueTextureFile, tmpTextureFile )
+		# We are testing that flushCaches works correctly on a stopped render.
+		GafferArnold.InteractiveArnoldRender.flushCaches( arnold.AI_CACHE_ALL )
+
+		# Start and stop new render
+		s["r"]["state"].setValue( s["r"].State.Running )
+		self.uiThreadCallHandler.waitFor( 1.0 )
+		s["r"]["state"].setValue( s["r"].State.Stopped )
+
+		# Get image from new render.
+		blueTexture = self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
+
+		# Make sure that the two renders are different.
+		self.assertNotEqual( redTexture, blueTexture )
+
+		# Double check that the textures are the right colours.
+		# Texture one should have red and no blue.
+		self.assertAlmostEqual( redTexture.r, 1.0, delta = 0.01 )
+		self.assertAlmostEqual( redTexture.b, 0.0, delta = 0.01 )
+
+		# Texture one should have blue and no red.
+		self.assertAlmostEqual( blueTexture.b, 1.0, delta = 0.01 )
+		self.assertAlmostEqual( blueTexture.r, 0.0, delta = 0.01 )
+
+		# Reset texture.
+		shutil.copyfile( redTextureFile, tmpTextureFile )
+		GafferArnold.InteractiveArnoldRender.flushCaches( arnold.AI_CACHE_ALL )
+
+		# Now test flush cache during a render
+		s["r"]["state"].setValue( s["r"].State.Running )
+		self.uiThreadCallHandler.waitFor( 1.0 )
+
+		# Get colour after 1 second of render.
+		redTexture = self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
+
+		# Copy new texture, flush cache and then render for 1 second.
+		shutil.copyfile( blueTextureFile, tmpTextureFile )
+		GafferArnold.InteractiveArnoldRender.flushCaches( arnold.AI_CACHE_ALL )
+		self.uiThreadCallHandler.waitFor( 1.0 )
+
+		# Get colour of second texture and stop.
+		blueTexture = self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
+		s["r"]["state"].setValue( s["r"].State.Stopped )
+
+		# Make sure that the two renders are different.
+		self.assertNotEqual( redTexture, blueTexture )
+
+		# Double check that the textures are the right colours.
+		# Texture one should have red and no blue.
+		self.assertAlmostEqual( redTexture.r, 1.0, delta = 0.01 )
+		self.assertAlmostEqual( redTexture.b, 0.0, delta = 0.01 )
+
+		# Texture one should have blue and no red.
+		self.assertAlmostEqual( blueTexture.b, 1.0, delta = 0.01 )
+		self.assertAlmostEqual( blueTexture.r, 0.0, delta = 0.01 )
 
 	def testMeshLightFilterChange( self ) :
 
