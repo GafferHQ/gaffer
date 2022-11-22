@@ -175,6 +175,8 @@ Gaffer.Metadata.registerNode(
 
 class _RandomColorPlugValueWidget( GafferUI.PlugValueWidget ) :
 
+	__gridSize = imath.V2i( 10, 3 )
+
 	def __init__( self, plug, **kw ) :
 
 		self.__grid = GafferUI.GridContainer( spacing = 4 )
@@ -182,22 +184,41 @@ class _RandomColorPlugValueWidget( GafferUI.PlugValueWidget ) :
 		GafferUI.PlugValueWidget.__init__( self, self.__grid, plug, **kw )
 
 		with self.__grid :
-			for x in range( 0, 10 ) :
-				for y in range( 0, 3 ) :
+			for x in range( 0, self.__gridSize.x ) :
+				for y in range( 0, self.__gridSize.y ) :
 					GafferUI.ColorSwatch( parenting = { "index" : ( x, y ) } )
 
-		self._updateFromPlug()
+	@staticmethod
+	def _valuesForUpdate( plugs ) :
 
-	def _updateFromPlug( self ) :
-
-		node = self.getPlug().source().node()
+		node = next( iter( plugs ) ).source().node()
 		seed = node["seed"].getValue()
 
-		gridSize = self.__grid.gridSize()
-		for x in range( 0, gridSize.x ) :
-			for y in range( 0, gridSize.y ) :
-				self.__grid[x,y].setColor( node.randomColor( seed ) )
+		result = []
+		for x in range( 0, _RandomColorPlugValueWidget.__gridSize.x ) :
+			column = []
+			for y in range( 0, _RandomColorPlugValueWidget.__gridSize.y ) :
+				column.append( node.randomColor( seed ) )
 				seed += 1
+			result.append( column )
+
+		return result
+
+	def _updateFromValues( self, values, exception ) :
+
+		for x in range( 0, self.__gridSize.x ) :
+			for y in range( 0, self.__gridSize.y ) :
+				if exception is not None :
+					self.__grid[x,y].setColor( imath.Color3f( 1, 0.33, 0.33 ) )
+				elif len( values ) :
+					self.__grid[x,y].setColor( values[x][y] )
+				else :
+					# We are called with `values == []` prior to
+					# the BackgroundTask for `_valuesForUpdate()`
+					# being launched. No point displaying a "busy"
+					# state as it is typically so quick as to just
+					# be visual noise.
+					pass
 
 # PlugValueWidget popup menu
 ##########################################################################
