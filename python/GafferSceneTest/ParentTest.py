@@ -915,5 +915,60 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 			parent["in"].boundHash( "/GAFFERBOT/C_torso_GRP" )
 		)
 
+	def testChainedNodesWithIdenticalBranches( self ) :
+
+		# Trick to make a large scene without needing a cache file
+		# and without using a BranchCreator. This scene is infinite
+		# but very cheap to compute.
+
+		infiniteScene = GafferScene.ScenePlug()
+		infiniteScene["childNames"].setValue( IECore.InternedStringVectorData( [ "one", "two" ] ) )
+
+		# Filter that will search the scene to a fixed depth, but
+		# never find anything.
+
+		pathFilter = GafferScene.PathFilter()
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ "/*/*/*/*/*/*/*/*/*/*/*/thisDoesntExist" ] ) )
+
+		# Two Parent nodes one after another, using the same filter.
+		# These will generate the same (empty) set of branches.
+
+		parent1 = GafferScene.Parent()
+		parent1["in"].setInput( infiniteScene )
+		parent1["filter"].setInput( pathFilter["out"] )
+
+		parent2 = GafferScene.Parent()
+		parent2["in"].setInput( parent1["out"] )
+		parent2["filter"].setInput( pathFilter["out"] )
+
+		# Simulate the effects of a previous computation being evicted
+		# from the cache.
+
+		parent2["__branches"].getValue()
+		Gaffer.ValuePlug.clearCache()
+
+		# We are now a situation where the hash for `parent2.__branches` is
+		# cached, but the value isn't. This is significant, because it means
+		# that in the next step, the downstream compute for `parent2.__branches`
+		# starts _before_ the upstream one for `parent1.__branches`. If the hash
+		# wasn't cached, then the hash for `parent2` would trigger
+		# an upstream compute for `parent1.__branches` first.
+
+		# Trigger scene generation. We can't use `traverseScene()` because the
+		# scene is infinite, so we use `matchingPaths()` to generate up to a fixed
+		# depth. The key effect here is that lots of threads are indirectly pulling on
+		# `parent2.__branches`, triggering task collaboration.
+
+		with Gaffer.PerformanceMonitor() as monitor :
+			paths = IECore.PathMatcher()
+			GafferScene.SceneAlgo.matchingPaths( IECore.PathMatcher( [ "/*/*/*/*/*/*/*/*/*/*/*/*" ] ), parent2["out"], paths )
+
+		# We only expect to see a single hash/compute for `__branches` on each
+		# node. A previous bug meant that this was not the case, and thousands
+		# of unnecessary evaluations of `parent1.__branches` could occur.
+
+		self.assertEqual( monitor.plugStatistics( parent1["__branches"] ).computeCount, 1 )
+		self.assertEqual( monitor.plugStatistics( parent2["__branches"] ).computeCount, 1 )
+
 if __name__ == "__main__":
 	unittest.main()

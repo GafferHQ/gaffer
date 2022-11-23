@@ -162,6 +162,10 @@ void FilterResults::hash( const Gaffer::ValuePlug *output, const Gaffer::Context
 		ScenePlug::ScenePath rootPath;
 		ScenePlug::stringToPath( rootPlug()->getValue(), rootPath );
 		h.append( SceneAlgo::matchingPathsHash( filterPlug(), scenePlug(), rootPath ) );
+		// Ensure hash is unique to this plug, to avoid deadlocks that would be
+		// caused by depending on an identical upstream FilterResults output.
+		// See `SetTest.testRecursion()` and `FilterResults.testComputeCacheRecursion()`.
+		h.append( (uint64_t)output );
 	}
 	else if( output == outPlug() )
 	{

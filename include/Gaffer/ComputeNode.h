@@ -65,14 +65,20 @@ class GAFFER_API ComputeNode : public DependencyNode
 
 	protected :
 
-		/// Called to compute the hashes for output Plugs. Must be implemented to call the base
-		/// class method, then call input->hash( h ) for all input plugs used in the computation
-		/// of output. Must also hash in the value of any context items that will be accessed by
-		/// the computation.
+		/// Called to compute the hash for an output Plug. This hash provides the key
+		/// used to store the results of `compute()` in an internal cache.
+		///
+		/// Implementations should first call the base class method, to seed the hash with
+		/// the node type and plug name. They should then call `input->hash( h )`
+		/// for all input plugs used in the computation of `output`, and must also hash in the
+		/// value of any context items that will be accessed by the computation.
 		///
 		/// In the special case that the node will pass through a value from an input plug
-		/// unchanged, the hash for the input plug should be assigned directly to the result
-		/// (rather than appended) - this allows cache entries to be shared.
+		/// unchanged, the hash for the input plug may be assigned directly to the result
+		/// (rather than appended); this allows compute cache entries to be shared. At times,
+		/// calling `input->getValue()` may also allow a more accurate hash to be generated,
+		/// again resulting in fewer total compute cache entries. Both techniques are subject
+		/// to the caveats documented in `computeCachePolicy()`.
 		virtual void hash( const ValuePlug *output, const Context *context, IECore::MurmurHash &h ) const = 0;
 		/// Called to compute the values for output Plugs. Must be implemented to compute
 		/// an appropriate value and apply it using output->setValue().
@@ -83,6 +89,21 @@ class GAFFER_API ComputeNode : public DependencyNode
 		virtual ValuePlug::CachePolicy hashCachePolicy( const ValuePlug *output ) const;
 		/// Called to determine how calls to `compute()` should be cached. If `compute( output )`
 		/// will spawn TBB tasks then one of the task-based policies _must_ be used.
+		///
+		/// > Caution : Using any policy other than `Uncached` or `Legacy` places constraints
+		/// > on the implementation of `hash()` : the hash _must be different_ to the hash of
+		/// > any upstream dependency of `compute()`. In practice, this means two things :
+		/// >
+		/// > 1. A direct pass-through of an input hash must not be used. See
+		/// >    `ObjectProcessor::processedObjectPlug()` for an example
+		/// >    of using TaskCollaboration while retaining the ability to use
+		/// >    pass-throughs.
+		/// > 2. Any `input->getValue()` calls must be used with great care, to ensure
+		/// >    they can't cause nodes of the same type to generate the same hash.
+		/// >
+		/// > Failure to meet these constraints can result in deadlock, as an upstream
+		/// > compute tries to acquire a cache entry which is currently locked by a downstream
+		/// > compute.
 		virtual ValuePlug::CachePolicy computeCachePolicy( const ValuePlug *output ) const;
 
 	private :

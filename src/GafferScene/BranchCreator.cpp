@@ -544,6 +544,22 @@ void BranchCreator::hash( const Gaffer::ValuePlug *output, const Gaffer::Context
 	if( output == branchesPlug() )
 	{
 		BranchesData::hash( this, context, h );
+		// The BranchesData hash has a one-to-one mapping to BranchesData
+		// values, meaning that even completely different input scenes and
+		// filters can yield the same hash. Ensure that two nodes in the same
+		// dependency chain can't share the same hash, as that would lead to
+		// deadlock when the upstream compute tries to acquire a cache entry which
+		// is already locked by the downstream compute.
+		//
+		// See `ParentTest.testChainedNodesWithIdenticalBranches()`.
+		//
+		// > Note : When `output` is destructed, ValuePlug will invalidate all
+		// > its entries in the hash cache, so it is OK if a future plug re-uses
+		// > its address.
+		h.append( (uint64_t)output );
+		/// \todo It's not totally clear that there's an overall benefit from
+		/// computing an expensive but exact hash. We might want to consider
+		/// using a very cheap hash based on `dirtyCount()` instead.
 	}
 	else if( output == mappingPlug() )
 	{

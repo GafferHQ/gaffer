@@ -89,7 +89,7 @@ ValuePlug::CachePolicy ComputeNode::computeCachePolicy( const ValuePlug *output 
 	{
 		return ValuePlug::CachePolicy::Uncached;
 	}
-	/// \todo Return `Standard` once all task-spawning computes are
+	/// \todo Return `Standard` once all task-spawning computes are <===== NO
 	/// known to be declaring an appropriate policy.
 	return ValuePlug::CachePolicy::Legacy;
 }

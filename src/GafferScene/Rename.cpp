@@ -845,16 +845,9 @@ void Rename::hashSet( const IECore::InternedString &setName, const Gaffer::Conte
 		}
 	);
 
-	if( renamesHash != MurmurHash() )
-	{
-		FilteredSceneProcessor::hashSet( setName, context, parent, h );
-		h.append( inputSetHash );
-		h.append( renamesHash );
-	}
-	else
-	{
-		h = inputSetHash;
-	}
+	FilteredSceneProcessor::hashSet( setName, context, parent, h );
+	h.append( inputSetHash );
+	h.append( renamesHash );
 }
 
 IECore::ConstPathMatcherDataPtr Rename::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const

@@ -60,7 +60,7 @@ class RenameTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertTrue( rename["out"].exists( "/group/sphere" ) )
 		self.assertScenesEqual( rename["out"], rename["in"] )
-		self.assertSceneHashesEqual( rename["out"], rename["in"] )
+		self.assertSceneHashesEqual( rename["out"], rename["in"], checks = self.allSceneChecks - { "sets" } )
 
 		# Filter, but not matching anything yet
 
@@ -69,7 +69,7 @@ class RenameTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertTrue( rename["out"].exists( "/group/sphere" ) )
 		self.assertScenesEqual( rename["out"], rename["in"] )
-		self.assertSceneHashesEqual( rename["out"], rename["in"] )
+		self.assertSceneHashesEqual( rename["out"], rename["in"], checks = self.allSceneChecks - { "sets" } )
 
 		# Filter matching something, but node disabled
 
@@ -589,6 +589,18 @@ class RenameTest( GafferSceneTest.SceneTestCase ) :
 		spreadsheet["rows"][1]["cells"]["newName"]["enabled"].setValue( True )
 		self.assertSceneValid( rename["out"] )
 		self.assertEqual( rename["out"].childNames( "/" )[0], "newSphere" )
+
+	def testSetPassThroughWithCacheEviction( self ) :
+
+		sphere = GafferScene.Sphere()
+		sphere["sets"].setValue( "setA" )
+
+		rename = GafferScene.Rename()
+		rename["in"].setInput( sphere["out"] )
+
+		rename["out"].set( "setA" )
+		Gaffer.ValuePlug.clearCache()
+		rename["out"].set( "setA" )
 
 if __name__ == "__main__":
 	unittest.main()
