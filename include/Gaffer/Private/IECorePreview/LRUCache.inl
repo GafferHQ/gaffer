@@ -747,7 +747,7 @@ class TaskParallel
 			template<typename F>
 			void execute( F &&f )
 			{
-				if( m_spawnsTasks && m_itemLock.lockType() == TaskMutex::ScopedLock::LockType::Write )
+				if( m_spawnsTasks )
 				{
 					// The getter function will spawn tasks. Execute
 					// it via the TaskMutex, so that other threads trying
@@ -815,9 +815,8 @@ class TaskParallel
 						// found a pre-existing item we optimistically take
 						// just a read lock, because it is faster when
 						// many threads just need to read from the same
-						// cached item. We accept WorkerRead locks when necessary,
-						// to support Getter recursion.
-						TaskMutex::ScopedLock::LockType lockType = TaskMutex::ScopedLock::LockType::WorkerRead;
+						// cached item.
+						TaskMutex::ScopedLock::LockType lockType = TaskMutex::ScopedLock::LockType::Read;
 						if( inserted || mode == FindWritable || mode == InsertWritable )
 						{
 							lockType = TaskMutex::ScopedLock::LockType::Write;

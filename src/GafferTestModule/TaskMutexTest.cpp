@@ -254,49 +254,6 @@ void testTaskMutexHeavyContention( bool acceptWork )
 	);
 }
 
-void testTaskMutexWorkerRecursion()
-{
-	TaskMutex mutex;
-	tbb::enumerable_thread_specific<int> gotLock;
-
-	std::function<void ( int )> recurse;
-	recurse = [&mutex, &gotLock, &recurse] ( int depth ) {
-
-		TaskMutex::ScopedLock lock;
-		const bool acquired = lock.acquireOr(
-			mutex, TaskMutex::ScopedLock::LockType::WorkerRead,
-			[]( bool workAvailable ) { return true; }
-		);
-
-		GAFFERTEST_ASSERT( acquired );
-		GAFFERTEST_ASSERT( lock.lockType() == TaskMutex::ScopedLock::LockType::WorkerRead );
-
-		gotLock.local() = true;
-
-		if( depth > 4 )
-		{
-			std::this_thread::sleep_for( std::chrono::milliseconds( 10 ) );
-		}
-		else
-		{
-			tbb::parallel_for(
-				0, 4,
-				[&recurse, depth] ( int i ) {
-					recurse( depth + 1 );
-				}
-			);
-		}
-
-	};
-
-	TaskMutex::ScopedLock lock( mutex );
-	lock.execute(
-		[&recurse] { recurse( 0 ); }
-	);
-
-	GAFFERTEST_ASSERTEQUAL( gotLock.size(), tbb::tbb_thread::hardware_concurrency() );
-}
-
 void testTaskMutexAcquireOr()
 {
 	TaskMutex mutex;
@@ -522,7 +479,6 @@ void GafferTestModule::bindTaskMutexTest()
 	def( "testTaskMutexWithinIsolate", &testTaskMutexWithinIsolate );
 	def( "testTaskMutexJoiningOuterTasks", &testTaskMutexJoiningOuterTasks );
 	def( "testTaskMutexHeavyContention", &testTaskMutexHeavyContention );
-	def( "testTaskMutexWorkerRecursion", &testTaskMutexWorkerRecursion );
 	def( "testTaskMutexAcquireOr", &testTaskMutexAcquireOr );
 	def( "testTaskMutexExceptions", &testTaskMutexExceptions );
 	def( "testTaskMutexWorkerExceptions", &testTaskMutexWorkerExceptions );
