@@ -158,10 +158,6 @@ class LRUCacheTest( GafferTest.TestCase ) :
 
 		GafferTest.testLRUCacheRecursionOnOneItem( "serial" )
 
-	def testRecursionOnOneItemTaskParallel( self ) :
-
-		GafferTest.testLRUCacheRecursionOnOneItem( "taskParallel" )
-
 	def testClearFromGetSerial( self ) :
 
 		GafferTest.testLRUCacheClearFromGet( "serial" )
@@ -238,10 +234,7 @@ class LRUCacheTest( GafferTest.TestCase ) :
 
 	def testSetIfUncachedRecursion( self ) :
 
-		# `parallel` policy omitted because it doesn't support recursion.
-		for policy in [ "serial", "taskParallel" ] :
-			with self.subTest( policy = policy ) :
-				GafferTest.testLRUCacheSetIfUncachedRecursion( policy )
+		GafferTest.testLRUCacheSetIfUncachedRecursion( "serial" )
 
 if __name__ == "__main__":
 	unittest.main()

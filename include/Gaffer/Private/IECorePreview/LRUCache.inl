@@ -177,6 +177,10 @@ class Serial
 				// always be OK to write. But we return false for recursive
 				// calls to avoid unnecessary overhead updating the LRU list
 				// for inner calls.
+				/// \todo Is this distinction worth it, and do we really need
+				/// to support recursion on a single item in the Serial policy?
+				/// This is a remnant of a more complex system that allowed recursion
+				/// in the TaskParallel policy, but that has since been removed.
 				return m_it->handleCount == 1;
 			}
 
@@ -733,20 +737,19 @@ class TaskParallel
 
 			CacheEntry &writable()
 			{
-				assert( m_itemLock.lockType() == TaskMutex::ScopedLock::LockType::Write );
+				assert( m_itemLock.isWriter() );
 				return m_item->cacheEntry;
 			}
 
-			// May return false for AcquireMode::Insert if a GetterFunction recurses.
 			bool isWritable() const
 			{
-				return m_itemLock.lockType() == Item::Mutex::ScopedLock::LockType::Write;
+				return m_itemLock.isWriter();
 			}
 
 			template<typename F>
 			void execute( F &&f )
 			{
-				if( m_spawnsTasks && m_itemLock.lockType() == TaskMutex::ScopedLock::LockType::Write )
+				if( m_spawnsTasks )
 				{
 					// The getter function will spawn tasks. Execute
 					// it via the TaskMutex, so that other threads trying
@@ -814,16 +817,9 @@ class TaskParallel
 						// found a pre-existing item we optimistically take
 						// just a read lock, because it is faster when
 						// many threads just need to read from the same
-						// cached item. We accept WorkerRead locks when necessary,
-						// to support Getter recursion.
-						TaskMutex::ScopedLock::LockType lockType = TaskMutex::ScopedLock::LockType::WorkerRead;
-						if( inserted || mode == FindWritable || mode == InsertWritable )
-						{
-							lockType = TaskMutex::ScopedLock::LockType::Write;
-						}
-
+						// cached item.
 						const bool acquired = m_itemLock.acquireOr(
-							it->mutex, lockType,
+							it->mutex, /* write = */ inserted || mode == FindWritable || mode == InsertWritable,
 							// Work accepter
 							[&binLock, canceller] ( bool workAvailable ) {
 								// Release the bin lock prior to accepting work, because
@@ -844,7 +840,7 @@ class TaskParallel
 						if( acquired )
 						{
 							if(
-								m_itemLock.lockType() == TaskMutex::ScopedLock::LockType::Read &&
+								!m_itemLock.isWriter() &&
 								mode == Insert && it->cacheEntry.status() == LRUCache::Uncached
 							)
 							{
