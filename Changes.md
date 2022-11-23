@@ -1,6 +1,8 @@
 1.x.x.x
 =======
 
+This version enables Cycles support by default, as we believe we have made sufficient progress to allow wider testing. We may continue to make behaviour-changing updates if necessary though, so support is not yet considered final.
+
 > Note : Python 2 support has been removed. All builds are now using Python 3.
 
 Features
