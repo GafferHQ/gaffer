@@ -45,11 +45,6 @@
 
 #include "tbb/task_arena.h"
 #include "tbb/task_group.h"
-// Enable preview feature that allows us to construct a `task_scheduler_observer`
-// for a specific `task_arena`. This feature becomes officially supported in
-// Intel TBB 2019 Update 5, so it is not going to be removed.
-#define TBB_PREVIEW_LOCAL_OBSERVER 1
-#include "tbb/task_scheduler_observer.h"
 
 #include <iostream>
 #include <optional>
@@ -101,6 +96,9 @@ namespace IECorePreview
 /// 	}
 /// 	// Use resource here, while lock is still held.
 /// ```
+///
+/// \todo Investigate `tbb::collaborative_call_once`, once VFXPlatform has moved to OneTBB.
+/// It appears to provide very similar functionality.
 class TaskMutex : boost::noncopyable
 {
 
@@ -121,7 +119,7 @@ class TaskMutex : boost::noncopyable
 			public :
 
 				ScopedLock()
-					:	m_mutex( nullptr ), m_lockType( LockType::None )
+					:	m_mutex( nullptr ), m_writer( false )
 				{
 				}
 
@@ -143,9 +141,8 @@ class TaskMutex : boost::noncopyable
 				/// work on behalf of `execute()` while waiting.
 				void acquire( TaskMutex &mutex, bool write = true, bool acceptWork = true )
 				{
-					const LockType l = write ? LockType::Write : LockType::Read;
 					tbb::internal::atomic_backoff backoff;
-					while( !acquireOr( mutex, l, [acceptWork]( bool workAvailable ){ return acceptWork; } ) )
+					while( !acquireOr( mutex, write, [acceptWork]( bool workAvailable ){ return acceptWork; } ) )
 					{
 						backoff.pause();
 					}
@@ -156,8 +153,8 @@ class TaskMutex : boost::noncopyable
 				/// temporarily releasing the lock, and false otherwise.
 				bool upgradeToWriter()
 				{
-					assert( m_mutex && (m_lockType == LockType::Read) );
-					m_lockType = LockType::Write;
+					assert( m_mutex && !m_writer );
+					m_writer = true;
 					return m_lock.upgrade_to_writer();
 				}
 
@@ -166,7 +163,7 @@ class TaskMutex : boost::noncopyable
 				template<typename F>
 				void execute( F &&f )
 				{
-					assert( m_mutex && m_lockType == LockType::Write );
+					assert( m_mutex && m_writer );
 
 					ExecutionStateMutex::scoped_lock executionStateLock( m_mutex->m_executionStateMutex );
 					assert( !m_mutex->m_executionState );
@@ -219,8 +216,7 @@ class TaskMutex : boost::noncopyable
 				/// Acquires mutex or returns false. Never does TBB tasks.
 				bool tryAcquire( TaskMutex &mutex, bool write = true )
 				{
-					const LockType l = write ? LockType::Write : LockType::Read;
-					return acquireOr( mutex, l, []( bool workAvailable ){ return false; } );
+					return acquireOr( mutex, write, []( bool workAvailable ){ return false; } );
 				}
 
 				/// Releases the lock. This will be done automatically
@@ -229,12 +225,9 @@ class TaskMutex : boost::noncopyable
 				void release()
 				{
 					assert( m_mutex );
-					if( m_lockType != LockType::WorkerRead )
-					{
-						m_lock.release();
-					}
+					m_lock.release();
 					m_mutex = nullptr;
-					m_lockType = LockType::None;
+					m_writer = false;
 				}
 
 				/// Advanced API
@@ -244,40 +237,20 @@ class TaskMutex : boost::noncopyable
 				/// in Gaffer's LRUCache. They should not be considered part of the canonical
 				/// API.
 
-				enum class LockType
-				{
-					None,
-					// Multiple readers may coexist.
-					Read,
-					// Only a single writer can exist at a time, and the presence
-					// of a writer prevents read locks being acquired.
-					Write,
-					// Artificial read lock, available only to threads performing
-					// TBB tasks on behalf of `execute()`. These readers are
-					// protected only by the original write lock held by the caller
-					// of `execute()`. This means the caller of `execute()` _must_
-					// delay any writes until _after_ `execute()` has returned.
-					// A WorkerRead lock can not be upgraded via `upgradeToWriter()`.
-					WorkerRead,
-				};
-
 				/// Tries to acquire the mutex, returning true on success. On failure,
 				/// calls `workNotifier( bool workAvailable )`. If work is available and
 				/// `workNotifier` returns true, then this thread will perform TBB tasks
 				/// spawned by `execute()` until the work is complete. Returns false on
 				/// failure regardless of whether or not work is done.
 				template<typename WorkNotifier>
-				bool acquireOr( TaskMutex &mutex, LockType lockType, WorkNotifier &&workNotifier )
+				bool acquireOr( TaskMutex &mutex, bool write, WorkNotifier &&workNotifier )
 				{
 					assert( !m_mutex );
-					assert( m_lockType == LockType::None );
-					assert( lockType != LockType::None );
-
-					if( m_lock.try_acquire( mutex.m_mutex, /* write = */ lockType == LockType::Write ) )
+					if( m_lock.try_acquire( mutex.m_mutex, write ) )
 					{
 						// Success!
 						m_mutex = &mutex;
-						m_lockType = lockType == LockType::WorkerRead ? LockType::Read : lockType;
+						m_writer = write;
 						return true;
 					}
 
@@ -286,14 +259,6 @@ class TaskMutex : boost::noncopyable
 					// current call to `execute()`.
 
 					ExecutionStateMutex::scoped_lock executionStateLock( mutex.m_executionStateMutex );
-					if( lockType == LockType::WorkerRead && mutex.m_executionState && mutex.m_executionState->arenaObserver.containsThisThread() )
-					{
-						// We're already doing work on behalf of `execute()`, so we can
-						// take a WorkerRead lock.
-						m_mutex = &mutex;
-						m_lockType = lockType;
-						return true;
-					}
 
 					const bool workAvailable = mutex.m_executionState.get();
 					if( !workNotifier( workAvailable ) || !workAvailable )
@@ -313,20 +278,16 @@ class TaskMutex : boost::noncopyable
 					return false;
 				}
 
-				/// Returns the type of the lock currently held. If `acquireOr( WorkerRead )`
-				/// is called successfully, this will return `Read` for an external lock and
-				/// `WorkerRead` for an internal lock acquired by virtue of performing tasks
-				/// for `execute()`.
-				LockType lockType() const
+				bool isWriter() const
 				{
-					return m_lockType;
+					return m_writer;
 				}
 
 			private :
 
 				InternalMutex::scoped_lock m_lock;
 				TaskMutex *m_mutex;
-				LockType m_lockType;
+				bool m_writer;
 
 		};
 
@@ -335,64 +296,10 @@ class TaskMutex : boost::noncopyable
 		// The actual mutex that is held by the ScopedLock.
 		InternalMutex m_mutex;
 
-		// Tracks worker threads as they enter and exit an arena, so we can determine
-		// whether or not the current thread is inside the arena. We use this to detect
-		// recursion and allow any worker thread to obtain a recursive lock provided
-		// they are currently performing work in service of `ScopedLock::execute()`.
-		class ArenaObserver : public tbb::task_scheduler_observer
-		{
-
-			public :
-
-				ArenaObserver( tbb::task_arena &arena )
-					:	tbb::task_scheduler_observer( arena )
-				{
-					observe( true );
-				}
-
-				~ArenaObserver() override
-				{
-					observe( false );
-				}
-
-				bool containsThisThread()
-				{
-					Mutex::scoped_lock lock( m_mutex );
-					return m_threadIdSet.find( std::this_thread::get_id() ) != m_threadIdSet.end();
-				}
-
-			private :
-
-				void on_scheduler_entry( bool isWorker ) override
-				{
-					assert( !containsThisThread() );
-					Mutex::scoped_lock lock( m_mutex );
-					m_threadIdSet.insert( std::this_thread::get_id() );
-				}
-
-				void on_scheduler_exit( bool isWorker ) override
-				{
-					assert( containsThisThread() );
-					Mutex::scoped_lock lock( m_mutex );
-					m_threadIdSet.erase( std::this_thread::get_id() );
-				}
-
-				using Mutex = tbb::spin_mutex;
-				using ThreadIdSet = boost::container::flat_set<std::thread::id>;
-				Mutex m_mutex;
-				ThreadIdSet m_threadIdSet;
-
-		};
-
 		// The mechanism we use to allow waiting threads
 		// to participate in the work done by `execute()`.
 		struct ExecutionState : public IECore::RefCounted
 		{
-			ExecutionState()
-				:	arenaObserver( arena )
-			{
-			}
-
 			// Work around https://bugs.llvm.org/show_bug.cgi?id=32978
 			~ExecutionState() noexcept( true ) override
 			{
@@ -402,9 +309,6 @@ class TaskMutex : boost::noncopyable
 			// waiting threads to participate in work.
 			tbb::task_arena arena;
 			tbb::task_group taskGroup;
-			// Observer used to track which threads are
-			// currently inside the arena.
-			ArenaObserver arenaObserver;
 		};
 		IE_CORE_DECLAREPTR( ExecutionState );
 
