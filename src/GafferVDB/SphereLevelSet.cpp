@@ -170,3 +170,12 @@ IECore::ConstObjectPtr SphereLevelSet::computeSource( const Context *context ) c
 	return newVDBObject;
 
 }
+
+Gaffer::ValuePlug::CachePolicy SphereLevelSet::computeCachePolicy( const Gaffer::ValuePlug *output ) const
+{
+	if( output == sourcePlug() )
+	{
+		return ValuePlug::CachePolicy::TaskCollaboration;
+	}
+	return ObjectSource::computeCachePolicy( output );
+}

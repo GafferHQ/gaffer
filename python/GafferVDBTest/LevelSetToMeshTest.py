@@ -34,6 +34,9 @@
 #
 ##########################################################################
 
+import os
+
+import IECore
 import IECoreScene
 import IECoreVDB
 
@@ -123,3 +126,18 @@ class LevelSetToMeshTest( GafferVDBTest.VDBTestCase ) :
 
 		levelSetToMesh['adaptivity'].setValue(1.0)
 		self.assertTrue( 2800 <= len( levelSetToMesh['out'].object( "sphere" ).verticesPerFace ) <= 3200 )
+
+	def testParallelGetValueComputesObjectOnce( self ) :
+
+		reader = GafferScene.SceneReader()
+		reader["fileName"].setValue( os.path.join( os.path.dirname( __file__ ), "data", "sphere.vdb" ) )
+
+		pathFilter = GafferScene.PathFilter()
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ "/vdb" ] ) )
+
+		levelSetToMesh = GafferVDB.LevelSetToMesh()
+		levelSetToMesh["in"].setInput( reader["out"] )
+		levelSetToMesh["filter"].setInput( pathFilter["out"] )
+		levelSetToMesh["grid"].setValue( "ls_sphere" )
+
+		self.assertParallelGetValueComputesObjectOnce( levelSetToMesh["out"], "/vdb" )

@@ -257,3 +257,8 @@ IECore::ConstObjectPtr LevelSetToMesh::computeProcessedObject( const ScenePath &
 
 	return volumeToMesh( grid, isoValuePlug()->getValue(), adaptivityPlug()->getValue() );
 }
+
+Gaffer::ValuePlug::CachePolicy LevelSetToMesh::processedObjectComputeCachePolicy() const
+{
+	return ValuePlug::CachePolicy::TaskCollaboration;
+}

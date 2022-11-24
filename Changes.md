@@ -32,6 +32,7 @@ Fixes
 - CodeWidget : Fixed auto-complete for `pathlib.Path` objects, and any other classes which throw `AttributeError` for an attribute advertised by `dir()`.
 - Expression : Fixed non-deterministic parsing order for Python expressions (#4935).
 - FileSequencePathFilter : Fixed bug whereby files were considered to be part of a sequence if they were in a numbered directory. Now only numbers in the file's name are considered.
+- LevelSetOffset, MeshToLevelSet, LevelSetToMesh, SphereLevelSet : Fixed bugs which could cause unnecessary repeated computations, or in the worst case, lead to deadlock.
 - GafferTest : Fixed bug which caused `parallelGetValue()` to use the wrong context.
 
 API
@@ -44,6 +45,7 @@ API
 - SceneGadget : Added `setVisibleSet()`, and `getVisibleSet()` methods.
 - EditScopeAlgo : Added methods to modify and query modifications to set members in an Edit Scope.
 - GafferTest : Added ObjectPlug overloads for `repeatGetValue()` and `parallelGetValue()`.
+- SceneTestCase : Added `assertParallelGetValueComputesObjectOnce()`. This can be used to check that expensive computes are using an appropriate cache policy.
 
 Breaking Changes
 ----------------
