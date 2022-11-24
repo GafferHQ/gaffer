@@ -131,11 +131,14 @@ class SetQueryTest( GafferSceneTest.SceneTestCase ) :
 			( "D A D", "/outerGroup/innerGroup/sphere", False, [ "D", "A" ] ),
 			( "D* *D", "/outerGroup/innerGroup/sphere", False, [ "D" ] ),
 			( "[D] D", "/outerGroup/innerGroup/sphere", False, [ "D" ] ),
-			# Exception to the sorting rule. Ancestor matches come before exact
-			# matches at this location, no matter the order. This means that
-			# `firstMatch` is consistent throughout the scene hierarchy, from
-			# the first matching ancestor down.
-			( "C A", "/outerGroup/innerGroup", True, [ "A", "C" ] ),
+			# Order of inheritance of set membership is irrelevant to result.
+			# Result is always ordered according to original query.
+			( "A C", "/outerGroup/innerGroup", True, [ "A", "C" ] ),
+			( "C A", "/outerGroup/innerGroup", True, [ "C", "A" ] ),
+			( "*", "/outerGroup/innerGroup", True, [ "A", "C" ] ),
+			( "B A Z", "/outerGroup/plane", True, [ "B", "A" ] ),
+			( "B E A D Y", "/outerGroup/innerGroup/sphere", True, [ "E", "A", "D" ] ),
+			( "A B L E", "/outerGroup/innerGroup/sphere", True, [ "A", "E" ] ),
 		] :
 
 			# Sanity check test input

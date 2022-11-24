@@ -56,20 +56,23 @@ namespace
 
 struct MatchesData : public IECore::Data
 {
-	MatchesData( const ConstStringVectorDataPtr &matches, const ConstInternedStringVectorDataPtr &descendantMatches, bool inherit )
+	struct DescendantMatch { InternedString setName; bool inherited; };
+	using DescendantMatches = vector<DescendantMatch>;
+
+	MatchesData( const ConstStringVectorDataPtr &matches, DescendantMatches &&descendantMatches, bool inherit )
 		:	matches( matches ), descendantMatches( descendantMatches ), inherit( inherit )
 	{
 	}
 
-	// Sets that match this location.
+	// The result for `SetQuery.matches` at this location.
 	ConstStringVectorDataPtr matches;
-	// Sets that might match a descendant of this location. By removing these as
-	// they become irrelevant, we avoid checking _every_ location against
-	// _every_ set, which would be `O( n^2 )` (assuming the number of sets is
-	// proportional to the number of locations, and all locations are queried).
-	// This is the most important reason behind `MatchesData` and
-	// `matchesInternalPlug().
-	ConstInternedStringVectorDataPtr descendantMatches;
+	// Sets that we need to consider at descendants of this location. By
+	// removing these as they become irrelevant, we avoid checking _every_
+	// location against _every_ set, which would be `O( n^2 )` (assuming the
+	// number of sets is proportional to the number of locations, and all
+	// locations are queried). This is the most important reason behind
+	// `MatchesData` and `matchesInternalPlug().
+	DescendantMatches descendantMatches;
 	// True if `matches` should be inherited by descendant locations.
 	bool inherit;
 };
@@ -77,7 +80,7 @@ struct MatchesData : public IECore::Data
 IE_CORE_DECLAREPTR( MatchesData );
 
 const ConstStringVectorDataPtr g_emptyStringVectorData = new StringVectorData;
-const ConstMatchesDataPtr g_emptyMatches = new MatchesData( g_emptyStringVectorData, new InternedStringVectorData, false );
+const ConstMatchesDataPtr g_emptyMatches = new MatchesData( g_emptyStringVectorData, MatchesData::DescendantMatches(), false );
 
 struct ParentScope : public Context::EditableScope
 {
@@ -407,11 +410,14 @@ IECore::ConstObjectPtr SetQuery::computeMatchesInternal( const Gaffer::Context *
 	{
 		// We are the "ancestor" of the _root_, so our potential descendant matches are all
 		// the sets listed in `setsPlug()`, taking into account wildcards.
+		MatchesData::DescendantMatches descendantMatches;
+		for( const auto &setName : matchingSetNames( scenePlug(), setsPlug()->getValue() ) )
+		{
+			descendantMatches.push_back( { setName, /* inherited = */ false } );
+		}
 		return new MatchesData(
 			g_emptyStringVectorData,
-			new InternedStringVectorData(
-				matchingSetNames( scenePlug(), setsPlug()->getValue() )
-			),
+			std::move( descendantMatches ),
 			inheritPlug()->getValue()
 		);
 	}
@@ -425,46 +431,52 @@ IECore::ConstObjectPtr SetQuery::computeMatchesInternal( const Gaffer::Context *
 		// Optimisation for common cases, where we can reuse previous results
 		// because there are no additional matches at this location.
 
-		if( parentMatches->descendantMatches->readable().empty() )
+		if( parentMatches->descendantMatches.empty() )
 		{
-			if( parentMatches->inherit )
-			{
-				return parentMatches;
-			}
-			else
-			{
-				return g_emptyMatches;
-			}
+			return parentMatches->inherit ? parentMatches : g_emptyMatches;
 		}
 
 		// Compute new MatchesData for this location.
 
 		StringVectorDataPtr matchesData = new StringVectorData;
 		vector<string> &matches = matchesData->writable();
+		MatchesData::DescendantMatches descendantMatches;
 
-		InternedStringVectorDataPtr descendantMatchesData = new InternedStringVectorData;
-		vector<InternedString> &descendantMatches = descendantMatchesData->writable();
-
-		if( parentMatches->inherit )
+		for( const auto &[setName, inherited] : parentMatches->descendantMatches )
 		{
-			matches = parentMatches->matches->readable();
-		}
+			unsigned m;
+			if( inherited )
+			{
+				m = IECore::PathMatcher::ExactMatch | IECore::PathMatcher::DescendantMatch;
+			}
+			else
+			{
+				m = scenePlug()->set( setName )->readable().match( *path );
+			}
 
-		for( const auto &setName : parentMatches->descendantMatches->readable() )
-		{
-			const unsigned m = scenePlug()->set( setName )->readable().match( *path );
-			const bool exactMatch = m & PathMatcher::ExactMatch;
-			if( exactMatch )
+			if( m & PathMatcher::ExactMatch )
 			{
 				matches.push_back( setName );
 			}
-			if( (m & PathMatcher::DescendantMatch) && !( parentMatches->inherit && exactMatch ) )
+
+			if( parentMatches->inherit && ( m & PathMatcher::ExactMatch ) )
 			{
-				descendantMatches.push_back( setName );
+				descendantMatches.push_back( { setName, /* inherited = */ true } );
+			}
+			else if( m & PathMatcher::DescendantMatch )
+			{
+				descendantMatches.push_back( { setName, /* inherited = */ false } );
 			}
 		}
 
-		return new MatchesData( matchesData, descendantMatchesData, parentMatches->inherit );
+		if( std::all_of( descendantMatches.begin(), descendantMatches.end(), [] ( const auto &m ) { return m.inherited; } ) )
+		{
+			// All descendant matches are inherited. Clear them to trigger
+			// optimisation where this MatchesData is reused for children.
+			descendantMatches.clear();
+		}
+
+		return new MatchesData( matchesData, std::move( descendantMatches ), parentMatches->inherit );
 	}
 
 	return nullptr;

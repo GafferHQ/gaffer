@@ -101,12 +101,6 @@ Gaffer.Metadata.registerNode(
 			"""
 			The list of sets that the `location` is a member of. Returned in the
 			order they are listed in the `sets` plug.
-
-			> Note : When matches are inherited from a parent location, these
-			> are returned _before_ matches at this location, regardless of the
-			> order they are listed in the `sets` plug. This makes `firstMatch`
-			> consistent throughout the scene hierarchy, with children sharing
-			> the `firstMatch` of their parent.
 			""",
 
 			"layout:section", "Settings.Outputs",
