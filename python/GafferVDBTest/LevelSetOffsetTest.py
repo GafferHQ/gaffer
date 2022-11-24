@@ -34,6 +34,10 @@
 #
 ##########################################################################
 
+import os
+
+import IECore
+
 import GafferScene
 import GafferVDB
 import GafferVDBTest
@@ -67,3 +71,18 @@ class LevelSetOffsetTest( GafferVDBTest.VDBTestCase ) :
 		levelSetOffset["offset"].setValue( 1.0 )
 		self.assertAlmostEqual( 4.0, levelSetOffset['out'].bound( "sphere" ).max()[0], delta = 0.05 )
 		self.assertTrue( 640 <= levelSetOffset['out'].object( "sphere" ).findGrid( "surface" ).leafCount() <= 650)
+
+	def testParallelGetValueComputesObjectOnce( self ) :
+
+		reader = GafferScene.SceneReader()
+		reader["fileName"].setValue( os.path.join( os.path.dirname( __file__ ), "data", "sphere.vdb" ) )
+
+		pathFilter = GafferScene.PathFilter()
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ "/vdb" ] ) )
+
+		offset = GafferVDB.LevelSetOffset()
+		offset["in"].setInput( reader["out"] )
+		offset["filter"].setInput( pathFilter["out"] )
+		offset["grid"].setValue( "ls_sphere" )
+
+		self.assertParallelGetValueComputesObjectOnce( offset["out"], "/vdb" )

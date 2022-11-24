@@ -156,6 +156,11 @@ IECore::ConstObjectPtr LevelSetOffset::computeProcessedObject( const ScenePath &
 	return newVDBObject;
 }
 
+Gaffer::ValuePlug::CachePolicy LevelSetOffset::processedObjectComputeCachePolicy() const
+{
+	return ValuePlug::CachePolicy::TaskCollaboration;
+}
+
 bool LevelSetOffset::affectsProcessedObjectBound( const Gaffer::Plug *input ) const
 {
 	return
