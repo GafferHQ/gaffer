@@ -34,26 +34,14 @@
 #
 ##########################################################################
 
-
-import os
-
-import IECore
-import IECoreScene
-import IECoreVDB
-
-import GafferTest
 import GafferScene
 import GafferVDB
 import GafferVDBTest
 
-
 class LevelSetOffsetTest( GafferVDBTest.VDBTestCase ) :
-	def setUp( self ) :
-		GafferVDBTest.VDBTestCase.setUp( self )
-		self.sourcePath = os.path.join( self.dataDir, "sphere.vdb" )
-		self.sceneInterface = IECoreScene.SceneInterface.create( self.sourcePath, IECore.IndexedIO.OpenMode.Read )
 
 	def testBoundsUpdated( self ) :
+
 		sphere = GafferScene.Sphere()
 		sphere["radius"].setValue( 5 )
 

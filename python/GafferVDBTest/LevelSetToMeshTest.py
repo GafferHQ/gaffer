@@ -34,26 +34,17 @@
 #
 ##########################################################################
 
-import os
-import imath
-
-import IECore
 import IECoreScene
 import IECoreVDB
 
-import GafferTest
 import GafferScene
 import GafferVDB
 import GafferVDBTest
 
 class LevelSetToMeshTest( GafferVDBTest.VDBTestCase ) :
 
-	def setUp( self ) :
-		GafferVDBTest.VDBTestCase.setUp( self )
-		self.sourcePath = os.path.join( self.dataDir, "sphere.vdb" )
-		self.sceneInterface = IECoreScene.SceneInterface.create( self.sourcePath, IECore.IndexedIO.OpenMode.Read )
-
 	def testCanConvertLevelSetToMesh( self ) :
+
 		sphere = GafferScene.Sphere()
 		meshToLevelSet = GafferVDB.MeshToLevelSet()
 		self.setFilter( meshToLevelSet, path='/sphere' )
@@ -112,6 +103,7 @@ class LevelSetToMeshTest( GafferVDBTest.VDBTestCase ) :
 		self.assertTrue( bound.intersects( levelSetToMesh["out"].bound( "/sphere" ).max() ) )
 
 	def testIncreasingAdapativityDecreasesPolyCount( self ) :
+
 		sphere = GafferScene.Sphere()
 		sphere["radius"].setValue( 5 )
 
