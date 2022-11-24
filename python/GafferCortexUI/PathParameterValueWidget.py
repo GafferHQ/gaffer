@@ -38,6 +38,7 @@ import IECore
 
 import Gaffer
 import GafferUI
+import GafferCortex
 import GafferCortexUI
 
 class PathParameterValueWidget( GafferCortexUI.ParameterValueWidget ) :
@@ -89,3 +90,28 @@ class PathParameterValueWidget( GafferCortexUI.ParameterValueWidget ) :
 		return result
 
 GafferCortexUI.ParameterValueWidget.registerType( IECore.PathParameter, PathParameterValueWidget )
+
+__nodeTypes = (
+	GafferCortex.ParameterisedHolderNode,
+	GafferCortex.ParameterisedHolderComputeNode,
+	GafferCortex.ParameterisedHolderDependencyNode,
+	GafferCortex.ParameterisedHolderTaskNode,
+)
+
+def __hasExtensions( plug ) :
+
+	handler = plug.node().parameterHandler()
+	if not handler :
+		return None
+
+	parameter = handler.parameter()
+	for p in plug.relativeName( plug.node() ).split( "." )[1:] :
+		parameter = parameter[p]
+
+	if not isinstance( parameter, IECore.FileNameParameter ) :
+		return None
+
+	return IECore.StringVectorData( parameter.extensions )
+
+for nodeType in __nodeTypes :
+	Gaffer.Metadata.registerValue( nodeType, "parameters.*...", "fileSystemPath:extensions", __hasExtensions )
