@@ -14,6 +14,7 @@ Improvements
 - Animation Editor : Added UI tooltips to menu items for TieMode and Interpolation.
 - CopyPrimitiveVariables : Added `ignoreIncompatible` plug which will cause the node to not error when attempting to copy primitive variables from the source object that are imcompatible with the destination object.
 - Arnold : Enabled support for using the `layerName` parameter with non-LPE outputs. This requires a minimum of Arnold 7.1.3.0, because it contains a fix for ARNOLD-12282.
+- File browsers : Excessively long filter labels are now truncated, instead of making the widget too wide.
 - PathParameterValueWidget : The `extensions` specified by the parameter are now translated to `fileSystemPath:extensions` metadata, enabling filtering in the Gaffer file browser.
 
 Fixes

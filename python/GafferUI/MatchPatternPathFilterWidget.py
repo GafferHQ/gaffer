@@ -84,6 +84,10 @@ class MatchPatternPathFilterWidget( GafferUI.PathFilterWidget ) :
 		label = str( self.pathFilter() )
 		with IECore.IgnoredExceptions( KeyError ) :
 			label = self.pathFilter().userData()["UI"]["label"].value
+			if len(label) > 40:
+				self.__enabledWidget.setToolTip( label )
+				label = label[:40] + '...'
+
 		self.__enabledWidget.setText( label )
 
 		invertEnabled = False
