@@ -36,13 +36,11 @@
 
 import time
 
-import GafferTest
+import IECoreVDB
 
 import Gaffer
+import GafferTest
 import GafferVDB
-import IECore
-import IECoreScene
-import IECoreVDB
 import GafferVDBTest
 import GafferScene
 
