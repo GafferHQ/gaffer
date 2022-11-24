@@ -148,6 +148,11 @@ Gaffer.Metadata.registerNode(
 		"compare.catalogueOutput" : [
 			# catalogueOutput is also handled by _CompareImageWidget
 			"plugValueWidget:type", "",
+
+			"preset:1", "output:1",
+			"preset:2", "output:2",
+			"preset:3", "output:3",
+			"preset:4", "output:4",
 		],
 
 
@@ -1563,7 +1568,7 @@ class _CompareImageWidget( GafferUI.Frame ) :
 		self.__scriptNode = plug.node()["in"].getInput().node().scriptNode()
 		self.__defaultNodeSet = Gaffer.StandardSet( [] )
 		self.__nodeSet = self.__defaultNodeSet
-		self.__catalogueOutput = 0
+		self.__catalogueOutput = ""
 
 		row = GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Horizontal )
 		with row :
@@ -1584,11 +1589,11 @@ class _CompareImageWidget( GafferUI.Frame ) :
 
 		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__showEditorFocusMenu ), scoped=False )
 
-		self._setState( self.__defaultNodeSet, 1 )
+		self._setState( self.__defaultNodeSet, Gaffer.NodeAlgo.presets( self.__node["compare"]["catalogueOutput"] )[0] )
 
-	def _setState( self, nodeSet, outputIndex ):
+	def _setState( self, nodeSet, catalogueOutputPreset ):
 		self.__nodeSet = nodeSet
-		self.__catalogueOutput = outputIndex
+		self.__catalogueOutput = catalogueOutputPreset
 		self.__memberAddedConnection = self.__nodeSet.memberAddedSignal().connect(
 			Gaffer.WeakMethod( self._update ), scoped = True
 		)
@@ -1606,12 +1611,21 @@ class _CompareImageWidget( GafferUI.Frame ) :
 			compareImage = _firstValidImagePlug( self.__nodeSet[-1] )
 
 		self.__node["compare"]["image"].setInput( compareImage )
-		self.__node["compare"]["catalogueOutput"].setValue( "output:%i" % self.__catalogueOutput if self.__catalogueOutput > 0 else "" )
+		if self.__catalogueOutput != "":
+			Gaffer.NodeAlgo.applyPreset( self.__node["compare"]["catalogueOutput"], self.__catalogueOutput )
+		else:
+			self.__node["compare"]["catalogueOutput"].setValue( "" )
 
 		# Icon
 
-		if self.__catalogueOutput > 0:
-			icon = "catalogueOutput%i.png" % self.__catalogueOutput
+		if self.__catalogueOutput != "":
+			try:
+				icon = "catalogueOutput%s.png" % self.__catalogueOutput
+				# Try loading icon just to check for validity ( taking advantage of the icon cache )
+				GafferUI.Image._qtPixmapFromFile( icon )
+			except:
+				# Icon doesn't exist, use a default
+				icon = "catalogueOutputHeader.png"
 		elif self.__nodeSet.isSame( self.__scriptNode.selection() ) :
 			icon = "nodeSetNodeSelection.png"
 		elif self.__nodeSet.isSame( self.__scriptNode.focusSet() ) :
@@ -1635,9 +1649,9 @@ class _CompareImageWidget( GafferUI.Frame ) :
 	def getToolTip( self ) :
 
 		toolTipElements = []
-		if self.__catalogueOutput > 0:
+		if self.__catalogueOutput != "":
 			toolTipElements.append( "" )
-			toolTipElements.append( "Comparing to Catalogue output %i." % self.__catalogueOutput )
+			toolTipElements.append( "Comparing to Catalogue output " + self.__catalogueOutput )
 		elif self.__nodeSet == self.__scriptNode.selection() :
 			toolTipElements.append( "" )
 			toolTipElements.append( "Comparing to the node selection." )
@@ -1681,8 +1695,8 @@ class _CompareImageWidget( GafferUI.Frame ) :
 		m = IECore.MenuDefinition()
 
 		m.append( "/Catalogue Divider", { "divider" : True, "label" : "Follow Catalogue Output" } )
-		for i in range( 1, 5 ):
-			m.append( "/%i"%i, {
+		for i in Gaffer.NodeAlgo.presets( self.__node["compare"]["catalogueOutput"] ):
+			m.append( "/" + i, {
 				"command" : functools.partial( Gaffer.WeakMethod( self.__followCatalogueOutput ), i ),
 				"checkBox" : self.__catalogueOutput == i
 				#"shortCut" : "`"

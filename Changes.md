@@ -5,6 +5,7 @@ Improvements
 ------------
 
 - UIEditor : Added `Allow Custom Values` checkbox to the Widget Settings section for the Presets Menu widget. When on, this allows the user to enter their own custom values in addition to choosing presets from the menu.
+- Image View : Added support for custom presets for choosing catalogue outputs to compare to.  This can be set up like `Gaffer.Metadata.registerNodeValue( GafferImageUI.ImageView, "compare.catalogueOutput", "preset:MyPreset", "myNamespace:specialImage" )`.  The Catalogue won't know how to deal with a request for "myNamespace:specialImage", and will just output an error image, but this could be useful in pipelines where Catalogue's are wrapped in custom nodes that can respond to this special value of the `catalogue:imageName`.  If you want to provide a custom icon for your custom mode, Gaffer will search for an icon name `catalogueOutput{preset name}.png`.
 
 1.1.5.0 (relative to 1.1.4.0)
 =======
