@@ -33,6 +33,7 @@ Fixes
 - Expression : Fixed non-deterministic parsing order for Python expressions (#4935).
 - FileSequencePathFilter : Fixed bug whereby files were considered to be part of a sequence if they were in a numbered directory. Now only numbers in the file's name are considered.
 - BoolWidget : Fixed bug triggered by calling `setImage()` from within a `with widgetContainer` block.
+- GafferTest : Fixed bug which caused `parallelGetValue()` to use the wrong context.
 
 API
 ---
@@ -44,6 +45,7 @@ API
 - SceneGadget : Added `setVisibleSet()`, and `getVisibleSet()` methods.
 - EditScopeAlgo : Added methods to modify and query modifications to set members in an Edit Scope.
 - Widget : Added support for a `_postContructor()` method, which is called after the widget is fully constructed. This can be useful for performing post-initialisation work from a base class.
+- GafferTest : Added ObjectPlug overloads for `repeatGetValue()` and `parallelGetValue()`.
 
 Breaking Changes
 ----------------
