@@ -1699,10 +1699,10 @@ class _CompareImageWidget( GafferUI.Frame ) :
 
 		m.append( "/Catalogue Divider", { "divider" : True, "label" : "Follow Catalogue Output" } )
 		for i in Gaffer.NodeAlgo.presets( self.__node["compare"]["catalogueOutput"] ):
-			m.append( "/" + i, {
+			m.append( "/CatalogueOutput{}".format( i ), {
 				"command" : functools.partial( Gaffer.WeakMethod( self.__followCatalogueOutput ), i ),
-				"checkBox" : self.__catalogueOutput == i
-				#"shortCut" : "`"
+				"checkBox" : self.__catalogueOutput == i,
+				"label" : i,
 			} )
 		m.append( "/Pin Divider", { "divider" : True, "label" : "Pin" } )
 
@@ -1743,9 +1743,10 @@ class _CompareImageWidget( GafferUI.Frame ) :
 			if bookmarkNode is not None :
 				title += " : %s" % bookmarkNode.getName()
 			isCurrent = isinstance( self.__nodeSet, Gaffer.NumericBookmarkSet ) and self.__nodeSet.getBookmark() == i
-			m.append( "%s" % title, {
+			m.append( "/NumericBookMark{}".format( i ), {
 				"command" : functools.partial( Gaffer.WeakMethod( self.__followBookmark ), i ),
 				"checkBox" : isCurrent,
+				"label" : title,
 			} )
 
 		self.__pinningMenu = GafferUI.Menu( m, title = "Comparison Image" )
