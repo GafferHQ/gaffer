@@ -164,6 +164,7 @@ from .OptionTweaksTest import OptionTweaksTest
 from .OptionQueryTest import OptionQueryTest
 from .RenameTest import RenameTest
 from .PrimitiveVariableQueryTest import PrimitiveVariableQueryTest
+from .SetQueryTest import SetQueryTest
 from .VisibleSetTest import VisibleSetTest
 from .VisibleSetDataTest import VisibleSetDataTest
 

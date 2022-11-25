@@ -255,7 +255,8 @@ class RowsMap : public IECore::Data
 
 IE_CORE_DECLAREPTR( RowsMap )
 
-InternedString g_scenePath( "scene:path" );
+const InternedString g_scenePath( "scene:path" );
+const InternedString g_firstMatch( "firstMatch" );
 
 // Context scope used for accessing `rowsMapPlug()`. This
 // removes all context variables referred to by `selectorPlug()`,
@@ -278,9 +279,20 @@ class RowsMapScope : boost::noncopyable, public Context::SubstitutionProvider
 
 	public :
 
-		RowsMapScope( const Context *context, const std::string &selector )
-			:	SubstitutionProvider( context ), m_context( context )
+		RowsMapScope( const Context *context, const StringPlug *selectorPlug )
+			:	SubstitutionProvider( context ), m_context( context ), m_selectorPlug( selectorPlug )
 		{
+			if( !mightContainSubstitutions( selectorPlug->source<StringPlug>() ) )
+			{
+				// We are guaranteed that the selector won't contain
+				// substitutions, so we don't need to sanitise the context.
+				// We'll initialise `m_selector` lazily in the `selector()`
+				// accessor, which allows us to avoid pulling on `selectorPlug()`
+				// at all when computing `Spreadsheet.enabledRowNames`.
+				return;
+			}
+
+			const std::string selector = selectorPlug->getValue();
 			if( selector == "${scene:path}" )
 			{
 				// Special case for `scene:path`, which users will expect to use PathMatcher
@@ -310,7 +322,12 @@ class RowsMapScope : boost::noncopyable, public Context::SubstitutionProvider
 		// Returns the selector with Context substitutions applied.
 		const RowsMap::Selector &selector() const
 		{
-			return m_selector;
+			if( !m_selector )
+			{
+				assert( !mightContainSubstitutions( m_selectorPlug->source<StringPlug>() ) );
+				m_selector = m_selectorPlug->getValue();
+			}
+			return *m_selector;
 		}
 
 		// Methods used by `StringAlgo::substitute()`. We use
@@ -333,9 +350,44 @@ class RowsMapScope : boost::noncopyable, public Context::SubstitutionProvider
 
 	private :
 
+		static bool mightContainSubstitutions( const StringPlug *plug )
+		{
+			if( plug->direction() == Plug::In )
+			{
+				// User input can contain anything.
+				return true;
+			}
+			const Node *node = plug->node();
+			if( !node )
+			{
+				// Value will come from plug's default, which again
+				// could contain anything.
+				return true;
+			}
+			if( plug->getName() == g_firstMatch && node->isInstanceOf( "GafferScene::SetQuery" ) )
+			{
+				// Value is guaranteed to be the name of a set, which will not
+				// contain substitutions. Admittedly, this is a bit of a hack :
+				// the Spreadsheet shouldn't know anything about SetQuery.
+				// Possibilities for more principled approaches include :
+				//
+				// 1. A public method on Spreadsheet for registering node/plug
+				//    combos that are guaranteed not to contain substitutions.
+				// 2. An even more general mechanism for a node to guarantee
+				//    that an output won't contain substitutions.
+				//
+				// But in the absence of other use cases, it seem reasonable to
+				// defer a decision that would commit us to additional public
+				// API.
+				return false;
+			}
+			return true;
+		}
+
 		const Context *m_context;
 		mutable std::optional<Context::EditableScope> m_scope;
-		RowsMap::Selector m_selector;
+		const StringPlug *m_selectorPlug;
+		mutable std::optional<RowsMap::Selector> m_selector;
 
 };
 
@@ -1020,7 +1072,7 @@ void Spreadsheet::hash( const ValuePlug *output, const Context *context, IECore:
 	{
 		ComputeNode::hash( output, context, h );
 		enabledPlug()->hash( h );
-		RowsMapScope rowsMapScope( context, selectorPlug()->getValue() );
+		RowsMapScope rowsMapScope( context, selectorPlug() );
 		rowsMapPlug()->hash( h );
 		RowsMap::hash( rowsMapScope.selector(), h );
 		return;
@@ -1033,7 +1085,7 @@ void Spreadsheet::hash( const ValuePlug *output, const Context *context, IECore:
 	else if( output == enabledRowNamesPlug() )
 	{
 		ComputeNode::hash( output, context, h );
-		RowsMapScope rowsMapScope( context, selectorPlug()->getValue() );
+		RowsMapScope rowsMapScope( context, selectorPlug() );
 		rowsMapPlug()->hash( h );
 		return;
 	}
@@ -1060,7 +1112,7 @@ void Spreadsheet::compute( ValuePlug *output, const Context *context ) const
 		size_t result = 0;
 		if( enabledPlug()->getValue() )
 		{
-			RowsMapScope rowsMapScope( context, selectorPlug()->getValue() );
+			RowsMapScope rowsMapScope( context, selectorPlug() );
 			ConstRowsMapPtr rowsMap = boost::static_pointer_cast<const RowsMap>( rowsMapPlug()->getValue() );
 			result = rowsMap->rowIndex( rowsMapScope.selector() );
 		}
@@ -1074,7 +1126,7 @@ void Spreadsheet::compute( ValuePlug *output, const Context *context ) const
 	}
 	else if( output == enabledRowNamesPlug() )
 	{
-		RowsMapScope rowsMapScope( context, selectorPlug()->getValue() );
+		RowsMapScope rowsMapScope( context, selectorPlug() );
 		ConstRowsMapPtr rowsMap = boost::static_pointer_cast<const RowsMap>( rowsMapPlug()->getValue() );
 		static_cast<StringVectorDataPlug *>( output )->setValue( rowsMap->enabledRowNames() );
 		return;

@@ -391,6 +391,7 @@ nodeMenu.append( "/Scene/Utility/Transform Query", GafferScene.TransformQuery, s
 nodeMenu.append( "/Scene/Utility/Bound Query", GafferScene.BoundQuery, searchText = "BoundQuery" )
 nodeMenu.append( "/Scene/Utility/Existence Query", GafferScene.ExistenceQuery, searchText = "ExistenceQuery" )
 nodeMenu.append( "/Scene/Utility/Attribute Query", GafferScene.AttributeQuery, searchText = "AttributeQuery" )
+nodeMenu.append( "/Scene/Utility/Set Query", GafferScene.SetQuery, searchText = "SetQuery" )
 nodeMenu.append( "/Scene/Utility/Shader Query", GafferScene.ShaderQuery, searchText = "ShaderQuery" )
 nodeMenu.append( "/Scene/Utility/Option Query", GafferScene.OptionQuery, searchText = "OptionQuery" )
 nodeMenu.append( "/Scene/Utility/Primitive Variable Query", GafferScene.PrimitiveVariableQuery, searchText = "PrimitiveVariableQuery" )

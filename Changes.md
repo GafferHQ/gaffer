@@ -75,6 +75,19 @@ Build
 
 - Cortex : Updated to version 10.4.3.0.
 
+1.1.x.x (relative to 1.1.5.0)
+=======
+
+Features
+--------
+
+- SetQuery : Added a new node for querying the set memberships of a location.
+
+Improvements
+------------
+
+- UIEditor : Added `Allow Custom Values` checkbox to the Widget Settings section for the Presets Menu widget. When on, this allows the user to enter their own custom values in addition to choosing presets from the menu.
+
 1.1.5.0 (relative to 1.1.4.0)
 =======
 
