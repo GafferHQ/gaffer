@@ -40,6 +40,7 @@
 
 #include "Gaffer/Context.h"
 #include "Gaffer/NumericPlug.h"
+#include "Gaffer/TypedObjectPlug.h"
 #include "Gaffer/ValuePlug.h"
 
 #include "tbb/parallel_for.h"
@@ -53,7 +54,8 @@ using namespace Gaffer;
 namespace
 {
 
-void repeatGetValue( const IntPlug *plug, int iterations )
+template<typename T>
+void repeatGetValue( const T *plug, int iterations )
 {
 	IECorePython::ScopedGILRelease gilRelease;
 	for( int i = 0; i < iterations; i++ )
@@ -68,12 +70,15 @@ void repeatGetValue( const IntPlug *plug, int iterations )
 // but it can help turn up performance issues that can happen when a
 // downstream graph ends up repeatedly evaluating something which turn out
 // not to vary.
-void parallelGetValue( const IntPlug *plug, int iterations )
+template<typename T>
+void parallelGetValue( const T *plug, int iterations )
 {
 	IECorePython::ScopedGILRelease gilRelease;
+	const ThreadState &threadState = ThreadState::current();
 	tbb::parallel_for(
 		tbb::blocked_range<int>( 0, iterations ),
-		[&plug]( const tbb::blocked_range<int> &r ) {
+		[&]( const tbb::blocked_range<int> &r ) {
+			ThreadState::Scope scope( threadState );
 			for( int i = r.begin(); i < r.end(); ++i )
 			{
 				plug->getValue();
@@ -84,7 +89,8 @@ void parallelGetValue( const IntPlug *plug, int iterations )
 
 // Variant of the above which stores the iteration in a context variable, allowing
 // the parallel evaluates to vary
-void parallelGetValueWithVar( const IntPlug *plug, int iterations, const IECore::InternedString iterationVar )
+template<typename T>
+void parallelGetValueWithVar( const T *plug, int iterations, const IECore::InternedString iterationVar )
 {
 	IECorePython::ScopedGILRelease gilRelease;
 	const ThreadState &threadState = ThreadState::current();
@@ -105,7 +111,10 @@ void parallelGetValueWithVar( const IntPlug *plug, int iterations, const IECore:
 
 void GafferTestModule::bindValuePlugTest()
 {
-	def( "repeatGetValue", &repeatGetValue );
-	def( "parallelGetValue", &parallelGetValue );
-	def( "parallelGetValue", &parallelGetValueWithVar );
+	def( "repeatGetValue", &repeatGetValue<IntPlug> );
+	def( "repeatGetValue", &repeatGetValue<ObjectPlug> );
+	def( "parallelGetValue", &parallelGetValue<IntPlug> );
+	def( "parallelGetValue", &parallelGetValue<ObjectPlug> );
+	def( "parallelGetValue", &parallelGetValueWithVar<IntPlug> );
+	def( "parallelGetValue", &parallelGetValueWithVar<ObjectPlug> );
 }

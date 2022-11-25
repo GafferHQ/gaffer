@@ -35,25 +35,19 @@
 ##########################################################################
 
 import os
-import imath
 
 import IECore
 import IECoreScene
 import IECoreVDB
 
-import GafferTest
 import GafferScene
 import GafferVDB
 import GafferVDBTest
 
 class LevelSetToMeshTest( GafferVDBTest.VDBTestCase ) :
 
-	def setUp( self ) :
-		GafferVDBTest.VDBTestCase.setUp( self )
-		self.sourcePath = os.path.join( self.dataDir, "sphere.vdb" )
-		self.sceneInterface = IECoreScene.SceneInterface.create( self.sourcePath, IECore.IndexedIO.OpenMode.Read )
-
 	def testCanConvertLevelSetToMesh( self ) :
+
 		sphere = GafferScene.Sphere()
 		meshToLevelSet = GafferVDB.MeshToLevelSet()
 		self.setFilter( meshToLevelSet, path='/sphere' )
@@ -112,6 +106,7 @@ class LevelSetToMeshTest( GafferVDBTest.VDBTestCase ) :
 		self.assertTrue( bound.intersects( levelSetToMesh["out"].bound( "/sphere" ).max() ) )
 
 	def testIncreasingAdapativityDecreasesPolyCount( self ) :
+
 		sphere = GafferScene.Sphere()
 		sphere["radius"].setValue( 5 )
 
@@ -131,3 +126,18 @@ class LevelSetToMeshTest( GafferVDBTest.VDBTestCase ) :
 
 		levelSetToMesh['adaptivity'].setValue(1.0)
 		self.assertTrue( 2800 <= len( levelSetToMesh['out'].object( "sphere" ).verticesPerFace ) <= 3200 )
+
+	def testParallelGetValueComputesObjectOnce( self ) :
+
+		reader = GafferScene.SceneReader()
+		reader["fileName"].setValue( os.path.join( os.path.dirname( __file__ ), "data", "sphere.vdb" ) )
+
+		pathFilter = GafferScene.PathFilter()
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ "/vdb" ] ) )
+
+		levelSetToMesh = GafferVDB.LevelSetToMesh()
+		levelSetToMesh["in"].setInput( reader["out"] )
+		levelSetToMesh["filter"].setInput( pathFilter["out"] )
+		levelSetToMesh["grid"].setValue( "ls_sphere" )
+
+		self.assertParallelGetValueComputesObjectOnce( levelSetToMesh["out"], "/vdb" )

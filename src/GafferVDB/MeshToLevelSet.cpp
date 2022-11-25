@@ -242,3 +242,8 @@ IECore::ConstObjectPtr MeshToLevelSet::computeProcessedObject( const ScenePath &
 
 	return newVDBObject;
 }
+
+Gaffer::ValuePlug::CachePolicy MeshToLevelSet::processedObjectComputeCachePolicy() const
+{
+	return ValuePlug::CachePolicy::TaskCollaboration;
+}

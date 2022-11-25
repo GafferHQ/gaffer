@@ -104,6 +104,11 @@ class SphereLevelSetTest( GafferVDBTest.VDBTestCase ) :
 		translatedLeafCount = sphereLevelSet['out'].object( "vdb" ).findGrid( "surface" ).leafCount()
 		self.assertTrue( abs( translatedLeafCount - newLeafCount ) < 10 )
 
+	def testParallelGetValueComputesObjectOnce( self ) :
+
+		sphere = GafferVDB.SphereLevelSet()
+		self.assertParallelGetValueComputesObjectOnce( sphere["out"], "/sphere" )
+
 	def assertBoundsNearlyEqual( self, lhs, rhs ):
 		self.assertAlmostEqual( lhs.min()[0], lhs.min()[0] )
 		self.assertAlmostEqual( lhs.min()[1], lhs.min()[1] )

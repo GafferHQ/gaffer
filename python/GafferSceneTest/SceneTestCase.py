@@ -43,6 +43,7 @@ import IECore
 import IECoreScene
 
 import Gaffer
+import GafferTest
 import GafferImageTest
 import GafferScene
 import GafferSceneTest
@@ -358,6 +359,20 @@ class SceneTestCase( GafferImageTest.ImageTestCase ) :
 			v2 = getattr( box1, n )()
 			for i in range( 0, 3 ) :
 				self.assertAlmostEqual( v1[i], v2[i], places )
+
+	def assertParallelGetValueComputesObjectOnce( self, scene, path ) :
+
+		with Gaffer.PerformanceMonitor() as pm :
+			with Gaffer.Context() as c :
+				c["scene:path"] = GafferScene.ScenePlug.stringToPath( path )
+				GafferTest.parallelGetValue( scene["object"], 100 )
+
+		if isinstance( scene.node(), GafferScene.ObjectProcessor ) :
+			self.assertEqual( pm.plugStatistics( scene.node()["__processedObject"] ).computeCount, 1 )
+		elif isinstance( scene.node(), GafferScene.ObjectSource ) :
+			self.assertEqual( pm.plugStatistics( scene.node()["__source"] ).computeCount, 1 )
+		else :
+			self.assertEqual( pm.plugStatistics( scene["object"] ).computeCount, 1 )
 
 	__uniqueInts = {}
 	@classmethod

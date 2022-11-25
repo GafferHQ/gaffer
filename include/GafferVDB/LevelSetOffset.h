@@ -69,6 +69,7 @@ class GAFFERVDB_API LevelSetOffset : public GafferScene::Deformer
 		bool affectsProcessedObject( const Gaffer::Plug *input ) const override;
 		void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, const IECore::Object *inputObject ) const override;
+		Gaffer::ValuePlug::CachePolicy processedObjectComputeCachePolicy() const override;
 
 		bool affectsProcessedObjectBound( const Gaffer::Plug *input ) const override;
 		void hashProcessedObjectBound( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;

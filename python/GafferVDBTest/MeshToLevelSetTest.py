@@ -36,13 +36,12 @@
 
 import time
 
-import GafferTest
+import IECore
+import IECoreVDB
 
 import Gaffer
+import GafferTest
 import GafferVDB
-import IECore
-import IECoreScene
-import IECoreVDB
 import GafferVDBTest
 import GafferScene
 
@@ -168,3 +167,16 @@ class MeshToLevelSetTest( GafferVDBTest.VDBTestCase ) :
 			vdbAfterCancellation.findGrid( "surface" ).activeVoxelCount(),
 			vdb.findGrid( "surface" ).activeVoxelCount(),
 		)
+
+	def testParallelGetValueComputesObjectOnce( self ) :
+
+		cube = GafferScene.Cube()
+
+		pathFilter = GafferScene.PathFilter()
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ "/cube" ] ) )
+
+		meshToLevelSet = GafferVDB.MeshToLevelSet()
+		meshToLevelSet["in"].setInput( cube["out"] )
+		meshToLevelSet["filter"].setInput( pathFilter["out"] )
+
+		self.assertParallelGetValueComputesObjectOnce( meshToLevelSet["out"], "/cube" )
