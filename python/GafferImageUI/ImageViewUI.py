@@ -1401,7 +1401,7 @@ class _CompareParentPlugValueWidget( GafferUI.PlugValueWidget ) :
 		node = self.__dropNode( event )
 
 		if node:
-			self.__row[-1]._setState( Gaffer.StandardSet( [ node ] ), 0 )
+			self.__row[-1]._setState( Gaffer.StandardSet( [ node ] ), "" )
 
 			if not self.getPlug()["mode"].getValue():
 				self.getPlug()["mode"].setValue( self.__row[0]._CompareModePlugValueWidget__hotkeyTarget() )
@@ -1592,6 +1592,9 @@ class _CompareImageWidget( GafferUI.Frame ) :
 		self._setState( self.__defaultNodeSet, Gaffer.NodeAlgo.presets( self.__node["compare"]["catalogueOutput"] )[0] )
 
 	def _setState( self, nodeSet, catalogueOutputPreset ):
+
+		assert( isinstance( catalogueOutputPreset, str ) )
+
 		self.__nodeSet = nodeSet
 		self.__catalogueOutput = catalogueOutputPreset
 		self.__memberAddedConnection = self.__nodeSet.memberAddedSignal().connect(
@@ -1675,19 +1678,19 @@ class _CompareImageWidget( GafferUI.Frame ) :
 		return "\n".join( toolTipElements )
 
 	def __pinToNodeSelection( self, *unused ) :
-		self._setState( Gaffer.StandardSet( list( self.__scriptNode.selection() ) ), 0 )
+		self._setState( Gaffer.StandardSet( list( self.__scriptNode.selection() ) ), "" )
 
 	def __followNodeSelection( self, *unused ) :
-		self._setState( self.__scriptNode.selection(), 0 )
+		self._setState( self.__scriptNode.selection(), "" )
 
 	def __followFocusNode( self, *unused ) :
-		self._setState( self.__scriptNode.focusSet(), 0 )
+		self._setState( self.__scriptNode.focusSet(), "" )
 
 	def __followCatalogueOutput( self, i, *unused ) :
 		self._setState( self.__defaultNodeSet, i )
 
 	def __followBookmark( self, i, *unused ) :
-		self._setState( Gaffer.NumericBookmarkSet( self.__scriptNode, i ), 0 )
+		self._setState( Gaffer.NumericBookmarkSet( self.__scriptNode, i ), "" )
 
 
 	def __showEditorFocusMenu( self, *unused ) :
