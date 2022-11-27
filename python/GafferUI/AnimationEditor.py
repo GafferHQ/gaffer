@@ -456,6 +456,16 @@ class _KeyWidget( GafferUI.GridContainer ) :
 		slopeToolTip = "# Slope\n\nThe slope of the %stangents of the currently selected keys."
 		scaleToolTip = "# Scale\n\nThe scale of the %stangents of the currently selected keys."
 
+		# append interpolation mode descriptions to tooltip
+		for mode in sorted( Gaffer.Animation.Interpolation.values.values() ) :
+			description = Gaffer.Metadata.value( "Animation.Interpolation.%s" % mode.name, "description" )
+			interpolationToolTip += "\n* %s%s" % ( mode.name, " : %s" % description if description is not None else "" )
+
+		# append tie mode descriptions to tooltip
+		for mode in sorted( Gaffer.Animation.TieMode.values.values() ) :
+			description = Gaffer.Metadata.value( "Animation.TieMode.%s" % mode.name, "description" )
+			tieModeToolTip += "\n* %s%s" % ( mode.name, " : %s" % description if description is not None else "" )
+
 		# create labels
 		frameLabel = GafferUI.Label( text="Frame", toolTip=frameToolTip )
 		valueLabel = GafferUI.Label( text="Value", toolTip=valueToolTip )
