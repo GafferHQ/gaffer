@@ -73,6 +73,16 @@ Gaffer.Metadata.registerNode(
 
 )
 
+Gaffer.Metadata.registerValue( "Animation.Interpolation.Constant", "description", "Curve span has in key's value." )
+Gaffer.Metadata.registerValue( "Animation.Interpolation.ConstantNext", "description", "Curve span has out key's value." )
+Gaffer.Metadata.registerValue( "Animation.Interpolation.Linear", "description", "Curve span is linearly interpolated between values of in key and out key." )
+Gaffer.Metadata.registerValue( "Animation.Interpolation.Cubic", "description", "Curve span is smoothly interpolated between values of in key and out key using tangent slope." )
+Gaffer.Metadata.registerValue( "Animation.Interpolation.Bezier", "description", "Curve span is smoothly interpolated between values of in key and out key using tangent slope and scale." )
+
+Gaffer.Metadata.registerValue( "Animation.TieMode.Manual", "description", "Tangent slope and scale can be independently adjusted." )
+Gaffer.Metadata.registerValue( "Animation.TieMode.Slope", "description", "Tangent slopes are kept equal." )
+Gaffer.Metadata.registerValue( "Animation.TieMode.Scale", "description", "Tangent slopes are kept equal and scales are kept proportional." )
+
 # PlugValueWidget popup menu for setting keys
 ##########################################################################
 

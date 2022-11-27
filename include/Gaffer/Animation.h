@@ -61,14 +61,19 @@ class GAFFER_API Animation : public ComputeNode
 		/// Defines the method used to interpolate between a key and the next one.
 		enum class Interpolation
 		{
+			/// Curve span has in key's value.
 			Constant = 0,
+			/// Curve span has out key's value.
 			ConstantNext,
+			/// Curve span is linearly interpolated between values of in key and out key.
 			Linear,
+			/// Curve span is smoothly interpolated between values of in key and out key using tangent slope.
 			Cubic,
+			/// Curve span is smoothly interpolated between values of in key and out key using tangent slope and scale.
 			Bezier
 		};
 
-		/// Defines direction relative to a key.
+		/// Defines direction relative to a key or curve span.
 		enum class Direction
 		{
 			In = 0,
@@ -78,8 +83,11 @@ class GAFFER_API Animation : public ComputeNode
 		/// Defines whether slope and scale are tied.
 		enum class TieMode
 		{
+			/// Tangent slope and scale can be independently adjusted.
 			Manual = 0,
+			/// Tangent slopes are kept equal.
 			Slope,
+			/// Tangent slopes are kept equal and scales are kept proportional.
 			Scale
 		};
 
