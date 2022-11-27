@@ -145,6 +145,7 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 					),
 					"active" : spanKeyOnThisFrame and plugValueWidget._editable( canEditAnimation = True ),
 					"checkBox" : spanKeyOnThisFrame and ( spanKey.getInterpolation() == mode ),
+					"description" : Gaffer.Metadata.value( "Animation.Interpolation.%s" % mode.name, "description" ),
 				}
 			)
 
