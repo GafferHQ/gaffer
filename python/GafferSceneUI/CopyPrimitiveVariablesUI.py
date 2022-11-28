@@ -93,6 +93,15 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"ignoreIncompatible" : [
+
+			"description",
+			"""
+			Causes the node to not error when attempting to copy primitive variables from
+			the source object that are not compatible with the destination object.
+			""",
+		]
+
 	}
 
 )
