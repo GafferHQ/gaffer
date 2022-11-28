@@ -282,5 +282,30 @@ class LoopTest( GafferTest.TestCase ) :
 		for plug, value in valuesWhenDirtied.items() :
 			self.assertEqual( plugValue( plug ), value )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "taskCollaboration:hashAliasing" } )
+	def testHashAliasingDeadlock( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["loop"] = Gaffer.Loop()
+		script["loop"].setup( Gaffer.StringPlug() )
+
+		# Dumb expression that just sets the value for the next iteration to
+		# the value from the previous iteration. Because of de8ab79d6f958cef3b80954798f8083a346945a7,
+		# the hash for the expression output is identical for every iteration of
+		# the loop, even though the context differs.
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression( """parent["loop"]["next"] = parent["loop"]["previous"]""" )
+
+		# Get the result of the loop. This actually computes the _first_ iteration of the loop first,
+		# while computing the hash of the result, and reuses the result for every other loop iteration.
+		script["loop"]["out"].getValue()
+		# Simulate cache eviction by clearing the compute cache.
+		Gaffer.ValuePlug.clearCache()
+		# Get the value again. Now, because the hash is still cached, this will first start the
+		# compute for the _last_ iteration. This leads to a recursive compute, which can cause deadlock
+		# if not handled appropriately.
+		script["loop"]["out"].getValue()
+
 if __name__ == "__main__":
 	unittest.main()

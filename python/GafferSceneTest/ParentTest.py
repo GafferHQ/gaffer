@@ -36,6 +36,7 @@
 
 import pathlib
 import inspect
+import functools
 
 import imath
 
@@ -936,6 +937,313 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 		parent["destination"].setValue( "/woops/a*" )
 		with self.assertRaisesRegex( Gaffer.ProcessException, r".*Invalid destination `/woops/a\*`. Name `a\*` is invalid \(because it contains filter wildcards\)" ) :
 			parent["out"].childNames( "/" )
+
+	@GafferTest.TestRunner.CategorisedTestMethod( { "taskCollaboration:hashAliasing" } )
+	def testChainedNodesWithIdenticalBranches( self ) :
+
+		#     infiniteScene
+		#          |
+		#       parent2
+		#          |
+		#       parent1
+
+		# Trick to make a large scene without needing a cache file
+		# and without using a BranchCreator. This scene is infinite
+		# but very cheap to compute.
+
+		infiniteScene = GafferScene.ScenePlug()
+		infiniteScene["childNames"].setValue( IECore.InternedStringVectorData( [ "one", "two" ] ) )
+
+		# Filter that will search the scene to a fixed depth, but
+		# never find anything.
+
+		nothingFilter = GafferScene.PathFilter()
+		nothingFilter["paths"].setValue( IECore.StringVectorData( [ "/*/*/*/*/*/*/*/*/*/*/thisDoesntExist" ] ) )
+
+		# Two Parent nodes one after another, using the same filter.
+		# These will generate the same (empty) set of branches, and
+		# therefore have the same hash.
+
+		parent2 = GafferScene.Parent()
+		parent2["in"].setInput( infiniteScene )
+		parent2["filter"].setInput( nothingFilter["out"] )
+
+		parent1 = GafferScene.Parent()
+		parent1["in"].setInput( parent2["out"] )
+		parent1["filter"].setInput( nothingFilter["out"] )
+
+		self.assertEqual( parent1["__branches"].hash(), parent2["__branches"].hash() )
+
+		# Simulate the effects of a previous computation being evicted
+		# from the cache.
+
+		parent1["__branches"].getValue()
+		Gaffer.ValuePlug.clearCache()
+
+		# We are now a situation where the hash for `parent1.__branches` is
+		# cached, but the value isn't. This is significant, because it means
+		# that in the next step, the downstream compute for `parent1.__branches`
+		# starts _before_ the upstream one for `parent2.__branches`. If the hash
+		# wasn't cached, then the hash for `parent1` would trigger
+		# an upstream compute for `parent2.__branches` first.
+
+		# Trigger scene generation. We can't use `traverseScene()` because the
+		# scene is infinite, so we use `matchingPaths()` to generate up to a fixed
+		# depth. The key effect here is that lots of threads are indirectly pulling on
+		# `parent1.__branches`, triggering task collaboration.
+
+		with Gaffer.PerformanceMonitor() as monitor :
+			paths = IECore.PathMatcher()
+			GafferScene.SceneAlgo.matchingPaths( IECore.PathMatcher( [ "/*/*/*/*/*/*/*/*/*" ] ), parent1["out"], paths )
+
+		# We only expect to see a single hash/compute for `__branches` on each
+		# node. A previous bug meant that this was not the case, and thousands
+		# of unnecessary evaluations of `parent2.__branches` could occur.
+
+		self.assertEqual( monitor.plugStatistics( parent1["__branches"] ).computeCount, 1 )
+		self.assertEqual( monitor.plugStatistics( parent2["__branches"] ).computeCount, 1 )
+
+	@GafferTest.TestRunner.CategorisedTestMethod( { "taskCollaboration:hashAliasing" } )
+	def testChainedNodesWithIdenticalBranchesAndIntermediateCompute( self ) :
+
+		# As for `testChainedNodesWithIdenticalBranches` above, but with a
+		# _different_ Parent node inserted between the identical two.
+		#
+		#     infiniteScene
+		#          |
+		#       parentA2
+		#          |
+		#       parentB
+		#          |
+		#       parentA1
+		#
+
+		infiniteScene = GafferScene.ScenePlug()
+		infiniteScene["childNames"].setValue( IECore.InternedStringVectorData( [ "one", "two" ] ) )
+
+		filterA = GafferScene.PathFilter()
+		filterA["paths"].setValue( IECore.StringVectorData( [ "/*/*/*/*/*/thisDoesntExist" ] ) )
+
+		somethingFilter = GafferScene.PathFilter()
+		somethingFilter["paths"].setValue( IECore.StringVectorData( [ "/*/*/*/*/*" ] ) )
+
+		parentA2 = GafferScene.Parent()
+		parentA2["in"].setInput( infiniteScene )
+		parentA2["filter"].setInput( filterA["out"] )
+
+		parentB = GafferScene.Parent()
+		parentB["in"].setInput( parentA2["out"] )
+		parentB["filter"].setInput( somethingFilter["out"] )
+
+		parentA1 = GafferScene.Parent()
+		parentA1["in"].setInput( parentB["out"] )
+		parentA1["filter"].setInput( filterA["out"] )
+
+		self.assertEqual( parentA1["__branches"].hash(), parentA2["__branches"].hash() )
+
+		# Simulate the effects of a previous computation being evicted
+		# from the cache.
+
+		parentA1["__branches"].getValue()
+		Gaffer.ValuePlug.clearCache()
+
+		# We are now a situation where the hash for `parentA1.__branches` is
+		# cached, but the value isn't. This means that the next call will
+		# trigger the compute for `parentA1.__branches` _first_. In turn, that
+		# will trigger a compute on `parentB.__branches`, and _that_ will
+		# recurse to `parentA2.__branches`. There are now two paths for worker
+		# threads to need the result from `parentA2` :
+		#
+		# 1. The worker enters the task arena for `parentA1`, then enters the
+		#    nested task arena for `parentB`, and finally tries to get the result
+		#    from `parentA2`.
+		# 2. The worker enters the task arena for `parentB` directly, takes a task, then
+		#    tries to get the result from `parentA1`.
+		#
+		# In the first case we were able to detect the recursion from `parentA1` to
+		# `parentA2` using a `task_arena_observer`. But in the second case, the worker
+		# enters the `parentB` arena directly, and isn't considered to be in the `parentA1`
+		# arena by `task_arena_observer`. So this worker tries to do task collaboration
+		# on A, and is therefore waiting on A to finish. But A can't finish until B finishes
+		# on the first worker thread. And B can't finish on the first worker thread because
+		# it is waiting on a task that is trapped on the second worker thread. Deadlock!
+		#
+		# This deficiency in using `task_arena_observer` to detect recursion lead
+		# us to develop a different method, one that avoids the deadlock
+		# that was being triggered by the call below.
+
+		parentA1["__branches"].getValue()
+
+	@GafferTest.TestRunner.CategorisedTestMethod( { "taskCollaboration:hashAliasing" } )
+	def testSplitNodesWithIdenticalBranchesAndIntermediateCompute( self ) :
+
+		# As for `testChainedNodesWithIdenticalBranches` above, but with node
+		# `parentC` branching off in parallel with `parentA1`. This branch
+		# arrives at `parentA2` without having `parentA1` in the history. This
+		# is similar to the case above - it is another mechanism whereby B is
+		# needed before A on one thread in particular.
+		#
+		#     infiniteScene
+		#          |
+		#       parentA2
+		#          |
+		#       parentB
+		#         / \
+		#  parentA1  parentC
+
+		script = Gaffer.ScriptNode()
+
+		script["infiniteScene"] = GafferScene.ScenePlug()
+		script["infiniteScene"]["childNames"].setValue( IECore.InternedStringVectorData( [ "one", "two" ] ) )
+
+		script["filterA"] = GafferScene.PathFilter()
+		script["filterA"]["paths"].setValue( IECore.StringVectorData( [ "/*/*/*/*/*/*/*thisDoesntExist" ] ) )
+
+		script["filterB"] = GafferScene.PathFilter()
+		script["filterB"]["paths"].setValue( IECore.StringVectorData( [ "/*/*/*/*/*/*/one" ] ) )
+
+		script["filterC"] = GafferScene.PathFilter()
+		script["filterC"]["paths"].setValue( IECore.StringVectorData( [ "/*/*/*/*/*/*/two" ] ) )
+
+		script["parentA2"] = GafferScene.Parent()
+		script["parentA2"]["in"].setInput( script["infiniteScene"] )
+		script["parentA2"]["filter"].setInput( script["filterA"]["out"] )
+
+		script["parentB"] = GafferScene.Parent()
+		script["parentB"]["in"].setInput( script["parentA2"]["out"] )
+		script["parentB"]["filter"].setInput( script["filterB"]["out"] )
+
+		script["parentA1"] = GafferScene.Parent()
+		script["parentA1"]["in"].setInput( script["parentB"]["out"] )
+		script["parentA1"]["filter"].setInput( script["filterA"]["out"] )
+
+		script["parentC"] = GafferScene.Parent()
+		script["parentC"]["in"].setInput( script["parentB"]["out"] )
+		script["parentC"]["filter"].setInput( script["filterC"]["out"] )
+
+		self.assertEqual( script["parentA1"]["__branches"].hash(), script["parentA2"]["__branches"].hash() )
+		self.assertNotEqual( script["parentA1"]["__branches"].hash(), script["parentB"]["__branches"].hash() )
+		self.assertNotEqual( script["parentA1"]["__branches"].hash(), script["parentC"]["__branches"].hash() )
+		self.assertNotEqual( script["parentB"]["__branches"].hash(), script["parentC"]["__branches"].hash() )
+
+		# Repeat this one, because it is more sensitive to specific task timings.
+		for i in range( 0, 100 ) :
+
+			# Simulate the effects of a previous computation being evicted
+			# from the cache.
+
+			script["parentA1"]["__branches"].getValue()
+			script["parentC"]["__branches"].getValue()
+			Gaffer.ValuePlug.clearCache()
+
+			# Trigger a bunch of parallel computes on both `parentA1` and `parentC`.
+
+			def evaluateScene( scene ) :
+
+				paths = IECore.PathMatcher()
+				GafferScene.SceneAlgo.matchingPaths( IECore.PathMatcher( [ "/*/*/*/*/*/*/*/*/*" ] ), scene, paths )
+
+			parentA1Task = Gaffer.ParallelAlgo.callOnBackgroundThread( script["parentA1"]["out"], functools.partial( evaluateScene, script["parentA1"]["out"] ) )
+			parentCTask = Gaffer.ParallelAlgo.callOnBackgroundThread( script["parentC"]["out"], functools.partial( evaluateScene, script["parentC"]["out"] ) )
+
+			parentA1Task.wait()
+			parentCTask.wait()
+
+	@GafferTest.TestRunner.CategorisedTestMethod( { "taskCollaboration:hashAliasing" } )
+	def testDependencyPropagationThroughIntermediateCompute( self ) :
+
+		# As for `testSplitNodesWithIdenticalBranchesAndIntermediateCompute` above, but
+		# with an additional task collaboration between `parentB` and `parentA2`. This
+		# means that we need to track the dependency from `parentB` to `parentA2` through
+		# an intermediate node.
+		#
+		#     infiniteScene
+		#          |
+		#       parentA2
+		#          |
+		#       parentI
+		#          |
+		#       parentB
+		#         / \
+		#  parentA1  parentC
+
+		script = Gaffer.ScriptNode()
+
+		script["infiniteScene"] = GafferScene.ScenePlug()
+		script["infiniteScene"]["childNames"].setValue( IECore.InternedStringVectorData( [ "one", "two" ] ) )
+
+		script["filterA"] = GafferScene.PathFilter()
+		script["filterA"]["paths"].setValue( IECore.StringVectorData( [ "/*/*/*/*/*/*/*thisDoesntExist" ] ) )
+
+		script["filterB"] = GafferScene.PathFilter()
+		script["filterB"]["paths"].setValue( IECore.StringVectorData( [ "/*/*/*/*/*/*/one" ] ) )
+
+		script["filterC"] = GafferScene.PathFilter()
+		script["filterC"]["paths"].setValue( IECore.StringVectorData( [ "/*/*/*/*/*/*/two" ] ) )
+
+		script["filterI"] = GafferScene.PathFilter()
+		script["filterI"]["paths"].setValue( IECore.StringVectorData( [ "/*/*/*/*/*/*/*/*two" ] ) )
+
+		script["parentA2"] = GafferScene.Parent()
+		script["parentA2"]["in"].setInput( script["infiniteScene"] )
+		script["parentA2"]["filter"].setInput( script["filterA"]["out"] )
+
+		script["parentI"] = GafferScene.Parent()
+		script["parentI"]["in"].setInput( script["parentA2"]["out"] )
+		script["parentI"]["filter"].setInput( script["filterI"]["out"] )
+
+		script["parentB"] = GafferScene.Parent()
+		script["parentB"]["in"].setInput( script["parentI"]["out"] )
+		script["parentB"]["filter"].setInput( script["filterB"]["out"] )
+
+		script["parentA1"] = GafferScene.Parent()
+		script["parentA1"]["in"].setInput( script["parentB"]["out"] )
+		script["parentA1"]["filter"].setInput( script["filterA"]["out"] )
+
+		script["parentC"] = GafferScene.Parent()
+		script["parentC"]["in"].setInput( script["parentB"]["out"] )
+		script["parentC"]["filter"].setInput( script["filterC"]["out"] )
+
+		self.assertEqual( script["parentA1"]["__branches"].hash(), script["parentA2"]["__branches"].hash() )
+		self.assertNotEqual( script["parentA1"]["__branches"].hash(), script["parentB"]["__branches"].hash() )
+		self.assertNotEqual( script["parentA1"]["__branches"].hash(), script["parentC"]["__branches"].hash() )
+		self.assertNotEqual( script["parentB"]["__branches"].hash(), script["parentC"]["__branches"].hash() )
+
+		# Repeat this one, because it is more sensitive to specific task timings.
+		for i in range( 0, 100 ) :
+
+			# Simulate the effects of a previous computation being evicted
+			# from the cache.
+
+			script["parentA1"]["__branches"].getValue()
+			script["parentC"]["__branches"].getValue()
+			Gaffer.ValuePlug.clearCache()
+
+			# Trigger a bunch of parallel computes on both `parentA1` and
+			# `parentC`. The sequence of computes we're concerned about is this :
+			#
+			# 1. `parentC`
+			# 2. `parentB`
+			# 3. `parentI`
+			# 4. `parentA1`
+			# 5. `parentB` (collaboration from `parentA1`)
+			# 6. `parentA2` (mustn't collaborate with `parentA1`)
+			#
+			# This means realising that `parentA2` is being waited on by
+			# `parentA1`, even though `parentI` started computing _before_
+			# collaboration on `parentB` started. So we can't simply track
+			# dependents up the chain at the point each process starts.
+
+			def evaluateScene( scene ) :
+
+				paths = IECore.PathMatcher()
+				GafferScene.SceneAlgo.matchingPaths( IECore.PathMatcher( [ "/*/*/*/*/*/*/*/*/*" ] ), scene, paths )
+
+			parentCTask = Gaffer.ParallelAlgo.callOnBackgroundThread( script["parentC"]["out"], functools.partial( evaluateScene, script["parentC"]["out"] ) )
+			parentA1Task = Gaffer.ParallelAlgo.callOnBackgroundThread( script["parentA1"]["out"], functools.partial( evaluateScene, script["parentA1"]["out"] ) )
+
+			parentCTask.wait()
+			parentA1Task.wait()
 
 if __name__ == "__main__":
 	unittest.main()
