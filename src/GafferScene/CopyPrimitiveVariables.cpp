@@ -203,7 +203,7 @@ IECore::ConstObjectPtr CopyPrimitiveVariables::computeProcessedObject( const Sce
 			const string &sourcePath = sourceLocation.size() ? sourceLocation : destinationPath;
 			throw IECore::Exception( boost::str(
 				boost::format( "Cannot copy \"%1%\" from \"%2%\" to \"%3%\" because source and destination primitives have different topology" )
-					% variable.first % destinationPath % sourcePath
+					% variable.first % sourcePath % destinationPath
 			) );
 		}
 		result->variables[prefix + variable.first] = variable.second;
