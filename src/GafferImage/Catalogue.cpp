@@ -1285,7 +1285,14 @@ void Catalogue::compute( ValuePlug *output, const Context *context ) const
 
 		if( boost::starts_with( imageName, g_outputPrefix ) )
 		{
-			outputIndex = std::stoi( imageName.substr( g_outputPrefix.size() ) );
+			try
+			{
+				outputIndex = std::stoi( imageName.substr( g_outputPrefix.size() ) );
+			}
+			catch( ... )
+			{
+				// If stoi failed, leave the outputIndex at 0
+			}
 		}
 
 		std::string result;

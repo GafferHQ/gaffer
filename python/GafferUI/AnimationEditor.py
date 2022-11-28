@@ -342,7 +342,8 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 						mode=mode
 					),
 					"active" : not emptySelectedKeys,
-					"checkBox" : interpolation == mode
+					"checkBox" : interpolation == mode,
+					"description" : Gaffer.Metadata.value( "Animation.Interpolation.%s" % mode.name, "description" ),
 				}
 			)
 
@@ -355,7 +356,8 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 						mode=mode
 					),
 					"active" : not emptySelectedKeys,
-					"checkBox" : tieMode == mode
+					"checkBox" : tieMode == mode,
+					"description" : Gaffer.Metadata.value( "Animation.TieMode.%s" % mode.name, "description" ),
 				}
 			)
 
@@ -456,6 +458,16 @@ class _KeyWidget( GafferUI.GridContainer ) :
 		slopeToolTip = "# Slope\n\nThe slope of the %stangents of the currently selected keys."
 		scaleToolTip = "# Scale\n\nThe scale of the %stangents of the currently selected keys."
 
+		# append interpolation mode descriptions to tooltip
+		for mode in sorted( Gaffer.Animation.Interpolation.values.values() ) :
+			description = Gaffer.Metadata.value( "Animation.Interpolation.%s" % mode.name, "description" )
+			interpolationToolTip += "\n* %s%s" % ( mode.name, " : %s" % description if description is not None else "" )
+
+		# append tie mode descriptions to tooltip
+		for mode in sorted( Gaffer.Animation.TieMode.values.values() ) :
+			description = Gaffer.Metadata.value( "Animation.TieMode.%s" % mode.name, "description" )
+			tieModeToolTip += "\n* %s%s" % ( mode.name, " : %s" % description if description is not None else "" )
+
 		# create labels
 		frameLabel = GafferUI.Label( text="Frame", toolTip=frameToolTip )
 		valueLabel = GafferUI.Label( text="Value", toolTip=valueToolTip )
@@ -482,7 +494,9 @@ class _KeyWidget( GafferUI.GridContainer ) :
 		for mode in sorted( Gaffer.Animation.Interpolation.values.values() ) :
 			im.append( "%s" % ( mode.name ), {
 				"command" : functools.partial( Gaffer.WeakMethod( self.__setInterpolation ), mode=mode ),
-				"checkBox" : functools.partial( Gaffer.WeakMethod( self.__checkBoxStateForKeyInterpolation ), mode=mode ) } )
+				"checkBox" : functools.partial( Gaffer.WeakMethod( self.__checkBoxStateForKeyInterpolation ), mode=mode ),
+				"description" : Gaffer.Metadata.value( "Animation.Interpolation.%s" % mode.name, "description" ),
+			} )
 		self.__interpolationEditor.setMenu( GafferUI.Menu( im ) )
 
 		# build tie mode menu
@@ -490,7 +504,9 @@ class _KeyWidget( GafferUI.GridContainer ) :
 		for mode in sorted( Gaffer.Animation.TieMode.values.values() ) :
 			tm.append( "%s" % ( mode.name ), {
 				"command" : functools.partial( Gaffer.WeakMethod( self.__setTieMode ), mode=mode ),
-				"checkBox" : functools.partial( Gaffer.WeakMethod( self.__checkBoxStateForTieMode ), mode=mode ) } )
+				"checkBox" : functools.partial( Gaffer.WeakMethod( self.__checkBoxStateForTieMode ), mode=mode ),
+				"description" : Gaffer.Metadata.value( "Animation.TieMode.%s" % mode.name, "description" ),
+			} )
 		self.__tieModeEditor.setMenu( GafferUI.Menu( tm ) )
 
 		# setup editor connections
