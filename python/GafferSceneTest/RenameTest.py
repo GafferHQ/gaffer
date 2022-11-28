@@ -590,5 +590,22 @@ class RenameTest( GafferSceneTest.SceneTestCase ) :
 		self.assertSceneValid( rename["out"] )
 		self.assertEqual( rename["out"].childNames( "/" )[0], "newSphere" )
 
+	def testSetPassThroughWithCacheEviction( self ) :
+
+		# This reproduces a deadlock that was once triggered by performing the
+		# Legacy policy compute for `sphere.out.set` behind the lock for the
+		# TaskCollaboration compute on `rename.out.set`. The test doesn't
+		# assert anything, because we are just happy if it completes at all.
+
+		sphere = GafferScene.Sphere()
+		sphere["sets"].setValue( "setA" )
+
+		rename = GafferScene.Rename()
+		rename["in"].setInput( sphere["out"] )
+
+		rename["out"].set( "setA" )
+		Gaffer.ValuePlug.clearCache()
+		rename["out"].set( "setA" )
+
 if __name__ == "__main__":
 	unittest.main()

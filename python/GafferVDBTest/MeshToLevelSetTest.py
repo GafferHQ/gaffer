@@ -180,3 +180,53 @@ class MeshToLevelSetTest( GafferVDBTest.VDBTestCase ) :
 		meshToLevelSet["filter"].setInput( pathFilter["out"] )
 
 		self.assertParallelGetValueComputesObjectOnce( meshToLevelSet["out"], "/cube" )
+
+	def testRecursionViaIntermediateQuery( self ) :
+
+		cube = GafferScene.Cube()
+
+		cubeFilter = GafferScene.PathFilter()
+		cubeFilter["paths"].setValue( IECore.StringVectorData( [ "/cube" ] ) )
+
+		# Two identical MeshToLevelSet nodes, with the same input scene.
+
+		meshToLevelSet1 = GafferVDB.MeshToLevelSet()
+		meshToLevelSet1["in"].setInput( cube["out"] )
+		meshToLevelSet1["filter"].setInput( cubeFilter["out"] )
+
+		meshToLevelSet2 = GafferVDB.MeshToLevelSet()
+		meshToLevelSet2["in"].setInput( cube["out"] )
+		meshToLevelSet2["filter"].setInput( cubeFilter["out"] )
+
+		# Use a PrimitiveVariableQuery to make one node depend on the other,
+		# while keeping the input values they receive identical. Dastardly!
+
+		query = GafferScene.PrimitiveVariableQuery()
+		query["scene"].setInput( meshToLevelSet1["out"] )
+		query["location"].setValue( "/cube" )
+		p = query.addQuery( Gaffer.StringPlug(), "thisVariableDoesNotExist" )
+		# Query will fail and output this default value, but not without
+		# pulling on `meshToLevelSet1` first.
+		p["value"].setValue( "surface" )
+		meshToLevelSet2["grid"].setInput( query.valuePlugFromQuery( p ) )
+
+		# The two nodes now have the same hash, despite one depending
+		# on the other. This is because `surface` is a StringPlug, which
+		# hashes based on value, thanks to de8ab79d6f958cef3b80954798f8083a346945a7.
+
+		self.assertEqual(
+			meshToLevelSet2["out"].objectHash( "/cube" ),
+			meshToLevelSet1["out"].objectHash( "/cube" )
+		)
+
+		# Evict all values from the compute cache, keeping the hashes in
+		# the hash cache.
+
+		Gaffer.ValuePlug.clearCache()
+
+		# Now, when we get the value from the downstream node, it will
+		# trigger a recursive compute of the upstream node, for the
+		# _same_ compute cache entry. If we don't handle this appropriately
+		# we'll get deadlock.
+
+		meshToLevelSet2["out"].object( "/cube" )

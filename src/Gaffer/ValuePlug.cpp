@@ -247,17 +247,18 @@ class ValuePlug::HashProcess : public Process
 			else if( Process::forceMonitoring( threadState, plug, ValuePlug::HashProcess::staticType ) )
 			{
 				HashProcess process( processKey );
+				auto costFunction = [] ( const IECore::MurmurHash &key ) { return 1; };
 				if(
 					processKey.cachePolicy == CachePolicy::TaskCollaboration ||
 					processKey.cachePolicy == CachePolicy::TaskIsolation
 				)
 				{
-					g_globalCache.set( processKey, process.m_result, 1 );
+					g_globalCache.setIfUncached( processKey, process.m_result, costFunction );
 				}
 				else
 				{
 					ThreadData &threadData = g_threadData.local();
-					threadData.cache.set( processKey, process.m_result, 1 );
+					threadData.cache.setIfUncached( processKey, process.m_result, costFunction );
 				}
 				return process.m_result;
 			}
@@ -622,7 +623,10 @@ class ValuePlug::ComputeProcess : public Process
 			else if( Process::forceMonitoring( threadState, plug, ValuePlug::ComputeProcess::staticType ) )
 			{
 				ComputeProcess process( processKey );
-				g_cache.set( processKey, process.m_result, process.m_result->memoryUsage() );
+				g_cache.setIfUncached(
+					processKey, process.m_result,
+					[]( const IECore::ConstObjectPtr &v ) { return v->memoryUsage(); }
+				);
 				return process.m_result;
 			}
 			else if( processKey.cachePolicy == CachePolicy::Legacy )
@@ -638,24 +642,21 @@ class ValuePlug::ComputeProcess : public Process
 					return *result;
 				}
 				ComputeProcess process( processKey );
-				// Store the value in the cache, after first checking that this
-				// hasn't been done already. The check is useful because it's
-				// common for an upstream compute triggered by us to have
-				// already done the work, and calling memoryUsage() can be very
-				// expensive for some datatypes. A prime example of this is the
-				// attribute state passed around in GafferScene - it's common
-				// for a selective filter to mean that the attribute compute is
+				// Store the value in the cache, but only if it isn't there
+				// already. The check is useful because it's common for an
+				// upstream compute triggered by us to have already done the
+				// work, and calling `memoryUsage()` can be very expensive for
+				// some datatypes. A prime example of this is the attribute
+				// state passed around in GafferScene - it's common for a
+				// selective filter to mean that the attribute compute is
 				// implemented as a pass-through (thus an upstream node will
 				// already have computed the same result) and the attribute data
 				// itself consists of many small objects for which computing
 				// memory usage is slow.
-				/// \todo Accessing the LRUCache multiple times like this does
-				/// have an overhead, and at some point we'll need to address
-				/// that.
-				if( !g_cache.getIfCached( processKey ) )
-				{
-					g_cache.set( processKey, process.m_result, process.m_result->memoryUsage() );
-				}
+				g_cache.setIfUncached(
+					processKey, process.m_result,
+					[]( const IECore::ConstObjectPtr &v ) { return v->memoryUsage(); }
+				);
 				return process.m_result;
 			}
 			else

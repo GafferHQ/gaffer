@@ -36,6 +36,7 @@ Fixes
 - FileSequencePathFilter : Fixed bug whereby files were considered to be part of a sequence if they were in a numbered directory. Now only numbers in the file's name are considered.
 - BoolWidget : Fixed bug triggered by calling `setImage()` from within a `with widgetContainer` block.
 - LevelSetOffset, MeshToLevelSet, LevelSetToMesh, SphereLevelSet : Fixed bugs which could cause unnecessary repeated computations, or in the worst case, lead to deadlock.
+- ValuePlug : Fixed rare deadlock when a TaskParallel compute recurses to a Legacy compute with the _same_ hash.
 - GafferTest : Fixed bug which caused `parallelGetValue()` to use the wrong context.
 
 API
