@@ -1,6 +1,10 @@
 1.3.x.x (relative to 1.3.2.0)
 =======
 
+API
+---
+
+- ThreadState : Added `process()` method.
 
 1.3.2.0 (relative to 1.3.1.0)
 =======
