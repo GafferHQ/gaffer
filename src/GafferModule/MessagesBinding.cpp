@@ -83,8 +83,11 @@ long hashMessage( const Message &m )
 
 object firstDifferenceWrapper( const Messages &m, const Messages &others )
 {
-	IECorePython::ScopedGILRelease gilRelease;
-	auto d = m.firstDifference( others );
+	std::optional<size_t> d;
+	{
+		IECorePython::ScopedGILRelease gilRelease;
+		d = m.firstDifference( others );
+	}
 	return d ? object( *d ) : object();
 }
 

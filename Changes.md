@@ -1,3 +1,11 @@
+1.0.6.x (relative to 1.0.6.3)
+=======
+
+Fixes
+-----
+
+- MessagesBinding : Fixed GIL management bug that could cause crashes when performing an interactive render.
+
 1.0.6.3 (relative to 1.0.6.2)
 =======
 
