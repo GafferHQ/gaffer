@@ -1194,6 +1194,27 @@ bool LRUCache<Key, Value, Policy, GetterKey>::set( const Key &key, const Value &
 }
 
 template<typename Key, typename Value, template <typename> class Policy, typename GetterKey>
+template<typename CostFunction>
+bool LRUCache<Key, Value, Policy, GetterKey>::setIfUncached( const Key &key, const Value &value, CostFunction &&costFunction )
+{
+	typename Policy<LRUCache>::Handle handle;
+	m_policy.acquire( key, handle, LRUCachePolicy::Insert, /* canceller = */ nullptr );
+	const CacheEntry &cacheEntry = handle.readable();
+	const Status status = cacheEntry.status();
+
+	bool result = false;
+	if( status == Uncached && handle.isWritable() )
+	{
+		result = setInternal( key, handle.writable(), value, costFunction( value ) );
+		m_policy.push( handle );
+
+		handle.release();
+		limitCost( m_maxCost );
+	}
+	return result;
+}
+
+template<typename Key, typename Value, template <typename> class Policy, typename GetterKey>
 bool LRUCache<Key, Value, Policy, GetterKey>::setInternal( const Key &key, CacheEntry &cacheEntry, const Value &value, Cost cost )
 {
 	eraseInternal( key, cacheEntry );

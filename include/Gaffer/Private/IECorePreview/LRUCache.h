@@ -132,6 +132,13 @@ class LRUCache : private boost::noncopyable
 		/// when true is returned, the item may be removed from the cache by a
 		/// subsequent (or concurrent) operation.
 		bool set( const Key &key, const Value &value, Cost cost );
+		/// As above, but only if the item is not cached already. This avoids
+		/// calling a potentially expensive cost function in the case that the
+		/// item is cached already.
+		/// \todo Ideally we wouldn't need the cost calculation to be duplicated
+		/// between CostFunction and GetterFunction.
+		template<typename CostFunction>
+		bool setIfUncached( const Key &key, const Value &value, CostFunction &&costFunction );
 
 		/// Returns true if the object is in the cache. Note that the
 		/// return value may be invalidated immediately by operations performed
