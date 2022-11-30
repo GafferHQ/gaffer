@@ -57,6 +57,12 @@ void setValue( StringPlug *plug, const std::string& value )
 	plug->setValue( value );
 }
 
+void setPathValue( StringPlug *plug, const std::filesystem::path &value )
+{
+	IECorePython::ScopedGILRelease r;
+	plug->setValue( value );
+}
+
 std::string getValue( const StringPlug *plug, const IECore::MurmurHash *precomputedHash )
 {
 	// Must release GIL in case computation spawns threads which need
@@ -152,6 +158,8 @@ void GafferModule::bindStringPlug()
 		.def( "__repr__", &repr )
 		.def( "substitutions", &StringPlug::substitutions )
 		.def( "defaultValue", &StringPlug::defaultValue, return_value_policy<boost::python::copy_const_reference>() )
+		// Must be registered before string-based `setValue()`, to give it weaker overloading precedence.
+		.def( "setValue", &setPathValue )
 		.def( "setValue", &setValue )
 		.def( "getValue", &getValue, ( boost::python::arg( "_precomputedHash" ) = object() ) )
 	;

@@ -217,11 +217,11 @@ class ReferenceTest( GafferTest.TestCase ) :
 		self.assertTrue( "sum" in s2["r"] )
 		self.assertTrue( s2["r"]["op1"].getInput().isSame( s2["a"]["sum"] ) )
 
-		s2["fileName"].setValue( ( self.temporaryDirectory() / "test.gfr" ).as_posix() )
+		s2["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
 		s2.save()
 
 		s3 = Gaffer.ScriptNode()
-		s3["fileName"].setValue( ( self.temporaryDirectory() / "test.gfr" ).as_posix() )
+		s3["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
 		s3.load()
 
 		self.assertEqual( s3["r"].keys(), s2["r"].keys() )
@@ -478,7 +478,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		# save that script, and then mysteriously
 		# disable GafferTest.StringInOutNode.
 
-		s2["fileName"].setValue( ( self.temporaryDirectory() / "test.gfr" ).as_posix() )
+		s2["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
 		s2.save()
 
 		del GafferTest.StringInOutNode
@@ -487,7 +487,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		# load in the other referenced node.
 
 		s3 = Gaffer.ScriptNode()
-		s3["fileName"].setValue( ( self.temporaryDirectory() / "test.gfr" ).as_posix() )
+		s3["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
 		with IECore.CapturingMessageHandler() as mh :
 			s3.load( continueOnError=True )
 
@@ -619,7 +619,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		# And we should be able to save and reload the script
 		# and have that still be the case.
 
-		s["fileName"].setValue( ( self.temporaryDirectory() / "test.gfr" ).as_posix() )
+		s["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
 		s.save()
 		s.load()
 
@@ -762,7 +762,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 		# And we should be able to save and reload the script
 		# and have that still be the case.
 
-		s["fileName"].setValue( ( self.temporaryDirectory() / "test.gfr" ).as_posix() )
+		s["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
 		s.save()
 		s.load()
 

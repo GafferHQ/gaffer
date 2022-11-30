@@ -129,7 +129,7 @@ class BoxIOTest( GafferTest.TestCase ) :
 	def testLoadOutsideBoxVersion0_52( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["fileName"].setValue( ( pathlib.Path( __file__ ).parent / "scripts" / "boxIOOutsideBoxVersion-0.52.0.0.gfr" ).as_posix() )
+		s["fileName"].setValue( pathlib.Path( __file__ ).parent / "scripts" / "boxIOOutsideBoxVersion-0.52.0.0.gfr" )
 		s.load()
 
 		self.assertIsInstance( s["BoxIn"], Gaffer.BoxIn )

@@ -1559,7 +1559,7 @@ class ExpressionTest( GafferTest.TestCase ) :
 		# iteration order of Python sets, which is non-deterministic since
 		# Python 3 (see `PYTHONHASHSEED`).
 
-		script["fileName"].setValue( ( self.temporaryDirectory() / "test.gfr" ).as_posix() )
+		script["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
 		script.save()
 
 		env = os.environ.copy()

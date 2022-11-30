@@ -2892,7 +2892,7 @@ class AnimationTest( GafferTest.TestCase ) :
 		import os
 
 		s = Gaffer.ScriptNode()
-		s["fileName"].setValue( ( pathlib.Path( __file__ ).parent / "scripts" / "animationVersion-0.60.9.0.gfr" ).as_posix() )
+		s["fileName"].setValue( pathlib.Path( __file__ ).parent / "scripts" / "animationVersion-0.60.9.0.gfr" )
 		s.load()
 
 		def assertAnimation( script ) :

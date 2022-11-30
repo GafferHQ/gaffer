@@ -210,11 +210,11 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		s["a2"]["op1"].setInput( s["a1"]["sum"] )
 		s["a2"]["op2"].setValue( 10 )
 
-		s["fileName"].setValue( ( self.temporaryDirectory() / "test.gfr" ).as_posix() )
+		s["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
 		s.save()
 
 		s2 = Gaffer.ScriptNode()
-		s2["fileName"].setValue( ( self.temporaryDirectory() / "test.gfr" ).as_posix() )
+		s2["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
 		s2.load()
 
 		self.assertTrue( s2["a2"]["op1"].getInput().isSame( s2["a1"]["sum"] ) )
@@ -224,7 +224,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s["a1"] = GafferTest.AddNode()
 
-		s["fileName"].setValue( ( self.temporaryDirectory() / "test.gfr" ).as_posix() )
+		s["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
 		s.save()
 
 		s.load()
@@ -405,11 +405,11 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		self.assertEqual( s["frameRange"]["start"].getValue(), 110 )
 		self.assertEqual( s["frameRange"]["end"].getValue(), 200 )
 
-		s["fileName"].setValue( ( self.temporaryDirectory() / "test.gfr" ).as_posix() )
+		s["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
 		s.save()
 
 		s2 = Gaffer.ScriptNode()
-		s2["fileName"].setValue( ( self.temporaryDirectory() / "test.gfr" ).as_posix() )
+		s2["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
 		s2.load()
 
 		self.assertEqual( s2["frameRange"]["start"].getValue(), 110 )
@@ -610,11 +610,11 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		s["customSetting"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		s["customSetting"].setValue( 100 )
 
-		s["fileName"].setValue( ( self.temporaryDirectory() / "test.gfr" ).as_posix() )
+		s["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
 		s.save()
 
 		s2 = Gaffer.ScriptNode()
-		s2["fileName"].setValue( ( self.temporaryDirectory() / "test.gfr" ).as_posix() )
+		s2["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
 		s2.load()
 
 		self.assertEqual( s2["customSetting"].getValue(), 100 )
@@ -815,13 +815,13 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s["n"] = Gaffer.Node()
 
-		s["fileName"].setValue( ( self.temporaryDirectory() / "test.gfr" ).as_posix() )
+		s["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
 		s.save()
 
 		shutil.move( self.temporaryDirectory() / "test.gfr", self.temporaryDirectory() / "test2.gfr" )
 
 		s = Gaffer.ScriptNode()
-		s["fileName"].setValue( ( self.temporaryDirectory() / "test2.gfr" ).as_posix() )
+		s["fileName"].setValue( self.temporaryDirectory() / "test2.gfr" )
 		s.load()
 
 		self.assertEqual( s["fileName"].getValue(), ( self.temporaryDirectory() / "test2.gfr" ).as_posix() )
@@ -842,7 +842,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 			s["node"] = GafferTest.AddNode()
 		self.assertEqual( s["unsavedChanges"].getValue(), True )
 
-		s["fileName"].setValue( ( self.temporaryDirectory() / "test.gfr" ).as_posix() )
+		s["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
 		s.save()
 		self.assertEqual( s["unsavedChanges"].getValue(), False )
 
@@ -900,7 +900,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		s.serialiseToFile( self.temporaryDirectory() / "test.gfr" )
 
 		s2 = Gaffer.ScriptNode()
-		s2["fileName"].setValue( ( self.temporaryDirectory() / "test.gfr" ).as_posix() )
+		s2["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
 		s2.load()
 
 		self.assertTrue( "n1" in s2 )
@@ -910,7 +910,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		s.serialiseToFile( self.temporaryDirectory() / "test.gfr", filter = Gaffer.StandardSet( [ s["n2"] ] ) )
 
 		s3 = Gaffer.ScriptNode()
-		s3["fileName"].setValue( ( self.temporaryDirectory() / "test.gfr" ).as_posix() )
+		s3["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
 		s3.load()
 
 		self.assertTrue( "n1" not in s3 )
@@ -997,11 +997,11 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		p["value"].setValue( 20 )
 		self.assertEqual( s.context().get( "test" ), 20 )
 
-		s["fileName"].setValue( ( self.temporaryDirectory() / "test.gfr" ).as_posix() )
+		s["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
 		s.save()
 
 		s2 = Gaffer.ScriptNode()
-		s2["fileName"].setValue( ( self.temporaryDirectory() / "test.gfr" ).as_posix() )
+		s2["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
 		s2.load()
 
 		self.assertEqual( s2["variables"][p.getName()]["value"].getValue(), 20 )
@@ -1012,7 +1012,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		self.assertEqual( s.context().get( "script:name" ), "" )
 
-		s["fileName"].setValue( ( self.temporaryDirectory() / "test.gfr" ).as_posix() )
+		s["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
 		self.assertEqual( s.context().get( "script:name" ), "test" )
 
 	def testReloadWithCustomVariables( self ) :
@@ -1020,7 +1020,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s["variables"].addChild( Gaffer.NameValuePlug( "test", IECore.IntData( 10 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 
-		s["fileName"].setValue( ( self.temporaryDirectory() / "test.gfr" ).as_posix() )
+		s["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
 		s.save()
 
 		s["variables"][0]["value"].setValue( 100 )
@@ -1037,11 +1037,11 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		s["variables"].addChild( p )
 		self.assertEqual( s.context().get( "test" ), 10 )
 
-		s["fileName"].setValue( ( self.temporaryDirectory() / "test.gfr" ).as_posix() )
+		s["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
 		s.save()
 
 		s2 = Gaffer.ScriptNode()
-		s2["fileName"].setValue( ( self.temporaryDirectory() / "test.gfr" ).as_posix() )
+		s2["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
 		s2.load()
 
 		self.assertEqual( s2["variables"][p.getName()]["value"].getValue(), 10 )
@@ -1188,7 +1188,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.value( s, "serialiser:patchVersion" ), None )
 
 		s2 = Gaffer.ScriptNode()
-		s2["fileName"].setValue( ( self.temporaryDirectory() / "test.gfr" ).as_posix() )
+		s2["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
 		s2.load()
 
 		self.assertEqual( Gaffer.Metadata.value( s2, "serialiser:milestoneVersion" ), Gaffer.About.milestoneVersion() )
@@ -1196,7 +1196,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.value( s2, "serialiser:minorVersion" ), Gaffer.About.minorVersion() )
 		self.assertEqual( Gaffer.Metadata.value( s2, "serialiser:patchVersion" ), Gaffer.About.patchVersion() )
 
-		s["fileName"].setValue( ( self.temporaryDirectory() / "test.gfr" ).as_posix() )
+		s["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
 		s.save()
 
 		s2.load()
@@ -1209,7 +1209,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 	def testFileVersioningUpdatesOnSave( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["fileName"].setValue( ( pathlib.Path( __file__ ).parent /  "scripts" / "previousSerialisationVersion.gfr" ).as_posix() )
+		s["fileName"].setValue( pathlib.Path( __file__ ).parent /  "scripts" / "previousSerialisationVersion.gfr" )
 		s.load()
 
 		self.assertEqual( Gaffer.Metadata.value( s, "serialiser:milestoneVersion" ), 0 )
@@ -1217,11 +1217,11 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.value( s, "serialiser:minorVersion" ), 0 )
 		self.assertEqual( Gaffer.Metadata.value( s, "serialiser:patchVersion" ), 0 )
 
-		s["fileName"].setValue( ( self.temporaryDirectory() / "test.gfr" ).as_posix() )
+		s["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
 		s.save()
 
 		s2 = Gaffer.ScriptNode()
-		s2["fileName"].setValue( ( self.temporaryDirectory() / "test.gfr" ).as_posix() )
+		s2["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
 		s2.load()
 
 		self.assertEqual( Gaffer.Metadata.value( s2, "serialiser:milestoneVersion" ), Gaffer.About.milestoneVersion() )
@@ -1511,7 +1511,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		s.load()
 		self.assertTrue( Gaffer.MetadataAlgo.getReadOnly( s ) )
 
-		s["fileName"].setValue( ( self.temporaryDirectory() / "test2.gfr" ).as_posix() )
+		s["fileName"].setValue( self.temporaryDirectory() / "test2.gfr" )
 		self.assertFalse( Gaffer.MetadataAlgo.getReadOnly( s ) )
 
 		os.chmod( fileName, stat.S_IWRITE | stat.S_IWGRP | stat.S_IWOTH )
@@ -1635,7 +1635,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 	def testCancellationDuringLoad( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["fileName"].setValue( ( pathlib.Path( __file__ ).parent / "scripts" / "previousSerialisationVersion.gfr" ).as_posix() )
+		s["fileName"].setValue( pathlib.Path( __file__ ).parent / "scripts" / "previousSerialisationVersion.gfr" )
 
 		context = Gaffer.Context()
 		canceller = IECore.Canceller()
