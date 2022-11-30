@@ -897,7 +897,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		s["n2"] = GafferTest.AddNode()
 		s["n2"]["op1"].setInput( s["n1"]["sum"] )
 
-		s.serialiseToFile( ( self.temporaryDirectory() / "test.gfr" ).as_posix() )
+		s.serialiseToFile( self.temporaryDirectory() / "test.gfr" )
 
 		s2 = Gaffer.ScriptNode()
 		s2["fileName"].setValue( ( self.temporaryDirectory() / "test.gfr" ).as_posix() )
@@ -907,7 +907,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		self.assertTrue( "n2" in s2 )
 		self.assertTrue( s2["n2"]["op1"].getInput().isSame( s2["n1"]["sum"] ) )
 
-		s.serialiseToFile( ( self.temporaryDirectory() / "test.gfr" ).as_posix(), filter = Gaffer.StandardSet( [ s["n2"] ] ) )
+		s.serialiseToFile( self.temporaryDirectory() / "test.gfr", filter = Gaffer.StandardSet( [ s["n2"] ] ) )
 
 		s3 = Gaffer.ScriptNode()
 		s3["fileName"].setValue( ( self.temporaryDirectory() / "test.gfr" ).as_posix() )
@@ -924,13 +924,13 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		s["n2"] = GafferTest.AddNode()
 		s["n2"]["op1"].setInput( s["n1"]["sum"] )
 
-		s.serialiseToFile( ( self.temporaryDirectory() / "test.gfr" ).as_posix() )
+		s.serialiseToFile( self.temporaryDirectory() / "test.gfr" )
 
 		s2 = Gaffer.ScriptNode()
 
 		self.assertRaises( RuntimeError, s2.executeFile, "thisFileDoesntExist.gfr" )
 
-		s2.executeFile( ( self.temporaryDirectory() / "test.gfr" ).as_posix() )
+		s2.executeFile( self.temporaryDirectory() / "test.gfr" )
 
 		self.assertTrue( s2["n2"]["op1"].getInput().isSame( s2["n1"]["sum"] ) )
 
@@ -1180,7 +1180,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.value( s, "serialiser:minorVersion" ), None )
 		self.assertEqual( Gaffer.Metadata.value( s, "serialiser:patchVersion" ), None )
 
-		s.serialiseToFile( ( self.temporaryDirectory() / "test.gfr" ).as_posix() )
+		s.serialiseToFile( self.temporaryDirectory() / "test.gfr" )
 
 		self.assertEqual( Gaffer.Metadata.value( s, "serialiser:milestoneVersion" ), None )
 		self.assertEqual( Gaffer.Metadata.value( s, "serialiser:majorVersion" ), None )
@@ -1306,7 +1306,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 
 	def testFileNameInExecutionError( self ) :
 
-		fileName = ( self.temporaryDirectory() / "test.gfr" ).as_posix()
+		fileName = self.temporaryDirectory() / "test.gfr"
 		with open( fileName, "w" ) as f :
 			f.write( "a = 10\n" )
 			f.write( "a = iDontExist\n" )
@@ -1318,7 +1318,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 
 			self.assertRaisesRegex(
 				RuntimeError,
-				"Line 2 of " + fileName + " : NameError: name 'iDontExist' is not defined",
+				"Line 2 of {} : NameError: name 'iDontExist' is not defined".format( fileName ),
 				method
 			)
 
@@ -1326,7 +1326,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 				method( continueOnError = True )
 
 			self.assertEqual( len( mh.messages ), 1 )
-			self.assertEqual( mh.messages[0].context, "Line 2 of " + fileName )
+			self.assertEqual( mh.messages[0].context, "Line 2 of {}".format( fileName ) )
 			self.assertTrue( "NameError: name 'iDontExist' is not defined" in mh.messages[0].message )
 
 	def testIsExecuting( self ) :
@@ -1350,10 +1350,10 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		b = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["n1"] ] ) )
 		Gaffer.PlugAlgo.promote( b["n1"]["op1"] )
 
-		b.exportForReference( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
+		b.exportForReference( self.temporaryDirectory() / "test.grf" )
 
 		s["r"] = Gaffer.Reference()
-		s["r"].load( ( self.temporaryDirectory() / "test.grf" ).as_posix() )
+		s["r"].load( self.temporaryDirectory() / "test.grf" )
 
 		s["r"]["op1"].setInput( s["n"]["sum"] )
 
@@ -1474,7 +1474,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 		s1["frameRange"]["end"].setValue( 101 )
 		s1["variables"].addChild( Gaffer.NameValuePlug( "test", "test" ) )
 
-		fileName = ( self.temporaryDirectory() / "toImport.gfr" ).as_posix()
+		fileName = self.temporaryDirectory() / "toImport.gfr"
 		s1.serialiseToFile( fileName )
 
 		s2 = Gaffer.ScriptNode()
@@ -1489,7 +1489,7 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 
 	def testReadOnlyMetadata( self ) :
 
-		fileName = ( self.temporaryDirectory() / "test.gfr" ).as_posix()
+		fileName = self.temporaryDirectory() / "test.gfr"
 
 		s = Gaffer.ScriptNode()
 		self.assertFalse( Gaffer.MetadataAlgo.getReadOnly( s ) )

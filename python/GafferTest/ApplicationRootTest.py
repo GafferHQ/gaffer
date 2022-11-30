@@ -79,7 +79,7 @@ class ApplicationRootTest( GafferTest.TestCase ) :
 		preferencesFile = self.temporaryDirectory() / "testPreferences.gfr"
 
 		self.assertFalse( preferencesFile.exists() )
-		applicationRoot.savePreferences( preferencesFile.as_posix() )
+		applicationRoot.savePreferences( preferencesFile )
 		self.assertTrue( preferencesFile.exists() )
 
 		p["category1"]["i"].setValue( 1 )
@@ -101,16 +101,16 @@ class ApplicationRootTest( GafferTest.TestCase ) :
 		a = Gaffer.ApplicationRoot( "testApp" )
 
 		preferencesFile = self.temporaryDirectory() / "testPreferences.gfr"
-		a.savePreferences( preferencesFile.as_posix() )
+		a.savePreferences( preferencesFile )
 		preferencesFile.chmod( 0 )
-		self.assertRaises( RuntimeError, a.savePreferences, preferencesFile.as_posix() )
+		self.assertRaises( RuntimeError, a.savePreferences, preferencesFile )
 		preferencesFile.chmod( stat.S_IWRITE )
 
 	def testPreferencesLocation( self ) :
 
 		a = Gaffer.ApplicationRoot( "testApp" )
 
-		self.assertEqual( a.preferencesLocation(), self.__defaultPreferencesFile.parent.as_posix() )
+		self.assertEqual( a.preferencesLocation(), self.__defaultPreferencesFile.parent )
 		self.assertTrue( pathlib.Path( a.preferencesLocation() ).is_dir() )
 
 	def testClipboard( self ) :

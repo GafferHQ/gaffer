@@ -116,12 +116,12 @@ void ApplicationRoot::savePreferences() const
 	savePreferences( defaultPreferencesFileName() );
 }
 
-void ApplicationRoot::savePreferences( const std::string &fileName ) const
+void ApplicationRoot::savePreferences( const std::filesystem::path &fileName ) const
 {
 	throw IECore::Exception( "Cannot save preferences from an ApplicationRoot not created in Python." );
 }
 
-std::string ApplicationRoot::preferencesLocation() const
+std::filesystem::path ApplicationRoot::preferencesLocation() const
 {
 	const char *home = getenv( "HOME" );
 	if( !home )
@@ -134,10 +134,10 @@ std::string ApplicationRoot::preferencesLocation() const
 
 	std::filesystem::create_directories( result );
 
-	return result.generic_string();
+	return result;
 }
 
-std::string ApplicationRoot::defaultPreferencesFileName() const
+std::filesystem::path ApplicationRoot::defaultPreferencesFileName() const
 {
-	return preferencesLocation() + "/preferences.py";
+	return preferencesLocation() / "preferences.py";
 }

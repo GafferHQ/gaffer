@@ -39,6 +39,8 @@
 
 #include "Gaffer/SubGraph.h"
 
+#include <filesystem>
+
 namespace Gaffer
 {
 
@@ -68,7 +70,7 @@ class GAFFER_API Box : public SubGraph
 
 		/// Exports the contents of the Box so that it can be referenced
 		/// by a Reference node.
-		void exportForReference( const std::string &fileName ) const;
+		void exportForReference( const std::filesystem::path &fileName ) const;
 
 		/// Creates a Box by containing a set of child nodes which
 		/// were previously held by a different parent.

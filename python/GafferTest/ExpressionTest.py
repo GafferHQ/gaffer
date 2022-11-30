@@ -1548,7 +1548,7 @@ class ExpressionTest( GafferTest.TestCase ) :
 		script = Gaffer.ScriptNode()
 
 		script["reference"] = Gaffer.Reference()
-		script["reference"].load( ( pathlib.Path( __file__ ).parent / "references" / "multipleOutputExpression.grf" ).as_posix() )
+		script["reference"].load( pathlib.Path( __file__ ).parent / "references" / "multipleOutputExpression.grf" )
 
 		# Check all is well.
 

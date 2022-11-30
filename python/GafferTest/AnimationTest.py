@@ -2708,7 +2708,7 @@ class AnimationTest( GafferTest.TestCase ) :
 			c.setTime( 1 )
 			self.assertEqual( s["b"]["sum"].getValue(), 1 )
 
-		fileName = ( self.temporaryDirectory() / "reference.grf" ).as_posix()
+		fileName = self.temporaryDirectory() / "reference.grf"
 		s["b"].exportForReference( fileName )
 
 		s["r"] = Gaffer.Reference()

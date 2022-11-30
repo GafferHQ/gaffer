@@ -141,7 +141,7 @@ class BoxIOTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 		s["b"] = Gaffer.Box()
 
-		s.executeFile( ( pathlib.Path( __file__ ).parent / "scripts" / "boxIOOutsideBoxVersion-0.52.0.0.gfr" ).as_posix(), parent = s["b"] )
+		s.executeFile( pathlib.Path( __file__ ).parent / "scripts" / "boxIOOutsideBoxVersion-0.52.0.0.gfr", parent = s["b"] )
 		self.assertIn( "in", s["b"] )
 		self.assertIn( "out", s["b"] )
 		self.assertIn( "passThrough", s["b"]["BoxOut"] )

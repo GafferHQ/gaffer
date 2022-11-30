@@ -554,11 +554,11 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 
 		Gaffer.MetadataAlgo.setNumericBookmark( s, 1, s["box"]["n"] )
 
-		s["box"].exportForReference( ( self.temporaryDirectory() / "bookmarked.grf" ).as_posix() )
+		s["box"].exportForReference( self.temporaryDirectory() / "bookmarked.grf" )
 
 		# Bring reference back in
 		s["r"] = Gaffer.Reference()
-		s["r"].load( ( self.temporaryDirectory() / "bookmarked.grf" ).as_posix() )
+		s["r"].load( self.temporaryDirectory() / "bookmarked.grf" )
 
 		# Clashing Metadata was completely removed
 		self.assertEqual( Gaffer.Metadata.value( s["r"]["n"], "numericBookmark1" ), None )
@@ -570,7 +570,7 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 		Gaffer.MetadataAlgo.setNumericBookmark( s, 1, None )
 
 		s["r2"] = Gaffer.Reference()
-		s["r2"].load( ( self.temporaryDirectory() / "bookmarked.grf" ).as_posix() )
+		s["r2"].load( self.temporaryDirectory() / "bookmarked.grf" )
 
 		self.assertEqual( Gaffer.Metadata.value( s["r2"]["n"], "numericBookmark1" ), None )
 		self.assertEqual( Gaffer.MetadataAlgo.numericBookmark( s["r2"]["n"] ), 0 )
@@ -586,12 +586,12 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 
 		Gaffer.MetadataAlgo.setNumericBookmark( s, 1, s["box"]["n"] )
 
-		s["box"].exportForReference( ( self.temporaryDirectory() / "bookmarked.grf" ).as_posix() )
+		s["box"].exportForReference( self.temporaryDirectory() / "bookmarked.grf" )
 
 		# Bring the box back in, not as a Reference, but as read-only Box
 		s["b1"] = Gaffer.Box()
 		Gaffer.MetadataAlgo.setChildNodesAreReadOnly( s["b1"], True )
-		s.executeFile( ( self.temporaryDirectory() / "bookmarked.grf" ).as_posix(), parent = s["b1"], continueOnError = True)
+		s.executeFile( self.temporaryDirectory() / "bookmarked.grf", parent = s["b1"], continueOnError = True)
 
 		# Clashing Metadata was completely removed
 		self.assertEqual( Gaffer.Metadata.value( s["b1"]["n"], "numericBookmark1" ), None )
@@ -604,7 +604,7 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 
 		s["b2"] = Gaffer.Box()
 		Gaffer.MetadataAlgo.setChildNodesAreReadOnly( s["b2"], True )
-		s.executeFile( ( self.temporaryDirectory() / "bookmarked.grf" ).as_posix(), parent = s["b2"], continueOnError = True)
+		s.executeFile( self.temporaryDirectory() / "bookmarked.grf", parent = s["b2"], continueOnError = True)
 
 		self.assertEqual( Gaffer.Metadata.value( s["b2"]["n"], "numericBookmark1" ), None )
 		self.assertEqual( Gaffer.MetadataAlgo.numericBookmark( s["b2"]["n"] ), 0 )
@@ -613,7 +613,7 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 		# But loading it without the read-only flag results in the bookmark being set
 
 		s["b3"] = Gaffer.Box()
-		s.executeFile( ( self.temporaryDirectory() / "bookmarked.grf" ).as_posix(), parent = s["b3"], continueOnError = True)
+		s.executeFile( self.temporaryDirectory() / "bookmarked.grf", parent = s["b3"], continueOnError = True)
 
 		self.assertEqual( Gaffer.Metadata.value( s["b3"]["n"], "numericBookmark1" ), True )
 		self.assertEqual( Gaffer.MetadataAlgo.numericBookmark( s["b3"]["n"] ), 1 )

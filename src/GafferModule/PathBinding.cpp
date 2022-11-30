@@ -50,6 +50,8 @@
 #include "IECorePython/RunTimeTypedBinding.h"
 #include "IECorePython/ExceptionAlgo.h"
 
+#include <filesystem>
+
 using namespace boost::python;
 using namespace IECorePython;
 using namespace Gaffer;
@@ -442,6 +444,76 @@ PathFilterPtr createStandardFilter( object pythonExtensions, const std::string &
 	return FileSystemPath::createStandardFilter( extensions, extensionsLabel, includeSequences );
 }
 
+// Interoperability between `std::filesystem::path` and `pathlib.Path`
+
+struct StdPathFromPathlibPath
+{
+
+	StdPathFromPathlibPath()
+	{
+		boost::python::converter::registry::push_back(
+			&convertible,
+			&construct,
+			boost::python::type_id<std::filesystem::path>()
+		);
+	}
+
+	static void *convertible( PyObject *obj )
+	{
+		if( PyUnicode_Check( obj ) )
+		{
+			return obj;
+		}
+
+		object pathlibPathClass = import( "pathlib" ).attr( "Path" );
+		if( PyObject_IsInstance( obj, pathlibPathClass.ptr() ) )
+		{
+			return obj;
+		}
+
+		return nullptr;
+	}
+
+	static void construct( PyObject *obj, boost::python::converter::rvalue_from_python_stage1_data *data )
+	{
+		void *storage = ( ( converter::rvalue_from_python_storage<std::filesystem::path> * ) data )->storage.bytes;
+		std::filesystem::path *path = new( storage ) std::filesystem::path;
+		data->convertible = storage;
+
+		object o( handle<>( borrowed( obj ) ) );
+		std::string s;
+		if( !PyUnicode_Check( obj ) )
+		{
+			o = o.attr( "__str__" )();
+		}
+		*path = std::string( extract<std::string>( o ) );
+	}
+
+};
+
+struct StdPathToPathlibPath
+{
+	static PyObject *convert( const std::filesystem::path &path )
+	{
+		const std::string s = path.string();
+		object result;
+		if( s.empty() )
+		{
+			// This is highly unsatisfactory - `pathlib.Path` has no way of
+			// representing an empty path, so the best we can do is to return
+			// `None`.
+			result = object();
+		}
+		else
+		{
+			result = import( "pathlib" ).attr( "Path" )( s );
+		}
+		Py_INCREF( result.ptr() );
+		return result.ptr();
+	}
+};
+
+
 } // namespace
 
 void GafferModule::bindPath()
@@ -529,5 +601,8 @@ void GafferModule::bindPath()
 		.def( "nativeString", &FileSystemPath::nativeString )
 		.staticmethod( "createStandardFilter" )
 	;
+
+	StdPathFromPathlibPath();
+	to_python_converter<std::filesystem::path, StdPathToPathlibPath>();
 
 }

@@ -469,7 +469,7 @@ class BoxInTest( GafferTest.TestCase ) :
 		s1["b"]["i"].setup( Gaffer.IntPlug())
 
 		s1["r"] = Gaffer.Reference()
-		s1["r"].load( ( pathlib.Path( __file__ ).parent / "references" / "empty.grf" ).as_posix() )
+		s1["r"].load( pathlib.Path( __file__ ).parent / "references" / "empty.grf" )
 
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s1.serialise() )

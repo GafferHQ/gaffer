@@ -42,6 +42,16 @@ Fixes
 API
 ---
 
+- Filesystem path handling : Adopted `std::filesystem::path` and `pathlib.Path` in the C++ and Python APIs respectively, with automatic conversion between the two. These simplify common use cases, and provide for more elegant cross-platform path handling.
+  - ScriptNode : `serialiseToFile()`, `executeFile()` and `importFile()` now take `filesystem::path` arguments.
+  - Reference :
+    - `load()` now takes a `filesystem::path` argument.
+    - `fileName()` now returns a `filesystem::path` argument.
+  - Box : `exportForReference()` now takes a `filesystem::path` argument.
+  - ApplicationRoot :
+    - `savePreferences()` now takes a `filesystem::path` argument.
+    - `preferencesLocation()` now returns a `filesystem::path`.
+  - TestCase : `temporaryDirectory()` now returns a `pathlib.Path`.
 - PathColumn : Added `buttonPressSignal()`, `buttonReleaseSignal()` and `buttonDoubleClickSignal()`. These allow a PathColumn to implement its own event handling.
 - Capsule : Removed attempts to detect invalidated Capsules.
 - VisibleSet/VisibleSetData : Added struct used to define a subset of the scene to be rendered based on expansions, inclusions, and exclusions. This is used to allow scene locations to be defined as always or never renderable, overriding the usual UI expansion behaviour.
@@ -70,6 +80,8 @@ Breaking Changes
   - `GafferUI.NodeEditor`
   - `GafferUI.NodeUI`
   - `GafferUI.PlugLayout`
+- Reference : The `fileName()` Python binding now returns a `pathlib.Path` argument, or `None` for empty file names.
+- ApplicationRoot : The `preferencesLocation()` Python binding now returns a `pathlib.Path` argument.
 
 Build
 -----
