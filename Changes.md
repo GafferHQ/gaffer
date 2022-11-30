@@ -52,6 +52,7 @@ API
     - `savePreferences()` now takes a `filesystem::path` argument.
     - `preferencesLocation()` now returns a `filesystem::path`.
   - StringPlug : Added a `setValue()` overload taking a `filesystem::path`.
+  - Dispatcher : `jobDirectory()` now returns a `filesystem::path`.
   - TestCase : `temporaryDirectory()` now returns a `pathlib.Path`.
 - PathColumn : Added `buttonPressSignal()`, `buttonReleaseSignal()` and `buttonDoubleClickSignal()`. These allow a PathColumn to implement its own event handling.
 - Capsule : Removed attempts to detect invalidated Capsules.
@@ -84,6 +85,7 @@ Breaking Changes
 - Reference : The `fileName()` Python binding now returns a `pathlib.Path` argument, or `None` for empty file names.
 - ApplicationRoot : The `preferencesLocation()` Python binding now returns a `pathlib.Path` argument.
 - StringPlug : `setValue( std::filesystem::path & )` now uses `path.generic_string()` for the value, whereas before an automatic conversion would have used `path.string()` (the native string).
+  - Dispatcher : the `jobDirectory()` Python binding now returns a `pathlib.Path`, or `None` if it is empty.
 
 Build
 -----

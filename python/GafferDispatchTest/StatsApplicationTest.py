@@ -56,7 +56,7 @@ class StatsApplicationTest( GafferTest.TestCase ) :
 			"""
 		) )
 
-		script["fileName"].setValue( self.temporaryDirectory() + "/script.gfr" )
+		script["fileName"].setValue( self.temporaryDirectory() / "script.gfr" )
 		script.save()
 
 		o = subprocess.check_output(
