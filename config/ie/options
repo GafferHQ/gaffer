@@ -282,13 +282,17 @@ elif targetApp == "houdini" and distutils.version.LooseVersion(targetAppVersion)
 		LOCATE_DEPENDENCY_SYSTEMPATH[:0] = [ os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenVDB", vdbVersion, IEEnv.platform(), compiler, compilerVersion, "python", "include", "python{0}".format( pythonVersion ) ) ]
 
 if targetAppVersion :
+	appSpecificPaths = []
+	for x in targetAppReg.get( 'includes', [] ) :
+		appSpecificPaths.append( os.path.join( targetAppReg['location'], x ) )
+
 	# for Houdini, we are favouring our dependency rather than sideFx's
 	# given that 17.5 is shipping with openExr mangled lib without python binding.
 	# We should reassess for next version of Houdini to see if that still holds true.
 	if targetApp == "houdini" :
-		LOCATE_DEPENDENCY_SYSTEMPATH += [ os.path.join( targetAppReg['location'], x ) for x in targetAppReg.get( 'includes', [] ) ]
+		LOCATE_DEPENDENCY_SYSTEMPATH += appSpecificPaths
 	else :
-		LOCATE_DEPENDENCY_SYSTEMPATH[:0] = [ os.path.join( targetAppReg['location'], x ) for x in targetAppReg.get( 'includes', [] ) ]
+		LOCATE_DEPENDENCY_SYSTEMPATH[:0] = appSpecificPaths
 
 LOCATE_DEPENDENCY_CPPPATH = [
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "cortex", cortexVersion, IEEnv.platform(), "base", "include" ),
