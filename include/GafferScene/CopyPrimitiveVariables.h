@@ -66,6 +66,9 @@ class GAFFERSCENE_API CopyPrimitiveVariables : public Deformer
 		Gaffer::StringPlug *prefixPlug();
 		const Gaffer::StringPlug *prefixPlug() const;
 
+		Gaffer::BoolPlug *ignoreIncompatiblePlug();
+		const Gaffer::BoolPlug *ignoreIncompatiblePlug() const;
+
 	protected :
 
 		bool affectsProcessedObject( const Gaffer::Plug *input ) const override;
