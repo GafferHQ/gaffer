@@ -35,7 +35,7 @@
 ##########################################################################
 
 import unittest
-import os
+import pathlib
 
 import IECore
 
@@ -2708,7 +2708,7 @@ class AnimationTest( GafferTest.TestCase ) :
 			c.setTime( 1 )
 			self.assertEqual( s["b"]["sum"].getValue(), 1 )
 
-		fileName = os.path.join( self.temporaryDirectory(), "reference.grf" )
+		fileName = self.temporaryDirectory() / "reference.grf"
 		s["b"].exportForReference( fileName )
 
 		s["r"] = Gaffer.Reference()
@@ -2892,7 +2892,7 @@ class AnimationTest( GafferTest.TestCase ) :
 		import os
 
 		s = Gaffer.ScriptNode()
-		s["fileName"].setValue( os.path.join( os.path.dirname( __file__ ), "scripts", "animationVersion-0.60.9.0.gfr" ) )
+		s["fileName"].setValue( pathlib.Path( __file__ ).parent / "scripts" / "animationVersion-0.60.9.0.gfr" )
 		s.load()
 
 		def assertAnimation( script ) :

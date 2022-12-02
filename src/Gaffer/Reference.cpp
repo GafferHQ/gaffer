@@ -448,14 +448,15 @@ Reference::~Reference()
 {
 }
 
-void Reference::load( const std::string &fileName )
+void Reference::load( const std::filesystem::path &fileName )
 {
 	const char *s = getenv( "GAFFER_REFERENCE_PATHS" );
 	IECore::SearchPath sp( s ? s : "" );
-	boost::filesystem::path path = sp.find( fileName );
+	/// \todo Convert SearchPath to deal in `std::filesystem` rather than `boost::filesystem`.
+	std::filesystem::path path = sp.find( fileName.string() ).string();
 	if( path.empty() )
 	{
-		throw Exception( "Could not find file '" + fileName + "'" );
+		throw Exception( "Could not find file '" + fileName.generic_string() + "'" );
 	}
 
 	ScriptNode *script = scriptNode();
@@ -471,7 +472,7 @@ void Reference::load( const std::string &fileName )
 	);
 }
 
-const std::string &Reference::fileName() const
+const std::filesystem::path &Reference::fileName() const
 {
 	return m_fileName;
 }
@@ -481,7 +482,7 @@ Reference::ReferenceLoadedSignal &Reference::referenceLoadedSignal()
 	return m_referenceLoadedSignal;
 }
 
-void Reference::loadInternal( const std::string &fileName )
+void Reference::loadInternal( const std::filesystem::path &fileName )
 {
 	ScriptNode *script = scriptNode();
 
@@ -547,7 +548,8 @@ void Reference::loadInternal( const std::string &fileName )
 	bool errors = false;
 	const char *s = getenv( "GAFFER_REFERENCE_PATHS" );
 	IECore::SearchPath sp( s ? s : "" );
-	boost::filesystem::path path = sp.find( fileName );
+	/// \todo Convert SearchPath to deal in `std::filesystem` rather than `boost::filesystem`.
+	std::filesystem::path path = sp.find( fileName.string() ).string();
 	if( !path.empty() )
 	{
 		PlugEdits::LoadingScope loadingScope( m_plugEdits.get() );

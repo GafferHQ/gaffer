@@ -820,21 +820,21 @@ std::string ScriptNode::serialise( const Node *parent, const Set *filter ) const
 	return serialiseInternal( parent, filter );
 }
 
-void ScriptNode::serialiseToFile( const std::string &fileName, const Node *parent, const Set *filter ) const
+void ScriptNode::serialiseToFile( const std::filesystem::path &fileName, const Node *parent, const Set *filter ) const
 {
 	std::string s = serialiseInternal( parent, filter );
 
 	std::ofstream f( fileName.c_str() );
 	if( !f.good() )
 	{
-		throw IECore::IOException( "Unable to open file \"" + fileName + "\"" );
+		throw IECore::IOException( "Unable to open file \"" + fileName.string() + "\"" );
 	}
 
 	f << s;
 
 	if( !f.good() )
 	{
-		throw IECore::IOException( "Failed to write to \"" + fileName + "\"" );
+		throw IECore::IOException( "Failed to write to \"" + fileName.string() + "\"" );
 	}
 }
 
@@ -843,7 +843,7 @@ bool ScriptNode::execute( const std::string &serialisation, Node *parent, bool c
 	return executeInternal( serialisation, parent, continueOnError, "" );
 }
 
-bool ScriptNode::executeFile( const std::string &fileName, Node *parent, bool continueOnError )
+bool ScriptNode::executeFile( const std::filesystem::path &fileName, Node *parent, bool continueOnError )
 {
 	const std::string serialisation = readFile( fileName );
 	return executeInternal( serialisation, parent, continueOnError, fileName );
@@ -878,7 +878,7 @@ void ScriptNode::save() const
 	const_cast<BoolPlug *>( unsavedChangesPlug() )->setValue( false );
 }
 
-bool ScriptNode::importFile( const std::string &fileName, Node *parent, bool continueOnError )
+bool ScriptNode::importFile( const std::filesystem::path &fileName, Node *parent, bool continueOnError )
 {
 	DirtyPropagationScope dirtyScope;
 

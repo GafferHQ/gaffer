@@ -36,6 +36,7 @@
 ##########################################################################
 
 import os
+import pathlib
 import inspect
 import unittest
 
@@ -212,7 +213,7 @@ class StringPlugTest( GafferTest.TestCase ) :
 	def testLoadSubstitutionsVersion0_56( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["fileName"].setValue( os.path.join( os.path.dirname( __file__ ), "scripts", "stringPlugSubstitutions-0.56.0.0.gfr" ) )
+		s["fileName"].setValue( pathlib.Path( __file__ ).parent / "scripts" / "stringPlugSubstitutions-0.56.0.0.gfr" )
 		s.load()
 
 		self.assertEqual( s["n"]["user"]["p"].substitutions(), IECore.StringAlgo.Substitutions.AllSubstitutions & ~IECore.StringAlgo.Substitutions.FrameSubstitutions )
@@ -220,7 +221,7 @@ class StringPlugTest( GafferTest.TestCase ) :
 	def testLoadSubstitutionsVersion0_55( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["fileName"].setValue( os.path.join( os.path.dirname( __file__ ), "scripts", "stringPlugSubstitutions-0.55.4.0.gfr" ) )
+		s["fileName"].setValue( pathlib.Path( __file__ ).parent / "scripts" / "stringPlugSubstitutions-0.55.4.0.gfr" )
 		s.load()
 
 		self.assertEqual( s["n"]["user"]["p"].substitutions(), IECore.StringAlgo.Substitutions.AllSubstitutions & ~IECore.StringAlgo.Substitutions.FrameSubstitutions )
@@ -432,6 +433,18 @@ class StringPlugTest( GafferTest.TestCase ) :
 		# We do expect a different result from `StringPlug.hash()` for each context though,
 		# because the hash accounts for the substitutions.
 		self.assertEqual( len( hashes ), 3 )
+
+	def testSetValueFromPath( self ) :
+
+		p = Gaffer.StringPlug()
+
+		# Setting from a string, slashes are preserved exactly.
+		p.setValue( r"/\/" )
+		self.assertEqual( p.getValue(), r"/\/" )
+
+		# Setting from a path, we convert to generic format internally.
+		p.setValue( pathlib.Path.cwd() )
+		self.assertEqual( p.getValue(), pathlib.Path.cwd().as_posix() )
 
 if __name__ == "__main__":
 	unittest.main()

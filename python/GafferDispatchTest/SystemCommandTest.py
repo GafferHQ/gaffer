@@ -49,32 +49,32 @@ class SystemCommandTest( GafferTest.TestCase ) :
 	def test( self ) :
 
 		n = GafferDispatch.SystemCommand()
-		n["command"].setValue( "touch " + self.temporaryDirectory() + "/systemCommandTest.txt" )
+		n["command"].setValue( "touch {}".format( self.temporaryDirectory() / "systemCommandTest.txt" ) )
 
 		n["task"].execute()
 
-		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/systemCommandTest.txt" ) )
+		self.assertTrue( ( self.temporaryDirectory() / "systemCommandTest.txt" ).is_file() )
 
 	def testEnvironmentVariables( self ) :
 
 		n = GafferDispatch.SystemCommand()
-		n["command"].setValue( "env > " + self.temporaryDirectory() + "/systemCommandTest.txt" )
+		n["command"].setValue( "env > {}".format( self.temporaryDirectory() / "systemCommandTest.txt" ) )
 		n["environmentVariables"].addChild( Gaffer.NameValuePlug( "GAFFER_SYSTEMCOMMAND_TEST", IECore.StringData( "test" ) ) )
 
 		n["task"].execute()
 
-		env = "".join( open( self.temporaryDirectory() + "/systemCommandTest.txt" ).readlines() )
+		env = "".join( open( self.temporaryDirectory() / "systemCommandTest.txt" ).readlines() )
 		self.assertTrue( "GAFFER_SYSTEMCOMMAND_TEST=test" in env )
 
 	def testSubstitutions( self ) :
 
 		n = GafferDispatch.SystemCommand()
-		n["command"].setValue( "echo {adjective} {noun} > " + self.temporaryDirectory() + "/systemCommandTest.txt" )
+		n["command"].setValue( "echo {adjective} {noun} > " + str( self.temporaryDirectory() / "systemCommandTest.txt" ) )
 		n["substitutions"].addChild( Gaffer.NameValuePlug( "adjective", IECore.StringData( "red" ) ) )
 		n["substitutions"].addChild( Gaffer.NameValuePlug( "noun", IECore.StringData( "truck" ) ) )
 
 		n["task"].execute()
-		self.assertEqual( "red truck\n", open( self.temporaryDirectory() + "/systemCommandTest.txt" ).readlines()[0] )
+		self.assertEqual( "red truck\n", open( self.temporaryDirectory() / "systemCommandTest.txt" ).readlines()[0] )
 
 	def testHash( self ) :
 
@@ -103,16 +103,16 @@ class SystemCommandTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["n"] = GafferDispatch.SystemCommand()
-		s["n"]["command"].setValue( "touch " + self.temporaryDirectory() + "/systemCommandTest.####.txt" )
+		s["n"]["command"].setValue( "touch {}".format( self.temporaryDirectory() / "systemCommandTest.####.txt" ) )
 
 		d = GafferDispatch.LocalDispatcher()
-		d["jobsDirectory"].setValue( self.temporaryDirectory() + "/jobs" )
+		d["jobsDirectory"].setValue( self.temporaryDirectory() / "jobs" )
 		d["framesMode"].setValue( d.FramesMode.CustomRange )
 		d["frameRange"].setValue( "1-10" )
 
 		d.dispatch( [ s["n"] ] )
 
-		sequences = IECore.ls( self.temporaryDirectory() )
+		sequences = IECore.ls( str( self.temporaryDirectory() ) )
 		self.assertEqual( len( sequences ), 1 )
 		self.assertEqual( str( sequences[0] ), "systemCommandTest.####.txt 1-10" )
 

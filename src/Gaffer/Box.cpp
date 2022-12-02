@@ -136,7 +136,7 @@ void Box::unpromotePlug( Plug *promotedDescendantPlug )
 	return PlugAlgo::unpromote( promotedDescendantPlug );
 }
 
-void Box::exportForReference( const std::string &fileName ) const
+void Box::exportForReference( const std::filesystem::path &fileName ) const
 {
 	const ScriptNode *script = scriptNode();
 	if( !script )

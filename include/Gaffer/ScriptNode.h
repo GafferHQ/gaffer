@@ -48,6 +48,7 @@
 
 #include "boost/container/flat_set.hpp"
 
+#include <filesystem>
 #include <functional>
 #include <stack>
 
@@ -199,7 +200,7 @@ class GAFFER_API ScriptNode : public Node
 		/// serialised nodes to those contained in the set.
 		std::string serialise( const Node *parent = nullptr, const Set *filter = nullptr ) const;
 		/// Calls serialise() and saves the result into the specified file.
-		void serialiseToFile( const std::string &fileName, const Node *parent = nullptr, const Set *filter = nullptr ) const;
+		void serialiseToFile( const std::filesystem::path &fileName, const Node *parent = nullptr, const Set *filter = nullptr ) const;
 		/// Executes a previously generated serialisation. If continueOnError is true, then
 		/// errors are reported via IECore::MessageHandler rather than as exceptions, and
 		/// execution continues at the point after the error. This allows scripts to be loaded as
@@ -208,7 +209,7 @@ class GAFFER_API ScriptNode : public Node
 		/// were ignored.
 		bool execute( const std::string &serialisation, Node *parent = nullptr, bool continueOnError = false );
 		/// As above, but loads the serialisation from the specified file.
-		bool executeFile( const std::string &fileName, Node *parent = nullptr, bool continueOnError = false );
+		bool executeFile( const std::filesystem::path &fileName, Node *parent = nullptr, bool continueOnError = false );
 		/// Returns true if a script is currently being executed. Note that
 		/// `execute()`, `executeFile()`, `load()`, `importFile()` and `paste()` are all
 		/// sources of execution, and there is intentionally no way of
@@ -236,7 +237,7 @@ class GAFFER_API ScriptNode : public Node
 		/// Imports the nodes from the specified script, adding them to
 		/// the contents of this script. See `execute()` for a description
 		/// of the continueOnError argument and the return value.
-		bool importFile( const std::string &fileName, Node *parent = nullptr, bool continueOnError = false );
+		bool importFile( const std::filesystem::path &fileName, Node *parent = nullptr, bool continueOnError = false );
 		//@}
 
 		//! @name Computation context

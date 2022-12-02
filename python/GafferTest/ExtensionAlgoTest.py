@@ -69,9 +69,9 @@ class ExtensionAlgoTest( GafferTest.TestCase ) :
 		Gaffer.Metadata.registerValue( box["in"], "test", 1 )
 
 		Gaffer.ExtensionAlgo.exportExtension( "TestExtension", [ box ], self.temporaryDirectory() )
-		self.assertTrue( os.path.exists( os.path.join( self.temporaryDirectory(), "python", "TestExtension" ) ) )
+		self.assertTrue( ( self.temporaryDirectory() / "python" / "TestExtension" ).exists() )
 
-		sys.path.append( os.path.join( self.temporaryDirectory(), "python" ) )
+		sys.path.append( str( self.temporaryDirectory() / "python" ) )
 
 		# Import and test
 
@@ -116,7 +116,7 @@ class ExtensionAlgoTest( GafferTest.TestCase ) :
 		box["spline"] = Gaffer.SplinefColor3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 
 		Gaffer.ExtensionAlgo.exportExtension( "PlugTypesExtension", [ box ], self.temporaryDirectory() )
-		sys.path.append( os.path.join( self.temporaryDirectory(), "python" ) )
+		sys.path.append( str( self.temporaryDirectory() / "python" ) )
 
 		import PlugTypesExtension
 		node = PlugTypesExtension.PlugTypes()
@@ -141,7 +141,7 @@ class ExtensionAlgoTest( GafferTest.TestCase ) :
 
 		Gaffer.ExtensionAlgo.exportExtension( "TestExtensionWithExpression", [ box ], self.temporaryDirectory() )
 
-		sys.path.append( os.path.join( self.temporaryDirectory(), "python" ) )
+		sys.path.append( str( self.temporaryDirectory() / "python" ) )
 		import TestExtensionWithExpression
 
 		script = Gaffer.ScriptNode()

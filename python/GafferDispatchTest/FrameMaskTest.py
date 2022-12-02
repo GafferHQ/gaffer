@@ -57,7 +57,7 @@ class FrameMaskTest( GafferTest.TestCase ) :
 		s["mask"]["mask"].setValue( "1,3,10-15,20-30x2" )
 
 		d = GafferDispatch.LocalDispatcher()
-		d["jobsDirectory"].setValue( self.temporaryDirectory() + "/jobs" )
+		d["jobsDirectory"].setValue( self.temporaryDirectory() / "jobs" )
 		d["framesMode"].setValue( d.FramesMode.CustomRange )
 		d["frameRange"].setValue( "1-50" )
 

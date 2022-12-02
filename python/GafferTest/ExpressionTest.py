@@ -36,6 +36,7 @@
 ##########################################################################
 
 import os
+import pathlib
 import inspect
 import unittest
 import imath
@@ -1547,7 +1548,7 @@ class ExpressionTest( GafferTest.TestCase ) :
 		script = Gaffer.ScriptNode()
 
 		script["reference"] = Gaffer.Reference()
-		script["reference"].load( os.path.join( os.path.dirname( __file__ ), "references", "multipleOutputExpression.grf" ) )
+		script["reference"].load( pathlib.Path( __file__ ).parent / "references" / "multipleOutputExpression.grf" )
 
 		# Check all is well.
 
@@ -1558,7 +1559,7 @@ class ExpressionTest( GafferTest.TestCase ) :
 		# iteration order of Python sets, which is non-deterministic since
 		# Python 3 (see `PYTHONHASHSEED`).
 
-		script["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.gfr" ) )
+		script["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
 		script.save()
 
 		env = os.environ.copy()

@@ -292,7 +292,7 @@ class ReferenceSerialiser : public NodeSerialiser
 
 };
 
-void load( Reference &r, const std::string &f )
+void load( Reference &r, const std::filesystem::path &f )
 {
 	IECorePython::ScopedGILRelease gilRelease;
 	r.load( f );

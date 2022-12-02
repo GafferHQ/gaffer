@@ -114,15 +114,15 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
 		self.assertEqual( dispatcher["jobName"].getValue(), "" )
-		self.assertEqual( dispatcher["jobsDirectory"].getValue(), self.temporaryDirectory() )
+		self.assertEqual( dispatcher["jobsDirectory"].getValue(), self.temporaryDirectory().as_posix() )
 
 		s = Gaffer.ScriptNode()
 		s["n1"] = GafferDispatchTest.LoggingTaskNode()
 		dispatcher.dispatch( [ s["n1"] ] )
 
 		jobDir = dispatcher.jobDirectory()
-		self.assertEqual( jobDir, self.temporaryDirectory() + "/000000" )
-		self.assertTrue( os.path.exists( jobDir ) )
+		self.assertEqual( jobDir, self.temporaryDirectory() / "000000" )
+		self.assertTrue( jobDir.is_dir() )
 
 	def testDerivedClass( self ) :
 
@@ -142,7 +142,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		n = GafferDispatchTest.LoggingTaskNode()
 
 		self.assertRaises( RuntimeError, dispatcher.dispatch, [ n ] )
-		self.assertEqual( dispatcher.jobDirectory(), "" )
+		self.assertEqual( dispatcher.jobDirectory(), None )
 		self.assertEqual( n.log, [] )
 
 	def testDifferentScripts( self ) :
@@ -156,7 +156,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s2["n2"] = GafferDispatchTest.LoggingTaskNode()
 
 		self.assertRaises( RuntimeError, dispatcher.dispatch, [ s["n1"], s2["n2"] ] )
-		self.assertEqual( dispatcher.jobDirectory(), "" )
+		self.assertEqual( dispatcher.jobDirectory(), None )
 		self.assertEqual( s["n1"].log, [] )
 		self.assertEqual( s2["n2"].log, [] )
 
@@ -168,7 +168,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["n1"] = Gaffer.Node()
 
 		self.assertRaises( RuntimeError, dispatcher.dispatch, [ s["n1"] ] )
-		self.assertEqual( dispatcher.jobDirectory(), "" )
+		self.assertEqual( dispatcher.jobDirectory(), None )
 
 	def testDispatcherRegistration( self ) :
 
@@ -389,7 +389,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 	def testCyclesThrow( self ) :
 
 		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
-		fileName = self.temporaryDirectory() + "/result.txt"
+		fileName = self.temporaryDirectory() / "result.txt"
 
 		s = Gaffer.ScriptNode()
 		s["n1"] = GafferDispatchTest.TextWriter()
@@ -423,14 +423,14 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertNotEqual( s["n3"]["task"].hash(), s["n4"]["task"].hash() )
 		self.assertNotEqual( s["n1"]["task"].hash(), s["n4"]["task"].hash() )
 
-		self.assertEqual( os.path.isfile( fileName ), False )
+		self.assertFalse( fileName.is_file() )
 		self.assertRaises( RuntimeError, dispatcher.dispatch, [ s["n4"] ] )
-		self.assertEqual( os.path.isfile( fileName ), False )
+		self.assertFalse( fileName.is_file() )
 
 	def testNotACycle( self ) :
 
 		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
-		fileName = self.temporaryDirectory() + "/result.txt"
+		fileName = self.temporaryDirectory() / "result.txt"
 
 		s = Gaffer.ScriptNode()
 		s["n1"] = GafferDispatchTest.TextWriter()
@@ -453,9 +453,9 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertNotEqual( s["n1"]["task"].hash(), s["n2"]["task"].hash() )
 		self.assertNotEqual( s["n2"]["task"].hash(), s["n3"]["task"].hash() )
 
-		self.assertEqual( os.path.isfile( fileName ), False )
+		self.assertFalse( fileName.exists() )
 		dispatcher.dispatch( [ s["n3"] ] )
-		self.assertEqual( os.path.isfile( fileName ), True )
+		self.assertTrue( fileName.exists() )
 
 		with open( fileName, "r" ) as f :
 			text = f.read()
@@ -545,7 +545,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		dispatcher["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CustomRange )
 		frameList = IECore.FrameList.parse( "2-6x2" )
 		dispatcher["frameRange"].setValue( str(frameList) )
-		fileName = self.temporaryDirectory() + "/result.txt"
+		fileName = self.temporaryDirectory() / "result.txt"
 
 		s = Gaffer.ScriptNode()
 		s["n1"] = GafferDispatchTest.TextWriter()
@@ -563,11 +563,11 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["n2"]["preTasks"][0].setInput( s["n1"]["task"] )
 		s["n3"]["preTasks"][0].setInput( s["n2"]["task"] )
 
-		self.assertEqual( os.path.isfile( fileName ), False )
+		self.assertFalse( fileName.is_file() )
 
 		dispatcher.dispatch( [ s["n3"] ] )
 
-		self.assertEqual( os.path.isfile( fileName ), True )
+		self.assertTrue( fileName.is_file() )
 
 		with open( fileName, "r" ) as f :
 			text = f.read()
@@ -581,7 +581,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
 		dispatcher["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CustomRange )
 		dispatcher["frameRange"].setValue( "2-6x2" )
-		fileName = self.temporaryDirectory() + "/result.txt"
+		fileName = self.temporaryDirectory() / "result.txt"
 
 		s = Gaffer.ScriptNode()
 		s["n1"] = GafferDispatchTest.TextWriter()
@@ -599,9 +599,9 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["n2"]["preTasks"][0].setInput( s["n1"]["task"] )
 		s["n3"]["preTasks"][0].setInput( s["n2"]["task"] )
 
-		self.assertEqual( os.path.isfile( fileName ), False )
+		self.assertFalse( fileName.is_file() )
 		dispatcher.dispatch( [ s["n3"] ] )
-		self.assertEqual( os.path.isfile( fileName ), True )
+		self.assertTrue( fileName.is_file() )
 		with open( fileName, "r" ) as f :
 			text = f.read()
 
@@ -611,10 +611,10 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		# make sure n2 gets frames in sorted order
 		dispatcher["frameRange"].setValue( "2,6,4" )
-		os.remove( fileName )
-		self.assertEqual( os.path.isfile( fileName ), False )
+		fileName.unlink()
+		self.assertFalse( fileName.is_file() )
 		dispatcher.dispatch( [ s["n3"] ] )
-		self.assertEqual( os.path.isfile( fileName ), True )
+		self.assertTrue( fileName.is_file() )
 		with open( fileName, "r" ) as f :
 			text = f.read()
 
@@ -627,7 +627,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
 		dispatcher["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CustomRange )
 		dispatcher["frameRange"].setValue( "2-6x2" )
-		fileName = self.temporaryDirectory() + "/result.txt"
+		fileName = self.temporaryDirectory() / "result.txt"
 
 		s = Gaffer.ScriptNode()
 		s["n1"] = GafferDispatchTest.TextWriter()
@@ -650,9 +650,9 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["n3"]["preTasks"][1].setInput( s["n2"]["task"] )
 		s["n4"]["preTasks"][0].setInput( s["n3"]["task"] )
 
-		self.assertEqual( os.path.isfile( fileName ), False )
+		self.assertFalse( fileName.is_file() )
 		dispatcher.dispatch( [ s["n4"] ] )
-		self.assertEqual( os.path.isfile( fileName ), True )
+		self.assertTrue( fileName.is_file() )
 		with open( fileName, "r" ) as f :
 			text = f.read()
 
@@ -663,10 +663,10 @@ class DispatcherTest( GafferTest.TestCase ) :
 		# dispatch again with differnt batch sizes
 		s["n1"]["dispatcher"]["batchSize"].setValue( 2 )
 		s["n2"]["dispatcher"]["batchSize"].setValue( 5 )
-		os.remove( fileName )
-		self.assertEqual( os.path.isfile( fileName ), False )
+		fileName.unlink()
+		self.assertFalse( fileName.is_file() )
 		dispatcher.dispatch( [ s["n4"] ] )
-		self.assertEqual( os.path.isfile( fileName ), True )
+		self.assertTrue( fileName.is_file() )
 		with open( fileName, "r" ) as f :
 			text = f.read()
 
@@ -679,7 +679,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
 		dispatcher["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CustomRange )
 		dispatcher["frameRange"].setValue( "2-6x2" )
-		fileName = self.temporaryDirectory() + "/result.txt"
+		fileName = self.temporaryDirectory() / "result.txt"
 
 		s = Gaffer.ScriptNode()
 		s["n1"] = GafferDispatchTest.TextWriter()
@@ -705,16 +705,16 @@ class DispatcherTest( GafferTest.TestCase ) :
 		promotedTaskPlug = Gaffer.PlugAlgo.promote( s["b"]["n3"]["task"] )
 		s["n4"]["preTasks"][0].setInput( promotedTaskPlug )
 		# export a reference too
-		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+		s["b"].exportForReference( self.temporaryDirectory() / "test.grf" )
 		s["r"] = Gaffer.Reference()
-		s["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s["r"].load( self.temporaryDirectory() / "test.grf" )
 		s["r"][promotedPreTaskPlug.getName()].setInput( s["n1"]["task"] )
 
 		# dispatch a task that requires a Box
 
-		self.assertEqual( os.path.isfile( fileName ), False )
+		self.assertFalse( fileName.is_file() )
 		dispatcher.dispatch( [ s["n4"] ] )
-		self.assertEqual( os.path.isfile( fileName ), True )
+		self.assertTrue( fileName.is_file() )
 		with open( fileName, "r" ) as f :
 			text = f.read()
 
@@ -724,10 +724,10 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		# dispatch the box directly
 
-		os.remove( fileName )
-		self.assertEqual( os.path.isfile( fileName ), False )
+		fileName.unlink()
+		self.assertFalse( fileName.is_file() )
 		dispatcher.dispatch( [ s["b"] ] )
-		self.assertEqual( os.path.isfile( fileName ), True )
+		self.assertTrue( fileName.is_file() )
 		with open( fileName, "r" ) as f :
 			text = f.read()
 
@@ -739,10 +739,10 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		s["b"]["n3"]["preTasks"][1].setInput( None )
 
-		os.remove( fileName )
-		self.assertEqual( os.path.isfile( fileName ), False )
+		fileName.unlink()
+		self.assertFalse( fileName.is_file() )
 		dispatcher.dispatch( [ s["b"] ] )
-		self.assertEqual( os.path.isfile( fileName ), True )
+		self.assertTrue( fileName.is_file() )
 		with open( fileName, "r" ) as f :
 			text = f.read()
 
@@ -754,10 +754,10 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		s["b"]["out2"] = s["b"]["n2"]["task"].createCounterpart( "out2", Gaffer.Plug.Direction.Out )
 
-		os.remove( fileName )
-		self.assertEqual( os.path.isfile( fileName ), False )
+		fileName.unlink()
+		self.assertFalse( fileName.is_file() )
 		dispatcher.dispatch( [ s["b"] ] )
-		self.assertEqual( os.path.isfile( fileName ), True )
+		self.assertTrue( fileName.is_file() )
 		with open( fileName, "r" ) as f :
 			text = f.read()
 
@@ -770,10 +770,10 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["b"]["out3"] = s["b"]["n2"]["task"].createCounterpart( "out3", Gaffer.Plug.Direction.Out )
 		s["b"]["out3"].setInput( s["b"]["n2"]["task"] )
 
-		os.remove( fileName )
-		self.assertEqual( os.path.isfile( fileName ), False )
+		fileName.unlink()
+		self.assertFalse( fileName.is_file() )
 		dispatcher.dispatch( [ s["b"] ] )
-		self.assertEqual( os.path.isfile( fileName ), True )
+		self.assertTrue( fileName.is_file() )
 		with open( fileName, "r" ) as f :
 			text = f.read()
 
@@ -783,11 +783,11 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		# dispatch an task that requires a Reference
 
-		os.remove( fileName )
+		fileName.unlink()
 		s["n4"]["preTasks"][0].setInput( s["r"][promotedTaskPlug.getName()] )
-		self.assertEqual( os.path.isfile( fileName ), False )
+		self.assertFalse( fileName.is_file() )
 		dispatcher.dispatch( [ s["n4"] ] )
-		self.assertEqual( os.path.isfile( fileName ), True )
+		self.assertTrue( fileName.is_file() )
 		with open( fileName, "r" ) as f :
 			text = f.read()
 
@@ -799,10 +799,10 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		# dispatch the Reference directly
 
-		os.remove( fileName )
-		self.assertEqual( os.path.isfile( fileName ), False )
+		fileName.unlink()
+		self.assertFalse( fileName.is_file() )
 		dispatcher.dispatch( [ s["r"] ] )
-		self.assertEqual( os.path.isfile( fileName ), True )
+		self.assertTrue( fileName.is_file() )
 		with open( fileName, "r" ) as f :
 			text = f.read()
 
@@ -989,7 +989,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["w"] = GafferDispatchTest.TextWriter()
-		s["w"]["fileName"].setValue( self.temporaryDirectory() + "/test.####.txt" )
+		s["w"]["fileName"].setValue( self.temporaryDirectory() / "test.####.txt" )
 
 		s["e"] = Gaffer.Expression()
 		s["e"].setExpression( 'parent["w"]["text"] = context["myText"]' )
@@ -999,7 +999,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		GafferDispatch.Dispatcher.create( "testDispatcher" ).dispatch( [ s["c"] ] )
 
-		self.assertEqual( next( open( self.temporaryDirectory() + "/test.0010.txt" ) ), "testing 123" )
+		self.assertEqual( next( open( self.temporaryDirectory() / "test.0010.txt" ) ), "testing 123" )
 
 	def testBatchesCanAccessJobDirectory( self ) :
 

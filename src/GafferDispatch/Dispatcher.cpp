@@ -48,7 +48,6 @@
 #include "IECore/MessageHandler.h"
 
 #include "boost/algorithm/string/predicate.hpp"
-#include "boost/filesystem.hpp"
 
 using namespace std;
 using namespace IECore;
@@ -178,14 +177,14 @@ const StringPlug *Dispatcher::jobsDirectoryPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 3 );
 }
 
-const std::string Dispatcher::jobDirectory() const
+const std::filesystem::path Dispatcher::jobDirectory() const
 {
 	return m_jobDirectory;
 }
 
 void Dispatcher::createJobDirectory( const Gaffer::ScriptNode *script, Gaffer::Context *context ) const
 {
-	boost::filesystem::path jobDirectory( context->substitute( jobsDirectoryPlug()->getValue() ) );
+	std::filesystem::path jobDirectory( context->substitute( jobsDirectoryPlug()->getValue() ) );
 	jobDirectory /= context->substitute( jobNamePlug()->getValue() );
 
 	if( jobDirectory == "" )
@@ -213,10 +212,10 @@ void Dispatcher::createJobDirectory( const Gaffer::ScriptNode *script, Gaffer::C
 
 		/// \todo I think it would be better to throw here, rather than
 		/// litter the current directory.
-		jobDirectory = boost::filesystem::current_path().generic_string();
+		jobDirectory = std::filesystem::current_path();
 	}
 
-	boost::filesystem::create_directories( jobDirectory );
+	std::filesystem::create_directories( jobDirectory );
 
 	// To distinguish between multiple jobs with the same settings
 	// we use a unique numeric subdirectory per job. Start by finding
@@ -225,7 +224,7 @@ void Dispatcher::createJobDirectory( const Gaffer::ScriptNode *script, Gaffer::C
 	// in a loop.
 
 	long i = -1;
-	for( const auto &d : boost::filesystem::directory_iterator( jobDirectory ) )
+	for( const auto &d : std::filesystem::directory_iterator( jobDirectory ) )
 	{
 		i = std::max( i, strtol( d.path().filename().string().c_str(), nullptr, 10 ) );
 	}
@@ -235,25 +234,25 @@ void Dispatcher::createJobDirectory( const Gaffer::ScriptNode *script, Gaffer::C
 	// may be in a race against other processes.
 
 	boost::format formatter( "%06d" );
-	boost::filesystem::path numberedJobDirectory;
+	std::filesystem::path numberedJobDirectory;
 	while( true )
 	{
 		++i;
 		numberedJobDirectory = jobDirectory / ( formatter % i ).str();
-		if( boost::filesystem::create_directory( numberedJobDirectory ) )
+		if( std::filesystem::create_directory( numberedJobDirectory ) )
 		{
 			break;
 		}
 	}
 
-	m_jobDirectory = numberedJobDirectory.generic_string();
-	context->set( g_jobDirectoryContextEntry, m_jobDirectory );
+	m_jobDirectory = numberedJobDirectory;
+	context->set( g_jobDirectoryContextEntry, m_jobDirectory.generic_string() );
 
 	// Now figure out where we'll save the script in that directory, and
 	// advertise it via the context. We'll do the actual saving later.
 
-	boost::filesystem::path scriptFileName = script->fileNamePlug()->getValue();
-	if( scriptFileName.size() )
+	std::filesystem::path scriptFileName = script->fileNamePlug()->getValue();
+	if( !scriptFileName.empty() )
 	{
 		scriptFileName = numberedJobDirectory / scriptFileName.filename();
 	}
@@ -835,7 +834,7 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 	// directory. We could use some sort of UUID for this, but there is some concern that this will be less
 	// useable/friendly than the existing sequential naming.
 	const std::string scriptFileName = jobContext->get<string>( g_scriptFileNameContextEntry );
-	if( !boost::filesystem::exists( scriptFileName ) )
+	if( !std::filesystem::exists( scriptFileName ) )
 	{
 		script->serialiseToFile( scriptFileName );
 	}
