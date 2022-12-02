@@ -36,7 +36,7 @@
 
 import unittest
 
-import os
+import pathlib
 import imath
 import json
 
@@ -51,8 +51,8 @@ import GafferSceneTest
 
 class CryptomatteTest( GafferSceneTest.SceneTestCase ) :
 
-	testImagePath = os.path.join( os.path.dirname( os.path.abspath( __file__ ) ), "images" )
-	testImage = os.path.join( testImagePath, "cryptomatte.exr" )
+	testImagePath = pathlib.Path( __file__ ).parent / "images"
+	testImage = testImagePath / "cryptomatte.exr"
 
 	def testCryptomatteHash( self ) :
 
@@ -151,10 +151,10 @@ class CryptomatteTest( GafferSceneTest.SceneTestCase ) :
 		c = GafferScene.Cryptomatte()
 		c["in"].setInput( r["out"] )
 		c["manifestSource"].setValue( GafferScene.Cryptomatte.ManifestSource.Sidecar )
-		c["sidecarFile"].setValue( os.path.join( self.testImagePath, "crypto_object.json" ) )
+		c["sidecarFile"].setValue( self.testImagePath / "crypto_object.json" )
 		self.compareValues( c, ["crypto_object"] )
 
-		c["sidecarFile"].setValue( os.path.join( self.testImagePath, "crypto_material.json" ) )
+		c["sidecarFile"].setValue( self.testImagePath / "crypto_material.json" )
 		self.compareValues( c, ["crypto_material"] )
 
 		c["sidecarFile"].setValue( "" )
@@ -162,7 +162,7 @@ class CryptomatteTest( GafferSceneTest.SceneTestCase ) :
 		with self.assertRaisesRegex( Gaffer.ProcessException, r'No manifest file provided.' ) as raised :
 			self.compareValues( c, ["crypto_object"] )
 
-		invalidPath = os.path.dirname( self.testImage ) + "/not/a/valid/path.json"
+		invalidPath = self.testImage.parent / "not" / "a" / "valid" / "path.json"
 		c["sidecarFile"].setValue( invalidPath )
 
 		with self.assertRaisesRegex( Gaffer.ProcessException, r'Manifest file not found: {}'.format( invalidPath ) ) as raised :
@@ -183,7 +183,7 @@ class CryptomatteTest( GafferSceneTest.SceneTestCase ) :
 		c = GafferScene.Cryptomatte()
 		c["in"].setInput( d["out"] )
 		c["manifestSource"].setValue( GafferScene.Cryptomatte.ManifestSource.Metadata )
-		c["manifestDirectory"].setValue( os.path.dirname( self.testImage ) )
+		c["manifestDirectory"].setValue( self.testImage.parent )
 
 		self.compareValues( c, ["crypto_object", "crypto_material"] )
 
@@ -192,7 +192,7 @@ class CryptomatteTest( GafferSceneTest.SceneTestCase ) :
 		with self.assertRaisesRegex( Gaffer.ProcessException, r'No manifest directory provided.' ) as raised :
 			self.compareValues( c, ["crypto_object"] )
 
-		invalidPath = os.path.dirname( self.testImage ) + "/not/a/valid/path"
+		invalidPath = self.testImage.parent / "not" / "a" / "valid" / "path"
 		c["manifestDirectory"].setValue( invalidPath )
 
 		with self.assertRaisesRegex( Gaffer.ProcessException, r'Manifest directory not found: {}'.format( invalidPath ) ) as raised :
@@ -355,7 +355,7 @@ class CryptomatteTest( GafferSceneTest.SceneTestCase ) :
 			"/cow1"
 		] )	)
 
-		resultImage = os.path.join( self.testImagePath, "cryptomatteKeyed.exr" )
+		resultImage = self.testImagePath / "cryptomatteKeyed.exr"
 		r2 = GafferImage.ImageReader()
 		r2["fileName"].setValue( resultImage )
 

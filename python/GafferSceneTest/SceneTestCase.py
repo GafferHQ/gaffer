@@ -168,7 +168,7 @@ class SceneTestCase( GafferImageTest.ImageTestCase ) :
 
 			childNames = scenePlug.childNames( scenePath, _copy = False )
 			for childName in childNames :
-				walkScene( os.path.join( scenePath, str( childName ) ) )
+				walkScene( scenePath.rstrip( "/" ) + "/" + str( childName ) )
 
 		walkScene( "/" )
 

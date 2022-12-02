@@ -35,7 +35,7 @@
 #
 ##########################################################################
 
-import os
+import pathlib
 import unittest
 
 import IECore
@@ -346,7 +346,7 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 	def testLoadExtraAttributesFrom0_58( self ) :
 
 		script = Gaffer.ScriptNode()
-		script["fileName"].setValue( os.path.join( os.path.dirname( __file__ ), "scripts", "extraAttributes-0.58.5.2.gfr" ) )
+		script["fileName"].setValue( pathlib.Path( __file__ ).parent / "scripts" / "extraAttributes-0.58.5.2.gfr" )
 		script.load()
 
 		self.assertEqual(
@@ -439,7 +439,7 @@ class CustomAttributesTest( GafferSceneTest.SceneTestCase ) :
 	def testLoadExtraAttributesFrom0_59( self ) :
 
 		script = Gaffer.ScriptNode()
-		script["fileName"].setValue( os.path.join( os.path.dirname( __file__ ), "scripts", "extraAttributes-0.59.0.0.gfr" ) )
+		script["fileName"].setValue( pathlib.Path( __file__ ).parent / "scripts" / "extraAttributes-0.59.0.0.gfr" )
 		script.load()
 
 		self.assertEqual(

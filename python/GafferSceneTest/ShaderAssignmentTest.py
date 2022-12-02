@@ -36,6 +36,7 @@
 ##########################################################################
 
 import os
+import pathlib
 import subprocess
 import unittest
 
@@ -308,10 +309,10 @@ class ShaderAssignmentTest( GafferSceneTest.SceneTestCase ) :
 		s["b"] = Gaffer.Box()
 		s["b"]["a"] = GafferScene.ShaderAssignment()
 		p = Gaffer.PlugAlgo.promote( s["b"]["a"]["filter"] )
-		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+		s["b"].exportForReference( self.temporaryDirectory() / "test.grf" )
 
 		s["r"] = Gaffer.Reference()
-		s["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s["r"].load( self.temporaryDirectory() / "test.grf" )
 
 		self.assertTrue( s["r"]["a"]["filter"].getInput().isSame( s["r"][p.getName()] ) )
 
@@ -328,10 +329,10 @@ class ShaderAssignmentTest( GafferSceneTest.SceneTestCase ) :
 		s["b"]["a"]["filter"].setInput( s["b"]["d"]["out"] )
 
 		p = Gaffer.PlugAlgo.promote( s["b"]["d"]["in"] )
-		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+		s["b"].exportForReference( self.temporaryDirectory() / "test.grf" )
 
 		s["r"] = Gaffer.Reference()
-		s["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s["r"].load( self.temporaryDirectory() / "test.grf" )
 
 		self.assertTrue( s["r"]["a"]["filter"].source().isSame( s["r"][p.getName()] ) )
 
@@ -346,10 +347,10 @@ class ShaderAssignmentTest( GafferSceneTest.SceneTestCase ) :
 		s["b"]["a"] = GafferScene.ShaderAssignment()
 		p = Gaffer.PlugAlgo.promote( s["b"]["a"]["shader"] )
 
-		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+		s["b"].exportForReference( self.temporaryDirectory() / "test.grf" )
 
 		s["r"] = Gaffer.Reference()
-		s["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s["r"].load( self.temporaryDirectory() / "test.grf" )
 
 		self.assertTrue( s["r"]["a"]["shader"].getInput().node().isSame( s["r"] ) )
 
@@ -541,9 +542,9 @@ class ShaderAssignmentTest( GafferSceneTest.SceneTestCase ) :
 
 		script["writer"] = GafferScene.SceneWriter()
 		script["writer"]["in"].setInput( script["assignment"]["out"] )
-		script["writer"]["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.scc" ) )
+		script["writer"]["fileName"].setValue( self.temporaryDirectory() / "test.scc" )
 
-		script["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.gfr" ) )
+		script["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
 		script.save()
 
 
@@ -614,7 +615,7 @@ class ShaderAssignmentTest( GafferSceneTest.SceneTestCase ) :
 	def testLoadFrom0_55( self ) :
 
 		script = Gaffer.ScriptNode()
-		script["fileName"].setValue( os.path.join( os.path.dirname( __file__ ), "scripts", "shaderAssignment-0.55.0.0.gfr" ) )
+		script["fileName"].setValue( pathlib.Path( __file__ ).parent / "scripts" / "shaderAssignment-0.55.0.0.gfr" )
 		script.load()
 
 		self.assertNotIn( "__contextCompatibility", script["ShaderAssignment"] )
@@ -622,7 +623,7 @@ class ShaderAssignmentTest( GafferSceneTest.SceneTestCase ) :
 	def testSwitchGraphDestruction( self ) :
 
 		script = Gaffer.ScriptNode()
-		script["fileName"].setValue( os.path.join( os.path.dirname( __file__ ), "scripts", "shaderAssignmentSwitchProblem.gfr" ) )
+		script["fileName"].setValue( pathlib.Path( __file__ ).parent / "scripts" / "shaderAssignmentSwitchProblem.gfr" )
 		script.load()
 
 		# This exposed a bug whereby `ShaderPlug.acceptsInput()` rejected an input as the inputs

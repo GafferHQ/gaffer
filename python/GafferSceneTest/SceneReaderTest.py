@@ -34,7 +34,7 @@
 #
 ##########################################################################
 
-import os
+import pathlib
 import unittest
 import inspect
 import imath
@@ -52,11 +52,11 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 
 		GafferSceneTest.SceneTestCase.setUp( self )
 
-		self.__testFile = self.temporaryDirectory() + "/test.scc"
+		self.__testFile = self.temporaryDirectory() / "test.scc"
 
 	def testFileRefreshProblem( self ) :
 
-		sc = IECoreScene.SceneCache( self.__testFile, IECore.IndexedIO.OpenMode.Write )
+		sc = IECoreScene.SceneCache( str( self.__testFile ), IECore.IndexedIO.OpenMode.Write )
 
 		t = sc.createChild( "1" )
 		t.writeTransform( IECore.M44dData( imath.M44d().translate( imath.V3d( 1, 0, 0 ) ) ), 0.0 )
@@ -75,7 +75,7 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 
 		del scene
 
-		sc = IECoreScene.SceneCache( self.__testFile, IECore.IndexedIO.OpenMode.Write )
+		sc = IECoreScene.SceneCache( str( self.__testFile ), IECore.IndexedIO.OpenMode.Write )
 
 		t = sc.createChild( "transform" )
 		t.writeTransform( IECore.M44dData( imath.M44d().translate( imath.V3d( 1, 0, 0 ) ) ), 0.0 )
@@ -96,7 +96,7 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 
 	def testRead( self ) :
 
-		sc = IECoreScene.SceneCache( self.__testFile, IECore.IndexedIO.OpenMode.Write )
+		sc = IECoreScene.SceneCache( str( self.__testFile ), IECore.IndexedIO.OpenMode.Write )
 
 		t = sc.createChild( "transform" )
 		t.writeTransform( IECore.M44dData( imath.M44d().translate( imath.V3d( 1, 0, 0 ) ) ), 0.0 )
@@ -121,7 +121,7 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 
 	def writeAnimatedSCC( self ) :
 
-		scene = IECoreScene.SceneCache( self.__testFile, IECore.IndexedIO.OpenMode.Write )
+		scene = IECoreScene.SceneCache( str( self.__testFile ), IECore.IndexedIO.OpenMode.Write )
 
 		time = 0
 		sc1 = scene.createChild( str( 1 ) )
@@ -187,7 +187,7 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 
 	def testEnabled( self ) :
 
-		sc = IECoreScene.SceneCache( self.__testFile, IECore.IndexedIO.OpenMode.Write )
+		sc = IECoreScene.SceneCache( str( self.__testFile ), IECore.IndexedIO.OpenMode.Write )
 
 		t = sc.createChild( "transform" )
 		t.writeTransform( IECore.M44dData( imath.M44d().translate( imath.V3d( 1, 0, 0 ) ) ), 0.0 )
@@ -225,8 +225,8 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 
 	def testChildNamesHash( self ) :
 
-		fileName = os.path.join( self.temporaryDirectory(), "test.scc" )
-		s = IECoreScene.SceneCache( fileName, IECore.IndexedIO.OpenMode.Write )
+		filePath = self.temporaryDirectory() / "test.scc"
+		s = IECoreScene.SceneCache( str( filePath ), IECore.IndexedIO.OpenMode.Write )
 		sphereGroup = s.createChild( "sphereGroup" )
 		sphereGroup.writeTransform( IECore.M44dData( imath.M44d().translate( imath.V3d( 1, 0, 0 ) ) ), 0.0 )
 		sphereGroup.writeTransform( IECore.M44dData( imath.M44d().translate( imath.V3d( 2, 0, 0 ) ) ), 1.0 )
@@ -236,8 +236,8 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 		del s, sphereGroup, sphere
 
 		s = GafferScene.SceneReader()
-		s["fileName"].setValue( fileName )
-		s["refreshCount"].setValue( self.uniqueInt( fileName ) ) # account for our changing of file contents between tests
+		s["fileName"].setValue( filePath )
+		s["refreshCount"].setValue( self.uniqueInt( filePath ) ) # account for our changing of file contents between tests
 
 		t = Gaffer.TimeWarp()
 		t.setup( GafferScene.ScenePlug() )
@@ -251,8 +251,8 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 
 	def testStaticHashes( self ) :
 
-		fileName = os.path.join( self.temporaryDirectory(), "test.scc" )
-		s = IECoreScene.SceneCache( fileName, IECore.IndexedIO.OpenMode.Write )
+		filePath = self.temporaryDirectory() / "test.scc"
+		s = IECoreScene.SceneCache( str( filePath ), IECore.IndexedIO.OpenMode.Write )
 
 		movingGroup = s.createChild( "movingGroup" )
 		movingGroup.writeTransform( IECore.M44dData( imath.M44d().translate( imath.V3d( 1, 0, 0 ) ) ), 0.0 )
@@ -271,8 +271,8 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 		del s, movingGroup, deformingSphere, staticGroup, staticSphere
 
 		s = GafferScene.SceneReader()
-		s["fileName"].setValue( fileName )
-		s["refreshCount"].setValue( self.uniqueInt( fileName ) ) # account for our changing of file contents between tests
+		s["fileName"].setValue( filePath )
+		s["refreshCount"].setValue( self.uniqueInt( filePath ) ) # account for our changing of file contents between tests
 
 		t = Gaffer.TimeWarp()
 		t.setup( GafferScene.ScenePlug() )
@@ -317,8 +317,8 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 
 	def testTagFilteringWholeScene( self ) :
 
-		fileName = os.path.join( self.temporaryDirectory(), "test.scc" )
-		s = IECoreScene.SceneCache( fileName, IECore.IndexedIO.OpenMode.Write )
+		filePath = self.temporaryDirectory() / "test.scc"
+		s = IECoreScene.SceneCache( str( filePath ), IECore.IndexedIO.OpenMode.Write )
 
 		sphereGroup = s.createChild( "sphereGroup" )
 		sphereGroup.writeTags( [ "chrome" ] )
@@ -335,19 +335,19 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 		# these are all loading everything, although each with
 		# different filters.
 
-		refreshCount = self.uniqueInt( fileName )
+		refreshCount = self.uniqueInt( filePath )
 
 		s1 = GafferScene.SceneReader()
-		s1["fileName"].setValue( fileName )
+		s1["fileName"].setValue( filePath )
 		s1["refreshCount"].setValue( refreshCount )
 
 		s2 = GafferScene.SceneReader()
-		s2["fileName"].setValue( fileName )
+		s2["fileName"].setValue( filePath )
 		s2["refreshCount"].setValue( refreshCount )
 		s2["tags"].setValue( "chrome wood" )
 
 		s3 = GafferScene.SceneReader()
-		s3["fileName"].setValue( fileName )
+		s3["fileName"].setValue( filePath )
 		s3["refreshCount"].setValue( refreshCount )
 		s3["tags"].setValue( "chrome something" )
 
@@ -363,8 +363,8 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 
 	def testTagFilteringPartialScene( self ) :
 
-		fileName = os.path.join( self.temporaryDirectory(), "test.scc" )
-		s = IECoreScene.SceneCache( fileName, IECore.IndexedIO.OpenMode.Write )
+		filePath = self.temporaryDirectory() / "test.scc"
+		s = IECoreScene.SceneCache( str( filePath ), IECore.IndexedIO.OpenMode.Write )
 
 		sphereGroup = s.createChild( "sphereGroup" )
 		sphereGroup.writeTags( [ "chrome" ] )
@@ -378,25 +378,25 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 
 		del s, sphereGroup, sphere, planeGroup, plane
 
-		refreshCount = self.uniqueInt( fileName )
+		refreshCount = self.uniqueInt( filePath )
 
 		# this one will load everything
 
 		s1 = GafferScene.SceneReader()
-		s1["fileName"].setValue( fileName )
+		s1["fileName"].setValue( filePath )
 		s1["refreshCount"].setValue( refreshCount )
 
 		# this one should load just the sphere
 
 		s2 = GafferScene.SceneReader()
-		s2["fileName"].setValue( fileName )
+		s2["fileName"].setValue( filePath )
 		s2["refreshCount"].setValue( refreshCount )
 		s2["tags"].setValue( "chrome" )
 
 		# this one should load just the plane
 
 		s3 = GafferScene.SceneReader()
-		s3["fileName"].setValue( fileName )
+		s3["fileName"].setValue( filePath )
 		s3["refreshCount"].setValue( refreshCount )
 		s3["tags"].setValue( "wood" )
 
@@ -431,8 +431,8 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 
 	def testTagsAsSets( self ) :
 
-		fileName = os.path.join( self.temporaryDirectory(), "test.scc" )
-		s = IECoreScene.SceneCache( fileName, IECore.IndexedIO.OpenMode.Write )
+		filePath = self.temporaryDirectory() / "test.scc"
+		s = IECoreScene.SceneCache( str( filePath ), IECore.IndexedIO.OpenMode.Write )
 
 		sphereGroup = s.createChild( "sphereGroup" )
 		sphereGroup.writeTags( [ "chrome" ] )
@@ -447,8 +447,8 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 		del s, sphereGroup, sphere, planeGroup, plane
 
 		s = GafferScene.SceneReader()
-		s["fileName"].setValue( fileName )
-		s["refreshCount"].setValue( self.uniqueInt( fileName ) ) # account for our changing of file contents between tests
+		s["fileName"].setValue( filePath )
+		s["refreshCount"].setValue( self.uniqueInt( filePath ) ) # account for our changing of file contents between tests
 
 		self.assertEqual(
 			set( [ str( ss ) for ss in s["out"]["setNames"].getValue() ] ),
@@ -505,13 +505,13 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 	def testAlembic( self ) :
 
 		r = GafferScene.SceneReader()
-		r["fileName"].setValue( os.path.dirname( __file__ ) + "/alembicFiles/cube.abc" )
+		r["fileName"].setValue( pathlib.Path( __file__ ).parent / "alembicFiles" / "cube.abc" )
 		self.assertSceneValid( r["out"] )
 
 	def testTransform( self ) :
 
 		r = GafferScene.SceneReader()
-		r["fileName"].setValue( os.path.dirname( __file__ ) + "/alembicFiles/groupedPlane.abc" )
+		r["fileName"].setValue( pathlib.Path( __file__ ).parent / "alembicFiles" / "groupedPlane.abc" )
 		self.assertEqual( r["out"].transform( "/group" ), imath.M44f() )
 
 		r["transform"]["translate"].setValue( imath.V3f( 1, 2, 3 ) )
@@ -521,9 +521,9 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 	def testAlembicThreading( self ) :
 
 		mesh = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) )
-		fileName = self.temporaryDirectory() + "/test.abc"
+		filePath = self.temporaryDirectory() / "test.abc"
 
-		root = IECoreScene.SceneInterface.create( fileName, IECore.IndexedIO.OpenMode.Write )
+		root = IECoreScene.SceneInterface.create( str( filePath ), IECore.IndexedIO.OpenMode.Write )
 		root.writeBound( imath.Box3d( mesh.bound() ), 0 )
 		for i in range( 0, 1000 ) :
 			child = root.createChild( str( i ) )
@@ -533,7 +533,7 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 		del root, child
 
 		sceneReader = GafferScene.SceneReader()
-		sceneReader["fileName"].setValue( fileName )
+		sceneReader["fileName"].setValue( filePath )
 
 		for i in range( 0, 20 ) :
 			sceneReader["refreshCount"].setValue( sceneReader["refreshCount"].getValue() + 1 )
@@ -624,7 +624,7 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 
 		writer = GafferScene.SceneWriter()
 		writer["in"].setInput( group["out"] )
-		writer["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.usda" ) )
+		writer["fileName"].setValue( self.temporaryDirectory() / "test.usda" )
 		writer["task"].execute()
 
 		reader = GafferScene.SceneReader()
@@ -660,7 +660,7 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 				# - `IECoreVDB::VDBScene` hasn't implemented sets or tags at all.
 				continue
 
-			writer["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.{}".format( extension ) ) )
+			writer["fileName"].setValue( self.temporaryDirectory() / f"test.{extension}" )
 			writer["task"].execute()
 
 			for setName in writer["in"].setNames() :
