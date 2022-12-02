@@ -240,15 +240,18 @@ void Inspector::inspectHistoryWalk( const GafferScene::SceneAlgo::History *histo
 
 	if( auto editScope = runTimeCast<EditScope>( node ) )
 	{
-		if( history->scene == editScope->inPlug() && editScope == result->m_editScope )
+		if( !result->m_editScopeInHistory && history->scene == editScope->inPlug() && editScope == result->m_editScope )
 		{
-			// We are leaving the target EditScope. We consider EditScopes on
-			// the way out to allow other nodes within the scope to take
-			// precedence. An existing edit in the scope will have been picked
-			// up via `source()` already.
+			// We are leaving the target EditScope for the first time. We
+			// consider EditScopes on the way out to allow other nodes within
+			// the scope to take precedence. An existing edit in the scope will
+			// have been picked up via `source()` already.
 			//
 			// \todo Should call `editFunction()` with the context from the
-			// `outPlug()` of the EditScope - see TransformTool.
+			// `outPlug()` of the EditScope - see TransformTool. We should also
+			// explicitly prefer branches where `scene:path` matches the value
+			// in the `outPlug()` context, to avoid making edits to locations
+			// other than the one emerging from the EditScope.
 			result->m_editScopeInHistory = true;
 			Context::Scope scope( history->context.get() );
 			if( editScope->enabledPlug()->getValue() )
