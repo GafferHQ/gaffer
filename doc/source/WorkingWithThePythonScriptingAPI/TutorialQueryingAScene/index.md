@@ -180,8 +180,6 @@ print( root["StandardOptions"]["out"].childNames( "/world" ) )
 Rather than continue this manual exploration, let's write a simple recursive function to traverse the scene and print what it finds :
 
 ```
-import os
-
 def visit( scene, path ) :
 
 	print( path )
@@ -190,7 +188,7 @@ def visit( scene, path ) :
 	print( "\tAttributes : " + " ".join( scene.attributes( path ).keys() ) )
 	print( "\tBound : " + str( scene.bound( path ) ) + "\n" )
 	for childName in scene.childNames( path ) :
-		visit( scene, os.path.join( path, str( childName )  ) )
+		visit( scene, path.rstrip( "/" ) + "/" + str( childName ) )
 
 visit( root["StandardOptions"]["out"], "/" )
 ```
