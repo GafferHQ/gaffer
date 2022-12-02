@@ -89,9 +89,9 @@ class ShaderViewTest( GafferUITest.TestCase ) :
 		s["b"]["assignment"]["shader"].setInput( s["b"]["shader"] )
 		s["b"]["out"].setInput( s["b"]["assignment"]["out"] )
 
-		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+		s["b"].exportForReference( self.temporaryDirectory() / "test.grf" )
 
-		GafferSceneUI.ShaderView.registerScene( "test", "Default", self.temporaryDirectory() + "/test.grf" )
+		GafferSceneUI.ShaderView.registerScene( "test", "Default", ( self.temporaryDirectory() / "test.grf" ).as_posix() )
 
 		shader = GafferSceneTest.TestShader()
 		shader["type"].setValue( "test:surface" )
@@ -99,7 +99,7 @@ class ShaderViewTest( GafferUITest.TestCase ) :
 
 		view = GafferUI.View.create( shader["out"] )
 		self.assertTrue( isinstance( view.scene(), Gaffer.Reference ) )
-		self.assertEqual( view.scene().fileName(), self.temporaryDirectory() + "/test.grf" )
+		self.assertEqual( view.scene().fileName(), self.temporaryDirectory() / "test.grf" )
 		self.assertEqual( view.scene()["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "cube" ] ) )
 
 	def testScenesAreReused( self ) :

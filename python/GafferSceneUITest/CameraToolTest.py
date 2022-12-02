@@ -405,7 +405,7 @@ class CameraToolTest( GafferUITest.TestCase ) :
 
 		script["sceneWriter"] = GafferScene.SceneWriter()
 		script["sceneWriter"]["in"].setInput( script["group"]["out"] )
-		script["sceneWriter"]["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.usda" ) )
+		script["sceneWriter"]["fileName"].setValue( self.temporaryDirectory() / "test.usda" )
 		script["sceneWriter"]["task"].execute()
 
 		script["sceneReader"] = GafferScene.SceneReader()

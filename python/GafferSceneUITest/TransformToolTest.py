@@ -72,11 +72,11 @@ class TransformToolTest( GafferUITest.TestCase ) :
 		# Reference internals are not editable, so attempts to access invalid
 		# fields should throw.
 
-		referenceFileName = os.path.join( self.temporaryDirectory(), "test.grf" )
-		script["box"].exportForReference( referenceFileName )
+		referenceFilePath = self.temporaryDirectory() / "test.grf"
+		script["box"].exportForReference( referenceFilePath )
 
 		script["reference"] = Gaffer.Reference()
-		script["reference"].load( referenceFileName )
+		script["reference"].load( referenceFilePath )
 
 		selection = GafferSceneUI.TransformTool.Selection( script["reference"]["out"], "/plane", script.context(), None )
 
@@ -318,11 +318,11 @@ class TransformToolTest( GafferUITest.TestCase ) :
 		# Make sure we don't accidentally traverse through the reference and try to edit
 		# the Plane directly.
 
-		referenceFileName = os.path.join( self.temporaryDirectory(), "test.grf" )
-		script["box"].exportForReference( referenceFileName )
+		referenceFilePath = self.temporaryDirectory() / "test.grf"
+		script["box"].exportForReference( referenceFilePath )
 
 		script["reference"] = Gaffer.Reference()
-		script["reference"].load( referenceFileName )
+		script["reference"].load( referenceFilePath )
 		script["reference"]["in"].setInput( script["plane"]["out"] )
 
 		selection = GafferSceneUI.TransformTool.Selection( script["reference"]["out"], "/plane", script.context(), None )
