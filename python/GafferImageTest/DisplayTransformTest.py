@@ -174,9 +174,9 @@ class DisplayTransformTest( GafferImageTest.ImageTestCase ) :
 
 	def testContext( self ) :
 
-		scriptFileName = self.temporaryDirectory() + "/script.gfr"
-		contextImageFile = self.temporaryDirectory() + "/context.#.exr"
-		contextOverrideImageFile = self.temporaryDirectory() + "/context_override.#.exr"
+		scriptFileName = self.temporaryDirectory() / "script.gfr"
+		contextImageFile = self.temporaryDirectory() / "context.#.exr"
+		contextOverrideImageFile = self.temporaryDirectory() / "context_override.#.exr"
 
 		s = Gaffer.ScriptNode()
 
@@ -204,8 +204,7 @@ class DisplayTransformTest( GafferImageTest.ImageTestCase ) :
 		env["CDL"] = "cineon.spi1d"
 
 		subprocess.check_call(
-			" ".join(["gaffer", "execute", scriptFileName,"-frames", "1"]),
-			shell = True,
+			["gaffer", "execute", scriptFileName,"-frames", "1"],
 			stderr = subprocess.PIPE,
 			env = env,
 		)
@@ -229,8 +228,7 @@ class DisplayTransformTest( GafferImageTest.ImageTestCase ) :
 		s.save()
 
 		subprocess.check_call(
-			" ".join(["gaffer", "execute", scriptFileName,"-frames", "1"]),
-			shell = True,
+			["gaffer", "execute", scriptFileName,"-frames", "1"],
 			stderr = subprocess.PIPE,
 			env = env
 		)

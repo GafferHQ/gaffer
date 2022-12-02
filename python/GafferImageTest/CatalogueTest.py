@@ -112,7 +112,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 		w = GafferImage.ImageWriter()
 		w["in"].setInput( m["out"] )
-		w["fileName"].setValue( os.path.join( self.temporaryDirectory(), "description.exr" ) )
+		w["fileName"].setValue( self.temporaryDirectory() / "description.exr" )
 		w["task"].execute()
 
 		r = GafferImage.ImageReader()
@@ -232,7 +232,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["c"] = GafferImage.Catalogue()
-		s["c"]["directory"].setValue( os.path.join( self.temporaryDirectory(), "catalogue" ) )
+		s["c"]["directory"].setValue( self.temporaryDirectory() / "catalogue" )
 
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/blurRange.exr" )
@@ -364,7 +364,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		s = Gaffer.ScriptNode()
 		s["b"] = Gaffer.Box()
 		s["b"]["c"] = GafferImage.Catalogue()
-		s["b"]["c"]["directory"].setValue( os.path.join( self.temporaryDirectory(), "catalogue" ) )
+		s["b"]["c"]["directory"].setValue( self.temporaryDirectory() / "catalogue" )
 		promotedImages = Gaffer.PlugAlgo.promote( s["b"]["c"]["images"] )
 		promotedImageIndex = Gaffer.PlugAlgo.promote( s["b"]["c"]["imageIndex"] )
 		promotedOut = Gaffer.PlugAlgo.promote( s["b"]["c"]["out"] )
@@ -493,7 +493,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		# send it.
 
 		c = GafferImage.Catalogue()
-		c["directory"].setValue( os.path.join( self.temporaryDirectory(), "catalogue" ) )
+		c["directory"].setValue( self.temporaryDirectory() / "catalogue" )
 
 		drivers = GafferTest.CapturingSlot( GafferImage.Display.driverCreatedSignal() )
 
@@ -566,7 +566,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 	def testDeleteBeforeSaveCompletes( self ) :
 
 		c = GafferImage.Catalogue()
-		c["directory"].setValue( os.path.join( self.temporaryDirectory(), "catalogue" ) )
+		c["directory"].setValue( self.temporaryDirectory() / "catalogue" )
 
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/checker.exr" )
@@ -581,12 +581,12 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		s["fileName"].setValue( "testDeleteBeforeSaveCompletesWithScriptVariables" )
 		self.assertEqual( s.context().substitute( "${script:name}" ), "testDeleteBeforeSaveCompletesWithScriptVariables" )
 
-		baseDirectory = os.path.join( self.temporaryDirectory(), "catalogue" )
+		baseDirectory = self.temporaryDirectory() / "catalogue"
 		# we don't expect to need to write here, but to ensure
 		# we didn't even try to do so we make it read only.
 		os.mkdir( baseDirectory )
 		os.chmod( baseDirectory, stat.S_IREAD )
-		directory = os.path.join( baseDirectory, "${script:name}", "images" )
+		directory = baseDirectory / "${script:name}" / "images"
 
 		s["c"] = GafferImage.Catalogue()
 		s["c"]["directory"].setValue( directory )
@@ -616,7 +616,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["c"] = GafferImage.Catalogue()
-		s["c"]["directory"].setValue( os.path.join( self.temporaryDirectory(), "catalogue" ) )
+		s["c"]["directory"].setValue( self.temporaryDirectory() / "catalogue" )
 		os.chmod( self.temporaryDirectory(), stat.S_IREAD )
 
 		r = GafferImage.ImageReader()
@@ -644,7 +644,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 		script = Gaffer.ScriptNode()
 		script["catalogue"] = GafferImage.Catalogue()
-		script["catalogue"]["directory"].setValue( os.path.join( self.temporaryDirectory(), "catalogue" ) )
+		script["catalogue"]["directory"].setValue( self.temporaryDirectory() / "catalogue" )
 
 		script["red"] = GafferImage.Constant()
 		script["red"]["format"].setValue( GafferImage.Format( 64, 64 ) )
@@ -749,9 +749,9 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 			( "%", "_" ),
 		] :
 
-			fileName = os.path.join( self.temporaryDirectory(), name + ".exr" )
+			fileName = self.temporaryDirectory() / ( name + ".exr" )
 			shutil.copyfile( sourceFile, fileName )
-			GafferImage.Catalogue.Image.load( fileName )
+			GafferImage.Catalogue.Image.load( fileName.as_posix() )
 
 	def testRenamePromotedImages( self ) :
 
@@ -760,7 +760,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		box = Gaffer.Box()
 
 		box["catalogue"] = GafferImage.Catalogue()
-		box["catalogue"]["directory"].setValue( os.path.join( self.temporaryDirectory(), "catalogue" ) )
+		box["catalogue"]["directory"].setValue( self.temporaryDirectory() / "catalogue" )
 
 		images = Gaffer.PlugAlgo.promote( box["catalogue"]["images"] )
 

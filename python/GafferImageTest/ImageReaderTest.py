@@ -128,7 +128,7 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 
 	def testFileRefresh( self ) :
 
-		testFile = self.temporaryDirectory() + "/refresh.exr"
+		testFile = self.temporaryDirectory() / "refresh.exr"
 		shutil.copyfile( self.fileName, testFile )
 
 		reader = GafferImage.ImageReader()
@@ -158,7 +158,7 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 
 	def testMissingFrameMode( self ) :
 
-		testSequence = IECore.FileSequence( self.temporaryDirectory() + "/incompleteSequence.####.exr" )
+		testSequence = IECore.FileSequence( str( self.temporaryDirectory() / "incompleteSequence.####.exr" ) )
 		shutil.copyfile( self.fileName, testSequence.fileNameForFrame( 1 ) )
 		shutil.copyfile( self.offsetDataWindowFileName, testSequence.fileNameForFrame( 3 ) )
 
@@ -261,7 +261,7 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 
 	def testFrameRangeMask( self ) :
 
-		testSequence = IECore.FileSequence( self.temporaryDirectory() + "/incompleteSequence.####.exr" )
+		testSequence = IECore.FileSequence( str( self.temporaryDirectory() / "incompleteSequence.####.exr" ) )
 		shutil.copyfile( self.fileName, testSequence.fileNameForFrame( 1 ) )
 		shutil.copyfile( self.fileName, testSequence.fileNameForFrame( 3 ) )
 		shutil.copyfile( self.offsetDataWindowFileName, testSequence.fileNameForFrame( 5 ) )
@@ -439,7 +439,7 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 			( "tif", "tiff", "uint32" ),
 		] :
 
-			w["fileName"].setValue( "{0}/{1}.{2}".format( self.temporaryDirectory(), dataType, ext ) )
+			w["fileName"].setValue( self.temporaryDirectory() / "{0}.{1}".format( dataType, ext ) )
 			w[fileFormat]["dataType"].setValue( dataType )
 			w["task"].execute()
 

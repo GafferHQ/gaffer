@@ -232,7 +232,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 
 	def testFileRefresh( self ) :
 
-		testFile = self.temporaryDirectory() + "/refresh.exr"
+		testFile = self.temporaryDirectory() / "refresh.exr"
 		shutil.copyfile( self.fileName, testFile )
 
 		reader = GafferImage.OpenImageIOReader()
@@ -262,7 +262,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 
 	def testAvailableFrames( self ) :
 
-		testSequence = IECore.FileSequence( self.temporaryDirectory() + "/incompleteSequence.####.exr" )
+		testSequence = IECore.FileSequence( str( self.temporaryDirectory() / "incompleteSequence.####.exr" ) )
 		shutil.copyfile( self.fileName, testSequence.fileNameForFrame( 1 ) )
 		shutil.copyfile( self.offsetDataWindowFileName, testSequence.fileNameForFrame( 3 ) )
 
@@ -285,7 +285,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 
 	def testMissingFrameMode( self ) :
 
-		testSequence = IECore.FileSequence( self.temporaryDirectory() + "/incompleteSequence.####.exr" )
+		testSequence = IECore.FileSequence( str( self.temporaryDirectory() / "incompleteSequence.####.exr" ) )
 		shutil.copyfile( self.fileName, testSequence.fileNameForFrame( 1 ) )
 		shutil.copyfile( self.offsetDataWindowFileName, testSequence.fileNameForFrame( 3 ) )
 
@@ -430,7 +430,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		# frame, so we need to check that the output
 		# still responds to frame changes.
 
-		testSequence = IECore.FileSequence( self.temporaryDirectory() + "/incompleteSequence.####.exr" )
+		testSequence = IECore.FileSequence( str( self.temporaryDirectory() / "incompleteSequence.####.exr" ) )
 		shutil.copyfile( self.fileName, testSequence.fileNameForFrame( 0 ) )
 		shutil.copyfile( self.offsetDataWindowFileName, testSequence.fileNameForFrame( 1 ) )
 
@@ -483,7 +483,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		# Test a bunch of different data window alignments on disk.  This exercises code for reading
 		# weirdly aligned scanlines and partial tiles
 
-		tempFile = self.temporaryDirectory() + "/tempOffsetImage.exr"
+		tempFile = self.temporaryDirectory() / "tempOffsetImage.exr"
 
 		r = GafferImage.OpenImageIOReader()
 		r["fileName"].setValue( self.alignmentTestSourceFileName )

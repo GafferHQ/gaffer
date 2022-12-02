@@ -276,7 +276,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		)
 
 		s["w"]["in"].setInput( s["c"]["out"] )
-		s["w"]["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.exr" ) )
+		s["w"]["fileName"].setValue( self.temporaryDirectory() / "test.exr" )
 		s["r"]["fileName"].setInput( s["w"]["fileName"] )
 
 		for mode in ( GafferImage.ImageWriter.Mode.Scanline, GafferImage.ImageWriter.Mode.Tile ) :
@@ -598,7 +598,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		w["task"].execute()
 
 		self.assertTrue( os.path.exists( testFile ) )
-		i = IECore.Reader.create( testFile ).read()
+		i = IECore.Reader.create( str( testFile ) ).read()
 
 		# Cortex uses the EXR convention, which differs
 		# from Gaffer's, so we use the conversion methods to
@@ -623,7 +623,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( writer.hash( c ), IECore.MurmurHash() )
 
 		# no input image produces no effect
-		writer["fileName"].setValue( self.temporaryDirectory() + "/test.exr" )
+		writer["fileName"].setValue( self.temporaryDirectory() / "test.exr" )
 		self.assertEqual( writer.hash( c ), IECore.MurmurHash() )
 
 		# now theres a file and an image, we get some output
@@ -635,7 +635,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( writer.hash( c ), writer.hash( c2 ) )
 
 		# now it does vary
-		writer["fileName"].setValue( self.temporaryDirectory() + "/test.#.exr" )
+		writer["fileName"].setValue( self.temporaryDirectory() / "test.#.exr" )
 		self.assertNotEqual( writer.hash( c ), writer.hash( c2 ) )
 
 		# other plugs matter too
@@ -980,14 +980,14 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		s["c"] = GafferImage.Constant()
 		s["w"] = GafferImage.ImageWriter()
 		s["w"]["in"].setInput( s["c"]["out"] )
-		s["w"]["fileName"].setValue( self.temporaryDirectory() + "/test.${ext}" )
+		s["w"]["fileName"].setValue( self.temporaryDirectory() / "test.${ext}" )
 
 		context = Gaffer.Context( s.context() )
 		context["ext"] = "tif"
 		with context :
 			s["w"]["task"].execute()
 
-		self.assertTrue( os.path.isfile( self.temporaryDirectory() + "/test.tif" ) )
+		self.assertTrue( os.path.isfile( self.temporaryDirectory() / "test.tif" ) )
 
 	def testErrorMessages( self ) :
 
@@ -996,16 +996,16 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		s["c"] = GafferImage.Constant()
 		s["w"] = GafferImage.ImageWriter()
 		s["w"]["in"].setInput( s["c"]["out"] )
-		s["w"]["fileName"].setValue( self.temporaryDirectory() + "/test.unsupportedExtension" )
+		s["w"]["fileName"].setValue( self.temporaryDirectory() / "test.unsupportedExtension" )
 
 		with s.context() :
 
 			self.assertRaisesRegex( RuntimeError, "could not find a format writer for", s["w"].execute )
 
-			s["w"]["fileName"].setValue( self.temporaryDirectory() + "/test.tif" )
+			s["w"]["fileName"].setValue( self.temporaryDirectory() / "test.tif" )
 			s["w"]["task"].execute()
 
-			os.chmod( self.temporaryDirectory() + "/test.tif", 0o444 )
+			os.chmod( self.temporaryDirectory() / "test.tif", 0o444 )
 			self.assertRaisesRegex( RuntimeError, "Could not open", s["w"]["task"].execute )
 
 	def testWriteIntermediateFile( self ) :
@@ -1026,18 +1026,18 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 		s["w1"] = GafferImage.ImageWriter()
 		s["w1"]["in"].setInput( s["c"]["out"] )
-		s["w1"]["fileName"].setValue( self.temporaryDirectory() + "/test1.exr" )
+		s["w1"]["fileName"].setValue( self.temporaryDirectory() / "test1.exr" )
 
 		s["r"] = GafferImage.ImageReader()
-		s["r"]["fileName"].setValue( self.temporaryDirectory() + "/test1.exr" )
+		s["r"]["fileName"].setValue( self.temporaryDirectory() / "test1.exr" )
 
 		s["w2"] = GafferImage.ImageWriter()
 		s["w2"]["in"].setInput( s["r"]["out"] )
-		s["w2"]["fileName"].setValue( self.temporaryDirectory() + "/test2.exr" )
+		s["w2"]["fileName"].setValue( self.temporaryDirectory() / "test2.exr" )
 		s["w2"]["preTasks"][0].setInput( s["w1"]["task"] )
 
 		d = GafferDispatch.LocalDispatcher()
-		d["jobsDirectory"].setValue( self.temporaryDirectory() + "/jobs" )
+		d["jobsDirectory"].setValue( self.temporaryDirectory() / "jobs" )
 
 		with s.context() :
 			d.dispatch( [ s["w2"] ] )
@@ -1053,10 +1053,10 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 		s["w"] = GafferImage.ImageWriter()
 		s["w"]["in"].setInput( s["c"]["out"] )
-		s["w"]["fileName"].setValue( self.temporaryDirectory() + "/test.exr" )
+		s["w"]["fileName"].setValue( self.temporaryDirectory() / "test.exr" )
 
 		d = GafferDispatch.LocalDispatcher()
-		d["jobsDirectory"].setValue( self.temporaryDirectory() + "/jobs" )
+		d["jobsDirectory"].setValue( self.temporaryDirectory() / "jobs" )
 		d["executeInBackground"].setValue( True )
 
 		with s.context() :
@@ -1088,8 +1088,8 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 		w = DerivedImageWriter()
 		w["in"].setInput( c["out"] )
-		w["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.exr" ) )
-		w["copyFileName"].setValue( os.path.join( self.temporaryDirectory(), "test2.exr" ) )
+		w["fileName"].setValue( self.temporaryDirectory() / "test.exr" )
+		w["copyFileName"].setValue( self.temporaryDirectory() / "test2.exr" )
 
 		w["task"].execute()
 
@@ -1106,7 +1106,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 		w = GafferImage.ImageWriter()
 		w["in"].setInput( m["out"] )
-		w["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.exr" ) )
+		w["fileName"].setValue( self.temporaryDirectory() / "test.exr" )
 		w["task"].execute()
 
 		r = GafferImage.ImageReader()
@@ -1116,7 +1116,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 	def __testFile( self, mode, channels, ext ) :
 
-		return self.temporaryDirectory() + "/test." + channels + "." + str( mode ) + "." + str( ext )
+		return self.temporaryDirectory() / ( "test." + channels + "." + str( mode ) + "." + str( ext ) )
 
 	def testJpgChroma( self ):
 
@@ -1131,7 +1131,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		chromaSubSamplings = ( "4:4:4", "4:2:2", "4:2:0", "4:1:1", "" )
 		for chromaSubSampling in chromaSubSamplings:
 
-			testFile = os.path.join( self.temporaryDirectory(), "chromaSubSampling.{0}.jpg".format( chromaSubSampling ) )
+			testFile = self.temporaryDirectory() / "chromaSubSampling.{0}.jpg".format( chromaSubSampling )
 
 			w["fileName"].setValue( testFile )
 			w["jpeg"]["chromaSubSampling"].setValue( chromaSubSampling )
@@ -1156,7 +1156,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 		for dataType in [ 8, 10, 12, 16 ] :
 
-			writer["fileName"].setValue( "{}/uint{}.dpx".format( self.temporaryDirectory(), dataType ) )
+			writer["fileName"].setValue( self.temporaryDirectory() / "uint{}.dpx".format( dataType ) )
 			writer["dpx"]["dataType"].setValue( "uint{0}".format( dataType ) )
 			writer["task"].execute()
 
@@ -1205,7 +1205,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 			( "tif", "tiff", "uint32" ),
 		] :
 
-			w["fileName"].setValue( "{0}/{1}.{2}".format( self.temporaryDirectory(), dataType, ext ) )
+			w["fileName"].setValue( self.temporaryDirectory() / "{0}.{1}".format( dataType, ext ) )
 			w[fileFormat]["dataType"].setValue( dataType )
 
 			capturedArguments.clear()
@@ -1239,7 +1239,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 				functools.partial( hardcodedColorSpaceConfig, colorSpace )
 			)
 
-			writer["fileName"].setValue( "{0}/{1}.exr".format( self.temporaryDirectory(), colorSpace ) )
+			writer["fileName"].setValue( self.temporaryDirectory() / "{}.exr".format( colorSpace ) )
 			writer["task"].execute()
 
 			reader["colorSpace"].setValue( colorSpace )
@@ -1266,7 +1266,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		for colorSpace in [ "Cineon", "rec709", "AlexaV3LogC" ] :
 
 			writer["in"].setInput( reader["out"] )
-			writer["fileName"].setValue( "{0}/{1}.exr".format( self.temporaryDirectory(), colorSpace ) )
+			writer["fileName"].setValue( self.temporaryDirectory() / "{}.exr".format( colorSpace ) )
 			writer["colorSpace"].setValue( colorSpace )
 
 			writer["task"].execute()
@@ -1314,7 +1314,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		# write to a file format that requires consecutive scanlines
 		writer = GafferImage.ImageWriter()
 		writer["in"].setInput( resize["out"] )
-		writer["fileName"].setValue( "{0}/blankScanlines.jpg".format( self.temporaryDirectory() ) )
+		writer["fileName"].setValue( self.temporaryDirectory() / "blankScanlines.jpg" )
 		writer["task"].execute()
 
 		# ensure we wrote the file successfully
@@ -1331,7 +1331,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 		writer = GafferImage.ImageWriter()
 		writer["in"].setInput( constant["out"] )
-		writer["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.exr" ) )
+		writer["fileName"].setValue( self.temporaryDirectory() / "test.exr" )
 		writer["channels"].setValue( "diffuse.[RGB]" )
 
 		with self.assertRaisesRegex( Gaffer.ProcessException, "No channels to write" ) :
@@ -1344,7 +1344,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		constant = GafferImage.Constant()
 		writer = GafferImage.ImageWriter()
 		writer["in"].setInput( constant["out"] )
-		writer["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.exr" ) )
+		writer["fileName"].setValue( self.temporaryDirectory() / "test.exr" )
 		writer["openexr"]["dwaCompressionLevel"].setValue( 100 )
 
 		reader = GafferImage.ImageReader()
@@ -1395,7 +1395,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 		writer = GafferImage.ImageWriter()
 		writer["in"].setInput( shuffle["out"] )
-		writer["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.exr" ) )
+		writer["fileName"].setValue( self.temporaryDirectory() / "test.exr" )
 		writer["task"].execute()
 
 		rereader = GafferImage.ImageReader()
@@ -1413,7 +1413,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		metadata["metadata"].addChild( Gaffer.NameValuePlug( "oiio:subimages", 1 ) )
 
 		writer["in"].setInput( metadata["out"] )
-		writer["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test2.exr" ) )
+		writer["fileName"].setValue( self.temporaryDirectory() / "test2.exr" )
 
 		with IECore.CapturingMessageHandler() as mh :
 			writer["task"].execute()
@@ -1445,7 +1445,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 		writer = GafferImage.ImageWriter()
 		writer["in"].setInput( collect["out"] )
-		writer["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.exr" ) )
+		writer["fileName"].setValue( self.temporaryDirectory() / "test.exr" )
 		writer["layout"]["partName"].setValue( '${imageWriter:standardPartName}.main' )
 		writer["layout"]["channelName"].setValue( '${imageWriter:nukeBaseName}' )
 		writer["task"].execute()
@@ -1503,7 +1503,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 		writer = GafferImage.ImageWriter()
 		writer["in"].setInput( collect["out"] )
-		writer["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.exr" ) )
+		writer["fileName"].setValue( self.temporaryDirectory() / "test.exr" )
 		writer["layout"]["partName"].setValue( '${imageWriter:standardPartName}.main' )
 		writer["layout"]["channelName"].setValue( '${imageWriter:layerName}.${imageWriter:baseName}' )
 		writer["expression"] = Gaffer.Expression()
@@ -1568,7 +1568,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 		reference = self.channelTestImage()
 
-		writePath = os.path.join( self.temporaryDirectory(), "test.exr" )
+		writePath = self.temporaryDirectory() / "test.exr"
 		writer = GafferImage.ImageWriter()
 		writer["in"].setInput( reference["out"] )
 		writer["fileName"].setValue( writePath )
@@ -1601,7 +1601,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 		reference = self.channelTestImageMultiView()
 
-		writePath = os.path.join( self.temporaryDirectory(), "multiViewTest.exr" )
+		writePath = self.temporaryDirectory() / "multiViewTest.exr"
 		writer = GafferImage.ImageWriter()
 		writer["in"].setInput( reference["out"] )
 		writer["fileName"].setValue( writePath )
@@ -1732,7 +1732,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 					writer["layout"]["partName"].setInput( writer["partNameForSeparateZ"] )
 
 				tempFileIndex += 1
-				tempFile = os.path.join( self.temporaryDirectory(), "sampleImageTestFile%i.exr" % tempFileIndex )
+				tempFile = self.temporaryDirectory() / ( "sampleImageTestFile%i.exr" % tempFileIndex )
 				writer["fileName"].setValue( tempFile )
 				rereader["fileName"].setValue( tempFile )
 
@@ -1800,7 +1800,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 		writer = GafferImage.ImageWriter()
 		writer["in"].setInput( reference["out"] )
-		writer["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.tif" ) )
+		writer["fileName"].setValue( self.temporaryDirectory() / "test.tif" )
 
 		# Start with some formats that don't support per channel data types, and check that they fail as
 		# expected
@@ -1810,13 +1810,13 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		with self.assertRaisesRegex( Gaffer.ProcessException, "File format tiff does not support per-channel data types" ) :
 			writer["task"].execute()
 
-		writer["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.dpx" ) )
+		writer["fileName"].setValue( self.temporaryDirectory() / "test.dpx" )
 		writer["dataTypeExpression"].setExpression( 'parent["dpx"]["dataType"] = "uint8" if context.get( "imageWriter:channelName" ) == "R" else "uint16"' )
 
 		with self.assertRaisesRegex( Gaffer.ProcessException, "File format dpx does not support per-channel data types" ) :
 			writer["task"].execute()
 
-		writePath = os.path.join( self.temporaryDirectory(), "test.exr" )
+		writePath = self.temporaryDirectory() / "test.exr"
 		writer["fileName"].setValue( writePath )
 
 		writer["task"].execute()

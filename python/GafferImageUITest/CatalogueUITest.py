@@ -113,7 +113,7 @@ class CatalogueUITest( GafferUITest.TestCase ) :
 
 		script["imageWriter"] = GafferImage.ImageWriter()
 		script["imageWriter"]["in"].setInput( script["metadata"]["out"] )
-		script["imageWriter"]["fileName"].setValue( os.path.join( self.temporaryDirectory() + "/test.exr" ) )
+		script["imageWriter"]["fileName"].setValue( self.temporaryDirectory() / "test.exr" )
 		script["imageWriter"]["task"].execute()
 
 		script["catalogue"] = GafferImage.Catalogue()
