@@ -35,20 +35,21 @@
 ##########################################################################
 
 import os
+import pathlib
 import subprocess
 
 def appleseedProjectSchemaPath():
 
-	return os.path.join( os.environ["APPLESEED"], "schemas", "project.xsd" )
+	return pathlib.Path( os.environ["APPLESEED"] ) / "schemas" / "project.xsd"
 
 def compileOSLShader( sourceFileName, tempDir ) :
 
-	outputFileName = tempDir + "/" + os.path.splitext( os.path.basename( sourceFileName ) )[0] + ".oso"
+	outputFileName = tempDir / pathlib.Path( sourceFileName ).with_suffix( ".oso" ).name
 
 	subprocess.check_call(
 		[ "oslc", "-q" ] +
-		[ "-I" + p for p in os.environ.get( "OSL_SHADER_PATHS", "" ).split( ":" ) ] +
+		[ "-I" + p for p in os.environ.get( "OSL_SHADER_PATHS", "" ).split( os.pathsep ) ] +
 		[ "-o", outputFileName, sourceFileName ]
 	)
 
-	return os.path.splitext( outputFileName )[0]
+	return str( outputFileName.with_suffix("") )

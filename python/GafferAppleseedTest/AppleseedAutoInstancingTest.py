@@ -34,8 +34,6 @@
 #
 ##########################################################################
 
-import os
-
 import appleseed as asr
 
 import IECore
@@ -53,7 +51,7 @@ class AppleseedAutoInstancingTest( GafferTest.TestCase ) :
 
 		GafferTest.TestCase.setUp( self )
 
-		self.__scriptFileName = self.temporaryDirectory() + "/test.gfr"
+		self.__scriptFileName = self.temporaryDirectory() / "test.gfr"
 
 	def testAutoInstancing( self ) :
 
@@ -76,13 +74,13 @@ class AppleseedAutoInstancingTest( GafferTest.TestCase ) :
 		s["render"]["in"].setInput( s["group"]["out"] )
 		s["render"]["mode"].setValue( s["render"].Mode.SceneDescriptionMode )
 
-		projectFilename =  self.temporaryDirectory() + "/test.appleseed"
+		projectFilename =  self.temporaryDirectory() / "test.appleseed"
 		s["render"]["fileName"].setValue( projectFilename )
 		s["render"]["task"].execute()
 
 		reader = asr.ProjectFileReader()
 		options = asr.ProjectFileReaderOptions.OmitReadingMeshFiles
-		project = reader.read( projectFilename, appleseedProjectSchemaPath(), options )
+		project = reader.read( str( projectFilename ), str( appleseedProjectSchemaPath() ), options )
 		scene = project.get_scene()
 		mainAssembly = scene.assemblies().get_by_name( "assembly" )
 
@@ -118,13 +116,13 @@ class AppleseedAutoInstancingTest( GafferTest.TestCase ) :
 		s["render"]["in"].setInput( s["group"]["out"] )
 		s["render"]["mode"].setValue( s["render"].Mode.SceneDescriptionMode )
 
-		projectFilename =  self.temporaryDirectory() + "/test.appleseed"
+		projectFilename =  self.temporaryDirectory() / "test.appleseed"
 		s["render"]["fileName"].setValue( projectFilename )
 		s["render"]["task"].execute()
 
 		reader = asr.ProjectFileReader()
 		options = asr.ProjectFileReaderOptions.OmitReadingMeshFiles
-		project = reader.read( projectFilename, appleseedProjectSchemaPath(), options )
+		project = reader.read( str( projectFilename ), str( appleseedProjectSchemaPath() ), options )
 		scene = project.get_scene()
 		mainAssembly = scene.assemblies().get_by_name( "assembly" )
 

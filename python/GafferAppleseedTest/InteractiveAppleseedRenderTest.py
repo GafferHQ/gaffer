@@ -34,7 +34,7 @@
 #
 ##########################################################################
 
-import os
+import pathlib
 import unittest
 
 import IECore
@@ -119,7 +119,7 @@ class InteractiveAppleseedRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		shader = GafferOSL.OSLShader()
 		shader.loadShader(
-			compileOSLShader( os.path.dirname( __file__ ) + "/shaders/constant.osl",
+			compileOSLShader( pathlib.Path( __file__ ).parent / "shaders" / "constant.osl",
 			self.temporaryDirectory() ) )
 		return shader, shader["parameters"]["constant_color"]
 
@@ -127,7 +127,7 @@ class InteractiveAppleseedRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		shader = GafferOSL.OSLShader()
 		shader.loadShader(
-			compileOSLShader( os.path.dirname( __file__ ) + "/shaders/matte.osl",
+			compileOSLShader( pathlib.Path( __file__ ).parent / "shaders" / "matte.osl",
 			self.temporaryDirectory() ) )
 		return shader, shader["parameters"]["Kd_color"]
 

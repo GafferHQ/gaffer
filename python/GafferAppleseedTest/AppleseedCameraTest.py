@@ -34,8 +34,6 @@
 #
 ##########################################################################
 
-import os
-
 import appleseed as asr
 
 import IECore
@@ -53,7 +51,7 @@ class AppleseedCameraTest( GafferTest.TestCase ) :
 
 		GafferTest.TestCase.setUp( self )
 
-		self.__scriptFileName = self.temporaryDirectory() + "/test.gfr"
+		self.__scriptFileName = self.temporaryDirectory() / "test.gfr"
 
 	def testOneCamera( self ) :
 
@@ -70,13 +68,13 @@ class AppleseedCameraTest( GafferTest.TestCase ) :
 		s["render"]["in"].setInput( s["options"]["out"] )
 		s["render"]["mode"].setValue( s["render"].Mode.SceneDescriptionMode )
 
-		projectFilename =  self.temporaryDirectory() + "/test.appleseed"
+		projectFilename =  self.temporaryDirectory() / "test.appleseed"
 		s["render"]["fileName"].setValue( projectFilename )
 		s["render"]["task"].execute()
 
 		reader = asr.ProjectFileReader()
 		options = asr.ProjectFileReaderOptions.OmitReadingMeshFiles
-		project = reader.read( projectFilename, appleseedProjectSchemaPath(), options )
+		project = reader.read( str( projectFilename ), str( appleseedProjectSchemaPath() ), options )
 		scene = project.get_scene()
 
 		self.assertEqual( len( scene.cameras() ), 1 )
@@ -108,13 +106,13 @@ class AppleseedCameraTest( GafferTest.TestCase ) :
 		s["render"]["in"].setInput( s["options"]["out"] )
 		s["render"]["mode"].setValue( s["render"].Mode.SceneDescriptionMode )
 
-		projectFilename =  self.temporaryDirectory() + "/test.appleseed"
+		projectFilename =  self.temporaryDirectory() / "test.appleseed"
 		s["render"]["fileName"].setValue( projectFilename )
 		s["render"]["task"].execute()
 
 		reader = asr.ProjectFileReader()
 		options = asr.ProjectFileReaderOptions.OmitReadingMeshFiles
-		project = reader.read( projectFilename, appleseedProjectSchemaPath(), options )
+		project = reader.read( str( projectFilename ), str( appleseedProjectSchemaPath() ), options )
 		scene = project.get_scene()
 
 		self.assertEqual( len( scene.cameras() ), 3 )
