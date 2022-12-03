@@ -34,7 +34,7 @@
 #
 ##########################################################################
 
-import os
+import pathlib
 import sys
 import time
 import shutil
@@ -291,7 +291,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		s["Tex"] = GafferArnold.ArnoldShader( "image" )
 		s["Tex"].loadShader( "image" )
-		s["Tex"]["parameters"]["filename"].setValue( os.path.join( os.path.dirname( __file__ ), "images", "sphereLightBake.exr" ) )
+		s["Tex"]["parameters"]["filename"].setValue( pathlib.Path( __file__ ).parent / "images" / "sphereLightBake.exr" )
 		s["Tex"]["parameters"]["multiply"].setValue( imath.Color3f( 1, 0, 0 ) )
 
 		s["Light"] = GafferArnold.ArnoldLight( "quad_light" )
@@ -361,9 +361,9 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		# that the cache gets reloaded from the default universe.
 
 		# Create tmp file for texture image
-		redTextureFile  = os.path.join( os.path.dirname( __file__ ), "images", "red.exr" )
-		blueTextureFile = os.path.join( os.path.dirname( __file__ ), "images", "blue.exr" )
-		tmpTextureFile  = os.path.join( self.temporaryDirectory(), "texture.exr" )
+		redTextureFile  = pathlib.Path( __file__ ).parent / "images" / "red.exr"
+		blueTextureFile = pathlib.Path( __file__ ).parent / "images" / "blue.exr"
+		tmpTextureFile  = self.temporaryDirectory() / "texture.exr"
 		shutil.copyfile( redTextureFile, tmpTextureFile )
 
 		s = Gaffer.ScriptNode()

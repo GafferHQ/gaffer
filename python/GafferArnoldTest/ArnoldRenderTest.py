@@ -35,7 +35,7 @@
 #
 ##########################################################################
 
-import os
+import pathlib
 import inspect
 import unittest
 import subprocess
@@ -65,7 +65,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		GafferSceneTest.SceneTestCase.setUp( self )
 
-		self.__scriptFileName = self.temporaryDirectory() + "/test.gfr"
+		self.__scriptFileName = self.temporaryDirectory() / "test.gfr"
 
 	def tearDown( self ) :
 
@@ -83,13 +83,13 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["render"]["in"].setInput( s["plane"]["out"] )
 
 		s["expression"] = Gaffer.Expression()
-		s["expression"].setExpression( "parent['render']['fileName'] = '" + self.temporaryDirectory() + "/test.%d.ass' % int( context['frame'] )" )
+		s["expression"].setExpression( f"""parent['render']['fileName'] = '{( self.temporaryDirectory() / "test.%d.ass" ).as_posix()}' % int( context['frame'] )""" )
 
 		s["fileName"].setValue( self.__scriptFileName )
 		s.save()
 
 		p = subprocess.Popen(
-			"gaffer execute " + self.__scriptFileName + " -frames 1-3",
+			f"gaffer execute {self.__scriptFileName} -frames 1-3",
 			shell=True,
 			stderr = subprocess.PIPE,
 		)
@@ -97,7 +97,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertFalse( p.returncode )
 
 		for i in range( 1, 4 ) :
-			self.assertTrue( os.path.exists( self.temporaryDirectory() + "/test.%d.ass" % i ) )
+			self.assertTrue( ( self.temporaryDirectory() / f"test.{i}.ass" ).exists() )
 
 	def testWaitForImage( self ) :
 
@@ -109,7 +109,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["outputs"].addOutput(
 			"beauty",
 			IECoreScene.Output(
-				self.temporaryDirectory() + "/test.tif",
+				str( self.temporaryDirectory() / "test.tif" ),
 				"tiff",
 				"rgba",
 				{}
@@ -121,7 +121,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["render"]["in"].setInput( s["outputs"]["out"] )
 		s["render"]["task"].execute()
 
-		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/test.tif" ) )
+		self.assertTrue( ( self.temporaryDirectory() / "test.tif" ).exists() )
 
 	def testExecuteWithStringSubstitutions( self ) :
 
@@ -131,13 +131,13 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["render"] = GafferArnold.ArnoldRender()
 		s["render"]["mode"].setValue( s["render"].Mode.SceneDescriptionMode )
 		s["render"]["in"].setInput( s["plane"]["out"] )
-		s["render"]["fileName"].setValue( self.temporaryDirectory() + "/test.####.ass" )
+		s["render"]["fileName"].setValue( self.temporaryDirectory() / "test.####.ass" )
 
 		s["fileName"].setValue( self.__scriptFileName )
 		s.save()
 
 		p = subprocess.Popen(
-			"gaffer execute " + self.__scriptFileName + " -frames 1-3",
+			f"gaffer execute {self.__scriptFileName} -frames 1-3",
 			shell=True,
 			stderr = subprocess.PIPE,
 		)
@@ -145,7 +145,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertFalse( p.returncode )
 
 		for i in range( 1, 4 ) :
-			self.assertTrue( os.path.exists( self.temporaryDirectory() + "/test.%04d.ass" % i ) )
+			self.assertTrue( ( self.temporaryDirectory() / f"test.{i:04d}.ass" ).exists() )
 
 	def testImageOutput( self ) :
 
@@ -157,7 +157,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["outputs"].addOutput(
 			"beauty",
 			IECoreScene.Output(
-				self.temporaryDirectory() + "/test.####.tif",
+				str( self.temporaryDirectory() / "test.####.tif" ),
 				"tiff",
 				"rgba",
 				{}
@@ -175,7 +175,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 				s["render"]["task"].execute()
 
 		for i in range( 1, 4 ) :
-			self.assertTrue( os.path.exists( self.temporaryDirectory() + "/test.%04d.tif" % i ) )
+			self.assertTrue( ( self.temporaryDirectory() / f"test.{i:04d}.tif" ).exists() )
 
 	def testTypeNamePrefixes( self ) :
 
@@ -195,8 +195,8 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 	def testDirectoryCreation( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["variables"].addChild( Gaffer.NameValuePlug( "renderDirectory", self.temporaryDirectory() + "/renderTests" ) )
-		s["variables"].addChild( Gaffer.NameValuePlug( "assDirectory", self.temporaryDirectory() + "/assTests" ) )
+		s["variables"].addChild( Gaffer.NameValuePlug( "renderDirectory", ( self.temporaryDirectory() / "renderTests" ).as_posix() ) )
+		s["variables"].addChild( Gaffer.NameValuePlug( "assDirectory", ( self.temporaryDirectory() / "assTests" ).as_posix() ) )
 
 		s["plane"] = GafferScene.Plane()
 
@@ -217,27 +217,27 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["render"]["fileName"].setValue( "$assDirectory/test.####.ass" )
 		s["render"]["mode"].setValue( s["render"].Mode.SceneDescriptionMode )
 
-		self.assertFalse( os.path.exists( self.temporaryDirectory() + "/renderTests" ) )
-		self.assertFalse( os.path.exists( self.temporaryDirectory() + "/assTests" ) )
-		self.assertFalse( os.path.exists( self.temporaryDirectory() + "/assTests/test.0001.ass" ) )
+		self.assertFalse( ( self.temporaryDirectory() / "renderTests" ).exists() )
+		self.assertFalse( ( self.temporaryDirectory() / "assTests" ).exists() )
+		self.assertFalse( ( self.temporaryDirectory() / "assTests" / "test.0001.ass" ).exists() )
 
-		s["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
+		s["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
 
 		with s.context() :
 			s["render"]["task"].execute()
 
-		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/renderTests" ) )
-		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/assTests" ) )
-		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/assTests/test.0001.ass" ) )
+		self.assertTrue( ( self.temporaryDirectory() / "renderTests" ).exists() )
+		self.assertTrue( ( self.temporaryDirectory() / "assTests" ).exists())
+		self.assertTrue( ( self.temporaryDirectory() / "assTests"/ "test.0001.ass" ).exists() )
 
 		# check it can cope with everything already existing
 
 		with s.context() :
 			s["render"]["task"].execute()
 
-		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/renderTests" ) )
-		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/assTests" ) )
-		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/assTests/test.0001.ass" ) )
+		self.assertTrue( ( self.temporaryDirectory() / "renderTests" ).exists() )
+		self.assertTrue( ( self.temporaryDirectory() / "assTests" ).exists() )
+		self.assertTrue( ( self.temporaryDirectory() / "assTests" / "test.0001.ass" ).exists() )
 
 	def testWedge( self ) :
 
@@ -259,7 +259,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["outputs"].addOutput(
 			"beauty",
 			IECoreScene.Output(
-				self.temporaryDirectory() + "/${wedge:value}.tif",
+				( self.temporaryDirectory() / "${wedge:value}.tif" ).as_posix(),
 				"tiff",
 				"rgba",
 				{
@@ -269,7 +269,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["outputs"]["in"].setInput( s["attributes"]["out"] )
 
 		s["render"] = GafferArnold.ArnoldRender()
-		s["render"]["fileName"].setValue( self.temporaryDirectory() + "/test.####.ass" )
+		s["render"]["fileName"].setValue( self.temporaryDirectory() / "test.####.ass" )
 		s["render"]["in"].setInput( s["outputs"]["out"] )
 
 		s["wedge"] = GafferDispatch.Wedge()
@@ -277,21 +277,21 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["wedge"]["strings"].setValue( IECore.StringVectorData( [ "visible", "hidden" ] ) )
 		s["wedge"]["preTasks"][0].setInput( s["render"]["task"] )
 
-		s["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
+		s["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
 		s.save()
 
 		dispatcher = GafferDispatch.LocalDispatcher()
-		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() + "/testJobDirectory" )
+		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() / "testJobDirectory" )
 		dispatcher["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CurrentFrame )
 		dispatcher["executeInBackground"].setValue( False )
 
 		dispatcher.dispatch( [ s["wedge"] ] )
 
 		hidden = GafferImage.ImageReader()
-		hidden["fileName"].setValue( self.temporaryDirectory() + "/hidden.tif" )
+		hidden["fileName"].setValue( self.temporaryDirectory() / "hidden.tif" )
 
 		visible = GafferImage.ImageReader()
-		visible["fileName"].setValue( self.temporaryDirectory() + "/visible.tif" )
+		visible["fileName"].setValue( self.temporaryDirectory() / "visible.tif" )
 
 		hiddenStats = GafferImage.ImageStats()
 		hiddenStats["in"].setInput( hidden["out"] )
@@ -347,7 +347,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["render"] = GafferArnold.ArnoldRender()
 		s["render"]["in"].setInput( s["options"]["out"] )
 		s["render"]["mode"].setValue( s["render"].Mode.SceneDescriptionMode )
-		s["render"]["fileName"].setValue( self.temporaryDirectory() + "/test.ass" )
+		s["render"]["fileName"].setValue( self.temporaryDirectory() / "test.ass" )
 
 		# No motion blur
 
@@ -356,7 +356,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			camera = arnold.AiNodeLookUpByName( universe, "gaffer:defaultCamera" )
 			sphere = arnold.AiNodeLookUpByName( universe, "/group/sphere" )
@@ -394,7 +394,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			camera = arnold.AiNodeLookUpByName( universe, "gaffer:defaultCamera" )
 			sphere = arnold.AiNodeLookUpByName( universe, "/group/sphere" )
@@ -444,7 +444,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			camera = arnold.AiNodeLookUpByName( universe, "gaffer:defaultCamera" )
 			sphere = arnold.AiNodeLookUpByName( universe, "/group/sphere" )
@@ -503,7 +503,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["render"] = GafferArnold.ArnoldRender()
 		s["render"]["in"].setInput( s["options"]["out"] )
 		s["render"]["mode"].setValue( s["render"].Mode.SceneDescriptionMode )
-		s["render"]["fileName"].setValue( self.temporaryDirectory() + "/test.ass" )
+		s["render"]["fileName"].setValue( self.temporaryDirectory() / "test.ass" )
 
 		# Default camera should have the right resolution.
 
@@ -511,7 +511,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 			options = arnold.AiUniverseGetOptions( universe )
 			self.assertEqual( arnold.AiNodeGetInt( options, "xres" ), 400 )
 			self.assertEqual( arnold.AiNodeGetInt( options, "yres" ), 200 )
@@ -524,7 +524,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 			options = arnold.AiUniverseGetOptions( universe )
 			self.assertEqual( arnold.AiNodeGetInt( options, "xres" ), 400 )
 			self.assertEqual( arnold.AiNodeGetInt( options, "yres" ), 200 )
@@ -543,14 +543,14 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["render"] = GafferArnold.ArnoldRender()
 		s["render"]["in"].setInput( s["options"]["out"] )
 		s["render"]["mode"].setValue( s["render"].Mode.SceneDescriptionMode )
-		s["render"]["fileName"].setValue( self.temporaryDirectory() + "/test.ass" )
+		s["render"]["fileName"].setValue( self.temporaryDirectory() / "test.ass" )
 
 		# Default region
 		s["render"]["task"].execute()
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 			options = arnold.AiUniverseGetOptions( universe )
 			self.assertEqual( arnold.AiNodeGetInt( options, "xres" ), 640 )
 			self.assertEqual( arnold.AiNodeGetInt( options, "yres" ), 480 )
@@ -567,7 +567,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 			options = arnold.AiUniverseGetOptions( universe )
 			self.assertEqual( arnold.AiNodeGetInt( options, "xres" ), 640 )
 			self.assertEqual( arnold.AiNodeGetInt( options, "yres" ), 480 )
@@ -583,7 +583,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 			options = arnold.AiUniverseGetOptions( universe )
 			self.assertEqual( arnold.AiNodeGetInt( options, "xres" ), 640 )
 			self.assertEqual( arnold.AiNodeGetInt( options, "yres" ), 480 )
@@ -611,7 +611,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 			options = arnold.AiUniverseGetOptions( universe )
 			self.assertEqual( arnold.AiNodeGetInt( options, "xres" ), 640 )
 			self.assertEqual( arnold.AiNodeGetInt( options, "yres" ), 480 )
@@ -631,7 +631,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["render"] = GafferArnold.ArnoldRender()
 		s["render"]["in"].setInput( s["options"]["out"] )
 		s["render"]["mode"].setValue( s["render"].Mode.SceneDescriptionMode )
-		s["render"]["fileName"].setValue( self.temporaryDirectory() + "/test.ass" )
+		s["render"]["fileName"].setValue( self.temporaryDirectory() / "test.ass" )
 
 		# The requested camera doesn't exist - this should raise an exception.
 
@@ -656,7 +656,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		render = GafferArnold.ArnoldRender()
 		render["in"].setInput( duplicate["out"] )
 		render["mode"].setValue( render.Mode.SceneDescriptionMode )
-		render["fileName"].setValue( self.temporaryDirectory() + "/test.ass" )
+		render["fileName"].setValue( self.temporaryDirectory() / "test.ass" )
 
 		render["task"].execute()
 
@@ -672,7 +672,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		render = GafferArnold.ArnoldRender()
 		render["in"].setInput( duplicate["out"] )
 		render["mode"].setValue( render.Mode.SceneDescriptionMode )
-		render["fileName"].setValue( self.temporaryDirectory() + "/test.####.ass" )
+		render["fileName"].setValue( self.temporaryDirectory() / "test.####.ass" )
 
 		errors = []
 		def executeFrame( frame ) :
@@ -696,7 +696,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		with Gaffer.Context() as c :
 			for i in range( 0, 2 ) :
 				c.setFrame( i )
-				self.assertTrue( os.path.exists( c.substitute( render["fileName"].getValue() ) ) )
+				self.assertTrue( pathlib.Path( c.substitute( render["fileName"].getValue() ) ).exists() )
 
 	def testTraceSets( self ) :
 
@@ -728,13 +728,13 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		render = GafferArnold.ArnoldRender()
 		render["in"].setInput( set4["out"] )
 		render["mode"].setValue( render.Mode.SceneDescriptionMode )
-		render["fileName"].setValue( self.temporaryDirectory() + "/test.ass" )
+		render["fileName"].setValue( self.temporaryDirectory() / "test.ass" )
 
 		render["task"].execute()
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			firstSphere = arnold.AiNodeLookUpByName( universe, "/group/sphere" )
 			secondSphere = arnold.AiNodeLookUpByName( universe, "/group/sphere1" )
@@ -757,7 +757,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		script["render"] = GafferArnold.ArnoldRender()
 		script["render"]["in"].setInput( script["light"]["out"] )
 		script["render"]["mode"].setValue( script["render"].Mode.SceneDescriptionMode )
-		script["render"]["fileName"].setValue( self.temporaryDirectory() + "/test.ass" )
+		script["render"]["fileName"].setValue( self.temporaryDirectory() / "test.ass" )
 
 		for i in range( 0, 100 ) :
 
@@ -772,7 +772,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		render = GafferArnold.ArnoldRender()
 		render["in"].setInput( options["out"] )
 		render["mode"].setValue( render.Mode.SceneDescriptionMode )
-		render["fileName"].setValue( self.temporaryDirectory() + "/test.ass" )
+		render["fileName"].setValue( self.temporaryDirectory() / "test.ass" )
 
 		for frame in ( 1, 2, 2.8, 3.2 ) :
 			for seed in ( None, 3, 4 ) :
@@ -787,7 +787,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 
 					with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-						arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+						arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 						self.assertEqual(
 							arnold.AiNodeGetInt( arnold.AiUniverseGetOptions( universe ), "AA_seed" ),
@@ -802,13 +802,13 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		render = GafferArnold.ArnoldRender()
 		render["in"].setInput( sphere["out"] )
 		render["mode"].setValue( render.Mode.SceneDescriptionMode )
-		render["fileName"].setValue( self.temporaryDirectory() + "/test.ass" )
+		render["fileName"].setValue( self.temporaryDirectory() / "test.ass" )
 
 		render["task"].execute()
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 			self.assertTrue( arnold.AiNodeLookUpByName( universe, "/sphereArnold" ) is not None )
 
 	def testAdaptors( self ) :
@@ -830,13 +830,13 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		render = GafferArnold.ArnoldRender()
 		render["in"].setInput( sphere["out"] )
 		render["mode"].setValue( render.Mode.SceneDescriptionMode )
-		render["fileName"].setValue( self.temporaryDirectory() + "/test.ass" )
+		render["fileName"].setValue( self.temporaryDirectory() / "test.ass" )
 
 		render["task"].execute()
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 			node = arnold.AiNodeLookUpByName( universe, "/sphere" )
 
 			self.assertEqual( arnold.AiNodeGetBool( node, "matte" ), True )
@@ -877,12 +877,12 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		arnoldAttributes["attributes"]["shadowGroup"]["value"].setValue( "/group/light1" )
 
 		render["mode"].setValue( render.Mode.SceneDescriptionMode )
-		render["fileName"].setValue( self.temporaryDirectory() + "/test.ass" )
+		render["fileName"].setValue( self.temporaryDirectory() / "test.ass" )
 		render["task"].execute()
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			# the first sphere had linked lights
 			sphere = arnold.AiNodeLookUpByName( universe, "/group/sphere" )
@@ -952,12 +952,12 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		render["in"].setInput( group["out"] )
 
 		render["mode"].setValue( render.Mode.SceneDescriptionMode )
-		render["fileName"].setValue( self.temporaryDirectory() + "/test.ass" )
+		render["fileName"].setValue( self.temporaryDirectory() / "test.ass" )
 		render["task"].execute()
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			sphere = arnold.AiNodeLookUpByName( universe, "/group/sphere" )
 			self.assertIsNotNone( sphere )
@@ -995,13 +995,13 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["render"] = GafferArnold.ArnoldRender()
 		s["render"]["in"].setInput( s["group"]["out"] )
 		s["render"]["mode"].setValue( s["render"].Mode.SceneDescriptionMode )
-		s["render"]["fileName"].setValue( self.temporaryDirectory() + "/test.ass" )
+		s["render"]["fileName"].setValue( self.temporaryDirectory() / "test.ass" )
 
 		s["render"]["task"].execute()
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			light = arnold.AiNodeLookUpByName( universe, "light:/group/light" )
 			linkedFilters = arnold.AiNodeGetArray( light, "filters" )
@@ -1082,7 +1082,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["outputs"].addOutput(
 			"beauty",
 			IECoreScene.Output(
-				self.temporaryDirectory() + "/test.tif",
+				str( self.temporaryDirectory() / "test.tif" ),
 				"tiff",
 				"rgba",
 				{}
@@ -1169,12 +1169,12 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		render["in"].setInput( group["out"] )
 
 		render["mode"].setValue( render.Mode.SceneDescriptionMode )
-		render["fileName"].setValue( self.temporaryDirectory() + "/test.ass" )
+		render["fileName"].setValue( self.temporaryDirectory() / "test.ass" )
 		render["task"].execute()
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			sphere = arnold.AiNodeLookUpByName( universe, "/group/sphere" )
 			self.assertIsNotNone( sphere )
@@ -1228,7 +1228,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		render = GafferArnold.ArnoldRender()
 		render["in"].setInput( attributes["out"] )
 		render["mode"].setValue( render.Mode.SceneDescriptionMode )
-		render["fileName"].setValue( self.temporaryDirectory() + "/test.ass" )
+		render["fileName"].setValue( self.temporaryDirectory() / "test.ass" )
 
 		# Don't really understand why a regular `with CapturingMessageHandler` doesn't work here
 		try :
@@ -1274,7 +1274,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		render = GafferArnold.ArnoldRender()
 		render["in"].setInput( options["out"] )
 		render["mode"].setValue( render.Mode.SceneDescriptionMode )
-		render["fileName"].setValue( self.temporaryDirectory() + "/test.ass" )
+		render["fileName"].setValue( self.temporaryDirectory() / "test.ass" )
 
 		render["task"].execute()
 
@@ -1352,13 +1352,13 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["render"] = GafferArnold.ArnoldRender()
 		s["render"]["in"].setInput( s["globalAttrs"]["out"] )
 		s["render"]["mode"].setValue( s["render"].Mode.SceneDescriptionMode )
-		s["render"]["fileName"].setValue( self.temporaryDirectory() + "/test.ass" )
+		s["render"]["fileName"].setValue( self.temporaryDirectory() / "test.ass" )
 
 		s["render"]["task"].execute()
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 			plane = arnold.AiNodeLookUpByName( universe, "/plane" )
 			shader = arnold.AiNodeGetPtr( plane, "shader" )
 			self.assertEqual( arnold.AiNodeGetStr( shader, "filename" ), "bar/path/foo.tx" )
@@ -1418,7 +1418,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["outputs"].addOutput(
 			"beauty",
 			IECoreScene.Output(
-				os.path.join( self.temporaryDirectory(), "deformationBlurOff.exr" ),
+				str( self.temporaryDirectory() / "deformationBlurOff.exr" ),
 				"exr",
 				"rgba",
 				{
@@ -1445,16 +1445,16 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["options"]["options"]["deformationBlur"]["value"].setValue( True )
 		s["options"]["options"]["shutter"]["enabled"].setValue( True )
 		s["options"]["options"]["shutter"]["value"].setValue( imath.V2f( -0.5, 0.5 ) )
-		s["outputs"]["outputs"][0]["fileName"].setValue( os.path.join( self.temporaryDirectory(), "deformationBlurOn.exr" ) )
+		s["outputs"]["outputs"][0]["fileName"].setValue( self.temporaryDirectory() / "deformationBlurOn.exr" )
 		s["render"]["task"].execute()
 
 		# Check that the renders are the same.
 
 		s["deformationOff"] = GafferImage.ImageReader()
-		s["deformationOff"]["fileName"].setValue( os.path.join( self.temporaryDirectory(), "deformationBlurOff.exr" ) )
+		s["deformationOff"]["fileName"].setValue( self.temporaryDirectory() / "deformationBlurOff.exr" )
 
 		s["deformationOn"] = GafferImage.ImageReader()
-		s["deformationOn"]["fileName"].setValue( os.path.join( self.temporaryDirectory(), "deformationBlurOn.exr" ) )
+		s["deformationOn"]["fileName"].setValue( self.temporaryDirectory() / "deformationBlurOn.exr" )
 
 		# The `maxDifference` is huge to account for noise and watermarks, but is still low enough to check what
 		# we want, since if the Encapsulate was sampled at shutter open and not the frame, the difference would be
@@ -1467,7 +1467,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		render = GafferArnold.ArnoldRender()
 		render["in"].setInput( coordinateSystem["out"] )
 		render["mode"].setValue( render.Mode.SceneDescriptionMode )
-		render["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.ass" ) )
+		render["fileName"].setValue( self.temporaryDirectory() / "test.ass" )
 		render["task"].execute()
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
