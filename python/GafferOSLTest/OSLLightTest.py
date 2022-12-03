@@ -34,7 +34,7 @@
 #
 ##########################################################################
 
-import os
+import pathlib
 import unittest
 import imath
 
@@ -51,7 +51,7 @@ class OSLLightTest( GafferOSLTest.OSLTestCase ) :
 
 	def testShader( self ) :
 
-		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/constant.osl" )
+		shader = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "constant.osl" )
 
 		node = GafferOSL.OSLLight()
 		self.assertIsInstance( node, GafferScene.Light )
@@ -68,7 +68,7 @@ class OSLLightTest( GafferOSLTest.OSLTestCase ) :
 
 	def testSerialisation( self ) :
 
-		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/constant.osl" )
+		shader = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "constant.osl" )
 
 		script = Gaffer.ScriptNode()
 		script["n"] = GafferOSL.OSLLight()
@@ -111,8 +111,8 @@ class OSLLightTest( GafferOSLTest.OSLTestCase ) :
 
 	def testNetwork( self ) :
 
-		constantShader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/constant.osl" )
-		addShader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/add.osl" )
+		constantShader = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "constant.osl" )
+		addShader = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "add.osl" )
 
 		lightNode = GafferOSL.OSLLight()
 		lightNode.loadShader( constantShader )
@@ -131,7 +131,7 @@ class OSLLightTest( GafferOSLTest.OSLTestCase ) :
 
 	def testAttributes( self ) :
 
-		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/constant.osl" )
+		shader = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "constant.osl" )
 
 		node = GafferOSL.OSLLight()
 		node.loadShader( shader )

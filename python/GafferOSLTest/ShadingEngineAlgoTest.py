@@ -35,7 +35,7 @@
 ##########################################################################
 
 import imath
-import os
+import pathlib
 import sys
 
 import IECore
@@ -49,9 +49,9 @@ class ShadingEngineAlgoTest( GafferOSLTest.OSLTestCase ) :
 
 	def testShadeTexture( self ) :
 
-		uvShader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/uv.osl" )
-		constant = self.compileShader( os.path.dirname( __file__ ) + "/shaders/constant.osl" )
-		addShader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/add.osl" )
+		uvShader = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "uv.osl" )
+		constant = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "constant.osl" )
+		addShader = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "add.osl" )
 
 		n = IECoreScene.ShaderNetwork(
 			shaders = {
