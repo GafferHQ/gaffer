@@ -34,7 +34,7 @@
 #
 ##########################################################################
 
-import os
+import pathlib
 
 import IECore
 import GafferScene
@@ -44,7 +44,7 @@ class VDBTestCase( GafferSceneTest.SceneTestCase ) :
 
 	def setUp( self ) :
 		GafferSceneTest.SceneTestCase.setUp( self )
-		self.dataDir = os.path.join( os.path.dirname( __file__ ),  "data")
+		self.dataDir = pathlib.Path( __file__ ).parent / "data"
 		self.filters = [] # need to keep hold of the filters for the duration of the test
 
 	def setFilter(self, node, path = '/vdb'):
