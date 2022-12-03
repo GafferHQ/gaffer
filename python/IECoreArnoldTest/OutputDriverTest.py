@@ -32,7 +32,7 @@
 #
 ##########################################################################
 
-import os
+import pathlib
 import time
 import unittest
 import subprocess
@@ -48,7 +48,7 @@ class OutputDriverTest( unittest.TestCase ) :
 
 		subprocess.check_call( [
 			"kick", "-v", "0", "-dw", "-dp",
-			os.path.join( os.path.dirname( __file__ ), "assFiles", "mergedDisplays.ass" )
+			pathlib.Path( __file__ ).parent / "assFiles" / "mergedDisplays.ass"
 		] )
 
 		image = IECoreImage.ImageDisplayDriver.removeStoredImage( "mergedImage" )
@@ -70,7 +70,7 @@ class OutputDriverTest( unittest.TestCase ) :
 
 		subprocess.check_call( [
 			"kick", "-v", "0", "-dw", "-dp",
-			os.path.join( os.path.dirname( __file__ ), "assFiles", "vectorAndPointDisplays.ass" )
+			pathlib.Path( __file__ ).parent / "assFiles" / "vectorAndPointDisplays.ass"
 		] )
 
 		image = IECoreImage.ImageDisplayDriver.removeStoredImage( "vectorAndPointImage" )
@@ -95,7 +95,7 @@ class OutputDriverTest( unittest.TestCase ) :
 
 		subprocess.check_call( [
 			"kick", "-v", "0", "-dw", "-dp",
-			os.path.join( os.path.dirname( __file__ ), "assFiles", "outputWithLayerName.ass" )
+			pathlib.Path( __file__ ).parent / "assFiles" / "outputWithLayerName.ass"
 		] )
 
 		image = IECoreImage.ImageDisplayDriver.removeStoredImage( "layerNameImage" )
