@@ -35,6 +35,7 @@
 ##########################################################################
 
 import os
+import pathlib
 import unittest
 
 import IECore
@@ -49,7 +50,7 @@ class OpMatcherTest( GafferTest.TestCase ) :
 
 		GafferTest.TestCase.setUp( self )
 
-		self.__sequence = IECore.FileSequence( self.temporaryDirectory() + "/a.#.exr 1-10" )
+		self.__sequence = IECore.FileSequence( f'{self.temporaryDirectory() / "a.#.exr"} 1-10' )
 		for f in self.__sequence.fileNames() :
 			os.system( "touch %s" % f )
 
@@ -61,8 +62,8 @@ class OpMatcherTest( GafferTest.TestCase ) :
 
 		matcher = GafferCortex.OpMatcher.defaultInstance()
 
-		exrFile = os.path.dirname( __file__ ) + "/images/checker.exr"
-		path = Gaffer.FileSystemPath( exrFile )
+		exrPath = pathlib.Path( __file__ ).parent / "images" / "checker.exr"
+		path = Gaffer.FileSystemPath( exrPath )
 
 		ops = matcher.matches( path )
 		self.assertTrue( len( ops ) )

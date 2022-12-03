@@ -36,6 +36,7 @@
 ##########################################################################
 
 import os
+import pathlib
 import unittest
 
 import IECore
@@ -49,36 +50,36 @@ class ObjectReaderTest( GafferTest.TestCase ) :
 
 	def test( self ) :
 
-		fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferCortexTest/images/checker.exr" )
+		filePath = pathlib.Path( os.environ["GAFFER_ROOT"] ) / "python" / "GafferCortexTest" / "images" / "checker.exr"
 
 		node = GafferCortex.ObjectReader()
-		node["fileName"].setValue( fileName )
-		self.assertEqual( node["fileName"].getValue(), fileName )
+		node["fileName"].setValue( filePath )
+		self.assertEqual( node["fileName"].getValue(), filePath.as_posix() )
 
-		reader = IECore.Reader.create( fileName )
+		reader = IECore.Reader.create( str( filePath ) )
 
 		# check that the result is the same as loading it ourselves
 		self.assertEqual( reader.read(), node["out"].getValue() )
 
 	def testChangingFileType( self ) :
 
-		imageFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferCortexTest/images/checker.exr" )
-		cobFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferCortexTest/cobs/string.cob" )
+		imageFilePath = pathlib.Path( os.environ["GAFFER_ROOT"] ) / "python" / "GafferCortexTest" / "images" / "checker.exr"
+		cobFilePath = pathlib.Path( os.environ["GAFFER_ROOT"] ) / "python" / "GafferCortexTest" / "cobs" / "string.cob"
 
 		node = GafferCortex.ObjectReader()
-		node["fileName"].setValue( imageFileName )
-		reader = IECore.Reader.create( imageFileName )
+		node["fileName"].setValue( imageFilePath )
+		reader = IECore.Reader.create( str( imageFilePath ) )
 		self.assertEqual( reader.read(), node["out"].getValue() )
 
-		node["fileName"].setValue( cobFileName )
-		reader = IECore.Reader.create( cobFileName )
+		node["fileName"].setValue( cobFilePath )
+		reader = IECore.Reader.create( str( cobFilePath ) )
 		self.assertEqual( reader.read(), node["out"].getValue() )
 
 	def testReadAfterSerialisation( self ) :
 
 		s = Gaffer.ScriptNode()
 		s["n"] = GafferCortex.ObjectReader()
-		s["n"]["fileName"].setValue( os.path.dirname( __file__ ) + "/images/checker.exr" )
+		s["n"]["fileName"].setValue( pathlib.Path( __file__ ).parent / "images" / "checker.exr" )
 
 		r = s["n"]["out"].getValue()
 

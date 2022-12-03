@@ -36,6 +36,7 @@
 ##########################################################################
 
 import os
+import pathlib
 import unittest
 
 import IECore
@@ -51,26 +52,26 @@ class ObjectWriterTest( GafferTest.TestCase ) :
 
 		GafferTest.TestCase.setUp( self )
 
-		self.__exrFileName = self.temporaryDirectory() + "/checker.exr"
-		self.__tifFileName = self.temporaryDirectory() + "/checker.tif"
-		self.__exrSequence = IECore.FileSequence( self.temporaryDirectory() + "/checker.####.exr 1-4" )
+		self.__exrFilePath = self.temporaryDirectory() / "checker.exr"
+		self.__tifFilePath = self.temporaryDirectory() / "checker.tif"
+		self.__exrSequence = IECore.FileSequence( f'{self.temporaryDirectory() / "checker.####.exr"} 1-4' )
 
 	def test( self ) :
 
-		checker = os.path.expandvars( "$GAFFER_ROOT/python/GafferCortexTest/images/checker.exr" )
-		checker = IECore.Reader.create( checker ).read()
+		checkerPath = pathlib.Path( os.environ["GAFFER_ROOT"] ) / "python" / "GafferCortexTest" / "images" / "checker.exr"
+		checker = IECore.Reader.create( str( checkerPath ) ).read()
 
 		node = GafferCortex.ObjectWriter()
-		node["fileName"].setValue( self.__exrFileName )
+		node["fileName"].setValue( self.__exrFilePath )
 		node["in"].setValue( checker )
 
-		self.assertEqual( node["fileName"].getValue(), self.__exrFileName )
+		self.assertEqual( node["fileName"].getValue(), self.__exrFilePath.as_posix() )
 		self.assertEqual( node["in"].getValue(), checker )
 
 		# check that there are plugs for the writer parameters,
 		# but not for the fileName parameter.
 
-		writer = IECore.Writer.create( checker, self.__exrFileName )
+		writer = IECore.Writer.create( checker, str( self.__exrFilePath ) )
 
 		for k in writer.parameters().keys() :
 			if k != "fileName" and k != "object" :
@@ -80,34 +81,34 @@ class ObjectWriterTest( GafferTest.TestCase ) :
 
 		# check that saving it works
 
-		self.assertFalse( os.path.exists( self.__exrFileName ) )
+		self.assertFalse( self.__exrFilePath.exists() )
 		with Gaffer.Context() :
 			node["task"].execute()
-		self.assertTrue( os.path.exists( self.__exrFileName ) )
+		self.assertTrue( self.__exrFilePath.exists() )
 
 	def testChangingFileType( self ) :
 
-		checker = os.path.expandvars( "$GAFFER_ROOT/python/GafferCortexTest/images/checker.exr" )
-		checker = IECore.Reader.create( checker ).read()
+		checkerPath = pathlib.Path( os.environ["GAFFER_ROOT"] ) / "python" / "GafferCortexTest" / "images" / "checker.exr"
+		checker = IECore.Reader.create( str( checkerPath ) ).read()
 
 		node = GafferCortex.ObjectWriter()
-		node["fileName"].setValue( self.__exrFileName )
+		node["fileName"].setValue( self.__exrFilePath )
 		node["in"].setValue( checker )
 
-		node["fileName"].setValue( self.__tifFileName )
+		node["fileName"].setValue( self.__tifFilePath )
 
 		with Gaffer.Context() :
 			node["task"].execute()
-		self.assertTrue( os.path.exists( self.__tifFileName ) )
+		self.assertTrue( self.__tifFilePath.exists() )
 
-		image = IECoreImage.ImageReader( self.__tifFileName ).read()
+		image = IECoreImage.ImageReader( str( self.__tifFilePath ) ).read()
 		self.assertIn( "tiff:Compression", image.blindData() )
 
 	def testExtraneousPlugsAfterSerialisation( self ) :
 
 		s = Gaffer.ScriptNode()
 		s["n"] = GafferCortex.ObjectWriter()
-		s["n"]["fileName"].setValue( self.__exrFileName )
+		s["n"]["fileName"].setValue( self.__exrFilePath )
 
 		self.assertIn( "parameters", s["n"] )
 		self.assertNotIn( "parameters1", s["n"] )
@@ -122,8 +123,8 @@ class ObjectWriterTest( GafferTest.TestCase ) :
 
 	def testStringSubstitutions( self ) :
 
-		checker = os.path.expandvars( "$GAFFER_ROOT/python/GafferCortexTest/images/checker.exr" )
-		checker = IECore.Reader.create( checker ).read()
+		checkerPath = pathlib.Path( os.environ["GAFFER_ROOT"] ) / "python" / "GafferCortexTest" / "images" / "checker.exr"
+		checker = IECore.Reader.create( str( checkerPath ) ).read()
 
 		node = GafferCortex.ObjectWriter()
 		node["fileName"].setValue( self.__exrSequence.fileName )
@@ -137,7 +138,7 @@ class ObjectWriterTest( GafferTest.TestCase ) :
 				node["task"].execute()
 
 		for f in self.__exrSequence.fileNames() :
-			self.assertTrue( os.path.exists( f ) )
+			self.assertTrue( pathlib.Path( f ).exists() )
 
 	def testHash( self ) :
 
@@ -155,7 +156,7 @@ class ObjectWriterTest( GafferTest.TestCase ) :
 
 		# no input object produces no effect
 		with c :
-			s["n"]["fileName"].setValue( self.__exrFileName )
+			s["n"]["fileName"].setValue( self.__exrFilePath )
 			self.assertEqual( s["n"]["task"].hash(), IECore.MurmurHash() )
 
 		# now theres a file and object, we get some output
