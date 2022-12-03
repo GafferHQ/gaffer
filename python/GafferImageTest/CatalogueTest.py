@@ -39,6 +39,7 @@ import threading
 import stat
 import shutil
 import imath
+import pathlib
 
 import IECore
 
@@ -238,7 +239,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/blurRange.exr" )
 		self.sendImage( r["out"], s["c"] )
 		self.assertEqual( len( s["c"]["images"] ), 1 )
-		self.assertEqual( os.path.dirname( s["c"]["images"][0]["fileName"].getValue() ), s["c"]["directory"].getValue() )
+		self.assertEqual( pathlib.Path( s["c"]["images"][0]["fileName"].getValue() ).parent.as_posix(), s["c"]["directory"].getValue() )
 		self.assertImagesEqual( s["c"]["out"], r["out"], ignoreMetadata = True, maxDifference = 0.0003 )
 
 		r["fileName"].setValue( s["c"]["images"][0]["fileName"].getValue() )
@@ -508,7 +509,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		# in order to save memory.
 
 		self.assertEqual( len( c["images"] ), 1 )
-		self.assertEqual( os.path.dirname( c["images"][0]["fileName"].getValue() ), c["directory"].getValue() )
+		self.assertEqual( pathlib.Path( c["images"][0]["fileName"].getValue() ).parent.as_posix(), c["directory"].getValue() )
 
 		self.assertEqual( drivers[0][0].refCount(), 1 )
 
@@ -591,10 +592,10 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		s["c"] = GafferImage.Catalogue()
 		s["c"]["directory"].setValue( directory )
 
-		fullDirectory = s.context().substitute( s["c"]["directory"].getValue() )
+		fullDirectory = pathlib.Path( s.context().substitute( s["c"]["directory"].getValue() ) )
 		self.assertNotEqual( directory, fullDirectory )
-		self.assertFalse( os.path.exists( directory ) )
-		self.assertFalse( os.path.exists( fullDirectory ) )
+		self.assertFalse( directory.exists() )
+		self.assertFalse( fullDirectory.exists() )
 
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/checker.exr" )
@@ -609,8 +610,8 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		s.removeChild( s["c"] )
 		driver.close()
 
-		self.assertFalse( os.path.exists( directory ) )
-		self.assertFalse( os.path.exists( fullDirectory ) )
+		self.assertFalse( directory.exists() )
+		self.assertFalse( fullDirectory.exists() )
 
 	def testNonWritableDirectory( self ) :
 
@@ -740,7 +741,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 	def testLoadWithInvalidNames( self ) :
 
-		sourceFile = os.path.join( os.path.dirname( __file__ ), "images", "blurRange.exr" )
+		sourceFile = pathlib.Path( __file__ ).parent /  "images" / "blurRange.exr"
 
 		for name, expectedName in [
 			( "0", "_0" ),

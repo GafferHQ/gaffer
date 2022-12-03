@@ -38,6 +38,7 @@ import os
 import inspect
 import unittest
 import imath
+import pathlib
 
 import IECore
 
@@ -47,7 +48,7 @@ import GafferImageTest
 
 class AnaglyphTest( GafferImageTest.ImageTestCase ) :
 
-	file = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/multipart.exr" )
+	file = pathlib.Path( os.environ["GAFFER_ROOT"] ) / "python" / "GafferImageTest" / "images" / "multipart.exr"
 
 	def test( self ) :
 

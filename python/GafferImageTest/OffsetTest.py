@@ -35,6 +35,7 @@
 ##########################################################################
 
 import os
+import pathlib
 import unittest
 import imath
 
@@ -50,7 +51,7 @@ class OffsetTest( GafferImageTest.ImageTestCase ) :
 	def testPassThrough( self ) :
 
 		c = GafferImage.ImageReader()
-		c["fileName"].setValue( os.path.dirname( __file__ ) + "/images/checker2x2.exr" )
+		c["fileName"].setValue( pathlib.Path( __file__ ).parent / "images" / "checker2x2.exr" )
 
 		o = GafferImage.Offset()
 		o["in"].setInput( c["out"] )
@@ -62,7 +63,7 @@ class OffsetTest( GafferImageTest.ImageTestCase ) :
 	def testDataWindow( self ) :
 
 		c = GafferImage.ImageReader()
-		c["fileName"].setValue( os.path.dirname( __file__ ) + "/images/checker2x2.exr" )
+		c["fileName"].setValue( pathlib.Path( __file__ ).parent / "images" / "checker2x2.exr" )
 
 		self.assertEqual(
 			c["out"]["dataWindow"].getValue(),
@@ -81,7 +82,7 @@ class OffsetTest( GafferImageTest.ImageTestCase ) :
 	def testChannelData( self ) :
 
 		c = GafferImage.ImageReader()
-		c["fileName"].setValue( os.path.dirname( __file__ ) + "/images/checker2x2.exr" )
+		c["fileName"].setValue( pathlib.Path( __file__ ).parent / "images" / "checker2x2.exr" )
 
 		o = GafferImage.Offset()
 		o["in"].setInput( c["out"] )
@@ -108,7 +109,7 @@ class OffsetTest( GafferImageTest.ImageTestCase ) :
 	def testDeepOffset( self ) :
 
 		r = GafferImage.ImageReader()
-		r["fileName"].setValue( os.path.dirname( __file__ ) + "/images/representativeDeepImage.exr" )
+		r["fileName"].setValue( pathlib.Path( __file__ ).parent / "images" / "representativeDeepImage.exr" )
 
 		od = GafferImage.Offset()
 		od["in"].setInput( r["out"] )
@@ -138,7 +139,7 @@ class OffsetTest( GafferImageTest.ImageTestCase ) :
 	def testMultipleOfTileSize( self ) :
 
 		c = GafferImage.ImageReader()
-		c["fileName"].setValue( os.path.dirname( __file__ ) + "/images/checker.exr" )
+		c["fileName"].setValue( pathlib.Path( __file__ ).parent / "images" / "checker.exr" )
 
 		o = GafferImage.Offset()
 		o["in"].setInput( c["out"] )
@@ -168,7 +169,7 @@ class OffsetTest( GafferImageTest.ImageTestCase ) :
 	def testOffsetBack( self ) :
 
 		c = GafferImage.ImageReader()
-		c["fileName"].setValue( os.path.dirname( __file__ ) + "/images/checker.exr" )
+		c["fileName"].setValue( pathlib.Path( __file__ ).parent / "images" / "checker.exr" )
 
 		o1 = GafferImage.Offset()
 		o1["in"].setInput( c["out"] )
