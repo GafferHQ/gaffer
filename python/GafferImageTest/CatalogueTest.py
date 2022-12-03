@@ -585,7 +585,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		# we don't expect to need to write here, but to ensure
 		# we didn't even try to do so we make it read only.
 		os.mkdir( baseDirectory )
-		os.chmod( baseDirectory, stat.S_IREAD )
+		os.chmod( baseDirectory, stat.S_IREAD | stat.S_IEXEC )
 		directory = baseDirectory / "${script:name}" / "images"
 
 		s["c"] = GafferImage.Catalogue()
