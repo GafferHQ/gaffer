@@ -35,6 +35,7 @@
 ##########################################################################
 
 import os
+import pathlib
 import subprocess
 
 import IECore
@@ -128,8 +129,8 @@ class ArnoldShaderUITest( GafferUITest.TestCase ) :
 
 	def testUserDefaultMetadata( self ) :
 
-		cacheFile =	os.path.join( self.temporaryDirectory(), "testShaderUserDefaults.scc" )
-		script = """
+		cacheFilePath =	self.temporaryDirectory() / "testShaderUserDefaults.scc"
+		script = f"""
 import Gaffer
 import GafferScene
 import GafferArnold
@@ -144,16 +145,16 @@ root["SceneWriter"] = GafferScene.SceneWriter( "SceneWriter" )
 root["ShaderAssignment"]["in"].setInput( root["Sphere"]["out"] )
 root["ShaderAssignment"]["shader"].setInput( root["image"]["out"] )
 root["SceneWriter"]["in"].setInput( root["ShaderAssignment"]["out"] )
-root["SceneWriter"]["fileName"].setValue( "%s" )
+root["SceneWriter"]["fileName"].setValue( "{cacheFilePath.as_posix()}" )
 root["SceneWriter"].execute()
-		""" % cacheFile
+		"""
 
 		env = os.environ.copy()
 		subprocess.check_call(
 			[ "gaffer", "env", "python","-c", script ],
 			env = env
 		)
-		scene = IECoreScene.SceneCache( cacheFile, IECore.IndexedIO.OpenMode.Read )
+		scene = IECoreScene.SceneCache( str( cacheFilePath ), IECore.IndexedIO.OpenMode.Read )
 		sphere = scene.child( "sphere" )
 		parms = sphere.readAttributeAtSample( "ai:surface", 0 ).outputShader().parameters
 
@@ -167,12 +168,12 @@ root["SceneWriter"].execute()
 		self.assertEqual( parms["filename"].value, "" )
 		self.assertEqual( parms["filter"].value, "smart_bicubic" )
 
-		env["ARNOLD_PLUGIN_PATH"] = os.path.join( os.path.dirname( __file__ ), "metadata" )
+		env["ARNOLD_PLUGIN_PATH"] = pathlib.Path( __file__ ).parent / "metadata"
 		subprocess.check_call(
 			[ "gaffer", "env", "python","-c", script ],
 			env = env
 		)
-		scene = IECoreScene.SceneCache( cacheFile, IECore.IndexedIO.OpenMode.Read )
+		scene = IECoreScene.SceneCache( str( cacheFilePath ), IECore.IndexedIO.OpenMode.Read )
 		sphere = scene.child( "sphere" )
 		parms = sphere.readAttributeAtSample( "ai:surface", 0 ).outputShader().parameters
 

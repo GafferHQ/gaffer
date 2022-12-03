@@ -121,7 +121,7 @@ class InteractiveArnoldRenderPerformanceTest( GafferUITest.TestCase ) :
 		script["InteractiveArnoldRender"]["in"].setInput( script["Outputs"]["out"] )
 
 		script["Catalogue"] = GafferImage.Catalogue( "Catalogue" )
-		script["Catalogue"]["directory"].setValue( self.temporaryDirectory() + "/catalogues/test" )
+		script["Catalogue"]["directory"].setValue( self.temporaryDirectory() / "catalogues" / "test" )
 
 		script["Blur"] = GafferImage.Blur( "Blur" )
 		script["Blur"]["in"].setInput( script["Catalogue"]["out"] )
