@@ -34,7 +34,7 @@
 #
 ##########################################################################
 
-import os
+import pathlib
 import unittest
 
 import IECore
@@ -53,10 +53,10 @@ class DelightRenderTest( GafferSceneTest.SceneTestCase ) :
 		render = GafferDelight.DelightRender()
 		render["in"].setInput( plane["out"] )
 		render["mode"].setValue( render.Mode.SceneDescriptionMode )
-		render["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.nsi" ) )
+		render["fileName"].setValue( self.temporaryDirectory() / "test.nsi" )
 
 		render["task"].execute()
-		self.assertTrue( os.path.exists( render["fileName"].getValue() ) )
+		self.assertTrue( pathlib.Path( render["fileName"].getValue() ).exists() )
 
 	def testRenderMode( self ) :
 
@@ -66,7 +66,7 @@ class DelightRenderTest( GafferSceneTest.SceneTestCase ) :
 		outputs.addOutput(
 			"beauty",
 			IECoreScene.Output(
-				self.temporaryDirectory() + "/test.exr",
+				str( self.temporaryDirectory() / "test.exr" ),
 				"exr",
 				"rgba",
 				{}
@@ -78,7 +78,7 @@ class DelightRenderTest( GafferSceneTest.SceneTestCase ) :
 		render["mode"].setValue( render.Mode.RenderMode )
 
 		render["task"].execute()
-		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/test.exr" ) )
+		self.assertTrue( ( self.temporaryDirectory() / "test.exr" ).exists() )
 
 	def testSceneTranslationOnly( self ) :
 
@@ -88,7 +88,7 @@ class DelightRenderTest( GafferSceneTest.SceneTestCase ) :
 		outputs.addOutput(
 			"beauty",
 			IECoreScene.Output(
-				self.temporaryDirectory() + "/test.exr",
+				str( self.temporaryDirectory() / "test.exr" ),
 				"exr",
 				"rgba",
 				{}
@@ -103,7 +103,7 @@ class DelightRenderTest( GafferSceneTest.SceneTestCase ) :
 			context["scene:render:sceneTranslationOnly"] = IECore.BoolData( True )
 			render["task"].execute()
 
-		self.assertFalse( os.path.exists( self.temporaryDirectory() + "/test.exr" ) )
+		self.assertFalse( ( self.temporaryDirectory() / "test.exr" ).exists() )
 
 if __name__ == "__main__":
 	unittest.main()
