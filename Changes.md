@@ -13,6 +13,7 @@ Improvements
 - Image View : Added support for custom presets for choosing catalogue outputs to compare to.  This can be set up like `Gaffer.Metadata.registerNodeValue( GafferImageUI.ImageView, "compare.catalogueOutput", "preset:MyPreset", "myNamespace:specialImage" )`.  The Catalogue won't know how to deal with a request for "myNamespace:specialImage", and will just output an error image, but this could be useful in pipelines where Catalogue's are wrapped in custom nodes that can respond to this special value of the `catalogue:imageName`.  If you want to provide a custom icon for your custom mode, Gaffer will search for an icon name `catalogueOutput{preset name}.png`.
 - Animation Editor : Added UI tooltips to menu items for TieMode and Interpolation.
 - CopyPrimitiveVariables : Added `ignoreIncompatible` plug which will cause the node to not error when attempting to copy primitive variables from the source object that are imcompatible with the destination object.
+- Arnold : Enabled support for using the `layerName` parameter with non-LPE outputs. This requires a minimum of Arnold 7.1.3.0, because it contains a fix for ARNOLD-12282.
 
 Fixes
 -----
