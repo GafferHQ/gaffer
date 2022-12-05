@@ -281,13 +281,13 @@ class ReferenceSerialiser : public NodeSerialiser
 	{
 		const Reference *r = static_cast<const Reference *>( graphComponent );
 
-		const std::string &fileName = r->fileName();
+		const std::filesystem::path &fileName = r->fileName();
 		if( fileName.empty() )
 		{
 			return "";
 		};
 
-		return identifier + ".load( \"" + fileName + "\" )\n";
+		return identifier + ".load( \"" + fileName.generic_string() + "\" )\n";
 	}
 
 };
