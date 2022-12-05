@@ -164,7 +164,7 @@ attribute = attributes["name"].value
 def visit( scene, path ) :
 
 	for childName in scene.childNames( path ) :
-		visit( scene, os.path.join( path, str( childName )  ) )
+		visit( scene, path.rstrip( "/" ) + "/" + str( childName ) )
 
 visit( node["out"], "/" )
 ```
