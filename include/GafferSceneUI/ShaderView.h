@@ -47,6 +47,7 @@
 #include "GafferImage/Display.h"
 
 #include <functional>
+#include <filesystem>
 
 namespace GafferSceneUI
 {
@@ -82,7 +83,7 @@ class GAFFERSCENEUI_API ShaderView : public GafferImageUI::ImageView
 
 		using SceneCreator = std::function<Gaffer::NodePtr ()>;
 		static void registerScene( const std::string &shaderPrefix, const std::string &name, SceneCreator sceneCreator );
-		static void registerScene( const std::string &shaderPrefix, const std::string &name, const std::string &referenceFileName );
+		static void registerScene( const std::string &shaderPrefix, const std::string &name, const std::filesystem::path &referenceFileName );
 		static void registeredScenes( const std::string &shaderPrefix, std::vector<std::string> &names );
 
 	private :

@@ -459,7 +459,7 @@ void ShaderView::deregisterRenderer( const std::string &shaderPrefix )
 	rendererRegistrationChangedSignal()();
 }
 
-void ShaderView::registerScene( const std::string &shaderPrefix, const std::string &name, const std::string &fileName )
+void ShaderView::registerScene( const std::string &shaderPrefix, const std::string &name, const std::filesystem::path &fileName )
 {
 	// See ShaderViewBinding.cpp for details.
 	throw IECore::Exception( "ShaderView::registerScene currently only implemented in Python" );

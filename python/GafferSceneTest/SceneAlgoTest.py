@@ -35,7 +35,6 @@
 ##########################################################################
 
 import imath
-import os
 import unittest
 
 import IECore
@@ -765,11 +764,11 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		m["in"].setInput( c["out"] )
 		o["in"].setInput( m["out"] )
 
-		pathWithoutMeta = os.path.join( self.temporaryDirectory(), "sceneAlgoSourceSceneWithoutMeta.exr" )
+		pathWithoutMeta = self.temporaryDirectory() / "sceneAlgoSourceSceneWithoutMeta.exr"
 		o["fileName"].setValue( pathWithoutMeta )
 		o.execute()
 
-		pathWithMeta = os.path.join( self.temporaryDirectory(), "sceneAlgoSourceSceneWithMeta.exr" )
+		pathWithMeta = self.temporaryDirectory() / "sceneAlgoSourceSceneWithMeta.exr"
 		m["metadata"].addChild(
 			Gaffer.NameValuePlug(
 				"gaffer:sourceScene", IECore.StringData( expectedPath ), True, "sourceScene",

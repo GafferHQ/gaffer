@@ -34,7 +34,6 @@
 #
 ##########################################################################
 
-import os
 import imath
 
 import IECore
@@ -163,8 +162,8 @@ class AttributeVisualiserTest( GafferSceneTest.SceneTestCase ) :
 
 	def testVectors( self ) :
 
-		fileName = os.path.join( self.temporaryDirectory(), "attributes.scc" )
-		scene = IECoreScene.SceneInterface.create( fileName, IECore.IndexedIO.Write )
+		filePath = self.temporaryDirectory() / "attributes.scc"
+		scene = IECoreScene.SceneInterface.create( str( filePath ), IECore.IndexedIO.Write )
 		child = scene.createChild( "child" )
 		for name, value in [
 			( "v2f", IECore.V2fData( imath.V2f( 1, 2 ) ) ),
@@ -178,7 +177,7 @@ class AttributeVisualiserTest( GafferSceneTest.SceneTestCase ) :
 		del scene, child
 
 		sceneReader = GafferScene.SceneReader()
-		sceneReader["fileName"].setValue( fileName )
+		sceneReader["fileName"].setValue( filePath )
 
 		childFilter = GafferScene.PathFilter()
 		childFilter["paths"].setValue( IECore.StringVectorData( [ "/child" ] ) )

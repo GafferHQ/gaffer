@@ -34,7 +34,7 @@
 #
 ##########################################################################
 
-import os
+import pathlib
 
 import IECore
 
@@ -136,7 +136,7 @@ class StandardAttributesTest( GafferSceneTest.SceneTestCase ) :
 	def testLoadPromotedAttributeFrom0_53( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/promotedCompoundDataMemberPlug-0.53.4.0.gfr" )
+		s["fileName"].setValue( pathlib.Path( __file__ ).parent / "scripts" / "promotedCompoundDataMemberPlug-0.53.4.0.gfr" )
 		s.load()
 		self.assertPromotedAttribute( s )
 

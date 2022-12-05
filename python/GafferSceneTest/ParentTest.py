@@ -34,7 +34,7 @@
 #
 ##########################################################################
 
-import os.path
+import pathlib
 import inspect
 
 import imath
@@ -451,7 +451,7 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 	def testLoadFrom0_54( self ) :
 
 		script = Gaffer.ScriptNode()
-		script["fileName"].setValue( os.path.join( os.path.dirname( __file__ ), "scripts", "parent-0.54.1.0.gfr" ) )
+		script["fileName"].setValue( pathlib.Path( __file__ ).parent / "scripts" / "parent-0.54.1.0.gfr" )
 		script.load()
 
 		self.assertEqual( script["Parent"]["in"].getInput(), script["Plane"]["out"] )

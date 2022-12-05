@@ -793,7 +793,7 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 
 		script["writer"] = GafferScene.SceneWriter()
 		script["writer"]["in"].setInput( script["group"]["out"] )
-		script["writer"]["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.abc" ) )
+		script["writer"]["fileName"].setValue( self.temporaryDirectory() / "test.abc" )
 		script["writer"]["task"].execute()
 
 		script["reader"] = GafferScene.SceneReader()
