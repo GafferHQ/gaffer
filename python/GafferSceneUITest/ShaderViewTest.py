@@ -91,7 +91,7 @@ class ShaderViewTest( GafferUITest.TestCase ) :
 
 		s["b"].exportForReference( self.temporaryDirectory() / "test.grf" )
 
-		GafferSceneUI.ShaderView.registerScene( "test", "Default", ( self.temporaryDirectory() / "test.grf" ).as_posix() )
+		GafferSceneUI.ShaderView.registerScene( "test", "Default", self.temporaryDirectory() / "test.grf" )
 
 		shader = GafferSceneTest.TestShader()
 		shader["type"].setValue( "test:surface" )
