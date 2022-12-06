@@ -320,8 +320,7 @@ class CopyPrimitiveVariablesTest( GafferSceneTest.SceneTestCase ) :
 		copy["filter"].setInput( sphereFilter["out"] )
 		copy["primitiveVariables"].setValue( "*" )
 
-		with six.assertRaisesRegex(
-			self,
+		with self.assertRaisesRegex(
 			RuntimeError,
 			'Cannot copy .* from "/cube" to "/sphere" because source and destination primitives have different topology. Turn on `ignoreIncompatible` to disable this error and ignore invalid primitive variables.'
 		) :
