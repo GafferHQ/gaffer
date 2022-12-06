@@ -18,6 +18,7 @@ Fixes
 -----
 
 - Viewer : Added missing missing bookmarks 1-4 to the image comparison menu.
+- MessagesBinding : Fixed GIL management bug that could cause crashes when performing an interactive render.
 
 API
 ---
@@ -237,6 +238,14 @@ Breaking Changes
 - Signals : Removed flawed `ScopedConnection` copy constructor and assignment operator. Use move construction and assignment instead.
 - ImagePlug : Removed unused `viewName` argument from `viewNames()` and `viewNamesHash()` methods.
 - StandardAttributes : Removed backwards compatibility for StandardAttributes nodes saved from Gaffer `0.95.0` (May 2014) and earlier. If necessary, resave affected files using a recent Gaffer version.
+
+1.0.6.x (relative to 1.0.6.3)
+=======
+
+Fixes
+-----
+
+- MessagesBinding : Fixed GIL management bug that could cause crashes when performing an interactive render.
 
 1.0.6.3 (relative to 1.0.6.2)
 =======
