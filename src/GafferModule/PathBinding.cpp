@@ -481,12 +481,12 @@ struct StdPathFromPathlibPath
 		data->convertible = storage;
 
 		object o( handle<>( borrowed( obj ) ) );
-		std::string s;
 		if( !PyUnicode_Check( obj ) )
 		{
 			o = o.attr( "__str__" )();
 		}
-		*path = std::string( extract<std::string>( o ) );
+		const std::string s = extract<std::string>( o );
+		*path = s;
 	}
 
 };
