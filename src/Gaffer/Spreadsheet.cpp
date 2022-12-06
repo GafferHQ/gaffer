@@ -423,7 +423,7 @@ class Spreadsheet::RowsPlug::RowNameMap
 
 		string rowName( const RowPlug *row )
 		{
-			auto namePlug = row->namePlug()->source<StringPlug>();
+			auto namePlug = row->namePlug()->source<ValuePlug>();
 			if( namePlug->direction() == Plug::Out )
 			{
 				return "__rowNameMap::computedNameSentinel__";
