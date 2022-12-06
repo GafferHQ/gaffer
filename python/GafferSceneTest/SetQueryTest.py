@@ -35,7 +35,6 @@
 ##########################################################################
 
 import inspect
-import six
 import unittest
 
 import imath
@@ -200,7 +199,7 @@ class SetQueryTest( GafferSceneTest.SceneTestCase ) :
 			"""
 		) )
 
-		with six.assertRaisesRegex( self, Gaffer.ProcessException, 'Context has no variable named "scene:path"' ) :
+		with self.assertRaisesRegex( Gaffer.ProcessException, 'Context has no variable named "scene:path"' ) :
 			script["query"]["firstMatch"].getValue()
 
 		script["expression"] = Gaffer.Expression()
@@ -211,7 +210,7 @@ class SetQueryTest( GafferSceneTest.SceneTestCase ) :
 			"""
 		) )
 
-		with six.assertRaisesRegex( self, Gaffer.ProcessException, 'Context has no variable named "scene:path"' ) :
+		with self.assertRaisesRegex( Gaffer.ProcessException, 'Context has no variable named "scene:path"' ) :
 			script["query"]["firstMatch"].getValue()
 
 	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 1 )
