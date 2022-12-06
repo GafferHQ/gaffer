@@ -214,12 +214,12 @@ IE_CORE_DEFINERUNTIMETYPED( ScriptNode::CompoundAction );
 namespace
 {
 
-std::string readFile( const std::string &fileName )
+std::string readFile( const std::filesystem::path &fileName )
 {
 	std::ifstream f( fileName.c_str() );
 	if( !f.good() )
 	{
-		throw IECore::IOException( "Unable to open file \"" + fileName + "\"" );
+		throw IECore::IOException( "Unable to open file \"" + fileName.string() + "\"" );
 	}
 
 	const IECore::Canceller *canceller = Context::current()->canceller();
@@ -230,7 +230,7 @@ std::string readFile( const std::string &fileName )
 		IECore::Canceller::check( canceller );
 		if( !f.good() )
 		{
-			throw IECore::IOException( "Failed to read from \"" + fileName + "\"" );
+			throw IECore::IOException( "Failed to read from \"" + fileName.string() + "\"" );
 		}
 
 		std::string line;
@@ -846,7 +846,7 @@ bool ScriptNode::execute( const std::string &serialisation, Node *parent, bool c
 bool ScriptNode::executeFile( const std::filesystem::path &fileName, Node *parent, bool continueOnError )
 {
 	const std::string serialisation = readFile( fileName );
-	return executeInternal( serialisation, parent, continueOnError, fileName );
+	return executeInternal( serialisation, parent, continueOnError, fileName.generic_string() );
 }
 
 bool ScriptNode::load( bool continueOnError)
