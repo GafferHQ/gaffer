@@ -46,6 +46,8 @@
 #include "IECoreImage/DisplayDriver.h"
 #include "IECoreImage/DisplayDriverServer.h"
 
+#include <filesystem>
+
 namespace GafferImageModule
 {
 
@@ -92,8 +94,8 @@ class GAFFERIMAGE_API Catalogue : public ImageNode
 				/// asynchronously.
 				void copyFrom( const Image *other );
 
-				static Ptr load( const std::string &fileName );
-				void save( const std::string &fileName ) const;
+				static Ptr load( const std::filesystem::path &fileName );
+				void save( const std::filesystem::path &fileName ) const;
 
 				Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
 
@@ -133,8 +135,8 @@ class GAFFERIMAGE_API Catalogue : public ImageNode
 		/// Generates a filename that could be used for storing
 		/// a particular image locally in this Catalogue's directory.
 		/// Primarily exists to be used in the UI.
-		std::string generateFileName( const Image *image ) const;
-		std::string generateFileName( const ImagePlug *image ) const;
+		std::filesystem::path generateFileName( const Image *image ) const;
+		std::filesystem::path generateFileName( const ImagePlug *image ) const;
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 

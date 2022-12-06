@@ -36,6 +36,7 @@
 ##########################################################################
 
 import os
+import pathlib
 import unittest
 
 import imath
@@ -152,7 +153,7 @@ class CheckerboardTest( GafferImageTest.ImageTestCase ) :
 		checkerboard["transform"]["scale"]["y"].setValue( 10 )
 
 		reader = GafferImage.ImageReader()
-		reader["fileName"].setValue( os.path.dirname( __file__ ) + "/images/GafferChecker.exr" )
+		reader["fileName"].setValue( pathlib.Path( __file__ ).parent / "images" / "GafferChecker.exr" )
 
 		# The image
 		self.assertImagesEqual( checkerboard["out"], reader["out"], ignoreMetadata = True, maxDifference = 0.0002 )
