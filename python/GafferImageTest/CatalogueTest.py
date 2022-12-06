@@ -751,7 +751,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 			fileName = self.temporaryDirectory() / ( name + ".exr" )
 			shutil.copyfile( sourceFile, fileName )
-			GafferImage.Catalogue.Image.load( fileName.as_posix() )
+			GafferImage.Catalogue.Image.load( fileName )
 
 	def testRenamePromotedImages( self ) :
 
@@ -894,8 +894,8 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		# Check that two images match only if identical
 		f1 = catalogue.generateFileName( constant1["out"] )
 
-		self.assertEqual( f1.split( "/" )[:2], [ "foo", "dir" ] )
-		self.assertEqual( f1.split( "." )[-1], "exr" )
+		self.assertEqual( f1.parts[:2], ( "foo", "dir" ) )
+		self.assertEqual( f1.suffix, ".exr" )
 
 		constant2 = GafferImage.Constant()
 		constant2["format"].setValue( GafferImage.Format( imath.Box2i( imath.V2i(0), imath.V2i( 100 ) ) ) )

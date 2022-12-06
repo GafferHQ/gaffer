@@ -56,6 +56,7 @@ API
   - Backups : File names are now represented using `pathlib.Path`.
   - TestCase : `temporaryDirectory()` now returns a `pathlib.Path`.
   - ShaderView : `registerReferenceScene()` now takes a `filesystem::path`.
+  - Catalogue : `save()` and `load()` take a `filesystem::path`, and `generateFileName()` returns one.
 - PathColumn : Added `buttonPressSignal()`, `buttonReleaseSignal()` and `buttonDoubleClickSignal()`. These allow a PathColumn to implement its own event handling.
 - Capsule : Removed attempts to detect invalidated Capsules.
 - VisibleSet/VisibleSetData : Added struct used to define a subset of the scene to be rendered based on expansions, inclusions, and exclusions. This is used to allow scene locations to be defined as always or never renderable, overriding the usual UI expansion behaviour.
