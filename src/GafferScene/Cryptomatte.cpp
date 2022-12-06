@@ -42,12 +42,12 @@
 
 #include "IECore/MessageHandler.h"
 
-#include <boost/filesystem.hpp>
 #include <boost/iostreams/stream.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/regex.hpp>
 
+#include <filesystem>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -217,7 +217,7 @@ IECore::CompoundDataPtr parseManifestFromSidecarFile( const std::string &manifes
 	{
 		throw IECore::Exception( "No manifest file provided." );
 	}
-	else if( !boost::filesystem::is_regular_file( manifestFile ) )
+	else if( !std::filesystem::is_regular_file( manifestFile ) )
 	{
 		throw IECore::Exception( boost::str( boost::format( "Manifest file not found: %s" ) % manifestFile ) );
 	}
@@ -247,13 +247,13 @@ IECore::CompoundDataPtr parseManifestFromMetadataAndSidecar( const std::string &
 	{
 		throw IECore::Exception( "No manifest directory provided. A directory is required to locate the manifest." );
 	}
-	else if( !boost::filesystem::is_directory( manifestDirectory ) )
+	else if( !std::filesystem::is_directory( manifestDirectory ) )
 	{
 		throw IECore::Exception( boost::str( boost::format( "Manifest directory not found: %s") % manifestDirectory ) );
 	}
 
 	const StringData *manifestFile = metadata->member<StringData>( metadataKey );
-	boost::filesystem::path p( manifestDirectory );
+	std::filesystem::path p( manifestDirectory );
 	// append manifest file to directory path
 	p /= manifestFile->readable();
 

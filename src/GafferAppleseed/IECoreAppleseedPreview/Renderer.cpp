@@ -86,13 +86,13 @@
 #include "renderer/api/utility.h"
 
 #include "boost/algorithm/string.hpp"
-#include "boost/filesystem/convenience.hpp"
-#include "boost/filesystem/operations.hpp"
 #include "boost/lexical_cast.hpp"
 #include "boost/smart_ptr/scoped_ptr.hpp"
 #include "boost/thread.hpp"
 
 #include "tbb/concurrent_hash_map.h"
+
+#include <filesystem>
 
 namespace asf = foundation;
 namespace asr = renderer;
@@ -247,7 +247,7 @@ class AppleseedRendererBase : public IECoreScenePreview::Renderer
 		float m_shutterCloseTime;
 
 		string m_appleseedFileName;
-		boost::filesystem::path m_projectPath;
+		std::filesystem::path m_projectPath;
 };
 
 } // namespace
@@ -1191,7 +1191,7 @@ class AppleseedPrimitive : public AppleseedEntity
 			AppleseedPrimitive::attributes( attributes );
 		}
 
-		AppleseedPrimitive( asr::Project &project, const string &name, const Object *object, const IECoreScenePreview::Renderer::AttributesInterface *attributes, const boost::filesystem::path &projectPath )
+		AppleseedPrimitive( asr::Project &project, const string &name, const Object *object, const IECoreScenePreview::Renderer::AttributesInterface *attributes, const std::filesystem::path &projectPath )
 			:	AppleseedEntity( project, name, false )
 		{
 			init();
@@ -1201,7 +1201,7 @@ class AppleseedPrimitive : public AppleseedEntity
 			createSceneDescriptionObject( samples, projectPath, attributes );
 		}
 
-		AppleseedPrimitive( asr::Project &project, const string &name, const vector<const Object *> &samples, const vector<float> &times, float shutterOpenTime, float shutterCloseTime, const IECoreScenePreview::Renderer::AttributesInterface *attributes, const boost::filesystem::path &projectPath )
+		AppleseedPrimitive( asr::Project &project, const string &name, const vector<const Object *> &samples, const vector<float> &times, float shutterOpenTime, float shutterCloseTime, const IECoreScenePreview::Renderer::AttributesInterface *attributes, const std::filesystem::path &projectPath )
 			:	AppleseedEntity( project, name, false )
 		{
 			init();
@@ -1450,7 +1450,7 @@ class AppleseedPrimitive : public AppleseedEntity
 			return ".binarymesh";
 		}
 
-		void writeGeomFile( const Object *object, const boost::filesystem::path &path ) const
+		void writeGeomFile( const Object *object, const std::filesystem::path &path ) const
 		{
 			asf::auto_release_ptr<asr::Object> obj( ObjectAlgo::convert( object ) );
 
@@ -1463,7 +1463,7 @@ class AppleseedPrimitive : public AppleseedEntity
 		}
 
 		template<class ObjectType>
-		void createSceneDescriptionObject( const vector<ObjectType> &samples, const boost::filesystem::path &projectPath, const IECoreScenePreview::Renderer::AttributesInterface *attributes )
+		void createSceneDescriptionObject( const vector<ObjectType> &samples, const std::filesystem::path &projectPath, const IECoreScenePreview::Renderer::AttributesInterface *attributes )
 		{
 			const AppleseedAttributes *appleseedAttributes = static_cast<const AppleseedAttributes*>( attributes );
 
@@ -1476,14 +1476,14 @@ class AppleseedPrimitive : public AppleseedEntity
 				MurmurHash hash = object.hash();
 
 				string fileName = string( "_geometry/" ) + hash.toString() + filenameExtensionForObject( &object );
-				boost::filesystem::path p = projectPath / fileName;
+				std::filesystem::path p = projectPath / fileName;
 
 				// todo: can we do something better than locking here?
 				{
 					boost::lock_guard<boost::mutex> lock( g_geomFilesMutex );
 
 					// Write a geom file for the object if needed.
-					if( !boost::filesystem::exists( p ) )
+					if( !std::filesystem::exists( p ) )
 					{
 						writeGeomFile( &object, p );
 					}
@@ -2389,13 +2389,13 @@ void AppleseedRendererBase::createProject()
 			msg( MessageHandler::Error, "AppleseedRenderer", "Empty project filename" );
 		}
 
-		m_projectPath = boost::filesystem::path( m_appleseedFileName ).parent_path();
+		m_projectPath = std::filesystem::path( m_appleseedFileName ).parent_path();
 
 		// Create a dir to store the mesh files if it does not exist yet.
-		boost::filesystem::path geomPath = m_projectPath / "_geometry";
-		if( !boost::filesystem::exists( geomPath ) )
+		std::filesystem::path geomPath = m_projectPath / "_geometry";
+		if( !std::filesystem::exists( geomPath ) )
 		{
-			if( !boost::filesystem::create_directory( geomPath ) )
+			if( !std::filesystem::create_directory( geomPath ) )
 			{
 				msg( MessageHandler::Error, "AppleseedRenderer", "Couldn't create _geometry directory." );
 			}

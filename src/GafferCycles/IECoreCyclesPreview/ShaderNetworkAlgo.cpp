@@ -53,7 +53,6 @@
 #include "boost/algorithm/string.hpp"
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/lexical_cast.hpp"
-#include "boost/filesystem.hpp"
 #include "boost/unordered_map.hpp"
 
 // Cycles
@@ -62,6 +61,8 @@ IECORE_PUSH_DEFAULT_VISIBILITY
 #include "scene/osl.h"
 #include "util/path.h"
 IECORE_POP_DEFAULT_VISIBILITY
+
+#include <filesystem>
 
 using namespace std;
 using namespace IECore;
@@ -280,12 +281,12 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 					// Workaround to find all available tiles
 					string baseFileName = fileName.substr( 0, offset );
 					vector<string> files;
-					boost::filesystem::path path( ccl::path_dirname( pathFileName ) );
-					for( boost::filesystem::directory_iterator it( path ); it != boost::filesystem::directory_iterator(); ++it )
+					const std::filesystem::path path( ccl::path_dirname( pathFileName ) );
+					for( const auto &d : std::filesystem::directory_iterator( path ) )
 					{
-						if( boost::filesystem::is_regular_file( it->status() ) || boost::filesystem::is_symlink( it->status() ) )
+						if( std::filesystem::is_regular_file( d.status() ) || std::filesystem::is_symlink( d.status() ) )
 						{
-							string foundFile = it->path().stem().string();
+							string foundFile = d.path().stem().string();
 							if( baseFileName == ( foundFile.substr( 0, offset ) ) )
 							{
 								files.push_back( foundFile );

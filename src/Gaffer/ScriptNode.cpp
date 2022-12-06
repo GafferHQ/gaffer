@@ -55,8 +55,6 @@
 
 #include "boost/bind/bind.hpp"
 #include "boost/bind/placeholders.hpp"
-#include "boost/filesystem/convenience.hpp"
-#include "boost/filesystem/path.hpp"
 
 #include <fstream>
 
@@ -987,12 +985,12 @@ void ScriptNode::plugSet( Plug *plug )
 	}
 	else if( plug == fileNamePlug() )
 	{
-		const boost::filesystem::path fileName( fileNamePlug()->getValue() );
+		const std::filesystem::path fileName( fileNamePlug()->getValue() );
 		context()->set( g_scriptName, fileName.stem().string() );
 
 		MetadataAlgo::setReadOnly(
 			this,
-			boost::filesystem::exists( fileName ) && 0 != access( fileName.c_str(), W_OK ),
+			std::filesystem::exists( fileName ) && 0 != access( fileName.c_str(), W_OK ),
 			/* persistent = */ false
 		);
 	}

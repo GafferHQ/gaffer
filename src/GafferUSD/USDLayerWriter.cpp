@@ -51,6 +51,8 @@ IECORE_POP_DEFAULT_VISIBILITY
 
 #include "boost/filesystem.hpp"
 
+#include <filesystem>
+
 using namespace std;
 using namespace pxr;
 using namespace IECore;
@@ -71,30 +73,30 @@ class ScopedDirectory : boost::noncopyable
 
 	public :
 
-		ScopedDirectory( const boost::filesystem::path &p )
+		ScopedDirectory( const std::filesystem::path &p )
 			:	m_path( p )
 		{
-			boost::filesystem::create_directories( m_path );
+			std::filesystem::create_directories( m_path );
 		}
 
 		~ScopedDirectory()
 		{
-			boost::filesystem::remove_all( m_path );
+			std::filesystem::remove_all( m_path );
 		}
 
 	private :
 
-		boost::filesystem::path m_path;
+		std::filesystem::path m_path;
 
 };
 
 void createDirectories( const std::string &fileName )
 {
-	boost::filesystem::path filePath( fileName );
-	boost::filesystem::path directory = filePath.parent_path();
+	std::filesystem::path filePath( fileName );
+	std::filesystem::path directory = filePath.parent_path();
 	if( !directory.empty() )
 	{
-		boost::filesystem::create_directories( directory );
+		std::filesystem::create_directories( directory );
 	}
 }
 
@@ -352,7 +354,7 @@ void USDLayerWriter::executeSequence( const std::vector<float> &frames ) const
 	/// which are identical in both scenes, to avoid the overhead of writing
 	/// them only to discard them in `createDiff()`?
 
-	const boost::filesystem::path tempDirectory = boost::filesystem::temp_directory_path() / boost::filesystem::unique_path();
+	const std::filesystem::path tempDirectory = std::filesystem::temp_directory_path() / boost::filesystem::unique_path().string();
 	ScopedDirectory scopedTempDirectory( tempDirectory );
 
 	const string baseFileName = ( tempDirectory / "base.usdc" ).generic_string();

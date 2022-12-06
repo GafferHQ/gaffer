@@ -64,11 +64,11 @@
 #include "OpenColorIO/OpenColorIO.h"
 
 #include "boost/algorithm/string.hpp"
-#include "boost/filesystem.hpp"
 #include "boost/functional/hash.hpp"
 
 #include "tbb/spin_mutex.h"
 
+#include <filesystem>
 #include <memory>
 
 #ifndef _MSC_VER
@@ -2009,10 +2009,10 @@ void ImageWriter::execute() const
 
 	// Create the directory we need and open the file
 
-	boost::filesystem::path directory = boost::filesystem::path( fileName ).parent_path();
+	const std::filesystem::path directory = std::filesystem::path( fileName ).parent_path();
 	if( !directory.empty() )
 	{
-		boost::filesystem::create_directories( directory );
+		std::filesystem::create_directories( directory );
 	}
 
 
