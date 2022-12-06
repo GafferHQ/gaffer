@@ -60,6 +60,7 @@ CopyPrimitiveVariables::CopyPrimitiveVariables( const std::string &name )
 	addChild( new StringPlug( "primitiveVariables", Plug::In, "" ) );
 	addChild( new StringPlug( "sourceLocation" ) );
 	addChild( new StringPlug( "prefix" ) );
+	addChild( new BoolPlug( "ignoreIncompatible" ) );
 }
 
 CopyPrimitiveVariables::~CopyPrimitiveVariables()
@@ -106,6 +107,16 @@ const Gaffer::StringPlug *CopyPrimitiveVariables::prefixPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 3 );
 }
 
+Gaffer::BoolPlug *CopyPrimitiveVariables::ignoreIncompatiblePlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 4 );
+}
+
+const Gaffer::BoolPlug *CopyPrimitiveVariables::ignoreIncompatiblePlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 4 );
+}
+
 bool CopyPrimitiveVariables::affectsProcessedObject( const Gaffer::Plug *input ) const
 {
 	return Deformer::affectsProcessedObject( input ) ||
@@ -113,7 +124,8 @@ bool CopyPrimitiveVariables::affectsProcessedObject( const Gaffer::Plug *input )
 		input == primitiveVariablesPlug() ||
 		input == prefixPlug() ||
 		input == sourceLocationPlug() ||
-		input == sourcePlug()->existsPlug()
+		input == sourcePlug()->existsPlug() ||
+		input == ignoreIncompatiblePlug()
 	;
 }
 
@@ -135,6 +147,8 @@ void CopyPrimitiveVariables::hashProcessedObject( const ScenePath &path, const G
 		h = inPlug()->objectPlug()->hash();
 		return;
 	}
+
+	ignoreIncompatiblePlug()->hash( h );
 
 	if( sourceLocationPath )
 	{
@@ -190,6 +204,8 @@ IECore::ConstObjectPtr CopyPrimitiveVariables::computeProcessedObject( const Sce
 		return inputObject;
 	}
 
+	bool ignoreIncompatible = ignoreIncompatiblePlug()->getValue();
+
 	PrimitivePtr result = primitive->copy();
 	for( auto &variable : sourcePrimitive->variables )
 	{
@@ -199,11 +215,18 @@ IECore::ConstObjectPtr CopyPrimitiveVariables::computeProcessedObject( const Sce
 		}
 		if( !result->isPrimitiveVariableValid( variable.second ) )
 		{
+			if( ignoreIncompatible )
+			{
+				continue;
+			}
 			string destinationPath; ScenePlug::pathToString( path, destinationPath );
 			const string &sourcePath = sourceLocation.size() ? sourceLocation : destinationPath;
 			throw IECore::Exception( boost::str(
-				boost::format( "Cannot copy \"%1%\" from \"%2%\" to \"%3%\" because source and destination primitives have different topology" )
-					% variable.first % destinationPath % sourcePath
+				boost::format(
+					"Cannot copy \"%1%\" from \"%2%\" to \"%3%\" because source and "
+					"destination primitives have different topology. Turn on `ignoreIncompatible` "
+					"to disable this error and ignore invalid primitive variables."
+				) % variable.first % sourcePath % destinationPath
 			) );
 		}
 		result->variables[prefix + variable.first] = variable.second;

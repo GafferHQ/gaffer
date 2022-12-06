@@ -37,6 +37,7 @@
 import unittest
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferScene
@@ -295,6 +296,44 @@ class CopyPrimitiveVariablesTest( GafferSceneTest.SceneTestCase ) :
 				copy["out"].boundHash( location ),
 				sphere1["out"].boundHash( location )
 			)
+
+	def testIgnoreIncompatible( self ) :
+
+		sphere = GafferScene.Sphere()
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		cube = GafferScene.Cube()
+		cubeFilter = GafferScene.PathFilter()
+		cubeFilter["paths"].setValue( IECore.StringVectorData( [ "/cube" ] ) )
+
+		cubeVariables = GafferScene.PrimitiveVariables()
+		cubeVariables["in"].setInput( cube["out"] )
+		cubeVariables["filter"].setInput( cubeFilter["out"] )
+		cubeVariables["primitiveVariables"].addChild( Gaffer.NameValuePlug( "c", IECore.IntData( 1 ) ) )
+		cubeVariables["enabled"].setValue( False )
+
+		copy = GafferScene.CopyPrimitiveVariables()
+		copy["in"].setInput( sphere["out"] )
+		copy["source"].setInput( cubeVariables["out"] )
+		copy["sourceLocation"].setValue( "/cube" )
+		copy["filter"].setInput( sphereFilter["out"] )
+		copy["primitiveVariables"].setValue( "*" )
+
+		with six.assertRaisesRegex(
+			self,
+			RuntimeError,
+			'Cannot copy .* from "/cube" to "/sphere" because source and destination primitives have different topology. Turn on `ignoreIncompatible` to disable this error and ignore invalid primitive variables.'
+		) :
+			copy["out"].object( "/sphere" )
+
+		copy["ignoreIncompatible"].setValue( True )
+
+		self.assertScenesEqual( copy["out"], sphere["out"] )
+
+		# Variables that can be copied should succeed, even if others don't
+		cubeVariables["enabled"].setValue( True )
+		self.assertEqual( copy["out"].object( "/sphere" )["c"], IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Constant, IECore.IntData( 1 ) )  )
 
 if __name__ == "__main__":
 	unittest.main()
