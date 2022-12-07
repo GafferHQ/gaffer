@@ -9,7 +9,9 @@ Features
 Improvements
 ------------
 
-- Light Editor : Added a "Mute" column for toggling a light's mute attribute on and off.
+- Light Editor :
+  - Added a "Mute" column for toggling a light's mute attribute on and off.
+  - Added a "Disable Edit" command to the right-click menu, to easily disable tweaks in EditScopes (shortcut <kbd>D</kbd>).
 - Cycles [^1] :
   - Replaced `size` on portals and quad lights with separate `width` and `height` parameters, and renamed `size` parameter of disk lights to `width`.
   - Added `use_camera`, `use_caustics` and `normalize` parameters to lights.

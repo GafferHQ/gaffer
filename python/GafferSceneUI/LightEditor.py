@@ -309,10 +309,15 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 
 	def __keyPress( self, pathListing, event ) :
 
-		if event.key == "Return" or event.key == "Enter" :
-			self.__editSelectedCells( pathListing )
+		if event.modifiers == event.Modifiers.None_ :
 
-			return True
+			if event.key == "Return" or event.key == "Enter" :
+				self.__editSelectedCells( pathListing )
+				return True
+
+			if event.key == "D" :
+				self.__disableEdits( pathListing )
+				return True
 
 		return False
 
@@ -418,6 +423,42 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 
 		return True
 
+	def __disablableInspectionTweaks( self, pathListing ) :
+
+		tweaks = []
+
+		with Gaffer.Context( self.getContext() ) as context :
+			for columnSelection, column in zip( pathListing.getSelection(), pathListing.getColumns() ) :
+				if not isinstance( column, _GafferSceneUI._LightEditorInspectorColumn ) :
+					continue
+				for path in columnSelection.paths() :
+					context["scene:path"] = GafferScene.ScenePlug.stringToPath( path )
+					inspection = column.inspector().inspect()
+					if inspection is not None and inspection.editable() :
+						source = inspection.source()
+						editScope = self.__settingsNode["editScope"].getInput()
+						if (
+							isinstance( source, ( Gaffer.TweakPlug, Gaffer.NameValuePlug ) ) and
+							( editScope is None or editScope.node().isAncestorOf( source ) ) and
+							source["enabled"].getValue()
+						) :
+							tweaks.append( source )
+						else :
+							return []
+					else :
+						return []
+
+		return tweaks
+
+	def __disableEdits( self, pathListing ) :
+
+		tweaks = self.__disablableInspectionTweaks( pathListing )
+
+		with Gaffer.UndoScope( self.scriptNode() ) :
+			for tweak in tweaks :
+				tweak["enabled"].setValue( False )
+
+
 	def __buttonPress( self, pathListing, event ) :
 
 		if event.button != event.Buttons.Right or event.modifiers != event.Modifiers.None_ :
@@ -504,6 +545,14 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 				"Edit...",
 				{
 					"command" : functools.partial( self.__editSelectedCells, pathListing, False )
+				}
+			)
+			menuDefinition.append(
+				"Remove Edit",
+				{
+					"command" : functools.partial( self.__disableEdits, pathListing ),
+					"active" : lambda : len( self.__disablableInspectionTweaks( pathListing ) ) > 0,
+					"shortCut" : "D",
 				}
 			)
 
