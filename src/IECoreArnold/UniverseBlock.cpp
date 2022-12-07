@@ -37,7 +37,6 @@
 #include "IECore/Exception.h"
 #include "IECore/MessageHandler.h"
 
-#include "boost/filesystem.hpp"
 #include "boost/tokenizer.hpp"
 
 #include "ai_metadata.h"
@@ -45,6 +44,8 @@
 #include "ai_plugins.h"
 #include "ai_render.h"
 #include "ai_universe.h"
+
+#include <filesystem>
 
 using namespace IECore;
 using namespace IECoreArnold;
@@ -61,17 +62,17 @@ void loadMetadata( const std::string &pluginPaths )
 		const char *separator = ":";
 	#endif
 	Tokenizer t( pluginPaths, boost::char_separator<char>( separator ) );
-	for( Tokenizer::const_iterator it = t.begin(), eIt = t.end(); it != eIt; ++it )
+	for( const auto &pluginPath : t )
 	{
 		try
 		{
-			for( boost::filesystem::recursive_directory_iterator dIt( *it ), deIt; dIt != deIt; ++dIt )
+			for( const auto &d : std::filesystem::recursive_directory_iterator( pluginPath ) )
 			{
-				if( dIt->path().extension() == ".mtd" )
+				if( d.path().extension() == ".mtd" )
 				{
-					if( !AiMetaDataLoadFile( dIt->path().string().c_str() ) )
+					if( !AiMetaDataLoadFile( d.path().string().c_str() ) )
 					{
-						throw IECore::Exception( boost::str( boost::format( "Failed to load \"%s\"" ) % dIt->path().string() ) );
+						throw IECore::Exception( boost::str( boost::format( "Failed to load \"%s\"" ) % d.path().string() ) );
 					}
 				}
 			}

@@ -64,7 +64,6 @@
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/container/flat_map.hpp"
 #include "boost/date_time/posix_time/posix_time.hpp"
-#include "boost/filesystem/operations.hpp"
 #include "boost/format.hpp"
 #include "boost/lexical_cast.hpp"
 
@@ -82,6 +81,7 @@
 #include "tbb/spin_mutex.h"
 
 #include <condition_variable>
+#include <filesystem>
 #include <functional>
 #include <memory>
 #include <sstream>
@@ -89,7 +89,6 @@
 #include <unordered_set>
 
 using namespace std;
-using namespace boost::filesystem;
 using namespace IECoreArnold;
 
 //////////////////////////////////////////////////////////////////////////
@@ -3217,9 +3216,9 @@ class ArnoldGlobals
 					{
 						try
 						{
-							boost::filesystem::path path( d->readable() );
-							path.remove_filename();
-							boost::filesystem::create_directories( path );
+							std::filesystem::create_directories(
+								std::filesystem::path( d->readable() ).parent_path()
+							);
 						}
 						catch( const std::exception &e )
 						{
@@ -3246,9 +3245,9 @@ class ArnoldGlobals
 					{
 						try
 						{
-							boost::filesystem::path path( d->readable() );
-							path.remove_filename();
-							boost::filesystem::create_directories( path );
+							std::filesystem::create_directories(
+								std::filesystem::path( d->readable() ).parent_path()
+							);
 						}
 						catch( const std::exception &e )
 						{
@@ -3272,9 +3271,9 @@ class ArnoldGlobals
 					{
 						try
 						{
-							boost::filesystem::path path( d->readable() );
-							path.remove_filename();
-							boost::filesystem::create_directories( path );
+							std::filesystem::create_directories(
+								std::filesystem::path( d->readable() ).parent_path()
+							);
 						}
 						catch( const std::exception &e )
 						{

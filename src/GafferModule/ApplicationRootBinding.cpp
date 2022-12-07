@@ -49,8 +49,6 @@
 #include "IECorePython/RunTimeTypedBinding.h"
 #include "IECorePython/ScopedGILLock.h"
 
-#include "boost/filesystem.hpp"
-
 #include <fstream>
 
 using namespace boost::python;

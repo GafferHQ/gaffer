@@ -44,9 +44,9 @@
 
 #include "IECoreScene/SceneInterface.h"
 
-#include "boost/filesystem.hpp"
-
 #include "tbb/mutex.h"
+
+#include <filesystem>
 
 using namespace std;
 using namespace IECore;
@@ -291,10 +291,10 @@ bool SceneWriter::requiresSequenceExecution() const
 
 void SceneWriter::createDirectories( const std::string &fileName ) const
 {
-	boost::filesystem::path filePath( fileName );
-	boost::filesystem::path directory = filePath.parent_path();
+	const std::filesystem::path filePath( fileName );
+	const std::filesystem::path directory = filePath.parent_path();
 	if( !directory.empty() )
 	{
-		boost::filesystem::create_directories( directory );
+		std::filesystem::create_directories( directory );
 	}
 }
