@@ -38,6 +38,7 @@ Fixes
 - LevelSetOffset, MeshToLevelSet, LevelSetToMesh, SphereLevelSet : Fixed bugs which could cause unnecessary repeated computations, or in the worst case, lead to deadlock.
 - ValuePlug : Fixed rare deadlock when a TaskParallel compute recurses to a Legacy compute with the _same_ hash.
 - GafferTest : Fixed bug which caused `parallelGetValue()` to use the wrong context.
+- LightEditor : Fixed bug which could cause attribute edits to be made for a parent location instead of the desired one.
 
 API
 ---

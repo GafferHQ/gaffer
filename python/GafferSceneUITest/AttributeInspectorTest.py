@@ -706,5 +706,35 @@ class AttributeInspectorTest( GafferUITest.TestCase ) :
 			edit = edit
 		)
 
+	def testDontEditParentOfInspectedLocation( self ) :
+
+		light = GafferSceneTest.TestLight()
+
+		childGroup = GafferScene.Group()
+		childGroup["in"][0].setInput( light["out"] )
+		childGroup["name"].setValue( "child" )
+
+		parentGroup = GafferScene.Group()
+		parentGroup["in"][0].setInput( childGroup["out"] )
+		parentGroup["name"].setValue( "parent" )
+
+		editScope = Gaffer.EditScope()
+		editScope.setup( parentGroup["out"] )
+		editScope["in"].setInput( parentGroup["out"] )
+
+		inspection = self.__inspect( editScope["out"], "/parent/child", "gl:visualiser:scale", editScope )
+		edit = inspection.acquireEdit()
+		row = edit.ancestor( Gaffer.Spreadsheet.RowPlug )
+
+		self.assertEqual( row["name"].getValue(), "/parent/child" )
+
+		edit["enabled"].setValue( False )
+
+		inspection = self.__inspect( editScope["out"], "/parent/child", "gl:visualiser:scale", editScope )
+		edit = inspection.acquireEdit()
+		row = edit.ancestor( Gaffer.Spreadsheet.RowPlug )
+
+		self.assertEqual( row["name"].getValue(), "/parent/child" )
+
 if __name__ == "__main__" :
 	unittest.main()
