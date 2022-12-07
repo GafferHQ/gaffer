@@ -37,7 +37,6 @@
 import unittest
 import inspect
 import math
-import os
 import imath
 import re
 
@@ -370,17 +369,17 @@ class OSLExpressionEngineTest( GafferOSLTest.OSLTestCase ) :
 		script["writer"] = GafferDispatchTest.TextWriter()
 
 		script["expression"] = Gaffer.Expression()
-		script["expression"].setExpression( 'parent.writer.fileName = "' + self.temporaryDirectory() + '/test.txt"', "OSL" )
+		script["expression"].setExpression( f'parent.writer.fileName = "{ self.temporaryDirectory() / "test.txt" }"', "OSL" )
 
 		dispatcher = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
-		dispatcher["jobsDirectory"].setValue( os.path.join( self.temporaryDirectory(), "jobs" ) )
+		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() / "jobs" )
 		dispatcher["executeInBackground"].setValue( True )
 		dispatcher.dispatch( [ script["writer"] ] )
 
 		dispatcher.jobPool().waitForAll()
 		self.assertEqual( len( dispatcher.jobPool().failedJobs() ), 0 )
 
-		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/test.txt" ) )
+		self.assertTrue( ( self.temporaryDirectory() / "test.txt" ).exists() )
 
 	def testTimeGlobalVariable( self ) :
 

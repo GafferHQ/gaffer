@@ -34,7 +34,7 @@
 #
 ##########################################################################
 
-import os
+import pathlib
 import imath
 
 import IECore
@@ -82,7 +82,7 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 	def test( self ) :
 
-		s = self.compileShader( os.path.dirname( __file__ ) +  "/shaders/constant.osl" )
+		s = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "constant.osl" )
 
 		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
 			shaders = {
@@ -97,8 +97,8 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 	def testNetwork( self ) :
 
-		constant = self.compileShader( os.path.dirname( __file__ ) +  "/shaders/constant.osl" )
-		input = self.compileShader( os.path.dirname( __file__ ) +  "/shaders/outputTypes.osl" )
+		constant = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "constant.osl" )
+		input = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "outputTypes.osl" )
 
 		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
 			shaders = {
@@ -117,7 +117,7 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 	def testGlobals( self ) :
 
-		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/globals.osl" )
+		shader = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "globals.osl" )
 
 		rp = self.rectanglePoints()
 
@@ -136,7 +136,7 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 	def testDoubleAsIntViaGetAttribute( self ) :
 
-		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/intAttribute.osl" )
+		shader = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "intAttribute.osl" )
 
 		rp = self.rectanglePoints()
 
@@ -157,7 +157,7 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 	def testUserDataViaGetAttribute( self ) :
 
-		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/attribute.osl" )
+		shader = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "attribute.osl" )
 
 		rp = self.rectanglePoints()
 
@@ -229,7 +229,7 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 	def testDynamicAttributesAllAttributesAreNeeded( self ) :
 
-		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/dynamicAttribute.osl" )
+		shader = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "dynamicAttribute.osl" )
 
 		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
 			shaders = {
@@ -243,8 +243,8 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 	def testStructs( self ) :
 
-		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/structs.osl" )
-		constant = self.compileShader( os.path.dirname( __file__ ) + "/shaders/constant.osl" )
+		shader = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "structs.osl" )
+		constant = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "constant.osl" )
 
 		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
 			shaders = {
@@ -263,8 +263,8 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 	def testClosureParameters( self ) :
 
-		outputClosure = self.compileShader( os.path.dirname( __file__ ) + "/shaders/outputClosure.osl" )
-		inputClosure = self.compileShader( os.path.dirname( __file__ ) + "/shaders/inputClosure.osl" )
+		outputClosure = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "outputClosure.osl" )
+		inputClosure = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "inputClosure.osl" )
 
 		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
 			shaders = {
@@ -283,7 +283,7 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 	def testDebugClosure( self ) :
 
-		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/debugClosure.osl" )
+		shader = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "debugClosure.osl" )
 
 		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
 			shaders = {
@@ -308,7 +308,7 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 	def testMultipleDebugClosures( self ) :
 
-		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/multipleDebugClosures.osl" )
+		shader = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "multipleDebugClosures.osl" )
 
 		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
 			shaders = {
@@ -326,7 +326,7 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 	def testTypedDebugClosure( self ) :
 
-		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/typedDebugClosure.osl" )
+		shader = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "typedDebugClosure.osl" )
 
 		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
 			shaders = {
@@ -372,7 +372,7 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 	def testDebugClosureWithInternalValue( self ) :
 
-		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/debugClosureWithInternalValue.osl" )
+		shader = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "debugClosureWithInternalValue.osl" )
 
 		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
 			shaders = {
@@ -403,7 +403,7 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 	def testDebugClosureWithZeroValue( self ) :
 
-		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/debugClosureWithInternalValue.osl" )
+		shader = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "debugClosureWithInternalValue.osl" )
 
 		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
 			shaders = {
@@ -434,7 +434,7 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 	def testSpline( self ) :
 
-		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/splineParameters.osl" )
+		shader = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "splineParameters.osl" )
 		spline =  IECore.SplinefColor3f(
 			IECore.CubicBasisf.bSpline(),
 			[
@@ -459,7 +459,7 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 	def testMatrixInput( self ) :
 
-		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/extractTranslate.osl" )
+		shader = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "extractTranslate.osl" )
 
 		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
 			shaders = {
@@ -474,7 +474,7 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 	def testParameters( self ) :
 
-		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/parameterTypes.osl" )
+		shader = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "parameterTypes.osl" )
 		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
 			shaders = {
 				"output" : IECoreScene.Shader( shader, "osl:surface", {
@@ -499,7 +499,7 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 	def testTransform( self ) :
 
-		s = self.compileShader( os.path.dirname( __file__ ) +  "/shaders/transform.osl" )
+		s = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "transform.osl" )
 
 		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
 			shaders = {
@@ -553,7 +553,7 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 	def testCanReadV3iArrayUserData( self ) :
 
-		s = self.compileShader( os.path.dirname( __file__ ) +  "/shaders/V3iArrayAttributeRead.osl" )
+		s = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "V3iArrayAttributeRead.osl" )
 
 		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
 			shaders = {
@@ -600,7 +600,7 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 	def testReadV2fUserData( self ) :
 
-		s = self.compileShader( os.path.dirname( __file__ ) +  "/shaders/attribute.osl" )
+		s = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "attribute.osl" )
 		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
 			shaders = {
 				"output" : IECoreScene.Shader( s, "osl:surface", { "name" : "v2f" } )
@@ -621,7 +621,7 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 	def testCanReadStringData( self ):
 
-		s = self.compileShader( os.path.dirname( __file__ ) +  "/shaders/stringAttribute.osl" )
+		s = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "stringAttribute.osl" )
 		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
 			shaders = {
 				"output" : IECoreScene.Shader( s, "osl:surface", { "name" : "strattr" } )
@@ -645,7 +645,7 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 	def testUVProvidedAsV2f( self ) :
 
-		shader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/globals.osl" )
+		shader = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "globals.osl" )
 
 		rp = self.rectanglePoints()
 		rp["uv"] = IECore.V2fVectorData(
@@ -669,10 +669,10 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 	def testTextureOrientation( self ) :
 
-		s = self.compileShader( os.path.dirname( __file__ ) +  "/shaders/uvTextureMap.osl" )
+		s = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "uvTextureMap.osl" )
 		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
 			shaders = {
-				"output" : IECoreScene.Shader( s, "osl:surface", { "fileName" : os.path.dirname( __file__ ) + "/images/vRamp.tx" } )
+				"output" : IECoreScene.Shader( s, "osl:surface", { "fileName" : ( pathlib.Path( __file__ ).parent / "images" / "vRamp.tx" ).as_posix() } )
 			},
 			output = "output"
 		) )
@@ -685,7 +685,7 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 	def testDerivatives( self ) :
 
-		s = self.compileShader( os.path.dirname( __file__ ) +  "/shaders/derivatives.osl" )
+		s = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "derivatives.osl" )
 
 		with Gaffer.Context() as c :
 
@@ -714,7 +714,7 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 	def testTime( self ) :
 
-		s = self.compileShader( os.path.dirname( __file__ ) + "/shaders/globals.osl" )
+		s = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "globals.osl" )
 
 		# A shader that doesn't read time should yield a hash which
 		# doesn't vary with time.
@@ -764,7 +764,7 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 	def testContextVariable( self ) :
 
-		s = self.compileShader( os.path.dirname( __file__ ) + "/shaders/contextVariable.osl" )
+		s = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "contextVariable.osl" )
 
 		# A shader which doesn't read a context variable should
 		# have a hash which is constant with respect to that variable.
@@ -828,7 +828,7 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 	def testGlobalAsNeededAttribute( self ) :
 
-		s = self.compileShader( os.path.dirname( __file__ ) + "/shaders/red.osl" )
+		s = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "red.osl" )
 
 		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
 			shaders = {
@@ -843,7 +843,7 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 		self.assertFalse( e.needsAttribute( "v" ) )
 		self.assertFalse( e.needsAttribute( "time" ) )
 
-		s = self.compileShader( os.path.dirname( __file__ ) + "/shaders/globals.osl" )
+		s = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "globals.osl" )
 
 		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
 			shaders = {
@@ -899,7 +899,7 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 	def testHasDeformation( self ) :
 
-		inputClosureShader = self.compileShader( os.path.dirname( __file__ ) + "/shaders/inputClosure.osl" )
+		inputClosureShader = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "inputClosure.osl" )
 
 		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
 			shaders = {
@@ -939,7 +939,7 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 	def testReadConstantArraySize1( self ) :
 
-		s = self.compileShader( os.path.dirname( __file__ ) +  "/shaders/attribute.osl" )
+		s = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "attribute.osl" )
 		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
 			shaders = {
 				"output" : IECoreScene.Shader( s, "osl:surface", { "name" : "constantColor" } )

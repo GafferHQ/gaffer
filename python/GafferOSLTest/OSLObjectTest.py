@@ -34,7 +34,7 @@
 #
 ##########################################################################
 
-import os
+import pathlib
 import imath
 import subprocess
 import inspect
@@ -228,10 +228,10 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		p = Gaffer.PlugAlgo.promote( s["b"]["o"]["primitiveVariables"]["testClosure"]["value"] )
 		p.setName( "p" )
 
-		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+		s["b"].exportForReference( self.temporaryDirectory() / "test.grf" )
 
 		s["r"] = Gaffer.Reference()
-		s["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s["r"].load( self.temporaryDirectory() / "test.grf" )
 
 		s["s"] = GafferOSL.OSLShader()
 		s["s"].loadShader( "ObjectProcessing/OutObject" )
@@ -463,8 +463,7 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 
 	def testTextureOrientation( self ) :
 
-		textureFileName = os.path.dirname( __file__ ) + "/images/vRamp.tx"
-
+		textureFileName = pathlib.Path( __file__ ).parent / "images" / "vRamp.tx"
 
 		outColor = GafferOSL.OSLCode()
 		outColor["out"]["c"] = GafferOSL.ClosurePlug(
@@ -1098,7 +1097,7 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 	def testLoadFrom0_55( self ) :
 
 		script = Gaffer.ScriptNode()
-		script["fileName"].setValue( os.path.join( os.path.dirname( __file__ ), "scripts", "oslObjectVersion-0.55.0.0.gfr" ) )
+		script["fileName"].setValue( pathlib.Path( __file__ ).parent / "scripts" / "oslObjectVersion-0.55.0.0.gfr" )
 		script.load()
 
 		self.assertNotIn( "__contextCompatibility", script["OSLObject"] )

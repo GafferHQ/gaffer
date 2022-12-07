@@ -34,7 +34,7 @@
 #
 ##########################################################################
 
-import os
+import pathlib
 
 import IECore
 import IECoreScene
@@ -130,7 +130,7 @@ class LevelSetToMeshTest( GafferVDBTest.VDBTestCase ) :
 	def testParallelGetValueComputesObjectOnce( self ) :
 
 		reader = GafferScene.SceneReader()
-		reader["fileName"].setValue( os.path.join( os.path.dirname( __file__ ), "data", "sphere.vdb" ) )
+		reader["fileName"].setValue( pathlib.Path( __file__ ).parent / "data" / "sphere.vdb" )
 
 		pathFilter = GafferScene.PathFilter()
 		pathFilter["paths"].setValue( IECore.StringVectorData( [ "/vdb" ] ) )

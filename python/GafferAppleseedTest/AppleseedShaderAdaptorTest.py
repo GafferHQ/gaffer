@@ -34,7 +34,7 @@
 #
 ##########################################################################
 
-import os
+import pathlib
 import imath
 
 import IECore
@@ -85,7 +85,7 @@ class AppleseedShaderAdaptorTest( GafferOSLTest.OSLTestCase ) :
 		sphere = GafferScene.Sphere()
 
 		shader = GafferOSL.OSLShader()
-		shader.loadShader( self.compileShader( os.path.dirname( __file__ ) + "/shaders/empty.osl" ) )
+		shader.loadShader( self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "empty.osl" ) )
 
 		assignment = GafferScene.ShaderAssignment()
 		assignment["in"].setInput( sphere["out"] )

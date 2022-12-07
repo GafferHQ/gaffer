@@ -36,6 +36,7 @@
 ##########################################################################
 
 import os
+import pathlib
 import unittest
 import datetime
 import imath
@@ -105,10 +106,10 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 		with n.parameterModificationContext() as parameters :
 
 			parameters["multiply"].setNumericValue( 10 )
-			parameters["dst"].setTypedValue( self.temporaryDirectory() + "/s.####.exr" )
+			parameters["dst"].setTypedValue( str( self.temporaryDirectory() / "s.####.exr" ) )
 
 		self.assertEqual( n["parameters"]["multiply"].getValue(), 10 )
-		self.assertEqual( n["parameters"]["dst"].getValue(), self.temporaryDirectory() + "/s.####.exr" )
+		self.assertEqual( n["parameters"]["dst"].getValue(), str( self.temporaryDirectory() / "s.####.exr" ) )
 
 		n["parameters"]["multiply"].setValue( 20 )
 		n["parameters"]["dst"].setValue( "lalalal.##.tif" )
@@ -1068,7 +1069,7 @@ class ParameterisedHolderTest( GafferTest.TestCase ) :
 
 		GafferTest.TestCase.setUp( self )
 
-		os.environ["GAFFERCORTEXTEST_CLASS_PATHS"] = os.path.dirname( __file__ ) + "/classes"
+		os.environ["GAFFERCORTEXTEST_CLASS_PATHS"] = str( pathlib.Path( __file__ ).parent / "classes" )
 
 if __name__ == "__main__":
 	unittest.main()

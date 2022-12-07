@@ -34,7 +34,7 @@
 #
 ##########################################################################
 
-import os
+import pathlib
 import re
 import subprocess
 import time
@@ -56,7 +56,7 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 
 		GafferTest.TestCase.setUp( self )
 
-		self.__scriptFileName = self.temporaryDirectory() + "/test.gfr"
+		self.__scriptFileName = self.temporaryDirectory() / "test.gfr"
 
 	def testExecute( self ) :
 
@@ -68,7 +68,7 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 		s["render"]["in"].setInput( s["plane"]["out"] )
 
 		s["expression"] = Gaffer.Expression()
-		s["expression"].setExpression( "parent['render']['fileName'] = '" + self.temporaryDirectory() + "/test.%d.appleseed' % int( context['frame'] )" )
+		s["expression"].setExpression( f"""parent['render']['fileName'] = '{( self.temporaryDirectory() / "test.%d.appleseed" ).as_posix()}' % int( context['frame'] )""" )
 
 		s["fileName"].setValue( self.__scriptFileName )
 		s.save()
@@ -78,7 +78,7 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 		)
 
 		for i in range( 1, 4 ) :
-			self.assertTrue( os.path.exists( self.temporaryDirectory() + "/test.%d.appleseed" % i ) )
+			self.assertTrue( ( self.temporaryDirectory() / f"test.{i}.appleseed" ).exists() )
 
 	def testWaitForImage( self ) :
 
@@ -95,7 +95,7 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 		s["outputs"].addOutput(
 			"beauty",
 			IECoreScene.Output(
-				self.temporaryDirectory() + "/test.exr",
+				str( self.temporaryDirectory() / "test.exr" ),
 				"exr",
 				"rgba",
 				{}
@@ -106,14 +106,14 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 		s["render"] = GafferAppleseed.AppleseedRender()
 		s["render"]["in"].setInput( s["outputs"]["out"] )
 
-		s["render"]["fileName"].setValue( self.temporaryDirectory() + "/test.appleseed" )
+		s["render"]["fileName"].setValue( self.temporaryDirectory() / "test.appleseed" )
 
 		s["fileName"].setValue( self.__scriptFileName )
 		s.save()
 
 		s["render"]["task"].execute()
 
-		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/test.exr" ) )
+		self.assertTrue( ( self.temporaryDirectory() / "test.exr" ).exists() )
 
 	def testExecuteWithStringSubstitutions( self ) :
 
@@ -123,7 +123,7 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 		s["render"] = GafferAppleseed.AppleseedRender()
 		s["render"]["mode"].setValue( s["render"].Mode.SceneDescriptionMode )
 		s["render"]["in"].setInput( s["plane"]["out"] )
-		s["render"]["fileName"].setValue( self.temporaryDirectory() + "/test.####.appleseed" )
+		s["render"]["fileName"].setValue( self.temporaryDirectory() / "test.####.appleseed" )
 
 		s["fileName"].setValue( self.__scriptFileName )
 		s.save()
@@ -133,7 +133,7 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 		)
 
 		for i in range( 1, 4 ) :
-			self.assertTrue( os.path.exists( self.temporaryDirectory() + "/test.%04d.appleseed" % i ) )
+			self.assertTrue( ( self.temporaryDirectory() / f"test.{i:04d}.appleseed" ).exists() )
 
 	def testImageOutput( self ) :
 
@@ -150,7 +150,7 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 		s["outputs"].addOutput(
 			"beauty",
 			IECoreScene.Output(
-				self.temporaryDirectory() + "/test.####.exr",
+				str( self.temporaryDirectory() / "test.####.exr" ),
 				"exr",
 				"rgba",
 				{}
@@ -161,7 +161,7 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 		s["render"] = GafferAppleseed.AppleseedRender()
 		s["render"]["in"].setInput( s["outputs"]["out"] )
 
-		s["render"]["fileName"].setValue( self.temporaryDirectory() + "/test.####.appleseed" )
+		s["render"]["fileName"].setValue( self.temporaryDirectory() / "test.####.appleseed" )
 
 		s["fileName"].setValue( self.__scriptFileName )
 		s.save()
@@ -173,7 +173,7 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 				s["render"]["task"].execute()
 
 		for i in range( 1, 4 ) :
-			self.assertTrue( os.path.exists( self.temporaryDirectory() + "/test.%04d.exr" % i ) )
+			self.assertTrue( ( self.temporaryDirectory() / f"test.{i:04d}.exr" ).exists() )
 
 	def testTypeNamePrefixes( self ) :
 
@@ -193,8 +193,8 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 	def testDirectoryCreation( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["variables"].addChild( Gaffer.NameValuePlug( "renderDirectory", self.temporaryDirectory() + "/renderTests",  Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
-		s["variables"].addChild( Gaffer.NameValuePlug( "appleseedDirectory", self.temporaryDirectory() + "/appleseedTests", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		s["variables"].addChild( Gaffer.NameValuePlug( "renderDirectory", ( self.temporaryDirectory() / "renderTests" ).as_posix(),  Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		s["variables"].addChild( Gaffer.NameValuePlug( "appleseedDirectory", ( self.temporaryDirectory() / "appleseedTests" ).as_posix(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 
 		s["plane"] = GafferScene.Plane()
 
@@ -215,10 +215,10 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 		s["render"]["fileName"].setValue( "$appleseedDirectory/test.####.appleseed" )
 		s["render"]["mode"].setValue( s["render"].Mode.SceneDescriptionMode )
 
-		self.assertFalse( os.path.exists( self.temporaryDirectory() + "/renderTests" ) )
-		self.assertFalse( os.path.exists( self.temporaryDirectory() + "/appleseedTests" ) )
-		self.assertFalse( os.path.exists( self.temporaryDirectory() + "/appleseedTests/test.0001.appleseed" ) )
-		self.assertFalse( os.path.exists( self.__scriptFileName ) )
+		self.assertFalse( ( self.temporaryDirectory() / "renderTests" ).exists() )
+		self.assertFalse( ( self.temporaryDirectory() / "appleseedTests" ).exists() )
+		self.assertFalse( ( self.temporaryDirectory() / "appleseedTests" / "test.0001.appleseed" ).exists() )
+		self.assertFalse( self.__scriptFileName.exists() )
 
 		s["fileName"].setValue( self.__scriptFileName )
 		s.save()
@@ -226,19 +226,19 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 		with s.context() :
 			s["render"]["task"].execute()
 
-		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/renderTests" ) )
-		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/appleseedTests" ) )
-		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/appleseedTests/test.0001.appleseed" ) )
-		self.assertTrue( os.path.exists( self.__scriptFileName ) )
+		self.assertTrue( ( self.temporaryDirectory() / "renderTests" ).exists() )
+		self.assertTrue( ( self.temporaryDirectory() / "appleseedTests" ).exists() )
+		self.assertTrue( ( self.temporaryDirectory() / "appleseedTests" / "test.0001.appleseed" ).exists() )
+		self.assertTrue( ( self.__scriptFileName ) )
 
 		# check it can cope with everything already existing
 
 		with s.context() :
 			s["render"]["task"].execute()
 
-		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/renderTests" ) )
-		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/appleseedTests" ) )
-		self.assertTrue( os.path.exists( self.temporaryDirectory() + "/appleseedTests/test.0001.appleseed" ) )
+		self.assertTrue( ( self.temporaryDirectory() / "renderTests" ).exists() )
+		self.assertTrue( ( self.temporaryDirectory() / "appleseedTests" ).exists() )
+		self.assertTrue( ( self.temporaryDirectory() / "appleseedTests" / "test.0001.appleseed" ).exists() )
 
 	def testInternalConnectionsNotSerialised( self ) :
 
@@ -250,11 +250,11 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 
 		render = GafferAppleseed.AppleseedRender()
 		render["mode"].setValue( render.Mode.SceneDescriptionMode )
-		render["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.appleseed" ) )
+		render["fileName"].setValue( self.temporaryDirectory() / "test.appleseed" )
 
 		self.assertEqual( render["task"].hash(), IECore.MurmurHash() )
 		render["task"].execute()
-		self.assertFalse( os.path.exists( render["fileName"].getValue() ) )
+		self.assertFalse( pathlib.Path( render["fileName"].getValue() ).exists() )
 
 	def testInputFromContextVariables( self ) :
 
@@ -267,11 +267,11 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 		render = GafferAppleseed.AppleseedRender()
 		render["in"].setInput( variables["out"] )
 		render["mode"].setValue( render.Mode.SceneDescriptionMode )
-		render["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.appleseed" ) )
+		render["fileName"].setValue( self.temporaryDirectory() / "test.appleseed" )
 
 		self.assertNotEqual( render["task"].hash(), IECore.MurmurHash() )
 		render["task"].execute()
-		self.assertTrue( os.path.exists( render["fileName"].getValue() ) )
+		self.assertTrue( pathlib.Path( render["fileName"].getValue() ).exists() )
 
 	def testShaderSubstitutions( self ) :
 
@@ -308,11 +308,11 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 		render = GafferAppleseed.AppleseedRender()
 		render["in"].setInput( shaderAssignment["out"] )
 		render["mode"].setValue( render.Mode.SceneDescriptionMode )
-		render["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.appleseed" ) )
+		render["fileName"].setValue( self.temporaryDirectory() / "test.appleseed" )
 
 		self.assertNotEqual( render["task"].hash(), IECore.MurmurHash() )
 		render["task"].execute()
-		self.assertTrue( os.path.exists( render["fileName"].getValue() ) )
+		self.assertTrue( pathlib.Path( render["fileName"].getValue() ).exists() )
 		f = open( render["fileName"].getValue(), "r" )
 		texturePaths = set( re.findall( '<parameter name="in_filename" value="string (.*)"', f.read()) )
 		self.assertEqual( texturePaths, set( ['bar/path/foo.tx', 'bar/path/override.tx' ] ) )
@@ -322,9 +322,9 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 		RenderType = GafferScene.Private.IECoreScenePreview.Renderer.RenderType
 
 		for renderType, fileName, output, expected in (
-			( RenderType.Batch, "", IECoreScene.Output( self.temporaryDirectory() + "/beauty.exr", "exr", "rgba" ), 2 ),
-			( RenderType.Interactive, "", IECoreScene.Output( self.temporaryDirectory() + "/beauty.exr", "exr", "rgba" ), 2 ),
-			( RenderType.SceneDescription, self.temporaryDirectory() + "/test.appleseed" , None, 1 )
+			( RenderType.Batch, "", IECoreScene.Output( str( self.temporaryDirectory() / "beauty.exr" ), "exr", "rgba" ), 2 ),
+			( RenderType.Interactive, "", IECoreScene.Output( str( self.temporaryDirectory() / "beauty.exr" ), "exr", "rgba" ), 2 ),
+			( RenderType.SceneDescription, str( self.temporaryDirectory() / "test.appleseed" ) , None, 1 )
 		) :
 
 			with IECore.CapturingMessageHandler() as fallbackHandler :

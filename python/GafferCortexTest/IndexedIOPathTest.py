@@ -35,7 +35,6 @@
 ##########################################################################
 
 import unittest
-import os
 
 import IECore
 
@@ -49,7 +48,7 @@ class IndexedIOPathTest( GafferTest.TestCase ) :
 
 		GafferTest.TestCase.setUp( self )
 
-		self.__fileName = self.temporaryDirectory() + "/test.fio"
+		self.__fileName = str( self.temporaryDirectory() / "test.fio" )
 
 		f = IECore.FileIndexedIO( self.__fileName, IECore.IndexedIO.OpenMode.Write )
 		d1 = f.subdirectory( "d1", IECore.FileIndexedIO.MissingBehaviour.CreateIfMissing )

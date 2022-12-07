@@ -35,6 +35,7 @@
 from __future__ import with_statement
 
 import os
+import pathlib
 import unittest
 import ctypes
 import subprocess
@@ -74,13 +75,13 @@ class UniverseBlockTest( unittest.TestCase ) :
 
 	def testMetadataLoading( self ) :
 
-		metadataPath = os.path.join( os.path.dirname( __file__ ), "metadata" )
-		if metadataPath not in os.environ["ARNOLD_PLUGIN_PATH"].split( ":" ) :
+		metadataPath = pathlib.Path( __file__ ).parent / "metadata"
+		if str( metadataPath ) not in os.environ["ARNOLD_PLUGIN_PATH"].split( os.pathsep ) :
 
 			# Relaunch test in subprocess with our metadata on the plugin path.
 
 			env = os.environ.copy()
-			env["ARNOLD_PLUGIN_PATH"] = env["ARNOLD_PLUGIN_PATH"] + ":" + metadataPath
+			env["ARNOLD_PLUGIN_PATH"] = env["ARNOLD_PLUGIN_PATH"] + os.pathsep + str( metadataPath )
 
 			try :
 				subprocess.check_output(

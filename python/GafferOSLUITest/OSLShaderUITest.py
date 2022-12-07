@@ -34,7 +34,7 @@
 #
 ##########################################################################
 
-import os
+import pathlib
 
 import Gaffer
 import GafferUI
@@ -47,13 +47,10 @@ class OSLShaderUITest( GafferOSLTest.OSLTestCase ) :
 
 	def testChangingOutputNodules( self ) :
 
-		shaderDirectory = os.path.join(
-			os.path.dirname( __file__ ).replace( "GafferOSLUITest", "GafferOSLTest" ),
-			"shaders"
-		)
-		surfaceShader = self.compileShader( os.path.join( shaderDirectory, "constant.osl" ) )
-		utilityShader1 = self.compileShader( os.path.join( shaderDirectory, "version1.osl" ) )
-		utilityShader2 = self.compileShader( os.path.join( shaderDirectory, "outputTypes.osl" ) )
+		shaderDirectory = pathlib.Path( __file__ ).parents[1] / "GafferOSLTest" / "shaders"
+		surfaceShader = self.compileShader( shaderDirectory / "constant.osl" )
+		utilityShader1 = self.compileShader( shaderDirectory / "version1.osl" )
+		utilityShader2 = self.compileShader( shaderDirectory / "outputTypes.osl" )
 
 		node = GafferOSL.OSLShader()
 		nodeGadget = GafferUI.NodeGadget.create( node )

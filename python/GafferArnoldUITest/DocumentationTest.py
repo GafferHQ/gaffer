@@ -35,6 +35,7 @@
 ##########################################################################
 
 import os
+import pathlib
 
 import Gaffer
 import GafferUITest
@@ -61,7 +62,7 @@ class DocumentationTest( GafferUITest.TestCase ) :
 	def testViewerSettings( self ) :
 
 		script = Gaffer.ScriptNode()
-		script["fileName"].setValue( os.path.join( os.environ["GAFFER_ROOT"], "startup", "gui", "arnoldViewerSettings.gfr" ) )
+		script["fileName"].setValue( pathlib.Path( os.environ["GAFFER_ROOT"] ) / "startup" / "gui" / "arnoldViewerSettings.gfr" )
 		script.load()
 
 		self.assertNodeIsDocumented( script["ViewerSettings"], additionalTerminalPlugTypes = ( GafferScene.ScenePlug, ) )
