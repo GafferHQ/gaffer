@@ -1,4 +1,4 @@
-1.1.x.x (relative to 1.1.5.0)
+1.1.6.0 (relative to 1.1.5.0)
 =======
 
 Features
@@ -21,7 +21,7 @@ Improvements
 Fixes
 -----
 
-- Viewer : Added missing missing bookmarks 1-4 to the image comparison menu.
+- Viewer : Added missing bookmarks 1-4 to the image comparison menu.
 - MessagesBinding : Fixed GIL management bug that could cause crashes when performing an interactive render.
 - Spreadsheet : Fixed crash when connecting a StringVectorDataPlug to a row's `name` plug.
 - Documentation : Fixed "In this article" navigation column contents on pages containing figures.
