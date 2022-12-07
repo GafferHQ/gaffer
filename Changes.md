@@ -5,6 +5,7 @@ Fixes
 -----
 
 - MessagesBinding : Fixed GIL management bug that could cause crashes when performing an interactive render.
+- Spreadsheet : Fixed crash when connecting a StringVectorDataPlug to a row's `name` plug.
 
 1.0.6.3 (relative to 1.0.6.2)
 =======
