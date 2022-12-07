@@ -77,7 +77,7 @@ Build
 
 - Cortex : Updated to version 10.4.3.0.
 
-1.1.x.x (relative to 1.1.5.0)
+1.1.6.0 (relative to 1.1.5.0)
 =======
 
 Features
@@ -92,12 +92,18 @@ Improvements
 - Image View : Added support for custom presets for choosing catalogue outputs to compare to.  This can be set up like `Gaffer.Metadata.registerNodeValue( GafferImageUI.ImageView, "compare.catalogueOutput", "preset:MyPreset", "myNamespace:specialImage" )`.  The Catalogue won't know how to deal with a request for "myNamespace:specialImage", and will just output an error image, but this could be useful in pipelines where Catalogue's are wrapped in custom nodes that can respond to this special value of the `catalogue:imageName`.  If you want to provide a custom icon for your custom mode, Gaffer will search for an icon name `catalogueOutput{preset name}.png`.
 - Animation Editor : Added UI tooltips to menu items for TieMode and Interpolation.
 - CopyPrimitiveVariables : Added `ignoreIncompatible` plug which will cause the node to not error when attempting to copy primitive variables from the source object that are imcompatible with the destination object.
+- Arnold : Enabled support for using the `layerName` parameter with non-LPE outputs. This requires a minimum of Arnold 7.1.3.0, because it contains a fix for ARNOLD-12282.
+- ShaderQuery : Added "From Selection" menu item to the popup menus for the `shader` plug and parameter adder.
+- File browsers : Excessively long filter labels are now truncated, instead of making the widget too wide.
+- PathParameterValueWidget : The `extensions` specified by the parameter are now translated to `fileSystemPath:extensions` metadata, enabling filtering in the Gaffer file browser.
 
 Fixes
 -----
 
-- Viewer : Added missing missing bookmarks 1-4 to the image comparison menu.
+- Viewer : Added missing bookmarks 1-4 to the image comparison menu.
 - MessagesBinding : Fixed GIL management bug that could cause crashes when performing an interactive render.
+- Spreadsheet : Fixed crash when connecting a StringVectorDataPlug to a row's `name` plug.
+- Documentation : Fixed "In this article" navigation column contents on pages containing figures.
 
 API
 ---
@@ -319,13 +325,15 @@ Breaking Changes
 - ImagePlug : Removed unused `viewName` argument from `viewNames()` and `viewNamesHash()` methods.
 - StandardAttributes : Removed backwards compatibility for StandardAttributes nodes saved from Gaffer `0.95.0` (May 2014) and earlier. If necessary, resave affected files using a recent Gaffer version.
 
-1.0.6.x (relative to 1.0.6.3)
+1.0.6.4 (relative to 1.0.6.3)
 =======
 
 Fixes
 -----
 
 - MessagesBinding : Fixed GIL management bug that could cause crashes when performing an interactive render.
+- Spreadsheet : Fixed crash when connecting a StringVectorDataPlug to a row's `name` plug.
+- Documentation : Fixed "In this article" navigation column contents on pages containing figures.
 
 1.0.6.3 (relative to 1.0.6.2)
 =======

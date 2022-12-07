@@ -223,6 +223,11 @@ function GenerateTOC() {
     /* Build the TOC */
     anchors.forEach(
         function(anchor) {
+            var headingMatch = anchor.parentNode.nodeName.match(/^H([1-6])$/);
+            if (!headingMatch) {
+                /* Only include anchors that are children of a heading */
+                return;
+            }
             /* Grab the bookmark */
             var bookmark = anchor.getAttribute('href');
             /* Clone the heading, since we must manipulate its nodes in
@@ -231,7 +236,7 @@ function GenerateTOC() {
             /* Remove the anchor (and pilcrow) from the cloned node */
             heading.removeChild(heading.lastChild);
             var headingHTML = heading.innerHTML;
-            var curLevel = heading.nodeName.replace('H', '');
+            var curLevel = Number(headingMatch[1]);
 
             if (curLevel > prevLevel) {
                 TOCHTML += (new Array(curLevel - prevLevel + 1)).join('<ul>');
@@ -241,7 +246,7 @@ function GenerateTOC() {
                 TOCHTML += (new Array(prevLevel + 1)).join('</li>');
             }
 
-            prevLevel = Number(curLevel);
+            prevLevel = curLevel;
             TOCHTML += '<li><a href="' + bookmark + '">' + headingHTML + '</a>';
         }
     );

@@ -370,29 +370,52 @@ def _shaderQueryNode( plugValueWidget ) :
 
 	return walkOutputs( plugValueWidget.getPlug() )
 
-def _shaderAttributes( plugValueWidget, affectedOnly ) :
+def _pathsFromLocation( plugValueWidget ) :
 
 	node = _shaderQueryNode( plugValueWidget )
 	if node is None :
-		return None
+		return []
 
 	path = node["location"].getValue()
 	if not node["scene"].exists( path ) :
-		return None
+		return []
+
+	return [ path ]
+
+def _pathsFromSelection( plugValueWidget ) :
+
+	node = _shaderQueryNode( plugValueWidget )
+	if node is None :
+		return []
+
+	paths = GafferSceneUI.ContextAlgo.getSelectedPaths( plugValueWidget.getContext() )
+	paths = paths.paths() if paths else []
+
+	with plugValueWidget.getContext() :
+		paths = [ p for p in paths if node["scene"].exists( p ) ]
+
+	return paths
+
+def _shaderAttributes( plugValueWidget, paths, affectedOnly ) :
 
 	result = {}
+
+	node = _shaderQueryNode( plugValueWidget )
+	if node is None :
+		return result
 
 	with plugValueWidget.getContext() :
 		useFullAttr = node["inherit"].getValue()
 		attributeNamePatterns = node["shader"].getValue() if affectedOnly else "*"
 
-		attributes = node["scene"].fullAttributes( path ) if useFullAttr else node["scene"].attributes( path )
-		for name, attribute in attributes.items() :
-			if not IECore.StringAlgo.matchMultiple( name, attributeNamePatterns ) :
-				continue
-			if not isinstance( attribute, IECoreScene.ShaderNetwork ) or not len( attribute ) :
-				continue
-			result.setdefault( path, {} )[name] = attribute
+		for path in paths :
+			attributes = node["scene"].fullAttributes( path ) if useFullAttr else node["scene"].attributes( path )
+			for name, attribute in attributes.items() :
+				if not IECore.StringAlgo.matchMultiple( name, attributeNamePatterns ) :
+					continue
+				if not isinstance( attribute, IECoreScene.ShaderNetwork ) or not len( attribute ) :
+					continue
+				result.setdefault( path, {} )[name] = attribute
 
 	return result
 
@@ -440,6 +463,12 @@ class _ShaderQueryFooter( GafferUI.PlugValueWidget ) :
 				"command" : Gaffer.WeakMethod( self.__browseLocationShaders )
 			}
 		)
+		result.append(
+			"/From Selection...",
+			{
+				"command" : Gaffer.WeakMethod( self.__browseSelectedShaders )
+			}
+		)
 
 		result.append( "/FromPathsDivider", { "divider" : True } )
 
@@ -470,21 +499,13 @@ class _ShaderQueryFooter( GafferUI.PlugValueWidget ) :
 
 		return result
 
-	def __browseLocationShaders( self ) :
+	def __browseShaders( self, paths, title ) :
 
-		shaderAttributes = _shaderAttributes( self, affectedOnly = True )
-		if shaderAttributes is None :
-			dialogue = GafferUI.ConfirmationDialogue(
-				"Shader Browser",
-				"Location does not exist."
-			)
-			dialogue.waitForConfirmation()
-
-			return None
+		shaderAttributes = _shaderAttributes( self, paths, affectedOnly = True )
 
 		shaderNetworks = set().union( *[ set( a.values() ) for a in shaderAttributes.values() ] )
 
-		browser = GafferSceneUI.ShaderUI._ShaderParameterDialogue( shaderNetworks, "Location Shaders" )
+		browser = GafferSceneUI.ShaderUI._ShaderParameterDialogue( shaderNetworks, title )
 
 		queries = browser.waitForParameters( parentWindow = self.ancestor( GafferUI.ScriptWindow ) )
 
@@ -498,6 +519,14 @@ class _ShaderQueryFooter( GafferUI.PlugValueWidget ) :
 						)
 
 						break
+
+	def __browseLocationShaders( self ) :
+
+		self.__browseShaders( _pathsFromLocation( self ), "Location Shaders" )
+
+	def __browseSelectedShaders( self ) :
+
+		self.__browseShaders( _pathsFromSelection( self ), "Selected Shaders" )
 
 	def __addQuery( self, name, plugTypeOrValue ) :
 
@@ -540,13 +569,20 @@ def __setShaderFromLocationMenuDefinition( menu ) :
 
 	plugValueWidget = menu.ancestor( GafferUI.PlugValueWidget )
 
-	result = IECore.MenuDefinition()
+	return __setShaderPathsMenuDefinition( plugValueWidget, _pathsFromLocation( plugValueWidget ) )
 
-	shaderAttributes = _shaderAttributes( plugValueWidget, affectedOnly = False )
-	if shaderAttributes is None :
-		return result
+def __setShaderFromSelectionMenuDefinition( menu ) :
 
+	plugValueWidget = menu.ancestor( GafferUI.PlugValueWidget )
+
+	return __setShaderPathsMenuDefinition( plugValueWidget, _pathsFromSelection( plugValueWidget ) )
+
+def __setShaderPathsMenuDefinition( plugValueWidget, paths ) :
+
+	shaderAttributes = _shaderAttributes( plugValueWidget, paths, affectedOnly = False )
 	names = set().union( *[ set( a.keys() ) for a in shaderAttributes.values() ] )
+
+	result = IECore.MenuDefinition()
 
 	for name in sorted( names ) :
 		result.append(
@@ -579,6 +615,7 @@ def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 
 	menuDefinition.prepend( "/ShaderQueryDivider/", { "divider" : True } )
 	menuDefinition.prepend( "/From Location/", { "subMenu" : __setShaderFromLocationMenuDefinition } )
+	menuDefinition.prepend( "/From Selection/", { "subMenu" : __setShaderFromSelectionMenuDefinition } )
 
 GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu, scoped = False )
 

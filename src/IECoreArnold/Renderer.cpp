@@ -159,6 +159,31 @@ T parameter( const IECore::CompoundDataMap &parameters, const IECore::InternedSt
 	}
 }
 
+bool aiVersionLessThan( int arch, int major, int minor, int patch )
+{
+	// This is _not_ the same as `AiCheckAPIVersion()` :
+	//
+	// - `AiCheckAPIVersion()` is for determining ABI compatibility and
+	//   returns false if the `arch` or `major` numbers are not equal.
+	// - `AiCheckAPIVersion()` doesn't support a patch version.
+	// - `aiVersionLess()` is suitable for determining if an Arnold
+	//   feature or bugfix is available.
+	const char *arnoldVersionString = AiGetVersion( nullptr, nullptr, nullptr, nullptr );
+	int arnoldVersion[4];
+	for( int i = 0; i < 4; ++i )
+	{
+		arnoldVersion[i] = strtol( arnoldVersionString, const_cast<char **>( &arnoldVersionString ), 10 );
+		++arnoldVersionString;
+	}
+
+	auto version = { arch, major, minor, patch };
+
+	return std::lexicographical_compare(
+		begin( arnoldVersion ), end( arnoldVersion ),
+		version.begin(), version.end()
+	);
+}
+
 std::string formatHeaderParameter( const std::string name, const IECore::Data *data )
 {
 	if( const IECore::BoolData *boolData = IECore::runTimeCast<const IECore::BoolData>( data ) )
@@ -650,7 +675,7 @@ class ArnoldOutput : public IECore::RefCounted
 				// easier to discover/use, and it should be easier to generalise to other
 				// renderers.
 				m_data += "_*";
-				if( m_layerName.size() )
+				if( aiVersionLessThan( 7, 1, 3, 0 ) && m_layerName.size() )
 				{
 					// Work around Arnold bug #12282. If a layer name is specified, then Arnold
 					// will fail to apply the light group suffix to it. This causes the EXR driver
@@ -660,7 +685,7 @@ class ArnoldOutput : public IECore::RefCounted
 					if( m_lpeName.empty() )
 					{
 						IECore::msg( IECore::Msg::Warning, "ArnoldRenderer",
-							boost::format( "Cannot use `layerName` with `layerPerLightGroup` for non-LPE output \"%1%\", due to Arnold bug #12882" ) % name
+							boost::format( "Cannot use `layerName` with `layerPerLightGroup` for non-LPE output \"%1%\", due to Arnold bug #12282" ) % name
 						);
 					}
 					else

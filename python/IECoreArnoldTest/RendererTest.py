@@ -3885,6 +3885,60 @@ class RendererTest( GafferTest.TestCase ) :
 			{ "diffuse_{}.{}".format( g, c ) for g in lightGroups for c in "RGB" }
 		)
 
+	@unittest.skipIf( [ int( x ) for x in arnold.AiGetVersion() ] < [ 7, 1, 3, 0 ], "Fails due to bug ARNOLD-12282" )
+	def testLightGroupBeautyOutputWithLayerName( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+		)
+
+		beautyFileName = os.path.join( self.temporaryDirectory(), "beauty.exr" )
+		r.output(
+			"perLightRGBA", IECoreScene.Output(
+				beautyFileName, "exr", "rgba",
+				{
+					"layerPerLightGroup" : True,
+					"layerName" : "beauty",
+				}
+			)
+		)
+
+		lightGroups = [ "lightGroup1", "myLightGroup", "keyGroup" ]
+		for group in lightGroups :
+
+			lightShader = IECoreScene.ShaderNetwork(
+				shaders = {
+					"light" : IECoreScene.Shader(
+						"point_light", "ai:light",
+						{ "aov" : group }
+					),
+				},
+				output = "light"
+			)
+
+			r.light(
+				"/testLight/" + group,
+				None,
+				r.attributes(
+					IECore.CompoundObject( {
+						"ai:light" : lightShader
+					} )
+				)
+			)
+
+		r.render()
+
+		# Arnold always makes an annoying `default` group, even if no lights
+		# belong in it.
+		lightGroups.append( "default" )
+
+		beautyImage = IECore.Reader.create( beautyFileName ).read()
+		self.assertEqual(
+			set( beautyImage.keys() ),
+			{ "beauty_{}.{}".format( g, c ) for g in lightGroups for c in "RGBA" }
+		)
+
 	def testNamedOutputParameter( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(

@@ -1234,5 +1234,17 @@ class SpreadsheetTest( GafferTest.TestCase ) :
 			c["testSelector"] = "b"
 			self.assertEqual( s["activeRowIndex"].getValue(), 2 )
 
+	def testRowNameWithStringVectorDataInput( self ) :
+
+		n = Gaffer.Node()
+		n["user"]["stringVector"] = Gaffer.StringVectorDataPlug( defaultValue = IECore.StringVectorData(), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		n["user"]["stringVector"].setValue( IECore.StringVectorData( [ "a", "b", "c" ] ) )
+
+		s = Gaffer.Spreadsheet()
+		r = s["rows"].addRow()
+		r["name"].setInput( n["user"]["stringVector"] )
+
+		self.assertEqual( s["rows"].row( "a b c" ), r )
+
 if __name__ == "__main__":
 	unittest.main()
