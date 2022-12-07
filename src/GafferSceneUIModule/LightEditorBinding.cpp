@@ -198,9 +198,20 @@ class InspectorColumn : public PathColumn
 			/// return a colour for `Role::Value`?
 			result.icon = runTimeCast<const Color3fData>( inspectorResult->value() );
 			result.background = g_sourceTypeColors.at( (int)inspectorResult->sourceType() );
+			std::string toolTip;
 			if( auto source = inspectorResult->source() )
 			{
-				result.toolTip = new StringData( "Source : " + source->relativeName( source->ancestor<ScriptNode>() ) );
+				toolTip = "Source : " + source->relativeName( source->ancestor<ScriptNode>() );
+			}
+
+			if( runTimeCast<const IECore::BoolData>( result.value ) )
+			{
+				toolTip += !toolTip.empty() ? "\n\nDouble-click to toggle" : "Double-click to toggle";
+			}
+
+			if( !toolTip.empty() )
+			{
+				result.toolTip = new StringData( toolTip );
 			}
 
 			return result;
@@ -273,7 +284,7 @@ class MuteColumn : public InspectorColumn
 					{
 						result.icon = fullValue->readable() ? m_muteFadedIconData : m_unMuteFadedIconData;
 						result.toolTip = new StringData(
-							"Inherited from : " + ScenePlug::pathToString( currentPath ) + "\n" 
+							"Inherited from : " + ScenePlug::pathToString( currentPath ) + "\n\n"
 							"Double-click to toggle"
 						);
 						break;
