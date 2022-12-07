@@ -6,6 +6,7 @@ Fixes
 
 - MessagesBinding : Fixed GIL management bug that could cause crashes when performing an interactive render.
 - Spreadsheet : Fixed crash when connecting a StringVectorDataPlug to a row's `name` plug.
+- Documentation : Fixed "In this article" navigation column contents on pages containing figures.
 
 1.0.6.3 (relative to 1.0.6.2)
 =======
