@@ -153,11 +153,6 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 {
 	// Reuse previously created node if we can.
 	const IECoreScene::Shader *shader = shaderNetwork->getShader( outputParameter.shader );
-	const bool isOSLShader = boost::starts_with( shader->getType(), "osl:" );
-	const bool isConverter = boost::starts_with( shader->getName(), "convert" );
-	const bool isAOV = boost::starts_with( shader->getType(), "cycles:aov:" );
-	const bool isImageTexture = shader->getName() == "image_texture";
-
 	auto inserted = converted.insert( { outputParameter.shader, nullptr } );
 	ccl::ShaderNode *&node = inserted.first->second;
 	if( !inserted.second )
@@ -166,6 +161,8 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 	}
 
 	// Create node for shader.
+
+	const bool isOSLShader = boost::starts_with( shader->getType(), "osl:" );
 
 	if( isOSLShader )
 	{
@@ -181,7 +178,7 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 			return node;
 		}
 	}
-	else if( isConverter )
+	else if( boost::starts_with( shader->getName(), "convert" ) )
 	{
 		/// \todo Why can't this be handled by the generic case below? There are NodeTypes
 		/// registered for each of these conversions, so `NodeType::find()` does work. The
@@ -221,6 +218,8 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 	node->name = ccl::ustring( nodeName.c_str() );
 
 	// Set the shader parameters
+
+	const bool isImageTexture = shader->getName() == "image_texture";
 
 	for( const auto &namedParameter : shader->parameters() )
 	{
@@ -364,7 +363,7 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 		}
 	}
 
-	if( shaderNetwork->outputShader() == shader && !isAOV )
+	if( shaderNetwork->outputShader() == shader && !boost::starts_with( shader->getType(), "cycles:aov:" ) )
 	{
 		// Connect to the main output node of the cycles shader graph.
 		// Either cycles:surface, cycles:volume or cycles:displacement.
