@@ -4,7 +4,9 @@
 Fixes
 -----
 
-- Cycles : Fixed crash when attempting to use a non-existent OSL shader.
+- Cycles :
+  - Fixed handling of OSL shader component connections (#4926).
+  - Fixed crash when attempting to use a non-existent OSL shader.
 
 1.1.6.0 (relative to 1.1.5.0)
 =======

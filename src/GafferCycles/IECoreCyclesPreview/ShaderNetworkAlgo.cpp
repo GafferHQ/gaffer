@@ -504,18 +504,24 @@ ccl::ShaderGraph *convertGraph( const IECoreScene::ShaderNetwork *surfaceShader,
 	{
 		if( surfaceShader )
 		{
+			ShaderNetworkPtr toConvert = surfaceShader->copy();
+			IECoreScene::ShaderNetworkAlgo::convertOSLComponentConnections( toConvert.get() );
 			ShaderMap converted;
-			convertWalk( surfaceShader->getOutput(), surfaceShader, namePrefix, shaderManager, graph, converted );
+			convertWalk( toConvert->getOutput(), toConvert.get(), namePrefix, shaderManager, graph, converted );
 		}
 		if( displacementShader )
 		{
+			ShaderNetworkPtr toConvert = surfaceShader->copy();
+			IECoreScene::ShaderNetworkAlgo::convertOSLComponentConnections( toConvert.get() );
 			ShaderMap converted;
-			convertWalk( displacementShader->getOutput(), displacementShader, namePrefix, shaderManager, graph, converted );
+			convertWalk( toConvert->getOutput(), toConvert.get(), namePrefix, shaderManager, graph, converted );
 		}
 		if( volumeShader )
 		{
+			ShaderNetworkPtr toConvert = surfaceShader->copy();
+			IECoreScene::ShaderNetworkAlgo::convertOSLComponentConnections( toConvert.get() );
 			ShaderMap converted;
-			convertWalk( volumeShader->getOutput(), volumeShader, namePrefix, shaderManager, graph, converted );
+			convertWalk( toConvert->getOutput(), toConvert.get(), namePrefix, shaderManager, graph, converted );
 		}
 	}
 
