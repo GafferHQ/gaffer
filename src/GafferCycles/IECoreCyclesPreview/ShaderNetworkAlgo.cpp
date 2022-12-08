@@ -538,26 +538,6 @@ ccl::ShaderGraph *convertGraph( const IECoreScene::ShaderNetwork *surfaceShader,
 	return graph;
 }
 
-ccl::Shader *convert( const IECoreScene::ShaderNetwork *surfaceShader,
-					  const IECoreScene::ShaderNetwork *displacementShader,
-					  const IECoreScene::ShaderNetwork *volumeShader,
-					  ccl::ShaderManager *shaderManager,
-					  const std::string &namePrefix )
-{
-	string shaderName(
-		namePrefix +
-		surfaceShader->getOutput().shader.string()
-	);
-
-	ccl::ShaderGraph *graph = convertGraph( surfaceShader, displacementShader, volumeShader, shaderManager, namePrefix );
-
-	ccl::Shader *result = new ccl::Shader();
-	result->name = ccl::ustring( shaderName.c_str() );
-	result->set_graph( graph );
-
-	return result;
-}
-
 void convertAOV( const IECoreScene::ShaderNetwork *shaderNetwork, ccl::ShaderGraph *graph, ccl::ShaderManager *shaderManager, const std::string &namePrefix )
 {
 	ShaderMap converted;
