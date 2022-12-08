@@ -35,11 +35,14 @@
 #include "GafferCycles/IECoreCyclesPreview/GeometryAlgo.h"
 #include "GafferCycles/IECoreCyclesPreview/SocketAlgo.h"
 
-#include "IECoreVDB/VDBObject.h"
-
 IECORE_PUSH_DEFAULT_VISIBILITY
 #include "openvdb/openvdb.h"
 IECORE_POP_DEFAULT_VISIBILITY
+
+// This also includes "openvdb.h", so it must come after our
+// `#include "openvdb.h"` so that `IECORE_PUSH_DEFAULT_VISIBILITY`
+// can do its thing.
+#include "IECoreVDB/VDBObject.h"
 
 // Cycles
 IECORE_PUSH_DEFAULT_VISIBILITY
