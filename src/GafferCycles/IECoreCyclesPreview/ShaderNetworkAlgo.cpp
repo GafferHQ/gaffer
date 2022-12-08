@@ -176,7 +176,6 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 	}
 	else if( isOSLShader )
 	{
-#ifdef WITH_OSL
 		if( shaderManager && shaderManager->use_osl() )
 		{
 			ccl::OSLShaderManager *manager = (ccl::OSLShaderManager*)shaderManager;
@@ -185,13 +184,8 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 			node = shaderGraph->add( node );
 		}
 		else
-#endif
 		{
-#ifdef WITH_OSL
 			msg( Msg::Warning, "IECoreCycles::ShaderNetworkAlgo", boost::format( "Couldn't load OSL shader \"%s\" as the shading system is not set to OSL." ) % shader->getName() );
-#else
-			msg( Msg::Warning, "IECoreCycles::ShaderNetworkAlgo", boost::format( "Couldn't load OSL shader \"%s\" as GafferCycles wasn't compiled with OSL support." ) % shader->getName() );
-#endif
 			return node;
 		}
 	}
