@@ -151,13 +151,8 @@ typedef boost::unordered_map<ShaderNetwork::Parameter, ccl::ShaderNode *> Shader
 
 ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECoreScene::ShaderNetwork *shaderNetwork, const std::string &namePrefix, ccl::ShaderManager *shaderManager, ccl::ShaderGraph *shaderGraph, ShaderMap &converted )
 {
-	// Reuse previously created node if we can. It is ideal for all assigned
-	// shaders in the graph to funnel through the default "output" so
-	// that things like MIS/displacement/etc. can be set, however it isn't a
-	// requirement. Regardless, we look out for this special node as it already
-	// exists in the graph and we simply point to it.
+	// Reuse previously created node if we can.
 	const IECoreScene::Shader *shader = shaderNetwork->getShader( outputParameter.shader );
-	const bool isOutput = ( boost::starts_with( shader->getType(), "cycles:" ) ) && ( shader->getName() == "output" );
 	const bool isOSLShader = boost::starts_with( shader->getType(), "osl:" );
 	const bool isConverter = boost::starts_with( shader->getName(), "convert" );
 	const bool isAOV = boost::starts_with( shader->getType(), "cycles:aov:" );
@@ -170,11 +165,7 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 		return node;
 	}
 
-	if( isOutput )
-	{
-		node = (ccl::ShaderNode*)shaderGraph->output();
-	}
-	else if( isOSLShader )
+	if( isOSLShader )
 	{
 		if( shaderManager && shaderManager->use_osl() )
 		{
@@ -373,10 +364,9 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 		}
 	}
 
-	if( !isOutput && ( shaderNetwork->outputShader() == shader ) && !isAOV )
+	if( shaderNetwork->outputShader() == shader && !isAOV )
 	{
-		// In the cases where there is no cycles output attached in the network
-		// we just connect to the main output node of the cycles shader graph.
+		// Connect to the main output node of the cycles shader graph.
 		// Either cycles:surface, cycles:volume or cycles:displacement.
 		ccl::ShaderNode *outputNode = (ccl::ShaderNode*)shaderGraph->output();
 		string input = string( shader->getType().c_str() + 7 );
