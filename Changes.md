@@ -1,3 +1,11 @@
+1.1.x.x (relative to 1.1.6.0)
+=======
+
+Fixes
+-----
+
+- Cycles : Fixed crash when attempting to use a non-existent OSL shader.
+
 1.1.6.0 (relative to 1.1.5.0)
 =======
 

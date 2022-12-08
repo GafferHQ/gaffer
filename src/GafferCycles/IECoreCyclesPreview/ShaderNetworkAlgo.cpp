@@ -165,6 +165,8 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 		return node;
 	}
 
+	// Create node for shader.
+
 	if( isOSLShader )
 	{
 		if( shaderManager && shaderManager->use_osl() )
@@ -172,7 +174,6 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 			ccl::OSLShaderManager *manager = (ccl::OSLShaderManager*)shaderManager;
 			std::string shaderFileName = g_shaderSearchPathCache.get( shader->getName() );
 			node = manager->osl_node( shaderGraph, shaderManager, shaderFileName.c_str() );
-			node = shaderGraph->add( node );
 		}
 		else
 		{
@@ -192,8 +193,6 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 		{
 			ccl::ConvertNode *convertNode = shaderGraph->create_node<ccl::ConvertNode>( getSocketType( split[1] ), getSocketType( split[3] ), true );
 			node = (ccl::ShaderNode*)convertNode;
-			if( node )
-				node = shaderGraph->add( node );
 		}
 	}
 	else if( const ccl::NodeType *nodeType = ccl::NodeType::find( ccl::ustring( shader->getName() ) ) )
@@ -202,7 +201,6 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 		{
 			node = static_cast<ccl::ShaderNode *>( nodeType->create( nodeType ) );
 			node->set_owner( shaderGraph );
-			shaderGraph->add( node );
 		}
 	}
 
@@ -212,7 +210,9 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 		return node;
 	}
 
-	// Create the ShaderNode for this shader output
+	// Add node to graph
+
+	node = shaderGraph->add( node );
 
 	string nodeName(
 		namePrefix +

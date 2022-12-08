@@ -1280,6 +1280,47 @@ class RendererTest( GafferTest.TestCase ) :
 
 		del plane
 
+	def testMissingOSLShader( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		with IECore.CapturingMessageHandler() as mh :
+
+			renderer.attributes( IECore.CompoundObject ( {
+				"cycles:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader( "NonExistentShader", "osl:surface" ),
+					},
+					output = "output",
+				)
+			} ) )
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].message, "Couldn't load shader \"NonExistentShader\"" )
+
+	def testMissingCyclesShader( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		with IECore.CapturingMessageHandler() as mh :
+
+			renderer.attributes( IECore.CompoundObject ( {
+				"cycles:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader( "NonExistentShader", "cycles:surface" ),
+					},
+					output = "output",
+				)
+			} ) )
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].message, "Couldn't load shader \"NonExistentShader\"" )
 
 if __name__ == "__main__":
 	unittest.main()
