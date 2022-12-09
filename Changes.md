@@ -5,6 +5,15 @@ Features
 --------
 
 - Light Editor : Added a "Solo" column to quickly add and remove lights from the `soloLights` set.
+- Animation :
+  - Added new curve extrapolation modes to determine the shape of a curve outside the range of its keys.
+    - Constant : Curve is extended as a flat line.
+    - Linear : Curve is extended as a line with slope matching tangent in direction of extrapolation.
+    - Cycle : Curve is repeated indefinitely.
+    - CycleOffset : Curve is repeated indefinitely with each repetition offset in value to preserve continuity.
+    - CycleFlop : Curve is repeated indefinitely with each repetition mirrored in time.
+    - CycleFlip : Curve is repeated indefinitely with each repetition inverted in value and offset to preserve continuity.
+  - Added new curve tab in Animation Editor with controls for setting the extrapolation modes of a curve.
 
 Improvements
 ------------
@@ -47,7 +56,11 @@ API
 - PathColumn : Added `setSizeMode()` and `getSizeMode()` methods, and `sizeMode` constructor argument. These allow the size behaviour of a PathColumn to be configured.
 - EditScopeAlgo : Added `acquireSetEdits()` method.
 - TestCase : Added `scopedLocale()` method.
-- Animation : The slope and scale of protruding tangents is now constrained to match the values of the sibling tangent.
+- Animation :
+  - The slope and scale of protruding tangents is now constrained to match the values of the sibling tangent.
+  - Added `curve.extrapolationChangedSignal()` function, returns a signal that is called when a curve's extrapolation has changed.
+  - Added new api for curve extrapolation modes (see header `Animation.h` for full details).
+  - Added `description` metadata for curve extrapolation modes that is used to generate UI tooltips.
 
 Breaking Changes
 ----------------
