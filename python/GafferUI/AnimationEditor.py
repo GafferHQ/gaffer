@@ -922,6 +922,11 @@ class _CurveWidget( GafferUI.GridContainer ) :
 		# tool tips
 		extrapolationToolTip = "# Extrapolation\n\nThe %sextrapolation of the currently selected curves.\n"
 
+		# append extrapolation mode descriptions to tooltip
+		for mode in sorted( Gaffer.Animation.Extrapolation.values.values() ) :
+			description = Gaffer.Metadata.value( "Animation.Extrapolation.%s" % mode.name, "description" )
+			extrapolationToolTip += "\n* %s%s" % ( mode.name, " : %s" % description if description is not None else "" )
+
 		# create labels
 		extrapolationLabel = GafferUI.Label( text="Extrapolation", toolTip=( extrapolationToolTip % "" ) )
 
