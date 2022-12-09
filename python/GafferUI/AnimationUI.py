@@ -79,6 +79,9 @@ Gaffer.Metadata.registerValue( "Animation.Interpolation.Linear", "description", 
 Gaffer.Metadata.registerValue( "Animation.Interpolation.Cubic", "description", "Curve span is smoothly interpolated between values of in key and out key using tangent slope." )
 Gaffer.Metadata.registerValue( "Animation.Interpolation.Bezier", "description", "Curve span is smoothly interpolated between values of in key and out key using tangent slope and scale." )
 
+Gaffer.Metadata.registerValue( "Animation.Extrapolation.Constant", "description", "Curve is extended as a flat line." )
+Gaffer.Metadata.registerValue( "Animation.Extrapolation.Linear", "description", "Curve is extended as a line with slope matching tangent in direction of extrapolation." )
+
 Gaffer.Metadata.registerValue( "Animation.TieMode.Manual", "description", "Tangent slope and scale can be independently adjusted." )
 Gaffer.Metadata.registerValue( "Animation.TieMode.Slope", "description", "Tangent slopes are kept equal." )
 Gaffer.Metadata.registerValue( "Animation.TieMode.Scale", "description", "Tangent slopes are kept equal and scales are kept proportional." )
