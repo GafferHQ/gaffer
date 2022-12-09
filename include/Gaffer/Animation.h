@@ -82,6 +82,8 @@ class GAFFER_API Animation : public ComputeNode
 			Linear,
 			/// Curve is repeated indefinitely.
 			Cycle,
+			/// Curve is repeated indefinitely with each repetition offset in value to preserve continuity.
+			CycleOffset,
 		};
 
 		/// Defines direction relative to a key or curve span.

@@ -600,6 +600,42 @@ struct ExtrapolatorCycle
 	}
 };
 
+// cycle offset extrapolator
+
+struct ExtrapolatorCycleOffset
+: public Gaffer::Animation::Extrapolator
+{
+	ExtrapolatorCycleOffset()
+	: Gaffer::Animation::Extrapolator( Gaffer::Animation::Extrapolation::CycleOffset )
+	{}
+
+	double evaluate( const Gaffer::Animation::CurvePlug& curve,
+		const Gaffer::Animation::Direction direction, const double time ) const override
+	{
+		// NOTE : repeat the curve indefinitely with each repetition offset to be relative in value to the last.
+
+		const Gaffer::Animation::Key* const key = curve.getExtrapolationKey( direction );
+		const Gaffer::Animation::Key* const keyOpposite = curve.getExtrapolationKey( Gaffer::Animation::opposite( direction ) );
+
+		const double dt = std::abs( static_cast< double >( key->getTime() ) - static_cast< double >( keyOpposite->getTime() ) );
+		if( dt == 0.0 )
+		{
+			return key->getValue();
+		}
+
+		double count;
+		const double offset = time - key->getTime();
+		const double remainder = std::modf( offset / dt, & count ) * dt;
+
+		const double value = evaluateInKeyRange( curve, ( remainder == 0.0 )
+			? key->getTime()
+			: static_cast< float >( keyOpposite->getTime() + remainder ) );
+
+		const double dv = static_cast< double >( key->getValue() ) - static_cast< double >( keyOpposite->getValue() );
+		return std::fma( std::abs( count ) + ( ( remainder == 0.0 ) ? 0.0 : 1.0 ), dv, value );
+	}
+};
+
 } // namespace
 
 namespace Gaffer
@@ -711,6 +747,7 @@ const Animation::Extrapolator::Container& Animation::Extrapolator::get()
 		ConstExtrapolatorPtr( new ExtrapolatorConstant() ),
 		ConstExtrapolatorPtr( new ExtrapolatorLinear() ),
 		ConstExtrapolatorPtr( new ExtrapolatorCycle() ),
+		ConstExtrapolatorPtr( new ExtrapolatorCycleOffset() ),
 	};
 
 	return container;
@@ -2887,6 +2924,8 @@ const char* Animation::toString( const Animation::Extrapolation extrapolation )
 			return "Linear";
 		case Extrapolation::Cycle:
 			return "Cycle";
+		case Extrapolation::CycleOffset:
+			return "CycleOffset";
 		default:
 			assert( 0 );
 			return 0;
