@@ -109,6 +109,11 @@ def __setKeyInterpolation( plug, key, mode, unused ) :
 	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
 		key.setInterpolation( mode )
 
+def __setCurveExtrapolation( plug, curve, direction, mode, unused ) :
+
+	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
+		curve.setExtrapolation( direction, mode )
+
 def __popupMenu( menuDefinition, plugValueWidget ) :
 
 	plug = plugValueWidget.getPlug()
@@ -140,6 +145,24 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 				"active" : previousKey is not None,
 			}
 		)
+
+		for direction in reversed( sorted( Gaffer.Animation.Direction.values.values() ) ) :
+			for mode in reversed( sorted( Gaffer.Animation.Extrapolation.values.values() ) ) :
+				menuDefinition.prepend(
+					"/Extrapolation/%s/%s" % ( direction.name, mode.name ),
+					{
+						"command" : functools.partial(
+							__setCurveExtrapolation,
+							plug,
+							curve,
+							direction,
+							mode
+						),
+						"active" : plugValueWidget._editable( canEditAnimation = True ),
+						"checkBox" : curve.getExtrapolation( direction ) == mode,
+						"description" : Gaffer.Metadata.value( "Animation.Extrapolation.%s" % mode.name, "description" ),
+					}
+				)
 
 		spanKey = curve.getKey( context.getTime() ) or previousKey
 		spanKeyOnThisFrame = spanKey is not None
