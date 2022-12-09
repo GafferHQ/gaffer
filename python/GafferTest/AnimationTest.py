@@ -2678,6 +2678,29 @@ class AnimationTest( GafferTest.TestCase ) :
 			self.assertAlmostEqual( v0 - time * s0, curve.evaluate( k0.getTime() - time ), places = 5 )
 			self.assertAlmostEqual( v1 + time * s1, curve.evaluate( k1.getTime() + time ), places = 5 )
 
+	def testExtrapolationCycle( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["f"] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		curve = Gaffer.Animation.acquire( s["n"]["user"]["f"] )
+
+		curve.setExtrapolation( Gaffer.Animation.Direction.In, Gaffer.Animation.Extrapolation.Cycle )
+		curve.setExtrapolation( Gaffer.Animation.Direction.Out, Gaffer.Animation.Extrapolation.Cycle )
+
+		k0 = Gaffer.Animation.Key( 23, value = 1, interpolation = Gaffer.Animation.Interpolation.Linear )
+		k1 = Gaffer.Animation.Key( 25, value = 3, interpolation = Gaffer.Animation.Interpolation.Linear )
+		curve.addKey( k0 )
+		curve.addKey( k1 )
+
+		# NOTE : At exact multiple of [in|out] key the curve repeats. ensure that the extrapolated
+		#        value is equal to the value of the key in the direction of extrapolation.
+		for i in range( 1, 22, 2 ) :
+			self.assertEqual( k0.getValue(), curve.evaluate( float( i ) ) )
+		for i in range( 27, 45, 2 ) :
+			self.assertEqual( k1.getValue(), curve.evaluate( float( i ) ) )
+
 	def testAffects( self ) :
 
 		s = Gaffer.ScriptNode()
