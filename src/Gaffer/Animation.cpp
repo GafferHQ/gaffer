@@ -636,6 +636,39 @@ struct ExtrapolatorCycleOffset
 	}
 };
 
+// cycle flop extrapolator
+
+struct ExtrapolatorCycleFlop
+: public Gaffer::Animation::Extrapolator
+{
+	ExtrapolatorCycleFlop()
+	: Gaffer::Animation::Extrapolator( Gaffer::Animation::Extrapolation::CycleFlop )
+	{}
+
+	double evaluate( const Gaffer::Animation::CurvePlug& curve,
+		const Gaffer::Animation::Direction direction, const double time ) const override
+	{
+		// NOTE : mirror the curve in time indefinitely.
+
+		const Gaffer::Animation::Key* const key = curve.getExtrapolationKey( direction );
+		const Gaffer::Animation::Key* const keyOpposite = curve.getExtrapolationKey( Gaffer::Animation::opposite( direction ) );
+
+		const double dt = std::abs( static_cast< double >( key->getTime() ) - static_cast< double >( keyOpposite->getTime() ) );
+		if( dt == 0.0 )
+		{
+			return key->getValue();
+		}
+
+		double count;
+		const double offset = time - key->getTime();
+		const double remainder = std::modf( offset / dt, & count ) * dt;
+
+		return evaluateInKeyRange( curve, static_cast< float >( ( ( static_cast< int >( count ) % 2 ) != 0 )
+			? ( keyOpposite->getTime() + remainder )
+			: ( key->getTime() - remainder ) ) );
+	}
+};
+
 } // namespace
 
 namespace Gaffer
@@ -748,6 +781,7 @@ const Animation::Extrapolator::Container& Animation::Extrapolator::get()
 		ConstExtrapolatorPtr( new ExtrapolatorLinear() ),
 		ConstExtrapolatorPtr( new ExtrapolatorCycle() ),
 		ConstExtrapolatorPtr( new ExtrapolatorCycleOffset() ),
+		ConstExtrapolatorPtr( new ExtrapolatorCycleFlop() ),
 	};
 
 	return container;
@@ -2926,6 +2960,8 @@ const char* Animation::toString( const Animation::Extrapolation extrapolation )
 			return "Cycle";
 		case Extrapolation::CycleOffset:
 			return "CycleOffset";
+		case Extrapolation::CycleFlop:
+			return "CycleFlop";
 		default:
 			assert( 0 );
 			return 0;

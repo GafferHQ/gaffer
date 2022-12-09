@@ -83,6 +83,7 @@ Gaffer.Metadata.registerValue( "Animation.Extrapolation.Constant", "description"
 Gaffer.Metadata.registerValue( "Animation.Extrapolation.Linear", "description", "Curve is extended as a line with slope matching tangent in direction of extrapolation." )
 Gaffer.Metadata.registerValue( "Animation.Extrapolation.Cycle", "description", "Curve is repeated indefinitely." )
 Gaffer.Metadata.registerValue( "Animation.Extrapolation.CycleOffset", "description", "Curve is repeated indefinitely with each repetition offset in value to preserve continuity." )
+Gaffer.Metadata.registerValue( "Animation.Extrapolation.CycleFlop", "description", "Curve is repeated indefinitely with each repetition mirrored in time." )
 
 Gaffer.Metadata.registerValue( "Animation.TieMode.Manual", "description", "Tangent slope and scale can be independently adjusted." )
 Gaffer.Metadata.registerValue( "Animation.TieMode.Slope", "description", "Tangent slopes are kept equal." )
