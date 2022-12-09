@@ -147,6 +147,12 @@ double ensurePositiveZero( const double value )
 	return ( value == 0.0 ) ? 0.0 : value;
 }
 
+double clampSlope( const double slope )
+{
+	const double maxSlope = 1.e9;
+	return Imath::clamp( slope, -maxSlope, maxSlope );
+}
+
 double slopeFromPosition( const Imath::V2d& position, const Gaffer::Animation::Direction direction )
 {
 	static_assert( std::numeric_limits< double >::is_iec559, "IEEE 754 required to represent negative infinity" );
@@ -319,12 +325,6 @@ struct InterpolatorCubic
 	}
 
 private:
-
-	static double clampSlope( const double slope )
-	{
-		const double maxSlope = 1.e9;
-		return Imath::clamp( slope, -maxSlope, maxSlope );
-	}
 
 	void computeCoeffs(
 		const Gaffer::Animation::Key& keyLo, const Gaffer::Animation::Key& keyHi,
@@ -542,6 +542,26 @@ struct ExtrapolatorConstant
 	}
 };
 
+// linear extrapolator
+
+struct ExtrapolatorLinear
+: public Gaffer::Animation::Extrapolator
+{
+	ExtrapolatorLinear()
+	: Gaffer::Animation::Extrapolator( Gaffer::Animation::Extrapolation::Linear )
+	{}
+
+	double evaluate( const Gaffer::Animation::CurvePlug& curve,
+		const Gaffer::Animation::Direction direction, const double time ) const override
+	{
+		// NOTE : extrapolate line with slope matching tangent in direction
+		//        of extrapolation from key in direction of extrapolation.
+
+		const Gaffer::Animation::Key* const key = curve.getExtrapolationKey( direction );
+		return std::fma( clampSlope( key->tangent( direction ).getSlope() ), ( time - key->getTime() ), key->getValue() );
+	}
+};
+
 } // namespace
 
 namespace Gaffer
@@ -645,7 +665,8 @@ const Animation::Extrapolator::Container& Animation::Extrapolator::get()
 {
 	static const Container container
 	{
-		ConstExtrapolatorPtr( new ExtrapolatorConstant() )
+		ConstExtrapolatorPtr( new ExtrapolatorConstant() ),
+		ConstExtrapolatorPtr( new ExtrapolatorLinear() ),
 	};
 
 	return container;
@@ -2810,6 +2831,8 @@ const char* Animation::toString( const Animation::Extrapolation extrapolation )
 	{
 		case Extrapolation::Constant:
 			return "Constant";
+		case Extrapolation::Linear:
+			return "Linear";
 		default:
 			assert( 0 );
 			return 0;

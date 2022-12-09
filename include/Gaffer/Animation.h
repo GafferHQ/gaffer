@@ -78,6 +78,8 @@ class GAFFER_API Animation : public ComputeNode
 		{
 			/// Curve is extended as a flat line.
 			Constant = 0,
+			/// Curve is extended as a line with slope matching tangent in direction of extrapolation.
+			Linear,
 		};
 
 		/// Defines direction relative to a key or curve span.
