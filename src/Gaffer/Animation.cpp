@@ -2070,9 +2070,7 @@ Animation::KeyPtr Animation::CurvePlug::insertKeyInternal( const float time, con
 		lo = finalKey();
 	}
 
-	// if key already exists at time then return it with updated value, otherwise if time is
-	// outside existing range of keys, there is no way currently to extrapolate a value so
-	// if no value has been provided then return KeyPtr().
+	// if key already exists at time then return it with updated value
 
 	if( key )
 	{
@@ -2081,10 +2079,6 @@ Animation::KeyPtr Animation::CurvePlug::insertKeyInternal( const float time, con
 			key->setValue( *value );
 		}
 
-		return key;
-	}
-	else if( !( lo && hi ) && ( value == nullptr ) )
-	{
 		return key;
 	}
 
@@ -2108,10 +2102,10 @@ Animation::KeyPtr Animation::CurvePlug::insertKeyInternal( const float time, con
 
 	// create key
 
-	key.reset( new Key( time, ( ( value != nullptr ) ? ( *value ) : 0.f ), interpolator->getInterpolation(),
+	key.reset( new Key( time, ( value == nullptr ) ? evaluate( time ) : ( *value ), interpolator->getInterpolation(),
 		defaultSlope(), defaultScale(), defaultSlope(), defaultScale(), TieMode::Manual ) );
 
-	// if specified value is the same as the evaluated value of the curve then bisect span.
+	// if time is in range of keys and specified value is the same as the evaluated value of the curve then bisect span.
 
 	if( ( lo && hi ) && ( ( value == nullptr ) || ( evaluate( time ) == ( *value ) ) ) )
 	{
