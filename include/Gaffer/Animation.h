@@ -452,7 +452,7 @@ class GAFFER_API Animation : public ComputeNode
 				/// This is the key from which the curve will be extrapolated in the specified direction.
 				const Key *getExtrapolationKey( Animation::Direction direction ) const;
 
-				/// Evaluate the curve at the specified time
+				/// Evaluate the curve at the specified time.
 				float evaluate( float time ) const;
 
 				/// Output plug for evaluating the curve
@@ -465,6 +465,7 @@ class GAFFER_API Animation : public ComputeNode
 
 				friend class Key;
 				friend class Tangent;
+				friend class Extrapolator;
 				friend KeyIterator;
 				friend ConstKeyIterator;
 
@@ -474,6 +475,7 @@ class GAFFER_API Animation : public ComputeNode
 				const Key *finalKey() const;
 
 				KeyPtr insertKeyInternal( float, const float* );
+				double evaluateInternal( double, bool ) const;
 
 				struct TimeKey
 				{

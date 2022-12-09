@@ -111,6 +111,9 @@ protected:
 	// construct with specified extrapolation
 	explicit Extrapolator( Animation::Extrapolation extrapolation );
 
+	// evaluate curve without doing extrapolation
+	double evaluateInKeyRange( const CurvePlug& curve, double time ) const;
+
 private:
 
 	friend class CurvePlug;
@@ -653,6 +656,11 @@ Animation::Extrapolator::Extrapolator( const Animation::Extrapolation extrapolat
 Animation::Extrapolation Animation::Extrapolator::getExtrapolation() const
 {
 	return m_extrapolation;
+}
+
+double Animation::Extrapolator::evaluateInKeyRange( const Animation::CurvePlug& curve, const double time ) const
+{
+	return curve.evaluateInternal( time, /* extrapolate = */ false );
 }
 
 double Animation::Extrapolator::evaluate(
@@ -2547,6 +2555,11 @@ void Animation::CurvePlug::setExtrapolation( const Animation::Direction directio
 
 float Animation::CurvePlug::evaluate( const float time ) const
 {
+	return evaluateInternal( time, /* extrapolate = */ true );
+}
+
+double Animation::CurvePlug::evaluateInternal( const double time, const bool extrapolate ) const
+{
 	// NOTE : no keys return 0
 
 	if( m_keys.empty() )
@@ -2560,14 +2573,23 @@ float Animation::CurvePlug::evaluate( const float time ) const
 	Keys::const_iterator hiIt = m_keys.lower_bound( time );
 	if( hiIt == m_keys.end() )
 	{
-		return ( m_keys.rbegin() )->getValue();
+		return ( extrapolate )
+			? m_extrapolatorOut->evaluate( *this, Animation::Direction::Out, time )
+			: finalKey()->getValue();
 	}
 
 	const Key &hi = *( hiIt );
 
-	if( hi.m_time == time || hiIt == m_keys.begin() )
+	if( hi.m_time == time )
 	{
 		return hi.getValue();
+	}
+
+	if( hiIt == m_keys.begin() )
+	{
+		return ( extrapolate )
+			? m_extrapolatorIn->evaluate( *this, Animation::Direction::In, time )
+			: firstKey()->getValue();
 	}
 
 	const Key &lo = *( std::prev( hiIt ) );
