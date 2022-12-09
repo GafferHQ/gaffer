@@ -37,6 +37,7 @@
 import ctypes
 import json
 import os
+import pathlib
 import sys
 import time
 import unittest
@@ -73,7 +74,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		o = r.object(
@@ -89,7 +90,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			n = arnold.AiNodeLookUpByName( universe, "testPlane" )
 			self.assertTrue( arnold.AiNodeEntryGetType( arnold.AiNodeGetNodeEntry( n ) ), arnold.AI_NODE_SHAPE )
@@ -99,7 +100,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		r.camera(
@@ -120,7 +121,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 			options = arnold.AiUniverseGetOptions( universe )
 
 			self.assertEqual( arnold.AiNodeGetInt( options, "xres" ), 2000 )
@@ -136,7 +137,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		for i in range( 0, 10 ) :
@@ -158,7 +159,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 			self.assertEqual( len( self.__allNodes( universe, type = arnold.AI_NODE_SHADER ) ), 1 )
 
 	def testShaderGarbageCollection( self ) :
@@ -171,7 +172,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.output(
 			"test",
 			IECoreScene.Output(
-				self.temporaryDirectory() + "/beauty.exr",
+				str( self.temporaryDirectory() / "beauty.exr" ),
 				"exr",
 				"rgba",
 				{
@@ -205,7 +206,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		shader1 = IECoreScene.ShaderNetwork(
@@ -255,7 +256,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			shaders = self.__allNodes( universe, type = arnold.AI_NODE_SHADER )
 			self.assertEqual( len( shaders ), 4 )
@@ -268,7 +269,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		scalarColorShader = IECoreScene.ShaderNetwork(
@@ -309,7 +310,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			target = arnold.AiNodeGetPtr( arnold.AiNodeLookUpByName( universe, "testPlane_scalarColor" ), "shader" )
 			source = arnold.AiNodeGetLink( target, "Kd_color" )
@@ -324,7 +325,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		s = IECoreScene.ShaderNetwork(
@@ -355,7 +356,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			outputNode = arnold.AiNodeGetPtr( arnold.AiNodeLookUpByName( universe, "test" ), "shader" )
 
@@ -380,7 +381,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		s = IECoreScene.ShaderNetwork(
@@ -411,7 +412,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			outputNode = arnold.AiNodeGetPtr( arnold.AiNodeLookUpByName( universe, "test" ), "shader" )
 
@@ -448,7 +449,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		lightShader = IECoreScene.ShaderNetwork( { "light" : IECoreScene.Shader( "point_light", "ai:light" ), }, output = "light" )
@@ -467,7 +468,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			lights = self.__allNodes( universe, type = arnold.AI_NODE_LIGHT )
 			self.assertEqual( len( lights ), 1 )
@@ -478,7 +479,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		lightAttributes = r.attributes(
@@ -504,7 +505,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			untransformedLight = arnold.AiNodeLookUpByName( universe, "light:untransformedLight" )
 			staticLight = arnold.AiNodeLookUpByName( universe, "light:staticLight" )
@@ -531,7 +532,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		lightShader = IECoreScene.ShaderNetwork( { "output" : IECoreScene.Shader( "point_light", "ai:light" ) }, output = "output" )
@@ -550,7 +551,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			lights = self.__allNodes( universe, type = arnold.AI_NODE_LIGHT )
 			self.assertEqual( len( lights ), 2 )
@@ -561,7 +562,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		r.object(
@@ -615,7 +616,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			o1 = arnold.AiNodeLookUpByName( universe, "testMesh1" )
 			o2 = arnold.AiNodeLookUpByName( universe, "testMesh2" )
@@ -648,7 +649,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		r.output(
@@ -691,7 +692,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			options = arnold.AiUniverseGetOptions( universe )
 			outputs = arnold.AiNodeGetArray( options, "outputs" )
@@ -709,7 +710,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		r.output(
@@ -730,7 +731,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 			filters = self.__allNodes( universe, type = arnold.AI_NODE_FILTER )
 			self.assertEqual( len( filters ), 1 )
 			f = filters[0]
@@ -743,7 +744,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		r.output(
@@ -773,7 +774,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			options = arnold.AiUniverseGetOptions( universe )
 			outputs = arnold.AiNodeGetArray( options, "outputs" )
@@ -800,7 +801,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		for i in range( 3 ):
 			c = r.camera(
-				"testCamera%i"%i,
+				f"testCamera{i}",
 				IECoreScene.Camera(
 					parameters = {
 						"projection" : "orthographic"
@@ -811,13 +812,13 @@ class RendererTest( GafferTest.TestCase ) :
 			c.transform( imath.M44f().translate( imath.V3f( i, 0, 0 ) ) )
 
 			r.output(
-				"testBeauty%i"%i,
+				f"testBeauty{i}",
 				IECoreScene.Output(
-					self.temporaryDirectory() + "/beauty%i.exr"%i,
+					str( self.temporaryDirectory() / f"beauty{i}.exr" ),
 					"exr",
 					"rgba",
 					{
-						"camera" : "testCamera%i"%i
+						"camera" : f"testCamera{i}"
 					}
 				)
 			)
@@ -825,7 +826,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.output(
 			"testDiffuse2",
 			IECoreScene.Output(
-				self.temporaryDirectory() + "/diffuse2.exr",
+				str( self.temporaryDirectory() / "diffuse2.exr" ),
 				"exr",
 				"color diffuse",
 				{
@@ -843,11 +844,11 @@ class RendererTest( GafferTest.TestCase ) :
 			worldToCameraKey = "worldToCamera"
 
 		for i in range( 3 ):
-			image = IECoreImage.ImageReader( self.temporaryDirectory() + "/beauty%i.exr"%i ).read()
+			image = IECoreImage.ImageReader( str( self.temporaryDirectory() / f"beauty{i}.exr" ) ).read()
 			self.assertEqual( image.blindData()[worldToCameraKey].value,
 				imath.M44f( 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1, 0, -i, 0, 0, 1 ) )
 
-		image = IECoreImage.ImageReader( self.temporaryDirectory() + "/diffuse2.exr" ).read()
+		image = IECoreImage.ImageReader( str( self.temporaryDirectory() / "diffuse2.exr" ) ).read()
 		self.assertEqual( image.blindData()[worldToCameraKey].value,
 			imath.M44f( 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1, 0, -2, 0, 0, 1 ) )
 
@@ -856,7 +857,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		r.object(
@@ -883,7 +884,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			options = arnold.AiUniverseGetOptions( universe )
 
@@ -901,7 +902,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		r.output(
@@ -971,7 +972,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			# test if data was added correctly to existing data
 			exrDriver = arnold.AiNodeLookUpByName( universe, "ieCoreArnold:display:exrTest" )
@@ -1013,7 +1014,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		polyPlane = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) )
@@ -1111,7 +1112,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			shapes = self.__allNodes( universe, type = arnold.AI_NODE_SHAPE )
 			numInstances = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "ginstance" ] )
@@ -1171,7 +1172,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		plane = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) )
@@ -1194,7 +1195,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 			defaultNode = arnold.AiNodeLookUpByName( universe, "planeDefault" )
 			linearNode = arnold.AiNodeLookUpByName( universe, "planeLinear" )
 			linearThenDefaultNode = arnold.AiNodeLookUpByName( universe, "planeLinearThenDefault" )
@@ -1207,7 +1208,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		subdivPlane = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) )
@@ -1232,7 +1233,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 			node = arnold.AiNodeLookUpByName( universe, "plane" )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( node ) ), "polymesh" )
 			self.assertEqual( arnold.AiNodeGetByte( node, "subdiv_iterations" ), 10 )
@@ -1246,7 +1247,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		plane = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) )
@@ -1287,7 +1288,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 			node = arnold.AiNodeLookUpByName( universe, "plane" )
 			self.assertEqual( arnold.AiNodeGetStr( node, "sss_setname" ), "testSet" )
 			node = arnold.AiNodeLookUpByName( universe, "planeInterned" )
@@ -1300,7 +1301,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		# Current convention : attributes prefixed with "user:"
@@ -1368,7 +1369,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			# Test "user:". We expect the prefix to be included in the Arnold
 			# parameter name.
@@ -1409,7 +1410,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		# Mix of attributes where `render:` clashes with `user:`
@@ -1430,7 +1431,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			# We expect the `render:` attribute to have taken precedence over
 			# the `user:` one.
@@ -1443,7 +1444,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		# Start with one set of attributes.
@@ -1478,7 +1479,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			plane = arnold.AiNodeLookUpByName( universe, "plane" )
 
@@ -1492,7 +1493,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		# Try to set `motion_start` on the sly, via a `render:` attribute.
@@ -1522,7 +1523,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			plane = arnold.AiNodeLookUpByName( universe, "plane" )
 			self.assertEqual( arnold.AiNodeGetFlt( plane, "motion_start" ), 0 )
@@ -1532,7 +1533,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		# Try to set `matrix` on the sly, via a `render:` attribute.
@@ -1572,7 +1573,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			plane = arnold.AiNodeLookUpByName( universe, "plane" )
 			self.assertEqual(
@@ -1585,7 +1586,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		plane = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) )
@@ -1638,7 +1639,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			shapes = self.__allNodes( universe, type = arnold.AI_NODE_SHAPE )
 			self.assertEqual( len( shapes ), 5 )
@@ -1684,7 +1685,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		r.object(
@@ -1698,7 +1699,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			default = arnold.AiNodeLookUpByName( universe, "default" )
 			polymesh = arnold.AiNodeGetPtr( default, "node" )
@@ -1713,7 +1714,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		meshes = {}
@@ -1739,7 +1740,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			for interpolation in meshes.keys() :
 				for subdividePolygons in ( None, False, True ) :
@@ -1760,7 +1761,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		mesh = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) )
@@ -1782,7 +1783,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			for uvSmoothing in smoothingTypes :
 
@@ -1799,7 +1800,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		l = r.light(
@@ -1818,7 +1819,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			shapes = self.__allNodes( universe, type = arnold.AI_NODE_SHAPE )
 			self.assertEqual( len( shapes ), 2 )
@@ -1839,7 +1840,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		lightShaderNetwork = IECoreScene.ShaderNetwork(
@@ -1876,7 +1877,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			shapes = self.__allNodes( universe, type = arnold.AI_NODE_SHAPE )
 			self.assertEqual( len( shapes ), 3 )
@@ -1908,7 +1909,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		network = IECoreScene.ShaderNetwork(
@@ -1968,10 +1969,10 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			options = arnold.AiUniverseGetOptions( universe )
-			self.assertTrue( os.path.expandvars( "$GAFFER_ROOT/shaders" ) in arnold.AiNodeGetStr( options, "plugin_searchpath" ) )
+			self.assertTrue( str( pathlib.Path( os.environ["GAFFER_ROOT"] ) / "shaders" ) in arnold.AiNodeGetStr( options, "plugin_searchpath" ) )
 
 			n = arnold.AiNodeLookUpByName( universe, "testPlane" )
 
@@ -2022,7 +2023,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		network = IECoreScene.ShaderNetwork( { "output" : IECoreScene.Shader( "Pattern/Noise", "osl:shader" ) }, output = "output" )
@@ -2039,7 +2040,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			options = arnold.AiUniverseGetOptions( universe )
 
@@ -2054,7 +2055,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		network = IECoreScene.ShaderNetwork(
@@ -2086,7 +2087,7 @@ class RendererTest( GafferTest.TestCase ) :
 		del r
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			n = arnold.AiNodeLookUpByName( universe, "testPlane" )
 
@@ -2117,7 +2118,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		objectNamesAndSets = [
@@ -2146,7 +2147,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			for objectName, sets in objectNamesAndSets :
 
@@ -2165,7 +2166,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		curves = IECoreScene.CurvesPrimitive.createBox( imath.Box3f( imath.V3f( -1 ), imath.V3f( 1 ) ) )
@@ -2218,7 +2219,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			shapes = self.__allNodes( universe, type = arnold.AI_NODE_SHAPE )
 			numInstances = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "ginstance" ] )
@@ -2342,7 +2343,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		primitives = {
@@ -2381,7 +2382,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			shapes = self.__allNodes( universe, type = arnold.AI_NODE_SHAPE )
 			numInstances = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "ginstance" ] )
@@ -2449,7 +2450,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		primitives = {
@@ -2484,7 +2485,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			shapes = self.__allNodes( universe, type = arnold.AI_NODE_SHAPE )
 			numInstances = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "ginstance" ] )
@@ -2547,7 +2548,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		r.object(
@@ -2574,7 +2575,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			instance = arnold.AiNodeLookUpByName( universe, "test" )
 			self.assertTrue( arnold.AiNodeIs( instance, "ginstance" ) )
@@ -2588,7 +2589,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		r.option( "ai:declare:myCustomOption", IECore.StringData( "myCustomOptionValue" ) )
@@ -2598,7 +2599,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 			options = arnold.AiUniverseGetOptions( universe )
 
 			self.assertEqual( arnold.AiNodeGetStr( options, "myCustomOption" ), "myCustomOptionValue" )
@@ -2611,7 +2612,7 @@ class RendererTest( GafferTest.TestCase ) :
 				r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 					"Arnold",
 					GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-					self.temporaryDirectory() + "/test.ass"
+					str( self.temporaryDirectory() / "test.ass" )
 				)
 
 				if frame is not None :
@@ -2624,7 +2625,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 				with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-					arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+					arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 					options = arnold.AiUniverseGetOptions( universe )
 					self.assertEqual(
@@ -2640,20 +2641,20 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
-		r.option( "ai:log:filename", IECore.StringData( self.temporaryDirectory() + "/test/log.txt" ) )
+		r.option( "ai:log:filename", IECore.StringData( ( self.temporaryDirectory() / "test" / "log.txt" ).as_posix() ) )
 		r.render()
 
-		self.assertTrue( os.path.isdir( self.temporaryDirectory() + "/test" ) )
+		self.assertTrue( ( self.temporaryDirectory() / "test" ).is_dir() )
 
 		# And it should still be OK to pass a filename where the directory already exists
 
-		r.option( "ai:log:filename", IECore.StringData( self.temporaryDirectory() + "/log.txt" ) )
+		r.option( "ai:log:filename", IECore.StringData( ( self.temporaryDirectory() / "log.txt" ).as_posix() ) )
 		r.render()
 
-		self.assertTrue( os.path.isdir( self.temporaryDirectory() ) )
+		self.assertTrue( self.temporaryDirectory().is_dir() )
 
 		# Passing an empty filename should be fine too.
 
@@ -2663,11 +2664,11 @@ class RendererTest( GafferTest.TestCase ) :
 		# Trying to write to a read-only location should result in an
 		# error message.
 
-		os.makedirs( self.temporaryDirectory() + "/readOnly" )
-		os.chmod( self.temporaryDirectory() + "/readOnly", 444 )
+		( self.temporaryDirectory() / "readOnly" ).mkdir()
+		( self.temporaryDirectory() / "readOnly" ).chmod( 444 )
 
 		with IECore.CapturingMessageHandler() as mh :
-			r.option( "ai:log:filename", IECore.StringData( self.temporaryDirectory() + "/readOnly/nested/log.txt" ) )
+			r.option( "ai:log:filename", IECore.StringData( ( self.temporaryDirectory() / "readOnly" / "nested" / "log.txt" ).as_posix() ) )
 			r.render()
 
 		self.assertEqual( len( mh.messages ), 1 )
@@ -2681,9 +2682,9 @@ class RendererTest( GafferTest.TestCase ) :
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
 		)
 
-		r.option( "ai:log:filename", IECore.StringData( self.temporaryDirectory() + "/test/test_log.txt" ) )
-		r.option( "ai:statisticsFileName", IECore.StringData( self.temporaryDirectory() + "/test/test_stats.json" ) )
-		r.option( "ai:profileFileName", IECore.StringData( self.temporaryDirectory() + "/test/test_profile.json" ) )
+		r.option( "ai:log:filename", IECore.StringData( ( self.temporaryDirectory() / "test" / "test_log.txt" ).as_posix() ) )
+		r.option( "ai:statisticsFileName", IECore.StringData( ( self.temporaryDirectory() / "test" / "test_stats.json" ).as_posix() ) )
+		r.option( "ai:profileFileName", IECore.StringData( ( self.temporaryDirectory() / "test" / "test_profile.json" ).as_posix() ) )
 
 		c = r.camera(
 			"testCamera",
@@ -2698,7 +2699,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.output(
 			"testBeauty",
 			IECoreScene.Output(
-				self.temporaryDirectory() + "/beauty.exr",
+				str( self.temporaryDirectory() / "beauty.exr" ),
 				"exr",
 				"rgba"
 			)
@@ -2711,10 +2712,10 @@ class RendererTest( GafferTest.TestCase ) :
 		# required to flush the profile json
 		del r
 
-		with open( self.temporaryDirectory() + "/test/test_log.txt", "r" ) as logHandle:
+		with open( self.temporaryDirectory() / "test" / "test_log.txt", "r" ) as logHandle:
 			self.assertNotEqual( logHandle.read().find( "rendering image at 640 x 480" ), -1 )
 
-		with open( self.temporaryDirectory() + "/test/test_stats.json", "r" ) as statsHandle:
+		with open( self.temporaryDirectory() / "test" / "test_stats.json", "r" ) as statsHandle:
 			stats = json.load( statsHandle )["render 0000"]
 			self.assertTrue( "microseconds" in stats["scene creation time"] )
 			self.assertTrue( "microseconds" in stats["frame time"] )
@@ -2727,7 +2728,7 @@ class RendererTest( GafferTest.TestCase ) :
 		if int(arnold.AiGetVersion()[0]) == 7 :
 			self.skipTest( "Profiling broken in Arnold 7" )
 
-		with open( self.temporaryDirectory() + "/test/test_profile.json", "r" ) as profileHandle :
+		with open( self.temporaryDirectory() / "test" / "test_profile.json", "r" ) as profileHandle :
 			stats = json.load( profileHandle )["traceEvents"]
 			driverEvents = [ x for x in stats if x["name"] == "ieCoreArnold:display:testBeauty" ]
 			self.assertEqual( driverEvents[0]["cat"], "driver_exr" )
@@ -2737,9 +2738,9 @@ class RendererTest( GafferTest.TestCase ) :
 		RenderType = GafferScene.Private.IECoreScenePreview.Renderer.RenderType
 
 		for renderType, fileName, output in (
-			( RenderType.Batch, "", IECoreScene.Output( self.temporaryDirectory() + "/beauty.exr", "exr", "rgba" ) ),
+			( RenderType.Batch, "", IECoreScene.Output( str( self.temporaryDirectory() / "beauty.exr" ), "exr", "rgba" ) ),
 			( RenderType.Interactive, "", None ),
-			( RenderType.SceneDescription, self.temporaryDirectory() + "/test.ass" , None )
+			( RenderType.SceneDescription, str( self.temporaryDirectory() / "test.ass" ), None )
 		) :
 
 			with IECore.CapturingMessageHandler() as fallbackHandler :
@@ -2841,7 +2842,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.output(
 			"test",
 			IECoreScene.Output(
-				self.temporaryDirectory() + "/beauty.exr",
+				str( self.temporaryDirectory() / "beauty.exr" ),
 				"exr",
 				"rgba",
 				{
@@ -2913,7 +2914,7 @@ class RendererTest( GafferTest.TestCase ) :
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
 		)
 
-		outputFileName = self.temporaryDirectory() + "/beauty.exr"
+		outputFileName = str( self.temporaryDirectory() / "beauty.exr" )
 		r.output(
 			"test",
 			IECoreScene.Output(
@@ -3041,7 +3042,7 @@ class RendererTest( GafferTest.TestCase ) :
 		renderer.output(
 			"test",
 			IECoreScene.Output(
-				self.temporaryDirectory() + "/beauty.exr",
+				str( self.temporaryDirectory() / "beauty.exr" ),
 				"exr",
 				"rgba",
 				{
@@ -3105,7 +3106,7 @@ class RendererTest( GafferTest.TestCase ) :
 				renderer.attributes( IECore.CompoundObject() )
 			).transform( imath.M44f().translate( imath.V3f( 0, 0, -1 ) ) )
 
-			outputFileName = os.path.join( self.temporaryDirectory(), "beauty.exr" )
+			outputFileName = str( self.temporaryDirectory() / "beauty.exr" )
 			renderer.output(
 				"test",
 				IECoreScene.Output(
@@ -3345,7 +3346,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		o = r.lightFilter(
@@ -3374,7 +3375,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			# Since Arnold's `light_blocker` node doesn't support transform blur,
 			# we just expect a single matrix with the first transform sample.
@@ -3389,12 +3390,12 @@ class RendererTest( GafferTest.TestCase ) :
 
 		import IECoreVDB
 
-		tmpFile = self.temporaryDirectory() + "/test.ass"
+		tmpFile = self.temporaryDirectory() / "test.ass"
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			tmpFile
+			str( tmpFile )
 		)
 
 		attributes = IECore.CompoundObject( {
@@ -3431,7 +3432,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, tmpFile, None )
+			arnold.AiSceneLoad( universe, str( tmpFile ), None )
 
 			shapes = self.__allNodes( universe, type = arnold.AI_NODE_SHAPE )
 			numInstances = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "ginstance" ] )
@@ -3467,7 +3468,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		r.camera(
@@ -3494,7 +3495,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			cameraNode = arnold.AiNodeLookUpByName( universe, "/camera" )
 
@@ -3568,7 +3569,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		c1 = IECoreScene.Camera()
@@ -3588,7 +3589,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			n = arnold.AiNodeLookUpByName( universe, "testCamera" )
 			self.assertTrue( arnold.AiNodeEntryGetType( arnold.AiNodeGetNodeEntry( n ) ), arnold.AI_NODE_CAMERA )
@@ -3608,7 +3609,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		# Create an output
@@ -3616,7 +3617,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.output(
 			"test1",
 			IECoreScene.Output(
-				self.temporaryDirectory() + "/beauty1.exr", "exr", "rgba", {}
+				str( self.temporaryDirectory() / "beauty1.exr" ), "exr", "rgba", {}
 			)
 		)
 
@@ -3647,7 +3648,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.output(
 			"test2",
 			IECoreScene.Output(
-				self.temporaryDirectory() + "/beauty2.exr", "exr", "rgba", {}
+				str( self.temporaryDirectory() / "beauty2.exr" ), "exr", "rgba", {}
 			)
 		)
 
@@ -3659,7 +3660,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			drivers = self.__allNodes( universe, type = arnold.AI_NODE_DRIVER, nodeEntryName = "driver_exr" )
 			self.assertEqual( len( drivers ), 2 )
@@ -3730,7 +3731,7 @@ class RendererTest( GafferTest.TestCase ) :
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
 		)
 
-		fileName = os.path.join( self.temporaryDirectory(), "testID.exr" )
+		fileName = str( self.temporaryDirectory() / "testID.exr" )
 		r.output( "testID", IECoreScene.Output( fileName, "exr", "uint id", { "filter" : "closest" } ) )
 
 		o = r.object(
@@ -3782,7 +3783,7 @@ class RendererTest( GafferTest.TestCase ) :
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
 		)
 
-		beautyFileName = os.path.join( self.temporaryDirectory(), "beauty.exr" )
+		beautyFileName = str( self.temporaryDirectory() / "beauty.exr" )
 		r.output(
 			"whatABeauty", IECoreScene.Output(
 				beautyFileName, "exr", "rgba",
@@ -3792,7 +3793,7 @@ class RendererTest( GafferTest.TestCase ) :
 			)
 		)
 
-		diffuseFileName = os.path.join( self.temporaryDirectory(), "diffuse.exr" )
+		diffuseFileName = str( self.temporaryDirectory() / "diffuse.exr" )
 		r.output(
 			"diffuseLPE", IECoreScene.Output(
 				diffuseFileName, "exr", "lpe C<RD>.*",
@@ -3823,7 +3824,7 @@ class RendererTest( GafferTest.TestCase ) :
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
 		)
 
-		beautyFileName = os.path.join( self.temporaryDirectory(), "beauty.exr" )
+		beautyFileName = str( self.temporaryDirectory() / "beauty.exr" )
 		r.output(
 			"perLightRGBA", IECoreScene.Output(
 				beautyFileName, "exr", "rgba",
@@ -3833,7 +3834,7 @@ class RendererTest( GafferTest.TestCase ) :
 			)
 		)
 
-		diffuseFileName = os.path.join( self.temporaryDirectory(), "diffuse.exr" )
+		diffuseFileName = str( self.temporaryDirectory() / "diffuse.exr" )
 		r.output(
 			"perLightLPE", IECoreScene.Output(
 				diffuseFileName, "exr", "lpe C<RD>.*",
@@ -3944,7 +3945,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		r.object(
@@ -3977,7 +3978,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			layerShader = arnold.AiNodeGetPtr( arnold.AiNodeLookUpByName( universe, "testPlane" ), "shader" )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( layerShader ) ), "layer_shader" )
@@ -3992,7 +3993,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			self.temporaryDirectory() + "/test.ass"
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		r.object(
@@ -4017,7 +4018,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, self.temporaryDirectory() + "/test.ass", None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			surfaceShader = arnold.AiNodeGetPtr( arnold.AiNodeLookUpByName( universe, "testPlane" ), "shader" )
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( surfaceShader ) ), "standard_surface" )
@@ -4030,7 +4031,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			os.path.join( self.temporaryDirectory(), "test.ass" )
+			str( self.temporaryDirectory() / "test.ass" )
 		)
 
 		r.object(
@@ -4046,7 +4047,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
-			arnold.AiSceneLoad( universe, os.path.join( self.temporaryDirectory(), "test.ass" ), None )
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			plane = arnold.AiNodeLookUpByName( universe, "testPlane" )
 			self.assertEqual( arnold.AiNodeGetStr( plane, "user:myString" ), "test" )

@@ -38,6 +38,7 @@
 import unittest
 import time
 import datetime
+import pathlib
 import os
 if os.name !="nt" :
 
@@ -83,15 +84,15 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 	@unittest.skipIf( os.name == "nt", "Windows does not support symbolic links." )
 	def testBrokenSymbolicLinks( self ) :
 
-		os.symlink( self.temporaryDirectory() + "/nonExistent", self.temporaryDirectory() + "/broken" )
+		os.symlink( self.temporaryDirectory() / "nonExistent", self.temporaryDirectory() / "broken" )
 
 		# we do want symlinks to appear in children, even if they're broken
-		d = Gaffer.FileSystemPath( self.temporaryDirectory() )
+		d = Gaffer.FileSystemPath( self.temporaryDirectory().as_posix() )
 		c = d.children()
 		self.assertEqual( len( c ), 1 )
 
 		l = c[0]
-		self.assertEqual( str( l ), self.temporaryDirectory() + "/broken" )
+		self.assertEqual( str( l ), ( self.temporaryDirectory() / "broken" ).as_posix() )
 
 		# we also want broken symlinks to report themselves as "valid",
 		# because having a path return a child and then claim the child
@@ -105,15 +106,15 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 	@unittest.skipIf( os.name == "nt", "Windows does not support symbolic links." )
 	def testSymLinkInfo( self ) :
 
-		with open( self.temporaryDirectory() + "/a", "w" ) as f :
+		with open( self.temporaryDirectory() / "a", "w" ) as f :
 			f.write( "AAAA" )
 
-		os.symlink( self.temporaryDirectory() + "/a", self.temporaryDirectory() + "/l" )
+		os.symlink( self.temporaryDirectory() / "a", self.temporaryDirectory() / "l" )
 
 		# symlinks should report the info for the file
 		# they point to.
-		a = Gaffer.FileSystemPath( self.temporaryDirectory() + "/a" )
-		l = Gaffer.FileSystemPath( self.temporaryDirectory() + "/l" )
+		a = Gaffer.FileSystemPath( ( self.temporaryDirectory() / "a" ).as_posix() )
+		l = Gaffer.FileSystemPath( ( self.temporaryDirectory() / "l" ).as_posix() )
 		aInfo = a.info()
 		self.assertEqual( aInfo["fileSystem:size"], l.info()["fileSystem:size"] )
 		# unless they're broken
@@ -122,7 +123,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 
 	def testCopy( self ) :
 
-		p = Gaffer.FileSystemPath( self.temporaryDirectory() )
+		p = Gaffer.FileSystemPath( self.temporaryDirectory().as_posix() )
 		p2 = p.copy()
 
 		self.assertEqual( p, p2 )
@@ -141,7 +142,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 
 		os.chdir( self.temporaryDirectory() )
 
-		with open( os.path.join( self.temporaryDirectory(), "a" ), "w" ) as f :
+		with open( self.temporaryDirectory() / "a", "w" ) as f :
 			f.write( "AAAA" )
 
 		p = Gaffer.FileSystemPath( "a" )
@@ -332,7 +333,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 
 		os.chdir( self.temporaryDirectory() )
 		os.mkdir( "dir" )
-		with open( os.path.join( self.temporaryDirectory(), "dir", "a" ), "w" ) as f :
+		with open( self.temporaryDirectory() / "dir" / "a", "w" ) as f :
 			f.write( "AAAA" )
 
 		p = Gaffer.FileSystemPath( "dir" )
@@ -354,7 +355,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 
 	def testModificationTimes( self ) :
 
-		p = Gaffer.FileSystemPath( self.temporaryDirectory() )
+		p = Gaffer.FileSystemPath( self.temporaryDirectory().as_posix() )
 		p.append( "t" )
 
 		with open( p.nativeString(), "w" ) as f :
@@ -375,7 +376,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 
 	def testOwner( self ) :
 
-		p = Gaffer.FileSystemPath( self.temporaryDirectory() )
+		p = Gaffer.FileSystemPath( self.temporaryDirectory().as_posix() )
 		p.append( "t" )
 
 		with open( p.nativeString(), "w" ) as f :
@@ -388,7 +389,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 
 	def testGroup( self ) :
 
-		p = Gaffer.FileSystemPath( self.temporaryDirectory() )
+		p = Gaffer.FileSystemPath( self.temporaryDirectory().as_posix() )
 		p.append( "t" )
 
 		with open( p.nativeString(), "w" ) as f :
@@ -400,7 +401,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 
 	def testPropertyNames( self ) :
 
-		p = Gaffer.FileSystemPath( self.temporaryDirectory() )
+		p = Gaffer.FileSystemPath( self.temporaryDirectory().as_posix() )
 
 		a = p.propertyNames()
 		self.assertTrue( isinstance( a, list ) )
@@ -411,39 +412,39 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 		self.assertTrue( "fileSystem:size" in a )
 
 		self.assertTrue( "fileSystem:frameRange" not in a )
-		p = Gaffer.FileSystemPath( self.temporaryDirectory(), includeSequences = True )
+		p = Gaffer.FileSystemPath( self.temporaryDirectory().as_posix(), includeSequences = True )
 		self.assertTrue( "fileSystem:frameRange" in p.propertyNames() )
 
 	def testSequences( self ) :
 
-		os.mkdir( os.path.join( self.temporaryDirectory(), "dir" ) )
+		os.mkdir( self.temporaryDirectory() / "dir" )
 		for n in [ "singleFile.txt", "a.001.txt", "a.002.txt", "a.004.txt", "b.003.txt" ] :
-			with open( os.path.join( self.temporaryDirectory(), n ), "w" ) as f :
+			with open( self.temporaryDirectory() / n, "w" ) as f :
 				f.write( "AAAA" )
 
-		p = Gaffer.FileSystemPath( self.temporaryDirectory(), includeSequences = True )
+		p = Gaffer.FileSystemPath( self.temporaryDirectory().as_posix(), includeSequences = True )
 		self.assertTrue( p.getIncludeSequences() )
 
 		c = p.children()
 		self.assertEqual( len( c ), 8 )
 
 		s = sorted( c, key=str )
-		self.assertEqual( str(s[0]), self.temporaryDirectory().replace( "\\", "/" ) + "/a.###.txt" )
-		self.assertEqual( s[0].nativeString(), os.path.join( self.temporaryDirectory(), "a.###.txt" ) )
-		self.assertEqual( str(s[1]), self.temporaryDirectory().replace( "\\", "/" ) + "/a.001.txt" )
-		self.assertEqual( s[1].nativeString(), os.path.join( self.temporaryDirectory(), "a.001.txt" ) )
-		self.assertEqual( str(s[2]), self.temporaryDirectory().replace( "\\", "/" ) + "/a.002.txt" )
-		self.assertEqual( s[2].nativeString(), os.path.join( self.temporaryDirectory(), "a.002.txt" ) )
-		self.assertEqual( str(s[3]), self.temporaryDirectory().replace( "\\", "/" ) + "/a.004.txt" )
-		self.assertEqual( s[3].nativeString(), os.path.join( self.temporaryDirectory(), "a.004.txt" ) )
-		self.assertEqual( str(s[4]), self.temporaryDirectory().replace( "\\", "/" ) + "/b.###.txt" )
-		self.assertEqual( s[4].nativeString(), os.path.join( self.temporaryDirectory(), "b.###.txt" ) )
-		self.assertEqual( str(s[5]), self.temporaryDirectory().replace( "\\", "/" ) + "/b.003.txt" )
-		self.assertEqual( s[5].nativeString(), os.path.join( self.temporaryDirectory(), "b.003.txt" ) )
-		self.assertEqual( str(s[6]), self.temporaryDirectory().replace( "\\", "/" ) + "/dir" )
-		self.assertEqual( s[6].nativeString(), os.path.join( self.temporaryDirectory(), "dir" ) )
-		self.assertEqual( str(s[7]), self.temporaryDirectory().replace( "\\", "/" ) + "/singleFile.txt" )
-		self.assertEqual( s[7].nativeString(), os.path.join( self.temporaryDirectory(), "singleFile.txt" ) )
+		self.assertEqual( str(s[0]), ( self.temporaryDirectory() / "a.###.txt" ).as_posix() )
+		self.assertEqual( s[0].nativeString(), str( self.temporaryDirectory() / "a.###.txt" ) )
+		self.assertEqual( str(s[1]), ( self.temporaryDirectory() /"a.001.txt" ).as_posix() )
+		self.assertEqual( s[1].nativeString(), str( self.temporaryDirectory() / "a.001.txt" ) )
+		self.assertEqual( str(s[2]), ( self.temporaryDirectory() / "a.002.txt" ).as_posix() )
+		self.assertEqual( s[2].nativeString(), str( self.temporaryDirectory() / "a.002.txt" ) )
+		self.assertEqual( str(s[3]), ( self.temporaryDirectory() / "a.004.txt" ).as_posix() )
+		self.assertEqual( s[3].nativeString(), str( self.temporaryDirectory() / "a.004.txt" ) )
+		self.assertEqual( str(s[4]), ( self.temporaryDirectory() / "b.###.txt" ).as_posix() )
+		self.assertEqual( s[4].nativeString(), str( self.temporaryDirectory() / "b.###.txt" ) )
+		self.assertEqual( str(s[5]), ( self.temporaryDirectory() / "b.003.txt" ).as_posix() )
+		self.assertEqual( s[5].nativeString(), str( self.temporaryDirectory() / "b.003.txt" ) )
+		self.assertEqual( str(s[6]), ( self.temporaryDirectory() / "dir" ).as_posix() )
+		self.assertEqual( s[6].nativeString(), str( self.temporaryDirectory() / "dir" ) )
+		self.assertEqual( str(s[7]), ( self.temporaryDirectory() / "singleFile.txt" ).as_posix() )
+		self.assertEqual( s[7].nativeString(), str( self.temporaryDirectory() / "singleFile.txt" ) )
 
 		for x in s :
 
@@ -481,25 +482,25 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 		self.assertEqual( len( p2.children() ), 8 )
 
 		# make sure we can still exclude the sequences
-		p = Gaffer.FileSystemPath( self.temporaryDirectory(), includeSequences = False )
+		p = Gaffer.FileSystemPath( self.temporaryDirectory().as_posix(), includeSequences = False )
 		self.assertFalse( p.getIncludeSequences() )
 
 		c = p.children()
 		self.assertEqual( len( c ), 6 )
 
 		s = sorted( c, key=str )
-		self.assertEqual( str(s[0]), self.temporaryDirectory().replace( "\\", "/" ) + "/a.001.txt" )
-		self.assertEqual( s[0].nativeString(), os.path.join( self.temporaryDirectory(), "a.001.txt" ) )
-		self.assertEqual( str(s[1]), self.temporaryDirectory().replace( "\\", "/" ) + "/a.002.txt" )
-		self.assertEqual( s[1].nativeString(), os.path.join( self.temporaryDirectory(), "a.002.txt" ) )
-		self.assertEqual( str(s[2]), self.temporaryDirectory().replace( "\\", "/" ) + "/a.004.txt" )
-		self.assertEqual( s[2].nativeString(), os.path.join( self.temporaryDirectory(), "a.004.txt" ) )
-		self.assertEqual( str(s[3]), self.temporaryDirectory().replace( "\\", "/" ) + "/b.003.txt" )
-		self.assertEqual( s[3].nativeString(), os.path.join( self.temporaryDirectory(), "b.003.txt" ) )
-		self.assertEqual( str(s[4]), self.temporaryDirectory().replace( "\\", "/" ) + "/dir" )
-		self.assertEqual( s[4].nativeString(), os.path.join( self.temporaryDirectory(), "dir" ) )
-		self.assertEqual( str(s[5]), self.temporaryDirectory().replace( "\\", "/" ) + "/singleFile.txt" )
-		self.assertEqual( s[5].nativeString(), os.path.join( self.temporaryDirectory(), "singleFile.txt" ) )
+		self.assertEqual( str(s[0]), ( self.temporaryDirectory() / "a.001.txt" ).as_posix() )
+		self.assertEqual( s[0].nativeString(), str( self.temporaryDirectory() / "a.001.txt" ) )
+		self.assertEqual( str(s[1]), ( self.temporaryDirectory() / "a.002.txt" ).as_posix() )
+		self.assertEqual( s[1].nativeString(), str( self.temporaryDirectory() / "a.002.txt" ) )
+		self.assertEqual( str(s[2]), ( self.temporaryDirectory() / "a.004.txt" ).as_posix() )
+		self.assertEqual( s[2].nativeString(), str( self.temporaryDirectory() / "a.004.txt" ) )
+		self.assertEqual( str(s[3]), ( self.temporaryDirectory() / "b.003.txt" ).as_posix() )
+		self.assertEqual( s[3].nativeString(), str( self.temporaryDirectory() / "b.003.txt" ) )
+		self.assertEqual( str(s[4]), ( self.temporaryDirectory() / "dir" ).as_posix() )
+		self.assertEqual( s[4].nativeString(), str( self.temporaryDirectory() / "dir" ) )
+		self.assertEqual( str(s[5]), ( self.temporaryDirectory() / "singleFile.txt" ).as_posix() )
+		self.assertEqual( s[5].nativeString(), str( self.temporaryDirectory() / "singleFile.txt" ) )
 
 		# and we can include them again
 		p.setIncludeSequences( True )
@@ -510,7 +511,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 
 	def testCancellation( self ) :
 
-		p = Gaffer.FileSystemPath( os.path.dirname( __file__ ) )
+		p = Gaffer.FileSystemPath( pathlib.Path( __file__ ).parent.as_posix() )
 
 		# Children
 
@@ -523,10 +524,10 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 		# Sequence properties
 
 		for f in range( 0, 100 ) :
-			with open( os.path.join( self.temporaryDirectory(), "{}.txt".format( f ) ), "w" ) as f :
+			with open( self.temporaryDirectory() / ( str( f ) + ".txt" ), "w" ) as f :
 				f.write( "x" )
 
-		p = Gaffer.FileSystemPath( os.path.join( self.temporaryDirectory(), "#.txt" ), includeSequences = True )
+		p = Gaffer.FileSystemPath( ( self.temporaryDirectory() / "#.txt" ).as_posix(), includeSequences = True )
 
 		with self.assertRaises( IECore.Cancelled ) :
 			p.property( "fileSystem:owner", c )

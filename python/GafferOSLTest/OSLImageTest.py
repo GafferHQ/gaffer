@@ -35,6 +35,7 @@
 ##########################################################################
 
 import os
+import pathlib
 import imath
 import inspect
 
@@ -48,7 +49,7 @@ import GafferOSL
 import GafferOSLTest
 
 class OSLImageTest( GafferImageTest.ImageTestCase ) :
-	representativeDeepImagePath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/representativeDeepImage.exr" )
+	representativeDeepImagePath = pathlib.Path( os.environ["GAFFER_ROOT"] ) / "python" / "GafferImageTest" / "images" / "representativeDeepImage.exr"
 
 	def test( self ) :
 		for useClosure in [ False, True ]:
@@ -72,7 +73,7 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 			floatToColor["parameters"]["b"].setInput( getRed["out"]["channelValue"] )
 
 			reader = GafferImage.ImageReader()
-			reader["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/rgb.100x100.exr" ) )
+			reader["fileName"].setValue( pathlib.Path( os.environ["GAFFER_ROOT"] ) / "python" / "GafferImageTest" / "images" / "rgb.100x100.exr" )
 
 			shuffle = GafferImage.Shuffle()
 			shuffle["in"].setInput( reader["out"] )
@@ -276,7 +277,7 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 		imageShader["parameters"]["in0"].setInput( outR["out"]["channel"] )
 
 		reader = GafferImage.ImageReader()
-		reader["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/rgb.100x100.exr" ) )
+		reader["fileName"].setValue( pathlib.Path( os.environ["GAFFER_ROOT"] ) / "python" / "GafferImageTest" / "images" / "rgb.100x100.exr" )
 
 		image = GafferOSL.OSLImage()
 		image["in"].setInput( reader["out"] )
@@ -301,7 +302,7 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 		imageShader["parameters"]["in0"].setInput( outR["out"]["channel"] )
 
 		reader = GafferImage.ImageReader()
-		reader["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/rgb.100x100.exr" ) )
+		reader["fileName"].setValue( pathlib.Path( os.environ["GAFFER_ROOT"] ) / "python" / "GafferImageTest" / "images" / "rgb.100x100.exr" )
 
 		image = GafferOSL.OSLImage()
 		image["in"].setInput( reader["out"] )
@@ -325,10 +326,10 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 		p = Gaffer.PlugAlgo.promote( s["b"]["i"]["channels"]["testClosure"]["value"] )
 		p.setName( "p" )
 
-		s["b"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+		s["b"].exportForReference( self.temporaryDirectory() / "test.grf" )
 
 		s["r"] = Gaffer.Reference()
-		s["r"].load( self.temporaryDirectory() + "/test.grf" )
+		s["r"].load( self.temporaryDirectory() / "test.grf" )
 
 		s["s"] = GafferOSL.OSLShader()
 		s["s"].loadShader( "ImageProcessing/OutImage" )
@@ -500,14 +501,14 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 		constant = GafferImage.Constant()
 		constant["format"].setValue( GafferImage.Format( 32, 32 ) )
 
-		textureFileName = os.path.dirname( __file__ ) + "/images/vRamp.tx"
+		textureFilePath = pathlib.Path( __file__ ).parent / "images" / "vRamp.tx"
 
 		outLayer = GafferOSL.OSLCode()
 		outLayer["out"]["layer"] = GafferOSL.ClosurePlug(
 			direction = Gaffer.Plug.Direction.Out,
 			flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic
 		)
-		outLayer["code"].setValue( 'layer = outLayer( "", texture( "{}", u, v ) )'.format( textureFileName ) )
+		outLayer["code"].setValue( f'layer = outLayer( "", texture( "{textureFilePath}", u, v ) )' )
 
 		outImage = GafferOSL.OSLShader()
 		outImage.loadShader( "ImageProcessing/OutImage" )

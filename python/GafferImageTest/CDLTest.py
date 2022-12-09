@@ -35,6 +35,7 @@
 ##########################################################################
 
 import os
+import pathlib
 import unittest
 import imath
 
@@ -47,7 +48,7 @@ import GafferImageTest
 
 class CDLTest( GafferImageTest.ImageTestCase ) :
 
-	imageFile = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" )
+	imageFile = pathlib.Path( os.environ["GAFFER_ROOT"] ) / "python" / "GafferImageTest" / "images" / "checker.exr"
 
 	def test( self ) :
 
@@ -138,7 +139,7 @@ class CDLTest( GafferImageTest.ImageTestCase ) :
 	def testChannelsAreSeparate( self ) :
 
 		i = GafferImage.ImageReader()
-		i["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/circles.exr" ) )
+		i["fileName"].setValue( pathlib.Path( os.environ["GAFFER_ROOT"] ) / "python" / "GafferImageTest" / "images" / "circles.exr" )
 
 		o = GafferImage.CDL()
 		o["in"].setInput( i["out"] )

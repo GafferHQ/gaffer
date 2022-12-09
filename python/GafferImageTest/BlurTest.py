@@ -36,6 +36,7 @@
 
 import unittest
 import imath
+import pathlib
 
 import IECore
 
@@ -193,7 +194,7 @@ class BlurTest( GafferImageTest.ImageTestCase ) :
 			testWriter["task"].execute()
 
 		expectedReader = GafferImage.ImageReader()
-		expectedReader["fileName"].setValue( os.path.dirname( __file__ ) + "/images/blurRange.exr" )
+		expectedReader["fileName"].setValue( pathlib.Path( __file__ ).parent / "images" / "blurRange.exr" )
 
 		self.assertImagesEqual( finalCrop["out"], expectedReader["out"], maxDifference = 0.00001, ignoreMetadata = True )
 

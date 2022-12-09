@@ -518,10 +518,10 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		script["box"]["in"] = GafferScene.ScenePlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		script["box"]["out"] = GafferScene.ScenePlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
 		script["box"]["out"].setInput( script["box"]["in"] )
-		script["box"].exportForReference( self.temporaryDirectory() + "/test.grf" )
+		script["box"].exportForReference( self.temporaryDirectory() / "test.grf" )
 
 		script["reference"] = Gaffer.Reference()
-		script["reference"].load( self.temporaryDirectory() + "/test.grf" )
+		script["reference"].load( self.temporaryDirectory() / "test.grf" )
 		script["reference"]["in"].setInput( script["instancer"]["out"] )
 
 		script["attributes"] = GafferScene.CustomAttributes()
@@ -530,7 +530,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		traverseConnection = Gaffer.Signals.ScopedConnection( GafferSceneTest.connectTraverseSceneToPlugDirtiedSignal( script["attributes"]["out"] ) )
 		with Gaffer.Context() as c :
 
-			script["reference"].load( self.temporaryDirectory() + "/test.grf" )
+			script["reference"].load( self.temporaryDirectory() / "test.grf" )
 
 	def testContextChangedAndGIL( self ) :
 

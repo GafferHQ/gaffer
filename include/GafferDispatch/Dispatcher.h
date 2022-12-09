@@ -48,6 +48,7 @@
 #include "IECore/RunTimeTyped.h"
 #include "IECore/StringAlgo.h"
 
+#include <filesystem>
 #include <functional>
 #include <map>
 #include <set>
@@ -170,9 +171,9 @@ class GAFFERDISPATCH_API Dispatcher : public Gaffer::Node
 		/// files on a per-job basis.
 		Gaffer::StringPlug *jobsDirectoryPlug();
 		const Gaffer::StringPlug *jobsDirectoryPlug() const;
-		/// At the start of dispatch(), a directory is created under jobsDirectoryPlug + jobNamePlug
+		/// At the start of dispatch(), a directory is created under `jobsDirectoryPlug / jobNamePlug`
 		/// which the dispatcher writes temporary files to. This method returns the most recent created directory.
-		const std::string jobDirectory() const;
+		const std::filesystem::path jobDirectory() const;
 		//@}
 
 		/// A function which creates a Dispatcher.
@@ -277,7 +278,7 @@ class GAFFERDISPATCH_API Dispatcher : public Gaffer::Node
 	private :
 
 		void createJobDirectory( const Gaffer::ScriptNode *script, Gaffer::Context *context ) const;
-		mutable std::string m_jobDirectory;
+		mutable std::filesystem::path m_jobDirectory;
 
 		void executeAndPruneImmediateBatches( TaskBatch *batch, bool immediate = false ) const;
 

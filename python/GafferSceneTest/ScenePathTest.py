@@ -34,7 +34,7 @@
 #
 ##########################################################################
 
-import os
+import pathlib
 import unittest
 import inspect
 import imath
@@ -51,7 +51,7 @@ class ScenePathTest( GafferSceneTest.SceneTestCase ) :
 	def test( self ) :
 
 		a = GafferScene.SceneReader()
-		a["fileName"].setValue( os.path.dirname( __file__ ) + "/alembicFiles/cube.abc" )
+		a["fileName"].setValue( pathlib.Path( __file__ ).parent / "alembicFiles" / "cube.abc" )
 
 		p = GafferScene.ScenePath( a["out"], Gaffer.Context(), "/" )
 		c = p.children()
@@ -62,7 +62,7 @@ class ScenePathTest( GafferSceneTest.SceneTestCase ) :
 	def testRelative( self ) :
 
 		a = GafferScene.SceneReader()
-		a["fileName"].setValue( os.path.dirname( __file__ ) + "/alembicFiles/cube.abc" )
+		a["fileName"].setValue( pathlib.Path( __file__ ).parent / "alembicFiles"/ "cube.abc" )
 
 		p = GafferScene.ScenePath( a["out"], Gaffer.Context(), "group1" )
 		self.assertEqual( str( p ), "group1" )

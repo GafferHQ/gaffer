@@ -281,18 +281,18 @@ class ReferenceSerialiser : public NodeSerialiser
 	{
 		const Reference *r = static_cast<const Reference *>( graphComponent );
 
-		const std::string &fileName = r->fileName();
+		const std::filesystem::path &fileName = r->fileName();
 		if( fileName.empty() )
 		{
 			return "";
 		};
 
-		return identifier + ".load( \"" + fileName + "\" )\n";
+		return identifier + ".load( \"" + fileName.generic_string() + "\" )\n";
 	}
 
 };
 
-void load( Reference &r, const std::string &f )
+void load( Reference &r, const std::filesystem::path &f )
 {
 	IECorePython::ScopedGILRelease gilRelease;
 	r.load( f );

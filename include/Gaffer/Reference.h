@@ -39,6 +39,8 @@
 
 #include "Gaffer/SubGraph.h"
 
+#include <filesystem>
+
 namespace Gaffer
 {
 
@@ -57,9 +59,9 @@ class GAFFER_API Reference : public SubGraph
 		/// Loads the specified script, which should have been exported
 		/// using Box::exportForReference().
 		/// \undoable.
-		void load( const std::string &fileName );
+		void load( const std::filesystem::path &fileName );
 		/// Returns the name of the script currently being referenced.
-		const std::string &fileName() const;
+		const std::filesystem::path &fileName() const;
 
 		using ReferenceLoadedSignal = Signals::Signal<void ( Reference * )>;
 		/// Emitted when a reference is loaded (or unloaded following an undo).
@@ -79,10 +81,10 @@ class GAFFER_API Reference : public SubGraph
 
 	private :
 
-		void loadInternal( const std::string &fileName );
+		void loadInternal( const std::filesystem::path &fileName );
 		bool isReferencePlug( const Plug *plug ) const;
 
-		std::string m_fileName;
+		std::filesystem::path m_fileName;
 		ReferenceLoadedSignal m_referenceLoadedSignal;
 
 		class PlugEdits;

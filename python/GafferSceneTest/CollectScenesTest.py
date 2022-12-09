@@ -35,7 +35,7 @@
 ##########################################################################
 
 import inspect
-import os
+import pathlib
 import unittest
 import imath
 
@@ -317,7 +317,7 @@ class CollectScenesTest( GafferSceneTest.SceneTestCase ) :
 	def testLoadFromVersion0_48( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/collectScenes-0.48.0.0.gfr" )
+		s["fileName"].setValue( pathlib.Path( __file__ ).parent / "scripts" / "collectScenes-0.48.0.0.gfr" )
 		s.load()
 
 		self.assertTrue( s["CollectScenes"]["in"].getInput(), s["Sphere"]["out"] )

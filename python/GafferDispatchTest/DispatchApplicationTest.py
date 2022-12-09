@@ -50,8 +50,8 @@ class DispatchApplicationTest( GafferTest.TestCase ) :
 
 		GafferTest.TestCase.setUp( self )
 
-		self.__scriptFileName = self.temporaryDirectory() + "/script.gfr"
-		self.__outputTextFile = self.temporaryDirectory() + "/output.txt"
+		self.__scriptFileName = self.temporaryDirectory() / "script.gfr"
+		self.__outputTextFile = self.temporaryDirectory() / "output.txt"
 
 	def writeSimpleScript( self ) :
 
@@ -62,8 +62,8 @@ class DispatchApplicationTest( GafferTest.TestCase ) :
 		s["test"]["text"].setValue( "its a test" )
 		s.save()
 
-		self.assertTrue( os.path.exists( self.__scriptFileName ) )
-		self.assertFalse( os.path.exists( self.__outputTextFile ) )
+		self.assertTrue( self.__scriptFileName.exists() )
+		self.assertFalse( self.__outputTextFile.exists() )
 
 		return s
 
@@ -196,11 +196,11 @@ class DispatchApplicationTest( GafferTest.TestCase ) :
 			)
 		)
 		error = "".join( p.stderr.readlines() )
-		self.assertTrue( self.__scriptFileName in error )
+		self.assertTrue( str( self.__scriptFileName ) in error )
 		self.assertTrue( "KeyError: \"'badPlug'" in error )
 		self.assertFalse( "Traceback" in error )
 		self.assertNotEqual( p.returncode, 0 )
-		self.assertFalse( os.path.exists( self.__outputTextFile ) )
+		self.assertFalse( self.__outputTextFile.exists() )
 
 		p = self.waitForCommand(
 			"gaffer dispatch -ignoreScriptLoadErrors -script {script} -tasks {task}".format(
@@ -242,7 +242,7 @@ class DispatchApplicationTest( GafferTest.TestCase ) :
 		error = "".join( p.stderr.readlines() )
 		self.assertEqual( error, "" )
 		self.assertFalse( p.returncode )
-		jobDir = self.temporaryDirectory() + "/dispatcher/local/000000"
+		jobDir = self.temporaryDirectory() / "dispatcher" / "local" / "000000"
 		with open( self.__outputTextFile, "r" ) as f :
 			self.assertEqual( f.readlines(), [ "userDefault test {jobDir}".format( jobDir = jobDir ) ] )
 
@@ -307,9 +307,11 @@ class DispatchApplicationTest( GafferTest.TestCase ) :
 
 	def testMultipleNodes( self ) :
 
+		self.maxDiff = None
+
 		s = self.writeSimpleScript()
 		s["test2"] = GafferDispatchTest.TextWriter()
-		s["test2"]["fileName"].setValue( self.__outputTextFile + ".2" )
+		s["test2"]["fileName"].setValue( self.__outputTextFile.with_suffix( ".2" ) )
 		s["test2"]["text"].setValue( "its a 2nd test" )
 		s.save()
 
@@ -325,7 +327,7 @@ class DispatchApplicationTest( GafferTest.TestCase ) :
 		self.assertFalse( p.returncode )
 		with open( self.__outputTextFile, "r" ) as f :
 			self.assertEqual( f.readlines(), [ "its a test" ] )
-		with open( self.__outputTextFile + ".2", "r" ) as f :
+		with open( self.__outputTextFile.with_suffix( ".2" ), "r" ) as f :
 			self.assertEqual( f.readlines(), [ "its a 2nd test" ] )
 
 if __name__ == "__main__":

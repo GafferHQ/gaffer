@@ -100,19 +100,19 @@ void copyFrom( Catalogue::Image &image, const Catalogue::Image *other )
 	image.copyFrom( other );
 }
 
-void save( Catalogue::Image &image, const std::string &fileName )
+void save( Catalogue::Image &image, const std::filesystem::path &fileName )
 {
 	IECorePython::ScopedGILRelease gilRelease;
 	image.save( fileName );
 }
 
-std::string generateFileName1( Catalogue &catalogue, const Catalogue::Image *image )
+std::filesystem::path generateFileName1( Catalogue &catalogue, const Catalogue::Image *image )
 {
 	IECorePython::ScopedGILRelease gilRelease;
 	return catalogue.generateFileName( image );
 }
 
-std::string generateFileName2( Catalogue &catalogue, const ImagePlug *image )
+std::filesystem::path generateFileName2( Catalogue &catalogue, const ImagePlug *image )
 {
 	IECorePython::ScopedGILRelease gilRelease;
 	return catalogue.generateFileName( image );

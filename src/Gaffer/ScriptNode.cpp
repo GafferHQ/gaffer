@@ -55,8 +55,6 @@
 
 #include "boost/bind/bind.hpp"
 #include "boost/bind/placeholders.hpp"
-#include "boost/filesystem/convenience.hpp"
-#include "boost/filesystem/path.hpp"
 
 #include <fstream>
 
@@ -214,12 +212,12 @@ IE_CORE_DEFINERUNTIMETYPED( ScriptNode::CompoundAction );
 namespace
 {
 
-std::string readFile( const std::string &fileName )
+std::string readFile( const std::filesystem::path &fileName )
 {
 	std::ifstream f( fileName.c_str() );
 	if( !f.good() )
 	{
-		throw IECore::IOException( "Unable to open file \"" + fileName + "\"" );
+		throw IECore::IOException( "Unable to open file \"" + fileName.string() + "\"" );
 	}
 
 	const IECore::Canceller *canceller = Context::current()->canceller();
@@ -230,7 +228,7 @@ std::string readFile( const std::string &fileName )
 		IECore::Canceller::check( canceller );
 		if( !f.good() )
 		{
-			throw IECore::IOException( "Failed to read from \"" + fileName + "\"" );
+			throw IECore::IOException( "Failed to read from \"" + fileName.string() + "\"" );
 		}
 
 		std::string line;
@@ -820,21 +818,21 @@ std::string ScriptNode::serialise( const Node *parent, const Set *filter ) const
 	return serialiseInternal( parent, filter );
 }
 
-void ScriptNode::serialiseToFile( const std::string &fileName, const Node *parent, const Set *filter ) const
+void ScriptNode::serialiseToFile( const std::filesystem::path &fileName, const Node *parent, const Set *filter ) const
 {
 	std::string s = serialiseInternal( parent, filter );
 
 	std::ofstream f( fileName.c_str() );
 	if( !f.good() )
 	{
-		throw IECore::IOException( "Unable to open file \"" + fileName + "\"" );
+		throw IECore::IOException( "Unable to open file \"" + fileName.string() + "\"" );
 	}
 
 	f << s;
 
 	if( !f.good() )
 	{
-		throw IECore::IOException( "Failed to write to \"" + fileName + "\"" );
+		throw IECore::IOException( "Failed to write to \"" + fileName.string() + "\"" );
 	}
 }
 
@@ -843,10 +841,10 @@ bool ScriptNode::execute( const std::string &serialisation, Node *parent, bool c
 	return executeInternal( serialisation, parent, continueOnError, "" );
 }
 
-bool ScriptNode::executeFile( const std::string &fileName, Node *parent, bool continueOnError )
+bool ScriptNode::executeFile( const std::filesystem::path &fileName, Node *parent, bool continueOnError )
 {
 	const std::string serialisation = readFile( fileName );
-	return executeInternal( serialisation, parent, continueOnError, fileName );
+	return executeInternal( serialisation, parent, continueOnError, fileName.generic_string() );
 }
 
 bool ScriptNode::load( bool continueOnError)
@@ -878,7 +876,7 @@ void ScriptNode::save() const
 	const_cast<BoolPlug *>( unsavedChangesPlug() )->setValue( false );
 }
 
-bool ScriptNode::importFile( const std::string &fileName, Node *parent, bool continueOnError )
+bool ScriptNode::importFile( const std::filesystem::path &fileName, Node *parent, bool continueOnError )
 {
 	DirtyPropagationScope dirtyScope;
 
@@ -987,12 +985,12 @@ void ScriptNode::plugSet( Plug *plug )
 	}
 	else if( plug == fileNamePlug() )
 	{
-		const boost::filesystem::path fileName( fileNamePlug()->getValue() );
+		const std::filesystem::path fileName( fileNamePlug()->getValue() );
 		context()->set( g_scriptName, fileName.stem().string() );
 
 		MetadataAlgo::setReadOnly(
 			this,
-			boost::filesystem::exists( fileName ) && 0 != access( fileName.c_str(), W_OK ),
+			std::filesystem::exists( fileName ) && 0 != access( fileName.c_str(), W_OK ),
 			/* persistent = */ false
 		);
 	}

@@ -48,7 +48,7 @@ class TaskSwitchTest( GafferTest.TestCase ) :
 	def __dispatcher( self ) :
 
 		result = GafferDispatch.LocalDispatcher()
-		result["jobsDirectory"].setValue( self.temporaryDirectory() + "/jobs" )
+		result["jobsDirectory"].setValue( self.temporaryDirectory() / "jobs" )
 
 		return result
 

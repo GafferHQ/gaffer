@@ -37,6 +37,7 @@
 import unittest
 import subprocess
 import os
+import pathlib
 import imath
 
 import IECore
@@ -1052,7 +1053,7 @@ class MetadataTest( GafferTest.TestCase ) :
 	def testPythonUnload() :
 
 		executable = "gaffer" if os.name != "nt" else "gaffer.cmd"
-		subprocess.check_call( [ executable, "python", os.path.join( os.path.dirname( __file__ ), "pythonScripts", "unloadExceptionScript.py" ) ] )
+		subprocess.check_call( [ executable, "python", pathlib.Path( __file__ ).parent / "pythonScripts" / "unloadExceptionScript.py" ] )
 
 	def testWildcardsAndDot( self ) :
 

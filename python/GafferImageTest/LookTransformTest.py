@@ -70,8 +70,8 @@ class LookTransformTest( GafferImageTest.ImageTestCase ) :
 
 	def testPrimary( self ):
 
-		scriptFileName = self.temporaryDirectory() + "/script.gfr"
-		contextImageFile = self.temporaryDirectory() + "/look.#.exr"
+		scriptFileName = self.temporaryDirectory() / "script.gfr"
+		contextImageFile = self.temporaryDirectory() / "look.#.exr"
 
 		s = Gaffer.ScriptNode()
 
@@ -96,8 +96,7 @@ class LookTransformTest( GafferImageTest.ImageTestCase ) :
 		env["CDL"] = "cineon.spi1d"
 
 		subprocess.check_call(
-			" ".join( ["gaffer", "execute", scriptFileName, "-frames", "1"] ),
-			shell = True,
+			["gaffer", "execute", scriptFileName, "-frames", "1"],
 			stderr = subprocess.PIPE,
 			env = env,
 		)
@@ -116,8 +115,8 @@ class LookTransformTest( GafferImageTest.ImageTestCase ) :
 
 	def testInversePrimary( self ):
 
-		scriptFileName = self.temporaryDirectory() + "/script.gfr"
-		contextImageFile = self.temporaryDirectory() + "/look.#.exr"
+		scriptFileName = self.temporaryDirectory() / "script.gfr"
+		contextImageFile = self.temporaryDirectory() / "look.#.exr"
 
 		s = Gaffer.ScriptNode()
 
@@ -142,8 +141,7 @@ class LookTransformTest( GafferImageTest.ImageTestCase ) :
 		env["CDL"] = "cineon.spi1d"
 
 		subprocess.check_call(
-			" ".join( ["gaffer", "execute", scriptFileName, "-frames", "1"] ),
-			shell = True,
+			["gaffer", "execute", scriptFileName, "-frames", "1"],
 			stderr = subprocess.PIPE,
 			env = env,
 		)
@@ -162,8 +160,8 @@ class LookTransformTest( GafferImageTest.ImageTestCase ) :
 
 	def testDirectionPrimary( self ):
 
-		scriptFileName = self.temporaryDirectory() + "/script.gfr"
-		contextImageFile = self.temporaryDirectory() + "/look.#.exr"
+		scriptFileName = self.temporaryDirectory() / "script.gfr"
+		contextImageFile = self.temporaryDirectory() / "look.#.exr"
 
 		s = Gaffer.ScriptNode()
 
@@ -189,8 +187,7 @@ class LookTransformTest( GafferImageTest.ImageTestCase ) :
 		env["CDL"] = "cineon.spi1d"
 
 		subprocess.check_call(
-			" ".join( ["gaffer", "execute", scriptFileName, "-frames", "1"] ),
-			shell = True,
+			["gaffer", "execute", scriptFileName, "-frames", "1"],
 			stderr = subprocess.PIPE,
 			env = env,
 		)

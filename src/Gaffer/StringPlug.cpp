@@ -96,6 +96,16 @@ void StringPlug::setValue( const std::string &value )
 	setObjectValue( new StringData( value ) );
 }
 
+void StringPlug::setValue( const char *value )
+{
+	setObjectValue( new StringData( value ) );
+}
+
+void StringPlug::setValue( const std::filesystem::path &value )
+{
+	setValue( value.generic_string() );
+}
+
 std::string StringPlug::getValue( const IECore::MurmurHash *precomputedHash ) const
 {
 	ConstStringDataPtr s = getObjectValue<StringData>( precomputedHash );

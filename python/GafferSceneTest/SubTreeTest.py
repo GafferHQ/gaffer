@@ -35,7 +35,7 @@
 #
 ##########################################################################
 
-import os
+import pathlib
 import unittest
 
 import imath
@@ -52,7 +52,7 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 	def testPassThrough( self ) :
 
 		a = GafferScene.SceneReader()
-		a["fileName"].setValue( os.path.dirname( __file__ ) + "/alembicFiles/groupedPlane.abc" )
+		a["fileName"].setValue( pathlib.Path( __file__ ).parent / "alembicFiles" / "groupedPlane.abc" )
 
 		s = GafferScene.SubTree()
 		s["in"].setInput( a["out"] )
@@ -68,7 +68,7 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 	def testSubTree( self ) :
 
 		a = GafferScene.SceneReader()
-		a["fileName"].setValue( os.path.dirname( __file__ ) + "/alembicFiles/groupedPlane.abc" )
+		a["fileName"].setValue( pathlib.Path( __file__ ).parent / "alembicFiles" / "groupedPlane.abc" )
 
 		s = GafferScene.SubTree()
 		s["in"].setInput( a["out"] )
@@ -95,7 +95,7 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 	def testRootHashesEqual( self ) :
 
 		a = GafferScene.SceneReader()
-		a["fileName"].setValue( os.path.dirname( __file__ ) + "/alembicFiles/animatedCube.abc" )
+		a["fileName"].setValue( pathlib.Path( __file__ ).parent / "alembicFiles" / "animatedCube.abc" )
 
 		s = GafferScene.SubTree()
 		s["in"].setInput( a["out"] )
@@ -222,7 +222,7 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 	def testIncludeRoot( self ) :
 
 		a = GafferScene.SceneReader()
-		a["fileName"].setValue( os.path.dirname( __file__ ) + "/alembicFiles/groupedPlane.abc" )
+		a["fileName"].setValue( pathlib.Path( __file__ ).parent / "alembicFiles" / "groupedPlane.abc" )
 
 		s = GafferScene.SubTree()
 		s["in"].setInput( a["out"] )
@@ -240,7 +240,7 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 	def testRootBoundWithTransformedChild( self ) :
 
 		a = GafferScene.SceneReader()
-		a["fileName"].setValue( os.path.dirname( __file__ ) + "/alembicFiles/animatedCube.abc" )
+		a["fileName"].setValue( pathlib.Path( __file__ ).parent / "alembicFiles" / "animatedCube.abc" )
 
 		s = GafferScene.SubTree()
 		s["in"].setInput( a["out"] )
@@ -259,7 +259,7 @@ class SubTreeTest( GafferSceneTest.SceneTestCase ) :
 	def testIncludeRootPassesThroughWhenNoRootSpecified( self ) :
 
 		a = GafferScene.SceneReader()
-		a["fileName"].setValue( os.path.dirname( __file__ ) + "/alembicFiles/animatedCube.abc" )
+		a["fileName"].setValue( pathlib.Path( __file__ ).parent / "alembicFiles" / "animatedCube.abc" )
 
 		s = GafferScene.SubTree()
 		s["in"].setInput( a["out"] )

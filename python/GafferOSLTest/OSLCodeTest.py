@@ -35,6 +35,7 @@
 ##########################################################################
 
 import os
+import pathlib
 import subprocess
 import shutil
 import unittest
@@ -215,7 +216,7 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 
 		info = subprocess.check_output( [ "oslinfo", self.__osoFileName( oslCode ) ], universal_newlines = True )
 		self.assertTrue(
-			info.startswith( "shader \"{0}\"".format( os.path.basename( self.__osoFileName( oslCode ) ) ) )
+			info.startswith( "shader \"{0}\"".format( pathlib.Path( self.__osoFileName( oslCode ) ).name ) )
 		)
 
 	def testSerialisation( self ) :
@@ -273,11 +274,11 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 
 		# Export it to a .osl file and compile it.
 
-		oslFileName = os.path.join( self.temporaryDirectory(), "test.osl" )
-		with open( oslFileName, "w" ) as f :
+		oslFilePath = self.temporaryDirectory() / "test.osl"
+		with open( oslFilePath, "w" ) as f :
 			f.write( oslCode.source( "test") )
 
-		shader = self.compileShader( oslFileName )
+		shader = self.compileShader( oslFilePath )
 
 		# Load that onto an OSLShader and check that
 		# it matches.
@@ -326,7 +327,7 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 
 		# Make an OSL shader in a specific code directory.
 
-		os.environ["GAFFEROSL_CODE_DIRECTORY"] = os.path.join( self.temporaryDirectory(), "codeDirectoryA" )
+		os.environ["GAFFEROSL_CODE_DIRECTORY"] = str( self.temporaryDirectory() / "codeDirectoryA" )
 
 		s = Gaffer.ScriptNode()
 
@@ -343,7 +344,7 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 		ss = s.serialise()
 
 		shutil.rmtree( os.environ["GAFFEROSL_CODE_DIRECTORY"] )
-		os.environ["GAFFEROSL_CODE_DIRECTORY"] = os.path.join( self.temporaryDirectory(), "codeDirectoryB" )
+		os.environ["GAFFEROSL_CODE_DIRECTORY"] = str( self.temporaryDirectory() / "codeDirectoryB" )
 
 		s2 = Gaffer.ScriptNode()
 		s2.execute( ss )

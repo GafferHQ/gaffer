@@ -48,8 +48,7 @@
 
 #include "IECore/ObjectPool.h"
 
-#include "boost/filesystem.hpp"
-
+#include <filesystem>
 #include <memory>
 
 using namespace IECore;
@@ -278,11 +277,11 @@ void Render::executeInternal( bool flushCaches ) const
 		}
 		else
 		{
-			boost::filesystem::path fileNamePath( fileName );
-			boost::filesystem::path directoryPath = fileNamePath.parent_path();
+			const std::filesystem::path fileNamePath( fileName );
+			const std::filesystem::path directoryPath = fileNamePath.parent_path();
 			if( !directoryPath.empty() && !renderScope.sceneTranslationOnly() )
 			{
-				boost::filesystem::create_directories( directoryPath );
+				std::filesystem::create_directories( directoryPath );
 			}
 		}
 	}

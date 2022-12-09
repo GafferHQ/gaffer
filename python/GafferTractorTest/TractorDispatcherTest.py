@@ -34,7 +34,6 @@
 #
 ##########################################################################
 
-import os
 import unittest
 import inspect
 import sys
@@ -55,7 +54,7 @@ class TractorDispatcherTest( GafferTest.TestCase ) :
 		import GafferTractor
 
 		dispatcher = GafferTractor.TractorDispatcher()
-		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() + "/testJobDirectory" )
+		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() / "testJobDirectory" )
 
 		return dispatcher
 
@@ -105,7 +104,7 @@ class TractorDispatcherTest( GafferTest.TestCase ) :
 		dispatcher = self.__dispatcher()
 		dispatcher.dispatch( [ s["n"] ] )
 
-		self.assertTrue( os.path.isfile( dispatcher.jobDirectory() + "/job.alf" ) )
+		self.assertTrue( ( dispatcher.jobDirectory() / "job.alf" ).is_file() )
 
 	def testJobAttributes( self ) :
 
@@ -276,7 +275,7 @@ class TractorDispatcherTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["t"] = GafferDispatchTest.TextWriter()
-		s["t"]["fileName"].setValue( self.temporaryDirectory() + "/test.txt" )
+		s["t"]["fileName"].setValue( self.temporaryDirectory() / "test.txt" )
 
 		s["e"] = Gaffer.Expression()
 		s["e"].setExpression( inspect.cleandoc(

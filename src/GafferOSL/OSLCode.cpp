@@ -197,24 +197,24 @@ class ScopedDirectory : boost::noncopyable
 
 	public :
 
-		ScopedDirectory( const boost::filesystem::path &p )
+		ScopedDirectory( const std::filesystem::path &p )
 			:	m_path( p )
 		{
-			boost::filesystem::create_directories( m_path );
+			std::filesystem::create_directories( m_path );
 		}
 
 		~ScopedDirectory()
 		{
-			boost::filesystem::remove_all( m_path );
+			std::filesystem::remove_all( m_path );
 		}
 
 	private :
 
-		boost::filesystem::path m_path;
+		std::filesystem::path m_path;
 
 };
 
-boost::filesystem::path compile( const std::string &shaderName, const std::string &shaderSource )
+std::filesystem::path compile( const std::string &shaderName, const std::string &shaderSource )
 {
 
 	// We need to ensure the existence of a unique .oso file
@@ -233,7 +233,7 @@ boost::filesystem::path compile( const std::string &shaderName, const std::strin
 
 	// Start by generating our final desired filename.
 
-	boost::filesystem::path directory = boost::filesystem::temp_directory_path() / "gafferOSLCode";
+	std::filesystem::path directory = std::filesystem::temp_directory_path() / "gafferOSLCode";
 	if( const char *cd = getenv( "GAFFEROSL_CODE_DIRECTORY" ) )
 	{
 		directory = cd;
@@ -246,11 +246,11 @@ boost::filesystem::path compile( const std::string &shaderName, const std::strin
 		directory /= shaderName.substr( i, 8 );
 	}
 
-	const boost::filesystem::path osoFileName = directory / ( shaderName + ".oso" );
+	const std::filesystem::path osoFileName = directory / ( shaderName + ".oso" );
 
 	// If that exists, then someone else has done our work already.
 
-	if( boost::filesystem::exists( osoFileName ) )
+	if( std::filesystem::exists( osoFileName ) )
 	{
 		return osoFileName.generic_string();
 	}
@@ -259,7 +259,7 @@ boost::filesystem::path compile( const std::string &shaderName, const std::strin
 	// ScopedDirectory class will remove it for us automatically on
 	// destruction, so we don't need to worry about exception handling.
 
-	const boost::filesystem::path tempDirectory = directory / boost::filesystem::unique_path();
+	const std::filesystem::path tempDirectory = directory / boost::filesystem::unique_path().string();
 	ScopedDirectory scopedTempDirectory( tempDirectory );
 
 	// Write the source code out.
@@ -308,7 +308,7 @@ boost::filesystem::path compile( const std::string &shaderName, const std::strin
 		}
 	}
 
-	if( !boost::filesystem::file_size( tempOSLFileName ) )
+	if( !std::filesystem::file_size( tempOSLFileName ) )
 	{
 		// Belt and braces. `compiler.compile()` should be reporting all errors,
 		// but on rare occasions we have still seen empty `.oso` files being
@@ -318,9 +318,9 @@ boost::filesystem::path compile( const std::string &shaderName, const std::strin
 
 	// Move temp file where we really want it, and clean up.
 
-	boost::filesystem::rename( tempOSOFileName, osoFileName );
+	std::filesystem::rename( tempOSOFileName, osoFileName );
 
-	if( !boost::filesystem::file_size( osoFileName ) )
+	if( !std::filesystem::file_size( osoFileName ) )
 	{
 		// Belt and braces. `rename()` should be reporting all errors,
 		// but on rare occasions we have still seen empty `.oso` files being
@@ -343,7 +343,7 @@ class CompileProcess : public Gaffer::Process
 			{
 				string shaderName;
 				string shaderSource = generate( oslCode, shaderName );
-				boost::filesystem::path shaderFile = compile( shaderName, shaderSource );
+				std::filesystem::path shaderFile = compile( shaderName, shaderSource );
 				oslCode->namePlug()->setValue( shaderFile.replace_extension().generic_string() );
 				oslCode->typePlug()->setValue( "osl:shader" );
 			}

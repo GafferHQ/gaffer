@@ -36,7 +36,6 @@
 
 import inspect
 import unittest
-import os
 import subprocess
 
 import IECore
@@ -265,7 +264,7 @@ class EncapsulateTest( GafferSceneTest.SceneTestCase ) :
 		script["collect"]["in"].setInput( script["encapsulate"]["out"] )
 		script["collect"]["rootNames"].setValue( IECore.StringVectorData( [ str( x ) for x in range( 0, 100 ) ] ) )
 
-		script["fileName"].setValue( os.path.join( self.temporaryDirectory(), "test.gfr" ) )
+		script["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
 		script.save()
 
 		# This exposed a crash caused by non-threadsafe access to signals from Capsules. It

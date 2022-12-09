@@ -235,11 +235,11 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 		s["p"] = GafferDispatch.PythonCommand()
 		s["p"]["command"].setValue( "pass" )
 
-		s["fileName"].setValue( self.temporaryDirectory() + "test.gfr" )
+		s["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
 		s.save()
 
 		output = subprocess.check_output(
-			[ "gaffer", "execute", self.temporaryDirectory() + "test.gfr", "-nodes", "p" ],
+			[ "gaffer", "execute", self.temporaryDirectory() / "test.gfr", "-nodes", "p" ],
 			stderr = subprocess.STDOUT, universal_newlines = True
 		)
 		self.assertEqual( output, "" )

@@ -60,12 +60,13 @@
 #include "IECore/NullObject.h"
 
 #include "boost/algorithm/string/predicate.hpp"
-#include "boost/filesystem.hpp"
 
 #include "tbb/blocked_range.h"
 #include "tbb/parallel_reduce.h"
 #include "tbb/parallel_for.h"
 #include "tbb/task.h"
+
+#include <filesystem>
 
 using namespace std;
 using namespace Imath;
@@ -102,16 +103,15 @@ namespace RendererAlgo
 
 void createOutputDirectories( const IECore::CompoundObject *globals )
 {
-	CompoundObject::ObjectMap::const_iterator it, eIt;
-	for( it = globals->members().begin(), eIt = globals->members().end(); it != eIt; it++ )
+	for( const auto &m : globals->members() )
 	{
-		if( const Output *o = runTimeCast<Output>( it->second.get() ) )
+		if( const Output *o = runTimeCast<Output>( m.second.get() ) )
 		{
-			boost::filesystem::path fileName( o->getName() );
-			boost::filesystem::path directory = fileName.parent_path();
+			const std::filesystem::path fileName( o->getName() );
+			const std::filesystem::path directory = fileName.parent_path();
 			if( !directory.empty() )
 			{
-				boost::filesystem::create_directories( directory );
+				std::filesystem::create_directories( directory );
 			}
 		}
 	}

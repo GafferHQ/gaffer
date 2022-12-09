@@ -43,6 +43,8 @@
 #include "Gaffer/Context.h"
 #include "Gaffer/ValuePlug.h"
 
+#include <filesystem>
+
 namespace Gaffer
 {
 
@@ -109,6 +111,14 @@ class GAFFER_API StringPlug : public ValuePlug
 
 		/// \undoable
 		void setValue( const std::string &value );
+		/// \undoable
+		void setValue( const char *value );
+		/// Calls `setValue( value.generic_string() )`.
+		/// > Note : When representing paths as strings, Gaffer uses the generic
+		/// > `/` separator on all platforms, _not_ the platform's native separator
+		/// > (which would be `\` on Windows).
+		/// \undoable
+		void setValue( const std::filesystem::path &value );
 		/// Returns the value. The `precomputedHash` argument is deprecated, and
 		/// will be removed in a future release.
 		/// \todo Remove `precomputedHash` argument.

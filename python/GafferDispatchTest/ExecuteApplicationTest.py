@@ -38,7 +38,6 @@
 import os
 import subprocess
 import unittest
-import glob
 import inspect
 import imath
 
@@ -56,10 +55,10 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 
 		GafferTest.TestCase.setUp( self )
 
-		self.__scriptFileName = self.temporaryDirectory() + "/executeScript.gfr"
-		self.__scriptFileNameWithSpecialCharacters = self.temporaryDirectory() + "/executeScript-10.tmp.gfr"
-		self.__outputTextFile = self.temporaryDirectory() + "/executeOutput.txt"
-		self.__outputFileSeq = IECore.FileSequence( self.temporaryDirectory() + "/output.####.cob" )
+		self.__scriptFileName = self.temporaryDirectory() / "executeScript.gfr"
+		self.__scriptFileNameWithSpecialCharacters = self.temporaryDirectory() / "executeScript-10.tmp.gfr"
+		self.__outputTextFile = self.temporaryDirectory() / "executeOutput.txt"
+		self.__outputFileSeq = IECore.FileSequence( str( self.temporaryDirectory() / "output.####.cob" ) )
 
 	def testErrorReturnStatusForMissingScript( self ) :
 
@@ -86,7 +85,7 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 
 		self.assertFalse( os.path.exists( self.__outputFileSeq.fileNameForFrame( 1 ) ) )
 		p = subprocess.Popen(
-			"gaffer execute " + self.__scriptFileName,
+			f"gaffer execute {self.__scriptFileName}",
 			shell=True,
 			stderr = subprocess.PIPE,
 			universal_newlines = True,
@@ -114,7 +113,7 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 			self.assertFalse( os.path.exists( self.__outputFileSeq.fileNameForFrame( f ) ) )
 
 		p = subprocess.Popen(
-			"gaffer execute " + self.__scriptFileName + " -frames " + str(frames),
+			f"gaffer execute {self.__scriptFileName} -frames {frames}",
 			shell=True,
 			stderr = subprocess.PIPE,
 			universal_newlines = True,
@@ -142,7 +141,7 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 
 		self.assertFalse( os.path.exists( self.__outputFileSeq.fileNameForFrame( 1 ) ) )
 		p = subprocess.Popen(
-			"gaffer execute " + self.__scriptFileName + " -context -valueOne 1 -valueTwo 2",
+			f"gaffer execute {self.__scriptFileName} -context -valueOne 1 -valueTwo 2",
 			shell=True,
 			stderr = subprocess.PIPE,
 			universal_newlines = True,
@@ -167,7 +166,7 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 		s.save()
 
 		p = subprocess.Popen(
-			"gaffer execute -script " + self.__scriptFileName + " -context -myArg 10 -noValue",
+			f"gaffer execute -script {self.__scriptFileName} -context -myArg 10 -noValue",
 			shell=True,
 			stderr = subprocess.PIPE,
 			universal_newlines = True,
@@ -194,7 +193,7 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 		s.save()
 
 		p = subprocess.Popen(
-			"gaffer execute -script " + self.__scriptFileName,
+			f"gaffer execute -script {self.__scriptFileName}",
 			shell = True,
 			stderr = subprocess.PIPE,
 			universal_newlines = True,
@@ -202,13 +201,13 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 		p.wait()
 
 		error = "".join( p.stderr.readlines() )
-		self.assertTrue( self.__scriptFileName in error )
+		self.assertTrue( str( self.__scriptFileName ) in error )
 		self.assertTrue( "KeyError: \"'badPlug'" in error )
 		self.assertFalse( "Traceback" in error )
 		self.assertNotEqual( p.returncode, 0 )
 
 		p = subprocess.Popen(
-			"gaffer execute -ignoreScriptLoadErrors -script " + self.__scriptFileName,
+			f"gaffer execute -ignoreScriptLoadErrors -script {self.__scriptFileName}",
 			shell = True,
 			stderr = subprocess.PIPE,
 			universal_newlines = True,
@@ -229,7 +228,7 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 		s.save()
 
 		p = subprocess.Popen(
-			"gaffer execute -script " + self.__scriptFileName,
+			f"gaffer execute -script {self.__scriptFileName}",
 			shell=True,
 			stderr = subprocess.PIPE,
 			universal_newlines = True,
@@ -257,7 +256,7 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 		p.wait()
 
 		self.assertEqual( p.returncode, 0 )
-		self.assertTrue( os.path.exists( self.__outputTextFile ) )
+		self.assertTrue( self.__outputTextFile.exists() )
 
 	def testErrorMessagesIncludeNodeName( self ) :
 
@@ -277,7 +276,7 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 		s.save()
 
 		p = subprocess.Popen(
-			"gaffer execute -script " + self.__scriptFileName + " -nodes MyTextWriter",
+			f"gaffer execute -script {self.__scriptFileName} -nodes MyTextWriter",
 			shell=True,
 			stderr = subprocess.PIPE,
 			universal_newlines = True,
@@ -289,7 +288,7 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 		self.assertIn( "MyExpression", error )
 
 		p = subprocess.Popen(
-			"gaffer execute -script " + self.__scriptFileName + " -nodes MyErroringTaskNode",
+			f"gaffer execute -script {self.__scriptFileName} -nodes MyErroringTaskNode",
 			shell=True,
 			stderr = subprocess.PIPE,
 			universal_newlines = True,
@@ -304,7 +303,7 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["t"] = GafferDispatchTest.TextWriter()
-		s["t"]["fileName"].setValue( self.temporaryDirectory() + "/test.####.txt" )
+		s["t"]["fileName"].setValue( self.temporaryDirectory() / "test.####.txt" )
 		s["t"]["text"].setValue( "test" )
 
 		s["fileName"].setValue( self.__scriptFileName )
@@ -314,15 +313,15 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 		subprocess.check_call( [ "gaffer", "execute", self.__scriptFileName ] )
 
 		self.assertEqual(
-			glob.glob( self.temporaryDirectory() + "/test.*.txt" ),
-			[ self.temporaryDirectory() + "/test.0010.txt" ]
+			list( self.temporaryDirectory().glob( "test.*.txt" ) ),
+			[ self.temporaryDirectory() / "test.0010.txt" ]
 		)
 
 	def testImathContextVariable( self ) :
 
 		s = Gaffer.ScriptNode()
 		s["t"] = GafferDispatchTest.TextWriter()
-		s["t"]["fileName"].setValue( self.temporaryDirectory() + "/test.txt" )
+		s["t"]["fileName"].setValue( self.temporaryDirectory() / "test.txt" )
 
 		s["e"] = Gaffer.Expression()
 		s["e"].setExpression( inspect.cleandoc(
@@ -332,7 +331,7 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 			"""
 		) )
 
-		s["fileName"].setValue(  self.temporaryDirectory() + "/test.gfr" )
+		s["fileName"].setValue(  self.temporaryDirectory() / "test.gfr" )
 		s.save()
 
 		subprocess.check_call( [ "gaffer", "execute", s["fileName"].getValue(), "-context", "c", "imath.Color3f( 0, 1, 2 )" ] )
@@ -371,10 +370,10 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 
 			subprocess.check_call( [ "gaffer", "execute", self.__scriptFileName, "-frames", "5", "-nodes", "PythonCommand" ] )
 
-			self.assertTrue( os.path.exists( self.temporaryDirectory() + "/canSerialiseFrameDependentPlug.gfr" ) )
+			self.assertTrue( ( self.temporaryDirectory() / "canSerialiseFrameDependentPlug.gfr" ).exists() )
 
 			ss = Gaffer.ScriptNode()
-			ss["fileName"].setValue( self.temporaryDirectory() + "/canSerialiseFrameDependentPlug.gfr" )
+			ss["fileName"].setValue( self.temporaryDirectory() / "canSerialiseFrameDependentPlug.gfr" )
 			ss.load()
 
 			# we must retain the non-substituted value

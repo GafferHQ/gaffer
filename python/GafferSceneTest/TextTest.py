@@ -35,6 +35,7 @@
 ##########################################################################
 
 import os
+import pathlib
 import unittest
 import imath
 
@@ -92,7 +93,7 @@ class TextTest( GafferSceneTest.SceneTestCase ) :
 		self.assertFalse( "out.transform" in [ x[0].relativeName( x[0].node() ) for x in s ] )
 
 		del s[:]
-		t["font"].setValue( os.path.expandvars( "$GAFFER_ROOT/fonts/VeraBI.ttf" ) )
+		t["font"].setValue( pathlib.Path( os.environ["GAFFER_ROOT"] ) / "fonts" / "VeraBI.ttf" )
 
 		self.assertTrue( "out.object" in [ x[0].relativeName( x[0].node() ) for x in s ] )
 		self.assertTrue( "out.bound" in [ x[0].relativeName( x[0].node() ) for x in s ] )

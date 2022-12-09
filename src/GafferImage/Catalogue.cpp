@@ -58,8 +58,6 @@
 
 #include "boost/algorithm/string.hpp"
 #include "boost/bind/bind.hpp"
-#include "boost/filesystem/operations.hpp"
-#include "boost/filesystem/path.hpp"
 #include "boost/lexical_cast.hpp"
 #include "boost/regex.hpp"
 #include "boost/unordered_map.hpp"
@@ -235,7 +233,7 @@ class Catalogue::InternalImage : public ImageNode
 			m_clientPID = -2; // Make sure insertDriver() will reject new drivers
 		}
 
-		void save( const std::string &fileName ) const
+		void save( const std::filesystem::path &fileName ) const
 		{
 			DeleteImageMetadataPtr deleteMetadata = new DeleteImageMetadata();
 			deleteMetadata->inPlug()->setInput( const_cast<ImagePlug *>( outPlug() ) );
@@ -488,7 +486,7 @@ class Catalogue::InternalImage : public ImageNode
 				imageCopy->imageSwitch()->indexPlug()->setValue( 1 );
 
 				// If there's nowhere to save, then a saver is useless, so return null.
-				const string fileName = client->parent<Catalogue>()->generateFileName( imageCopy->outPlug() );
+				const std::filesystem::path fileName = client->parent<Catalogue>()->generateFileName( imageCopy->outPlug() );
 				if( fileName.empty() )
 				{
 					return nullptr;
@@ -550,7 +548,7 @@ class Catalogue::InternalImage : public ImageNode
 
 			private :
 
-				AsynchronousSaver( InternalImagePtr imageCopy, const std::string &fileName )
+				AsynchronousSaver( InternalImagePtr imageCopy, const std::filesystem::path &fileName )
 					:	m_imageCopy( imageCopy )
 				{
 					// Set up an ImageWriter to do the actual saving.
@@ -720,14 +718,14 @@ void Catalogue::Image::copyFrom( const Image *other )
 	imageNode( this )->copyFrom( imageNode( other ) );
 }
 
-Catalogue::Image::Ptr Catalogue::Image::load( const std::string &fileName )
+Catalogue::Image::Ptr Catalogue::Image::load( const std::filesystem::path &fileName )
 {
 	// GraphComponent names are much more restrictive than filenames, so
 	// we must replace all non-alphanumeric characters with `_`, and make
 	// sure it doesn't start with a number.
 	/// \todo Relax these restrictions and/or provide automatic name
 	/// sanitisation in GraphComponent.
-	std::string name = boost::filesystem::path( fileName ).stem().string();
+	std::string name = fileName.stem().string();
 	std::replace_if(
 		name.begin(), name.end(),
 		[] ( char c ) {
@@ -746,7 +744,7 @@ Catalogue::Image::Ptr Catalogue::Image::load( const std::string &fileName )
 	return image;
 }
 
-void Catalogue::Image::save( const std::string &fileName ) const
+void Catalogue::Image::save( const std::filesystem::path &fileName ) const
 {
 	Catalogue::imageNode( this )->save( fileName );
 }
@@ -1001,12 +999,12 @@ const Catalogue::InternalImage *Catalogue::imageNode( const Image *image )
 	return result;
 }
 
-std::string Catalogue::generateFileName( const Image *image ) const
+std::filesystem::path Catalogue::generateFileName( const Image *image ) const
 {
 	return generateFileName( imageNode( image )->outPlug() );
 }
 
-std::string Catalogue::generateFileName( const ImagePlug *image ) const
+std::filesystem::path Catalogue::generateFileName( const ImagePlug *image ) const
 {
 	string directory = directoryPlug()->getValue();
 	if( const ScriptNode *script = ancestor<ScriptNode>() )
@@ -1029,7 +1027,7 @@ std::string Catalogue::generateFileName( const ImagePlug *image ) const
 		return "";
 	}
 
-	boost::filesystem::path result( directory );
+	std::filesystem::path result( directory );
 
 	// Hash all views of the image
 	IECore::MurmurHash h;
@@ -1040,7 +1038,7 @@ std::string Catalogue::generateFileName( const ImagePlug *image ) const
 	result /= h.toString();
 	result.replace_extension( "exr" );
 
-	return result.generic_string();
+	return result;
 }
 
 void Catalogue::imageAdded( GraphComponent *graphComponent )

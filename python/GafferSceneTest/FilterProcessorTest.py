@@ -34,7 +34,7 @@
 #
 ##########################################################################
 
-import os
+import pathlib
 import unittest
 
 import IECore
@@ -48,7 +48,7 @@ class FilterProcessorTest( GafferSceneTest.SceneTestCase ) :
 	def testLoadFromVersion0_27( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/filterProcessor-0.27.0.0.gfr" )
+		s["fileName"].setValue( pathlib.Path( __file__ ).parent / "scripts" / "filterProcessor-0.27.0.0.gfr" )
 		s.load()
 
 		self.assertEqual( len( s["FilterSwitch"]["in"] ), 3 )
@@ -73,7 +73,7 @@ class FilterProcessorTest( GafferSceneTest.SceneTestCase ) :
 	def testLoadBoxedFromVersion0_27( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/filterProcessorBoxed-0.27.0.0.gfr" )
+		s["fileName"].setValue( pathlib.Path( __file__ ).parent / "scripts" / "filterProcessorBoxed-0.27.0.0.gfr" )
 		s.load()
 
 		self.assertEqual( len( s["Box"]["FilterSwitch"]["in"] ), 3 )

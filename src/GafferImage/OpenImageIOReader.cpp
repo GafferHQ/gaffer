@@ -59,7 +59,6 @@
 
 #include <boost/algorithm/string.hpp>
 #include "boost/bind/bind.hpp"
-#include "boost/filesystem/path.hpp"
 #include "boost/regex.hpp"
 
 #include <memory>

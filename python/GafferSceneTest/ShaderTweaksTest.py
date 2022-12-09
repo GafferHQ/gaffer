@@ -34,7 +34,7 @@
 #
 ##########################################################################
 
-import os
+import pathlib
 import unittest
 import imath
 
@@ -115,7 +115,7 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 	def testLoadFromVersion0_52( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/lightTweaks-0.52.3.1.gfr" )
+		s["fileName"].setValue( pathlib.Path( __file__ ).parent / "scripts" / "lightTweaks-0.52.3.1.gfr" )
 		s.load()
 
 		self.assertIsInstance( s["LightTweaks1"], GafferScene.ShaderTweaks )
@@ -142,7 +142,7 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 	def testLoadAndResaveFromVersion0_52( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["fileName"].setValue( os.path.dirname( __file__ ) + "/scripts/lightTweaks-0.52.3.1.gfr" )
+		s["fileName"].setValue( pathlib.Path( __file__ ).parent / "scripts" / "lightTweaks-0.52.3.1.gfr" )
 		s.load()
 
 		ss = s.serialise()

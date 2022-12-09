@@ -38,6 +38,7 @@ import unittest
 import random
 import os
 import imath
+import pathlib
 
 import IECore
 
@@ -48,13 +49,13 @@ import GafferImageTest
 
 class BleedFillTest( GafferImageTest.ImageTestCase ) :
 
-	path = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/" )
+	path = pathlib.Path( os.environ["GAFFER_ROOT"] ) / "python" / "GafferImageTest" / "images"
 
 	def testBasics( self ) :
 
 		# Load a basic black/white checker, and resize it to 8x8 pixels
 		r = GafferImage.ImageReader()
-		r["fileName"].setValue( os.path.join( self.path, "checker2x2.exr" ) )
+		r["fileName"].setValue( self.path / "checker2x2.exr" )
 
 		resize = GafferImage.Resize()
 		resize["in"].setInput( r["out"] )

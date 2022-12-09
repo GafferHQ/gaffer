@@ -95,7 +95,7 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 			crop["in"].setInput( resample["out"] )
 			crop["area"].setValue( imath.Box2i( imath.V2i( 0 ), size ) )
 
-			outputFileName = self.temporaryDirectory() + "/%s_%dx%d_%s.exr" % ( os.path.splitext( fileName )[0], size.x, size.y, filter )
+			outputFileName = self.temporaryDirectory() / ( "%s_%dx%d_%s.exr" % ( os.path.splitext( fileName )[0], size.x, size.y, filter ) )
 			writer = GafferImage.ImageWriter()
 			writer["in"].setInput( crop["out"] )
 			writer["channels"].setValue( "[RGB]" )

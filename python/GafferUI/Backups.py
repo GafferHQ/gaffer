@@ -41,7 +41,7 @@ import IECore
 from Qt import QtCore
 
 import collections
-import os
+import pathlib
 import re
 import stat
 import weakref
@@ -77,48 +77,36 @@ class Backups( object ) :
 	# can call it from the unit tests.
 	def backup( self, script ) :
 
-		fileName = None
-		existingFiles = []
-		for f in self.__potentialFileNames( script ) :
-			if not os.path.exists( f ) :
-				fileName = f
+		path = None
+		existingPaths = []
+		for p in self.__potentialPaths( script ) :
+			if not p.exists() :
+				path = p
 				break
 			else :
-				existingFiles.append( ( os.path.getmtime( f ), f ) )
+				existingPaths.append( p )
 
-		if fileName is None :
+		if path is None :
 			# All files exist already, sort by modification
 			# time and choose the oldest.
-			existingFiles.sort()
-			fileName = existingFiles[0][1]
+			existingPaths.sort( key = lambda p : p.stat().st_mtime )
+			path = existingPaths[0]
 
-		dirName = os.path.dirname( fileName )
-		try :
-			os.makedirs( dirName )
-		except OSError :
-			# makedirs very unhelpfully raises an exception if
-			# the directory already exists, but it might also
-			# raise if it fails. We reraise only in the latter case.
-			# We do this rather than test for existence _first_,
-			# because then we'd be in a race against other processes
-			# trying to create the same directory, and could still
-			# end up with an exception.
-			if not os.path.isdir( dirName ) :
-				raise
+		path.parent.mkdir( parents = True, exist_ok = True )
 
 		# When overwriting a previous backup we need to
 		# temporarily make it writable. If this fails for
 		# any reason we leave it to `serialiseToFile()` to
 		# throw.
 		with IECore.IgnoredExceptions( OSError ) :
-			os.chmod( fileName, stat.S_IWUSR )
+			path.chmod( stat.S_IWUSR )
 
-		script.serialiseToFile( fileName )
+		script.serialiseToFile( path )
 
 		# Protect file by making it read only.
-		os.chmod( fileName, stat.S_IREAD | stat.S_IRGRP | stat.S_IROTH )
+		path.chmod( stat.S_IREAD | stat.S_IRGRP | stat.S_IROTH )
 
-		return fileName
+		return path
 
 	# Returns the filenames of all the backups that have
 	# been made for the specified script, ordered from
@@ -126,13 +114,9 @@ class Backups( object ) :
 	# or a filename.
 	def backups( self, script ) :
 
-		timesAndFiles = []
-		for f in self.__potentialFileNames( script ) :
-			if os.path.exists( f ) :
-				timesAndFiles.append( ( os.path.getmtime( f ), f ) )
-
-		timesAndFiles.sort()
-		return [ x[1] for x in timesAndFiles ]
+		paths = [ p for p in self.__potentialPaths( script ) if p.exists() ]
+		paths.sort( key = lambda p : p.stat().st_mtime )
+		return paths
 
 	# Returns the most recent backup for `script`, if it is
 	# both newer and has different contents to the original.
@@ -140,16 +124,16 @@ class Backups( object ) :
 	# or a filename.
 	def recoveryFile( self, script ) :
 
-		scriptFileName = self.__scriptFileName( script )
-		backups = self.backups( scriptFileName )
+		scriptPath = self.__scriptPath( script )
+		backups = self.backups( scriptPath )
 		if not backups :
 			return None
 
-		backupFileName = backups[-1]
-		if not os.path.exists( scriptFileName ) :
-			return backupFileName
+		backupPath = backups[-1]
+		if not scriptPath.exists() :
+			return backupPath
 
-		if os.path.getmtime( backupFileName ) < os.path.getmtime( scriptFileName ) :
+		if backupPath.stat().st_mtime < scriptPath.stat().st_mtime :
 			return None
 
 		ignorePatterns = [
@@ -163,13 +147,13 @@ class Backups( object ) :
 		]
 		ignorePatterns = [ re.compile( x ) for x in ignorePatterns ]
 
-		with open( backupFileName ) as backupFile, open( scriptFileName ) as scriptFile :
+		with open( backupPath ) as backupFile, open( scriptPath ) as scriptFile :
 
 			backupLines = backupFile.readlines()
 			scriptLines = scriptFile.readlines()
 
 			if len( backupLines ) != len( scriptLines ) :
-				return backupFileName
+				return backupPath
 
 			for backupLine, scriptLine in zip( backupLines, scriptLines ) :
 
@@ -177,7 +161,7 @@ class Backups( object ) :
 					continue
 
 				if backupLine != scriptLine :
-					return backupFileName
+					return backupPath
 
 		return None
 
@@ -249,34 +233,39 @@ class Backups( object ) :
 						str( e )
 					)
 
-	def __scriptFileName( self, script ) :
+	def __scriptPath( self, script ) :
 
-		if isinstance( script, Gaffer.ScriptNode ) :
-			return script["fileName"].getValue()
-		else :
-			assert( isinstance( script, str ) )
+		if isinstance( script, pathlib.Path ) :
 			return script
 
-	def __potentialFileNames( self, script ) :
+		if isinstance( script, Gaffer.ScriptNode ) :
+			fileName = script["fileName"].getValue()
+		else :
+			assert( isinstance( script, str ) )
+			fileName = script
 
-		fileName = self.__scriptFileName( script )
+		return pathlib.Path( fileName ) if fileName else None
 
-		if not fileName :
+	def __potentialPaths( self, script ) :
+
+		scriptPath = self.__scriptPath( script )
+
+		if not scriptPath :
 			return []
 
 		context = Gaffer.Context()
-		context["script:name"] = os.path.splitext( os.path.basename( fileName ) )[0]
-		context["script:directory"] = os.path.dirname( os.path.abspath( fileName ) )
+		context["script:name"] = scriptPath.stem
+		context["script:directory"] = scriptPath.parent.as_posix()
 
 		pattern = self.__settings["fileName"].getValue()
-		fileNames = []
+		paths = []
 		for i in range( self.__settings["files"].getValue() ) :
 			context["backup:number"] = i
 			context.setFrame( i )
-			fileNames.append( context.substitute( pattern ) )
+			paths.append( pathlib.Path( context.substitute( pattern ) ) )
 
 		# Make results unique while maintaining order
-		return collections.OrderedDict( [ ( x, x ) for x in fileNames ] ).keys()
+		return collections.OrderedDict( [ ( x, x ) for x in paths ] ).keys()
 
 ##########################################################################
 # UI

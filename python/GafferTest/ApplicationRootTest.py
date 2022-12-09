@@ -34,10 +34,10 @@
 #
 ##########################################################################
 
-import os
 import stat
 import unittest
 import imath
+import pathlib
 
 import IECore
 import Gaffer
@@ -45,7 +45,7 @@ import GafferTest
 
 class ApplicationRootTest( GafferTest.TestCase ) :
 
-	__defaultPreferencesFile = os.path.expanduser( "~/gaffer/startup/testApp/preferences.py" )
+	__defaultPreferencesFile = pathlib.Path( "~/gaffer/startup/testApp/preferences.py" ).expanduser()
 
 	class testApp( Gaffer.Application ) :
 
@@ -72,15 +72,15 @@ class ApplicationRootTest( GafferTest.TestCase ) :
 		p["category2"]["s"].setValue( "oranges" )
 		p["category2"]["v"].setValue( imath.V3f( 2, 3, 4 ) )
 
-		self.assertFalse( os.path.exists( self.__defaultPreferencesFile ) )
+		self.assertFalse( self.__defaultPreferencesFile.exists() )
 		applicationRoot.savePreferences()
-		self.assertTrue( os.path.exists( self.__defaultPreferencesFile ) )
+		self.assertTrue( self.__defaultPreferencesFile.exists() )
 
-		fileName = os.path.join( self.temporaryDirectory(), "testPreferences.gfr" )
+		preferencesFile = self.temporaryDirectory() / "testPreferences.gfr"
 
-		self.assertFalse( os.path.exists( fileName ) )
-		applicationRoot.savePreferences( fileName )
-		self.assertTrue( os.path.exists( fileName ) )
+		self.assertFalse( preferencesFile.exists() )
+		applicationRoot.savePreferences( preferencesFile )
+		self.assertTrue( preferencesFile.exists() )
 
 		p["category1"]["i"].setValue( 1 )
 		p["category2"]["s"].setValue( "beef" )
@@ -88,7 +88,7 @@ class ApplicationRootTest( GafferTest.TestCase ) :
 
 		executionContext = { "application" : application }
 		exec(
-			compile( open( fileName ).read(), fileName, "exec" ),
+			compile( open( preferencesFile ).read(), preferencesFile, "exec" ),
 			executionContext, executionContext
 		)
 
@@ -100,18 +100,18 @@ class ApplicationRootTest( GafferTest.TestCase ) :
 
 		a = Gaffer.ApplicationRoot( "testApp" )
 
-		fileName = os.path.join( self.temporaryDirectory(), "testPreferences.gfr" )
-		a.savePreferences( fileName )
-		os.chmod( fileName, 0 )
-		self.assertRaises( RuntimeError, a.savePreferences, fileName )
-		os.chmod( fileName, stat.S_IWRITE)
+		preferencesFile = self.temporaryDirectory() / "testPreferences.gfr"
+		a.savePreferences( preferencesFile )
+		preferencesFile.chmod( 0 )
+		self.assertRaises( RuntimeError, a.savePreferences, preferencesFile )
+		preferencesFile.chmod( stat.S_IWRITE )
 
 	def testPreferencesLocation( self ) :
 
 		a = Gaffer.ApplicationRoot( "testApp" )
 
-		self.assertEqual( a.preferencesLocation(), os.path.dirname( self.__defaultPreferencesFile ) )
-		self.assertTrue( os.path.isdir( a.preferencesLocation() ) )
+		self.assertEqual( a.preferencesLocation(), self.__defaultPreferencesFile.parent )
+		self.assertTrue( pathlib.Path( a.preferencesLocation() ).is_dir() )
 
 	def testClipboard( self ) :
 
@@ -149,8 +149,8 @@ class ApplicationRootTest( GafferTest.TestCase ) :
 
 		GafferTest.TestCase.tearDown( self )
 
-		if os.path.exists( self.__defaultPreferencesFile ) :
-			os.remove( self.__defaultPreferencesFile )
+		if self.__defaultPreferencesFile.exists() :
+			self.__defaultPreferencesFile.unlink()
 
 if __name__ == "__main__":
 	unittest.main()

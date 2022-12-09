@@ -36,9 +36,9 @@
 ##########################################################################
 
 import os
+import pathlib
 import shutil
 import unittest
-import glob
 import imath
 import random
 
@@ -52,22 +52,22 @@ import GafferImageTest
 
 class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 
-	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" )
-	offsetDataWindowFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/rgb.100x100.exr" )
-	fullDataWindowFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checkerboard.100x100.exr" )
-	negativeDataWindowFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checkerWithNegativeDataWindow.200x150.exr" )
-	negativeDisplayWindowFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/negativeDisplayWindow.exr" )
-	circlesExrFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/circles.exr" )
-	circlesJpgFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/circles.jpg" )
-	alignmentTestSourceFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/colorbars_half_max.exr" )
-	multipartFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/multipart.exr" )
-	unsupportedMultipartFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/unsupportedMultipart.exr" )
-	multipartDefaultChannelsFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/multipartDefaultChannels.exr" )
-	multipartDefaultChannelsOverlapFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/multipartDefaultChannelsOverlap.exr" )
+	fileName = pathlib.Path( os.environ["GAFFER_ROOT"] ) / "python" / "GafferImageTest" / "images" / "checker.exr"
+	offsetDataWindowFileName = pathlib.Path( os.environ["GAFFER_ROOT"] ) / "python" / "GafferImageTest" / "images" / "rgb.100x100.exr"
+	fullDataWindowFileName = pathlib.Path( os.environ["GAFFER_ROOT"] ) / "python" / "GafferImageTest" / "images" / "checkerboard.100x100.exr"
+	negativeDataWindowFileName = pathlib.Path( os.environ["GAFFER_ROOT"] ) / "python" / "GafferImageTest" / "images" / "checkerWithNegativeDataWindow.200x150.exr"
+	negativeDisplayWindowFileName = pathlib.Path( os.environ["GAFFER_ROOT"] ) / "python" / "GafferImageTest" / "images" / "negativeDisplayWindow.exr"
+	circlesExrFileName = pathlib.Path( os.environ["GAFFER_ROOT"] ) / "python" / "GafferImageTest" / "images" / "circles.exr"
+	circlesJpgFileName = pathlib.Path( os.environ["GAFFER_ROOT"] ) / "python" / "GafferImageTest" / "images" / "circles.jpg"
+	alignmentTestSourceFileName = pathlib.Path( os.environ["GAFFER_ROOT"] ) / "python" / "GafferImageTest" / "images" / "colorbars_half_max.exr"
+	multipartFileName = pathlib.Path( os.environ["GAFFER_ROOT"] ) / "python" / "GafferImageTest" / "images" / "multipart.exr"
+	unsupportedMultipartFileName = pathlib.Path( os.environ["GAFFER_ROOT"] ) / "python" / "GafferImageTest" / "images" / "unsupportedMultipart.exr"
+	multipartDefaultChannelsFileName = pathlib.Path( os.environ["GAFFER_ROOT"] ) / "python" / "GafferImageTest" / "images" / "multipartDefaultChannels.exr"
+	multipartDefaultChannelsOverlapFileName = pathlib.Path( os.environ["GAFFER_ROOT"] ) / "python" / "GafferImageTest" / "images" / "multipartDefaultChannelsOverlap.exr"
 
 	def testInternalImageSpaceConversion( self ) :
 
-		r = IECore.Reader.create( self.negativeDataWindowFileName )
+		r = IECore.Reader.create( str( self.negativeDataWindowFileName ) )
 		image = r.read()
 		exrDisplayWindow = image.displayWindow
 		exrDataWindow = image.dataWindow
@@ -116,7 +116,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		image = GafferImage.ImageAlgo.image( n["out"] )
 		self.assertEqual( image.blindData(), IECore.CompoundData( dict(expectedMetadata) ) )
 
-		image2 = IECore.Reader.create( self.fileName ).read()
+		image2 = IECore.Reader.create( str( self.fileName ) ).read()
 		image.blindData().clear()
 		image2.blindData().clear()
 		self.assertEqual( image, image2 )
@@ -130,7 +130,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( f.getDisplayWindow(), imath.Box2i( imath.V2i( -5, -5 ), imath.V2i( 21, 21 ) ) )
 		self.assertEqual( d, imath.Box2i( imath.V2i( 2, -14 ), imath.V2i( 36, 20 ) ) )
 
-		expectedImage = IECore.Reader.create( self.negativeDisplayWindowFileName ).read()
+		expectedImage = IECore.Reader.create( str( self.negativeDisplayWindowFileName ) ).read()
 		outImage = GafferImage.ImageAlgo.image( n["out"] )
 		expectedImage.blindData().clear()
 		outImage.blindData().clear()
@@ -150,7 +150,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		self.assertIn( "B", channelNames )
 
 		image = GafferImage.ImageAlgo.image( n["out"] )
-		image2 = IECore.Reader.create( self.negativeDataWindowFileName ).read()
+		image2 = IECore.Reader.create( str( self.negativeDataWindowFileName ) ).read()
 
 		op = IECoreImage.ImageDiffOp()
 		res = op(
@@ -198,7 +198,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		n["fileName"].setValue( self.offsetDataWindowFileName )
 
 		image = GafferImage.ImageAlgo.image( n["out"] )
-		image2 = IECore.Reader.create( self.offsetDataWindowFileName ).read()
+		image2 = IECore.Reader.create( str( self.offsetDataWindowFileName ) ).read()
 
 		image.blindData().clear()
 		image2.blindData().clear()
@@ -232,7 +232,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 
 	def testFileRefresh( self ) :
 
-		testFile = self.temporaryDirectory() + "/refresh.exr"
+		testFile = self.temporaryDirectory() / "refresh.exr"
 		shutil.copyfile( self.fileName, testFile )
 
 		reader = GafferImage.OpenImageIOReader()
@@ -262,7 +262,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 
 	def testAvailableFrames( self ) :
 
-		testSequence = IECore.FileSequence( self.temporaryDirectory() + "/incompleteSequence.####.exr" )
+		testSequence = IECore.FileSequence( str( self.temporaryDirectory() / "incompleteSequence.####.exr" ) )
 		shutil.copyfile( self.fileName, testSequence.fileNameForFrame( 1 ) )
 		shutil.copyfile( self.offsetDataWindowFileName, testSequence.fileNameForFrame( 3 ) )
 
@@ -285,7 +285,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 
 	def testMissingFrameMode( self ) :
 
-		testSequence = IECore.FileSequence( self.temporaryDirectory() + "/incompleteSequence.####.exr" )
+		testSequence = IECore.FileSequence( str( self.temporaryDirectory() / "incompleteSequence.####.exr" ) )
 		shutil.copyfile( self.fileName, testSequence.fileNameForFrame( 1 ) )
 		shutil.copyfile( self.offsetDataWindowFileName, testSequence.fileNameForFrame( 3 ) )
 
@@ -430,7 +430,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		# frame, so we need to check that the output
 		# still responds to frame changes.
 
-		testSequence = IECore.FileSequence( self.temporaryDirectory() + "/incompleteSequence.####.exr" )
+		testSequence = IECore.FileSequence( str( self.temporaryDirectory() / "incompleteSequence.####.exr" ) )
 		shutil.copyfile( self.fileName, testSequence.fileNameForFrame( 0 ) )
 		shutil.copyfile( self.offsetDataWindowFileName, testSequence.fileNameForFrame( 1 ) )
 
@@ -483,7 +483,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		# Test a bunch of different data window alignments on disk.  This exercises code for reading
 		# weirdly aligned scanlines and partial tiles
 
-		tempFile = self.temporaryDirectory() + "/tempOffsetImage.exr"
+		tempFile = self.temporaryDirectory() / "tempOffsetImage.exr"
 
 		r = GafferImage.OpenImageIOReader()
 		r["fileName"].setValue( self.alignmentTestSourceFileName )
@@ -695,10 +695,10 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 	@GafferTest.TestRunner.PerformanceTestMethod()
 	def testImageOpenPerformance( self ):
 		# Test the overhead of opening images by opening lots of images, but only reading the view count
-		files = glob.glob( os.path.expandvars( "${GAFFER_ROOT}/python/GafferImageTest/images/*.exr" ) )
-		files = filter( lambda f : not ( "ChannelsOverlap" in f or "NukeSinglePart" in f ), files )
+		files = ( pathlib.Path( os.environ["GAFFER_ROOT"] ) / "python" / "GafferImageTest" / "images" ).glob( "*.exr" )
+		files = filter( lambda f : not ( "ChannelsOverlap" in f.stem or "NukeSinglePart" in f.stem ), files )
 		files = sorted( files )
-		filesWithResult = [ (i, 2 if "channelTestMultiView" in i else 1 ) for i in files ]
+		filesWithResult = [ (i, 2 if "channelTestMultiView" in i.stem else 1 ) for i in files ]
 		reader = GafferImage.ImageReader()
 		with GafferTest.TestRunner.PerformanceScope() :
 			for f, r in filesWithResult:

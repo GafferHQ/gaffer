@@ -493,7 +493,7 @@ bool executeWrapper( ScriptNode &s, const std::string &serialisation, Node *pare
 	return s.execute( serialisation, parent, continueOnError );
 }
 
-bool executeFile( ScriptNode &s, const std::string &fileName, Node *parent, bool continueOnError )
+bool executeFile( ScriptNode &s, const std::filesystem::path &fileName, Node *parent, bool continueOnError )
 {
 	IECorePython::ScopedGILRelease r;
 	return s.executeFile( fileName, parent, continueOnError );
@@ -511,7 +511,7 @@ void save( ScriptNode &s )
 	s.save();
 }
 
-bool importFile( ScriptNode &s, const std::string &fileName, Node *parent, bool continueOnError )
+bool importFile( ScriptNode &s, const std::filesystem::path &fileName, Node *parent, bool continueOnError )
 {
 	IECorePython::ScopedGILRelease r;
 	return s.importFile( fileName, parent, continueOnError );

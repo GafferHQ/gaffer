@@ -34,7 +34,6 @@
 #
 ##########################################################################
 
-import os
 import math
 import time
 import unittest
@@ -495,11 +494,11 @@ class RendererTest( GafferTest.TestCase ) :
 			renderer.attributes( IECore.CompoundObject() )
 		)
 
-		fileName = os.path.join( self.temporaryDirectory(), "test.exr" )
+		fileName = self.temporaryDirectory() / "test.exr"
 		renderer.output(
 			"testOutput",
 			IECoreScene.Output(
-				fileName,
+				str( fileName ),
 				"exr",
 				"rgba",
 				{}
@@ -509,7 +508,7 @@ class RendererTest( GafferTest.TestCase ) :
 		renderer.option( "camera", IECore.StringData( "testCamera" ) )
 		renderer.render()
 
-		image = IECoreImage.ImageReader( fileName ).read()
+		image = IECoreImage.ImageReader( str( fileName ) ).read()
 		self.assertEqual( image.dataWindow, imath.Box2i( imath.V2i( 500, 250 ), imath.V2i( 1499, 749 ) ) )
 		self.assertEqual( image.displayWindow, imath.Box2i( imath.V2i( 0 ), imath.V2i( 1999, 999 ) ) )
 
@@ -637,11 +636,11 @@ class RendererTest( GafferTest.TestCase ) :
 		)
 		renderer.option( "camera", IECore.StringData( "testCamera" ) )
 
-		fileName = os.path.join( self.temporaryDirectory(), "test.exr" )
+		fileName = self.temporaryDirectory() / "test.exr"
 		renderer.output(
 			"testOutput",
 			IECoreScene.Output(
-				fileName,
+				str( fileName ),
 				"exr",
 				"rgba",
 				{}
@@ -668,7 +667,7 @@ class RendererTest( GafferTest.TestCase ) :
 
 		# Check we got what we expected
 
-		image = IECore.Reader.create( fileName ).read()
+		image = IECore.Reader.create( str( fileName ) ).read()
 
 		for uv, expectedColor in expectedPixels.items() :
 
@@ -1070,11 +1069,11 @@ class RendererTest( GafferTest.TestCase ) :
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
 		)
 
-		fileName = os.path.join( self.temporaryDirectory(), "test.exr" )
+		fileName = self.temporaryDirectory() / "test.exr"
 		renderer.output(
 			"testOutput",
 			IECoreScene.Output(
-				fileName,
+				str( fileName ),
 				"exr",
 				"rgba",
 				{}
@@ -1104,8 +1103,8 @@ class RendererTest( GafferTest.TestCase ) :
 
 			displayWindow = imath.Box2i( imath.V2i( 0 ), imath.V2i( 16 ) )
 			textureImage = IECoreImage.ImagePrimitive.createRGBFloat( color, displayWindow, displayWindow )
-			textureFileName = os.path.join( self.temporaryDirectory(), "{}.png".format( name ) )
-			IECoreImage.ImageWriter( textureImage, textureFileName ).write()
+			textureFileName = self.temporaryDirectory() / f"{name}.png"
+			IECoreImage.ImageWriter( textureImage, str( textureFileName ) ).write()
 
 			plane = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -0.1 ), imath.V2f( 0.1 ) ) )
 			# Workaround for #4890
@@ -1118,13 +1117,13 @@ class RendererTest( GafferTest.TestCase ) :
 				"{}Plane".format( name ), plane,
 				renderer.attributes( IECore.CompoundObject( {
 					"cycles:surface" : shader,
-					"textureFileName" : IECore.StringData( textureFileName ),
+					"textureFileName" : IECore.StringData( textureFileName.as_posix() ),
 				} ) )
 			)
 			cyclesPlane.transform( imath.M44f().translate( imath.V3f( translateX, 0, 1 ) ) )
 
 		renderer.render()
-		image = IECore.Reader.create( fileName ).read()
+		image = IECore.Reader.create( str( fileName ) ).read()
 
 		self.assertEqual( self.__colorAtUV( image, imath.V2f( 0.48, 0.5 ) ), imath.Color4f( 1, 0, 0, 1 ) )
 		self.assertEqual( self.__colorAtUV( image, imath.V2f( 0.52, 0.5 ) ), imath.Color4f( 0, 1, 0, 1 ) )
@@ -1161,11 +1160,11 @@ class RendererTest( GafferTest.TestCase ) :
 		)
 		renderer.option( "camera", IECore.StringData( "testCamera" ) )
 
-		fileName = os.path.join( self.temporaryDirectory(), "test.exr" )
+		fileName = self.temporaryDirectory() / "test.exr"
 		renderer.output(
 			"testOutput",
 			IECoreScene.Output(
-				fileName,
+				str( fileName ),
 				"exr",
 				"rgba",
 				{}
@@ -1194,7 +1193,7 @@ class RendererTest( GafferTest.TestCase ) :
 		primitiveHandle.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
 
 		renderer.render()
-		image = IECore.Reader.create( fileName ).read()
+		image = IECore.Reader.create( str( fileName ) ).read()
 
 		color = self.__colorAtUV( image, imath.V2f( 0.55 ) )
 		if maxDifference :

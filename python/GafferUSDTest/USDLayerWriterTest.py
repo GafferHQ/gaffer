@@ -34,7 +34,7 @@
 #
 ##########################################################################
 
-import os
+import pathlib
 import unittest
 
 import pxr.Usd
@@ -52,24 +52,24 @@ class USDLayerWriterTest( GafferSceneTest.SceneTestCase ) :
 
 		baseWriter = GafferScene.SceneWriter()
 		baseWriter["in"].setInput( base )
-		baseWriter["fileName"].setValue( os.path.join( self.temporaryDirectory(), "base.usda" ) )
+		baseWriter["fileName"].setValue( self.temporaryDirectory() / "base.usda" )
 		baseWriter["task"].execute()
 
 		layerWriter = GafferUSD.USDLayerWriter()
 		layerWriter["base"].setInput( base )
 		layerWriter["layer"].setInput( layer )
-		layerWriter["fileName"].setValue( os.path.join( self.temporaryDirectory(), "layer.usda" ) )
+		layerWriter["fileName"].setValue( self.temporaryDirectory() / "layer.usda" )
 		layerWriter["task"].execute()
 
-		compositionFileName = os.path.join( self.temporaryDirectory(), "composed.usda" )
-		composition = pxr.Usd.Stage.CreateNew( compositionFileName )
+		compositionFilePath = self.temporaryDirectory() / "composed.usda"
+		composition = pxr.Usd.Stage.CreateNew( str( compositionFilePath ) )
 		composition.GetRootLayer().subLayerPaths = [
 			layerWriter["fileName"].getValue(),
 			baseWriter["fileName"].getValue(),
 		]
 		composition.GetRootLayer().Save()
 
-		return layerWriter["fileName"].getValue(), compositionFileName
+		return layerWriter["fileName"].getValue(), compositionFilePath
 
 	def test( self ) :
 
@@ -143,10 +143,10 @@ class USDLayerWriterTest( GafferSceneTest.SceneTestCase ) :
 		# Write the differences into a USD layer, and compose them back with the original.
 		# The composed result should be identical to the Gaffer scene.
 
-		layerFileName, compositionFileName = self.__writeLayerAndComposition( group["out"], prune["out"] )
+		layerFileName, compositionFilePath = self.__writeLayerAndComposition( group["out"], prune["out"] )
 
 		reader = GafferScene.SceneReader()
-		reader["fileName"].setValue( compositionFileName )
+		reader["fileName"].setValue( compositionFilePath )
 		self.assertScenesEqual( reader["out"], prune["out"], checks = self.allSceneChecks - { "sets" } )
 
 		# Check that we've actually got a minimal set of opinions in the
@@ -176,10 +176,10 @@ class USDLayerWriterTest( GafferSceneTest.SceneTestCase ) :
 		writer = GafferUSD.USDLayerWriter()
 		writer["base"].setInput( sphere["out"] )
 		writer["layer"].setInput( sphere["out"] )
-		writer["fileName"].setValue( os.path.join( self.temporaryDirectory(), "subdir", "test.usda" ) )
+		writer["fileName"].setValue( self.temporaryDirectory() / "subdir" / "test.usda" )
 
 		writer["task"].execute()
-		self.assertTrue( os.path.isfile( writer["fileName"].getValue() ) )
+		self.assertTrue( pathlib.Path( writer["fileName"].getValue() ).is_file() )
 
 	def testRemoveAttribute( self ) :
 

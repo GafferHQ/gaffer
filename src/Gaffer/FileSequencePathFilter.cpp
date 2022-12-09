@@ -42,7 +42,8 @@
 #include "IECore/FileSequenceFunctions.h"
 
 #include "boost/bind/bind.hpp"
-#include "boost/filesystem.hpp"
+
+#include <filesystem>
 
 using namespace std;
 using namespace boost::placeholders;
@@ -97,7 +98,7 @@ bool FileSequencePathFilter::remove( PathPtr path ) const
 		return false;
 	}
 
-	if( m_mode == All || boost::filesystem::is_directory( fileSystemPath->string() ) )
+	if( m_mode == All || std::filesystem::is_directory( fileSystemPath->string() ) )
 	{
 		// always keep directories (and All)
 		return false;
@@ -120,7 +121,7 @@ bool FileSequencePathFilter::remove( PathPtr path ) const
 		return false;
 	}
 
-	if( ( m_mode & Files ) && !isSequentialFile && boost::filesystem::is_regular_file( fileSystemPath->string() ) )
+	if( ( m_mode & Files ) && !isSequentialFile && std::filesystem::is_regular_file( fileSystemPath->string() ) )
 	{
 		// its a real file on disk that isn't a sequential file, so keep it
 		return false;

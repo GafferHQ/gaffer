@@ -52,6 +52,7 @@
 #include "IECorePython/ExceptionAlgo.h"
 
 #include <string>
+#include <filesystem>
 
 using namespace std;
 using namespace boost::python;
@@ -196,7 +197,7 @@ struct CreatorWrapper
 struct ReferenceCreator
 {
 
-	ReferenceCreator( const std::string &referenceFileName )
+	ReferenceCreator( const std::filesystem::path &referenceFileName )
 		:	m_referenceFileName( referenceFileName )
 	{
 	}
@@ -217,7 +218,7 @@ struct ReferenceCreator
 
 	private :
 
-		std::string m_referenceFileName;
+		std::filesystem::path m_referenceFileName;
 
 };
 
@@ -236,7 +237,7 @@ void registerScene( const std::string &shaderPrefix, const std::string &name, ob
 	ShaderView::registerScene( shaderPrefix, name, CreatorWrapper<Node>( creator ) );
 }
 
-void registerReferenceScene( const std::string &shaderPrefix, const std::string &name, const std::string &referenceFileName )
+void registerReferenceScene( const std::string &shaderPrefix, const std::string &name, const std::filesystem::path &referenceFileName )
 {
 	ShaderView::registerScene( shaderPrefix, name, ReferenceCreator( referenceFileName ) );
 }

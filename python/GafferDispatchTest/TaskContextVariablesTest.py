@@ -34,7 +34,6 @@
 #
 ##########################################################################
 
-import glob
 import unittest
 
 import IECore
@@ -49,7 +48,7 @@ class TaskContextVariablesTest( GafferTest.TestCase ) :
 	def __dispatcher( self, frameRange = None ) :
 
 		result = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
-		result["jobsDirectory"].setValue( self.temporaryDirectory() + "/jobs" )
+		result["jobsDirectory"].setValue( self.temporaryDirectory() / "jobs" )
 
 		return result
 
@@ -58,7 +57,7 @@ class TaskContextVariablesTest( GafferTest.TestCase ) :
 		script = Gaffer.ScriptNode()
 
 		script["writer"] = GafferDispatchTest.TextWriter()
-		script["writer"]["fileName"].setValue( self.temporaryDirectory() + "/${name}.txt" )
+		script["writer"]["fileName"].setValue( self.temporaryDirectory() / "${name}.txt" )
 
 		script["variables"] = GafferDispatch.TaskContextVariables()
 		script["variables"]["preTasks"][0].setInput( script["writer"]["task"] )
@@ -67,9 +66,9 @@ class TaskContextVariablesTest( GafferTest.TestCase ) :
 		self.__dispatcher().dispatch( [ script["variables"] ] )
 
 		self.assertEqual(
-			set( glob.glob( self.temporaryDirectory() + "/*.txt" ) ),
+			set( self.temporaryDirectory().glob( "*.txt" ) ),
 			{
-				self.temporaryDirectory() + "/jimbob.txt",
+				self.temporaryDirectory() / "jimbob.txt",
 
 			}
 		)
@@ -79,7 +78,7 @@ class TaskContextVariablesTest( GafferTest.TestCase ) :
 		script = Gaffer.ScriptNode()
 
 		script["writer"] = GafferDispatchTest.TextWriter()
-		script["writer"]["fileName"].setValue( self.temporaryDirectory() + "/${name1}${name2}.txt" )
+		script["writer"]["fileName"].setValue( self.temporaryDirectory() / "${name1}${name2}.txt" )
 
 		script["variables"] = GafferDispatch.TaskContextVariables()
 		script["variables"]["preTasks"][0].setInput( script["writer"]["task"] )
@@ -89,9 +88,9 @@ class TaskContextVariablesTest( GafferTest.TestCase ) :
 		self.__dispatcher().dispatch( [ script["variables"] ] )
 
 		self.assertEqual(
-			set( glob.glob( self.temporaryDirectory() + "/*.txt" ) ),
+			set( self.temporaryDirectory().glob( "*.txt" ) ),
 			{
-				self.temporaryDirectory() + "/bob.txt",
+				self.temporaryDirectory() / "bob.txt",
 
 			}
 		)
@@ -101,7 +100,7 @@ class TaskContextVariablesTest( GafferTest.TestCase ) :
 		script = Gaffer.ScriptNode()
 
 		script["writer"] = GafferDispatchTest.TextWriter()
-		script["writer"]["fileName"].setValue( self.temporaryDirectory() + "/${name}.txt" )
+		script["writer"]["fileName"].setValue( self.temporaryDirectory() / "${name}.txt" )
 
 		script["variables"] = GafferDispatch.TaskContextVariables()
 		script["variables"]["preTasks"][0].setInput( script["writer"]["task"] )
@@ -115,9 +114,9 @@ class TaskContextVariablesTest( GafferTest.TestCase ) :
 		self.assertEqual( len( dispatcher.jobPool().failedJobs() ), 0 )
 
 		self.assertEqual(
-			set( glob.glob( self.temporaryDirectory() + "/*.txt" ) ),
+			set( self.temporaryDirectory().glob( "*.txt" ) ),
 			{
-				self.temporaryDirectory() + "/jimbob.txt",
+				self.temporaryDirectory() / "jimbob.txt",
 			}
 		)
 
