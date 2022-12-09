@@ -347,7 +347,7 @@ class TestCase( unittest.TestCase ) :
 			f.write( "import sys\n" )
 			f.write( "assert( 'GafferUI' not in sys.modules )\n" )
 
-		subprocess.check_call( [ str( Gaffer.executablePath( True ) ), "python", script ] )
+		subprocess.check_call( [ str( Gaffer.executablePath( True ) ), "python", str( script ) ] )
 
 	def assertFloat32Equal( self, value0, value1 ) :
 

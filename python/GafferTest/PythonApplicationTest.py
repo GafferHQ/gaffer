@@ -46,12 +46,12 @@ class PythonApplicationTest( GafferTest.TestCase ) :
 
 	def testVariableScope( self ) :
 
-		subprocess.check_call( [ str( Gaffer.executablePath( True ) ), "python", pathlib.Path( __file__ ).parent / "pythonScripts" / "variableScope.py" ] )
+		subprocess.check_call( [ str( Gaffer.executablePath( True ) ), "python", str( pathlib.Path( __file__ ).parent / "pythonScripts" / "variableScope.py" ) ] )
 
 	def testErrorReturnStatus( self ) :
 
 		p = subprocess.Popen(
-			[ str( Gaffer.executablePath( True ) ), "python", pathlib.Path( __file__ ).parent / "pythonScripts" / "exception.py" ],
+			[ str( Gaffer.executablePath( True ) ), "python", str( pathlib.Path( __file__ ).parent / "pythonScripts" / "exception.py" ) ],
 			stderr = subprocess.PIPE,
 			universal_newlines = True,
 		)
@@ -62,11 +62,11 @@ class PythonApplicationTest( GafferTest.TestCase ) :
 
 	def testFlagArguments( self ) :
 
-		subprocess.check_call( [ str( Gaffer.executablePath( True ) ), "python", pathlib.Path( __file__ ).parent / "pythonScripts" / "flagArguments.py", "-arguments", "-flag1", "-flag2" ] )
+		subprocess.check_call( [ str( Gaffer.executablePath( True ) ), "python", str( pathlib.Path( __file__ ).parent / "pythonScripts" / "flagArguments.py" ), "-arguments", "-flag1", "-flag2" ] )
 
 	def testName( self ) :
 
-		subprocess.check_call( [ str( Gaffer.executablePath( True ) ), "python", pathlib.Path( __file__ ).parent / "pythonScripts" / "name.py" ] )
+		subprocess.check_call( [ str( Gaffer.executablePath( True ) ), "python", str( pathlib.Path( __file__ ).parent / "pythonScripts" / "name.py" ) ] )
 
 if __name__ == "__main__":
 	unittest.main()

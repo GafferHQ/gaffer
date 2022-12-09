@@ -1052,7 +1052,7 @@ class MetadataTest( GafferTest.TestCase ) :
 	@staticmethod
 	def testPythonUnload() :
 
-		subprocess.check_call( [ str( Gaffer.executablePath( True ) ), "python", pathlib.Path( __file__ ).parent / "pythonScripts" / "unloadExceptionScript.py" ] )
+		subprocess.check_call( [ str( Gaffer.executablePath( True ) ), "python", str( pathlib.Path( __file__ ).parent / "pythonScripts" / "unloadExceptionScript.py" ) ] )
 
 	def testWildcardsAndDot( self ) :
 
