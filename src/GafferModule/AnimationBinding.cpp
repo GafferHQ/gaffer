@@ -182,6 +182,12 @@ void removeInactiveKeys( Animation::CurvePlug &p )
 	p.removeInactiveKeys();
 }
 
+void setExtrapolation( Animation::CurvePlug &p, const Animation::Direction direction, const Animation::Extrapolation extrapolation )
+{
+	ScopedGILRelease gilRelease;
+	p.setExtrapolation( direction, extrapolation );
+}
+
 struct CurvePlugKeySlotCaller
 {
 	void operator()( boost::python::object slot, const Animation::CurvePlugPtr c, const Animation::KeyPtr k )
@@ -189,6 +195,21 @@ struct CurvePlugKeySlotCaller
 		try
 		{
 			slot( c, k );
+		}
+		catch( const boost::python::error_already_set &e )
+		{
+			ExceptionAlgo::translatePythonException();
+		}
+	}
+};
+
+struct CurvePlugDirectionSlotCaller
+{
+	void operator()( boost::python::object slot, const Animation::CurvePlugPtr c, const Animation::Direction d )
+	{
+		try
+		{
+			slot( c, d );
 		}
 		catch( const boost::python::error_already_set &e )
 		{
@@ -205,7 +226,17 @@ class CurvePlugSerialiser : public ValuePlugSerialiser
 		std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, Serialisation &serialisation ) const override
 		{
 			std::string result = ValuePlugSerialiser::postConstructor( graphComponent, identifier, serialisation );
-			const Animation::CurvePlug *curve = static_cast<const Animation::CurvePlug *>( graphComponent );
+			const Animation::CurvePlug* const curve = static_cast<const Animation::CurvePlug *>( graphComponent );
+			const Gaffer::Animation::Extrapolation extrapolationIn = curve->getExtrapolation( Gaffer::Animation::Direction::In );
+			if( extrapolationIn != Gaffer::Animation::Extrapolation::Constant )
+			{
+				result += identifier + ".setExtrapolation( Gaffer.Animation.Direction.In, Gaffer.Animation.Extrapolation." + Animation::toString( extrapolationIn ) + " )\n";
+			}
+			const Gaffer::Animation::Extrapolation extrapolationOut = curve->getExtrapolation( Gaffer::Animation::Direction::Out );
+			if( extrapolationOut != Gaffer::Animation::Extrapolation::Constant )
+			{
+				result += identifier + ".setExtrapolation( Gaffer.Animation.Direction.Out, Gaffer.Animation.Extrapolation." + Animation::toString( extrapolationOut ) + " )\n";
+			}
 			for( const auto &key : *curve )
 			{
 				result += identifier + ".addKey( " + keyRepr( key ) + " )\n";
@@ -230,6 +261,8 @@ void GafferModule::bindAnimation()
 		.def( "defaultInterpolation", &Animation::defaultInterpolation )
 		.staticmethod( "defaultInterpolation" )
 		.def( "defaultTieMode", &Animation::defaultTieMode )
+		.def( "defaultExtrapolation", &Animation::defaultExtrapolation )
+		.staticmethod( "defaultExtrapolation" )
 		.staticmethod( "defaultTieMode" )
 		.def( "defaultSlope", &Animation::defaultSlope )
 		.staticmethod( "defaultSlope" )
@@ -245,6 +278,10 @@ void GafferModule::bindAnimation()
 		.value( Animation::toString( Animation::Interpolation::Linear ), Animation::Interpolation::Linear )
 		.value( Animation::toString( Animation::Interpolation::Cubic ), Animation::Interpolation::Cubic )
 		.value( Animation::toString( Animation::Interpolation::Bezier ), Animation::Interpolation::Bezier )
+	;
+
+	enum_< Animation::Extrapolation >( "Extrapolation" )
+		.value( Animation::toString( Animation::Extrapolation::Constant ), Animation::Extrapolation::Constant )
 	;
 
 	enum_< Animation::Direction >( "Direction" )
@@ -331,6 +368,7 @@ void GafferModule::bindAnimation()
 		.def( "keyValueChangedSignal", &Animation::CurvePlug::keyValueChangedSignal, return_internal_reference< 1 >() )
 		.def( "keyInterpolationChangedSignal", &Animation::CurvePlug::keyInterpolationChangedSignal, return_internal_reference< 1 >() )
 		.def( "keyTieModeChangedSignal", &Animation::CurvePlug::keyTieModeChangedSignal, return_internal_reference< 1 >() )
+		.def( "extrapolationChangedSignal", &Animation::CurvePlug::extrapolationChangedSignal, return_internal_reference< 1 >() )
 		.def( "addKey", &addKey, arg( "removeActiveClashing" ) = true )
 		.def( "insertKey", &insertKey )
 		.def( "insertKey", &insertKeyValue )
@@ -362,12 +400,21 @@ void GafferModule::bindAnimation()
 			(Animation::Key *(Animation::CurvePlug::*)( float ))&Animation::CurvePlug::nextKey,
 			return_value_policy<IECorePython::CastToIntrusivePtr>()
 		)
+		.def( "setExtrapolation", &setExtrapolation )
+		.def( "getExtrapolation", &Animation::CurvePlug::getExtrapolation )
+		.def(
+			"getExtrapolationKey",
+			(Animation::Key *(Animation::CurvePlug::*)( Animation::Direction ))&Animation::CurvePlug::getExtrapolationKey,
+			return_value_policy<IECorePython::CastToIntrusivePtr>() )
 		.def( "evaluate", &Animation::CurvePlug::evaluate )
 		.attr( "__qualname__" ) = "Animation.CurvePlug"
 	;
 
 	SignalClass< Animation::CurvePlug::CurvePlugKeySignal,
 		DefaultSignalCaller< Animation::CurvePlug::CurvePlugKeySignal >, CurvePlugKeySlotCaller >( "CurvePlugKeySignal" );
+
+	SignalClass< Animation::CurvePlug::CurvePlugDirectionSignal,
+		DefaultSignalCaller< Animation::CurvePlug::CurvePlugDirectionSignal >, CurvePlugDirectionSlotCaller >( "CurvePlugDirectionSignal" );
 
 	Serialisation::registerSerialiser( Gaffer::Animation::CurvePlug::staticTypeId(), new CurvePlugSerialiser );
 
