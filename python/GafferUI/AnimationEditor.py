@@ -330,8 +330,13 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 		# key interpolation for selected keys
 		interpolation = None if emptySelectedKeys else self.__curveEditor.keyWidget().getInterpolationForSelectedKeys()
 
+		# check there are editable curves
+		emptyEditableCurves = not self.__animationGadget.editablePlugs()
+
 		# build context menu
 		menuDefinition = IECore.MenuDefinition()
+
+		menuDefinition.append( "/KeysHeader", { "divider" : True, "label" : "Selected Keys" } )
 
 		for mode in sorted( Gaffer.Animation.Interpolation.values.values() ) :
 			menuDefinition.append(
@@ -361,7 +366,25 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 				}
 			)
 
-		self.__popupMenu = GafferUI.Menu( menuDefinition, title="Selected Keys" )
+		menuDefinition.append( "/CurvesHeader", { "divider" : True, "label" : "Selected Curves" } )
+
+		for direction in sorted( Gaffer.Animation.Direction.values.values() ) :
+			extrapolation = None if emptyEditableCurves else self.__curveEditor.curveWidget().getExtrapolationForEditableCurves( direction )
+			for mode in sorted( Gaffer.Animation.Extrapolation.values.values() ) :
+				menuDefinition.append(
+					"/Extrapolation/%s/%s" % ( direction.name, mode.name ),
+					{
+						"command" : functools.partial(
+							Gaffer.WeakMethod( self.__setEditableCurvesExtrapolation ),
+							direction=direction,
+							mode=mode
+						),
+						"active" : not emptyEditableCurves,
+						"checkBox" : extrapolation == mode,
+					}
+				)
+
+		self.__popupMenu = GafferUI.Menu( menuDefinition )
 		self.__popupMenu.popup( parent = self )
 
 		return True
@@ -377,6 +400,12 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 		with Gaffer.UndoScope( self.scriptNode() ) :
 			for key in self.__animationGadget.selectedKeys() :
 				key.setTieMode( mode )
+
+	def __setEditableCurvesExtrapolation( self, unused, direction, mode ) :
+
+		with Gaffer.UndoScope( self.scriptNode() ) :
+			for curve in self.__animationGadget.editablePlugs() :
+				curve.setExtrapolation( direction, mode )
 
 	def __repr__( self ) :
 
