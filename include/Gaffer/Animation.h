@@ -86,6 +86,8 @@ class GAFFER_API Animation : public ComputeNode
 			CycleOffset,
 			/// Curve is repeated indefinitely with each repetition mirrored in time.
 			CycleFlop,
+			/// Curve is repeated indefinitely with each repetition inverted in value and offset to preserve continuity.
+			CycleFlip
 		};
 
 		/// Defines direction relative to a key or curve span.

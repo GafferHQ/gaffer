@@ -669,6 +669,43 @@ struct ExtrapolatorCycleFlop
 	}
 };
 
+// cycle flip extrapolator
+
+struct ExtrapolatorCycleFlip
+: public Gaffer::Animation::Extrapolator
+{
+	ExtrapolatorCycleFlip()
+	: Gaffer::Animation::Extrapolator( Gaffer::Animation::Extrapolation::CycleFlip )
+	{}
+
+	double evaluate( const Gaffer::Animation::CurvePlug& curve,
+		const Gaffer::Animation::Direction direction, const double time ) const override
+	{
+		// NOTE : repeat the curve indefinitely, alternately inverting the value of the curve
+		//        with each repetition offset to be relative in value to the last.
+
+		const Gaffer::Animation::Key* const key = curve.getExtrapolationKey( direction );
+		const Gaffer::Animation::Key* const keyOpposite = curve.getExtrapolationKey( Gaffer::Animation::opposite( direction ) );
+
+		const double dt = std::abs( static_cast< double >( key->getTime() ) - static_cast< double >( keyOpposite->getTime() ) );
+		if( dt == 0.0 )
+		{
+			return key->getValue();
+		}
+
+		double count;
+		const double offset = time - key->getTime();
+		const double remainder = std::modf( offset / dt, & count ) * dt;
+
+		const double value = evaluateInKeyRange( curve, static_cast< float >( keyOpposite->getTime() + remainder ) );
+
+		return ( ( static_cast< int >( count ) % 2 ) == 0 ) ? (
+				static_cast< double >( curve.getExtrapolationKey( Gaffer::Animation::Direction::Out )->getValue() ) +
+				static_cast< double >( curve.getExtrapolationKey( Gaffer::Animation::Direction::In )->getValue() ) - value )
+			: value;
+	}
+};
+
 } // namespace
 
 namespace Gaffer
@@ -782,6 +819,7 @@ const Animation::Extrapolator::Container& Animation::Extrapolator::get()
 		ConstExtrapolatorPtr( new ExtrapolatorCycle() ),
 		ConstExtrapolatorPtr( new ExtrapolatorCycleOffset() ),
 		ConstExtrapolatorPtr( new ExtrapolatorCycleFlop() ),
+		ConstExtrapolatorPtr( new ExtrapolatorCycleFlip() )
 	};
 
 	return container;
@@ -2962,6 +3000,8 @@ const char* Animation::toString( const Animation::Extrapolation extrapolation )
 			return "CycleOffset";
 		case Extrapolation::CycleFlop:
 			return "CycleFlop";
+		case Extrapolation::CycleFlip:
+			return "CycleFlip";
 		default:
 			assert( 0 );
 			return 0;
