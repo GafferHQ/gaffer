@@ -548,7 +548,7 @@ class Catalogue::InternalImage : public ImageNode
 
 			private :
 
-				AsynchronousSaver( InternalImagePtr imageCopy, const std::string &fileName )
+				AsynchronousSaver( InternalImagePtr imageCopy, const std::filesystem::path &fileName )
 					:	m_imageCopy( imageCopy )
 				{
 					// Set up an ImageWriter to do the actual saving.
