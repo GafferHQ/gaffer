@@ -381,6 +381,7 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 						),
 						"active" : not emptyEditableCurves,
 						"checkBox" : extrapolation == mode,
+						"description" : Gaffer.Metadata.value( "Animation.Extrapolation.%s" % mode.name, "description" ),
 					}
 				)
 
@@ -942,6 +943,7 @@ class _CurveWidget( GafferUI.GridContainer ) :
 				em.append( "%s" % ( mode.name ), {
 					"command" : functools.partial( Gaffer.WeakMethod( self.__setExtrapolation ), direction=direction, mode=mode ),
 					"checkBox" : functools.partial( Gaffer.WeakMethod( self.__checkBoxStateForExtrapolation ), direction=direction, mode=mode ),
+					"description" : Gaffer.Metadata.value( "Animation.Extrapolation.%s" % mode.name, "description" ),
 				} )
 			self.__extrapolationEditor[ direction ].setMenu( GafferUI.Menu( em ) )
 
