@@ -1316,18 +1316,20 @@ class ScriptNodeTest( GafferTest.TestCase ) :
 
 		for method in ( s.load, functools.partial( s.executeFile, fileName ) ) :
 
-			self.assertRaisesRegex(
-				RuntimeError,
-				"Line 2 of {} : NameError: name 'iDontExist' is not defined".format( fileName ),
-				method
-			)
+			with self.subTest( fileName = fileName, method = method ) :
 
-			with IECore.CapturingMessageHandler() as mh :
-				method( continueOnError = True )
+				self.assertRaisesRegex(
+					RuntimeError,
+					"Line 2 of {} : NameError: name 'iDontExist' is not defined".format( fileName.as_posix() ),
+					method
+				)
 
-			self.assertEqual( len( mh.messages ), 1 )
-			self.assertEqual( mh.messages[0].context, "Line 2 of {}".format( fileName ) )
-			self.assertTrue( "NameError: name 'iDontExist' is not defined" in mh.messages[0].message )
+				with IECore.CapturingMessageHandler() as mh :
+					method( continueOnError = True )
+
+				self.assertEqual( len( mh.messages ), 1 )
+				self.assertEqual( mh.messages[0].context, "Line 2 of {}".format( fileName.as_posix() ) )
+				self.assertTrue( "NameError: name 'iDontExist' is not defined" in mh.messages[0].message )
 
 	def testIsExecuting( self ) :
 
