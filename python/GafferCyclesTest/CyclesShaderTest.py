@@ -73,5 +73,11 @@ class CyclesShaderTest( GafferSceneTest.SceneTestCase ) :
 		shader.loadShader( "attribute" )
 		self.assertEqual( shader["out"].keys(), [ "color", "vector", "fac", "alpha" ] )
 
+	def testLoadAllShaders( self ) :
+
+		shader = GafferCycles.CyclesShader()
+		for s in GafferCycles.shaders :
+			shader.loadShader( s )
+
 if __name__ == "__main__":
 	unittest.main()

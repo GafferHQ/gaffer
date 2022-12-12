@@ -196,6 +196,15 @@ const string nodeName ( Gaffer::GraphComponent *plugParent )
 	return node->relativeName( node->scriptNode() );
 }
 
+using NodeSocket = std::pair<ccl::ustring, ccl::ustring>;
+boost::container::flat_set<NodeSocket> g_socketBlacklist = {
+	// This socket is used to provide a list of available UDIMs
+	// to Cycles, which unlike other renderers, won't look for them
+	// itself. We handle this automatically in ShaderNetworkAlgo, so
+	// there is no need to expose the socket to the user.
+	{ ccl::ustring( "image_texture" ), ccl::ustring( "tiles" ) }
+};
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -480,6 +489,10 @@ void setupPlugs( const ccl::NodeType *nodeType, Gaffer::GraphComponent *plugsPar
 	{
 		for( const ccl::SocketType &socketType : nodeType->inputs )
 		{
+			if( g_socketBlacklist.contains( { nodeType->name, socketType.name } ) )
+			{
+				continue;
+			}
 			validPlugs.insert( setupPlug( nodeType, socketType, plugsParent, direction ) );
 		}
 	}
