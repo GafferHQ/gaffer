@@ -39,6 +39,7 @@ Fixes
 - ValuePlug : Fixed rare deadlock when a TaskParallel compute recurses to a Legacy compute with the _same_ hash.
 - GafferTest : Fixed bug which caused `parallelGetValue()` to use the wrong context.
 - LightEditor : Fixed bug which could cause attribute edits to be made for a parent location instead of the desired one.
+- BackgroundMethod : Fixed bug that could cause the `postCall` to be called on a widget that had already been removed from the UI.
 
 API
 ---

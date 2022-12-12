@@ -36,6 +36,7 @@
 
 import time
 import _thread
+import weakref
 
 import IECore
 
@@ -232,6 +233,32 @@ class BackgroundMethodTest( GafferUITest.TestCase ) :
 		# the post-call stage.
 		self.assertEqual( w.numPostCalls, 1 )
 		self.assertEqual( w.backgroundCallArg, 11 )
+
+	def testDeleteWidgetDuringCall( self ) :
+
+		with GafferUI.Window() as window :
+			w = weakref.ref( self.__TestWidget() )
+
+		window.setVisible( True )
+		self.waitForIdle( 1 )
+
+		w().updateInBackground( 1 )
+		time.sleep( 0.1 ) # Give the background task time to start
+
+		out = []
+		err = []
+		with Gaffer.OutputRedirection( stdOut = out.append, stdErr = err.append ) :
+			# Deleting the window will cancel the background task via
+			# `visibilityChanged`, and the widget will be destroyed before we
+			# can invoke the `postCall`. If we _did_ invoke the `postCall` on
+			# a zombie widget, we'd get PySide errors in our redirected output,
+			# so make sure that doesn't happen.
+			del window
+			self.waitForIdle( 1000 )
+
+		self.assertIsNone( w() )
+		self.assertEqual( out, [] )
+		self.assertEqual( err, [] )
 
 if __name__ == "__main__":
 	unittest.main()
