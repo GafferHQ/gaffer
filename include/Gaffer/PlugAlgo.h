@@ -55,14 +55,19 @@ IE_CORE_FORWARDDECLARE( ValuePlug )
 namespace PlugAlgo
 {
 
+/// Miscellaneous
+/// =============
+
+/// Adds `plug` as a child of `parent`, replacing an identically-named
+/// child if it exists. Where possible, existing values and connections
+/// are transferred from the original plug to the new one.
 GAFFER_API void replacePlug( GraphComponent *parent, PlugPtr plug );
+
+/// Conversion to and from `IECore::Data`
+/// =====================================
 
 /// Creates an appropriate plug to hold the specified data.
 GAFFER_API ValuePlugPtr createPlugFromData( const std::string &name, Plug::Direction direction, unsigned flags, const IECore::Data *value );
-
-/// Extracts a Data value from a plug previously created with createPlugFromData().
-/// \deprecated Use `getValueAsData` instead.
-GAFFER_API IECore::DataPtr extractDataFromPlug( const ValuePlug *plug );
 
 /// Returns a Data value from a plug.
 GAFFER_API IECore::DataPtr getValueAsData( const ValuePlug *plug );
@@ -78,6 +83,9 @@ GAFFER_API bool setValueFromData( const ValuePlug *plug, ValuePlug *leafPlug, co
 /// Returns true if the given plug's value can be set from Data.
 /// If value is provided, then return true if it can be set from Data with this type id
 GAFFER_API bool canSetValueFromData( const ValuePlug *plug, const IECore::Data *value = nullptr );
+
+[[deprecated( "Use `getValueAsData()` instead" )]]
+GAFFER_API IECore::DataPtr extractDataFromPlug( const ValuePlug *plug );
 
 /// Promotion
 /// =========
