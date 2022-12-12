@@ -87,24 +87,6 @@ CyclesShader::~CyclesShader()
 {
 }
 
-Gaffer::Plug *CyclesShader::correspondingInput( const Gaffer::Plug *output )
-{
-	// better to do a few harmless casts than manage a duplicate implementation
-	return const_cast<Gaffer::Plug *>(
-		const_cast<const CyclesShader *>( this )->correspondingInput( output )
-	);
-}
-
-const Gaffer::Plug *CyclesShader::correspondingInput( const Gaffer::Plug *output ) const
-{
-	if( output != outPlug() )
-	{
-		return Shader::correspondingInput( output );
-	}
-
-	return nullptr;
-}
-
 void CyclesShader::loadShader( const std::string &shaderName, bool keepExistingValues )
 {
 
