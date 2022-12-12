@@ -64,5 +64,14 @@ class CyclesShaderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertIsInstance( shader["out"]["fac"], Gaffer.FloatPlug )
 		self.assertIsInstance( shader["out"]["alpha"], Gaffer.FloatPlug )
 
+	def testLoadRemovesUnneededChildren( self ) :
+
+		shader = GafferCycles.CyclesShader()
+		shader.loadShader( "principled_bsdf" )
+		self.assertEqual( shader["out"].keys(), [ "BSDF" ] )
+
+		shader.loadShader( "attribute" )
+		self.assertEqual( shader["out"].keys(), [ "color", "vector", "fac", "alpha" ] )
+
 if __name__ == "__main__":
 	unittest.main()

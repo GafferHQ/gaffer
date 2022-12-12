@@ -54,7 +54,7 @@ namespace SocketHandler
 /// A helper class for mapping Cycles Sockets to Gaffer Plugs.
 Gaffer::Plug *setupPlug( const IECore::InternedString &socketName, int socketType, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction = Gaffer::Plug::In );
 Gaffer::Plug *setupPlug( const ccl::NodeType *nodeType, const ccl::SocketType socketType, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction = Gaffer::Plug::In );
-void setupPlugs( const ccl::NodeType *node, Gaffer::GraphComponent *plugsParent, Gaffer::Plug::Direction direction = Gaffer::Plug::In, bool keepExistingChildren = false );
+void setupPlugs( const ccl::NodeType *node, Gaffer::GraphComponent *plugsParent, Gaffer::Plug::Direction direction = Gaffer::Plug::In );
 void setupLightPlugs( const std::string &shaderName, const ccl::NodeType *nodeType, Gaffer::GraphComponent *plugsParent, bool keepExistingChildren = false );
 
 } // namespace SocketHandler

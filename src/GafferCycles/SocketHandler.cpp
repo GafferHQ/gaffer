@@ -469,7 +469,7 @@ Gaffer::Plug *setupPlug( const ccl::NodeType *nodeType, const ccl::SocketType so
 	return plug;
 }
 
-void setupPlugs( const ccl::NodeType *nodeType, Gaffer::GraphComponent *plugsParent, Gaffer::Plug::Direction direction, bool keepExistingChildren )
+void setupPlugs( const ccl::NodeType *nodeType, Gaffer::GraphComponent *plugsParent, Gaffer::Plug::Direction direction )
 {
 
 	// Make sure we have a plug to represent each socket, reusing plugs wherever possible.
@@ -494,15 +494,12 @@ void setupPlugs( const ccl::NodeType *nodeType, Gaffer::GraphComponent *plugsPar
 
 	// Remove any old plugs which it turned out we didn't need.
 
-	if( !keepExistingChildren )
+	for( int i = plugsParent->children().size() - 1; i >= 0; --i )
 	{
-		for( int i = plugsParent->children().size() - 1; i >= 0; --i )
+		Plug *child = plugsParent->getChild<Plug>( i );
+		if( validPlugs.find( child ) == validPlugs.end() )
 		{
-			Plug *child = plugsParent->getChild<Plug>( i );
-			if( validPlugs.find( child ) == validPlugs.end() )
-			{
-				plugsParent->removeChild( child );
-			}
+			plugsParent->removeChild( child );
 		}
 	}
 }
