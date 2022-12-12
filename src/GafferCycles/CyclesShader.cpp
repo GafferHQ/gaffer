@@ -103,27 +103,6 @@ const Gaffer::Plug *CyclesShader::correspondingInput( const Gaffer::Plug *output
 	}
 
 	return nullptr;
-
-	//const CompoundData *metadata = CyclesShader::metadata();
-	//if( !metadata )
-	//{
-	//	return nullptr;
-	//}
-
-	//const StringData *primaryInput = static_cast<const StringData*>( metadata->member<IECore::CompoundData>( "shader" )->member<IECore::Data>( "primaryInput" ) );
-	//if( !primaryInput )
-	//{
-	//	return nullptr;
-	//}
-
-	//const Plug *result = parametersPlug()->getChild<Plug>( primaryInput->readable() );
-	//if( !result )
-	//{
-	//	IECore::msg( IECore::Msg::Error, "CyclesShader::correspondingInput", boost::format( "Parameter \"%s\" does not exist" ) % primaryInput->readable() );
-	//	return nullptr;
-	//}
-
-	//return result;
 }
 
 void CyclesShader::loadShader( const std::string &shaderName, bool keepExistingValues )
