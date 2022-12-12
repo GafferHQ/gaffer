@@ -63,6 +63,10 @@ namespace PlugAlgo
 /// are transferred from the original plug to the new one.
 GAFFER_API void replacePlug( GraphComponent *parent, PlugPtr plug );
 
+/// Returns `true` if the plug's value is provided by the output
+/// of a ComputeNode, and `false` otherwise.
+GAFFER_API bool dependsOnCompute( const ValuePlug *plug );
+
 /// Conversion to and from `IECore::Data`
 /// =====================================
 

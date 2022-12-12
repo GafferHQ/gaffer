@@ -39,6 +39,7 @@
 
 #include "Gaffer/Box.h"
 #include "Gaffer/CompoundNumericPlug.h"
+#include "Gaffer/ComputeNode.h"
 #include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/Node.h"
 #include "Gaffer/NumericPlug.h"
@@ -161,6 +162,30 @@ void replacePlug( Gaffer::GraphComponent *parent, PlugPtr plug )
 } // namespace PlugAlgo
 
 } // namespace Gaffer
+
+//////////////////////////////////////////////////////////////////////////
+// Misc
+//////////////////////////////////////////////////////////////////////////
+
+bool Gaffer::PlugAlgo::dependsOnCompute( const ValuePlug *plug )
+{
+	if( plug->children().empty() )
+	{
+		plug = plug->source<Gaffer::ValuePlug>();
+		return plug->direction() == Plug::Out && IECore::runTimeCast<const ComputeNode>( plug->node() );
+	}
+	else
+	{
+		for( const auto &child : ValuePlug::Range( *plug ) )
+		{
+			if( dependsOnCompute( child.get() ) )
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+}
 
 //////////////////////////////////////////////////////////////////////////
 // Convert to/from Data

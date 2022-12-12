@@ -105,11 +105,7 @@ class _PrimitiveVariablesFooter( GafferUI.PlugValueWidget ) :
 		result = IECore.MenuDefinition()
 		usedNames = set()
 		for p in self.getPlug().children():
-			# TODO - this method for checking if a plug variesWithContext should probably live in PlugAlgo
-			# ( it's based on Switch::variesWithContext )
-			sourcePlug = p["name"].source()
-			variesWithContext = sourcePlug.direction() == Gaffer.Plug.Direction.Out and isinstance( ComputeNode, sourcePlug.node() )
-			if not variesWithContext:
+			if not Gaffer.PlugAlgo.dependsOnCompute( p ) :
 				usedNames.add( p["name"].getValue() )
 
 		categories = { "Standard" : [], "Custom" : [], "Advanced" : [] }

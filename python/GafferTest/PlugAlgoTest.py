@@ -868,5 +868,38 @@ class PlugAlgoTest( GafferTest.TestCase ) :
 					Gaffer.PlugAlgo.setValueFromData( plug, data )
 				)
 
+	def testDependsOnCompute( self ) :
+
+		add = GafferTest.AddNode()
+		self.assertFalse( Gaffer.PlugAlgo.dependsOnCompute( add["op1"] ) )
+		self.assertFalse( Gaffer.PlugAlgo.dependsOnCompute( add["op2"] ) )
+		self.assertTrue( Gaffer.PlugAlgo.dependsOnCompute( add["sum"] ) )
+
+		node = Gaffer.Node()
+		node["user"]["p"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		self.assertFalse( Gaffer.PlugAlgo.dependsOnCompute( node["user"]["p"] ) )
+		node["user"]["p"].setInput( add["op1"] )
+		self.assertFalse( Gaffer.PlugAlgo.dependsOnCompute( node["user"]["p"] ) )
+		node["user"]["p"].setInput( add["sum"] )
+		self.assertTrue( Gaffer.PlugAlgo.dependsOnCompute( node["user"]["p"] ) )
+
+		stringNode = GafferTest.StringInOutNode()
+		self.assertFalse( Gaffer.PlugAlgo.dependsOnCompute( stringNode["in"] ) )
+		self.assertTrue( Gaffer.PlugAlgo.dependsOnCompute( stringNode["out"] ) )
+
+		# Although string substitutions may result in a value that varies with
+		# context, they are not implemented via a compute.
+		stringNode["in"].setValue( "${frame}" )
+		self.assertFalse( Gaffer.PlugAlgo.dependsOnCompute( stringNode["in"] ) )
+
+		# If a child of a compound plug depends on a compute, then so does
+		# the parent as far as we're concerned.
+		node["user"]["v"] = Gaffer.V3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		self.assertFalse( Gaffer.PlugAlgo.dependsOnCompute( node["user"]["v"] ) )
+		node["user"]["v"]["x"].setInput( add["op1"] )
+		self.assertFalse( Gaffer.PlugAlgo.dependsOnCompute( node["user"]["v"] ) )
+		node["user"]["v"]["y"].setInput( add["sum"] )
+		self.assertTrue( Gaffer.PlugAlgo.dependsOnCompute( node["user"]["v"] ) )
+
 if __name__ == "__main__":
 	unittest.main()
