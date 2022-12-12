@@ -15,7 +15,7 @@
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
 #
-#      * Neither the name of Image Engine Design Inc nor the names of
+#      * Neither the name of Cinesite VFX Ltd nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
@@ -34,14 +34,35 @@
 #
 ##########################################################################
 
-from .CyclesLightTest import CyclesLightTest
-from .InteractiveCyclesRenderTest import InteractiveCyclesRenderTest
-from .ModuleTest import ModuleTest
-from .CyclesLightTest import CyclesLightTest
-from .CyclesShaderTest import CyclesShaderTest
+import unittest
 
-from .IECoreCyclesPreviewTest import *
+import Gaffer
+import GafferOSL
+import GafferSceneTest
+import GafferCycles
+
+class CyclesShaderTest( GafferSceneTest.SceneTestCase ) :
+
+	def testInitialPlugs( self ) :
+
+		shader = GafferCycles.CyclesShader()
+		self.assertIn( "parameters", shader )
+		self.assertIn( "out", shader )
+		self.assertIs( type( shader["parameters"] ), Gaffer.Plug )
+		self.assertIs( type( shader["out"] ), Gaffer.Plug )
+		self.assertEqual( len( shader["parameters"] ), 0 )
+		self.assertEqual( len( shader["out"] ), 0 )
+
+	def testLoadOutputs( self ) :
+
+		shader = GafferCycles.CyclesShader()
+		shader.loadShader( "attribute" )
+
+		self.assertEqual( shader["out"].keys(), [ "color", "vector", "fac", "alpha" ] )
+		self.assertIsInstance( shader["out"]["color"], Gaffer.Color3fPlug )
+		self.assertIsInstance( shader["out"]["vector"], Gaffer.V3fPlug )
+		self.assertIsInstance( shader["out"]["fac"], Gaffer.FloatPlug )
+		self.assertIsInstance( shader["out"]["alpha"], Gaffer.FloatPlug )
 
 if __name__ == "__main__":
-	import unittest
 	unittest.main()

@@ -593,25 +593,6 @@ void setupLightPlugs( const std::string &shaderName, const ccl::NodeType *nodeTy
 	}
 }
 
-Gaffer::Plug *setupOutputNodePlug( Gaffer::GraphComponent *plugParent )
-{
-	Plug *existingPlug = plugParent->getChild<Plug>( "out" );
-	if(
-		existingPlug &&
-		existingPlug->direction() == Gaffer::Plug::Out &&
-		existingPlug->typeId() == Plug::staticTypeId()
-	)
-	{
-		existingPlug->setFlags( Gaffer::Plug::Dynamic, false );
-		return existingPlug;
-	}
-
-	PlugPtr plug = new Plug( "out", Gaffer::Plug::Out, Plug::Default );
-	PlugAlgo::replacePlug( plugParent, plug );
-
-	return plug.get();
-}
-
 } // namespace SocketHandler
 
 } // namespace GafferCycles
