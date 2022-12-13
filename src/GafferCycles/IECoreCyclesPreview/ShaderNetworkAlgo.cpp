@@ -363,17 +363,6 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 		}
 	}
 
-	if( shaderNetwork->outputShader() == shader && !boost::starts_with( shader->getType(), "cycles:aov:" ) )
-	{
-		// Connect to the main output node of the cycles shader graph.
-		// Either cycles:surface, cycles:volume or cycles:displacement.
-		ccl::ShaderNode *outputNode = (ccl::ShaderNode*)shaderGraph->output();
-		string input = string( shader->getType().c_str() + 7 );
-		if( ccl::ShaderOutput *shaderOutput = IECoreCycles::ShaderNetworkAlgo::output( node, outputParameter.name ) )
-		    if( ccl::ShaderInput *shaderInput = IECoreCycles::ShaderNetworkAlgo::input( outputNode, input ) )
-				shaderGraph->connect( shaderOutput, shaderInput );
-	}
-
 	return node;
 }
 
@@ -491,36 +480,33 @@ ccl::ShaderGraph *convertGraph( const IECoreScene::ShaderNetwork *surfaceShader,
 								const std::string &namePrefix )
 {
 	ccl::ShaderGraph *graph = new ccl::ShaderGraph();
-	if( surfaceShader && surfaceShader->getOutput().shader.string().empty() )
+
+	using NamedNetwork = std::pair<std::string, const IECoreScene::ShaderNetwork *>;
+	for( const auto &[name, network] : { NamedNetwork( "surface", surfaceShader ), NamedNetwork( "displacement", displacementShader ), NamedNetwork( "volume", volumeShader ) } )
 	{
-		msg( Msg::Warning, "IECoreCycles::ShaderNetworkAlgo", "Shader has no output" );
-	}
-	else if( volumeShader && volumeShader->getOutput().shader.string().empty() )
-	{
-		msg( Msg::Warning, "IECoreCycles::ShaderNetworkAlgo", "Shader has no output" );
-	}
-	else
-	{
-		if( surfaceShader )
+		if( !network )
 		{
-			ShaderNetworkPtr toConvert = surfaceShader->copy();
-			IECoreScene::ShaderNetworkAlgo::convertOSLComponentConnections( toConvert.get() );
-			ShaderMap converted;
-			convertWalk( toConvert->getOutput(), toConvert.get(), namePrefix, shaderManager, graph, converted );
+			continue;
 		}
-		if( displacementShader )
+		if( network->getOutput().shader.string().empty() )
 		{
-			ShaderNetworkPtr toConvert = surfaceShader->copy();
-			IECoreScene::ShaderNetworkAlgo::convertOSLComponentConnections( toConvert.get() );
-			ShaderMap converted;
-			convertWalk( toConvert->getOutput(), toConvert.get(), namePrefix, shaderManager, graph, converted );
+			msg( Msg::Warning, "IECoreCycles::ShaderNetworkAlgo", "Shader has no output" );
+			continue;
 		}
-		if( volumeShader )
+
+		ShaderNetworkPtr toConvert = network->copy();
+		IECoreScene::ShaderNetworkAlgo::convertOSLComponentConnections( toConvert.get() );
+		ShaderMap converted;
+		ccl::ShaderNode *node = convertWalk( toConvert->getOutput(), toConvert.get(), namePrefix, shaderManager, graph, converted );
+
+		if( node )
 		{
-			ShaderNetworkPtr toConvert = surfaceShader->copy();
-			IECoreScene::ShaderNetworkAlgo::convertOSLComponentConnections( toConvert.get() );
-			ShaderMap converted;
-			convertWalk( toConvert->getOutput(), toConvert.get(), namePrefix, shaderManager, graph, converted );
+			// Connect to the main output node of the cycles shader graph, either
+			// surface, displacement or volume.
+			if( ccl::ShaderOutput *shaderOutput = output( node, network->getOutput().name ) )
+			{
+				graph->connect( shaderOutput, input( (ccl::ShaderNode *)graph->output(), name ) );
+			}
 		}
 	}
 
