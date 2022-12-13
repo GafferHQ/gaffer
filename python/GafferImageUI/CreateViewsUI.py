@@ -129,15 +129,14 @@ class _ViewsFooter( GafferUI.PlugValueWidget ) :
 
 			GafferUI.Spacer( imath.V2i( GafferUI.PlugWidget.labelWidth(), 1 ) )
 
-			button = GafferUI.Button( image = "plus.png", hasFrame = False )
-			button.setEnabled( not Gaffer.MetadataAlgo.readOnly( plug ) )
-			button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ), scoped = False )
+			self.__button = GafferUI.Button( image = "plus.png", hasFrame = False )
+			self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ), scoped = False )
 
 			GafferUI.Spacer( imath.V2i( 1 ), imath.V2i( 999999, 1 ), parenting = { "expand" : True } )
 
-	def _updateFromPlug( self ) :
+	def _updateFromEditable( self ) :
 
-		self.setEnabled( self._editable() )
+		self.__button.setEnabled( self._editable() )
 
 	def __buttonClicked( self, widget ) :
 
