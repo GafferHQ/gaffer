@@ -34,7 +34,7 @@
 #
 ##########################################################################
 
-import os
+import pathlib
 import re
 
 import IECore
@@ -48,34 +48,37 @@ import Gaffer
 # loaded automatically by Gaffer.
 def exportExtension( name, boxes, directory ) :
 
-	pythonDir = os.path.join( directory, "python", name )
-	os.makedirs( pythonDir )
+	if isinstance( directory, str ) :
+		directory = pathlib.Path( directory )
 
-	with open( os.path.join( pythonDir, "__init__.py" ), "w" ) as initFile :
+	pythonDir = directory / "python" / name
+	pythonDir.mkdir( parents = True, exist_ok = True )
+
+	with open( pythonDir / "__init__.py", "w" ) as initFile :
 
 		for box in boxes :
 
-			with open( os.path.join( pythonDir, box.getName() + ".py" ), "w" ) as nodeFile :
+			with open( pythonDir / (box.getName() + ".py"), "w" ) as nodeFile :
 				nodeFile.write( __nodeDefinition( box, name ) )
 
 			initFile.write( "from .{name} import {name}\n".format( name = box.getName() ) )
 
-	uiDir = os.path.join( directory, "python", name + "UI" )
-	os.makedirs( uiDir )
+	uiDir = directory / "python" / (name + "UI")
+	uiDir.mkdir( parents = True, exist_ok = True )
 
-	with open( os.path.join( uiDir, "__init__.py" ), "w" ) as initFile :
+	with open( uiDir / "__init__.py", "w" ) as initFile :
 
 		for box in boxes :
 
-			with open( os.path.join( uiDir, box.getName() + "UI.py" ), "w" ) as uiFile :
+			with open( uiDir / (box.getName() + "UI.py"), "w" ) as uiFile :
 				uiFile.write( __uiDefinition( box, name ) )
 
 			initFile.write( "from . import {name}UI\n".format( name = box.getName() ) )
 
-	startupDir = os.path.join( directory, "startup", "gui" )
-	os.makedirs( startupDir )
+	startupDir = directory / "startup" / "gui"
+	startupDir.mkdir( parents = True, exist_ok = True )
 
-	with open( os.path.join( startupDir, name + ".py" ), "w" ) as startupFile :
+	with open( startupDir / (name + ".py"), "w" ) as startupFile :
 
 		nodeMenuDefinition = []
 		for box in boxes :
