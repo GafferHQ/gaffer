@@ -67,6 +67,7 @@ API
 - Widget : Added support for a `_postContructor()` method, which is called after the widget is fully constructed. This can be useful for performing post-initialisation work from a base class.
 - GafferTest : Added ObjectPlug overloads for `repeatGetValue()` and `parallelGetValue()`.
 - SceneTestCase : Added `assertParallelGetValueComputesObjectOnce()`. This can be used to check that expensive computes are using an appropriate cache policy.
+- Gaffer ( Python module ) : Added `rootPath()` and `executablePath()` methods.
 
 Breaking Changes
 ----------------

@@ -51,7 +51,7 @@ INSTALL_DIR = os.path.join( "install", os.environ["GAFFER_BUILD_NAME"] )
 
 PACKAGE_FILE = "{}.{}".format(
 	os.environ["GAFFER_BUILD_NAME"],
-	{"win32" : "zip"}.get( sys.platform, "tar.gz" )
+	os.environ["PACKAGE_EXTENSION"]
 )
 
 SPHINX = os.environ["GAFFER_SPHINX"]
@@ -65,3 +65,4 @@ if sys.platform == "win32" :
 	APPLESEED_ROOT = None
 	CYCLES_ROOT = None
 	CXXFLAGS = "\"-DBOOST_ALL_NO_LIB\""
+	SPHINX = "noSphinxYet"

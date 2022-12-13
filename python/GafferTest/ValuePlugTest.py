@@ -906,9 +906,8 @@ class ValuePlugTest( GafferTest.TestCase ) :
 			try :
 				env = os.environ.copy()
 				env["VALUEPLUGTEST_SUBPROCESS"] = "1"
-				executable = "gaffer" if os.name != "nt" else "gaffer.cmd"
 				subprocess.check_output(
-					[ executable, "test", "-threads", "3", "GafferTest.ValuePlugTest.testCancellationOfSecondGetValueCall" ],
+					[ str( Gaffer.executablePath( True ) ), "test", "-threads", "3", "GafferTest.ValuePlugTest.testCancellationOfSecondGetValueCall" ],
 					stderr = subprocess.STDOUT,
 					env = env
 				)

@@ -62,11 +62,12 @@ jobs:
           - name: windows
             os: windows-2019
             buildType: RELEASE
-            publish: false
+            publish: true
             containerImage:
             dependenciesURL: https://github.com/ImageEngine/cortex/releases/download/10.4.3.0/cortex-10.4.3.0-windows-python3.zip
             testRunner: Invoke-Expression
-            testArguments: GafferTest.FileSystemPathTest
+            testArguments: GafferTest
+            sconsCacheMegabytes: 400
 
     runs-on: ${{ matrix.os }}
 
@@ -208,19 +209,19 @@ jobs:
     - name: Validate
       run: |
         echo "::add-matcher::./.github/workflows/main/problemMatchers/validateRelease.json"
-        ./config/validateRelease.py --archive ${{ env.GAFFER_BUILD_NAME }}.tar.gz ${{ env.GAFFER_VALIDATE_EXTRA_FLAGS }}
+        python ./config/validateRelease.py --archive ${{ env.GAFFER_BUILD_NAME }}.${{ env.PACKAGE_EXTENSION }} ${{ env.GAFFER_VALIDATE_EXTRA_FLAGS }}
         echo "::remove-matcher owner=validateRelease::"
       if: matrix.publish
 
     - uses: actions/upload-artifact@v2
       with:
         name: ${{ env.GAFFER_BUILD_NAME }}
-        path: ${{ env.GAFFER_BUILD_NAME }}.tar.gz
+        path: ${{ env.GAFFER_BUILD_NAME }}.${{ env.PACKAGE_EXTENSION }}
       if: matrix.publish
 
     - name: Publish Release
       run: |
-        ./config/publishRelease.py --archive ${{ env.GAFFER_BUILD_NAME }}.tar.gz --repo ${{ github.repository }} --releaseId ${{ env.GAFFER_GITHUB_RELEASEID }}
+        python ./config/publishRelease.py --archive ${{ env.GAFFER_BUILD_NAME }}.${{ env.PACKAGE_EXTENSION }} --repo ${{ github.repository }} --releaseId ${{ env.GAFFER_GITHUB_RELEASEID }}
       if: matrix.publish && env.GAFFER_GITHUB_RELEASEID != ''
       env:
         GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -230,7 +231,7 @@ jobs:
       # files into `./sconsCache` with every build, we must trim its size to avoid
       # unbounded growth. In practice, the archives that get uploaded are much smaller
       # than the limit we apply here, because they're compressed.
-      run: ./.github/workflows/main/limitDirectorySize.py --directory ./sconsCache --megabytes ${{ matrix.sconsCacheMegabytes }} --verbose
+      run: python ./.github/workflows/main/limitDirectorySize.py --directory ./sconsCache --megabytes ${{ matrix.sconsCacheMegabytes }} --verbose
 
     - name: Debug Failures
       run: |

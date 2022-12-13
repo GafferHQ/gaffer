@@ -171,3 +171,16 @@ with open( os.environ["GITHUB_ENV"], "a" ) as f :
 
 	print( "Setting $GAFFER_GITHUB_RELEASEID to '%s'" % releaseId )
 	f.write( 'GAFFER_GITHUB_RELEASEID=%s\n' % releaseId )
+
+	if os.name == "nt" :
+		packageExtension = "zip"
+
+		# \todo Remove this when docs are ready to build
+		print( "Setting $GAFFER_VALIDATE_EXTRA_FLAGS to '--skipDocs'" )
+		f.write( 'GAFFER_VALIDATE_EXTRA_FLAGS=--skipDocs\n' )
+
+	else :
+		packageExtension = "tar.gz"
+	
+	print( "Setting $PACKAGE_EXTENSION to '%s'" %packageExtension )
+	f.write( 'PACKAGE_EXTENSION=%s\n' %packageExtension )

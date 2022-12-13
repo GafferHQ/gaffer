@@ -39,6 +39,7 @@ import argparse
 import os
 import sys
 import tarfile
+import zipfile
 
 # A script to validate a Gaffer release archive
 
@@ -81,47 +82,64 @@ else :
 	requiredPaths.append( os.path.join( "doc", "gaffer", "html", "index.html" ) )
 
 for module in (
-	"Gaffer", "GafferAppleseed", "GafferDelight",
+	"Gaffer", "GafferDelight",
 	"GafferDispatch", "GafferImage", "GafferOSL", "GafferScene",
 	"GafferTractor", "GafferVDB"
 ) :
 	requiredPaths.append( os.path.join( "python", module ) )
 	requiredPaths.append( os.path.join( "python", "%sUI" % module ) )
 
-with tarfile.open( args.archive, "r:gz" ) as a:
+if os.name != "nt" :
+	requiredPaths.append( os.path.join( "python", "GafferAppleseed" ) )
+	requiredPaths.append( os.path.join( "python", "%sUI" % "GafferAppleseed" ) )
 
-	# getmember still reads the whole archive, so might as well grab them all
-	# as we go. We need to strip the first directory from all paths as that
-	# contains the release name.
+rawMembers = []
 
-	archivePaths = set()
+if args.archive.endswith( ".tar.gz" ) :
 
-	for m in a.getmembers() :
-		# ignore anything not under the release directory
-		if os.sep not in m.name :
-			continue
-		# Strip the release dir and any empty components at the end
-		relPath = os.path.join( *m.name.split( os.sep )[1:] )
-		archivePaths.add( os.path.normpath( relPath ) )
+	with tarfile.open( args.archive, "r:gz" ) as a:
 
-	missing = [ p for p in requiredPaths if p not in archivePaths ]
-	if missing :
-		sys.stderr.write(
-			"Validation failed\n%s\n"
-				% "\n".join( [ "ERROR: %s is missing from the archive" % m for m in missing ] )
-		)
-		sys.exit( 1 )
+		# getmember still reads the whole archive, so might as well grab them all
+		# as we go. We need to strip the first directory from all paths as that
+		# contains the release name.
 
-		# We've seen sporadic validation failures in CI, temp hack to debug
-		print( "\n------------------------" )
-		print( "Considered archive paths" )
-		print( "------------------------" )
-		print( "\n".join( sorted(archivePaths) ) )
-		print( "\n------------------------" )
-		print( "All archive paths" )
-		print( "------------------------" )
-		print( "\n".join( [ m.name for m in a.getmembers() ] ) )
+		for m in a.getmembers() :
+			rawMembers.append( m.name )
 
-		sys.exit( 1 )
+elif args.archive.endswith( ".zip" ) :
+
+	with zipfile.ZipFile( args.archive, "r" ) as a :
+
+		rawMembers = a.namelist()
+
+archivePaths = set()
+
+for m in rawMembers :
+	# ignore anything not under the release directory
+	if "/" not in m :
+		continue
+	# Strip the release dir and any empty components at the end
+	relPath = os.path.join( *m.split( "/" )[1:] )
+	archivePaths.add( os.path.normpath( relPath ) )
+
+missing = [ p for p in requiredPaths if p not in archivePaths ]
+if missing :
+	sys.stderr.write(
+		"Validation failed\n%s\n"
+			% "\n".join( [ "ERROR: %s is missing from the archive" % m for m in missing ] )
+	)
+	sys.exit( 1 )
+
+	# We've seen sporadic validation failures in CI, temp hack to debug
+	print( "\n------------------------" )
+	print( "Considered archive paths" )
+	print( "------------------------" )
+	print( "\n".join( sorted(archivePaths) ) )
+	print( "\n------------------------" )
+	print( "All archive paths" )
+	print( "------------------------" )
+	print( "\n".join( [ m.name for m in rawMembers ] ) )
+
+	sys.exit( 1 )
 
 print( "Archive appears OK" )
