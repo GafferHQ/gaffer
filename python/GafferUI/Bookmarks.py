@@ -34,7 +34,6 @@
 #
 ##########################################################################
 
-import os
 import weakref
 
 import IECore
@@ -326,5 +325,5 @@ class Bookmarks( object ) :
 		else :
 			serialization += "\n".join( bookmarkSerializations )
 
-		with open( os.path.join( self.__applicationRoot().preferencesLocation(), "bookmarks.py" ), "w" ) as f :
+		with open( self.__applicationRoot().preferencesLocation() / "bookmarks.py", "w" ) as f :
 			f.write( serialization )
