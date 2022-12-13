@@ -45,6 +45,8 @@ import GafferUI
 import GafferImage
 import GafferImageUI
 
+from GafferUI.PlugValueWidget import sole
+
 from Qt import QtGui
 from Qt import QtWidgets
 from Qt import QtCore
@@ -244,8 +246,6 @@ Gaffer.Metadata.registerNode(
 			Controls whether to use the fast GPU path for applying exposure, gamma, and displayTransform.
 			""",
 
-			"plugValueWidget:type", "GafferImageUI.ImageViewUI._LutGPUPlugValueWidget",
-			"label", "",
 			"toolbarLayout:activator", "gpuAvailable",
 
 			# Turning off GPU mode means we can't properly support efficient wipes.  Since we no longer
@@ -309,7 +309,6 @@ class _TogglePlugValueWidget( GafferUI.PlugValueWidget ) :
 				plugValueWidget.numericWidget().setFixedCharacterWidth( 5 )
 
 		self.__toggleValue = Gaffer.Metadata.value( plug, "togglePlugValueWidget:defaultToggleValue" )
-		self._updateFromPlug()
 
 	def hasLabel( self ) :
 
@@ -326,18 +325,18 @@ class _TogglePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return result
 
-	def _updateFromPlug( self ) :
+	def _updateFromValues( self, values, exception ) :
 
-		with self.getContext() :
-			value = self.getPlug().getValue()
-
+		value = sole( values )
 		if value != self.getPlug().defaultValue() :
 			self.__toggleValue = value
 			self.__button.setImage( self.__imagePrefix + "On.png" )
 		else :
 			self.__button.setImage( self.__imagePrefix + "Off.png" )
 
-		self.setEnabled( self.getPlug().settable() )
+	def _updateFromEditable( self ) :
+
+		self.__button.setEnabled( self._editable() )
 
 	def __clicked( self, button ) :
 
@@ -537,15 +536,15 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		plug.node()["colorInspector"]["evaluator"]["pixelColor"].getInput().node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__updateFromImageNode ), scoped = False )
 
-		plug.node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self._plugDirtied ), scoped = False )
+		plug.node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__plugDirtied ), scoped = False )
 		plug.node()["in"].getInput().node().scriptNode().context().changedSignal().connect( Gaffer.WeakMethod( self.__updateFromContext ), scoped = False )
 		Gaffer.Metadata.plugValueChangedSignal( self.getPlug().node() ).connect( Gaffer.WeakMethod( self.__plugMetadataChanged ), scoped = False )
 
 		self.__updateLabels( [ imath.V2i( 0 ) ] * 2 , [ imath.Color4f( 0, 0, 0, 1 ) ] * 2 )
 
 		# Set initial state of mode icons
-		self._plugDirtied( plug["mode"] )
-		self._plugDirtied( self.getPlug().node()["compare"]["mode"] )
+		self.__plugDirtied( plug["mode"] )
+		self.__plugDirtied( self.getPlug().node()["compare"]["mode"] )
 
 	def __addInspector( self ):
 		parent = self.getPlug().parent()
@@ -571,23 +570,28 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__updateLazily()
 
-	def _plugDirtied( self, childPlug ):
-		if childPlug == self.getPlug()["mode"]:
-			mode = self.getPlug()["mode"].getValue()
+	# We don't fit neatly into PlugValueWidget's `_updateFromValues()` scheme,
+	# because we have a lot of custom logic in `__getSampleSources` and also depend
+	# on plug's that other than `self.getPlug()`. So we implement our own updates
+	# manually via `__plugDirtied`.
+	def __plugDirtied( self, childPlug ):
 
-			# TODO - should GafferUI.Image have a setImage?
-			self.__modeImage._qtWidget().setPixmap( GafferUI.Image._qtPixmapFromFile( [ "sourceCursor.png", "sourcePixel.png", "sourceArea.png" ][ mode ]  ) )
-			self.__updateLazily()
-
-		if not self.getPlug().node():
-			# If we've been unparented, we're being deleted, and we no longer need to worry about updating anything
+		if self.getPlug().node() is None :
+			# If the plug has been unparented, we're going to be deleted, and we
+			# no longer need to worry about updating anything.
 			return
 
-		if childPlug == self.getPlug().node()["compare"]["mode"]:
+		if childPlug == self.getPlug()["mode"]:
+			mode = self.getPlug()["mode"].getValue()
+			## \todo - should GafferUI.Image have a setImage?
+			self.__modeImage._qtWidget().setPixmap( GafferUI.Image._qtPixmapFromFile( [ "sourceCursor.png", "sourcePixel.png", "sourceArea.png" ][ mode ]  ) )
+		elif childPlug == self.getPlug().node()["compare"]["mode"]:
 			comparing = self.getPlug().node()["compare"]["mode"].getValue() != ""
 			for c in self.__colorValueWidgets:
 				c.setLabelVisible( comparing )
 			self.__colorValueWidgets[1].setVisible( comparing )
+			self.__updateLazily()
+		elif childPlug == self.getPlug() :
 			self.__updateLazily()
 
 	def __plugMetadataChanged( self, plug, key, reason ):
@@ -595,10 +599,6 @@ class _ColorInspectorPlugValueWidget( GafferUI.PlugValueWidget ) :
 			# We could avoid the extra compute of the color at the cost of a little extra complexity if
 			# we stored the last evaluated color so we could directly call _updateLabels
 			self.__updateLazily()
-
-	def _updateFromPlug( self ) :
-
-		self.__updateLazily()
 
 	def __updateFromContext( self, context, name ) :
 
@@ -1116,13 +1116,13 @@ class _SoloChannelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		GafferUI.PlugValueWidget.__init__( self, self.__button, plug, **kw )
 
-		self._updateFromPlug()
+	def _updateFromValues( self, values, exception ) :
 
-	def _updateFromPlug( self ) :
+		self.__button.setImage( "soloChannel{0}.png".format( sole( values ) ) )
 
-		with Gaffer.Context() :
+	def _updateFromEditable( self ) :
 
-			self.__button.setImage( "soloChannel{0}.png".format( self.getPlug().getValue() ) )
+		self.__button.setEnabled( self._editable() )
 
 	def __menuDefinition( self ) :
 
@@ -1160,85 +1160,6 @@ class _SoloChannelPlugValueWidget( GafferUI.PlugValueWidget ) :
 					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), -2 ),
 					"checkBox" : soloChannel == -2,
 					"shortCut" : "L"
-				}
-			)
-
-		return m
-
-	def __setValue( self, value, *unused ) :
-
-		self.getPlug().setValue( value )
-
-##########################################################################
-# _LutGPUPlugValueWidget
-##########################################################################
-
-class _LutGPUPlugValueWidget( GafferUI.PlugValueWidget ) :
-
-	def __init__( self, plug, **kw ) :
-
-		self.__button = GafferUI.MenuButton(
-			image = "lutGPU.png",
-			hasFrame = False,
-			menu = GafferUI.Menu(
-				Gaffer.WeakMethod( self.__menuDefinition ),
-				title = "LUT Mode",
-			)
-		)
-
-		GafferUI.PlugValueWidget.__init__( self, self.__button, plug, **kw )
-
-		plug.node().plugSetSignal().connect( Gaffer.WeakMethod( self.__plugSet ), scoped = False )
-
-		self._updateFromPlug()
-
-	def getToolTip( self ) :
-		text = "# LUT Mode\n\n"
-		if self.__button.getEnabled():
-			if self.getPlug().getValue():
-				text += "Running LUT on GPU."
-			else:
-				text += "Running LUT on CPU."
-			text += "\n\nAlt+G to toggle"
-		else:
-			text += "GPU not supported by current DisplayTransform"
-		return text
-
-	def __plugSet( self, plug ) :
-		n = plug.node()
-		if plug == n["displayTransform"] :
-			self._updateFromPlug()
-
-	def _updateFromPlug( self ) :
-
-		with self.getContext() :
-			gpuSupported = isinstance(
-				GafferImageUI.ImageView.createDisplayTransform( self.getPlug().node()["displayTransform"].getValue() ),
-				GafferImage.OpenColorIOTransform
-			)
-
-			gpuOn = gpuSupported and self.getPlug().getValue()
-			self.__button.setImage( "lutGPU.png" if gpuOn else "lutCPU.png" )
-			self.__button.setEnabled( gpuSupported )
-
-	def __menuDefinition( self ) :
-
-		with self.getContext() :
-			lutGPU = self.getPlug().getValue()
-
-		n = self.getPlug().node()["displayTransform"].getValue()
-		gpuSupported = isinstance( GafferImageUI.ImageView.createDisplayTransform( n ), GafferImage.OpenColorIOTransform )
-		m = IECore.MenuDefinition()
-		for name, value in [
-			( "GPU", True ),
-			( "CPU", False )
-		] :
-			m.append(
-				"/" + name,
-				{
-					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), value ),
-					"checkBox" : lutGPU == value,
-					"active" : gpuSupported
 				}
 			)
 
@@ -1356,19 +1277,20 @@ class _CompareParentPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		GafferUI.WidgetAlgo.joinEdges( self.__row[:], GafferUI.ListContainer.Orientation.Horizontal )
 
-		self._updateFromPlug()
-
 		# We connect to the front, and unconditionally return True from all these methods, to
 		# ensure that we never run any of the default signal handlers from PlugValueWidget
 		self.dragEnterSignal().connectFront( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
 		self.dragLeaveSignal().connectFront( Gaffer.WeakMethod( self.__dragLeave ), scoped = False )
 		self.dropSignal().connectFront( Gaffer.WeakMethod( self.__drop ), scoped = False )
 
-	def _updateFromPlug( self ) :
+	@staticmethod
+	def _valuesForUpdate( plugs ) :
 
-		with Gaffer.Context() :
-			m = self.getPlug()["mode"].getValue()
+		return [ p["mode"].getValue() for p in plugs ]
 
+	def _updateFromValues( self, values, exception ) :
+
+		m = sole( values )
 		# Disable all but mode plug if mode is "" ( comparison disabled )
 		for i in self.__row[1:]:
 			i.setEnabled( m != "" )
@@ -1439,14 +1361,10 @@ class _CompareModePlugValueWidget( GafferUI.PlugValueWidget ) :
 			scoped = False
 		)
 
-		self._updateFromPlug()
+	def _updateFromValues( self, values, exception ) :
 
-	def _updateFromPlug( self ) :
-
-		with Gaffer.Context() :
-			v = self.getPlug().getValue()
-
-		if v != "":
+		v = sole( values )
+		if v :
 			Gaffer.Metadata.registerValue( self.getPlug(), "imageViewer:lastCompareMode", v )
 
 		icon = self.__iconDict[v] if v in self.__iconDict else "compareModeNone.png"
@@ -1529,15 +1447,11 @@ class _CompareWipePlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.__toggle  ), scoped = False)
 		plug.node().viewportGadget().keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
 
-		self._updateFromPlug()
+	def _updateFromValues( self, values, exception ) :
 
-	def _updateFromPlug( self ) :
-
-		with Gaffer.Context() :
-			v = self.getPlug().getValue()
-
-		icon = "wipeEnabled.png" if v else "wipeDisabled.png"
-		self.__button.setImage( icon )
+		self.__button.setImage(
+			"wipeEnabled.png" if sole( values ) else "wipeDisabled.png"
+		)
 
 	def __keyPress( self, gadget, event ) :
 
