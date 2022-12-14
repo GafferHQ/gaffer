@@ -260,12 +260,6 @@ void Context::EditableScope::set( const IECore::InternedString &name, const T *v
 }
 
 template<typename T, typename Enabler>
-void Context::EditableScope::set( const IECore::InternedString &name, const T &value )
-{
-	m_context->set( name, value );
-}
-
-template<typename T, typename Enabler>
 void Context::EditableScope::setAllocated( const IECore::InternedString &name, const T &value )
 {
 	m_context->set( name, value );

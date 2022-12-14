@@ -365,16 +365,6 @@ ImagePlug::ChannelDataScope::ChannelDataScope( const Gaffer::ThreadState &thread
 {
 }
 
-void ImagePlug::ChannelDataScope::setTileOrigin( const V2i &tileOrigin )
-{
-	setAllocated( tileOriginContextName, tileOrigin );
-}
-
-void ImagePlug::ChannelDataScope::setChannelName( const std::string &channelName )
-{
-	setAllocated( channelNameContextName, channelName );
-}
-
 void ImagePlug::ChannelDataScope::setTileOrigin( const V2i *tileOrigin )
 {
 	set( tileOriginContextName, tileOrigin );

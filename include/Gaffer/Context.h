@@ -232,10 +232,6 @@ class GAFFER_API Context : public IECore::RefCounted
 				template<typename T>
 				void set( const IECore::InternedString &name, const T *value );
 
-				template<typename T, typename Enabler = std::enable_if_t<!std::is_pointer<T>::value > >
-				[[deprecated("Use faster pointer version, or use the more explicit setAllocated if you actually need to allocate ")]]
-				void set( const IECore::InternedString &name, const T &value );
-
 				/// Sets a variable from a copy of `value`. This is more expensive than the
 				/// pointer version above, and should be avoided where possible.
 				template<typename T, typename Enabler = std::enable_if_t<!std::is_pointer<T>::value > >
@@ -249,8 +245,6 @@ class GAFFER_API Context : public IECore::RefCounted
 				void setFrame( float frame );
 				void setTime( float timeInSeconds );
 
-				[[deprecated("Use faster pointer version")]]
-				void setFramesPerSecond( float framesPerSecond );
 				void setFramesPerSecond( const float *framesPerSecond );
 
 				void remove( const IECore::InternedString &name );

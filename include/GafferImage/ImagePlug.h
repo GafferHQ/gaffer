@@ -187,11 +187,6 @@ class GAFFERIMAGE_API ImagePlug : public Gaffer::ValuePlug
 			ChannelDataScope( const Gaffer::Context *context );
 			ChannelDataScope( const Gaffer::ThreadState &threadState );
 
-			[[deprecated("Use faster pointer version")]]
-			void setTileOrigin( const Imath::V2i &tileOrigin );
-			[[deprecated("Use faster pointer version")]]
-			void setChannelName( const std::string &channelName );
-
 			// These fast calls take pointers, and it is the caller's
 			// responsibility to ensure that the memory pointed to
 			// stays valid for the lifetime of the ChannelDataScope

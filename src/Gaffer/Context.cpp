@@ -511,11 +511,6 @@ void Context::EditableScope::setFrame( float frame )
 	set( g_frame, &m_frameStorage );
 }
 
-void Context::EditableScope::setFramesPerSecond( float framesPerSecond )
-{
-	m_context->setFramesPerSecond( framesPerSecond );
-}
-
 void Context::EditableScope::setTime( float timeInSeconds )
 {
 	setFrame( timeInSeconds * m_context->getFramesPerSecond() );
