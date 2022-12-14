@@ -57,7 +57,7 @@ class ApplicationTest( GafferTest.TestCase ) :
 	def testWrapperDoesntDuplicatePaths( self ) :
 
 		for v in ["GAFFER_STARTUP_PATHS", "GAFFER_APP_PATHS"] :
-			value = subprocess.check_output( [ str( Gaffer.executablePath( True ) ), "env", "python", "-c", "import os; print(os.environ['{}'])".format( v ) ], universal_newlines = True )
+			value = subprocess.check_output( [ str( Gaffer.executablePath() ), "env", "python", "-c", "import os; print(os.environ['{}'])".format( v ) ], universal_newlines = True )
 			self.assertEqual( value.strip(), os.environ[v] )
 
 	@unittest.skipIf( os.name == "nt", "Process name is not controllable on Windows.")
