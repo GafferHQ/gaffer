@@ -196,6 +196,15 @@ const string nodeName ( Gaffer::GraphComponent *plugParent )
 	return node->relativeName( node->scriptNode() );
 }
 
+using NodeSocket = std::pair<ccl::ustring, ccl::ustring>;
+boost::container::flat_set<NodeSocket> g_socketBlacklist = {
+	// This socket is used to provide a list of available UDIMs
+	// to Cycles, which unlike other renderers, won't look for them
+	// itself. We handle this automatically in ShaderNetworkAlgo, so
+	// there is no need to expose the socket to the user.
+	{ ccl::ustring( "image_texture" ), ccl::ustring( "tiles" ) }
+};
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -469,7 +478,7 @@ Gaffer::Plug *setupPlug( const ccl::NodeType *nodeType, const ccl::SocketType so
 	return plug;
 }
 
-void setupPlugs( const ccl::NodeType *nodeType, Gaffer::GraphComponent *plugsParent, Gaffer::Plug::Direction direction, bool keepExistingChildren )
+void setupPlugs( const ccl::NodeType *nodeType, Gaffer::GraphComponent *plugsParent, Gaffer::Plug::Direction direction )
 {
 
 	// Make sure we have a plug to represent each socket, reusing plugs wherever possible.
@@ -480,6 +489,10 @@ void setupPlugs( const ccl::NodeType *nodeType, Gaffer::GraphComponent *plugsPar
 	{
 		for( const ccl::SocketType &socketType : nodeType->inputs )
 		{
+			if( g_socketBlacklist.contains( { nodeType->name, socketType.name } ) )
+			{
+				continue;
+			}
 			validPlugs.insert( setupPlug( nodeType, socketType, plugsParent, direction ) );
 		}
 	}
@@ -494,15 +507,12 @@ void setupPlugs( const ccl::NodeType *nodeType, Gaffer::GraphComponent *plugsPar
 
 	// Remove any old plugs which it turned out we didn't need.
 
-	if( !keepExistingChildren )
+	for( int i = plugsParent->children().size() - 1; i >= 0; --i )
 	{
-		for( int i = plugsParent->children().size() - 1; i >= 0; --i )
+		Plug *child = plugsParent->getChild<Plug>( i );
+		if( validPlugs.find( child ) == validPlugs.end() )
 		{
-			Plug *child = plugsParent->getChild<Plug>( i );
-			if( validPlugs.find( child ) == validPlugs.end() )
-			{
-				plugsParent->removeChild( child );
-			}
+			plugsParent->removeChild( child );
 		}
 	}
 }
@@ -591,25 +601,6 @@ void setupLightPlugs( const std::string &shaderName, const ccl::NodeType *nodeTy
 			}
 		}
 	}
-}
-
-Gaffer::Plug *setupOutputNodePlug( Gaffer::GraphComponent *plugParent )
-{
-	Plug *existingPlug = plugParent->getChild<Plug>( "out" );
-	if(
-		existingPlug &&
-		existingPlug->direction() == Gaffer::Plug::Out &&
-		existingPlug->typeId() == Plug::staticTypeId()
-	)
-	{
-		existingPlug->setFlags( Gaffer::Plug::Dynamic, false );
-		return existingPlug;
-	}
-
-	PlugPtr plug = new Plug( "out", Gaffer::Plug::Out, Plug::Default );
-	PlugAlgo::replacePlug( plugParent, plug );
-
-	return plug.get();
 }
 
 } // namespace SocketHandler

@@ -98,6 +98,17 @@ Build
 
 - Cortex : Updated to version 10.4.3.0.
 
+1.1.x.x (relative to 1.1.6.0)
+=======
+
+Fixes
+-----
+
+- Cycles :
+  - Fixed handling of OSL shader component connections (#4926).
+  - Fixed crash when attempting to use a non-existent OSL shader.
+  - Fixed `Unsupported socket "tiles"` warning when loading the `image_texture` shader.
+
 1.1.6.0 (relative to 1.1.5.0)
 =======
 

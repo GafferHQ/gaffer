@@ -55,11 +55,6 @@ class GAFFERCYCLES_API CyclesShader : public GafferScene::Shader
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferCycles::CyclesShader, CyclesShaderTypeId, GafferScene::Shader );
 
-		/// Implemented for outPlug(), returning the parameter named in the "primaryInput"
-		/// shader annotation if it has been specified.
-		Gaffer::Plug *correspondingInput( const Gaffer::Plug *output ) override;
-		const Gaffer::Plug *correspondingInput( const Gaffer::Plug *output ) const override;
-
 		void loadShader( const std::string &shaderName, bool keepExistingValues=false ) override;
 
 	protected :
