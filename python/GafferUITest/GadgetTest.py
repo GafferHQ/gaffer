@@ -36,6 +36,7 @@
 ##########################################################################
 
 import functools
+import os
 import unittest
 import imath
 import operator
@@ -47,6 +48,7 @@ import GafferTest
 import GafferUI
 import GafferUITest
 
+@unittest.skipIf( os.name == "nt", "Awaiting triage" )
 class GadgetTest( GafferUITest.TestCase ) :
 
 	def testTransform( self ) :
