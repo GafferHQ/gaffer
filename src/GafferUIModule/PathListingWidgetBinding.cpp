@@ -1097,7 +1097,7 @@ class PathModel : public QAbstractItemModel
 			// responsible for caching the results of these queries internally.
 			QVariant data( int column, int role, const PathModel *model )
 			{
-				if( requestIfUnrequested( m_dataState ) )
+				if( dirtyIfUnrequested( m_dataState ) )
 				{
 					const_cast<PathModel *>( model )->scheduleUpdate();
 				}
@@ -1131,7 +1131,7 @@ class PathModel : public QAbstractItemModel
 
 			ChildContainer &childItems( const PathModel *model )
 			{
-				if( requestIfUnrequested( m_childItemsState ) )
+				if( dirtyIfUnrequested( m_childItemsState ) )
 				{
 					const_cast<PathModel *>( model )->scheduleUpdate();
 				}
@@ -1303,6 +1303,15 @@ class PathModel : public QAbstractItemModel
 						}
 					}
 
+					if( expanded )
+					{
+						// The QTreeView is inevitably going to query the
+						// children after we call `treeView->setExpanded()`.
+						// Get ahead of the game by creating them during this
+						// update.
+						dirtyIfUnrequested( m_childItemsState );
+					}
+
 					if( expanded != m_expandedInTreeView )
 					{
 						model->queueEdit(
@@ -1312,12 +1321,6 @@ class PathModel : public QAbstractItemModel
 								treeView->setExpanded( model->createIndex( m_row, 0, this ), expanded );
 							}
 						);
-					}
-
-					if( match & IECore::PathMatcher::DescendantMatch )
-					{
-						// Force creation of children so we can expand them.
-						requestIfUnrequested( m_childItemsState );
 					}
 
 					// Handle expansion for selection updates.
@@ -1343,7 +1346,7 @@ class PathModel : public QAbstractItemModel
 						if( scrollToMatch & IECore::PathMatcher::DescendantMatch )
 						{
 							// Force creation of children so we can scroll to them.
-							requestIfUnrequested( m_childItemsState );
+							dirtyIfUnrequested( m_childItemsState );
 						}
 					}
 
@@ -1371,7 +1374,7 @@ class PathModel : public QAbstractItemModel
 						if( selectionMatch & IECore::PathMatcher::DescendantMatch )
 						{
 							// Force creation of children so we can expand them.
-							requestIfUnrequested( m_childItemsState );
+							dirtyIfUnrequested( m_childItemsState );
 						}
 					}
 
@@ -1437,7 +1440,7 @@ class PathModel : public QAbstractItemModel
 
 						for( const auto &childItem : newChildItems )
 						{
-							requestIfUnrequested( childItem->m_dataState );
+							dirtyIfUnrequested( childItem->m_dataState );
 							sortedIndices.push_back( SortablePair(
 								childItem->updateData( model, children[sortedIndices.size()].get(), canceller ),
 								sortedIndices.size()
@@ -1546,30 +1549,25 @@ class PathModel : public QAbstractItemModel
 
 				// State transitions :
 				//
-				// - Unrequested->Requested : When first queried.
-				// - Requested->Clean : When first updated.
+				// - Unrequested->Dirty : When first queried.
+				// - Dirty->Clean : When updated.
 				// - Clean->Dirty : When path changes.
-				// - Dirty->Clean : On all subsequent updates.
 				enum class State
 				{
 					// Initial state. Not yet requested by clients
 					// of the model, therefore not yet computed, and not
 					// in need of consideration during recursive updates.
 					Unrequested,
-					// Has just been requested for the first time. Needs
-					// to be updated, but there is no need to emit change
-					// signals for the first update.
-					Requested,
 					// Computed and up to date.
 					Clean,
 					// Stale data that needs recomputing.
 					Dirty
 				};
 
-				static bool requestIfUnrequested( std::atomic<State> &state )
+				static bool dirtyIfUnrequested( std::atomic<State> &state )
 				{
 					State unrequested = State::Unrequested;
-					return state.compare_exchange_strong( unrequested, State::Requested );
+					return state.compare_exchange_strong( unrequested, State::Dirty );
 				}
 
 				std::atomic<State> m_dataState;
