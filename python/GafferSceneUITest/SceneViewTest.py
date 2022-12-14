@@ -49,6 +49,7 @@ import GafferScene
 import GafferSceneTest
 import GafferSceneUI
 
+@unittest.skipIf( os.name == "nt", "Awaiting triage" )
 class SceneViewTest( GafferUITest.TestCase ) :
 
 	def testFactory( self ) :
