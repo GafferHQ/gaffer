@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import os
 import unittest
 import imath
 
@@ -80,6 +81,7 @@ class ImageGadgetTest( GafferUITest.TestCase ) :
 		g.setImage( c["out"] )
 		self.assertTrue( g.getImage().isSame( c["out"] ) )
 
+	@unittest.skipIf( os.name == "nt", "Awaiting triage" )
 	def testDestroyWhileProcessing( self ) :
 
 		s = Gaffer.ScriptNode()
