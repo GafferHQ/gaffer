@@ -63,18 +63,16 @@ class ButtonPlugValueWidget( GafferUI.PlugValueWidget ) :
 		GafferUI.PlugValueWidget.setPlug( self, plug )
 
 		self.__nameChangedConnection = None
-		self.__plugMetadataChangedConnection = None
 		if plug is not None :
 			self.__nameChangedConnection = plug.nameChangedSignal().connect( Gaffer.WeakMethod( self.__nameChanged ), scoped = True )
-			self.__plugMetadataChangedConnection = Gaffer.Metadata.plugValueChangedSignal( plug.node() ).connect(
-				Gaffer.WeakMethod( self.__plugMetadataChanged ), scoped = True
-			)
 
-		self.__updateLabel()
-
-	def _updateFromPlug( self ) :
+	def _updateFromEditable( self ) :
 
 		self.__button.setEnabled( self._editable() )
+
+	def _updateFromMetadata( self ) :
+
+		self.__updateLabel()
 
 	def __nameChanged( self, plug ) :
 
