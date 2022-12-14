@@ -144,6 +144,12 @@ node["out"].fullTransform( "/path/to/location" )
 bound = node["out"].bound( "/path/to/location" )
 ```
 
+### Get the world space bounding box of a location
+
+```
+bound = node["out"].bound( "/path/to/location" ) * node["out"].fullTransform( "/path/to/location" )
+```
+
 ### Get the local attributes of a location
 
 ```
