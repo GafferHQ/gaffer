@@ -179,9 +179,7 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 
 				GafferUI.Spacer( imath.V2i( 1 ), imath.V2i( 999999, 1 ), parenting = { "expand" : True } )
 
-		self._updateFromPlug()
-
-	def _updateFromPlug( self ) :
+	def _updateFromEditable( self ) :
 
 		self.__button.setEnabled( self._editable() )
 

@@ -28,7 +28,7 @@ Fixes
   - Fixed assignment of `emission` shader. Previously this was being assigned as a `cycles:light` attribute instead of `cycles:surface` (#5058).
 - ImageViewer : Fixed drawing of pixels to the left of the display window [^1].
 - Random : Fixed GIL management bug which could lead to hangs [^1].
-- ShufflePrimitiveVariables, ShuffleAttributes, OptionQuery, PrimitiveVariableQuery, ShaderQuery, ContextQuery, CreateViews : Fixed bugs which allowed read-only nodes to be edited.
+- ShufflePrimitiveVariables, ShuffleAttributes, OptionQuery, PrimitiveVariableQuery, ShaderQuery, ContextQuery, CreateViews, SetVisualiser : Fixed bugs which allowed read-only nodes to be edited.
 
 API
 ---
