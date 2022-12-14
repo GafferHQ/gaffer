@@ -56,10 +56,10 @@ import GafferImageTest
 
 class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
-	__largeFilePath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/large.exr" )
-	__rgbFilePath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/rgb.100x100" )
-	__negativeDataWindowFilePath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checkerWithNegativeDataWindow.200x150" )
-	__representativeDeepPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/representativeDeepImage.exr" )
+	__largeFilePath = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "large.exr"
+	__rgbFilePath = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "rgb.100x100.exr"
+	__negativeDataWindowFilePath = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "checkerWithNegativeDataWindow.200x150.exr"
+	__representativeDeepPath = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "representativeDeepImage.exr"
 
 	longMessage = True
 
@@ -77,7 +77,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 	def testChannelMask( self ) :
 
 		r = GafferImage.ImageReader()
-		r["fileName"].setValue( self.__rgbFilePath+".exr" )
+		r["fileName"].setValue( self.__rgbFilePath )
 
 		testFile = self.__testFile( "default", "RB", "exr" )
 		self.assertFalse( os.path.exists( testFile ) )
@@ -403,8 +403,8 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 	def __testExtension( self, ext, formatName, options = {}, metadataToIgnore = [] ) :
 
 		r = GafferImage.ImageReader()
-		r["fileName"].setValue( self.__rgbFilePath+".exr" )
-		expectedFile = "{base}.{ext}".format( base=self.__rgbFilePath, ext=ext )
+		r["fileName"].setValue( self.__rgbFilePath )
+		expectedFile = self.__rgbFilePath.with_suffix( "." + ext )
 
 		tests = [
 			{
@@ -558,11 +558,11 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 	def __testAdjustDataWindowToDisplayWindow( self, ext, filePath ) :
 
 		r = GafferImage.ImageReader()
-		r["fileName"].setValue( filePath+".exr" )
+		r["fileName"].setValue( filePath )
 		w = GafferImage.ImageWriter()
 
 		testFile = self.__testFile( os.path.basename(filePath), "RGBA", ext )
-		expectedFile = filePath+"."+ext
+		expectedFile = filePath.with_suffix( "." + ext )
 
 		self.assertFalse( os.path.exists( testFile ), "Temporary file already exists : {}".format( testFile ) )
 
@@ -670,7 +670,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 	def testMetadataDocumentName( self ) :
 
 		r = GafferImage.ImageReader()
-		r["fileName"].setValue( self.__rgbFilePath+".exr" )
+		r["fileName"].setValue( self.__rgbFilePath )
 		w = GafferImage.ImageWriter()
 
 		testFile = self.__testFile( "metadataTest", "RGBA", "exr" )
@@ -708,7 +708,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 	def __testMetadataDoesNotAffectPixels( self, ext, overrideMetadata = {}, metadataToIgnore = [] ) :
 
 		reader = GafferImage.ImageReader()
-		reader["fileName"].setValue( self.__rgbFilePath+"."+ext )
+		reader["fileName"].setValue( self.__rgbFilePath.with_suffix( "." + ext ) )
 
 		# IPTC:Creator will have the current username appended to the end of
 		# the existing one, creating a list of creators. Blank out the initial
@@ -904,7 +904,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 	def testPixelAspectRatio( self ) :
 
 		r = GafferImage.ImageReader()
-		r["fileName"].setValue( self.__rgbFilePath+".exr" )
+		r["fileName"].setValue( self.__rgbFilePath )
 		self.assertEqual( r["out"]["format"].getValue().getPixelAspect(), 1 )
 		self.assertEqual( r["out"]["metadata"].getValue()["PixelAspectRatio"], IECore.FloatData( 1 ) )
 
@@ -1121,7 +1121,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 	def testJpgChroma( self ):
 
 		r = GafferImage.ImageReader()
-		r["fileName"].setValue( self.__rgbFilePath+".exr" )
+		r["fileName"].setValue( self.__rgbFilePath )
 
 		w = GafferImage.ImageWriter()
 		w["in"].setInput( r["out"] )
@@ -1248,7 +1248,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 	def testNonDefaultColorSpace( self ) :
 
 		reader = GafferImage.ImageReader()
-		reader["fileName"].setValue( self.__rgbFilePath + ".exr" )
+		reader["fileName"].setValue( self.__rgbFilePath )
 
 		extraChannel = GafferImage.Shuffle()
 		extraChannel["in"].setInput( reader["out"] )

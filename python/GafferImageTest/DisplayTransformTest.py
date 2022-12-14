@@ -48,7 +48,7 @@ import GafferImageTest
 
 class DisplayTransformTest( GafferImageTest.ImageTestCase ) :
 
-	imageFile = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" )
+	imageFile = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "checker.exr"
 
 	def test( self ) :
 
@@ -134,7 +134,7 @@ class DisplayTransformTest( GafferImageTest.ImageTestCase ) :
 	def testChannelsAreSeparate( self ) :
 
 		i = GafferImage.ImageReader()
-		i["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/circles.exr" ) )
+		i["fileName"].setValue( Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "circles.exr" )
 
 		o = GafferImage.DisplayTransform()
 		o["in"].setInput( i["out"] )
@@ -199,7 +199,7 @@ class DisplayTransformTest( GafferImageTest.ImageTestCase ) :
 		s.save()
 
 		env = os.environ.copy()
-		env["OCIO"] = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/openColorIO/context.ocio" )
+		env["OCIO"] = str( Gaffer.rootPath() / "python" / "GafferImageTest" / "openColorIO" / "context.ocio" )
 		env["LUT"] = "srgb.spi1d"
 		env["CDL"] = "cineon.spi1d"
 
@@ -210,7 +210,7 @@ class DisplayTransformTest( GafferImageTest.ImageTestCase ) :
 		)
 
 		i = GafferImage.ImageReader()
-		i["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker_ocio_context.exr" ) )
+		i["fileName"].setValue( Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "checker_ocio_context.exr" )
 
 		o = GafferImage.ImageReader()
 		o["fileName"].setValue( contextImageFile )
@@ -234,7 +234,7 @@ class DisplayTransformTest( GafferImageTest.ImageTestCase ) :
 		)
 
 		i = GafferImage.ImageReader()
-		i["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker_ocio_context_override.exr" ) )
+		i["fileName"].setValue( Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "checker_ocio_context_override.exr" )
 
 		o = GafferImage.ImageReader()
 		o["fileName"].setValue( contextOverrideImageFile )

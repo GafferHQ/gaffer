@@ -48,7 +48,7 @@ import GafferImageTest
 
 class CollectImagesTest( GafferImageTest.ImageTestCase ) :
 
-	layersPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/layers.10x10.exr" )
+	layersPath = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "layers.10x10.exr"
 
 	# Test against an image which has a different positioned box in each image layer, and a datawindow
 	# that has been enlarged to hold all layers

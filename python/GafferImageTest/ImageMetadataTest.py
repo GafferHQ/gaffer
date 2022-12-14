@@ -46,7 +46,7 @@ import GafferImageTest
 
 class ImageMetadataTest( GafferImageTest.ImageTestCase ) :
 
-	checkerFile = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" )
+	checkerFile = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "checker.exr"
 
 	def test( self ) :
 

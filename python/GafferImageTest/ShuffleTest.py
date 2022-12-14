@@ -47,7 +47,7 @@ import GafferImageTest
 
 class ShuffleTest( GafferImageTest.ImageTestCase ) :
 
-	representativeDeepImagePath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/representativeDeepImage.exr" )
+	representativeDeepImagePath = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "representativeDeepImage.exr"
 
 	def test( self ) :
 

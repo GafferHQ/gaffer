@@ -49,7 +49,7 @@ import GafferImageTest
 
 class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 
-	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" )
+	fileName = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "checker.exr"
 
 	def test( self ) :
 
@@ -131,7 +131,7 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 	def testChannelsAreSeparate( self ) :
 
 		i = GafferImage.ImageReader()
-		i["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/circles.exr" ) )
+		i["fileName"].setValue( Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "circles.exr" )
 
 		o = GafferImage.ColorSpace()
 		o["in"].setInput( i["out"] )
@@ -193,7 +193,7 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 		s.save()
 
 		env = os.environ.copy()
-		env["OCIO"] = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/openColorIO/context.ocio" )
+		env["OCIO"] = str( Gaffer.rootPath() / "python" / "GafferImageTest" / "openColorIO" / "context.ocio" )
 		env["LUT"] = "srgb.spi1d"
 		env["CDL"] = "cineon.spi1d"
 
@@ -204,7 +204,7 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 		)
 
 		i = GafferImage.ImageReader()
-		i["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker_ocio_context.exr" ) )
+		i["fileName"].setValue( Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "checker_ocio_context.exr" )
 
 		o = GafferImage.ImageReader()
 		o["fileName"].setValue( contextImageFile )
@@ -228,7 +228,7 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 		)
 
 		i = GafferImage.ImageReader()
-		i["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker_ocio_context_override.exr" ) )
+		i["fileName"].setValue( Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "checker_ocio_context_override.exr" )
 
 		o = GafferImage.ImageReader()
 		o["fileName"].setValue( contextOverrideImageFile )
@@ -265,7 +265,7 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 	def testUnpremultiplied( self ) :
 
 		i = GafferImage.ImageReader()
-		i["fileName"].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/circles.exr" ) )
+		i["fileName"].setValue( Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "circles.exr" )
 
 		shuffleAlpha = GafferImage.Shuffle()
 		shuffleAlpha["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "channel" ) )

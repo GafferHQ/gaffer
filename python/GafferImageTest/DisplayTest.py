@@ -204,15 +204,15 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 
 	def testTransferChecker( self ) :
 
-		self.__testTransferImage( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" )
+		self.__testTransferImage( Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "checker.exr" )
 
 	def testTransferWithDataWindow( self ) :
 
-		self.__testTransferImage( "$GAFFER_ROOT/python/GafferImageTest/images/checkerWithNegativeDataWindow.200x150.exr" )
+		self.__testTransferImage( Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "checkerWithNegativeDataWindow.200x150.exr" )
 
 	def testAccessOutsideDataWindow( self ) :
 
-		node = self.__testTransferImage( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" )
+		node = self.__testTransferImage( Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "checker.exr" )
 
 		blackTile = IECore.FloatVectorData( [ 0 ] * GafferImage.ImagePlug.tileSize() * GafferImage.ImagePlug.tileSize() )
 

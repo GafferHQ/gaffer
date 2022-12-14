@@ -47,7 +47,7 @@ import GafferImageTest
 
 class SelectViewTest( GafferImageTest.ImageTestCase ) :
 
-	__rgbFilePath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/rgb.100x100.exr" )
+	__rgbFilePath = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "rgb.100x100.exr"
 
 	def test( self ) :
 

@@ -48,9 +48,9 @@ import GafferImageTest
 
 class LookTransformTest( GafferImageTest.ImageTestCase ) :
 
-	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" )
-	groundTruth = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker_ocio_look.exr" )
-	ocioConfig = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/openColorIO/context.ocio" )
+	fileName = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "checker.exr"
+	groundTruth = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "checker_ocio_look.exr"
+	ocioConfig = Gaffer.rootPath() / "python" / "GafferImageTest" / "openColorIO" / "context.ocio"
 
 	def test( self ) :
 

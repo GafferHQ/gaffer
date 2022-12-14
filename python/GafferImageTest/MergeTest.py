@@ -47,13 +47,13 @@ import GafferImageTest
 
 class MergeTest( GafferImageTest.ImageTestCase ) :
 
-	rPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/redWithDataWindow.100x100.exr" )
-	gPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/greenWithDataWindow.100x100.exr" )
-	bPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/blueWithDataWindow.100x100.exr" )
-	checkerPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checkerboard.100x100.exr" )
-	checkerRGBPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/rgbOverChecker.100x100.exr" )
-	rgbPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/rgb.100x100.exr" )
-	mergeBoundariesRefPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/mergeBoundariesRef.exr" )
+	rPath = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "redWithDataWindow.100x100.exr"
+	gPath = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "greenWithDataWindow.100x100.exr"
+	bPath = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "blueWithDataWindow.100x100.exr"
+	checkerPath = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "checkerboard.100x100.exr"
+	checkerRGBPath = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "rgbOverChecker.100x100.exr"
+	rgbPath = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "rgb.100x100.exr"
+	mergeBoundariesRefPath = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "mergeBoundariesRef.exr"
 
 	# Do several tests to check the cache is working correctly:
 	def testHashes( self ) :

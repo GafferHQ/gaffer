@@ -49,11 +49,11 @@ import GafferImageTest
 
 class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 
-	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/circles.exr" )
-	colorSpaceFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/circles_as_cineon.exr" )
-	offsetDataWindowFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/rgb.100x100.exr" )
-	jpgFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/circles.jpg" )
-	largeFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/colorbars_max_clamp.exr" )
+	fileName = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "circles.exr"
+	colorSpaceFileName = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "circles_as_cineon.exr"
+	offsetDataWindowFileName = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "rgb.100x100.exr"
+	jpgFileName = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "circles.jpg"
+	largeFileName = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "colorbars_max_clamp.exr"
 
 	def setUp( self ) :
 
