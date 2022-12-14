@@ -81,49 +81,11 @@ IE_CORE_DEFINERUNTIMETYPED( CyclesShader );
 CyclesShader::CyclesShader( const std::string &name )
 	:	GafferScene::Shader( name )
 {
+	addChild( new Plug( "out", Gaffer::Plug::Out ) );
 }
 
 CyclesShader::~CyclesShader()
 {
-}
-
-Gaffer::Plug *CyclesShader::correspondingInput( const Gaffer::Plug *output )
-{
-	// better to do a few harmless casts than manage a duplicate implementation
-	return const_cast<Gaffer::Plug *>(
-		const_cast<const CyclesShader *>( this )->correspondingInput( output )
-	);
-}
-
-const Gaffer::Plug *CyclesShader::correspondingInput( const Gaffer::Plug *output ) const
-{
-	if( output != outPlug() )
-	{
-		return Shader::correspondingInput( output );
-	}
-
-	return nullptr;
-
-	//const CompoundData *metadata = CyclesShader::metadata();
-	//if( !metadata )
-	//{
-	//	return nullptr;
-	//}
-
-	//const StringData *primaryInput = static_cast<const StringData*>( metadata->member<IECore::CompoundData>( "shader" )->member<IECore::Data>( "primaryInput" ) );
-	//if( !primaryInput )
-	//{
-	//	return nullptr;
-	//}
-
-	//const Plug *result = parametersPlug()->getChild<Plug>( primaryInput->readable() );
-	//if( !result )
-	//{
-	//	IECore::msg( IECore::Msg::Error, "CyclesShader::correspondingInput", boost::format( "Parameter \"%s\" does not exist" ) % primaryInput->readable() );
-	//	return nullptr;
-	//}
-
-	//return result;
 }
 
 void CyclesShader::loadShader( const std::string &shaderName, bool keepExistingValues )
@@ -138,14 +100,11 @@ void CyclesShader::loadShader( const std::string &shaderName, bool keepExistingV
 		throw Exception( str( format( "Shader \"%s\" not found" ) % shaderName ) );
 	}
 
-	Plug *out = outPlug();
-
-	const bool outPlugHadChildren = out ? out->children().size() : false;
+	const bool outPlugWasEmpty = outPlug()->children().empty();
 	if( !keepExistingValues )
 	{
 		parametersPlug()->clearChildren();
-		if( out )
-			out->clearChildren();
+		outPlug()->clearChildren();
 	}
 
 	namePlug()->setValue( shaderName );
@@ -172,17 +131,11 @@ void CyclesShader::loadShader( const std::string &shaderName, bool keepExistingV
 	}
 
 	SocketHandler::setupPlugs( shaderNodeType, parametersPlug() );
-
-	if( !out )
-	{
-		out = SocketHandler::setupOutputNodePlug( this );
-	}
-	setChild( "out", out );
 	SocketHandler::setupPlugs( shaderNodeType, outPlug(), Gaffer::Plug::Out );
 
-	if( static_cast<bool>( outPlug()->children().size() ) != outPlugHadChildren )
+	if( outPlug()->children().empty() != outPlugWasEmpty )
 	{
-		// OSLShaderUI registers a dynamic metadata entry which depends on whether or
+		// CyclesShaderUI registers a dynamic metadata entry which depends on whether or
 		// not the plug has children, so we must notify the world that the value will
 		// have changed.
 		Metadata::plugValueChangedSignal()( staticTypeId(), "out", "nodule:type", outPlug() );
