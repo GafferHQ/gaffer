@@ -176,7 +176,7 @@ class _ParametersFooter( GafferUI.PlugValueWidget ) :
 
 				GafferUI.Spacer( imath.V2i( GafferUI.PlugWidget.labelWidth(), 1 ) )
 
-				menuButton = GafferUI.MenuButton(
+				self.__menuButton = GafferUI.MenuButton(
 					image = "plus.png",
 					hasFrame = False,
 					menu = GafferUI.Menu(
@@ -185,13 +185,12 @@ class _ParametersFooter( GafferUI.PlugValueWidget ) :
 					),
 					toolTip = "Add " + ( "Input" if plug.direction() == plug.Direction.In else "Output" ),
 				)
-				menuButton.setEnabled( not Gaffer.MetadataAlgo.readOnly( plug ) )
 
 				GafferUI.Spacer( imath.V2i( 1 ), imath.V2i( 999999, 1 ), parenting = { "expand" : True } )
 
-	def _updateFromPlug( self ) :
+	def _updateFromEditable( self ) :
 
-		self.setEnabled( self._editable() )
+		self.__menuButton.setEnabled( self._editable() )
 
 	def __menuDefinition( self ) :
 
