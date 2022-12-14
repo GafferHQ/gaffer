@@ -51,6 +51,7 @@ import GafferUITest
 import GafferScene
 import GafferSceneUI
 
+@unittest.skipIf( os.name == "nt", "Awaiting triage" )
 class SceneGadgetTest( GafferUITest.TestCase ) :
 
 	renderer = "OpenGL"
