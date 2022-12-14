@@ -34,6 +34,9 @@
 #
 ##########################################################################
 
+import os
+import unittest
+
 import IECore
 import Gaffer
 import GafferImage
@@ -42,6 +45,7 @@ import GafferUI
 import GafferUITest
 import GafferSceneUI
 
+@unittest.skipIf( os.name == "nt", "Awaiting triage" )
 class CropWindowToolTest( GafferUITest.TestCase ) :
 
 	def testSceneViewStatus( self ) :
