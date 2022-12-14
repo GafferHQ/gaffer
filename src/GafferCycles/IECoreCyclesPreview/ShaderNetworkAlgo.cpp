@@ -151,18 +151,8 @@ typedef boost::unordered_map<ShaderNetwork::Parameter, ccl::ShaderNode *> Shader
 
 ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECoreScene::ShaderNetwork *shaderNetwork, const std::string &namePrefix, ccl::ShaderManager *shaderManager, ccl::ShaderGraph *shaderGraph, ShaderMap &converted )
 {
-	// Reuse previously created node if we can. It is ideal for all assigned
-	// shaders in the graph to funnel through the default "output" so
-	// that things like MIS/displacement/etc. can be set, however it isn't a
-	// requirement. Regardless, we look out for this special node as it already
-	// exists in the graph and we simply point to it.
+	// Reuse previously created node if we can.
 	const IECoreScene::Shader *shader = shaderNetwork->getShader( outputParameter.shader );
-	const bool isOutput = ( boost::starts_with( shader->getType(), "cycles:" ) ) && ( shader->getName() == "output" );
-	const bool isOSLShader = boost::starts_with( shader->getType(), "osl:" );
-	const bool isConverter = boost::starts_with( shader->getName(), "convert" );
-	const bool isAOV = boost::starts_with( shader->getType(), "cycles:aov:" );
-	const bool isImageTexture = shader->getName() == "image_texture";
-
 	auto inserted = converted.insert( { outputParameter.shader, nullptr } );
 	ccl::ShaderNode *&node = inserted.first->second;
 	if( !inserted.second )
@@ -170,32 +160,25 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 		return node;
 	}
 
-	if( isOutput )
+	// Create node for shader.
+
+	const bool isOSLShader = boost::starts_with( shader->getType(), "osl:" );
+
+	if( isOSLShader )
 	{
-		node = (ccl::ShaderNode*)shaderGraph->output();
-	}
-	else if( isOSLShader )
-	{
-#ifdef WITH_OSL
 		if( shaderManager && shaderManager->use_osl() )
 		{
 			ccl::OSLShaderManager *manager = (ccl::OSLShaderManager*)shaderManager;
 			std::string shaderFileName = g_shaderSearchPathCache.get( shader->getName() );
 			node = manager->osl_node( shaderGraph, shaderManager, shaderFileName.c_str() );
-			node = shaderGraph->add( node );
 		}
 		else
-#endif
 		{
-#ifdef WITH_OSL
 			msg( Msg::Warning, "IECoreCycles::ShaderNetworkAlgo", boost::format( "Couldn't load OSL shader \"%s\" as the shading system is not set to OSL." ) % shader->getName() );
-#else
-			msg( Msg::Warning, "IECoreCycles::ShaderNetworkAlgo", boost::format( "Couldn't load OSL shader \"%s\" as GafferCycles wasn't compiled with OSL support." ) % shader->getName() );
-#endif
 			return node;
 		}
 	}
-	else if( isConverter )
+	else if( boost::starts_with( shader->getName(), "convert" ) )
 	{
 		/// \todo Why can't this be handled by the generic case below? There are NodeTypes
 		/// registered for each of these conversions, so `NodeType::find()` does work. The
@@ -207,8 +190,6 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 		{
 			ccl::ConvertNode *convertNode = shaderGraph->create_node<ccl::ConvertNode>( getSocketType( split[1] ), getSocketType( split[3] ), true );
 			node = (ccl::ShaderNode*)convertNode;
-			if( node )
-				node = shaderGraph->add( node );
 		}
 	}
 	else if( const ccl::NodeType *nodeType = ccl::NodeType::find( ccl::ustring( shader->getName() ) ) )
@@ -217,7 +198,6 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 		{
 			node = static_cast<ccl::ShaderNode *>( nodeType->create( nodeType ) );
 			node->set_owner( shaderGraph );
-			shaderGraph->add( node );
 		}
 	}
 
@@ -227,7 +207,9 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 		return node;
 	}
 
-	// Create the ShaderNode for this shader output
+	// Add node to graph
+
+	node = shaderGraph->add( node );
 
 	string nodeName(
 		namePrefix +
@@ -236,6 +218,8 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 	node->name = ccl::ustring( nodeName.c_str() );
 
 	// Set the shader parameters
+
+	const bool isImageTexture = shader->getName() == "image_texture";
 
 	for( const auto &namedParameter : shader->parameters() )
 	{
@@ -379,18 +363,6 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 		}
 	}
 
-	if( !isOutput && ( shaderNetwork->outputShader() == shader ) && !isAOV )
-	{
-		// In the cases where there is no cycles output attached in the network
-		// we just connect to the main output node of the cycles shader graph.
-		// Either cycles:surface, cycles:volume or cycles:displacement.
-		ccl::ShaderNode *outputNode = (ccl::ShaderNode*)shaderGraph->output();
-		string input = string( shader->getType().c_str() + 7 );
-		if( ccl::ShaderOutput *shaderOutput = IECoreCycles::ShaderNetworkAlgo::output( node, outputParameter.name ) )
-		    if( ccl::ShaderInput *shaderInput = IECoreCycles::ShaderNetworkAlgo::input( outputNode, input ) )
-				shaderGraph->connect( shaderOutput, shaderInput );
-	}
-
 	return node;
 }
 
@@ -508,54 +480,37 @@ ccl::ShaderGraph *convertGraph( const IECoreScene::ShaderNetwork *surfaceShader,
 								const std::string &namePrefix )
 {
 	ccl::ShaderGraph *graph = new ccl::ShaderGraph();
-	if( surfaceShader && surfaceShader->getOutput().shader.string().empty() )
+
+	using NamedNetwork = std::pair<std::string, const IECoreScene::ShaderNetwork *>;
+	for( const auto &[name, network] : { NamedNetwork( "surface", surfaceShader ), NamedNetwork( "displacement", displacementShader ), NamedNetwork( "volume", volumeShader ) } )
 	{
-		msg( Msg::Warning, "IECoreCycles::ShaderNetworkAlgo", "Shader has no output" );
-	}
-	else if( volumeShader && volumeShader->getOutput().shader.string().empty() )
-	{
-		msg( Msg::Warning, "IECoreCycles::ShaderNetworkAlgo", "Shader has no output" );
-	}
-	else
-	{
-		if( surfaceShader )
+		if( !network )
 		{
-			ShaderMap converted;
-			convertWalk( surfaceShader->getOutput(), surfaceShader, namePrefix, shaderManager, graph, converted );
+			continue;
 		}
-		if( displacementShader )
+		if( network->getOutput().shader.string().empty() )
 		{
-			ShaderMap converted;
-			convertWalk( displacementShader->getOutput(), displacementShader, namePrefix, shaderManager, graph, converted );
+			msg( Msg::Warning, "IECoreCycles::ShaderNetworkAlgo", "Shader has no output" );
+			continue;
 		}
-		if( volumeShader )
+
+		ShaderNetworkPtr toConvert = network->copy();
+		IECoreScene::ShaderNetworkAlgo::convertOSLComponentConnections( toConvert.get() );
+		ShaderMap converted;
+		ccl::ShaderNode *node = convertWalk( toConvert->getOutput(), toConvert.get(), namePrefix, shaderManager, graph, converted );
+
+		if( node )
 		{
-			ShaderMap converted;
-			convertWalk( volumeShader->getOutput(), volumeShader, namePrefix, shaderManager, graph, converted );
+			// Connect to the main output node of the cycles shader graph, either
+			// surface, displacement or volume.
+			if( ccl::ShaderOutput *shaderOutput = output( node, network->getOutput().name ) )
+			{
+				graph->connect( shaderOutput, input( (ccl::ShaderNode *)graph->output(), name ) );
+			}
 		}
 	}
 
 	return graph;
-}
-
-ccl::Shader *convert( const IECoreScene::ShaderNetwork *surfaceShader,
-					  const IECoreScene::ShaderNetwork *displacementShader,
-					  const IECoreScene::ShaderNetwork *volumeShader,
-					  ccl::ShaderManager *shaderManager,
-					  const std::string &namePrefix )
-{
-	string shaderName(
-		namePrefix +
-		surfaceShader->getOutput().shader.string()
-	);
-
-	ccl::ShaderGraph *graph = convertGraph( surfaceShader, displacementShader, volumeShader, shaderManager, namePrefix );
-
-	ccl::Shader *result = new ccl::Shader();
-	result->name = ccl::ustring( shaderName.c_str() );
-	result->set_graph( graph );
-
-	return result;
 }
 
 void convertAOV( const IECoreScene::ShaderNetwork *shaderNetwork, ccl::ShaderGraph *graph, ccl::ShaderManager *shaderManager, const std::string &namePrefix )

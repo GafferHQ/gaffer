@@ -65,11 +65,6 @@ IECORECYCLES_API ccl::ShaderGraph *convertGraph( const IECoreScene::ShaderNetwor
                                                  ccl::ShaderManager *shaderManager,
                                                  const std::string &namePrefix = "" );
 
-IECORECYCLES_API ccl::Shader *convert( const IECoreScene::ShaderNetwork *surfaceShader,
-                                       const IECoreScene::ShaderNetwork *displacementShader,
-                                       const IECoreScene::ShaderNetwork *volumeShader,
-                                       ccl::ShaderManager *shaderManager,
-                                       const std::string &namePrefix = "" );
 IECORECYCLES_API void convertAOV( const IECoreScene::ShaderNetwork *shaderNetwork, ccl::ShaderGraph *graph, ccl::ShaderManager *shaderManager, const std::string &namePrefix = "" );
 IECORECYCLES_API void setSingleSided( ccl::ShaderGraph *graph );
 IECORECYCLES_API ccl::Shader *createDefaultShader();

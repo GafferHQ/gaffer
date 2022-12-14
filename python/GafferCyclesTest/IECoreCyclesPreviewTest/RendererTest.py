@@ -1280,6 +1280,154 @@ class RendererTest( GafferTest.TestCase ) :
 
 		del plane
 
+	def testMissingOSLShader( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		with IECore.CapturingMessageHandler() as mh :
+
+			renderer.attributes( IECore.CompoundObject ( {
+				"cycles:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader( "NonExistentShader", "osl:surface" ),
+					},
+					output = "output",
+				)
+			} ) )
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].message, "Couldn't load shader \"NonExistentShader\"" )
+
+	def testMissingCyclesShader( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		with IECore.CapturingMessageHandler() as mh :
+
+			renderer.attributes( IECore.CompoundObject ( {
+				"cycles:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader( "NonExistentShader", "cycles:surface" ),
+					},
+					output = "output",
+				)
+			} ) )
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].message, "Couldn't load shader \"NonExistentShader\"" )
+
+	def testOSLComponentConnections( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		renderer.output(
+			"testOutput",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testOSLComponentConnections",
+				}
+			)
+		)
+
+		plane = renderer.object(
+			"/plane",
+			IECoreScene.MeshPrimitive.createPlane(
+				imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ),
+			),
+			renderer.attributes( IECore.CompoundObject ( {
+				"cycles:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", { "base_color" : imath.Color3f( 0 ) } ),
+						"multiplyColor" : IECoreScene.Shader( "Maths/MultiplyColor", "osl:shader", { "b" : imath.Color3f( 0, 0, 0 ) } ),
+						"multiplyFloat" : IECoreScene.Shader( "Maths/MultiplyFloat", "osl:shader" ),
+					},
+					connections = [
+						( ( "multiplyFloat", "out" ), ( "multiplyColor", "b.b" ) ),
+						( ( "multiplyColor", "out" ), ( "output", "emission" ) ),
+					],
+					output = "output",
+				)
+			} ) )
+		)
+
+		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
+
+		renderer.render()
+		time.sleep( 2 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testOSLComponentConnections" )
+		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+		self.assertEqual( self.__colorAtUV( image, imath.V2f( 0.55 ) ), imath.Color4f( 0, 0, 1, 1 ) )
+
+		del plane
+
+	def testSurfaceAttributeWithGenericShaderType( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		renderer.output(
+			"testOutput",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testSurfaceAttributeWithGenericShaderType",
+				}
+			)
+		)
+
+		plane = renderer.object(
+			"/plane",
+			IECoreScene.MeshPrimitive.createPlane(
+				imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ),
+			),
+			renderer.attributes( IECore.CompoundObject ( {
+				"cycles:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader(
+							"principled_bsdf", "cycles:shader",
+							{ "emission" : imath.Color3f( 1, 0, 1 ) }
+						),
+					},
+					output = "output",
+				)
+			} ) )
+		)
+		## \todo Default camera is facing down +ve Z but should be facing
+		# down -ve Z.
+		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
+
+		renderer.render()
+		time.sleep( 2 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testSurfaceAttributeWithGenericShaderType" )
+		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+
+		# Slightly off-centre, to avoid triangle edge artifact in centre of image.
+		testPixel = self.__colorAtUV( image, imath.V2f( 0.55 ) )
+		self.assertEqual( testPixel.r, 1 )
+		self.assertEqual( testPixel.g, 0 )
+		self.assertEqual( testPixel.b, 1 )
+
+		del plane
 
 if __name__ == "__main__":
 	unittest.main()

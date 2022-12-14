@@ -180,13 +180,6 @@ void CyclesShader::loadShader( const std::string &shaderName, bool keepExistingV
 	setChild( "out", out );
 	SocketHandler::setupPlugs( shaderNodeType, outPlug(), Gaffer::Plug::Out );
 
-	if( shaderName == "output" )
-	{
-		const ccl::NodeType *shaderOutput = ccl::NodeType::find( ccl::ustring( "shader" ) );
-		SocketHandler::setupPlugs( shaderOutput, parametersPlug(), Gaffer::Plug::In, true );
-		//SocketHandler::setupPlugs( shaderOutput, outPlug(), Gaffer::Plug::Out, true );
-	}
-
 	if( static_cast<bool>( outPlug()->children().size() ) != outPlugHadChildren )
 	{
 		// OSLShaderUI registers a dynamic metadata entry which depends on whether or
