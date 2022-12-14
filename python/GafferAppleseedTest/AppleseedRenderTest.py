@@ -74,7 +74,7 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 		s.save()
 
 		subprocess.check_call(
-			[ "gaffer", "execute", self.__scriptFileName, "-frames", "1-3" ]
+			[ str( Gaffer.executablePath() ), "execute", self.__scriptFileName, "-frames", "1-3" ]
 		)
 
 		for i in range( 1, 4 ) :
@@ -129,7 +129,7 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 		s.save()
 
 		subprocess.check_call(
-			[ "gaffer", "execute", self.__scriptFileName, "-frames", "1-3" ]
+			[ str( Gaffer.executablePath() ), "execute", self.__scriptFileName, "-frames", "1-3" ]
 		)
 
 		for i in range( 1, 4 ) :

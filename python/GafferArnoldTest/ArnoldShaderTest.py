@@ -67,7 +67,7 @@ def withMetadata( func ) :
 
 			try :
 				subprocess.check_output(
-					[ "gaffer", "test", "GafferArnoldTest.ArnoldShaderTest." + func.__name__ ],
+					[ str( Gaffer.executablePath() ), "test", "GafferArnoldTest.ArnoldShaderTest." + func.__name__ ],
 					env = env, stderr = subprocess.STDOUT
 				)
 			except subprocess.CalledProcessError as e :

@@ -198,7 +198,7 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 		env["CDL"] = "cineon.spi1d"
 
 		subprocess.check_call(
-			["gaffer", "execute", scriptFileName,"-frames", "1"],
+			[ str( Gaffer.executablePath() ), "execute", scriptFileName,"-frames", "1" ],
 			stderr = subprocess.PIPE,
 			env = env,
 		)
@@ -222,7 +222,7 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 		s.save()
 
 		subprocess.check_call(
-			["gaffer", "execute", scriptFileName,"-frames", "1"],
+			[ str( Gaffer.executablePath() ), "execute", scriptFileName,"-frames", "1" ],
 			stderr = subprocess.PIPE,
 			env = env
 		)

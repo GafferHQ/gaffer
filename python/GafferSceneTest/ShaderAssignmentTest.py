@@ -555,7 +555,7 @@ class ShaderAssignmentTest( GafferSceneTest.SceneTestCase ) :
 				env["GAFFERSCENE_SHADERASSIGNMENT_OSL_PREFIX"] = envVar
 
 			o = subprocess.check_output(
-				[ "gaffer", "execute", script["fileName"].getValue(), "-nodes", "writer" ],
+				[ str( Gaffer.executablePath() ), "execute", script["fileName"].getValue(), "-nodes", "writer" ],
 				env = env
 			)
 

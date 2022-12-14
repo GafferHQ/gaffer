@@ -151,7 +151,7 @@ root["SceneWriter"].execute()
 
 		env = os.environ.copy()
 		subprocess.check_call(
-			[ "gaffer", "env", "python","-c", script ],
+			[ str( Gaffer.executablePath() ), "env", "python","-c", script ],
 			env = env
 		)
 		scene = IECoreScene.SceneCache( str( cacheFilePath ), IECore.IndexedIO.OpenMode.Read )
@@ -170,7 +170,7 @@ root["SceneWriter"].execute()
 
 		env["ARNOLD_PLUGIN_PATH"] = pathlib.Path( __file__ ).parent / "metadata"
 		subprocess.check_call(
-			[ "gaffer", "env", "python","-c", script ],
+			[ str( Gaffer.executablePath() ), "env", "python","-c", script ],
 			env = env
 		)
 		scene = IECoreScene.SceneCache( str( cacheFilePath ), IECore.IndexedIO.OpenMode.Read )

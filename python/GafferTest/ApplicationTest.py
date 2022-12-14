@@ -63,7 +63,7 @@ class ApplicationTest( GafferTest.TestCase ) :
 	@unittest.skipIf( os.name == "nt", "Process name is not controllable on Windows.")
 	def testProcessName( self ) :
 
-		process = subprocess.Popen( [ "gaffer", "env", "sleep", "100" ] )
+		process = subprocess.Popen( [ str( Gaffer.executablePath() ), "env", "sleep", "100" ] )
 		time.sleep( 1 )
 		command = subprocess.check_output( [ "ps", "-p", str( process.pid ), "-o", "command=" ], universal_newlines = True ).strip()
 		name = subprocess.check_output( [ "ps", "-p", str( process.pid ), "-o", "comm=" ], universal_newlines = True ).strip()
