@@ -597,7 +597,8 @@ class InclusionsColumn : public PathColumn
 
 		CellData headerData( const IECore::Canceller *canceller ) const override
 		{
-			return CellData( /* value = */ nullptr, /* icon = */ g_locationIncludedIconName, /* background = */ nullptr, /* tooltip = */ new StringData( "Visible Set Inclusions" ) );
+			const auto visibleSet = ContextAlgo::getVisibleSet( m_context.get() );
+			return CellData( /* value = */ nullptr, /* icon = */ visibleSet.inclusions.isEmpty() ? g_ancestorIncludedIconName : g_locationIncludedIconName, /* background = */ nullptr, /* tooltip = */ new StringData( "Visible Set Inclusions" ) );
 		}
 
 	private :
@@ -816,7 +817,8 @@ class ExclusionsColumn : public PathColumn
 
 		CellData headerData( const IECore::Canceller *canceller ) const override
 		{
-			return CellData( /* value = */ nullptr, /* icon = */ g_locationExcludedIconName, /* background = */ nullptr, /* tooltip = */ new StringData( "Visible Set Exclusions" ) );
+			const auto visibleSet = ContextAlgo::getVisibleSet( m_context.get() );
+			return CellData( /* value = */ nullptr, /* icon = */ visibleSet.exclusions.isEmpty() ? g_ancestorExcludedIconName : g_locationExcludedIconName, /* background = */ nullptr, /* tooltip = */ new StringData( "Visible Set Exclusions" ) );
 		}
 
 	private :

@@ -15,6 +15,7 @@ Improvements
 - TweakPlug : Added a `CreateIfMissing` mode, to only create a new value if one does not currently exist [^1].
 - OSLObject : Added support for attribute substitutions using `<attr:myAttrName>` syntax in string parameters, provided that `useAttributes` is turned on [^1].
 - UIEditor : Increased maximum size of the "Button Click Code" editor [^1].
+- HierarchyView : Inclusions and Exclusions column header icons now update to show when one or more locations have been added to or excluded from the Visible Set [^2].
 
 Fixes
 -----
@@ -46,6 +47,7 @@ Build
 - 3Delight : Updated to 3Delight version 2.9.17.
 
 [^1]: Changes inherited from 1.x. Can be omitted from the release notes for the final release of 1.2.
+[^2]: Changes made to features introduced in 1.2.0.0ax. Can be omitted from the release notes for the final release of 1.2.
 
 1.2.0.0a1
 =========
