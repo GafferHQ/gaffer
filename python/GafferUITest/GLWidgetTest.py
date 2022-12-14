@@ -34,6 +34,9 @@
 #
 ##########################################################################
 
+import os
+import unittest
+
 import imath
 
 import IECore
@@ -42,6 +45,7 @@ import Gaffer
 import GafferUI
 import GafferUITest
 
+@unittest.skipIf( os.name == "nt", "Awaiting triage" )
 class GLWidgetTest( GafferUITest.TestCase ) :
 
 	def testOverlayParenting( self ) :
