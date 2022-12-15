@@ -82,5 +82,13 @@ class PathColumnTest( GafferUITest.TestCase ) :
 		d.toolTip = "help!"
 		self.assertEqual( d.toolTip, "help!" )
 
+	def testSizeMode( self ) :
+
+		p = GafferUI.PathColumn( sizeMode = GafferUI.PathColumn.SizeMode.Stretch )
+		self.assertEqual( p.getSizeMode(), GafferUI.PathColumn.SizeMode.Stretch )
+
+		p.setSizeMode( GafferUI.PathColumn.SizeMode.Interactive )
+		self.assertEqual( p.getSizeMode(), GafferUI.PathColumn.SizeMode.Interactive )
+
 if __name__ == "__main__":
 	unittest.main()

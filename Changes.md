@@ -11,6 +11,7 @@ Improvements
   - Added warning when a shader contains a parameter with an unsupported datatype.
   - Added warning when a shader contains an enum parameter with an invalid value.
   - Added support for passing InternedStringData to enum and string parameters.
+- PathListingWidget : Added support for columns that can automatically stretch to make use of available space.
 
 Fixes
 -----
@@ -20,6 +21,11 @@ Fixes
   - Fixed support for Color4f values on colour shader parameters. This can be useful when loading non-standard USD files.
   - Fixed support for V[23]i values on vector shader parameters.
   - Fixed handling of colour array parameters.
+
+API
+---
+
+- PathColumn : Added `setSizeMode()` and `getSizeMode()` methods, and `sizeMode` constructor argument. These allow the size behaviour of a PathColumn to be configured.
 
 [^1]: Changes inherited from 1.x. Can be omitted from the release notes for the final release of 1.2.
 [^2]: Changes made to features introduced in 1.2.0.0ax. Can be omitted from the release notes for the final release of 1.2.

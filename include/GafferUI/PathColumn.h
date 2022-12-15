@@ -63,6 +63,24 @@ class GAFFERUI_API PathColumn : public IECore::RefCounted, public Gaffer::Signal
 
 		IE_CORE_DECLAREMEMBERPTR( PathColumn )
 
+		/// Defines the UI size behaviour of the column.
+		enum SizeMode
+		{
+			/// The column is user resizable.
+			Interactive = 0,
+			/// The column will automatically resize to fill available space.
+			Stretch = 1,
+
+			Default = Interactive,
+		};
+
+		PathColumn( SizeMode sizeMode = Default );
+
+		/// Returns the current column size mode.
+		SizeMode getSizeMode() const;
+		/// Sets the column size mode.
+		void setSizeMode( SizeMode sizeMode );
+
 		/// Display data
 		/// ============
 
@@ -141,6 +159,8 @@ class GAFFERUI_API PathColumn : public IECore::RefCounted, public Gaffer::Signal
 		ButtonSignal m_buttonReleaseSignal;
 		ButtonSignal m_buttonDoubleClickSignal;
 
+		SizeMode m_sizeMode;
+
 };
 
 IE_CORE_DECLAREPTR( PathColumn )
@@ -153,7 +173,7 @@ class GAFFERUI_API StandardPathColumn : public PathColumn
 
 		IE_CORE_DECLAREMEMBERPTR( StandardPathColumn )
 
-		StandardPathColumn( const std::string &label, IECore::InternedString property );
+		StandardPathColumn( const std::string &label, IECore::InternedString property, PathColumn::SizeMode sizeMode = Default );
 
 		IECore::InternedString property() const;
 
@@ -183,7 +203,7 @@ class GAFFERUI_API IconPathColumn : public PathColumn
 		/// - StringData
 		/// - IntData, UInt44Data
 		/// - BoolData
-		IconPathColumn( const std::string &label, const std::string &prefix, IECore::InternedString property );
+		IconPathColumn( const std::string &label, const std::string &prefix, IECore::InternedString property, PathColumn::SizeMode sizeMode = Default );
 
 		CellData cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const override;
 		CellData headerData( const IECore::Canceller *canceller ) const override;
@@ -207,7 +227,7 @@ class GAFFERUI_API FileIconPathColumn : public PathColumn
 
 		IE_CORE_DECLAREMEMBERPTR( FileIconPathColumn )
 
-		FileIconPathColumn();
+		FileIconPathColumn( PathColumn::SizeMode sizeMode = Default );
 
 		CellData cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const override;
 		CellData headerData( const IECore::Canceller *canceller ) const override;

@@ -73,6 +73,21 @@ const std::string basisName( StandardCubicBasis basis )
 // PathColumn
 //////////////////////////////////////////////////////////////////////////
 
+PathColumn::PathColumn( SizeMode sizeMode )
+	:	m_sizeMode( sizeMode )
+{
+}
+
+PathColumn::SizeMode PathColumn::getSizeMode() const
+{
+	return m_sizeMode;
+}
+
+void PathColumn::setSizeMode( SizeMode sizeMode )
+{
+	m_sizeMode = sizeMode;
+}
+
 PathColumn::PathColumnSignal &PathColumn::changedSignal()
 {
 	return m_changedSignal;
@@ -97,8 +112,8 @@ PathColumn::ButtonSignal &PathColumn::buttonDoubleClickSignal()
 // StandardPathColumn
 //////////////////////////////////////////////////////////////////////////
 
-StandardPathColumn::StandardPathColumn( const std::string &label, IECore::InternedString property )
-	:	m_label( new IECore::StringData( label ) ), m_property( property )
+StandardPathColumn::StandardPathColumn( const std::string &label, IECore::InternedString property, SizeMode sizeMode )
+	:	PathColumn( sizeMode ), m_label( new IECore::StringData( label ) ), m_property( property )
 {
 }
 
@@ -149,8 +164,8 @@ PathColumn::CellData StandardPathColumn::headerData( const IECore::Canceller *ca
 // IconPathColumn
 //////////////////////////////////////////////////////////////////////////
 
-IconPathColumn::IconPathColumn( const std::string &label, const std::string &prefix, IECore::InternedString property )
-	:	m_label( new StringData( label ) ), m_prefix( prefix ), m_property( property )
+IconPathColumn::IconPathColumn( const std::string &label, const std::string &prefix, IECore::InternedString property, SizeMode sizeMode )
+	:	PathColumn( sizeMode ), m_label( new StringData( label ) ), m_prefix( prefix ), m_property( property )
 {
 }
 
@@ -197,8 +212,8 @@ PathColumn::CellData IconPathColumn::headerData( const IECore::Canceller *cancel
 // FileIconPathColumn
 //////////////////////////////////////////////////////////////////////////
 
-FileIconPathColumn::FileIconPathColumn()
-	:	m_label( new IECore::StringData( "Type" ) )
+FileIconPathColumn::FileIconPathColumn( SizeMode sizeMode )
+	:	PathColumn( sizeMode ), m_label( new IECore::StringData( "Type" ) )
 {
 }
 
