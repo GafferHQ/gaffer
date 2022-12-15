@@ -63,7 +63,7 @@ class PathListingWidget( GafferUI.Widget ) :
 	IconColumn = _GafferUI.IconPathColumn
 
 	## A collection of handy column definitions for FileSystemPaths
-	defaultNameColumn = StandardColumn( "Name", "name" )
+	defaultNameColumn = StandardColumn( "Name", "name", GafferUI.PathColumn.SizeMode.Stretch )
 	defaultFileSystemOwnerColumn = StandardColumn( "Owner", "fileSystem:owner" )
 	defaultFileSystemModificationTimeColumn = StandardColumn( "Modified", "fileSystem:modificationTime" )
 	defaultFileSystemIconColumn = GafferUI.FileIconPathColumn()
