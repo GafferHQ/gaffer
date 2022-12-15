@@ -193,12 +193,12 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 		s.save()
 
 		env = os.environ.copy()
-		env["OCIO"] = self.openColorIOPath() / "context.ocio"
+		env["OCIO"] = str( self.openColorIOPath() / "context.ocio" )
 		env["LUT"] = "srgb.spi1d"
 		env["CDL"] = "cineon.spi1d"
 
 		subprocess.check_call(
-			[ str( Gaffer.executablePath() ), "execute", scriptFileName,"-frames", "1" ],
+			[ str( Gaffer.executablePath() ), "execute", str( scriptFileName ),"-frames", "1" ],
 			stderr = subprocess.PIPE,
 			env = env,
 		)
@@ -222,7 +222,7 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 		s.save()
 
 		subprocess.check_call(
-			[ str( Gaffer.executablePath() ), "execute", scriptFileName,"-frames", "1" ],
+			[ str( Gaffer.executablePath() ), "execute", str( scriptFileName ),"-frames", "1" ],
 			stderr = subprocess.PIPE,
 			env = env
 		)

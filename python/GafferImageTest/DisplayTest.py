@@ -239,7 +239,7 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 		s.save()
 
 		output = subprocess.check_output(
-			[ str( Gaffer.executablePath() ), "execute", self.temporaryDirectory() / "test.gfr", "-nodes", "p" ],
+			[ str( Gaffer.executablePath() ), "execute", str( self.temporaryDirectory() / "test.gfr" ), "-nodes", "p" ],
 			stderr = subprocess.STDOUT, universal_newlines = True
 		)
 		self.assertEqual( output, "" )
