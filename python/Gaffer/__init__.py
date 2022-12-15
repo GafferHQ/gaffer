@@ -70,13 +70,13 @@ def rootPath() :
 	return pathlib.Path( os.path.expandvars( "$GAFFER_ROOT" ) )
 
 # Returns the path of the Gaffer executable for the current platform.
-# If `resolve` is `True`, the full path will be returned, otherwise
-# only a path to the executable name and extension are returned.
-def executablePath( resolve = False ) :
+# If `absolute` is `True`, the full path will be returned, otherwise
+# only a path with the executable name and extension are returned.
+def executablePath( absolute = True ) :
 
 	executable = pathlib.Path( "gaffer" ) if os.name != "nt" else pathlib.Path( "gaffer.cmd" )
 
-	if resolve :
+	if absolute :
 		return rootPath() / "bin" / executable
 
 	return executable

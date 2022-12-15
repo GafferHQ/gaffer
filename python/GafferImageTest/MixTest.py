@@ -47,13 +47,13 @@ import GafferImageTest
 
 class MixTest( GafferImageTest.ImageTestCase ) :
 
-	rPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/redWithDataWindow.100x100.exr" )
-	gPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/greenWithDataWindow.100x100.exr" )
-	checkerPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checkerboard.100x100.exr" )
-	checkerNegativeDataWindowPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checkerWithNegativeDataWindow.200x150.exr" )
-	checkerMixPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checkerMix.100x100.exr" )
-	representativeDeepImagePath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/representativeDeepImage.exr" )
-	radialPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/radial.exr" )
+	rPath = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "redWithDataWindow.100x100.exr"
+	gPath = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "greenWithDataWindow.100x100.exr"
+	checkerPath = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "checkerboard.100x100.exr"
+	checkerNegativeDataWindowPath = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "checkerWithNegativeDataWindow.200x150.exr"
+	checkerMixPath = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "checkerMix.100x100.exr"
+	representativeDeepImagePath = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "representativeDeepImage.exr"
+	radialPath = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "radial.exr"
 
 	# Do several tests to check the cache is working correctly:
 	def testHashes( self ) :

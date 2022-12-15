@@ -61,7 +61,7 @@ class StatsApplicationTest( GafferTest.TestCase ) :
 
 		o = subprocess.check_output(
 			[
-				"gaffer", "stats", script["fileName"].getValue(),
+				str( Gaffer.executablePath() ), "stats", script["fileName"].getValue(),
 				"-task", "command",
 				"-context", "-valueOne", "1", "-valueTwo", "2"
 			],

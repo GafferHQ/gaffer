@@ -48,8 +48,8 @@ import math
 
 class FilterAlgoTest( GafferImageTest.ImageTestCase ) :
 
-	derivativesReferenceParallelFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/filterDerivativesTest.parallel.exr" )
-	derivativesReferenceBoxFileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/filterDerivativesTest.box.exr" )
+	derivativesReferenceParallelFileName = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "filterDerivativesTest.parallel.exr"
+	derivativesReferenceBoxFileName = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "filterDerivativesTest.box.exr"
 
 	# Artificial test of several filters passing in different derivatives, including a bunch of 15 degree rotations
 	def testFilterDerivatives( self ):
@@ -124,8 +124,8 @@ class FilterAlgoTest( GafferImageTest.ImageTestCase ) :
 			IECore.Writer.create( parallelogramImage, "/tmp/filterDerivativesTestResult.parallelogram.exr" ).write()
 			IECore.Writer.create( boxImage, "/tmp/filterDerivativesTestResult.box.exr" ).write()
 
-		parallelogramReference = IECore.Reader.create( self.derivativesReferenceParallelFileName ).read()
-		boxReference = IECore.Reader.create( self.derivativesReferenceBoxFileName ).read()
+		parallelogramReference = IECore.Reader.create( str( self.derivativesReferenceParallelFileName ) ).read()
+		boxReference = IECore.Reader.create( str( self.derivativesReferenceBoxFileName ) ).read()
 
 		for i in range( len( parallelogramImage["R"] ) ):
 			self.assertAlmostEqual( parallelogramReference["R"][i], parallelogramImage["R"][i], places = 5 )

@@ -46,7 +46,7 @@ import GafferImageTest
 
 class SamplerTest( GafferImageTest.ImageTestCase ) :
 
-	fileName = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" )
+	fileName = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "checker.exr"
 
 	def testOutOfBoundsSampleModeBlack( self ) :
 

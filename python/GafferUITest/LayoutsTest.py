@@ -91,7 +91,7 @@ class LayoutsTest( GafferUITest.TestCase ) :
 		# (the user running these tests may have their own personal configs).
 		startupPaths = os.environ["GAFFER_STARTUP_PATHS"]
 		try :
-			os.environ["GAFFER_STARTUP_PATHS"] = os.path.expandvars( "$GAFFER_ROOT/startup" )
+			os.environ["GAFFER_STARTUP_PATHS"] = str( Gaffer.rootPath() / "startup" )
 			app._executeStartupFiles( "gui" )
 		finally :
 			os.environ["GAFFER_STARTUP_PATHS"] = startupPaths

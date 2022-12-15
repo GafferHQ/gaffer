@@ -47,8 +47,8 @@ import GafferImageTest
 
 class ImageStatsTest( GafferImageTest.ImageTestCase ) :
 
-	__rgbFilePath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/rgb.100x100.exr" )
-	__file300PxPath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/dotGrid.warped.exr" )
+	__rgbFilePath = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "rgb.100x100.exr"
+	__file300PxPath = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "dotGrid.warped.exr"
 
 	# Test that the outputs change when different channels are selected.
 	def testChannels( self ) :

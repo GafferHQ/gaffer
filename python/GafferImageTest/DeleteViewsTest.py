@@ -47,10 +47,9 @@ import GafferImageTest
 
 class DeleteViewsTest( GafferImageTest.ImageTestCase ) :
 
-	__rgbFilePath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/rgb.100x100.exr" )
+	__rgbFilePath = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "rgb.100x100.exr"
 
 	def test( self ) :
-
 
 		reader = GafferImage.ImageReader()
 		reader["fileName"].setValue( self.__rgbFilePath )

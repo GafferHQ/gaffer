@@ -310,7 +310,7 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 		s.context().setFrame( 10 )
 		s.save()
 
-		subprocess.check_call( [ "gaffer", "execute", self.__scriptFileName ] )
+		subprocess.check_call( [ str( Gaffer.executablePath() ), "execute", self.__scriptFileName ] )
 
 		self.assertEqual(
 			list( self.temporaryDirectory().glob( "test.*.txt" ) ),
@@ -334,7 +334,7 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 		s["fileName"].setValue(  self.temporaryDirectory() / "test.gfr" )
 		s.save()
 
-		subprocess.check_call( [ "gaffer", "execute", s["fileName"].getValue(), "-context", "c", "imath.Color3f( 0, 1, 2 )" ] )
+		subprocess.check_call( [ str( Gaffer.executablePath() ), "execute", s["fileName"].getValue(), "-context", "c", "imath.Color3f( 0, 1, 2 )" ] )
 
 		self.assertEqual(
 			open( s["t"]["fileName"].getValue() ).read(),
@@ -368,7 +368,7 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 			s.context().setFrame( 10 )
 			s.save()
 
-			subprocess.check_call( [ "gaffer", "execute", self.__scriptFileName, "-frames", "5", "-nodes", "PythonCommand" ] )
+			subprocess.check_call( [ str( Gaffer.executablePath() ), "execute", self.__scriptFileName, "-frames", "5", "-nodes", "PythonCommand" ] )
 
 			self.assertTrue( ( self.temporaryDirectory() / "canSerialiseFrameDependentPlug.gfr" ).exists() )
 

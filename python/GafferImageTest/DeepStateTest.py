@@ -52,13 +52,10 @@ import GafferImageTest
 
 # \todo : Add tests for how DeepState responds when A, Z and/or ZBack
 #         channels do not exist on input
-
-
 class DeepStateTest( GafferImageTest.ImageTestCase ) :
 
-	representativeImagePath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/representativeDeepImage.exr" )
-	mergeReferencePath = os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/deepMergeReference.exr" )
-
+	representativeImagePath = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "representativeDeepImage.exr"
+	mergeReferencePath = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "deepMergeReference.exr"
 
 	longMessage = True
 

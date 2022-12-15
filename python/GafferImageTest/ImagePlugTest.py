@@ -156,7 +156,7 @@ class ImagePlugTest( GafferImageTest.ImageTestCase ) :
 	def testImageHash( self ) :
 
 		r = GafferImage.ImageReader()
-		r['fileName'].setValue( os.path.expandvars( "$GAFFER_ROOT/python/GafferImageTest/images/checker.exr" ) )
+		r['fileName'].setValue( Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "checker.exr" )
 
 		h = GafferImage.ImageAlgo.imageHash( r['out'] )
 
