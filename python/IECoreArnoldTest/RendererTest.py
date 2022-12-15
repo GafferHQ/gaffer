@@ -3894,7 +3894,7 @@ class RendererTest( GafferTest.TestCase ) :
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
 		)
 
-		beautyFileName = os.path.join( self.temporaryDirectory(), "beauty.exr" )
+		beautyFileName = str( self.temporaryDirectory() / "beauty.exr" )
 		r.output(
 			"perLightRGBA", IECoreScene.Output(
 				beautyFileName, "exr", "rgba",
