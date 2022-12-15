@@ -487,11 +487,16 @@ class PlugValueWidget( GafferUI.Widget ) :
 			menuDefinition.append( "/LockDivider", { "divider" : True } )
 
 		readOnly = any( Gaffer.MetadataAlgo.getReadOnly( p ) for p in self.getPlugs() )
+		staticallyReadOnly = any(
+			Gaffer.MetadataAlgo.getReadOnly( p ) and Gaffer.Metadata.value( p, "readOnly", instanceOnly = True ) is None
+			for p in self.getPlugs()
+		)
+		parentReadOnly = any( Gaffer.MetadataAlgo.readOnly( p.parent() ) for p in self.getPlugs() )
 		menuDefinition.append(
 			"/Unlock" if readOnly else "/Lock",
 			{
 				"command" : functools.partial( Gaffer.WeakMethod( self.__applyReadOnly ), not readOnly ),
-				"active" : not any( Gaffer.MetadataAlgo.readOnly( p.parent() ) for p in self.getPlugs() ),
+				"active" : not parentReadOnly and not staticallyReadOnly,
 			}
 		)
 
