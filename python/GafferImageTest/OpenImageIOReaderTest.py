@@ -522,7 +522,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		s["reader"] = GafferImage.OpenImageIOReader()
 
 		s["expression"] = Gaffer.Expression()
-		s["expression"].setExpression( 'parent["reader"]["fileName"] = "%s"' % self.fileName )
+		s["expression"].setExpression( 'parent["reader"]["fileName"] = "%s"' % str( self.fileName ).replace( '\\', '\\\\' ) )
 
 		with Gaffer.ContextMonitor( root = s["expression"] ) as cm :
 			GafferImage.ImageAlgo.tiles( s["reader"]["out"] )
