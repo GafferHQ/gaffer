@@ -1,3 +1,11 @@
+1.0.6.x (relative to 1.0.6.4)
+=======
+
+Fixes
+-----
+
+- NodeEditor : Fixed updates for the green "non-default-value" dots in plug labels.
+
 1.0.6.4 (relative to 1.0.6.3)
 =======
 
