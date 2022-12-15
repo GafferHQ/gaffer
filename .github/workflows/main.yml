@@ -67,7 +67,7 @@ jobs:
             dependenciesURL: https://github.com/ImageEngine/cortex/releases/download/10.4.3.0/cortex-10.4.3.0-windows-python3.zip
             testRunner: Invoke-Expression
             sconsCacheMegabytes: 400
-            testArguments: GafferTest GafferImageTest GafferSceneTest GafferDispatchTest GafferOSLTest GafferUSDTest GafferVDBTest GafferArnoldTest GafferCortexTest GafferDelight
+            testArguments: GafferTest GafferImageTest GafferSceneTest GafferDispatchTest GafferOSLTest GafferUSDTest GafferVDBTest GafferDelightTest
 
     runs-on: ${{ matrix.os }}
 
