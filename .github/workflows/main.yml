@@ -181,11 +181,9 @@ jobs:
           #Build Arnold extension
           subprocess.check_call( "scons -j 2 build BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions", shell = True )
 
-          if os.name != "nt" :
-            # Test Arnold extension
-            print( "::add-matcher::./.github/workflows/main/problemMatchers/unittest.json" )
-            subprocess.check_call( "${{ matrix.testRunner }} \"" + os.path.join( os.environ["GAFFER_BUILD_DIR"], "bin", "gaffer" ) + " test IECoreArnoldTest GafferArnoldTest GafferArnoldUITest\"", shell = True )
-            print( "::remove-matcher owner=unittest::" )
+          # Test Arnold extension
+          print( "::add-matcher::./.github/workflows/main/problemMatchers/unittest.json" )
+          subprocess.check_call( "${{ matrix.testRunner }} \"" + os.path.join( os.environ["GAFFER_BUILD_DIR"], "bin", "gaffer" ) + " test IECoreArnoldTest GafferArnoldTest GafferArnoldUITest\"", shell = True )
 
           # Publish ARNOLD_ROOT to the environment for subsequent steps,
           # so we can build the docs for GafferArnold.
