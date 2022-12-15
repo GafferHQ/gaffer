@@ -84,8 +84,6 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__updatePlugMetadataChangedConnections()
 		self.__updateDoubleClickConnection()
 
-		self._updateFromPlugs()
-
 	def label( self ) :
 
 		return self.__label
@@ -125,11 +123,11 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return result
 
-	def _updateFromPlugs( self ) :
+	@staticmethod
+	def _valuesForUpdate( plugs ) :
 
 		## \todo: This is mirrored in PlugLayout and needs centralising in NodeAlgo (along
 		# with proper support for child plug connections/defaults) at the next API break.
-
 		def valueChanged( plug ) :
 
 			if plug.direction() == Gaffer.Plug.Direction.Out :
@@ -143,8 +141,11 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 			else :
 				return not plug.isSetToDefault()
 
-		anyValueChanged = any( [ valueChanged( plug ) for plug in self.getPlugs() ] )
-		self.__setValueChanged( anyValueChanged )
+		return [ valueChanged( p ) for p in plugs ]
+
+	def _updateFromValues( self, values, exception ) :
+
+		self.__setValueChanged( any( values ) )
 
 	# Sets whether or not the label be rendered in a ValueChanged state.
 	def __setValueChanged( self, valueChanged ) :
