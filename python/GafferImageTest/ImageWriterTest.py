@@ -1527,7 +1527,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 	# Helper function that extracts the part of the header we care about from exrheader
 	def usefulHeader( self, path ):
-		r = subprocess.check_output( ["exrheader", path ], universal_newlines=True ).splitlines()[2:]
+		r = subprocess.check_output( ["exrheader", str( path ) ], universal_newlines=True ).splitlines()[2:]
 
 		# Skip header lines that change every run, or between software, and compression ( since we're
 		# not testing for that ), and chunkCount ( since it depends on compression ).  "version" is
@@ -1789,7 +1789,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 					self.assertImagesEqual( rereader["out"], reader["out"], ignoreMetadata = True, ignoreChannelNamesOrder = ignoreOrder, ignoreDataWindow = expandDataWindow )
 
 	def channelTypesFromHeader( self, path ):
-		r = subprocess.check_output( ["exrheader", path ], universal_newlines=True )
+		r = subprocess.check_output( ["exrheader", str( path ) ], universal_newlines=True )
 
 		channelText = re.findall( re.compile( r'channels \(type chlist\):\n((    .*\n)+)', re.MULTILINE ), r )
 

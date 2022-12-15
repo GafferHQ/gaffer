@@ -92,12 +92,12 @@ class LookTransformTest( GafferImageTest.ImageTestCase ) :
 		s.save()
 
 		env = os.environ.copy()
-		env["OCIO"] = self.ocioConfig
+		env["OCIO"] = str( self.ocioConfig )
 		env["LUT"] = "srgb.spi1d"
 		env["CDL"] = "cineon.spi1d"
 
 		subprocess.check_call(
-			[ str( Gaffer.executablePath() ), "execute", scriptFileName, "-frames", "1" ],
+			[ str( Gaffer.executablePath() ), "execute", str( scriptFileName ), "-frames", "1" ],
 			stderr = subprocess.PIPE,
 			env = env,
 		)
@@ -137,12 +137,12 @@ class LookTransformTest( GafferImageTest.ImageTestCase ) :
 		s.save()
 
 		env = os.environ.copy()
-		env["OCIO"] = self.ocioConfig
+		env["OCIO"] = str( self.ocioConfig )
 		env["LUT"] = "srgb.spi1d"
 		env["CDL"] = "cineon.spi1d"
 
 		subprocess.check_call(
-			[ str( Gaffer.executablePath() ), "execute", scriptFileName, "-frames", "1" ],
+			[ str( Gaffer.executablePath() ), "execute", str( scriptFileName ), "-frames", "1" ],
 			stderr = subprocess.PIPE,
 			env = env,
 		)
@@ -183,12 +183,12 @@ class LookTransformTest( GafferImageTest.ImageTestCase ) :
 		s.save()
 
 		env = os.environ.copy()
-		env["OCIO"] = self.ocioConfig
+		env["OCIO"] = str( self.ocioConfig )
 		env["LUT"] = "srgb.spi1d"
 		env["CDL"] = "cineon.spi1d"
 
 		subprocess.check_call(
-			[ str( Gaffer.executablePath() ), "execute", scriptFileName, "-frames", "1" ],
+			[ str( Gaffer.executablePath() ), "execute", str( scriptFileName ), "-frames", "1" ],
 			stderr = subprocess.PIPE,
 			env = env,
 		)
