@@ -49,11 +49,11 @@ import GafferImageTest
 
 class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 
-	fileName = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "circles.exr"
-	colorSpaceFileName = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "circles_as_cineon.exr"
-	offsetDataWindowFileName = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "rgb.100x100.exr"
-	jpgFileName = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "circles.jpg"
-	largeFileName = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "colorbars_max_clamp.exr"
+	fileName = GafferImageTest.ImageTestCase.imagesPath() / "circles.exr"
+	colorSpaceFileName = GafferImageTest.ImageTestCase.imagesPath() / "circles_as_cineon.exr"
+	offsetDataWindowFileName = GafferImageTest.ImageTestCase.imagesPath() / "rgb.100x100.exr"
+	jpgFileName = GafferImageTest.ImageTestCase.imagesPath() / "circles.jpg"
+	largeFileName = GafferImageTest.ImageTestCase.imagesPath() / "colorbars_max_clamp.exr"
 
 	def setUp( self ) :
 
@@ -472,7 +472,7 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 			for name, value in channels:
 				self.assertAlmostEqual( reader["out"].channelData( name, imath.V2i( 0 ), view )[0], value, places = 3 )
 
-		reader["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/imitateProductionLayers1.exr" )
+		reader["fileName"].setValue( self.imagesPath() / "imitateProductionLayers1.exr" )
 
 		reader["channelInterpretation"].setValue( GafferImage.ImageReader.ChannelInterpretation.Default )
 		validateChannels( [ ( "R", 0.1 ), ( "G", 0.2 ), ( "B", 0.3 ), ( "character.R", 0.4 ), ( "character.G", 0.5 ), ( "character.B", 0.6 ) ] )
@@ -484,7 +484,7 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 		#for the specification interpretation, then you actually get a view named "main"
 		validateChannels( [ ( "R", 0.1 ), ( "G", 0.2 ), ( "B", 0.3 ), ( "red", 0.4 ), ( "green", 0.5 ), ( "blue", 0.6 ) ], "main" )
 
-		reader["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/imitateProductionLayers2.exr" )
+		reader["fileName"].setValue( self.imagesPath() / "imitateProductionLayers2.exr" )
 		reader["channelInterpretation"].setValue( GafferImage.ImageReader.ChannelInterpretation.Default )
 		validateChannels( [ ( "R", 0.1 ), ( "G", 0.2 ), ( "B", 0.3 ), ( "Z", 0.4 ) ] )
 		reader["channelInterpretation"].setValue( GafferImage.ImageReader.ChannelInterpretation.Legacy )
@@ -499,7 +499,7 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 		# something like "RGB" or "rgba" or "main", which we recognize.  If you have an EXR with weird part
 		# names though, you can load it correctly by switching channelInterpretation from Default to
 		# Specification
-		reader["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/weirdPartNames.exr" )
+		reader["fileName"].setValue( self.imagesPath() / "weirdPartNames.exr" )
 		reader["channelInterpretation"].setValue( GafferImage.ImageReader.ChannelInterpretation.Default )
 		validateChannels( [
 			( "part0.R", 0.1 ), ( "part1.G", 0.2 ), ( "part2.B", 0.3 ), ( "layer.R", 0.4 ),
@@ -523,7 +523,7 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 
 		for n in [ "SinglePart", "PartPerLayer", "NukeSinglePart", "NukePartPerLayer" ]:
 
-			reader["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/channelTest" + n + ".exr" )
+			reader["fileName"].setValue( self.imagesPath() / ( "channelTest" + n + ".exr" ) )
 
 			# The default channel interpretation should work fine with files coming from Nuke, or from a
 			# spec compliant writer ( like Gaffer's new default )
@@ -585,7 +585,7 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 				# like the spec says they must.  I guess we just give up on this?
 				continue
 
-			reader["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/channelTestMultiView" + n + ".exr" )
+			reader["fileName"].setValue( self.imagesPath() / ( "channelTestMultiView" + n + ".exr" ) )
 
 			# Our reference comes from channelTestImageMultiView, which tries to exercise a bunch of corner
 			# cases, including one view with some channels deleted so the channels aren't the same between views.

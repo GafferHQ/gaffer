@@ -47,7 +47,7 @@ import GafferImageTest
 
 class GradeTest( GafferImageTest.ImageTestCase ) :
 
-	checkerFile = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "checker.exr"
+	checkerFile = GafferImageTest.ImageTestCase.imagesPath() / "checker.exr"
 
 	# Test that when gamma == 0 that the coresponding channel isn't modified.
 	def testChannelEnable( self ) :

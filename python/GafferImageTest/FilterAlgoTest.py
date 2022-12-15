@@ -48,8 +48,8 @@ import math
 
 class FilterAlgoTest( GafferImageTest.ImageTestCase ) :
 
-	derivativesReferenceParallelFileName = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "filterDerivativesTest.parallel.exr"
-	derivativesReferenceBoxFileName = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "filterDerivativesTest.box.exr"
+	derivativesReferenceParallelFileName = GafferImageTest.ImageTestCase.imagesPath() / "filterDerivativesTest.parallel.exr"
+	derivativesReferenceBoxFileName = GafferImageTest.ImageTestCase.imagesPath() / "filterDerivativesTest.box.exr"
 
 	# Artificial test of several filters passing in different derivatives, including a bunch of 15 degree rotations
 	def testFilterDerivatives( self ):
@@ -134,7 +134,7 @@ class FilterAlgoTest( GafferImageTest.ImageTestCase ) :
 	def testMatchesResample( self ):
 		def __test( fileName, size, filter ) :
 
-			inputFileName = os.path.dirname( __file__ ) + "/images/" + fileName
+			inputFileName = self.imagesPath() / fileName
 
 			reader = GafferImage.ImageReader()
 			reader["fileName"].setValue( inputFileName )

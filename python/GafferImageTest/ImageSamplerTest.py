@@ -98,7 +98,7 @@ class ImageSamplerTest( GafferImageTest.ImageTestCase ) :
 		constantSource["color"].setValue( imath.Color4f( 0.1, 0.2, 0.3, 0.4 ) )
 
 		reader = GafferImage.ImageReader()
-		reader["fileName"].setValue( Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "blueWithDataWindow.100x100.exr" )
+		reader["fileName"].setValue( self.imagesPath() / "blueWithDataWindow.100x100.exr" )
 
 		views = GafferImage.CreateViews()
 		views["views"].addChild( Gaffer.NameValuePlug( "left", GafferImage.ImagePlug(), True ) )

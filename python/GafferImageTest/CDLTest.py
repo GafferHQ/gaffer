@@ -48,7 +48,7 @@ import GafferImageTest
 
 class CDLTest( GafferImageTest.ImageTestCase ) :
 
-	imageFile = pathlib.Path( os.environ["GAFFER_ROOT"] ) / "python" / "GafferImageTest" / "images" / "checker.exr"
+	imageFile = GafferImageTest.ImageTestCase.imagesPath() / "checker.exr"
 
 	def test( self ) :
 
@@ -139,7 +139,7 @@ class CDLTest( GafferImageTest.ImageTestCase ) :
 	def testChannelsAreSeparate( self ) :
 
 		i = GafferImage.ImageReader()
-		i["fileName"].setValue( pathlib.Path( os.environ["GAFFER_ROOT"] ) / "python" / "GafferImageTest" / "images" / "circles.exr" )
+		i["fileName"].setValue( self.imagesPath() / "circles.exr" )
 
 		o = GafferImage.CDL()
 		o["in"].setInput( i["out"] )

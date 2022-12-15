@@ -47,7 +47,7 @@ import GafferImageTest
 
 class DeleteChannelsTest( GafferImageTest.ImageTestCase ) :
 
-	checkerFile = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "checker.exr"
+	checkerFile = GafferImageTest.ImageTestCase.imagesPath() / "checker.exr"
 
 	def testDirtyPropagation( self ) :
 

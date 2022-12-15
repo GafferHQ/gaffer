@@ -77,7 +77,7 @@ class MedianTest( GafferImageTest.ImageTestCase ) :
 	def testFilter( self ) :
 
 		r = GafferImage.ImageReader()
-		r["fileName"].setValue( os.path.dirname( __file__ ) + "/images/noisyRamp.exr" )
+		r["fileName"].setValue( self.imagesPath() / "noisyRamp.exr" )
 
 		m = GafferImage.Median()
 		m["in"].setInput( r["out"] )
@@ -98,7 +98,7 @@ class MedianTest( GafferImageTest.ImageTestCase ) :
 	def testDriverChannel( self ) :
 
 		rRaw = GafferImage.ImageReader()
-		rRaw["fileName"].setValue( os.path.dirname( __file__ ) + "/images/circles.exr" )
+		rRaw["fileName"].setValue( self.imagesPath() / "circles.exr" )
 
 		r = GafferImage.Grade()
 		r["in"].setInput( rRaw["out"] )
@@ -113,7 +113,7 @@ class MedianTest( GafferImageTest.ImageTestCase ) :
 		masterMedian["masterChannel"].setValue( "G" )
 
 		expected = GafferImage.ImageReader()
-		expected["fileName"].setValue( os.path.dirname( __file__ ) + "/images/circlesGreenMedian.exr" )
+		expected["fileName"].setValue( self.imagesPath() / "circlesGreenMedian.exr" )
 
 		# Note that in this expected image, the green channel is nicely medianed, and red and blue are completely
 		# unchanged in areas where there is no green.  In areas where red and blue overlap with a noisy green,

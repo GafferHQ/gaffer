@@ -49,7 +49,7 @@ class MirrorTest( GafferImageTest.ImageTestCase ) :
 	def testPassThrough( self ) :
 
 		r = GafferImage.ImageReader()
-		r["fileName"].setValue( os.path.dirname( __file__ ) + "/images/checker2x2.exr" )
+		r["fileName"].setValue( self.imagesPath() / "checker2x2.exr" )
 
 		m = GafferImage.Mirror()
 		m["in"].setInput( r["out"] )
@@ -87,7 +87,7 @@ class MirrorTest( GafferImageTest.ImageTestCase ) :
 	def testHorizontal( self ) :
 
 		r = GafferImage.ImageReader()
-		r["fileName"].setValue( os.path.dirname( __file__ ) + "/images/checker2x2.exr" )
+		r["fileName"].setValue( self.imagesPath() / "checker2x2.exr" )
 
 		m = GafferImage.Mirror()
 		m["in"].setInput( r["out"] )
@@ -106,7 +106,7 @@ class MirrorTest( GafferImageTest.ImageTestCase ) :
 	def testVertical( self ) :
 
 		r = GafferImage.ImageReader()
-		r["fileName"].setValue( os.path.dirname( __file__ ) + "/images/checker2x2.exr" )
+		r["fileName"].setValue( self.imagesPath() / "checker2x2.exr" )
 
 		m = GafferImage.Mirror()
 		m["in"].setInput( r["out"] )

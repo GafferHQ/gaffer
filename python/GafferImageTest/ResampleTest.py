@@ -75,7 +75,7 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 
 		def __test( fileName, size, filter ) :
 
-			inputFileName = os.path.dirname( __file__ ) + "/images/" + fileName
+			inputFileName = self.imagesPath() / fileName
 
 			reader = GafferImage.ImageReader()
 			reader["fileName"].setValue( inputFileName )
@@ -107,12 +107,13 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 
 			expected = GafferImage.ImageReader()
 			expected["fileName"].setValue(
-				"%s/images/%s_%dx%d_%s.exr" % (
-					os.path.dirname( __file__ ),
-					os.path.splitext( fileName )[0],
-					size.x,
-					size.y,
-					filter
+				self.imagesPath() / (
+					"%s_%dx%d_%s.exr" % (
+						os.path.splitext( fileName )[0],
+						size.x,
+						size.y,
+						filter
+					)
 				)
 			)
 

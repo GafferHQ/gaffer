@@ -41,14 +41,13 @@ import os
 
 import IECore
 
-import Gaffer
 import GafferTest
 import GafferImage
 import GafferImageTest
 
 class DeepHoldoutTest( GafferImageTest.ImageTestCase ) :
 
-	representativeImagePath = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "representativeDeepImage.exr"
+	representativeImagePath = GafferImageTest.ImageTestCase.imagesPath() / "representativeDeepImage.exr"
 
 	def testBasics( self ):
 		representativeImage = GafferImage.ImageReader()

@@ -56,10 +56,10 @@ import GafferImageTest
 
 class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
-	__largeFilePath = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "large.exr"
-	__rgbFilePath = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "rgb.100x100.exr"
-	__negativeDataWindowFilePath = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "checkerWithNegativeDataWindow.200x150.exr"
-	__representativeDeepPath = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "representativeDeepImage.exr"
+	__largeFilePath = GafferImageTest.ImageTestCase.imagesPath() / "large.exr"
+	__rgbFilePath = GafferImageTest.ImageTestCase.imagesPath() / "rgb.100x100.exr"
+	__negativeDataWindowFilePath = GafferImageTest.ImageTestCase.imagesPath() / "checkerWithNegativeDataWindow.200x150.exr"
+	__representativeDeepPath = GafferImageTest.ImageTestCase.imagesPath() / "representativeDeepImage.exr"
 
 	longMessage = True
 
@@ -561,8 +561,8 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		r["fileName"].setValue( filePath )
 		w = GafferImage.ImageWriter()
 
-		testFile = self.__testFile( os.path.basename(filePath), "RGBA", ext )
-		expectedFile = filePath.with_suffix( "." + ext )
+		testFile = self.__testFile( filePath.with_suffix("").name, "RGBA", ext )
+		expectedFile = filePath.with_suffix( "."+ext )
 
 		self.assertFalse( os.path.exists( testFile ), "Temporary file already exists : {}".format( testFile ) )
 
@@ -708,7 +708,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 	def __testMetadataDoesNotAffectPixels( self, ext, overrideMetadata = {}, metadataToIgnore = [] ) :
 
 		reader = GafferImage.ImageReader()
-		reader["fileName"].setValue( self.__rgbFilePath.with_suffix( "." + ext ) )
+		reader["fileName"].setValue( self.__rgbFilePath.with_suffix( "."+ext ) )
 
 		# IPTC:Creator will have the current username appended to the end of
 		# the existing one, creating a list of creators. Blank out the initial
@@ -1372,7 +1372,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		# Load an image with various layers.
 
 		reader = GafferImage.ImageReader()
-		reader["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/multipart.exr" )
+		reader["fileName"].setValue( self.imagesPath() / "multipart.exr" )
 		self.assertEqual(
 			set( reader["out"].channelNames() ),
 			{
@@ -1451,7 +1451,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		writer["task"].execute()
 
 		refReader = GafferImage.ImageReader()
-		refReader["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/imitateProductionLayers1.exr" )
+		refReader["fileName"].setValue( self.imagesPath() / "imitateProductionLayers1.exr" )
 
 		rereader = GafferImage.ImageReader()
 		rereader["channelInterpretation"].setInput( refReader["channelInterpretation"] )
@@ -1479,7 +1479,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		)
 		writer["task"].execute()
 
-		refReader["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/imitateProductionLayers2.exr" )
+		refReader["fileName"].setValue( self.imagesPath() / "imitateProductionLayers2.exr" )
 		refReader["refreshCount"].setValue( 2 )
 		rereader["refreshCount"].setValue( 2 )
 
@@ -1513,7 +1513,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		writer["task"].execute()
 
 		refReader = GafferImage.ImageReader()
-		refReader["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/weirdPartNames.exr" )
+		refReader["fileName"].setValue( self.imagesPath() / "weirdPartNames.exr" )
 
 		rereader = GafferImage.ImageReader()
 		rereader["channelInterpretation"].setInput( refReader["channelInterpretation"] )
@@ -1590,7 +1590,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 			rereader["refreshCount"].setValue( rereader["refreshCount"].getValue() + 1 )
 			self.assertImagesEqual( rereader["out"], reference["out"], ignoreMetadata = True, maxDifference = 0.0002, ignoreChannelNamesOrder = layout.startswith( "Nuke" ) )
 			header = self.usefulHeader( writePath )
-			refHeader = self.usefulHeader( os.path.expandvars( "${GAFFER_ROOT}/python/GafferImageTest/images/channelTest" + referenceFile + ".exr" ) )
+			refHeader = self.usefulHeader( self.imagesPath() / ( "channelTest" + referenceFile + ".exr" ) )
 
 			if layout == "Nuke/Interleave Channels":
 				# We don't match the view metadata which Nuke sticks on files without specific views
@@ -1625,7 +1625,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 			self.assertImagesEqual( rereader["out"], reference["out"], ignoreMetadata = True, maxDifference = 0.0002, ignoreChannelNamesOrder = layout == "Single Part", ignoreDataWindow = layout == "Single Part" )
 
 			header = self.usefulHeader( writePath )
-			refHeader = self.usefulHeader( os.path.expandvars( "${GAFFER_ROOT}/python/GafferImageTest/images/channelTestMultiView" + referenceFile + ".exr" ) )
+			refHeader = self.usefulHeader( self.imagesPath() / ( "channelTestMultiView" + referenceFile + ".exr" ) )
 
 			self.assertEqual( header, refHeader )
 
@@ -1659,7 +1659,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 				continue
 
 			header = self.usefulHeader( writePath )
-			refHeader = self.usefulHeader( os.path.expandvars( "${GAFFER_ROOT}/python/GafferImageTest/images/channelTestMultiView" + referenceFile + ".exr" ) )
+			refHeader = self.usefulHeader( self.imagesPath() / ( "channelTestMultiView" + referenceFile + ".exr" ) )
 
 			if layout == "Nuke/Interleave Channels and Layers":
 				# Swap the order of left and right to match Nuke having arbitrarily reordered

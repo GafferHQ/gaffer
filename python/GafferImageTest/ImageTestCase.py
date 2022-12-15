@@ -35,6 +35,8 @@
 ##########################################################################
 
 import imath
+import os
+import pathlib
 
 import IECore
 import IECoreImage
@@ -235,3 +237,11 @@ parent["color"] = imath.Color4f( 0.5, 0.6, 0.7, 0.8 ) if context.get( "collect:l
 		deep = GafferImage.Empty()
 		node["in"].setInput( deep["out"] )
 		self.assertRaisesRegex( RuntimeError, 'Deep data not supported in input "in*', GafferImage.ImageAlgo.image, node["out"] )
+
+	@staticmethod
+	def imagesPath() :
+		return Gaffer.rootPath() / "python" / "GafferImageTest" / "images"
+
+	@staticmethod
+	def openColorIOPath() :
+		return Gaffer.rootPath() / "python" / "GafferImageTest" / "openColorIO"
