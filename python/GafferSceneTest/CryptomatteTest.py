@@ -39,6 +39,7 @@ import unittest
 import pathlib
 import imath
 import json
+import re
 
 import IECore
 
@@ -165,7 +166,7 @@ class CryptomatteTest( GafferSceneTest.SceneTestCase ) :
 		invalidPath = self.testImage.parent / "not" / "a" / "valid" / "path.json"
 		c["sidecarFile"].setValue( invalidPath )
 
-		with self.assertRaisesRegex( Gaffer.ProcessException, r'Manifest file not found: {}'.format( invalidPath ) ) as raised :
+		with self.assertRaisesRegex( Gaffer.ProcessException, r'Manifest file not found: {}'.format( re.escape( str( invalidPath ) ) ) ) as raised :
 			self.compareValues( c, ["crypto_object"] )
 
 	def testManifestFromSidecarMetadata( self ) :
@@ -195,7 +196,7 @@ class CryptomatteTest( GafferSceneTest.SceneTestCase ) :
 		invalidPath = self.testImage.parent / "not" / "a" / "valid" / "path"
 		c["manifestDirectory"].setValue( invalidPath )
 
-		with self.assertRaisesRegex( Gaffer.ProcessException, r'Manifest directory not found: {}'.format( invalidPath ) ) as raised :
+		with self.assertRaisesRegex( Gaffer.ProcessException, r'Manifest directory not found: {}'.format( re.escape( str( invalidPath ) ) ) ) as raised :
 			self.compareValues( c, ["crypto_object"] )
 
 		d["names"].setValue( "cryptomatte/bda530a/manifest cryptomatte/bda530a/manif_file" )
