@@ -84,6 +84,8 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__updatePlugMetadataChangedConnections()
 		self.__updateDoubleClickConnection()
 
+		self._updateFromPlugs()
+
 	def label( self ) :
 
 		return self.__label
