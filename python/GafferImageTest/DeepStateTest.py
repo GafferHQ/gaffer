@@ -353,7 +353,7 @@ class DeepStateTest( GafferImageTest.ImageTestCase ) :
 		iState['deepState'].setValue( GafferImage.DeepState.TargetState.Flat )
 
 		testFile = self.temporaryDirectory() / "test.Flat.exr"
-		self.assertFalse( os.path.exists( testFile ) )
+		self.assertFalse( testFile.exists() )
 
 		w = GafferImage.ImageWriter()
 		w['in'].setInput( iState["out"] )
