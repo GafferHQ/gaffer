@@ -1273,6 +1273,12 @@ _styleSheet = string.Template(
 		paint-alternating-row-colors-for-empty-area: 1;
 	}
 
+	*[gafferClass="GafferSceneUI.HierarchyView"] QTreeView::item {
+		height: 18px;
+		padding-top: 0px;
+		padding-bottom: 0px;
+	}
+
 	QTreeView::item {
 		padding-top: 2px;
 		padding-bottom: 2px;
