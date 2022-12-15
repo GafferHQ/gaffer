@@ -36,6 +36,7 @@
 
 import math
 import os
+import pathlib
 import shutil
 import unittest
 import imath
@@ -612,7 +613,7 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 	@unittest.skipIf( not "OPENEXR_IMAGES_DIR" in os.environ, "If you want to run tests using the OpenEXR sample images, then download https://github.com/AcademySoftwareFoundation/openexr-images and set the env var OPENEXR_IMAGES_DIR to the directory" )
 	def testWithEXRSampleImages( self ):
 
-		directory = os.environ["OPENEXR_IMAGES_DIR"]
+		directory = pathlib.Path( os.environ["OPENEXR_IMAGES_DIR"] )
 
 		reader = GafferImage.ImageReader()
 
@@ -781,7 +782,7 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 					[ "left", "RGBAZ", ((0,0), (1920,814)), (0.0072465, 0.00569297, 0.00303837, 0.0964944), (0, 0, 0, 0), (0.397461, 0.307129, 0.177368, 1) ],
 					[ "right", "RGBAZ", ((0,0), (1883,814)), (0.00711977, 0.00569962, 0.00315493, 0.111899), (0, 0, 0, 0), (0.396729, 0.306396, 0.17749, 1) ] ] ]
 		]:
-			reader["fileName"].setValue( os.path.join( directory, name ) )
+			reader["fileName"].setValue( directory / name )
 
 			# The EXR examples should load correctly with either our default interpretation, or a strict
 			# interpretation of the spec
