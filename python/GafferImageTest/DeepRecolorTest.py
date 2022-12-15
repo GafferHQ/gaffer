@@ -41,15 +41,14 @@ import os
 
 import IECore
 
-import Gaffer
 import GafferTest
 import GafferImage
 import GafferImageTest
 
 class DeepRecolorTest( GafferImageTest.ImageTestCase ) :
 
-	representativeImagePath = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "representativeDeepImage.exr"
-	flatImagePath = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "rgb.100x100.exr"
+	representativeImagePath = GafferImageTest.ImageTestCase.imagesPath() / "representativeDeepImage.exr"
+	flatImagePath = GafferImageTest.ImageTestCase.imagesPath() / "rgb.100x100.exr"
 
 	def testBasics( self ):
 		representativeImage = GafferImage.ImageReader()

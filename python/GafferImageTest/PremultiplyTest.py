@@ -47,7 +47,7 @@ import GafferImageTest
 
 class PremultiplyTest( GafferImageTest.ImageTestCase ) :
 
-	checkerFile = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "rgbOverChecker.100x100.exr"
+	checkerFile = GafferImageTest.ImageTestCase.imagesPath() / "rgbOverChecker.100x100.exr"
 
 	def testAlphaChannel( self ) :
 		# Test that changing the channel to use as the alpha channel changes the hash

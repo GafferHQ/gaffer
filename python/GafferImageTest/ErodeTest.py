@@ -76,7 +76,7 @@ class ErodeTest( GafferImageTest.ImageTestCase ) :
 	def testFilter( self ) :
 
 		r = GafferImage.ImageReader()
-		r["fileName"].setValue( os.path.dirname( __file__ ) + "/images/radial.exr" )
+		r["fileName"].setValue( self.imagesPath() / "radial.exr" )
 
 		m = GafferImage.Erode()
 		m["in"].setInput( r["out"] )
@@ -95,7 +95,7 @@ class ErodeTest( GafferImageTest.ImageTestCase ) :
 	def testDriverChannel( self ) :
 
 		rRaw = GafferImage.ImageReader()
-		rRaw["fileName"].setValue( os.path.dirname( __file__ ) + "/images/circles.exr" )
+		rRaw["fileName"].setValue( self.imagesPath() / "circles.exr" )
 
 		r = GafferImage.Grade()
 		r["in"].setInput( rRaw["out"] )
@@ -110,7 +110,7 @@ class ErodeTest( GafferImageTest.ImageTestCase ) :
 		masterErode["masterChannel"].setValue( "G" )
 
 		expected = GafferImage.ImageReader()
-		expected["fileName"].setValue( os.path.dirname( __file__ ) + "/images/circlesGreenErode.exr" )
+		expected["fileName"].setValue( self.imagesPath() / "circlesGreenErode.exr" )
 
 		# Note that in this expected image, the green channel is nicely medianed, and red and blue are completely
 		# unchanged in areas where there is no green.  In areas where red and blue overlap with a noisy green,

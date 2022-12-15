@@ -47,7 +47,7 @@ import GafferImageTest
 
 class ShuffleTest( GafferImageTest.ImageTestCase ) :
 
-	representativeDeepImagePath = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "representativeDeepImage.exr"
+	representativeDeepImagePath = GafferImageTest.ImageTestCase.imagesPath() / "representativeDeepImage.exr"
 
 	def test( self ) :
 
@@ -153,7 +153,7 @@ class ShuffleTest( GafferImageTest.ImageTestCase ) :
 	def testMissingInputChannel( self ) :
 
 		r = GafferImage.ImageReader()
-		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/blurRange.exr" )
+		r["fileName"].setValue( self.imagesPath() / "blurRange.exr" )
 		self.assertEqual( r["out"]["channelNames"].getValue(), IECore.StringVectorData( [ "R" ] ) )
 
 		s = GafferImage.Shuffle()

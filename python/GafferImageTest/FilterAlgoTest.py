@@ -48,8 +48,8 @@ import math
 
 class FilterAlgoTest( GafferImageTest.ImageTestCase ) :
 
-	derivativesReferenceParallelFileName = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "filterDerivativesTest.parallel.exr"
-	derivativesReferenceBoxFileName = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "filterDerivativesTest.box.exr"
+	derivativesReferenceParallelFileName = GafferImageTest.ImageTestCase.imagesPath() / "filterDerivativesTest.parallel.exr"
+	derivativesReferenceBoxFileName = GafferImageTest.ImageTestCase.imagesPath() / "filterDerivativesTest.box.exr"
 
 	# Artificial test of several filters passing in different derivatives, including a bunch of 15 degree rotations
 	def testFilterDerivatives( self ):
@@ -121,8 +121,8 @@ class FilterAlgoTest( GafferImageTest.ImageTestCase ) :
 
 		# Enable to write out images for visual comparison
 		if False:
-			IECore.Writer.create( parallelogramImage, "/tmp/filterDerivativesTestResult.parallelogram.exr" ).write()
-			IECore.Writer.create( boxImage, "/tmp/filterDerivativesTestResult.box.exr" ).write()
+			IECore.Writer.create( parallelogramImage, str( self.temporaryDirectory() / "filterDerivativesTestResult.parallelogram.exr" ) ).write()
+			IECore.Writer.create( boxImage, str( self.temporaryDirectory() / "filterDerivativesTestResult.box.exr" ) ).write()
 
 		parallelogramReference = IECore.Reader.create( str( self.derivativesReferenceParallelFileName ) ).read()
 		boxReference = IECore.Reader.create( str( self.derivativesReferenceBoxFileName ) ).read()
@@ -134,7 +134,7 @@ class FilterAlgoTest( GafferImageTest.ImageTestCase ) :
 	def testMatchesResample( self ):
 		def __test( fileName, size, filter ) :
 
-			inputFileName = os.path.dirname( __file__ ) + "/images/" + fileName
+			inputFileName = self.imagesPath() / fileName
 
 			reader = GafferImage.ImageReader()
 			reader["fileName"].setValue( inputFileName )

@@ -49,7 +49,7 @@ import GafferImageTest
 
 class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 
-	fileName = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "checker.exr"
+	fileName = GafferImageTest.ImageTestCase.imagesPath() / "checker.exr"
 
 	def test( self ) :
 
@@ -131,7 +131,7 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 	def testChannelsAreSeparate( self ) :
 
 		i = GafferImage.ImageReader()
-		i["fileName"].setValue( Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "circles.exr" )
+		i["fileName"].setValue( self.imagesPath() / "circles.exr" )
 
 		o = GafferImage.ColorSpace()
 		o["in"].setInput( i["out"] )
@@ -193,7 +193,7 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 		s.save()
 
 		env = os.environ.copy()
-		env["OCIO"] = str( Gaffer.rootPath() / "python" / "GafferImageTest" / "openColorIO" / "context.ocio" )
+		env["OCIO"] = self.openColorIOPath() / "context.ocio"
 		env["LUT"] = "srgb.spi1d"
 		env["CDL"] = "cineon.spi1d"
 
@@ -204,7 +204,7 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 		)
 
 		i = GafferImage.ImageReader()
-		i["fileName"].setValue( Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "checker_ocio_context.exr" )
+		i["fileName"].setValue( self.imagesPath() / "checker_ocio_context.exr" )
 
 		o = GafferImage.ImageReader()
 		o["fileName"].setValue( contextImageFile )
@@ -228,7 +228,7 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 		)
 
 		i = GafferImage.ImageReader()
-		i["fileName"].setValue( Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "checker_ocio_context_override.exr" )
+		i["fileName"].setValue( self.imagesPath() / "checker_ocio_context_override.exr" )
 
 		o = GafferImage.ImageReader()
 		o["fileName"].setValue( contextOverrideImageFile )
@@ -242,7 +242,7 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 	def testSingleChannelImage( self ) :
 
 		r = GafferImage.ImageReader()
-		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/blurRange.exr" )
+		r["fileName"].setValue( self.imagesPath() / "blurRange.exr" )
 		self.assertEqual( r["out"]["channelNames"].getValue(), IECore.StringVectorData( [ "R" ] ) )
 
 		s = GafferImage.Shuffle()
@@ -265,7 +265,7 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 	def testUnpremultiplied( self ) :
 
 		i = GafferImage.ImageReader()
-		i["fileName"].setValue( Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "circles.exr" )
+		i["fileName"].setValue( self.imagesPath() / "circles.exr" )
 
 		shuffleAlpha = GafferImage.Shuffle()
 		shuffleAlpha["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "channel" ) )

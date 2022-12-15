@@ -96,7 +96,7 @@ class FormatQueryTest( GafferImageTest.ImageTestCase ) :
 		constantSource["format"].setValue( GafferImage.Format( imath.Box2i( imath.V2i( 0 ), imath.V2i( 512 ) ), 1 ) )
 
 		reader = GafferImage.ImageReader()
-		reader["fileName"].setValue( Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "checkerboard.100x100.exr" )
+		reader["fileName"].setValue( self.imagesPath() / "checkerboard.100x100.exr" )
 
 		views = GafferImage.CreateViews()
 		views["views"].addChild( Gaffer.NameValuePlug( "left", GafferImage.ImagePlug(), True ) )

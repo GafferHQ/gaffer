@@ -52,7 +52,7 @@ class CatalogueSelectTest( GafferImageTest.ImageTestCase ) :
 
 		outputIndex = 0
 		for fileName in fileNames :
-			images.append( GafferImage.Catalogue.Image.load( "${GAFFER_ROOT}/python/GafferImageTest/images/" + fileName ) )
+			images.append( GafferImage.Catalogue.Image.load( self.imagesPath() / fileName ) )
 			outputIndex += 1
 			images[-1]["outputIndex"].setValue( outputIndex )
 			readers.append( GafferImage.ImageReader() )

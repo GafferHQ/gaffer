@@ -145,7 +145,7 @@ class RampTest( GafferImageTest.ImageTestCase ) :
 		ramp["ramp"]["p2"].addChild( Gaffer.Color4fPlug( "y", defaultValue = imath.Color4f( 0.530900002, 0, 0, 0.50999999 ) ) )
 
 		reader = GafferImage.ImageReader()
-		reader["fileName"].setValue( os.path.dirname( __file__ ) + "/images/GafferRamp.exr" )
+		reader["fileName"].setValue( self.imagesPath() / "GafferRamp.exr" )
 
 		self.assertImagesEqual( ramp["out"], reader["out"], ignoreMetadata = True, maxDifference = 0.001 )
 

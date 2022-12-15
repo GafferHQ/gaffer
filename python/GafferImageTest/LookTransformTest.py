@@ -35,6 +35,7 @@
 ##########################################################################
 
 import os
+import pathlib
 import unittest
 import subprocess
 import imath
@@ -48,9 +49,9 @@ import GafferImageTest
 
 class LookTransformTest( GafferImageTest.ImageTestCase ) :
 
-	fileName = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "checker.exr"
-	groundTruth = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "checker_ocio_look.exr"
-	ocioConfig = Gaffer.rootPath() / "python" / "GafferImageTest" / "openColorIO" / "context.ocio"
+	fileName = GafferImageTest.ImageTestCase.imagesPath() / "checker.exr"
+	groundTruth = GafferImageTest.ImageTestCase.imagesPath() / "checker_ocio_look.exr"
+	ocioConfig = GafferImageTest.ImageTestCase.openColorIOPath() / "context.ocio"
 
 	def test( self ) :
 

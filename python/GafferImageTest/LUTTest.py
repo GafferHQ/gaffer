@@ -49,8 +49,8 @@ import GafferImageTest
 
 class LUTTest( GafferImageTest.ImageTestCase ) :
 
-	imageFile = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "checker.exr"
-	lut = Gaffer.rootPath() / "python" / "GafferImageTest" / "openColorIO" / "luts" / "slog10.spi1d"
+	imageFile = GafferImageTest.ImageTestCase.imagesPath() / "checker.exr"
+	lut = GafferImageTest.ImageTestCase.openColorIOPath() / "luts" / "slog10.spi1d"
 
 	def test( self ) :
 
@@ -166,7 +166,7 @@ class LUTTest( GafferImageTest.ImageTestCase ) :
 	def testChannelsAreSeparate( self ) :
 
 		i = GafferImage.ImageReader()
-		i["fileName"].setValue( Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "circles.exr" )
+		i["fileName"].setValue( self.imagesPath() / "circles.exr" )
 
 		o = GafferImage.LUT()
 		o["in"].setInput( i["out"] )
