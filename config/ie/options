@@ -531,6 +531,7 @@ ENV_VARS_TO_IMPORT = " ".join( [
 	"QT_VERSION",
 	"QT_QPA_PLATFORM_PLUGIN_PATH",
 	"GAFFER_JEMALLOC",
+	"CORTEX_PREFERRED_PYTHON_VERSION",
 ] )
 
 # required if scons compiler version doesn't match the build compiler version
