@@ -1016,7 +1016,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		dispatcher.dispatch( [ s["w"] ] )
 
 		# a single dispatch should have the same job directory for all batches
-		jobDir = dispatcher.jobDirectory()
+		jobDir = dispatcher.jobDirectory().as_posix()
 		self.assertEqual( next( open( "%s/test.0002.txt" % jobDir ) ), "w on 2 from %s" % jobDir )
 		self.assertEqual( next( open( "%s/test.0004.txt" % jobDir ) ), "w on 4 from %s" % jobDir )
 		self.assertEqual( next( open( "%s/test.0006.txt" % jobDir ) ), "w on 6 from %s" % jobDir )
