@@ -1,3 +1,8 @@
+1.0.6.x (relative to 1.0.6.5)
+=======
+
+- Random : Fixed GIL management bug which could lead to hangs.
+
 1.0.6.5 (relative to 1.0.6.4)
 =======
 

@@ -53,6 +53,7 @@ namespace
 
 Imath::Color3f randomColor( Random &r, int seed )
 {
+	IECorePython::ScopedGILRelease gilRelease;
 	return r.randomColor( std::max( seed, 0 ) );
 }
 
