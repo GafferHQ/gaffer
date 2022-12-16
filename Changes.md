@@ -32,6 +32,7 @@ Fixes
 API
 ---
 
+- PlugValueWidget : Added new API to provide asynchronous updates. The old `_updateFromPlugs()` and `_plugConnections()` methods are deprecated, and support for them will be removed in a future version.
 - PlugAlgo : Added `dependsOnCompute()` utility method.
 - FileSystemPath :
   - Added a constructor that accepts a `filesystem::path`.

@@ -47,6 +47,17 @@ import GafferUITest
 
 class PlugValueWidgetTest( GafferUITest.TestCase ) :
 
+	@staticmethod
+	def waitForUpdate( widget ) :
+
+		# Updates are done lazily, so we need to flush any pending updates.
+		widget._PlugValueWidget__callUpdateFromValues.flush( widget )
+		# And updates for computed values are done in the background, so we
+		# need to wait until they're done.
+		if any( isinstance( p, Gaffer.ValuePlug ) and Gaffer.PlugAlgo.dependsOnCompute( p ) for p in widget.getPlugs() ) :
+			with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as handler :
+				handler.assertCalled()
+
 	def testContext( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -233,18 +244,16 @@ class PlugValueWidgetTest( GafferUITest.TestCase ) :
 		menu.item( "/presetTwo" ).command()
 		self.assertEqual( script["n"]["op1"].getValue(), 2 )
 
-	class UpdateCountPlugValueWidget( GafferUI.NumericPlugValueWidget ) :
+	class UpdateCountPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		def __init__( self, plugs, **kw ) :
 
 			self.updateCount = 0
 			self.updateContexts = []
 
-			GafferUI.NumericPlugValueWidget.__init__( self, plugs, **kw )
+			GafferUI.PlugValueWidget.__init__( self, GafferUI.Label( "" ), plugs, **kw )
 
-		def _updateFromPlugs( self ) :
-
-			GafferUI.NumericPlugValueWidget._updateFromPlugs( self )
+		def _updateFromValues( self, values, exception ) :
 
 			self.updateCount += 1
 			self.updateContexts.append( self.getContext() )
@@ -254,8 +263,57 @@ class PlugValueWidgetTest( GafferUITest.TestCase ) :
 		script = Gaffer.ScriptNode()
 		script["add"] = GafferTest.AddNode()
 
+		# Should do no updates during construction, because the widget is
+		# not visible yet.
+		with GafferUI.Window() as window :
+			widget = self.UpdateCountPlugValueWidget( script["add"]["op1"] )
+
+		self.assertEqual( widget.updateCount, 0 )
+		self.assertEqual( len( widget.updateContexts ), 0 )
+
+		# First update should occur when we make the widget visible.
+		window.setVisible( True )
+		self.waitForIdle()
+		self.assertEqual( widget.updateCount, 1 )
+		self.assertTrue( widget.updateContexts[0].isSame( script.context() ) )
+
+		# No need to do an update when calling `setContext()`
+		# with the same context as already held.
+		self.assertTrue( widget.getContext().isSame( script.context() ) )
+		widget.setContext( script.context() )
+		self.waitForIdle()
+		self.assertEqual( widget.updateCount, 1 )
+
+		# But changing to a different context should trigger an update.
+		context = Gaffer.Context()
+		widget.setContext( context )
+		self.waitForUpdate( widget ) # Updates are done lazily
+		self.assertEqual( widget.updateCount, 2 )
+		self.assertTrue( widget.updateContexts[1].isSame( context ) )
+
+	class LegacyUpdateCountPlugValueWidget( GafferUI.PlugValueWidget ) :
+
+		def __init__( self, plugs, **kw ) :
+
+			self.updateCount = 0
+			self.updateContexts = []
+
+			GafferUI.PlugValueWidget.__init__( self, GafferUI.Label( "" ), plugs, **kw )
+
+			self._updateFromPlugs()
+
+		def _updateFromPlugs( self ) :
+
+			self.updateCount += 1
+			self.updateContexts.append( self.getContext() )
+
+	def testLegacyUpdates( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["add"] = GafferTest.AddNode()
+
 		# Should do one update during construction
-		widget = self.UpdateCountPlugValueWidget( script["add"]["op1"] )
+		widget = self.LegacyUpdateCountPlugValueWidget( script["add"]["op1"] )
 		self.assertEqual( widget.updateCount, 1 )
 		self.assertTrue( widget.updateContexts[0].isSame( script.context() ) )
 
