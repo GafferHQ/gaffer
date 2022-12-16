@@ -73,7 +73,7 @@ class DispatchApplicationTest( GafferTest.TestCase ) :
 		if "-settings" not in command :
 			command += " -settings"
 		if "-dispatcher.jobsDirectory" not in command :
-			command += " -dispatcher.jobsDirectory '\"{tmpDir}/dispatcher/local\"'".format( tmpDir = self.temporaryDirectory() )
+			command += " -dispatcher.jobsDirectory '\"{tmpDir}\"'".format( tmpDir = str( self.temporaryDirectory() / "dispatcher" / "local" ).replace( '\\', '\\\\' ) )
 
 		p = subprocess.Popen( command, shell=True, stderr = subprocess.PIPE, universal_newlines = True )
 		p.wait()
@@ -220,7 +220,7 @@ class DispatchApplicationTest( GafferTest.TestCase ) :
 		p = self.waitForCommand(
 			"gaffer dispatch -tasks {task} -settings -TextWriter.fileName '\"{output}\"' -TextWriter.text '\"{text}\"'".format(
 				task = "GafferDispatchTest.TextWriter",
-				output = self.__outputTextFile,
+				output = str( self.__outputTextFile ).replace( '\\', '\\\\'),
 				text = "command line test",
 			)
 		)
@@ -235,7 +235,7 @@ class DispatchApplicationTest( GafferTest.TestCase ) :
 		p = self.waitForCommand(
 			"gaffer dispatch -tasks {task} -applyUserDefaults -settings -TextWriter.fileName '\"{output}\"' -TextWriter.text '\"{text}\"'".format(
 				task = "GafferDispatchTest.TextWriter",
-				output = self.__outputTextFile,
+				output = str( self.__outputTextFile ).replace( '\\', '\\\\'),
 				text = "userDefault test ${dispatcher:jobDirectory}",
 			)
 		)
@@ -274,7 +274,7 @@ class DispatchApplicationTest( GafferTest.TestCase ) :
 		p = self.waitForCommand(
 			"gaffer dispatch -tasks {task} -settings -TextWriter.fileName '\"{output}\"' -TextWriter.text '\"{text}\"' -context.myVar 1.25".format(
 				task = "GafferDispatchTest.TextWriter",
-				output = self.__outputTextFile,
+				output = str( self.__outputTextFile ).replace( '\\', '\\\\'),
 				text = "context ${myVar} test",
 			)
 		)
