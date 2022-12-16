@@ -48,8 +48,8 @@ import GafferImageTest
 
 class CreateViewsTest( GafferImageTest.ImageTestCase ) :
 
-	__rgbFilePath = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "rgb.100x100.exr"
-	__stereoFilePath = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "channelTestMultiViewPartPerView.exr"
+	__rgbFilePath = GafferImageTest.ImageTestCase.imagesPath() / "rgb.100x100.exr"
+	__stereoFilePath = GafferImageTest.ImageTestCase.imagesPath() / "channelTestMultiViewPartPerView.exr"
 
 	def test( self ) :
 

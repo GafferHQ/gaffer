@@ -109,7 +109,7 @@ class TextTest( GafferImageTest.ImageTestCase ) :
 		text["transform"]["rotate"].setValue( 90 )
 
 		reader = GafferImage.ImageReader()
-		reader["fileName"].setValue( os.path.dirname( __file__ ) + "/images/text.exr" )
+		reader["fileName"].setValue( self.imagesPath() / "text.exr" )
 
 		self.assertImagesEqual( text["out"], reader["out"], ignoreMetadata = True, maxDifference = 0.001 )
 

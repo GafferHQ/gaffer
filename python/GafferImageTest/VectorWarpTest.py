@@ -71,7 +71,7 @@ class VectorWarpTest( GafferImageTest.ImageTestCase ) :
 	def testVectorWarp( self ) :
 
 		reader = GafferImage.ImageReader()
-		reader["fileName"].setValue( os.path.dirname( __file__ ) + "/images/checker2x2.exr" )
+		reader["fileName"].setValue( self.imagesPath() / "checker2x2.exr" )
 
 		# Constant provides the same Vector across the board
 		# for the VectorWarp vector input.
@@ -102,7 +102,7 @@ class VectorWarpTest( GafferImageTest.ImageTestCase ) :
 	def testNegativeDataWindowOrigin( self ) :
 
 		reader = GafferImage.ImageReader()
-		reader["fileName"].setValue( os.path.dirname( __file__ ) + "/images/checker.exr" )
+		reader["fileName"].setValue( self.imagesPath() / "checker.exr" )
 
 		constant = GafferImage.Constant()
 		constant["color"].setValue( imath.Color4f( 0.5, 0, 0, 1 ) )
@@ -119,7 +119,7 @@ class VectorWarpTest( GafferImageTest.ImageTestCase ) :
 
 	def testWarpImage( self ):
 		dotGridReader = GafferImage.ImageReader()
-		dotGridReader["fileName"].setValue( os.path.dirname( __file__ ) + "/images/dotGrid.300.exr" )
+		dotGridReader["fileName"].setValue( self.imagesPath() / "dotGrid.300.exr" )
 
 		vectorWarp = GafferImage.VectorWarp()
 		vectorWarp["in"].setInput( dotGridReader["out"] )
@@ -146,7 +146,7 @@ class VectorWarpTest( GafferImageTest.ImageTestCase ) :
 
 		# Test that a warp with distortion produces an expected output
 		warpPatternReader = GafferImage.ImageReader()
-		warpPatternReader["fileName"].setValue( os.path.dirname( __file__ ) + "/images/warpPattern.exr" )
+		warpPatternReader["fileName"].setValue( self.imagesPath() / "warpPattern.exr" )
 
 		toAbsoluteMerge["in"]["in2"].setInput( warpPatternReader["out"] )
 
@@ -154,7 +154,7 @@ class VectorWarpTest( GafferImageTest.ImageTestCase ) :
 		vectorWarp["vector"].setInput( toAbsoluteMerge["out"] )
 
 		expectedReader = GafferImage.ImageReader()
-		expectedReader["fileName"].setValue( os.path.dirname( __file__ ) + "/images/dotGrid.warped.exr" )
+		expectedReader["fileName"].setValue( self.imagesPath() / "dotGrid.warped.exr" )
 		self.assertImagesEqual( vectorWarp["out"], expectedReader["out"], maxDifference = 0.0005, ignoreMetadata = True )
 
 		# Test that we can get the same result using pixel offsets instead of normalized coordinates

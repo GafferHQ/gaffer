@@ -49,8 +49,7 @@ import GafferImageTest
 
 class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 
-	fileName = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "checker.exr"
-	path = Gaffer.rootPath() / "python" / "GafferImageTest" / "images"
+	fileName = GafferImageTest.ImageTestCase.imagesPath() / "checker.exr"
 
 	def testNoPassThrough( self ) :
 
@@ -78,7 +77,7 @@ class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 		# tiles apart.
 
 		r = GafferImage.ImageReader()
-		r["fileName"].setValue( self.path / "rgb.100x100.exr" )
+		r["fileName"].setValue( self.imagesPath() / "rgb.100x100.exr" )
 
 		t = GafferImage.ImageTransform()
 		t["in"].setInput( r["out"] )
@@ -86,7 +85,7 @@ class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 		t["transform"]["scale"].setValue( imath.V2f( 1.5, 1. ) )
 
 		r2 = GafferImage.ImageReader()
-		r2["fileName"].setValue( self.path / "knownTransformBug.exr" )
+		r2["fileName"].setValue( self.imagesPath() / "knownTransformBug.exr" )
 
 		self.assertImagesEqual( t["out"], r2["out"], ignoreMetadata = True, maxDifference = 0.05 )
 
@@ -296,7 +295,7 @@ class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 	def testNegativeScale( self ) :
 
 		r = GafferImage.ImageReader()
-		r["fileName"].setValue( Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "checker2x2.exr" )
+		r["fileName"].setValue( self.imagesPath() / "checker2x2.exr" )
 
 		t = GafferImage.ImageTransform()
 		t["in"].setInput( r["out"] )

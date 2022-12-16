@@ -52,10 +52,13 @@ import GafferImageTest
 
 # \todo : Add tests for how DeepState responds when A, Z and/or ZBack
 #         channels do not exist on input
+
+
 class DeepStateTest( GafferImageTest.ImageTestCase ) :
 
-	representativeImagePath = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "representativeDeepImage.exr"
-	mergeReferencePath = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "deepMergeReference.exr"
+	representativeImagePath = GafferImageTest.ImageTestCase.imagesPath() / "representativeDeepImage.exr"
+	mergeReferencePath = GafferImageTest.ImageTestCase.imagesPath() / "deepMergeReference.exr"
+
 
 	longMessage = True
 
@@ -350,7 +353,7 @@ class DeepStateTest( GafferImageTest.ImageTestCase ) :
 		iState['deepState'].setValue( GafferImage.DeepState.TargetState.Flat )
 
 		testFile = self.temporaryDirectory() / "test.Flat.exr"
-		self.assertFalse( os.path.exists( testFile ) )
+		self.assertFalse( testFile.exists() )
 
 		w = GafferImage.ImageWriter()
 		w['in'].setInput( iState["out"] )

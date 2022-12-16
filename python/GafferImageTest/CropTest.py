@@ -48,9 +48,10 @@ import GafferImageTest
 
 class CropTest( GafferImageTest.ImageTestCase ) :
 
-	imageFileUndersizeDataWindow = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "blueWithDataWindow.100x100.exr"
-	imageFileOversizeDataWindow = Gaffer.rootPath() / "python"/ "GafferImageTest" / "images" / "checkerWithNegWindows.200x150.exr"
-	representativeDeepImagePath = Gaffer.rootPath() / "python"/ "GafferImageTest"/ "images" /"representativeDeepImage.exr"
+	imageFileUndersizeDataWindow = GafferImageTest.ImageTestCase.imagesPath() / "blueWithDataWindow.100x100.exr"
+	imageFileOversizeDataWindow = GafferImageTest.ImageTestCase.imagesPath() / "checkerWithNegWindows.200x150.exr"
+	representativeDeepImagePath = GafferImageTest.ImageTestCase.imagesPath() / "representativeDeepImage.exr"
+
 
 	def testDefaultState( self ) :
 

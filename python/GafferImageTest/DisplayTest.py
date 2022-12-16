@@ -204,15 +204,15 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 
 	def testTransferChecker( self ) :
 
-		self.__testTransferImage( Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "checker.exr" )
+		self.__testTransferImage( self.imagesPath() / "checker.exr" )
 
 	def testTransferWithDataWindow( self ) :
 
-		self.__testTransferImage( Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "checkerWithNegativeDataWindow.200x150.exr" )
+		self.__testTransferImage( self.imagesPath() / "checkerWithNegativeDataWindow.200x150.exr" )
 
 	def testAccessOutsideDataWindow( self ) :
 
-		node = self.__testTransferImage( Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "checker.exr" )
+		node = self.__testTransferImage( self.imagesPath() / "checker.exr" )
 
 		blackTile = IECore.FloatVectorData( [ 0 ] * GafferImage.ImagePlug.tileSize() * GafferImage.ImagePlug.tileSize() )
 
@@ -312,7 +312,7 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 	def __testTransferImage( self, fileName ) :
 
 		imageReader = GafferImage.ImageReader()
-		imageReader["fileName"].setValue( os.path.expandvars( fileName ) )
+		imageReader["fileName"].setValue( fileName )
 
 		imagesReceived = GafferTest.CapturingSlot( GafferImage.Display.imageReceivedSignal() )
 

@@ -35,6 +35,7 @@
 ##########################################################################
 
 import os
+import pathlib
 import shutil
 import unittest
 import subprocess
@@ -75,7 +76,7 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 
 		def __test( fileName, size, filter ) :
 
-			inputFileName = os.path.dirname( __file__ ) + "/images/" + fileName
+			inputFileName = self.imagesPath() / fileName
 
 			reader = GafferImage.ImageReader()
 			reader["fileName"].setValue( inputFileName )
@@ -95,7 +96,7 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 			crop["in"].setInput( resample["out"] )
 			crop["area"].setValue( imath.Box2i( imath.V2i( 0 ), size ) )
 
-			outputFileName = self.temporaryDirectory() / ( "%s_%dx%d_%s.exr" % ( os.path.splitext( fileName )[0], size.x, size.y, filter ) )
+			outputFileName = self.temporaryDirectory() / ( "%s_%dx%d_%s.exr" % ( pathlib.Path( fileName ).with_suffix(""), size.x, size.y, filter ) )
 			writer = GafferImage.ImageWriter()
 			writer["in"].setInput( crop["out"] )
 			writer["channels"].setValue( "[RGB]" )
@@ -107,12 +108,13 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 
 			expected = GafferImage.ImageReader()
 			expected["fileName"].setValue(
-				"%s/images/%s_%dx%d_%s.exr" % (
-					os.path.dirname( __file__ ),
-					os.path.splitext( fileName )[0],
-					size.x,
-					size.y,
-					filter
+				self.imagesPath() / (
+					"%s_%dx%d_%s.exr" % (
+						pathlib.Path( fileName ).with_suffix(""),
+						size.x,
+						size.y,
+						filter
+					)
 				)
 			)
 
@@ -123,12 +125,12 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 			# of the current directory.
 			if False :
 
-				if not os.path.exists( "resampleComparison" ) :
-					os.makedirs( "resampleComparison" )
+				resampleComparisonDir = pathlib.Path( "resampleComparison" )
+				resampleComparisonDir.mkdir( exist_ok=True )
 
-				shutil.copyfile( outputFileName, "resampleComparison/gaffer_" + os.path.basename( outputFileName ) )
+				shutil.copyfile( outputFileName, resampleComparisonDir / ( "gaffer_" + outputFileName.name ) )
 
-				oiioOutputFileName = "resampleComparison/oiio_%s_%dx%d_%s.exr" % ( os.path.splitext( fileName )[0], size.x, size.y, filter )
+				oiioOutputFileName = resampleComparisonDir / ( "oiio_%s_%dx%d_%s.exr" % ( pathlib.Path( fileName ).with_suffix(""), size.x, size.y, filter ) )
 
 				subprocess.check_call(
 					"oiiotool --threads 1 %s --ch R,G,B --resize:filter=%s %dx%d  -o %s" %

@@ -51,7 +51,7 @@ class ClampTest( GafferImageTest.ImageTestCase ) :
 	def testClamp( self ) :
 
 		i = GafferImage.ImageReader()
-		i["fileName"].setValue( pathlib.Path( os.environ["GAFFER_ROOT"] ) / "python" / "GafferImageTest" / "images" /"colorbars_half_max.exr" )
+		i["fileName"].setValue( self.imagesPath() / "colorbars_half_max.exr" )
 
 		clamp = GafferImage.Clamp()
 		clamp["in"].setInput(i["out"])
@@ -62,7 +62,7 @@ class ClampTest( GafferImageTest.ImageTestCase ) :
 	def testPerChannelHash( self ) :
 
 		i = GafferImage.ImageReader()
-		i["fileName"].setValue( pathlib.Path( os.environ["GAFFER_ROOT"] ) / "python" / "GafferImageTest" / "images" / "colorbars_half_max.exr" )
+		i["fileName"].setValue( self.imagesPath() / "colorbars_half_max.exr" )
 
 		clamp = GafferImage.Clamp()
 		clamp["in"].setInput(i["out"])
@@ -86,7 +86,7 @@ class ClampTest( GafferImageTest.ImageTestCase ) :
 	def testDisconnectedDirty( self ) :
 
 		r = GafferImage.ImageReader()
-		r["fileName"].setValue( pathlib.Path( os.environ["GAFFER_ROOT"] ) / "python" / "GafferImageTest" / "images" / "colorbars_half_max.exr" )
+		r["fileName"].setValue( self.imagesPath() / "colorbars_half_max.exr" )
 		clamp = GafferImage.Clamp()
 		clamp["in"].setInput( r["out"] )
 
@@ -106,7 +106,7 @@ class ClampTest( GafferImageTest.ImageTestCase ) :
 	def testClampWithMaxTo( self ) :
 
 		i = GafferImage.ImageReader()
-		i["fileName"].setValue( pathlib.Path( os.environ["GAFFER_ROOT"] ) / "python" / "GafferImageTest" / "images" / "colorbars_max_clamp.exr" )
+		i["fileName"].setValue( self.imagesPath() / "colorbars_max_clamp.exr" )
 
 		clamp = GafferImage.Clamp()
 		clamp["in"].setInput(i["out"])
@@ -133,7 +133,7 @@ class ClampTest( GafferImageTest.ImageTestCase ) :
 	def testEnabledBypass( self ) :
 
 		i = GafferImage.ImageReader()
-		i["fileName"].setValue( pathlib.Path( os.environ["GAFFER_ROOT"] ) / "python" / "GafferImageTest" / "images" / "colorbars_half_max.exr" )
+		i["fileName"].setValue( self.imagesPath() / "colorbars_half_max.exr" )
 
 		clamp = GafferImage.Clamp()
 		clamp["in"].setInput(i["out"])
@@ -158,7 +158,7 @@ class ClampTest( GafferImageTest.ImageTestCase ) :
 	def testPassThrough( self ) :
 
 		i = GafferImage.ImageReader()
-		i["fileName"].setValue( pathlib.Path( os.environ["GAFFER_ROOT"] ) / "python" / "GafferImageTest" / "images" / "colorbars_half_max.exr" )
+		i["fileName"].setValue( self.imagesPath() / "colorbars_half_max.exr" )
 
 		c = GafferImage.Clamp()
 		c["in"].setInput( i["out"] )

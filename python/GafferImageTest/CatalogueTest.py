@@ -71,7 +71,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		images = []
 		readers = []
 		for i, fileName in enumerate( [ "checker.exr", "blurRange.exr", "noisyRamp.exr", "resamplePatterns.exr" ] ) :
-			images.append( GafferImage.Catalogue.Image.load( "${GAFFER_ROOT}/python/GafferImageTest/images/" + fileName ) )
+			images.append( GafferImage.Catalogue.Image.load( self.imagesPath() / fileName ) )
 			readers.append( GafferImage.ImageReader() )
 			readers[-1]["fileName"].setValue( images[-1]["fileName"].getValue() )
 
@@ -97,7 +97,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 	def testDescription( self ) :
 
 		c = GafferImage.Catalogue()
-		c["images"].addChild( c.Image.load( "${GAFFER_ROOT}/python/GafferImageTest/images/blurRange.exr" ) )
+		c["images"].addChild( c.Image.load( self.imagesPath() / "blurRange.exr" ) )
 		self.assertNotIn( "ImageDescription", c["out"]["metadata"].getValue() )
 
 		c["images"][-1]["description"].setValue( "ddd" )
@@ -132,7 +132,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		for i, fileName in enumerate( [ "checker.exr", "blurRange.exr" ] ) :
 			s["c"]["images"].addChild(
 				GafferImage.Catalogue.Image.load(
-					"${GAFFER_ROOT}/python/GafferImageTest/images/" + fileName,
+					self.imagesPath() / fileName,
 				)
 			)
 
@@ -160,12 +160,12 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 		c1 = GafferImage.Catalogue()
 		c1["images"].addChild(
-			GafferImage.Catalogue.Image.load( "${GAFFER_ROOT}/python/GafferImageTest/images/checker.exr" )
+			GafferImage.Catalogue.Image.load( self.imagesPath() / "checker.exr" )
 		)
 
 		c2 = GafferImage.Catalogue()
 		c2["images"].addChild(
-			GafferImage.Catalogue.Image.load( "${GAFFER_ROOT}/python/GafferImageTest/images/checker.exr" )
+			GafferImage.Catalogue.Image.load( self.imagesPath() / "checker.exr" )
 		)
 
 		self.assertImagesEqual( c1["out"], c2["out"] )
@@ -185,7 +185,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( len( c["images"] ), 0 )
 
 		r = GafferImage.ImageReader()
-		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/checker.exr" )
+		r["fileName"].setValue( self.imagesPath() / "checker.exr" )
 
 		driver = self.sendImage( r["out"], c, close = False )
 		self.assertEqual( c["out"]["metadata"].getValue()[ self.__catalogueIsRenderingMetadataKey ].value, True )
@@ -198,7 +198,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertImagesEqual( r["out"], c["out"] )
 
-		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/blurRange.exr" )
+		r["fileName"].setValue( self.imagesPath() / "blurRange.exr" )
 		self.sendImage( r["out"], c )
 
 		self.assertEqual( len( c["images"] ), 2 )
@@ -236,7 +236,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		s["c"]["directory"].setValue( self.temporaryDirectory() / "catalogue" )
 
 		r = GafferImage.ImageReader()
-		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/blurRange.exr" )
+		r["fileName"].setValue( self.imagesPath() / "blurRange.exr" )
 		self.sendImage( r["out"], s["c"] )
 		self.assertEqual( len( s["c"]["images"] ), 1 )
 		self.assertEqual( pathlib.Path( s["c"]["images"][0]["fileName"].getValue() ).parent.as_posix(), s["c"]["directory"].getValue() )
@@ -321,7 +321,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		images = []
 		readers = []
 		for i, fileName in enumerate( [ "checker.exr", "blurRange.exr", "noisyRamp.exr" ] ) :
-			images.append( GafferImage.Catalogue.Image.load( "${GAFFER_ROOT}/python/GafferImageTest/images/" + fileName ) )
+			images.append( GafferImage.Catalogue.Image.load( self.imagesPath() / fileName ) )
 			readers.append( GafferImage.ImageReader() )
 			readers[-1]["fileName"].setValue( images[-1]["fileName"].getValue() )
 
@@ -371,14 +371,14 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		promotedOut = Gaffer.PlugAlgo.promote( s["b"]["c"]["out"] )
 
 		r = GafferImage.ImageReader()
-		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/checker.exr" )
+		r["fileName"].setValue( self.imagesPath() / "checker.exr" )
 		self.sendImage( r["out"], s["b"]["c"] )
 
 		self.assertEqual( len( promotedImages ), 1 )
 		self.assertEqual( promotedImageIndex.getValue(), 0 )
 		self.assertImagesEqual( r["out"], promotedOut, ignoreMetadata = True )
 
-		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/blurRange.exr" )
+		r["fileName"].setValue( self.imagesPath() / "blurRange.exr" )
 		self.sendImage( r["out"], s["b"]["c"] )
 
 		self.assertEqual( len( promotedImages ), 2 )
@@ -409,7 +409,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		promotedOut = Gaffer.PlugAlgo.promote( s["b"]["c"]["out"] )
 
 		r = GafferImage.ImageReader()
-		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/checker.exr" )
+		r["fileName"].setValue( self.imagesPath() / "checker.exr" )
 		self.sendImage( r["out"], s["b"]["c"] )
 
 		self.assertEqual( len( promotedImages ), 1 )
@@ -423,10 +423,10 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["c"] = GafferImage.Catalogue()
-		s["c"]["images"].addChild( s["c"].Image.load( "${GAFFER_ROOT}/python/GafferImageTest/images/checker.exr" ) )
+		s["c"]["images"].addChild( s["c"].Image.load( self.imagesPath() / "checker.exr" ) )
 
 		r = GafferImage.ImageReader()
-		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/blurRange.exr" )
+		r["fileName"].setValue( self.imagesPath() / "blurRange.exr" )
 
 		def assertPreconditions() :
 
@@ -483,7 +483,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		# we do not deadlock on the GIL.
 
 		r = GafferImage.ImageReader()
-		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/checker.exr" )
+		r["fileName"].setValue( self.imagesPath() / "checker.exr" )
 
 		self.sendImage( r["out"], s["catalogue"] )
 
@@ -499,7 +499,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		drivers = GafferTest.CapturingSlot( GafferImage.Display.driverCreatedSignal() )
 
 		r = GafferImage.ImageReader()
-		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/checker.exr" )
+		r["fileName"].setValue( self.imagesPath() / "checker.exr" )
 		self.sendImage( r["out"], c )
 
 		self.assertEqual( len( drivers ), 1 )
@@ -552,7 +552,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 	def testCopyFrom( self ) :
 
 		c = GafferImage.Catalogue()
-		c["images"].addChild( c.Image.load( "${GAFFER_ROOT}/python/GafferImageTest/images/checker.exr" ) )
+		c["images"].addChild( c.Image.load( self.imagesPath() / "checker.exr" ) )
 		c["images"][0]["description"].setValue( "test" )
 
 		c["images"].addChild( c.Image( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
@@ -570,7 +570,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		c["directory"].setValue( self.temporaryDirectory() / "catalogue" )
 
 		r = GafferImage.ImageReader()
-		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/checker.exr" )
+		r["fileName"].setValue( self.imagesPath() / "checker.exr" )
 
 		with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as h :
 			self.sendImage( r["out"], c, waitForSave = False )
@@ -598,7 +598,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		self.assertFalse( fullDirectory.exists() )
 
 		r = GafferImage.ImageReader()
-		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/checker.exr" )
+		r["fileName"].setValue( self.imagesPath() / "checker.exr" )
 
 		driver = self.sendImage( r["out"], s["c"], waitForSave = False, close = False )
 		# Simulate deletion by removing it from the script but keeping it alive.
@@ -621,7 +621,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		os.chmod( self.temporaryDirectory(), stat.S_IREAD )
 
 		r = GafferImage.ImageReader()
-		r["fileName"].setValue( "${GAFFER_ROOT}/python/GafferImageTest/images/blurRange.exr" )
+		r["fileName"].setValue( self.imagesPath() / "blurRange.exr" )
 
 		originalMessageHandler = IECore.MessageHandler.getDefaultHandler()
 		mh = IECore.CapturingMessageHandler()
@@ -831,7 +831,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 	def testInternalImagePythonType( self ) :
 
 		c = GafferImage.Catalogue()
-		c["images"].addChild( c.Image.load( "${GAFFER_ROOT}/python/GafferImageTest/images/blurRange.exr" ) )
+		c["images"].addChild( c.Image.load( self.imagesPath() / "blurRange.exr" ) )
 
 		for g in Gaffer.GraphComponent.RecursiveRange( c ) :
 			self.assertTrue(
@@ -938,7 +938,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		images = []
 		readers = []
 		for i, fileName in enumerate( [ "checker.exr", "blurRange.exr", "noisyRamp.exr", "resamplePatterns.exr" ] ) :
-			images.append( GafferImage.Catalogue.Image.load( "${GAFFER_ROOT}/python/GafferImageTest/images/" + fileName ) )
+			images.append( GafferImage.Catalogue.Image.load( self.imagesPath() / fileName ) )
 			readers.append( GafferImage.ImageReader() )
 			readers[-1]["fileName"].setValue( images[-1]["fileName"].getValue() )
 

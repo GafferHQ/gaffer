@@ -76,7 +76,7 @@ class DilateTest( GafferImageTest.ImageTestCase ) :
 	def testFilter( self ) :
 
 		r = GafferImage.ImageReader()
-		r["fileName"].setValue( os.path.dirname( __file__ ) + "/images/radial.exr" )
+		r["fileName"].setValue( self.imagesPath() / "radial.exr" )
 
 		m = GafferImage.Dilate()
 		m["in"].setInput( r["out"] )
@@ -93,7 +93,7 @@ class DilateTest( GafferImageTest.ImageTestCase ) :
 	def testDriverChannel( self ) :
 
 		rRaw = GafferImage.ImageReader()
-		rRaw["fileName"].setValue( os.path.dirname( __file__ ) + "/images/circles.exr" )
+		rRaw["fileName"].setValue( self.imagesPath() / "circles.exr" )
 
 		r = GafferImage.Grade()
 		r["in"].setInput( rRaw["out"] )
@@ -108,7 +108,7 @@ class DilateTest( GafferImageTest.ImageTestCase ) :
 		masterDilate["masterChannel"].setValue( "G" )
 
 		expected = GafferImage.ImageReader()
-		expected["fileName"].setValue( os.path.dirname( __file__ ) + "/images/circlesGreenDilate.exr" )
+		expected["fileName"].setValue( self.imagesPath() / "circlesGreenDilate.exr" )
 
 		# Note that in this expected image, the green channel is nicely medianed, and red and blue are completely
 		# unchanged in areas where there is no green.  In areas where red and blue overlap with a noisy green,

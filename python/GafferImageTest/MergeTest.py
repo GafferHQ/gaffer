@@ -47,13 +47,13 @@ import GafferImageTest
 
 class MergeTest( GafferImageTest.ImageTestCase ) :
 
-	rPath = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "redWithDataWindow.100x100.exr"
-	gPath = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "greenWithDataWindow.100x100.exr"
-	bPath = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "blueWithDataWindow.100x100.exr"
-	checkerPath = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "checkerboard.100x100.exr"
-	checkerRGBPath = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "rgbOverChecker.100x100.exr"
-	rgbPath = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "rgb.100x100.exr"
-	mergeBoundariesRefPath = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "mergeBoundariesRef.exr"
+	rPath = GafferImageTest.ImageTestCase.imagesPath() / "redWithDataWindow.100x100.exr"
+	gPath = GafferImageTest.ImageTestCase.imagesPath() / "greenWithDataWindow.100x100.exr"
+	bPath = GafferImageTest.ImageTestCase.imagesPath() / "blueWithDataWindow.100x100.exr"
+	checkerPath = GafferImageTest.ImageTestCase.imagesPath() / "checkerboard.100x100.exr"
+	checkerRGBPath = GafferImageTest.ImageTestCase.imagesPath() / "rgbOverChecker.100x100.exr"
+	rgbPath = GafferImageTest.ImageTestCase.imagesPath() / "rgb.100x100.exr"
+	mergeBoundariesRefPath = GafferImageTest.ImageTestCase.imagesPath() / "mergeBoundariesRef.exr"
 
 	# Do several tests to check the cache is working correctly:
 	def testHashes( self ) :

@@ -46,7 +46,7 @@ import GafferImageTest
 
 class SamplerTest( GafferImageTest.ImageTestCase ) :
 
-	fileName = Gaffer.rootPath() / "python" / "GafferImageTest" / "images" / "checker.exr"
+	fileName = GafferImageTest.ImageTestCase.imagesPath() / "checker.exr"
 
 	def testOutOfBoundsSampleModeBlack( self ) :
 
@@ -119,7 +119,7 @@ class SamplerTest( GafferImageTest.ImageTestCase ) :
 	def test2x2Checker( self ) :
 
 		reader = GafferImage.ImageReader()
-		reader["fileName"].setValue( os.path.dirname( __file__ ) + "/images/checker2x2.exr" )
+		reader["fileName"].setValue( self.imagesPath() / "checker2x2.exr" )
 
 		# As long as the sample region includes the valid range of our image, and all
 		# the pixels we're going to request, it should have no effect on our sampling.
