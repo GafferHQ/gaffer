@@ -60,26 +60,16 @@ class ColorSwatchPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__swatch.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ), scoped = False )
 		self.__swatch.buttonReleaseSignal().connect( Gaffer.WeakMethod( self.__buttonRelease ), scoped = False )
 
-		self._updateFromPlugs()
-
 	def setHighlighted( self, highlighted ) :
 
 		GafferUI.PlugValueWidget.setHighlighted( self, highlighted )
 
 		self.__swatch.setHighlighted( highlighted )
 
-	def _updateFromPlugs( self ) :
+	def _updateFromValues( self, values, exception ) :
 
-		errored = False
-		value = imath.Color4f( 0 )
-		with self.getContext() :
-			try :
-				value = _colorFromPlugs( self.getPlugs() )
-			except :
-				errored = True
-
-		self.__swatch.setErrored( errored )
-		self.__swatch.setColor( value )
+		self.__swatch.setErrored( exception is not None )
+		self.__swatch.setColor( _averageColor( values ) )
 
 	def __buttonPress( self, widget, event ) :
 
@@ -110,15 +100,19 @@ class ColorSwatchPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return True
 
-def _colorFromPlugs( plugs ) :
+def _averageColor( colors ) :
 
-	if not len( plugs ) :
+	if not len( colors ) :
 		return imath.Color4f( 0 )
+
+	return sum( colors ) / len( colors )
+
+def _colorFromPlugs( plugs ) :
 
 	# ColorSwatch only supports one colour, and doesn't have
 	# an "indeterminate" state, so when we have multiple plugs
 	# the best we can do is take an average.
-	return sum( p.getValue() for p in plugs ) / len( plugs )
+	return _averageColor( [ p.getValue() for p in plugs ] )
 
 ## \todo Perhaps we could make this a part of the public API? Perhaps we could also make a
 # PlugValueDialogue base class to share some of the work with the dialogue made by the
