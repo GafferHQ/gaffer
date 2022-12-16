@@ -81,11 +81,11 @@ Gaffer.Metadata.registerNode(
 
 def __shaderCreator( shaderName ) :
 
-	nodeName = os.path.split( shaderName )[-1]
+	nodeName = shaderName.name
 	nodeName = nodeName.translate( str.maketrans( ".-", "__" ) )
 
 	node = GafferScene.OpenGLShader( nodeName )
-	node.loadShader( shaderName )
+	node.loadShader( shaderName.as_posix() )
 
 	return node
 
@@ -97,16 +97,14 @@ def shaderSubMenu() :
 
 	## \todo Should be searching IECOREGL_SHADER_PATHS but that includes
 	# a lot of irrelevancies at IE at the moment.
-	paths = [ os.environ["GAFFER_ROOT"] + "/glsl" ]
+	paths = [ Gaffer.rootPath() / "glsl" ]
 	for path in paths :
-		for root, dirs, files in os.walk( path ) :
-			for file in files :
-				if os.path.splitext( file )[1] in ( ".vert", ".frag" ) :
-					shaderPath = os.path.join( root, file ).partition( path )[-1].lstrip( "/" )
-					shaders.add( os.path.splitext( shaderPath )[0] )
+		for child in path.rglob( '*' ) :
+			if child.is_file() and child.suffix in ( ".vert", ".frag" ) :
+				shaders.add( child.relative_to( path ).with_suffix( "" ) )
 
 	result = IECore.MenuDefinition()
 	for shader in sorted( list( shaders ) ) :
-		result.append( "/" + IECore.CamelCase.toSpaced( shader ), { "command" : GafferUI.NodeMenu.nodeCreatorWrapper( functools.partial( __shaderCreator, shader ) ) } )
+		result.append( "/" + IECore.CamelCase.toSpaced( str( shader ) ), { "command" : GafferUI.NodeMenu.nodeCreatorWrapper( functools.partial( __shaderCreator, shader ) ) } )
 
 	return result
