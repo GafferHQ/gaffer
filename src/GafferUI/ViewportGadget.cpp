@@ -1099,16 +1099,6 @@ std::vector< Gadget* > ViewportGadget::gadgetsAtInternal( const Imath::Box2f &ra
 	return gadgets;
 }
 
-// DEPRECATED
-void ViewportGadget::gadgetsAt( const Imath::V2f &rasterPosition, std::vector<GadgetPtr> &gadgets ) const
-{
-	std::vector< Gadget* > retGadgets = gadgetsAt( rasterPosition );
-	for( Gadget *g : retGadgets )
-	{
-		gadgets.push_back( g );
-	}
-}
-
 IECore::LineSegment3f ViewportGadget::rasterToGadgetSpace( const Imath::V2f &position, const Gadget *gadget ) const
 {
 	LineSegment3f result;

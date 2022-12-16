@@ -92,6 +92,8 @@ Breaking Changes
 - ApplicationRoot : The `preferencesLocation()` Python binding now returns a `pathlib.Path` argument.
 - StringPlug : `setValue( std::filesystem::path & )` now uses `path.generic_string()` for the value, whereas before an automatic conversion would have used `path.string()` (the native string).
   - Dispatcher : the `jobDirectory()` Python binding now returns a `pathlib.Path`, or `None` if it is empty.
+- Context::EditableScope, ImagePlug::ChannelDataScope, ScenePlug::PathScope/SetScope : Removed deprecated functions which don't take pointers and require duplicating data.
+- ViewportGadget::gadgetsAt : Removed deprecated signature.
 
 Build
 -----

@@ -316,12 +316,6 @@ ScenePlug::PathScope::PathScope( const Gaffer::Context *context )
 	remove( ScenePlug::setNameContextName );
 }
 
-ScenePlug::PathScope::PathScope( const Gaffer::Context *context, const ScenePath &scenePath )
-	:	PathScope( context )
-{
-	setAllocated( scenePathContextName, scenePath );
-}
-
 ScenePlug::PathScope::PathScope( const Gaffer::Context *context, const ScenePath *scenePath )
 	:	PathScope( context )
 {
@@ -333,21 +327,10 @@ ScenePlug::PathScope::PathScope( const Gaffer::ThreadState &threadState )
 {
 }
 
-ScenePlug::PathScope::PathScope( const Gaffer::ThreadState &threadState, const ScenePath &scenePath )
-	:	EditableScope( threadState )
-{
-	setAllocated( scenePathContextName, scenePath );
-}
-
 ScenePlug::PathScope::PathScope( const Gaffer::ThreadState &threadState, const ScenePath *scenePath )
 	:	EditableScope( threadState )
 {
 	setPath( scenePath );
-}
-
-void ScenePlug::PathScope::setPath( const ScenePath &scenePath )
-{
-	setAllocated( scenePathContextName, scenePath );
 }
 
 void ScenePlug::PathScope::setPath( const ScenePath *scenePath )
@@ -360,14 +343,6 @@ ScenePlug::SetScope::SetScope( const Gaffer::Context *context )
 {
 	remove( Filter::inputSceneContextName );
 	remove( ScenePlug::scenePathContextName );
-}
-
-ScenePlug::SetScope::SetScope( const Gaffer::Context *context, const IECore::InternedString &setName )
-	:	EditableScope( context )
-{
-	remove( Filter::inputSceneContextName );
-	remove( ScenePlug::scenePathContextName );
-	setAllocated( setNameContextName, setName );
 }
 
 ScenePlug::SetScope::SetScope( const Gaffer::Context *context, const IECore::InternedString *setName )
@@ -385,25 +360,12 @@ ScenePlug::SetScope::SetScope( const Gaffer::ThreadState &threadState )
 	remove( ScenePlug::scenePathContextName );
 }
 
-ScenePlug::SetScope::SetScope( const Gaffer::ThreadState &threadState, const IECore::InternedString &setName )
-	:	EditableScope( threadState )
-{
-	remove( Filter::inputSceneContextName );
-	remove( ScenePlug::scenePathContextName );
-	setAllocated( setNameContextName, setName );
-}
-
 ScenePlug::SetScope::SetScope( const Gaffer::ThreadState &threadState, const IECore::InternedString *setName )
 	:	EditableScope( threadState )
 {
 	remove( Filter::inputSceneContextName );
 	remove( ScenePlug::scenePathContextName );
 	setSetName( setName );
-}
-
-void ScenePlug::SetScope::setSetName( const IECore::InternedString &setName )
-{
-	setAllocated( setNameContextName, setName );
 }
 
 void ScenePlug::SetScope::setSetName( const IECore::InternedString *setName )

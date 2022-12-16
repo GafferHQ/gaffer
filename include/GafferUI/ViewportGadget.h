@@ -294,9 +294,6 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		/// and optionally accepts filterLayer - if set, only Gadgets in this layer will be rendered
 		std::vector<Gadget*> gadgetsAt( const Imath::Box2f &rasterRegion, Layer filterLayer = Layer::None ) const;
 
-		[[deprecated("Use above form which returns vector")]]
-		void gadgetsAt( const Imath::V2f &rasterPosition, std::vector<GadgetPtr> &gadgets ) const;
-
 		/// The SelectionScope class can be used by child Gadgets to perform
 		/// OpenGL selection from event signal callbacks.
 		class GAFFERUI_API SelectionScope : boost::noncopyable
