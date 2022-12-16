@@ -71,9 +71,9 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 
 		for root, dirs, files in os.walk( os.path.join( self.temporaryDirectory() ) ) :
 			for fileName in files :
-				os.chmod( os.path.join( root, fileName ), stat.S_IWUSR )
+				os.chmod( os.path.join( root, fileName ), stat.S_IRWXU )
 			for dirName in dirs :
-				os.chmod( os.path.join( root, dirName ), stat.S_IWUSR )
+				os.chmod( os.path.join( root, dirName ), stat.S_IRWXU )
 
 		GafferImageTest.ImageTestCase.tearDown( self )
 
