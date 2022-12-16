@@ -164,10 +164,11 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 		shutil.copyfile( self.offsetDataWindowFileName, testSequence.fileNameForFrame( 3 ) )
 
 		reader = GafferImage.ImageReader()
-		reader["fileName"].setValue( testSequence.fileName )
+		# todo : Change IECore.FileSequence to return a `pathlib.Path` object and use that directly.
+		reader["fileName"].setValue( pathlib.Path( testSequence.fileName ) )
 
 		oiio = GafferImage.OpenImageIOReader()
-		oiio["fileName"].setValue( testSequence.fileName )
+		oiio["fileName"].setValue( pathlib.Path( testSequence.fileName ) )
 
 		def assertMatch() :
 
@@ -269,11 +270,11 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 		shutil.copyfile( self.offsetDataWindowFileName, testSequence.fileNameForFrame( 7 ) )
 
 		reader = GafferImage.ImageReader()
-		reader["fileName"].setValue( testSequence.fileName )
+		reader["fileName"].setValue( pathlib.Path( testSequence.fileName ) )
 		reader["missingFrameMode"].setValue( GafferImage.ImageReader.MissingFrameMode.Hold )
 
 		oiio = GafferImage.OpenImageIOReader()
-		oiio["fileName"].setValue( testSequence.fileName )
+		oiio["fileName"].setValue( pathlib.Path( testSequence.fileName ) )
 		oiio["missingFrameMode"].setValue( GafferImage.ImageReader.MissingFrameMode.Hold )
 
 		context = Gaffer.Context( Gaffer.Context.current() )
