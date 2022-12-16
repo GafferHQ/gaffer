@@ -272,25 +272,18 @@ class _CodePlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__codeWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__setPlugValue ), scoped = False )
 		self.__codeWidget.dropTextSignal().connect( Gaffer.WeakMethod( self.__dropText ), scoped = False )
 
-		self._updateFromPlug()
-
 	def codeWidget( self ) :
 
 		return self.__codeWidget
 
-	def _updateFromPlug( self ) :
+	def _updateFromValues( self, values, exception ) :
 
-		if self.getPlug() is not None :
-			with self.getContext() :
-				try :
-					value = self.getPlug().getValue()
-				except :
-					value = None
+		if len( values ) :
+			self.__codeWidget.setText( values[0] )
 
-			if value is not None :
-				self.__codeWidget.setText( value )
+		self.__codeWidget.setErrored( exception is not None )
 
-			self.__codeWidget.setErrored( value is None )
+	def _updateFromEditable( self ) :
 
 		self.__codeWidget.setEditable( self._editable() )
 
