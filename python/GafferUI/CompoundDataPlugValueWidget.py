@@ -70,8 +70,6 @@ class CompoundDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 				GafferUI.Spacer( imath.V2i( 1 ), imath.V2i( 999999, 1 ), parenting = { "expand" : True } )
 
-		self._updateFromPlug()
-
 	def hasLabel( self ) :
 
 		return True
@@ -87,17 +85,15 @@ class CompoundDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return self.__layout.plugValueWidget( childPlug )
 
-	def _updateFromPlug( self ) :
+	def _updateFromMetadata( self ) :
 
-		editable = True
-		readOnly = False
-		if self.getPlug() is not None :
-			editable = Gaffer.Metadata.value( self.getPlug(), "compoundDataPlugValueWidget:editable" )
-			editable = editable if editable is not None else True
-			readOnly = Gaffer.MetadataAlgo.readOnly( self.getPlug() )
-
+		editable = Gaffer.Metadata.value( self.getPlug(), "compoundDataPlugValueWidget:editable" )
+		editable = editable if editable is not None else True
 		self.__editRow.setVisible( editable )
-		self.__editRow.setEnabled( not readOnly )
+
+	def _updateFromEditable( self ) :
+
+		self.__editRow.setEnabled( self._editable() )
 
 	def __addMenuDefinition( self ) :
 
