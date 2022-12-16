@@ -383,9 +383,8 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 		self["__IndexFileExpression"] = Gaffer.Expression()
 		self["__IndexFileExpression"].setExpression( inspect.cleandoc(
 			"""
-			import os
-			parent["__indexFilePath"] = os.path.join( parent["bakeDirectory"], "BAKE_FILE_INDEX_" +
-				str( context.get("BAKE_WEDGE:index", 0 ) ) + ".####.txt" )
+			import pathlib
+			parent["__indexFilePath"] = str( pathlib.Path( parent["bakeDirectory"] ) / ( "BAKE_FILE_INDEX_%i.####.txt" % context.get("BAKE_WEDGE:index", 0 ) ) )
 			"""
 		), "python" )
 
