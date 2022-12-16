@@ -249,7 +249,7 @@ def hideShaders( pathMatcher ) :
 
 def __nodeName( shaderName ) :
 
-	nodeName = os.path.split( shaderName )[-1]
+	nodeName = shaderName.split( "/" )[-1]
 	nodeName = nodeName.translate( str.maketrans( ".-", "__" ) )
 
 	return nodeName
@@ -266,7 +266,7 @@ def __loadFromFile( menu, extensions, nodeCreator ) :
 	if not path :
 		return None
 
-	shaderName = os.path.splitext( str( path ) )[0]
+	shaderName = pathlib.Path( str( path ) ).with_suffix( "" ).as_posix()
 
 	return nodeCreator( __nodeName( shaderName ), shaderName )
 
@@ -284,15 +284,13 @@ def __shaderSubMenu( searchPaths, extensions, nodeCreator, matchExpression, sear
 		if path in pathsVisited :
 			continue
 
-		for root, dirs, files in os.walk( path ) :
-			for file in files :
-				if os.path.splitext( file )[1][1:] in extensions :
-					shaderPath = os.path.join( root, file ).partition( path )[-1].lstrip( os.path.sep )
-					shaderPath = shaderPath.replace( "\\", "/" )
-					if __hiddenShadersPathMatcher.match( shaderPath ) & IECore.PathMatcher.Result.ExactMatch :
-						continue
-					if shaderPath not in shaders and matchExpression.match( shaderPath ) :
-						shaders.add( os.path.splitext( shaderPath )[0] )
+		for child in pathlib.Path( path ).rglob( '*' ) :
+			if child.is_file() and child.suffix.strip( '.' ) in extensions:
+				shaderPath = child.relative_to( path )
+				if __hiddenShadersPathMatcher.match( shaderPath.as_posix() ) & IECore.PathMatcher.Result.ExactMatch :
+					continue
+				if matchExpression.match( shaderPath.as_posix() ) :
+					shaders.add( shaderPath.with_suffix("").as_posix() )
 
 		pathsVisited.add( path )
 
