@@ -267,7 +267,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		shutil.copyfile( self.offsetDataWindowFileName, testSequence.fileNameForFrame( 3 ) )
 
 		reader = GafferImage.OpenImageIOReader()
-		reader["fileName"].setValue( testSequence.fileName )
+		reader["fileName"].setValue( pathlib.Path( testSequence.fileName ) )
 
 		self.assertEqual( reader["availableFrames"].getValue(), IECore.IntVectorData( [ 1, 3 ] ) )
 
@@ -280,7 +280,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		# explicit file paths aren't considered a sequence
 		reader["fileName"].setValue( self.fileName )
 		self.assertEqual( reader["availableFrames"].getValue(), IECore.IntVectorData( [] ) )
-		reader["fileName"].setValue( testSequence.fileNameForFrame( 1 )  )
+		reader["fileName"].setValue( pathlib.Path( testSequence.fileNameForFrame( 1 ) ) )
 		self.assertEqual( reader["availableFrames"].getValue(), IECore.IntVectorData( [] ) )
 
 	def testMissingFrameMode( self ) :
@@ -290,7 +290,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		shutil.copyfile( self.offsetDataWindowFileName, testSequence.fileNameForFrame( 3 ) )
 
 		reader = GafferImage.OpenImageIOReader()
-		reader["fileName"].setValue( testSequence.fileName )
+		reader["fileName"].setValue( pathlib.Path( testSequence.fileName ) )
 
 		context = Gaffer.Context( Gaffer.Context.current() )
 
@@ -435,7 +435,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		shutil.copyfile( self.offsetDataWindowFileName, testSequence.fileNameForFrame( 1 ) )
 
 		reader = GafferImage.OpenImageIOReader()
-		reader["fileName"].setValue( testSequence.fileName )
+		reader["fileName"].setValue( pathlib.Path( testSequence.fileName ) )
 
 		context = Gaffer.Context( Gaffer.Context.current() )
 
@@ -452,7 +452,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 
 		# but when we set an explicit fileName,
 		# we no longer re-compute per frame.
-		reader["fileName"].setValue( testSequence.fileNameForFrame( 0 ) )
+		reader["fileName"].setValue( pathlib.Path( testSequence.fileNameForFrame( 0 ) ) )
 
 		# get frame 0 data for comparison
 		context.setFrame( 0 )
@@ -522,7 +522,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		s["reader"] = GafferImage.OpenImageIOReader()
 
 		s["expression"] = Gaffer.Expression()
-		s["expression"].setExpression( 'parent["reader"]["fileName"] = "%s"' % self.fileName )
+		s["expression"].setExpression( 'parent["reader"]["fileName"] = "%s"' % self.fileName.as_posix() )
 
 		with Gaffer.ContextMonitor( root = s["expression"] ) as cm :
 			GafferImage.ImageAlgo.tiles( s["reader"]["out"] )
