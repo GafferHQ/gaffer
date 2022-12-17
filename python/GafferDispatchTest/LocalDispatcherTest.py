@@ -708,7 +708,10 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		testFile = self.temporaryDirectory() / "test"
 
 		s["c"] = GafferDispatch.SystemCommand()
-		s["c"]["command"].setValue( rf"echo HELLO \$GAFFERDISPATCHTEST_ENVVAR > {testFile}" )
+		if os.name != "nt" :
+			s["c"]["command"].setValue( rf"echo HELLO \$GAFFERDISPATCHTEST_ENVVAR > {testFile}" )
+		else :
+			s["c"]["command"].setValue( "echo HELLO %GAFFERDISPATCHTEST_ENVVAR%> " + testFile.as_posix() )
 
 		dispatcher = self.__createLocalDispatcher()
 		dispatcher["executeInBackground"].setValue( True )
@@ -717,9 +720,12 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		dispatcher.jobPool().waitForAll()
 
 		with open( testFile ) as f :
-			self.assertEqual( f.readlines(), [ "HELLO\n" ] )
+			self.assertEqual( f.readlines(), [ "HELLO\n" if os.name != "nt" else "HELLO %GAFFERDISPATCHTEST_ENVVAR%\n" ] )
 
-		dispatcher["environmentCommand"].setValue( "env GAFFERDISPATCHTEST_ENVVAR=WORLD" )
+		if os.name != "nt" :
+			dispatcher["environmentCommand"].setValue( "env GAFFERDISPATCHTEST_ENVVAR=WORLD" )
+		else :
+			dispatcher["environmentCommand"].setValue( "set GAFFERDISPATCHTEST_ENVVAR=WORLD&" )
 		dispatcher.dispatch( [ s["c"] ] )
 		dispatcher.jobPool().waitForAll()
 
@@ -733,13 +739,19 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		testFile = self.temporaryDirectory() / "test"
 
 		s["c"] = GafferDispatch.SystemCommand()
-		s["c"]["command"].setValue( rf"echo HELLO \$GAFFERDISPATCHTEST_ENVVAR > {testFile}" )
+		if os.name != "nt" :
+			s["c"]["command"].setValue( rf"echo HELLO \$GAFFERDISPATCHTEST_ENVVAR > {testFile}" )
+		else :
+			s["c"]["command"].setValue( "echo HELLO %GAFFERDISPATCHTEST_ENVVAR%> " + testFile.as_posix() )
 
 		dispatcher = self.__createLocalDispatcher()
 		dispatcher["executeInBackground"].setValue( True )
 		dispatcher["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CurrentFrame )
 
-		dispatcher["environmentCommand"].setValue( "env GAFFERDISPATCHTEST_ENVVAR=$world" )
+		if os.name != "nt" :
+			dispatcher["environmentCommand"].setValue( "env GAFFERDISPATCHTEST_ENVVAR=$world" )
+		else :
+			dispatcher["environmentCommand"].setValue( "set GAFFERDISPATCHTEST_ENVVAR=$world&" )
 
 		with Gaffer.Context() as c :
 			c["world"] = "WORLD"
