@@ -49,7 +49,7 @@ class OSLTestCase( GafferSceneTest.SceneTestCase ) :
 		subprocess.check_call(
 			[ "oslc", "-q" ] +
 			[ "-I" + p for p in os.environ.get( "OSL_SHADER_PATHS", "" ).split( os.pathsep ) ] +
-			[ "-o", outputFileName, sourceFileName ]
+			[ "-o", str( outputFileName ), str( sourceFileName ) ]
 		)
 
-		return str( outputFileName.with_suffix("") )
+		return outputFileName.with_suffix("").as_posix()
