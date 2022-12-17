@@ -9,6 +9,11 @@ Features
   - Added use_camera and use_caustics for lights.
   - Added normalize option for lights.
 
+Improvements
+------------
+
+- NodeEditor : Added "Promote Value and Switch" context menu item for promoting NameValuePlugs to Boxes.
+
 Fixes
 -----
 
