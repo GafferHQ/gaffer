@@ -508,7 +508,7 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 			direction = Gaffer.Plug.Direction.Out,
 			flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic
 		)
-		outLayer["code"].setValue( f'layer = outLayer( "", texture( "{textureFilePath}", u, v ) )' )
+		outLayer["code"].setValue( f'layer = outLayer( "", texture( "{textureFilePath.as_posix()}", u, v ) )' )
 
 		outImage = GafferOSL.OSLShader()
 		outImage.loadShader( "ImageProcessing/OutImage" )
