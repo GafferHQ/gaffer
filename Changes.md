@@ -1,9 +1,10 @@
-1.1.x.x (relative to 1.1.6.0)
+1.1.6.1 (relative to 1.1.6.0)
 =======
 
 Fixes
 -----
 
+- NodeEditor : Fixed updates for the green "non-default-value" dots in plug labels.
 - Cycles :
   - Fixed handling of OSL shader component connections (#4926).
   - Fixed crash when attempting to use a non-existent OSL shader.
