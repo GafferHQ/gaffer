@@ -34,7 +34,9 @@
 #
 ##########################################################################
 
-import os, sys, traceback
+import sys
+import traceback
+import pathlib
 
 import IECore
 
@@ -153,7 +155,7 @@ class dispatch( Gaffer.Application ) :
 		script = Gaffer.ScriptNode()
 
 		if args["script"].value :
-			script["fileName"].setValue( os.path.abspath( args["script"].value ) )
+			script["fileName"].setValue( pathlib.Path( args["script"].value ).absolute() )
 			try :
 				script.load( continueOnError = args["ignoreScriptLoadErrors"].value )
 			except Exception as exception :

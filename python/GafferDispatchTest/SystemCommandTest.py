@@ -49,7 +49,7 @@ class SystemCommandTest( GafferTest.TestCase ) :
 	def test( self ) :
 
 		n = GafferDispatch.SystemCommand()
-		n["command"].setValue( "touch {}".format( self.temporaryDirectory() / "systemCommandTest.txt" ) )
+		n["command"].setValue( "echo 1 > {}".format( ( self.temporaryDirectory() / "systemCommandTest.txt" ).as_posix() ) )
 
 		n["task"].execute()
 
@@ -58,7 +58,10 @@ class SystemCommandTest( GafferTest.TestCase ) :
 	def testEnvironmentVariables( self ) :
 
 		n = GafferDispatch.SystemCommand()
-		n["command"].setValue( "env > {}".format( self.temporaryDirectory() / "systemCommandTest.txt" ) )
+		if os.name != "nt" :
+			n["command"].setValue( "env > {}".format( self.temporaryDirectory() / "systemCommandTest.txt" ) )
+		else :
+			n["command"].setValue( " set > {}".format( ( self.temporaryDirectory() / "systemCommandTest.txt" ).as_posix() ) )
 		n["environmentVariables"].addChild( Gaffer.NameValuePlug( "GAFFER_SYSTEMCOMMAND_TEST", IECore.StringData( "test" ) ) )
 
 		n["task"].execute()
@@ -69,7 +72,7 @@ class SystemCommandTest( GafferTest.TestCase ) :
 	def testSubstitutions( self ) :
 
 		n = GafferDispatch.SystemCommand()
-		n["command"].setValue( "echo {adjective} {noun} > " + str( self.temporaryDirectory() / "systemCommandTest.txt" ) )
+		n["command"].setValue( "echo {adjective} {noun}> " + ( self.temporaryDirectory() / "systemCommandTest.txt" ).as_posix() )
 		n["substitutions"].addChild( Gaffer.NameValuePlug( "adjective", IECore.StringData( "red" ) ) )
 		n["substitutions"].addChild( Gaffer.NameValuePlug( "noun", IECore.StringData( "truck" ) ) )
 
@@ -103,7 +106,7 @@ class SystemCommandTest( GafferTest.TestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["n"] = GafferDispatch.SystemCommand()
-		s["n"]["command"].setValue( "touch {}".format( self.temporaryDirectory() / "systemCommandTest.####.txt" ) )
+		s["n"]["command"].setValue( "echo 1 > {}".format( ( self.temporaryDirectory() / "systemCommandTest.####.txt" ).as_posix() ) )
 
 		d = GafferDispatch.LocalDispatcher()
 		d["jobsDirectory"].setValue( self.temporaryDirectory() / "jobs" )
@@ -125,14 +128,21 @@ class SystemCommandTest( GafferTest.TestCase ) :
 		self.assertEqual( s["n"]["shell"].getValue(), True )
 
 		# The following command is only valid when interpreted as a shell command
-		s["n"]["command"].setValue( "date | wc -l" )
+		if os.name != "nt" :
+			s["n"]["command"].setValue( "date | wc -l" )
+		else :
+			s["n"]["command"].setValue( "set" )
 
 		s["n"].execute()
 
 		s["n"]["shell"].setValue( False )
 
-		with self.assertRaises( subprocess.CalledProcessError ) :
-			s["n"].execute()
+		if os.name != "nt" :
+			with self.assertRaises( subprocess.CalledProcessError ) :
+				s["n"].execute()
+		else :
+			with self.assertRaises( FileNotFoundError ) :
+				s["n"].execute()
 
 	def testEmptyCommand( self ) :
 

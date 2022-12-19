@@ -470,7 +470,7 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 			direction = Gaffer.Plug.Direction.Out,
 			flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic
 		)
-		outColor["code"].setValue( 'c = outColor( "Cs", texture( "{}", u, v ) )'.format( textureFileName ) )
+		outColor["code"].setValue( 'c = outColor( "Cs", texture( "{}", u, v ) )'.format( textureFileName.as_posix() ) )
 
 		outObject = GafferOSL.OSLShader()
 		outObject.loadShader( "ObjectProcessing/OutObject" )

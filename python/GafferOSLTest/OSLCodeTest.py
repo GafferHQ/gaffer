@@ -327,7 +327,7 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 
 		# Make an OSL shader in a specific code directory.
 
-		os.environ["GAFFEROSL_CODE_DIRECTORY"] = str( self.temporaryDirectory() / "codeDirectoryA" )
+		os.environ["GAFFEROSL_CODE_DIRECTORY"] = ( self.temporaryDirectory() / "codeDirectoryA" ).as_posix()
 
 		s = Gaffer.ScriptNode()
 
@@ -344,7 +344,7 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 		ss = s.serialise()
 
 		shutil.rmtree( os.environ["GAFFEROSL_CODE_DIRECTORY"] )
-		os.environ["GAFFEROSL_CODE_DIRECTORY"] = str( self.temporaryDirectory() / "codeDirectoryB" )
+		os.environ["GAFFEROSL_CODE_DIRECTORY"] = ( self.temporaryDirectory() / "codeDirectoryB" ).as_posix()
 
 		s2 = Gaffer.ScriptNode()
 		s2.execute( ss )

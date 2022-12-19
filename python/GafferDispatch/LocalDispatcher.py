@@ -262,7 +262,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			args = [
 				str( Gaffer.executablePath() ),
 				"execute",
-				"-script", self.__scriptFile,
+				"-script", str( self.__scriptFile ),
 				"-nodes", batch.blindData()["nodeName"].value,
 				"-frames", frames,
 			]
@@ -283,7 +283,10 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			self.__setStatus( batch, LocalDispatcher.Job.Status.Running )
 			IECore.msg( IECore.MessageHandler.Level.Info, self.__messageTitle, " ".join( args ) )
 			if os.name == "nt":
-				process = subprocess.Popen( args )
+				if self.__environmentCommand :
+					process = subprocess.Popen( args, shell=True )
+				else :
+					process = subprocess.Popen( args )
 			else:
 				process = subprocess.Popen( args, start_new_session=True )
 			batch.blindData()["pid"] = IECore.IntData( process.pid )

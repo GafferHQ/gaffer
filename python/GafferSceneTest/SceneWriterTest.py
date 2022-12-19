@@ -142,7 +142,6 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 		writer["in"].setInput( reader["out"] )
 		writer["fileName"].setValue( self.temporaryDirectory() / "test.scc" )
 		writer.execute()
-		( self.temporaryDirectory() / "fromPython.scc" ).unlink()
 
 		testCacheFile( self.temporaryDirectory() / "test.scc" )
 

@@ -35,7 +35,9 @@
 #
 ##########################################################################
 
-import os, sys, traceback
+import sys
+import pathlib
+import traceback
 
 import imath
 
@@ -122,7 +124,7 @@ class execute( Gaffer.Application ) :
 	def _run( self, args ) :
 
 		scriptNode = Gaffer.ScriptNode()
-		scriptNode["fileName"].setValue( os.path.abspath( args["script"].value ) )
+		scriptNode["fileName"].setValue( pathlib.Path( args["script"].value ).absolute() )
 		try :
 			scriptNode.load( continueOnError = args["ignoreScriptLoadErrors"].value )
 		except Exception as exception :

@@ -73,7 +73,7 @@ class DispatchApplicationTest( GafferTest.TestCase ) :
 		if "-settings" not in command :
 			command += " -settings"
 		if "-dispatcher.jobsDirectory" not in command :
-			command += " -dispatcher.jobsDirectory '\"{tmpDir}/dispatcher/local\"'".format( tmpDir = self.temporaryDirectory() )
+			command += " -dispatcher.jobsDirectory '\"{tmpDir}/dispatcher/local\"'".format( tmpDir = self.temporaryDirectory().as_posix() )
 
 		p = subprocess.Popen( command, shell=True, stderr = subprocess.PIPE, universal_newlines = True )
 		p.wait()
@@ -196,7 +196,7 @@ class DispatchApplicationTest( GafferTest.TestCase ) :
 			)
 		)
 		error = "".join( p.stderr.readlines() )
-		self.assertTrue( str( self.__scriptFileName ) in error )
+		self.assertTrue( self.__scriptFileName.as_posix() in error )
 		self.assertTrue( "KeyError: \"'badPlug'" in error )
 		self.assertFalse( "Traceback" in error )
 		self.assertNotEqual( p.returncode, 0 )
@@ -220,7 +220,7 @@ class DispatchApplicationTest( GafferTest.TestCase ) :
 		p = self.waitForCommand(
 			"gaffer dispatch -tasks {task} -settings -TextWriter.fileName '\"{output}\"' -TextWriter.text '\"{text}\"'".format(
 				task = "GafferDispatchTest.TextWriter",
-				output = self.__outputTextFile,
+				output = self.__outputTextFile.as_posix(),
 				text = "command line test",
 			)
 		)
@@ -235,7 +235,7 @@ class DispatchApplicationTest( GafferTest.TestCase ) :
 		p = self.waitForCommand(
 			"gaffer dispatch -tasks {task} -applyUserDefaults -settings -TextWriter.fileName '\"{output}\"' -TextWriter.text '\"{text}\"'".format(
 				task = "GafferDispatchTest.TextWriter",
-				output = self.__outputTextFile,
+				output = self.__outputTextFile.as_posix(),
 				text = "userDefault test ${dispatcher:jobDirectory}",
 			)
 		)
@@ -244,7 +244,7 @@ class DispatchApplicationTest( GafferTest.TestCase ) :
 		self.assertFalse( p.returncode )
 		jobDir = self.temporaryDirectory() / "dispatcher" / "local" / "000000"
 		with open( self.__outputTextFile, "r" ) as f :
-			self.assertEqual( f.readlines(), [ "userDefault test {jobDir}".format( jobDir = jobDir ) ] )
+			self.assertEqual( f.readlines(), [ "userDefault test {jobDir}".format( jobDir = jobDir.as_posix() ) ] )
 
 	def testDispatcherOverrides( self ) :
 
@@ -274,7 +274,7 @@ class DispatchApplicationTest( GafferTest.TestCase ) :
 		p = self.waitForCommand(
 			"gaffer dispatch -tasks {task} -settings -TextWriter.fileName '\"{output}\"' -TextWriter.text '\"{text}\"' -context.myVar 1.25".format(
 				task = "GafferDispatchTest.TextWriter",
-				output = self.__outputTextFile,
+				output = self.__outputTextFile.as_posix(),
 				text = "context ${myVar} test",
 			)
 		)
