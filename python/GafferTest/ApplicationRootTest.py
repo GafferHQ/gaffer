@@ -104,7 +104,6 @@ class ApplicationRootTest( GafferTest.TestCase ) :
 		a.savePreferences( preferencesFile )
 		preferencesFile.chmod( 0 )
 		self.assertRaises( RuntimeError, a.savePreferences, preferencesFile )
-		preferencesFile.chmod( stat.S_IWRITE )
 
 	def testPreferencesLocation( self ) :
 

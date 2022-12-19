@@ -478,7 +478,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 			# the writer adds several standard attributes that aren't in the original file
 			expectedMetadata["Software"] = IECore.StringData( "Gaffer " + Gaffer.About.versionString() )
 			expectedMetadata["HostComputer"] = IECore.StringData( platform.node() )
-			expectedMetadata["Artist"] = IECore.StringData( os.environ["USER"] )
+			expectedMetadata["Artist"] = IECore.StringData( os.environ.get("USER") or os.environ["USERNAME"] ) #Linux or windows
 			expectedMetadata["DocumentName"] = IECore.StringData( "untitled" )
 
 			for key in overrideMetadata :
@@ -793,7 +793,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		expectedMetadata["DateTime"] = regularReaderMetadata["DateTime"]
 		expectedMetadata["Software"] = IECore.StringData( "Gaffer " + Gaffer.About.versionString() )
 		expectedMetadata["HostComputer"] = IECore.StringData( platform.node() )
-		expectedMetadata["Artist"] = IECore.StringData( os.environ["USER"] )
+		expectedMetadata["Artist"] = IECore.StringData( os.environ.get("USER") or os.environ["USERNAME"] ) #Linux or windows
 		expectedMetadata["DocumentName"] = IECore.StringData( "untitled" )
 		expectedMetadata["fileFormat"] = regularReaderMetadata["fileFormat"]
 		expectedMetadata["dataType"] = regularReaderMetadata["dataType"]
@@ -1132,7 +1132,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		chromaSubSamplings = ( "4:4:4", "4:2:2", "4:2:0", "4:1:1", "" )
 		for chromaSubSampling in chromaSubSamplings:
 
-			testFile = self.temporaryDirectory() / "chromaSubSampling.{0}.jpg".format( chromaSubSampling )
+			testFile = self.temporaryDirectory() / "chromaSubSampling.{0}.jpg".format( chromaSubSampling.replace( ':', '_' ) )
 
 			w["fileName"].setValue( testFile )
 			w["jpeg"]["chromaSubSampling"].setValue( chromaSubSampling )
@@ -1527,7 +1527,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 	# Helper function that extracts the part of the header we care about from exrheader
 	def usefulHeader( self, path ):
-		r = subprocess.check_output( ["exrheader", path ], universal_newlines=True ).splitlines()[2:]
+		r = subprocess.check_output( ["exrheader", str( path ) ], universal_newlines=True ).splitlines()[2:]
 
 		# Skip header lines that change every run, or between software, and compression ( since we're
 		# not testing for that ), and chunkCount ( since it depends on compression ).  "version" is
@@ -1789,7 +1789,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 					self.assertImagesEqual( rereader["out"], reader["out"], ignoreMetadata = True, ignoreChannelNamesOrder = ignoreOrder, ignoreDataWindow = expandDataWindow )
 
 	def channelTypesFromHeader( self, path ):
-		r = subprocess.check_output( ["exrheader", path ], universal_newlines=True )
+		r = subprocess.check_output( ["exrheader", str( path ) ], universal_newlines=True )
 
 		channelText = re.findall( re.compile( r'channels \(type chlist\):\n((    .*\n)+)', re.MULTILINE ), r )
 

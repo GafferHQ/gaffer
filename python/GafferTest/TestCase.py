@@ -45,6 +45,7 @@ import tempfile
 import traceback
 import functools
 import pathlib
+import stat
 
 import IECore
 
@@ -101,6 +102,10 @@ class TestCase( unittest.TestCase ) :
 			# the traceback associated with the expected
 			# failure.
 			traceback.clear_frames( self._outcome.expectedFailure[1].__traceback__ )
+
+		for root, dirs, files in os.walk( self.temporaryDirectory() ) :
+			for fileName in [ p for p in files + dirs if not ( pathlib.Path( root ) / p ).is_symlink() ] :
+				( pathlib.Path( root ) / fileName ).chmod( stat.S_IRWXU )
 
 		if self.__temporaryDirectory is not None :
 			shutil.rmtree( self.__temporaryDirectory )
