@@ -315,7 +315,7 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 				self.__editSelectedCells( pathListing )
 				return True
 
-			if event.key == "D" :
+			if event.key == "D" and len( self.__disablableInspectionTweaks( pathListing ) ) > 0 :
 				self.__disableEdits( pathListing )
 				return True
 
@@ -548,7 +548,7 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 				}
 			)
 			menuDefinition.append(
-				"Remove Edit",
+				"Disable Edit",
 				{
 					"command" : functools.partial( self.__disableEdits, pathListing ),
 					"active" : lambda : len( self.__disablableInspectionTweaks( pathListing ) ) > 0,
