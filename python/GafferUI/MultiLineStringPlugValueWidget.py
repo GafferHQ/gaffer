@@ -38,6 +38,8 @@
 import Gaffer
 import GafferUI
 
+from GafferUI.PlugValueWidget import sole
+
 ## Supported Metadata :
 #
 # - "multiLineStringPlugValueWidget:continuousUpdate"
@@ -57,25 +59,18 @@ class MultiLineStringPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__textWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__setPlugValue ), scoped = False )
 		self.__textChangedConnection = self.__textWidget.textChangedSignal().connect( Gaffer.WeakMethod( self.__setPlugValue ), scoped = False )
 
-		self._updateFromPlug()
-
 	def textWidget( self ) :
 
 		return self.__textWidget
 
-	def _updateFromPlug( self ) :
+	def _updateFromValues( self, values, exception ) :
+
+		self.__textWidget.setText( sole( values ) or "" )
+		self.__textWidget.setErrored( exception is not None )
+
+	def _updateFromMetadata( self ) :
 
 		if self.getPlug() is not None :
-			with self.getContext() :
-				try :
-					value = self.getPlug().getValue()
-				except :
-					value = None
-
-			if value is not None :
-				self.__textWidget.setText( value )
-
-			self.__textWidget.setErrored( value is None )
 
 			fixedLineHeight = Gaffer.Metadata.value( self.getPlug(), "fixedLineHeight" )
 			self.__textWidget.setFixedLineHeight( fixedLineHeight )
@@ -87,6 +82,8 @@ class MultiLineStringPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__textChangedConnection.setBlocked(
 				not Gaffer.Metadata.value( self.getPlug(), "multiLineStringPlugValueWidget:continuousUpdate" )
 			)
+
+	def _updateFromEditable( self ) :
 
 		self.__textWidget.setEditable( self._editable() )
 
