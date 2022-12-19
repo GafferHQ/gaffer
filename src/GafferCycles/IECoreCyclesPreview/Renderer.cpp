@@ -105,6 +105,7 @@ IECORE_PUSH_DEFAULT_VISIBILITY
 #include "util/murmurhash.h"
 #include "util/path.h"
 #include "util/time.h"
+#include "util/types.h"
 #include "util/vector.h"
 IECORE_POP_DEFAULT_VISIBILITY
 
@@ -2527,7 +2528,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_renderType( renderType ),
 				m_frame( 1 ),
 				m_renderState( RENDERSTATE_READY ),
-				m_sessionReset( false ),
 				m_outputsChanged( true ),
 				m_cryptomatteAccurate( true ),
 				m_cryptomatteDepth( 0 ),
@@ -2766,7 +2766,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					m_deviceName = g_defaultDeviceName;
 					IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown value for option \"%s\"." ) % name.string() );
 				}
-				m_sessionReset = true;
 				return;
 			}
 			else if( name == g_threadsOptionName )
@@ -2936,7 +2935,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 							{
 								auto &vis = data->readable();
 								auto ray = nameToRayType( name.string().c_str() + 29 );
-								uint prevVis = background->get_visibility();
+								uint32_t prevVis = background->get_visibility();
 								background->set_visibility( vis ? prevVis |= ray : prevVis & ~ray );
 							}
 						}
@@ -3199,8 +3198,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		{
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 
-			m_scene->mutex.lock();
 			{
+				std::scoped_lock sceneLock( m_scene->mutex );
 				if( m_renderState == RENDERSTATE_RENDERING && m_renderType == Interactive )
 				{
 					clearUnused();
@@ -3218,23 +3217,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 						m_session->reset( m_sessionParams, m_bufferParams );
 					}
 				}
-
-				// Dirty flag here is so that we don't unlock on a re-created scene if a reset happened
-				if( !m_sessionReset )
-				{
-					m_scene->mutex.unlock();
-				}
-				else
-				{
-					m_sessionReset = false;
-				}
-
-				if( m_renderState == RENDERSTATE_RENDERING )
-				{
-					m_session->start();
-				}
 			}
-			m_scene->mutex.unlock();
 
 			if( m_renderState == RENDERSTATE_RENDERING )
 			{
@@ -3460,13 +3443,12 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			// If anything changes in scene or session, we reset.
 			if( m_scene->params.modified( m_sceneParams ) ||
-				m_session->params.modified( m_sessionParams ) ||
-				m_sessionReset )
+				m_session->params.modified( m_sessionParams )
+			)
 			{
 				// Flag it true here so that we never mutex unlock a different scene pointer due to the reset
 				if( m_renderState != RENDERSTATE_RENDERING )
 				{
-					m_sessionReset = true;
 					reset();
 				}
 			}
@@ -3919,7 +3901,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		int m_frame;
 		string m_camera;
 		RenderState m_renderState;
-		bool m_sessionReset;
 		bool m_outputsChanged;
 		bool m_cryptomatteAccurate;
 		int m_cryptomatteDepth;
