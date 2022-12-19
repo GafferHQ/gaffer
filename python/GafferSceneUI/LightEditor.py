@@ -319,6 +319,13 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 				self.__disableEdits( pathListing )
 				return True
 
+			if (
+				( event.key == "Backspace" or event.key == "Delete" ) and
+				len( self.__removableAttributeInspections( pathListing ) ) > 0
+			) :
+				self.__removeAttributes( pathListing )
+				return True
+
 		return False
 
 	def __editSelectedCells( self, pathListing, quickBoolean = True ) :
@@ -458,6 +465,43 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 			for tweak in tweaks :
 				tweak["enabled"].setValue( False )
 
+	def __removableAttributeInspections( self, pathListing ) :
+
+		inspections = []
+
+		with Gaffer.Context( self.getContext() ) as context :
+			for columnSelection, column in zip( pathListing.getSelection(), pathListing.getColumns() ) :
+				if not isinstance( column, _GafferSceneUI._LightEditorInspectorColumn ) :
+					continue
+				elif not columnSelection.isEmpty() and type( column.inspector() ) != GafferSceneUI.Private.AttributeInspector :
+					return []
+				for path in columnSelection.paths() :
+					context["scene:path"] = GafferScene.ScenePlug.stringToPath( path )
+					inspection = column.inspector().inspect()
+					if inspection is not None and inspection.editable() :
+						source = inspection.source()
+						editScope = self.__settingsNode["editScope"].getInput()
+						if (
+							( isinstance( source, Gaffer.TweakPlug ) and source["mode"].getValue() != Gaffer.TweakPlug.Mode.Remove ) or
+							editScope is not None
+						) :
+							inspections.append( inspection )
+						else :
+							return []
+					else :
+						return []
+
+		return inspections
+
+	def __removeAttributes( self, pathListing ) :
+
+		inspections = self.__removableAttributeInspections( pathListing )
+
+		with Gaffer.UndoScope( self.scriptNode() ) :
+			for inspection in inspections :
+				tweak = inspection.acquireEdit()
+				tweak["enabled"].setValue( True )
+				tweak["mode"].setValue( Gaffer.TweakPlug.Mode.Remove )
 
 	def __buttonPress( self, pathListing, event ) :
 
@@ -553,6 +597,14 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 					"command" : functools.partial( self.__disableEdits, pathListing ),
 					"active" : lambda : len( self.__disablableInspectionTweaks( pathListing ) ) > 0,
 					"shortCut" : "D",
+				}
+			)
+			menuDefinition.append(
+				"Remove Attribute",
+				{
+					"command" : functools.partial( self.__removeAttributes, pathListing ),
+					"active" : lambda : len( self.__removableAttributeInspections( pathListing ) ) > 0,
+					"shortCut" : "Backspace, Delete",
 				}
 			)
 

@@ -12,6 +12,7 @@ Improvements
 - Light Editor :
   - Added a "Mute" column for toggling a light's mute attribute on and off.
   - Added a "Disable Edit" command to the right-click menu, to easily disable tweaks in EditScopes (shortcut <kbd>D</kbd>).
+  - Added a "Remove Attribute" command to the right-click menu, to delete attributes using the EditScope (shortcut <kbd>Delete</kbd>).
 - Cycles [^1] :
   - Replaced `size` on portals and quad lights with separate `width` and `height` parameters, and renamed `size` parameter of disk lights to `width`.
   - Added `use_camera`, `use_caustics` and `normalize` parameters to lights.
@@ -20,6 +21,7 @@ Improvements
 - UIEditor : Increased maximum size of the "Button Click Code" editor [^1].
 - HierarchyView : Inclusions and Exclusions column header icons now update to show when one or more locations have been added to or excluded from the Visible Set [^2].
 - Light : Added an enable/disable toggle to the `mute` plug [^2].
+- AttributeTweaks : Added `Remove` mode.
 
 Fixes
 -----
