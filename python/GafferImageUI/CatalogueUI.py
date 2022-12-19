@@ -783,8 +783,6 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 
 		self.contextMenuSignal().connect( Gaffer.WeakMethod( self.__contextMenu ), scoped = False )
 
-		self._updateFromPlug()
-
 	def getToolTip( self ) :
 
 		# Suppress the default imageIndex tool-tip until we can do something
@@ -792,10 +790,9 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 		# to the plug description for 'falsy' values.
 		return None
 
-	def _updateFromPlug( self ) :
+	def _updateFromValues( self, values, exception ) :
 
-		with self.getContext() :
-			index = self.getPlug().getValue()
+		index = values[0] if len( values ) else 0
 
 		images = self.__images()
 		if len( images ) :
