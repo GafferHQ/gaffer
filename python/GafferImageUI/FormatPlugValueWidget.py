@@ -42,12 +42,14 @@ import Gaffer
 import GafferUI
 import GafferImage
 
+from GafferUI.PlugValueWidget import sole
+
 class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, **kw ) :
+	def __init__( self, plugs, **kw ) :
 
 		grid = GafferUI.GridContainer( spacing = 4 )
-		GafferUI.PlugValueWidget.__init__( self, grid, plug, **kw )
+		GafferUI.PlugValueWidget.__init__( self, grid, plugs, **kw )
 
 		self.__menuButton = GafferUI.MenuButton( menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ) )
 		grid[0:2,0] = self.__menuButton
@@ -55,101 +57,101 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__minLabel = GafferUI.Label( "Min" )
 		grid.addChild( self.__minLabel, index = ( 0, 1 ), alignment = ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center ) )
 
-		self.__minWidget = GafferUI.CompoundNumericPlugValueWidget( plug["displayWindow"]["min"] )
+		self.__minWidget = GafferUI.CompoundNumericPlugValueWidget( plugs = [] )
 		grid[1,1] = self.__minWidget
 
 		self.__maxLabel = GafferUI.Label( "Max" )
 		grid.addChild( self.__maxLabel, index = ( 0, 2 ), alignment = ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center ) )
 
-		self.__maxWidget = GafferUI.CompoundNumericPlugValueWidget( plug["displayWindow"]["max"] )
+		self.__maxWidget = GafferUI.CompoundNumericPlugValueWidget( plugs = [] )
 		grid[1,2] = self.__maxWidget
 
 		self.__pixelAspectLabel = GafferUI.Label( "Pixel Aspect" )
 		grid.addChild( self.__pixelAspectLabel, index = ( 0, 3 ), alignment = ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center ) )
 
-		self.__pixelAspectWidget = GafferUI.NumericPlugValueWidget( plug["pixelAspect"] )
+		self.__pixelAspectWidget = GafferUI.NumericPlugValueWidget( plugs = [] )
 		grid[1,3] = self.__pixelAspectWidget
 
 		# If the plug hasn't got an input, the PlugValueWidget base class assumes we're not
-		# sensitive to contex changes and omits calls to _updateFromPlug(). But the default
+		# sensitive to context changes and omits calls to `_updateFromValues()`. But the default
 		# format mechanism uses the context, so we must arrange to do updates ourselves when
 		# necessary.
 		self.getContext().changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ), scoped = False )
 
 		self._addPopupMenu( self.__menuButton )
-		self._updateFromPlug()
 
-	def setPlug( self, plug ) :
+		self.__currentFormat = None
+		self.__attachChildPlugValueWidgets()
 
-		self.__minWidget.setPlug( plug["displayWindow"]["min"] )
-		self.__maxWidget.setPlug( plug["displayWindow"]["max"] )
-		self.__pixelAspectWidget.setPlug( plug["pixelAspect"] )
+	def setPlugs( self, plugs ) :
 
-		GafferUI.PlugValueWidget.setPlug( self, plug )
+		GafferUI.PlugValueWidget.setPlugs( self, plugs )
+		self.__attachChildPlugValueWidgets()
 
-	def _updateFromPlug( self ) :
+	def _updateFromValues( self, values, exception ) :
 
-		self.__menuButton.setEnabled( self._editable() )
+		self.__currentFormat = sole( values )
+		custom = any( Gaffer.Metadata.value( p, "formatPlugValueWidget:mode" ) == "custom" for p in self.getPlugs() )
 
-		text = ""
-		mode = "standard"
-		if self.getPlug() is not None :
-
-			mode = Gaffer.Metadata.value( self.getPlug(), "formatPlugValueWidget:mode" )
-			errored = False
-			fmt = GafferImage.Format()
-			with self.getContext() :
-				try:
-					fmt = self.getPlug().getValue()
-				except:
-					errored = True
-
-			text = self.__formatLabel( fmt )
-
-			if fmt == GafferImage.Format() :
+		if self.__currentFormat is not None :
+			if self.__currentFormat == GafferImage.Format() :
 				# The empty display window of the default format is
 				# confusing to look at, so turn off custom mode.
-				mode = "standard"
-			elif not GafferImage.Format.name( fmt ) :
+				custom = False
+			elif not GafferImage.Format.name( self.__currentFormat ) :
 				# If the chosen format hasn't been registered,
 				# force custom mode even if it hasn't been
 				# asked for explicitly.
-				mode = "custom"
+				custom = True
 
-		if not errored:
-			self.__menuButton.setText( text if mode != "custom" else "Custom" )
-			self.__menuButton.setErrored( False )
-		else:
-			self.__menuButton.setText( "---" )
-			self.__menuButton.setErrored( True )
+		self.__menuButton.setText(
+			"Custom" if custom else ( self.__formatLabel( self.__currentFormat ) if self.__currentFormat is not None else "---" )
+		)
 
-		nonZeroOrigin = fmt.getDisplayWindow().min() != imath.V2i( 0 )
+		nonZeroOrigin = any( v.getDisplayWindow().min() != imath.V2i( 0 ) for v in values )
 		for widget in ( self.__minLabel, self.__minWidget ) :
-			widget.setVisible( mode == "custom" and nonZeroOrigin )
+			widget.setVisible( custom and nonZeroOrigin )
 
 		for widget in ( self.__maxLabel, self.__maxWidget, self.__pixelAspectLabel, self.__pixelAspectWidget ) :
-			widget.setVisible( mode == "custom" )
+			widget.setVisible( custom )
 
 		self.__maxLabel.setText( "Max" if nonZeroOrigin else "Size" )
+
+		self.__menuButton.setErrored( exception is not None )
+
+	def _updateFromMetadata( self ) :
+
+		# Account for query to "formatPlugValueWidget:mode"
+		# in `_updateFromValues()`.
+		self._requestUpdateFromValues()
+
+	def _updateFromEditable( self ) :
+
+		self.__menuButton.setEnabled( self._editable() )
+
+	def __attachChildPlugValueWidgets( self ) :
+
+		self.__minWidget.setPlugs( [ p["displayWindow"]["min"] for p in self.getPlugs() ] )
+		self.__maxWidget.setPlugs( [ p["displayWindow"]["max"] for p in self.getPlugs() ] )
+		self.__pixelAspectWidget.setPlugs( [ p["pixelAspect"] for p in self.getPlugs() ] )
 
 	def __menuDefinition( self ) :
 
 		result = IECore.MenuDefinition()
-		if self.getPlug() is None :
+		if not self.getPlugs() :
 			return result
 
 		formats = [ GafferImage.Format.format( n ) for n in GafferImage.Format.registeredFormats() ]
-		if not self.getPlug().ancestor( Gaffer.ScriptNode ).isSame( self.getPlug().node() ) :
+		if not any( p.ancestor( Gaffer.ScriptNode ).isSame( p.node() ) for p in self.getPlugs() ) :
 			formats.insert( 0, GafferImage.Format() )
 
-		currentFormat = self.getPlug().getValue()
-		modeIsCustom = Gaffer.Metadata.value( self.getPlug(), "formatPlugValueWidget:mode" ) == "custom"
+		modeIsCustom = any( Gaffer.Metadata.value( p, "formatPlugValueWidget:mode" ) == "custom" for p in self.getPlugs() )
 		for fmt in formats :
 			result.append(
 				"/" + self.__formatLabel( fmt ),
 				{
 					"command" : functools.partial( Gaffer.WeakMethod( self.__applyFormat ), fmt = fmt ),
-					"checkBox" : fmt == currentFormat and not modeIsCustom,
+					"checkBox" : fmt == self.__currentFormat and not modeIsCustom,
 				}
 			)
 
@@ -159,7 +161,7 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 			"/Custom",
 			{
 				"command" : Gaffer.WeakMethod( self.__applyCustomFormat ),
-				"checkBox" : modeIsCustom or currentFormat not in formats,
+				"checkBox" : modeIsCustom or self.__currentFormat not in formats,
 			}
 		)
 
@@ -178,21 +180,22 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __applyFormat( self, unused, fmt ) :
 
-		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-			Gaffer.Metadata.registerValue( self.getPlug(), "formatPlugValueWidget:mode", "standard" )
-			self.getPlug().setValue( fmt )
+		with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ) ) :
+			for plug in self.getPlugs() :
+				Gaffer.Metadata.registerValue( plug, "formatPlugValueWidget:mode", "standard" )
+				plug.setValue( fmt )
 
 	def __applyCustomFormat( self, unused ) :
 
-		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+		with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ) ) :
 
-			with self.getContext() :
-				if self.getPlug().getValue() == GafferImage.Format() :
-					# Format is empty. It's kindof confusing to display that
-					# to the user in the custom fields, so take the default
-					# format and set it explicitly as a starting point for
-					# editing.
-					self.getPlug().setValue( GafferImage.FormatPlug.getDefaultFormat( self.getContext() ) )
+			if self.__currentFormat == GafferImage.Format() :
+				# Format is empty. It's kindof confusing to display that
+				# to the user in the custom fields, so take the default
+				# format and set it explicitly as a starting point for
+				# editing.
+				for p in self.getPlugs() :
+					p.setValue( GafferImage.FormatPlug.getDefaultFormat( self.getContext() ) )
 
 			# When we first switch to custom mode, the current value will
 			# actually be one of the registered formats. So we use this
@@ -200,11 +203,12 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 			# custom mode despite of this fact. We use metadata rather than
 			# a member variable so that undo will take us back to the non-custom
 			# state automatically.
-			Gaffer.Metadata.registerValue( self.getPlug(), "formatPlugValueWidget:mode", "custom" )
+			for p in self.getPlugs() :
+				Gaffer.Metadata.registerValue( p, "formatPlugValueWidget:mode", "custom" )
 
 	def __contextChanged( self, context, key ) :
 
 		if key == "image:defaultFormat" :
-			self._updateFromPlug()
+			self._requestUpdateFromValues()
 
 GafferUI.PlugValueWidget.registerType( GafferImage.FormatPlug, FormatPlugValueWidget )
