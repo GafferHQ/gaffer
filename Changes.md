@@ -1,5 +1,5 @@
-1.x.x.x
-=======
+1.2.0.0a1
+=========
 
 This version enables Cycles support by default, as we believe we have made sufficient progress to allow wider testing. We may continue to make behaviour-changing updates if necessary though, so support is not yet considered final.
 
@@ -8,6 +8,7 @@ This version enables Cycles support by default, as we believe we have made suffi
 Features
 --------
 
+- Windows : Added official builds for Windows.
 - Mute/Solo : Added the ability to mute and solo lights.
   - A light can be muted by setting the `light:mute` attribute. If that attribute is not present, the light will not be muted.
   - One or more lights can be enabled exclusively via membership in the `soloLights` set. If that set has one or more members, only the lights in that set will emit. If the set is empty, all lights emit according to their mute state. If a light is both muted and in the `soloLights` set, it will emit.
@@ -94,7 +95,7 @@ Breaking Changes
 - StringPlug : `setValue( std::filesystem::path & )` now uses `path.generic_string()` for the value, whereas before an automatic conversion would have used `path.string()` (the native string).
   - Dispatcher : the `jobDirectory()` Python binding now returns a `pathlib.Path`, or `None` if it is empty.
 - Context::EditableScope, ImagePlug::ChannelDataScope, ScenePlug::PathScope/SetScope : Removed deprecated functions which don't take pointers and require duplicating data.
-- ViewportGadget::gadgetsAt : Removed deprecated signature.
+- ViewportGadget : Removed deprecated `gadgetsAt()` signature.
 
 Build
 -----
