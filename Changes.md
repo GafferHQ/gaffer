@@ -14,6 +14,7 @@ Improvements
 ------------
 
 - TweakPlug : Added a `CreateIfMissing` mode, to only create a new value if one does not currently exist.
+- OSLObject : Added support for attribute substitutions using `<attr:myAttrName>` syntax in string parameters, provided that `useAttributes` is turned on.
 
 Fixes
 -----

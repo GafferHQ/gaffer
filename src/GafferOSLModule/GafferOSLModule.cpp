@@ -74,6 +74,12 @@ object parameterMetadata( const OSLShader &s, const Gaffer::Plug *plug, const ch
 	return dataToPython( s.parameterMetadata( plug, key ), copy );
 }
 
+ShadingEnginePtr oslShaderShadingEngine( const OSLShader &s, const IECore::CompoundObject *substitutions )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return const_cast<ShadingEngine*>( s.shadingEngine( substitutions ).get() );
+}
+
 int oslLibraryVersionMajor()
 {
 	return OSL_LIBRARY_VERSION_MAJOR;
@@ -161,6 +167,7 @@ BOOST_PYTHON_MODULE( _GafferOSL )
 	GafferBindings::DependencyNodeClass<OSLShader>()
 		.def( "shaderMetadata", &shaderMetadata, ( boost::python::arg_( "_copy" ) = true ) )
 		.def( "parameterMetadata", &parameterMetadata, ( boost::python::arg_( "plug" ), boost::python::arg_( "_copy" ) = true ) )
+		.def( "shadingEngine", &oslShaderShadingEngine, ( boost::python::arg_( "substitutions" ) = object() ) )
 	;
 
 	GafferBindings::DependencyNodeClass<OSLImage>();

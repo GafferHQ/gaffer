@@ -55,6 +55,10 @@ class GAFFEROSL_API ShadingEngine : public IECore::RefCounted
 		IE_CORE_DECLAREMEMBERPTR( ShadingEngine )
 
 		ShadingEngine( const IECoreScene::ShaderNetwork *shaderNetwork );
+
+		// Fast version that takes ownership of network instead of copying
+		ShadingEngine( IECoreScene::ShaderNetworkPtr &&shaderNetwork );
+
 		~ShadingEngine() override;
 
 		struct Transform
