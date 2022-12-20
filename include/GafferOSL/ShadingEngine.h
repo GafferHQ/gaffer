@@ -83,7 +83,10 @@ class GAFFEROSL_API ShadingEngine : public IECore::RefCounted
 
 		/// Append a unique hash representing this shading engine to `h`.
 		void hash( IECore::MurmurHash &h ) const;
+
+		/// \todo : replace with one function with default argument value on main branch
 		IECore::CompoundDataPtr shade( const IECore::CompoundData *points, const Transforms &transforms = Transforms() ) const;
+		IECore::CompoundDataPtr shade( const IECore::CompoundData *points, const Transforms &transforms, const IECore::CompoundObject *attributeSubstitutions ) const;
 
 		bool needsAttribute( const std::string &name ) const;
 		bool hasDeformation() const;

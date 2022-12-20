@@ -58,9 +58,11 @@
 #include "boost/algorithm/string/classification.hpp"
 #include "boost/algorithm/string/join.hpp"
 #include "boost/algorithm/string/predicate.hpp"
+#include "boost/algorithm/string/replace.hpp"
 #include "boost/algorithm/string/split.hpp"
 #include "boost/container/flat_map.hpp"
 #include "boost/unordered_map.hpp"
+#include "boost/regex.hpp"
 
 #include "tbb/enumerable_thread_specific.h"
 #include "tbb/parallel_for.h"
@@ -257,6 +259,88 @@ bool convertValue( void *dst, TypeDesc dstType, const void *src, TypeDesc srcTyp
 	return false;
 }
 
+struct ReplaceFunctor
+{
+	ReplaceFunctor( const IECore::CompoundObject *attributes ) : m_attributes( attributes )
+	{
+	}
+
+	std::string operator()( const boost::smatch & match )
+	{
+		// Search for attribute matching token
+		const StringData *sourceAttribute = m_attributes->member<StringData>( match[1].str() );
+		if( sourceAttribute )
+		{
+			return sourceAttribute->readable();
+		}
+		else
+		{
+			// Otherwise, return empty string
+			return "";
+		}
+	}
+
+	const IECore::CompoundObject *m_attributes;
+};
+
+boost::regex attributeRegex()
+{
+	// Extract ATTR_NAME from the pattern <attr:ATTR_NAME>
+	// Only match if the angle brackets haven't been escaped with a backslash
+	static boost::regex r( "(?<!\\\\)<attr:([^>]*[^\\\\>])>" );
+	return r;
+}
+
+std::string stringApplySubstitutions( const std::string &target, const IECore::CompoundObject *attributes )
+{
+	ReplaceFunctor rf( attributes );
+	std::string result = boost::regex_replace(
+		target, attributeRegex(), rf, boost::match_default | boost::format_all
+	);
+	boost::replace_all( result, "\\<", "<" );
+	boost::replace_all( result, "\\>", ">" );
+	return result;
+}
+
+void convertStringSubstitutions( ShaderNetwork *network )
+{
+	// Output parameters
+
+	std::map<InternedString, std::vector< ShaderNetwork::Parameter > > needSubstitution;
+
+	for( const auto &s : network->shaders() )
+	{
+		for( const auto &p : s.second->parameters() )
+		{
+			if( p.second->typeId() == IECore::StringDataTypeId )
+			{
+				const InternedString &text = IECore::runTimeCast<StringData>( p.second )->readable();
+				if( boost::regex_search( text.string().begin(), text.string().end(), attributeRegex() ) )
+				{
+					needSubstitution.insert( { text, std::vector< ShaderNetwork::Parameter >() } ).first->second.push_back( { s.first, p.first } );
+				}
+			}
+		}
+	}
+
+	static const InternedString defaultSubstituteHandle( "substitutedString" );
+	static const InternedString outParameterName( "value" );
+
+	for( const auto &s : needSubstitution )
+	{
+		ShaderPtr substitute = new Shader( "ObjectProcessing/InString", "osl:shader" );
+		substitute->parameters()["name"] = new StringData( "substituteString:" + s.first.string() );
+		substitute->parameters()["defaultValue"] = new StringData( s.first.string() );
+		const InternedString substituteHandle = network->addShader( defaultSubstituteHandle, std::move( substitute ) );
+	
+		ShaderNetwork::Parameter substitutedOut = { substituteHandle, outParameterName };	
+		for( const auto &i : s.second )
+		{
+			network->addConnection( ShaderNetwork::Connection( substitutedOut, i ) );
+		}
+	}
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -278,7 +362,8 @@ class RenderState
 			const IECore::CompoundData *shadingPoints,
 			const ShadingEngine::Transforms &transforms,
 			const std::vector<InternedString> &contextVariablesNeeded,
-			const Gaffer::Context *context
+			const Gaffer::Context *context,
+			const CompoundObject *attributeSubstitutions
 		)
 		{
 			for(
@@ -319,6 +404,8 @@ class RenderState
 					)
 				);
 			}
+
+			m_attributeSubstitutions = attributeSubstitutions;
 		}
 
 		bool contextVariable( ustring name, TypeDesc type, void *value ) const
@@ -384,6 +471,20 @@ class RenderState
 			return false;
 		}
 
+		std::string applyAttributeSubstitutions( std::string s ) const
+		{
+			if( m_attributeSubstitutions )
+			{
+				return stringApplySubstitutions( s, m_attributeSubstitutions );
+			}
+			else
+			{
+				// I kinda wonder if this should be an error that would make it more obvious that you've
+				// failed to provide attributes?
+				return s;
+			}
+		}
+
 	private :
 
 		using RenderStateTransforms = boost::unordered_map< OIIO::ustring, ShadingEngine::Transform, OIIO::ustringHash>;
@@ -403,6 +504,7 @@ class RenderState
 
 		container::flat_map<ustring, UserData, OIIO::ustringPtrIsLess> m_userData;
 		container::flat_map<ustring, ContextData, OIIO::ustringPtrIsLess> m_contextVariables;
+		const CompoundObject *m_attributeSubstitutions;
 
 };
 
@@ -485,6 +587,14 @@ class RendererServices : public OSL::RendererServices
 				}
 
 				return threadRenderState->renderState.contextVariable( name, type, value );
+			}
+
+			static const std::string substitutePrefix( "substituteString:" );
+			if( type == TypeDesc::TypeString && boost::starts_with( name.string(), substitutePrefix ) )
+			{
+				std::string result = threadRenderState->renderState.applyAttributeSubstitutions( name.string().substr( substitutePrefix.size() ) );
+				*( (ustring*)value ) = result;
+				return true;
 			}
 
 			// fall through to get_userdata - i'm not sure this is the intention of the osl spec, but how else can
@@ -936,6 +1046,7 @@ ShadingEngine::ShadingEngine( const IECoreScene::ShaderNetwork *shaderNetwork )
 	:	m_hash( shaderNetwork->Object::hash() ), m_timeNeeded( false ), m_unknownAttributesNeeded( false ), m_hasDeformation( false )
 {
 	ShaderNetworkPtr networkCopy = shaderNetwork->copy();
+	convertStringSubstitutions( networkCopy.get() );
 	IECoreScene::ShaderNetworkAlgo::convertOSLComponentConnections( networkCopy.get(), OSL_VERSION );
 	shaderNetwork = networkCopy.get();
 
@@ -1100,6 +1211,11 @@ void ShadingEngine::hash( IECore::MurmurHash &h ) const
 
 IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points, const Transforms &transforms ) const
 {
+	return shade( points, transforms, nullptr );
+}
+
+IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points, const Transforms &transforms, const CompoundObject *attributeSubstitutions ) const
+{
 	// Get the data for "P" - this determines the number of points to be shaded.
 
 	size_t numPoints = 0;
@@ -1149,7 +1265,7 @@ IECore::CompoundDataPtr ShadingEngine::shade( const IECore::CompoundData *points
 	// Add a RenderState to the ShaderGlobals. This will
 	// get passed to our RendererServices queries.
 
-	RenderState renderState( points, transforms, m_contextVariablesNeeded, context );
+	RenderState renderState( points, transforms, m_contextVariablesNeeded, context, attributeSubstitutions );
 
 	// Get pointers to varying data, we'll use these to
 	// update the shaderGlobals as we iterate over our points.

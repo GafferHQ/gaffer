@@ -993,6 +993,61 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 
 		self.assertEqual( o["out"].object( "/plane" )["testString"].data[0], "NOT FOUND" )
 
+	def testAttributeStringSubstitutions( self ):
+
+		p = GafferScene.Plane()
+
+		g = GafferScene.Group()
+		g["in"][0].setInput( p["out"] )
+		g["in"][1].setInput( p["out"] )
+
+		a = GafferScene.CustomAttributes()
+		a["attributes"].addChild( Gaffer.NameValuePlug( "testAttribute", "${scene:path}" ) )
+		a["in"].setInput( g["out"] )
+
+		o = GafferOSL.OSLObject()
+		o["in"].setInput( a["out"] )
+
+		# shading network to output attributes as formatted string.
+
+		code = GafferOSL.OSLCode()
+		code["parameters"].addChild( Gaffer.StringPlug( "inString", defaultValue = "<attr:testAttribute>" ) )
+		code["out"].addChild( Gaffer.StringPlug( "testString", direction = Gaffer.Plug.Direction.Out ) )
+
+		o["primitiveVariables"].addChild( Gaffer.NameValuePlug( "testString", "" ) )
+		o["primitiveVariables"][0]["value"].setInput( code["out"]["testString"] )
+
+		f = GafferScene.PathFilter()
+		f["paths"].setValue( IECore.StringVectorData( [ "/..." ] ) )
+
+		a["filter"].setInput( f["out"] )
+		o["filter"].setInput( f["out"] )
+
+		code["code"].setValue( 'testString = inString;' )
+
+		self.assertEqual( o["out"].object( "/group/plane" )["testString"].data[0], "<attr:testAttribute>" )
+		self.assertEqual( o["out"].object( "/group/plane1" )["testString"].data[0], "<attr:testAttribute>" )
+
+		o["useAttributes"].setValue( True )
+
+		self.assertEqual( o["out"].object( "/group/plane" )["testString"].data[0], "/group/plane" )
+		self.assertEqual( o["out"].object( "/group/plane1" )["testString"].data[0], "/group/plane1" )
+
+		code["parameters"].addChild( Gaffer.StringPlug( "inString2", defaultValue = "<attr:testAttribute>" ) )
+		code["code"].setValue( 'testString = concat( inString, ",", inString2 );' )
+
+		self.assertEqual( o["out"].object( "/group/plane" )["testString"].data[0], "/group/plane,/group/plane" )
+
+		code["parameters"]["inString"].setValue( "[<attr:testAttribute>]" )
+
+		self.assertEqual( o["out"].object( "/group/plane" )["testString"].data[0], "[/group/plane],/group/plane" )
+
+		code["parameters"]["inString"].setValue( "<attr:testAttribute2>" )
+		# Is this the right behaviour for missing attributes?		
+		self.assertEqual( o["out"].object( "/group/plane" )["testString"].data[0], ",/group/plane" )
+
+		a["attributes"].addChild( Gaffer.NameValuePlug( "testAttribute2", "foo" ) )
+		self.assertEqual( o["out"].object( "/group/plane" )["testString"].data[0], "foo,/group/plane" )
 
 	def testAffects( self ) :
 

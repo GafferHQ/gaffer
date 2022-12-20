@@ -356,7 +356,7 @@ IECore::ConstObjectPtr OSLObject::computeProcessedObject( const ScenePath &path,
 		transforms[ g_world ] = ShadingEngine::Transform( Imath::M44f(), Imath::M44f() );
 	}
 
-	CompoundDataPtr shadedPoints = shadingEngine->shade( shadingPoints.get(), transforms );
+	CompoundDataPtr shadedPoints = shadingEngine->shade( shadingPoints.get(), transforms, gafferAttributes.get() );
 	for( CompoundDataMap::const_iterator it = shadedPoints->readable().begin(), eIt = shadedPoints->readable().end(); it != eIt; ++it )
 	{
 
