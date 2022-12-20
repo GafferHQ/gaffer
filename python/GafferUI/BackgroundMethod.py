@@ -103,9 +103,21 @@ class BackgroundMethod( object ) :
 			if superceded.get() :
 				return
 
+			# It is possible that the widget was removed from the UI before
+			# `foregroundFunction` got called. But it will have been kept
+			# alive until now by this circular reference from `__CurrentCall` to the
+			# BackgroundTask, which in turn holds a reference to `widget`. This
+			# is crucial : without it, the widget can end up being destroyed
+			# on the _background_ thread, where it is illegal to destroy a QWidget.
+			# Here we break the cycle, allowing the `widget` to die on the UI thread
+			# after exit from function.
 			delattr( widget, method.__name__ + "__CurrentCall" )
 
-			if method.__postCall is not None :
+			# Because of the above, it is possible that the QWidget part of the
+			# `GafferUI.Widget has already been destroyed by Qt (due to the
+			# Widget's parent dying first). So we must use `_qtObjectIsValid()`
+			# to avoid invoking the `postCall` on an invalid widget.
+			if method.__postCall is not None and GafferUI._qtObjectIsValid( widget._qtWidget() ) :
 				method.__postCall( widget, result )
 
 		def backgroundFunction( widget, superceded, *args, **kw ) :
