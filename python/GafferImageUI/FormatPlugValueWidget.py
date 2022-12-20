@@ -105,7 +105,9 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 				custom = True
 
 		self.__menuButton.setText(
-			"Custom" if custom else ( self.__formatLabel( self.__currentFormat ) if self.__currentFormat is not None else "---" )
+			"Custom" if custom
+			else
+			( _formatLabel( self.__currentFormat, self.getContext() ) if self.__currentFormat is not None else "---" )
 		)
 
 		nonZeroOrigin = any( v.getDisplayWindow().min() != imath.V2i( 0 ) for v in values )
@@ -148,7 +150,7 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 		modeIsCustom = any( Gaffer.Metadata.value( p, "formatPlugValueWidget:mode" ) == "custom" for p in self.getPlugs() )
 		for fmt in formats :
 			result.append(
-				"/" + self.__formatLabel( fmt ),
+				"/" + _formatLabel( fmt, self.getContext() ),
 				{
 					"command" : functools.partial( Gaffer.WeakMethod( self.__applyFormat ), fmt = fmt ),
 					"checkBox" : fmt == self.__currentFormat and not modeIsCustom,
@@ -166,17 +168,6 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 		)
 
 		return result
-
-	def __formatLabel( self, fmt ) :
-
-		if fmt == GafferImage.Format() :
-			return "Default ( %s )" % GafferImage.FormatPlug.getDefaultFormat( self.getContext() )
-		else :
-			name = GafferImage.Format.name( fmt )
-			if name :
-				return "%s ( %s )" % ( name, str( fmt ) )
-			else :
-				return "Custom"
 
 	def __applyFormat( self, unused, fmt ) :
 
@@ -212,3 +203,19 @@ class FormatPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self._requestUpdateFromValues()
 
 GafferUI.PlugValueWidget.registerType( GafferImage.FormatPlug, FormatPlugValueWidget )
+
+def _formatLabel( fmt, context ) :
+
+	if fmt == GafferImage.Format() :
+		return "Default ( {} )".format( GafferImage.FormatPlug.getDefaultFormat( context ) )
+	else :
+		return "{} ( {} )".format(
+			GafferImage.Format.name( fmt ) or "Custom",
+			fmt
+		)
+
+def __spreadsheetFormatter( plug, forToolTip ) :
+
+	return _formatLabel( plug.getValue(), plug.ancestor( Gaffer.ScriptNode ).context() )
+
+GafferUI.SpreadsheetUI.registerValueFormatter( GafferImage.FormatPlug, __spreadsheetFormatter )

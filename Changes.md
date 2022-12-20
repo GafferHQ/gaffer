@@ -6,6 +6,7 @@ Improvements
 
 - Viewer : If Arnold is available, then it is preferred over Appleseed for performing OSL shader previews. If neither is available, then Cycles will be used (#5084).
 - FormatPlugValueWidget : Added support for editing multiple plugs at once, as needed when multiple Spreadsheet cells are edited at once.
+- Spreadsheet : Improved display of image formats.
 
 Fixes
 -----
