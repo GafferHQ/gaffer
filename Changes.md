@@ -12,6 +12,7 @@ Fixes
 - Cycles : Disabled auto-tiling mode for the viewport/interactive render mode, which caused odd/glitchy behaviour on larger than 2k renders [^1].
 - Arnold : The `ai:GI_diffuse_depth` and `ai:GI_specular_depth` options now default to `2` when they are left unspecified, matching the default values on the ArnoldOptions node.
 - Menu buttons : Fixed missing dropdown menu indicators.
+- CompoundNumericPlugValueWidget : Fixed failure to construct with an empty list of plugs.
 
 API
 ---
