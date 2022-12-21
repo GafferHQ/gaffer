@@ -8,6 +8,12 @@ Features
   - Replaced size on portals and quad lights with width and height. Disks are width-only.
   - Added use_camera and use_caustics for lights.
   - Added normalize option for lights.
+- ContextVariableTweaks : Added a new node for tweaking the context used to evaluate upstream nodes.
+
+Improvements
+------------
+
+- TweakPlug : Added a `CreateIfMissing` mode, to only create a new value if one does not currently exist.
 
 Fixes
 -----

@@ -41,6 +41,7 @@
 #include "GafferBindings/DependencyNodeBinding.h"
 
 #include "Gaffer/ContextVariables.h"
+#include "Gaffer/ContextVariableTweaks.h"
 #include "Gaffer/DeleteContextVariables.h"
 #include "Gaffer/TimeWarp.h"
 #include "Gaffer/Loop.h"
@@ -198,6 +199,7 @@ void GafferModule::bindContextProcessor()
 	DependencyNodeClass<TimeWarp>();
 	DependencyNodeClass<ContextVariables>();
 	DependencyNodeClass<DeleteContextVariables>();
+	DependencyNodeClass<ContextVariableTweaks>();
 
 	Serialisation::registerSerialiser( Loop::staticTypeId(), new SetupBasedNodeSerialiser );
 	Serialisation::registerSerialiser( ContextProcessor::staticTypeId(), new SetupBasedNodeSerialiser );
