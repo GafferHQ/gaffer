@@ -1130,7 +1130,7 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( self.__colorAtUV( image, imath.V2f( 0.48, 0.5 ) ), imath.Color4f( 1, 0, 0, 1 ) )
 		self.assertEqual( self.__colorAtUV( image, imath.V2f( 0.52, 0.5 ) ), imath.Color4f( 0, 1, 0, 1 ) )
 
-	def __colorAtUV( self, image, uv ) :
+	def __colorAtUV( self, image, uv, channelName = "" ) :
 
 		dimensions = image.dataWindow.size() + imath.V2i( 1 )
 
@@ -1138,7 +1138,11 @@ class RendererTest( GafferTest.TestCase ) :
 		iy = int( uv.y * ( dimensions.y - 1 ) )
 		i = iy * dimensions.x + ix
 
-		return imath.Color4f( image["R"][i], image["G"][i], image["B"][i], image["A"][i] )
+		c = channelName
+		if c != "":
+			c = "%s." % channelName
+
+		return imath.Color4f( image[c+"R"][i], image[c+"G"][i], image[c+"B"][i], image[c+"A"][i] )
 
 	def __testCustomAttributeType( self, primitive, prefix, customAttribute, outputPlug, data, expectedResult, maxDifference = 0.0 ) :
 
@@ -1423,6 +1427,113 @@ class RendererTest( GafferTest.TestCase ) :
 
 		# Slightly off-centre, to avoid triangle edge artifact in centre of image.
 		testPixel = self.__colorAtUV( image, imath.V2f( 0.55 ) )
+		self.assertEqual( testPixel.r, 1 )
+		self.assertEqual( testPixel.g, 0 )
+		self.assertEqual( testPixel.b, 1 )
+
+		del plane
+
+	def __valueAtUV( self, image, uv, channelName ) :
+
+		dimensions = image.dataWindow.size() + imath.V2i( 1 )
+
+		ix = int( uv.x * ( dimensions.x - 1 ) )
+		iy = int( uv.y * ( dimensions.y - 1 ) )
+		i = iy * dimensions.x + ix
+
+		return image[channelName][i]
+
+	def testCustomAOV( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		# Custom AOVs are currently not supported in OSL mode.
+		# See https://developer.blender.org/T73266 for further updates
+		# for when OSL will eventually support custom AOVs.
+		renderer.option( "cycles:shadingsystem", IECore.StringData( "SVM" ) )
+
+		renderer.output(
+			"testValueOutput",
+			IECoreScene.Output(
+				"testValue",
+				"ieDisplay",
+				"float myValueAOV",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testCustomValueAOV",
+				}
+			)
+		)
+
+		renderer.output(
+			"testColorOutput",
+			IECoreScene.Output(
+				"testColor",
+				"ieDisplay",
+				"color myColorAOV",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testCustomColorAOV",
+				}
+			)
+		)
+
+		plane = renderer.object(
+			"/plane",
+			IECoreScene.MeshPrimitive.createPlane(
+				imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ),
+			),
+			renderer.attributes( IECore.CompoundObject ( {
+				"cycles:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader(
+							"principled_bsdf", "cycles:shader",
+						),
+					},
+					output = "output",
+				),
+				"cycles:aov:myValueAOV" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"aov_value" : IECoreScene.Shader(
+							"aov_output", "cycles:shader",
+							{ "name" : "myValueAOV", "value" : 0.5 }
+						),
+					},
+					output = "aov_value",
+				),
+				"cycles:aov:myColorAOV" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"aov_color" : IECoreScene.Shader(
+							"aov_output", "cycles:shader",
+							{ "name" : "myColorAOV", "color" : imath.Color3f( 1, 0, 1 ) }
+						),
+					},
+					output = "aov_color",
+				)
+			} ) )
+		)
+		## \todo Default camera is facing down +ve Z but should be facing
+		# down -ve Z.
+		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
+
+		renderer.render()
+		time.sleep( 2 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testCustomValueAOV" )
+		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+
+		# Slightly off-centre, to avoid triangle edge artifact in centre of image.
+		testPixel = self.__valueAtUV( image, imath.V2f( 0.55 ), "myValueAOV" )
+		self.assertEqual( testPixel, 0.5 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testCustomColorAOV" )
+		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+
+		# Slightly off-centre, to avoid triangle edge artifact in centre of image.
+		testPixel = self.__colorAtUV( image, imath.V2f( 0.55 ), "myColorAOV" )
 		self.assertEqual( testPixel.r, 1 )
 		self.assertEqual( testPixel.g, 0 )
 		self.assertEqual( testPixel.b, 1 )
