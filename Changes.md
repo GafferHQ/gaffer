@@ -1,11 +1,20 @@
 1.1.x.x (relative to 1.1.6.1)
 =======
 
+Features
+--------
+
+- Cycles :
+  - Replaced size on portals and quad lights with width and height. Disks are width-only.
+  - Added use_camera and use_caustics for lights.
+  - Added normalize option for lights.
+
 Fixes
 -----
 
 - Cycles :
   - Fixed custom AOVs not being created properly for SVM shading mode only, OSL is not supported. (#5044).
+  - Fixed distant light angle is in degrees and not radians.
 
 1.1.6.1 (relative to 1.1.6.0)
 =======
