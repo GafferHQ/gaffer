@@ -49,7 +49,6 @@
 
 #include "boost/algorithm/string.hpp"
 #include "boost/date_time/posix_time/conversion.hpp"
-#include "boost/filesystem.hpp"
 #include "boost/filesystem/operations.hpp"
 
 #ifndef _MSC_VER
@@ -67,7 +66,6 @@
 #include <sys/stat.h>
 
 using namespace std;
-using namespace boost::filesystem;
 using namespace boost::algorithm;
 using namespace boost::posix_time;
 using namespace IECore;
@@ -231,6 +229,12 @@ FileSystemPath::FileSystemPath( const std::string &path, PathFilterPtr filter, b
 	setFromString( path );
 }
 
+FileSystemPath::FileSystemPath( const std::filesystem::path &path, PathFilterPtr filter, bool includeSequences )
+	:	Path( filter ), m_includeSequences( includeSequences )
+{
+	setFromString( path.generic_string() );
+}
+
 FileSystemPath::FileSystemPath( const Names &names, const IECore::InternedString &root, PathFilterPtr filter, bool includeSequences )
 	:	Path( names, root, filter ), m_includeSequences( includeSequences )
 {
@@ -252,13 +256,13 @@ bool FileSystemPath::isValid( const IECore::Canceller *canceller ) const
 		return true;
 	}
 
-	const file_type t = symlink_status( path( this->string() ) ).type();
-	return t != status_error && t != file_not_found;
+	const std::filesystem::file_type t = std::filesystem::symlink_status( std::filesystem::path( this->string() ) ).type();
+	return t != std::filesystem::file_type::none && t != std::filesystem::file_type::not_found;
 }
 
 bool FileSystemPath::isLeaf( const IECore::Canceller *canceller ) const
 {
-	return isValid() && !is_directory( path( this->string() ) );
+	return isValid() && !is_directory( std::filesystem::path( this->string() ) );
 }
 
 bool FileSystemPath::getIncludeSequences() const
@@ -273,7 +277,7 @@ void FileSystemPath::setIncludeSequences( bool includeSequences )
 
 bool FileSystemPath::isFileSequence() const
 {
-	if( !m_includeSequences || is_directory( path( this->string() ) ) )
+	if( !m_includeSequences || is_directory( std::filesystem::path( this->string() ) ) )
 	{
 		return false;
 	}
@@ -291,7 +295,7 @@ bool FileSystemPath::isFileSequence() const
 
 FileSequencePtr FileSystemPath::fileSequence() const
 {
-	if( !m_includeSequences || is_directory( path( this->string() ) ) )
+	if( !m_includeSequences || is_directory( std::filesystem::path( this->string() ) ) )
 	{
 		return nullptr;
 	}
@@ -406,7 +410,7 @@ IECore::ConstRunTimeTypedPtr FileSystemPath::property( const IECore::InternedStr
 				for( std::vector<std::string>::iterator it = files.begin(); it != files.end(); ++it )
 				{
 					IECore::Canceller::check( canceller );
-					std::time_t t = last_write_time( path( *it ), e );
+					std::time_t t = boost::filesystem::last_write_time( boost::filesystem::path( *it ), e );
 					if( t > newest )
 					{
 						newest = t;
@@ -417,12 +421,12 @@ IECore::ConstRunTimeTypedPtr FileSystemPath::property( const IECore::InternedStr
 			}
 		}
 
-		std::time_t t = last_write_time( path( this->string() ), e );
+		std::time_t t = boost::filesystem::last_write_time( boost::filesystem::path( this->string() ), e );
 		return new DateTimeData( from_time_t( t ) );
 	}
 	else if( name == g_sizePropertyName )
 	{
-		boost::system::error_code e;
+		std::error_code e;
 
 		if( m_includeSequences )
 		{
@@ -438,7 +442,7 @@ IECore::ConstRunTimeTypedPtr FileSystemPath::property( const IECore::InternedStr
 				for( std::vector<std::string>::iterator it = files.begin(); it != files.end(); ++it )
 				{
 					IECore::Canceller::check( canceller );
-					uintmax_t s = file_size( path( *it ), e );
+					uintmax_t s = std::filesystem::file_size( std::filesystem::path( *it ), e );
 					if( !e )
 					{
 						total += s;
@@ -449,7 +453,7 @@ IECore::ConstRunTimeTypedPtr FileSystemPath::property( const IECore::InternedStr
 			}
 		}
 
-		uintmax_t s = file_size( path( this->string() ), e );
+		uintmax_t s = std::filesystem::file_size( std::filesystem::path( this->string() ), e );
 		return new UInt64Data( !e ? s : 0 );
 	}
 	else if( name == g_frameRangePropertyName )
@@ -473,14 +477,14 @@ PathPtr FileSystemPath::copy() const
 
 void FileSystemPath::doChildren( std::vector<PathPtr> &children, const IECore::Canceller *canceller ) const
 {
-	path p( this->string() );
+	std::filesystem::path p( this->string() );
 
-	if( !is_directory( p ) )
+	if( !std::filesystem::is_directory( p ) )
 	{
 		return;
 	}
 
-	for( directory_iterator it( p ), eIt; it != eIt; ++it )
+	for( std::filesystem::directory_iterator it( p ), eIt; it != eIt; ++it )
 	{
 		IECore::Canceller::check( canceller );
 		children.push_back( new FileSystemPath( it->path().generic_string(), const_cast<PathFilter *>( getFilter() ), m_includeSequences ) );
@@ -496,9 +500,9 @@ void FileSystemPath::doChildren( std::vector<PathPtr> &children, const IECore::C
 			IECore::Canceller::check( canceller );
 			std::vector<FrameList::Frame> frames;
 			(*it)->getFrameList()->asList( frames );
-			if ( !is_directory( path( (*it)->fileNameForFrame( frames[0] ) ) ) )
+			if ( !is_directory( std::filesystem::path( (*it)->fileNameForFrame( frames[0] ) ) ) )
 			{
-				children.push_back( new FileSystemPath( path( p / (*it)->getFileName() ).generic_string(), const_cast<PathFilter *>( getFilter() ), m_includeSequences ) );
+				children.push_back( new FileSystemPath( std::filesystem::path( p / (*it)->getFileName() ).generic_string(), const_cast<PathFilter *>( getFilter() ), m_includeSequences ) );
 			}
 		}
 	}
@@ -609,10 +613,10 @@ void FileSystemPath::rootAndNames(const std::string &string, InternedString &roo
 		}
 	}
 
-	const path convertedPath( sanitizedString );
+	const std::filesystem::path convertedPath( sanitizedString );
 	root = convertedPath.root_path().generic_string();
 
-	path::const_iterator startIt = convertedPath.begin();
+	std::filesystem::path::const_iterator startIt = convertedPath.begin();
 
 	// path iteration includes the root name and directory, if present
 	if( convertedPath.has_root_name() )
@@ -625,7 +629,7 @@ void FileSystemPath::rootAndNames(const std::string &string, InternedString &roo
 		++startIt;
 	}
 
-	for( path::const_iterator it = startIt, eIt = convertedPath.end(); it != eIt; ++it )
+	for( std::filesystem::path::const_iterator it = startIt, eIt = convertedPath.end(); it != eIt; ++it )
 	{
 		if( it->string() != "." )
 		{
@@ -642,9 +646,14 @@ std::string FileSystemPath::nativeString() const
 	return string();
 #endif
 
-	path p( string() );
+	std::filesystem::path p( string() );
 	// This is used instead of `nativeString()` because `nativeString()` on Windows
 	// returns a `wstring`.
 	p.make_preferred();
 	return p.string();
+}
+
+std::filesystem::path FileSystemPath::standardPath() const
+{
+	return std::filesystem::path( nativeString() );
 }

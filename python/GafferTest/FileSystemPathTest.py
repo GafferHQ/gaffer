@@ -87,7 +87,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 		os.symlink( self.temporaryDirectory() / "nonExistent", self.temporaryDirectory() / "broken" )
 
 		# we do want symlinks to appear in children, even if they're broken
-		d = Gaffer.FileSystemPath( self.temporaryDirectory().as_posix() )
+		d = Gaffer.FileSystemPath( self.temporaryDirectory() )
 		c = d.children()
 		self.assertEqual( len( c ), 1 )
 
@@ -113,8 +113,8 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 
 		# symlinks should report the info for the file
 		# they point to.
-		a = Gaffer.FileSystemPath( ( self.temporaryDirectory() / "a" ).as_posix() )
-		l = Gaffer.FileSystemPath( ( self.temporaryDirectory() / "l" ).as_posix() )
+		a = Gaffer.FileSystemPath( self.temporaryDirectory() / "a" )
+		l = Gaffer.FileSystemPath( self.temporaryDirectory() / "l" )
 		aInfo = a.info()
 		self.assertEqual( aInfo["fileSystem:size"], l.info()["fileSystem:size"] )
 		# unless they're broken
@@ -123,7 +123,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 
 	def testCopy( self ) :
 
-		p = Gaffer.FileSystemPath( self.temporaryDirectory().as_posix() )
+		p = Gaffer.FileSystemPath( self.temporaryDirectory() )
 		p2 = p.copy()
 
 		self.assertEqual( p, p2 )
@@ -355,7 +355,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 
 	def testModificationTimes( self ) :
 
-		p = Gaffer.FileSystemPath( self.temporaryDirectory().as_posix() )
+		p = Gaffer.FileSystemPath( self.temporaryDirectory() )
 		p.append( "t" )
 
 		with open( p.nativeString(), "w" ) as f :
@@ -376,7 +376,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 
 	def testOwner( self ) :
 
-		p = Gaffer.FileSystemPath( self.temporaryDirectory().as_posix() )
+		p = Gaffer.FileSystemPath( self.temporaryDirectory() )
 		p.append( "t" )
 
 		with open( p.nativeString(), "w" ) as f :
@@ -389,7 +389,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 
 	def testGroup( self ) :
 
-		p = Gaffer.FileSystemPath( self.temporaryDirectory().as_posix() )
+		p = Gaffer.FileSystemPath( self.temporaryDirectory() )
 		p.append( "t" )
 
 		with open( p.nativeString(), "w" ) as f :
@@ -401,7 +401,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 
 	def testPropertyNames( self ) :
 
-		p = Gaffer.FileSystemPath( self.temporaryDirectory().as_posix() )
+		p = Gaffer.FileSystemPath( self.temporaryDirectory() )
 
 		a = p.propertyNames()
 		self.assertTrue( isinstance( a, list ) )
@@ -412,7 +412,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 		self.assertTrue( "fileSystem:size" in a )
 
 		self.assertTrue( "fileSystem:frameRange" not in a )
-		p = Gaffer.FileSystemPath( self.temporaryDirectory().as_posix(), includeSequences = True )
+		p = Gaffer.FileSystemPath( self.temporaryDirectory(), includeSequences = True )
 		self.assertTrue( "fileSystem:frameRange" in p.propertyNames() )
 
 	def testSequences( self ) :
@@ -422,7 +422,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 			with open( self.temporaryDirectory() / n, "w" ) as f :
 				f.write( "AAAA" )
 
-		p = Gaffer.FileSystemPath( self.temporaryDirectory().as_posix(), includeSequences = True )
+		p = Gaffer.FileSystemPath( self.temporaryDirectory(), includeSequences = True )
 		self.assertTrue( p.getIncludeSequences() )
 
 		c = p.children()
@@ -482,7 +482,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 		self.assertEqual( len( p2.children() ), 8 )
 
 		# make sure we can still exclude the sequences
-		p = Gaffer.FileSystemPath( self.temporaryDirectory().as_posix(), includeSequences = False )
+		p = Gaffer.FileSystemPath( self.temporaryDirectory(), includeSequences = False )
 		self.assertFalse( p.getIncludeSequences() )
 
 		c = p.children()
@@ -511,7 +511,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 
 	def testCancellation( self ) :
 
-		p = Gaffer.FileSystemPath( pathlib.Path( __file__ ).parent.as_posix() )
+		p = Gaffer.FileSystemPath( pathlib.Path( __file__ ).parent )
 
 		# Children
 
@@ -527,7 +527,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 			with open( self.temporaryDirectory() / ( str( f ) + ".txt" ), "w" ) as f :
 				f.write( "x" )
 
-		p = Gaffer.FileSystemPath( ( self.temporaryDirectory() / "#.txt" ).as_posix(), includeSequences = True )
+		p = Gaffer.FileSystemPath( ( self.temporaryDirectory() / "#.txt" ), includeSequences = True )
 
 		with self.assertRaises( IECore.Cancelled ) :
 			p.property( "fileSystem:owner", c )
@@ -540,6 +540,10 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 
 		with self.assertRaises( IECore.Cancelled ) :
 			p.property( "fileSystem:modificationTime", c )
+
+	def testPath( self ) :
+
+		self.assertEqual( Gaffer.FileSystemPath( pathlib.Path( __file__ ) ).standardPath(), pathlib.Path( __file__ ) )
 
 	def setUp( self ) :
 
@@ -570,6 +574,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 			securityDescriptor = GafferTest._WindowsUtils.getFileSecurity( filePath )
 			group, domain = securityDescriptor.group()
 			return group
+
 
 if __name__ == "__main__":
 	unittest.main()

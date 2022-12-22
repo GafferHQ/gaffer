@@ -44,7 +44,7 @@ class FileSequencePathFilterTest( GafferTest.TestCase ) :
 
 	def test( self ) :
 
-		p = Gaffer.FileSystemPath( self.__dir.as_posix(), includeSequences = True )
+		p = Gaffer.FileSystemPath( self.__dir, includeSequences = True )
 		self.assertTrue( p.getIncludeSequences() )
 
 		self.assertEqual( set( [ str( c ) for c in p.children() ] ), set( [
@@ -117,7 +117,7 @@ class FileSequencePathFilterTest( GafferTest.TestCase ) :
 			( self.__dir / "b.###.txt" ).as_posix()
 		] ) )
 
-		p = Gaffer.FileSystemPath( self.__dir.as_posix(), includeSequences = True )
+		p = Gaffer.FileSystemPath( self.__dir, includeSequences = True )
 		self.assertTrue( p.getIncludeSequences() )
 
 		self.assertEqual( set( [ str( c ) for c in p.children() ] ), set( [
@@ -197,7 +197,7 @@ class FileSequencePathFilterTest( GafferTest.TestCase ) :
 		# path that by definition has no sequences,
 		# but we may as well verify that it works.
 
-		p = Gaffer.FileSystemPath( self.__dir.as_posix(), includeSequences = False )
+		p = Gaffer.FileSystemPath( self.__dir, includeSequences = False )
 		self.assertFalse( p.getIncludeSequences() )
 
 		self.assertEqual( set( [ str( c ) for c in p.children() ] ), set( [
@@ -264,7 +264,7 @@ class FileSequencePathFilterTest( GafferTest.TestCase ) :
 
 	def testEnabled( self ) :
 
-		p = Gaffer.FileSystemPath( self.__dir.as_posix(), includeSequences = True )
+		p = Gaffer.FileSystemPath( self.__dir, includeSequences = True )
 		self.assertTrue( p.getIncludeSequences() )
 
 		p.setFilter( Gaffer.FileSequencePathFilter( mode = Gaffer.FileSequencePathFilter.Keep.Files ) )

@@ -582,6 +582,13 @@ void GafferModule::bindPath()
 			) )
 		)
 		.def(
+			init<const std::filesystem::path &, PathFilterPtr, bool>( (
+				arg( "path" ),
+				arg( "filter" ) = object(),
+				arg( "includeSequences" ) = false
+			) )
+		)
+		.def(
 			init<const std::string &, PathFilterPtr, bool>( (
 				arg( "path" ),
 				arg( "filter" ) = object(),
@@ -599,6 +606,7 @@ void GafferModule::bindPath()
 			)
 		)
 		.def( "nativeString", &FileSystemPath::nativeString )
+		.def( "standardPath", &FileSystemPath::standardPath )
 		.staticmethod( "createStandardFilter" )
 	;
 
