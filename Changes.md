@@ -1,3 +1,12 @@
+1.1.x.x (relative to 1.1.6.1)
+=======
+
+Fixes
+-----
+
+- Cycles :
+  - Fixed custom AOVs not being created properly for SVM shading mode only, OSL is not supported. (#5044).
+
 1.1.6.1 (relative to 1.1.6.0)
 =======
 
