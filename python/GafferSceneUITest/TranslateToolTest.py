@@ -41,6 +41,7 @@ import os
 import imath
 
 import IECore
+import IECoreScene
 
 import Gaffer
 import GafferTest
@@ -50,6 +51,12 @@ import GafferScene
 import GafferSceneUI
 
 class TranslateToolTest( GafferUITest.TestCase ) :
+
+	def tearDown( self ) :
+
+		IECoreScene.SharedSceneInterfaces.clear()
+
+		GafferUITest.TestCase.tearDown( self )
 
 	def testSelection( self ) :
 
