@@ -38,6 +38,7 @@ import os
 import unittest
 import weakref
 import imath
+import math
 
 import IECore
 import IECoreImage
@@ -72,6 +73,7 @@ class WidgetAlgoTest( GafferUITest.TestCase ) :
 			if windowHandle :
 				screen = windowHandle.screen()
 			expectedSize *= screen.devicePixelRatio()
+			expectedSize = imath.V2f( math.ceil( expectedSize.x ), math.ceil( expectedSize.y ) )
 
 		self.assertEqual( imath.V2f( i.displayWindow.size() ) + imath.V2f( 1 ), expectedSize )
 
