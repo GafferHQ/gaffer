@@ -1214,7 +1214,7 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 
 		# Simulate click on PathListingWidget.
 
-		center = widget.bound().center()
+		center = widget.bound( window ).center()
 		centerPath = widget.pathAt( center )
 		self.assertIsInstance( centerPath, Gaffer.DictPath )
 
