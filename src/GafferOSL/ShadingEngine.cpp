@@ -259,6 +259,11 @@ bool convertValue( void *dst, TypeDesc dstType, const void *src, TypeDesc srcTyp
 	return false;
 }
 
+//////////////////////////////////////////////////////////////////////////
+// Copied from IECore: src/IECoreScene/ShaderNetwork.cpp
+// Would probably be better if this was public so we could just call it
+//////////////////////////////////////////////////////////////////////////
+
 struct ReplaceFunctor
 {
 	ReplaceFunctor( const IECore::CompoundObject *attributes ) : m_attributes( attributes )
@@ -306,7 +311,7 @@ void convertStringSubstitutions( ShaderNetwork *network )
 {
 	// Output parameters
 
-	std::map<InternedString, std::vector< ShaderNetwork::Parameter > > needSubstitution;
+	std::map<std::string, std::vector< ShaderNetwork::Parameter > > needSubstitution;
 
 	for( const auto &s : network->shaders() )
 	{
@@ -314,8 +319,8 @@ void convertStringSubstitutions( ShaderNetwork *network )
 		{
 			if( p.second->typeId() == IECore::StringDataTypeId )
 			{
-				const InternedString &text = IECore::runTimeCast<StringData>( p.second )->readable();
-				if( boost::regex_search( text.string().begin(), text.string().end(), attributeRegex() ) )
+				const std::string &text = IECore::runTimeCast<StringData>( p.second )->readable();
+				if( boost::regex_search( text.begin(), text.end(), attributeRegex() ) )
 				{
 					needSubstitution.insert( { text, std::vector< ShaderNetwork::Parameter >() } ).first->second.push_back( { s.first, p.first } );
 				}
@@ -329,8 +334,8 @@ void convertStringSubstitutions( ShaderNetwork *network )
 	for( const auto &s : needSubstitution )
 	{
 		ShaderPtr substitute = new Shader( "ObjectProcessing/InString", "osl:shader" );
-		substitute->parameters()["name"] = new StringData( "substituteString:" + s.first.string() );
-		substitute->parameters()["defaultValue"] = new StringData( s.first.string() );
+		substitute->parameters()["name"] = new StringData( "substituteString:" + s.first );
+		substitute->parameters()["defaultValue"] = new StringData( s.first );
 		const InternedString substituteHandle = network->addShader( defaultSubstituteHandle, std::move( substitute ) );
 	
 		ShaderNetwork::Parameter substitutedOut = { substituteHandle, outParameterName };	
@@ -479,8 +484,9 @@ class RenderState
 			}
 			else
 			{
-				// I kinda wonder if this should be an error that would make it more obvious that you've
-				// failed to provide attributes?
+
+				// It might be nice to throw an exception here that would make it more obvious that you've
+				// failed to provide attributes, but it's not easy to pass exceptions through OSL
 				return s;
 			}
 		}

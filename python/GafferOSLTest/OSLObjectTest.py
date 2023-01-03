@@ -1043,7 +1043,8 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( o["out"].object( "/group/plane" )["testString"].data[0], "[/group/plane],/group/plane" )
 
 		code["parameters"]["inString"].setValue( "<attr:testAttribute2>" )
-		# Is this the right behaviour for missing attributes?		
+
+		# Missing attributes are replaced with an empty string
 		self.assertEqual( o["out"].object( "/group/plane" )["testString"].data[0], ",/group/plane" )
 
 		a["attributes"].addChild( Gaffer.NameValuePlug( "testAttribute2", "foo" ) )
