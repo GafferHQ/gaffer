@@ -307,9 +307,11 @@ class PlugValueWidget( GafferUI.Widget ) :
 	# This is not typically necessary as calls are made automatically whenever the
 	# plug is dirtied, but it can be useful when the user wishes to abandon an
 	# in-progress edit in the widget (by hitting `Esc` for example).
-	def _requestUpdateFromValues( self ) :
+	def _requestUpdateFromValues( self, lazy = True ) :
 
 		self.__callUpdateFromValues()
+		if not lazy :
+			self.__callUpdateFromValues.flush( self )
 
 	## Returns a context manager that blocks the connections used to
 	# call `_updateFromValues()` when the plug is dirtied. This may
