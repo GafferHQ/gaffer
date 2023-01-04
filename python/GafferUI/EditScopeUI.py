@@ -128,13 +128,13 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 				)
 				GafferUI.Spacer( imath.V2i( 4, 1 ), imath.V2i( 4, 1 ) )
 
-		self._updateFromPlug()
-
 	def hasLabel( self ) :
 
 		return True
 
-	def _updateFromPlug( self ) :
+	# We don't actually display values, but this is also called whenever the
+	# input changes, which is when we need to update.
+	def _updateFromValues( self, values, exception ) :
 
 		editScope = self.__editScope()
 		editScopeActive = editScope is not None
