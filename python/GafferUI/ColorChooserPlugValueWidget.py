@@ -53,18 +53,10 @@ class ColorChooserPlugValueWidget( GafferUI.PlugValueWidget ) :
 			Gaffer.WeakMethod( self.__colorChanged ), scoped = False
 		)
 
-		self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ), scoped = False )
-
 		self.__lastChangedReason = None
 		self.__mergeGroupId = 0
 
 		self._updateFromPlugs()
-
-	def setPlugs( self, plugs ) :
-
-		GafferUI.PlugValueWidget.setPlugs( self, plugs )
-
-		self.__colorChooser.setInitialColor( self.__colorFromPlugs() )
 
 	def _updateFromPlugs( self ) :
 
@@ -107,11 +99,6 @@ class ColorChooserPlugValueWidget( GafferUI.PlugValueWidget ) :
 			return sum( values ) / len( values )
 		else :
 			return imath.Color4f( 0 )
-
-	def __visibilityChanged( self, widget ) :
-
-		if self.visible() :
-			self.__colorChooser.setInitialColor( self.__colorChooser.getColor() )
 
 	def __allComponentsEditable( self ) :
 
