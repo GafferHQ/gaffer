@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 ##########################################################################
 #
 #  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
