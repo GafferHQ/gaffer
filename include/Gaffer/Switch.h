@@ -116,8 +116,6 @@ class IECORE_EXPORT Switch : public ComputeNode
 		// if plug is not meaningful to the switching process.
 		const Plug *oppositePlug( const Plug *plug, const Context *context = nullptr ) const;
 
-		bool variesWithContext( const Plug *plug ) const;
-
 		void updateInternalConnection();
 
 		static size_t g_firstPlugIndex;

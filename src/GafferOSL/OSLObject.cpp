@@ -246,16 +246,6 @@ const GafferOSL::OSLCode *OSLObject::oslCode() const
 	return getChild<GafferOSL::OSLCode>( g_firstPlugIndex + 7 );
 }
 
-namespace
-{
-	// Copied from Switch::variesWithContext.  Should be shared somewhere central
-	bool requiresCompute( const Plug *plug )
-	{
-		plug = plug->source<Gaffer::Plug>();
-		return plug->direction() == Plug::Out && IECore::runTimeCast<const ComputeNode>( plug->node() );
-	}
-}
-
 void OSLObject::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	Deformer::affects( input, outputs );
@@ -271,23 +261,15 @@ void OSLObject::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outp
 
 bool OSLObject::affectsProcessedObject( const Gaffer::Plug *input ) const
 {
-	const bool transformTrigger = input == inPlug()->transformPlug() && (
-		requiresCompute( useTransformPlug() ) || useTransformPlug()->getValue()
-	);
-
-	const bool attributeTrigger = input == inPlug()->attributesPlug() && (
-		requiresCompute( useAttributesPlug() ) || useAttributesPlug()->getValue()
-	);
-
 	return
 		Deformer::affectsProcessedObject( input ) ||
 		input == shaderPlug() ||
 		input == interpolationPlug() ||
 		input == useTransformPlug() ||
+		( input == inPlug()->transformPlug() && !useTransformPlug()->isSetToDefault() ) ||
 		input == useAttributesPlug() ||
-		input == resampledInPlug()->objectPlug() ||
-		transformTrigger ||
-		attributeTrigger
+		( input == inPlug()->attributesPlug() && !useAttributesPlug()->isSetToDefault() ) ||
+		input == resampledInPlug()->objectPlug()
 	;
 }
 

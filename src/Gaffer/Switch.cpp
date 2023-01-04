@@ -41,6 +41,7 @@
 #include "Gaffer/ContextAlgo.h"
 #include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/NameValuePlug.h"
+#include "Gaffer/PlugAlgo.h"
 
 #include "boost/bind/bind.hpp"
 #include "boost/bind/placeholders.hpp"
@@ -322,7 +323,7 @@ size_t Switch::inputIndex( const Context *context ) const
 	// an upstream compute. This avoids leakage of context variables such as
 	// `scene:path`.
 	std::optional<ContextAlgo::GlobalScope> globalScope;
-	if( variesWithContext( enabledPlug ) || variesWithContext( indexPlug ) )
+	if( PlugAlgo::dependsOnCompute( enabledPlug ) || PlugAlgo::dependsOnCompute( indexPlug ) )
 	{
 		globalScope.emplace( context, globalScopePlug );
 	}
@@ -400,12 +401,6 @@ const Plug *Switch::oppositePlug( const Plug *plug, const Context *context ) con
 	return result;
 }
 
-bool Switch::variesWithContext( const Plug *plug ) const
-{
-	plug = plug->source<Gaffer::Plug>();
-	return plug->direction() == Plug::Out && IECore::runTimeCast<const ComputeNode>( plug->node() );
-}
-
 void Switch::updateInternalConnection()
 {
 	Plug *out = outPlug();
@@ -414,7 +409,7 @@ void Switch::updateInternalConnection()
 		return;
 	}
 
-	if( variesWithContext( enabledPlug() ) || variesWithContext( indexPlug() ) )
+	if( PlugAlgo::dependsOnCompute( enabledPlug() ) || PlugAlgo::dependsOnCompute( indexPlug() ) )
 	{
 		// We can't use an internal connection to implement the switch,
 		// because the index might vary from context to context. We must

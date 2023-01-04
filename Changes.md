@@ -1,3 +1,11 @@
+1.2.0.0ax (relative to 1.2.0.0a1)
+=========
+
+API
+---
+
+- PlugAlgo : Added `dependsOnCompute()` utility method.
+
 1.2.0.0a1
 =========
 

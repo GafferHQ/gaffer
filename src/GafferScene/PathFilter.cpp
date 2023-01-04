@@ -40,6 +40,7 @@
 #include "GafferScene/ScenePlug.h"
 
 #include "Gaffer/Context.h"
+#include "Gaffer/PlugAlgo.h"
 
 #include "boost/bind/bind.hpp"
 
@@ -123,9 +124,7 @@ void PathFilter::plugDirtied( const Gaffer::Plug *plug )
 {
 	if( plug == pathsPlug() )
 	{
-		//\todo: share this logic with Switch::variesWithContext()
-		Plug* sourcePlug = pathsPlug()->source();
-		if( sourcePlug->direction() == Plug::Out && IECore::runTimeCast<const ComputeNode>( sourcePlug->node() ) )
+		if( PlugAlgo::dependsOnCompute( pathsPlug() ) )
 		{
 			// pathsPlug() is receiving data from a plug whose value is context varying, meaning
 			// we need to use the intermediate pathMatcherPlug() in computeMatch() instead:

@@ -119,6 +119,8 @@ void GafferModule::bindPlugAlgo()
 	scope moduleScope( module );
 
 	def( "replacePlug", &replacePlug, ( arg( "parent" ), arg( "plug" ) ) );
+	def( "dependsOnCompute", &PlugAlgo::dependsOnCompute );
+
 	def( "createPlugFromData", &createPlugFromData );
 	def( "extractDataFromPlug", &extractDataFromPlug );
 	def( "getValueAsData", &getValueAsData );
