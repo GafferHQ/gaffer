@@ -1,6 +1,11 @@
 1.2.0.0ax (relative to 1.2.0.0a1)
 =========
 
+Fixes
+-----
+
+- 3Delight : Fixed rendering with recent versions of 3Delight, which no longer use the `DL_DISPLAYS_PATH` to search for display drivers.
+
 API
 ---
 
