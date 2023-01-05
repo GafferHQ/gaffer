@@ -11,6 +11,11 @@ API
 
 - PlugAlgo : Added `dependsOnCompute()` utility method.
 
+Build
+-----
+
+- 3Delight : Updated to 3Delight version 2.9.17.
+
 1.2.0.0a1
 =========
 
