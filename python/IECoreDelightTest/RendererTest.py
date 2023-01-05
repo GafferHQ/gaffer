@@ -42,10 +42,10 @@ import imath
 
 import IECore
 import IECoreScene
+import IECoreDelight
 
 import GafferTest
 import GafferScene
-import GafferDelight
 
 class RendererTest( GafferTest.TestCase ) :
 

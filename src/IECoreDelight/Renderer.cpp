@@ -38,8 +38,8 @@
 
 #include "Gaffer/Private/IECorePreview/LRUCache.h"
 
-#include "GafferDelight/IECoreDelightPreview/NodeAlgo.h"
-#include "GafferDelight/IECoreDelightPreview/ParameterList.h"
+#include "IECoreDelight/NodeAlgo.h"
+#include "IECoreDelight/ParameterList.h"
 
 #include "IECoreScene/Shader.h"
 #include "IECoreScene/ShaderNetwork.h"

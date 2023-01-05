@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2017, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -32,52 +32,59 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferDelight/IECoreDelightPreview/NodeAlgo.h"
-#include "GafferDelight/IECoreDelightPreview/ParameterList.h"
+#ifndef IECOREDELIGHT_PARAMETERLIST_H
+#define IECOREDELIGHT_PARAMETERLIST_H
 
-#include "IECoreScene/SpherePrimitive.h"
+#include "IECoreDelight/Export.h"
+
+#include "IECoreScene/PrimitiveVariable.h"
+
+#include "IECore/CompoundData.h"
+#include "IECore/VectorTypedData.h"
+
+#include <vector>
 
 #include <nsi.h>
 
-using namespace std;
-using namespace Imath;
-using namespace IECore;
-using namespace IECoreScene;
-using namespace IECoreDelight;
-
-namespace
+namespace IECoreDelight
 {
 
-bool convert( const IECoreScene::SpherePrimitive *object, NSIContext_t context, const char *handle )
+/// Aids in the creation of parameter lists to be passed to the
+/// NSI API. The ParameterList does not copy any of the data passed
+/// to it; it is the caller's responsibility to keep all data alive
+/// for as long as the ParameterList is used.
+class IECOREDELIGHT_API ParameterList
 {
-	NSICreate( context, handle, "particles", 0, nullptr );
 
-	ParameterList parameters;
+	public :
 
-	const V3f p( 0 );
-	parameters.add( {
-		"P",
-		&p,
-		NSITypePoint,
-		0,
-		1,
-		NSIParamPerVertex
-	} );
+		ParameterList();
+		ParameterList( std::initializer_list<NSIParam_t> parameters );
+		ParameterList( const IECore::CompoundDataMap &values );
 
-	const float width = object->radius() * 2;
-	parameters.add( {
-		"width",
-		&width,
-		NSITypeFloat,
-		0,
-		1,
-		NSIParamPerVertex
-	} );
+		~ParameterList();
 
-	NSISetAttribute( context, handle, parameters.size(), parameters.data() );
-	return true;
-}
+		void add( const NSIParam_t &parameter );
+		void add( const char *name, const std::string &value );
+		void add( const char *name, const IECore::Data *value );
+		void add( const char *name, const IECore::Data *value, const IECore::IntVectorData *indices );
 
-NodeAlgo::ConverterDescription<SpherePrimitive> g_description( convert );
+		NSIParam_t parameter( const char *name, const IECore::Data *value );
+		const char *allocate( const std::string &s );
 
-} // namespace
+		int size() const;
+		const NSIParam_t *data() const;
+
+	private :
+
+		template<typename T>
+		T *allocate();
+
+		std::vector<NSIParam_t> m_params;
+		std::vector<const void *> m_allocations;
+
+};
+
+} // namespace IECoreDelight
+
+#endif // IECOREDELIGHT_PARAMETERLIST_H

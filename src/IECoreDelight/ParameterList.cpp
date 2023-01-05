@@ -32,7 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferDelight/IECoreDelightPreview/ParameterList.h"
+#include "IECoreDelight/ParameterList.h"
 
 #include "IECore/MessageHandler.h"
 #include "IECore/SimpleTypedData.h"

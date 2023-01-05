@@ -32,12 +32,10 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferDelight/IECoreDelightPreview/NodeAlgo.h"
-#include "GafferDelight/IECoreDelightPreview/ParameterList.h"
+#include "IECoreDelight/NodeAlgo.h"
+#include "IECoreDelight/ParameterList.h"
 
-#include "IECoreScene/CurvesPrimitive.h"
-
-#include "IECore/MessageHandler.h"
+#include "IECoreScene/PointsPrimitive.h"
 
 #include <nsi.h>
 
@@ -49,48 +47,27 @@ using namespace IECoreDelight;
 namespace
 {
 
-const char *g_catmullRom = "catmull-rom";
-const char *g_bSpline = "b-spline";
+float g_one = 1.0f;
 
-void staticParameters( const IECoreScene::CurvesPrimitive *object, ParameterList &parameters )
+void staticParameters( const IECoreScene::PointsPrimitive *object, ParameterList &parameters )
 {
-	parameters.add( "nvertices", object->verticesPerCurve() );
-
-	const char **basis = nullptr;
-	if( object->basis() == CubicBasisf::catmullRom() )
+	if( object->variables.find( "width" ) == object->variables.end() )
 	{
-		basis = &g_catmullRom;
-	}
-	else if( object->basis() == CubicBasisf::bSpline() )
-	{
-		basis = &g_bSpline;
-	}
-	else
-	{
-		IECore::msg( IECore::Msg::Warning, "IECoreDelight", "Unsupported curves basis" );
-	}
-
-	if( basis )
-	{
+		// Width is a required parameter
 		parameters.add( {
-			"basis",
-			basis,
-			NSITypeString,
+			"width",
+			&g_one,
+			NSITypeFloat,
 			0,
 			1,
 			0
 		} );
 	}
-
-	if( object->periodic() )
-	{
-		IECore::msg( IECore::Msg::Warning, "IECoreDelight", "Periodic curves are not supported" );
-	}
 }
 
-bool convertStatic( const IECoreScene::CurvesPrimitive *object, NSIContext_t context, const char *handle )
+bool convertStatic( const IECoreScene::PointsPrimitive *object, NSIContext_t context, const char *handle )
 {
-	NSICreate( context, handle, "cubiccurves", 0, nullptr );
+	NSICreate( context, handle, "particles", 0, nullptr );
 
 	ParameterList parameters;
 	staticParameters( object, parameters );
@@ -102,9 +79,9 @@ bool convertStatic( const IECoreScene::CurvesPrimitive *object, NSIContext_t con
 	return true;
 }
 
-bool convertAnimated( const vector<const IECoreScene::CurvesPrimitive *> &objects, const vector<float> &times, NSIContext_t context, const char *handle )
+bool convertAnimated( const vector<const IECoreScene::PointsPrimitive *> &objects, const vector<float> &times, NSIContext_t context, const char *handle )
 {
-	NSICreate( context, handle, "cubiccurves", 0, nullptr );
+	NSICreate( context, handle, "particles", 0, nullptr );
 
 	ParameterList parameters;
 	staticParameters( objects.front(), parameters );
@@ -128,6 +105,6 @@ bool convertAnimated( const vector<const IECoreScene::CurvesPrimitive *> &object
 	return true;
 }
 
-NodeAlgo::ConverterDescription<CurvesPrimitive> g_description( convertStatic, convertAnimated );
+NodeAlgo::ConverterDescription<PointsPrimitive> g_description( convertStatic, convertAnimated );
 
 } // namespace

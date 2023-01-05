@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2017, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -32,10 +32,10 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferDelight/IECoreDelightPreview/NodeAlgo.h"
-#include "GafferDelight/IECoreDelightPreview/ParameterList.h"
+#include "IECoreDelight/NodeAlgo.h"
+#include "IECoreDelight/ParameterList.h"
 
-#include "GafferScene/Private/IECoreScenePreview/Geometry.h"
+#include "IECoreScene/Camera.h"
 
 #include "IECore/SimpleTypedData.h"
 
@@ -50,26 +50,44 @@ using namespace IECoreDelight;
 namespace
 {
 
-bool convert( const IECoreScenePreview::Geometry *geometry, NSIContext_t context, const char *handle )
+bool convert( const IECoreScene::Camera *camera, NSIContext_t context, const char *handle )
 {
-	if( geometry->getType() != "dl:environment" )
+	const string &projection = camera->getProjection();
+	const string nodeType = projection + "camera";
+
+	NSICreate( context, handle, nodeType.c_str(), 0, nullptr );
+
+	ParameterList parameters;
+
+	const float fov = 90.0f;
+	const int dofEnable = 1;
+	const double fStop = camera->getFStop();
+	const double focalLength = camera->getFocalLength() * camera->getFocalLengthWorldScale();
+	const double focusDistance = camera->getFocusDistance();
+
+	if( projection == "perspective" )
 	{
-		return false;
+		parameters.add( { "fov", &fov, NSITypeFloat, 0, 1, 0 } );
+		if( camera->getFStop() > 0.0f )
+		{
+			parameters.add( { "depthoffield.enable", &dofEnable, NSITypeInteger, 0, 1, 0 } );
+			parameters.add( { "depthoffield.fstop", &fStop, NSITypeDouble, 0, 1, 0 } );
+			parameters.add( { "depthoffield.focallength", &focalLength, NSITypeDouble, 0, 1, 0 } );
+			parameters.add( { "depthoffield.focaldistance", &focusDistance, NSITypeDouble, 0, 1, 0 } );
+		}
 	}
 
-	NSICreate( context, handle, "environment", 0, nullptr );
+	const V2d clippingPlanes = camera->getClippingPlanes();
+	parameters.add( { "clippingrange", clippingPlanes.getValue(), NSITypeDouble, 0, 2, 0 } );
 
-	if( const FloatData *angleData = geometry->parameters()->member<const FloatData>( "angle" ) )
-	{
-		const double angle = angleData->readable();
-		ParameterList parameters;
-		parameters.add( { "angle", &angle, NSITypeDouble, 0, 1, 0 } );
-		NSISetAttribute( context, handle, parameters.size(), parameters.data() );
-	}
+	const V2d shutter = camera->getShutter();
+	parameters.add( { "shutterrange", shutter.getValue(), NSITypeDouble, 0, 2, 0 } );
+
+	NSISetAttribute( context, handle, parameters.size(), parameters.data() );
 
 	return true;
 }
 
-NodeAlgo::ConverterDescription<IECoreScenePreview::Geometry> g_description( convert );
+NodeAlgo::ConverterDescription<Camera> g_description( convert );
 
 } // namespace
