@@ -44,6 +44,8 @@ import IECore
 import Gaffer
 import GafferUI
 
+from GafferUI.PlugValueWidget import sole
+
 import GafferScene
 
 class FilterPlugValueWidget( GafferUI.PlugValueWidget ) :
@@ -71,16 +73,19 @@ class FilterPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 			GafferUI.Divider()
 
-		self._updateFromPlug()
-
 	def hasLabel( self ) :
 
 		return True
 
-	def _updateFromPlug( self ) :
+	@staticmethod
+	def _valuesForUpdate( plugs ) :
+
+		return [ FilterPlugValueWidget.__filterNode( p ) for p in plugs ]
+
+	def _updateFromValues( self, values, exception ) :
 
 		thisNode = self.getPlug().node()
-		filterNode = self.__filterNode()
+		filterNode = sole( values )
 
 		# update the selection menu text
 		if filterNode is None :
@@ -107,9 +112,16 @@ class FilterPlugValueWidget( GafferUI.PlugValueWidget ) :
 				filterUI.__node = filterNode
 				self.__column.append( filterUI )
 
-	def __filterNode( self ) :
+	def _updateFromEditable( self ) :
 
-		input = self.getPlug().getInput()
+		# We don't use `_editable()` directly because it considers us to be non-editable
+		# if the plug has an input, and our whole purpose is to manage that input.
+		self.__menuButton.setEnabled( not Gaffer.MetadataAlgo.readOnly( self.getPlug() ) )
+
+	@staticmethod
+	def __filterNode( plug ) :
+
+		input = plug.getInput()
 		if input is None :
 			return None
 
@@ -117,8 +129,9 @@ class FilterPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __removeFilter( self ) :
 
-		filterNode = self.__filterNode()
-		filterNode.parent().removeChild( filterNode )
+		with Gaffer.UndoScope( self.getPlug().node().scriptNode() ) :
+			filterNode = self.__filterNode( self.getPlug() )
+			filterNode.parent().removeChild( filterNode )
 
 	def __addFilter( self, filterType ) :
 
@@ -130,7 +143,7 @@ class FilterPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __menuDefinition( self ) :
 
-		filterNode = self.__filterNode()
+		filterNode = self.__filterNode( self.getPlug() )
 		result = IECore.MenuDefinition()
 
 		if filterNode is not None :

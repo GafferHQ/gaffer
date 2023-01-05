@@ -15,6 +15,9 @@ Fixes
 - Arnold : The `ai:GI_diffuse_depth` and `ai:GI_specular_depth` options now default to `2` when they are left unspecified, matching the default values on the ArnoldOptions node.
 - Menu buttons : Fixed missing dropdown menu indicators.
 - CompoundNumericPlugValueWidget : Fixed failure to construct with an empty list of plugs.
+- FilteredSceneProcessor :
+  - Fixed bugs which allowed read-only nodes to be edited.
+  - Fixed undo for `Remove` menu item in Filter tab.
 
 API
 ---
