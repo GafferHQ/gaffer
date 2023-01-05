@@ -61,14 +61,18 @@ Gaffer.Metadata.registerValue( "cycles:light:quad_light", "intensityParameter", 
 Gaffer.Metadata.registerValue( "cycles:light:quad_light", "exposureParameter", "exposure" )
 Gaffer.Metadata.registerValue( "cycles:light:quad_light", "colorParameter", "color" )
 Gaffer.Metadata.registerValue( "cycles:light:quad_light", "textureNameParameter", "image" )
+Gaffer.Metadata.registerValue( "cycles:light:quad_light", "widthParameter", "width" )
+Gaffer.Metadata.registerValue( "cycles:light:quad_light", "heightParameter", "height" )
 
 Gaffer.Metadata.registerValue( "cycles:light:portal", "type", "quad" )
+Gaffer.Metadata.registerValue( "cycles:light:portal", "widthParameter", "width" )
+Gaffer.Metadata.registerValue( "cycles:light:portal", "heightParameter", "height" )
 
 Gaffer.Metadata.registerValue( "cycles:light:disk_light", "type", "disk" )
 Gaffer.Metadata.registerValue( "cycles:light:disk_light", "intensityParameter", "intensity" )
 Gaffer.Metadata.registerValue( "cycles:light:disk_light", "exposureParameter", "exposure" )
 Gaffer.Metadata.registerValue( "cycles:light:disk_light", "colorParameter", "color" )
-Gaffer.Metadata.registerValue( "cycles:light:disk_light", "widthParameter", "size" )
+Gaffer.Metadata.registerValue( "cycles:light:disk_light", "widthParameter", "width" )
 Gaffer.Metadata.registerValue( "cycles:light:disk_light", "textureNameParameter", "image" )
 
 Gaffer.Metadata.registerValue( "cycles:light:background_light", "type", "environment" )

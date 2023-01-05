@@ -393,13 +393,15 @@ T parameterValue( const IECore::CompoundDataMap &parameters, const IECore::Inter
 
 // Cycles lights just have a single `strength` parameter which
 // we want to present as separate "virtual" parameters for
-// intensity, color and exposure.
+// intensity, color, exposure and normalize. We calculate un-normalized
+// lights by multiplying the surface area of the light source.
 bool contributesToLightStrength( InternedString parameterName )
 {
 	return
 		parameterName == "intensity" ||
 		parameterName == "color" ||
-		parameterName == "exposure"
+		parameterName == "exposure" ||
+		parameterName == "normalize"
 	;
 }
 
@@ -421,6 +423,48 @@ Imath::Color3f constantLightStrength( const IECoreScene::ShaderNetwork *light )
 	// We don't support input connections to exposure - it seems unlikely that
 	// you'd want to texture that.
 	strength *= powf( 2.0f, parameterValue<float>( lightShader->parameters(), "exposure", 0.0f ) );
+
+	// Cycles has normalized lights as a default, we can emulate un-normalized lights
+	// with a bit of surface area size calculation onto the strength parameter.
+	/// \todo I think we should move normalization into Cycles itself -
+	/// https://developer.blender.org/D16838
+	if( !parameterValue<bool>( lightShader->parameters(), "normalize", true ) )
+	{
+		if( lightShader->getName() == "distant_light" )
+		{
+			const float angle = IECore::degreesToRadians( parameterValue<float>( lightShader->parameters(), "angle", 0.0f ) ) / 2.0f;
+			const float radius = tanf( angle );
+			const float area = M_PI_F * radius * radius;
+			if( area > 0.0f )
+			{
+				strength *= area;
+			}
+		}
+		else if( lightShader->getName() == "background_light" )
+		{
+			// Do nothing.
+		}
+		else if(
+			lightShader->getName() == "quad_light" ||
+			lightShader->getName() == "portal"
+		)
+		{
+			const float width = parameterValue( lightShader->parameters(), "width", 1.0f );
+			const float height = parameterValue( lightShader->parameters(), "height", 1.0f );
+			strength *= width * height;
+		}
+		else if( lightShader->getName() == "disk_light" )
+		{
+			const float width = parameterValue( lightShader->parameters(), "width", 2.0f ) * 0.5f;
+			const float height = parameterValue( lightShader->parameters(), "height", 2.0f ) * 0.5f;
+			strength *= M_PI * width * height;
+		}
+		else // Point or spot light.
+		{
+			const float size = parameterValue( lightShader->parameters(), "size", 1.0f ) * 0.5f;
+			strength *= M_PI * size * size * 4.0f;
+		}
+	}
 
 	return strength;;
 }
@@ -615,12 +659,19 @@ void convertLight( const IECoreScene::ShaderNetwork *light, ccl::Light *cyclesLi
 	)
 	{
 		cyclesLight->set_light_type( ccl::LIGHT_AREA );
-		cyclesLight->set_size( 2.0f );
+		cyclesLight->set_size( 1.0f );
+		cyclesLight->set_sizeu( 2.0f );
+		cyclesLight->set_sizev( 2.0f );
+
+		cyclesLight->set_round( false );
 	}
 	else if( lightShader->getName() == "disk_light" )
 	{
 		cyclesLight->set_light_type( ccl::LIGHT_AREA );
-		cyclesLight->set_size( 2.0f );
+		cyclesLight->set_size( 1.0f );
+		cyclesLight->set_sizeu( 2.0f );
+		cyclesLight->set_sizev( 2.0f );
+
 		cyclesLight->set_round( true );
 	}
 	else
@@ -648,6 +699,19 @@ void convertLight( const IECoreScene::ShaderNetwork *light, ccl::Light *cyclesLi
 		else if( name == "spread" )
 		{
 			cyclesLight->set_spread( IECore::degreesToRadians( parameterValue<float>( value.get(), name, 180.0f ) ) );
+		}
+		else if( name == "width" )
+		{
+			cyclesLight->set_sizeu( parameterValue<float>( value.get(), name, 2.0f ) );
+			// No oval support yet, just apply width to height.
+			if( lightShader->getName() == "disk_light" )
+			{
+				cyclesLight->set_sizev( parameterValue<float>( value.get(), name, 2.0f ) );
+			}
+		}
+		else if( name == "height" )
+		{
+			cyclesLight->set_sizev( parameterValue<float>( value.get(), name, 2.0f ) );
 		}
 		// Convert generic parameters.
 		else
