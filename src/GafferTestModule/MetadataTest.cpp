@@ -34,7 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferTest/MetadataTest.h"
+#include "MetadataTest.h"
 
 #include "GafferTest/Assert.h"
 
@@ -50,7 +50,7 @@ using namespace tbb;
 using namespace IECore;
 using namespace Gaffer;
 
-void GafferTest::testMetadataThreading()
+void GafferTestModule::testConcurrentAccessToDifferentInstances()
 {
 	// This test simulates many different scripts being loaded concurrently in
 	// separate threads, with each script registering per-instance metadata for

@@ -41,7 +41,6 @@
 #include "GafferTest/ContextTest.h"
 #include "GafferTest/DownstreamIteratorTest.h"
 #include "GafferTest/FilteredRecursiveChildIteratorTest.h"
-#include "GafferTest/MetadataTest.h"
 #include "GafferTest/MultiplyNode.h"
 #include "GafferTest/RandomTest.h"
 #include "GafferTest/RecursiveChildIteratorTest.h"
@@ -50,6 +49,7 @@
 #include "TaskMutexTest.h"
 #include "ValuePlugTest.h"
 #include "MessagesTest.h"
+#include "MetadataTest.h"
 #include "SignalsTest.h"
 
 #include "IECorePython/ScopedGILRelease.h"
@@ -58,10 +58,10 @@ using namespace boost::python;
 using namespace GafferTest;
 using namespace GafferTestModule;
 
-static void testMetadataThreadingWrapper()
+static void testConcurrentAccessToDifferentInstancesWrapper()
 {
 	IECorePython::ScopedGILRelease gilRelease;
-	testMetadataThreading();
+	testConcurrentAccessToDifferentInstances();
 }
 
 static boost::python::tuple countContextHash32CollisionsWrapper( int entries, int mode, int seed )
@@ -91,7 +91,6 @@ BOOST_PYTHON_MODULE( _GafferTest )
 	def( "asFloat32", &asFloat32 );
 	def( "testRecursiveChildIterator", &testRecursiveChildIterator );
 	def( "testFilteredRecursiveChildIterator", &testFilteredRecursiveChildIterator );
-	def( "testMetadataThreading", &testMetadataThreadingWrapper );
 	def( "testManyContexts", &testManyContexts );
 	def( "testManySubstitutions", &testManySubstitutions );
 	def( "testManyEnvironmentSubstitutions", &testManyEnvironmentSubstitutions );
@@ -111,5 +110,11 @@ BOOST_PYTHON_MODULE( _GafferTest )
 	bindValuePlugTest();
 	bindMessagesTest();
 	bindSignalsTest();
+
+	object module( borrowed( PyImport_AddModule( "GafferTest._MetadataTest" ) ) );
+	scope().attr( "_MetadataTest" ) = module;
+	scope moduleScope( module );
+
+	def( "testConcurrentAccessToDifferentInstances", &testConcurrentAccessToDifferentInstancesWrapper );
 
 }

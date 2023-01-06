@@ -45,6 +45,8 @@ import IECore
 import Gaffer
 import GafferTest
 
+from GafferTest._GafferTest import _MetadataTest
+
 class MetadataTest( GafferTest.TestCase ) :
 
 	class DerivedAddNode( GafferTest.AddNode ) :
@@ -458,9 +460,9 @@ class MetadataTest( GafferTest.TestCase ) :
 			]
 		)
 
-	def testThreading( self ) :
+	def testConcurrentAccessToDifferentInstances( self ) :
 
-		GafferTest.testMetadataThreading()
+		_MetadataTest.testConcurrentAccessToDifferentInstances()
 
 	def testVectorTypes( self ) :
 
