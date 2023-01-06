@@ -114,9 +114,23 @@ PtDspyError imageOpen( PtDspyImageHandle *image, const char *driverName, const c
 			const string layerName = *(const char **)(parameters[p].value);
 			if( !layerName.empty() )
 			{
-				for( auto &channel : channels )
+				if( channels.size() == 1 )
 				{
-					channel = layerName + "." + channel;
+					// I'm not sure what the semantics of 3Delight's `layername`
+					// actually are, but this gets the naming matching Arnold
+					// for our all-important OutputBuffer outputs used in the
+					// Viewer.
+					/// \todo We're overdue a reckoning were we define our own
+					/// standard semantics for all the little details of outputs,
+					/// and implement them to match across all renderers.
+					channels[0] = layerName;
+				}
+				else
+				{
+					for( auto &channel : channels )
+					{
+						channel = layerName + "." + channel;
+					}
 				}
 			}
 		}
