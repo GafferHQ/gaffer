@@ -50,29 +50,6 @@ using namespace tbb;
 using namespace IECore;
 using namespace Gaffer;
 
-struct TestThreading
-{
-
-	void operator()( const blocked_range<size_t> &r ) const
-	{
-		for( size_t i=r.begin(); i!=r.end(); ++i )
-		{
-			NodePtr n = new Node();
-			PlugPtr p = new Plug();
-
-			GAFFERTEST_ASSERT( Metadata::value( n.get(), "threadingTest" ) == nullptr );
-			GAFFERTEST_ASSERT( Metadata::value( p.get(), "threadingTest" ) == nullptr );
-
-			Metadata::registerValue( n.get(), "threadingTest", new IECore::IntData( 1 ) );
-			Metadata::registerValue( p.get(), "threadingTest", new IECore::IntData( 2 ) );
-
-			GAFFERTEST_ASSERT( Metadata::value<IntData>( n.get(), "threadingTest" )->readable() == 1 );
-			GAFFERTEST_ASSERT( Metadata::value<IntData>( p.get(), "threadingTest" )->readable() == 2 );
-		}
-	}
-
-};
-
 void GafferTest::testMetadataThreading()
 {
 	// This test simulates many different scripts being loaded concurrently in
@@ -107,9 +84,26 @@ void GafferTest::testMetadataThreading()
 		}
 	);
 
-	TestThreading t;
 	const size_t iterations = 100000;
-	parallel_for( blocked_range<size_t>( 0, iterations ), t );
+	parallel_for(
+		blocked_range<size_t>( 0, iterations ),
+		[]( const blocked_range<size_t> &r ) {
+			for( size_t i=r.begin(); i!=r.end(); ++i )
+			{
+				NodePtr n = new Node();
+				PlugPtr p = new Plug();
+
+				GAFFERTEST_ASSERT( Metadata::value( n.get(), "threadingTest" ) == nullptr );
+				GAFFERTEST_ASSERT( Metadata::value( p.get(), "threadingTest" ) == nullptr );
+
+				Metadata::registerValue( n.get(), "threadingTest", new IECore::IntData( 1 ) );
+				Metadata::registerValue( p.get(), "threadingTest", new IECore::IntData( 2 ) );
+
+				GAFFERTEST_ASSERT( Metadata::value<IntData>( n.get(), "threadingTest" )->readable() == 1 );
+				GAFFERTEST_ASSERT( Metadata::value<IntData>( p.get(), "threadingTest" )->readable() == 2 );
+			}
+		}
+	);
 
 	GAFFERTEST_ASSERTEQUAL( callCount.load(), iterations );
 }
