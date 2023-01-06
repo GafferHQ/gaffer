@@ -294,7 +294,7 @@ using InstanceValues = multi_index::multi_index_container<
 	>
 >;
 
-using InstanceMetadataMap = concurrent_hash_map<const GraphComponent *, InstanceValues *>;
+using InstanceMetadataMap = concurrent_hash_map<const GraphComponent *, std::unique_ptr<InstanceValues>>;
 
 InstanceMetadataMap &instanceMetadataMap()
 {
@@ -309,15 +309,15 @@ InstanceValues *instanceMetadata( const GraphComponent *instance, bool createIfM
 	InstanceMetadataMap::accessor accessor;
 	if( m.find( accessor, instance ) )
 	{
-		return accessor->second;
+		return accessor->second.get();
 	}
 	else
 	{
 		if( createIfMissing )
 		{
 			m.insert( accessor, instance );
-			accessor->second = new InstanceValues();
-			return accessor->second;
+			accessor->second = std::make_unique<InstanceValues>();
+			return accessor->second.get();
 		}
 	}
 

@@ -1215,5 +1215,18 @@ class MetadataTest( GafferTest.TestCase ) :
 		with self.assertRaisesRegex( Exception, r"did not match C\+\+ signature" ) :
 			Gaffer.Metadata.value( None, "test" )
 
+	def testInstanceValueLifetime( self ) :
+
+		n = GafferTest.MultiplyNode()
+
+		v = IECore.IntData( 2 )
+		self.assertEqual( v.refCount(), 1 )
+
+		Gaffer.Metadata.registerValue( n, "test", v )
+		self.assertEqual( v.refCount(), 2 )
+
+		del n
+		self.assertEqual( v.refCount(), 1 )
+
 if __name__ == "__main__":
 	unittest.main()
