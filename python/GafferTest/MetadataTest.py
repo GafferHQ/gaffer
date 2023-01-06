@@ -464,6 +464,10 @@ class MetadataTest( GafferTest.TestCase ) :
 
 		_MetadataTest.testConcurrentAccessToDifferentInstances()
 
+	def testConcurrentAccessToSameInstance( self ) :
+
+		_MetadataTest.testConcurrentAccessToSameInstance()
+
 	def testVectorTypes( self ) :
 
 		n = Gaffer.Node()
@@ -1227,6 +1231,19 @@ class MetadataTest( GafferTest.TestCase ) :
 
 		del n
 		self.assertEqual( v.refCount(), 1 )
+
+	def testReentrantSlot( self ) :
+
+		node = Gaffer.Node()
+
+		def changed( node, key, reason ) :
+
+			if Gaffer.Metadata.value( node, key ) != 1 :
+				Gaffer.Metadata.registerValue( node, key, 1 )
+
+		Gaffer.Metadata.nodeValueChangedSignal( node ).connect( changed, scoped = False )
+		Gaffer.Metadata.registerValue( node, "test", 2 )
+		self.assertEqual( Gaffer.Metadata.value( node, "test" ), 1 )
 
 if __name__ == "__main__":
 	unittest.main()

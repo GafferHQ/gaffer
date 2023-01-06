@@ -41,6 +41,7 @@ namespace GafferTestModule
 {
 
 void testConcurrentAccessToDifferentInstances();
+void testConcurrentAccessToSameInstance();
 
 } // namespace GafferTestModule
 

@@ -302,28 +302,6 @@ InstanceMetadataMap &instanceMetadataMap()
 	return m;
 }
 
-InstanceValues *instanceMetadata( const GraphComponent *instance, bool createIfMissing )
-{
-	InstanceMetadataMap &m = instanceMetadataMap();
-
-	InstanceMetadataMap::accessor accessor;
-	if( m.find( accessor, instance ) )
-	{
-		return accessor->second.get();
-	}
-	else
-	{
-		if( createIfMissing )
-		{
-			m.insert( accessor, instance );
-			accessor->second = std::make_unique<InstanceValues>();
-			return accessor->second.get();
-		}
-	}
-
-	return nullptr;
-}
-
 // It's valid to register null as an instance value and expect it to override
 // any non-null registration. We use OptionalData as a way of distinguishing
 // between an explicit registration of null and no registration at all.
@@ -331,14 +309,15 @@ using OptionalData = std::optional<ConstDataPtr>;
 
 OptionalData instanceValue( const GraphComponent *instance, InternedString key, bool *persistent = nullptr )
 {
-	const InstanceValues *m = instanceMetadata( instance, /* createIfMissing = */ false );
-	if( !m )
+	InstanceMetadataMap &m = instanceMetadataMap();
+	InstanceMetadataMap::const_accessor accessor;
+	if( !m.find( accessor, instance ) )
 	{
 		return OptionalData();
 	}
 
-	InstanceValues::const_iterator vIt = m->find( key );
-	if( vIt != m->end() )
+	InstanceValues::const_iterator vIt = accessor->second->find( key );
+	if( vIt != accessor->second->end() )
 	{
 		if( persistent )
 		{
@@ -352,32 +331,44 @@ OptionalData instanceValue( const GraphComponent *instance, InternedString key, 
 
 void registerInstanceValueAction( GraphComponent *instance, InternedString key, OptionalData value, bool persistent )
 {
-	InstanceValues *m = instanceMetadata( instance, /* createIfMissing = */ static_cast<bool>( value ) );
-	if( !m )
+	InstanceMetadataMap &m = instanceMetadataMap();
+	InstanceMetadataMap::accessor accessor;
+	if( !m.find( accessor, instance ) )
 	{
-		return;
+		if( !value )
+		{
+			return;
+		}
+		else if( m.insert( accessor, instance ) )
+		{
+			accessor->second = std::make_unique<InstanceValues>();
+		}
 	}
 
-	InstanceValues::const_iterator it = m->find( key );
+	InstanceValues::const_iterator it = accessor->second->find( key );
 	if( value )
 	{
 		NamedInstanceValue namedValue( key, *value, persistent );
-		if( it == m->end() )
+		if( it == accessor->second->end() )
 		{
-			m->insert( namedValue );
+			accessor->second->insert( namedValue );
 		}
 		else
 		{
-			m->replace( it, namedValue );
+			accessor->second->replace( it, namedValue );
 		}
 	}
 	else
 	{
-		if( it != m->end() )
+		if( it != accessor->second->end() )
 		{
-			m->erase( it );
+			accessor->second->erase( it );
 		}
 	}
+
+	// Release lock before emitting signals, in case a slot tries
+	// to re-enter the Metadata API.
+	accessor.release();
 
 	const Metadata::ValueChangedReason reason = value ? Metadata::ValueChangedReason::InstanceRegistration : Metadata::ValueChangedReason::InstanceDeregistration;
 
@@ -439,15 +430,19 @@ void registerInstanceValue( GraphComponent *instance, IECore::InternedString key
 
 void registeredInstanceValues( const GraphComponent *graphComponent, std::vector<IECore::InternedString> &keys, bool persistentOnly )
 {
-	if( const InstanceValues *im = instanceMetadata( graphComponent, /* createIfMissing = */ false ) )
+	InstanceMetadataMap &m = instanceMetadataMap();
+	InstanceMetadataMap::const_accessor accessor;
+	if( !m.find( accessor, graphComponent ) )
 	{
-		const InstanceValues::nth_index<1>::type &index = im->get<1>();
-		for( InstanceValues::nth_index<1>::type::const_iterator vIt = index.begin(), veIt = index.end(); vIt != veIt; ++vIt )
+		return;
+	}
+
+	const InstanceValues::nth_index<1>::type &index = accessor->second->get<1>();
+	for( InstanceValues::nth_index<1>::type::const_iterator vIt = index.begin(), veIt = index.end(); vIt != veIt; ++vIt )
+	{
+		if( !persistentOnly || vIt->persistent )
 		{
-			if( !persistentOnly || vIt->persistent )
-			{
-				keys.push_back( vIt->name );
-			}
+			keys.push_back( vIt->name );
 		}
 	}
 }

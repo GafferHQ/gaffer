@@ -64,6 +64,12 @@ static void testConcurrentAccessToDifferentInstancesWrapper()
 	testConcurrentAccessToDifferentInstances();
 }
 
+static void testConcurrentAccessToSameInstanceWrapper()
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	testConcurrentAccessToSameInstance();
+}
+
 static boost::python::tuple countContextHash32CollisionsWrapper( int entries, int mode, int seed )
 {
 	IECorePython::ScopedGILRelease gilRelease;
@@ -116,5 +122,6 @@ BOOST_PYTHON_MODULE( _GafferTest )
 	scope moduleScope( module );
 
 	def( "testConcurrentAccessToDifferentInstances", &testConcurrentAccessToDifferentInstancesWrapper );
+	def( "testConcurrentAccessToSameInstance", &testConcurrentAccessToSameInstanceWrapper );
 
 }

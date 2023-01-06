@@ -107,3 +107,33 @@ void GafferTestModule::testConcurrentAccessToDifferentInstances()
 
 	GAFFERTEST_ASSERTEQUAL( callCount.load(), iterations );
 }
+
+void GafferTestModule::testConcurrentAccessToSameInstance()
+{
+	NodePtr node = new Node;
+	PlugPtr plug = new Plug;
+
+	ConstStringDataPtr value1 = new StringData( "one" );
+	ConstStringDataPtr value2 = new StringData( "two" );
+
+	const size_t iterations = 100000;
+	parallel_for(
+		blocked_range<size_t>( 0, iterations ),
+		[&]( const blocked_range<size_t> &r ) {
+			for( size_t i=r.begin(); i!=r.end(); ++i )
+			{
+				// Write a value
+				ConstDataPtr value = i % 2 ? value1 : value2;
+				Metadata::registerValue( node.get(), "threadingTest", value );
+				Metadata::registerValue( plug.get(), "threadingTest", value );
+				// And read one back. There is no guarantee about which value
+				// we'll get back is it could have been changed in the interim,
+				// but it should be one of the known valid values.
+				ConstDataPtr nodeValue = Metadata::value<Data>( node.get(), "threadingTest" );
+				GAFFERTEST_ASSERT( nodeValue == value1 || nodeValue == value2 );
+				ConstDataPtr plugValue = Metadata::value<Data>( plug.get(), "threadingTest" );
+				GAFFERTEST_ASSERT( plugValue == value1 || plugValue == value2 );
+			}
+		}
+	);
+}
