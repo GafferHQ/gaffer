@@ -45,6 +45,8 @@ import IECore
 import Gaffer
 import GafferTest
 
+from GafferTest._GafferTest import _MetadataTest
+
 class MetadataTest( GafferTest.TestCase ) :
 
 	class DerivedAddNode( GafferTest.AddNode ) :
@@ -458,9 +460,13 @@ class MetadataTest( GafferTest.TestCase ) :
 			]
 		)
 
-	def testThreading( self ) :
+	def testConcurrentAccessToDifferentInstances( self ) :
 
-		GafferTest.testMetadataThreading()
+		_MetadataTest.testConcurrentAccessToDifferentInstances()
+
+	def testConcurrentAccessToSameInstance( self ) :
+
+		_MetadataTest.testConcurrentAccessToSameInstance()
 
 	def testVectorTypes( self ) :
 
@@ -1212,6 +1218,32 @@ class MetadataTest( GafferTest.TestCase ) :
 
 		with self.assertRaisesRegex( Exception, r"did not match C\+\+ signature" ) :
 			Gaffer.Metadata.value( None, "test" )
+
+	def testInstanceValueLifetime( self ) :
+
+		n = GafferTest.MultiplyNode()
+
+		v = IECore.IntData( 2 )
+		self.assertEqual( v.refCount(), 1 )
+
+		Gaffer.Metadata.registerValue( n, "test", v )
+		self.assertEqual( v.refCount(), 2 )
+
+		del n
+		self.assertEqual( v.refCount(), 1 )
+
+	def testReentrantSlot( self ) :
+
+		node = Gaffer.Node()
+
+		def changed( node, key, reason ) :
+
+			if Gaffer.Metadata.value( node, key ) != 1 :
+				Gaffer.Metadata.registerValue( node, key, 1 )
+
+		Gaffer.Metadata.nodeValueChangedSignal( node ).connect( changed, scoped = False )
+		Gaffer.Metadata.registerValue( node, "test", 2 )
+		self.assertEqual( Gaffer.Metadata.value( node, "test" ), 1 )
 
 if __name__ == "__main__":
 	unittest.main()

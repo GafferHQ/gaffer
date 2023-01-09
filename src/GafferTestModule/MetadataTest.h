@@ -34,16 +34,15 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERTEST_METADATATEST_H
-#define GAFFERTEST_METADATATEST_H
+#ifndef GAFFERTESTMODULE_METADATATEST_H
+#define GAFFERTESTMODULE_METADATATEST_H
 
-#include "GafferTest/Export.h"
-
-namespace GafferTest
+namespace GafferTestModule
 {
 
-GAFFERTEST_API void testMetadataThreading();
+void testConcurrentAccessToDifferentInstances();
+void testConcurrentAccessToSameInstance();
 
-} // namespace GafferTest
+} // namespace GafferTestModule
 
-#endif // GAFFERTEST_METADATATEST_H
+#endif // GAFFERTESTMODULE_METADATATEST_H
