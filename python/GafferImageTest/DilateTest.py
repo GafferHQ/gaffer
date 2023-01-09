@@ -138,5 +138,20 @@ class DilateTest( GafferImageTest.ImageTestCase ) :
 			# a master
 			self.assertImagesEqual( masterDilateSingleChannel["out"], defaultDilateSingleChannel["out"] )
 
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 1 )
+	def testPerf( self ) :
+
+		imageReader = GafferImage.ImageReader()
+		imageReader["fileName"].setValue( self.imagesPath() / 'deepMergeReference.exr' )
+
+		GafferImageTest.processTiles( imageReader["out"] )
+
+		dilate = GafferImage.Dilate()
+		dilate["in"].setInput( imageReader["out"] )
+		dilate["radius"].setValue( imath.V2i( 128 ) )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			GafferImageTest.processTiles( dilate["out"] )
+
 if __name__ == "__main__":
 	unittest.main()

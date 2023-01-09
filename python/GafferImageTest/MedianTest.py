@@ -172,5 +172,20 @@ class MedianTest( GafferImageTest.ImageTestCase ) :
 		bt.cancelAndWait()
 		self.assertLess( time.time() - t, acceptableCancellationDelay )
 
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 1 )
+	def testPerf( self ) :
+
+		imageReader = GafferImage.ImageReader()
+		imageReader["fileName"].setValue( self.imagesPath() / 'deepMergeReference.exr' )
+
+		GafferImageTest.processTiles( imageReader["out"] )
+
+		median = GafferImage.Median()
+		median["in"].setInput( imageReader["out"] )
+		median["radius"].setValue( imath.V2i( 128 ) )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			GafferImageTest.processTiles( median["out"] )
+
 if __name__ == "__main__":
 	unittest.main()
