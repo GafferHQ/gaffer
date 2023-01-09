@@ -329,18 +329,32 @@ class CyclesOutput : public IECore::RefCounted
 			}
 			else if( tokens.size() == 2 )
 			{
-				if( tokens[0] == "aovv" )
+				if( tokens[0] == "float" && tokens[1] == "Z" )
+				{
+					m_data = tokens[1];
+					p["name"] = new StringData( tokens[1] );
+					p["type"] = new StringData( "depth" );
+					passType = "depth";
+				}
+				else if( tokens[0] == "uint" && tokens[1] == "id" )
+				{
+					m_data = tokens[1];
+					p["name"] = new StringData( tokens[1] );
+					p["type"] = new StringData( "object_id" );
+					passType = "object_id";
+				}
+				else if( tokens[0] == "float" )
 				{
 					p["name"] = m_denoise ? new StringData( ccl::string_printf( "%s_denoised", tokens[1].c_str() ) ) : new StringData( tokens[1] );
 					p["type"] = new StringData( "aov_value" );
-					passType = tokens[1];
+					passType = "aov_value";
 					m_data = tokens[1];
 				}
-				else if( tokens[0] == "aovc" )
+				else if( tokens[0] == "color" )
 				{
 					p["name"] = m_denoise ? new StringData( ccl::string_printf( "%s_denoised", tokens[1].c_str() ) ) : new StringData( tokens[1] );
 					p["type"] = new StringData( "aov_color" );
-					passType = tokens[1];
+					passType = "aov_color";
 					m_data = tokens[1];
 				}
 				else if( tokens[0] == "lg" )
@@ -357,20 +371,6 @@ class CyclesOutput : public IECore::RefCounted
 					p["name"] = new StringData( m_data );
 					p["type"] = new StringData( tokens[0] );
 					passType = tokens[0];
-				}
-				else if( tokens[0] == "float" && tokens[1] == "Z" )
-				{
-					m_data = tokens[1];
-					p["name"] = new StringData( tokens[1] );
-					p["type"] = new StringData( "depth" );
-					passType = "depth";
-				}
-				else if( tokens[0] == "uint" && tokens[1] == "id" )
-				{
-					m_data = tokens[1];
-					p["name"] = new StringData( tokens[1] );
-					p["type"] = new StringData( "object_id" );
-					passType = "object_id";
 				}
 			}
 

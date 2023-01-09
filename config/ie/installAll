@@ -1,8 +1,12 @@
-#!/usr/bin/env iePython2.7
+#!/usr/bin/env iePython
 
 import IEEnv
 import sys
 import subprocess
+import collections
+import VersionControl
+VersionControl.setVersion( "IEBuild" )
+import IEBuild
 
 ##########################################################################
 # parse SConstruct file for the gaffer version
@@ -94,17 +98,20 @@ def build( extraArgs = [] ) :
 platform = IEEnv.platform()
 defaultCompilerVersion = IEEnv.registry["platformDefaults"][platform]["compilerVersion"]
 
-cortexInfo = { x : IEEnv.registry["libraries"]["cortex"][x][platform] for x in IEEnv.activeVersions( IEEnv.registry["libraries"]["cortex"] ) }
+cortexVersions = IEBuild.utils.versionsToInstall( "cortex" )
+cortexInfo = { x : IEEnv.registry["libraries"]["cortex"][x][platform] for x in cortexVersions }
 
-# find all Arnold versions
-arnoldVersions = IEEnv.activeVersions( IEEnv.registry["apps"]["arnold"] )
+arnoldVersions = IEBuild.utils.versionsToInstall( "arnold" )
+compilerVersions = IEBuild.utils.versionsToInstall( "gcc" )
+appleseedVersions = IEBuild.utils.versionsToInstall( "appleseed" )
 
-# fetch at least one active version of each renderer
-dlVersion = ( IEEnv.activeVersions( IEEnv.registry["apps"]["3delight"] ) or [ "UNDEFINED" ] )[-1]
+# DL is no longer used at IE
+# \todo: confirm we can remove this completely
+dlVersion = "UNDEFINED"
 
 # find a specific appleseed version per compiler per cortex version
-appleseedCompilerMap = { x : {} for x in IEEnv.activeVersions( IEEnv.registry["compilers"]["gcc"] ) }
-for appleseedVersion in IEEnv.activeVersions( IEEnv.registry["apps"]["appleseed"] ) :
+appleseedCompilerMap = { x : {} for x in compilerVersions }
+for appleseedVersion in appleseedVersions :
 	compilerVersion = IEEnv.registry["apps"]["appleseed"][appleseedVersion][platform]["compilerVersion"]
 	for cortexCompatibilityVersion in cortexInfo.keys() :
 		if IEEnv.Registry.validateVariation( [
@@ -113,6 +120,26 @@ for appleseedVersion in IEEnv.activeVersions( IEEnv.registry["apps"]["appleseed"
 			"APPLESEED_VERSION={}".format( appleseedVersion ),
 		] ) :
 			appleseedCompilerMap[compilerVersion][cortexCompatibilityVersion] = appleseedVersion
+
+# app versions
+appInfos = (
+	( "maya", None ),
+	( "houdini", None ),
+	( "nuke", None )
+)
+
+appVersionsDict = collections.OrderedDict()
+appSpecificInstall = set()
+# if {APP}_VERSION=??? is provided, we assume that only the app-specific builds are needed
+# this is useful to build for a newly installed application version
+for app, _ in appInfos :
+	for arg in sys.argv :
+		if arg.startswith( "{}_VERSION=".format( app.upper() ) ) :
+			appSpecificInstall.add( app )
+
+for app, minimumVersion in appInfos :
+	if not appSpecificInstall or app in appSpecificInstall :
+		appVersionsDict[app] = IEBuild.utils.versionsToInstall( app, minimumVersion=minimumVersion )
 
 ##########################################################################
 # Loop over all builds
@@ -138,12 +165,8 @@ if platform in ( "cent7.x86_64" ) :
 				build( baseArgs + variantArgs + arnoldArgs )
 
 		# app specific builds
-		for app, minimumVersion in (
-			( "maya", None ),
-			( "houdini", "16.5.268" ),
-			( "nuke", None )
-		) :
-			for appVersion in IEEnv.activeAppVersions( app, minimumVersion=minimumVersion ) :
+		for app, appVersions in appVersionsDict.items() :
+			for appVersion in appVersions :
 				compilerVersion = IEEnv.registry["apps"][app][appVersion][platform]["compilerVersion"]
 				appleseedVersion = appleseedCompilerMap[compilerVersion].get( cortexCompatibilityVersion, "UNDEFINED" )
 				for arnoldVersion in arnoldVersions :

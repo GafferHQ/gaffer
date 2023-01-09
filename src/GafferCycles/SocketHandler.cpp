@@ -524,19 +524,16 @@ void setupLightPlugs( const std::string &shaderName, const ccl::NodeType *nodeTy
 
 	std::set<const Plug *> validPlugs;
 
-	if( shaderName == "portal" )
-	{
-		validPlugs.insert( setupTypedPlug<FloatPlug>( "size", plugsParent, Gaffer::Plug::In, 2.0f ) );
-	}
-	else
+	if( shaderName != "portal" )
 	{
 		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "cast_shadow" ) )), plugsParent, Gaffer::Plug::In ) );
-		//validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "use_mis" ) )), plugsParent, Gaffer::Plug::In ) );
 		validPlugs.insert( setupTypedPlug<BoolPlug>( "use_mis", plugsParent, Gaffer::Plug::In, true ) );
+		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "use_camera" ) )), plugsParent, Gaffer::Plug::In ) );
 		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "use_diffuse" ) )), plugsParent, Gaffer::Plug::In ) );
 		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "use_glossy" ) )), plugsParent, Gaffer::Plug::In ) );
 		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "use_transmission" ) )), plugsParent, Gaffer::Plug::In ) );
 		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "use_scatter" ) )), plugsParent, Gaffer::Plug::In ) );
+		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "use_caustics" ) )), plugsParent, Gaffer::Plug::In ) );
 		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "max_bounces" ) )), plugsParent, Gaffer::Plug::In ) );
 		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "lightgroup" ) )), plugsParent, Gaffer::Plug::In ) );
 		validPlugs.insert( setupTypedPlug<FloatPlug>( "intensity", plugsParent, Gaffer::Plug::In, 1.0f ) );
@@ -544,7 +541,12 @@ void setupLightPlugs( const std::string &shaderName, const ccl::NodeType *nodeTy
 		validPlugs.insert( setupTypedPlug<Color3fPlug>( "color", plugsParent, Gaffer::Plug::In, Color3f( 1.0f ) ) );
 	}
 
-	if( shaderName == "spot_light" )
+	if( shaderName == "portal" || shaderName == "quad_light" )
+	{
+		validPlugs.insert( setupTypedPlug<FloatPlug>( "width", plugsParent, Gaffer::Plug::In, 2.0f ) );
+		validPlugs.insert( setupTypedPlug<FloatPlug>( "height", plugsParent, Gaffer::Plug::In, 2.0f ) );
+	}
+	else if( shaderName == "spot_light" )
 	{
 		validPlugs.insert( setupPlug( nodeType, *(nodeType->find_input( ccl::ustring( "size" ) )), plugsParent, Gaffer::Plug::In ) );
 		const ccl::SocketType *angleSocket = nodeType->find_input( ccl::ustring( "spot_angle" ) );
@@ -564,7 +566,7 @@ void setupLightPlugs( const std::string &shaderName, const ccl::NodeType *nodeTy
 	}
 	else if( shaderName == "disk_light" )
 	{
-		validPlugs.insert( setupTypedPlug<FloatPlug>( "size", plugsParent, Gaffer::Plug::In, 2.0f ) );
+		validPlugs.insert( setupTypedPlug<FloatPlug>( "width", plugsParent, Gaffer::Plug::In, 2.0f ) );
 	}
 	else if( shaderName == "background_light" )
 	{
@@ -572,7 +574,15 @@ void setupLightPlugs( const std::string &shaderName, const ccl::NodeType *nodeTy
 	}
 	else if( shaderName == "distant_light" )
 	{
-		validPlugs.insert( setupTypedPlug<FloatPlug>( "angle", plugsParent, Gaffer::Plug::In, 0.0f ) );
+		const ccl::SocketType *angleSocket = nodeType->find_input( ccl::ustring( "angle" ) );
+		validPlugs.insert(
+			setupNumericPlug<FloatPlug>(
+				nodeType, *angleSocket, plugsParent, Gaffer::Plug::In,
+				// Cycles API uses radians, but that isn't user-friendly so we convert to degrees.
+				// We convert back to radians in the renderer backend.
+				IECore::radiansToDegrees( *static_cast<const float *>( angleSocket->default_value ) )
+			)
+		);
 	}
 
 	if( shaderName == "quad_light" || shaderName == "disk_light" )
@@ -586,6 +596,11 @@ void setupLightPlugs( const std::string &shaderName, const ccl::NodeType *nodeTy
 				IECore::radiansToDegrees( *static_cast<const float *>( spreadSocket->default_value ) )
 			)
 		);
+	}
+
+	if( shaderName != "portal" && shaderName != "background_light" )
+	{
+		validPlugs.insert( setupTypedPlug<BoolPlug>( "normalize", plugsParent, Gaffer::Plug::In, true ) );
 	}
 
 	// Remove any old plugs which it turned out we didn't need.

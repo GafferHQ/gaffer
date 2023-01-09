@@ -349,10 +349,10 @@ if os.environ.get( "CYCLES_ROOT" ) and os.environ.get( "GAFFERCYCLES_HIDE_UI", "
 					label = "Light_Group"
 
 				if data == "aov_color" :
-					data = "aovc aov_color"
+					data = "color aov_color"
 
 				if data == "aov_value" :
-					data = "aovv aov_value"
+					data = "float aov_value"
 
 				if data.startswith( "cryptomatte" ) :
 					data = data.replace( "_", " " )

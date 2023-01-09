@@ -119,5 +119,23 @@ class CyclesLightTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( shader.parameters["color"], IECore.Color3fData( imath.Color3f( 1, 2, 3 ) ) )
 		self.assertEqual( shader.parameters["size"], IECore.FloatData( 2 ) )
 
+	def testQuadSize( self ) :
+
+		node = GafferCycles.CyclesLight()
+		node.loadShader( "quad_light" )
+
+		self.assertEqual( node["parameters"]["width"].defaultValue(), 2.0 )
+		self.assertTrue( node["parameters"]["width"].isSetToDefault() )
+		self.assertEqual( node["parameters"]["height"].defaultValue(), 2.0 )
+		self.assertTrue( node["parameters"]["height"].isSetToDefault() )
+
+		self.assertNotIn( "size", node["parameters"] )
+
+		shader = node["out"].attributes( "/light" )["cycles:light"].outputShader()
+		self.assertEqual( shader.parameters["width"].value, 2.0 )
+		self.assertEqual( shader.parameters["height"].value, 2.0 )
+
+		self.assertNotIn( "size", shader.parameters )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -79,5 +79,11 @@ class CyclesShaderTest( GafferSceneTest.SceneTestCase ) :
 		for s in GafferCycles.shaders :
 			shader.loadShader( s )
 
+	def testLoadEmission( self ) :
+
+		shader = GafferCycles.CyclesShader()
+		shader.loadShader( "emission" )
+		self.assertEqual( shader["type"].getValue(), "cycles:surface" )
+
 if __name__ == "__main__":
 	unittest.main()

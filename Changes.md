@@ -1,6 +1,14 @@
 1.2.0.0ax (relative to 1.2.0.0a1)
 =========
 
+Improvements
+------------
+
+- Cycles [^1] :
+  - Replaced size on portals and quad lights with width and height. Disks are width-only.
+  - Added use_camera and use_caustics for lights.
+  - Added normalize option for lights.
+
 Fixes
 -----
 
@@ -8,6 +16,12 @@ Fixes
 - Metadata :
   - Fixed memory leak.
   - Fixed thread safety bug that prevented concurrent access to metadata for the _same_ plug or node from multiple threads.
+- Cycles [^1] :
+  - Fixed custom AOVs not being created properly for SVM shading mode only, OSL is not supported. (#5044).
+  - Fixed distant light angle is in degrees and not radians.
+  - Fixed assignment of `emission` shader. Previously this was being assigned as a `cycles:light` attribute instead of `cycles:surface` (#5058).
+- ImageViewer : Fixed drawing of pixels to the left of the display window [^1].
+- Random : Fixed GIL management bug which could lead to hangs [^1].
 
 API
 ---
@@ -18,6 +32,8 @@ Build
 -----
 
 - 3Delight : Updated to 3Delight version 2.9.17.
+
+[^1]: Changes inherited from 1.x. Can be omitted from the release notes for the final release of 1.2.
 
 1.2.0.0a1
 =========
@@ -122,6 +138,27 @@ Build
 -----
 
 - Cortex : Updated to version 10.4.3.0.
+
+1.1.x.x (relative to 1.1.6.1)
+=======
+
+Improvements
+------------
+
+- Cycles :
+  - Replaced size on portals and quad lights with width and height. Disks are width-only.
+  - Added use_camera and use_caustics for lights.
+  - Added normalize option for lights.
+
+Fixes
+-----
+
+- Cycles :
+  - Fixed custom AOVs not being created properly for SVM shading mode only, OSL is not supported. (#5044).
+  - Fixed distant light angle is in degrees and not radians.
+  - Fixed assignment of `emission` shader. Previously this was being assigned as a `cycles:light` attribute instead of `cycles:surface` (#5058).
+- ImageViewer : Fixed drawing of pixels to the left of the display window.
+- Random : Fixed GIL management bug which could lead to hangs.
 
 1.1.6.1 (relative to 1.1.6.0)
 =======

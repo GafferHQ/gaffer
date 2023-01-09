@@ -960,14 +960,15 @@ void ImageGadget::visibilityChanged()
 void ImageGadget::renderTiles() const
 {
 	float radians = m_wipeAngle * M_PI / 180.0f;
+	const Box2i dataWindow = this->dataWindow();
+
 	TileShader::ScopedBinding shaderBinding(
 		*tileShader(),
-		m_wipeEnabled ? m_wipePos : V2f( 0 ),
+		m_wipeEnabled ? m_wipePos : V2f( dataWindow.min.x, dataWindow.min.y ),
 		m_wipeEnabled ? V2f( cosf( radians ), sinf( radians ) ) : V2f( -1, 0 ),
 		m_blendMode
 	);
 
-	const Box2i dataWindow = this->dataWindow();
 	const float pixelAspect = this->format().getPixelAspect();
 
 	V2i tileOrigin = ImagePlug::tileOrigin( dataWindow.min );
