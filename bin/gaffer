@@ -300,7 +300,6 @@ if [[ -n $DELIGHT ]] ; then
 	appendToPath "$DELIGHT/bin" PATH
 	appendToPath "$DELIGHT/python" PYTHONPATH
 	appendToPath "$DELIGHT/shaders" DL_SHADERS_PATH
-	appendToPath "$DELIGHT/displays" DL_DISPLAYS_PATH
 
 	appendToPath "$DELIGHT" OSL_SHADER_PATHS
 

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2017, John Haddon. All rights reserved.
+//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -32,12 +32,10 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferDelight/IECoreDelightPreview/NodeAlgo.h"
-#include "GafferDelight/IECoreDelightPreview/ParameterList.h"
+#include "IECoreDelight/NodeAlgo.h"
+#include "IECoreDelight/ParameterList.h"
 
-#include "IECoreScene/Camera.h"
-
-#include "IECore/SimpleTypedData.h"
+#include "IECoreScene/DiskPrimitive.h"
 
 #include <nsi.h>
 
@@ -50,44 +48,51 @@ using namespace IECoreDelight;
 namespace
 {
 
-bool convert( const IECoreScene::Camera *camera, NSIContext_t context, const char *handle )
+bool convert( const IECoreScene::DiskPrimitive *object, NSIContext_t context, const char *handle )
 {
-	const string &projection = camera->getProjection();
-	const string nodeType = projection + "camera";
-
-	NSICreate( context, handle, nodeType.c_str(), 0, nullptr );
+	NSICreate( context, handle, "particles", 0, nullptr );
 
 	ParameterList parameters;
 
-	const float fov = 90.0f;
-	const int dofEnable = 1;
-	const double fStop = camera->getFStop();
-	const double focalLength = camera->getFocalLength() * camera->getFocalLengthWorldScale();
-	const double focusDistance = camera->getFocusDistance();
+	const V3f p( 0, 0, object->getZ() );
+	parameters.add( {
+		"P",
+		&p,
+		NSITypePoint,
+		0,
+		1,
+		NSIParamPerVertex
+	} );
 
-	if( projection == "perspective" )
-	{
-		parameters.add( { "fov", &fov, NSITypeFloat, 0, 1, 0 } );
-		if( camera->getFStop() > 0.0f )
-		{
-			parameters.add( { "depthoffield.enable", &dofEnable, NSITypeInteger, 0, 1, 0 } );
-			parameters.add( { "depthoffield.fstop", &fStop, NSITypeDouble, 0, 1, 0 } );
-			parameters.add( { "depthoffield.focallength", &focalLength, NSITypeDouble, 0, 1, 0 } );
-			parameters.add( { "depthoffield.focaldistance", &focusDistance, NSITypeDouble, 0, 1, 0 } );
-		}
-	}
+	// Technically speaking, I think the normal should probably
+	// point in +ve Z (to be facing a default camera which is facing
+	// in -ve Z). But practically speaking we expect disks to only
+	// be used as the geometry for spotlights, in which case 3Delight
+	// seems to want it to point in -ve Z.
+	const V3f n( 0, 0, -1 );
+	parameters.add( {
+		"N",
+		&n,
+		NSITypeNormal,
+		0,
+		1,
+		NSIParamPerVertex
+	} );
 
-	const V2d clippingPlanes = camera->getClippingPlanes();
-	parameters.add( { "clippingrange", clippingPlanes.getValue(), NSITypeDouble, 0, 2, 0 } );
-
-	const V2d shutter = camera->getShutter();
-	parameters.add( { "shutterrange", shutter.getValue(), NSITypeDouble, 0, 2, 0 } );
+	const float width = object->getRadius() * 2;
+	parameters.add( {
+		"width",
+		&width,
+		NSITypeFloat,
+		0,
+		1,
+		NSIParamPerVertex
+	} );
 
 	NSISetAttribute( context, handle, parameters.size(), parameters.data() );
-
 	return true;
 }
 
-NodeAlgo::ConverterDescription<Camera> g_description( convert );
+NodeAlgo::ConverterDescription<DiskPrimitive> g_description( convert );
 
 } // namespace

@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2017, John Haddon. All rights reserved.
+//  Copyright (c) 2023, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -32,57 +32,15 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef IECOREDELIGHT_PARAMETERLIST_H
-#define IECOREDELIGHT_PARAMETERLIST_H
+#ifndef IECOREDELIGHT_EXPORT_H
+#define IECOREDELIGHT_EXPORT_H
 
-#include "IECoreScene/PrimitiveVariable.h"
+#include "IECore/Export.h"
 
-#include "IECore/CompoundData.h"
-#include "IECore/VectorTypedData.h"
+#ifdef IECoreDelight_EXPORTS
+	#define IECOREDELIGHT_API IECORE_EXPORT
+#else
+	#define IECOREDELIGHT_API IECORE_IMPORT
+#endif
 
-#include <vector>
-
-#include <nsi.h>
-
-namespace IECoreDelight
-{
-
-/// Aids in the creation of parameter lists to be passed to the
-/// NSI API. The ParameterList does not copy any of the data passed
-/// to it; it is the caller's responsibility to keep all data alive
-/// for as long as the ParameterList is used.
-class ParameterList
-{
-
-	public :
-
-		ParameterList();
-		ParameterList( std::initializer_list<NSIParam_t> parameters );
-		ParameterList( const IECore::CompoundDataMap &values );
-
-		~ParameterList();
-
-		void add( const NSIParam_t &parameter );
-		void add( const char *name, const std::string &value );
-		void add( const char *name, const IECore::Data *value );
-		void add( const char *name, const IECore::Data *value, const IECore::IntVectorData *indices );
-
-		NSIParam_t parameter( const char *name, const IECore::Data *value );
-		const char *allocate( const std::string &s );
-
-		int size() const;
-		const NSIParam_t *data() const;
-
-	private :
-
-		template<typename T>
-		T *allocate();
-
-		std::vector<NSIParam_t> m_params;
-		std::vector<const void *> m_allocations;
-
-};
-
-} // namespace IECoreDelight
-
-#endif // IECOREDELIGHT_PARAMETERLIST_H
+#endif // #ifndef IECOREDELIGHT_EXPORT_H

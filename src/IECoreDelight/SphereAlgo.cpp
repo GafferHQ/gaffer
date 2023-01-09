@@ -32,10 +32,10 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferDelight/IECoreDelightPreview/NodeAlgo.h"
-#include "GafferDelight/IECoreDelightPreview/ParameterList.h"
+#include "IECoreDelight/NodeAlgo.h"
+#include "IECoreDelight/ParameterList.h"
 
-#include "IECoreScene/DiskPrimitive.h"
+#include "IECoreScene/SpherePrimitive.h"
 
 #include <nsi.h>
 
@@ -48,13 +48,13 @@ using namespace IECoreDelight;
 namespace
 {
 
-bool convert( const IECoreScene::DiskPrimitive *object, NSIContext_t context, const char *handle )
+bool convert( const IECoreScene::SpherePrimitive *object, NSIContext_t context, const char *handle )
 {
 	NSICreate( context, handle, "particles", 0, nullptr );
 
 	ParameterList parameters;
 
-	const V3f p( 0, 0, object->getZ() );
+	const V3f p( 0 );
 	parameters.add( {
 		"P",
 		&p,
@@ -64,22 +64,7 @@ bool convert( const IECoreScene::DiskPrimitive *object, NSIContext_t context, co
 		NSIParamPerVertex
 	} );
 
-	// Technically speaking, I think the normal should probably
-	// point in +ve Z (to be facing a default camera which is facing
-	// in -ve Z). But practically speaking we expect disks to only
-	// be used as the geometry for spotlights, in which case 3Delight
-	// seems to want it to point in -ve Z.
-	const V3f n( 0, 0, -1 );
-	parameters.add( {
-		"N",
-		&n,
-		NSITypeNormal,
-		0,
-		1,
-		NSIParamPerVertex
-	} );
-
-	const float width = object->getRadius() * 2;
+	const float width = object->radius() * 2;
 	parameters.add( {
 		"width",
 		&width,
@@ -93,6 +78,6 @@ bool convert( const IECoreScene::DiskPrimitive *object, NSIContext_t context, co
 	return true;
 }
 
-NodeAlgo::ConverterDescription<DiskPrimitive> g_description( convert );
+NodeAlgo::ConverterDescription<SpherePrimitive> g_description( convert );
 
 } // namespace

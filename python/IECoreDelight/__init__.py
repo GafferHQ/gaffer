@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2017, John Haddon. All rights reserved.
+#  Copyright (c) 2023, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,10 +34,4 @@
 #
 ##########################################################################
 
-from .DelightRenderTest import DelightRenderTest
-from .InteractiveDelightRenderTest import InteractiveDelightRenderTest
-from .ModuleTest import ModuleTest
-
-if __name__ == "__main__":
-	import unittest
-	unittest.main()
+from ._IECoreDelight import *

@@ -101,8 +101,7 @@ if "%DELIGHT%" NEQ "" (
 	call :appendToPath "%DELIGHT%\bin" PATH
 	call :appendToPath "%DELIGHT%\python" PYTHONPATH
 	call :appendToPath "%DELIGHT%\shaders" DL_SHADERS_PATH
-	call :appendToPath "%DELIGHT%\displays" DL_DISPLAYS_PATH
-	
+
 	call :appendToPath "%DELIGHT%" OSL_SHADER_PATHS
 
 	call :appendToPath "%GAFFER_ROOT%\renderMan\displayDrivers" DL_RESOURCES_PATH

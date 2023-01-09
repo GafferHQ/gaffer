@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2017, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2017, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -32,10 +32,10 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferDelight/IECoreDelightPreview/NodeAlgo.h"
-#include "GafferDelight/IECoreDelightPreview/ParameterList.h"
+#include "IECoreDelight/NodeAlgo.h"
+#include "IECoreDelight/ParameterList.h"
 
-#include "IECoreScene/PointsPrimitive.h"
+#include "IECoreScene/MeshPrimitive.h"
 
 #include <nsi.h>
 
@@ -47,17 +47,18 @@ using namespace IECoreDelight;
 namespace
 {
 
-float g_one = 1.0f;
+const char *g_catmullClark = "catmull-clark";
 
-void staticParameters( const IECoreScene::PointsPrimitive *object, ParameterList &parameters )
+void staticParameters( const IECoreScene::MeshPrimitive *mesh, ParameterList &parameters )
 {
-	if( object->variables.find( "width" ) == object->variables.end() )
+	parameters.add( "nvertices", mesh->verticesPerFace() );
+
+	if( mesh->interpolation() == "catmullClark" )
 	{
-		// Width is a required parameter
 		parameters.add( {
-			"width",
-			&g_one,
-			NSITypeFloat,
+			"subdivision.scheme",
+			&g_catmullClark,
+			NSITypeString,
 			0,
 			1,
 			0
@@ -65,31 +66,31 @@ void staticParameters( const IECoreScene::PointsPrimitive *object, ParameterList
 	}
 }
 
-bool convertStatic( const IECoreScene::PointsPrimitive *object, NSIContext_t context, const char *handle )
+bool convertStatic( const IECoreScene::MeshPrimitive *mesh, NSIContext_t context, const char *handle )
 {
-	NSICreate( context, handle, "particles", 0, nullptr );
+	NSICreate( context, handle, "mesh", 0, nullptr );
 
 	ParameterList parameters;
-	staticParameters( object, parameters );
-
-	NodeAlgo::primitiveVariableParameterList( object, parameters );
+	staticParameters( mesh, parameters );
+	NodeAlgo::primitiveVariableParameterList( mesh, parameters, mesh->vertexIds() );
 
 	NSISetAttribute( context, handle, parameters.size(), parameters.data() );
 
 	return true;
 }
 
-bool convertAnimated( const vector<const IECoreScene::PointsPrimitive *> &objects, const vector<float> &times, NSIContext_t context, const char *handle )
+bool convertAnimated( const vector<const IECoreScene::MeshPrimitive *> &meshes, const vector<float> &times, NSIContext_t context, const char *handle )
 {
-	NSICreate( context, handle, "particles", 0, nullptr );
+	NSICreate( context, handle, "mesh", 0, nullptr );
 
 	ParameterList parameters;
-	staticParameters( objects.front(), parameters );
+	staticParameters( meshes.front(), parameters );
 
 	vector<ParameterList> animatedParameters;
 	NodeAlgo::primitiveVariableParameterLists(
-		vector<const Primitive *>( objects.begin(), objects.end() ),
-		parameters, animatedParameters
+		vector<const Primitive *>( meshes.begin(), meshes.end() ),
+		parameters, animatedParameters,
+		meshes.front()->vertexIds()
 	);
 
 	NSISetAttribute( context, handle, parameters.size(), parameters.data() );
@@ -105,6 +106,6 @@ bool convertAnimated( const vector<const IECoreScene::PointsPrimitive *> &object
 	return true;
 }
 
-NodeAlgo::ConverterDescription<PointsPrimitive> g_description( convertStatic, convertAnimated );
+NodeAlgo::ConverterDescription<MeshPrimitive> g_description( convertStatic, convertAnimated );
 
 } // namespace

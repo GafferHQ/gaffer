@@ -32,9 +32,9 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferDelight/IECoreDelightPreview/NodeAlgo.h"
+#include "IECoreDelight/NodeAlgo.h"
 
-#include "GafferDelight/IECoreDelightPreview/ParameterList.h"
+#include "IECoreDelight/ParameterList.h"
 
 #include "IECore/MessageHandler.h"
 
