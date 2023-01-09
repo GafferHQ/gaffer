@@ -69,9 +69,9 @@ class InteractiveCyclesRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 	def _createConstantShader( self ) :
 
 		shader = GafferCycles.CyclesShader()
-		shader.loadShader( "principled_bsdf" )
-		shader["parameters"]["base_color"].setValue( imath.Color3f( 0 ) )
-		return shader, shader["parameters"]["emission"]
+		shader.loadShader( "emission" )
+		shader["parameters"]["strength"].setValue( 1 )
+		return shader, shader["parameters"]["color"]
 
 	def _createMatteShader( self ) :
 

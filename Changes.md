@@ -15,6 +15,7 @@ Fixes
 - Cycles :
   - Fixed custom AOVs not being created properly for SVM shading mode only, OSL is not supported. (#5044).
   - Fixed distant light angle is in degrees and not radians.
+  - Fixed assignment of `emission` shader. Previously this was being assigned as a `cycles:light` attribute instead of `cycles:surface` (#5058).
 
 1.1.6.1 (relative to 1.1.6.0)
 =======
