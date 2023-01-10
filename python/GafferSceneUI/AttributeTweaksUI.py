@@ -106,56 +106,6 @@ Gaffer.Metadata.registerNode(
 )
 
 ##########################################################################
-# Internal utilities
-##########################################################################
-
-def _attributeTweaksNode( plugValueWidget ) :
-
-	# The plug may not belong to an AttributeTweaks node
-	# directly. Instead it may have been promoted
-	# elsewhere and be driving a target plug on an
-	# AttributeTweaks node.
-
-	def walkOutputs( plug ) :
-
-		if isinstance( plug.node(), GafferScene.AttributeTweaks ) :
-			return plug.node()
-
-		for output in plug.outputs() :
-			node = walkOutputs( output )
-			if node is not None :
-				return node
-
-	return walkOutputs( plugValueWidget.getPlug() )
-
-def _pathsFromAffected( plugValueWidget ) :
-
-	node = _attributeTweaksNode( plugValueWidget )
-	if node is None :
-		return []
-
-	pathMatcher = IECore.PathMatcher()
-	with plugValueWidget.getContext() :
-		GafferScene.SceneAlgo.matchingPaths( node["filter"], node["in"], pathMatcher )
-
-	return pathMatcher.paths()
-
-def _pathsFromSelection( plugValueWidget ) :
-
-	node = _attributeTweaksNode( plugValueWidget )
-	if node is None :
-		return []
-
-	paths = GafferSceneUI.ContextAlgo.getSelectedPaths( plugValueWidget.getContext() )
-	paths = paths.paths() if paths else []
-
-	with plugValueWidget.getContext() :
-		paths = [ p for p in paths if node["in"].exists( p ) ]
-
-	return paths
-
-
-##########################################################################
 # _TweaksFooter
 ##########################################################################
 
@@ -234,25 +184,34 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 
 	def __addFromAffectedMenuDefinition( self ) :
 
-		return self.__addFromPathsMenuDefinition( _pathsFromAffected( self ) )
+		node = self.getPlug().node()
+		assert( isinstance( node, GafferScene.AttributeTweaks ) )
+
+		pathMatcher = IECore.PathMatcher()
+		with self.getContext() :
+			GafferScene.SceneAlgo.matchingPaths( node["filter"], node["in"], pathMatcher )
+
+		return self.__addFromPathsMenuDefinition( pathMatcher.paths() )
 
 	def __addFromSelectedMenuDefinition( self ) :
 
-		return self.__addFromPathsMenuDefinition( _pathsFromSelection( self ) )
+		return self.__addFromPathsMenuDefinition(
+			GafferSceneUI.ContextAlgo.getSelectedPaths( self.getContext() ).paths()
+	)
 
 	def __addFromPathsMenuDefinition( self, paths ) :
 
 		result = IECore.MenuDefinition()
 
-		node = _attributeTweaksNode( self )
-		attributes = {}
+		node = self.getPlug().node()
+		assert( isinstance( node, GafferScene.AttributeTweaks ) )
 
-		if node is not None :
-			with self.getContext() :
-				useFullAttr = node["localise"].getValue()
-				for path in paths :
-					attr = node["in"].fullAttributes( path ) if useFullAttr else node["in"].attributes( path )
-					attributes.update( attr )
+		attributes = {}
+		with self.getContext() :
+			useFullAttr = node["localise"].getValue()
+			for path in paths :
+				attr = node["in"].fullAttributes( path ) if useFullAttr else node["in"].attributes( path )
+				attributes.update( attr )
 
 		attributes = collections.OrderedDict( sorted( attributes.items() ) )
 
