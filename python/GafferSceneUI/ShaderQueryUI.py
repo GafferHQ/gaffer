@@ -358,17 +358,10 @@ def _shaderQueryNode( plugValueWidget ) :
 	# elsewhere and be driving a target plug on a
 	# ShaderQuery node.
 
-	def walkOutputs( plug ) :
-
-		if isinstance( plug.node(), GafferScene.ShaderQuery ) :
-			return plug.node()
-
-		for output in plug.outputs() :
-			node = walkOutputs( output )
-			if node is not None :
-				return node
-
-	return walkOutputs( plugValueWidget.getPlug() )
+	return Gaffer.PlugAlgo.findDestination(
+		plugValueWidget.getPlug(),
+		lambda plug : plug.node() if isinstance( plug.node(), GafferScene.ShaderQuery ) else None,
+	)
 
 def _pathsFromLocation( plugValueWidget ) :
 
@@ -602,20 +595,16 @@ def __setShader( plug, value ) :
 
 def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 
-	plug = plugValueWidget.getPlug()
-	if plug is None :
+	if plugValueWidget.getPlug() is None :
 		return
 
-	node = plug.node()
-	if not isinstance( node, GafferScene.ShaderQuery ) :
-		return
-
-	if plug != node["shader"] :
-		return
-
-	menuDefinition.prepend( "/ShaderQueryDivider/", { "divider" : True } )
-	menuDefinition.prepend( "/From Location/", { "subMenu" : __setShaderFromLocationMenuDefinition } )
-	menuDefinition.prepend( "/From Selection/", { "subMenu" : __setShaderFromSelectionMenuDefinition } )
+	if Gaffer.PlugAlgo.findDestination(
+		plugValueWidget.getPlug(),
+		lambda plug : plug if isinstance( plug.parent(), GafferScene.ShaderQuery ) and plug.getName() == "shader" else None
+	) :
+		menuDefinition.prepend( "/ShaderQueryDivider/", { "divider" : True } )
+		menuDefinition.prepend( "/From Location/", { "subMenu" : __setShaderFromLocationMenuDefinition } )
+		menuDefinition.prepend( "/From Selection/", { "subMenu" : __setShaderFromSelectionMenuDefinition } )
 
 GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu, scoped = False )
 
