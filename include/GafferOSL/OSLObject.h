@@ -98,7 +98,7 @@ class GAFFEROSL_API OSLObject : public GafferScene::Deformer
 		Gaffer::StringPlug *resampledNamesPlug();
 		const Gaffer::StringPlug *resampledNamesPlug() const;
 
-		ConstShadingEnginePtr shadingEngine( const Gaffer::Context *context ) const;
+		ConstShadingEnginePtr shadingEngine( const Gaffer::Context *context, const IECore::CompoundObject *substitutions ) const;
 
 		GafferOSL::OSLCode *oslCode();
 		const GafferOSL::OSLCode *oslCode() const;

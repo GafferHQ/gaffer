@@ -76,6 +76,26 @@ using namespace GafferOSL;
 namespace
 {
 
+const ShaderNetwork *findOSLShaderNetwork( const CompoundObject *attributes )
+{
+	static InternedString oslSurfaceName = "osl:surface";
+	static InternedString oslShaderName = "osl:shader";
+	CompoundObject::ObjectMap::const_iterator it = attributes->members().find( oslSurfaceName );
+	if( it == attributes->members().end() )
+	{
+		// If we didn't find a surface, check if it's named "osl:shader", since OSL doesn't actually
+		// enforce any difference between surfaces and shaders
+		it = attributes->members().find( oslShaderName );
+	}
+
+	if( it == attributes->members().end() )
+	{
+		return nullptr;
+	}
+
+	return runTimeCast<const ShaderNetwork>( it->second.get() );
+}
+
 struct ShadingEngineCacheGetterKey
 {
 
@@ -84,9 +104,19 @@ struct ShadingEngineCacheGetterKey
 	{
 	}
 
-	ShadingEngineCacheGetterKey( const OSLShader *s )
-		:	shader( s ), hash( s->attributesHash() )
+	ShadingEngineCacheGetterKey( const OSLShader *s, const CompoundObject *substitutions )
+		:	shader( s ), substitutions( substitutions )
 	{
+		hash = s->attributesHash();
+		if( substitutions )
+		{
+			ConstCompoundObjectPtr attributes = shader->attributes();
+			const ShaderNetwork *network = findOSLShaderNetwork( attributes.get() );
+			if( network )
+			{
+				network->hashSubstitutions( substitutions, hash );
+			}
+		}
 	}
 
 	operator const IECore::MurmurHash & () const
@@ -96,7 +126,7 @@ struct ShadingEngineCacheGetterKey
 
 	const OSLShader *shader;
 	MurmurHash hash;
-
+	const CompoundObject *substitutions;
 };
 
 ConstShadingEnginePtr getter( const ShadingEngineCacheGetterKey &key, size_t &cost, const IECore::Canceller *canceller )
@@ -104,27 +134,19 @@ ConstShadingEnginePtr getter( const ShadingEngineCacheGetterKey &key, size_t &co
 	cost = 1;
 
 	ConstCompoundObjectPtr attributes = key.shader->attributes();
-
-	CompoundObject::ObjectMap::const_iterator it = attributes->members().find( "osl:surface" );
-	if( it == attributes->members().end() )
-	{
-		// If we didn't find a surface, check if it's named "osl:shader", since OSL doesn't actually
-		// enforce any difference between surfaces and shaders
-		it = attributes->members().find( "osl:shader" );
-	}
-
-	if( it == attributes->members().end() )
-	{
-		return nullptr;
-	}
-
-	const ShaderNetwork *network = runTimeCast<const ShaderNetwork>( it->second.get() );
+	const ShaderNetwork *network = findOSLShaderNetwork( attributes.get() );
 	if( !network || !network->size() )
 	{
 		return nullptr;
 	}
 
-	return new ShadingEngine( network );
+	ShaderNetworkPtr networkCopy = network->copy();
+	if( key.substitutions )
+	{
+		networkCopy->applySubstitutions( key.substitutions );
+	}
+
+	return new ShadingEngine( std::move( networkCopy ) );
 }
 
 using ShadingEngineCache = IECorePreview::LRUCache<IECore::MurmurHash, ConstShadingEnginePtr, IECorePreview::LRUCachePolicy::Parallel, ShadingEngineCacheGetterKey>;
@@ -210,9 +232,9 @@ const Gaffer::Plug *OSLShader::correspondingInput( const Gaffer::Plug *output ) 
 	return result;
 }
 
-ConstShadingEnginePtr OSLShader::shadingEngine() const
+ConstShadingEnginePtr OSLShader::shadingEngine( const CompoundObject *substitutions ) const
 {
-	return g_shadingEngineCache.get( ShadingEngineCacheGetterKey( this ) );
+	return g_shadingEngineCache.get( ShadingEngineCacheGetterKey( this, substitutions ) );
 }
 
 bool OSLShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) const

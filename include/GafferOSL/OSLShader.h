@@ -66,7 +66,7 @@ class GAFFEROSL_API OSLShader : public GafferScene::Shader
 
 		void reloadShader() override;
 
-		ConstShadingEnginePtr shadingEngine() const;
+		ConstShadingEnginePtr shadingEngine( const IECore::CompoundObject *substitutions = nullptr ) const;
 
 		/// Returns an OSL metadata item from the shader.
 		const IECore::Data *shaderMetadata( const IECore::InternedString &name ) const;

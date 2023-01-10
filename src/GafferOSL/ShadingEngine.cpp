@@ -932,13 +932,15 @@ static const T *varyingValue( const IECore::CompoundData *points, const char *na
 
 } // namespace
 
-ShadingEngine::ShadingEngine( const IECoreScene::ShaderNetwork *shaderNetwork )
+ShadingEngine::ShadingEngine( const IECoreScene::ShaderNetwork *shaderNetwork ) : ShadingEngine( shaderNetwork->copy() )
+{
+}
+
+
+ShadingEngine::ShadingEngine( IECoreScene::ShaderNetworkPtr &&shaderNetwork )
 	:	m_hash( shaderNetwork->Object::hash() ), m_timeNeeded( false ), m_unknownAttributesNeeded( false ), m_hasDeformation( false )
 {
-	ShaderNetworkPtr networkCopy = shaderNetwork->copy();
-	IECoreScene::ShaderNetworkAlgo::convertOSLComponentConnections( networkCopy.get(), OSL_VERSION );
-	shaderNetwork = networkCopy.get();
-
+	IECoreScene::ShaderNetworkAlgo::convertOSLComponentConnections( shaderNetwork.get(), OSL_VERSION );
 	ShadingSystem *shadingSystem = ::shadingSystem();
 
 	{
@@ -947,7 +949,7 @@ ShadingEngine::ShadingEngine( const IECoreScene::ShaderNetwork *shaderNetwork )
 		std::vector<std::string> invalidShaders;
 
 		ShaderNetworkAlgo::depthFirstTraverse(
-			shaderNetwork,
+			shaderNetwork.get(),
 			[shadingSystem, &invalidShaders] ( const ShaderNetwork *shaderNetwork, const InternedString &handle ) {
 
 				// Check for invalid (non-OSL) shaders. We stop declaring shaders if any

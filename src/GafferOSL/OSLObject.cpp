@@ -275,7 +275,13 @@ bool OSLObject::affectsProcessedObject( const Gaffer::Plug *input ) const
 
 void OSLObject::hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ConstShadingEnginePtr shadingEngine = this->shadingEngine( context );
+	ConstCompoundObjectPtr gafferAttributes = nullptr;
+	if( useAttributesPlug()->getValue() )
+	{
+		gafferAttributes = inPlug()->fullAttributes( path );
+	}
+
+	ConstShadingEnginePtr shadingEngine = this->shadingEngine( context, gafferAttributes.get() );
 	if( !shadingEngine )
 	{
 		h = inPlug()->objectPlug()->hash();
@@ -292,9 +298,17 @@ void OSLObject::hashProcessedObject( const ScenePath &path, const Gaffer::Contex
 	{
 		h.append( inPlug()->fullTransformHash( path ) );
 	}
-	if( useAttributesPlug()->getValue() )
+
+	if( gafferAttributes )
 	{
-		h.append( inPlug()->fullAttributesHash( path ) );
+		for( const auto &[ name,  value ] : gafferAttributes->members() )
+		{
+			if( shadingEngine->needsAttribute( name ) )
+			{
+				h.append( name );
+				value->hash( h );
+			}
+		}
 	}
 }
 
@@ -308,7 +322,13 @@ IECore::ConstObjectPtr OSLObject::computeProcessedObject( const ScenePath &path,
 		return inputObject;
 	}
 
-	ConstShadingEnginePtr shadingEngine = this->shadingEngine( context );
+	ConstCompoundObjectPtr gafferAttributes = nullptr;
+	if( useAttributesPlug()->getValue() )
+	{
+		gafferAttributes = inPlug()->fullAttributes( path );
+	}
+
+	ConstShadingEnginePtr shadingEngine = this->shadingEngine( context, gafferAttributes.get() );
 	if( !shadingEngine )
 	{
 		return inputObject;
@@ -316,11 +336,6 @@ IECore::ConstObjectPtr OSLObject::computeProcessedObject( const ScenePath &path,
 
 	PrimitiveVariable::Interpolation interpolation = static_cast<PrimitiveVariable::Interpolation>( interpolationPlug()->getValue() );
 
-	ConstCompoundObjectPtr gafferAttributes;
-	if( useAttributesPlug()->getValue() )
-	{
-		gafferAttributes = inPlug()->fullAttributes( path );
-	}
 
 	IECoreScene::ConstPrimitivePtr resampledObject = IECore::runTimeCast<const IECoreScene::Primitive>( resampledInPlug()->objectPlug()->getValue() );
 	CompoundDataPtr shadingPoints = prepareShadingPoints( resampledObject.get(), shadingEngine.get(), gafferAttributes.get() );
@@ -364,7 +379,25 @@ bool OSLObject::adjustBounds() const
 		return false;
 	}
 
-	ConstShadingEnginePtr s = shadingEngine( Context::current() );
+	// \todo - this is technically wrong, whether a deformation closure is output may depend
+	// on the substitutions.
+	//
+	// To solve this properly, we could do something like: ShadingEngine declares a special
+	// token STRING_PARAMETER_VALUE_UNKNOWN. Evaluating shade() on a ShadingEngine containing
+	// these tokens throws an exception, but calls to hasDeformation or needsAttribute
+	// would yield correct ( or at least conservative ) results, by using lockgeom=false.
+	//
+	// The getter for ShadingEngines inside OSLShader can then be modified to replace strings
+	// that require substitutions with this token when a special flag is passed somehow.
+	//
+	// Uses of the shadingEngine in OSLObject that don't use shade() and want global results
+	// without considering the specific location ( adjustBounds and resampledNamesPlug )
+	// would then need to pass this special flag.
+	//
+	// See conversation here https://github.com/GafferHQ/gaffer/pull/5039#discussion_r1063481066
+	// where this approach was proposed, and we decided not to implement it yet.
+
+	ConstShadingEnginePtr s = shadingEngine( Context::current(), nullptr );
 	return s && s->hasDeformation();
 }
 
@@ -392,7 +425,8 @@ void OSLObject::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 			return;
 		}
 
-		ConstShadingEnginePtr shadingEngine = this->shadingEngine( context );
+		// \todo - using an null substitutions here is not fully accurate.  See comment in adjustBounds
+		ConstShadingEnginePtr shadingEngine = this->shadingEngine( context, nullptr );
 
 		std::string primitiveVariablesToResample;
 		for( PrimitiveVariableMap::const_iterator it = prim->variables.begin(); it != prim->variables.end(); ++it )
@@ -417,7 +451,7 @@ void OSLObject::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 	Deformer::compute( output, context );
 }
 
-ConstShadingEnginePtr OSLObject::shadingEngine( const Gaffer::Context *context ) const
+ConstShadingEnginePtr OSLObject::shadingEngine( const Gaffer::Context *context, const CompoundObject *substitutions ) const
 {
 	auto shader = runTimeCast<const OSLShader>( shaderPlug()->source()->node() );
 	if( !shader )
@@ -426,7 +460,10 @@ ConstShadingEnginePtr OSLObject::shadingEngine( const Gaffer::Context *context )
 	}
 
 	ScenePlug::GlobalScope globalScope( context );
-	return shader->shadingEngine();
+
+	static ConstCompoundObjectPtr defaultSubstitutions = new CompoundObject();
+
+	return shader->shadingEngine( substitutions ? substitutions : defaultSubstitutions.get() );
 }
 
 void OSLObject::updatePrimitiveVariables()
