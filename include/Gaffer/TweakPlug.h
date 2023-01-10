@@ -70,9 +70,10 @@ class GAFFER_API TweakPlug : public Gaffer::ValuePlug
 			ListAppend,
 			ListPrepend,
 			ListRemove,
+			CreateIfMissing,
 
 			First = Replace,
-			Last = ListRemove,
+			Last = CreateIfMissing,
 		};
 
 		TweakPlug( const std::string &tweakName, Gaffer::ValuePlugPtr valuePlug, Mode mode = Replace, bool enabled = true );

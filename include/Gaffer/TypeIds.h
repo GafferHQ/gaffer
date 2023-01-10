@@ -148,6 +148,7 @@ enum TypeId
 	TweaksPlugTypeId = 110101,
 	V2fVectorDataPlugTypeId = 110102,
 	V3iVectorDataPlugTypeId = 110103,
+	ContextVariableTweaksTypeId = 110104,
 
 	LastTypeId = 110159,
 

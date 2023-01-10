@@ -111,7 +111,11 @@ bool TweakPlug::applyTweak(
 
 	if( !currentValue )
 	{
-		if( mode == Gaffer::TweakPlug::ListAppend || mode == Gaffer::TweakPlug::ListPrepend )
+		if(
+			mode == Gaffer::TweakPlug::ListAppend ||
+			mode == Gaffer::TweakPlug::ListPrepend ||
+			mode == Gaffer::TweakPlug::CreateIfMissing
+		)
 		{
 			setDataFunctor( name, newData );
 			return true;
@@ -145,7 +149,10 @@ bool TweakPlug::applyTweak(
 		applyListTweak( currentValue, newData.get(), newData.get(), mode, name );
 	}
 
-	setDataFunctor( name, newData );
+	if( mode != Gaffer::TweakPlug::CreateIfMissing )
+	{
+		setDataFunctor( name, newData );
+	}
 
 	return true;
 }

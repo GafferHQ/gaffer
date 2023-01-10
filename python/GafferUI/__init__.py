@@ -302,6 +302,7 @@ from . import BoxInUI
 from . import BoxOutUI
 from . import NameSwitchUI
 from . import EditScopeUI
+from . import ContextVariableTweaksUI
 
 # backwards compatibility
 ## \todo Remove me

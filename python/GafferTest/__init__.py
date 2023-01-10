@@ -167,6 +167,7 @@ from .EditScopeTest import EditScopeTest
 from .RandomChoiceTest import RandomChoiceTest
 from .ContextQueryTest import ContextQueryTest
 from .TweakPlugTest import TweakPlugTest
+from .ContextVariableTweaksTest import ContextVariableTweaksTest
 
 from .IECorePreviewTest import *
 
