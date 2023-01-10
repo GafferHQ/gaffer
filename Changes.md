@@ -4,15 +4,14 @@
 Features
 --------
 
-- Cycles :
-  - Replaced size on portals and quad lights with width and height. Disks are width-only.
-  - Added use_camera and use_caustics for lights.
-  - Added normalize option for lights.
 - ContextVariableTweaks : Added a new node for tweaking the context used to evaluate upstream nodes.
 
 Improvements
 ------------
 
+- Cycles :
+  - Replaced `size` on portals and quad lights with separate `width` and `height` parameters, and renamed `size` parameter of disk lights to `width`.
+  - Added `use_camera`, `use_caustics` and `normalize` parameters to lights.
 - TweakPlug : Added a `CreateIfMissing` mode, to only create a new value if one does not currently exist.
 - OSLObject : Added support for attribute substitutions using `<attr:myAttrName>` syntax in string parameters, provided that `useAttributes` is turned on.
 
