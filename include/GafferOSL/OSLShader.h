@@ -66,7 +66,9 @@ class GAFFEROSL_API OSLShader : public GafferScene::Shader
 
 		void reloadShader() override;
 
+		// \todo - Combine into one function with optional argument once we can do API break
 		ConstShadingEnginePtr shadingEngine() const;
+		ConstShadingEnginePtr shadingEngine( const IECore::CompoundObject *substitutions ) const;
 
 		/// Returns an OSL metadata item from the shader.
 		const IECore::Data *shaderMetadata( const IECore::InternedString &name ) const;

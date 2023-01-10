@@ -1122,5 +1122,37 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		self.assertEqual( s["mx_invert_float"]["parameters"]["in"].getValue(), 1 )
 		self.assertEqual( s["mx_invert_float"]["parameters"]["amount"].getValue(), 2 )
 
+	def testShadingEngineDeduplicate( self ) :
+
+		s = self.compileShader( os.path.dirname( __file__ ) + "/shaders/debugClosure.osl" )
+		# \todo - switch to this on main
+		#s = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "debugClosure.osl" )
+
+		n = GafferOSL.OSLShader()
+		n.loadShader( s )
+
+		n["parameters"]["name"].setValue( "o<attr:b><attr:d>" )
+
+		singlePoint = IECore.CompoundData( { "P" : IECore.V3fVectorData( [ imath.V3f(0) ] ) } )
+
+		defaultSE = n.shadingEngine( IECore.CompoundObject( {} ) )
+
+		self.assertEqual( set( defaultSE.shade( singlePoint ).keys() ), { "Ci", "o" } )
+
+		self.assertTrue( defaultSE.isSame( n.shadingEngine( IECore.CompoundObject( { "a" : IECore.StringData( "A" ) } ) ) ) )
+		firstSE = n.shadingEngine( IECore.CompoundObject( { "b" : IECore.StringData( "B" ) } ) )
+		self.assertEqual( set( firstSE.shade( singlePoint ).keys() ), { 'Ci', 'oB' } )
+		self.assertTrue( defaultSE.isSame( n.shadingEngine( IECore.CompoundObject( { "c" : IECore.StringData( "C" ) } ) ) ) )
+		self.assertTrue( firstSE.isSame( n.shadingEngine( IECore.CompoundObject( { "c" : IECore.StringData( "C" ), "b" : IECore.StringData( "B" ) } ) ) ) )
+		self.assertEqual( set( n.shadingEngine( IECore.CompoundObject( { "d" : IECore.StringData( "D" ) } ) ).shade( singlePoint ).keys() ), { "Ci", "oD" } )
+		bothSE = n.shadingEngine( IECore.CompoundObject( { "d" : IECore.StringData( "D" ), "b" : IECore.StringData( "B" ) } ) )
+		self.assertEqual( set( bothSE.shade( singlePoint ).keys() ), { "Ci", "oBD" } )
+		self.assertTrue( bothSE.isSame( n.shadingEngine( IECore.CompoundObject( { "c" : IECore.StringData( "C" ), "b" : IECore.StringData( "B" ), "d" : IECore.StringData( "D" ) } ) ) ) )
+
+		# \todo - need to figure out what n.shadingEngine() should do when substitutions are needed.
+		# Should it be a synonym for n.shadingEngine( IECore.CompoundObject( {} ) )?
+		# Or should it raise an exception?  The current behaviour of leaving unsubstituted strings is probably
+		# not right.
+
 if __name__ == "__main__":
 	unittest.main()

@@ -994,6 +994,99 @@ class OSLObjectTest( GafferOSLTest.OSLTestCase ) :
 
 		self.assertEqual( o["out"].object( "/plane" )["testString"].data[0], "NOT FOUND" )
 
+	def testAttributeStringSubstitutions( self ):
+
+		p = GafferScene.Plane()
+
+		g = GafferScene.Group()
+		g["in"][0].setInput( p["out"] )
+		g["in"][1].setInput( p["out"] )
+
+		a = GafferScene.CustomAttributes()
+		a["attributes"].addChild( Gaffer.NameValuePlug( "testAttribute", "${scene:path}" ) )
+		a["in"].setInput( g["out"] )
+
+		o = GafferOSL.OSLObject()
+		o["in"].setInput( a["out"] )
+
+		# shading network to output attributes as formatted string.
+
+		code = GafferOSL.OSLCode()
+		code["parameters"].addChild( Gaffer.StringPlug( "inString", defaultValue = "<attr:testAttribute>" ) )
+		code["out"].addChild( Gaffer.StringPlug( "testString", direction = Gaffer.Plug.Direction.Out ) )
+
+		o["primitiveVariables"].addChild( Gaffer.NameValuePlug( "testString", "" ) )
+		o["primitiveVariables"][0]["value"].setInput( code["out"]["testString"] )
+
+		f = GafferScene.PathFilter()
+		f["paths"].setValue( IECore.StringVectorData( [ "/..." ] ) )
+
+		a["filter"].setInput( f["out"] )
+		o["filter"].setInput( f["out"] )
+
+		code["code"].setValue( 'testString = inString;' )
+
+		self.assertEqual( o["out"].object( "/group/plane" )["testString"].data[0], "" )
+		self.assertEqual( o["out"].object( "/group/plane1" )["testString"].data[0], "" )
+
+		o["useAttributes"].setValue( True )
+
+		self.assertEqual( o["out"].object( "/group/plane" )["testString"].data[0], "/group/plane" )
+		self.assertEqual( o["out"].object( "/group/plane1" )["testString"].data[0], "/group/plane1" )
+
+		code["parameters"].addChild( Gaffer.StringPlug( "inString2", defaultValue = "<attr:testAttribute>" ) )
+		code["code"].setValue( 'testString = concat( inString, ",", inString2 );' )
+
+		self.assertEqual( o["out"].object( "/group/plane" )["testString"].data[0], "/group/plane,/group/plane" )
+
+		code["parameters"]["inString"].setValue( "[<attr:testAttribute>]" )
+
+		self.assertEqual( o["out"].object( "/group/plane" )["testString"].data[0], "[/group/plane],/group/plane" )
+
+		code["parameters"]["inString"].setValue( "<attr:testAttribute2>" )
+
+		# Missing attributes are replaced with an empty string
+		self.assertEqual( o["out"].object( "/group/plane" )["testString"].data[0], ",/group/plane" )
+
+		a["attributes"].addChild( Gaffer.NameValuePlug( "testAttribute2", "foo" ) )
+		self.assertEqual( o["out"].object( "/group/plane" )["testString"].data[0], "foo,/group/plane" )
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testAttributeStringSubstitutionsPerf( self ):
+
+		p = GafferScene.Plane()
+		p["divisions"].setValue( imath.V2i( 99 ) )
+
+		a = GafferScene.CustomAttributes()
+		for i in range( 100 ):
+			a["attributes"].addChild( Gaffer.NameValuePlug( "testAttribute%i"%i, "${scene:path}%i"%i ) )
+		a["in"].setInput( p["out"] )
+
+		o = GafferOSL.OSLObject()
+		o["in"].setInput( a["out"] )
+
+		# shading network to output attributes as formatted string.
+
+		code = GafferOSL.OSLCode()
+		for i in range( 100 ):
+			code["parameters"].addChild( Gaffer.StringPlug( "inString%i"%i, defaultValue = "<attr:testAttribute%i>"%i ) )
+		code["out"].addChild( Gaffer.IntPlug( "test", direction = Gaffer.Plug.Direction.Out ) )
+
+		o["primitiveVariables"].addChild( Gaffer.NameValuePlug( "test", 0 ) )
+		o["primitiveVariables"][0]["value"].setInput( code["out"]["test"] )
+
+		f = GafferScene.PathFilter()
+		f["paths"].setValue( IECore.StringVectorData( [ "/..." ] ) )
+
+		a["filter"].setInput( f["out"] )
+		o["filter"].setInput( f["out"] )
+
+		# Count the number of substituted parameters that end in "0"
+		code["code"].setValue( 'test = 0;\n' + "".join( [ 'test += getchar( inString%i, strlen( inString%i ) - 1 ) == 48;\n'%(i,i) for i in range( 100 ) ] ) )
+
+		o["useAttributes"].setValue( True )
+
+		self.assertEqual( o["out"].object( "/plane" )["test"].data, IECore.IntVectorData( [ 10 ] * 10000 ) )
 
 	def testAffects( self ) :
 
