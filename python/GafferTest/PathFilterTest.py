@@ -62,7 +62,7 @@ class PathFilterTest( GafferTest.TestCase ) :
 
 		# Check that an unfiltered path can see all the files
 
-		path = Gaffer.FileSystemPath( self.temporaryDirectory().as_posix() )
+		path = Gaffer.FileSystemPath( self.temporaryDirectory() )
 		children = path.children()
 		self.assertEqual( len( children ), len( list( self.temporaryDirectory().glob( "*" ) ) ) )
 
@@ -84,7 +84,7 @@ class PathFilterTest( GafferTest.TestCase ) :
 
 	def testEnabledState( self ) :
 
-		path = Gaffer.FileSystemPath( self.temporaryDirectory().as_posix() )
+		path = Gaffer.FileSystemPath( self.temporaryDirectory() )
 
 		f = Gaffer.FileNamePathFilter( [ "*.txt" ] )
 		self.assertEqual( f.getEnabled(), True )

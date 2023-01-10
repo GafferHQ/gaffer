@@ -46,17 +46,17 @@ class HiddenFilePathFilterTest( GafferTest.TestCase ) :
 
 	def test( self ) :
 
-		hiddenFile = Gaffer.FileSystemPath( ( self.temporaryDirectory() / ".sneaky.txt" ).as_posix() )
+		hiddenFile = Gaffer.FileSystemPath( self.temporaryDirectory() / ".sneaky.txt" )
 		with open( hiddenFile.nativeString(), "w" ) as f :
 			f.write( "Can't see me" )
 		if os.name == "nt" :
 			subprocess.check_call( [ "attrib", "+H", hiddenFile.nativeString() ] )
 
-		visibleFile = Gaffer.FileSystemPath( ( self.temporaryDirectory() / "frank.txt" ).as_posix() )
+		visibleFile = Gaffer.FileSystemPath( self.temporaryDirectory() / "frank.txt" )
 		with open( visibleFile.nativeString(), "w" ) as f :
 			f.write( "Can see me" )
 
-		p = Gaffer.FileSystemPath( pathlib.Path( hiddenFile.nativeString() ).parent.as_posix() )
+		p = Gaffer.FileSystemPath( pathlib.Path( hiddenFile.nativeString() ).parent )
 
 		self.assertEqual(
 			sorted( [ str( i ) for i in p.children() ] ),

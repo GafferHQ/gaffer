@@ -33,6 +33,9 @@ API
 ---
 
 - PlugAlgo : Added `dependsOnCompute()` utility method.
+- FileSystemPath :
+  - Added a constructor that accepts a `filesystem::path`.
+  - Added a `standardPath()` method returning a `std::filesystem::path` object in C++ and a `pathlib.Path` object in Python.
 
 Build
 -----

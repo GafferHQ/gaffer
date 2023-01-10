@@ -42,6 +42,8 @@
 
 #include "IECore/FileSequence.h"
 
+#include <filesystem>
+
 namespace Gaffer
 {
 
@@ -61,6 +63,7 @@ class GAFFER_API FileSystemPath : public Path
 
 		FileSystemPath( PathFilterPtr filter = nullptr, bool includeSequences = false );
 		FileSystemPath( const std::string &path, PathFilterPtr filter = nullptr, bool includeSequences = false );
+		FileSystemPath( const std::filesystem::path &path, PathFilterPtr filter = nullptr, bool includeSequences = false );
 		FileSystemPath( const Names &names, const IECore::InternedString &root = "/", PathFilterPtr filter = nullptr, bool includeSequences = false );
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::FileSystemPath, FileSystemPathTypeId, Path );
@@ -93,6 +96,8 @@ class GAFFER_API FileSystemPath : public Path
 
 		// Returns the path converted to the OS native format
 		std::string nativeString() const;
+
+		std::filesystem::path standardPath() const;
 
 		static PathFilterPtr createStandardFilter( const std::vector<std::string> &extensions = std::vector<std::string>(), const std::string &extensionsLabel = "", bool includeSequenceFilter = false );
 
