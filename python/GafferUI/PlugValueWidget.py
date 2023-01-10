@@ -37,6 +37,7 @@
 
 import collections
 import functools
+import inspect
 import itertools
 import traceback
 import warnings
@@ -47,16 +48,17 @@ import Gaffer
 import GafferUI
 
 ## Base class for widgets which can display and optionally edit one or
-# more ValuePlugs. Subclasses must override `_updateFromPlugs()` to
-# update the UI to reflect the current state of the plugs, and may also
-# override `setPlugs()` to perform any book-keeping needed when the plugs
-# being displayed are changed.
+# more ValuePlugs. The base class automatically tracks changes to plug
+# state and calls `_updateFromValues()`, `_updateFromMetadata()` and
+# `_updateFromEditable()` appropriately. Subclasses should override
+# these methods to update the UI to reflect the plug state. Subclasses
+# may also override `setPlugs()` to perform any necessary bookkeeping of
+# their own.
 #
-# > Note : PlugValueWidgets could originally only display a single plug
-# > at a time, using overrides for `_updateFromPlug()` and `setPlug()`
-# > (note the singular). For backwards compatibility we still support
-# > subclasses which override these old methods, but over time will phase
-# > this out and require the plural form.
+# > Note : For backwards compatibility, PlugValueWidget will also call
+# > `_updateFromPlug()` or `_updateFromPlugs()` methods if they are
+# > defined by a subclass. This is deprecated, and will be removed in
+# > a future version.
 class PlugValueWidget( GafferUI.Widget ) :
 
 	class MultiplePlugsError( ValueError ) : pass
@@ -75,10 +77,9 @@ class PlugValueWidget( GafferUI.Widget ) :
 		elif not isinstance( plugs, set ) :
 			plugs = set( plugs )
 
-		# We don't want to call `_updateFromPlugs()` yet because the derived
-		# classes haven't constructed. They can call it themselves
-		# upon completing construction.
-		self.__setPlugsInternal( plugs, callUpdateFromPlugs=False )
+		# We don't want to call the update methods yet because the derived
+		# classes haven't constructed. We'll do that in `_postConstructor()`.
+		self.__setPlugsInternal( plugs, callUpdateMethods=False )
 
 		self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
 		self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ), scoped = False )
@@ -106,7 +107,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 			else :
 				raise Exception( "{} does not support multiple plugs".format( self.__class__.__name__ ) )
 		else :
-			self.__setPlugsInternal( plugs, callUpdateFromPlugs=True )
+			self.__setPlugsInternal( plugs, callUpdateMethods=True )
 
 	def getPlugs( self ) :
 
@@ -119,7 +120,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 		if self.setPlug.__code__ is not PlugValueWidget.setPlug.__code__ :
 			# Legacy subclass has overridden `setPlug()`. Do work internally
 			# to avoid recursion.
-			self.__setPlugsInternal( { plug } if plug is not None else set(), callUpdateFromPlugs=True )
+			self.__setPlugsInternal( { plug } if plug is not None else set(), callUpdateMethods=True )
 		else :
 			# Implement via `setPlugs()` so that new classes may
 			# override it.
@@ -149,7 +150,8 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		self.__context = context
 		self.__updateContextConnection()
-		self._updateFromPlugs()
+		self.__callLegacyUpdateMethods()
+		self.__callUpdateFromValues()
 
 	def getContext( self ) :
 
@@ -270,23 +272,65 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		return plugValueWidget
 
-	## Must be implemented by subclasses so that the widget reflects the current
-	# status of the plugs. To temporarily suspend calls to this function, use
-	# `Gaffer.Signals.BlockedConnection( self._plugConnections() )`.
-	def _updateFromPlugs( self ) :
+	def _postConstructor( self ) :
 
-		# Default implementation falls back to legacy update for a single plug.
-		updateFromPlug = getattr( self, "_updateFromPlug", None )
-		if updateFromPlug is not None :
-			updateFromPlug()
+		# Sanity check `_valuesForUpdate` override.
+		assert( isinstance( inspect.getattr_static( self, "_valuesForUpdate" ), staticmethod ) )
 
-	def _plugConnections( self ) :
+		# Trigger initial updates in the derived class. Note : we're not calling
+		# `__callLegacyUpdateMethods()` because the legacy API required the
+		# most-derived class to do the first update manually.
+		self._updateFromMetadata()
+		self._updateFromEditable()
+		self.__callUpdateFromValues()
 
-		return (
-			self.__plugDirtiedConnections +
-			self.__plugInputChangedConnections +
-			self.__plugMetadataChangedConnections
-		)
+	## Called to retrieve a list of current plug values so that the UI can be updated
+	# from them via `_updateFromValues()`. The default implementation uses
+	# `plug.getValue()`; subclasses may override as necessary.
+	#
+	# > Note : May be called on a background thread, to avoid locking the UI
+	# > waiting for expensive computes. It must be a static method to avoid the
+	# > possibility of accessing unprotected state from the widget.
+	@staticmethod
+	def _valuesForUpdate( plugs ) :
+
+		return [ p.getValue() if hasattr( p, "getValue" ) else None for p in plugs ]
+
+	## Should be implemented by derived classes to update the UI from the `values`
+	# provided. If an error occurred while retrieving them from `_valuesForUpdate()`,
+	# it is passed as `exception`, and the UI should be updated to reflect it.
+	def _updateFromValues( self, values, exception ) :
+
+		pass
+
+	## May be called by derived classes to request a call to `_updateFromValues()`.
+	# This is not typically necessary as calls are made automatically whenever the
+	# plug is dirtied, but it can be useful when the user wishes to abandon an
+	# in-progress edit in the widget (by hitting `Esc` for example).
+	def _requestUpdateFromValues( self ) :
+
+		self.__callUpdateFromValues()
+
+	## Returns a context manager that blocks the connections used to
+	# call `_updateFromValues()` when the plug is dirtied. This may
+	# be used to avoid recursion when the widget edits the plug value.
+	def _blockedUpdateFromValues( self ) :
+
+		return Gaffer.Signals.BlockedConnection( self.__plugDirtiedConnections )
+
+	## Called whenever metadata relating to the plug has changed. Should
+	# be implemented by derived classes to display the changes in the UI
+	# as necessary.
+	def _updateFromMetadata( self ) :
+
+		pass
+
+	## Called whenever the result of `self._editable()` has changed. Should
+	# be implemented by derived classes to update the editability of the
+	# widget as necessary.
+	def _updateFromEditable( self ) :
+
+		pass
 
 	## Returns True if the plug's values are editable as far as this UI is concerned
 	# - that `plug.settable()` is True for all plugs and `MetadataAlgo.readOnly()`
@@ -309,6 +353,18 @@ class PlugValueWidget( GafferUI.Widget ) :
 				return False
 
 		return True
+
+	## \deprecated
+	def _plugConnections( self ) :
+
+		## \todo Emit DeprecationWarning once we can reasonably expect
+		# Gaffer `1.1.x.x` to be history.
+
+		return (
+			self.__plugDirtiedConnections +
+			self.__plugInputChangedConnections +
+			self.__plugMetadataChangedConnections
+		)
 
 	## Called to convert the specified value into something
 	# suitable for passing to a plug.setValue() call. Returns
@@ -443,38 +499,132 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		return menuDefinition
 
+	def __callLegacyUpdateMethods( self ) :
+
+		# Originally, PlugValueWidget used an `_updateFromPlug()` method to
+		# perform _all_ updates in one shot. Later, we added support for
+		# representing multiple plugs in one widget, and the function was
+		# renamed to `_updateFromPlugs()` (plural). Both methods are now
+		# deprecated in favour of the more granular updates provided by
+		# `_updateFromMetadata()`, `_updateFromValues()` etc. But we still
+		# support calling them if they exist.
+
+		updateMethod = getattr( self, "_updateFromPlugs", None )
+		if updateMethod is None :
+			updateMethod = getattr( self, "_updateFromPlug", None )
+
+		if updateMethod is not None :
+			## \todo Emit DeprecationWarning. It doesn't make sense to do
+			# this until we can reasonably expect Gaffer `1.1.x.x` to be
+			# out of use, as maintaining a subclass to use both the old
+			# and the new API would be incredibly painful.
+			updateMethod()
+
+	@GafferUI.LazyMethod()
+	def __callUpdateFromValues( self ) :
+
+		if self.__class__._updateFromValues is PlugValueWidget._updateFromValues :
+			# No override for `_updateFromValues()`, so no point doing all the work
+			# of calling it. Assume the subclass must be implementing the legacy
+			# `_updateFromPlug()` method instead.
+			return
+
+		with self.getContext() :
+			if any( isinstance( p, Gaffer.ValuePlug ) and Gaffer.PlugAlgo.dependsOnCompute( p ) for p in self.getPlugs() ) :
+				# Getting the values will trigger a compute, which could be
+				# arbitrarily slow. So we do it in the background to avoid locking
+				# the UI.
+				self.__updateFromValuesInBackground( self.getPlugs() )
+			else :
+				# No compute involved, so we don't expect to get any exceptions.
+				self._updateFromValues( self._valuesForUpdate( self.getPlugs() ), None )
+
+	@GafferUI.BackgroundMethod()
+	def __updateFromValuesInBackground( self, plugs ) :
+
+		return self._valuesForUpdate( plugs )
+
+	@__updateFromValuesInBackground.preCall
+	def __updateFromValuesInBackgroundPreCall( self ) :
+
+		# Many derived classes have a special "---" state when they have no
+		# plugs/values. Use this as a visual hint that a background computation
+		# is taking place.
+		self._updateFromValues( [], None )
+
+	@__updateFromValuesInBackground.plug
+	def __updateFromValuesInBackgroundPlug( self ) :
+
+		# Provide an appropriate plug for BackgroundMethod to use for
+		# cancellation.
+		return next( iter( self.getPlugs() ) )
+
+	@__updateFromValuesInBackground.postCall
+	def __updateFromValuesInBackgroundPostCall( self, backgroundResult ) :
+
+		if isinstance( backgroundResult, IECore.Cancelled ) :
+			# Cancellation. This could be due to any of the following :
+			#
+			# - This widget being hidden.
+			# - A graph edit that will affect the result and will have triggered
+			#   a call to `__callUpdateFromValues()`.
+			# - A graph edit that won't trigger a call to
+			#   `__callUpdateFromValues()`.
+			#
+			# LazyMethod takes care of all this for us. If we're hidden, it
+			# waits till we're visible. If `__callUpdateFromValues()` has
+			# already been called, our call will just replace the pending call.
+			self.__callUpdateFromValues()
+		elif isinstance( backgroundResult, Exception ) :
+			# Computation error.
+			self._updateFromValues( [], backgroundResult )
+		else :
+			# Success.
+			self._updateFromValues( backgroundResult, None )
+
 	def __plugDirtied( self, plug ) :
 
 		if plug in self.__plugs :
-			self._updateFromPlugs()
+			self.__callLegacyUpdateMethods()
+			self.__callUpdateFromValues()
 
 	def __plugInputChanged( self, plug ) :
 
 		if plug in self.__plugs :
 			self.__updateContextConnection()
+			self._updateFromEditable()
 
 	def __plugMetadataChanged( self, plug, key, reason ) :
 
+		metadataChanged = False
+		editableChanged = False
 		for p in self.__plugs :
-			if (
-				p == plug or p.isAncestorOf( plug ) or
-				Gaffer.MetadataAlgo.readOnlyAffectedByChange( p, plug, key )
-			) :
-				self._updateFromPlugs()
-				return
+			if p == plug or p.isAncestorOf( plug ) :
+				metadataChanged = True
+			if Gaffer.MetadataAlgo.readOnlyAffectedByChange( p, plug, key ) :
+				editableChanged = True
+
+		if metadataChanged or editableChanged :
+			self.__callLegacyUpdateMethods()
+		if metadataChanged :
+			self._updateFromMetadata()
+		if editableChanged :
+			self._updateFromEditable()
 
 	def __nodeMetadataChanged( self, nodeTypeId, key, node ) :
 
 		for p in self.__plugs :
 			if Gaffer.MetadataAlgo.readOnlyAffectedByChange( p, nodeTypeId, key, node ) :
-				self._updateFromPlugs()
+				self.__callLegacyUpdateMethods()
+				self._updateFromEditable()
 				return
 
 	def __contextChanged( self, context, key ) :
 
-		self._updateFromPlugs()
+		self.__callLegacyUpdateMethods()
+		self.__callUpdateFromValues()
 
-	def __setPlugsInternal( self, plugs, callUpdateFromPlugs ) :
+	def __setPlugsInternal( self, plugs, callUpdateMethods ) :
 
 		assert( isinstance( plugs, set ) )
 		if len( plugs ) and sole( p.__class__ for p in plugs ) is None :
@@ -508,8 +658,11 @@ class PlugValueWidget( GafferUI.Widget ) :
 		self.__context = next( ( self.__defaultContext( p ) for p in self.__plugs ), self.__fallbackContext )
 		self.__updateContextConnection()
 
-		if callUpdateFromPlugs :
-			self._updateFromPlugs()
+		if callUpdateMethods :
+			self.__callLegacyUpdateMethods()
+			self._updateFromMetadata()
+			self._updateFromEditable()
+			self.__callUpdateFromValues()
 
 	def __updateContextConnection( self ) :
 

@@ -51,41 +51,42 @@ import GafferUI
 # such as ShuffleAttributes and ShufflePrimitiveVariables.
 class ShufflePlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug ) :
+	def __init__( self, plugs ) :
 
 		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
 
-		GafferUI.PlugValueWidget.__init__( self, self.__row, plug )
+		GafferUI.PlugValueWidget.__init__( self, self.__row, plugs )
 
-		sourceWidget = GafferUI.StringPlugValueWidget( plug["source"] )
+		sourceWidget = GafferUI.StringPlugValueWidget( { p["source"] for p in self.getPlugs() } )
 		sourceWidget.textWidget()._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
 		self.__row.append( sourceWidget, verticalAlignment = GafferUI.Label.VerticalAlignment.Top )
 
 		self.__row.append(
-			GafferUI.BoolPlugValueWidget( plug["enabled"], displayMode = GafferUI.BoolWidget.DisplayMode.Switch ),
+			GafferUI.BoolPlugValueWidget(
+				{ p["enabled"] for p in self.getPlugs() },
+				displayMode = GafferUI.BoolWidget.DisplayMode.Switch
+			),
 			verticalAlignment = GafferUI.Label.VerticalAlignment.Top,
 		)
 
-		destinationWidget = GafferUI.StringPlugValueWidget( plug["destination"] )
+		destinationWidget = GafferUI.StringPlugValueWidget( { p["destination"] for p in self.getPlugs() } )
 		destinationWidget.textWidget()._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
 		self.__row.append( destinationWidget, verticalAlignment = GafferUI.Label.VerticalAlignment.Top )
 
-		deleteSourceWidget = GafferUI.PlugValueWidget.create( plug["deleteSource"] )
+		deleteSourceWidget = GafferUI.BoolPlugValueWidget( { p["deleteSource"] for p in self.getPlugs() } )
 		deleteSourceWidget.boolWidget()._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() - 40 )
 		self.__row.append( deleteSourceWidget )
-		self.__row.append( GafferUI.PlugValueWidget.create( plug["replaceDestination"] ), expand = True )
+		self.__row.append( GafferUI.BoolPlugValueWidget( { p["replaceDestination"] for p in self.getPlugs() } ) )
 
-		self._updateFromPlug()
+	def setPlugs( self, plugs ) :
 
-	def setPlug( self, plug ) :
+		GafferUI.PlugValueWidget.setPlugs( self, plugs )
 
-		GafferUI.PlugValueWidget.setPlug( self, plug )
-
-		self.__row[0].setPlug( plug["source"] )
-		self.__row[1].setPlug( plug["enabled"] )
-		self.__row[2].setPlug( plug["destination"] )
-		self.__row[3].setPlug( plug["deleteSource"] )
-		self.__row[4].setPlug( plug["replaceDestination"] )
+		self.__row[0].setPlug( { p["source"] for p in self.getPlugs() } )
+		self.__row[1].setPlug( { p["enabled"] for p in self.getPlugs() } )
+		self.__row[2].setPlug( { p["destination"] for p in self.getPlugs() } )
+		self.__row[3].setPlug( { p["deleteSource"] for p in self.getPlugs() } )
+		self.__row[4].setPlug( { p["replaceDestination"] for p in self.getPlugs() } )
 
 	def hasLabel( self ) :
 
@@ -94,16 +95,19 @@ class ShufflePlugValueWidget( GafferUI.PlugValueWidget ) :
 	def childPlugValueWidget( self, childPlug ) :
 
 		for w in self.__row :
-			if w.getPlug().isSame( childPlug ) :
+			if childPlug in w.getPlugs() :
 				return w
 
 		return None
 
-	def _updateFromPlug( self ) :
+	@staticmethod
+	def _valuesForUpdate( plugs ) :
 
-		with self.getContext() :
-			enabled = self.getPlug()["enabled"].getValue()
+		return [ p["enabled"].getValue() for p in plugs ]
 
+	def _updateFromValues( self, values, exception ) :
+
+		enabled = all( values )
 		for i in ( 0, 2, 3, 4 ) :
 			self.__row[i].setEnabled( enabled )
 
@@ -163,7 +167,7 @@ class ShufflesPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return self.__plugLayout.plugValueWidget( childPlug )
 
-	def _updateFromPlug( self ) :
+	def _updateFromEditable( self ) :
 
 		self.__addButton.setEnabled( self._editable() )
 

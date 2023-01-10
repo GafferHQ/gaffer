@@ -60,8 +60,6 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__textWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__editingFinished ), scoped = False )
 		self.__textChangedConnection = self.__textWidget.textChangedSignal().connect( Gaffer.WeakMethod( self.__textChanged ), scoped = False )
 
-		self._updateFromPlugs()
-
 	def textWidget( self ) :
 
 		return self.__textWidget
@@ -71,15 +69,9 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 		GafferUI.PlugValueWidget.setHighlighted( self, highlighted )
 		self.textWidget().setHighlighted( highlighted )
 
-	def _updateFromPlugs( self ) :
+	def _updateFromValues( self, values, exception ) :
 
-		value = None
-		errored = False
-		with self.getContext() :
-			try :
-				value = sole( p.getValue() for p in self.getPlugs() )
-			except :
-				errored = True
+		value = sole( values )
 
 		text = value or ""
 		if text != self.__textWidget.getText() :
@@ -91,12 +83,10 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 			with Gaffer.Signals.BlockedConnection( self.__textChangedConnection ) :
 				self.__textWidget.setText( text )
 
-		self.__textWidget.setErrored( errored )
-
-		self.__continuousUpdate = all( Gaffer.Metadata.value( p, "stringPlugValueWidget:continuousUpdate" ) for p in self.getPlugs() )
+		self.__textWidget.setErrored( exception is not None )
 
 		placeHolder = ""
-		if value is None and len( self.getPlugs() ) :
+		if value is None and len( values ) :
 			placeHolder = "---"
 			# Mixed values require interaction before we commit the widget
 			# value to the plugs. This prevents mixed values being overriden
@@ -106,6 +96,13 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 			placeHolder = self.__placeholderText()
 			self.__editRequiresInteraction = False
 		self.textWidget()._qtWidget().setPlaceholderText( placeHolder )
+
+	def _updateFromMetadata( self ) :
+
+		self.__continuousUpdate = all( Gaffer.Metadata.value( p, "stringPlugValueWidget:continuousUpdate" ) for p in self.getPlugs() )
+		self._requestUpdateFromValues() # To apply placeholder metadata
+
+	def _updateFromEditable( self ) :
 
 		self.__textWidget.setEditable( self._editable() )
 

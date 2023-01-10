@@ -295,7 +295,7 @@ class _ContextQueryFooter( GafferUI.PlugValueWidget ) :
 
 			GafferUI.Spacer( imath.V2i( GafferUI.PlugWidget.labelWidth(), 1 ) )
 
-			GafferUI.MenuButton(
+			self.__menuButton = GafferUI.MenuButton(
 				image = "plus.png",
 				hasFrame = False,
 				menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) )
@@ -308,9 +308,9 @@ class _ContextQueryFooter( GafferUI.PlugValueWidget ) :
 			scoped = False
 		)
 
-	def _updateFromPlug( self ) :
+	def _updateFromEditable( self ) :
 
-		self.setEnabled( self._editable() )
+		self.__menuButton.setEnabled( self._editable() )
 
 	def __menuDefinition( self ) :
 

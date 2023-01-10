@@ -60,15 +60,6 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__numericWidget.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
 		self.__valueChangedConnection = self.__numericWidget.valueChangedSignal().connect( Gaffer.WeakMethod( self.__valueChanged ), scoped = False )
 
-		self._updateFromPlugs()
-		self.__updateWidth()
-
-	def setPlugs( self, plugs ) :
-
-		GafferUI.PlugValueWidget.setPlugs( self, plugs )
-
-		self.__updateWidth()
-
 	def numericWidget( self ) :
 
 		return self.__numericWidget
@@ -91,18 +82,11 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return result
 
-	def _updateFromPlugs( self ) :
+	def _updateFromValues( self, values, exception ) :
 
-		# Get value and error state
+		# Update value and error state.
 
-		value = None
-		errored = False
-		with self.getContext() :
-			try :
-				value = sole( p.getValue() for p in self.getPlugs() )
-			except :
-				errored = True
-
+		value = sole( values )
 		with Gaffer.Signals.BlockedConnection( self.__valueChangedConnection ) :
 
 			# Always give the widget a value, even if we have multiple, because
@@ -115,15 +99,15 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 			# But if there are multiple values or an error, clear the actual
 			# display so we don't show anything misleading.
-			if errored or value is None :
+			if exception is not None or value is None :
 				self.__numericWidget.setText( "" )
 				self.__numericWidget._qtWidget().setPlaceholderText( "---" )
 			else :
 				self.__numericWidget._qtWidget().setPlaceholderText( "" )
 
-		self.__numericWidget.setErrored( errored )
+		self.__numericWidget.setErrored( exception is not None )
 
-		# Update animation and enabled state
+		# Update animation styling
 
 		animated = any( Gaffer.Animation.isAnimated( p ) for p in self.getPlugs() )
 		## \todo Perhaps this styling should be provided by the NumericWidget itself?
@@ -132,7 +116,22 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__numericWidget._qtWidget().setProperty( "gafferAnimated", GafferUI._Variant.toVariant( bool( animated ) ) )
 			self.__numericWidget._repolish()
 
+	def _updateFromEditable( self ) :
+
 		self.__numericWidget.setEditable( self._editable( canEditAnimation = True ) )
+
+	def _updateFromMetadata( self ) :
+
+		charWidth = None
+		for plug in self.getPlugs() :
+			plugCharWidth = Gaffer.Metadata.value( plug, "numericPlugValueWidget:fixedCharacterWidth" )
+			if plugCharWidth is None and isinstance( plug, Gaffer.IntPlug ) :
+				if plug.hasMinValue() and plug.hasMaxValue() :
+					plugCharWidth = max( len( str( plug.minValue() ) ), len( str( plug.maxValue() ) ) )
+			if plugCharWidth is not None :
+				charWidth = max( charWidth, plugCharWidth ) if charWidth is not None else plugCharWidth
+
+		self.__numericWidget.setFixedCharacterWidth( charWidth )
 
 	def __keyPress( self, widget, event ) :
 
@@ -143,7 +142,7 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		# escape abandons everything
 		if event.key=="Escape" :
-			self._updateFromPlugs()
+			self._requestUpdateFromValues()
 			return True
 
 		return False
@@ -151,7 +150,7 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def __valueChanged( self, widget, reason ) :
 
 		if reason == GafferUI.NumericWidget.ValueChangedReason.InvalidEdit :
-			self._updateFromPlugs()
+			self._requestUpdateFromValues()
 			return
 
 		if self._editable( canEditAnimation = True ) :
@@ -168,7 +167,7 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ), mergeGroup=mergeGroup ) :
 
-			with Gaffer.Signals.BlockedConnection( self._plugConnections() ) :
+			with self._blockedUpdateFromValues() :
 
 				for plug in self.getPlugs() :
 
@@ -191,22 +190,9 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 		# We always need to update the UI from the plugs after trying to set them,
 		# because the plugs might clamp the value to something else. Furthermore
 		# they might not even emit `plugDirtiedSignal() if they happens to clamp to the same
-		# value as before. We block calls to `_updateFromPlugs()` while setting
+		# value as before. We block calls to `_updateFromValues()` while setting
 		# the value to avoid having to do the work twice if `plugDirtiedSignal()` _is_ emitted.
-		self._updateFromPlugs()
-
-	def __updateWidth( self ) :
-
-		charWidth = None
-		for plug in self.getPlugs() :
-			plugCharWidth = Gaffer.Metadata.value( plug, "numericPlugValueWidget:fixedCharacterWidth" )
-			if plugCharWidth is None and isinstance( plug, Gaffer.IntPlug ) :
-				if plug.hasMinValue() and plug.hasMaxValue() :
-					plugCharWidth = max( len( str( plug.minValue() ) ), len( str( plug.maxValue() ) ) )
-			if plugCharWidth is not None :
-				charWidth = max( charWidth, plugCharWidth ) if charWidth is not None else plugCharWidth
-
-		self.__numericWidget.setFixedCharacterWidth( charWidth )
+		self._requestUpdateFromValues()
 
 GafferUI.PlugValueWidget.registerType( Gaffer.FloatPlug, NumericPlugValueWidget )
 GafferUI.PlugValueWidget.registerType( Gaffer.IntPlug, NumericPlugValueWidget )

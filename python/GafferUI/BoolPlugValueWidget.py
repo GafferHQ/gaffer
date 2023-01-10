@@ -50,23 +50,12 @@ class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plugs, displayMode=GafferUI.BoolWidget.DisplayMode.CheckBox, **kw ) :
 
-		if plugs is None :
-			plugs = set()
-		elif isinstance( plugs, Gaffer.Plug ) :
-			plugs = { plugs }
-
-		self.__boolWidget = GafferUI.BoolWidget(
-			displayMode = displayMode,
-			image = sole( Gaffer.Metadata.value( p, "boolPlugValueWidget:image" ) for p in plugs )
-		)
-
+		self.__boolWidget = GafferUI.BoolWidget( displayMode = displayMode )
 		GafferUI.PlugValueWidget.__init__( self, self.__boolWidget, plugs, **kw )
 
 		self._addPopupMenu( self.__boolWidget )
 
 		self.__stateChangedConnection = self.__boolWidget.stateChangedSignal().connect( Gaffer.WeakMethod( self.__stateChanged ), scoped = False )
-
-		self._updateFromPlugs()
 
 	def boolWidget( self ) :
 
@@ -77,22 +66,15 @@ class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
 		GafferUI.PlugValueWidget.setHighlighted( self, highlighted )
 		self.__boolWidget.setHighlighted( highlighted )
 
-	def _updateFromPlugs( self ) :
+	def _updateFromValues( self, values, exception ) :
 
 		# Value and error status
 
-		errored = False
-		value = None
-		with self.getContext() :
-			try :
-				value = sole( p.getValue() for p in self.getPlugs() )
-			except :
-				errored = True
-
+		value = sole( values )
 		with Gaffer.Signals.BlockedConnection( self.__stateChangedConnection ) :
 			self.__boolWidget.setState( value if value is not None else self.__boolWidget.State.Indeterminate )
 
-		self.__boolWidget.setErrored( errored )
+		self.__boolWidget.setErrored( exception is not None )
 
 		# Animation state
 
@@ -103,7 +85,11 @@ class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__boolWidget._qtWidget().setProperty( "gafferAnimated", GafferUI._Variant.toVariant( bool( animated ) ) )
 			self.__boolWidget._repolish()
 
-		# Display mode and enabled status
+	def _updateFromMetadata( self ) :
+
+		self.__boolWidget.setImage(
+			sole( Gaffer.Metadata.value( p, "boolPlugValueWidget:image" ) for p in self.getPlugs() )
+		)
 
 		displayMode = sole( Gaffer.Metadata.value( p, "boolPlugValueWidget:displayMode" ) for p in self.getPlugs() )
 		if displayMode is not None :
@@ -113,6 +99,8 @@ class BoolPlugValueWidget( GafferUI.PlugValueWidget ) :
 				"tool" : self.__boolWidget.DisplayMode.Tool,
 			}.get( displayMode, self.__boolWidget.DisplayMode.CheckBox )
 			self.__boolWidget.setDisplayMode( displayMode )
+
+	def _updateFromEditable( self ) :
 
 		self.__boolWidget.setEnabled( self._editable( canEditAnimation = True ) )
 
