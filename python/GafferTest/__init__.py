@@ -155,6 +155,7 @@ from .RandomChoiceTest import RandomChoiceTest
 from .ContextQueryTest import ContextQueryTest
 from .TweakPlugTest import TweakPlugTest
 from .HiddenFilePathFilterTest import HiddenFilePathFilterTest
+from .ContextVariableTweaksTest import ContextVariableTweaksTest
 
 from .IECorePreviewTest import *
 

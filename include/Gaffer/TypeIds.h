@@ -148,7 +148,8 @@ enum TypeId
 	TweaksPlugTypeId = 110101,
 	V2fVectorDataPlugTypeId = 110102,
 	V3iVectorDataPlugTypeId = 110103,
-	HiddenFilePathFilterTypeId = 110104,
+	ContextVariableTweaksTypeId = 110104,
+	HiddenFilePathFilterTypeId = 110105,
 
 	LastTypeId = 110159,
 

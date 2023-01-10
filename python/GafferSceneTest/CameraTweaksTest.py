@@ -147,6 +147,8 @@ class CameraTweaksTest( GafferSceneTest.SceneTestCase ) :
 						ref = orig - value
 					elif mode == Gaffer.TweakPlug.Mode.Create:
 						ref = value
+					elif mode == Gaffer.TweakPlug.Mode.CreateIfMissing :
+						ref = orig
 					elif mode == GafferScene.TweakPlug.Mode.Min:
 						if type( value ) == imath.V2f:
 							ref = imath.V2f( min( orig[0], value[0] ), min( orig[1], value[1] ) )

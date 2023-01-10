@@ -50,7 +50,7 @@ from Qt import QtWidgets
 # or "Add"/"Subtract"/"Multiply"/"Min"/"Max" if the plug is numeric,
 # or "ListAppend"/"ListPrepend"/"ListRemove" if the plug is a list,
 # or "Remove" if the metadata "tweakPlugValueWidget:allowRemove" is set,
-# or "Create" if the metadata "tweakPlugValueWidget:allowCreate" is set.
+# or "Create" and "CreateIfMissing" if the metadata "tweakPlugValueWidget:allowCreate" is set.
 class TweakPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plugs ) :
@@ -77,7 +77,7 @@ class TweakPlugValueWidget( GafferUI.PlugValueWidget ) :
 		)
 
 		modeWidget = GafferUI.PlugValueWidget.create( self.__childPlugs( plugs, "mode" ) )
-		modeWidget._qtWidget().setFixedWidth( 80 )
+		modeWidget._qtWidget().setFixedWidth( 105 )
 		modeWidget._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetDefaultConstraint )
 		self.__row.append( modeWidget, verticalAlignment = GafferUI.Label.VerticalAlignment.Top )
 
@@ -160,7 +160,7 @@ def __validModes( plug ) :
 
 	result = []
 	if Gaffer.Metadata.value( plug.parent(), "tweakPlugValueWidget:allowCreate" ) :
-		result += [ Gaffer.TweakPlug.Mode.Create ]
+		result += [ Gaffer.TweakPlug.Mode.Create, Gaffer.TweakPlug.Mode.CreateIfMissing ]
 
 	result += [ Gaffer.TweakPlug.Mode.Replace ]
 	if hasattr( plug.parent()["value"], "hasMinValue" ) :

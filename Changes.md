@@ -1,6 +1,11 @@
 1.2.0.0ax (relative to 1.2.0.0a1)
 =========
 
+Features
+--------
+
+- ContextVariableTweaks : Added a new node for tweaking the context used to evaluate upstream nodes [^1].
+
 Improvements
 ------------
 
@@ -8,6 +13,7 @@ Improvements
   - Replaced size on portals and quad lights with width and height. Disks are width-only.
   - Added use_camera and use_caustics for lights.
   - Added normalize option for lights.
+- TweakPlug : Added a `CreateIfMissing` mode, to only create a new value if one does not currently exist [^1].
 
 Fixes
 -----
@@ -142,6 +148,11 @@ Build
 1.1.x.x (relative to 1.1.6.1)
 =======
 
+Features
+--------
+
+- ContextVariableTweaks : Added a new node for tweaking the context used to evaluate upstream nodes.
+
 Improvements
 ------------
 
@@ -149,6 +160,7 @@ Improvements
   - Replaced size on portals and quad lights with width and height. Disks are width-only.
   - Added use_camera and use_caustics for lights.
   - Added normalize option for lights.
+- TweakPlug : Added a `CreateIfMissing` mode, to only create a new value if one does not currently exist.
 
 Fixes
 -----

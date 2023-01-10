@@ -298,6 +298,7 @@ void TweakPlug::applyNumericTweak(
 					case TweakPlug::Replace :
 					case TweakPlug::Remove :
 					case TweakPlug::Create :
+					case TweakPlug::CreateIfMissing :
 						// These cases are unused - we handle them outside of numericTweak.
 						// But the compiler gets unhappy if we don't handle some cases.
 						assert( false );
@@ -398,6 +399,8 @@ const char *TweakPlug::modeToString( Gaffer::TweakPlug::Mode mode )
 			return "ListPrepend";
 		case Gaffer::TweakPlug::ListRemove :
 			return "ListRemove";
+		case Gaffer::TweakPlug::CreateIfMissing :
+			return "CreateIfMissing";
 	}
 	return  "Invalid";
 }
