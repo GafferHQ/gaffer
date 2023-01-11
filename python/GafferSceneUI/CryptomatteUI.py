@@ -54,19 +54,10 @@ def _idToManifestKey( value ) :
 
 def _findCryptomatteNode( sourcePlug ) :
 
-	def walk( plug ) :
-
-		if isinstance( plug.parent(), GafferScene.Cryptomatte ) :
-			return plug.parent()
-
-		for output in plug.outputs() :
-			r = walk( output )
-			if r is not None :
-				return r
-
-		return None
-
-	return walk( sourcePlug )
+	return Gaffer.PlugAlgo.findDestination(
+		sourcePlug,
+		lambda plug : plug.parent() if isinstance( plug.parent(), GafferScene.Cryptomatte ) else None
+	)
 
 class _CryptomatteNamesPlugValueWidget( GafferUI.VectorDataPlugValueWidget ) :
 
