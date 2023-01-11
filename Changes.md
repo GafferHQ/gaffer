@@ -16,6 +16,11 @@ Improvements
 - OSLObject : Added support for attribute substitutions using `<attr:myAttrName>` syntax in string parameters, provided that `useAttributes` is turned on.
 - UIEditor : Increased maximum size of the "Button Click Code" editor.
 
+Improvements
+------------
+
+- NodeEditor : Added "Promote Value and Switch" context menu item for promoting NameValuePlugs to Boxes.
+
 Fixes
 -----
 
