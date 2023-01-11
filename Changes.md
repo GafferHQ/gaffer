@@ -13,6 +13,8 @@ Improvements
   - Replaced `size` on portals and quad lights with separate `width` and `height` parameters, and renamed `size` parameter of disk lights to `width`.
   - Added `use_camera`, `use_caustics` and `normalize` parameters to lights.
 - TweakPlug : Added a `CreateIfMissing` mode, to only create a new value if one does not currently exist [^1].
+- OSLObject : Added support for attribute substitutions using `<attr:myAttrName>` syntax in string parameters, provided that `useAttributes` is turned on [^1].
+- UIEditor : Increased maximum size of the "Button Click Code" editor [^1].
 
 Fixes
 -----
@@ -165,6 +167,7 @@ Improvements
   - Added `use_camera`, `use_caustics` and `normalize` parameters to lights.
 - TweakPlug : Added a `CreateIfMissing` mode, to only create a new value if one does not currently exist.
 - OSLObject : Added support for attribute substitutions using `<attr:myAttrName>` syntax in string parameters, provided that `useAttributes` is turned on.
+- UIEditor : Increased maximum size of the "Button Click Code" editor.
 
 Fixes
 -----

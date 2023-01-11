@@ -1402,8 +1402,6 @@ class _PlugEditor( GafferUI.Widget ) :
 						_Label( "Connection Color" )
 						self.__metadataWidgets["connectionGadget:color"] = MetadataWidget.ColorSwatchMetadataWidget( key = "connectionGadget:color", defaultValue = imath.Color3f( 0.125 ) )
 
-			GafferUI.Spacer( imath.V2i( 0 ), parenting = { "expand" : True } )
-
 		self.__plug = None
 
 	def setPlug( self, plug ) :
