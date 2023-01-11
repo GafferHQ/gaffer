@@ -176,19 +176,10 @@ class _CommandPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __pythonCommandNode( self ) :
 
-		def walk( plug ) :
-
-			if isinstance( plug.parent(), GafferDispatch.PythonCommand ) :
-				return plug.parent()
-
-			for output in plug.outputs() :
-				r = walk( output )
-				if r is not None :
-					return r
-
-			return None
-
-		return walk( self.getPlug() )
+		return Gaffer.PlugAlgo.findDestination(
+			self.getPlug(),
+			lambda plug : plug.parent() if isinstance( plug.parent(), GafferDispatch.PythonCommand ) else None
+		)
 
 	def __pythonCommandPlugDirtied( self, plug ) :
 
