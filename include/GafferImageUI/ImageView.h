@@ -132,6 +132,7 @@ class GAFFERIMAGEUI_API ImageView : public GafferUI::View
 		const ImageGadget *imageGadget() const;
 
 		void setContext( Gaffer::ContextPtr context ) override;
+		void contextChanged( const IECore::InternedString &name ) override;
 
 		using DisplayTransformCreator = std::function<GafferImage::ImageProcessorPtr ()>;
 
@@ -184,21 +185,24 @@ class GAFFERIMAGEUI_API ImageView : public GafferUI::View
 		bool keyPress( const GafferUI::KeyEvent &event );
 		void preRender();
 
-		void insertDisplayTransform();
-		void updateDisplayTransform();
-
 		struct DisplayTransformEntry
 		{
 			GafferImage::ImageProcessorPtr displayTransform;
 			IECoreGL::Shader::SetupPtr shader;
+			bool shaderDirty = true;
+			IECore::MurmurHash shaderHash;
 			bool supportsShader;
 		};
-
-		void setWipeActive( bool active );
 
 		using DisplayTransformMap = std::map<std::string, DisplayTransformEntry>;
 		DisplayTransformMap m_displayTransforms;
 		DisplayTransformEntry *m_displayTransformAndShader;
+
+		void insertDisplayTransform();
+		void displayTransformPlugDirtied( DisplayTransformEntry *displayTransform );
+		void updateDisplayTransform();
+
+		void setWipeActive( bool active );
 
 		IECore::BoolDataPtr m_absoluteValueParameter;
 		IECore::BoolDataPtr m_clippingParameter;

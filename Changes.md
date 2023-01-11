@@ -19,11 +19,13 @@ Improvements
 Fixes
 -----
 
+- Viewer :
+  - Fixed Default display transform so that it updates correctly when the default is changed via the Preferences dialogue, and when the context changes.
+  - Fixed drawing of image pixels to the left of the display window.
 - Cycles :
   - Fixed custom AOVs not being created properly for SVM shading mode only, OSL is not supported. (#5044).
   - Fixed distant light angle is in degrees and not radians.
   - Fixed assignment of `emission` shader. Previously this was being assigned as a `cycles:light` attribute instead of `cycles:surface` (#5058).
-- ImageViewer : Fixed drawing of pixels to the left of the display window.
 - UVInspector : Fixed update delay when changing display transform.
 - Random : Fixed GIL management bug which could lead to hangs.
 
