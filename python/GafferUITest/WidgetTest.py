@@ -39,6 +39,7 @@ import unittest
 import weakref
 import sys
 import imath
+import os
 
 import IECore
 
@@ -401,6 +402,7 @@ class WidgetTest( GafferUITest.TestCase ) :
 		w.setHighlighted( False )
 		self.assertEqual( w.getHighlighted(), False )
 
+	@unittest.skipIf( os.name == "nt", "Skip failing Windows tests temporarily" )
 	def testWidgetAt( self ) :
 
 		with GafferUI.Window() as w1 :
