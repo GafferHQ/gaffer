@@ -145,14 +145,21 @@ void setParameterInternal( AtNode *node, AtString name, int parameterType, bool 
 				}
 				break;
 			case AI_TYPE_ENUM :
-				// Arnold supports setting enums with either the integer index or the string name
-
-				// First try getting an integer, but don't warn if it fails
+				// Arnold supports setting enums with either the integer index
+				// or the string name. First try getting an integer, but don't
+				// warn if it fails.
 				if( const IntData *data = runTimeCast<const IntData>( value ) )
 				{
 					AiNodeSetInt( node, name, data->readable() );
 				}
-				// Then try getting a string, with the usual warning if nothing has been found yet
+				// Maya exports enum parameters as `TfToken`, which get loaded
+				// as InternedStringData by Cortex. Try that next.
+				else if( const InternedStringData *data = runTimeCast<const InternedStringData>( value ) )
+				{
+					AiNodeSetStr( node, name, AtString( data->readable().c_str() ) );
+				}
+				// Then try getting a string, with the usual warning if nothing
+				// has been found yet.
 				else if( const StringData *data = dataCast<StringData>( name, value ) )
 				{
 					AiNodeSetStr( node, name, AtString( data->readable().c_str() ) );
