@@ -64,13 +64,7 @@ jobs:
 
     runs-on: ${{ matrix.os }}
 
-    container:
-      image: ${{ matrix.containerImage }}
-      # By default, GitHub would run as the `root` user in our container.
-      # But some of our tests assert that filesystem permissions are respected,
-      # and will fail since root doesn't respect permissions. So we use a user
-      # with lesser privilege.
-      options: --user operator
+    container: ${{ matrix.containerImage }}
 
     env:
       ARNOLD_LICENSE_ORDER: none # Don't waste time looking for a license that doesn't exist
