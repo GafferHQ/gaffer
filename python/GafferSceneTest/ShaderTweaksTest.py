@@ -433,5 +433,23 @@ class ShaderTweaksTest( GafferSceneTest.SceneTestCase ) :
 		colorTweak["enabled"].setValue( False )
 		self.assertTrue( "surface" not in tweaks["out"].attributes( "/group/plane" ) )
 
+	def testRemove( self ) :
+
+		light = GafferSceneTest.TestLight()
+		self.assertIn( "intensity", light["out"].attributes( "/light" )["light"].outputShader().parameters )
+
+		pathFilter = GafferScene.PathFilter()
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ "/light" ] ) )
+
+		tweaks = GafferScene.ShaderTweaks()
+		tweaks["in"].setInput( light["out"] )
+		tweaks["shader"].setValue( "light" )
+		tweaks["filter"].setInput( pathFilter["out"] )
+
+		tweaks["tweaks"].addChild(
+			Gaffer.TweakPlug( "intensity", 2.0, mode = Gaffer.TweakPlug.Mode.Remove )
+		)
+		self.assertNotIn( "intensity", tweaks["out"].attributes( "/light" )["light"].outputShader().parameters )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -1,6 +1,7 @@
 1.0.6.x (relative to 1.0.6.5)
 =======
 
+- ShaderTweaks : Fixed `Remove` mode.
 - FilterQuery : Fixed bug which prevented the output from updating when the input scene changed (#5066).
 - Random : Fixed GIL management bug which could lead to hangs.
 
