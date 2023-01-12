@@ -1815,6 +1815,16 @@ void ImageView::setContext( Gaffer::ContextPtr context )
 	m_imageGadgets[1]->setContext( context );
 }
 
+void ImageView::contextChanged( const IECore::InternedString &name )
+{
+	for( auto &[name, displayTransform] : m_displayTransforms )
+	{
+		// The values on the OpenColorIOTransform node can contain
+		// context variable substitutions.
+		displayTransform.shaderDirty = true;
+	}
+}
+
 void ImageView::plugSet( Gaffer::Plug *plug )
 {
 	if( plug == soloChannelPlug() )
@@ -2010,25 +2020,29 @@ void ImageView::preRender()
 	{
 		viewportGadget()->setPostProcessShader( nullptr );
 	}
-	else
+	else if( !m_displayTransformAndShader->shader || m_displayTransformAndShader->shaderDirty )
 	{
-		if( m_displayTransformAndShader->shader == nullptr )
+		if( !m_displayTransformAndShader->displayTransform )
 		{
-			if( !m_displayTransformAndShader->displayTransform )
-			{
-				m_displayTransformAndShader->shader = OpenColorIOAlgo::displayTransformToFramebufferShader( nullptr );
-			}
-			else
-			{
-				const OpenColorIOTransform *ocioTrans = runTimeCast<const OpenColorIOTransform>(
-					m_displayTransformAndShader->displayTransform.get()
-				);
+			m_displayTransformAndShader->shader = OpenColorIOAlgo::displayTransformToFramebufferShader( nullptr );
+		}
+		else
+		{
+			Context::Scope scope( getContext() );
+			const OpenColorIOTransform *ocioTrans = runTimeCast<const OpenColorIOTransform>(
+				m_displayTransformAndShader->displayTransform.get()
+			);
 
+			const IECore::MurmurHash h = ocioTrans->processorHash();
+			if( h != m_displayTransformAndShader->shaderHash )
+			{
 				m_displayTransformAndShader->shader = OpenColorIOAlgo::displayTransformToFramebufferShader(
 					ocioTrans->processor().get()
 				);
+				m_displayTransformAndShader->shaderHash = h;
 			}
 		}
+		m_displayTransformAndShader->shaderDirty = false;
 
 		m_displayTransformAndShader->shader->addUniformParameter( "absoluteValue", m_absoluteValueParameter );
 		m_displayTransformAndShader->shader->addUniformParameter( "clipping", m_clippingParameter );
@@ -2117,6 +2131,9 @@ void ImageView::insertDisplayTransform()
 		{
 			getPreprocessor()->addChild( m_displayTransformAndShader->displayTransform );
 			m_displayTransformAndShader->displayTransform->inPlug()->setInput( m_imageBeforeColorTransform );
+			m_displayTransformAndShader->displayTransform->plugDirtiedSignal().connect(
+				boost::bind( &ImageView::displayTransformPlugDirtied, this, m_displayTransformAndShader )
+			);
 		}
 	}
 
@@ -2130,6 +2147,15 @@ void ImageView::insertDisplayTransform()
 	}
 
 	updateDisplayTransform();
+}
+
+void ImageView::displayTransformPlugDirtied( DisplayTransformEntry *displayTransform )
+{
+	displayTransform->shaderDirty = true;
+	if( displayTransform == m_displayTransformAndShader )
+	{
+		viewportGadget()->renderRequestSignal()( viewportGadget() );
+	}
 }
 
 void ImageView::updateDisplayTransform()
