@@ -22,6 +22,26 @@
      id="title2005">Gaffer Icons</title>
   <defs
      id="defs4">
+    <inkscape:path-effect
+       only_selected="false"
+       apply_with_weight="true"
+       apply_no_weight="true"
+       helper_size="0"
+       steps="2"
+       weight="33.333333"
+       is_visible="true"
+       id="path-effect2297"
+       effect="bspline" />
+    <inkscape:path-effect
+       effect="bspline"
+       id="path-effect2267"
+       is_visible="true"
+       weight="33.333333"
+       steps="2"
+       helper_size="0"
+       apply_no_weight="true"
+       apply_with_weight="true"
+       only_selected="false" />
     <linearGradient
        id="exclusionRed"
        osb:paint="solid"
@@ -2903,6 +2923,14 @@
          x="197"
          y="2612"
          id="listRemoveSmall" />
+      <rect
+         id="removeSmall"
+         y="2612"
+         x="219"
+         height="14"
+         width="14"
+         style="display:inline;opacity:1;fill:none;fill-opacity:1;stroke:none;stroke-width:0.52291256;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173225;stroke-opacity:1;paint-order:markers stroke fill"
+         inkscape:label="removeSmall" />
     </g>
     <g
        id="menus"
@@ -2944,6 +2972,18 @@
          transform="matrix(0,1,1,0,0,0)"
          inkscape:label="menuBreadCrumb" />
     </g>
+    <path
+       style="fill:none;stroke:url(#foreground);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 228,2613.5 h 3.5 v 3.5"
+       id="path2283"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="ccc" />
+    <path
+       sodipodi:nodetypes="ccc"
+       inkscape:connector-curvature="0"
+       id="path2293"
+       d="m 224,2624.5 h -3.5 v -3.5"
+       style="fill:none;stroke:url(#foreground);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
   </g>
   <g
      inkscape:label="Artwork"
@@ -8574,7 +8614,7 @@
    cy="2604.3616"
    cx="261.00079"
    id="circle2269"
-   style="opacity:1;vector-effect:none;fill:#787878;fill-opacity:0.50196081;fill-rule:nonzero;stroke:#3c3c3c;stroke-width:1.00157475;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal" />
+   style="opacity:1;vector-effect:none;fill:#787878;fill-opacity:0.50196078;fill-rule:nonzero;stroke:#3c3c3c;stroke-width:1.00157475;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal" />
 <circle
    r="5.5"
    cy="2604.3616"
@@ -8582,7 +8622,7 @@
    id="circle2273"
    style="opacity:0.4;vector-effect:none;fill:url(#exclusionRed);fill-opacity:1;fill-rule:nonzero;stroke:#3c3c3c;stroke-width:1.00157475;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal" />
 <circle
-   style="opacity:0.4;vector-effect:none;fill:#787878;fill-opacity:0.50196081;fill-rule:nonzero;stroke:#3c3c3c;stroke-width:1.00157475;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"
+   style="opacity:0.4;vector-effect:none;fill:#787878;fill-opacity:0.50196078;fill-rule:nonzero;stroke:#3c3c3c;stroke-width:1.00157475;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"
    id="circle2277"
    cx="306.00079"
    cy="2604.3616"
@@ -8598,7 +8638,7 @@
    cy="2604.3616"
    cx="352.00079"
    id="circle2289"
-   style="opacity:1;vector-effect:none;fill:#787878;fill-opacity:0.50196081;fill-rule:nonzero;stroke:url(#brightColor);stroke-width:1.00157475;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal" />
+   style="opacity:1;vector-effect:none;fill:#787878;fill-opacity:0.50196078;fill-rule:nonzero;stroke:url(#brightColor);stroke-width:1.00157475;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal" />
 <circle
    style="opacity:1;vector-effect:none;fill:#ad5454;fill-opacity:0.4;fill-rule:nonzero;stroke:#779cbd;stroke-width:1.00157475;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal"
    id="circle2297"
@@ -9146,5 +9186,23 @@
            sodipodi:nodetypes="ccccccc" />
       </g>
     </g>
+    <path
+       style="fill:none;stroke:url(#foreground);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 224,2665.8622 c 0,0 -3.5,0 -3.5,0 0,0 0,3.5 0,3.5"
+       id="path2265"
+       inkscape:connector-curvature="0"
+       inkscape:path-effect="#path-effect2267"
+       inkscape:original-d="m 224,2665.8622 h -3.5 v 3.5"
+       sodipodi:nodetypes="ccc"
+       transform="translate(0,-1.7e-5)" />
+    <path
+       sodipodi:nodetypes="ccc"
+       inkscape:original-d="m 224,2665.8622 h -3.5 v 3.5"
+       inkscape:path-effect="#path-effect2297"
+       inkscape:connector-curvature="0"
+       id="path2295"
+       d="m 224,2665.8622 c 0,0 -3.5,0 -3.5,0 0,0 0,3.5 0,3.5"
+       style="fill:none;stroke:url(#foreground);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       transform="rotate(-180,226,2671.3622)" />
   </g>
 </svg>

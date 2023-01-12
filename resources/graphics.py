@@ -378,6 +378,7 @@
 				"listAppendSmall",
 				"listPrependSmall",
 				"listRemoveSmall",
+				"removeSmall",
 			]
 		},
 
