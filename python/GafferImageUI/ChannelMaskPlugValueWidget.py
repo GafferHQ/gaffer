@@ -45,37 +45,59 @@ import Gaffer
 import GafferImage
 import GafferUI
 
+from GafferUI.PlugValueWidget import sole
+
 class ChannelMaskPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	__customMetadataName = "channelMaskPlugValueWidget:custom"
 
-	def __init__( self, plug, **kw ) :
+	def __init__( self, plugs, **kw ) :
 
 		column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4 )
 
-		GafferUI.PlugValueWidget.__init__( self, column, plug, **kw )
+		GafferUI.PlugValueWidget.__init__( self, column, plugs, **kw )
 
 		with column :
 			self.__menuButton = GafferUI.MenuButton( menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ) )
-			self.__stringPlugValueWidget = GafferUI.StringPlugValueWidget( plug )
+			self.__stringPlugValueWidget = GafferUI.StringPlugValueWidget( plugs )
 
-		self._updateFromPlug()
+		self.__availableChannels = set()
+		self.__currentValue = None
 
-	def _updateFromPlug( self ) :
+	def _auxiliaryPlugs( self, plug ) :
 
-		value = None
-		if self.getPlug() is not None :
-			with self.getContext() :
-				# Leave it to other parts of the UI
-				# to display the error.
-				with IECore.IgnoredExceptions( Exception ) :
-					value = self.getPlug().getValue()
+		return list( GafferImage.ImagePlug.RecursiveInputRange( plug.node() ) )
 
-		custom = Gaffer.Metadata.value( self.getPlug(), self.__customMetadataName )
+	@staticmethod
+	def _valuesForUpdate( plugs, auxiliaryPlugs ) :
+
+		result = []
+
+		for plug, imagePlugs in zip( plugs, auxiliaryPlugs ) :
+
+			availableChannels = set()
+			for imagePlug in imagePlugs :
+				for viewName in imagePlug.viewNames() :
+					availableChannels.update( imagePlug.channelNames( viewName = viewName ) )
+
+			result.append( { "value" : plug.getValue(), "availableChannels" : availableChannels } )
+
+		return result
+
+	def _updateFromValues( self, values, exception ) :
+
+		self.__availableChannels = set().union( *[ v["availableChannels"] for v in values ] )
+		self.__currentValue = sole( v["value"] for v in values )
+
+		custom = any( Gaffer.Metadata.value( p, self.__customMetadataName ) for p in self.getPlugs() )
+		self.__stringPlugValueWidget.setVisible( custom )
+
 		if custom :
 			self.__menuButton.setText( "Custom" )
+		elif self.__currentValue is None :
+			self.__menuButton.setText( "---" )
 		else :
-			labels = _CanonicalValue( value ).matchPatterns()
+			labels = _CanonicalValue( self.__currentValue ).matchPatterns()
 			# Replace match expressions the menu can create
 			# with friendlier descriptions.
 			for i, label in enumerate( labels ) :
@@ -95,38 +117,23 @@ class ChannelMaskPlugValueWidget( GafferUI.PlugValueWidget ) :
 			else :
 				self.__menuButton.setText( "None" )
 
-		self.__stringPlugValueWidget.setVisible( custom )
+		self.__menuButton.setErrored( exception is not None )
+
+	def _updateFromMetadata( self ) :
+
+		# Because the button text is determined by a combination of
+		# values and metadata.
+		self._requestUpdateFromValues()
+
+	def _updateFromEditable( self ) :
+
 		self.__menuButton.setEnabled( self._editable() )
-
-	def __imagePlugs( self ) :
-
-		if self.getPlug() is None :
-			return []
-
-		node = self.getPlug().node()
-		p = node["in"]
-		if isinstance( p, GafferImage.ImagePlug ) :
-			return [ p ]
-		else :
-			# Array plug
-			return p.children( GafferImage.ImagePlug )
 
 	def __menuDefinition( self ) :
 
-		value = ""
-		availableChannels = []
-		with self.getContext() :
-			with IECore.IgnoredExceptions( Exception ) :
-				value = self.getPlug().getValue()
-			with IECore.IgnoredExceptions( Exception ) :
-				for imagePlug in self.__imagePlugs() :
-					views = imagePlug.viewNames()
-					for v in views:
-						availableChannels.extend( imagePlug.channelNames( viewName = v ) )
-
-		value = _CanonicalValue( value )
+		value = _CanonicalValue( self.__currentValue )
 		matchPatterns = value.matchPatterns()
-		availableChannels = _CanonicalValue( availableChannels )
+		availableChannels = _CanonicalValue( self.__availableChannels )
 
 		def menuItem( matchPattern ) :
 
@@ -189,7 +196,7 @@ class ChannelMaskPlugValueWidget( GafferUI.PlugValueWidget ) :
 			"/Custom",
 			{
 				"command" : Gaffer.WeakMethod( self.__toggleCustom ),
-				"checkBox" : bool( Gaffer.Metadata.value( self.getPlug(), self.__customMetadataName ) ),
+				"checkBox" : any( Gaffer.Metadata.value( p, self.__customMetadataName ) for p in self.getPlugs() ),
 			}
 		)
 
@@ -197,16 +204,18 @@ class ChannelMaskPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __setValue( self, unused, value ) :
 
-		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-			self.getPlug().setValue( value )
+		with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ) ) :
+			for plug in self.getPlugs() :
+				plug.setValue( value )
 
 	def __toggleCustom( self, checked ) :
 
-		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-			if not checked :
-				Gaffer.Metadata.deregisterValue( self.getPlug(), self.__customMetadataName )
-			else :
-				Gaffer.Metadata.registerValue( self.getPlug(), self.__customMetadataName, True )
+		with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ) ) :
+			for plug in self.getPlugs() :
+				if not checked :
+					Gaffer.Metadata.deregisterValue( plug, self.__customMetadataName )
+				else :
+					Gaffer.Metadata.registerValue( plug, self.__customMetadataName, True )
 
 # Because channel masks can contain arbitary match patterns,
 # there are multiple ways of expressing the same thing - for
