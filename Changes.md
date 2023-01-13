@@ -4,6 +4,7 @@
 - ShaderTweaks : Fixed `Remove` mode.
 - FilterQuery : Fixed bug which prevented the output from updating when the input scene changed (#5066).
 - Random : Fixed GIL management bug which could lead to hangs.
+- Arnold : Fixed rendering of `token` enum parameter values loaded from USD.
 
 1.0.6.5 (relative to 1.0.6.4)
 =======
