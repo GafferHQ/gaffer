@@ -34,6 +34,9 @@ Fixes
   - Hid internal shader plugs which shouldn't be exposed to the user (e.g. `surface_mix_weight`).
 - UVInspector : Fixed update delay when changing display transform.
 - Random : Fixed GIL management bug which could lead to hangs.
+- ShaderTweaks : Fixed `Remove` mode.
+- FilterQuery : Fixed bug which prevented the output from updating when the input scene changed (#5066).
+- Arnold : Fixed rendering of `token` enum parameter values loaded from USD.
 
 1.1.6.1 (relative to 1.1.6.0)
 =======
@@ -294,10 +297,13 @@ Breaking Changes
 - ImagePlug : Removed unused `viewName` argument from `viewNames()` and `viewNamesHash()` methods.
 - StandardAttributes : Removed backwards compatibility for StandardAttributes nodes saved from Gaffer `0.95.0` (May 2014) and earlier. If necessary, resave affected files using a recent Gaffer version.
 
-1.0.6.x (relative to 1.0.6.5)
+1.0.6.6 (relative to 1.0.6.5)
 =======
 
+- ShaderTweaks : Fixed `Remove` mode.
+- FilterQuery : Fixed bug which prevented the output from updating when the input scene changed (#5066).
 - Random : Fixed GIL management bug which could lead to hangs.
+- Arnold : Fixed rendering of `token` enum parameter values loaded from USD.
 
 1.0.6.5 (relative to 1.0.6.4)
 =======

@@ -1007,5 +1007,23 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 		self.assertEqual( texture.name, "image" )
 		self.assertEqual( texture.parameters["filename"].value, "myFile.tx" )
 
+	def testInternedStringsForEnumParameters( self ) :
+
+		network = IECoreScene.ShaderNetwork(
+			shaders = {
+				"noiseHandle" : IECoreScene.Shader(
+					"cell_noise", "ai:surface",
+					{ "pattern" : IECore.InternedStringData( "worley1" ) }
+				),
+			},
+			output = "noiseHandle"
+		)
+
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+			nodes = IECoreArnold.ShaderNetworkAlgo.convert( network, universe, "test" )
+			self.assertEqual( len( nodes ), 1 )
+			self.assertEqual( arnold.AiNodeGetStr( nodes[0], "pattern" ), "worley1" )
+
 if __name__ == "__main__":
 	unittest.main()

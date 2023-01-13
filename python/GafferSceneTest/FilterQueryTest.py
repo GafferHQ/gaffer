@@ -167,5 +167,26 @@ class FilterQueryTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( query["ancestorMatch"].getValue(), False )
 		self.assertEqual( query["closestAncestor"].getValue(), "" )
 
+	def testChangingSet( self ) :
+
+		sphere = GafferScene.Sphere()
+		sphere["sets"].setValue( "setA" )
+
+		setFilter = GafferScene.SetFilter()
+		setFilter["setExpression"].setValue( "setA" )
+
+		query = GafferScene.FilterQuery()
+		query["scene"].setInput( sphere["out"] )
+		query["filter"].setInput( setFilter["out"] )
+		query["location"].setValue( "/sphere" )
+
+		self.assertEqual( query["exactMatch"].getValue(), True )
+		self.assertEqual( query["closestAncestor"].getValue(), "/sphere" )
+
+		sphere["sets"].setValue( "setB" )
+
+		self.assertEqual( query["exactMatch"].getValue(), False )
+		self.assertEqual( query["closestAncestor"].getValue(), "" )
+
 if __name__ == "__main__":
 	unittest.main()
