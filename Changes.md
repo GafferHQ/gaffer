@@ -1,4 +1,4 @@
-1.2.0.0ax (relative to 1.2.0.0a1)
+1.2.0.0a2 (relative to 1.2.0.0a1)
 =========
 
 Features
