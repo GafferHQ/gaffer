@@ -66,7 +66,6 @@ class PresetsPlugValueWidget( GafferUI.PlugValueWidget ) :
 		cont.addChild( self.__customValuePlugWidget )
 
 		self._addPopupMenu( self.__menuButton )
-		self._updateFromPlugs()
 
 	def menu( self ) :
 
@@ -76,27 +75,22 @@ class PresetsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return self.__menuButton
 
-	def _updateFromPlugs( self ) :
+	@staticmethod
+	def _valuesForUpdate( plugs ) :
 
-		self.__menuButton.setEnabled( self._editable() )
-		if not self.getPlugs() :
-			self.__menuButton.setText( "" )
-			return
+		return [ Gaffer.NodeAlgo.currentPreset( p ) or "" for p in plugs ]
 
-		errored = False
-		with self.getContext() :
-			try:
-				currentPreset = sole( ( Gaffer.NodeAlgo.currentPreset( p ) or "" for p in self.getPlugs() ) )
-			except:
-				errored = True
+	def _updateFromValues( self, values, exception ) :
 
-			allowCustom = sole( ( Gaffer.Metadata.value( p, "presetsPlugValueWidget:allowCustom" ) for p in self.getPlugs() ) )
-			isCustom = any( Gaffer.Metadata.value( p, "presetsPlugValueWidget:isCustom" ) for p in self.getPlugs() )
-			isCustom = allowCustom and ( isCustom or currentPreset == "" )
+		currentPreset = sole( values )
+
+		allowCustom = sole( ( Gaffer.Metadata.value( p, "presetsPlugValueWidget:allowCustom" ) for p in self.getPlugs() ) )
+		isCustom = any( Gaffer.Metadata.value( p, "presetsPlugValueWidget:isCustom" ) for p in self.getPlugs() )
+		isCustom = allowCustom and ( isCustom or currentPreset == "" )
 
 		self.__customValuePlugWidget.setVisible( isCustom )
 
-		if errored:
+		if exception is not None :
 			self.__menuButton.setText( "" )
 		elif isCustom :
 			self.__menuButton.setText( "Custom" )
@@ -107,8 +101,15 @@ class PresetsPlugValueWidget( GafferUI.PlugValueWidget ) :
 		else :
 			self.__menuButton.setText( "Invalid" )
 
-		self.__menuButton.setErrored( errored )
+		self.__menuButton.setErrored( exception is not None )
 
+	def _updateFromMetadata( self ) :
+
+		self._requestUpdateFromValues()
+
+	def _updateFromEditable( self ) :
+
+		self.__menuButton.setEnabled( self._editable() )
 
 	def __menuDefinition( self ) :
 

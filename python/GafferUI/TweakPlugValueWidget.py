@@ -83,8 +83,6 @@ class TweakPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__row.append( valueWidget, expand = True )
 
-		self._updateFromPlugs()
-
 	def setPlugs( self, plugs ) :
 
 		GafferUI.PlugValueWidget.setPlugs( self, plugs )
@@ -114,11 +112,17 @@ class TweakPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return self.__row[0].getVisible()
 
-	def _updateFromPlugs( self ) :
+	@staticmethod
+	def _valuesForUpdate( plugs ) :
 
-		with self.getContext() :
-			enabled = all( p["enabled"].getValue() for p in self.getPlugs() )
+		return [ p["enabled"].getValue() for p in plugs ]
 
+	def _updateFromValues( self, values, exception ) :
+
+		# No need to handle exception, as our embedded BoolPlugValueWidget will
+		# display error status itself.
+
+		enabled = all( values )
 		for i in ( 0, 2, 3 ) :
 			self.__row[i].setEnabled( enabled )
 

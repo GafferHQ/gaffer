@@ -67,8 +67,6 @@ class ConnectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self._addPopupMenu( self.__frame )
 
-		self._updateFromPlug()
-
 	def setHighlighted( self, highlighted ) :
 
 		GafferUI.PlugValueWidget.setHighlighted( self, highlighted )
@@ -93,7 +91,16 @@ class ConnectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return result
 
-	def _updateFromPlug( self ) :
+	@staticmethod
+	def _valuesForUpdate( plugs ) :
+
+		# Avoid unnecessary overhead of computing values, since
+		# we don't use them in `_updateFromValues()`.
+		return [ None for p in plugs ]
+
+	# We don't actually display values, but this is also called whenever the
+	# input changes, which is when we need to update.
+	def _updateFromValues( self, values, exception ) :
 
 		input = self.getPlug().getInput()
 		self.__inputLabel.setGraphComponent( input )

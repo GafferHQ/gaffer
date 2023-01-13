@@ -43,6 +43,8 @@ import IECoreScene
 import Gaffer
 import GafferUI
 
+from GafferUI.PlugValueWidget import sole
+
 import GafferScene
 import GafferSceneUI
 
@@ -188,7 +190,7 @@ class ChildPlugValueWidget( GafferUI.PlugValueWidget ) :
 				collapseButton.clickedSignal().connect( Gaffer.WeakMethod( self.__collapseButtonClicked ), scoped = False )
 
 				GafferUI.PlugValueWidget.create( childPlug["active"] )
-				self.__label = GafferUI.Label( self.__namePlug().getValue() )
+				self.__label = GafferUI.Label( childPlug["name"].getValue() )
 
 				GafferUI.Spacer( imath.V2i( 1 ), maximumSize = imath.V2i( 100000, 1 ), parenting = { "expand" : True } )
 
@@ -206,31 +208,33 @@ class ChildPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return True
 
-	def _updateFromPlug( self ) :
+	@staticmethod
+	def _valuesForUpdate( plugs ) :
 
-		with self.getContext() :
+		return [
+			{
+				"enabled" : plug["active"].getValue(),
+				"name" : plug["name"].getValue(),
+			}
+			for plug in plugs
+		]
 
-			enabled = self.getPlug()["active"].getValue()
+	def _updateFromValues( self, values, exception ) :
+
+		if values :
+			enabled = all( v["enabled"] for v in values )
 			self.__label.setEnabled( enabled )
 			self.__detailsColumn.setEnabled( enabled )
+			self.__label.setText( sole( v["name"] for v in values ) )
 
-			self.__label.setText( self.__namePlug().getValue() )
+	def _updateFromEditable( self ) :
 
-	def __namePlug( self ) :
-
-		plug = self.getPlug()
-		# backwards compatibility with old plug layout
-		return plug.getChild( "label" ) or plug.getChild( "name" )
-
-	def __fileNamePlug( self ) :
-
-		plug = self.getPlug()
-		# backwards compatibility with old plug layout
-		return plug.getChild( "fileName" ) or plug.getChild( "name" )
+		self.__deleteButton.setEnabled( self._editable() )
 
 	def __enter( self, widget ) :
 
-		self.__deleteButton.setVisible( True )
+		if self._editable() :
+			self.__deleteButton.setVisible( True )
 
 	def __leave( self, widget ) :
 
@@ -244,8 +248,8 @@ class ChildPlugValueWidget( GafferUI.PlugValueWidget ) :
 			# Build details section the first time it is shown,
 			# to avoid excessive overhead in the initial UI build.
 			with self.__detailsColumn :
-				GafferUI.PlugWidget( self.__namePlug() )
-				GafferUI.PlugWidget( self.__fileNamePlug() )
+				GafferUI.PlugWidget( self.getPlug()["name"] )
+				GafferUI.PlugWidget( self.getPlug()["fileName"] )
 				GafferUI.PlugWidget( self.getPlug()["type"] )
 				GafferUI.PlugWidget( self.getPlug()["data"] )
 				GafferUI.CompoundDataPlugValueWidget( self.getPlug()["parameters"] )

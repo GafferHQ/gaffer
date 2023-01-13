@@ -40,6 +40,8 @@ import IECore
 import Gaffer
 import GafferUI
 
+from .PlugValueWidget import sole
+
 import os
 
 ## Supported plug metadata - used to provide arguments to a
@@ -74,8 +76,6 @@ class PathPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__row.append( button )
 
 		pathWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__setPlugValue ), scoped = False )
-
-		self._updateFromPlug()
 
 	def path( self ) :
 
@@ -141,11 +141,12 @@ class PathPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return GafferUI.PathChooserDialogue( pathCopy, **pathChooserDialogueKeywords )
 
-	def _updateFromPlug( self ) :
+	def _updateFromValues( self, values, exception ) :
 
-		with self.getContext() :
-			with IECore.IgnoredExceptions( ValueError ) :
-				self.__path.setFromString( self.getPlug().getValue() )
+		self.pathWidget().setErrored( exception is not None )
+		self.__path.setFromString( sole( values ) or "" )
+
+	def _updateFromEditable( self ) :
 
 		self.pathWidget().setEditable( self._editable() )
 		self.__row[1].setEnabled( self._editable() ) # button

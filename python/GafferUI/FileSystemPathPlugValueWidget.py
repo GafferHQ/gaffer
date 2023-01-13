@@ -57,8 +57,6 @@ class FileSystemPathPlugValueWidget( GafferUI.PathPlugValueWidget ) :
 			**kw
 		)
 
-		self._updateFromPlug()
-
 	def getToolTip( self ) :
 
 		result = GafferUI.PathPlugValueWidget.getToolTip( self )
@@ -83,9 +81,9 @@ class FileSystemPathPlugValueWidget( GafferUI.PathPlugValueWidget ) :
 
 		return dialogue
 
-	def _updateFromPlug( self ) :
+	def _updateFromMetadata( self ) :
 
-		GafferUI.PathPlugValueWidget._updateFromPlug( self )
+		GafferUI.PathPlugValueWidget._updateFromMetadata( self )
 
 		includeSequences = self.__metadataValue( "includeSequences" ) or False
 

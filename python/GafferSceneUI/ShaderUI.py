@@ -87,6 +87,8 @@ Gaffer.Metadata.registerNode(
 			method to load a shader.
 			""",
 
+			"label", "Shader",
+			"readOnly", True,
 			"layout:section", "",
 			"nodule:type", "",
 			"plugValueWidget:type", "GafferSceneUI.ShaderUI._ShaderNamePlugValueWidget",
@@ -182,39 +184,36 @@ Gaffer.Metadata.registerNode(
 
 class _ShaderNamePlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, **kw ) :
+	def __init__( self, plugs, **kw ) :
 
 		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
 
-		GafferUI.PlugValueWidget.__init__( self, row, plug, **kw )
+		GafferUI.PlugValueWidget.__init__( self, row, plugs, **kw )
 
 		with row :
 
-			self.__label = GafferUI.Label( "" )
-			self.__label._qtWidget().setProperty( "gafferItemName", True )
+			self.__stringPlugValueWidget = GafferUI.StringPlugValueWidget( plugs )
+			self.__reloadButton = GafferUI.Button( image = "refresh.png", hasFrame = False, toolTip = "Click to reload shader" )
+			self.__reloadButton.clickedSignal().connect( Gaffer.WeakMethod( self.__reloadButtonClicked ), scoped = False )
 
-			GafferUI.Spacer( imath.V2i( 1 ), parenting = { "expand" : True } )
+	def setPlugs( self, plugs ) :
 
-			self.__button = GafferUI.Button( "Reload" )
-			self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ), scoped = False )
+		GafferUI.PlugValueWidget.setPlugs( self, plugs )
+		self.__stringPlugValueWidget.setPlugs( plugs )
 
-		self._updateFromPlug()
+	def _updateFromEditable( self ) :
 
-	def hasLabel( self ) :
+		self.__reloadButton.setEnabled(
+			# The plug will always be read-only because we don't want the user to edit it.
+			# But we do want to allow reloading, as long as the parent node isn't read-only.
+			not any( Gaffer.MetadataAlgo.readOnly( p.node() ) for p in self.getPlugs() )
+		)
 
-		return True
+	def __reloadButtonClicked( self, button ) :
 
-	def _updateFromPlug( self ) :
-
-		with self.getContext() :
-			shaderName = self.getPlug().getValue()
-			self.__label.setText( "Shader: " + shaderName )
-			self.__button.setEnabled( not Gaffer.MetadataAlgo.readOnly( self.getPlug() ) )
-
-	def __buttonClicked( self, button ) :
-		node = self.getPlug().node()
-		with Gaffer.UndoScope( node.ancestor( Gaffer.ScriptNode ) ) :
-			node.reloadShader()
+		with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ) ) :
+			for plug in self.getPlugs() :
+				plug.node().reloadShader()
 
 ##########################################################################
 # NodeFinderDialogue mode

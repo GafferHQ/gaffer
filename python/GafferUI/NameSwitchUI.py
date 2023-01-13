@@ -41,6 +41,8 @@ import IECore
 import Gaffer
 import GafferUI
 
+from GafferUI.PlugValueWidget import sole
+
 Gaffer.Metadata.registerNode(
 
 	Gaffer.NameSwitch,
@@ -182,7 +184,7 @@ class _InPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return self.__plugLayout.plugValueWidget( childPlug )
 
-	def _updateFromPlug( self ) :
+	def _updateFromEditable( self ) :
 
 		self.__addButton.setEnabled( self._editable() )
 
@@ -363,7 +365,6 @@ class _RowPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__dragDivider = GafferUI.Divider()
 
 		self.__updateWidgetVisibility()
-		self._updateFromPlug()
 
 	def setPlug( self, plug ) :
 
@@ -387,19 +388,20 @@ class _RowPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return None
 
-	def _updateFromPlug( self ) :
+	@staticmethod
+	def _valuesForUpdate( plugs ) :
 
-		enabled = False
-		with self.getContext() :
-			with IECore.IgnoredExceptions( Gaffer.ProcessException ) :
-				enabled = self.getPlug()["enabled"].getValue()
+		return [ p["enabled"].getValue() for p in plugs ]
 
+	def _updateFromValues( self, values, exception ) :
+
+		enabled = sole( values ) or False
 		self.__plugValueWidgets[0].setEnabled( enabled )
 		self.__plugValueWidgets[2].setEnabled( enabled )
 
-		self.__dragHandle.setEnabled(
-			not Gaffer.MetadataAlgo.readOnly( self.getPlug() )
-		)
+	def _updateFromEditable( self ) :
+
+		self.__dragHandle.setEnabled( self._editable() )
 
 	def __updateWidgetVisibility( self ) :
 

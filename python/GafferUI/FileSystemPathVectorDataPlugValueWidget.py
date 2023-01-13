@@ -47,9 +47,9 @@ class FileSystemPathVectorDataPlugValueWidget( GafferUI.PathVectorDataPlugValueW
 
 		GafferUI.PathVectorDataPlugValueWidget.__init__( self, plug, Gaffer.FileSystemPath(), **kw )
 
-	def _updateFromPlug( self ) :
+	def _updateFromMetadata( self ) :
 
-		GafferUI.PathVectorDataPlugValueWidget._updateFromPlug( self )
+		GafferUI.PathVectorDataPlugValueWidget._updateFromMetadata( self )
 
 		self.path().setFilter(
 			Gaffer.FileSystemPath.createStandardFilter(

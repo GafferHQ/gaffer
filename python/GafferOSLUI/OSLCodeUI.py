@@ -176,7 +176,7 @@ class _ParametersFooter( GafferUI.PlugValueWidget ) :
 
 				GafferUI.Spacer( imath.V2i( GafferUI.PlugWidget.labelWidth(), 1 ) )
 
-				menuButton = GafferUI.MenuButton(
+				self.__menuButton = GafferUI.MenuButton(
 					image = "plus.png",
 					hasFrame = False,
 					menu = GafferUI.Menu(
@@ -185,13 +185,12 @@ class _ParametersFooter( GafferUI.PlugValueWidget ) :
 					),
 					toolTip = "Add " + ( "Input" if plug.direction() == plug.Direction.In else "Output" ),
 				)
-				menuButton.setEnabled( not Gaffer.MetadataAlgo.readOnly( plug ) )
 
 				GafferUI.Spacer( imath.V2i( 1 ), imath.V2i( 999999, 1 ), parenting = { "expand" : True } )
 
-	def _updateFromPlug( self ) :
+	def _updateFromEditable( self ) :
 
-		self.setEnabled( self._editable() )
+		self.__menuButton.setEnabled( self._editable() )
 
 	def __menuDefinition( self ) :
 
@@ -273,25 +272,18 @@ class _CodePlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__codeWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__setPlugValue ), scoped = False )
 		self.__codeWidget.dropTextSignal().connect( Gaffer.WeakMethod( self.__dropText ), scoped = False )
 
-		self._updateFromPlug()
-
 	def codeWidget( self ) :
 
 		return self.__codeWidget
 
-	def _updateFromPlug( self ) :
+	def _updateFromValues( self, values, exception ) :
 
-		if self.getPlug() is not None :
-			with self.getContext() :
-				try :
-					value = self.getPlug().getValue()
-				except :
-					value = None
+		if len( values ) :
+			self.__codeWidget.setText( values[0] )
 
-			if value is not None :
-				self.__codeWidget.setText( value )
+		self.__codeWidget.setErrored( exception is not None )
 
-			self.__codeWidget.setErrored( value is None )
+	def _updateFromEditable( self ) :
 
 		self.__codeWidget.setEditable( self._editable() )
 
