@@ -595,7 +595,7 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 				"Disable Edit",
 				{
 					"command" : functools.partial( self.__disableEdits, pathListing ),
-					"active" : lambda : len( self.__disablableInspectionTweaks( pathListing ) ) > 0,
+					"active" : len( self.__disablableInspectionTweaks( pathListing ) ) > 0,
 					"shortCut" : "D",
 				}
 			)
@@ -603,7 +603,7 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 				"Remove Attribute",
 				{
 					"command" : functools.partial( self.__removeAttributes, pathListing ),
-					"active" : lambda : len( self.__removableAttributeInspections( pathListing ) ) > 0,
+					"active" : len( self.__removableAttributeInspections( pathListing ) ) > 0,
 					"shortCut" : "Backspace, Delete",
 				}
 			)
