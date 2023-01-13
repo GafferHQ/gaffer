@@ -120,6 +120,7 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"layout:section", "Light Linking",
+			"nameValuePlugPlugValueWidget:ignoreNamePlug", True,
 		],
 
 		"visualiserAttributes" : [

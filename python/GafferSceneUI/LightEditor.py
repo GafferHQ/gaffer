@@ -106,7 +106,13 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 
 			self.__pathListing = GafferUI.PathListingWidget(
 				Gaffer.DictPath( {}, "/" ), # Temp till we make a ScenePath
-				columns = [ _GafferSceneUI._LightEditorLocationNameColumn() ],
+				columns = [
+					_GafferSceneUI._LightEditorLocationNameColumn(),
+					_GafferSceneUI._LightEditorMuteColumn(
+						self.__settingsNode["in"],
+						self.__settingsNode["editScope"]
+					),
+				],
 				selectionMode = GafferUI.PathListingWidget.SelectionMode.Cells,
 				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
 				horizontalScrollMode = GafferUI.ScrollMode.Automatic
@@ -241,7 +247,8 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 				sectionColumns += [ c( self.__settingsNode["in"], self.__settingsNode["editScope"] ) for c in section.values() ]
 
 		nameColumn = self.__pathListing.getColumns()[0]
-		self.__pathListing.setColumns( [ nameColumn ] + sectionColumns )
+		muteColumn = self.__pathListing.getColumns()[1]
+		self.__pathListing.setColumns( [ nameColumn, muteColumn ] + sectionColumns )
 
 	def __settingsPlugSet( self, plug ) :
 
@@ -302,48 +309,69 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 
 	def __keyPress( self, pathListing, event ) :
 
-		if event.key == "Return" or event.key == "Enter" :
-			self.__editSelectedCells( pathListing )
+		if event.modifiers == event.Modifiers.None_ :
 
-			return True
+			if event.key == "Return" or event.key == "Enter" :
+				self.__editSelectedCells( pathListing )
+				return True
+
+			if event.key == "D" and len( self.__disablableInspectionTweaks( pathListing ) ) > 0 :
+				self.__disableEdits( pathListing )
+				return True
+
+			if (
+				( event.key == "Backspace" or event.key == "Delete" ) and
+				len( self.__removableAttributeInspections( pathListing ) ) > 0
+			) :
+				self.__removeAttributes( pathListing )
+				return True
 
 		return False
 
-	def __editSelectedCells( self, pathListing ) :
+	def __editSelectedCells( self, pathListing, quickBoolean = True ) :
 
-		selection = pathListing.getSelection()
-
-		columns = pathListing.getColumns()
-
+		# A dictionary of the form :
+		# { inspector : { path1 : inspection, path2 : inspection, ... }, ... }
+		inspectors = {}
 		inspections = []
 
 		with Gaffer.Context( self.getContext() ) as context :
-			for i in range( 0, len( columns ) ) :
-				column = columns[ i ]
+			for selection, column in zip( pathListing.getSelection(), pathListing.getColumns() ) :
 				if not isinstance( column, _GafferSceneUI._LightEditorInspectorColumn ) :
 					continue
-				for path in selection[i].paths() :
-					context["scene:path"] = GafferScene.ScenePlug.stringToPath( path )
+				for pathString in selection.paths() :
+					path = GafferScene.ScenePlug.stringToPath( pathString )
+					context["scene:path"] = path
 					inspection = column.inspector().inspect()
 
 					if inspection is not None :
+						inspectors.setdefault( column.inspector(), {} )[path] = inspection
 						inspections.append( inspection )
 
-		if len( inspections ) == 0 :
+		if len( inspectors ) == 0 :
+			with GafferUI.PopupWindow() as self.__popup :
+				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+					GafferUI.Image( "warningSmall.png" )
+					GafferUI.Label( "<h4>The selected cells cannot be edited in the current Edit Scope</h4>" )
+
+			self.__popup.popup()
+
 			return
 
 		nonEditable = [ i for i in inspections if not i.editable() ]
 
 		if len( nonEditable ) == 0 :
-			edits = [ i.acquireEdit() for i in inspections ]
-			warnings = "\n".join( [ i.editWarning() for i in inspections if i.editWarning() != "" ] )
+			if not quickBoolean or not self.__toggleBoolean( inspectors, inspections ) :
+				edits = [ i.acquireEdit() for i in inspections ]
+				warnings = "\n".join( [ i.editWarning() for i in inspections if i.editWarning() != "" ] )
+				# The plugs are either not boolean, boolean with mixed values,
+				# or attributes that don't exist and are not boolean. Show the popup.
+				self.__popup = GafferUI.PlugPopup( edits, warning = warnings )
 
-			self.__popup = GafferUI.PlugPopup( edits, warning = warnings )
+				if isinstance( self.__popup.plugValueWidget(), GafferUI.TweakPlugValueWidget ) :
+					self.__popup.plugValueWidget().setNameVisible( False )
 
-			if isinstance( self.__popup.plugValueWidget(), GafferUI.TweakPlugValueWidget ) :
-				self.__popup.plugValueWidget().setNameVisible( False )
-
-			self.__popup.popup()
+				self.__popup.popup()
 
 		else :
 
@@ -353,6 +381,127 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 					GafferUI.Label( "<h4>{}</h4>".format( nonEditable[0].nonEditableReason() ) )
 
 			self.__popup.popup()
+
+	def __toggleBoolean( self, inspectors, inspections ) :
+
+		plugs = [ i.acquireEdit() for i in inspections ]
+		# Make sure all the plugs are either a BoolPlug or contain a BoolPlug
+		if not all (
+			(
+				isinstance( p, ( Gaffer.TweakPlug, Gaffer.NameValuePlug ) ) and
+				isinstance( p["value"], Gaffer.BoolPlug )
+			) or isinstance( p, Gaffer.BoolPlug ) for p in plugs
+		) :
+			return False
+
+		currentValues = []
+
+		# Use a single new value for all plugs.
+		# First we need to find out what the new value would be for each plug in isolation.
+		for inspector, pathInspections in inspectors.items() :
+			for path, inspection in pathInspections.items() :
+				currentValue = inspection.value().value if inspection.value() is not None else None
+
+				if isinstance( inspector, GafferSceneUI.Private.AttributeInspector ) :
+					fullAttributes = self.__settingsNode["in"].fullAttributes( path[:-1] )
+					parentValueData = fullAttributes.get( inspector.name(), None )
+					parentValue = parentValueData.value if parentValueData is not None else False
+
+					currentValues.append( currentValue if currentValue is not None else parentValue )
+				else :
+					currentValues.append( currentValue )
+
+		# Now set the value for all plugs, defaulting to `True` if they are not
+		# currently all the same.
+		newValue = not sole( currentValues )
+
+		with Gaffer.UndoScope( self.scriptNode() ) :
+			for inspector, pathInspections in inspectors.items() :
+				for path, inspection in pathInspections.items() :
+					plug = inspection.acquireEdit()
+
+					if isinstance( plug, ( Gaffer.TweakPlug, Gaffer.NameValuePlug ) ) :
+						plug["value"].setValue( newValue )
+						plug["enabled"].setValue( True )
+						if isinstance( plug, Gaffer.TweakPlug ) :
+							plug["mode"].setValue( Gaffer.TweakPlug.Mode.Create )
+					else :
+						plug.setValue( newValue )
+
+		return True
+
+	def __disablableInspectionTweaks( self, pathListing ) :
+
+		tweaks = []
+
+		with Gaffer.Context( self.getContext() ) as context :
+			for columnSelection, column in zip( pathListing.getSelection(), pathListing.getColumns() ) :
+				if not isinstance( column, _GafferSceneUI._LightEditorInspectorColumn ) :
+					continue
+				for path in columnSelection.paths() :
+					context["scene:path"] = GafferScene.ScenePlug.stringToPath( path )
+					inspection = column.inspector().inspect()
+					if inspection is not None and inspection.editable() :
+						source = inspection.source()
+						editScope = self.__settingsNode["editScope"].getInput()
+						if (
+							isinstance( source, ( Gaffer.TweakPlug, Gaffer.NameValuePlug ) ) and
+							( editScope is None or editScope.node().isAncestorOf( source ) ) and
+							source["enabled"].getValue()
+						) :
+							tweaks.append( source )
+						else :
+							return []
+					else :
+						return []
+
+		return tweaks
+
+	def __disableEdits( self, pathListing ) :
+
+		tweaks = self.__disablableInspectionTweaks( pathListing )
+
+		with Gaffer.UndoScope( self.scriptNode() ) :
+			for tweak in tweaks :
+				tweak["enabled"].setValue( False )
+
+	def __removableAttributeInspections( self, pathListing ) :
+
+		inspections = []
+
+		with Gaffer.Context( self.getContext() ) as context :
+			for columnSelection, column in zip( pathListing.getSelection(), pathListing.getColumns() ) :
+				if not isinstance( column, _GafferSceneUI._LightEditorInspectorColumn ) :
+					continue
+				elif not columnSelection.isEmpty() and type( column.inspector() ) != GafferSceneUI.Private.AttributeInspector :
+					return []
+				for path in columnSelection.paths() :
+					context["scene:path"] = GafferScene.ScenePlug.stringToPath( path )
+					inspection = column.inspector().inspect()
+					if inspection is not None and inspection.editable() :
+						source = inspection.source()
+						editScope = self.__settingsNode["editScope"].getInput()
+						if (
+							( isinstance( source, Gaffer.TweakPlug ) and source["mode"].getValue() != Gaffer.TweakPlug.Mode.Remove ) or
+							editScope is not None
+						) :
+							inspections.append( inspection )
+						else :
+							return []
+					else :
+						return []
+
+		return inspections
+
+	def __removeAttributes( self, pathListing ) :
+
+		inspections = self.__removableAttributeInspections( pathListing )
+
+		with Gaffer.UndoScope( self.scriptNode() ) :
+			for inspection in inspections :
+				tweak = inspection.acquireEdit()
+				tweak["enabled"].setValue( True )
+				tweak["mode"].setValue( Gaffer.TweakPlug.Mode.Remove )
 
 	def __buttonPress( self, pathListing, event ) :
 
@@ -434,6 +583,28 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 				"Show History...",
 				{
 					"command" : Gaffer.WeakMethod( self.__showHistory )
+				}
+			)
+			menuDefinition.append(
+				"Edit...",
+				{
+					"command" : functools.partial( self.__editSelectedCells, pathListing, False )
+				}
+			)
+			menuDefinition.append(
+				"Disable Edit",
+				{
+					"command" : functools.partial( self.__disableEdits, pathListing ),
+					"active" : len( self.__disablableInspectionTweaks( pathListing ) ) > 0,
+					"shortCut" : "D",
+				}
+			)
+			menuDefinition.append(
+				"Remove Attribute",
+				{
+					"command" : functools.partial( self.__removeAttributes, pathListing ),
+					"active" : len( self.__removableAttributeInspections( pathListing ) ) > 0,
+					"shortCut" : "Backspace, Delete",
 				}
 			)
 

@@ -43,11 +43,14 @@
 #include "GafferScene/ScenePath.h"
 #include "GafferScene/ScenePlug.h"
 
+#include "GafferSceneUI/Private/AttributeInspector.h"
+
 #include "GafferUI/PathColumn.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/ScriptNode.h"
+#include "Gaffer/TweakPlug.h"
 
 #include "IECoreScene/ShaderNetwork.h"
 
@@ -195,9 +198,20 @@ class InspectorColumn : public PathColumn
 			/// return a colour for `Role::Value`?
 			result.icon = runTimeCast<const Color3fData>( inspectorResult->value() );
 			result.background = g_sourceTypeColors.at( (int)inspectorResult->sourceType() );
+			std::string toolTip;
 			if( auto source = inspectorResult->source() )
 			{
-				result.toolTip = new StringData( "Source : " + source->relativeName( source->ancestor<ScriptNode>() ) );
+				toolTip = "Source : " + source->relativeName( source->ancestor<ScriptNode>() );
+			}
+
+			if( runTimeCast<const IECore::BoolData>( result.value ) )
+			{
+				toolTip += !toolTip.empty() ? "\n\nDouble-click to toggle" : "Double-click to toggle";
+			}
+
+			if( !toolTip.empty() )
+			{
+				result.toolTip = new StringData( toolTip );
 			}
 
 			return result;
@@ -232,6 +246,115 @@ class InspectorColumn : public PathColumn
 
 };
 
+class MuteColumn : public InspectorColumn
+{
+
+	public :
+		IE_CORE_DECLAREMEMBERPTR( MuteColumn )
+
+		MuteColumn( const GafferScene::ScenePlugPtr &scene, const Gaffer::PlugPtr &editScope )
+			: InspectorColumn( new GafferSceneUI::Private::AttributeInspector( scene, editScope, "light:mute" ), "Mute" )
+		{
+
+		}
+
+		CellData cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const override
+		{
+			CellData result = InspectorColumn::cellData( path, canceller );
+
+			auto scenePath = runTimeCast<const ScenePath>( &path );
+			if( !scenePath )
+			{
+				return result;
+			}
+
+			if( auto value = runTimeCast<const BoolData>( result.value ) )
+			{
+				result.icon = value->readable() ? m_muteIconData : m_unMuteIconData;
+			}
+			else
+			{
+				ScenePlug::PathScope pathScope( scenePath->getContext() );
+				ScenePlug::ScenePath currentPath( scenePath->names() );
+				while( !currentPath.empty() )
+				{
+					pathScope.setPath( &currentPath );
+					auto a = scenePath->getScene()->attributesPlug()->getValue();
+					if( auto fullValue = a->member<BoolData>( "light:mute" ) )
+					{
+						result.icon = fullValue->readable() ? m_muteFadedIconData : m_unMuteFadedIconData;
+						result.toolTip = new StringData(
+							"Inherited from : " + ScenePlug::pathToString( currentPath ) + "\n\n"
+							"Double-click to toggle"
+						);
+						break;
+					}
+					currentPath.pop_back();
+				}
+				if( !result.icon )
+				{
+					// Use a transparent icon to reserve space in the UI. Without this,
+					// the top row will resize when setting the mute value, causing a full
+					// table resize.
+					if( path.isEmpty() )
+					{
+						result.icon = m_muteBlankIconName;
+					}
+					else
+					{
+						result.icon = m_muteUndefinedIconData;
+					}
+				}
+			}
+
+			result.value = nullptr;
+
+			return result;
+		}
+
+	private :
+
+		static IECore::CompoundDataPtr m_muteIconData;
+		static IECore::CompoundDataPtr m_unMuteIconData;
+		static IECore::CompoundDataPtr m_muteFadedIconData;
+		static IECore::CompoundDataPtr m_unMuteFadedIconData;
+		static IECore::CompoundDataPtr m_muteUndefinedIconData;
+		static IECore::StringDataPtr m_muteBlankIconName;
+};
+
+CompoundDataPtr MuteColumn::m_muteIconData = new CompoundData(
+	{
+		{ InternedString( "state:normal" ), new StringData( "muteLight.png" ) },
+		{ InternedString( "state:highlighted" ), new StringData( "muteLightHighlighted.png" ) }
+	}
+);
+CompoundDataPtr MuteColumn::m_unMuteIconData = new CompoundData(
+	{
+		{ InternedString( "state:normal" ), new StringData( "unMuteLight.png" ) },
+		{ InternedString( "state:highlighted" ), new StringData( "unMuteLightHighlighted.png" ) }
+	}
+);
+CompoundDataPtr MuteColumn::m_muteFadedIconData = new CompoundData(
+	{
+		{ InternedString( "state:normal" ), new StringData( "muteLightFaded.png" ) },
+		{ InternedString( "state:highlighted" ), new StringData( "muteLightFadedHighlighted.png" ) }
+	}
+);
+CompoundDataPtr MuteColumn::m_unMuteFadedIconData = new CompoundData(
+	{
+		{ InternedString( "state:normal" ), new StringData( "unMuteLightFaded.png" ) },
+		{ InternedString( "state:highlighted" ), new StringData( "unMuteLightFadedHighlighted.png" ) }
+	}
+);
+CompoundDataPtr MuteColumn::m_muteUndefinedIconData = new CompoundData(
+	{
+		{ InternedString( "state:normal" ), new StringData( "muteLightUndefined.png" ) },
+		{ InternedString( "state:highlighted" ), new StringData( "muteLightFadedHighlighted.png" ) }
+	}
+);
+
+StringDataPtr MuteColumn::m_muteBlankIconName = new StringData( "muteLightUndefined.png" );
+
 PathColumn::CellData headerDataWrapper( PathColumn &pathColumn, const Canceller *canceller )
 {
 	IECorePython::ScopedGILRelease gilRelease;
@@ -259,6 +382,17 @@ void GafferSceneUIModule::bindLightEditor()
 			)
 		) )
 		.def( "inspector", &InspectorColumn::inspector, return_value_policy<IECorePython::CastToIntrusivePtr>() )
+		.def( "headerData", &headerDataWrapper, ( arg_( "canceller" ) = object() ) )
+	;
+
+	IECorePython::RefCountedClass<MuteColumn, InspectorColumn>( "_LightEditorMuteColumn" )
+		.def( init<const GafferScene::ScenePlugPtr &, const Gaffer::PlugPtr &>(
+			(
+				arg_( "scene" ),
+				arg_( "editScope" )
+			)
+		) )
+		.def( "inspector", &MuteColumn::inspector, return_value_policy<IECorePython::CastToIntrusivePtr>() )
 		.def( "headerData", &headerDataWrapper, ( arg_( "canceller" ) = object() ) )
 	;
 

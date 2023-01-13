@@ -128,7 +128,7 @@ class GAFFERSCENEUI_API Inspector : public IECore::RefCounted, public Gaffer::Si
 		/// Returns a `Path` representing the history for the inspected property
 		/// in the current context. The path has a child for each predecessor in
 		/// the history, and properties `history:value`, `history:operation`,
-		/// `history:source`, `history:editWarning` and `history:nodeName`.
+		/// `history:source`, `history:editWarning` and `history:node`.
 		Gaffer::PathPtr historyPath();
 
 	protected :
