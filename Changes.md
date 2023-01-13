@@ -1,4 +1,4 @@
-1.1.x.x (relative to 1.1.6.1)
+1.1.7.0 (relative to 1.1.6.1)
 =======
 
 Features
@@ -28,8 +28,8 @@ Fixes
   - Fixed Default display transform so that it updates correctly when the default is changed via the Preferences dialogue, and when the context changes.
   - Fixed drawing of image pixels to the left of the display window.
 - Cycles :
-  - Fixed custom AOVs not being created properly for SVM shading mode only, OSL is not supported. (#5044).
-  - Fixed distant light angle is in degrees and not radians.
+  - Fixed custom AOVs (for SVM shading mode only, Cycles doesn't support custom AOVs in OSL mode) (#5044).
+  - Fixed units for distant light angle (now degrees and not radians).
   - Fixed assignment of `emission` shader. Previously this was being assigned as a `cycles:light` attribute instead of `cycles:surface` (#5058).
   - Hid internal shader plugs which shouldn't be exposed to the user (e.g. `surface_mix_weight`).
 - UVInspector : Fixed update delay when changing display transform.
