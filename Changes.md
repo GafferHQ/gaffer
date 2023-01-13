@@ -1,4 +1,4 @@
-1.0.6.x (relative to 1.0.6.5)
+1.0.6.6 (relative to 1.0.6.5)
 =======
 
 - ShaderTweaks : Fixed `Remove` mode.
