@@ -126,7 +126,7 @@ void GafferSceneUIModule::bindContextAlgo()
 	def( "getLastSelectedPath", &getLastSelectedPathWrapper );
 	def( "affectsLastSelectedPath", &affectsLastSelectedPath );
 	def( "expand", &expandWrapper, ( arg( "expandAncestors" ) = true ) );
-	def( "expandDescendants", &expandDescendantsWrapper, ( arg( "context" ), arg( "paths" ), arg( "scene" ), arg( "depth" ) = Imath::limits<int>::max() ) );
+	def( "expandDescendants", &expandDescendantsWrapper, ( arg( "context" ), arg( "paths" ), arg( "scene" ), arg( "depth" ) = std::numeric_limits<int>::max() ) );
 	def( "clearExpansion", &clearExpansionWrapper );
 	def( "setSelectedPaths", &setSelectedPathsWrapper );
 	def( "getSelectedPaths", &getSelectedPaths );

@@ -63,8 +63,8 @@ TransformPlug::TransformPlug(
 			"translate",
 			direction,
 			defaultTranslate,
-			V3f( limits<float>::min() ),
-			V3f( limits<float>::max() ),
+			V3f( std::numeric_limits<float>::lowest() ),
+			V3f( std::numeric_limits<float>::max() ),
 			flags
 		)
 	);
@@ -74,8 +74,8 @@ TransformPlug::TransformPlug(
 			"rotate",
 			direction,
 			defaultRotate,
-			V3f( limits<float>::min() ),
-			V3f( limits<float>::max() ),
+			V3f( std::numeric_limits<float>::lowest() ),
+			V3f( std::numeric_limits<float>::max() ),
 			flags
 		)
 	);
@@ -85,8 +85,8 @@ TransformPlug::TransformPlug(
 			"scale",
 			direction,
 			defaultScale,
-			V3f( limits<float>::min() ),
-			V3f( limits<float>::max() ),
+			V3f( std::numeric_limits<float>::lowest() ),
+			V3f( std::numeric_limits<float>::max() ),
 			flags
 		)
 	);
@@ -96,8 +96,8 @@ TransformPlug::TransformPlug(
 			"pivot",
 			direction,
 			defaultPivot,
-			V3f( limits<float>::min() ),
-			V3f( limits<float>::max() ),
+			V3f( std::numeric_limits<float>::lowest() ),
+			V3f( std::numeric_limits<float>::max() ),
 			flags
 		)
 	);

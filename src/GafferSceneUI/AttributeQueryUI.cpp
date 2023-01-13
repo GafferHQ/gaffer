@@ -70,8 +70,8 @@ Gaffer::ConstValuePlugPtr createNumericPlug(
 	const std::string& name, const Gaffer::Plug::Direction direction, const ValueType& value, const unsigned flags )
 {
 	const Gaffer::ConstValuePlugPtr plug( new Gaffer::NumericPlug< ValueType >( name, direction, value,
-		ValueType( Imath::limits< ValueType >::min() ),
-		ValueType( Imath::limits< ValueType >::max() ), flags ) );
+		ValueType( std::numeric_limits< ValueType >::lowest() ),
+		ValueType( std::numeric_limits< ValueType >::max() ), flags ) );
 	return plug;
 }
 
@@ -80,8 +80,8 @@ Gaffer::ConstValuePlugPtr createCompoundNumericPlug(
 	const std::string& name, const Gaffer::Plug::Direction direction, const ValueType& value, const unsigned flags )
 {
 	const Gaffer::ConstValuePlugPtr plug( new Gaffer::CompoundNumericPlug< ValueType >( name, direction, value,
-		ValueType( Imath::limits< typename ValueType::BaseType >::min() ),
-		ValueType( Imath::limits< typename ValueType::BaseType >::max() ), flags ) );
+		ValueType( std::numeric_limits< typename ValueType::BaseType >::lowest() ),
+		ValueType( std::numeric_limits< typename ValueType::BaseType >::max() ), flags ) );
 	return plug;
 }
 
@@ -90,8 +90,8 @@ Gaffer::ConstValuePlugPtr createBoxPlug(
 	const std::string& name, const Gaffer::Plug::Direction direction, const Imath::Box< ValueType >& value, const unsigned flags )
 {
 	const Gaffer::ConstValuePlugPtr plug( new Gaffer::BoxPlug< Imath::Box< ValueType > >( name, direction, value,
-		ValueType( Imath::limits< typename ValueType::BaseType >::min() ),
-		ValueType( Imath::limits< typename ValueType::BaseType >::max() ), flags ) );
+		ValueType( std::numeric_limits< typename ValueType::BaseType >::lowest() ),
+		ValueType( std::numeric_limits< typename ValueType::BaseType >::max() ), flags ) );
 	return plug;
 }
 

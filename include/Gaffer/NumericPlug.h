@@ -42,8 +42,6 @@
 
 #include "IECore/SimpleTypedData.h"
 
-#include "OpenEXR/ImathLimits.h"
-
 namespace Gaffer
 {
 
@@ -61,8 +59,8 @@ class GAFFER_API NumericPlug : public ValuePlug
 			const std::string &name = defaultName<NumericPlug>(),
 			Direction direction=In,
 			T defaultValue = T(),
-			T minValue = Imath::limits<T>::min(),
-			T maxValue = Imath::limits<T>::max(),
+			T minValue = std::numeric_limits<T>::lowest(),
+			T maxValue = std::numeric_limits<T>::max(),
 			unsigned flags = Default
 		);
 		~NumericPlug() override;

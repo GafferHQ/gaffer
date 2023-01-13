@@ -1331,7 +1331,7 @@ class SceneView::Camera : public Signals::Trackable
 					"clippingPlanes", Plug::In,
 					V2f( 0.1, 100000 ),
 					V2f( 0.0001 ),
-					V2f( Imath::limits<float>::max() ),
+					V2f( std::numeric_limits<float>::max() ),
 					Plug::Default & ~Plug::AcceptsInputs
 				)
 			);
@@ -1343,7 +1343,7 @@ class SceneView::Camera : public Signals::Trackable
 					"lightLookThroughDefaultDistantAperture", Plug::In,
 					2.0f,
 					0.0f,
-					Imath::limits<float>::max(),
+					std::numeric_limits<float>::max(),
 					Plug::Default & ~Plug::AcceptsInputs
 				)
 			);
@@ -1352,8 +1352,8 @@ class SceneView::Camera : public Signals::Trackable
 				new Gaffer::V2fPlug(
 					"lightLookThroughDefaultClippingPlanes", Plug::In,
 					V2f( -100000, 100000 ),
-					V2f( Imath::limits<float>::min() ),
-					V2f( Imath::limits<float>::max() ),
+					V2f( std::numeric_limits<float>::lowest() ),
+					V2f( std::numeric_limits<float>::max() ),
 					Plug::Default & ~Plug::AcceptsInputs
 				)
 			);
@@ -1941,7 +1941,7 @@ SceneView::SceneView( const std::string &name )
 
 	storeIndexOfNextChild( g_firstPlugIndex );
 
-	addChild( new IntPlug( "minimumExpansionDepth", Plug::In, 0, 0, Imath::limits<int>::max(), Plug::Default & ~Plug::AcceptsInputs ) );
+	addChild( new IntPlug( "minimumExpansionDepth", Plug::In, 0, 0, std::numeric_limits<int>::max(), Plug::Default & ~Plug::AcceptsInputs ) );
 
 	plugSetSignal().connect( boost::bind( &SceneView::plugSet, this, ::_1 ) );
 

@@ -62,8 +62,8 @@ Transform2DPlug::Transform2DPlug(
 			"translate",
 			direction,
 			defaultTranslate,
-			V2f( limits<float>::min() ),
-			V2f( limits<float>::max() ),
+			V2f( std::numeric_limits<float>::lowest() ),
+			V2f( std::numeric_limits<float>::max() ),
 			flags
 		)
 	);
@@ -73,8 +73,8 @@ Transform2DPlug::Transform2DPlug(
 			"rotate",
 			direction,
 			defaultRotate,
-			limits<float>::min(),
-			limits<float>::max(),
+			std::numeric_limits<float>::lowest(),
+			std::numeric_limits<float>::max(),
 			flags
 		)
 	);
@@ -84,8 +84,8 @@ Transform2DPlug::Transform2DPlug(
 			"scale",
 			direction,
 			defaultScale,
-			V2f( limits<float>::min() ),
-			V2f( limits<float>::max() ),
+			V2f( std::numeric_limits<float>::lowest() ),
+			V2f( std::numeric_limits<float>::max() ),
 			flags
 		)
 	);
@@ -95,8 +95,8 @@ Transform2DPlug::Transform2DPlug(
 			"pivot",
 			direction,
 			defaultPivot,
-			V2f( limits<float>::min() ),
-			V2f( limits<float>::max() ),
+			V2f( std::numeric_limits<float>::lowest() ),
+			V2f( std::numeric_limits<float>::max() ),
 			flags
 		)
 	);

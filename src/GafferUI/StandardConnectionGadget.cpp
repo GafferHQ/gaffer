@@ -394,7 +394,7 @@ float StandardConnectionGadget::distanceToNodeGadget( const IECore::LineSegment3
 	const NodeGadget *nodeGadget = nodule ? nodule->ancestor<NodeGadget>() : nullptr;
 	if( !nodeGadget )
 	{
-		return Imath::limits<float>::max();
+		return std::numeric_limits<float>::max();
 	}
 
 	const M44f relativeTransform = fullTransform() * nodeGadget->fullTransform().inverse();

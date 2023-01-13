@@ -72,7 +72,7 @@ Box3f boundAndAutoStepSize( const std::string &fileName, const std::set<std::str
 	file.setCopyMaxBytes( 0 );
 	file.open();
 
-	autoStepSize = Imath::limits<float>::max();
+	autoStepSize = std::numeric_limits<float>::max();
 
 	openvdb::BBoxd result;
 	for( std::set<std::string>::const_iterator it = sets.begin(), eIt = sets.end(); it != eIt; ++it )

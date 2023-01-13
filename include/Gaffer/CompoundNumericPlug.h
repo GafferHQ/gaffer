@@ -66,8 +66,8 @@ class GAFFER_API CompoundNumericPlug : public ValuePlug
 			const std::string &name = defaultName<CompoundNumericPlug>(),
 			Direction direction=In,
 			T defaultValue = T( 0 ),
-			T minValue = T( Imath::limits<typename T::BaseType>::min() ),
-			T maxValue = T( Imath::limits<typename T::BaseType>::max() ),
+			T minValue = T( std::numeric_limits<typename T::BaseType>::lowest() ),
+			T maxValue = T( std::numeric_limits<typename T::BaseType>::max() ),
 			unsigned flags = Default,
 			IECore::GeometricData::Interpretation interpretation = IECore::GeometricData::None
 		);

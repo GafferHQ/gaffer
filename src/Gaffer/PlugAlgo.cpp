@@ -216,8 +216,8 @@ ValuePlugPtr compoundNumericValuePlug( const std::string &name, Plug::Direction 
 		name,
 		direction,
 		value->readable(),
-		ValueType( Imath::limits<BaseType>::min() ),
-		ValueType( Imath::limits<BaseType>::max() ),
+		ValueType( std::numeric_limits<BaseType>::lowest() ),
+		ValueType( std::numeric_limits<BaseType>::max() ),
 		flags
 	);
 
@@ -235,8 +235,8 @@ ValuePlugPtr geometricCompoundNumericValuePlug( const std::string &name, Plug::D
 		name,
 		direction,
 		value->readable(),
-		ValueType( Imath::limits<BaseType>::min() ),
-		ValueType( Imath::limits<BaseType>::max() ),
+		ValueType( std::numeric_limits<BaseType>::lowest() ),
+		ValueType( std::numeric_limits<BaseType>::max() ),
 		flags,
 		value->getInterpretation()
 	);
@@ -275,8 +275,8 @@ ValuePlugPtr createPlugFromData( const std::string &name, Plug::Direction direct
 				name,
 				direction,
 				static_cast<const FloatData *>( value )->readable(),
-				Imath::limits<float>::min(),
-				Imath::limits<float>::max(),
+				std::numeric_limits<float>::lowest(),
+				std::numeric_limits<float>::max(),
 				flags
 			);
 			return valuePlug;
@@ -287,8 +287,8 @@ ValuePlugPtr createPlugFromData( const std::string &name, Plug::Direction direct
 				name,
 				direction,
 				static_cast<const IntData *>( value )->readable(),
-				Imath::limits<int>::min(),
-				Imath::limits<int>::max(),
+				std::numeric_limits<int>::lowest(),
+				std::numeric_limits<int>::max(),
 				flags
 			);
 			return valuePlug;

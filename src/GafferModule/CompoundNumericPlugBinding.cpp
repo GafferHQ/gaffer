@@ -146,8 +146,8 @@ void bind()
 					boost::python::arg_( "name" )=GraphComponent::defaultName<T>(),
 					boost::python::arg_( "direction" )=Plug::In,
 					boost::python::arg_( "defaultValue" )=V( 0 ),
-					boost::python::arg_( "minValue" )=V(Imath::limits<typename V::BaseType>::min()),
-					boost::python::arg_( "maxValue" )=V(Imath::limits<typename V::BaseType>::max()),
+					boost::python::arg_( "minValue" )=V(std::numeric_limits<typename V::BaseType>::lowest()),
+					boost::python::arg_( "maxValue" )=V(std::numeric_limits<typename V::BaseType>::max()),
 					boost::python::arg_( "flags" )=Plug::Default,
 					boost::python::arg_( "interpretation" )=IECore::GeometricData::None
 				)
