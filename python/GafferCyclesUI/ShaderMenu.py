@@ -72,7 +72,7 @@ def appendShaders( menuDefinition, prefix="/Cycles" ) :
 		nodeCreator = functools.partial( __lightCreator, lightName, GafferCycles.CyclesLight )
 		menuItems.append( MenuItem( "%s/%s" % ( menuPath, displayName ), nodeCreator ) )
 
-	menuItems.append( MenuItem( "%s/%s" % ( "Light", "MeshLight" ), GafferCycles.CyclesMeshLight ) )
+	menuItems.append( MenuItem( "%s/%s" % ( "Light", "Mesh Light" ), GafferCycles.CyclesMeshLight ) )
 
 	# Create the actual menu items.
 

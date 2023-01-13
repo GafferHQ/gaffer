@@ -1,3 +1,10 @@
+1.1.x.x (relative to 1.1.6.1)
+
+Improvements
+------------
+
+- Cycles : Added `useMis` and more visibility flags and removed the previously erroneous removal of non-camera visibility flags to the Mesh Light.
+
 1.1.7.0 (relative to 1.1.6.1)
 =======
 

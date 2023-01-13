@@ -57,31 +57,29 @@ CyclesMeshLight::CyclesMeshLight( const std::string &name )
 	:	GafferScene::FilteredSceneProcessor( name, IECore::PathMatcher::NoMatch )
 {
 
-	// CyclesAttributesNode. This hides the objects from the majority
-	// of ray types, since we don't want to add the poor sampling of the
-	// object on top of the nice sampling of the light. The only visibility
-	// option we don't turn off is camera visibility - instead we promote
-	// so the user can decide whether or not the mesh should be visible in
-	// the render.
-
 	CyclesAttributesPtr attributes = new CyclesAttributes( "__attributes" );
 	attributes->inPlug()->setInput( inPlug() );
 	attributes->filterPlug()->setInput( filterPlug() );
+	addChild( attributes );
+
+	// Visibility flags
+
 	for( NameValuePlug::Iterator it( attributes->attributesPlug() ); !it.done(); ++it )
 	{
-		if( boost::ends_with( (*it)->getName().string(), "Visibility" ) && (*it)->getName() != "cameraVisibility" )
+		if( boost::ends_with( (*it)->getName().string(), "Visibility" ) )
 		{
-			(*it)->enabledPlug()->setValue( true );
-			(*it)->valuePlug<BoolPlug>()->setValue( false );
+			PlugPtr plug = (*it)->createCounterpart( (*it)->getName(), Plug::In );
+			addChild( plug );
+			(*it)->setInput( plug );
 		}
 	}
 
-	addChild( attributes );
+	// MIS
 
-	Plug *internalCameraVisibilityPlug = attributes->attributesPlug()->getChild<Plug>( "cameraVisibility" );
-	PlugPtr cameraVisibilityPlug = internalCameraVisibilityPlug->createCounterpart( "cameraVisibility", Plug::In );
-	addChild( cameraVisibilityPlug );
-	internalCameraVisibilityPlug->setInput( cameraVisibilityPlug );
+	Plug *internalMisPlug = attributes->attributesPlug()->getChild<Plug>( "useMis" );
+	PlugPtr misPlug = internalMisPlug->createCounterpart( "useMis", Plug::In );
+	addChild( misPlug );
+	internalMisPlug->setInput( misPlug );
 
 	// Light-Group
 

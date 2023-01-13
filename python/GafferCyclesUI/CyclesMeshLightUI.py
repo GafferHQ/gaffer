@@ -64,6 +64,81 @@ Gaffer.Metadata.registerNode(
 			rays.
 			""",
 
+			"nameValuePlugPlugValueWidget:ignoreNamePlug", True,
+
+		],
+
+		"diffuseVisibility" : [
+
+			"description",
+			"""
+			Whether or not the object is visible to diffuse
+			rays.
+			""",
+
+			"nameValuePlugPlugValueWidget:ignoreNamePlug", True,
+
+		],
+
+		"glossyVisibility" : [
+
+			"description",
+			"""
+			Whether or not the object is visible in
+			glossy rays.
+			""",
+
+			"nameValuePlugPlugValueWidget:ignoreNamePlug", True,
+
+		],
+
+		"transmissionVisibility" : [
+
+			"description",
+			"""
+			Whether or not the object is visible in
+			transmission.
+			""",
+
+			"nameValuePlugPlugValueWidget:ignoreNamePlug", True,
+
+		],
+
+		"shadowVisibility" : [
+
+			"description",
+			"""
+			Whether or not the object is visible to shadow
+			rays - whether it casts shadows or not.
+			""",
+
+			"nameValuePlugPlugValueWidget:ignoreNamePlug", True,
+
+		],
+
+		"scatterVisibility" : [
+
+			"description",
+			"""
+			Whether or not the object is visible to
+			scatter rays.
+			""",
+
+			"nameValuePlugPlugValueWidget:ignoreNamePlug", True,
+
+		],
+
+		"useMis" : [
+
+			"description",
+			"""
+			Use multiple importance sampling for this material,
+			disabling may reduce overall noise for large
+			objects that emit little light compared to other light sources.
+			""",
+
+			"nameValuePlugPlugValueWidget:ignoreNamePlug", True,
+
 		],
 
 		"lightGroup" : [
@@ -72,6 +147,8 @@ Gaffer.Metadata.registerNode(
 			"""
 			The light group that the mesh light will contribute to.
 			""",
+
+			"nameValuePlugPlugValueWidget:ignoreNamePlug", True,
 
 		],
 
