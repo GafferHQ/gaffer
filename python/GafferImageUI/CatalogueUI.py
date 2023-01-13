@@ -81,9 +81,9 @@ _columnsMetadataKey = "catalogue:columns"
 # `_imageCellData()`.
 class Column( GafferUI.PathColumn ) :
 
-	def __init__( self, title ) :
+	def __init__( self, title, sizeMode = GafferUI.PathColumn.SizeMode.Default ) :
 
-		GafferUI.PathColumn.__init__( self )
+		GafferUI.PathColumn.__init__( self, sizeMode )
 
 		self.__title = IECore.StringData( title )
 
@@ -203,9 +203,9 @@ class SimpleColumn( Column ) :
 # image's origin.
 class ImageMetadataColumn( Column ) :
 
-	def __init__( self, title, nameOrNames, defaultValue = None ) :
+	def __init__( self, title, nameOrNames, defaultValue = None, sizeMode = GafferUI.PathColumn.SizeMode.Default ) :
 
-		Column.__init__( self, title )
+		Column.__init__( self, title, sizeMode )
 
 		if isinstance( nameOrNames, str ) :
 			nameOrNames = [ nameOrNames, ]
@@ -271,7 +271,7 @@ class __StatusIconColumn( Column ) :
 registerColumn( "Status", __StatusIconColumn() )
 registerColumn( "Name", GafferUI.PathListingWidget.defaultNameColumn )
 registerColumn( "Frame", ContextVariableColumn( "Frame", "frame" ) )
-registerColumn( "Description", ImageMetadataColumn( "Description", "ImageDescription" ) )
+registerColumn( "Description", ImageMetadataColumn( "Description", "ImageDescription", sizeMode = GafferUI.PathColumn.SizeMode.Stretch ) )
 
 # Image properties
 
