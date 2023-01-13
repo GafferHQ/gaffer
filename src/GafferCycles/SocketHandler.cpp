@@ -489,7 +489,8 @@ void setupPlugs( const ccl::NodeType *nodeType, Gaffer::GraphComponent *plugsPar
 	{
 		for( const ccl::SocketType &socketType : nodeType->inputs )
 		{
-			if( g_socketBlacklist.contains( { nodeType->name, socketType.name } ) )
+			if( g_socketBlacklist.contains( { nodeType->name, socketType.name } ) ||
+				( socketType.flags & ccl::SocketType::INTERNAL ) )
 			{
 				continue;
 			}

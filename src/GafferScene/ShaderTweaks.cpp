@@ -335,8 +335,17 @@ bool ShaderTweaks::applyTweaks( IECoreScene::ShaderNetwork *shaderNetwork, Tweak
 					},
 					[&parameter, &modifiedShader]( const std::string &valueName, DataPtr newData )
 					{
-						modifiedShader.first->second->parameters()[parameter.name] = newData;
-						return true;
+						if( newData )
+						{
+							modifiedShader.first->second->parameters()[parameter.name] = newData;
+							return true;
+						}
+						else
+						{
+							return static_cast<bool>(
+								modifiedShader.first->second->parameters().erase( parameter.name )
+							);
+						}
 					},
 					missingMode
 				)

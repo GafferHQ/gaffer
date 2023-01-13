@@ -761,6 +761,7 @@ void UVView::plugSet( const Gaffer::Plug *plug )
 	if( plug == displayTransformPlug() )
 	{
 		m_displayTransformDirty = true;
+		viewportGadget()->renderRequestSignal()( viewportGadget() );
 	}
 }
 

@@ -288,7 +288,11 @@ def __upgradeToUseBoxIO( node ) :
 def __promote( plug ) :
 
 	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
-		Gaffer.BoxIO.promote( plug )
+		promoted = Gaffer.BoxIO.promote( plug )
+		if isinstance( promoted, Gaffer.NameValuePlug ) :
+			Gaffer.Metadata.registerValue(
+				promoted, "nameValuePlugPlugValueWidget:ignoreNamePlug", True
+			)
 
 def __unpromote( plug ) :
 
@@ -311,6 +315,7 @@ def __appendPlugPromotionMenuItems( menuDefinition, plug ) :
 		Gaffer.ArrayPlug : "Array",
 		Gaffer.TransformPlug : "Transform",
 		Gaffer.Transform2DPlug : "Transform",
+		Gaffer.NameValuePlug : "Value and Switch",
 	}.get( type( plug.parent() ) )
 
 	if ancestorLabel is not None :

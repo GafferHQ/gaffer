@@ -22,21 +22,30 @@ Improvements
 - HierarchyView : Inclusions and Exclusions column header icons now update to show when one or more locations have been added to or excluded from the Visible Set [^2].
 - Light : Added an enable/disable toggle to the `mute` plug [^2].
 - AttributeTweaks : Added `Remove` mode.
+- NodeEditor : Added "Promote Value and Switch" context menu item for promoting NameValuePlugs to Boxes [^1].
 
 Fixes
 -----
 
+- Viewer [^1] :
+  - Fixed Default display transform so that it updates correctly when the default is changed via the Preferences dialogue, and when the context changes.
+  - Fixed drawing of image pixels to the left of the display window.
 - 3Delight : Fixed rendering with recent versions of 3Delight, which no longer use the `DL_DISPLAYS_PATH` to search for display drivers.
 - Metadata :
   - Fixed memory leak.
   - Fixed thread safety bug that prevented concurrent access to metadata for the _same_ plug or node from multiple threads.
 - Cycles [^1] :
-  - Fixed custom AOVs not being created properly for SVM shading mode only, OSL is not supported. (#5044).
-  - Fixed distant light angle is in degrees and not radians.
+ - Fixed custom AOVs (for SVM shading mode only, Cycles doesn't support custom AOVs in OSL mode) (#5044).
+  - Fixed units for distant light angle (now degrees and not radians).
   - Fixed assignment of `emission` shader. Previously this was being assigned as a `cycles:light` attribute instead of `cycles:surface` (#5058).
+  - Hid internal shader plugs which shouldn't be exposed to the user (e.g. `surface_mix_weight`).
 - ImageViewer : Fixed drawing of pixels to the left of the display window [^1].
+- UVInspector : Fixed update delay when changing display transform [^1].
 - Random : Fixed GIL management bug which could lead to hangs [^1].
 - ShufflePrimitiveVariables, ShuffleAttributes, OptionQuery, PrimitiveVariableQuery, ShaderQuery, ContextQuery, CreateViews, SetVisualiser, OSLImage, OSLObject, OSLCode, Outputs : Fixed bugs which allowed read-only nodes to be edited.
+- ShaderTweaks : Fixed `Remove` mode [^1].
+- FilterQuery : Fixed bug which prevented the output from updating when the input scene changed (#5066) [^1].
+- Arnold : Fixed rendering of `token` enum parameter values loaded from USD [^1].
 
 API
 ---
@@ -159,7 +168,7 @@ Build
 
 - Cortex : Updated to version 10.4.3.0.
 
-1.1.x.x (relative to 1.1.6.1)
+1.1.7.0 (relative to 1.1.6.1)
 =======
 
 Features
@@ -177,15 +186,27 @@ Improvements
 - OSLObject : Added support for attribute substitutions using `<attr:myAttrName>` syntax in string parameters, provided that `useAttributes` is turned on.
 - UIEditor : Increased maximum size of the "Button Click Code" editor.
 
+Improvements
+------------
+
+- NodeEditor : Added "Promote Value and Switch" context menu item for promoting NameValuePlugs to Boxes.
+
 Fixes
 -----
 
+- Viewer :
+  - Fixed Default display transform so that it updates correctly when the default is changed via the Preferences dialogue, and when the context changes.
+  - Fixed drawing of image pixels to the left of the display window.
 - Cycles :
-  - Fixed custom AOVs not being created properly for SVM shading mode only, OSL is not supported. (#5044).
-  - Fixed distant light angle is in degrees and not radians.
+  - Fixed custom AOVs (for SVM shading mode only, Cycles doesn't support custom AOVs in OSL mode) (#5044).
+  - Fixed units for distant light angle (now degrees and not radians).
   - Fixed assignment of `emission` shader. Previously this was being assigned as a `cycles:light` attribute instead of `cycles:surface` (#5058).
-- ImageViewer : Fixed drawing of pixels to the left of the display window.
+  - Hid internal shader plugs which shouldn't be exposed to the user (e.g. `surface_mix_weight`).
+- UVInspector : Fixed update delay when changing display transform.
 - Random : Fixed GIL management bug which could lead to hangs.
+- ShaderTweaks : Fixed `Remove` mode.
+- FilterQuery : Fixed bug which prevented the output from updating when the input scene changed (#5066).
+- Arnold : Fixed rendering of `token` enum parameter values loaded from USD.
 
 1.1.6.1 (relative to 1.1.6.0)
 =======
@@ -447,10 +468,13 @@ Breaking Changes
 - ImagePlug : Removed unused `viewName` argument from `viewNames()` and `viewNamesHash()` methods.
 - StandardAttributes : Removed backwards compatibility for StandardAttributes nodes saved from Gaffer `0.95.0` (May 2014) and earlier. If necessary, resave affected files using a recent Gaffer version.
 
-1.0.6.x (relative to 1.0.6.5)
+1.0.6.6 (relative to 1.0.6.5)
 =======
 
+- ShaderTweaks : Fixed `Remove` mode.
+- FilterQuery : Fixed bug which prevented the output from updating when the input scene changed (#5066).
 - Random : Fixed GIL management bug which could lead to hangs.
+- Arnold : Fixed rendering of `token` enum parameter values loaded from USD.
 
 1.0.6.5 (relative to 1.0.6.4)
 =======

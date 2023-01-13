@@ -211,6 +211,7 @@ void FilterQuery::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *
 			ScenePlug::PathScope scope( context, &locationPath );
 			if( scenePlug()->existsPlug()->getValue() )
 			{
+				const FilterPlug::SceneScope sceneScope( scope.context(), scenePlug() );
 				filterPlug()->hash( h );
 			}
 		}
