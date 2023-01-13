@@ -66,7 +66,7 @@ jobs:
             containerImage:
             dependenciesURL: https://github.com/ImageEngine/cortex/releases/download/10.4.3.0/cortex-10.4.3.0-windows-python3.zip
             testRunner: Invoke-Expression
-            testArguments: GafferTest GafferVDBTest GafferUSDTest GafferSceneTest GafferDispatchTest GafferOSLTest GafferImageTest
+            testArguments: GafferTest GafferVDBTest GafferUSDTest GafferSceneTest GafferDispatchTest GafferOSLTest GafferImageTest GafferUITest GafferImageUITest GafferSceneUITest GafferDispatchUITest GafferOSLUITest GafferUSDUITest GafferVDBUITest GafferDelightUITest
             sconsCacheMegabytes: 400
 
     runs-on: ${{ matrix.os }}
@@ -137,6 +137,16 @@ jobs:
         ./.github/workflows/main/installDelight.py
         echo DELIGHT=$GITHUB_WORKSPACE/3delight >> $GITHUB_ENV
       shell: bash
+
+    - name: Install Mesa (Windows)
+      # Installed after dependencies to avoid errors from python related to existing directory `bin`.
+      # Adapted from Mesa's `systemwidedeploy.cmd` `osmesa` branch.
+      run: |
+        curl.exe -L --output mesa.7z --url https://github.com/pal1000/mesa-dist-win/releases/download/22.3.1/mesa3d-22.3.1-release-msvc.7z
+        & "C:\Program Files\7-Zip\7z.exe" x mesa.7z -omesa
+        ./mesa/systemwidedeploy.cmd 1
+      shell: pwsh
+      if: runner.os == 'Windows'
 
     - name: Cache
       uses: actions/cache@v3

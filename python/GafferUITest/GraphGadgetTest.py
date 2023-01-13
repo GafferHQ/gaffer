@@ -1813,6 +1813,8 @@ class GraphGadgetTest( GafferUITest.TestCase ) :
 		# Initially we expect the left branch of the switch to be highlighted.
 
 		window.setVisible( True )
+		self.waitForIdle( 1000 )
+
 		self.assertHighlighting( graphGadget, { "switch" : True, "add1" : True, "add2" : False } )
 
 		# If we switch to the right branch, we expect the highlighting to

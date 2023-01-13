@@ -291,8 +291,8 @@ class WindowTest( GafferUITest.TestCase ) :
 		w._qtWidget().resize( 200, 100 )
 		self.assertEqual( ( w._qtWidget().width(), w._qtWidget().height() ), ( 200, 100 ) )
 
-		w.setPosition( imath.V2i( 20, 30 ) )
-		self.assertEqual( w.getPosition(), imath.V2i( 20, 30 ) )
+		w.setPosition( imath.V2i( 100, 30 ) )
+		self.assertEqual( w.getPosition(), imath.V2i( 100, 30 ) )
 
 		desktop = QtWidgets.QApplication.desktop()
 

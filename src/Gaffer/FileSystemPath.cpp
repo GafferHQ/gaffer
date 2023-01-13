@@ -256,7 +256,9 @@ bool FileSystemPath::isValid( const IECore::Canceller *canceller ) const
 		return true;
 	}
 
-	const std::filesystem::file_type t = std::filesystem::symlink_status( std::filesystem::path( this->string() ) ).type();
+	std::error_code e;
+
+	const std::filesystem::file_type t = std::filesystem::symlink_status( std::filesystem::path( this->string() ), e ).type();
 	return t != std::filesystem::file_type::none && t != std::filesystem::file_type::not_found;
 }
 
