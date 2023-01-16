@@ -128,6 +128,7 @@ from .CodeWidgetTest import CodeWidgetTest
 from .PathColumnTest import PathColumnTest
 from .ToolTest import ToolTest
 from .StandardNodeToolbarTest import StandardNodeToolbarTest
+from .LabelPlugValueWidgetTest import LabelPlugValueWidgetTest
 
 if __name__ == "__main__":
 	unittest.main()

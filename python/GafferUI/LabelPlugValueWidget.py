@@ -126,26 +126,36 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 	@staticmethod
 	def _valuesForUpdate( plugs ) :
 
-		## \todo: This is mirrored in PlugLayout and needs centralising in NodeAlgo (along
-		# with proper support for child plug connections/defaults) at the next API break.
-		def valueChanged( plug ) :
-
-			if plug.direction() == Gaffer.Plug.Direction.Out :
-				return False
-			elif plug.getInput() is not None :
-				return True
-			elif not isinstance( plug, Gaffer.ValuePlug ) :
-				return False
-			elif Gaffer.NodeAlgo.hasUserDefault( plug ) :
-				return not Gaffer.NodeAlgo.isSetToUserDefault( plug )
-			else :
-				return not plug.isSetToDefault()
-
-		return [ valueChanged( p ) for p in plugs ]
+		return [ LabelPlugValueWidget._hasUserValue( p ) for p in plugs ]
 
 	def _updateFromValues( self, values, exception ) :
 
 		self.__setValueChanged( any( values ) )
+
+	@staticmethod
+	def _hasUserValue( plug ) :
+
+		if plug.direction() == Gaffer.Plug.Direction.Out :
+			return False
+
+		if plug.getInput() is not None :
+			return True
+
+		if any(
+			p.getInput() is not None and p.direction() != Gaffer.Plug.Direction.Out
+			for p in Gaffer.Plug.RecursiveRange( plug )
+		) :
+			return True
+
+		if Gaffer.NodeAlgo.hasUserDefault( plug ) :
+			return not Gaffer.NodeAlgo.isSetToUserDefault( plug )
+
+		if len( plug ) :
+			return any( LabelPlugValueWidget._hasUserValue( p ) for p in Gaffer.Plug.Range( plug ) )
+		elif isinstance( plug, Gaffer.ValuePlug ) :
+			return not plug.isSetToDefault()
+		else :
+			return False
 
 	# Sets whether or not the label be rendered in a ValueChanged state.
 	def __setValueChanged( self, valueChanged ) :

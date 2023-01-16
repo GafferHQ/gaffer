@@ -1,3 +1,11 @@
+1.2.0.0ax (relative to 1.2.0.0a2)
+=========
+
+Fixes
+-----
+
+- NodeEditor : Fixed bugs in handling of "green dot" non-default-value indicators with nested plugs.
+
 1.2.0.0a2 (relative to 1.2.0.0a1)
 =========
 
