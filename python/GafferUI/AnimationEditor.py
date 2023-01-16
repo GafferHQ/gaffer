@@ -385,6 +385,13 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 					}
 				)
 
+		menuDefinition.append(
+			"/Set Default Color", {
+				"command" : functools.partial( Gaffer.WeakMethod( self.__setEditableCurvesDefaultColor ) ),
+				"active" : not emptyEditableCurves,
+			}
+		)
+
 		self.__popupMenu = GafferUI.Menu( menuDefinition )
 		self.__popupMenu.popup( parent = self )
 
@@ -407,6 +414,12 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 		with Gaffer.UndoScope( self.scriptNode() ) :
 			for curve in self.__animationGadget.editablePlugs() :
 				curve.setExtrapolation( direction, mode )
+
+	def __setEditableCurvesDefaultColor( self ) :
+
+		with Gaffer.UndoScope( self.scriptNode() ) :
+			for curve in self.__animationGadget.editablePlugs() :
+				curve.setColor( Gaffer.Animation.defaultColor( next( iter( curve[ "out" ].outputs() ) ) ) )
 
 	def __repr__( self ) :
 
