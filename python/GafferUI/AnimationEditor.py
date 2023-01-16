@@ -39,6 +39,9 @@ import GafferUI
 
 from GafferUI.PlugValueWidget import sole
 
+import IECore
+
+import functools
 import imath
 
 from Qt import QtWidgets
@@ -310,9 +313,6 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 
 	def __animationGadgetContextMenu( self, *unused ) :
 
-		import IECore
-		import functools
-
 		# convert mouse position to event line
 		line = self.__gadgetWidget.getViewportGadget().rasterToGadgetSpace(
 			imath.V2f( GafferUI.Widget.mousePosition( relativeTo = self.__gadgetWidget ) ), gadget = self.__animationGadget )
@@ -481,9 +481,6 @@ class _KeyWidget( GafferUI.GridContainer ) :
 	Connections = namedtuple( "Connections", ("frame", "value", "interpolation", "tieMode", "tangent") )
 
 	def __init__( self ) :
-
-		import IECore
-		import functools
 
 		GafferUI.GridContainer.__init__( self, spacing=4, borderWidth=4 )
 
@@ -783,11 +780,11 @@ class _KeyWidget( GafferUI.GridContainer ) :
 
 		# handle undo queue
 		if not widget.changesShouldBeMerged( self.__lastChangedReasonFrame, reason ) :
-			curves = self.parent().curveGadget().editablePlugs()
-			if curves :
-				scriptNode = curves[0].ancestor( Gaffer.ScriptNode )
+			editableCurves = self.parent().curveGadget().editablePlugs()
+			if editableCurves :
+				scriptNode = editableCurves[ 0 ].ancestor( Gaffer.ScriptNode )
 				with Gaffer.UndoScope( scriptNode, mergeGroup=str( self.__mergeGroupIdFrame ) ) :
-					for curve in curves :
+					for curve in editableCurves :
 						curve.removeInactiveKeys()
 			self.__mergeGroupIdFrame += 1
 		self.__lastChangedReasonFrame = reason
@@ -799,7 +796,7 @@ class _KeyWidget( GafferUI.GridContainer ) :
 				value = int( widget.getValue() )
 			except ValueError :
 				return
-			scriptNode = selectedKeys[0].parent().ancestor( Gaffer.ScriptNode )
+			scriptNode = selectedKeys[ 0 ].parent().ancestor( Gaffer.ScriptNode )
 			time = value / scriptNode.context().getFramesPerSecond()
 			with Gaffer.UndoScope( scriptNode, mergeGroup=str( self.__mergeGroupIdFrame ) ) :
 				for key in selectedKeys :
@@ -826,7 +823,7 @@ class _KeyWidget( GafferUI.GridContainer ) :
 				value = widget.getValue()
 			except ValueError :
 				return
-			with Gaffer.UndoScope( selectedKeys[0].parent().ancestor( Gaffer.ScriptNode ), mergeGroup=str( self.__mergeGroupIdValue ) ) :
+			with Gaffer.UndoScope( selectedKeys[ 0 ].parent().ancestor( Gaffer.ScriptNode ), mergeGroup=str( self.__mergeGroupIdValue ) ) :
 				for key in selectedKeys :
 					with Gaffer.Signals.BlockedConnection( self.__connections[ key.parent() ].value ) :
 						key.setValue( value )
@@ -854,7 +851,7 @@ class _KeyWidget( GafferUI.GridContainer ) :
 				value = widget.getValue()
 			except ValueError :
 				return
-			with Gaffer.UndoScope( selectedKeys[0].parent().ancestor( Gaffer.ScriptNode ), mergeGroup=str( self.__mergeGroupIdSlope[ direction ] ) ) :
+			with Gaffer.UndoScope( selectedKeys[ 0 ].parent().ancestor( Gaffer.ScriptNode ), mergeGroup=str( self.__mergeGroupIdSlope[ direction ] ) ) :
 				for key in selectedKeys :
 					with Gaffer.Signals.BlockedConnection( self.__connections[ key.parent() ].tangent ) :
 						key.tangent( direction ).setSlopeAndScale( value,
@@ -885,7 +882,7 @@ class _KeyWidget( GafferUI.GridContainer ) :
 				value = max( widget.getValue(), float(0) )
 			except ValueError :
 				return
-			with Gaffer.UndoScope( selectedKeys[0].parent().ancestor( Gaffer.ScriptNode ), mergeGroup=str( self.__mergeGroupIdScale[ direction ] ) ) :
+			with Gaffer.UndoScope( selectedKeys[ 0 ].parent().ancestor( Gaffer.ScriptNode ), mergeGroup=str( self.__mergeGroupIdScale[ direction ] ) ) :
 				for key in selectedKeys :
 					with Gaffer.Signals.BlockedConnection( self.__connections[ key.parent() ].tangent ) :
 						key.tangent( direction ).setScale( value )
