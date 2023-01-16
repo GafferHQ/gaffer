@@ -602,6 +602,12 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"options.giDiffuseDepth.value" : [
+
+			"userDefault", 0,
+
+		],
+
 		"options.giSpecularDepth" : [
 
 			"description",
@@ -612,6 +618,12 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Ray Depth",
 			"label", "Specular Depth",
+
+		],
+
+		"options.giSpecularDepth.value" : [
+
+			"userDefault", 0,
 
 		],
 
