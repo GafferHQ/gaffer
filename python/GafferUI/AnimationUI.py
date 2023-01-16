@@ -90,6 +90,17 @@ Gaffer.Metadata.registerValue( "Animation.TieMode.Manual", "description", "Tange
 Gaffer.Metadata.registerValue( "Animation.TieMode.Slope", "description", "Tangent slopes are kept equal." )
 Gaffer.Metadata.registerValue( "Animation.TieMode.Scale", "description", "Tangent slopes are kept equal and scales are kept proportional." )
 
+Gaffer.Metadata.registerValue( Gaffer.ValuePlug,       "Animation:defaultColor", imath.Color3f( 1 ) )
+Gaffer.Metadata.registerValue( Gaffer.ValuePlug, ".x", "Animation:defaultColor", imath.Color3f( 0.73, 0.17, 0.17 ) )
+Gaffer.Metadata.registerValue( Gaffer.ValuePlug, ".r", "Animation:defaultColor", imath.Color3f( 0.73, 0.17, 0.17 ) )
+Gaffer.Metadata.registerValue( Gaffer.ValuePlug, ".y", "Animation:defaultColor", imath.Color3f( 0.20, 0.57, 0.20 ) )
+Gaffer.Metadata.registerValue( Gaffer.ValuePlug, ".g", "Animation:defaultColor", imath.Color3f( 0.20, 0.57, 0.20 ) )
+Gaffer.Metadata.registerValue( Gaffer.ValuePlug, ".z", "Animation:defaultColor", imath.Color3f( 0.20, 0.36, 0.74 ) )
+Gaffer.Metadata.registerValue( Gaffer.ValuePlug, ".b", "Animation:defaultColor", imath.Color3f( 0.20, 0.36, 0.74 ) )
+
+# NOTE : ensures that the default color metadata does not get serialised for promoted plugs (e.g. BoxIO.setup())
+Gaffer.Metadata.registerValue( Gaffer.ValuePlug, "Animation:defaultColor:promotable", False )
+
 # PlugValueWidget popup menu for setting keys
 ##########################################################################
 
