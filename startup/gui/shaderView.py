@@ -40,6 +40,33 @@ import IECore
 
 import GafferSceneUI
 
+if os.environ.get( "CYCLES_ROOT" ) :
+
+	with IECore.IgnoredExceptions( ImportError ) :
+
+		import GafferCycles
+
+		GafferSceneUI.ShaderView.registerRenderer( "cycles", GafferCycles.InteractiveCyclesRender )
+
+		def __cyclesShaderBall() :
+
+			result = GafferCycles.CyclesShaderBall()
+
+			# Reserve some cores for the rest of the UI
+			result["threads"]["enabled"].setValue( True )
+			result["threads"]["value"].setValue( -3 )
+
+			# Less issues when mixing around OSL shaders
+			result["shadingSystem"]["enabled"].setValue( True )
+			result["shadingSystem"]["value"].setValue( "OSL" )
+
+			return result
+
+		GafferSceneUI.ShaderView.registerScene( "cycles", "Default", __cyclesShaderBall )
+
+		GafferSceneUI.ShaderView.registerRenderer( "osl", GafferCycles.InteractiveCyclesRender )
+		GafferSceneUI.ShaderView.registerScene( "osl", "Default", __cyclesShaderBall )
+
 with IECore.IgnoredExceptions( ImportError ) :
 
 	import GafferAppleseed
@@ -78,26 +105,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 
 	GafferSceneUI.ShaderView.registerScene( "ai", "Default", __arnoldShaderBall )
 
-if os.environ.get( "CYCLES_ROOT" ) :
-
-	with IECore.IgnoredExceptions( ImportError ) :
-
-		import GafferCycles
-
-		GafferSceneUI.ShaderView.registerRenderer( "cycles", GafferCycles.InteractiveCyclesRender )
-
-		def __cyclesShaderBall() :
-
-			result = GafferCycles.CyclesShaderBall()
-
-			# Reserve some cores for the rest of the UI
-			result["threads"]["enabled"].setValue( True )
-			result["threads"]["value"].setValue( -3 )
-
-			# Less issues when mixing around OSL shaders
-			result["shadingSystem"]["enabled"].setValue( True )
-			result["shadingSystem"]["value"].setValue( "OSL" )
-
-			return result
-
-		GafferSceneUI.ShaderView.registerScene( "cycles", "Default", __cyclesShaderBall )
+	# If Arnold is available, then we assume that the user would prefer
+	# it over Appleseed or Cycles for OSL previews.
+	GafferSceneUI.ShaderView.registerRenderer( "osl", GafferArnold.InteractiveArnoldRender )
+	GafferSceneUI.ShaderView.registerScene( "osl", "Default", __arnoldShaderBall )
