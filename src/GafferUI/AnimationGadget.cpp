@@ -146,28 +146,6 @@ float snapTimeToFrame( float fps, float time, float threshold=std::numeric_limit
 	return frameToTime( fps, std::abs( frame - rounded ) > threshold ? frame : rounded );
 }
 
-// \todo: Consider making the colorForAxes function in StandardStyle public?
-//        Include names for plugs representing color? (foo.r, foo.g, foo.b)
-Color3f colorFromName( std::string name )
-{
-	if( boost::ends_with( name, ".x" ) )
-	{
-		return Imath::Color3f( 0.73, 0.17, 0.17 );
-	}
-	else if( boost::ends_with( name, ".y" ) )
-	{
-		return Imath::Color3f( 0.2, 0.57, 0.2 );
-	}
-	else if( boost::ends_with( name, ".z" ) )
-	{
-		return Imath::Color3f( 0.2, 0.36, 0.74 );
-	}
-	else
-	{
-		return Color3f( 1 );
-	}
-}
-
 // Compute grid line locations. Note that positions are given in raster space so
 // that lines can get drawn directly.
 // For the time-dimension we limit the computed locations to multiples of one
@@ -621,7 +599,7 @@ void AnimationGadget::renderLayer( Layer layer, const Style *style, RenderReason
 		{
 			Animation::CurvePlug *curvePlug = IECore::runTimeCast<Animation::CurvePlug>( &runtimeTyped );
 
-			const Imath::Color3f color3 = colorFromName( drivenPlugName( curvePlug ) );
+			const Imath::Color3f color3 = curvePlug->getColor();
 			const Imath::Color4f color4( color3.x, color3.y, color3.z, 1.0 );
 
 			Animation::Key* previousKey = nullptr;
@@ -1823,7 +1801,7 @@ void AnimationGadget::renderCurve( const Animation::CurvePlug *curvePlug, const 
 	V2f previousKeyPosition( 0 );
 
 	const Style::State styleState = ( curvePlug == m_highlightedCurve ) ? Style::HighlightedState : Style::NormalState;
-	const Imath::Color3f color3 = colorFromName( drivenPlugName( curvePlug ) );
+	const Imath::Color3f color3 = curvePlug->getColor();
 
 	// draw extrapolated curve (direction in)
 	// NOTE : generate vertices starting at extrapolation key, so that any pattern applied
