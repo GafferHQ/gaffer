@@ -43,26 +43,51 @@ import Gaffer
 import GafferUI
 import GafferImage
 
+from GafferUI.PlugValueWidget import sole
+
 class RGBAChannelsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, **kw ) :
+	def __init__( self, plugs, **kw ) :
 
 		self.__menuButton = GafferUI.MenuButton( menu = GafferUI.Menu( Gaffer.WeakMethod( self._menuDefinition ) ) )
 		self.__menuButton._qtWidget().setMinimumWidth( 150 )
 
-		GafferUI.PlugValueWidget.__init__( self, self.__menuButton, plug, **kw )
+		GafferUI.PlugValueWidget.__init__( self, self.__menuButton, plugs, **kw )
 
-		self._updateFromPlug()
+		self.__availableChannels = set()
+		self.__currentValue = None
 
-	def _updateFromPlug( self ) :
+	def _auxiliaryPlugs( self, plug ) :
 
-		with self.getContext() :
-			value = self.getPlug().getValue()
+		firstInputImage = next( GafferImage.ImagePlug.RecursiveInputRange( plug.node() ), None )
+		return [ firstInputImage ] if firstInputImage is not None else []
 
-		assert( len( value ) == 4 )
+	@staticmethod
+	def _valuesForUpdate( plugs, auxiliaryPlugs ) :
 
-		layers = [ GafferImage.ImageAlgo.layerName( x ) for x in value ]
-		channels = [ GafferImage.ImageAlgo.baseName( x ) for x in value ]
+		result = []
+
+		for plug, imagePlugs in zip( plugs, auxiliaryPlugs ) :
+
+			availableChannels = set()
+			for viewName in imagePlugs[0].viewNames() :
+				availableChannels.update( imagePlugs[0].channelNames( viewName = viewName ) )
+
+			result.append( { "value" : plug.getValue(), "availableChannels" : availableChannels } )
+
+		return result
+
+	def _updateFromValues( self, values, exception ) :
+
+		self.__availableChannels = set().union( *[ v["availableChannels"] for v in values ] )
+		self.__currentValue = sole( v["value"] for v in values )
+
+		if self.__currentValue is None :
+			self.__menuButton.setText( "---" )
+			return
+
+		layers = [ GafferImage.ImageAlgo.layerName( x ) for x in self.__currentValue ]
+		channels = [ GafferImage.ImageAlgo.baseName( x ) for x in self.__currentValue ]
 
 		# Figure out a good label for the current list of channels.
 		# Start out with "Custom" to represent something arbitrary
@@ -70,7 +95,8 @@ class RGBAChannelsPlugValueWidget( GafferUI.PlugValueWidget ) :
 		# to anything that can be chosen via the menu.
 		# > Note : We don't use `_rgbaChannels()` to generate
 		# > our label because it depends on the currently available
-		# > channels. We need a label even if the channels are unavailable.
+		# > channels. We need a label even if the channels don't
+		# > currently exist.
 		text = "Custom"
 		if len( set( layers ) ) == 1 :
 			prefix = layers[0] + "." if layers[0] else ""
@@ -80,41 +106,24 @@ class RGBAChannelsPlugValueWidget( GafferUI.PlugValueWidget ) :
 				text = prefix + channels[0]
 
 		self.__menuButton.setText( text )
-		self.__menuButton.setEnabled( self._editable() )
+		self.__menuButton.setErrored( exception is not None )
 
-	def _image( self ) :
-		return next( iter( self.getPlug().node().children( GafferImage.ImagePlug ) ) )
+	def _updateFromEditable( self ) :
+
+		self.__menuButton.setEnabled( self._editable() )
 
 	# Returns a dictionary mapping from display name to sets of `[ R, G, B, A ]`
 	# channels. Maybe belongs in ImageAlgo.h?
 	def _rgbaChannels( self ) :
 
-		try :
-			image = self._image()
-			with self.getContext() :
-				views = image.viewNames()
-				if len( views ) == 0:
-					channelNames = image["channelNames"].getValue()
-				else:
-					c = Gaffer.Context( self.getContext() )
-					channelNames = []
-					with c:
-						for v in views:
-							c.set( "image:viewName", v )
-							newNames = image["channelNames"].getValue()
-							channelNames += [ i for i in newNames if not i in channelNames ]
-
-		except Gaffer.ProcessException :
-			return {}
-
 		result = collections.OrderedDict()
 
 		nonStandardLayers = {
-			GafferImage.ImageAlgo.layerName( c ) for c in channelNames
+			GafferImage.ImageAlgo.layerName( c ) for c in self.__availableChannels
 			if GafferImage.ImageAlgo.baseName( c ) not in [ "R", "G", "B", "A" ]
 		}
 
-		for channelName in GafferImage.ImageAlgo.sortedChannelNames( channelNames ) :
+		for channelName in GafferImage.ImageAlgo.sortedChannelNames( self.__availableChannels ) :
 
 			if GafferImage.ImageAlgo.baseName( channelName ) in [ "R", "G", "B", "A" ] :
 				layerName = GafferImage.ImageAlgo.layerName( channelName )
@@ -139,11 +148,6 @@ class RGBAChannelsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def _menuDefinition( self ) :
 
-		currentValue = None
-		with self.getContext() :
-			with IECore.IgnoredExceptions( Gaffer.ProcessException ) :
-				currentValue = self.getPlug().getValue()
-
 		rgbaChannels = self._rgbaChannels()
 
 		result = IECore.MenuDefinition()
@@ -157,7 +161,7 @@ class RGBAChannelsPlugValueWidget( GafferUI.PlugValueWidget ) :
 				"/" + text.replace( ".", "/" ),
 				{
 					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), value = value ),
-					"checkBox" : value == currentValue,
+					"checkBox" : value == self.__currentValue,
 				}
 			)
 
@@ -165,5 +169,6 @@ class RGBAChannelsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __setValue( self, unused, value ) :
 
-		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-			self.getPlug().setValue( value )
+		with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ) ) :
+			for plug in self.getPlugs() :
+				plug.setValue( value )
