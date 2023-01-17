@@ -921,23 +921,39 @@ EditScope::ProcessorRegistration g_setMembershipProcessorRegistration( "SetMembe
 
 }  // namespace
 
-void EditScopeAlgo::setSetMembership( Gaffer::EditScope *scope, const IECore::PathMatcher &paths, const std::string &set, EditScopeAlgo::SetMembership state )
+Gaffer::ValuePlug *EditScopeAlgo::acquireSetEdits( Gaffer::EditScope *scope, const std::string &set, bool createIfNecessary )
 {
-	Node *processor = scope->acquireProcessor( "SetMembershipEdits" );
+	Node *processor = scope->acquireProcessor( "SetMembershipEdits", createIfNecessary );
+
+	if( !processor )
+	{
+		return nullptr;
+	}
+
 	auto rows = processor->getChild<Spreadsheet::RowsPlug>( "edits" );
 
 	auto row = rows->row( set );
-	if( !row )
+
+	if( !row && createIfNecessary )
 	{
 		row = rows->addRow();
 		row->namePlug()->setValue( set );
 	}
 
-	auto addCell = row->cellsPlug()->getChild<Spreadsheet::CellPlug>( g_addSetColumnIndex );
-	auto removeCell = row->cellsPlug()->getChild<Spreadsheet::CellPlug>( g_removeSetColumnIndex );
+	return row ? row->cellsPlug() : nullptr;
+}
+
+void EditScopeAlgo::setSetMembership( Gaffer::EditScope *scope, const IECore::PathMatcher &paths, const std::string &set, EditScopeAlgo::SetMembership state )
+{
+	auto cells = EditScopeAlgo::acquireSetEdits( scope, set );
+
+	auto addCell = cells->getChild<Spreadsheet::CellPlug>( g_addSetColumnIndex );
+	auto removeCell = cells->getChild<Spreadsheet::CellPlug>( g_removeSetColumnIndex );
 
 	auto addStringPlug = addCell->valuePlug<StringVectorDataPlug>();
 	auto removeStringPlug = removeCell->valuePlug<StringVectorDataPlug>();
+
+	auto row = cells->parent<Spreadsheet::RowPlug>();
 
 	if( !row->enabledPlug()->getValue() )
 	{
@@ -983,16 +999,14 @@ void EditScopeAlgo::setSetMembership( Gaffer::EditScope *scope, const IECore::Pa
 
 EditScopeAlgo::SetMembership EditScopeAlgo::getSetMembership( Gaffer::EditScope *scope, const ScenePlug::ScenePath &path, const std::string &set )
 {
-	Node *processor = scope->acquireProcessor( "SetMembershipEdits", /* createIfNecessary */ false );
-	if( !processor )
+	auto cells = EditScopeAlgo::acquireSetEdits( scope, set, false );
+	if( !cells )
 	{
 		return EditScopeAlgo::SetMembership::Unchanged;
 	}
 
-	auto rows = processor->getChild<Spreadsheet::RowsPlug>( "edits" );
-
-	auto row = rows->row( set );
-	if( !row || !row->enabledPlug()->getValue() )
+	auto row = cells->parent<Spreadsheet::RowPlug>();
+	if( !row->enabledPlug()->getValue() )
 	{
 		return EditScopeAlgo::SetMembership::Unchanged;
 	}

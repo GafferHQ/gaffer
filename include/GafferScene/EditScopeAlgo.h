@@ -135,6 +135,7 @@ enum class SetMembership
 	Unchanged
 };
 
+GAFFERSCENE_API Gaffer::ValuePlug *acquireSetEdits( Gaffer::EditScope *scope, const std::string &set, bool createIfNecessary = true  );
 GAFFERSCENE_API void setSetMembership( Gaffer::EditScope *scope, const IECore::PathMatcher &paths, const std::string &set, SetMembership state );
 GAFFERSCENE_API SetMembership getSetMembership( Gaffer::EditScope *scope, const ScenePlug::ScenePath &path, const std::string &set );
 GAFFERSCENE_API const Gaffer::GraphComponent *setMembershipReadOnlyReason( const Gaffer::EditScope *scope, const std::string &set, SetMembership state );

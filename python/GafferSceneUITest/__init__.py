@@ -56,6 +56,7 @@ from .ParameterInspectorTest import ParameterInspectorTest
 from .AttributeInspectorTest import AttributeInspectorTest
 from .HistoryPathTest import HistoryPathTest
 from .LightEditorTest import LightEditorTest
+from .SetMembershipInspectorTest import SetMembershipInspectorTest
 
 if __name__ == "__main__":
 	unittest.main()

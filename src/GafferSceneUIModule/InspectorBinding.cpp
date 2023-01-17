@@ -41,6 +41,7 @@
 #include "GafferSceneUI/Private/Inspector.h"
 #include "GafferSceneUI/Private/AttributeInspector.h"
 #include "GafferSceneUI/Private/ParameterInspector.h"
+#include "GafferSceneUI/Private/SetMembershipInspector.h"
 
 #include "GafferBindings/PathBinding.h"
 #include "GafferBindings/SignalBinding.h"
@@ -147,4 +148,11 @@ void GafferSceneUIModule::bindInspector()
 		)
 	;
 
+	RefCountedClass<SetMembershipInspector, Inspector>( "SetMembershipInspector" )
+		.def(
+			init<const ScenePlugPtr &, const PlugPtr &, IECore::InternedString>(
+				( arg( "scene" ), arg( "editScope" ), arg( "setName" ) )
+			)
+		)
+	;
 }
