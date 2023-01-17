@@ -1,6 +1,11 @@
 1.2.0.0ax (relative to 1.2.0.0a2)
 =========
 
+Improvements
+------------
+
+- Viewer : If Arnold is available, then it is preferred over Appleseed for performing OSL shader previews. If neither is available, then Cycles will be used (#5084).
+
 Fixes
 -----
 
