@@ -92,29 +92,6 @@ Gaffer.Metadata.registerNode(
 )
 
 ##########################################################################
-# Internal utilities
-##########################################################################
-
-def _optionTweaksNode( plugValueWidget ) :
-
-	# The plug may not belong to an OptionTweaks node
-	# directly. Instead it may have been promoted
-	# elsewhere and be driving a target plug on an
-	# OptionTweaks node.
-
-	def walkOutputs( plug ) :
-
-		if isinstance( plug.node(), GafferScene.OptionTweaks ) :
-			return plug.node()
-
-		for output in plug.outputs() :
-			node = walkOutputs( output )
-			if node is not None :
-				return node
-
-	return walkOutputs( plugValueWidget.getPlug() )
-
-##########################################################################
 # _TweaksFooter
 ##########################################################################
 
@@ -188,12 +165,11 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 
 		result = IECore.MenuDefinition()
 
-		node = _optionTweaksNode( self )
-		options = {}
+		node = self.getPlug().node()
+		assert( isinstance( node, GafferScene.OptionTweaks ) )
 
-		if node is not None :
-			with self.getContext() :
-				options = node["out"]["globals"].getValue()
+		with self.getContext() :
+			options = node["out"]["globals"].getValue()
 
 		prefix = "option:"
 

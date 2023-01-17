@@ -125,37 +125,10 @@ Gaffer.Metadata.registerNode(
 
 def __targetFilterPlug( plug ) :
 
-	stack = deque( [ plug ] )
-
-	while stack :
-		plug = stack.popleft()
-
-		cellPlug = plug.ancestor( Gaffer.Spreadsheet.CellPlug )
-		if cellPlug is not None and isinstance( plug.node(), Gaffer.Spreadsheet ) :
-			plug = plug.node()["out"][cellPlug.getName()]
-
-		node = plug.node()
-
-		if isinstance( node, GafferScene.PathFilter ) and plug == node["paths"] :
-			return plug
-
-		stack.extend( plug.outputs() )
-
-	return None
-
-def __targetSceneOutPlug( plug ) :
-
-	stack = deque( [ plug ] )
-
-	while stack :
-		plug = stack.popleft()
-		node = plug.node()
-		if isinstance( plug.node(), GafferScene.SceneNode ) :
-			return node["out"]
-
-		stack.extend( plug.outputs() )
-
-	return None
+	return Gaffer.PlugAlgo.findDestination(
+		plug,
+		lambda plug : plug if isinstance( plug.parent(), GafferScene.PathFilter ) and plug.getName() == "paths" else None
+	)
 
 def _selectAffected( plug, selection ) :
 
@@ -169,7 +142,10 @@ def _selectAffected( plug, selection ) :
 		inPlugs = [ n["in"] for n in GafferScene.SceneAlgo.filteredNodes( targetPlug.node() ) ]
 	elif rowPlug is not None :
 		for output in rowPlug.node()["out"] :
-			targetPlug = __targetSceneOutPlug( output )
+			targetPlug = Gaffer.PlugAlgo.findDestination(
+				output,
+				lambda plug : plug.node()["out"] if isinstance( plug.node(), GafferScene.SceneNode ) else None
+			)
 			if targetPlug is not None :
 				inPlugs = [ targetPlug ]
 				break

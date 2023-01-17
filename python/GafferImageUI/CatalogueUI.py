@@ -587,22 +587,6 @@ def _duplicateImages( catalogue, plugIndices ) :
 # _CataloguePath
 ##########################################################################
 
-def _findSourceCatalogue( imagesPlug ) :
-
-	def walk( plug ) :
-
-		if isinstance( plug.parent(), GafferImage.Catalogue ) :
-			return plug.parent()
-
-		for output in plug.outputs() :
-			r = walk( output )
-			if r is not None :
-				return r
-
-		return None
-
-	return walk( imagesPlug )
-
 class _ImagesPath( Gaffer.Path ) :
 
 	indexMetadataName = 'image:index'
@@ -612,7 +596,9 @@ class _ImagesPath( Gaffer.Path ) :
 		Gaffer.Path.__init__( self, path, root, filter )
 
 		self.__images = images
-		self.__catalogue = _findSourceCatalogue( images )
+		self.__catalogue = Gaffer.PlugAlgo.findDestination(
+			images, lambda plug : plug.parent() if isinstance( plug.parent(), GafferImage.Catalogue ) else None
+		)
 
 	def copy( self ) :
 
@@ -863,7 +849,9 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 
 	def __catalogue( self ) :
 
-		return _findSourceCatalogue( self.getPlug() )
+		return Gaffer.PlugAlgo.findDestination(
+			self.getPlug(), lambda plug : plug.parent() if isinstance( plug.parent(), GafferImage.Catalogue ) else None
+		)
 
 	def __images( self ) :
 

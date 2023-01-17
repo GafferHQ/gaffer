@@ -146,17 +146,10 @@ def _shaderTweaksNode( plugValueWidget ) :
 	# elsewhere and be driving a target plug on a
 	# ShaderTweaks node.
 
-	def walkOutputs( plug ) :
-
-		if isinstance( plug.node(), GafferScene.ShaderTweaks ) :
-			return plug.node()
-
-		for output in plug.outputs() :
-			node = walkOutputs( output )
-			if node is not None :
-				return node
-
-	return walkOutputs( plugValueWidget.getPlug() )
+	return Gaffer.PlugAlgo.findDestination(
+		plugValueWidget.getPlug(),
+		lambda plug : plug.node() if isinstance( plug.node(), GafferScene.ShaderTweaks ) else None,
+	)
 
 def _pathsFromAffected( plugValueWidget ) :
 
@@ -368,20 +361,17 @@ def __setShaderFromPathsMenuDefinition( plugValueWidget, paths ) :
 
 def __plugPopupMenu( menuDefinition, plugValueWidget ) :
 
-	plug = plugValueWidget.getPlug()
-	if plug is None :
+	if plugValueWidget.getPlug() is None :
 		return
 
-	node = plug.node()
-	if not isinstance( node, GafferScene.ShaderTweaks ) :
-		return
+	if Gaffer.PlugAlgo.findDestination(
+		plugValueWidget.getPlug(),
+		lambda plug : plug if isinstance( plug.parent(), GafferScene.ShaderTweaks ) and plug.getName() == "shader" else None
+	) :
 
-	if plug != node["shader"] :
-		return
-
-	menuDefinition.prepend( "/ShaderTweaksDivider/", { "divider" : True } )
-	menuDefinition.prepend( "/From Selection/", { "subMenu" : __setShaderFromSelectionMenuDefinition } )
-	menuDefinition.prepend( "/From Affected/", { "subMenu" : __setShaderFromAffectedMenuDefinition } )
+		menuDefinition.prepend( "/ShaderTweaksDivider/", { "divider" : True } )
+		menuDefinition.prepend( "/From Selection/", { "subMenu" : __setShaderFromSelectionMenuDefinition } )
+		menuDefinition.prepend( "/From Affected/", { "subMenu" : __setShaderFromAffectedMenuDefinition } )
 
 GafferUI.PlugValueWidget.popupMenuSignal().connect( __plugPopupMenu, scoped = False )
 

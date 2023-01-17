@@ -651,11 +651,12 @@ class _PlugTableView( GafferUI.Widget ) :
 			# can show a plug menu. We should probably refactor so we can do it
 			# without the widget, but this would touch `PlugValueWidget.popupMenuSignal()`
 			# and all connected client code.
-			self.__menuPlugValueWidget = GafferUI.PlugValueWidget.create( plug )
-			definition = self.__menuPlugValueWidget._popupMenuDefinition()
+			self.__plugMenuParent = GafferUI.PlugValueWidget.create( plug )
+			definition = self.__plugMenuParent._popupMenuDefinition()
 
 		else :
 
+			self.__plugMenuParent = None
 			definition = IECore.MenuDefinition()
 
 		if self.__mode == self.Mode.RowNames :
@@ -664,7 +665,7 @@ class _PlugTableView( GafferUI.Widget ) :
 			self.__prependCellMenuItems( definition, selectedPlugs )
 
 		self.__plugMenu = GafferUI.Menu( definition )
-		self.__plugMenu.popup()
+		self.__plugMenu.popup( parent = self.__plugMenuParent )
 
 		return True
 

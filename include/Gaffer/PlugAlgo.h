@@ -67,6 +67,12 @@ GAFFER_API void replacePlug( GraphComponent *parent, PlugPtr plug );
 /// of a ComputeNode, and `false` otherwise.
 GAFFER_API bool dependsOnCompute( const ValuePlug *plug );
 
+/// Visits the plug and its downstream outputs, returning the first `predicate( plug )`
+/// result which evaluates to `true`. Traverses across Spreadsheets to visit the output
+/// corresponding to a CellPlug input.
+template<typename Predicate>
+std::invoke_result_t<Predicate, Plug *> findDestination( Plug *plug, Predicate &&predicate );
+
 /// Conversion to and from `IECore::Data`
 /// =====================================
 
@@ -125,5 +131,7 @@ GAFFER_API void unpromote( Plug *plug );
 } // namespace PlugAlgo
 
 } // namespace Gaffer
+
+#include "Gaffer/PlugAlgo.inl"
 
 #endif // GAFFER_PLUGALGO_H

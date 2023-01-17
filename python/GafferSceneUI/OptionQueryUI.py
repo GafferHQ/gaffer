@@ -285,29 +285,6 @@ Gaffer.Metadata.registerNode(
 )
 
 ##########################################################################
-# Internal utilities
-##########################################################################
-
-def _optionQueryNode( plugValueWidget ) :
-
-	# The plug may not belong to a OptionQuery node
-	# directly. Instead it may have been promoted
-	# elsewhere and be driving a target plug on a
-	# OptionQuery node.
-
-	def walkOutputs( plug ) :
-
-		if isinstance( plug.node(), GafferScene.OptionQuery ) :
-			return plug.node()
-
-		for output in plug.outputs() :
-			node = walkOutputs( output )
-			if node is not None :
-				return node
-
-	return walkOutputs( plugValueWidget.getPlug() )
-
-##########################################################################
 # _OutputQueryFooter
 ##########################################################################
 
@@ -384,12 +361,11 @@ class _OptionQueryFooter( GafferUI.PlugValueWidget ) :
 
 		result = IECore.MenuDefinition()
 
-		node = _optionQueryNode( self )
-		options = {}
+		node = self.getPlug().node()
+		assert( isinstance( node, GafferScene.OptionQuery ) )
 
-		if node is not None :
-			with self.getContext() :
-				options = node["scene"]["globals"].getValue()
+		with self.getContext() :
+			options = node["scene"]["globals"].getValue()
 
 		prefix = "option:"
 

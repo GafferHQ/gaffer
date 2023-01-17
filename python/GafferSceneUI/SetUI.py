@@ -181,28 +181,6 @@ def __setValue( plug, value, *unused ) :
 	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
 		plug.setValue( value )
 
-def __targetPlug( plug ) :
-
-	stack = deque( [ plug ] )
-
-	while stack :
-		plug = stack.popleft()
-
-		cellPlug = plug.ancestor( Gaffer.Spreadsheet.CellPlug )
-		if cellPlug is not None and isinstance( plug.node(), Gaffer.Spreadsheet ) :
-			plug = plug.node()["out"][cellPlug.getName()]
-
-		# get required data
-		acceptsSetName = Gaffer.Metadata.value( plug, "ui:scene:acceptsSetName" )
-		acceptsSetNames = Gaffer.Metadata.value( plug, "ui:scene:acceptsSetNames" )
-		acceptsSetExpression = Gaffer.Metadata.value( plug, "ui:scene:acceptsSetExpression" )
-		if acceptsSetName or acceptsSetNames or acceptsSetExpression :
-			return plug
-
-		stack.extend( plug.outputs() )
-
-	return None
-
 def __scenePlugs( node ) :
 
 	result = []
@@ -233,17 +211,25 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 	if plug is None :
 		return
 
-	targetPlug = __targetPlug( plug )
-	if targetPlug is None :
+	destinationPlug = Gaffer.PlugAlgo.findDestination(
+		plug,
+		lambda p :
+			p if (
+				Gaffer.Metadata.value( p, "ui:scene:acceptsSetName" ) or
+				Gaffer.Metadata.value( p, "ui:scene:acceptsSetNames" ) or
+				Gaffer.Metadata.value( p, "ui:scene:acceptsSetExpression" )
+			) else None
+	)
+	if destinationPlug is None :
 		return
 
 	# Some operations require a text widget so we can manipulate insertion position, etc...
 	hasTextWidget = hasattr( plugValueWidget, 'textWidget' )
 
 	# get required data
-	acceptsSetName = Gaffer.Metadata.value( targetPlug, "ui:scene:acceptsSetName" )
-	acceptsSetNames = Gaffer.Metadata.value( targetPlug, "ui:scene:acceptsSetNames" )
-	acceptsSetExpression = hasTextWidget and Gaffer.Metadata.value( targetPlug, "ui:scene:acceptsSetExpression" )
+	acceptsSetName = Gaffer.Metadata.value( destinationPlug, "ui:scene:acceptsSetName" )
+	acceptsSetNames = Gaffer.Metadata.value( destinationPlug, "ui:scene:acceptsSetNames" )
+	acceptsSetExpression = hasTextWidget and Gaffer.Metadata.value( destinationPlug, "ui:scene:acceptsSetExpression" )
 	if not acceptsSetName and not acceptsSetNames and not acceptsSetExpression :
 		return
 
@@ -259,7 +245,7 @@ def __popupMenu( menuDefinition, plugValueWidget ) :
 		if insertAt == (0, 0) :  # if there's no selection to be replaced, use position of cursor
 			insertAt = (cursorPosition, cursorPosition)
 
-	node = targetPlug.node()
+	node = destinationPlug.node()
 
 	if isinstance( node, GafferScene.Filter ) :
 		nodes = GafferScene.SceneAlgo.filteredNodes( node )

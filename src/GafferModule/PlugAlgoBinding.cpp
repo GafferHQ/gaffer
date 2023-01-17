@@ -57,6 +57,17 @@ void replacePlug( GraphComponent &parent, Plug &plug )
 	PlugAlgo::replacePlug( &parent, &plug );
 }
 
+object findDestinationWrapper( Plug *plug, object predicate )
+{
+	return PlugAlgo::findDestination(
+		plug,
+		[&predicate] ( Plug *plug ) {
+			object o = predicate( PlugPtr( plug ) );
+			return o;
+		}
+	);
+}
+
 ValuePlugPtr createPlugFromData( const std::string &name, Plug::Direction direction, unsigned flags, const IECore::Data *value )
 {
 	IECorePython::ScopedGILRelease gilRelease;
@@ -120,6 +131,7 @@ void GafferModule::bindPlugAlgo()
 
 	def( "replacePlug", &replacePlug, ( arg( "parent" ), arg( "plug" ) ) );
 	def( "dependsOnCompute", &PlugAlgo::dependsOnCompute );
+	def( "findDestination", &findDestinationWrapper );
 
 	def( "createPlugFromData", &createPlugFromData );
 	def( "extractDataFromPlug", &extractDataFromPlug );

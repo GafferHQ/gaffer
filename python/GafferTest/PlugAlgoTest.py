@@ -901,5 +901,92 @@ class PlugAlgoTest( GafferTest.TestCase ) :
 		node["user"]["v"]["y"].setInput( add["sum"] )
 		self.assertTrue( Gaffer.PlugAlgo.dependsOnCompute( node["user"]["v"] ) )
 
+	def testFindDestination( self ) :
+
+		# Promote a plug through two levels of nesting.
+
+		outerBox = Gaffer.Box()
+		outerBox["innerBox"] = Gaffer.Box()
+		outerBox["innerBox"]["node"] = GafferTest.AddNode()
+		innerPlug = Gaffer.PlugAlgo.promote( outerBox["innerBox"]["node"]["op1"] )
+		outerPlug = Gaffer.PlugAlgo.promote( innerPlug )
+
+		# Find the destination plug.
+
+		self.assertEqual(
+			Gaffer.PlugAlgo.findDestination( outerPlug, lambda plug : plug if isinstance( plug.node(), GafferTest.AddNode ) else None ),
+			outerBox["innerBox"]["node"]["op1"]
+		)
+
+		# Find the destination node.
+
+		self.assertEqual(
+			Gaffer.PlugAlgo.findDestination( outerPlug, lambda plug : plug.node() if isinstance( plug.node(), GafferTest.AddNode ) else None ),
+			outerBox["innerBox"]["node"]
+		)
+
+		# Try to find a destination which doesn't exist.
+
+		self.assertIsNone(
+			Gaffer.PlugAlgo.findDestination( outerPlug, lambda plug : plug if isinstance( plug, Gaffer.StringPlug ) else None ),
+		)
+
+		# Plugs should be visited before their outputs.
+
+		self.assertEqual(
+			Gaffer.PlugAlgo.findDestination( outerPlug, lambda plug : plug ),
+			outerPlug
+		)
+
+		self.assertEqual(
+			Gaffer.PlugAlgo.findDestination( outerPlug, lambda plug : plug if plug.getInput() else None ),
+			innerPlug
+		)
+
+		# Spreadsheets should be taken into account.
+
+		spreadsheet = Gaffer.Spreadsheet()
+		spreadsheet["rows"].addColumn( Gaffer.IntPlug( "test" ) )
+		outerPlug.setInput( spreadsheet["out"]["test"] )
+
+		self.assertEqual(
+			Gaffer.PlugAlgo.findDestination(
+				spreadsheet["rows"][0]["cells"]["test"]["value"],
+				lambda plug : plug if isinstance( plug.node(), GafferTest.AddNode ) else None,
+			),
+			outerBox["innerBox"]["node"]["op1"]
+		)
+
+	def testFindDestinationSupportsSpreadsheetsWithCompoundPlugs( self ) :
+
+		spreadsheet = Gaffer.Spreadsheet()
+		spreadsheet["rows"].addColumn( Gaffer.V2iPlug( "test" ) )
+
+		self.assertEqual(
+			Gaffer.PlugAlgo.findDestination(
+				spreadsheet["rows"][0]["cells"]["test"]["value"]["x"],
+				lambda plug : plug if plug.direction() == Gaffer.Plug.Direction.Out else None,
+			),
+			spreadsheet["out"]["test"]["x"]
+		)
+
+	def testFindDestinationIgnoresSpreadsheetCellEnabled( self ) :
+
+		spreadsheet = Gaffer.Spreadsheet()
+		spreadsheet["rows"].addColumn( Gaffer.FloatPlug( "test" ) )
+
+		self.assertIsNone(
+			Gaffer.PlugAlgo.findDestination(
+				spreadsheet["rows"][0]["cells"]["test"]["enabled"],
+				lambda plug : plug if plug.direction() == Gaffer.Plug.Direction.Out else None,
+			)
+		)
+
+	def testFindDestinationFromNone( self ) :
+
+		self.assertIsNone(
+			Gaffer.PlugAlgo.findDestination( None, lambda plug : plug )
+		)
+
 if __name__ == "__main__":
 	unittest.main()
