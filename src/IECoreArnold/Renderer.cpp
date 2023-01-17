@@ -374,7 +374,6 @@ const AtString g_subdivFrustumIgnoreArnoldString( "subdiv_frustum_ignore" );
 const AtString g_subdivSmoothDerivsArnoldString( "subdiv_smooth_derivs" );
 const AtString g_subdivTypeArnoldString( "subdiv_type" );
 const AtString g_subdivUVSmoothingArnoldString( "subdiv_uv_smoothing" );
-const AtString g_textureAutoGenerateArnoldString( "texture_auto_generate_tx" );
 const AtString g_toonIdArnoldString( "toon_id" );
 const AtString g_traceSetsArnoldString( "trace_sets" );
 const AtString g_transformTypeArnoldString( "transform_type" );
@@ -3111,6 +3110,19 @@ void throwError( int errorCode )
 	}
 }
 
+// Our general rule is to expose everything from the renderer as-is. But in a few cases we consider Arnold's
+// defaults to be sufficiently non-ideal that we override them.
+const boost::container::flat_map<IECore::InternedString, IECore::ConstDataPtr> g_optionDefaultOverrides = {
+	// These default to `0` in Arnold, but we don't want users to have to
+	// take any extra steps to get global illumination in their render.
+	{ "ai:GI_diffuse_depth", new IECore::IntData( 2 ) },
+	{ "ai:GI_specular_depth", new IECore::IntData( 2 ) },
+	// This defaults to `true` in Arnold, which isn't suitable for use on
+	// a render farm, because it can lead to multiple machines all fighting
+	// to generate the same `.tx` files.
+	{ "ai:texture_auto_generate_tx", new IECore::BoolData( false ) }
+};
+
 class ArnoldGlobals
 {
 
@@ -3149,12 +3161,14 @@ class ArnoldGlobals
 			AiMsgSetLogFileFlags( m_universeBlock->universe(), m_logFileFlags );
 			// Get OSL shaders onto the shader searchpath.
 			option( g_pluginSearchPathOptionName, new IECore::StringData( "" ) );
-			// Set the `texture_auto_generate_tx` option to our preferred default, which is
-			// not the Arnold default.
-			const AtNode *options = AiUniverseGetOptions( m_universeBlock->universe() );
-			if( AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( options ), g_textureAutoGenerateArnoldString ) )
+			// Override any options that we think have poor defaults.
+			const AtNodeEntry *options = AiNodeGetNodeEntry( AiUniverseGetOptions( m_universeBlock->universe() ) );
+			for( const auto &[name, value] : g_optionDefaultOverrides )
 			{
-				option( g_textureAutoGenerateOptionName, nullptr );
+				if( AiNodeEntryLookUpParameter( options, AtString( name.c_str() + 3 ) ) )
+				{
+					option( name, nullptr );
+				}
 			}
 		}
 
@@ -3456,12 +3470,6 @@ class ArnoldGlobals
 				}
 				return;
 			}
-			else if( name == g_textureAutoGenerateOptionName )
-			{
-				auto d = value ? reportedCast<const IECore::BoolData>( value, "option", name ) : nullptr;
-				AiNodeSetBool( options, g_textureAutoGenerateArnoldString, d ? d->readable() : false );
-				return;
-			}
 			else if( boost::starts_with( name.c_str(), "ai:aov_shader:" ) )
 			{
 				m_aovShaders.erase( name );
@@ -3516,7 +3524,20 @@ class ArnoldGlobals
 				const AtParamEntry *parameter = AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( options ), arnoldName );
 				if( parameter )
 				{
-					const IECore::Data *dataValue = IECore::runTimeCast<const IECore::Data>( value );
+					const IECore::Data *dataValue = nullptr;
+					if( value )
+					{
+						dataValue = IECore::runTimeCast<const IECore::Data>( value );
+					}
+					else
+					{
+						auto it = g_optionDefaultOverrides.find( name );
+						if( it != g_optionDefaultOverrides.end() )
+						{
+							dataValue = it->second.get();
+						}
+					}
+
 					if( dataValue )
 					{
 						ParameterAlgo::setParameter( options, arnoldName, dataValue );

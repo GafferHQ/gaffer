@@ -4073,6 +4073,28 @@ class RendererTest( GafferTest.TestCase ) :
 		r.option( "ai:texture_auto_generate_tx", IECore.BoolData( False ) )
 		self.assertEqual( arnold.AiNodeGetBool( options, "texture_auto_generate_tx" ), False )
 
+	def testDiffuseAndSpecularDepthDefaults( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		universe = ctypes.cast( r.command( "ai:queryUniverse", {} ), ctypes.POINTER( arnold.AtUniverse ) )
+		options = arnold.AiUniverseGetOptions( universe )
+		self.assertEqual( arnold.AiNodeGetInt( options, "GI_diffuse_depth" ), 2 )
+		self.assertEqual( arnold.AiNodeGetInt( options, "GI_specular_depth" ), 2 )
+
+		r.option( "ai:GI_diffuse_depth", IECore.IntData( 3 ) )
+		r.option( "ai:GI_specular_depth", IECore.IntData( 4 ) )
+		self.assertEqual( arnold.AiNodeGetInt( options, "GI_diffuse_depth" ), 3 )
+		self.assertEqual( arnold.AiNodeGetInt( options, "GI_specular_depth" ), 4 )
+
+		r.option( "ai:GI_diffuse_depth", None )
+		r.option( "ai:GI_specular_depth", None )
+		self.assertEqual( arnold.AiNodeGetInt( options, "GI_diffuse_depth" ), 2 )
+		self.assertEqual( arnold.AiNodeGetInt( options, "GI_specular_depth" ), 2 )
+
 	@staticmethod
 	def __m44f( m ) :
 
