@@ -2555,6 +2555,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			{
 				m_sessionParams.headless = false;
 				m_sessionParams.background = false;
+				m_sessionParams.use_auto_tile = false;
 				m_sceneParams.bvh_type = ccl::BVH_TYPE_DYNAMIC;
 			}
 

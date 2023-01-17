@@ -1,6 +1,11 @@
 1.2.0.0ax (relative to 1.2.0.0a2)
 =========
 
+Fixes
+-----
+
+- Cycles : Disabled auto-tiling mode for the viewport/interactive render mode, which caused odd/glitchy behaviour on larger than 2k renders [^1].
+
 API
 ---
 
@@ -175,6 +180,14 @@ Build
 -----
 
 - Cortex : Updated to version 10.4.3.0.
+
+1.1.x.x (relative to 1.1.7.0)
+=======
+
+Fixes
+-----
+
+- Cycles : Disabled auto-tiling mode for the viewport/interactive render mode, which caused odd/glitchy behaviour on larger than 2k renders.
 
 1.1.7.0 (relative to 1.1.6.1)
 =======
