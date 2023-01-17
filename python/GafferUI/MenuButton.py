@@ -88,7 +88,11 @@ class MenuButton( GafferUI.Button ) :
 		# we also can't use the QPushButton::menu-indicator subcontrol to
 		# style menus. Instead we use this custom property to drive the
 		# stylesheet.
-		self._qtWidget().setProperty( "gafferMenuIndicator", text != "" )
+		wantMenuIndicator = bool( text )
+		haveMenuIndicator = self._qtWidget().property( "gafferMenuIndicator" ) or False
+		if wantMenuIndicator != haveMenuIndicator :
+			self._qtWidget().setProperty( "gafferMenuIndicator", wantMenuIndicator )
+			self._repolish()
 
 	def setErrored( self, errored ) :
 

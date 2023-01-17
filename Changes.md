@@ -10,6 +10,7 @@ Fixes
 -----
 
 - Cycles : Disabled auto-tiling mode for the viewport/interactive render mode, which caused odd/glitchy behaviour on larger than 2k renders [^1].
+- Menu buttons : Fixed missing dropdown menu indicators.
 
 API
 ---
