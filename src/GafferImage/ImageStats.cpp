@@ -419,8 +419,8 @@ void ImageStats::compute( ValuePlug *output, const Context *context ) const
 
 		IECore::ConstFloatVectorDataPtr channelData = flattenedInPlug()->channelDataPlug()->getValue();
 
-		float min = Imath::limits<float>::max();
-		float max = Imath::limits<float>::min();
+		float min = std::numeric_limits<float>::max();
+		float max = std::numeric_limits<float>::lowest();
 		double sum = 0.;
 
 		const std::vector<float> &channel = channelData->readable();
@@ -444,8 +444,8 @@ void ImageStats::compute( ValuePlug *output, const Context *context ) const
 			static_cast<ObjectPlug *>( output )->setValue( new IECore::V3dData( Imath::V3d( 0 ) ) );
 			return;
 		}
-		float min = Imath::limits<float>::max();
-		float max = Imath::limits<float>::min();
+		float min = std::numeric_limits<float>::max();
+		float max = std::numeric_limits<float>::lowest();
 		double sum = 0.;
 
 		// We traverse in TopToBottom order because floating point precision means that changing

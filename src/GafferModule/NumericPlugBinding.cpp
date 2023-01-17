@@ -85,8 +85,8 @@ void bind()
 					boost::python::arg_( "name" )=GraphComponent::defaultName<T>(),
 					boost::python::arg_( "direction" )=Plug::In,
 					boost::python::arg_( "defaultValue" )=V(),
-					boost::python::arg_( "minValue" )=Imath::limits<V>::min(),
-					boost::python::arg_( "maxValue" )=Imath::limits<V>::max(),
+					boost::python::arg_( "minValue" )=std::numeric_limits<V>::lowest(),
+					boost::python::arg_( "maxValue" )=std::numeric_limits<V>::max(),
 					boost::python::arg_( "flags" )=Plug::Default
 				)
 			)

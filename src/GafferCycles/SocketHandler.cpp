@@ -79,7 +79,7 @@ Gaffer::Plug *setupNumericPlug( const ccl::NodeType *nodeType, const ccl::Socket
 {
 	using ValueType = typename PlugType::ValueType;
 
-	ValueType minValue = Imath::limits<ValueType>::min();
+	ValueType minValue = std::numeric_limits<ValueType>::lowest();
 	if( socketType.type == ccl::SocketType::UINT )
 	{
 		minValue = 0;
@@ -97,7 +97,7 @@ Gaffer::Plug *setupNumericPlug( const ccl::NodeType *nodeType, const ccl::Socket
 		return existingPlug;
 	}
 
-	typename PlugType::Ptr plug = new PlugType( name, direction, defaultValue, minValue, Imath::limits<ValueType>::max(), Plug::Default );
+	typename PlugType::Ptr plug = new PlugType( name, direction, defaultValue, minValue, std::numeric_limits<ValueType>::max(), Plug::Default );
 	PlugAlgo::replacePlug( plugParent, plug );
 
 	return plug.get();
@@ -162,8 +162,8 @@ Gaffer::Plug *setupColorPlug( const ccl::NodeType *nodeType, const ccl::SocketTy
 	defaultValue[1] = defaultCValue->y;
 	defaultValue[2] = defaultCValue->z;
 
-	ValueType minValue( Imath::limits<BaseType>::min() );
-	ValueType maxValue( Imath::limits<BaseType>::max() );
+	ValueType minValue( std::numeric_limits<BaseType>::lowest() );
+	ValueType maxValue( std::numeric_limits<BaseType>::max() );
 
 	string name = boost::replace_first_copy( string( socketType.name.c_str() ), ".", "__" );
 	PlugType *existingPlug = plugParent->getChild<PlugType>( name );

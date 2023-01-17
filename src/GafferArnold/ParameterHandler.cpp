@@ -77,8 +77,8 @@ Gaffer::Plug *setupNumericPlug( const AtNodeEntry *node, const AtParamEntry *par
 	using ValueType = typename PlugType::ValueType;
 
 	ValueType defaultValue = 0;
-	ValueType minValue = Imath::limits<ValueType>::min();
-	ValueType maxValue = Imath::limits<ValueType>::max();
+	ValueType minValue = std::numeric_limits<ValueType>::lowest();
+	ValueType maxValue = std::numeric_limits<ValueType>::max();
 
 	AtString name = AiParamGetName( parameter );
 	bool defaultOverridden = false;
@@ -241,8 +241,8 @@ Gaffer::Plug *setupColorPlug( const AtNodeEntry *node, const AtParamEntry *param
 
 	// Now create (or reuse) a plug as necessary.
 
-	ValueType minValue( Imath::limits<BaseType>::min() );
-	ValueType maxValue( Imath::limits<BaseType>::max() );
+	ValueType minValue( std::numeric_limits<BaseType>::lowest() );
+	ValueType maxValue( std::numeric_limits<BaseType>::max() );
 
 	PlugType *existingPlug = plugParent->getChild<PlugType>( name.c_str() );
 	if(

@@ -1167,7 +1167,7 @@ ConnectionCreator *StandardNodeGadget::closestDragDestination( const DragDropEve
 	}
 
 	ConnectionCreator *result = nullptr;
-	float maxDist = Imath::limits<float>::max();
+	float maxDist = std::numeric_limits<float>::max();
 
 	for( ConnectionCreator::RecursiveIterator it( this ); !it.done(); it++ )
 	{

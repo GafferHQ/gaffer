@@ -359,8 +359,8 @@ Plug *loadNumericParameter( const OSLQuery::Parameter *parameter, const Interned
 		defaultValue = ValueType( parameter->fdefault[0] );
 	}
 
-	ValueType minValue( Imath::limits<ValueType>::min() );
-	ValueType maxValue( Imath::limits<ValueType>::max() );
+	ValueType minValue( std::numeric_limits<ValueType>::lowest() );
+	ValueType maxValue( std::numeric_limits<ValueType>::max() );
 	if( metadata )
 	{
 		const TypedData<ValueType> *minMeta = metadata->member< TypedData<ValueType> >( "min" );
@@ -472,8 +472,8 @@ Plug *loadCompoundNumericParameter( const OSLQuery::Parameter *parameter, const 
 	}
 
 	/// \todo Get from metadata
-	ValueType minValue( Imath::limits<BaseType>::min() );
-	ValueType maxValue( Imath::limits<BaseType>::max() );
+	ValueType minValue( std::numeric_limits<BaseType>::lowest() );
+	ValueType maxValue( std::numeric_limits<BaseType>::max() );
 	if( metadata )
 	{
 		const TypedData<ValueType> *minMeta = metadata->member< TypedData<ValueType> >( "min" );

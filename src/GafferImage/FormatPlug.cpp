@@ -59,7 +59,7 @@ FormatPlug::FormatPlug( const std::string &name, Direction direction, Format def
 {
 	const unsigned childFlags = flags & ~Dynamic;
 	addChild( new Box2iPlug( "displayWindow", direction, defaultValue.getDisplayWindow(), childFlags ) );
-	addChild( new FloatPlug( "pixelAspect", direction, defaultValue.getPixelAspect(), Imath::limits<float>::min(), Imath::limits<float>::max(), childFlags ) );
+	addChild( new FloatPlug( "pixelAspect", direction, defaultValue.getPixelAspect(), std::numeric_limits<float>::lowest(), std::numeric_limits<float>::max(), childFlags ) );
 }
 
 FormatPlug::~FormatPlug()

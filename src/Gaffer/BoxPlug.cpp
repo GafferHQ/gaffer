@@ -56,8 +56,8 @@ BoxPlug<T>::BoxPlug(
 		new ChildType(
 			"min", direction,
 			defaultValue.min,
-			typename ChildType::ValueType( Imath::limits<typename ChildType::ValueType::BaseType>::min() ),
-			typename ChildType::ValueType( Imath::limits<typename ChildType::ValueType::BaseType>::max() ),
+			typename ChildType::ValueType( std::numeric_limits<typename ChildType::ValueType::BaseType>::lowest() ),
+			typename ChildType::ValueType( std::numeric_limits<typename ChildType::ValueType::BaseType>::max() ),
 			childFlags
 		)
 	);
@@ -66,8 +66,8 @@ BoxPlug<T>::BoxPlug(
 		new ChildType(
 			"max", direction,
 			defaultValue.max,
-			typename ChildType::ValueType( Imath::limits<typename ChildType::ValueType::BaseType>::min() ),
-			typename ChildType::ValueType( Imath::limits<typename ChildType::ValueType::BaseType>::max() ),
+			typename ChildType::ValueType( std::numeric_limits<typename ChildType::ValueType::BaseType>::lowest() ),
+			typename ChildType::ValueType( std::numeric_limits<typename ChildType::ValueType::BaseType>::max() ),
 			childFlags
 		)
 	);

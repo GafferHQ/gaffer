@@ -43,8 +43,6 @@
 
 #include "IECore/PathMatcher.h"
 
-#include "OpenEXR/ImathLimits.h"
-
 namespace Gaffer
 {
 
@@ -99,7 +97,7 @@ GAFFERSCENEUI_API void expand( Gaffer::Context *context, const IECore::PathMatch
 
 /// Appends descendant paths to the current expansion up to a specified maximum depth.
 /// Returns a new PathMatcher containing the new leafs of this expansion.
-GAFFERSCENEUI_API IECore::PathMatcher expandDescendants( Gaffer::Context *context, const IECore::PathMatcher &paths, const GafferScene::ScenePlug *scene, int depth = Imath::limits<int>::max() );
+GAFFERSCENEUI_API IECore::PathMatcher expandDescendants( Gaffer::Context *context, const IECore::PathMatcher &paths, const GafferScene::ScenePlug *scene, int depth = std::numeric_limits<int>::max() );
 
 /// Clears the currently expanded paths
 GAFFERSCENEUI_API void clearExpansion( Gaffer::Context *context );

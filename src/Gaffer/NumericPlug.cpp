@@ -109,13 +109,13 @@ T NumericPlug<T>::defaultValue() const
 template<class T>
 bool NumericPlug<T>::hasMinValue() const
 {
-	return m_minValue!=Imath::limits<T>::min();
+	return m_minValue!=std::numeric_limits<T>::lowest();
 }
 
 template<class T>
 bool NumericPlug<T>::hasMaxValue() const
 {
-	return m_maxValue!=Imath::limits<T>::max();
+	return m_maxValue!=std::numeric_limits<T>::max();
 }
 
 template<class T>

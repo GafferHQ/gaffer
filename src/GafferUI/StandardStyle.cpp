@@ -482,7 +482,7 @@ V3f auxiliaryConnectionArrowPosition( const Box2f &dstNodeFrame, const V3f &p, c
 {
 	const float offset = 1.0;
 
-	float xT = limits<float>::max();
+	float xT = std::numeric_limits<float>::max();
 	if( v.x > 0 )
 	{
 		xT = ( offset + dstNodeFrame.max.x - p.x ) / v.x;
@@ -492,7 +492,7 @@ V3f auxiliaryConnectionArrowPosition( const Box2f &dstNodeFrame, const V3f &p, c
 		xT = ( offset + p.x - dstNodeFrame.min.x ) / -v.x;
 	}
 
-	float yT = limits<float>::max();
+	float yT = std::numeric_limits<float>::max();
 	if( v.y > 0 )
 	{
 		yT = ( offset + dstNodeFrame.max.y - p.y ) / v.y;

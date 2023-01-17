@@ -1487,12 +1487,12 @@ ImageView::ImageView( const std::string &name )
 	addChild( clippingPlug );
 
 	FloatPlugPtr exposurePlug = new FloatPlug( "exposure", Plug::In, 0.0f,
-		Imath::limits<float>::min(), Imath::limits<float>::max(), Plug::Default & ~Plug::AcceptsInputs
+		std::numeric_limits<float>::lowest(), std::numeric_limits<float>::max(), Plug::Default & ~Plug::AcceptsInputs
 	);
 	addChild( exposurePlug ); // dealt with in plugSet()
 
 	PlugPtr gammaPlug = new FloatPlug( "gamma", Plug::In, 1.0f,
-		Imath::limits<float>::min(), Imath::limits<float>::max(), Plug::Default & ~Plug::AcceptsInputs
+		std::numeric_limits<float>::lowest(), std::numeric_limits<float>::max(), Plug::Default & ~Plug::AcceptsInputs
 	);
 	addChild( gammaPlug );
 

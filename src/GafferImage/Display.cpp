@@ -395,7 +395,7 @@ Display::Display( const std::string &name )
 			Plug::In,
 			0,
 			0,
-			Imath::limits<int>::max(),
+			std::numeric_limits<int>::max(),
 			Plug::Default & ~Plug::Serialisable
 		)
 	);
@@ -408,7 +408,7 @@ Display::Display( const std::string &name )
 			Plug::In,
 			0,
 			0,
-			Imath::limits<int>::max(),
+			std::numeric_limits<int>::max(),
 			Plug::Default & ~Plug::Serialisable
 		)
 	);

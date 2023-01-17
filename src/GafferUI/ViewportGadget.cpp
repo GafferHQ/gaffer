@@ -1653,7 +1653,7 @@ bool ViewportGadget::mouseMove( GadgetPtr gadget, const ButtonEvent &event )
 IECore::RunTimeTypedPtr ViewportGadget::dragBegin( GadgetPtr gadget, const DragDropEvent &event )
 {
 	m_dragButton = event.buttons;
-	m_dragTrackingThreshold = limits<float>::max();
+	m_dragTrackingThreshold = std::numeric_limits<float>::max();
 
 	CameraController::MotionType cameraMotionType = m_cameraController->cameraMotionType( event, m_variableAspectZoom, m_preciseMotionAllowed );
 	bool unmodifiedMiddleDrag = event.buttons == ButtonEvent::Middle && event.modifiers == ModifiableEvent::None;

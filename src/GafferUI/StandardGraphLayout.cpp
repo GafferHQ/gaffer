@@ -743,8 +743,8 @@ class LayoutEngine
 		{
 			// Offsets of plugs relative to
 			// parent node origin.
-			V2f sourceOffset;
-			V2f targetOffset;
+			V2f sourceOffset = V2f( 0.0f );
+			V2f targetOffset = V2f( 0.0f );
 
 			Direction sourceTangent;
 			Direction targetTangent;

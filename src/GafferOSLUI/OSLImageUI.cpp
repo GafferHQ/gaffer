@@ -144,7 +144,7 @@ class OSLImagePlugAdder : public PlugAdder
 				if( color4fDefaultData )
 				{
 					const Imath::Color4f &default4 = color4fDefaultData->readable();
-					alphaValuePlug = new FloatPlug( "value", Plug::In, default4[3], Imath::limits<float>::min(), Imath::limits<float>::max(), Plug::Flags::Default | Plug::Flags::Dynamic );
+					alphaValuePlug = new FloatPlug( "value", Plug::In, default4[3], std::numeric_limits<float>::lowest(), std::numeric_limits<float>::max(), Plug::Flags::Default | Plug::Flags::Dynamic );
 					defaultData = new IECore::Color3fData( Imath::Color3f( default4[0], default4[1], default4[2] ) );
 				}
 
