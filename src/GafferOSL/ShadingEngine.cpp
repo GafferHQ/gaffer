@@ -236,20 +236,29 @@ bool convertValue( void *dst, TypeDesc dstType, const void *src, TypeDesc srcTyp
 	{
 		// Convert an aggregate (vec2, vec3, vec4, matrix33, matrix44) to an array with the same base type.
 		// Note that the aggregate enum value is the number of elements.
-		memcpy( dst, src, dstType.size() );
+		if( src && dst )
+		{
+			memcpy( dst, src, dstType.size() );
+		}
 		return true;
 	}
 	else if( srcType.basetype == TypeDesc::DOUBLE && srcType.aggregate == TypeDesc::SCALAR )
 	{
-		double doubleValue = *reinterpret_cast<const double *>( src );
+		const double *doubleCast = reinterpret_cast<const double *>( src );
 		if( dstType == TypeDesc::FLOAT )
 		{
-			*((float*)dst) = static_cast<float>( doubleValue );
+			if( doubleCast && dst )
+			{
+				*((float*)dst) = static_cast<float>( *doubleCast );
+			}
 			return true;
 		}
 		else if( dstType == TypeDesc::INT )
 		{
-			*((int*)dst) = static_cast<int>( doubleValue );
+			if( doubleCast && dst )
+			{
+				*((int*)dst) = static_cast<int>( *doubleCast );
+			}
 			return true;
 		}
 		return false;
