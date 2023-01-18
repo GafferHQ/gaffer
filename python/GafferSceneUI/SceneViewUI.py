@@ -581,16 +581,14 @@ class _SelectionMaskPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		GafferUI.PlugValueWidget.__init__( self, self.__menuButton, plug, **kw )
 
-		self._updateFromPlug()
-
 	def hasLabel( self ) :
 
 		return True
 
-	def _updateFromPlug( self ) :
+	def _updateFromValues( self, values, exception ) :
 
 		allTypes = set().union( *[ x[1] for x in self.__menuItems() if x[1] and not x[2] ] )
-		currentTypes = set().union( *[ _leafTypes( t ) for t in self.getPlug().getValue() ] )
+		currentTypes = set().union( *[ _leafTypes( t ) for t in values[0] ] )
 
 		self.__menuButton.setImage(
 			"selectionMaskOff.png" if currentTypes.issuperset( allTypes ) else "selectionMaskOn.png"
@@ -691,18 +689,21 @@ class _CameraPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.dragEnterSignal().connectFront( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
 		self.dropSignal().connectFront( Gaffer.WeakMethod( self.__drop ), scoped = False )
 
-		self._updateFromPlug()
-
 	def setHighlighted( self, highlighted ) :
 
 		GafferUI.PlugValueWidget.setHighlighted( self, highlighted )
 
 		self.__menuButton.setHighlighted( highlighted )
 
-	def _updateFromPlug( self ) :
+	@staticmethod
+	def _valuesForUpdate( plugs ) :
+
+		return [ p["lookThroughEnabled"].getValue() for p in plugs ]
+
+	def _updateFromValues( self, values, exception ) :
 
 		self.__menuButton.setImage(
-			"cameraOn.png" if self.getPlug()["lookThroughEnabled"].getValue() else "cameraOff.png"
+			"cameraOn.png" if all( values ) else "cameraOff.png"
 		)
 
 	def __menuDefinition( self ) :

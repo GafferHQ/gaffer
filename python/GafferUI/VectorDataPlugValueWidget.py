@@ -70,8 +70,6 @@ class VectorDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__dataWidget.dataChangedSignal().connect( Gaffer.WeakMethod( self.__dataChanged ), scoped = False )
 
-		self._updateFromPlug()
-
 	def vectorDataWidget( self ) :
 
 		return self.__dataWidget
@@ -81,16 +79,29 @@ class VectorDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 		GafferUI.PlugValueWidget.setHighlighted( self, highlighted )
 		self.vectorDataWidget().setHighlighted( highlighted )
 
-	def _updateFromPlug( self ) :
+	@staticmethod
+	def _valuesForUpdate( plugs ) :
 
-		plug = self.getPlug()
-		if plug is not None :
-			with self.getContext() :
-				self.__dataWidget.setData( [ p.getValue() for p in self.__dataPlugs() ] )
+		assert( len( plugs ) == 1 )
+		plug = next( iter( plugs ) )
+		if len( plug ) :
+			return { c : c.getValue() for c in plug }
+		else :
+			return { plug : plug.getValue() }
 
-			dragPointer = Gaffer.Metadata.value( plug, "vectorDataPlugValueWidget:dragPointer" )
-			if dragPointer is not None :
-				self.__dataWidget.setDragPointer( dragPointer )
+	def _updateFromValues( self, values, exception ) :
+
+		if values :
+			self.__dataWidget.setData( [ values[p] for p in self.__dataPlugs() ] )
+
+	def _updateFromMetadata( self ) :
+
+		dragPointer = None
+		if self.getPlug() is not None :
+			dragPointer = Gaffer.Metadata.value( self.getPlug(), "vectorDataPlugValueWidget:dragPointer" )
+		self.__dataWidget.setDragPointer( dragPointer or "values" )
+
+	def _updateFromEditable( self ) :
 
 		self.__dataWidget.setEditable( self._editable() )
 
@@ -113,7 +124,7 @@ class VectorDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 		assert( widget is self.__dataWidget )
 
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-			with Gaffer.Signals.BlockedConnection( self._plugConnections() ) :
+			with self._blockedUpdateFromValues() :
 				data = self.__dataWidget.getData()
 				for plug, value in zip( self.__dataPlugs(), self.__dataWidget.getData() ) :
 					plug.setValue( value )

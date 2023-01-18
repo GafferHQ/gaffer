@@ -44,6 +44,8 @@ import GafferScene
 import GafferUI
 import GafferImageUI
 
+from GafferUI.PlugValueWidget import sole
+
 import IECore
 
 ##########################################################################
@@ -206,24 +208,22 @@ class _StatePlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__stateIcons = {
 			GafferScene.InteractiveRender.State.Running : 'renderPause.png',
 			GafferScene.InteractiveRender.State.Paused : 'renderResume.png',
-			GafferScene.InteractiveRender.State.Stopped : 'renderStart.png'
+			GafferScene.InteractiveRender.State.Stopped : 'renderStart.png',
+			None : 'renderStart.png',
 		}
 
-		self._updateFromPlug()
+		self.__state = None
 
-	def _updateFromPlug( self ) :
+	def _updateFromValues( self, values, exception ) :
 
-		if self.getPlug() is None or not self._editable() :
-			self.__startPauseButton.setEnabled( False )
-			self.__stopButton.setEnabled( False )
-			return
+		self.__state = sole( values )
+		self.__startPauseButton.setImage( self.__stateIcons[self.__state] )
+		self._updateFromEditable()
 
-		with self.getContext() :
-			state = self.getPlug().getValue()
+	def _updateFromEditable( self ) :
 
-		self.__startPauseButton.setEnabled( True )
-		self.__startPauseButton.setImage( self.__stateIcons[state] )
-		self.__stopButton.setEnabled( state != GafferScene.InteractiveRender.State.Stopped )
+		self.__startPauseButton.setEnabled( self._editable() )
+		self.__stopButton.setEnabled( self._editable() and self.__state != GafferScene.InteractiveRender.State.Stopped )
 
 	def __startPauseClicked( self, button ) :
 
@@ -258,24 +258,21 @@ class _MessageSummaryPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__summaryWidget.levelButtonClickedSignal().connect( Gaffer.WeakMethod( self.__levelButtonClicked ), scoped = False )
 
-		self._updateFromPlug()
-
 	def getToolTip( self ) :
 
 		# Suppress the default messages tool-tip.
 		return ""
 
-	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
-	def _updateFromPlug( self ) :
+	def _updateFromValues( self, values, exception ) :
 
-		if self.getPlug() is not None :
-			with self.getContext() :
-				messages = self.getPlug().getValue().value
-		else :
-			messages = Gaffer.Private.IECorePreview.Messages()
+		if len( values ) :
+			self.__summaryWidget.setMessages( values[0].value )
 
-		self.__summaryWidget.setMessages( messages )
-		self.__summaryWidget.setEnabled( self.getPlug() is not None )
+	def _updateFromEditable( self ) :
+
+		# We don't care about read-onliness, because the summary widget only
+		# displays values, and doesn't allow any editing.
+		self.__summaryWidget.setEnabled( bool( self.getPlugs() ) )
 
 	def __levelButtonClicked( self, level ) :
 
@@ -355,8 +352,6 @@ class _MessagesPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		GafferUI.PlugValueWidget.__init__( self, self.__messages, plug, **kwargs )
 
-		self._updateFromPlug()
-
 	def hasLabel( self ) :
 
 		return True
@@ -370,16 +365,10 @@ class _MessagesPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return self.__messages
 
-	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
-	def _updateFromPlug( self, *unused ) :
+	def _updateFromValues( self, values, exception ) :
 
-		if self.getPlug() is not None :
-			with self.getContext() :
-				messages = self.getPlug().getValue().value
-		else :
-			messages = Gaffer.Private.IECorePreview.Messages()
-
-		self.__messages.setMessages( messages )
+		if len( values ) :
+			self.__messages.setMessages( values[0].value )
 
 ##########################################################################
 # Metadata for InteractiveRender node.

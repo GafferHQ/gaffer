@@ -93,8 +93,6 @@ class _CellPlugValueWidget( GafferUI.PlugValueWidget ) :
 		else :
 			self.__enabledPlugValueWidget = None
 
-		self._updateFromPlugs()
-
 	def childPlugValueWidget( self, childPlug ) :
 
 		for widget in self.__row :
@@ -156,19 +154,17 @@ class _CellPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	__plugValueWidgetCreators = {}
 
-	def _updateFromPlugs( self ) :
+	@staticmethod
+	def _valuesForUpdate( plugs ) :
+
+		return [ p.enabledPlug().getValue() for p in plugs ]
+
+	def _updateFromValues( self, values, exception ) :
 
 		if self.__enabledPlugValueWidget is None :
 			return
 
-		enabledPlugs = [ p.enabledPlug() for p in self.getPlugs() ]
-
-		enabled = False
-		with self.getContext() :
-			with IECore.IgnoredExceptions( Exception ) :
-				enabled = sole( [ p.getValue() for p in enabledPlugs ] )
-
-		self.__row[-1].setEnabled( enabled is True )
+		self.__row[-1].setEnabled( sole( values ) is True )
 
 	__numericFieldWidth = 60
 

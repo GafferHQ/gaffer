@@ -190,7 +190,7 @@ class CompoundNumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 				additionalWidgets = self.__row[i:]
 				break
 
-		dimensions = min( len( p ) for p in self.getPlugs() )
+		dimensions = min( len( p ) for p in self.getPlugs() ) if self.getPlugs() else 2
 		if dimensions > len( numericWidgets ) :
 			for i in range( 0, dimensions - len( numericWidgets ) ) :
 				numericWidgets.append( GafferUI.NumericPlugValueWidget( plugs = [] ) )

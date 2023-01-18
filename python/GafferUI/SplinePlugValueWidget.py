@@ -35,7 +35,7 @@
 #
 ##########################################################################
 
-import weakref
+import IECore
 
 import Gaffer
 import GafferUI
@@ -75,12 +75,15 @@ class SplinePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.splineWidget().setHighlighted( highlighted )
 
-	def _updateFromPlug( self ) :
+	def _updateFromValues( self, values, exception ) :
 
-		plug = self.getPlug()
-		if plug is not None :
-			with self.getContext() :
-				self.__splineWidget.setSpline( plug.getValue().spline() )
+		if values :
+			assert( len( values ) == 1 )
+			self.__splineWidget.setSpline( values[0].spline() )
+		else :
+			self.__splineWidget.setSpline(
+				IECore.Splineff( IECore.CubicBasisf.linear(), [ ( 0, 0.3 ), ( 1, 0.3 ) ] ),
+			)
 
 	def __buttonPress( self, button, event ) :
 

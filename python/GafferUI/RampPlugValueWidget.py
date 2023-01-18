@@ -135,22 +135,33 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return result
 
-	def _updateFromPlug( self ) :
+	@staticmethod
+	def _valuesForUpdate( plugs ) :
+
+		return [
+			{
+				"spline" : p.getValue().spline(),
+				# We can't get these positions from `spline`, because we need
+				# them to have the same order as the point plugs.
+				"positions" : [ p.pointXPlug( i ).getValue() for i in range( 0, p.numPoints() ) ],
+			}
+			for p in plugs
+		]
+
+	def _updateFromValues( self, values, exception ) :
+
+		assert( len( values ) < 2 )
+		if len( values ) :
+			self.__splineWidget.setSpline( values[0]["spline"] )
+			with Gaffer.Signals.BlockedConnection( self.__positionsChangedConnection ) :
+				self.__slider.setValues( values[0]["positions"] )
+
+	def _updateFromEditable( self ) :
 
 		plug = self.getPlug()
 		self.__slider.setSizeEditable( not ( plug.getInput() or
 			plug.direction() == Gaffer.Plug.Direction.Out or Gaffer.MetadataAlgo.readOnly( plug )
 		) )
-		with self.getContext() :
-
-			self.__splineWidget.setSpline( plug.getValue().spline() )
-
-			positions = []
-			for i in range( 0, plug.numPoints() ) :
-				positions.append( plug.pointXPlug( i ).getValue() )
-
-			with Gaffer.Signals.BlockedConnection( self.__positionsChangedConnection ) :
-				self.__slider.setValues( positions )
 
 	def __positionsChanged( self, slider, reason ) :
 
@@ -175,8 +186,10 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 						else:
 							rejected = True
 
-				if rejected:
-					self._updateFromPlug()
+				if rejected :
+					# Do immediate (non-lazy) update to get slider position back
+					# to where it should be, without any flickering.
+					self._requestUpdateFromValues( lazy = False )
 			else :
 				# a new position was added on the end by the user clicking
 				# on an empty area of the slider.

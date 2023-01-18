@@ -734,11 +734,9 @@ class _SectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__updateTabs()
 
-	def _updateFromPlug( self ) :
+	def _updateFromValues( self, values, exception ) :
 
-		with self.getContext() :
-			text = self.getPlug().getValue()
-
+		text = values[0]
 		text = "Main" if text == "" else text
 		for i in range( 0, self._qtWidget().count() ) :
 			if self._qtWidget().tabText( i ) == text :
@@ -756,7 +754,7 @@ class _SectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		index = self._qtWidget().currentIndex()
 		text = self._qtWidget().tabText( index )
-		with Gaffer.Signals.BlockedConnection( self._plugConnections() ) :
+		with self._blockedUpdateFromValues() :
 			self.getPlug().setValue(
 				text if text != "Main" else ""
 			)

@@ -53,30 +53,24 @@ class ColorChooserPlugValueWidget( GafferUI.PlugValueWidget ) :
 			Gaffer.WeakMethod( self.__colorChanged ), scoped = False
 		)
 
-		self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ), scoped = False )
-
 		self.__lastChangedReason = None
 		self.__mergeGroupId = 0
 
-		self._updateFromPlugs()
+	def _updateFromValues( self, values, exception ) :
 
-	def setPlugs( self, plugs ) :
-
-		GafferUI.PlugValueWidget.setPlugs( self, plugs )
-
-		self.__colorChooser.setInitialColor( self.__colorFromPlugs() )
-
-	def _updateFromPlugs( self ) :
+		# ColorChooser only supports one colour, and doesn't have
+		# an "indeterminate" state, so when we have multiple plugs
+		# the best we can do is take an average.
+		if len( values ) :
+			color = sum( values ) / len( values )
+		else :
+			color = imath.Color4f( 0 )
 
 		with Gaffer.Signals.BlockedConnection( self.__colorChangedConnection ) :
-			value = imath.Color4f( 0 )
-			errored = False
-			try:
-				value = self.__colorFromPlugs()
-			except:
-				errored = True
-			self.__colorChooser.setColor( value )
-			self.__colorChooser.setErrored( errored )
+			self.__colorChooser.setColor( color )
+			self.__colorChooser.setErrored( exception is not None )
+
+	def _updateFromEnabled( self ) :
 
 		self.__colorChooser.setEnabled( self.__allComponentsEditable() )
 
@@ -91,27 +85,9 @@ class ColorChooserPlugValueWidget( GafferUI.PlugValueWidget ) :
 			mergeGroup = "ColorPlugValueWidget%d%d" % ( id( self, ), self.__mergeGroupId )
 		) :
 
-			with Gaffer.Signals.BlockedConnection( self._plugConnections() ) :
+			with self._blockedUpdateFromValues() :
 				for plug in self.getPlugs() :
 					plug.setValue( self.__colorChooser.getColor() )
-
-	def __colorFromPlugs( self ) :
-
-		with self.getContext() :
-			values = [ p.getValue() for p in self.getPlugs() ]
-
-		if len( values ) :
-			# ColorChooser only supports one colour, and doesn't have
-			# an "indeterminate" state, so when we have multiple plugs
-			# the best we can do is take an average.
-			return sum( values ) / len( values )
-		else :
-			return imath.Color4f( 0 )
-
-	def __visibilityChanged( self, widget ) :
-
-		if self.visible() :
-			self.__colorChooser.setInitialColor( self.__colorChooser.getColor() )
 
 	def __allComponentsEditable( self ) :
 

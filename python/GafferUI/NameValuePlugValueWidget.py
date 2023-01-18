@@ -87,8 +87,6 @@ class NameValuePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__row.append( GafferUI.PlugValueWidget.create( { plug["value"] for plug in self.getPlugs() } ), expand = True )
 
-		self._updateFromPlugs()
-
 	def setPlugs( self, plugs ) :
 
 		GafferUI.PlugValueWidget.setPlugs( self, plugs )
@@ -123,16 +121,20 @@ class NameValuePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return self.__row[0].getVisible()
 
-	def _updateFromPlugs( self ) :
+	@staticmethod
+	def _valuesForUpdate( plugs ) :
 
-		if all( [ "enabled" in plug for plug in self.getPlugs()] ) :
-			with self.getContext() :
-				enabled = sole( [ plug["enabled"].getValue() for plug in self.getPlugs() ] )
+		return [
+			p["enabled"].getValue() if "enabled" in p else True
+			for p in plugs
+		]
 
-			if isinstance( self.__row[0], GafferUI.StringPlugValueWidget ) :
-				self.__row[0].setEnabled( enabled is True )
+	def _updateFromValues( self, values, exception ) :
 
-			self.__row[-1].setEnabled( enabled is True )
+		enabled = all( values )
+		if isinstance( self.__row[0], GafferUI.StringPlugValueWidget ) :
+			self.__row[0].setEnabled( enabled )
+		self.__row[-1].setEnabled( enabled )
 
 	def __drop( self, widget, event ) :
 

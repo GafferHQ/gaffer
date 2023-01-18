@@ -237,9 +237,9 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		return cls.__addColumnButtonMenuSignal
 
-	def _updateFromPlug( self ) :
+	def _updateFromEditable( self ) :
 
-		editable = self.getPlug().getInput() is None and not Gaffer.MetadataAlgo.readOnly( self.getPlug() )
+		editable = self._editable() and self.getPlug().getInput() is None
 		self.__addRowButton.setEnabled( editable )
 		self.__addColumnButton.setEnabled( editable )
 

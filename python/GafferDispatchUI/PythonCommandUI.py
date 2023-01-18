@@ -40,6 +40,8 @@ import Gaffer
 import GafferUI
 import GafferDispatch
 
+from GafferUI.PlugValueWidget import sole
+
 Gaffer.Metadata.registerNode(
 
 	GafferDispatch.PythonCommand,
@@ -147,21 +149,12 @@ class _CommandPlugValueWidget( GafferUI.PlugValueWidget ) :
 			node.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__pythonCommandPlugDirtied ), scoped = False )
 		self.__updateCompleter()
 
-		self._updateFromPlug()
+	def _updateFromValues( self, values, exception ) :
 
-	def _updateFromPlug( self ) :
+		self.__codeWidget.setText( sole( values ) or "" )
+		self.__codeWidget.setErrored( exception is not None )
 
-		if self.getPlug() is not None :
-			with self.getContext() :
-				try :
-					value = self.getPlug().getValue()
-				except :
-					value = None
-
-			if value is not None :
-				self.__codeWidget.setText( value )
-
-			self.__codeWidget.setErrored( value is None )
+	def _updateFromEditable( self ) :
 
 		self.__codeWidget.setEditable( self._editable() )
 
