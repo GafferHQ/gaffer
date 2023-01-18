@@ -10,12 +10,18 @@ Fixes
 -----
 
 - Cycles : Disabled auto-tiling mode for the viewport/interactive render mode, which caused odd/glitchy behaviour on larger than 2k renders [^1].
+- Arnold : The `ai:GI_diffuse_depth` and `ai:GI_specular_depth` options now default to `2` when they are left unspecified, matching the default values on the ArnoldOptions node.
 - Menu buttons : Fixed missing dropdown menu indicators.
 
 API
 ---
 
 - PlugAlgo : Added `findDestination()` utility method.
+
+Breaking Changes
+----------------
+
+- Arnold : Changed the default values for the `ai:GI_diffuse_depth` and `ai:GI_specular_depth` options.
 
 1.2.0.0a2 (relative to 1.2.0.0a1)
 =========
