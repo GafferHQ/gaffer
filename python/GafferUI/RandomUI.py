@@ -189,7 +189,7 @@ class _RandomColorPlugValueWidget( GafferUI.PlugValueWidget ) :
 					GafferUI.ColorSwatch( parenting = { "index" : ( x, y ) } )
 
 	@staticmethod
-	def _valuesForUpdate( plugs ) :
+	def _valuesForUpdate( plugs, auxiliaryPlugs ) :
 
 		node = next( iter( plugs ) ).source().node()
 		seed = node["seed"].getValue()

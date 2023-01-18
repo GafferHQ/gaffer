@@ -101,7 +101,7 @@ class ShufflePlugValueWidget( GafferUI.PlugValueWidget ) :
 		return None
 
 	@staticmethod
-	def _valuesForUpdate( plugs ) :
+	def _valuesForUpdate( plugs, auxiliaryPlugs ) :
 
 		return [ p["enabled"].getValue() for p in plugs ]
 

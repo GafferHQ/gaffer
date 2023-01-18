@@ -292,7 +292,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 	# > waiting for expensive computes. It must be a static method to avoid the
 	# > possibility of accessing unprotected state from the widget.
 	@staticmethod
-	def _valuesForUpdate( plugs ) :
+	def _valuesForUpdate( plugs, auxiliaryPlugs ) :
 
 		return [ p.getValue() if hasattr( p, "getValue" ) else None for p in plugs ]
 
@@ -319,6 +319,15 @@ class PlugValueWidget( GafferUI.Widget ) :
 	def _blockedUpdateFromValues( self ) :
 
 		return Gaffer.Signals.BlockedConnection( self.__plugDirtiedConnections )
+
+	## May be implemented to return a list of associated plugs that should
+	# also trigger updates, and which will also be passed to `_valuesForUpdate()`.
+	# The is called via `PlugAlgo.findDestination()` so that auxiliary plugs
+	# may be found on downstream nodes in the case that the widget is editing a
+	# plug on a Box or Spreadsheet.
+	def _auxiliaryPlugs( self, plug ) :
+
+		return []
 
 	## Called whenever metadata relating to the plug has changed. Should
 	# be implemented by derived classes to display the changes in the UI
@@ -537,19 +546,22 @@ class PlugValueWidget( GafferUI.Widget ) :
 			return
 
 		with self.getContext() :
-			if any( isinstance( p, Gaffer.ValuePlug ) and Gaffer.PlugAlgo.dependsOnCompute( p ) for p in self.getPlugs() ) :
+			if any(
+				isinstance( p, Gaffer.ValuePlug ) and Gaffer.PlugAlgo.dependsOnCompute( p )
+				for p in itertools.chain( self.getPlugs(), *self.__auxiliaryPlugs )
+			) :
 				# Getting the values will trigger a compute, which could be
 				# arbitrarily slow. So we do it in the background to avoid locking
 				# the UI.
-				self.__updateFromValuesInBackground( self.getPlugs() )
+				self.__updateFromValuesInBackground( self.getPlugs(), self.__auxiliaryPlugs )
 			else :
 				# No compute involved, so we don't expect to get any exceptions.
-				self._updateFromValues( self._valuesForUpdate( self.getPlugs() ), None )
+				self._updateFromValues( self._valuesForUpdate( self.getPlugs(), self.__auxiliaryPlugs ), None )
 
 	@GafferUI.BackgroundMethod()
-	def __updateFromValuesInBackground( self, plugs ) :
+	def __updateFromValuesInBackground( self, plugs, auxiliaryPlugs ) :
 
-		return self._valuesForUpdate( plugs )
+		return self._valuesForUpdate( plugs, auxiliaryPlugs )
 
 	@__updateFromValuesInBackground.preCall
 	def __updateFromValuesInBackgroundPreCall( self ) :
@@ -594,6 +606,13 @@ class PlugValueWidget( GafferUI.Widget ) :
 		if plug in self.__plugs :
 			self.__callLegacyUpdateMethods()
 			self.__callUpdateFromValues()
+
+	def __auxiliaryPlugDirtied( self, plug ) :
+
+		for plugs in self.__auxiliaryPlugs :
+			if plug in plugs :
+				self.__callUpdateFromValues()
+				return
 
 	def __plugInputChanged( self, plug ) :
 
@@ -664,6 +683,18 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		self.__context = next( ( self.__defaultContext( p ) for p in self.__plugs ), self.__fallbackContext )
 		self.__updateContextConnection()
+
+		self.__auxiliaryPlugs = []
+		auxiliaryNodes = set()
+		for plug in self.__plugs :
+			auxiliaryPlugs = Gaffer.PlugAlgo.findDestination( plug, lambda plug : self._auxiliaryPlugs( plug ) ) or []
+			self.__auxiliaryPlugs.append( auxiliaryPlugs )
+			auxiliaryNodes.update( [ plug.node() for plug in auxiliaryPlugs ] )
+
+		self.__auxiliaryPlugDirtiedConnections = [
+			node.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__auxiliaryPlugDirtied ), scoped = True )
+			for node in auxiliaryNodes
+		]
 
 		if callUpdateMethods :
 			self.__callLegacyUpdateMethods()

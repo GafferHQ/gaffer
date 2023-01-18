@@ -122,7 +122,7 @@ class NameValuePlugValueWidget( GafferUI.PlugValueWidget ) :
 		return self.__row[0].getVisible()
 
 	@staticmethod
-	def _valuesForUpdate( plugs ) :
+	def _valuesForUpdate( plugs, auxiliaryPlugs ) :
 
 		return [
 			p["enabled"].getValue() if "enabled" in p else True

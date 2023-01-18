@@ -696,7 +696,7 @@ class _CameraPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__menuButton.setHighlighted( highlighted )
 
 	@staticmethod
-	def _valuesForUpdate( plugs ) :
+	def _valuesForUpdate( plugs, auxiliaryPlugs ) :
 
 		return [ p["lookThroughEnabled"].getValue() for p in plugs ]
 

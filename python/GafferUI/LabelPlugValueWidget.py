@@ -124,7 +124,7 @@ class LabelPlugValueWidget( GafferUI.PlugValueWidget ) :
 		return result
 
 	@staticmethod
-	def _valuesForUpdate( plugs ) :
+	def _valuesForUpdate( plugs, auxiliaryPlugs ) :
 
 		## \todo: This is mirrored in PlugLayout and needs centralising in NodeAlgo (along
 		# with proper support for child plug connections/defaults) at the next API break.

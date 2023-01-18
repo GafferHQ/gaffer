@@ -113,7 +113,7 @@ class TweakPlugValueWidget( GafferUI.PlugValueWidget ) :
 		return self.__row[0].getVisible()
 
 	@staticmethod
-	def _valuesForUpdate( plugs ) :
+	def _valuesForUpdate( plugs, auxiliaryPlugs ) :
 
 		return [ p["enabled"].getValue() for p in plugs ]
 

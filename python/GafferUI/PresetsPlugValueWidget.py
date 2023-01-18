@@ -76,7 +76,7 @@ class PresetsPlugValueWidget( GafferUI.PlugValueWidget ) :
 		return self.__menuButton
 
 	@staticmethod
-	def _valuesForUpdate( plugs ) :
+	def _valuesForUpdate( plugs, auxiliaryPlugs ) :
 
 		return [ Gaffer.NodeAlgo.currentPreset( p ) or "" for p in plugs ]
 
