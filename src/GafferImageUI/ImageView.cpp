@@ -2020,29 +2020,32 @@ void ImageView::preRender()
 	{
 		viewportGadget()->setPostProcessShader( nullptr );
 	}
-	else if( !m_displayTransformAndShader->shader || m_displayTransformAndShader->shaderDirty )
+	else
 	{
-		if( !m_displayTransformAndShader->displayTransform )
+		if( !m_displayTransformAndShader->shader || m_displayTransformAndShader->shaderDirty )
 		{
-			m_displayTransformAndShader->shader = OpenColorIOAlgo::displayTransformToFramebufferShader( nullptr );
-		}
-		else
-		{
-			Context::Scope scope( getContext() );
-			const OpenColorIOTransform *ocioTrans = runTimeCast<const OpenColorIOTransform>(
-				m_displayTransformAndShader->displayTransform.get()
-			);
-
-			const IECore::MurmurHash h = ocioTrans->processorHash();
-			if( h != m_displayTransformAndShader->shaderHash )
+			if( !m_displayTransformAndShader->displayTransform )
 			{
-				m_displayTransformAndShader->shader = OpenColorIOAlgo::displayTransformToFramebufferShader(
-					ocioTrans->processor().get()
-				);
-				m_displayTransformAndShader->shaderHash = h;
+				m_displayTransformAndShader->shader = OpenColorIOAlgo::displayTransformToFramebufferShader( nullptr );
 			}
+			else
+			{
+				Context::Scope scope( getContext() );
+				const OpenColorIOTransform *ocioTrans = runTimeCast<const OpenColorIOTransform>(
+					m_displayTransformAndShader->displayTransform.get()
+				);
+
+				const IECore::MurmurHash h = ocioTrans->processorHash();
+				if( h != m_displayTransformAndShader->shaderHash )
+				{
+					m_displayTransformAndShader->shader = OpenColorIOAlgo::displayTransformToFramebufferShader(
+						ocioTrans->processor().get()
+					);
+					m_displayTransformAndShader->shaderHash = h;
+				}
+			}
+			m_displayTransformAndShader->shaderDirty = false;
 		}
-		m_displayTransformAndShader->shaderDirty = false;
 
 		m_displayTransformAndShader->shader->addUniformParameter( "absoluteValue", m_absoluteValueParameter );
 		m_displayTransformAndShader->shader->addUniformParameter( "clipping", m_clippingParameter );

@@ -4,6 +4,7 @@
 Fixes
 -----
 
+- Viewer : Fixed bug which made it impossible to switch back to a previously used display transform.
 - Cycles : Disabled auto-tiling mode for the viewport/interactive render mode, which caused odd/glitchy behaviour on larger than 2k renders.
 
 1.1.7.0 (relative to 1.1.6.1)
