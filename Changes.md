@@ -12,6 +12,7 @@ Improvements
   - Added warning when a shader contains an enum parameter with an invalid value.
   - Added support for passing InternedStringData to enum and string parameters.
 - PathListingWidget : Added support for columns that can automatically stretch to make use of available space.
+- LightEditor : Adjustments made to the width of the "Name" column are now preserved when switching between sections.
 
 Fixes
 -----

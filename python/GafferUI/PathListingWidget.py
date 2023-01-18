@@ -35,6 +35,7 @@
 #
 ##########################################################################
 
+import collections
 import warnings
 
 import imath
@@ -848,9 +849,9 @@ class _TreeView( QtWidgets.QTreeView ) :
 
 		self.__recalculatingColumnWidths = False
 		# the ideal size for each column. we cache these because they're slow to compute
-		self.__idealColumnWidths = []
+		self.__idealColumnWidths = collections.defaultdict( int )
 		# offsets to the ideal sizes made by the user
-		self.__columnWidthAdjustments = []
+		self.__columnWidthAdjustments = collections.defaultdict( int )
 
 		self.__currentEventModifiers = QtCore.Qt.NoModifier
 
@@ -904,18 +905,12 @@ class _TreeView( QtWidgets.QTreeView ) :
 		header = self.header()
 		numColumnsToResize = header.count() - 1 # leave the last section alone, as it's expandable
 
-		if numColumnsToResize != len( self.__columnWidthAdjustments ) :
-			# either the first time in here, or the number of columns has
-			# changed and we want to start again with the offsets.
-			self.__columnWidthAdjustments = [ 0 ] * numColumnsToResize
-
-		del self.__idealColumnWidths[:]
 		for i in range( 0, numColumnsToResize ) :
-
+			column = self.__getColumn( i )
 			idealWidth = max( header.sectionSizeHint( i ), self.sizeHintForColumn( i ) )
-			self.__idealColumnWidths.append( idealWidth )
+			self.__idealColumnWidths[column] = idealWidth
 
-			header.resizeSection( i, idealWidth + self.__columnWidthAdjustments[i] )
+			header.resizeSection( i, idealWidth + self.__columnWidthAdjustments[column] )
 
 		self.__recalculatingColumnWidths = False
 
@@ -1030,5 +1025,14 @@ class _TreeView( QtWidgets.QTreeView ) :
 
 		# store the difference between the ideal size and what the user would prefer, so
 		# we can apply it again in updateColumnWidths
-		if len( self.__idealColumnWidths ) > index :
-			self.__columnWidthAdjustments[index] = newWidth - self.__idealColumnWidths[index]
+		column = self.__getColumn( index )
+		self.__columnWidthAdjustments[column] = newWidth - self.__idealColumnWidths[column]
+
+	def __getColumn( self, index ) :
+
+		columns = _GafferUI._pathListingWidgetGetColumns( GafferUI._qtAddress( self ) )
+
+		if index >= len( columns ) :
+			raise IndexError( index )
+
+		return columns[index]
