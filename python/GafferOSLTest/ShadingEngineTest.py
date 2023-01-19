@@ -71,8 +71,13 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 				colorUserData.append( imath.Color3f( r.nextf(), r.nextf(), r.nextf() ) )
 				doubleUserData.append( y * divisions.x  + x )
 
+		dPdxData = IECore.V3fData( imath.V3f( bound.size().x / float( divisions.x - 1 ), 0, 0 ) )
+		dPdyData = IECore.V3fData( imath.V3f( 0, bound.size().y / float( divisions.y - 1 ), 0 ) )
+
 		return IECore.CompoundData( {
 			"P" : pData,
+			"dPdx" : dPdxData,
+			"dPdy" : dPdyData,
 			"u" : uData,
 			"v" : vData,
 			"floatUserData" : floatUserData,
@@ -695,7 +700,11 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 
 				for name in [ "colorUserData", "P" ] :
 
-					for direction in [ "X", "Y", "Z" ] :
+					for direction, dP in [
+						( "X", imath.Color3f( 0.222222224, 0, 0 ) ),
+						( "Y", imath.Color3f( 0, 0.222222224, 0 ) ),
+						( "Z", imath.Color3f( 0 ) )
+					] :
 
 						e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
 							shaders = {
@@ -710,7 +719,11 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 						) )
 
 						p = e.shade( self.rectanglePoints() )
-						self.assertEqual( p["Ci"], IECore.Color3fVectorData( [ imath.Color3f( 0 ) ] * 100 ) )
+						if name == "P":
+							self.assertEqual( p["Ci"], IECore.Color3fVectorData( [ dP ] * 100 ) )
+						else:
+							# The last 5 elements are always set to P, to test split SIMD batches
+							self.assertEqual( p["Ci"], IECore.Color3fVectorData( [ imath.Color3f( 0 ) ] * 95 + [ dP ] * 5) )
 
 	def testTime( self ) :
 

@@ -42,12 +42,13 @@ surface derivatives
 )
 {
 	int success = 1;
-	color a = 0;
-	if( name == "P" )
-	{
-		a = color( P );
-	}
-	else
+	color a = P;
+	int index;
+	getattribute( "shading:index", index );
+	// We leave the last 5 elements set to the derivative of P for this test.
+	// This tests overwriting derivatives, and in particular, tests the situation
+	// for SIMD where only part of a batch is overwritten.
+	if( name != "P" && index < 95 )
 	{
 		success = getattribute( object, name, a );
 	}
