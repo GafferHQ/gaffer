@@ -67,8 +67,7 @@ class GafferVolumeLoader : public ccl::VDBImageLoader
 {
 	public:
 		GafferVolumeLoader( const IECoreVDB::VDBObject *ieVolume, const string &gridName )
-		: VDBImageLoader( gridName ),
-		  m_ieVolume( ieVolume )
+		: VDBImageLoader( gridName ), m_ieVolume( ieVolume )
 		{
 		}
 
@@ -81,10 +80,12 @@ class GafferVolumeLoader : public ccl::VDBImageLoader
 			return ccl::VDBImageLoader::load_metadata( features, metadata );
 		}
 
-		bool load_pixels( const ccl::ImageMetaData &metadata,
-						  void *pixels,
-						  const size_t pixel_size,
-						  const bool associate_alpha ) override
+		bool load_pixels(
+			const ccl::ImageMetaData &metadata,
+			void *pixels,
+			const size_t pixel_size,
+			const bool associate_alpha
+		) override
 		{
 			if( m_ieVolume )
 				return ccl::VDBImageLoader::load_pixels( metadata, pixels, pixel_size, associate_alpha );

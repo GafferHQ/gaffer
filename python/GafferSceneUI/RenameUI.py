@@ -131,7 +131,7 @@ Gaffer.Metadata.registerNode(
 			--------
 
 			- `()` : Captures the subgroup of the pattern within the brackets,
-			  allowing it to be referenced by `{}` in the `replace` string.
+			allowing it to be referenced by `{}` in the `replace` string.
 
 			""",
 

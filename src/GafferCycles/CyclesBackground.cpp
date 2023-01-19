@@ -63,4 +63,3 @@ std::string CyclesBackground::computeOptionName( const Gaffer::Context *context 
 {
 	return "cycles:background:shader";
 }
-
