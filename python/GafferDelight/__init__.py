@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+__import__( "IECoreDelight" )
 __import__( "GafferScene" )
 
 from ._GafferDelight import *

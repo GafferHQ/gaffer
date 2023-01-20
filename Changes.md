@@ -18,6 +18,7 @@ Fixes
 - FilteredSceneProcessor :
   - Fixed bugs which allowed read-only nodes to be edited.
   - Fixed undo for `Remove` menu item in Filter tab.
+- 3Delight : Fixed bug preventing 3delight from loading on Windows. (#5081). This also caused errors in the light editor at startup : `IECore.Exception: File "maya/osl/pointLight" could not be found.` [^2]
 
 API
 ---
@@ -28,6 +29,9 @@ Breaking Changes
 ----------------
 
 - Arnold : Changed the default values for the `ai:GI_diffuse_depth` and `ai:GI_specular_depth` options.
+
+[^1]: Changes inherited from 1.x. Can be omitted from the release notes for the final release of 1.2.
+[^2]: Changes made to features introduced in 1.2.0.0ax. Can be omitted from the release notes for the final release of 1.2.
 
 1.2.0.0a2 (relative to 1.2.0.0a1)
 =========
