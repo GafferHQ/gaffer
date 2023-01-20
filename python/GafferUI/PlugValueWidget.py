@@ -690,6 +690,12 @@ class PlugValueWidget( GafferUI.Widget ) :
 			auxiliaryPlugs = Gaffer.PlugAlgo.findDestination( plug, lambda plug : self._auxiliaryPlugs( plug ) ) or []
 			self.__auxiliaryPlugs.append( auxiliaryPlugs )
 			auxiliaryNodes.update( [ plug.node() for plug in auxiliaryPlugs ] )
+			# > Note : Which `auxiliaryPlugs` we find depends on the output connections
+			# from `plug` (because we're using `findDestination()`). So we should redo
+			# this search when the outputs change (or the outputs of the outputs change etc).
+			# But we don't currently have appropriate signals to allow that. For now, we
+			# assume that the results of `findDestination()` change infrequently enough that
+			# it is OK to perform the search only once.
 
 		self.__auxiliaryPlugDirtiedConnections = [
 			node.plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__auxiliaryPlugDirtied ), scoped = True )
