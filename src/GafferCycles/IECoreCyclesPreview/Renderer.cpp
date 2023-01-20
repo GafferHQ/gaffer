@@ -3199,24 +3199,21 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		{
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 
+			if( m_renderState == RENDERSTATE_RENDERING && m_renderType == Interactive )
 			{
-				std::scoped_lock sceneLock( m_scene->mutex );
-				if( m_renderState == RENDERSTATE_RENDERING && m_renderType == Interactive )
-				{
-					clearUnused();
-				}
+				clearUnused();
+			}
 
-				updateSceneObjects();
-				updateOptions();
-				updateCamera();
-				updateOutputs();
+			updateSceneObjects();
+			updateOptions();
+			updateCamera();
+			updateOutputs();
 
-				if( m_renderState == RENDERSTATE_RENDERING )
+			if( m_renderState == RENDERSTATE_RENDERING )
+			{
+				if( m_scene->need_reset() )
 				{
-					if( m_scene->need_reset() )
-					{
-						m_session->reset( m_sessionParams, m_bufferParams );
-					}
+					m_session->reset( m_sessionParams, m_bufferParams );
 				}
 			}
 
