@@ -918,31 +918,86 @@ void StandardStyle::renderRectangle( const Imath::Box2f &box ) const
 	glEnd();
 }
 
-void StandardStyle::renderAnimationCurve( const Imath::V2f &start, const Imath::V2f &end, const Imath::V2f &startTangent, const Imath::V2f &endTangent, State state, const Imath::Color3f *userColor ) const
+void StandardStyle::renderAnimationCurve( const std::vector< Imath::V2f > &vertices, const bool inKeyRange, const State state, const Imath::Color3f *const userColor ) const
 {
-	glUniform1i( g_isCurveParameter, 1 );
+
+	bool const selectMode = ( IECoreGL::Selector::currentSelector() != nullptr );
+
+	// shader state
+
+	glUniform1i( g_isCurveParameter, 0 );
 	glUniform1i( g_borderParameter, 0 );
-	glUniform1f( g_edgeAntiAliasingParameter, 1 );
+	glUniform1f( g_edgeAntiAliasingParameter, 0 );
 	glUniform1i( g_textureTypeParameter, 0 );
-	glUniform1f( g_lineWidthParameter, 3.0 );
 
-	glColor( colorForState( AnimationCurveColor, state, userColor ) );
+	// set colour
 
-	const Imath::V3f start3 = Imath::V3f( start.x, start.y, 0 );
-	const Imath::V3f end3 = Imath::V3f( end.x, end.y, 0 );
-	const Imath::V3f startTangent3 = Imath::V3f( startTangent.x, startTangent.y, 0 );
-	const Imath::V3f endTangent3 = Imath::V3f( endTangent.x, endTangent.y, 0 );
+	if( ! selectMode )
+	{
+		glColor( colorForState( AnimationCurveColor, state, userColor ) );
+	}
 
-	const V3f dir = ( end3 - start3 ).normalized();
+	// set line width
 
-	glUniform3fv( g_v0Parameter, 1, start3.getValue() );
-	glUniform3fv( g_v1Parameter, 1, end3.getValue() );
-	glUniform3fv( g_t0Parameter, 1, ( startTangent3 != V3f( 0 ) ? startTangent3 :  dir ).getValue() );
-	glUniform3fv( g_t1Parameter, 1, ( endTangent3 != V3f( 0 ) ? endTangent3 : -dir ).getValue() );
+	GLfloat lineWidth;
+	glGetFloatv( GL_LINE_WIDTH, & lineWidth );
+	const bool lineSmooth = ( glIsEnabled( GL_LINE_SMOOTH ) == GL_TRUE );
+	if( selectMode )
+	{
+		glDisable( GL_LINE_SMOOTH );
+		glLineWidth( 3.f );
+	}
+	else
+	{
+		glEnable( GL_LINE_SMOOTH );
+		glLineWidth( 2.f );
+	}
 
-	glUniform1f( g_endPointSizeParameter, g_endPointSize );
+	// set line stipple (dotted line) when not drawing curve in range of keys
 
-	glCallList( connectionDisplayList() );
+	GLint lineStippleRepeat, lineStipplePattern;
+	const bool lineStipple = ( glIsEnabled( GL_LINE_STIPPLE ) == GL_TRUE );
+	if( ! inKeyRange && ! selectMode )
+	{
+		glGetIntegerv( GL_LINE_STIPPLE_REPEAT, & lineStippleRepeat );
+		glGetIntegerv( GL_LINE_STIPPLE_PATTERN, & lineStipplePattern );
+		glLineStipple( 2, 0x5555 );
+		glEnable( GL_LINE_STIPPLE );
+	}
+	else
+	{
+		glDisable( GL_LINE_STIPPLE );
+	}
+
+	// draw vertices
+
+	glBegin( GL_LINE_STRIP );
+
+		for( const Imath::V2f
+			*      it    = vertices.data(),
+			*const itEnd = vertices.data() + vertices.size(); it != itEnd; ++it )
+		{
+			glVertex2f( it->x, it->y );
+		}
+
+	glEnd();
+
+	// restore gl state
+
+	glLineWidth( lineWidth );
+
+	( lineSmooth )
+		? glEnable( GL_LINE_SMOOTH )
+		: glDisable( GL_LINE_SMOOTH );
+
+	if( ! inKeyRange && ! selectMode )
+	{
+		glLineStipple( lineStippleRepeat, lineStipplePattern );
+	}
+
+	( lineStipple )
+		? glEnable( GL_LINE_STIPPLE )
+		: glDisable( GL_LINE_STIPPLE );
 }
 
 void StandardStyle::renderAnimationKey( const Imath::V2f &position, State state, float size, const Imath::Color3f *userColor ) const
