@@ -155,7 +155,7 @@ class _CellPlugValueWidget( GafferUI.PlugValueWidget ) :
 	__plugValueWidgetCreators = {}
 
 	@staticmethod
-	def _valuesForUpdate( plugs ) :
+	def _valuesForUpdate( plugs, auxiliaryPlugs ) :
 
 		return [ p.enabledPlug().getValue() for p in plugs ]
 

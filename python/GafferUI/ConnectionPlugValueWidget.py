@@ -92,7 +92,7 @@ class ConnectionPlugValueWidget( GafferUI.PlugValueWidget ) :
 		return result
 
 	@staticmethod
-	def _valuesForUpdate( plugs ) :
+	def _valuesForUpdate( plugs, auxiliaryPlugs ) :
 
 		# Avoid unnecessary overhead of computing values, since
 		# we don't use them in `_updateFromValues()`.

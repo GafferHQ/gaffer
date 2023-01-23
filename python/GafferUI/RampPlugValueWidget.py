@@ -136,7 +136,7 @@ class RampPlugValueWidget( GafferUI.PlugValueWidget ) :
 		return result
 
 	@staticmethod
-	def _valuesForUpdate( plugs ) :
+	def _valuesForUpdate( plugs, auxiliaryPlugs ) :
 
 		return [
 			{

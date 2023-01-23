@@ -105,8 +105,6 @@ class _ContextVariableWidget( GafferUI.PlugValueWidget ) :
 			else:
 				_VariationsPlugValueWidget( self.getPlug().node()["variations"], self.getPlug()["name"], "", toolTipPrefix )
 
-		self._updateFromPlugs()
-
 	def setPlugs( self, plugs ) :
 
 		GafferUI.PlugValueWidget.setPlugs( self, plugs )
@@ -127,21 +125,25 @@ class _ContextVariableWidget( GafferUI.PlugValueWidget ) :
 
 		return None
 
-	def _updateFromPlugs( self ) :
+	@staticmethod
+	def _valuesForUpdate( plugs, auxiliaryPlugs ) :
 
-		with self.getContext() :
-			enabled = self.getPlug()["enabled"].getValue()
-			self.__row[0].setEnabled( enabled )
-			self.__row[2].setEnabled( enabled )
+		return [ p["enabled"].getValue() for p in plugs ]
+
+	def _updateFromValues( self, values, exception ) :
+
+		enabled = all( values )
+		self.__row[0].setEnabled( enabled )
+		self.__row[2].setEnabled( enabled )
 
 GafferUI.PlugValueWidget.registerType( GafferScene.Instancer.ContextVariablePlug, _ContextVariableWidget )
 
 class _VariationsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	# The variations plug returns a count for each context variable, and a total.  This plug can
-	# display any one of these counts - which to display is selected by the "contextName" argument,
-	# which can be either a string literal, or a String plug which will be evaluated to find the
-	# name to access within the variations plug output
+	# The variations plug returns a count for each context variable, and a total. This widget can
+	# display any one of these counts - which to display is selected by the `contextName` argument,
+	# which can be either a string literal, or a StringPlug which will be evaluated to find the
+	# name to access within the variations plug output.
 	def __init__( self, plug, contextName, label, toolTipPrefix, **kw ) :
 
 		toolTip = toolTipPrefix + "  " + inspect.cleandoc(
@@ -153,18 +155,12 @@ class _VariationsPlugValueWidget( GafferUI.PlugValueWidget ) :
 			"""
 		)
 
+		assert( isinstance( contextName, ( str, Gaffer.StringPlug ) ) )
+		self.__contextName = contextName
+
 		l = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4, toolTip = toolTip )
 
 		GafferUI.PlugValueWidget.__init__( self, l, plug, **kw )
-
-
-		if isinstance( contextName, Gaffer.StringPlug ):
-			self.contextName = None
-			self.contextNamePlug = contextName
-			self.contextNamePlug.node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__namePlugDirtied ), scoped = False )
-		else:
-			self.contextName = contextName
-			self.contextNamePlug = None
 
 		with l :
 			GafferUI.Spacer( imath.V2i( 0 ), preferredSize = imath.V2i( 0 ) )
@@ -176,89 +172,42 @@ class _VariationsPlugValueWidget( GafferUI.PlugValueWidget ) :
 				self.__countLabel = GafferUI.Label( horizontalAlignment = GafferUI.HorizontalAlignment.Right, toolTip = toolTip )
 				self.__countLabel._qtWidget().setMinimumWidth( 90 )
 
-		self.__updateLabel( -1 )
-		self._updateFromPlug()
-
-	def setPlugs( self, plugs ) :
-		# VariationsPlugValueWidget is a special widget that requires both the plug and contextName
-		# to be set in the constructor.  Does not support setPlugs.
-		raise NotImplementedError
-
 	def hasLabel( self ) :
+
 		return True
 
-	def __namePlugDirtied( self, plug ) :
+	def _auxiliaryPlugs( self, plug ) :
 
-		if plug == self.contextNamePlug :
-			self._updateFromPlug()
+		return [ self.__contextName ] if isinstance( self.__contextName, Gaffer.StringPlug ) else []
 
-	def _updateFromPlug( self ) :
+	@staticmethod
+	def _valuesForUpdate( plugs, auxiliaryPlugs ) :
 
-		self.__updateLazily()
+		return [
+			{
+				"variations" : plug.getValue(),
+				"contextName" : auxiliary[0].getValue() if auxiliary else None,
+			}
+			for plug, auxiliary in zip( plugs, auxiliaryPlugs )
+		]
 
-	@GafferUI.LazyMethod()
-	def __updateLazily( self ) :
+	def _updateFromValues( self, values, exception ) :
 
-		with self.getContext() :
-			self.__updateInBackground()
+		self.__busyWidget.setBusy( not values and exception is None )
 
-	@GafferUI.BackgroundMethod()
-	def __updateInBackground( self ) :
+		if values :
 
-		resultDict = self.getPlug().getValue()
+			assert( len( values ) == 1 )
 
-		contextName = ""
-		if self.contextNamePlug:
-			contextName = self.contextNamePlug.getValue()
+			if values[0]["contextName"] is None :
+				assert( isinstance( self.__contextName, str ) )
+				count = values[0]["variations"].get( self.__contextName, "" )
+			elif values[0]["contextName"] :
+				count = values[0]["variations"].get( values[0]["contextName"], "" )
+			else :
+				count = ""
 
-			if contextName == "":
-				return -1
-		else:
-			contextName = self.contextName
-
-		if contextName in resultDict:
-			# Success. We have valid infomation to display.
-			return resultDict[contextName].value
-
-		# Could be that this variable is disabled
-		return -1
-
-	@__updateInBackground.preCall
-	def __updateInBackgroundPreCall( self ) :
-
-		self.__updateLabel( -1 )
-		self.__busyWidget.setBusy( True )
-
-	@__updateInBackground.postCall
-	def __updateInBackgroundPostCall( self, backgroundResult ) :
-
-		if isinstance( backgroundResult, IECore.Cancelled ) :
-			# Cancellation. This could be due to any of the
-			# following :
-			#
-			# - This widget being hidden.
-			# - A graph edit that will affect the result and will have
-			#   triggered a call to _updateFromPlug().
-			# - A graph edit that won't trigger a call to _updateFromPlug().
-			#
-			# LazyMethod takes care of all this for us. If we're hidden,
-			# it waits till we're visible. If `updateFromPlug()` has already
-			# called `__updateLazily()`, our call will just replace the
-			# pending call.
-			self.__updateLazily()
-			return
-		elif isinstance( backgroundResult, Exception ) :
-			# Computation error. This will be reported elsewhere
-			# in the UI.
-			self.__updateLabel( -1 )
-		else :
-			self.__updateLabel( backgroundResult )
-
-		self.__busyWidget.setBusy( False )
-
-	def __updateLabel( self, count ) :
-		self.__countLabel.setText( str(count) + " " if count >= 0 else " " )
-
+			self.__countLabel.setText( "{} ".format( count ) )
 
 def _variationsPlugValueWidgetWidth() :
 	# Size of the visible part of the _VariationsPlugValueWidget

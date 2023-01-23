@@ -209,7 +209,7 @@ class ChildPlugValueWidget( GafferUI.PlugValueWidget ) :
 		return True
 
 	@staticmethod
-	def _valuesForUpdate( plugs ) :
+	def _valuesForUpdate( plugs, auxiliaryPlugs ) :
 
 		return [
 			{

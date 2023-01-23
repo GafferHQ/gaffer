@@ -34,7 +34,6 @@
 #
 ##########################################################################
 
-import collections
 import functools
 
 import IECore
@@ -43,77 +42,65 @@ import Gaffer
 import GafferUI
 import GafferImage
 
+from GafferUI.PlugValueWidget import sole
+
 class ViewPlugValueWidget( GafferUI.PlugValueWidget ) :
 
-	def __init__( self, plug, **kw ) :
+	def __init__( self, plugs, **kw ) :
 
 		self.__menuButton = GafferUI.MenuButton( menu = GafferUI.Menu( Gaffer.WeakMethod( self._menuDefinition ) ) )
 
-		GafferUI.PlugValueWidget.__init__( self, self.__menuButton, plug, **kw )
+		GafferUI.PlugValueWidget.__init__( self, self.__menuButton, plugs, **kw )
 
-		self.__plugDirtiedConnection = self.getPlug().node().plugDirtiedSignal().connect( Gaffer.WeakMethod( self.__imagePlugDirtied ), scoped = True )
-		self._updateFromPlug()
+		self.__currentValue = None
+		self.__availableViews = []
 
+	def _auxiliaryPlugs( self, plug ) :
 
-	def _updateFromPlug( self ) :
+		firstInputImage = next( GafferImage.ImagePlug.RecursiveInputRange( plug.node() ), None )
+		return [ firstInputImage["viewNames"] ] if firstInputImage is not None else []
 
-		errored = False
-		with self.getContext() :
-			try:
-				value = self.getPlug().getValue()
-				image = self.__firstInputImagePlug()
-				if image is not None :
-					viewNames = image.viewNames()
-				else :
-					viewNames = GafferImage.ImagePlug.defaultViewNames()
-			except:
-				errored = True
+	@staticmethod
+	def _valuesForUpdate( plugs, auxiliaryPlugs ) :
 
-		self.__menuButton.setErrored( errored )
+		return [
+			{
+				"value" : plug.getValue(),
+				"availableViews" : viewNamesPlugs[0].getValue()
+			}
+			for plug, viewNamesPlugs in zip( plugs, auxiliaryPlugs )
+		]
 
-		if not errored :
-			if value == "" :
-				text = "(Use Current Context)"
-			elif value in viewNames :
-				text = value
-			else :
-				text = "{}{}".format(
-					value,
-					" (invalid)" if GafferImage.ImagePlug.defaultViewName not in viewNames else " (default)"
-				)
-			self.__menuButton.setText( text )
+	def _updateFromValues( self, values, exception ) :
+
+		self.__currentValue = sole( v["value"] for v in values )
+		self.__availableViews = sorted( set().union( *[ v["availableViews"] for v in values ] ) )
+
+		if self.__currentValue == "" :
+			self.__menuButton.setText( "(Current Context)" )
+		elif self.__currentValue is None :
+			self.__menuButton.setText( "---" )
+		elif self.__currentValue in self.__availableViews :
+			self.__menuButton.setText( self.__currentValue )
 		else :
-			self.__menuButton.setText( "" )
+			self.__menuButton.setText(
+				"{}{}".format(
+					self.__currentValue,
+					" (invalid)" if GafferImage.ImagePlug.defaultViewName not in self.__availableViews else " (default)"
+				)
+			)
+
+		self.__menuButton.setErrored( exception is not None )
+
+	def _updateFromEditable( self ) :
 
 		self.__menuButton.setEnabled( self._editable() )
 
-	def __firstInputImagePlug( self ):
-		for i in self.getPlug().node().children( GafferImage.ImagePlug ):
-			if i.direction() == Gaffer.Plug.Direction.In:
-				return i
-
-		return None
-
-	def __imagePlugDirtied( self, plug ):
-		i = self.__firstInputImagePlug()
-		if i and plug == self.__firstInputImagePlug()["viewNames"]:
-			self._updateFromPlug()
-
 	def _views( self ) :
 
-		try :
-			with self.getContext() :
-				viewNames = self.__firstInputImagePlug()["viewNames"].getValue()
-				return IECore.StringVectorData( sorted( viewNames ) )
-		except:
-			return GafferImage.ImagePlug.defaultViewNames()
+		return self.__availableViews
 
 	def _menuDefinition( self ) :
-
-		currentValue = None
-		with self.getContext() :
-			with IECore.IgnoredExceptions( Gaffer.ProcessException ) :
-				currentValue = self.getPlug().getValue()
 
 		result = IECore.MenuDefinition()
 		for v in self._views():
@@ -121,16 +108,16 @@ class ViewPlugValueWidget( GafferUI.PlugValueWidget ) :
 				"/" + v,
 				{
 					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), value = v ),
-					"checkBox" : v == currentValue,
+					"checkBox" : v == self.__currentValue,
 				}
 			)
 
-		if Gaffer.Metadata.value( self.getPlug(), "viewPlugValueWidget:allowUseCurrentContext" ):
+		if all( Gaffer.Metadata.value( p, "viewPlugValueWidget:allowUseCurrentContext" ) for p in self.getPlugs() ) :
 			result.append(
-				"/(Use Current Context)",
+				"/(Current Context)",
 				{
 					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), value = "" ),
-					"checkBox" : "" == currentValue,
+					"checkBox" : "" == self.__currentValue,
 				}
 			)
 
@@ -138,5 +125,6 @@ class ViewPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __setValue( self, unused, value ) :
 
-		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-			self.getPlug().setValue( value )
+		with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ) ) :
+			for plug in self.getPlugs() :
+				plug.setValue( value )

@@ -80,7 +80,7 @@ class VectorDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.vectorDataWidget().setHighlighted( highlighted )
 
 	@staticmethod
-	def _valuesForUpdate( plugs ) :
+	def _valuesForUpdate( plugs, auxiliaryPlugs ) :
 
 		assert( len( plugs ) == 1 )
 		plug = next( iter( plugs ) )

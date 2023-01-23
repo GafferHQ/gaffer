@@ -78,7 +78,7 @@ class FilterPlugValueWidget( GafferUI.PlugValueWidget ) :
 		return True
 
 	@staticmethod
-	def _valuesForUpdate( plugs ) :
+	def _valuesForUpdate( plugs, auxiliaryPlugs ) :
 
 		return [ FilterPlugValueWidget.__filterNode( p ) for p in plugs ]
 

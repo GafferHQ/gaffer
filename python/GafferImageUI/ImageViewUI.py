@@ -1284,7 +1284,7 @@ class _CompareParentPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.dropSignal().connectFront( Gaffer.WeakMethod( self.__drop ), scoped = False )
 
 	@staticmethod
-	def _valuesForUpdate( plugs ) :
+	def _valuesForUpdate( plugs, auxiliaryPlugs ) :
 
 		return [ p["mode"].getValue() for p in plugs ]
 

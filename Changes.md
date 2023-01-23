@@ -5,7 +5,7 @@ Improvements
 ------------
 
 - Viewer : If Arnold is available, then it is preferred over Appleseed for performing OSL shader previews. If neither is available, then Cycles will be used (#5084).
-- FormatPlugValueWidget : Added support for editing multiple plugs at once, as needed when multiple Spreadsheet cells are edited at once.
+- FormatPlugValueWidget, ChannelPlugValueWidget, ChannelMaskPlugValueWidget, RGBAChannelsPlugValueWidget, ViewPlugValueWidget : Added support for showing multiple plugs at once, as needed when multiple Spreadsheet cells are selected for editing.
 - Spreadsheet : Improved display of image formats.
 
 Fixes
@@ -15,6 +15,7 @@ Fixes
 - Arnold : The `ai:GI_diffuse_depth` and `ai:GI_specular_depth` options now default to `2` when they are left unspecified, matching the default values on the ArnoldOptions node.
 - Menu buttons : Fixed missing dropdown menu indicators.
 - CompoundNumericPlugValueWidget : Fixed failure to construct with an empty list of plugs.
+- ChannelPlugValueWidget : Fixed compatibility with multi-view images.
 - FilteredSceneProcessor :
   - Fixed bugs which allowed read-only nodes to be edited.
   - Fixed undo for `Remove` menu item in Filter tab.
