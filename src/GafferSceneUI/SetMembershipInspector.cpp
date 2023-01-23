@@ -38,6 +38,7 @@
 
 #include "GafferScene/EditScopeAlgo.h"
 #include "GafferScene/ObjectSource.h"
+#include "GafferScene/PathFilter.h"
 #include "GafferScene/SceneNode.h"
 #include "GafferScene/Set.h"
 #include "GafferScene/SetAlgo.h"
@@ -141,6 +142,54 @@ m_setName( setName )
 
 	Metadata::plugValueChangedSignal().connect( boost::bind( &SetMembershipInspector::plugMetadataChanged, this, ::_3, ::_4 ) );
 	Metadata::nodeValueChangedSignal().connect( boost::bind( &SetMembershipInspector::nodeMetadataChanged, this, ::_2, ::_3 ) );
+}
+
+bool SetMembershipInspector::editSetMembership( const Result *inspection, const ScenePlug::ScenePath &path, EditScopeAlgo::SetMembership setMembership ) const
+{
+	PlugPtr plug = inspection->acquireEdit();
+
+	if( auto objectNode = runTimeCast<ObjectSource>( plug->node() ) )
+	{
+		std::vector<std::string> sets;
+		IECore::StringAlgo::tokenize( objectNode->setsPlug()->getValue(), ' ', sets );
+
+		if( setMembership == EditScopeAlgo::SetMembership::Added )
+		{
+			if( std::find( sets.begin(), sets.end(), m_setName.string() ) == sets.end() )
+			{
+				sets.push_back( m_setName.string() );
+			}
+		}
+		else
+		{
+			sets.erase( std::remove( sets.begin(), sets.end(), m_setName.string() ), sets.end() );
+		}
+
+		objectNode->setsPlug()->setValue( boost::algorithm::join( sets, " " ) );
+
+		return true;
+	}
+
+	if( auto cells = runTimeCast<Gaffer::ValuePlug>( plug ) )
+	{
+		auto row = cells->parent<Spreadsheet::RowPlug>();
+		auto editScope = cells->ancestor<EditScope>();
+		if( row && editScope )
+		{
+			PathMatcher m;
+			m.addPath( path );
+			EditScopeAlgo::setSetMembership(
+				editScope,
+				m,
+				m_setName.string(),
+				setMembership
+			);
+
+			return true;
+		}
+	}
+
+	return false;
 }
 
 GafferScene::SceneAlgo::History::ConstPtr SetMembershipInspector::history() const

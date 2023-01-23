@@ -41,6 +41,9 @@
 
 #include "GafferSceneUI/Private/Inspector.h"
 
+#include "GafferScene/EditScopeAlgo.h"
+#include "GafferScene/ScenePlug.h"
+
 namespace GafferSceneUI
 {
 
@@ -57,6 +60,15 @@ class GAFFERSCENEUI_API SetMembershipInspector : public Inspector
 			const Gaffer::PlugPtr &editScope,
 			IECore::InternedString setName
 		);
+
+		/// Convenience method to acquire an edit from `inspection` and
+		/// edit the set membership to include or exclude `path`. Returns true
+		/// if an edit was made, false otherwise.
+		bool editSetMembership(
+			const Result *inspection,
+			const GafferScene::ScenePlug::ScenePath &path,
+			GafferScene::EditScopeAlgo::SetMembership setMembership
+		) const;
 
 		IE_CORE_DECLAREMEMBERPTR( SetMembershipInspector );
 

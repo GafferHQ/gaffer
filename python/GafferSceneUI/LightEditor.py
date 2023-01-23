@@ -392,12 +392,18 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 	def __toggleBoolean( self, inspectors, inspections ) :
 
 		plugs = [ i.acquireEdit() for i in inspections ]
-		# Make sure all the plugs are either a BoolPlug or contain a BoolPlug
+		# Make sure all the plugs either contain, or are themselves a BoolPlug or can be edited
+		# by `SetMembershipInspector.editSetMembership()`
 		if not all (
 			(
-				isinstance( p, ( Gaffer.TweakPlug, Gaffer.NameValuePlug ) ) and
-				isinstance( p["value"], Gaffer.BoolPlug )
-			) or isinstance( p, Gaffer.BoolPlug ) for p in plugs
+				isinstance( plug, ( Gaffer.TweakPlug, Gaffer.NameValuePlug ) ) and
+				isinstance( plug["value"], Gaffer.BoolPlug )
+			) or (
+				isinstance( plug, ( Gaffer.BoolPlug ) )
+			) or (
+				isinstance( inspector, GafferSceneUI.Private.SetMembershipInspector )
+			)
+			for plug, inspector in zip( plugs, inspectors )
 		) :
 			return False
 
@@ -415,6 +421,16 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 					parentValue = parentValueData.value if parentValueData is not None else False
 
 					currentValues.append( currentValue if currentValue is not None else parentValue )
+				elif isinstance( inspector, GafferSceneUI.Private.SetMembershipInspector ) :
+					if currentValue is not None :
+						currentValues.append(
+							True if currentValue & (
+								IECore.PathMatcher.Result.ExactMatch |
+								IECore.PathMatcher.Result.AncestorMatch
+							) else False
+						)
+					else :
+						currentValues.append( False )
 				else :
 					currentValues.append( currentValue )
 
@@ -425,15 +441,22 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 		with Gaffer.UndoScope( self.scriptNode() ) :
 			for inspector, pathInspections in inspectors.items() :
 				for path, inspection in pathInspections.items() :
-					plug = inspection.acquireEdit()
+					if isinstance( inspector, GafferSceneUI.Private.SetMembershipInspector ) :
+						inspector.editSetMembership(
+							inspection,
+							path,
+							GafferScene.EditScopeAlgo.SetMembership.Added if newValue else GafferScene.EditScopeAlgo.SetMembership.Removed
+						)
 
-					if isinstance( plug, ( Gaffer.TweakPlug, Gaffer.NameValuePlug ) ) :
-						plug["value"].setValue( newValue )
-						plug["enabled"].setValue( True )
-						if isinstance( plug, Gaffer.TweakPlug ) :
-							plug["mode"].setValue( Gaffer.TweakPlug.Mode.Create )
 					else :
-						plug.setValue( newValue )
+						plug = inspection.acquireEdit()
+						if isinstance( plug, ( Gaffer.TweakPlug, Gaffer.NameValuePlug ) ) :
+							plug["value"].setValue( newValue )
+							plug["enabled"].setValue( True )
+							if isinstance( plug, Gaffer.TweakPlug ) :
+								plug["mode"].setValue( Gaffer.TweakPlug.Mode.Create )
+						else :
+							plug.setValue( newValue )
 
 		return True
 

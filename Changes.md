@@ -4,7 +4,7 @@
 Features
 --------
 
-- Light Editor : Added a read-only "Solo" column to indicate lights that are in the `soloLights` set.
+- Light Editor : Added a "Solo" column to quickly add and remove lights from the `soloLights` set.
 
 Improvements
 ------------

@@ -415,6 +415,153 @@ class SetMembershipInspectorTest( GafferUITest.TestCase ) :
 		Gaffer.MetadataAlgo.setReadOnly( editScope, True )
 		self.assertEqual( len( cs ), 2 )  # Change affects the result of `inspect().editable()`
 
+	def testObjectSourceEditSetMembership( self ) :
+
+		plane1 = GafferScene.Plane()
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( plane1["out"] )
+
+		plane2 = GafferScene.Plane()
+
+		parent = GafferScene.Parent()
+		parent["parent"].setValue( "/" )
+		parent["children"][0].setInput( group["out"] )
+		parent["children"][1].setInput( plane2["out"] )
+
+		editScopePlug = Gaffer.Plug()
+
+		# Include in `planeSet`
+
+		inspector = GafferSceneUI.Private.SetMembershipInspector( parent["out"], editScopePlug, "planeSet" )
+		self.assertIsNotNone( inspector )
+
+		with Gaffer.Context() as c :
+			c["scene:path"] = IECore.InternedStringVectorData( [ "group", "plane" ] )
+			inspection = inspector.inspect()
+
+		self.assertTrue( inspector.editSetMembership( inspection, "/group/plane", GafferScene.EditScopeAlgo.SetMembership.Added ) )
+
+		planeSet = parent["out"].set( "planeSet" ).value
+
+		for path, result in [
+			( "/group/plane", IECore.PathMatcher.Result.ExactMatch ),
+			( "/group", IECore.PathMatcher.Result.DescendantMatch ),
+			( "/plane", IECore.PathMatcher.Result.NoMatch )
+		] :
+			self.assertEqual( planeSet.match( path ), result )
+
+		# And remove it
+
+		self.assertTrue( inspector.editSetMembership( inspection, "/group/plane", GafferScene.EditScopeAlgo.SetMembership.Removed ) )
+
+		planeSet = parent["out"].set( "planeSet" ).value
+
+		for path, result in [
+			( "/group/plane", IECore.PathMatcher.Result.NoMatch ),
+			( "/group", IECore.PathMatcher.Result.NoMatch ),
+			( "/plane", IECore.PathMatcher.Result.NoMatch )
+		] :
+			self.assertEqual( planeSet.match( path ), result )
+
+	def testEditScopeEditSetMembership( self ) :
+
+		plane1 = GafferScene.Plane()
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( plane1["out"] )
+
+		plane2 = GafferScene.Plane()
+
+		parent = GafferScene.Parent()
+		parent["parent"].setValue( "/" )
+		parent["children"][0].setInput( group["out"] )
+		parent["children"][1].setInput( plane2["out"] )
+
+		editScope = Gaffer.EditScope()
+		editScope.setup( parent["out"] )
+		editScope["in"].setInput( parent["out"] )
+
+		editScopePlug = Gaffer.Plug()
+		editScopePlug.setInput( editScope["enabled"] )
+
+		# Include in `planeSet`
+
+		inspector = GafferSceneUI.Private.SetMembershipInspector( editScope["out"], editScopePlug, "planeSet" )
+
+		with Gaffer.Context() as c :
+			c["scene:path"] = IECore.InternedStringVectorData( [ "group", "plane" ] )
+			inspection = inspector.inspect()
+
+		self.assertTrue( inspector.editSetMembership( inspection, "/group/plane", GafferScene.EditScopeAlgo.SetMembership.Added ) )
+
+		planeSet = editScope["out"].set( "planeSet" ).value
+
+		for path, result in [
+			( "/group/plane", IECore.PathMatcher.Result.ExactMatch ),
+			( "/group", IECore.PathMatcher.Result.DescendantMatch ),
+			( "/plane", IECore.PathMatcher.Result.NoMatch )
+		] :
+			self.assertEqual( planeSet.match( path ), result )
+
+		planeSet = parent["out"].set( "planeSet" ).value
+
+		for path, result in [
+			( "/group/plane", IECore.PathMatcher.Result.NoMatch ),
+			( "/group", IECore.PathMatcher.Result.NoMatch ),
+			( "/plane", IECore.PathMatcher.Result.NoMatch )
+		] :
+			self.assertEqual( planeSet.match( path ), result )
+
+		# And remove it
+
+		self.assertTrue( inspector.editSetMembership( inspection, "/group/plane", GafferScene.EditScopeAlgo.SetMembership.Removed ) )
+		planeSet = parent["out"].set( "planeSet" ).value
+
+		for path, result in [
+			( "/group/plane", IECore.PathMatcher.Result.NoMatch ),
+			( "/group", IECore.PathMatcher.Result.NoMatch ),
+			( "/plane", IECore.PathMatcher.Result.NoMatch )
+		] :
+			self.assertEqual( planeSet.match( path ), result )
+
+		planeSet = parent["out"].set( "planeSet" ).value
+
+		for path, result in [
+			( "/group/plane", IECore.PathMatcher.Result.NoMatch ),
+			( "/group", IECore.PathMatcher.Result.NoMatch ),
+			( "/plane", IECore.PathMatcher.Result.NoMatch )
+		] :
+			self.assertEqual( planeSet.match( path ), result )
+
+	def testSetNodeEditSetMembership( self ) :
+
+		# Modifying a `Set` node is beyond our powers
+
+		plane = GafferScene.Plane()
+
+		planeFilter = GafferScene.PathFilter()
+		planeFilter["paths"].setValue( IECore.StringVectorData( [ "/plane"] ) )
+
+		setNode = GafferScene.Set()
+		setNode["name"].setValue( "planeSet" )
+		setNode["in"].setInput( plane["out"] )
+		setNode["filter"].setInput( planeFilter["out"] )
+
+		editScopePlug = Gaffer.Plug()
+
+		inspector = GafferSceneUI.Private.SetMembershipInspector( setNode["out"], editScopePlug, "planeSet" )
+
+		# Even if we know the source, we politely decline to make an edit
+
+		with Gaffer.Context() as c :
+			c["scene:path"] = IECore.InternedStringVectorData( [ "plane" ] )
+			inspection = inspector.inspect()
+
+		self.assertEqual( inspection.source(), setNode["name"] )
+
+		self.assertFalse( inspector.editSetMembership( inspection, "/plane", GafferScene.EditScopeAlgo.SetMembership.Removed ) )
+
 
 if __name__ == "__main__" :
 	unittest.main()
