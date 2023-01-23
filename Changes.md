@@ -1,6 +1,11 @@
 1.2.x.x (relative to 1.2.0.0a3)
 =======
 
+Features
+--------
+
+- Light Editor : Added a read-only "Solo" column to indicate lights that are in the `soloLights` set.
+
 Improvements
 ------------
 

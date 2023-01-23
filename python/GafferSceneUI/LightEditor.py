@@ -112,6 +112,12 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 						self.__settingsNode["in"],
 						self.__settingsNode["editScope"]
 					),
+					_GafferSceneUI._LightEditorSetMembershipColumn(
+						self.__settingsNode["in"],
+						self.__settingsNode["editScope"],
+						"soloLights",
+						"Solo"
+					),
 				],
 				selectionMode = GafferUI.PathListingWidget.SelectionMode.Cells,
 				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
@@ -248,7 +254,8 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 
 		nameColumn = self.__pathListing.getColumns()[0]
 		muteColumn = self.__pathListing.getColumns()[1]
-		self.__pathListing.setColumns( [ nameColumn, muteColumn ] + sectionColumns )
+		soloColumn = self.__pathListing.getColumns()[2]
+		self.__pathListing.setColumns( [ nameColumn, muteColumn, soloColumn ] + sectionColumns )
 
 	def __settingsPlugSet( self, plug ) :
 
