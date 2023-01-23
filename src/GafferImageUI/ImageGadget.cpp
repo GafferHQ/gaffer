@@ -99,9 +99,7 @@ void findUsableTextureFormats( GLenum &monochromeFormat, GLenum &colorFormat )
 		else
 		{
 			IECore::msg( IECore::Msg::Warning, "ImageGadget",
-				"Could not find supported floating point texture format in OpenGL.  GPU image"
-				" viewer path will be low quality, recommend switching to CPU display transform,"
-				" or resolving graphics driver issue."
+				"Could not find supported floating point texture format in OpenGL."
 			);
 		}
 		g_textureFormatsInitialized = true;

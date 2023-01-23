@@ -107,7 +107,7 @@ class ImageGadgetTest( GafferUITest.TestCase ) :
 		if len( mh.messages ):
 			self.assertEqual(  len( mh.messages ), 1 )
 			self.assertEqual( mh.messages[0].context, "ImageGadget" )
-			self.assertEqual( mh.messages[0].message, "Could not find supported floating point texture format in OpenGL.  GPU image viewer path will be low quality, recommend switching to CPU display transform, or resolving graphics driver issue." )
+			self.assertEqual( mh.messages[0].message, "Could not find supported floating point texture format in OpenGL." )
 
 		del g, w
 		del s

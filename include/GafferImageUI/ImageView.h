@@ -64,8 +64,6 @@ namespace GafferImage
 {
 
 IE_CORE_FORWARDDECLARE( ImageProcessor )
-IE_CORE_FORWARDDECLARE( Clamp )
-IE_CORE_FORWARDDECLARE( Grade )
 IE_CORE_FORWARDDECLARE( ImageStats )
 IE_CORE_FORWARDDECLARE( DeepState )
 IE_CORE_FORWARDDECLARE( ImagePlug )
@@ -109,9 +107,6 @@ class GAFFERIMAGEUI_API ImageView : public GafferUI::View
 		/// Values should be names that exist in registeredDisplayTransforms().
 		Gaffer::StringPlug *displayTransformPlug();
 		const Gaffer::StringPlug *displayTransformPlug() const;
-
-		Gaffer::BoolPlug *lutGPUPlug();
-		const Gaffer::BoolPlug *lutGPUPlug() const;
 
 		Gaffer::StringPlug *viewPlug();
 		const Gaffer::StringPlug *viewPlug() const;
@@ -199,7 +194,6 @@ class GAFFERIMAGEUI_API ImageView : public GafferUI::View
 
 		void insertDisplayTransform();
 		void displayTransformPlugDirtied( DisplayTransformEntry *displayTransform );
-		void updateDisplayTransform();
 
 		void setWipeActive( bool active );
 
@@ -208,7 +202,6 @@ class GAFFERIMAGEUI_API ImageView : public GafferUI::View
 		IECore::Color3fDataPtr m_multiplyParameter;
 		IECore::Color3fDataPtr m_powerParameter;
 		IECore::IntDataPtr m_soloChannelParameter;
-		bool m_lutGPU;
 
 		ImageGadgetPtr m_imageGadgets[2];
 		bool m_framed;
@@ -219,12 +212,6 @@ class GAFFERIMAGEUI_API ImageView : public GafferUI::View
 		class ColorInspector;
 		std::unique_ptr<ColorInspector> m_colorInspector;
 
-		GafferImage::ImagePlugPtr m_imageBeforeColorTransform;
-		Gaffer::FloatPlugPtr m_cpuSaturationPlug;
-		Gaffer::BoolPlugPtr m_cpuClippingPlug;
-		Gaffer::Color4fPlugPtr m_cpuMultiplyPlug;
-		Gaffer::Color4fPlugPtr m_cpuGammaPlug;
-		Gaffer::SwitchPtr m_colorTransformSwitch;
 		Gaffer::ContextVariablesPtr m_comparisonSelect;
 
 		using DisplayTransformCreatorMap = std::map<std::string, DisplayTransformCreator>;

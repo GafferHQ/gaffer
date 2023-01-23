@@ -1446,7 +1446,6 @@ ImageView::ImageView( const std::string &name )
 		m_multiplyParameter( new Color3fData( Color3f( 1 ) ) ),
 		m_powerParameter( new Color3fData( Color3f( 1 ) ) ),
 		m_soloChannelParameter( new IntData( -1 ) ),
-		m_lutGPU( true ),
 		m_imageGadgets{ new ImageGadget(), new ImageGadget() },
 		m_framed( false )
 {
@@ -1496,7 +1495,6 @@ ImageView::ImageView( const std::string &name )
 	addChild( gammaPlug );
 
 	addChild( new StringPlug( "displayTransform", Plug::In, "Default", Plug::Default & ~Plug::AcceptsInputs ) );
-	addChild( new BoolPlug( "lutGPU", Plug::In, true, Plug::Default & ~Plug::AcceptsInputs ) );
 
 	ImagePlugPtr preprocessorOutput = new ImagePlug( "out", Plug::Out );
 	preprocessor->addChild( preprocessorOutput );
@@ -1528,38 +1526,7 @@ ImageView::ImageView( const std::string &name )
 	deepState->deepStatePlug()->setValue( int( DeepState::TargetState::Flat ) );
 	deepState->inPlug()->setInput( selectView->outPlug() );
 
-	SaturationPtr saturationNode = new Saturation;
-	preprocessor->addChild( saturationNode );
-	saturationNode->inPlug()->setInput( deepState->outPlug() );
-	m_cpuSaturationPlug = saturationNode->saturationPlug();
-
-	ClampPtr clampNode = new Clamp();
-	preprocessor->addChild( clampNode );
-	clampNode->inPlug()->setInput( saturationNode->outPlug() );
-	clampNode->channelsPlug()->setValue( "*" );
-	clampNode->minClampToEnabledPlug()->setValue( true );
-	clampNode->maxClampToEnabledPlug()->setValue( true );
-	clampNode->minClampToPlug()->setValue( Color4f( 1.0f, 1.0f, 1.0f, 0.0f ) );
-	clampNode->maxClampToPlug()->setValue( Color4f( 0.0f, 0.0f, 0.0f, 1.0f ) );
-	m_cpuClippingPlug = clampNode->enabledPlug();
-	// Default false to match the plug that drives it
-	m_cpuClippingPlug->setValue( false );
-
-	GradePtr gradeNode = new Grade();
-	preprocessor->addChild( gradeNode );
-	gradeNode->inPlug()->setInput( clampNode->outPlug() );
-	gradeNode->channelsPlug()->setValue( "*" );
-	m_cpuMultiplyPlug = gradeNode->multiplyPlug();
-	m_cpuGammaPlug = gradeNode->gammaPlug();
-
-	m_imageBeforeColorTransform = gradeNode->outPlug();
-
-	m_colorTransformSwitch = new Switch();
-	preprocessor->addChild( m_colorTransformSwitch );
-	m_colorTransformSwitch->setup( preprocessorInput.get() );
-	m_colorTransformSwitch->inPlugs()->getChild<Gaffer::Plug>(0)->setInput( deepState->outPlug() );
-
-	preprocessorOutput->setInput( m_colorTransformSwitch->outPlug() );
+	preprocessorOutput->setInput( deepState->outPlug() );
 
 	// tell the base class about all the preprocessing we want to do
 
@@ -1727,16 +1694,6 @@ const Gaffer::StringPlug *ImageView::displayTransformPlug() const
 	return getChild<StringPlug>( "displayTransform" );
 }
 
-Gaffer::BoolPlug *ImageView::lutGPUPlug()
-{
-	return getChild<BoolPlug>( "lutGPU" );
-}
-
-const Gaffer::BoolPlug *ImageView::lutGPUPlug() const
-{
-	return getChild<BoolPlug>( "lutGPU" );
-}
-
 Gaffer::StringPlug *ImageView::viewPlug()
 {
 	return getChild<StringPlug>( "view" );
@@ -1832,7 +1789,6 @@ void ImageView::plugSet( Gaffer::Plug *plug )
 		m_imageGadgets[0]->setSoloChannel( soloChannel );
 		m_imageGadgets[1]->setSoloChannel( soloChannel );
 		m_soloChannelParameter->writable() = soloChannel;
-		m_cpuSaturationPlug->setValue( soloChannel != -2 );
 	}
 	else if( plug == channelsPlug() )
 	{
@@ -1850,30 +1806,22 @@ void ImageView::plugSet( Gaffer::Plug *plug )
 	else if( plug == clippingPlug() )
 	{
 		bool clipping = clippingPlug()->getValue();
-		m_cpuClippingPlug->setValue( clipping );
 		m_clippingParameter->writable() = clipping;
 	}
 	else if( plug == exposurePlug() )
 	{
 		float multiply = pow( 2.0f, exposurePlug()->getValue() );
-		m_cpuMultiplyPlug->setValue( Color4f( multiply, multiply, multiply, 1.0f ) );
 		m_multiplyParameter->writable() = Color3f( multiply );
 	}
 	else if( plug == gammaPlug() )
 	{
 		float gamma = gammaPlug()->getValue();
 		float power = gamma > 0.0 ? 1.0f / gamma : 1.0f;
-		m_cpuGammaPlug->setValue( Color4f( gamma, gamma, gamma, 1.0f ) );
 		m_powerParameter->writable() = Color3f( power );
 	}
 	else if( plug == displayTransformPlug() )
 	{
 		insertDisplayTransform();
-	}
-	else if( plug == lutGPUPlug() )
-	{
-		m_lutGPU = lutGPUPlug()->getValue();
-		updateDisplayTransform();
 	}
 	else if( plug == compareModePlug() )
 	{
@@ -2005,17 +1953,13 @@ bool ImageView::keyPress( const GafferUI::KeyEvent &event )
 	{
 		m_imageGadgets[0]->setPaused( true );
 	}
-	else if( event.key == "G" && event.modifiers == ModifiableEvent::Modifiers::Alt )
-	{
-		lutGPUPlug()->setValue( !lutGPUPlug()->getValue() );
-	}
 
 	return false;
 }
 
 void ImageView::preRender()
 {
-	if( !m_displayTransformAndShader->supportsShader || !m_lutGPU )
+	if( !m_displayTransformAndShader->supportsShader )
 	{
 		viewportGadget()->setPostProcessShader( Gadget::Layer::Main, nullptr );
 	}
@@ -2131,24 +2075,11 @@ void ImageView::insertDisplayTransform()
 
 		if( m_displayTransformAndShader->displayTransform )
 		{
-			getPreprocessor()->addChild( m_displayTransformAndShader->displayTransform );
-			m_displayTransformAndShader->displayTransform->inPlug()->setInput( m_imageBeforeColorTransform );
 			m_displayTransformAndShader->displayTransform->plugDirtiedSignal().connect(
 				boost::bind( &ImageView::displayTransformPlugDirtied, this, m_displayTransformAndShader )
 			);
 		}
 	}
-
-	if( m_displayTransformAndShader->displayTransform )
-	{
-		m_colorTransformSwitch->inPlugs()->getChild<Gaffer::Plug>(1)->setInput( m_displayTransformAndShader->displayTransform->outPlug() );
-	}
-	else
-	{
-		m_colorTransformSwitch->inPlugs()->getChild<Gaffer::Plug>(1)->setInput( m_imageBeforeColorTransform );
-	}
-
-	updateDisplayTransform();
 }
 
 void ImageView::displayTransformPlugDirtied( DisplayTransformEntry *displayTransform )
@@ -2158,12 +2089,6 @@ void ImageView::displayTransformPlugDirtied( DisplayTransformEntry *displayTrans
 	{
 		viewportGadget()->renderRequestSignal()( viewportGadget() );
 	}
-}
-
-void ImageView::updateDisplayTransform()
-{
-	// Enable the CPU path if necessary
-	m_colorTransformSwitch->indexPlug()->setValue( !m_displayTransformAndShader->supportsShader || !m_lutGPU );
 }
 
 void ImageView::registerDisplayTransform( const std::string &name, DisplayTransformCreator creator )
