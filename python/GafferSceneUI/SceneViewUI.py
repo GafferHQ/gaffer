@@ -279,6 +279,7 @@ Gaffer.Metadata.registerNode(
 		"grid" : [
 
 			"plugValueWidget:type", "GafferSceneUI.SceneViewUI._GridPlugValueWidget",
+			"toolbarLayout:divider", True,
 
 		],
 
@@ -298,7 +299,15 @@ Gaffer.Metadata.registerNode(
 
 			"plugValueWidget:type", "",
 
-		]
+		],
+
+		"displayTransform.soloChannel" : [
+
+			# The `RGBAL`` shortcuts conflict with shortcuts used for
+			# Tools, so we disable them.
+			"view:displayTransform:useShortcuts", False,
+
+		],
 
 	}
 

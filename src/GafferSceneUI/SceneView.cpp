@@ -576,6 +576,7 @@ class SceneView::Grid : public Signals::Trackable
 
 			m_gadget->setMinimumExpansionDepth( 1 );
 			m_gadget->setScene( m_node->outPlug() );
+			m_gadget->setLayer( Gadget::Layer::MidFront );
 
 			view->viewportGadget()->setChild( "__grid", m_gadget );
 
@@ -1954,6 +1955,9 @@ SceneView::SceneView( const std::string &name )
 	m_grid.reset( new Grid( this ) );
 	m_gnomon.reset( new Gnomon( this ) );
 	m_fps.reset( new FPS( this ) );
+
+	[[maybe_unused]] auto displayTransform = new DisplayTransform( this );
+	assert( displayTransform->parent() == this );
 
 	//////////////////////////////////////////////////////////////////////////
 	// add a preprocessor which monkeys with the scene before it is displayed.

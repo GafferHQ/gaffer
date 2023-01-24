@@ -496,7 +496,11 @@ void View::DisplayTransform::preRender()
 
 bool View::DisplayTransform::keyPress( const KeyEvent &event )
 {
-	if( !event.modifiers )
+	ConstBoolDataPtr soloChannelShortCuts = Gaffer::Metadata::value<BoolData>(
+		soloChannelPlug()->source(), "view:displayTransform:useShortcuts"
+	);
+
+	if( !event.modifiers && ( !soloChannelShortCuts || soloChannelShortCuts->readable() ) )
 	{
 		const char *rgbal[5] = { "R", "G", "B", "A", "L" };
 		for( int i = 0; i < 5; ++i )

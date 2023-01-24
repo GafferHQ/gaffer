@@ -205,6 +205,9 @@ class _SoloChannelPlugValueWidget( GafferUI.PlugValueWidget ) :
 		with self.getContext() :
 			soloChannel = self.getPlug().getValue()
 
+		useShortCuts = Gaffer.Metadata.value( self.getPlug(), "view:displayTransform:useShortcuts" )
+		useShortCuts = True if useShortCuts is None else useShortCuts
+
 		m = IECore.MenuDefinition()
 		m.append(
 			"/All",
@@ -224,7 +227,7 @@ class _SoloChannelPlugValueWidget( GafferUI.PlugValueWidget ) :
 				{
 					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), value ),
 					"checkBox" : soloChannel == value,
-					"shortCut" : name
+					"shortCut" : name if useShortCuts else None
 				}
 			)
 
@@ -235,7 +238,7 @@ class _SoloChannelPlugValueWidget( GafferUI.PlugValueWidget ) :
 				{
 					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), -2 ),
 					"checkBox" : soloChannel == -2,
-					"shortCut" : "L"
+					"shortCut" : "L" if useShortCuts else None
 				}
 			)
 
