@@ -1441,11 +1441,6 @@ GAFFERIMAGEUI_API ImageView::ViewDescription<ImageView> ImageView::g_viewDescrip
 
 ImageView::ImageView( const std::string &name )
 	:	View( name, new GafferImage::ImagePlug() ),
-		m_absoluteValueParameter( new BoolData( false ) ),
-		m_clippingParameter( new BoolData( false ) ),
-		m_multiplyParameter( new Color3fData( Color3f( 1 ) ) ),
-		m_powerParameter( new Color3fData( Color3f( 1 ) ) ),
-		m_soloChannelParameter( new IntData( -1 ) ),
 		m_imageGadgets{ new ImageGadget(), new ImageGadget() },
 		m_framed( false )
 {
@@ -1471,30 +1466,8 @@ ImageView::ImageView( const std::string &name )
 	channelsDefaultData->writable() = { "R", "G", "B", "A" };
 	addChild( new StringVectorDataPlug( "channels", Plug::In, channelsDefaultData ) );
 
-	addChild(
-		new IntPlug(
-			"soloChannel",
-			Plug::In,
-			/* defaultValue = */ -1,
-			/* minValue = */ -2,
-			/* maxValue = */ 3
-		)
-	);
-
-	BoolPlugPtr clippingPlug = new BoolPlug( "clipping", Plug::In, false, Plug::Default & ~Plug::AcceptsInputs );
-	addChild( clippingPlug );
-
-	FloatPlugPtr exposurePlug = new FloatPlug( "exposure", Plug::In, 0.0f,
-		std::numeric_limits<float>::lowest(), std::numeric_limits<float>::max(), Plug::Default & ~Plug::AcceptsInputs
-	);
-	addChild( exposurePlug ); // dealt with in plugSet()
-
-	PlugPtr gammaPlug = new FloatPlug( "gamma", Plug::In, 1.0f,
-		std::numeric_limits<float>::lowest(), std::numeric_limits<float>::max(), Plug::Default & ~Plug::AcceptsInputs
-	);
-	addChild( gammaPlug );
-
-	addChild( new StringPlug( "displayTransform", Plug::In, "Default", Plug::Default & ~Plug::AcceptsInputs ) );
+	[[maybe_unused]] auto displayTransform = new DisplayTransform( this );
+	assert( displayTransform->parent() == this );
 
 	ImagePlugPtr preprocessorOutput = new ImagePlug( "out", Plug::Out );
 	preprocessor->addChild( preprocessorOutput );
@@ -1537,10 +1510,6 @@ ImageView::ImageView( const std::string &name )
 	plugSetSignal().connect( boost::bind( &ImageView::plugSet, this, ::_1 ) );
 	viewportGadget()->keyPressSignal().connect( boost::bind( &ImageView::keyPress, this, ::_2 ) );
 	viewportGadget()->preRenderSignal().connect( boost::bind( &ImageView::preRender, this ) );
-
-	// get our display transform right
-
-	insertDisplayTransform();
 
 	// Now we can connect up our ImageGadget, which will do the
 	// hard work of actually displaying the image.
@@ -1644,56 +1613,6 @@ const StringVectorDataPlug *ImageView::channelsPlug() const
 	return getChild<StringVectorDataPlug>( "channels" );
 }
 
-IntPlug *ImageView::soloChannelPlug()
-{
-	return getChild<IntPlug>( "soloChannel" );
-}
-
-const IntPlug *ImageView::soloChannelPlug() const
-{
-	return getChild<IntPlug>( "soloChannel" );
-}
-
-Gaffer::BoolPlug *ImageView::clippingPlug()
-{
-	return getChild<BoolPlug>( "clipping" );
-}
-
-const Gaffer::BoolPlug *ImageView::clippingPlug() const
-{
-	return getChild<BoolPlug>( "clipping" );
-}
-
-Gaffer::FloatPlug *ImageView::exposurePlug()
-{
-	return getChild<FloatPlug>( "exposure" );
-}
-
-const Gaffer::FloatPlug *ImageView::exposurePlug() const
-{
-	return getChild<FloatPlug>( "exposure" );
-}
-
-Gaffer::FloatPlug *ImageView::gammaPlug()
-{
-	return getChild<FloatPlug>( "gamma" );
-}
-
-const Gaffer::FloatPlug *ImageView::gammaPlug() const
-{
-	return getChild<FloatPlug>( "gamma" );
-}
-
-Gaffer::StringPlug *ImageView::displayTransformPlug()
-{
-	return getChild<StringPlug>( "displayTransform" );
-}
-
-const Gaffer::StringPlug *ImageView::displayTransformPlug() const
-{
-	return getChild<StringPlug>( "displayTransform" );
-}
-
 Gaffer::StringPlug *ImageView::viewPlug()
 {
 	return getChild<StringPlug>( "view" );
@@ -1771,26 +1690,9 @@ void ImageView::setContext( Gaffer::ContextPtr context )
 	m_imageGadgets[1]->setContext( context );
 }
 
-void ImageView::contextChanged( const IECore::InternedString &name )
-{
-	for( auto &[name, displayTransform] : m_displayTransforms )
-	{
-		// The values on the OpenColorIOTransform node can contain
-		// context variable substitutions.
-		displayTransform.shaderDirty = true;
-	}
-}
-
 void ImageView::plugSet( Gaffer::Plug *plug )
 {
-	if( plug == soloChannelPlug() )
-	{
-		int soloChannel = soloChannelPlug()->getValue();
-		m_imageGadgets[0]->setSoloChannel( soloChannel );
-		m_imageGadgets[1]->setSoloChannel( soloChannel );
-		m_soloChannelParameter->writable() = soloChannel;
-	}
-	else if( plug == channelsPlug() )
+	if( plug == channelsPlug() )
 	{
 		ConstStringVectorDataPtr channelsData = channelsPlug()->getValue();
 		const std::vector<std::string> &channels = channelsData->readable();
@@ -1803,32 +1705,10 @@ void ImageView::plugSet( Gaffer::Plug *plug )
 		m_imageGadgets[0]->setChannels( c );
 		m_imageGadgets[1]->setChannels( c );
 	}
-	else if( plug == clippingPlug() )
-	{
-		bool clipping = clippingPlug()->getValue();
-		m_clippingParameter->writable() = clipping;
-	}
-	else if( plug == exposurePlug() )
-	{
-		float multiply = pow( 2.0f, exposurePlug()->getValue() );
-		m_multiplyParameter->writable() = Color3f( multiply );
-	}
-	else if( plug == gammaPlug() )
-	{
-		float gamma = gammaPlug()->getValue();
-		float power = gamma > 0.0 ? 1.0f / gamma : 1.0f;
-		m_powerParameter->writable() = Color3f( power );
-	}
-	else if( plug == displayTransformPlug() )
-	{
-		insertDisplayTransform();
-	}
 	else if( plug == compareModePlug() )
 	{
 		std::string compareMode = compareModePlug()->getValue();
 		ImageGadget::BlendMode m = ImageGadget::BlendMode::Replace;
-
-		m_absoluteValueParameter->writable() = false;
 
 		bool compareEnabled = true;
 
@@ -1852,7 +1732,6 @@ void ImageView::plugSet( Gaffer::Plug *plug )
 		else if( compareMode == "difference" )
 		{
 			m = ImageGadget::BlendMode::Difference;
-			m_absoluteValueParameter->writable() = true;
 		}
 		else if( compareMode == "sideBySide" )
 		{
@@ -1864,6 +1743,10 @@ void ImageView::plugSet( Gaffer::Plug *plug )
 		m_imageGadgets[0]->setBlendMode( m );
 
 		setWipeActive( compareMode != "" && compareWipePlug()->getValue() );
+
+		getChild( "displayTransform" )->getChild<BoolPlug>( "absolute" )->setValue(
+			m == ImageGadget::BlendMode::Difference
+		);
 	}
 	else if( plug == compareWipePlug() )
 	{
@@ -1872,6 +1755,12 @@ void ImageView::plugSet( Gaffer::Plug *plug )
 	else if( plug == compareCatalogueOutputPlug() )
 	{
 		m_comparisonSelect->variablesPlug()->getChild<NameValuePlug>( 0 )->enabledPlug()->setValue( compareCatalogueOutputPlug()->getValue() != "" );
+	}
+	else if( plug == getChild( "displayTransform" )->getChild( "soloChannel" ) )
+	{
+		const int soloChannel = static_cast<IntPlug *>( plug )->getValue();
+		m_imageGadgets[0]->setSoloChannel( soloChannel );
+		m_imageGadgets[1]->setSoloChannel( soloChannel );
 	}
 }
 
@@ -1909,24 +1798,6 @@ void ImageView::setWipeActive( bool active )
 
 bool ImageView::keyPress( const GafferUI::KeyEvent &event )
 {
-
-	// Check all the solo hotkeys
-	if( !event.modifiers )
-	{
-		const char *rgbal[5] = { "R", "G", "B", "A", "L" };
-		for( int i = 0; i < 5; ++i )
-		{
-			if( event.key == rgbal[i] )
-			{
-				int soloChannel = i < 4 ? i : -2;
-				soloChannelPlug()->setValue(
-					soloChannelPlug()->getValue() == soloChannel ? -1 : soloChannel
-				);
-				return true;
-			}
-		}
-	}
-
 	if( event.key == "F" && !event.modifiers )
 	{
 		const Box3f b = m_imageGadgets[0]->bound();
@@ -1959,45 +1830,6 @@ bool ImageView::keyPress( const GafferUI::KeyEvent &event )
 
 void ImageView::preRender()
 {
-	if( !m_displayTransformAndShader->supportsShader )
-	{
-		viewportGadget()->setPostProcessShader( Gadget::Layer::Main, nullptr );
-	}
-	else
-	{
-		if( !m_displayTransformAndShader->shader || m_displayTransformAndShader->shaderDirty )
-		{
-			if( !m_displayTransformAndShader->displayTransform )
-			{
-				m_displayTransformAndShader->shader = OpenColorIOAlgo::displayTransformToFramebufferShader( nullptr );
-			}
-			else
-			{
-				Context::Scope scope( getContext() );
-				const OpenColorIOTransform *ocioTrans = runTimeCast<const OpenColorIOTransform>(
-					m_displayTransformAndShader->displayTransform.get()
-				);
-
-				const IECore::MurmurHash h = ocioTrans->processorHash();
-				if( h != m_displayTransformAndShader->shaderHash )
-				{
-					m_displayTransformAndShader->shader = OpenColorIOAlgo::displayTransformToFramebufferShader(
-						ocioTrans->processor().get()
-					);
-					m_displayTransformAndShader->shaderHash = h;
-				}
-			}
-			m_displayTransformAndShader->shaderDirty = false;
-		}
-
-		m_displayTransformAndShader->shader->addUniformParameter( "absoluteValue", m_absoluteValueParameter );
-		m_displayTransformAndShader->shader->addUniformParameter( "clipping", m_clippingParameter );
-		m_displayTransformAndShader->shader->addUniformParameter( "multiply", m_multiplyParameter );
-		m_displayTransformAndShader->shader->addUniformParameter( "power", m_powerParameter );
-		m_displayTransformAndShader->shader->addUniformParameter( "soloChannel", m_soloChannelParameter );
-		viewportGadget()->setPostProcessShader( Gadget::Layer::Main, m_displayTransformAndShader->shader );
-	}
-
 	V3f comparisonScale( 1.0f );
 	V3f comparisonTranslate( 0.0f );
 	if( compareMatchDisplayWindowsPlug()->getValue() )
@@ -2051,74 +1883,4 @@ void ImageView::preRender()
 
 	viewportGadget()->frame( b );
 	m_framed = true;
-}
-
-void ImageView::insertDisplayTransform()
-{
-	const std::string name = displayTransformPlug()->getValue();
-
-	DisplayTransformMap::iterator it = m_displayTransforms.find( name );
-	if( it != m_displayTransforms.end() )
-	{
-		m_displayTransformAndShader = &(it->second);
-	}
-	else
-	{
-		m_displayTransformAndShader = &m_displayTransforms.insert(
-			std::make_pair( name, DisplayTransformEntry() )
-		).first->second;
-
-		m_displayTransformAndShader->displayTransform = createDisplayTransform( name );
-		const OpenColorIOTransform *ocioTrans = runTimeCast<const OpenColorIOTransform>( m_displayTransformAndShader->displayTransform.get() );
-		m_displayTransformAndShader->supportsShader = ocioTrans != nullptr || !m_displayTransformAndShader->displayTransform;
-		m_displayTransformAndShader->shader = nullptr;
-
-		if( m_displayTransformAndShader->displayTransform )
-		{
-			m_displayTransformAndShader->displayTransform->plugDirtiedSignal().connect(
-				boost::bind( &ImageView::displayTransformPlugDirtied, this, m_displayTransformAndShader )
-			);
-		}
-	}
-}
-
-void ImageView::displayTransformPlugDirtied( DisplayTransformEntry *displayTransform )
-{
-	displayTransform->shaderDirty = true;
-	if( displayTransform == m_displayTransformAndShader )
-	{
-		viewportGadget()->renderRequestSignal()( viewportGadget() );
-	}
-}
-
-void ImageView::registerDisplayTransform( const std::string &name, DisplayTransformCreator creator )
-{
-	displayTransformCreators()[name] = creator;
-}
-
-void ImageView::registeredDisplayTransforms( std::vector<std::string> &names )
-{
-	const DisplayTransformCreatorMap &m = displayTransformCreators();
-	names.clear();
-	for( DisplayTransformCreatorMap::const_iterator it = m.begin(), eIt = m.end(); it != eIt; ++it )
-	{
-		names.push_back( it->first );
-	}
-}
-
-GafferImage::ImageProcessorPtr ImageView::createDisplayTransform( const std::string &name )
-{
-	const auto &m = displayTransformCreators();
-	auto it = m.find( name );
-	if( it != m.end() )
-	{
-		return it->second();
-	}
-	return nullptr;
-}
-
-ImageView::DisplayTransformCreatorMap &ImageView::displayTransformCreators()
-{
-	static auto g_creators = new DisplayTransformCreatorMap;
-	return *g_creators;
 }

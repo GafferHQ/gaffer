@@ -4,6 +4,7 @@
 API
 ---
 
+- View : Added DisplayTransform add-on class which can be used to add colourspace management to any View.
 - ViewportGadget : A post-process shader can now be applied to any layer, not just the main one.
 
 Breaking Changes
@@ -13,7 +14,11 @@ Breaking Changes
   - A GL context is no longer available in `_resize()`.
   - Removed `BufferOptions.Double`.
 - GadgetWidget : Removed `bufferOptions` constructor argument.
-- ImageView : Removed `lutGPU` plug.
+- ImageView :
+  - Removed `lutGPU` plug.
+  - Removed DisplayTransform methods. Use `View::DisplayTransform` instead.
+  - Moved `exposure`, `gamma`, `clipping` and `soloChannel` plugs under a `displayTransform` parent plug.
+  - Moved the `displayTransform` plug to `displayTransform.name`.
 - ViewportGadget : Changed function signature for `setPostProcessShader()` and `getPostProcessShader()`.
 
 1.2.2.0 (relative to 1.2.1.1)
