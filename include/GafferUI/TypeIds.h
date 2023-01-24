@@ -84,6 +84,7 @@ enum TypeId
 	GraphGadgetSetPositionsActionTypeId = 110290,
 	ToolContainerTypeId = 110291,
 	FPSGadgetTypeId = 110292,
+	ViewDisplayTransformTypeId = 110293,
 
 	LastTypeId = 110450
 };

@@ -46,6 +46,7 @@
 #include "Gaffer/EditScope.h"
 #include "Gaffer/Plug.h"
 
+#include "IECorePython/ExceptionAlgo.h"
 #include "IECorePython/ScopedGILRelease.h"
 
 #include "boost/python/suite/indexing/container_utils.hpp"
@@ -105,6 +106,36 @@ ViewPtr create( Gaffer::PlugPtr input )
 	return View::create( input );
 }
 
+void registerDisplayTransformWrapper( const std::string &name, object creator )
+{
+	View::DisplayTransform::registerDisplayTransform(
+		name,
+		[creator] () {
+			IECorePython::ScopedGILLock gilLock;
+			try
+			{
+				object pythonShader = creator();
+				IECoreGL::Shader::SetupPtr shader = extract<IECoreGL::Shader::SetupPtr>( pythonShader );
+				return shader;
+			}
+			catch( error_already_set & )
+			{
+				IECorePython::ExceptionAlgo::translatePythonException();
+			}
+		}
+	);
+}
+
+list registeredDisplayTransformsWrapper()
+{
+	list result;
+	for( const auto &name : View::DisplayTransform::registeredDisplayTransforms() )
+	{
+		result.append( name );
+	}
+	return result;
+}
+
 } // namespace
 
 namespace GafferUIModule
@@ -117,7 +148,7 @@ Gaffer::NodePtr getPreprocessor( View &v )
 
 void bindView()
 {
-	GafferBindings::NodeClass<View, ViewWrapper>( nullptr, no_init )
+	scope s = GafferBindings::NodeClass<View, ViewWrapper>( nullptr, no_init )
 		.def( init<const std::string &, PlugPtr>() )
 		.def( "editScope", (EditScope *(View::*)())&View::editScope, return_value_policy<IECorePython::CastToIntrusivePtr>() )
 		.def( "getContext", (Context *(View::*)())&View::getContext, return_value_policy<IECorePython::CastToIntrusivePtr>() )
@@ -131,6 +162,14 @@ void bindView()
 		.def( "registerView", &registerView1 )
 		.def( "registerView", &registerView2 )
 		.staticmethod( "registerView" )
+	;
+
+	GafferBindings::NodeClass<View::DisplayTransform>( nullptr, no_init )
+		.def( init<View *>() )
+		.def( "registerDisplayTransform", &registerDisplayTransformWrapper )
+		.staticmethod( "registerDisplayTransform" )
+		.def( "registeredDisplayTransforms", &registeredDisplayTransformsWrapper )
+		.staticmethod( "registeredDisplayTransforms" )
 	;
 }
 
