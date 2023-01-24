@@ -111,12 +111,10 @@ class GAFFERSCENEUI_API UVView : public GafferUI::View
 		GafferUI::Gadget *textureGadgets();
 		const GafferUI::Gadget *textureGadgets() const;
 
-		void plugSet( const Gaffer::Plug *plug );
 		void plugDirtied( const Gaffer::Plug *plug );
 		void preRender();
 		void visibilityChanged();
 		void updateTextureGadgets( const IECore::ConstCompoundObjectPtr &textures );
-		void updateDisplayTransform();
 		void gadgetStateChanged( const GafferUI::Gadget *gadget, bool running );
 
 		UVViewSignal m_stateChangedSignal;
@@ -126,10 +124,6 @@ class GAFFERSCENEUI_API UVView : public GafferUI::View
 		std::unique_ptr<Gaffer::BackgroundTask> m_texturesTask;
 
 		bool m_framed;
-
-		using DisplayTransformMap = std::unordered_map<std::string, GafferImage::ImageProcessorPtr>;
-		DisplayTransformMap m_displayTransforms;
-		bool m_displayTransformDirty;
 
 		static size_t g_firstPlugIndex;
 

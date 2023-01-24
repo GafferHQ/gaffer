@@ -1,6 +1,16 @@
 1.x.x.x (relative to 1.2.x.x)
 =======
 
+Improvements
+------------
+
+- UVInspector : Added exposure, gamma and solo channel settings.
+
+Fixes
+-----
+
+- UVInspector : Removed display transform from UV wireframes and grid.
+
 API
 ---
 
@@ -21,6 +31,7 @@ Breaking Changes
   - Moved `exposure`, `gamma`, `clipping` and `soloChannel` plugs under a `displayTransform` parent plug.
   - Moved the `displayTransform` plug to `displayTransform.name`.
 - ViewportGadget : Changed function signature for `setPostProcessShader()` and `getPostProcessShader()`.
+- UVInspector : Moved the `displayTransform` plug to `displayTransform.name`.
 
 1.2.2.0 (relative to 1.2.1.1)
 =======
