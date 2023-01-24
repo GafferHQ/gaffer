@@ -165,6 +165,7 @@ from .OptionQueryTest import OptionQueryTest
 from .RenameTest import RenameTest
 from .PrimitiveVariableQueryTest import PrimitiveVariableQueryTest
 from .SetQueryTest import SetQueryTest
+from .MeshSegmentsTest import MeshSegmentsTest
 
 from .IECoreScenePreviewTest import *
 from .IECoreGLPreviewTest import *

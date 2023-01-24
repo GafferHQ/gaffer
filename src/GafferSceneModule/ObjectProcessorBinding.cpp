@@ -46,6 +46,7 @@
 #include "GafferScene/DeletePoints.h"
 #include "GafferScene/LightToCamera.h"
 #include "GafferScene/MeshDistortion.h"
+#include "GafferScene/MeshSegments.h"
 #include "GafferScene/MeshTangents.h"
 #include "GafferScene/MeshToPoints.h"
 #include "GafferScene/MeshType.h"
@@ -74,6 +75,7 @@ void GafferSceneModule::bindObjectProcessor()
 	GafferBindings::DependencyNodeClass<GafferScene::DeleteCurves>();
 	GafferBindings::DependencyNodeClass<GafferScene::PointsType>();
 	GafferBindings::DependencyNodeClass<GafferScene::MeshToPoints>();
+	GafferBindings::DependencyNodeClass<GafferScene::MeshSegments>();
 	GafferBindings::DependencyNodeClass<MeshType>();
 	GafferBindings::DependencyNodeClass<GafferScene::LightToCamera>();
 	GafferBindings::DependencyNodeClass<Parameters>();

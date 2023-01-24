@@ -172,6 +172,7 @@ enum TypeId
 	OptionQueryTypeId = 110627,
 	PrimitiveVariableQueryTypeId = 110628,
 	SetQueryTypeId = 110629,
+	MeshSegmentsTypeId = 110630,
 
 	PreviewPlaceholderTypeId = 110647,
 	PreviewGeometryTypeId = 110648,
