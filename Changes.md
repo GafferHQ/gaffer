@@ -11,6 +11,7 @@ Improvements
 Fixes
 -----
 
+- Viewer : Fixed bug which made it impossible to switch back to a previously used display transform [^1].
 - Cycles : Disabled auto-tiling mode for the viewport/interactive render mode, which caused odd/glitchy behaviour on larger than 2k renders [^1].
 - Arnold : The `ai:GI_diffuse_depth` and `ai:GI_specular_depth` options now default to `2` when they are left unspecified, matching the default values on the ArnoldOptions node.
 - Menu buttons : Fixed missing dropdown menu indicators.
@@ -22,6 +23,7 @@ Fixes
 - 3Delight : Fixed bug preventing 3delight from loading on Windows. (#5081). This also caused errors in the light editor at startup : `IECore.Exception: File "maya/osl/pointLight" could not be found.` [^2]
 - NodeEditor : Fixed bugs in handling of "green dot" non-default-value indicators with nested plugs.
 - GUI App : Fixed error on Windows when launching the `gui` app after a previous launch loaded a script with `\` in the path. [^2]
+- HierarchyView : Fixed <kbd>P</kbd> and <kbd>N</kbd> editor focus hotkeys [^1].
 
 API
 ---
