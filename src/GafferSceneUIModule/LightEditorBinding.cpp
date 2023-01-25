@@ -283,10 +283,7 @@ class MuteColumn : public InspectorColumn
 					if( auto fullValue = a->member<BoolData>( "light:mute" ) )
 					{
 						result.icon = fullValue->readable() ? m_muteFadedIconData : m_unMuteFadedIconData;
-						result.toolTip = new StringData(
-							"Inherited from : " + ScenePlug::pathToString( currentPath ) + "\n\n"
-							"Double-click to toggle"
-						);
+						result.toolTip = new StringData( "Inherited from : " + ScenePlug::pathToString( currentPath ) );
 						break;
 					}
 					currentPath.pop_back();
@@ -308,6 +305,20 @@ class MuteColumn : public InspectorColumn
 			}
 
 			result.value = nullptr;
+			if( auto toolTipData = runTimeCast<const StringData>( result.toolTip ) )
+			{
+				std::string toolTip = toolTipData->readable();
+				size_t size = toolTip.size();
+				if( size < 6 || toolTip.substr( size - 6 ) != "toggle" )
+				{
+					toolTip += "\n\nDouble-click to toggle";
+					result.toolTip = new StringData( toolTip );
+				}
+			}
+			else
+			{
+				result.toolTip = new StringData( "Double-click to toggle" );
+			}
 
 			return result;
 		}

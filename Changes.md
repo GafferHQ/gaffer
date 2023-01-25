@@ -30,10 +30,18 @@ Fixes
 [^1]: Changes inherited from 1.x. Can be omitted from the release notes for the final release of 1.2.
 [^2]: Changes made to features introduced in 1.2.0.0ax. Can be omitted from the release notes for the final release of 1.2.
 
+Fixes
+-----
+
+- Light Editor : Fixed tooltips that were missing the "Double-click to toggle" hint. [^2]
+
 API
 ---
 
 - EditScopeAlgo : Added `acquireSetEdits()` method.
+
+[^1]: Changes inherited from 1.x. Can be omitted from the release notes for the final release of 1.2.
+[^2]: Changes made to features introduced in 1.2.0.0ax. Can be omitted from the release notes for the final release of 1.2.
 
 1.2.0.0a3 (relative to 1.2.0.0a2)
 =========
