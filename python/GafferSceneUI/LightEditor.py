@@ -478,11 +478,16 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 						source = inspection.source()
 						editScope = self.__settingsNode["editScope"].getInput()
 						if (
-							isinstance( source, ( Gaffer.TweakPlug, Gaffer.NameValuePlug ) ) and
-							( editScope is None or editScope.node().isAncestorOf( source ) ) and
-							source["enabled"].getValue()
+							(
+								(
+									isinstance( source, ( Gaffer.TweakPlug, Gaffer.NameValuePlug ) ) and
+									source["enabled"].getValue()
+								) or
+								isinstance( column.inspector(), GafferSceneUI.Private.SetMembershipInspector )
+							) and
+							( editScope is None or editScope.node().isAncestorOf( source ) )
 						) :
-							tweaks.append( source )
+							tweaks.append( ( path, column.inspector() ) )
 						else :
 							return []
 					else :
@@ -492,11 +497,20 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 
 	def __disableEdits( self, pathListing ) :
 
-		tweaks = self.__disablableInspectionTweaks( pathListing )
+		edits = self.__disablableInspectionTweaks( pathListing )
 
-		with Gaffer.UndoScope( self.scriptNode() ) :
-			for tweak in tweaks :
-				tweak["enabled"].setValue( False )
+		with Gaffer.UndoScope( self.scriptNode() ), Gaffer.Context( self.getContext() ) as context :
+			for path, inspector in edits :
+				context["scene:path"] = GafferScene.ScenePlug.stringToPath( path )
+
+				inspection = inspector.inspect()
+				if inspection is not None and inspection.editable() :
+					source = inspection.source()
+
+					if isinstance( source, ( Gaffer.TweakPlug, Gaffer.NameValuePlug ) ) :
+						source["enabled"].setValue( False )
+					elif isinstance( inspector, GafferSceneUI.Private.SetMembershipInspector ) :
+						inspector.editSetMembership( inspection, path, GafferScene.EditScopeAlgo.SetMembership.Unchanged )
 
 	def __removableAttributeInspections( self, pathListing ) :
 
@@ -516,6 +530,7 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 						editScope = self.__settingsNode["editScope"].getInput()
 						if (
 							( isinstance( source, Gaffer.TweakPlug ) and source["mode"].getValue() != Gaffer.TweakPlug.Mode.Remove ) or
+							( isinstance( source, Gaffer.ValuePlug ) and len( source.children() ) == 2 and "Added" in source and "Removed" in source ) or
 							editScope is not None
 						) :
 							inspections.append( inspection )
