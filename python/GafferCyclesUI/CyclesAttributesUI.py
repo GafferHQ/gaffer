@@ -437,7 +437,7 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			Scale the distance between volume shader samples when rendering the volume
-            (lower values give more accurate and detailed results, but also increased render time).
+			(lower values give more accurate and detailed results, but also increased render time).
 			""",
 
 			"layout:section", "Shader",

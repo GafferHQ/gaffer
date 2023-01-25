@@ -43,9 +43,9 @@
 // GafferCycles, or including headers for linking to it. the GAFFERCYCLES_API
 // macro is the one that is used in the class definitions.
 #ifdef GafferCycles_EXPORTS
-  #define GAFFERCYCLES_API IECORE_EXPORT
+	#define GAFFERCYCLES_API IECORE_EXPORT
 #else
-  #define GAFFERCYCLES_API IECORE_IMPORT
+	#define GAFFERCYCLES_API IECORE_IMPORT
 #endif
 
 #endif // #ifndef GAFFERCYCLES_EXPORT_H

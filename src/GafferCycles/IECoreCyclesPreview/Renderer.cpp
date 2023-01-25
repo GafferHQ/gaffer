@@ -576,11 +576,13 @@ class ShaderCache : public IECore::RefCounted
 		}
 
 		// Can be called concurrently with other get() calls.
-		CyclesShaderPtr get( const IECoreScene::ShaderNetwork *surfaceShader,
-							 const IECoreScene::ShaderNetwork *displacementShader,
-							 const IECoreScene::ShaderNetwork *volumeShader,
-							 const IECore::CompoundObject *attributes,
-							 IECore::MurmurHash &h )
+		CyclesShaderPtr get(
+			const IECoreScene::ShaderNetwork *surfaceShader,
+			const IECoreScene::ShaderNetwork *displacementShader,
+			const IECoreScene::ShaderNetwork *volumeShader,
+			const IECore::CompoundObject *attributes,
+			IECore::MurmurHash &h
+		)
 		{
 			IECore::MurmurHash hSubst;
 			IECore::MurmurHash hSubstDisp;
@@ -1559,11 +1561,13 @@ class InstanceCache : public IECore::RefCounted
 		}
 
 		// Can be called concurrently with other get() calls.
-		Instance get( const std::vector<const IECore::Object *> &samples,
-					  const std::vector<float> &times,
-					  const int frameIdx,
-					  const IECoreScenePreview::Renderer::AttributesInterface *attributes,
-					  const std::string &nodeName )
+		Instance get(
+			const std::vector<const IECore::Object *> &samples,
+			const std::vector<float> &times,
+			const int frameIdx,
+			const IECoreScenePreview::Renderer::AttributesInterface *attributes,
+			const std::string &nodeName
+		)
 		{
 			const CyclesAttributes *cyclesAttributes = static_cast<const CyclesAttributes *>( attributes );
 
@@ -3479,13 +3483,17 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			Box2i displayWindow(
 				V2i( 0, 0 ),
 				V2i( width - 1, height - 1 )
-				);
+			);
 			Box2i dataWindow(
-				V2i( (int)(camera->get_border_left()   * (float)width ),
-					 (int)(camera->get_border_bottom() * (float)height ) ),
-				V2i( (int)(camera->get_border_right()  * (float)width ) - 1,
-					 (int)(camera->get_border_top()    * (float)height - 1 ) )
-				);
+				V2i(
+					(int)(camera->get_border_left()   * (float)width ),
+					(int)(camera->get_border_bottom() * (float)height )
+				),
+				V2i(
+					(int)(camera->get_border_right()  * (float)width ) - 1,
+					(int)(camera->get_border_top()    * (float)height - 1 )
+				)
+			);
 
 			ccl::set<ccl::Pass *> clearPasses( m_scene->passes.begin(), m_scene->passes.end() );
 			m_scene->delete_nodes( clearPasses );

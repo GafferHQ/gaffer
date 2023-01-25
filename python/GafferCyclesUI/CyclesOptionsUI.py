@@ -730,7 +730,7 @@ Gaffer.Metadata.registerNode(
 			Probabilistically terminate light samples when the light
 			contribution is below this threshold (more noise but faster
 			rendering).
-            Zero disables the test and never ignores lights.
+			Zero disables the test and never ignores lights.
 			""",
 
 			"layout:section", "Sampling",
@@ -836,7 +836,7 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			Minimum number of light bounces. Setting this higher reduces noise in the first bounces,
-            but can also be less efficient for more complex geometry like hair and volumes.
+			but can also be less efficient for more complex geometry like hair and volumes.
 			""",
 
 			"layout:section", "Ray Depth",
@@ -912,7 +912,7 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			Minimum number of transparent bounces. Setting this higher reduces noise in the first bounces,
-            but can also be less efficient for more complex geometry like hair and volumes."
+			but can also be less efficient for more complex geometry like hair and volumes."
 			""",
 
 			"layout:section", "Ray Depth",
@@ -951,7 +951,7 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			Distance between volume shader samples when rendering the volume
-            (lower values give more accurate and detailed results, but also
+			(lower values give more accurate and detailed results, but also
 			increases render time).
 			""",
 
@@ -964,7 +964,7 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			Maximum number of steps through the volume before giving up,
-            to avoid extremely long render times with big objects or small step
+			to avoid extremely long render times with big objects or small step
 			sizes.
 			""",
 

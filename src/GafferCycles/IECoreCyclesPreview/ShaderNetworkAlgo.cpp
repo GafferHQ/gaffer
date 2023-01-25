@@ -93,14 +93,14 @@ ShaderSearchPathCache g_shaderSearchPathCache( shaderCacheGetter, 10000 );
 
 ccl::SocketType::Type getSocketType( const std::string &name )
 {
-    if( name == "float" ) return ccl::SocketType::Type::FLOAT;
-    if( name == "int" ) return ccl::SocketType::Type::INT;
-    if( name == "color" ) return ccl::SocketType::Type::COLOR;
-    if( name == "vector" ) return ccl::SocketType::Type::VECTOR;
-    if( name == "point" ) return ccl::SocketType::Type::POINT;
-    if( name == "normal" ) return ccl::SocketType::Type::NORMAL;
-    if( name == "closure" ) return ccl::SocketType::Type::CLOSURE;
-    if( name == "string" ) return ccl::SocketType::Type::STRING;
+	if( name == "float" ) return ccl::SocketType::Type::FLOAT;
+	if( name == "int" ) return ccl::SocketType::Type::INT;
+	if( name == "color" ) return ccl::SocketType::Type::COLOR;
+	if( name == "vector" ) return ccl::SocketType::Type::VECTOR;
+	if( name == "point" ) return ccl::SocketType::Type::POINT;
+	if( name == "normal" ) return ccl::SocketType::Type::NORMAL;
+	if( name == "closure" ) return ccl::SocketType::Type::CLOSURE;
+	if( name == "string" ) return ccl::SocketType::Type::STRING;
 	return ccl::SocketType::Type::UNDEFINED;
 }
 
