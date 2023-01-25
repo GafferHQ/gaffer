@@ -220,7 +220,7 @@ def addRecentFile( application, fileName, *_reserved ) :
 
 		f.write( "import GafferUI\n" )
 		for fileName in reversed( applicationRoot.__recentFiles ) :
-			f.write( "GafferUI.FileMenu.addRecentFile( application, \"%s\" )\n" % fileName )
+			f.write( "GafferUI.FileMenu.addRecentFile( application, {} )\n".format( repr( fileName ) ) )
 
 ## A function suitable as the command for a File/Save menu item. It must be invoked from a menu which
 # has a ScriptWindow in its ancestry.

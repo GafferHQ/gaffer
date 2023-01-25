@@ -21,6 +21,7 @@ Fixes
   - Fixed undo for `Remove` menu item in Filter tab.
 - 3Delight : Fixed bug preventing 3delight from loading on Windows. (#5081). This also caused errors in the light editor at startup : `IECore.Exception: File "maya/osl/pointLight" could not be found.` [^2]
 - NodeEditor : Fixed bugs in handling of "green dot" non-default-value indicators with nested plugs.
+- GUI App : Fixed error on Windows when launching the `gui` app after a previous launch loaded a script with `\` in the path. [^2]
 
 API
 ---
