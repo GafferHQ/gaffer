@@ -919,6 +919,24 @@ class _TreeView( QtWidgets.QTreeView ) :
 
 		self.__recalculatingColumnWidths = False
 
+	def keyPressEvent( self, event ) :
+
+		# When the tree view has focus, the base class steals most
+		# keypresses to perform a search for a matching item. We don't
+		# like that because it prevents our own hotkeys from working,
+		# including the `P` and `N` shortcuts for managing editor focus.
+		# There is no way of turning off this behaviour, so we override
+		# `keyboardSearch()` to do nothing, and then reject the event
+		# after the fact.
+		self.__didKeyboardSearch = False
+		QtWidgets.QTreeView.keyPressEvent( self, event )
+		if self.__didKeyboardSearch :
+			event.setAccepted( False )
+
+	def keyboardSearch( self, search ) :
+
+		self.__didKeyboardSearch = True
+
 	def paintEvent( self, event ) :
 
 		QtWidgets.QTreeView.paintEvent( self, event )
