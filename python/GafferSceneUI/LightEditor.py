@@ -123,6 +123,9 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
 				horizontalScrollMode = GafferUI.ScrollMode.Automatic
 			)
+
+			self.__soloColumnIndex = 2
+
 			self.__pathListing.setDragPointer( "objects" )
 			self.__pathListing.setSortable( False )
 			self.__selectionChangedConnection = self.__pathListing.selectionChangedSignal().connect(
@@ -618,7 +621,8 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 			menuDefinition.append(
 				"Edit...",
 				{
-					"command" : functools.partial( self.__editSelectedCells, pathListing, False )
+					"command" : functools.partial( self.__editSelectedCells, pathListing, False ),
+					"active" : pathListing.getSelection()[self.__soloColumnIndex].isEmpty(),
 				}
 			)
 			menuDefinition.append(
