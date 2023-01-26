@@ -54,6 +54,7 @@
 
 #include "OSL/oslcomp.h"
 #include "OSL/oslexec.h"
+#include "OSL/rendererservices.h"
 
 #include "OpenImageIO/errorhandler.h"
 
