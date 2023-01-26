@@ -1078,12 +1078,12 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		# - lightSolo2                  False           in          False
 		# - lightMute                   True            out         True
 		# --- lightMuteChild            undefined       out         True
-		# --- lightMuteChildSolo        undefined       in          False
-		# - lightMuteSolo               True            in          False
-		# --- lightMuteSoloChild        undefined       out         False
-		# --- lightMuteSoloChildSolo    undefined       in          False
+		# --- lightMuteChildSolo        undefined       in          True
+		# - lightMuteSolo               True            in          True
+		# --- lightMuteSoloChild        undefined       out         True
+		# --- lightMuteSoloChildSolo    undefined       in          True
 		# - groupMute                   True            out         --
-		# --- lightGroupMuteChildSolo   undefined       in          False
+		# --- lightGroupMuteChildSolo   undefined       in          True
 
 		lightSolo = GafferSceneTest.TestLight()
 		lightSolo["name"].setValue( "lightSolo" )
@@ -1229,25 +1229,25 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertFalse( renderer.capturedObject( "/lightSolo2" ).capturedAttributes().attributes()["light:mute"].value )
 		self.assertTrue( renderer.capturedObject( "/lightMute" ).capturedAttributes().attributes()["light:mute"].value )
 		self.assertTrue( renderer.capturedObject( "/lightMute/lightMuteChild" ).capturedAttributes().attributes()["light:mute"].value )
-		self.assertFalse( renderer.capturedObject( "/lightMute/lightMuteChildSolo" ).capturedAttributes().attributes()["light:mute"].value )
-		self.assertFalse( renderer.capturedObject( "/lightMuteSolo" ).capturedAttributes().attributes()["light:mute"].value )
-		self.assertFalse( renderer.capturedObject( "/lightMuteSolo/lightMuteSoloChild" ).capturedAttributes().attributes()["light:mute"].value )
-		self.assertFalse( renderer.capturedObject( "/lightMuteSolo/lightMuteSoloChildSolo" ).capturedAttributes().attributes()["light:mute"].value )
-		self.assertFalse( renderer.capturedObject( "/groupMute/lightGroupMuteChildSolo" ).capturedAttributes().attributes()["light:mute"].value )
+		self.assertTrue( renderer.capturedObject( "/lightMute/lightMuteChildSolo" ).capturedAttributes().attributes()["light:mute"].value )
+		self.assertTrue( renderer.capturedObject( "/lightMuteSolo" ).capturedAttributes().attributes()["light:mute"].value )
+		self.assertTrue( renderer.capturedObject( "/lightMuteSolo/lightMuteSoloChild" ).capturedAttributes().attributes()["light:mute"].value )
+		self.assertTrue( renderer.capturedObject( "/lightMuteSolo/lightMuteSoloChildSolo" ).capturedAttributes().attributes()["light:mute"].value )
+		self.assertTrue( renderer.capturedObject( "/groupMute/lightGroupMuteChildSolo" ).capturedAttributes().attributes()["light:mute"].value )
 
 		#   Light                       light:mute      soloLights  Mute Result
 		#   ---------------------------------------------------------------------------
 		# - lightSolo                   undefined       out         True
 		# - light                       undefined       in          False
 		# - lightSolo2                  False           out         True
-		# - lightMute                   True            in          False
-		# --- lightMuteChild            undefined       in          False
-		# --- lightMuteChildSolo        undefined       out         False
+		# - lightMute                   True            in          True
+		# --- lightMuteChild            undefined       in          True
+		# --- lightMuteChildSolo        undefined       out         True
 		# - lightMuteSolo               True            out         True
-		# --- lightMuteSoloChild        undefined       in          False
+		# --- lightMuteSoloChild        undefined       in          True
 		# --- lightMuteSoloChildSolo    undefined       out         True
 		# - groupMute                   True            in          --
-		# --- lightGroupMuteChildSolo   undefined       out         False
+		# --- lightGroupMuteChildSolo   undefined       out         True
 
 		soloFilter["paths"].setValue(
 			IECore.StringVectorData(
@@ -1265,13 +1265,13 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( renderer.capturedObject( "/lightSolo" ).capturedAttributes().attributes()["light:mute"].value )
 		self.assertFalse( renderer.capturedObject( "/light" ).capturedAttributes().attributes()["light:mute"].value )
 		self.assertTrue( renderer.capturedObject( "/lightSolo2" ).capturedAttributes().attributes()["light:mute"].value )
-		self.assertFalse( renderer.capturedObject( "/lightMute" ).capturedAttributes().attributes()["light:mute"].value )
-		self.assertFalse( renderer.capturedObject( "/lightMute/lightMuteChild" ).capturedAttributes().attributes()["light:mute"].value )
-		self.assertFalse( renderer.capturedObject( "/lightMute/lightMuteChildSolo" ).capturedAttributes().attributes()["light:mute"].value )
+		self.assertTrue( renderer.capturedObject( "/lightMute" ).capturedAttributes().attributes()["light:mute"].value )
+		self.assertTrue( renderer.capturedObject( "/lightMute/lightMuteChild" ).capturedAttributes().attributes()["light:mute"].value )
+		self.assertTrue( renderer.capturedObject( "/lightMute/lightMuteChildSolo" ).capturedAttributes().attributes()["light:mute"].value )
 		self.assertTrue( renderer.capturedObject( "/lightMuteSolo" ).capturedAttributes().attributes()["light:mute"].value )
-		self.assertFalse( renderer.capturedObject( "/lightMuteSolo/lightMuteSoloChild" ).capturedAttributes().attributes()["light:mute"].value )
+		self.assertTrue( renderer.capturedObject( "/lightMuteSolo/lightMuteSoloChild" ).capturedAttributes().attributes()["light:mute"].value )
 		self.assertTrue( renderer.capturedObject( "/lightMuteSolo/lightMuteSoloChildSolo" ).capturedAttributes().attributes()["light:mute"].value )
-		self.assertFalse( renderer.capturedObject( "/groupMute/lightGroupMuteChildSolo" ).capturedAttributes().attributes()["light:mute"].value )
+		self.assertTrue( renderer.capturedObject( "/groupMute/lightGroupMuteChildSolo" ).capturedAttributes().attributes()["light:mute"].value )
 
 	def testSoloLightsSetUpdate( self ) :
 

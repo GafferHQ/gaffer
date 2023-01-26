@@ -40,6 +40,11 @@ API
 
 - EditScopeAlgo : Added `acquireSetEdits()` method.
 
+Breaking Changes
+----------------
+
+- Mute/Solo : Changed the dominant state to mute. If a light is both muted and soloed, its final state will be `mute`. [^2]
+
 [^1]: Changes inherited from 1.x. Can be omitted from the release notes for the final release of 1.2.
 [^2]: Changes made to features introduced in 1.2.0.0ax. Can be omitted from the release notes for the final release of 1.2.
 

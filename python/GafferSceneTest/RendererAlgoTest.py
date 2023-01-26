@@ -157,7 +157,7 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 		# - lightMute                   True            out         True
 		# --- lightMuteChild            undefined       out         True
 		# --- lightMuteChildSolo        undefined       in          False
-		# - lightMuteSolo               True            in          False
+		# - lightMuteSolo               True            in          True
 		# --- lightMuteSoloChild        undefined       out         False
 		# --- lightMuteSoloChildSolo    undefined       in          False
 		# - groupMute                   True            out         --
@@ -312,7 +312,7 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( renderer.capturedObject( "/lightMute" ).capturedAttributes().attributes()["light:mute"].value )
 		self.assertTrue( renderer.capturedObject( "/lightMute/lightMuteChild" ).capturedAttributes().attributes()["light:mute"].value )
 		self.assertFalse( renderer.capturedObject( "/lightMute/lightMuteChildSolo" ).capturedAttributes().attributes()["light:mute"].value )
-		self.assertFalse( renderer.capturedObject( "/lightMuteSolo" ).capturedAttributes().attributes()["light:mute"].value )
+		self.assertTrue( renderer.capturedObject( "/lightMuteSolo" ).capturedAttributes().attributes()["light:mute"].value )
 		self.assertFalse( renderer.capturedObject( "/lightMuteSolo/lightMuteSoloChild" ).capturedAttributes().attributes()["light:mute"].value )
 		self.assertFalse( renderer.capturedObject( "/lightMuteSolo/lightMuteSoloChildSolo" ).capturedAttributes().attributes()["light:mute"].value )
 		self.assertFalse( renderer.capturedObject( "/groupMute/lightGroupMuteChildSolo" ).capturedAttributes().attributes()["light:mute"].value )
