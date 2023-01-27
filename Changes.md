@@ -14,6 +14,7 @@ Fixes
 - SceneReader : Fixed reading of USD primitives containing `primvars:normals`. These are now correctly loaded as a primitive variable called N, taking precedence over the UsdGeomPointBased normals attribute.
 - SceneWriter : Fixed writing of indexed normals to USD files, so that the indexing is retained on load. Note that this means that normals are now always written as `primvars:normals` and never via the UsdGeomPointBased `normals` attribute.
 - CompoundDataPlugValueWidget : Fixed bug which prevented the addition of new plugs when an existing plug had an input connection. This affected the ContextVariables, CustomOptions and CustomAttributes nodes, among others.
+- Cycles : Refactor the problematic reset code, we now only allow scene/session parameters to be set before rendering starts (#5101). Fixes (#5234)
 
 API
 ---
