@@ -5,6 +5,7 @@ Improvements
 ------------
 
 - Arnold : Disabled ADP more thoroughly, using `ARNOLD_ADP_DISABLE=1` for Arnold 7.1.4.0 and greater. Set `ARNOLD_ADP_DISABLE=0` before running Gaffer if you wish to use ADP.
+- Cycles : Added warning when a shader contains a parameter which does not exist in Cycles.
 
 1.1.8.0 (relative to 1.1.7.0)
 =======

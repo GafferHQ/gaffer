@@ -1326,6 +1326,30 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( len( mh.messages ), 1 )
 		self.assertEqual( mh.messages[0].message, "Couldn't load shader \"NonExistentShader\"" )
 
+	def testMissingShaderParameter( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+		)
+
+		with IECore.CapturingMessageHandler() as mh :
+			dodgyNetwork = IECoreScene.ShaderNetwork(
+				shaders = {
+					"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", { "bad_parameter" : 10 } )
+				},
+				output = "output"
+			)
+			renderer.attributes( IECore.CompoundObject( { "cycles:surface" : dodgyNetwork } ) )
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].context, "Cycles::SocketAlgo" )
+		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Warning )
+		six.assertRegex(
+			self, mh.messages[0].message,
+			"Socket `bad_parameter` on node .* does not exist"
+		)
+
 	def testOSLComponentConnections( self ) :
 
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(

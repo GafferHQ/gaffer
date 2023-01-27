@@ -34,6 +34,7 @@
 
 #include "GafferCycles/IECoreCyclesPreview/SocketAlgo.h"
 
+#include "IECore/MessageHandler.h"
 #include "IECore/SimpleTypedData.h"
 #include "IECore/VectorTypedData.h"
 
@@ -356,7 +357,17 @@ void setSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Da
 
 void setSocket( ccl::Node *node, const std::string &name, const IECore::Data *value )
 {
-	setSocket( node, node->type->find_input( ccl::ustring( name.c_str() ) ), value );
+	if( auto socket = node->type->find_input( ccl::ustring( name.c_str() ) ) )
+	{
+		setSocket( node, socket, value );
+	}
+	else
+	{
+		IECore::msg(
+			IECore::Msg::Warning, "Cycles::SocketAlgo",
+			boost::format( "Socket `%1%` on node `%2%` does not exist" ) % name % node->name
+		);
+	}
 }
 
 void setRampSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Splineff &spline )
