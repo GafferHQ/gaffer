@@ -85,7 +85,7 @@ class UniverseBlockTest( unittest.TestCase ) :
 
 			try :
 				subprocess.check_output(
-					[ "gaffer", "test", "IECoreArnoldTest.UniverseBlockTest.testMetadataLoading" ],
+					[ "gaffer" if os.name != "nt" else "gaffer.cmd", "test", "IECoreArnoldTest.UniverseBlockTest.testMetadataLoading" ],
 					env = env, stderr = subprocess.STDOUT
 				)
 			except subprocess.CalledProcessError as e :
@@ -99,7 +99,7 @@ class UniverseBlockTest( unittest.TestCase ) :
 
 				e = arnold.AiNodeEntryLookUp( "options" )
 
-				s = arnold.AtStringReturn()
+				s = arnold.AtStringStruct()
 				i = ctypes.c_int()
 
 				arnold.AiMetaDataGetStr( e, "", "cortex.testString", s )
@@ -114,6 +114,7 @@ class UniverseBlockTest( unittest.TestCase ) :
 				arnold.AiMetaDataGetInt( e, "AA_samples", "cortex.testInt", i )
 				self.assertEqual( i.value, 12 )
 
+	@unittest.skipIf( os.name == "nt", "Kick not currently working on Windows.")
 	def testKickNodes( self ) :
 
 		# Running `kick -nodes` will load any plugins that might link to
