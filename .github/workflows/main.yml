@@ -196,6 +196,11 @@ jobs:
             print( "::add-matcher::./.github/workflows/main/problemMatchers/unittest.json" )
             subprocess.check_call( "${{ matrix.testRunner }} \"" + os.path.join( os.environ["GAFFER_BUILD_DIR"], "bin", "gaffer" ) + " test IECoreArnoldTest GafferArnoldTest GafferArnoldUITest\"", shell = True )
             print( "::remove-matcher owner=unittest::" )
+          else :
+            # Temporary until all Arnold modules are passing
+            print( "::add-matcher::./.github/workflows/main/problemMatchers/unittest.json" )
+            subprocess.check_call( "${{ matrix.testRunner }} \"" + os.path.join( os.environ["GAFFER_BUILD_DIR"], "bin", "gaffer.cmd" ) + " test IECoreArnoldTest\"", shell = True )
+            print( "::remove-matcher owner=unittest::" )
 
           # Publish ARNOLD_ROOT to the environment for subsequent steps,
           # so we can build the docs for GafferArnold.
