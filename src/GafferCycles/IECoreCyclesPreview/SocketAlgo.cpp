@@ -84,6 +84,65 @@ void setNumericSocket( ccl::Node *node, const ccl::SocketType &socket, const IEC
 	}
 }
 
+template<typename T>
+void setFloat2Socket( ccl::Node *node, const ccl::SocketType &socket, const T &value )
+{
+	node->set( socket, ccl::make_float2( value[0], value[1] ) );
+}
+
+void setFloat2Socket( ccl::Node *node, const ccl::SocketType &socket, const IECore::Data *value )
+{
+	switch( value->typeId() )
+	{
+		case IECore::V2fDataTypeId :
+			setFloat2Socket( node, socket, static_cast<const V2fData *>( value )->readable() );
+			break;
+		case IECore::V2iDataTypeId :
+			setFloat2Socket( node, socket, static_cast<const V2iData *>( value )->readable() );
+			break;
+		default :
+			IECore::msg(
+				IECore::Msg::Warning, "Cycles::SocketAlgo",
+				boost::format( "Unsupported type `%1%` for socket `%2%` on node `%3%" )
+					% value->typeName() % socket.name % node->name
+			);
+			break;
+	}
+}
+
+template<typename T>
+void setFloat3Socket( ccl::Node *node, const ccl::SocketType &socket, const T &value )
+{
+	node->set( socket, ccl::make_float3( value[0], value[1], value[2] ) );
+}
+
+void setFloat3Socket( ccl::Node *node, const ccl::SocketType &socket, const IECore::Data *value )
+{
+	switch( value->typeId() )
+	{
+		case IECore::Color3fDataTypeId :
+			setFloat3Socket( node, socket, static_cast<const Color3fData *>( value )->readable() );
+			break;
+		case IECore::Color4fDataTypeId :
+			// Omitting alpha
+			setFloat3Socket( node, socket, static_cast<const Color4fData *>( value )->readable() );
+			break;
+		case IECore::V3fDataTypeId :
+			setFloat3Socket( node, socket, static_cast<const V3fData *>( value )->readable() );
+			break;
+		case IECore::V3iDataTypeId :
+			setFloat3Socket( node, socket, static_cast<const V3iData *>( value )->readable() );
+			break;
+		default :
+			IECore::msg(
+				IECore::Msg::Warning, "Cycles::SocketAlgo",
+				boost::format( "Unsupported type `%1%` for socket `%2%` on node `%3%" )
+					% value->typeName() % socket.name % node->name
+			);
+			break;
+	}
+}
+
 template<typename T, typename U>
 void dataToArray( ccl::Node *node, const ccl::SocketType *socket, const IECore::Data *value )
 {
@@ -218,37 +277,13 @@ void setSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Da
 			setNumericSocket<uint>( node, *socket, value );
 			break;
 		case ccl::SocketType::COLOR:
-			if( const Color3fData *data = static_cast<const Color3fData *>( value ) )
-			{
-				node->set( *socket, setColor( data->readable() ) );
-			}
-			else if( const Color4fData *data = static_cast<const Color4fData *>( value ) )
-			{
-				// Dropping alpha
-				node->set( *socket, setColor( data->readable() ) );
-			}
-			break;
 		case ccl::SocketType::VECTOR:
 		case ccl::SocketType::POINT:
 		case ccl::SocketType::NORMAL:
-			if( const V3fData *data = static_cast<const V3fData *>( value ) )
-			{
-				node->set( *socket, setVector( data->readable() ) );
-			}
-			else if( const V3iData *data = static_cast<const V3iData *>( value ) )
-			{
-				node->set( *socket, setVector( Imath::V3f( data->readable() ) ) );
-			}
+			setFloat3Socket( node, *socket, value );
 			break;
 		case ccl::SocketType::POINT2:
-			if( const V2fData *data = static_cast<const V2fData *>( value ) )
-			{
-				node->set( *socket, setVector( data->readable() ) );
-			}
-			else if( const V2iData *data = static_cast<const V2iData *>( value ) )
-			{
-				node->set( *socket, setVector( Imath::V2f( data->readable() ) ) );
-			}
+			setFloat2Socket( node, *socket, value );
 			break;
 		case ccl::SocketType::CLOSURE:
 			break;

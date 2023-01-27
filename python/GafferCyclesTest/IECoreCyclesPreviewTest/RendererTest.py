@@ -1644,6 +1644,54 @@ class RendererTest( GafferTest.TestCase ) :
 
 			self.__testShaderResults( shader, [ ( imath.V2f( 0.55 ), imath.Color4f( value.value, value.value, value.value, 1 ) ) ] )
 
+	def testColorParameters( self ) :
+
+		for value in [
+			IECore.Color3fData( imath.Color3f( 1, 2, 3 ) ),
+			IECore.Color4fData( imath.Color4f( 1, 2, 3, 4 ) ),
+			IECore.V3fData( imath.V3f( 1, 2, 3 ) ),
+			IECore.V3iData( imath.V3i( 1, 2, 3 ) ),
+		] :
+
+			shader = IECoreScene.ShaderNetwork(
+				shaders = {
+					"output" : IECoreScene.Shader(
+						"principled_bsdf", "cycles:surface",
+						{ "base_color" : imath.Color3f( 0 ), "emission" : value }
+					),
+				},
+				output = "output",
+			)
+
+			self.__testShaderResults( shader, [ ( imath.V2f( 0.55 ), imath.Color4f( 1, 2, 3, 1 ) ) ] )
+
+	def testVectorParameters( self ) :
+
+		for value in [
+			IECore.Color3fData( imath.Color3f( 1, 2, 3 ) ),
+			IECore.Color4fData( imath.Color4f( 1, 2, 3, 4 ) ),
+			IECore.V3fData( imath.V3f( 1, 2, 3 ) ),
+			IECore.V3iData( imath.V3i( 1, 2, 3 ) ),
+		] :
+
+			shader = IECoreScene.ShaderNetwork(
+				shaders = {
+					"converter" : IECoreScene.Shader(
+						"convert_vector_to_color", "cycles:shader", { "value_vector" : value }
+					),
+					"output" : IECoreScene.Shader(
+						"principled_bsdf", "cycles:surface", { "base_color" : imath.Color3f( 0 ) }
+					),
+				},
+				connections = [
+					( ( "converter", "value_color" ), ( "output", "emission" ) )
+				],
+				output = "output",
+			)
+
+			self.__testShaderResults( shader, [ ( imath.V2f( 0.55 ), imath.Color4f( 1, 2, 3, 1 ) ) ] )
+
+
 	def testInvalidShaderParameterValues( self ) :
 
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
@@ -1653,6 +1701,8 @@ class RendererTest( GafferTest.TestCase ) :
 
 		for name, value in {
 			"sheen" : IECore.StringData( "iShouldBeAFloat" ),
+			"base_color" : IECore.StringData( "iShouldBeAColor" ),
+			"normal" : IECore.StringData( "iShouldBeAV3f" ),
 		}.items() :
 
 			with IECore.CapturingMessageHandler() as mh :
