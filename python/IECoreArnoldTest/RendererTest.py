@@ -1972,7 +1972,7 @@ class RendererTest( GafferTest.TestCase ) :
 			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
 			options = arnold.AiUniverseGetOptions( universe )
-			self.assertTrue( str( pathlib.Path( os.environ["GAFFER_ROOT"] ) / "shaders" ) in arnold.AiNodeGetStr( options, "plugin_searchpath" ) )
+			self.assertTrue( ( pathlib.Path( os.environ["GAFFER_ROOT"] ) / "shaders" ).as_posix() in arnold.AiNodeGetStr( options, "plugin_searchpath" ) )
 
 			n = arnold.AiNodeLookUpByName( universe, "testPlane" )
 
@@ -2661,6 +2661,15 @@ class RendererTest( GafferTest.TestCase ) :
 		r.option( "ai:log:filename", IECore.StringData( "" ) )
 		r.render()
 
+	@unittest.skipIf( os.name == "nt", "Windows does not support read-only directories" )
+	def testLogDirectoryCreationReadOnly( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.ass" )
+		)
+
 		# Trying to write to a read-only location should result in an
 		# error message.
 
@@ -2675,6 +2684,7 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Error )
 		self.assertTrue( "Permission denied" in mh.messages[0].message )
 
+	@unittest.skipIf( os.name == "nt", "Log file can't be deleted on Windows because it is still in use until the process finishes.")
 	def testStatsAndLog( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
