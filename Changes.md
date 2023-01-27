@@ -1,6 +1,11 @@
 1.2.x.x (relative to 1.2.0.2)
 =======
 
+Features
+--------
+
+- ImageToPoints : Added a new node for converting images to 3d pointclouds.
+
 Improvements
 ------------
 

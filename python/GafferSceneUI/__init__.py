@@ -180,6 +180,7 @@ from . import RenameUI
 from . import PrimitiveVariableQueryUI
 from . import SetQueryUI
 from . import MeshSegmentsUI
+from . import ImageToPointsUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.
