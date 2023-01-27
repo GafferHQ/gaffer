@@ -55,11 +55,32 @@ namespace
 {
 
 template<typename T>
-void convert( ccl::Node *node, const ccl::SocketType *socket, const IECore::Data *value )
+void setNumericSocket( ccl::Node *node, const ccl::SocketType &socket, const IECore::Data *value )
 {
-	if( const T *data = static_cast<const T *>( value ) )
+	switch( value->typeId() )
 	{
-		node->set( *socket, data->readable() );
+		case IECore::BoolDataTypeId :
+			node->set( socket, static_cast<T>( static_cast<const BoolData *>( value )->readable() ) );
+			break;
+		case IECore::FloatDataTypeId :
+			node->set( socket, static_cast<T>( static_cast<const FloatData *>( value )->readable() ) );
+			break;
+		case IECore::DoubleDataTypeId :
+			node->set( socket, static_cast<T>( static_cast<const DoubleData *>( value )->readable() ) );
+			break;
+		case IECore::IntDataTypeId :
+			node->set( socket, static_cast<T>( static_cast<const IntData *>( value )->readable() ) );
+			break;
+		case IECore::UIntDataTypeId :
+			node->set( socket, static_cast<T>( static_cast<const UIntData *>( value )->readable() ) );
+			break;
+		default :
+			IECore::msg(
+				IECore::Msg::Warning, "Cycles::SocketAlgo",
+				boost::format( "Unsupported type `%1%` for socket `%2%` on node `%3%" )
+					% value->typeName() % socket.name % node->name
+			);
+			break;
 	}
 }
 
@@ -185,23 +206,16 @@ void setSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Da
 	switch( socket->type )
 	{
 		case ccl::SocketType::BOOLEAN:
-			convert<BoolData>( node, socket, value );
+			setNumericSocket<bool>( node, *socket, value );
 			break;
 		case ccl::SocketType::FLOAT:
-			if( const FloatData *data = static_cast<const FloatData *>( value ) )
-			{
-				node->set( *socket, data->readable() );
-			}
-			else if( const DoubleData *data = static_cast<const DoubleData *>( value ) )
-			{
-				node->set( *socket, (float)data->readable() );
-			}
+			setNumericSocket<float>( node, *socket, value );
 			break;
 		case ccl::SocketType::INT:
-			convert<IntData>( node, socket, value );
+			setNumericSocket<int>( node, *socket, value );
 			break;
 		case ccl::SocketType::UINT:
-			convert<UIntData>( node, socket, value );
+			setNumericSocket<uint>( node, *socket, value );
 			break;
 		case ccl::SocketType::COLOR:
 			if( const Color3fData *data = static_cast<const Color3fData *>( value ) )
@@ -256,7 +270,7 @@ void setSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Da
 			}
 			else
 			{
-				convert<IntData>( node, socket, value );
+				setNumericSocket<int>( node, *socket, value );
 			}
 			break;
 		case ccl::SocketType::TRANSFORM:

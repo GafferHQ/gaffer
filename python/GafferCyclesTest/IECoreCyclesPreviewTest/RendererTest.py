@@ -1564,5 +1564,119 @@ class RendererTest( GafferTest.TestCase ) :
 
 		del plane
 
+	def __testShaderResults( self, shader, expectedResults, maxDifference = 0.0 ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+		)
+
+		# Frame so our plane fills the entire image.
+
+		renderer.camera(
+			"testCamera",
+			IECoreScene.Camera(
+				parameters = {
+					"resolution" : imath.V2i( 100, 100 ),
+					"projection" : "orthographic",
+					"screenWindow" : imath.Box2f( imath.V2f( -0.5 ), imath.V2f( 0.5 ) )
+				}
+			),
+			renderer.attributes( IECore.CompoundObject() )
+		)
+		renderer.option( "camera", IECore.StringData( "testCamera" ) )
+
+		fileName = os.path.join( self.temporaryDirectory(), "test.exr" )
+		renderer.output(
+			"testOutput",
+			IECoreScene.Output(
+				fileName,
+				"exr",
+				"rgba",
+				{}
+			)
+		)
+
+		# Render the plane with the shader provided.
+
+		primitiveHandle = renderer.object(
+			"/primitive",
+			IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -0.5 ), imath.V2f( 0.5 ) ) ),
+			renderer.attributes( IECore.CompoundObject( { "cycles:surface" : shader } ) )
+		)
+		primitiveHandle.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
+
+		renderer.render()
+		image = IECore.Reader.create( fileName ).read()
+
+		# Check we got what we expected.
+
+		for uv, expectedResult in expectedResults :
+			color = self.__colorAtUV( image, uv )
+			if maxDifference :
+				for i in range( 0, 4 ) :
+					self.assertAlmostEqual( color[i], expectedResult[i], delta = maxDifference )
+			else :
+				self.assertEqual( color, expectedResult )
+
+	def testNumericParameters( self ) :
+
+		for value in [
+			IECore.IntData( 1 ),
+			IECore.UIntData( 1 ),
+			IECore.FloatData( 1 ),
+			IECore.DoubleData( 1 ),
+			IECore.FloatData( 1 ),
+		] :
+
+			shader = IECoreScene.ShaderNetwork(
+				shaders = {
+					"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", { "base_color" : imath.Color3f( 0 ) } ),
+					"value" : IECoreScene.Shader( "value", "cycles:shader", { "value" : value } ),
+					"converter" : IECoreScene.Shader( "convert_float_to_color", "cycles:shader" ),
+				},
+				connections = [
+					( ( "value", "value" ), ( "converter", "value_float" ) ),
+					( ( "converter", "value_color" ), ( "output", "emission" ) ),
+				],
+				output = "output",
+			)
+
+			self.__testShaderResults( shader, [ ( imath.V2f( 0.55 ), imath.Color4f( value.value, value.value, value.value, 1 ) ) ] )
+
+	def testInvalidShaderParameterValues( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+		)
+
+		for name, value in {
+			"sheen" : IECore.StringData( "iShouldBeAFloat" ),
+		}.items() :
+
+			with IECore.CapturingMessageHandler() as mh :
+
+				attributes = renderer.attributes(
+					IECore.CompoundObject( {
+						"cycles:surface" : IECoreScene.ShaderNetwork(
+							shaders = {
+								"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", { name : value } )
+							},
+							output = "output"
+						)
+					} )
+				)
+
+				self.assertEqual( len( mh.messages ), 1 )
+				self.assertEqual( mh.messages[0].context, "Cycles::SocketAlgo" )
+				self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Warning )
+				six.assertRegex(
+					self, mh.messages[0].message,
+					"Unsupported type `{}` for socket `{}` on node .*".format(
+						value.typeName(), name
+					)
+				)
+
 if __name__ == "__main__":
 	unittest.main()
