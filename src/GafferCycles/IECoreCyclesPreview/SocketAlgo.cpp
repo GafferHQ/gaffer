@@ -74,39 +74,6 @@ void dataToArray( ccl::Node *node, const ccl::SocketType *socket, const IECore::
 	}
 }
 
-template<typename T, typename U>
-IECore::DataPtr arrayToData( const ccl::array<U>& array )
-{
-	using VectorType = vector<T>;
-	using DataType = IECore::TypedData<vector<T>>;
-	typename DataType::Ptr data = new DataType;
-	VectorType &v = data->writable();
-	v.reserve( array.size() );
-
-	for( size_t i = 0; i < array.size(); ++i )
-	{
-		v.push_back( array[i] );
-	}
-
-	return data;
-}
-
-template<typename T>
-IECore::DataPtr arrayToData( const ccl::array<ccl::float3>& array )
-{
-	using VectorType = vector<T>;
-	using DataType = IECore::TypedData<vector<T>>;
-	typename DataType::Ptr data = new DataType;
-	VectorType &v = data->writable();
-	v.reserve( array.size() );
-
-	for( size_t i = 0; i < array.size(); ++i )
-	{
-		v.push_back( T( array[i][0], array[i][1], array[i][2]) );
-	}
-	return data;
-}
-
 } // namespace
 
 namespace IECoreCycles
@@ -149,11 +116,6 @@ ccl::float3 setColor( const Imath::Color4f &color )
 {
 	// Dropping alpha
 	return ccl::make_float3( color[0], color[1], color[2] );
-}
-
-float setAlpha( const Imath::Color4f &color )
-{
-	return color[3];
 }
 
 ccl::float4 setQuaternion( const Imath::Quatf &quat )
@@ -395,123 +357,6 @@ void setSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Da
 void setSocket( ccl::Node *node, const std::string &name, const IECore::Data *value )
 {
 	setSocket( node, node->type->find_input( ccl::ustring( name.c_str() ) ), value );
-}
-
-void setSockets( ccl::Node *node, const IECore::CompoundDataMap &values )
-{
-	for( CompoundDataMap::const_iterator it=values.begin(); it!=values.end(); it++ )
-	{
-		setSocket( node, it->first.value().c_str(), it->second.get() );
-	}
-}
-
-IECore::DataPtr getSocket( const ccl::Node *node, const ccl::SocketType *socket )
-{
-	if( socket == nullptr )
-		return nullptr;
-
-	switch( socket->type )
-	{
-		case ccl::SocketType::BOOLEAN:
-			return new BoolData( node->get_bool( *socket ) );
-		case ccl::SocketType::FLOAT:
-			return new FloatData( node->get_float( *socket ) );
-		case ccl::SocketType::INT:
-			return new IntData( node->get_int( *socket ) );
-		case ccl::SocketType::UINT:
-			return new UIntData( node->get_uint( *socket ) );
-		case ccl::SocketType::COLOR:
-		{
-			ccl::float3 rgb = node->get_float3( *socket );
-			return new Color3fData( Imath::Color3f( rgb.x, rgb.y, rgb.z ) );
-		}
-		case ccl::SocketType::VECTOR:
-		case ccl::SocketType::POINT:
-		case ccl::SocketType::NORMAL:
-		{
-			ccl::float3 vector = node->get_float3( *socket );
-			return new V3fData( Imath::V3f( vector.x, vector.y, vector.z ) );
-		}
-		case ccl::SocketType::POINT2:
-		{
-			ccl::float2 vector = node->get_float2( *socket );
-			return new V2fData( Imath::V2f( vector.x, vector.y ) );
-		}
-		case ccl::SocketType::CLOSURE:
-			return nullptr;
-		case ccl::SocketType::STRING:
-			return new StringData( string( node->get_string( *socket ).c_str() ) );
-		case ccl::SocketType::ENUM:
-			return new StringData( string( node->get_string( *socket ).c_str() ) );
-		case ccl::SocketType::TRANSFORM:
-		{
-			return new M44fData( getTransform( node->get_transform( *socket ) ) );
-		}
-		case ccl::SocketType::NODE:
-			return nullptr;
-
-		case ccl::SocketType::BOOLEAN_ARRAY:
-			return arrayToData<bool>( node->get_bool_array( *socket ) );
-		case ccl::SocketType::FLOAT_ARRAY:
-			return arrayToData<float>( node->get_float_array( *socket ) );
-		case ccl::SocketType::INT_ARRAY:
-			return arrayToData<int>( node->get_int_array( *socket ) );
-		case ccl::SocketType::COLOR_ARRAY:
-			return arrayToData<Color3f>( node->get_float3_array( *socket ) );
-		case ccl::SocketType::VECTOR_ARRAY:
-		case ccl::SocketType::POINT_ARRAY:
-		case ccl::SocketType::NORMAL_ARRAY:
-			return arrayToData<V3f>( node->get_float3_array( *socket ) );
-		case ccl::SocketType::POINT2_ARRAY:
-		{
-			auto &array = node->get_float2_array( *socket );
-			auto data = new IECore::TypedData<vector<V2f> >;
-			vector<V2f> &v = data->writable();
-			v.reserve( array.size() );
-
-			for( size_t i = 0; i < array.size(); ++i )
-			{
-				v.push_back( V2f( array[i][0], array[i][1]) );
-			}
-			return data;
-		}
-		case ccl::SocketType::STRING_ARRAY:
-		{
-			auto &array = node->get_string_array( *socket );
-			auto data = new IECore::TypedData<vector<string> >;
-			vector<string> &v = data->writable();
-			v.reserve( array.size() );
-
-			for( size_t i = 0; i < array.size(); ++i )
-			{
-				v.push_back( string( array[i].c_str() ) );
-			}
-			return data;
-		}
-		case ccl::SocketType::TRANSFORM_ARRAY:
-		{
-			auto &array = node->get_transform_array( *socket );
-			auto data = new IECore::TypedData<vector<M44f> >;
-			vector<M44f> &v = data->writable();
-			v.reserve( array.size() );
-
-			for( size_t i = 0; i < array.size(); ++i )
-			{
-				v.push_back( getTransform( array[i] ) );
-			}
-			return data;
-		}
-		case ccl::SocketType::NODE_ARRAY:
-			return nullptr;
-		default:
-			return nullptr;
-	}
-	return nullptr;
-}
-
-IECore::DataPtr getSocket( const ccl::Node *node, const std::string &name )
-{
-	return getSocket( node, node->type->find_input( ccl::ustring( name.c_str() ) ) );
 }
 
 void setRampSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Splineff &spline )
