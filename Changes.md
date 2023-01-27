@@ -1,12 +1,24 @@
 1.1.x.x (relative to 1.1.7.0)
 =======
 
+Improvements
+------------
+
+- USD :
+  - Added support for Arnold-USD's convention for representing connections to individual indices of an array.
+  - Added loading of `float4` USD shader parameters as `Color4` parameters in Gaffer.
+
 Fixes
 -----
 
 - Viewer : Fixed bug which made it impossible to switch back to a previously used display transform.
 - Cycles : Disabled auto-tiling mode for the viewport/interactive render mode, which caused odd/glitchy behaviour on larger than 2k renders.
 - HierarchyView : Fixed <kbd>P</kbd> and <kbd>N</kbd> editor focus hotkeys.
+
+Build
+-----
+
+- Cortex : Updated to 10.4.4.0.
 
 1.1.7.0 (relative to 1.1.6.1)
 =======
