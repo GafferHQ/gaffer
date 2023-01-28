@@ -829,9 +829,11 @@ std::string AnimationGadget::getToolTip( const IECore::LineSegment3f &line ) con
 		const Gaffer::Animation::Tangent& tangent = keyTangent.first->tangent( keyTangent.second );
 		std::ostringstream os;
 		os.precision( 4 );
-		os << "Direction: " << Gaffer::Animation::toString( tangent.direction() );
-		os << "<br>Slope: " << tangent.getSlope();
-		os << "<br>Scale: " << tangent.getScale();
+		os	<< "**" << drivenPlugName( keyTangent.first->parent() ) << "**"
+			<< "  \nDirection : " << Gaffer::Animation::toString( tangent.direction() )
+			<< "  \nSlope\t : " << tangent.getSlope()
+			<< "  \nScale\t : " << tangent.getScale()
+			;
 		return os.str();
 	}
 	else if( const Animation::ConstKeyPtr key = keyAt( line ) )
@@ -841,15 +843,22 @@ std::string AnimationGadget::getToolTip( const IECore::LineSegment3f &line ) con
 
 		std::ostringstream os;
 		os.precision( 4 );
-		os << "Frame: " << std::round( key->getTime() * scriptNode->framesPerSecondPlug()->getValue() );
-		os << "<br>Value: " << key->getValue();
-		os << "<br>Interpolation: " << Animation::toString( key->getInterpolation() );
-		os << "<br>Tie Mode: " << Animation::toString( key->getTieMode() );
+		os	<< "**" << drivenPlugName( key->parent() ) << "**"
+			<< "  \nFrame : " << std::round( key->getTime() * scriptNode->framesPerSecondPlug()->getValue() )
+			<< "  \nValue : " << key->getValue()
+			<< "  \nInterpolation : " << Animation::toString( key->getInterpolation() )
+			<< "  \nTie Mode : " << Animation::toString( key->getTieMode() )
+			;
 		return os.str();
 	}
 	else if( Animation::ConstCurvePlugPtr curvePlug = curveAt( line ) )
 	{
-		return drivenPlugName( curvePlug.get() );
+		std::ostringstream os;
+		os	<< "**" << drivenPlugName( curvePlug.get() ) << "**"
+			<< "  \nExtrapolation In : " << Animation::toString( curvePlug->getExtrapolation( Animation::Direction::In ) )
+			<< "  \nExtrapolation Out : " << Animation::toString( curvePlug->getExtrapolation( Animation::Direction::Out ) )
+			;
+		return os.str();
 	}
 
 	return "";
