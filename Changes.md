@@ -1,6 +1,11 @@
 1.1.x.x (relative to 1.1.7.0)
 =======
 
+Features
+--------
+
+- MeshSegments : Added a node for identifying faces in contiguous segments.
+
 Improvements
 ------------
 
