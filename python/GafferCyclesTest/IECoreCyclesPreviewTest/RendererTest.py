@@ -1691,6 +1691,42 @@ class RendererTest( GafferTest.TestCase ) :
 
 			self.__testShaderResults( shader, [ ( imath.V2f( 0.55 ), imath.Color4f( 1, 2, 3, 1 ) ) ] )
 
+	def testColorArrayParameters( self ) :
+
+		shader = IECoreScene.ShaderNetwork(
+			shaders = {
+				"coordinates" : IECoreScene.Shader( "texture_coordinate", "cycles:shader" ),
+				"ramp" : IECoreScene.Shader(
+					"rgb_ramp", "cycles:shader", {
+						"interpolate" : False,
+						"ramp" : IECore.Color3fVectorData( [
+							imath.Color3f( 0.0, 1.0, 0.25 ),
+							imath.Color3f( 0.25, 0.75, 0.25 ),
+							imath.Color3f( 0.5, 0.5, 0.25 ),
+							imath.Color3f( 0.75, 0.25, 0.25 ),
+						] ),
+						"ramp_alpha" : IECore.FloatVectorData( [ 1, 1, 1, 1 ] ),
+					}
+				),
+				"output" : IECoreScene.Shader(
+					"principled_bsdf", "cycles:surface", { "base_color" : imath.Color3f( 0 ) }
+				),
+			},
+			connections = [
+				( ( "coordinates", "UV.x" ), ( "ramp", "fac" ) ),
+				( ( "ramp", "color" ), ( "output", "emission" ) ),
+			],
+			output = "output",
+		)
+
+		self.__testShaderResults(
+			shader,
+			[
+				( imath.V2f( 0.25, 0.5 ), imath.Color4f( 0, 1.0, 0.25, 1 ) ),
+				( imath.V2f( 0.5, 0.5 ), imath.Color4f( 0.25, 0.75, 0.25, 1 ) ),
+				( imath.V2f( 0.75, 0.5 ), imath.Color4f( 0.5, 0.5, 0.25, 1 ) ),
+			]
+		)
 
 	def testInvalidShaderParameterValues( self ) :
 

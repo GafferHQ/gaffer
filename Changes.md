@@ -16,6 +16,7 @@ Fixes
   - Fixed crashes caused by providing unsupported data types in shader parameters.
   - Fixed support for Color4f values on colour shader parameters. This can be useful when loading non-standard USD files.
   - Fixed support for V[23]i values on vector shader parameters.
+  - Fixed handling of colour array parameters.
 
 1.1.8.0 (relative to 1.1.7.0)
 =======
