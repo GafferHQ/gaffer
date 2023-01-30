@@ -35,7 +35,7 @@
 #
 ##########################################################################
 
-import os
+import pathlib
 import unittest
 import six
 
@@ -54,7 +54,7 @@ class MeshSegmentsTest( GafferSceneTest.SceneTestCase ) :
 	def testSampleFile( self ) :
 
 		r = GafferScene.SceneReader()
-		r["fileName"].setValue( os.path.join( os.path.dirname( __file__ ), "usdFiles", "segmentTestMesh.usd" ) )
+		r["fileName"].setValue( pathlib.Path( __file__ ).parent / "usdFiles" / "segmentTestMesh.usd" )
 
 		f = GafferScene.PathFilter()
 		f["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
