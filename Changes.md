@@ -1,12 +1,20 @@
 1.2.0.0ax (relative to 1.2.0.0a2)
 =========
 
+Features
+--------
+
+- MeshSegments : Added a node for identifying faces in contiguous segments. [^1]
+
 Improvements
 ------------
 
 - Viewer : If Arnold is available, then it is preferred over Appleseed for performing OSL shader previews. If neither is available, then Cycles will be used (#5084).
 - FormatPlugValueWidget, ChannelPlugValueWidget, ChannelMaskPlugValueWidget, RGBAChannelsPlugValueWidget, ViewPlugValueWidget : Added support for showing multiple plugs at once, as needed when multiple Spreadsheet cells are selected for editing.
 - Spreadsheet : Improved display of image formats.
+- USD : [^1]
+  - Added support for Arnold-USD's convention for representing connections to individual indices of an array.
+  - Added loading of `float4` USD shader parameters as `Color4` parameters in Gaffer.
 
 Fixes
 -----
@@ -37,6 +45,11 @@ Breaking Changes
 
 [^1]: Changes inherited from 1.x. Can be omitted from the release notes for the final release of 1.2.
 [^2]: Changes made to features introduced in 1.2.0.0ax. Can be omitted from the release notes for the final release of 1.2.
+
+Build
+-----
+
+- Cortex : Updated to 10.4.4.0. [^1]
 
 1.2.0.0a2 (relative to 1.2.0.0a1)
 =========
@@ -208,8 +221,20 @@ Build
 
 - Cortex : Updated to version 10.4.3.0.
 
-1.1.x.x (relative to 1.1.7.0)
+1.1.8.0 (relative to 1.1.7.0)
 =======
+
+Features
+--------
+
+- MeshSegments : Added a node for identifying faces in contiguous segments.
+
+Improvements
+------------
+
+- USD :
+  - Added support for Arnold-USD's convention for representing connections to individual indices of an array.
+  - Added loading of `float4` USD shader parameters as `Color4` parameters in Gaffer.
 
 Fixes
 -----
@@ -217,6 +242,11 @@ Fixes
 - Viewer : Fixed bug which made it impossible to switch back to a previously used display transform.
 - Cycles : Disabled auto-tiling mode for the viewport/interactive render mode, which caused odd/glitchy behaviour on larger than 2k renders.
 - HierarchyView : Fixed <kbd>P</kbd> and <kbd>N</kbd> editor focus hotkeys.
+
+Build
+-----
+
+- Cortex : Updated to 10.4.4.0.
 
 1.1.7.0 (relative to 1.1.6.1)
 =======

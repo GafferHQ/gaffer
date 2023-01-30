@@ -167,6 +167,7 @@ from .PrimitiveVariableQueryTest import PrimitiveVariableQueryTest
 from .SetQueryTest import SetQueryTest
 from .VisibleSetTest import VisibleSetTest
 from .VisibleSetDataTest import VisibleSetDataTest
+from .MeshSegmentsTest import MeshSegmentsTest
 
 from .IECoreScenePreviewTest import *
 from .IECoreGLPreviewTest import *

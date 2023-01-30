@@ -37,6 +37,7 @@
 import os
 import sys
 import distutils
+import re
 
 import IEEnv
 
@@ -62,7 +63,6 @@ def getOption( name, default ) :
 ## \todo: this is duplicated from ./installAll but can we centralize it instead?
 def gafferVersionFromScons() :
 
-	import re
 	sconsFile = "SConstruct"
 	versionVars = ["gafferMilestoneVersion", "gafferMajorVersion", "gafferMinorVersion", "gafferPatchVersion"]
 	varsToFind = list(versionVars)
@@ -121,7 +121,8 @@ targetAppVersion = None
 
 if int( getOption( "IE_STOMP_VERSION", "0" ) ):
 	gafferVersion = os.environ["GAFFER_VERSION"]
-	GAFFER_MILESTONE_VERSION, GAFFER_MAJOR_VERSION, GAFFER_MINOR_VERSION, GAFFER_PATCH_VERSION = os.environ["GAFFER_VERSION"].rstrip( "dev" ).split( "." )
+	GAFFER_MILESTONE_VERSION, GAFFER_MAJOR_VERSION, GAFFER_MINOR_VERSION, patchAndSuffix = os.environ["GAFFER_VERSION"].rstrip( "dev" ).split( "." )
+	GAFFER_PATCH_VERSION, GAFFER_VERSION_SUFFIX = re.match(r"([0-9]*)([^0-9]?.*)", patchAndSuffix).groups()
 else:
 	gafferVersion = gafferVersionFromScons()
 
