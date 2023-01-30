@@ -1,4 +1,4 @@
-1.1.x.x (relative to 1.1.7.0)
+1.1.8.0 (relative to 1.1.7.0)
 =======
 
 Features
