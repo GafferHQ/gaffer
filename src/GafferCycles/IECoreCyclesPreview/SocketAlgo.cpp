@@ -231,6 +231,41 @@ void setArraySocket( ccl::Node *node, const ccl::SocketType &socket, const Data 
 	}
 }
 
+void setEnumSocket( ccl::Node *node, const ccl::SocketType &socket, const IECore::Data *value )
+{
+	const char *name = nullptr;
+	if( auto data = runTimeCast<const StringData>( value ) )
+	{
+		name = data->readable().c_str();
+	}
+	else if( auto internedData = runTimeCast<const InternedStringData>( value ) )
+	{
+		name = internedData->readable().c_str();
+	}
+
+	if( name )
+	{
+		ccl::ustring uName( name );
+		const ccl::NodeEnum &enums = *socket.enum_values;
+		if( enums.exists( uName ) )
+		{
+			node->set( socket, enums[uName] );
+		}
+		else
+		{
+			IECore::msg(
+				IECore::Msg::Warning, "Cycles::SocketAlgo",
+				boost::format( "Invalid enum value \"%1%\" for socket `%2%` on node %3%" )
+					% name % socket.name % node->name
+			);
+		}
+	}
+	else
+	{
+		setNumericSocket<int>( node, socket, value );
+	}
+}
+
 } // namespace
 
 namespace IECoreCycles
@@ -370,19 +405,7 @@ void setSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Da
 			}
 			break;
 		case ccl::SocketType::ENUM:
-			if( const StringData *data = runTimeCast<const StringData>( value ) )
-			{
-				ccl::ustring enumName( data->readable().c_str() );
-				const ccl::NodeEnum &enums = *socket->enum_values;
-				if( enums.exists( enumName ) )
-				{
-					node->set( *socket, enums[enumName] );
-				}
-			}
-			else
-			{
-				setNumericSocket<int>( node, *socket, value );
-			}
+			setEnumSocket( node, *socket, value );
 			break;
 		case ccl::SocketType::TRANSFORM:
 			if( const M44fData *data = static_cast<const M44fData *>( value ) )

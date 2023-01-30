@@ -8,6 +8,8 @@ Improvements
 - Cycles :
   - Added warning when a shader contains a parameter which does not exist in Cycles.
   - Added warning when a shader contains a parameter with an unsupported datatype.
+  - Added warning when a shader contains an enum parameter with an invalid value.
+  - Added support for passing InternedStringData to enum parameters.
 
 Fixes
 -----

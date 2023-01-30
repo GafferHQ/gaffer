@@ -1739,6 +1739,7 @@ class RendererTest( GafferTest.TestCase ) :
 			"sheen" : IECore.StringData( "iShouldBeAFloat" ),
 			"base_color" : IECore.StringData( "iShouldBeAColor" ),
 			"normal" : IECore.StringData( "iShouldBeAV3f" ),
+			"subsurface_method" : IECore.Color3fData( imath.Color3f( 10 ) ),
 		}.items() :
 
 			with IECore.CapturingMessageHandler() as mh :
@@ -1763,6 +1764,34 @@ class RendererTest( GafferTest.TestCase ) :
 						value.typeName(), name
 					)
 				)
+
+	def testInvalidShaderEnumValue( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+		)
+
+		with IECore.CapturingMessageHandler() as mh :
+
+			attributes = renderer.attributes(
+				IECore.CompoundObject( {
+					"cycles:surface" : IECoreScene.ShaderNetwork(
+						shaders = {
+							"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", { "subsurface_method" : "missing" } )
+						},
+						output = "output"
+					)
+				} )
+			)
+
+			self.assertEqual( len( mh.messages ), 1 )
+			self.assertEqual( mh.messages[0].context, "Cycles::SocketAlgo" )
+			self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Warning )
+			six.assertRegex(
+				self, mh.messages[0].message,
+				"Invalid enum value \"missing\" for socket `subsurface_method` on node .*"
+			)
 
 if __name__ == "__main__":
 	unittest.main()
