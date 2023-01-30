@@ -41,7 +41,7 @@ jobs:
             buildType: RELEASE
             publish: true
             containerImage: ghcr.io/gafferhq/build/build:2.0.0
-            dependenciesURL: https://github.com/ImageEngine/cortex/releases/download/10.4.2.1/cortex-10.4.2.1-linux-python2.tar.gz
+            dependenciesURL: https://github.com/ImageEngine/cortex/releases/download/10.4.4.0/cortex-10.4.4.0-linux-python2.tar.gz
             # GitHub container builds run as root. This causes failures for tests that
             # assert that filesystem permissions are respected, because root doesn't
             # respect permissions. So we run the final test suite as a dedicated
@@ -54,7 +54,7 @@ jobs:
             buildType: DEBUG
             publish: false
             containerImage: ghcr.io/gafferhq/build/build:2.0.0
-            dependenciesURL: https://github.com/ImageEngine/cortex/releases/download/10.4.2.1/cortex-10.4.2.1-linux-python2.tar.gz
+            dependenciesURL: https://github.com/ImageEngine/cortex/releases/download/10.4.4.0/cortex-10.4.4.0-linux-python2.tar.gz
             testRunner: su testUser -c
             # Debug builds are ludicrously big, so we must use a larger cache
             # limit. In practice this compresses down to 4-500Mb.
@@ -65,7 +65,7 @@ jobs:
             buildType: RELEASE
             publish: true
             containerImage: ghcr.io/gafferhq/build/build:2.0.0
-            dependenciesURL: https://github.com/ImageEngine/cortex/releases/download/10.4.2.1/cortex-10.4.2.1-linux-python3.tar.gz
+            dependenciesURL: https://github.com/ImageEngine/cortex/releases/download/10.4.4.0/cortex-10.4.4.0-linux-python3.tar.gz
             testRunner: su testUser -c
             sconsCacheMegabytes: 400
 
@@ -75,7 +75,7 @@ jobs:
             variant: windows-python3
             publish: false
             containerImage:
-            dependenciesURL: https://github.com/ImageEngine/cortex/releases/download/10.4.2.1/cortex-10.4.2.1-windows-python3.zip
+            dependenciesURL: https://github.com/ImageEngine/cortex/releases/download/10.4.4.0/cortex-10.4.4.0-windows-python3.zip
             testRunner: Invoke-Expression
             testArguments: GafferTest.FileSystemPathTest
 
