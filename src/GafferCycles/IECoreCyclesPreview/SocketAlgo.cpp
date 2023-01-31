@@ -266,6 +266,26 @@ void setEnumSocket( ccl::Node *node, const ccl::SocketType &socket, const IECore
 	}
 }
 
+void setStringSocket( ccl::Node *node, const ccl::SocketType &socket, const IECore::Data *value )
+{
+	if( auto data = runTimeCast<const StringData>( value ) )
+	{
+		node->set( socket, data->readable().c_str() );
+	}
+	else if( auto internedData = runTimeCast<const InternedStringData>( value ) )
+	{
+		node->set( socket, internedData->readable().c_str() );
+	}
+	else
+	{
+		IECore::msg(
+			IECore::Msg::Warning, "Cycles::SocketAlgo",
+			boost::format( "Unsupported data type `%1%` for socket `%2%` on node %3% (expected StringData or InternedStringData)." )
+				% value->typeName() % socket.name % node->name
+		);
+	}
+}
+
 } // namespace
 
 namespace IECoreCycles
@@ -399,10 +419,7 @@ void setSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Da
 		case ccl::SocketType::CLOSURE:
 			break;
 		case ccl::SocketType::STRING:
-			if( const StringData *data = runTimeCast<const StringData>( value ) )
-			{
-				node->set( *socket, data->readable().c_str() );
-			}
+			setStringSocket( node, *socket, value );
 			break;
 		case ccl::SocketType::ENUM:
 			setEnumSocket( node, *socket, value );
