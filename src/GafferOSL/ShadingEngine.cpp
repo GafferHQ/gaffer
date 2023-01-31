@@ -52,6 +52,7 @@
 #include "OSL/oslclosure.h"
 #include "OSL/oslexec.h"
 #include "OSL/oslversion.h"
+#include "OSL/rendererservices.h"
 
 #include "OpenImageIO/ustring.h"
 
