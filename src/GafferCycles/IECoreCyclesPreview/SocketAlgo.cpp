@@ -424,16 +424,6 @@ void setSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Da
 		case ccl::SocketType::ENUM:
 			setEnumSocket( node, *socket, value );
 			break;
-		case ccl::SocketType::TRANSFORM:
-			if( const M44fData *data = static_cast<const M44fData *>( value ) )
-			{
-				node->set( *socket, setTransform( data->readable() ) );
-			}
-			else if( const M44dData *data = static_cast<const M44dData *>( value ) )
-			{
-				node->set( *socket, setTransform( data->readable() ) );
-			}
-			break;
 		case ccl::SocketType::BOOLEAN_ARRAY:
 			setArraySocket<bool>( node, *socket, value );
 			break;
@@ -455,38 +445,12 @@ void setSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Da
 		case ccl::SocketType::STRING_ARRAY:
 			setArraySocket<ccl::ustring, StringVectorData>( node, *socket, value );
 			break;
-		case ccl::SocketType::TRANSFORM_ARRAY:
-			if( const M44dVectorData *data = static_cast<const M44dVectorData *>( value ) )
-			{
-				const vector<M44d> &matrices = data->readable();
-				auto matricesSize = matrices.size();
-				ccl::array<ccl::Transform> array( matricesSize );
-				ccl::Transform *tdata = array.data();
-				for(size_t i = 0; i < matricesSize; ++i)
-				{
-					auto m = matrices[i];
-					*(tdata++) = setTransform( m );
-				}
-				node->set( *socket, array );
-			}
-			else if( const M44fVectorData *data = static_cast<const M44fVectorData *>( value ) )
-			{
-				const vector<M44f> &matrices = data->readable();
-				auto matricesSize = matrices.size();
-				ccl::array<ccl::Transform> array( matricesSize );
-				ccl::Transform *tdata = array.data();
-				for(size_t i = 0; i < matricesSize; ++i)
-				{
-					auto m = matrices[i];
-					*(tdata++) = setTransform( m );
-				}
-				node->set( *socket, array );
-			}
-			break;
-		case ccl::SocketType::NODE:
-		case ccl::SocketType::NODE_ARRAY:
-			break;
 		default:
+			IECore::msg(
+				IECore::Msg::Warning, "Cycles::SocketAlgo",
+				boost::format( "Unsupported socket type `%1%` for socket `%2%` on node `%3%`." )
+					% ccl::SocketType::type_name( socket->type ) % value->typeName() % socket->name % node->name
+			);
 			break;
 	}
 }
