@@ -1326,6 +1326,30 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( len( mh.messages ), 1 )
 		self.assertEqual( mh.messages[0].message, "Couldn't load shader \"NonExistentShader\"" )
 
+	def testMissingShaderParameter( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+		)
+
+		with IECore.CapturingMessageHandler() as mh :
+			dodgyNetwork = IECoreScene.ShaderNetwork(
+				shaders = {
+					"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", { "bad_parameter" : 10 } )
+				},
+				output = "output"
+			)
+			renderer.attributes( IECore.CompoundObject( { "cycles:surface" : dodgyNetwork } ) )
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].context, "Cycles::SocketAlgo" )
+		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Warning )
+		six.assertRegex(
+			self, mh.messages[0].message,
+			"Socket `bad_parameter` on node .* does not exist"
+		)
+
 	def testOSLComponentConnections( self ) :
 
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
@@ -1539,6 +1563,235 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( testPixel.b, 1 )
 
 		del plane
+
+	def __testShaderResults( self, shader, expectedResults, maxDifference = 0.0 ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+		)
+
+		# Frame so our plane fills the entire image.
+
+		renderer.camera(
+			"testCamera",
+			IECoreScene.Camera(
+				parameters = {
+					"resolution" : imath.V2i( 100, 100 ),
+					"projection" : "orthographic",
+					"screenWindow" : imath.Box2f( imath.V2f( -0.5 ), imath.V2f( 0.5 ) )
+				}
+			),
+			renderer.attributes( IECore.CompoundObject() )
+		)
+		renderer.option( "camera", IECore.StringData( "testCamera" ) )
+
+		fileName = os.path.join( self.temporaryDirectory(), "test.exr" )
+		renderer.output(
+			"testOutput",
+			IECoreScene.Output(
+				fileName,
+				"exr",
+				"rgba",
+				{}
+			)
+		)
+
+		# Render the plane with the shader provided.
+
+		primitiveHandle = renderer.object(
+			"/primitive",
+			IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -0.5 ), imath.V2f( 0.5 ) ) ),
+			renderer.attributes( IECore.CompoundObject( { "cycles:surface" : shader } ) )
+		)
+		primitiveHandle.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
+
+		renderer.render()
+		image = IECore.Reader.create( fileName ).read()
+
+		# Check we got what we expected.
+
+		for uv, expectedResult in expectedResults :
+			color = self.__colorAtUV( image, uv )
+			if maxDifference :
+				for i in range( 0, 4 ) :
+					self.assertAlmostEqual( color[i], expectedResult[i], delta = maxDifference )
+			else :
+				self.assertEqual( color, expectedResult )
+
+	def testNumericParameters( self ) :
+
+		for value in [
+			IECore.IntData( 1 ),
+			IECore.UIntData( 1 ),
+			IECore.FloatData( 1 ),
+			IECore.DoubleData( 1 ),
+			IECore.FloatData( 1 ),
+		] :
+
+			shader = IECoreScene.ShaderNetwork(
+				shaders = {
+					"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", { "base_color" : imath.Color3f( 0 ) } ),
+					"value" : IECoreScene.Shader( "value", "cycles:shader", { "value" : value } ),
+					"converter" : IECoreScene.Shader( "convert_float_to_color", "cycles:shader" ),
+				},
+				connections = [
+					( ( "value", "value" ), ( "converter", "value_float" ) ),
+					( ( "converter", "value_color" ), ( "output", "emission" ) ),
+				],
+				output = "output",
+			)
+
+			self.__testShaderResults( shader, [ ( imath.V2f( 0.55 ), imath.Color4f( value.value, value.value, value.value, 1 ) ) ] )
+
+	def testColorParameters( self ) :
+
+		for value in [
+			IECore.Color3fData( imath.Color3f( 1, 2, 3 ) ),
+			IECore.Color4fData( imath.Color4f( 1, 2, 3, 4 ) ),
+			IECore.V3fData( imath.V3f( 1, 2, 3 ) ),
+			IECore.V3iData( imath.V3i( 1, 2, 3 ) ),
+		] :
+
+			shader = IECoreScene.ShaderNetwork(
+				shaders = {
+					"output" : IECoreScene.Shader(
+						"principled_bsdf", "cycles:surface",
+						{ "base_color" : imath.Color3f( 0 ), "emission" : value }
+					),
+				},
+				output = "output",
+			)
+
+			self.__testShaderResults( shader, [ ( imath.V2f( 0.55 ), imath.Color4f( 1, 2, 3, 1 ) ) ] )
+
+	def testVectorParameters( self ) :
+
+		for value in [
+			IECore.Color3fData( imath.Color3f( 1, 2, 3 ) ),
+			IECore.Color4fData( imath.Color4f( 1, 2, 3, 4 ) ),
+			IECore.V3fData( imath.V3f( 1, 2, 3 ) ),
+			IECore.V3iData( imath.V3i( 1, 2, 3 ) ),
+		] :
+
+			shader = IECoreScene.ShaderNetwork(
+				shaders = {
+					"converter" : IECoreScene.Shader(
+						"convert_vector_to_color", "cycles:shader", { "value_vector" : value }
+					),
+					"output" : IECoreScene.Shader(
+						"principled_bsdf", "cycles:surface", { "base_color" : imath.Color3f( 0 ) }
+					),
+				},
+				connections = [
+					( ( "converter", "value_color" ), ( "output", "emission" ) )
+				],
+				output = "output",
+			)
+
+			self.__testShaderResults( shader, [ ( imath.V2f( 0.55 ), imath.Color4f( 1, 2, 3, 1 ) ) ] )
+
+	def testColorArrayParameters( self ) :
+
+		shader = IECoreScene.ShaderNetwork(
+			shaders = {
+				"coordinates" : IECoreScene.Shader( "texture_coordinate", "cycles:shader" ),
+				"ramp" : IECoreScene.Shader(
+					"rgb_ramp", "cycles:shader", {
+						"interpolate" : False,
+						"ramp" : IECore.Color3fVectorData( [
+							imath.Color3f( 0.0, 1.0, 0.25 ),
+							imath.Color3f( 0.25, 0.75, 0.25 ),
+							imath.Color3f( 0.5, 0.5, 0.25 ),
+							imath.Color3f( 0.75, 0.25, 0.25 ),
+						] ),
+						"ramp_alpha" : IECore.FloatVectorData( [ 1, 1, 1, 1 ] ),
+					}
+				),
+				"output" : IECoreScene.Shader(
+					"principled_bsdf", "cycles:surface", { "base_color" : imath.Color3f( 0 ) }
+				),
+			},
+			connections = [
+				( ( "coordinates", "UV.x" ), ( "ramp", "fac" ) ),
+				( ( "ramp", "color" ), ( "output", "emission" ) ),
+			],
+			output = "output",
+		)
+
+		self.__testShaderResults(
+			shader,
+			[
+				( imath.V2f( 0.25, 0.5 ), imath.Color4f( 0, 1.0, 0.25, 1 ) ),
+				( imath.V2f( 0.5, 0.5 ), imath.Color4f( 0.25, 0.75, 0.25, 1 ) ),
+				( imath.V2f( 0.75, 0.5 ), imath.Color4f( 0.5, 0.5, 0.25, 1 ) ),
+			]
+		)
+
+	def testInvalidShaderParameterValues( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+		)
+
+		for name, value in {
+			"sheen" : IECore.StringData( "iShouldBeAFloat" ),
+			"base_color" : IECore.StringData( "iShouldBeAColor" ),
+			"normal" : IECore.StringData( "iShouldBeAV3f" ),
+			"subsurface_method" : IECore.Color3fData( imath.Color3f( 10 ) ),
+		}.items() :
+
+			with IECore.CapturingMessageHandler() as mh :
+
+				attributes = renderer.attributes(
+					IECore.CompoundObject( {
+						"cycles:surface" : IECoreScene.ShaderNetwork(
+							shaders = {
+								"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", { name : value } )
+							},
+							output = "output"
+						)
+					} )
+				)
+
+				self.assertEqual( len( mh.messages ), 1 )
+				self.assertEqual( mh.messages[0].context, "Cycles::SocketAlgo" )
+				self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Warning )
+				six.assertRegex(
+					self, mh.messages[0].message,
+					"Unsupported type `{}` for socket `{}` on node .*".format(
+						value.typeName(), name
+					)
+				)
+
+	def testInvalidShaderEnumValue( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+		)
+
+		with IECore.CapturingMessageHandler() as mh :
+
+			attributes = renderer.attributes(
+				IECore.CompoundObject( {
+					"cycles:surface" : IECoreScene.ShaderNetwork(
+						shaders = {
+							"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", { "subsurface_method" : "missing" } )
+						},
+						output = "output"
+					)
+				} )
+			)
+
+			self.assertEqual( len( mh.messages ), 1 )
+			self.assertEqual( mh.messages[0].context, "Cycles::SocketAlgo" )
+			self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Warning )
+			six.assertRegex(
+				self, mh.messages[0].message,
+				"Invalid enum value \"missing\" for socket `subsurface_method` on node .*"
+			)
 
 if __name__ == "__main__":
 	unittest.main()

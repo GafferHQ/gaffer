@@ -154,9 +154,9 @@ ccl::Camera *convertCommon( const IECoreScene::Camera *camera, const std::string
 				}
 			}
 		}
-		else
+		else if( auto socket = ccam->type->find_input( ccl::ustring( it->first.c_str() ) ) )
 		{
-			SocketAlgo::setSocket( ccam, it->first, it->second.get() );
+			SocketAlgo::setSocket( ccam, socket, it->second.get() );
 		}
 	}
 

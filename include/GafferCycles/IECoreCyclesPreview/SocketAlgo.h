@@ -60,7 +60,6 @@ IECORECYCLES_API ccl::float2 setVector( const Imath::V2f &vector );
 IECORECYCLES_API ccl::float3 setVector( const Imath::V3f &vector );
 IECORECYCLES_API ccl::float3 setColor( const Imath::Color3f &color );
 IECORECYCLES_API ccl::float3 setColor( const Imath::Color4f &color );
-IECORECYCLES_API float setAlpha( const Imath::Color4f &color );
 IECORECYCLES_API ccl::float4 setQuaternion( const Imath::Quatf &quat );
 IECORECYCLES_API ccl::Transform setTransform( const Imath::M44d &matrix );
 IECORECYCLES_API ccl::Transform setTransform( const Imath::M44f &matrix );
@@ -75,11 +74,6 @@ IECORECYCLES_API Imath::M44f getTransform( const ccl::Transform transform );
 // Setting sockets onto cycles nodes.
 IECORECYCLES_API void setSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Data *value );
 IECORECYCLES_API void setSocket( ccl::Node *node, const std::string &name, const IECore::Data *value );
-IECORECYCLES_API void setSockets( ccl::Node *node, const IECore::CompoundDataMap &values );
-
-// Getting data from cycles nodes via sockets.
-IECORECYCLES_API IECore::DataPtr getSocket( const ccl::Node *node, const ccl::SocketType *socket );
-IECORECYCLES_API IECore::DataPtr getSocket( const ccl::Node *node, const std::string &name );
 
 // Splines
 IECORECYCLES_API void setRampSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Splineff &spline );
