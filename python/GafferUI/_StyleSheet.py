@@ -1280,6 +1280,12 @@ _styleSheet = string.Template(
 		padding-bottom: 0px;
 	}
 
+	*[gafferClass="GafferSceneUI._HistoryWindow"] QTreeView::item {
+		height: 18px;
+		padding-top: 0px;
+		padding-bottom: 0px;
+	}
+
 	QTreeView::item {
 		padding-top: 2px;
 		padding-bottom: 2px;
