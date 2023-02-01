@@ -373,7 +373,7 @@ class SetMembershipColumn : public InspectorColumn
 		IE_CORE_DECLAREMEMBERPTR( SetMembershipColumn )
 
 		SetMembershipColumn( const GafferScene::ScenePlugPtr &scene, const Gaffer::PlugPtr editScope, const IECore::InternedString &setName, const std::string &columnName )
-			: InspectorColumn( new GafferSceneUI::Private::SetMembershipInspector( scene, editScope, setName ), columnName ), m_setName( setName )
+			: InspectorColumn( new GafferSceneUI::Private::SetMembershipInspector( scene, editScope, setName ), columnName ), m_setName( setName ), m_scene( scene )
 		{
 
 		}
@@ -432,15 +432,29 @@ class SetMembershipColumn : public InspectorColumn
 
 		CellData headerData( const IECore::Canceller *canceller ) const override
 		{
-			return InspectorColumn::headerData( canceller );
+			CellData result = InspectorColumn::headerData( canceller );
+
+			if( auto sceneInput = m_scene->getInput() )
+			{
+				auto scriptNode = sceneInput->ancestor<ScriptNode>();
+
+				Context::Scope contextScope( scriptNode->context() );
+				ConstPathMatcherDataPtr setMembersData = m_scene->set( m_setName );
+				result.icon = setMembersData->readable().isEmpty() ? m_setEmpty : m_setHasMembers;
+			}
+
+			return result;
 		}
 
 	private :
 		const IECore::InternedString m_setName;
+		const GafferScene::ScenePlugPtr m_scene;
 
 		static IECore::CompoundDataPtr m_setMemberIconData;
 		static IECore::CompoundDataPtr m_setMemberIconFadedData;
 		static IECore::CompoundDataPtr m_setMemberUndefinedIconData;
+		static IECore::StringDataPtr m_setHasMembers;
+		static IECore::StringDataPtr m_setEmpty;
 };
 
 CompoundDataPtr SetMembershipColumn::m_setMemberIconData = new CompoundData(
@@ -463,6 +477,9 @@ CompoundDataPtr SetMembershipColumn::m_setMemberUndefinedIconData = new Compound
 		{ InternedString( "state:highlighted" ), new StringData( "setMemberFadedHighlighted.png" ) }
 	}
 );
+
+StringDataPtr SetMembershipColumn::m_setHasMembers = new StringData( "setMember.png" );
+StringDataPtr SetMembershipColumn::m_setEmpty = new StringData( "muteLightUndefined.png" );
 
 PathColumn::CellData headerDataWrapper( PathColumn &pathColumn, const Canceller *canceller )
 {

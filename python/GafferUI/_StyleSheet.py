@@ -1269,6 +1269,11 @@ _styleSheet = string.Template(
 		paint-alternating-row-colors-for-empty-area: 1;
 	}
 
+	*[gafferClass="GafferSceneUI.LightEditor"] QHeaderView::section {
+		height: 18px;
+		padding-left: 2px;
+	}
+
 	*[gafferClass="GafferSceneUI.HierarchyView"], *[gafferClass="GafferSceneUI.LightEditor"] QTreeView::item {
 		height: 18px;
 		padding-top: 0px;
