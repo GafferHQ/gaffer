@@ -263,13 +263,19 @@ if [[ $ARNOLD_ROOT ]] ; then
 
 	if [[ -f "$ARNOLD_ROOT/include/ai_version.h" ]] ; then
 
-		arnoldVersion=`awk \
-			'$1=="#define" && $2=="AI_VERSION_ARCH_NUM"{arch = $3}; \$1=="#define" && $2=="AI_VERSION_MAJOR_NUM"{print arch "." $3}' \
-			"$ARNOLD_ROOT/include/ai_version.h"`
+		# Parse Arnold version information into an array of `[ arch, major, minor ]`
+		arnoldVersion=($(awk \
+			'$1=="#define" && $2=="AI_VERSION_ARCH_NUM"{arch = $3}; \
+			$1=="#define" && $2=="AI_VERSION_MAJOR_NUM"{major = $3}; \
+			$1=="#define" && $2=="AI_VERSION_MINOR_NUM"{print arch,major,$3}' \
+			"$ARNOLD_ROOT/include/ai_version.h"
+		))
 
-		if [[ -d "$GAFFER_ROOT/arnold/$arnoldVersion" ]] ; then
-			prependToPath "$GAFFER_ROOT/arnold/$arnoldVersion" GAFFER_EXTENSION_PATHS
-			prependToPath "$ARNOLD_ROOT/plugins:$GAFFER_ROOT/arnold/$arnoldVersion/arnoldPlugins" ARNOLD_PLUGIN_PATH
+		# Look for a compiled plugin matching `arch.major`.
+		arnoldPluginVersion=${arnoldVersion[0]}.${arnoldVersion[1]}
+		if [[ -d "$GAFFER_ROOT/arnold/$arnoldPluginVersion" ]] ; then
+			prependToPath "$GAFFER_ROOT/arnold/$arnoldPluginVersion" GAFFER_EXTENSION_PATHS
+			prependToPath "$ARNOLD_ROOT/plugins:$GAFFER_ROOT/arnold/$arnoldPluginVersion/arnoldPlugins" ARNOLD_PLUGIN_PATH
 		else
 			echo "WARNING : GafferArnold extension not available for Arnold $arnoldVersion" >&2
 		fi
@@ -278,10 +284,20 @@ if [[ $ARNOLD_ROOT ]] ; then
 		echo "WARNING : Unable to determine Arnold version" >&2
 	fi
 
-	# Disable Autodesk Analytics, unless they have been explicitly
-	# opted in to already by setting `ARNOLD_ADP_OPTIN=1`.
-	if [[ -z $ARNOLD_ADP_OPTIN ]] ; then
-		export ARNOLD_ADP_OPTIN=0
+	# Disable Autodesk Analytics, unless is is being explicitly managed already
+	# by setting `ARNOLD_ADP_OPTIN` or `ARNOLD_ADP_DISABLE`.
+	if [[ -z $ARNOLD_ADP_OPTIN && -z $ARNOLD_ADP_DISABLE ]] ; then
+		arnoldVersionNum=$(( ${arnoldVersion[0]} * 10000 + ${arnoldVersion[1]} * 100 + ${arnoldVersion[2]} ))
+		if (( ${arnoldVersionNum} >= 70104 )) ; then
+			# `ARNOLD_ADP_DISABLE` is new in Arnold `7.1.4.0`, and is claimed
+			# to completely disable ADP.
+			export ARNOLD_ADP_DISABLE=1
+		else
+			# In older Arnold versions, we only have `ARNOLD_ADP_OPTIN`, which
+			# still allows ADP to run, but is meant to opt out of reporting.
+			# In Arnold 7.1.4.0 is has been observed to cause hangs.
+			export ARNOLD_ADP_OPTIN=0
+		fi
 	fi
 
 fi

@@ -34,6 +34,7 @@
 
 #include "GafferCycles/IECoreCyclesPreview/SocketAlgo.h"
 
+#include "IECore/MessageHandler.h"
 #include "IECore/SimpleTypedData.h"
 #include "IECore/VectorTypedData.h"
 
@@ -54,57 +55,235 @@ namespace
 {
 
 template<typename T>
-void convert( ccl::Node *node, const ccl::SocketType *socket, const IECore::Data *value )
+void setNumericSocket( ccl::Node *node, const ccl::SocketType &socket, const IECore::Data *value )
 {
-	if( const T *data = static_cast<const T *>( value ) )
+	switch( value->typeId() )
 	{
-		node->set( *socket, data->readable() );
+		case IECore::BoolDataTypeId :
+			node->set( socket, static_cast<T>( static_cast<const BoolData *>( value )->readable() ) );
+			break;
+		case IECore::FloatDataTypeId :
+			node->set( socket, static_cast<T>( static_cast<const FloatData *>( value )->readable() ) );
+			break;
+		case IECore::DoubleDataTypeId :
+			node->set( socket, static_cast<T>( static_cast<const DoubleData *>( value )->readable() ) );
+			break;
+		case IECore::IntDataTypeId :
+			node->set( socket, static_cast<T>( static_cast<const IntData *>( value )->readable() ) );
+			break;
+		case IECore::UIntDataTypeId :
+			node->set( socket, static_cast<T>( static_cast<const UIntData *>( value )->readable() ) );
+			break;
+		default :
+			IECore::msg(
+				IECore::Msg::Warning, "Cycles::SocketAlgo",
+				boost::format( "Unsupported type `%1%` for socket `%2%` on node `%3%" )
+					% value->typeName() % socket.name % node->name
+			);
+			break;
 	}
-}
-
-template<typename T, typename U>
-void dataToArray( ccl::Node *node, const ccl::SocketType *socket, const IECore::Data *value )
-{
-	if( const U *data = static_cast<const U *>( value ) )
-	{
-		const auto &vector = data->readable();
-		ccl::array<T> array( vector.size() );
-		memcpy((void*)array.data(), &vector[0], vector.size() * sizeof(T) );
-		node->set( *socket, array );
-	}
-}
-
-template<typename T, typename U>
-IECore::DataPtr arrayToData( const ccl::array<U>& array )
-{
-	using VectorType = vector<T>;
-	using DataType = IECore::TypedData<vector<T>>;
-	typename DataType::Ptr data = new DataType;
-	VectorType &v = data->writable();
-	v.reserve( array.size() );
-
-	for( size_t i = 0; i < array.size(); ++i )
-	{
-		v.push_back( array[i] );
-	}
-
-	return data;
 }
 
 template<typename T>
-IECore::DataPtr arrayToData( const ccl::array<ccl::float3>& array )
+void setFloat2Socket( ccl::Node *node, const ccl::SocketType &socket, const T &value )
 {
-	using VectorType = vector<T>;
-	using DataType = IECore::TypedData<vector<T>>;
-	typename DataType::Ptr data = new DataType;
-	VectorType &v = data->writable();
-	v.reserve( array.size() );
+	node->set( socket, ccl::make_float2( value[0], value[1] ) );
+}
 
-	for( size_t i = 0; i < array.size(); ++i )
+void setFloat2Socket( ccl::Node *node, const ccl::SocketType &socket, const IECore::Data *value )
+{
+	switch( value->typeId() )
 	{
-		v.push_back( T( array[i][0], array[i][1], array[i][2]) );
+		case IECore::V2fDataTypeId :
+			setFloat2Socket( node, socket, static_cast<const V2fData *>( value )->readable() );
+			break;
+		case IECore::V2iDataTypeId :
+			setFloat2Socket( node, socket, static_cast<const V2iData *>( value )->readable() );
+			break;
+		default :
+			IECore::msg(
+				IECore::Msg::Warning, "Cycles::SocketAlgo",
+				boost::format( "Unsupported type `%1%` for socket `%2%` on node `%3%" )
+					% value->typeName() % socket.name % node->name
+			);
+			break;
 	}
-	return data;
+}
+
+template<typename T>
+void setFloat2ArraySocket( ccl::Node *node, const ccl::SocketType &socket, const T &value )
+{
+	ccl::array<ccl::float2> array( value.size() );
+	for( size_t i = 0; i < value.size(); ++i )
+	{
+		array[i] = ccl::make_float2( value[i][0], value[i][1] );
+	}
+	node->set( socket, array );
+}
+
+void setFloat2ArraySocket( ccl::Node *node, const ccl::SocketType &socket, const IECore::Data *value )
+{
+	switch( value->typeId() )
+	{
+		case IECore::V2fVectorDataTypeId :
+			setFloat2ArraySocket( node, socket, static_cast<const V2fVectorData *>( value )->readable() );
+			break;
+		case IECore::V2iVectorDataTypeId :
+			setFloat2ArraySocket( node, socket, static_cast<const V2iVectorData *>( value )->readable() );
+			break;
+		default :
+			IECore::msg(
+				IECore::Msg::Warning, "Cycles::SocketAlgo",
+				boost::format( "Unsupported type `%1%` for socket `%2%` on node `%3%" )
+					% value->typeName() % socket.name % node->name
+			);
+			break;
+	}
+}
+
+template<typename T>
+void setFloat3Socket( ccl::Node *node, const ccl::SocketType &socket, const T &value )
+{
+	node->set( socket, ccl::make_float3( value[0], value[1], value[2] ) );
+}
+
+void setFloat3Socket( ccl::Node *node, const ccl::SocketType &socket, const IECore::Data *value )
+{
+	switch( value->typeId() )
+	{
+		case IECore::Color3fDataTypeId :
+			setFloat3Socket( node, socket, static_cast<const Color3fData *>( value )->readable() );
+			break;
+		case IECore::Color4fDataTypeId :
+			// Omitting alpha
+			setFloat3Socket( node, socket, static_cast<const Color4fData *>( value )->readable() );
+			break;
+		case IECore::V3fDataTypeId :
+			setFloat3Socket( node, socket, static_cast<const V3fData *>( value )->readable() );
+			break;
+		case IECore::V3iDataTypeId :
+			setFloat3Socket( node, socket, static_cast<const V3iData *>( value )->readable() );
+			break;
+		default :
+			IECore::msg(
+				IECore::Msg::Warning, "Cycles::SocketAlgo",
+				boost::format( "Unsupported type `%1%` for socket `%2%` on node `%3%" )
+					% value->typeName() % socket.name % node->name
+			);
+			break;
+	}
+}
+
+template<typename T>
+void setFloat3ArraySocket( ccl::Node *node, const ccl::SocketType &socket, const T &value )
+{
+	ccl::array<ccl::float3> array( value.size() );
+	for( size_t i = 0; i < value.size(); ++i )
+	{
+		array[i] = ccl::make_float3( value[i][0], value[i][1], value[i][2] );
+	}
+	node->set( socket, array );
+}
+
+void setFloat3ArraySocket( ccl::Node *node, const ccl::SocketType &socket, const IECore::Data *value )
+{
+	switch( value->typeId() )
+	{
+		case IECore::Color3fVectorDataTypeId :
+			setFloat3ArraySocket( node, socket, static_cast<const Color3fVectorData *>( value )->readable() );
+			break;
+		case IECore::Color4fVectorDataTypeId :
+			// Omitting alpha
+			setFloat3ArraySocket( node, socket, static_cast<const Color4fVectorData *>( value )->readable() );
+			break;
+		case IECore::V3fVectorDataTypeId :
+			setFloat3ArraySocket( node, socket, static_cast<const V3fVectorData *>( value )->readable() );
+			break;
+		case IECore::V3iVectorDataTypeId :
+			setFloat3ArraySocket( node, socket, static_cast<const V3iVectorData *>( value )->readable() );
+			break;
+		default :
+			IECore::msg(
+				IECore::Msg::Warning, "Cycles::SocketAlgo",
+				boost::format( "Unsupported type `%1%` for socket `%2%` on node `%3%" )
+					% value->typeName() % socket.name % node->name
+			);
+			break;
+	}
+}
+
+template<typename T, typename DataType = IECore::TypedData<vector<T>>>
+void setArraySocket( ccl::Node *node, const ccl::SocketType &socket, const Data *value )
+{
+	if( auto data = runTimeCast<const DataType>( value ) )
+	{
+		ccl::array<T> array( data->readable().size() );
+		std::copy( data->readable().begin(), data->readable().end(), array.data() );
+		node->set( socket, array );
+	}
+	else
+	{
+		IECore::msg(
+			IECore::Msg::Warning, "Cycles::SocketAlgo::setSocket",
+			boost::format( "Unsupported data type `%1%` for socket `%2%` on node %3%" )
+				% value->typeName() % socket.name % node->name
+		);
+	}
+}
+
+void setEnumSocket( ccl::Node *node, const ccl::SocketType &socket, const IECore::Data *value )
+{
+	const char *name = nullptr;
+	if( auto data = runTimeCast<const StringData>( value ) )
+	{
+		name = data->readable().c_str();
+	}
+	else if( auto internedData = runTimeCast<const InternedStringData>( value ) )
+	{
+		name = internedData->readable().c_str();
+	}
+
+	if( name )
+	{
+		ccl::ustring uName( name );
+		const ccl::NodeEnum &enums = *socket.enum_values;
+		if( enums.exists( uName ) )
+		{
+			node->set( socket, enums[uName] );
+		}
+		else
+		{
+			IECore::msg(
+				IECore::Msg::Warning, "Cycles::SocketAlgo",
+				boost::format( "Invalid enum value \"%1%\" for socket `%2%` on node %3%" )
+					% name % socket.name % node->name
+			);
+		}
+	}
+	else
+	{
+		setNumericSocket<int>( node, socket, value );
+	}
+}
+
+void setStringSocket( ccl::Node *node, const ccl::SocketType &socket, const IECore::Data *value )
+{
+	if( auto data = runTimeCast<const StringData>( value ) )
+	{
+		node->set( socket, data->readable().c_str() );
+	}
+	else if( auto internedData = runTimeCast<const InternedStringData>( value ) )
+	{
+		node->set( socket, internedData->readable().c_str() );
+	}
+	else
+	{
+		IECore::msg(
+			IECore::Msg::Warning, "Cycles::SocketAlgo",
+			boost::format( "Unsupported data type `%1%` for socket `%2%` on node %3% (expected StringData or InternedStringData)." )
+				% value->typeName() % socket.name % node->name
+		);
+	}
 }
 
 } // namespace
@@ -149,11 +328,6 @@ ccl::float3 setColor( const Imath::Color4f &color )
 {
 	// Dropping alpha
 	return ccl::make_float3( color[0], color[1], color[2] );
-}
-
-float setAlpha( const Imath::Color4f &color )
-{
-	return color[3];
 }
 
 ccl::float4 setQuaternion( const Imath::Quatf &quat )
@@ -222,296 +396,78 @@ void setSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Da
 	switch( socket->type )
 	{
 		case ccl::SocketType::BOOLEAN:
-			convert<BoolData>( node, socket, value );
+			setNumericSocket<bool>( node, *socket, value );
 			break;
 		case ccl::SocketType::FLOAT:
-			if( const FloatData *data = static_cast<const FloatData *>( value ) )
-			{
-				node->set( *socket, data->readable() );
-			}
-			else if( const DoubleData *data = static_cast<const DoubleData *>( value ) )
-			{
-				node->set( *socket, (float)data->readable() );
-			}
+			setNumericSocket<float>( node, *socket, value );
 			break;
 		case ccl::SocketType::INT:
-			convert<IntData>( node, socket, value );
+			setNumericSocket<int>( node, *socket, value );
 			break;
 		case ccl::SocketType::UINT:
-			convert<UIntData>( node, socket, value );
+			setNumericSocket<uint>( node, *socket, value );
 			break;
 		case ccl::SocketType::COLOR:
-			if( const Color3fData *data = static_cast<const Color3fData *>( value ) )
-			{
-				node->set( *socket, setColor( data->readable() ) );
-			}
-			else if( const Color4fData *data = static_cast<const Color4fData *>( value ) )
-			{
-				// Dropping alpha
-				node->set( *socket, setColor( data->readable() ) );
-			}
-			break;
 		case ccl::SocketType::VECTOR:
 		case ccl::SocketType::POINT:
 		case ccl::SocketType::NORMAL:
-			if( const V3fData *data = static_cast<const V3fData *>( value ) )
-			{
-				node->set( *socket, setVector( data->readable() ) );
-			}
-			else if( const V3iData *data = static_cast<const V3iData *>( value ) )
-			{
-				node->set( *socket, setVector( Imath::V3f( data->readable() ) ) );
-			}
+			setFloat3Socket( node, *socket, value );
 			break;
 		case ccl::SocketType::POINT2:
-			if( const V2fData *data = static_cast<const V2fData *>( value ) )
-			{
-				node->set( *socket, setVector( data->readable() ) );
-			}
-			else if( const V2iData *data = static_cast<const V2iData *>( value ) )
-			{
-				node->set( *socket, setVector( Imath::V2f( data->readable() ) ) );
-			}
+			setFloat2Socket( node, *socket, value );
 			break;
 		case ccl::SocketType::CLOSURE:
 			break;
 		case ccl::SocketType::STRING:
-			if( const StringData *data = runTimeCast<const StringData>( value ) )
-			{
-				node->set( *socket, data->readable().c_str() );
-			}
+			setStringSocket( node, *socket, value );
 			break;
 		case ccl::SocketType::ENUM:
-			if( const StringData *data = runTimeCast<const StringData>( value ) )
-			{
-				ccl::ustring enumName( data->readable().c_str() );
-				const ccl::NodeEnum &enums = *socket->enum_values;
-				if( enums.exists( enumName ) )
-				{
-					node->set( *socket, enums[enumName] );
-				}
-			}
-			else
-			{
-				convert<IntData>( node, socket, value );
-			}
+			setEnumSocket( node, *socket, value );
 			break;
-		case ccl::SocketType::TRANSFORM:
-			if( const M44fData *data = static_cast<const M44fData *>( value ) )
-			{
-				node->set( *socket, setTransform( data->readable() ) );
-			}
-			else if( const M44dData *data = static_cast<const M44dData *>( value ) )
-			{
-				node->set( *socket, setTransform( data->readable() ) );
-			}
-			break;
-		case ccl::SocketType::NODE:
-			break;
-
-		// Cycles will 'steal' the ccl::array data and clear it for us
 		case ccl::SocketType::BOOLEAN_ARRAY:
-			// bools are a special case because of how the STL implements vector<bool>.
-			// Since the base for vector<bool> are not actual booleans, we need to manually
-			// convert to a ccl::array here.
-			if( const BoolVectorData *data = static_cast<const BoolVectorData *>( value ) )
-			{
-				const vector<bool> &booleans = data->readable();
-				vector<bool>::size_type booleansSize = booleans.size();
-				ccl::array<bool> array( booleansSize );
-				bool *bdata = array.data();
-				for(vector<bool>::size_type i = 0; i < booleansSize; ++i){
-					*(bdata++) = booleans[i];
-				}
-				node->set( *socket, array );
-			}
+			setArraySocket<bool>( node, *socket, value );
 			break;
 		case ccl::SocketType::FLOAT_ARRAY:
-			dataToArray<float, FloatVectorData>( node, socket, value );
+			setArraySocket<float>( node, *socket, value );
 			break;
 		case ccl::SocketType::INT_ARRAY:
-			dataToArray<int, IntVectorData>( node, socket, value );
+			setArraySocket<int>( node, *socket, value );
 			break;
 		case ccl::SocketType::COLOR_ARRAY:
-			dataToArray<ccl::float3, Color3fVectorData>( node, socket, value );
-			break;
 		case ccl::SocketType::VECTOR_ARRAY:
 		case ccl::SocketType::POINT_ARRAY:
 		case ccl::SocketType::NORMAL_ARRAY:
-			dataToArray<ccl::float3, V3fVectorData>( node, socket, value );
+			setFloat3ArraySocket( node, *socket, value );
 			break;
 		case ccl::SocketType::POINT2_ARRAY:
-			dataToArray<ccl::float2, V2fVectorData>( node, socket, value );
+			setFloat2ArraySocket( node, *socket, value );
 			break;
 		case ccl::SocketType::STRING_ARRAY:
-			if( const StringVectorData *data = static_cast<const StringVectorData *>( value ) )
-			{
-				const vector<string> &strings = data->readable();
-				auto stringSize = strings.size();
-				ccl::array<ccl::ustring> array( stringSize );
-				ccl::ustring *sdata = array.data();
-				for( size_t i = 0; i < stringSize; ++i)
-				{
-					*(sdata++) = ccl::ustring( strings[i].c_str() );
-				}
-				node->set( *socket, array );
-			}
-			break;
-		case ccl::SocketType::TRANSFORM_ARRAY:
-			if( const M44dVectorData *data = static_cast<const M44dVectorData *>( value ) )
-			{
-				const vector<M44d> &matrices = data->readable();
-				auto matricesSize = matrices.size();
-				ccl::array<ccl::Transform> array( matricesSize );
-				ccl::Transform *tdata = array.data();
-				for(size_t i = 0; i < matricesSize; ++i)
-				{
-					auto m = matrices[i];
-					*(tdata++) = setTransform( m );
-				}
-				node->set( *socket, array );
-			}
-			else if( const M44fVectorData *data = static_cast<const M44fVectorData *>( value ) )
-			{
-				const vector<M44f> &matrices = data->readable();
-				auto matricesSize = matrices.size();
-				ccl::array<ccl::Transform> array( matricesSize );
-				ccl::Transform *tdata = array.data();
-				for(size_t i = 0; i < matricesSize; ++i)
-				{
-					auto m = matrices[i];
-					*(tdata++) = setTransform( m );
-				}
-				node->set( *socket, array );
-			}
-			break;
-		case ccl::SocketType::NODE_ARRAY:
+			setArraySocket<ccl::ustring, StringVectorData>( node, *socket, value );
 			break;
 		default:
+			IECore::msg(
+				IECore::Msg::Warning, "Cycles::SocketAlgo",
+				boost::format( "Unsupported socket type `%1%` for socket `%2%` on node `%3%`." )
+					% ccl::SocketType::type_name( socket->type ) % value->typeName() % socket->name % node->name
+			);
 			break;
 	}
 }
 
 void setSocket( ccl::Node *node, const std::string &name, const IECore::Data *value )
 {
-	setSocket( node, node->type->find_input( ccl::ustring( name.c_str() ) ), value );
-}
-
-void setSockets( ccl::Node *node, const IECore::CompoundDataMap &values )
-{
-	for( CompoundDataMap::const_iterator it=values.begin(); it!=values.end(); it++ )
+	if( auto socket = node->type->find_input( ccl::ustring( name.c_str() ) ) )
 	{
-		setSocket( node, it->first.value().c_str(), it->second.get() );
+		setSocket( node, socket, value );
 	}
-}
-
-IECore::DataPtr getSocket( const ccl::Node *node, const ccl::SocketType *socket )
-{
-	if( socket == nullptr )
-		return nullptr;
-
-	switch( socket->type )
+	else
 	{
-		case ccl::SocketType::BOOLEAN:
-			return new BoolData( node->get_bool( *socket ) );
-		case ccl::SocketType::FLOAT:
-			return new FloatData( node->get_float( *socket ) );
-		case ccl::SocketType::INT:
-			return new IntData( node->get_int( *socket ) );
-		case ccl::SocketType::UINT:
-			return new UIntData( node->get_uint( *socket ) );
-		case ccl::SocketType::COLOR:
-		{
-			ccl::float3 rgb = node->get_float3( *socket );
-			return new Color3fData( Imath::Color3f( rgb.x, rgb.y, rgb.z ) );
-		}
-		case ccl::SocketType::VECTOR:
-		case ccl::SocketType::POINT:
-		case ccl::SocketType::NORMAL:
-		{
-			ccl::float3 vector = node->get_float3( *socket );
-			return new V3fData( Imath::V3f( vector.x, vector.y, vector.z ) );
-		}
-		case ccl::SocketType::POINT2:
-		{
-			ccl::float2 vector = node->get_float2( *socket );
-			return new V2fData( Imath::V2f( vector.x, vector.y ) );
-		}
-		case ccl::SocketType::CLOSURE:
-			return nullptr;
-		case ccl::SocketType::STRING:
-			return new StringData( string( node->get_string( *socket ).c_str() ) );
-		case ccl::SocketType::ENUM:
-			return new StringData( string( node->get_string( *socket ).c_str() ) );
-		case ccl::SocketType::TRANSFORM:
-		{
-			return new M44fData( getTransform( node->get_transform( *socket ) ) );
-		}
-		case ccl::SocketType::NODE:
-			return nullptr;
-
-		case ccl::SocketType::BOOLEAN_ARRAY:
-			return arrayToData<bool>( node->get_bool_array( *socket ) );
-		case ccl::SocketType::FLOAT_ARRAY:
-			return arrayToData<float>( node->get_float_array( *socket ) );
-		case ccl::SocketType::INT_ARRAY:
-			return arrayToData<int>( node->get_int_array( *socket ) );
-		case ccl::SocketType::COLOR_ARRAY:
-			return arrayToData<Color3f>( node->get_float3_array( *socket ) );
-		case ccl::SocketType::VECTOR_ARRAY:
-		case ccl::SocketType::POINT_ARRAY:
-		case ccl::SocketType::NORMAL_ARRAY:
-			return arrayToData<V3f>( node->get_float3_array( *socket ) );
-		case ccl::SocketType::POINT2_ARRAY:
-		{
-			auto &array = node->get_float2_array( *socket );
-			auto data = new IECore::TypedData<vector<V2f> >;
-			vector<V2f> &v = data->writable();
-			v.reserve( array.size() );
-
-			for( size_t i = 0; i < array.size(); ++i )
-			{
-				v.push_back( V2f( array[i][0], array[i][1]) );
-			}
-			return data;
-		}
-		case ccl::SocketType::STRING_ARRAY:
-		{
-			auto &array = node->get_string_array( *socket );
-			auto data = new IECore::TypedData<vector<string> >;
-			vector<string> &v = data->writable();
-			v.reserve( array.size() );
-
-			for( size_t i = 0; i < array.size(); ++i )
-			{
-				v.push_back( string( array[i].c_str() ) );
-			}
-			return data;
-		}
-		case ccl::SocketType::TRANSFORM_ARRAY:
-		{
-			auto &array = node->get_transform_array( *socket );
-			auto data = new IECore::TypedData<vector<M44f> >;
-			vector<M44f> &v = data->writable();
-			v.reserve( array.size() );
-
-			for( size_t i = 0; i < array.size(); ++i )
-			{
-				v.push_back( getTransform( array[i] ) );
-			}
-			return data;
-		}
-		case ccl::SocketType::NODE_ARRAY:
-			return nullptr;
-		default:
-			return nullptr;
+		IECore::msg(
+			IECore::Msg::Warning, "Cycles::SocketAlgo",
+			boost::format( "Socket `%1%` on node `%2%` does not exist" ) % name % node->name
+		);
 	}
-	return nullptr;
-}
-
-IECore::DataPtr getSocket( const ccl::Node *node, const std::string &name )
-{
-	return getSocket( node, node->type->find_input( ccl::ustring( name.c_str() ) ) );
 }
 
 void setRampSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Splineff &spline )

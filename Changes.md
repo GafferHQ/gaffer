@@ -5,6 +5,24 @@ Improvements
 ------------
 
 - OSL : Will use OSL's batched API if it is available. This improves performance up to 3X when running heavy OSL computations using OSLObject or OSLImage. This is slightly experimental, since it relies on recently added OSL features. Please let us know if you encounter any new issues with OSL. To disable this optimization, set the environment variable `GAFFEROSL_USE_BATCHED=0`.
+- Arnold : Disabled ADP more thoroughly, using `ARNOLD_ADP_DISABLE=1` for Arnold 7.1.4.0 and greater. Set `ARNOLD_ADP_DISABLE=0` before running Gaffer if you wish to use ADP. [^1]
+- Cycles : [^1]
+  - Added warning when a shader contains a parameter which does not exist in Cycles.
+  - Added warning when a shader contains a parameter with an unsupported datatype.
+  - Added warning when a shader contains an enum parameter with an invalid value.
+  - Added support for passing InternedStringData to enum and string parameters.
+
+Fixes
+-----
+
+- Cyles : [^1]
+  - Fixed crashes caused by providing unsupported data types in shader parameters.
+  - Fixed support for Color4f values on colour shader parameters. This can be useful when loading non-standard USD files.
+  - Fixed support for V[23]i values on vector shader parameters.
+  - Fixed handling of colour array parameters.
+
+[^1]: Changes inherited from 1.x. Can be omitted from the release notes for the final release of 1.2.
+[^2]: Changes made to features introduced in 1.2.0.0ax. Can be omitted from the release notes for the final release of 1.2.
 
 1.2.0.0a3 (relative to 1.2.0.0a2)
 =========
@@ -228,6 +246,28 @@ Build
 -----
 
 - Cortex : Updated to version 10.4.3.0.
+
+1.1.x.x (relative to 1.1.8.0)
+=======
+
+Improvements
+------------
+
+- Arnold : Disabled ADP more thoroughly, using `ARNOLD_ADP_DISABLE=1` for Arnold 7.1.4.0 and greater. Set `ARNOLD_ADP_DISABLE=0` before running Gaffer if you wish to use ADP.
+- Cycles :
+  - Added warning when a shader contains a parameter which does not exist in Cycles.
+  - Added warning when a shader contains a parameter with an unsupported datatype.
+  - Added warning when a shader contains an enum parameter with an invalid value.
+  - Added support for passing InternedStringData to enum and string parameters.
+
+Fixes
+-----
+
+- Cyles :
+  - Fixed crashes caused by providing unsupported data types in shader parameters.
+  - Fixed support for Color4f values on colour shader parameters. This can be useful when loading non-standard USD files.
+  - Fixed support for V[23]i values on vector shader parameters.
+  - Fixed handling of colour array parameters.
 
 1.1.8.0 (relative to 1.1.7.0)
 =======
