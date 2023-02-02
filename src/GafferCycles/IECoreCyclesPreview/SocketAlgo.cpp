@@ -405,7 +405,7 @@ void setSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Da
 			setNumericSocket<int>( node, *socket, value );
 			break;
 		case ccl::SocketType::UINT:
-			setNumericSocket<uint>( node, *socket, value );
+			setNumericSocket<ccl::uint>( node, *socket, value );
 			break;
 		case ccl::SocketType::COLOR:
 		case ccl::SocketType::VECTOR:
