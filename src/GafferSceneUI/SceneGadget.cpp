@@ -215,6 +215,10 @@ SceneGadget::~SceneGadget()
 	// Make sure background task completes before anything
 	// it relies on is destroyed.
 	m_updateTask.reset();
+	// Then destroy controller and renderer before our OutputBuffer is
+	// destroyed, because the renderer might send pixels to it during shutdown.
+	m_controller.reset();
+	m_renderer.reset();
 }
 
 void SceneGadget::setScene( GafferScene::ConstScenePlugPtr scene )
@@ -915,6 +919,14 @@ void SceneGadget::updateCamera( GafferUI::ViewportGadget::CameraFlags changes )
 
 void SceneGadget::bufferChanged()
 {
+	if( !refCount() )
+	{
+		// We're in the process of destruction, receiving the
+		// final pixels while waiting for the renderer to be
+		// destroyed.
+		return;
+	}
+
 	// Using `thisRef` to stop us dying before our UI thread call is scheduled.
 	ParallelAlgo::callOnUIThread(
 		[thisRef = Ptr( this )] {

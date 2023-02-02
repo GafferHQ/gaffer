@@ -15,7 +15,7 @@ Fixes
 -----
 
 - Backups : Fixed error when a backup file contained characters that couldn't be represented using the current locale. This could be triggered by a separate bug in OpenShadingLanguage that caused the locale to be changed unnecessarily (#5048).
-
+- Viewer : Fixed potential crash when destroying a raytraced viewport.
 - Cyles :
   - Fixed crashes caused by providing unsupported data types in shader parameters.
   - Fixed support for Color4f values on colour shader parameters. This can be useful when loading non-standard USD files.
