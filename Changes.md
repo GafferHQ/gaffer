@@ -263,6 +263,7 @@ Improvements
 Fixes
 -----
 
+- Viewer : Fixed potential crash when destroying a raytraced viewport.
 - Cyles :
   - Fixed crashes caused by providing unsupported data types in shader parameters.
   - Fixed support for Color4f values on colour shader parameters. This can be useful when loading non-standard USD files.
