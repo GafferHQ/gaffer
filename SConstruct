@@ -677,6 +677,9 @@ if not haveInkscape and env["INKSCAPE"] != "disableGraphics" :
 	sys.stderr.write( "ERROR : Inkscape not found. Check INKSCAPE build variable.\n" )
 	Exit( 1 )
 
+inkscapeHelp = subprocess.check_output( [ env["INKSCAPE"], "--help" ], universal_newlines=True )
+env["INKSCAPE_USE_EXPORT_FILENAME"] = True if "--export-filename" in inkscapeHelp else False
+
 haveSphinx = conf.checkSphinx()
 
 if not conf.checkQtVersion() :
@@ -1739,14 +1742,22 @@ def buildImageCommand( source, target, env ) :
 		os.makedirs( outputDirectory )
 
 	args = [
-		"--export-png={}".format( os.path.abspath( filename ) ),
+		env["INKSCAPE"],
 		"--export-id={}".format( substitutions["id"] ),
 		"--export-width={:d}".format( substitutions["width"] ),
 		"--export-height={:d}".format( substitutions["height"] ),
-		"--export-background-opacity=0",
-		os.path.abspath( svgFilename )
+		"--export-background-opacity=0"
 	]
-	subprocess.check_call( [ env["INKSCAPE"] ] + args )
+	if env["INKSCAPE_USE_EXPORT_FILENAME"] :
+		args += [
+			"--export-filename={}".format( os.path.abspath( filename ) ),
+			"--export-overwrite",
+		]
+	else :
+		args.append( "--export-png={}".format( os.path.abspath( filename ) ) )
+	args.append( os.path.abspath( svgFilename ) )
+
+	subprocess.check_call( args )
 
 def validateAndFlattenImageOptions( imageOptions, svg ) :
 

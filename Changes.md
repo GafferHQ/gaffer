@@ -6,6 +6,11 @@ Documentation
 
  - Added more Python examples to the Scripting Reference "Common Operations" article.
 
+Build
+-----
+
+- Added support for Inkscape versions greater than 1.0.
+
 1.2.0.2 (relative to 1.2.0.1)
 =======
 
