@@ -220,7 +220,10 @@ class _HistoryWindow( GafferUI.Window ) :
 				selectedPath.property( "history:node" ),
 				floating = True
 			)
-		elif selectedColumn == self.__valueColumnIndex or selectedColumn == self.__operationColumnIndex :
+		elif (
+			( selectedColumn == self.__valueColumnIndex or selectedColumn == self.__operationColumnIndex ) and
+			not isinstance( self.__inspector, GafferSceneUI.Private.SetMembershipInspector )
+		) :
 			editPlug = selectedPath.property( "history:source" )
 			self.__popup = GafferUI.PlugPopup(
 				[ editPlug ], warning = selectedPath.property( "history:editWarning" )
