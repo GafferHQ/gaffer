@@ -1343,8 +1343,8 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( len( mh.messages ), 1 )
 		self.assertEqual( mh.messages[0].context, "Cycles::SocketAlgo" )
 		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Warning )
-		six.assertRegex(
-			self, mh.messages[0].message,
+		self.assertRegex(
+			mh.messages[0].message,
 			"Socket `bad_parameter` on node .* does not exist"
 		)
 
@@ -1584,11 +1584,11 @@ class RendererTest( GafferTest.TestCase ) :
 		)
 		renderer.option( "camera", IECore.StringData( "testCamera" ) )
 
-		fileName = os.path.join( self.temporaryDirectory(), "test.exr" )
+		fileName = self.temporaryDirectory() / "test.exr"
 		renderer.output(
 			"testOutput",
 			IECoreScene.Output(
-				fileName,
+				str( fileName ),
 				"exr",
 				"rgba",
 				{}
@@ -1605,7 +1605,7 @@ class RendererTest( GafferTest.TestCase ) :
 		primitiveHandle.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
 
 		renderer.render()
-		image = IECore.Reader.create( fileName ).read()
+		image = IECore.Reader.create( str( fileName ) ).read()
 
 		# Check we got what we expected.
 
@@ -1756,8 +1756,8 @@ class RendererTest( GafferTest.TestCase ) :
 				self.assertEqual( len( mh.messages ), 1 )
 				self.assertEqual( mh.messages[0].context, "Cycles::SocketAlgo" )
 				self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Warning )
-				six.assertRegex(
-					self, mh.messages[0].message,
+				self.assertRegex(
+					mh.messages[0].message,
 					"Unsupported type `{}` for socket `{}` on node .*".format(
 						value.typeName(), name
 					)
@@ -1786,8 +1786,8 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( len( mh.messages ), 1 )
 			self.assertEqual( mh.messages[0].context, "Cycles::SocketAlgo" )
 			self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Warning )
-			six.assertRegex(
-				self, mh.messages[0].message,
+			self.assertRegex(
+				mh.messages[0].message,
 				"Invalid enum value \"missing\" for socket `subsurface_method` on node .*"
 			)
 
