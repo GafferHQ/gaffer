@@ -791,8 +791,9 @@ if "BOOST_MAJOR_VERSION" not in baseLibEnv :
 
 basePythonEnv = baseLibEnv.Clone()
 
+pythonExecutable = shutil.which( "python", path = commandEnv["ENV"]["PATH"] )
 basePythonEnv["PYTHON_VERSION"] = subprocess.check_output(
-	[ "python", "-c", "import sys; print( '{}.{}'.format( *sys.version_info[:2] ) )" ],
+	[ pythonExecutable, "-c", "import sys; print( '{}.{}'.format( *sys.version_info[:2] ) )" ],
 	env=commandEnv["ENV"], universal_newlines=True
 ).strip()
 
@@ -801,7 +802,7 @@ if basePythonEnv["PLATFORM"] == "win32" :
 
 basePythonEnv["PYTHON_ABI_VERSION"] = basePythonEnv["PYTHON_VERSION"]
 basePythonEnv["PYTHON_ABI_VERSION"] += subprocess.check_output(
-	[ "python", "-c", "import sysconfig; print( sysconfig.get_config_var( 'abiflags' ) or '' )" ],
+	[ pythonExecutable, "-c", "import sysconfig; print( sysconfig.get_config_var( 'abiflags' ) or '' )" ],
 	env=commandEnv["ENV"], universal_newlines=True
 ).strip()
 
