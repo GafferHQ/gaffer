@@ -37,7 +37,6 @@
 
 import pathlib
 import unittest
-import six
 
 import imath
 
@@ -177,19 +176,19 @@ class MeshSegmentsTest( GafferSceneTest.SceneTestCase ) :
 		s["in"].setInput( o["out"] )
 		s["filter"].setInput( f["out"] )
 
-		with six.assertRaisesRegex( self, RuntimeError, "Vertex primitive variable P has indices.  Indices are not supported on vertex primitive variables." ) :
+		with self.assertRaisesRegex( RuntimeError, "Vertex primitive variable P has indices.  Indices are not supported on vertex primitive variables." ) :
 			s["out"].object( "/object" )
 
 		s["connectivity"].setValue( "doesNotExist" )
-		with six.assertRaisesRegex( self, RuntimeError, 'No primitive variable named "doesNotExist"' ) :
+		with self.assertRaisesRegex( RuntimeError, 'No primitive variable named "doesNotExist"' ) :
 			s["out"].object( "/object" )
 
 		s["connectivity"].setValue( "uv" )
-		with six.assertRaisesRegex( self, RuntimeError, "FaceVarying primitive variable uv must be indexed in order to use as connectivity." ) :
+		with self.assertRaisesRegex( RuntimeError, "FaceVarying primitive variable uv must be indexed in order to use as connectivity." ) :
 			s["out"].object( "/object" )
 
 		s["connectivity"].setValue( "unindexedUniform" )
-		with six.assertRaisesRegex( self, RuntimeError, "Uniform primitive variable unindexedUniform must be indexed in order to use as connectivity." ) :
+		with self.assertRaisesRegex( RuntimeError, "Uniform primitive variable unindexedUniform must be indexed in order to use as connectivity." ) :
 			s["out"].object( "/object" )
 
 		# We can segment even this bad mesh by its vertex connectivity specifying no primvar
