@@ -522,6 +522,7 @@ else:
 			"/DNOMINMAX",  # Suppress compiler definition of `min` and `max`
 			"/D__PRETTY_FUNCTION__=__FUNCSIG__",
 			"/DBOOST_ALL_DYN_LINK",
+			"/DBOOST_ALL_NO_LIB",
 			"/W4",  # Warning level 4, one level less than all warnings
 			"/experimental:external",  # Allow use of /external:I
 			"/external:W0",  # Suppress warnings for headers included with /external:I
