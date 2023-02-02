@@ -62,6 +62,7 @@ def getOption( name, default ) :
 
 ## \todo: this is duplicated from ./installAll but can we centralize it instead?
 def gafferVersionFromScons() :
+	import re
 
 	sconsFile = "SConstruct"
 	versionVars = ["gafferMilestoneVersion", "gafferMajorVersion", "gafferMinorVersion", "gafferPatchVersion"]
