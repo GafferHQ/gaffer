@@ -65,7 +65,7 @@ jobs:
             publish: true
             containerImage:
             dependenciesURL: https://github.com/GafferHQ/dependencies/releases/download/6.0.0/gafferDependencies-6.0.0-windows.zip
-            testRunner: Invoke-Expression
+            testRunner: powershell -c Invoke-Expression
             testArguments: GafferTest GafferVDBTest GafferUSDTest GafferSceneTest GafferDispatchTest GafferOSLTest GafferImageTest GafferUITest GafferImageUITest GafferSceneUITest GafferDispatchUITest GafferOSLUITest GafferUSDUITest GafferVDBUITest GafferDelightUITest
             sconsCacheMegabytes: 400
 
@@ -191,11 +191,10 @@ jobs:
           #Build Arnold extension
           subprocess.check_call( "scons -j 2 build BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions", shell = True )
 
-          if os.name != "nt" :
-            # Test Arnold extension
-            print( "::add-matcher::./.github/workflows/main/problemMatchers/unittest.json" )
-            subprocess.check_call( "${{ matrix.testRunner }} \"" + os.path.join( os.environ["GAFFER_BUILD_DIR"], "bin", "gaffer" ) + " test IECoreArnoldTest GafferArnoldTest GafferArnoldUITest\"", shell = True )
-            print( "::remove-matcher owner=unittest::" )
+          # Test Arnold extension
+          print( "::add-matcher::./.github/workflows/main/problemMatchers/unittest.json" )
+          subprocess.check_call( "${{ matrix.testRunner }} \"" + os.path.join( os.environ["GAFFER_BUILD_DIR"], "bin", "gaffer" ) + " test IECoreArnoldTest GafferArnoldTest GafferArnoldUITest\"", shell = True )
+          print( "::remove-matcher owner=unittest::" )
 
           # Publish ARNOLD_ROOT to the environment for subsequent steps,
           # so we can build the docs for GafferArnold.
