@@ -130,7 +130,10 @@ class ArnoldShaderUITest( GafferUITest.TestCase ) :
 	def testUserDefaultMetadata( self ) :
 
 		cacheFilePath =	self.temporaryDirectory() / "testShaderUserDefaults.scc"
-		script = f"""
+
+		scriptPath = self.temporaryDirectory() / "testScript.py"
+		with open( scriptPath, "w" ) as outFile :
+			outFile.write( f"""
 import Gaffer
 import GafferScene
 import GafferArnold
@@ -148,10 +151,11 @@ root["SceneWriter"]["in"].setInput( root["ShaderAssignment"]["out"] )
 root["SceneWriter"]["fileName"].setValue( "{cacheFilePath.as_posix()}" )
 root["SceneWriter"].execute()
 		"""
+			)
 
 		env = os.environ.copy()
 		subprocess.check_call(
-			[ str( Gaffer.executablePath() ), "env", "python","-c", script ],
+			[ str( Gaffer.executablePath() ), "env", "python", str( scriptPath ) ],
 			env = env
 		)
 		scene = IECoreScene.SceneCache( str( cacheFilePath ), IECore.IndexedIO.OpenMode.Read )
@@ -168,9 +172,9 @@ root["SceneWriter"].execute()
 		self.assertEqual( parms["filename"].value, "" )
 		self.assertEqual( parms["filter"].value, "smart_bicubic" )
 
-		env["ARNOLD_PLUGIN_PATH"] = pathlib.Path( __file__ ).parent / "metadata"
+		env["ARNOLD_PLUGIN_PATH"] = str( pathlib.Path( __file__ ).parent / "metadata" )
 		subprocess.check_call(
-			[ str( Gaffer.executablePath() ), "env", "python","-c", script ],
+			[ str( Gaffer.executablePath() ), "env", "python", str( scriptPath ) ],
 			env = env
 		)
 		scene = IECoreScene.SceneCache( str( cacheFilePath ), IECore.IndexedIO.OpenMode.Read )
