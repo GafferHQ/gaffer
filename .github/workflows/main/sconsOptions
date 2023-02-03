@@ -63,5 +63,4 @@ if sys.platform == "win32" :
 	INKSCAPE = "C:\\Program Files\\Inkscape\\inkscape.com"
 	WARNINGS_AS_ERRORS = False
 	APPLESEED_ROOT = None
-	CXXFLAGS = "\"-DBOOST_ALL_NO_LIB\""
 	SPHINX = "noSphinxYet"
