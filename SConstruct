@@ -1352,7 +1352,7 @@ libraries = {
 	},
 
 	"scripts" : {
-		"additionalFiles" : [ "bin/gaffer", "bin/__gaffer.py" ],
+		"additionalFiles" : [ "bin/__gaffer.py" ],
 	},
 
 	"misc" : {
@@ -1377,8 +1377,7 @@ libraries = {
 
 }
 
-if env["PLATFORM"] == "win32" :
-	libraries["scripts"]["additionalFiles"].append( "bin/gaffer.cmd" )
+libraries["scripts"]["additionalFiles"].append( "bin/gaffer.cmd" if env["PLATFORM"] == "win32" else "bin/gaffer" )
 
 # Add on OpenGL libraries to definitions - these vary from platform to platform
 for library in ( "GafferUI", "GafferScene", "GafferSceneUI", "GafferImageUI" ) :
