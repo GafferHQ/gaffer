@@ -561,6 +561,12 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 		self["__CleanUpExpression"].setExpression( inspect.cleandoc(
 			"""
 
+			import GafferImage
+
+			fLimit = GafferImage.OpenImageIOReader.getOpenFilesLimit()
+			GafferImage.OpenImageIOReader.setOpenFilesLimit( 0 )
+			GafferImage.OpenImageIOReader.setOpenFilesLimit( fLimit )
+
 			imageList = parent["__imageList"]
 
 			toDelete = []
