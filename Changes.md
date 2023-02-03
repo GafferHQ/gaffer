@@ -20,6 +20,7 @@ Fixes
   - Fixed support for Color4f values on colour shader parameters. This can be useful when loading non-standard USD files.
   - Fixed support for V[23]i values on vector shader parameters.
   - Fixed handling of colour array parameters.
+- Layouts : Fixed bug applying window size and position from saved layouts (#5042).
 
 [^1]: Changes inherited from 1.x. Can be omitted from the release notes for the final release of 1.2.
 [^2]: Changes made to features introduced in 1.2.0.0ax. Can be omitted from the release notes for the final release of 1.2.
