@@ -1284,11 +1284,11 @@ class AnimationTest( GafferTest.TestCase ) :
 		# add key to empty curve
 		curve.addKey( k )
 
-		# both tangents protrude from start/end of curve so slopes are unconstrained
-		self.assertFalse( k.tangentIn().slopeIsConstrained() )
-		self.assertFalse( k.tangentOut().slopeIsConstrained() )
+		# both tangents protrude from start/end of curve so slopes are constrained
+		self.assertTrue( k.tangentIn().slopeIsConstrained() )
+		self.assertTrue( k.tangentOut().slopeIsConstrained() )
 
-		# add key with same time so original key becomes inactive (tangent slopes remain unconstrained)
+		# add key with same time so original key becomes inactive (tangent slopes are unconstrained)
 		kd = Gaffer.Animation.Key( time = 0, interpolation = Gaffer.Animation.Interpolation.Linear )
 		curve.addKey( kd, removeActiveClashing = False )
 		self.assertTrue( kd.isActive() )
@@ -1308,13 +1308,13 @@ class AnimationTest( GafferTest.TestCase ) :
 		kp = Gaffer.Animation.Key( time = -1, interpolation = Gaffer.Animation.Interpolation.Linear )
 		curve.addKey( kp )
 		self.assertTrue( k.tangentIn().slopeIsConstrained() )
-		self.assertFalse( k.tangentOut().slopeIsConstrained() )
+		self.assertTrue( k.tangentOut().slopeIsConstrained() )
 		curve.removeKey( kp )
 
 		# add next key so that out tangent no longer protrudes from end of curve
 		kn = Gaffer.Animation.Key( time = 1, interpolation = Gaffer.Animation.Interpolation.Linear )
 		curve.addKey( kn )
-		self.assertFalse( k.tangentIn().slopeIsConstrained() )
+		self.assertTrue( k.tangentIn().slopeIsConstrained() )
 		self.assertTrue( k.tangentOut().slopeIsConstrained() )
 		curve.removeKey( kn )
 
@@ -1357,11 +1357,11 @@ class AnimationTest( GafferTest.TestCase ) :
 		# add key to empty curve
 		curve.addKey( k )
 
-		# both tangents protrude from start/end of curve so scales are unconstrained
-		self.assertFalse( k.tangentIn().scaleIsConstrained() )
-		self.assertFalse( k.tangentOut().scaleIsConstrained() )
+		# both tangents protrude from start/end of curve so scales are constrained
+		self.assertTrue( k.tangentIn().scaleIsConstrained() )
+		self.assertTrue( k.tangentOut().scaleIsConstrained() )
 
-		# add duplicate key with same time so original key becomes inactive (tangent scales remain unconstrained)
+		# add duplicate key with same time so original key becomes inactive (tangent scales are unconstrained)
 		kd = Gaffer.Animation.Key( time = 0, interpolation = Gaffer.Animation.Interpolation.Linear )
 		curve.addKey( kd, removeActiveClashing = False )
 		self.assertTrue( kd.isActive() )
@@ -1381,13 +1381,13 @@ class AnimationTest( GafferTest.TestCase ) :
 		kp = Gaffer.Animation.Key( time = -1, interpolation = Gaffer.Animation.Interpolation.Linear )
 		curve.addKey( kp )
 		self.assertTrue( k.tangentIn().scaleIsConstrained() )
-		self.assertFalse( k.tangentOut().scaleIsConstrained() )
+		self.assertTrue( k.tangentOut().scaleIsConstrained() )
 		curve.removeKey( kp )
 
 		# add next key so that out tangent no longer protrudes from end of curve
 		kn = Gaffer.Animation.Key( time = 1, interpolation = Gaffer.Animation.Interpolation.Linear )
 		curve.addKey( kn )
-		self.assertFalse( k.tangentIn().scaleIsConstrained() )
+		self.assertTrue( k.tangentIn().scaleIsConstrained() )
 		self.assertTrue( k.tangentOut().scaleIsConstrained() )
 		curve.removeKey( kn )
 
@@ -1502,12 +1502,26 @@ class AnimationTest( GafferTest.TestCase ) :
 
 		k0 = Gaffer.Animation.Key(
 			time = -1,
+			value = -2,
 			interpolation = Gaffer.Animation.Interpolation.Linear )
 		k1 = Gaffer.Animation.Key(
 			time = 1,
+			value = 2,
 			interpolation = Gaffer.Animation.Interpolation.Linear )
 		curve.addKey( k0 )
 		curve.addKey( k1 )
+
+		# protruding tangent slopes should be constrained
+		pti = k0.tangentIn()
+		ptf = k1.tangentOut()
+		self.assertTrue( pti.slopeIsConstrained() )
+		self.assertTrue( ptf.slopeIsConstrained() )
+
+		# set slope of protruding tangents should have no effect as slope is constrained to match sibling tangent
+		pti.setSlope( 25 )
+		self.assertEqual( pti.getSlope(), k0.tangentOut().getSlope() )
+		ptf.setSlope( 32 )
+		self.assertEqual( ptf.getSlope(), k1.tangentIn().getSlope() )
 
 		# create key (manual tie mode) and get its tangents
 		k = Gaffer.Animation.Key(
@@ -1642,6 +1656,18 @@ class AnimationTest( GafferTest.TestCase ) :
 			interpolation = Gaffer.Animation.Interpolation.Linear )
 		curve.addKey( k0 )
 		curve.addKey( k1 )
+
+		# protruding tangent scales should be constrained
+		pti = k0.tangentIn()
+		ptf = k1.tangentOut()
+		self.assertTrue( pti.scaleIsConstrained() )
+		self.assertTrue( ptf.scaleIsConstrained() )
+
+		# set slope of protruding tangents should have no effect as scale is constrained to match sibling tangent
+		pti.setScale( 0.12 )
+		self.assertEqual( pti.getScale(), k0.tangentOut().getScale() )
+		ptf.setScale( 0.23 )
+		self.assertEqual( ptf.getScale(), k1.tangentIn().getScale() )
 
 		# create key (manual tie mode) and get its tangents
 		k = Gaffer.Animation.Key(
@@ -2979,13 +3005,13 @@ class AnimationTest( GafferTest.TestCase ) :
 		ti2 = k2.tangentIn()
 		tf2 = k2.tangentOut()
 
-		# check that in tangent of first key is unconstrained
-		self.assertFalse( ti1.slopeIsConstrained() )
+		# check that in tangent of first key is constrained
+		self.assertTrue( ti1.slopeIsConstrained() )
 		self.assertFalse( tf1.slopeIsConstrained() )
 
-		# check that out tangent of last key is unconstrained
+		# check that out tangent of last key is constrained
 		self.assertFalse( ti2.slopeIsConstrained() )
-		self.assertFalse( tf2.slopeIsConstrained() )
+		self.assertTrue( tf2.slopeIsConstrained() )
 
 		# set out tangent slope of first key to 30
 		tf1.setSlope( 30 )
@@ -3275,9 +3301,9 @@ class AnimationTest( GafferTest.TestCase ) :
 		til = kl.tangentIn()
 		tfl = kl.tangentOut()
 
-		# check that out tangent of last key is unconstrained
+		# check that out tangent of last key is constrained
 		self.assertFalse( til.slopeIsConstrained() )
-		self.assertFalse( tfl.slopeIsConstrained() )
+		self.assertTrue( tfl.slopeIsConstrained() )
 
 		# set in tangent slope of last key to -60
 		til.setSlope( -60 )
@@ -3323,8 +3349,8 @@ class AnimationTest( GafferTest.TestCase ) :
 		tif = kf.tangentIn()
 		tff = kf.tangentOut()
 
-		# check that in tangent of first key is unconstrained
-		self.assertFalse( tif.slopeIsConstrained() )
+		# check that in tangent of first key is constrained
+		self.assertTrue( tif.slopeIsConstrained() )
 		self.assertFalse( tff.slopeIsConstrained() )
 
 		# set out tangent slope of first key to 30
@@ -3505,7 +3531,7 @@ class AnimationTest( GafferTest.TestCase ) :
 		tf2 = k2.tangentOut()
 
 		# set the out tangent slope of the first key
-		self.assertFalse( ti1.slopeIsConstrained() )
+		self.assertTrue( ti1.slopeIsConstrained() )
 		self.assertFalse( tf1.slopeIsConstrained() )
 		tf1.setSlope( 30 )
 		self.assertEqual( ti1.getSlope(), 30 )
@@ -3513,7 +3539,7 @@ class AnimationTest( GafferTest.TestCase ) :
 
 		# set the in tangent slope of the final key
 		self.assertFalse( ti2.slopeIsConstrained() )
-		self.assertFalse( tf2.slopeIsConstrained() )
+		self.assertTrue( tf2.slopeIsConstrained() )
 		ti2.setSlope( 60 )
 		self.assertEqual( ti2.getSlope(), 60 )
 		self.assertEqual( tf2.getSlope(), 60 )

@@ -141,7 +141,6 @@ class GAFFER_API Animation : public ComputeNode
 				/// If relative is true the position is relative to the parent key's position.
 				/// If the tangent's key has tie mode set to either Slope or Scale the opposite tangents slope will be set to the same value.
 				/// If slopeIsConstrained() returns true this function will have no effect.
-				/// Slope cannot be set from a position if there is no adjacent key in the direction of the tangent.
 				void setSlopeFromPosition( const Imath::V2d& position, bool relative = false );
 
 				/// Get tangent's scale.
@@ -159,16 +158,21 @@ class GAFFER_API Animation : public ComputeNode
 				/// If relative is true the position is relative to the parent key's position.
 				/// If the tangent's key has tie mode set to Scale the opposite tangent's scale will be kept proportional.
 				/// If scaleIsConstrained() returns true this function will have no effect.
-				/// Scale cannot be set from a position if there is no adjacent key in the direction of the tangent.
 				void setScaleFromPosition( const Imath::V2d& position, bool relative = false );
 
 				/// \undoable
 				/// Set tangent's slope and scale, constrained slope and/or scale will be maintained.
 				void setSlopeAndScale( double slope, double scale );
 
-				/// Is slope currently constrained by interpolation mode.
+				/// Is slope currently constrained.
+				/// Slope is not constrained when the parent key is inactive.
+				/// When tangent protrudes from its parent curve, slope is constrained to match its sibling tangent.
+				/// Otherwise slope may be constrained by interpolation mode.
 				bool slopeIsConstrained() const;
-				/// Is scale currently constrained by interpolation mode.
+				/// Is scale currently constrained.
+				/// Scale is not constrained when the parent key is inactive.
+				/// When tangent protrudes from its parent curve, scale is constrained to match its sibling tangent.
+				/// Otherwise scale may be constrained by interpolation mode.
 				bool scaleIsConstrained() const;
 
 				/// Get tangent's position.
