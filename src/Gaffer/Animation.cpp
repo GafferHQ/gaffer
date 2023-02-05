@@ -120,6 +120,8 @@ private:
 
 	/// Implement to return extrapolated value at specified time
 	virtual double evaluate( const CurvePlug& curve, Animation::Direction direction, double time ) const;
+	/// Implement to extend curve to specified key
+	virtual void extend( CurvePlug& curve, Animation::Direction direction, KeyPtr key ) const;
 
 	typedef std::vector< ConstExtrapolatorPtr > Container;
 	static const Container& get();
@@ -543,6 +545,17 @@ struct ExtrapolatorConstant
 	{
 		return curve.getExtrapolationKey( direction )->getValue();
 	}
+
+	void extend( Gaffer::Animation::CurvePlug& curve,
+		const Gaffer::Animation::Direction direction, const Gaffer::Animation::KeyPtr key ) const override
+	{
+		// ensure extrapolation key has tie mode manual and protruding tangent has default slope and scale
+
+		Gaffer::Animation::Key* const ke = curve.getExtrapolationKey( direction );
+		curve.addKey( key );
+		ke->setTieMode( Gaffer::Animation::TieMode::Manual );
+		ke->tangent( direction ).setSlopeAndScale( Gaffer::Animation::defaultSlope(), Gaffer::Animation::defaultScale() );
+	}
 };
 
 // linear extrapolator
@@ -562,6 +575,19 @@ struct ExtrapolatorLinear
 
 		const Gaffer::Animation::Key* const key = curve.getExtrapolationKey( direction );
 		return std::fma( clampSlope( key->tangent( direction ).getSlope() ), ( time - key->getTime() ), key->getValue() );
+	}
+
+	void extend( Gaffer::Animation::CurvePlug& curve,
+		const Gaffer::Animation::Direction direction, const Gaffer::Animation::KeyPtr key ) const override
+	{
+		// ensure slope of key's tangents match slope of protruding tangent and bake protruding tangent's slope
+
+		Gaffer::Animation::Tangent& pt = curve.getExtrapolationKey( direction )->tangent( direction );
+		const double slope = pt.getSlope();
+		key->tangentIn().setSlope( slope );
+		key->tangentOut().setSlope( slope );
+		curve.addKey( key );
+		pt.setSlope( slope );
 	}
 };
 
@@ -808,6 +834,12 @@ double Animation::Extrapolator::evaluate(
 	const Animation::CurvePlug& /*curve*/, const Animation::Direction /*direction*/, const double /*time*/ ) const
 {
 	return 0.0;
+}
+
+void Animation::Extrapolator::extend(
+	Animation::CurvePlug& curve, const Animation::Direction /*direction*/, const KeyPtr key ) const
+{
+	curve.addKey( key );
 }
 
 const Animation::Extrapolator::Container& Animation::Extrapolator::get()
@@ -2247,66 +2279,86 @@ Animation::KeyPtr Animation::CurvePlug::insertKeyInternal( const float time, con
 
 	// create key
 
-	key.reset( new Key( time, ( value == nullptr ) ? evaluate( time ) : ( *value ), interpolator->getInterpolation(),
+	const float evaluatedValue = evaluate( time );
+	key.reset( new Key( time, ( value == nullptr ) ? evaluatedValue : ( *value ), interpolator->getInterpolation(),
 		defaultSlope(), defaultScale(), defaultSlope(), defaultScale(), TieMode::Manual ) );
 
-	// if time is in range of keys and specified value is the same as the evaluated value of the curve then bisect span.
+	// check if specified value is the same as the evaluated value of the curve.
 
-	if( ( lo && hi ) && ( ( value == nullptr ) || ( evaluate( time ) == ( *value ) ) ) )
+	if( ( value == nullptr ) || ( evaluatedValue == ( *value ) ) )
 	{
-		// normalise time to lo, hi key time range
+		// time is in range of keys bisect span
 
-		const double lt = ( time - lo->m_time );
-		const double ht = ( hi->m_time - time );
-		const double nt = std::min( std::max( lt / lo->m_tangentOut.m_dt, 0.0 ), 1.0 );
+		if( lo && hi )
+		{
+			// normalise time to lo, hi key time range
 
-		// create dummmy hi/lo keys. use dummy keys to prevent unwanted side effects from
-		// badly behaved interpolators.
+			const double lt = ( time - lo->m_time );
+			const double ht = ( hi->m_time - time );
+			const double nt = std::min( std::max( lt / lo->m_tangentOut.m_dt, 0.0 ), 1.0 );
 
-		KeyPtr kl( new Key( lo->m_time, lo->getValue(), interpolator->getInterpolation() ) );
-		KeyPtr kh( new Key( hi->m_time, hi->getValue(), interpolator->getInterpolation() ) );
+			// create dummmy hi/lo keys. use dummy keys to prevent unwanted side effects from
+			// badly behaved interpolators.
 
-		kl->m_tangentIn.m_slope = lo->m_tangentIn.m_slope;
-		kl->m_tangentIn.m_scale = lo->m_tangentIn.m_scale;
-		kl->m_tangentOut.m_slope = lo->m_tangentOut.m_slope;
-		kl->m_tangentOut.m_scale = lo->m_tangentOut.m_scale;
-		kl->m_tieMode = TieMode::Manual;
+			KeyPtr kl( new Key( lo->m_time, lo->getValue(), interpolator->getInterpolation() ) );
+			KeyPtr kh( new Key( hi->m_time, hi->getValue(), interpolator->getInterpolation() ) );
 
-		kh->m_tangentIn.m_slope = hi->m_tangentIn.m_slope;
-		kh->m_tangentIn.m_scale = hi->m_tangentIn.m_scale;
-		kh->m_tangentOut.m_slope = hi->m_tangentOut.m_slope;
-		kh->m_tangentOut.m_scale = hi->m_tangentOut.m_scale;
-		kh->m_tieMode = TieMode::Manual;
+			kl->m_tangentIn.m_slope = lo->m_tangentIn.m_slope;
+			kl->m_tangentIn.m_scale = lo->m_tangentIn.m_scale;
+			kl->m_tangentOut.m_slope = lo->m_tangentOut.m_slope;
+			kl->m_tangentOut.m_scale = lo->m_tangentOut.m_scale;
+			kl->m_tieMode = TieMode::Manual;
 
-		// new tangents are in space of new spans (post-bisection)
+			kh->m_tangentIn.m_slope = hi->m_tangentIn.m_slope;
+			kh->m_tangentIn.m_scale = hi->m_tangentIn.m_scale;
+			kh->m_tangentOut.m_slope = hi->m_tangentOut.m_slope;
+			kh->m_tangentOut.m_scale = hi->m_tangentOut.m_scale;
+			kh->m_tieMode = TieMode::Manual;
 
-		kl->m_tangentOut.m_dt = lt;
-		key->m_tangentIn.m_dt = lt;
-		key->m_tangentOut.m_dt = ht;
-		kh->m_tangentIn.m_dt = ht;
+			// new tangents are in space of new spans (post-bisection)
 
-		// bisect span
+			kl->m_tangentOut.m_dt = lt;
+			key->m_tangentIn.m_dt = lt;
+			key->m_tangentOut.m_dt = ht;
+			kh->m_tangentIn.m_dt = ht;
 
-		interpolator->bisect( *lo, *hi, nt, lo->m_tangentOut.m_dt, *key, kl->m_tangentOut, kh->m_tangentIn );
+			// bisect span
 
-		// retrieve new tangent slope and scale
+			interpolator->bisect( *lo, *hi, nt, lo->m_tangentOut.m_dt, *key, kl->m_tangentOut, kh->m_tangentIn );
 
-		const double lfsl = kl->m_tangentOut.getSlope();
-		const double lfsc = kl->m_tangentOut.getScale();
-		const double hisl = kh->m_tangentIn.getSlope();
-		const double hisc = kh->m_tangentIn.getScale();
+			// retrieve new tangent slope and scale
 
-		// add new key to curve
+			const double lfsl = kl->m_tangentOut.getSlope();
+			const double lfsc = kl->m_tangentOut.getScale();
+			const double hisl = kh->m_tangentIn.getSlope();
+			const double hisc = kh->m_tangentIn.getScale();
 
-		addKey( key );
+			// add new key to curve
 
-		// set new tangent slope and scale for lo and hi keys
+			addKey( key );
 
-		Private::ScopedAssignment< TieMode > ltm( lo->m_tieMode, TieMode::Manual );
-		Private::ScopedAssignment< TieMode > htm( hi->m_tieMode, TieMode::Manual );
+			// set new tangent slope and scale for lo and hi keys
 
-		lo->m_tangentOut.setSlopeAndScale( lfsl, lfsc );
-		hi->m_tangentIn.setSlopeAndScale( hisl, hisc );
+			Private::ScopedAssignment< TieMode > ltm( lo->m_tieMode, TieMode::Manual );
+			Private::ScopedAssignment< TieMode > htm( hi->m_tieMode, TieMode::Manual );
+
+			lo->m_tangentOut.setSlopeAndScale( lfsl, lfsc );
+			hi->m_tangentIn.setSlopeAndScale( hisl, hisc );
+		}
+		else if( lo || hi )
+		{
+			// time is outside range of keys use extrapolator to extend curve
+
+			const Animation::Direction direction = ( lo )
+				? Animation::Direction::Out
+				: Animation::Direction::In;
+
+			( this->*m_extrapolators[ static_cast< int >( direction ) ] )->extend( *this, direction, key );
+		}
+		else
+		{
+			addKey( key );
+		}
 	}
 	else
 	{
