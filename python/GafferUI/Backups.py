@@ -41,6 +41,7 @@ import IECore
 from Qt import QtCore
 
 import collections
+import io
 import os
 import re
 import stat
@@ -163,7 +164,7 @@ class Backups( object ) :
 		]
 		ignorePatterns = [ re.compile( x ) for x in ignorePatterns ]
 
-		with open( backupFileName ) as backupFile, open( scriptFileName ) as scriptFile :
+		with io.open( backupFileName, encoding = "utf-8" ) as backupFile, io.open( scriptFileName, encoding = "utf-8" ) as scriptFile :
 
 			backupLines = backupFile.readlines()
 			scriptLines = scriptFile.readlines()
