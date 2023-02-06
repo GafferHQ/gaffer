@@ -54,11 +54,11 @@ def exportExtension( name, boxes, directory ) :
 	pythonDir = directory / "python" / name
 	pythonDir.mkdir( parents = True, exist_ok = True )
 
-	with open( pythonDir / "__init__.py", "w" ) as initFile :
+	with open( pythonDir / "__init__.py", "w", encoding = "utf-8" ) as initFile :
 
 		for box in boxes :
 
-			with open( pythonDir / (box.getName() + ".py"), "w" ) as nodeFile :
+			with open( pythonDir / (box.getName() + ".py"), "w", encoding = "utf-8" ) as nodeFile :
 				nodeFile.write( __nodeDefinition( box, name ) )
 
 			initFile.write( "from .{name} import {name}\n".format( name = box.getName() ) )
@@ -66,11 +66,11 @@ def exportExtension( name, boxes, directory ) :
 	uiDir = directory / "python" / (name + "UI")
 	uiDir.mkdir( parents = True, exist_ok = True )
 
-	with open( uiDir / "__init__.py", "w" ) as initFile :
+	with open( uiDir / "__init__.py", "w", encoding = "utf-8" ) as initFile :
 
 		for box in boxes :
 
-			with open( uiDir / (box.getName() + "UI.py"), "w" ) as uiFile :
+			with open( uiDir / (box.getName() + "UI.py"), "w", encoding = "utf-8" ) as uiFile :
 				uiFile.write( __uiDefinition( box, name ) )
 
 			initFile.write( "from . import {name}UI\n".format( name = box.getName() ) )
@@ -78,7 +78,7 @@ def exportExtension( name, boxes, directory ) :
 	startupDir = directory / "startup" / "gui"
 	startupDir.mkdir( parents = True, exist_ok = True )
 
-	with open( startupDir / (name + ".py"), "w" ) as startupFile :
+	with open( startupDir / (name + ".py"), "w", encoding = "utf-8" ) as startupFile :
 
 		nodeMenuDefinition = []
 		for box in boxes :

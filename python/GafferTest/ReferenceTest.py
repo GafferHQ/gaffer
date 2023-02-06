@@ -738,7 +738,7 @@ class ReferenceTest( GafferTest.TestCase ) :
 
 		# And there shouldn't be a single setValue() call in the exported file.
 
-		e = "".join( open( self.temporaryDirectory() / "test.grf" ).readlines() )
+		e = "".join( open( self.temporaryDirectory() / "test.grf", encoding = "utf-8" ).readlines() )
 		self.assertTrue( "setValue" not in e )
 
 	def testInternalNodeDefaultValues( self ) :

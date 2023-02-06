@@ -70,7 +70,7 @@ class TextWriter( GafferDispatch.TaskNode ) :
 					raise
 
 		text = self.__processText( context )
-		with open( fileName, self["mode"].getValue() ) as f :
+		with open( fileName, self["mode"].getValue(), encoding = "utf-8" ) as f :
 			f.write( text )
 
 	def executeSequence( self, frames ) :
@@ -82,7 +82,7 @@ class TextWriter( GafferDispatch.TaskNode ) :
 		context = Gaffer.Context( Gaffer.Context.current() )
 		fileName = self["fileName"].getValue()
 
-		with open( fileName, self["mode"].getValue() ) as f :
+		with open( fileName, self["mode"].getValue(), encoding = "utf-8" ) as f :
 			with context :
 				for frame in frames :
 					context.setFrame( frame )

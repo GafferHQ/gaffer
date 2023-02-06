@@ -96,7 +96,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		# Executing n1 should trigger execution of all of them
 		dispatcher.dispatch( [ s["n1"] ] )
 		self.assertTrue( fileName.is_file() )
-		with open( fileName, "r" ) as f :
+		with open( fileName, "r", encoding = "utf-8" ) as f :
 			text = f.read()
 		expectedText = s.context().substitute( "n2a on ${frame};n2b on ${frame};n2 on ${frame};n1 on ${frame};" )
 		self.assertEqual( text, expectedText )
@@ -105,7 +105,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		fileName.unlink()
 		dispatcher.dispatch( [ s["n2b"], s["n1"] ] )
 		self.assertTrue( fileName.is_file() )
-		with open( fileName, "r" ) as f :
+		with open( fileName, "r", encoding = "utf-8" ) as f :
 			text = f.read()
 		expectedText = s.context().substitute( "n2b on ${frame};n2a on ${frame};n2 on ${frame};n1 on ${frame};" )
 		self.assertEqual( text, expectedText )
@@ -114,7 +114,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		fileName.unlink()
 		dispatcher.dispatch( [ s["n2"], s["n2b"], s["n1"], s["n2a"] ] )
 		self.assertTrue( fileName.is_file() )
-		with open( fileName, "r" ) as f :
+		with open( fileName, "r", encoding = "utf-8" ) as f :
 			text = f.read()
 		expectedText = s.context().substitute( "n2a on ${frame};n2b on ${frame};n2 on ${frame};n1 on ${frame};" )
 		self.assertEqual( text, expectedText )
@@ -123,7 +123,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		fileName.unlink()
 		dispatcher.dispatch( [ s["n2"] ] )
 		self.assertTrue( fileName.is_file() )
-		with open( fileName, "r" ) as f :
+		with open( fileName, "r", encoding = "utf-8" ) as f :
 			text = f.read()
 		expectedText = s.context().substitute( "n2a on ${frame};n2b on ${frame};n2 on ${frame};" )
 		self.assertEqual( text, expectedText )
@@ -132,7 +132,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		fileName.unlink()
 		dispatcher.dispatch( [ s["n2b"] ] )
 		self.assertTrue( fileName.is_file() )
-		with open( fileName, "r" ) as f :
+		with open( fileName, "r", encoding = "utf-8" ) as f :
 			text = f.read()
 		expectedText = s.context().substitute( "n2b on ${frame};" )
 		self.assertEqual( text, expectedText )
@@ -152,7 +152,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 		fileName = context.substitute( s["n1"]["fileName"].getValue() )
 		self.assertTrue( os.path.isfile( fileName ) )
-		with open( fileName, "r" ) as f :
+		with open( fileName, "r", encoding = "utf-8" ) as f :
 			text = f.read()
 		self.assertEqual( text, "%s on %d" % ( s["n1"].getName(), context.getFrame() ) )
 
@@ -192,7 +192,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		# Executing n1 should trigger execution of all of them
 		dispatcher.dispatch( [ s["n1"] ] )
 		self.assertTrue( fileName.is_file() )
-		with open( fileName, "r" ) as f :
+		with open( fileName, "r", encoding = "utf-8" ) as f :
 			text = f.read()
 		expectedText = ""
 		for frame in frameList.asList() :
@@ -205,7 +205,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		fileName.unlink()
 		dispatcher.dispatch( [ s["n2b"] ] )
 		self.assertTrue( fileName.is_file() )
-		with open( fileName, "r" ) as f :
+		with open( fileName, "r", encoding = "utf-8" ) as f :
 			text = f.read()
 		expectedText = ""
 		for frame in frameList.asList() :
@@ -249,7 +249,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		# Executing n1 should trigger execution of all of them
 		dispatcher.dispatch( [ s["n1"] ] )
 		self.assertTrue( fileName.is_file() )
-		with open( fileName, "r" ) as f :
+		with open( fileName, "r", encoding = "utf-8" ) as f :
 			text = f.read()
 		expectedText = ""
 		for frame in frameList.asList() :
@@ -262,7 +262,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		fileName.unlink()
 		dispatcher.dispatch( [ s["n2b"] ] )
 		self.assertTrue( fileName.is_file() )
-		with open( fileName, "r" ) as f :
+		with open( fileName, "r", encoding = "utf-8" ) as f :
 			text = f.read()
 		expectedText = ""
 		for frame in frameList.asList() :
@@ -304,7 +304,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 		self.assertTrue( os.path.isfile( fileName ) )
 		self.assertTrue( os.path.basename( fileName ).startswith( context["script:name"] ) )
-		with open( fileName, "r" ) as f :
+		with open( fileName, "r", encoding = "utf-8" ) as f :
 			text = f.read()
 		expected = "%s on %d" % ( context["script:name"], context.getFrame() )
 		expected = expected.replace( context["textWriter:replace"][0], context["textWriter:replace"][1] )
@@ -425,7 +425,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 		# all the foreground execution has finished
 		self.assertTrue( fileName.is_file() )
-		with open( fileName, "r" ) as f :
+		with open( fileName, "r", encoding = "utf-8" ) as f :
 			text = f.read()
 		expectedText = ""
 		for frame in frameList.asList() :
@@ -440,7 +440,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( len(dispatcher.jobPool().jobs()), 0 )
 
 		self.assertTrue( fileName.is_file() )
-		with open( fileName, "r" ) as f :
+		with open( fileName, "r", encoding = "utf-8" ) as f :
 			text = f.read()
 		# don't reset the expectedText since we're still appending
 		for frame in frameList.asList() :
@@ -499,7 +499,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 		# n3 executed correctly
 		self.assertTrue( os.path.isfile( s.context().substitute( s["n3"]["fileName"].getValue() ) ) )
-		with open( s.context().substitute( s["n3"]["fileName"].getValue() ), "r" ) as f :
+		with open( s.context().substitute( s["n3"]["fileName"].getValue() ), "r", encoding = "utf-8" ) as f :
 			text = f.read()
 		self.assertEqual( text, "n3 on %d" % s.context().getFrame() )
 
@@ -519,7 +519,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 		# n3 executed correctly
 		self.assertTrue( os.path.isfile( s.context().substitute( s["n3"]["fileName"].getValue() ) ) )
-		with open( s.context().substitute( s["n3"]["fileName"].getValue() ), "r" ) as f :
+		with open( s.context().substitute( s["n3"]["fileName"].getValue() ), "r", encoding = "utf-8" ) as f :
 			text = f.read()
 		self.assertEqual( text, "n3 on %d" % s.context().getFrame() )
 
@@ -573,7 +573,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 		dispatcher.jobPool().waitForAll()
 
-		text = "".join( open( self.temporaryDirectory() / "test.txt" ).readlines() )
+		text = "".join( open( self.temporaryDirectory() / "test.txt", encoding = "utf-8" ).readlines() )
 		self.assertEqual( text, "i am a string with spaces" )
 
 	def testUIContextEntriesIgnored( self ) :
@@ -595,7 +595,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 		dispatcher.jobPool().waitForAll()
 
-		text = "".join( open( self.temporaryDirectory() / "out.txt" ).readlines() )
+		text = "".join( open( self.temporaryDirectory() / "out.txt", encoding = "utf-8" ).readlines() )
 		self.assertEqual( text, "foo " )
 
 	def testContextLockedDuringBackgroundDispatch( self ) :
@@ -624,7 +624,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 		self.assertTrue( fileName.is_file() )
 
-		text = "".join( open( fileName ).readlines() )
+		text = "".join( open( fileName, encoding = "utf-8" ).readlines() )
 		self.assertEqual( text, "n1 on 1 with foo" )
 
 	def testNodeNamesLockedDuringBackgroundDispatch( self ) :
@@ -648,7 +648,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 		self.assertTrue( fileName.is_file() )
 
-		text = "".join( open( fileName ).readlines() )
+		text = "".join( open( fileName, encoding = "utf-8" ).readlines() )
 		self.assertEqual( text, "n1 on 1" )
 
 	def testIgnoreScriptLoadErrors( self ) :
@@ -697,9 +697,9 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 		# a single dispatch should have the same job directory for all batches
 		jobDir = dispatcher["jobsDirectory"].getValue() + "/000000"
-		self.assertEqual( next( open( "%s/test.0002.txt" % jobDir ) ), "w on 2 from %s" % jobDir )
-		self.assertEqual( next( open( "%s/test.0004.txt" % jobDir ) ), "w on 4 from %s" % jobDir )
-		self.assertEqual( next( open( "%s/test.0006.txt" % jobDir ) ), "w on 6 from %s" % jobDir )
+		self.assertEqual( next( open( "%s/test.0002.txt" % jobDir, encoding = "utf-8" ) ), "w on 2 from %s" % jobDir )
+		self.assertEqual( next( open( "%s/test.0004.txt" % jobDir, encoding = "utf-8" ) ), "w on 4 from %s" % jobDir )
+		self.assertEqual( next( open( "%s/test.0006.txt" % jobDir, encoding = "utf-8" ) ), "w on 6 from %s" % jobDir )
 
 	def testEnvironmentCommand( self ) :
 
@@ -719,7 +719,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		dispatcher.dispatch( [ s["c"] ] )
 		dispatcher.jobPool().waitForAll()
 
-		with open( testFile ) as f :
+		with open( testFile, encoding = "utf-8" ) as f :
 			self.assertEqual( f.readlines(), [ "HELLO\n" if os.name != "nt" else "HELLO %GAFFERDISPATCHTEST_ENVVAR%\n" ] )
 
 		if os.name != "nt" :
@@ -729,7 +729,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		dispatcher.dispatch( [ s["c"] ] )
 		dispatcher.jobPool().waitForAll()
 
-		with open( testFile ) as f :
+		with open( testFile, encoding = "utf-8" ) as f :
 			self.assertEqual( f.readlines(), [ "HELLO WORLD\n" ] )
 
 	def testEnvironmentCommandSubstitutions( self ) :
@@ -759,7 +759,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 		dispatcher.jobPool().waitForAll()
 
-		with open( testFile ) as f :
+		with open( testFile, encoding = "utf-8" ) as f :
 			self.assertEqual( f.readlines(), [ "HELLO WORLD\n" ] )
 
 	def testScaling( self ) :
@@ -832,7 +832,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		d.jobPool().waitForAll()
 
 		self.assertEqual(
-			open( s["t"]["fileName"].getValue() ).read(),
+			open( s["t"]["fileName"].getValue(), encoding = "utf-8" ).read(),
 			"0.0 1.0 2.0"
 		)
 
@@ -867,8 +867,8 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		self.assertTrue( ( self.temporaryDirectory() / "outer.txt" ).exists() )
 
 		self.assertEqual(
-			open( self.temporaryDirectory() / "nested.txt" ).readlines(),
-			open( self.temporaryDirectory() / "outer.txt" ).readlines(),
+			open( self.temporaryDirectory() / "nested.txt", encoding = "utf-8" ).readlines(),
+			open( self.temporaryDirectory() / "outer.txt", encoding = "utf-8" ).readlines(),
 		)
 
 if __name__ == "__main__":

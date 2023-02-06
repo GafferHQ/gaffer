@@ -115,7 +115,7 @@ class python( Gaffer.Application ) :
 		try:
 			sys.argv = [ args[ "file" ].value ] + list( args[ "arguments" ] )
 			try :
-				with open( args["file"].value ) as f :
+				with open( args["file"].value, encoding = "utf-8" ) as f :
 					exec(
 						compile( f.read(), args["file"].value, "exec" ),
 						{

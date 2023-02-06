@@ -509,7 +509,7 @@ class RendererTest( GafferTest.TestCase ) :
 			r.render()
 			del r
 
-			nsi = open( self.temporaryDirectory() / "test.nsi" ).read()
+			nsi = open( self.temporaryDirectory() / "test.nsi", encoding = "utf-8" ).read()
 			return re.findall( '\n *"testStringSubstituted" "string" 1 "(.*)" \n', nsi )[0]
 
 		self.assertEqual( runSubstitutions( "<attr:test:foo> TEST <attr:test:bar>", {} ), " TEST " )
@@ -560,7 +560,7 @@ class RendererTest( GafferTest.TestCase ) :
 	def __parse( self, nsiFile ) :
 
 		result = []
-		with open( nsiFile ) as f :
+		with open( nsiFile, encoding = "utf-8" ) as f :
 			for x in f.readlines() :
 				result.extend( x.split() )
 

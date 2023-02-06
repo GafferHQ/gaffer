@@ -347,7 +347,7 @@ class TestCase( unittest.TestCase ) :
 	def assertModuleDoesNotImportUI( self, moduleName ) :
 
 		script = self.temporaryDirectory() / "test.py"
-		with open( script, "w" ) as f :
+		with open( script, "w", encoding = "utf-8" ) as f :
 			f.write( "import {}\n".format( moduleName ) )
 			f.write( "import sys\n" )
 			f.write( "assert( 'GafferUI' not in sys.modules )\n" )

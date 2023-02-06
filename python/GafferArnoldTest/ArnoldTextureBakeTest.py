@@ -316,7 +316,7 @@ class ArnoldTextureBakeTest( GafferSceneTest.SceneTestCase ) :
 			[ "BAKE_FILE_INDEX_0.0001.txt", "BAKE_FILE_INDEX_1.0001.txt", "BAKE_FILE_INDEX_2.0001.txt", "beauty", "diffuse" ] )
 		# Make sure the 16 images that need writing get divided into very approximate thirds
 		for i in range( 3 ):
-			l = len( open( self.temporaryDirectory() / 'bakeSpheres' / f'BAKE_FILE_INDEX_{i}.0001.txt' ).readlines() )
+			l = len( open( self.temporaryDirectory() / 'bakeSpheres' / f'BAKE_FILE_INDEX_{i}.0001.txt', encoding = "utf-8" ).readlines() )
 			self.assertGreater( l, 2 )
 			self.assertLess( l, 8 )
 

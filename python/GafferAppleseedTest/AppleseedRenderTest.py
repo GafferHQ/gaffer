@@ -313,7 +313,7 @@ class AppleseedRenderTest( GafferTest.TestCase ) :
 		self.assertNotEqual( render["task"].hash(), IECore.MurmurHash() )
 		render["task"].execute()
 		self.assertTrue( pathlib.Path( render["fileName"].getValue() ).exists() )
-		f = open( render["fileName"].getValue(), "r" )
+		f = open( render["fileName"].getValue(), "r", encoding = "utf-8" )
 		texturePaths = set( re.findall( '<parameter name="in_filename" value="string (.*)"', f.read()) )
 		self.assertEqual( texturePaths, set( ['bar/path/foo.tx', 'bar/path/override.tx' ] ) )
 
