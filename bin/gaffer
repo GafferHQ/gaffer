@@ -50,12 +50,6 @@ if [[ $1 == -psn_0_* ]] ; then
 	shift
 fi
 
-# Work around OCIO bug that causes parsing to fail for certain locales.
-# See https://github.com/imageworks/OpenColorIO/issues/297
-##########################################################################
-
-export LC_NUMERIC=C
-
 # Find where this script is located, resolving any symlinks that were used
 # to invoke it. Set GAFFER_ROOT based on the script location.
 ##########################################################################

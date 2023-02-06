@@ -22,6 +22,11 @@ Fixes
   - Fixed handling of colour array parameters.
 - Layouts : Fixed bug applying window size and position from saved layouts (#5042).
 
+Breaking Changes
+----------------
+
+- Locale : Removed `LC_NUMERIC=C` environment variable assignment from wrapper. This was a workaround for an OpenColorIO bug that has since been fixed.
+
 [^1]: Changes inherited from 1.x. Can be omitted from the release notes for the final release of 1.2.
 [^2]: Changes made to features introduced in 1.2.0.0ax. Can be omitted from the release notes for the final release of 1.2.
 
