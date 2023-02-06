@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 ##########################################################################
 #
 #  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
@@ -204,6 +206,26 @@ class BackupsTest( GafferUITest.TestCase ) :
 
 		b.backup( s )
 		assertBackupsReadOnly()
+
+	def testNonASCIIRecoveryFile( self ) :
+
+		a = Gaffer.ApplicationRoot()
+
+		b = GafferUI.Backups.acquire( a )
+		b.settings()["fileName"].setValue( "${script:directory}/${script:name}-backup${backup:number}.gfr" )
+		b.settings()["files"].setValue( 3 )
+
+		s = Gaffer.ScriptNode()
+		s["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
+		s.save()
+
+		s["node"] = GafferTest.StringInOutNode()
+		s["node"]["in"].setValue( "Ä, Ö, and Ü." )
+
+		b.backup( s )
+
+		with self.scopedLocale( "C" ) :
+			self.assertEqual( b.recoveryFile( s ), self.temporaryDirectory() + "/test-backup0.gfr" )
 
 	def __assertFilesEqual( self, f1, f2 ) :
 
