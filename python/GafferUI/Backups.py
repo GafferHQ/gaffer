@@ -147,7 +147,7 @@ class Backups( object ) :
 		]
 		ignorePatterns = [ re.compile( x ) for x in ignorePatterns ]
 
-		with open( backupPath ) as backupFile, open( scriptPath ) as scriptFile :
+		with open( backupPath, encoding = "utf-8" ) as backupFile, open( scriptPath, encoding = "utf-8" ) as scriptFile :
 
 			backupLines = backupFile.readlines()
 			scriptLines = scriptFile.readlines()

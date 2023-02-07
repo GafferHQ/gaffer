@@ -164,7 +164,7 @@ class TestRunner( unittest.TextTestRunner ) :
 			self.__results = collections.OrderedDict()
 
 			if previousResultsFile :
-				with open( previousResultsFile ) as f :
+				with open( previousResultsFile, encoding = "utf-8" ) as f :
 					self.__previousResults = json.load( f )
 			else :
 				self.__previousResults = {}
@@ -175,7 +175,7 @@ class TestRunner( unittest.TextTestRunner ) :
 
 		def save( self, fileName ) :
 
-			with open( fileName, "w" ) as f :
+			with open( fileName, "w", encoding = "utf-8" ) as f :
 				json.dump( self.__results, f, indent = 4 )
 
 		def writePerformance( self ) :

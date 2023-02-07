@@ -457,7 +457,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		dispatcher.dispatch( [ s["n3"] ] )
 		self.assertTrue( fileName.exists() )
 
-		with open( fileName, "r" ) as f :
+		with open( fileName, "r", encoding = "utf-8" ) as f :
 			text = f.read()
 
 		self.assertEqual( text, "a1;b1;c1;" )
@@ -569,7 +569,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		self.assertTrue( fileName.is_file() )
 
-		with open( fileName, "r" ) as f :
+		with open( fileName, "r", encoding = "utf-8" ) as f :
 			text = f.read()
 
 		# all nodes on frame 1, followed by all nodes on frame 2, followed by all nodes on frame 3
@@ -602,7 +602,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertFalse( fileName.is_file() )
 		dispatcher.dispatch( [ s["n3"] ] )
 		self.assertTrue( fileName.is_file() )
-		with open( fileName, "r" ) as f :
+		with open( fileName, "r", encoding = "utf-8" ) as f :
 			text = f.read()
 
 		# n1 on all frames, followed by the n2 sequence, followed by n3 on all frames
@@ -615,7 +615,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertFalse( fileName.is_file() )
 		dispatcher.dispatch( [ s["n3"] ] )
 		self.assertTrue( fileName.is_file() )
-		with open( fileName, "r" ) as f :
+		with open( fileName, "r", encoding = "utf-8" ) as f :
 			text = f.read()
 
 		# n1 in requested order, followed by the n2 sequence in sorted order, followed by n3 in the requested order
@@ -653,7 +653,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertFalse( fileName.is_file() )
 		dispatcher.dispatch( [ s["n4"] ] )
 		self.assertTrue( fileName.is_file() )
-		with open( fileName, "r" ) as f :
+		with open( fileName, "r", encoding = "utf-8" ) as f :
 			text = f.read()
 
 		# all frames of n1 and n2 interleaved, followed by the n3 sequence, followed by n4 on all frames
@@ -667,7 +667,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertFalse( fileName.is_file() )
 		dispatcher.dispatch( [ s["n4"] ] )
 		self.assertTrue( fileName.is_file() )
-		with open( fileName, "r" ) as f :
+		with open( fileName, "r", encoding = "utf-8" ) as f :
 			text = f.read()
 
 		# first 2 frames of n1, followed by all frames of n2, followed by last frame of n1, followed by the n3 sequence, followed by n4 on all frames
@@ -715,7 +715,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertFalse( fileName.is_file() )
 		dispatcher.dispatch( [ s["n4"] ] )
 		self.assertTrue( fileName.is_file() )
-		with open( fileName, "r" ) as f :
+		with open( fileName, "r", encoding = "utf-8" ) as f :
 			text = f.read()
 
 		# all frames of n1 and n2 interleaved, followed by the n3 sequence, followed by n4 on all frames
@@ -728,7 +728,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertFalse( fileName.is_file() )
 		dispatcher.dispatch( [ s["b"] ] )
 		self.assertTrue( fileName.is_file() )
-		with open( fileName, "r" ) as f :
+		with open( fileName, "r", encoding = "utf-8" ) as f :
 			text = f.read()
 
 		# all frames of n1 and n2 interleaved, followed by the n3 sequence
@@ -743,7 +743,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertFalse( fileName.is_file() )
 		dispatcher.dispatch( [ s["b"] ] )
 		self.assertTrue( fileName.is_file() )
-		with open( fileName, "r" ) as f :
+		with open( fileName, "r", encoding = "utf-8" ) as f :
 			text = f.read()
 
 		# all frames of n1, followed by the n3 sequence
@@ -758,7 +758,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertFalse( fileName.is_file() )
 		dispatcher.dispatch( [ s["b"] ] )
 		self.assertTrue( fileName.is_file() )
-		with open( fileName, "r" ) as f :
+		with open( fileName, "r", encoding = "utf-8" ) as f :
 			text = f.read()
 
 		# all frames of n1, followed by the n3 sequence
@@ -774,7 +774,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertFalse( fileName.is_file() )
 		dispatcher.dispatch( [ s["b"] ] )
 		self.assertTrue( fileName.is_file() )
-		with open( fileName, "r" ) as f :
+		with open( fileName, "r", encoding = "utf-8" ) as f :
 			text = f.read()
 
 		# all frames of n1, followed by the n3 sequence, followed by all frames of n2
@@ -788,7 +788,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertFalse( fileName.is_file() )
 		dispatcher.dispatch( [ s["n4"] ] )
 		self.assertTrue( fileName.is_file() )
-		with open( fileName, "r" ) as f :
+		with open( fileName, "r", encoding = "utf-8" ) as f :
 			text = f.read()
 
 		# all frames of n1, n2, n3, and n4 interleaved
@@ -803,7 +803,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertFalse( fileName.is_file() )
 		dispatcher.dispatch( [ s["r"] ] )
 		self.assertTrue( fileName.is_file() )
-		with open( fileName, "r" ) as f :
+		with open( fileName, "r", encoding = "utf-8" ) as f :
 			text = f.read()
 
 		# all frames of n1, n2, and n3 interleaved
@@ -999,7 +999,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		GafferDispatch.Dispatcher.create( "testDispatcher" ).dispatch( [ s["c"] ] )
 
-		self.assertEqual( next( open( self.temporaryDirectory() / "test.0010.txt" ) ), "testing 123" )
+		self.assertEqual( next( open( self.temporaryDirectory() / "test.0010.txt", encoding = "utf-8" ) ), "testing 123" )
 
 	def testBatchesCanAccessJobDirectory( self ) :
 
@@ -1017,9 +1017,9 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		# a single dispatch should have the same job directory for all batches
 		jobDir = dispatcher.jobDirectory().as_posix()
-		self.assertEqual( next( open( "%s/test.0002.txt" % jobDir ) ), "w on 2 from %s" % jobDir )
-		self.assertEqual( next( open( "%s/test.0004.txt" % jobDir ) ), "w on 4 from %s" % jobDir )
-		self.assertEqual( next( open( "%s/test.0006.txt" % jobDir ) ), "w on 6 from %s" % jobDir )
+		self.assertEqual( next( open( "%s/test.0002.txt" % jobDir, encoding = "utf-8" ) ), "w on 2 from %s" % jobDir )
+		self.assertEqual( next( open( "%s/test.0004.txt" % jobDir, encoding = "utf-8" ) ), "w on 4 from %s" % jobDir )
+		self.assertEqual( next( open( "%s/test.0006.txt" % jobDir, encoding = "utf-8" ) ), "w on 6 from %s" % jobDir )
 
 	def testNoOpDoesntBreakFrameParallelism( self ) :
 

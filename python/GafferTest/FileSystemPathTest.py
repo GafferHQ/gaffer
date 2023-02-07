@@ -106,7 +106,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 	@unittest.skipIf( os.name == "nt", "Windows does not support symbolic links." )
 	def testSymLinkInfo( self ) :
 
-		with open( self.temporaryDirectory() / "a", "w" ) as f :
+		with open( self.temporaryDirectory() / "a", "w", encoding = "utf-8" ) as f :
 			f.write( "AAAA" )
 
 		os.symlink( self.temporaryDirectory() / "a", self.temporaryDirectory() / "l" )
@@ -142,7 +142,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 
 		os.chdir( self.temporaryDirectory() )
 
-		with open( self.temporaryDirectory() / "a", "w" ) as f :
+		with open( self.temporaryDirectory() / "a", "w", encoding = "utf-8" ) as f :
 			f.write( "AAAA" )
 
 		p = Gaffer.FileSystemPath( "a" )
@@ -333,7 +333,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 
 		os.chdir( self.temporaryDirectory() )
 		os.mkdir( "dir" )
-		with open( self.temporaryDirectory() / "dir" / "a", "w" ) as f :
+		with open( self.temporaryDirectory() / "dir" / "a", "w", encoding = "utf-8" ) as f :
 			f.write( "AAAA" )
 
 		p = Gaffer.FileSystemPath( "dir" )
@@ -358,7 +358,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 		p = Gaffer.FileSystemPath( self.temporaryDirectory() )
 		p.append( "t" )
 
-		with open( p.nativeString(), "w" ) as f :
+		with open( p.nativeString(), "w", encoding = "utf-8" ) as f :
 			f.write( "AAAA" )
 
 		mt = p.property( "fileSystem:modificationTime" )
@@ -367,7 +367,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 
 		time.sleep( 1 )
 
-		with open( p.nativeString(), "w" ) as f :
+		with open( p.nativeString(), "w", encoding = "utf-8" ) as f :
 			f.write( "BBBB" )
 
 		mt = p.property( "fileSystem:modificationTime" )
@@ -379,7 +379,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 		p = Gaffer.FileSystemPath( self.temporaryDirectory() )
 		p.append( "t" )
 
-		with open( p.nativeString(), "w" ) as f :
+		with open( p.nativeString(), "w", encoding = "utf-8" ) as f :
 			f.write( "AAAA" )
 
 		o = p.property( "fileSystem:owner" )
@@ -392,7 +392,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 		p = Gaffer.FileSystemPath( self.temporaryDirectory() )
 		p.append( "t" )
 
-		with open( p.nativeString(), "w" ) as f :
+		with open( p.nativeString(), "w", encoding = "utf-8" ) as f :
 			f.write( "AAAA" )
 
 		g = p.property( "fileSystem:group" )
@@ -419,7 +419,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 
 		os.mkdir( self.temporaryDirectory() / "dir" )
 		for n in [ "singleFile.txt", "a.001.txt", "a.002.txt", "a.004.txt", "b.003.txt" ] :
-			with open( self.temporaryDirectory() / n, "w" ) as f :
+			with open( self.temporaryDirectory() / n, "w", encoding = "utf-8" ) as f :
 				f.write( "AAAA" )
 
 		p = Gaffer.FileSystemPath( self.temporaryDirectory(), includeSequences = True )
@@ -524,7 +524,7 @@ class FileSystemPathTest( GafferTest.TestCase ) :
 		# Sequence properties
 
 		for f in range( 0, 100 ) :
-			with open( self.temporaryDirectory() / ( str( f ) + ".txt" ), "w" ) as f :
+			with open( self.temporaryDirectory() / ( str( f ) + ".txt" ), "w", encoding = "utf-8" ) as f :
 				f.write( "x" )
 
 		p = Gaffer.FileSystemPath( ( self.temporaryDirectory() / "#.txt" ), includeSequences = True )

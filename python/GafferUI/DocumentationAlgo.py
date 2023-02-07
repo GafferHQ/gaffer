@@ -60,7 +60,7 @@ def exportNodeReference( directory, modules = [], modulePath = "" ) :
 			if not m.endswith( "Test" ) and not m.endswith( "UI" ) :
 				modules.append( module )
 
-	index = open( "%s/index.md" % directory, "w" )
+	index = open( "%s/index.md" % directory, "w", encoding = "utf-8" )
 	index.write( "<!-- !NO_SCROLLSPY -->\n\n" )
 	index.write( __heading( "Node Reference" ) )
 
@@ -86,13 +86,13 @@ def exportNodeReference( directory, modules = [], modulePath = "" ) :
 				continue
 
 			__makeDirs( directory + "/" + module.__name__ )
-			with open( "%s/%s/%s.md" % ( directory, module.__name__, name ), "w" ) as f :
+			with open( "%s/%s/%s.md" % ( directory, module.__name__, name ), "w", encoding = "utf-8" ) as f :
 				f.write( __nodeDocumentation( node ) )
 				moduleIndex += "\n{}{}.md".format( " " * 4, name )
 
 		if moduleIndex :
 
-			with open( "%s/%s/index.md" % ( directory, module.__name__ ), "w" ) as f :
+			with open( "%s/%s/index.md" % ( directory, module.__name__ ), "w", encoding = "utf-8" ) as f :
 				f.write( "<!-- !NO_SCROLLSPY -->\n\n" )
 				f.write( __heading( module.__name__ ) )
 				f.write( __tocString().format( moduleIndex ) )
@@ -103,7 +103,7 @@ def exportNodeReference( directory, modules = [], modulePath = "" ) :
 
 def exportLicenseReference( directory, about ) :
 
-	with open( directory + "/index.md", "w" ) as index :
+	with open( directory + "/index.md", "w", encoding = "utf-8" ) as index :
 
 		index.write( __heading( "License" ) )
 		index.write( "```none\n" + __fileContents( about.license() ) + "\n```\n\n" )
@@ -140,7 +140,7 @@ def exportCommandLineReference( directory, appPath = "$GAFFER_ROOT/apps", ignore
 
 	__makeDirs( directory )
 
-	index = open( "%s/index.md" % directory, "w" )
+	index = open( "%s/index.md" % directory, "w", encoding = "utf-8" )
 	index.write( "<!-- !NO_SCROLLSPY -->\n\n" )
 	index.write( __heading( "Command Line Reference" ) )
 
@@ -189,7 +189,7 @@ def exportCommandLineReference( directory, appPath = "$GAFFER_ROOT/apps", ignore
 			continue
 
 		tocIndex += "\n{}{}.md".format( " " * 4, appName )
-		with open( "%s.md" % appName, "w" ) as f :
+		with open( "%s.md" % appName, "w", encoding = "utf-8" ) as f :
 
 			f.write( __appDocumentation( classLoader.load( appName )() ) )
 
@@ -255,7 +255,7 @@ def __appDocumentation( app ) :
 
 def __fileContents( file ) :
 
-	with open( os.path.expandvars( file ), "r" ) as f :
+	with open( os.path.expandvars( file ), "r", encoding = "utf-8" ) as f :
 		text = f.read()
 
 	return text

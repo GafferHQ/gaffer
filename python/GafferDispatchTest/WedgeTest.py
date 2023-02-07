@@ -128,9 +128,9 @@ class WedgeTest( GafferTest.TestCase ) :
 			}
 		)
 
-		self.assertEqual( next( open( self.temporaryDirectory() / "0.txt" ) ), "1.25" )
-		self.assertEqual( next( open( self.temporaryDirectory() / "1.txt" ) ), "2.75" )
-		self.assertEqual( next( open( self.temporaryDirectory() / "2.txt" ) ), "44" )
+		self.assertEqual( next( open( self.temporaryDirectory() / "0.txt", encoding = "utf-8" ) ), "1.25" )
+		self.assertEqual( next( open( self.temporaryDirectory() / "1.txt", encoding = "utf-8" ) ), "2.75" )
+		self.assertEqual( next( open( self.temporaryDirectory() / "2.txt", encoding = "utf-8" ) ), "44" )
 
 	def testIntRange( self ) :
 
@@ -186,11 +186,11 @@ class WedgeTest( GafferTest.TestCase ) :
 			}
 		)
 
-		self.assertEqual( next( open( self.temporaryDirectory() / "0.txt" ) ), "0" )
-		self.assertEqual( next( open( self.temporaryDirectory() / "1.txt" ) ), "0.25" )
-		self.assertEqual( next( open( self.temporaryDirectory() / "2.txt" ) ), "0.5" )
-		self.assertEqual( next( open( self.temporaryDirectory() / "3.txt" ) ), "0.75" )
-		self.assertEqual( next( open( self.temporaryDirectory() / "4.txt" ) ), "1" )
+		self.assertEqual( next( open( self.temporaryDirectory() / "0.txt", encoding = "utf-8" ) ), "0" )
+		self.assertEqual( next( open( self.temporaryDirectory() / "1.txt", encoding = "utf-8" ) ), "0.25" )
+		self.assertEqual( next( open( self.temporaryDirectory() / "2.txt", encoding = "utf-8" ) ), "0.5" )
+		self.assertEqual( next( open( self.temporaryDirectory() / "3.txt", encoding = "utf-8" ) ), "0.75" )
+		self.assertEqual( next( open( self.temporaryDirectory() / "4.txt", encoding = "utf-8" ) ), "1" )
 
 	def testFloatByPointOne( self ) :
 
@@ -226,17 +226,17 @@ class WedgeTest( GafferTest.TestCase ) :
 			}
 		)
 
-		self.assertAlmostEqual( float( next( open( self.temporaryDirectory() / "0.txt" ) ) ), 0 )
-		self.assertAlmostEqual( float( next( open( self.temporaryDirectory() / "1.txt" ) ) ), 0.1 )
-		self.assertAlmostEqual( float( next( open( self.temporaryDirectory() / "2.txt" ) ) ), 0.2 )
-		self.assertAlmostEqual( float( next( open( self.temporaryDirectory() / "3.txt" ) ) ), 0.3 )
-		self.assertAlmostEqual( float( next( open( self.temporaryDirectory() / "4.txt" ) ) ), 0.4 )
-		self.assertAlmostEqual( float( next( open( self.temporaryDirectory() / "5.txt" ) ) ), 0.5 )
-		self.assertAlmostEqual( float( next( open( self.temporaryDirectory() / "6.txt" ) ) ), 0.6 )
-		self.assertAlmostEqual( float( next( open( self.temporaryDirectory() / "7.txt" ) ) ), 0.7 )
-		self.assertAlmostEqual( float( next( open( self.temporaryDirectory() / "8.txt" ) ) ), 0.8 )
-		self.assertAlmostEqual( float( next( open( self.temporaryDirectory() / "9.txt" ) ) ), 0.9 )
-		self.assertAlmostEqual( float( next( open( self.temporaryDirectory() / "10.txt" ) ) ), 1 )
+		self.assertAlmostEqual( float( next( open( self.temporaryDirectory() / "0.txt", encoding = "utf-8" ) ) ), 0 )
+		self.assertAlmostEqual( float( next( open( self.temporaryDirectory() / "1.txt", encoding = "utf-8" ) ) ), 0.1 )
+		self.assertAlmostEqual( float( next( open( self.temporaryDirectory() / "2.txt", encoding = "utf-8" ) ) ), 0.2 )
+		self.assertAlmostEqual( float( next( open( self.temporaryDirectory() / "3.txt", encoding = "utf-8" ) ) ), 0.3 )
+		self.assertAlmostEqual( float( next( open( self.temporaryDirectory() / "4.txt", encoding = "utf-8" ) ) ), 0.4 )
+		self.assertAlmostEqual( float( next( open( self.temporaryDirectory() / "5.txt", encoding = "utf-8" ) ) ), 0.5 )
+		self.assertAlmostEqual( float( next( open( self.temporaryDirectory() / "6.txt", encoding = "utf-8" ) ) ), 0.6 )
+		self.assertAlmostEqual( float( next( open( self.temporaryDirectory() / "7.txt", encoding = "utf-8" ) ) ), 0.7 )
+		self.assertAlmostEqual( float( next( open( self.temporaryDirectory() / "8.txt", encoding = "utf-8" ) ) ), 0.8 )
+		self.assertAlmostEqual( float( next( open( self.temporaryDirectory() / "9.txt", encoding = "utf-8" ) ) ), 0.9 )
+		self.assertAlmostEqual( float( next( open( self.temporaryDirectory() / "10.txt", encoding = "utf-8" ) ) ), 1 )
 
 	def testColorRange( self ) :
 
@@ -264,9 +264,9 @@ class WedgeTest( GafferTest.TestCase ) :
 			}
 		)
 
-		self.assertEqual( next( open( self.temporaryDirectory() / "0.txt" ) ), "0.0 0.0 0.0" )
-		self.assertEqual( next( open( self.temporaryDirectory() / "1.txt" ) ), "0.5 0.5 0.5" )
-		self.assertEqual( next( open( self.temporaryDirectory() / "2.txt" ) ), "1.0 1.0 1.0" )
+		self.assertEqual( next( open( self.temporaryDirectory() / "0.txt", encoding = "utf-8" ) ), "0.0 0.0 0.0" )
+		self.assertEqual( next( open( self.temporaryDirectory() / "1.txt", encoding = "utf-8" ) ), "0.5 0.5 0.5" )
+		self.assertEqual( next( open( self.temporaryDirectory() / "2.txt", encoding = "utf-8" ) ), "1.0 1.0 1.0" )
 
 	def test2DRange( self ) :
 

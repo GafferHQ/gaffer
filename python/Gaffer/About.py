@@ -113,7 +113,7 @@ class About :
 			# Internal build, not based on GafferHQ/dependencies.
 			return []
 
-		with open( os.path.join( licenseDir, "manifest.json" ) ) as f :
+		with open( os.path.join( licenseDir, "manifest.json" ), encoding = "utf-8" ) as f :
 			result = json.load( f )
 
 		for project in result :

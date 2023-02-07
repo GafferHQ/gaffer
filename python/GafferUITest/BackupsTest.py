@@ -207,10 +207,10 @@ class BackupsTest( GafferUITest.TestCase ) :
 
 	def __assertFilesEqual( self, f1, f2 ) :
 
-		with open( f1 ) as f1 :
+		with open( f1, encoding = "utf-8" ) as f1 :
 			l1 = f1.readlines()
 
-		with open( f2 ) as f2 :
+		with open( f2, encoding = "utf-8" ) as f2 :
 			l2 = f2.readlines()
 
 		self.assertEqual( l1, l2 )

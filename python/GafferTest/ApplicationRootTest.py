@@ -88,7 +88,7 @@ class ApplicationRootTest( GafferTest.TestCase ) :
 
 		executionContext = { "application" : application }
 		exec(
-			compile( open( preferencesFile ).read(), preferencesFile, "exec" ),
+			compile( open( preferencesFile, encoding = "utf-8" ).read(), preferencesFile, "exec" ),
 			executionContext, executionContext
 		)
 

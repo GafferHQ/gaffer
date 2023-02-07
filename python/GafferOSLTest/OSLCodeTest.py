@@ -275,7 +275,7 @@ class OSLCodeTest( GafferOSLTest.OSLTestCase ) :
 		# Export it to a .osl file and compile it.
 
 		oslFilePath = self.temporaryDirectory() / "test.osl"
-		with open( oslFilePath, "w" ) as f :
+		with open( oslFilePath, "w", encoding = "utf-8" ) as f :
 			f.write( oslCode.source( "test") )
 
 		shader = self.compileShader( oslFilePath )

@@ -50,8 +50,8 @@ class PathFilterTest( GafferTest.TestCase ) :
 
 		GafferTest.TestCase.setUp( self )
 
-		open( self.temporaryDirectory() / "a", "w" )
-		open( self.temporaryDirectory() / "b.txt", "w" )
+		open( self.temporaryDirectory() / "a", "w", encoding = "utf-8" )
+		open( self.temporaryDirectory() / "b.txt", "w", encoding = "utf-8" )
 
 	def test( self ) :
 

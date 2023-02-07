@@ -403,7 +403,7 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 			# Ensure path exists
 			distutils.dir_util.mkpath( variables["bakeDirectory"] )
 
-			f = open( variables["indexFilePath"], "w" )
+			f = open( variables["indexFilePath"], "w", encoding = "utf-8" )
 
 			f.writelines( [ i + "\\n" for i in sorted( variables["fileList"] ) ] )
 			f.close()
@@ -586,7 +586,7 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 		self["__ImageSetupExpression"] = Gaffer.Expression()
 		self["__ImageSetupExpression"].setExpression( inspect.cleandoc(
 			"""
-			f = open( parent["__indexFilePath"], "r" )
+			f = open( parent["__indexFilePath"], "r", encoding = "utf-8" )
 
 			fileList = f.read().splitlines()
 			fileDict = {}

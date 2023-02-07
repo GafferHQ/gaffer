@@ -2712,10 +2712,10 @@ class RendererTest( GafferTest.TestCase ) :
 		# required to flush the profile json
 		del r
 
-		with open( self.temporaryDirectory() / "test" / "test_log.txt", "r" ) as logHandle:
+		with open( self.temporaryDirectory() / "test" / "test_log.txt", "r", encoding = "utf-8" ) as logHandle:
 			self.assertNotEqual( logHandle.read().find( "rendering image at 640 x 480" ), -1 )
 
-		with open( self.temporaryDirectory() / "test" / "test_stats.json", "r" ) as statsHandle:
+		with open( self.temporaryDirectory() / "test" / "test_stats.json", "r", encoding = "utf-8" ) as statsHandle:
 			stats = json.load( statsHandle )["render 0000"]
 			self.assertTrue( "microseconds" in stats["scene creation time"] )
 			self.assertTrue( "microseconds" in stats["frame time"] )
@@ -2728,7 +2728,7 @@ class RendererTest( GafferTest.TestCase ) :
 		if int(arnold.AiGetVersion()[0]) == 7 :
 			self.skipTest( "Profiling broken in Arnold 7" )
 
-		with open( self.temporaryDirectory() / "test" / "test_profile.json", "r" ) as profileHandle :
+		with open( self.temporaryDirectory() / "test" / "test_profile.json", "r", encoding = "utf-8" ) as profileHandle :
 			stats = json.load( profileHandle )["traceEvents"]
 			driverEvents = [ x for x in stats if x["name"] == "ieCoreArnold:display:testBeauty" ]
 			self.assertEqual( driverEvents[0]["cat"], "driver_exr" )

@@ -66,7 +66,7 @@ class SystemCommandTest( GafferTest.TestCase ) :
 
 		n["task"].execute()
 
-		env = "".join( open( self.temporaryDirectory() / "systemCommandTest.txt" ).readlines() )
+		env = "".join( open( self.temporaryDirectory() / "systemCommandTest.txt", encoding = "utf-8" ).readlines() )
 		self.assertTrue( "GAFFER_SYSTEMCOMMAND_TEST=test" in env )
 
 	def testSubstitutions( self ) :
@@ -77,7 +77,7 @@ class SystemCommandTest( GafferTest.TestCase ) :
 		n["substitutions"].addChild( Gaffer.NameValuePlug( "noun", IECore.StringData( "truck" ) ) )
 
 		n["task"].execute()
-		self.assertEqual( "red truck\n", open( self.temporaryDirectory() / "systemCommandTest.txt" ).readlines()[0] )
+		self.assertEqual( "red truck\n", open( self.temporaryDirectory() / "systemCommandTest.txt", encoding = "utf-8" ).readlines()[0] )
 
 	def testHash( self ) :
 

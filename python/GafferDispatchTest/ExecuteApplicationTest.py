@@ -150,7 +150,7 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 		self.assertFalse( p.returncode )
 		self.assertTrue( pathlib.Path( self.__outputFileSeq.fileNameForFrame( 1 ) ).exists() )
 
-		with open( pathlib.Path( self.__outputFileSeq.fileNameForFrame( 1 ) ) ) as f :
+		with open( pathlib.Path( self.__outputFileSeq.fileNameForFrame( 1 ) ), encoding = "utf-8" ) as f :
 			string = f.read()
 
 		self.assertEqual( string, "1 2" )
@@ -327,7 +327,7 @@ class ExecuteApplicationTest( GafferTest.TestCase ) :
 		subprocess.check_call( [ str( Gaffer.executablePath() ), "execute", s["fileName"].getValue(), "-context", "c", "imath.Color3f( 0, 1, 2 )" ] )
 
 		self.assertEqual(
-			open( s["t"]["fileName"].getValue() ).read(),
+			open( s["t"]["fileName"].getValue(), encoding = "utf-8" ).read(),
 			"0.0 1.0 2.0"
 		)
 
