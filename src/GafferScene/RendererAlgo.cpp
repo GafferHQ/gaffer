@@ -643,6 +643,16 @@ void RenderSets::attributes( CompoundObject::ObjectMap &attributes, const SceneP
 
 	if( !soloLightsSet().isEmpty() && lightsSet().match( path ) & ( PathMatcher::ExactMatch | PathMatcher::AncestorMatch ) )
 	{
+		auto muteData = attributes.find( g_lightMuteAttributeName );
+		if( muteData != attributes.end() )
+		{
+			auto mute = runTimeCast<const BoolData>( muteData->second );
+			if( mute && mute->readable() )
+			{
+				return;
+			}
+		}
+
 		if( soloLightsSet().match( path ) & ( PathMatcher::ExactMatch | PathMatcher::AncestorMatch ) )
 		{
 			attributes[g_lightMuteAttributeName] = g_false;

@@ -356,6 +356,10 @@
 				"muteLightFadedHighlighted",
 				"unMuteLightFadedHighlighted",
 				"muteLightUndefined",
+				"setMember",
+				"setMemberHighlighted",
+				"setMemberFaded",
+				"setMemberFadedHighlighted",
 			]
 		},
 

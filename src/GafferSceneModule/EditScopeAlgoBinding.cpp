@@ -179,6 +179,12 @@ GraphComponentPtr attributeEditReadOnlyReasonWrapper( Gaffer::EditScope &scope, 
 // Set Membership
 // ==============
 
+ValuePlugPtr acquireSetEditsWrapper( Gaffer::EditScope &scope, const std::string &set, bool createIfNecessary )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return EditScopeAlgo::acquireSetEdits( &scope, set, createIfNecessary );
+}
+
 void setSetMembershipWrapper( Gaffer::EditScope &scope, const IECore::PathMatcher &paths, const std::string &set, EditScopeAlgo::SetMembership state )
 {
 	IECorePython::ScopedGILRelease gilRelease;
@@ -238,6 +244,7 @@ void bindEditScopeAlgo()
 	def( "removeAttributeEdit", &removeAttributeEditWrapper, ( arg( "scope" ), arg( "path" ), arg( "attribute" ) ) );
 	def( "attributeEditReadOnlyReason", &attributeEditReadOnlyReasonWrapper, ( arg( "scope" ), arg( "path" ), arg( "attribute" ) ) );
 
+	def( "acquireSetEdits", &acquireSetEditsWrapper, ( arg( "scope" ), arg( "set" ), arg( "createIfNecessary" ) = true ) );
 	def( "setSetMembership", &setSetMembershipWrapper );
 	def( "getSetMembership", &getSetMembershipWrapper );
 	def( "setMembershipReadOnlyReason", &setMembershipReadOnlyReasonWrapper );

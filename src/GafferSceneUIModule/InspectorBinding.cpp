@@ -41,6 +41,7 @@
 #include "GafferSceneUI/Private/Inspector.h"
 #include "GafferSceneUI/Private/AttributeInspector.h"
 #include "GafferSceneUI/Private/ParameterInspector.h"
+#include "GafferSceneUI/Private/SetMembershipInspector.h"
 
 #include "GafferBindings/PathBinding.h"
 #include "GafferBindings/SignalBinding.h"
@@ -74,6 +75,17 @@ Gaffer::ValuePlugPtr acquireEditWrapper( GafferSceneUI::Private::Inspector::Resu
 {
 	ScopedGILRelease gilRelease;
 	return result.acquireEdit();
+}
+
+bool editSetMembershipWrapper(
+	const GafferSceneUI::Private::SetMembershipInspector &inspector,
+	const GafferSceneUI::Private::Inspector::Result &inspection,
+	const GafferScene::ScenePlug::ScenePath &path,
+	GafferScene::EditScopeAlgo::SetMembership setMembership
+)
+{
+	ScopedGILRelease gilRelease;
+	return inspector.editSetMembership( &inspection, path, setMembership );
 }
 
 struct DirtiedSlotCaller
@@ -147,4 +159,12 @@ void GafferSceneUIModule::bindInspector()
 		)
 	;
 
+	RefCountedClass<SetMembershipInspector, Inspector>( "SetMembershipInspector" )
+		.def(
+			init<const ScenePlugPtr &, const PlugPtr &, IECore::InternedString>(
+				( arg( "scene" ), arg( "editScope" ), arg( "setName" ) )
+			)
+		)
+		.def( "editSetMembership", &editSetMembershipWrapper)
+	;
 }

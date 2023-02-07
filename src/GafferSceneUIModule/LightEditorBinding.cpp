@@ -38,12 +38,12 @@
 
 #include "LightEditorBinding.h"
 
+#include "GafferSceneUI/Private/AttributeInspector.h"
 #include "GafferSceneUI/Private/Inspector.h"
+#include "GafferSceneUI/Private/SetMembershipInspector.h"
 
 #include "GafferScene/ScenePath.h"
 #include "GafferScene/ScenePlug.h"
-
-#include "GafferSceneUI/Private/AttributeInspector.h"
 
 #include "GafferUI/PathColumn.h"
 
@@ -283,10 +283,7 @@ class MuteColumn : public InspectorColumn
 					if( auto fullValue = a->member<BoolData>( "light:mute" ) )
 					{
 						result.icon = fullValue->readable() ? m_muteFadedIconData : m_unMuteFadedIconData;
-						result.toolTip = new StringData(
-							"Inherited from : " + ScenePlug::pathToString( currentPath ) + "\n\n"
-							"Double-click to toggle"
-						);
+						result.toolTip = new StringData( "Inherited from : " + ScenePlug::pathToString( currentPath ) );
 						break;
 					}
 					currentPath.pop_back();
@@ -308,6 +305,20 @@ class MuteColumn : public InspectorColumn
 			}
 
 			result.value = nullptr;
+			if( auto toolTipData = runTimeCast<const StringData>( result.toolTip ) )
+			{
+				std::string toolTip = toolTipData->readable();
+				size_t size = toolTip.size();
+				if( size < 6 || toolTip.substr( size - 6 ) != "toggle" )
+				{
+					toolTip += "\n\nDouble-click to toggle";
+					result.toolTip = new StringData( toolTip );
+				}
+			}
+			else
+			{
+				result.toolTip = new StringData( "Double-click to toggle" );
+			}
 
 			return result;
 		}
@@ -355,6 +366,121 @@ CompoundDataPtr MuteColumn::m_muteUndefinedIconData = new CompoundData(
 
 StringDataPtr MuteColumn::m_muteBlankIconName = new StringData( "muteLightUndefined.png" );
 
+class SetMembershipColumn : public InspectorColumn
+{
+
+	public :
+		IE_CORE_DECLAREMEMBERPTR( SetMembershipColumn )
+
+		SetMembershipColumn( const GafferScene::ScenePlugPtr &scene, const Gaffer::PlugPtr editScope, const IECore::InternedString &setName, const std::string &columnName )
+			: InspectorColumn( new GafferSceneUI::Private::SetMembershipInspector( scene, editScope, setName ), columnName ), m_setName( setName ), m_scene( scene )
+		{
+
+		}
+
+		CellData cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const override
+		{
+			CellData result = InspectorColumn::cellData( path, canceller );
+
+			auto scenePath = runTimeCast<const ScenePath>( &path );
+			if( !scenePath )
+			{
+				return result;
+			}
+
+			std::string toolTip;
+			if( auto toolTipData = runTimeCast<const StringData>( result.toolTip ) )
+			{
+				toolTip = toolTipData->readable();
+			}
+
+			if( auto value = runTimeCast<const IntData>( result.value ) )
+			{
+				if( value->readable() & PathMatcher::Result::ExactMatch )
+				{
+					result.icon = m_setMemberIconData;
+				}
+				else if( value->readable() & PathMatcher::Result::AncestorMatch )
+				{
+					ConstPathMatcherDataPtr setMembersData = scenePath->getScene()->set( m_setName );
+					const PathMatcher &setMembers = setMembersData->readable();
+
+					ScenePlug::ScenePath currentPath( scenePath->names() );
+					while( !currentPath.empty() )
+					{
+						if( setMembers.match( currentPath ) & PathMatcher::Result::ExactMatch )
+						{
+							result.icon = m_setMemberIconFadedData;
+							toolTip = "Inherited from : " + ScenePlug::pathToString( currentPath );
+							break;
+						}
+						currentPath.pop_back();
+					}
+				}
+			}
+
+			if( !result.icon )
+			{
+				result.icon = m_setMemberUndefinedIconData;
+			}
+
+			result.value = nullptr;
+			result.toolTip = new StringData( toolTip + ( toolTip.size() ? "\n\n" : "" ) + "Double-click to toggle" );
+
+			return result;
+		}
+
+		CellData headerData( const IECore::Canceller *canceller ) const override
+		{
+			CellData result = InspectorColumn::headerData( canceller );
+
+			if( auto sceneInput = m_scene->getInput() )
+			{
+				auto scriptNode = sceneInput->ancestor<ScriptNode>();
+
+				Context::Scope contextScope( scriptNode->context() );
+				ConstPathMatcherDataPtr setMembersData = m_scene->set( m_setName );
+				result.icon = setMembersData->readable().isEmpty() ? m_setEmpty : m_setHasMembers;
+			}
+
+			return result;
+		}
+
+	private :
+		const IECore::InternedString m_setName;
+		const GafferScene::ScenePlugPtr m_scene;
+
+		static IECore::CompoundDataPtr m_setMemberIconData;
+		static IECore::CompoundDataPtr m_setMemberIconFadedData;
+		static IECore::CompoundDataPtr m_setMemberUndefinedIconData;
+		static IECore::StringDataPtr m_setHasMembers;
+		static IECore::StringDataPtr m_setEmpty;
+};
+
+CompoundDataPtr SetMembershipColumn::m_setMemberIconData = new CompoundData(
+	{
+		{ InternedString( "state:normal" ), new StringData( "setMember.png" ) },
+		{ InternedString( "state:highlighted" ), new StringData( "setMemberHighlighted.png" ) }
+	}
+);
+
+CompoundDataPtr SetMembershipColumn::m_setMemberIconFadedData = new CompoundData(
+	{
+		{ InternedString( "state:normal" ), new StringData( "setMemberFaded.png" ) },
+		{ InternedString( "state:highlighted" ), new StringData( "setMemberFadedHighlighted.png" ) }
+	}
+);
+
+CompoundDataPtr SetMembershipColumn::m_setMemberUndefinedIconData = new CompoundData(
+	{
+		{ InternedString( "state:normal" ), new StringData( "muteLightUndefined.png" ) },
+		{ InternedString( "state:highlighted" ), new StringData( "setMemberFadedHighlighted.png" ) }
+	}
+);
+
+StringDataPtr SetMembershipColumn::m_setHasMembers = new StringData( "setMember.png" );
+StringDataPtr SetMembershipColumn::m_setEmpty = new StringData( "muteLightUndefined.png" );
+
 PathColumn::CellData headerDataWrapper( PathColumn &pathColumn, const Canceller *canceller )
 {
 	IECorePython::ScopedGILRelease gilRelease;
@@ -393,6 +519,19 @@ void GafferSceneUIModule::bindLightEditor()
 			)
 		) )
 		.def( "inspector", &MuteColumn::inspector, return_value_policy<IECorePython::CastToIntrusivePtr>() )
+		.def( "headerData", &headerDataWrapper, ( arg_( "canceller" ) = object() ) )
+	;
+
+	IECorePython::RefCountedClass<SetMembershipColumn, InspectorColumn>( "_LightEditorSetMembershipColumn" )
+		.def( init<const GafferScene::ScenePlugPtr &, const Gaffer::PlugPtr &, const IECore::InternedString &, const std::string &>(
+			(
+				arg_( "scene" ),
+				arg_( "editScope" ),
+				arg_( "setName" ),
+				arg_( "columnName" )
+			)
+		) )
+		.def( "inspector", &SetMembershipColumn::inspector, return_value_policy<IECorePython::CastToIntrusivePtr>() )
 		.def( "headerData", &headerDataWrapper, ( arg_( "canceller" ) = object() ) )
 	;
 

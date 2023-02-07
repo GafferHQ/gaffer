@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import IECore
+
 import Gaffer
 import GafferUI
 import GafferScene
@@ -96,6 +98,35 @@ class _NodeNameColumn( GafferUI.PathColumn ) :
 
 		return self.CellData( self.__title )
 
+# \todo This duplicates logic from (in this case) `_GafferSceneUI._LightEditorSetMembershipColumn`.
+# Refactor to allow calling `_GafferSceneUI.InspectorColumn.cellData()` from `_HistoryWindow` to
+# remove this duplication for columns that customize their value presentation.
+class _SetMembershipColumn( GafferUI.PathColumn ) :
+
+	def __init__( self, title, property ) :
+
+		GafferUI.PathColumn.__init__( self )
+
+		self.__title = title
+		self.__property = property
+
+	def cellData( self, path, canceller = None ) :
+
+		cellValue = path.property( self.__property )
+
+		data = self.CellData()
+
+		if cellValue & IECore.PathMatcher.Result.ExactMatch :
+			data.icon = "setMember.png"
+		elif cellValue & IECore.PathMatcher.Result.AncestorMatch :
+			data.icon = "setMemberFaded.png"
+
+		return data
+
+	def headerData( self, canceller = None ) :
+
+		return self.CellData( self.__title )
+
 class _HistoryWindow( GafferUI.Window ) :
 
 	def __init__( self, inspector, scenePath, context, scriptNode, title=None, **kw ) :
@@ -116,7 +147,9 @@ class _HistoryWindow( GafferUI.Window ) :
 				Gaffer.DictPath( {}, "/" ),
 				columns = (
 					_NodeNameColumn( "Node", "history:node", self.__scriptNode ),
-					GafferUI.PathListingWidget.StandardColumn( "Value", "history:value" ),
+					_SetMembershipColumn( "Value", "history:value" ) if (
+						isinstance( inspector, GafferSceneUI.Private.SetMembershipInspector )
+					) else GafferUI.PathListingWidget.StandardColumn( "Value", "history:value" ),
 					_OperationIconColumn( "Operation", "history:operation" ),
 				),
 				sortable = False,
@@ -187,7 +220,10 @@ class _HistoryWindow( GafferUI.Window ) :
 				selectedPath.property( "history:node" ),
 				floating = True
 			)
-		elif selectedColumn == self.__valueColumnIndex or selectedColumn == self.__operationColumnIndex :
+		elif (
+			( selectedColumn == self.__valueColumnIndex or selectedColumn == self.__operationColumnIndex ) and
+			not isinstance( self.__inspector, GafferSceneUI.Private.SetMembershipInspector )
+		) :
 			editPlug = selectedPath.property( "history:source" )
 			self.__popup = GafferUI.PlugPopup(
 				[ editPlug ], warning = selectedPath.property( "history:editWarning" )

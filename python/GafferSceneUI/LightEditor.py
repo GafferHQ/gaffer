@@ -112,11 +112,20 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 						self.__settingsNode["in"],
 						self.__settingsNode["editScope"]
 					),
+					_GafferSceneUI._LightEditorSetMembershipColumn(
+						self.__settingsNode["in"],
+						self.__settingsNode["editScope"],
+						"soloLights",
+						"Solo"
+					),
 				],
 				selectionMode = GafferUI.PathListingWidget.SelectionMode.Cells,
 				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
 				horizontalScrollMode = GafferUI.ScrollMode.Automatic
 			)
+
+			self.__soloColumnIndex = 2
+
 			self.__pathListing.setDragPointer( "objects" )
 			self.__pathListing.setSortable( False )
 			self.__selectionChangedConnection = self.__pathListing.selectionChangedSignal().connect(
@@ -248,7 +257,8 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 
 		nameColumn = self.__pathListing.getColumns()[0]
 		muteColumn = self.__pathListing.getColumns()[1]
-		self.__pathListing.setColumns( [ nameColumn, muteColumn ] + sectionColumns )
+		soloColumn = self.__pathListing.getColumns()[2]
+		self.__pathListing.setColumns( [ nameColumn, muteColumn, soloColumn ] + sectionColumns )
 
 	def __settingsPlugSet( self, plug ) :
 
@@ -385,12 +395,18 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 	def __toggleBoolean( self, inspectors, inspections ) :
 
 		plugs = [ i.acquireEdit() for i in inspections ]
-		# Make sure all the plugs are either a BoolPlug or contain a BoolPlug
+		# Make sure all the plugs either contain, or are themselves a BoolPlug or can be edited
+		# by `SetMembershipInspector.editSetMembership()`
 		if not all (
 			(
-				isinstance( p, ( Gaffer.TweakPlug, Gaffer.NameValuePlug ) ) and
-				isinstance( p["value"], Gaffer.BoolPlug )
-			) or isinstance( p, Gaffer.BoolPlug ) for p in plugs
+				isinstance( plug, ( Gaffer.TweakPlug, Gaffer.NameValuePlug ) ) and
+				isinstance( plug["value"], Gaffer.BoolPlug )
+			) or (
+				isinstance( plug, ( Gaffer.BoolPlug ) )
+			) or (
+				isinstance( inspector, GafferSceneUI.Private.SetMembershipInspector )
+			)
+			for plug, inspector in zip( plugs, inspectors )
 		) :
 			return False
 
@@ -408,6 +424,16 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 					parentValue = parentValueData.value if parentValueData is not None else False
 
 					currentValues.append( currentValue if currentValue is not None else parentValue )
+				elif isinstance( inspector, GafferSceneUI.Private.SetMembershipInspector ) :
+					if currentValue is not None :
+						currentValues.append(
+							True if currentValue & (
+								IECore.PathMatcher.Result.ExactMatch |
+								IECore.PathMatcher.Result.AncestorMatch
+							) else False
+						)
+					else :
+						currentValues.append( False )
 				else :
 					currentValues.append( currentValue )
 
@@ -418,15 +444,22 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 		with Gaffer.UndoScope( self.scriptNode() ) :
 			for inspector, pathInspections in inspectors.items() :
 				for path, inspection in pathInspections.items() :
-					plug = inspection.acquireEdit()
+					if isinstance( inspector, GafferSceneUI.Private.SetMembershipInspector ) :
+						inspector.editSetMembership(
+							inspection,
+							path,
+							GafferScene.EditScopeAlgo.SetMembership.Added if newValue else GafferScene.EditScopeAlgo.SetMembership.Removed
+						)
 
-					if isinstance( plug, ( Gaffer.TweakPlug, Gaffer.NameValuePlug ) ) :
-						plug["value"].setValue( newValue )
-						plug["enabled"].setValue( True )
-						if isinstance( plug, Gaffer.TweakPlug ) :
-							plug["mode"].setValue( Gaffer.TweakPlug.Mode.Create )
 					else :
-						plug.setValue( newValue )
+						plug = inspection.acquireEdit()
+						if isinstance( plug, ( Gaffer.TweakPlug, Gaffer.NameValuePlug ) ) :
+							plug["value"].setValue( newValue )
+							plug["enabled"].setValue( True )
+							if isinstance( plug, Gaffer.TweakPlug ) :
+								plug["mode"].setValue( Gaffer.TweakPlug.Mode.Create )
+						else :
+							plug.setValue( newValue )
 
 		return True
 
@@ -445,11 +478,16 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 						source = inspection.source()
 						editScope = self.__settingsNode["editScope"].getInput()
 						if (
-							isinstance( source, ( Gaffer.TweakPlug, Gaffer.NameValuePlug ) ) and
-							( editScope is None or editScope.node().isAncestorOf( source ) ) and
-							source["enabled"].getValue()
+							(
+								(
+									isinstance( source, ( Gaffer.TweakPlug, Gaffer.NameValuePlug ) ) and
+									source["enabled"].getValue()
+								) or
+								isinstance( column.inspector(), GafferSceneUI.Private.SetMembershipInspector )
+							) and
+							( editScope is None or editScope.node().isAncestorOf( source ) )
 						) :
-							tweaks.append( source )
+							tweaks.append( ( path, column.inspector() ) )
 						else :
 							return []
 					else :
@@ -459,11 +497,20 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 
 	def __disableEdits( self, pathListing ) :
 
-		tweaks = self.__disablableInspectionTweaks( pathListing )
+		edits = self.__disablableInspectionTweaks( pathListing )
 
-		with Gaffer.UndoScope( self.scriptNode() ) :
-			for tweak in tweaks :
-				tweak["enabled"].setValue( False )
+		with Gaffer.UndoScope( self.scriptNode() ), Gaffer.Context( self.getContext() ) as context :
+			for path, inspector in edits :
+				context["scene:path"] = GafferScene.ScenePlug.stringToPath( path )
+
+				inspection = inspector.inspect()
+				if inspection is not None and inspection.editable() :
+					source = inspection.source()
+
+					if isinstance( source, ( Gaffer.TweakPlug, Gaffer.NameValuePlug ) ) :
+						source["enabled"].setValue( False )
+					elif isinstance( inspector, GafferSceneUI.Private.SetMembershipInspector ) :
+						inspector.editSetMembership( inspection, path, GafferScene.EditScopeAlgo.SetMembership.Unchanged )
 
 	def __removableAttributeInspections( self, pathListing ) :
 
@@ -483,6 +530,7 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 						editScope = self.__settingsNode["editScope"].getInput()
 						if (
 							( isinstance( source, Gaffer.TweakPlug ) and source["mode"].getValue() != Gaffer.TweakPlug.Mode.Remove ) or
+							( isinstance( source, Gaffer.ValuePlug ) and len( source.children() ) == 2 and "Added" in source and "Removed" in source ) or
 							editScope is not None
 						) :
 							inspections.append( inspection )
@@ -588,7 +636,8 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 			menuDefinition.append(
 				"Edit...",
 				{
-					"command" : functools.partial( self.__editSelectedCells, pathListing, False )
+					"command" : functools.partial( self.__editSelectedCells, pathListing, False ),
+					"active" : pathListing.getSelection()[self.__soloColumnIndex].isEmpty(),
 				}
 			)
 			menuDefinition.append(

@@ -1269,7 +1269,18 @@ _styleSheet = string.Template(
 		paint-alternating-row-colors-for-empty-area: 1;
 	}
 
-	*[gafferClass="GafferSceneUI.HierarchyView"] QTreeView::item {
+	*[gafferClass="GafferSceneUI.LightEditor"] QHeaderView::section {
+		height: 18px;
+		padding-left: 2px;
+	}
+
+	*[gafferClass="GafferSceneUI.HierarchyView"], *[gafferClass="GafferSceneUI.LightEditor"] QTreeView::item {
+		height: 18px;
+		padding-top: 0px;
+		padding-bottom: 0px;
+	}
+
+	*[gafferClass="GafferSceneUI._HistoryWindow"] QTreeView::item {
 		height: 18px;
 		padding-top: 0px;
 		padding-bottom: 0px;

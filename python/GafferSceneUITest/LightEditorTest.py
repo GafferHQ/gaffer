@@ -637,12 +637,12 @@ class LightEditorTest( GafferUITest.TestCase ) :
 
 			if muteIndex is None :
 				for i, c in zip( range( 0, len( columns ) ), columns ) :
-					if isinstance( c, _GafferSceneUI._LightEditorInspectorColumn ) :
+					if isinstance( c, _GafferSceneUI._LightEditorMuteColumn ) :
 						muteIndex = i
 
 			self.assertIsNotNone( muteIndex )
 
-			selection = [IECore.PathMatcher()] * len( columns )
+			selection = [ IECore.PathMatcher() for i in range( 0, len( columns ) ) ]
 			for path in togglePaths :
 				selection[muteIndex].addPath( path )
 

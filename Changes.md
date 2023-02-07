@@ -1,6 +1,11 @@
 1.2.x.x (relative to 1.2.0.0a3)
 =======
 
+Features
+--------
+
+- Light Editor : Added a "Solo" column to quickly add and remove lights from the `soloLights` set.
+
 Improvements
 ------------
 
@@ -33,6 +38,24 @@ API
 ---
 
 - PathColumn : Added `setSizeMode()` and `getSizeMode()` methods, and `sizeMode` constructor argument. These allow the size behaviour of a PathColumn to be configured.
+
+[^1]: Changes inherited from 1.x. Can be omitted from the release notes for the final release of 1.2.
+[^2]: Changes made to features introduced in 1.2.0.0ax. Can be omitted from the release notes for the final release of 1.2.
+
+Fixes
+-----
+
+- Light Editor : Fixed tooltips that were missing the "Double-click to toggle" hint. [^2]
+
+API
+---
+
+- EditScopeAlgo : Added `acquireSetEdits()` method.
+
+Breaking Changes
+----------------
+
+- Mute/Solo : Changed the dominant state to mute. If a light is both muted and soloed, its final state will be `mute`. [^2]
 
 [^1]: Changes inherited from 1.x. Can be omitted from the release notes for the final release of 1.2.
 [^2]: Changes made to features introduced in 1.2.0.0ax. Can be omitted from the release notes for the final release of 1.2.
