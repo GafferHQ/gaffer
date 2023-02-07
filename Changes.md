@@ -11,6 +11,8 @@ Improvements
   - Added warning when a shader contains a parameter with an unsupported datatype.
   - Added warning when a shader contains an enum parameter with an invalid value.
   - Added support for passing InternedStringData to enum and string parameters.
+- PathListingWidget : Added support for columns that can automatically stretch to make use of available space.
+- LightEditor : Adjustments made to the width of the "Name" column are now preserved when switching between sections.
 
 Fixes
 -----
@@ -26,6 +28,11 @@ Breaking Changes
 ----------------
 
 - Locale : Removed `LC_NUMERIC=C` environment variable assignment from wrapper. This was a workaround for an OpenColorIO bug that has since been fixed.
+
+API
+---
+
+- PathColumn : Added `setSizeMode()` and `getSizeMode()` methods, and `sizeMode` constructor argument. These allow the size behaviour of a PathColumn to be configured.
 
 [^1]: Changes inherited from 1.x. Can be omitted from the release notes for the final release of 1.2.
 [^2]: Changes made to features introduced in 1.2.0.0ax. Can be omitted from the release notes for the final release of 1.2.

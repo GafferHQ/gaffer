@@ -213,7 +213,7 @@ class _LocalJobsWindow( GafferUI.Window ) :
 					_LocalJobsPath( jobPool ),
 					columns = (
 						GafferUI.PathListingWidget.IconColumn( "Status", "localDispatcherStatus", "localDispatcher:status" ),
-						GafferUI.PathListingWidget.StandardColumn( "Name", "localDispatcher:jobName" ),
+						GafferUI.PathListingWidget.StandardColumn( "Name", "localDispatcher:jobName", sizeMode = GafferUI.PathColumn.SizeMode.Stretch ),
 						GafferUI.PathListingWidget.StandardColumn( "Id", "localDispatcher:id" ),
 						GafferUI.PathListingWidget.StandardColumn( "CPU", "localDispatcher:cpu" ),
 						GafferUI.PathListingWidget.StandardColumn( "Memory", "localDispatcher:memory" ),

@@ -1236,6 +1236,47 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		self.assertEqual( cs[0][0], centerPath )
 		self.assertIs( cs[0][1], widget )
 
+	def testColumnSizeMode( self ) :
+
+		columns = [
+				GafferUI.PathListingWidget.defaultNameColumn,
+				GafferUI.PathListingWidget.StandardColumn( "Test", "test", sizeMode = GafferUI.PathColumn.SizeMode.Interactive ),
+				GafferUI.PathListingWidget.StandardColumn( "Test", "test", sizeMode = GafferUI.PathColumn.SizeMode.Stretch ),
+			]
+
+		widget = GafferUI.PathListingWidget(
+			path = Gaffer.DictPath( {}, "/" ),
+			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
+			columns = columns,
+		)
+
+		_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( widget._qtWidget() ) )
+
+		for i, c in enumerate( widget.getColumns() ) :
+			self.assertEqual( columns[i].getSizeMode(), c.getSizeMode() )
+
+		reorderedColumns = [ columns[1], columns[2], columns[0] ]
+		widget.setColumns( reorderedColumns )
+
+		for i, c in enumerate( widget.getColumns() ) :
+			self.assertEqual( reorderedColumns[i].getSizeMode(), c.getSizeMode() )
+
+	def testStretchLastColumnIsSetFromColumns( self ) :
+
+		widget = GafferUI.PathListingWidget(
+			path = Gaffer.DictPath( {}, "/" ),
+			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
+			columns = [
+				GafferUI.PathListingWidget.StandardColumn( "Test", "test", sizeMode = GafferUI.PathColumn.SizeMode.Stretch ),
+				GafferUI.PathListingWidget.StandardColumn( "Test", "test" )
+			],
+		)
+		_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( widget._qtWidget() ) )
+
+		self.assertFalse( widget._qtWidget()._shouldStretchLastColumn() )
+		widget.setColumns( [ GafferUI.PathListingWidget.StandardColumn( "Test", "test" ) ] )
+		self.assertTrue( widget._qtWidget()._shouldStretchLastColumn() )
+
 	@staticmethod
 	def __emitPathChanged( widget ) :
 

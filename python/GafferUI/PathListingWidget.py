@@ -35,6 +35,8 @@
 #
 ##########################################################################
 
+import collections
+import math
 import warnings
 
 import imath
@@ -61,7 +63,7 @@ class PathListingWidget( GafferUI.Widget ) :
 	IconColumn = _GafferUI.IconPathColumn
 
 	## A collection of handy column definitions for FileSystemPaths
-	defaultNameColumn = StandardColumn( "Name", "name" )
+	defaultNameColumn = StandardColumn( "Name", "name", GafferUI.PathColumn.SizeMode.Stretch )
 	defaultFileSystemOwnerColumn = StandardColumn( "Owner", "fileSystem:owner" )
 	defaultFileSystemModificationTimeColumn = StandardColumn( "Modified", "fileSystem:modificationTime" )
 	defaultFileSystemIconColumn = GafferUI.FileIconPathColumn()
@@ -116,7 +118,7 @@ class PathListingWidget( GafferUI.Widget ) :
 		# Install an empty model. We'll update the model contents shortly in setPath().
 
 		_GafferUI._pathListingWidgetUpdateModel( GafferUI._qtAddress( self._qtWidget() ), None )
-		_GafferUI._pathListingWidgetSetColumns( GafferUI._qtAddress( self._qtWidget() ), columns )
+		self.setColumns( columns )
 
 		# Turn off selection in Qt. QItemSelectionModel is full of quadratic performance
 		# hazards so we rely entirely on our own PathMatcher instead. We update the PathMatcher
@@ -301,6 +303,7 @@ class PathListingWidget( GafferUI.Widget ) :
 			return
 
 		_GafferUI._pathListingWidgetSetColumns( GafferUI._qtAddress( self._qtWidget() ), columns )
+		self._qtWidget().updateColumnWidths()
 
 	def getColumns( self ) :
 
@@ -843,14 +846,26 @@ class _TreeView( QtWidgets.QTreeView ) :
 
 		QtWidgets.QTreeView.__init__( self )
 
-		self.header().geometriesChanged.connect( self.updateGeometry )
+		self.header().geometriesChanged.connect( self.__geometriesChanged )
 		self.header().sectionResized.connect( self.__sectionResized )
 
+		# Disable Qt's stretchLastSection behaviour as it will claim any available space in the header
+		# before our stretch columns have a chance to resize themselves. We control our own equivalent
+		# behaviour based on the result of _shouldStretchLastColumn()
+		self.header().setStretchLastSection( False )
+		# width of the last column after being automatically stretched to use available space
+		self.__lastColumnWidth = 0
+
 		self.__recalculatingColumnWidths = False
+		self.__updatingGeometry = False
+
+		# we track the previous viewport width to aid in determining whether stretchable columns should
+		# be resized when the viewport width changes
+		self.__previousViewportWidth = 0
 		# the ideal size for each column. we cache these because they're slow to compute
-		self.__idealColumnWidths = []
+		self.__idealColumnWidths = collections.defaultdict( int )
 		# offsets to the ideal sizes made by the user
-		self.__columnWidthAdjustments = []
+		self.__columnWidthAdjustments = collections.defaultdict( int )
 
 		self.__currentEventModifiers = QtCore.Qt.NoModifier
 
@@ -858,6 +873,13 @@ class _TreeView( QtWidgets.QTreeView ) :
 
 		QtWidgets.QTreeView.setModel( self, model )
 
+		## \todo We may want more granular behaviour on model update.
+		# Currently column widths are updated when a location is
+		# expanded for the first time and requires a model update.
+		# This can lead to situations where first expanding and collapsing
+		# /a/veryLongName followed by /b/shortName leaves the column
+		# resized to /b/shortName. Expanding /a/veryLongName again will
+		# not update the column width and truncate to /a/veryLo...
 		model.updateFinished.connect( self.updateColumnWidths )
 
 		self.updateColumnWidths()
@@ -902,20 +924,35 @@ class _TreeView( QtWidgets.QTreeView ) :
 		self.__recalculatingColumnWidths = True
 
 		header = self.header()
-		numColumnsToResize = header.count() - 1 # leave the last section alone, as it's expandable
+		numColumnsToResize = header.count()
+		stretchLastColumn = self._shouldStretchLastColumn()
+		if stretchLastColumn :
+			numColumnsToResize -= 1 # leave the last section alone, as it's expandable
 
-		if numColumnsToResize != len( self.__columnWidthAdjustments ) :
-			# either the first time in here, or the number of columns has
-			# changed and we want to start again with the offsets.
-			self.__columnWidthAdjustments = [ 0 ] * numColumnsToResize
-
-		del self.__idealColumnWidths[:]
+		columns = self.__getColumns()
+		columnWidthsChanged = False
 		for i in range( 0, numColumnsToResize ) :
+			if columns[i].getSizeMode() == GafferUI.PathColumn.SizeMode.Interactive :
+				idealWidth = max( header.sectionSizeHint( i ), self.sizeHintForColumn( i ) )
+				self.__idealColumnWidths[columns[i]] = idealWidth
+				adjustedWidth = idealWidth + self.__columnWidthAdjustments[columns[i]]
+				if i == header.count() - 1  :
+					# the last column may have been automatically extended to fill available space
+					# reuse that extended width to provide some consistency between column width updates
+					## \todo this may be better handled as a proportion of the overall width
+					adjustedWidth = max( adjustedWidth, self.__lastColumnWidth )
+				if header.sectionSize( i ) != adjustedWidth :
+					header.resizeSection( i, adjustedWidth )
+					columnWidthsChanged = True
 
-			idealWidth = max( header.sectionSizeHint( i ), self.sizeHintForColumn( i ) )
-			self.__idealColumnWidths.append( idealWidth )
+		if columnWidthsChanged :
+			# an update to column widths can require resizing columns configured to stretch
+			# to make use of any change in available space
+			self.__resizeStretchColumns()
 
-			header.resizeSection( i, idealWidth + self.__columnWidthAdjustments[i] )
+		if stretchLastColumn :
+			# finally, resize the last column to make use of any remaining available width
+			self.__resizeLastColumnToAvailableWidth()
 
 		self.__recalculatingColumnWidths = False
 
@@ -1024,11 +1061,125 @@ class _TreeView( QtWidgets.QTreeView ) :
 
 	def __sectionResized( self, index, oldWidth, newWidth ) :
 
-		if self.__recalculatingColumnWidths :
+		if self.__recalculatingColumnWidths or self.__updatingGeometry :
 			# we're only interested in resizing being done by the user
 			return
 
 		# store the difference between the ideal size and what the user would prefer, so
 		# we can apply it again in updateColumnWidths
-		if len( self.__idealColumnWidths ) > index :
-			self.__columnWidthAdjustments[index] = newWidth - self.__idealColumnWidths[index]
+		column = self.__getColumns()[index]
+		self.__columnWidthAdjustments[column] = newWidth - self.__idealColumnWidths[column]
+
+		# When any column is user resized, automatically adjust the last column's width
+		# in order to make use of any empty space.
+		if index == self.header().count() - 1 :
+			# We prevent the last column from being user resized narrower than the
+			# available empty space in the header, but still allow it to be enlarged
+			# by providing the user specified column width as the minimum.
+			self.__resizeLastColumnToAvailableWidth( newWidth )
+		else :
+			self.__resizeLastColumnToAvailableWidth()
+
+	def __resizeLastColumnToAvailableWidth( self, minimumSuggestedWidth = 0 ) :
+
+		header = self.header()
+		availableWidth = header.width()
+		lastColumn = header.count() - 1
+		for i in range( 0, lastColumn ) :
+			availableWidth -= header.sectionSize( i )
+
+		minimumSectionWidth = max( header.minimumSectionSize(), header.sectionSizeHint( lastColumn ) )
+		minimumWidth = max( minimumSectionWidth, minimumSuggestedWidth )
+
+		# take column width adjustment into account when resizing, so we don't
+		# inadvertently truncate the last column after a user has extended it
+		column = self.__getColumns()[lastColumn]
+		if self.__columnWidthAdjustments[ column ] != 0 :
+			preferredWidth = self.__idealColumnWidths[ column ] + self.__columnWidthAdjustments[ column ]
+			minimumWidth = max( preferredWidth, minimumWidth )
+
+		adjustedWidth = max( minimumWidth, availableWidth )
+		self.__lastColumnWidth = adjustedWidth
+
+		self.__recalculatingColumnWidths = True
+		header.resizeSection( lastColumn, adjustedWidth )
+		self.__recalculatingColumnWidths = False
+
+	def __geometriesChanged( self ) :
+
+		self.updateGeometry()
+
+		viewportWidth = self.viewport().width()
+		if viewportWidth == self.__previousViewportWidth :
+			# We're only interested in changes to width
+			return
+
+		if self.header().length() <= self.__previousViewportWidth or self.header().length() < viewportWidth :
+			# We use the previous viewport width to help determine whether the columns should be resized,
+			# if the columns fit within the previous width, then we should maintain that relationship and
+			# resize to fit the new width. If the columns are narrower than the current viewport width,
+			# then we resize to make use of the newly available space.
+			self.__updatingGeometry = True
+			self.__resizeStretchColumns()
+			self.__updatingGeometry = False
+
+		self.__previousViewportWidth = viewportWidth
+
+	def __resizeStretchColumns( self ) :
+
+		header = self.header()
+		availableWidth = header.width()
+		stretchColumnWidth = 0
+		columnsToStretch = []
+
+		columns = self.__getColumns()
+		stretchLastColumn = self._shouldStretchLastColumn()
+		for i in range( 0, header.count() ) :
+			if (
+				columns[i].getSizeMode() == GafferUI.PathColumn.SizeMode.Stretch or
+				( stretchLastColumn and i == header.count() - 1 )
+			) :
+				stretchColumnWidth += header.sectionSize( i )
+				columnsToStretch.append( i )
+			else :
+				availableWidth -= header.sectionSize( i )
+
+		if len( columnsToStretch ) == 0 or availableWidth <= 0 :
+			return
+
+		self.__recalculatingColumnWidths = True
+
+		weight = 1.0 / len( columnsToStretch )
+		for c in columnsToStretch :
+			if stretchColumnWidth > 0 :
+				# preserve any existing column proportions
+				weight = header.sectionSize( c ) / stretchColumnWidth
+
+			## \todo A very small resize with multiple stretch columns can result in the
+			# larger column(s) taking all available space. Doing this repeatedly, such as a
+			# slow interactive resize, makes only the larger column(s) appear to stretch.
+
+			minimumWidth = max( header.minimumSectionSize(), header.sectionSizeHint( c ) )
+			idealWidth = max( math.floor( availableWidth * weight ), minimumWidth )
+			self.__idealColumnWidths[columns[c]] = idealWidth
+
+			header.resizeSection( c, idealWidth )
+
+		self.__recalculatingColumnWidths = False
+
+	def __getColumns( self ) :
+
+		if self.header().count() == 0 :
+			return []
+
+		return _GafferUI._pathListingWidgetGetColumns( GafferUI._qtAddress( self ) )
+
+	# Protected rather than private to allow access by PathListingWidgetTest
+	def _shouldStretchLastColumn( self ) :
+
+		if self.header().count() == 0 :
+			return False
+
+		# automatically stretch the last column to fill available space in the header
+		# when no other columns are configured to stretch
+		return not any( c.getSizeMode() == GafferUI.PathColumn.SizeMode.Stretch for c in self.__getColumns() )

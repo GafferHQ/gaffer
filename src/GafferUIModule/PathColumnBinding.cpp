@@ -159,8 +159,8 @@ class PathColumnWrapper : public IECorePython::RefCountedWrapper<PathColumn>
 
 	public :
 
-		PathColumnWrapper( PyObject *self )
-			:	 IECorePython::RefCountedWrapper<PathColumn>( self )
+		PathColumnWrapper( PyObject *self, PathColumn::SizeMode sizeMode )
+			:	 IECorePython::RefCountedWrapper<PathColumn>( self, sizeMode )
 		{
 		}
 
@@ -308,14 +308,13 @@ struct ButtonSignalSlotCaller
 
 void GafferUIModule::bindPathColumn()
 {
+	IECorePython::RefCountedClass<PathColumn, IECore::RefCounted, PathColumnWrapper> pathColumnClass( "PathColumn" );
 	{
-		scope s = IECorePython::RefCountedClass<PathColumn, IECore::RefCounted, PathColumnWrapper>( "PathColumn" )
-			.def( init<>() )
-			.def( "changedSignal", &PathColumn::changedSignal, return_internal_reference<1>() )
-			.def( "cellData", &cellDataWrapper, ( arg( "path" ), arg( "canceller" ) = object() ) )
-			.def( "buttonPressSignal", &PathColumn::buttonPressSignal, return_internal_reference<1>() )
-			.def( "buttonReleaseSignal", &PathColumn::buttonReleaseSignal, return_internal_reference<1>() )
-			.def( "buttonDoubleClickSignal", &PathColumn::buttonDoubleClickSignal, return_internal_reference<1>() )
+		scope s = pathColumnClass;
+		enum_<PathColumn::SizeMode>( "SizeMode" )
+			.value( "Interactive", PathColumn::SizeMode::Interactive )
+			.value( "Stretch", PathColumn::SizeMode::Stretch )
+			.value( "Default", PathColumn::SizeMode::Default )
 		;
 
 		class_<PathColumn::CellData>( "CellData" )
@@ -347,15 +346,25 @@ void GafferUIModule::bindPathColumn()
 		SignalClass<PathColumn::ButtonSignal, ButtonSignalCaller, ButtonSignalSlotCaller>( "ButtonSignal" );
 	}
 
+	pathColumnClass.def( init<PathColumn::SizeMode>( arg( "sizeMode" ) = PathColumn::SizeMode::Default ) )
+		.def( "changedSignal", &PathColumn::changedSignal, return_internal_reference<1>() )
+		.def( "cellData", &cellDataWrapper, ( arg( "path" ), arg( "canceller" ) = object() ) )
+		.def( "buttonPressSignal", &PathColumn::buttonPressSignal, return_internal_reference<1>() )
+		.def( "buttonReleaseSignal", &PathColumn::buttonReleaseSignal, return_internal_reference<1>() )
+		.def( "buttonDoubleClickSignal", &PathColumn::buttonDoubleClickSignal, return_internal_reference<1>() )
+		.def( "getSizeMode", (PathColumn::SizeMode (PathColumn::*)() const )&PathColumn::getSizeMode )
+		.def( "setSizeMode", &PathColumn::setSizeMode, ( arg( "sizeMode" ) ) )
+	;
+
 	IECorePython::RefCountedClass<StandardPathColumn, PathColumn>( "StandardPathColumn" )
-		.def( init<const std::string &, IECore::InternedString>() )
+		.def( init<const std::string &, IECore::InternedString, PathColumn::SizeMode>( arg( "sizeMode" ) = PathColumn::Default ) )
 	;
 
 	IECorePython::RefCountedClass<IconPathColumn, PathColumn>( "IconPathColumn" )
-		.def( init<const std::string &, const std::string &, IECore::InternedString>() )
+		.def( init<const std::string &, const std::string &, IECore::InternedString, PathColumn::SizeMode>( arg( "sizeMode" ) = PathColumn::Default ) )
 	;
 
 	IECorePython::RefCountedClass<FileIconPathColumn, PathColumn>( "FileIconPathColumn" )
-		.def( init<>() )
+		.def( init<PathColumn::SizeMode>( arg( "sizeMode" ) = PathColumn::Default ) )
 	;
 }
