@@ -19,6 +19,7 @@ Improvements
 - PathListingWidget : Added support for columns that can automatically stretch to make use of available space.
 - LightEditor : Adjustments made to the width of the "Name" column are now preserved when switching between sections.
 - Animation Editor : For protruding tangents the slope and scale controls are now disabled (non editable) and display constrained values.
+- Expression : `pathlib.Path` values may now be assigned to StringPlugs.
 
 Fixes
 -----
@@ -34,6 +35,7 @@ Fixes
   - Fixed handling of colour array parameters.
 - Layouts : Fixed bug applying window size and position from saved layouts (#5042).
 - Light Editor : Fixed tooltips that were missing the "Double-click to toggle" hint. [^2]
+- ArnoldTextureBake : Fixed Windows path handling bug.
 
 API
 ---
