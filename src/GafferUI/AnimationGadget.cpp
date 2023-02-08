@@ -90,27 +90,29 @@ void tieModeToBools( const Animation::TieMode mode, bool& tieSlope, bool& tieSca
 	}
 }
 
-void renderCurveSpan( const Animation::CurvePlug* const curvePlug,
-	const float tmin, const float tmax, const double unitPerPx,
-	const ViewportGadget* const viewportGadget,
-	const Style* const style, const Style::State styleState, const Imath::Color3f& color )
+void evaluateCurve( const Animation::CurvePlug* const curvePlug,
+	const float tStart, const float tEnd, const double unitPerPx,
+	const ViewportGadget* const viewportGadget, std::vector< Imath::V2f >& vertices )
 {
-	// NOTE : draw span with one sample per pixel in time dimension so curve appears smooth at all zoom levels.
+	// NOTE : When evaluating the extrapolated portions of a curve, evaluation starts at the extrapolation key
+	//        to ensure any stipple pattern extends from the extrapolation key, so tEnd may be less than tStart.
+	double const sign = ( tEnd < tStart ) ? -1.0 : 1.0;
+
+	// NOTE : evaluate curve with one sample per pixel in time dimension so curve appears smooth at all zoom levels.
 	double count;
-	const double fract = std::modf( ( tmax - tmin ) / unitPerPx, & count );
+	const double fract = std::modf( std::abs( tEnd - tStart ) / unitPerPx, & count );
 	const int steps = static_cast< int >( count ) + ( ( fract == 0.0 ) ? 0 : 1 );
-	V2f p0 = viewportGadget->worldToRasterSpace( V3f( tmin, curvePlug->evaluate( tmin ), 0 ) );
+
+	if( vertices.empty() )
+		vertices.push_back( viewportGadget->worldToRasterSpace( V3f( tStart, curvePlug->evaluate( tStart ), 0 ) ) );
 
 	for( int i = 1; i < steps; ++i )
 	{
-		const double time = tmin + ( static_cast< double >( i ) * unitPerPx );
-		const V2f p1 = viewportGadget->worldToRasterSpace( V3f( time, curvePlug->evaluate( time ), 0 ) );
-		style->renderAnimationCurve( p0, p1, V2f( 0 ), V2f( 0 ), styleState, &color );
-		p0 = p1;
+		const double time = tStart + static_cast< double >( i ) * unitPerPx * sign;
+		vertices.push_back( viewportGadget->worldToRasterSpace( V3f( time, curvePlug->evaluate( time ), 0 ) ) );
 	}
 
-	const V2f p1 = viewportGadget->worldToRasterSpace( V3f( tmax, curvePlug->evaluate( tmax ), 0 ) );
-	style->renderAnimationCurve( p0, p1, V2f( 0 ), V2f( 0 ), styleState, &color );
+	vertices.push_back( viewportGadget->worldToRasterSpace( V3f( tEnd, curvePlug->evaluate( tEnd ), 0 ) ) );
 }
 
 /// Aliases that define the intended use of each
@@ -501,6 +503,7 @@ AnimationGadget::AnimationGadget()
 , m_lastDragPosition( 0 )
 , m_dragMode( DragMode::None )
 , m_moveAxis( MoveAxis::Both )
+, m_vertices()
 , m_snappingClosestKey( nullptr )
 , m_highlightedKey( nullptr )
 , m_highlightedCurve( nullptr )
@@ -1813,29 +1816,33 @@ void AnimationGadget::renderCurve( const Animation::CurvePlug *curvePlug, const 
 	const Style::State styleState = ( curvePlug == m_highlightedCurve ) ? Style::HighlightedState : Style::NormalState;
 	const Imath::Color3f color3 = colorFromName( drivenPlugName( curvePlug ) );
 
-	// draw curve spans between keys
+	// draw the animation curve between keys
+	m_vertices.clear();
 	for( const auto &key : *curvePlug )
 	{
 		V2f keyPosition = viewportGadget->worldToRasterSpace( V3f( key.getTime(), key.getValue(), 0 ) );
 
 		if( previousKey && ( keyPosition.x >= m_xMargin ) && ( previousKeyPosition.x <= rx ) )
 		{
+			if( m_vertices.empty() )
+				m_vertices.push_back( previousKeyPosition );
+
 			switch( previousKey->getInterpolation() )
 			{
 				case Gaffer::Animation::Interpolation::Constant:
-					style->renderAnimationCurve( previousKeyPosition, V2f( keyPosition.x, previousKeyPosition.y ), V2f( 0 ), V2f( 0 ), styleState, &color3 );
-					style->renderAnimationCurve( V2f( keyPosition.x, previousKeyPosition.y ), keyPosition, V2f( 0 ), V2f( 0 ), styleState, &color3 );
+					m_vertices.emplace_back( keyPosition.x, previousKeyPosition.y );
+					m_vertices.push_back( keyPosition );
 					break;
 				case Gaffer::Animation::Interpolation::ConstantNext:
-					style->renderAnimationCurve( previousKeyPosition, V2f( previousKeyPosition.x, keyPosition.y ), V2f( 0 ), V2f( 0 ), styleState, &color3 );
-					style->renderAnimationCurve( V2f( previousKeyPosition.x, keyPosition.y ), keyPosition, V2f( 0 ), V2f( 0 ), styleState, &color3 );
+					m_vertices.emplace_back( previousKeyPosition.x, keyPosition.y );
+					m_vertices.push_back( keyPosition );
 					break;
 				case Gaffer::Animation::Interpolation::Linear:
-					style->renderAnimationCurve( previousKeyPosition, keyPosition, V2f( 0 ), V2f( 0 ), styleState, &color3 );
+					m_vertices.push_back( keyPosition );
 					break;
 				default:
-					renderCurveSpan( curvePlug, std::max( tmin, previousKey->getTime() ), std::min( tmax, key.getTime() ),
-						unitPerPx, viewportGadget, style, styleState, color3 );
+					evaluateCurve( curvePlug, std::max( tmin, previousKey->getTime() ), std::min( tmax, key.getTime() ),
+						unitPerPx, viewportGadget, m_vertices );
 					break;
 			}
 		}
@@ -1843,6 +1850,8 @@ void AnimationGadget::renderCurve( const Animation::CurvePlug *curvePlug, const 
 		previousKey = &key;
 		previousKeyPosition = keyPosition;
 	}
+
+	style->renderAnimationCurve( m_vertices, /* inKeyRange = */ true, styleState, &color3 );
 }
 
 void AnimationGadget::renderFrameIndicator( int frame, const Style *style, bool preview, float lineWidth ) const

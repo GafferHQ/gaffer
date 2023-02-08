@@ -179,6 +179,7 @@ class GAFFERUI_API AnimationGadget : public Gadget
 
 		MoveAxis m_moveAxis;
 
+		mutable std::vector< Imath::V2f > m_vertices;
 		Gaffer::Animation::KeyPtr m_snappingClosestKey;
 		Gaffer::Animation::KeyPtr m_highlightedKey;
 		Gaffer::Animation::CurvePlugPtr m_highlightedCurve;

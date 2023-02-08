@@ -100,7 +100,7 @@ class GAFFERUI_API StandardStyle : public Style
 		void renderRotateHandle( Axes axes, State state = NormalState, const Imath::V3f &highlightVector = Imath::V3f( 0 ) ) const override;
 		void renderScaleHandle( Axes axes, State state = NormalState ) const override;
 
-		void renderAnimationCurve( const Imath::V2f &start, const Imath::V2f &end, const Imath::V2f &startTangent, const Imath::V2f &endTangent, State state, const Imath::Color3f *userColor = nullptr ) const override;
+		void renderAnimationCurve( const std::vector< Imath::V2f > &vertices, bool inKeyRange, State state, const Imath::Color3f *userColor = nullptr ) const override;
 		void renderAnimationKey( const Imath::V2f &position, State state, float size = 2.0, const Imath::Color3f *userColor = nullptr ) const override;
 
 		enum Color

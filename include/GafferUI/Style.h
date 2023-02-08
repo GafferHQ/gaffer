@@ -160,7 +160,7 @@ class GAFFERUI_API Style : public IECore::RunTimeTyped
 		/// @name Animation UI elements
 		//////////////////////////////////////////////////////////////////////////
 		//@{
-		virtual void renderAnimationCurve( const Imath::V2f &start, const Imath::V2f &end, const Imath::V2f &startTangent, const Imath::V2f &endTangent, State state, const Imath::Color3f *userColor = nullptr ) const = 0;
+		virtual void renderAnimationCurve( const std::vector< Imath::V2f > &vertices, bool inKeyRange, State state, const Imath::Color3f *userColor = nullptr ) const = 0;
 		virtual void renderAnimationKey( const Imath::V2f &position, State state, float size = 2.0, const Imath::Color3f *userColor = nullptr ) const = 0;
 		//@}
 
