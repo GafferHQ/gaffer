@@ -22,6 +22,10 @@ Improvements
 Fixes
 -----
 
+- Backups : Fixed error when a backup file contained characters that couldn't be represented using the current locale. This could be triggered by a separate bug in OpenShadingLanguage that caused the locale to be changed unnecessarily (#5048). [^1]
+- Viewer : [^1]
+  - Fixed crash when switching from Cycles to OpenGL rendering (#5051).
+  - Fixed potential crash when destroying a raytraced viewport.
 - Cyles : [^1]
   - Fixed crashes caused by providing unsupported data types in shader parameters.
   - Fixed support for Color4f values on colour shader parameters. This can be useful when loading non-standard USD files.
@@ -29,15 +33,16 @@ Fixes
   - Fixed handling of colour array parameters.
 - Layouts : Fixed bug applying window size and position from saved layouts (#5042).
 
-Breaking Changes
-----------------
-
-- Locale : Removed `LC_NUMERIC=C` environment variable assignment from wrapper. This was a workaround for an OpenColorIO bug that has since been fixed.
-
 API
 ---
 
 - PathColumn : Added `setSizeMode()` and `getSizeMode()` methods, and `sizeMode` constructor argument. These allow the size behaviour of a PathColumn to be configured.
+- TestCase : Added `scopedLocale()` method.
+
+Breaking Changes
+----------------
+
+- Locale : Removed `LC_NUMERIC=C` environment variable assignment from wrapper. This was a workaround for an OpenColorIO bug that has since been fixed.
 
 [^1]: Changes inherited from 1.x. Can be omitted from the release notes for the final release of 1.2.
 [^2]: Changes made to features introduced in 1.2.0.0ax. Can be omitted from the release notes for the final release of 1.2.
@@ -299,11 +304,20 @@ Improvements
 Fixes
 -----
 
+- Backups : Fixed error when a backup file contained characters that couldn't be represented using the current locale. This could be triggered by a separate bug in OpenShadingLanguage that caused the locale to be changed unnecessarily (#5048).
+- Viewer :
+  - Fixed crash when switching from Cycles to OpenGL rendering (#5051).
+  - Fixed potential crash when destroying a raytraced viewport.
 - Cyles :
   - Fixed crashes caused by providing unsupported data types in shader parameters.
   - Fixed support for Color4f values on colour shader parameters. This can be useful when loading non-standard USD files.
   - Fixed support for V[23]i values on vector shader parameters.
   - Fixed handling of colour array parameters.
+
+API
+---
+
+- TestCase : Added `scopedLocale()` method.
 
 1.1.8.0 (relative to 1.1.7.0)
 =======

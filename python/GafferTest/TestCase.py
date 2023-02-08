@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import contextlib
+import locale
 import os
 import sys
 import unittest
@@ -127,6 +129,17 @@ class TestCase( unittest.TestCase ) :
 			self.__temporaryDirectory = pathlib.Path( tempfile.mkdtemp( prefix = "gafferTest" ) )
 
 		return self.__temporaryDirectory
+
+	## Returns a context manager that sets the locale
+	# on enter and restores it on exit.
+	@staticmethod
+	@contextlib.contextmanager
+	def scopedLocale( l, category = locale.LC_CTYPE ) :
+
+		previousLocale = locale.getlocale( category )
+		locale.setlocale( category, l )
+		yield
+		locale.setlocale( category, previousLocale )
 
 	## Attempts to ensure that the hashes for a node
 	# are reasonable by jiggling around input values

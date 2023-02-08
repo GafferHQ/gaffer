@@ -41,7 +41,12 @@ import IECore
 from Qt import QtCore
 
 import collections
+<<<<<<< HEAD
 import pathlib
+=======
+import io
+import os
+>>>>>>> 1.1_maintenance
 import re
 import stat
 import weakref
