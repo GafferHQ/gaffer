@@ -18,6 +18,7 @@ Improvements
   - Added support for passing InternedStringData to enum and string parameters.
 - PathListingWidget : Added support for columns that can automatically stretch to make use of available space.
 - LightEditor : Adjustments made to the width of the "Name" column are now preserved when switching between sections.
+- Animation Editor : For protruding tangents the slope and scale controls are now disabled (non editable) and display constrained values.
 
 Fixes
 -----
@@ -40,6 +41,7 @@ API
 - PathColumn : Added `setSizeMode()` and `getSizeMode()` methods, and `sizeMode` constructor argument. These allow the size behaviour of a PathColumn to be configured.
 - EditScopeAlgo : Added `acquireSetEdits()` method.
 - TestCase : Added `scopedLocale()` method.
+- Animation : The slope and scale of protruding tangents is now constrained to match the values of the sibling tangent.
 
 Breaking Changes
 ----------------

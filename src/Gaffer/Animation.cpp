@@ -737,9 +737,25 @@ double Animation::Tangent::getSlope() const
 {
 	if( slopeIsConstrained() )
 	{
-		return ( ( m_direction == Direction::Out )
-			? m_key->m_interpolator
-			: m_key->prevKey()->m_interpolator )->effectiveSlope( *this, m_dt, m_dv );
+		const Key* const kn = m_key->nextKey();
+		const Key* const kp = m_key->prevKey();
+
+		// parent key is sole use default scale
+
+		if( ! kp && ! kn )
+		{
+			return defaultSlope();
+		}
+
+		// when tangent protrudes, slope matches sibling tangent, otherwise use interpolator effective slope
+
+		return ( m_direction == Direction::In )
+			? ( ( kp )
+				? kp->m_interpolator->effectiveSlope( *this, m_dt, m_dv )
+				: m_key->m_tangentOut.getSlope() )
+			: ( ( kn )
+				? m_key->m_interpolator->effectiveSlope( *this, m_dt, m_dv )
+				: m_key->m_tangentIn.getSlope() );
 	}
 
 	return m_slope;
@@ -756,13 +772,13 @@ bool Animation::Tangent::slopeIsConstrained() const
 		return false;
 	}
 
-	// check interpolator hints
+	// when protruding, slope is always constrained otherwise check interpolator hints
 
 	if(
-		( ( m_direction == Direction::Out ) && ( m_key->m_parent->finalKey() != m_key ) &&
-			! ( m_key->m_interpolator->getHints() & Interpolator::Hint::UseSlope ) ) ||
-		( ( m_direction == Direction::In ) && ( m_key->m_parent->firstKey() != m_key ) &&
-			! ( m_key->prevKey()->m_interpolator->getHints() & Interpolator::Hint::UseSlope ) ) )
+		( ( m_direction == Direction::Out ) && ( ( m_key->m_parent->finalKey() == m_key ) ||
+			! ( m_key->m_interpolator->getHints() & Interpolator::Hint::UseSlope ) ) ) ||
+		( ( m_direction == Direction::In  ) && ( ( m_key->m_parent->firstKey() == m_key ) ||
+			! ( m_key->prevKey()->m_interpolator->getHints() & Interpolator::Hint::UseSlope ) ) ) )
 	{
 		return true;
 	}
@@ -867,9 +883,25 @@ double Animation::Tangent::getScale() const
 {
 	if( scaleIsConstrained() )
 	{
-		return ( ( m_direction == Direction::Out )
-			? m_key->m_interpolator
-			: m_key->prevKey()->m_interpolator )->effectiveScale( *this, m_dt, m_dv );
+		const Key* const kn = m_key->nextKey();
+		const Key* const kp = m_key->prevKey();
+
+		// parent key is sole use default scale
+
+		if( ! kp && ! kn )
+		{
+			return defaultScale();
+		}
+
+		// when tangent protrudes, scale matches sibling tangent, otherwise use interpolator effective scale
+
+		return ( m_direction == Direction::In )
+			? ( ( kp )
+				? kp->m_interpolator->effectiveScale( *this, m_dt, m_dv )
+				: m_key->m_tangentOut.getScale() )
+			: ( ( kn )
+				? m_key->m_interpolator->effectiveScale( *this, m_dt, m_dv )
+				: m_key->m_tangentIn.getScale() );
 	}
 
 	return m_scale;
@@ -886,13 +918,13 @@ bool Animation::Tangent::scaleIsConstrained() const
 		return false;
 	}
 
-	// check interpolator hints
+	// when protruding, scale is always constrained otherwise check interpolator hints
 
 	if(
-		( ( m_direction == Direction::Out ) && ( m_key->m_parent->finalKey() != m_key ) &&
-			! ( m_key->m_interpolator->getHints() & Interpolator::Hint::UseScale ) ) ||
-		( ( m_direction == Direction::In ) && ( m_key->m_parent->firstKey() != m_key ) &&
-			! ( m_key->prevKey()->m_interpolator->getHints() & Interpolator::Hint::UseScale ) ) )
+		( ( m_direction == Direction::Out ) && ( ( m_key->m_parent->finalKey() == m_key ) ||
+			! ( m_key->m_interpolator->getHints() & Interpolator::Hint::UseScale ) ) ) ||
+		( ( m_direction == Direction::In  ) && ( ( m_key->m_parent->firstKey() == m_key ) ||
+			! ( m_key->prevKey()->m_interpolator->getHints() & Interpolator::Hint::UseScale ) ) ) )
 	{
 		return true;
 	}
