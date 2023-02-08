@@ -39,6 +39,7 @@ import re
 import ast
 import functools
 import inspect
+import pathlib
 import imath
 
 import IECore
@@ -95,7 +96,10 @@ class PythonExpressionEngine( Gaffer.Expression.Engine ) :
 				parentDict = parentDict[p]
 			r = parentDict.get( plugPathSplit[-1], IECore.NullObject.defaultNullObject() )
 			try:
-				result.append( r )
+				if isinstance( r, pathlib.Path ) :
+					result.append( r.as_posix() )
+				else :
+					result.append( r )
 			except:
 				raise TypeError( "Unsupported type for result \"%s\" for expression output \"%s\"" % ( str( r ), plugPath ) )
 

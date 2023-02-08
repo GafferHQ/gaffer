@@ -1584,5 +1584,15 @@ class ExpressionTest( GafferTest.TestCase ) :
 		self.assertEqual( script["reference"]["IntPlug"].getValue(), 99 )
 		self.assertEqual( script["reference"]["FloatPlug"].getValue(), 2.5 )
 
+	def testPathForStringPlug( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["node"] = GafferTest.StringInOutNode()
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression( 'import pathlib; parent["node"]["in"] = pathlib.Path.cwd()' )
+
+		self.assertEqual( script["node"]["in"].getValue(), pathlib.Path.cwd().as_posix() )
+
 if __name__ == "__main__":
 	unittest.main()
