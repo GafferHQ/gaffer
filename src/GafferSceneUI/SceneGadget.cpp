@@ -215,6 +215,10 @@ SceneGadget::~SceneGadget()
 	// Make sure background task completes before anything
 	// it relies on is destroyed.
 	m_updateTask.reset();
+	// Then destroy controller and renderer before our OutputBuffer is
+	// destroyed, because the renderer might send pixels to it during shutdown.
+	m_controller.reset();
+	m_renderer.reset();
 }
 
 void SceneGadget::setScene( GafferScene::ConstScenePlugPtr scene )
@@ -356,10 +360,10 @@ void SceneGadget::setRenderer( IECore::InternedString name )
 
 	m_rendererName = name;
 	IECoreScenePreview::RendererPtr newRenderer;
+	std::unique_ptr<OutputBuffer> newOutputBuffer;
 	if( m_rendererName == "OpenGL" )
 	{
 		newRenderer = IECoreScenePreview::Renderer::create( m_rendererName, IECoreScenePreview::Renderer::Interactive );
-		m_outputBuffer.reset();
 	}
 	else
 	{
@@ -369,8 +373,8 @@ void SceneGadget::setRenderer( IECore::InternedString name )
 		} );
 		ConstBoolDataPtr renderObjectsData = new BoolData( false );
 		newRenderer->option( "gl:renderObjects", renderObjectsData.get() );
-		m_outputBuffer = std::make_unique<OutputBuffer>( newRenderer.get() );
-		m_outputBuffer->bufferChangedSignal().connect( boost::bind( &SceneGadget::bufferChanged, this ) );
+		newOutputBuffer = std::make_unique<OutputBuffer>( newRenderer.get() );
+		newOutputBuffer->bufferChangedSignal().connect( boost::bind( &SceneGadget::bufferChanged, this ) );
 	}
 
 	auto newController = std::make_unique<RenderController>(
@@ -387,11 +391,13 @@ void SceneGadget::setRenderer( IECore::InternedString name )
 
 	// Replace old controller and renderer, being careful to delete controller
 	// and camera first, since ObjectInterfaces must be deleted _before_ the
-	// renderer.
+	// renderer. We must also be careful to delete the old OutputBuffer after
+	// the old renderer, as the renderer may send pixels during destruction.
 
 	m_controller = std::move( newController );
 	m_camera.reset();
 	m_renderer = newRenderer;
+	m_outputBuffer = std::move( newOutputBuffer );
 
 	m_controller->updateRequiredSignal().connect(
 		boost::bind( &SceneGadget::dirty, this, DirtyType::Layout )
@@ -915,6 +921,14 @@ void SceneGadget::updateCamera( GafferUI::ViewportGadget::CameraFlags changes )
 
 void SceneGadget::bufferChanged()
 {
+	if( !refCount() )
+	{
+		// We're in the process of destruction, receiving the
+		// final pixels while waiting for the renderer to be
+		// destroyed.
+		return;
+	}
+
 	// Using `thisRef` to stop us dying before our UI thread call is scheduled.
 	ParallelAlgo::callOnUIThread(
 		[thisRef = Ptr( this )] {

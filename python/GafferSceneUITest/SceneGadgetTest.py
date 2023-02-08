@@ -631,6 +631,27 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 			gw._qtWidget().setFixedWidth( 200 + ( i % 2 ) * 200 )
 			self.waitForIdle( 100 )
 
+	def testSetRenderer( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["s"] = GafferScene.Sphere()
+
+		sg = GafferSceneUI.SceneGadget()
+		sg.setMinimumExpansionDepth( 1 )
+		sg.setScene( s["s"]["out"] )
+
+		with GafferUI.Window() as w :
+			gw = GafferUI.GadgetWidget( sg )
+
+		w.setVisible( True )
+		self.waitForIdle( 1000 )
+
+		for i in range( 0, 5 ) :
+			sg.setRenderer( self.renderer )
+			self.waitForRender( sg )
+			sg.setRenderer( "OpenGL" )
+			self.waitForRender( sg )
+
 	def setUp( self ) :
 
 		GafferUITest.TestCase.setUp( self )
