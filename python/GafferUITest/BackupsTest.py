@@ -216,7 +216,7 @@ class BackupsTest( GafferUITest.TestCase ) :
 		b.settings()["files"].setValue( 3 )
 
 		s = Gaffer.ScriptNode()
-		s["fileName"].setValue( self.temporaryDirectory() + "/test.gfr" )
+		s["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
 		s.save()
 
 		s["node"] = GafferTest.StringInOutNode()
@@ -225,7 +225,7 @@ class BackupsTest( GafferUITest.TestCase ) :
 		b.backup( s )
 
 		with self.scopedLocale( "C" ) :
-			self.assertEqual( b.recoveryFile( s ), self.temporaryDirectory() + "/test-backup0.gfr" )
+			self.assertEqual( b.recoveryFile( s ), self.temporaryDirectory() / "test-backup0.gfr" )
 
 	def __assertFilesEqual( self, f1, f2 ) :
 
