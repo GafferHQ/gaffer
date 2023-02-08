@@ -32,35 +32,20 @@ Fixes
   - Fixed support for V[23]i values on vector shader parameters.
   - Fixed handling of colour array parameters.
 - Layouts : Fixed bug applying window size and position from saved layouts (#5042).
-
-API
----
-
-- PathColumn : Added `setSizeMode()` and `getSizeMode()` methods, and `sizeMode` constructor argument. These allow the size behaviour of a PathColumn to be configured.
-- TestCase : Added `scopedLocale()` method.
-
-Breaking Changes
-----------------
-
-- Locale : Removed `LC_NUMERIC=C` environment variable assignment from wrapper. This was a workaround for an OpenColorIO bug that has since been fixed.
-
-[^1]: Changes inherited from 1.x. Can be omitted from the release notes for the final release of 1.2.
-[^2]: Changes made to features introduced in 1.2.0.0ax. Can be omitted from the release notes for the final release of 1.2.
-
-Fixes
------
-
 - Light Editor : Fixed tooltips that were missing the "Double-click to toggle" hint. [^2]
 
 API
 ---
 
+- PathColumn : Added `setSizeMode()` and `getSizeMode()` methods, and `sizeMode` constructor argument. These allow the size behaviour of a PathColumn to be configured.
 - EditScopeAlgo : Added `acquireSetEdits()` method.
+- TestCase : Added `scopedLocale()` method.
 
 Breaking Changes
 ----------------
 
 - Mute/Solo : Changed the dominant state to mute. If a light is both muted and soloed, its final state will be `mute`. [^2]
+- Locale : Removed `LC_NUMERIC=C` environment variable assignment from wrapper. This was a workaround for an OpenColorIO bug that has since been fixed.
 
 [^1]: Changes inherited from 1.x. Can be omitted from the release notes for the final release of 1.2.
 [^2]: Changes made to features introduced in 1.2.0.0ax. Can be omitted from the release notes for the final release of 1.2.
