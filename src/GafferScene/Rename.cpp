@@ -48,11 +48,8 @@
 
 #include "tbb/enumerable_thread_specific.h"
 
-/// \todo Add the latest `fmtlib` to GafferHQ/dependencies
-/// and get it from there. We don't want to rely on OpenImageIO
-/// here, especially not its implementation details.
-#define FMT_HEADER_ONLY
-#include "OpenImageIO/detail/fmt/format.h"
+#include "fmt/args.h"
+#include "fmt/format.h"
 
 #include <regex>
 #include <unordered_set>
