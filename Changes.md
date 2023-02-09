@@ -37,6 +37,7 @@ Fixes
 - Layouts : Fixed bug applying window size and position from saved layouts (#5042).
 - Light Editor : Fixed tooltips that were missing the "Double-click to toggle" hint. [^2]
 - ArnoldTextureBake : Fixed Windows path handling bug.
+- Arnold : Fixed input connections to individual color and vector components when rendering with a GPU device.
 
 API
 ---
