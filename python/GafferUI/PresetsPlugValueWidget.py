@@ -73,6 +73,10 @@ class PresetsPlugValueWidget( GafferUI.PlugValueWidget ) :
 		# - "<presetName>" : All plugs have value matching `<presetName>`.
 		# - "" : All plugs have a value that isn't a preset.
 		self.__currentPreset = None
+		# We do this again when `_updateFromValues()` is called, but doing it
+		# from the constructor first avoids layout flicker by getting the
+		# visibility correct before the widget is shown.
+		self.__customValuePlugWidget.setVisible( self.__isCustom() )
 
 	def menu( self ) :
 
