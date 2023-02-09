@@ -1266,7 +1266,7 @@ libraries = {
 				( "CCL_NAMESPACE_END", "}" ),
 				( "WITH_OSL", "1" ),
 			],
-			"FRAMEWORKS" : [ "Foundation", "Metal" ],
+			"FRAMEWORKS" : [ "Foundation", "Metal", "IOKit" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBPATH" : [ "$CYCLES_ROOT/lib" ],
