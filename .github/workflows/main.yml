@@ -65,7 +65,7 @@ jobs:
             publish: true
             containerImage:
             dependenciesURL: https://github.com/GafferHQ/dependencies/releases/download/6.0.0/gafferDependencies-6.0.0-windows.zip
-            testRunner: powershell -c Invoke-Expression
+            testRunner: Invoke-Expression
             testArguments: GafferTest GafferVDBTest GafferUSDTest GafferSceneTest GafferDispatchTest GafferOSLTest GafferImageTest GafferUITest GafferImageUITest GafferSceneUITest GafferDispatchUITest GafferOSLUITest GafferUSDUITest GafferVDBUITest GafferDelightUITest
             sconsCacheMegabytes: 400
 
@@ -193,7 +193,13 @@ jobs:
 
           # Test Arnold extension
           print( "::add-matcher::./.github/workflows/main/problemMatchers/unittest.json" )
-          subprocess.check_call( "${{ matrix.testRunner }} \"" + os.path.join( os.environ["GAFFER_BUILD_DIR"], "bin", "gaffer" ) + " test IECoreArnoldTest GafferArnoldTest GafferArnoldUITest\"", shell = True )
+
+          # `matrix.testRunner` on Windows is used to run tests in Powershell. Python `subprocess` uses
+          # `cmd.exe` on Windows, which requires Byzantine syntax to keep using Powershell. We
+          # run `gaffer` without the Powershell shim from `matrix.testRunner`.
+          cmd = os.path.join( os.environ["GAFFER_BUILD_DIR"], "bin", "gaffer" ) + " test IECoreArnoldTest GafferArnoldTest GafferArnoldUITest"
+          cmd = ( "${{ matrix.testRunner }} \"" if os.name != "nt" else "" ) + cmd + ( "\"" if os.name != "nt" else "" )
+          subprocess.check_call( cmd, shell = True )
           print( "::remove-matcher owner=unittest::" )
 
           # Publish ARNOLD_ROOT to the environment for subsequent steps,
