@@ -36,8 +36,6 @@
 
 import unittest
 
-import imath
-
 import IECore
 
 import Gaffer
@@ -137,6 +135,30 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 		capturedCamera = renderer.capturedObject( "/camera" )
 		self.assertEqual( capturedCamera.capturedSamples(), [ expectedCamera( 0.75 ), expectedCamera( 1.25 ) ] )
 		self.assertEqual( capturedCamera.capturedSampleTimes(), [ 0.75, 1.25 ] )
+
+	def testInvisibleCamera( self ) :
+
+		camera = GafferScene.Camera()
+
+		standardAttributes = GafferScene.StandardAttributes()
+		standardAttributes["in"].setInput( camera["out"] )
+		standardAttributes["attributes"]["visibility"]["enabled"].setValue( True )
+		standardAttributes["attributes"]["visibility"]["value"].setValue( False )
+
+		standardOptions = GafferScene.StandardOptions()
+		standardOptions["in"].setInput( standardAttributes["out"] )
+		standardOptions["options"]["renderCamera"]["enabled"].setValue( True )
+		standardOptions["options"]["renderCamera"]["value"].setValue( "/camera" )
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer(
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+		)
+		with self.assertRaisesRegex( RuntimeError, "Camera \"/camera\" is hidden" ) :
+			GafferScene.Private.RendererAlgo.outputCameras(
+				standardOptions["out"], standardOptions["out"].globals(),
+				GafferScene.Private.RendererAlgo.RenderSets( standardOptions["out"] ),
+				renderer
+			)
 
 	def testCoordinateSystemSamples( self ) :
 
