@@ -20,6 +20,7 @@ Improvements
 - LightEditor : Adjustments made to the width of the "Name" column are now preserved when switching between sections.
 - Animation Editor : For protruding tangents the slope and scale controls are now disabled (non editable) and display constrained values.
 - Expression : `pathlib.Path` values may now be assigned to StringPlugs.
+- Render : An error is now emitted if the render camera is hidden, instead of rendering through a default camera instead (#5131).
 
 Fixes
 -----

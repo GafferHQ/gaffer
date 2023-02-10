@@ -1691,6 +1691,10 @@ void outputCameras( const ScenePlug *scene, const IECore::CompoundObject *global
 		{
 			throw IECore::Exception( "Camera \"" + cameraOption->readable() + "\" is not in the camera set" );
 		}
+		if( !SceneAlgo::visible( scene, cameraPath ) )
+		{
+			throw IECore::Exception( "Camera \"" + cameraOption->readable() + "\" is hidden" );
+		}
 	}
 
 	const ScenePlug::ScenePath root;
