@@ -552,6 +552,16 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 		self["__CleanUpCommand"]["command"].setValue( inspect.cleandoc(
 			"""
 			import os
+
+			import GafferImage
+
+			# Clear the image cache to free file handles preventing
+			# intermediate files from being deleted on Windows.
+
+			fLimit = GafferImage.OpenImageIOReader.getOpenFilesLimit()
+			GafferImage.OpenImageIOReader.setOpenFilesLimit( 0 )
+			GafferImage.OpenImageIOReader.setOpenFilesLimit( fLimit )
+
 			for tmpFile in variables["filesToDelete"]:
 				os.remove( tmpFile )
 			"""
@@ -560,13 +570,6 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 		self["__CleanUpExpression"] = Gaffer.Expression()
 		self["__CleanUpExpression"].setExpression( inspect.cleandoc(
 			"""
-
-			import GafferImage
-
-			fLimit = GafferImage.OpenImageIOReader.getOpenFilesLimit()
-			GafferImage.OpenImageIOReader.setOpenFilesLimit( 0 )
-			GafferImage.OpenImageIOReader.setOpenFilesLimit( fLimit )
-
 			imageList = parent["__imageList"]
 
 			toDelete = []
