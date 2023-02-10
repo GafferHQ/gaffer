@@ -132,7 +132,7 @@ class ArnoldShaderUITest( GafferUITest.TestCase ) :
 		cacheFilePath =	self.temporaryDirectory() / "testShaderUserDefaults.scc"
 
 		scriptPath = self.temporaryDirectory() / "testScript.py"
-		with open( scriptPath, "w" ) as outFile :
+		with open( scriptPath, "w", encoding = "utf-8" ) as outFile :
 			outFile.write( f"""
 import Gaffer
 import GafferScene
