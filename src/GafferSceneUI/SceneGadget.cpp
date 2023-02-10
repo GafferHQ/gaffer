@@ -218,6 +218,7 @@ SceneGadget::~SceneGadget()
 	// Then destroy controller and renderer before our OutputBuffer is
 	// destroyed, because the renderer might send pixels to it during shutdown.
 	m_controller.reset();
+	m_camera.reset();
 	m_renderer.reset();
 }
 
