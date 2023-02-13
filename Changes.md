@@ -19,13 +19,7 @@ Improvements
 ------------
 
 - OSL : Will use OSL's batched API if it is available. This improves performance up to 3X when running heavy OSL computations using OSLObject or OSLImage. This is slightly experimental, since it relies on recently added OSL features. Please let us know if you encounter any new issues with OSL. To disable this optimization, set the environment variable `GAFFEROSL_USE_BATCHED=0`.
-- Arnold : Disabled ADP more thoroughly, using `ARNOLD_ADP_DISABLE=1` for Arnold 7.1.4.0 and greater. Set `ARNOLD_ADP_DISABLE=0` before running Gaffer if you wish to use ADP. [^1]
-- Cycles :
-  - Updated to Cycles 3.4.
-  - Added warning when a shader contains a parameter which does not exist in Cycles. [^1]
-  - Added warning when a shader contains a parameter with an unsupported datatype. [^1]
-  - Added warning when a shader contains an enum parameter with an invalid value. [^1]
-  - Added support for passing InternedStringData to enum and string parameters. [^1]
+- Cycles : Updated to Cycles 3.4.
 - PathListingWidget : Added support for columns that can automatically stretch to make use of available space.
 - LightEditor : Adjustments made to the width of the "Name" column are now preserved when switching between sections.
 - Animation Editor : For protruding tangents the slope and scale controls are now disabled (non editable) and display constrained values.
@@ -36,17 +30,7 @@ Improvements
 Fixes
 -----
 
-- Backups : Fixed error when a backup file contained characters that couldn't be represented using the current locale. This could be triggered by a separate bug in OpenShadingLanguage that caused the locale to be changed unnecessarily (#5048). [^1]
-- Viewer : [^1]
-  - Fixed crash when switching from Cycles to OpenGL rendering (#5051).
-  - Fixed potential crash when destroying a raytraced viewport.
-- Cyles : [^1]
-  - Fixed crashes caused by providing unsupported data types in shader parameters.
-  - Fixed support for Color4f values on colour shader parameters. This can be useful when loading non-standard USD files.
-  - Fixed support for V[23]i values on vector shader parameters.
-  - Fixed handling of colour array parameters.
 - Layouts : Fixed bug applying window size and position from saved layouts (#5042).
-- Light Editor : Fixed tooltips that were missing the "Double-click to toggle" hint. [^2]
 - ArnoldTextureBake : Fixed Windows path handling bug.
 - Arnold : Fixed input connections to individual color and vector components when rendering with a GPU device.
 
@@ -66,7 +50,6 @@ Breaking Changes
 ----------------
 
 - MaterialX : The majority of OSL shaders in `shaders/MaterialX` are no longer provided, as the `OpenShadingLanguage` project removed them and no direct equivalent exists in the `MaterialX` project itself. We recommend using alternative shaders, or if necessary, sourcing them from a previous Gaffer release.
-- Mute/Solo : Changed the dominant state to mute. If a light is both muted and soloed, its final state will be `mute`. [^2]
 - Locale : Removed `LC_NUMERIC=C` environment variable assignment from wrapper. This was a workaround for an OpenColorIO bug that has since been fixed.
 
 Build
@@ -88,16 +71,8 @@ Build
     - Enabled the OpenImageIO plugin. Among other things, this allows OpenEXR textures to be shown in `usdview`.
   - YAML-CPP : Added version 0.7.0.
 
-[^1]: Changes inherited from 1.x. Can be omitted from the release notes for the final release of 1.2.
-[^2]: Changes made to features introduced in 1.2.0.0ax. Can be omitted from the release notes for the final release of 1.2.
-
 1.2.0.0a3 (relative to 1.2.0.0a2)
 =========
-
-Features
---------
-
-- MeshSegments : Added a node for identifying faces in contiguous segments. [^1]
 
 Improvements
 ------------
@@ -105,15 +80,10 @@ Improvements
 - Viewer : If Arnold is available, then it is preferred over Appleseed for performing OSL shader previews. If neither is available, then Cycles will be used (#5084).
 - FormatPlugValueWidget, ChannelPlugValueWidget, ChannelMaskPlugValueWidget, RGBAChannelsPlugValueWidget, ViewPlugValueWidget : Added support for showing multiple plugs at once, as needed when multiple Spreadsheet cells are selected for editing.
 - Spreadsheet : Improved display of image formats.
-- USD : [^1]
-  - Added support for Arnold-USD's convention for representing connections to individual indices of an array.
-  - Added loading of `float4` USD shader parameters as `Color4` parameters in Gaffer.
 
 Fixes
 -----
 
-- Viewer : Fixed bug which made it impossible to switch back to a previously used display transform [^1].
-- Cycles : Disabled auto-tiling mode for the viewport/interactive render mode, which caused odd/glitchy behaviour on larger than 2k renders [^1].
 - Arnold : The `ai:GI_diffuse_depth` and `ai:GI_specular_depth` options now default to `2` when they are left unspecified, matching the default values on the ArnoldOptions node.
 - Menu buttons : Fixed missing dropdown menu indicators.
 - CompoundNumericPlugValueWidget : Fixed failure to construct with an empty list of plugs.
@@ -121,10 +91,7 @@ Fixes
 - FilteredSceneProcessor :
   - Fixed bugs which allowed read-only nodes to be edited.
   - Fixed undo for `Remove` menu item in Filter tab.
-- 3Delight : Fixed bug preventing 3delight from loading on Windows. (#5081). This also caused errors in the light editor at startup : `IECore.Exception: File "maya/osl/pointLight" could not be found.` [^2]
 - NodeEditor : Fixed bugs in handling of "green dot" non-default-value indicators with nested plugs.
-- GUI App : Fixed error on Windows when launching the `gui` app after a previous launch loaded a script with `\` in the path. [^2]
-- HierarchyView : Fixed <kbd>P</kbd> and <kbd>N</kbd> editor focus hotkeys [^1].
 
 API
 ---
@@ -138,21 +105,8 @@ Breaking Changes
 - Arnold : Changed the default values for the `ai:GI_diffuse_depth` and `ai:GI_specular_depth` options.
 - Style : Changed the signature of the `renderAnimationCurve()` virtual function.
 
-[^1]: Changes inherited from 1.x. Can be omitted from the release notes for the final release of 1.2.
-[^2]: Changes made to features introduced in 1.2.0.0ax. Can be omitted from the release notes for the final release of 1.2.
-
-Build
------
-
-- Cortex : Updated to 10.4.4.0. [^1]
-
 1.2.0.0a2 (relative to 1.2.0.0a1)
 =========
-
-Features
---------
-
-- ContextVariableTweaks : Added a new node for tweaking the context used to evaluate upstream nodes [^1].
 
 Improvements
 ------------
@@ -161,39 +115,16 @@ Improvements
   - Added a "Mute" column for toggling a light's mute attribute on and off.
   - Added a "Disable Edit" command to the right-click menu, to easily disable tweaks in EditScopes (shortcut <kbd>D</kbd>).
   - Added a "Remove Attribute" command to the right-click menu, to delete attributes using the EditScope (shortcut <kbd>Delete</kbd>).
-- Cycles [^1] :
-  - Replaced `size` on portals and quad lights with separate `width` and `height` parameters, and renamed `size` parameter of disk lights to `width`.
-  - Added `use_camera`, `use_caustics` and `normalize` parameters to lights.
-- TweakPlug : Added a `CreateIfMissing` mode, to only create a new value if one does not currently exist [^1].
-- OSLObject : Added support for attribute substitutions using `<attr:myAttrName>` syntax in string parameters, provided that `useAttributes` is turned on [^1].
-- UIEditor : Increased maximum size of the "Button Click Code" editor [^1].
-- HierarchyView : Inclusions and Exclusions column header icons now update to show when one or more locations have been added to or excluded from the Visible Set [^2].
-- Light : Added an enable/disable toggle to the `mute` plug [^2].
 - AttributeTweaks : Added `Remove` mode.
-- NodeEditor : Added "Promote Value and Switch" context menu item for promoting NameValuePlugs to Boxes [^1].
 
 Fixes
 -----
 
-- Viewer [^1] :
-  - Fixed Default display transform so that it updates correctly when the default is changed via the Preferences dialogue, and when the context changes.
-  - Fixed drawing of image pixels to the left of the display window.
 - 3Delight : Fixed rendering with recent versions of 3Delight, which no longer use the `DL_DISPLAYS_PATH` to search for display drivers.
 - Metadata :
   - Fixed memory leak.
   - Fixed thread safety bug that prevented concurrent access to metadata for the _same_ plug or node from multiple threads.
-- Cycles [^1] :
- - Fixed custom AOVs (for SVM shading mode only, Cycles doesn't support custom AOVs in OSL mode) (#5044).
-  - Fixed units for distant light angle (now degrees and not radians).
-  - Fixed assignment of `emission` shader. Previously this was being assigned as a `cycles:light` attribute instead of `cycles:surface` (#5058).
-  - Hid internal shader plugs which shouldn't be exposed to the user (e.g. `surface_mix_weight`).
-- ImageViewer : Fixed drawing of pixels to the left of the display window [^1].
-- UVInspector : Fixed update delay when changing display transform [^1].
-- Random : Fixed GIL management bug which could lead to hangs [^1].
 - ShufflePrimitiveVariables, ShuffleAttributes, OptionQuery, PrimitiveVariableQuery, ShaderQuery, ContextQuery, CreateViews, SetVisualiser, OSLImage, OSLObject, OSLCode, Outputs : Fixed bugs which allowed read-only nodes to be edited.
-- ShaderTweaks : Fixed `Remove` mode [^1].
-- FilterQuery : Fixed bug which prevented the output from updating when the input scene changed (#5066) [^1].
-- Arnold : Fixed rendering of `token` enum parameter values loaded from USD [^1].
 
 API
 ---
@@ -208,9 +139,6 @@ Build
 -----
 
 - 3Delight : Updated to 3Delight version 2.9.17.
-
-[^1]: Changes inherited from 1.x. Can be omitted from the release notes for the final release of 1.2.
-[^2]: Changes made to features introduced in 1.2.0.0ax. Can be omitted from the release notes for the final release of 1.2.
 
 1.2.0.0a1
 =========
