@@ -90,16 +90,24 @@ Gaffer.Metadata.registerValue( "Animation.TieMode.Manual", "description", "Tange
 Gaffer.Metadata.registerValue( "Animation.TieMode.Slope", "description", "Tangent slopes are kept equal." )
 Gaffer.Metadata.registerValue( "Animation.TieMode.Scale", "description", "Tangent slopes are kept equal and scales are kept proportional." )
 
-Gaffer.Metadata.registerValue( Gaffer.ValuePlug,       "Animation:defaultColor", imath.Color3f( 1 ) )
-Gaffer.Metadata.registerValue( Gaffer.ValuePlug, ".x", "Animation:defaultColor", imath.Color3f( 0.73, 0.17, 0.17 ) )
-Gaffer.Metadata.registerValue( Gaffer.ValuePlug, ".r", "Animation:defaultColor", imath.Color3f( 0.73, 0.17, 0.17 ) )
-Gaffer.Metadata.registerValue( Gaffer.ValuePlug, ".y", "Animation:defaultColor", imath.Color3f( 0.20, 0.57, 0.20 ) )
-Gaffer.Metadata.registerValue( Gaffer.ValuePlug, ".g", "Animation:defaultColor", imath.Color3f( 0.20, 0.57, 0.20 ) )
-Gaffer.Metadata.registerValue( Gaffer.ValuePlug, ".z", "Animation:defaultColor", imath.Color3f( 0.20, 0.36, 0.74 ) )
-Gaffer.Metadata.registerValue( Gaffer.ValuePlug, ".b", "Animation:defaultColor", imath.Color3f( 0.20, 0.36, 0.74 ) )
+xyzColours = [
+	imath.Color3f( 0.73, 0.17, 0.17 ),
+	imath.Color3f( 0.20, 0.57, 0.20 ),
+	imath.Color3f( 0.20, 0.36, 0.74 ) ]
 
-# NOTE : ensures that the default color metadata does not get serialised for promoted plugs (e.g. BoxIO.setup())
-Gaffer.Metadata.registerValue( Gaffer.ValuePlug, "Animation:defaultColor:promotable", False )
+for plugType, names in [
+	( Gaffer.V2iPlug,     ( "x", "y"      ) ),
+	( Gaffer.V2fPlug,     ( "x", "y"      ) ),
+	( Gaffer.V3iPlug,     ( "x", "y", "z" ) ),
+	( Gaffer.V3fPlug,     ( "x", "y", "z" ) ),
+	( Gaffer.Color3fPlug, ( "r", "g", "b" ) ),
+	( Gaffer.Color4fPlug, ( "r", "g", "b" ) ) ] :
+
+	for i, name in enumerate( names ) :
+		Gaffer.Metadata.registerValue( plugType, ".{0}".format( name ), "animation:color", xyzColours[ i ] )
+
+# NOTE : ensures metadata does not get serialised for promoted plugs (e.g. BoxIO.setup())
+Gaffer.Metadata.registerValue( Gaffer.ValuePlug, "animation:color:promotable", False )
 
 # PlugValueWidget popup menu for setting keys
 ##########################################################################
