@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2023, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,46 +34,21 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
-
-#include "GafferSceneTest/ContextSanitiser.h"
-#include "GafferSceneTest/CompoundObjectSource.h"
-#include "GafferSceneTest/ScenePlugTest.h"
-#include "GafferSceneTest/TestLight.h"
 #include "GafferSceneTest/TestLightFilter.h"
+
 #include "GafferSceneTest/TestShader.h"
-#include "GafferSceneTest/TraverseScene.h"
 
-#include "GafferBindings/DependencyNodeBinding.h"
-
-#include "IECorePython/ScopedGILRelease.h"
-
-using namespace boost::python;
+using namespace Gaffer;
+using namespace GafferScene;
 using namespace GafferSceneTest;
 
-static void traverseSceneWrapper( const GafferScene::ScenePlug *scenePlug )
+GAFFER_NODE_DEFINE_TYPE( TestLightFilter );
+
+TestLightFilter::TestLightFilter( const std::string &name )
+	:	GafferScene::LightFilter( new Shader(), name )
 {
-	IECorePython::ScopedGILRelease gilRelease;
-	traverseScene( scenePlug );
 }
 
-BOOST_PYTHON_MODULE( _GafferSceneTest )
+TestLightFilter::~TestLightFilter()
 {
-
-	IECorePython::RefCountedClass<ContextSanitiser, Gaffer::Monitor>( "ContextSanitiser" )
-		.def( init<>() )
-	;
-
-	GafferBindings::DependencyNodeClass<CompoundObjectSource>();
-	GafferBindings::NodeClass<TestShader>();
-	GafferBindings::NodeClass<TestLight>();
-	GafferBindings::NodeClass<TestLightFilter>();
-
-	def( "traverseScene", &traverseSceneWrapper );
-	def( "connectTraverseSceneToPlugDirtiedSignal", &connectTraverseSceneToPlugDirtiedSignal );
-	def( "connectTraverseSceneToContextChangedSignal", &connectTraverseSceneToContextChangedSignal );
-	def( "connectTraverseSceneToPreDispatchSignal", &connectTraverseSceneToPreDispatchSignal );
-
-	def( "testManyStringToPathCalls", &testManyStringToPathCalls );
-
 }

@@ -129,6 +129,7 @@ API
 - GafferTest : Added ObjectPlug overloads for `repeatGetValue()` and `parallelGetValue()`.
 - SceneTestCase : Added `assertParallelGetValueComputesObjectOnce()`. This can be used to check that expensive computes are using an appropriate cache policy.
 - Gaffer ( Python module ) : Added `rootPath()` and `executablePath()` methods.
+- TestLightFilter : Added new node to GafferSceneTest, to aid in testing of scenarios involving LightFilters.
 
 Breaking Changes
 ----------------

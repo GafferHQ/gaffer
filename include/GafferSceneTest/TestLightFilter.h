@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2023, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,46 +34,31 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#ifndef GAFFERSCENETEST_TESTLIGHTFILTER_H
+#define GAFFERSCENETEST_TESTLIGHTFILTER_H
 
-#include "GafferSceneTest/ContextSanitiser.h"
-#include "GafferSceneTest/CompoundObjectSource.h"
-#include "GafferSceneTest/ScenePlugTest.h"
-#include "GafferSceneTest/TestLight.h"
-#include "GafferSceneTest/TestLightFilter.h"
-#include "GafferSceneTest/TestShader.h"
-#include "GafferSceneTest/TraverseScene.h"
+#include "GafferSceneTest/Export.h"
+#include "GafferSceneTest/TypeIds.h"
 
-#include "GafferBindings/DependencyNodeBinding.h"
+#include "GafferScene/LightFilter.h"
 
-#include "IECorePython/ScopedGILRelease.h"
-
-using namespace boost::python;
-using namespace GafferSceneTest;
-
-static void traverseSceneWrapper( const GafferScene::ScenePlug *scenePlug )
-{
-	IECorePython::ScopedGILRelease gilRelease;
-	traverseScene( scenePlug );
-}
-
-BOOST_PYTHON_MODULE( _GafferSceneTest )
+namespace GafferSceneTest
 {
 
-	IECorePython::RefCountedClass<ContextSanitiser, Gaffer::Monitor>( "ContextSanitiser" )
-		.def( init<>() )
-	;
+class GAFFERSCENETEST_API TestLightFilter : public GafferScene::LightFilter
+{
 
-	GafferBindings::DependencyNodeClass<CompoundObjectSource>();
-	GafferBindings::NodeClass<TestShader>();
-	GafferBindings::NodeClass<TestLight>();
-	GafferBindings::NodeClass<TestLightFilter>();
+	public :
 
-	def( "traverseScene", &traverseSceneWrapper );
-	def( "connectTraverseSceneToPlugDirtiedSignal", &connectTraverseSceneToPlugDirtiedSignal );
-	def( "connectTraverseSceneToContextChangedSignal", &connectTraverseSceneToContextChangedSignal );
-	def( "connectTraverseSceneToPreDispatchSignal", &connectTraverseSceneToPreDispatchSignal );
+		GAFFER_NODE_DECLARE_TYPE( GafferSceneTest::TestLightFilter, TestLightFilterTypeId, GafferScene::LightFilter );
 
-	def( "testManyStringToPathCalls", &testManyStringToPathCalls );
+		TestLightFilter( const std::string &name=defaultName<TestLightFilter>() );
+		~TestLightFilter() override;
 
-}
+};
+
+IE_CORE_DECLAREPTR( TestLightFilter )
+
+} // namespace GafferSceneTest
+
+#endif // GAFFERSCENETEST_TESTLIGHTFILTER_H

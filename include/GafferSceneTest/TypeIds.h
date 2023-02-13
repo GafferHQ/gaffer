@@ -46,6 +46,7 @@ enum TypeId
 	CompoundObjectSourceTypeId = 110701,
 	TestShaderTypeId = 110702,
 	TestLightTypeId = 110703,
+	TestLightFilterTypeId = 110704,
 
 	LastTypeId = 110749
 };
