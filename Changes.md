@@ -1,4 +1,4 @@
-1.2.x.x (relative to 1.1.9.0)
+1.2.0.0 (relative to 1.1.9.0)
 =======
 
 This version enables Cycles support by default, as we believe we have made sufficient progress to allow wider testing. We may continue to make behaviour-changing updates if necessary though, so support is not yet considered final.
