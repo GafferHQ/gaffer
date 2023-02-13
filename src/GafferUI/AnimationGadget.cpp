@@ -281,22 +281,6 @@ std::string drivenPlugName( const Animation::CurvePlug* const curvePlug )
 	return outputs.front()->relativeName( scriptNode );
 }
 
-Imath::Color3f drivenPlugColor( const Animation::CurvePlug* const curvePlug )
-{
-	const Gaffer::Plug* const plug = drivenPlug( curvePlug );
-	if( plug )
-	{
-		const IECore::ConstColor3fDataPtr colorData =
-			Gaffer::Metadata::value< IECore::Color3fData >( plug, g_colorMetadata );
-		if( colorData )
-		{
-			return colorData->readable();
-		}
-	}
-
-	return Imath::Color3f( 1.f );
-}
-
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -635,7 +619,7 @@ void AnimationGadget::renderLayer( Layer layer, const Style *style, RenderReason
 		{
 			Animation::CurvePlug *curvePlug = IECore::runTimeCast<Animation::CurvePlug>( &runtimeTyped );
 
-			const Imath::Color3f color3 = drivenPlugColor( curvePlug );
+			const Imath::Color3f color3 = getColor( curvePlug );
 			const Imath::Color4f color4( color3.x, color3.y, color3.z, 1.0 );
 
 			Animation::Key* previousKey = nullptr;
@@ -892,6 +876,26 @@ std::string AnimationGadget::getToolTip( const IECore::LineSegment3f &line ) con
 	}
 
 	return "";
+}
+
+Imath::Color3f AnimationGadget::getColor( const Gaffer::Plug* plug )
+{
+	if( const Animation::CurvePlug* const curvePlug =
+		IECore::runTimeCast< const Animation::CurvePlug >( plug ) )
+	{
+		plug = drivenPlug( curvePlug );
+	}
+
+	if( plug )
+	{
+		if( const IECore::ConstColor3fDataPtr colorData =
+			Gaffer::Metadata::value< IECore::Color3fData >( plug, g_colorMetadata ) )
+		{
+			return colorData->readable();
+		}
+	}
+
+	return Imath::Color3f( 1.f );
 }
 
 void AnimationGadget::insertKeyframe( Animation::CurvePlug *curvePlug, float time )
@@ -1860,7 +1864,7 @@ void AnimationGadget::renderCurve( const Animation::CurvePlug *curvePlug, const 
 	V2f previousKeyPosition( 0 );
 
 	const Style::State styleState = ( curvePlug == m_highlightedCurve ) ? Style::HighlightedState : Style::NormalState;
-	const Imath::Color3f color3 = drivenPlugColor( curvePlug );
+	const Imath::Color3f color3 = getColor( curvePlug );
 
 	// draw extrapolated curve (direction in)
 	// NOTE : generate vertices starting at extrapolation key, so that any pattern applied

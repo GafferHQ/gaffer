@@ -68,5 +68,7 @@ void GafferUIModule::bindAnimationGadget()
 		.def( "setContext", &AnimationGadget::setContext )
 		.def( "onTimeAxis", &AnimationGadget::onTimeAxis )
 		.def( "onValueAxis", &AnimationGadget::onValueAxis )
+		.def( "getColor", &AnimationGadget::getColor )
+		.staticmethod( "getColor" )
 		;
 }
