@@ -1,10 +1,28 @@
-1.2.x.x (relative to 1.2.0.0a3)
+1.2.0.0 (relative to 1.1.9.0)
 =======
+
+This version enables Cycles support by default, as we believe we have made sufficient progress to allow wider testing. We may continue to make behaviour-changing updates if necessary though, so support is not yet considered final.
+
+> Note : Python 2 support has been removed. All builds are now using Python 3.
 
 Features
 --------
 
-- Light Editor : Added a "Solo" column to quickly add and remove lights from the `soloLights` set.
+- Windows : Added official builds for Windows.
+- HierarchyView : Added control over the Visible Set, which defines the locations within the scene that are loaded and rendered by the Viewer.
+  - The Inclusions column adds locations to the Visible Set, so that they and their descendants are rendered in the Viewer without needing to be expanded in the HierarchyView.
+  - The Exclusions column excludes locations from the Visible Set, so that they and their descendants are never rendered in the Viewer, regardless of any other expansions or inclusions.
+  - Locations can have their Visible Set inclusion or exclusion toggled by clicking within the appropriate column. <kbd>Shift</kbd>-clicking will remove the location and any of its descendants from the Visible Set. When multiple locations are selected, edits to any of the selected locations will affect all selected locations.
+- Mute/Solo : Added the ability to mute and solo lights.
+  - A light can be muted by setting the `light:mute` attribute. If that attribute is not present, the light will not be muted.
+  - One or more lights can be enabled exclusively via membership in the `soloLights` set. If that set has one or more members, only the lights in that set will emit. If the set is empty, all lights emit according to their mute state. If a light is both muted and in the `soloLights` set, it will emit.
+  - Light Editor :
+    - Added a "Mute" column for toggling a light's mute attribute on and off.
+    - Added a "Solo" column to quickly add and remove lights from the `soloLights` set.
+  - Lights : Added a `mute` toggle, which can be accessed in the node editor from the `Light Linking` tab.
+  - Added a visual indication to lights in the viewport when they are muted. Muted lights use a dark gray outline instead of yellow.
+  - Cycles : Muted lights are disabled in renders.
+  - Arnold : Muted lights are disabled in renders.
 - Animation :
   - Added new curve extrapolation modes to determine the shape of a curve outside the range of its keys.
     - Constant : Curve is extended as a flat line.
@@ -18,162 +36,44 @@ Features
 Improvements
 ------------
 
-- OSL : Will use OSL's batched API if it is available. This improves performance up to 3X when running heavy OSL computations using OSLObject or OSLImage. This is slightly experimental, since it relies on recently added OSL features. Please let us know if you encounter any new issues with OSL. To disable this optimization, set the environment variable `GAFFEROSL_USE_BATCHED=0`.
 - Cycles : Updated to Cycles 3.4.
+- OSL : Will use OSL's batched API if it is available. This improves performance up to 3X when running heavy OSL computations using OSLObject or OSLImage. This is slightly experimental, since it relies on recently added OSL features. Please let us know if you encounter any new issues with OSL. To disable this optimization, set the environment variable `GAFFEROSL_USE_BATCHED=0`.
+- LightEditor :
+  - Added a "Disable Edit" command to the right-click menu, to easily disable tweaks in EditScopes (shortcut <kbd>D</kbd>).
+  - Added a "Remove Attribute" command to the right-click menu, to delete attributes using the EditScope (shortcut <kbd>Delete</kbd>).
+  - Adjustments made to the width of the "Name" column are now preserved when switching between sections.
+- AttributeTweaks : Added `Remove` mode.
 - PathListingWidget : Added support for columns that can automatically stretch to make use of available space.
-- LightEditor : Adjustments made to the width of the "Name" column are now preserved when switching between sections.
 - Animation Editor : For protruding tangents the slope and scale controls are now disabled (non editable) and display constrained values.
 - Expression : `pathlib.Path` values may now be assigned to StringPlugs.
 - Render : An error is now emitted if the render camera is hidden, instead of rendering through a default camera instead (#5131).
 - ResamplePrimitiveVariables : Extended the supported data types when resampling from a Constant primitive variable.
-
-Fixes
------
-
-- Layouts : Fixed bug applying window size and position from saved layouts (#5042).
-- ArnoldTextureBake : Fixed Windows path handling bug.
-- Arnold : Fixed input connections to individual color and vector components when rendering with a GPU device.
-
-API
----
-
-- PathColumn : Added `setSizeMode()` and `getSizeMode()` methods, and `sizeMode` constructor argument. These allow the size behaviour of a PathColumn to be configured.
-- EditScopeAlgo : Added `acquireSetEdits()` method.
-- TestCase : Added `scopedLocale()` method.
-- Animation :
-  - The slope and scale of protruding tangents is now constrained to match the values of the sibling tangent.
-  - Added `curve.extrapolationChangedSignal()` function, returns a signal that is called when a curve's extrapolation has changed.
-  - Added new api for curve extrapolation modes (see header `Animation.h` for full details).
-  - Added `description` metadata for curve extrapolation modes that is used to generate UI tooltips.
-
-Breaking Changes
-----------------
-
-- MaterialX : The majority of OSL shaders in `shaders/MaterialX` are no longer provided, as the `OpenShadingLanguage` project removed them and no direct equivalent exists in the `MaterialX` project itself. We recommend using alternative shaders, or if necessary, sourcing them from a previous Gaffer release.
-- Locale : Removed `LC_NUMERIC=C` environment variable assignment from wrapper. This was a workaround for an OpenColorIO bug that has since been fixed.
-
-Build
------
-
-- Updated to GafferHQ/dependencies 6.0.0 :
-  - Cortex : Updated to version 10.4.5.0.
-  - Cycles : Updated to version 3.4.
-  - Embree : Updated to version 3.13.4.
-  - Expat : Added version 2.5.0.
-  - Fmt : Added version 9.1.0.
-  - OpenColorIO : Updated to version 2.1.2.
-  - OpenImageIO : Updated to version 2.4.8.0.
-  - OpenShadingLanguage : Updated to version 1.12.9.0.
-  - OpenSubdiv : Updated to version 3.4.4.
-  - PyString : Added version 1.1.4.
-  - USD :
-    - Updated to version 23.02.
-    - Enabled the OpenImageIO plugin. Among other things, this allows OpenEXR textures to be shown in `usdview`.
-  - YAML-CPP : Added version 0.7.0.
-
-1.2.0.0a3 (relative to 1.2.0.0a2)
-=========
-
-Improvements
-------------
-
 - Viewer : If Arnold is available, then it is preferred over Appleseed for performing OSL shader previews. If neither is available, then Cycles will be used (#5084).
 - FormatPlugValueWidget, ChannelPlugValueWidget, ChannelMaskPlugValueWidget, RGBAChannelsPlugValueWidget, ViewPlugValueWidget : Added support for showing multiple plugs at once, as needed when multiple Spreadsheet cells are selected for editing.
+- SceneReader :
+  - Improved read performance for sets in USD files, with a benchmark reading a moderately large set seeing more than 2x speedup.
+  - Improved cancellation responsiveness when reading large sets from USD files.
+- SceneWriter : Improved performance when writing sets to USD files.
 - Spreadsheet : Improved display of image formats.
 
 Fixes
 -----
 
-- Arnold : The `ai:GI_diffuse_depth` and `ai:GI_specular_depth` options now default to `2` when they are left unspecified, matching the default values on the ArnoldOptions node.
-- Menu buttons : Fixed missing dropdown menu indicators.
+- Layouts : Fixed bug applying window size and position from saved layouts (#5042).
+- Arnold :
+  - Fixed input connections to individual color and vector components when rendering with a GPU device.
+  - The `ai:GI_diffuse_depth` and `ai:GI_specular_depth` options now default to `2` when they are left unspecified, matching the default values on the ArnoldOptions node.
 - CompoundNumericPlugValueWidget : Fixed failure to construct with an empty list of plugs.
 - ChannelPlugValueWidget : Fixed compatibility with multi-view images.
 - FilteredSceneProcessor :
   - Fixed bugs which allowed read-only nodes to be edited.
   - Fixed undo for `Remove` menu item in Filter tab.
 - NodeEditor : Fixed bugs in handling of "green dot" non-default-value indicators with nested plugs.
-
-API
----
-
-- PlugAlgo : Added `findDestination()` utility method.
-- Style : `renderAnimationCurve()` function now takes a vector of curve vertices and an `inKeyRange` argument that indicates whether the specified curve vertices lie within the time range of the curve's keys.
-
-Breaking Changes
-----------------
-
-- Arnold : Changed the default values for the `ai:GI_diffuse_depth` and `ai:GI_specular_depth` options.
-- Style : Changed the signature of the `renderAnimationCurve()` virtual function.
-
-1.2.0.0a2 (relative to 1.2.0.0a1)
-=========
-
-Improvements
-------------
-
-- Light Editor :
-  - Added a "Mute" column for toggling a light's mute attribute on and off.
-  - Added a "Disable Edit" command to the right-click menu, to easily disable tweaks in EditScopes (shortcut <kbd>D</kbd>).
-  - Added a "Remove Attribute" command to the right-click menu, to delete attributes using the EditScope (shortcut <kbd>Delete</kbd>).
-- AttributeTweaks : Added `Remove` mode.
-
-Fixes
------
-
 - 3Delight : Fixed rendering with recent versions of 3Delight, which no longer use the `DL_DISPLAYS_PATH` to search for display drivers.
 - Metadata :
   - Fixed memory leak.
   - Fixed thread safety bug that prevented concurrent access to metadata for the _same_ plug or node from multiple threads.
 - ShufflePrimitiveVariables, ShuffleAttributes, OptionQuery, PrimitiveVariableQuery, ShaderQuery, ContextQuery, CreateViews, SetVisualiser, OSLImage, OSLObject, OSLCode, Outputs : Fixed bugs which allowed read-only nodes to be edited.
-
-API
----
-
-- PlugValueWidget : Added new API to provide asynchronous updates. The old `_updateFromPlugs()` and `_plugConnections()` methods are deprecated, and support for them will be removed in a future version.
-- PlugAlgo : Added `dependsOnCompute()` utility method.
-- FileSystemPath :
-  - Added a constructor that accepts a `filesystem::path`.
-  - Added a `standardPath()` method returning a `std::filesystem::path` object in C++ and a `pathlib.Path` object in Python.
-
-Build
------
-
-- 3Delight : Updated to 3Delight version 2.9.17.
-
-1.2.0.0a1
-=========
-
-This version enables Cycles support by default, as we believe we have made sufficient progress to allow wider testing. We may continue to make behaviour-changing updates if necessary though, so support is not yet considered final.
-
-> Note : Python 2 support has been removed. All builds are now using Python 3.
-
-Features
---------
-
-- Windows : Added official builds for Windows.
-- Mute/Solo : Added the ability to mute and solo lights.
-  - A light can be muted by setting the `light:mute` attribute. If that attribute is not present, the light will not be muted.
-  - One or more lights can be enabled exclusively via membership in the `soloLights` set. If that set has one or more members, only the lights in that set will emit. If the set is empty, all lights emit according to their mute state. If a light is both muted and in the `soloLights` set, it will emit.
-  - Lights : Added a `mute` toggle, which can be accessed in the node editor from the `Light Linking` tab.
-  - Added a visual indication to lights in the viewport when they are muted. Muted lights use a dark gray outline instead of yellow.
-  - Cycles : Muted lights are disabled in renders.
-  - Arnold : Muted lights are disabled in renders.
-- HierarchyView : Added control over the Visible Set, which defines the locations within the scene that are loaded and rendered by the Viewer.
-  - The Inclusions column adds locations to the Visible Set, so that they and their descendants are rendered in the Viewer without needing to be expanded in the HierarchyView.
-  - The Exclusions column excludes locations from the Visible Set, so that they and their descendants are never rendered in the Viewer, regardless of any other expansions or inclusions.
-  - Locations can have their Visible Set inclusion or exclusion toggled by clicking within the appropriate column. <kbd>Shift</kbd>-clicking will remove the location and any of its descendants from the Visible Set. When multiple locations are selected, edits to any of the selected locations will affect all selected locations.
-
-Improvements
-------------
-
-- SceneReader :
-  - Improved read performance for sets in USD files, with a benchmark reading a moderately large set seeing more than 2x speedup.
-  - Improved cancellation responsiveness when reading large sets from USD files.
-- SceneWriter : Improved performance when writing sets to USD files.
-
-Fixes
------
-
 - CodeWidget : Fixed auto-complete for `pathlib.Path` objects, and any other classes which throw `AttributeError` for an attribute advertised by `dir()`.
 - Expression : Fixed non-deterministic parsing order for Python expressions (#4935).
 - FileSequencePathFilter : Fixed bug whereby files were considered to be part of a sequence if they were in a numbered directory. Now only numbers in the file's name are considered.
@@ -196,6 +96,9 @@ API
   - ApplicationRoot :
     - `savePreferences()` now takes a `filesystem::path` argument.
     - `preferencesLocation()` now returns a `filesystem::path`.
+  - FileSystemPath :
+    - Added a constructor that accepts a `filesystem::path`.
+    - Added a `standardPath()` method returning a `std::filesystem::path` object in C++ and a `pathlib.Path` object in Python.
   - StringPlug : Added a `setValue()` overload taking a `filesystem::path`.
   - Dispatcher : `jobDirectory()` now returns a `filesystem::path`.
   - Backups : File names are now represented using `pathlib.Path`.
@@ -203,6 +106,18 @@ API
   - ShaderView : `registerReferenceScene()` now takes a `filesystem::path`.
   - Catalogue : `save()` and `load()` take a `filesystem::path`, and `generateFileName()` returns one.
   - ExtensionAlgo : `exportExtension()` now takes a `pathlib.Path` in the `directory` argument.
+- PlugValueWidget : Added new API to provide asynchronous updates. The old `_updateFromPlugs()` and `_plugConnections()` methods are deprecated, and support for them will be removed in a future version.
+- PathColumn : Added `setSizeMode()` and `getSizeMode()` methods, and `sizeMode` constructor argument. These allow the size behaviour of a PathColumn to be configured.
+- EditScopeAlgo : Added `acquireSetEdits()` method.
+- TestCase : Added `scopedLocale()` method.
+- Animation :
+  - The slope and scale of protruding tangents is now constrained to match the values of the sibling tangent.
+  - Added `curve.extrapolationChangedSignal()` function, returns a signal that is called when a curve's extrapolation has changed.
+  - Added new api for curve extrapolation modes (see header `Animation.h` for full details).
+  - Added `description` metadata for curve extrapolation modes that is used to generate UI tooltips.
+- PlugAlgo : Added `findDestination()` utility method.
+- Style : `renderAnimationCurve()` function now takes a vector of curve vertices and an `inKeyRange` argument that indicates whether the specified curve vertices lie within the time range of the curve's keys.
+- PlugAlgo : Added `dependsOnCompute()` utility method.
 - PathColumn : Added `buttonPressSignal()`, `buttonReleaseSignal()` and `buttonDoubleClickSignal()`. These allow a PathColumn to implement its own event handling.
 - Capsule : Removed attempts to detect invalidated Capsules.
 - VisibleSet/VisibleSetData : Added struct used to define a subset of the scene to be rendered based on expansions, inclusions, and exclusions. This is used to allow scene locations to be defined as always or never renderable, overriding the usual UI expansion behaviour.
@@ -217,9 +132,13 @@ API
 Breaking Changes
 ----------------
 
+- Python : Removed support for Python 2.
+- MaterialX : The majority of OSL shaders in `shaders/MaterialX` are no longer provided, as the `OpenShadingLanguage` project removed them and no direct equivalent exists in the `MaterialX` project itself. We recommend using alternative shaders, or if necessary, sourcing them from a previous Gaffer release.
+- Arnold : Changed the default values for the `ai:GI_diffuse_depth` and `ai:GI_specular_depth` options.
+- Locale : Removed `LC_NUMERIC=C` environment variable assignment from wrapper. This was a workaround for an OpenColorIO bug that has since been fixed.
+- Style : Changed the signature of the `renderAnimationCurve()` virtual function.
 - Signal : Removed `disconnect( slot )` method. This was a performance hazard because it was linear in the number of connections. Use `Connection::disconnect()` instead, which is constant time.
 - GafferTest : Removed `expectedFailure()` decorator. Use `unittest.expectedFailure()` instead.
-- Python : Removed support for Python 2.
 - SceneWriter :
   - Sets are now only written on the first frame for each file written.
   - `SceneInterface::writeSet()` is now used in preference to `SceneInterface::writeTags()` for all non-legacy file formats.
@@ -235,14 +154,29 @@ Breaking Changes
 - Reference : The `fileName()` Python binding now returns a `pathlib.Path` argument, or `None` for empty file names.
 - ApplicationRoot : The `preferencesLocation()` Python binding now returns a `pathlib.Path` argument.
 - StringPlug : `setValue( std::filesystem::path & )` now uses `path.generic_string()` for the value, whereas before an automatic conversion would have used `path.string()` (the native string).
-  - Dispatcher : the `jobDirectory()` Python binding now returns a `pathlib.Path`, or `None` if it is empty.
-- Context::EditableScope, ImagePlug::ChannelDataScope, ScenePlug::PathScope/SetScope : Removed deprecated functions which don't take pointers and require duplicating data.
+- Dispatcher : the `jobDirectory()` Python binding now returns a `pathlib.Path`, or `None` if it is empty.
+- `Context::EditableScope`, `ImagePlug::ChannelDataScope`, `ScenePlug::PathScope/SetScope` : Removed deprecated functions which didn't take pointers and required duplication of data.
 - ViewportGadget : Removed deprecated `gadgetsAt()` signature.
 
 Build
 -----
 
-- Cortex : Updated to version 10.4.3.0.
+- Updated to GafferHQ/dependencies 6.0.0 :
+  - Cortex : Updated to version 10.4.5.0.
+  - Cycles : Updated to version 3.4.
+  - Embree : Updated to version 3.13.4.
+  - Expat : Added version 2.5.0.
+  - Fmt : Added version 9.1.0.
+  - OpenColorIO : Updated to version 2.1.2.
+  - OpenImageIO : Updated to version 2.4.8.0.
+  - OpenShadingLanguage : Updated to version 1.12.9.0.
+  - OpenSubdiv : Updated to version 3.4.4.
+  - PyString : Added version 1.1.4.
+  - USD :
+    - Updated to version 23.02.
+    - Enabled the OpenImageIO plugin. Among other things, this allows OpenEXR textures to be shown in `usdview`.
+  - YAML-CPP : Added version 0.7.0.
+- 3Delight : Updated to 3Delight version 2.9.17.
 
 1.1.9.0 (relative to 1.1.8.0)
 =======
