@@ -37,7 +37,7 @@ Improvements
 ------------
 
 - Cycles : Updated to Cycles 3.4.
-- OSL : Will use OSL's batched API if it is available. This improves performance up to 3X when running heavy OSL computations using OSLObject or OSLImage. This is slightly experimental, since it relies on recently added OSL features. Please let us know if you encounter any new issues with OSL. To disable this optimization, set the environment variable `GAFFEROSL_USE_BATCHED=0`.
+- OSLObject, OSLImage : Improved performance when running heavy shaders on Linux (by 3x in one benchmark). This is achieved using OSL's recently added batched shading API. In the event of any problem, the optimisation may be disabled by setting the environment variable `GAFFEROSL_USE_BATCHED=0`.
 - LightEditor :
   - Added a "Disable Edit" command to the right-click menu, to easily disable tweaks in EditScopes (shortcut <kbd>D</kbd>).
   - Added a "Remove Attribute" command to the right-click menu, to delete attributes using the EditScope (shortcut <kbd>Delete</kbd>).
