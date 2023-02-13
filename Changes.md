@@ -1,4 +1,4 @@
-1.2.0.0 (relative to 1.1.9.0)
+1.2.x.x (relative to 1.1.9.0)
 =======
 
 This version enables Cycles support by default, as we believe we have made sufficient progress to allow wider testing. We may continue to make behaviour-changing updates if necessary though, so support is not yet considered final.
@@ -38,6 +38,7 @@ Improvements
 
 - Cycles : Updated to Cycles 3.4.
 - OSLObject, OSLImage : Improved performance when running heavy shaders on Linux (by 3x in one benchmark). This is achieved using OSL's recently added batched shading API. In the event of any problem, the optimisation may be disabled by setting the environment variable `GAFFEROSL_USE_BATCHED=0`.
+- NodeEditor : Improved interactivity by moving computations onto background threads. The UI will no longer hang while the NodeEditor waits for the result of a slow computation.
 - LightEditor :
   - Added a "Disable Edit" command to the right-click menu, to easily disable tweaks in EditScopes (shortcut <kbd>D</kbd>).
   - Added a "Remove Attribute" command to the right-click menu, to delete attributes using the EditScope (shortcut <kbd>Delete</kbd>).
