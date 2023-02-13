@@ -954,6 +954,7 @@ class _CurveWidget( GafferUI.GridContainer ) :
 		self.__extrapolationEditor = (
 			GafferUI.MenuButton( toolTip=( extrapolationToolTip % "in " ) ),
 			GafferUI.MenuButton( toolTip=( extrapolationToolTip % "out " ) ) )
+		# \todo It's a pity we can't use ColorSwatchMetadataWidget here (because it doesn't support multiple plugs at once).
 		self.__colorSwatch = GafferUI.ColorSwatch( useDisplayTransform=False, toolTip=colorToolTip )
 		self.__colorSwatch._qtWidget().setFixedHeight( 18 )
 		self.__colorInvalid = GafferUI.TextWidget( text="---", editable=False )
@@ -999,7 +1000,8 @@ class _CurveWidget( GafferUI.GridContainer ) :
 		if curve not in self.__connections :
 			self.__connections[ curve ] = _CurveWidget.Connections(
 				extrapolation = curve.extrapolationChangedSignal().connect( Gaffer.WeakMethod( self.__extrapolationChanged ), scoped = False ),
-				color = curve.colorChangedSignal().connect( Gaffer.WeakMethod( self.__colorChanged ), scoped = False ),
+				color = Gaffer.Metadata.plugValueChangedSignal( curve[ "out" ].outputs()[ 0 ].ancestor( Gaffer.Node ) ).connect(
+					Gaffer.WeakMethod( self.__colorChanged ), scoped = False ),
 			)
 
 	def disconnect( self, curve ) :
@@ -1050,7 +1052,7 @@ class _CurveWidget( GafferUI.GridContainer ) :
 
 		menuDefinition = IECore.MenuDefinition()
 		menuDefinition.append(
-			"/Set Default", {
+			"/Default", {
 				"command" : functools.partial( Gaffer.WeakMethod( self.__colorDefault ) ),
 				"active" : bool( self.parent().curveGadget().editablePlugs() )
 			}
@@ -1096,7 +1098,7 @@ class _CurveWidget( GafferUI.GridContainer ) :
 		# store initial color of selected curves
 		self.__initialColors.clear()
 		for curve in editableCurves :
-			self.__initialColors[ curve ] = curve.getColor()
+			self.__initialColors[ curve ] = Gaffer.Metadata.value( curve[ "out" ].outputs()[ 0 ], "animation:color", instanceOnly=True )
 
 		# create color chooser dialog
 		color = self.__colorSwatch.getColor()
@@ -1119,10 +1121,10 @@ class _CurveWidget( GafferUI.GridContainer ) :
 		# restore default color of editable curves
 		editableCurves = self.parent().curveGadget().editablePlugs()
 		if editableCurves :
-			with Gaffer.UndoScope( next( iter( editableCurves ) ).ancestor( Gaffer.ScriptNode ), mergeGroup=str( self.__mergeGroupIdColor ) ) :
+			with Gaffer.UndoScope( editableCurves[ 0 ].ancestor( Gaffer.ScriptNode ), mergeGroup=str( self.__mergeGroupIdColor ) ) :
 				for curve in editableCurves :
 					with Gaffer.BlockedConnection( self.__connections[ curve ].color ) :
-						curve.setColor( Gaffer.Animation.defaultColor( next( iter( curve[ "out" ].outputs() ) ) ) )
+						Gaffer.Metadata.deregisterValue( curve[ "out" ].outputs()[ 0 ], "animation:color" )
 			self.__updateColor()
 
 	def __colorCancelled( self, button ) :
@@ -1130,28 +1132,35 @@ class _CurveWidget( GafferUI.GridContainer ) :
 		# restore initial color of editable curves
 		editableCurves = self.parent().curveGadget().editablePlugs()
 		if editableCurves :
-			with Gaffer.UndoScope( next( iter( editableCurves ) ).ancestor( Gaffer.ScriptNode ) ) :
+			with Gaffer.UndoScope( editableCurves[ 0 ].ancestor( Gaffer.ScriptNode ) ) :
 				for curve in editableCurves :
 					with Gaffer.BlockedConnection( self.__connections[ curve ].color ) :
 						assert( curve in self.__initialColors )
-						curve.setColor( self.__initialColors[ curve ] )
+						initialColor = self.__initialColors[ curve ]
+						if initialColor is None :
+							Gaffer.Metadata.deregisterValue( curve[ "out" ].outputs()[ 0 ], "animation:color" )
+						else :
+							Gaffer.Metadata.registerValue( curve[ "out" ].outputs()[ 0 ], "animation:color", initialColor )
 			self.__updateColor()
 
-	def __colorChanged( self, curve ) :
+	def __colorChanged( self, plug, key, reason ) :
 
-		if self.parent().curveGadget().editablePlugs().contains( curve ) :
-			self.__updateColor()
+		if key == "animation:color" :
+			if Gaffer.Animation.isAnimated( plug ) :
+				if self.parent().curveGadget().editablePlugs().contains( Gaffer.Animation.acquire( plug ) ) :
+					self.__updateColor()
 
 	def __updateColor( self ) :
 
 		editableCurves = self.parent().curveGadget().editablePlugs()
 		if editableCurves :
 			# set swatch to average color of selected curves
-			self.__colorSwatch.setColor( sum( curve.getColor() for curve in editableCurves ) / len( editableCurves ) )
-			self[ 1:3, 0 ] = self.__colorSwatch
+			self.__colorSwatch.setColor( sum( GafferUI.AnimationGadget.getColor( curve )
+				for curve in editableCurves ) / len( editableCurves ) )
+			self[ 1:3, 1 ] = self.__colorSwatch
 		else :
 			# there is no color to display so instead show invalid color label
-			self[ 1:3, 0 ] = self.__colorInvalid
+			self[ 1:3, 1 ] = self.__colorInvalid
 
 	def __setColor( self, widget, reason ) :
 
@@ -1164,10 +1173,10 @@ class _CurveWidget( GafferUI.GridContainer ) :
 		editableCurves = self.parent().curveGadget().editablePlugs()
 		if editableCurves :
 			color = widget.getColor()
-			with Gaffer.UndoScope( next( iter( editableCurves ) ).ancestor( Gaffer.ScriptNode ), mergeGroup=str( self.__mergeGroupIdColor ) ) :
+			with Gaffer.UndoScope( editableCurves[ 0 ].ancestor( Gaffer.ScriptNode ), mergeGroup=str( self.__mergeGroupIdColor ) ) :
 				for curve in editableCurves :
 					with Gaffer.BlockedConnection( self.__connections[ curve ].color ) :
-						curve.setColor( color )
+						Gaffer.Metadata.registerValue( curve[ "out" ].outputs()[ 0 ], "animation:color", color )
 			self.__updateColor()
 
 GafferUI.Editor.registerType( "AnimationEditor", AnimationEditor )

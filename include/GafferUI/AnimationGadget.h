@@ -105,6 +105,7 @@ class GAFFERUI_API AnimationGadget : public Gadget
 		void frame();
 
 		void plugDirtied( Gaffer::Plug *plug );
+		void plugMetadataDirtied( Gaffer::Plug *plug, IECore::InternedString key );
 
 		bool buttonPress( GadgetPtr gadget, const ButtonEvent &event );
 		bool buttonRelease( GadgetPtr gadget, const ButtonEvent &event );
