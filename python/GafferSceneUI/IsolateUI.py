@@ -83,8 +83,8 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Keeps all lights, regardless of other settings. This is
-			useful when isolating an asset but wanting to render it
+			Keeps all lights and light filters, regardless of other settings.
+			This is useful when isolating an asset but wanting to render it
 			using a light rig located elsewhere in the scene.
 			""",
 

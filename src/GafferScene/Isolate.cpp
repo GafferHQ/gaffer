@@ -40,6 +40,7 @@
 #include "Gaffer/StringPlug.h"
 
 #include "boost/algorithm/string/predicate.hpp"
+#include "boost/container/static_vector.hpp"
 
 using namespace std;
 using namespace IECore;
@@ -53,8 +54,9 @@ using namespace GafferScene;
 namespace
 {
 
-InternedString g_lightsSetName( "__lights" );
-InternedString g_camerasSetName( "__cameras" );
+const InternedString g_lightsSetName( "__lights" );
+const InternedString g_lightFiltersSetName( "__lightFilters" );
+const InternedString g_camerasSetName( "__cameras" );
 
 } // namespace
 
@@ -65,30 +67,24 @@ struct Isolate::SetsToKeep
 	{
 		const ScenePlug *scene = isolate->inPlug();
 
-		for( int i = 0; i < 2; ++i )
+		if( isolate->keepLightsPlug()->getValue() )
 		{
-			const BoolPlug *p = i == 0 ? isolate->keepLightsPlug() : isolate->keepCamerasPlug();
-			if( p->getValue() )
-			{
-				m_setOwners[i] = scene->set( i == 0 ? g_lightsSetName : g_camerasSetName );
-				m_sets[i] = &(m_setOwners[i]->readable());
-			}
-			else
-			{
-				m_sets[i] = nullptr;
-			}
+			m_sets.push_back( scene->set( g_lightsSetName )->readable() );
+			m_sets.push_back( scene->set( g_lightFiltersSetName )->readable() );
+		}
+
+		if( isolate->keepCamerasPlug()->getValue() )
+		{
+			m_sets.push_back( scene->set( g_camerasSetName )->readable() );
 		}
 	}
 
 	unsigned match( const ScenePath &path ) const
 	{
 		unsigned result = IECore::PathMatcher::NoMatch;
-		for( int i = 0; i < 2; ++i )
+		for( const auto &set : m_sets )
 		{
-			if( m_sets[i] )
-			{
-				result |= m_sets[i]->match( path );
-			}
+			result |= set.match( path );
 		}
 
 		return result;
@@ -96,8 +92,7 @@ struct Isolate::SetsToKeep
 
 	private :
 
-		IECore::ConstPathMatcherDataPtr m_setOwners[2];
-		const PathMatcher *m_sets[2];
+		boost::container::static_vector<IECore::PathMatcher, 3> m_sets;
 
 };
 
@@ -328,7 +323,7 @@ void Isolate::hashSet( const IECore::InternedString &setName, const Gaffer::Cont
 	const bool keepLights = keepLightsPlug()->getValue();
 	const bool keepCameras = keepCamerasPlug()->getValue();
 	if(
-		( setName == g_lightsSetName && keepLights ) ||
+		( ( setName == g_lightsSetName || setName == g_lightFiltersSetName ) && keepLights ) ||
 		( setName == g_camerasSetName && keepCameras )
 	)
 	{
@@ -370,7 +365,7 @@ IECore::ConstPathMatcherDataPtr Isolate::computeSet( const IECore::InternedStrin
 {
 	ConstPathMatcherDataPtr inputSetData = inPlug()->setPlug()->getValue();
 	if(
-		( setName == g_lightsSetName && keepLightsPlug()->getValue() ) ||
+		( ( setName == g_lightsSetName || setName == g_lightFiltersSetName ) && keepLightsPlug()->getValue() ) ||
 		( setName == g_camerasSetName && keepCamerasPlug()->getValue() )
 	)
 	{

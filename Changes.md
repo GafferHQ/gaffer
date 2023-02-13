@@ -43,6 +43,7 @@ Improvements
   - Added a "Disable Edit" command to the right-click menu, to easily disable tweaks in EditScopes (shortcut <kbd>D</kbd>).
   - Added a "Remove Attribute" command to the right-click menu, to delete attributes using the EditScope (shortcut <kbd>Delete</kbd>).
   - Adjustments made to the width of the "Name" column are now preserved when switching between sections.
+- Isolate : The `keepLights` setting now also keeps light filters.
 - AttributeTweaks : Added `Remove` mode.
 - PathListingWidget : Added support for columns that can automatically stretch to make use of available space.
 - Animation Editor : For protruding tangents the slope and scale controls are now disabled (non editable) and display constrained values.
@@ -159,6 +160,7 @@ Breaking Changes
 - Dispatcher : the `jobDirectory()` Python binding now returns a `pathlib.Path`, or `None` if it is empty.
 - `Context::EditableScope`, `ImagePlug::ChannelDataScope`, `ScenePlug::PathScope/SetScope` : Removed deprecated functions which didn't take pointers and required duplication of data.
 - ViewportGadget : Removed deprecated `gadgetsAt()` signature.
+- Isolate : The `keepLights` setting now also keeps light filters.
 
 Build
 -----
