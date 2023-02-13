@@ -1013,7 +1013,7 @@ libraries = {
 
 	"GafferScene" : {
 		"envAppends" : {
-			"LIBS" : [ "Gaffer", "Iex$OPENEXR_LIB_SUFFIX", "IECoreGL$CORTEX_LIB_SUFFIX", "IECoreImage$CORTEX_LIB_SUFFIX",  "IECoreScene$CORTEX_LIB_SUFFIX", "GafferImage", "GafferDispatch", "Half" ],
+			"LIBS" : [ "Gaffer", "Iex$OPENEXR_LIB_SUFFIX", "IECoreGL$CORTEX_LIB_SUFFIX", "IECoreImage$CORTEX_LIB_SUFFIX",  "IECoreScene$CORTEX_LIB_SUFFIX", "GafferImage", "GafferDispatch", "Half", "fmt" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferBindings", "GafferScene", "GafferDispatch", "GafferImage", "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreGL$CORTEX_LIB_SUFFIX" ],
@@ -1266,7 +1266,7 @@ libraries = {
 				( "CCL_NAMESPACE_END", "}" ),
 				( "WITH_OSL", "1" ),
 			],
-			"FRAMEWORKS" : [ "Foundation", "Metal" ],
+			"FRAMEWORKS" : [ "Foundation", "Metal", "IOKit" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBPATH" : [ "$CYCLES_ROOT/lib" ],

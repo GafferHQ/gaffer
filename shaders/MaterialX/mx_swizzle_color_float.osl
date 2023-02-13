@@ -1,0 +1,41 @@
+// OSL used to provide this shader, and we used it to emulate connections
+// between colour components in `IECoreScene::ShaderNetworkAlgo::addComponentConnectionAdapters`.
+// But OSL 1.12 has removed it for good, and it doesn't exist in the MaterialX
+// repo either (they seem to be all about on-the-fly code generation now instead).
+// Until we can wean ourself off it and onto something healthier, we provide our
+// own version here temporarily.
+//
+// > Note : Other than the parameters, this shares nothing with the
+// > [original implementation](https://github.com/AcademySoftwareFoundation/OpenShadingLanguage/blob/dev-1.11/src/shaders/MaterialX/mx_funcs.h#L546-L569),
+// > which looped over each character of `channels` and used `substr()` to extract it _even though it
+// > only actually used `channels[0]`_. This makes our implementation capable of being run on the GPU
+// > in Arnold, whereas the original was not.
+shader mx_swizzle_color_float(
+	color in = 0,
+	string channels = "rgb",
+	output float out = 0
+)
+{
+	int channel = getchar( channels, 0 );
+	if( channel == 114 || channel == 120 ) // "r" or "x"
+	{
+		out = in[0];
+	}
+	else if( channel == 103 || channel == 121 ) // "g" or "y"
+	{
+		out = in[1];
+	}
+	else if( channel == 98 || channel == 122 ) // "b" or "z"
+	{
+		out = in[2];
+	}
+	else if( channel == 49 ) // "1"
+	{
+		out = 1;
+	}
+	else
+	{
+		out = 0;
+	}
+}
+

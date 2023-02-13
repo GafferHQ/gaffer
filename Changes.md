@@ -11,16 +11,18 @@ Improvements
 
 - OSL : Will use OSL's batched API if it is available. This improves performance up to 3X when running heavy OSL computations using OSLObject or OSLImage. This is slightly experimental, since it relies on recently added OSL features. Please let us know if you encounter any new issues with OSL. To disable this optimization, set the environment variable `GAFFEROSL_USE_BATCHED=0`.
 - Arnold : Disabled ADP more thoroughly, using `ARNOLD_ADP_DISABLE=1` for Arnold 7.1.4.0 and greater. Set `ARNOLD_ADP_DISABLE=0` before running Gaffer if you wish to use ADP. [^1]
-- Cycles : [^1]
-  - Added warning when a shader contains a parameter which does not exist in Cycles.
-  - Added warning when a shader contains a parameter with an unsupported datatype.
-  - Added warning when a shader contains an enum parameter with an invalid value.
-  - Added support for passing InternedStringData to enum and string parameters.
+- Cycles :
+  - Updated to Cycles 3.4.
+  - Added warning when a shader contains a parameter which does not exist in Cycles. [^1]
+  - Added warning when a shader contains a parameter with an unsupported datatype. [^1]
+  - Added warning when a shader contains an enum parameter with an invalid value. [^1]
+  - Added support for passing InternedStringData to enum and string parameters. [^1]
 - PathListingWidget : Added support for columns that can automatically stretch to make use of available space.
 - LightEditor : Adjustments made to the width of the "Name" column are now preserved when switching between sections.
 - Animation Editor : For protruding tangents the slope and scale controls are now disabled (non editable) and display constrained values.
 - Expression : `pathlib.Path` values may now be assigned to StringPlugs.
 - Render : An error is now emitted if the render camera is hidden, instead of rendering through a default camera instead (#5131).
+- ResamplePrimitiveVariables : Extended the supported data types when resampling from a Constant primitive variable.
 
 Fixes
 -----
@@ -37,6 +39,7 @@ Fixes
 - Layouts : Fixed bug applying window size and position from saved layouts (#5042).
 - Light Editor : Fixed tooltips that were missing the "Double-click to toggle" hint. [^2]
 - ArnoldTextureBake : Fixed Windows path handling bug.
+- Arnold : Fixed input connections to individual color and vector components when rendering with a GPU device.
 
 API
 ---
@@ -49,8 +52,28 @@ API
 Breaking Changes
 ----------------
 
+- MaterialX : The majority of OSL shaders in `shaders/MaterialX` are no longer provided, as the `OpenShadingLanguage` project removed them and no direct equivalent exists in the `MaterialX` project itself. We recommend using alternative shaders, or if necessary, sourcing them from a previous Gaffer release.
 - Mute/Solo : Changed the dominant state to mute. If a light is both muted and soloed, its final state will be `mute`. [^2]
 - Locale : Removed `LC_NUMERIC=C` environment variable assignment from wrapper. This was a workaround for an OpenColorIO bug that has since been fixed.
+
+Build
+-----
+
+- Updated to GafferHQ/dependencies 6.0.0 :
+  - Cortex : Updated to version 10.4.5.0.
+  - Cycles : Updated to version 3.4.
+  - Embree : Updated to version 3.13.4.
+  - Expat : Added version 2.5.0.
+  - Fmt : Added version 9.1.0.
+  - OpenColorIO : Updated to version 2.1.2.
+  - OpenImageIO : Updated to version 2.4.8.0.
+  - OpenShadingLanguage : Updated to version 1.12.9.0.
+  - OpenSubdiv : Updated to version 3.4.4.
+  - PyString : Added version 1.1.4.
+  - USD :
+    - Updated to version 23.02.
+    - Enabled the OpenImageIO plugin. Among other things, this allows OpenEXR textures to be shown in `usdview`.
+  - YAML-CPP : Added version 0.7.0.
 
 [^1]: Changes inherited from 1.x. Can be omitted from the release notes for the final release of 1.2.
 [^2]: Changes made to features introduced in 1.2.0.0ax. Can be omitted from the release notes for the final release of 1.2.

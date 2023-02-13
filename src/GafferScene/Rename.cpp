@@ -48,11 +48,8 @@
 
 #include "tbb/enumerable_thread_specific.h"
 
-/// \todo Add the latest `fmtlib` to GafferHQ/dependencies
-/// and get it from there. We don't want to rely on OpenImageIO
-/// here, especially not its implementation details.
-#define FMT_HEADER_ONLY
-#include "OpenImageIO/detail/fmt/format.h"
+#include "fmt/args.h"
+#include "fmt/format.h"
 
 #include <regex>
 #include <unordered_set>
@@ -99,7 +96,6 @@ string regexReplace( const std::string &s, const std::regex &r, const std::strin
 
 		// Format this match using the format string provided, and
 		// add it to our result.
-		fmt::format_args formatArgs;
 		fmt::dynamic_format_arg_store<fmt::format_context> store;
 		for( const auto &subMatch : *matchIt )
 		{
