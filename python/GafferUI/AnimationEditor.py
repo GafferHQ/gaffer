@@ -330,8 +330,13 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 		# key interpolation for selected keys
 		interpolation = None if emptySelectedKeys else self.__curveEditor.keyWidget().getInterpolationForSelectedKeys()
 
+		# check there are editable curves
+		emptyEditableCurves = not self.__animationGadget.editablePlugs()
+
 		# build context menu
 		menuDefinition = IECore.MenuDefinition()
+
+		menuDefinition.append( "/KeysHeader", { "divider" : True, "label" : "Selected Keys" } )
 
 		for mode in sorted( Gaffer.Animation.Interpolation.values.values() ) :
 			menuDefinition.append(
@@ -361,7 +366,26 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 				}
 			)
 
-		self.__popupMenu = GafferUI.Menu( menuDefinition, title="Selected Keys" )
+		menuDefinition.append( "/CurvesHeader", { "divider" : True, "label" : "Selected Curves" } )
+
+		for direction in sorted( Gaffer.Animation.Direction.values.values() ) :
+			extrapolation = None if emptyEditableCurves else self.__curveEditor.curveWidget().getExtrapolationForEditableCurves( direction )
+			for mode in sorted( Gaffer.Animation.Extrapolation.values.values() ) :
+				menuDefinition.append(
+					"/Extrapolation/%s/%s" % ( direction.name, mode.name ),
+					{
+						"command" : functools.partial(
+							Gaffer.WeakMethod( self.__setEditableCurvesExtrapolation ),
+							direction=direction,
+							mode=mode
+						),
+						"active" : not emptyEditableCurves,
+						"checkBox" : extrapolation == mode,
+						"description" : Gaffer.Metadata.value( "Animation.Extrapolation.%s" % mode.name, "description" ),
+					}
+				)
+
+		self.__popupMenu = GafferUI.Menu( menuDefinition )
 		self.__popupMenu.popup( parent = self )
 
 		return True
@@ -377,6 +401,12 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 		with Gaffer.UndoScope( self.scriptNode() ) :
 			for key in self.__animationGadget.selectedKeys() :
 				key.setTieMode( mode )
+
+	def __setEditableCurvesExtrapolation( self, unused, direction, mode ) :
+
+		with Gaffer.UndoScope( self.scriptNode() ) :
+			for curve in self.__animationGadget.editablePlugs() :
+				curve.setExtrapolation( direction, mode )
 
 	def __repr__( self ) :
 
@@ -394,9 +424,11 @@ class _CurveEditor( GafferUI.TabbedContainer ) :
 
 		# create widgets
 		self.__keyWidget = _KeyWidget()
+		self.__curveWidget = _CurveWidget()
 
 		# set tab ordering
 		self.append( self.__keyWidget, "Key" )
+		self.append( self.__curveWidget, "Curve" )
 
 		# set up signals
 		self.__curveGadget.selectedKeys().memberAddedSignal().connect(
@@ -418,6 +450,9 @@ class _CurveEditor( GafferUI.TabbedContainer ) :
 	def keyWidget( self ) :
 		return self.__keyWidget
 
+	def curveWidget( self ) :
+		return self.__curveWidget
+
 	def __selectedKeysChanged( self ) :
 		self.__keyWidget.update()
 
@@ -432,10 +467,12 @@ class _CurveEditor( GafferUI.TabbedContainer ) :
 	def __curveSelected( self, unused, curve ) :
 		for tab in self :
 			tab.connect( curve )
+			tab.update()
 
 	def __curveDeselected( self, unused, curve ) :
 		for tab in self :
 			tab.disconnect( curve )
+			tab.update()
 
 # Private implementation - key widget
 class _KeyWidget( GafferUI.GridContainer ) :
@@ -868,6 +905,103 @@ class _KeyWidget( GafferUI.GridContainer ) :
 
 		# check if tie mode equals common tie mode of selected keys
 		commonMode = self.getTieModeForSelectedKeys()
+		return None if commonMode is None else commonMode == mode
+
+# Private implementation - curve widget
+class _CurveWidget( GafferUI.GridContainer ) :
+
+	from collections import namedtuple
+	Connections = namedtuple( "Connections", ("extrapolation") )
+
+	def __init__( self ) :
+
+		import IECore
+		import functools
+
+		GafferUI.GridContainer.__init__( self, spacing=4, borderWidth=4 )
+
+		# tool tips
+		extrapolationToolTip = "# Extrapolation\n\nThe %sextrapolation of the currently selected curves.\n"
+
+		# append extrapolation mode descriptions to tooltip
+		for mode in sorted( Gaffer.Animation.Extrapolation.values.values() ) :
+			description = Gaffer.Metadata.value( "Animation.Extrapolation.%s" % mode.name, "description" )
+			extrapolationToolTip += "\n* %s%s" % ( mode.name, " : %s" % description if description is not None else "" )
+
+		# create labels
+		extrapolationLabel = GafferUI.Label( text="Extrapolation", toolTip=( extrapolationToolTip % "" ) )
+
+		# create editors
+		self.__extrapolationEditor = (
+			GafferUI.MenuButton( toolTip=( extrapolationToolTip % "in " ) ),
+			GafferUI.MenuButton( toolTip=( extrapolationToolTip % "out " ) ) )
+
+		# build extrapolation menus
+		for direction in Gaffer.Animation.Direction.names.values() :
+			em = IECore.MenuDefinition()
+			for mode in sorted( Gaffer.Animation.Extrapolation.values.values() ) :
+				em.append( "%s" % ( mode.name ), {
+					"command" : functools.partial( Gaffer.WeakMethod( self.__setExtrapolation ), direction=direction, mode=mode ),
+					"checkBox" : functools.partial( Gaffer.WeakMethod( self.__checkBoxStateForExtrapolation ), direction=direction, mode=mode ),
+					"description" : Gaffer.Metadata.value( "Animation.Extrapolation.%s" % mode.name, "description" ),
+				} )
+			self.__extrapolationEditor[ direction ].setMenu( GafferUI.Menu( em ) )
+
+		# layout widgets
+		alignment = ( GafferUI.HorizontalAlignment.Right, GafferUI.VerticalAlignment.Center )
+		self.addChild( extrapolationLabel, index=( 0, 0 ), alignment=alignment )
+		self[ 1, 0 ] = self.__extrapolationEditor[ Gaffer.Animation.Direction.In ]
+		self[ 2, 0 ] = self.__extrapolationEditor[ Gaffer.Animation.Direction.Out ]
+
+		# curve connections
+		self.__connections = {}
+
+	def connect( self, curve ) :
+		if curve not in self.__connections :
+			self.__connections[ curve ] = _CurveWidget.Connections(
+				extrapolation = curve.extrapolationChangedSignal().connect( Gaffer.WeakMethod( self.__extrapolationChanged ), scoped = False ) )
+
+	def disconnect( self, curve ) :
+		if curve in self.__connections :
+			for connection in self.__connections[ curve ] :
+				connection.disconnect()
+			del self.__connections[ curve ]
+
+	def update( self ) :
+		for direction in Gaffer.Animation.Direction.names.values() :
+			self.__updateExtrapolation( direction )
+
+	def getExtrapolationForEditableCurves( self, direction ) :
+		# if multiple curves are editable check if all have same extrapolation in specified direction otherwise return None
+		return sole( curve.getExtrapolation( direction ) for curve in self.parent().curveGadget().editablePlugs() )
+
+	def __extrapolationChanged( self, curve, direction ) :
+		if self.parent().curveGadget().editablePlugs().contains( curve ) :
+			self.__updateExtrapolation( direction )
+
+	def __updateExtrapolation( self, direction ) :
+
+		mode = self.getExtrapolationForEditableCurves( direction )
+		self.__extrapolationEditor[ direction ].setText( "---" if mode is None else mode.name )
+
+		# set disabled when no editable curves
+		self.__extrapolationEditor[ direction ].setEnabled( bool( self.parent().curveGadget().editablePlugs() ) )
+
+	def __setExtrapolation( self, unused, direction, mode ) :
+
+		# set extrapolation for all editable curves
+		editableCurves = self.parent().curveGadget().editablePlugs()
+		if editableCurves :
+			with Gaffer.UndoScope( editableCurves[0].ancestor( Gaffer.ScriptNode ) ) :
+				for curve in editableCurves :
+					with Gaffer.BlockedConnection( self.__connections[ curve ].extrapolation ) :
+						curve.setExtrapolation( direction, mode )
+		self.__extrapolationEditor[ direction ].setText( mode.name )
+
+	def __checkBoxStateForExtrapolation( self, direction, mode ) :
+
+		# check if mode equals common mode of editable curves
+		commonMode = self.getExtrapolationForEditableCurves( direction )
 		return None if commonMode is None else commonMode == mode
 
 GafferUI.Editor.registerType( "AnimationEditor", AnimationEditor )

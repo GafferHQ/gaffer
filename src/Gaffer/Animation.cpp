@@ -98,7 +98,36 @@ private:
 };
 
 class Animation::Extrapolator : public IECore::RefCounted
-{};
+{
+public:
+
+	Animation::Extrapolation getExtrapolation() const;
+
+	static ConstExtrapolatorPtr get( Animation::Extrapolation extrapolation );
+	static ConstExtrapolatorPtr getDefault();
+
+protected:
+
+	// construct with specified extrapolation
+	explicit Extrapolator( Animation::Extrapolation extrapolation );
+
+	// evaluate curve without doing extrapolation
+	double evaluateInKeyRange( const CurvePlug& curve, double time ) const;
+
+private:
+
+	friend class CurvePlug;
+
+	/// Implement to return extrapolated value at specified time
+	virtual double evaluate( const CurvePlug& curve, Animation::Direction direction, double time ) const;
+	/// Implement to extend curve to specified key
+	virtual void extend( CurvePlug& curve, Animation::Direction direction, KeyPtr key ) const;
+
+	typedef std::vector< ConstExtrapolatorPtr > Container;
+	static const Container& get();
+
+	Animation::Extrapolation m_extrapolation;
+};
 
 } // Gaffer
 
@@ -121,6 +150,12 @@ double maxScale( const double slope )
 double ensurePositiveZero( const double value )
 {
 	return ( value == 0.0 ) ? 0.0 : value;
+}
+
+double clampSlope( const double slope )
+{
+	const double maxSlope = 1.e9;
+	return Imath::clamp( slope, -maxSlope, maxSlope );
 }
 
 double slopeFromPosition( const Imath::V2d& position, const Gaffer::Animation::Direction direction )
@@ -295,12 +330,6 @@ struct InterpolatorCubic
 	}
 
 private:
-
-	static double clampSlope( const double slope )
-	{
-		const double maxSlope = 1.e9;
-		return Imath::clamp( slope, -maxSlope, maxSlope );
-	}
 
 	void computeCoeffs(
 		const Gaffer::Animation::Key& keyLo, const Gaffer::Animation::Key& keyHi,
@@ -502,6 +531,207 @@ private:
 	}
 };
 
+// constant extrapolator
+
+struct ExtrapolatorConstant
+: public Gaffer::Animation::Extrapolator
+{
+	ExtrapolatorConstant()
+	: Gaffer::Animation::Extrapolator( Gaffer::Animation::Extrapolation::Constant )
+	{}
+
+	double evaluate( const Gaffer::Animation::CurvePlug& curve,
+		const Gaffer::Animation::Direction direction, const double /*time*/ ) const override
+	{
+		return curve.getExtrapolationKey( direction )->getValue();
+	}
+
+	void extend( Gaffer::Animation::CurvePlug& curve,
+		const Gaffer::Animation::Direction direction, const Gaffer::Animation::KeyPtr key ) const override
+	{
+		// ensure extrapolation key has tie mode manual and protruding tangent has default slope and scale
+
+		Gaffer::Animation::Key* const ke = curve.getExtrapolationKey( direction );
+		curve.addKey( key );
+		ke->setTieMode( Gaffer::Animation::TieMode::Manual );
+		ke->tangent( direction ).setSlopeAndScale( Gaffer::Animation::defaultSlope(), Gaffer::Animation::defaultScale() );
+	}
+};
+
+// linear extrapolator
+
+struct ExtrapolatorLinear
+: public Gaffer::Animation::Extrapolator
+{
+	ExtrapolatorLinear()
+	: Gaffer::Animation::Extrapolator( Gaffer::Animation::Extrapolation::Linear )
+	{}
+
+	double evaluate( const Gaffer::Animation::CurvePlug& curve,
+		const Gaffer::Animation::Direction direction, const double time ) const override
+	{
+		// NOTE : extrapolate line with slope matching tangent in direction
+		//        of extrapolation from key in direction of extrapolation.
+
+		const Gaffer::Animation::Key* const key = curve.getExtrapolationKey( direction );
+		return std::fma( clampSlope( key->tangent( direction ).getSlope() ), ( time - key->getTime() ), key->getValue() );
+	}
+
+	void extend( Gaffer::Animation::CurvePlug& curve,
+		const Gaffer::Animation::Direction direction, const Gaffer::Animation::KeyPtr key ) const override
+	{
+		// ensure slope of key's tangents match slope of protruding tangent and bake protruding tangent's slope
+
+		Gaffer::Animation::Tangent& pt = curve.getExtrapolationKey( direction )->tangent( direction );
+		const double slope = pt.getSlope();
+		key->tangentIn().setSlope( slope );
+		key->tangentOut().setSlope( slope );
+		curve.addKey( key );
+		pt.setSlope( slope );
+	}
+};
+
+// cycle extrapolator
+
+struct ExtrapolatorCycle
+: public Gaffer::Animation::Extrapolator
+{
+	ExtrapolatorCycle()
+	: Gaffer::Animation::Extrapolator( Gaffer::Animation::Extrapolation::Cycle )
+	{}
+
+	double evaluate( const Gaffer::Animation::CurvePlug& curve,
+		const Gaffer::Animation::Direction direction, const double time ) const override
+	{
+		// NOTE : repeat the curve indefinitely
+
+		const Gaffer::Animation::Key* const key = curve.getExtrapolationKey( direction );
+		const Gaffer::Animation::Key* const keyOpposite = curve.getExtrapolationKey( Gaffer::Animation::opposite( direction ) );
+
+		const double dt = std::abs( static_cast< double >( key->getTime() ) - static_cast< double >( keyOpposite->getTime() ) );
+		if( dt == 0.0 )
+		{
+			return key->getValue();
+		}
+
+		// NOTE : use modf instead of fmod to match implementation of ExtrapolatorCycleOffset.
+
+		double count;
+		const double offset = time - key->getTime();
+		const double remainder = std::modf( offset / dt, & count ) * dt;
+
+		return evaluateInKeyRange( curve, ( remainder == 0.0 )
+			? key->getTime()
+			: static_cast< float >( keyOpposite->getTime() + remainder ) );
+	}
+};
+
+// cycle offset extrapolator
+
+struct ExtrapolatorCycleOffset
+: public Gaffer::Animation::Extrapolator
+{
+	ExtrapolatorCycleOffset()
+	: Gaffer::Animation::Extrapolator( Gaffer::Animation::Extrapolation::CycleOffset )
+	{}
+
+	double evaluate( const Gaffer::Animation::CurvePlug& curve,
+		const Gaffer::Animation::Direction direction, const double time ) const override
+	{
+		// NOTE : repeat the curve indefinitely with each repetition offset to be relative in value to the last.
+
+		const Gaffer::Animation::Key* const key = curve.getExtrapolationKey( direction );
+		const Gaffer::Animation::Key* const keyOpposite = curve.getExtrapolationKey( Gaffer::Animation::opposite( direction ) );
+
+		const double dt = std::abs( static_cast< double >( key->getTime() ) - static_cast< double >( keyOpposite->getTime() ) );
+		if( dt == 0.0 )
+		{
+			return key->getValue();
+		}
+
+		double count;
+		const double offset = time - key->getTime();
+		const double remainder = std::modf( offset / dt, & count ) * dt;
+
+		const double value = evaluateInKeyRange( curve, ( remainder == 0.0 )
+			? key->getTime()
+			: static_cast< float >( keyOpposite->getTime() + remainder ) );
+
+		const double dv = static_cast< double >( key->getValue() ) - static_cast< double >( keyOpposite->getValue() );
+		return std::fma( std::abs( count ) + ( ( remainder == 0.0 ) ? 0.0 : 1.0 ), dv, value );
+	}
+};
+
+// cycle flop extrapolator
+
+struct ExtrapolatorCycleFlop
+: public Gaffer::Animation::Extrapolator
+{
+	ExtrapolatorCycleFlop()
+	: Gaffer::Animation::Extrapolator( Gaffer::Animation::Extrapolation::CycleFlop )
+	{}
+
+	double evaluate( const Gaffer::Animation::CurvePlug& curve,
+		const Gaffer::Animation::Direction direction, const double time ) const override
+	{
+		// NOTE : mirror the curve in time indefinitely.
+
+		const Gaffer::Animation::Key* const key = curve.getExtrapolationKey( direction );
+		const Gaffer::Animation::Key* const keyOpposite = curve.getExtrapolationKey( Gaffer::Animation::opposite( direction ) );
+
+		const double dt = std::abs( static_cast< double >( key->getTime() ) - static_cast< double >( keyOpposite->getTime() ) );
+		if( dt == 0.0 )
+		{
+			return key->getValue();
+		}
+
+		double count;
+		const double offset = time - key->getTime();
+		const double remainder = std::modf( offset / dt, & count ) * dt;
+
+		return evaluateInKeyRange( curve, static_cast< float >( ( ( static_cast< int >( count ) % 2 ) != 0 )
+			? ( keyOpposite->getTime() + remainder )
+			: ( key->getTime() - remainder ) ) );
+	}
+};
+
+// cycle flip extrapolator
+
+struct ExtrapolatorCycleFlip
+: public Gaffer::Animation::Extrapolator
+{
+	ExtrapolatorCycleFlip()
+	: Gaffer::Animation::Extrapolator( Gaffer::Animation::Extrapolation::CycleFlip )
+	{}
+
+	double evaluate( const Gaffer::Animation::CurvePlug& curve,
+		const Gaffer::Animation::Direction direction, const double time ) const override
+	{
+		// NOTE : repeat the curve indefinitely, alternately inverting the value of the curve
+		//        with each repetition offset to be relative in value to the last.
+
+		const Gaffer::Animation::Key* const key = curve.getExtrapolationKey( direction );
+		const Gaffer::Animation::Key* const keyOpposite = curve.getExtrapolationKey( Gaffer::Animation::opposite( direction ) );
+
+		const double dt = std::abs( static_cast< double >( key->getTime() ) - static_cast< double >( keyOpposite->getTime() ) );
+		if( dt == 0.0 )
+		{
+			return key->getValue();
+		}
+
+		double count;
+		const double offset = time - key->getTime();
+		const double remainder = std::modf( offset / dt, & count ) * dt;
+
+		const double value = evaluateInKeyRange( curve, static_cast< float >( keyOpposite->getTime() + remainder ) );
+
+		return ( ( static_cast< int >( count ) % 2 ) == 0 ) ? (
+				static_cast< double >( curve.getExtrapolationKey( Gaffer::Animation::Direction::Out )->getValue() ) +
+				static_cast< double >( curve.getExtrapolationKey( Gaffer::Animation::Direction::In )->getValue() ) - value )
+			: value;
+	}
+};
+
 } // namespace
 
 namespace Gaffer
@@ -580,6 +810,66 @@ Animation::ConstInterpolatorPtr Animation::Interpolator::get( const Animation::I
 Animation::ConstInterpolatorPtr Animation::Interpolator::getDefault()
 {
 	return Interpolator::get().front();
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Extrapolator implementation
+//////////////////////////////////////////////////////////////////////////
+
+Animation::Extrapolator::Extrapolator( const Animation::Extrapolation extrapolation )
+: m_extrapolation( extrapolation )
+{}
+
+Animation::Extrapolation Animation::Extrapolator::getExtrapolation() const
+{
+	return m_extrapolation;
+}
+
+double Animation::Extrapolator::evaluateInKeyRange( const Animation::CurvePlug& curve, const double time ) const
+{
+	return curve.evaluateInternal( time, /* extrapolate = */ false );
+}
+
+double Animation::Extrapolator::evaluate(
+	const Animation::CurvePlug& /*curve*/, const Animation::Direction /*direction*/, const double /*time*/ ) const
+{
+	return 0.0;
+}
+
+void Animation::Extrapolator::extend(
+	Animation::CurvePlug& curve, const Animation::Direction /*direction*/, const KeyPtr key ) const
+{
+	curve.addKey( key );
+}
+
+const Animation::Extrapolator::Container& Animation::Extrapolator::get()
+{
+	static const Container container
+	{
+		ConstExtrapolatorPtr( new ExtrapolatorConstant() ),
+		ConstExtrapolatorPtr( new ExtrapolatorLinear() ),
+		ConstExtrapolatorPtr( new ExtrapolatorCycle() ),
+		ConstExtrapolatorPtr( new ExtrapolatorCycleOffset() ),
+		ConstExtrapolatorPtr( new ExtrapolatorCycleFlop() ),
+		ConstExtrapolatorPtr( new ExtrapolatorCycleFlip() )
+	};
+
+	return container;
+}
+
+Animation::ConstExtrapolatorPtr Animation::Extrapolator::get( const Animation::Extrapolation extrapolation )
+{
+	const Container& container = Extrapolator::get();
+	const Container::const_iterator it =
+		std::find_if( container.begin(), container.end(),
+			[ extrapolation ]( const ConstExtrapolatorPtr& extrapolator ) -> bool
+			{ return extrapolator->getExtrapolation() == extrapolation; } );
+	return ( it != container.end() ) ? ( *it ) : Extrapolator::getDefault();
+}
+
+Animation::ConstExtrapolatorPtr Animation::Extrapolator::getDefault()
+{
+	return Extrapolator::get().front();
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -1713,8 +2003,8 @@ Animation::CurvePlug::CurvePlug( const std::string &name, const Plug::Direction 
 , m_keyInterpolationChangedSignal()
 , m_keyTieModeChangedSignal()
 , m_extrapolationChangedSignal()
-, m_extrapolatorIn()
-, m_extrapolatorOut()
+, m_extrapolatorIn( Extrapolator::getDefault() )
+, m_extrapolatorOut( Extrapolator::getDefault() )
 {
 	addChild( new FloatPlug( "out", Plug::Out ) );
 }
@@ -1753,6 +2043,11 @@ Animation::CurvePlug::CurvePlugKeySignal& Animation::CurvePlug::keyInterpolation
 Animation::CurvePlug::CurvePlugKeySignal& Animation::CurvePlug::keyTieModeChangedSignal()
 {
 	return m_keyTieModeChangedSignal;
+}
+
+Animation::CurvePlug::CurvePlugDirectionSignal& Animation::CurvePlug::extrapolationChangedSignal()
+{
+	return m_extrapolationChangedSignal;
 }
 
 Animation::KeyPtr Animation::CurvePlug::addKey( const Animation::KeyPtr &key, const bool removeActiveClashing )
@@ -1952,9 +2247,7 @@ Animation::KeyPtr Animation::CurvePlug::insertKeyInternal( const float time, con
 		lo = finalKey();
 	}
 
-	// if key already exists at time then return it with updated value, otherwise if time is
-	// outside existing range of keys, there is no way currently to extrapolate a value so
-	// if no value has been provided then return KeyPtr().
+	// if key already exists at time then return it with updated value
 
 	if( key )
 	{
@@ -1963,10 +2256,6 @@ Animation::KeyPtr Animation::CurvePlug::insertKeyInternal( const float time, con
 			key->setValue( *value );
 		}
 
-		return key;
-	}
-	else if( !( lo && hi ) && ( value == nullptr ) )
-	{
 		return key;
 	}
 
@@ -1990,66 +2279,86 @@ Animation::KeyPtr Animation::CurvePlug::insertKeyInternal( const float time, con
 
 	// create key
 
-	key.reset( new Key( time, ( ( value != nullptr ) ? ( *value ) : 0.f ), interpolator->getInterpolation(),
+	const float evaluatedValue = evaluate( time );
+	key.reset( new Key( time, ( value == nullptr ) ? evaluatedValue : ( *value ), interpolator->getInterpolation(),
 		defaultSlope(), defaultScale(), defaultSlope(), defaultScale(), TieMode::Manual ) );
 
-	// if specified value is the same as the evaluated value of the curve then bisect span.
+	// check if specified value is the same as the evaluated value of the curve.
 
-	if( ( lo && hi ) && ( ( value == nullptr ) || ( evaluate( time ) == ( *value ) ) ) )
+	if( ( value == nullptr ) || ( evaluatedValue == ( *value ) ) )
 	{
-		// normalise time to lo, hi key time range
+		// time is in range of keys bisect span
 
-		const double lt = ( time - lo->m_time );
-		const double ht = ( hi->m_time - time );
-		const double nt = std::min( std::max( lt / lo->m_tangentOut.m_dt, 0.0 ), 1.0 );
+		if( lo && hi )
+		{
+			// normalise time to lo, hi key time range
 
-		// create dummmy hi/lo keys. use dummy keys to prevent unwanted side effects from
-		// badly behaved interpolators.
+			const double lt = ( time - lo->m_time );
+			const double ht = ( hi->m_time - time );
+			const double nt = std::min( std::max( lt / lo->m_tangentOut.m_dt, 0.0 ), 1.0 );
 
-		KeyPtr kl( new Key( lo->m_time, lo->getValue(), interpolator->getInterpolation() ) );
-		KeyPtr kh( new Key( hi->m_time, hi->getValue(), interpolator->getInterpolation() ) );
+			// create dummmy hi/lo keys. use dummy keys to prevent unwanted side effects from
+			// badly behaved interpolators.
 
-		kl->m_tangentIn.m_slope = lo->m_tangentIn.m_slope;
-		kl->m_tangentIn.m_scale = lo->m_tangentIn.m_scale;
-		kl->m_tangentOut.m_slope = lo->m_tangentOut.m_slope;
-		kl->m_tangentOut.m_scale = lo->m_tangentOut.m_scale;
-		kl->m_tieMode = TieMode::Manual;
+			KeyPtr kl( new Key( lo->m_time, lo->getValue(), interpolator->getInterpolation() ) );
+			KeyPtr kh( new Key( hi->m_time, hi->getValue(), interpolator->getInterpolation() ) );
 
-		kh->m_tangentIn.m_slope = hi->m_tangentIn.m_slope;
-		kh->m_tangentIn.m_scale = hi->m_tangentIn.m_scale;
-		kh->m_tangentOut.m_slope = hi->m_tangentOut.m_slope;
-		kh->m_tangentOut.m_scale = hi->m_tangentOut.m_scale;
-		kh->m_tieMode = TieMode::Manual;
+			kl->m_tangentIn.m_slope = lo->m_tangentIn.m_slope;
+			kl->m_tangentIn.m_scale = lo->m_tangentIn.m_scale;
+			kl->m_tangentOut.m_slope = lo->m_tangentOut.m_slope;
+			kl->m_tangentOut.m_scale = lo->m_tangentOut.m_scale;
+			kl->m_tieMode = TieMode::Manual;
 
-		// new tangents are in space of new spans (post-bisection)
+			kh->m_tangentIn.m_slope = hi->m_tangentIn.m_slope;
+			kh->m_tangentIn.m_scale = hi->m_tangentIn.m_scale;
+			kh->m_tangentOut.m_slope = hi->m_tangentOut.m_slope;
+			kh->m_tangentOut.m_scale = hi->m_tangentOut.m_scale;
+			kh->m_tieMode = TieMode::Manual;
 
-		kl->m_tangentOut.m_dt = lt;
-		key->m_tangentIn.m_dt = lt;
-		key->m_tangentOut.m_dt = ht;
-		kh->m_tangentIn.m_dt = ht;
+			// new tangents are in space of new spans (post-bisection)
 
-		// bisect span
+			kl->m_tangentOut.m_dt = lt;
+			key->m_tangentIn.m_dt = lt;
+			key->m_tangentOut.m_dt = ht;
+			kh->m_tangentIn.m_dt = ht;
 
-		interpolator->bisect( *lo, *hi, nt, lo->m_tangentOut.m_dt, *key, kl->m_tangentOut, kh->m_tangentIn );
+			// bisect span
 
-		// retrieve new tangent slope and scale
+			interpolator->bisect( *lo, *hi, nt, lo->m_tangentOut.m_dt, *key, kl->m_tangentOut, kh->m_tangentIn );
 
-		const double lfsl = kl->m_tangentOut.getSlope();
-		const double lfsc = kl->m_tangentOut.getScale();
-		const double hisl = kh->m_tangentIn.getSlope();
-		const double hisc = kh->m_tangentIn.getScale();
+			// retrieve new tangent slope and scale
 
-		// add new key to curve
+			const double lfsl = kl->m_tangentOut.getSlope();
+			const double lfsc = kl->m_tangentOut.getScale();
+			const double hisl = kh->m_tangentIn.getSlope();
+			const double hisc = kh->m_tangentIn.getScale();
 
-		addKey( key );
+			// add new key to curve
 
-		// set new tangent slope and scale for lo and hi keys
+			addKey( key );
 
-		Private::ScopedAssignment< TieMode > ltm( lo->m_tieMode, TieMode::Manual );
-		Private::ScopedAssignment< TieMode > htm( hi->m_tieMode, TieMode::Manual );
+			// set new tangent slope and scale for lo and hi keys
 
-		lo->m_tangentOut.setSlopeAndScale( lfsl, lfsc );
-		hi->m_tangentIn.setSlopeAndScale( hisl, hisc );
+			Private::ScopedAssignment< TieMode > ltm( lo->m_tieMode, TieMode::Manual );
+			Private::ScopedAssignment< TieMode > htm( hi->m_tieMode, TieMode::Manual );
+
+			lo->m_tangentOut.setSlopeAndScale( lfsl, lfsc );
+			hi->m_tangentIn.setSlopeAndScale( hisl, hisc );
+		}
+		else if( lo || hi )
+		{
+			// time is outside range of keys use extrapolator to extend curve
+
+			const Animation::Direction direction = ( lo )
+				? Animation::Direction::Out
+				: Animation::Direction::In;
+
+			( this->*m_extrapolators[ static_cast< int >( direction ) ] )->extend( *this, direction, key );
+		}
+		else
+		{
+			addKey( key );
+		}
 	}
 	else
 	{
@@ -2086,6 +2395,16 @@ const Animation::Key *Animation::CurvePlug::getKey( const float time ) const
 	return ( it != m_keys.end() )
 		? &( *it )
 		: nullptr;
+}
+
+Animation::Key *Animation::CurvePlug::getExtrapolationKey( const Animation::Direction direction )
+{
+	return const_cast< Key* >( static_cast< const CurvePlug* >( this )->getExtrapolationKey( direction ) );
+}
+
+const Animation::Key *Animation::CurvePlug::getExtrapolationKey( const Animation::Direction direction ) const
+{
+	return ( direction == Animation::Direction::In ) ? firstKey() : finalKey();
 }
 
 void Animation::CurvePlug::removeKey( const Animation::KeyPtr &key )
@@ -2393,7 +2712,44 @@ Animation::ConstKeyIterator Animation::CurvePlug::end() const
 	return m_keys.end();
 }
 
+Animation::Extrapolation Animation::CurvePlug::getExtrapolation( const Animation::Direction direction ) const
+{
+	return ( this->*m_extrapolators[ static_cast< int >( direction ) ] )->getExtrapolation();
+}
+
+void Animation::CurvePlug::setExtrapolation( const Animation::Direction direction, const Animation::Extrapolation extrapolation )
+{
+	const ConstExtrapolatorPtr extrapolator = Extrapolator::get( extrapolation );
+	const ConstExtrapolatorPtr previousExtrapolator = this->*m_extrapolators[ static_cast< int >( direction ) ];
+
+	if( ! extrapolator || ( extrapolator == previousExtrapolator ) )
+	{
+		return;
+	}
+
+	Action::enact(
+		this,
+		// Do
+		[ this, extrapolator, direction ] {
+			this->*m_extrapolators[ static_cast< int >( direction ) ] = extrapolator;
+			this->m_extrapolationChangedSignal( this, direction );
+			this->propagateDirtiness( this->outPlug() );
+		},
+		// Undo
+		[ this, previousExtrapolator, direction ] {
+			this->*m_extrapolators[ static_cast< int >( direction ) ] = previousExtrapolator;
+			this->m_extrapolationChangedSignal( this, direction );
+			this->propagateDirtiness( this->outPlug() );
+		}
+	);
+}
+
 float Animation::CurvePlug::evaluate( const float time ) const
+{
+	return evaluateInternal( time, /* extrapolate = */ true );
+}
+
+double Animation::CurvePlug::evaluateInternal( const double time, const bool extrapolate ) const
 {
 	// NOTE : no keys return 0
 
@@ -2408,14 +2764,23 @@ float Animation::CurvePlug::evaluate( const float time ) const
 	Keys::const_iterator hiIt = m_keys.lower_bound( time );
 	if( hiIt == m_keys.end() )
 	{
-		return ( m_keys.rbegin() )->getValue();
+		return ( extrapolate )
+			? m_extrapolatorOut->evaluate( *this, Animation::Direction::Out, time )
+			: finalKey()->getValue();
 	}
 
 	const Key &hi = *( hiIt );
 
-	if( hi.m_time == time || hiIt == m_keys.begin() )
+	if( hi.m_time == time )
 	{
 		return hi.getValue();
+	}
+
+	if( hiIt == m_keys.begin() )
+	{
+		return ( extrapolate )
+			? m_extrapolatorIn->evaluate( *this, Animation::Direction::In, time )
+			: firstKey()->getValue();
 	}
 
 	const Key &lo = *( std::prev( hiIt ) );
@@ -2628,6 +2993,11 @@ Animation::Interpolation Animation::defaultInterpolation()
 	return Interpolator::getDefault()->getInterpolation();
 }
 
+Animation::Extrapolation Animation::defaultExtrapolation()
+{
+	return Extrapolator::getDefault()->getExtrapolation();
+}
+
 Animation::TieMode Animation::defaultTieMode()
 {
 	return TieMode::Scale;
@@ -2665,6 +3035,28 @@ const char* Animation::toString( const Animation::Interpolation interpolation )
 		default:
 			assert( 0 );
 			return nullptr;
+	}
+}
+
+const char* Animation::toString( const Animation::Extrapolation extrapolation )
+{
+	switch( extrapolation )
+	{
+		case Extrapolation::Constant:
+			return "Constant";
+		case Extrapolation::Linear:
+			return "Linear";
+		case Extrapolation::Cycle:
+			return "Cycle";
+		case Extrapolation::CycleOffset:
+			return "CycleOffset";
+		case Extrapolation::CycleFlop:
+			return "CycleFlop";
+		case Extrapolation::CycleFlip:
+			return "CycleFlip";
+		default:
+			assert( 0 );
+			return 0;
 	}
 }
 

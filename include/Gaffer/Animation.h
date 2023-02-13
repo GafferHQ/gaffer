@@ -73,6 +73,23 @@ class GAFFER_API Animation : public ComputeNode
 			Bezier
 		};
 
+		/// Defines the method used to extrapolate the shape of a curve outside the range of its keys.
+		enum class Extrapolation
+		{
+			/// Curve is extended as a flat line.
+			Constant = 0,
+			/// Curve is extended as a line with slope matching tangent in direction of extrapolation.
+			Linear,
+			/// Curve is repeated indefinitely.
+			Cycle,
+			/// Curve is repeated indefinitely with each repetition offset in value to preserve continuity.
+			CycleOffset,
+			/// Curve is repeated indefinitely with each repetition mirrored in time.
+			CycleFlop,
+			/// Curve is repeated indefinitely with each repetition inverted in value and offset to preserve continuity.
+			CycleFlip
+		};
+
 		/// Defines direction relative to a key or curve span.
 		enum class Direction
 		{
@@ -93,6 +110,9 @@ class GAFFER_API Animation : public ComputeNode
 
 		/// Get the default interpolation mode.
 		static Interpolation defaultInterpolation();
+
+		/// Get the default extrapolation mode.
+		static Extrapolation defaultExtrapolation();
 
 		/// Get the default tie mode.
 		static TieMode defaultTieMode();
@@ -341,6 +361,7 @@ class GAFFER_API Animation : public ComputeNode
 				~CurvePlug() override;
 
 				using CurvePlugKeySignal = Signals::Signal<void ( CurvePlug*, Key* ), Signals::CatchingCombiner<void>>;
+				using CurvePlugDirectionSignal = Signals::Signal<void ( CurvePlug*, Animation::Direction ), Signals::CatchingCombiner<void>>;
 
 				CurvePlugKeySignal& keyAddedSignal();
 				CurvePlugKeySignal& keyRemovedSignal();
@@ -348,6 +369,7 @@ class GAFFER_API Animation : public ComputeNode
 				CurvePlugKeySignal& keyValueChangedSignal();
 				CurvePlugKeySignal& keyInterpolationChangedSignal();
 				CurvePlugKeySignal& keyTieModeChangedSignal();
+				CurvePlugDirectionSignal& extrapolationChangedSignal();
 
 				/// Adds specified key to curve, if key is parented to another curve or already parented
 				/// to the curve and inactive it is removed from its parent curve. If the key has already
@@ -358,18 +380,19 @@ class GAFFER_API Animation : public ComputeNode
 				/// \undoable
 				KeyPtr addKey( const KeyPtr &key, bool removeActiveClashing = true );
 
-				/// Inserts a key at the given time, if the specified time is outside the range of
-				/// the existing keys there is no way (currently) to extrapolate a value so KeyPtr()
-				/// is returned, otherwise the curve is bisected at the specified time. If there is
-				/// already a key at the specified time it is returned unaltered.
+				/// Inserts a key at the given time, if the specified time is outside the range of the
+				/// existing keys the extrapolated value of the curve will be used, otherwise the curve
+				/// is bisected at the specified time. If there is already a key at the specified time
+				/// it is returned unaltered.
 				/// \undoable
 				KeyPtr insertKey( float time );
 
-				/// Inserts a key at the given time, if the specified value is equivalent to the
-				/// evaluated value of the curve at the specfied time the curve is bisected otherwise
-				/// a new key is created and added with the same interpolation as the previous or
-				/// first key of the curve. If there is already a key at the specified time its value
-				/// is adjusted if its not equivalent to the specified value.
+				/// Inserts a key at the given time, if the specified time is in the time range of the
+				/// curve's keys and the specified value is equivalent to the evaluated value of the
+				/// curve at the specfied time, the curve is bisected otherwise a new key is created
+				/// and added with the same interpolation as the previous or first key of the curve.
+				/// If there is already a key at the specified time its value is adjusted if its not
+				/// equivalent to the specified value.
 				/// \undoable
 				KeyPtr insertKey( float time, float value );
 
@@ -426,7 +449,19 @@ class GAFFER_API Animation : public ComputeNode
 				/// iterator to end of range of active keys. (const access)
 				ConstKeyIterator end() const;
 
-				/// Evaluate the curve at the specified time
+				/// Set extrapolation in specified direction.
+				/// \undoable
+				void setExtrapolation( Animation::Direction direction, Extrapolation extrapolation );
+				/// Get extrapolation in specified direction.
+				Extrapolation getExtrapolation( Animation::Direction direction ) const;
+				/// Get extrapolation key in specified direction.
+				/// This is the key from which the curve will be extrapolated in the specified direction.
+				Key *getExtrapolationKey( Animation::Direction direction );
+				/// Get extrapolation key in specified direction. (const access)
+				/// This is the key from which the curve will be extrapolated in the specified direction.
+				const Key *getExtrapolationKey( Animation::Direction direction ) const;
+
+				/// Evaluate the curve at the specified time.
 				float evaluate( float time ) const;
 
 				/// Output plug for evaluating the curve
@@ -439,10 +474,9 @@ class GAFFER_API Animation : public ComputeNode
 
 				friend class Key;
 				friend class Tangent;
+				friend class Extrapolator;
 				friend KeyIterator;
 				friend ConstKeyIterator;
-
-				using CurvePlugDirectionSignal = Signals::Signal<void ( CurvePlug*, Animation::Direction ), Signals::CatchingCombiner<void>>;
 
 				Key *firstKey();
 				Key *finalKey();
@@ -450,6 +484,7 @@ class GAFFER_API Animation : public ComputeNode
 				const Key *finalKey() const;
 
 				KeyPtr insertKeyInternal( float, const float* );
+				double evaluateInternal( double, bool ) const;
 
 				struct TimeKey
 				{
@@ -480,6 +515,7 @@ class GAFFER_API Animation : public ComputeNode
 
 		/// convert enums to strings
 		static const char* toString( Interpolation interpolation );
+		static const char* toString( Extrapolation extrapolation );
 		static const char* toString( Direction direction );
 		static const char* toString( TieMode mode );
 

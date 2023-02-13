@@ -829,9 +829,11 @@ std::string AnimationGadget::getToolTip( const IECore::LineSegment3f &line ) con
 		const Gaffer::Animation::Tangent& tangent = keyTangent.first->tangent( keyTangent.second );
 		std::ostringstream os;
 		os.precision( 4 );
-		os << "Direction: " << Gaffer::Animation::toString( tangent.direction() );
-		os << "<br>Slope: " << tangent.getSlope();
-		os << "<br>Scale: " << tangent.getScale();
+		os	<< "**" << drivenPlugName( keyTangent.first->parent() ) << "**"
+			<< "  \nDirection : " << Gaffer::Animation::toString( tangent.direction() )
+			<< "  \nSlope\t : " << tangent.getSlope()
+			<< "  \nScale\t : " << tangent.getScale()
+			;
 		return os.str();
 	}
 	else if( const Animation::ConstKeyPtr key = keyAt( line ) )
@@ -841,15 +843,22 @@ std::string AnimationGadget::getToolTip( const IECore::LineSegment3f &line ) con
 
 		std::ostringstream os;
 		os.precision( 4 );
-		os << "Frame: " << std::round( key->getTime() * scriptNode->framesPerSecondPlug()->getValue() );
-		os << "<br>Value: " << key->getValue();
-		os << "<br>Interpolation: " << Animation::toString( key->getInterpolation() );
-		os << "<br>Tie Mode: " << Animation::toString( key->getTieMode() );
+		os	<< "**" << drivenPlugName( key->parent() ) << "**"
+			<< "  \nFrame : " << std::round( key->getTime() * scriptNode->framesPerSecondPlug()->getValue() )
+			<< "  \nValue : " << key->getValue()
+			<< "  \nInterpolation : " << Animation::toString( key->getInterpolation() )
+			<< "  \nTie Mode : " << Animation::toString( key->getTieMode() )
+			;
 		return os.str();
 	}
 	else if( Animation::ConstCurvePlugPtr curvePlug = curveAt( line ) )
 	{
-		return drivenPlugName( curvePlug.get() );
+		std::ostringstream os;
+		os	<< "**" << drivenPlugName( curvePlug.get() ) << "**"
+			<< "  \nExtrapolation In : " << Animation::toString( curvePlug->getExtrapolation( Animation::Direction::In ) )
+			<< "  \nExtrapolation Out : " << Animation::toString( curvePlug->getExtrapolation( Animation::Direction::Out ) )
+			;
+		return os.str();
 	}
 
 	return "";
@@ -1816,6 +1825,27 @@ void AnimationGadget::renderCurve( const Animation::CurvePlug *curvePlug, const 
 	const Style::State styleState = ( curvePlug == m_highlightedCurve ) ? Style::HighlightedState : Style::NormalState;
 	const Imath::Color3f color3 = colorFromName( drivenPlugName( curvePlug ) );
 
+	// draw extrapolated curve (direction in)
+	// NOTE : generate vertices starting at extrapolation key, so that any pattern applied
+	//        to the curve extends from the extrapolation key.
+	const Gaffer::Animation::Key* const keyIn = curvePlug->getExtrapolationKey( Gaffer::Animation::Direction::In );
+	if( keyIn && ( keyIn->getTime() > tmin ) )
+	{
+		m_vertices.clear();
+		switch( curvePlug->getExtrapolation( Gaffer::Animation::Direction::In ) )
+		{
+			case Gaffer::Animation::Extrapolation::Constant:
+			case Gaffer::Animation::Extrapolation::Linear:
+				m_vertices.push_back( viewportGadget->worldToRasterSpace( V3f( keyIn->getTime(), keyIn->getValue(), 0 ) ) );
+				m_vertices.push_back( viewportGadget->worldToRasterSpace( V3f( tmin, curvePlug->evaluate( tmin ), 0 ) ) );
+				break;
+			default:
+				evaluateCurve( curvePlug, std::min( tmax, keyIn->getTime() ), tmin, unitPerPx, viewportGadget, m_vertices );
+				break;
+		}
+		style->renderAnimationCurve( m_vertices, /* inKeyRange = */ false, styleState, &color3 );
+	}
+
 	// draw the animation curve between keys
 	m_vertices.clear();
 	for( const auto &key : *curvePlug )
@@ -1850,8 +1880,28 @@ void AnimationGadget::renderCurve( const Animation::CurvePlug *curvePlug, const 
 		previousKey = &key;
 		previousKeyPosition = keyPosition;
 	}
-
 	style->renderAnimationCurve( m_vertices, /* inKeyRange = */ true, styleState, &color3 );
+
+	// draw extrapolated curve (direction out)
+	// NOTE : generate vertices starting at extrapolation key, so that any pattern applied
+	//        to the curve extends from the extrapolation key.
+	const Gaffer::Animation::Key* const keyOut = curvePlug->getExtrapolationKey( Gaffer::Animation::Direction::Out );
+	if( keyOut && ( keyOut->getTime() < tmax ) )
+	{
+		m_vertices.clear();
+		switch( curvePlug->getExtrapolation( Gaffer::Animation::Direction::Out ) )
+		{
+			case Gaffer::Animation::Extrapolation::Constant:
+			case Gaffer::Animation::Extrapolation::Linear:
+				m_vertices.push_back( viewportGadget->worldToRasterSpace( V3f( keyOut->getTime(), keyOut->getValue(), 0 ) ) );
+				m_vertices.push_back( viewportGadget->worldToRasterSpace( V3f( tmax, curvePlug->evaluate( tmax ), 0 ) ) );
+				break;
+			default:
+				evaluateCurve( curvePlug, std::max( tmin, keyOut->getTime() ), tmax, unitPerPx, viewportGadget, m_vertices );
+				break;
+		}
+		style->renderAnimationCurve( m_vertices, /* inKeyRange = */ false, styleState, &color3 );
+	}
 }
 
 void AnimationGadget::renderFrameIndicator( int frame, const Style *style, bool preview, float lineWidth ) const
