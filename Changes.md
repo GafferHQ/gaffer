@@ -1,3 +1,11 @@
+1.2.x.x (relative to 1.2.0.0)
+=======
+
+Fixes
+-----
+
+- Viewer : Fixed crash displaying Arnold quad lights in portal mode.
+
 1.2.0.0 (relative to 1.1.9.0)
 =======
 

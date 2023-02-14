@@ -534,7 +534,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		if( parameter<bool>( metadataTarget, shaderParameters, "portalParameter", false ) )
 		{
 			// Because we don't support variable size lights, we keep a fixed hatching scale
-			geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( quadPortal( size, muted ) ) );
+			geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( quadPortal( size, /* hatchingScale = */ 1.0f, muted ) ) );
 		}
 		else
 		{
