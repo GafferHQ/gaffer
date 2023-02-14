@@ -49,6 +49,37 @@ To set up the `gaffer` command in Linux:
 You can now execute `gaffer` as a command from any directory in the terminal.
 
 
+## Setting up the "gaffer" command in Windows ##
+
+To set up the `gaffer` command in Windows:
+
+1. Right click on the Start menu and click on __System__.
+
+2. In the "Settings" window, click on __Advanced System Settings__.
+
+3. In the "System Properties" window, click on __Environment Variables__.
+
+4. The "Environment Variables" window contains two sections, one for the current user's environment variables and the other for system environment variables, which apply to all users. In the appropriate section, select the `Path` entry and click __Edit...__
+
+5. In the "Edit environment variable" window, click __New__ and specify the path to the Gaffer install's `bin` directory.
+
+    - `C:\software\gaffer-!GAFFER_VERSION!-windows\bin`
+
+6. Click __Ok__ to apply the edit, and __Ok__ again to dismiss the "Edit environment variable" window.
+
+7. In a new Command Prompt window, test that the `PATH` variable has been updated:
+
+    ```powershell
+    C:\Users\user> echo %PATH%
+    # C:\Windows\system32;C:\software\gaffer-!GAFFER_VERSION!-windows\bin
+    ```
+
+> Note :
+> Depending on your system configuration, the beginning of your `PATH` variable might not appear exactly as above. What's important is whether `C:\software\gaffer-!GAFFER_VERSION!-windows\bin` appears.
+
+You can now execute `gaffer` as a command from any directory in the command prompt.
+
+
 ## Setting up the "gaffer" command in macOS ##
 
 The default terminal in macOS is bash, so you will need to add to the `PATH` variable in the bash user config.
