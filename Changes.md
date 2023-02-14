@@ -1,6 +1,10 @@
 1.2.x.x (relative to 1.2.1.1)
 =======
 
+Improvements
+------------
+- File Menu: Add autoload backup option to preferences and file menu command to open latest backup.
+
 1.2.1.1 (relative to 1.2.1.0)
 =======
 
