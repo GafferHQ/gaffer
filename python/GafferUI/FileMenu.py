@@ -51,6 +51,7 @@ def appendDefinitions( menuDefinition, prefix="" ) :
 	menuDefinition.append( prefix + "/New", { "command" : new, "shortCut" : "Ctrl+N" } )
 	menuDefinition.append( prefix + "/Open...", { "command" : open, "shortCut" : "Ctrl+O" } )
 	menuDefinition.append( prefix + "/Open Recent", { "subMenu" : openRecent } )
+	menuDefinition.append( prefix + "/Open Backup", { "command" : openBackup, "active" : __backupAvailable } )
 	menuDefinition.append( prefix + "/OpenDivider", { "divider" : True } )
 	menuDefinition.append( prefix + "/Save", { "command" : save, "shortCut" : "Ctrl+S" } )
 	menuDefinition.append( prefix + "/Save As...", { "command" : saveAs, "shortCut" : "Shift+Ctrl+S" } )
@@ -100,7 +101,7 @@ def __addScript( application, fileName, dialogueParentWindow = None, asNew = Fal
 
 	recoveryFileName = None
 	backups = GafferUI.Backups.acquire( application, createIfNecessary = False )
-	if backups is not None :
+	if backups is not None and backups.autoload() :
 		recoveryFileName = backups.recoveryFile( fileName )
 		if recoveryFileName :
 			dialogue = GafferUI.ConfirmationDialogue(
@@ -187,6 +188,40 @@ def openRecent( menu ) :
 		result.append( "/None Available", { "active" : False } )
 
 	return result
+
+## A function suitable as the submenu callable for a File/OpenBackups menu item. It must be invoked
+# from a menu which has a ScriptWindow in its ancestry.
+def openBackup( menu ) :
+
+	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
+	currentScript = scriptWindow.scriptNode()
+	applicationRoot = currentScript.ancestor( Gaffer.ApplicationRoot )
+
+	currentWindow = GafferUI.ScriptWindow.acquire( currentScript )
+
+	backups = GafferUI.Backups.acquire( applicationRoot, createIfNecessary = False )
+
+	if backups is not None :
+		recoveryFileName = backups.recoveryFile( currentScript )
+		if not recoveryFileName :
+			return
+
+		script = Gaffer.ScriptNode()
+		script["fileName"].setValue( recoveryFileName )
+
+		dialogue = GafferUI.BackgroundTaskDialogue( "Loading" )
+		result = dialogue.waitForBackgroundTask( functools.partial( script.load, continueOnError = True, ), currentWindow)
+		if isinstance( result, IECore.Cancelled ) :
+			return
+
+		# We are loading a backup so rename the script to the old
+		# filename so the user can resave and continue as before.
+		fileName = currentScript["fileName"].getValue()
+		script["fileName"].setValue( fileName )
+		script["unsavedChanges"].setValue( True )
+		applicationRoot["scripts"].addChild( script )
+
+		addRecentFile( applicationRoot, fileName )
 
 ## This function adds a file to the list shown in the File/OpenRecent menu, and saves a recentFiles.py
 # in the application's user startup folder so the settings will persist.
@@ -397,6 +432,19 @@ def __selectionAvailable( menu ) :
 
 	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
 	return True if scriptWindow.scriptNode().selection().size() else False
+
+def __backupAvailable( menu ) :
+
+	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
+	currentScript = scriptWindow.scriptNode()
+	applicationRoot = currentScript.ancestor( Gaffer.ApplicationRoot )
+
+	backups = GafferUI.Backups.acquire( applicationRoot, createIfNecessary = False )
+
+	if backups is not None and backups.recoveryFile( currentScript ) :
+		return True
+
+	return False;
 
 def __pathAndBookmarks( scriptWindow ) :
 
