@@ -67,6 +67,17 @@ class PresetsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self._addPopupMenu( self.__menuButton )
 
+		# Possible states :
+		#
+		# - None : Multiple plugs, and they have different values.
+		# - "<presetName>" : All plugs have value matching `<presetName>`.
+		# - "" : All plugs have a value that isn't a preset.
+		self.__currentPreset = None
+		# We do this again when `_updateFromValues()` is called, but doing it
+		# from the constructor first avoids layout flicker by getting the
+		# visibility correct before the widget is shown.
+		self.__customValuePlugWidget.setVisible( self.__isCustom() )
+
 	def menu( self ) :
 
 		return self.__menuButton.getMenu()
@@ -82,11 +93,8 @@ class PresetsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def _updateFromValues( self, values, exception ) :
 
-		currentPreset = sole( values )
-
-		allowCustom = sole( ( Gaffer.Metadata.value( p, "presetsPlugValueWidget:allowCustom" ) for p in self.getPlugs() ) )
-		isCustom = any( Gaffer.Metadata.value( p, "presetsPlugValueWidget:isCustom" ) for p in self.getPlugs() )
-		isCustom = allowCustom and ( isCustom or currentPreset == "" )
+		self.__currentPreset = sole( values )
+		isCustom = self.__isCustom()
 
 		self.__customValuePlugWidget.setVisible( isCustom )
 
@@ -94,9 +102,9 @@ class PresetsPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__menuButton.setText( "" )
 		elif isCustom :
 			self.__menuButton.setText( "Custom" )
-		elif currentPreset :
-			self.__menuButton.setText( currentPreset )
-		elif currentPreset is None :
+		elif self.__currentPreset :
+			self.__menuButton.setText( self.__currentPreset )
+		elif self.__currentPreset is None :
 			self.__menuButton.setText( "---" )
 		else :
 			self.__menuButton.setText( "Invalid" )
@@ -120,11 +128,6 @@ class PresetsPlugValueWidget( GafferUI.PlugValueWidget ) :
 		# Required for context-sensitive dynamic presets
 		with self.getContext():
 
-			currentPreset = sole( ( Gaffer.NodeAlgo.currentPreset( p ) or "" for p in self.getPlugs() ) )
-			allowCustom = sole( ( Gaffer.Metadata.value( p, "presetsPlugValueWidget:allowCustom" ) for p in self.getPlugs() ) )
-			isCustom = all( Gaffer.Metadata.value( p, "presetsPlugValueWidget:isCustom" ) for p in self.getPlugs() )
-			isCustom = allowCustom and ( isCustom or currentPreset == "" )
-
 			# Find the union of the presets across all plugs,
 			# and count how many times they occur.
 			presets = []
@@ -137,6 +140,7 @@ class PresetsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		# Build menu. We'll list every preset we found, but disable
 		# any which aren't available for all plugs.
+		isCustom = self.__isCustom()
 		readOnly = any( Gaffer.MetadataAlgo.readOnly( p ) for p in self.getPlugs() )
 		for preset in presets :
 
@@ -145,11 +149,12 @@ class PresetsPlugValueWidget( GafferUI.PlugValueWidget ) :
 				menuPath,
 				{
 					"command" : functools.partial( Gaffer.WeakMethod( self.__applyPreset ), preset = preset ),
-					"checkBox" : preset == currentPreset and not isCustom,
+					"checkBox" : preset == self.__currentPreset and not isCustom,
 					"active" : ( presetCounts[preset] == len( self.getPlugs() ) ) and not readOnly
 				}
 			)
 
+		allowCustom = sole( ( Gaffer.Metadata.value( p, "presetsPlugValueWidget:allowCustom" ) for p in self.getPlugs() ) )
 		if allowCustom :
 			result.append( "/CustomDivider", { "divider" : True } )
 			result.append(
@@ -162,6 +167,12 @@ class PresetsPlugValueWidget( GafferUI.PlugValueWidget ) :
 			)
 
 		return result
+
+	def __isCustom( self ) :
+
+		allowCustom = sole( ( Gaffer.Metadata.value( p, "presetsPlugValueWidget:allowCustom" ) for p in self.getPlugs() ) )
+		isCustom = any( Gaffer.Metadata.value( p, "presetsPlugValueWidget:isCustom" ) for p in self.getPlugs() )
+		return allowCustom and ( isCustom or self.__currentPreset == "" )
 
 	def __applyPreset( self, unused, preset ) :
 
