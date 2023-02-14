@@ -1,3 +1,6 @@
+1.x.x.x (relative to 1.2.x.x)
+=======
+
 1.2.0.0 (relative to 1.1.9.0)
 =======
 
