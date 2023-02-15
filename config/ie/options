@@ -480,9 +480,7 @@ SPHINX = os.path.join( sphinxRoot, "bin", "sphinx-build" )
 if "install" in sys.argv :
 	# disable docs for installations (the postInstall command will symlink them from the public build)
 	SPHINX = "disableDocs"
-	# disable graphics for all DCC installs (the postInstall command will symlink them our standalone build)
-	if targetAppVersion :
-		INKSCAPE = "disableGraphics"
+
 	INSTALL_POST_COMMAND="scons -i -f config/ie/postInstall BASE_INSTALL_DIR={baseInstallDir} INSTALL_DIR=$INSTALL_DIR GAFFER_BUILD_VARIANT={gafferBuildVariant}".format(
 		baseInstallDir = baseInstallDir,
 		gafferBuildVariant = gafferBuildVariant,
