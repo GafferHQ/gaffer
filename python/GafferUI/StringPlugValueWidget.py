@@ -35,6 +35,8 @@
 #
 ##########################################################################
 
+import IECore
+
 import Gaffer
 import GafferUI
 
@@ -105,6 +107,19 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def _updateFromEditable( self ) :
 
 		self.__textWidget.setEditable( self._editable() )
+
+	# Reimplemented to perform casting between vector and string types,
+	def _convertValue( self, value ) :
+
+		result = GafferUI.PlugValueWidget._convertValue( self, value )
+		if result is not None :
+			return result
+
+		if isinstance( value, IECore.StringVectorData ) :
+			result = " ".join( value )
+			return result
+
+		return None
 
 	def __editInteractionOccured( self ) :
 
