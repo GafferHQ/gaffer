@@ -423,6 +423,21 @@
 				"locationIncludedHighlightedTransparent",
 				"locationIncludedTransparent",
 			]
+		},
+
+		"setEditor" : {
+
+			"options" : {
+				"requiredWidth" : 16,
+				"requiredHeight" : 16,
+				"validatePixelAlignment" : True
+			},
+
+			"ids" : [
+				"populatedSet",
+				"emptySet",
+				"setFolder",
+			]
 		}
 
 	},
