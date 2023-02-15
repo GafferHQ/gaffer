@@ -1,6 +1,15 @@
 1.2.x.x (relative to 1.2.0.1)
 =======
 
+Fixes
+-----
+
+- Viewer : Fixed flickering and empty menu in the channel selector for the image view.
+- RGBAChannelsPlugValueWidget, ChannelPlugValueWidget, ChannelMaskPlugValueWidget :
+  - Fixed unnecessary updates when channel data changed.
+ - RGBAChannelsPlugValueWidget
+  - Fixed bug that prevented errors being shown.
+
 1.2.0.1 (relative to 1.2.0.0)
 =======
 

@@ -66,7 +66,10 @@ class ChannelMaskPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def _auxiliaryPlugs( self, plug ) :
 
-		return list( GafferImage.ImagePlug.RecursiveInputRange( plug.node() ) )
+		result = []
+		for imagePlug in GafferImage.ImagePlug.RecursiveInputRange( plug.node() ) :
+			result.extend( [ imagePlug["viewNames"], imagePlug["channelNames"] ] )
+		return result
 
 	@staticmethod
 	def _valuesForUpdate( plugs, auxiliaryPlugs ) :
@@ -76,9 +79,9 @@ class ChannelMaskPlugValueWidget( GafferUI.PlugValueWidget ) :
 		for plug, imagePlugs in zip( plugs, auxiliaryPlugs ) :
 
 			availableChannels = set()
-			for imagePlug in imagePlugs :
-				for viewName in imagePlug.viewNames() :
-					availableChannels.update( imagePlug.channelNames( viewName = viewName ) )
+			for viewNamesPlug, channelNamesPlug in [ ( imagePlugs[i], imagePlugs[i+1] ) for i in range( 0, len( imagePlugs ), 2 ) ] :
+				for viewName in viewNamesPlug.getValue() :
+					availableChannels.update( channelNamesPlug.parent().channelNames( viewName = viewName ) )
 
 			result.append( { "value" : plug.getValue(), "availableChannels" : availableChannels } )
 
