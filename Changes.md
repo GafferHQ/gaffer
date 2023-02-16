@@ -1,10 +1,11 @@
-1.1.x.x (relative to 1.1.9.0)
+1.1.9.x (relative to 1.1.9.0)
 =======
 
 Fixes
 -----
 
-- CompoundPlugValueWidget : Fixed errors when refreshing the widget. 
+- Cycles : Fixed crash triggered by unsupported shader parameters (#5147).
+- CompoundPlugValueWidget : Fixed errors when refreshing the widget.
 
 1.1.9.0 (relative to 1.1.8.0)
 =======
