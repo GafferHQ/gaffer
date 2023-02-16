@@ -46,6 +46,8 @@ IECORE_PUSH_DEFAULT_VISIBILITY
 #include "util/vector.h"
 IECORE_POP_DEFAULT_VISIBILITY
 
+#include "fmt/format.h"
+
 using namespace std;
 using namespace Imath;
 using namespace IECore;
@@ -448,8 +450,10 @@ void setSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Da
 		default:
 			IECore::msg(
 				IECore::Msg::Warning, "Cycles::SocketAlgo",
-				boost::format( "Unsupported socket type `%1%` for socket `%2%` on node `%3%`." )
-					% ccl::SocketType::type_name( socket->type ) % socket->name % node->name
+				fmt::format(
+					"Unsupported socket type `{}` for socket `{}` on node `{}`.",
+					ccl::SocketType::type_name( socket->type ), socket->name, node->name
+				)
 			);
 			break;
 	}
