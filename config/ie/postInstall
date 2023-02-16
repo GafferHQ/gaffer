@@ -52,10 +52,6 @@ def __link( source, target ) :
 		target
 	)
 
-# symlink to standalone install
-for subdir in ( "graphics", ) :
-	__link( os.path.join( ARGUMENTS['BASE_INSTALL_DIR'], "gaffer", ARGUMENTS['GAFFER_BUILD_VARIANT'], subdir ), os.path.join( ARGUMENTS['INSTALL_DIR'], subdir ) )
-
 # symlink to public install
 for subdir in ( "doc", ) :
 	__link( os.path.join( ARGUMENTS['BASE_INSTALL_DIR'], "public", subdir ), os.path.join( ARGUMENTS['INSTALL_DIR'], subdir ) )
