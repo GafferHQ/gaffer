@@ -59,25 +59,27 @@ class RGBAChannelsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def _auxiliaryPlugs( self, plug ) :
 
-		firstInputImage = next( GafferImage.ImagePlug.RecursiveInputRange( plug.node() ), None )
-		return [ firstInputImage ] if firstInputImage is not None else []
+		firstInputImage = next( GafferImage.ImagePlug.RecursiveInputRange( plug.node() ) )
+		return [ firstInputImage["viewNames"], firstInputImage["channelNames"] ]
 
 	@staticmethod
 	def _valuesForUpdate( plugs, auxiliaryPlugs ) :
 
 		result = []
 
-		for plug, imagePlugs in zip( plugs, auxiliaryPlugs ) :
+		for plug, ( viewNamesPlug, channelNamesPlug ) in zip( plugs, auxiliaryPlugs ) :
 
 			availableChannels = set()
-			for viewName in imagePlugs[0].viewNames() :
-				availableChannels.update( imagePlugs[0].channelNames( viewName = viewName ) )
+			for viewName in viewNamesPlug.getValue() :
+				availableChannels.update( channelNamesPlug.parent().channelNames( viewName = viewName ) )
 
 			result.append( { "value" : plug.getValue(), "availableChannels" : availableChannels } )
 
 		return result
 
 	def _updateFromValues( self, values, exception ) :
+
+		self.__menuButton.setErrored( exception is not None )
 
 		self.__availableChannels = set().union( *[ v["availableChannels"] for v in values ] )
 		self.__currentValue = sole( v["value"] for v in values )
@@ -106,7 +108,6 @@ class RGBAChannelsPlugValueWidget( GafferUI.PlugValueWidget ) :
 				text = prefix + channels[0]
 
 		self.__menuButton.setText( text )
-		self.__menuButton.setErrored( exception is not None )
 
 	def _updateFromEditable( self ) :
 

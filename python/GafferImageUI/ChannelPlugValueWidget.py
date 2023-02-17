@@ -73,18 +73,18 @@ class ChannelPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		name = Gaffer.Metadata.value( plug, "channelPlugValueWidget:imagePlugName" ) or "in"
 		imagePlug = plug.node().descendant( name )
-		return [ imagePlug ] if isinstance( imagePlug, GafferImage.ImagePlug ) else []
+		return [ imagePlug["viewNames"], imagePlug["channelNames"] ]
 
 	@staticmethod
 	def _valuesForUpdate( plugs, auxiliaryPlugs ) :
 
 		result = []
 
-		for plug, imagePlugs in zip( plugs, auxiliaryPlugs ) :
+		for plug, ( viewNamesPlug, channelNamesPlug ) in zip( plugs, auxiliaryPlugs ) :
 
 			availableChannels = set()
-			for viewName in imagePlugs[0].viewNames() :
-				availableChannels.update( imagePlugs[0].channelNames( viewName = viewName ) )
+			for viewName in viewNamesPlug.getValue() :
+				availableChannels.update( channelNamesPlug.parent().channelNames( viewName = viewName ) )
 
 			result.append( { "value" : plug.getValue(), "availableChannels" : availableChannels } )
 
