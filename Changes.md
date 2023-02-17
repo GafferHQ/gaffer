@@ -9,6 +9,8 @@ Fixes
   - Fixed unnecessary updates when channel data changed.
  - RGBAChannelsPlugValueWidget
   - Fixed bug that prevented errors being shown.
+- Cycles : Fixed crash triggered by unsupported shader parameters (#5147).
+- CompoundPlugValueWidget : Fixed errors when refreshing the widget.
 
 1.2.0.1 (relative to 1.2.0.0)
 =======
@@ -201,6 +203,15 @@ Build
     - Enabled the OpenImageIO plugin. Among other things, this allows OpenEXR textures to be shown in `usdview`.
   - YAML-CPP : Added version 0.7.0.
 - 3Delight : Updated to 3Delight version 2.9.17.
+
+1.1.9.1 (relative to 1.1.9.0)
+=======
+
+Fixes
+-----
+
+- Cycles : Fixed crash triggered by unsupported shader parameters (#5147).
+- CompoundPlugValueWidget : Fixed errors when refreshing the widget.
 
 1.1.9.0 (relative to 1.1.8.0)
 =======

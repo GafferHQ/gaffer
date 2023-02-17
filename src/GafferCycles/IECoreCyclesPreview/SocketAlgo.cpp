@@ -449,7 +449,7 @@ void setSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Da
 			IECore::msg(
 				IECore::Msg::Warning, "Cycles::SocketAlgo",
 				boost::format( "Unsupported socket type `%1%` for socket `%2%` on node `%3%`." )
-					% ccl::SocketType::type_name( socket->type ) % value->typeName() % socket->name % node->name
+					% ccl::SocketType::type_name( socket->type ) % socket->name % node->name
 			);
 			break;
 	}
