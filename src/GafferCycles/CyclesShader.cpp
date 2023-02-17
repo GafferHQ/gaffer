@@ -52,7 +52,6 @@
 #include "IECoreScene/ShaderNetwork.h"
 
 #include "boost/algorithm/string.hpp"
-#include "boost/format.hpp"
 
 // Cycles
 #include "graph/node.h"
@@ -158,7 +157,7 @@ IECore::ConstCompoundObjectPtr CyclesShader::attributes( const Gaffer::Plug *out
 			break;
 		}
 	}
-	std::string aovTypeName = ( boost::format( "cycles:aov:%s" ) % aovName ).str();
+	const std::string aovTypeName = "cycles:aov:" + aovName;
 	CompoundObjectPtr result = original->copy();
 
 	result->member<IECoreScene::ShaderNetwork>( aovTypeName, false, true );
