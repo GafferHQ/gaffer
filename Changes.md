@@ -10,8 +10,7 @@ Fixes
 - Viewer : Fixed flickering and empty menu in the channel selector for the image view.
 - RGBAChannelsPlugValueWidget, ChannelPlugValueWidget, ChannelMaskPlugValueWidget :
   - Fixed unnecessary updates when channel data changed.
- - RGBAChannelsPlugValueWidget
-  - Fixed bug that prevented errors being shown.
+- RGBAChannelsPlugValueWidget : Fixed bug that prevented errors being shown.
 - Cycles : Fixed crash triggered by unsupported shader parameters (#5147).
 - CompoundPlugValueWidget : Fixed errors when refreshing the widget.
 
