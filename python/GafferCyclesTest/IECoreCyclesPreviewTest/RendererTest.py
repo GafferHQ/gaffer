@@ -1818,8 +1818,8 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( len( mh.messages ), 1 )
 		self.assertEqual( mh.messages[0].context, "Cycles::SocketAlgo" )
 		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Warning )
-		six.assertRegex(
-			self, mh.messages[0].message,
+		self.assertRegex(
+			mh.messages[0].message,
 			"Unsupported socket type `transform` for socket `ob_tfm` on node .*"
 		)
 
