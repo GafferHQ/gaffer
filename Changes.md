@@ -1,3 +1,11 @@
+1.1.x.x (relative to 1.1.9.0)
+=======
+
+Fixes
+-----
+
+- CompoundPlugValueWidget : Fixed errors when refreshing the widget. 
+
 1.1.9.0 (relative to 1.1.8.0)
 =======
 
