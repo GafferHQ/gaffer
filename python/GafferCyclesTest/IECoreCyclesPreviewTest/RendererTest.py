@@ -1791,5 +1791,37 @@ class RendererTest( GafferTest.TestCase ) :
 				"Invalid enum value \"missing\" for socket `subsurface_method` on node .*"
 			)
 
+	def testUnsupportedShaderParameters( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+		)
+
+		with IECore.CapturingMessageHandler() as mh :
+
+			attributes = renderer.attributes(
+				IECore.CompoundObject( {
+					"cycles:surface" : IECoreScene.ShaderNetwork(
+						shaders = {
+							"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface" ),
+							"coordinates" : IECoreScene.Shader( "texture_coordinate", "cycles:shader", { "ob_tfm" : imath.M44f() } ),
+						},
+						connections = [
+							( ( "coordinates", "normal" ), ( "output", "normal" ) )
+						],
+						output = "output"
+					)
+				} )
+			)
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].context, "Cycles::SocketAlgo" )
+		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Warning )
+		self.assertRegex(
+			mh.messages[0].message,
+			"Unsupported socket type `transform` for socket `ob_tfm` on node .*"
+		)
+
 if __name__ == "__main__":
 	unittest.main()

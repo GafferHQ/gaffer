@@ -177,7 +177,7 @@ class CompoundPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		# ditch child uis we don't need any more
 		childPlugs = self._childPlugs()
-		for childPlug in self.__childPlugUIs.keys() :
+		for childPlug in list( self.__childPlugUIs.keys() ) :
 			if childPlug not in childPlugs :
 				del self.__childPlugUIs[childPlug]
 
