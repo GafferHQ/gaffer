@@ -43,8 +43,6 @@
 #include "IECoreScene/PointsAlgo.h"
 #include "IECoreScene/PointsPrimitive.h"
 
-#include "boost/format.hpp"
-
 using namespace IECore;
 using namespace IECoreScene;
 using namespace Gaffer;

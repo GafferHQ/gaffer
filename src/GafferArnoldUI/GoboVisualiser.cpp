@@ -58,8 +58,6 @@
 
 #include "IECore/VectorTypedData.h"
 
-#include "boost/format.hpp"
-
 using namespace std;
 using namespace Imath;
 using namespace IECore;

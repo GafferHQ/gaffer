@@ -51,7 +51,6 @@
 
 #include "IECore/MessageHandler.h"
 
-#include "boost/format.hpp"
 #include "boost/python/suite/indexing/container_utils.hpp"
 #include "boost/tokenizer.hpp"
 
