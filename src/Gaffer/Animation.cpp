@@ -1465,11 +1465,11 @@ void Animation::Key::setTieMode( const Animation::TieMode tieMode )
 		{
 			// ensure that tangent slopes are equal.
 			//
-			// NOTE : If only one tangent's slope is constrained or the tangent protrudes beyond the
-			//        start/end of the curve, preserve the opposite slope, otherwise take average.
+			// NOTE : If only one tangent's slope is constrained, preserve the opposite slope,
+			//        otherwise take average. Assumes that protruding tangents are constrained.
 
-			const bool inConstrainedOrProtrudes = m_tangentIn.slopeIsConstrained() || ( prevKey() == nullptr );
-			const bool outConstrainedOrProtrudes = m_tangentOut.slopeIsConstrained() || ( nextKey() == nullptr );
+			const bool inConstrainedOrProtrudes = m_tangentIn.slopeIsConstrained();
+			const bool outConstrainedOrProtrudes = m_tangentOut.slopeIsConstrained();
 
 			const double s = ( inConstrainedOrProtrudes == outConstrainedOrProtrudes )
 				? std::tan(
