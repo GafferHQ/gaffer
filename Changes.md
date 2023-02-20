@@ -1,6 +1,13 @@
 1.2.x.x (relative to 1.2.0.2)
 =======
 
+Fixes
+-----
+
+- Locale :
+  - Reintroduced `LC_NUMERIC=C` environment variable assignment to wrapper. This was removed in `1.2.0.0` but is still necessary due to a [bug in Cortex](https://github.com/ImageEngine/cortex/issues/1338).
+  - Fixed serialisation of `.gfr` files in locales with non-default numeric formatting (#5158).
+
 Documentation
 -------------
 
