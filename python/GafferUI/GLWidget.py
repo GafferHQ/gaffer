@@ -56,9 +56,16 @@ import OpenGL.GL as GL
 
 import Qt
 from Qt import QtCore
-from Qt import QtGui
-from Qt import QtWidgets
-from Qt import QtOpenGL
+
+# Importing directly rather than via Qt.py because Qt.py won't expose the
+# Qt-5-only QOpenGLWidget and QSurfaceFormat classes that we need. Their mantra
+# is to provide only what is available in Qt4/PySide1 - see
+# https://github.com/mottosso/Qt.py/issues/341.
+## \todo Now that Qt 4 is long gone, and PySide is an official
+# Qt project, Qt.py isn't much help. Remove across the board, or see
+# if we can coax the project into bridging Qt 5/6 instead of 4/5?
+from PySide2 import QtGui
+from PySide2 import QtWidgets
 
 ## The GLWidget is a base class for all widgets which wish to draw using OpenGL.
 # Derived classes override the _draw() method to achieve this.
@@ -78,16 +85,17 @@ class GLWidget( GafferUI.Widget ) :
 	# even when not requested.
 	def __init__( self, bufferOptions = set(), **kw ) :
 
-		format = QtOpenGL.QGLFormat()
-		format.setRgba( True )
+		format = QtGui.QSurfaceFormat()
 
-		format.setAlpha( self.BufferOptions.Alpha in bufferOptions )
-		format.setDepth( self.BufferOptions.Depth in bufferOptions )
-		format.setDoubleBuffer( self.BufferOptions.Double in bufferOptions )
+		if self.BufferOptions.Alpha in bufferOptions :
+			format.setAlphaBufferSize( 8 )
+		if self.BufferOptions.Depth in bufferOptions :
+			format.setDepthBufferSize( 24 )
+		if self.BufferOptions.Double in bufferOptions :
+			format.setSwapBehavior( format.SwapBehavior.DoubleBuffer )
 
 		self.__multisample = self.BufferOptions.AntiAlias in bufferOptions
 		if self.__multisample:
-			format.setSampleBuffers( True )
 			format.setSamples( 8 )
 
 		format.setVersion( 2, 1 )
@@ -114,20 +122,6 @@ class GLWidget( GafferUI.Widget ) :
 
 		self.__overlays.add( overlay )
 		overlay._setStyleSheet()
-		if Qt.__binding__ in ( "PySide2", "PyQt5" ) :
-			# Force Qt to use a raster drawing path for the overlays.
-			#
-			# - On Mac, this avoids "QMacCGContext:: Unsupported painter devtype type 1"
-			#   errors. See https://bugreports.qt.io/browse/QTBUG-32639 for
-			#   further details.
-			# - On Linux, this avoids an unknown problem which manifests as
-			#   a GL error that appears to occur inside Qt's code, and which
-			#   is accompanied by text drawing being scrambled in the overlay.
-			#
-			## \todo When we no longer need to support Qt4, we should be
-			# able to stop using a QGLWidget for the viewport, and this
-			# should no longer be needed.
-			overlay._qtWidget().setWindowOpacity( 0.9999 )
 
 		self.__graphicsScene.addOverlay( overlay )
 
@@ -142,11 +136,11 @@ class GLWidget( GafferUI.Widget ) :
 		self.__overlays.remove( child )
 
 	## Called whenever the widget is resized. May be reimplemented by derived
-	# classes if necessary. The appropriate OpenGL context will already be current
-	# when this is called.
+	# classes if necessary.
+	# > Note : An OpenGL context is not available when this function is called.
 	def _resize( self, size ) :
 
-		GL.glViewport( 0, 0, size.x, size.y )
+		return
 
 	## Derived classes must override this to draw their contents using
 	# OpenGL calls. The appropriate OpenGL context will already be current
@@ -161,8 +155,8 @@ class GLWidget( GafferUI.Widget ) :
 		self._glWidget().update()
 
 	## May be used by derived classes to get access to the internal
-	# QGLWidget. Note that _makeCurrent() should be used in preference
-	# to _glWidget().makeCurrent(), for the reasons stated in the
+	# QOpenGLWidget. Note that `_makeCurrent()` should be used in preference
+	# to `_glWidget().makeCurrent()`, for the reasons stated in the
 	# documentation for that method.
 	def _glWidget( self ) :
 
@@ -170,33 +164,24 @@ class GLWidget( GafferUI.Widget ) :
 
 	## May be used by derived classes to make the OpenGL context
 	# for this widget current. Returns True if the operation was
-	# successful and False if not. In an ideal world, the return
-	# value would always be True, but it appears that there are
-	# Qt/Mac bugs which cause it not to be from time to time -
-	# typically for newly created Widgets. If False is returned,
-	# no OpenGL operations should be undertaken subsequently by
-	# the caller.
+	# successful and False if not.
+	## \todo This function was originally introduced to work around
+	# bugs in Qt's QGLWidget. It may be unnecessary now that we are
+	# using a QOpenGLWidget.
 	def _makeCurrent( self ) :
 
+		if self._qtWidget().viewport().context() is None :
+			return False
+
 		self._qtWidget().viewport().makeCurrent()
-		return self.__framebufferValid()
-
-	def __framebufferValid( self ) :
-
-		import OpenGL.GL.framebufferobjects
-		return GL.framebufferobjects.glCheckFramebufferStatus( GL.framebufferobjects.GL_FRAMEBUFFER ) == GL.framebufferobjects.GL_FRAMEBUFFER_COMPLETE
+		return True
 
 	def __draw( self ) :
-
-		if not self.__framebufferValid() :
-			return
 
 		# we need to call the init method after a GL context has been
 		# created, and this seems like the only place that is guaranteed.
 		# calling it here does mean we call init() way more than needed,
 		# but it's safe.
-		## \todo: this might be removable if we can prove resizeEvent
-		# is always called first.
 		IECoreGL.init( True )
 
 		if self.__multisample:
@@ -226,7 +211,8 @@ class _GLGraphicsView( QtWidgets.QGraphicsView ) :
 		self.setHorizontalScrollBarPolicy( QtCore.Qt.ScrollBarAlwaysOff )
 		self.setVerticalScrollBarPolicy( QtCore.Qt.ScrollBarAlwaysOff )
 
-		glWidget = self.__createQGLWidget( format )
+		glWidget = QtWidgets.QOpenGLWidget()
+		glWidget.setFormat( format )
 		self.setViewport( glWidget )
 		self.setViewportUpdateMode( self.FullViewportUpdate )
 
@@ -244,25 +230,6 @@ class _GLGraphicsView( QtWidgets.QGraphicsView ) :
 
 			self.scene().setSceneRect( 0, 0, event.size().width(), event.size().height() )
 			owner = GafferUI.Widget._owner( self )
-
-			owner._makeCurrent()
-
-			# clear any existing errors that may trigger
-			# error checking code in _resize implementations.
-			while GL.glGetError() :
-				pass
-
-			# We need to call the init method after a GL context has been
-			# created, but before any events requiring GL have been triggered.
-			# We had been doing this from GLWidget.__draw(), but it was still
-			# possible to trigger mouseMove events prior to drawing by hovering
-			# over top of an about-to-become-visible GLWidget. resizeEvent
-			# seems to always be triggered prior to both draw and mouseMove,
-			# ensuring GL is initialized in time for those other events.
-			# Calling it here does mean we call init() more than needed,
-			# but it's safe.
-			IECoreGL.init( True )
-
 			owner._resize( imath.V2i( event.size().width(), event.size().height() ) )
 
 	def keyPressEvent( self, event ) :
@@ -281,17 +248,6 @@ class _GLGraphicsView( QtWidgets.QGraphicsView ) :
 				return
 
 		QtWidgets.QFrame.keyPressEvent( self, event )
-
-	# We keep a single hidden widget which owns the texture and display lists
-	# and then share those with all the widgets we really want to make.
-	__shareWidget = None
-	@classmethod
-	def __createQGLWidget( cls, format ) :
-
-		if cls.__shareWidget is None :
-			cls.__shareWidget = QtOpenGL.QGLWidget()
-
-		return QtOpenGL.QGLWidget( format, shareWidget = cls.__shareWidget )
 
 class _GLGraphicsScene( QtWidgets.QGraphicsScene ) :
 
@@ -333,6 +289,8 @@ class _GLGraphicsScene( QtWidgets.QGraphicsScene ) :
 
 		# Qt sometimes enters this method with a GL error flag still set.
 		# We unset it here so it won't trigger our own error checking.
+		## \todo Determine if this is still necessary now that we've
+		# transitioned from QGLWidget to QOpenGLWidget.
 		while GL.glGetError() :
 			pass
 

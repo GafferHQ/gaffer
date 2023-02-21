@@ -162,6 +162,9 @@ class EventLoop( object ) :
 		# Stop icons/fonts being tiny on high-dpi monitors. Must be set before
 		# the application is created.
 		QtWidgets.QApplication.setAttribute( QtCore.Qt.AA_EnableHighDpiScaling )
+		# Allow all `GafferUI.GLWidgets` to share OpenGL resources (via the underlying
+		# QOpenGLWidget).
+		QtWidgets.QApplication.setAttribute( QtCore.Qt.AA_ShareOpenGLContexts )
 		assert( style is not None )
 		__qtApplication = QtWidgets.QApplication( [ "gaffer" ] )
 		# Fixes laggy interaction with tablets, equivalent to the old

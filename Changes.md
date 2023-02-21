@@ -1,6 +1,11 @@
 1.x.x.x (relative to 1.2.x.x)
 =======
 
+Breaking Changes
+----------------
+
+- GLWidget : A GL context is no longer available in `_resize()`.
+
 1.2.x.x (relative to 1.2.0.2)
 =======
 
