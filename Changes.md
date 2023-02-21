@@ -14,6 +14,7 @@ Improvements
 - StringPlugValueWidget : Added support for converting StringVectorData values pasted or dropped onto the widget. The string value is formed by joining the string array using spaces.
 - Spreadsheet : Improved support for converting StringVectorData to StringData when dropping values on cells. The string value is formed by joining the string array using spaces.
 - CompoundPathFilter : Canceller is now passed to member filters.
+- PathListingWidget : Improved performance when sorting items based on the name column.
 
 Fixes
 -----

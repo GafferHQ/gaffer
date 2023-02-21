@@ -1437,14 +1437,36 @@ class PathModel : public QAbstractItemModel
 						using SortablePair = std::pair<QVariant, size_t>;
 						std::vector<SortablePair> sortedIndices;
 						sortedIndices.reserve( newChildItems.size() );
-
-						for( const auto &childItem : newChildItems )
+						bool sortingByName = false;
+						if( auto *standardColumn = dynamic_cast<const GafferUI::StandardPathColumn *>( model->m_columns[model->m_sortColumn].get() ) )
 						{
-							dirtyIfUnrequested( childItem->m_dataState );
-							sortedIndices.push_back( SortablePair(
-								childItem->updateData( model, children[sortedIndices.size()].get(), canceller ),
-								sortedIndices.size()
-							) );
+							if( standardColumn->property() == g_nameProperty )
+							{
+								sortingByName = true;
+								for( const auto &childItem : newChildItems )
+								{
+									// Optimisation for standard name column. We
+									// know the name already, so there is no need to
+									// wait for the data to be computed. This reduces
+									// delay when displaying items sorted by name.
+									sortedIndices.push_back( SortablePair(
+										childItem->name().c_str(),
+										sortedIndices.size()
+									) );
+								}
+							}
+						}
+
+						if( !sortingByName )
+						{
+							for( const auto &childItem : newChildItems )
+							{
+								dirtyIfUnrequested( childItem->m_dataState );
+								sortedIndices.push_back( SortablePair(
+									childItem->updateData( model, children[sortedIndices.size()].get(), canceller ),
+									sortedIndices.size()
+								) );
+							}
 						}
 
 						std::sort(
