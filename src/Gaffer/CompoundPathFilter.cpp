@@ -123,7 +123,7 @@ void CompoundPathFilter::doFilter( std::vector<PathPtr> &paths, const IECore::Ca
 {
 	for( std::list<Filter>::const_iterator it = m_filters.begin(), eIt = m_filters.end(); it != eIt; ++it )
 	{
-		it->filter->filter( paths );
+		it->filter->filter( paths, canceller );
 	}
 }
 
