@@ -2205,10 +2205,6 @@ void ViewportGadget::SelectionScope::begin( const ViewportGadget *viewportGadget
 	m_depthSort = false;
 	camera->render( nullptr );
 
-	glClearColor( 0.3f, 0.3f, 0.3f, 0.0f );
-	glClearDepth( 1.0f );
-	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-
 	m_selector = SelectorPtr( new IECoreGL::Selector( ndcRegion, mode, m_selection ) );
 
 	glPushMatrix();
