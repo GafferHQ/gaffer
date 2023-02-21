@@ -1238,13 +1238,15 @@ void ViewportGadget::renderInternal( RenderReason reason, Gadget::Layer filterLa
 		int currentViewport[4];
 		glGetIntegerv( GL_VIEWPORT, currentViewport );
 		V2i res( currentViewport[2] - currentViewport[0], currentViewport[3] - currentViewport[1] );
-
 		if( res == V2i( 0 ) )
 		{
 			// If there is no resolution, we don't need to draw anything, and it would trigger a GL error
 			// if we tried to create a zero-sized frame buffer
 			return;
 		}
+
+		GLint originalFramebuffer = -1;
+		glGetIntegerv( GL_DRAW_FRAMEBUFFER_BINDING, &originalFramebuffer );
 
 		if( m_framebufferSize != res )
 		{
@@ -1273,7 +1275,7 @@ void ViewportGadget::renderInternal( RenderReason reason, Gadget::Layer filterLa
 
 			// Create Frame Buffer Object
 			glGenFramebuffers(1, &m_fbo);
-			glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
+			glBindFramebuffer( GL_DRAW_FRAMEBUFFER, m_fbo );
 
 			// Resize Framebuffer Texture
 			glBindTexture(GL_TEXTURE_2D, m_framebufferTexture);
@@ -1281,15 +1283,15 @@ void ViewportGadget::renderInternal( RenderReason reason, Gadget::Layer filterLa
 				GL_TEXTURE_2D, 0, hasTextureFloat ? GL_RGBA16F : GL_RGBA8,
 				res.x, res.y, 0, GL_RGBA, GL_FLOAT, NULL
 			);
-			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_framebufferTexture, 0);
+			glFramebufferTexture2D( GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_framebufferTexture, 0 );
 
 			// Resize Render Buffer Object
 			glBindRenderbuffer(GL_RENDERBUFFER, m_rbo);
 			glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, res.x, res.y );
-			glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_rbo );
+			glFramebufferRenderbuffer( GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_rbo );
 
 			// Error checking framebuffer
-			GLenum fboStatus = glCheckFramebufferStatus( GL_FRAMEBUFFER );
+			GLenum fboStatus = glCheckFramebufferStatus( GL_DRAW_FRAMEBUFFER );
 			if( fboStatus != GL_FRAMEBUFFER_COMPLETE )
 			{
 				IECore::msg( IECore::Msg::Warning, "GafferUI::ViewportGadget", "Framebuffer error: " + std::to_string( fboStatus ) );
@@ -1298,7 +1300,7 @@ void ViewportGadget::renderInternal( RenderReason reason, Gadget::Layer filterLa
 			m_framebufferSize = res;
 		}
 
-		glBindFramebuffer( GL_FRAMEBUFFER, m_fbo );
+		glBindFramebuffer( GL_DRAW_FRAMEBUFFER, m_fbo );
 		// Specify the color of the background
 		glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
 		// Clean the back buffer and depth buffer
@@ -1306,7 +1308,8 @@ void ViewportGadget::renderInternal( RenderReason reason, Gadget::Layer filterLa
 
 		renderLayerInternal( RenderReason::Draw, Layer::Main, viewTransform, bound, currentStyle, nullptr );
 
-		glBindFramebuffer( GL_FRAMEBUFFER, 0 );
+		// Leave things as we found them.
+		glBindFramebuffer( GL_DRAW_FRAMEBUFFER, originalFramebuffer );
 	}
 
 	IECoreGL::Selector *selector = IECoreGL::Selector::currentSelector();
