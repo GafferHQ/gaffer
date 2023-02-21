@@ -348,14 +348,7 @@ class _GLGraphicsView( QtWidgets.QGraphicsView ) :
 
 		import IECoreHoudini
 
-		if hasattr( IECoreHoudini, "sharedGLWidget" ) :
-			# In Houdini 14 and 15, Qt is the native UI, and we can access
-			# Houdini's shared QGLWidget directly.
-			return QtOpenGL.QGLWidget( format, shareWidget = GafferUI._qtObject( IECoreHoudini.sharedGLWidget(), QtOpenGL.QGLWidget ) )
-
-		# While Qt is the native UI in Houdini 16.0, they have moved away
-		# from QGLWidgets for their Qt5 builds, so we need to force the
-		# Houdini GL context to be current, and share it.
+		# Force the Houdini GL context to be current, and share it.
 		IECoreHoudini.makeMainGLContextCurrent()
 		return cls.__createHostedQGLWidget( format )
 
