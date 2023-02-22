@@ -2073,6 +2073,9 @@ if haveSphinx and haveInkscape :
 	docEnv.Depends( docs, docGraphicsCommands )
 	docEnv.Depends( docs, "build" )
 	docVars = docCommandEnv.Command( "doc/source/gafferVars.json", "doc/source/gafferVars.py", generateDocs )
+	# Always build gafferVars otherwise an incorrect version could be retrieved from the cache
+	docEnv.AlwaysBuild( docVars )
+	docEnv.NoCache( docVars )
 	docEnv.Depends( docs, docVars )
 	if resources is not None :
 		docEnv.Depends( docs, resources )
