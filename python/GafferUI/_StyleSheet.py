@@ -1588,7 +1588,7 @@ _styleSheet = string.Template(
 		margin-right: 0;
 	}
 
-	/* PathChooseWidget */
+	/* PathChooserWidget */
 
 	*[gafferClass="GafferUI.PathChooserWidget"] #gafferPathListingContainer {
 		border-radius: $widgetCornerRadius;
@@ -1596,6 +1596,12 @@ _styleSheet = string.Template(
 		border: 1px solid $backgroundHighlight;
 		border-right-color: $backgroundLowlight;
 		border-bottom-color: $backgroundLowlight;
+	}
+
+	*[gafferClass="GafferUI.PathChooserWidget"] QTreeView::item {
+		height: 22px;
+		padding-top: 0px;
+		padding-bottom: 0px;
 	}
 
 	/* SceneInspector */
