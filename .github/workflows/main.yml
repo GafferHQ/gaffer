@@ -89,7 +89,7 @@ jobs:
     - name: Install toolchain (Windows)
       run: |
         python -m pip install scons
-        Invoke-WebRequest -Uri "https://inkscape.org/gallery/item/18067/inkscape-0.92.5-x64.exe" -OutFile "inkscape.exe"
+        Invoke-WebRequest -Uri "https://inkscape.org/gallery/item/37363/inkscape-1.2.2_2022-12-09_732a01da63-x64.exe" -OutFile "inkscape.exe"
         Start-Process .\inkscape.exe /S -NoNewWindow -Wait
       shell: pwsh
       if: runner.os == 'Windows'
