@@ -39,7 +39,7 @@ import GafferSceneUI
 
 # Arnold
 
-for p in [ "exposure", "color", "radius", "roundness", "spread", "cone_angle", "penumbra_angle", "samples", "aov" ] :
+for p in [ "exposure", "color", "width", "height", "radius", "roundness", "spread", "cone_angle", "penumbra_angle", "samples", "aov" ] :
 	GafferSceneUI._SceneViewInspector.registerShaderParameter( "ai:light", p )
 
 for p in ["geometry_type", "density", "filtered_lights", "shader" ] :

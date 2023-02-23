@@ -71,6 +71,8 @@ const AtString g_Color3fPlugArnoldString( "Color3fPlug" );
 const AtString g_Color4fPlugArnoldString( "Color4fPlug" );
 const AtString g_ClosurePlugArnoldString( "ClosurePlug" );
 
+const AtString g_quadLightShaderName( "quad_light" );
+
 template<typename PlugType>
 Gaffer::Plug *setupNumericPlug( const AtNodeEntry *node, const AtParamEntry *parameter, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction )
 {
@@ -594,6 +596,25 @@ void ParameterHandler::setupPlugs( const AtNodeEntry *nodeEntry, Gaffer::GraphCo
 		validPlugs.insert( setupPlug( nodeEntry, param, plugsParent, direction ) );
 	}
 	AiParamIteratorDestroy( it );
+
+	// `width` and `height` plugs are also valid, and should be present, for `quad_light` shaders.
+	if( strcmp( AiNodeEntryGetName( nodeEntry ), g_quadLightShaderName ) == 0 )
+	{
+		FloatPlugPtr widthPlug = plugsParent->getChild<FloatPlug>( "width" );
+		FloatPlugPtr heightPlug = plugsParent->getChild<FloatPlug>( "height" );
+		if( !widthPlug )
+		{
+			widthPlug = new FloatPlug( "width", Gaffer::Plug::Direction::In, 2.f, 0.001f, limits<float>::max() );
+			plugsParent->addChild( widthPlug );
+		}
+		if( !heightPlug )
+		{
+			heightPlug = new FloatPlug( "height", Gaffer::Plug::Direction::In, 2.f, 0.001f, limits<float>::max() );
+			plugsParent->addChild( heightPlug );
+		}
+		validPlugs.insert( widthPlug.get() );
+		validPlugs.insert( heightPlug.get() );
+	}
 
 	// Remove any old plugs which it turned out we didn't need.
 

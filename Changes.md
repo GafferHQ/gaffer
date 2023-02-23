@@ -16,6 +16,7 @@ Improvements
 - CompoundPathFilter : Canceller is now passed to member filters.
 - PathListingWidget : Improved performance when sorting items based on the name column.
 - Scene : Improved performance computing the bounding box for a primitive.
+- aiQuadLight : Added `width` and `height` parameters.
 
 Fixes
 -----
@@ -29,6 +30,7 @@ Fixes
 - Viewer : Fixed Arnold selection bugs caused by the `ai:fis_filter` option.
 - SceneReader : Invalid primitive variables in USD files are now skipped during loading, with a warning being emitted instead.
 - DeleteFaces : Fixed sudivision crease handling bug.
+- USD RectLight : Fixed the orientation of textures applied to the light to be oriented with the top-left of the image at the top-left of the quad light when viewed from an object receiving illumination.
 
 Documentation
 -------------

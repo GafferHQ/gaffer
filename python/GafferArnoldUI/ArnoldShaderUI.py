@@ -399,6 +399,16 @@ with IECoreArnold.UniverseBlock( writable = False ) :
 
 		__translateNodeMetadata( arnold.AiNodeEntryIteratorGetNext( nodeIt ) )
 
+# Manually add width and height for `quad_light`
+__metadata["quad_light.parameters.width"]["nodule:type"] = ""
+__metadata["quad_light.parameters.height"]["nodule:type"] = ""
+__metadata["quad_light.parameters.width"]["layout:section"] = "Shape"
+__metadata["quad_light.parameters.height"]["layout:section"] = "Shape"
+__metadata["quad_light.parameters.width"]["layout:index"] = 0
+__metadata["quad_light.parameters.height"]["layout:index"] = 1
+GafferSceneUI.LightEditor.registerParameter( "ai:light", "width", "Shape" )
+GafferSceneUI.LightEditor.registerParameter( "ai:light", "height", "Shape" )
+
 ##########################################################################
 # Gaffer Metadata queries. These are implemented using the preconstructed
 # registry above.
