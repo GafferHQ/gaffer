@@ -96,9 +96,9 @@ struct GAFFERSCENE_API Visualisation
 		bool affectsFramingBound = true
 	);
 
-	Scale scale = Scale::Local;
-	Category category = Category::Generic;
-	bool affectsFramingBound = true;
+	Scale scale;
+	Category category;
+	bool affectsFramingBound;
 
 	const IECoreGL::Renderable *renderable() const;
 
