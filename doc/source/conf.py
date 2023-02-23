@@ -301,12 +301,12 @@ texinfo_documents = [
 
 # Variables for string replacement functions
 
-arnold_version = '7.1.1.1'
+arnold_version = '7.1.4.2'
 arnold_path_linux = '/opt/solidangle/arnold-{0}'.format( arnold_version )
 arnold_path_osx = '/opt/solidangle/arnold-{0}'.format( arnold_version )
 arnold_path_windows = 'C:\\software\\arnold-{0}'.format( arnold_version )
 
-delight_version = '13.0.18'
+delight_version = '2.9.17'
 delight_path_linux = '/opt/3delight-{0}'.format( delight_version )
 delight_path_osx = '/opt/3delight-{0}'.format( delight_version )
 delight_path_windows = 'C:\\software\\3delight-{0}'.format( delight_version )
