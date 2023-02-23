@@ -3,7 +3,7 @@
 Gaffer is compatible with the following commercial and open-source third-party tools:
 
 - [Appleseed](http://appleseedhq.net/)
-- [Arnold](https://www.solidangle.com/arnold/)
+- [Arnold](https://www.arnoldrenderer.com/)
 - [3Delight](http://www.3delight.com/)
 - [Tractor](https://renderman.pixar.com/tractor)
 
