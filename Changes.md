@@ -1,3 +1,11 @@
+1.1.9.x (relative to 1.1.9.1)
+=======
+
+Fixes
+-----
+
+- Tweak nodes : Fixed bugs which prevented the creation of new tweaks when an existing tweak had an input connection.
+
 1.1.9.1 (relative to 1.1.9.0)
 =======
 
