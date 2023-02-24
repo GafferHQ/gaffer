@@ -60,6 +60,8 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 	# Arnold outputs licensing warnings that would cause failures
 	failureMessageLevel = IECore.MessageHandler.Level.Error
 
+	startupWaitTime = 3.0 if sys.platform == "win32" else 1.0
+
 	def testTwoRenders( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -168,7 +170,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		script["render"]["state"].setValue( script["render"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 1 )
+		self.uiThreadCallHandler.waitFor( self.startupWaitTime )
 
 		self.assertAlmostEqual( script["imageStats"]["average"][3].getValue(), 0.381, delta = 0.001 )
 
@@ -246,7 +248,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 1.0 )
+		self.uiThreadCallHandler.waitFor( self.startupWaitTime )
 
 		self.assertAlmostEqual(
 			self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r,
@@ -337,7 +339,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 1.0 )
+		self.uiThreadCallHandler.waitFor( self.startupWaitTime )
 
 		initialColor = self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
 		self.assertAlmostEqual( initialColor.r, 0.09, delta = 0.013 )
@@ -422,7 +424,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		# Start render 1 and save the image output.
 		s["r"]["state"].setValue( s["r"].State.Running )
-		self.uiThreadCallHandler.waitFor( 1.0 )
+		self.uiThreadCallHandler.waitFor( self.startupWaitTime )
 		s["r"]["state"].setValue( s["r"].State.Stopped )
 		redTexture = self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
 
@@ -433,7 +435,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		# Start and stop new render
 		s["r"]["state"].setValue( s["r"].State.Running )
-		self.uiThreadCallHandler.waitFor( 1.0 )
+		self.uiThreadCallHandler.waitFor( self.startupWaitTime )
 		s["r"]["state"].setValue( s["r"].State.Stopped )
 
 		# Get image from new render.
@@ -457,7 +459,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		# Now test flush cache during a render
 		s["r"]["state"].setValue( s["r"].State.Running )
-		self.uiThreadCallHandler.waitFor( 1.0 )
+		self.uiThreadCallHandler.waitFor( self.startupWaitTime )
 
 		# Get colour after 1 second of render.
 		redTexture = self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
@@ -526,7 +528,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		# Start rendering.
 
 		s["render"]["state"].setValue( s["render"].State.Running )
-		self.uiThreadCallHandler.waitFor( 1.0 )
+		self.uiThreadCallHandler.waitFor( self.startupWaitTime )
 
 		# Switch which object is tagged as a mesh light. This used to trigger a
 		# crash.
@@ -608,7 +610,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		# Render, and check `sphere2`` is receiving illumination.
 
 		s["render"]["state"].setValue( s["render"].State.Running )
-		self.uiThreadCallHandler.waitFor( 1.0 )
+		self.uiThreadCallHandler.waitFor( self.startupWaitTime )
 
 		litColor = self._color4fAtUV( s["catalogue"], imath.V2f( 0.75, 0.5 ) )
 		self.assertGreater( litColor.r, 0.1 )
