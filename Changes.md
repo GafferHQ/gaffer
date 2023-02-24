@@ -22,6 +22,11 @@ Documentation
  - Added more Python examples to the Scripting Reference "Common Operations" article.
  - Added instructions for installing and configuring Gaffer on Windows to the "Getting Started" guide.
 
+API
+---
+
+- RGBAChannelsPlugValueWidget : Added support for `rgbaChannelsPlugValueWidget:allowNone` metadata.
+
 Build
 -----
 
