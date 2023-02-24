@@ -43,6 +43,9 @@ Gaffer is now installed to `C:\software\gaffer-!GAFFER_VERSION!-windows`.
 
 ## Installing in macOS ##
 
+> Note :
+> Pre-built versions of Gaffer are currently unavailable on macOS.
+
 To install Gaffer in macOS:
 
 1. Download the [latest macOS package of Gaffer](https://github.com/GafferHQ/gaffer/releases/download/!GAFFER_VERSION!/gaffer-!GAFFER_VERSION!-macos.tar.gz).
