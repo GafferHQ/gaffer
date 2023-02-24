@@ -1,6 +1,11 @@
 1.2.x.x (relative to 1.2.0.2)
 =======
 
+Documentation
+-------------
+
+ - Added more Python examples to the Scripting Reference "Common Operations" article.
+
 1.2.0.2 (relative to 1.2.0.1)
 =======
 

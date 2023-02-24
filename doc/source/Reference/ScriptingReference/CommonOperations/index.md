@@ -18,6 +18,18 @@ root.addChild( node )
 node.setName( "newName" )
 ```
 
+### Get a node or plug name
+
+```
+name = node.getName()
+```
+
+### Get a node or plug name relative to an ancestor
+
+```
+name = node["plugName"].relativeName( root )
+```
+
 ### Get a plug value
 
 ```
@@ -33,13 +45,49 @@ node["plugName"].setValue( value )
 ### Make a connection
 
 ```
-destinationNode["destinationPlugName"].setInput( sourceNode["sourceNode"] )
+destinationNode["destinationPlugName"].setInput( sourceNode["sourcePlugName"] )
 ```
 
 ### Break a connection
 
 ```
 node["plugName"].setInput( None )
+```
+
+### Get a plug's input connection
+
+```
+input = node["plugName"].getInput()
+```
+
+### Get a plug's output connections
+
+```
+outputs = node["plugName"].outputs()
+```
+
+### Get all child plugs from a node
+
+```
+plugs = node.children( Gaffer.Plug )
+```
+
+### Get the node from a plug
+
+```
+node = plug.node()
+```
+
+### Get the parent of a node or plug
+
+```
+parent = node.parent()
+```
+
+### Get a node's ancestor of type Gaffer.ScriptNode
+
+```
+script = node.ancestor( Gaffer.ScriptNode )
 ```
 
 ### Get a node by name
@@ -55,6 +103,20 @@ for node in root.children( Gaffer.Node ) :
 	...
 ```
 
+### Loop over child nodes of type GafferScene.Sphere
+
+```
+for node in GafferScene.Sphere.Range( root ) :
+	...
+```
+
+### Loop over all descendant nodes of type Gaffer.Box
+
+```
+for node in Gaffer.Box.RecursiveRange( root ) :
+	...
+```
+
 ### Get the current filename
 
 ```
@@ -67,10 +129,37 @@ root["fileName"].getValue()
 root.serialiseToFile( "/path/to/file.gfr" )
 ```
 
+### Load a script
+
+```
+root["fileName"].setValue( "/path/to/file.gfr" )
+root.load()
+```
+
+### Export a reference
+
+```
+root["boxToExport"].exportForReference( "/path/to/file.grf" )
+```
+
+### Load a reference
+
+```
+referenceNode = Gaffer.Reference()
+root.addChild( referenceNode )
+referenceNode.load( "/path/to/file.grf" )
+```
+
 ### Query a script variable
 
 ```
 root.context()["project:rootDirectory"]
+```
+
+### Get selected nodes
+
+```
+root.selection()
 ```
 
 ### Select a node
@@ -83,14 +172,50 @@ root.selection().add( root["nodeName"] )
 ### Get the frame range
 
 ```
-start = root['frameRange']['start'].getValue()
-end = root['frameRange']['end'].getValue()
+start = root["frameRange"]["start"].getValue()
+end = root["frameRange"]["end"].getValue()
 ```
 
 ### Set the current frame
 
 ```
 root.context().setFrame( frame )
+```
+
+### Get the playback range
+
+```
+GafferUI.Playback.acquire( root.context() ).getFrameRange()
+```
+
+### Set the playback range
+
+```
+GafferUI.Playback.acquire( root.context() ).setFrameRange( start, end )
+```
+
+### Set node as numeric bookmark 1
+
+```
+Gaffer.MetadataAlgo.setNumericBookmark( root, 1, root["nodeName"] )
+```
+
+### Get the node set as numeric bookmark 1
+
+```
+Gaffer.MetadataAlgo.getNumericBookmark( root, 1 )
+```
+
+### Set a node as the focus node
+
+```
+root.setFocus( root["nodeName"] )
+```
+
+### Get the currently focussed node
+
+```
+root.getFocus()
 ```
 
 Metadata
@@ -108,6 +233,13 @@ Gaffer.Metadata.registerValue( node, "name", value )
 ```
 Gaffer.Metadata.value( plug, "name" )
 Gaffer.Metadata.value( node, "name" )
+```
+
+### Find plugs/nodes with specific metadata
+
+```
+Gaffer.Metadata.plugsWithMetadata( root, "name" )
+Gaffer.Metadata.nodesWithMetadata( root, "name" )
 ```
 
 Scenes
