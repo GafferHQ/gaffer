@@ -261,7 +261,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 3.0 )
+		self.uiThreadCallHandler.waitFor( 1.0 )
 
 		self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
 
@@ -320,7 +320,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		# Render the sphere.
 
 		s["r"]["state"].setValue( s["r"].State.Running )
-		self.uiThreadCallHandler.waitFor( 3.0 )
+		self.uiThreadCallHandler.waitFor( 1.0 )
 
 		self.assertAlmostEqual( self._color4fAtUV( s["catalogue"], imath.V2f( 0.5 ) ).r, 1, delta = 0.01 )
 
@@ -378,7 +378,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 3.0 )
+		self.uiThreadCallHandler.waitFor( 1.0 )
 
 		# Visible to start with
 
@@ -462,7 +462,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 3.0 )
+		self.uiThreadCallHandler.waitFor( 1.0 )
 
 		# Visible to start with
 
@@ -528,7 +528,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 3.0 )
+		self.uiThreadCallHandler.waitFor( 1.0 )
 
 		# Visible to start with
 
@@ -585,7 +585,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 3.0 )
+		self.uiThreadCallHandler.waitFor( 2.0 )
 
 		# Render red sphere
 
@@ -646,7 +646,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 3.0 )
+		self.uiThreadCallHandler.waitFor( 1.0 )
 
 		# Visible to start with
 
@@ -882,7 +882,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 3.0 )
+		self.uiThreadCallHandler.waitFor( 1.0 )
 
 		# Visible to start with
 
@@ -972,7 +972,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 3 )
+		self.uiThreadCallHandler.waitFor( 2 )
 
 		c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
 		self.assertEqual( c / c[0], imath.Color3f( 1, 0.5, 0.25 ) )
@@ -1072,7 +1072,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 3 )
+		self.uiThreadCallHandler.waitFor( 2 )
 
 		c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
 		self.assertEqual( c / c[0], imath.Color3f( 1, 0, 0 ) )
@@ -1149,7 +1149,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 3 )
+		self.uiThreadCallHandler.waitFor( 2 )
 
 		c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
 		self.assertNotEqual( c[0], 0.0 )
@@ -1229,7 +1229,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 3 )
+		self.uiThreadCallHandler.waitFor( 2 )
 
 		c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
 		self.assertNotEqual( c[0], 0.0 )
@@ -1289,7 +1289,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 3.0 )
+		self.uiThreadCallHandler.waitFor( 1.0 )
 
 		# Visible to start with
 
@@ -1348,7 +1348,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 3.0 )
+		self.uiThreadCallHandler.waitFor( 1.0 )
 
 		# Visible to start with
 
@@ -1517,7 +1517,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["render"]["in"].setInput( s["outputs"]["out"] )
 		s["render"]["state"].setValue( s["render"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 3.0 )
+		self.uiThreadCallHandler.waitFor( 1.0 )
 
 		# We haven't used the trace sets yet, so should be able to see
 		# the reflection.
@@ -1673,7 +1673,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		script["render"]["state"].setValue( script["render"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 3 )
+		self.uiThreadCallHandler.waitFor( 1 )
 
 		c = self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) )
 		unfilteredIntensity = c[0]
@@ -1832,7 +1832,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		# by default, filters aren't linked.
 
 		script["render"]["state"].setValue( script["render"].State.Running )
-		self.uiThreadCallHandler.waitFor( 3 )
+		self.uiThreadCallHandler.waitFor( 1 )
 
 		unfilteredColor = self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) )
 		self.assertGreater( unfilteredColor[0], 0.25 )
@@ -1905,7 +1905,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 3.0 )
+		self.uiThreadCallHandler.waitFor( 2.0 )
 
 		# Render red sphere
 
@@ -1966,7 +1966,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["r"]["state"].setValue( s["r"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 3 )
+		self.uiThreadCallHandler.waitFor( 2 )
 
 		c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
 		self.assertEqual( c / c[0], imath.Color3f( 1, 0.5, 0.25 ) )
@@ -2055,7 +2055,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s["renderer"]["state"].setValue( s["renderer"].State.Running )
 
-		self.uiThreadCallHandler.waitFor( 3 )
+		self.uiThreadCallHandler.waitFor( 2 )
 
 		c = self._color3fAtUV( s["catalogue"], imath.V2f( 0.5 ) )
 		self.assertNotEqual( c[0], 0 )
