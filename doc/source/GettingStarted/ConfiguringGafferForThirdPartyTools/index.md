@@ -3,7 +3,7 @@
 Gaffer is compatible with the following commercial and open-source third-party tools:
 
 - [Appleseed](http://appleseedhq.net/)
-- [Arnold](https://www.solidangle.com/arnold/)
+- [Arnold](https://www.arnoldrenderer.com/)
 - [3Delight](http://www.3delight.com/)
 - [Tractor](https://renderman.pixar.com/tractor)
 
@@ -37,6 +37,25 @@ To create the `ARNOLD_ROOT` environment variable in Linux:
     ```bash
     user@desktop ~ $ echo $ARNOLD_ROOT
     # !ARNOLD_PATH_LINUX!
+    ```
+
+
+### Arnold in Windows ###
+
+> Note :
+> For this instruction, we will assume you have Arnold !ARNOLD_VERSION! installed to `!ARNOLD_PATH_WINDOWS!`.
+
+To create the `ARNOLD_ROOT` environment variable in Windows:
+
+1. Open the Command Prompt (Start > Windows System > Command Prompt).
+
+2. Run the command `setx ARNOLD_ROOT "!ARNOLD_PATH_WINDOWS!"`.
+
+3. In a new Command Prompt window, test that the variable is set:
+
+    ```powershell
+    C:\Users\user> echo %ARNOLD_ROOT%
+    # !ARNOLD_PATH_WINDOWS!
     ```
 
 
@@ -89,6 +108,31 @@ To create the `DELIGHT` environment variable in Linux:
     ```shell
     user@desktop ~ $ echo $DELIGHT
     # !DELIGHT_PATH_LINUX!
+    ```
+
+
+### 3Delight in Windows ###
+
+> Important :
+> Gaffer currently requires __3Delight for Maya__ to be included as part of the 3Delight install for access to lights and shaders.
+
+> Tip :
+> The 3Delight installer typically configures the `DELIGHT` environment variable on Windows. So the steps below may not be required.
+
+> Note :
+> For this instruction, we will assume you have 3Delight !DELIGHT_VERSION! installed to `!DELIGHT_PATH_WINDOWS!`.
+
+To create the `DELIGHT` environment variable in Windows:
+
+1. Open the Command Prompt (Start > Windows System > Command Prompt).
+
+2. Run the command `setx DELIGHT "!DELIGHT_PATH_WINDOWS!"`.
+
+3. In a new Command Prompt window, test that the variable is set:
+
+    ```powershell
+    C:\Users\user> echo %DELIGHT%
+    # !DELIGHT_PATH_WINDOWS!
     ```
 
 
