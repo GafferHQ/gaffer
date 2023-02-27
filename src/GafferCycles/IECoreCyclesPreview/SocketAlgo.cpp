@@ -80,7 +80,7 @@ void setNumericSocket( ccl::Node *node, const ccl::SocketType &socket, const IEC
 			IECore::msg(
 				IECore::Msg::Warning, "Cycles::SocketAlgo",
 				fmt::format(
-					"Unsupported type `{}` for socket `{}` on node `{}",
+					"Unsupported type `{}` for socket `{}` on node `{}`",
 					value->typeName(), socket.name, node->name
 				)
 			);
@@ -108,7 +108,7 @@ void setFloat2Socket( ccl::Node *node, const ccl::SocketType &socket, const IECo
 			IECore::msg(
 				IECore::Msg::Warning, "Cycles::SocketAlgo",
 				fmt::format(
-					"Unsupported type `{}` for socket `{}` on node `{}",
+					"Unsupported type `{}` for socket `{}` on node `{}`",
 					value->typeName(), socket.name, node->name
 				)
 			);
@@ -141,7 +141,7 @@ void setFloat2ArraySocket( ccl::Node *node, const ccl::SocketType &socket, const
 			IECore::msg(
 				IECore::Msg::Warning, "Cycles::SocketAlgo",
 				fmt::format(
-					"Unsupported type `{}` for socket `{}` on node `{}",
+					"Unsupported type `{}` for socket `{}` on node `{}`",
 					value->typeName(), socket.name, node->name
 				)
 			);
@@ -176,7 +176,7 @@ void setFloat3Socket( ccl::Node *node, const ccl::SocketType &socket, const IECo
 			IECore::msg(
 				IECore::Msg::Warning, "Cycles::SocketAlgo",
 				fmt::format(
-					"Unsupported type `{}` for socket `{}` on node `{}",
+					"Unsupported type `{}` for socket `{}` on node `{}`",
 					value->typeName(), socket.name, node->name
 				)
 			);
@@ -216,7 +216,7 @@ void setFloat3ArraySocket( ccl::Node *node, const ccl::SocketType &socket, const
 			IECore::msg(
 				IECore::Msg::Warning, "Cycles::SocketAlgo",
 				fmt::format(
-					"Unsupported type `{}` for socket `{}` on node `{}",
+					"Unsupported type `{}` for socket `{}` on node `{}`",
 					value->typeName(), socket.name, node->name
 				)
 			);
@@ -238,7 +238,7 @@ void setArraySocket( ccl::Node *node, const ccl::SocketType &socket, const Data 
 		IECore::msg(
 			IECore::Msg::Warning, "Cycles::SocketAlgo::setSocket",
 			fmt::format(
-				"Unsupported data type `{}` for socket `{}` on node {}",
+				"Unsupported data type `{}` for socket `{}` on node `{}`",
 				value->typeName(), socket.name, node->name
 			)
 		);
@@ -270,7 +270,7 @@ void setEnumSocket( ccl::Node *node, const ccl::SocketType &socket, const IECore
 			IECore::msg(
 				IECore::Msg::Warning, "Cycles::SocketAlgo",
 				fmt::format(
-					"Invalid enum value \"{}\" for socket `{}` on node {}",
+					"Invalid enum value \"{}\" for socket `{}` on node `{}`",
 					name, socket.name, node->name
 				)
 			);
@@ -297,7 +297,7 @@ void setStringSocket( ccl::Node *node, const ccl::SocketType &socket, const IECo
 		IECore::msg(
 			IECore::Msg::Warning, "Cycles::SocketAlgo",
 			fmt::format(
-				"Unsupported data type `{}` for socket `{}` on node {} (expected StringData or InternedStringData).",
+				"Unsupported data type `{}` for socket `{}` on node `{}` (expected StringData or InternedStringData).",
 				value->typeName(), socket.name, node->name
 			)
 		);
@@ -485,7 +485,7 @@ void setSocket( ccl::Node *node, const std::string &name, const IECore::Data *va
 	{
 		IECore::msg(
 			IECore::Msg::Warning, "Cycles::SocketAlgo",
-			boost::format( "Socket `%1%` on node `%2%` does not exist" ) % name % node->name
+			fmt::format( "Socket `{}` on node `{}` does not exist", name, node->name )
 		);
 	}
 }

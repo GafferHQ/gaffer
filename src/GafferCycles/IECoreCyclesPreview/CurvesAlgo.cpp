@@ -44,6 +44,8 @@
 #include "scene/geometry.h"
 #include "scene/hair.h"
 
+#include "fmt/format.h"
+
 using namespace std;
 using namespace Imath;
 using namespace IECore;
@@ -237,7 +239,7 @@ ccl::Geometry *convert( const vector<const IECoreScene::CurvesPrimitive *> &curv
 			}
 			else
 			{
-				msg( Msg::Warning, "IECoreCycles::CurvesAlgo::convert", boost::format( "Variable \"Position\" has unsupported type \"%s\" (expected V3fVectorData)." ) % pIt->second.data->typeName() );
+				msg( Msg::Warning, "IECoreCycles::CurvesAlgo::convert", fmt::format( "Variable \"Position\" has unsupported type \"{}\" (expected V3fVectorData).", pIt->second.data->typeName() ) );
 				hair->attributes.remove( attr_mP );
 				hair->set_motion_steps( 0 );
 				hair->set_use_motion_blur( false );

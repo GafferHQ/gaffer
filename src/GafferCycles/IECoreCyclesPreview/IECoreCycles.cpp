@@ -41,6 +41,8 @@
 
 #include "IECore/MessageHandler.h"
 
+#include "fmt/format.h"
+
 #include <filesystem>
 
 namespace
@@ -68,7 +70,7 @@ bool init()
 	auto kernelFile = std::filesystem::path( cyclesRoot ) / "source" / "kernel" / "types.h";
 	if( !std::filesystem::is_regular_file( kernelFile ) )
 	{
-		IECore::msg( IECore::Msg::Error, "IECoreCycles::init", boost::format( "File %1% not found" ) % kernelFile );
+		IECore::msg( IECore::Msg::Error, "IECoreCycles::init", fmt::format( "File \"{}\" not found", kernelFile ) );
 		return false;
 	}
 
