@@ -49,6 +49,8 @@
 #include "boost/bind/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 
+#include "fmt/format.h"
+
 using namespace boost::placeholders;
 using namespace IECore;
 using namespace Gaffer;
@@ -124,10 +126,8 @@ void Expression::setExpression( const std::string &expression, const std::string
 	EnginePtr engine = Engine::create( language );
 	if( !engine )
 	{
-		throw Exception( boost::str(
-			boost::format(
-				"Failed to create engine for language \"%s\""
-			) % language
+		throw Exception( fmt::format(
+			"Failed to create engine for language \"{}\"", language
 		) );
 	}
 
@@ -146,10 +146,9 @@ void Expression::setExpression( const std::string &expression, const std::string
 		{
 			if( std::binary_search( sortedInPlugs.begin(), sortedInPlugs.end(), *it ) )
 			{
-				throw Exception( boost::str(
-					boost::format(
-						"Cannot both read from and write to plug \"%s\""
-					) % (*it)->relativeName( parent() )
+				throw Exception( fmt::format(
+					"Cannot both read from and write to plug \"{}\"",
+					(*it)->relativeName( parent() )
 				) );
 			}
 		}

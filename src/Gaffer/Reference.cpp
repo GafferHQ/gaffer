@@ -53,6 +53,8 @@
 #include "boost/bind/bind.hpp"
 #include "boost/container/flat_set.hpp"
 
+#include "fmt/format.h"
+
 #include <unordered_map>
 
 using namespace std;
@@ -612,7 +614,7 @@ void Reference::loadInternal( const std::filesystem::path &fileName )
 			{
 				msg(
 					Msg::Warning,
-					boost::str( boost::format( "Loading \"%s\" onto \"%s\"" ) % fileName % getName().c_str() ),
+					fmt::format( "Loading \"{}\" onto \"{}\"", fileName.generic_string(), getName().c_str() ),
 					e.what()
 				);
 			}
@@ -630,7 +632,7 @@ void Reference::loadInternal( const std::filesystem::path &fileName )
 
 	if( errors )
 	{
-		throw Exception( boost::str( boost::format( "Error loading reference \"%s\"" ) % fileName ) );
+		throw Exception( fmt::format( "Error loading reference \"{}\"", fileName.generic_string() ) );
 	}
 
 }

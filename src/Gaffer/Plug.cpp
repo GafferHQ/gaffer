@@ -48,12 +48,13 @@
 #include "IECore/Exception.h"
 
 #include "boost/bind/bind.hpp"
-#include "boost/format.hpp"
 #include "boost/graph/adjacency_list.hpp"
 #include "boost/graph/depth_first_search.hpp"
 #include "boost/unordered_map.hpp"
 
 #include "tbb/enumerable_thread_specific.h"
+
+#include "fmt/format.h"
 
 using namespace boost;
 using namespace Gaffer;
@@ -376,12 +377,10 @@ void Plug::setInput( PlugPtr input, bool setChildInputs, bool updateParentInput 
 
 	if( input && !acceptsInput( input.get() ) )
 	{
-		std::string what = boost::str(
-			boost::format( "Plug \"%s\" rejects input \"%s\"." )
-			% fullName()
-			% input->fullName()
-		);
-		throw IECore::Exception( what );
+		throw IECore::Exception( fmt::format(
+			"Plug \"{}\" rejects input \"{}\".",
+			fullName(), input->fullName()
+		) );
 	}
 
 	// Connect our children first.
@@ -680,7 +679,7 @@ void Plug::childrenReordered( const std::vector<size_t> &oldIndices )
 		{
 			IECore::msg(
 				IECore::Msg::Warning, "Plug::childrenReordered",
-				boost::format( "Not reordering output \"%1%\" because its size doesn't match the input" ) % output->fullName()
+				fmt::format( "Not reordering output \"{}\" because its size doesn't match the input", output->fullName() )
 			);
 			continue;
 		}
@@ -881,10 +880,10 @@ class Plug::DirtyPlugs
 			{
 				IECore::msg(
 					IECore::Msg::Error, "Plug dirty propagation",
-					boost::str(
-						boost::format( "Cycle detected between %1% and %2%" ) %
-							graph[boost::target( e, graph )]->fullName() %
-							graph[boost::source( e, graph )]->fullName()
+					fmt::format(
+						"Cycle detected between {} and {}",
+						graph[boost::target( e, graph )]->fullName(),
+						graph[boost::source( e, graph )]->fullName()
 					)
 				);
 			}

@@ -50,6 +50,8 @@
 #include "boost/multi_index_container.hpp"
 #include "boost/variant.hpp"
 
+#include "fmt/format.h"
+
 #include <unordered_map>
 
 using namespace std;
@@ -700,16 +702,16 @@ void Spreadsheet::RowsPlug::removeRow( Spreadsheet::RowPlugPtr row )
 {
 	if( row->parent() != this )
 	{
-		throw Exception( boost::str(
-			boost::format( "Row \"%1%\" is not a child of \"%2%\"." ) % row->fullName() % fullName()
-		) );
+		throw Exception(
+			fmt::format( "Row \"{}\" is not a child of \"{}\".", row->fullName(), fullName() )
+		);
 	}
 
 	if( row == getChild( 0 ) )
 	{
-		throw Exception( boost::str(
-			boost::format( "Cannot remove default row from \"%1%\"." ) % fullName()
-		) );
+		throw Exception(
+			fmt::format( "Cannot remove default row from \"{}\".", fullName() )
+		);
 	}
 
 	removeChild( row );

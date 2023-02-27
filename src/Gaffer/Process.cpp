@@ -46,6 +46,8 @@
 
 #include "tbb/enumerable_thread_specific.h"
 
+#include "fmt/format.h"
+
 using namespace Gaffer;
 
 //////////////////////////////////////////////////////////////////////////
@@ -100,10 +102,11 @@ Process::~Process()
 		{
 			IECore::msg(
 				IECore::Msg::Warning, "Process::~Process",
-				boost::format( "Cancellation for `%1%` (%2%) took %3%s" )
-					% plug()->fullName()
-					% type()
-					% std::chrono::duration<float>( t ).count()
+				fmt::format(
+					"Cancellation for `{}` ({}) took {}s",
+					plug()->fullName(), type().string(),
+					std::chrono::duration<float>( t ).count()
+				)
 			);
 		}
 	}

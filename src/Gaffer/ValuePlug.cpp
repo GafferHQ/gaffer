@@ -46,9 +46,10 @@
 #include "IECore/MessageHandler.h"
 
 #include "boost/bind/bind.hpp"
-#include "boost/format.hpp"
 
 #include "tbb/enumerable_thread_specific.h"
+
+#include "fmt/format.h"
 
 #include <atomic>
 
@@ -670,13 +671,13 @@ class ValuePlug::ComputeProcess : public Process
 			const Process *process = Process::current();
 			if( !process || process->type() != staticType )
 			{
-				throw IECore::Exception( boost::str( boost::format( "Cannot set value for plug \"%s\" except during computation." ) % plug->fullName() ) );
+				throw IECore::Exception( fmt::format( "Cannot set value for plug \"{}\" except during computation.", plug->fullName() ) );
 			}
 
 			const ComputeProcess *computeProcess = static_cast<const ComputeProcess *>( process );
 			if( computeProcess->plug() != plug )
 			{
-				throw IECore::Exception( boost::str( boost::format( "Cannot set value for plug \"%s\" during computation for plug \"%s\"." ) % plug->fullName() % computeProcess->plug()->fullName() ) );
+				throw IECore::Exception( fmt::format( "Cannot set value for plug \"{}\" during computation for plug \"{}\".", plug->fullName(), computeProcess->plug()->fullName() ) );
 			}
 
 			const_cast<ComputeProcess *>( computeProcess )->m_result = result;

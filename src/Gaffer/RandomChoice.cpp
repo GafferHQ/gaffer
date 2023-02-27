@@ -46,6 +46,8 @@
 
 #include "OpenEXR/ImathRandom.h"
 
+#include "fmt/format.h"
+
 #include <numeric>
 
 using namespace std;
@@ -334,11 +336,10 @@ void RandomChoice::compute( ValuePlug *output, const Context *context ) const
 
 				if( weights.size() != choices.size() )
 				{
-					throw IECore::Exception( boost::str(
-						boost::format(
-							"Length of `choices.weights` does not match length of `choices.values` "
-							"(%1% but should be %2%)."
-						) % weights.size() % choices.size()
+					throw IECore::Exception( fmt::format(
+						"Length of `choices.weights` does not match length of `choices.values` "
+						"({} but should be {}).",
+						weights.size(), choices.size()
 					) );
 				}
 
