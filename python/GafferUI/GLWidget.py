@@ -288,68 +288,10 @@ class _GLGraphicsView( QtWidgets.QGraphicsView ) :
 	@classmethod
 	def __createQGLWidget( cls, format ) :
 
-		# try to make a host specific widget if necessary.
-		result = cls.__createMayaQGLWidget( format )
-		if result is not None :
-			return result
-
-		result = cls.__createHoudiniQGLWidget( format )
-		if result is not None :
-			return result
-
-		# and if it wasn't necessary, just breathe a sigh of relief
-		# and make a nice normal one.
 		if cls.__shareWidget is None :
 			cls.__shareWidget = QtOpenGL.QGLWidget()
 
 		return QtOpenGL.QGLWidget( format, shareWidget = cls.__shareWidget )
-
-	@classmethod
-	def __createHostedQGLWidget( cls, format ) :
-
-		# When running Gaffer embedded in a host application such as Maya
-		# or Houdini, we want to be able to share OpenGL resources between
-		# gaffer uis and host viewport uis, because IECoreGL will be used
-		# in both. So we implement our own QGLContext class which creates a
-		# context which shares with the host. The custom QGLContext is
-		# implemented in GLWidgetBinding.cpp, and automatically shares with
-		# the context which is current at the time of its creation. The host
-		# context should therefore be made current before calling this
-		# method.
-
-		result = QtOpenGL.QGLWidget()
-		_GafferUI._glWidgetSetHostedContext( GafferUI._qtAddress( result ), GafferUI._qtAddress( format ) )
-		return result
-
-	@classmethod
-	def __createMayaQGLWidget( cls, format ) :
-
-		try :
-			import maya.OpenMayaRender
-		except ImportError :
-			# we're not in maya - createQGLWidget() will just make a
-			# normal widget.
-			return None
-
-		mayaRenderer = maya.OpenMayaRender.MHardwareRenderer.theRenderer()
-		mayaRenderer.makeResourceContextCurrent( mayaRenderer.backEndString() )
-		return cls.__createHostedQGLWidget( format )
-
-	@classmethod
-	def __createHoudiniQGLWidget( cls, format ) :
-
-		try :
-			import hou
-		except ImportError :
-			# we're not in houdini - createQGLWidget() will just make a
-			# normal widget.
-			return None
-
-		import IECoreHoudini
-
-		# Force the Houdini GL context to be current, and share it.
-		IECoreHoudini.makeMainGLContextCurrent()
-		return cls.__createHostedQGLWidget( format )
 
 class _GLGraphicsScene( QtWidgets.QGraphicsScene ) :
 
