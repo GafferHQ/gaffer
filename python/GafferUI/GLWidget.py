@@ -90,8 +90,7 @@ class GLWidget( GafferUI.Widget ) :
 			format.setSampleBuffers( True )
 			format.setSamples( 8 )
 
-		if hasattr( format, "setVersion" ) : # setVersion doesn't exist in qt prior to 4.7.
-			format.setVersion( 2, 1 )
+		format.setVersion( 2, 1 )
 
 		graphicsView = _GLGraphicsView( format )
 		self.__graphicsScene = _GLGraphicsScene( graphicsView, Gaffer.WeakMethod( self.__draw ) )
