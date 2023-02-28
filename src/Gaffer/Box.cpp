@@ -45,6 +45,8 @@
 
 #include "boost/regex.hpp"
 
+#include "fmt/format.h"
+
 #include <unordered_set>
 
 using namespace std;
@@ -117,8 +119,9 @@ Plug *Box::promotePlug( Plug *descendantPlug )
 	if( !descendantNode || descendantNode->parent<Node>() != this )
 	{
 		throw IECore::Exception(
-			boost::str(
-				boost::format( "Cannot promote plug \"%s\" as its node is not a child of \"%s\"." ) % descendantPlug->fullName() % fullName()
+			fmt::format(
+				"Cannot promote plug \"{}\" as its node is not a child of \"{}\".",
+				descendantPlug->fullName(), fullName()
 			)
 		);
 	}

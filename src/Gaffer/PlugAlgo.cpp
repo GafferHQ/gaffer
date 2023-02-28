@@ -53,7 +53,8 @@
 
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/algorithm/string/replace.hpp"
-#include "boost/format.hpp"
+
+#include "fmt/format.h"
 
 using namespace std;
 using namespace IECore;
@@ -405,7 +406,7 @@ ValuePlugPtr createPlugFromData( const std::string &name, Plug::Direction direct
 		}
 		default :
 			throw IECore::Exception(
-				boost::str( boost::format( "Data for \"%s\" has unsupported value data type \"%s\"" ) % name % value->typeName() )
+				fmt::format( "Data for \"{}\" has unsupported value data type \"{}\"", name, value->typeName() )
 			);
 	}
 }
@@ -506,7 +507,7 @@ IECore::DataPtr getValueAsData( const ValuePlug *plug )
 		}
 		default :
 			throw IECore::Exception(
-				boost::str( boost::format( "Plug \"%s\" has unsupported type \"%s\"" ) % plug->getName().string() % plug->typeName() )
+				fmt::format( "Plug \"{}\" has unsupported type \"{}\"", plug->getName().string(), plug->typeName() )
 			);
 	}
 
@@ -902,21 +903,19 @@ bool setValueFromData( const ValuePlug *plug, ValuePlug *leafPlug, const IECore:
 		if( !plug->isAncestorOf( leafPlug ) )
 		{
 			throw IECore::Exception(
-				boost::str(
-					boost::format(
-						"PlugAlgo::setValueFromData : Attempt to set plug \"%s\""
-						"to a non-descendent leaf plug \"%s\""
-					) % plug->getName().c_str() % leafPlug->getName().c_str()
+				fmt::format(
+					"PlugAlgo::setValueFromData : Attempt to set plug \"{}\""
+					"to a non-descendent leaf plug \"{}\"",
+					plug->getName().c_str(), leafPlug->getName().c_str()
 				)
 			);
 		}
 		if( leafPlug->children().size() != 0 )
 		{
 			throw IECore::Exception(
-				boost::str(
-					boost::format(
-						"PlugAlgo::setValueFromData : Plug \"%s\" is not a leaf plug"
-					) % leafPlug->getName().c_str()
+				fmt::format(
+					"PlugAlgo::setValueFromData : Plug \"{}\" is not a leaf plug",
+					leafPlug->getName().c_str()
 				)
 			);
 		}
@@ -999,9 +998,7 @@ bool validatePromotability( const Plug *plug, const Plug *parent, bool throwExce
 		else
 		{
 			throw IECore::Exception(
-				boost::str(
-					boost::format( "Cannot promote plug \"%s\" as it is already promoted." ) % plug->fullName()
-				)
+				fmt::format( "Cannot promote plug \"{}\" as it is already promoted.", plug->fullName() )
 			);
 		}
 	}
@@ -1021,9 +1018,7 @@ bool validatePromotability( const Plug *plug, const Plug *parent, bool throwExce
 			else
 			{
 				throw IECore::Exception(
-					boost::str(
-						boost::format( "Cannot promote plug \"%s\" as it is not serialisable." ) % plug->fullName()
-					)
+					fmt::format( "Cannot promote plug \"{}\" as it is not serialisable.", plug->fullName() )
 				);
 			}
 		}
@@ -1037,9 +1032,7 @@ bool validatePromotability( const Plug *plug, const Plug *parent, bool throwExce
 			else
 			{
 				throw IECore::Exception(
-					boost::str(
-						boost::format( "Cannot promote plug \"%s\" as it does not accept inputs." ) % plug->fullName()
-					)
+					fmt::format( "Cannot promote plug \"{}\" as it does not accept inputs.", plug->fullName() )
 				);
 			}
 		}
@@ -1053,9 +1046,7 @@ bool validatePromotability( const Plug *plug, const Plug *parent, bool throwExce
 			else
 			{
 				throw IECore::Exception(
-					boost::str(
-						boost::format( "Cannot promote plug \"%s\" as it already has an input." ) % plug->fullName()
-					)
+					fmt::format( "Cannot promote plug \"{}\" as it already has an input.", plug->fullName()	)
 				);
 			}
 		}
@@ -1073,9 +1064,7 @@ bool validatePromotability( const Plug *plug, const Plug *parent, bool throwExce
 			else
 			{
 				throw IECore::Exception(
-					boost::str(
-						boost::format( "Cannot promote plug \"%s\" as there is no external node." ) % plug->fullName()
-					)
+					fmt::format( "Cannot promote plug \"{}\" as there is no external node.", plug->fullName() )
 				);
 			}
 		}
@@ -1089,9 +1078,9 @@ bool validatePromotability( const Plug *plug, const Plug *parent, bool throwExce
 			else
 			{
 				throw IECore::Exception(
-					boost::str(
-						boost::format( "Cannot promote plug \"%s\" because parent \"%s\" is not a descendant of \"%s\"." ) %
-							plug->fullName() % parent % node
+					fmt::format(
+						"Cannot promote plug \"{}\" because parent \"{}\" is not a descendant of \"{}\".",
+						plug->fullName(), parent->fullName(), node->fullName()
 					)
 				);
 			}
@@ -1286,9 +1275,7 @@ void unpromote( Plug *plug )
 		if( plug )
 		{
 			throw IECore::Exception(
-				boost::str(
-					boost::format( "Cannot unpromote plug \"%s\" as it has not been promoted." ) % plug->fullName()
-				)
+				fmt::format( "Cannot unpromote plug \"{}\" as it has not been promoted.", plug->fullName() )
 			);
 		}
 		else

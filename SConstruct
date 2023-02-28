@@ -934,7 +934,7 @@ libraries = {
 
 	"Gaffer" : {
 		"envAppends" : {
-			"LIBS" : [ "Half" ],
+			"LIBS" : [ "Half", "fmt" ],
 		}
 	},
 
