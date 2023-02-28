@@ -1,6 +1,11 @@
 1.2.x.x (relative to 1.2.0.2)
 =======
 
+Improvements
+------------
+
+- USD : Added translation of UsdUVTexture's `scale`, `bias` and `fallback` parameters to Arnold.
+
 Fixes
 -----
 

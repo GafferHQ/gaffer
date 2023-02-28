@@ -498,6 +498,13 @@ T parameterValue( const Shader *shader, InternedString parameterName, const T &d
 		{
 			return d->readable();
 		}
+		// Conversion of Color4 to Color3, for cases like converting `UsdUVTexture.scale`
+		// to `image.multiply`.
+		if( auto d = shader->parametersData()->member<Color4fData>( parameterName ) )
+		{
+			const Color4f &c = d->readable();
+			return Color3f( c[0], c[1], c[2] );
+		}
 	}
 	else if constexpr( is_same_v<remove_cv_t<T>, string> )
 	{
@@ -527,6 +534,7 @@ void transferUSDParameter( ShaderNetwork *network, InternedString shaderHandle, 
 const InternedString g_aParameter( "a" );
 const InternedString g_angleParameter( "angle" );
 const InternedString g_attributeParameter( "attribute" );
+const InternedString g_biasParameter( "bias" );
 const InternedString g_bParameter( "b" );
 const InternedString g_baseColorParameter( "base_color" );
 const InternedString g_bottomParameter( "bottom" );
@@ -569,7 +577,9 @@ const InternedString g_matrixParameter( "matrix" );
 const InternedString g_metallicParameter( "metallic" );
 const InternedString g_metalnessParameter( "metalness" );
 const InternedString g_missingTextureColorParameter( "missing_texture_color" );
+const InternedString g_multiplyParameter( "multiply" );
 const InternedString g_normalizeParameter( "normalize" );
+const InternedString g_offsetParameter( "offset" );
 const InternedString g_opacityParameter( "opacity" );
 const InternedString g_opacityThresholdParameter( "opacityThreshold" );
 const InternedString g_penumbraAngleParameter( "penumbra_angle" );
@@ -759,11 +769,9 @@ void convertUSDUVTextures( ShaderNetwork *network )
 			imageShader->parameters()[name] = new StringData( mode );
 		}
 
-		/// \todo Support `fallback`, `scale` and `bias` properly. These are
-		/// `float4` values in USD, which don't have a corresponding type in
-		/// Cortex yet. We should probably add `Vec4fData` holding `ImathVec4f`
-		/// and use that.
-		imageShader->parameters()[g_missingTextureColorParameter] = new Color4fData( Color4f( 0.5, 0.5, 0.5, 1.0 ) );
+		transferUSDParameter( network, handle, shader.get(), g_fallbackParameter, imageShader.get(), g_missingTextureColorParameter, Color4f( 0, 0, 0, 1 ) );
+		transferUSDParameter( network, handle, shader.get(), g_scaleParameter, imageShader.get(), g_multiplyParameter, Color3f( 1 ) );
+		transferUSDParameter( network, handle, shader.get(), g_biasParameter, imageShader.get(), g_offsetParameter, Color3f( 0 ) );
 
 		// Arnold gives up on proper texturing filtering if the `image.uvcoords`
 		// input is used. So do what we can to avoid that, by converting a

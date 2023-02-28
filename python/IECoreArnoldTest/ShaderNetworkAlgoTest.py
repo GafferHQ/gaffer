@@ -593,6 +593,35 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 		self.assertEqual( convertedNetwork.input( ( "texture", "uvcoords" ) ), "transform" )
 		self.assertEqual( convertedNetwork.input( ( "previewSurface", "base_color" ) ), "texture" )
 
+	def testConvertUSDUVTextureColor4Parameters( self ) :
+
+		network = IECoreScene.ShaderNetwork(
+			shaders = {
+				"previewSurface" : IECoreScene.Shader( "UsdPreviewSurface" ),
+				"texture" : IECoreScene.Shader(
+					"UsdUVTexture", "shader",
+					{
+						"fallback" : imath.Color4f( 1, 2, 3, 4 ),
+						"scale" : imath.Color4f( 0.1, 0.2, 0.3, 0.4 ),
+						"bias" : imath.Color4f( 0.2, 0.4, 0.6, 0.8 ),
+					}
+				),
+			},
+			connections = [
+				( ( "texture", "rgb" ), ( "previewSurface", "diffuseColor" ) ),
+			],
+			output = "previewSurface",
+		)
+
+		convertedNetwork = network.copy()
+		IECoreArnold.ShaderNetworkAlgo.convertUSDShaders( convertedNetwork )
+
+		texture = convertedNetwork.getShader( "texture" )
+		self.assertEqual( texture.name, "image" )
+		self.assertEqual( texture.parameters["missing_texture_color"].value, imath.Color4f( 1, 2, 3, 4 ) )
+		self.assertEqual( texture.parameters["multiply"].value, imath.Color3f( 0.1, 0.2, 0.3 ) )
+		self.assertEqual( texture.parameters["offset"].value, imath.Color3f( 0.2, 0.4, 0.6 ) )
+
 	def testConvertUSDPrimvarReader( self ) :
 
 		for usdDataType, arnoldShaderType, usdFallback, arnoldDefault in [
