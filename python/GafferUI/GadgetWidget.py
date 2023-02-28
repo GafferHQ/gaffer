@@ -61,8 +61,6 @@ class GadgetWidget( GafferUI.GLWidget ) :
 
 		self._qtWidget().setFocusPolicy( QtCore.Qt.ClickFocus )
 
-		self.__requestedDepthBuffer = self.BufferOptions.Depth in bufferOptions
-
 		self.enterSignal().connect( Gaffer.WeakMethod( self.__enter ), scoped = False )
 		self.leaveSignal().connect( Gaffer.WeakMethod( self.__leave ), scoped = False )
 		self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )

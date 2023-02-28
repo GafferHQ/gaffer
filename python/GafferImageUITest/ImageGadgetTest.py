@@ -94,14 +94,15 @@ class ImageGadgetTest( GafferUITest.TestCase ) :
 		g.setImage( s["b"]["out"] )
 
 		with GafferUI.Window() as w :
-			GafferUI.GadgetWidget( g )
-
-		w.setVisible( True )
+			gw = GafferUI.GadgetWidget( g )
 
 		# If this computer doesn't support floating point textures, the ImageGadget will warn about
 		# this the first time it tries to render.  Don't fail because of this
 		with IECore.CapturingMessageHandler() as mh :
-			self.waitForIdle( 1000 )
+			cs = GafferTest.CapturingSlot( gw.getViewportGadget().preRenderSignal() )
+			w.setVisible( True )
+			while not len( cs ) :
+				self.waitForIdle( 1 )
 
 		if len( mh.messages ):
 			self.assertEqual(  len( mh.messages ), 1 )
