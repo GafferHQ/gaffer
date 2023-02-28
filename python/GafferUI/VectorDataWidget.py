@@ -472,9 +472,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 
 		return newData
 
-	# Qt5 added a third argument we don't need, so we gobble it
-	# up with `*unused` to maintain compatibility with Qt4.
-	def __modelDataChanged( self, topLeft, bottomRight, *unused ) :
+	def __modelDataChanged( self, topLeft, bottomRight, roles ) :
 
 		if self.__propagatingDataChangesToSelection :
 			return

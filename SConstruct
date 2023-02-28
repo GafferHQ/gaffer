@@ -1404,18 +1404,16 @@ def addQtLibrary( library, qtLibrary, pythonOnly = True ) :
 		if not pythonOnly:
 			libraries[library]["envAppends"].setdefault( "FRAMEWORKS", [] ).append( "Qt" + qtLibrary )
 	else :
-		prefix = "Qt" if int( env["QT_VERSION"] ) < 5 else "Qt${QT_VERSION}"
-		libraries[library]["pythonEnvAppends"]["LIBS"].append( prefix + qtLibrary )
+		libraries[library]["pythonEnvAppends"]["LIBS"].append( "Qt${QT_VERSION}" + qtLibrary )
 		if not pythonOnly:
-			libraries[library]["envAppends"]["LIBS"].append( prefix + qtLibrary )
+			libraries[library]["envAppends"]["LIBS"].append( "Qt${QT_VERSION}" + qtLibrary )
 
 for library in ( "GafferUI", ) :
 	addQtLibrary( library, "Core", False )
 	addQtLibrary( library, "Gui" )
 	addQtLibrary( library, "OpenGL" )
 	addQtLibrary( library, "Test" )
-	if int( env["QT_VERSION"] ) > 4 :
-		addQtLibrary( library, "Widgets" )
+	addQtLibrary( library, "Widgets" )
 
 # Add required libraries for Windows
 
