@@ -48,7 +48,7 @@
 #include "renderer/api/environmentedf.h"
 #include "renderer/api/light.h"
 
-#include "boost/format.hpp"
+#include "fmt/format.h"
 
 using namespace Gaffer;
 using namespace GafferAppleseed;
@@ -98,7 +98,7 @@ void AppleseedLight::loadShader( const std::string &shaderName )
 	}
 	else // unknown model
 	{
-		throw IECore::Exception( boost::str( boost::format( "Light or Environment model \"%s\" not found" ) % shaderName ) );
+		throw IECore::Exception( fmt::format( "Light or Environment model \"{}\" not found", shaderName ) );
 	}
 
 	setupPlugs( shaderName, metadata );
