@@ -61,10 +61,7 @@ class MatchPatternPathFilterWidget( GafferUI.PathFilterWidget ) :
 			)
 
 			self.__patternWidget = GafferUI.TextWidget()
-
-			if hasattr( self.__patternWidget._qtWidget(), "setPlaceholderText" ) :
-				# setPlaceHolderText appeared in qt 4.7, nuke (6.3 at time of writing) is stuck on 4.6.
-				self.__patternWidget._qtWidget().setPlaceholderText( "Filter..." )
+			self.__patternWidget._qtWidget().setPlaceholderText( "Filter..." )
 
 			self.__patternWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__patternEditingFinished ), scoped = False )
 			self.__patternWidget.textChangedSignal().connect( Gaffer.WeakMethod( self.__patternTextChanged ), scoped = False )
