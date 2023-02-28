@@ -212,6 +212,9 @@ class _GLGraphicsView( QtWidgets.QGraphicsView ) :
 		self.setVerticalScrollBarPolicy( QtCore.Qt.ScrollBarAlwaysOff )
 
 		glWidget = QtWidgets.QOpenGLWidget()
+		# Avoid `QOpenGLFramebufferObject: Framebuffer incomplete attachment`
+		# errors caused by Qt trying to make a framebuffer with zero size.
+		glWidget.setMinimumSize( 1, 1 )
 		glWidget.setFormat( format )
 		self.setViewport( glWidget )
 		self.setViewportUpdateMode( self.FullViewportUpdate )
