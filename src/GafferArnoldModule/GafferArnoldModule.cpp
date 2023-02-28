@@ -57,6 +57,8 @@
 
 #include "GafferBindings/DependencyNodeBinding.h"
 
+#include "fmt/format.h"
+
 using namespace boost::python;
 using namespace GafferArnold;
 
@@ -79,7 +81,7 @@ class ArnoldColorManagerSerialiser : public GafferBindings::NodeSerialiser
 		const std::string name = static_cast<const ArnoldColorManager *>( graphComponent )->getChild<ArnoldShader>( "__shader" )->namePlug()->getValue();
 		if( name.size() )
 		{
-			result += boost::str( boost::format( "\n%s.loadColorManager( \"%s\" )\n" ) % identifier % name );
+			result += fmt::format( "\n{}.loadColorManager( \"{}\" )\n", identifier, name );
 		}
 
 		return result;

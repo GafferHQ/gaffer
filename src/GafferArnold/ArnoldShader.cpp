@@ -50,7 +50,7 @@
 
 #include "IECore/MessageHandler.h"
 
-#include "boost/format.hpp"
+#include "fmt/format.h"
 
 #include "ai_metadata.h"
 
@@ -113,7 +113,7 @@ const Gaffer::Plug *ArnoldShader::correspondingInput( const Gaffer::Plug *output
 	const Plug *result = parametersPlug()->getChild<Plug>( primaryInput->readable() );
 	if( !result )
 	{
-		IECore::msg( IECore::Msg::Error, "ArnoldShader::correspondingInput", boost::format( "Parameter \"%s\" does not exist" ) % primaryInput->readable() );
+		IECore::msg( IECore::Msg::Error, "ArnoldShader::correspondingInput", fmt::format( "Parameter \"{}\" does not exist", primaryInput->readable() ) );
 		return nullptr;
 	}
 

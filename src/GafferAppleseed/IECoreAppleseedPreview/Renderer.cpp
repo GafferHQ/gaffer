@@ -92,6 +92,8 @@
 
 #include "tbb/concurrent_hash_map.h"
 
+#include "fmt/format.h"
+
 #include <filesystem>
 
 namespace asf = foundation;
@@ -122,7 +124,7 @@ T *reportedCast( const RunTimeTyped *v, const char *type, const InternedString &
 		return t;
 	}
 
-	msg( Msg::Warning, "AppleseedRenderer", boost::format( "Expected %s but got %s for %s \"%s\"." ) % T::staticTypeName() % v->typeName() % type % name.c_str() );
+	msg( Msg::Warning, "AppleseedRenderer", fmt::format( "Expected {} but got {} for {} \"{}\".", T::staticTypeName(), v->typeName(), type, name.c_str() ) );
 	return nullptr;
 }
 
@@ -2801,7 +2803,7 @@ class AppleseedRenderer final : public AppleseedRendererBase
 					return;
 				}
 
-				msg( Msg::Warning, "AppleseedRenderer::option", boost::format( "Unknown option \"%s\"." ) % name.c_str() );
+				msg( Msg::Warning, "AppleseedRenderer::option", fmt::format( "Unknown option \"{}\".", name.c_str() ) );
 				return;
 			}
 
@@ -2835,7 +2837,7 @@ class AppleseedRenderer final : public AppleseedRendererBase
 				return;
 			}
 
-			msg( Msg::Warning, "AppleseedRenderer::option", boost::format( "Unknown option \"%s\"." ) % name.c_str() );
+			msg( Msg::Warning, "AppleseedRenderer::option", fmt::format( "Unknown option \"{}\".", name.c_str() ) );
 		}
 
 		void output( const InternedString &name, const Output *output ) override
@@ -2873,7 +2875,7 @@ class AppleseedRenderer final : public AppleseedRendererBase
 
 					if( m_aovs.get_by_name( aov->get_name() ) != nullptr )
 					{
-						msg( Msg::Warning, "AppleseedRenderer::output", boost::format( "AOV \"%s\" already exists. Ignoring." ) % aov->get_name() );
+						msg( Msg::Warning, "AppleseedRenderer::output", fmt::format( "AOV \"{}\" already exists. Ignoring.", aov->get_name() ) );
 						return;
 					}
 
@@ -2889,7 +2891,7 @@ class AppleseedRenderer final : public AppleseedRendererBase
 				}
 				else
 				{
-					msg( Msg::Warning, "AppleseedRenderer::output", boost::format( "Unknown AOV \"%s\"." ) % output->getData() );
+					msg( Msg::Warning, "AppleseedRenderer::output", fmt::format( "Unknown AOV \"{}\".", output->getData() ) );
 					return;
 				}
 			}
@@ -2929,7 +2931,7 @@ class AppleseedRenderer final : public AppleseedRendererBase
 			}
 			else
 			{
-				msg( Msg::Warning, "AppleseedRenderer::output", boost::format( "Unknown output type \"%s\"." ) % output->getType() );
+				msg( Msg::Warning, "AppleseedRenderer::output", fmt::format( "Unknown output type \"{}\".", output->getType() ) );
 			}
 		}
 
@@ -3134,7 +3136,7 @@ class AppleseedRenderer final : public AppleseedRendererBase
 			}
 			catch( const exception &e )
 			{
-				msg( MessageHandler::Error, "AppleseedRenderer", boost::format( "Exception in render thread, what = %s" ) % e.what() );
+				msg( MessageHandler::Error, "AppleseedRenderer", fmt::format( "Exception in render thread, what = {}", e.what() ) );
 			}
 			catch( ... )
 			{
@@ -3199,7 +3201,7 @@ class AppleseedRenderer final : public AppleseedRendererBase
 			}
 			catch( const exception &e )
 			{
-				msg( MessageHandler::Error, "AppleseedRenderer", boost::format( "Exception in render thread, what = %s" ) % e.what() );
+				msg( MessageHandler::Error, "AppleseedRenderer", fmt::format( "Exception in render thread, what = {}", e.what() ) );
 			}
 			catch( ... )
 			{
