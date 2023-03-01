@@ -34,8 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_SAMPLECOUNTS_H
-#define GAFFERIMAGE_SAMPLECOUNTS_H
+#ifndef GAFFERIMAGE_DEEPSAMPLECOUNTS_H
+#define GAFFERIMAGE_DEEPSAMPLECOUNTS_H
 
 #include "GafferImage/ImageProcessor.h"
 
@@ -80,4 +80,4 @@ IE_CORE_DECLAREPTR( DeepSampleCounts )
 
 } // namespace GafferImage
 
-#endif // GAFFERIMAGE_SAMPLECOUNTS_H
+#endif // GAFFERIMAGE_DEEPSAMPLECOUNTS_H

@@ -34,8 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUIMODULE_SCENEVIEWBINDING_H
-#define GAFFERSCENEUIMODULE_SCENEVIEWBINDING_H
+#ifndef GAFFERSCENEUIMODULE_VIEWBINDING_H
+#define GAFFERSCENEUIMODULE_VIEWBINDING_H
 
 namespace GafferSceneUIModule
 {
@@ -44,4 +44,4 @@ void bindViews();
 
 } // namespace GafferSceneUIModule
 
-#endif // GAFFERSCENEUIMODULE_SCENEVIEWBINDING_H
+#endif // GAFFERSCENEUIMODULE_VIEWBINDING_H

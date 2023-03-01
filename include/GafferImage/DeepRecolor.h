@@ -34,8 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_GRADE_H
-#define GAFFERIMAGE_GRADE_H
+#ifndef GAFFERIMAGE_DEEPRECOLOR_H
+#define GAFFERIMAGE_DEEPRECOLOR_H
 
 #include "GafferImage/ImageProcessor.h"
 
@@ -83,4 +83,4 @@ IE_CORE_DECLAREPTR( DeepRecolor );
 
 } // namespace GafferImage
 
-#endif // GAFFERIMAGE_GRADE_H
+#endif // GAFFERIMAGE_DEEPRECOLOR_H

@@ -110,4 +110,4 @@ IE_CORE_DECLAREPTR( MeshTangents )
 
 } // namespace GafferScene
 
-#endif //GAFFERSCENE_MESHTANGENTS_H
+#endif // GAFFERSCENE_MESHTANGENTS_H

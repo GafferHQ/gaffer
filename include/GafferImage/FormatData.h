@@ -34,8 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_FORMATDATA_H
-#define GAFFER_FORMATDATA_H
+#ifndef GAFFERIMAGE_FORMATDATA_H
+#define GAFFERIMAGE_FORMATDATA_H
 
 #include "GafferImage/Format.h"
 #include "GafferImage/TypeIds.h"
@@ -55,4 +55,4 @@ IE_CORE_DECLAREPTR( FormatData );
 
 } // namespace GafferImage
 
-#endif // GAFFER_FORMATDATA_H
+#endif // GAFFERIMAGE_FORMATDATA_H

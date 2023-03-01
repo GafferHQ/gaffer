@@ -85,4 +85,4 @@ IE_CORE_DECLAREPTR( DeleteViews )
 
 } // namespace GafferImage
 
-#endif // GAFFERIMAGE_DELETEVIEW_H
+#endif // GAFFERIMAGE_DELETEVIEWS_H

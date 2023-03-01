@@ -32,8 +32,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef IECORE_GEOMETRY_H
-#define IECORE_GEOMETRY_H
+#ifndef IECORESCENE_GEOMETRY_H
+#define IECORESCENE_GEOMETRY_H
 
 #include "GafferScene/Export.h"
 
@@ -81,4 +81,4 @@ IE_CORE_DECLAREPTR( Geometry );
 
 } // namespace IECoreScenePreview
 
-#endif // IECORE_GEOMETRY_H
+#endif // IECORESCENE_GEOMETRY_H

@@ -67,4 +67,4 @@ GraphComponentClass<T, TWrapper>::GraphComponentClass( const char *docString )
 
 } // namespace GafferBindings
 
-#endif // GAFFERBINDINGS_NODEBINDING_INL
+#endif // GAFFERBINDINGS_GRAPHCOMPONENTBINDING_INL

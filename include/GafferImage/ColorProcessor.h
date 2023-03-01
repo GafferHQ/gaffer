@@ -101,4 +101,4 @@ IE_CORE_DECLAREPTR( ColorProcessor )
 
 } // namespace GafferImage
 
-#endif // GAFFERIMAGE_CHANNELDATAPROCESSOR_H
+#endif // GAFFERIMAGE_COLORPROCESSOR_H

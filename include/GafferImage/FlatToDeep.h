@@ -34,8 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_ADDDEPTH_H
-#define GAFFERIMAGE_ADDDEPTH_H
+#ifndef GAFFERIMAGE_FLATTODEEP_H
+#define GAFFERIMAGE_FLATTODEEP_H
 
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/StringPlug.h"
@@ -108,4 +108,4 @@ IE_CORE_DECLAREPTR( FlatToDeep )
 
 } // namespace GafferImage
 
-#endif // GAFFERIMAGE_ADDDEPTH_H
+#endif // GAFFERIMAGE_FLATTODEEP_H

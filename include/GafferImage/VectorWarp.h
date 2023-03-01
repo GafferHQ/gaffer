@@ -34,8 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_UVWARP_H
-#define GAFFERIMAGE_UVWARP_H
+#ifndef GAFFERIMAGE_VECTORWARP_H
+#define GAFFERIMAGE_VECTORWARP_H
 
 #include "GafferImage/Warp.h"
 
@@ -96,4 +96,4 @@ IE_CORE_DECLAREPTR( VectorWarp )
 
 } // namespace GafferImage
 
-#endif // GAFFERIMAGE_UVWARP_H
+#endif // GAFFERIMAGE_VECTORWARP_H

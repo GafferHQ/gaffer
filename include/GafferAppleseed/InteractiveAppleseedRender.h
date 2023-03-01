@@ -34,8 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_INTERACTIVEAPPLESEEDRENDER_H
-#define GAFFERSCENE_INTERACTIVEAPPLESEEDRENDER_H
+#ifndef GAFFERAPPLESEED_INTERACTIVEAPPLESEEDRENDER_H
+#define GAFFERAPPLESEED_INTERACTIVEAPPLESEEDRENDER_H
 
 #include "GafferAppleseed/Export.h"
 #include "GafferAppleseed/TypeIds.h"
@@ -61,4 +61,4 @@ IE_CORE_DECLAREPTR( InteractiveAppleseedRender );
 
 } // namespace GafferAppleseed
 
-#endif // GAFFERSCENE_INTERACTIVEAPPLESEEDRENDER_H
+#endif // GAFFERAPPLESEED_INTERACTIVEAPPLESEEDRENDER_H

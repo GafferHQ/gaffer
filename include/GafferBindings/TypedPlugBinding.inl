@@ -88,4 +88,4 @@ TypedPlugClass<T, TWrapper>::TypedPlugClass( const char *docString )
 
 } // namespace GafferBindings
 
-#endif // GAFFERBINDINGS_PLUGBINDING_INL
+#endif // GAFFERBINDINGS_TYPEDPLUGBINDING_INL

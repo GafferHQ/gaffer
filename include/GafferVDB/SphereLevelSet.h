@@ -34,8 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_SPHERELEVELSET_H
-#define GAFFERSCENE_SPHERELEVELSET_H
+#ifndef GAFFERVDB_SPHERELEVELSET_H
+#define GAFFERVDB_SPHERELEVELSET_H
 
 #include "GafferVDB/Export.h"
 
@@ -92,4 +92,4 @@ class GAFFERVDB_API SphereLevelSet : public GafferScene::ObjectSource
 
 } // namespace GafferVDB
 
-#endif // GAFFERSCENE_SPHERELEVELSET_H
+#endif // GAFFERVDB_SPHERELEVELSET_H

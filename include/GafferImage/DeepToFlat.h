@@ -34,8 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_FLATTEN_H
-#define GAFFERIMAGE_FLATTEN_H
+#ifndef GAFFERIMAGE_DEEPTOFLAT_H
+#define GAFFERIMAGE_DEEPTOFLAT_H
 
 #include "Gaffer/NumericPlug.h"
 
@@ -101,4 +101,4 @@ IE_CORE_DECLAREPTR( DeepToFlat )
 
 } // namespace GafferImage
 
-#endif // GAFFERIMAGE_FLATTEN_H
+#endif // GAFFERIMAGE_DEEPTOFLAT_H

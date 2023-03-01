@@ -73,4 +73,4 @@ IE_CORE_DECLAREPTR( LookTransform )
 
 } // namespace GafferImage
 
-#endif //GAFFERIMAGE_LOOKTRANSFORM_H
+#endif // GAFFERIMAGE_LOOKTRANSFORM_H

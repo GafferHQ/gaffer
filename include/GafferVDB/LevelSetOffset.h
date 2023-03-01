@@ -34,8 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERVDB_LEVELSET_OFFSET_H
-#define GAFFERVDB_LEVELSET_OFFSET_H
+#ifndef GAFFERVDB_LEVELSETOFFSET_H
+#define GAFFERVDB_LEVELSETOFFSET_H
 
 #include "GafferVDB/Export.h"
 #include "GafferVDB/TypeIds.h"
@@ -84,4 +84,4 @@ IE_CORE_DECLAREPTR( LevelSetOffset )
 
 } // namespace GafferVDB
 
-#endif // GAFFERVDB_LEVELSET_OFFSET_H
+#endif // GAFFERVDB_LEVELSETOFFSET_H

@@ -128,4 +128,4 @@ class GAFFERIMAGE_API Sampler
 
 #include "GafferImage/Sampler.inl"
 
-#endif
+#endif // GAFFERIMAGE_SAMPLER_H
