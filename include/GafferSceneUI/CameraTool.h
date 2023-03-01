@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUI_CAMERATOOL_H
-#define GAFFERSCENEUI_CAMERATOOL_H
+#pragma once
 
 #include "GafferSceneUI/TransformTool.h"
 #include "GafferSceneUI/TypeIds.h"
@@ -107,5 +106,3 @@ class GAFFERSCENEUI_API CameraTool : public GafferSceneUI::SelectionTool
 IE_CORE_DECLAREPTR( CameraTool )
 
 } // namespace GafferSceneUI
-
-#endif // GAFFERSCENEUI_CAMERATOOL_H

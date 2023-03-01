@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUIMODULE_ANIMATIONGADGETBINDING_H
-#define GAFFERUIMODULE_ANIMATIONGADGETBINDING_H
+#pragma once
 
 namespace GafferUIModule
 {
@@ -43,5 +42,3 @@ namespace GafferUIModule
 void bindAnimationGadget();
 
 } // namespace GafferUIModule
-
-#endif // GAFFERUIMODULE_ANIMATIONGADGETBINDING_H

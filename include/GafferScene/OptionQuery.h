@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_OPTIONQUERY_H
-#define GAFFERSCENE_OPTIONQUERY_H
+#pragma once
 
 #include "GafferScene/Export.h"
 #include "GafferScene/ScenePlug.h"
@@ -109,5 +108,3 @@ class GAFFERSCENE_API OptionQuery : public Gaffer::ComputeNode
 IE_CORE_DECLAREPTR( OptionQuery )
 
 } // GafferScene
-
-#endif // GAFFERSCENE_OPTIONQUERY_H

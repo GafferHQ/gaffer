@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_VIEWPORTGADGET_H
-#define GAFFERUI_VIEWPORTGADGET_H
+#pragma once
 
 #include "GafferUI/IndividualContainer.h"
 
@@ -467,5 +466,3 @@ inline ViewportGadget::CameraFlags operator|= ( ViewportGadget::CameraFlags &a, 
 }
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_VIEWPORTGADGET_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERCORTEX_EXECUTABLEOPHOLDER_H
-#define GAFFERCORTEX_EXECUTABLEOPHOLDER_H
+#pragma once
 
 #include "GafferCortex/ParameterisedHolder.h"
 
@@ -84,5 +83,3 @@ class GAFFERCORTEX_API ExecutableOpHolder : public ParameterisedHolderTaskNode
 IE_CORE_DECLAREPTR( ExecutableOpHolder )
 
 } // namespace GafferCortex
-
-#endif // GAFFERCORTEX_EXECUTABLEOPHOLDER_H

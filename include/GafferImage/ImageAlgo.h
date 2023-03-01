@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_IMAGEALGO_H
-#define GAFFERIMAGE_IMAGEALGO_H
+#pragma once
 
 #include "IECoreImage/ImagePrimitive.h"
 
@@ -219,5 +218,3 @@ GAFFERIMAGE_API bool viewIsValid( const Gaffer::Context *context, const std::vec
 } // namespace GafferImage
 
 #include "GafferImage/ImageAlgo.inl"
-
-#endif // GAFFERIMAGE_IMAGEALGO_H

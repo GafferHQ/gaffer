@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFEROSL_OSLIMAGE_H
-#define GAFFEROSL_OSLIMAGE_H
+#pragma once
 
 #include "GafferOSL/Export.h"
 #include "GafferOSL/OSLCode.h"
@@ -131,5 +130,3 @@ class GAFFEROSL_API OSLImage : public GafferImage::ImageProcessor
 };
 
 } // namespace GafferOSL
-
-#endif // GAFFEROSL_OSLIMAGE_H

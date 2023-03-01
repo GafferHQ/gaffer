@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUI_SELECTIONTOOL_H
-#define GAFFERSCENEUI_SELECTIONTOOL_H
+#pragma once
 
 #include "GafferSceneUI/Export.h"
 #include "GafferSceneUI/TypeIds.h"
@@ -81,5 +80,3 @@ class GAFFERSCENEUI_API SelectionTool : public GafferUI::Tool
 };
 
 } // namespace GafferSceneUI
-
-#endif // GAFFERSCENEUI_SELECTIONTOOL_H

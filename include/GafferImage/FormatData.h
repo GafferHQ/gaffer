@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_FORMATDATA_H
-#define GAFFERIMAGE_FORMATDATA_H
+#pragma once
 
 #include "GafferImage/Format.h"
 #include "GafferImage/TypeIds.h"
@@ -54,5 +53,3 @@ using FormatData = IECore::FormatData;
 IE_CORE_DECLAREPTR( FormatData );
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_FORMATDATA_H

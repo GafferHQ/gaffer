@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERBINDINGS_NODEBINDING_H
-#define GAFFERBINDINGS_NODEBINDING_H
+#pragma once
 
 #include "boost/python.hpp"
 
@@ -163,5 +162,3 @@ class GAFFERBINDINGS_API NodeSerialiser : public Serialisation::Serialiser
 } // namespace GafferBindings
 
 #include "GafferBindings/NodeBinding.inl"
-
-#endif // GAFFERBINDINGS_NODEBINDING_H

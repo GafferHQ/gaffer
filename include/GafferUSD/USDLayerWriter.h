@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUSD_USDLAYERWRITER_H
-#define GAFFERUSD_USDLAYERWRITER_H
+#pragma once
 
 #include "GafferUSD/Export.h"
 #include "GafferUSD/TypeIds.h"
@@ -94,5 +93,3 @@ class GAFFERUSD_API USDLayerWriter : public GafferDispatch::TaskNode
 IE_CORE_DECLAREPTR( USDLayerWriter )
 
 } // namespace GafferUSD
-
-#endif // GAFFERUSD_USDLAYERWRITER_H

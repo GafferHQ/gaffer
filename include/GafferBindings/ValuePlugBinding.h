@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERBINDINGS_VALUEPLUGBINDING_H
-#define GAFFERBINDINGS_VALUEPLUGBINDING_H
+#pragma once
 
 #include "GafferBindings/PlugBinding.h"
 
@@ -68,5 +67,3 @@ class GAFFERBINDINGS_API ValuePlugSerialiser : public PlugSerialiser
 };
 
 } // namespace GafferBindings
-
-#endif // GAFFERBINDINGS_VALUEPLUGBINDING_H

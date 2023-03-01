@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_RANDOMCHOICE_H
-#define GAFFER_RANDOMCHOICE_H
+#pragma once
 
 #include "Gaffer/ComputeNode.h"
 #include "Gaffer/NumericPlug.h"
@@ -114,5 +113,3 @@ IE_CORE_DECLAREPTR( RandomChoice )
 } // namespace Gaffer
 
 #include "Gaffer/RandomChoice.inl"
-
-#endif // GAFFER_RANDOMCHOICE_H

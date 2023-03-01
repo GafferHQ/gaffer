@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERCORTEX_DATETIMEPARAMETERHANDLER_H
-#define GAFFERCORTEX_DATETIMEPARAMETERHANDLER_H
+#pragma once
 
 #include "GafferCortex/ParameterHandler.h"
 
@@ -80,5 +79,3 @@ class GAFFERCORTEX_API DateTimeParameterHandler : public ParameterHandler
 };
 
 } // namespace GafferCortex
-
-#endif // GAFFERCORTEX_DATETIMEPARAMETERHANDLER_H

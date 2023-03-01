@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERARNOLD_ARNOLDLIGHTFILTER_H
-#define GAFFERARNOLD_ARNOLDLIGHTFILTER_H
+#pragma once
 
 #include "GafferArnold/Export.h"
 #include "GafferArnold/TypeIds.h"
@@ -62,5 +61,3 @@ class GAFFERARNOLD_API ArnoldLightFilter : public GafferScene::LightFilter
 IE_CORE_DECLAREPTR( ArnoldLightFilter )
 
 } // namespace GafferArnold
-
-#endif // GAFFERARNOLD_ARNOLDLIGHTFILTER_H

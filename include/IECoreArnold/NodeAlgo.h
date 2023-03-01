@@ -32,8 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef IECOREARNOLD_NODEALGO_H
-#define IECOREARNOLD_NODEALGO_H
+#pragma once
 
 #include "IECoreArnold/Export.h"
 
@@ -95,5 +94,3 @@ class ConverterDescription
 } // namespace NodeAlgo
 
 } // namespace IECoreArnold
-
-#endif // IECOREARNOLD_NODEALGO_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERMODULE_PLUGALGOBINDING_H
-#define GAFFERMODULE_PLUGALGOBINDING_H
+#pragma once
 
 namespace GafferModule
 {
@@ -43,5 +42,3 @@ namespace GafferModule
 void bindPlugAlgo();
 
 } // namespace GafferModule
-
-#endif // GAFFERMODULE_PLUGALGOBINDING_H

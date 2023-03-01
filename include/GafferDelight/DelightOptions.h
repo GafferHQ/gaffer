@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERDELIGHT_DELIGHTOPTIONS_H
-#define GAFFERDELIGHT_DELIGHTOPTIONS_H
+#pragma once
 
 #include "GafferDelight/Export.h"
 #include "GafferDelight/TypeIds.h"
@@ -60,5 +59,3 @@ class GAFFERDELIGHT_API DelightOptions : public GafferScene::Options
 IE_CORE_DECLAREPTR( DelightOptions );
 
 } // namespace GafferDelight
-
-#endif // GAFFERDELIGHT_DELIGHTOPTIONS_H

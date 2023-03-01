@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_BOXOUT_H
-#define GAFFER_BOXOUT_H
+#pragma once
 
 #include "Gaffer/BoxIO.h"
 
@@ -74,5 +73,3 @@ IE_CORE_DECLAREPTR( BoxOut )
 } // namespace Gaffer
 
 #include "Gaffer/BoxOut.inl"
-
-#endif // GAFFER_BOXOUT_H

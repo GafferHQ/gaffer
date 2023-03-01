@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_CONTEXTPROCESSOR_H
-#define GAFFER_CONTEXTPROCESSOR_H
+#pragma once
 
 #include "Gaffer/ComputeNode.h"
 #include "Gaffer/Context.h"
@@ -106,5 +105,3 @@ class IECORE_EXPORT ContextProcessor : public ComputeNode
 IE_CORE_DECLAREPTR( ContextProcessor );
 
 } // namespace Gaffer
-
-#endif // GAFFER_CONTEXTPROCESSOR_H

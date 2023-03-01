@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUI_SCENEGADGET_H
-#define GAFFERSCENEUI_SCENEGADGET_H
+#pragma once
 
 #include "GafferSceneUI/Export.h"
 #include "GafferSceneUI/Private/OutputBuffer.h"
@@ -230,5 +229,3 @@ class GAFFERSCENEUI_API SceneGadget : public GafferUI::Gadget
 };
 
 } // namespace GafferUI
-
-#endif // GAFFERSCENEUI_SCENEGADGET_H

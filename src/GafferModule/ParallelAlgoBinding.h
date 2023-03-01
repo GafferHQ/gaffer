@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERMODULE_PARALLELALGOBINDING_H
-#define GAFFERMODULE_PARALLELALGOBINDING_H
+#pragma once
 
 namespace GafferModule
 {
@@ -43,5 +42,3 @@ namespace GafferModule
 void bindParallelAlgo();
 
 } // namespace GafferModule
-
-#endif // GAFFERMODULE_PARALLELALGOBINDING_H

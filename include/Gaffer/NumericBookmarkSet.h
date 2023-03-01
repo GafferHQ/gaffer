@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_NUMERICBOOKMARKSET_H
-#define GAFFER_NUMERICBOOKMARKSET_H
+#pragma once
 
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/Set.h"
@@ -82,5 +81,3 @@ class GAFFER_API NumericBookmarkSet : public Gaffer::Set
 IE_CORE_DECLAREPTR( NumericBookmarkSet );
 
 } // namespace Gaffer
-
-#endif // GAFFER_NUMERICBOOKMARKSET_H

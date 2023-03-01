@@ -32,8 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef IECOREPREVIEW_LRUCACHE_H
-#define IECOREPREVIEW_LRUCACHE_H
+#pragma once
 
 #include "IECore/Canceller.h"
 
@@ -231,5 +230,3 @@ class LRUCache : private boost::noncopyable
 } // namespace IECorePreview
 
 #include "Gaffer/Private/IECorePreview/LRUCache.inl"
-
-#endif // IECOREPREVIEW_LRUCACHE_H

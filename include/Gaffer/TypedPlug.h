@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_TYPEDPLUG_H
-#define GAFFER_TYPEDPLUG_H
+#pragma once
 
 #include "Gaffer/ValuePlug.h"
 
@@ -108,5 +107,3 @@ IE_CORE_DECLAREPTR( AtomicBox3fPlug );
 IE_CORE_DECLAREPTR( AtomicBox2iPlug );
 
 } // namespace Gaffer
-
-#endif // GAFFER_TYPEDPLUG_H

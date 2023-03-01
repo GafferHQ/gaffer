@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_DRAGDROPEVENT_H
-#define GAFFERUI_DRAGDROPEVENT_H
+#pragma once
 
 #include "GafferUI/ButtonEvent.h"
 
@@ -70,5 +69,3 @@ struct GAFFERUI_API DragDropEvent : public ButtonEvent
 };
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_DRAGDROPEVENT_H

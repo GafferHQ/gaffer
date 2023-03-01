@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_OPTIONTWEAKS_H
-#define GAFFERSCENE_OPTIONTWEAKS_H
+#pragma once
 
 #include "GafferScene/Export.h"
 #include "GafferScene/GlobalsProcessor.h"
@@ -77,5 +76,3 @@ class GAFFERSCENE_API OptionTweaks : public GlobalsProcessor
 IE_CORE_DECLAREPTR( OptionTweaks )
 
 }  // namespace GafferScene
-
-#endif // GAFFERSCENE_OPTIONTWEAKS_H

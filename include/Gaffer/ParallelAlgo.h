@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_PARALLELALGO_H
-#define GAFFER_PARALLELALGO_H
+#pragma once
 
 #include "Gaffer/Export.h"
 #include "Gaffer/Signals.h"
@@ -85,5 +84,3 @@ GAFFER_API std::unique_ptr<BackgroundTask> callOnBackgroundThread( const Plug *s
 } // namespace ParallelAlgo
 
 } // namespace Gaffer
-
-#endif // GAFFER_PARALLELALGO_H

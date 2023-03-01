@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_TEXT_H
-#define GAFFERIMAGE_TEXT_H
+#pragma once
 
 #include "GafferImage/Shape.h"
 
@@ -131,5 +130,3 @@ class GAFFERIMAGE_API Text : public Shape
 IE_CORE_DECLAREPTR( Text )
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_TEXT_H

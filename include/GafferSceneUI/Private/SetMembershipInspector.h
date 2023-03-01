@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUI_SETMEMBERSHIPINSPECTOR_H
-#define GAFFERSCENEUI_SETMEMBERSHIPINSPECTOR_H
+#pragma once
 
 #include "GafferSceneUI/Export.h"
 
@@ -96,5 +95,3 @@ class GAFFERSCENEUI_API SetMembershipInspector : public Inspector
 }
 
 }
-
-#endif // GAFFERSCENEUI_SETMEMBERSHIPINSPECTOR_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_NODEALGO_H
-#define GAFFER_NODEALGO_H
+#pragma once
 
 #include "Gaffer/Node.h"
 
@@ -141,5 +140,3 @@ std::vector<T *> connectedNodes( Node *node, VisitOrder order = VisitOrder::Brea
 } // namespace Gaffer
 
 #include "Gaffer/NodeAlgo.inl"
-
-#endif // GAFFER_NODEALGO_H

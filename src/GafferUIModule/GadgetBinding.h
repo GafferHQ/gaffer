@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUIMODULE_GADGETBINDING_H
-#define GAFFERUIMODULE_GADGETBINDING_H
+#pragma once
 
 namespace GafferUIModule
 {
@@ -44,5 +43,3 @@ namespace GafferUIModule
 void bindGadget();
 
 } // namespace GafferUIModule
-
-#endif // GAFFERUIMODULE_GADGETBINDING_H

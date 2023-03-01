@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERBINDINGS_SIGNALBINDING_H
-#define GAFFERBINDINGS_SIGNALBINDING_H
+#pragma once
 
 #include "boost/python.hpp"
 
@@ -70,5 +69,3 @@ class SignalClass : public boost::python::class_<Signal, boost::noncopyable>
 } // namespace GafferBindings
 
 #include "GafferBindings/SignalBinding.inl"
-
-#endif // GAFFERBINDINGS_SIGNALBINDING_H

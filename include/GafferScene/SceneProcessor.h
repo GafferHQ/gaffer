@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_SCENEPROCESSOR_H
-#define GAFFERSCENE_SCENEPROCESSOR_H
+#pragma once
 
 #include <limits>
 
@@ -103,5 +102,3 @@ class GAFFERSCENE_API SceneProcessor : public SceneNode
 IE_CORE_DECLAREPTR( SceneProcessor )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_SCENEPROCESSOR_H

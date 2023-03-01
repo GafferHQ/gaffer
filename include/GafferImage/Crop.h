@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_CROP_H
-#define GAFFERIMAGE_CROP_H
+#pragma once
 
 #include "GafferImage/ImageProcessor.h"
 
@@ -113,5 +112,3 @@ class GAFFERIMAGE_API Crop : public ImageProcessor
 IE_CORE_DECLAREPTR( Crop )
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_CROP_H

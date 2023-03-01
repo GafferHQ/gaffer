@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_TYPEIDS_H
-#define GAFFERIMAGE_TYPEIDS_H
+#pragma once
 
 namespace GafferImage
 {
@@ -134,5 +133,3 @@ enum TypeId
 };
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_TYPEIDS_H

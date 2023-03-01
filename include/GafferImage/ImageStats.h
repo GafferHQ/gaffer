@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_IMAGESTATS_H
-#define GAFFERIMAGE_IMAGESTATS_H
+#pragma once
 
 #include "GafferImage/ImagePlug.h"
 #include "GafferImage/DeepState.h"
@@ -113,5 +112,3 @@ class GAFFERIMAGE_API ImageStats : public Gaffer::ComputeNode
 IE_CORE_DECLAREPTR( ImageStats );
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_IMAGESTATS_H

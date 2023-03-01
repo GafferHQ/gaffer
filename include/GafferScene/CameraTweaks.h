@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_CAMERATWEAKS_H
-#define GAFFERSCENE_CAMERATWEAKS_H
+#pragma once
 
 #include "GafferScene/ObjectProcessor.h"
 
@@ -71,5 +70,3 @@ class GAFFERSCENE_API CameraTweaks : public ObjectProcessor
 IE_CORE_DECLAREPTR( CameraTweaks )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_CAMERATWEAKS_H

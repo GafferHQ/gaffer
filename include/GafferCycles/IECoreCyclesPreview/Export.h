@@ -32,8 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef IECORECYCLES_EXPORT_H
-#define IECORECYCLES_EXPORT_H
+#pragma once
 
 #include "IECore/Export.h"
 
@@ -50,5 +49,3 @@
 #else
 	#define IECORECYCLES_API IECORE_IMPORT
 #endif
-
-#endif // #ifndef IECORECYCLES_EXPORT_H

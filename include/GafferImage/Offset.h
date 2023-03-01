@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_OFFSET_H
-#define GAFFERIMAGE_OFFSET_H
+#pragma once
 
 #include "GafferImage/ImageProcessor.h"
 
@@ -77,5 +76,3 @@ class GAFFERIMAGE_API Offset : public ImageProcessor
 IE_CORE_DECLAREPTR( Offset )
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_OFFSET_H

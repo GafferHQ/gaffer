@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEMODULE_SETALGOBINDING_H
-#define GAFFERSCENEMODULE_SETALGOBINDING_H
+#pragma once
 
 namespace GafferSceneModule
 {
@@ -43,5 +42,3 @@ namespace GafferSceneModule
 void bindSetAlgo();
 
 } // namespace GafferSceneModule
-
-#endif // GAFFERSCENEMODULE_SETALGOBINDING_H

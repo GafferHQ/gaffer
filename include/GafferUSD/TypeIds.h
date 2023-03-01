@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUSD_TYPEIDS_H
-#define GAFFERUSD_TYPEIDS_H
+#pragma once
 
 namespace GafferUSD
 {
@@ -51,5 +50,3 @@ enum TypeId
 };
 
 } // namespace GafferUSD
-
-#endif // GAFFERUSD_TYPEIDS_H

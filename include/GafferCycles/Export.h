@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERCYCLES_EXPORT_H
-#define GAFFERCYCLES_EXPORT_H
+#pragma once
 
 #include "IECore/Export.h"
 
@@ -47,5 +46,3 @@
 #else
 	#define GAFFERCYCLES_API IECORE_IMPORT
 #endif
-
-#endif // #ifndef GAFFERCYCLES_EXPORT_H

@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENETEST_COMPOUNDOBJECTSOURCE_H
-#define GAFFERSCENETEST_COMPOUNDOBJECTSOURCE_H
+#pragma once
 
 #include "GafferSceneTest/Export.h"
 #include "GafferSceneTest/TypeIds.h"
@@ -91,5 +90,3 @@ class GAFFERSCENETEST_API CompoundObjectSource : public GafferScene::SceneNode
 };
 
 } // namespace GafferSceneTest
-
-#endif // GAFFERSCENETEST_COMPOUNDOBJECTSOURCE_H

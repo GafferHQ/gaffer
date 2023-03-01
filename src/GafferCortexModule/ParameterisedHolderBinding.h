@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERCORTEXMODULE_PARAMETERISEDHOLDERBINDING_H
-#define GAFFERCORTEXMODULE_PARAMETERISEDHOLDERBINDING_H
+#pragma once
 
 #include "GafferCortex/ParameterisedHolder.h"
 
@@ -202,5 +201,3 @@ class ParameterisedHolderClass : public BaseType
 void bindParameterisedHolder();
 
 } // namespace GafferCortexModule
-
-#endif // GAFFERCORTEXMODULE_PARAMETERISEDHOLDERBINDING_H

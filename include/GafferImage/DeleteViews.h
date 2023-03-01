@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_DELETEVIEWS_H
-#define GAFFERIMAGE_DELETEVIEWS_H
+#pragma once
 
 #include "GafferImage/ImageProcessor.h"
 
@@ -84,5 +83,3 @@ class GAFFERIMAGE_API DeleteViews : public ImageProcessor
 IE_CORE_DECLAREPTR( DeleteViews )
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_DELETEVIEWS_H

@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_DEPENDENCYNODE_H
-#define GAFFER_DEPENDENCYNODE_H
+#pragma once
 
 #include "Gaffer/Node.h"
 #include "Gaffer/TypedPlug.h"
@@ -92,5 +91,3 @@ class GAFFER_API DependencyNode : public Node
 };
 
 } // namespace Gaffer
-
-#endif // GAFFER_DEPENDENCYNODE_H

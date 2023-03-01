@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERTEST_RANDOMTEST_H
-#define GAFFERTEST_RANDOMTEST_H
+#pragma once
 
 #include "GafferTest/Export.h"
 
@@ -45,5 +44,3 @@ namespace GafferTest
 GAFFERTEST_API void testRandomPerf();
 
 } // namespace GafferTest
-
-#endif // GAFFERTEST_RANDOMTEST_H

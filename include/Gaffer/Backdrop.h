@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_BACKDROP_H
-#define GAFFER_BACKDROP_H
+#pragma once
 
 #include "Gaffer/Node.h"
 #include "Gaffer/NumericPlug.h"
@@ -75,5 +74,3 @@ class GAFFER_API Backdrop : public Node
 IE_CORE_DECLAREPTR( Backdrop )
 
 } // namespace Gaffer
-
-#endif // GAFFER_BACKDROP_H

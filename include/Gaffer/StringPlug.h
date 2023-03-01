@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_STRINGPLUG_H
-#define GAFFER_STRINGPLUG_H
+#pragma once
 
 #include "IECore/StringAlgo.h"
 
@@ -140,5 +139,3 @@ class GAFFER_API StringPlug : public ValuePlug
 IE_CORE_DECLAREPTR( StringPlug );
 
 } // namespace Gaffer
-
-#endif // GAFFER_STRINGPLUG_H

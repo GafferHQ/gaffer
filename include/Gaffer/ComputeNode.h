@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_COMPUTENODE_H
-#define GAFFER_COMPUTENODE_H
+#pragma once
 
 #include "Gaffer/DependencyNode.h"
 
@@ -92,5 +91,3 @@ class GAFFER_API ComputeNode : public DependencyNode
 };
 
 } // namespace Gaffer
-
-#endif // GAFFER_COMPUTENODE_H

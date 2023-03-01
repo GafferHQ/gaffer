@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEMODULE_ATTRIBUTESBINDING_H
-#define GAFFERSCENEMODULE_ATTRIBUTESBINDING_H
+#pragma once
 
 namespace GafferSceneModule
 {
@@ -43,5 +42,3 @@ namespace GafferSceneModule
 void bindAttributes();
 
 } // namespace GafferSceneModule
-
-#endif // GAFFERSCENEMODULE_ATTRIBUTESBINDING_H

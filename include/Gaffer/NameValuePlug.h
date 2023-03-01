@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_NAMEVALUEPLUG_H
-#define GAFFER_NAMEVALUEPLUG_H
+#pragma once
 
 #include "Gaffer/TypeIds.h"
 
@@ -139,5 +138,3 @@ IE_CORE_DECLAREPTR( NameValuePlug );
 } // namespace Gaffer
 
 #include "Gaffer/NameValuePlug.inl"
-
-#endif // GAFFER_NAMEVALUEPLUG_H

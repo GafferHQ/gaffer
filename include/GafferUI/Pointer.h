@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_POINTER_H
-#define GAFFERUI_POINTER_H
+#pragma once
 
 #include "Gaffer/Signals.h"
 
@@ -90,5 +89,3 @@ class GAFFERUI_API Pointer : public IECore::RefCounted
 };
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_POINTER_H

@@ -32,8 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef IECOREARNOLD_UNIVERSEBLOCK_H
-#define IECOREARNOLD_UNIVERSEBLOCK_H
+#pragma once
 
 #include "IECoreArnold/Export.h"
 
@@ -71,5 +70,3 @@ class IECOREARNOLD_API UniverseBlock : public boost::noncopyable
 };
 
 } // namespace IECoreArnold
-
-#endif // IECOREARNOLD_UNIVERSEBLOCK_H

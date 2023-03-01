@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERVDB_LEVELSETOFFSET_H
-#define GAFFERVDB_LEVELSETOFFSET_H
+#pragma once
 
 #include "GafferVDB/Export.h"
 #include "GafferVDB/TypeIds.h"
@@ -83,5 +82,3 @@ class GAFFERVDB_API LevelSetOffset : public GafferScene::Deformer
 IE_CORE_DECLAREPTR( LevelSetOffset )
 
 } // namespace GafferVDB
-
-#endif // GAFFERVDB_LEVELSETOFFSET_H

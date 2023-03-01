@@ -32,8 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef IECORECYCLES_CAMERAALGO_H
-#define IECORECYCLES_CAMERAALGO_H
+#pragma once
 
 #include "GafferCycles/IECoreCyclesPreview/Export.h"
 
@@ -58,5 +57,3 @@ IECORECYCLES_API ccl::Camera *convert( const IECoreScene::Camera *camera, const 
 } // namespace CameraAlgo
 
 } // namespace IECoreCycles
-
-#endif // IECORECYCLES_CAMERAALGO_H

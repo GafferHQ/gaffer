@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_TRANSFORMPLUG_H
-#define GAFFER_TRANSFORMPLUG_H
+#pragma once
 
 #include "Gaffer/CompoundNumericPlug.h"
 
@@ -84,5 +83,3 @@ class GAFFER_API TransformPlug : public ValuePlug
 IE_CORE_DECLAREPTR( TransformPlug );
 
 } // namespace Gaffer
-
-#endif // GAFFER_TRANSFORMPLUG_H

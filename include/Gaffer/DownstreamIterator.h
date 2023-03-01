@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_DOWNSTREAMITERATOR_H
-#define GAFFER_DOWNSTREAMITERATOR_H
+#pragma once
 
 #include "Gaffer/DependencyNode.h"
 
@@ -314,5 +313,3 @@ class DownstreamIterator : public boost::iterator_facade<DownstreamIterator, con
 };
 
 } // namespace Gaffer
-
-#endif // GAFFER_DOWNSTREAMITERATOR_H

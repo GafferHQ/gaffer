@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERBINDINGS_TYPEDPLUGBINDING_INL
-#define GAFFERBINDINGS_TYPEDPLUGBINDING_INL
+#pragma once
 
 #include "IECorePython/ScopedGILRelease.h"
 
@@ -87,5 +86,3 @@ TypedPlugClass<T, TWrapper>::TypedPlugClass( const char *docString )
 }
 
 } // namespace GafferBindings
-
-#endif // GAFFERBINDINGS_TYPEDPLUGBINDING_INL

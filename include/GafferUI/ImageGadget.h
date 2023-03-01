@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_IMAGEGADGET_H
-#define GAFFERUI_IMAGEGADGET_H
+#pragma once
 
 #include "GafferUI/Gadget.h"
 
@@ -100,5 +99,3 @@ class GAFFERUI_API ImageGadget : public Gadget
 IE_CORE_DECLAREPTR( ImageGadget )
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_IMAGEGADGET_H

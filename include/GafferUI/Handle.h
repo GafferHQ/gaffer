@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_HANDLE_H
-#define GAFFERUI_HANDLE_H
+#pragma once
 
 #include "GafferUI/Export.h"
 #include "GafferUI/Gadget.h"
@@ -221,5 +220,3 @@ class GAFFERUI_API Handle : public Gadget
 IE_CORE_DECLAREPTR( Handle )
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_HANDLE_H

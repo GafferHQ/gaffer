@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERDISPATCHBINDINGS_TASKNODEBINDING_H
-#define GAFFERDISPATCHBINDINGS_TASKNODEBINDING_H
+#pragma once
 
 #include "GafferDispatch/TaskNode.h"
 
@@ -242,5 +241,3 @@ class TaskNodeWrapper : public GafferBindings::DependencyNodeWrapper<WrappedType
 } // namespace GafferDispatchBindings
 
 #include "GafferDispatchBindings/TaskNodeBinding.inl"
-
-#endif // GAFFERDISPATCHBINDINGS_TASKNODEBINDING_H

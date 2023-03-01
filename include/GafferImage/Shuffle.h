@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_SHUFFLE_H
-#define GAFFERIMAGE_SHUFFLE_H
+#pragma once
 
 #include "GafferImage/ImageProcessor.h"
 
@@ -112,5 +111,3 @@ class GAFFERIMAGE_API Shuffle : public ImageProcessor
 IE_CORE_DECLAREPTR( Shuffle )
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_SHUFFLE_H

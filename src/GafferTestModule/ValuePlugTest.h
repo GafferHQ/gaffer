@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERTESTMODULE_VALUEPLUGTEST_H
-#define GAFFERTESTMODULE_VALUEPLUGTEST_H
+#pragma once
 
 namespace GafferTestModule
 {
@@ -43,5 +42,3 @@ namespace GafferTestModule
 void bindValuePlugTest();
 
 } // namespace GafferTestModule
-
-#endif // GAFFERTESTMODULE_VALUEPLUGTEST_H

@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_STANDARDNODEGADGET_H
-#define GAFFERUI_STANDARDNODEGADGET_H
+#pragma once
 
 #include "GafferUI/LinearContainer.h"
 #include "GafferUI/NodeGadget.h"
@@ -189,5 +188,3 @@ class GAFFERUI_API StandardNodeGadget : public NodeGadget
 IE_CORE_DECLAREPTR( StandardNodeGadget )
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_STANDARDNODEGADGET_H

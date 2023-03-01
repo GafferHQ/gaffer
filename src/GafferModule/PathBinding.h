@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERMODULE_PATHBINDING_H
-#define GAFFERMODULE_PATHBINDING_H
+#pragma once
 
 namespace GafferModule
 {
@@ -43,5 +42,3 @@ namespace GafferModule
 void bindPath();
 
 } // namespace GafferModule
-
-#endif // GAFFERMODULE_PATHBINDING_H

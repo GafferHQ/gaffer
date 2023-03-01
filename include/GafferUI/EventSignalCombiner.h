@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_EVENTSIGNALCOMBINER_H
-#define GAFFERUI_EVENTSIGNALCOMBINER_H
+#pragma once
 
 namespace GafferUI
 {
@@ -57,5 +56,3 @@ struct EventSignalCombiner
 } // namespace GafferUI
 
 #include "GafferUI/EventSignalCombiner.inl"
-
-#endif // GAFFERUI_EVENTSIGNALCOMBINER_H

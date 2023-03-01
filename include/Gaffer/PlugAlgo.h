@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_PLUGALGO_H
-#define GAFFER_PLUGALGO_H
+#pragma once
 
 #include "Gaffer/Export.h"
 #include "Gaffer/Plug.h"
@@ -133,5 +132,3 @@ GAFFER_API void unpromote( Plug *plug );
 } // namespace Gaffer
 
 #include "Gaffer/PlugAlgo.inl"
-
-#endif // GAFFER_PLUGALGO_H

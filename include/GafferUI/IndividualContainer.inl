@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_INDIVIDUALCONTAINER_INL
-#define GAFFERUI_INDIVIDUALCONTAINER_INL
+#pragma once
 
 #include "GafferUI/IndividualContainer.h"
 
@@ -65,5 +64,3 @@ const T *IndividualContainer::getChild() const
 
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_INDIVIDUALCONTAINER_INL

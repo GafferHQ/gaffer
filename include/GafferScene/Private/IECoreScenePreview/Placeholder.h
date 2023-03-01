@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef IECORESCENE_PLACEHOLDER_H
-#define IECORESCENE_PLACEHOLDER_H
+#pragma once
 
 #include "GafferScene/Export.h"
 
@@ -73,5 +72,3 @@ class GAFFERSCENE_API Placeholder : public IECoreScene::VisibleRenderable
 IE_CORE_DECLAREPTR( Placeholder );
 
 } // namespace IECoreScenePreview
-
-#endif // IECORESCENE_PLACEHOLDER_H

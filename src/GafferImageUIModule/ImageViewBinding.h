@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGEUIMODULE_IMAGEVIEWBINDING_H
-#define GAFFERIMAGEUIMODULE_IMAGEVIEWBINDING_H
+#pragma once
 
 namespace GafferImageUIModule
 {
@@ -43,5 +42,3 @@ namespace GafferImageUIModule
 void bindImageView();
 
 } // namespace GafferImageUIModule
-
-#endif // GAFFERIMAGEUIMODULE_IMAGEVIEWBINDING_H

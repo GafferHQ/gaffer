@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_SPACERGADGET_H
-#define GAFFERUI_SPACERGADGET_H
+#pragma once
 
 #include "GafferUI/Gadget.h"
 
@@ -69,5 +68,3 @@ class GAFFERUI_API SpacerGadget : public Gadget
 IE_CORE_DECLAREPTR( SpacerGadget )
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_SPACERGADGET_H

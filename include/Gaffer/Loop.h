@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_LOOP_H
-#define GAFFER_LOOP_H
+#pragma once
 
 #include "Gaffer/ComputeNode.h"
 #include "Gaffer/NumericPlug.h"
@@ -110,5 +109,3 @@ class IECORE_EXPORT Loop : public ComputeNode
 IE_CORE_DECLAREPTR( Loop )
 
 } // namespace Gaffer
-
-#endif // GAFFER_LOOP_H

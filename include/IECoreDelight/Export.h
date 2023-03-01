@@ -32,8 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef IECOREDELIGHT_EXPORT_H
-#define IECOREDELIGHT_EXPORT_H
+#pragma once
 
 #include "IECore/Export.h"
 
@@ -42,5 +41,3 @@
 #else
 	#define IECOREDELIGHT_API IECORE_IMPORT
 #endif
-
-#endif // #ifndef IECOREDELIGHT_EXPORT_H

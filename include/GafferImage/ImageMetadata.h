@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_IMAGEMETADATA_H
-#define GAFFERIMAGE_IMAGEMETADATA_H
+#pragma once
 
 #include "GafferImage/MetadataProcessor.h"
 
@@ -76,5 +75,3 @@ class GAFFERIMAGE_API ImageMetadata : public MetadataProcessor
 IE_CORE_DECLAREPTR( ImageMetadata );
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_IMAGEMETADATA_H

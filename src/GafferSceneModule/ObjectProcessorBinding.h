@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEMODULE_OBJECTPROCESSORBINDING_H
-#define GAFFERSCENEMODULE_OBJECTPROCESSORBINDING_H
+#pragma once
 
 namespace GafferSceneModule
 {
@@ -43,5 +42,3 @@ namespace GafferSceneModule
 void bindObjectProcessor();
 
 } // namespace GafferSceneModule
-
-#endif // GAFFERSCENEMODULE_OBJECTPROCESSORBINDING_H

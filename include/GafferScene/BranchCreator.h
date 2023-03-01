@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_BRANCHCREATOR_H
-#define GAFFERSCENE_BRANCHCREATOR_H
+#pragma once
 
 #include "GafferScene/FilteredSceneProcessor.h"
 
@@ -238,5 +237,3 @@ class GAFFERSCENE_API BranchCreator : public FilteredSceneProcessor
 IE_CORE_DECLAREPTR( BranchCreator )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_BRANCHCREATOR_H

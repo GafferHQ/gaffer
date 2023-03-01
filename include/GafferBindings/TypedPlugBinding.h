@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERBINDINGS_TYPEDPLUGBINDING_H
-#define GAFFERBINDINGS_TYPEDPLUGBINDING_H
+#pragma once
 
 #include "GafferBindings/PlugBinding.h"
 
@@ -54,5 +53,3 @@ class TypedPlugClass : public PlugClass<T, TWrapper>
 } // namespace GafferBindings
 
 #include "GafferBindings/TypedPlugBinding.inl"
-
-#endif // GAFFERBINDINGS_TYPEDPLUGBINDING_H

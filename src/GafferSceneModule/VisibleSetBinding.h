@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEMODULE_VISIBLESETBINDING_H
-#define GAFFERSCENEMODULE_VISIBLESETBINDING_H
+#pragma once
 
 namespace GafferSceneModule
 {
@@ -43,5 +42,3 @@ namespace GafferSceneModule
 void bindVisibleSet();
 
 } // namespace GafferSceneModule
-
-#endif // GAFFERSCENEMODULE_VISIBLESETBINDING_H

@@ -32,8 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERARNOLD_EXPORT_H
-#define GAFFERARNOLD_EXPORT_H
+#pragma once
 
 #include "IECore/Export.h"
 
@@ -42,5 +41,3 @@
 #else
 	#define GAFFERARNOLD_API IECORE_IMPORT
 #endif
-
-#endif // #ifndef GAFFERARNOLD_EXPORT_H

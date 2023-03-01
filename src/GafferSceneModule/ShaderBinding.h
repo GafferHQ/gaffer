@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEMODULE_SHADERBINDING_H
-#define GAFFERSCENEMODULE_SHADERBINDING_H
+#pragma once
 
 namespace GafferSceneModule
 {
@@ -43,5 +42,3 @@ namespace GafferSceneModule
 void bindShader();
 
 } // namespace GafferSceneModule
-
-#endif // GAFFERSCENEMODULE_SHADERBINDING_H

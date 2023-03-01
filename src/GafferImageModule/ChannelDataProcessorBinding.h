@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGEMODULE_CHANNELDATAPROCESSORBINDING_H
-#define GAFFERIMAGEMODULE_CHANNELDATAPROCESSORBINDING_H
+#pragma once
 
 namespace GafferImageModule
 {
@@ -43,5 +42,3 @@ namespace GafferImageModule
 void bindChannelDataProcessor();
 
 }; // namespace GafferImageModule
-
-#endif // GAFFERIMAGEMODULE_CHANNELDATAPROCESSORBINDING_H

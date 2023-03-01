@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERTESTMODULE_SIGNALSTEST_H
-#define GAFFERTESTMODULE_SIGNALSTEST_H
+#pragma once
 
 namespace GafferTestModule
 {
@@ -43,5 +42,3 @@ namespace GafferTestModule
 void bindSignalsTest();
 
 } // namespace GafferTestModule
-
-#endif // GAFFERTESTMODULE_SIGNALSTEST_H

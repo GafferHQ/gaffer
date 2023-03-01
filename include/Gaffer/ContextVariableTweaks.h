@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_CONTEXTVARIABLETWEAKS_H
-#define GAFFER_CONTEXTVARIABLETWEAKS_H
+#pragma once
 
 #include "Gaffer/ContextProcessor.h"
 #include "Gaffer/Export.h"
@@ -73,5 +72,3 @@ class GAFFER_API ContextVariableTweaks : public ContextProcessor
 IE_CORE_DECLAREPTR( ContextVariableTweaks )
 
 }  // namespace Gaffer
-
-#endif // GAFFER_CONTEXTVARIABLETWEAKS_H

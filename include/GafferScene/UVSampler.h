@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_UVSAMPLER_H
-#define GAFFERSCENE_UVSAMPLER_H
+#pragma once
 
 #include "GafferScene/PrimitiveSampler.h"
 
@@ -70,5 +69,3 @@ class GAFFERSCENE_API UVSampler : public PrimitiveSampler
 IE_CORE_DECLAREPTR( UVSampler )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_UVSAMPLER_H

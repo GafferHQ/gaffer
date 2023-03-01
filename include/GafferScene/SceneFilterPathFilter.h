@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_SCENEFILTERPATHFILTER_H
-#define GAFFERSCENE_SCENEFILTERPATHFILTER_H
+#pragma once
 
 #include "GafferScene/Export.h"
 #include "GafferScene/TypeIds.h"
@@ -77,5 +76,3 @@ class GAFFERSCENE_API SceneFilterPathFilter : public Gaffer::PathFilter
 IE_CORE_DECLAREPTR( SceneFilterPathFilter )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_SCENEFILTERPATHFILTER_H

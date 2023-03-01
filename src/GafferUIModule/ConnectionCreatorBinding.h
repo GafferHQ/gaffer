@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUIMODULE_CONNECTIONCREATORBINDING_H
-#define GAFFERUIMODULE_CONNECTIONCREATORBINDING_H
+#pragma once
 
 #include "GafferUIBindings/GadgetBinding.h"
 
@@ -150,5 +149,3 @@ class ConnectionCreatorWrapper : public GafferUIBindings::GadgetWrapper<WrappedT
 } // namespace GafferUIModule
 
 #include "ConnectionCreatorBinding.inl"
-
-#endif // GAFFERUIMODULE_CONNECTIONCREATORBINDING_H

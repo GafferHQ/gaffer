@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERBINDINGS_DATABINDING_H
-#define GAFFERBINDINGS_DATABINDING_H
+#pragma once
 
 #include "boost/python.hpp"
 
@@ -60,5 +59,3 @@ GAFFERBINDINGS_API boost::python::object dataToPython( IECore::Data *data, boost
 GAFFERBINDINGS_API boost::python::object dataToPython( const IECore::Data *data, bool copy, boost::python::object nullValue = boost::python::object() );
 
 } // namespace GafferBindings
-
-#endif // GAFFERBINDINGS_DATABINDING_H

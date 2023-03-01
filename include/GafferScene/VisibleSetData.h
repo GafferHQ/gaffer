@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_VISIBLESETDATA_H
-#define GAFFERSCENE_VISIBLESETDATA_H
+#pragma once
 
 #include "GafferScene/VisibleSet.h"
 #include "GafferScene/TypeIds.h"
@@ -54,5 +53,3 @@ using VisibleSetData = IECore::VisibleSetData;
 IE_CORE_DECLAREPTR( VisibleSetData );
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_VISIBLESETDATA_H

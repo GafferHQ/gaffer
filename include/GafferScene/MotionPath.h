@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_MOTIONPATH_H
-#define GAFFERSCENE_MOTIONPATH_H
+#pragma once
 
 #include "GafferScene/FilteredSceneProcessor.h"
 
@@ -118,5 +117,3 @@ class GAFFERSCENE_API MotionPath : public FilteredSceneProcessor
 IE_CORE_DECLAREPTR( MotionPath )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_MOTIONPATH_H

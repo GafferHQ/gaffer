@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_UNIONFILTER_H
-#define GAFFERSCENE_UNIONFILTER_H
+#pragma once
 
 #include "GafferScene/FilterProcessor.h"
 
@@ -65,5 +64,3 @@ class GAFFERSCENE_API UnionFilter : public FilterProcessor
 IE_CORE_DECLAREPTR( UnionFilter )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_UNIONFILTER_H

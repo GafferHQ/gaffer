@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERCYCLES_CYCLESRENDER_H
-#define GAFFERCYCLES_CYCLESRENDER_H
+#pragma once
 
 #include "GafferCycles/Export.h"
 #include "GafferCycles/TypeIds.h"
@@ -60,5 +59,3 @@ class GAFFERCYCLES_API CyclesRender : public GafferScene::Render
 IE_CORE_DECLAREPTR( CyclesRender );
 
 } // namespace GafferCycles
-
-#endif // GAFFERCYCLES_CYCLESRENDER_H

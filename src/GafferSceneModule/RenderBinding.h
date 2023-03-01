@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEMODULE_RENDERBINDING_H
-#define GAFFERSCENEMODULE_RENDERBINDING_H
+#pragma once
 
 namespace GafferSceneModule
 {
@@ -43,5 +42,3 @@ namespace GafferSceneModule
 void bindRender();
 
 } // namespace GafferSceneModule
-
-#endif // GAFFERSCENEMODULE_RENDERBINDING_H

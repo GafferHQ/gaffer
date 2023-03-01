@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_COPYIMAGEMETADATA_H
-#define GAFFERIMAGE_COPYIMAGEMETADATA_H
+#pragma once
 
 #include "GafferImage/MetadataProcessor.h"
 
@@ -79,5 +78,3 @@ class GAFFERIMAGE_API CopyImageMetadata : public MetadataProcessor
 IE_CORE_DECLAREPTR( CopyImageMetadata );
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_COPYIMAGEMETADATA_H

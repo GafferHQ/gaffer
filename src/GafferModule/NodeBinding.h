@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERMODULE_NODEBINDING_H
-#define GAFFERMODULE_NODEBINDING_H
+#pragma once
 
 namespace GafferModule
 {
@@ -44,5 +43,3 @@ namespace GafferModule
 void bindNode();
 
 } // namespace GafferModule
-
-#endif // GAFFERMODULE_NODEBINDING_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENETEST_CONTEXTSANITISER_H
-#define GAFFERSCENETEST_CONTEXTSANITISER_H
+#pragma once
 
 #include "GafferSceneTest/Export.h"
 
@@ -79,5 +78,3 @@ class GAFFERSCENETEST_API ContextSanitiser : public Gaffer::Monitor
 IE_CORE_DECLAREPTR( ContextSanitiser )
 
 } // namespace GafferSceneTest
-
-#endif // GAFFERSCENETEST_CONTEXTSANITISER_H

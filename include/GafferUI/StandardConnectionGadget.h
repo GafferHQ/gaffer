@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_STANDARDCONNECTIONGADGET_H
-#define GAFFERUI_STANDARDCONNECTIONGADGET_H
+#pragma once
 
 #include "GafferUI/ConnectionGadget.h"
 
@@ -149,5 +148,3 @@ class GAFFERUI_API StandardConnectionGadget : public ConnectionGadget
 };
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_STANDARDCONNECTIONGADGET_H

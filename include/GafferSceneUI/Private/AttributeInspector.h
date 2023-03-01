@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUI_ATTRIBUTEINSPECTOR_H
-#define GAFFERSCENEUI_ATTRIBUTEINSPECTOR_H
+#pragma once
 
 #include "GafferSceneUI/Export.h"
 
@@ -87,5 +86,3 @@ IE_CORE_DECLAREPTR( AttributeInspector )
 }  // namespace Private
 
 }  // namespace GafferSceneUI
-
-#endif // GAFFERSCENEUI_ATTRIBUTEINSPECTOR_H

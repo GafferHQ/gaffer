@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_UNDOSCOPE_H
-#define GAFFER_UNDOSCOPE_H
+#pragma once
 
 #include "Gaffer/DirtyPropagationScope.h"
 
@@ -82,5 +81,3 @@ class GAFFER_API UndoScope : DirtyPropagationScope
 };
 
 } // namespace Gaffer
-
-#endif // GAFFER_UNDOSCOPE_H

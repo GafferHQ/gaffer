@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERAPPLESEED_TYPEIDS_H
-#define GAFFERAPPLESEED_TYPEIDS_H
+#pragma once
 
 namespace GafferAppleseed
 {
@@ -53,5 +52,3 @@ enum TypeId
 };
 
 } // namespace GafferAppleseed
-
-#endif // GAFFERAPPLESEED_TYPEIDS_H

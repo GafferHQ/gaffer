@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_SUBTREE_H
-#define GAFFERSCENE_SUBTREE_H
+#pragma once
 
 #include "GafferScene/SceneProcessor.h"
 
@@ -123,5 +122,3 @@ class GAFFERSCENE_API SubTree : public SceneProcessor
 IE_CORE_DECLAREPTR( SubTree )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_SUBTREE_H

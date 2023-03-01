@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_SCENENODE_H
-#define GAFFERSCENE_SCENENODE_H
+#pragma once
 
 #include "GafferScene/Export.h"
 #include "GafferScene/ScenePlug.h"
@@ -152,5 +151,3 @@ class GAFFERSCENE_API SceneNode : public Gaffer::ComputeNode
 IE_CORE_DECLAREPTR( SceneNode )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_SCENENODE_H

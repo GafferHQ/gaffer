@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERMODULE_VALUEPLUGBINDING_H
-#define GAFFERMODULE_VALUEPLUGBINDING_H
+#pragma once
 
 namespace GafferModule
 {
@@ -44,5 +43,3 @@ namespace GafferModule
 void bindValuePlug();
 
 } // namespace GafferModule
-
-#endif // GAFFERMODULE_VALUEPLUGBINDING_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_ATOMICFORMATPLUG_H
-#define GAFFERIMAGE_ATOMICFORMATPLUG_H
+#pragma once
 
 #include "GafferImage/FormatData.h"
 #include "GafferImage/TypeIds.h"
@@ -50,5 +49,3 @@ using AtomicFormatPlug = Gaffer::TypedPlug<GafferImage::Format>;
 IE_CORE_DECLAREPTR( AtomicFormatPlug );
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_ATOMICFORMATPLUG_H

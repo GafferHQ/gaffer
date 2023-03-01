@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_NODULE_H
-#define GAFFERUI_NODULE_H
+#pragma once
 
 #include "GafferUI/ConnectionCreator.h"
 
@@ -113,5 +112,3 @@ class GAFFERUI_API Nodule : public ConnectionCreator
 IE_CORE_DECLAREPTR( Nodule );
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_NODULE_H

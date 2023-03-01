@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_SPREADSHEET_H
-#define GAFFER_SPREADSHEET_H
+#pragma once
 
 #include "Gaffer/ComputeNode.h"
 #include "Gaffer/NumericPlug.h"
@@ -258,5 +257,3 @@ IE_CORE_DECLAREPTR( Spreadsheet )
 } // namespace Gaffer
 
 #include "Gaffer/Spreadsheet.inl"
-
-#endif // GAFFER_SPREADSHEET_H

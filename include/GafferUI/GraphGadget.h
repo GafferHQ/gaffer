@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_GRAPHGADGET_H
-#define GAFFERUI_GRAPHGADGET_H
+#pragma once
 
 #include "GafferUI/ContainerGadget.h"
 
@@ -350,5 +349,3 @@ class GAFFERUI_API GraphGadget : public ContainerGadget
 IE_CORE_DECLAREPTR( GraphGadget );
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_GRAPHGADGET_H

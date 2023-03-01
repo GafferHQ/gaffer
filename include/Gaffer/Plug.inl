@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_PLUG_INL
-#define GAFFER_PLUG_INL
+#pragma once
 
 namespace Gaffer
 {
@@ -79,5 +78,3 @@ const T *Plug::source() const
 }
 
 } // namespace Gaffer
-
-#endif // GAFFER_PLUG_INL

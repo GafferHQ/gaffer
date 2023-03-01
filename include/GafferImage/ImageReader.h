@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_IMAGEREADER_H
-#define GAFFERIMAGE_IMAGEREADER_H
+#pragma once
 
 #include "GafferImage/ImageNode.h"
 
@@ -195,5 +194,3 @@ class GAFFERIMAGE_API ImageReader : public ImageNode
 IE_CORE_DECLAREPTR( ImageReader )
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_IMAGEREADER_H

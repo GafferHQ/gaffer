@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_MESHTANGENTS_H
-#define GAFFERSCENE_MESHTANGENTS_H
+#pragma once
 
 #include "GafferScene/ObjectProcessor.h"
 
@@ -109,5 +108,3 @@ class GAFFERSCENE_API MeshTangents : public ObjectProcessor
 IE_CORE_DECLAREPTR( MeshTangents )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_MESHTANGENTS_H

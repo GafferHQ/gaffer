@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_CHANNELDATAPROCESSOR_H
-#define GAFFERIMAGE_CHANNELDATAPROCESSOR_H
+#pragma once
 
 #include "GafferImage/ImageProcessor.h"
 
@@ -94,5 +93,3 @@ class GAFFERIMAGE_API ChannelDataProcessor : public ImageProcessor
 IE_CORE_DECLAREPTR( ChannelDataProcessor )
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_CHANNELDATAPROCESSOR_H

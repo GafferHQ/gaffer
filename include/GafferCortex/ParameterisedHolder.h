@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERCORTEX_PARAMETERISEDHOLDER_H
-#define GAFFERCORTEX_PARAMETERISEDHOLDER_H
+#pragma once
 
 #include "GafferCortex/Export.h"
 #include "GafferCortex/TypeIds.h"
@@ -134,5 +133,3 @@ IE_CORE_DECLAREPTR( ParameterisedHolderComputeNode )
 IE_CORE_DECLAREPTR( ParameterisedHolderTaskNode )
 
 } // namespace GafferCortex
-
-#endif // GAFFERCORTEX_PARAMETERISEDHOLDER_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_MESHTOPOINTS_H
-#define GAFFERSCENE_MESHTOPOINTS_H
+#pragma once
 
 #include "GafferScene/Deformer.h"
 
@@ -77,5 +76,3 @@ class GAFFERSCENE_API MeshToPoints : public Deformer
 IE_CORE_DECLAREPTR( MeshToPoints )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_MESHTOPOINTS_H

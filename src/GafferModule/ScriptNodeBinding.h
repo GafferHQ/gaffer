@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERMODULE_SCRIPTNODEBINDING_H
-#define GAFFERMODULE_SCRIPTNODEBINDING_H
+#pragma once
 
 namespace GafferModule
 {
@@ -43,5 +42,3 @@ namespace GafferModule
 void bindScriptNode();
 
 } // namespace GafferModule
-
-#endif // GAFFERMODULE_SCRIPTNODEBINDING_H

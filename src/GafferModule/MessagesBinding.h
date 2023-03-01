@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERMODULE_MESSAGESBINDING_H
-#define GAFFERMODULE_MESSAGESBINDING_H
+#pragma once
 
 namespace GafferModule
 {
@@ -43,5 +42,3 @@ namespace GafferModule
 void bindMessages();
 
 } // namespace GafferModule
-
-#endif // GAFFERMODULE_MESSAGESBINDING_H

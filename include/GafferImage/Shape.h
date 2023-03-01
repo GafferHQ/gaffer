@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_SHAPE_H
-#define GAFFERIMAGE_SHAPE_H
+#pragma once
 
 #include "GafferImage/FlatImageProcessor.h"
 
@@ -125,5 +124,3 @@ class GAFFERIMAGE_API Shape : public FlatImageProcessor
 IE_CORE_DECLAREPTR( Shape )
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_SHAPE_H

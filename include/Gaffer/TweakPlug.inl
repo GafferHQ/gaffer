@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_TWEAKPLUG_INL
-#define GAFFER_TWEAKPLUG_INL
+#pragma once
 
 #include "Gaffer/PlugAlgo.h"
 
@@ -178,5 +177,3 @@ bool TweaksPlug::applyTweaks(
 }
 
 } // namespace Gaffer
-
-#endif // GAFFER_TWEAKPLUG_INL

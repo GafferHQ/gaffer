@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_DILATE_H
-#define GAFFERIMAGE_DILATE_H
+#pragma once
 
 #include "GafferImage/RankFilter.h"
 
@@ -57,5 +56,3 @@ class GAFFERIMAGE_API Dilate : public RankFilter
 IE_CORE_DECLAREPTR( Dilate );
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_DILATE_H

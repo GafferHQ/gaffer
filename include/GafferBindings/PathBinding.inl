@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERBINDINGS_PATHBINDING_INL
-#define GAFFERBINDINGS_PATHBINDING_INL
+#pragma once
 
 #include "GafferBindings/DataBinding.h"
 
@@ -189,5 +188,3 @@ PathClass<T, TWrapper>::PathClass( const char *docString )
 }
 
 } // namespace GafferBindings
-
-#endif // GAFFERBINDINGS_PATHBINDING_INL

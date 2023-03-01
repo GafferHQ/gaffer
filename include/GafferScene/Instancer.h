@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_INSTANCER_H
-#define GAFFERSCENE_INSTANCER_H
+#pragma once
 
 #include "GafferScene/Export.h"
 #include "GafferScene/BranchCreator.h"
@@ -253,5 +252,3 @@ class GAFFERSCENE_API Instancer : public BranchCreator
 IE_CORE_DECLAREPTR( Instancer )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_INSTANCER_H

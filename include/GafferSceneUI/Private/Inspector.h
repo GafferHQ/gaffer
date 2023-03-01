@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUI_INSPECTOR_H
-#define GAFFERSCENEUI_INSPECTOR_H
+#pragma once
 
 #include "GafferSceneUI/Export.h"
 #include "GafferSceneUI/TypeIds.h"
@@ -347,5 +346,3 @@ class GAFFERSCENEUI_API Inspector::Result : public IECore::RefCounted
 } // namespace Private
 
 } // namespace GafferSceneUI
-
-#endif // GAFFERSCENEUI_INSPECTOR_H

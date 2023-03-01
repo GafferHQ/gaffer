@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEMODULE_QUERYBINDING_H
-#define GAFFERSCENEMODULE_QUERYBINDING_H
+#pragma once
 
 namespace GafferSceneModule
 {
@@ -43,5 +42,3 @@ namespace GafferSceneModule
 void bindQueries();
 
 } // namespace GafferSceneModule
-
-#endif // GAFFERSCENEMODULE_QUERYBINDING_H

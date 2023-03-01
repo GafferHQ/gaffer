@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_RANKFILTER_H
-#define GAFFERIMAGE_RANKFILTER_H
+#pragma once
 
 #include "GafferImage/FlatImageProcessor.h"
 
@@ -104,5 +103,3 @@ class GAFFERIMAGE_API RankFilter : public FlatImageProcessor
 IE_CORE_DECLAREPTR( RankFilter );
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_RANKFILTER_H

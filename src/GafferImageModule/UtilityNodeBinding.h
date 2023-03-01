@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGEMODULE_UTILITYNODEBINDING_H
-#define GAFFERIMAGEMODULE_UTILITYNODEBINDING_H
+#pragma once
 
 namespace GafferImageModule
 {
@@ -43,5 +42,3 @@ namespace GafferImageModule
 void bindUtilityNodes();
 
 }; // namespace GafferImageModule
-
-#endif // GAFFERIMAGEMODULE_UTILITYNODEBINDING_H

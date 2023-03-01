@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_OPENCOLORIOTRANSFORM_H
-#define GAFFERIMAGE_OPENCOLORIOTRANSFORM_H
+#pragma once
 
 #include "GafferImage/ColorProcessor.h"
 
@@ -129,5 +128,3 @@ class GAFFERIMAGE_API OpenColorIOTransform : public ColorProcessor
 IE_CORE_DECLAREPTR( OpenColorIOTransform )
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_OPENCOLORIOTRANSFORM_H

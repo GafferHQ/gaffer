@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERMODULE_SPREADSHEETBINDING_H
-#define GAFFERMODULE_SPREADSHEETBINDING_H
+#pragma once
 
 namespace GafferModule
 {
@@ -43,5 +42,3 @@ namespace GafferModule
 void bindSpreadsheet();
 
 } // namespace GafferModule
-
-#endif // GAFFERMODULE_SPREADSHEETBINDING_H

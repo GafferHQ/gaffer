@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_DEEPSTATE_H
-#define GAFFERIMAGE_DEEPSTATE_H
+#pragma once
 
 #include "Gaffer/NumericPlug.h"
 
@@ -101,5 +100,3 @@ class GAFFERIMAGE_API DeepState : public ImageProcessor
 IE_CORE_DECLAREPTR( DeepState )
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_DEEPSTATE_H

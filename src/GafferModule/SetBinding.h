@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERMODULE_SETBINDING_H
-#define GAFFERMODULE_SETBINDING_H
+#pragma once
 
 namespace GafferModule
 {
@@ -44,5 +43,3 @@ namespace GafferModule
 void bindSet();
 
 } // namespace GafferModule
-
-#endif // GAFFERMODULE_SETBINDING_H

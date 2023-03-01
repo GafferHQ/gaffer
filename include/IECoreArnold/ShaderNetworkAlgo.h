@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef IECOREARNOLD_SHADERNETWORKALGO_H
-#define IECOREARNOLD_SHADERNETWORKALGO_H
+#pragma once
 
 #include "IECoreArnold/Export.h"
 
@@ -70,5 +69,3 @@ IECOREARNOLD_API void convertUSDShaders( IECoreScene::ShaderNetwork *shaderNetwo
 } // namespace ShaderNetworkAlgo
 
 } // namespace IECoreArnold
-
-#endif // IECOREARNOLD_SHADERNETWORKALGO_H

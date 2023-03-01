@@ -32,8 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFEROSL_SHADINGENGINE_H
-#define GAFFEROSL_SHADINGENGINE_H
+#pragma once
 
 #include "GafferOSL/Export.h"
 #include "GafferOSL/TypeIds.h"
@@ -116,5 +115,3 @@ class GAFFEROSL_API ShadingEngine : public IECore::RefCounted
 IE_CORE_DECLAREPTR( ShadingEngine )
 
 } // namespace GafferOSL
-
-#endif // GAFFEROSL_SHADINGENGINE_H

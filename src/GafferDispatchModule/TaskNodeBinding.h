@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERDISPATCHMODULE_TASKNODEBINDING_H
-#define GAFFERDISPATCHMODULE_TASKNODEBINDING_H
+#pragma once
 
 namespace GafferDispatchModule
 {
@@ -43,5 +42,3 @@ namespace GafferDispatchModule
 void bindTaskNode();
 
 } // namespace GafferDispatchModule
-
-#endif // GAFFERDISPATCHMODULE_TASKNODEBINDING_H

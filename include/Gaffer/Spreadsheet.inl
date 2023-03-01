@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_SPREADSHEET_INL
-#define GAFFER_SPREADSHEET_INL
+#pragma once
 
 namespace Gaffer
 {
@@ -53,5 +52,3 @@ const T *Spreadsheet::CellPlug::valuePlug() const
 }
 
 } // namespace Gaffer
-
-#endif // GAFFER_SPREADSHEET_INL

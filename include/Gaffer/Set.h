@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_SET_H
-#define GAFFER_SET_H
+#pragma once
 
 #include "Gaffer/Export.h"
 #include "Gaffer/Node.h"
@@ -156,5 +155,3 @@ class SetIterator : public boost::iterator_facade<SetIterator<ContainerType, Val
 };
 
 } // namespace Gaffer
-
-#endif // GAFFER_SET_H

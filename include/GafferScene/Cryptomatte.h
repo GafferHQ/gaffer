@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_CRYPTOMATTE_H
-#define GAFFERSCENE_CRYPTOMATTE_H
+#pragma once
 
 #include "GafferScene/ScenePlug.h"
 
@@ -124,5 +123,3 @@ class GAFFERSCENE_API Cryptomatte : public GafferImage::FlatImageProcessor
 IE_CORE_DECLAREPTR(Cryptomatte);
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_CRYPTOMATTE_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_SCENEALGO_H
-#define GAFFERSCENE_SCENEALGO_H
+#pragma once
 
 #include "GafferScene/Filter.h"
 #include "GafferScene/ScenePlug.h"
@@ -290,5 +289,3 @@ GAFFERSCENE_API void applyCameraGlobals( IECoreScene::Camera *camera, const IECo
 } // namespace GafferScene
 
 #include "GafferScene/SceneAlgo.inl"
-
-#endif // GAFFERSCENE_SCENEALGO_H

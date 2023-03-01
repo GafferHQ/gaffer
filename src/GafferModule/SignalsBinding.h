@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERMODULE_SIGNALSBINDING_H
-#define GAFFERMODULE_SIGNALSBINDING_H
+#pragma once
 
 namespace GafferModule
 {
@@ -44,5 +43,3 @@ namespace GafferModule
 void bindSignals();
 
 } // namespace GafferModule
-
-#endif // GAFFERMODULE_SIGNALSBINDING_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENETEST_TESTLIGHTFILTER_H
-#define GAFFERSCENETEST_TESTLIGHTFILTER_H
+#pragma once
 
 #include "GafferSceneTest/Export.h"
 #include "GafferSceneTest/TypeIds.h"
@@ -60,5 +59,3 @@ class GAFFERSCENETEST_API TestLightFilter : public GafferScene::LightFilter
 IE_CORE_DECLAREPTR( TestLightFilter )
 
 } // namespace GafferSceneTest
-
-#endif // GAFFERSCENETEST_TESTLIGHTFILTER_H

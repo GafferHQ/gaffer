@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_CUSTOMATTRIBUTES_H
-#define GAFFERSCENE_CUSTOMATTRIBUTES_H
+#pragma once
 
 #include "GafferScene/Attributes.h"
 
@@ -57,5 +56,3 @@ class GAFFERSCENE_API CustomAttributes : public GafferScene::Attributes
 IE_CORE_DECLAREPTR( CustomAttributes )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_CUSTOMATTRIBUTES_H

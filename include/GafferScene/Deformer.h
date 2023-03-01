@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_DEFORMER_H
-#define GAFFERSCENE_DEFORMER_H
+#pragma once
 
 #include "GafferScene/ObjectProcessor.h"
 
@@ -114,5 +113,3 @@ class GAFFERSCENE_API Deformer : public ObjectProcessor
 IE_CORE_DECLAREPTR( Deformer )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_DEFORMER_H

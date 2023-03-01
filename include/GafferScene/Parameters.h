@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_PARAMETERS_H
-#define GAFFERSCENE_PARAMETERS_H
+#pragma once
 
 #include "GafferScene/ObjectProcessor.h"
 
@@ -72,5 +71,3 @@ class GAFFERSCENE_API Parameters : public ObjectProcessor
 IE_CORE_DECLAREPTR( Parameters )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_PARAMETERS_H

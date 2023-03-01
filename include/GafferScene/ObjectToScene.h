@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_OBJECTTOSCENE_H
-#define GAFFERSCENE_OBJECTTOSCENE_H
+#pragma once
 
 #include "GafferScene/ObjectSource.h"
 
@@ -71,5 +70,3 @@ class GAFFERSCENE_API ObjectToScene : public ObjectSource
 IE_CORE_DECLAREPTR( ObjectToScene )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_OBJECTTOSCENE_H

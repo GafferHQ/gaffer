@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_TRANSLATEHANDLE_H
-#define GAFFERUI_TRANSLATEHANDLE_H
+#pragma once
 
 #include "GafferUI/Handle.h"
 
@@ -85,5 +84,3 @@ class GAFFERUI_API TranslateHandle : public Handle
 IE_CORE_DECLAREPTR( TranslateHandle )
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_TRANSLATEHANDLE_H

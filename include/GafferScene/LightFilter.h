@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_LIGHTFILTER_H
-#define GAFFERSCENE_LIGHTFILTER_H
+#pragma once
 
 #include "GafferScene/ObjectSource.h"
 #include "GafferScene/Shader.h"
@@ -104,5 +103,3 @@ class GAFFERSCENE_API LightFilter : public ObjectSource
 IE_CORE_DECLAREPTR( LightFilter )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_LIGHTFILTER_H

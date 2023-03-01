@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_DELETESETS_H
-#define GAFFERSCENE_DELETESETS_H
+#pragma once
 
 #include "GafferScene/SceneProcessor.h"
 
@@ -84,5 +83,3 @@ class GAFFERSCENE_API DeleteSets : public SceneProcessor
 IE_CORE_DECLAREPTR( DeleteSets )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_DELETESETS_H

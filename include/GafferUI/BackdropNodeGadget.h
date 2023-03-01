@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_BACKDROPNODEGADGET_H
-#define GAFFERUI_BACKDROPNODEGADGET_H
+#pragma once
 
 #include "GafferUI/NodeGadget.h"
 
@@ -113,5 +112,3 @@ class GAFFERUI_API BackdropNodeGadget : public NodeGadget
 IE_CORE_DECLAREPTR( BackdropNodeGadget );
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_BACKDROPNODEGADGET_H

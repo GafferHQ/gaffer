@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_ACTION_H
-#define GAFFER_ACTION_H
+#pragma once
 
 #include "Gaffer/Export.h"
 #include "Gaffer/TypeIds.h"
@@ -155,5 +154,3 @@ class GAFFER_API Action : public IECore::RunTimeTyped
 IE_CORE_DECLAREPTR( Action );
 
 } // namespace Gaffer
-
-#endif // GAFFER_ACTION_H

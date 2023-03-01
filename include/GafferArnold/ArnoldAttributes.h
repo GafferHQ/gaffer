@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERARNOLD_ARNOLDATTRIBUTES_H
-#define GAFFERARNOLD_ARNOLDATTRIBUTES_H
+#pragma once
 
 #include "GafferArnold/Export.h"
 #include "GafferArnold/TypeIds.h"
@@ -60,5 +59,3 @@ class GAFFERARNOLD_API ArnoldAttributes : public GafferScene::Attributes
 IE_CORE_DECLAREPTR( ArnoldAttributes )
 
 } // namespace GafferArnold
-
-#endif // GAFFERARNOLD_ARNOLDATTRIBUTES_H

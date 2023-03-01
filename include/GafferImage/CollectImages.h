@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_COLLECTIMAGES_H
-#define GAFFERIMAGE_COLLECTIMAGES_H
+#pragma once
 
 #include "GafferImage/ImageProcessor.h"
 
@@ -97,5 +96,3 @@ class GAFFERIMAGE_API CollectImages : public ImageProcessor
 IE_CORE_DECLAREPTR( CollectImages )
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_COLLECTIMAGES_H

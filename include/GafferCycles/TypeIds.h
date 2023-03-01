@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERCYCLES_TYPEIDS_H
-#define GAFFERCYCLES_TYPEIDS_H
+#pragma once
 
 namespace GafferCycles
 {
@@ -55,5 +54,3 @@ enum TypeId
 };
 
 } // namespace GafferCycles
-
-#endif // GAFFERCYCLES_TYPEIDS_H

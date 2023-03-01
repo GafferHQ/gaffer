@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERMODULE_PROCESSMESSAGEHANDLERBINDING_H
-#define GAFFERMODULE_PROCESSMESSAGEHANDLERBINDING_H
+#pragma once
 
 namespace GafferModule
 {
@@ -43,5 +42,3 @@ namespace GafferModule
 void bindProcessMessageHandler();
 
 } // namespace GafferModule
-
-#endif // GAFFERMODULE_PROCESSMESSAGEHANDLERBINDING_H

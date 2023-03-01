@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERCORTEX_OBJECTPARAMETERHANDLER_H
-#define GAFFERCORTEX_OBJECTPARAMETERHANDLER_H
+#pragma once
 
 #include "GafferCortex/ParameterHandler.h"
 
@@ -79,5 +78,3 @@ class GAFFERCORTEX_API ObjectParameterHandler : public ParameterHandler
 };
 
 } // namespace GafferCortex
-
-#endif // GAFFERCORTEX_OBJECTPARAMETERHANDLER_H

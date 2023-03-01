@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_MEDIAN_H
-#define GAFFERIMAGE_MEDIAN_H
+#pragma once
 
 #include "GafferImage/RankFilter.h"
 
@@ -57,5 +56,3 @@ class GAFFERIMAGE_API Median : public RankFilter
 IE_CORE_DECLAREPTR( Median );
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_MEDIAN_H

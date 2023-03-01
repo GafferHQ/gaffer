@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_TRANSFORMQUERY_H
-#define GAFFERSCENE_TRANSFORMQUERY_H
+#pragma once
 
 #include "GafferScene/Export.h"
 #include "GafferScene/ScenePlug.h"
@@ -97,5 +96,3 @@ protected:
 IE_CORE_DECLAREPTR( TransformQuery )
 
 } // GafferScene
-
-#endif // GAFFERSCENE_TRANSFORMQUERY_H

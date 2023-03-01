@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_SCENEREADER_H
-#define GAFFERSCENE_SCENEREADER_H
+#pragma once
 
 #include "GafferScene/SceneNode.h"
 
@@ -144,5 +143,3 @@ class GAFFERSCENE_API SceneReader : public SceneNode
 IE_CORE_DECLAREPTR( SceneReader )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_SCENEREADER_H

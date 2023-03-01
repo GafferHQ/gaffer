@@ -32,8 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef IECOREPREVIEW_TASKMUTEX_H
-#define IECOREPREVIEW_TASKMUTEX_H
+#pragma once
 
 #include "IECore/Canceller.h"
 #include "IECore/RefCounted.h"
@@ -416,5 +415,3 @@ class TaskMutex : boost::noncopyable
 };
 
 } // namespace IECorePreview
-
-#endif // IECOREPREVIEW_TASKMUTEX_H

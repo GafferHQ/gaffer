@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_FILTERPROCESSOR_H
-#define GAFFERSCENE_FILTERPROCESSOR_H
+#pragma once
 
 #include "GafferScene/Filter.h"
 
@@ -103,5 +102,3 @@ class GAFFERSCENE_API FilterProcessor : public Filter
 IE_CORE_DECLAREPTR( FilterProcessor )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_FILTERPROCESSOR_H

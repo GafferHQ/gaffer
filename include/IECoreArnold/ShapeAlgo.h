@@ -32,8 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef IECOREARNOLD_SHAPEALGO_H
-#define IECOREARNOLD_SHAPEALGO_H
+#pragma once
 
 #include "IECoreArnold/Export.h"
 
@@ -61,5 +60,3 @@ IECOREARNOLD_API void convertPrimitiveVariables( const IECoreScene::Primitive *p
 } // namespace ShapeAlgo
 
 } // namespace IECoreArnold
-
-#endif // IECOREARNOLD_SHAPEALGO_H

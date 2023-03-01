@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_OBJECTPROCESSOR_H
-#define GAFFERSCENE_OBJECTPROCESSOR_H
+#pragma once
 
 #include "GafferScene/FilteredSceneProcessor.h"
 
@@ -120,5 +119,3 @@ class GAFFERSCENE_API ObjectProcessor : public FilteredSceneProcessor
 IE_CORE_DECLAREPTR( ObjectProcessor )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_OBJECTPROCESSOR_H

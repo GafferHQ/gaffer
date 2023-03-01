@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_SIGNALS_INL
-#define GAFFER_SIGNALS_INL
+#pragma once
 
 #include "IECore/MessageHandler.h"
 
@@ -553,5 +552,3 @@ inline BlockedConnection::~BlockedConnection()
 }
 
 } // namespace Gaffer::Signals
-
-#endif // GAFFER_SIGNALS_INL

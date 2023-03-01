@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_MODIFIABLEEVENT_H
-#define GAFFERUI_MODIFIABLEEVENT_H
+#pragma once
 
 #include "GafferUI/Event.h"
 
@@ -68,5 +67,3 @@ struct GAFFERUI_API ModifiableEvent : public Event
 };
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_MODIFIABLEEVENT_H

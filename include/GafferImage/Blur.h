@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_BLUR_H
-#define GAFFERIMAGE_BLUR_H
+#pragma once
 
 #include "GafferImage/FlatImageProcessor.h"
 
@@ -100,5 +99,3 @@ class GAFFERIMAGE_API Blur : public FlatImageProcessor
 IE_CORE_DECLAREPTR( Blur )
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_BLUR_H

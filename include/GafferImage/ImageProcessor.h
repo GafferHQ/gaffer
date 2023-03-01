@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_IMAGEPROCESSOR_H
-#define GAFFERIMAGE_IMAGEPROCESSOR_H
+#pragma once
 
 #include "GafferImage/ImageNode.h"
 
@@ -102,5 +101,3 @@ class GAFFERIMAGE_API ImageProcessor : public ImageNode
 IE_CORE_DECLAREPTR( ImageProcessor )
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_IMAGEPROCESSOR_H

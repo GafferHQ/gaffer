@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_PRIVATE_CHILDNAMESMAP_H
-#define GAFFERSCENE_PRIVATE_CHILDNAMESMAP_H
+#pragma once
 
 #include "IECore/Data.h"
 #include "IECore/PathMatcherData.h"
@@ -103,5 +102,3 @@ IE_CORE_DECLAREPTR( ChildNamesMap )
 } // namespace Private
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_PRIVATE_CHILDNAMESMAP_H

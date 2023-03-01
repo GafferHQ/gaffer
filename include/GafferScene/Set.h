@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_SET_H
-#define GAFFERSCENE_SET_H
+#pragma once
 
 #include "GafferScene/FilteredSceneProcessor.h"
 
@@ -111,5 +110,3 @@ class GAFFERSCENE_API Set : public FilteredSceneProcessor
 IE_CORE_DECLAREPTR( Set );
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_SET_H

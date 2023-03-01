@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERCORTEXMODULE_EXECUTABLEOPHOLDERBINDING_H
-#define GAFFERCORTEXMODULE_EXECUTABLEOPHOLDERBINDING_H
+#pragma once
 
 namespace GafferCortexModule
 {
@@ -43,5 +42,3 @@ namespace GafferCortexModule
 void bindExecutableOpHolder();
 
 } // namespace GafferCortexModule
-
-#endif // GAFFERCORTEXMODULE_EXECUTABLEOPHOLDERBINDING_H

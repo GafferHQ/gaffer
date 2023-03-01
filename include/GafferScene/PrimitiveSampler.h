@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_PRIMITIVESAMPLER_H
-#define GAFFERSCENE_PRIMITIVESAMPLER_H
+#pragma once
 
 #include "GafferScene/Deformer.h"
 
@@ -130,5 +129,3 @@ class GAFFERSCENE_API PrimitiveSampler : public Deformer
 IE_CORE_DECLAREPTR( PrimitiveSampler )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_PRIMITIVESAMPLER_H

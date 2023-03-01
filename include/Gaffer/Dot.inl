@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_DOT_INL
-#define GAFFER_DOT_INL
+#pragma once
 
 namespace Gaffer
 {
@@ -65,5 +64,3 @@ const T *Dot::outPlug() const
 }
 
 } // namespace Gaffer
-
-#endif // GAFFER_DOT_INL

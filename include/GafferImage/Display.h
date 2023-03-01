@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_DISPLAY_H
-#define GAFFERIMAGE_DISPLAY_H
+#pragma once
 
 #include "GafferImage/ImageNode.h"
 
@@ -129,5 +128,3 @@ class GAFFERIMAGE_API Display : public ImageNode
 IE_CORE_DECLAREPTR( Display );
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_DISPLAY_H

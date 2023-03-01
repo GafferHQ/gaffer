@@ -32,8 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef IECOREARNOLD_PARAMETERALGO_H
-#define IECOREARNOLD_PARAMETERALGO_H
+#pragma once
 
 #include "IECoreArnold/Export.h"
 
@@ -73,5 +72,3 @@ IECOREARNOLD_API AtArray *dataToArray( const std::vector<const IECore::Data *> &
 } // namespace ParameterAlgo
 
 } // namespace IECoreArnold
-
-#endif // IECOREARNOLD_PARAMETERALGO_H

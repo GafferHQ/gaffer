@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERBINDINGS_SERIALISATIONBINDING_INL
-#define GAFFERBINDINGS_SERIALISATIONBINDING_INL
+#pragma once
 
 namespace GafferBindings
 {
@@ -209,5 +208,3 @@ SerialiserClass<T, Base, TWrapper>::SerialiserClass( const char *name )
 }
 
 } // namespace GafferBindings
-
-#endif // GAFFERBINDINGS_SERIALISATIONBINDING_INL

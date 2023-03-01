@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERARNOLD_ARNOLDMESHLIGHT_H
-#define GAFFERARNOLD_ARNOLDMESHLIGHT_H
+#pragma once
 
 #include "GafferArnold/Export.h"
 #include "GafferArnold/TypeIds.h"
@@ -64,5 +63,3 @@ class GAFFERARNOLD_API ArnoldMeshLight : public GafferScene::FilteredSceneProces
 IE_CORE_DECLAREPTR( ArnoldMeshLight )
 
 } // namespace GafferArnold
-
-#endif // GAFFERARNOLD_ARNOLDMESHLIGHT_H

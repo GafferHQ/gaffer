@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUIMODULE_PATHCOLUMNBINDING_H
-#define GAFFERUIMODULE_PATHCOLUMNBINDING_H
+#pragma once
 
 namespace GafferUIModule
 {
@@ -43,5 +42,3 @@ namespace GafferUIModule
 void bindPathColumn();
 
 } // namespace GafferUIModule
-
-#endif // GAFFERUIMODULE_PATHCOLUMNBINDING_H

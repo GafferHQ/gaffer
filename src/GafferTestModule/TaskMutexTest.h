@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERTESTMODULE_TASKMUTEXTEST_H
-#define GAFFERTESTMODULE_TASKMUTEXTEST_H
+#pragma once
 
 namespace GafferTestModule
 {
@@ -43,5 +42,3 @@ namespace GafferTestModule
 void bindTaskMutexTest();
 
 } // namespace GafferTestModule
-
-#endif // GAFFERTESTMODULE_TASKMUTEXTEST_H

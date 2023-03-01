@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_RESIZE_H
-#define GAFFERIMAGE_RESIZE_H
+#pragma once
 
 #include "GafferImage/FormatPlug.h"
 #include "GafferImage/FlatImageProcessor.h"
@@ -122,5 +121,3 @@ class GAFFERIMAGE_API Resize : public FlatImageProcessor
 IE_CORE_DECLAREPTR( Resize )
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_RESIZE_H

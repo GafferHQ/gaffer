@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_COMPOUNDNUMERICPLUG_H
-#define GAFFER_COMPOUNDNUMERICPLUG_H
+#pragma once
 
 #include "Gaffer/NumericPlug.h"
 
@@ -144,5 +143,3 @@ IE_CORE_DECLAREPTR( Color3fPlug );
 IE_CORE_DECLAREPTR( Color4fPlug );
 
 } // namespace Gaffer
-
-#endif // GAFFER_COMPOUNDNUMERICPLUG_H

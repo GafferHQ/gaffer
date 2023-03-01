@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_RECTANGLE_H
-#define GAFFERIMAGE_RECTANGLE_H
+#pragma once
 
 #include "GafferImage/Shape.h"
 
@@ -92,5 +91,3 @@ class GAFFERIMAGE_API Rectangle : public Shape
 IE_CORE_DECLAREPTR( Rectangle )
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_RECTANGLE_H

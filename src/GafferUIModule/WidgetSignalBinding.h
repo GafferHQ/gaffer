@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUIMODULE_WIDGETSIGNALBINDING_H
-#define GAFFERUIMODULE_WIDGETSIGNALBINDING_H
+#pragma once
 
 namespace GafferUIModule
 {
@@ -43,5 +42,3 @@ namespace GafferUIModule
 void bindWidgetSignal();
 
 } // namespace GafferUIModule
-
-#endif // GAFFERUIMODULE_WIDGETSIGNALBINDING_H

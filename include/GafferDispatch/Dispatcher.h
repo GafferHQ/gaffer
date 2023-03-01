@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERDISPATCH_DISPATCHER_H
-#define GAFFERDISPATCH_DISPATCHER_H
+#pragma once
 
 #include "GafferDispatch/Export.h"
 #include "GafferDispatch/TaskNode.h"
@@ -296,5 +295,3 @@ class GAFFERDISPATCH_API Dispatcher : public Gaffer::Node
 };
 
 } // namespace GafferDispatch
-
-#endif // GAFFERDISPATCH_DISPATCHER_H

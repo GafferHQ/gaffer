@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_NAMESWITCH_H
-#define GAFFER_NAMESWITCH_H
+#pragma once
 
 #include "Gaffer/Switch.h"
 
@@ -78,5 +77,3 @@ class IECORE_EXPORT NameSwitch : public Switch
 IE_CORE_DECLAREPTR( NameSwitch );
 
 } // namespace Gaffer
-
-#endif // GAFFER_NAMESWITCH_H

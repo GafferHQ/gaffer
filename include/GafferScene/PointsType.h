@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_POINTSTYPE_H
-#define GAFFERSCENE_POINTSTYPE_H
+#pragma once
 
 #include "GafferScene/ObjectProcessor.h"
 
@@ -77,5 +76,3 @@ class GAFFERSCENE_API PointsType : public ObjectProcessor
 IE_CORE_DECLAREPTR( PointsType )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_POINTSTYPE_H

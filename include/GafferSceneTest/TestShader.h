@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENETEST_TESTSHADER_H
-#define GAFFERSCENETEST_TESTSHADER_H
+#pragma once
 
 #include "GafferSceneTest/Export.h"
 #include "GafferSceneTest/TypeIds.h"
@@ -58,5 +57,3 @@ class GAFFERSCENETEST_API TestShader : public GafferScene::Shader
 };
 
 } // namespace GafferSceneTest
-
-#endif // GAFFERSCENETEST_TESTSHADER_H

@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_NODEGADGET_H
-#define GAFFERUI_NODEGADGET_H
+#pragma once
 
 #include "GafferUI/IndividualContainer.h"
 
@@ -132,5 +131,3 @@ class GAFFERUI_API NodeGadget : public Gadget
 IE_CORE_DECLAREPTR( NodeGadget );
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_NODEGADGET_H

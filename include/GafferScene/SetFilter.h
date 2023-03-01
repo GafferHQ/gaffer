@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_SETFILTER_H
-#define GAFFERSCENE_SETFILTER_H
+#pragma once
 
 #include "GafferScene/Filter.h"
 
@@ -87,5 +86,3 @@ class GAFFERSCENE_API SetFilter : public Filter
 IE_CORE_DECLAREPTR( SetFilter )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_SETFILTER_H

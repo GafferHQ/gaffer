@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGEMODULE_WARPBINDING_H
-#define GAFFERIMAGEMODULE_WARPBINDING_H
+#pragma once
 
 namespace GafferImageModule
 {
@@ -43,5 +42,3 @@ namespace GafferImageModule
 void bindWarp();
 
 }; // namespace GafferImageModule
-
-#endif // GAFFERIMAGEMODULE_WARPBINDING_H

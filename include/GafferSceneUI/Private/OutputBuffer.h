@@ -32,8 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUI_OUTPUTBUFFER_H
-#define GAFFERSCENEUI_OUTPUTBUFFER_H
+#pragma once
 
 #include "GafferScene/ScenePlug.h"
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
@@ -113,5 +112,3 @@ class OutputBuffer
 };
 
 } // namespace GafferSceneUI
-
-#endif // GAFFERSCENEUI_OUTPUTBUFFER_H

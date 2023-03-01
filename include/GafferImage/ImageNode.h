@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_IMAGENODE_H
-#define GAFFERIMAGE_IMAGENODE_H
+#pragma once
 
 #include "GafferImage/Export.h"
 #include "GafferImage/ImagePlug.h"
@@ -139,5 +138,3 @@ class GAFFERIMAGE_API ImageNode : public Gaffer::ComputeNode
 IE_CORE_DECLAREPTR( ImageNode )
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_IMAGENODE_H

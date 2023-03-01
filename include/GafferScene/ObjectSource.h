@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_OBJECTSOURCE_H
-#define GAFFERSCENE_OBJECTSOURCE_H
+#pragma once
 
 #include "GafferScene/SceneNode.h"
 
@@ -118,5 +117,3 @@ class GAFFERSCENE_API ObjectSource : public SceneNode
 IE_CORE_DECLAREPTR( ObjectSource );
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_OBJECTSOURCE_H

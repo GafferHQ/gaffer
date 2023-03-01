@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGEMODULE_SHAPEBINDING_H
-#define GAFFERIMAGEMODULE_SHAPEBINDING_H
+#pragma once
 
 namespace GafferImageModule
 {
@@ -43,5 +42,3 @@ namespace GafferImageModule
 void bindShape();
 
 }; // namespace GafferImageModule
-
-#endif // GAFFERIMAGEMODULE_SHAPEBINDING_H

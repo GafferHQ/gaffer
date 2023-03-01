@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_STANDARDNODULE_H
-#define GAFFERUI_STANDARDNODULE_H
+#pragma once
 
 #include "GafferUI/Nodule.h"
 
@@ -111,5 +110,3 @@ class GAFFERUI_API StandardNodule : public Nodule
 IE_CORE_DECLAREPTR( StandardNodule );
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_STANDARDNODULE_H

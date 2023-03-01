@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_PLANE_H
-#define GAFFERSCENE_PLANE_H
+#pragma once
 
 #include "GafferScene/ObjectSource.h"
 
@@ -77,5 +76,3 @@ class GAFFERSCENE_API Plane : public ObjectSource
 IE_CORE_DECLAREPTR( Plane )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_PLANE_H

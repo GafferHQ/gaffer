@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_LUT_H
-#define GAFFERIMAGE_LUT_H
+#pragma once
 
 #include "GafferImage/OpenColorIOTransform.h"
 
@@ -97,5 +96,3 @@ class GAFFERIMAGE_API LUT : public OpenColorIOTransform
 IE_CORE_DECLAREPTR( LUT )
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_LUT_H

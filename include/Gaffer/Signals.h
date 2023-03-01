@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_SIGNALS_H
-#define GAFFER_SIGNALS_H
+#pragma once
 
 #include "Gaffer/Private/SlotBase.h"
 
@@ -276,5 +275,3 @@ class Trackable : boost::noncopyable
 } // namespace Gaffer::Signals
 
 #include "Gaffer/Signals.inl"
-
-#endif // GAFFER_SIGNALS_H

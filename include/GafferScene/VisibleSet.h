@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_VISIBLESET_H
-#define GAFFERSCENE_VISIBLESET_H
+#pragma once
 
 #include "GafferScene/Export.h"
 
@@ -79,5 +78,3 @@ void murmurHashAppend( MurmurHash &h, const VisibleSet &data );
 } // namespace GafferScene
 
 #include "GafferScene/VisibleSet.inl"
-
-#endif // GAFFERSCENE_VISIBLESET_H

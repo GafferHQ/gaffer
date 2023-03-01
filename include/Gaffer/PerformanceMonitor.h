@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_PERFORMANCEMONITOR_H
-#define GAFFER_PERFORMANCEMONITOR_H
+#pragma once
 
 #include "Gaffer/Monitor.h"
 
@@ -128,5 +127,3 @@ class GAFFER_API PerformanceMonitor : public Monitor
 IE_CORE_DECLAREPTR( PerformanceMonitor )
 
 } // namespace Gaffer
-
-#endif // GAFFER_PERFORMANCEMONITOR_H

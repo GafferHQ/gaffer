@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_SHUFFLEPLUG_H
-#define GAFFER_SHUFFLEPLUG_H
+#pragma once
 
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/TypedPlug.h"
@@ -104,5 +103,3 @@ class GAFFER_API ShufflesPlug : public ValuePlug
 } // namespace Gaffer
 
 #include "Gaffer/ShufflePlug.inl"
-
-#endif // GAFFER_SHUFFLEPLUG_H

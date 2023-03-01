@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_GRADE_H
-#define GAFFERIMAGE_GRADE_H
+#pragma once
 
 #include "GafferImage/ChannelDataProcessor.h"
 
@@ -99,5 +98,3 @@ class GAFFERIMAGE_API Grade : public ChannelDataProcessor
 IE_CORE_DECLAREPTR( Grade );
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_GRADE_H

@@ -32,8 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENETEST_EXPORT_H
-#define GAFFERSCENETEST_EXPORT_H
+#pragma once
 
 #include "IECore/Export.h"
 
@@ -42,5 +41,3 @@
 #else
 	#define GAFFERSCENETEST_API IECORE_IMPORT
 #endif
-
-#endif // #ifndef GAFFERSCENETEST_EXPORT_H

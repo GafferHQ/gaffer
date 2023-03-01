@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_BUFFERALGO_INL
-#define GAFFERIMAGE_BUFFERALGO_INL
+#pragma once
 
 #include <cassert>
 
@@ -132,5 +131,3 @@ inline size_t index( const Imath::V2i &p, const Imath::Box2i &b )
 } // namespace BufferAlgo
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_BUFFERALGO_INL

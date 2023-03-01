@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_CLIPPINGPLANE_H
-#define GAFFERSCENE_CLIPPINGPLANE_H
+#pragma once
 
 #include "GafferScene/ObjectSource.h"
 
@@ -64,5 +63,3 @@ class GAFFERSCENE_API ClippingPlane : public ObjectSource
 IE_CORE_DECLAREPTR( ClippingPlane )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_CLIPPINGPLANE_H

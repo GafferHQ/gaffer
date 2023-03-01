@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef IECORESCENEPREVIEW_CAPTURINGRENDERER_H
-#define IECORESCENEPREVIEW_CAPTURINGRENDERER_H
+#pragma once
 
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 
@@ -187,5 +186,3 @@ class GAFFERSCENE_API CapturingRenderer : public Renderer
 IE_CORE_DECLAREPTR( CapturingRenderer )
 
 } // namespace IECoreScenePreview
-
-#endif // IECORESCENEPREVIEW_CAPTURINGRENDERER_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUIMODULE_POINTERBINDING_H
-#define GAFFERUIMODULE_POINTERBINDING_H
+#pragma once
 
 namespace GafferUIModule
 {
@@ -43,5 +42,3 @@ namespace GafferUIModule
 void bindPointer();
 
 } // namespace GafferUIModule
-
-#endif // GAFFERUIMODULE_POINTERBINDING_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_CONTAINER_INL
-#define GAFFER_CONTAINER_INL
+#pragma once
 
 namespace Gaffer
 {
@@ -102,5 +101,3 @@ bool Container<Base, T>::acceptsChild( const GraphComponent *potentialChild ) co
 }
 
 } // namespace Gaffer
-
-#endif // GAFFER_CONTAINER_INL

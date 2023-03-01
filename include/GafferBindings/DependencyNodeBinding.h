@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERBINDINGS_DEPENDENCYNODEBINDING_H
-#define GAFFERBINDINGS_DEPENDENCYNODEBINDING_H
+#pragma once
 
 #include "boost/python.hpp"
 
@@ -184,5 +183,3 @@ class DependencyNodeWrapper : public NodeWrapper<WrappedType>, public Dependency
 } // namespace GafferBindings
 
 #include "GafferBindings/DependencyNodeBinding.inl"
-
-#endif // GAFFERBINDINGS_DEPENDENCYNODEBINDING_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_MESHTYPE_H
-#define GAFFERSCENE_MESHTYPE_H
+#pragma once
 
 #include "GafferScene/ObjectProcessor.h"
 
@@ -84,5 +83,3 @@ class GAFFERSCENE_API MeshType : public ObjectProcessor
 IE_CORE_DECLAREPTR( MeshType )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_MESHTYPE_H

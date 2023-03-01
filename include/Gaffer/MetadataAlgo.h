@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_METADATAALGO_H
-#define GAFFER_METADATAALGO_H
+#pragma once
 
 #include "Gaffer/Export.h"
 #include "Gaffer/Node.h"
@@ -235,5 +234,3 @@ GAFFER_API bool isPromotable( const GraphComponent *from, const GraphComponent *
 } // namespace Gaffer
 
 #include "Gaffer/MetadataAlgo.inl"
-
-#endif // GAFFER_METADATAALGO_H

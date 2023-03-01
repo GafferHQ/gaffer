@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_CONTEXTALGO_H
-#define GAFFER_CONTEXTALGO_H
+#pragma once
 
 #include "Gaffer/Context.h"
 
@@ -76,5 +75,3 @@ class GAFFER_API GlobalScope : boost::noncopyable
 } // namespace ContextAlgo
 
 } // namespace Gaffer
-
-#endif // GAFFER_CONTEXTALGO_H

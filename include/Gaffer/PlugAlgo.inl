@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_PLUGALGO_INL
-#define GAFFER_PLUGALGO_INL
+#pragma once
 
 #include "Gaffer/Spreadsheet.h"
 
@@ -86,5 +85,3 @@ std::invoke_result_t<Predicate, Plug *> findDestination( Plug *plug, Predicate &
 }
 
 } // namespace Gaffer::PlugAlgo
-
-#endif // GAFFER_PLUGALGO_INL

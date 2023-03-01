@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERDISPATCH_TYPEIDS_H
-#define GAFFERDISPATCH_TYPEIDS_H
+#pragma once
 
 namespace GafferDispatch
 {
@@ -52,5 +51,3 @@ enum TypeId
 };
 
 } // namespace GafferDispatch
-
-#endif // GAFFERDISPATCH_TYPEIDS_H

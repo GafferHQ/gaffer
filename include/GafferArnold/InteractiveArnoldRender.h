@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERARNOLD_INTERACTIVEARNOLDRENDER_H
-#define GAFFERARNOLD_INTERACTIVEARNOLDRENDER_H
+#pragma once
 
 #include "GafferArnold/Export.h"
 #include "GafferArnold/TypeIds.h"
@@ -64,5 +63,3 @@ class GAFFERARNOLD_API InteractiveArnoldRender : public GafferScene::Interactive
 IE_CORE_DECLAREPTR( InteractiveArnoldRender );
 
 } // namespace GafferArnold
-
-#endif // GAFFERARNOLD_INTERACTIVEARNOLDRENDER_H
