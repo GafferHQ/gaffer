@@ -133,6 +133,7 @@ gafferBuildVariant = getOption( "GAFFER_BUILD_VARIANT", "py3" )
 qtVersion = gafferReg["qtVersion"]
 pysideVersion = gafferReg.get( "pysideVersion", "2.0.0" )
 qtPyVersion = gafferReg.get( "qtPyVersion", "1.0.0.b3" )
+fmtVersion = gafferReg.get( "fmtVersion", "9.1.0" )
 
 vTuneVersion = getOption( "VTUNE_VERSION", os.environ["VTUNE_VERSION"] )
 VTUNE_ROOT = IEEnv.registry["apps"]["vtune"][vTuneVersion][IEEnv.platform()]["location"]
@@ -264,6 +265,7 @@ LOCATE_DEPENDENCY_SYSTEMPATH = [
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenImageIO", oiioVersion, IEEnv.platform(), compiler, compilerVersion, "include" ),
 	os.path.join( OSLHOME, "include" ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "qt", qtVersion, IEEnv.platform(), compiler, compilerVersion, "include" ),
+	os.path.join( IEEnv.Environment.rootPath(), "apps", "fmt", fmtVersion, IEEnv.platform(), compiler, compilerVersion, "include" ),
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "glew", targetAppReg.get( "glew", cortexReg["glewVersion"] ) ),
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "OpenEXR", exrVersion ),
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "OpenEXR", exrVersion, "OpenEXR" ),

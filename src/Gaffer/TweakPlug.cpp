@@ -44,6 +44,8 @@
 #include "IECore/StringAlgo.h"
 #include "IECore/TypeTraits.h"
 
+#include "fmt/format.h"
+
 #include <unordered_map>
 
 using namespace std;
@@ -307,11 +309,10 @@ void TweakPlug::applyNumericTweak(
 			}
 			else
 			{
-				throw IECore::Exception( boost::str(
-					boost::format( "Cannot apply tweak with mode %s to \"%s\" : Data type %s not supported." )
-						% modeToString( mode )
-						% tweakName
-						% sourceData->typeName()
+				throw IECore::Exception(
+					fmt::format(
+						"Cannot apply tweak with mode {} to \"{}\" : Data type {} not supported.",
+						modeToString( mode ), tweakName, sourceData->typeName()
 					)
 				);
 			}

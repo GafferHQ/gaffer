@@ -9,10 +9,26 @@ Breaking Changes
 1.2.x.x (relative to 1.2.0.2)
 =======
 
+Improvements
+------------
+
+- USD : Added translation of UsdUVTexture's `scale`, `bias` and `fallback` parameters to Arnold.
+
+Fixes
+-----
+
+- Locale :
+  - Reintroduced `LC_NUMERIC=C` environment variable assignment to wrapper. This was removed in `1.2.0.0` but is still necessary due to a [bug in Cortex](https://github.com/ImageEngine/cortex/issues/1338).
+  - Fixed serialisation of `.gfr` files in locales with non-default numeric formatting (#5158).
+- Tweak nodes : Fixed bugs which prevented the creation of new tweaks when an existing tweak had an input connection.
+- Preferences : Fixed bug which caused UI metadata to be serialised unnecessarily into `~/gaffer/startup/gui/preferences.py`.
+- OpenGL Texture shader : Fixed bug which allowed transparent regions to obscure objects behind them.
+
 Documentation
 -------------
 
  - Added more Python examples to the Scripting Reference "Common Operations" article.
+ - Added instructions for installing and configuring Gaffer on Windows to the "Getting Started" guide.
 
 Build
 -----
@@ -223,6 +239,13 @@ Build
     - Enabled the OpenImageIO plugin. Among other things, this allows OpenEXR textures to be shown in `usdview`.
   - YAML-CPP : Added version 0.7.0.
 - 3Delight : Updated to 3Delight version 2.9.17.
+
+1.1.9.x (relative to 1.1.9.1)
+=======
+
+- Tweak nodes : Fixed bugs which prevented the creation of new tweaks when an existing tweak had an input connection.
+- Preferences : Fixed bug which caused UI metadata to be serialised unnecessarily into `~/gaffer/startup/gui/preferences.py`.
+- OpenGL Texture shader : Fixed bug which allowed transparent regions to obscure objects behind them.
 
 1.1.9.1 (relative to 1.1.9.0)
 =======

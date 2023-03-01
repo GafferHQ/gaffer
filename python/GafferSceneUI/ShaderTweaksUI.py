@@ -224,7 +224,10 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 
 	def _updateFromEditable( self ) :
 
-		self.__button.setEnabled( self._editable() )
+		# Not using `_editable()` as it considers the whole plug to be non-editable if
+		# any child has an input connection, but that shouldn't prevent us adding a new
+		# tweak.
+		self.__button.setEnabled( self.getPlug().getInput() is None and not Gaffer.MetadataAlgo.readOnly( self.getPlug() ) )
 
 	def __menuDefinition( self ) :
 

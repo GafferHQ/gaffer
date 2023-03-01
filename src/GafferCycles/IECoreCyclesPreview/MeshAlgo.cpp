@@ -48,6 +48,8 @@
 #include "util/param.h"
 #include "util/types.h"
 
+#include "fmt/format.h"
+
 using namespace std;
 using namespace Imath;
 using namespace IECore;
@@ -300,7 +302,7 @@ ccl::Geometry *convert( const std::vector<const IECoreScene::MeshPrimitive *> &m
 			}
 			else
 			{
-				msg( Msg::Warning, "IECoreCyles::MeshAlgo::convert", boost::format( "Variable \"Position\" has unsupported type \"%s\" (expected V3fVectorData)." ) % pIt->second.data->typeName() );
+				msg( Msg::Warning, "IECoreCyles::MeshAlgo::convert", fmt::format( "Variable \"Position\" has unsupported type \"{}\" (expected V3fVectorData).", pIt->second.data->typeName() ) );
 				cmesh->attributes.remove( attr_mP );
 				cmesh->set_motion_steps( 0) ;
 				cmesh->set_use_motion_blur( true );

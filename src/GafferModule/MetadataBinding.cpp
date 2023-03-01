@@ -49,7 +49,6 @@
 
 #include "IECore/SimpleTypedData.h"
 
-#include "boost/format.hpp"
 #include "boost/python/raw_function.hpp"
 
 using namespace boost::python;

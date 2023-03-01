@@ -50,6 +50,12 @@ if [[ $1 == -psn_0_* ]] ; then
 	shift
 fi
 
+# Work around https://github.com/ImageEngine/cortex/issues/1338, which
+# causes bad serialisations in certain locales.
+##########################################################################
+
+export LC_NUMERIC=C
+
 # Find where this script is located, resolving any symlinks that were used
 # to invoke it. Set GAFFER_ROOT based on the script location.
 ##########################################################################

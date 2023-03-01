@@ -48,8 +48,6 @@
 
 #include "IECore/Exception.h"
 
-#include "boost/format.hpp"
-
 using namespace std;
 using namespace IECore;
 using namespace Gaffer;

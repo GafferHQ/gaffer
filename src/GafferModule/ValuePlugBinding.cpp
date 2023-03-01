@@ -49,8 +49,6 @@
 #include "Gaffer/Reference.h"
 #include "Gaffer/Metadata.h"
 
-#include "boost/format.hpp"
-
 using namespace boost::python;
 using namespace GafferBindings;
 using namespace Gaffer;

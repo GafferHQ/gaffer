@@ -301,13 +301,15 @@ texinfo_documents = [
 
 # Variables for string replacement functions
 
-arnold_version = '7.1.1.1'
+arnold_version = '7.1.4.2'
 arnold_path_linux = '/opt/solidangle/arnold-{0}'.format( arnold_version )
 arnold_path_osx = '/opt/solidangle/arnold-{0}'.format( arnold_version )
+arnold_path_windows = 'C:\\software\\arnold-{0}'.format( arnold_version )
 
-delight_version = '13.0.18'
+delight_version = '2.9.17'
 delight_path_linux = '/opt/3delight-{0}'.format( delight_version )
 delight_path_osx = '/opt/3delight-{0}'.format( delight_version )
+delight_path_windows = 'C:\\software\\3delight-{0}'.format( delight_version )
 
 tractor_version = '2.2'
 tractor_path_linux = '/opt/pixar/Tractor-{0}'.format( tractor_version )
@@ -366,9 +368,11 @@ def thirdPartySourceSubtitutions( app, docName, source) :
 	source[0] = source[0].replace( "!ARNOLD_VERSION!", arnold_version )
 	source[0] = source[0].replace( "!ARNOLD_PATH_LINUX!", arnold_path_linux )
 	source[0] = source[0].replace( "!ARNOLD_PATH_OSX!", arnold_path_osx )
+	source[0] = source[0].replace( "!ARNOLD_PATH_WINDOWS!", arnold_path_windows )
 	source[0] = source[0].replace( "!DELIGHT_VERSION!", delight_version )
 	source[0] = source[0].replace( "!DELIGHT_PATH_LINUX!", delight_path_linux )
 	source[0] = source[0].replace( "!DELIGHT_PATH_OSX!", delight_path_osx )
+	source[0] = source[0].replace( "!DELIGHT_PATH_WINDOWS!", delight_path_windows )
 	source[0] = source[0].replace( "!TRACTOR_VERSION!", tractor_version )
 	source[0] = source[0].replace( "!TRACTOR_PATH_LINUX!", tractor_path_linux )
 	source[0] = source[0].replace( "!TRACTOR_PATH_OSX!", tractor_path_osx )

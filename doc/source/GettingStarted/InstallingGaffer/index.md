@@ -5,7 +5,7 @@
 The Gaffer package is a self-contained directory, so you will need to manually install it, and later manually configure it, if necessary. Once extracted, the Gaffer directory contains the complete application, ready for use.
 
 > Note :
-> In keeping with Linux/macOS best practices, we will demonstrate how to install Gaffer in the `/opt/` directory. However, you could install it to any location on your file system to which you have write and execute access.
+> In keeping with Linux/macOS best practices, we will demonstrate how to install Gaffer in the `/opt/` directory. We also use `C:\software\` on Windows as an example installation path. However, you could install it to any location on your file system to which you have write and execute access.
 
 
 ## Installing in Linux ##
@@ -26,7 +26,25 @@ To install Gaffer in Linux:
 Gaffer is now installed to `/opt/gaffer-!GAFFER_VERSION!-linux`.
 
 
+## Installing in Windows ##
+
+To install Gaffer in Windows:
+
+1. Download the [latest Windows package of Gaffer](https://github.com/GafferHQ/gaffer/releases/download/!GAFFER_VERSION!/gaffer-!GAFFER_VERSION!-windows.zip).
+
+2. Extract the archive (for best performance, we suggest extracting with [7-Zip](https://www.7-zip.org/)).
+
+3. Move the extracted `gaffer-!GAFFER_VERSION!-windows` folder to the location you wish to install it under, such as `C:\software`.
+
+Gaffer is now installed to `C:\software\gaffer-!GAFFER_VERSION!-windows`.
+
+> Note :
+> Gaffer requires the [Microsoft Visual C++ Redistributable](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170) to be installed on Windows. This needs to be [downloaded](https://aka.ms/vs/17/release/vc_redist.x64.exe) and installed before Gaffer can be [launched](../LaunchingGafferFirstTime/index.md).
+
 ## Installing in macOS ##
+
+> Note :
+> Pre-built versions of Gaffer are currently unavailable on macOS.
 
 To install Gaffer in macOS:
 

@@ -56,6 +56,8 @@
 #include "boost/bind/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 
+#include "fmt/format.h"
+
 #include <fstream>
 
 // Help MSVC check if a file is writable
@@ -503,7 +505,7 @@ void ScriptNode::setFocus( Node *node )
 	}
 	if( node && !this->isAncestorOf( node ) )
 	{
-		throw IECore::Exception( boost::str( boost::format( "%s is not a child of this script" ) % node->fullName() ) );
+		throw IECore::Exception( fmt::format( "{} is not a child of this script", node->fullName() ) );
 	}
 	m_focus->setNode( node );
 	focusChangedSignal()( this, node );
@@ -772,7 +774,7 @@ void ScriptNode::deleteNodes( Node *parent, const Set *filter, bool reconnect )
 					{
 						msg(
 							IECore::Msg::Warning,
-							boost::str( boost::format( "correspondingInput error while deleting - cannot reconnect \"%s\"" ) % it->get()->fullName() ),
+							fmt::format( "correspondingInput error while deleting - cannot reconnect \"{}\"", it->get()->fullName() ),
 							e.what()
 						);
 					}

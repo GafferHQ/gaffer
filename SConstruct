@@ -934,7 +934,7 @@ libraries = {
 
 	"Gaffer" : {
 		"envAppends" : {
-			"LIBS" : [ "Half" ],
+			"LIBS" : [ "Half", "fmt" ],
 		}
 	},
 
@@ -1108,13 +1108,13 @@ libraries = {
 	"GafferArnold" : {
 		"envAppends" : {
 			"LIBPATH" : [ "$ARNOLD_ROOT/bin" ] if env["PLATFORM"] != "win32" else [ "$ARNOLD_ROOT/bin", "$ARNOLD_ROOT/lib" ],
-			"LIBS" : [ "Gaffer", "GafferScene", "GafferDispatch", "ai", "GafferVDB", "openvdb$VDB_LIB_SUFFIX",  "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreVDB$CORTEX_LIB_SUFFIX", "IECoreArnold", "GafferOSL" ],
+			"LIBS" : [ "Gaffer", "GafferScene", "GafferDispatch", "ai", "GafferVDB", "openvdb$VDB_LIB_SUFFIX",  "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreVDB$CORTEX_LIB_SUFFIX", "IECoreArnold", "GafferOSL", "fmt" ],
 			"CXXFLAGS" : [ "-DAI_ENABLE_DEPRECATION_WARNINGS" ],
 			"CPPPATH" : [ "$ARNOLD_ROOT/include" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBPATH" : [ "$ARNOLD_ROOT/bin" ] if env["PLATFORM"] != "win32" else [ "$ARNOLD_ROOT/bin", "$ARNOLD_ROOT/lib" ],
-			"LIBS" : [ "Gaffer", "GafferScene", "GafferBindings", "GafferVDB", "GafferDispatch", "GafferArnold", "GafferOSL", "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreArnold" ],
+			"LIBS" : [ "Gaffer", "GafferScene", "GafferBindings", "GafferVDB", "GafferDispatch", "GafferArnold", "GafferOSL", "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreArnold", "fmt" ],
 			"CXXFLAGS" : [ "-DAI_ENABLE_DEPRECATION_WARNINGS" ],
 			"CPPPATH" : [ "$ARNOLD_ROOT/include" ],
 		},
@@ -1232,7 +1232,7 @@ libraries = {
 		"envAppends" : {
 			"CXXFLAGS" : [ systemIncludeArgument, "$APPLESEED_ROOT/include", "-DAPPLESEED_ENABLE_IMATH_INTEROP" ],
 			"LIBPATH" : [ "$APPLESEED_ROOT/lib" ],
-			"LIBS" : [ "Gaffer", "GafferDispatch", "GafferScene", "appleseed",  "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreAppleseed$CORTEX_LIB_SUFFIX", "OpenImageIO$OIIO_LIB_SUFFIX", "OpenImageIO_Util$OIIO_LIB_SUFFIX", "oslquery$OSL_LIB_SUFFIX" ],
+			"LIBS" : [ "Gaffer", "GafferDispatch", "GafferScene", "appleseed",  "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreAppleseed$CORTEX_LIB_SUFFIX", "OpenImageIO$OIIO_LIB_SUFFIX", "OpenImageIO_Util$OIIO_LIB_SUFFIX", "oslquery$OSL_LIB_SUFFIX", "fmt" ],
 			"CPPDEFINES" : [ "APPLESEED_USE_SSE" ] if platform.machine() != "arm64" else [],
 		},
 		"pythonEnvAppends" : {
@@ -1404,18 +1404,16 @@ def addQtLibrary( library, qtLibrary, pythonOnly = True ) :
 		if not pythonOnly:
 			libraries[library]["envAppends"].setdefault( "FRAMEWORKS", [] ).append( "Qt" + qtLibrary )
 	else :
-		prefix = "Qt" if int( env["QT_VERSION"] ) < 5 else "Qt${QT_VERSION}"
-		libraries[library]["pythonEnvAppends"]["LIBS"].append( prefix + qtLibrary )
+		libraries[library]["pythonEnvAppends"]["LIBS"].append( "Qt${QT_VERSION}" + qtLibrary )
 		if not pythonOnly:
-			libraries[library]["envAppends"]["LIBS"].append( prefix + qtLibrary )
+			libraries[library]["envAppends"]["LIBS"].append( "Qt${QT_VERSION}" + qtLibrary )
 
 for library in ( "GafferUI", ) :
 	addQtLibrary( library, "Core", False )
 	addQtLibrary( library, "Gui" )
 	addQtLibrary( library, "OpenGL" )
 	addQtLibrary( library, "Test" )
-	if int( env["QT_VERSION"] ) > 4 :
-		addQtLibrary( library, "Widgets" )
+	addQtLibrary( library, "Widgets" )
 
 # Add required libraries for Windows
 

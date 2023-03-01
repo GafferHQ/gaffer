@@ -57,10 +57,7 @@ class InfoPathFilterWidget( GafferUI.PathFilterWidget ) :
 			filterButton.clickedSignal().connect( Gaffer.WeakMethod( self.__buttonClicked ), scoped = False )
 
 			self.__filterText = GafferUI.TextWidget()
-
-			if hasattr( self.__filterText._qtWidget(), "setPlaceholderText" ) :
-				# setPlaceHolderText appeared in qt 4.7, nuke (6.3 at time of writing) is stuck on 4.6.
-				self.__filterText._qtWidget().setPlaceholderText( "Filter..." )
+			self.__filterText._qtWidget().setPlaceholderText( "Filter..." )
 
 			self.__filterText.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__filterEditingFinished ), scoped = False )
 			self.__filterText.textChangedSignal().connect( Gaffer.WeakMethod( self.__filterTextChanged ), scoped = False )

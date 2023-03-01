@@ -46,6 +46,8 @@ IECORE_PUSH_DEFAULT_VISIBILITY
 #undef fmix // OpenImageIO's farmhash inteferes with IECore::MurmurHash
 IECORE_POP_DEFAULT_VISIBILITY
 
+#include "fmt/format.h"
+
 #include <unordered_map>
 
 using namespace std;
@@ -158,8 +160,10 @@ ccl::Attribute *convertTypedPrimitiveVariable( const std::string &name, const Pr
 	{
 		msg(
 			Msg::Warning, "IECoreCyles::GeometryAlgo::convertPrimitiveVariable",
-			boost::format( "Primitive variable \"%1%\" has size %2% but Cycles allocated size %3%." )
-				% name % dataSize( data ) % allocatedSize
+			fmt::format(
+				"Primitive variable \"{}\" has size {} but Cycles allocated size {}.",
+				name, dataSize( data ), allocatedSize
+			)
 		);
 		return nullptr;
 	}
@@ -328,7 +332,13 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 			attr = convertTypedPrimitiveVariable<Color3fVectorData>( name, primitiveVariable, attributes, ccl::TypeDesc::TypeColor, attributeElement );
 			break;
 		default :
-			msg( Msg::Warning, "IECoreCyles::GeometryAlgo::convertPrimitiveVariable", boost::format( "Primitive variable \"%s\" has unsupported type \"%s\"." ) % name % primitiveVariable.data->typeName() );
+			msg(
+				Msg::Warning, "IECoreCyles::GeometryAlgo::convertPrimitiveVariable",
+				fmt::format(
+					"Primitive variable \"{}\" has unsupported type \"{}\".",
+					name, primitiveVariable.data->typeName()
+				)
+			);
 	};
 
 	if( !attr )

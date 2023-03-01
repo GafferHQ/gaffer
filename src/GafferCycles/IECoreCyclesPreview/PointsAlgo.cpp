@@ -45,6 +45,8 @@
 #include "scene/geometry.h"
 #include "scene/pointcloud.h"
 
+#include "fmt/format.h"
+
 using namespace std;
 using namespace Imath;
 using namespace IECore;
@@ -239,7 +241,7 @@ ccl::Geometry *convert( const vector<const IECoreScene::PointsPrimitive *> &poin
 			}
 			else
 			{
-				msg( Msg::Warning, "IECoreCycles::PointsAlgo::convert", boost::format( "Variable \"Position\" has unsupported type \"%s\" (expected V3fVectorData)." ) % pIt->second.data->typeName() );
+				msg( Msg::Warning, "IECoreCycles::PointsAlgo::convert", fmt::format( "Variable \"Position\" has unsupported type \"{}\" (expected V3fVectorData).", pIt->second.data->typeName() ) );
 				pointcloud->attributes.remove( attr_mP );
 				pointcloud->set_motion_steps( 0 );
 				pointcloud->set_use_motion_blur( false );

@@ -44,9 +44,10 @@
 #include "IECore/StringAlgo.h"
 
 #include "boost/bind/bind.hpp"
-#include "boost/format.hpp"
 #include "boost/lexical_cast.hpp"
 #include "boost/regex.hpp"
+
+#include "fmt/format.h"
 
 #include <set>
 #include <unordered_map>
@@ -108,7 +109,7 @@ void validateName( const InternedString &name )
 		return;
 	}
 
-	std::string what = boost::str( boost::format( "Invalid name \"%s\"" ) % name.string() );
+	std::string what = fmt::format( "Invalid name \"{}\"", name.string() );
 	throw IECore::Exception( what );
 }
 
@@ -267,7 +268,7 @@ std::string GraphComponent::relativeName( const GraphComponent *ancestor ) const
 	}
 	if( ancestor && c!=ancestor )
 	{
-		string what = boost::str( boost::format( "Object \"%s\" is not an ancestor of \"%s\"." ) % ancestor->m_name.value() % m_name.value() );
+		string what = fmt::format( "Object \"{}\" is not an ancestor of \"{}\".", ancestor->m_name.value(), m_name.value() );
 		throw Exception( what );
 	}
 	return fullName;
@@ -362,25 +363,25 @@ void GraphComponent::throwIfChildRejected( const GraphComponent *potentialChild 
 {
 	if( potentialChild == this )
 	{
-		string what = boost::str( boost::format( "Child \"%s\" cannot be parented to itself." ) % m_name.value() );
+		string what = fmt::format( "Child \"{}\" cannot be parented to itself.", m_name.value() );
 		throw Exception( what );
 	}
 
 	if( potentialChild->isAncestorOf( this ) )
 	{
-		string what = boost::str( boost::format( "Child \"%s\" cannot be parented to parent \"%s\" as it is an ancestor of \"%s\"." ) % potentialChild->m_name.value() % m_name.value() % m_name.value() );
+		string what = fmt::format( "Child \"{}\" cannot be parented to parent \"{}\" as it is an ancestor of \"{}\".", potentialChild->m_name.value(), m_name.value(), m_name.value() );
 		throw Exception( what );
 	}
 
 	if( !acceptsChild( potentialChild ) )
 	{
-		string what = boost::str( boost::format( "Parent \"%s\" ( of type %s ) rejects child \"%s\" ( of type %s )." ) % m_name.value() % typeName() % potentialChild->m_name.value() % potentialChild->typeName() );
+		string what = fmt::format( "Parent \"{}\" ( of type {} ) rejects child \"{}\" ( of type {} ).", m_name.value(), typeName(), potentialChild->m_name.value(), potentialChild->typeName() );
 		throw Exception( what );
 	}
 
 	if( !potentialChild->acceptsParent( this ) )
 	{
-		string what = boost::str( boost::format( "Child \"%s\" rejects parent \"%s\"." ) % potentialChild->m_name.value() % m_name.value() );
+		string what = fmt::format( "Child \"{}\" rejects parent \"{}\".", potentialChild->m_name.value(), m_name.value() );
 		throw Exception( what );
 	}
 }
@@ -451,7 +452,7 @@ void GraphComponent::removeChildInternal( GraphComponentPtr child, bool emitPare
 		// undo queue. the onus is on such slots to not reperform their work when ScriptNode::currentActionStage()
 		// is Action::Redo - instead they should rely on the fact that their actions will have been
 		// recorded and replayed automatically.
-		throw Exception( boost::str( boost::format( "GraphComponent::removeChildInternal : \"%s\" is not a child of \"%s\"." ) % child->fullName() % fullName() ) );
+		throw Exception( fmt::format( "GraphComponent::removeChildInternal : \"{}\" is not a child of \"{}\".", child->fullName(), fullName() ) );
 	}
 	m_children.erase( it );
 	child->m_parent = nullptr;
@@ -475,7 +476,7 @@ void GraphComponent::reorderChildren( const ChildContainer &newOrder )
 	if( newOrder.size() != m_children.size() )
 	{
 		throw IECore::InvalidArgumentException(
-			boost::str( boost::format( "Wrong number of children specified (%1% but should be %2%)" ) % newOrder.size() % m_children.size() )
+			fmt::format( "Wrong number of children specified ({} but should be {})", newOrder.size(), m_children.size() )
 		);
 	}
 
@@ -498,7 +499,7 @@ void GraphComponent::reorderChildren( const ChildContainer &newOrder )
 		if( child->parent() != this )
 		{
 			throw IECore::InvalidArgumentException(
-				boost::str( boost::format( "\"%1%\" is not a child of \"%2%\"" ) % child->fullName() % fullName() )
+				fmt::format( "\"{}\" is not a child of \"{}\"", child->fullName(), fullName() )
 			);
 		}
 
@@ -507,7 +508,7 @@ void GraphComponent::reorderChildren( const ChildContainer &newOrder )
 		{
 			// We removed it from the map already
 			throw IECore::InvalidArgumentException(
-				boost::str( boost::format( "Child \"%1%\" is in more than one position" ) % child->getName() )
+				fmt::format( "Child \"{}\" is in more than one position", child->getName().string() )
 			);
 		}
 		indices->push_back( it->second );
