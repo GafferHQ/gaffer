@@ -47,5 +47,10 @@ in vec2 fragmentuv;
 void main()
 {
 	gl_FragColor = tint * texture2D( texture, fragmentuv );
+	if( gl_FragColor.a <= 0.0 )
+	{
+		// Don't write to depth buffer.
+		discard;
+	}
 	gl_FragColor = vec4( gl_FragColor.rgb * mult, gl_FragColor.a );
 }
