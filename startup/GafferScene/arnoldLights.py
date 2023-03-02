@@ -68,6 +68,7 @@ Gaffer.Metadata.registerValue( "ai:light:quad_light", "widthParameter", "width" 
 Gaffer.Metadata.registerValue( "ai:light:quad_light", "heightParameter", "height" )
 Gaffer.Metadata.registerValue( "ai:light:quad_light", "portalParameter", "portal" )
 Gaffer.Metadata.registerValue( "ai:light:quad_light", "spreadParameter", "spread" )
+Gaffer.Metadata.registerValue( "ai:light:quad_light", "uvOrientation", imath.M33f().rotate( 0.5 * math.pi ) )
 
 Gaffer.Metadata.registerValue( "ai:light:disk_light", "type", "disk" )
 Gaffer.Metadata.registerValue( "ai:light:disk_light", "intensityParameter", "intensity" )
