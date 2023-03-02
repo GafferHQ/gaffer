@@ -5,6 +5,7 @@ Improvements
 ------------
 
 - USD : Added translation of UsdUVTexture's `scale`, `bias` and `fallback` parameters to Arnold.
+- AnimationGadget : Curves using cubic interpolation whose tangents have constrained scale are now displayed with fixed raster space length to ensure that tangent manipulator handles are always accessible.
 
 Fixes
 -----
@@ -15,6 +16,11 @@ Fixes
 - Tweak nodes : Fixed bugs which prevented the creation of new tweaks when an existing tweak had an input connection.
 - Preferences : Fixed bug which caused UI metadata to be serialised unnecessarily into `~/gaffer/startup/gui/preferences.py`.
 - OpenGL Texture shader : Fixed bug which allowed transparent regions to obscure objects behind them.
+
+API
+---
+
+- Animation : Added `constrainedLength` metadata that specifies the fixed raster space length used for display of tangents whose scale is constrained.
 
 Documentation
 -------------
