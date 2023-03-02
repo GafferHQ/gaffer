@@ -188,6 +188,7 @@ void ImageToPoints::hashSource( const Gaffer::Context *context, IECore::MurmurHa
 	const Box2i dataWindow = imagePlug()->dataWindowPlug()->getValue();
 
 	h.append( displayWindow );
+	ignoreTransparentPlug()->hash( h );
 
 	bool mappingProvidesP = false;
 	vector<ChannelMapping> mappings = channelMappings();
@@ -209,7 +210,6 @@ void ImageToPoints::hashSource( const Gaffer::Context *context, IECore::MurmurHa
 	}
 
 	widthPlug()->hash( h );
-	ignoreTransparentPlug()->hash( h );
 
 	tbb::enumerable_thread_specific<IECore::MurmurHash> threadLocalHash;
 	ImageAlgo::parallelProcessTiles(
@@ -255,7 +255,15 @@ IECore::ConstObjectPtr ImageToPoints::computeSource( const Context *context ) co
 	const Format format = imagePlug()->formatPlug()->getValue();
 	const Box2i displayWindow = format.getDisplayWindow();
 	const Box2i dataWindow = imagePlug()->dataWindowPlug()->getValue();
-	size_t numPixels = displayWindow.size().x * displayWindow.size().y;
+
+	// The image extent is defined by the display window, so we'll output
+	// a point for each pixel within it. But when later discarding transparent
+	// pixels, we know that everything outside the data window will be
+	// discarded, so we don't even need to allocate space for it in the buffer.
+
+	const bool ignoreTransparent = ignoreTransparentPlug()->getValue();
+	const Box2i bufferWindow = ignoreTransparent ? BufferAlgo::intersection( dataWindow, displayWindow ) : displayWindow;
+	const size_t numPixels = bufferWindow.size().x * bufferWindow.size().y;
 
 	// Make a PointsPrimitive with all the primitive variables specified
 	// by our channel mappings.
@@ -304,9 +312,9 @@ IECore::ConstObjectPtr ImageToPoints::computeSource( const Context *context ) co
 		pointsPrimitive->variables["P"] = PrimitiveVariable( PrimitiveVariable::Vertex, pData );
 		auto it = pData->writable().begin();
 		const float pixelAspect = format.getPixelAspect();
-		for( int y = displayWindow.min.y; y < displayWindow.max.y; ++y )
+		for( int y = bufferWindow.min.y; y < bufferWindow.max.y; ++y )
 		{
-			for( int x = displayWindow.min.x; x < displayWindow.max.x; ++x )
+			for( int x = bufferWindow.min.x; x < bufferWindow.max.x; ++x )
 			{
 				*it++ = V3f( ( x + 0.5 ) * pixelAspect, y + 0.5, 0.0 );
 			}
@@ -331,7 +339,7 @@ IECore::ConstObjectPtr ImageToPoints::computeSource( const Context *context ) co
 
 			const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
 			const Box2i validTileBound = BufferAlgo::intersection(
-				BufferAlgo::intersection( tileBound, dataWindow ), displayWindow
+				BufferAlgo::intersection( tileBound, dataWindow ), bufferWindow
 			);
 
 			for( const auto &mapping : mappings )
@@ -346,7 +354,7 @@ IECore::ConstObjectPtr ImageToPoints::computeSource( const Context *context ) co
 					for( int y = validTileBound.min.y; y < validTileBound.max.y; ++y )
 					{
 						size_t inIndex = BufferAlgo::index( V2i( validTileBound.min.x, y ), tileBound );
-						size_t outIndex = BufferAlgo::index( V2i( validTileBound.min.x, y ), displayWindow ) * stride + destination.offset;
+						size_t outIndex = BufferAlgo::index( V2i( validTileBound.min.x, y ), bufferWindow ) * stride + destination.offset;
 						if( !isWidth )
 						{
 							for( int x = validTileBound.min.x; x < validTileBound.max.x; ++x )
@@ -368,7 +376,7 @@ IECore::ConstObjectPtr ImageToPoints::computeSource( const Context *context ) co
 				}
 			}
 		},
-		BufferAlgo::intersection( displayWindow, dataWindow )
+		BufferAlgo::intersection( bufferWindow, dataWindow )
 	);
 
 	// Strip out points below the alpha threshold in a final serial step.
