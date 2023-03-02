@@ -53,6 +53,10 @@ Gaffer.Metadata.registerNode(
 	Arbitrary image channels may be converted to additional primitive
 	variables on the pointcloud, and transparent pixels may be omitted
 	from the conversion.
+
+	> Note : Only pixels within the display window are converted. To
+	> include overscan pixels, use a Crop node to extend the display
+	> window.
 	""",
 
 	plugs = {
