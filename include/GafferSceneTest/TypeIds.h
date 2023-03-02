@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENETEST_TYPEIDS_H
-#define GAFFERSCENETEST_TYPEIDS_H
+#pragma once
 
 namespace GafferSceneTest
 {
@@ -52,5 +51,3 @@ enum TypeId
 };
 
 } // namespace GafferSceneTest
-
-#endif // GAFFERSCENETEST_TYPEIDS_H

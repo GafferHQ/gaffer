@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_REFERENCE_H
-#define GAFFER_REFERENCE_H
+#pragma once
 
 #include "Gaffer/SubGraph.h"
 
@@ -95,5 +94,3 @@ class GAFFER_API Reference : public SubGraph
 IE_CORE_DECLAREPTR( Reference )
 
 } // namespace Gaffer
-
-#endif // GAFFER_REFERENCE_H

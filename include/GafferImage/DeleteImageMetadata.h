@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_DELETEIMAGEMETADATA_H
-#define GAFFERIMAGE_DELETEIMAGEMETADATA_H
+#pragma once
 
 #include "GafferImage/MetadataProcessor.h"
 
@@ -76,5 +75,3 @@ class GAFFERIMAGE_API DeleteImageMetadata : public MetadataProcessor
 IE_CORE_DECLAREPTR( DeleteImageMetadata );
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_DELETEIMAGEMETADATA_H

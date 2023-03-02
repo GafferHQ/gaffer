@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_STANDARDSET_H
-#define GAFFER_STANDARDSET_H
+#pragma once
 
 #include "Gaffer/Set.h"
 
@@ -181,5 +180,3 @@ IE_CORE_DECLAREPTR( StandardSet );
 } // namespace Gaffer
 
 #include "Gaffer/StandardSet.inl"
-
-#endif // GAFFER_STANDARDSET_H

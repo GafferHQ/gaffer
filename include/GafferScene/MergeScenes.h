@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_MERGESCENES_H
-#define GAFFERSCENE_MERGESCENES_H
+#pragma once
 
 #include "GafferScene/SceneProcessor.h"
 
@@ -157,5 +156,3 @@ class GAFFERSCENE_API MergeScenes : public SceneProcessor
 IE_CORE_DECLAREPTR( MergeScenes )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_MERGESCENES_H

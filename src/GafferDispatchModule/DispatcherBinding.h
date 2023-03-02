@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERDISPATCHMODULE_DISPATCHERBINDING_H
-#define GAFFERDISPATCHMODULE_DISPATCHERBINDING_H
+#pragma once
 
 namespace GafferDispatchModule
 {
@@ -43,5 +42,3 @@ namespace GafferDispatchModule
 void bindDispatcher();
 
 } // namespace GafferDispatchModule
-
-#endif // GAFFERDISPATCHMODULE_DISPATCHERBINDING_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef IECORECYCLES_SHADERNETWORKALGO_H
-#define IECORECYCLES_SHADERNETWORKALGO_H
+#pragma once
 
 #include "GafferCycles/IECoreCyclesPreview/Export.h"
 
@@ -97,5 +96,3 @@ IECORECYCLES_API IECoreScene::ShaderNetworkPtr convertLightShader( const IECoreS
 } // namespace ShaderNetworkAlgo
 
 } // namespace IECoreCycles
-
-#endif // IECORECYCLES_SHADERNETWORKALGO_H

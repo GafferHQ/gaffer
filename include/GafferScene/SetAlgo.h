@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_SETEXPRESSION_H
-#define GAFFER_SETEXPRESSION_H
+#pragma once
 
 #include "GafferScene/ScenePlug.h"
 
@@ -59,5 +58,3 @@ GAFFERSCENE_API bool affectsSetExpression( const Gaffer::Plug *scenePlugChild );
 } // namespace SetAlgo
 
 } // namespace Gaffer
-
-#endif // GAFFER_SETALGO_H

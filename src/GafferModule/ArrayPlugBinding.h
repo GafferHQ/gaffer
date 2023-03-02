@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERMODULE_ARRAYPLUGBINDING_H
-#define GAFFERMODULE_ARRAYPLUGBINDING_H
+#pragma once
 
 namespace GafferModule
 {
@@ -43,5 +42,3 @@ namespace GafferModule
 void bindArrayPlug();
 
 } // namespace GafferModule
-
-#endif // GAFFERMODULE_ARRAYPLUGBINDING_H

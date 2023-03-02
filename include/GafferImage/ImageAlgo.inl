@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_IMAGEALGO_INL
-#define GAFFERIMAGE_IMAGEALGO_INL
+#pragma once
 
 #include "GafferImage/BufferAlgo.h"
 #include "GafferImage/ImagePlug.h"
@@ -437,5 +436,3 @@ void parallelGatherTiles( const ImagePlug *imagePlug, const std::vector<std::str
 } // namespace ImageAlgo
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_IMAGEALGO_INL

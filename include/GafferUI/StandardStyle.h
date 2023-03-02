@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_STANDARDSTYLE_H
-#define GAFFERUI_STANDARDSTYLE_H
+#pragma once
 
 #include "GafferUI/Style.h"
 
@@ -163,5 +162,3 @@ class GAFFERUI_API StandardStyle : public Style
 IE_CORE_DECLAREPTR( Style );
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_STANDARDSTYLE_H

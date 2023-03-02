@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEMODULE_TWEAKSBINDING_H
-#define GAFFERSCENEMODULE_TWEAKSBINDING_H
+#pragma once
 
 namespace GafferSceneModule
 {
@@ -43,5 +42,3 @@ namespace GafferSceneModule
 void bindTweaks();
 
 } // namespace GafferSceneModule
-
-#endif // GAFFERSCENEMODULE_TWEAKSBINDING_H

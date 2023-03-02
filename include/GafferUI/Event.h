@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_EVENT_H
-#define GAFFERUI_EVENT_H
+#pragma once
 
 #include "GafferUI/Export.h"
 
@@ -50,5 +49,3 @@ struct GAFFERUI_API Event
 };
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_EVENT_H

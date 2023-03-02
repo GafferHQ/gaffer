@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_AUXILIARYNODEGADGET_H
-#define GAFFERUI_AUXILIARYNODEGADGET_H
+#pragma once
 
 #include "GafferUI/StandardNodeGadget.h"
 
@@ -72,5 +71,3 @@ class GAFFERUI_API AuxiliaryNodeGadget : public StandardNodeGadget
 IE_CORE_DECLAREPTR( AuxiliaryNodeGadget )
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_AUXILIARYNODEGADGET_H

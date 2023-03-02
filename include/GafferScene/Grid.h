@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_GRID_H
-#define GAFFERSCENE_GRID_H
+#pragma once
 
 #include "GafferScene/SceneNode.h"
 
@@ -122,5 +121,3 @@ class GAFFERSCENE_API Grid : public SceneNode
 IE_CORE_DECLAREPTR( Grid );
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_GRID_H

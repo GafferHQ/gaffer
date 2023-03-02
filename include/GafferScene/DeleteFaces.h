@@ -35,8 +35,7 @@
 /////////////////////////////////////////////////////////////////////////
 
 
-#ifndef GAFFERSCENE_DELETEFACES_H
-#define GAFFERSCENE_DELETEFACES_H
+#pragma once
 
 #include "GafferScene/Deformer.h"
 
@@ -84,5 +83,3 @@ class GAFFERSCENE_API DeleteFaces : public Deformer
 IE_CORE_DECLAREPTR( DeleteFaces )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_DELETEFACES_H

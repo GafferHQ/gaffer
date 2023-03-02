@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_MIX_H
-#define GAFFERIMAGE_MIX_H
+#pragma once
 
 #include "GafferImage/ImagePlug.h"
 #include "GafferImage/ImageProcessor.h"
@@ -98,5 +97,3 @@ class GAFFERIMAGE_API Mix : public ImageProcessor
 IE_CORE_DECLAREPTR( Mix )
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_MIX_H

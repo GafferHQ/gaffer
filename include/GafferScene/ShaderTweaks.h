@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_SHADERTWEAKS_H
-#define GAFFERSCENE_SHADERTWEAKS_H
+#pragma once
 
 #include "GafferScene/AttributeProcessor.h"
 
@@ -86,5 +85,3 @@ class GAFFERSCENE_API ShaderTweaks : public AttributeProcessor
 IE_CORE_DECLAREPTR( ShaderTweaks )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_SHADERTWEAKS_H

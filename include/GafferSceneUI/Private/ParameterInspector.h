@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUI_PARAMETERINSPECTOR_H
-#define GAFFERSCENEUI_PARAMETERINSPECTOR_H
+#pragma once
 
 #include "GafferSceneUI/Export.h"
 
@@ -80,5 +79,3 @@ IE_CORE_DECLAREPTR( ParameterInspector )
 } // namespace Private
 
 } // namespace GafferSceneUI
-
-#endif // GAFFERSCENEUI_PARAMETERINSPECTOR_H

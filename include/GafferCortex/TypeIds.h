@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERCORTEX_TYPEIDS_H
-#define GAFFERCORTEX_TYPEIDS_H
+#pragma once
 
 namespace GafferCortex
 {
@@ -56,5 +55,3 @@ enum TypeId
 };
 
 } // namespace GafferCortex
-
-#endif // GAFFERCORTEX_TYPEIDS_H

@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_VALUEPLUG_H
-#define GAFFER_VALUEPLUG_H
+#pragma once
 
 #include "Gaffer/Plug.h"
 
@@ -300,5 +299,3 @@ IE_CORE_DECLAREPTR( ValuePlug )
 } // namespace Gaffer
 
 #include "Gaffer/ValuePlug.inl"
-
-#endif // GAFFER_VALUEPLUG_H

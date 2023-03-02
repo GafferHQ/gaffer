@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_GLOBALSPROCESSOR_H
-#define GAFFERSCENE_GLOBALSPROCESSOR_H
+#pragma once
 
 #include "GafferScene/SceneProcessor.h"
 
@@ -74,5 +73,3 @@ class GAFFERSCENE_API GlobalsProcessor : public SceneProcessor
 IE_CORE_DECLAREPTR( GlobalsProcessor )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_GLOBALSPROCESSOR_H

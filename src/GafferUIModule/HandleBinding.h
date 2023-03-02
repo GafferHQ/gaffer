@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUIMODULE_HANDLEBINDING_H
-#define GAFFERUIMODULE_HANDLEBINDING_H
+#pragma once
 
 namespace GafferUIModule
 {
@@ -43,5 +42,3 @@ namespace GafferUIModule
 void bindHandle();
 
 } // namespace GafferUIModule
-
-#endif // GAFFERUIMODULE_HANDLEBINDING_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFEROSL_PRIVATE_CAPTURINGERRORHANDLER_H
-#define GAFFEROSL_PRIVATE_CAPTURINGERRORHANDLER_H
+#pragma once
 
 #include "OpenImageIO/errorhandler.h"
 
@@ -65,5 +64,3 @@ class CapturingErrorHandler : public OIIO::ErrorHandler
 } // namespace Private
 
 } // namespace GafferOSL
-
-#endif // GAFFEROSL_PRIVATE_CAPTURINGERRORHANDLER_H

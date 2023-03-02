@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_FREEZETRANSFORM_H
-#define GAFFERSCENE_FREEZETRANSFORM_H
+#pragma once
 
 #include "GafferScene/FilteredSceneProcessor.h"
 
@@ -80,5 +79,3 @@ class GAFFERSCENE_API FreezeTransform : public FilteredSceneProcessor
 IE_CORE_DECLAREPTR( FreezeTransform )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_FREEZETRANSFORM_H

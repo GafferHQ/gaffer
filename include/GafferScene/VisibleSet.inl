@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_VISIBLESET_INL
-#define GAFFERSCENE_VISIBLESET_INL
+#pragma once
 
 #include "IECore/PathMatcher.h"
 
@@ -115,5 +114,3 @@ inline void murmurHashAppend( MurmurHash &h, const VisibleSet &data )
 }
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_VISIBLESET_INL

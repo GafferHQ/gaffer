@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_INTERACTIVERENDER_H
-#define GAFFERSCENE_INTERACTIVERENDER_H
+#pragma once
 
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 #include "GafferScene/RenderController.h"
@@ -146,5 +145,3 @@ class GAFFERSCENE_API InteractiveRender : public Gaffer::ComputeNode
 IE_CORE_DECLAREPTR( InteractiveRender );
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_INTERACTIVERENDER_H

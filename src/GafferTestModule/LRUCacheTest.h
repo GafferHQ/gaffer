@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERTESTMODULE_LRUCACHETEST_H
-#define GAFFERTESTMODULE_LRUCACHETEST_H
+#pragma once
 
 namespace GafferTestModule
 {
@@ -43,5 +42,3 @@ namespace GafferTestModule
 void bindLRUCacheTest();
 
 } // namespace GafferTestModule
-
-#endif // GAFFERTESTMODULE_LRUCACHETEST_H

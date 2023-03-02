@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_FORMATQUERY_H
-#define GAFFERIMAGE_FORMATQUERY_H
+#pragma once
 
 #include "GafferImage/Export.h"
 #include "GafferImage/FormatPlug.h"
@@ -86,5 +85,3 @@ private:
 IE_CORE_DECLAREPTR( FormatQuery )
 
 } // GafferImage
-
-#endif // GAFFERIMAGE_FORMATQUERY_H

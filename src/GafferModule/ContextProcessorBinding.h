@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERMODULE_CONTEXTPROCESSORBINDING_H
-#define GAFFERMODULE_CONTEXTPROCESSORBINDING_H
+#pragma once
 
 namespace GafferModule
 {
@@ -43,5 +42,3 @@ namespace GafferModule
 void bindContextProcessor();
 
 } // namespace GafferModule
-
-#endif // GAFFERMODULE_CONTEXTPROCESSORBINDING_H

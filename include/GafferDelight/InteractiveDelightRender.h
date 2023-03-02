@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERDELIGHT_INTERACTIVEDELIGHTRENDER_H
-#define GAFFERDELIGHT_INTERACTIVEDELIGHTRENDER_H
+#pragma once
 
 #include "GafferDelight/Export.h"
 #include "GafferDelight/TypeIds.h"
@@ -59,5 +58,3 @@ class GAFFERDELIGHT_API InteractiveDelightRender : public GafferScene::Interacti
 IE_CORE_DECLAREPTR( InteractiveDelightRender );
 
 } // namespace GafferDelight
-
-#endif // GAFFERDELIGHT_INTERACTIVEDELIGHTRENDER_H

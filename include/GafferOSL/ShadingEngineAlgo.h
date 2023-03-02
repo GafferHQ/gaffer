@@ -31,8 +31,7 @@
 //  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 //////////////////////////////////////////////////////////////////////////
-#ifndef GAFFEROSL_SHADINGENGINEALGO_H
-#define GAFFEROSL_SHADINGENGINEALGO_H
+#pragma once
 
 #include "GafferOSL/ShadingEngine.h"
 
@@ -65,5 +64,3 @@ GAFFEROSL_API IECore::CompoundDataPtr shadeUVTexture(
 }
 
 }
-
-#endif // GAFFEROSL_SHADINGENGINEALGO_H

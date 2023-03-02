@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_METADATAALGO_INL
-#define GAFFER_METADATAALGO_INL
+#pragma once
 
 #include "Gaffer/GraphComponent.h"
 #include "Gaffer/Metadata.h"
@@ -71,5 +70,3 @@ void copyIf( const GraphComponent *from, GraphComponent *to, Predicate &&predica
 } // namespace MetadataAlgo
 
 } // namespace Gaffer
-
-#endif // GAFFER_METADATAALGO_INL

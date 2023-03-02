@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERBINDINGS_GRAPHCOMPONENTBINDING_INL
-#define GAFFERBINDINGS_GRAPHCOMPONENTBINDING_INL
+#pragma once
 
 namespace GafferBindings
 {
@@ -66,5 +65,3 @@ GraphComponentClass<T, TWrapper>::GraphComponentClass( const char *docString )
 }
 
 } // namespace GafferBindings
-
-#endif // GAFFERBINDINGS_NODEBINDING_INL

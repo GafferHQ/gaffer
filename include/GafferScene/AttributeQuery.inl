@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_ATTRIBUTEQUERY_INL
-#define GAFFERSCENE_ATTRIBUTEQUERY_INL
+#pragma once
 
 namespace GafferScene
 {
@@ -67,5 +66,3 @@ const PlugType* AttributeQuery::valuePlug() const
 }
 
 } // GafferScene
-
-#endif // GAFFERSCENE_ATTRIBUTEQUERY_INL

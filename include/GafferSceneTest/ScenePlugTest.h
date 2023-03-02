@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENETEST_SCENEPLUGTEST_H
-#define GAFFERSCENETEST_SCENEPLUGTEST_H
+#pragma once
 
 #include "GafferSceneTest/Export.h"
 
@@ -45,5 +44,3 @@ namespace GafferSceneTest
 GAFFERSCENETEST_API void testManyStringToPathCalls();
 
 } // namespace GafferSceneTest
-
-#endif // GAFFERSCENETEST_SCENEPLUGTEST_H

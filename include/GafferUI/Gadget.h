@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_GADGET_H
-#define GAFFERUI_GADGET_H
+#pragma once
 
 #include "GafferUI/ButtonEvent.h"
 #include "GafferUI/DragDropEvent.h"
@@ -368,5 +367,3 @@ inline unsigned operator| ( unsigned a, Gadget::Layer b )
 }
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_GADGET_H

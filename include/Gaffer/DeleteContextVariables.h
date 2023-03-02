@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_DELETECONTEXTVARIABLES_H
-#define GAFFER_DELETECONTEXTVARIABLES_H
+#pragma once
 
 #include "Gaffer/ContextProcessor.h"
 #include "Gaffer/StringPlug.h"
@@ -70,5 +69,3 @@ class IECORE_EXPORT DeleteContextVariables : public ContextProcessor
 IE_CORE_DECLAREPTR( DeleteContextVariables );
 
 } // namespace Gaffer
-
-#endif // GAFFER_DELETECONTEXTVARIABLES_H

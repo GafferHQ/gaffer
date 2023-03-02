@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_TYPEIDS_H
-#define GAFFER_TYPEIDS_H
+#pragma once
 
 namespace Gaffer
 {
@@ -156,5 +155,3 @@ enum TypeId
 };
 
 } // namespace Gaffer
-
-#endif // GAFFER_TYPEIDS_H

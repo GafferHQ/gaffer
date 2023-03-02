@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_ANIMATION_H
-#define GAFFER_ANIMATION_H
+#pragma once
 
 #include "Gaffer/ComputeNode.h"
 #include "Gaffer/NumericPlug.h"
@@ -628,5 +627,3 @@ class Animation::ConstKeyIterator
 };
 
 } // namespace Gaffer
-
-#endif // GAFFER_ANIMATION_H

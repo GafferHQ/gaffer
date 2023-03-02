@@ -32,8 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef IECORE_GEOMETRY_H
-#define IECORE_GEOMETRY_H
+#pragma once
 
 #include "GafferScene/Export.h"
 
@@ -80,5 +79,3 @@ class GAFFERSCENE_API Geometry : public IECoreScene::VisibleRenderable
 IE_CORE_DECLAREPTR( Geometry );
 
 } // namespace IECoreScenePreview
-
-#endif // IECORE_GEOMETRY_H

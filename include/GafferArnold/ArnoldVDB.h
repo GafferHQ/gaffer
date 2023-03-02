@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERARNOLD_ARNOLDVDB_H
-#define GAFFERARNOLD_ARNOLDVDB_H
+#pragma once
 
 #include "GafferArnold/Export.h"
 #include "GafferArnold/TypeIds.h"
@@ -89,5 +88,3 @@ class GAFFERARNOLD_API ArnoldVDB : public GafferScene::ObjectSource
 IE_CORE_DECLAREPTR( ArnoldVDB )
 
 } // namespace GafferArnold
-
-#endif // GAFFERARNOLD_ARNOLDVDB_H

@@ -32,8 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef IECOREPREVIEW_MESSAGES_H
-#define IECOREPREVIEW_MESSAGES_H
+#pragma once
 
 #include "Gaffer/Export.h"
 
@@ -134,5 +133,3 @@ class GAFFER_API Messages
 };
 
 } // IECorePreview
-
-#endif // IECOREPREVIEW_MESSAGES_H

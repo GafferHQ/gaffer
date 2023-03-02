@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_BOXIO_INL
-#define GAFFER_BOXIO_INL
+#pragma once
 
 #include "Gaffer/Node.h"
 #include "Gaffer/Plug.h"
@@ -91,5 +90,3 @@ const T *BoxIO::promotedPlug() const
 }
 
 } // namespace Gaffer
-
-#endif // GAFFER_BOXIO_INL

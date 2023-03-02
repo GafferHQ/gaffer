@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_PRIVATE_SCOPEDASSIGNMENT_H
-#define GAFFER_PRIVATE_SCOPEDASSIGNMENT_H
+#pragma once
 
 #include <boost/noncopyable.hpp>
 
@@ -67,5 +66,3 @@ private :
 
 } // Private
 } // Gaffer
-
-#endif // GAFFER_PRIVATE_SCOPEDASSIGNMENT_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_IMAGEWRITER_H
-#define GAFFERIMAGE_IMAGEWRITER_H
+#pragma once
 
 #include "GafferImage/TypeIds.h"
 #include "GafferImage/Export.h"
@@ -136,5 +135,3 @@ class GAFFERIMAGE_API ImageWriter : public GafferDispatch::TaskNode
 IE_CORE_DECLAREPTR( ImageWriter )
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_IMAGEWRITER_H

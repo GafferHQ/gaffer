@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGETEST_EXPORT_H
-#define GAFFERIMAGETEST_EXPORT_H
+#pragma once
 
 #include "IECore/Export.h"
 
@@ -47,5 +46,3 @@
 #else
 	#define GAFFERIMAGETEST_API IECORE_IMPORT
 #endif
-
-#endif // #ifndef GAFFERIMAGETEST_EXPORT_H

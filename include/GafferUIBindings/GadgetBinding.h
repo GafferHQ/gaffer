@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUIBINDINGS_GADGETBINDING_H
-#define GAFFERUIBINDINGS_GADGETBINDING_H
+#pragma once
 
 #include "GafferUI/Gadget.h"
 #include "GafferUI/Style.h"
@@ -223,5 +222,3 @@ class GadgetWrapper : public GafferBindings::GraphComponentWrapper<WrappedType>
 } // namespace GafferUIBindings
 
 #include "GafferUIBindings/GadgetBinding.inl"
-
-#endif // GAFFERUIBINDINGS_GADGETBINDING_H

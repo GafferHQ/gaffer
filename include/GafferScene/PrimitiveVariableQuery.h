@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_PRIMITIVEVARIABLEQUERY_H
-#define GAFFERSCENE_PRIMITIVEVARIABLEQUERY_H
+#pragma once
 
 #include "GafferScene/Export.h"
 #include "GafferScene/ScenePlug.h"
@@ -113,5 +112,3 @@ private:
 IE_CORE_DECLAREPTR( PrimitiveVariableQuery );
 
 } // GafferScene
-
-#endif // GAFFERSCENE_PRIMITIVEVARIABLEQUERY_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_RANDOM_H
-#define GAFFER_RANDOM_H
+#pragma once
 
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/ComputeNode.h"
@@ -98,5 +97,3 @@ class GAFFER_API Random : public ComputeNode
 IE_CORE_DECLAREPTR( Random )
 
 } // namespace Gaffer
-
-#endif // GAFFER_RANDOM_H

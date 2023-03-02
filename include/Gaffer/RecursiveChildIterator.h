@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_RECURSIVECHILDITERATOR_H
-#define GAFFER_RECURSIVECHILDITERATOR_H
+#pragma once
 
 #include "Gaffer/GraphComponent.h"
 
@@ -171,5 +170,3 @@ class RecursiveChildIterator : public boost::iterator_facade<RecursiveChildItera
 };
 
 } // namespace Gaffer
-
-#endif // GAFFER_RECURSIVECHILDITERATOR_H

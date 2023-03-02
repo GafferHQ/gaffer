@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_DELETECHANNELS_H
-#define GAFFERIMAGE_DELETECHANNELS_H
+#pragma once
 
 #include "GafferImage/ImageProcessor.h"
 
@@ -88,5 +87,3 @@ class GAFFERIMAGE_API DeleteChannels : public ImageProcessor
 IE_CORE_DECLAREPTR( DeleteChannels );
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_DELETECHANNELS_H

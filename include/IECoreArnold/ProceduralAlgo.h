@@ -32,8 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef IECOREARNOLD_PROCEDURALALGO_H
-#define IECOREARNOLD_PROCEDURALALGO_H
+#pragma once
 
 #include "IECoreArnold/Export.h"
 
@@ -52,5 +51,3 @@ IECOREARNOLD_API AtNode *convert( const IECoreScene::ExternalProcedural *procedu
 } // namespace ProceduralAlgo
 
 } // namespace IECoreArnold
-
-#endif // IECOREARNOLD_PROCEDURALALGO_H

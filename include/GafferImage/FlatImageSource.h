@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_FLATIMAGESOURCE_H
-#define GAFFERIMAGE_FLATIMAGESOURCE_H
+#pragma once
 
 #include "GafferImage/ImageNode.h"
 
@@ -75,5 +74,3 @@ class GAFFERIMAGE_API FlatImageSource : public ImageNode
 IE_CORE_DECLAREPTR( FlatImageSource )
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_FLATIMAGESOURCE_H

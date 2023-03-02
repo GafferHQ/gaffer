@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFEROSL_CLOSUREPLUG_H
-#define GAFFEROSL_CLOSUREPLUG_H
+#pragma once
 
 #include "GafferOSL/Export.h"
 #include "GafferOSL/TypeIds.h"
@@ -72,5 +71,3 @@ class GAFFEROSL_API ClosurePlug : public Gaffer::Plug
 IE_CORE_DECLAREPTR( ClosurePlug );
 
 } // namespace GafferOSL
-
-#endif // GAFFEROSL_CLOSUREPLUG_H

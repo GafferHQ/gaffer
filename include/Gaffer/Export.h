@@ -32,8 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_EXPORT_H
-#define GAFFER_EXPORT_H
+#pragma once
 
 #include "IECore/Export.h"
 
@@ -42,5 +41,3 @@
 #else
 	#define GAFFER_API IECORE_IMPORT
 #endif
-
-#endif // #ifndef GAFFER_EXPORT_H

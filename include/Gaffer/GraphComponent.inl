@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_GRAPHCOMPONENT_INL
-#define GAFFER_GRAPHCOMPONENT_INL
+#pragma once
 
 #include "boost/tokenizer.hpp"
 
@@ -164,5 +163,3 @@ std::string GraphComponent::defaultName()
 }
 
 } // namespace Gaffer
-
-#endif // GAFFER_GRAPHCOMPONENT_INL

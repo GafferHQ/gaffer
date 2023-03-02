@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_DIRTYPROPAGATIONSCOPE_H
-#define GAFFER_DIRTYPROPAGATIONSCOPE_H
+#pragma once
 
 #include "Gaffer/Export.h"
 
@@ -69,5 +68,3 @@ class GAFFER_API DirtyPropagationScope : boost::noncopyable
 };
 
 } // namespace Gaffer
-
-#endif // GAFFER_DIRTYPROPAGATIONSCOPE_H

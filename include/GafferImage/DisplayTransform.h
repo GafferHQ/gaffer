@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_DISPLAYTRANSFORM_H
-#define GAFFERIMAGE_DISPLAYTRANSFORM_H
+#pragma once
 
 #include "GafferImage/OpenColorIOTransform.h"
 
@@ -83,5 +82,3 @@ class GAFFERIMAGE_API DisplayTransform : public OpenColorIOTransform
 IE_CORE_DECLAREPTR( DisplayTransform )
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_DISPLAYTRANSFORM_H

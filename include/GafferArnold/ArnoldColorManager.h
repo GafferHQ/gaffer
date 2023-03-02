@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERARNOLD_ARNOLDCOLORMANAGER_H
-#define GAFFERARNOLD_ARNOLDCOLORMANAGER_H
+#pragma once
 
 #include "GafferArnold/Export.h"
 #include "GafferArnold/TypeIds.h"
@@ -87,5 +86,3 @@ class GAFFERARNOLD_API ArnoldColorManager : public GafferScene::GlobalsProcessor
 IE_CORE_DECLAREPTR( ArnoldColorManager )
 
 } // namespace GafferArnold
-
-#endif // GAFFERARNOLD_ARNOLDCOLORMANAGER_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_METADATA_H
-#define GAFFER_METADATA_H
+#pragma once
 
 #include "Gaffer/Export.h"
 #include "Gaffer/Signals.h"
@@ -197,5 +196,3 @@ class GAFFER_API Metadata
 } // namespace Gaffer
 
 #include "Gaffer/Metadata.inl"
-
-#endif // GAFFER_METADATA_H

@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERBINDINGS_PLUGBINDING_H
-#define GAFFERBINDINGS_PLUGBINDING_H
+#pragma once
 
 #include "GafferBindings/GraphComponentBinding.h"
 #include "GafferBindings/Serialisation.h"
@@ -178,5 +177,3 @@ class GAFFERBINDINGS_API PlugSerialiser : public Serialisation::Serialiser
 } // namespace GafferBindings
 
 #include "GafferBindings/PlugBinding.inl"
-
-#endif // GAFFERBINDINGS_PLUGBINDING_H

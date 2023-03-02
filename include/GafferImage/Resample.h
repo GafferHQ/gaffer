@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_RESAMPLE_H
-#define GAFFERIMAGE_RESAMPLE_H
+#pragma once
 
 #include "GafferImage/FlatImageProcessor.h"
 
@@ -117,5 +116,3 @@ class GAFFERIMAGE_API Resample : public FlatImageProcessor
 IE_CORE_DECLAREPTR( Resample )
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_RESAMPLE_H

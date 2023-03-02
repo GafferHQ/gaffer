@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_FILTERALGO_H
-#define GAFFERIMAGE_FILTERALGO_H
+#pragma once
 
 #include "GafferImage/Sampler.h"
 
@@ -84,5 +83,3 @@ GAFFERIMAGE_API Imath::V2f derivativesToAxisAligned( const Imath::V2f &p, const 
 } // namespace GafferImage
 
 #include "GafferImage/FilterAlgo.inl"
-
-#endif // GAFFERIMAGE_FILTERALGO_H

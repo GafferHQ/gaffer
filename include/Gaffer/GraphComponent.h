@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_GRAPHCOMPONENT_H
-#define GAFFER_GRAPHCOMPONENT_H
+#pragma once
 
 #include "Gaffer/Export.h"
 #include "Gaffer/Signals.h"
@@ -307,5 +306,3 @@ class GAFFER_API GraphComponent : public IECore::RunTimeTyped, public Signals::T
 } // namespace Gaffer
 
 #include "Gaffer/GraphComponent.inl"
-
-#endif // GAFFER_GRAPHCOMPONENT_H

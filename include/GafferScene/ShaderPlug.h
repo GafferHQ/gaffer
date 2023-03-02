@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_SHADERPLUG_H
-#define GAFFERSCENE_SHADERPLUG_H
+#pragma once
 
 #include "GafferScene/Export.h"
 #include "GafferScene/TypeIds.h"
@@ -79,5 +78,3 @@ class GAFFERSCENE_API ShaderPlug : public Gaffer::Plug
 IE_CORE_DECLAREPTR( ShaderPlug );
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_SHADERPLUG_H

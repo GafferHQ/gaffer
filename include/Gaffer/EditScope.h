@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_EDITSCOPE_H
-#define GAFFER_EDITSCOPE_H
+#pragma once
 
 #include "Gaffer/Box.h"
 
@@ -145,5 +144,3 @@ IE_CORE_DECLAREPTR( EditScope )
 } // namespace Gaffer
 
 #include "Gaffer/EditScope.inl"
-
-#endif // GAFFER_EDITSCOPE_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_WIREFRAME_H
-#define GAFFERSCENE_WIREFRAME_H
+#pragma once
 
 #include "GafferScene/Deformer.h"
 
@@ -81,5 +80,3 @@ class GAFFERSCENE_API Wireframe : public Deformer
 IE_CORE_DECLAREPTR( Wireframe )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_WIREFRAME_H

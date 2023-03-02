@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERDELIGHT_TYPEIDS_H
-#define GAFFERDELIGHT_TYPEIDS_H
+#pragma once
 
 namespace GafferDelight
 {
@@ -52,5 +51,3 @@ enum TypeId
 };
 
 } // namespace GafferDelight
-
-#endif // GAFFERDELIGHT_TYPEIDS_H

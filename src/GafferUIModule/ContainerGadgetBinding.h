@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUIMODULE_CONTAINERGADGETBINDING_H
-#define GAFFERUIMODULE_CONTAINERGADGETBINDING_H
+#pragma once
 
 namespace GafferUIModule
 {
@@ -43,5 +42,3 @@ namespace GafferUIModule
 void bindContainerGadget();
 
 } // namespace GafferUIModule
-
-#endif // GAFFERUIMODULE_CONTAINERGADGETBINDING_H

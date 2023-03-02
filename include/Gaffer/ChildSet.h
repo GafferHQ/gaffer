@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_CHILDSET_H
-#define GAFFER_CHILDSET_H
+#pragma once
 
 #include "Gaffer/Set.h"
 
@@ -75,5 +74,3 @@ class GAFFER_API ChildSet : public Gaffer::Set
 IE_CORE_DECLAREPTR( ChildSet );
 
 } // namespace Gaffer
-
-#endif // GAFFER_CHILDSET_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERARNOLDUI_VISUALISERALGO_H
-#define GAFFERARNOLDUI_VISUALISERALGO_H
+#pragma once
 
 #include "GafferArnoldUI/Export.h"
 
@@ -78,5 +77,3 @@ GAFFERARNOLDUI_API IECoreScene::ShaderNetworkPtr conformToOSLNetwork(
 } // namespace Private
 
 } // namespace GafferArnoldUI
-
-#endif // GAFFERARNOLDUI_VISUALISERALGO_H

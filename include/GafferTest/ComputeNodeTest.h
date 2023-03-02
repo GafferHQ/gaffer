@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERTEST_COMPUTENODETEST_H
-#define GAFFERTEST_COMPUTENODETEST_H
+#pragma once
 
 #include "GafferTest/Export.h"
 
@@ -45,5 +44,3 @@ namespace GafferTest
 GAFFERTEST_API void testComputeNodeThreading();
 
 } // namespace GafferTest
-
-#endif // GAFFERTEST_COMPUTENODETEST_H

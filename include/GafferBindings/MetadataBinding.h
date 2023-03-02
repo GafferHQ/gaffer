@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERBINDINGS_METADATABINDING_H
-#define GAFFERBINDINGS_METADATABINDING_H
+#pragma once
 
 #include "GafferBindings/Export.h"
 #include "GafferBindings/Serialisation.h"
@@ -47,5 +46,3 @@ namespace GafferBindings
 GAFFERBINDINGS_API std::string metadataSerialisation( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, Serialisation &serialisation );
 
 } // namespace GafferBindings
-
-#endif // GAFFERBINDINGS_METADATABINDING_H

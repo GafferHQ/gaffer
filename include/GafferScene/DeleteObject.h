@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_DELETEOBJECT_H
-#define GAFFERSCENE_DELETEOBJECT_H
+#pragma once
 
 #include "GafferScene/FilteredSceneProcessor.h"
 
@@ -74,5 +73,3 @@ class GAFFERSCENE_API DeleteObject : public FilteredSceneProcessor
 IE_CORE_DECLAREPTR( DeleteObject )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_DELETEOBJECT_H

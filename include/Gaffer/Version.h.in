@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_VERSION_H
-#define GAFFER_VERSION_H
+#pragma once
 
 #include "Gaffer/Export.h"
 
@@ -58,5 +57,3 @@ namespace Gaffer
 GAFFER_API std::string versionString();
 
 } // namespace Gaffer
-
-#endif // GAFFER_VERSION_H

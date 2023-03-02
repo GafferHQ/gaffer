@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERMODULE_RANDOMBINDING_H
-#define GAFFERMODULE_RANDOMBINDING_H
+#pragma once
 
 namespace GafferModule
 {
@@ -43,5 +42,3 @@ namespace GafferModule
 void bindRandom();
 
 } // namespace GafferModule
-
-#endif // GAFFERMODULE_RANDOMBINDING_H

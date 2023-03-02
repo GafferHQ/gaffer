@@ -33,8 +33,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef IECOREPREVIEW_LRUCACHE_INL
-#define IECOREPREVIEW_LRUCACHE_INL
+#pragma once
 
 #include "Gaffer/Private/IECorePreview/TaskMutex.h"
 
@@ -1306,5 +1305,3 @@ void LRUCache<Key, Value, Policy, GetterKey>::limitCost( Cost cost )
 }
 
 } // namespace IECorePreview
-
-#endif // IECOREPREVIEW_LRUCACHE_INL

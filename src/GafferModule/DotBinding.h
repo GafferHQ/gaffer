@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERMODULE_DOTBINDING_H
-#define GAFFERMODULE_DOTBINDING_H
+#pragma once
 
 namespace GafferModule
 {
@@ -43,5 +42,3 @@ namespace GafferModule
 void bindDot();
 
 } // namespace GafferModule
-
-#endif // GAFFERMODULE_DOTBINDING_H

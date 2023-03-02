@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_STANDARDSET_INL
-#define GAFFER_STANDARDSET_INL
+#pragma once
 
 namespace Gaffer
 {
@@ -70,5 +69,3 @@ bool StandardSet::typedMemberAcceptor( const StandardSet *set, const Member *pot
 }
 
 } // namespace Gaffer
-
-#endif // GAFFER_STANDARDSET_INL

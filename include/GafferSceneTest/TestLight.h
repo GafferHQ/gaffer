@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENETEST_TESTLIGHT_H
-#define GAFFERSCENETEST_TESTLIGHT_H
+#pragma once
 
 #include "GafferSceneTest/Export.h"
 #include "GafferSceneTest/TypeIds.h"
@@ -63,5 +62,3 @@ class GAFFERSCENETEST_API TestLight : public GafferScene::Light
 };
 
 } // namespace GafferSceneTest
-
-#endif // GAFFERSCENETEST_TESTLIGHT_H

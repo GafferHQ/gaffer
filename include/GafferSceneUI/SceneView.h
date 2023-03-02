@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUI_SCENEVIEW_H
-#define GAFFERSCENEUI_SCENEVIEW_H
+#pragma once
 
 #include "GafferSceneUI/Export.h"
 #include "GafferSceneUI/SceneGadget.h"
@@ -157,5 +156,3 @@ class GAFFERSCENEUI_API SceneView : public GafferUI::View
 IE_CORE_DECLAREPTR( SceneView );
 
 } // namespace GafferSceneUI
-
-#endif // GAFFERSCENEUI_SCENEVIEW_H

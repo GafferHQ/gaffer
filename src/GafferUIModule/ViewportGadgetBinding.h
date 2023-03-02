@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUIMODULE_VIEWPORTGADGETBINDING_H
-#define GAFFERUIMODULE_VIEWPORTGADGETBINDING_H
+#pragma once
 
 namespace GafferUIModule
 {
@@ -43,5 +42,3 @@ namespace GafferUIModule
 void bindViewportGadget();
 
 } // namespace GafferUIModule
-
-#endif // GAFFERUIMODULE_VIEWPORTGADGETBINDING_H

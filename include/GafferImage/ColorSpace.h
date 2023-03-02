@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_COLORSPACE_H
-#define GAFFERIMAGE_COLORSPACE_H
+#pragma once
 
 #include "GafferImage/OpenColorIOTransform.h"
 
@@ -81,5 +80,3 @@ class GAFFERIMAGE_API ColorSpace : public OpenColorIOTransform
 IE_CORE_DECLAREPTR( ColorSpace )
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_COLORSPACE_H

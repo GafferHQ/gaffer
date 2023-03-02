@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUIMODULE_VIEWBINDING_H
-#define GAFFERUIMODULE_VIEWBINDING_H
+#pragma once
 
 namespace GafferUIModule
 {
@@ -43,5 +42,3 @@ namespace GafferUIModule
 void bindView();
 
 } // namespace GafferUIModule
-
-#endif // GAFFERUIMODULE_VIEWBINDING_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_MERGE_H
-#define GAFFERIMAGE_MERGE_H
+#pragma once
 
 #include "GafferImage/FlatImageProcessor.h"
 
@@ -112,5 +111,3 @@ class GAFFERIMAGE_API Merge : public FlatImageProcessor
 IE_CORE_DECLAREPTR( Merge )
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_MERGE_H

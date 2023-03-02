@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_COLLECTTRANSFORMS_H
-#define GAFFERSCENE_COLLECTTRANSFORMS_H
+#pragma once
 
 #include "GafferScene/AttributeProcessor.h"
 
@@ -94,5 +93,3 @@ class GAFFERSCENE_API CollectTransforms : public AttributeProcessor
 IE_CORE_DECLAREPTR( CollectTransforms )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_COLLECTTRANSFORMS_H

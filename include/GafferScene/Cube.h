@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_CUBE_H
-#define GAFFERSCENE_CUBE_H
+#pragma once
 
 #include "GafferScene/ObjectSource.h"
 
@@ -73,5 +72,3 @@ class GAFFERSCENE_API Cube : public ObjectSource
 IE_CORE_DECLAREPTR( Cube )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_CUBE_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_EXTERNALPROCEDURAL_H
-#define GAFFERSCENE_EXTERNALPROCEDURAL_H
+#pragma once
 
 #include "GafferScene/ObjectSource.h"
 
@@ -79,5 +78,3 @@ class GAFFERSCENE_API ExternalProcedural : public ObjectSource
 IE_CORE_DECLAREPTR( ExternalProcedural )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_EXTERNALPROCEDURAL_H

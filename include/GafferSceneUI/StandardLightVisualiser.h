@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUI_STANDARDLIGHTVISUALISER_H
-#define GAFFERSCENEUI_STANDARDLIGHTVISUALISER_H
+#pragma once
 
 #include "GafferSceneUI/Export.h"
 #include "GafferScene/Private/IECoreGLPreview/LightVisualiser.h"
@@ -118,5 +117,3 @@ class GAFFERSCENEUI_API StandardLightVisualiser : public IECoreGLPreview::LightV
 IE_CORE_DECLAREPTR( StandardLightVisualiser )
 
 } // namespace GafferSceneUI
-
-#endif // GAFFERSCENEUI_STANDARDLIGHTVISUALISER_H

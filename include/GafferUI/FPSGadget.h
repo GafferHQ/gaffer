@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_FPSGADGET_H
-#define GAFFERUI_FPSGADGET_H
+#pragma once
 
 #include "GafferUI/Gadget.h"
 
@@ -67,5 +66,3 @@ class GAFFERUI_API FPSGadget : public Gadget
 IE_CORE_DECLAREPTR( FPSGadget )
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_FPSGADGET_H

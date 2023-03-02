@@ -32,8 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef IECOREARNOLD_CAMERAALGO_H
-#define IECOREARNOLD_CAMERAALGO_H
+#pragma once
 
 #include "IECoreArnold/Export.h"
 
@@ -53,5 +52,3 @@ IECOREARNOLD_API AtNode *convert( const std::vector<const IECoreScene::Camera *>
 } // namespace CameraAlgo
 
 } // namespace IECoreArnold
-
-#endif // IECOREARNOLD_CAMERAALGO_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUIMODULE_VISUALISERBINDING_H
-#define GAFFERSCENEUIMODULE_VISUALISERBINDING_H
+#pragma once
 
 namespace GafferSceneUIModule
 {
@@ -43,5 +42,3 @@ namespace GafferSceneUIModule
 void bindVisualisers();
 
 } // namespace GafferSceneUIModule
-
-#endif // GAFFERSCENEUIMODULE_VISUALISERBINDING_H

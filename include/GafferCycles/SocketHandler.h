@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERCYCLES_SOCKETHANDLER_H
-#define GAFFERCYCLES_SOCKETHANDLER_H
+#pragma once
 
 #include "Gaffer/Plug.h"
 
@@ -60,5 +59,3 @@ void setupLightPlugs( const std::string &shaderName, const ccl::NodeType *nodeTy
 } // namespace SocketHandler
 
 } // namespace GafferCycles
-
-#endif // GAFFERCYCLES_SOCKETHANDLER_H

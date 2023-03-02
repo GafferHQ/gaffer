@@ -32,8 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef IECORECYCLES_SOCKETALGO_H
-#define IECORECYCLES_SOCKETALGO_H
+#pragma once
 
 #include "GafferCycles/IECoreCyclesPreview/Export.h"
 
@@ -85,5 +84,3 @@ IECORECYCLES_API ccl::ParamValue setParamValue( const IECore::InternedString &na
 } // namespace SocketAlgo
 
 } // namespace IECoreCycles
-
-#endif // IECORECYCLES_SOCKETALGO_H

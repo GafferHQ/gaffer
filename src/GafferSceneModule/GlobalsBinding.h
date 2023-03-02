@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEMODULE_GLOBALSBINDING_H
-#define GAFFERSCENEMODULE_GLOBALSBINDING_H
+#pragma once
 
 namespace GafferSceneModule
 {
@@ -43,5 +42,3 @@ namespace GafferSceneModule
 void bindGlobals();
 
 } // namespace GafferSceneModule
-
-#endif // GAFFERSCENEMODULE_GLOBALSBINDING_H

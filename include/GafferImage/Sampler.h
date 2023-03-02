@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_SAMPLER_H
-#define GAFFERIMAGE_SAMPLER_H
+#pragma once
 
 #include "GafferImage/ImagePlug.h"
 
@@ -127,5 +126,3 @@ class GAFFERIMAGE_API Sampler
 }; // namespace GafferImage
 
 #include "GafferImage/Sampler.inl"
-
-#endif

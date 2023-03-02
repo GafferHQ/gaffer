@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERMODULE_NODEALGOBINDING_H
-#define GAFFERMODULE_NODEALGOBINDING_H
+#pragma once
 
 namespace GafferModule
 {
@@ -43,5 +42,3 @@ namespace GafferModule
 void bindNodeAlgo();
 
 } // namespace GafferModule
-
-#endif // GAFFERMODULE_NODEALGOBINDING_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_CONSTRAINT_H
-#define GAFFERSCENE_CONSTRAINT_H
+#pragma once
 
 #include "GafferScene/SceneElementProcessor.h"
 
@@ -152,5 +151,3 @@ class GAFFERSCENE_API Constraint : public SceneElementProcessor
 IE_CORE_DECLAREPTR( Constraint )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_CONSTRAINT_H

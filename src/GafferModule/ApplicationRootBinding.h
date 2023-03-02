@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERMODULE_APPLICATIONROOTBINDING_H
-#define GAFFERMODULE_APPLICATIONROOTBINDING_H
+#pragma once
 
 namespace GafferModule
 {
@@ -43,5 +42,3 @@ namespace GafferModule
 void bindApplicationRoot();
 
 } // namespace GafferModule
-
-#endif // GAFFERMODULE_APPLICATIONROOTBINDING_H

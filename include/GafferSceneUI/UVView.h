@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUI_UVVIEW_H
-#define GAFFERSCENEUI_UVVIEW_H
+#pragma once
 
 #include "GafferSceneUI/Export.h"
 #include "GafferSceneUI/TypeIds.h"
@@ -139,5 +138,3 @@ class GAFFERSCENEUI_API UVView : public GafferUI::View
 IE_CORE_DECLAREPTR( UVView )
 
 } // namespace GafferUI
-
-#endif // GAFFERSCENEUI_UVVIEW_H

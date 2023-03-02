@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_CDL_H
-#define GAFFERIMAGE_CDL_H
+#pragma once
 
 #include "GafferImage/OpenColorIOTransform.h"
 
@@ -85,5 +84,3 @@ class GAFFERIMAGE_API CDL : public OpenColorIOTransform
 IE_CORE_DECLAREPTR( CDL )
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_CDL_H

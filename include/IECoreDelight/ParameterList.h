@@ -32,8 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef IECOREDELIGHT_PARAMETERLIST_H
-#define IECOREDELIGHT_PARAMETERLIST_H
+#pragma once
 
 #include "IECoreDelight/Export.h"
 
@@ -86,5 +85,3 @@ class IECOREDELIGHT_API ParameterList
 };
 
 } // namespace IECoreDelight
-
-#endif // IECOREDELIGHT_PARAMETERLIST_H

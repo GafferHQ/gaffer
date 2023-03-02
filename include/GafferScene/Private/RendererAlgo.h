@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_RENDERERALGO_H
-#define GAFFERSCENE_RENDERERALGO_H
+#pragma once
 
 #include "GafferScene/ScenePlug.h"
 
@@ -270,5 +269,3 @@ GAFFERSCENE_API void outputObjects( const ScenePlug *scene, const IECore::Compou
 } // namespace Private
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_RENDERERALGO_H

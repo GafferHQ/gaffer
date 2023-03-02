@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_TOOL_H
-#define GAFFERUI_TOOL_H
+#pragma once
 
 #include "GafferUI/Export.h"
 #include "GafferUI/TypeIds.h"
@@ -141,5 +140,3 @@ using ToolContainer = Gaffer::Container<Gaffer::Node, Tool>;
 IE_CORE_DECLAREPTR( ToolContainer );
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_TOOL_H

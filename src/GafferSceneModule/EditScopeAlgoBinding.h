@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEMODULE_EDITSCOPEALGOBINDING_H
-#define GAFFERSCENEMODULE_EDITSCOPEALGOBINDING_H
+#pragma once
 
 namespace GafferSceneModule
 {
@@ -43,5 +42,3 @@ namespace GafferSceneModule
 void bindEditScopeAlgo();
 
 } // namespace GafferSceneModule
-
-#endif // GAFFERSCENEMODULE_EDITSCOPEALGOBINDING_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_PROCESSMESSAGEHANDLER_H
-#define GAFFER_PROCESSMESSAGEHANDLER_H
+#pragma once
 
 #include "Gaffer/Export.h"
 
@@ -67,5 +66,3 @@ class GAFFER_API ProcessMessageHandler : public IECore::FilteredMessageHandler
 };
 
 } // namespace Gaffer
-
-#endif // GAFFER_PROCESSMESSAGEHANDLER_H

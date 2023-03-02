@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_SPLINEPLUG_H
-#define GAFFER_SPLINEPLUG_H
+#pragma once
 
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/PlugType.h"
@@ -192,5 +191,3 @@ IE_CORE_DECLAREPTR( SplinefColor3fPlug );
 IE_CORE_DECLAREPTR( SplinefColor4fPlug );
 
 } // namespace Gaffer
-
-#endif // GAFFER_SPLINEPLUG_H

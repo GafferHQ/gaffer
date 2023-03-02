@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_OUTPUTS_H
-#define GAFFERSCENE_OUTPUTS_H
+#pragma once
 
 #include "GafferScene/GlobalsProcessor.h"
 
@@ -83,5 +82,3 @@ class GAFFERSCENE_API Outputs : public GlobalsProcessor
 IE_CORE_DECLAREPTR( Outputs )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_OUTPUTS_H

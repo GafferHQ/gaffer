@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_FILESEQUENCEPATHFILTER_H
-#define GAFFER_FILESEQUENCEPATHFILTER_H
+#pragma once
 
 #include "Gaffer/PathFilter.h"
 #include "Gaffer/TypeIds.h"
@@ -90,5 +89,3 @@ class GAFFER_API FileSequencePathFilter : public PathFilter
 IE_CORE_DECLAREPTR( FileSequencePathFilter )
 
 } // namespace Gaffer
-
-#endif // GAFFER_FILESEQUENCEPATHFILTER_H

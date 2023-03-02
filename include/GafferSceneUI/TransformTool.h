@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUI_TRANSFORMTOOL_H
-#define GAFFERSCENEUI_TRANSFORMTOOL_H
+#pragma once
 
 #include "GafferSceneUI/SelectionTool.h"
 #include "GafferSceneUI/TypeIds.h"
@@ -284,5 +283,3 @@ class GAFFERSCENEUI_API TransformTool : public GafferSceneUI::SelectionTool
 IE_CORE_DECLAREPTR( TransformTool )
 
 } // namespace GafferSceneUI
-
-#endif // GAFFERSCENEUI_TRANSFORMTOOL_H

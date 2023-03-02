@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERMODULE_TWEAKPLUGBINDING_H
-#define GAFFERMODULE_TWEAKPLUGBINDING_H
+#pragma once
 
 namespace GafferModule
 {
@@ -43,5 +42,3 @@ namespace GafferModule
 void bindTweakPlugs();
 
 } // namespace GafferSceneModule
-
-#endif // GAFFERMODULE_TWEAKPLUGBINDING_H

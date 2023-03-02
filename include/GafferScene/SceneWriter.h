@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_SCENEWRITER_H
-#define GAFFERSCENE_SCENEWRITER_H
+#pragma once
 
 #include "GafferScene/ScenePlug.h"
 #include "GafferScene/TypeIds.h"
@@ -98,5 +97,3 @@ class GAFFERSCENE_API SceneWriter : public GafferDispatch::TaskNode
 IE_CORE_DECLAREPTR( SceneWriter )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_SCENEWRITER_H

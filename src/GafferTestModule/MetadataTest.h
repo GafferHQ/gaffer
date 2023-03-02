@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERTESTMODULE_METADATATEST_H
-#define GAFFERTESTMODULE_METADATATEST_H
+#pragma once
 
 namespace GafferTestModule
 {
@@ -44,5 +43,3 @@ void testConcurrentAccessToDifferentInstances();
 void testConcurrentAccessToSameInstance();
 
 } // namespace GafferTestModule
-
-#endif // GAFFERTESTMODULE_METADATATEST_H

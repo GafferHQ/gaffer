@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_SCENEPLUG_H
-#define GAFFERSCENE_SCENEPLUG_H
+#pragma once
 
 #include "GafferScene/Export.h"
 #include "GafferScene/TypeIds.h"
@@ -291,5 +290,3 @@ IE_CORE_DECLAREPTR( ScenePlug );
 } // namespace GafferScene
 
 std::ostream &operator << ( std::ostream &o, const GafferScene::ScenePlug::ScenePath &path );
-
-#endif // GAFFERSCENE_SCENEPLUG_H

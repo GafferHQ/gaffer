@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_COPYCHANNELS_H
-#define GAFFERIMAGE_COPYCHANNELS_H
+#pragma once
 
 #include "GafferImage/FlatImageProcessor.h"
 
@@ -85,5 +84,3 @@ class GAFFERIMAGE_API CopyChannels : public FlatImageProcessor
 IE_CORE_DECLAREPTR( CopyChannels )
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_COPYCHANNELS_H

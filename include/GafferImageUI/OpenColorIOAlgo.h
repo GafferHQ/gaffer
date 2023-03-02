@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGEUI_OPENCOLORIOALGO_H
-#define GAFFERIMAGEUI_OPENCOLORIOALGO_H
+#pragma once
 
 #include "GafferImageUI/Export.h"
 
@@ -63,5 +62,3 @@ GAFFERIMAGEUI_API IECoreGL::Shader::SetupPtr displayTransformToFramebufferShader
 } // namespace OpenColorIOAlgo
 
 } // namespace GafferImageUI
-
-#endif // GAFFERIMAGEUI_OPENCOLORIOALGO_H

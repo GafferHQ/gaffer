@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERMODULE_GRAPHCOMPONENTBINDING_H
-#define GAFFERMODULE_GRAPHCOMPONENTBINDING_H
+#pragma once
 
 namespace GafferModule
 {
@@ -44,5 +43,3 @@ namespace GafferModule
 void bindGraphComponent();
 
 } // namespace GafferModule
-
-#endif // GAFFERMODULE_GRAPHCOMPONENTBINDING_H

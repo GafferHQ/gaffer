@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGEMODULE_FILTERALGOBINDING_H
-#define GAFFERIMAGEMODULE_FILTERALGOBINDING_H
+#pragma once
 
 namespace GafferImageModule
 {
@@ -43,5 +42,3 @@ namespace GafferImageModule
 void bindFilterAlgo();
 
 }; // namespace GafferImageModule
-
-#endif // GAFFERIMAGEMODULE_FILTERALGOBINDING_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERAPPLESEED_APPLESEEDSHADERADAPTOR_H
-#define GAFFERAPPLESEED_APPLESEEDSHADERADAPTOR_H
+#pragma once
 
 #include "GafferAppleseed/Export.h"
 #include "GafferAppleseed/TypeIds.h"
@@ -66,5 +65,3 @@ class GAFFERAPPLESEED_API AppleseedShaderAdaptor : public GafferScene::SceneProc
 IE_CORE_DECLAREPTR( AppleseedShaderAdaptor )
 
 } // namespace GafferAppleseed
-
-#endif // GAFFERAPPLESEED_APPLESEEDSHADERADAPTOR_H

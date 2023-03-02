@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_ANIMATIONGADGET_H
-#define GAFFERUI_ANIMATIONGADGET_H
+#pragma once
 
 #include "GafferUI/Gadget.h"
 
@@ -204,5 +203,3 @@ class GAFFERUI_API AnimationGadget : public Gadget
 IE_CORE_DECLAREPTR( AnimationGadget );
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_ANIMATIONGADGET_H

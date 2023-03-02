@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERTEST_MULTIPLYNODE_H
-#define GAFFERTEST_MULTIPLYNODE_H
+#pragma once
 
 #include "GafferTest/Export.h"
 #include "GafferTest/TypeIds.h"
@@ -82,5 +81,3 @@ class GAFFERTEST_API MultiplyNode : public Gaffer::ComputeNode
 IE_CORE_DECLAREPTR( MultiplyNode )
 
 } // namespace GafferTest
-
-#endif // GAFFERTEST_MULTIPLYNODE_H

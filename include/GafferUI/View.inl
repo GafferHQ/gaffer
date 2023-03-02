@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_VIEW_INL
-#define GAFFERUI_VIEW_INL
+#pragma once
 
 #include "GafferUI/IndividualContainer.h"
 
@@ -104,5 +103,3 @@ ViewPtr View::ViewDescription<T>::creator( Gaffer::PlugPtr input )
 };
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_VIEW_INL

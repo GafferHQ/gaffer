@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_EVENTSIGNALCOMBINER_INL
-#define GAFFERUI_EVENTSIGNALCOMBINER_INL
+#pragma once
 
 #include "IECore/MessageHandler.h"
 
@@ -70,5 +69,3 @@ typename EventSignalCombiner<T>::result_type EventSignalCombiner<T>::operator()(
 };
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_EVENTSIGNALCOMBINER_INL

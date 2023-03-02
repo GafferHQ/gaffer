@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_PLUG_H
-#define GAFFER_PLUG_H
+#pragma once
 
 #include "Gaffer/FilteredChildIterator.h"
 #include "Gaffer/FilteredRecursiveChildIterator.h"
@@ -323,5 +322,3 @@ struct PlugPredicate
 } // namespace Gaffer
 
 #include "Gaffer/Plug.inl"
-
-#endif // GAFFER_PLUG_H

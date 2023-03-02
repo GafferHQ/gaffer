@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_STANDARDOPTIONS_H
-#define GAFFERSCENE_STANDARDOPTIONS_H
+#pragma once
 
 #include "GafferScene/Options.h"
 
@@ -58,5 +57,3 @@ class GAFFERSCENE_API StandardOptions : public Options
 IE_CORE_DECLAREPTR( StandardOptions );
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_STANDARDOPTIONS_H

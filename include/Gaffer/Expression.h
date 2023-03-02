@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_EXPRESSION_H
-#define GAFFER_EXPRESSION_H
+#pragma once
 
 #include "Gaffer/ComputeNode.h"
 #include "Gaffer/TypedObjectPlug.h"
@@ -232,5 +231,3 @@ class GAFFER_API Expression : public ComputeNode
 IE_CORE_DECLAREPTR( Expression )
 
 } // namespace Gaffer
-
-#endif // GAFFER_EXPRESSION_H

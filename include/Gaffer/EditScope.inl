@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_EDITSCOPE_INL
-#define GAFFER_EDITSCOPE_INL
+#pragma once
 
 namespace Gaffer
 {
@@ -71,5 +70,3 @@ T *EditScope::acquireProcessor( const std::string &type, bool createIfNecessary 
 }
 
 } // namespace Gaffer
-
-#endif // GAFFER_EDITSCOPE_INL

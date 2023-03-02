@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_DUPLICATE_H
-#define GAFFERSCENE_DUPLICATE_H
+#pragma once
 
 #include "GafferScene/BranchCreator.h"
 
@@ -121,5 +120,3 @@ class GAFFERSCENE_API Duplicate : public BranchCreator
 IE_CORE_DECLAREPTR( Duplicate )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_DUPLICATE_H

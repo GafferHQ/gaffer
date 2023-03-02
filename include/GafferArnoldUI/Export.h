@@ -32,8 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERARNOLDUI_EXPORT_H
-#define GAFFERARNOLDUI_EXPORT_H
+#pragma once
 
 #include "IECore/Export.h"
 
@@ -42,5 +41,3 @@
 #else
 	#define GAFFERARNOLDUI_API IECORE_IMPORT
 #endif
-
-#endif // #ifndef GAFFERARNOLDUI_EXPORT_H

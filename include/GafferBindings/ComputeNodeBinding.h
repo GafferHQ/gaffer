@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERBINDINGS_COMPUTENODEBINDING_H
-#define GAFFERBINDINGS_COMPUTENODEBINDING_H
+#pragma once
 
 #include "boost/python.hpp"
 
@@ -163,5 +162,3 @@ class ComputeNodeWrapper : public DependencyNodeWrapper<WrappedType>
 };
 
 } // namespace GafferBindings
-
-#endif // GAFFERBINDINGS_COMPUTENODEBINDING_H

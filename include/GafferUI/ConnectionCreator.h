@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_CONNECTIONCREATOR_H
-#define GAFFERUI_CONNECTIONCREATOR_H
+#pragma once
 
 #include "GafferUI/Gadget.h"
 
@@ -77,5 +76,3 @@ class GAFFERUI_API ConnectionCreator : public Gadget
 IE_CORE_DECLAREPTR( ConnectionCreator )
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_CONNECTIONCREATOR_H

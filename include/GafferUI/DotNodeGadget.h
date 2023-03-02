@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_DOTNODEGADGET_H
-#define GAFFERUI_DOTNODEGADGET_H
+#pragma once
 
 #include "GafferUI/StandardNodeGadget.h"
 
@@ -93,5 +92,3 @@ class GAFFERUI_API DotNodeGadget : public StandardNodeGadget
 IE_CORE_DECLAREPTR( DotNodeGadget )
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_DOTNODEGADGET_H

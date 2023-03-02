@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_NAMEGADGET_H
-#define GAFFERUI_NAMEGADGET_H
+#pragma once
 
 #include "GafferUI/TextGadget.h"
 
@@ -63,5 +62,3 @@ class GAFFERUI_API NameGadget : public TextGadget
 IE_CORE_DECLAREPTR( NameGadget );
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_NAMEGADGET_H

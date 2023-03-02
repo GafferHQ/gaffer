@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_SWITCH_H
-#define GAFFER_SWITCH_H
+#pragma once
 
 #include "Gaffer/ArrayPlug.h"
 #include "Gaffer/ComputeNode.h"
@@ -129,5 +128,3 @@ using SwitchComputeNodePtr = SwitchPtr;
 using ConstSwitchComputeNodePtr = ConstSwitchPtr;
 
 } // namespace Gaffer
-
-#endif // GAFFER_SWITCH_H

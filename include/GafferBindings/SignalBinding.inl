@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERBINDINGS_SIGNALBINDING_INL
-#define GAFFERBINDINGS_SIGNALBINDING_INL
+#pragma once
 
 #include "Gaffer/Signals.h"
 
@@ -195,5 +194,3 @@ SignalClass<Signal, SignalCaller, SlotCaller>::SignalClass( const char *classNam
 }
 
 } // namespace GafferBindings
-
-#endif // GAFFERBINDINGS_SIGNALBINDING_INL

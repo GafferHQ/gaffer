@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_ISOLATE_H
-#define GAFFERSCENE_ISOLATE_H
+#pragma once
 
 #include "GafferScene/FilteredSceneProcessor.h"
 
@@ -95,5 +94,3 @@ class GAFFERSCENE_API Isolate : public FilteredSceneProcessor
 IE_CORE_DECLAREPTR( Isolate )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_ISOLATE_H

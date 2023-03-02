@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_SATURATION_H
-#define GAFFERIMAGE_SATURATION_H
+#pragma once
 
 #include "GafferImage/ColorProcessor.h"
 
@@ -71,5 +70,3 @@ class GAFFERIMAGE_API Saturation : public ColorProcessor
 IE_CORE_DECLAREPTR( Saturation )
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_SATURATION_H

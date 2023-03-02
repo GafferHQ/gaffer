@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_SHADERASSIGNMENT_H
-#define GAFFERSCENE_SHADERASSIGNMENT_H
+#pragma once
 
 #include "GafferScene/AttributeProcessor.h"
 #include "GafferScene/ShaderPlug.h"
@@ -77,5 +76,3 @@ class GAFFERSCENE_API ShaderAssignment : public AttributeProcessor
 IE_CORE_DECLAREPTR( ShaderAssignment )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_SHADERASSIGNMENT_H

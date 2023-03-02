@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_FILTERPLUG_H
-#define GAFFERSCENE_FILTERPLUG_H
+#pragma once
 
 #include "GafferScene/Export.h"
 #include "GafferScene/TypeIds.h"
@@ -109,5 +108,3 @@ class GAFFERSCENE_API FilterPlug : public Gaffer::IntPlug
 IE_CORE_DECLAREPTR( FilterPlug );
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_FILTERPLUG_H

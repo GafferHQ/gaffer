@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERMODULE_DIRTYPROPAGATIONSCOPEBINDING_H
-#define GAFFERMODULE_DIRTYPROPAGATIONSCOPEBINDING_H
+#pragma once
 
 namespace GafferModule
 {
@@ -43,5 +42,3 @@ namespace GafferModule
 void bindDirtyPropagationScope();
 
 } // namespace GafferModule
-
-#endif // GAFFERMODULE_DIRTYPROPAGATIONSCOPEBINDING_H

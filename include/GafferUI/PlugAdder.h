@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_PLUGADDER_H
-#define GAFFERUI_PLUGADDER_H
+#pragma once
 
 #include "GafferUI/ConnectionCreator.h"
 #include "GafferUI/StandardNodeGadget.h"
@@ -99,5 +98,3 @@ class GAFFERUI_API PlugAdder : public ConnectionCreator
 IE_CORE_DECLAREPTR( PlugAdder )
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_PLUGADDER_H

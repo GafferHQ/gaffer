@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_BOX_H
-#define GAFFER_BOX_H
+#pragma once
 
 #include "Gaffer/SubGraph.h"
 
@@ -84,5 +83,3 @@ using BoxIterator = FilteredChildIterator<TypePredicate<Box> >;
 using RecursiveBoxIterator = FilteredRecursiveChildIterator<TypePredicate<Box> >;
 
 } // namespace Gaffer
-
-#endif // GAFFER_BOX_H

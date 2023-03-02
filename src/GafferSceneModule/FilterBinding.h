@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEMODULE_FILTERBINDING_H
-#define GAFFERSCENEMODULE_FILTERBINDING_H
+#pragma once
 
 namespace GafferSceneModule
 {
@@ -43,5 +42,3 @@ namespace GafferSceneModule
 void bindFilter();
 
 } // namespace GafferSceneModule
-
-#endif // GAFFERSCENEMODULE_FILTERBINDING_H

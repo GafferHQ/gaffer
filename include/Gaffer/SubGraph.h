@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_SUBGRAPH_H
-#define GAFFER_SUBGRAPH_H
+#pragma once
 
 #include "Gaffer/DependencyNode.h"
 
@@ -71,5 +70,3 @@ class GAFFER_API SubGraph : public DependencyNode
 };
 
 } // namespace Gaffer
-
-#endif // GAFFER_SUBGRAPH_H

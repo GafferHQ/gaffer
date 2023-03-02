@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_BOXIO_H
-#define GAFFER_BOXIO_H
+#pragma once
 
 #include "Gaffer/Node.h"
 #include "Gaffer/Plug.h"
@@ -192,5 +191,3 @@ IE_CORE_DECLAREPTR( BoxIO )
 } // namespace Gaffer
 
 #include "Gaffer/BoxIO.inl"
-
-#endif // GAFFER_BOXIO_H

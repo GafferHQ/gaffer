@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENETEST_TRAVERSESCENE_H
-#define GAFFERSCENETEST_TRAVERSESCENE_H
+#pragma once
 
 #include "GafferSceneTest/Export.h"
 
@@ -65,5 +64,3 @@ GAFFERSCENETEST_API Gaffer::Signals::Connection connectTraverseSceneToContextCha
 GAFFERSCENETEST_API Gaffer::Signals::Connection connectTraverseSceneToPreDispatchSignal( const GafferScene::ConstScenePlugPtr &scene );
 
 } // namespace GafferSceneTest
-
-#endif // GAFFERSCENETEST_TRAVERSESCENE_H

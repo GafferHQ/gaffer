@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGEMODULE_IOBINDING_H
-#define GAFFERIMAGEMODULE_IOBINDING_H
+#pragma once
 
 namespace GafferImageModule
 {
@@ -43,5 +42,3 @@ namespace GafferImageModule
 void bindIO();
 
 }; // namespace GafferImageModule
-
-#endif // GAFFERIMAGEMODULE_IOBINDING_H

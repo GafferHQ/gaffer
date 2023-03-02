@@ -32,8 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERAPPLESEED_EXPORT_H
-#define GAFFERAPPLESEED_EXPORT_H
+#pragma once
 
 #include "IECore/Export.h"
 
@@ -42,5 +41,3 @@
 #else
 	#define GAFFERAPPLESEED_API IECORE_IMPORT
 #endif
-
-#endif // #ifndef GAFFERAPPLESEED_EXPORT_H

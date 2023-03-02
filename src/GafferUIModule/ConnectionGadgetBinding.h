@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUIMODULE_CONNECTIONGADGETBINDING_H
-#define GAFFERUIMODULE_CONNECTIONGADGETBINDING_H
+#pragma once
 
 namespace GafferUIModule
 {
@@ -43,5 +42,3 @@ namespace GafferUIModule
 void bindConnectionGadget();
 
 } // namespace GafferUIModule
-
-#endif // GAFFERUIMODULE_CONNECTIONGADGETBINDING_H

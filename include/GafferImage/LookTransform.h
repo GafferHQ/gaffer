@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_LOOKTRANSFORM_H
-#define GAFFERIMAGE_LOOKTRANSFORM_H
+#pragma once
 
 #include "GafferImage/OpenColorIOTransform.h"
 
@@ -72,5 +71,3 @@ class GAFFERIMAGE_API LookTransform : public OpenColorIOTransform
 IE_CORE_DECLAREPTR( LookTransform )
 
 } // namespace GafferImage
-
-#endif //GAFFERIMAGE_LOOKTRANSFORM_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERMODULE_METADATABINDING_H
-#define GAFFERMODULE_METADATABINDING_H
+#pragma once
 
 namespace GafferModule
 {
@@ -43,5 +42,3 @@ namespace GafferModule
 void bindMetadata();
 
 } // namespace GafferModule
-
-#endif // GAFFERMODULE_METADATABINDING_H

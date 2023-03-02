@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERARNOLD_ARNOLDATMOSPHERE_H
-#define GAFFERARNOLD_ARNOLDATMOSPHERE_H
+#pragma once
 
 #include "GafferArnold/Export.h"
 #include "GafferArnold/TypeIds.h"
@@ -70,5 +69,3 @@ class GAFFERARNOLD_API ArnoldAtmosphere : public GafferScene::GlobalShader
 IE_CORE_DECLAREPTR( ArnoldAtmosphere )
 
 } // namespace GafferArnold
-
-#endif // GAFFERARNOLD_ARNOLDATMOSPHERE_H

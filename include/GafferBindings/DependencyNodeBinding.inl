@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERBINDINGS_DEPENDENCYNODEBINDING_INL
-#define GAFFERBINDINGS_DEPENDENCYNODEBINDING_INL
+#pragma once
 
 namespace GafferBindings
 {
@@ -97,5 +96,3 @@ DependencyNodeClass<T, Ptr>::DependencyNodeClass( const char *docString, boost::
 }
 
 } // namespace GafferBindings
-
-#endif // GAFFERBINDINGS_DEPENDENCYNODEBINDING_INL

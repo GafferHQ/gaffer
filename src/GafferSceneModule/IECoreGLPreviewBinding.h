@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEMODULE_IECOREGLPREVIEWBINDING_H
-#define GAFFERSCENEMODULE_IECOREGLPREVIEWBINDING_H
+#pragma once
 
 namespace GafferSceneModule
 {
@@ -43,5 +42,3 @@ namespace GafferSceneModule
 void bindIECoreGLPreview();
 
 } // namespace GafferSceneModule
-
-#endif // GAFFERSCENEMODULE_IECOREGLPREVIEWBINDING_H

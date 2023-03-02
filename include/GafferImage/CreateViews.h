@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_CREATEVIEWS_H
-#define GAFFERIMAGE_CREATEVIEWS_H
+#pragma once
 
 #include "GafferImage/ImageNode.h"
 
@@ -86,5 +85,3 @@ class GAFFERIMAGE_API CreateViews : public ImageNode
 IE_CORE_DECLAREPTR( CreateViews )
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_CREATEVIEWS_H

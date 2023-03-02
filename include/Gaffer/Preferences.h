@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_PREFERENCES_H
-#define GAFFER_PREFERENCES_H
+#pragma once
 
 #include "Gaffer/Node.h"
 
@@ -63,5 +62,3 @@ class GAFFER_API Preferences : public Node
 IE_CORE_DECLAREPTR( Preferences );
 
 } // namespace Gaffer
-
-#endif // GAFFER_PREFERENCES_H

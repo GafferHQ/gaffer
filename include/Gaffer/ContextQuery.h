@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_CONTEXTQUERY_H
-#define GAFFER_CONTEXTQUERY_H
+#pragma once
 
 #include "Gaffer/Export.h"
 #include "Gaffer/TypeIds.h"
@@ -102,5 +101,3 @@ class GAFFER_API ContextQuery : public Gaffer::ComputeNode
 IE_CORE_DECLAREPTR( ContextQuery );
 
 }  // namespace Gaffer
-
-#endif // GAFFER_CONTEXTQUERY_H

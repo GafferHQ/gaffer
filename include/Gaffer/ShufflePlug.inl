@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_SHUFFLEPLUG_INL
-#define GAFFER_SHUFFLEPLUG_INL
+#pragma once
 
 #include "Gaffer/Node.h"
 #include "Gaffer/PlugAlgo.h"
@@ -191,5 +190,3 @@ T ShufflesPlug::shuffle( const T &sourceContainer ) const
 }
 
 } // namespace Gaffer
-
-#endif // GAFFER_SHUFFLEPLUG_INL

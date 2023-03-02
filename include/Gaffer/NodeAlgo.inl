@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_NODEALGO_INL
-#define GAFFER_NODEALGO_INL
+#pragma once
 
 #include "Gaffer/Node.h"
 #include "Gaffer/Plug.h"
@@ -375,5 +374,3 @@ std::vector<T *> connectedNodes( Node *node, VisitOrder order )
 } // namespace NodeAlgo
 
 } // namespace Gaffer
-
-#endif // GAFFER_NODEALGO_INL

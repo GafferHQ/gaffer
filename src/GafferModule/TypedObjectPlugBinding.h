@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERMODULE_TYPEDOBJECTPLUGBINDING_H
-#define GAFFERMODULE_TYPEDOBJECTPLUGBINDING_H
+#pragma once
 
 namespace GafferModule
 {
@@ -43,5 +42,3 @@ namespace GafferModule
 void bindTypedObjectPlug();
 
 } // namespace GafferModule
-
-#endif // GAFFERMODULE_TYPEDOBJECTPLUGBINDING_H

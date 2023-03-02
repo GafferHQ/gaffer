@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEMODULE_IOBINDING_H
-#define GAFFERSCENEMODULE_IOBINDING_H
+#pragma once
 
 namespace GafferSceneModule
 {
@@ -43,5 +42,3 @@ namespace GafferSceneModule
 void bindIO();
 
 } // namespace GafferSceneModule
-
-#endif // GAFFERSCENEMODULE_IOBINDING_H

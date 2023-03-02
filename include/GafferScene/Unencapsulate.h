@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_UNENCAPSULATE_H
-#define GAFFERSCENE_UNENCAPSULATE_H
+#pragma once
 
 #include "GafferScene/BranchCreator.h"
 
@@ -94,5 +93,3 @@ class GAFFERSCENE_API Unencapsulate : public BranchCreator
 IE_CORE_DECLAREPTR( Unencapsulate )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_UNENCAPSULATE_H

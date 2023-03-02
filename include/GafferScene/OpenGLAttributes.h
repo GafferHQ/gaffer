@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_OPENGLATTRIBUTES_H
-#define GAFFERSCENE_OPENGLATTRIBUTES_H
+#pragma once
 
 #include "GafferScene/Attributes.h"
 
@@ -57,5 +56,3 @@ class GAFFERSCENE_API OpenGLAttributes : public GafferScene::Attributes
 IE_CORE_DECLAREPTR( OpenGLAttributes )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_OPENGLATTRIBUTES_H

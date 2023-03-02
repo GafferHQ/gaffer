@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERMODULE_METADATAALGOBINDING_H
-#define GAFFERMODULE_METADATAALGOBINDING_H
+#pragma once
 
 namespace GafferModule
 {
@@ -43,5 +42,3 @@ namespace GafferModule
 void bindMetadataAlgo();
 
 } // namespace GafferModule
-
-#endif // GAFFERMODULE_METADATAALGOBINDING_H

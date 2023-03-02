@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_METADATA_INL
-#define GAFFER_METADATA_INL
+#pragma once
 
 namespace Gaffer
 {
@@ -53,5 +52,3 @@ typename T::ConstPtr Metadata::value( const GraphComponent *target, IECore::Inte
 }
 
 } // namespace Gaffer
-
-#endif // GAFFER_METADATA_INL

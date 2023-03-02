@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_GRAPHLAYOUT_H
-#define GAFFERUI_GRAPHLAYOUT_H
+#pragma once
 
 #include "GafferUI/Export.h"
 #include "GafferUI/TypeIds.h"
@@ -109,5 +108,3 @@ class GAFFERUI_API GraphLayout : public IECore::RunTimeTyped
 IE_CORE_DECLAREPTR( GraphLayout );
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_GRAPHLAYOUT_H

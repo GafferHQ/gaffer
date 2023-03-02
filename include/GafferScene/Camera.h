@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_CAMERA_H
-#define GAFFERSCENE_CAMERA_H
+#pragma once
 
 #include "Gaffer/CompoundDataPlug.h"
 #include "GafferScene/ObjectSource.h"
@@ -123,5 +122,3 @@ class GAFFERSCENE_API Camera : public ObjectSource
 IE_CORE_DECLAREPTR( Camera )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_CAMERA_H

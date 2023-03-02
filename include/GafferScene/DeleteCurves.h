@@ -35,8 +35,7 @@
 /////////////////////////////////////////////////////////////////////////
 
 
-#ifndef GAFFERSCENE_DELETECURVES_H
-#define GAFFERSCENE_DELETECURVES_H
+#pragma once
 
 #include "GafferScene/Deformer.h"
 
@@ -84,5 +83,3 @@ class GAFFERSCENE_API DeleteCurves : public Deformer
 IE_CORE_DECLAREPTR( DeleteCurves )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_DELETECURVES_H

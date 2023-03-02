@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef IECOREGLPREVIEW_LIGHTFILTERVISUALISER_H
-#define IECOREGLPREVIEW_LIGHTFILTERVISUALISER_H
+#pragma once
 
 #include "GafferScene/Export.h"
 
@@ -108,5 +107,3 @@ class GAFFERSCENE_API LightFilterVisualiser : public IECore::RefCounted
 };
 
 } // namespace IECoreGLPreview
-
-#endif // IECOREGLPREVIEW_LIGHTFILTERVISUALISER_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERBINDINGS_PATHBINDING_H
-#define GAFFERBINDINGS_PATHBINDING_H
+#pragma once
 
 #include "IECorePython/RunTimeTypedBinding.h"
 
@@ -55,5 +54,3 @@ class PathClass : public IECorePython::RunTimeTypedClass<T, TWrapper>
 } // namespace GafferBindings
 
 #include "GafferBindings/PathBinding.inl"
-
-#endif // GAFFERBINDINGS_PATHBINDING_H

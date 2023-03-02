@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_MIRROR_H
-#define GAFFERIMAGE_MIRROR_H
+#pragma once
 
 #include "GafferImage/FlatImageProcessor.h"
 
@@ -79,5 +78,3 @@ class GAFFERIMAGE_API Mirror : public FlatImageProcessor
 IE_CORE_DECLAREPTR( Mirror )
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_MIRROR_H

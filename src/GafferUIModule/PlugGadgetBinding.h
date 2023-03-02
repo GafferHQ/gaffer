@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUIMODULE_PLUGGADGETBINDING_H
-#define GAFFERUIMODULE_PLUGGADGETBINDING_H
+#pragma once
 
 namespace GafferUIModule
 {
@@ -43,5 +42,3 @@ namespace GafferUIModule
 void bindPlugGadget();
 
 } // namespace GafferUIModule
-
-#endif // GAFFERUIMODULE_PLUGGADGETBINDING_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_CUSTOMOPTIONS_H
-#define GAFFERSCENE_CUSTOMOPTIONS_H
+#pragma once
 
 #include "GafferScene/Options.h"
 
@@ -73,5 +72,3 @@ class GAFFERSCENE_API CustomOptions : public GafferScene::Options
 IE_CORE_DECLAREPTR( CustomOptions )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_CUSTOMOPTIONS_H

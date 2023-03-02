@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERCORTEX_PARAMETERHANDLER_H
-#define GAFFERCORTEX_PARAMETERHANDLER_H
+#pragma once
 
 #include "GafferCortex/Export.h"
 
@@ -116,5 +115,3 @@ class GAFFERCORTEX_API ParameterHandler : public IECore::RefCounted
 };
 
 } // namespace GafferCortex
-
-#endif // GAFFERCORTEX_PARAMETERHANDLER_H

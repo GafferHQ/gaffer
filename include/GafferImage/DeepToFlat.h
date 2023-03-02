@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_FLATTEN_H
-#define GAFFERIMAGE_FLATTEN_H
+#pragma once
 
 #include "Gaffer/NumericPlug.h"
 
@@ -100,5 +99,3 @@ class GAFFERIMAGE_API DeepToFlat : public ImageProcessor
 IE_CORE_DECLAREPTR( DeepToFlat )
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_FLATTEN_H

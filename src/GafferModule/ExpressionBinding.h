@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERMODULE_EXPRESSIONBINDING_H
-#define GAFFERMODULE_EXPRESSIONBINDING_H
+#pragma once
 
 namespace GafferModule
 {
@@ -43,5 +42,3 @@ namespace GafferModule
 void bindExpression();
 
 } // namespace GafferModule
-
-#endif // GAFFERMODULE_EXPRESSIONBINDING_H

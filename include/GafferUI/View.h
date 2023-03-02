@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_VIEW_H
-#define GAFFERUI_VIEW_H
+#pragma once
 
 #include "GafferUI/Tool.h"
 #include "GafferUI/ViewportGadget.h"
@@ -212,5 +211,3 @@ class GAFFERUI_API View : public Gaffer::Node
 } // namespace GafferUI
 
 #include "GafferUI/View.inl"
-
-#endif // GAFFERUI_VIEW_H

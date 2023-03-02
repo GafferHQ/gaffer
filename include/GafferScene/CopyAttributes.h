@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_COPYATTRIBUTES_H
-#define GAFFERSCENE_COPYATTRIBUTES_H
+#pragma once
 
 #include "GafferScene/FilteredSceneProcessor.h"
 
@@ -82,5 +81,3 @@ class GAFFERSCENE_API CopyAttributes : public FilteredSceneProcessor
 IE_CORE_DECLAREPTR( CopyAttributes )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_COPYATTRIBUTES_H

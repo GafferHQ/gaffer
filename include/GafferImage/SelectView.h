@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_SELECTVIEW_H
-#define GAFFERIMAGE_SELECTVIEW_H
+#pragma once
 
 #include "GafferImage/ImageProcessor.h"
 
@@ -91,5 +90,3 @@ class GAFFERIMAGE_API SelectView : public ImageProcessor
 IE_CORE_DECLAREPTR( SelectView )
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_SELECTVIEW_H

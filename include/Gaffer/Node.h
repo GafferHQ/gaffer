@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_NODE_H
-#define GAFFER_NODE_H
+#pragma once
 
 #include "Gaffer/FilteredChildIterator.h"
 #include "Gaffer/FilteredRecursiveChildIterator.h"
@@ -203,5 +202,3 @@ class GAFFER_API Node : public GraphComponent
 IE_CORE_DECLAREPTR( Node )
 
 } // namespace Gaffer
-
-#endif // GAFFER_NODE_H

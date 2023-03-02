@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_COPYPRIMITIVEVARIABLES_H
-#define GAFFERSCENE_COPYPRIMITIVEVARIABLES_H
+#pragma once
 
 #include "GafferScene/Deformer.h"
 
@@ -85,5 +84,3 @@ class GAFFERSCENE_API CopyPrimitiveVariables : public Deformer
 IE_CORE_DECLAREPTR( CopyPrimitiveVariables )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_COPYPRIMITIVEVARIABLES_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERARNOLD_ARNOLDIMAGER_H
-#define GAFFERARNOLD_ARNOLDIMAGER_H
+#pragma once
 
 #include "GafferArnold/Export.h"
 #include "GafferArnold/TypeIds.h"
@@ -87,5 +86,3 @@ class GAFFERARNOLD_API ArnoldImager : public GafferScene::GlobalsProcessor
 IE_CORE_DECLAREPTR( ArnoldImager )
 
 } // namespace GafferArnold
-
-#endif // GAFFERARNOLD_ARNOLDIMAGER_H

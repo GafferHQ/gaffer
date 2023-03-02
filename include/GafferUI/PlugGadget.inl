@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_PLUGGADGET_INL
-#define GAFFERUI_PLUGGADGET_INL
+#pragma once
 
 namespace GafferUI
 {
@@ -47,5 +46,3 @@ T *PlugGadget::getPlug()
 }
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_PLUGGADGET_INL

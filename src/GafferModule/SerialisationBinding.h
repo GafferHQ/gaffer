@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERMODULE_SERIALISATIONBINDING_H
-#define GAFFERMODULE_SERIALISATIONBINDING_H
+#pragma once
 
 namespace GafferModule
 {
@@ -44,5 +43,3 @@ namespace GafferModule
 void bindSerialisation();
 
 } // namespace GafferModule
-
-#endif // GAFFERMODULE_SERIALISATIONBINDING_H

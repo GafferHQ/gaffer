@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_IMAGEPLUG_H
-#define GAFFERIMAGE_IMAGEPLUG_H
+#pragma once
 
 #include "GafferImage/AtomicFormatPlug.h"
 #include "GafferImage/Export.h"
@@ -299,5 +298,3 @@ class GAFFERIMAGE_API ImagePlug : public Gaffer::ValuePlug
 IE_CORE_DECLAREPTR( ImagePlug );
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_IMAGEPLUG_H

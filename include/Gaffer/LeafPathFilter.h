@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_LEAFPATHFILTER_H
-#define GAFFER_LEAFPATHFILTER_H
+#pragma once
 
 #include "Gaffer/PathFilter.h"
 
@@ -70,5 +69,3 @@ class GAFFER_API LeafPathFilter : public Gaffer::PathFilter
 IE_CORE_DECLAREPTR( LeafPathFilter )
 
 } // namespace Gaffer
-
-#endif // GAFFER_LEAFPATHFILTER_H

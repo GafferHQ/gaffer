@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_FORMAT_INL
-#define GAFFERIMAGE_FORMAT_INL
+#pragma once
 
 #include "GafferImage/BufferAlgo.h"
 
@@ -168,6 +167,3 @@ inline void murmurHashAppend( IECore::MurmurHash &h, const GafferImage::Format &
 }
 
 } // namespace GafferImage
-
-
-#endif // GAFFERIMAGE_FORMAT_INL

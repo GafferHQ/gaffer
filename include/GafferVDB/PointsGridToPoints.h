@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERVDB_POINTSGRIDTOPOINTS_H
-#define GAFFERVDB_POINTSGRIDTOPOINTS_H
+#pragma once
 
 #include "GafferVDB/Export.h"
 #include "GafferVDB/TypeIds.h"
@@ -86,5 +85,3 @@ class GAFFERVDB_API PointsGridToPoints : public GafferScene::ObjectProcessor
 IE_CORE_DECLAREPTR( PointsGridToPoints )
 
 } // namespace GafferVDB
-
-#endif // GAFFERVDB_POINTSGRIDTOPOINTS_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERVDB_MESHTOLEVELSET_H
-#define GAFFERVDB_MESHTOLEVELSET_H
+#pragma once
 
 #include "GafferVDB/Export.h"
 #include "GafferVDB/TypeIds.h"
@@ -90,5 +89,3 @@ class GAFFERVDB_API MeshToLevelSet : public GafferScene::ObjectProcessor
 IE_CORE_DECLAREPTR( MeshToLevelSet )
 
 } // namespace GafferVDB
-
-#endif // GAFFERVDB_MESHTOLEVELSET_H

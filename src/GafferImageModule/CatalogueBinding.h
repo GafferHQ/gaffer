@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGEMODULE_CATALOGUEBINDING_H
-#define GAFFERIMAGEMODULE_CATALOGUEBINDING_H
+#pragma once
 
 namespace GafferImageModule
 {
@@ -43,5 +42,3 @@ namespace GafferImageModule
 void bindCatalogue();
 
 }; // namespace GafferImageModule
-
-#endif // GAFFERIMAGEMODULE_CATALOGUEBINDING_H

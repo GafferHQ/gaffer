@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERARNOLD_ARNOLDBACKGROUND_H
-#define GAFFERARNOLD_ARNOLDBACKGROUND_H
+#pragma once
 
 #include "GafferArnold/Export.h"
 #include "GafferArnold/TypeIds.h"
@@ -70,5 +69,3 @@ class GAFFERARNOLD_API ArnoldBackground : public GafferScene::GlobalShader
 IE_CORE_DECLAREPTR( ArnoldBackground )
 
 } // namespace GafferArnold
-
-#endif // GAFFERARNOLD_ARNOLDBACKGROUND_H

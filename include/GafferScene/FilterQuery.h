@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_FILTERQUERY_H
-#define GAFFERSCENE_FILTERQUERY_H
+#pragma once
 
 #include "GafferScene/Export.h"
 #include "GafferScene/TypeIds.h"
@@ -106,5 +105,3 @@ class GAFFERSCENE_API FilterQuery : public Gaffer::ComputeNode
 IE_CORE_DECLAREPTR( FilterQuery )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_FILTERQUERY_H

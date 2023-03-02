@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_MAPOFFSET_H
-#define GAFFERSCENE_MAPOFFSET_H
+#pragma once
 
 #include "GafferScene/ObjectProcessor.h"
 
@@ -84,5 +83,3 @@ class GAFFERSCENE_API MapOffset : public ObjectProcessor
 IE_CORE_DECLAREPTR( MapOffset )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_MAPOFFSET_H

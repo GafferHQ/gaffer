@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_FILESYSTEMPATH_H
-#define GAFFER_FILESYSTEMPATH_H
+#pragma once
 
 #include "Gaffer/Path.h"
 
@@ -119,5 +118,3 @@ class GAFFER_API FileSystemPath : public Path
 };
 
 } // namespace Gaffer
-
-#endif // GAFFER_FILESYSTEMPATH_H

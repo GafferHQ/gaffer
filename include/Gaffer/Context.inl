@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_CONTEXT_INL
-#define GAFFER_CONTEXT_INL
+#pragma once
 
 #include "IECore/SimpleTypedData.h"
 
@@ -294,5 +293,3 @@ Context::TypeDescription<T>::TypeDescription()
 }
 
 } // namespace Gaffer
-
-#endif // GAFFER_CONTEXT_INL

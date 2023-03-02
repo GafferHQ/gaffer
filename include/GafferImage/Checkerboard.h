@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_CHECKERBOARD_H
-#define GAFFERIMAGE_CHECKERBOARD_H
+#pragma once
 
 #include "GafferImage/FormatPlug.h"
 #include "GafferImage/FlatImageSource.h"
@@ -106,5 +105,3 @@ class GAFFERIMAGE_API Checkerboard : public FlatImageSource
 IE_CORE_DECLAREPTR( Checkerboard )
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_CHECKERBOARD_H

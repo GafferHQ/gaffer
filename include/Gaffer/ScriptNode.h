@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_SCRIPTNODE_H
-#define GAFFER_SCRIPTNODE_H
+#pragma once
 
 #include "Gaffer/Action.h"
 #include "Gaffer/Node.h"
@@ -375,5 +374,3 @@ class GAFFER_API ScriptNode : public Node
 IE_CORE_DECLAREPTR( ScriptNode );
 
 } // namespace Gaffer
-
-#endif // GAFFER_SCRIPTNODE_H

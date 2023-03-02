@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_TRANSFORM_H
-#define GAFFERSCENE_TRANSFORM_H
+#pragma once
 
 #include "GafferScene/SceneElementProcessor.h"
 
@@ -95,5 +94,3 @@ class GAFFERSCENE_API Transform : public SceneElementProcessor
 IE_CORE_DECLAREPTR( Transform )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_TRANSFORM_H

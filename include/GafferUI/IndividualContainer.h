@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_INDIVIDUALCONTAINER_H
-#define GAFFERUI_INDIVIDUALCONTAINER_H
+#pragma once
 
 #include "GafferUI/ContainerGadget.h"
 
@@ -75,5 +74,3 @@ IE_CORE_DECLAREPTR( IndividualContainer );
 } // namespace GafferUI
 
 #include "GafferUI/IndividualContainer.inl"
-
-#endif // GAFFERUI_INDIVIDUALCONTAINER_H

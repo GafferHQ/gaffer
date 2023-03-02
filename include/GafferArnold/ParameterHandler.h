@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERARNOLD_PARAMETERHANDLER_H
-#define GAFFERARNOLD_PARAMETERHANDLER_H
+#pragma once
 
 #include "GafferArnold/Export.h"
 
@@ -61,5 +60,3 @@ class GAFFERARNOLD_API ParameterHandler
 };
 
 } // namespace GafferArnold
-
-#endif // GAFFERARNOLD_PARAMETERHANDLER_H

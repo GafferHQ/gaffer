@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERCYCLES_CYCLESLIGHT_H
-#define GAFFERCYCLES_CYCLESLIGHT_H
+#pragma once
 
 #include "GafferCycles/Export.h"
 #include "GafferCycles/TypeIds.h"
@@ -81,5 +80,3 @@ class GAFFERCYCLES_API CyclesLight : public GafferScene::Light
 IE_CORE_DECLAREPTR( CyclesLight )
 
 } // namespace GafferCycles
-
-#endif // GAFFERCYCLES_CYCLESLIGHT_H

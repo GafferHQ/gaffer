@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_SLOTBASE_H
-#define GAFFER_SLOTBASE_H
+#pragma once
 
 #include "IECore/Export.h"
 
@@ -173,5 +172,3 @@ namespace GafferModule
 void bindSignals();
 
 };
-
-#endif // GAFFER_SLOTBASE_H

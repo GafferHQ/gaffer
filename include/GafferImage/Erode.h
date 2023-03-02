@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_ERODE_H
-#define GAFFERIMAGE_ERODE_H
+#pragma once
 
 #include "GafferImage/RankFilter.h"
 
@@ -57,5 +56,3 @@ class GAFFERIMAGE_API Erode : public RankFilter
 IE_CORE_DECLAREPTR( Erode );
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_ERODE_H

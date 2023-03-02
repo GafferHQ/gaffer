@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUIMODULE_EVENTBINDING_H
-#define GAFFERUIMODULE_EVENTBINDING_H
+#pragma once
 
 namespace GafferUIModule
 {
@@ -43,5 +42,3 @@ namespace GafferUIModule
 void bindEvent();
 
 } // namespace GafferUIModule
-
-#endif // GAFFERUIMODULE_EVENTBINDING_H

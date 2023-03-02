@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_PLUGTYPE_H
-#define GAFFER_PLUGTYPE_H
+#pragma once
 
 #include "Gaffer/BoxPlug.h"
 #include "Gaffer/CompoundNumericPlug.h"
@@ -86,5 +85,3 @@ GAFFER_PLUGTYPE_SPECIALISE( Imath::Box2f, Box2fPlug )
 GAFFER_PLUGTYPE_SPECIALISE( Imath::Box3f, Box3fPlug )
 
 } // namespace Gaffer
-
-#endif // GAFFER_PLUGTYPE_H

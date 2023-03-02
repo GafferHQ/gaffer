@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUI_ATTRIBUTEQUERYUI_H
-#define GAFFERSCENEUI_ATTRIBUTEQUERYUI_H
+#pragma once
 
 #include "GafferSceneUI/Export.h"
 
@@ -50,5 +49,3 @@ namespace AttributeQueryUI
 
 } // AttributeQueryUI
 } // GafferSceneUI
-
-#endif // GAFFERSCENEUI_ATTRIBUTEQUERYUI_H

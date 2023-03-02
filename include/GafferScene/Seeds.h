@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_SEEDS_H
-#define GAFFERSCENE_SEEDS_H
+#pragma once
 
 #include "GafferScene/BranchCreator.h"
 
@@ -96,5 +95,3 @@ class GAFFERSCENE_API Seeds : public BranchCreator
 IE_CORE_DECLAREPTR( Seeds )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_SEEDS_H

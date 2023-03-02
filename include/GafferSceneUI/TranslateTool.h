@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUI_TRANSLATETOOL_H
-#define GAFFERSCENEUI_TRANSLATETOOL_H
+#pragma once
 
 #include "GafferSceneUI/TransformTool.h"
 #include "GafferSceneUI/TypeIds.h"
@@ -128,5 +127,3 @@ class GAFFERSCENEUI_API TranslateTool : public TransformTool
 };
 
 } // namespace GafferSceneUI
-
-#endif // GAFFERSCENEUI_TRANSLATETOOL_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_RENAME_H
-#define GAFFERSCENE_RENAME_H
+#pragma once
 
 #include "GafferScene/FilteredSceneProcessor.h"
 
@@ -136,5 +135,3 @@ class GAFFERSCENE_API Rename : public FilteredSceneProcessor
 IE_CORE_DECLAREPTR( Rename )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_RENAME_H

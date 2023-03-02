@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGEMODULE_BUFFERALGOBINDING_H
-#define GAFFERIMAGEMODULE_BUFFERALGOBINDING_H
+#pragma once
 
 namespace GafferImageModule
 {
@@ -43,5 +42,3 @@ namespace GafferImageModule
 void bindBufferAlgo();
 
 }; // namespace GafferImageModule
-
-#endif // GAFFERIMAGEMODULE_BUFFERALGOBINDING_H

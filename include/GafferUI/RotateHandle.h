@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_ROTATEHANDLE_H
-#define GAFFERUI_ROTATEHANDLE_H
+#pragma once
 
 #include "GafferUI/Handle.h"
 
@@ -98,5 +97,3 @@ class GAFFERUI_API RotateHandle : public Handle
 IE_CORE_DECLAREPTR( RotateHandle )
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_ROTATEHANDLE_H

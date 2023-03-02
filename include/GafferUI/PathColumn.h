@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_PATHCOLUMN_H
-#define GAFFERUI_PATHCOLUMN_H
+#pragma once
 
 #include "GafferUI/ButtonEvent.h"
 #include "GafferUI/EventSignalCombiner.h"
@@ -259,5 +258,3 @@ class PathListingWidget
 };
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_PATHCOLUMN_H
