@@ -49,7 +49,7 @@
 #include "IECorePython/RefCountedBinding.h"
 #include "IECorePython/ScopedGILRelease.h"
 
-#include "boost/format.hpp"
+#include "fmt/format.h"
 
 using namespace boost::python;
 using namespace Gaffer;
@@ -60,12 +60,9 @@ namespace
 
 std::string repr( PerformanceMonitor::Statistics &s )
 {
-	return boost::str(
-		boost::format( "Gaffer.PerformanceMonitor.Statistics( hashCount = %d, computeCount = %d, hashDuration = %d, computeDuration = %d )" )
-			% s.hashCount
-			% s.computeCount
-			% s.hashDuration.count()
-			% s.computeDuration.count()
+	return fmt::format(
+		"Gaffer.PerformanceMonitor.Statistics( hashCount = {}, computeCount = {}, hashDuration = {}, computeDuration = {} )",
+			s.hashCount, s.computeCount, s.hashDuration.count(), s.computeDuration.count()
 	);
 }
 

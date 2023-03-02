@@ -51,7 +51,8 @@
 
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/algorithm/string/replace.hpp"
-#include "boost/format.hpp"
+
+#include "fmt/format.h"
 
 #include <unordered_map>
 
@@ -179,9 +180,7 @@ std::string ValuePlugSerialiser::repr( const Gaffer::ValuePlug *plug, const std:
 		else
 		{
 			throw IECore::Exception(
-				boost::str(
-					boost::format( "Default value for plug \"%s\" cannot be serialised" ) % plug->fullName()
-				)
+				fmt::format( "Default value for plug \"{}\" cannot be serialised", plug->fullName() )
 			);
 		}
 	}

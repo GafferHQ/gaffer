@@ -45,7 +45,7 @@
 
 #include "IECorePython/RunTimeTypedBinding.h"
 
-#include "boost/format.hpp"
+#include "fmt/format.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
@@ -65,12 +65,12 @@ std::string repr( const ArrayPlug *plug )
 
 	if( plug->minSize() != 1 )
 	{
-		result += boost::str( boost::format( "minSize = %d, " ) % plug->minSize() );
+		result += fmt::format( "minSize = {}, ", plug->minSize() );
 	}
 
 	if( plug->maxSize() != std::numeric_limits<size_t>::max() )
 	{
-		result += boost::str( boost::format( "maxSize = %d, " ) % plug->maxSize() );
+		result += fmt::format( "maxSize = {}, ", plug->maxSize() );
 	}
 
 	const unsigned flags = plug->getFlags();

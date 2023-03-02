@@ -48,8 +48,9 @@
 #include "IECorePython/ExceptionAlgo.h"
 #include "IECorePython/ScopedGILRelease.h"
 
-#include "boost/format.hpp"
 #include "boost/python/suite/indexing/container_utils.hpp"
+
+#include "fmt/format.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
@@ -160,9 +161,7 @@ GraphComponentPtr descendant( GraphComponent &g, const std::string &n )
 
 void throwKeyError( const GraphComponent &g, const IECore::InternedString &n )
 {
-	const std::string error = boost::str(
-		boost::format( "'%s' is not a child of '%s'" ) % n.string() % g.getName()
-	);
+	const std::string error = fmt::format( "'{}' is not a child of '{}'", n.string(), g.getName().string() );
 	PyErr_SetString( PyExc_KeyError, error.c_str() );
 	throw_error_already_set();
 }

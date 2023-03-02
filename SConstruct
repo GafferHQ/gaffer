@@ -935,6 +935,9 @@ libraries = {
 	"Gaffer" : {
 		"envAppends" : {
 			"LIBS" : [ "Half", "fmt" ],
+		},
+		"pythonEnvAppends" : {
+			"LIBS" : [ "fmt" ],
 		}
 	},
 
