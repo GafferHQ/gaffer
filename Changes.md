@@ -7,6 +7,7 @@ Fixes
 - Tweak nodes : Fixed bugs which prevented the creation of new tweaks when an existing tweak had an input connection.
 - Preferences : Fixed bug which caused UI metadata to be serialised unnecessarily into `~/gaffer/startup/gui/preferences.py`.
 - OpenGL Texture shader : Fixed bug which allowed transparent regions to obscure objects behind them.
+- Viewer : Fixed Arnold selection bugs caused by the `ai:fis_filter` option.
 
 1.1.9.1 (relative to 1.1.9.0)
 =======
