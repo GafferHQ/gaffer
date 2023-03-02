@@ -562,6 +562,8 @@ AnimationGadget::AnimationGadget()
 	m_visiblePlugs->memberAcceptanceSignal().connect( boost::bind( &AnimationGadget::plugSetAcceptor, this, ::_1, ::_2 ) );
 	m_visiblePlugs->memberAddedSignal().connect( boost::bind( &AnimationGadget::visiblePlugAdded, this, ::_1, ::_2 ) );
 	m_visiblePlugs->memberRemovedSignal().connect( boost::bind( &AnimationGadget::visiblePlugRemoved, this, ::_1, ::_2 ) );
+
+	Gaffer::Metadata::valueChangedSignal().connect( boost::bind( &AnimationGadget::metadataValueChanged, this, ::_1, ::_2 ) );
 }
 
 AnimationGadget::~AnimationGadget()
@@ -850,6 +852,14 @@ const Gaffer::StandardSet *AnimationGadget::editablePlugs() const
 void AnimationGadget::plugDirtied( Gaffer::Plug *plug )
 {
 	dirty( DirtyType::Render );
+}
+
+void AnimationGadget::metadataValueChanged( IECore::InternedString target, IECore::InternedString key )
+{
+	if( ( target == g_metadataTangent ) && ( key == g_metadataConstrainedLength ) )
+	{
+		dirty( DirtyType::Render );
+	}
 }
 
 std::string AnimationGadget::getToolTip( const IECore::LineSegment3f &line ) const
