@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERBINDINGS_SERIALISATION_H
-#define GAFFERBINDINGS_SERIALISATION_H
+#pragma once
 
 #include "GafferBindings/Export.h"
 
@@ -178,5 +177,3 @@ class GAFFERBINDINGS_API Serialisation : boost::noncopyable
 };
 
 } // namespace GafferBindings
-
-#endif // GAFFERBINDINGS_SERIALISATION_H

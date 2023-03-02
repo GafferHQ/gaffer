@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_PRUNE_H
-#define GAFFERSCENE_PRUNE_H
+#pragma once
 
 #include "GafferScene/FilteredSceneProcessor.h"
 
@@ -76,5 +75,3 @@ class GAFFERSCENE_API Prune : public FilteredSceneProcessor
 IE_CORE_DECLAREPTR( Prune )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_PRUNE_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUIMODULE_CONTEXTALGOBINDING_H
-#define GAFFERSCENEUIMODULE_CONTEXTALGOBINDING_H
+#pragma once
 
 namespace GafferSceneUIModule
 {
@@ -43,5 +42,3 @@ namespace GafferSceneUIModule
 void bindContextAlgo();
 
 } // namespace GafferSceneUIModule
-
-#endif // GAFFERSCENEUIMODULE_CONTEXTALGOBINDING_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFEROSL_OSLLIGHT_H
-#define GAFFEROSL_OSLLIGHT_H
+#pragma once
 
 #include "GafferOSL/Export.h"
 #include "GafferOSL/TypeIds.h"
@@ -118,5 +117,3 @@ class GAFFEROSL_API OSLLight : public GafferScene::Light
 IE_CORE_DECLAREPTR( OSLLight )
 
 } // namespace GafferOSL
-
-#endif // GAFFEROSL_OSLLIGHT_H

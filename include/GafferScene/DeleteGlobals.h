@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_DELETEGLOBALS_H
-#define GAFFERSCENE_DELETEGLOBALS_H
+#pragma once
 
 #include "GafferScene/GlobalsProcessor.h"
 
@@ -92,5 +91,3 @@ class GAFFERSCENE_API DeleteGlobals : public GlobalsProcessor
 IE_CORE_DECLAREPTR( DeleteGlobals );
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_DELETEGLOBALS_H

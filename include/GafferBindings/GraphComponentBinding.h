@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERBINDINGS_GRAPHCOMPONENTBINDING_H
-#define GAFFERBINDINGS_GRAPHCOMPONENTBINDING_H
+#pragma once
 
 #include "Gaffer/GraphComponent.h"
 
@@ -160,5 +159,3 @@ class GraphComponentWrapper : public IECorePython::RunTimeTypedWrapper<WrappedTy
 } // namespace GafferBindings
 
 #include "GafferBindings/GraphComponentBinding.inl"
-
-#endif // GAFFERBINDINGS_GRAPHCOMPONENTBINDING_H

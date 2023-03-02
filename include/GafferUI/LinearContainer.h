@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_LINEARCONTAINER_H
-#define GAFFERUI_LINEARCONTAINER_H
+#pragma once
 
 #include "GafferUI/ContainerGadget.h"
 
@@ -104,5 +103,3 @@ class GAFFERUI_API LinearContainer : public ContainerGadget
 IE_CORE_DECLAREPTR( LinearContainer );
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_LINEARCONTAINER_H

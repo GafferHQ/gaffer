@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERMODULE_SUBGRAPHBINDING_H
-#define GAFFERMODULE_SUBGRAPHBINDING_H
+#pragma once
 
 namespace GafferModule
 {
@@ -43,5 +42,3 @@ namespace GafferModule
 void bindSubGraph();
 
 } // namespace GafferModule
-
-#endif // GAFFERMODULE_SUBGRAPHBINDING_H

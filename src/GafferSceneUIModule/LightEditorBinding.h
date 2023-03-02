@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUIMODULE_LIGHTEDITORBINDING_H
-#define GAFFERSCENEUIMODULE_LIGHTEDITORBINDING_H
+#pragma once
 
 namespace GafferSceneUIModule
 {
@@ -43,5 +42,3 @@ namespace GafferSceneUIModule
 void bindLightEditor();
 
 } // namespace GafferSceneUIModule
-
-#endif // GAFFERSCENEUIMODULE_LIGHTEDITORBINDING_H

@@ -32,8 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef IECORECYCLES_GEOMETRYALGO_H
-#define IECORECYCLES_GEOMETRYALGO_H
+#pragma once
 
 #include "GafferCycles/IECoreCyclesPreview/Export.h"
 
@@ -105,5 +104,3 @@ class ConverterDescription
 } // namespace GeometryAlgo
 
 } // namespace IECoreCycles
-
-#endif // IECORECYCLES_GEOMETRYALGO_H

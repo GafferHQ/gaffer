@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_COMPOUNDPATHFILTER_H
-#define GAFFER_COMPOUNDPATHFILTER_H
+#pragma once
 
 #include "Gaffer/PathFilter.h"
 
@@ -89,5 +88,3 @@ class GAFFER_API CompoundPathFilter : public Gaffer::PathFilter
 IE_CORE_DECLAREPTR( CompoundPathFilter )
 
 } // namespace Gaffer
-
-#endif // GAFFER_COMPOUNDPATHFILTER_H

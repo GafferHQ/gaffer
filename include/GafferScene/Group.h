@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_GROUP_H
-#define GAFFERSCENE_GROUP_H
+#pragma once
 
 #include "GafferScene/SceneProcessor.h"
 
@@ -107,5 +106,3 @@ class GAFFERSCENE_API Group : public SceneProcessor
 IE_CORE_DECLAREPTR( Group )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_GROUP_H

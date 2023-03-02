@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERTEST_ASSERT_H
-#define GAFFERTEST_ASSERT_H
+#pragma once
 
 #include "IECore/Exception.h"
 
@@ -65,5 +64,3 @@ namespace GafferTest
 	}
 
 } // namespace GafferTest
-
-#endif // GAFFERTEST_ASSERT_H

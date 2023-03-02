@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_FORMATPLUG_H
-#define GAFFERIMAGE_FORMATPLUG_H
+#pragma once
 
 #include "GafferImage/Format.h"
 #include "GafferImage/TypeIds.h"
@@ -136,5 +135,3 @@ class GAFFERIMAGE_API FormatPlug : public Gaffer::ValuePlug
 IE_CORE_DECLAREPTR( FormatPlug );
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_FORMATPLUG_H

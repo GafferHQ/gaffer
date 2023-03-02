@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_SPHERELEVELSET_H
-#define GAFFERSCENE_SPHERELEVELSET_H
+#pragma once
 
 #include "GafferVDB/Export.h"
 
@@ -91,5 +90,3 @@ class GAFFERVDB_API SphereLevelSet : public GafferScene::ObjectSource
 	IE_CORE_DECLAREPTR( SphereLevelSet )
 
 } // namespace GafferVDB
-
-#endif // GAFFERSCENE_SPHERELEVELSET_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_VTUNEMONITOR_H
-#define GAFFER_VTUNEMONITOR_H
+#pragma once
 
 #ifdef GAFFER_VTUNE
 
@@ -71,4 +70,3 @@ IE_CORE_DECLAREPTR( VTuneMonitor )
 } // namespace Gaffer
 
 #endif // GAFFER_VTUNE
-#endif // GAFFER_VTUNEMONITOR_H

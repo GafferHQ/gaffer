@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERBINDINGS_SERIALISATIONBINDING_H
-#define GAFFERBINDINGS_SERIALISATIONBINDING_H
+#pragma once
 
 #include "boost/python.hpp"
 
@@ -233,5 +232,3 @@ class SerialiserWrapper : public IECorePython::RefCountedWrapper<WrappedType>
 } // namespace GafferBindings
 
 #include "GafferBindings/SerialisationBinding.inl"
-
-#endif // GAFFERBINDINGS_SERIALISATIONBINDING_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_TWEAKPLUG_H
-#define GAFFER_TWEAKPLUG_H
+#pragma once
 
 #include "Gaffer/Export.h"
 #include "Gaffer/CompoundDataPlug.h"
@@ -196,5 +195,3 @@ class GAFFER_API TweaksPlug : public Gaffer::ValuePlug
 } // namespace Gaffer
 
 #include "Gaffer/TweakPlug.inl"
-
-#endif // GAFFER_TWEAKPLUG_H

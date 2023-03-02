@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_LOCALISEATTRIBUTES_H
-#define GAFFERSCENE_LOCALISEATTRIBUTES_H
+#pragma once
 
 #include "GafferScene/AttributeProcessor.h"
 
@@ -72,5 +71,3 @@ class GAFFERSCENE_API LocaliseAttributes : public AttributeProcessor
 IE_CORE_DECLAREPTR( LocaliseAttributes )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_LOCALISEATTRIBUTES_H

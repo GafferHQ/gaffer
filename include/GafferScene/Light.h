@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_LIGHT_H
-#define GAFFERSCENE_LIGHT_H
+#pragma once
 
 #include "GafferScene/ObjectSource.h"
 
@@ -98,5 +97,3 @@ class GAFFERSCENE_API Light : public ObjectSource
 IE_CORE_DECLAREPTR( Light )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_LIGHT_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERTEST_CONTEXTTEST_H
-#define GAFFERTEST_CONTEXTTEST_H
+#pragma once
 
 #include "GafferTest/Assert.h"
 #include "GafferTest/Export.h"
@@ -193,5 +192,3 @@ GAFFERTEST_API void testCopyEditableScope();
 GAFFERTEST_API void testContextHashValidation();
 
 } // namespace GafferTest
-
-#endif // GAFFERTEST_CONTEXTTEST_H

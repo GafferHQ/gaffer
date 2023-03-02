@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_SHADERQUERY_H
-#define GAFFERSCENE_SHADERQUERY_H
+#pragma once
 
 #include "GafferScene/AttributeQuery.h"
 #include "GafferScene/Export.h"
@@ -120,5 +119,3 @@ class GAFFERSCENE_API ShaderQuery : public Gaffer::ComputeNode
 };
 
 }  // namespace GafferScene
-
-#endif // GAFFERSCENE_SHADERQUERY_H

@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_SCALEHANDLE_H
-#define GAFFERUI_SCALEHANDLE_H
+#pragma once
 
 #include "GafferUI/Handle.h"
 
@@ -78,5 +77,3 @@ class GAFFERUI_API ScaleHandle : public Handle
 IE_CORE_DECLAREPTR( ScaleHandle )
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_SCALEHANDLE_H

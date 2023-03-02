@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_ATTRIBUTETWEAKS_H
-#define GAFFERSCENE_ATTRIBUTETWEAKS_H
+#pragma once
 
 #include "GafferScene/AttributeProcessor.h"
 #include "GafferScene/Export.h"
@@ -77,5 +76,3 @@ class GAFFERSCENE_API AttributeTweaks : public AttributeProcessor
 IE_CORE_DECLAREPTR( AttributeTweaks )
 
 }  // namespace GafferScene
-
-#endif // GAFFERSCENE_ATTRIBUTETWEAKS_H

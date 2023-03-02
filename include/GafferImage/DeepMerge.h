@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_DEEPMERGE_H
-#define GAFFERIMAGE_DEEPMERGE_H
+#pragma once
 
 #include "GafferImage/ImageProcessor.h"
 
@@ -88,5 +87,3 @@ class GAFFERIMAGE_API DeepMerge : public ImageProcessor
 IE_CORE_DECLAREPTR( DeepMerge )
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_DEEPMERGE_H

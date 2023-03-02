@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_PREMULTIPLY_H
-#define GAFFERIMAGE_PREMULTIPLY_H
+#pragma once
 
 #include "GafferImage/ChannelDataProcessor.h"
 
@@ -79,5 +78,3 @@ class GAFFERIMAGE_API Premultiply : public ChannelDataProcessor
 IE_CORE_DECLAREPTR( Premultiply );
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_PREMULTIPLY_H

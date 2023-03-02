@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef IECOREGLPREVIEW_OBJECTVISUALISER_H
-#define IECOREGLPREVIEW_OBJECTVISUALISER_H
+#pragma once
 
 #include "GafferScene/Export.h"
 
@@ -97,5 +96,3 @@ class GAFFERSCENE_API ObjectVisualiser : public IECore::RefCounted
 };
 
 } // namespace IECoreGLPreview
-
-#endif // IECOREGLPREVIEW_OBJECTVISUALISER_H

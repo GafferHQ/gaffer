@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEMODULE_HIERARCHYBINDING_H
-#define GAFFERSCENEMODULE_HIERARCHYBINDING_H
+#pragma once
 
 namespace GafferSceneModule
 {
@@ -43,5 +42,3 @@ namespace GafferSceneModule
 void bindHierarchy();
 
 } // namespace GafferSceneModule
-
-#endif // GAFFERSCENEMODULE_HIERARCHYBINDING_H

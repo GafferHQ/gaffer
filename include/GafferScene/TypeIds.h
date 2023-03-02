@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_TYPEIDS_H
-#define GAFFERSCENE_TYPEIDS_H
+#pragma once
 
 namespace GafferScene
 {
@@ -183,5 +182,3 @@ enum TypeId
 };
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_TYPEIDS_H

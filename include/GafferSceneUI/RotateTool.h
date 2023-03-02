@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUI_ROTATETOOL_H
-#define GAFFERSCENEUI_ROTATETOOL_H
+#pragma once
 
 #include "GafferSceneUI/TransformTool.h"
 
@@ -130,5 +129,3 @@ class GAFFERSCENEUI_API RotateTool : public TransformTool
 };
 
 } // namespace GafferSceneUI
-
-#endif // GAFFERSCENEUI_ROTATETOOL_H

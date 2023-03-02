@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERBINDINGS_RAWCONSTRUCTOR_H
-#define GAFFERBINDINGS_RAWCONSTRUCTOR_H
+#pragma once
 
 #include "boost/functional.hpp"
 
@@ -48,5 +47,3 @@ boost::python::object rawConstructor( F f );
 } // namespace GafferBindings
 
 #include "GafferBindings/RawConstructor.inl"
-
-#endif // GAFFERBINDINGS_RAWCONSTRUCTOR_H

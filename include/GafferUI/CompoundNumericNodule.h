@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_COMPOUNDNUMERICNODULE_H
-#define GAFFERUI_COMPOUNDNUMERICNODULE_H
+#pragma once
 
 #include "GafferUI/StandardNodule.h"
 
@@ -86,5 +85,3 @@ class GAFFERUI_API CompoundNumericNodule : public StandardNodule
 IE_CORE_DECLAREPTR( CompoundNumericNodule );
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_COMPOUNDNUMERICNODULE_H

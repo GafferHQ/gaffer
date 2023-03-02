@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGEMODULE_TRANSFORMBINDING_H
-#define GAFFERIMAGEMODULE_TRANSFORMBINDING_H
+#pragma once
 
 namespace GafferImageModule
 {
@@ -43,5 +42,3 @@ namespace GafferImageModule
 void bindTransforms();
 
 }; // namespace GafferImageModule
-
-#endif // GAFFERIMAGEMODULE_TRANSFORMBINDING_H

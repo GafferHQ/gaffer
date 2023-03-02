@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERCYCLES_CYCLESMESHLIGHT_H
-#define GAFFERCYCLES_CYCLESMESHLIGHT_H
+#pragma once
 
 #include "GafferCycles/Export.h"
 #include "GafferCycles/TypeIds.h"
@@ -64,5 +63,3 @@ class GAFFERCYCLES_API CyclesMeshLight : public GafferScene::FilteredSceneProces
 IE_CORE_DECLAREPTR( CyclesMeshLight )
 
 } // namespace GafferCycles
-
-#endif // GAFFERCYCLES_CYCLESMESHLIGHT_H

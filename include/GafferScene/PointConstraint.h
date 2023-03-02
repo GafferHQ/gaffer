@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_POINTCONSTRAINT_H
-#define GAFFERSCENE_POINTCONSTRAINT_H
+#pragma once
 
 #include "GafferScene/Constraint.h"
 
@@ -79,5 +78,3 @@ class GAFFERSCENE_API PointConstraint : public Constraint
 IE_CORE_DECLAREPTR( PointConstraint )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_POINTCONSTRAINT_H

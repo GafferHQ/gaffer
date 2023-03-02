@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFEROSL_OSLCODE_H
-#define GAFFEROSL_OSLCODE_H
+#pragma once
 
 #include "GafferOSL/OSLShader.h"
 
@@ -97,5 +96,3 @@ class GAFFEROSL_API OSLCode : public OSLShader
 IE_CORE_DECLAREPTR( OSLCode )
 
 } // namespace GafferOSL
-
-#endif // GAFFEROSL_OSLCODE_H

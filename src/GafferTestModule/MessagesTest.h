@@ -32,8 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERTESTMODULE_MESSAGESTEST_H
-#define GAFFERTESTMODULE_MESSAGESTEST_H
+#pragma once
 
 namespace GafferTestModule
 {
@@ -41,7 +40,3 @@ namespace GafferTestModule
 void bindMessagesTest();
 
 } // namespace GafferTestModule
-
-
-
-#endif // GAFFERTESTMODULE_MESSAGESTEST_H

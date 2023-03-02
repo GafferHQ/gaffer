@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_DELETEPRIMITIVEVARIABLE_H
-#define GAFFERSCENE_DELETEPRIMITIVEVARIABLE_H
+#pragma once
 
 #include "GafferScene/PrimitiveVariableProcessor.h"
 
@@ -61,5 +60,3 @@ class GAFFERSCENE_API DeletePrimitiveVariables : public PrimitiveVariableProcess
 IE_CORE_DECLAREPTR( DeletePrimitiveVariables )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_DELETEPRIMITIVEVARIABLE_H

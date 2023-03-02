@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_TEXT_H
-#define GAFFERSCENE_TEXT_H
+#pragma once
 
 #include "GafferScene/ObjectSource.h"
 
@@ -74,5 +73,3 @@ class GAFFERSCENE_API Text : public ObjectSource
 IE_CORE_DECLAREPTR( Text )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_TEXT_H

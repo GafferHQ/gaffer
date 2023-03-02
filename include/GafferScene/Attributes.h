@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_ATTRIBUTES_H
-#define GAFFERSCENE_ATTRIBUTES_H
+#pragma once
 
 #include "GafferScene/AttributeProcessor.h"
 
@@ -89,5 +88,3 @@ class GAFFERSCENE_API Attributes : public AttributeProcessor
 IE_CORE_DECLAREPTR( Attributes )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_ATTRIBUTES_H

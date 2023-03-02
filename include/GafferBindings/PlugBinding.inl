@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERBINDINGS_PLUGBINDING_INL
-#define GAFFERBINDINGS_PLUGBINDING_INL
+#pragma once
 
 #include "IECorePython/ScopedGILRelease.h"
 
@@ -76,5 +75,3 @@ PlugClass<T, TWrapper>::PlugClass( const char *docString )
 }
 
 } // namespace GafferBindings
-
-#endif // GAFFERBINDINGS_PLUGBINDING_INL

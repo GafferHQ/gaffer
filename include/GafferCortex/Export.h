@@ -32,8 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERCORTEX_EXPORT_H
-#define GAFFERCORTEX_EXPORT_H
+#pragma once
 
 #include "IECore/Export.h"
 
@@ -42,5 +41,3 @@
 #else
 	#define GAFFERCORTEX_API IECORE_IMPORT
 #endif
-
-#endif // #ifndef GAFFGAFFERCORTEX_EXPORT_HER_EXPORT_H

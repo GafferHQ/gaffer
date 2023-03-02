@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_STANDARDATTRIBUTES_H
-#define GAFFERSCENE_STANDARDATTRIBUTES_H
+#pragma once
 
 #include "GafferScene/Attributes.h"
 
@@ -57,5 +56,3 @@ class GAFFERSCENE_API StandardAttributes : public Attributes
 IE_CORE_DECLAREPTR( StandardAttributes )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_STANDARDATTRIBUTES_H

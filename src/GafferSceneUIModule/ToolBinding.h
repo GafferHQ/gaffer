@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUIMODULE_TOOLBINDING_H
-#define GAFFERSCENEUIMODULE_TOOLBINDING_H
+#pragma once
 
 namespace GafferSceneUIModule
 {
@@ -43,5 +42,3 @@ namespace GafferSceneUIModule
 void bindTools();
 
 } // namespace GafferSceneUIModule
-
-#endif // GAFFERSCENEUIMODULE_TOOLBINDING_H

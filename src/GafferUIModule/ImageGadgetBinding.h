@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUIMODULE_IMAGEGADGETBINDING_H
-#define GAFFERUIMODULE_IMAGEGADGETBINDING_H
+#pragma once
 
 namespace GafferUIModule
 {
@@ -43,5 +42,3 @@ namespace GafferUIModule
 void bindImageGadget();
 
 } // namespace GafferUIModule
-
-#endif // GAFFERUIMODULE_IMAGEGADGETBINDING_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_CONSTANT_H
-#define GAFFERIMAGE_CONSTANT_H
+#pragma once
 
 #include "GafferImage/FormatPlug.h"
 #include "GafferImage/FlatImageSource.h"
@@ -89,5 +88,3 @@ class GAFFERIMAGE_API Constant : public FlatImageSource
 IE_CORE_DECLAREPTR( Constant )
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_CONSTANT_H

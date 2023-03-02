@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFEROSL_TYPEIDS_H
-#define GAFFEROSL_TYPEIDS_H
+#pragma once
 
 namespace GafferOSL
 {
@@ -54,5 +53,3 @@ enum TypeId
 };
 
 } // namespace GafferOSL
-
-#endif // GAFFEROSL_TYPEIDS_H

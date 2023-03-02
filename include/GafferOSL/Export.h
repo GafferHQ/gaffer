@@ -32,8 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFEROSL_EXPORT_H
-#define GAFFEROSL_EXPORT_H
+#pragma once
 
 #include "IECore/Export.h"
 
@@ -42,5 +41,3 @@
 #else
 	#define GAFFEROSL_API IECORE_IMPORT
 #endif
-
-#endif // #ifndef GAFFEROSL_EXPORT_H

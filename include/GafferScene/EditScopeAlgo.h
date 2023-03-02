@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_EDITSCOPEALGO_H
-#define GAFFERSCENE_EDITSCOPEALGO_H
+#pragma once
 
 #include "GafferScene/ScenePlug.h"
 
@@ -143,5 +142,3 @@ GAFFERSCENE_API const Gaffer::GraphComponent *setMembershipReadOnlyReason( const
 } // namespace EditScopeAlgo
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_EDITSCOPEALGO_H

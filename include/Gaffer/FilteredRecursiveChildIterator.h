@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_FILTEREDRECURSIVECHILDITERATOR_H
-#define GAFFER_FILTEREDRECURSIVECHILDITERATOR_H
+#pragma once
 
 #include "Gaffer/RecursiveChildIterator.h"
 
@@ -165,5 +164,3 @@ class FilteredRecursiveChildRange
 };
 
 } // namespace Gaffer
-
-#endif // GAFFER_FILTEREDRECURSIVECHILDITERATOR_H

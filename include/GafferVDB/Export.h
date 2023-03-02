@@ -32,8 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERVDB_EXPORT_H
-#define GAFFERVDB_EXPORT_H
+#pragma once
 
 #include "IECore/Export.h"
 
@@ -42,5 +41,3 @@
 #else
 	#define GAFFERVDB_API IECORE_IMPORT
 #endif
-
-#endif // #ifndef GAFFERVDB_EXPORT_H

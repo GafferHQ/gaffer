@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_DOT_H
-#define GAFFER_DOT_H
+#pragma once
 
 #include "Gaffer/DependencyNode.h"
 #include "Gaffer/NumericPlug.h"
@@ -108,5 +107,3 @@ IE_CORE_DECLAREPTR( Dot )
 } // namespace Gaffer
 
 #include "Gaffer/Dot.inl"
-
-#endif // GAFFER_DOT_H

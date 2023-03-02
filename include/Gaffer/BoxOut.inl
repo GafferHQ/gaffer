@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_BOXOUT_INL
-#define GAFFER_BOXOUT_INL
+#pragma once
 
 namespace Gaffer
 {
@@ -57,5 +56,3 @@ const T *BoxOut::passThroughPlug() const
 }
 
 } // namespace Gaffer
-
-#endif // GAFFER_BOXOUT_INL

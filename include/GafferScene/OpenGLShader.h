@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_OPENGLSHADER_H
-#define GAFFERSCENE_OPENGLSHADER_H
+#pragma once
 
 #include "GafferScene/Shader.h"
 
@@ -70,5 +69,3 @@ class GAFFERSCENE_API OpenGLShader : public GafferScene::Shader
 IE_CORE_DECLAREPTR( OpenGLShader )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_OPENGLSHADER_H

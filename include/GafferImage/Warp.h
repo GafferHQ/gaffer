@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_WARP_H
-#define GAFFERIMAGE_WARP_H
+#pragma once
 
 #include "GafferImage/FlatImageProcessor.h"
 
@@ -131,5 +130,3 @@ class GAFFERIMAGE_API Warp : public FlatImageProcessor
 IE_CORE_DECLAREPTR( Warp )
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_WARP_H

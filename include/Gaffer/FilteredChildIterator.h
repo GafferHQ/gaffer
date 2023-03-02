@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_FILTEREDCHILDITERATOR_H
-#define GAFFER_FILTEREDCHILDITERATOR_H
+#pragma once
 
 #include "Gaffer/GraphComponent.h"
 
@@ -155,5 +154,3 @@ class FilteredChildRange
 };
 
 } // namespace Gaffer
-
-#endif // GAFFER_FILTEREDCHILDITERATOR_H

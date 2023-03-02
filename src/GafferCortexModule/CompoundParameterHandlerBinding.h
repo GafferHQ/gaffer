@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERCORTEXMODULE_COMPOUNDPARAMETERHANDLERBINDING_H
-#define GAFFERCORTEXMODULE_COMPOUNDPARAMETERHANDLERBINDING_H
+#pragma once
 
 namespace GafferCortexModule
 {
@@ -43,5 +42,3 @@ namespace GafferCortexModule
 void bindCompoundParameterHandler();
 
 } // namespace GafferCortexModule
-
-#endif // GAFFERCORTEXMODULE_COMPOUNDPARAMETERHANDLERBINDING_H

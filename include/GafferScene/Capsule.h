@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_CAPSULE_H
-#define GAFFERSCENE_CAPSULE_H
+#pragma once
 
 #include "GafferScene/Private/IECoreScenePreview/Procedural.h"
 #include "GafferScene/ScenePlug.h"
@@ -113,5 +112,3 @@ class GAFFERSCENE_API Capsule : public IECoreScenePreview::Procedural
 IE_CORE_DECLAREPTR( Capsule )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_CAPSULE_H

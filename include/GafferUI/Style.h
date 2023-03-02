@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_STYLE_H
-#define GAFFERUI_STYLE_H
+#pragma once
 
 #include "GafferUI/Export.h"
 #include "GafferUI/TypeIds.h"
@@ -192,5 +191,3 @@ class GAFFERUI_API Style : public IECore::RunTimeTyped
 };
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_STYLE_H

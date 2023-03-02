@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_SCENEPATH_H
-#define GAFFERSCENE_SCENEPATH_H
+#pragma once
 
 #include "GafferScene/Export.h"
 #include "GafferScene/TypeIds.h"
@@ -107,5 +106,3 @@ class GAFFERSCENE_API ScenePath : public Gaffer::Path
 IE_CORE_DECLAREPTR( ScenePath )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_SCENEPATH_H

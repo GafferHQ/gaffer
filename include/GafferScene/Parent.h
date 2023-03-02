@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_PARENT_H
-#define GAFFERSCENE_PARENT_H
+#pragma once
 
 #include "GafferScene/BranchCreator.h"
 
@@ -115,5 +114,3 @@ class GAFFERSCENE_API Parent : public BranchCreator
 IE_CORE_DECLAREPTR( Parent )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_PARENT_H

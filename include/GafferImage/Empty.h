@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_EMPTY_H
-#define GAFFERIMAGE_EMPTY_H
+#pragma once
 
 #include "GafferImage/ImageNode.h"
 #include "GafferImage/FormatPlug.h"
@@ -85,5 +84,3 @@ class GAFFERIMAGE_API Empty : public ImageNode
 IE_CORE_DECLAREPTR( Empty )
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_EMPTY_H

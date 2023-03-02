@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEMODULE_PATHMATCHERBINDING_H
-#define GAFFERSCENEMODULE_PATHMATCHERBINDING_H
+#pragma once
 
 namespace GafferSceneModule
 {
@@ -43,5 +42,3 @@ namespace GafferSceneModule
 void bindPathMatcher();
 
 } // namespace GafferSceneModule
-
-#endif // GAFFERSCENEMODULE_PATHMATCHERBINDING_H

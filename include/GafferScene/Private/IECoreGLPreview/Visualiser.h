@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef IECOREGLPREVIEW_VISUALISER_H
-#define IECOREGLPREVIEW_VISUALISER_H
+#pragma once
 
 #include "GafferScene/Export.h"
 
@@ -123,5 +122,3 @@ struct GAFFERSCENE_API Visualisation
 using Visualisations = std::vector<Visualisation>;
 
 } // namespace IECoreGLPreview
-
-#endif // IECOREGLPREVIEW_VISUALISER_H

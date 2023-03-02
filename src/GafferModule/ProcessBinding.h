@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERMODULE_PROCESSBINDING_H
-#define GAFFERMODULE_PROCESSBINDING_H
+#pragma once
 
 namespace GafferModule
 {
@@ -43,5 +42,3 @@ namespace GafferModule
 void bindProcess();
 
 } // namespace GafferModule
-
-#endif // GAFFERMODULE_PROCESSBINDING_H

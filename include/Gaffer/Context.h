@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_CONTEXT_H
-#define GAFFER_CONTEXT_H
+#pragma once
 
 #include "Gaffer/Export.h"
 #include "Gaffer/Signals.h"
@@ -389,5 +388,3 @@ IE_CORE_DECLAREPTR( Context );
 } // namespace Gaffer
 
 #include "Gaffer/Context.inl"
-
-#endif // GAFFER_CONTEXT_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERMODULE_COMPOUNDNUMERICPLUGBINDING_H
-#define GAFFERMODULE_COMPOUNDNUMERICPLUGBINDING_H
+#pragma once
 
 namespace GafferModule
 {
@@ -43,5 +42,3 @@ namespace GafferModule
 void bindCompoundNumericPlug();
 
 } // namespace GafferModule
-
-#endif // GAFFERMODULE_COMPOUNDNUMERICPLUGBINDING_H

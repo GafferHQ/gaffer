@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_ANNOTATIONSGADGET_H
-#define GAFFERUI_ANNOTATIONSGADGET_H
+#pragma once
 
 #include "Gaffer/MetadataAlgo.h"
 
@@ -120,5 +119,3 @@ class GAFFERUI_API AnnotationsGadget : public Gadget
 };
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_ANNOTATIONSGADGET_H

@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERCORTEX_VECTORTYPEDPARAMETERHANDLER_H
-#define GAFFERCORTEX_VECTORTYPEDPARAMETERHANDLER_H
+#pragma once
 
 #include "GafferCortex/ParameterHandler.h"
 
@@ -78,5 +77,3 @@ class GAFFERCORTEX_API VectorTypedParameterHandler : public ParameterHandler
 };
 
 } // namespace GafferCortex
-
-#endif // GAFFERCORTEX_VECTORTYPEDPARAMETERHANDLER_H

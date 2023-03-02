@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_EXISTENCEQUERY_H
-#define GAFFERSCENE_EXISTENCEQUERY_H
+#pragma once
 
 #include "GafferScene/Export.h"
 #include "GafferScene/ScenePlug.h"
@@ -79,5 +78,3 @@ private:
 };
 
 } // GafferScene
-
-#endif // GAFFERSCENE_EXISTENCEQUERY_H

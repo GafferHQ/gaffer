@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGEMODULE_OPENCOLORIOTRANSFORMBINDING_H
-#define GAFFERIMAGEMODULE_OPENCOLORIOTRANSFORMBINDING_H
+#pragma once
 
 namespace GafferImageModule
 {
@@ -43,5 +42,3 @@ namespace GafferImageModule
 void bindOpenColorIOTransform();
 
 } // namespace GafferImageModule
-
-#endif // GAFFERIMAGEMODULE_OPENCOLORIOTRANSFORMBINDING_H

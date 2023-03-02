@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_IMAGETRANSFORM_H
-#define GAFFERSCENE_IMAGETRANSFORM_H
+#pragma once
 
 #include "GafferImage/FlatImageProcessor.h"
 
@@ -133,5 +132,3 @@ class GAFFERIMAGE_API ImageTransform : public FlatImageProcessor
 IE_CORE_DECLAREPTR( ImageTransform )
 
 } // namespace GafferImage
-
-#endif // GAFFERSCENE_IMAGETRANSFORM_H

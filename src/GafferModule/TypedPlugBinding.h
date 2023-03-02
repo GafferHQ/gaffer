@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERMODULE_TYPEDPLUGBINDING_H
-#define GAFFERMODULE_TYPEDPLUGBINDING_H
+#pragma once
 
 namespace GafferModule
 {
@@ -43,5 +42,3 @@ namespace GafferModule
 void bindTypedPlug();
 
 } // namespace GafferModule
-
-#endif // GAFFERMODULE_TYPEDPLUGBINDING_H

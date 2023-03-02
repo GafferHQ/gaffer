@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGEUI_IMAGEGADGET_H
-#define GAFFERIMAGEUI_IMAGEGADGET_H
+#pragma once
 
 #include "GafferImageUI/Export.h"
 #include "GafferImageUI/TypeIds.h"
@@ -333,5 +332,3 @@ class GAFFERIMAGEUI_API ImageGadget : public GafferUI::Gadget
 IE_CORE_DECLAREPTR( ImageGadget )
 
 } // namespace GafferImageUI
-
-#endif // GAFFERIMAGEUI_IMAGEGADGET_H

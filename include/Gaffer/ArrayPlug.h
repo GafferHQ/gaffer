@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_ARRAYPLUG_H
-#define GAFFER_ARRAYPLUG_H
+#pragma once
 
 #include "Gaffer/Plug.h"
 
@@ -104,5 +103,3 @@ class GAFFER_API ArrayPlug : public Plug
 IE_CORE_DECLAREPTR( ArrayPlug );
 
 } // namespace Gaffer
-
-#endif // GAFFER_ARRAYPLUG_H

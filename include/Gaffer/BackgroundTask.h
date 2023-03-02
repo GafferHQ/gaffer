@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_BACKGROUNDTASK_H
-#define GAFFER_BACKGROUNDTASK_H
+#pragma once
 
 #include "Gaffer/Export.h"
 
@@ -139,5 +138,3 @@ class GAFFER_API BackgroundTask : public boost::noncopyable
 };
 
 } // namespace Gaffer
-
-#endif // GAFFER_BACKGROUNDTASK_H

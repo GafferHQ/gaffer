@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEMODULE_TRANSFORMBINDING_H
-#define GAFFERSCENEMODULE_TRANSFORMBINDING_H
+#pragma once
 
 namespace GafferSceneModule
 {
@@ -43,5 +42,3 @@ namespace GafferSceneModule
 void bindTransform();
 
 } // namespace GafferSceneModule
-
-#endif // GAFFERSCENEMODULE_TRANSFORMBINDING_H

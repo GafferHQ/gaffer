@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_TIMEWARP_H
-#define GAFFER_TIMEWARP_H
+#pragma once
 
 #include "Gaffer/ContextProcessor.h"
 #include "Gaffer/NumericPlug.h"
@@ -73,5 +72,3 @@ class IECORE_EXPORT TimeWarp : public ContextProcessor
 IE_CORE_DECLAREPTR( TimeWarp );
 
 } // namespace Gaffer
-
-#endif // GAFFER_TIMEWARP_H

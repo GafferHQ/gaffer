@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_ATTRIBUTEVISUALISER_H
-#define GAFFERSCENE_ATTRIBUTEVISUALISER_H
+#pragma once
 
 #include "GafferScene/AttributeProcessor.h"
 
@@ -109,5 +108,3 @@ class GAFFERSCENE_API AttributeVisualiser : public AttributeProcessor
 IE_CORE_DECLAREPTR( AttributeVisualiser )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_ATTRIBUTEVISUALISER_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEMODULE_PRIMITIVESBINDING_H
-#define GAFFERSCENEMODULE_PRIMITIVESBINDING_H
+#pragma once
 
 namespace GafferSceneModule
 {
@@ -43,5 +42,3 @@ namespace GafferSceneModule
 void bindPrimitives();
 
 } // namespace GafferSceneModule
-
-#endif // GAFFERSCENEMODULE_PRIMITIVESBINDING_H

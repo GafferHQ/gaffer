@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_OPENGLRENDER_H
-#define GAFFERSCENE_OPENGLRENDER_H
+#pragma once
 
 #include "GafferScene/Render.h"
 
@@ -57,5 +56,3 @@ class GAFFERSCENE_API OpenGLRender : public Render
 IE_CORE_DECLAREPTR( OpenGLRender );
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_OPENGLRENDER_H

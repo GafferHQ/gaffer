@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGEUI_IMAGEVIEW_H
-#define GAFFERIMAGEUI_IMAGEVIEW_H
+#pragma once
 
 #include "GafferImageUI/Export.h"
 #include "GafferImageUI/TypeIds.h"
@@ -238,5 +237,3 @@ class GAFFERIMAGEUI_API ImageView : public GafferUI::View
 IE_CORE_DECLAREPTR( ImageView );
 
 } // namespace GafferImageUI
-
-#endif // GAFFERIMAGEUI_IMAGEVIEW_H

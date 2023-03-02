@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERMODULE_SWITCHBINDING_H
-#define GAFFERMODULE_SWITCHBINDING_H
+#pragma once
 
 namespace GafferModule
 {
@@ -43,5 +42,3 @@ namespace GafferModule
 void bindSwitch();
 
 } // namespace GafferModule
-
-#endif // GAFFERMODULE_SWITCHBINDING_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGEMODULE_DEEPNODEBINDING_H
-#define GAFFERIMAGEMODULE_DEEPNODEBINDING_H
+#pragma once
 
 namespace GafferImageModule
 {
@@ -43,5 +42,3 @@ namespace GafferImageModule
 void bindDeepNodes();
 
 }; // namespace GafferImageModule
-
-#endif // GAFFERIMAGEMODULE_DEEPNODEBINDING_H

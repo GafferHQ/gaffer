@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_LIGHTTOCAMERA_H
-#define GAFFERSCENE_LIGHTTOCAMERA_H
+#pragma once
 
 #include "GafferScene/SceneElementProcessor.h"
 
@@ -92,5 +91,3 @@ class GAFFERSCENE_API LightToCamera : public SceneElementProcessor
 IE_CORE_DECLAREPTR( LightToCamera )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_LIGHTTOCAMERA_H

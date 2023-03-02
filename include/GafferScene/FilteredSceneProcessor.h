@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_FILTEREDSCENEPROCESSOR_H
-#define GAFFERSCENE_FILTEREDSCENEPROCESSOR_H
+#pragma once
 
 #include "GafferScene/Export.h"
 
@@ -91,5 +90,3 @@ class GAFFERSCENE_API FilteredSceneProcessor : public SceneProcessor
 IE_CORE_DECLAREPTR( FilteredSceneProcessor )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_FILTEREDSCENEPROCESSOR_H

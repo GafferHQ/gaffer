@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_BUFFERALGO_H
-#define GAFFERIMAGE_BUFFERALGO_H
+#pragma once
 
 #include "IECore/Export.h"
 
@@ -81,5 +80,3 @@ size_t index( const Imath::V2i &p, const Imath::Box2i &b );
 } // namespace GafferImage
 
 #include "GafferImage/BufferAlgo.inl"
-
-#endif // GAFFERIMAGE_BUFFERALGO_H

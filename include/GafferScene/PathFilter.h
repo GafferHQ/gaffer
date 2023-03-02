@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_PATHFILTER_H
-#define GAFFERSCENE_PATHFILTER_H
+#pragma once
 
 #include "GafferScene/Filter.h"
 
@@ -100,5 +99,3 @@ class GAFFERSCENE_API PathFilter : public Filter
 IE_CORE_DECLAREPTR( PathFilter )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_PATHFILTER_H

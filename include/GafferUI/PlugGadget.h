@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_PLUGGADGET_H
-#define GAFFERUI_PLUGGADGET_H
+#pragma once
 
 #include "GafferUI/ContainerGadget.h"
 
@@ -97,5 +96,3 @@ IE_CORE_DECLAREPTR( PlugGadget )
 } // namespace GafferUI
 
 #include "GafferUI/PlugGadget.inl"
-
-#endif // GAFFERUI_PLUGGADGET_H

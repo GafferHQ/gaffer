@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERARNOLD_TYPEIDS_H
-#define GAFFERARNOLD_TYPEIDS_H
+#pragma once
 
 namespace GafferArnold
 {
@@ -64,5 +63,3 @@ enum TypeId
 };
 
 } // namespace GafferArnold
-
-#endif // GAFFERARNOLD_TYPEIDS_H

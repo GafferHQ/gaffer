@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEMODULE_PRIMITIVESAMPLERBINDING_H
-#define GAFFERSCENEMODULE_PRIMITIVESAMPLERBINDING_H
+#pragma once
 
 namespace GafferSceneModule
 {
@@ -43,5 +42,3 @@ namespace GafferSceneModule
 void bindPrimitiveSampler();
 
 } // namespace GafferSceneModule
-
-#endif // GAFFERSCENEMODULE_PRIMITIVESAMPLERBINDING_H

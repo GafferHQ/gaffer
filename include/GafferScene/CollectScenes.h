@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_COLLECTSCENES_H
-#define GAFFERSCENE_COLLECTSCENES_H
+#pragma once
 
 #include "GafferScene/SceneProcessor.h"
 
@@ -117,5 +116,3 @@ class GAFFERSCENE_API CollectScenes : public SceneProcessor
 IE_CORE_DECLAREPTR( CollectScenes )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_COLLECTSCENES_H

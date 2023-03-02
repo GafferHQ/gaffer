@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERTEST_DOWNSTREAMITERATORTEST_H
-#define GAFFERTEST_DOWNSTREAMITERATORTEST_H
+#pragma once
 
 #include "GafferTest/Export.h"
 
@@ -45,5 +44,3 @@ namespace GafferTest
 GAFFERTEST_API void testDownstreamIterator();
 
 } // namespace GafferTest
-
-#endif // GAFFERTEST_DOWNSTREAMITERATORTEST_H

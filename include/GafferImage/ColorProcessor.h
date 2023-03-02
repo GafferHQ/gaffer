@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_COLORPROCESSOR_H
-#define GAFFERIMAGE_COLORPROCESSOR_H
+#pragma once
 
 #include "GafferImage/ImageProcessor.h"
 
@@ -100,5 +99,3 @@ class GAFFERIMAGE_API ColorProcessor : public ImageProcessor
 IE_CORE_DECLAREPTR( ColorProcessor )
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_CHANNELDATAPROCESSOR_H

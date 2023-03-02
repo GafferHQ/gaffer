@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_COPYVIEWS_H
-#define GAFFERIMAGE_COPYVIEWS_H
+#pragma once
 
 #include "GafferImage/ImageProcessor.h"
 
@@ -97,5 +96,3 @@ class GAFFERIMAGE_API CopyViews : public ImageProcessor
 IE_CORE_DECLAREPTR( CopyViews )
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_COPYVIEWS_H

@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_PATH_H
-#define GAFFER_PATH_H
+#pragma once
 
 #include "Gaffer/Export.h"
 #include "Gaffer/Signals.h"
@@ -237,5 +236,3 @@ class GAFFER_API Path : public IECore::RunTimeTyped
 };
 
 } // namespace Gaffer
-
-#endif // GAFFER_PATH_H

@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_PATHFILTER_H
-#define GAFFER_PATHFILTER_H
+#pragma once
 
 #include "Gaffer/Export.h"
 #include "Gaffer/Signals.h"
@@ -93,5 +92,3 @@ class GAFFER_API PathFilter : public IECore::RunTimeTyped
 IE_CORE_DECLAREPTR( PathFilter )
 
 } // namespace Gaffer
-
-#endif // GAFFER_PATHFILTER_H

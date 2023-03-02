@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERVDB_TYPEIDS_H
-#define GAFFERVDB_TYPEIDS_H
+#pragma once
 
 namespace GafferVDB
 {
@@ -54,5 +53,3 @@ enum TypeId
 };
 
 } // namespace GafferVDB
-
-#endif // GAFFERVDB_TYPEIDS_H

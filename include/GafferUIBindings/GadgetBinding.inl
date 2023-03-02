@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUIBINDINGS_GADGETBINDING_INL
-#define GAFFERUIBINDINGS_GADGETBINDING_INL
+#pragma once
 
 namespace GafferUIBindings
 {
@@ -76,5 +75,3 @@ GadgetClass<T, TWrapper>::GadgetClass( const char *docString )
 }
 
 } // namespace GafferUIBindings
-
-#endif // GAFFERUIBINDINGS_GADGETBINDING_INL

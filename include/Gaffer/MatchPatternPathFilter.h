@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_MATCHPATTERNPATHFILTER_H
-#define GAFFER_MATCHPATTERNPATHFILTER_H
+#pragma once
 
 #include "Gaffer/PathFilter.h"
 
@@ -91,5 +90,3 @@ class GAFFER_API MatchPatternPathFilter : public Gaffer::PathFilter
 IE_CORE_DECLAREPTR( MatchPatternPathFilter )
 
 } // namespace Gaffer
-
-#endif // GAFFER_MATCHPATTERNPATHFILTER_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_SHUFFLEATTRIBUTES_H
-#define GAFFERSCENE_SHUFFLEATTRIBUTES_H
+#pragma once
 
 #include "GafferScene/AttributeProcessor.h"
 
@@ -72,5 +71,3 @@ class GAFFERSCENE_API ShuffleAttributes : public AttributeProcessor
 IE_CORE_DECLAREPTR( ShuffleAttributes )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_SHUFFLEATTRIBUTES_H

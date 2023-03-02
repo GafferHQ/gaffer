@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef IECORESCENEPREVIEW_PROCEDURAL_H
-#define IECORESCENEPREVIEW_PROCEDURAL_H
+#pragma once
 
 #include "GafferScene/Export.h"
 
@@ -72,5 +71,3 @@ class GAFFERSCENE_API Procedural : public IECoreScene::VisibleRenderable
 IE_CORE_DECLAREPTR( Procedural )
 
 } // namespace IECoreScenePreview
-
-#endif // IECORESCENEPREVIEW_PROCEDURAL_H

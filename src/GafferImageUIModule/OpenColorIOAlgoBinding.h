@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGEUIMODULE_OPENCOLORIOALGOBINDING_H
-#define GAFFERIMAGEUIMODULE_OPENCOLORIOALGOBINDING_H
+#pragma once
 
 namespace GafferImageUIModule
 {
@@ -43,5 +42,3 @@ namespace GafferImageUIModule
 void bindOpenColorIOAlgo();
 
 } // namespace GafferUIModule
-
-#endif // GAFFERIMAGEUIMODULE_OPENCOLORIOALGOBINDING_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_RENDERCONTROLLER_H
-#define GAFFERSCENE_RENDERCONTROLLER_H
+#pragma once
 
 #include "GafferScene/Export.h"
 #include "GafferScene/VisibleSet.h"
@@ -177,5 +176,3 @@ class GAFFERSCENE_API RenderController : public Gaffer::Signals::Trackable
 };
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_RENDERCONTROLLER_H

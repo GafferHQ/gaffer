@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEMODULE_OPTIONSBINDING_H
-#define GAFFERSCENEMODULE_OPTIONSBINDING_H
+#pragma once
 
 namespace GafferSceneModule
 {
@@ -43,5 +42,3 @@ namespace GafferSceneModule
 void bindOptions();
 
 } // namespace GafferSceneModule
-
-#endif // GAFFERSCENEMODULE_OPTIONSBINDING_H

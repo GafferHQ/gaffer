@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_UDIMQUERY_H
-#define GAFFERSCENE_UDIMQUERY_H
+#pragma once
 
 #include "GafferScene/Export.h"
 #include "GafferScene/TypeIds.h"
@@ -93,5 +92,3 @@ class GAFFERSCENE_API UDIMQuery : public Gaffer::ComputeNode
 IE_CORE_DECLAREPTR( UDIMQuery );
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_UDIMQUERY_H

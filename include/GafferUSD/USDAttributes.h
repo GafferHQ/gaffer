@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUSD_USDATTRIBUTES_H
-#define GAFFERUSD_USDATTRIBUTES_H
+#pragma once
 
 #include "GafferUSD/Export.h"
 #include "GafferUSD/TypeIds.h"
@@ -60,5 +59,3 @@ class GAFFERUSD_API USDAttributes : public GafferScene::Attributes
 IE_CORE_DECLAREPTR( USDAttributes )
 
 } // namespace GafferUSD
-
-#endif // GAFFERUSD_USDATTRIBUTES_H

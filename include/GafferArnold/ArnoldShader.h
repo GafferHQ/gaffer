@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERARNOLD_ARNOLDSHADER_H
-#define GAFFERARNOLD_ARNOLDSHADER_H
+#pragma once
 
 #include "GafferArnold/Export.h"
 #include "GafferArnold/TypeIds.h"
@@ -80,5 +79,3 @@ class GAFFERARNOLD_API ArnoldShader : public GafferScene::Shader
 IE_CORE_DECLAREPTR( ArnoldShader )
 
 } // namespace GafferArnold
-
-#endif // GAFFERARNOLD_ARNOLDSHADER_H

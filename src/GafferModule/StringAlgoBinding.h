@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERMODULE_STRINGALGOBINDING_H
-#define GAFFERMODULE_STRINGALGOBINDING_H
+#pragma once
 
 namespace GafferModule
 {
@@ -43,5 +42,3 @@ namespace GafferModule
 void bindStringAlgo();
 
 } // namespace GafferModule
-
-#endif // GAFFERMODULE_STRINGALGOBINDING_H

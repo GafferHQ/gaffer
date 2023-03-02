@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_PRIMITIVEVARIABLEPROCESSOR_H
-#define GAFFERSCENE_PRIMITIVEVARIABLEPROCESSOR_H
+#pragma once
 
 #include "GafferScene/SceneElementProcessor.h"
 
@@ -92,5 +91,3 @@ class GAFFERSCENE_API PrimitiveVariableProcessor : public SceneElementProcessor
 IE_CORE_DECLAREPTR( PrimitiveVariableProcessor )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_PRIMITIVEVARIABLEPROCESSOR_H

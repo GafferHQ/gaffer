@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_BOXIN_H
-#define GAFFER_BOXIN_H
+#pragma once
 
 #include "Gaffer/BoxIO.h"
 
@@ -57,5 +56,3 @@ class GAFFER_API BoxIn : public BoxIO
 IE_CORE_DECLAREPTR( BoxIn )
 
 } // namespace Gaffer
-
-#endif // GAFFER_BOXIN_H

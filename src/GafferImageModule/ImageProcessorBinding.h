@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGEMODULE_IMAGEPROCESSORBINDING_H
-#define GAFFERIMAGEMODULE_IMAGEPROCESSORBINDING_H
+#pragma once
 
 namespace GafferImageModule
 {
@@ -43,5 +42,3 @@ namespace GafferImageModule
 void bindImageProcessor();
 
 }; // namespace GafferImageModule
-
-#endif // GAFFERIMAGEMODULE_IMAGEPROCESSORBINDING_H

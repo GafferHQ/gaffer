@@ -32,8 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef IECORECYCLES_IECORECYCLES_H
-#define IECORECYCLES_IECORECYCLES_H
+#pragma once
 
 #include "GafferCycles/IECoreCyclesPreview/Export.h"
 
@@ -64,5 +63,3 @@ IECORECYCLES_API const std::string &versionString();
 IECORECYCLES_API const std::vector<ccl::DeviceInfo> &devices();
 
 }
-
-#endif // IECORECYCLES_IECORECYCLES_H

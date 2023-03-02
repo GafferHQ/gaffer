@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_NUMERICPLUG_H
-#define GAFFER_NUMERICPLUG_H
+#pragma once
 
 #include "Gaffer/ValuePlug.h"
 
@@ -104,5 +103,3 @@ IE_CORE_DECLAREPTR( FloatPlug );
 IE_CORE_DECLAREPTR( IntPlug );
 
 } // namespace Gaffer
-
-#endif // GAFFER_NUMERICPLUG_H

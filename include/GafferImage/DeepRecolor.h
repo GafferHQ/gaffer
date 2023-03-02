@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_GRADE_H
-#define GAFFERIMAGE_GRADE_H
+#pragma once
 
 #include "GafferImage/ImageProcessor.h"
 
@@ -82,5 +81,3 @@ class GAFFERIMAGE_API DeepRecolor : public ImageProcessor
 IE_CORE_DECLAREPTR( DeepRecolor );
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_GRADE_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUIMODULE_INSPECTORBINDING_H
-#define GAFFERSCENEUIMODULE_INSPECTORBINDING_H
+#pragma once
 
 namespace GafferSceneUIModule
 {
@@ -43,5 +42,3 @@ namespace GafferSceneUIModule
 void bindInspector();
 
 } // namespace GafferSceneUIModule
-
-#endif // GAFFERSCENEUIMODULE_INSPECTORBINDING_H

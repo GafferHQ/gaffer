@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_ATTRIBUTEQUERY_H
-#define GAFFERSCENE_ATTRIBUTEQUERY_H
+#pragma once
 
 #include "GafferScene/Export.h"
 #include "GafferScene/ScenePlug.h"
@@ -105,5 +104,3 @@ IE_CORE_DECLAREPTR( AttributeQuery )
 } // GafferScene
 
 #include "GafferScene/AttributeQuery.inl"
-
-#endif // GAFFERSCENE_ATTRIBUTEQUERY_H

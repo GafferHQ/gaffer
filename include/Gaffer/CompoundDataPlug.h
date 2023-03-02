@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_COMPOUNDDATAPLUG_H
-#define GAFFER_COMPOUNDDATAPLUG_H
+#pragma once
 
 #include "Gaffer/TypedPlug.h"
 #include "Gaffer/NameValuePlug.h"
@@ -91,5 +90,3 @@ class GAFFER_API CompoundDataPlug : public Gaffer::ValuePlug
 IE_CORE_DECLAREPTR( CompoundDataPlug );
 
 } // namespace Gaffer
-
-#endif // GAFFER_COMPOUNDDATAPLUG_H

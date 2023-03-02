@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_HIDDENFILEPATHFILTER_H
-#define GAFFER_HIDDENFILEPATHFILTER_H
+#pragma once
 
 #include "Gaffer/PathFilter.h"
 #include "Gaffer/TypeIds.h"
@@ -77,5 +76,3 @@ class GAFFER_API HiddenFilePathFilter : public PathFilter
 IE_CORE_DECLAREPTR( HiddenFilePathFilter )
 
 } // namespace Gaffer
-
-#endif // GAFFER_HIDDENFILEPATHFILTER_H

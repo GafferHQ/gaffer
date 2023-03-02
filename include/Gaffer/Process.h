@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_PROCESS_H
-#define GAFFER_PROCESS_H
+#pragma once
 
 #include "Gaffer/Context.h"
 #include "Gaffer/Export.h"
@@ -152,5 +151,3 @@ class GAFFER_API ProcessException : public std::runtime_error
 } // namespace Gaffer
 
 #include "Gaffer/Process.inl"
-
-#endif // GAFFER_PROCESS_H

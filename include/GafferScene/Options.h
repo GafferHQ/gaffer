@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_OPTIONS_H
-#define GAFFERSCENE_OPTIONS_H
+#pragma once
 
 #include "GafferScene/GlobalsProcessor.h"
 
@@ -80,5 +79,3 @@ class GAFFERSCENE_API Options : public GlobalsProcessor
 IE_CORE_DECLAREPTR( Options );
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_OPTIONS_H

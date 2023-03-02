@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUI_CROPWINDOWTOOL_H
-#define GAFFERSCENEUI_CROPWINDOWTOOL_H
+#pragma once
 
 #include "GafferImageUI/ImageView.h"
 
@@ -129,5 +128,3 @@ class GAFFERSCENEUI_API CropWindowTool : public GafferUI::Tool
 IE_CORE_DECLAREPTR( CropWindowTool )
 
 } // namespace GafferSceneUI
-
-#endif // GAFFERSCENEUI_CROPWINDOWTOOL_H

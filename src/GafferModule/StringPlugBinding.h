@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERMODULE_STRINGPLUGBINDING_H
-#define GAFFERMODULE_STRINGPLUGBINDING_H
+#pragma once
 
 namespace GafferModule
 {
@@ -43,5 +42,3 @@ namespace GafferModule
 void bindStringPlug();
 
 } // namespace GafferModule
-
-#endif // GAFFERMODULE_STRINGPLUGBINDING_H

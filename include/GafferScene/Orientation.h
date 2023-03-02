@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_ORIENTATION_H
-#define GAFFERSCENE_ORIENTATION_H
+#pragma once
 
 #include "GafferScene/ObjectProcessor.h"
 
@@ -209,5 +208,3 @@ class GAFFERSCENE_API Orientation : public ObjectProcessor
 IE_CORE_DECLAREPTR( Orientation )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_ORIENTATION_H

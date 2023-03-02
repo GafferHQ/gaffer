@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_AIMCONSTRAINT_H
-#define GAFFERSCENE_AIMCONSTRAINT_H
+#pragma once
 
 #include "GafferScene/Constraint.h"
 
@@ -73,5 +72,3 @@ class GAFFERSCENE_API AimConstraint : public Constraint
 IE_CORE_DECLAREPTR( AimConstraint )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_AIMCONSTRAINT_H

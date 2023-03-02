@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUI_CONTEXTALGO_H
-#define GAFFERSCENEUI_CONTEXTALGO_H
+#pragma once
 
 #include "GafferSceneUI/Export.h"
 
@@ -132,5 +131,3 @@ GAFFERSCENEUI_API bool affectsLastSelectedPath( const IECore::InternedString &na
 } // namespace ContextAlgo
 
 } // namespace GafferSceneUI
-
-#endif // GAFFERSCENEUI_CONTEXTALGO_H

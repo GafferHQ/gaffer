@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERCYCLES_CYCLESBACKGROUND_H
-#define GAFFERCYCLES_CYCLESBACKGROUND_H
+#pragma once
 
 #include "GafferCycles/Export.h"
 #include "GafferCycles/TypeIds.h"
@@ -70,5 +69,3 @@ class GAFFERCYCLES_API CyclesBackground : public GafferScene::GlobalShader
 IE_CORE_DECLAREPTR( CyclesBackground )
 
 } // namespace GafferCycles
-
-#endif // GAFFERCYCLES_CYCLESBACKGROUND_H

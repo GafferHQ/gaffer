@@ -32,8 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERBINDINGS_EXPORT_H
-#define GAFFERBINDINGS_EXPORT_H
+#pragma once
 
 #include "IECore/Export.h"
 
@@ -42,5 +41,3 @@
 #else
 	#define GAFFERBINDINGS_API IECORE_IMPORT
 #endif
-
-#endif // #ifndef GAFFERBINDINGS_EXPORT_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERAPPLESEED_APPLESEEDRENDER_H
-#define GAFFERAPPLESEED_APPLESEEDRENDER_H
+#pragma once
 
 #include "GafferAppleseed/Export.h"
 #include "GafferAppleseed/TypeIds.h"
@@ -60,5 +59,3 @@ class GAFFERAPPLESEED_API AppleseedRender : public GafferScene::Render
 IE_CORE_DECLAREPTR( AppleseedRender );
 
 } // namespace GafferAppleseed
-
-#endif // GAFFERAPPLESEED_APPLESEEDRENDER_H

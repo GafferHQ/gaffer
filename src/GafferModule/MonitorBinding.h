@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERMODULE_MONITORBINDING_H
-#define GAFFERMODULE_MONITORBINDING_H
+#pragma once
 
 namespace GafferModule
 {
@@ -43,5 +42,3 @@ namespace GafferModule
 void bindMonitor();
 
 } // namespace GafferModule
-
-#endif // GAFFERMODULE_MONITORBINDING_H

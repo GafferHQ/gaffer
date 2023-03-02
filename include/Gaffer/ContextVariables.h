@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_CONTEXTVARIABLES_H
-#define GAFFER_CONTEXTVARIABLES_H
+#pragma once
 
 #include "Gaffer/CompoundDataPlug.h"
 #include "Gaffer/ContextProcessor.h"
@@ -83,5 +82,3 @@ class IECORE_EXPORT ContextVariables : public ContextProcessor
 IE_CORE_DECLAREPTR( ContextVariables );
 
 } // namespace Gaffer
-
-#endif // GAFFER_CONTEXTVARIABLES_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERMODULE_SHUFFLESBINDING_H
-#define GAFFERMODULE_SHUFFLESBINDING_H
+#pragma once
 
 namespace GafferModule
 {
@@ -43,5 +42,3 @@ namespace GafferModule
 void bindShuffles();
 
 } // namespace GafferModule
-
-#endif // GAFFERMODULE_SHUFFLESBINDING_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_SHUFFLEPRIMITIVEVARIABLES_H
-#define GAFFERSCENE_SHUFFLEPRIMITIVEVARIABLES_H
+#pragma once
 
 #include "GafferScene/Deformer.h"
 
@@ -73,5 +72,3 @@ class GAFFERSCENE_API ShufflePrimitiveVariables : public Deformer
 IE_CORE_DECLAREPTR( ShufflePrimitiveVariables )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_SHUFFLEPRIMITIVEVARIABLES_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_COORDINATESYSTEM_H
-#define GAFFERSCENE_COORDINATESYSTEM_H
+#pragma once
 
 #include "GafferScene/ObjectSource.h"
 
@@ -63,5 +62,3 @@ class GAFFERSCENE_API CoordinateSystem : public ObjectSource
 IE_CORE_DECLAREPTR( CoordinateSystem )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_COORDINATESYSTEM_H

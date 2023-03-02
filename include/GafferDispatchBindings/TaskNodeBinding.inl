@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERDISPATCHBINDINGS_TASKNODEBINDING_INL
-#define GAFFERDISPATCHBINDINGS_TASKNODEBINDING_INL
+#pragma once
 
 #include "IECorePython/ScopedGILRelease.h"
 
@@ -128,5 +127,3 @@ TaskNodeClass<T, Ptr>::TaskNodeClass( const char *docString )
 }
 
 } // namespace GafferDispatchBindings
-
-#endif // GAFFERDISPATCHBINDINGS_TASKNODEBINDING_INL

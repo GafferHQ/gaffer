@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_THREADSTATE_H
-#define GAFFER_THREADSTATE_H
+#pragma once
 
 #include "Gaffer/Export.h"
 #include "Gaffer/Plug.h"
@@ -141,5 +140,3 @@ class GAFFER_API ThreadState
 };
 
 } // namespace Gaffer
-
-#endif // GAFFER_THREADSTATE_H

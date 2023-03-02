@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_PRIMITIVEVARIABLES_H
-#define GAFFERSCENE_PRIMITIVEVARIABLES_H
+#pragma once
 
 #include "GafferScene/ObjectProcessor.h"
 
@@ -72,5 +71,3 @@ class GAFFERSCENE_API PrimitiveVariables : public ObjectProcessor
 IE_CORE_DECLAREPTR( PrimitiveVariables )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_PRIMITIVEVARIABLES_H

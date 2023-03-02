@@ -32,8 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef IECORESCENEPREVIEW_COMPOUNDRENDERER_H
-#define IECORESCENEPREVIEW_COMPOUNDRENDERER_H
+#pragma once
 
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 
@@ -78,5 +77,3 @@ class GAFFERSCENE_API CompoundRenderer final : public IECoreScenePreview::Render
 IE_CORE_DECLAREPTR( CompoundRenderer )
 
 } // namespace IECoreScenePreview
-
-#endif // IECORESCENEPREVIEW_COMPOUNDRENDERER_H

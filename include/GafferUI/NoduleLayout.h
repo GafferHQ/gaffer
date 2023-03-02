@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_NODULELAYOUT_H
-#define GAFFERUI_NODULELAYOUT_H
+#pragma once
 
 #include "GafferUI/Gadget.h"
 #include "GafferUI/GraphGadget.h"
@@ -139,5 +138,3 @@ class GAFFERUI_API NoduleLayout : public Gadget
 IE_CORE_DECLAREPTR( NoduleLayout )
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_NODULELAYOUT_H

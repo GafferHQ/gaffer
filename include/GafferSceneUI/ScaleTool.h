@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUI_SCALETOOL_H
-#define GAFFERSCENEUI_SCALETOOL_H
+#pragma once
 
 #include "GafferSceneUI/TransformTool.h"
 
@@ -105,5 +104,3 @@ class GAFFERSCENEUI_API ScaleTool : public TransformTool
 };
 
 } // namespace GafferSceneUI
-
-#endif // GAFFERSCENEUI_SCALETOOL_H

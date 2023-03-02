@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_FRAME_H
-#define GAFFERUI_FRAME_H
+#pragma once
 
 #include "GafferUI/IndividualContainer.h"
 
@@ -71,5 +70,3 @@ class GAFFERUI_API Frame : public IndividualContainer
 IE_CORE_DECLAREPTR( Frame );
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_FRAME_H

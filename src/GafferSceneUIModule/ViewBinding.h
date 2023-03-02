@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUIMODULE_SCENEVIEWBINDING_H
-#define GAFFERSCENEUIMODULE_SCENEVIEWBINDING_H
+#pragma once
 
 namespace GafferSceneUIModule
 {
@@ -43,5 +42,3 @@ namespace GafferSceneUIModule
 void bindViews();
 
 } // namespace GafferSceneUIModule
-
-#endif // GAFFERSCENEUIMODULE_SCENEVIEWBINDING_H

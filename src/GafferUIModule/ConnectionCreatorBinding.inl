@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUIMODULE_CONNECTIONCREATORBINDING_INL
-#define GAFFERUIMODULE_CONNECTIONCREATORBINDING_INL
+#pragma once
 
 namespace GafferUIModule
 {
@@ -76,5 +75,3 @@ ConnectionCreatorClass<T, TWrapper>::ConnectionCreatorClass( const char *docStri
 }
 
 } // namespace GafferUIModule
-
-#endif // GAFFERUIMODULE_CONNECTIONCREATORBINDING_INL

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_RANDOMCHOICE_INL
-#define GAFFER_RANDOMCHOICE_INL
+#pragma once
 
 namespace Gaffer
 {
@@ -75,5 +74,3 @@ const T *RandomChoice::outPlug() const
 }
 
 } // namespace Gaffer
-
-#endif // GAFFER_RANDOMCHOICE_INL

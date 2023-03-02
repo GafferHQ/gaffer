@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUIBINDINGS_NODEGADGETBINDING_H
-#define GAFFERUIBINDINGS_NODEGADGETBINDING_H
+#pragma once
 
 #include "GafferUIBindings/GadgetBinding.h"
 
@@ -123,5 +122,3 @@ class NodeGadgetWrapper : public GadgetWrapper<WrappedType>
 } // namespace GafferUIBindings
 
 #include "GafferUIBindings/NodeGadgetBinding.inl"
-
-#endif // GAFFERUIBINDINGS_NODEGADGETBINDING_H

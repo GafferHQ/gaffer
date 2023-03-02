@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_NAMEVALUEPLUG_INL
-#define GAFFER_NAMEVALUEPLUG_INL
+#pragma once
 
 namespace Gaffer
 {
@@ -53,5 +52,3 @@ const T *NameValuePlug::valuePlug() const
 }
 
 } // namespace Gaffer
-
-#endif // GAFFER_NAMEVALUEPLUG_INL

@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_TYPEIDS_H
-#define GAFFERUI_TYPEIDS_H
+#pragma once
 
 namespace GafferUI
 {
@@ -90,5 +89,3 @@ enum TypeId
 };
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_TYPEIDS_H

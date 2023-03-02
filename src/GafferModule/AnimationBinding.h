@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERMODULE_ANIMATIONBINDING_H
-#define GAFFERMODULE_ANIMATIONBINDING_H
+#pragma once
 
 namespace GafferModule
 {
@@ -43,5 +42,3 @@ namespace GafferModule
 void bindAnimation();
 
 } // namespace GafferModule
-
-#endif // GAFFERMODULE_ANIMATIONBINDING_H

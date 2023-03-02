@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_CATALOGUE_H
-#define GAFFERIMAGE_CATALOGUE_H
+#pragma once
 
 #include "GafferImage/ImageNode.h"
 
@@ -180,5 +179,3 @@ class GAFFERIMAGE_API Catalogue : public ImageNode
 IE_CORE_DECLAREPTR( Catalogue );
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_CATALOGUE_H

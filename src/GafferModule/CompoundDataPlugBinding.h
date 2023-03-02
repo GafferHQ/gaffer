@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERMODULE_COMPOUNDDATAPLUGBINDING_H
-#define GAFFERMODULE_COMPOUNDDATAPLUGBINDING_H
+#pragma once
 
 namespace GafferModule
 {
@@ -43,5 +42,3 @@ namespace GafferModule
 void bindCompoundDataPlug();
 
 } // namespace GafferModule
-
-#endif // GAFFERMODULE_COMPOUNDDATAPLUGBINDING_H

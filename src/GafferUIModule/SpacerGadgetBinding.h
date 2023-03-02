@@ -34,8 +34,7 @@
 //Ga
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUIMODULE_SPACERGADGETBINDING_H
-#define GAFFERUIMODULE_SPACERGADGETBINDING_H
+#pragma once
 
 namespace GafferUIModule
 {
@@ -43,5 +42,3 @@ namespace GafferUIModule
 void bindSpacerGadget();
 
 } // namespace GafferUIModule
-
-#endif // GAFFERUIMODULE_SPACERGADGETBINDING_H

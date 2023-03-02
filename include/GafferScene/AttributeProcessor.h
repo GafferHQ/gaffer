@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_ATTRIBUTEPROCESSOR_H
-#define GAFFERSCENE_ATTRIBUTEPROCESSOR_H
+#pragma once
 
 #include "GafferScene/FilteredSceneProcessor.h"
 
@@ -100,5 +99,3 @@ class GAFFERSCENE_API AttributeProcessor : public FilteredSceneProcessor
 IE_CORE_DECLAREPTR( AttributeProcessor )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_ATTRIBUTEPROCESSOR_H

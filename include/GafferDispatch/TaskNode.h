@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERDISPATCH_TASKNODE_H
-#define GAFFERDISPATCH_TASKNODE_H
+#pragma once
 
 #include "GafferDispatch/Export.h"
 #include "GafferDispatch/TypeIds.h"
@@ -235,5 +234,3 @@ class GAFFERDISPATCH_API TaskNode : public Gaffer::DependencyNode
 };
 
 } // namespace GafferDispatch
-
-#endif // GAFFERDISPATCH_TASKNODE_H

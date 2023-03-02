@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_STANDARDGRAPHLAYOUT_H
-#define GAFFERUI_STANDARDGRAPHLAYOUT_H
+#pragma once
 
 #include "GafferUI/GraphLayout.h"
 
@@ -100,5 +99,3 @@ class GAFFERUI_API StandardGraphLayout : public GraphLayout
 IE_CORE_DECLAREPTR( StandardGraphLayout );
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_STANDARDGRAPHLAYOUT_H

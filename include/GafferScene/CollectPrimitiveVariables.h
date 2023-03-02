@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_COLLECTPRIMITIVEVARIABLES_H
-#define GAFFERSCENE_COLLECTPRIMITIVEVARIABLES_H
+#pragma once
 
 #include "GafferScene/ObjectProcessor.h"
 
@@ -87,5 +86,3 @@ class GAFFERSCENE_API CollectPrimitiveVariables : public ObjectProcessor
 IE_CORE_DECLAREPTR( CollectPrimitiveVariables )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_COLLECTPRIMITIVEVARIABLES_H

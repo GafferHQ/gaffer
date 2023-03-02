@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERMODULE_TRANSFORM2DPLUGBINDING_H
-#define GAFFERMODULE_TRANSFORM2DPLUGBINDING_H
+#pragma once
 
 namespace GafferModule
 {
@@ -43,5 +42,3 @@ namespace GafferModule
 void bindTransform2DPlug();
 
 } // namespace GafferModule
-
-#endif // GAFFERMODULE_TRANSFORM2DPLUGBINDING_H

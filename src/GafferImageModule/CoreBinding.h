@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGEMODULE_COREBINDING_H
-#define GAFFERIMAGEMODULE_COREBINDING_H
+#pragma once
 
 namespace GafferImageModule
 {
@@ -43,5 +42,3 @@ namespace GafferImageModule
 void bindCore();
 
 }; // namespace GafferImageModule
-
-#endif // GAFFERIMAGEMODULE_COREBINDING_H

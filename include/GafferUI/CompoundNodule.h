@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_COMPOUNDNODULE_H
-#define GAFFERUI_COMPOUNDNODULE_H
+#pragma once
 
 #include "GafferUI/LinearContainer.h"
 #include "GafferUI/Nodule.h"
@@ -78,5 +77,3 @@ class GAFFERUI_API CompoundNodule : public Nodule
 IE_CORE_DECLAREPTR( CompoundNodule );
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_COMPOUNDNODULE_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERMODULE_UNDOSCOPEBINDING_H
-#define GAFFERMODULE_UNDOSCOPEBINDING_H
+#pragma once
 
 namespace GafferModule
 {
@@ -43,5 +42,3 @@ namespace GafferModule
 void bindUndoScope();
 
 } // namespace GafferModule
-
-#endif // GAFFERMODULE_UNDOSCOPEBINDING_H

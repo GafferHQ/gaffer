@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERCORTEXMODULE_OPHOLDERBINDING_H
-#define GAFFERCORTEXMODULE_OPHOLDERBINDING_H
+#pragma once
 
 namespace GafferCortexModule
 {
@@ -43,5 +42,3 @@ namespace GafferCortexModule
 void bindOpHolder();
 
 } // namespace GafferCortexModule
-
-#endif // GAFFERCORTEXMODULE_OPHOLDERBINDING_H

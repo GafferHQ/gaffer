@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_BOXPLUG_H
-#define GAFFER_BOXPLUG_H
+#pragma once
 
 #include "Gaffer/CompoundNumericPlug.h"
 
@@ -121,5 +120,3 @@ IE_CORE_DECLAREPTR( Box2fPlug );
 IE_CORE_DECLAREPTR( Box3fPlug );
 
 } // namespace Gaffer
-
-#endif // GAFFER_BOXPLUG_H

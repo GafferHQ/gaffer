@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_DELETEATTRIBUTES_H
-#define GAFFERSCENE_DELETEATTRIBUTES_H
+#pragma once
 
 #include "GafferScene/AttributeProcessor.h"
 
@@ -75,5 +74,3 @@ class GAFFERSCENE_API DeleteAttributes : public AttributeProcessor
 IE_CORE_DECLAREPTR( DeleteAttributes )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_DELETEATTRIBUTES_H

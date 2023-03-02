@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_MAPPROJECTION_H
-#define GAFFERSCENE_MAPPROJECTION_H
+#pragma once
 
 #include "GafferScene/ObjectProcessor.h"
 
@@ -84,5 +83,3 @@ class GAFFERSCENE_API MapProjection : public ObjectProcessor
 IE_CORE_DECLAREPTR( MapProjection )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_MAPPROJECTION_H

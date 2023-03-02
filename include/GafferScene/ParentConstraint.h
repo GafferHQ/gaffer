@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_PARENTCONSTRAINT_H
-#define GAFFERSCENE_PARENTCONSTRAINT_H
+#pragma once
 
 #include "GafferScene/Constraint.h"
 
@@ -72,5 +71,3 @@ class GAFFERSCENE_API ParentConstraint : public Constraint
 IE_CORE_DECLAREPTR( ParentConstraint )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_PARENTCONSTRAINT_H

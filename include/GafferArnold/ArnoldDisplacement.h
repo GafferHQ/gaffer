@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERARNOLD_ARNOLDDISPLACEMENT_H
-#define GAFFERARNOLD_ARNOLDDISPLACEMENT_H
+#pragma once
 
 #include "GafferArnold/Export.h"
 #include "GafferArnold/TypeIds.h"
@@ -97,5 +96,3 @@ class GAFFERARNOLD_API ArnoldDisplacement : public GafferScene::Shader
 IE_CORE_DECLAREPTR( ArnoldDisplacement )
 
 } // namespace GafferArnold
-
-#endif // GAFFERARNOLD_ARNOLDDISPLACEMENT_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGEMODULE_MULTIVIEWBINDING_H
-#define GAFFERIMAGEMODULE_MULTIVIEWBINDING_H
+#pragma once
 
 namespace GafferImageModule
 {
@@ -43,5 +42,3 @@ namespace GafferImageModule
 void bindMultiView();
 
 }; // namespace GafferImageModule
-
-#endif // GAFFERIMAGEMODULE_MULTIVIEWBINDING_H

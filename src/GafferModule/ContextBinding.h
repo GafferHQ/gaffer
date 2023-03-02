@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERMODULE_CONTEXTBINDING_H
-#define GAFFERMODULE_CONTEXTBINDING_H
+#pragma once
 
 namespace GafferModule
 {
@@ -43,5 +42,3 @@ namespace GafferModule
 void bindContext();
 
 } // namespace GafferModule
-
-#endif // GAFFERMODULE_CONTEXTBINDING_H

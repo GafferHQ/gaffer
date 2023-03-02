@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_DELETEOUTPUTS_H
-#define GAFFERSCENE_DELETEOUTPUTS_H
+#pragma once
 
 #include "GafferScene/DeleteGlobals.h"
 
@@ -61,5 +60,3 @@ class GAFFERSCENE_API DeleteOutputs : public DeleteGlobals
 IE_CORE_DECLAREPTR( DeleteOutputs );
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_DELETEOUTPUTS_H

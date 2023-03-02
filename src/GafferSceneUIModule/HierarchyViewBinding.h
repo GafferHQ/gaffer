@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUIMODULE_HIERARCHYVIEWBINDING_H
-#define GAFFERSCENEUIMODULE_HIERARCHYVIEWBINDING_H
+#pragma once
 
 namespace GafferSceneUIModule
 {
@@ -46,5 +45,3 @@ namespace GafferSceneUIModule
 void bindHierarchyView();
 
 } // namespace GafferSceneUIModule
-
-#endif // GAFFERSCENEUIMODULE_HIERARCHYVIEWBINDING_H

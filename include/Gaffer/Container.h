@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_CONTAINER_H
-#define GAFFER_CONTAINER_H
+#pragma once
 
 #include "Gaffer/Export.h"
 #include "Gaffer/GraphComponent.h"
@@ -93,5 +92,3 @@ class IECORE_EXPORT Container : public Base
 
 
 } // namespace Gaffer
-
-#endif // GAFFER_CONTAINER_H

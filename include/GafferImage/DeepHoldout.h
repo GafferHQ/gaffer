@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_DEEPHOLDOUT_H
-#define GAFFERIMAGE_DEEPHOLDOUT_H
+#pragma once
 
 #include "GafferImage/ImageProcessor.h"
 
@@ -88,5 +87,3 @@ class GAFFERIMAGE_API DeepHoldout : public ImageProcessor
 IE_CORE_DECLAREPTR( DeepHoldout );
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_DEEPHOLDOUT_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERCYCLES_CYCLESATTRIBUTES_H
-#define GAFFERCYCLES_CYCLESATTRIBUTES_H
+#pragma once
 
 #include "GafferScene/Attributes.h"
 
@@ -60,5 +59,3 @@ class GAFFERCYCLES_API CyclesAttributes : public GafferScene::Attributes
 IE_CORE_DECLAREPTR( CyclesAttributes )
 
 } // namespace GafferCycles
-
-#endif // GAFFERCYCLES_CYCLESATTRIBUTES_H

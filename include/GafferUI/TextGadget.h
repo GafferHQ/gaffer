@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_TEXTGADGET_H
-#define GAFFERUI_TEXTGADGET_H
+#pragma once
 
 #include "GafferUI/Gadget.h"
 
@@ -80,5 +79,3 @@ class GAFFERUI_API TextGadget : public Gadget
 IE_CORE_DECLAREPTR( TextGadget );
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_TEXTGADGET_H

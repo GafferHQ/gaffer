@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_RENDER_H
-#define GAFFERSCENE_RENDER_H
+#pragma once
 
 #include "GafferScene/Export.h"
 #include "GafferScene/TypeIds.h"
@@ -112,5 +111,3 @@ class GAFFERSCENE_API Render : public GafferDispatch::TaskNode
 IE_CORE_DECLAREPTR( Render );
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_RENDER_H

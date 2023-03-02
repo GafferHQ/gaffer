@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERBINDINGS_NODEBINDING_INL
-#define GAFFERBINDINGS_NODEBINDING_INL
+#pragma once
 
 namespace GafferBindings
 {
@@ -74,5 +73,3 @@ NodeClass<T, TWrapper>::NodeClass( const char *docString, boost::python::no_init
 }
 
 } // namespace GafferBindings
-
-#endif // GAFFERBINDINGS_NODEBINDING_INL

@@ -35,8 +35,7 @@
 /////////////////////////////////////////////////////////////////////////
 
 
-#ifndef GAFFERSCENE_DELETEPOINTS_H
-#define GAFFERSCENE_DELETEPOINTS_H
+#pragma once
 
 #include "GafferScene/Deformer.h"
 
@@ -84,5 +83,3 @@ class GAFFERSCENE_API DeletePoints : public Deformer
 IE_CORE_DECLAREPTR( DeletePoints )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_DELETEPOINTS_H

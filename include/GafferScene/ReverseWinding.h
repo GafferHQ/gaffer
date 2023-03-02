@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_REVERSEWINDING_H
-#define GAFFERSCENE_REVERSEWINDING_H
+#pragma once
 
 #include "GafferScene/ObjectProcessor.h"
 
@@ -63,5 +62,3 @@ class GAFFERSCENE_API ReverseWinding : public ObjectProcessor
 IE_CORE_DECLAREPTR( ReverseWinding )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_REVERSEWINDING_H

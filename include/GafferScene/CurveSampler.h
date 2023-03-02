@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_CURVESAMPLER_H
-#define GAFFERSCENE_CURVESAMPLER_H
+#pragma once
 
 #include "GafferScene/PrimitiveSampler.h"
 
@@ -73,5 +72,3 @@ class GAFFERSCENE_API CurveSampler : public PrimitiveSampler
 IE_CORE_DECLAREPTR( CurveSampler )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_CURVESAMPLER_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERVDB_VOLUMETOMESH_H
-#define GAFFERVDB_VOLUMETOMESH_H
+#pragma once
 
 #include "GafferVDB/Export.h"
 #include "GafferVDB/TypeIds.h"
@@ -83,5 +82,3 @@ class GAFFERVDB_API LevelSetToMesh : public GafferScene::Deformer
 IE_CORE_DECLAREPTR( LevelSetToMesh )
 
 } // namespace GafferVDB
-
-#endif // GAFFERVDB_VOLUMETOMESH_H

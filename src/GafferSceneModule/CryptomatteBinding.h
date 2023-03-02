@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEMODULE_CRYPTOMATTEBINDING_H
-#define GAFFERSCENEMODULE_CRYPTOMATTEBINDING_H
+#pragma once
 
 namespace GafferSceneModule
 {
@@ -43,5 +42,3 @@ namespace GafferSceneModule
 void bindCryptomatte();
 
 } // namespace GafferSceneModule
-
-#endif // GAFFERSCENEMODULE_CRYPTOMATTEBINDING_H

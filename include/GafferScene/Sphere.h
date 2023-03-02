@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_SPHERE_H
-#define GAFFERSCENE_SPHERE_H
+#pragma once
 
 #include "GafferScene/ObjectSource.h"
 
@@ -94,5 +93,3 @@ class GAFFERSCENE_API Sphere : public ObjectSource
 IE_CORE_DECLAREPTR( Sphere )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_SPHERE_H

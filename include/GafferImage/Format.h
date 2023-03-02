@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_FORMAT_H
-#define GAFFERIMAGE_FORMAT_H
+#pragma once
 
 #include "GafferImage/Export.h"
 
@@ -136,5 +135,3 @@ void murmurHashAppend( IECore::MurmurHash &h, const GafferImage::Format &data );
 } // namespace GafferImage
 
 #include "GafferImage/Format.inl"
-
-#endif // GAFFERIMAGE_FORMAT_H

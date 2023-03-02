@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_SETQUERY_H
-#define GAFFERSCENE_SETQUERY_H
+#pragma once
 
 #include "GafferScene/Export.h"
 #include "GafferScene/TypeIds.h"
@@ -106,5 +105,3 @@ class GAFFERSCENE_API SetQuery : public Gaffer::ComputeNode
 IE_CORE_DECLAREPTR( SetQuery )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_SETQUERY_H

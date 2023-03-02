@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_MONITORALGO_H
-#define GAFFER_MONITORALGO_H
+#pragma once
 
 #include "Gaffer/Export.h"
 
@@ -80,5 +79,3 @@ GAFFER_API void removeContextAnnotations( Node &root );
 } // namespace MonitorAlgo
 
 } // namespace Gaffer
-
-#endif // GAFFER_MONITORALGO_H

@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_TYPEDOBJECTPLUG_H
-#define GAFFER_TYPEDOBJECTPLUG_H
+#pragma once
 
 // Include must come first to avoid symbol visibility problems with Clang.
 // It would appear that if any inline code involving `std::vector` appears
@@ -179,5 +178,3 @@ IE_CORE_DECLAREPTR( AtomicCompoundDataPlug );
 IE_CORE_DECLAREPTR( PathMatcherDataPlug );
 
 } // namespace Gaffer
-
-#endif // GAFFER_TYPEDOBJECTPLUG_H

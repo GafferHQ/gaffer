@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUIMODULE_PATHLISTINGWIDGETBINDING_H
-#define GAFFERUIMODULE_PATHLISTINGWIDGETBINDING_H
+#pragma once
 
 namespace GafferUIModule
 {
@@ -46,5 +45,3 @@ namespace GafferUIModule
 void bindPathListingWidget();
 
 } // namespace GafferUIModule
-
-#endif // GAFFERUIMODULE_PATHLISTINGWIDGETBINDING_H

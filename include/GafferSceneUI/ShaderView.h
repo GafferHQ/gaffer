@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEUI_SHADERVIEW_H
-#define GAFFERSCENEUI_SHADERVIEW_H
+#pragma once
 
 #include "GafferSceneUI/Export.h"
 #include "GafferSceneUI/TypeIds.h"
@@ -131,5 +130,3 @@ class GAFFERSCENEUI_API ShaderView : public GafferImageUI::ImageView
 IE_CORE_DECLAREPTR( ShaderView );
 
 } // namespace GafferSceneUI
-
-#endif // GAFFERSCENEUI_SHADERVIEW_H

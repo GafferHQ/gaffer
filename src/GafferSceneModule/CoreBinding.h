@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENEMODULE_COREBINDING_H
-#define GAFFERSCENEMODULE_COREBINDING_H
+#pragma once
 
 namespace GafferSceneModule
 {
@@ -43,5 +42,3 @@ namespace GafferSceneModule
 void bindCore();
 
 } // namespace GafferSceneModule
-
-#endif // GAFFERSCENEMODULE_COREBINDING_H

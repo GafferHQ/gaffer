@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERSCENE_MESHDISTORTION_H
-#define GAFFERSCENE_MESHDISTORTION_H
+#pragma once
 
 #include "GafferScene/ObjectProcessor.h"
 
@@ -85,5 +84,3 @@ class GAFFERSCENE_API MeshDistortion : public ObjectProcessor
 IE_CORE_DECLAREPTR( MeshDistortion )
 
 } // namespace GafferScene
-
-#endif // GAFFERSCENE_MESHDISTORTION_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERMODULE_SPLINEPLUGBINDING_H
-#define GAFFERMODULE_SPLINEPLUGBINDING_H
+#pragma once
 
 namespace GafferModule
 {
@@ -43,5 +42,3 @@ namespace GafferModule
 void bindSplinePlug();
 
 } // namespace GafferModule
-
-#endif // GAFFERMODULE_SPLINEPLUGBINDING_H

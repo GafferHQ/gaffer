@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_CONNECTIONGADGET_H
-#define GAFFERUI_CONNECTIONGADGET_H
+#pragma once
 
 #include "GafferUI/ConnectionCreator.h"
 
@@ -146,5 +145,3 @@ class GAFFERUI_API ConnectionGadget : public ConnectionCreator
 };
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_CONNECTIONGADGET_H

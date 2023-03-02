@@ -32,8 +32,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef IECOREDELIGHT_NODEALGO_H
-#define IECOREDELIGHT_NODEALGO_H
+#pragma once
 
 #include "IECoreDelight/Export.h"
 
@@ -104,5 +103,3 @@ IECOREDELIGHT_API void primitiveVariableParameterLists( const std::vector<const 
 } // namespace NodeAlgo
 
 } // namespace IECoreDelight
-
-#endif // IECOREDELIGHT_NODEALGO_H

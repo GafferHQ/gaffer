@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_DEEPSAMPLER_H
-#define GAFFERIMAGE_DEEPSAMPLER_H
+#pragma once
 
 #include "GafferImage/DeepState.h"
 #include "GafferImage/Export.h"
@@ -81,5 +80,3 @@ class GAFFERIMAGE_API DeepSampler : public Gaffer::ComputeNode
 };
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_DEEPSAMPLER_H

@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef IECORESCENEPREVIEW_RENDERER_H
-#define IECORESCENEPREVIEW_RENDERER_H
+#pragma once
 
 #include "GafferScene/Export.h"
 
@@ -342,5 +341,3 @@ class GAFFERSCENE_API Renderer : public IECore::RefCounted
 IE_CORE_DECLAREPTR( Renderer )
 
 } // namespace IECoreScenePreview
-
-#endif // IECORESCENEPREVIEW_RENDERER_H

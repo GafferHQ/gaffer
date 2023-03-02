@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFEROSL_OSLOBJECT_H
-#define GAFFEROSL_OSLOBJECT_H
+#pragma once
 
 #include "GafferOSL/Export.h"
 #include "GafferOSL/OSLCode.h"
@@ -113,5 +112,3 @@ class GAFFEROSL_API OSLObject : public GafferScene::Deformer
 };
 
 } // namespace GafferOSL
-
-#endif // GAFFEROSL_OSLOBJECT_H

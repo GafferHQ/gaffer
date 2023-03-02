@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_CLAMP_H
-#define GAFFERIMAGE_CLAMP_H
+#pragma once
 
 #include "GafferImage/ChannelDataProcessor.h"
 
@@ -102,5 +101,3 @@ class GAFFERIMAGE_API Clamp : public ChannelDataProcessor
 IE_CORE_DECLAREPTR( Clamp )
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_CLAMP_H

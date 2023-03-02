@@ -35,8 +35,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_APPLICATIONROOT_H
-#define GAFFER_APPLICATIONROOT_H
+#pragma once
 
 #include "Gaffer/ScriptNode.h"
 
@@ -121,5 +120,3 @@ class GAFFER_API ApplicationRoot : public GraphComponent
 IE_CORE_DECLAREPTR( ApplicationRoot );
 
 } // namespace Gaffer
-
-#endif // GAFFER_APPLICATIONROOT_H

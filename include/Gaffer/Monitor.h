@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFER_MONITOR_H
-#define GAFFER_MONITOR_H
+#pragma once
 
 #include "Gaffer/Export.h"
 #include "Gaffer/ThreadState.h"
@@ -111,5 +110,3 @@ class GAFFER_API Monitor : public IECore::RefCounted
 IE_CORE_DECLAREPTR( Monitor )
 
 } // namespace Gaffer
-
-#endif // GAFFER_MONITOR_H

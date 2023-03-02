@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERIMAGE_RAMP_H
-#define GAFFERIMAGE_RAMP_H
+#pragma once
 
 #include "GafferImage/FlatImageSource.h"
 #include "GafferImage/FormatPlug.h"
@@ -106,5 +105,3 @@ class GAFFERIMAGE_API Ramp : public FlatImageSource
 IE_CORE_DECLAREPTR( Ramp )
 
 } // namespace GafferImage
-
-#endif // GAFFERIMAGE_RAMP_H

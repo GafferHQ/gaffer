@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_KEYEVENT_H
-#define GAFFERUI_KEYEVENT_H
+#pragma once
 
 #include "GafferUI/ModifiableEvent.h"
 
@@ -75,5 +74,3 @@ inline bool operator != ( const KeyEvent &lhs, const KeyEvent &rhs )
 }
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_KEYEVENT_H

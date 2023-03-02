@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERUI_AUXILIARYCONNECTIONSGADGET_H
-#define GAFFERUI_AUXILIARYCONNECTIONSGADGET_H
+#pragma once
 
 #include "GafferUI/Gadget.h"
 
@@ -184,5 +183,3 @@ class GAFFERUI_API AuxiliaryConnectionsGadget : public Gadget
 };
 
 } // namespace GafferUI
-
-#endif // GAFFERUI_AUXILIARYCONNECTIONSGADGET_H

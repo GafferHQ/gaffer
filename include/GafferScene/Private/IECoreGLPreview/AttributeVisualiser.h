@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef IECOREGLPREVIEW_ATTRIBUTEVISUALISER_H
-#define IECOREGLPREVIEW_ATTRIBUTEVISUALISER_H
+#pragma once
 
 #include "GafferScene/Export.h"
 
@@ -94,5 +93,3 @@ class GAFFERSCENE_API AttributeVisualiser : public IECore::RefCounted
 IE_CORE_DECLAREPTR( AttributeVisualiser )
 
 } // namespace IECoreGLPreview
-
-#endif // IECOREGLPREVIEW_ATTRIBUTEVISUALISER_H
