@@ -90,6 +90,8 @@ Gaffer.Metadata.registerValue( "Animation.TieMode.Manual", "description", "Tange
 Gaffer.Metadata.registerValue( "Animation.TieMode.Slope", "description", "Tangent slopes are kept equal." )
 Gaffer.Metadata.registerValue( "Animation.TieMode.Scale", "description", "Tangent slopes are kept equal and scales are kept proportional." )
 
+Gaffer.Metadata.registerValue( "Animation.Tangent", "constrainedLength", 60.0 )
+
 # PlugValueWidget popup menu for setting keys
 ##########################################################################
 
