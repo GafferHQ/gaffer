@@ -42,6 +42,7 @@
 
 #include "Gaffer/Animation.h"
 #include "Gaffer/Context.h"
+#include "Gaffer/Metadata.h"
 #include "Gaffer/Node.h"
 #include "Gaffer/Plug.h"
 #include "Gaffer/ScriptNode.h"
@@ -69,6 +70,29 @@ using namespace Imath;
 
 namespace
 {
+
+const IECore::InternedString g_metadataTangent( "Animation.Tangent" );
+const IECore::InternedString g_metadataConstrainedLength( "constrainedLength" );
+
+float tangentConstrainedLength()
+{
+	// NOTE : value of zero disables drawing of constrained tangents with fixed raster space length.
+
+	float value = 0.f;
+
+	if( const IECore::ConstFloatDataPtr lengthData =
+		Gaffer::Metadata::value< IECore::FloatData >( g_metadataTangent, g_metadataConstrainedLength ) )
+	{
+		value = lengthData->readable();
+	}
+	else if( const IECore::ConstIntDataPtr lengthData =
+		Gaffer::Metadata::value< IECore::IntData >( g_metadataTangent, g_metadataConstrainedLength ) )
+	{
+		value = static_cast< float >( lengthData->readable() );
+	}
+
+	return std::max( value, 0.f );
+}
 
 void tieModeToBools( const Animation::TieMode mode, bool& tieSlope, bool& tieScale )
 {
@@ -608,6 +632,7 @@ void AnimationGadget::renderLayer( Layer layer, const Style *style, RenderReason
 	case AnimationLayer::Keys :
 	{
 		Imath::Color3f black( 0, 0, 0 );
+		const float constrainedLength = tangentConstrainedLength();
 
 		bool selecting = m_dragMode == DragMode::Selecting;
 		Box2f b;
@@ -632,7 +657,7 @@ void AnimationGadget::renderLayer( Layer layer, const Style *style, RenderReason
 			{
 				bool isHighlighted = ( & key == m_highlightedKey.get() ) || ( selecting && b.intersects( V2f( key.getTime(), key.getValue() ) ) );
 				bool isSelected = m_selectedKeys->contains( &key );
-				V2f keyPosition = viewportGadget->worldToRasterSpace( V3f( key.getTime(), key.getValue(), 0 ) );
+				const V2f keyPosition = viewportGadget->worldToRasterSpace( V3f( key.getTime(), key.getValue(), 0 ) );
 				style->renderAnimationKey( keyPosition, isSelected || isHighlighted ? Style::HighlightedState : Style::NormalState, isHighlighted ? 3.0 : 2.0, &black );
 
 				// draw the tangents
@@ -650,15 +675,18 @@ void AnimationGadget::renderLayer( Layer layer, const Style *style, RenderReason
 					tieModeToBools( previousKey->getTieMode(), tieSlopeOut, tieScaleOut );
 					const bool isOutHighlighted = ( m_highlightedTangentKey == previousKey ) && (
 						( m_highlightedTangentDirection == Animation::Direction::Out ) || tieSlopeOut || tieScaleOut );
+					const bool isOutScaleConstrained = out.scaleIsConstrained();
 
-					if( ( isSelected || previousKeySelected || isOutHighlighted ) && ( ! out.slopeIsConstrained() || ! out.scaleIsConstrained() ) )
+					if( ( isSelected || previousKeySelected || isOutHighlighted ) && ( ! isOutScaleConstrained || ! out.slopeIsConstrained() ) )
 					{
 						const V2d outPosKey = out.getPosition();
-						const V2f outPosRas = viewportGadget->worldToRasterSpace( V3f( outPosKey.x, outPosKey.y, 0 ) );
+						V2f outPosRas = viewportGadget->worldToRasterSpace( V3f( outPosKey.x, outPosKey.y, 0 ) );
+						if( isOutScaleConstrained && constrainedLength != 0.f )
+							outPosRas = previousKeyPosition + ( outPosRas - previousKeyPosition ).normalized() * constrainedLength;
 						const double outSize = isOutHighlighted ? 4.0 : 2.0;
 						const Box2f outBox( outPosRas - V2f( outSize ), outPosRas + V2f( outSize ) );
-						style->renderLine( IECore::LineSegment3f( V3f( outPosRas.x, outPosRas.y, 0 ), V3f( previousKeyPosition.x, previousKeyPosition.y, 0 ) ),
-							tieSlopeOut ? 2.0 : 1.0, &color4 );
+						const IECore::LineSegment3f outLine( V3f( outPosRas.x, outPosRas.y, 0 ), V3f( previousKeyPosition.x, previousKeyPosition.y, 0 ) );
+						style->renderLine( outLine, tieSlopeOut ? 2.0 : 1.0, &color4 );
 						( tieScaleOut ) ? style->renderSolidRectangle( outBox ) : style->renderRectangle( outBox );
 					}
 
@@ -666,15 +694,18 @@ void AnimationGadget::renderLayer( Layer layer, const Style *style, RenderReason
 					tieModeToBools( key.getTieMode(), tieSlopeIn, tieScaleIn );
 					const bool isInHighlighted = ( ( m_highlightedTangentKey == &key ) && (
 						( m_highlightedTangentDirection == Animation::Direction::In ) || tieSlopeIn || tieScaleIn ) );
+					const bool isInScaleConstrained = in.scaleIsConstrained();
 
-					if( ( isSelected || previousKeySelected || isInHighlighted ) && ( ! in.slopeIsConstrained() || ! in.scaleIsConstrained() ) )
+					if( ( isSelected || previousKeySelected || isInHighlighted ) && ( ! isInScaleConstrained || ! in.slopeIsConstrained() ) )
 					{
 						const V2d inPosKey = in.getPosition();
-						const V2f inPosRas = viewportGadget->worldToRasterSpace( V3f( inPosKey.x, inPosKey.y, 0 ) );
+						V2f inPosRas = viewportGadget->worldToRasterSpace( V3f( inPosKey.x, inPosKey.y, 0 ) );
+						if( isInScaleConstrained && constrainedLength != 0.f )
+							inPosRas = keyPosition + ( inPosRas - keyPosition ).normalized() * constrainedLength;
 						const double inSize = isInHighlighted ? 4.0 : 2.0;
 						const Box2f inBox( inPosRas - V2f( inSize ), inPosRas + V2f( inSize ) );
-						style->renderLine( IECore::LineSegment3f( V3f( inPosRas.x, inPosRas.y, 0 ), V3f( keyPosition.x, keyPosition.y, 0 ) ),
-							tieSlopeIn ? 2.0 : 1.0, &color4 );
+						const IECore::LineSegment3f inLine( V3f( inPosRas.x, inPosRas.y, 0 ), V3f( keyPosition.x, keyPosition.y, 0 ) );
+						style->renderLine( inLine, tieSlopeIn ? 2.0 : 1.0, &color4 );
 						( tieScaleIn ) ? style->renderSolidRectangle( inBox ) : style->renderRectangle( inBox );
 					}
 				}
@@ -1644,6 +1675,7 @@ std::pair<Gaffer::Animation::ConstKeyPtr, Gaffer::Animation::Direction> Animatio
 	std::vector<Animation::ConstKeyPtr> keys;
 
 	{
+		const float constrainedLength = tangentConstrainedLength();
 		ViewportGadget::SelectionScope selectionScope( position, this, selection, IECoreGL::Selector::IDRender );
 		IECoreGL::Selector *selector = IECoreGL::Selector::currentSelector();
 		const Style *style = this->style();
@@ -1660,31 +1692,40 @@ std::pair<Gaffer::Animation::ConstKeyPtr, Gaffer::Animation::Direction> Animatio
 			++name; // NOTE : Name 0 is invalid, so start at 1, for each curve this skips in tangent of first key
 
 			const Animation::Key* previousKey = nullptr;
+			V2f previousKeyPosition = V2f( 0 );
 			bool previousKeySelected = false;
 			for( Animation::Key &key : *curvePlug )
 			{
 				const bool isSelected = m_selectedKeys->contains( &key );
 				keys.emplace_back( &key );
+				V2f keyPosition = viewportGadget->worldToRasterSpace( V3f( key.getTime(), key.getValue(), 0 ) );
 
 				if( previousKey )
 				{
 					const Animation::Tangent& in = key.tangentIn();
+					const bool isInScaleConstrained = in.scaleIsConstrained();
 					const Animation::Tangent& out = previousKey->tangentOut();
+					const bool isOutScaleConstrained = out.scaleIsConstrained();
 
-					if( ( isSelected || previousKeySelected ) && ( ! out.slopeIsConstrained() || ! out.scaleIsConstrained() ) )
+
+					if( ( isSelected || previousKeySelected ) && ( ! isOutScaleConstrained || ! out.slopeIsConstrained() ) )
 					{
 						const V2d outPosKey = out.getPosition();
-						const V2f outPosRas = viewportGadget->worldToRasterSpace( V3f( outPosKey.x, outPosKey.y, 0 ) );
+						V2f outPosRas = viewportGadget->worldToRasterSpace( V3f( outPosKey.x, outPosKey.y, 0 ) );
+						if( isOutScaleConstrained && constrainedLength != 0.f )
+							outPosRas = previousKeyPosition + ( outPosRas - previousKeyPosition ).normalized() * constrainedLength;
 						selector->loadName( name );
 						style->renderSolidRectangle( Box2f( outPosRas - V2f( 4.0 ), outPosRas + V2f( 4.0 ) ) ); // slightly bigger for easier selection
 					}
 
 					++name;
 
-					if( ( isSelected || previousKeySelected ) && ( ! in.slopeIsConstrained() || ! in.scaleIsConstrained() ) )
+					if( ( isSelected || previousKeySelected ) && ( ! isInScaleConstrained || ! in.slopeIsConstrained() ) )
 					{
 						const V2d inPosKey = in.getPosition();
-						const V2f inPosRas = viewportGadget->worldToRasterSpace( V3f( inPosKey.x, inPosKey.y, 0 ) );
+						V2f inPosRas = viewportGadget->worldToRasterSpace( V3f( inPosKey.x, inPosKey.y, 0 ) );
+						if( isInScaleConstrained && constrainedLength != 0.f )
+							inPosRas = keyPosition + ( inPosRas - keyPosition ).normalized() * constrainedLength;
 						selector->loadName( name );
 						style->renderSolidRectangle( Box2f( inPosRas - V2f( 4.0 ), inPosRas + V2f( 4.0 ) ) ); // slightly bigger for easier selection
 					}
@@ -1693,6 +1734,7 @@ std::pair<Gaffer::Animation::ConstKeyPtr, Gaffer::Animation::Direction> Animatio
 				}
 
 				previousKey = & key;
+				previousKeyPosition = keyPosition;
 				previousKeySelected = isSelected;
 			}
 
