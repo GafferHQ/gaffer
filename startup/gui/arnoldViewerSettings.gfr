@@ -8,8 +8,8 @@ import imath
 
 Gaffer.Metadata.registerValue( parent, "serialiser:milestoneVersion", 1, persistent=False )
 Gaffer.Metadata.registerValue( parent, "serialiser:majorVersion", 1, persistent=False )
-Gaffer.Metadata.registerValue( parent, "serialiser:minorVersion", 4, persistent=False )
-Gaffer.Metadata.registerValue( parent, "serialiser:patchVersion", 0, persistent=False )
+Gaffer.Metadata.registerValue( parent, "serialiser:minorVersion", 9, persistent=False )
+Gaffer.Metadata.registerValue( parent, "serialiser:patchVersion", 1, persistent=False )
 
 __children = {}
 
@@ -226,11 +226,11 @@ Gaffer.Metadata.registerValue( __children["ViewerSettings"]["device"], 'layout:s
 Gaffer.Metadata.registerValue( __children["ViewerSettings"]["device"], 'layout:index', 6 )
 Gaffer.Metadata.registerValue( __children["ViewerSettings"]["device"], 'nodule:type', '' )
 Gaffer.Metadata.registerValue( __children["ViewerSettings"]["device"], 'description', 'Controls whether to use the CPU or GPU for rendering. The GPU is typically faster, but may take longer to start up.' )
-Gaffer.Metadata.registerValue( __children["ViewerSettings"]["DeleteOptions"], 'annotation:user:text', "Deletes all imagers, so they can't mess with our settings.\n" )
+Gaffer.Metadata.registerValue( __children["ViewerSettings"]["DeleteOptions"], 'annotation:user:text', "Deletes all imagers, so they can't mess with our settings. And deletes `ai:fis_filter` since Arnold's FIS doesn't support the `closest` filter needed for rendering the ID output. \n" )
 Gaffer.Metadata.registerValue( __children["ViewerSettings"]["DeleteOptions"], 'annotation:user:color', imath.Color3f( 0.150000006, 0.25999999, 0.25999999 ) )
 __children["ViewerSettings"]["DeleteOptions"]["in"].setInput( __children["ViewerSettings"]["DisableDisplacement"]["out"] )
-__children["ViewerSettings"]["DeleteOptions"]["names"].setValue( 'ai:imager' )
-__children["ViewerSettings"]["DeleteOptions"]["__uiPosition"].setValue( imath.V2f( -4.19273949, -138.585373 ) )
+__children["ViewerSettings"]["DeleteOptions"]["names"].setValue( 'ai:imager ai:fis_filter' )
+__children["ViewerSettings"]["DeleteOptions"]["__uiPosition"].setValue( imath.V2f( -4.19273949, -136.301804 ) )
 Gaffer.Metadata.registerValue( __children["ViewerSettings"]["SubdivisionAttributes"], 'annotation:user:text', "Forces object space metric for subdivision, since view-dependent subdivision is not suitable when the view is constantly changing.\n\nSets adaptive error to 0 because :\n\n- We don't know what scale objects are at, so can't set it ourself.\n- It doesn't make sense to reuse raster values the user may have authored, given that we've switched metric to object.\n\nIf user authored a value for `subdiv_iterations`, then clamps it below `maxSubdivIterations`. Otherwise doesn't author a value, so we inherit the global one." )
 Gaffer.Metadata.registerValue( __children["ViewerSettings"]["SubdivisionAttributes"], 'annotation:user:color', imath.Color3f( 0.150000006, 0.25999999, 0.25999999 ) )
 __children["ViewerSettings"]["SubdivisionAttributes"]["in"].setInput( __children["ViewerSettings"]["GlobalSubdivisionAttributes"]["out"] )
