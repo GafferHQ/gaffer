@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import IECore
+
 import Gaffer
 import GafferScene
 
@@ -47,11 +49,11 @@ Gaffer.Metadata.registerNode(
 
 	"description",
 	"""
-	Converts an image into a 3d pointcloud, with a point for each pixel
+	Converts an image into a points primitive, with a point for each pixel
 	in the image. Point positions may be defined either by the original
 	pixel coordinates or an image layer providing position data.
 	Arbitrary image channels may be converted to additional primitive
-	variables on the pointcloud, and transparent pixels may be omitted
+	variables on the points, and transparent pixels may be omitted
 	from the conversion.
 
 	> Note : Only pixels within the display window are converted. To
@@ -71,7 +73,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The image to be converted into a pointcloud.
+			The image to be converted into a points primitive.
 			""",
 
 			"nodule:type", "GafferUI::StandardNodule",
@@ -108,7 +110,7 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			The image channels to be converted to primitive variables on
-			the pointcloud. The chosen channels are converted using the
+			the points primitive. The chosen channels are converted using the
 			following rules :
 
 			- The main `RGB` channels are converted to a colour primitive variable called `Cs`.
@@ -134,11 +136,13 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The channel used to provide per-point width values for the pointcloud.
+			The channel used to provide per-point width values for the points primitive.
 			""",
 
 			"plugValueWidget:type", "GafferImageUI.ChannelPlugValueWidget",
 			"channelPlugValueWidget:imagePlugName", "image",
+			"channelPlugValueWidget:extraChannels", IECore.StringVectorData( [ "" ] ),
+			"channelPlugValueWidget:extraChannelLabels", IECore.StringVectorData( [ "None" ] ),
 			"layout:divider", True,
 
 		],
@@ -147,7 +151,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Omits pixels from the pointcloud if their alpha value is less than or equal
+			Omits pixels from the points primitive if their alpha value is less than or equal
 			to `alphaThreshold`.
 			""",
 
@@ -157,7 +161,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Threshold used to exclude pixels from the pointcloude when `ignoreTransparent`
+			Threshold used to exclude pixels from the points primitive when `ignoreTransparent`
 			is on.
 			""",
 

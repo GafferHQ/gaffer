@@ -518,7 +518,7 @@ std::vector<ImageToPoints::ChannelMapping> ImageToPoints::channelMappings() cons
 
 	if( !widthChannel.empty() and !haveWidthMapping )
 	{
-		throw IECore::Exception( "Width channels is missing from the input image" );
+		throw IECore::Exception( "Width channel is missing from the input image" );
 	}
 
 	if( ignoreTransparent && !haveAlphaMapping )
