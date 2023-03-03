@@ -467,8 +467,7 @@ class StringPlugValueAdaptor( ValueAdaptor ) :
 	def _canSet( cls, data, plug ) :
 
 		if isinstance( data, IECore.StringVectorData ) :
-			if len( data ) < 2 :
-				return cls._canSetKeyOrValue( plug )
+			return cls._canSetKeyOrValue( plug )
 
 		return ValueAdaptor._canSet( data, plug )
 
@@ -476,10 +475,7 @@ class StringPlugValueAdaptor( ValueAdaptor ) :
 	def _set( cls, data, plug, atTime ) :
 
 		if isinstance( data, IECore.StringVectorData ) :
-			if len( data ) == 1 :
-				data = IECore.StringData( data[ 0 ] )
-			else :
-				data = IECore.StringData( "" )
+			data = IECore.StringData( " ".join( data ) )
 
 		ValueAdaptor._set( data, plug, atTime )
 

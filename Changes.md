@@ -4,12 +4,17 @@
 Features
 --------
 
+- SetEditor : Added a new editor UI for inspecting sets. This can be found in the tab next to the SceneInspector in the Standard layouts. Sets are displayed hierarchically using ":" characters in set names as separators.
 - ImageToPoints : Added a new node for converting images to 3d pointclouds.
 
 Improvements
 ------------
 
 - USD : Added translation of UsdUVTexture's `scale`, `bias` and `fallback` parameters to Arnold.
+- StringPlugValueWidget : Added support for converting StringVectorData values pasted or dropped onto the widget. The string value is formed by joining the string array using spaces.
+- Spreadsheet : Improved support for converting StringVectorData to StringData when dropping values on cells. The string value is formed by joining the string array using spaces.
+- CompoundPathFilter : Canceller is now passed to member filters.
+- PathListingWidget : Improved performance when sorting items based on the name column.
 
 Fixes
 -----

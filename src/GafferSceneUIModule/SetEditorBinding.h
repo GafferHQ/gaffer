@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2023, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,28 +36,9 @@
 
 #pragma once
 
-namespace GafferSceneUI
+namespace GafferSceneUIModule
 {
 
-enum TypeId
-{
-	SceneViewTypeId = 110651,
-	SceneGadgetTypeId = 110652,
-	SelectionToolTypeId = 110653,
-	CropWindowToolTypeId = 110654,
-	ShaderViewTypeId = 110655,
-	ShaderNodeGadgetTypeId = 110656,
-	TransformToolTypeId = 110657,
-	TranslateToolTypeId = 110658,
-	ScaleToolTypeId = 110659,
-	RotateToolTypeId = 110660,
-	CameraToolTypeId = 110661,
-	UVViewTypeId = 110662,
-	UVSceneTypeId = 110663,
-	HistoryPathTypeId = 110664,
-	SetPathTypeId = 110665,
+void bindSetEditor();
 
-	LastTypeId = 110700
-};
-
-} // namespace GafferSceneUI
+} // namespace GafferSceneUIModule

@@ -164,7 +164,7 @@ from .VectorDataWidget import VectorDataWidget
 from .PathVectorDataWidget import PathVectorDataWidget
 from .ProgressBar import ProgressBar
 from .SelectionMenu import SelectionMenu
-from .PathFilterWidget import PathFilterWidget
+from .PathFilterWidget import PathFilterWidget, BasicPathFilterWidget
 from .CompoundPathFilterWidget import CompoundPathFilterWidget
 from .InfoPathFilterWidget import InfoPathFilterWidget
 from .MatchPatternPathFilterWidget import MatchPatternPathFilterWidget

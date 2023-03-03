@@ -45,6 +45,7 @@
 #include "ViewBinding.h"
 #include "VisualiserBinding.h"
 #include "QueryBinding.h"
+#include "SetEditorBinding.h"
 
 using namespace GafferSceneUIModule;
 
@@ -60,5 +61,6 @@ BOOST_PYTHON_MODULE( _GafferSceneUI )
 	bindQueries();
 	bindInspector();
 	bindLightEditor();
+	bindSetEditor();
 
 }

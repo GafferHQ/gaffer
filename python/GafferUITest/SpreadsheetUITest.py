@@ -731,9 +731,9 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 			self.assertEqual( s["rows"][1]["cells"][1]["value"].getValue(), data )
 
 		data = IECore.StringVectorData( [ "one", "two" ] )
-		self.assertFalse( _ClipboardAlgo.canPasteCells( data, bothColumns ) )
-		self.assertTrue( _ClipboardAlgo.canPasteCells( data, [ [ s["rows"][1]["cells"][1] ] ] ) )
-		_ClipboardAlgo.pasteCells( data, [ [ s["rows"][1]["cells"][1] ] ], 0 )
+		self.assertTrue( _ClipboardAlgo.canPasteCells( data, bothColumns ) )
+		_ClipboardAlgo.pasteCells( data, bothColumns, 0 )
+		self.assertEqual( s["rows"][1]["cells"][0]["value"].getValue(), " ".join( data ) )
 		self.assertEqual( s["rows"][1]["cells"][1]["value"].getValue(), data )
 
 	def testPasteBasicValues( self ) :

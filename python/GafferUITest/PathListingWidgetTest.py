@@ -937,6 +937,11 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 			)
 			_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( widget._qtWidget() ) )
 
+			if sortable :
+				# Sort by "Value" column as sorting by defaultNameColumn
+				# doesn't trigger a data update.
+				widget._qtWidget().header().setSortIndicator( 1, QtCore.Qt.AscendingOrder )
+
 			# Make initial child queries to populate the model with
 			# items, but without evaluating data. We should start
 			# without any rows on the root item.
@@ -998,6 +1003,8 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		self.assertEqual( model.rowCount(), 0 )
 		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
 		self.assertEqual( model.rowCount(), 1 )
+		self.assertEqual( model.data( model.index( 0, 1, QtCore.QModelIndex() ) ), None )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
 		self.assertEqual( model.data( model.index( 0, 1, QtCore.QModelIndex() ) ), 10 )
 
 		# Set up change tracking.
@@ -1153,7 +1160,7 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 				return self.CellData( value = "Title" )
 
 		with GafferUI.Window() as window :
-			GafferUI.PathListingWidget(
+			widget = GafferUI.PathListingWidget(
 				Gaffer.DictPath( { "a" : 10 }, "/" ),
 				columns = [
 					GafferUI.PathListingWidget.defaultNameColumn,
@@ -1163,7 +1170,7 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 
 		# Trigger a background update by showing the widget.
 		window.setVisible( True )
-		self.waitForIdle()
+		self.waitForIdle( 20000 )
 		self.assertTrue( SleepingColumn.cellDataCalled )
 
 		# Cancel the update by hiding it.
@@ -1276,6 +1283,65 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		self.assertFalse( widget._qtWidget()._shouldStretchLastColumn() )
 		widget.setColumns( [ GafferUI.PathListingWidget.StandardColumn( "Test", "test" ) ] )
 		self.assertTrue( widget._qtWidget()._shouldStretchLastColumn() )
+
+	def testModelNameSortingDoesntEmitDataChanged( self ) :
+
+		path = self.InfinitePath( "/" )
+
+		widget = GafferUI.PathListingWidget(
+			path = path,
+			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
+			sortable = False,
+			columns = [
+				GafferUI.PathListingWidget.defaultNameColumn,
+				GafferUI.PathListingWidget.StandardColumn( "Test", "test" )
+			],
+		)
+
+		expansionDepth = 4
+		model = widget._qtWidget().model()
+
+		self.__expandModel( model, depth = expansionDepth )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
+
+		changes = []
+		def dataChanged( *args ) :
+			changes.append( args )
+
+		model.dataChanged.connect( dataChanged )
+
+		# setting our widget to be sortable shouldn't result in any data changes
+		# as we're sorting by the `name` column
+
+		widget.setSortable( True )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
+		self.assertEqual( len( changes ), 0 )
+
+		# by default we should be sorting by ascending order
+		self.assertEqual( model.data( model.index( 0, 0 ) ), "a" )
+		self.assertEqual( model.data( model.index( 1, 0 ) ), "b" )
+
+		# likewise, changing the sort order of the `name` column shouldn't result
+		# in data changes
+
+		widget._qtWidget().header().setSortIndicator( 0, QtCore.Qt.DescendingOrder )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
+		self.assertEqual( len( changes ), 0 )
+
+		# ensure descending sort order
+		self.assertEqual( model.data( model.index( 0, 0 ) ), "b" )
+		self.assertEqual( model.data( model.index( 1, 0 ) ), "a" )
+
+		# but sorting by another column should result in data changes as we require
+		# CellData to sort on
+
+		widget._qtWidget().header().setSortIndicator( 1, QtCore.Qt.AscendingOrder )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
+		self.assertNotEqual( len( changes ), 0 )
+
+		# The Test column has no data to sort on, so we return to the original ordering
+		self.assertEqual( model.data( model.index( 0, 0 ) ), "a" )
+		self.assertEqual( model.data( model.index( 1, 0 ) ), "b" )
 
 	@staticmethod
 	def __emitPathChanged( widget ) :
