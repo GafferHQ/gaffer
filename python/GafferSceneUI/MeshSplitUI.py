@@ -50,6 +50,14 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
+		"parent" : [
+
+			"description",
+			"""
+			Legacy plug. Do not use.
+			"""
+
+		],
 
 		"segment" : [
 
