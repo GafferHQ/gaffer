@@ -412,6 +412,32 @@ void addTexturedConstantShader( IECoreGL::Group *group, IECore::ConstDataPtr tex
 	);
 }
 
+// Customized IECoreGL primitive supporting `uvOrientation`
+class UVOrientedQuadPrimitive : public IECoreGL::QuadPrimitive
+{
+	public :
+		UVOrientedQuadPrimitive( float width, float height, const M33f &uvOrientation ) : IECoreGL::QuadPrimitive( width, height )
+		{
+			IECore::V2fVectorDataPtr uvData = new IECore::V2fVectorData;
+
+			vector<V2f> &uvVector = uvData->writable();
+
+			uvVector.push_back( V2f( -0.5f, -0.5f ) * uvOrientation + V2f( 0.5f, 0.5f ) );
+			uvVector.push_back( V2f( 0.5f, -0.5f ) * uvOrientation + V2f( 0.5f, 0.5f ) );
+			uvVector.push_back( V2f( 0.5f, 0.5f ) * uvOrientation + V2f( 0.5f, 0.5f ) );
+			uvVector.push_back( V2f( -0.5f, 0.5f ) * uvOrientation + V2f( 0.5f, 0.5f ) );
+
+			addVertexAttribute( "uv", uvData );
+		}
+
+		~UVOrientedQuadPrimitive()
+		{
+
+		}
+};
+
+IE_CORE_DECLAREPTR( UVOrientedQuadPrimitive );
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -525,6 +551,8 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	}
 	else if( type && type->readable() == "quad" )
 	{
+		ConstM33fDataPtr uvOrientation = Metadata::value<M33fData>( metadataTarget, "uvOrientation" );
+
 		const V2f size(
 			parameter<float>( metadataTarget, shaderParameters, "widthParameter", 2.0f ),
 			parameter<float>( metadataTarget, shaderParameters, "heightParameter", 2.0f )
@@ -541,7 +569,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 			if( drawShaded )
 			{
 				ConstDataPtr textureData = drawTextured ? surfaceTexture( shaderNetwork, attributes, maxTextureResolution ) : nullptr;
-				geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( quadSurface( size, textureData, tint, maxTextureResolution, color ) ) );
+				geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( quadSurface( size, textureData, tint, maxTextureResolution, color, uvOrientation ? uvOrientation->readable() : M33f() ) ) );
 			}
 			else
 			{
@@ -961,7 +989,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::cylinderRays( float radius
 
 // Quads
 
-IECoreGL::ConstRenderablePtr StandardLightVisualiser::quadSurface( const Imath::V2f &size, IECore::ConstDataPtr textureData, const Color3f &tint, int maxTextureResolution,  const Color3f &fallbackColor )
+IECoreGL::ConstRenderablePtr StandardLightVisualiser::quadSurface( const Imath::V2f &size, IECore::ConstDataPtr textureData, const Color3f &tint, int maxTextureResolution,  const Color3f &fallbackColor, const M33f &uvOrientation )
 {
 	IECoreGL::GroupPtr group = new IECoreGL::Group();
 	if( textureData )
@@ -973,7 +1001,7 @@ IECoreGL::ConstRenderablePtr StandardLightVisualiser::quadSurface( const Imath::
 		addConstantShader( group.get(), tint, true );
 	}
 
-	IECoreGL::QuadPrimitivePtr textureQuad = new IECoreGL::QuadPrimitive( size.x, size.y );
+	UVOrientedQuadPrimitivePtr textureQuad = new UVOrientedQuadPrimitive( size.x, size.y, uvOrientation );
 	textureQuad->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( fallbackColor ) ) );
 	group->addChild( textureQuad );
 

@@ -223,6 +223,81 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 			self.assertEqual( arnold.AiNodeGetRGB( nodes[1], "user:testColor3f" ), arnold.AtRGB( 4, 5, 6 ) )
 			self.assertEqual( arnold.AiNodeGetStr( nodes[1], "user:testString" ), "we're all doomed" )
 
+	def testQuadLightVertices( self ) :
+
+		defaultQuadNetwork = IECoreScene.ShaderNetwork(
+			{
+				"light" : IECoreScene.Shader( "quad_light", "ai:light" ),
+			},
+			output = "light"
+		)
+
+		whQuadNetwork = IECoreScene.ShaderNetwork(
+			{
+				"light" : IECoreScene.Shader( "quad_light", "ai:light", { "width": 10.0, "height": 20.0 } ),
+			},
+			output = "light"
+		)
+
+		customQuadNetwork = IECoreScene.ShaderNetwork(
+			{
+				"light" : IECoreScene.Shader(
+					"quad_light",
+					"ai:light",
+					{
+						"vertices" : IECore.V3fVectorData( [
+							imath.V3f( -3.0, -2.0, 0.0 ),
+							imath.V3f( -6.0, 4.0, 0.0 ),
+							imath.V3f( 5.0, 8.0, 0.0 ),
+							imath.V3f( 7.0, -4.0, 0.0 ),
+						] )
+					}
+				)
+			},
+			output = "light"
+		)
+
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+			nodes = IECoreArnold.ShaderNetworkAlgo.convert( defaultQuadNetwork, universe, "test" )
+
+			self.assertEqual( len( nodes ), 1 )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( nodes[0] ) ), "quad_light" )
+
+			verticesArray = arnold.AiNodeGetArray( nodes[0], "vertices" )
+			self.assertEqual( arnold.AiArrayGetNumElements( verticesArray ), 4 )
+
+			self.assertEqual( arnold.AiArrayGetVec( verticesArray, 0 ), arnold.AtVector( -1, -1, 0 ) )
+			self.assertEqual( arnold.AiArrayGetVec( verticesArray, 1 ), arnold.AtVector( -1, 1, 0 ) )
+			self.assertEqual( arnold.AiArrayGetVec( verticesArray, 2 ), arnold.AtVector( 1, 1, 0) )
+			self.assertEqual( arnold.AiArrayGetVec( verticesArray, 3 ), arnold.AtVector( 1, -1, 0 ) )
+
+			nodes = IECoreArnold.ShaderNetworkAlgo.convert( whQuadNetwork, universe, "test" )
+
+			self.assertEqual( len( nodes ), 1 )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( nodes[0] ) ), "quad_light" )
+
+			verticesArray = arnold.AiNodeGetArray( nodes[0], "vertices" )
+			self.assertEqual( arnold.AiArrayGetNumElements( verticesArray ), 4 )
+
+			self.assertEqual( arnold.AiArrayGetVec( verticesArray, 0 ), arnold.AtVector( -5, -10, 0 ) )
+			self.assertEqual( arnold.AiArrayGetVec( verticesArray, 1 ), arnold.AtVector( -5, 10, 0 ) )
+			self.assertEqual( arnold.AiArrayGetVec( verticesArray, 2 ), arnold.AtVector( 5, 10, 0) )
+			self.assertEqual( arnold.AiArrayGetVec( verticesArray, 3 ), arnold.AtVector( 5, -10, 0 ) )
+
+			nodes = IECoreArnold.ShaderNetworkAlgo.convert( customQuadNetwork, universe, "test" )
+
+			self.assertEqual( len( nodes ), 1 )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( nodes[0] ) ), "quad_light" )
+
+			verticesArray = arnold.AiNodeGetArray( nodes[0], "vertices" )
+			self.assertEqual( arnold.AiArrayGetNumElements( verticesArray ), 4 )
+
+			self.assertEqual( arnold.AiArrayGetVec( verticesArray, 0 ), arnold.AtVector(-3.0, -2.0, 0.0 ) )
+			self.assertEqual( arnold.AiArrayGetVec( verticesArray, 1 ), arnold.AtVector( -6.0, 4.0, 0.0 ) )
+			self.assertEqual( arnold.AiArrayGetVec( verticesArray, 2 ), arnold.AtVector( 5.0, 8.0, 0.0 ) )
+			self.assertEqual( arnold.AiArrayGetVec( verticesArray, 3 ), arnold.AtVector( 7.0, -4.0, 0.0 ) )
+
 	def testConvertUSDPreviewSurfaceEmission( self ) :
 
 		for emissiveColor in ( imath.Color3f( 1 ), imath.Color3f( 0 ), None ) :
@@ -837,6 +912,26 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 
 			],
 
+			# RectLight -> quad_light, with USD default width and height
+
+			"rectLight" : [
+
+				IECoreScene.Shader( "RectLight", "light", {} ),
+
+				IECoreScene.Shader(
+					"quad_light", "light",
+					expectedLightParameters( {
+						"vertices" : IECore.V3fVectorData( [
+							imath.V3f( 0.5, -0.5, 0 ),
+							imath.V3f( -0.5, -0.5, 0 ),
+							imath.V3f( -0.5, 0.5, 0 ),
+							imath.V3f( 0.5, 0.5, 0 ),
+						] )
+					} )
+				),
+
+			],
+
 			# RectLight -> quad_light
 
 			"rectLight" : [
@@ -853,10 +948,10 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 					"quad_light", "light",
 					expectedLightParameters( {
 						"vertices" : IECore.V3fVectorData( [
-							imath.V3f( 10, 30, 0 ),
 							imath.V3f( 10, -30, 0 ),
 							imath.V3f( -10, -30, 0 ),
 							imath.V3f( -10, 30, 0 ),
+							imath.V3f( 10, 30, 0 ),
 						] )
 					} )
 				),
