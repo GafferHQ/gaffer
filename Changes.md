@@ -6,6 +6,7 @@ Features
 
 - SetEditor : Added a new editor UI for inspecting sets. This can be found in the tab next to the SceneInspector in the Standard layouts. Sets are displayed hierarchically using ":" characters in set names as separators.
 - ImageToPoints : Added a new node for converting images to points primitives.
+- MeshSplit : Added node for splitting a mesh into multiple meshes based on the values of a primitive variable. May be combined with the recently added MeshSegments to split meshes into connected parts.
 
 Improvements
 ------------
