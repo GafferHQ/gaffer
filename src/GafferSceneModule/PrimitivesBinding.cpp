@@ -46,6 +46,7 @@
 #include "GafferScene/Cube.h"
 #include "GafferScene/ExternalProcedural.h"
 #include "GafferScene/Grid.h"
+#include "GafferScene/ImageToPoints.h"
 #include "GafferScene/Light.h"
 #include "GafferScene/ObjectToScene.h"
 #include "GafferScene/Plane.h"
@@ -147,6 +148,7 @@ void GafferSceneModule::bindPrimitives()
 	GafferBindings::DependencyNodeClass<Cube>();
 	GafferBindings::DependencyNodeClass<Text>();
 	GafferBindings::DependencyNodeClass<ObjectToScene>();
+	GafferBindings::DependencyNodeClass<ImageToPoints>();
 
 	{
 		scope s = GafferBindings::DependencyNodeClass<Camera>();

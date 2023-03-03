@@ -1,6 +1,11 @@
 1.2.x.x (relative to 1.2.0.2)
 =======
 
+Features
+--------
+
+- ImageToPoints : Added a new node for converting images to 3d pointclouds.
+
 Improvements
 ------------
 
@@ -21,6 +26,11 @@ Documentation
 
  - Added more Python examples to the Scripting Reference "Common Operations" article.
  - Added instructions for installing and configuring Gaffer on Windows to the "Getting Started" guide.
+
+API
+---
+
+- RGBAChannelsPlugValueWidget : Added support for `rgbaChannelsPlugValueWidget:allowNone` metadata.
 
 Build
 -----

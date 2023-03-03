@@ -45,6 +45,9 @@ import GafferImage
 
 from GafferUI.PlugValueWidget import sole
 
+## Supported plug metadata :
+#
+# - "rgbaChannelsPlugValueWidget:allowNone" : Allows "None" to be chosen to assign an empty StringVectorData.
 class RGBAChannelsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plugs, **kw ) :
@@ -106,6 +109,8 @@ class RGBAChannelsPlugValueWidget( GafferUI.PlugValueWidget ) :
 				text = prefix + "RGBA"
 			elif len( set( channels ) ) == 1 :
 				text = prefix + channels[0]
+		elif len( layers ) == 0 :
+			text = "None"
 
 		self.__menuButton.setText( text )
 
@@ -118,6 +123,9 @@ class RGBAChannelsPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def _rgbaChannels( self ) :
 
 		result = collections.OrderedDict()
+
+		if all( Gaffer.Metadata.value( p, "rgbaChannelsPlugValueWidget:allowNone" ) for p in self.getPlugs() ) :
+			result["None"] = IECore.StringVectorData()
 
 		nonStandardLayers = {
 			GafferImage.ImageAlgo.layerName( c ) for c in self.__availableChannels

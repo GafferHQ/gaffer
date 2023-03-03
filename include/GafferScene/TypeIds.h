@@ -129,7 +129,7 @@ enum TypeId
 	RenderTypeId = 110585,
 	FilterPlugTypeId = 110586,
 	ShaderTweaksTypeId = 110587,
-	TweakPlugTypeId = 110588,   // Obsolete - available for reuse
+	ImageToPointsTypeId = 110588,
 	CopyOptionsTypeId = 110589,
 	LightToCameraTypeId = 110590,
 	FilterResultsTypeId = 110591,
