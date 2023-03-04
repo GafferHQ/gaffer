@@ -97,7 +97,7 @@ jobs:
     - name: Install toolchain (Linux)
       run: |
         Xvfb :99 -screen 0 1280x1024x24 &
-        metacity&
+        metacity --display :99.0 &
         useradd -m testUser
         echo LD_PRELOAD=libSegFault.so >> $GITHUB_ENV
         # The Docker container configures bash shells such that they enable the
