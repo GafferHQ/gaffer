@@ -90,6 +90,52 @@ class DilateTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertEqual( s.sample( 112, 112 ), 1.0 )
 
+	def testShape( self ):
+		constant1 = GafferImage.Constant( "constant1" )
+		constant1["color"].setValue( imath.Color4f( 1, 1, 1, 1 ) )
+		crop1 = GafferImage.Crop( "crop1" )
+		crop1["in"].setInput( constant1["out"] )
+		crop1["area"].setValue( imath.Box2i( imath.V2i( 3, 7 ), imath.V2i( 4, 8 ) ) )
+		crop1["affectDisplayWindow"].setValue( False )
+
+		constant2 = GafferImage.Constant( "constant2" )
+		constant2["color"].setValue( imath.Color4f( 2, 2, 2, 1 ) )
+		crop2 = GafferImage.Crop( "crop2" )
+		crop2["in"].setInput( constant2["out"] )
+		crop2["area"].setValue( imath.Box2i( imath.V2i( 6, 4 ), imath.V2i( 7, 5 ) ) )
+		crop2["affectDisplayWindow"].setValue( False )
+
+		merge = GafferImage.Merge( "merge" )
+		merge["in"][0].setInput( crop1["out"] )
+		merge["in"][1].setInput( crop2["out"] )
+		merge["operation"].setValue( 8 )
+
+		dilate = GafferImage.Dilate( "dilate" )
+		dilate["in"].setInput( merge["out"] )
+		dilate["expandDataWindow"].setValue( True )
+
+		expectedResultsText = """
+0000000000 0000000000 0000000000
+0000000000 0000000000 0000000000
+0000000000 0000000000 0000222220
+0000000000 0000022200 0000222220
+0000002000 0000022200 0000222220
+0000000000 0000022200 0111222220
+0000000000 0011100000 0111222220
+0001000000 0011100000 0111110000
+0000000000 0011100000 0111110000
+0000000000 0000000000 0111110000
+"""
+		expectedResults = expectedResultsText.splitlines()[1:]
+
+		for r in [ 0, 1, 2 ]:
+			dilate["radius"].setValue( imath.V2i( r ) )
+
+			s = GafferImage.Sampler( dilate['out'], "R", imath.Box2i( imath.V2i( 0 ), imath.V2i( 10 ) ) )
+			for y in range( 10 ):
+				for x in range( 10 ):
+					self.assertEqual( s.sample( x, y ), int( expectedResults[ y ][ x + r * 11 ] ) )
+
 	def testDriverChannel( self ) :
 
 		rRaw = GafferImage.ImageReader()
