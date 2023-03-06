@@ -6,7 +6,10 @@ Breaking Changes
 
 - GLWidget : A GL context is no longer available in `_resize()`.
 
-1.2.x.x (relative to 1.2.0.2)
+1.2.x.x (relative to 1.2.1.0)
+=======
+
+1.2.1.0 (relative to 1.2.0.2)
 =======
 
 Features
@@ -36,7 +39,9 @@ Fixes
 - Tweak nodes : Fixed bugs which prevented the creation of new tweaks when an existing tweak had an input connection.
 - Preferences : Fixed bug which caused UI metadata to be serialised unnecessarily into `~/gaffer/startup/gui/preferences.py`.
 - OpenGL Texture shader : Fixed bug which allowed transparent regions to obscure objects behind them.
-- Viewer : Fixed Arnold selection bugs caused by the `ai:fis_filter` option.
+- Viewer :
+  - Fixed visualisation of Arnold `image` nodes with non-default UV Coordinates settings.
+  - Fixed Arnold selection bugs caused by the `ai:fis_filter` option.
 - SceneReader : Invalid primitive variables in USD files are now skipped during loading, with a warning being emitted instead.
 - DeleteFaces : Fixed sudivision crease handling bug.
 - USD RectLight : Fixed the orientation of textures applied to the light to be oriented with the top-left of the image at the top-left of the quad light when viewed from an object receiving illumination.
@@ -263,13 +268,21 @@ Build
   - YAML-CPP : Added version 0.7.0.
 - 3Delight : Updated to 3Delight version 2.9.17.
 
-1.1.9.x (relative to 1.1.9.1)
+1.1.9.x (relative to 1.1.9.2)
 =======
+
+1.1.9.2 (relative to 1.1.9.1)
+=======
+
+Fixes
+-----
 
 - Tweak nodes : Fixed bugs which prevented the creation of new tweaks when an existing tweak had an input connection.
 - Preferences : Fixed bug which caused UI metadata to be serialised unnecessarily into `~/gaffer/startup/gui/preferences.py`.
 - OpenGL Texture shader : Fixed bug which allowed transparent regions to obscure objects behind them.
-- Viewer : Fixed Arnold selection bugs caused by the `ai:fis_filter` option.
+- Viewer :
+  - Fixed visualisation of Arnold `image` nodes with non-default UV Coordinates settings.
+  - Fixed Arnold selection bugs caused by the `ai:fis_filter` option.
 
 1.1.9.1 (relative to 1.1.9.0)
 =======
