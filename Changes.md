@@ -9,10 +9,23 @@ Breaking Changes
 1.2.x.x (relative to 1.2.0.2)
 =======
 
+Features
+--------
+
+- SetEditor : Added a new editor UI for inspecting sets. This can be found in the tab next to the SceneInspector in the Standard layouts. Sets are displayed hierarchically using ":" characters in set names as separators.
+- ImageToPoints : Added a new node for converting images to points primitives.
+- MeshSplit : Added node for splitting a mesh into multiple meshes based on the values of a primitive variable. May be combined with the recently added MeshSegments to split meshes into connected parts.
+
 Improvements
 ------------
 
 - USD : Added translation of UsdUVTexture's `scale`, `bias` and `fallback` parameters to Arnold.
+- StringPlugValueWidget : Added support for converting StringVectorData values pasted or dropped onto the widget. The string value is formed by joining the string array using spaces.
+- Spreadsheet : Improved support for converting StringVectorData to StringData when dropping values on cells. The string value is formed by joining the string array using spaces.
+- CompoundPathFilter : Canceller is now passed to member filters.
+- PathListingWidget : Improved performance when sorting items based on the name column.
+- Scene : Improved performance computing the bounding box for a primitive.
+- aiQuadLight : Added `width` and `height` parameters.
 
 Fixes
 -----
@@ -23,6 +36,10 @@ Fixes
 - Tweak nodes : Fixed bugs which prevented the creation of new tweaks when an existing tweak had an input connection.
 - Preferences : Fixed bug which caused UI metadata to be serialised unnecessarily into `~/gaffer/startup/gui/preferences.py`.
 - OpenGL Texture shader : Fixed bug which allowed transparent regions to obscure objects behind them.
+- Viewer : Fixed Arnold selection bugs caused by the `ai:fis_filter` option.
+- SceneReader : Invalid primitive variables in USD files are now skipped during loading, with a warning being emitted instead.
+- DeleteFaces : Fixed sudivision crease handling bug.
+- USD RectLight : Fixed the orientation of textures applied to the light to be oriented with the top-left of the image at the top-left of the quad light when viewed from an object receiving illumination.
 
 Documentation
 -------------
@@ -30,9 +47,15 @@ Documentation
  - Added more Python examples to the Scripting Reference "Common Operations" article.
  - Added instructions for installing and configuring Gaffer on Windows to the "Getting Started" guide.
 
+API
+---
+
+- RGBAChannelsPlugValueWidget : Added support for `rgbaChannelsPlugValueWidget:allowNone` metadata.
+
 Build
 -----
 
+- Cortex : Updated to version 10.4.6.0.
 - Added support for Inkscape versions greater than 1.0.
 
 1.2.0.2 (relative to 1.2.0.1)
@@ -246,6 +269,7 @@ Build
 - Tweak nodes : Fixed bugs which prevented the creation of new tweaks when an existing tweak had an input connection.
 - Preferences : Fixed bug which caused UI metadata to be serialised unnecessarily into `~/gaffer/startup/gui/preferences.py`.
 - OpenGL Texture shader : Fixed bug which allowed transparent regions to obscure objects behind them.
+- Viewer : Fixed Arnold selection bugs caused by the `ai:fis_filter` option.
 
 1.1.9.1 (relative to 1.1.9.0)
 =======

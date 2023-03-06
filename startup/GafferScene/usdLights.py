@@ -62,6 +62,8 @@ Gaffer.Metadata.registerValue( "light:DiskLight", "radiusParameter", "radius" )
 
 Gaffer.Metadata.registerValue( "light:RectLight", "widthParameter", "width" )
 Gaffer.Metadata.registerValue( "light:RectLight", "heightParameter", "height" )
+Gaffer.Metadata.registerValue( "light:RectLight", "textureNameParameter", "texture:file" )
+Gaffer.Metadata.registerValue( "light:RectLight", "visualiserOrientation", imath.M44f().rotate( imath.V3f( math.pi, math.pi , 0 ) ) )
 
 Gaffer.Metadata.registerValue( "light:CylinderLight", "radiusParameter", "radius" )
 Gaffer.Metadata.registerValue( "light:CylinderLight", "lengthParameter", "length" )

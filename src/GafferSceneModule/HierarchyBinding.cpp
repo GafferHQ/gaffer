@@ -53,6 +53,7 @@
 #include "GafferScene/SubTree.h"
 #include "GafferScene/Unencapsulate.h"
 #include "GafferScene/MotionPath.h"
+#include "GafferScene/MeshSplit.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
 #include "GafferBindings/PlugBinding.h"
@@ -118,6 +119,7 @@ void GafferSceneModule::bindHierarchy()
 	GafferBindings::DependencyNodeClass<Encapsulate>();
 	GafferBindings::DependencyNodeClass<Unencapsulate>();
 	GafferBindings::DependencyNodeClass<Rename>();
+	GafferBindings::DependencyNodeClass<MeshSplit>();
 
 	{
 		scope s = GafferBindings::DependencyNodeClass<MergeScenes>();

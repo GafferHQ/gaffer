@@ -908,5 +908,34 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( imager1["parameters"]["exposure"].acceptsInput( userDataFloat["parameters"]["default"] ) )
 		self.assertTrue( userDataFloat["parameters"]["default"].acceptsInput( imager1["parameters"]["exposure"] ) )
 
+	def testLoadQuadLight( self ) :
+
+		shader = GafferArnold.ArnoldShader()
+		shader.loadShader( "quad_light" )
+
+		self.assertIn( "width", shader["parameters"] )
+		self.assertIn( "height", shader["parameters"] )
+
+		self.assertEqual( shader["parameters"]["width"].getValue(), 2.0 )
+		self.assertEqual( shader["parameters"]["height"].getValue(), 2.0 )
+
+		shader["parameters"]["width"].setValue( 10 )
+		shader["parameters"]["height"].setValue( 4 )
+
+		originalPlugs = shader.children()
+		originalParameters = shader["parameters"].children()
+
+		shader.loadShader( "quad_light", keepExistingValues = True )
+
+		self.assertEqual( shader["parameters"]["width"].getValue(), 10 )
+		self.assertEqual( shader["parameters"]["height"].getValue(), 4 )
+		self.assertEqual( shader.children(), originalPlugs )
+		self.assertEqual( shader["parameters"].children(), originalParameters )
+
+		shader.loadShader( "quad_light", keepExistingValues = False )
+
+		self.assertTrue( shader["parameters"]["width"].isSetToDefault() )
+		self.assertTrue( shader["parameters"]["height"].isSetToDefault() )
+
 if __name__ == "__main__":
 	unittest.main()

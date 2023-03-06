@@ -57,9 +57,10 @@
 #include "boost/archive/iterators/base64_from_binary.hpp"
 #include "boost/archive/iterators/binary_from_base64.hpp"
 #include "boost/archive/iterators/transform_width.hpp"
-#include "boost/format.hpp"
 #include "boost/python/suite/indexing/container_utils.hpp"
 #include "boost/tokenizer.hpp"
+
+#include "fmt/format.h"
 
 #include <unordered_map>
 
@@ -180,13 +181,13 @@ std::string Serialisation::result() const
 		Context::current()->get<bool>( "serialiser:includeVersionMetadata", true )
 	)
 	{
-		boost::format formatter( "Gaffer.Metadata.registerValue( %s, \"%s\", %d, persistent=False )\n" );
+		const std::string formatString( "Gaffer.Metadata.registerValue( {}, \"{}\", {}, persistent=False )\n" );
 
 		result += "\n";
-		result += boost::str( formatter % m_parentName % "serialiser:milestoneVersion" % GAFFER_MILESTONE_VERSION );
-		result += boost::str( formatter % m_parentName % "serialiser:majorVersion" % GAFFER_MAJOR_VERSION );
-		result += boost::str( formatter % m_parentName % "serialiser:minorVersion" % GAFFER_MINOR_VERSION );
-		result += boost::str( formatter % m_parentName % "serialiser:patchVersion" % GAFFER_PATCH_VERSION );
+		result += fmt::format( formatString, m_parentName, "serialiser:milestoneVersion", GAFFER_MILESTONE_VERSION );
+		result += fmt::format( formatString, m_parentName, "serialiser:majorVersion", GAFFER_MAJOR_VERSION );
+		result += fmt::format( formatString, m_parentName, "serialiser:minorVersion", GAFFER_MINOR_VERSION );
+		result += fmt::format( formatString, m_parentName, "serialiser:patchVersion", GAFFER_PATCH_VERSION );
 	}
 
 	if( m_protectParentNamespace )

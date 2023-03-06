@@ -311,12 +311,77 @@ void resetNode( AtNode *node )
 	AiUserParamIteratorDestroy( itUser );
 }
 
+template<typename T>
+T parameterValue( const Shader *shader, InternedString parameterName, const T &defaultValue )
+{
+	if( auto d = shader->parametersData()->member<TypedData<T>>( parameterName ) )
+	{
+		return d->readable();
+	}
+
+	if constexpr( is_same_v<remove_cv_t<T>, Color3f> )
+	{
+		// Correction for USD files which author `float3` instead of `color3f`.
+		// See `ShaderNetworkAlgoTest.testConvertUSDFloat3ToColor3f()`.
+		if( auto d = shader->parametersData()->member<V3fData>( parameterName ) )
+		{
+			return d->readable();
+		}
+		// Conversion of Color4 to Color3, for cases like converting `UsdUVTexture.scale`
+		// to `image.multiply`.
+		if( auto d = shader->parametersData()->member<Color4fData>( parameterName ) )
+		{
+			const Color4f &c = d->readable();
+			return Color3f( c[0], c[1], c[2] );
+		}
+	}
+	else if constexpr( is_same_v<remove_cv_t<T>, string> )
+	{
+		// Support for USD `token`, which will be loaded as `InternedString`, but which
+		// we want to translate to `string`.
+		if( auto d = shader->parametersData()->member<InternedStringData>( parameterName ) )
+		{
+			return d->readable().string();
+		}
+	}
+
+	return defaultValue;
+}
+
 ShaderNetworkPtr preprocessedNetwork( const IECoreScene::ShaderNetwork *shaderNetwork )
 {
 	/// \todo : remove this conversion once Arnold supports it natively
 	ShaderNetworkPtr result = shaderNetwork->copy();
 	IECoreScene::ShaderNetworkAlgo::convertOSLComponentConnections( result.get() );
 	IECoreArnold::ShaderNetworkAlgo::convertUSDShaders( result.get() );
+
+	/// Convert `quad_light` width and height, if needed.
+	if( result->outputShader()->getName() == "quad_light" )
+	{
+		ShaderNetwork::Parameter outputParameter = result->getOutput();
+
+		ShaderPtr newShader = result->getShader( outputParameter.shader )->copy();
+
+		const auto verticesDataIt = newShader->parameters().find( "vertices" );
+		if( verticesDataIt == newShader->parameters().end() )
+		{
+			float width = parameterValue<float>( newShader.get(), "width", 2.f );
+			float height = parameterValue<float>( newShader.get(), "height", 2.f );
+
+			newShader->parameters()["vertices"] = new V3fVectorData( {
+				V3f( -width / 2, -height / 2, 0 ),
+				V3f( -width / 2, height / 2 , 0 ),
+				V3f( width / 2, height / 2, 0 ),
+				V3f( width / 2, -height / 2, 0 )
+			} );
+
+			newShader->parameters().erase( "width" );
+			newShader->parameters().erase( "height" );
+
+			result->setShader( outputParameter.shader, std::move( newShader ) );
+		}
+	}
+
 	return result;
 }
 
@@ -480,43 +545,6 @@ Color3f blackbody( float kelvins )
 	Color3f c = g_spline( kelvins );
 	c /= c.dot( V3f( 0.2126f, 0.7152f, 0.0722f ) ); // Normalise luminance
 	return Color3f( max( c[0], 0.0f ), max( c[1], 0.0f ), max( c[2], 0.0f ) );
-}
-
-template<typename T>
-T parameterValue( const Shader *shader, InternedString parameterName, const T &defaultValue )
-{
-	if( auto d = shader->parametersData()->member<TypedData<T>>( parameterName ) )
-	{
-		return d->readable();
-	}
-
-	if constexpr( is_same_v<remove_cv_t<T>, Color3f> )
-	{
-		// Correction for USD files which author `float3` instead of `color3f`.
-		// See `ShaderNetworkAlgoTest.testConvertUSDFloat3ToColor3f()`.
-		if( auto d = shader->parametersData()->member<V3fData>( parameterName ) )
-		{
-			return d->readable();
-		}
-		// Conversion of Color4 to Color3, for cases like converting `UsdUVTexture.scale`
-		// to `image.multiply`.
-		if( auto d = shader->parametersData()->member<Color4fData>( parameterName ) )
-		{
-			const Color4f &c = d->readable();
-			return Color3f( c[0], c[1], c[2] );
-		}
-	}
-	else if constexpr( is_same_v<remove_cv_t<T>, string> )
-	{
-		// Support for USD `token`, which will be loaded as `InternedString`, but which
-		// we want to translate to `string`.
-		if( auto d = shader->parametersData()->member<InternedStringData>( parameterName ) )
-		{
-			return d->readable().string();
-		}
-	}
-
-	return defaultValue;
 }
 
 template<typename T>
@@ -1014,10 +1042,10 @@ void IECoreArnold::ShaderNetworkAlgo::convertUSDShaders( ShaderNetwork *shaderNe
 			const float width = parameterValue( shader.get(), g_widthParameter, 1.0f );
 			const float height = parameterValue( shader.get(), g_heightParameter, 1.0f );
 			newShader->parameters()[g_verticesParameter] = new V3fVectorData( {
-				V3f( width / 2, height / 2, 0 ),
 				V3f( width / 2, -height / 2, 0 ),
 				V3f( -width / 2, -height / 2, 0 ),
-				V3f( -width / 2, height / 2, 0 )
+				V3f( -width / 2, height / 2, 0 ),
+				V3f( width / 2, height / 2, 0 )
 			} );
 			transferUSDTextureFile( shaderNetwork, handle, shader.get(), newShader.get() );
 		}

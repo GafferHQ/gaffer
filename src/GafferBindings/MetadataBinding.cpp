@@ -52,8 +52,9 @@
 
 #include "IECore/SimpleTypedData.h"
 
-#include "boost/format.hpp"
 #include "boost/python/raw_function.hpp"
+
+#include "fmt/format.h"
 
 using namespace boost::python;
 using namespace IECore;
@@ -97,20 +98,17 @@ std::string metadataSerialisation( const Gaffer::GraphComponent *graphComponent,
 		// we'll have more information about what the API should look like.
 		if( MetadataAlgo::numericBookmarkAffectedByChange( *it ) )
 		{
-			result += boost::str(
-				boost::format( "Gaffer.MetadataAlgo.setNumericBookmark( %s.scriptNode(), %s, %s )\n" ) %
-				identifier %
-				MetadataAlgo::numericBookmark( IECore::runTimeCast<const Node>( graphComponent ) ) %
+			result += fmt::format(
+				"Gaffer.MetadataAlgo.setNumericBookmark( {}.scriptNode(), {}, {} )\n",
+				identifier, MetadataAlgo::numericBookmark( IECore::runTimeCast<const Node>( graphComponent ) ),
 				identifier
 			);
 		}
 		else
 		{
-			result += boost::str(
-				boost::format( "Gaffer.Metadata.registerValue( %s, %s, %s )\n" ) %
-				identifier %
-				key %
-				stringValue
+			result += fmt::format(
+				"Gaffer.Metadata.registerValue( {}, {}, {} )\n",
+				identifier, key, stringValue
 			);
 		}
 	}

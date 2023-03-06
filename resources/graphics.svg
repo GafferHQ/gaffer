@@ -69,7 +69,7 @@
     </linearGradient>
     <linearGradient
        id="boundsTemplate"
-       gradientTransform="matrix(1.4488738,0,0,1.25,538.46586,5059.4394)"
+       gradientTransform="matrix(1.4488738,0,0,1.25,538.88253,5058.9564)"
        inkscape:swatch="solid">
       <stop
          style="stop-color:#ff0101;stop-opacity:0.0787037;"
@@ -580,6 +580,21 @@
        position="18.107786,-1740"
        orientation="0,1"
        id="guide6408"
+       inkscape:locked="false" />
+    <sodipodi:guide
+       position="-0.71540063,-1776"
+       orientation="0,1"
+       id="guide2344"
+       inkscape:locked="false" />
+    <sodipodi:guide
+       position="3.0241936,-1792"
+       orientation="0,1"
+       id="guide2346"
+       inkscape:locked="false" />
+    <sodipodi:guide
+       position="22.112383,-1784"
+       orientation="0,1"
+       id="guide2303"
        inkscape:locked="false" />
   </sodipodi:namedview>
   <metadata
@@ -1557,8 +1572,34 @@
        style="font-style:normal;font-weight:normal;font-size:40px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none"
        x="-3.9325323"
        y="2708.5918"
-       id="text8094" />
-  </g>
+       id="text8094"><tspan
+         sodipodi:role="line"
+         id="tspan8092"
+         x="-3.9325323"
+         y="2743.9824" /></text>
+    <path
+       style="display:inline;opacity:1;fill:none;stroke:#ffffff;stroke-width:0.99999994;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M -5.166662,2768.581 H 744.83333"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cc"
+       inkscape:label="hr1"
+       id="path8082-8" />
+    <flowRoot
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:24px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;display:inline;opacity:1;fill:#f4f4f4;fill-opacity:1;stroke:none;stroke-width:1.00000381"
+       transform="matrix(1,0,0,1.0000138,288.9349,1755.6606)"
+       inkscape:label="docTitle"
+       id="flowRoot8090-3"><flowRegion
+         style="font-size:24px;fill:#f4f4f4;fill-opacity:1;stroke-width:1.00000381"
+         id="flowRegion8086-1"><rect
+           width="343.75"
+           height="54.25"
+           x="-295"
+           y="983"
+           style="font-size:24px;fill:#f4f4f4;fill-opacity:1;stroke-width:1.00000381"
+           id="rect8084-2" /></flowRegion><flowPara
+         style="font-size:16px;fill:#f4f4f4;fill-opacity:1;stroke-width:1.00000381"
+         id="flowPara8088-1">SetEditor</flowPara></flowRoot>  </g>
   <g
      id="layer4"
      inkscape:label="ExportAreas"
@@ -2785,6 +2826,34 @@
        width="14"
        style="display:inline;opacity:1;fill:url(#boundsTemplate);fill-opacity:1;stroke:none;stroke-width:0.52291256;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173225;stroke-opacity:1;paint-order:markers stroke fill"
        inkscape:label="sizeGuide" />
+    <g
+       id="g3809"
+       inkscape:label="SetEditor">
+      <rect
+         inkscape:label="populatedSetIcon"
+         style="display:inline;opacity:0.1;fill:none;fill-opacity:1;stroke:none;stroke-width:0.59761435;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173225;stroke-opacity:1;paint-order:markers stroke fill"
+         width="16"
+         height="16"
+         x="30"
+         y="2776"
+         id="populatedSet" />
+      <rect
+         id="emptySet"
+         y="2776"
+         x="50"
+         height="16"
+         width="16"
+         style="display:inline;opacity:0.1;fill:none;fill-opacity:1;stroke:none;stroke-width:0.59761435;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173225;stroke-opacity:1;paint-order:markers stroke fill"
+         inkscape:label="emptySetIcon" />
+      <rect
+         id="setFolder"
+         y="2776"
+         x="70"
+         height="16"
+         width="16"
+         style="display:inline;opacity:0.1;fill:none;fill-opacity:1;stroke:none;stroke-width:0.59761435;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173225;stroke-opacity:1;paint-order:markers stroke fill"
+         inkscape:label="setFolderIcon" />
+    </g>
     <g
        id="LightEditor"
        inkscape:label="LightEditor">
@@ -9288,6 +9357,92 @@
            id="path12185"
            inkscape:connector-curvature="0"
            sodipodi:nodetypes="ccccccc" />
+      </g>
+    </g>
+    <path
+       style="fill:none;stroke:url(#foreground);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 224,2665.8622 c 0,0 -3.5,0 -3.5,0 0,0 0,3.5 0,3.5"
+       id="path2265"
+       inkscape:connector-curvature="0"
+       inkscape:path-effect="#path-effect2267"
+       inkscape:original-d="m 224,2665.8622 h -3.5 v 3.5"
+       sodipodi:nodetypes="ccc"
+       transform="translate(0,-1.7e-5)" />
+    <path
+       sodipodi:nodetypes="ccc"
+       inkscape:original-d="m 224,2665.8622 h -3.5 v 3.5"
+       inkscape:path-effect="#path-effect2297"
+       inkscape:connector-curvature="0"
+       id="path2295"
+       d="m 224,2665.8622 c 0,0 -3.5,0 -3.5,0 0,0 0,3.5 0,3.5"
+       style="fill:none;stroke:url(#foreground);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       transform="rotate(-180,226,2671.3622)" />
+    <g
+       id="g7809"
+       inkscape:label="SetEditor"
+       transform="translate(0,52.362183)">
+      <rect
+         id="rect2136-8"
+         y="2776"
+         x="10"
+         height="16"
+         width="16"
+         style="display:inline;opacity:1;fill:url(#boundsTemplate);fill-opacity:1;stroke:none;stroke-width:0.59761435;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173225;stroke-opacity:1;paint-order:markers stroke fill"
+         inkscape:label="sizeGuide" />
+      <g
+         style="fill:url(#backgroundLight);fill-opacity:1"
+         inkscape:label="emptySet"
+         id="g3885">
+        <circle
+           r="5.5"
+           cy="2784"
+           cx="58"
+           id="circle3880-5"
+           style="display:inline;opacity:1;vector-effect:none;fill:url(#backgroundLight);fill-opacity:1;fill-rule:nonzero;stroke:#3c3c3c;stroke-width:1.00157475;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal" />
+      </g>
+      <g
+         id="g7859"
+         inkscape:label="setFolder"
+         style="fill:url(#backgroundLight);fill-opacity:1">
+        <rect
+           style="opacity:1;fill:url(#backgroundLight);fill-opacity:1;stroke:#3c3c3c;stroke-width:1.23257422;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           id="rect4020"
+           width="2.4729218"
+           height="12.769132"
+           x="1850.9941"
+           y="3294.9106"
+           transform="matrix(1,0,-0.5374347,0.84330537,0,0)"
+           ry="0" />
+      </g>
+      <g
+         transform="translate(-15.135344,-0.81469727)"
+         inkscape:label="populatedSet"
+         id="g7869"
+         style="fill:#cccccc;fill-opacity:1">
+        <circle
+           r="5.5"
+           cy="2784.8147"
+           cx="53.141415"
+           id="circle7861"
+           style="opacity:1;vector-effect:none;fill:#cccccc;fill-opacity:1;fill-rule:nonzero;stroke:#3c3c3c;stroke-width:1.00157475;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal" />
+        <circle
+           r="0.5"
+           cy="2786.4141"
+           cx="51.166668"
+           id="circle7863"
+           style="display:inline;opacity:1;fill:#cccccc;fill-opacity:1;stroke:#3c3c3c;stroke-width:1;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+        <circle
+           r="0.5"
+           cy="2786.4141"
+           cx="55.083332"
+           id="circle7865"
+           style="display:inline;opacity:1;fill:#cccccc;fill-opacity:1;stroke:#3c3c3c;stroke-width:1;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+        <circle
+           r="0.5"
+           cy="2783.2109"
+           cx="53.141415"
+           id="circle7867"
+           style="display:inline;opacity:1;fill:#cccccc;fill-opacity:1;stroke:#3c3c3c;stroke-width:1;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
       </g>
     </g>
   </g>

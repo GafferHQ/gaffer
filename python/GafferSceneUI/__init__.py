@@ -48,6 +48,7 @@ from .UVInspector import UVInspector
 from .FilterPlugValueWidget import FilterPlugValueWidget
 from .ScenePathPlugValueWidget import ScenePathPlugValueWidget
 from .LightEditor import LightEditor
+from .SetEditor import SetEditor
 from . import SceneHistoryUI
 from . import EditScopeUI
 
@@ -180,6 +181,8 @@ from . import RenameUI
 from . import PrimitiveVariableQueryUI
 from . import SetQueryUI
 from . import MeshSegmentsUI
+from . import ImageToPointsUI
+from . import MeshSplitUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.
