@@ -73,6 +73,8 @@
 #include "tbb/concurrent_hash_map.h"
 #include "tbb/concurrent_vector.h"
 
+#include "fmt/format.h"
+
 #include <unordered_map>
 
 // Cycles
@@ -175,7 +177,12 @@ T *reportedCast( const IECore::RunTimeTyped *v, const char *type, const IECore::
 		return t;
 	}
 
-	IECore::msg( IECore::Msg::Warning, "IECoreCycles::Renderer", boost::format( "Expected %s but got %s for %s \"%s\"." ) % T::staticTypeName() % v->typeName() % type % name.c_str() );
+	IECore::msg( IECore::Msg::Warning, "IECoreCycles::Renderer",
+		fmt::format(
+			"Expected {} but got {} for {} \"{}\".",
+			T::staticTypeName(), v->typeName(), type, name.c_str()
+		)
+	);
 	return nullptr;
 }
 
@@ -1056,7 +1063,13 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				}
 				else
 				{
-					msg( Msg::Warning, "IECoreCycles::Renderer", boost::format( "Custom attribute \"%s\" has unsupported type \"%s\"." ) % attr.first.string() % attr.second->typeName() );
+					msg(
+						Msg::Warning, "IECoreCycles::Renderer",
+						fmt::format(
+							"Custom attribute \"{}\" has unsupported type \"{}\".",
+							attr.first.string(), attr.second->typeName()
+						)
+					);
 				}
 			}
 		}
@@ -2007,7 +2020,10 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 			ccl::Geometry *geo = object->get_geometry();
 			if( geo && geo->get_use_motion_blur() && geo->get_motion_steps() != samples.size() )
 			{
-				IECore::msg( IECore::Msg::Error, "IECoreCycles::Renderer", boost::format( "Transform step size on \"%s\" must match deformation step size." ) % object->name.c_str() );
+				IECore::msg(
+					IECore::Msg::Error, "IECoreCycles::Renderer",
+					fmt::format( "Transform step size on \"{}\" must match deformation step size.", object->name.c_str() )
+				);
 				object->set_tfm( SocketAlgo::setTransform( samples.front() ) );
 				motion.resize( geo->get_motion_steps(), ccl::transform_empty() );
 				for( size_t i = 0; i < motion.size(); ++i )
@@ -2601,7 +2617,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					boost::starts_with( name.string(), "cycles:scene:" ) ||
 					boost::starts_with( name.string(), "cycles:texture:" ) )
 				{
-					IECore::msg( IECore::Msg::Error, "CyclesRenderer::option", boost::format( "\"%s\" requires a manual render restart." ) % name );
+					IECore::msg( IECore::Msg::Error, "CyclesRenderer::option", fmt::format( "\"{}\" requires a manual render restart.", name ) );
 				}
 			}
 
@@ -2738,13 +2754,19 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 								}
 								else
 								{
-									IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Cannot find device \"%s\" for option \"%s\"." ) % deviceStr % name.string() );
+									IECore::msg(
+										IECore::Msg::Warning, "CyclesRenderer::option",
+										fmt::format( "Cannot find device \"{}\" for option \"{}\".", deviceStr, name.string() )
+									);
 								}
 							}
 						}
 						else
 						{
-							IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Cannot find device \"%s\" for option \"%s\"." ) % deviceStr % name.string() );
+							IECore::msg(
+								IECore::Msg::Warning, "CyclesRenderer::option",
+								fmt::format( "Cannot find device \"{}\" for option \"{}\".", deviceStr, name.string() )
+							);
 						}
 					}
 				}
@@ -2757,7 +2779,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 						m_multiDevices.push_back( device->second );
 					}
 					m_deviceName = g_defaultDeviceName;
-					IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown value for option \"%s\"." ) % name.string() );
+					IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", fmt::format( "Unknown value for option \"{}\".", name.string() ) );
 				}
 				return;
 			}
@@ -2794,7 +2816,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				}
 				else
 				{
-					IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown value for option \"%s\"." ) % name.string() );
+					IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", fmt::format( "Unknown value for option \"{}\".", name.string() ) );
 				}
 				return;
 			}
@@ -2856,7 +2878,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				OPTION(bool,  m_sessionParams, g_useAutoTileOptionName,  use_auto_tile);
 				OPTION(int,   m_sessionParams, g_tileSizeOptionName,     tile_size);
 
-				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown option \"%s\"." ) % name.string() );
+				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", fmt::format( "Unknown option \"{}\".", name.string() ) );
 				return;
 			}
 			else if( boost::starts_with( name.string(), "cycles:scene:" ) )
@@ -2891,7 +2913,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				OPTION(int,  m_sceneParams, g_hairSubdivisionsOptionName,     hair_subdivisions);
 				OPTION(int,  m_sceneParams, g_textureLimitOptionName,         texture_limit);
 
-				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown option \"%s\"." ) % name.string() );
+				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", fmt::format( "Unknown option \"{}\".", name.string() ) );
 				return;
 			}
 			else if( boost::starts_with( name.string(), "cycles:texture:" ) )
@@ -2911,7 +2933,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				OPTION_STR(   m_textureCacheParams, g_textureCustomCachePathOptionName,    custom_cache_path );
 #endif
 
-				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown option \"%s\"." ) % name.string() );
+				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", fmt::format( "Unknown option \"{}\".", name.string() ) );
 				return;
 			}
 			// The last 3 are subclassed internally from ccl::Node so treat their params like Cycles sockets
@@ -3032,12 +3054,12 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 			else if( boost::starts_with( name.string(), "cycles:" ) )
 			{
-				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown option \"%s\"." ) % name.string() );
+				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", fmt::format( "Unknown option \"{}\".", name.string() ) );
 				return;
 			}
 			else if( boost::starts_with( name.string(), "user:" ) )
 			{
-				IECore::msg( Msg::Warning, "CyclesRenderer::option", boost::format( "User option \"%s\" not supported" ) % name.string() );
+				IECore::msg( Msg::Warning, "CyclesRenderer::option", fmt::format( "User option \"{}\" not supported", name.string() ) );
 				return;
 			}
 			else if( boost::contains( name.c_str(), ":" ) )
@@ -3047,7 +3069,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 			else
 			{
-				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", boost::format( "Unknown option \"%s\"." ) % name.string() );
+				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", fmt::format( "Unknown option \"{}\".", name.string() ) );
 				return;
 			}
 		}
@@ -3247,7 +3269,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		{
 			if( boost::starts_with( name.string(), "cycles:" ) || name.string().find( ":" ) == string::npos )
 			{
-				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::command", boost::format( "Unknown command \"%s\"" ) % name.c_str() );
+				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::command", fmt::format( "Unknown command \"{}\"", name.c_str() ) );
 			}
 
 			return nullptr;
@@ -3297,7 +3319,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			if( !deviceAvailable )
 			{
-				IECore::msg( IECore::Msg::Warning, "CyclesRenderer", boost::format( "Cannot find the device \"%s\" requested, reverting to CPU." ) % m_deviceName );
+				IECore::msg( IECore::Msg::Warning, "CyclesRenderer", fmt::format( "Cannot find the device \"{}\" requested, reverting to CPU.", m_deviceName ) );
 				m_sessionParams.device = deviceFallback;
 			}
 
@@ -3714,7 +3736,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					{
 						IECore::msg(
 							IECore::Msg::Warning, "CyclesRenderer",
-							boost::format( "Camera \"%s\" does not exist" ) % m_camera
+							fmt::format( "Camera \"{}\" does not exist", m_camera )
 						);
 					}
 
@@ -3752,7 +3774,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					{
 						IECore::msg(
 							IECore::Msg::Warning, "CyclesRenderer",
-							boost::format( "Dicing camera \"%s\" does not exist" ) % m_dicingCamera
+							fmt::format( "Dicing camera \"{}\" does not exist", m_dicingCamera )
 						);
 					}
 					*m_scene->dicing_camera = *m_scene->camera;
@@ -3829,29 +3851,29 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				string deviceName = ccl::Device::string_from_type( device.type ).c_str();
 				if( device.type == ccl::DEVICE_CUDA )
 				{
-					auto optionName = boost::format( "CUDA:%02i" ) % indexCuda;
-					m_deviceMap[optionName.str()] = device;
+					auto optionName = fmt::format( "CUDA:{:02}", indexCuda );
+					m_deviceMap[optionName] = device;
 					++indexCuda;
 					continue;
 				}
 				if( device.type == ccl::DEVICE_HIP )
 				{
-					auto optionName = boost::format( "HIP:%02i" ) % indexHIP;
-					m_deviceMap[optionName.str()] = device;
+					auto optionName = fmt::format( "HIP:{:02}", indexHIP );
+					m_deviceMap[optionName] = device;
 					++indexHIP;
 					continue;
 				}
 				if( device.type == ccl::DEVICE_OPTIX )
 				{
-					auto optionName = boost::format( "OPTIX:%02i" ) % indexOptiX;
-					m_deviceMap[optionName.str()] = device;
+					auto optionName = fmt::format( "OPTIX:{:02}", indexOptiX );
+					m_deviceMap[optionName] = device;
 					++indexOptiX;
 					continue;
 				}
 				if( device.type == ccl::DEVICE_METAL )
 				{
-					auto optionName = boost::format( "METAL:%02i" ) % indexMetal;
-					m_deviceMap[optionName.str()] = device;
+					auto optionName = fmt::format( "METAL:{:02}", indexMetal );
+					m_deviceMap[optionName] = device;
 					++indexMetal;
 					continue;
 				}
