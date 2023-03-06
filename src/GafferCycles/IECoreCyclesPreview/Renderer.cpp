@@ -231,18 +231,6 @@ T parameter( const IECore::CompoundDataMap &parameters, const IECore::InternedSt
 	}
 }
 
-template<typename T>
-inline const T *dataCast( const char *name, const IECore::Data *data )
-{
-	const T *result = runTimeCast<const T>( data );
-	if( result )
-	{
-		return result;
-	}
-	msg( Msg::Warning, "setParameter", boost::format( "Unsupported value type \"%s\" for parameter \"%s\" (expected %s)." ) % data->typeName() % name % T::staticTypeName() );
-	return nullptr;
-}
-
 #define OPTION(TYPE, CATEGORY, OPTIONNAME, OPTION) if( name == OPTIONNAME ) { \
 	if( value == nullptr ) { \
 		CATEGORY.OPTION = CATEGORY ## Default.OPTION; \
