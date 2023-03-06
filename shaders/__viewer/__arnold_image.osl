@@ -49,7 +49,7 @@ shader __arnold_image
 	int tflip = 0,
 	float soffset = 0,
 	float toffset = 0,
-	int swapst = 0,
+	int swap_st = 0,
 
 	color multiply = 1,
 	color add = 0,
@@ -62,24 +62,26 @@ shader __arnold_image
 	output color out = 0
 )
 {
-	float uu = u * sscale;
-	float vv = v * tscale;
-
-	if( sflip > 0 )
-		uu = 1.0 - uu;
-	// Arnold / OSL have inverted v
-	if( tflip == 0 )
-		vv = 1.0 - vv;
+	float uu = u;
+	float vv = (1.0 - v);
 
 	uu += soffset;
 	vv += toffset;
 
-	if( swapst > 0 )
+	if( swap_st > 0 )
 	{
 		float tmp = uu;
-		uu == vv;
+		uu = vv;
 		vv = tmp;
 	}
+
+	if( sflip > 0 )
+		uu = 1.0 - uu;
+	if( tflip > 0 )
+		vv = 1.0 - vv;
+
+	uu *= sscale;
+	vv *= tscale;
 
 	color t = texture(
 		filename, uu, vv,
