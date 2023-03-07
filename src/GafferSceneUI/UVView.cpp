@@ -909,7 +909,7 @@ void UVView::updateDisplayTransform()
 		ocioProcessor = ocioTrans->processor().get();
 	}
 
-	viewportGadget()->setPostProcessShader( OpenColorIOAlgo::displayTransformToFramebufferShader( ocioProcessor ) );
+	viewportGadget()->setPostProcessShader( Gadget::Layer::Main, OpenColorIOAlgo::displayTransformToFramebufferShader( ocioProcessor ) );
 }
 
 void UVView::gadgetStateChanged( const Gadget *gadget, bool running )

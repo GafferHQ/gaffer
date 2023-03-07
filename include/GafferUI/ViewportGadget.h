@@ -44,6 +44,7 @@
 
 #include "IECoreScene/Camera.h"
 
+#include <array>
 #include <chrono>
 
 namespace GafferUI
@@ -262,20 +263,23 @@ class GAFFERUI_API ViewportGadget : public Gadget
 
 		};
 
-		// A post processing shader can be used to process all the pixels rendered in  the "Main"
-		// layer before they transferred to the screen.  The main use case for this is applying a
-		// color transform.
-		//
-		// The postProcessShader must have a specific interface in order to be used in this way,
-		// consisting of:
-		//
-		// uniform sampler2D framebufferTexture; // Will be set to a texture containing everything that
-		//                                       // has been rendered to the Main Layer
-		// in vec3 vertexP; // This should be passed through directly to gl_Position
-		// in vec2 vertexuv; // This should be used to access framebufferTexture
-		void setPostProcessShader( const IECoreGL::Shader::ConstSetupPtr &postProcessShader );
-
-		IECoreGL::Shader::ConstSetupPtr getPostProcessShader() const;
+		/// A post processing shader can be used to process all the pixels for a
+		/// specific layer as they are transferred to the screen. The main use
+		/// case for this is applying a color transform, but other uses are
+		/// possible.
+		///
+		/// The `postProcessShader` must have the following interface :
+		///
+		/// ```
+		/// // Texture containing the layer to be drawn to the screen.
+		/// uniform sampler2D framebufferTexture;
+		/// // To be passed directly to `gl_Position`
+		/// in vec3 vertexP;
+		/// // Coordinates to be used to access `framebufferTexture`
+		/// in vec2 vertexuv;
+		/// ```
+		void setPostProcessShader( Layer layer, const IECoreGL::Shader::ConstSetupPtr &postProcessShader );
+		IECoreGL::Shader::ConstSetupPtr getPostProcessShader( Layer layer ) const;
 
 		/// Selection
 		/// =========
@@ -358,6 +362,7 @@ class GAFFERUI_API ViewportGadget : public Gadget
 
 		void renderInternal( RenderReason reason, Layer filterLayer = Layer::None ) const;
 		void renderLayerInternal( RenderReason reason, Layer layer, const Imath::M44f &viewTransform, const Imath::Box3f &bound, IECoreGL::Selector *selector ) const;
+		GLuint acquireFramebuffer() const;
 
 		void childRemoved( GraphComponent *parent, GraphComponent *child );
 
@@ -432,15 +437,30 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		UnarySignal m_preRenderSignal;
 		UnarySignal m_renderRequestSignal;
 
-		mutable GLuint m_fbo;
+		// Framebuffer used for intermediate renders before
+		// transferring to the output framebuffer using the
+		// post-process shaders.
+		mutable GLuint m_framebuffer;
 		mutable Imath::V2i m_framebufferSize;
 		mutable GLuint m_framebufferTexture;
-		mutable GLuint m_rbo;
+		mutable GLuint m_depthBuffer;
 
-		IECoreGL::Shader::ConstSetupPtr m_postProcessShader;
-		const IECoreGL::Shader::Parameter* m_postProcessShaderTextureParm;
-		const IECoreGL::Shader::Parameter* m_postProcessShaderVertexP;
-		const IECoreGL::Shader::Parameter* m_postProcessShaderVertexUv;
+		struct PostProcessShader
+		{
+			PostProcessShader() = default;
+			PostProcessShader( const IECoreGL::Shader::ConstSetupPtr &setup );
+			IECoreGL::Shader::ConstSetupPtr setup;
+			const IECoreGL::Shader::Parameter *textureParameter = nullptr;
+			const IECoreGL::Shader::Parameter *pParameter = nullptr;
+			const IECoreGL::Shader::Parameter *uvParameter = nullptr;
+			static const PostProcessShader *defaultPostProcessShader();
+		};
+
+		// PostProcessShaders for each individual layer.
+		std::array<PostProcessShader, 6> m_postProcessShaders;
+
+		static PostProcessShader *defaultPostProcessShader();
+
 };
 
 IE_CORE_DECLAREPTR( ViewportGadget );
