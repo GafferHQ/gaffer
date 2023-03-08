@@ -241,7 +241,7 @@ Fit clipping planes to selection                     | {{rightClick}} > *Clippin
 Frame view, and fit clipping planes                  | {kbd}`Ctrl` + {kbd}`F`
 Reset clipping planes                                | {{rightClick}} > *Clipping Planes* > *Default*
 Toggle Inspector                                     | {kbd}`I`
-Prune selected objects from current EditScope        | {kbd}`Ctrl` + {kbd}`Delete`
+Prune selected objects from current EditScope        | {kbd}`Ctrl` + {kbd}`Delete`<br>or<br>{kbd}`Ctrl` + {kbd}`Backspace`
 
 ### Transform tools ###
 
