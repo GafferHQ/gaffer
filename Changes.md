@@ -1,6 +1,12 @@
 1.1.9.x (relative to 1.1.9.2)
 =======
 
+Fixes
+-----
+
+- ImageReader : Made error message more descriptive when trying to access a channel that doesn't exist.
+
+
 1.1.9.2 (relative to 1.1.9.1)
 =======
 

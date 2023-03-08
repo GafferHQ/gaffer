@@ -99,6 +99,13 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertNotEqual( h1, h2 )
 
+	def testChannelMissing( self ) :
+		n = GafferImage.ImageReader()
+		n["fileName"].setValue( self.largeFileName )
+
+		with six.assertRaisesRegex( self, RuntimeError, 'OpenImageIOReader : No channel named "doesNotExist"' ):
+			n["out"].channelData( "doesNotExist", imath.V2i( 0 ) )
+
 	def testColorSpaceOverride( self ) :
 
 		exrReader = GafferImage.ImageReader()
