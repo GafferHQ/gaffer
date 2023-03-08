@@ -1,6 +1,11 @@
 1.2.x.x (relative to 1.2.1.0)
 =======
 
+Fixes
+-----
+
+- ImageReader : Made error message more descriptive when trying to access a channel that doesn't exist.
+
 1.2.1.0 (relative to 1.2.0.2)
 =======
 
@@ -262,6 +267,12 @@ Build
 
 1.1.9.x (relative to 1.1.9.2)
 =======
+
+Fixes
+-----
+
+- ImageReader : Made error message more descriptive when trying to access a channel that doesn't exist.
+
 
 1.1.9.2 (relative to 1.1.9.1)
 =======

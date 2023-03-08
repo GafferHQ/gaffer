@@ -717,7 +717,12 @@ class File
 			}
 			else
 			{
-				ChannelMapEntry channelMapEntry = view.channelMap.at( channelName );
+				auto findIt = view.channelMap.find( channelName );
+				if( findIt == view.channelMap.end() )
+				{
+					throw IECore::Exception( "OpenImageIOReader : No channel named \"" + channelName + "\"" );
+				}
+				ChannelMapEntry channelMapEntry = findIt->second;
 				batchIndex = tileBatchIndex( view, channelMapEntry.subImage, tileOrigin );
 				batchSubIndex = tileBatchSubIndex( view, channelMapEntry.channelIndex, tileOrigin );
 			}
