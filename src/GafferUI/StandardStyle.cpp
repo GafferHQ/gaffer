@@ -576,7 +576,7 @@ void StandardStyle::bind( const Style *currentStyle ) const
 	}
 
 	glEnable( GL_BLEND );
-	glBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+	glBlendFuncSeparate( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA );
 	glUseProgram( shader()->program() );
 
 	if( IECoreGL::Selector *selector = IECoreGL::Selector::currentSelector() )

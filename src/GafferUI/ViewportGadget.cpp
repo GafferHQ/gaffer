@@ -1173,8 +1173,9 @@ void ViewportGadget::childDirtied( DirtyType dirtyType )
 	renderRequestSignal()( this );
 }
 
-void ViewportGadget::renderLayerInternal( RenderReason reason, Gadget::Layer layer, const M44f &viewTransform, const Box3f &bound, const Style *&currentStyle, IECoreGL::Selector *selector ) const
+void ViewportGadget::renderLayerInternal( RenderReason reason, Gadget::Layer layer, const M44f &viewTransform, const Box3f &bound, IECoreGL::Selector *selector ) const
 {
+	const Style *currentStyle = nullptr;
 	for( unsigned int i = 0; i < m_renderItems.size(); i++ )
 	{
 		const RenderItem &renderItem = m_renderItems[i];
@@ -1223,9 +1224,6 @@ void ViewportGadget::renderInternal( RenderReason reason, Gadget::Layer filterLa
 
 	M44f combinedInverse = projectionTransform.inverse() * viewTransform.inverse();
 	Box3f bound = transform( Box3f( V3f( -1 ), V3f( 1 ) ), combinedInverse );
-
-
-	const Style *currentStyle = nullptr;
 
 	// If we are using a post process shader, and the render reason is Draw ( ie. not selection ),
 	// then we render the Main layer to a framebuffer, so it can be post processed before being
@@ -1306,7 +1304,7 @@ void ViewportGadget::renderInternal( RenderReason reason, Gadget::Layer filterLa
 		// Clean the back buffer and depth buffer
 		glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-		renderLayerInternal( RenderReason::Draw, Layer::Main, viewTransform, bound, currentStyle, nullptr );
+		renderLayerInternal( RenderReason::Draw, Layer::Main, viewTransform, bound, nullptr );
 
 		// Leave things as we found them.
 		glBindFramebuffer( GL_DRAW_FRAMEBUFFER, originalFramebuffer );
@@ -1332,9 +1330,6 @@ void ViewportGadget::renderInternal( RenderReason reason, Gadget::Layer filterLa
 			glBindTexture( GL_TEXTURE_2D, m_framebufferTexture );
 			glUniform1i( m_postProcessShaderTextureParm->location, m_postProcessShaderTextureParm->textureUnit );
 
-			GLint prevBlendSrc, prevBlendDst;
-			glGetIntegerv( GL_BLEND_SRC, &prevBlendSrc );
-			glGetIntegerv( GL_BLEND_DST, &prevBlendDst );
 			// The framebuffer is already premulted
 			glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA );
 
@@ -1356,12 +1351,10 @@ void ViewportGadget::renderInternal( RenderReason reason, Gadget::Layer filterLa
 
 			glDisableVertexAttribArrayARB( m_postProcessShaderVertexP->location );
 			glDisableVertexAttribArrayARB( m_postProcessShaderVertexUv->location );
-
-			glBlendFunc( prevBlendSrc, prevBlendDst );
 			continue;
 		}
 
-		renderLayerInternal( reason, layer, viewTransform, bound, currentStyle, selector );
+		renderLayerInternal( reason, layer, viewTransform, bound, selector );
 	}
 	glLoadMatrixf( viewTransform.getValue() );
 }

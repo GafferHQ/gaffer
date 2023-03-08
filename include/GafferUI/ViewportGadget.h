@@ -357,7 +357,7 @@ class GAFFERUI_API ViewportGadget : public Gadget
 		static void getRenderItems( const Gadget *gadget,  Imath::M44f transform, const Style *parentStyle, std::vector<RenderItem> &renderItems );
 
 		void renderInternal( RenderReason reason, Layer filterLayer = Layer::None ) const;
-		void renderLayerInternal( RenderReason reason, Layer layer, const Imath::M44f &viewTransform, const Imath::Box3f &bound, const Style *&currentStyle, IECoreGL::Selector *selector ) const;
+		void renderLayerInternal( RenderReason reason, Layer layer, const Imath::M44f &viewTransform, const Imath::Box3f &bound, IECoreGL::Selector *selector ) const;
 
 		void childRemoved( GraphComponent *parent, GraphComponent *child );
 
