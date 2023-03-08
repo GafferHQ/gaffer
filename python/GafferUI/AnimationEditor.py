@@ -159,10 +159,7 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 		]
 
 		self.__gadgetWidget = GafferUI.GadgetWidget(
-			bufferOptions = {
-				GafferUI.GLWidget.BufferOptions.Depth,
-				GafferUI.GLWidget.BufferOptions.Double
-			}
+			bufferOptions = { GafferUI.GLWidget.BufferOptions.Depth }
 		)
 
 		self.__gadgetWidget.getViewportGadget().setPrimaryChild( self.__animationGadget )

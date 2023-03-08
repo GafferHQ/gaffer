@@ -4,7 +4,9 @@
 Breaking Changes
 ----------------
 
-- GLWidget : A GL context is no longer available in `_resize()`.
+- GLWidget :
+  - A GL context is no longer available in `_resize()`.
+  - Removed `BufferOptions.Double`.
 
 1.2.x.x (relative to 1.2.1.0)
 =======

@@ -76,8 +76,7 @@ class GLWidget( GafferUI.Widget ) :
 	BufferOptions = IECore.Enum.create(
 		"Alpha",
 		"Depth",
-		"Double",
-		"AntiAlias"
+		"AntiAlias",
 	)
 
 	## Note that you won't always get the buffer options you ask for - a best fit is found
@@ -91,8 +90,6 @@ class GLWidget( GafferUI.Widget ) :
 			format.setAlphaBufferSize( 8 )
 		if self.BufferOptions.Depth in bufferOptions :
 			format.setDepthBufferSize( 24 )
-		if self.BufferOptions.Double in bufferOptions :
-			format.setSwapBehavior( format.SwapBehavior.DoubleBuffer )
 
 		self.__multisample = self.BufferOptions.AntiAlias in bufferOptions
 		if self.__multisample:
