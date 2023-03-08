@@ -385,3 +385,10 @@ Toggle cell selection                                | {kbd}`Ctrl` + {{leftClick
 Edit selected cells                                  | {kbd}`Return`<br>or<br>{kbd}`Enter`
 Disable Edit                                         | {kbd}`D`
 Remove Attribute                                     | {kbd}`Delete`
+
+## Set Editor ##
+
+Action                              | Control or shortcut
+------------------------------------|-------------------
+Copy names of selected sets         | {kbd}`Ctrl` + {kbd}`C`
+Copy members of selected sets       | {kbd}`Ctrl` + {kbd}`Shift` + {kbd}`C`
