@@ -40,7 +40,7 @@ __children["ImageReader"]["__uiPosition"].setValue( imath.V2f( -22.6491661, 10.4
 __children["Rectangle"]["out"].setInput( __children["Rectangle"]["__merge"]["out"] )
 __children["Rectangle"]["in"].setInput( __children["ImageReader"]["out"] )
 __children["Rectangle"]["color"].setValue( imath.Color4f( 0.964699984, 0.57249999, 0.113700002, 1 ) )
-__children["Rectangle"]["area"].setValue( imath.Box2f( imath.V2f( 8, 60 ), imath.V2f( 223, 88 ) ) )
+__children["Rectangle"]["area"].setValue( imath.Box2f( imath.V2f( 8, 69 ), imath.V2f( 223, 95 ) ) )
 __children["Rectangle"]["cornerRadius"].setValue( 4.0 )
 __children["Rectangle"]["__uiPosition"].setValue( imath.V2f( -22.6491661, 2.28593731 ) )
 __children["ImageWriter"]["in"].setInput( __children["Rectangle"]["out"] )

@@ -116,7 +116,7 @@ __children["ImageTransform_Card"]["__uiPosition"].setValue( imath.V2f( 11.078329
 __children["Rectangle_Line"]["out"].setInput( __children["Rectangle_Line"]["__merge"]["out"] )
 __children["Rectangle_Line"]["in"].setInput( __children["Crop_Editor"]["out"] )
 __children["Rectangle_Line"]["color"].setValue( imath.Color4f( 0, 0.862699986, 0, 1 ) )
-__children["Rectangle_Line"]["area"].setValue( imath.Box2f( imath.V2f( 86, 119 ), imath.V2f( 154, 143 ) ) )
+__children["Rectangle_Line"]["area"].setValue( imath.Box2f( imath.V2f( 102, 119 ), imath.V2f( 170, 143 ) ) )
 __children["Rectangle_Line"]["lineWidth"].setValue( 2.0 )
 __children["Rectangle_Line"]["cornerRadius"].setValue( 4.0 )
 __children["Rectangle_Line"]["__uiPosition"].setValue( imath.V2f( -4.17264605, 8.67669487 ) )
