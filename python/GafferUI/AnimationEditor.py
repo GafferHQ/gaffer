@@ -158,9 +158,7 @@ class AnimationEditor( GafferUI.NodeSetEditor ) :
 			editable.memberRemovedSignal().connect( Gaffer.WeakMethod( self.__editablePlugRemoved ), scoped = False )
 		]
 
-		self.__gadgetWidget = GafferUI.GadgetWidget(
-			bufferOptions = { GafferUI.GLWidget.BufferOptions.Depth }
-		)
+		self.__gadgetWidget = GafferUI.GadgetWidget()
 
 		self.__gadgetWidget.getViewportGadget().setPrimaryChild( self.__animationGadget )
 		self.__gadgetWidget.getViewportGadget().setVariableAspectZoom( True )

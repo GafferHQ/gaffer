@@ -12,6 +12,7 @@ Breaking Changes
 - GLWidget :
   - A GL context is no longer available in `_resize()`.
   - Removed `BufferOptions.Double`.
+- GadgetWidget : Removed `bufferOptions` constructor argument.
 - ViewportGadget : Changed function signature for `setPostProcessShader()` and `getPostProcessShader()`.
 
 1.2.x.x (relative to 1.2.1.0)
