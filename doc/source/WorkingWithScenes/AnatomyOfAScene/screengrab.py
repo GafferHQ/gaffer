@@ -60,7 +60,7 @@ with GafferUI.Window( "Scene Inspector" ) as window :
 
 	sceneInspector = GafferSceneUI.SceneInspector( script )
 
-window.resizeToFitChild()
+window._qtWidget().resize( 512, 320 )
 window.setVisible( True )
 GafferUI.WidgetAlgo.grab( widget = sceneInspector, imagePath = "images/sceneInspector.png" )
 
