@@ -139,6 +139,23 @@ bool checkGLArbTextureFloat()
 	return supported;
 }
 
+GLsizei numSamples()
+{
+	GLint maxSamples = 0;
+	glGetIntegerv( GL_MAX_SAMPLES, &maxSamples );
+	return std::min( maxSamples, 8 );
+}
+
+V2i glViewportSize()
+{
+	// This is _not_ the same as `ViewportGadget::getViewport()` on high DPI displays.
+	// In that case, `getViewport()` returns the GadgetWidget's "virtual" size, which
+	// is a factor of the GL viewport's size, which is measured in true pixels.
+	int currentViewport[4];
+	glGetIntegerv( GL_VIEWPORT, currentViewport );
+	return V2i( currentViewport[2] - currentViewport[0], currentViewport[3] - currentViewport[1] );
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -743,8 +760,10 @@ ViewportGadget::ViewportGadget( GadgetPtr primaryChild )
 		m_cameraMotionDuringDrag( false ),
 		m_framebuffer( 0 ),
 		m_framebufferSize( -1 ),
-		m_framebufferTexture( 0 ),
-		m_depthBuffer( 0 )
+		m_colorBuffer( 0 ),
+		m_depthBuffer( 0 ),
+		m_downsampledFramebuffer( 0 ),
+		m_downsampledFramebufferTexture( 0 )
 {
 
 	// Viewport visibility is managed by GadgetWidgets,
@@ -779,8 +798,10 @@ ViewportGadget::~ViewportGadget()
 	if( m_framebuffer )
 	{
 		glDeleteFramebuffers( 1, &m_framebuffer );
-		glDeleteTextures( 1, &m_framebufferTexture );
+		glDeleteRenderbuffers( 1, &m_colorBuffer );
 		glDeleteRenderbuffers( 1, &m_depthBuffer );
+		glDeleteFramebuffers( 1, &m_downsampledFramebuffer );
+		glDeleteTextures( 1, &m_downsampledFramebufferTexture );
 	}
 }
 
@@ -1253,6 +1274,7 @@ void ViewportGadget::renderInternal( RenderReason reason, Gadget::Layer filterLa
 		glBindFramebuffer( GL_DRAW_FRAMEBUFFER, acquireFramebuffer() );
 		glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
 		glClear( GL_COLOR_BUFFER_BIT );
+		glEnable( GL_MULTISAMPLE );
 		if( layer == Layer::Back )
 		{
 			glClearDepth( 1.0f );
@@ -1260,18 +1282,26 @@ void ViewportGadget::renderInternal( RenderReason reason, Gadget::Layer filterLa
 		}
 		renderLayerInternal( RenderReason::Draw, layer, viewTransform, bound, nullptr );
 
+		// Blit to downsampled framebuffer, to get the image into a texture
+		// format we can read from a shader.
+
+		glBindFramebuffer( GL_READ_FRAMEBUFFER, m_framebuffer );
+		glBindFramebuffer( GL_DRAW_FRAMEBUFFER, m_downsampledFramebuffer );
+		const V2i size = glViewportSize();
+		glBlitFramebuffer( 0, 0, size.x, size.y, 0, 0, size.x, size.y, GL_COLOR_BUFFER_BIT, GL_NEAREST );
+
 		// Use post-process shader to transfer into the output buffer.
 		/// \todo This could be optimised by batching layers with the
 		/// same shader.
 
-		glBindFramebuffer( GL_DRAW_FRAMEBUFFER, outputFramebuffer );
+		glBindFramebuffer( GL_FRAMEBUFFER, outputFramebuffer );
 
 		const PostProcessShader &layerShader = m_postProcessShaders[layerIndex];
 		const PostProcessShader *shader = layerShader.setup ? &layerShader : PostProcessShader::defaultPostProcessShader();
 
 		IECoreGL::Shader::Setup::ScopedBinding shaderBinding( *shader->setup );
 		glActiveTexture( GL_TEXTURE0 + shader->textureParameter->textureUnit );
-		glBindTexture( GL_TEXTURE_2D, m_framebufferTexture );
+		glBindTexture( GL_TEXTURE_2D, m_downsampledFramebufferTexture );
 		glUniform1i( shader->textureParameter->location, shader->textureParameter->textureUnit );
 
 		// The intermediate framebuffer is already premultipled.
@@ -1300,25 +1330,24 @@ void ViewportGadget::renderInternal( RenderReason reason, Gadget::Layer filterLa
 
 GLuint ViewportGadget::acquireFramebuffer() const
 {
-	int currentViewport[4];
-	glGetIntegerv( GL_VIEWPORT, currentViewport );
-	const V2i size( currentViewport[2] - currentViewport[0], currentViewport[3] - currentViewport[1] );
+	const V2i size = glViewportSize();
 	if( m_framebuffer && m_framebufferSize == size )
 	{
 		// Reuse existing buffer.
 		return m_framebuffer;
 	}
 
-	if( !m_framebufferTexture )
+	if( !m_colorBuffer )
 	{
-		glGenTextures( 1, &m_framebufferTexture );
-		glBindTexture( GL_TEXTURE_2D, m_framebufferTexture );
+		glGenRenderbuffers( 1, &m_colorBuffer );
+		glGenRenderbuffers( 1, &m_depthBuffer );
+
+		glGenTextures( 1, &m_downsampledFramebufferTexture );
+		glBindTexture( GL_TEXTURE_2D, m_downsampledFramebufferTexture );
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
 		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
-
-		glGenRenderbuffers( 1, &m_depthBuffer );
 	}
 
 	if( m_framebuffer )
@@ -1328,31 +1357,47 @@ GLuint ViewportGadget::acquireFramebuffer() const
 		// resized - sounds like it depends on the driver. Safer to just
 		// recreate it.
 		glDeleteFramebuffers( 1, &m_framebuffer );
+		glDeleteFramebuffers( 1, &m_downsampledFramebuffer );
 	}
 
 	// Create framebuffer
 	glGenFramebuffers( 1, &m_framebuffer );
 	glBindFramebuffer( GL_DRAW_FRAMEBUFFER, m_framebuffer );
 
-	// Resize texture and attach to framebuffer
-	static bool haveTextureFloat = checkGLArbTextureFloat();
-	glBindTexture( GL_TEXTURE_2D, m_framebufferTexture );
-	glTexImage2D(
-		GL_TEXTURE_2D, 0, haveTextureFloat ? GL_RGBA16F : GL_RGBA8,
-		size.x, size.y, 0, GL_RGBA, GL_FLOAT, nullptr
-	);
-	glFramebufferTexture2D( GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_framebufferTexture, 0 );
+	// Resize color buffer and attach to framebuffer
+	static const GLint colorFormat = checkGLArbTextureFloat() ? GL_RGBA16F : GL_RGBA8;
+	static const GLsizei samples = numSamples();
+
+	glBindRenderbuffer( GL_RENDERBUFFER, m_colorBuffer );
+	glRenderbufferStorageMultisample( GL_RENDERBUFFER, samples, colorFormat, size.x, size.y );
+	glFramebufferRenderbuffer( GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, m_colorBuffer );
 
 	// Resize depth buffer and attach to framebuffer
 	glBindRenderbuffer( GL_RENDERBUFFER, m_depthBuffer );
-	glRenderbufferStorage( GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, size.x, size.y );
+	glRenderbufferStorageMultisample( GL_RENDERBUFFER, samples, GL_DEPTH_COMPONENT24, size.x, size.y );
 	glFramebufferRenderbuffer( GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_depthBuffer );
 
 	// Validate framebuffer
 	GLenum framebufferStatus = glCheckFramebufferStatus( GL_DRAW_FRAMEBUFFER );
 	if( framebufferStatus != GL_FRAMEBUFFER_COMPLETE )
 	{
-		IECore::msg( IECore::Msg::Warning, "GafferUI::ViewportGadget", "Framebuffer error : " + std::to_string( framebufferStatus ) );
+		IECore::msg( IECore::Msg::Warning, "GafferUI::ViewportGadget", "Multisampled framebuffer error : " + std::to_string( framebufferStatus ) );
+	}
+
+	// Create downsampled framebuffer
+	glGenFramebuffers( 1, &m_downsampledFramebuffer );
+	glBindFramebuffer( GL_DRAW_FRAMEBUFFER, m_downsampledFramebuffer );
+
+	// Resize color texture and attach to downsampled framebuffer
+	glBindTexture( GL_TEXTURE_2D, m_downsampledFramebufferTexture );
+	glTexImage2D( GL_TEXTURE_2D, 0, colorFormat, size.x, size.y, 0, GL_RGBA, GL_FLOAT, nullptr );
+	glFramebufferTexture2D( GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_downsampledFramebufferTexture, 0 );
+
+	// Validate downsampled framebuffer
+	framebufferStatus = glCheckFramebufferStatus( GL_DRAW_FRAMEBUFFER );
+	if( framebufferStatus != GL_FRAMEBUFFER_COMPLETE )
+	{
+		IECore::msg( IECore::Msg::Warning, "GafferUI::ViewportGadget", "Downsampled framebuffer error : " + std::to_string( framebufferStatus ) );
 	}
 
 	m_framebufferSize = size;
