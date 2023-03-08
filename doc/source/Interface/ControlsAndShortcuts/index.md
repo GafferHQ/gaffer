@@ -155,6 +155,7 @@ Action                               | Control or shortcut
 -------------------------------------|-------------------
 Jump to focus node                   | Hover cursor over editor, <kbd>&#96;</kbd><br>or<br>{{leftClick}} {{editorFocusMenu}}, select *Focus Node*
 Assign focus to selected node        | Hover cursor over node graph, {kbd}`Ctrl` + <kbd>&#96;</kbd><br>or<br>Click on top right of node
+Assign focus to numeric bookmark     | {kbd}`Alt` + {kbd}`1` … {kbd}`9`
 
 ### Node bookmarks ###
 
