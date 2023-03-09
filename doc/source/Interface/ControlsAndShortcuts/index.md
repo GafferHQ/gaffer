@@ -155,6 +155,7 @@ Action                               | Control or shortcut
 -------------------------------------|-------------------
 Jump to focus node                   | Hover cursor over editor, <kbd>&#96;</kbd><br>or<br>{{leftClick}} {{editorFocusMenu}}, select *Focus Node*
 Assign focus to selected node        | Hover cursor over node graph, {kbd}`Ctrl` + <kbd>&#96;</kbd><br>or<br>Click on top right of node
+Assign focus to numeric bookmark     | {kbd}`Alt` + {kbd}`1` … {kbd}`9`
 
 ### Node bookmarks ###
 
@@ -171,7 +172,7 @@ Remove numeric bookmark              | {kbd}`Ctrl` + {kbd}`0`
 
 ### Numeric plugs ###
 
-Action                                        | Control or shorcut
+Action                                        | Control or shortcut
 ----------------------------------------------|-------------------
 Increment/decrement value, specific precision | Position cursor next to a number position in plug field, then hit {kbd}`↑` / {kbd}`↓`
 Scrub value, coarse precision                 | {kbd}`Ctrl` + {{leftClick}} and drag the field left/right
@@ -184,7 +185,7 @@ Gang plugs together                           | {kbd}`Ctrl` + {kbd}`G`
 
 ### Path plugs ###
 
-Action                              | Control or shorcut
+Action                              | Control or shortcut
 ------------------------------------|------------------
 Autocomplete path component         | {kbd}`Tab`
 Path-level contents menu            | Select path component<br>or<br>Position text cursor in path component, then hit {kbd}`↓`
@@ -240,7 +241,7 @@ Fit clipping planes to selection                     | {{rightClick}} > *Clippin
 Frame view, and fit clipping planes                  | {kbd}`Ctrl` + {kbd}`F`
 Reset clipping planes                                | {{rightClick}} > *Clipping Planes* > *Default*
 Toggle Inspector                                     | {kbd}`I`
-Prune selected objects from current EditScope        | {kbd}`Ctrl` + {kbd}`Delete`
+Prune selected objects from current EditScope        | {kbd}`Ctrl` + {kbd}`Delete`<br>or<br>{kbd}`Ctrl` + {kbd}`Backspace`
 
 ### Transform tools ###
 
@@ -285,7 +286,7 @@ Draw new region anywhere             | {kbd}`Shift` + click and drag
 
 ## Hierarchy View ##
 
-Action                              | Control or shorcut
+Action                              | Control or shortcut
 ------------------------------------|-------------------
 Expand selected location            | {kbd}`→`
 Fully expand selected location      | {kbd}`Shift` + {kbd}`→`
@@ -351,7 +352,7 @@ Adjust value(s) of selected key(s)             | {kbd}`Shift` + {{leftClick}} an
 
 ## Interactive Render Log ##
 
-Action                              | Control or shorcut
+Action                              | Control or shortcut
 ------------------------------------|-------------------
 Next message of level               | {kbd}`E`, {kbd}`W`, {kbd}`I`, {kbd}`D`
 Previous message of level           | {kbd}`Shift` + {kbd}`E`, {kbd}`W`, {kbd}`I`, {kbd}`D`
@@ -385,3 +386,10 @@ Toggle cell selection                                | {kbd}`Ctrl` + {{leftClick
 Edit selected cells                                  | {kbd}`Return`<br>or<br>{kbd}`Enter`
 Disable Edit                                         | {kbd}`D`
 Remove Attribute                                     | {kbd}`Delete`
+
+## Set Editor ##
+
+Action                              | Control or shortcut
+------------------------------------|-------------------
+Copy names of selected sets         | {kbd}`Ctrl` + {kbd}`C`
+Copy members of selected sets       | {kbd}`Ctrl` + {kbd}`Shift` + {kbd}`C`

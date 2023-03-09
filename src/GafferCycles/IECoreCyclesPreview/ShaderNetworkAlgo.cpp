@@ -62,6 +62,8 @@ IECORE_PUSH_DEFAULT_VISIBILITY
 #include "util/path.h"
 IECORE_POP_DEFAULT_VISIBILITY
 
+#include "fmt/format.h"
+
 #include <filesystem>
 
 using namespace std;
@@ -175,7 +177,10 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 		}
 		else
 		{
-			msg( Msg::Warning, "IECoreCycles::ShaderNetworkAlgo", boost::format( "Couldn't load OSL shader \"%s\" as the shading system is not set to OSL." ) % shader->getName() );
+			msg(
+				Msg::Warning, "IECoreCycles::ShaderNetworkAlgo",
+				fmt::format( "Couldn't load OSL shader \"{}\" as the shading system is not set to OSL.", shader->getName() )
+			);
 			return node;
 		}
 	}
@@ -204,7 +209,7 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 
 	if( !node )
 	{
-		msg( Msg::Warning, "IECoreCycles::ShaderNetworkAlgo", boost::format( "Couldn't load shader \"%s\"" ) % shader->getName() );
+		msg( Msg::Warning, "IECoreCycles::ShaderNetworkAlgo", fmt::format( "Couldn't load shader \"{}\"", shader->getName() ) );
 		return node;
 	}
 
@@ -376,7 +381,10 @@ T parameterValue( const IECore::Data *data, const IECore::InternedString &name, 
 		return d->readable();
 	}
 
-	IECore::msg( IECore::Msg::Warning, "IECoreCycles::ShaderNetworkAlgo", boost::format( "Expected %s but got %s for parameter \"%s\"." ) % DataType::staticTypeName() % data->typeName() % name.c_str() );
+	IECore::msg(
+		IECore::Msg::Warning, "IECoreCycles::ShaderNetworkAlgo",
+		fmt::format( "Expected {} but got {} for parameter \"{}\".", DataType::staticTypeName(), data->typeName(), name.c_str() )
+	);
 	return defaultValue;
 }
 
@@ -491,7 +499,10 @@ ccl::ShaderInput *input( ccl::ShaderNode *node, IECore::InternedString name )
 			return socket;
 	}
 
-	msg( Msg::Warning, "IECoreCycles::ShaderNetworkAlgo", boost::format( "Couldn't find socket input \"%s\" on shaderNode \"%s\"" ) % name.string() % string( node->name.c_str() ) );
+	msg(
+		Msg::Warning, "IECoreCycles::ShaderNetworkAlgo",
+		fmt::format( "Couldn't find socket input \"{}\" on shaderNode \"{}\"", name.string(), node->name.c_str() )
+	);
 	return nullptr;
 }
 
@@ -514,7 +525,10 @@ ccl::ShaderOutput *output( ccl::ShaderNode *node, IECore::InternedString name )
 			return socket;
 	}
 
-	msg( Msg::Warning, "IECoreCycles::ShaderNetworkAlgo", boost::format( "Couldn't find socket output \"%s\" on shaderNode \"%s\"" ) % name.string() % string ( node->name.c_str() ) );
+	msg(
+		Msg::Warning, "IECoreCycles::ShaderNetworkAlgo",
+		fmt::format( "Couldn't find socket output \"{}\" on shaderNode \"{}\"", name.string(), node->name.c_str() )
+	);
 	return nullptr;
 }
 
