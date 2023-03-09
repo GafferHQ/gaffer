@@ -266,7 +266,10 @@ Build
   - YAML-CPP : Added version 0.7.0.
 - 3Delight : Updated to 3Delight version 2.9.17.
 
-1.1.9.x (relative to 1.1.9.2)
+1.1.9.x (relative to 1.1.9.3)
+=======
+
+1.1.9.3 (relative to 1.1.9.2)
 =======
 
 Fixes
