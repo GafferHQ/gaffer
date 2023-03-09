@@ -6,12 +6,16 @@ Breaking Changes
 
 - GLWidget : A GL context is no longer available in `_resize()`.
 
-1.2.x.x (relative to 1.2.1.0)
+1.2.x.x (relative to 1.2.1.1)
+=======
+
+1.2.1.1 (relative to 1.2.1.0)
 =======
 
 Fixes
 -----
 
+- TractorDispatcher : Fixed `TypeError : unsupported operand types` error that prevented dispatch.
 - ImageReader : Made error message more descriptive when trying to access a channel that doesn't exist.
 
 1.2.1.0 (relative to 1.2.0.2)
@@ -273,7 +277,10 @@ Build
   - YAML-CPP : Added version 0.7.0.
 - 3Delight : Updated to 3Delight version 2.9.17.
 
-1.1.9.x (relative to 1.1.9.2)
+1.1.9.x (relative to 1.1.9.3)
+=======
+
+1.1.9.3 (relative to 1.1.9.2)
 =======
 
 Fixes
