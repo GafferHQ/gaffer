@@ -4,6 +4,7 @@
 Fixes
 -----
 
+- TractorDispatcher : Fixed `TypeError : unsupported operand types` error that prevented dispatch.
 - ImageReader : Made error message more descriptive when trying to access a channel that doesn't exist.
 
 1.2.1.0 (relative to 1.2.0.2)
