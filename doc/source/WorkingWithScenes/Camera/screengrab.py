@@ -9,6 +9,11 @@
 # BuildTarget: images/taskCameraRenderOverridePlugs.png
 # BuildTarget: images/taskCameraTweaksTweaks.png
 # BuildTarget: images/taskStandardOptionsDepthOfFieldPlug.png
+# BuildDependency: scripts/renderDepthOfFieldBlur.gfr
+# BuildDependency: scripts/taskCameraApertureFocalLengthPlugs_edit.gfr
+# BuildDependency: scripts/taskCameraCustomAperturePlugs_edit.gfr
+# BuildDependency: scripts/taskCameraFOVPlugs_edit.gfr
+# BuildDependency: scripts/taskStandardOptionsDepthOfFieldPlug_edit.gfr
 
 import os
 import subprocess
