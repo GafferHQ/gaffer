@@ -4,6 +4,7 @@
 Fixes
 -----
 
+- Reference : Fixed bug reloading a Reference after changing the number of points in a SplinePlug. The complete edited spline is now maintained across a reload. If the spline has not been edited, then the value is updated from the `.grf` file as before (#5170).
 - DispatchDialogue : Fixed `AttributeError: '__Implementation' object has no attribute 'message'` error.
 
 1.2.1.1 (relative to 1.2.1.0)
