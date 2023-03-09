@@ -351,6 +351,8 @@ class SetPath : public Gaffer::Path
 
 };
 
+IE_CORE_DEFINERUNTIMETYPED( SetPath );
+
 SetPath::Ptr constructor1( ScenePlug &scene, Context &context, PathFilterPtr filter )
 {
 	return new SetPath( &scene, &context, filter );
