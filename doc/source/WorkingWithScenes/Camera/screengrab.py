@@ -171,9 +171,9 @@ __dispatchScript(
 __imageName = "renderDepthOfFieldBlur"
 __dispatchScript(
 	script = "scripts/{}.gfr".format( __imageName ),
-	tasks = [ "AppleseedRender" ],
+	tasks = [ "CyclesRender" ],
 	settings = [
-		"-Outputs.outputs.output2.fileName '\"{}\"'".format( os.path.abspath( "images/{}.png".format( __imageName ) ) )
+		"-Outputs.outputs.output1.fileName '\"{}\"'".format( os.path.abspath( "images/{}.png".format( __imageName ) ) )
 		]
   )
 
