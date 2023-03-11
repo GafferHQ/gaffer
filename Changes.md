@@ -1,6 +1,11 @@
 1.2.x.x (relative to 1.2.1.1)
 =======
 
+Fixes
+-----
+
+- DispatchDialogue : Fixed `AttributeError: '__Implementation' object has no attribute 'message'` error.
+
 1.2.1.1 (relative to 1.2.1.0)
 =======
 
