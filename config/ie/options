@@ -253,7 +253,7 @@ exrVersion = targetAppReg.get( "OpenEXRVersion", cortexReg["OpenEXRVersion"] )
 oiioVersion = targetAppReg.get( "OpenImageIOVersion", cortexReg["OpenImageIOVersion"] )
 oiioLibSuffix = targetAppReg.get( "OpenImageIOLibSuffix", oiioVersion )
 vdbVersion = targetAppReg.get( "OpenVDBVersion", cortexReg["OpenVDBVersion"] )
-oslVersion = targetAppReg.get( "OpenShadingLanguageVersion", cortexReg["OpenShadingLanguageVersion"] )
+oslVersion = targetAppReg.get( "OpenShadingLanguageVersion", gafferReg.get( "OpenShadingLanguageVersion", cortexReg["OpenShadingLanguageVersion"] ) )
 tbbVersion = targetAppReg.get( "tbbVersion", cortexReg["tbbVersion"] )
 usdVersion = targetAppReg.get( "usdVersion", cortexReg["usdVersion"] )
 
