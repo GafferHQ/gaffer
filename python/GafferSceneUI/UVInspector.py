@@ -60,12 +60,7 @@ class UVInspector( GafferUI.NodeSetEditor ) :
 			with GafferUI.Frame( borderWidth = 4, borderStyle = GafferUI.Frame.BorderStyle.None_ ) :
 				toolbar = GafferUI.NodeToolbar.create( self.__uvView )
 
-			self.__gadgetWidget = GafferUI.GadgetWidget(
-				bufferOptions = {
-					GafferUI.GLWidget.BufferOptions.Double,
-					GafferUI.GLWidget.BufferOptions.AntiAlias
-				},
-			)
+			self.__gadgetWidget = GafferUI.GadgetWidget()
 
 			Gaffer.NodeAlgo.applyUserDefaults( self.__uvView )
 			self.__uvView.setContext( self.getContext() )

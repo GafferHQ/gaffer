@@ -165,14 +165,24 @@ def __renderAndGrab( script, widget, imagePath, delay = 15 ) :
 
 	script["variables"]["imageCataloguePort"]["value"].setValue( script["Catalogue"].displayDriverServer().portNumber() )
 	script["InteractiveAppleseedRender"]["state"].setValue( script["InteractiveAppleseedRender"].State.Running )
-	__delay( delay )
 
+	# Wait for render. Deliberately not using `__delay()`, as it can wait a
+	# significant amount of time longer than requested when a render is running.
+	# This seems to be due to a single call to `waitForIdle()` getting stuck
+	# performing repeated draws of the Viewer, because pixels are arriving as
+	# fast as we can draw them.
+	time.sleep( delay )
+
+	# Stop renderer before grabbing, because `grab()` also calls `waitForIdle()`, which would
+	# again cause unwanted delays.
+	script["InteractiveAppleseedRender"]["state"].setValue( script["InteractiveAppleseedRender"].State.Stopped )
+
+	GafferUI.EventLoop.waitForIdle()
 	viewport = scriptWindow.getLayout().editors( GafferUI.Viewer )[0].view().viewportGadget()
 	viewport.frame( viewport.getPrimaryChild().bound() )
 	GafferUI.EventLoop.waitForIdle()
 
 	GafferUI.WidgetAlgo.grab( widget = widget, imagePath = imagePath )
-	script["InteractiveAppleseedRender"]["state"].setValue( script["InteractiveAppleseedRender"].State.Stopped )
 
 __renderAndGrab( script, scriptWindow, "images/mainRenderGrey.png", delay = 1 )
 

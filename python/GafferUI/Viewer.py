@@ -62,13 +62,7 @@ class Viewer( GafferUI.NodeSetEditor ) :
 
 	def __init__( self, scriptNode, **kw ) :
 
-		self.__gadgetWidget = GafferUI.GadgetWidget(
-			bufferOptions = set( (
-				GafferUI.GLWidget.BufferOptions.Depth,
-				GafferUI.GLWidget.BufferOptions.Double,
-				GafferUI.GLWidget.BufferOptions.AntiAlias )
-			),
-		)
+		self.__gadgetWidget = GafferUI.GadgetWidget()
 
 		GafferUI.NodeSetEditor.__init__( self, self.__gadgetWidget, scriptNode, nodeSet = scriptNode.focusSet(), **kw )
 

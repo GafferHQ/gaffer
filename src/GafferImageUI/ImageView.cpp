@@ -2017,7 +2017,7 @@ void ImageView::preRender()
 {
 	if( !m_displayTransformAndShader->supportsShader || !m_lutGPU )
 	{
-		viewportGadget()->setPostProcessShader( nullptr );
+		viewportGadget()->setPostProcessShader( Gadget::Layer::Main, nullptr );
 	}
 	else
 	{
@@ -2051,7 +2051,7 @@ void ImageView::preRender()
 		m_displayTransformAndShader->shader->addUniformParameter( "multiply", m_multiplyParameter );
 		m_displayTransformAndShader->shader->addUniformParameter( "power", m_powerParameter );
 		m_displayTransformAndShader->shader->addUniformParameter( "soloChannel", m_soloChannelParameter );
-		viewportGadget()->setPostProcessShader( m_displayTransformAndShader->shader );
+		viewportGadget()->setPostProcessShader( Gadget::Layer::Main, m_displayTransformAndShader->shader );
 	}
 
 	V3f comparisonScale( 1.0f );
