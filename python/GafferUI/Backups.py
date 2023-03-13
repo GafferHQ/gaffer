@@ -126,6 +126,8 @@ class Backups( object ) :
 	def recoveryFile( self, script ) :
 
 		scriptPath = self.__scriptPath( script )
+		if not scriptPath:
+			return None
 		backups = self.backups( scriptPath )
 		if not backups :
 			return None
