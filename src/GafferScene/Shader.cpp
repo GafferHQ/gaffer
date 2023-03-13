@@ -42,6 +42,7 @@
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/SplinePlug.h"
 #include "Gaffer/Switch.h"
 #include "Gaffer/TypedPlug.h"
 
@@ -53,6 +54,7 @@
 #include "boost/bind/bind.hpp"
 #include "boost/lexical_cast.hpp"
 
+#include "fmt/compile.h"
 #include "fmt/format.h"
 
 using namespace std;
@@ -274,6 +276,44 @@ class Shader::NetworkBuilder
 						parameterPlug = source;
 					}
 				}
+			}
+		}
+
+		IECoreScene::ShaderNetwork::Parameter outputParameterForPlug( const Plug *parameter )
+		{
+			assert( isOutputParameter( parameter ) );
+
+			const Shader *shader = static_cast<const Shader *>( parameter->node() );
+			IECore::InternedString outputName;
+			// Set up an output name if we are a descendant of the output plug.
+			// The alternative is a special case ( which should perhaps be removed
+			// in the future ), which is that for nodes with one output, parameter
+			// is the outPlug instead of being a descendant ( and then we use an
+			// empty name ).
+			if( shader->outPlug()->isAncestorOf( parameter ) )
+			{
+				outputName = parameter->relativeName( shader->outPlug() );
+			}
+
+			return { this->handle( shader ), outputName };
+		}
+
+		void parameterHashForPlug( const Plug *parameter, IECore::MurmurHash &h )
+		{
+			const Shader *shader = static_cast<const Shader *>( parameter->node() );
+			h.append( shaderHash( shader ) );
+			if( shader->outPlug()->isAncestorOf( parameter ) )
+			{
+				h.append( parameter->relativeName( shader->outPlug() ) );
+			}
+		}
+
+		void checkNoShaderInput( const Gaffer::Plug *parameterPlug )
+		{
+			const Gaffer::Plug *effectiveParameter = this->effectiveParameter( parameterPlug );
+			if( effectiveParameter && isOutputParameter( effectiveParameter ) )
+			{
+				throw IECore::Exception( fmt::format( "Shader connections to {} are not supported.", parameterPlug->fullName() ) );
 			}
 		}
 
@@ -513,6 +553,62 @@ class Shader::NetworkBuilder
 					}
 				}
 			}
+			else if( (Gaffer::TypeId)parameter->typeId() == SplineffPlugTypeId )
+			{
+				hashSplineParameterComponentConnections< SplineffPlug >( (const SplineffPlug*)parameter, h );
+			}
+			else if( (Gaffer::TypeId)parameter->typeId() == SplinefColor3fPlugTypeId )
+			{
+				hashSplineParameterComponentConnections< SplinefColor3fPlug >( (const SplinefColor3fPlug*)parameter, h );
+			}
+			else if( (Gaffer::TypeId)parameter->typeId() == SplinefColor4fPlugTypeId )
+			{
+				hashSplineParameterComponentConnections< SplinefColor4fPlug >( (const SplinefColor4fPlug*)parameter, h );
+			}
+		}
+
+		template< typename T >
+		void hashSplineParameterComponentConnections( const T *parameter, IECore::MurmurHash &h )
+		{
+			checkNoShaderInput( parameter->interpolationPlug() );
+
+			bool hasInput = false;
+			for( unsigned int i = 0; i < parameter->numPoints(); i++ )
+			{
+				checkNoShaderInput( parameter->pointPlug( i ) );
+				checkNoShaderInput( parameter->pointXPlug( i ) );
+
+				const auto* yPlug = parameter->pointYPlug( i );
+				const Gaffer::Plug *effectiveParameter = this->effectiveParameter( yPlug  );
+				if( effectiveParameter && isOutputParameter( effectiveParameter ) )
+				{
+					hasInput = true;
+					parameterHashForPlug( effectiveParameter, h );
+					h.append( i );
+				}
+				else if( isCompoundNumericPlug( yPlug ) )
+				{
+					for( Plug::InputIterator it( yPlug ); !it.done(); ++it )
+					{
+						const Gaffer::Plug *effectiveCompParameter = this->effectiveParameter( it->get() );
+						if( effectiveCompParameter && isOutputParameter( effectiveCompParameter ) )
+						{
+							hasInput = true;
+							parameterHashForPlug( effectiveCompParameter, h );
+							h.append( i );
+							h.append( (*it)->getName() );
+						}
+					}
+				}
+			}
+
+			if( hasInput )
+			{
+				for( unsigned int i = 0; i < parameter->numPoints(); i++ )
+				{
+					parameter->pointXPlug( i )->hash( h );
+				}
+			}
 		}
 
 		void addParameterComponentConnections( const Gaffer::Plug *parameter, const IECore::InternedString &parameterName, vector<IECoreScene::ShaderNetwork::Connection> &connections )
@@ -537,6 +633,124 @@ class Shader::NetworkBuilder
 							{ IECore::InternedString(), inputName }
 						} );
 					}
+				}
+			}
+			else if( (Gaffer::TypeId)parameter->typeId() == SplineffPlugTypeId )
+			{
+				addSplineParameterComponentConnections< SplineffPlug >( (const SplineffPlug*) parameter, parameterName, connections );
+			}
+			else if( (Gaffer::TypeId)parameter->typeId() == SplinefColor3fPlugTypeId )
+			{
+				addSplineParameterComponentConnections< SplinefColor3fPlug >( (const SplinefColor3fPlug*)parameter, parameterName, connections );
+			}
+			else if( (Gaffer::TypeId)parameter->typeId() == SplinefColor4fPlugTypeId )
+			{
+				addSplineParameterComponentConnections< SplinefColor4fPlug >( (const SplinefColor4fPlug*)parameter, parameterName, connections );
+			}
+		}
+
+		template< typename T >
+		void addSplineParameterComponentConnections( const T *parameter, const IECore::InternedString &parameterName, vector<IECoreScene::ShaderNetwork::Connection> &connections )
+		{
+			const int n = parameter->numPoints();
+			std::vector< std::tuple< int, std::string, const Gaffer::Plug *> > inputs;
+
+			for( int i = 0; i < n; i++ )
+			{
+				const auto* yPlug = parameter->pointYPlug( i );
+				const Gaffer::Plug *effectiveParameter = this->effectiveParameter( yPlug  );
+				if( effectiveParameter && isOutputParameter( effectiveParameter ) )
+				{
+					inputs.push_back( std::make_tuple( i, "", effectiveParameter ) );
+				}
+				else if( isCompoundNumericPlug( yPlug ) )
+				{
+					for( Plug::InputIterator it( yPlug ); !it.done(); ++it )
+					{
+						const Gaffer::Plug *effectiveCompParameter = this->effectiveParameter( it->get() );
+						if( effectiveCompParameter && isOutputParameter( effectiveCompParameter ) )
+						{
+							inputs.push_back( std::make_tuple( i, "." + (*it)->getName().string(), effectiveCompParameter ) );
+						}
+					}
+				}
+			}
+
+			if( !inputs.size() )
+			{
+				return;
+			}
+
+			std::vector< int > applySort( n );
+
+			{
+				std::vector< std::pair< float, unsigned int > > ordering;
+				ordering.reserve( n );
+				for( int i = 0; i < n; i++ )
+				{
+					ordering.push_back( std::make_pair( parameter->pointXPlug( i )->getValue(), i ) );
+				}
+				std::sort( ordering.begin(), ordering.end() );
+
+				for( int i = 0; i < n; i++ )
+				{
+					applySort[ ordering[i].second ] = i;
+				}
+			}
+
+			SplineDefinitionInterpolation interp = (SplineDefinitionInterpolation)parameter->interpolationPlug()->getValue();
+			int endPointDupes = 0;
+			// \todo : Need to duplicate the logic from SplineDefinition::endPointMultiplicity
+			// John requested an explicit notice that we are displeased by this duplication.
+			// Possible alternatives to this would be storing SplineDefinitionData instead of SplineData
+			// in the ShaderNetwork, or moving the handling of endpoint multiplicity inside Splineff
+			if( interp == SplineDefinitionInterpolationCatmullRom )
+			{
+				endPointDupes = 1;
+			}
+			else if( interp == SplineDefinitionInterpolationBSpline )
+			{
+				endPointDupes = 2;
+			}
+			else if( interp == SplineDefinitionInterpolationMonotoneCubic )
+			{
+				throw IECore::Exception(
+					"Cannot support monotone cubic interpolation for splines with inputs, for plug " + parameter->fullName()
+				);
+			}
+
+
+			for( const auto &[ origIndex, componentSuffix, sourcePlug ] : inputs )
+			{
+				IECoreScene::ShaderNetwork::Parameter sourceParameter = outputParameterForPlug( sourcePlug );
+
+				int index = applySort[ origIndex ];
+				int outIndexMin, outIndexMax;
+				if( index == 0 )
+				{
+					outIndexMin = 0;
+					outIndexMax = endPointDupes;
+				}
+				else if( index == n - 1 )
+				{
+					outIndexMin = endPointDupes + n - 1;
+					outIndexMax = endPointDupes + n - 1 + endPointDupes;
+				}
+				else
+				{
+					outIndexMin = outIndexMax = index + endPointDupes;
+				}
+
+				for( int i = outIndexMin; i <= outIndexMax; i++ )
+				{
+					IECore::InternedString inputName = fmt::format(
+						FMT_COMPILE( "{}[{}].y{}" ),
+						parameterName.string(), i, componentSuffix
+					);
+					connections.push_back( {
+						sourceParameter,
+						{ IECore::InternedString(), inputName }
+					} );
 				}
 			}
 		}
