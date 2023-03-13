@@ -61,7 +61,7 @@ class Backups( object ) :
 		self.__settings["frequency"] = Gaffer.IntPlug( defaultValue = 5, minValue = 0 )
 		self.__settings["fileName"] = Gaffer.StringPlug( defaultValue = "${script:directory}/.gafferBackups/${script:name}-backup${backup:number}.gfr" )
 		self.__settings["files"] = Gaffer.IntPlug( defaultValue = 10, minValue = 1 )
-		self.__settings["enableAutoLoad"] = Gaffer.BoolPlug( defaultValue = True )
+		self.__settings["checkForBackups"] = Gaffer.BoolPlug( defaultValue = True )
 
 		applicationRoot["preferences"]["backups"] = self.__settings
 
@@ -170,9 +170,9 @@ class Backups( object ) :
 
 		return self.__settings
 
-	def autoload( self ) :
+	def checkForBackups( self ) :
 
-		return self.__settings["enableAutoLoad"].getValue()
+		return self.__settings["checkForBackups"].getValue()
 
 	@classmethod
 	def acquire( cls, application, createIfNecessary=True ) :
@@ -366,14 +366,15 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"backups.enableAutoLoad" : [
+		"backups.checkForBackups" : [
 
 			"description",
 			"""
-			Toggles autoloading backups on Gaffer start. If enabled
-			and there exists a backup then Gaffer will hang and ask
-			the user if they want to open the backup instead. However,
-			if disabled then Gaffer will skip the backup.
+			When a file is opened, checks for a more recent backup.
+			If one is found, a dialogue is displayed,
+			asking if the backup should be opened instead.
+			If this option is turned off,
+			you can still access backups via the File/Open Backup menu item.
 			""",
 
 		],

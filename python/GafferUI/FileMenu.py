@@ -51,7 +51,7 @@ def appendDefinitions( menuDefinition, prefix="" ) :
 	menuDefinition.append( prefix + "/New", { "command" : new, "shortCut" : "Ctrl+N" } )
 	menuDefinition.append( prefix + "/Open...", { "command" : open, "shortCut" : "Ctrl+O" } )
 	menuDefinition.append( prefix + "/Open Recent", { "subMenu" : openRecent } )
-	menuDefinition.append( prefix + "/Open Backup", { "command" : openBackup, "active" : __backupAvailable } )
+	menuDefinition.append( prefix + "/Revert to Saved", { "command" : openBackup, "active" : __backupAvailable } )
 	menuDefinition.append( prefix + "/OpenDivider", { "divider" : True } )
 	menuDefinition.append( prefix + "/Save", { "command" : save, "shortCut" : "Ctrl+S" } )
 	menuDefinition.append( prefix + "/Save As...", { "command" : saveAs, "shortCut" : "Shift+Ctrl+S" } )
@@ -101,7 +101,7 @@ def __addScript( application, fileName, dialogueParentWindow = None, asNew = Fal
 
 	recoveryFileName = None
 	backups = GafferUI.Backups.acquire( application, createIfNecessary = False )
-	if backups is not None and backups.autoload() :
+	if backups is not None and backups.checkForBackups() :
 		recoveryFileName = backups.recoveryFile( fileName )
 		if recoveryFileName :
 			dialogue = GafferUI.ConfirmationDialogue(
