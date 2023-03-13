@@ -496,48 +496,47 @@ class Shader::NetworkBuilder
 
 		void hashParameterComponentConnections( const Gaffer::Plug *parameter, IECore::MurmurHash &h )
 		{
-			if( !isCompoundNumericPlug( parameter ) )
+			if( isCompoundNumericPlug( parameter ) )
 			{
-				return;
-			}
-			for( Plug::InputIterator it( parameter ); !it.done(); ++it )
-			{
-				const Gaffer::Plug *effectiveParameter = this->effectiveParameter( it->get() );
-				if( effectiveParameter && isOutputParameter( effectiveParameter ) )
+				for( Plug::InputIterator it( parameter ); !it.done(); ++it )
 				{
-					const Shader *effectiveShader = static_cast<const Shader *>( effectiveParameter->node() );
-					h.append( shaderHash( effectiveShader ) );
-					if( effectiveShader->outPlug()->isAncestorOf( effectiveParameter ) )
+					const Gaffer::Plug *effectiveParameter = this->effectiveParameter( it->get() );
+					if( effectiveParameter && isOutputParameter( effectiveParameter ) )
 					{
-						h.append( effectiveParameter->relativeName( effectiveShader->outPlug() ) );
+						const Shader *effectiveShader = static_cast<const Shader *>( effectiveParameter->node() );
+						h.append( shaderHash( effectiveShader ) );
+						if( effectiveShader->outPlug()->isAncestorOf( effectiveParameter ) )
+						{
+							h.append( effectiveParameter->relativeName( effectiveShader->outPlug() ) );
+						}
+						h.append( (*it)->getName() );
 					}
-					h.append( (*it)->getName() );
 				}
 			}
 		}
 
 		void addParameterComponentConnections( const Gaffer::Plug *parameter, const IECore::InternedString &parameterName, vector<IECoreScene::ShaderNetwork::Connection> &connections )
 		{
-			if( !isCompoundNumericPlug( parameter ) )
+			if( isCompoundNumericPlug( parameter ) )
 			{
-				return;
-			}
-			for( Plug::InputIterator it( parameter ); !it.done(); ++it )
-			{
-				const Gaffer::Plug *effectiveParameter = this->effectiveParameter( it->get() );
-				if( effectiveParameter && isOutputParameter( effectiveParameter ) )
+				for( Plug::InputIterator it( parameter ); !it.done(); ++it )
 				{
-					const Shader *effectiveShader = static_cast<const Shader *>( effectiveParameter->node() );
-					IECore::InternedString outputName;
-					if( effectiveShader->outPlug()->isAncestorOf( effectiveParameter ) )
+					const Gaffer::Plug *effectiveParameter = this->effectiveParameter( it->get() );
+					if( effectiveParameter && isOutputParameter( effectiveParameter ) )
 					{
-						outputName = effectiveParameter->relativeName( effectiveShader->outPlug() );
+						const Shader *effectiveShader = static_cast<const Shader *>( effectiveParameter->node() );
+						IECore::InternedString outputName;
+						if( effectiveShader->outPlug()->isAncestorOf( effectiveParameter ) )
+						{
+							outputName = effectiveParameter->relativeName( effectiveShader->outPlug() );
+						}
+						IECore::InternedString inputName = parameterName.string() + "." + (*it)->getName().string();
+
+						connections.push_back( {
+							{ this->handle( effectiveShader ), outputName },
+							{ IECore::InternedString(), inputName }
+						} );
 					}
-					IECore::InternedString inputName = parameterName.string() + "." + (*it)->getName().string();
-					connections.push_back( {
-						{ this->handle( effectiveShader ), outputName },
-						{ IECore::InternedString(), inputName }
-					} );
 				}
 			}
 		}
