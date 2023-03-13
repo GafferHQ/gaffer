@@ -187,12 +187,8 @@ class Shader::NetworkBuilder
 			{
 				if( isOutputParameter( p ) )
 				{
-					auto shader = static_cast<const Shader *>( p->node() );
-					IECore::MurmurHash result = shaderHash( shader );
-					if( p != shader->outPlug() )
-					{
-						result.append( p->relativeName( shader->outPlug() ) );
-					}
+					IECore::MurmurHash result;
+					parameterHashForPlug( p, result );
 					return result;
 				}
 			}
@@ -209,14 +205,7 @@ class Shader::NetworkBuilder
 				{
 					if( isOutputParameter( p ) )
 					{
-						auto shader = static_cast<const Shader *>( p->node() );
-						const IECore::InternedString outputHandle = handle( shader );
-						IECore::InternedString outputName;
-						if( p != shader->outPlug() )
-						{
-							outputName = p->relativeName( shader->outPlug() );
-						}
-						m_network->setOutput( { outputHandle, outputName } );
+						m_network->setOutput( outputParameterForPlug( p ) );
 					}
 				}
 			}
@@ -471,11 +460,7 @@ class Shader::NetworkBuilder
 			{
 				static_cast<const Shader *>( parameter->node() )->parameterHash( parameter, h );
 				assert( isOutputParameter( effectiveParameter ) );
-				h.append( shaderHash( effectiveShader ) );
-				if( effectiveShader->outPlug()->isAncestorOf( effectiveParameter ) )
-				{
-					h.append( effectiveParameter->relativeName( effectiveShader->outPlug() ) );
-				}
+				parameterHashForPlug( effectiveParameter, h );
 				return;
 			}
 		}
@@ -522,13 +507,8 @@ class Shader::NetworkBuilder
 					shader->parameters()[parameterName] = value;
 				}
 
-				IECore::InternedString outputName;
-				if( effectiveShader->outPlug()->isAncestorOf( effectiveParameter ) )
-				{
-					outputName = effectiveParameter->relativeName( effectiveShader->outPlug() );
-				}
 				connections.push_back( {
-					{ this->handle( effectiveShader ), outputName },
+					outputParameterForPlug( effectiveParameter ),
 					{ IECore::InternedString(), parameterName }
 				} );
 			}
@@ -543,12 +523,7 @@ class Shader::NetworkBuilder
 					const Gaffer::Plug *effectiveParameter = this->effectiveParameter( it->get() );
 					if( effectiveParameter && isOutputParameter( effectiveParameter ) )
 					{
-						const Shader *effectiveShader = static_cast<const Shader *>( effectiveParameter->node() );
-						h.append( shaderHash( effectiveShader ) );
-						if( effectiveShader->outPlug()->isAncestorOf( effectiveParameter ) )
-						{
-							h.append( effectiveParameter->relativeName( effectiveShader->outPlug() ) );
-						}
+						parameterHashForPlug( effectiveParameter, h );
 						h.append( (*it)->getName() );
 					}
 				}
@@ -620,16 +595,10 @@ class Shader::NetworkBuilder
 					const Gaffer::Plug *effectiveParameter = this->effectiveParameter( it->get() );
 					if( effectiveParameter && isOutputParameter( effectiveParameter ) )
 					{
-						const Shader *effectiveShader = static_cast<const Shader *>( effectiveParameter->node() );
-						IECore::InternedString outputName;
-						if( effectiveShader->outPlug()->isAncestorOf( effectiveParameter ) )
-						{
-							outputName = effectiveParameter->relativeName( effectiveShader->outPlug() );
-						}
 						IECore::InternedString inputName = parameterName.string() + "." + (*it)->getName().string();
 
 						connections.push_back( {
-							{ this->handle( effectiveShader ), outputName },
+							outputParameterForPlug( effectiveParameter ),
 							{ IECore::InternedString(), inputName }
 						} );
 					}
