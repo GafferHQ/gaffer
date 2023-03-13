@@ -40,17 +40,20 @@ import os
 import re
 import sys
 import glob
+import locale
 import platform
 import shutil
 import subprocess
 import distutils.dir_util
 
-if os.name == "nt":
-	import _locale
-	_locale._getdefaultlocale_backup = _locale._getdefaultlocale
-	_locale._getdefaultlocale = (lambda *args: (_locale._getdefaultlocale_backup()[0], 'utf8'))
+EnsureSConsVersion( 3, 0, 2 ) # Substfile is a default builder as of 3.0.2
 
-EnsureSConsVersion( 3, 0, 2 )  # Substfile is a default builder as of 3.0.2
+if locale.getpreferredencoding() != "UTF-8" :
+	# The `Substfile` builder uses `open()` without specifying an encoding, and
+	# so gets Python's default encoding. Unless this is `UTF-8`, any `.py` files
+	# containing unicode characters will be corrupted during installation.
+	sys.stderr.write( "ERROR : Preferred encoding must be 'UTF-8'. Set PYTHONUTF8 environment variable before running `scons`.\n" )
+	Exit( 1 )
 
 ###############################################################################################
 # Version

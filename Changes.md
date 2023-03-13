@@ -5,6 +5,11 @@ Improvements
 ------------
 - File Menu: Add autoload backup option to preferences and file menu command to open latest backup.
 
+Fixes
+-----
+
+- DispatchDialogue : Fixed `AttributeError: '__Implementation' object has no attribute 'message'` error.
+
 1.2.1.1 (relative to 1.2.1.0)
 =======
 
