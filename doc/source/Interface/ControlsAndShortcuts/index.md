@@ -52,6 +52,9 @@ Undo                                 | {kbd}`Ctrl` + {kbd}`Z`
 Redo                                 | {kbd}`Ctrl` + {kbd}`Shift` + {kbd}`Z`
 Step one frame forward               | {kbd}`→`
 Step one frame backward              | {kbd}`←`
+Play forward                         | {kbd}`Ctrl` + {kbd}`→`
+Play backward                        | {kbd}`Ctrl` + {kbd}`←`
+Stop playback                        | {kbd}`→`, {kbd}`←`, {kbd}`Ctrl` + {kbd}`→`, {kbd}`Ctrl` + {kbd}`←`
 Fullscreen mode                      | {kbd}`F11`
 Hide tabs of current panel           | {kbd}`Ctrl` + {kbd}`T`
 Maximise current panel               | {kbd}`Space`

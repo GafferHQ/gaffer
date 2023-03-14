@@ -1,6 +1,14 @@
 1.2.x.x (relative to 1.2.1.1)
 =======
 
+Improvements
+------------
+
+- Playback :
+  - Added <kbd>Ctrl</kbd>+<kbd>Right</kbd> hotkey toggle for forward playback.
+  - Added <kbd>Ctrl</kbd>+<kbd>Left</kbd> hotkey toggle for backward playback.
+  - Pressing either of <kbd>Right</kbd> or <kbd>Left</kbd> will also stop playback.
+
 Fixes
 -----
 
