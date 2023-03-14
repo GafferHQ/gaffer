@@ -8,6 +8,7 @@ Improvements
   - Added <kbd>Ctrl</kbd>+<kbd>Right</kbd> hotkey toggle for forward playback.
   - Added <kbd>Ctrl</kbd>+<kbd>Left</kbd> hotkey toggle for backward playback.
   - Pressing either of <kbd>Right</kbd> or <kbd>Left</kbd> will also stop playback.
+- Transform Tools : Added <kbd>O</kbd> shortcut to cycle through the orientation modes.
 
 Fixes
 -----

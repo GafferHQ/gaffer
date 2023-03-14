@@ -219,6 +219,7 @@ Pause processing                     | {kbd}`Escape`
 Selection Tool                       | {kbd}`Q`
 Translate Tool                       | {kbd}`W`
 Rotate Tool                          | {kbd}`E`
+Cycle Transform Tool Orientation     | {kbd}`O`
 Scale Tool                           | {kbd}`R`
 Camera Tool                          | {kbd}`T`
 Crop Window Tool                     | {kbd}`C`
