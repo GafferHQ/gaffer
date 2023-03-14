@@ -108,10 +108,7 @@ class SelectionTool::DragOverlay : public GafferUI::Gadget
 
 		void renderLayer( Layer layer, const Style *style, RenderReason reason ) const override
 		{
-			if( layer != Layer::Main )
-			{
-				return;
-			}
+			assert( layer == Layer::MidFront );
 
 			if( isSelectionRender( reason ) )
 			{
@@ -130,7 +127,7 @@ class SelectionTool::DragOverlay : public GafferUI::Gadget
 
 		unsigned layerMask() const override
 		{
-			return (unsigned)Layer::Main;
+			return (unsigned)Layer::MidFront;
 		}
 
 		Imath::Box3f renderBound() const override
