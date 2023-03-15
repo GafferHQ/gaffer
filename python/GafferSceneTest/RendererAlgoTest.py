@@ -147,5 +147,56 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 			self.assertEqual( len( samples ), 1 )
 			self.assertEqual( samples[0], coordinateSystem["out"].object( "/coordinateSystem" ) )
 
+	def testObjectSamplesHash( self ) :
+
+		sphere = GafferScene.Sphere()
+		sphere["type"].setValue( sphere.Type.Primitive )
+
+		with Gaffer.Context() as c :
+
+			c["scene:path"] = IECore.InternedStringVectorData( [ "sphere" ] )
+
+			h1 = IECore.MurmurHash()
+			samples1 = GafferScene.Private.RendererAlgo.objectSamples( sphere["out"]["object"], [ 1.0 ], h1 )
+			self.assertEqual( samples1[0].radius(), 1 )
+			self.assertNotEqual( h1, IECore.MurmurHash() )
+
+			sphere["radius"].setValue( 2 )
+			h2 = IECore.MurmurHash( h1 )
+			samples2 = GafferScene.Private.RendererAlgo.objectSamples( sphere["out"]["object"], [ 1.0 ], h2 )
+			self.assertEqual( samples2[0].radius(), 2 )
+			self.assertNotEqual( h2, IECore.MurmurHash() )
+			self.assertNotEqual( h2, h1 )
+
+			h3 = IECore.MurmurHash( h2 )
+			samples3 = GafferScene.Private.RendererAlgo.objectSamples( sphere["out"]["object"], [ 1.0 ], h3 )
+			self.assertIsNone( samples3 ) # Hash matched, so no samples generated
+			self.assertEqual( h3, h2 )
+
+	def testTransformSamplesHash( self ) :
+
+		sphere = GafferScene.Sphere()
+
+		with Gaffer.Context() as c :
+
+			c["scene:path"] = IECore.InternedStringVectorData( [ "sphere" ] )
+
+			h1 = IECore.MurmurHash()
+			samples1 = GafferScene.Private.RendererAlgo.transformSamples( sphere["out"]["transform"], [ 1.0 ], h1 )
+			self.assertEqual( samples1[0].translation().x, 0 )
+			self.assertNotEqual( h1, IECore.MurmurHash() )
+
+			sphere["transform"]["translate"]["x"].setValue( 2 )
+			h2 = IECore.MurmurHash( h1 )
+			samples2 = GafferScene.Private.RendererAlgo.transformSamples( sphere["out"]["transform"], [ 1.0 ], h2 )
+			self.assertEqual( samples2[0].translation().x, 2 )
+			self.assertNotEqual( h2, IECore.MurmurHash() )
+			self.assertNotEqual( h2, h1 )
+
+			h3 = IECore.MurmurHash( h2 )
+			samples3 = GafferScene.Private.RendererAlgo.transformSamples( sphere["out"]["transform"], [ 1.0 ], h3 )
+			self.assertIsNone( samples3 ) # Hash matched, so no samples generated
+			self.assertEqual( h3, h2 )
+
 if __name__ == "__main__":
 	unittest.main()
