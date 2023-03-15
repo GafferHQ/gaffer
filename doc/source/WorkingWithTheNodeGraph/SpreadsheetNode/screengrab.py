@@ -20,6 +20,26 @@
 # BuildTarget: images/taskSpreadsheetNodeReorderSection.png
 # BuildTarget: images/taskSpreadsheetNodeResizeColumnAutomatic.png
 # BuildTarget: images/taskSpreadsheetNodeResizeColumnManual.png
+# BuildDependency: scripts/interfaceSpreadsheetNodeAuxiliaryConnections.gfr
+# BuildDependency: scripts/interfaceSpreadsheetNodeBreakdown_edit.gfr
+# BuildDependency: scripts/interfaceSpreadsheetNodeColumnSections_edit.gfr
+# BuildDependency: scripts/interfaceSpreadsheetNodeColumnSections.gfr
+# BuildDependency: scripts/interfaceSpreadsheetNodeCompoundEnabledSwitch_edit.gfr
+# BuildDependency: scripts/interfaceSpreadsheetNodeCompoundEnabledSwitch.gfr
+# BuildDependency: scripts/interfaceSpreadsheetNodeDisabledCell_edit.gfr
+# BuildDependency: scripts/interfaceSpreadsheetNodeInterface.gfr
+# BuildDependency: scripts/interfaceSpreadsheetNodePatternWidths_edit.gfr
+# BuildDependency: scripts/interfaceSpreadsheetNodeRenderNetwork_edit.gfr
+# BuildDependency: scripts/interfaceSpreadsheetNodeRenderNetwork.gfr
+# BuildDependency: scripts/taskSpreadsheetNodeAddPlugBasic_edit.gfr
+# BuildDependency: scripts/taskSpreadsheetNodeAddPlugCompound_edit.gfr
+# BuildDependency: scripts/taskSpreadsheetNodeAddPlugTweak_edit.gfr
+# BuildDependency: scripts/taskSpreadsheetNodeAddPlugVectorSingle_edit.gfr
+# BuildDependency: scripts/taskSpreadsheetNodeAddPlugVectorWhole_edit.gfr
+# BuildDependency: scripts/taskSpreadsheetNodeReorderColumn_edit.gfr
+# BuildDependency: scripts/taskSpreadsheetNodeReorderSection_edit.gfr
+# BuildDependency: scripts/taskSpreadsheetNodeResizeColumnAutomatic_edit.gfr
+# BuildDependency: scripts/taskSpreadsheetNodeResizeColumnManual_edit.gfr
 
 import sys
 import os

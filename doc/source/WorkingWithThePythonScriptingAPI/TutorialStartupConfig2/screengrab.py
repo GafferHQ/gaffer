@@ -2,6 +2,9 @@
 # BuildTarget: images/tutorialDefaultBookmark.png
 # BuildTarget: images/tutorialDefaultImageNodeBookmark.png
 # BuildTarget: images/tutorialDefaultImageNodePath.png
+# BuildDependency: scripts/tutorialBookmarks_edit.gfr
+# BuildDependency: scripts/tutorialDefaultBookmark_edit.gfr
+# BuildDependency: scripts/tutorialDefaultImageNodeBookmark_edit.gfr
 
 import os
 import subprocess
