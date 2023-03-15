@@ -43,6 +43,8 @@
 #include "Gaffer/ArrayPlug.h"
 #include "Gaffer/Context.h"
 
+#include "fmt/format.h"
+
 #include <numeric>
 
 using namespace std;
@@ -247,14 +249,15 @@ IECore::ConstStringVectorDataPtr CollectImages::computeViewNames( const Gaffer::
 			// reasonable compromise, which I think would just require clearing out the channel names
 			// when looking at a view that doesn't existing for that context value
 
-			throw IECore::Exception( boost::str( boost::format(
-					"Root layer \"%s\" does not match views for \"%s\" : <%s> vs <%s>"
-				) %
-					rootLayers[i] %
-					rootLayers[0] %
-					std::accumulate( layerViewNamesData->readable().begin(), layerViewNamesData->readable().end(), std::string(" ")) %
-					std::accumulate( firstViewNames.begin(), firstViewNames.end(), std::string(" "))
-			) );
+			throw IECore::Exception(
+				fmt::format(
+					"Root layer \"{}\" does not match views for \"{}\" : <{}> vs <{}>",
+					rootLayers[i],
+					rootLayers[0],
+					std::accumulate( layerViewNamesData->readable().begin(), layerViewNamesData->readable().end(), std::string( " " ) ),
+					std::accumulate( firstViewNames.begin(), firstViewNames.end(), std::string( " " ) )
+				)
+			);
 		}
 	}
 
@@ -473,12 +476,14 @@ Imath::Box2i CollectImages::computeDataWindow( const Gaffer::Context *context, c
 		{
 			if( curDataWindow != dataWindow )
 			{
-				throw IECore::Exception( boost::str( boost::format(
+				throw IECore::Exception(
+					fmt::format(
 						"DataWindows on deep input to CollectImages must match. "
-						"Received both %i,%i -> %i,%i and %i,%i -> %i,%i"
-					) % dataWindow.min.x % dataWindow.min.y % dataWindow.max.x % dataWindow.max.y %
-						curDataWindow.min.x % curDataWindow.min.y % curDataWindow.max.x % curDataWindow.max.y
-				) );
+						"Received both {},{} -> {},{} and {},{} -> {},{}",
+						dataWindow.min.x, dataWindow.min.y, dataWindow.max.x, dataWindow.max.y,
+						curDataWindow.min.x, curDataWindow.min.y, curDataWindow.max.x, curDataWindow.max.y
+					)
+				);
 			}
 		}
 	}

@@ -40,6 +40,8 @@
 
 #include "OpenEXR/ImathBox.h"
 
+#include "fmt/format.h"
+
 #include <set>
 #include <regex>
 
@@ -510,11 +512,13 @@ void GafferImage::ImageAlgo::throwIfSampleOffsetsMismatch( const IECore::IntVect
 				int y = i / ImagePlug::tileSize();
 				int x = i - y * ImagePlug::tileSize();
 
-				throw IECore::Exception( message + boost::str( boost::format(
-					" Pixel %i,%i received both %i and %i samples"
-					) % ( x + tileOrigin.x )  % ( y + tileOrigin.y ) %
-					( sampleOffsetsA[i] - prevOffset ) % ( sampleOffsetsB[i] - prevOffset )
-				) );
+				throw IECore::Exception(
+					fmt::format(
+						"{} Pixel {},{} received both {} and {} samples",
+						message, x + tileOrigin.x,  y + tileOrigin.y,
+						sampleOffsetsA[i] - prevOffset, sampleOffsetsB[i] - prevOffset
+					)
+				);
 			}
 		}
 	}
