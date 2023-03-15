@@ -6,6 +6,11 @@ Fixes
 
 - DispatchDialogue : Fixed `AttributeError: '__Implementation' object has no attribute 'message'` error.
 
+Documentation
+-------------
+
+- Updated the "Assembling The Gaffer Bot" tutorial to use Cycles instead of Appleseed.
+
 1.2.1.1 (relative to 1.2.1.0)
 =======
 

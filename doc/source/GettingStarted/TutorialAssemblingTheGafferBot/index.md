@@ -15,7 +15,7 @@ By the end of this tutorial you will have built a basic scene with Gaffer's robo
 - Using an interactive renderer
 
 > Note :
-> This tutorial uses Appleseed, a free renderer included with Gaffer. While the Appleseed-specific nodes described here can be substituted with equivalents from Arnold or 3Delight, we recommend that you complete this tutorial using Appleseed before moving on to your preferred renderer.
+> This tutorial uses Cycles, a free renderer included with Gaffer. While the Cycles-specific nodes described here can be substituted with equivalents from Arnold, Appleseed or 3Delight, we recommend that you complete this tutorial using Cycles before moving on to your preferred renderer.
 
 
 ## Starting a new node graph ##
@@ -262,11 +262,11 @@ Create the render settings nodes:
 
 2. Then, create the following nodes in sequence:
     - StandardOptions (_Scene_ > _Globals_ > _StandardOptions_): Determines the camera, resolution, and blur settings of the scene.
-    - AppleseedOptions (_Appleseed_ > _Options_): Determines the settings of the Appleseed renderer.
+    - CyclesOptions (_Cycles_ > _Options_): Determines the settings of the Cycles renderer.
     - Outputs (_Scene_ > _Globals_ > _Outputs_): Determines what kind of output image will be created by the renderer.
-    - InteractiveAppleseedRender (_Appleseed_ > _InteractiveRender_): An instance of Appleseed's progressive renderer.
+    - InteractiveCyclesRender (_Cycles_ > _InteractiveRender_): An instance of Cycles' progressive renderer.
 
-3. Finally, create a Catalogue node (_Image_ > _Utility_ > _Catalogue_). This is an image node for listing and displaying a directory of images in the Viewer. By default, it points to the default output directory of your graph's rendered images. Place it next to the InteractiveAppleseedRender node.
+3. Finally, create a Catalogue node (_Image_ > _Utility_ > _Catalogue_). This is an image node for listing and displaying a directory of images in the Viewer. By default, it points to the default output directory of your graph's rendered images. Place it next to the InteractiveCyclesRender node.
 
     ![](images/graphEditorRenderSettings.png "The render-related nodes")
 
@@ -292,7 +292,7 @@ Next, you need to add an image type to render:
 
 With all the settings complete, start the interactive renderer:
 
-1. Select the InteractiveAppleseedRender node in the Graph Editor.
+1. Select the InteractiveCyclesRender node in the Graph Editor.
 
 2. In the Node Editor, click ![](images/timelinePlay.png "the play button") to start the renderer.
 
@@ -346,7 +346,7 @@ It will be best if you keep the render option nodes at the end of the graph. Sin
 
 1. Select the lower five nodes by clicking and dragging a marquee over them.
 
-2. Click and drag the nodes to move thme to a lower position in the graph.
+2. Click and drag the nodes to move them to a lower position in the graph.
 
     ![](images/mainRenderSettingsWithGap.png "The graph with some added space")
 
@@ -355,24 +355,21 @@ It will be best if you keep the render option nodes at the end of the graph. Sin
 
 Now that you have more space, it's time to add some shading nodes:
 
-1. Below and to the left of the Group node, create an Appleseed closure-to-surface node (_Appleseed_ > _Shader_ > _Surface_ > _asClosure2Surface_).
+1. Below and to the left of the Group node, create a Cycles Principled BSDF shader node (_Cycles_ > _Shader_ > _Shader_ > _Principled Bsdf_).
 
-2. Create an Appleseed Disney material shader node (_Appleseed_ > _Shader_ > _Shader_ > _asDisneyMaterial_).
-
-3. In the Node Editor, give the shader reflective surface properties:
-    - Set the Specular Weight plug to `0.6`.
-    - Set the Surface Roughness plug to `0.35`.
+2. In the Node Editor, give the shader reflective surface properties:
+    - Set the Base Color plug to `0.18 0.18 0.18`.
+    - Set the Specular plug to `0.6`.
+    - Set the Roughness plug to `0.35`.
 
 > Tip :
 > Numeric fields support basic mathematical operations to adjust their values. For example, appending `+1` to a plug with an existing value of `2`, will set it to `3`. You can use `+`, `-`, `/`, `*` and `%` to modify the existing value.
 
-4. Connect the out_outColor plug of the as_disney_material node to the input plug of the as_closure2surface node.
+3. Select the principled_bsdf node and create a ShaderAssignment node (_Scene_ > _Attributes_ > _ShaderAssignment_).
 
-5. Select the as_closure2surface node and create a ShaderAssignment node (_Scene_ > _Attributes_ > _ShaderAssignment_).
+4. Click and drag the ShaderAssignment node onto the connector between the Group and StandardOptions nodes. The ShaderAssignment node will be interjected between them.
 
-6. Click and drag the ShaderAssignment node onto the connector between the Group and StandardOptions nodes. The ShaderAssignment node will be interjected between them.
-
-    ![](images/graphEditorFirstShaderNodes.png "The ShaderAssignment and Disney material nodes")
+    ![](images/graphEditorFirstShaderNodes.png "The ShaderAssignment and Principled BSDF nodes")
 
 > Important :
 > In the Graph Editor, shader data flows from left to right.
@@ -380,31 +377,30 @@ Now that you have more space, it's time to add some shading nodes:
 In your newly shaded graph, the ShaderAssignment node takes the shader flowing in from the left and assigns it to Gaffy's scene flowing in from the top. Now that Gaffy has received a proper shader, the whole image has turned black, because the scene currently lacks lighting.
 
 
-### Adding an environment light ###
+### Adding a light ###
 
-For lights to take effect, they need to be combined with the main scene. For simplicity, use a global environment light:
+For lights to take effect, they need to be combined with the main scene. For simplicity, use a background light textured with an HDRI applied as an environment texture:
 
-1. Create an Appleseed physical sky modelling node (_Appleseed_ > _Environment_ > _PhysicalSky_).
+1. Create a Cycles background light node (_Cycles_ > _Light_ > _Background Light_).
 
-2. Place it next to the Camera node in the Graph Editor.
+2. Create a Cycles environment texture shader node (_Cycles_ > _Shader_ > _Texture_ > _Environment Texture_).
 
-3. In the Node Editor, adjust the node's angle and brightness plugs:
-    - Set the Sun Phi Angle plug to `100`.
-    - Set the Luminance plug to `2.5`.
+3. Place them next to the Camera node in the Graph Editor.
 
-4. Connect the node's out plug to the Group node's in2 plug.
+4. Connect the environment_texture node's color plug to the background_light node's color plug.
 
-![](images/graphEditorEnvironmentLightNode.png "A new environment light node")
+5. In the Node Editor, adjust the environment_texture node's filename plug:
+    - Set the Filename plug to `${GAFFER_ROOT}/resources/hdri/studio.exr`.
 
-For the light to take effect, you will need to assign it:
+6. Adjust the background_light node's exposure plug:
+    - Set the Exposure plug to `1`.
 
-1. Select the AppleseedOptions node.
+7. Rotate the background_light 90 degrees in Y:
+    - Under the Transform tab, set the Rotate Y plug to `90`.
 
-2. In the Node Editor, expand the _Environment_ section.
+8. Connect the background_light node's out plug to the Group node's in2 plug.
 
-3. Toggle the switch next to the Environment Light plug to enable it.
-
-4. Type `/group/light` into the plug's field.
+![](images/graphEditorBackgroundLightNode.png "A new background light node with sky texture shader")
 
 The interactive render will now begin updating, and you will be able to see Gaffy with some basic shaders and lighting.
 
@@ -415,12 +411,12 @@ The interactive render will now begin updating, and you will be able to see Gaff
 
 As Gaffy is looking a bit bland, you should drive the shader with some robot textures:
 
-1. Create an Appleseed 2D texture node (_Appleseed_ > _Shader_ > _Texture2d_ > _asTexture_).
+1. Create a Cycles image texture node (_Cycles_ > _Shader_ > _Texture_ > _Image Texture_).
 
 2. In the Node Editor, point the node to the textures:
     - For the Filename plug, type `${GAFFER_ROOT}/resources/gafferBot/textures/base_COL/base_COL_<UDIM>.tx`.
 
-3. In the Graph Editor, connect the as_texture node's Output Color plug to the as_disney_material node's Common.Surface Color plug. Gaffy's textures will now drive the color of the surface shader, and the render will update to show the combined results.
+3. In the Graph Editor, connect the image_texture node's color plug to the principled_bsdf node's base color plug. Gaffy's textures will now drive the color of the surface shader, and the render will update to show the combined results.
 
     ![](images/viewerRenderTextures.png "Gaffy with textures")
 
@@ -431,13 +427,14 @@ Right now, the physical surface of all of Gaffy's geometry looks the same, becau
 
 Begin by creating another shader:
 
-1. Create and connect another pair of as_disney_material and as_closure2surface nodes.
+1. Create another principled bsdf shader node.
 
 2. Give the shader some metallic properties:
-    - Set Metallicness to `0.8`.
-    - Set Surface Roughness to `0.4`.
+    - Set the Base Color plug to `0.3 0.15 0.04`.
+    - Set the Metallic plug to `1.0`.
+    - Set the Roughness plug to `0.25`.
 
-3. Select the as_closure2surface1 node and create another ShaderAssignment node.
+3. Select the principled_bsdf1 node and create another ShaderAssignment node.
 
 4. Interject the new ShaderAssignment1 node after the first ShaderAssignment node.
 
@@ -467,7 +464,7 @@ In order to selectively apply a shader to only certain locations in the scene, y
 
     ![](images/graphEditorPathFilterNode.png "The connected PathFilter node")
 
-Now when you check the render, you will see that the chrome shader is only applied to Gaffy's left ear. There are many other parts of Gaffy that could use the chrome treatment, but it would be tedious for you to manually enter multiple locations. Instead, we will demonstrate two easier ways to add locations to the filter: using text wildcards, and interacting directly with the geometry through the Viewer.
+Now when you check the render, you will see that the metal shader is only applied to Gaffy's left ear. There are many other parts of Gaffy that could use the metallic treatment, but it would be tedious for you to manually enter multiple locations. Instead, we will demonstrate two easier ways to add locations to the filter: using text wildcards, and interacting directly with the geometry through the Viewer.
 
 
 #### Filtering using wildcards ####
