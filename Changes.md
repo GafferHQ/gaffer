@@ -1,6 +1,11 @@
 1.1.9.x (relative to 1.1.9.3)
 =======
 
+Fixes
+-----
+
+- Viewer : Fixed bugs which could prevent an object from being updated if its computation was previously interrupted.
+
 1.1.9.3 (relative to 1.1.9.2)
 =======
 
@@ -8,7 +13,6 @@ Fixes
 -----
 
 - ImageReader : Made error message more descriptive when trying to access a channel that doesn't exist.
-
 
 1.1.9.2 (relative to 1.1.9.1)
 =======

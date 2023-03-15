@@ -198,5 +198,74 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 			self.assertIsNone( samples3 ) # Hash matched, so no samples generated
 			self.assertEqual( h3, h2 )
 
+	def testObjectSamplesCancellation( self ) :
+
+		sphere = GafferScene.Sphere()
+		sphere["type"].setValue( sphere.Type.Primitive )
+
+		# Cache the hash now, so `objectSamples()` can get the hash without
+		# it being cancelled.
+		sphere["out"].objectHash( "/sphere" )
+
+		# Call `objectSamples()` with a canceller that will immediately
+		# cancel any attempt to get the object.
+
+		canceller = IECore.Canceller()
+		canceller.cancel()
+
+		context = Gaffer.Context()
+		context["scene:path"] = IECore.InternedStringVectorData( [ "sphere" ] )
+		cancelledContext = Gaffer.Context( context, canceller )
+
+		with cancelledContext :
+
+			h = IECore.MurmurHash()
+			with self.assertRaises( IECore.Cancelled ) :
+				GafferScene.Private.RendererAlgo.objectSamples( sphere["out"]["object"], [ 1.0 ], h )
+
+			# The hash should not have been updated, so that when we use
+			# it in a non-cancelled context, we get some samples returned.
+			self.assertEqual( h, IECore.MurmurHash() )
+
+		with context :
+
+			samples = GafferScene.Private.RendererAlgo.objectSamples( sphere["out"]["object"], [ 1.0 ], h )
+			self.assertEqual( [ s.radius() for s in samples ], [ 1.0 ] )
+			self.assertNotEqual( h, IECore.MurmurHash() )
+
+	def testTransformSamplesCancellation( self ) :
+
+		sphere = GafferScene.Sphere()
+
+		# Cache the hash now, so `transformSamples()` can get the hash without
+		# it being cancelled.
+		sphere["out"].transformHash( "/sphere" )
+
+		# Call `transformSamples()` with a canceller that will immediately
+		# cancel any attempt to get the object.
+
+		canceller = IECore.Canceller()
+		canceller.cancel()
+
+		context = Gaffer.Context()
+		context["scene:path"] = IECore.InternedStringVectorData( [ "sphere" ] )
+		cancelledContext = Gaffer.Context( context, canceller )
+
+		with cancelledContext :
+
+			h = IECore.MurmurHash()
+			with self.assertRaises( IECore.Cancelled ) :
+				GafferScene.Private.RendererAlgo.transformSamples( sphere["out"]["transform"], [ 1.0 ], h )
+
+			# The hash should not have been updated, so that when we use
+			# it in a non-cancelled context, we get some samples returned.
+			self.assertEqual( h, IECore.MurmurHash() )
+
+		with context :
+
+			samples = GafferScene.Private.RendererAlgo.transformSamples( sphere["out"]["transform"], [ 1.0 ], h )
+			self.assertEqual( [ s.translation().x for s in samples ], [ 0.0 ] )
+			self.assertNotEqual( h, IECore.MurmurHash() )
+
 if __name__ == "__main__":
 	unittest.main()
