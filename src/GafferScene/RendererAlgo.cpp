@@ -192,9 +192,9 @@ bool transformSamples( const M44fPlug *transformPlug, const std::vector<float> &
 		}
 	}
 
+	IECore::MurmurHash combinedHash;
 	if( hash )
 	{
-		IECore::MurmurHash combinedHash;
 		if( sampleHashes.size() == 1 )
 		{
 			combinedHash = sampleHashes[0];
@@ -211,48 +211,50 @@ bool transformSamples( const M44fPlug *transformPlug, const std::vector<float> &
 		{
 			return false;
 		}
-		else
-		{
-			*hash = combinedHash;
-		}
 	}
 
 	samples.clear();
+
 	if( !sampleTimes.size() )
 	{
 		// No shutter to sample over
 		samples.push_back( transformPlug->getValue( &sampleHashes[0]) );
-		return true;
 	}
-
-	Context::EditableScope timeContext( Context::current() );
-	if( sampleHashes.size() == 1 )
+	else if( sampleHashes.size() == 1 )
 	{
 		// We have a shutter, but all the samples hash the same, so just evaluate one
+		Context::EditableScope timeContext( Context::current() );
 		timeContext.setFrame( sampleTimes[0] );
 		samples.push_back( transformPlug->getValue( &sampleHashes[0]) );
-		return true;
 	}
-
-	// Motion case
-	bool moving = false;
-	samples.reserve( sampleTimes.size() );
-	for( size_t i = 0; i < sampleTimes.size(); i++ )
+	else
 	{
-		timeContext.setFrame( sampleTimes[i] );
-		M44f m;
-		m = transformPlug->getValue( &sampleHashes[i] );
-		if( !moving && !samples.empty() && m != samples.front() )
+		// Motion case
+		Context::EditableScope timeContext( Context::current() );
+		bool moving = false;
+		samples.reserve( sampleTimes.size() );
+		for( size_t i = 0; i < sampleTimes.size(); i++ )
 		{
-			moving = true;
+			timeContext.setFrame( sampleTimes[i] );
+			const M44f m = transformPlug->getValue( &sampleHashes[i] );
+			if( !moving && !samples.empty() && m != samples.front() )
+			{
+				moving = true;
+			}
+			samples.push_back( m );
 		}
-		samples.push_back( m );
+
+		if( !moving )
+		{
+			samples.resize( 1 );
+		}
 	}
 
-	if( !moving )
+	if( hash )
 	{
-		samples.resize( 1 );
+		*hash = combinedHash;
 	}
+
 	return true;
 }
 
@@ -288,9 +290,9 @@ bool objectSamples( const ObjectPlug *objectPlug, const std::vector<float> &samp
 		}
 	}
 
+	IECore::MurmurHash combinedHash;
 	if( hash )
 	{
-		IECore::MurmurHash combinedHash;
 		if( sampleHashes.size() == 1 )
 		{
 			combinedHash = sampleHashes[0];
@@ -307,16 +309,13 @@ bool objectSamples( const ObjectPlug *objectPlug, const std::vector<float> &samp
 		{
 			return false;
 		}
-		else
-		{
-			*hash = combinedHash;
-		}
 	}
 
-	// Static case
 	samples.clear();
+
 	if( sampleHashes.size() == 1 )
 	{
+		// Static case
 		ConstObjectPtr object;
 		if( !sampleTimes.size() )
 		{
@@ -339,67 +338,72 @@ bool objectSamples( const ObjectPlug *objectPlug, const std::vector<float> &samp
 		{
 			samples.push_back( object.get() );
 		}
-
-		return true;
 	}
-
-	// Motion case
-
-	const Context *frameContext = Context::current();
-	Context::EditableScope timeContext( frameContext );
-
-	samples.reserve( sampleTimes.size() );
-	for( size_t i = 0; i < sampleTimes.size(); i++ )
+	else
 	{
-		timeContext.setFrame( sampleTimes[i] );
+		// Motion case
+		const Context *frameContext = Context::current();
+		Context::EditableScope timeContext( frameContext );
 
-		ConstObjectPtr object = objectPlug->getValue( &sampleHashes[i] );
-
-		if(
-			runTimeCast<const Primitive>( object.get() ) ||
-			runTimeCast<const Camera>( object.get() )
-		)
+		samples.reserve( sampleTimes.size() );
+		for( size_t i = 0; i < sampleTimes.size(); i++ )
 		{
-			samples.push_back( object.get() );
-		}
-		else if(
-			runTimeCast<const VisibleRenderable>( object.get() ) ||
-			runTimeCast<const CoordinateSystem>( object.get() )
-		)
-		{
-			// We can't motion blur these chappies, so just take the one
-			// sample. This must be at the frame time rather than shutter
-			// open time so that non-interpolable objects appear in the right
-			// position relative to non-blurred objects.
-			Context::Scope frameScope( frameContext );
-			std::vector<float> tempTimes = {};
+			timeContext.setFrame( sampleTimes[i] );
 
-			// This is a pretty weird case - we would have taken an earlier branch if the hashes
-			// had all matched, so it looks like this object is actual animated, despite not supporting
-			// animation.
-			// The most correct thing to do here is reset the hash, since we may not have included the
-			// on frame in the samples we hashed, and in theory, the on frame value could vary indepndently
-			// of shutter open and close.  This means that an animated non-animateable object will never have
-			// a matching hash, and will be updated every pass.  May be a performance hazard, but probably
-			// preferable to incorrect behaviour?  Just means people need to be careful to make sure their
-			// heavy crowd procedurals don't have a hash that changes during the shutter?
-			// ( I guess in theory we could check if the on frame time is in sampleTimes, but I don't want to
-			// add any more special cases to this weird corner ).
-			//
-			if( hash )
+			ConstObjectPtr object = objectPlug->getValue( &sampleHashes[i] );
+
+			if(
+				runTimeCast<const Primitive>( object.get() ) ||
+				runTimeCast<const Camera>( object.get() )
+			)
 			{
-				*hash = IECore::MurmurHash();
+				samples.push_back( object.get() );
 			}
+			else if(
+				runTimeCast<const VisibleRenderable>( object.get() ) ||
+				runTimeCast<const CoordinateSystem>( object.get() )
+			)
+			{
+				// We can't motion blur these chappies, so just take the one
+				// sample. This must be at the frame time rather than shutter
+				// open time so that non-interpolable objects appear in the right
+				// position relative to non-blurred objects.
+				Context::Scope frameScope( frameContext );
+				std::vector<float> tempTimes = {};
 
-			return objectSamples( objectPlug, tempTimes, samples );
-		}
-		else
-		{
-			// We don't even know what these chappies are, so
-			// don't take any samples at all.
-			break;
+				// This is a pretty weird case - we would have taken an earlier branch if the hashes
+				// had all matched, so it looks like this object is actual animated, despite not supporting
+				// animation.
+				// The most correct thing to do here is reset the hash, since we may not have included the
+				// on frame in the samples we hashed, and in theory, the on frame value could vary indepndently
+				// of shutter open and close.  This means that an animated non-animateable object will never have
+				// a matching hash, and will be updated every pass.  May be a performance hazard, but probably
+				// preferable to incorrect behaviour?  Just means people need to be careful to make sure their
+				// heavy crowd procedurals don't have a hash that changes during the shutter?
+				// ( I guess in theory we could check if the on frame time is in sampleTimes, but I don't want to
+				// add any more special cases to this weird corner ).
+				//
+				if( hash )
+				{
+					*hash = IECore::MurmurHash();
+				}
+
+				return objectSamples( objectPlug, tempTimes, samples );
+			}
+			else
+			{
+				// We don't even know what these chappies are, so
+				// don't take any samples at all.
+				break;
+			}
 		}
 	}
+
+	if( hash )
+	{
+		*hash = combinedHash;
+	}
+
 	return true;
 }
 
