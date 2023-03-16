@@ -461,24 +461,9 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	const IECore::CompoundData *shaderParameters = shaderNetwork->outputShader()->parametersData();
 
 	ConstStringDataPtr type = Metadata::value<StringData>( metadataTarget, "type" );
-	ConstM44fDataPtr orientation = Metadata::value<M44fData>( metadataTarget, "visualiserOrientation" );
 
 	const Color3f color = parameter<Color3f>( metadataTarget, shaderParameters, "colorParameter", Color3f( 1.0f ) );
 	const Color3f tint = parameter<Color3f>( metadataTarget, shaderParameters, "tintParameter", Color3f( 1.0f ) );
-
-	// Ornaments are affected by visualiser:scale and not local scale.
-	GroupPtr ornaments = new Group;
-	// Bound ornaments are considered when 'f' is pressed in the viewer to fit.
-	GroupPtr boundOrnaments = new Group;
-	// As part of our assumption that renderer's largely ignore scale, this is
-	// contains anything that should always be in fixed world scale and not be
-	// affected by visualiser scale.
-	GroupPtr fixedScaleOrnaments = new Group;
-	// Geometry is only affected by local scale (its size matters for rendering).
-	GroupPtr geometry = new Group;
-	// As 'projections' are largely for display, and lights don't generally
-	// scale this group only follows visualiser scale.
-	GroupPtr frustum = new Group;
 
 	const FloatData *visualiserScaleData = attributes->member<FloatData>( "gl:visualiser:scale" );
 	const float visualiserScale = visualiserScaleData ? visualiserScaleData->readable() : 1.0;
@@ -496,18 +481,10 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	const BoolData *muteData = attributes->member<BoolData>( "light:mute" );
 	const bool muted = muteData ? muteData->readable() : false;
 
-	Imath::M44f topTransform;
-	if( orientation )
-	{
-		topTransform = orientation->readable();
-	}
-	geometry->setTransform( topTransform );
-	ornaments->setTransform( topTransform );
-	boundOrnaments->setTransform( topTransform );
-	fixedScaleOrnaments->setTransform( topTransform );
-	frustum->setTransform( topTransform );
+	Visualisations result;
 
 	// A shared curves primitive for ornament wireframes
+
 	V3fVectorDataPtr ornamentWireframePoints = new V3fVectorData();
 	IntVectorDataPtr ornamentWireframeVertsPerCurve = new IntVectorData();
 
@@ -522,8 +499,14 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	{
 		float innerAngle, outerAngle, radius, lensRadius;
 		spotlightParameters( attributeName, shaderNetwork, innerAngle, outerAngle, radius, lensRadius );
-		boundOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( spotlightCone( innerAngle, outerAngle, lensRadius / visualiserScale, 1.0f, 1.0f, muted ) ) );
-		frustum->addChild( const_pointer_cast<IECoreGL::Renderable>( spotlightCone( innerAngle, outerAngle, lensRadius / visualiserScale, 10.0f * frustumScale, 0.5f, muted ) ) );
+		result.push_back( Visualisation::createOrnament(
+			spotlightCone( innerAngle, outerAngle, lensRadius / visualiserScale, 1.0f, 1.0f, muted ),
+			/* affectsFramingBound = */ true
+		) );
+		result.push_back( Visualisation::createFrustum(
+			spotlightCone( innerAngle, outerAngle, lensRadius / visualiserScale, 10.0f * frustumScale, 0.5f, muted ),
+			Visualisation::Scale::Visualiser
+		) );
 	}
 
 	// Now do visualisations based on light type.
@@ -533,21 +516,30 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		if( drawShaded )
 		{
 			ConstDataPtr textureData = drawTextured ? surfaceTexture( shaderNetwork, attributes, maxTextureResolution ) : nullptr;
-			boundOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( environmentSphereSurface( textureData, tint, maxTextureResolution, color ) ) );
+			result.push_back( Visualisation::createOrnament(
+				environmentSphereSurface( textureData, tint, maxTextureResolution, color ),
+				/* affectsFramingBound = */ true
+			) );
 		}
-		boundOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( sphereWireframe( 1.05f, Vec3<bool>( true ), 1.0f, V3f( 0.0f ), muted ) ) );
+		result.push_back( Visualisation::createOrnament(
+			sphereWireframe( 1.05f, Vec3<bool>( true ), 1.0f, V3f( 0.0f ), muted ),
+			/* affectsFramingBound = */ true
+		) );
 	}
 	else if( type && type->readable() == "spot" )
 	{
 		const float radius = parameter<float>( metadataTarget, shaderParameters, "radiusParameter", 0.0f );
-		fixedScaleOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( sphereWireframe( radius, Vec3<bool>( false, false, true ), 0.5f, V3f( 0.0f, 0.0f, 0.1f * visualiserScale ), muted ) ) );
+		result.push_back( Visualisation(
+			sphereWireframe( radius, Vec3<bool>( false, false, true ), 0.5f, V3f( 0.0f, 0.0f, 0.1f * visualiserScale ), muted ),
+			Visualisation::Scale::None
+		) );
 		addRay( V3f( 0 ), V3f( 0, 0, -1 ), ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
-		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color ) ) );
+		result.push_back( Visualisation::createOrnament( colorIndicator( color ), /* affectsFramingBound = */ false ) );
 	}
 	else if( type && type->readable() == "distant" )
 	{
-		boundOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( distantRays( muted ) ) );
-		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color ) ) );
+		result.push_back( Visualisation::createOrnament( distantRays( muted ), /* affectsFramingBound = */ true ) );
+		result.push_back( Visualisation::createOrnament( colorIndicator( color ), /* affectsFramingBound = */ false ) );
 	}
 	else if( type && type->readable() == "quad" )
 	{
@@ -562,20 +554,20 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		if( parameter<bool>( metadataTarget, shaderParameters, "portalParameter", false ) )
 		{
 			// Because we don't support variable size lights, we keep a fixed hatching scale
-			geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( quadPortal( size, /* hatchingScale = */ 1.0f, muted ) ) );
+			result.push_back( Visualisation::createGeometry( quadPortal( size, /* hatchingScale = */ 1.0f, muted ) ) );
 		}
 		else
 		{
 			if( drawShaded )
 			{
 				ConstDataPtr textureData = drawTextured ? surfaceTexture( shaderNetwork, attributes, maxTextureResolution ) : nullptr;
-				geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( quadSurface( size, textureData, tint, maxTextureResolution, color, uvOrientation ? uvOrientation->readable() : M33f() ) ) );
+				result.push_back( Visualisation::createGeometry( quadSurface( size, textureData, tint, maxTextureResolution, color, uvOrientation ? uvOrientation->readable() : M33f() ) ) );
 			}
 			else
 			{
-				ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color * tint ) ) );
+				result.push_back( Visualisation::createOrnament( colorIndicator( color * tint ), /* affectsFramingBound = */ true ) );
 			}
-			geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( quadWireframe( size, muted ) ) );
+			result.push_back( Visualisation::createGeometry( quadWireframe( size, muted ) ) );
 
 			const float spread = parameter<float>( metadataTarget, shaderParameters, "spreadParameter", -1 );
 			if( spread >= 0.0f )
@@ -593,13 +585,14 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		if( drawShaded )
 		{
 			ConstDataPtr textureData = drawTextured ? surfaceTexture( shaderNetwork, attributes, maxTextureResolution ) : nullptr;
-			geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( diskSurface( radius, textureData, tint, maxTextureResolution, color ) ) );
+			result.push_back( Visualisation::createGeometry( diskSurface( radius, textureData, tint, maxTextureResolution, color ) ) );
 		}
 		else
 		{
-			ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color * tint ) ) );
+			result.push_back( Visualisation::createOrnament( colorIndicator( color * tint ), /* affectsFramingBound = */ false ) );
 		}
-		geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( diskWireframe( radius, muted ) ) );
+
+		result.push_back( Visualisation::createGeometry( diskWireframe( radius, muted ) ) );
 		addRay( V3f( 0 ), V3f( 0, 0, -1 ), ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
 
 		const float spread = parameter<float>( metadataTarget, shaderParameters, "spreadParameter", -1 );
@@ -612,11 +605,11 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	{
 		const float radius = parameter<float>( metadataTarget, shaderParameters, "radiusParameter", 1 );
 		const float length = parameter<float>( metadataTarget, shaderParameters, "lengthParameter", 2 );
-		geometry->addChild( const_pointer_cast<IECoreGL::Renderable>( cylinderShape( radius, length, drawShaded, color * tint, muted ) ) );
-		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( cylinderRays( radius, muted ) ) );
+		result.push_back( Visualisation::createGeometry( cylinderShape( radius, length, drawShaded, color * tint, muted ) ) );
+		result.push_back( Visualisation::createOrnament( cylinderRays( radius, muted ), /* affectsFramingBound = */ false ) );
 		if( !drawShaded )
 		{
-			ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color * tint ) ) );
+			result.push_back( Visualisation::createOrnament( colorIndicator( color * tint ), /* affectsFramingBound = */ false ) );
 		}
 	}
 	else if( type && type->readable() == "mesh" )
@@ -634,9 +627,12 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		const float radius = parameter<float>( metadataTarget, shaderParameters, "radiusParameter", 0 );
 		if( radius > 0 )
 		{
-			fixedScaleOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( sphereWireframe( radius, Vec3<bool>( true, false, true ), 0.5f, V3f( 0.0f ), muted ) ) );
+			result.push_back( Visualisation(
+				sphereWireframe( radius, Vec3<bool>( true, false, true ), 0.5f, V3f( 0.0f ), muted ),
+				Visualisation::Scale::None
+			) );
 		}
-		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color ) ) );
+		result.push_back( Visualisation::createOrnament( colorIndicator( color ), /* affectsFramingBound = */ false ) );
 		addRay( V3f( 0 ), V3f( 0, 0, -1 ), ornamentWireframeVertsPerCurve->writable(), ornamentWireframePoints->writable() );
 	}
 	else
@@ -645,14 +641,14 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		const float radius = parameter<float>( metadataTarget, shaderParameters, "radiusParameter", 0 );
 		if( radius > 0 )
 		{
-			fixedScaleOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( pointShape( radius, muted ) ) );
+			result.push_back( Visualisation( pointShape( radius, muted ), Visualisation::Scale::None ) );
 		}
 
 		if( !haveCone )
 		{
-			boundOrnaments->addChild( const_pointer_cast<IECoreGL::Renderable>( pointRays( radius / visualiserScale, muted ) ) );
+			result.push_back( Visualisation::createOrnament( pointRays( radius / visualiserScale, muted ), /* affectsFramingBound = */ true ) );
 		}
-		ornaments->addChild( const_pointer_cast<IECoreGL::Renderable>( colorIndicator( color ) ) );
+		result.push_back( Visualisation::createOrnament( colorIndicator( color ), /* affectsFramingBound = */ false ) );
 	}
 
 	if( ornamentWireframePoints->readable().size() > 0 )
@@ -660,31 +656,22 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		IECoreGL::CurvesPrimitivePtr curves = new IECoreGL::CurvesPrimitive( IECore::CubicBasisf::linear(), false, ornamentWireframeVertsPerCurve );
 		curves->addPrimitiveVariable( "P", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Vertex, ornamentWireframePoints ) );
 		curves->addPrimitiveVariable( "Cs", IECoreScene::PrimitiveVariable( IECoreScene::PrimitiveVariable::Constant, new Color3fData( muted ? g_mutedLightWireframeColor : g_lightWireframeColor ) ) );
-		ornaments->addChild( curves );
+		result.push_back( Visualisation::createOrnament( curves, /* affectsFramingBound = */ false ) );
 	}
 
-	Visualisations result;
-	if( !geometry->children().empty() )
+	// Apply orientation corrective matrix if necessary.
+
+	if( auto orientation = Metadata::value<M44fData>( metadataTarget, "visualiserOrientation" ) )
 	{
-		result.push_back( Visualisation::createGeometry( geometry ) );
+		for( auto &v : result )
+		{
+			IECoreGL::GroupPtr group = new IECoreGL::Group;
+			group->addChild( boost::const_pointer_cast<IECoreGL::Renderable>( v.renderable ) );
+			group->setTransform( orientation->readable() );
+			v.renderable = group;
+		}
 	}
-	if( !ornaments->children().empty() )
-	{
-		addWireframeCurveState( ornaments.get() );
-		result.push_back( Visualisation::createOrnament( ornaments, false ) );
-	}
-	if( !boundOrnaments->children().empty() )
-	{
-		result.push_back( Visualisation::createOrnament( boundOrnaments, true ) );
-	}
-	if( !fixedScaleOrnaments->children().empty() )
-	{
-		result.push_back( Visualisation( fixedScaleOrnaments, Visualisation::Scale::None ) );
-	}
-	if( !frustum->children().empty() )
-	{
-		result.push_back( Visualisation::createFrustum( frustum, Visualisation::Scale::Visualiser ) );
-	}
+
 	return result;
 }
 
