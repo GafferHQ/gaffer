@@ -39,13 +39,8 @@
 using namespace IECoreGLPreview;
 
 Visualisation::Visualisation( const IECoreGL::ConstRenderablePtr &renderable, Scale scale, Category category, bool affectsFramingBound )
-	: scale( scale ), category( category ), affectsFramingBound( affectsFramingBound ), m_renderable( renderable )
+	: renderable( renderable ), scale( scale ), category( category ), affectsFramingBound( affectsFramingBound )
 {
-}
-
-const IECoreGL::Renderable *Visualisation::renderable() const
-{
-	return m_renderable.get();
 }
 
 Visualisation Visualisation::createGeometry( const IECoreGL::ConstRenderablePtr &renderable )

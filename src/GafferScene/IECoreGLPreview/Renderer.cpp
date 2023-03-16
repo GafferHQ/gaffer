@@ -143,7 +143,7 @@ void renderMatchingVisualisations( Visualisation::Scale scale, Visualisation::Ca
 		{
 			if( v.scale == scale && v.category & category )
 			{
-				v.renderable()->render( state );
+				v.renderable->render( state );
 			}
 		}
 	}
@@ -161,7 +161,7 @@ void accumulateVisualisationBounds( Box3f &target, Visualisation::Scale scale, V
 				continue;
 			}
 
-			const Box3f b = v.renderable()->bound();
+			const Box3f b = v.renderable->bound();
 			if( !b.isEmpty() )
 			{
 				target.extendBy( Imath::transform( b, transform ) );
