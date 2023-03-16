@@ -69,9 +69,72 @@ using namespace Gaffer;
 namespace
 {
 
+bool descendantHasInput( const Plug *plug )
+{
+	for( auto &d : Plug::RecursiveRange( *plug ) )
+	{
+		if( d->getInput() )
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+bool conformSplinePlugs( const Gaffer::Plug *srcPlug, Gaffer::Plug *dstPlug, bool ignoreDefaultValues )
+{
+	auto conform = [=] ( auto typedSrc, Gaffer::Plug *dst ) {
+
+		using PlugType = std::remove_const_t<std::remove_pointer_t<decltype( typedSrc )>>;
+		auto typedDest = runTimeCast<PlugType>( dst );
+		if( !typedDest )
+		{
+			return false;
+		}
+
+		if( typedSrc->isSetToDefault() && ignoreDefaultValues && !descendantHasInput( typedSrc ) )
+		{
+			// We don't want to transfer any inputs or values, so must leave
+			// `dstPlug` alone.
+			return false;
+		}
+
+		typedDest->clearPoints();
+		for( size_t i = 0, n = typedSrc->numPoints(); i < n; ++i )
+		{
+			const Plug *point = typedSrc->pointPlug( i );
+			typedDest->addChild( point->createCounterpart( point->getName(), point->direction() ) );
+		}
+		return true;
+	};
+
+	switch( (Gaffer::TypeId)srcPlug->typeId() )
+	{
+		case SplineffPlugTypeId :
+			return conform( static_cast<const SplineffPlug *>( srcPlug ), dstPlug );
+		case SplinefColor3fPlugTypeId :
+			return conform( static_cast<const SplinefColor3fPlug *>( srcPlug ), dstPlug );
+		case SplinefColor4fPlugTypeId :
+			return conform( static_cast<const SplinefColor4fPlug *>( srcPlug ), dstPlug );
+		default :
+			return false;
+	}
+}
+
 /// \todo Consider moving to PlugAlgo.h
 void copyInputsAndValues( Gaffer::Plug *srcPlug, Gaffer::Plug *dstPlug, bool ignoreDefaultValues )
 {
+
+	// From a user's perspective, we consider SplinePlugs to have a single
+	// atomic value. So _any_ edit to _any_ child plug should cause the entire
+	// value to be matched. To do that, we first need to conform the destination
+	// so that it has the same number of points as the source, and then we need
+	// to set values for all plugs.
+
+	if( conformSplinePlugs( srcPlug, dstPlug, ignoreDefaultValues ) )
+	{
+		ignoreDefaultValues = false;
+	}
 
 	// If we have an input to copy, we can leave the
 	// recursion to the `setInput()` call, which will
