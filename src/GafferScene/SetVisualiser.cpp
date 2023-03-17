@@ -124,8 +124,6 @@ const StringDataPtr fragmentSource()
 		"#define in varying\n"
 		"#endif\n"
 
-		"#include \"IECoreGL/ColorAlgo.h\"\n"
-
 		"uniform vec3 colors[" + std::to_string( g_maxShaderColors ) + "];"
 		"uniform int numColors;"
 		"uniform float stripeWidth;"
@@ -141,7 +139,7 @@ const StringDataPtr fragmentSource()
 		"	{"
 		"		float stripeIndex = floor( (gl_FragCoord.x - gl_FragCoord.y) / stripeWidth );"
 		"		stripeIndex = mod( stripeIndex, float(numColors) );"
-		"		gl_FragColor = ( gl_FragColor * 0.8 + 0.2 ) * vec4( ieLinToSRGB( colors[ int(stripeIndex) ] ), 1.0);"
+		"		gl_FragColor = ( gl_FragColor * 0.8 + 0.2 ) * vec4( colors[ int(stripeIndex) ], 1.0 );"
 		"	}"
 		"}"
 	);
