@@ -160,16 +160,13 @@ const char *texturedFragSource()
 		"#define in varying\n"
 		"#endif\n"
 		""
-		"#include \"IECoreGL/ColorAlgo.h\"\n"
-		""
 		"in vec2 fragmentuv;"
 		""
 		"uniform sampler2D texture;"
 		""
 		"void main()"
 		"{"
-			"vec4 t = texture2D( texture, fragmentuv );"
-			"gl_FragColor =  vec4( ieLinToSRGB( t.xyz ), t.w );"
+			"gl_FragColor = texture2D( texture, fragmentuv );"
 		"}"
 	;
 }
@@ -319,7 +316,7 @@ Visualisations GoboVisualiser::visualise( const IECore::InternedString &attribut
 
 	result->setTransform( goboTrans );
 
-	return { Visualisation::createOrnament( result, true ) };
+	return { Visualisation::createOrnament( result, /* affectsFramingBounds = */ true, Visualisation::ColorSpace::Scene ) };
 }
 
 } // namespace
