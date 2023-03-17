@@ -96,9 +96,7 @@ class GAFFERSCENEUI_API StandardLightVisualiser : public IECoreGLPreview::LightV
 
 		/// \todo Expose publicly once we have enough uses to dictate
 		/// the most general set of parameters.
-		static IECoreGL::ConstRenderablePtr cylinderShape( float radius, float length, bool filled = false, const Imath::Color3f &color = Imath::Color3f( 1.0f ), bool muted = false );
 		static IECoreGL::ConstRenderablePtr pointShape( float radius, bool muted = false );
-		static IECoreGL::ConstRenderablePtr cylinderRays( float radius, bool muted = false );
 
 		// textureData should be as per return type of surfaceTexture
 
@@ -109,6 +107,10 @@ class GAFFERSCENEUI_API StandardLightVisualiser : public IECoreGLPreview::LightV
 
 		static IECoreGL::ConstRenderablePtr diskWireframe( float radius, bool muted = false );
 		static IECoreGL::ConstRenderablePtr diskSurface( float radius, IECore::ConstDataPtr textureData, const Imath::Color3f &tint, int textureMaxResolution, const Imath::Color3f &fallbackColor );
+
+		static IECoreGL::ConstRenderablePtr cylinderWireframe( float radius, float length, bool muted = false );
+		static IECoreGL::ConstRenderablePtr cylinderSurface( float radius, float length, const Imath::Color3f &color );
+		static IECoreGL::ConstRenderablePtr cylinderRays( float radius, bool muted = false );
 
 		static LightVisualiser::LightVisualiserDescription<StandardLightVisualiser> g_description;
 
