@@ -846,6 +846,8 @@ class _TreeView( QtWidgets.QTreeView ) :
 
 		QtWidgets.QTreeView.__init__( self )
 
+		# Our `sizeHint()` depends on the header's size, so we need to
+		# ask for a geometry update any time it changes.
 		self.header().geometriesChanged.connect( self.updateGeometry )
 		self.header().sectionResized.connect( self.__sectionResized )
 
