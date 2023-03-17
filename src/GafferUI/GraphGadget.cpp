@@ -79,6 +79,8 @@ IECORE_POP_DEFAULT_VISIBILITY
 #include "boost/unordered_set.hpp"
 #include "boost/bind/placeholders.hpp"
 
+#include "fmt/format.h"
+
 using namespace GafferUI;
 using namespace Imath;
 using namespace IECore;
@@ -2027,7 +2029,7 @@ void GraphGadget::offsetNodes( Gaffer::Set *nodes, const Imath::V2f &offset )
 
 std::string GraphGadget::dragMergeGroup() const
 {
-	return boost::str( boost::format( "GraphGadget%1%%2%" ) % this % m_dragMergeGroupId );
+	return fmt::format( "GraphGadget{}{}", (void*)this, m_dragMergeGroupId );
 }
 
 void GraphGadget::updateDragSelection( bool dragEnd, ModifiableEvent::Modifiers modifiers )

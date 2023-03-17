@@ -43,6 +43,8 @@
 
 #include "IECore/SimpleTypedData.h"
 
+#include "fmt/format.h"
+
 using namespace GafferUI;
 using namespace IECore;
 using namespace Imath;
@@ -112,7 +114,7 @@ NodulePtr Nodule::create( Gaffer::PlugPtr plug )
 		}
 		else
 		{
-			IECore::msg( IECore::Msg::Warning, "Nodule::create", boost::format( "Nonexistent nodule type \"%s\" requested for plug \"%s\"" ) % noduleType->readable() % plug->fullName() );
+			IECore::msg( IECore::Msg::Warning, "Nodule::create", fmt::format( "Nonexistent nodule type \"{}\" requested for plug \"{}\"", noduleType->readable(), plug->fullName() ) );
 		}
 	}
 

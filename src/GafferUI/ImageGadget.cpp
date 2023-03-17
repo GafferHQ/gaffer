@@ -48,6 +48,8 @@
 #include "IECore/Exception.h"
 #include "IECore/SearchPath.h"
 
+#include "fmt/format.h"
+
 using namespace Imath;
 using namespace IECore;
 using namespace IECoreImage;
@@ -81,7 +83,7 @@ Box3f boundGetter( const std::string &fileName, size_t &cost, const IECore::Canc
 	ImageReaderPtr imageReader = IECore::runTimeCast<ImageReader>( reader );
 	if( !imageReader )
 	{
-		throw IECore::Exception( boost::str( boost::format( "File \"%s\" does not contain an image." ) % fileName ) );
+		throw IECore::Exception( fmt::format( "File \"{}\" does not contain an image.", fileName ) );
 	}
 
 	cost = 1;

@@ -55,6 +55,8 @@
 #include "boost/bind/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 
+#include "fmt/format.h"
+
 using namespace std;
 using namespace boost::placeholders;
 using namespace Imath;
@@ -617,9 +619,7 @@ std::string StandardConnectionGadget::getToolTip( const IECore::LineSegment3f &l
 	result = srcName + " -> " + dstName;
 	if( numSkippedDots )
 	{
-		result += boost::str(
-			boost::format( " (via %d dot%s)" ) % numSkippedDots % ( numSkippedDots > 1 ? "s" : "" )
-		);
+		result += fmt::format( " (via {} dot{})", numSkippedDots, numSkippedDots > 1 ? "s" : "" );
 	}
 	return result;
 }

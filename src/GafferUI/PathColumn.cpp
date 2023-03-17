@@ -45,6 +45,8 @@
 
 #include "boost/lexical_cast.hpp"
 
+#include "fmt/format.h"
+
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferUI;
@@ -195,7 +197,7 @@ PathColumn::CellData IconPathColumn::cellData( const Gaffer::Path &path, const I
 			fileName += boost::lexical_cast<std::string>( static_cast<const IECore::BoolData *>( property.get() )->readable() );
 			break;
 		default :
-			IECore::msg( IECore::Msg::Warning, "IconPathColumn", boost::str( boost::format( "Unsupported property type \"%s\"" ) % property->typeName() ) );
+			IECore::msg( IECore::Msg::Warning, "IconPathColumn", fmt::format( "Unsupported property type \"{}\"", property->typeName() ) );
 			return result;
 	}
 
