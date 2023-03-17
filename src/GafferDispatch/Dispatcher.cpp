@@ -49,6 +49,8 @@
 
 #include "boost/algorithm/string/predicate.hpp"
 
+#include "fmt/format.h"
+
 using namespace std;
 using namespace IECore;
 using namespace Gaffer;
@@ -233,12 +235,11 @@ void Dispatcher::createJobDirectory( const Gaffer::ScriptNode *script, Gaffer::C
 	// successfully create a directory of our own, because we
 	// may be in a race against other processes.
 
-	boost::format formatter( "%06d" );
 	std::filesystem::path numberedJobDirectory;
 	while( true )
 	{
 		++i;
-		numberedJobDirectory = jobDirectory / ( formatter % i ).str();
+		numberedJobDirectory = jobDirectory / fmt::format( "{:06}", i );
 		if( std::filesystem::create_directory( numberedJobDirectory ) )
 		{
 			break;
@@ -461,7 +462,10 @@ class Dispatcher::Batcher
 			TaskBatchPtr batch = acquireBatch( task );
 			if( ancestors.find( batch.get() ) != ancestors.end() )
 			{
-				throw IECore::Exception( ( boost::format( "Dispatched tasks cannot have cyclic dependencies but %s is involved in a cycle." ) % batch->plug()->relativeName( batch->plug()->ancestor<ScriptNode>() ) ).str() );
+				throw IECore::Exception( fmt::format(
+					"Dispatched tasks cannot have cyclic dependencies but {} is involved in a cycle.",
+					batch->plug()->relativeName( batch->plug()->ancestor<ScriptNode>() )
+				) );
 			}
 
 			// Ask the task what preTasks and postTasks it would like.
