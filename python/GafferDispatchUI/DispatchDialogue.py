@@ -258,9 +258,8 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 			"".join( traceback.format_exception( *exceptionInfo ) )
 		)
 
-		# this works for RuntimeError, but is this safe for all exceptions?
 		excType, excValue, excTrace = exceptionInfo
-		if excValue and excValue.message:
+		if excValue and hasattr( excValue, "message" ) and excValue.message :
 			userFriendlyException = excValue.message.strip( "\n" ).split( "\n" )[-1]
 		else:
 			userFriendlyException = str( excType.__name__ )

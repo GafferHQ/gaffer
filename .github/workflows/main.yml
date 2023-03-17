@@ -159,6 +159,8 @@ jobs:
     - name: Build Gaffer
       run: |
        scons -j 2 build BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions
+      env:
+        PYTHONUTF8: 1
 
     - name: Test
       # Tests should complete in well under an hour. If they don't it's most likely because
@@ -202,7 +204,8 @@ jobs:
           with open( os.environ["GITHUB_ENV"], "a" ) as f :
             print( "Setting $ARNOLD_ROOT to '%s'" % arnoldRoot )
             f.write( 'ARNOLD_ROOT=%s\n' % arnoldRoot )
-
+      env:
+        PYTHONUTF8: 1
       shell: python
 
     - name: Build Docs and Package
@@ -214,6 +217,8 @@ jobs:
         echo "::add-matcher::./.github/workflows/main/problemMatchers/sphinx.json"
         scons -j 2 package BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions
         echo "::remove-matcher owner=sphinx::"
+      env:
+        PYTHONUTF8: 1
       if: matrix.publish
 
     - name: Validate

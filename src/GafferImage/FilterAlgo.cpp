@@ -309,7 +309,7 @@ const OIIO::Filter2D *GafferImage::FilterAlgo::acquireFilter( const std::string 
 	}
 	else
 	{
-		throw IECore::Exception( boost::str( boost::format( "Unknown filter \"%s\"" ) % name ) );
+		throw IECore::Exception( fmt::format( "Unknown filter \"{}\"", name ) );
 	}
 }
 

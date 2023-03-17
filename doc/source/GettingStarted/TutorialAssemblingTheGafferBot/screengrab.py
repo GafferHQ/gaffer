@@ -14,7 +14,7 @@
 # BuildTarget: images/mainRenderGrey.png
 # BuildTarget: images/mainRenderSettingsWithGap.png
 # BuildTarget: images/graphEditorFirstShaderNodes.png
-# BuildTarget: images/graphEditorEnvironmentLightNode.png
+# BuildTarget: images/graphEditorBackgroundLightNode.png
 # BuildTarget: images/viewerRenderOneShader.png
 # BuildTarget: images/viewerRenderTextures.png
 # BuildTarget: images/graphEditorSecondShaderNodes.png
@@ -139,6 +139,7 @@ for i in viewer._Viewer__toolChooser.tools():
 rotateTool["active"].setValue( True )
 viewer.view().viewportGadget().getPrimaryChild().waitForCompletion()
 GafferUI.WidgetAlgo.grab( widget = viewer, imagePath = "images/viewerCameraRotated.png" )
+rotateTool["active"].setValue( False )
 
 # Camera node in Node Editor window
 nodeEditorWindow = GafferUI.NodeEditor.acquire( cameraNode, floating=True )
@@ -164,7 +165,7 @@ GafferUI.WidgetAlgo.grab( widget = graphEditor, imagePath = "images/graphEditorR
 def __renderAndGrab( script, widget, imagePath, delay = 15 ) :
 
 	script["variables"]["imageCataloguePort"]["value"].setValue( script["Catalogue"].displayDriverServer().portNumber() )
-	script["InteractiveAppleseedRender"]["state"].setValue( script["InteractiveAppleseedRender"].State.Running )
+	script["InteractiveCyclesRender"]["state"].setValue( script["InteractiveCyclesRender"].State.Running )
 
 	# Wait for render. Deliberately not using `__delay()`, as it can wait a
 	# significant amount of time longer than requested when a render is running.
@@ -175,7 +176,7 @@ def __renderAndGrab( script, widget, imagePath, delay = 15 ) :
 
 	# Stop renderer before grabbing, because `grab()` also calls `waitForIdle()`, which would
 	# again cause unwanted delays.
-	script["InteractiveAppleseedRender"]["state"].setValue( script["InteractiveAppleseedRender"].State.Stopped )
+	script["InteractiveCyclesRender"]["state"].setValue( script["InteractiveCyclesRender"].State.Stopped )
 
 	GafferUI.EventLoop.waitForIdle()
 	viewport = scriptWindow.getLayout().editors( GafferUI.Viewer )[0].view().viewportGadget()
@@ -189,14 +190,14 @@ __renderAndGrab( script, scriptWindow, "images/mainRenderGrey.png", delay = 1 )
 # Render settings with gap in main window
 script["fileName"].setValue( os.path.abspath( "scripts/renderSettingsWithGap.gfr" ) )
 script.load()
-script.selection().add( [ script["StandardOptions"], script["AppleseedOptions"], script["Outputs"], script["InteractiveAppleseedRender"], script["Catalogue"] ] )
+script.selection().add( [ script["StandardOptions"], script["CyclesOptions"], script["Outputs"], script["InteractiveCyclesRender"], script["Catalogue"] ] )
 graphEditor.frame( script.children( Gaffer.Node ) )
 GafferUI.WidgetAlgo.grab( widget = graphEditor, imagePath = "images/mainRenderSettingsWithGap.png" )
 
 # First shader assignment in Graph Editor
 script["fileName"].setValue( os.path.abspath( "scripts/firstShaderAssignment.gfr" ) )
 script.load()
-script.selection().add( script["ShaderAssignment"] )
+script.selection().add( [ script["ShaderAssignment"], script["principled_bsdf"] ] )
 script.setFocus( script["ShaderAssignment"] )
 graphEditor.frame( script.children( Gaffer.Node ) )
 GafferUI.WidgetAlgo.grab( widget = graphEditor, imagePath = "images/graphEditorFirstShaderNodes.png" )
@@ -204,10 +205,10 @@ GafferUI.WidgetAlgo.grab( widget = graphEditor, imagePath = "images/graphEditorF
 # Environment light in Graph Editor
 script["fileName"].setValue( os.path.abspath( "scripts/firstLight.gfr" ) )
 script.load()
-script.selection().add( script["hosek_environment_edf"] )
-script.setFocus( script["hosek_environment_edf"] )
-graphEditor.frame( Gaffer.StandardSet( [ script["Group"], script["hosek_environment_edf"] ] ) )
-GafferUI.WidgetAlgo.grab( widget = graphEditor, imagePath = "images/graphEditorEnvironmentLightNode.png" )
+script.selection().add( [ script["background_light"], script["environment_texture"] ] )
+script.setFocus( script["background_light"] )
+graphEditor.frame( Gaffer.StandardSet( [ script["SceneReader"], script["Group"], script["background_light"], script["environment_texture"] ] ) )
+GafferUI.WidgetAlgo.grab( widget = graphEditor, imagePath = "images/graphEditorBackgroundLightNode.png" )
 
 # GafferBot render with lighting in Viewer
 script.selection().clear()
@@ -225,9 +226,9 @@ __renderAndGrab( script, viewer, "images/viewerRenderTextures.png" )
 # Second shader assignment in Graph Editor
 script["fileName"].setValue( os.path.abspath( "scripts/secondShaderAssignment.gfr" ) )
 script.load()
-script.selection().add( script["ShaderAssignment1"] )
+script.selection().add( [ script["ShaderAssignment1"], script["principled_bsdf1"] ] )
 script.setFocus( script["ShaderAssignment1"] )
-graphEditor.frame( Gaffer.StandardSet( [ script["as_disney_material"], script["as_disney_material1"], script["ShaderAssignment"], script["ShaderAssignment1"] ] ) )
+graphEditor.frame( Gaffer.StandardSet( [ script["principled_bsdf"], script["principled_bsdf1"], script["ShaderAssignment"], script["ShaderAssignment1"] ] ) )
 GafferUI.WidgetAlgo.grab( widget = graphEditor, imagePath = "images/graphEditorSecondShaderNodes.png" )
 
 # GafferBot render with second shader assignment in main window
@@ -242,7 +243,7 @@ script["fileName"].setValue( os.path.abspath( "scripts/secondShaderAssignmentFil
 script.load()
 script.selection().add( script["PathFilter"] )
 script.setFocus( script["PathFilter"] )
-graphEditor.frame( Gaffer.StandardSet( [ script["PathFilter"], script["ShaderAssignment1"] ] ) )
+graphEditor.frame( Gaffer.StandardSet( [ script["PathFilter"], script["ShaderAssignment1"], script["principled_bsdf1"] ] ) )
 GafferUI.WidgetAlgo.grab( widget = graphEditor, imagePath = "images/graphEditorPathFilterNode.png" )
 
 # GafferBot node and mouth selection in Viewer
@@ -254,6 +255,10 @@ GafferSceneUI.ContextAlgo.setSelectedPaths( script.context(), paths )
 GafferUI.EventLoop.waitForIdle()
 paths = IECore.PathMatcher( [ "/group/GAFFERBOT/C_torso_GRP/C_head_GRP/C_head_CPT" ] )
 viewer.view().frame( paths, direction = imath.V3f( -0.2, -0.2, -1 ) )
+for i in viewer._Viewer__toolChooser.tools() :
+	if type( i ) == GafferSceneUI.SelectionTool :
+		selectionTool = i
+selectionTool["active"].setValue( True )
 __delay( 0.1 )
 viewer.view().viewportGadget().getPrimaryChild().waitForCompletion()
 GafferUI.WidgetAlgo.grab( widget = viewer, imagePath = "images/viewerSelectionFace.png" )

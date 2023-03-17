@@ -234,6 +234,18 @@ class Viewer( GafferUI.NodeSetEditor ) :
 						t["active"].setValue( False )
 				return True
 
+			# \todo The Viewer should not need to know about `TransformTool` and orientations.
+			# This can be made more general by adding metadata to plugs such as
+			# `viewer:cyclePresetShortcut` and acting on that instead of this one special case.
+			if event.key == "O" and t["active"].getValue() and "orientation" in t :
+				orientation = Gaffer.NodeAlgo.currentPreset( t["orientation"] )
+				presets = Gaffer.NodeAlgo.presets( t["orientation"] )
+
+				Gaffer.NodeAlgo.applyPreset(
+					t["orientation"],
+					presets[ ( presets.index( orientation ) + 1 ) % len( presets ) ]
+				)
+
 		return False
 
 	def __contextMenu( self, widget ) :

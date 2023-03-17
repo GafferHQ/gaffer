@@ -82,8 +82,8 @@ class Timeline( GafferUI.Editor ) :
 			self.__startButton = GafferUI.Button( image = "timelineStart.png", hasFrame=False )
 			self.__startButton.clickedSignal().connect( Gaffer.WeakMethod( self.__startOrEndButtonClicked ), scoped = False )
 
-			self.__playPause = GafferUI.Button( image = "timelinePlay.png", hasFrame=False )
-			self.__playPause.clickedSignal().connect( Gaffer.WeakMethod( self.__playPauseClicked ), scoped = False )
+			self.__playPauseButton = GafferUI.Button( image = "timelinePlay.png", hasFrame=False )
+			self.__playPauseButton.clickedSignal().connect( Gaffer.WeakMethod( self.__playPauseClicked ), scoped = False )
 
 			self.__endButton = GafferUI.Button( image = "timelineEnd.png", hasFrame=False )
 			self.__endButton.clickedSignal().connect( Gaffer.WeakMethod( self.__startOrEndButtonClicked ), scoped = False )
@@ -107,8 +107,14 @@ class Timeline( GafferUI.Editor ) :
 		frameIncrementShortcut = QtWidgets.QShortcut( QtGui.QKeySequence( "Right" ), self._qtWidget() )
 		frameIncrementShortcut.activated.connect( Gaffer.WeakMethod( self.__incrementFrame ) )
 
+		playForwardsShortcut = QtWidgets.QShortcut( QtGui.QKeySequence( "Ctrl+Right" ), self._qtWidget() )
+		playForwardsShortcut.activated.connect( Gaffer.WeakMethod( self.__playPausePressed ) )
+
 		frameDecrementShortcut = QtWidgets.QShortcut( QtGui.QKeySequence( "Left" ), self._qtWidget() )
 		frameDecrementShortcut.activated.connect( functools.partial( Gaffer.WeakMethod( self.__incrementFrame ), -1 ) )
+
+		playBackwards = QtWidgets.QShortcut( QtGui.QKeySequence( "Ctrl+Left" ), self._qtWidget() )
+		playBackwards.activated.connect( functools.partial( Gaffer.WeakMethod( self.__playPausePressed ), False ) )
 
 		self.__playback = None
 		self._updateFromContext( set() )
@@ -206,14 +212,21 @@ class Timeline( GafferUI.Editor ) :
 			self.__sliderRangeEnd.setVisible( True )
 			self.__visibilityButton.setImage( "timeline3.png" )
 
-	def __playPauseClicked( self, button ) :
-
-		assert( button is self.__playPause )
+	def __playPause( self, forwards = True ) :
 
 		if self.__playback.getState() == self.__playback.State.Stopped :
-			self.__playback.setState( self.__playback.State.PlayingForwards )
+			self.__playback.setState( self.__playback.State.PlayingForwards if forwards else self.__playback.State.PlayingBackwards )
 		else :
 			self.__playback.setState( self.__playback.State.Stopped )
+
+	def __playPauseClicked( self, button ) :
+
+		assert( button is self.__playPauseButton )
+		self.__playPause()
+
+	def __playPausePressed( self, forwards = True ) :
+
+		self.__playPause( forwards )
 
 	def __startOrEndButtonClicked( self, button ) :
 
@@ -227,9 +240,9 @@ class Timeline( GafferUI.Editor ) :
 	def __playbackStateChanged( self, playback ) :
 
 		if playback.getState() in ( playback.State.PlayingForwards, playback.State.PlayingBackwards ) :
-			self.__playPause.setImage( "timelinePause.png" )
+			self.__playPauseButton.setImage( "timelinePause.png" )
 		else :
-			self.__playPause.setImage( "timelinePlay.png" )
+			self.__playPauseButton.setImage( "timelinePlay.png" )
 
 	def __playbackFrameRangeChanged( self, playback ) :
 
@@ -242,7 +255,10 @@ class Timeline( GafferUI.Editor ) :
 
 	def __incrementFrame( self, increment = 1 ) :
 
-		self.__playback.incrementFrame( increment )
+		if self.__playback.getState() == self.__playback.State.Stopped :
+			self.__playback.incrementFrame( increment )
+		else :
+			self.__playback.setState( self.__playback.State.Stopped )
 
 	def __repr__( self ) :
 

@@ -55,6 +55,8 @@
 
 #include FT_FREETYPE_H
 
+#include "fmt/format.h"
+
 #include <memory>
 
 using namespace std;
@@ -102,7 +104,7 @@ FacePtr faceLoader( const std::string &font, size_t &cost, const IECore::Cancell
 	std::string file = sp.find( font ).generic_string();
 	if( !file.size() )
 	{
-		throw Exception( boost::str( boost::format( "Unable to find font \"%s\"." ) % font ) );
+		throw Exception( fmt::format( "Unable to find font \"{}\".", font ) );
 	}
 
 	FT_Face face = nullptr;
@@ -112,7 +114,7 @@ FacePtr faceLoader( const std::string &font, size_t &cost, const IECore::Cancell
 
 	if( error )
 	{
-		throw Exception( boost::str( boost::format( "Error loading font \"%s\"." ) % font ) );
+		throw Exception( fmt::format( "Error loading font \"{}\".", font ) );
 	}
 
 	cost = 1;
@@ -137,7 +139,7 @@ FacePtr face( const string &font, const V2i &size )
 	FT_Error error = FT_Set_Pixel_Sizes( face.get(), size.x, size.y );
 	if( error )
 	{
-		throw Exception( boost::str( boost::format( "Error setting size for font \"%s\"." ) % font ) );
+		throw Exception( fmt::format( "Error setting size for font \"{}\".", font ) );
 	}
 
 	return face;

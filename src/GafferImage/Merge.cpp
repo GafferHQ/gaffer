@@ -43,6 +43,8 @@
 
 #include "IECore/BoxOps.h"
 
+#include "fmt/format.h"
+
 using namespace std;
 using namespace Imath;
 using namespace IECore;
@@ -164,7 +166,7 @@ typename Functor::ReturnType dispatchOperation( Merge::Operation op, Functor &&f
 		case Merge::Min : return functor.template operator()<OpMin>( std::forward<Args>( args )... );
 		case Merge::Max : return functor.template operator()<OpMax>( std::forward<Args>( args )... );
 		default:
-			throw InvalidArgumentException( boost::str( boost::format( "Invalid Merge Operation : %1%" ) % op ) );
+			throw InvalidArgumentException( fmt::format( "Invalid Merge Operation : {}", op ) );
 	}
 }
 

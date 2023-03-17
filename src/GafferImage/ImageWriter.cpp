@@ -68,6 +68,8 @@
 
 #include "tbb/spin_mutex.h"
 
+#include "fmt/format.h"
+
 #include <filesystem>
 #include <memory>
 
@@ -463,7 +465,7 @@ class FlatTileWriter
 
 			if( !m_out->write_tile( exrTileOrigin.x, exrTileOrigin.y, 0, TypeDesc::FLOAT, &tileData->readable()[0] ) )
 			{
-				throw IECore::Exception( boost::str( boost::format( "Could not write tile to \"%s\", error = %s" ) % m_fileName % m_out->geterror() ) );
+				throw IECore::Exception( fmt::format( "Could not write tile to \"{}\", error = {}", m_fileName, m_out->geterror() ) );
 			}
 		}
 
@@ -577,7 +579,7 @@ class FlatScanlineWriter
 		{
 			if ( !m_out->write_scanlines( exrYBegin, exrYEnd, 0, TypeDesc::FLOAT, &m_scanlinesData[0] + ( scanlinesYOffset * m_spec.width * m_channels.size() ) ) )
 			{
-				throw IECore::Exception( boost::str( boost::format( "Could not write scanline to \"%s\", error = %s" ) % m_fileName % m_out->geterror() ) );
+				throw IECore::Exception( fmt::format( "Could not write scanline to \"{}\", error = {}", m_fileName, m_out->geterror() ) );
 			}
 		}
 
@@ -863,7 +865,7 @@ class DeepTileWriter
 				tileData
 			) )
 			{
-				throw IECore::Exception( boost::str( boost::format( "Could not write tile to \"%s\", error = %s" ) % m_fileName % m_out->geterror() ) );
+				throw IECore::Exception( fmt::format( "Could not write tile to \"{}\", error = {}", m_fileName, m_out->geterror() ) );
 			}
 		}
 
@@ -1041,7 +1043,7 @@ class DeepScanlineWriter
 			auto range = scanlineRange();
 			if ( !m_out->write_deep_scanlines( range.first, range.second, 0, m_deepData ) )
 			{
-				throw IECore::Exception( boost::str( boost::format( "Could not write scanline to \"%s\", error = %s" ) % m_fileName % m_out->geterror() ) );
+				throw IECore::Exception( fmt::format( "Could not write scanline to \"{}\", error = {}", m_fileName, m_out->geterror() ) );
 			}
 
 			// Advance to next chunk
@@ -1080,7 +1082,7 @@ void metadataToImageSpecAttributes( const CompoundData *metadata, ImageSpec &spe
 		{
 			IECore::msg(
 				IECore::Msg::Warning, "ImageWriter",
-				boost::format( "Ignoring metadata \"%1%\" because it conflicts with OpenImageIO." ) % it->first
+				fmt::format( "Ignoring metadata \"{}\" because it conflicts with OpenImageIO.", it->first )
 			);
 			continue;
 		}
@@ -1891,7 +1893,7 @@ void ImageWriter::execute() const
 		bool deep = inPlug()->deep();
 		if( deep && !out->supports( "deepdata" ) )
 		{
-			throw IECore::Exception( boost::str( boost::format( "Deep data is not supported by %s files." ) % out->format_name() ) );
+			throw IECore::Exception( fmt::format( "Deep data is not supported by {} files.", out->format_name() ) );
 		}
 
 		// Create an OIIO::ImageSpec describing what we'll write
@@ -1980,7 +1982,7 @@ void ImageWriter::execute() const
 				{
 					if( defaultSpec.deep || part.spec.deep )
 					{
-						throw IECore::Exception( boost::str( boost::format( "Cannot write views \"%s\" and \"%s\" both to same image part when dealing with deep images" ) % part.views.back() % viewName ) );
+						throw IECore::Exception( fmt::format( "Cannot write views \"{}\" and \"{}\" both to same image part when dealing with deep images", part.views.back(), viewName ) );
 					}
 
 					part.views.push_back( viewName );
@@ -2018,7 +2020,7 @@ void ImageWriter::execute() const
 
 	if( parts.size() > 1 && !out->supports( "multiimage" ) )
 	{
-		throw IECore::Exception( boost::str( boost::format( "Cannot write multiple parts to this image format: \"%s\"" ) % fileName ) );
+		throw IECore::Exception( fmt::format( "Cannot write multiple parts to this image format: \"{}\"", fileName ) );
 	}
 
 	if( matchDataWindows )
@@ -2117,7 +2119,7 @@ void ImageWriter::execute() const
 	}
 	else
 	{
-		throw IECore::Exception( boost::str( boost::format( "Could not open \"%s\", error = %s" ) % fileName % out->geterror() ) );
+		throw IECore::Exception( fmt::format( "Could not open \"{}\", error = {}", fileName, out->geterror() ) );
 	}
 
 	for( const Part &part : parts )
