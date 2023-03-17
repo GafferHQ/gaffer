@@ -846,7 +846,9 @@ class _TreeView( QtWidgets.QTreeView ) :
 
 		QtWidgets.QTreeView.__init__( self )
 
-		self.header().geometriesChanged.connect( self.__geometriesChanged )
+		# Our `sizeHint()` depends on the header's size, so we need to
+		# ask for a geometry update any time it changes.
+		self.header().geometriesChanged.connect( self.updateGeometry )
 		self.header().sectionResized.connect( self.__sectionResized )
 
 		# Disable Qt's stretchLastSection behaviour as it will claim any available space in the header
@@ -857,7 +859,6 @@ class _TreeView( QtWidgets.QTreeView ) :
 		self.__lastColumnWidth = 0
 
 		self.__recalculatingColumnWidths = False
-		self.__updatingGeometry = False
 
 		# we track the previous viewport width to aid in determining whether stretchable columns should
 		# be resized when the viewport width changes
@@ -903,6 +904,20 @@ class _TreeView( QtWidgets.QTreeView ) :
 				return True
 
 		return QtWidgets.QTreeView.event( self, event )
+
+	def resizeEvent( self, event ) :
+
+		viewportWidth = self.viewport().width()
+		if viewportWidth != self.__previousViewportWidth :
+			if self.__previousViewportWidth == 0 or self.header().length() <= self.__previousViewportWidth or self.header().length() < viewportWidth :
+				# We use the previous viewport width to help determine whether the columns should be resized,
+				# if the columns fit within the previous width, then we should maintain that relationship and
+				# resize to fit the new width. If the columns are narrower than the current viewport width,
+				# then we resize to make use of the newly available space.
+				self.__resizeStretchColumns()
+			self.__previousViewportWidth = viewportWidth
+
+		QtWidgets.QTreeView.resizeEvent( self, event )
 
 	def lastVisibleIndex( self, parentIndex = None ) :
 
@@ -1061,7 +1076,7 @@ class _TreeView( QtWidgets.QTreeView ) :
 
 	def __sectionResized( self, index, oldWidth, newWidth ) :
 
-		if self.__recalculatingColumnWidths or self.__updatingGeometry :
+		if self.__recalculatingColumnWidths :
 			# we're only interested in resizing being done by the user
 			return
 
@@ -1105,30 +1120,10 @@ class _TreeView( QtWidgets.QTreeView ) :
 		header.resizeSection( lastColumn, adjustedWidth )
 		self.__recalculatingColumnWidths = False
 
-	def __geometriesChanged( self ) :
-
-		self.updateGeometry()
-
-		viewportWidth = self.viewport().width()
-		if viewportWidth == self.__previousViewportWidth :
-			# We're only interested in changes to width
-			return
-
-		if self.header().length() <= self.__previousViewportWidth or self.header().length() < viewportWidth :
-			# We use the previous viewport width to help determine whether the columns should be resized,
-			# if the columns fit within the previous width, then we should maintain that relationship and
-			# resize to fit the new width. If the columns are narrower than the current viewport width,
-			# then we resize to make use of the newly available space.
-			self.__updatingGeometry = True
-			self.__resizeStretchColumns()
-			self.__updatingGeometry = False
-
-		self.__previousViewportWidth = viewportWidth
-
 	def __resizeStretchColumns( self ) :
 
 		header = self.header()
-		availableWidth = header.width()
+		availableWidth = self.viewport().width()
 		stretchColumnWidth = 0
 		columnsToStretch = []
 
