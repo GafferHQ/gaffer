@@ -18,6 +18,7 @@ Fixes
 - Catalogue : Fixed errors caused by empty image selections.
 - MultiLineStringPlugValueWidget : Fixed bug handling <kbd>Esc</kbd>.
 - PathListingWidget : Fixed issue with columns set to automatically stretch not resizing if column headers are hidden.
+- Viewer : Fixed bugs which could prevent an object from being updated if its computation was previously interrupted.
 
 Documentation
 -------------
@@ -292,8 +293,16 @@ Build
   - YAML-CPP : Added version 0.7.0.
 - 3Delight : Updated to 3Delight version 2.9.17.
 
-1.1.9.x (relative to 1.1.9.3)
+1.1.9.x (relative to 1.1.9.4)
 =======
+
+1.1.9.4 (relative to 1.1.9.3)
+=======
+
+Fixes
+-----
+
+- Viewer : Fixed bugs which could prevent an object from being updated if its computation was previously interrupted.
 
 1.1.9.3 (relative to 1.1.9.2)
 =======
@@ -302,7 +311,6 @@ Fixes
 -----
 
 - ImageReader : Made error message more descriptive when trying to access a channel that doesn't exist.
-
 
 1.1.9.2 (relative to 1.1.9.1)
 =======

@@ -336,12 +336,18 @@ object capturedObjectCapturedLinks( const CapturingRenderer::CapturedObject &o, 
 	}
 }
 
-list objectSamplesWrapper( const Gaffer::ObjectPlug &objectPlug, const std::vector<float> &sampleTimes, bool copy )
+object objectSamplesWrapper( const Gaffer::ObjectPlug &objectPlug, const std::vector<float> &sampleTimes, IECore::MurmurHash *hash, bool copy )
 {
+	bool result;
 	std::vector<IECore::ConstObjectPtr> samples;
 	{
 		IECorePython::ScopedGILRelease gilRelease;
-		GafferScene::Private::RendererAlgo::objectSamples( &objectPlug, sampleTimes, samples );
+		result = GafferScene::Private::RendererAlgo::objectSamples( &objectPlug, sampleTimes, samples, hash );
+	}
+
+	if( !result )
+	{
+		return object();
 	}
 
 	list pythonSamples;
@@ -355,6 +361,29 @@ list objectSamplesWrapper( const Gaffer::ObjectPlug &objectPlug, const std::vect
 		{
 			pythonSamples.append( boost::const_pointer_cast<IECore::Object>( s ) );
 		}
+	}
+
+	return pythonSamples;
+}
+
+object transformSamplesWrapper( const Gaffer::M44fPlug &transformPlug, const std::vector<float> &sampleTimes, IECore::MurmurHash *hash )
+{
+	bool result;
+	std::vector<M44f> samples;
+	{
+		IECorePython::ScopedGILRelease gilRelease;
+		result = GafferScene::Private::RendererAlgo::transformSamples( &transformPlug, sampleTimes, samples, hash );
+	}
+
+	if( !result )
+	{
+		return object();
+	}
+
+	list pythonSamples;
+	for( auto &s : samples )
+	{
+		pythonSamples.append( s );
 	}
 
 	return pythonSamples;
@@ -410,7 +439,8 @@ void GafferSceneModule::bindRender()
 
 			scope rendererAlgomoduleScope( rendererAlgoModule );
 
-			def( "objectSamples", &objectSamplesWrapper, ( arg( "objectPlug" ), arg( "sampleTimes" ), arg( "_copy" ) = true ) );
+			def( "objectSamples", &objectSamplesWrapper, ( arg( "objectPlug" ), arg( "sampleTimes" ), arg( "hash" ) = object(), arg( "_copy" ) = true ) );
+			def( "transformSamples", &transformSamplesWrapper, ( arg( "transformPlug" ), arg( "sampleTimes" ), arg( "hash" ) = object() ) );
 
 			class_<GafferScene::Private::RendererAlgo::RenderSets, boost::noncopyable>( "RenderSets" )
 				.def( init<const ScenePlug *>() )
