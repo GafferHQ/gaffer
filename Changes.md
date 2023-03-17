@@ -6,6 +6,7 @@ API
 
 - View : Added DisplayTransform add-on class which can be used to add colourspace management to any View.
 - ViewportGadget : A post-process shader can now be applied to any layer, not just the main one.
+- SceneGadget : Added `setLayer()` and `getLayer()` methods, which allow the destination `Gadget::Layer` to be specified.
 
 Breaking Changes
 ----------------

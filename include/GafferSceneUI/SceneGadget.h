@@ -108,6 +108,10 @@ class GAFFERSCENEUI_API SceneGadget : public GafferUI::Gadget
 		void setOpenGLOptions( const IECore::CompoundObject *options );
 		const IECore::CompoundObject *getOpenGLOptions() const;
 
+		/// Specifies the viewport layer that the scene is rendered into.
+		void setLayer( Gadget::Layer layer );
+		Gadget::Layer getLayer() const;
+
 		/// Update process
 		/// ==============
 		///
@@ -222,6 +226,7 @@ class GAFFERSCENEUI_API SceneGadget : public GafferUI::Gadget
 		std::atomic_bool m_renderRequestPending;
 
 		IECore::ConstCompoundObjectPtr m_openGLOptions;
+		Gadget::Layer m_layer;
 		IECore::PathMatcher m_selection;
 
 		IECore::StringVectorDataPtr m_selectionMask;
