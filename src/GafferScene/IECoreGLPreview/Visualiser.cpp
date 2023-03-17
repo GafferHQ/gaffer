@@ -38,29 +38,33 @@
 
 using namespace IECoreGLPreview;
 
-Visualisation::Visualisation( const IECoreGL::ConstRenderablePtr &renderable, Scale scale, Category category, bool affectsFramingBound )
-	: renderable( renderable ), scale( scale ), category( category ), affectsFramingBound( affectsFramingBound )
+Visualisation::Visualisation( const IECoreGL::ConstRenderablePtr &renderable, Scale scale, Category category, bool affectsFramingBound, ColorSpace colorSpace )
+	: renderable( renderable ), scale( scale ), category( category ), affectsFramingBound( affectsFramingBound ), colorSpace( colorSpace )
 {
 }
 
-Visualisation Visualisation::createGeometry( const IECoreGL::ConstRenderablePtr &renderable )
+Visualisation Visualisation::createGeometry( const IECoreGL::ConstRenderablePtr &renderable, ColorSpace colorSpace )
 {
-	return Visualisation( renderable );
+	Visualisation v( renderable );
+	v.colorSpace = colorSpace;
+	return v;
 }
 
-Visualisation Visualisation::createOrnament( const IECoreGL::ConstRenderablePtr &renderable, bool affectsFramingBounds )
+Visualisation Visualisation::createOrnament( const IECoreGL::ConstRenderablePtr &renderable, bool affectsFramingBounds, ColorSpace colorSpace )
 {
 	Visualisation v( renderable );
 	v.scale = Visualisation::Scale::Visualiser;
 	v.affectsFramingBound = affectsFramingBounds;
+	v.colorSpace = colorSpace;
 	return v;
 }
 
-Visualisation Visualisation::createFrustum( const IECoreGL::ConstRenderablePtr &renderable, Scale scale )
+Visualisation Visualisation::createFrustum( const IECoreGL::ConstRenderablePtr &renderable, Scale scale, ColorSpace colorSpace )
 {
 	Visualisation v( renderable );
 	v.affectsFramingBound = false;
 	v.category = Visualisation::Category::Frustum;
 	v.scale = scale;
+	v.colorSpace = colorSpace;
 	return v;
 }
