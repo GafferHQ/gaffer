@@ -41,6 +41,8 @@
 
 #include "OpenImageIO/filter.h"
 
+#include "fmt/format.h"
+
 #include <climits>
 
 
