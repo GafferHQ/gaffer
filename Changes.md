@@ -1,14 +1,37 @@
-1.2.x.x (relative to 1.2.1.1)
+1.2.x.x (relative to 1.2.2.0)
 =======
 
 Improvements
 ------------
 - File Menu: Add autoload backup option to preferences and file menu command to open latest backup.
 
+
+1.2.2.0 (relative to 1.2.1.1)
+=======
+
+Improvements
+------------
+
+- Playback :
+  - Added <kbd>Ctrl</kbd>+<kbd>Right</kbd> hotkey toggle for forward playback.
+  - Added <kbd>Ctrl</kbd>+<kbd>Left</kbd> hotkey toggle for backward playback.
+  - Pressing either of <kbd>Right</kbd> or <kbd>Left</kbd> will also stop playback.
+- Transform Tools : Added <kbd>O</kbd> shortcut to cycle through the orientation modes.
+
 Fixes
 -----
 
+- Reference : Fixed bug reloading a Reference after changing the number of points in a SplinePlug. The complete edited spline is now maintained across a reload. If the spline has not been edited, then the value is updated from the `.grf` file as before (#5170).
 - DispatchDialogue : Fixed `AttributeError: '__Implementation' object has no attribute 'message'` error.
+- Catalogue : Fixed errors caused by empty image selections.
+- MultiLineStringPlugValueWidget : Fixed bug handling <kbd>Esc</kbd>.
+- PathListingWidget : Fixed issue with columns set to automatically stretch not resizing if column headers are hidden.
+- Viewer : Fixed bugs which could prevent an object from being updated if its computation was previously interrupted.
+
+Documentation
+-------------
+
+- Updated the "Assembling The Gaffer Bot" tutorial to use Cycles instead of Appleseed.
 
 1.2.1.1 (relative to 1.2.1.0)
 =======
@@ -278,8 +301,16 @@ Build
   - YAML-CPP : Added version 0.7.0.
 - 3Delight : Updated to 3Delight version 2.9.17.
 
-1.1.9.x (relative to 1.1.9.3)
+1.1.9.x (relative to 1.1.9.4)
 =======
+
+1.1.9.4 (relative to 1.1.9.3)
+=======
+
+Fixes
+-----
+
+- Viewer : Fixed bugs which could prevent an object from being updated if its computation was previously interrupted.
 
 1.1.9.3 (relative to 1.1.9.2)
 =======
@@ -288,7 +319,6 @@ Fixes
 -----
 
 - ImageReader : Made error message more descriptive when trying to access a channel that doesn't exist.
-
 
 1.1.9.2 (relative to 1.1.9.1)
 =======

@@ -2,6 +2,7 @@
 # BuildTarget: images/tutorialSettingsWindowDefaultContextVariables.png
 # BuildTarget: images/tutorialVariableSubstitutionInStringPlug.png
 # BuildTarget: images/tutorialVariableSubstitutionTest.png
+# BuildDependency: scripts/tutorialVariableSubstitutionInStringPlug_edit.gfr
 
 import os
 import subprocess

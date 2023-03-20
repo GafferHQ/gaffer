@@ -880,12 +880,11 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 		self.__duplicateButton.setEnabled( bool( indices ) )
 
 		if not indices :
-			# No selection. This happens when the user renames
-			# an image, because the selection is name based.
-			# Calling _updateFromPlug() causes us to reselect
-			# the correct image based on the value of the index
-			# plug.
-			self._updateFromPlug()
+			# No selection. This happens when the user renames an image, because
+			# the selection is name-based. Calling `_requestUpdateFromValues()`
+			# causes us to reselect the correct image based on the value of the
+			# index plug.
+			self._requestUpdateFromValues()
 		else :
 			# Deliberately not using an UndoScope as the user thinks
 			# of this as making a selection, not changing a plug value.

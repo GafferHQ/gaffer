@@ -61,8 +61,8 @@ if locale.getpreferredencoding() != "UTF-8" :
 
 gafferMilestoneVersion = 1 # for announcing major milestones - may contain all of the below
 gafferMajorVersion = 2 # backwards-incompatible changes
-gafferMinorVersion = 1 # new backwards-compatible features
-gafferPatchVersion = 1 # bug fixes
+gafferMinorVersion = 2 # new backwards-compatible features
+gafferPatchVersion = 0 # bug fixes
 gafferVersionSuffix = "" # used for alpha/beta releases : "a1", "b2", etc.
 
 # All of the following must be considered when determining
@@ -1054,7 +1054,7 @@ libraries = {
 	"GafferImage" : {
 		"envAppends" : {
 			"CPPPATH" : [ "$BUILD_DIR/include/freetype2" ],
-			"LIBS" : [ "Gaffer", "GafferDispatch", "Iex$OPENEXR_LIB_SUFFIX", "IECoreImage$CORTEX_LIB_SUFFIX", "OpenImageIO$OIIO_LIB_SUFFIX", "OpenImageIO_Util$OIIO_LIB_SUFFIX", "OpenColorIO$OCIO_LIB_SUFFIX", "freetype" ],
+			"LIBS" : [ "Gaffer", "GafferDispatch", "Iex$OPENEXR_LIB_SUFFIX", "IECoreImage$CORTEX_LIB_SUFFIX", "OpenImageIO$OIIO_LIB_SUFFIX", "OpenImageIO_Util$OIIO_LIB_SUFFIX", "OpenColorIO$OCIO_LIB_SUFFIX", "freetype", "fmt" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferBindings", "GafferImage", "GafferDispatch", "IECoreImage$CORTEX_LIB_SUFFIX", ],
@@ -2013,12 +2013,18 @@ def locateDocs( docRoot, env ) :
 					if ext == ".sh" :
 						line = s.readline()
 					targets = []
-					while line.startswith( "# BuildTarget:" ) :
-						targets.extend( [ os.path.join( root, x ) for x in line.partition( "# BuildTarget:" )[-1].strip( " \n" ).split( " " ) ] )
+					dependencies = []
+					while line.startswith( ( "# BuildTarget:", "# BuildDependency:" ) ) :
+						if line.startswith( "# BuildTarget:" ) :
+							targets.extend( [ os.path.join( root, x ) for x in line.partition( "# BuildTarget:" )[-1].strip( " \n" ).split( " " ) ] )
+						elif line.startswith( "# BuildDependency:" ) :
+							dependencies.extend( [ os.path.join( root, x ) for x in line.partition( "# BuildDependency:" )[-1].strip( " \n" ).split( " " ) ] )
 						line = s.readline()
-					if targets:
+					if targets :
 						command = env.Command( targets, sourceFile, generateDocs )
 						env.Depends( command, "build" )
+						if dependencies :
+							env.Depends( command, dependencies )
 						if line.startswith( "# UndeclaredBuildTargets" ) :
 							env.NoCache( command )
 						# Force the commands to run serially, in case the doc generation

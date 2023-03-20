@@ -125,11 +125,10 @@ GafferUI.WidgetAlgo.grab( widget = tempPythonEditor.outputWidget(), imagePath = 
 
 # Concept: Querying results fixed
 tempPythonEditor.outputWidget().setText( "" )
-text = 'context = Gaffer.Context( root.context() )\ncontext["scene:path"] = IECore.InternedStringVectorData( ["cube2"] )\nwith context:\n    print root["Transform"]["transform"]["translate"]["y"].getValue()'
+text = 'context = Gaffer.Context( root.context() )\ncontext["scene:path"] = IECore.InternedStringVectorData( ["cube2"] )\nwith context:\n    print( root["Transform"]["transform"]["translate"]["y"].getValue() )'
 tempPythonEditor.inputWidget().setText( text )
 tempPythonEditor.execute()
 tempPythonEditor.inputWidget().setText( text )
-GafferUI.WidgetAlgo.grab( widget = tempPythonEditor.outputWidget(), imagePath = "images/conceptContextsQueryingResultsPythonEditor.png" )
 GafferUI.WidgetAlgo.grab( widget = tempPythonEditor.outputWidget(), imagePath = "images/conceptContextsQueryingResultsFixedPythonEditor.png" )
 tempWindow.close()
 del tempWindow

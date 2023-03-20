@@ -303,9 +303,12 @@ class File
 
 						if( multiViewAttr->type().basetype != TypeDesc::STRING )
 						{
-							IECore::msg( IECore::Msg::Warning, "OpenImageIOReader",
-								boost::format( "Ignoring \"multiView\" attribute of invalid type in \"%s\"." )
-								% infoFileName
+							IECore::msg(
+								IECore::Msg::Warning, "OpenImageIOReader",
+								fmt::format(
+									"Ignoring \"multiView\" attribute of invalid type in \"{}\".",
+									infoFileName
+								)
 							);
 						}
 
@@ -346,9 +349,12 @@ class File
 						{
 							// We require the same sampleOffsets for all channels, so we don't really support
 							// multiple subimages for deep.
-							IECore::msg( IECore::Msg::Warning, "OpenImageIOReader",
-								boost::format( "Ignoring subimage %i of \"%s\" because we only support one part per view for deep images." )
-								% subImageIndex % infoFileName
+							IECore::msg(
+								IECore::Msg::Warning, "OpenImageIOReader",
+								fmt::format(
+									"Ignoring subimage {} of \"{}\" because we only support one part per view for deep images.",
+									subImageIndex, infoFileName
+								)
 							);
 
 							continue;
@@ -454,9 +460,10 @@ class File
 					auto mapEntry = channelView->channelMap.find( channelName );
 					if( mapEntry != channelView->channelMap.end() )
 					{
-						std::string m = ( boost::format(
-							"Ignoring channel \"%s\" in subimage \"%i\" of \"%s\" because it's already in subimage \"%i\""
-						) % channelName % subImageIndex % infoFileName % mapEntry->second.subImage ).str();
+						std::string m = fmt::format(
+							"Ignoring channel \"{}\" in subimage \"{}\" of \"{}\" because it's already in subimage \"{}\"",
+							channelName, subImageIndex, infoFileName, mapEntry->second.subImage
+						);
 						if( viewName != "" )
 						{
 							m += " for view <" + viewName +">.";
@@ -837,11 +844,13 @@ class File
 
 				if( !success )
 				{
-					throw IECore::Exception( boost::str (
-						boost::format( "OpenImageIOReader : Failed to read scanlines %i to %i.  Error: %s" ) %
-						exrDataRegion.min.y % exrDataRegion.max.y %
-						m_imageInput->geterror()
-					) );
+					throw IECore::Exception(
+						fmt::format(
+							"OpenImageIOReader : Failed to read scanlines {} to {}. Error : {}",
+							exrDataRegion.min.y, exrDataRegion.max.y,
+							m_imageInput->geterror()
+						)
+					);
 				}
 			}
 			else
@@ -883,12 +892,14 @@ class File
 
 				if( !success )
 				{
-					throw IECore::Exception( boost::str (
-						boost::format( "OpenImageIOReader : Failed to read tiles %i,%i to %i,%i.  Error: %s" ) %
-						exrDataRegion.min.x % exrDataRegion.min.y %
-						exrDataRegion.max.x % exrDataRegion.max.y %
-						m_imageInput->geterror()
-					) );
+					throw IECore::Exception(
+						fmt::format(
+							"OpenImageIOReader : Failed to read tiles {},{} to {},{}. Error : {}",
+							exrDataRegion.min.x, exrDataRegion.min.y,
+							exrDataRegion.max.x, exrDataRegion.max.y,
+							m_imageInput->geterror()
+						)
+					);
 				}
 			}
 
@@ -1378,7 +1389,7 @@ IECore::ConstCompoundDataPtr OpenImageIOReader::computeMetadata( const Gaffer::C
 		const int bitsPerSample = spec.get_int_attribute( "oiio:BitsPerSample", 0 );
 		if( bitsPerSample )
 		{
-			dataType = boost::str( boost::format( "uint%d" ) % bitsPerSample );
+			dataType = fmt::format( "uint{}", bitsPerSample );
 		}
 	}
 	else if( dataType == "uint" )
@@ -1478,11 +1489,13 @@ IECore::ConstIntVectorDataPtr OpenImageIOReader::computeSampleOffsets( const Ima
 		const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
 		if( !BufferAlgo::intersects( dataWindow, tileBound ) )
 		{
-			throw IECore::Exception( boost::str(
-				boost::format( "OpenImageIOReader : Invalid tile (%i,%i) -> (%i,%i) not within data window (%i,%i) -> (%i,%i)." ) %
-				tileBound.min.x % tileBound.min.y % tileBound.max.x % tileBound.max.y %
-				dataWindow.min.x % dataWindow.min.y % dataWindow.max.x % dataWindow.max.y
-			) );
+			throw IECore::Exception(
+				fmt::format(
+					"OpenImageIOReader : Invalid tile ({},{}) -> ({},{}) not within data window ({},{}) -> ({},{}).",
+					tileBound.min.x, tileBound.min.y, tileBound.max.x, tileBound.max.y,
+					dataWindow.min.x, dataWindow.min.y, dataWindow.max.x, dataWindow.max.y
+				)
+			);
 		}
 
 		V3i tileBatchIndex;
@@ -1529,11 +1542,13 @@ IECore::ConstFloatVectorDataPtr OpenImageIOReader::computeChannelData( const std
 	const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
 	if( !BufferAlgo::intersects( dataWindow, tileBound ) )
 	{
-		throw IECore::Exception( boost::str(
-			boost::format( "OpenImageIOReader : Invalid tile (%i,%i) -> (%i,%i) not within data window (%i,%i) -> (%i,%i)." ) %
-			tileBound.min.x % tileBound.min.y % tileBound.max.x % tileBound.max.y %
-			dataWindow.min.x % dataWindow.min.y % dataWindow.max.x % dataWindow.max.y
-		) );
+		throw IECore::Exception(
+			fmt::format(
+				"OpenImageIOReader : Invalid tile ({},{}) -> ({},{}) not within data window ({},{}) -> ({},{}).",
+				tileBound.min.x, tileBound.min.y, tileBound.max.x, tileBound.max.y,
+				dataWindow.min.x, dataWindow.min.y, dataWindow.max.x, dataWindow.max.y
+			)
+		);
 	}
 
 	V3i tileBatchIndex;

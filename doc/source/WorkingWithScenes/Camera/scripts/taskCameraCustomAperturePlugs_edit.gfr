@@ -44,7 +44,7 @@ __children["ImageWriter"]["colorSpace"].setValue( 'raw' )
 __children["ImageWriter"]["png"]["compressionLevel"].setValue( 9 )
 __children["ImageWriter"]["__uiPosition"].setValue( imath.V2f( -24.1491661, -5.87812519 ) )
 __children["Crop"]["in"].setInput( __children["ImageReader"]["out"] )
-__children["Crop"]["area"].setValue( imath.Box2i( imath.V2i( 0, 141 ), imath.V2i( 470, 228 ) ) )
+__children["Crop"]["area"].setValue( imath.Box2i( imath.V2i( 0, 141 ), imath.V2i( 453, 218 ) ) )
 __children["Crop"]["__uiPosition"].setValue( imath.V2f( -22.6488075, 2.28593731 ) )
 
 

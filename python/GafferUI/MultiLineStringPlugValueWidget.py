@@ -96,7 +96,7 @@ class MultiLineStringPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		# escape abandons everything
 		if event.key=="Escape" :
-			self._updateFromPlug()
+			self._requestUpdateFromValues()
 			return True
 
 		return False

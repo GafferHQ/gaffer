@@ -38,6 +38,7 @@
 import unittest
 import functools
 import time
+import math
 
 import imath
 
@@ -50,7 +51,7 @@ import GafferUI
 from GafferUI import _GafferUI
 import GafferUITest
 
-from Qt import QtCore
+from Qt import QtCore, QtWidgets
 
 class PathListingWidgetTest( GafferUITest.TestCase ) :
 
@@ -1283,6 +1284,218 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		self.assertFalse( widget._qtWidget()._shouldStretchLastColumn() )
 		widget.setColumns( [ GafferUI.PathListingWidget.StandardColumn( "Test", "test" ) ] )
 		self.assertTrue( widget._qtWidget()._shouldStretchLastColumn() )
+
+	def testColumnSizeUpdate( self ) :
+
+		for visible in ( False, True ) :
+
+			widget = GafferUI.PathListingWidget(
+				path = Gaffer.DictPath( {}, "/" ),
+				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
+				columns = [ GafferUI.PathListingWidget.defaultNameColumn ]
+			)
+			widget.setHeaderVisible( visible )
+
+			w = GafferUI.Window()
+			w._qtWidget().resize( 512, 384 )
+			c = GafferUI.SplitContainer( orientation = GafferUI.SplitContainer.Orientation.Horizontal )
+			w.setChild( c )
+
+			c.append( widget )
+			c.append( GafferUI.TabbedContainer() )
+
+			w.setVisible( True )
+			self.assertEqual( widget._qtWidget().header().sectionSize( 0 ) + 2, c.getSizes()[0] )
+
+			c.setSizes( [ 0.75, 0.25 ] )
+			self.assertEqual( widget._qtWidget().header().sectionSize( 0 ) + 2, c.getSizes()[0] )
+
+			c.setSizes( [ 0.25, 0.75 ] )
+			self.assertEqual( widget._qtWidget().header().sectionSize( 0 ) + 2, c.getSizes()[0] )
+
+	def testProportionalColumnStretch( self ) :
+
+		for visible in ( False, True ) :
+
+			widget = GafferUI.PathListingWidget(
+				path = Gaffer.DictPath( {}, "/" ),
+				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
+				columns = [
+					GafferUI.PathListingWidget.StandardColumn( "Test", "test", sizeMode = GafferUI.PathColumn.SizeMode.Stretch ),
+					GafferUI.PathListingWidget.StandardColumn( "Test", "test", sizeMode = GafferUI.PathColumn.SizeMode.Stretch )
+				]
+			)
+			widget.setHeaderVisible( visible )
+
+			w = GafferUI.Window()
+			w._qtWidget().resize( 512, 384 )
+			w.setChild( widget )
+			w.setVisible( True )
+
+			# as both columns have a sizeMode of Stretch, they will equally share the available space
+			self.assertEqual( widget._qtWidget().header().sectionSize( 0 ), widget._qtWidget().header().sectionSize( 1 ) )
+			self.assertEqual( widget._qtWidget().header().sectionSize( 0 ), widget._qtWidget().viewport().width() // 2 )
+
+			# those equal column proportions should be maintained when the window resizes
+			w._qtWidget().resize( 400, 384 )
+			self.assertEqual( widget._qtWidget().header().sectionSize( 0 ), widget._qtWidget().header().sectionSize( 1 ) )
+			self.assertEqual( widget._qtWidget().header().sectionSize( 0 ), widget._qtWidget().viewport().width() // 2 )
+
+			w._qtWidget().resize( 600, 384 )
+			self.assertEqual( widget._qtWidget().header().sectionSize( 0 ), widget._qtWidget().header().sectionSize( 1 ) )
+			self.assertEqual( widget._qtWidget().header().sectionSize( 0 ), widget._qtWidget().viewport().width() // 2 )
+
+			# adjustments to the column proportions should be maintained by subsequent window resizes
+			proportions = [ 0.3, 0.7 ]
+			widget._qtWidget().header().resizeSection( 0, widget._qtWidget().viewport().width() * proportions[0] )
+			widget._qtWidget().header().resizeSection( 1, widget._qtWidget().viewport().width() * proportions[1] )
+
+			w._qtWidget().resize( 300, 384 )
+			self.assertEqual( widget._qtWidget().header().sectionSize( 0 ), math.floor( widget._qtWidget().viewport().width() * proportions[0] ) )
+			self.assertEqual( widget._qtWidget().header().sectionSize( 1 ), math.floor( widget._qtWidget().viewport().width() * proportions[1] ) )
+
+			w._qtWidget().resize( 600, 384 )
+			self.assertEqual( widget._qtWidget().header().sectionSize( 0 ), math.floor( widget._qtWidget().viewport().width() * proportions[0] ) )
+			self.assertEqual( widget._qtWidget().header().sectionSize( 1 ), math.floor( widget._qtWidget().viewport().width() * proportions[1] ) )
+
+	def testColumnsWiderThanViewportPreventStretch( self ) :
+
+		for visible in ( False, True ) :
+
+			widget = GafferUI.PathListingWidget(
+				path = Gaffer.DictPath( {}, "/" ),
+				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
+				columns = [
+					GafferUI.PathListingWidget.StandardColumn( "Test", "test", sizeMode = GafferUI.PathColumn.SizeMode.Stretch ),
+					GafferUI.PathListingWidget.StandardColumn( "Test", "test" )
+				]
+			)
+			widget.setHeaderVisible( visible )
+			columnWidth = 80
+			widget._qtWidget().header().resizeSection( 1, columnWidth )
+
+			w = GafferUI.Window()
+			w._qtWidget().resize( 512, 384 )
+			w.setChild( widget )
+			w.setVisible( True )
+
+			self.assertEqual( widget._qtWidget().header().sectionSize( 0 ), widget._qtWidget().viewport().width() - columnWidth )
+			self.assertEqual( widget._qtWidget().header().sectionSize( 1 ), columnWidth )
+
+			# when resizing the window the first column should stretch to make use of available space
+			# the second column should remain the same width
+			w._qtWidget().resize( 400, 384 )
+			self.assertEqual( widget._qtWidget().header().sectionSize( 0 ), widget._qtWidget().viewport().width() - columnWidth )
+			self.assertEqual( widget._qtWidget().header().sectionSize( 1 ), columnWidth )
+
+			w._qtWidget().resize( 600, 384 )
+			self.assertEqual( widget._qtWidget().header().sectionSize( 0 ), widget._qtWidget().viewport().width() - columnWidth )
+			self.assertEqual( widget._qtWidget().header().sectionSize( 1 ), columnWidth )
+
+			# enlarge our second column so the total column width is greater than the current viewport width,
+			# this prevents the first column from resizing until we have enough available space to allow it to grow
+			stretchColumnWidth = widget._qtWidget().header().sectionSize( 0 )
+			adjustedColumnWidth = columnWidth * 1.5
+			widget._qtWidget().header().resizeSection( 1, adjustedColumnWidth )
+			self.assertEqual( widget._qtWidget().header().sectionSize( 0 ), stretchColumnWidth )
+			self.assertEqual( widget._qtWidget().header().sectionSize( 1 ), adjustedColumnWidth )
+			self.assertGreater( stretchColumnWidth + adjustedColumnWidth, widget._qtWidget().viewport().width() )
+
+			# resizing the window smaller should not trigger a resize of either column
+			w._qtWidget().resize( 400, 384 )
+			self.assertEqual( widget._qtWidget().header().sectionSize( 0 ), stretchColumnWidth )
+			self.assertEqual( widget._qtWidget().header().sectionSize( 1 ), adjustedColumnWidth )
+
+			# enlarging the window back to the previous size will also not trigger a resize of either column
+			w._qtWidget().resize( 600, 384 )
+			self.assertGreater( stretchColumnWidth + adjustedColumnWidth, widget._qtWidget().viewport().width() )
+			self.assertEqual( widget._qtWidget().header().sectionSize( 0 ), stretchColumnWidth )
+			self.assertEqual( widget._qtWidget().header().sectionSize( 1 ), adjustedColumnWidth )
+
+			# resizing the window to a width greater than our two columns will trigger a resize of the first column
+			# to make use of the newly available space
+			w._qtWidget().resize( 700, 384 )
+			self.assertLess( stretchColumnWidth + adjustedColumnWidth, widget._qtWidget().viewport().width() )
+			self.assertEqual( widget._qtWidget().header().sectionSize( 0 ), widget._qtWidget().viewport().width() - adjustedColumnWidth )
+			self.assertEqual( widget._qtWidget().header().sectionSize( 1 ), adjustedColumnWidth )
+
+			# now that the columns fit within the viewport, resizing the window will cause the first column to resize along with it
+			w._qtWidget().resize( 400, 384 )
+			self.assertEqual( widget._qtWidget().header().sectionSize( 0 ), widget._qtWidget().viewport().width() - adjustedColumnWidth )
+			self.assertEqual( widget._qtWidget().header().sectionSize( 1 ), adjustedColumnWidth )
+
+			w._qtWidget().resize( 600, 384 )
+			self.assertEqual( widget._qtWidget().header().sectionSize( 0 ), widget._qtWidget().viewport().width() - adjustedColumnWidth )
+			self.assertEqual( widget._qtWidget().header().sectionSize( 1 ), adjustedColumnWidth )
+
+	def testAutomaticLastColumnStretch( self ) :
+
+		for visible in ( False, True ) :
+
+			widget = GafferUI.PathListingWidget(
+				path = Gaffer.DictPath( {}, "/" ),
+				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
+				columns = [
+					GafferUI.PathListingWidget.StandardColumn( "Test", "test" ),
+					GafferUI.PathListingWidget.StandardColumn( "Test", "test" ),
+					GafferUI.PathListingWidget.StandardColumn( "Test", "test" )
+				]
+			)
+			widget.setHeaderVisible( visible )
+			columnWidth = 80
+			widget._qtWidget().header().resizeSection( 0, columnWidth )
+			widget._qtWidget().header().resizeSection( 1, columnWidth )
+
+			w = GafferUI.Window()
+			w._qtWidget().resize( 512, 384 )
+			w.setChild( widget )
+			w.setVisible( True )
+
+			# none of our columns have a sizeMode of `Stretch` but the last column should still automatically stretch
+			# to make use of available space
+			self.assertEqual( widget._qtWidget().header().sectionSize( 0 ), columnWidth )
+			self.assertEqual( widget._qtWidget().header().sectionSize( 1 ), columnWidth )
+			self.assertEqual( widget._qtWidget().header().sectionSize( 2 ), widget._qtWidget().viewport().width() - ( columnWidth * 2 ) )
+
+			w._qtWidget().resize( 700, 384 )
+			self.assertEqual( widget._qtWidget().header().sectionSize( 0 ), columnWidth )
+			self.assertEqual( widget._qtWidget().header().sectionSize( 1 ), columnWidth )
+			self.assertEqual( widget._qtWidget().header().sectionSize( 2 ), widget._qtWidget().viewport().width() - ( columnWidth * 2 ) )
+
+			w._qtWidget().resize( 400, 384 )
+			self.assertEqual( widget._qtWidget().header().sectionSize( 0 ), columnWidth )
+			self.assertEqual( widget._qtWidget().header().sectionSize( 1 ), columnWidth )
+			self.assertEqual( widget._qtWidget().header().sectionSize( 2 ), widget._qtWidget().viewport().width() - ( columnWidth * 2 ) )
+
+	def testColumnSizeSurvivesStylesheetUpdate( self ) :
+
+		for visible in ( False, True ) :
+
+			widget = GafferUI.PathListingWidget(
+				path = Gaffer.DictPath( {}, "/" ),
+				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
+				columns = [ GafferUI.PathListingWidget.StandardColumn( "Test", "test", sizeMode = GafferUI.PathColumn.SizeMode.Stretch ) ]
+			)
+			widget.setHeaderVisible( visible )
+
+			w = GafferUI.Window()
+			c = GafferUI.SplitContainer( orientation = GafferUI.SplitContainer.Orientation.Horizontal )
+			w.setChild( c )
+
+			c.append( widget )
+			c.append( GafferUI.TabbedContainer() )
+			c.setSizes( [ 0.7, 0.3 ] )
+
+			w.setVisible( True )
+			self.assertEqual( widget._qtWidget().header().sectionSize( 0 ) + 2, c.getSizes()[0] )
+
+			oldStyle = QtWidgets.QApplication.instance().styleSheet()
+			try :
+				QtWidgets.QApplication.instance().setStyleSheet( GafferUI._StyleSheet._styleSheet )
+				self.assertEqual( widget._qtWidget().header().sectionSize( 0 ) + 2, c.getSizes()[0] )
+			finally :
+				QtWidgets.QApplication.instance().setStyleSheet( oldStyle )
+				self.assertEqual( widget._qtWidget().header().sectionSize( 0 ) + 2, c.getSizes()[0] )
 
 	def testModelNameSortingDoesntEmitDataChanged( self ) :
 

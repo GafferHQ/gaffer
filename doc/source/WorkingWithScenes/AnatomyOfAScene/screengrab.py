@@ -16,6 +16,12 @@ import GafferSceneUI
 import GafferOSL
 import GafferAppleseed
 
+# Delay for x seconds
+def __delay( delay ) :
+	endtime = time.time() + delay
+	while time.time() < endtime :
+		GafferUI.EventLoop.waitForIdle( 1 )
+
 # Create and connect nodes
 script["SceneReader"] = GafferScene.SceneReader()
 script["ShaderAssignment"] = GafferScene.ShaderAssignment()
@@ -45,6 +51,7 @@ GafferSceneUI.ContextAlgo.setSelectedPaths( script.context(), __paths )
 scriptWindow = GafferUI.ScriptWindow.acquire( script )
 GafferSceneUI.ContextAlgo.setExpandedPaths( script.context(), IECore.PathMatcher( [ __path ] ) )
 hierarchyView = scriptWindow.getLayout().editors( GafferSceneUI.HierarchyView )[0]
+__delay( 1.0 )
 GafferUI.WidgetAlgo.grab( widget = hierarchyView, imagePath = "images/hierarchyView.png" )
 
 # The Selection tab of the Scene Inspector with a location selected
@@ -53,7 +60,7 @@ with GafferUI.Window( "Scene Inspector" ) as window :
 
 	sceneInspector = GafferSceneUI.SceneInspector( script )
 
-window.resizeToFitChild()
+window._qtWidget().resize( 512, 320 )
 window.setVisible( True )
 GafferUI.WidgetAlgo.grab( widget = sceneInspector, imagePath = "images/sceneInspector.png" )
 
