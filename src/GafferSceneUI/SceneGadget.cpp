@@ -186,6 +186,8 @@ namespace
 
 const ConstStringDataPtr g_cameraName = new StringData( "/__sceneGadget:camera" );
 const ConstCompoundObjectPtr g_emptyCompoundObject = new CompoundObject();
+const IECore::StringDataPtr g_sceneColorSpace = new StringData( "scene" );
+const IECore::StringDataPtr g_displayColorSpace = new StringData( "display" );
 
 } // namespace
 
@@ -571,7 +573,11 @@ bool SceneGadget::openGLObjectAt( const IECore::LineSegment3f &lineInGadgetSpace
 		//  a real-world depth from the buffer. We do this here in case
 		//  SelectionScope ever affects the matrix/planes.
 		glGetFloatv( GL_PROJECTION_MATRIX, projectionMatrix );
-		m_renderer->command( "gl:renderToCurrentContext", IECore::CompoundDataMap() );
+		IECore::CompoundDataMap parameters;
+		parameters["colorSpace"] = g_sceneColorSpace;
+		m_renderer->command( "gl:renderToCurrentContext", parameters );
+		parameters["colorSpace"] = g_displayColorSpace;
+		m_renderer->command( "gl:renderToCurrentContext", parameters );
 	}
 
 	if( !selection.size() )
@@ -616,7 +622,11 @@ size_t SceneGadget::objectsAt(
 	vector<IECoreGL::HitRecord> selection;
 	{
 		ViewportGadget::SelectionScope selectionScope( corner0InGadgetSpace, corner1InGadgetSpace, this, selection, IECoreGL::Selector::OcclusionQuery );
-		m_renderer->command( "gl:renderToCurrentContext", IECore::CompoundDataMap() );
+		IECore::CompoundDataMap parameters;
+		parameters["colorSpace"] = g_sceneColorSpace;
+		m_renderer->command( "gl:renderToCurrentContext", parameters );
+		parameters["colorSpace"] = g_displayColorSpace;
+		m_renderer->command( "gl:renderToCurrentContext", parameters );
 	}
 
 	UIntVectorDataPtr ids = new UIntVectorData;
@@ -772,7 +782,7 @@ Imath::Box3f SceneGadget::bound() const
 
 void SceneGadget::renderLayer( Layer layer, const GafferUI::Style *style, RenderReason reason ) const
 {
-	assert( layer == m_layer );
+	assert( layer == m_layer || layer == Layer::MidFront );
 
 	if( isSelectionRender( reason ) )
 	{
@@ -787,14 +797,26 @@ void SceneGadget::renderLayer( Layer layer, const GafferUI::Style *style, Render
 
 	if( m_outputBuffer )
 	{
-		m_outputBuffer->render();
+		if( layer == m_layer )
+		{
+			m_outputBuffer->render();
+		}
+		else
+		{
+			// Selection is rendered as an overlay so that it isn't
+			// affected by the display transform and solo channel.
+			m_outputBuffer->renderSelection();
+		}
 	}
-	m_renderer->command( "gl:renderToCurrentContext", IECore::CompoundDataMap() );
+
+	IECore::CompoundDataMap parameters;
+	parameters["colorSpace"] = layer == m_layer ? g_sceneColorSpace : g_displayColorSpace;
+	m_renderer->command( "gl:renderToCurrentContext", parameters );
 }
 
 unsigned SceneGadget::layerMask() const
 {
-	return (unsigned)m_layer;
+	return m_layer | Layer::MidFront;
 }
 
 Imath::Box3f SceneGadget::renderBound() const

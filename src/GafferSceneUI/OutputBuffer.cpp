@@ -120,8 +120,6 @@ const char *g_fragmentSource = R"(
 
 #version 330 compatibility
 
-#include "IECoreGL/ColorAlgo.h"
-
 // Assumes texture contains sorted values.
 bool contains( usamplerBuffer array, uint value )
 {
@@ -146,6 +144,7 @@ uniform sampler2D rgbaTexture;
 uniform sampler2D depthTexture;
 uniform usampler2D idTexture;
 uniform usamplerBuffer selectionTexture;
+uniform bool renderSelection;
 
 in vec2 texCoords;
 layout( location=0 ) out vec4 outColor;
@@ -158,14 +157,6 @@ void main()
 		discard;
 	}
 
-	/// \todo : Add OCIO support for configurable color space
-	outColor = vec4(
-		outColor.a * ieLinToSRGB( outColor.r / outColor.a ),
-		outColor.a * ieLinToSRGB( outColor.g / outColor.a ),
-		outColor.a * ieLinToSRGB( outColor.b / outColor.a ),
-		outColor.a
-	);
-
 	// Input depth is absolute in camera space (completely
 	// unrelated to clipping planes). Convert to the screen
 	// space that `GL_fragDepth` needs.
@@ -175,12 +166,11 @@ void main()
 	float ndcDepth = Pclip.z / Pclip.w;
 	gl_FragDepth = (ndcDepth + 1.0) / 2.0;
 
-	uint id = texture( idTexture, texCoords ).r;
-	outColor = mix(
-		outColor,
-		vec4( 0.466, 0.612, 0.741, 1.0 ) * outColor.a,
-		0.75 * float( contains( selectionTexture, id ) )
-	);
+	if( renderSelection )
+	{
+		uint id = texture( idTexture, texCoords ).r;
+		outColor = vec4( 0.466, 0.612, 0.741, 1.0 ) * outColor.a * 0.75 * float( contains( selectionTexture, id ) );
+	}
 }
 
 )";
@@ -222,6 +212,16 @@ OutputBuffer::~OutputBuffer()
 
 void OutputBuffer::render() const
 {
+	renderInternal( /* renderSelection = */ false );
+}
+
+void OutputBuffer::renderSelection() const
+{
+	renderInternal( /* renderSelection = */ true );
+}
+
+void OutputBuffer::renderInternal( bool renderSelection ) const
+{
 	if( m_dataWindow.isEmpty() )
 	{
 		return;
@@ -245,7 +245,9 @@ void OutputBuffer::render() const
 		m_selectionTexture = std::make_unique<BufferTexture>();
 	}
 
-	if( m_texturesDirty.exchange( false ) )
+	// We only update textures during the main render, so that the selection
+	// overlay we render next remains in sync with it.
+	if( !renderSelection && m_texturesDirty.exchange( false ) )
 	{
 		std::unique_lock lock( m_bufferReallocationMutex );
 
@@ -300,12 +302,14 @@ void OutputBuffer::render() const
 	glActiveTexture( GL_TEXTURE0 + selectionTextureUnit );
 	glBindTexture( GL_TEXTURE_BUFFER, m_selectionTexture->texture() );
 	glUniform1i( selectionParameter->location, selectionTextureUnit );
+	glUniform1i( m_shader->uniformParameter( "renderSelection" )->location, renderSelection );
 
 	glPushAttrib( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_ENABLE_BIT );
 
 		glEnable( GL_DEPTH_TEST );
 		glEnable( GL_BLEND );
 		glBlendFunc( GL_ONE, GL_ONE_MINUS_SRC_ALPHA );
+		glDepthFunc( renderSelection ? GL_LEQUAL : GL_LESS );
 
 		glDrawArrays( GL_TRIANGLE_FAN, 0, 4 );
 
