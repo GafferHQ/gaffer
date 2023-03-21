@@ -54,6 +54,8 @@
 #include "boost/algorithm/string.hpp"
 #include "boost/bind/bind.hpp"
 
+#include "fmt/format.h"
+
 using namespace boost::placeholders;
 using namespace Imath;
 using namespace IECore;
@@ -486,7 +488,7 @@ bool BackdropNodeGadget::dragMove( Gadget *gadget, const DragDropEvent &event )
 		b.max.y = std::max( event.line.p0.y, b.min.y + g_margin * 4.0f);
 	}
 
-	const std::string mergeGroup = boost::str( boost::format( "BackdropNodeGadget%1%%2%" ) % this % m_mergeGroupId );
+	const std::string mergeGroup = fmt::format( "BackdropNodeGadget{}{}", (void*)this, m_mergeGroupId );
 	UndoScope undoScope( node()->scriptNode(), UndoScope::Enabled, mergeGroup );
 	setBound( b );
 	return true;

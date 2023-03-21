@@ -45,6 +45,8 @@
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/SubGraph.h"
 
+#include "fmt/format.h"
+
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferDispatch;
@@ -99,7 +101,7 @@ class TaskNodeProcess : public Gaffer::Process
 			const TaskNode *n = runTimeCast<const TaskNode>( plug()->node() );
 			if( !n )
 			{
-				throw IECore::Exception( boost::str( boost::format( "TaskPlug \"%s\" has no TaskNode." ) % plug()->fullName() ) );
+				throw IECore::Exception( fmt::format( "TaskPlug \"{}\" has no TaskNode.", plug()->fullName() ) );
 			}
 			return n;
 		}

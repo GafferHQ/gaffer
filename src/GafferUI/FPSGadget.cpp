@@ -39,6 +39,8 @@
 #include "GafferUI/Style.h"
 #include "GafferUI/ViewportGadget.h"
 
+#include "fmt/format.h"
+
 using namespace GafferUI;
 
 GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( FPSGadget );
@@ -102,8 +104,7 @@ void FPSGadget::renderLayer( Gadget::Layer layer, const Style *style, Gadget::Re
 	glMultMatrixf( getTransform().getValue() );
 	glScalef( 8.0f, -8.0f, 8.0f );
 
-	style->renderText( Style::LabelText, boost::str( boost::format( "%.1f FPS" ) % ( 1.0f / averageFrameTime ) ) );
-
+	style->renderText( Style::LabelText, fmt::format( "{:.1f} FPS", ( 1.0f / averageFrameTime ) ) );
 }
 
 unsigned FPSGadget::layerMask() const
