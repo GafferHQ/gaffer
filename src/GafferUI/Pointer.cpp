@@ -38,6 +38,8 @@
 
 #include "IECore/CachedReader.h"
 
+#include "fmt/format.h"
+
 using namespace GafferUI;
 
 static ConstPointerPtr g_current;
@@ -92,7 +94,7 @@ Pointer::Pointer( const std::string &fileName, const Imath::V2i &hotspot )
 	if( !m_image )
 	{
 		throw IECore::Exception(
-			boost::str( boost::format( "File \"%s\" does not contain an image." ) % fileName )
+			fmt::format( "File \"{}\" does not contain an image.", fileName )
 		);
 	}
 }
@@ -138,7 +140,7 @@ void Pointer::setCurrent( const std::string &name )
 	Registry::const_iterator it = r.find( name );
 	if( it == r.end() )
 	{
-		throw IECore::Exception( boost::str( boost::format( "Pointer \"%s\" does not exist" ) % name ) );
+		throw IECore::Exception( fmt::format( "Pointer \"{}\" does not exist", name ) );
 	}
 
 	setCurrent( it->second );

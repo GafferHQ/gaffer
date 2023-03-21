@@ -49,6 +49,8 @@
 
 #include "boost/algorithm/string/find.hpp"
 
+#include "fmt/format.h"
+
 using namespace GafferUI;
 using namespace Imath;
 using namespace IECore;
@@ -115,7 +117,7 @@ NodeGadgetPtr NodeGadget::create( Gaffer::NodePtr node )
 		}
 		else
 		{
-			IECore::msg( IECore::Msg::Warning, "NodeGadget::create", boost::format( "Nonexistent type \"%s\" requested for node \"%s\"" ) % nodeGadgetType->readable() % node->fullName() );
+			IECore::msg( IECore::Msg::Warning, "NodeGadget::create", fmt::format( "Nonexistent type \"{}\" requested for node \"{}\"", nodeGadgetType->readable(), node->fullName() ) );
 		}
 	}
 

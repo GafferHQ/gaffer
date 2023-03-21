@@ -58,6 +58,8 @@
 #include "boost/multi_index/random_access_index.hpp"
 #include "boost/multi_index_container.hpp"
 
+#include "fmt/format.h"
+
 #include <cmath>
 #include <cassert>
 #include <sstream>
@@ -705,9 +707,6 @@ void AnimationGadget::renderLayer( Layer layer, const Style *style, RenderReason
 		style->renderSolidRectangle( Box2f( V2f( 0 ) , V2f( m_xMargin, resolution.y - m_yMargin ) ) );
 		style->renderSolidRectangle( Box2f( V2f( 0, resolution.y - m_yMargin ) , V2f( resolution.x, resolution.y ) ) );
 
-		boost::format formatX( "%.2f" );
-		boost::format formatY( "%.3f" );
-
 		// \todo: pull matrix stack operations out of the loops.
 		for( const auto &x : xAxis.main )
 		{
@@ -718,7 +717,7 @@ void AnimationGadget::renderLayer( Layer layer, const Style *style, RenderReason
 
 			glPushMatrix();
 
-			std::string label = boost::str( formatX % x.second );
+			const std::string label = fmt::format( "{:.2f}", x.second );
 			Box3f labelBound = style->textBound( Style::BodyText, label );
 
 			glTranslatef( x.first - labelBound.center().x * m_textScale, resolution.y - m_labelPadding, 0.0f );
@@ -738,7 +737,7 @@ void AnimationGadget::renderLayer( Layer layer, const Style *style, RenderReason
 
 			glPushMatrix();
 
-			std::string label = boost::str( formatY % y.second );
+			const std::string label = fmt::format( "{:.3f}", y.second );
 			Box3f labelBound = style->textBound( Style::BodyText, label );
 
 			glTranslatef( ( m_xMargin - m_labelPadding ) - labelBound.size().x * m_textScale, y.first + labelBound.center().y * m_textScale, 0.0f );
@@ -1558,7 +1557,7 @@ bool AnimationGadget::keyRelease( GadgetPtr gadget, const KeyEvent &event )
 
 std::string AnimationGadget::undoMergeGroup() const
 {
-	return boost::str( boost::format( "AnimationGadget%1%%2%" ) % this % m_mergeGroupId );
+	return fmt::format( "AnimationGadget{}{}", (void*)this, m_mergeGroupId );
 }
 
 bool AnimationGadget::onTimeAxis( const IECore::LineSegment3f& line ) const
