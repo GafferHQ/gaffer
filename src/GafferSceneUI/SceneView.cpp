@@ -653,10 +653,7 @@ class GnomonGadget : public GafferUI::Gadget
 
 		void renderLayer( Layer layer, const Style *style, RenderReason reason ) const final
 		{
-			if( layer != Layer::Main )
-			{
-				return;
-			}
+			assert( layer == Layer::MidFront );
 
 			const float pixelWidth = 30.0f;
 			const V2i viewport = ancestor<ViewportGadget>()->getViewport();
@@ -720,7 +717,7 @@ class GnomonGadget : public GafferUI::Gadget
 
 		unsigned layerMask() const override
 		{
-			return (unsigned)Layer::Main;
+			return (unsigned)Layer::MidFront;
 		}
 
 		virtual void renderGnomon( const Style *style ) const = 0;
@@ -1063,10 +1060,7 @@ class CameraOverlay : public GafferUI::Gadget
 
 		void renderLayer( Layer layer, const Style *style, RenderReason reason ) const override
 		{
-			if( layer != Layer::Main )
-			{
-				return;
-			}
+			assert( layer == Layer::MidFront );
 
 			if( isSelectionRender( reason ) || ( m_resolutionGate.isEmpty() && m_apertureGate.isEmpty() ) )
 			{
@@ -1184,7 +1178,7 @@ class CameraOverlay : public GafferUI::Gadget
 
 		unsigned layerMask() const override
 		{
-			return (unsigned)Layer::Main;
+			return (unsigned)Layer::MidFront;
 		}
 
 		Imath::Box3f renderBound() const override

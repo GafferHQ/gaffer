@@ -96,11 +96,10 @@ struct GAFFERSCENE_API Visualisation
 		bool affectsFramingBound = true
 	);
 
-	Scale scale = Scale::Local;
-	Category category = Category::Generic;
-	bool affectsFramingBound = true;
-
-	const IECoreGL::Renderable *renderable() const;
+	IECoreGL::ConstRenderablePtr renderable;
+	Scale scale;
+	Category category;
+	bool affectsFramingBound;
 
 	// Convenience constructors for well-known types of visualisation
 
@@ -114,8 +113,6 @@ struct GAFFERSCENE_API Visualisation
 	// for the location to make scene navigation easier.
 	static Visualisation createFrustum( const IECoreGL::ConstRenderablePtr &renderable, Scale scale );
 
-	private:
-		IECoreGL::ConstRenderablePtr m_renderable;
 };
 
 
