@@ -64,8 +64,6 @@ namespace GafferImage
 {
 
 IE_CORE_FORWARDDECLARE( ImageProcessor )
-IE_CORE_FORWARDDECLARE( Clamp )
-IE_CORE_FORWARDDECLARE( Grade )
 IE_CORE_FORWARDDECLARE( ImageStats )
 IE_CORE_FORWARDDECLARE( DeepState )
 IE_CORE_FORWARDDECLARE( ImagePlug )
@@ -94,25 +92,6 @@ class GAFFERIMAGEUI_API ImageView : public GafferUI::View
 		Gaffer::StringVectorDataPlug *channelsPlug();
 		const Gaffer::StringVectorDataPlug *channelsPlug() const;
 
-		Gaffer::IntPlug *soloChannelPlug();
-		const Gaffer::IntPlug *soloChannelPlug() const;
-
-		Gaffer::BoolPlug *clippingPlug();
-		const Gaffer::BoolPlug *clippingPlug() const;
-
-		Gaffer::FloatPlug *exposurePlug();
-		const Gaffer::FloatPlug *exposurePlug() const;
-
-		Gaffer::FloatPlug *gammaPlug();
-		const Gaffer::FloatPlug *gammaPlug() const;
-
-		/// Values should be names that exist in registeredDisplayTransforms().
-		Gaffer::StringPlug *displayTransformPlug();
-		const Gaffer::StringPlug *displayTransformPlug() const;
-
-		Gaffer::BoolPlug *lutGPUPlug();
-		const Gaffer::BoolPlug *lutGPUPlug() const;
-
 		Gaffer::StringPlug *viewPlug();
 		const Gaffer::StringPlug *viewPlug() const;
 		Gaffer::StringPlug *compareModePlug();
@@ -131,13 +110,6 @@ class GAFFERIMAGEUI_API ImageView : public GafferUI::View
 		const ImageGadget *imageGadget() const;
 
 		void setContext( Gaffer::ContextPtr context ) override;
-		void contextChanged( const IECore::InternedString &name ) override;
-
-		using DisplayTransformCreator = std::function<GafferImage::ImageProcessorPtr ()>;
-
-		static void registerDisplayTransform( const std::string &name, DisplayTransformCreator creator );
-		static void registeredDisplayTransforms( std::vector<std::string> &names );
-		static GafferImage::ImageProcessorPtr createDisplayTransform( const std::string &name );
 
 		class GAFFERIMAGEUI_API ColorInspectorPlug : public Gaffer::ValuePlug
 		{
@@ -184,31 +156,7 @@ class GAFFERIMAGEUI_API ImageView : public GafferUI::View
 		bool keyPress( const GafferUI::KeyEvent &event );
 		void preRender();
 
-		struct DisplayTransformEntry
-		{
-			GafferImage::ImageProcessorPtr displayTransform;
-			IECoreGL::Shader::SetupPtr shader;
-			bool shaderDirty = true;
-			IECore::MurmurHash shaderHash;
-			bool supportsShader;
-		};
-
-		using DisplayTransformMap = std::map<std::string, DisplayTransformEntry>;
-		DisplayTransformMap m_displayTransforms;
-		DisplayTransformEntry *m_displayTransformAndShader;
-
-		void insertDisplayTransform();
-		void displayTransformPlugDirtied( DisplayTransformEntry *displayTransform );
-		void updateDisplayTransform();
-
 		void setWipeActive( bool active );
-
-		IECore::BoolDataPtr m_absoluteValueParameter;
-		IECore::BoolDataPtr m_clippingParameter;
-		IECore::Color3fDataPtr m_multiplyParameter;
-		IECore::Color3fDataPtr m_powerParameter;
-		IECore::IntDataPtr m_soloChannelParameter;
-		bool m_lutGPU;
 
 		ImageGadgetPtr m_imageGadgets[2];
 		bool m_framed;
@@ -219,17 +167,7 @@ class GAFFERIMAGEUI_API ImageView : public GafferUI::View
 		class ColorInspector;
 		std::unique_ptr<ColorInspector> m_colorInspector;
 
-		GafferImage::ImagePlugPtr m_imageBeforeColorTransform;
-		Gaffer::FloatPlugPtr m_cpuSaturationPlug;
-		Gaffer::BoolPlugPtr m_cpuClippingPlug;
-		Gaffer::Color4fPlugPtr m_cpuMultiplyPlug;
-		Gaffer::Color4fPlugPtr m_cpuGammaPlug;
-		Gaffer::SwitchPtr m_colorTransformSwitch;
 		Gaffer::ContextVariablesPtr m_comparisonSelect;
-
-		using DisplayTransformCreatorMap = std::map<std::string, DisplayTransformCreator>;
-		static DisplayTransformCreatorMap &displayTransformCreators();
-
 		static ViewDescription<ImageView> g_viewDescription;
 
 };

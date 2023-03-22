@@ -145,23 +145,6 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"displayTransform" : [
-
-			"description",
-			"""
-			Applies colour space transformations for viewing the textures correctly.
-			""",
-
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"label", "",
-			"toolbarLayout:width", 100,
-
-			"presetNames", lambda plug : IECore.StringVectorData( GafferImageUI.ImageView.registeredDisplayTransforms() ),
-			"presetValues", lambda plug : IECore.StringVectorData( GafferImageUI.ImageView.registeredDisplayTransforms() ),
-
-		]
-
-
 	}
 
 )

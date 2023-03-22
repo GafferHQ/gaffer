@@ -73,50 +73,6 @@ class ImageViewWrapper : public NodeWrapper<ImageView>
 
 };
 
-struct DisplayTransformCreator
-{
-	DisplayTransformCreator( object fn )
-		:	m_fn( fn )
-	{
-	}
-
-	ImageProcessorPtr operator()()
-	{
-		IECorePython::ScopedGILLock gilLock;
-		ImageProcessorPtr result = extract<ImageProcessorPtr>( m_fn() );
-		return result;
-	}
-
-	private :
-
-		object m_fn;
-
-};
-
-void registerDisplayTransform( const std::string &name, object creator )
-{
-	ImageView::registerDisplayTransform( name, DisplayTransformCreator( creator ) );
-}
-
-boost::python::list registeredDisplayTransforms()
-{
-	vector<string> n;
-	ImageView::registeredDisplayTransforms( n );
-	boost::python::list result;
-	for( vector<string>::const_iterator it = n.begin(), eIt = n.end(); it != eIt; ++it )
-	{
-		result.append( *it );
-	}
-
-	return result;
-}
-
-ImageProcessorPtr createDisplayTransform( const std::string &name )
-{
-	IECorePython::ScopedGILRelease gilRelease;
-	return ImageView::createDisplayTransform( name );
-}
-
 } // namespace
 
 void GafferImageUIModule::bindImageView()
@@ -125,12 +81,6 @@ void GafferImageUIModule::bindImageView()
 		.def( init<const std::string &>() )
 		.def( "imageGadget", (ImageGadget *(ImageView::*)())&ImageView::imageGadget, return_value_policy<IECorePython::CastToIntrusivePtr>() )
 		.def( "_insertConverter", &ImageViewWrapper::insertConverter )
-		.def( "registerDisplayTransform", &registerDisplayTransform )
-		.staticmethod( "registerDisplayTransform" )
-		.def( "registeredDisplayTransforms", &registeredDisplayTransforms )
-		.staticmethod( "registeredDisplayTransforms" )
-		.def( "createDisplayTransform", &createDisplayTransform )
-		.staticmethod( "createDisplayTransform" )
 	;
 
 	scope ci = GafferBindings::PlugClass<ImageView::ColorInspectorPlug>()

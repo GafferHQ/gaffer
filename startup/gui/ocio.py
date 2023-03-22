@@ -74,24 +74,28 @@ Gaffer.Metadata.registerValue( preferences["displayColorSpace"], "layout:section
 Gaffer.Metadata.registerValue( preferences["displayColorSpace"]["context"], "layout:customWidget:addButton:widgetType", "GafferImageUI.OpenColorIOTransformUI._ContextFooter", persistent = False )
 Gaffer.Metadata.registerValue( preferences["displayColorSpace"]["context"], "layout:customWidget:addButton:index", -1, persistent = False )
 
-# update the display transform from the plugs
+# Register with `GafferUI.DisplayTransform` for use by Widgets.
 
-def __setDisplayTransform() :
+def __processor( view ) :
 
 	d = OCIO.DisplayViewTransform()
 	d.setSrc( OCIO.ROLE_SCENE_LINEAR )
 	d.setDisplay( defaultDisplay )
-	d.setView( preferences["displayColorSpace"]["view"].getValue() )
+	d.setView( view )
 
 	# \todo : Should be `context = copy.deepcopy( config.getCurrentContext() )`
 	# once https://github.com/AcademySoftwareFoundation/OpenColorIO/pull/1575 gets merged into OCIO2.1.2
 	context = OCIO.Context( searchPaths = list( config.getCurrentContext().getSearchPaths() ), workingDir = config.getCurrentContext().getWorkingDir(), environmentMode = config.getCurrentContext().getEnvironmentMode(), stringVars = dict( config.getCurrentContext().getStringVars() ) )
+	gafferContext = Gaffer.Context.current()
 	for variable in preferences["displayColorSpace"]["context"] :
 		if variable["enabled"].getValue() :
-			context[ variable["name"].getValue() ] = variable["value"].getValue()
+			context[ variable["name"].getValue() ] = gafferContext.substitute( variable["value"].getValue() )
 
-	processor = config.getProcessor( transform = d, context = context, direction = OCIO.TRANSFORM_DIR_FORWARD )
-	cpuProcessor = processor.getDefaultCPUProcessor()
+	return config.getProcessor( transform = d, context = context, direction = OCIO.TRANSFORM_DIR_FORWARD )
+
+def __setDisplayTransform() :
+
+	cpuProcessor = __processor( preferences["displayColorSpace"]["view"].getValue() ).getDefaultCPUProcessor()
 
 	def f( c ) :
 
@@ -102,44 +106,38 @@ def __setDisplayTransform() :
 
 __setDisplayTransform()
 
-# and connect to plug changed to update things again when the user asks
+# Register with `GafferUI.View.DisplayTransform` for use in the Viewer.
+
+def __displayTransformCreator( view ) :
+
+	processor = __processor( view )
+	return GafferImageUI.OpenColorIOAlgo.displayTransformToFramebufferShader( processor )
+
+def __registerViewerDisplayTransforms() :
+
+	for name in config.getViews( defaultDisplay ) :
+		GafferUI.View.DisplayTransform.registerDisplayTransform(
+			name,
+			functools.partial( __displayTransformCreator, name )
+		)
+
+	GafferUI.View.DisplayTransform.registerDisplayTransform(
+		"Default",
+		functools.partial( __displayTransformCreator, preferences["displayColorSpace"]["view"].getValue() )
+	)
+
+__registerViewerDisplayTransforms()
+
+# And connect to `plugSet()` to update everything again when the user modifies something.
 
 def __plugSet( plug ) :
 
 	if plug.relativeName( plug.node() ) != "displayColorSpace" :
 		return
 
+	__registerViewerDisplayTransforms()
 	__setDisplayTransform()
 
 preferences.plugSetSignal().connect( __plugSet, scoped = False )
 
-# register display transforms with the image viewer
-
-def __displayTransformCreator( name ) :
-
-	result = GafferImage.DisplayTransform()
-	result["channels"].setValue( "[RGB] *.[RGB]" )
-	result["inputColorSpace"].setValue( config.getColorSpace( OCIO.ROLE_SCENE_LINEAR ).getName() )
-	result["display"].setValue( defaultDisplay )
-	result["view"].setValue( name )
-
-	for plug in preferences["displayColorSpace"]["context"] :
-		result["context"].addChild( plug.createCounterpart( plug.getName(), plug.Direction.In ) )
-	result["context"].setInput( preferences["displayColorSpace"]["context"] )
-
-	return result
-
-for name in config.getViews( defaultDisplay ) :
-	GafferImageUI.ImageView.registerDisplayTransform( name, functools.partial( __displayTransformCreator, name ) )
-
-# and register a special "Default" display transform which tracks the
-# global settings from the preferences
-
-def __defaultDisplayTransformCreator() :
-
-	result = __displayTransformCreator( "" )
-	result["view"].setInput( preferences["displayColorSpace"]["view"] )
-
-	return result
-
-GafferImageUI.ImageView.registerDisplayTransform( "Default", __defaultDisplayTransformCreator )
+Gaffer.Metadata.registerValue( GafferUI.View, "displayTransform.name", "userDefault", "Default" )

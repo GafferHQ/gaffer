@@ -401,29 +401,21 @@ class GridGadget : public GafferUI::Gadget
 
 		void renderLayer( Layer layer, const Style *style, RenderReason reason ) const override
 		{
-			if( layer != Layer::Main && layer != Layer::MidBack && layer != Layer::Front )
-			{
-				return;
-			}
+			assert( layer == Layer::MidBack || layer == Layer::MidFront );
 
 			const ViewportGadget *viewport = ancestor<ViewportGadget>();
 			Box3f bound;
 			bound.extendBy( viewport->rasterToGadgetSpace( V2f( 0 ), this ).p0 );
 			bound.extendBy( viewport->rasterToGadgetSpace( viewport->getViewport(), this ).p0 );
 
+			// Grid
+
 			const int divisions = layer == Layer::MidBack ? 10 : 1;
 			const float divisionDensity = bound.size().x * (float)divisions / (float)viewport->getViewport().x;
+			const float alpha = 1.0f - IECore::smoothstep( 0.1f, 0.4f, divisionDensity );
 
-			if( layer == Layer::Main || layer == Layer::MidBack )
+			if( alpha > 0.0f )
 			{
-				// Grid layer
-
-				const float alpha = 1.0f - IECore::smoothstep( 0.1f, 0.4f, divisionDensity );
-				if( alpha <= 0.0f )
-				{
-					return;
-				}
-
 				const float lineWidth = (layer == Layer::Main ? 2.0f : 1.0f) * bound.size().x / viewport->getViewport().x;
 				const Color4f lineColor( 0.23, 0.23, 0.23, alpha );
 
@@ -443,7 +435,8 @@ class GridGadget : public GafferUI::Gadget
 					);
 				}
 			}
-			else
+
+			if( layer == Layer::MidFront )
 			{
 				// UDIM label layer
 
@@ -485,7 +478,7 @@ class GridGadget : public GafferUI::Gadget
 
 		unsigned layerMask() const override
 		{
-			return Layer::Main | Layer::MidBack | Layer::Front;
+			return Layer::MidBack | Layer::MidFront;
 		}
 
 };
@@ -582,13 +575,16 @@ static InternedString g_gridGadgetName( "gridGadget" );
 GAFFER_NODE_DEFINE_TYPE( UVView )
 
 UVView::UVView( const std::string &name )
-	:	View( name, new ScenePlug ), m_textureGadgetsDirty( true ), m_framed( false ), m_displayTransformDirty( true )
+	:	View( name, new ScenePlug ), m_textureGadgetsDirty( true ), m_framed( false )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
 	addChild( new StringPlug( "uvSet", Plug::In, "uv" ) );
 	addChild( new StringPlug( "textureFileName" ) );
-	addChild( new StringPlug( "displayTransform", Plug::In, "Default" ) );
+
+	[[maybe_unused]] auto displayTransform = new DisplayTransform( this );
+	assert( displayTransform->parent() == this );
+
 	addChild( new CompoundObjectPlug( "__textures", Plug::In, new CompoundObject ) );
 
 	addChild( new UVScene( "__uvScene" ) );
@@ -610,9 +606,9 @@ UVView::UVView( const std::string &name )
 	openGLOptions->members()["gl:primitive:wireframeColor"] = new Color4fData( Color4f( 0.7, 0.7, 0.7, 1 ) );
 	sceneGadget()->setOpenGLOptions( openGLOptions.get() );
 	sceneGadget()->setMinimumExpansionDepth( 99999 );
+	sceneGadget()->setLayer( Gadget::Layer::MidFront );
 	sceneGadget()->stateChangedSignal().connect( [this]( SceneGadget *g ) { this->gadgetStateChanged( g, g->state() == SceneGadget::Running ); } );
 
-	plugSetSignal().connect( boost::bind( &UVView::plugSet, this, ::_1 ) );
 	plugDirtiedSignal().connect( boost::bind( &UVView::plugDirtied, this, ::_1 ) );
 	viewportGadget()->preRenderSignal().connect( boost::bind( &UVView::preRender, this ) );
 	viewportGadget()->visibilityChangedSignal().connect( boost::bind( &UVView::visibilityChanged, this ) );
@@ -646,54 +642,47 @@ void UVView::contextChanged( const IECore::InternedString &name )
 	}
 }
 
+// We're accessing plugs by name rather than by index to allow for
+// plugs added by bolt-on components like DisplayTransform. This is
+// OK because none of our accessors are performance critical.
 Gaffer::StringPlug *UVView::uvSetPlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex );
+	return getChild<StringPlug>( "uvSet" );
 }
 
 const Gaffer::StringPlug *UVView::uvSetPlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex );
+	return getChild<StringPlug>( "uvSet" );
 }
 
 Gaffer::StringPlug *UVView::textureFileNamePlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+	return getChild<StringPlug>( "textureFileName" );
 }
 
 const Gaffer::StringPlug *UVView::textureFileNamePlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 1 );
-}
-
-Gaffer::StringPlug *UVView::displayTransformPlug()
-{
-	return getChild<StringPlug>( g_firstPlugIndex + 2 );
-}
-
-const Gaffer::StringPlug *UVView::displayTransformPlug() const
-{
-	return getChild<StringPlug>( g_firstPlugIndex + 2 );
+	return getChild<StringPlug>( "textureFileName" );
 }
 
 Gaffer::CompoundObjectPlug *UVView::texturesPlug()
 {
-	return getChild<CompoundObjectPlug>( g_firstPlugIndex + 3 );
+	return getChild<CompoundObjectPlug>( "__textures" );
 }
 
 const Gaffer::CompoundObjectPlug *UVView::texturesPlug() const
 {
-	return getChild<CompoundObjectPlug>( g_firstPlugIndex + 3 );
+	return getChild<CompoundObjectPlug>( "__textures" );
 }
 
 UVView::UVScene *UVView::uvScene()
 {
-	return getChild<UVScene>( g_firstPlugIndex + 4 );
+	return getChild<UVScene>( "__uvScene" );
 }
 
 const UVView::UVScene *UVView::uvScene() const
 {
-	return getChild<UVScene>( g_firstPlugIndex + 4 );
+	return getChild<UVScene>( "__uvScene" );
 }
 
 void UVView::setPaused( bool paused )
@@ -756,15 +745,6 @@ const GafferUI::Gadget *UVView::textureGadgets() const
 	return viewportGadget()->getChild<Gadget>( g_textureGadgetsName );
 }
 
-void UVView::plugSet( const Gaffer::Plug *plug )
-{
-	if( plug == displayTransformPlug() )
-	{
-		m_displayTransformDirty = true;
-		viewportGadget()->renderRequestSignal()( viewportGadget() );
-	}
-}
-
 void UVView::plugDirtied( const Gaffer::Plug *plug )
 {
 	if( plug == texturesPlug() )
@@ -779,14 +759,6 @@ void UVView::preRender()
 	{
 		viewportGadget()->frame( Box3f( V3f( -0.05 ), V3f( 1.05 ) ) );
 		m_framed = true;
-	}
-
-	// We use an OpenGL display transform, so we can't set it up until GL is initialized - once
-	// we get the preRender call, we should be good.
-	if( m_displayTransformDirty )
-	{
-		updateDisplayTransform();
-		m_displayTransformDirty = false;
 	}
 
 	if( getPaused() || !m_textureGadgetsDirty )
@@ -881,35 +853,6 @@ void UVView::updateTextureGadgets( const IECore::ConstCompoundObjectPtr &texture
 	}
 
 	gadgetStateChanged( textureGadgets(), /* running = */ false );
-}
-
-void UVView::updateDisplayTransform()
-{
-	const string displayTransformName = displayTransformPlug()->getValue();
-
-	const ImageProcessor *displayTransform;
-
-	const auto it = m_displayTransforms.find( displayTransformName );
-	if( it == m_displayTransforms.end() )
-	{
-		ImageProcessorPtr newDisplayTransform = ImageView::createDisplayTransform( displayTransformName );
-		m_displayTransforms[displayTransformName] = newDisplayTransform;
-		displayTransform = newDisplayTransform.get();
-	}
-	else
-	{
-		displayTransform = it->second.get();
-	}
-
-	const OpenColorIOTransform *ocioTrans = runTimeCast<const OpenColorIOTransform>( displayTransform );
-
-	const OCIO_NAMESPACE::Processor *ocioProcessor = nullptr;
-	if( ocioTrans )
-	{
-		ocioProcessor = ocioTrans->processor().get();
-	}
-
-	viewportGadget()->setPostProcessShader( Gadget::Layer::Main, OpenColorIOAlgo::displayTransformToFramebufferShader( ocioProcessor ) );
 }
 
 void UVView::gadgetStateChanged( const Gadget *gadget, bool running )

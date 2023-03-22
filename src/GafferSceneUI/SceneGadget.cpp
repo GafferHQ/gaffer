@@ -193,7 +193,8 @@ SceneGadget::SceneGadget()
 	:	Gadget( defaultName<SceneGadget>() ),
 		m_paused( false ),
 		m_updateErrored( false ),
-		m_renderRequestPending( false )
+		m_renderRequestPending( false ),
+		m_layer( Gadget::Layer::Main )
 {
 	using Option = CompoundObject::ObjectMap::value_type;
 	CompoundObjectPtr openGLOptions = new CompoundObject;
@@ -469,6 +470,21 @@ void SceneGadget::setOpenGLOptions( const IECore::CompoundObject *options )
 const IECore::CompoundObject *SceneGadget::getOpenGLOptions() const
 {
 	return m_openGLOptions.get();
+}
+
+void SceneGadget::setLayer( Gadget::Layer layer )
+{
+	if( layer == m_layer )
+	{
+		return;
+	}
+	m_layer = layer;
+	dirty( DirtyType::Render );
+}
+
+Gadget::Layer SceneGadget::getLayer() const
+{
+	return m_layer;
 }
 
 void SceneGadget::setSelectionMask( const IECore::StringVectorData *typeNames )
@@ -756,10 +772,7 @@ Imath::Box3f SceneGadget::bound() const
 
 void SceneGadget::renderLayer( Layer layer, const GafferUI::Style *style, RenderReason reason ) const
 {
-	if( layer != Layer::Main )
-	{
-		return;
-	}
+	assert( layer == m_layer );
 
 	if( isSelectionRender( reason ) )
 	{
@@ -781,7 +794,7 @@ void SceneGadget::renderLayer( Layer layer, const GafferUI::Style *style, Render
 
 unsigned SceneGadget::layerMask() const
 {
-	return (unsigned)Layer::Main;
+	return (unsigned)m_layer;
 }
 
 Imath::Box3f SceneGadget::renderBound() const

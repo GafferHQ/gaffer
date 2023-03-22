@@ -82,8 +82,8 @@ class ImageViewTest( GafferUITest.TestCase ) :
 		self.assertTrue( isinstance( view, MyView ) )
 		self.assertTrue( view["in"].getInput().isSame( string["out"] ) )
 		self.assertTrue( isinstance( view["in"], Gaffer.StringPlug ) )
-		view["exposure"].setValue( 1 )
-		view["gamma"].setValue( 0.5 )
+		view["displayTransform"]["exposure"].setValue( 1 )
+		view["displayTransform"]["gamma"].setValue( 0.5 )
 
 	def testImageGadget( self ) :
 

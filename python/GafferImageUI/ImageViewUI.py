@@ -81,8 +81,6 @@ Gaffer.Metadata.registerNode(
 	"toolbarLayout:customWidget:BottomRightSpacer:section", "Bottom",
 	"toolbarLayout:customWidget:BottomRightSpacer:index", -1,
 
-	"toolbarLayout:activator:gpuAvailable", lambda node : isinstance( GafferImageUI.ImageView.createDisplayTransform( node["displayTransform"].getValue() ), GafferImage.OpenColorIOTransform ),
-
 	plugs = {
 
 		"view" : [
@@ -171,91 +169,6 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"soloChannel" : [
-
-			"description",
-			"""
-			Chooses a channel to show in isolation.
-			""",
-
-			"plugValueWidget:type", "GafferImageUI.ImageViewUI._SoloChannelPlugValueWidget",
-			"toolbarLayout:divider", True,
-			"label", "",
-
-		],
-
-		"clipping" : [
-
-			"description",
-			"""
-			Highlights the regions in which the colour values go above 1 or below 0.
-			""",
-
-			"plugValueWidget:type", "GafferImageUI.ImageViewUI._TogglePlugValueWidget",
-			"togglePlugValueWidget:imagePrefix", "clipping",
-			"togglePlugValueWidget:defaultToggleValue", True,
-			"toolbarLayout:divider", True,
-
-		],
-
-		"exposure" : [
-
-			"description",
-			"""
-			Applies an exposure adjustment to the image.
-			""",
-
-			"plugValueWidget:type", "GafferImageUI.ImageViewUI._TogglePlugValueWidget",
-			"togglePlugValueWidget:imagePrefix", "exposure",
-			"togglePlugValueWidget:defaultToggleValue", 1,
-
-		],
-
-		"gamma" : [
-
-			"description",
-			"""
-			Applies a gamma correction to the image.
-			""",
-
-			"plugValueWidget:type", "GafferImageUI.ImageViewUI._TogglePlugValueWidget",
-			"togglePlugValueWidget:imagePrefix", "gamma",
-			"togglePlugValueWidget:defaultToggleValue", 2,
-
-		],
-
-		"displayTransform" : [
-
-			"description",
-			"""
-			Applies colour space transformations for viewing the image correctly.
-			""",
-
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-			"label", "",
-			"toolbarLayout:width", 100,
-
-			"presetNames", lambda plug : IECore.StringVectorData( GafferImageUI.ImageView.registeredDisplayTransforms() ),
-			"presetValues", lambda plug : IECore.StringVectorData( GafferImageUI.ImageView.registeredDisplayTransforms() ),
-
-		],
-
-		"lutGPU" : [
-			"description",
-			"""
-			Controls whether to use the fast GPU path for applying exposure, gamma, and displayTransform.
-			""",
-
-			"toolbarLayout:activator", "gpuAvailable",
-
-			# Turning off GPU mode means we can't properly support efficient wipes.  Since we no longer
-			# have feature parity, we're deprecating CPU mode, and expecting everyone to use the GPU path.
-			# With new OCIO, the GPU path now gives high quality on any even vaguely recent GPU.
-			# The only use case I can think of for the CPU path is checking that the GPU path is working correctly.
-			# If you need to do that, set this metadata to True, and then create a new Viewer to force a refresh.
-			"toolbarLayout:visibilityActivator", False,
-		],
-
 		"colorInspector" : [
 			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
 			"toolbarLayout:section", "Bottom",
@@ -284,69 +197,6 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
-
-##########################################################################
-# _TogglePlugValueWidget
-##########################################################################
-
-# Toggles between default value and the last non-default value
-class _TogglePlugValueWidget( GafferUI.PlugValueWidget ) :
-
-	def __init__( self, plug, **kw ) :
-
-		row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 2 )
-
-		GafferUI.PlugValueWidget.__init__( self, row, plug, **kw )
-
-		self.__imagePrefix = Gaffer.Metadata.value( plug, "togglePlugValueWidget:imagePrefix" )
-		with row :
-
-			self.__button = GafferUI.Button( "", self.__imagePrefix + "Off.png", hasFrame=False )
-			self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ), scoped = False )
-
-			if not isinstance( plug, Gaffer.BoolPlug ) :
-				plugValueWidget = GafferUI.PlugValueWidget.create( plug, useTypeOnly=True )
-				plugValueWidget.numericWidget().setFixedCharacterWidth( 5 )
-
-		self.__toggleValue = Gaffer.Metadata.value( plug, "togglePlugValueWidget:defaultToggleValue" )
-
-	def hasLabel( self ) :
-
-		return True
-
-	def getToolTip( self ) :
-
-		result = GafferUI.PlugValueWidget.getToolTip( self )
-
-		if result :
-			result += "\n"
-		result += "## Actions\n\n"
-		result += "- Click to toggle to/from default value\n"
-
-		return result
-
-	def _updateFromValues( self, values, exception ) :
-
-		value = sole( values )
-		if value != self.getPlug().defaultValue() :
-			self.__toggleValue = value
-			self.__button.setImage( self.__imagePrefix + "On.png" )
-		else :
-			self.__button.setImage( self.__imagePrefix + "Off.png" )
-
-	def _updateFromEditable( self ) :
-
-		self.__button.setEnabled( self._editable() )
-
-	def __clicked( self, button ) :
-
-		with self.getContext() :
-			value = self.getPlug().getValue()
-
-		if value == self.getPlug().defaultValue() and self.__toggleValue is not None :
-			self.getPlug().setValue( self.__toggleValue )
-		else :
-			self.getPlug().setToDefault()
 
 ##########################################################################
 # _ColorInspectorPlugValueWidget
@@ -1095,79 +945,6 @@ class _ChannelsPlugValueWidget( GafferImageUI.RGBAChannelsPlugValueWidget ) :
 
 		index = max( 0, min( index, len( values ) - 1 ) )
 		return values[index]
-
-
-##########################################################################
-# _SoloChannelPlugValueWidget
-##########################################################################
-
-class _SoloChannelPlugValueWidget( GafferUI.PlugValueWidget ) :
-
-	def __init__( self, plug, **kw ) :
-
-		self.__button = GafferUI.MenuButton(
-			image = "soloChannel-1.png",
-			hasFrame = False,
-			menu = GafferUI.Menu(
-				Gaffer.WeakMethod( self.__menuDefinition ),
-				title = "Channel",
-			)
-		)
-
-		GafferUI.PlugValueWidget.__init__( self, self.__button, plug, **kw )
-
-	def _updateFromValues( self, values, exception ) :
-
-		self.__button.setImage( "soloChannel{0}.png".format( sole( values ) ) )
-
-	def _updateFromEditable( self ) :
-
-		self.__button.setEnabled( self._editable() )
-
-	def __menuDefinition( self ) :
-
-		with self.getContext() :
-			soloChannel = self.getPlug().getValue()
-
-		m = IECore.MenuDefinition()
-		m.append(
-			"/All",
-			{
-				"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), -1 ),
-				"checkBox" : soloChannel == -1
-			}
-		)
-		for name, value in [
-			( "R", 0 ),
-			( "G", 1 ),
-			( "B", 2 ),
-			( "A", 3 ),
-		] :
-			m.append(
-				"/" + name,
-				{
-					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), value ),
-					"checkBox" : soloChannel == value,
-					"shortCut" : name
-				}
-			)
-
-		m.append( "/LuminanceDivider", { "divider" : True, })
-
-		m.append(
-				"/Luminance",
-				{
-					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), -2 ),
-					"checkBox" : soloChannel == -2,
-					"shortCut" : "L"
-				}
-			)
-
-		return m
-
-	def __setValue( self, value, *unused ) :
-
-		self.getPlug().setValue( value )
 
 ##########################################################################
 # _StateWidget

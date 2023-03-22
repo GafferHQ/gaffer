@@ -96,18 +96,10 @@ class ImageGadgetTest( GafferUITest.TestCase ) :
 		with GafferUI.Window() as w :
 			gw = GafferUI.GadgetWidget( g )
 
-		# If this computer doesn't support floating point textures, the ImageGadget will warn about
-		# this the first time it tries to render.  Don't fail because of this
-		with IECore.CapturingMessageHandler() as mh :
-			cs = GafferTest.CapturingSlot( gw.getViewportGadget().preRenderSignal() )
-			w.setVisible( True )
-			while not len( cs ) :
-				self.waitForIdle( 1 )
-
-		if len( mh.messages ):
-			self.assertEqual(  len( mh.messages ), 1 )
-			self.assertEqual( mh.messages[0].context, "ImageGadget" )
-			self.assertEqual( mh.messages[0].message, "Could not find supported floating point texture format in OpenGL.  GPU image viewer path will be low quality, recommend switching to CPU display transform, or resolving graphics driver issue." )
+		cs = GafferTest.CapturingSlot( gw.getViewportGadget().preRenderSignal() )
+		w.setVisible( True )
+		while not len( cs ) :
+			self.waitForIdle( 1 )
 
 		del g, w
 		del s

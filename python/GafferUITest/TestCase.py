@@ -75,6 +75,14 @@ class TestCase( GafferTest.TestCase ) :
 		QtCompat.qInstallMessageHandler( messageHandler )
 		self.addCleanup( functools.partial( QtCompat.qInstallMessageHandler, None ) )
 
+		# The Mesa stack in our Docker build container doesn't currently support
+		# floating point textures. Prevent warning from causing test failures.
+		self.ignoreMessage(
+			IECore.Msg.Level.Warning, "ViewportGadget",
+			"Could not find supported floating point texture format in OpenGL. "
+			"Viewport display is likely to show banding - please resolve graphics driver issue."
+		)
+
 	def tearDown( self ) :
 
 		GafferTest.TestCase.tearDown( self )

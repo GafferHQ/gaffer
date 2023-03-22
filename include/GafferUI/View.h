@@ -41,6 +41,8 @@
 #include "GafferUI/ViewportGadget.h"
 
 #include "Gaffer/Node.h"
+#include "Gaffer/NumericPlug.h"
+#include "Gaffer/StringPlug.h"
 
 #include "boost/regex.hpp"
 
@@ -120,6 +122,8 @@ class GAFFERUI_API View : public Gaffer::Node
 		/// query the available tools and `Tool::create()` to add a tool.
 		ToolContainer *tools();
 		const ToolContainer *tools() const;
+
+		class DisplayTransform;
 
 		/// @name Factory
 		///////////////////////////////////////////////////////////////////
@@ -205,6 +209,62 @@ class GAFFERUI_API View : public Gaffer::Node
 
 		friend void GafferUIModule::bindView();
 		friend Gaffer::NodePtr GafferUIModule::getPreprocessor( View & );
+
+};
+
+/// Optional component that can be added to any view, adding plugs to manage
+/// a display transform applied to `Layer::Main`.
+class GAFFERUI_API View::DisplayTransform : public Gaffer::Node
+{
+
+	public :
+
+		/// The new DisplayTransform will be owned by `view`.
+		DisplayTransform( View *view );
+		~DisplayTransform() override;
+
+		GAFFER_NODE_DECLARE_TYPE( GafferUI::View::DisplayTransform, ViewDisplayTransformTypeId, Gaffer::Node );
+
+		/// Function that returns an OpenGL shader that applies a display
+		/// transform. In addition to the shader parameters required by `ViewportGadget::setPostProcessShader()`,
+		/// the shader should also have the following parameters :
+		///
+		/// - `bool unpremultiply` : Temporarily unpremultiplies while applying the color transform.
+		/// - `bool absoluteValue` : Flips negative values to positive (useful when viewing a difference value).
+		/// - `bool clipping` : Marks regions outside `0 - 1`.
+		/// - `color multiply` : Applies a multiplier before the color transform.
+		/// - `color power` : Applies a power curve before the color transform.
+		/// - `int soloChannel` : Set to 0-3 to pick channels RGBA, or -2 for luminance.
+		///   Default -1 uses all channels as a color.
+		using DisplayTransformCreator = std::function<IECoreGL::Shader::SetupPtr ()>;
+
+		static void registerDisplayTransform( const std::string &name, DisplayTransformCreator creator );
+		static std::vector<std::string> registeredDisplayTransforms();
+
+	private :
+
+		View *view();
+		Gaffer::StringPlug *namePlug();
+		Gaffer::IntPlug *soloChannelPlug();
+		Gaffer::BoolPlug *clippingPlug();
+		Gaffer::FloatPlug *exposurePlug();
+		Gaffer::FloatPlug *gammaPlug();
+		Gaffer::BoolPlug *absolutePlug();
+
+		void connectToViewContext();
+		void contextChanged( const IECore::InternedString &name );
+		void registrationChanged( const std::string &name );
+		void plugDirtied( const Gaffer::Plug *plug );
+		void preRender();
+		bool keyPress( const KeyEvent &event );
+
+		Gaffer::Signals::ScopedConnection m_contextChangedConnection;
+
+		IECoreGL::Shader::SetupPtr m_shader;
+		bool m_shaderDirty;
+		bool m_parametersDirty;
+
+		static size_t g_firstPlugIndex;
 
 };
 

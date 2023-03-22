@@ -1,10 +1,23 @@
 1.x.x.x (relative to 1.2.x.x)
 =======
 
+Improvements
+------------
+
+- UVInspector : Added exposure, gamma and solo channel settings.
+
+Fixes
+-----
+
+- UVInspector : Removed display transform from UV wireframes and grid.
+
 API
 ---
 
+- View : Added DisplayTransform add-on class which can be used to add colourspace management to any View.
 - ViewportGadget : A post-process shader can now be applied to any layer, not just the main one.
+- SceneGadget : Added `setLayer()` and `getLayer()` methods, which allow the destination `Gadget::Layer` to be specified.
+- TestCase : Added `ignoreMessage()` method, to register messages that should not be treated as test failures.
 
 Breaking Changes
 ----------------
@@ -13,7 +26,13 @@ Breaking Changes
   - A GL context is no longer available in `_resize()`.
   - Removed `BufferOptions.Double`.
 - GadgetWidget : Removed `bufferOptions` constructor argument.
+- ImageView :
+  - Removed `lutGPU` plug.
+  - Removed DisplayTransform methods. Use `View::DisplayTransform` instead.
+  - Moved `exposure`, `gamma`, `clipping` and `soloChannel` plugs under a `displayTransform` parent plug.
+  - Moved the `displayTransform` plug to `displayTransform.name`.
 - ViewportGadget : Changed function signature for `setPostProcessShader()` and `getPostProcessShader()`.
+- UVInspector : Moved the `displayTransform` plug to `displayTransform.name`.
 
 1.2.2.0 (relative to 1.2.1.1)
 =======
