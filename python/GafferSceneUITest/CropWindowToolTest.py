@@ -140,14 +140,7 @@ class CropWindowToolTest( GafferUITest.TestCase ) :
 
 		script["image"]["fileName"].setValue( "${GAFFER_ROOT}/resources/images/macaw.exr" )
 
-		with IECore.CapturingMessageHandler() as mh :
-			self.waitForIdle( 1000 )
-
-		# Don't fail due to running on computer that can't do GPU color transforms well
-		if len( mh.messages ):
-			self.assertEqual( len( mh.messages ), 1 )
-			self.assertEqual( mh.messages[0].context, "ImageGadget" )
-			self.assertTrue( mh.messages[0].message.startswith( "Could not find supported floating point texture format in OpenGL" ) )
+		self.waitForIdle( 1000 )
 
 		self.assertEqual( tool.status(), "Error: No <b>gaffer:sourceScene</b> metadata in image" )
 

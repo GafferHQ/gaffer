@@ -96,12 +96,6 @@ void findUsableTextureFormats( GLenum &monochromeFormat, GLenum &colorFormat )
 			g_monochromeFormat = GL_INTENSITY16F_ARB;
 			g_colorFormat = GL_RGB16F_ARB;
 		}
-		else
-		{
-			IECore::msg( IECore::Msg::Warning, "ImageGadget",
-				"Could not find supported floating point texture format in OpenGL."
-			);
-		}
 		g_textureFormatsInitialized = true;
 	}
 

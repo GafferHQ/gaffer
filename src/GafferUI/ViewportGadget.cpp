@@ -133,9 +133,14 @@ IECoreGL::BufferPtr rectUvBuffer()
 bool checkGLArbTextureFloat()
 {
 	bool supported = std::regex_match( std::string( (const char*)glGetString( GL_EXTENSIONS ) ), std::regex( R"(.*GL_ARB_texture_float( |\n).*)" ) );
-
-	// Really ought to warn here if supported is false, but currently we already warn in ImageGadget
-	// if GL_ARB_texture_float is not found, and there's probably not much point in duplicate warnings
+	if( !supported )
+	{
+		IECore::msg(
+			IECore::Msg::Warning, "ViewportGadget",
+			"Could not find supported floating point texture format in OpenGL. Viewport "
+			"display is likely to show banding - please resolve graphics driver issue."
+		);
+	}
 	return supported;
 }
 

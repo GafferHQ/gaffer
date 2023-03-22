@@ -63,26 +63,25 @@ class TestCase( unittest.TestCase ) :
 	def setUp( self ) :
 
 		self.__temporaryDirectory = None
+		self.__messagesToIgnore = set()
 
-		# Set up a capturing message handler and a cleanup function so
-		# we can assert that no undesired messages are triggered by
-		# the tests. If any such messages are actually expected during testing,
-		# the relevant tests should use their own CapturingMessageHandler
-		# to grab them and then assert that they are as expected.
-		# We also setup a tee to the default message handler, which is useful
-		# as it allows errors to be seen at the time they occur, rather than
-		# after the test has completed.
+		# Set up a capturing message handler so that `tearDown()` can assert
+		# that no undesired messages are triggered by the tests. If any such
+		# messages are actually expected during testing, the relevant tests
+		# should use their own CapturingMessageHandler to grab them and then
+		# assert that they are as expected, or call `self.ignoreMessage()`. We
+		# also set up a tee to the default message handler, which is useful as
+		# it allows errors to be seen at the time they occur, rather than after
+		# the test has completed.
+		self.__defaultMessageHandler = IECore.MessageHandler.getDefaultHandler()
+		testMessageHandler = IECore.CompoundMessageHandler()
+		testMessageHandler.addHandler( self.__defaultMessageHandler )
+
+		self.__failureMessageHandler = IECore.CapturingMessageHandler()
 		if self.failureMessageLevel is not None :
+			testMessageHandler.addHandler( IECore.LevelFilteredMessageHandler( self.__failureMessageHandler, self.failureMessageLevel ) )
 
-			defaultHandler = IECore.MessageHandler.getDefaultHandler()
-			testMessageHandler = IECore.CompoundMessageHandler()
-			testMessageHandler.addHandler( defaultHandler )
-
-			failureMessageHandler = IECore.CapturingMessageHandler()
-			testMessageHandler.addHandler( IECore.LevelFilteredMessageHandler( failureMessageHandler, self.failureMessageLevel ) )
-
-			IECore.MessageHandler.setDefaultHandler( testMessageHandler )
-			self.addCleanup( functools.partial( self.__messageHandlerCleanup, defaultHandler, failureMessageHandler ) )
+		IECore.MessageHandler.setDefaultHandler( testMessageHandler )
 
 		# Clear the cache and hash cache so that each test starts afresh. This is
 		# important for tests which use monitors to assert that specific
@@ -112,13 +111,18 @@ class TestCase( unittest.TestCase ) :
 		if self.__temporaryDirectory is not None :
 			shutil.rmtree( self.__temporaryDirectory )
 
-	@staticmethod
-	def __messageHandlerCleanup( originalHandler, failureHandler ) :
+		IECore.MessageHandler.setDefaultHandler( self.__defaultMessageHandler )
 
-		IECore.MessageHandler.setDefaultHandler( originalHandler )
+		for message in self.__failureMessageHandler.messages :
+			message = "{} : {} : {}".format( IECore.Msg.levelAsString( message.level ), message.context, message.message )
+			if message not in self.__messagesToIgnore :
+				self.fail( f"Unexpected message : {message}" )
 
-		for message in failureHandler.messages :
-			raise RuntimeError( "Unexpected message : " + failureHandler.levelAsString( message.level ) + " : " + message.context + " : " + message.message )
+	## Registers a message that will be ignored if it is emitted during the
+	# test run, instead of triggering a failure.
+	def ignoreMessage( self, level, context, message ) :
+
+		self.__messagesToIgnore.add( "{} : {} : {}".format( IECore.Msg.levelAsString( level ), context, message ) )
 
 	## Returns a path to a directory the test may use for temporary
 	# storage. This will be cleaned up automatically after the test
