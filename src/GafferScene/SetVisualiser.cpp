@@ -50,6 +50,7 @@
 
 #include "boost/algorithm/string/predicate.hpp"
 
+#include "fmt/format.h"
 
 using namespace Imath;
 using namespace IECore;
@@ -82,9 +83,9 @@ std::vector<Override> unpackOverrides( const CompoundDataPlug *plug )
 			}
 			else
 			{
-				throw IECore::Exception( boost::str( boost::format(
-					"Color Override value for \"%s\" is not a Color3f") % name )
-				);
+				throw IECore::Exception( fmt::format(
+					"Color Override value for \"{}\" is not a Color3f", name
+				) );
 			}
 		}
 	}

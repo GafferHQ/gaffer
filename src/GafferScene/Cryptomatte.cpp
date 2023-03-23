@@ -47,6 +47,8 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/regex.hpp>
 
+#include "fmt/format.h"
+
 #include <filesystem>
 #include <unordered_map>
 #include <unordered_set>
@@ -160,7 +162,7 @@ inline float matteNameToValue( const std::string &matteName )
 inline std::string hashLayerName( const std::string &layerName )
 {
 	// hash the layer name to find manifest keys from image metadata
-	return boost::str( boost::format( "%08x" ) % MurmurHash3_x86_32( layerName.c_str(), layerName.length(), 0 ) );
+	return fmt::format( "{:08x}", MurmurHash3_x86_32( layerName.c_str(), layerName.length(), 0 ) );
 }
 
 IECore::CompoundDataPtr propertyTreeToCompoundData( const boost::property_tree::ptree &pt )
@@ -192,7 +194,7 @@ IECore::CompoundDataPtr parseManifestFromMetadata( const std::string &metadataKe
 {
 	if( metadata->readable().find( metadataKey ) == metadata->readable().end() )
 	{
-		throw IECore::Exception( boost::str( boost::format( "Image metadata entry not found: %s" ) % metadataKey ) );
+		throw IECore::Exception( fmt::format( "Image metadata entry not found: {}", metadataKey ) );
 	}
 
 	const StringData *manifest = metadata->member<StringData>( metadataKey );
@@ -205,7 +207,7 @@ IECore::CompoundDataPtr parseManifestFromMetadata( const std::string &metadataKe
 	}
 	catch( const boost::property_tree::json_parser::json_parser_error &e )
 	{
-		throw IECore::Exception( boost::str( boost::format( "Error parsing manifest metadata: %s" ) % e.what() ) );
+		throw IECore::Exception( fmt::format( "Error parsing manifest metadata: {}", e.what() ) );
 	}
 
 	return propertyTreeToCompoundData( pt );
@@ -219,7 +221,7 @@ IECore::CompoundDataPtr parseManifestFromSidecarFile( const std::string &manifes
 	}
 	else if( !std::filesystem::is_regular_file( manifestFile ) )
 	{
-		throw IECore::Exception( boost::str( boost::format( "Manifest file not found: %s" ) % manifestFile ) );
+		throw IECore::Exception( fmt::format( "Manifest file not found: {}", manifestFile ) );
 	}
 
 	boost::property_tree::ptree pt;
@@ -230,7 +232,7 @@ IECore::CompoundDataPtr parseManifestFromSidecarFile( const std::string &manifes
 	}
 	catch( const boost::property_tree::json_parser::json_parser_error &e )
 	{
-		throw IECore::Exception( boost::str( boost::format( "Error parsing manifest file: %s" ) % e.what() ) );
+		throw IECore::Exception( fmt::format( "Error parsing manifest file: {}", e.what() ) );
 	}
 
 	return propertyTreeToCompoundData( pt );
@@ -240,7 +242,7 @@ IECore::CompoundDataPtr parseManifestFromMetadataAndSidecar( const std::string &
 {
 	if( metadata->readable().find( metadataKey ) == metadata->readable().end() )
 	{
-		throw IECore::Exception( boost::str( boost::format( "Image metadata entry not found: %s" ) % metadataKey ) );
+		throw IECore::Exception( fmt::format( "Image metadata entry not found: {}", metadataKey ) );
 	}
 
 	if( manifestDirectory == "" )
@@ -249,7 +251,7 @@ IECore::CompoundDataPtr parseManifestFromMetadataAndSidecar( const std::string &
 	}
 	else if( !std::filesystem::is_directory( manifestDirectory ) )
 	{
-		throw IECore::Exception( boost::str( boost::format( "Manifest directory not found: %s") % manifestDirectory ) );
+		throw IECore::Exception( fmt::format( "Manifest directory not found: {}", manifestDirectory ) );
 	}
 
 	const StringData *manifestFile = metadata->member<StringData>( metadataKey );
@@ -263,7 +265,7 @@ IECore::CompoundDataPtr parseManifestFromMetadataAndSidecar( const std::string &
 IECore::CompoundDataPtr parseManifestFromFirstMetadataEntry( const std::string &cryptomatteLayer, ConstCompoundDataPtr metadata, const std::string &manifestDirectory )
 {
 	// The Cryptomatte specification suggests metadata entries stored for each layer based on a key generated from the first 7 characters of the hashed layer name.
-	const std::string layerPrefix = boost::str( boost::format( "cryptomatte/%.7s" ) % hashLayerName( cryptomatteLayer ) );
+	const std::string layerPrefix = fmt::format( "cryptomatte/{:.7s}", hashLayerName( cryptomatteLayer ) );
 
 	// A "conversion" metadata entry is required, specifying the conversion method used to convert hash values to pixel values.
 	// As per the Cryptomatte specification, "uint32_to_float32" is the only currently supported conversion type.
@@ -271,7 +273,7 @@ IECore::CompoundDataPtr parseManifestFromFirstMetadataEntry( const std::string &
 
 	if( metadata->readable().find( manifestConversion ) == metadata->readable().end() )
 	{
-		throw IECore::Exception( boost::str( boost::format( "Image metadata entry not found: %s" ) % manifestConversion ) );
+		throw IECore::Exception( fmt::format( "Image metadata entry not found: {}", manifestConversion ) );
 	}
 	else if( metadata->member<StringData>( manifestConversion )->readable() != "uint32_to_float32" )
 	{
@@ -284,7 +286,7 @@ IECore::CompoundDataPtr parseManifestFromFirstMetadataEntry( const std::string &
 
 	if( metadata->readable().find( manifestHash ) == metadata->readable().end() )
 	{
-		throw IECore::Exception( boost::str( boost::format( "Image metadata entry not found: %s" ) % manifestHash ) );
+		throw IECore::Exception( fmt::format( "Image metadata entry not found: {}", manifestHash ) );
 	}
 	else if( metadata->member<StringData>( manifestHash )->readable() != "MurmurHash3_32" )
 	{
@@ -307,7 +309,7 @@ IECore::CompoundDataPtr parseManifestFromFirstMetadataEntry( const std::string &
 	}
 	else
 	{
-		throw IECore::Exception( boost::str( boost::format( "Image metadata entry not found. One of the following entries expected: %s %s" ) % manifestKey % manifestFileKey ) );
+		throw IECore::Exception( fmt::format( "Image metadata entry not found. One of the following entries expected: {} {}", manifestKey, manifestFileKey ) );
 	}
 }
 
@@ -327,7 +329,7 @@ static const ChannelMap g_channelMap = {
 };
 
 const std::string g_firstDataChannelSuffix = "00.R";
-const std::string g_cryptomatteChannelPattern = "^%s[0-9]+\\.[RGBA]";
+const std::string g_cryptomatteChannelPattern = "^{}[0-9]+\\.[RGBA]";
 
 Cryptomatte::Cryptomatte( const std::string &name )
 	: GafferImage::FlatImageProcessor( name )
@@ -573,7 +575,7 @@ void Cryptomatte::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *
 			matteValuesPlug()->hash( h );
 		}
 
-		boost::regex channelNameRegex( boost::str( boost::format( g_cryptomatteChannelPattern ) % cryptomatteLayer ) );
+		boost::regex channelNameRegex( fmt::format( g_cryptomatteChannelPattern, cryptomatteLayer ) );
 		GafferImage::ImagePlug::ChannelDataScope channelDataScope( context );
 		for( const auto &c : channelNamesData->readable() )
 		{
@@ -649,7 +651,7 @@ void Cryptomatte::compute( Gaffer::ValuePlug *output, const Gaffer::Context *con
 				}
 				catch( const std::exception &e )
 				{
-					IECore::msg( IECore::Msg::Error, "Cryptomatte::matteValues", boost::format( "Error converting value: %s" ) % name );
+					IECore::msg( IECore::Msg::Error, "Cryptomatte::matteValues", fmt::format( "Error converting value: {}", name ) );
 					continue;
 				}
 			}
@@ -764,7 +766,7 @@ void Cryptomatte::compute( Gaffer::ValuePlug *output, const Gaffer::Context *con
 		const std::vector<std::string> &channelNames = channelNamesData->readable();
 		const std::vector<float> &matteValues = matteValuesData->readable();
 
-		boost::regex channelNameRegex( boost::str( boost::format( g_cryptomatteChannelPattern ) % cryptomatteLayer ) );
+		boost::regex channelNameRegex( fmt::format( g_cryptomatteChannelPattern, cryptomatteLayer ) );
 		GafferImage::ImagePlug::ChannelDataScope channelDataScope( context );
 		for( const auto &c : channelNames )
 		{

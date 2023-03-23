@@ -42,7 +42,8 @@
 #include "IECoreScene/CurvesPrimitive.h"
 
 #include "boost/algorithm/string.hpp"
-#include "boost/format.hpp"
+
+#include "fmt/format.h"
 
 using namespace IECore;
 using namespace IECoreScene;
@@ -139,7 +140,7 @@ IECore::ConstObjectPtr DeleteCurves::computeProcessedObject( const ScenePath &pa
 			return inputObject;
 		}
 
-		throw InvalidArgumentException( boost::str( boost::format( "DeleteCurves : No primitive variable \"%s\" found" ) % deletePrimVarName ) );
+		throw InvalidArgumentException( fmt::format( "DeleteCurves : No primitive variable \"{}\" found", deletePrimVarName ) );
 	}
 
 	return CurvesAlgo::deleteCurves(curves, it->second, invertPlug()->getValue());

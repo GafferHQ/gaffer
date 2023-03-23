@@ -132,7 +132,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		# the index, so will just return a reasonable value
 		self.assertRaisesRegex(
 			Gaffer.ProcessException,
-			'Instancer.out.transform : Instance id "77" is invalid, instancer produces only 4 children.  Topology may have changed during shutter.',
+			'Instancer.out.transform : Instance id "77" is invalid, instancer produces only 4 children. Topology may have changed during shutter.',
 			instancer["out"].transform, "/seeds/instances/sphere/77"
 		)
 		self.assertEqual( instancer["out"].object( "/seeds/instances/sphere/77" ), sphere )
@@ -1300,7 +1300,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertRaisesRegex(
 			Gaffer.ProcessException,
-			'Instancer.out.transform : Instance id "77" is invalid.  Topology may have changed during shutter.',
+			'Instancer.out.transform : Instance id "77" is invalid. Topology may have changed during shutter.',
 			instancer["out"].transform, "/object/instances/cube/77"
 		)
 
@@ -2109,7 +2109,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		for func in [ instancer["out"].object, instancer["out"].childNames, instancer["out"].bound, instancer["out"].transform ]:
 			self.assertRaisesRegex(
 				Gaffer.ProcessException,
-				'Instancer.out.' + func.__name__ + ' : Instance id "777" is invalid, instancer produces only 10 children.  Topology may have changed during shutter.',
+				'Instancer.out.' + func.__name__ + ' : Instance id "777" is invalid, instancer produces only 10 children. Topology may have changed during shutter.',
 				func, "/points/instances/withAttrs/777"
 			)
 

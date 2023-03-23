@@ -43,6 +43,8 @@
 
 #include "OpenEXR/ImathRandom.h"
 
+#include "fmt/format.h"
+
 using namespace Imath;
 using namespace IECore;
 using namespace IECoreScene;
@@ -298,9 +300,9 @@ IECore::ConstCompoundObjectPtr AttributeVisualiser::computeProcessedAttributes( 
 				color = static_cast<const V3dData *>( attribute )->readable();
 				break;
 			default :
-				throw IECore::Exception( boost::str(
-					boost::format( "Unsupported attribute data type \"%s\"" ) % attribute->typeName()
-				) );
+				throw IECore::Exception(
+					fmt::format( "Unsupported attribute data type \"{}\"", attribute->typeName() )
+				);
 		}
 		const Color3f min( minPlug()->getValue() );
 		const Color3f max( maxPlug()->getValue() );

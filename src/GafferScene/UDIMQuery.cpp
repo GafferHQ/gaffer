@@ -46,6 +46,7 @@
 #include "boost/algorithm/string/replace.hpp"
 #include "boost/container/flat_set.hpp"
 
+#include "fmt/format.h"
 
 using namespace IECore;
 using namespace IECoreScene;
@@ -232,10 +233,9 @@ struct InfoDataAccumulator
 		if( uvs->size() != targetSize )
 		{
 			throw IECore::Exception(
-				boost::str(
-					boost::format(
-						"Cannot query UDIMs.  Bad uvs at location %s.  Required count %i but found %i."
-					) % pathString % targetSize % uvs->size()
+				fmt::format(
+					"Cannot query UDIMs. Bad uvs at location \"{}\". Required count {} but found {}.",
+					pathString, targetSize, uvs->size()
 				)
 			);
 		}

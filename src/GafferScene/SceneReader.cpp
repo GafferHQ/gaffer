@@ -48,6 +48,8 @@
 
 #include "boost/bind/bind.hpp"
 
+#include "fmt/format.h"
+
 using namespace std;
 using namespace boost::placeholders;
 using namespace Imath;
@@ -345,8 +347,10 @@ IECore::ConstCompoundObjectPtr SceneReader::computeAttributes( const ScenePath &
 		{
 			IECore::msg(
 				IECore::Msg::Warning, "SceneReader::computeAttributes",
-				boost::format( "Failed to load attribute \"%1%\" at location \"%2%\"" )
-					% *it % ScenePlug::pathToString( path )
+				fmt::format(
+					"Failed to load attribute \"{}\" at location \"{}\"",
+					it->string(), ScenePlug::pathToString( path )
+				)
 			);
 		}
 	}

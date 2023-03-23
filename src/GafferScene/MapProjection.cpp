@@ -45,6 +45,8 @@
 
 #include "OpenEXR/ImathFun.h"
 
+#include "fmt/format.h"
+
 using namespace std;
 using namespace Imath;
 using namespace IECore;
@@ -151,9 +153,9 @@ IECore::ConstObjectPtr MapProjection::computeProcessedObject( const ScenePath &p
 	if( !pData )
 	{
 		string pathString; ScenePlug::pathToString( path, pathString );
-		throw IECore::Exception( boost::str(
-			boost::format( "Position primitive variable \"%1%\" on object \"%2%\" should be V3fVectorData (but is %3%)" )
-				% position % pathString % pPrimVar.data->typeName()
+		throw IECore::Exception( fmt::format(
+			"Position primitive variable \"{}\" on object \"{}\" should be V3fVectorData (but is {})",
+			position, pathString, pPrimVar.data->typeName()
 		) );
 	}
 

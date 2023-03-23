@@ -45,6 +45,8 @@
 
 #include "boost/container/flat_map.hpp"
 
+#include "fmt/format.h"
+
 using namespace std;
 using namespace Imath;
 using namespace IECore;
@@ -113,7 +115,7 @@ class RootTree : public IECore::Data
 					{
 						if( location->isRoot() )
 						{
-							throw IECore::Exception( boost::str( boost::format( "\"%1%\" contains nested roots" ) % location->rootVariableValue ) );
+							throw IECore::Exception( fmt::format( "\"{}\" contains nested roots", location->rootVariableValue ) );
 						}
 						inserted.first->second.reset( new Location( location->depth + 1 ) );
 						location->childNames->writable().push_back( name );
@@ -129,7 +131,7 @@ class RootTree : public IECore::Data
 
 				if( !location->children.empty() )
 				{
-					throw IECore::Exception( boost::str( boost::format( "\"%1%\" contains nested roots" ) % root ) );
+					throw IECore::Exception( fmt::format( "\"{}\" contains nested roots", root ) );
 				}
 
 				location->rootVariableValue = root;

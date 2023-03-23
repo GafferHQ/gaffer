@@ -51,6 +51,8 @@
 #include "boost/variant/apply_visitor.hpp"
 #include "boost/variant/recursive_variant.hpp"
 
+#include "fmt/format.h"
+
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
@@ -206,7 +208,7 @@ struct AstEvaluator
 			PathMatcher result;
 			if( StringAlgo::hasWildcards( identifier ) )
 			{
-				throw IECore::Exception( boost::str( boost::format( "Object name \"%1%\" contains wildcards" ) % identifier ) );
+				throw IECore::Exception( fmt::format( "Object name \"{}\" contains wildcards", identifier ) );
 			}
 			result.addPath( identifier );
 			return result;
@@ -505,7 +507,7 @@ void expressionToAST( const std::string &setExpression, ExpressionAst &ast)
 			errorIndication += '|' + std::string( indicationSize - 2, '-') + '|';
 		}
 
-		throw IECore::Exception( boost::str( boost::format( "Syntax error in indicated part of SetExpression.\n%s\n%i\n." ) % setExpression % errorIndication ) ) ;
+		throw IECore::Exception( fmt::format( "Syntax error in indicated part of SetExpression.\n{}\n{}\n.", setExpression, errorIndication ) );
 	}
 }
 

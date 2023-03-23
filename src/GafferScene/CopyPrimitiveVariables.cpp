@@ -42,6 +42,8 @@
 
 #include "IECoreScene/Primitive.h"
 
+#include "fmt/format.h"
+
 using namespace std;
 using namespace IECore;
 using namespace IECoreScene;
@@ -221,12 +223,11 @@ IECore::ConstObjectPtr CopyPrimitiveVariables::computeProcessedObject( const Sce
 			}
 			string destinationPath; ScenePlug::pathToString( path, destinationPath );
 			const string &sourcePath = sourceLocation.size() ? sourceLocation : destinationPath;
-			throw IECore::Exception( boost::str(
-				boost::format(
-					"Cannot copy \"%1%\" from \"%2%\" to \"%3%\" because source and "
-					"destination primitives have different topology. Turn on `ignoreIncompatible` "
-					"to disable this error and ignore invalid primitive variables."
-				) % variable.first % sourcePath % destinationPath
+			throw IECore::Exception( fmt::format(
+				"Cannot copy \"{}\" from \"{}\" to \"{}\" because source and "
+				"destination primitives have different topology. Turn on `ignoreIncompatible` "
+				"to disable this error and ignore invalid primitive variables.",
+				variable.first, sourcePath, destinationPath
 			) );
 		}
 		result->variables[prefix + variable.first] = variable.second;
