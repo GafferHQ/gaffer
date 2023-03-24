@@ -5,6 +5,7 @@ API
 ---
 
 - NoduleLayout : Added a warning message when a required custom gadget has not been registered.
+- GafferUITest.TestCase : Added testing of NodeGadgets to `assertNodeUIsHaveExpectedLifetime()`.
 
 1.2.2.0 (relative to 1.2.1.1)
 =======
