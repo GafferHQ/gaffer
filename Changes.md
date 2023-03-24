@@ -1,6 +1,11 @@
 1.2.x.x (relative to 1.2.2.0)
 =======
 
+Fixes
+-----
+
+- OSLObject/OSLImage : Fixed missing `+` buttons in GraphEditor on Windows (#5222).
+
 API
 ---
 
