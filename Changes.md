@@ -1,6 +1,11 @@
 1.2.x.x (relative to 1.2.2.0)
 =======
 
+API
+---
+
+- NoduleLayout : Added a warning message when a required custom gadget has not been registered.
+
 1.2.2.0 (relative to 1.2.1.1)
 =======
 
