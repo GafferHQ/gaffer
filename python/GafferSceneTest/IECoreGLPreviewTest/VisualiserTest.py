@@ -63,23 +63,29 @@ class VisualiserTest( GafferTest.TestCase ) :
 
 		g = IECoreGL.Group()
 
-		geom = GafferScene.IECoreScenePreview.Visualisation.createGeometry( g )
-		self.assertEqual( geom.scale, GafferScene.IECoreScenePreview.Visualisation.Scale.Local )
-		self.assertEqual( geom.category, GafferScene.IECoreScenePreview.Visualisation.Category.Generic )
-		self.assertEqual( geom.affectsFramingBound, True )
+		ColorSpace = GafferScene.IECoreScenePreview.Visualisation.ColorSpace
+		for colorSpace in ( ColorSpace.Scene, ColorSpace.Display ) :
 
-		for bounded in ( True, False ) :
-			o = GafferScene.IECoreScenePreview.Visualisation.createOrnament( g, bounded )
-			self.assertEqual( o.scale, GafferScene.IECoreScenePreview.Visualisation.Scale.Visualiser )
-			self.assertEqual( o.category, GafferScene.IECoreScenePreview.Visualisation.Category.Generic )
-			self.assertEqual( o.affectsFramingBound, bounded )
+			geom = GafferScene.IECoreScenePreview.Visualisation.createGeometry( g, colorSpace = colorSpace )
+			self.assertEqual( geom.scale, GafferScene.IECoreScenePreview.Visualisation.Scale.Local )
+			self.assertEqual( geom.category, GafferScene.IECoreScenePreview.Visualisation.Category.Generic )
+			self.assertEqual( geom.affectsFramingBound, True )
+			self.assertEqual( geom.colorSpace, colorSpace )
 
-		Scale = GafferScene.IECoreScenePreview.Visualisation.Scale
-		for scale in ( Scale.Local, Scale.Visualiser ) :
-			f = GafferScene.IECoreScenePreview.Visualisation.createFrustum( g, scale )
-			self.assertEqual( f.scale, scale )
-			self.assertEqual( f.category, GafferScene.IECoreScenePreview.Visualisation.Category.Frustum )
-			self.assertEqual( f.affectsFramingBound, False )
+			for bounded in ( True, False ) :
+				o = GafferScene.IECoreScenePreview.Visualisation.createOrnament( g, bounded, colorSpace = colorSpace )
+				self.assertEqual( o.scale, GafferScene.IECoreScenePreview.Visualisation.Scale.Visualiser )
+				self.assertEqual( o.category, GafferScene.IECoreScenePreview.Visualisation.Category.Generic )
+				self.assertEqual( o.affectsFramingBound, bounded )
+				self.assertEqual( o.colorSpace, colorSpace )
+
+			Scale = GafferScene.IECoreScenePreview.Visualisation.Scale
+			for scale in ( Scale.Local, Scale.Visualiser ) :
+				f = GafferScene.IECoreScenePreview.Visualisation.createFrustum( g, scale, colorSpace = colorSpace )
+				self.assertEqual( f.scale, scale )
+				self.assertEqual( f.category, GafferScene.IECoreScenePreview.Visualisation.Category.Frustum )
+				self.assertEqual( f.affectsFramingBound, False )
+				self.assertEqual( f.colorSpace, colorSpace )
 
 if __name__ == "__main__":
 	unittest.main()
