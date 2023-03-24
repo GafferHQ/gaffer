@@ -48,6 +48,8 @@
 #include "IECore/SimpleTypedData.h"
 #include "IECore/StringAlgo.h"
 
+#include "fmt/format.h"
+
 #include <unordered_map>
 
 using namespace std;
@@ -271,8 +273,9 @@ bool ShaderTweaks::applyTweaks( IECoreScene::ShaderNetwork *shaderNetwork, Tweak
 		{
 			if( missingMode != TweakPlug::MissingMode::Ignore )
 			{
-				throw IECore::Exception( boost::str(
-					boost::format( "Cannot apply tweak \"%1%\" because shader \"%2%\" does not exist" ) % name % parameter.shader
+				throw IECore::Exception( fmt::format(
+					"Cannot apply tweak \"{}\" because shader \"{}\" does not exist",
+					name, parameter.shader.string()
 				) );
 			}
 			else
@@ -287,7 +290,7 @@ bool ShaderTweaks::applyTweaks( IECoreScene::ShaderNetwork *shaderNetwork, Tweak
 		{
 			if( mode != TweakPlug::Mode::Replace )
 			{
-				throw IECore::Exception( boost::str( boost::format( "Cannot apply tweak to \"%s\" : Mode must be \"Replace\" when a previous connection exists" ) % name ) );
+				throw IECore::Exception( fmt::format( "Cannot apply tweak to \"{}\" : Mode must be \"Replace\" when a previous connection exists", name ) );
 			}
 			shaderNetwork->removeConnection( { input, parameter } );
 			removedConnections = true;
@@ -311,7 +314,7 @@ bool ShaderTweaks::applyTweaks( IECoreScene::ShaderNetwork *shaderNetwork, Tweak
 			{
 				if( mode != TweakPlug::Mode::Replace )
 				{
-					throw IECore::Exception( boost::str( boost::format( "Cannot apply tweak to \"%s\" : Mode must be \"Replace\" when inserting a connection" ) % name ) );
+					throw IECore::Exception( fmt::format( "Cannot apply tweak to \"{}\" : Mode must be \"Replace\" when inserting a connection", name ) );
 				}
 				const auto inputParameter = ShaderNetworkAlgo::addShaders( shaderNetwork, inputNetwork );
 				shaderNetwork->addConnection( { inputParameter, parameter } );

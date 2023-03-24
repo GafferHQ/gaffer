@@ -56,6 +56,8 @@
 
 #include "boost/algorithm/string/predicate.hpp"
 
+#include "fmt/format.h"
+
 using namespace std;
 using namespace IECore;
 using namespace Gaffer;
@@ -179,7 +181,7 @@ void OpenGLShader::loadShader( const std::string &shaderName, bool keepExistingV
 				msg(
 					Msg::Warning,
 					"OpenGLShader::loadShader",
-					boost::format( "Parameter \"%s\" has unsupported type" ) % *it
+					fmt::format( "Parameter \"{}\" has unsupported type", *it )
 				);
 		}
 		if( plug )

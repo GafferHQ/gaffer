@@ -66,6 +66,8 @@
 #include "tbb/parallel_for.h"
 #include "tbb/task.h"
 
+#include "fmt/format.h"
+
 #include <filesystem>
 
 using namespace std;
@@ -1280,9 +1282,10 @@ struct CameraOutput : public LocationOutput
 				IECore::msg(
 					IECore::Msg::Warning,
 					"RendererAlgo::CameraOutput",
-					boost::format( "Camera missing for location \"%1%\" at frame %2%" )
-						% name( path )
-						% Context::current()->getFrame()
+					fmt::format(
+						"Camera missing for location \"{}\" at frame {}",
+						name( path ), Context::current()->getFrame()
+					)
 				);
 			}
 			else
@@ -1535,7 +1538,7 @@ ConstOutputPtr addGafferOutputHeaders( const Output *output, const ScenePlug *sc
 				IECore::msg(
 					IECore::Msg::Debug,
 					"GafferScene::RendererAlgo",
-					boost::format(  "Unsupported data type for Context variable \"%s\" (%s), unable to add this variable to output image header" ) % name % data->typeName()
+					fmt::format( "Unsupported data type for Context variable \"{}\" ({}), unable to add this variable to output image header", name.string(), data->typeName() )
 				);
 		};
 	}

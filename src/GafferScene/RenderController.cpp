@@ -56,6 +56,8 @@
 
 #include "tbb/task.h"
 
+#include "fmt/format.h"
+
 using namespace std;
 using namespace boost::placeholders;
 using namespace Imath;
@@ -891,9 +893,10 @@ class RenderController::SceneGraph
 					IECore::msg(
 						IECore::Msg::Warning,
 						"RenderController::updateObject",
-						boost::format( "Camera missing for location \"%1%\" at frame %2%" )
-							% name
-							% Context::current()->getFrame()
+						fmt::format(
+							"Camera missing for location \"{}\" at frame {}",
+							name, Context::current()->getFrame()
+						)
 					);
 				}
 				else
@@ -1670,9 +1673,10 @@ void RenderController::updateInternal( const ProgressCallback &callback, const I
 			{
 				IECore::msg(
 					IECore::Msg::Warning, "RenderController",
-					boost::format( "%1% attribute edit%2% required geometry to be regenerated" )
-						% m_failedAttributeEdits
-						% ( m_failedAttributeEdits > 1 ? "s" : "" )
+					fmt::format(
+						"{} attribute edit{} required geometry to be regenerated",
+						m_failedAttributeEdits, m_failedAttributeEdits > 1 ? "s" : ""
+					)
 				);
 				m_failedAttributeEdits = 0;
 			}

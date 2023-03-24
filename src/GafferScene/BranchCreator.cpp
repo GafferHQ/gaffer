@@ -48,6 +48,8 @@
 
 #include "tbb/spin_mutex.h"
 
+#include "fmt/format.h"
+
 #include <unordered_map>
 
 using namespace std;
@@ -259,7 +261,7 @@ class BranchCreator::BranchesData : public IECore::Data
 			assert( location->depth == destination.size() );
 			if( !location->sourcePaths )
 			{
-				throw IECore::Exception( boost::str( boost::format( "No source paths found for destination \"%1%\"" ) % ScenePlug::pathToString( destination ) ) );
+				throw IECore::Exception( fmt::format( "No source paths found for destination \"{}\"", ScenePlug::pathToString( destination ) ) );
 			}
 			return *location->sourcePaths;
 		}
@@ -322,9 +324,9 @@ class BranchCreator::BranchesData : public IECore::Data
 				{
 					// We don't yet support merging branch children with new locations
 					// introduced by destinations that didn't previously exist.
-					throw IECore::Exception( boost::str(
-						boost::format( "Destination \"%1%\" contains a nested destination" )
-							% ScenePlug::pathToString( ScenePath( destination.begin(), destination.begin() + location->depth ) )
+					throw IECore::Exception( fmt::format(
+						"Destination \"{}\" contains a nested destination",
+						ScenePlug::pathToString( ScenePath( destination.begin(), destination.begin() + location->depth ) )
 					) );
 				}
 
@@ -349,9 +351,9 @@ class BranchCreator::BranchesData : public IECore::Data
 			{
 				if( !location->exists && location->children.size() )
 				{
-					throw IECore::Exception( boost::str(
-						boost::format( "Destination \"%1%\" contains a nested destination" )
-							% ScenePlug::pathToString( destination )
+					throw IECore::Exception( fmt::format(
+						"Destination \"{}\" contains a nested destination",
+						ScenePlug::pathToString( destination )
 					) );
 				}
 				location->sourcePaths.reset( new Location::SourcePaths );

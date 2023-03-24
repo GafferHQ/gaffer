@@ -53,6 +53,8 @@
 #include "OpenEXR/ImathMatrixAlgo.h"
 #include "OpenEXR/ImathRandom.h"
 
+#include "fmt/format.h"
+
 #include <random>
 
 using namespace std;
@@ -90,7 +92,7 @@ PrimitiveVariable::IndexedView<T> indexedView( const Primitive *inputPrimitive, 
 	if( it == inputPrimitive->variables.end() )
 	{
 		throw IECore::Exception(
-			boost::str( boost::format( "Primitive variable \"%s\" not found" ) % name )
+			fmt::format( "Primitive variable \"{}\" not found", name )
 		);
 	}
 
@@ -99,11 +101,9 @@ PrimitiveVariable::IndexedView<T> indexedView( const Primitive *inputPrimitive, 
 	if( !data )
 	{
 		throw IECore::Exception(
-			boost::str(
-				boost::format( "Primitive variable \"%s\" has wrong type \"%s\" (wanted \"%s\")" )
-					% name
-					% it->second.data->typeName()
-					% DataType::staticTypeName()
+			fmt::format(
+				"Primitive variable \"{}\" has wrong type \"{}\" (wanted \"{}\")",
+				name, it->second.data->typeName(), DataType::staticTypeName()
 			)
 		);
 	}
@@ -121,12 +121,9 @@ PrimitiveVariable::IndexedView<T> indexedView( const Primitive *inputPrimitive, 
 		if( data->readable().size() != spec.size )
 		{
 			throw IECore::Exception(
-				boost::str(
-					boost::format( "Primitive variable \"%s\" has wrong size (%d, but should be %d to match \"%s\")" )
-						% name
-						% data->readable().size()
-						% spec.size
-						% spec.name
+				fmt::format(
+					"Primitive variable \"{}\" has wrong size ({}, but should be {} to match \"{}\")",
+					name, data->readable().size(), spec.size, spec.name
 				)
 			);
 		}
