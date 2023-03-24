@@ -5,6 +5,7 @@ Fixes
 -----
 
 - OSLObject/OSLImage : Fixed missing `+` buttons in GraphEditor on Windows (#5222).
+- Viewer : Fixed missing VDB visualisations on Windows (#5223).
 
 API
 ---
