@@ -255,7 +255,7 @@ void OutputBuffer::renderInternal( bool renderSelection ) const
 
 		Texture::ScopedBinding binding( *m_rgbaTexture );
 		glTexImage2D(
-			GL_TEXTURE_2D, 0, GL_RGBA,
+			GL_TEXTURE_2D, 0, GL_RGBA16F,
 			/* width = */ m_dataWindow.size().x + 1, /* height = */ m_dataWindow.size().y + 1, /* border = */ 0,
 			GL_RGBA, GL_FLOAT, m_rgbaBuffer.data()
 		);
