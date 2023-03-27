@@ -149,6 +149,11 @@ class BackupsTest( GafferUITest.TestCase ) :
 		b.settings()["files"].setValue( 3 )
 
 		s = Gaffer.ScriptNode()
+
+		# New script that hasn't been saved - recovery file should be none.
+		self.assertEqual( b.recoveryFile( s ), None )
+
+		# Script saved but no backup made - recovery file should be none.
 		s["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
 		self.assertEqual( b.recoveryFile( s ), None )
 

@@ -61,6 +61,7 @@ class Backups( object ) :
 		self.__settings["frequency"] = Gaffer.IntPlug( defaultValue = 5, minValue = 0 )
 		self.__settings["fileName"] = Gaffer.StringPlug( defaultValue = "${script:directory}/.gafferBackups/${script:name}-backup${backup:number}.gfr" )
 		self.__settings["files"] = Gaffer.IntPlug( defaultValue = 10, minValue = 1 )
+		self.__settings["checkForBackups"] = Gaffer.BoolPlug( defaultValue = True )
 
 		applicationRoot["preferences"]["backups"] = self.__settings
 
@@ -125,6 +126,8 @@ class Backups( object ) :
 	def recoveryFile( self, script ) :
 
 		scriptPath = self.__scriptPath( script )
+		if not scriptPath:
+			return None
 		backups = self.backups( scriptPath )
 		if not backups :
 			return None
@@ -168,6 +171,10 @@ class Backups( object ) :
 	def settings( self ) :
 
 		return self.__settings
+
+	def checkForBackups( self ) :
+
+		return self.__settings["checkForBackups"].getValue()
 
 	@classmethod
 	def acquire( cls, application, createIfNecessary=True ) :
@@ -358,6 +365,19 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"layout:activator", "backupNumberEnabled",
+
+		],
+
+		"backups.checkForBackups" : [
+
+			"description",
+			"""
+			When a file is opened, checks for a more recent backup.
+			If one is found, a dialogue is displayed,
+			asking if the backup should be opened instead.
+			If this option is turned off,
+			you can still access backups via the File/Open Backup menu item.
+			""",
 
 		],
 
