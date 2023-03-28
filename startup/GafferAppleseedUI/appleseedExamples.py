@@ -1,7 +1,6 @@
 import Gaffer
 import GafferUI
 import GafferScene
-import GafferOSL
 import GafferAppleseed
 
 GafferUI.Examples.registerExample(
@@ -11,17 +10,6 @@ GafferUI.Examples.registerExample(
 	notableNodes = [
 		GafferScene.Camera,
 		GafferScene.StandardOptions
-	]
-)
-
-GafferUI.Examples.registerExample(
-	"Rendering/Macbeth Chart",
-	"$GAFFER_ROOT/resources/examples/rendering/macbethChart.gfr",
-	description = "Demonstrates how to create and assign a procedural OSL texture.",
-	notableNodes = [
-		GafferOSL.OSLCode,
-		GafferOSL.OSLShader,
-		Gaffer.Reference
 	]
 )
 

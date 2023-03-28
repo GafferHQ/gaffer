@@ -38,6 +38,7 @@ Documentation
 -------------
 
 - Updated the "Contact Sheet Generation" example to use Cycles instead of Appleseed.
+- Updated the "Macbeth Chart" example to use Cycles instead of Appleseed.
 - Updated the "Per-location Light Tweak Spreadsheet" example to use Cycles instead of Appleseed.
 - Updated the "Wedge Tests" example to use Cycles instead of Appleseed.
 

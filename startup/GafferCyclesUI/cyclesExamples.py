@@ -3,6 +3,7 @@ import GafferUI
 import GafferCycles
 import GafferDispatch
 import GafferImage
+import GafferOSL
 import GafferScene
 
 GafferUI.Examples.registerExample(
@@ -17,6 +18,19 @@ GafferUI.Examples.registerExample(
 		Gaffer.ContextVariables,
 		Gaffer.ContextQuery,
 		Gaffer.Expression,
+		GafferCycles.CyclesRender
+	]
+)
+
+GafferUI.Examples.registerExample(
+	"Rendering/Macbeth Chart",
+	"$GAFFER_ROOT/resources/examples/rendering/macbethChart.gfr",
+	description = "Demonstrates how to create and assign a procedural OSL texture.",
+	notableNodes = [
+		GafferOSL.OSLCode,
+		GafferOSL.OSLShader,
+		GafferScene.ShaderAssignment,
+		Gaffer.Reference,
 		GafferCycles.CyclesRender
 	]
 )

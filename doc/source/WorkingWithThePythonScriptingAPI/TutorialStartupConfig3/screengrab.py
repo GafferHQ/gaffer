@@ -24,15 +24,12 @@ def __dispatchScript( script, tasks, settings ) :
 # Example: Macbeth Chart
 __dispatchScript(
 	script = os.path.abspath( "../../../examples/rendering/macbethChart.gfr" ),
-	tasks = [ "AppleseedRender" ],
+	tasks = [ "CyclesRender" ],
 	settings = [
 		"-StandardOptions.options.renderResolution.enabled True",
 		"-StandardOptions.options.renderResolution.value.x '270'",
 		"-StandardOptions.options.renderResolution.value.y '240'",
-		"-AppleseedOptions.options.maxAASamples.enabled True",
-		"-AppleseedOptions.options.maxAASamples.value '0'",
-		"-AppleseedOptions.options.aaBatchSampleSize.enabled True",
-		"-AppleseedOptions.options.aaBatchSampleSize.value '64'",
+		"-background_light.parameters.exposure '1'",
 		"-Outputs.outputs.output2.fileName '\"{}\"'".format( os.path.abspath( "images/exampleMacbethChart.png" ) ),
 		"-Outputs.outputs.output2.type '\"png\"'",
 		"-Outputs.outputs.output1.active False"
