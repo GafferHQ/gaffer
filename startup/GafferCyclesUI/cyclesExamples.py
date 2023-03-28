@@ -1,5 +1,6 @@
 import Gaffer
 import GafferUI
+import GafferCycles
 import GafferDispatch
 import GafferImage
 import GafferScene
@@ -34,3 +35,16 @@ GafferUI.Examples.registerExample(
 	]
 )
 
+GafferUI.Examples.registerExample(
+	"Rendering/Per-location Light Tweak Spreadsheet",
+	"$GAFFER_ROOT/resources/examples/rendering/perLocationLightTweakSpreadsheet.gfr",
+	description = """
+	Demonstrates how to use the Spreadsheet node to vary light tweaks
+	per location.
+	""",
+	notableNodes = [
+		Gaffer.Spreadsheet,
+		GafferScene.ShaderTweaks,
+		GafferCycles.CyclesLight
+	]
+)
