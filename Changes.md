@@ -38,6 +38,7 @@ Documentation
 -------------
 
 - Updated the "Contact Sheet Generation" example to use Cycles instead of Appleseed.
+- Updated the "Wedge Tests" example to use Cycles instead of Appleseed.
 
 1.2.2.0 (relative to 1.2.1.1)
 =======
