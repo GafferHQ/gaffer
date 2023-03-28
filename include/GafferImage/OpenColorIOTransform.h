@@ -61,13 +61,6 @@ class GAFFERIMAGE_API OpenColorIOTransform : public ColorProcessor
 			Inverse
 		};
 
-		/// Fills the vector will the available color spaces,
-		/// as defined by the current OpenColorIO config.
-		static void availableColorSpaces( std::vector<std::string> &colorSpaces );
-		/// Fills the vector will the available roles,
-		/// as defined by the current OpenColorIO config.
-		static void availableRoles( std::vector<std::string> &Roles );
-
 		/// May return null if the derived class does not
 		/// request OCIO context variable support.
 		Gaffer::CompoundDataPlug *contextPlug();

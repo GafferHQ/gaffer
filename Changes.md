@@ -43,6 +43,7 @@ Breaking Changes
 - ViewportGadget : Changed function signature for `setPostProcessShader()` and `getPostProcessShader()`.
 - UVInspector : Moved the `displayTransform` plug to `displayTransform.name`.
 - ImageReader : Renamed `None` preset to `Automatic`.
+- OpenColorIOTransform : Removed `availableColorSpaces()` and `availableRoles()` methods.
 
 1.2.x.x (relative to 1.2.2.0)
 =======
