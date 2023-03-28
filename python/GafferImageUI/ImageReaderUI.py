@@ -221,6 +221,7 @@ Gaffer.Metadata.registerNode(
 
 			"presetNames", lambda plug : OpenColorIOTransformUI.colorSpacePresetNames( plug, noneLabel = "Automatic" ),
 			"presetValues", OpenColorIOTransformUI.colorSpacePresetValues,
+			"openColorIO:categories", "file-io",
 
 			"plugValueWidget:type", "GafferImageUI.ImageReaderUI._ColorSpacePlugValueWidget",
 

@@ -42,20 +42,42 @@ import Gaffer
 import GafferUI
 import GafferImage
 
+import PyOpenColorIO
+
+def __colorSpaceMenuHelper( plug ) :
+
+	config = PyOpenColorIO.GetCurrentConfig()
+	parameters = PyOpenColorIO.ColorSpaceMenuParameters( config )
+
+	categories = Gaffer.Metadata.value( plug, "openColorIO:categories" )
+	if categories is not None :
+		parameters.setAppCategories( categories )
+
+	includeRoles = Gaffer.Metadata.value( plug, "openColorIO:includeRoles" )
+	if includeRoles is not None :
+		parameters.setIncludeRoles( includeRoles )
+
+	return PyOpenColorIO.ColorSpaceMenuHelper( parameters )
+
 def colorSpacePresetNames( plug, noneLabel = "None" ) :
 
+	helper = __colorSpaceMenuHelper( plug )
 	return IECore.StringVectorData(
-		[ noneLabel ] +
-		[ "Roles/{0}".format( x.replace( "_", " ").title() ) for x in sorted( GafferImage.OpenColorIOTransform.availableRoles() ) ] +
-		sorted( GafferImage.OpenColorIOTransform.availableColorSpaces() )
+		[ noneLabel ] + [
+			"/".join(
+				list( helper.getHierarchyLevels( i ) ) +
+				[ helper.getUIName( i ) ]
+			)
+			for i in range( 0, helper.getNumColorSpaces() )
+		]
 	)
 
 def colorSpacePresetValues( plug ) :
 
+	helper = __colorSpaceMenuHelper( plug )
 	return IECore.StringVectorData(
 		[ "" ] +
-		sorted( GafferImage.OpenColorIOTransform.availableRoles() ) +
-		sorted( GafferImage.OpenColorIOTransform.availableColorSpaces() )
+		[ helper.getName( i ) for i in range( 0, helper.getNumColorSpaces() ) ]
 	)
 
 Gaffer.Metadata.registerNode(

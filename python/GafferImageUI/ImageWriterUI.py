@@ -150,8 +150,10 @@ Gaffer.Metadata.registerNode(
 
 			"presetNames", OpenColorIOTransformUI.colorSpacePresetNames,
 			"presetValues", OpenColorIOTransformUI.colorSpacePresetValues,
+			"openColorIO:categories", "file-io",
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
 		],
 
 		"layout" : [
