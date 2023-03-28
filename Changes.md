@@ -5,6 +5,7 @@ Improvements
 ------------
 
 - UVInspector : Added exposure, gamma and solo channel settings.
+- ImageReader : The `colorSpace` widget now displays the name of the assumed colorspace when in `Automatic` mode.
 
 Fixes
 -----
