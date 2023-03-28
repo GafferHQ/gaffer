@@ -42,17 +42,6 @@ GafferUI.Examples.registerExample(
 )
 
 GafferUI.Examples.registerExample(
-	"Compositing/Contact Sheet Generation",
-	"$GAFFER_ROOT/resources/examples/compositing/contactSheet.gfr",
-	description = "Demonstrates how to use the Loop node to build a contact sheet of shader variations.",
-	notableNodes = [
-		Gaffer.Loop,
-		GafferImage.ImageTransform,
-		Gaffer.Expression
-	]
-)
-
-GafferUI.Examples.registerExample(
 	"Rendering/Multi-shot Render Spreadsheet",
 	"$GAFFER_ROOT/resources/examples/rendering/multiShotRenderSpreadsheet.gfr",
 	description = """
