@@ -42,10 +42,10 @@ import Gaffer
 import GafferUI
 import GafferImage
 
-def colorSpacePresetNames( plug ) :
+def colorSpacePresetNames( plug, noneLabel = "None" ) :
 
 	return IECore.StringVectorData(
-		[ "None" ] +
+		[ noneLabel ] +
 		[ "Roles/{0}".format( x.replace( "_", " ").title() ) for x in sorted( GafferImage.OpenColorIOTransform.availableRoles() ) ] +
 		sorted( GafferImage.OpenColorIOTransform.availableColorSpaces() )
 	)

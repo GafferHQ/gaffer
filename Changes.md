@@ -18,6 +18,7 @@ API
 - ViewportGadget : A post-process shader can now be applied to any layer, not just the main one.
 - SceneGadget : Added `setLayer()` and `getLayer()` methods, which allow the destination `Gadget::Layer` to be specified.
 - TestCase : Added `ignoreMessage()` method, to register messages that should not be treated as test failures.
+- OpenColorIOTransformUI : Added `noneLabel` argument to `colorSpacePresetNames()`.
 
 Breaking Changes
 ----------------
@@ -33,6 +34,7 @@ Breaking Changes
   - Moved the `displayTransform` plug to `displayTransform.name`.
 - ViewportGadget : Changed function signature for `setPostProcessShader()` and `getPostProcessShader()`.
 - UVInspector : Moved the `displayTransform` plug to `displayTransform.name`.
+- ImageReader : Renamed `None` preset to `Automatic`.
 
 1.2.x.x (relative to 1.2.2.0)
 =======

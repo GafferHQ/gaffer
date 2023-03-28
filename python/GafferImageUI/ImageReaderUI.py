@@ -211,12 +211,12 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			The colour space of the input image, used to convert the input image to
-			the scene linear colorspace defined by the OpenColorIO config. The default
-			behaviour is to automatically determine the colorspace by calling the function
-			registered with `ImageReader::setDefaultColorSpaceFunction()`.
+			the scene linear space defined by the OpenColorIO config. When set
+			to `Automatic`, the colour space is determined automatically using the
+			function registered with `ImageReader::setDefaultColorSpaceFunction()`.
 			""",
 
-			"presetNames", OpenColorIOTransformUI.colorSpacePresetNames,
+			"presetNames", lambda plug : OpenColorIOTransformUI.colorSpacePresetNames( plug, noneLabel = "Automatic" ),
 			"presetValues", OpenColorIOTransformUI.colorSpacePresetValues,
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
