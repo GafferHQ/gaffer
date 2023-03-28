@@ -217,7 +217,48 @@ T parameter( const IECore::CompoundDataMap &parameters, const IECore::InternedSt
 	}
 }
 
-const IECoreGL::State &selectionState()
+const IECoreGL::State &selectedSceneState()
+{
+	static IECoreGL::StatePtr s;
+	if( !s )
+	{
+		s = new IECoreGL::State( false );
+		// Turn off wireframe when rendering `ColorSpace::Scene`, because we'll
+		// be using it for a selection overlay in `ColorSpace::Display`.
+		s->add( new IECoreGL::Primitive::DrawWireframe( false ), /* override = */ true );
+	}
+	return *s;
+}
+
+const IECoreGL::State &selectedCurvesSceneState()
+{
+	static IECoreGL::StatePtr s;
+	if( !s )
+	{
+		s = new IECoreGL::State( false );
+		// Turn off wireframe as for `selectedSceneState()`, but also turn off solid drawing
+		// because it also conflicts with the wireframe.
+		s->add( new IECoreGL::Primitive::DrawWireframe( false ), /* override = */ true );
+		s->add( new IECoreGL::Primitive::DrawSolid( false ), /* override = */ true );
+	}
+	return *s;
+}
+
+const IECoreGL::State &selectedPointsSceneState()
+{
+	static IECoreGL::StatePtr s;
+	if( !s )
+	{
+		s = new IECoreGL::State( false );
+		// See above.
+		s->add( new IECoreGL::Primitive::DrawWireframe( false ), /* override = */ true );
+		s->add( new IECoreGL::Primitive::DrawSolid( false ), /* override = */ true );
+		s->add( new IECoreGL::Primitive::DrawPoints( false ), /* override = */ true );
+	}
+	return *s;
+}
+
+const IECoreGL::State &selectedDisplayState()
 {
 	static IECoreGL::StatePtr s;
 	if( !s )
@@ -229,6 +270,32 @@ const IECoreGL::State &selectionState()
 		s->add( new IECoreGL::WireframeColorStateComponent( Color4f( 0.466f, 0.612f, 0.741f, 1.0f ) ), /* override = */ true );
 	}
 	return *s;
+}
+
+const IECoreGL::State &selectionState( const IECoreGL::Renderable *renderable, const IECoreGL::State *currentState, Visualisation::ColorSpace colorSpace )
+{
+	if( colorSpace == Visualisation::ColorSpace::Display )
+	{
+		return selectedDisplayState();
+	}
+
+	switch( (IECoreGL::TypeId)renderable->typeId() )
+	{
+		case IECoreGL::PointsPrimitiveTypeId :
+			if( static_cast<const IECoreGL::PointsPrimitive *>( renderable )->renderUsesGLPoints( currentState ) ) {
+				return selectedPointsSceneState();
+			} else {
+				return selectedSceneState();
+			}
+		case IECoreGL::CurvesPrimitiveTypeId :
+			if( static_cast<const IECoreGL::CurvesPrimitive *>( renderable )->renderUsesGLLines( currentState ) ) {
+				return selectedCurvesSceneState();
+			} else {
+				return selectedSceneState();
+			}
+		default :
+			return selectedSceneState();
+	}
 }
 
 } // namespace
@@ -522,7 +589,7 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 			if( haveVisualisations )
 			{
 				IECoreGL::State::ScopedBinding selectionScope(
-					selectionState(), *currentState, isSelected && colorSpace == Visualisation::ColorSpace::Display
+					selectedDisplayState(), *currentState, isSelected && colorSpace == Visualisation::ColorSpace::Display
 				);
 
 				Visualisation::Category categories = Visualisation::Category::Generic;
@@ -579,8 +646,8 @@ class OpenGLObject : public IECoreScenePreview::Renderer::ObjectInterface
 					visualisationStateScope.emplace( *visualisationState, *currentState );
 				}
 				IECoreGL::State::ScopedBinding selectionScope(
-					selectionState(),
-					*currentState, isSelected && colorSpace == Visualisation::ColorSpace::Display
+					selectionState( m_renderable. get(), currentState, colorSpace ),
+					*currentState, isSelected
 				);
 
 				ScopedTransform l( m_transform );
@@ -1118,10 +1185,6 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 
 		void renderObjects( IECoreGL::State *currentState, Visualisation::ColorSpace colorSpace )
 		{
-			// Stop selection overlays from `ColorSpace::Display` being
-			// depth culled by wireframes in `ColorSpace::Scene.`
-			glDepthFunc( colorSpace == Visualisation::ColorSpace::Display ? GL_LEQUAL : GL_LESS );
-
 			IECoreGL::Selector *selector = IECoreGL::Selector::currentSelector();
 
 			GLuint i = 1;
