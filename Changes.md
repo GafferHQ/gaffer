@@ -1,6 +1,18 @@
 1.2.x.x (relative to 1.2.2.0)
 =======
 
+Fixes
+-----
+
+- OSLObject/OSLImage : Fixed missing `+` buttons in GraphEditor on Windows (#5222).
+- Viewer : Fixed missing VDB visualisations on Windows (#5223).
+
+API
+---
+
+- NoduleLayout : Added a warning message when a required custom gadget has not been registered.
+- GafferUITest.TestCase : Added testing of NodeGadgets to `assertNodeUIsHaveExpectedLifetime()`.
+
 1.2.2.0 (relative to 1.2.1.1)
 =======
 

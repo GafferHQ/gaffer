@@ -36,6 +36,16 @@
 
 from ._GafferOSLUI import *
 
+import os
+import ctypes
+if os.name == "nt" :
+	# Because `_GafferOSLUI.pyd` currently doesn't require any symbols
+	# from `GafferOSLUI.dll`, the Windows linker omits the latter. Load
+	# it explicitly, because it contains custom gadget registrations
+	# that we need.
+	ctypes.CDLL( "GafferOSLUI.dll" )
+del os, ctypes
+
 from . import OSLShaderUI
 from . import OSLImageUI
 from . import OSLObjectUI
