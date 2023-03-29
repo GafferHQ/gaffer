@@ -537,6 +537,7 @@ import GafferVDBUI
 
 nodeMenu.append( "/VDB/Level Set To Mesh", GafferVDB.LevelSetToMesh, searchText = "LevelSetToMesh" )
 nodeMenu.append( "/VDB/Mesh To Level Set", GafferVDB.MeshToLevelSet, searchText = "MeshToLevelSet" )
+nodeMenu.append( "/VDB/Points To Level Set", GafferVDB.PointsToLevelSet, searchText = "PointsToLevelSet" )
 nodeMenu.append( "/VDB/Level Set Offset", GafferVDB.LevelSetOffset, searchText = "LevelSetOffset" )
 nodeMenu.append( "/VDB/Points Grid To Points", GafferVDB.PointsGridToPoints, searchText = "PointsGridToPoints" )
 nodeMenu.append( "/VDB/Sphere Level Set", GafferVDB.SphereLevelSet, searchText="SphereLevelSet")

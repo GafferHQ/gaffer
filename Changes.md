@@ -1,6 +1,11 @@
 1.2.x.x (relative to 1.2.2.0)
 =======
 
+Features
+--------
+
+- PointsToLevelSet : Added a new node for converting points primitives into OpenVDB level sets.
+
 Fixes
 -----
 

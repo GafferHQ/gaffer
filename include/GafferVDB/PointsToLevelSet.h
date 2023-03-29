@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2017, Image Engine. All rights reserved.
+//  Copyright (c) 2022, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
 //
-//      * Neither the name of Image Engine nor the names of
+//      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
@@ -34,7 +34,8 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#pragma once
+#ifndef GAFFERVDB_POINTSTOLEVELSET_H
+#define GAFFERVDB_POINTSTOLEVELSET_H
 
 #include "GafferVDB/Export.h"
 #include "GafferVDB/TypeIds.h"
@@ -51,30 +52,46 @@ class StringPlug;
 namespace GafferVDB
 {
 
-class GAFFERVDB_API PointsGridToPoints : public GafferScene::ObjectProcessor
+class GAFFERVDB_API PointsToLevelSet : public GafferScene::ObjectProcessor
 {
 
 	public :
 
-		PointsGridToPoints( const std::string &name=defaultName<PointsGridToPoints>() );
-		~PointsGridToPoints() override;
+		PointsToLevelSet( const std::string &name=defaultName<PointsToLevelSet>() );
+		~PointsToLevelSet() override;
 
-		GAFFER_NODE_DECLARE_TYPE( GafferVDB::PointsGridToPoints, PointsGridToPointsTypeId, GafferScene::ObjectProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferVDB::PointsToLevelSet, PointsToLevelSetTypeId, GafferScene::ObjectProcessor );
+
+		Gaffer::StringPlug *widthPlug();
+		const Gaffer::StringPlug *widthPlug() const;
+
+		Gaffer::FloatPlug *widthScalePlug();
+		const Gaffer::FloatPlug *widthScalePlug() const;
+
+		Gaffer::BoolPlug *useVelocityPlug();
+		const Gaffer::BoolPlug *useVelocityPlug() const;
+
+		Gaffer::StringPlug *velocityPlug();
+		const Gaffer::StringPlug *velocityPlug() const;
+
+		Gaffer::FloatPlug *velocityScalePlug();
+		const Gaffer::FloatPlug *velocityScalePlug() const;
 
 		Gaffer::StringPlug *gridPlug();
 		const Gaffer::StringPlug *gridPlug() const;
 
-		Gaffer::StringPlug *namesPlug();
-		const Gaffer::StringPlug *namesPlug() const;
+		Gaffer::FloatPlug *voxelSizePlug();
+		const Gaffer::FloatPlug *voxelSizePlug() const;
 
-		Gaffer::BoolPlug *invertNamesPlug();
-		const Gaffer::BoolPlug *invertNamesPlug() const;
+		Gaffer::FloatPlug *halfBandwidthPlug();
+		const Gaffer::FloatPlug *halfBandwidthPlug() const;
 
 	protected :
 
-		bool affectsProcessedObject( const Gaffer::Plug *input ) const override;
+		bool affectsProcessedObject( const Gaffer::Plug *plug ) const override;
 		void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, const IECore::Object *inputObject ) const override;
+		Gaffer::ValuePlug::CachePolicy processedObjectComputeCachePolicy() const override;
 
 	private :
 
@@ -82,6 +99,8 @@ class GAFFERVDB_API PointsGridToPoints : public GafferScene::ObjectProcessor
 
 };
 
-IE_CORE_DECLAREPTR( PointsGridToPoints )
+IE_CORE_DECLAREPTR( PointsToLevelSet )
 
 } // namespace GafferVDB
+
+#endif // GAFFERVDB_POINTSTOLEVELSET_H
