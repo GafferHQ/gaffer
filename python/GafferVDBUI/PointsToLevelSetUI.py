@@ -57,6 +57,9 @@ GafferUI.Metadata.registerNode(
 			The name of a `float` primitive variable specifying the width of each point.
 			The primitive variable may have either `Vertex` or `Constant` interpolation.
 			If the primitive variable doesn't exist, a width of 1.0 is used.
+
+			> Note : A point's width needs to be at least 3x `voxelSize` to contribute to
+			> the level set. Smaller points will be ignored, and reported as a warning.
 			"""
 
 		],
@@ -75,7 +78,7 @@ GafferUI.Metadata.registerNode(
 			"description",
 			"""
 			Enables the creation of trails behind the points, based
-			on `velocity` primitive variable.
+			on the `velocity` primitive variable.
 			""",
 
 		],
