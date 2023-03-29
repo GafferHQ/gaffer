@@ -53,6 +53,8 @@
 #include "boost/container/flat_set.hpp"
 #include "boost/regex.hpp"
 
+#include "fmt/format.h"
+
 using namespace std;
 using namespace boost::placeholders;
 using namespace IECore;
@@ -109,6 +111,7 @@ GadgetPtr createCustomGadget( const InternedString &gadgetType, GraphComponentPt
 	const CustomGadgetCreatorMap::const_iterator it = m.find( gadgetType );
 	if( it == m.end() )
 	{
+		IECore::msg( IECore::Msg::Warning, "NoduleLayout", fmt::format( "No custom gadget \"{}\" registered for `{}`", gadgetType.string(), parent->fullName() ) );
 		return nullptr;
 	}
 	return it->second( parent );
@@ -640,7 +643,7 @@ void NoduleLayout::updateNoduleLayout()
 			{
 				gadget = Nodule::create( const_cast<Plug *>( boost::get<const Plug *>( item ) ) ); /// \todo Fix cast
 			}
-			else
+			else if( !gadgetType.string().empty() )
 			{
 				gadget = createCustomGadget( gadgetType, m_parent.get() );
 			}

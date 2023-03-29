@@ -168,8 +168,12 @@ class TestCase( GafferTest.TestCase ) :
 			weakNodeUI = weakref.ref( nodeUI )
 			weakScript = weakref.ref( script )
 
-			del window, nodeUI
+			nodeGadget = GafferUI.NodeGadget.create( script["node"] )
+			weakNodeGadget = weakref.ref( nodeGadget )
+
+			del window, nodeUI, nodeGadget
 			self.assertIsNone( weakNodeUI() )
+			self.assertIsNone( weakNodeGadget() )
 
 			del script
 			self.assertIsNone( weakScript() )

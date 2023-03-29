@@ -36,10 +36,21 @@
 
 from ._GafferVDBUI import *
 
+import os
+import ctypes
+if os.name == "nt" :
+	# Because `_GafferVDBUI.pyd` currently doesn't require any symbols
+	# from `GafferVDBUI.dll`, the Windows linker omits the latter. Load
+	# it explicitly, because it contains a custom visualiser registration
+	# that we need.
+	ctypes.CDLL( "GafferVDBUI.dll" )
+del os, ctypes
+
 from . import LevelSetToMeshUI
 from . import MeshToLevelSetUI
 from . import LevelSetOffsetUI
 from . import PointsGridToPointsUI
 from . import SphereLevelSetUI
+from . import PointsToLevelSetUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferVDBUI" )

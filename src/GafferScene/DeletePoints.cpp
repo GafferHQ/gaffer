@@ -43,7 +43,8 @@
 #include "IECoreScene/PointsPrimitive.h"
 
 #include "boost/algorithm/string.hpp"
-#include "boost/format.hpp"
+
+#include "fmt/format.h"
 
 using namespace IECore;
 using namespace IECoreScene;
@@ -139,7 +140,7 @@ IECore::ConstObjectPtr DeletePoints::computeProcessedObject( const ScenePath &pa
 			return inputObject;
 		}
 
-		throw InvalidArgumentException( boost::str( boost::format( "DeletePoints : No primitive variable \"%s\" found" ) % deletePrimVarName ) );
+		throw InvalidArgumentException( fmt::format( "DeletePoints : No primitive variable \"{}\" found", deletePrimVarName ) );
 	}
 
 	return PointsAlgo::deletePoints( points, it->second, invertPlug()->getValue() );

@@ -42,7 +42,8 @@
 #include "IECoreScene/MeshPrimitive.h"
 
 #include "boost/algorithm/string.hpp"
-#include "boost/format.hpp"
+
+#include "fmt/format.h"
 
 using namespace IECore;
 using namespace IECoreScene;
@@ -138,7 +139,7 @@ IECore::ConstObjectPtr DeleteFaces::computeProcessedObject( const ScenePath &pat
 			return inputObject;
 		}
 
-		throw InvalidArgumentException( boost::str( boost::format( "DeleteFaces : No primitive variable \"%s\" found" ) % deletePrimVarName ) );
+		throw InvalidArgumentException( fmt::format( "DeleteFaces : No primitive variable \"{}\" found", deletePrimVarName ) );
 	}
 
 	return MeshAlgo::deleteFaces( mesh, it->second, invertPlug()->getValue(), context->canceller() );

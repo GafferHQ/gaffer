@@ -61,6 +61,8 @@
 #include "tbb/parallel_reduce.h"
 #include "tbb/spin_mutex.h"
 
+#include "fmt/format.h"
+
 #include <functional>
 #include <unordered_map>
 
@@ -336,7 +338,7 @@ class Instancer::EngineData : public Data
 				m_ids = &ids->readable();
 				if( m_ids->size() != numPoints() )
 				{
-					throw IECore::Exception( boost::str( boost::format( "Id primitive variable \"%1%\" has incorrect size" ) % id ) );
+					throw IECore::Exception( fmt::format( "Id primitive variable \"{}\" has incorrect size", id ) );
 				}
 			}
 
@@ -345,7 +347,7 @@ class Instancer::EngineData : public Data
 				m_positions = &p->readable();
 				if( m_positions->size() != numPoints() )
 				{
-					throw IECore::Exception( boost::str( boost::format( "Position primitive variable \"%1%\" has incorrect size" ) % position ) );
+					throw IECore::Exception( fmt::format( "Position primitive variable \"{}\" has incorrect size", position ) );
 				}
 			}
 
@@ -354,7 +356,7 @@ class Instancer::EngineData : public Data
 				m_orientations = &o->readable();
 				if( m_orientations->size() != numPoints() )
 				{
-					throw IECore::Exception( boost::str( boost::format( "Orientation primitive variable \"%1%\" has incorrect size" ) % orientation ) );
+					throw IECore::Exception( fmt::format( "Orientation primitive variable \"{}\" has incorrect size", orientation ) );
 				}
 			}
 
@@ -363,7 +365,7 @@ class Instancer::EngineData : public Data
 				m_scales = &s->readable();
 				if( m_scales->size() != numPoints() )
 				{
-					throw IECore::Exception( boost::str( boost::format( "Scale primitive variable \"%1%\" has incorrect size" ) % scale ) );
+					throw IECore::Exception( fmt::format( "Scale primitive variable \"{}\" has incorrect size", scale ) );
 				}
 			}
 			else if( const FloatVectorData *s = m_primitive->variableData<FloatVectorData>( scale ) )
@@ -371,7 +373,7 @@ class Instancer::EngineData : public Data
 				m_uniformScales = &s->readable();
 				if( m_uniformScales->size() != numPoints() )
 				{
-					throw IECore::Exception( boost::str( boost::format( "Uniform scale primitive variable \"%1%\" has incorrect size" ) % scale ) );
+					throw IECore::Exception( fmt::format( "Uniform scale primitive variable \"{}\" has incorrect size", scale ) );
 				}
 			}
 
@@ -398,7 +400,7 @@ class Instancer::EngineData : public Data
 					m_primitive->variableSize( v.primVar->interpolation ) == numPoints()
 				) )
 				{
-					throw IECore::Exception( boost::str( boost::format( "Context primitive variable for \"%1%\" is not a correctly sized Vertex primitive variable" ) % v.name.string() ) );
+					throw IECore::Exception( fmt::format( "Context primitive variable for \"{}\" is not a correctly sized Vertex primitive variable", v.name.string() ) );
 				}
 			}
 		}
@@ -420,7 +422,7 @@ class Instancer::EngineData : public Data
 			{
 				if( i >= numPoints() )
 				{
-					throw IECore::Exception( boost::str( boost::format( "Instance id \"%1%\" is invalid, instancer produces only %2% children.  Topology may have changed during shutter." ) % name % numPoints() ) );
+					throw IECore::Exception( fmt::format( "Instance id \"{}\" is invalid, instancer produces only {} children. Topology may have changed during shutter.", name.string(), numPoints() ) );
 				}
 				return i;
 			}
@@ -428,7 +430,7 @@ class Instancer::EngineData : public Data
 			IdsToPointIndices::const_iterator it = m_idsToPointIndices.find( i );
 			if( it == m_idsToPointIndices.end() )
 			{
-				throw IECore::Exception( boost::str( boost::format( "Instance id \"%1%\" is invalid.  Topology may have changed during shutter." ) % name ) );
+				throw IECore::Exception( fmt::format( "Instance id \"{}\" is invalid. Topology may have changed during shutter.", name.string() ) );
 			}
 
 			return it->second;
@@ -583,7 +585,7 @@ class Instancer::EngineData : public Data
 				}
 				catch( QuantizeException &e )
 				{
-					throw IECore::Exception( boost::str( boost::format( "Context variable \"%1%\" : cannot quantize variable of type %2%" ) % index % v.primVar->data->typeName() ) );
+					throw IECore::Exception( fmt::format( "Context variable \"{}\" : cannot quantize variable of type {}", index, v.primVar->data->typeName() ) );
 				}
 			}
 		}
@@ -611,7 +613,7 @@ class Instancer::EngineData : public Data
 			}
 			catch( QuantizeException &e )
 			{
-				throw IECore::Exception( boost::str( boost::format( "Context variable \"%1%\" : cannot quantize variable of type %2%" ) % index % v.primVar->data->typeName() ) );
+				throw IECore::Exception( fmt::format( "Context variable \"{}\" : cannot quantize variable of type {}", index, v.primVar->data->typeName() ) );
 			}
 		}
 
@@ -708,7 +710,7 @@ class Instancer::EngineData : public Data
 						m_indices = &indices->readable();
 						if( m_indices->size() != numPoints() )
 						{
-							throw IECore::Exception( boost::str( boost::format( "prototypeIndex primitive variable \"%1%\" has incorrect size" ) % index ) );
+							throw IECore::Exception( fmt::format( "prototypeIndex primitive variable \"{}\" has incorrect size", index ) );
 						}
 					}
 
@@ -723,14 +725,14 @@ class Instancer::EngineData : public Data
 						m_indices = &indices->readable();
 						if( m_indices->size() != numPoints() )
 						{
-							throw IECore::Exception( boost::str( boost::format( "prototypeIndex primitive variable \"%1%\" has incorrect size" ) % index ) );
+							throw IECore::Exception( fmt::format( "prototypeIndex primitive variable \"{}\" has incorrect size", index ) );
 						}
 					}
 
 					const auto *roots = m_primitive->variableData<StringVectorData>( rootsVariable, PrimitiveVariable::Constant );
 					if( !roots )
 					{
-						std::string message = boost::str( boost::format( "prototypeRoots primitive variable \"%1%\" must be Constant StringVectorData when using IndexedRootsVariable mode" ) % rootsVariable );
+						std::string message = fmt::format( "prototypeRoots primitive variable \"{}\" must be Constant StringVectorData when using IndexedRootsVariable mode", rootsVariable );
 						if( m_primitive->variables.find( rootsVariable ) == m_primitive->variables.end() )
 						{
 							message += ", but it does not exist";
@@ -741,7 +743,7 @@ class Instancer::EngineData : public Data
 					rootStrings = &roots->readable();
 					if( rootStrings->empty() )
 					{
-						throw IECore::Exception( boost::str( boost::format( "prototypeRoots primitive variable \"%1%\" must specify at least one root location" ) % rootsVariable ) );
+						throw IECore::Exception( fmt::format( "prototypeRoots primitive variable \"{}\" must specify at least one root location", rootsVariable ) );
 					}
 
 					break;
@@ -751,7 +753,7 @@ class Instancer::EngineData : public Data
 					const auto view = m_primitive->variableIndexedView<StringVectorData>( rootsVariable, PrimitiveVariable::Vertex );
 					if( !view )
 					{
-						std::string message = boost::str( boost::format( "prototypeRoots primitive variable \"%1%\" must be Vertex StringVectorData when using RootPerVertex mode" ) % rootsVariable );
+						std::string message = fmt::format( "prototypeRoots primitive variable \"{}\" must be Vertex StringVectorData when using RootPerVertex mode", rootsVariable );
 						if( m_primitive->variables.find( rootsVariable ) == m_primitive->variables.end() )
 						{
 							message += ", but it does not exist";
@@ -777,7 +779,7 @@ class Instancer::EngineData : public Data
 				ScenePlug::stringToPath( root, path );
 				if( !prototypes->exists( path ) )
 				{
-					throw IECore::Exception( boost::str( boost::format( "Prototype root \"%1%\" does not exist in the `prototypes` scene" ) % root ) );
+					throw IECore::Exception( fmt::format( "Prototype root \"{}\" does not exist in the `prototypes` scene", root ) );
 				}
 
 				if( path.empty() )

@@ -72,6 +72,8 @@
 #include "tbb/parallel_for.h"
 #include "tbb/spin_mutex.h"
 
+#include "fmt/format.h"
+
 using namespace std;
 using namespace Imath;
 using namespace IECore;
@@ -716,9 +718,9 @@ SceneAlgo::History::Ptr SceneAlgo::history( const Gaffer::ValuePlug *scenePlugCh
 {
 	if( !scenePlugChild->parent<ScenePlug>() )
 	{
-		throw IECore::Exception( boost::str(
-			boost::format( "Plug \"%1%\" is not a child of a ScenePlug." ) % scenePlugChild->fullName()
-		) );
+		throw IECore::Exception(
+			fmt::format( "Plug \"{}\" is not a child of a ScenePlug.", scenePlugChild->fullName() )
+		);
 	}
 
 	CapturingMonitorPtr monitor = new CapturingMonitor( scenePlugChild->getName() );
@@ -1167,7 +1169,7 @@ SceneProcessorPtr GafferScene::SceneAlgo::createRenderAdaptors()
 		{
 			IECore::msg(
 				IECore::Msg::Warning, "SceneAlgo::createRenderAdaptors",
-				boost::format( "Adaptor \"%1%\" returned null" ) % it->first
+				fmt::format( "Adaptor \"{}\" returned null", it->first )
 			);
 		}
 	}

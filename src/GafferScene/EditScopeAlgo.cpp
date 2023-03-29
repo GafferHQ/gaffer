@@ -62,6 +62,8 @@
 #include "boost/container/flat_map.hpp"
 #include "boost/tokenizer.hpp"
 
+#include "fmt/format.h"
+
 #include <unordered_map>
 
 using namespace std;
@@ -432,7 +434,7 @@ ConstObjectPtr attributeValue( const ScenePlug *scene, const ScenePlug::ScenePat
 	if( !scene->exists( path ) )
 	{
 		string pathString; ScenePlug::pathToString( path, pathString );
-		throw IECore::Exception( boost::str( boost::format( "Location \"%1%\" does not exist" ) % pathString ) );
+		throw IECore::Exception( fmt::format( "Location \"{}\" does not exist", pathString ) );
 	}
 
 	auto attributes = scene->fullAttributes( path );
@@ -447,7 +449,7 @@ ConstObjectPtr attributeValue( const ScenePlug *scene, const ScenePlug::ScenePat
 			return registeredAttribute->second;
 		}
 
-		throw IECore::Exception( boost::str( boost::format( "Attribute \"%s\" does not exist" ) % attribute ) );
+		throw IECore::Exception( fmt::format( "Attribute \"{}\" does not exist", attribute ) );
 	}
 
 	return result;
@@ -460,7 +462,7 @@ ConstDataPtr parameterValue( const ScenePlug *scene, const ScenePlug::ScenePath 
 	auto shaderNetwork = runTimeCast<const IECoreScene::ShaderNetwork>( attributeShader.get() );
 	if( !shaderNetwork )
 	{
-		throw IECore::Exception( boost::str( boost::format( "Attribute \"%1%\" is not a shader" ) % attribute ) );
+		throw IECore::Exception( fmt::format( "Attribute \"{}\" is not a shader", attribute ) );
 	}
 
 	const IECoreScene::Shader *shader;
@@ -469,7 +471,7 @@ ConstDataPtr parameterValue( const ScenePlug *scene, const ScenePlug::ScenePath 
 		shader = shaderNetwork->getShader( parameter.shader );
 		if( !shader )
 		{
-			throw IECore::Exception( boost::str( boost::format( "Shader \"%1%\" does not exist" ) % parameter.shader ) );
+			throw IECore::Exception( fmt::format( "Shader \"{}\" does not exist", parameter.shader.string() ) );
 		}
 	}
 	else
@@ -488,7 +490,7 @@ ConstDataPtr parameterValue( const ScenePlug *scene, const ScenePlug::ScenePath 
 	}
 	else
 	{
-		throw IECore::Exception( boost::str( boost::format( "Parameter \"%1%\" does not exist" ) % parameter.name ) );
+		throw IECore::Exception( fmt::format( "Parameter \"{}\" does not exist", parameter.name.string() ) );
 	}
 }
 
@@ -731,7 +733,7 @@ TweakPlug *GafferScene::EditScopeAlgo::acquireAttributeEdit( Gaffer::EditScope *
 			);
 			if( !attributeValue )
 			{
-				throw IECore::Exception( boost::str( boost::format( "Attribute \"%s\" cannot be tweaked" ) % attribute ) );
+				throw IECore::Exception( fmt::format( "Attribute \"{}\" cannot be tweaked", attribute ) );
 			}
 		}
 	};

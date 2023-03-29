@@ -42,7 +42,7 @@
 #include "IECoreScene/MeshPrimitive.h"
 #include "IECoreScene/PointsPrimitive.h"
 
-#include <boost/format.hpp>
+#include "fmt/format.h"
 
 #include <algorithm>
 #include <cassert>
@@ -319,10 +319,10 @@ Imath::V3f interpolateNonConvexPolygon( const PIndexer points, const UVIndexer u
 					break;
 				}
 
-				throw IECore::InvalidArgumentException( (
-					boost::format(
-						"Gaffer::Constraint : UV coordinates \"%s\" map to ambiguous point(s) in 3d space."
-					) % ( uv ) ).str() );
+				throw IECore::InvalidArgumentException( fmt::format(
+					"Gaffer::Constraint : UV coordinates \"{}, {}\" map to ambiguous point(s) in 3d space.",
+					uv.x, uv.y
+				) );
 			}
 
 			// NOTE : ensure that the positive barycentric coordinates sum to a maximum of one.
@@ -432,10 +432,10 @@ struct UVIndexer
 		{
 			if( throwOnError )
 			{
-				throw IECore::InvalidArgumentException( (
-					boost::format(
-						"Gaffer::Constraint : MeshPrimitive has no V2fVectorData primitive variable named \"%s\"."
-					) % ( uvSet ) ).str() );
+				throw IECore::InvalidArgumentException( fmt::format(
+					"Gaffer::Constraint : MeshPrimitive has no V2fVectorData primitive variable named \"{}\".",
+					uvSet
+				) );
 			}
 			else
 			{
@@ -455,10 +455,10 @@ struct UVIndexer
 		{
 			if( throwOnError )
 			{
-				throw IECore::InvalidArgumentException( (
-					boost::format(
-						"Gaffer::Constraint : Primitive variable named \"%s\" has incorrect interpolation, must be either Vertex, Varying or FaceVarying"
-					) % ( uvSet ) ).str() );
+				throw IECore::InvalidArgumentException( fmt::format(
+					"Gaffer::Constraint : Primitive variable named \"{}\" has incorrect interpolation, must be either Vertex, Varying or FaceVarying",
+					uvSet
+				) );
 			}
 			else
 			{
@@ -507,10 +507,10 @@ void computePrimitiveVertexLocalFrame( const IECoreScene::Primitive& primitive, 
 	{
 		if( throwOnError )
 		{
-			throw IECore::InvalidArgumentException( (
-				boost::format(
-					"Gaffer::Constraint : Vertex id \"%d\" is out of range."
-				) % ( vertexId ) ).str() );
+			throw IECore::InvalidArgumentException( fmt::format(
+				"Gaffer::Constraint : Vertex id \"{}\" is out of range.",
+				vertexId
+			) );
 		}
 		else
 		{
@@ -543,10 +543,10 @@ void computeMeshVertexLocalFrame( const IECoreScene::MeshPrimitive& primitive, I
 	{
 		if( throwOnError )
 		{
-			throw IECore::InvalidArgumentException( (
-				boost::format(
-					"Gaffer::Constraint : Vertex id \"%d\" is out of range."
-				) % ( vertexId ) ).str() );
+			throw IECore::InvalidArgumentException( fmt::format(
+				"Gaffer::Constraint : Vertex id \"{}\" is out of range.",
+				vertexId
+			) );
 		}
 		else
 		{
@@ -660,10 +660,10 @@ void computeVertexLocalFrame( const IECore::Object& object, Imath::M44f& m, cons
 		default:
 			if( throwOnError )
 			{
-				throw IECore::InvalidArgumentException( (
-					boost::format(
-						"Gaffer::Constraint : Target primitive of type \"%s\" is not supported in Vertex target mode."
-					) % ( object.typeName() ) ).str() );
+				throw IECore::InvalidArgumentException( fmt::format(
+					"Gaffer::Constraint : Target primitive of type \"{}\" is not supported in Vertex target mode.",
+					object.typeName()
+				) );
 			}
 			break;
 	}
@@ -773,10 +773,10 @@ void computeMeshUVLocalFrame( const IECoreScene::MeshPrimitive& primitive, Imath
 
 	if( throwOnError )
 	{
-		throw IECore::InvalidArgumentException( (
-			boost::format(
-				"Gaffer::Constraint : UV coordinates \"%s\" are out of range."
-			) % ( uv ) ).str() );
+		throw IECore::InvalidArgumentException( fmt::format(
+			"Gaffer::Constraint : UV coordinates \"{}, {}\" are out of range.",
+			uv.x, uv.y
+		) );
 	}
 }
 
@@ -790,10 +790,10 @@ void computeUVLocalFrame( const IECore::Object& object, Imath::M44f& m, const Im
 		default:
 			if( throwOnError )
 			{
-				throw IECore::InvalidArgumentException( (
-					boost::format(
-						"Gaffer::Constraint : Target primitive of type \"%s\" is not supported in UV target mode."
-					) % ( object.typeName() ) ).str() );
+				throw IECore::InvalidArgumentException( fmt::format(
+					"Gaffer::Constraint : Target primitive of type \"{}\" is not supported in UV target mode.",
+					object.typeName()
+				) );
 			}
 			break;
 	}
@@ -810,9 +810,9 @@ struct ReferenceFrameScope : public Context::EditableScope
 		if( !constraint->inPlug()->existsPlug()->getValue() )
 		{
 			const ScenePlug::ScenePath &path = context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName );
-			throw IECore::Exception( boost::str(
-				boost::format( "Constrained object \"%1%\" does not exist at reference frame %2%" )
-					% ScenePlug::pathToString( path ) % frame
+			throw IECore::Exception( fmt::format(
+				"Constrained object \"{}\" does not exist at reference frame {}",
+				ScenePlug::pathToString( path ), frame
 			) );
 		}
 	}
@@ -1249,8 +1249,10 @@ std::optional<Constraint::Target> Constraint::target() const
 		}
 		else
 		{
-			throw IECore::Exception( boost::str(
-				boost::format( "Constraint target does not exist: \"%s\".  Use 'ignoreMissingTarget' option if you want to just skip this constraint" ) % targetPathAsString ) );
+			throw IECore::Exception( fmt::format(
+				"Constraint target does not exist: \"{}\". Use 'ignoreMissingTarget' option if you want to just skip this constraint",
+				targetPathAsString
+			) );
 		}
 	}
 

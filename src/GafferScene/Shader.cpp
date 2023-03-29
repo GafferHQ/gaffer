@@ -53,6 +53,8 @@
 #include "boost/bind/bind.hpp"
 #include "boost/lexical_cast.hpp"
 
+#include "fmt/format.h"
+
 using namespace std;
 using namespace boost::placeholders;
 using namespace Imath;
@@ -139,9 +141,9 @@ struct CycleDetector
 		if( !m_downstreamShaders.insert( m_shader ).second )
 		{
 			throw IECore::Exception(
-				boost::str(
-					boost::format( "Shader \"%s\" is involved in a dependency cycle." ) %
-						m_shader->relativeName( m_shader->ancestor<ScriptNode>() )
+				fmt::format(
+					"Shader \"{}\" is involved in a dependency cycle.",
+					m_shader->relativeName( m_shader->ancestor<ScriptNode>() )
 				)
 			);
 		}

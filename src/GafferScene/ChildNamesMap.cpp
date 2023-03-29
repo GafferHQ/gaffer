@@ -38,9 +38,10 @@
 
 #include "IECore/StringAlgo.h"
 
-#include "boost/format.hpp"
 #include "boost/lexical_cast.hpp"
 #include "boost/regex.hpp"
+
+#include "fmt/format.h"
 
 #include <unordered_set>
 
@@ -124,7 +125,7 @@ const ChildNamesMap::Input &ChildNamesMap::input( IECore::InternedString outputN
 	if( it == m_map.end() )
 	{
 		throw IECore::Exception(
-			boost::str( boost::format( "Invalid child name \"%1%\"" ) % outputName )
+			fmt::format( "Invalid child name \"{}\"", outputName.string() )
 		);
 	}
 
