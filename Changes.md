@@ -11,12 +11,19 @@ Fixes
 
 - OSLObject/OSLImage : Fixed missing `+` buttons in GraphEditor on Windows (#5222).
 - Viewer : Fixed missing VDB visualisations on Windows (#5223).
+- SceneReader : Fixed reading of USD primitives containing `primvars:normals`. These are now correctly loaded as a primitive variable called N, taking precedence over the UsdGeomPointBased normals attribute.
+- SceneWriter : Fixed writing of indexed normals to USD files, so that the indexing is retained on load. Note that this means that normals are now always written as `primvars:normals` and never via the UsdGeomPointBased `normals` attribute.
 
 API
 ---
 
 - NoduleLayout : Added a warning message when a required custom gadget has not been registered.
 - GafferUITest.TestCase : Added testing of NodeGadgets to `assertNodeUIsHaveExpectedLifetime()`.
+
+Build
+-----
+
+- Cortex : Updated to version 10.4.7.0.
 
 1.2.2.0 (relative to 1.2.1.1)
 =======
