@@ -62,3 +62,17 @@ GafferUI.Examples.registerExample(
 		GafferCycles.CyclesLight
 	]
 )
+
+GafferUI.Examples.registerExample(
+	"Rendering/Multi-shot Render Spreadsheet",
+	"$GAFFER_ROOT/resources/examples/rendering/multiShotRenderSpreadsheet.gfr",
+	description = """
+	Demonstrates how to use the Spreadsheet node to vary renderer
+	settings per shot.
+	""",
+	notableNodes = [
+		Gaffer.Spreadsheet,
+		GafferScene.StandardOptions,
+		GafferCycles.CyclesOptions
+	]
+)

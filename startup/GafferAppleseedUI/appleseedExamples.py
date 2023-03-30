@@ -1,7 +1,5 @@
-import Gaffer
 import GafferUI
 import GafferScene
-import GafferAppleseed
 
 GafferUI.Examples.registerExample(
 	"Rendering/Anamorphic Camera",
@@ -10,18 +8,5 @@ GafferUI.Examples.registerExample(
 	notableNodes = [
 		GafferScene.Camera,
 		GafferScene.StandardOptions
-	]
-)
-
-GafferUI.Examples.registerExample(
-	"Rendering/Multi-shot Render Spreadsheet",
-	"$GAFFER_ROOT/resources/examples/rendering/multiShotRenderSpreadsheet.gfr",
-	description = """
-	Demonstrates how to use the Spreadsheet node to vary renderer
-	settings per shot.
-	""",
-	notableNodes = [
-		Gaffer.Spreadsheet,
-		GafferAppleseed.AppleseedOptions
 	]
 )
