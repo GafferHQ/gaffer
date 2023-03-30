@@ -12,7 +12,7 @@ import Gaffer
 import GafferScene
 import GafferUI
 import GafferSceneUI
-import GafferAppleseed
+import GafferCycles
 
 scriptWindow = GafferUI.ScriptWindow.acquire( script )
 viewer = scriptWindow.getLayout().editors( GafferUI.Viewer )[0]
@@ -22,7 +22,7 @@ hierarchyView = scriptWindow.getLayout().editors( GafferSceneUI.HierarchyView )[
 # Base graph
 script["Sphere"] = GafferScene.Sphere()
 script["Group"] = GafferScene.Group()
-script["Light"] = GafferAppleseed.AppleseedLight()
+script["Light"] = GafferCycles.CyclesLight()
 script["Group"]["in"]["in0"].setInput( script["Sphere"]["out"] )
 script["Group"]["in"]["in1"].setInput( script["Light"]["out"] )
 script["PathFilter"] = GafferScene.PathFilter()
@@ -39,7 +39,7 @@ script.addChild( script["StandardAttributes"] )
 script.addChild( script["PathFilter"] )
 
 # Interface: the Default Light plug of a light node in the Node Editor
-# TODO: "AppleseedLight" label clearly visible; figure out a way to fake "ArnoldLight" label
+# TODO: "CyclesLight" label clearly visible; figure out a way to fake "ArnoldLight" label
 nodeEditorWindow = GafferUI.NodeEditor.acquire( script["Light"], floating = True )
 nodeEditorWindow._qtWidget().setFocus()
 GafferUI.PlugValueWidget.acquire( script["Light"]["defaultLight"] )
