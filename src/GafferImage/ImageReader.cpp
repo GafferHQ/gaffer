@@ -41,7 +41,12 @@
 
 #include "Gaffer/StringPlug.h"
 
+#include "OpenEXR/OpenEXRConfig.h"
+#if OPENEXR_VERSION_MAJOR < 3
 #include "OpenEXR/ImathFun.h"
+#else
+#include "Imath/ImathFun.h"
+#endif
 
 #include "OpenColorIO/OpenColorIO.h"
 
