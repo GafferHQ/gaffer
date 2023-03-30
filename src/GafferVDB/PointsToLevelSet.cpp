@@ -45,6 +45,8 @@
 
 #include "IECoreScene/PointsPrimitive.h"
 
+#include "IECore/Version.h"
+
 #include "openvdb/openvdb.h"
 #include "openvdb/tools/ParticlesToLevelSet.h"
 
@@ -70,7 +72,7 @@ struct ParticleList
 	using PosType = openvdb::Vec3R;
 
 	ParticleList( const Primitive *points, const std::string &width, float widthScale, const std::string &velocity, float velocityScale )
-		:	m_positionView( points->variableIndexedView<V3fVectorData>( "P", PrimitiveVariable::Vertex, /* throwIfInvalid = */ true ).get() ),
+		:	m_positionView( points->variableIndexedView<V3fVectorData>( "P", PrimitiveVariable::Vertex, /* throwIfInvalid = */ true ).value() ),
 			m_widthView( points->variableIndexedView<FloatVectorData>( width, PrimitiveVariable::Vertex ) ),
 			m_widthScale( 0.5f * widthScale ), // VDB wants radius, so divide by two
 			m_velocityView( points->variableIndexedView<V3fVectorData>( velocity, PrimitiveVariable::Vertex ) ),
@@ -117,10 +119,17 @@ struct ParticleList
 
 	private :
 
+		template<typename T>
+#if CORTEX_COMPATIBILITY_VERSION >= 10005
+		using OptionalIndexedView = std::optional<PrimitiveVariable::IndexedView<T>>;
+#else
+		using OptionalIndexedView = boost::optional<PrimitiveVariable::IndexedView<T>>;
+#endif
+
 		PrimitiveVariable::IndexedView<V3f> m_positionView;
-		boost::optional<PrimitiveVariable::IndexedView<float>> m_widthView;
+		OptionalIndexedView<float> m_widthView;
 		float m_widthScale;
-		boost::optional<PrimitiveVariable::IndexedView<V3f>> m_velocityView;
+		OptionalIndexedView<V3f> m_velocityView;
 		float m_velocityScale;
 
 };
