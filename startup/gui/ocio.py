@@ -40,11 +40,11 @@ import imath
 
 import IECore
 
-import GafferImage # this sets the OCIO environment variable
 import PyOpenColorIO as OCIO
 
 import Gaffer
 import GafferUI
+import GafferImage
 import GafferImageUI
 
 # get default display setup

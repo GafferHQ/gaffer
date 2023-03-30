@@ -38,14 +38,6 @@ __import__( "IECoreImage" )
 __import__( "Gaffer" )
 __import__( "GafferDispatch" )
 
-def __setupEnvironment() :
-
-	import os
-	if "OCIO" not in os.environ :
-		os.environ["OCIO"] = os.path.expandvars( "$GAFFER_ROOT/openColorIO/config.ocio" )
-
-__setupEnvironment()
-
 from ._GafferImage import *
 from .CatalogueSelect import CatalogueSelect
 from .BleedFill import BleedFill

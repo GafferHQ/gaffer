@@ -10,10 +10,12 @@ Improvements
 - UVInspector : Added exposure, gamma and solo channel settings.
 - ImageReader : The `colorSpace` widget now displays the name of the assumed colorspace when in `Automatic` mode.
 - ImageReader, ImageWriter : The `colorSpace` menu is now filtered using the `file-io` category, if the current OpenColorIO config provides it.
-- OpenColorIO : Improved colorspace menus :
-  - Organised colorspaces into submenus by family.
-  - Removed unwanted title-casing, so that names are now displayed verbatim.
-  - Removed Roles submenu, which is deemed unsuitable by the OpenColorIO UX working group. It may be reintroduced by registering `openColorIO:includeRoles` metadata to the relevant plugs.
+- OpenColorIO :
+  - Updated default config to ACES Studio 1.3.
+  - Improved colorspace menus :
+    - Organised colorspaces into submenus by family.
+    - Removed unwanted title-casing, so that names are now displayed verbatim.
+    - Removed Roles submenu, which is deemed unsuitable by the OpenColorIO UX working group. It may be reintroduced by registering `openColorIO:includeRoles` metadata to the relevant plugs.
 - VectorDataPlugValueWidget : Computation errors are now reflected by a red background colour.
 
 Fixes
@@ -56,6 +58,7 @@ Breaking Changes
 - UVInspector : Moved the `displayTransform` plug to `displayTransform.name`.
 - ImageReader : Renamed `None` preset to `Automatic`.
 - OpenColorIOTransform : Removed `availableColorSpaces()` and `availableRoles()` methods.
+- OpenColorIO : Changed default config.
 
 Build
 -----

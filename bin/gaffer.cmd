@@ -49,7 +49,7 @@ set QT_QPA_PLATFORM_PLUGIN_PATH=%GAFFER_ROOT%\qt\plugins
 call :prependToPath "%GAFFER_ROOT%\bin" PATH
 
 if "%OCIO%" EQU "" (
-	set OCIO=%GAFFER_ROOT%\openColorIO\config.ocio
+	set OCIO=ocio://studio-config-v1.0.0_aces-v1.3_ocio-v2.1
 )
 
 rem Arnold
