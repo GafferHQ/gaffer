@@ -73,9 +73,14 @@
 #include "IECore/BoxOps.h"
 #include "IECore/FastFloat.h"
 
+#include "OpenEXR/OpenEXRConfig.h"
+#if OPENEXR_VERSION_MAJOR < 3
 #include "OpenEXR/ImathColorAlgo.h"
-
 #include "OpenEXR/ImathMatrixAlgo.h"
+#else
+#include "Imath/ImathColorAlgo.h"
+#include "Imath/ImathMatrixAlgo.h"
+#endif
 
 #include "boost/bind/bind.hpp"
 #include "boost/bind/placeholders.hpp"

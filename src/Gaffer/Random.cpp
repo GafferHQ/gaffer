@@ -40,8 +40,14 @@
 #include "Gaffer/Context.h"
 #include "Gaffer/StringPlug.h"
 
+#include "OpenEXR/OpenEXRConfig.h"
+#if OPENEXR_VERSION_MAJOR < 3
 #include "OpenEXR/ImathColorAlgo.h"
 #include "OpenEXR/ImathRandom.h"
+#else
+#include "Imath/ImathColorAlgo.h"
+#include "Imath/ImathRandom.h"
+#endif
 
 #include "boost/functional/hash.hpp"
 

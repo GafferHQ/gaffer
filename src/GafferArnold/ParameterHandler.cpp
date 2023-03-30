@@ -604,12 +604,12 @@ void ParameterHandler::setupPlugs( const AtNodeEntry *nodeEntry, Gaffer::GraphCo
 		FloatPlugPtr heightPlug = plugsParent->getChild<FloatPlug>( "height" );
 		if( !widthPlug )
 		{
-			widthPlug = new FloatPlug( "width", Gaffer::Plug::Direction::In, 2.f, 0.001f, limits<float>::max() );
+			widthPlug = new FloatPlug( "width", Gaffer::Plug::Direction::In, 2.f, 0.001f, std::numeric_limits<float>::max() );
 			plugsParent->addChild( widthPlug );
 		}
 		if( !heightPlug )
 		{
-			heightPlug = new FloatPlug( "height", Gaffer::Plug::Direction::In, 2.f, 0.001f, limits<float>::max() );
+			heightPlug = new FloatPlug( "height", Gaffer::Plug::Direction::In, 2.f, 0.001f, std::numeric_limits<float>::max() );
 			plugsParent->addChild( heightPlug );
 		}
 		validPlugs.insert( widthPlug.get() );

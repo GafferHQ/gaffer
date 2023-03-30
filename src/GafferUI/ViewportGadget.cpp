@@ -52,8 +52,14 @@
 #include "IECore/NullObject.h"
 #include "IECore/SimpleTypedData.h"
 
+#include "OpenEXR/OpenEXRConfig.h"
+#if OPENEXR_VERSION_MAJOR < 3
 #include "OpenEXR/ImathBoxAlgo.h"
 #include "OpenEXR/ImathMatrixAlgo.h"
+#else
+#include "Imath/ImathBoxAlgo.h"
+#include "Imath/ImathMatrixAlgo.h"
+#endif
 
 #include "boost/bind/bind.hpp"
 #include "boost/bind/placeholders.hpp"
