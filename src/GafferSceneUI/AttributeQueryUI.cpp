@@ -51,7 +51,7 @@
 #include "IECore/Exception.h"
 #include "IECore/NullObject.h"
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/mem_fun.hpp>
 #include <boost/multi_index/ordered_index.hpp>
@@ -61,6 +61,8 @@
 #include <cassert>
 #include <functional>
 #include <iterator>
+
+using namespace boost::placeholders;
 
 namespace
 {

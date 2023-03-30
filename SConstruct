@@ -384,12 +384,6 @@ env = Environment(
 	CPPDEFINES = [
 		( "BOOST_FILESYSTEM_VERSION", "3" ),
 		"BOOST_FILESYSTEM_NO_DEPRECATED",
-		# Boost has deprecated `boost/bind.hpp` in favour of
-		# `boost/bind/bind.hpp`, and we have updated our code accordingly. But
-		# `boost::python` and others are still using the deprecated header,
-		# so we define BOOST_BIND_GLOBAL_PLACEHOLDERS to silence the reams of
-		# warnings triggered by that.
-		"BOOST_BIND_GLOBAL_PLACEHOLDERS",
 	],
 
 	CPPPATH = [
@@ -790,6 +784,14 @@ with open( str( boostVersionHeader ) ) as f :
 if "BOOST_MAJOR_VERSION" not in baseLibEnv :
 	sys.stderr.write( "ERROR : unable to determine boost version from \"{}\".\n".format(  boostVersionHeader ) )
 	Exit( 1 )
+
+if ( int( baseLibEnv["BOOST_MAJOR_VERSION"] ), int( baseLibEnv["BOOST_MINOR_VERSION"] ) ) < ( 1, 80 ) :
+
+	# Older versions of boost deprecated `boost/bind.hpp` in favour of
+	# `boost/bind/bind.hpp`, but left `boost::python` and others still using the
+	# deprecated header, so we define BOOST_BIND_GLOBAL_PLACEHOLDERS to silence
+	# the reams of warnings triggered by that.
+	baseLibEnv.Append( CPPDEFINES = [ "BOOST_BIND_GLOBAL_PLACEHOLDERS" ] )
 
 ###############################################################################################
 # The basic environment for building python modules
