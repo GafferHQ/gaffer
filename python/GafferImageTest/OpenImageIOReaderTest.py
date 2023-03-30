@@ -64,6 +64,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 	unsupportedMultipartFileName = GafferImageTest.ImageTestCase.imagesPath() / "unsupportedMultipart.exr"
 	multipartDefaultChannelsFileName = GafferImageTest.ImageTestCase.imagesPath() / "multipartDefaultChannels.exr"
 	multipartDefaultChannelsOverlapFileName = GafferImageTest.ImageTestCase.imagesPath() / "multipartDefaultChannelsOverlap.exr"
+	missingFileName = GafferImageTest.ImageTestCase.imagesPath() / "missing.####.exr"
 
 	def testInternalImageSpaceConversion( self ) :
 
@@ -281,6 +282,10 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		reader["fileName"].setValue( self.fileName )
 		self.assertEqual( reader["availableFrames"].getValue(), IECore.IntVectorData( [] ) )
 		reader["fileName"].setValue( pathlib.Path( testSequence.fileNameForFrame( 1 ) ) )
+		self.assertEqual( reader["availableFrames"].getValue(), IECore.IntVectorData( [] ) )
+
+		# missing image sequence, empty available frames
+		reader["fileName"].setValue( self.missingFileName )
 		self.assertEqual( reader["availableFrames"].getValue(), IECore.IntVectorData( [] ) )
 
 	def testMissingFrameMode( self ) :

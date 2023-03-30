@@ -1212,7 +1212,17 @@ void OpenImageIOReader::compute( ValuePlug *output, const Context *context ) con
 	if( output == availableFramesPlug() )
 	{
 		FileSequencePtr fileSequence = nullptr;
-		IECore::ls( fileNamePlug()->getValue(), fileSequence, /* minSequenceSize */ 1 );
+		// In case the image sequence is simply missing, the availableFrames should be set to 0
+		// that allows, in practice, tool building on the ImageReader to gracefully handle that case
+		// when running template workflows.
+		try
+		{
+			IECore::ls( fileNamePlug()->getValue(), fileSequence, /* minSequenceSize */ 1 );
+		}
+		catch( const std::exception & )
+		{
+			// Fall through to `setToDefault()`.
+		}
 
 		if( fileSequence )
 		{
