@@ -166,8 +166,13 @@ vec4 luminance( vec4 c )
 	return vec4( vec3( c.r * 0.2126 + c.g * 0.7152 + c.b * 0.0722 ), c.a );
 }
 
-vec4 colorTransformWithSolo( vec4 inPixel, bool absoluteValue, bool clipping, vec3 multiply, vec3 power, int soloChannel )
+vec4 colorTransformWithSolo( vec4 inPixel, bool absoluteValue, bool clipping, vec3 multiply, float power, int soloChannel )
 {
+	if( inPixel == vec4( 0.0 ) )
+	{
+		return inPixel;
+	}
+
 	if( absoluteValue )
 	{
 		inPixel = vec4( abs( inPixel.r ), abs( inPixel.g ), abs( inPixel.b ), abs( inPixel.a ) );
@@ -182,48 +187,45 @@ vec4 colorTransformWithSolo( vec4 inPixel, bool absoluteValue, bool clipping, ve
 			inPixel.a
 		);
 	}
-	inPixel = vec4( inPixel.rgb * multiply, inPixel.a );
-	if( inPixel.r > 0.0 && power.r != 1.0 ) inPixel.r = pow( inPixel.r, power.r );
-	if( inPixel.g > 0.0 && power.g != 1.0 ) inPixel.g = pow( inPixel.g, power.g );
-	if( inPixel.b > 0.0 && power.b != 1.0 ) inPixel.b = pow( inPixel.b, power.b );
 
+	inPixel = vec4( inPixel.rgb * multiply, inPixel.a );
+
+	vec4 result;
 	if( soloChannel == -1 )
 	{
-		return OCIODisplay( inPixel );
+		result = OCIODisplay( inPixel );
 	}
 	else if( soloChannel == 0 )
 	{
-		return OCIODisplay( inPixel.rrrr ).rrrr;
+		result = OCIODisplay( inPixel.rrrr ).rrrr;
 	}
 	else if( soloChannel == 1 )
 	{
-		return OCIODisplay( inPixel.gggg ).gggg;
+		result = OCIODisplay( inPixel.gggg ).gggg;
 	}
 	else if( soloChannel == 2 )
 	{
-		return OCIODisplay( inPixel.bbbb ).bbbb;
+		result = OCIODisplay( inPixel.bbbb ).bbbb;
 	}
 	else if( soloChannel == 3 )
 	{
-		return inPixel.aaaa;
+		result = inPixel.aaaa;
 	}
 	else // -2 is for luminance
 	{
-		return luminance( OCIODisplay( luminance( inPixel ) ) );
+		result = luminance( OCIODisplay( luminance( inPixel ) ) );
 	}
-}
 
-vec4 colorTransform( vec4 inPixel, bool absoluteValue, bool clipping, vec3 multiply, vec3 power, int soloChannel )
-{
-	if( inPixel == vec4( 0.0 ) )
+	if( power != 1.0 )
 	{
-		return inPixel;
+		if( result.r > 0.0 ) result.r = pow( result.r, power );
+		if( result.g > 0.0 ) result.g = pow( result.g, power );
+		if( result.b > 0.0 ) result.b = pow( result.b, power );
 	}
-	else
-	{
-		return colorTransformWithSolo( inPixel, absoluteValue, clipping, multiply, power, soloChannel );
-	}
-})";
+
+	return result;
+}
+)";
 
 	// Build and compile GLSL shader
 	static const char *g_vertexSource = R"(
@@ -252,13 +254,13 @@ uniform sampler2D framebufferTexture;
 uniform bool absoluteValue;
 uniform bool clipping;
 uniform vec3 multiply;
-uniform vec3 power;
+uniform float power;
 uniform int soloChannel;
 in vec2 fragmentuv;
 layout( location=0 ) out vec4 outColor;
 void main()
 {
-	outColor = colorTransform( texture2D( framebufferTexture, fragmentuv ), absoluteValue, clipping, multiply, power, soloChannel );
+	outColor = colorTransformWithSolo( texture2D( framebufferTexture, fragmentuv ), absoluteValue, clipping, multiply, power, soloChannel );
 })";
 		combinedFragmentCode = "#version 330 compatibility\n" + colorTransformCode + g_fragmentSuffixNew;
 	}
@@ -269,7 +271,7 @@ uniform sampler2D framebufferTexture;
 uniform bool absoluteValue;
 uniform bool clipping;
 uniform vec3 multiply;
-uniform vec3 power;
+uniform float power;
 uniform int soloChannel;
 varying vec2 fragmentuv;
 void main()
@@ -286,7 +288,7 @@ void main()
 	shaderSetup->addUniformParameter( "absoluteValue", new IECore::BoolData( false ) );
 	shaderSetup->addUniformParameter( "clipping", new IECore::BoolData( false ) );
 	shaderSetup->addUniformParameter( "multiply", new IECore::Color3fData( Imath::Color3f( 1 ) ) );
-	shaderSetup->addUniformParameter( "power", new IECore::Color3fData( Imath::Color3f( 1 ) ) );
+	shaderSetup->addUniformParameter( "power", new IECore::FloatData( 1.0f ) );
 	shaderSetup->addUniformParameter( "soloChannel", new IECore::IntData( -1 ) );
 
 	// Query shader parameters
