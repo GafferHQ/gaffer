@@ -229,7 +229,6 @@ class GAFFERUI_API View::DisplayTransform : public Gaffer::Node
 		/// transform. In addition to the shader parameters required by `ViewportGadget::setPostProcessShader()`,
 		/// the shader should also have the following parameters :
 		///
-		/// - `bool unpremultiply` : Temporarily unpremultiplies while applying the color transform.
 		/// - `bool absoluteValue` : Flips negative values to positive (useful when viewing a difference value).
 		/// - `bool clipping` : Marks regions outside `0 - 1`.
 		/// - `color multiply` : Applies a multiplier before the color transform.
