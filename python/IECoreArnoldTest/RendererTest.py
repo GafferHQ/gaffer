@@ -1914,6 +1914,10 @@ class RendererTest( GafferTest.TestCase ) :
 
 		network = IECoreScene.ShaderNetwork(
 			shaders = {
+				"globalsHandle" : IECoreScene.Shader(
+					"Utility/Globals",
+					"osl:shader",
+				),
 				"noiseHandle" : IECoreScene.Shader(
 					"Pattern/Noise",
 					"osl:shader",
@@ -1947,12 +1951,31 @@ class RendererTest( GafferTest.TestCase ) :
 						),
 					}
 				),
+				"splineWithInputsHandle" : IECoreScene.Shader(
+					"Pattern/ColorSpline",
+					"osl:shader",
+					{
+						"spline" : IECore.SplinefColor3f(
+							IECore.CubicBasisf.catmullRom(),
+							[
+								( 0, imath.Color3f( 0 ) ),
+								( 0.25, imath.Color3f( 0.25 ) ),
+								( 0.5, imath.Color3f( 0.5 ) ),
+								( 1, imath.Color3f( 1 ) ),
+							]
+						),
+					}
+				),
 				"output" : IECoreScene.Shader( "switch_rgba", "ai:surface" ),
 			},
 			connections = [
 				( ( "splineHandle", "" ), ( "output", "input1" ) ),
 				( ( "noiseHandle", "" ), ( "output", "input2" ) ),
 				( ( "floatSplineHandle", "" ), ( "output", "input3" ) ),
+				( ( "splineWithInputsHandle", "" ), ( "output", "input4" ) ),
+
+				( ( "globalsHandle", "globalP" ), ( "splineWithInputsHandle", "spline[0].y" ) ),
+				( ( "globalsHandle", "globalV" ), ( "splineWithInputsHandle", "spline[3].y.g" ) ),
 			],
 			output = "output"
 		)
@@ -2017,6 +2040,35 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( noise ) ), "osl" )
 			self.assertEqual( arnold.AiNodeGetStr( noise, "shadername" ), "Pattern/Noise" )
 			self.assertEqual( arnold.AiNodeGetFlt( noise, "param_scale" ), 10.0 )
+
+			splineWithInputs = arnold.AiNodeGetLink( switch, "input4" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( splineWithInputs ) ), "osl" )
+			self.assertEqual( arnold.AiNodeGetStr( splineWithInputs, "shadername" ), "Pattern/ColorSpline" )
+			self.assertEqual( arnold.AiNodeGetStr( splineWithInputs, "param_splineBasis" ), "catmull-rom" )
+
+			splineWithInputsPositions = arnold.AiNodeGetArray( splineWithInputs, "param_splinePositions" )
+			self.assertEqual( arnold.AiArrayGetFlt( splineWithInputsPositions, 0 ), 0 )
+			self.assertEqual( arnold.AiArrayGetFlt( splineWithInputsPositions, 1 ), 0.25 )
+			self.assertEqual( arnold.AiArrayGetFlt( splineWithInputsPositions, 2 ), 0.5 )
+			self.assertEqual( arnold.AiArrayGetFlt( splineWithInputsPositions, 3 ), 1 )
+
+			splineWithInputsAdapter = arnold.AiNodeGetLink( splineWithInputs, "param_splineValues" )
+			self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( splineWithInputsAdapter ) ), "osl" )
+			self.assertEqual( arnold.AiNodeGetStr( splineWithInputsAdapter, "shadername" ), "Utility/__ColorToArray" )
+			self.assertEqual( arnold.AiNodeGetRGB( splineWithInputsAdapter, "param_in1" ), arnold.AtRGB( 0.25, 0.25, 0.25 ) )
+			self.assertEqual( arnold.AiNodeGetRGB( splineWithInputsAdapter, "param_in2" ), arnold.AtRGB( 0.5, 0.5, 0.5 ) )
+
+			globalPInput = arnold.AiNodeGetLink( splineWithInputsAdapter, "param_in0" )
+			print( arnold.AiNodeGetLink( splineWithInputsAdapter, "param_in3" ) )
+			self.assertEqual( arnold.AiNodeGetStr( globalPInput, "shadername" ), "Utility/Globals" )
+			self.assertEqual( arnold.AiNodeGetStr( globalPInput, "output" ), "globalP" )
+
+
+			componentAdapterInput = arnold.AiNodeGetLink( splineWithInputsAdapter, "param_in3" )
+			self.assertEqual( arnold.AiNodeGetStr( componentAdapterInput, "shadername" ), "MaterialX/mx_pack_color" )
+			globalVInput = arnold.AiNodeGetLink( componentAdapterInput, "param_in2" )
+			self.assertEqual( arnold.AiNodeGetStr( globalVInput, "shadername" ), "Utility/Globals" )
+			self.assertEqual( arnold.AiNodeGetStr( globalVInput, "output" ), "globalV" )
 
 	def testPureOSLShaders( self ) :
 

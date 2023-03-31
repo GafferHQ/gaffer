@@ -350,9 +350,15 @@ T parameterValue( const Shader *shader, InternedString parameterName, const T &d
 
 ShaderNetworkPtr preprocessedNetwork( const IECoreScene::ShaderNetwork *shaderNetwork )
 {
-	/// \todo : remove this conversion once Arnold supports it natively
 	ShaderNetworkPtr result = shaderNetwork->copy();
-	IECoreScene::ShaderNetworkAlgo::convertOSLComponentConnections( result.get() );
+	/// \todo : pass in the actual OSL version.  We should be able to use a recent enough
+	/// version of OSL that Arnold supports actual component connections, and we don't have
+	/// to force the insertion of old OSL adapters.
+	///
+	/// While we're at it, if we can get onto recent enough Arnold, then we can connect to
+	/// specific outputs, and can stop needing to duplicate shaders when more than 1 output
+	/// is used.
+	IECoreScene::ShaderNetworkAlgo::convertToOSLConventions( result.get(), 10900 );
 	IECoreArnold::ShaderNetworkAlgo::convertUSDShaders( result.get() );
 
 	/// Convert `quad_light` width and height, if needed.

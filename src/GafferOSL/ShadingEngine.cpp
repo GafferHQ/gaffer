@@ -1279,7 +1279,7 @@ ShadingEngine::ShadingEngine( const IECoreScene::ShaderNetwork *shaderNetwork ) 
 ShadingEngine::ShadingEngine( IECoreScene::ShaderNetworkPtr &&shaderNetwork )
 	:	m_hash( shaderNetwork->Object::hash() ), m_timeNeeded( false ), m_unknownAttributesNeeded( false ), m_hasDeformation( false )
 {
-	IECoreScene::ShaderNetworkAlgo::convertOSLComponentConnections( shaderNetwork.get(), OSL_VERSION );
+	IECoreScene::ShaderNetworkAlgo::convertToOSLConventions( shaderNetwork.get(), OSL_VERSION );
 
 	ShadingSystem *shadingSystem = ::shadingSystem();
 
@@ -1309,11 +1309,7 @@ ShadingEngine::ShadingEngine( IECoreScene::ShaderNetworkPtr &&shaderNetwork )
 
 				// Declare this shader along with its parameters and connections.
 
-				IECore::ConstCompoundDataPtr expandedParameters =
-					IECoreScene::ShaderNetworkAlgo::expandSplineParameters(
-						shader->parametersData()
-					);
-				declareParameters( expandedParameters->readable(), shadingSystem );
+				declareParameters( shader->parametersData()->readable(), shadingSystem );
 				shadingSystem->Shader( "surface", shader->getName().c_str(), handle.c_str() );
 
 				for( const auto &c : shaderNetwork->inputConnections( handle ) )

@@ -1,0 +1,108 @@
+//////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (c) 2023, Image Engine Design Inc. All rights reserved.
+//
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+//
+//      * Redistributions of source code must retain the above
+//        copyright notice, this list of conditions and the following
+//        disclaimer.
+//
+//      * Redistributions in binary form must reproduce the above
+//        copyright notice, this list of conditions and the following
+//        disclaimer in the documentation and/or other materials provided with
+//        the distribution.
+//
+//      * Neither the name of John Haddon nor the names of
+//        any other contributors to this software may be used to endorse or
+//        promote products derived from this software without specific prior
+//        written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+//  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+//  PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+//  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+//  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+//  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+//  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+//  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+//////////////////////////////////////////////////////////////////////////
+
+#include "GafferOSL/ArrayArgList.h"
+
+shader __FloatToArray
+(
+	float in0 = 0,
+	float in1 = 0,
+	float in2 = 0,
+	float in3 = 0,
+	float in4 = 0,
+	float in5 = 0,
+	float in6 = 0,
+	float in7 = 0,
+	float in8 = 0,
+	float in9 = 0,
+	float in10 = 0,
+	float in11 = 0,
+	float in12 = 0,
+	float in13 = 0,
+	float in14 = 0,
+	float in15 = 0,
+	float in16 = 0,
+	float in17 = 0,
+	float in18 = 0,
+	float in19 = 0,
+	float in20 = 0,
+	float in21 = 0,
+	float in22 = 0,
+	float in23 = 0,
+	float in24 = 0,
+	float in25 = 0,
+	float in26 = 0,
+	float in27 = 0,
+	float in28 = 0,
+	float in29 = 0,
+	float in30 = 0,
+	float in31 = 0,
+
+	output float out1[1] = { GAFFEROSL_INLIST_1 },
+	output float out2[2] = { GAFFEROSL_INLIST_2 },
+	output float out3[3] = { GAFFEROSL_INLIST_3 },
+	output float out4[4] = { GAFFEROSL_INLIST_4 },
+	output float out5[5] = { GAFFEROSL_INLIST_5 },
+	output float out6[6] = { GAFFEROSL_INLIST_6 },
+	output float out7[7] = { GAFFEROSL_INLIST_7 },
+	output float out8[8] = { GAFFEROSL_INLIST_8 },
+	output float out9[9] = { GAFFEROSL_INLIST_9 },
+	output float out10[10] = { GAFFEROSL_INLIST_10 },
+	output float out11[11] = { GAFFEROSL_INLIST_11 },
+	output float out12[12] = { GAFFEROSL_INLIST_12 },
+	output float out13[13] = { GAFFEROSL_INLIST_13 },
+	output float out14[14] = { GAFFEROSL_INLIST_14 },
+	output float out15[15] = { GAFFEROSL_INLIST_15 },
+	output float out16[16] = { GAFFEROSL_INLIST_16 },
+	output float out17[17] = { GAFFEROSL_INLIST_17 },
+	output float out18[18] = { GAFFEROSL_INLIST_18 },
+	output float out19[19] = { GAFFEROSL_INLIST_19 },
+	output float out20[20] = { GAFFEROSL_INLIST_20 },
+	output float out21[21] = { GAFFEROSL_INLIST_21 },
+	output float out22[22] = { GAFFEROSL_INLIST_22 },
+	output float out23[23] = { GAFFEROSL_INLIST_23 },
+	output float out24[24] = { GAFFEROSL_INLIST_24 },
+	output float out25[25] = { GAFFEROSL_INLIST_25 },
+	output float out26[26] = { GAFFEROSL_INLIST_26 },
+	output float out27[27] = { GAFFEROSL_INLIST_27 },
+	output float out28[28] = { GAFFEROSL_INLIST_28 },
+	output float out29[29] = { GAFFEROSL_INLIST_29 },
+	output float out30[30] = { GAFFEROSL_INLIST_30 },
+	output float out31[31] = { GAFFEROSL_INLIST_31 },
+	output float out32[32] = { GAFFEROSL_INLIST_32 }
+)
+{
+}

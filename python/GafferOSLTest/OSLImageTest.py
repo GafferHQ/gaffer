@@ -907,5 +907,107 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 				for c in range(3):
 					self.assertAlmostEqual( samplers[c].sample( x, 0 ), result[c], places = 3 )
 
+	def testOSLSplineConnections( self ):
+
+		g = GafferOSL.OSLShader()
+		g.loadShader( "Utility/Globals" )
+
+		invertU = GafferOSL.OSLShader()
+		invertU.loadShader( "Maths/SubtractFloat" )
+		invertU["parameters"]["a"].setValue( 1.0 )
+		invertU["parameters"]["b"].setInput( g["out"]["globalU"] )
+
+		floatSpline = GafferOSL.OSLShader()
+		floatSpline.loadShader( "Pattern/FloatSpline" )
+		floatSpline["parameters"]["x"].setInput( g["out"]["globalV"] )
+		floatSpline['parameters']['spline'].setValue( Gaffer.SplineDefinitionff( ( ( 1/8, 0 ), ( 3/8, 0 ), ( 5/8, 1 ), ( 7/8, 1 )), Gaffer.SplineDefinitionInterpolation.Constant ) )
+		floatSpline["parameters"]["spline"]["p1"]["y"].setInput( invertU["out"]["out"] )
+		floatSpline["parameters"]["spline"]["p2"]["y"].setInput( g["out"]["globalU"] )
+
+		oslImage = GafferOSL.OSLImage()
+		oslImage["channels"].addChild( Gaffer.NameValuePlug( "", Gaffer.Color3fPlug( "value" ), True, "channel" ) )
+		oslImage["defaultFormat"].setValue( GafferImage.Format( 2, 8, 1.000 ) )
+		oslImage["channels"]["channel"]["value"].setInput( floatSpline["out"]["c"] )
+
+		def testEval( channelName ):
+			d = oslImage['out'].channelData( channelName, imath.V2i( 0 ) )
+			ts = GafferImage.ImagePlug.tileSize()
+			# Multiplying by 1000 and rounding to int values is enough precision for this test, and makes
+			# the reference values concise
+			return [ round( d[ x + y * ts ] * 1000 ) for y in range( 8 ) for x in range( 2 ) ]
+
+		self.assertEqual( testEval("R"), [0, 0, 0, 0, 0, 0, 750, 250, 750, 250, 250, 750, 250, 750, 1000, 1000] )
+
+		floatSpline["parameters"]["spline"]["interpolation"].setValue( Gaffer.SplineDefinitionInterpolation.Linear )
+		self.assertEqual( testEval("R"), [0, 0, 188, 62, 562, 188, 625, 375, 375, 625, 438, 812, 812, 938, 1000, 1000] )
+
+		floatSpline["parameters"]["spline"]["interpolation"].setValue( Gaffer.SplineDefinitionInterpolation.CatmullRom )
+		self.assertEqual( testEval("R"), [0, 0, 232, 54, 648, 170, 684, 363, 316, 637, 352, 830, 768, 946, 1000, 1000] )
+
+		floatSpline["parameters"]["spline"]["interpolation"].setValue( Gaffer.SplineDefinitionInterpolation.BSpline )
+		self.assertEqual( testEval("R"), [0, 0, 187, 63, 476, 205, 540, 392, 460, 608, 524, 795, 813, 937, 1000, 1000] )
+
+		floatSpline["parameters"]["spline"]["interpolation"].setValue( Gaffer.SplineDefinitionInterpolation.MonotoneCubic )
+		with self.assertRaisesRegex( Exception, "Cannot support monotone cubic interpolation for splines with inputs, for plug OSLShader.parameters.s" ):
+			testEval( "R" )
+
+		# Make connections to outermost control points ( this will require duplicating connections to the
+		# duplicated end points )
+		floatSpline["parameters"]["spline"]["p0"]["y"].setInput( invertU["out"]["out"] )
+		floatSpline["parameters"]["spline"]["p1"]["y"].setInput( None )
+		floatSpline["parameters"]["spline"]["p2"]["y"].setInput( None )
+		floatSpline["parameters"]["spline"]["p3"]["y"].setInput( g["out"]["globalU"] )
+
+		floatSpline["parameters"]["spline"]["interpolation"].setValue( Gaffer.SplineDefinitionInterpolation.Constant )
+
+		self.assertEqual( testEval("R"), [750, 250, 750, 250, 750, 250, 0, 0, 0, 0, 1000, 1000, 1000, 1000, 250, 750])
+
+		floatSpline["parameters"]["spline"]["interpolation"].setValue( Gaffer.SplineDefinitionInterpolation.Linear )
+		self.assertEqual( testEval("R"), [750, 250, 562, 188, 188, 62, 250, 250, 750, 750, 812, 938, 438, 812, 250, 750] )
+
+		floatSpline["parameters"]["spline"]["interpolation"].setValue( Gaffer.SplineDefinitionInterpolation.CatmullRom )
+		self.assertEqual( testEval("R"), [750, 250, 500, 143, 68, -23, 168, 191, 832, 809, 932, 1023, 500, 857, 250, 750] )
+
+		floatSpline["parameters"]["spline"]["interpolation"].setValue( Gaffer.SplineDefinitionInterpolation.BSpline )
+		self.assertEqual( testEval("R"), [750, 250, 563, 188, 309, 149, 368, 335, 632, 665, 691, 851, 437, 812, 250, 750] )
+
+		# Now test color connections
+		colorSpline = GafferOSL.OSLShader()
+		colorSpline.loadShader( "Pattern/ColorSpline" )
+		colorSpline["parameters"]["x"].setInput( g["out"]["globalV"] )
+
+		colorSpline['parameters']['spline'].setValue( Gaffer.SplineDefinitionfColor3f(
+			(
+				( 1/8, imath.Color3f(0, 1, 0.4) ), ( 3/8, imath.Color3f(0.25, 0.75, 0.5) ),
+				( 5/8, imath.Color3f(0.75, 0.25, 0.6) ), ( 7/8, imath.Color3f(1, 0, 0.7) )
+			),
+			Gaffer.SplineDefinitionInterpolation.CatmullRom
+		) )
+
+		floatToColor = GafferOSL.OSLShader()
+		floatToColor.loadShader( "Conversion/FloatToColor" )
+		floatToColor["parameters"]["r"].setInput( invertU["out"]["out"] )
+		floatToColor["parameters"]["g"].setValue( 0.55 )
+		floatToColor["parameters"]["b"].setInput( g["out"]["globalU"] )
+
+		colorSpline["parameters"]["spline"]["p1"]["y"].setInput( floatToColor["out"]["c"] )
+		colorSpline["parameters"]["spline"]["p3"]["y"]["g"].setInput( g["out"]["globalU"] )
+
+		oslImage["channels"]["channel"]["value"].setInput( colorSpline["out"]["c"] )
+
+		self.assertEqual( testEval("R"), [0, 0, 214, 54, 614, 170, 797, 363, 750, 637, 795, 830, 929, 946, 1000, 1000])
+		self.assertEqual( testEval("G"), [1000, 1000, 882, 882, 652, 652, 457, 446, 300, 265, 230, 320, 239, 597, 250, 750] )
+		self.assertEqual( testEval("B"), [400, 400, 345, 505, 253, 697, 308, 742, 518, 632, 642, 608, 684, 666, 700, 700] )
+
+		# Modify x value ordering to make sure that control point sorting is working
+		colorSpline["parameters"]["spline"]["p0"]["x"].setValue( 7/8 )
+		colorSpline["parameters"]["spline"]["p1"]["x"].setValue( 5/8 )
+		colorSpline["parameters"]["spline"]["p2"]["x"].setValue( 3/8 )
+		colorSpline["parameters"]["spline"]["p3"]["x"].setValue( 1/8 )
+
+		self.assertEqual( testEval("R"), [ 1000, 1000, 929, 946, 795, 830, 750, 637, 797, 363, 614, 170, 214, 54, 0, 0 ])
+		self.assertEqual( testEval("G"), [ 250, 750, 239, 597, 230, 320, 300, 265, 457, 446, 652, 652, 882, 882, 1000, 1000 ] )
+		self.assertEqual( testEval("B"), [ 700, 700, 684, 666, 642, 608, 518, 632, 308, 742, 253, 697, 345, 505, 400, 400 ] )
+
 if __name__ == "__main__":
 	unittest.main()

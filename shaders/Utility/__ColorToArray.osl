@@ -1,0 +1,108 @@
+//////////////////////////////////////////////////////////////////////////
+//
+//  Copyright (c) 2023, Image Engine Design Inc. All rights reserved.
+//
+//  Redistribution and use in source and binary forms, with or without
+//  modification, are permitted provided that the following conditions are
+//  met:
+//
+//      * Redistributions of source code must retain the above
+//        copyright notice, this list of conditions and the following
+//        disclaimer.
+//
+//      * Redistributions in binary form must reproduce the above
+//        copyright notice, this list of conditions and the following
+//        disclaimer in the documentation and/or other materials provided with
+//        the distribution.
+//
+//      * Neither the name of John Haddon nor the names of
+//        any other contributors to this software may be used to endorse or
+//        promote products derived from this software without specific prior
+//        written permission.
+//
+//  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+//  IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+//  THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+//  PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
+//  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+//  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+//  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+//  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+//  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+//  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+//  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
+//////////////////////////////////////////////////////////////////////////
+
+#include "GafferOSL/ArrayArgList.h"
+
+shader __ColorToArray
+(
+	color in0 = 0,
+	color in1 = 0,
+	color in2 = 0,
+	color in3 = 0,
+	color in4 = 0,
+	color in5 = 0,
+	color in6 = 0,
+	color in7 = 0,
+	color in8 = 0,
+	color in9 = 0,
+	color in10 = 0,
+	color in11 = 0,
+	color in12 = 0,
+	color in13 = 0,
+	color in14 = 0,
+	color in15 = 0,
+	color in16 = 0,
+	color in17 = 0,
+	color in18 = 0,
+	color in19 = 0,
+	color in20 = 0,
+	color in21 = 0,
+	color in22 = 0,
+	color in23 = 0,
+	color in24 = 0,
+	color in25 = 0,
+	color in26 = 0,
+	color in27 = 0,
+	color in28 = 0,
+	color in29 = 0,
+	color in30 = 0,
+	color in31 = 0,
+
+	output color out1[1] = { GAFFEROSL_INLIST_1 },
+	output color out2[2] = { GAFFEROSL_INLIST_2 },
+	output color out3[3] = { GAFFEROSL_INLIST_3 },
+	output color out4[4] = { GAFFEROSL_INLIST_4 },
+	output color out5[5] = { GAFFEROSL_INLIST_5 },
+	output color out6[6] = { GAFFEROSL_INLIST_6 },
+	output color out7[7] = { GAFFEROSL_INLIST_7 },
+	output color out8[8] = { GAFFEROSL_INLIST_8 },
+	output color out9[9] = { GAFFEROSL_INLIST_9 },
+	output color out10[10] = { GAFFEROSL_INLIST_10 },
+	output color out11[11] = { GAFFEROSL_INLIST_11 },
+	output color out12[12] = { GAFFEROSL_INLIST_12 },
+	output color out13[13] = { GAFFEROSL_INLIST_13 },
+	output color out14[14] = { GAFFEROSL_INLIST_14 },
+	output color out15[15] = { GAFFEROSL_INLIST_15 },
+	output color out16[16] = { GAFFEROSL_INLIST_16 },
+	output color out17[17] = { GAFFEROSL_INLIST_17 },
+	output color out18[18] = { GAFFEROSL_INLIST_18 },
+	output color out19[19] = { GAFFEROSL_INLIST_19 },
+	output color out20[20] = { GAFFEROSL_INLIST_20 },
+	output color out21[21] = { GAFFEROSL_INLIST_21 },
+	output color out22[22] = { GAFFEROSL_INLIST_22 },
+	output color out23[23] = { GAFFEROSL_INLIST_23 },
+	output color out24[24] = { GAFFEROSL_INLIST_24 },
+	output color out25[25] = { GAFFEROSL_INLIST_25 },
+	output color out26[26] = { GAFFEROSL_INLIST_26 },
+	output color out27[27] = { GAFFEROSL_INLIST_27 },
+	output color out28[28] = { GAFFEROSL_INLIST_28 },
+	output color out29[29] = { GAFFEROSL_INLIST_29 },
+	output color out30[30] = { GAFFEROSL_INLIST_30 },
+	output color out31[31] = { GAFFEROSL_INLIST_31 },
+	output color out32[32] = { GAFFEROSL_INLIST_32 }
+)
+{
+}

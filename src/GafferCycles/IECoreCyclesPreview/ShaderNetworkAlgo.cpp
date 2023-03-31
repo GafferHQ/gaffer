@@ -106,50 +106,6 @@ ccl::SocketType::Type getSocketType( const std::string &name )
 	return ccl::SocketType::Type::UNDEFINED;
 }
 
-template<typename Spline>
-void setSplineParameter( ccl::ShaderNode *node, const std::string &name, const Spline &spline )
-{
-	using PositionsVector = vector<typename Spline::XType>;
-	using ValuesVector = vector<typename Spline::YType>;
-	using PositionsData = TypedData<PositionsVector>;
-	using ValuesData = TypedData<ValuesVector>;
-
-	typename PositionsData::Ptr positionsData = new PositionsData;
-	typename ValuesData::Ptr valuesData = new ValuesData;
-
-	PositionsVector &positions = positionsData->writable();
-	ValuesVector &values = valuesData->writable();
-	positions.reserve( spline.points.size() );
-	values.reserve( spline.points.size() );
-
-	for( typename Spline::PointContainer::const_iterator it = spline.points.begin(), eIt = spline.points.end(); it != eIt; ++it )
-	{
-		positions.push_back( it->first );
-		values.push_back( it->second );
-	}
-
-/*
-	AtString basis( g_catmullRomArnoldString );
-	if( spline.basis == Spline::Basis::bezier() )
-	{
-		basis = g_bezierArnoldString;
-	}
-	else if( spline.basis == Spline::Basis::bSpline() )
-	{
-		basis = g_bsplineArnoldString;
-	}
-	else if( spline.basis == Spline::Basis::linear() )
-	{
-		basis = g_linearArnoldString;
-	}
-*/
-
-	//GafferOSL::OSLShader::prepareSplineCVsForOSL( positions, values, basis );
-	SocketAlgo::setSocket( node, ( name + "Positions" ).c_str(), positionsData.get() );
-	SocketAlgo::setSocket( node, ( name + "Values" ).c_str(), valuesData.get() );
-	//SocketAlgo::setSocket( node, name + "Basis", basis );
-}
-
 typedef boost::unordered_map<ShaderNetwork::Parameter, ccl::ShaderNode *> ShaderMap;
 
 ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECoreScene::ShaderNetwork *shaderNetwork, const std::string &namePrefix, ccl::ShaderManager *shaderManager, ccl::ShaderGraph *shaderGraph, ShaderMap &converted )
@@ -235,26 +191,22 @@ ccl::ShaderNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, c
 
 		if( const SplineffData *splineData = runTimeCast<const SplineffData>( namedParameter.second.get() ) )
 		{
-			if( !isOSLShader )
+			// For OSL, splines are handled by convertToOSLConventions
+			assert( !isOSLShader );
+
+			if( const ccl::SocketType *socket = node->type->find_input( ccl::ustring( parameterName.c_str() ) ) )
 			{
-				if( const ccl::SocketType *socket = node->type->find_input( ccl::ustring( parameterName.c_str() ) ) )
-					SocketAlgo::setRampSocket( node, socket, splineData->readable() );
-			}
-			else
-			{
-				setSplineParameter( node, parameterName, splineData->readable() );
+				SocketAlgo::setRampSocket( node, socket, splineData->readable() );
 			}
 		}
 		else if( const SplinefColor3fData *splineData = runTimeCast<const SplinefColor3fData>( namedParameter.second.get() ) )
 		{
-			if( !isOSLShader )
+			// For OSL, splines are handled by convertToOSLConventions
+			assert( !isOSLShader );
+
+			if( const ccl::SocketType *socket = node->type->find_input( ccl::ustring( parameterName.c_str() ) ) )
 			{
-				if( const ccl::SocketType *socket = node->type->find_input( ccl::ustring( parameterName.c_str() ) ) )
-					SocketAlgo::setRampSocket( node, socket, splineData->readable() );
-			}
-			else
-			{
-				setSplineParameter( node, parameterName, splineData->readable() );
+				SocketAlgo::setRampSocket( node, socket, splineData->readable() );
 			}
 		}
 		else if( isImageTexture && parameterName == "filename" )
@@ -554,7 +506,10 @@ ccl::ShaderGraph *convertGraph( const IECoreScene::ShaderNetwork *surfaceShader,
 		}
 
 		ShaderNetworkPtr toConvert = network->copy();
-		IECoreScene::ShaderNetworkAlgo::convertOSLComponentConnections( toConvert.get() );
+
+		/// Hardcoded to the old OSL version to indicate that component connection adapters are
+		/// required - even though OSL now supports component connections, the Cycles API AFAIK doesn't.
+		IECoreScene::ShaderNetworkAlgo::convertToOSLConventions( toConvert.get(), 10900 );
 		ShaderMap converted;
 		ccl::ShaderNode *node = convertWalk( toConvert->getOutput(), toConvert.get(), namePrefix, shaderManager, graph, converted );
 
