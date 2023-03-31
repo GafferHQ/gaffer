@@ -9,6 +9,7 @@ Features
 Improvements
 ------------
 
+- ArnoldOptions : Exposed Arnold 7.2.1.0's Global Light Sampling feature via a new `lightSamples` plug.
 - Shader : Added support for shading input connections to splines.  After double clicking on a spline to open the editor, you may select a control point, and then drag an input to the value control.  Works in GafferImage, GafferObject and Arnold.  Supports a max of 32 values in the spline.
 
 Fixes
