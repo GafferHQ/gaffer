@@ -4,6 +4,7 @@
 Features
 --------
 
+- Arnold : Added support for Arnold 7.2.
 - PointsToLevelSet : Added a new node for converting points primitives into OpenVDB level sets.
 
 Improvements
