@@ -42,6 +42,11 @@ Features
 
 - PointsToLevelSet : Added a new node for converting points primitives into OpenVDB level sets.
 
+Improvements
+------------
+
+- Shader : Added support for shading input connections to splines.  After double clicking on a spline to open the editor, you may select a control point, and then drag an input to the value control.  Works in GafferImage, GafferObject and Arnold.  Supports a max of 32 values in the spline.
+
 Fixes
 -----
 
