@@ -5,6 +5,7 @@ Features
 --------
 
 - LightTool : Added manipulator for quad lights.
+- Collect : Added a utility node for collecting the values of arbitrary inputs across a range of contexts.
 
 Improvements
 ------------
