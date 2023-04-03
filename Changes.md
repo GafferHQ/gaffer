@@ -33,6 +33,7 @@ API
   - Added `noneLabel` argument to `colorSpacePresetNames()`.
   - Added support for `openColorIO:categories` and `openColorIO:includeRoles` metadata to `colorSpacePresetNames()`. These may be registered on a per-plug basis to control the colorspaces shown for that plug.
 - ValuePlugs : Added Python bindings for `ValueType` type alias.
+- Color4fVectorDataPlug : Added a plug type for storing arrays of `Color4f`.
 
 Breaking Changes
 ----------------

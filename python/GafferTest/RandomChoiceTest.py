@@ -57,6 +57,7 @@ class RandomChoiceTest( GafferTest.TestCase ) :
 			( Gaffer.V2fPlug, Gaffer.V2fVectorDataPlug ),
 			( Gaffer.V3fPlug, Gaffer.V3fVectorDataPlug ),
 			( Gaffer.Color3fPlug, Gaffer.Color3fVectorDataPlug ),
+			( Gaffer.Color4fPlug, Gaffer.Color4fVectorDataPlug ),
 		] :
 
 			examplePlug = plugType()
