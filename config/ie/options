@@ -134,6 +134,7 @@ qtVersion = gafferReg["qtVersion"]
 pysideVersion = gafferReg.get( "pysideVersion", "2.0.0" )
 qtPyVersion = gafferReg.get( "qtPyVersion", "1.0.0.b3" )
 fmtVersion = gafferReg.get( "fmtVersion", "9.1.0" )
+embreeVersion = gafferReg.get( "embreeVersion", "3.13.5" )
 
 vTuneVersion = getOption( "VTUNE_VERSION", os.environ["VTUNE_VERSION"] )
 VTUNE_ROOT = IEEnv.registry["apps"]["vtune"][vTuneVersion][IEEnv.platform()]["location"]
@@ -194,6 +195,13 @@ try :
 	ARNOLD_ROOT = arnoldReg["location"]
 except :
 	ARNOLD_ROOT = ""
+
+cyclesVersion = getOption( "CYCLES_VERSION", targetAppReg.get( "cyclesVersion", os.environ.get( "CYCLES_VERSION", "" ) ) )
+
+if cyclesVersion == "" :
+	CYCLES_ROOT = ""
+else :
+	CYCLES_ROOT = os.path.join( IEEnv.Environment.rootPath(), "apps", "cycles", cyclesVersion, IEEnv.platform(), compiler, compilerVersion )
 
 dlVersion = getOption( "DL_VERSION", os.environ.get( "DL_VERSION", "" ) )
 
@@ -336,6 +344,7 @@ LOCATE_DEPENDENCY_LIBPATH = [
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "openexr", exrVersion, IEEnv.platform(), compiler, compilerVersion, "lib" ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "openexr", exrVersion, IEEnv.platform(), compiler, compilerVersion, "python", pythonVersion, "boost", boostVersion, "lib64" ),
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "lib", IEEnv.platform(), compiler, compilerVersion ),
+	os.path.join( IEEnv.Environment.rootPath(), "apps", "embree", embreeVersion, IEEnv.platform(), compiler, compilerVersion, "lib" ),
 
 ]
 
