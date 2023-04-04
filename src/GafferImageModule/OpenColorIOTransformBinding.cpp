@@ -54,34 +54,6 @@ using namespace GafferImage;
 namespace
 {
 
-boost::python::list availableColorSpaces()
-{
-	std::vector<std::string> e;
-	OpenColorIOTransform::availableColorSpaces( e );
-
-	boost::python::list result;
-	for( std::vector<std::string>::const_iterator it = e.begin(), eIt = e.end(); it != eIt; ++it )
-	{
-		result.append( *it );
-	}
-
-	return result;
-}
-
-boost::python::list availableRoles()
-{
-	std::vector<std::string> e;
-	OpenColorIOTransform::availableRoles( e );
-
-	boost::python::list result;
-	for( std::vector<std::string>::const_iterator it = e.begin(), eIt = e.end(); it != eIt; ++it )
-	{
-		result.append( *it );
-	}
-
-	return result;
-}
-
 boost::python::list supportedExtensions()
 {
 	std::vector<std::string> e;
@@ -107,10 +79,7 @@ void GafferImageModule::bindOpenColorIOTransform()
 	GafferBindings::DependencyNodeClass<Saturation>();
 
 	{
-		scope s = GafferBindings::DependencyNodeClass<OpenColorIOTransform>()
-			.def( "availableColorSpaces", &availableColorSpaces ).staticmethod( "availableColorSpaces" )
-			.def( "availableRoles", &availableRoles ).staticmethod( "availableRoles" )
-		;
+		scope s = GafferBindings::DependencyNodeClass<OpenColorIOTransform>();
 
 		enum_<OpenColorIOTransform::Direction>( "Direction" )
 			.value( "Forward", OpenColorIOTransform::Forward )

@@ -141,3 +141,17 @@ def __plugSet( plug ) :
 preferences.plugSetSignal().connect( __plugSet, scoped = False )
 
 Gaffer.Metadata.registerValue( GafferUI.View, "displayTransform.name", "userDefault", "Default" )
+
+# Add "Roles" submenus to various colorspace plugs. The OCIO UX guidelines suggest we
+# shouldn't do this, but they do seem like they might be useful, and historically they
+# have been available in Gaffer. They can be disabled by overwriting the metadata in
+# a custom config file.
+
+for node, plug in [
+	( GafferImage.ColorSpace, "inputSpace" ),
+	( GafferImage.ColorSpace, "outputSpace" ),
+	( GafferImage.DisplayTransform, "inputColorSpace" ),
+	( GafferImage.ImageReader, "colorSpace" ),
+	( GafferImage.ImageWriter, "colorSpace" ),
+] :
+	Gaffer.Metadata.registerValue( node, plug, "openColorIO:includeRoles", True )

@@ -8,6 +8,12 @@ Improvements
   - Added OpenColorIO colour management.
   - Added exposure, gamma and solo channel settings.
 - UVInspector : Added exposure, gamma and solo channel settings.
+- ImageReader : The `colorSpace` widget now displays the name of the assumed colorspace when in `Automatic` mode.
+- ImageReader, ImageWriter : The `colorSpace` menu is now filtered using the `file-io` category, if the current OpenColorIO config provides it.
+- OpenColorIO : Improved colorspace menus :
+  - Organised colorspaces into submenus by family.
+  - Removed unwanted title-casing, so that names are now displayed verbatim.
+  - Removed Roles submenu, which is deemed unsuitable by the OpenColorIO UX working group. It may be reintroduced by registering `openColorIO:includeRoles` metadata to the relevant plugs.
 
 Fixes
 -----
@@ -21,6 +27,9 @@ API
 - ViewportGadget : A post-process shader can now be applied to any layer, not just the main one.
 - SceneGadget : Added `setLayer()` and `getLayer()` methods, which allow the destination `Gadget::Layer` to be specified.
 - TestCase : Added `ignoreMessage()` method, to register messages that should not be treated as test failures.
+- OpenColorIOTransformUI :
+  - Added `noneLabel` argument to `colorSpacePresetNames()`.
+  - Added support for `openColorIO:categories` and `openColorIO:includeRoles` metadata to `colorSpacePresetNames()`. These may be registered on a per-plug basis to control the colorspaces shown for that plug.
 
 Breaking Changes
 ----------------
@@ -36,6 +45,8 @@ Breaking Changes
   - Moved the `displayTransform` plug to `displayTransform.name`.
 - ViewportGadget : Changed function signature for `setPostProcessShader()` and `getPostProcessShader()`.
 - UVInspector : Moved the `displayTransform` plug to `displayTransform.name`.
+- ImageReader : Renamed `None` preset to `Automatic`.
+- OpenColorIOTransform : Removed `availableColorSpaces()` and `availableRoles()` methods.
 
 1.2.x.x (relative to 1.2.2.0)
 =======

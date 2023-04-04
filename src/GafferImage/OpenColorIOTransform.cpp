@@ -265,29 +265,3 @@ void OpenColorIOTransform::processColorData( const Gaffer::Context *context, IEC
 	OCIO_NAMESPACE::ConstCPUProcessorRcPtr cpuProcessor = processor->getDefaultCPUProcessor();
 	cpuProcessor->apply( image );
 }
-
-void OpenColorIOTransform::availableColorSpaces( std::vector<std::string> &colorSpaces )
-{
-	OCIO_NAMESPACE::ConstConfigRcPtr config = OCIO_NAMESPACE::GetCurrentConfig();
-
-	colorSpaces.clear();
-	colorSpaces.reserve( config->getNumColorSpaces() );
-
-	for( int i = 0; i < config->getNumColorSpaces(); ++i )
-	{
-		colorSpaces.push_back( config->getColorSpaceNameByIndex( i ) );
-	}
-}
-
-void OpenColorIOTransform::availableRoles( std::vector<std::string> &roles )
-{
-	OCIO_NAMESPACE::ConstConfigRcPtr config = OCIO_NAMESPACE::GetCurrentConfig();
-
-	roles.clear();
-	roles.reserve( config->getNumRoles() );
-
-	for( int i = 0; i < config->getNumRoles(); ++i )
-	{
-		roles.push_back( config->getRoleName( i ) );
-	}
-}

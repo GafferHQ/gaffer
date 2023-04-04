@@ -39,6 +39,9 @@ import IECore
 import Gaffer
 import GafferUI
 import GafferImage
+
+from GafferUI.PlugValueWidget import sole
+
 from . import OpenColorIOTransformUI
 
 Gaffer.Metadata.registerNode(
@@ -211,15 +214,16 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			The colour space of the input image, used to convert the input image to
-			the scene linear colorspace defined by the OpenColorIO config. The default
-			behaviour is to automatically determine the colorspace by calling the function
-			registered with `ImageReader::setDefaultColorSpaceFunction()`.
+			the scene linear space defined by the OpenColorIO config. When set
+			to `Automatic`, the colour space is determined automatically using the
+			function registered with `ImageReader::setDefaultColorSpaceFunction()`.
 			""",
 
-			"presetNames", OpenColorIOTransformUI.colorSpacePresetNames,
+			"presetNames", lambda plug : OpenColorIOTransformUI.colorSpacePresetNames( plug, noneLabel = "Automatic" ),
 			"presetValues", OpenColorIOTransformUI.colorSpacePresetValues,
+			"openColorIO:categories", "file-io",
 
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"plugValueWidget:type", "GafferImageUI.ImageReaderUI._ColorSpacePlugValueWidget",
 
 		],
 
@@ -252,3 +256,48 @@ Gaffer.Metadata.registerNode(
 	}
 
 )
+
+# Augments PresetsPlugValueWidget label with the computed colour space
+# when preset is "Automatic". Since this involves opening the file to
+# read metadata, we do the work in the background via an auxiliary plug
+# passed to `_valuesForUpdate()`.
+class _ColorSpacePlugValueWidget( GafferUI.PresetsPlugValueWidget ) :
+
+	def __init__( self, plugs, **kw ) :
+
+		GafferUI.PresetsPlugValueWidget.__init__( self, plugs, **kw )
+
+	@staticmethod
+	def _valuesForUpdate( plugs, auxiliaryPlugs ) :
+
+		presets = GafferUI.PresetsPlugValueWidget._valuesForUpdate( plugs, [ [] for p in plugs ] )
+
+		result = []
+		for preset, colorSpacePlugs in zip( presets, auxiliaryPlugs ) :
+
+			automaticSpace = ""
+			if len( colorSpacePlugs ) and preset == "Automatic" :
+				with IECore.IgnoredExceptions( Gaffer.ProcessException ) :
+					automaticSpace = colorSpacePlugs[0].getValue()
+
+			result.append( {
+				"preset" : preset,
+				"automaticSpace" : automaticSpace
+			} )
+
+		return result
+
+	def _updateFromValues( self, values, exception ) :
+
+		GafferUI.PresetsPlugValueWidget._updateFromValues( self, [ v["preset"] for v in values ], exception )
+
+		if self.menuButton().getText() == "Automatic" :
+			automaticSpace = sole( v["automaticSpace"] for v in values )
+			if automaticSpace != "" :
+				self.menuButton().setText( "Automatic ({})".format( automaticSpace or "---" ) )
+
+	def _auxiliaryPlugs( self, plug ) :
+
+		node = plug.node()
+		if isinstance( node, GafferImage.ImageReader ) :
+			return [ node["__intermediateColorSpace"] ]
