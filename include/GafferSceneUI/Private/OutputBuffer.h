@@ -63,6 +63,8 @@ class OutputBuffer
 
 		/// Renders the output buffers to OpenGL.
 		void render() const;
+		/// Renders an overlay showing the selected objects.
+		void renderSelection() const;
 
 		/// Specifies a set of objects to be drawn as highlighted.
 		void setSelection( const std::vector<uint32_t> &ids );
@@ -87,6 +89,7 @@ class OutputBuffer
 		template<typename T>
 		void updateBuffer( const Imath::Box2i &box, const T *data, int numChannels, std::vector<T> &buffer );
 		void dirtyTexture();
+		void renderInternal( bool renderSelection ) const;
 
 		// Used to prevent the buffers being reallocated by an `imageFormat()` call
 		// on a background thread while they are being read from by the foreground

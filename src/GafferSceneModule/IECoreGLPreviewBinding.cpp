@@ -84,6 +84,10 @@ void GafferSceneModule::bindIECoreGLPreview()
 			.value( "Generic", Visualisation::Category::Generic )
 			.value( "Frustum", Visualisation::Category::Frustum )
 		;
+		enum_<Visualisation::ColorSpace>( "ColorSpace" )
+			.value( "Scene", Visualisation::ColorSpace::Scene )
+			.value( "Display", Visualisation::ColorSpace::Display )
+		;
 	}
 	v.def( init<
 				IECoreGL::ConstRenderablePtr,
@@ -103,11 +107,21 @@ void GafferSceneModule::bindIECoreGLPreview()
 		.def_readwrite( "scale", &Visualisation::scale )
 		.def_readwrite( "category", &Visualisation::category )
 		.def_readwrite( "affectsFramingBound", &Visualisation::affectsFramingBound )
-		.def( "createGeometry", &Visualisation::createGeometry )
+		.def_readwrite( "colorSpace", &Visualisation::colorSpace )
+		.def(
+			"createGeometry", &Visualisation::createGeometry,
+			( arg( "renderable" ), arg( "colorSpace" ) = Visualisation::ColorSpace::Display )
+		)
 		.staticmethod( "createGeometry" )
-		.def( "createOrnament", &Visualisation::createOrnament )
+		.def(
+			"createOrnament", &Visualisation::createOrnament,
+			( arg( "renderable" ), arg( "affectsFramingBounds" ), arg( "colorSpace" ) = Visualisation::ColorSpace::Display )
+		)
 		.staticmethod( "createOrnament" )
-		.def( "createFrustum", &Visualisation::createFrustum )
+		.def(
+			"createFrustum", &Visualisation::createFrustum,
+			( arg( "renderable" ), arg( "scale" ), arg( "colorSpace" ) = Visualisation::ColorSpace::Display )
+		)
 		.staticmethod( "createFrustum" )
 	;
 }

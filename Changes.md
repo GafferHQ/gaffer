@@ -4,6 +4,9 @@
 Improvements
 ------------
 
+- 3D Viewer :
+  - Added OpenColorIO colour management.
+  - Added exposure, gamma and solo channel settings.
 - UVInspector : Added exposure, gamma and solo channel settings.
 
 Fixes
