@@ -34,8 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef GAFFERVDB_POINTSTOLEVELSET_H
-#define GAFFERVDB_POINTSTOLEVELSET_H
+#pragma once
 
 #include "GafferVDB/Export.h"
 #include "GafferVDB/TypeIds.h"
@@ -102,5 +101,3 @@ class GAFFERVDB_API PointsToLevelSet : public GafferScene::ObjectProcessor
 IE_CORE_DECLAREPTR( PointsToLevelSet )
 
 } // namespace GafferVDB
-
-#endif // GAFFERVDB_POINTSTOLEVELSET_H
