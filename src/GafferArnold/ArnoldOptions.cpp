@@ -62,6 +62,7 @@ ArnoldOptions::ArnoldOptions( const std::string &name )
 	options->addChild( new Gaffer::NameValuePlug( "ai:GI_transmission_samples", new IECore::IntData( 2 ), false, "giTransmissionSamples" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ai:GI_sss_samples", new IECore::IntData( 2 ), false, "giSSSSamples" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ai:GI_volume_samples", new IECore::IntData( 2 ), false, "giVolumeSamples" ) );
+	options->addChild( new Gaffer::NameValuePlug( "ai:light_samples", new IECore::IntData( 0 ), false, "lightSamples" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ai:AA_seed", new IECore::IntData( 1 ), false, "aaSeed" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ai:AA_sample_clamp", new IECore::FloatData( 10 ), false, "aaSampleClamp" ) );
 	options->addChild( new Gaffer::NameValuePlug( "ai:AA_sample_clamp_affects_aovs", new IECore::BoolData( false ), false, "aaSampleClampAffectsAOVs" ) );

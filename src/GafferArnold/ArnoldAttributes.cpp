@@ -66,6 +66,7 @@ ArnoldAttributes::ArnoldAttributes( const std::string &name )
 
 	attributes->addChild( new Gaffer::NameValuePlug( "ai:disp_autobump", new IECore::BoolData( false ), false, "autoBump" ) );
 	attributes->addChild( new Gaffer::NameValuePlug( "ai:autobump_visibility:camera", new IECore::BoolData( true ), false, "cameraAutoBumpVisibility" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "ai:autobump_visibility:shadow", new IECore::BoolData( false ), false, "shadowAutoBumpVisibility" ) );
 	attributes->addChild( new Gaffer::NameValuePlug( "ai:autobump_visibility:diffuse_reflect", new IECore::BoolData( false ), false, "diffuseReflectionAutoBumpVisibility" ) );
 	attributes->addChild( new Gaffer::NameValuePlug( "ai:autobump_visibility:specular_reflect", new IECore::BoolData( false ), false, "specularReflectionAutoBumpVisibility" ) );
 	attributes->addChild( new Gaffer::NameValuePlug( "ai:autobump_visibility:diffuse_transmit", new IECore::BoolData( false ), false, "diffuseTransmissionAutoBumpVisibility" ) );
