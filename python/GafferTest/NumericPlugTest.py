@@ -527,5 +527,10 @@ class NumericPlugTest( GafferTest.TestCase ) :
 			[ n["c4"]["gc2"] ]
 		)
 
+	def testValueType( self ) :
+
+		self.assertIs( Gaffer.IntPlug.ValueType, int )
+		self.assertIs( Gaffer.FloatPlug.ValueType, float )
+
 if __name__ == "__main__":
 	unittest.main()

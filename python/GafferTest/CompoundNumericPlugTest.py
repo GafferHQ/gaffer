@@ -483,5 +483,14 @@ class CompoundNumericPlugTest( GafferTest.TestCase ) :
 		n["p"].setValue( n["p"].defaultValue() )
 		self.assertTrue( n["p"].isSetToDefault() )
 
+	def testValueType( self ) :
+
+		self.assertIs( Gaffer.V2iPlug.ValueType, imath.V2i )
+		self.assertIs( Gaffer.V2fPlug.ValueType, imath.V2f )
+		self.assertIs( Gaffer.V3iPlug.ValueType, imath.V3i )
+		self.assertIs( Gaffer.V3fPlug.ValueType, imath.V3f )
+		self.assertIs( Gaffer.Color3fPlug.ValueType, imath.Color3f )
+		self.assertIs( Gaffer.Color4fPlug.ValueType, imath.Color4f )
+
 if __name__ == "__main__":
 	unittest.main()
