@@ -231,6 +231,10 @@ AtNode *convertCommon( const IECoreScene::MeshPrimitive *mesh, AtUniverse *unive
 
 	AtNode *result = AiNode( universe, g_polymeshArnoldString, AtString( nodeName.c_str() ), parentNode );
 
+	// This defaults to `false` in Arnold 7.1 and lower, and to `true` in Arnold 7.2 and greater.
+	// Set to `false` so we have a common baseline in all versions.
+	AiNodeSetBool( result, g_smoothingArnoldString, false );
+
 	const std::vector<int> &verticesPerFace = mesh->verticesPerFace()->readable();
 	AiNodeSetArray(
 		result,

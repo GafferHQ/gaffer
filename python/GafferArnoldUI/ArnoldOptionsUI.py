@@ -69,6 +69,8 @@ def __samplingSummary( plug ) :
 		info.append( "SSS %d" % plug["giSSSSamples"]["value"].getValue() )
 	if plug["giVolumeSamples"]["enabled"].getValue() :
 		info.append( "Volume %d" % plug["giVolumeSamples"]["value"].getValue() )
+	if plug["lightSamples"]["enabled"].getValue() :
+		info.append( "Light %d" % plug["lightSamples"]["value"].getValue() )
 	if plug["aaSeed"]["enabled"].getValue() :
 		info.append( "Seed {0}".format( plug["aaSeed"]["value"].getValue() ) )
 	if plug["aaSampleClamp"]["enabled"].getValue() :
@@ -423,6 +425,30 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Sampling",
 			"label", "Volume Samples",
+
+		],
+
+		"options.lightSamples" : [
+
+			"description",
+			"""
+			Specifies a fixed number of light samples to be taken at each
+			shading point. This enables "Global Light Sampling", which provides
+			significantly improved performance for scenes containing large numbers
+			of lights. In this mode, the `samples` setting on each light is ignored,
+			and instead the fixed number of samples is distributed among all the
+			lights according to their contribution at the shading point.
+
+			A value of `0` disables Global Light Sampling, reverting to the original
+			per-light sampling algorithm.
+
+			> Note : Global Light Sampling currently has limitations. See
+			> https://help.autodesk.com/view/ARNOL/ENU/?guid=arnold_user_guide_ac_render_settings_ac_lights_settings_html
+			> for more details.
+			""",
+
+			"layout:section", "Sampling",
+			"label", "Light Samples",
 
 		],
 

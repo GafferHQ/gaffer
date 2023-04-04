@@ -54,11 +54,14 @@ Breaking Changes
 Features
 --------
 
+- Arnold : Added support for Arnold 7.2.
 - PointsToLevelSet : Added a new node for converting points primitives into OpenVDB level sets.
 
 Improvements
 ------------
 
+- ArnoldOptions : Exposed Arnold 7.2.1.0's Global Light Sampling feature via a new `lightSamples` plug.
+- ArnoldAttributes : Added `shadowAutoBumpVisibility` plug, since Arnold 7.2.1.0 now correctly implements this feature.
 - Shader : Added support for shading input connections to splines.  After double clicking on a spline to open the editor, you may select a control point, and then drag an input to the value control.  Works in GafferImage, GafferObject and Arnold.  Supports a max of 32 values in the spline.
 
 Fixes

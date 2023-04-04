@@ -75,6 +75,7 @@ def __autoBumpVisibilitySummary( plug ) :
 	for childName, label in (
 
 		( "camera", "Camera" ),
+		( "shadow", "Shadow" ),
 		( "diffuseReflection", "DiffRefl" ),
 		( "specularReflection", "SpecRefl" ),
 		( "diffuseTransmission", "DiffTrans" ),
@@ -350,6 +351,19 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Displacement.Auto Bump Visibility",
 			"label", "Camera",
+
+		],
+
+		"attributes.shadowAutoBumpVisibility" : [
+
+			"description",
+			"""
+			Whether or not the autobump is visible to shadow
+			rays.
+			""",
+
+			"layout:section", "Displacement.Auto Bump Visibility",
+			"label", "Shadow",
 
 		],
 

@@ -129,9 +129,13 @@ class MeshAlgoTest( unittest.TestCase ) :
 				IECore.V3fVectorData( [ imath.V3f( 1, 0, 0 ), imath.V3f( -1, 0, 0 ) ] ), IECore.IntVectorData( [0]* 8 + [1]* 8 )
 		)
 
+		mNoNormals = m.copy()
+		del mNoNormals["N"]
+
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
 			n = IECoreArnold.NodeAlgo.convert( m, universe, "testMesh" )
+			self.assertTrue( arnold.AiNodeGetBool( n, "smoothing" ) )
 
 			normals = arnold.AiNodeGetArray( n, "nlist" )
 			self.assertEqual( arnold.AiArrayGetNumElements( normals.contents ), 4 )
@@ -140,6 +144,7 @@ class MeshAlgoTest( unittest.TestCase ) :
 				self.assertEqual( arnold.AiArrayGetVec( normals, i ), arnold.AtVector( 1, 0, 0 ) )
 
 			n = IECoreArnold.NodeAlgo.convert( mFaceVaryingIndexed, universe, "testMesh2" )
+			self.assertTrue( arnold.AiNodeGetBool( n, "smoothing" ) )
 			normals = arnold.AiNodeGetArray( n, "nlist" )
 			normalIndices = arnold.AiNodeGetArray( n, "nidxs" )
 
@@ -149,12 +154,16 @@ class MeshAlgoTest( unittest.TestCase ) :
 					arnold.AtVector( *refNormals[i//4] ) )
 
 			n = IECoreArnold.NodeAlgo.convert( mVertexIndexed, universe, "testMesh3" )
+			self.assertTrue( arnold.AiNodeGetBool( n, "smoothing" ) )
 			normals = arnold.AiNodeGetArray( n, "nlist" )
 			normalIndices = arnold.AiNodeGetArray( n, "nidxs" )
 			for i in range( 0, 36 ) :
 				s = [0, (i // 2)%2, 1][i // 12]
 				self.assertEqual( arnold.AiArrayGetVec( normals, arnold.AiArrayGetInt( normalIndices, i ) ),
 					arnold.AtVector( -1 if s else 1, 0, 0 ) )
+
+			n = IECoreArnold.NodeAlgo.convert( mNoNormals, universe, "testMesh4" )
+			self.assertFalse( arnold.AiNodeGetBool( n, "smoothing" ) )
 
 	def testVertexPrimitiveVariables( self ) :
 

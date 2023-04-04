@@ -929,6 +929,7 @@ IECore::InternedString g_volumeVisibilityAttributeName( "ai:visibility:volume" )
 IECore::InternedString g_subsurfaceVisibilityAttributeName( "ai:visibility:subsurface" );
 
 IECore::InternedString g_cameraVisibilityAutoBumpAttributeName( "ai:autobump_visibility:camera" );
+IECore::InternedString g_shadowVisibilityAutoBumpAttributeName( "ai:autobump_visibility:shadow" );
 IECore::InternedString g_diffuseReflectVisibilityAutoBumpAttributeName( "ai:autobump_visibility:diffuse_reflect" );
 IECore::InternedString g_specularReflectVisibilityAutoBumpAttributeName( "ai:autobump_visibility:specular_reflect" );
 IECore::InternedString g_diffuseTransmitVisibilityAutoBumpAttributeName( "ai:autobump_visibility:diffuse_transmit" );
@@ -1555,6 +1556,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				autoBump = attributeValue<bool>( g_dispAutoBumpAttributeName, attributes, false );
 				autoBumpVisibility = AI_RAY_CAMERA;
 				updateVisibility( autoBumpVisibility, g_cameraVisibilityAutoBumpAttributeName, AI_RAY_CAMERA, attributes );
+				updateVisibility( autoBumpVisibility, g_shadowVisibilityAutoBumpAttributeName, AI_RAY_SHADOW, attributes );
 				updateVisibility( autoBumpVisibility, g_diffuseReflectVisibilityAutoBumpAttributeName, AI_RAY_DIFFUSE_REFLECT, attributes );
 				updateVisibility( autoBumpVisibility, g_specularReflectVisibilityAutoBumpAttributeName, AI_RAY_SPECULAR_REFLECT, attributes );
 				updateVisibility( autoBumpVisibility, g_diffuseTransmitVisibilityAutoBumpAttributeName, AI_RAY_DIFFUSE_TRANSMIT, attributes );
