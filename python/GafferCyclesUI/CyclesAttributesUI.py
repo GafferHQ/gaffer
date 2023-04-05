@@ -86,7 +86,7 @@ def __objectSummary( plug ) :
 def __shaderSummary( plug ) :
 
 	info = []
-	for childName in ( "useMis", "useTransparentShadow", "heterogeneousVolume", "volumeSamplingMethod", "volumeInterpolationMethod", "volumeStepRate", "displacementMethod" ) :
+	for childName in ( "emissionSamplingMethod", "useTransparentShadow", "heterogeneousVolume", "volumeSamplingMethod", "volumeInterpolationMethod", "volumeStepRate", "displacementMethod" ) :
 		if plug[childName]["enabled"].getValue() :
 			info.append( IECore.CamelCase.toSpaced( childName ) + ( " On" if plug[childName]["value"].getValue() else " Off" ) )
 
@@ -354,16 +354,26 @@ Gaffer.Metadata.registerNode(
 
 		# Shader
 
-		"attributes.useMis" : [
+		"attributes.emissionSamplingMethod" : [
 
 			"description",
 			"""
-			Use multiple importance sampling for this material,
-			disabling may reduce overall noise for large
-			objects that emit little light compared to other light sources.
+			Sampling strategy for emissive surfaces.
 			""",
 
 			"layout:section", "Shader",
+
+		],
+
+		"attributes.emissionSamplingMethod.value" : [
+
+			"preset:None", "none",
+			"preset:Auto", "auto",
+			"preset:Front", "front",
+			"preset:Back", "back",
+			"preset:Front-Back", "front_back",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
 		],
 

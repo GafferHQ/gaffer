@@ -361,8 +361,7 @@ bool contributesToLightStrength( InternedString parameterName )
 	return
 		parameterName == "intensity" ||
 		parameterName == "color" ||
-		parameterName == "exposure" ||
-		parameterName == "normalize"
+		parameterName == "exposure"
 	;
 }
 
@@ -387,12 +386,22 @@ Imath::Color3f constantLightStrength( const IECoreScene::ShaderNetwork *light )
 
 	// Cycles has normalized lights as a default, we can emulate un-normalized lights
 	// with a bit of surface area size calculation onto the strength parameter.
-	/// \todo I think we should move normalization into Cycles itself -
-	/// https://developer.blender.org/D16838
+	/// \todo To be removed once upstream cycles gets some fixes.
 	if( !parameterValue<bool>( lightShader->parameters(), "normalize", true ) )
 	{
-		if( lightShader->getName() == "distant_light" )
+		// Disk lights become quads again when un-normalised in upstream Cycles.
+		// Fix needs merging https://projects.blender.org/blender/cycles/pulls/4
+		// until then we emulate.
+		if( lightShader->getName() == "disk_light" )
 		{
+			const float width = parameterValue( lightShader->parameters(), "width", 2.0f ) * 0.5f;
+			const float height = parameterValue( lightShader->parameters(), "height", 2.0f ) * 0.5f;
+			strength *= M_PI * width * height;
+		}
+		else if( lightShader->getName() == "distant_light" )
+		{
+			// Need to look at this code in Cycles again, but doing a side-by-side with Arnold
+			// with a false-colour heatmap, the calcuation here is more accurate.
 			const float angle = IECore::degreesToRadians( parameterValue<float>( lightShader->parameters(), "angle", 0.0f ) ) / 2.0f;
 			const float radius = tanf( angle );
 			const float area = M_PI_F * radius * radius;
@@ -401,27 +410,11 @@ Imath::Color3f constantLightStrength( const IECoreScene::ShaderNetwork *light )
 				strength *= area;
 			}
 		}
-		else if( lightShader->getName() == "background_light" )
+		else
 		{
-			// Do nothing.
-		}
-		else if(
-			lightShader->getName() == "quad_light" ||
-			lightShader->getName() == "portal"
-		)
-		{
-			const float width = parameterValue( lightShader->parameters(), "width", 1.0f );
-			const float height = parameterValue( lightShader->parameters(), "height", 1.0f );
-			strength *= width * height;
-		}
-		else if( lightShader->getName() == "disk_light" )
-		{
-			const float width = parameterValue( lightShader->parameters(), "width", 2.0f ) * 0.5f;
-			const float height = parameterValue( lightShader->parameters(), "height", 2.0f ) * 0.5f;
-			strength *= M_PI * width * height;
-		}
-		else // Point or spot light.
-		{
+			// Point or spot light. Cycles doesn't calculate point/spot lights with correct
+			// sphere surface area so the un-normalise code is visually incorrect.
+			// Check again when https://projects.blender.org/blender/blender/pulls/108506 is merged.
 			const float size = parameterValue( lightShader->parameters(), "size", 1.0f ) * 0.5f;
 			strength *= M_PI * size * size * 4.0f;
 		}
@@ -682,6 +675,15 @@ void convertLight( const IECoreScene::ShaderNetwork *light, ccl::Light *cyclesLi
 		else if( name == "height" )
 		{
 			cyclesLight->set_sizev( parameterValue<float>( value.get(), name, 2.0f ) );
+		}
+		else if( name == "normalize" && ( lightShader->getName() == "disk_light" ||
+										lightShader->getName() == "spot_light" ||
+										lightShader->getName() == "point_light" ||
+										lightShader->getName() == "distant_light" ) )
+		{
+			// Un-normalised for these lights have problems.
+			// See constantLightStrength() above for details.
+			continue;
 		}
 		// Convert generic parameters.
 		else

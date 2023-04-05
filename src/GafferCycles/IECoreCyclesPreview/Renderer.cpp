@@ -419,42 +419,12 @@ ccl::DisplacementMethod displacementMethodFromString( const string &name )
 	return ccl::DisplacementMethod::DISPLACE_TRUE;
 }
 
-IECore::InternedString g_shaderUseMisAttributeName( "cycles:shader:use_mis" );
+IECore::InternedString g_shaderEmissionSamplingMethodAttributeName( "cycles:shader:emission_sampling_method" );
 IECore::InternedString g_shaderUseTransparentShadowAttributeName( "cycles:shader:use_transparent_shadow" );
 IECore::InternedString g_shaderHeterogeneousVolumeAttributeName( "cycles:shader:heterogeneous_volume" );
 IECore::InternedString g_shaderVolumeSamplingMethodAttributeName( "cycles:shader:volume_sampling_method" );
 IECore::InternedString g_shaderVolumeInterpolationMethodAttributeName( "cycles:shader:volume_interpolation_method" );
 IECore::InternedString g_shaderVolumeStepRateAttributeName( "cycles:shader:volume_step_rate" );
-
-std::array<IECore::InternedString, ccl::VOLUME_NUM_SAMPLING> g_volumeSamplingEnumNames = { {
-	"distance",
-	"equiangular",
-	"multiple_importance"
-} };
-ccl::VolumeSampling nameToVolumeSamplingMethodEnum( const IECore::InternedString &name )
-{
-#define MAP_NAME(enumName, enum) if(name == enumName) return enum;
-	MAP_NAME(g_volumeSamplingEnumNames[0], ccl::VOLUME_SAMPLING_DISTANCE);
-	MAP_NAME(g_volumeSamplingEnumNames[1], ccl::VOLUME_SAMPLING_EQUIANGULAR);
-	MAP_NAME(g_volumeSamplingEnumNames[1], ccl::VOLUME_SAMPLING_MULTIPLE_IMPORTANCE);
-#undef MAP_NAME
-
-	return ccl::VOLUME_SAMPLING_MULTIPLE_IMPORTANCE;
-}
-
-std::array<IECore::InternedString, ccl::VOLUME_NUM_INTERPOLATION> g_volumeInterpolationEnumNames = { {
-	"linear",
-	"cubic"
-} };
-ccl::VolumeInterpolation nameToVolumeInterpolationMethodEnum( const IECore::InternedString &name )
-{
-#define MAP_NAME(enumName, enum) if(name == enumName) return enum;
-	MAP_NAME(g_volumeInterpolationEnumNames[0], ccl::VOLUME_INTERPOLATION_LINEAR);
-	MAP_NAME(g_volumeInterpolationEnumNames[1], ccl::VOLUME_INTERPOLATION_CUBIC);
-#undef MAP_NAME
-
-	return ccl::VOLUME_INTERPOLATION_LINEAR;
-}
 
 class CyclesShader : public IECore::RefCounted
 {
@@ -964,6 +934,25 @@ const char *customAttributeName( const std::string &attributeName, bool &hasPrec
 	return nullptr;
 }
 
+void applyShaderEnum( ccl::Shader *shader, const IECore::InternedString &name, const boost::optional<InternedString> &value )
+{
+	const ccl::SocketType *input = shader->node_type->find_input( ccl::ustring( name.c_str() + 14 ) );
+	if( input )
+	{
+		value ? SocketAlgo::setSocket( shader, input, new IECore::InternedStringData( value.get() ) ) : shader->set_default_value( *input );
+	}
+	else
+	{
+		msg(
+			Msg::Warning, "IECoreCycles::Renderer",
+			fmt::format(
+				"Unsupported socket `{}` on shader `{}`",
+				name, shader->name
+			)
+		);
+	}
+}
+
 class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterface
 {
 
@@ -1316,7 +1305,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		{
 			ShaderAttributes( const IECore::CompoundObject *attributes )
 			{
-				useMIS = optionalAttribute<bool>( g_shaderUseMisAttributeName, attributes );
+				emissionSamplingMethod = optionalAttribute<InternedString>( g_shaderEmissionSamplingMethodAttributeName, attributes );
 				useTransparentShadow = optionalAttribute<bool>( g_shaderUseTransparentShadowAttributeName, attributes );
 				heterogeneousVolume = optionalAttribute<bool>( g_shaderHeterogeneousVolumeAttributeName, attributes );
 				volumeSamplingMethod = optionalAttribute<InternedString>( g_shaderVolumeSamplingMethodAttributeName, attributes );
@@ -1324,7 +1313,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				volumeStepRate = optionalAttribute<float>( g_shaderVolumeStepRateAttributeName, attributes );
 			}
 
-			boost::optional<bool> useMIS;
+			boost::optional<InternedString> emissionSamplingMethod;
 			boost::optional<bool> useTransparentShadow;
 			boost::optional<bool> heterogeneousVolume;
 			boost::optional<InternedString> volumeSamplingMethod;
@@ -1333,8 +1322,10 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 			void hash( IECore::MurmurHash &h, const IECore::CompoundObject *attributes ) const
 			{
-				if( useMIS && !useMIS.get() )
-					h.append( "no_mis" );
+				if( emissionSamplingMethod && emissionSamplingMethod.get() != "auto" )
+				{
+					h.append( emissionSamplingMethod.get() );
+				}
 
 				// Volume-related attributes hash
 				auto it = attributes->members().find( g_cyclesVolumeShaderAttributeName );
@@ -1353,11 +1344,11 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 			bool apply( ccl::Shader *shader ) const
 			{
-				shader->set_emission_sampling_method( useMIS.value_or( true ) ? ccl::EMISSION_SAMPLING_FRONT_BACK : ccl::EMISSION_SAMPLING_NONE );
-				shader->set_use_transparent_shadow(useTransparentShadow ? useTransparentShadow.get() : true );
+				applyShaderEnum( shader, g_shaderEmissionSamplingMethodAttributeName, emissionSamplingMethod );
+				shader->set_use_transparent_shadow( useTransparentShadow ? useTransparentShadow.get() : true );
 				shader->set_heterogeneous_volume( heterogeneousVolume ? heterogeneousVolume.get() : true );
-				shader->set_volume_sampling_method( volumeSamplingMethod ? nameToVolumeSamplingMethodEnum( volumeSamplingMethod.get() ) : ccl::VOLUME_SAMPLING_MULTIPLE_IMPORTANCE );
-				shader->set_volume_interpolation_method( volumeInterpolationMethod ? nameToVolumeInterpolationMethodEnum( volumeInterpolationMethod.get() ) : ccl::VOLUME_INTERPOLATION_LINEAR );
+				applyShaderEnum( shader, g_shaderVolumeSamplingMethodAttributeName, volumeSamplingMethod );
+				applyShaderEnum( shader, g_shaderVolumeInterpolationMethodAttributeName, volumeInterpolationMethod );
 				shader->set_volume_step_rate( volumeStepRate ? volumeStepRate.get() : 1.0f );
 
 				return true;
