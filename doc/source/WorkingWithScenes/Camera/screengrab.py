@@ -237,7 +237,7 @@ __nodeEditorWindow.parent().close()
 # Example: Anamorphic Camera Setup
 __dispatchScript(
 	script = os.path.abspath( "../../../examples/rendering/anamorphicCameraSetup.gfr" ),
-	tasks = [ "AppleseedRender" ],
+	tasks = [ "CyclesRender" ],
 	settings = [
 		"-StandardOptions.options.renderResolution.value.x '240'",
 		"-StandardOptions.options.renderResolution.value.y '270'",
