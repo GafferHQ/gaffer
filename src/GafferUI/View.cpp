@@ -487,7 +487,7 @@ void View::DisplayTransform::preRender()
 		m_shader->addUniformParameter( "multiply", new Color3fData( Imath::Color3f( m ) ) );
 		const float gamma = gammaPlug()->getValue();
 		const float p = gamma > 0.0 ? 1.0f / gamma : 1.0f;
-		m_shader->addUniformParameter( "power", new Color3fData( Imath::Color3f( p ) ) );
+		m_shader->addUniformParameter( "power", new FloatData( p ) );
 		m_shader->addUniformParameter( "soloChannel", new IntData( soloChannelPlug()->getValue() ) );
 		m_shader->addUniformParameter( "absoluteValue", new BoolData( absolutePlug()->getValue() ) );
 		m_parametersDirty = false;

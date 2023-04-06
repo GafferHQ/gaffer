@@ -19,6 +19,7 @@ Fixes
 -----
 
 - UVInspector : Removed display transform from UV wireframes and grid.
+- Viewer : Gamma is now applied after the display transform, not before.
 
 API
 ---

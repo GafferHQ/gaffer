@@ -229,11 +229,10 @@ class GAFFERUI_API View::DisplayTransform : public Gaffer::Node
 		/// transform. In addition to the shader parameters required by `ViewportGadget::setPostProcessShader()`,
 		/// the shader should also have the following parameters :
 		///
-		/// - `bool unpremultiply` : Temporarily unpremultiplies while applying the color transform.
 		/// - `bool absoluteValue` : Flips negative values to positive (useful when viewing a difference value).
 		/// - `bool clipping` : Marks regions outside `0 - 1`.
 		/// - `color multiply` : Applies a multiplier before the color transform.
-		/// - `color power` : Applies a power curve before the color transform.
+		/// - `float power` : Applies `pow( c, power )` _after_ the color transform.
 		/// - `int soloChannel` : Set to 0-3 to pick channels RGBA, or -2 for luminance.
 		///   Default -1 uses all channels as a color.
 		using DisplayTransformCreator = std::function<IECoreGL::Shader::SetupPtr ()>;
