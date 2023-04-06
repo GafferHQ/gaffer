@@ -15,7 +15,7 @@ By the end of this tutorial you will have built a basic scene with Gaffer's robo
 - Using an interactive renderer
 
 > Note :
-> This tutorial uses Cycles, a free renderer included with Gaffer. While the Cycles-specific nodes described here can be substituted with equivalents from Arnold, Appleseed or 3Delight, we recommend that you complete this tutorial using Cycles before moving on to your preferred renderer.
+> This tutorial uses Cycles, a free renderer included with Gaffer. While the Cycles-specific nodes described here can be substituted with equivalents from Arnold or 3Delight, we recommend that you complete this tutorial using Cycles before moving on to your preferred renderer.
 
 
 ## Starting a new node graph ##
