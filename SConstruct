@@ -743,12 +743,8 @@ baseLibEnv = env.Clone()
 baseLibEnv.Append(
 
 	LIBS = [
-		"boost_iostreams$BOOST_LIB_SUFFIX",
 		"boost_filesystem$BOOST_LIB_SUFFIX",
-		"boost_date_time$BOOST_LIB_SUFFIX",
-		"boost_wave$BOOST_LIB_SUFFIX",
 		"boost_regex$BOOST_LIB_SUFFIX",
-		"boost_system$BOOST_LIB_SUFFIX",
 		"boost_chrono$BOOST_LIB_SUFFIX",
 		"tbb",
 		"Imath$OPENEXR_LIB_SUFFIX",
