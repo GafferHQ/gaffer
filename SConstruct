@@ -425,6 +425,9 @@ for e in env["ENV_VARS_TO_IMPORT"].split() :
 	if e in os.environ :
 		env["ENV"][e] = os.environ[e]
 
+if env["BUILD_CACHEDIR"] != "" :
+	CacheDir( env["BUILD_CACHEDIR"] )
+
 ###########################################################################################
 # POSIX configuration
 ###########################################################################################
@@ -598,10 +601,6 @@ else:
 				"/Fd${TARGET}.pdb",
 			],
 		)
-
-
-if env["BUILD_CACHEDIR"] != "" :
-	CacheDir( env["BUILD_CACHEDIR"] )
 
 ###############################################################################################
 # Check for inkscape and sphinx
