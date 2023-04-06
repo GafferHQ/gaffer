@@ -510,6 +510,19 @@ if env["PLATFORM"] != "win32" :
 			SHLINKFLAGS = [ "-Wl,-fatal_warnings" ],
 		)
 
+	# Address Sanitiser
+
+	if env["ASAN"] :
+		env.Append(
+			CXXFLAGS = [ "-fsanitize=address" ],
+			LINKFLAGS = [ "-fsanitize=address" ],
+		)
+		if "clang++" in os.path.basename( env["CXX"] ) :
+			env.Append(
+				CXXFLAGS = [ "-shared-libasan" ],
+				LINKFLAGS = [ "-shared-libasan" ],
+			)
+
 ###########################################################################################
 # Windows configuration
 ###########################################################################################
@@ -681,17 +694,6 @@ haveSphinx = conf.checkSphinx()
 if not conf.checkQtVersion() :
 	sys.stderr.write( "Qt not found\n" )
 	Exit( 1 )
-
-if env["ASAN"] :
-	env.Append(
-		CXXFLAGS = [ "-fsanitize=address" ],
-		LINKFLAGS = [ "-fsanitize=address" ],
-	)
-	if "clang++" in os.path.basename( env["CXX"] ) :
-		env.Append(
-			CXXFLAGS = [ "-shared-libasan" ],
-			LINKFLAGS = [ "-shared-libasan" ],
-		)
 
 ###############################################################################################
 # An environment for running commands with access to the applications we've built
