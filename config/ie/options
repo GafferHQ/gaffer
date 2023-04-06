@@ -501,7 +501,7 @@ if "install" in sys.argv :
 # figure out the lib suffixes
 ##########################################################################
 
-OPENEXR_LIB_SUFFIX = IEEnv.BuildUtil.libSuffix( "OpenEXR", exrVersion )
+IMATH_LIB_SUFFIX = IEEnv.BuildUtil.libSuffix( "OpenEXR", exrVersion )
 OIIO_LIB_SUFFIX = IEEnv.BuildUtil.libSuffix( "OpenImageIO", oiioLibSuffix )
 OCIO_LIB_SUFFIX = IEEnv.BuildUtil.libSuffix( "OpenColorIO", ocioVersion )
 OSL_LIB_SUFFIX = IEEnv.BuildUtil.libSuffix( "OpenShadingLanguage", oslVersion )
