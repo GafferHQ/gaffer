@@ -746,7 +746,6 @@ baseLibEnv.Append(
 		"boost_iostreams$BOOST_LIB_SUFFIX",
 		"boost_filesystem$BOOST_LIB_SUFFIX",
 		"boost_date_time$BOOST_LIB_SUFFIX",
-		"boost_thread$BOOST_LIB_SUFFIX",
 		"boost_wave$BOOST_LIB_SUFFIX",
 		"boost_regex$BOOST_LIB_SUFFIX",
 		"boost_system$BOOST_LIB_SUFFIX",
@@ -1239,7 +1238,7 @@ libraries = {
 		"envAppends" : {
 			"CXXFLAGS" : [ systemIncludeArgument, "$APPLESEED_ROOT/include", "-DAPPLESEED_ENABLE_IMATH_INTEROP" ],
 			"LIBPATH" : [ "$APPLESEED_ROOT/lib" ],
-			"LIBS" : [ "Gaffer", "GafferDispatch", "GafferScene", "appleseed",  "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreAppleseed$CORTEX_LIB_SUFFIX", "OpenImageIO$OIIO_LIB_SUFFIX", "OpenImageIO_Util$OIIO_LIB_SUFFIX", "oslquery$OSL_LIB_SUFFIX", "fmt" ],
+			"LIBS" : [ "Gaffer", "GafferDispatch", "GafferScene", "appleseed",  "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreAppleseed$CORTEX_LIB_SUFFIX", "OpenImageIO$OIIO_LIB_SUFFIX", "OpenImageIO_Util$OIIO_LIB_SUFFIX", "oslquery$OSL_LIB_SUFFIX", "boost_thread$BOOST_LIB_SUFFIX", "fmt" ],
 			"CPPDEFINES" : [ "APPLESEED_USE_SSE" ] if platform.machine() != "arm64" else [],
 		},
 		"pythonEnvAppends" : {
