@@ -10,8 +10,6 @@ import GafferUI
 
 import GafferScene
 import GafferSceneUI
-import GafferOSL
-import GafferAppleseed
 
 # Interface: the object and set sections of a camera in the Scene Inspector
 script["Camera"] = GafferScene.Camera()

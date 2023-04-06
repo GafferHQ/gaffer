@@ -34,6 +34,16 @@ Build
 
 - Cortex : Updated to version 10.4.7.0.
 
+Documentation
+-------------
+
+- Updated the "Anamorphic Camera Setup" example to use Cycles instead of Appleseed.
+- Updated the "Contact Sheet Generation" example to use Cycles instead of Appleseed.
+- Updated the "Macbeth Chart" example to use Cycles instead of Appleseed.
+- Updated the "Per-location Light Tweak Spreadsheet" example to use Cycles instead of Appleseed.
+- Updated the "Wedge Tests" example to use Cycles instead of Appleseed.
+- Updated the "Setting Up a Spreadsheet" tutorial to use Cycles instead of Appleseed.
+
 1.2.2.0 (relative to 1.2.1.1)
 =======
 

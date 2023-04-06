@@ -171,9 +171,9 @@ __dispatchScript(
 __imageName = "renderDepthOfFieldBlur"
 __dispatchScript(
 	script = "scripts/{}.gfr".format( __imageName ),
-	tasks = [ "AppleseedRender" ],
+	tasks = [ "CyclesRender" ],
 	settings = [
-		"-Outputs.outputs.output2.fileName '\"{}\"'".format( os.path.abspath( "images/{}.png".format( __imageName ) ) )
+		"-Outputs.outputs.output1.fileName '\"{}\"'".format( os.path.abspath( "images/{}.png".format( __imageName ) ) )
 		]
   )
 
@@ -237,7 +237,7 @@ __nodeEditorWindow.parent().close()
 # Example: Anamorphic Camera Setup
 __dispatchScript(
 	script = os.path.abspath( "../../../examples/rendering/anamorphicCameraSetup.gfr" ),
-	tasks = [ "AppleseedRender" ],
+	tasks = [ "CyclesRender" ],
 	settings = [
 		"-StandardOptions.options.renderResolution.value.x '240'",
 		"-StandardOptions.options.renderResolution.value.y '270'",
