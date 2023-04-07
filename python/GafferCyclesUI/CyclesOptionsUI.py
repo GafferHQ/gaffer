@@ -139,6 +139,27 @@ def __samplingSummary( plug ) :
 
 	return ", ".join( info )
 
+def __pathGuidingSummary( plug ) :
+
+	info = []
+
+	for childName in (
+		"useGuiding",
+		"deterministicGuiding",
+		"useSurfaceGuiding",
+		"surfaceGuidingProbability",
+		"useVolumeGuiding",
+		"volumeGuidingProbability",
+		"guidingTrainingSamples",
+		"useGuidingDirectLight",
+		"useGuidingMisWeights",
+		"guidingDistributionType"
+		) :
+		if plug[childName]["enabled"].getValue() :
+			info.append( IECore.CamelCase.toSpaced( childName ) + ( " On" if plug[childName]["value"].getValue() else " Off" ) )
+
+	return ", ".join( info )
+
 def __rayDepthSummary( plug ) :
 
 	info = []
@@ -414,6 +435,7 @@ Gaffer.Metadata.registerNode(
 			"layout:section:Session:summary", __sessionSummary,
 			"layout:section:Scene:summary", __sceneSummary,
 			"layout:section:Sampling:summary", __samplingSummary,
+			"layout:section:Path-Guiding:summary", __pathGuidingSummary,
 			"layout:section:Ray Depth:summary", __rayDepthSummary,
 			"layout:section:Volumes:summary", __volumesSummary,
 			"layout:section:Caustics:summary", __causticsSummary,
@@ -837,6 +859,135 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"layout:section", "Sampling",
+
+		],
+
+		# Path Guiding
+
+		"options.useGuiding" : [
+
+			"description",
+			"""
+			Use path guiding for sampling paths. Path guiding incrementally
+			learns the light distribution of the scene and guides path into directions
+			with high direct and indirect light contributions.
+			""",
+
+			"layout:section", "Path-Guiding",
+
+		],
+
+		"options.deterministicGuiding" : [
+
+			"description",
+			"""
+			Makes path guiding deterministic which means renderings will be
+			reproducible with the same pixel values every time. This feature slows down
+			training.
+			""",
+
+			"layout:section", "Path-Guiding",
+
+		],
+
+		"options.useSurfaceGuiding" : [
+
+			"description",
+			"""
+			Use guiding when sampling directions on a surface.
+			""",
+
+			"layout:section", "Path-Guiding",
+
+		],
+
+		"options.surfaceGuidingProbability" : [
+
+			"description",
+			"""
+			The probability of guiding a direction on a surface.
+			""",
+
+			"layout:section", "Path-Guiding",
+
+		],
+
+		"options.useVolumeGuiding" : [
+
+			"description",
+			"""
+			Use guiding when sampling directions inside a volume.
+			""",
+
+			"layout:section", "Path-Guiding",
+
+		],
+
+		"options.volumeGuidingProbability" : [
+
+			"description",
+			"""
+			The probability of guiding a direction inside a volume.
+			""",
+
+			"layout:section", "Path-Guiding",
+
+		],
+
+		"options.guidingTrainingSamples" : [
+
+			"description",
+			"""
+			The maximum number of samples used for training path guiding.
+			Higher samples lead to more accurate guiding, however may also unnecessarily slow
+			down rendering once guiding is accurate enough.
+			A value of 0 will continue training until the last sample.
+			""",
+
+			"layout:section", "Path-Guiding",
+
+		],
+
+		"options.useGuidingDirectLight" : [
+
+			"description",
+			"""
+			Consider the contribution of directly visible light sources during guiding.
+			""",
+
+			"layout:section", "Path-Guiding",
+
+		],
+
+		"options.useGuidingMisWeights" : [
+
+			"description",
+			"""
+			Use the MIS weight to weight the contribution of directly visible light sources during guiding.
+			""",
+
+			"layout:section", "Path-Guiding",
+
+		],
+
+		"options.guidingDistributionType" : [
+
+			"description",
+			"""
+			Type of representation for the guiding distribution.
+			""",
+
+			"layout:section", "Path-Guiding",
+
+		],
+
+		"options.guidingDistributionType.value" : [
+
+			"preset:Parallax-Aware VMM", "PARALLAX_AWARE_VMM",
+			"preset:Directional Quad-Tree", "DIRECTIONAL_QUAD_TREE",
+			"preset:VMM", "VMM",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
 		],
 

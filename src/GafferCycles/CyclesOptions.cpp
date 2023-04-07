@@ -123,6 +123,17 @@ CyclesOptions::CyclesOptions( const std::string &name )
 	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:use_denoise_pass_normal", new IECore::BoolData( true ), false, "useDenoisePassNormal" ) );
 	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:denoiser_prefilter", new IECore::StringData( "accurate" ), false, "denoiserPrefilter" ) );
 
+	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:use_guiding", new IECore::BoolData( false ), false, "useGuiding" ) );
+	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:deterministic_guiding", new IECore::BoolData( true ), false, "deterministicGuiding" ) );
+	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:use_surface_guiding", new IECore::BoolData( true ), false, "useSurfaceGuiding" ) );
+	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:surface_guiding_probability", new IECore::FloatData( 0.5f ), false, "surfaceGuidingProbability" ) );
+	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:use_volume_guiding", new IECore::BoolData( true ), false, "useVolumeGuiding" ) );
+	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:volume_guiding_probability", new IECore::FloatData( 0.5f ), false, "volumeGuidingProbability" ) );
+	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:guiding_training_samples", new IECore::IntData( 128 ), false, "guidingTrainingSamples" ) );
+	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:use_guiding_direct_light", new IECore::BoolData( true ), false, "useGuidingDirectLight" ) );
+	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:use_guiding_mis_weights", new IECore::BoolData( true ), false, "useGuidingMisWeights" ) );
+	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:guiding_distribution_type", new IECore::StringData( "PARALLAX_AWARE_VMM" ), false, "guidingDistributionType" ) );
+
 	// Background
 	options->addChild( new Gaffer::NameValuePlug( "cycles:background:use_shader", new IECore::BoolData( true ), false, "bgUseShader" ) );
 
