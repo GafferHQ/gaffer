@@ -108,6 +108,7 @@ CyclesOptions::CyclesOptions( const std::string &name )
 
 	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:start_sample", new IECore::IntData( 0 ), false, "startSample" ) );
 
+	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:use_light_tree", new IECore::BoolData( true ), false, "useLightTree" ) );
 	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:light_sampling_threshold", new IECore::FloatData( 0.05f ), false, "lightSamplingThreshold" ) );
 
 	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:use_adaptive_sampling", new IECore::BoolData( false ), false, "useAdaptiveSampling" ) );

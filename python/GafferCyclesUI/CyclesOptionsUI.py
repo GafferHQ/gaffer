@@ -829,6 +829,17 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"options.useLightTree" : [
+
+			"description",
+			"""
+			Sample multiple lights more efficiently based on estimated contribution at every shading point.
+			""",
+
+			"layout:section", "Sampling",
+
+		],
+
 		# Ray Depth
 
 		"options.minBounce" : [
