@@ -256,6 +256,10 @@ _styleSheet = string.Template(
 		padding-left: 16px;
 	}
 
+	QLabel#gafferDefaultRowLabel {
+		margin-bottom: 6px;
+	}
+
 	QMenuBar {
 		background-color: $backgroundDarkest;
 		font-weight: bold;

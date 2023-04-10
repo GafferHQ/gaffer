@@ -3780,6 +3780,19 @@
          sodipodi:nodetypes="cccsssccscsss" />
     </g>
     <g
+       transform="translate(4.9651315e-6,18.491124)"
+       id="searchOn"
+       inkscape:label="#g3188"
+       style="display:inline;fill:url(#backgroundLighter)">
+      <path
+         style="fill:url(#foreground);fill-opacity:1;stroke:#3c3c3c;stroke-width:1;stroke-linecap:round;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         d="M 257.09375,44.90625 253.4375,41.25 c 0.67769,-1.087575 1.0625,-2.372568 1.0625,-3.75 -0.004,-3.89216 -3.13671,-7.03125 -7,-7.03125 -3.86599,0 -7,3.136366 -7,7.03125 0,3.894884 3.13401,7.0625 7,7.0625 1.43426,0 2.76489,-0.440152 3.875,-1.1875 L 255,47 m -7.5,-14 c 2.46825,0 4.46631,2.012609 4.46875,4.5 0,2.489132 -1.99877,4.5 -4.46875,4.5 -2.46998,0 -4.46875,-2.010868 -4.46875,-4.5 0,-2.489132 1.99877,-4.5 4.46875,-4.5 z"
+         transform="translate(-4.9651315e-6,52.407524)"
+         id="path4173-7"
+         inkscape:connector-curvature="0"
+         sodipodi:nodetypes="cccsssccscsss" />
+    </g>
+    <g
        id="g4179"
        inkscape:label="values"
        transform="translate(-187,1215)">

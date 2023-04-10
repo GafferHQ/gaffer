@@ -80,15 +80,35 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__sectionChooser.currentSectionChangedSignal().connect( Gaffer.WeakMethod( self.__currentSectionChanged ), scoped = False )
 
 			with GafferUI.ListContainer(
+				GafferUI.ListContainer.Orientation.Horizontal,
+				spacing = 4,
 				parenting = {
 					"index" : ( 0, 1 ),
-					"alignment" : ( GafferUI.HorizontalAlignment.Left, GafferUI.VerticalAlignment.Bottom ),
+					# Set the horizontal alignment to None_ so the ListContainer continues to occupy the
+					# entire width while we set the vertical alignment.
+					"alignment" : ( GafferUI.HorizontalAlignment.None_, GafferUI.VerticalAlignment.Bottom ),
 				}
 			) :
 
-				self.__defaultLabel = GafferUI.Label( "Default" )
-				self.__defaultLabel._qtWidget().setIndent( 6 )
-				GafferUI.Spacer( imath.V2i( 1, 8 ) )
+				self.__toggleFilterButton = GafferUI.Button( image = "search.png", hasFrame = False )
+				self.__toggleFilterButton.clickedSignal().connect( Gaffer.WeakMethod( self.__toggleFilterButtonClicked ), scoped = False )
+
+				self.__patternWidget = GafferUI.TextWidget( toolTip = "Row filter pattern" )
+				self.__patternWidget.setText( Gaffer.Metadata.value( plug, "spreadsheet:rowFilter" ) )
+				self.__patternWidget._qtWidget().setPlaceholderText( "Filter..." )
+				# Ignore the width in X so that the widget is sized based on the width dictated by `rowNamesTable`.
+				self.__patternWidget._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Fixed )
+				self.__patternWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__patternEditingFinished ), scoped = False )
+
+				self.__refreshFilterButton = GafferUI.Button( image = "refresh.png", hasFrame = False, toolTip = "Click to refresh row filter" )
+				self.__refreshFilterButton.clickedSignal().connect( Gaffer.WeakMethod( self.__refreshFilterButtonClicked ), scoped = False )
+
+				self.__defaultLabel = GafferUI.Label( "<h4>Default</h4>", horizontalAlignment = GafferUI.HorizontalAlignment.Right )
+				self.__defaultLabel._qtWidget().setObjectName( "gafferDefaultRowLabel" )
+				# Ignore the width in X so that the label is sized based on the width dictated by `rowNamesTable`.
+				self.__defaultLabel._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Fixed )
+
+				GafferUI.Spacer( imath.V2i( 1, 20 ), maximumSize = imath.V2i( 1, 20 ) )
 
 			self.__defaultTable = _PlugTableView(
 				selectionModel, _PlugTableView.Mode.Defaults,
@@ -185,7 +205,7 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 			# otherwise large status labels can force cells off the screen.
 			self.__statusLabel._qtWidget().setSizePolicy( QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Fixed )
 
-		for widget in [ self.__addRowButton, self.__addColumnButton ] :
+		for widget in [ self.__addRowButton, self.__addColumnButton, self.__patternWidget, self.__refreshFilterButton, self.__toggleFilterButton ] :
 			widget.enterSignal().connect( Gaffer.WeakMethod( self.__enterToolTippedWidget ), scoped = False )
 			widget.leaveSignal().connect( Gaffer.WeakMethod( self.__leaveToolTippedWidget ), scoped = False )
 
@@ -195,8 +215,12 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		Gaffer.Metadata.plugValueChangedSignal( plug.node() ).connect( Gaffer.WeakMethod( self.__plugMetadataChanged ), scoped = False )
 
+		self.__rowFilterEnabled = Gaffer.Metadata.value( plug, "spreadsheet:rowFilterEnabled" )
+
 		self.__updateVisibleSections()
 		self.__updateDefaultRowVisibility()
+		self.__updateRowFilterWidgets()
+		self.__applyRowFilter()
 
 	def hasLabel( self ) :
 
@@ -402,14 +426,8 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 		visible = Gaffer.Metadata.value( self.getPlug(), "spreadsheet:defaultRowVisible" )
 		if visible is None :
 			visible = True
-		self.__defaultLabel.setVisible( visible )
-		## \todo We shouldn't really be reaching into the protected
-		# `_qtWidget()` implementation here. Soon enough we will want
-		# to implement searching/filtering of rows, and when we implement
-		# that we should do it via a simple abstraction on `_PlugTableView`
-		# and use that here too. Perhaps just `setRowFilter( matchPattern )`
-		# would do the trick?
-		self.__defaultTable._qtWidget().setRowHidden( 0, not visible )
+		self.__defaultLabel.setVisible( visible and not self.__rowFilterEnabled )
+		self.__defaultTable.setRowFilter( "" if visible else "__hideDefaultRow__" )
 
 	def __plugMetadataChanged( self, plug, key, reason ) :
 
@@ -425,6 +443,46 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 		section = self.__sectionChooser.currentSection()
 		self.__defaultTable.setVisibleSection( section )
 		self.__cellsTable.setVisibleSection( section )
+
+	def __updateRowFilterWidgets( self ) :
+
+		self.__patternWidget.setVisible( self.__rowFilterEnabled )
+		self.__refreshFilterButton.setVisible( self.__rowFilterEnabled )
+		self.__toggleFilterButton.setImage( "searchOn.png" if self.__rowFilterEnabled else "search.png" )
+		self.__toggleFilterButton.setToolTip( "Click to disable row filter" if self.__rowFilterEnabled else "Click to enable row filter" )
+
+	def __toggleFilterButtonClicked( self, *unused ) :
+
+		self.__rowFilterEnabled = not self.__rowFilterEnabled
+		Gaffer.Metadata.registerValue( self.getPlug(), "spreadsheet:rowFilterEnabled", self.__rowFilterEnabled, persistent = False )
+
+		self.__updateDefaultRowVisibility()
+		self.__updateRowFilterWidgets()
+		self.__applyRowFilter()
+
+	def __refreshFilterButtonClicked( self, *unused ) :
+
+		self.__applyRowFilter()
+
+	def __patternEditingFinished( self, textWidget ) :
+
+		pattern = self.__patternWidget.getText()
+		# Remember the user's filter pattern so we can apply
+		# it next time we construct a widget for this plug.
+		Gaffer.Metadata.registerValue( self.getPlug(), "spreadsheet:rowFilter", pattern, persistent = False )
+
+		self.__applyRowFilter()
+
+	def __applyRowFilter( self ) :
+
+		pattern = ""
+
+		if self.__rowFilterEnabled :
+			pattern = self.__patternWidget.getText()
+			pattern = " ".join( [ x if IECore.StringAlgo.hasWildcards( x ) else f"*{x}*" for x in pattern.split() ] )
+
+		self.__rowNamesTable.setRowFilter( pattern )
+		self.__cellsTable.setRowFilter( pattern )
 
 GafferUI.PlugValueWidget.registerType( Gaffer.Spreadsheet.RowsPlug, _RowsPlugValueWidget )
 
