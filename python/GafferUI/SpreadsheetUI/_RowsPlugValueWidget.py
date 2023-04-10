@@ -148,6 +148,11 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 				}
 			)
 
+			# Reverse the row colour order so the colour of the first row of the
+			# rowNamesTable and cellsTable differ from the Default row's colour.
+			self.__rowNamesTable._qtWidget().setProperty( "gafferReverseRowColors", True )
+			self.__cellsTable._qtWidget().setProperty( "gafferReverseRowColors", True )
+
 			_LinkedScrollBar(
 				GafferUI.ListContainer.Orientation.Vertical, [ self.__cellsTable, self.__rowNamesTable ],
 				parenting = {

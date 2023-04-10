@@ -1312,6 +1312,30 @@ _styleSheet = string.Template(
 		border: none;
 	}
 
+	*[gafferClass="GafferUI.SpreadsheetUI._PlugTableView"]::item {
+		background-color: $background;
+	}
+
+	*[gafferClass="GafferUI.SpreadsheetUI._PlugTableView"]::item:alternate {
+		background-color: $backgroundAlt;
+	}
+
+	*[gafferClass="GafferUI.SpreadsheetUI._PlugTableView"]::item:selected {
+		background-color: $brightColor;
+	}
+
+	*[gafferClass="GafferUI.SpreadsheetUI._PlugTableView"][gafferReverseRowColors="true"]::item {
+		background-color: $backgroundAlt;
+	}
+
+	*[gafferClass="GafferUI.SpreadsheetUI._PlugTableView"][gafferReverseRowColors="true"]::item:alternate {
+		background-color: $background;
+	}
+
+	*[gafferClass="GafferUI.SpreadsheetUI._PlugTableView"][gafferReverseRowColors="true"]::item:selected {
+		background-color: $brightColor;
+	}
+
 	_TableView {
 		gridline-color: $backgroundLowlight;
 		padding: 0px;

@@ -76,6 +76,7 @@ class _PlugTableView( GafferUI.Widget ) :
 		QtCompat.setSectionResizeMode( tableView.verticalHeader(), QtWidgets.QHeaderView.Fixed )
 		tableView.verticalHeader().setDefaultSectionSize( 25 )
 		tableView.verticalHeader().setVisible( False )
+		tableView.setAlternatingRowColors( True )
 
 		self.__horizontalHeader = GafferUI.Widget( QtWidgets.QHeaderView( QtCore.Qt.Horizontal, tableView ) )
 		self.__horizontalHeader._qtWidget().setDefaultAlignment( QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter )

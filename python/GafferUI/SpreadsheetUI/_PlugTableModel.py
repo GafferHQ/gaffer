@@ -225,13 +225,6 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 
 			return self.__formatValue( index )
 
-		elif role == QtCore.Qt.BackgroundColorRole :
-
-			if index.row() % 2 == 0 :
-				return GafferUI._Variant.toVariant( GafferUI._StyleSheet.styleColor( "background" ) )
-			else:
-				return GafferUI._Variant.toVariant( GafferUI._StyleSheet.styleColor( "backgroundAlt" ) )
-
 		elif role == QtCore.Qt.DecorationRole :
 
 			plug = self.valuePlugForIndex( index )
