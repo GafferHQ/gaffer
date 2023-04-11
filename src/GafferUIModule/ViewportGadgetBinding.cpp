@@ -146,6 +146,33 @@ void render( const ViewportGadget &v )
 	v.render();
 }
 
+class RasterScopeWrapper : boost::noncopyable
+{
+
+	public :
+
+		RasterScopeWrapper( ViewportGadget &viewportGadget )
+			:	m_viewportGadget( &viewportGadget )
+		{
+		}
+
+		void enter()
+		{
+			m_rasterScope.emplace( m_viewportGadget.get() );
+		}
+
+		void exit( object type, object value, object traceback )
+		{
+			m_rasterScope.reset();
+		}
+
+	private :
+
+		ViewportGadgetPtr m_viewportGadget;
+		std::optional<ViewportGadget::RasterScope> m_rasterScope;
+
+};
+
 } // namespace
 
 void GafferUIModule::bindViewportGadget()
@@ -209,6 +236,12 @@ void GafferUIModule::bindViewportGadget()
 		.value( "NoDragTracking", ViewportGadget::NoDragTracking )
 		.value( "XDragTracking", ViewportGadget::XDragTracking )
 		.value( "YDragTracking", ViewportGadget::YDragTracking )
+	;
+
+	class_<RasterScopeWrapper, boost::noncopyable>( "RasterScope", no_init )
+		.def( init<ViewportGadget &>() )
+		.def( "__enter__", &RasterScopeWrapper::enter )
+		.def( "__exit__", &RasterScopeWrapper::exit )
 	;
 
 	SignalClass<ViewportGadget::UnarySignal, DefaultSignalCaller<ViewportGadget::UnarySignal>, ViewportGadgetSlotCaller>( "UnarySignal" );
