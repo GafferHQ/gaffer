@@ -28,6 +28,7 @@ API
 
 - NoduleLayout : Added a warning message when a required custom gadget has not been registered.
 - GafferUITest.TestCase : Added testing of NodeGadgets to `assertNodeUIsHaveExpectedLifetime()`.
+- SceneView : Added Python binding for `resolutionGate()` method.
 
 Build
 -----
