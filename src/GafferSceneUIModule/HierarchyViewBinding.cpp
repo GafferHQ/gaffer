@@ -60,6 +60,7 @@
 
 using namespace std;
 using namespace boost::python;
+using namespace boost::placeholders;
 using namespace IECore;
 using namespace IECorePython;
 using namespace Gaffer;

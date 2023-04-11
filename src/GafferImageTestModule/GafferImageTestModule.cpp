@@ -50,6 +50,7 @@
 #include "IECorePython/ScopedGILRelease.h"
 
 using namespace boost::python;
+using namespace boost::placeholders;
 using namespace Gaffer;
 using namespace GafferImage;
 using namespace GafferImageTest;

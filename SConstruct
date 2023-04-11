@@ -241,8 +241,8 @@ options.Add(
 )
 
 options.Add(
-	"OPENEXR_LIB_SUFFIX",
-	"The suffix used when locating the OpenEXR libraries.",
+	"IMATH_LIB_SUFFIX",
+	"The suffix used when locating the Imath library.",
 	"",
 )
 
@@ -384,12 +384,6 @@ env = Environment(
 	CPPDEFINES = [
 		( "BOOST_FILESYSTEM_VERSION", "3" ),
 		"BOOST_FILESYSTEM_NO_DEPRECATED",
-		# Boost has deprecated `boost/bind.hpp` in favour of
-		# `boost/bind/bind.hpp`, and we have updated our code accordingly. But
-		# `boost::python` and others are still using the deprecated header,
-		# so we define BOOST_BIND_GLOBAL_PLACEHOLDERS to silence the reams of
-		# warnings triggered by that.
-		"BOOST_BIND_GLOBAL_PLACEHOLDERS",
 	],
 
 	CPPPATH = [
@@ -417,7 +411,7 @@ systemIncludeArgument = "/external:I" if env[ "PLATFORM" ] == "win32" else "-isy
 
 for path in [
 		"$BUILD_DIR/include",
-		"$BUILD_DIR/include/OpenEXR",
+		"$BUILD_DIR/include/Imath",
 		"$BUILD_DIR/include/GL",
 	] + env["LOCATE_DEPENDENCY_SYSTEMPATH"] :
 
@@ -430,6 +424,9 @@ env["BUILD_DIR"] = os.path.abspath( env["BUILD_DIR"] )
 for e in env["ENV_VARS_TO_IMPORT"].split() :
 	if e in os.environ :
 		env["ENV"][e] = os.environ[e]
+
+if env["BUILD_CACHEDIR"] != "" :
+	CacheDir( env["BUILD_CACHEDIR"] )
 
 ###########################################################################################
 # POSIX configuration
@@ -512,6 +509,19 @@ if env["PLATFORM"] != "win32" :
 			CXXFLAGS = [ "-Werror" ],
 			SHLINKFLAGS = [ "-Wl,-fatal_warnings" ],
 		)
+
+	# Address Sanitiser
+
+	if env["ASAN"] :
+		env.Append(
+			CXXFLAGS = [ "-fsanitize=address" ],
+			LINKFLAGS = [ "-fsanitize=address" ],
+		)
+		if "clang++" in os.path.basename( env["CXX"] ) :
+			env.Append(
+				CXXFLAGS = [ "-shared-libasan" ],
+				LINKFLAGS = [ "-shared-libasan" ],
+			)
 
 ###########################################################################################
 # Windows configuration
@@ -605,10 +615,6 @@ else:
 			],
 		)
 
-
-if env["BUILD_CACHEDIR"] != "" :
-	CacheDir( env["BUILD_CACHEDIR"] )
-
 ###############################################################################################
 # Check for inkscape and sphinx
 ###############################################################################################
@@ -689,17 +695,6 @@ if not conf.checkQtVersion() :
 	sys.stderr.write( "Qt not found\n" )
 	Exit( 1 )
 
-if env["ASAN"] :
-	env.Append(
-		CXXFLAGS = [ "-fsanitize=address" ],
-		LINKFLAGS = [ "-fsanitize=address" ],
-	)
-	if "clang++" in os.path.basename( env["CXX"] ) :
-		env.Append(
-			CXXFLAGS = [ "-shared-libasan" ],
-			LINKFLAGS = [ "-shared-libasan" ],
-		)
-
 ###############################################################################################
 # An environment for running commands with access to the applications we've built
 ###############################################################################################
@@ -749,17 +744,11 @@ baseLibEnv = env.Clone()
 baseLibEnv.Append(
 
 	LIBS = [
-		"boost_iostreams$BOOST_LIB_SUFFIX",
 		"boost_filesystem$BOOST_LIB_SUFFIX",
-		"boost_date_time$BOOST_LIB_SUFFIX",
-		"boost_thread$BOOST_LIB_SUFFIX",
-		"boost_wave$BOOST_LIB_SUFFIX",
 		"boost_regex$BOOST_LIB_SUFFIX",
-		"boost_system$BOOST_LIB_SUFFIX",
 		"boost_chrono$BOOST_LIB_SUFFIX",
 		"tbb",
-		"Imath$OPENEXR_LIB_SUFFIX",
-		"IlmImf$OPENEXR_LIB_SUFFIX",
+		"Imath$IMATH_LIB_SUFFIX",
 		"IECore$CORTEX_LIB_SUFFIX",
 	],
 
@@ -790,6 +779,46 @@ with open( str( boostVersionHeader ) ) as f :
 if "BOOST_MAJOR_VERSION" not in baseLibEnv :
 	sys.stderr.write( "ERROR : unable to determine boost version from \"{}\".\n".format(  boostVersionHeader ) )
 	Exit( 1 )
+
+if ( int( baseLibEnv["BOOST_MAJOR_VERSION"] ), int( baseLibEnv["BOOST_MINOR_VERSION"] ) ) < ( 1, 80 ) :
+
+	# Older versions of boost deprecated `boost/bind.hpp` in favour of
+	# `boost/bind/bind.hpp`, but left `boost::python` and others still using the
+	# deprecated header, so we define BOOST_BIND_GLOBAL_PLACEHOLDERS to silence
+	# the reams of warnings triggered by that.
+	baseLibEnv.Append( CPPDEFINES = [ "BOOST_BIND_GLOBAL_PLACEHOLDERS" ] )
+
+# Determine Imath version. The transition between 2 and 3 is a bit of a mess.
+# Imath 3 provides `Imath/ImathConfig.h` for determining version, but that isn't
+# provided by Imath 2, which comes with `OpenEXR/IlmBaseConfig.h` instead. The
+# one thing we can rely on existing all the time is the conceptually unrelated
+# `OpenEXR/OpenEXRConfig.h`, so we use that, even though we don't directly
+# depend on OpenEXR ourselves.
+
+exrVersionHeader = baseLibEnv.FindFile(
+	"OpenEXR/OpenEXRConfig.h",
+	[ "$BUILD_DIR/include" ] +
+	baseLibEnv["LOCATE_DEPENDENCY_SYSTEMPATH"] +
+	baseLibEnv["LOCATE_DEPENDENCY_CPPPATH"]
+)
+
+if not exrVersionHeader :
+	sys.stderr.write( "ERROR : unable to find \"OpenEXR/OpenEXRConfig.h\".\n" )
+	Exit( 1 )
+
+for line in open( str( exrVersionHeader ) ) :
+	m = re.match( r'^#define OPENEXR_VERSION_STRING "(\d)\.(\d)\.(\d)"$', line )
+	if m :
+		baseLibEnv["IMATH_MAJOR_VERSION"] = int( m.group( 1 ) )
+
+if baseLibEnv["IMATH_MAJOR_VERSION"] is None :
+	sys.stderr.write( "ERROR : unable to determine version from \"{}\".\n".format( exrVersionHeader ) )
+	Exit( 1 )
+
+# Imath 2 came with a separate `Half` library but in Imath 3 everything is in
+# the `Imath` library.
+
+baseLibEnv["HALF_LIBRARY"] = "Half" if baseLibEnv["IMATH_MAJOR_VERSION"] < 3 else ""
 
 ###############################################################################################
 # The basic environment for building python modules
@@ -937,7 +966,7 @@ libraries = {
 
 	"Gaffer" : {
 		"envAppends" : {
-			"LIBS" : [ "Half", "fmt" ],
+			"LIBS" : [ "$HALF_LIBRARY", "fmt" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "fmt" ],
@@ -957,7 +986,8 @@ libraries = {
 
 	"GafferUI" : {
 		"envAppends" : {
-			"LIBS" : [ "Gaffer", "Iex$OPENEXR_LIB_SUFFIX", "IECoreGL$CORTEX_LIB_SUFFIX", "IECoreImage$CORTEX_LIB_SUFFIX", "IECoreScene$CORTEX_LIB_SUFFIX", "fmt" ],
+			## \todo Stop linking against `Iex`. It is only necessary on Windows Imath 2 builds.
+			"LIBS" : [ "Gaffer", "Iex$IMATH_LIB_SUFFIX", "IECoreGL$CORTEX_LIB_SUFFIX", "IECoreImage$CORTEX_LIB_SUFFIX", "IECoreScene$CORTEX_LIB_SUFFIX", "fmt" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "IECoreImage$CORTEX_LIB_SUFFIX", "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreGL$CORTEX_LIB_SUFFIX", "GafferUI", "GafferBindings" ],
@@ -1022,7 +1052,7 @@ libraries = {
 
 	"GafferScene" : {
 		"envAppends" : {
-			"LIBS" : [ "Gaffer", "Iex$OPENEXR_LIB_SUFFIX", "IECoreGL$CORTEX_LIB_SUFFIX", "IECoreImage$CORTEX_LIB_SUFFIX",  "IECoreScene$CORTEX_LIB_SUFFIX", "GafferImage", "GafferDispatch", "Half", "fmt" ],
+			"LIBS" : [ "Gaffer", "Iex$IMATH_LIB_SUFFIX", "IECoreGL$CORTEX_LIB_SUFFIX", "IECoreImage$CORTEX_LIB_SUFFIX",  "IECoreScene$CORTEX_LIB_SUFFIX", "GafferImage", "GafferDispatch", "$HALF_LIBRARY", "fmt" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferBindings", "GafferScene", "GafferDispatch", "GafferImage", "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreGL$CORTEX_LIB_SUFFIX" ],
@@ -1042,7 +1072,7 @@ libraries = {
 
 	"GafferSceneUI" : {
 		"envAppends" : {
-			"LIBS" : [ "Gaffer", "GafferUI", "GafferImage", "GafferImageUI", "GafferScene", "Iex$OPENEXR_LIB_SUFFIX", "IECoreGL$CORTEX_LIB_SUFFIX", "IECoreImage$CORTEX_LIB_SUFFIX", "IECoreScene$CORTEX_LIB_SUFFIX" ],
+			"LIBS" : [ "Gaffer", "GafferUI", "GafferImage", "GafferImageUI", "GafferScene", "Iex$IMATH_LIB_SUFFIX", "IECoreGL$CORTEX_LIB_SUFFIX", "IECoreImage$CORTEX_LIB_SUFFIX", "IECoreScene$CORTEX_LIB_SUFFIX" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "IECoreGL$CORTEX_LIB_SUFFIX", "GafferBindings", "GafferScene", "GafferUI", "GafferImageUI", "GafferSceneUI", "IECoreScene$CORTEX_LIB_SUFFIX" ],
@@ -1054,7 +1084,7 @@ libraries = {
 	"GafferImage" : {
 		"envAppends" : {
 			"CPPPATH" : [ "$BUILD_DIR/include/freetype2" ],
-			"LIBS" : [ "Gaffer", "GafferDispatch", "Iex$OPENEXR_LIB_SUFFIX", "IECoreImage$CORTEX_LIB_SUFFIX", "OpenImageIO$OIIO_LIB_SUFFIX", "OpenImageIO_Util$OIIO_LIB_SUFFIX", "OpenColorIO$OCIO_LIB_SUFFIX", "freetype", "fmt" ],
+			"LIBS" : [ "Gaffer", "GafferDispatch", "Iex$IMATH_LIB_SUFFIX", "IECoreImage$CORTEX_LIB_SUFFIX", "OpenImageIO$OIIO_LIB_SUFFIX", "OpenImageIO_Util$OIIO_LIB_SUFFIX", "OpenColorIO$OCIO_LIB_SUFFIX", "freetype", "fmt" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferBindings", "GafferImage", "GafferDispatch", "IECoreImage$CORTEX_LIB_SUFFIX", ],
@@ -1078,7 +1108,7 @@ libraries = {
 
 	"GafferImageUI" : {
 		"envAppends" : {
-			"LIBS" : [ "IECoreGL$CORTEX_LIB_SUFFIX", "Gaffer", "GafferImage", "GafferUI", "OpenColorIO$OCIO_LIB_SUFFIX", "IECoreScene$CORTEX_LIB_SUFFIX", "Iex$OPENEXR_LIB_SUFFIX" ],
+			"LIBS" : [ "IECoreGL$CORTEX_LIB_SUFFIX", "Gaffer", "GafferImage", "GafferUI", "OpenColorIO$OCIO_LIB_SUFFIX", "IECoreScene$CORTEX_LIB_SUFFIX", "Iex$IMATH_LIB_SUFFIX" ],
 		},
 		"pythonEnvAppends" : {
 			"CPPPATH" : [ "$PYBIND11/include" ],
@@ -1172,11 +1202,11 @@ libraries = {
 	"GafferOSL" : {
 		"envAppends" : {
 			"CPPPATH" : [ "$OSLHOME/include/OSL" ],
-			"LIBS" : [ "Gaffer", "GafferScene", "GafferImage", "OpenImageIO$OIIO_LIB_SUFFIX", "OpenImageIO_Util$OIIO_LIB_SUFFIX", "oslquery$OSL_LIB_SUFFIX", "oslexec$OSL_LIB_SUFFIX", "Iex$OPENEXR_LIB_SUFFIX", "IECoreImage$CORTEX_LIB_SUFFIX", "IECoreScene$CORTEX_LIB_SUFFIX" ],
+			"LIBS" : [ "Gaffer", "GafferScene", "GafferImage", "OpenImageIO$OIIO_LIB_SUFFIX", "OpenImageIO_Util$OIIO_LIB_SUFFIX", "oslquery$OSL_LIB_SUFFIX", "oslexec$OSL_LIB_SUFFIX", "Iex$IMATH_LIB_SUFFIX", "IECoreImage$CORTEX_LIB_SUFFIX", "IECoreScene$CORTEX_LIB_SUFFIX" ],
 		},
 		"pythonEnvAppends" : {
 			"CPPPATH" : [ "$OSLHOME/include/OSL" ],
-			"LIBS" : [ "GafferBindings", "GafferScene", "GafferImage", "GafferOSL", "Iex$OPENEXR_LIB_SUFFIX", "IECoreScene$CORTEX_LIB_SUFFIX" ],
+			"LIBS" : [ "GafferBindings", "GafferScene", "GafferImage", "GafferOSL", "Iex$IMATH_LIB_SUFFIX", "IECoreScene$CORTEX_LIB_SUFFIX" ],
 		},
 		"oslHeaders" : glob.glob( "shaders/*/*.h" ),
 		"oslShaders" : glob.glob( "shaders/*/*.osl" ),
@@ -1238,7 +1268,7 @@ libraries = {
 		"envAppends" : {
 			"CXXFLAGS" : [ systemIncludeArgument, "$APPLESEED_ROOT/include", "-DAPPLESEED_ENABLE_IMATH_INTEROP" ],
 			"LIBPATH" : [ "$APPLESEED_ROOT/lib" ],
-			"LIBS" : [ "Gaffer", "GafferDispatch", "GafferScene", "appleseed",  "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreAppleseed$CORTEX_LIB_SUFFIX", "OpenImageIO$OIIO_LIB_SUFFIX", "OpenImageIO_Util$OIIO_LIB_SUFFIX", "oslquery$OSL_LIB_SUFFIX", "fmt" ],
+			"LIBS" : [ "Gaffer", "GafferDispatch", "GafferScene", "appleseed",  "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreAppleseed$CORTEX_LIB_SUFFIX", "OpenImageIO$OIIO_LIB_SUFFIX", "OpenImageIO_Util$OIIO_LIB_SUFFIX", "oslquery$OSL_LIB_SUFFIX", "boost_thread$BOOST_LIB_SUFFIX", "fmt" ],
 			"CPPDEFINES" : [ "APPLESEED_USE_SSE" ] if platform.machine() != "arm64" else [],
 		},
 		"pythonEnvAppends" : {
@@ -1338,7 +1368,7 @@ libraries = {
 
 	"GafferVDB" : {
 		"envAppends" : {
-			"LIBS" : [ "Gaffer", "GafferScene", "Half", "openvdb$VDB_LIB_SUFFIX", "IECoreVDB$CORTEX_LIB_SUFFIX", "IECoreScene$CORTEX_LIB_SUFFIX" ],
+			"LIBS" : [ "Gaffer", "GafferScene", "openvdb$VDB_LIB_SUFFIX", "IECoreVDB$CORTEX_LIB_SUFFIX", "IECoreScene$CORTEX_LIB_SUFFIX" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferBindings", "GafferScene", "GafferVDB", "openvdb$VDB_LIB_SUFFIX", "IECoreVDB$CORTEX_LIB_SUFFIX", "IECoreScene$CORTEX_LIB_SUFFIX"],

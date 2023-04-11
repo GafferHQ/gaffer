@@ -49,6 +49,12 @@ Breaking Changes
 - ImageReader : Renamed `None` preset to `Automatic`.
 - OpenColorIOTransform : Removed `availableColorSpaces()` and `availableRoles()` methods.
 
+Build
+-----
+
+- OpenEXR : Stopped linking unnecessarily to the `IlmImf` library.
+- Boost : Stopped linking unnecessarily to `iostreams`, `date_time`, `wave` and `system` libraries.
+
 1.2.x.x (relative to 1.2.2.0)
 =======
 

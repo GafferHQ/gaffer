@@ -63,6 +63,7 @@
 #include "boost/container/flat_set.hpp"
 
 using namespace std;
+using namespace boost::placeholders;
 using namespace boost::python;
 using namespace IECore;
 using namespace IECorePython;

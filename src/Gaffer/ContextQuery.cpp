@@ -41,8 +41,6 @@
 
 #include "IECore/NullObject.h"
 
-#include "boost/bind.hpp"
-
 using namespace Imath;
 using namespace IECore;
 using namespace Gaffer;
