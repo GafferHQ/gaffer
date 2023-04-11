@@ -1,10 +1,10 @@
 import Gaffer
 import GafferUI
+import GafferCycles
 import GafferDispatch
 import GafferImage
-import GafferScene
 import GafferOSL
-import GafferAppleseed
+import GafferScene
 
 GafferUI.Examples.registerExample(
 	"Rendering/Wedge Tests",
@@ -16,7 +16,9 @@ GafferUI.Examples.registerExample(
 		GafferImage.Text,
 		GafferScene.Outputs,
 		Gaffer.ContextVariables,
-		Gaffer.Expression
+		Gaffer.ContextQuery,
+		Gaffer.Expression,
+		GafferCycles.CyclesRender
 	]
 )
 
@@ -37,7 +39,9 @@ GafferUI.Examples.registerExample(
 	notableNodes = [
 		GafferOSL.OSLCode,
 		GafferOSL.OSLShader,
-		Gaffer.Reference
+		GafferScene.ShaderAssignment,
+		Gaffer.Reference,
+		GafferCycles.CyclesRender
 	]
 )
 
@@ -47,21 +51,11 @@ GafferUI.Examples.registerExample(
 	description = "Demonstrates how to use the Loop node to build a contact sheet of shader variations.",
 	notableNodes = [
 		Gaffer.Loop,
+		GafferDispatch.Wedge,
 		GafferImage.ImageTransform,
+		GafferImage.ImageWriter,
+		Gaffer.ContextQuery,
 		Gaffer.Expression
-	]
-)
-
-GafferUI.Examples.registerExample(
-	"Rendering/Multi-shot Render Spreadsheet",
-	"$GAFFER_ROOT/resources/examples/rendering/multiShotRenderSpreadsheet.gfr",
-	description = """
-	Demonstrates how to use the Spreadsheet node to vary renderer
-	settings per shot.
-	""",
-	notableNodes = [
-		Gaffer.Spreadsheet,
-		GafferAppleseed.AppleseedOptions
 	]
 )
 
@@ -74,6 +68,21 @@ GafferUI.Examples.registerExample(
 	""",
 	notableNodes = [
 		Gaffer.Spreadsheet,
-		GafferScene.ShaderTweaks
+		GafferScene.ShaderTweaks,
+		GafferCycles.CyclesLight
+	]
+)
+
+GafferUI.Examples.registerExample(
+	"Rendering/Multi-shot Render Spreadsheet",
+	"$GAFFER_ROOT/resources/examples/rendering/multiShotRenderSpreadsheet.gfr",
+	description = """
+	Demonstrates how to use the Spreadsheet node to vary renderer
+	settings per shot.
+	""",
+	notableNodes = [
+		Gaffer.Spreadsheet,
+		GafferScene.StandardOptions,
+		GafferCycles.CyclesOptions
 	]
 )

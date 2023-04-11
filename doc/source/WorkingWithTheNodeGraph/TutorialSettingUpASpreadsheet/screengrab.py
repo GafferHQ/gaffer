@@ -1,10 +1,12 @@
-# BuildTarget: images/tutorialSettingUpASpreadsheetAppleseedOptionsNode.png
 # BuildTarget: images/tutorialSettingUpASpreadsheetCleanColumn.png
+# BuildTarget: images/tutorialSettingUpASpreadsheetCyclesOptionsNode.png
 # BuildTarget: images/tutorialSettingUpASpreadsheetDefaultCell.png
 # BuildTarget: images/tutorialSettingUpASpreadsheetFullName.png
 # BuildTarget: images/tutorialSettingUpASpreadsheetGlobalContextVariables.png
 # BuildTarget: images/tutorialSettingUpASpreadsheetNewSpreadsheet.png
-# BuildTarget: images/tutorialSettingUpASpreadsheetOverscanValues.png
+# BuildTarget: images/tutorialSettingUpASpreadsheetRenamedResolutionColumn.png
+# BuildTarget: images/tutorialSettingUpASpreadsheetResolutionColumn.png
+# BuildTarget: images/tutorialSettingUpASpreadsheetResolutionValues.png
 # BuildTarget: images/tutorialSettingUpASpreadsheetRow1.png
 # BuildTarget: images/tutorialSettingUpASpreadsheetRow2.png
 # BuildTarget: images/tutorialSettingUpASpreadsheetRow2Other.png
@@ -62,12 +64,35 @@ sheet["rows"].removeChild( row2Other )
 __delay( 0.1 )
 GafferUI.WidgetAlgo.grab( widget = nodeEditorWindow, imagePath = "images/tutorialSettingUpASpreadsheetRows2A2B.png" )
 
-# Tutorial: Overscan values
+# Tutorial: Resolution values
 sheet["rows"].removeChild( row2B )
 row2 = row2A
 row2["name"].setValue( "2" )
+row2["cells"]["samples"].enabledPlug().setValue( True )
+row2["cells"]["samples"]["value"]["value"].setValue( 1536 )
 __delay( 0.1 )
-GafferUI.WidgetAlgo.grab( widget = nodeEditorWindow, imagePath = "images/tutorialSettingUpASpreadsheetOverscanValues.png" )
+GafferUI.WidgetAlgo.grab( widget = nodeEditorWindow, imagePath = "images/tutorialSettingUpASpreadsheetResolutionValues.png" )
+
+# Tutorial: Add resolutionMultiplier and renderCamera columns
+defaultRow["cells"]["renderResolution"].enabledPlug().setValue( False )
+defaultRow["cells"]["resolutionMultiplier"].enabledPlug().setValue( False )
+defaultRow["cells"]["renderCamera"].enabledPlug().setValue( False )
+defaultRow["cells"]["renderCamera"]["value"]["value"].setValue( "" )
+row2["cells"]["renderResolution"].enabledPlug().setValue( False )
+__delay( 0.1 )
+GafferUI.WidgetAlgo.grab( widget = nodeEditorWindow, imagePath = "images/tutorialSettingUpASpreadsheetExtraColumns.png" )
+
+# Tutorial: Renamed resolution column
+sheet["rows"].removeColumn( 3 )
+sheet["rows"].removeColumn( 2 )
+__delay( 0.1 )
+GafferUI.WidgetAlgo.grab( widget = nodeEditorWindow, imagePath = "images/tutorialSettingUpASpreadsheetRenamedResolutionColumn.png" )
+
+# Tutorial: Add resolution plug
+Gaffer.Metadata.registerValue( defaultRow["cells"]["renderResolution"], "spreadsheet:columnLabel", "Render Resolution" )
+Gaffer.Metadata.registerValue( defaultRow["cells"]["renderResolution"], "spreadsheet:columnWidth", 120 )
+__delay( 0.1 )
+GafferUI.WidgetAlgo.grab( widget = nodeEditorWindow, imagePath = "images/tutorialSettingUpASpreadsheetResolutionColumn.png" )
 
 # Tutorial: Spreadsheet name in Graph Editor
 nodeEditorWindow.parent()._qtWidget().hide()
@@ -85,14 +110,7 @@ del graphEditorWindow
 # Tutorial: Row 2
 nodeEditorWindow.parent()._qtWidget().show()
 __delay( 0.1 )
-sheet["rows"].removeColumn( 5 )
-sheet["rows"].removeColumn( 4 )
-sheet["rows"].removeColumn( 3 )
-sheet["rows"].removeColumn( 2 )
 sheet["rows"].removeColumn( 1 )
-row2["name"].setValue( "2" )
-row2["cells"]["maxAASamples"].enabledPlug().setValue( True )
-row2["cells"]["maxAASamples"]["value"]["value"].setValue( 36 )
 __delay( 0.1 )
 GafferUI.WidgetAlgo.grab( widget = nodeEditorWindow, imagePath = "images/tutorialSettingUpASpreadsheetRow2.png" )
 
@@ -102,27 +120,27 @@ __delay( 0.1 )
 GafferUI.WidgetAlgo.grab( widget = nodeEditorWindow, imagePath = "images/tutorialSettingUpASpreadsheetCleanColumn.png" )
 
 # Tutorial: Default cell
-Gaffer.Metadata.registerValue( defaultRow["cells"]["maxAASamples"], 'spreadsheet:columnWidth', 100 )
-Gaffer.Metadata.registerValue( defaultRow["cells"]["maxAASamples"], 'spreadsheet:columnLabel', 'Max AA Samples' )
+Gaffer.Metadata.registerValue( defaultRow["cells"]["samples"], "spreadsheet:columnWidth", 100 )
 __delay( 0.1 )
 GafferUI.WidgetAlgo.grab( widget = nodeEditorWindow, imagePath = "images/tutorialSettingUpASpreadsheetDefaultCell.png" )
 
 # Tutorial: Filled row 1
-defaultRow["cells"]["maxAASamples"].enabledPlug().setValue( False )
+defaultRow["cells"]["samples"].enabledPlug().setValue( False )
 __delay( 0.1 )
 GafferUI.WidgetAlgo.grab( widget = nodeEditorWindow, imagePath = "images/tutorialSettingUpASpreadsheetRow1.png" )
 
 # Tutorial: Selector plug
 row1["name"].setValue( "" )
-row1["cells"]["maxAASamples"]["value"]["value"].setValue( 32 )
-row1["cells"]["maxAASamples"].enabledPlug().setValue( False )
+row1["cells"]["samples"]["value"]["value"].setValue( 1024 )
+row1["cells"]["samples"].enabledPlug().setValue( False )
 __delay( 0.1 )
 GafferUI.WidgetAlgo.grab( widget = nodeEditorWindow, imagePath = "images/tutorialSettingUpASpreadsheetSelector.png" )
 
 # Tutorial: New spreadsheet
 sheet["selector"].setValue( "" )
-script.selection().add( Gaffer.StandardSet( [ script["AppleseedOptions"] ] ) )
-GafferUI.PlugValueWidget.acquire( script["AppleseedOptions"]["options"]["maxAASamples"] )
+Gaffer.Metadata.deregisterValue( sheet, "nodeGadget:type" )
+script.selection().add( Gaffer.StandardSet( [ script["CyclesOptions"] ] ) )
+GafferUI.PlugValueWidget.acquire( script["CyclesOptions"]["options"]["samples"] )
 pos = nodeEditorWindow.parent()._qtWidget().pos()
 pos.setX( pos.x() - 150 )
 nodeEditorWindow.parent()._qtWidget().move( pos )
@@ -144,7 +162,7 @@ GafferUI.WidgetAlgo.grab( widget = settingsWindow, imagePath = "images/tutorialS
 settingsWindow.close()
 del settingsWindow
 
-# Tutorial: AppleseedOptions node
+# Tutorial: CyclesOptions node
 with GafferUI.Window() as window :
 	graphEditorWindow = GafferUI.GraphEditor( script )
 graphEditorWindow.parent().reveal()
@@ -152,10 +170,10 @@ graphEditorWindow.parent()._qtWidget().resize( 300, 200 )
 __delay( 0.1 )
 graphEditorWindow.frame( script.children( Gaffer.Node ) )
 __delay( 0.1 )
-GafferUI.WidgetAlgo.grab( widget = graphEditorWindow, imagePath = "images/tutorialSettingUpASpreadsheetAppleseedOptionsNode.png" )
+GafferUI.WidgetAlgo.grab( widget = graphEditorWindow, imagePath = "images/tutorialSettingUpASpreadsheetCyclesOptionsNode.png" )
 
 # Tutorial: StandardOptions node
-script.removeChild( script["AppleseedOptions"] )
+script.removeChild( script["CyclesOptions"] )
 graphEditorWindow.frame( script.children( Gaffer.Node ) )
 __delay( 0.1 )
 GafferUI.WidgetAlgo.grab( widget = graphEditorWindow, imagePath = "images/tutorialSettingUpASpreadsheetStandardOptionsNode.png" )

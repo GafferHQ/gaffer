@@ -14,7 +14,6 @@ import GafferUI
 import GafferScene
 import GafferSceneUI
 import GafferOSL
-import GafferAppleseed
 
 # Delay for x seconds
 def __delay( delay ) :
@@ -26,18 +25,17 @@ def __delay( delay ) :
 script["SceneReader"] = GafferScene.SceneReader()
 script["ShaderAssignment"] = GafferScene.ShaderAssignment()
 script["ShaderAssignment"]["in"].setInput( script["SceneReader"]["out"] )
-script["as_metal"] = GafferOSL.OSLShader()
-script["as_metal"].loadShader( "as_metal" )
-script["ShaderAssignment"]["shader"].setInput( script["as_metal"]["out"]["out_outColor"] )
-script["AppleseedAttributes"] = GafferAppleseed.AppleseedAttributes( "AppleseedAttributes" )
-script["AppleseedAttributes"]["in"].setInput( script["ShaderAssignment"]["out"] )
+script["Constant"] = GafferOSL.OSLShader()
+script["Constant"].loadShader( "Surface/Constant" )
+script["ShaderAssignment"]["shader"].setInput( script["Constant"]["out"] )
+script["StandardAttributes"] = GafferScene.StandardAttributes( "StandardAttributes" )
+script["StandardAttributes"]["in"].setInput( script["ShaderAssignment"]["out"] )
 script["Set"] = GafferScene.Set()
-script["Set"]["in"].setInput( script["AppleseedAttributes"]["out"] )
+script["Set"]["in"].setInput( script["StandardAttributes"]["out"] )
 
 # Set node plug values
 script["SceneReader"]["fileName"].setValue( "${GAFFER_ROOT}/resources/gafferBot/caches/gafferBot.scc" )
-script["AppleseedAttributes"]["attributes"]["shadingSamples"]["enabled"].setValue( True )
-script["AppleseedAttributes"]["attributes"]["shadingSamples"]["value"].setValue( 4 )
+script["StandardAttributes"]["attributes"]["visibility"]["enabled"].setValue( True )
 script["Set"]["name"].setValue( "hands" )
 script["Set"]["paths"].setValue( IECore.StringVectorData( [ '/GAFFERBOT' ] ) )
 script.setFocus( script["Set"] )
