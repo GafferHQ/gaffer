@@ -14,6 +14,7 @@ Improvements
 - ArnoldAttributes : Added `shadowAutoBumpVisibility` plug, since Arnold 7.2.1.0 now correctly implements this feature.
 - Shader : Added support for shading input connections to splines. After double clicking on a spline to open the editor, you may select a control point, and then drag an input to the value control. Works in GafferImage, GafferObject and Arnold. Supports a max of 32 values in the spline.
 - FloatSpline and ColorSpline OSL shaders : Added a `direction` parameter, with options of `U`, `V`, `Diagonal`, `Radial` and `Custom`.
+- Constraint : Disabled the `referenceFrame` plug in the NodeEditor when `keepReferencePosition` is off.
 
 Fixes
 -----
