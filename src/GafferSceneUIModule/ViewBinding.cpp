@@ -152,6 +152,12 @@ void collapseSelection( SceneView &view )
 	view.collapseSelection();
 }
 
+Imath::Box2f resolutionGateWrapper( SceneView &view )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return view.resolutionGate();
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -311,6 +317,7 @@ void GafferSceneUIModule::bindViews()
 
 	GafferBindings::NodeClass<SceneView>()
 		.def( "frame", &frame, ( boost::python::arg_( "filter" ), boost::python::arg_( "direction" ) = Imath::V3f( -0.64, -0.422, -0.64 ) ) )
+		.def( "resolutionGate", &resolutionGateWrapper )
 		.def( "expandSelection", &expandSelection, ( boost::python::arg_( "depth" ) = 1 ) )
 		.def( "collapseSelection", &collapseSelection )
 		.def( "registerRenderer", &sceneViewRegisterRenderer )
