@@ -43,11 +43,70 @@ shader ColorSpline
 	color splineValues[] = { 0, 0, 1, 1 },
 	string splineBasis = "catmull-rom",
 
-	float x = 0,
+	string direction = "custom" [[
+		string help = "Which direction the spline is applied in. U or V use the UVs, Diagonal or Radial use the UVs together with a start and end position. Custom uses the `x` input, which may be hooked up to any shader returning a float. When using UVs, the overrideUV plug maybe be connected in order to use custom UVs.",
+		string widget = "popup",
+		string options = "Custom:custom|U:u|V:v|Diagonal:diagonal|Radial:radial",
+		int connectable = 0,
+	]],
+
+	float x = 0 [[
+		string help = "The spline coordinate to use when direction is set to Custom.",
+		string visibleExpression = "direction == \"custom\"",
+	]],
+	point startPosition = 0 [[
+		string help = "Determines the start of a Diagonal spline, or the center of a Radial spline.",
+		int gafferNoduleLayoutVisible = 0,
+		string visibleExpression = "direction == \"diagonal\" || direction == \"radial\"",
+	]],
+	point endPosition = point( 1, 1, 0 ) [[
+		string help = "Determines the end of a Diagonal spline.",
+		int gafferNoduleLayoutVisible = 0,
+		string visibleExpression = "direction == \"diagonal\"",
+	]],
+	float radius = 1 [[
+		string help = "The size of the falloff in when direction is set to Radial.",
+		int gafferNoduleLayoutVisible = 0,
+		string visibleExpression = "direction == \"radial\"",
+	]],
+	point overrideUV = 0 [[
+		string help = "Connect to the nodule for this plug to override the UVs used when direction is set to U, V, Diagonal, or Radial. May be a 3 dimensional value for a 3 dimensional falloff.",
+		string widget = "null",
+	]],
 
 	output color c = 0
 
 )
 {
-	c = colorSpline( splinePositions, splineValues, splineBasis, x );
+	point uv = point( u, v, 0 );
+	if( isconnected( overrideUV ) )
+	{
+		uv = overrideUV;
+	}
+
+	float splineCoord;
+	if( direction == "custom" )
+	{
+		splineCoord = x;
+	}
+	else if( direction == "u" )
+	{
+		splineCoord = uv.x;
+	}
+	else if( direction == "v" )
+	{
+		splineCoord = uv.y;
+	}
+	else if( direction == "diagonal" )
+	{
+		vector disp = endPosition - startPosition;
+		splineCoord = dot( uv - startPosition, disp ) / dot( disp, disp );
+	}
+	else if( direction == "radial" )
+	{
+		vector disp = endPosition - startPosition;
+		splineCoord = length( uv - startPosition ) / radius;
+	}
+
+	c = colorSpline( splinePositions, splineValues, splineBasis, splineCoord );
 }
