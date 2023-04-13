@@ -56,6 +56,7 @@ Gaffer.Metadata.registerNode(
 	"layout:activator:targetModeIsUV", lambda node : node["targetMode"].getValue() == GafferScene.Constraint.TargetMode.UV,
 	"layout:activator:targetModeIsVertex", lambda node : node["targetMode"].getValue() == GafferScene.Constraint.TargetMode.Vertex,
 	"layout:activator:keepReferencePositionIsOff", lambda node : not node["keepReferencePosition"].getValue(),
+	"layout:activator:keepReferencePositionIsOn", lambda node : node["keepReferencePosition"].getValue(),
 
 	plugs = {
 
@@ -171,6 +172,8 @@ Gaffer.Metadata.registerNode(
 			The reference frame used by the `keepReferencePosition` mode. The constraint
 			is adjusted so that the original position at this frame is maintained.
 			""",
+
+			"layout:activator", "keepReferencePositionIsOn",
 
 		],
 

@@ -1144,5 +1144,30 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		# Or should it raise an exception?  The current behaviour of leaving unsubstituted strings is probably
 		# not right.
 
+	def testActivatorMetadata( self ) :
+		c = Gaffer.Context()
+
+		s = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "activatorMetadata.osl" )
+		n = GafferOSL.OSLShader()
+		n.loadShader( s )
+
+		parameters = n["parameters"]
+		for i in range( 5 ):
+			parameters["i"].setValue( i )
+			self.assertEqual( Gaffer.Metadata.value( parameters["test1"], "layout:activator" ), i > 2 )
+
+		self.assertEqual( Gaffer.Metadata.value( parameters["test2"], "layout:activator" ), False )
+		parameters["s"].setValue( "foo" )
+		self.assertEqual( Gaffer.Metadata.value( parameters["test2"], "layout:activator" ), True )
+
+		parameters["i"].setValue( 9 )
+		self.assertEqual( Gaffer.Metadata.value( parameters["test3"], "layout:visibilityActivator" ), False )
+		parameters["i2"].setValue( 8 )
+		self.assertEqual( Gaffer.Metadata.value( parameters["test3"], "layout:visibilityActivator" ), True )
+
+		self.assertEqual( Gaffer.Metadata.value( parameters["test4"], "layout:visibilityActivator" ), False )
+		parameters["c"].setValue( imath.Color3f( 0.2, 0.4, 0 ) )
+		self.assertEqual( Gaffer.Metadata.value( parameters["test4"], "layout:visibilityActivator" ), True )
+
 if __name__ == "__main__":
 	unittest.main()

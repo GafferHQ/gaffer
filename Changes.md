@@ -55,7 +55,10 @@ Build
 - OpenEXR : Stopped linking unnecessarily to the `IlmImf` library.
 - Boost : Stopped linking unnecessarily to `iostreams`, `date_time`, `wave` and `system` libraries.
 
-1.2.x.x (relative to 1.2.2.0)
+1.2.x.x (relative to 1.2.3.0)
+=======
+
+1.2.3.0 (relative to 1.2.2.0)
 =======
 
 Features
@@ -69,7 +72,9 @@ Improvements
 
 - ArnoldOptions : Exposed Arnold 7.2.1.0's Global Light Sampling feature via a new `lightSamples` plug.
 - ArnoldAttributes : Added `shadowAutoBumpVisibility` plug, since Arnold 7.2.1.0 now correctly implements this feature.
-- Shader : Added support for shading input connections to splines.  After double clicking on a spline to open the editor, you may select a control point, and then drag an input to the value control.  Works in GafferImage, GafferObject and Arnold.  Supports a max of 32 values in the spline.
+- Shader : Added support for shading input connections to splines. After double clicking on a spline to open the editor, you may select a control point, and then drag an input to the value control. Works in GafferImage, GafferObject and Arnold. Supports a max of 32 values in the spline.
+- FloatSpline and ColorSpline OSL shaders : Added a `direction` parameter, with options of `U`, `V`, `Diagonal`, `Radial` and `Custom`.
+- Constraint : Disabled the `referenceFrame` plug in the NodeEditor when `keepReferencePosition` is off.
 
 Fixes
 -----
@@ -87,6 +92,7 @@ API
 - GafferUITest.TestCase : Added testing of NodeGadgets to `assertNodeUIsHaveExpectedLifetime()`.
 - SceneView : Added Python binding for `resolutionGate()` method.
 - ViewportGadget : Added Python binding for `RasterScope` class.
+- OSLShader : Added support for `visibleExpression` and `enabledExpression` metadata in OSL shaders. These may provide an OSL expression to control the activation of parameters in Gaffer's node editor.
 
 Build
 -----
