@@ -214,8 +214,8 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		jpgReader["fileName"].setValue( self.circlesJpgFileName )
 		jpgOCIO = GafferImage.ColorSpace()
 		jpgOCIO["in"].setInput( jpgReader["out"] )
-		jpgOCIO["inputSpace"].setValue( "sRGB" )
-		jpgOCIO["outputSpace"].setValue( "linear" )
+		jpgOCIO["inputSpace"].setValue( "sRGB - Texture" )
+		jpgOCIO["outputSpace"].setValue( "Linear Rec.709 (sRGB)" )
 
 		self.assertImagesEqual( exrReader["out"], jpgOCIO["out"], ignoreMetadata = True, maxDifference = 0.001 )
 

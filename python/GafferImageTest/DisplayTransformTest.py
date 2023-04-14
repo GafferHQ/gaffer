@@ -63,22 +63,22 @@ class DisplayTransformTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( orig, GafferImage.ImageAlgo.image( o["out"] ) )
 
 		o["inputColorSpace"].setValue( "scene_linear" )
-		o["display"].setValue( "default" )
-		o["view"].setValue( "rec709" )
+		o["display"].setValue( "sRGB - Display" )
+		o["view"].setValue( "ACES 1.0 - SDR Video" )
 
-		rec709 = GafferImage.ImageAlgo.image( o["out"] )
-		self.assertNotEqual( orig, rec709 )
+		transform1 = GafferImage.ImageAlgo.image( o["out"] )
+		self.assertNotEqual( orig, transform1 )
 
-		o["view"].setValue( "sRGB" )
-		sRGB = GafferImage.ImageAlgo.image( o["out"] )
-		self.assertNotEqual( orig, sRGB )
-		self.assertNotEqual( rec709, sRGB )
+		o["view"].setValue( "Un-tone-mapped" )
+		transform2 = GafferImage.ImageAlgo.image( o["out"] )
+		self.assertNotEqual( orig, transform2 )
+		self.assertNotEqual( transform1, transform2 )
 
-		o["inputColorSpace"].setValue( "cineon" )
-		cineon = GafferImage.ImageAlgo.image( o["out"] )
-		self.assertNotEqual( orig, cineon )
-		self.assertNotEqual( rec709, cineon )
-		self.assertNotEqual( sRGB, cineon )
+		o["inputColorSpace"].setValue( "V-Log V-Gamut" )
+		transform3 = GafferImage.ImageAlgo.image( o["out"] )
+		self.assertNotEqual( orig, transform3 )
+		self.assertNotEqual( transform1, transform3 )
+		self.assertNotEqual( transform2, transform3 )
 
 	def testHashPassThrough( self ) :
 
@@ -92,8 +92,8 @@ class DisplayTransformTest( GafferImageTest.ImageTestCase ) :
 		self.assertImagesEqual( n["out"], o["out"] )
 
 		o["inputColorSpace"].setValue( "scene_linear" )
-		o["display"].setValue( "default" )
-		o["view"].setValue( "rec709" )
+		o["display"].setValue( "sRGB - Display" )
+		o["view"].setValue( "ACES 1.0 - SDR Video" )
 
 		self.assertNotEqual( GafferImage.ImageAlgo.image( n["out"] ), GafferImage.ImageAlgo.image( o["out"] ) )
 
@@ -127,7 +127,7 @@ class DisplayTransformTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( GafferImage.ImageAlgo.imageHash( i["out"] ), GafferImage.ImageAlgo.imageHash( o["out"] ) )
 
 		o["inputColorSpace"].setValue( "scene_linear" )
-		o["display"].setValue( "default" )
+		o["display"].setValue( "sRGB - Display" )
 		o["view"].setValue( "rec709" )
 
 		self.assertNotEqual( GafferImage.ImageAlgo.imageHash( i["out"] ), GafferImage.ImageAlgo.imageHash( o["out"] ) )
@@ -160,7 +160,7 @@ class DisplayTransformTest( GafferImageTest.ImageTestCase ) :
 		o = GafferImage.DisplayTransform()
 		o["in"].setInput( i["out"] )
 		o["inputColorSpace"].setValue( "scene_linear" )
-		o["display"].setValue( "default" )
+		o["display"].setValue( "sRGB - Display" )
 		o["view"].setValue( "rec709" )
 
 		self.assertEqual( i["out"]["format"].hash(), o["out"]["format"].hash() )

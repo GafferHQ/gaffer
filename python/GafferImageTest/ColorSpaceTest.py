@@ -250,15 +250,22 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 		s["channels"].addChild( s.ChannelPlug( "G", "R" ) )
 		s["channels"].addChild( s.ChannelPlug( "B", "R" ) )
 
+		# This test is primarily to check that the ColorSpace node doesn't pull
+		# on non-existent input channels, and can still transform a single-channel
+		# image. In order for the transform to be comparable to an RGB image, we
+		# must test with a transform that contains no channel cross-talk, hence the
+		# use of simple gamma encodings with identical primaries for our input and
+		# output spaces.
+
 		c1 = GafferImage.ColorSpace()
 		c1["in"].setInput( r["out"] )
-		c1["inputSpace"].setValue( "scene_linear" )
-		c1["outputSpace"].setValue( "color_picking" )
+		c1["inputSpace"].setValue( "Gamma 2.2 Rec.709 - Texture" )
+		c1["outputSpace"].setValue( "Gamma 2.4 Rec.709 - Texture" )
 
 		c2 = GafferImage.ColorSpace()
 		c2["in"].setInput( s["out"] )
-		c2["inputSpace"].setValue( "scene_linear" )
-		c2["outputSpace"].setValue( "color_picking" )
+		c2["inputSpace"].setValue( "Gamma 2.2 Rec.709 - Texture" )
+		c2["outputSpace"].setValue( "Gamma 2.4 Rec.709 - Texture" )
 
 		self.assertEqual( c2["out"].channelData( "R", imath.V2i( 0 ) ), c1["out"].channelData( "R", imath.V2i( 0 ) ) )
 
