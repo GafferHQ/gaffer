@@ -1192,7 +1192,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 					"metadata" : metadata,
 				}
 			)
-			return "linear"
+			return "scene_linear"
 
 		GafferImage.ImageWriter.setDefaultColorSpaceFunction( f )
 
@@ -1234,7 +1234,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 			return colorSpace
 
-		for colorSpace in [ "Cineon", "rec709", "AlexaV3LogC", "linear" ] :
+		for colorSpace in [ "Cineon", "rec709", "AlexaV3LogC", "scene_linear" ] :
 
 			GafferImage.ImageWriter.setDefaultColorSpaceFunction(
 				functools.partial( hardcodedColorSpaceConfig, colorSpace )

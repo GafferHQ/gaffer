@@ -434,7 +434,7 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 					"metadata" : metadata,
 				}
 			)
-			return "linear"
+			return "scene_linear"
 
 		GafferImage.ImageReader.setDefaultColorSpaceFunction( f )
 
