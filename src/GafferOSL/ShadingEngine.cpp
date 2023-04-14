@@ -75,6 +75,8 @@
 #include "tbb/spin_mutex.h"
 #include "tbb/spin_rw_mutex.h"
 
+#include "fmt/format.h"
+
 #include <filesystem>
 #include <limits>
 #include <unordered_set>
@@ -970,7 +972,7 @@ OSL::ShadingSystem *shadingSystem( int *batchSize = nullptr )
 		int llvm_jit_fma;
 		g_shadingSystem->getattribute("llvm_jit_fma", llvm_jit_fma);
 
-		msg( Msg::Info, "ShadingEngine", boost::format( "Initialized shading system with support for %i-wide batched shading.  Architecture: %s, Fused-Multiply-Add: %s" ) % g_shadingSystemBatchSize % llvm_jit_target.string() % ( llvm_jit_fma ? "Enabled" : "Disabled" ) );
+		msg( Msg::Info, "ShadingEngine", fmt::format( "Initialized shading system with support for {}-wide batched shading. Architecture: {}, Fused-Multiply-Add: {}", g_shadingSystemBatchSize, llvm_jit_target.string(), llvm_jit_fma ? "Enabled" : "Disabled" ) );
 	}
 #endif
 
@@ -1234,7 +1236,7 @@ void declareParameters( const CompoundDataMap &parameters, ShadingSystem *shadin
 		}
 		else
 		{
-			msg( Msg::Warning, "ShadingEngine", boost::format( "Parameter \"%s\" has unsupported type \"%s\"" ) % it->first.string() % it->second->typeName() );
+			msg( Msg::Warning, "ShadingEngine", fmt::format( "Parameter \"{}\" has unsupported type \"{}\"", it->first.string(), it->second->typeName() ) );
 		}
 	}
 }

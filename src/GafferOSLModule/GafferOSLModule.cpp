@@ -57,6 +57,8 @@
 
 #include "OSL/oslversion.h"
 
+#include "fmt/format.h"
+
 using namespace boost::python;
 using namespace GafferBindings;
 using namespace GafferOSL;
@@ -108,10 +110,10 @@ std::string oslCodeSource( const OSLCode &oslCode, const std::string &shaderName
 
 std::string repr( ShadingEngine::Transform &s )
 {
-	return boost::str(
-		boost::format( "GafferOSL.ShadingEngine.Transform( fromObjectSpace = %s, toObjectSpace = %s )" )
-			% IECorePython::repr<Imath::M44f>( s.fromObjectSpace )
-			% IECorePython::repr<Imath::M44f>( s.toObjectSpace )
+	return fmt::format(
+		"GafferOSL.ShadingEngine.Transform( fromObjectSpace = {}, toObjectSpace = {} )",
+		IECorePython::repr<Imath::M44f>( s.fromObjectSpace ),
+		IECorePython::repr<Imath::M44f>( s.toObjectSpace )
 	);
 }
 
