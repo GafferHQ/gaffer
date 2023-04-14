@@ -1176,7 +1176,7 @@ libraries = {
 		},
 		"pythonEnvAppends" : {
 			"CPPPATH" : [ "$OSLHOME/include/OSL" ],
-			"LIBS" : [ "GafferBindings", "GafferScene", "GafferImage", "GafferOSL", "Iex$OPENEXR_LIB_SUFFIX", "IECoreScene$CORTEX_LIB_SUFFIX" ],
+			"LIBS" : [ "GafferBindings", "GafferScene", "GafferImage", "GafferOSL", "Iex$OPENEXR_LIB_SUFFIX", "IECoreScene$CORTEX_LIB_SUFFIX", "fmt" ],
 		},
 		"oslHeaders" : glob.glob( "shaders/*/*.h" ),
 		"oslShaders" : glob.glob( "shaders/*/*.osl" ),

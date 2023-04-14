@@ -67,6 +67,8 @@
 #include "boost/lexical_cast.hpp"
 #include "boost/regex.hpp"
 
+#include "fmt/format.h"
+
 using namespace std;
 using namespace boost;
 using namespace Imath;
@@ -618,19 +620,19 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 				case Color3fPlugTypeId :
 				{
 					const Color3f c = static_cast<const Color3fPlug *>( output )->getValue();
-					value = boost::str( boost::format( "color( %f, %f, %f )" ) % c[0] % c[1] % c[2] );
+					value = fmt::format( "color( {}, {}, {} )", c[0], c[1], c[2] );
 					break;
 				}
 				case V3fPlugTypeId :
 				{
 					const V3f v = static_cast<const V3fPlug *>( output )->getValue();
-					value = boost::str( boost::format( "vector( %f, %f, %f )" ) % v[0] % v[1] % v[2] );
+					value = fmt::format( "vector( {}, {}, {} )", v[0], v[1], v[2] );
 					break;
 				}
 				case M44fPlugTypeId :
 				{
 					const M44f m = static_cast<const M44fPlug *>( output )->getValue();
-					value = boost::str( boost::format( "matrix( %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f, %f )" ) % m[0][0] % m[0][1] % m[0][2] % m[0][3] % m[1][0] % m[1][1] % m[1][2] % m[1][3] % m[2][0] % m[2][1] % m[2][2] % m[2][3] % m[3][0] % m[3][1] % m[3][2] % m[3][3] );
+					value = fmt::format( "matrix( {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {} )", m[0][0], m[0][1], m[0][2], m[0][3], m[1][0], m[1][1], m[1][2], m[1][3], m[2][0], m[2][1], m[2][2], m[2][3], m[3][0], m[3][1], m[3][2], m[3][3] );
 					break;
 				}
 				case StringPlugTypeId :
@@ -691,13 +693,13 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 			GraphComponent *descendant = plugScope->descendant( plugPath );
 			if( !descendant )
 			{
-				throw IECore::Exception( boost::str( boost::format( "\"%s\" does not exist" ) % plugPath ) );
+				throw IECore::Exception( fmt::format( "\"{}\" does not exist", plugPath ) );
 			}
 
 			ValuePlug *result = runTimeCast<ValuePlug>( descendant );
 			if( !result )
 			{
-				throw IECore::Exception( boost::str( boost::format( "\"%s\" is not a ValuePlug" ) % plugPath ) );
+				throw IECore::Exception( fmt::format( "\"{}\" is not a ValuePlug", plugPath ) );
 			}
 
 			return result;
@@ -927,13 +929,13 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 			const GraphComponent *descendant = parameters->descendant( plugPath );
 			if( !descendant )
 			{
-				throw IECore::Exception( boost::str( boost::format( "\"%s\" does not exist" ) % plugPath ) );
+				throw IECore::Exception( fmt::format( "\"{}\" does not exist", plugPath ) );
 			}
 
 			const ValuePlug *result = runTimeCast<const ValuePlug>( descendant );
 			if( !result )
 			{
-				throw IECore::Exception( boost::str( boost::format( "\"%s\" is not a ValuePlug" ) % plugPath ) );
+				throw IECore::Exception( fmt::format( "\"{}\" is not a ValuePlug", plugPath ) );
 			}
 
 			return result;
