@@ -38,6 +38,8 @@
 
 #include "Gaffer/PlugAlgo.h"
 
+#include "fmt/format.h"
+
 namespace Gaffer
 {
 
@@ -82,7 +84,7 @@ bool TweakPlug::applyTweak(
 	if( !newData )
 	{
 		throw IECore::Exception(
-			boost::str( boost::format( "Cannot apply tweak to \"%s\" : Value plug has unsupported type \"%s\"" ) % name % valuePlug()->typeName() )
+			fmt::format( "Cannot apply tweak to \"{}\" : Value plug has unsupported type \"{}\"", name, valuePlug()->typeName() )
 		);
 	}
 
@@ -104,7 +106,7 @@ bool TweakPlug::applyTweak(
 	if( currentValue && currentValue->typeId() != newData->typeId() )
 	{
 		throw IECore::Exception(
-			boost::str( boost::format( "Cannot apply tweak to \"%s\" : Value of type \"%s\" does not match parameter of type \"%s\"" ) % name % currentValue->typeName() % newData->typeName() )
+			fmt::format( "Cannot apply tweak to \"{}\" : Value of type \"{}\" does not match parameter of type \"{}\"", name, currentValue->typeName(), newData->typeName() )
 		);
 	}
 
@@ -125,7 +127,7 @@ bool TweakPlug::applyTweak(
 		}
 		else if( !( mode == Gaffer::TweakPlug::Replace && missingMode == Gaffer::TweakPlug::MissingMode::IgnoreOrReplace) )
 		{
-			throw IECore::Exception( boost::str( boost::format( "Cannot apply tweak with mode %s to \"%s\" : This parameter does not exist" ) % modeToString( mode ) % name ) );
+			throw IECore::Exception( fmt::format( "Cannot apply tweak with mode {} to \"{}\" : This parameter does not exist", modeToString( mode ), name ) );
 		}
 	}
 

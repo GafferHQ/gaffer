@@ -1082,7 +1082,7 @@ void metadataToImageSpecAttributes( const CompoundData *metadata, ImageSpec &spe
 		{
 			IECore::msg(
 				IECore::Msg::Warning, "ImageWriter",
-				fmt::format( "Ignoring metadata \"{}\" because it conflicts with OpenImageIO.", it->first )
+				fmt::format( "Ignoring metadata \"{}\" because it conflicts with OpenImageIO.", it->first.string() )
 			);
 			continue;
 		}

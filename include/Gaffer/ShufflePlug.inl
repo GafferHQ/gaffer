@@ -39,6 +39,8 @@
 #include "Gaffer/Node.h"
 #include "Gaffer/PlugAlgo.h"
 
+#include "fmt/format.h"
+
 #include <unordered_set>
 
 //////////////////////////////////////////////////////////////////////////
@@ -158,15 +160,13 @@ T ShufflesPlug::shuffle( const T &sourceContainer ) const
 							if( ! moveNames.insert( dstName ).second )
 							{
 								throw IECore::Exception(
-									boost::str(
-										boost::format(
-											"ShufflesPlug::shuffle : Destination plug \"%s\" shuffles from \"%s\" to \"%s\", " \
-											"cannot write from multiple sources to destination \"%s\"" )
-											% plug->destinationPlug()->relativeName( plug->node() ? plug->node()->parent() : nullptr )
-											% srcPattern
-											% dstPattern
-											% dstName
-								) );
+									fmt::format(
+										"ShufflesPlug::shuffle : Destination plug \"{}\" shuffles from \"{}\" to \"{}\", " \
+										"cannot write from multiple sources to destination \"{}\"",
+										plug->destinationPlug()->relativeName( plug->node() ? plug->node()->parent() : nullptr ),
+										srcPattern, dstPattern, dstName
+									)
+								);
 							}
 
 							if( dstReplace || ( destinationContainer.find( dstName ) == destinationContainer.end() ) )

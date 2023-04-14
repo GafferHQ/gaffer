@@ -748,6 +748,7 @@ baseLibEnv.Append(
 		"boost_regex$BOOST_LIB_SUFFIX",
 		"boost_chrono$BOOST_LIB_SUFFIX",
 		"tbb",
+		"fmt",
 		"Imath$IMATH_LIB_SUFFIX",
 		"IECore$CORTEX_LIB_SUFFIX",
 	],
@@ -966,11 +967,8 @@ libraries = {
 
 	"Gaffer" : {
 		"envAppends" : {
-			"LIBS" : [ "$HALF_LIBRARY", "fmt" ],
+			"LIBS" : [ "$HALF_LIBRARY" ],
 		},
-		"pythonEnvAppends" : {
-			"LIBS" : [ "fmt" ],
-		}
 	},
 
 	"GafferTest" : {
@@ -987,7 +985,7 @@ libraries = {
 	"GafferUI" : {
 		"envAppends" : {
 			## \todo Stop linking against `Iex`. It is only necessary on Windows Imath 2 builds.
-			"LIBS" : [ "Gaffer", "Iex$IMATH_LIB_SUFFIX", "IECoreGL$CORTEX_LIB_SUFFIX", "IECoreImage$CORTEX_LIB_SUFFIX", "IECoreScene$CORTEX_LIB_SUFFIX", "fmt" ],
+			"LIBS" : [ "Gaffer", "Iex$IMATH_LIB_SUFFIX", "IECoreGL$CORTEX_LIB_SUFFIX", "IECoreImage$CORTEX_LIB_SUFFIX", "IECoreScene$CORTEX_LIB_SUFFIX" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "IECoreImage$CORTEX_LIB_SUFFIX", "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreGL$CORTEX_LIB_SUFFIX", "GafferUI", "GafferBindings" ],
@@ -1006,7 +1004,7 @@ libraries = {
 
 	"GafferDispatch" : {
 		"envAppends" : {
-			"LIBS" : [ "Gaffer", "fmt" ],
+			"LIBS" : [ "Gaffer" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferBindings", "GafferDispatch" ],
@@ -1052,7 +1050,7 @@ libraries = {
 
 	"GafferScene" : {
 		"envAppends" : {
-			"LIBS" : [ "Gaffer", "Iex$IMATH_LIB_SUFFIX", "IECoreGL$CORTEX_LIB_SUFFIX", "IECoreImage$CORTEX_LIB_SUFFIX",  "IECoreScene$CORTEX_LIB_SUFFIX", "GafferImage", "GafferDispatch", "$HALF_LIBRARY", "fmt" ],
+			"LIBS" : [ "Gaffer", "Iex$IMATH_LIB_SUFFIX", "IECoreGL$CORTEX_LIB_SUFFIX", "IECoreImage$CORTEX_LIB_SUFFIX",  "IECoreScene$CORTEX_LIB_SUFFIX", "GafferImage", "GafferDispatch", "$HALF_LIBRARY" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferBindings", "GafferScene", "GafferDispatch", "GafferImage", "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreGL$CORTEX_LIB_SUFFIX" ],
@@ -1084,7 +1082,7 @@ libraries = {
 	"GafferImage" : {
 		"envAppends" : {
 			"CPPPATH" : [ "$BUILD_DIR/include/freetype2" ],
-			"LIBS" : [ "Gaffer", "GafferDispatch", "Iex$IMATH_LIB_SUFFIX", "IECoreImage$CORTEX_LIB_SUFFIX", "OpenImageIO$OIIO_LIB_SUFFIX", "OpenImageIO_Util$OIIO_LIB_SUFFIX", "OpenColorIO$OCIO_LIB_SUFFIX", "freetype", "fmt" ],
+			"LIBS" : [ "Gaffer", "GafferDispatch", "Iex$IMATH_LIB_SUFFIX", "IECoreImage$CORTEX_LIB_SUFFIX", "OpenImageIO$OIIO_LIB_SUFFIX", "OpenImageIO_Util$OIIO_LIB_SUFFIX", "OpenColorIO$OCIO_LIB_SUFFIX", "freetype" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferBindings", "GafferImage", "GafferDispatch", "IECoreImage$CORTEX_LIB_SUFFIX", ],
@@ -1093,7 +1091,7 @@ libraries = {
 
 	"GafferImageTest" : {
 		"envAppends" : {
-			"LIBS" : [ "Gaffer", "GafferImage", "OpenImageIO$OIIO_LIB_SUFFIX",  ],
+			"LIBS" : [ "Gaffer", "GafferImage", "OpenImageIO$OIIO_LIB_SUFFIX" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "GafferImage", "GafferImageTest" ],
@@ -1144,13 +1142,13 @@ libraries = {
 	"GafferArnold" : {
 		"envAppends" : {
 			"LIBPATH" : [ "$ARNOLD_ROOT/bin" ] if env["PLATFORM"] != "win32" else [ "$ARNOLD_ROOT/bin", "$ARNOLD_ROOT/lib" ],
-			"LIBS" : [ "Gaffer", "GafferScene", "GafferDispatch", "ai", "GafferVDB", "openvdb$VDB_LIB_SUFFIX",  "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreVDB$CORTEX_LIB_SUFFIX", "IECoreArnold", "GafferOSL", "fmt" ],
+			"LIBS" : [ "Gaffer", "GafferScene", "GafferDispatch", "ai", "GafferVDB", "openvdb$VDB_LIB_SUFFIX",  "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreVDB$CORTEX_LIB_SUFFIX", "IECoreArnold", "GafferOSL" ],
 			"CXXFLAGS" : [ "-DAI_ENABLE_DEPRECATION_WARNINGS" ],
 			"CPPPATH" : [ "$ARNOLD_ROOT/include" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBPATH" : [ "$ARNOLD_ROOT/bin" ] if env["PLATFORM"] != "win32" else [ "$ARNOLD_ROOT/bin", "$ARNOLD_ROOT/lib" ],
-			"LIBS" : [ "Gaffer", "GafferScene", "GafferBindings", "GafferVDB", "GafferDispatch", "GafferArnold", "GafferOSL", "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreArnold", "fmt" ],
+			"LIBS" : [ "Gaffer", "GafferScene", "GafferBindings", "GafferVDB", "GafferDispatch", "GafferArnold", "GafferOSL", "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreArnold" ],
 			"CXXFLAGS" : [ "-DAI_ENABLE_DEPRECATION_WARNINGS" ],
 			"CPPPATH" : [ "$ARNOLD_ROOT/include" ],
 		},
@@ -1268,7 +1266,7 @@ libraries = {
 		"envAppends" : {
 			"CXXFLAGS" : [ systemIncludeArgument, "$APPLESEED_ROOT/include", "-DAPPLESEED_ENABLE_IMATH_INTEROP" ],
 			"LIBPATH" : [ "$APPLESEED_ROOT/lib" ],
-			"LIBS" : [ "Gaffer", "GafferDispatch", "GafferScene", "appleseed",  "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreAppleseed$CORTEX_LIB_SUFFIX", "OpenImageIO$OIIO_LIB_SUFFIX", "OpenImageIO_Util$OIIO_LIB_SUFFIX", "oslquery$OSL_LIB_SUFFIX", "boost_thread$BOOST_LIB_SUFFIX", "fmt" ],
+			"LIBS" : [ "Gaffer", "GafferDispatch", "GafferScene", "appleseed",  "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreAppleseed$CORTEX_LIB_SUFFIX", "OpenImageIO$OIIO_LIB_SUFFIX", "OpenImageIO_Util$OIIO_LIB_SUFFIX", "oslquery$OSL_LIB_SUFFIX", "boost_thread$BOOST_LIB_SUFFIX" ],
 			"CPPDEFINES" : [ "APPLESEED_USE_SSE" ] if platform.machine() != "arm64" else [],
 		},
 		"pythonEnvAppends" : {

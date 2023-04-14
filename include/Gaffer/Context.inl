@@ -38,7 +38,7 @@
 
 #include "IECore/SimpleTypedData.h"
 
-#include "boost/format.hpp"
+#include "fmt/format.h"
 
 namespace Gaffer
 {
@@ -115,7 +115,7 @@ inline const T &Context::Value::value() const
 	{
 		return *static_cast<const T *>( m_value );
 	}
-	throw IECore::Exception( boost::str( boost::format( "Context variable is not of type \"%s\"" ) % DataType::staticTypeName() ) );
+	throw IECore::Exception( fmt::format( "Context variable is not of type \"{}\"", DataType::staticTypeName() ) );
 }
 
 template<typename T>
@@ -145,9 +145,9 @@ void Context::Value::registerType()
 		const Value rehashed( name, static_cast<const ValueType *>( v.rawValue() ) );
 		if( v.hash() != rehashed.hash() )
 		{
-			throw IECore::Exception( boost::str(
-				boost::format( "Context variable \"%1%\" has an invalid hash" ) % name
-			) );
+			throw IECore::Exception(
+				fmt::format( "Context variable \"{}\" has an invalid hash", name.string() )
+			);
 		}
 	};
 }
@@ -201,7 +201,7 @@ inline const Context::Value &Context::internalGet( const IECore::InternedString 
 	const Value *result = internalGetIfExists( name );
 	if( !result )
 	{
-		throw IECore::Exception( boost::str( boost::format( "Context has no variable named \"%s\"" ) % name.value() ) );
+		throw IECore::Exception( fmt::format( "Context has no variable named \"{}\"", name.value() ) );
 	}
 
 #ifndef NDEBUG
