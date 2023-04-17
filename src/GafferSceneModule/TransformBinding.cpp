@@ -40,6 +40,7 @@
 
 #include "GafferScene/AimConstraint.h"
 #include "GafferScene/Constraint.h"
+#include "GafferScene/FramingConstraint.h"
 #include "GafferScene/FreezeTransform.h"
 #include "GafferScene/ParentConstraint.h"
 #include "GafferScene/PointConstraint.h"
@@ -92,6 +93,7 @@ void GafferSceneModule::bindTransform()
 	GafferBindings::DependencyNodeClass<AimConstraint>();
 	GafferBindings::DependencyNodeClass<PointConstraint>();
 	GafferBindings::DependencyNodeClass<ParentConstraint>();
+	GafferBindings::DependencyNodeClass<FramingConstraint>();
 	GafferBindings::DependencyNodeClass<GafferScene::FreezeTransform>();
 
 	{

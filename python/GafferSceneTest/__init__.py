@@ -170,6 +170,7 @@ from .VisibleSetDataTest import VisibleSetDataTest
 from .MeshSegmentsTest import MeshSegmentsTest
 from .ImageToPointsTest import ImageToPointsTest
 from .MeshSplitTest import MeshSplitTest
+from .FramingConstraintTest import FramingConstraintTest
 
 from .IECoreScenePreviewTest import *
 from .IECoreGLPreviewTest import *

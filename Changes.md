@@ -1,6 +1,11 @@
 1.2.x.x (relative to 1.2.3.0)
 =======
 
+Features
+--------
+
+- FramingConstraint : Added a new node for moving cameras to frame a chosen target.
+
 1.2.3.0 (relative to 1.2.2.0)
 =======
 
