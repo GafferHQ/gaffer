@@ -44,6 +44,8 @@
 
 #include "Gaffer/Animation.h"
 
+#include "fmt/format.h"
+
 #include "boost/lexical_cast.hpp"
 
 #include <cmath>
@@ -128,7 +130,7 @@ void setPosition( Animation::Tangent &t, const Imath::V2d& position, const bool 
 
 std::string slopeRepr( const double slope )
 {
-	return boost::str( boost::format( ( ( std::isinf( slope ) ) ? "float( '%.9g' )" : "%.9g" ) ) % slope );
+	return fmt::format( std::isinf( slope ) ? "float( '{:.9g}' )" : "{:.9g}", slope );
 }
 
 void setTieMode( Animation::Key &k, const Animation::TieMode mode )
@@ -139,16 +141,16 @@ void setTieMode( Animation::Key &k, const Animation::TieMode mode )
 
 std::string keyRepr( const Animation::Key &k )
 {
-	return boost::str( boost::format(
-		"Gaffer.Animation.Key( %.9g, %.9g, Gaffer.Animation.Interpolation.%s, %s, %.9g, %s, %.9g, Gaffer.Animation.TieMode.%s )" )
-			% k.getTime()
-			% k.getValue()
-			% Animation::toString( k.getInterpolation() )
-			% slopeRepr( k.tangentIn().getSlope() )
-			% k.tangentIn().getScale()
-			% slopeRepr( k.tangentOut().getSlope() )
-			% k.tangentOut().getScale()
-			% Animation::toString( k.getTieMode() )
+	return fmt::format(
+		"Gaffer.Animation.Key( {:.9g}, {:.9g}, Gaffer.Animation.Interpolation.{}, {}, {:.9g}, {}, {:.9g}, Gaffer.Animation.TieMode.{} )",
+		k.getTime(),
+		k.getValue(),
+		Animation::toString( k.getInterpolation() ),
+		slopeRepr( k.tangentIn().getSlope() ),
+		k.tangentIn().getScale(),
+		slopeRepr( k.tangentOut().getSlope() ),
+		k.tangentOut().getScale(),
+		Animation::toString( k.getTieMode() )
 	);
 };
 

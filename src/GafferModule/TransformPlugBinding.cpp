@@ -43,6 +43,8 @@
 
 #include "Gaffer/TransformPlug.h"
 
+#include "fmt/format.h"
+
 using namespace boost::python;
 using namespace Imath;
 using namespace GafferBindings;
@@ -78,10 +80,9 @@ class TransformPlugSerialiser : public ValuePlugSerialiser
 
 			auto appendDefault = [&result]( const V3f &d, const V3f &defaultD, const char *name )
 			{
-				static boost::format formatter( "%1% = imath.V3f( %2%, %3%, %4% ), " );
 				if( d != defaultD )
 				{
-					result += boost::str( formatter % name % d.x % d.y % d.z );
+					result += fmt::format( "{} = imath.V3f( {}, {}, {} ), ", name, d.x, d.y, d.z );
 				}
 			};
 			appendDefault( plug->translatePlug()->defaultValue(), V3f( 0 ), "defaultTranslate" );
