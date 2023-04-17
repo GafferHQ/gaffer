@@ -55,6 +55,8 @@
 
 #include "IECorePython/SimpleTypedDataBinding.h"
 
+#include "fmt/format.h"
+
 using namespace boost::python;
 using namespace Gaffer;
 using namespace GafferImage;
@@ -240,21 +242,17 @@ std::string formatRepr( const GafferImage::Format &format )
 	else if ( format.getDisplayWindow().min == Imath::V2i( 0 ) )
 	{
 		Imath::Box2i box( format.getDisplayWindow() );
-		return std::string(
-			boost::str( boost::format(
-				"GafferImage.Format( %d, %d, %.3f )" )
-				% box.max.x % box.max.y % format.getPixelAspect()
-			)
+		return fmt::format(
+			"GafferImage.Format( {}, {}, {:.3f} )",
+			box.max.x, box.max.y, format.getPixelAspect()
 		);
 	}
 	else
 	{
 		Imath::Box2i box( format.getDisplayWindow() );
-		return std::string(
-			boost::str( boost::format(
-				"GafferImage.Format( imath.Box2i( imath.V2i( %d, %d ), imath.V2i( %d, %d ) ), %.3f )" )
-				% box.min.x % box.min.y % box.max.x % box.max.y % format.getPixelAspect()
-			)
+		return fmt::format(
+			"GafferImage.Format( imath.Box2i( imath.V2i( {}, {} ), imath.V2i( {}, {} ) ), {:.3f} )",
+			box.min.x, box.min.y, box.max.x, box.max.y, format.getPixelAspect()
 		);
 	}
 }
