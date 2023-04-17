@@ -60,6 +60,8 @@
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/bind/bind.hpp"
 
+#include "fmt/format.h"
+
 using namespace std;
 using namespace boost::placeholders;
 using namespace Imath;
@@ -327,14 +329,14 @@ IECore::RunTimeTypedPtr CameraTool::viewportDragBegin( const GafferUI::DragDropE
 	// The viewport may be performing a camera drag. Set up our undo group
 	// so that all the steps of the drag will be collapsed into a single undoable
 	// block.
-	m_undoGroup = boost::str( boost::format( "CameraTool%1%Drag%2%" ) % this % m_dragId++ );
+	m_undoGroup = fmt::format( "CameraTool{}Drag{}", fmt::ptr( this ), m_dragId++ );
 	return nullptr;
 }
 
 bool CameraTool::viewportWheel( const GafferUI::ButtonEvent &event )
 {
 	// Merge all wheel events into a single undo.
-	m_undoGroup = boost::str( boost::format( "CameraTool%1%Wheel" ) % this );
+	m_undoGroup = fmt::format( "CameraTool{}Wheel", fmt::ptr( this ) );
 	return false;
 }
 

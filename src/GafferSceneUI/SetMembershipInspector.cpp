@@ -53,6 +53,8 @@
 
 #include "boost/algorithm/string/join.hpp"
 
+#include "fmt/format.h"
+
 using namespace boost::placeholders;
 using namespace IECore;
 using namespace IECoreScene;
@@ -268,9 +270,7 @@ Inspector::EditFunctionOrFailure SetMembershipInspector::editFunction( Gaffer::E
 
 	if( readOnlyReason )
 	{
-		return boost::str(
-			boost::format( "%s is locked." ) % readOnlyReason->relativeName( readOnlyReason->ancestor<ScriptNode>() )
-		);
+		return fmt::format( "{} is locked.", readOnlyReason->relativeName( readOnlyReason->ancestor<ScriptNode>() ) );
 	}
 	else
 	{

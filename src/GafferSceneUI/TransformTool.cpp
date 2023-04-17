@@ -66,6 +66,8 @@
 #include "boost/bind/bind.hpp"
 #include "boost/unordered_map.hpp"
 
+#include "fmt/format.h"
+
 #include <memory>
 #include <unordered_set>
 
@@ -1239,7 +1241,7 @@ void TransformTool::dragEnd()
 
 std::string TransformTool::undoMergeGroup() const
 {
-	return boost::str( boost::format( "TransformTool%1%%2%" ) % this % m_mergeGroupId );
+	return fmt::format( "TransformTool{}{}", fmt::ptr( this ), m_mergeGroupId );
 }
 
 bool TransformTool::keyPress( const GafferUI::KeyEvent &event )

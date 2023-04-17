@@ -80,6 +80,8 @@
 #include "boost/bind/bind.hpp"
 #include "boost/bind/placeholders.hpp"
 
+#include "fmt/format.h"
+
 #include <unordered_map>
 
 using namespace std;
@@ -1613,7 +1615,7 @@ class SceneView::Camera : public Signals::Trackable
 				return it->second;
 			}
 
-			IECore::msg( IECore::Msg::Warning, "SceneView", boost::format( "Free camera \"%1%\" does not exist" ) % name );
+			IECore::msg( IECore::Msg::Warning, "SceneView", fmt::format( "Free camera \"{}\" does not exist", name ) );
 			return m_freeCameras.at( "perspective" );
 		}
 
@@ -1754,11 +1756,11 @@ class SceneView::Camera : public Signals::Trackable
 			{
 				const V2i resolution = m_lookThroughCamera->getResolution();
 				const float pixelAspectRatio = m_lookThroughCamera->getPixelAspectRatio();
-				m_overlay->setCaption( boost::str(
-					boost::format( "%dx%d, %.3f, %s" ) %
-						resolution.x % resolution.y %
-						pixelAspectRatio %
-						(!cameraPathString.empty() ? cameraPathString : "default")
+				m_overlay->setCaption( fmt::format(
+					"{}x{}, {:.3f}, {}",
+					resolution.x, resolution.y,
+					pixelAspectRatio,
+					!cameraPathString.empty() ? cameraPathString : "default"
 				) );
 				m_overlay->setIcon( "" );
 			}

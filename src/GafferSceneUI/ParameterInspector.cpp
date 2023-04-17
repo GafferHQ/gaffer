@@ -49,6 +49,8 @@
 
 #include "boost/bind/bind.hpp"
 
+#include "fmt/format.h"
+
 using namespace boost::placeholders;
 using namespace IECore;
 using namespace IECoreScene;
@@ -133,9 +135,9 @@ Gaffer::ValuePlugPtr ParameterInspector::source( const GafferScene::SceneAlgo::H
 				/// \todo This is overly conservative. We should test to see if there is more than
 				/// one filter match (but make sure to early-out once two are found, rather than test
 				/// the rest of the scene).
-				editWarning = boost::str(
-					boost::format( "Edits to %1% may affect other locations in the scene." )
-						% shader->relativeName( shader->scriptNode() )
+				editWarning = fmt::format(
+					"Edits to {} may affect other locations in the scene.",
+					shader->relativeName( shader->scriptNode() )
 				);
 				return parameterPlug;
 			}
@@ -177,9 +179,9 @@ Inspector::EditFunctionOrFailure ParameterInspector::editFunction( Gaffer::EditS
 		// If we don't have an edit and the scope is locked, we error,
 		// as we can't add an edit. Other cases where we already _have_
 		// an edit will have been found by `source()`.
-		return boost::str(
-			boost::format( "%1% is locked." )
-				% readOnlyReason->relativeName( readOnlyReason->ancestor<ScriptNode>() )
+		return fmt::format(
+			"{} is locked.",
+			readOnlyReason->relativeName( readOnlyReason->ancestor<ScriptNode>() )
 		);
 	}
 	else

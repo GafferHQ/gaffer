@@ -43,6 +43,8 @@
 
 #include "boost/bind/bind.hpp"
 
+#include "fmt/format.h"
+
 using namespace boost::placeholders;
 using namespace IECore;
 using namespace Gaffer;
@@ -160,9 +162,9 @@ Inspector::ResultPtr Inspector::inspect() const
 
 	if( result->editScope() && !result->m_editScopeInHistory )
 	{
-		result->m_editFunction = boost::str(
-			boost::format( "The target EditScope (%1%) is not in the scene history." )
-				% result->editScope()->relativeName( result->editScope()->scriptNode() )
+		result->m_editFunction = fmt::format(
+			"The target EditScope ({}) is not in the scene history.",
+			result->editScope()->relativeName( result->editScope()->scriptNode() )
 		);
 		result->m_sourceType = Result::SourceType::Other;
 	}
@@ -262,18 +264,18 @@ void Inspector::inspectHistoryWalk( const GafferScene::SceneAlgo::History *histo
 					const Node *downstreamNode = result->m_source->node();
 					const auto *downstreamEditScope = downstreamNode->ancestor<EditScope>();
 					downstreamNode = downstreamEditScope ? downstreamEditScope : downstreamNode;
-					result->m_editWarning = boost::str(
-						boost::format( "%1% has edits downstream in %2%." )
-							% ( std::string( 1, std::toupper( type()[0] ) ) + type().substr( 1 ) )
-							% downstreamNode->relativeName( downstreamNode->scriptNode() )
+					result->m_editWarning = fmt::format(
+						"{} has edits downstream in {}.",
+						std::string( 1, std::toupper( type()[0] ) ) + type().substr( 1 ),
+						downstreamNode->relativeName( downstreamNode->scriptNode() )
 					);
 				}
 			}
 			else
 			{
-				result->m_editFunction = boost::str(
-					boost::format( "The target EditScope (%1%) is disabled." )
-						% editScope->relativeName( editScope->scriptNode() )
+				result->m_editFunction = fmt::format(
+					"The target EditScope ({}) is disabled.",
+					editScope->relativeName( editScope->scriptNode() )
 				);
 			}
 		}
