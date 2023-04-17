@@ -6,6 +6,11 @@ Features
 
 - FramingConstraint : Added a new node for moving cameras to frame a chosen target.
 
+Fixes
+-----
+
+- Arnold : Moved `distance` shader to the `Shader/Utility` section of the node menu (previously in `Shader/Other`).
+
 1.2.3.0 (relative to 1.2.2.0)
 =======
 
