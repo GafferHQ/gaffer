@@ -47,6 +47,8 @@
 
 #include "Gaffer/StringPlug.h"
 
+#include "fmt/format.h"
+
 using namespace boost::python;
 
 using namespace Gaffer;
@@ -110,7 +112,7 @@ class ShaderSerialiser : public GafferBindings::NodeSerialiser
 		const std::string shaderName = shader->namePlug()->getValue();
 		if( shaderName.size() )
 		{
-			return defaultPC + boost::str( boost::format( "%s.loadShader( \"%s\" )\n" ) % identifier % shaderName );
+			return defaultPC + fmt::format( "{}.loadShader( \"{}\" )\n", identifier, shaderName );
 		}
 
 		return defaultPC;

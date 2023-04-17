@@ -57,6 +57,8 @@
 
 #include "GafferBindings/DependencyNodeBinding.h"
 
+#include "fmt/format.h"
+
 using namespace std;
 using namespace boost::python;
 using namespace IECorePython;
@@ -105,7 +107,7 @@ class LightSerialiser : public GafferBindings::NodeSerialiser
 		const std::string shaderName = shaderNamePlug ? shaderNamePlug->getValue() : "";
 		if( shaderName.size() )
 		{
-			return defaultPC + boost::str( boost::format( "%s.loadShader( \"%s\" )\n" ) % identifier % shaderName );
+			return defaultPC + fmt::format( "{}.loadShader( \"{}\" )\n", identifier, shaderName );
 		}
 
 		return defaultPC;
@@ -129,7 +131,7 @@ class LightFilterSerialiser : public GafferBindings::NodeSerialiser
 
 		if( shaderName.size() )
 		{
-			return defaultPostConstructor + boost::str( boost::format( "%s.loadShader( \"%s\" )\n" ) % identifier % shaderName );
+			return defaultPostConstructor + fmt::format( "{}.loadShader( \"{}\" )\n", identifier, shaderName );
 		}
 
 		return defaultPostConstructor;
