@@ -48,13 +48,6 @@ for p in ["geometry_type", "density", "filtered_lights", "shader" ] :
 for p in ["base", "base_color", "diffuse_roughness", "metallness", "specular", "specular_color", "specular_roughness" ] :
 	GafferSceneUI._SceneViewInspector.registerShaderParameter( "ai:surface", p )
 
-
-# Appleseed (light-only as our shader hunting doesn't traverse the closure adaptor yet)
-
-for p in [ "exposure", "intensity", "radiance", "irradiance", "inner_angle", "outer_angle" ] :
-	GafferSceneUI._SceneViewInspector.registerShaderParameter( "as:light", p )
-
-
 # OSL
 
 for p in [ "exposure", "i_color", "radius", "roundness", "spread", "coneAngle", "penumbraAngle", "image" ] :

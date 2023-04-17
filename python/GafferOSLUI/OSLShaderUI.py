@@ -57,11 +57,6 @@ def __nodeDescription( node ) :
 
 def __nodeIcon ( node ) :
 
-	if node["name"].getValue().startswith( "as_" ) :
-		# Appleseed advertises icons that it doesn't seem
-		# to provide.
-		return None
-
 	return node.shaderMetadata ( "icon" )
 
 def __nodeIconScale ( node ) :

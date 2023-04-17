@@ -194,24 +194,6 @@ with IECore.IgnoredExceptions( ImportError ) :
 
 	] )
 
-if os.environ.get( "GAFFERAPPLESEED_HIDE_UI", "" ) != "1" :
-
-	with IECore.IgnoredExceptions( ImportError ) :
-
-		import GafferAppleseed
-
-		__registerShadingModes( [
-
-			( "Diagnostic/Appleseed/Shader Assignment", GafferScene.AttributeVisualiser, { "attributeName" : "osl:surface", "mode" : GafferScene.AttributeVisualiser.Mode.ShaderNodeColor } ),
-			( "Diagnostic/Appleseed/Camera Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "as:visibility:camera" } ),
-			( "Diagnostic/Appleseed/Shadow Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "as:visibility:shadow" } ),
-			( "Diagnostic/Appleseed/Diffuse Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "as:visibility:diffuse" } ),
-			( "Diagnostic/Appleseed/Specular Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "as:visibility:specular" } ),
-			( "Diagnostic/Appleseed/Glossy Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "as:visibility:glossy" } ),
-			( "Diagnostic/Appleseed/Photon Visibility", GafferScene.AttributeVisualiser, { "attributeName" : "as:visibility:light" } ),
-
-		] )
-
 if os.environ.get( "CYCLES_ROOT" ) and os.environ.get( "GAFFERCYCLES_HIDE_UI", "" ) != "1" :
 
 	with IECore.IgnoredExceptions( ImportError ) :

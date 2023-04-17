@@ -240,41 +240,6 @@ if moduleSearchPath.find( "nsi.py" ) and moduleSearchPath.find( "GafferDelight" 
 		stacktrace = traceback.format_exc()
 		IECore.msg( IECore.Msg.Level.Error, "startup/gui/menus.py", "Error loading Delight module - \"%s\".\n %s" % ( m, stacktrace ) )
 
-# appleseed nodes
-
-if "APPLESEED" in os.environ :
-
-	try :
-
-		import GafferAppleseed
-		import GafferAppleseedUI
-		import GafferOSL
-		import GafferOSLUI
-
-		if os.environ.get( "GAFFERAPPLESEED_HIDE_UI", "" ) != "1" :
-
-			GafferAppleseedUI.ShaderMenu.appendShaders( nodeMenu.definition() )
-
-			GafferAppleseedUI.LightMenu.appendLights( nodeMenu.definition() )
-
-			nodeMenu.append( "/Appleseed/Attributes", GafferAppleseed.AppleseedAttributes, searchText = "AppleseedAttributes" )
-			nodeMenu.append( "/Appleseed/Options", GafferAppleseed.AppleseedOptions, searchText = "AppleseedOptions" )
-			nodeMenu.append( "/Appleseed/Render", GafferAppleseed.AppleseedRender, searchText = "AppleseedRender" )
-			nodeMenu.append( "/Appleseed/Interactive Render", GafferAppleseed.InteractiveAppleseedRender, searchText = "InteractiveAppleseedRender" )
-			nodeMenu.append( "/Appleseed/Shader Ball", GafferAppleseed.AppleseedShaderBall, searchText = "AppleseedShaderBall" )
-
-			scriptWindowMenu.append(
-				"/Help/Appleseed/User Docs",
-				{
-					"command" : functools.partial( GafferUI.showURL, "https://github.com/appleseedhq/appleseed/wiki" ),
-				}
-			)
-
-	except Exception as m :
-
-		stacktrace = traceback.format_exc()
-		IECore.msg( IECore.Msg.Level.Error, "startup/gui/menus.py", "Error loading Appleseed module - \"%s\".\n %s" % ( m, stacktrace ) )
-
 # Cycles nodes
 
 if os.environ.get( "CYCLES_ROOT" ) and moduleSearchPath.find( "GafferCycles" ) :
@@ -484,11 +449,8 @@ if moduleSearchPath.find( "GafferOSL" ) :
 		os.environ["OSL_SHADER_PATHS"].split( os.path.pathsep ),
 		[ "oso" ],
 		__shaderNodeCreator,
-		# Appleseed comes with a library of OSL shaders which we put
-		# on the OSL_SHADER_PATHS, but we don't want to show them in
-		# this menu, because we show them in the Appleseed menu instead.
-		# Likewise, 3Delight comes with a library of shaders that we
-		# show in the 3Delight menu and don't want to show here.
+		# 3Delight comes with a library of shaders that we show
+		# in the 3Delight menu and don't want to show here.
 		#
 		# The OSLCode node also generates a great many shaders behind
 		# the scenes that we don't want to place in the menus. Typically
@@ -510,13 +472,12 @@ if moduleSearchPath.find( "GafferOSL" ) :
 		#   shaders.
 		# - (?<!3DelightForKatana/osl/) is the same, but for another location
 		#   where 3delight seems to put copies of the same shaders.
-		# - (?!as_|oslCode) is a negative lookahead, asserting that the shader
-		#   name does not start with "as_", the prefix for all
-		#   Appleseed shaders, or "oslCode", the prefix for all OSLCode
+		# - (?!oslCode) is a negative lookahead, asserting that the shader
+		#   name does not start "oslCode", the prefix for all OSLCode
 		#   shaders.
 		# - [^/]*$ matches the rest of the shader name, ensuring it
 		#   doesn't include any directory separators.
-		matchExpression = re.compile( "(^|.*/)(?<!maya/osl/)(?<!3DelightForKatana/osl/)(?!as_|oslCode)[^/]*$"),
+		matchExpression = re.compile( "(^|.*/)(?<!maya/osl/)(?<!3DelightForKatana/osl/)(?!oslCode)[^/]*$"),
 		searchTextPrefix = "osl",
 	)
 

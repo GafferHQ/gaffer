@@ -52,24 +52,6 @@ if "%OCIO%" EQU "" (
 	set OCIO=%GAFFER_ROOT%\openColorIO\config.ocio
 )
 
-rem Appleseed
-rem if "%APPLESEED%" == "" (
-rem 	if EXIST "%GAFFER_ROOT%"\appleseed (
-rem 		set APPLESEED=%GAFFER_ROOT%\appleseed
-rem 	)
-rem )
-
-rem if "%APPLESEED%" NEQ "" (
-rem 	call :prependToPath "%APPLESEED%\shaders\gaffer" OSL_SHADER_PATHS
-rem 	call :prependToPath "%APPLESEED%\shaders\appleseed" OSL_SHADER_PATHS
-rem )
-
-rem if "%APPLESEED%" NEQ "" (
-rem 	call :prependToPath "%APPLESEED%\bin;%APPLESEED%\lib" PATH
-rem 	call :prependToPath "%APPLESEED%\lib\python2.7" PYTHONPATH
-rem 	call :prependToPath "%OSL_SHADER_PATHS%;%GAFFER_ROOT%\appleseedDisplays" APPLESEED_SEARCHPATH
-rem )
-
 rem Arnold
 if "%ARNOLD_ROOT%" NEQ "" (
 	call :appendToPath "%ARNOLD_ROOT%\bin" PATH

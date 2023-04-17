@@ -52,7 +52,6 @@ if application["gui"].getTypedValue() :
 	for module in (
 		"GafferSceneUI",
 		"GafferImageUI",
-		"GafferAppleseedUI",
 		"GafferArnoldUI",
 		"GafferDelightUI",
 		"GafferTractorUI",

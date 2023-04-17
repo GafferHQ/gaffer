@@ -385,7 +385,6 @@ SceneProcessorPtr shaderParameterProcessor( const std::string &attribute, const 
 const boost::container::flat_map<string, string> g_rendererAttributePrefixes = {
 	{ "ai", "Arnold" },
 	{ "dl", "Delight" },
-	{ "as", "Appleseed" },
 	{ "gl", "OpenGL" },
 	{ "osl", "OSL" },
 	{ "cycles", "Cycles" }

@@ -181,12 +181,6 @@ options.Add(
 # provided by the GafferHQ/dependencies project.
 
 options.Add(
-	"APPLESEED_ROOT",
-	"The directory in which Appleseed is installed. Used to build Gafferseed",
-	os.path.join( "$BUILD_DIR", "appleseed" ),
-)
-
-options.Add(
 	"CYCLES_ROOT",
 	"The directory in which Cycles is installed. Used to build GafferCycles",
 	os.path.join( "$BUILD_DIR", "cycles" ),
@@ -231,12 +225,6 @@ options.Add(
 	"The path to the resources provided by the gafferResources project. "
 	"If you follow the build instructions using the precompiled "
 	"dependencies then you will not need this option.",
-	"",
-)
-
-options.Add(
-	"LOCATE_DEPENDENCY_APPLESEED_SEARCHPATH",
-	"The paths in which Appleseed resources are installed.",
 	"",
 )
 
@@ -1263,30 +1251,6 @@ libraries = {
 
 	"GafferDelightUITest" : {},
 
-	"GafferAppleseed" : {
-		"envAppends" : {
-			"CXXFLAGS" : [ systemIncludeArgument, "$APPLESEED_ROOT/include", "-DAPPLESEED_ENABLE_IMATH_INTEROP" ],
-			"LIBPATH" : [ "$APPLESEED_ROOT/lib" ],
-			"LIBS" : [ "Gaffer", "GafferDispatch", "GafferScene", "appleseed",  "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreAppleseed$CORTEX_LIB_SUFFIX", "OpenImageIO$OIIO_LIB_SUFFIX", "OpenImageIO_Util$OIIO_LIB_SUFFIX", "oslquery$OSL_LIB_SUFFIX", "boost_thread$BOOST_LIB_SUFFIX" ],
-			"CPPDEFINES" : [ "APPLESEED_USE_SSE" ] if platform.machine() != "arm64" else [],
-		},
-		"pythonEnvAppends" : {
-			"CXXFLAGS" : [ systemIncludeArgument, "$APPLESEED_ROOT/include", "-DAPPLESEED_ENABLE_IMATH_INTEROP" ],
-			"LIBPATH" : [ "$APPLESEED_ROOT/lib" ],
-			"LIBS" : [ "Gaffer", "GafferDispatch", "GafferScene", "GafferBindings", "GafferAppleseed" ],
-			"CPPDEFINES" : [ "APPLESEED_USE_SSE" ] if platform.machine() != "arm64" else [],
-		},
-		"requiredOptions" : [ "APPLESEED_ROOT" ],
-	},
-
-	"GafferAppleseedTest" : {
-		"additionalFiles" : glob.glob( "python/GafferAppleseedTest/*/*" ),
-	},
-
-	"GafferAppleseedUI" : {},
-
-	"GafferAppleseedUITest" : {},
-
 	"GafferCycles" : {
 		"envAppends" : {
 			"LIBPATH" : [ "$CYCLES_ROOT/lib" ],
@@ -2095,7 +2059,7 @@ if haveSphinx and haveInkscape :
 	docCommandEnv["ENV"]["GAFFER_REFERENCE_PATHS"] = os.path.abspath( "doc/references" )
 	docCommandEnv["ENV"]["GAFFER_STARTUP_PATHS"] = os.path.abspath( "doc/startup" )
 
-	# Ensure that Arnold, Appleseed and 3delight are available in the documentation
+	# Ensure that Arnold and 3delight are available in the documentation
 	# environment.
 
 	libraryPathEnvVar = "DYLD_LIBRARY_PATH" if docEnv["PLATFORM"]=="darwin" else "LD_LIBRARY_PATH"
@@ -2104,13 +2068,6 @@ if haveSphinx and haveInkscape :
 		docCommandEnv["ENV"]["PATH"] += ":" + docCommandEnv.subst( "$ARNOLD_ROOT/bin" )
 		docCommandEnv["ENV"]["PYTHONPATH"] += ":" + docCommandEnv.subst( "$ARNOLD_ROOT/python" )
 		docCommandEnv["ENV"][libraryPathEnvVar] = docCommandEnv["ENV"].get( libraryPathEnvVar, "" ) + ":" + docCommandEnv.subst( "$ARNOLD_ROOT/bin" )
-
-	if docCommandEnv.subst( "$APPLESEED_ROOT" ) and docCommandEnv["APPLESEED_ROOT"] != "$BUILD_DIR/appleseed" :
-		docCommandEnv["ENV"]["PATH"] += ":" + docCommandEnv.subst( "$APPLESEED_ROOT/bin" )
-		docCommandEnv["ENV"][libraryPathEnvVar] = docCommandEnv["ENV"].get( libraryPathEnvVar, "" ) + ":" + docCommandEnv.subst( "$APPLESEED_ROOT/lib" )
-		docCommandEnv["ENV"]["OSLHOME"] = docCommandEnv.subst( "$OSLHOME" )
-		docCommandEnv["ENV"]["OSL_SHADER_PATHS"] = docCommandEnv.subst( "$APPLESEED_ROOT/shaders/appleseed" )
-		docCommandEnv["ENV"]["APPLESEED_SEARCHPATH"] = docCommandEnv.subst( "$APPLESEED_ROOT/shaders/appleseed:$LOCATE_DEPENDENCY_APPLESEED_SEARCHPATH" )
 
 	#  Docs graphics generation
 	docGraphicsCommands = graphicsCommands( docEnv, "resources/docGraphics.svg", "$BUILD_DIR/doc/gaffer/graphics" )

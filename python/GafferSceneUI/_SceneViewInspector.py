@@ -65,7 +65,6 @@ from Qt import QtWidgets
 _rendererAttributePrefixes = {
 	"ai" : "Arnold",
 	"dl" : "Delight",
-	"as" : "Appleseed",
 	"gl" : "OpenGL",
 	"osl" : "OSL",
 	"cycles" : "Cycles"
