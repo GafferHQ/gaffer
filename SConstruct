@@ -532,6 +532,7 @@ else:
 		CXXFLAGS = [
 			"/nologo",  # Suppress startup banner
 			"/DOPENEXR_DLL",  # Link to dynamic OpenEXR library
+			"/DIMATH_DLL",  # Link to dynamic Imath library
 			"/DNOMINMAX",  # Suppress compiler definition of `min` and `max`
 			"/D__PRETTY_FUNCTION__=__FUNCSIG__",
 			"/DBOOST_ALL_DYN_LINK",
