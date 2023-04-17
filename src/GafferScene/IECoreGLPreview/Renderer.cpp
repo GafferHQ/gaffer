@@ -78,9 +78,10 @@
 #endif
 
 #include "boost/algorithm/string/predicate.hpp"
-#include "boost/format.hpp"
 
 #include "tbb/concurrent_queue.h"
+
+#include "fmt/format.h"
 
 #include <functional>
 #include <unordered_map>
@@ -185,7 +186,7 @@ T *reportedCast( const IECore::RunTimeTyped *v, const char *type, const IECore::
 		return t;
 	}
 
-	IECore::msg( IECore::Msg::Warning, "IECoreGL::Renderer", boost::format( "Expected %s but got %s for %s \"%s\"." ) % T::staticTypeName() % v->typeName() % type % name.c_str() );
+	IECore::msg( IECore::Msg::Warning, "IECoreGL::Renderer", fmt::format( "Expected {} but got {} for {} \"{}\".", T::staticTypeName(), v->typeName(), type, name.string() ) );
 	return nullptr;
 }
 
@@ -893,7 +894,7 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 			}
 			else
 			{
-				IECore::msg( IECore::Msg::Warning, "IECoreGL::Renderer::option", boost::format( "Unknown option \"%s\"." ) % name.c_str() );
+				IECore::msg( IECore::Msg::Warning, "IECoreGL::Renderer::option", fmt::format( "Unknown option \"{}\".", name.string() ) );
 			}
 		}
 
@@ -1015,7 +1016,7 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 			}
 			else if( boost::starts_with( name.string(), "gl:" ) || name.string().find( ":" ) == string::npos )
 			{
-				IECore::msg( IECore::Msg::Warning, "IECoreGL::Renderer::command", boost::format( "Unknown command \"%s\"." ) % name.c_str() );
+				IECore::msg( IECore::Msg::Warning, "IECoreGL::Renderer::command", fmt::format( "Unknown command \"{}\".", name.string() ) );
 			}
 
 			return nullptr;
@@ -1227,7 +1228,7 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 				}
 				else
 				{
-					IECore::msg( IECore::Msg::Warning, "IECoreGL::Renderer", boost::format( "Unsupported data format \"%s\"." ) % data );
+					IECore::msg( IECore::Msg::Warning, "IECoreGL::Renderer", fmt::format( "Unsupported data format \"{}\".", data ) );
 					return;
 				}
 
@@ -1235,7 +1236,7 @@ class OpenGLRenderer final : public IECoreScenePreview::Renderer
 				IECore::WriterPtr writer = IECore::Writer::create( image, "tmp." + type );
 				if( !writer )
 				{
-					IECore::msg( IECore::Msg::Warning, "IECoreGL::Renderer", boost::format( "Unsupported display type \"%s\"." ) % type );
+					IECore::msg( IECore::Msg::Warning, "IECoreGL::Renderer", fmt::format( "Unsupported display type \"{}\".", type ) );
 					return;
 				}
 
