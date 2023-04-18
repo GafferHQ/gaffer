@@ -81,6 +81,18 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"mergeMetadata" : [
+
+			"description",
+			"""
+			Controls how the output metadata is generated from the collected
+			images. By default, the metadata from the first image alone
+			is passed through. When `mergeMetadata` is on, the metadata from
+			all collected images is merged, with the last image winning
+			in the case of multiple image specifying the same piece of metadata.
+			""",
+
+		],
 	}
 
 )

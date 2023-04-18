@@ -118,6 +118,7 @@ CollectImages::CollectImages( const std::string &name )
 
 	addChild( new StringVectorDataPlug( "rootLayers", Plug::In, new StringVectorData ) );
 	addChild( new StringPlug( "layerVariable", Plug::In, "collect:layerName" ) );
+	addChild( new BoolPlug( "mergeMetadata", Plug::In ) );
 }
 
 CollectImages::~CollectImages()
@@ -144,6 +145,15 @@ const Gaffer::StringPlug *CollectImages::layerVariablePlug() const
 	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 1 );
 }
 
+Gaffer::BoolPlug *CollectImages::mergeMetadataPlug()
+{
+	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 2 );
+}
+
+const Gaffer::BoolPlug *CollectImages::mergeMetadataPlug() const
+{
+	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 2 );
+}
 
 void CollectImages::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
@@ -198,6 +208,10 @@ void CollectImages::affects( const Gaffer::Plug *input, AffectedPlugsContainer &
 		outputs.push_back( outPlug()->metadataPlug() );
 		outputs.push_back( outPlug()->sampleOffsetsPlug() );
 		outputs.push_back( outPlug()->deepPlug() );
+	}
+	else if( input == mergeMetadataPlug() )
+	{
+		outputs.push_back( outPlug()->metadataPlug() );
 	}
 
 }
@@ -395,9 +409,23 @@ void CollectImages::hashMetadata( const GafferImage::ImagePlug *parent, const Ga
 
 	if( rootLayersData->readable().size() )
 	{
+		const string layerVariable = layerVariablePlug()->getValue();
+
 		Context::EditableScope editScope( context );
-		editScope.set( layerVariablePlug()->getValue(), &( rootLayersData->readable()[0] ) );
-		h = inPlug()->metadataPlug()->hash();
+		if( !mergeMetadataPlug()->getValue() )
+		{
+			editScope.set( layerVariable, &( rootLayersData->readable()[0] ) );
+			h = inPlug()->metadataPlug()->hash();
+		}
+		else
+		{
+			ImageProcessor::hashMetadata( parent, context, h );
+			for( const auto &i : rootLayersData->readable() )
+			{
+				editScope.set( layerVariable, &i );
+				inPlug()->metadataPlug()->hash( h );
+			}
+		}
 	}
 	else
 	{
@@ -411,9 +439,30 @@ IECore::ConstCompoundDataPtr CollectImages::computeMetadata( const Gaffer::Conte
 
 	if( rootLayersData->readable().size() )
 	{
+		const string layerVariable = layerVariablePlug()->getValue();
+
 		Context::EditableScope editScope( context );
-		editScope.set( layerVariablePlug()->getValue(), &( rootLayersData->readable()[0] ) );
-		return inPlug()->metadataPlug()->getValue();
+		if( !mergeMetadataPlug()->getValue() )
+		{
+			editScope.set( layerVariable, &( rootLayersData->readable()[0] ) );
+			return inPlug()->metadataPlug()->getValue();
+		}
+		else
+		{
+			IECore::CompoundDataPtr resultData = new CompoundData();
+			auto &result = resultData->writable();
+			for( const auto &i : rootLayersData->readable() )
+			{
+				editScope.set( layerVariable, &i );
+				IECore::ConstCompoundDataPtr metadata = inPlug()->metadataPlug()->getValue();
+
+				for( const auto &m : metadata->readable() )
+				{
+					result[m.first] = m.second;
+				}
+			}
+			return resultData;
+		}
 	}
 	else
 	{
