@@ -398,9 +398,9 @@ struct TestLRUCacheExceptions
 		Cache cache(
 			[&calls]( int key, size_t &cost, const IECore::Canceller *canceller ) {
 				calls.push_back( key );
-				throw IECore::Exception( boost::str(
-					boost::format( "Get failed for %1%" ) % key
-				) );
+				throw IECore::Exception(
+					fmt::format( "Get failed for {}", key )
+				);
 				return 0;
 			},
 			1000
@@ -494,9 +494,9 @@ struct TestLRUCacheExceptions
 		Cache noErrorsCache(
 			[&calls]( int key, size_t &cost, const IECore::Canceller *canceller ) {
 				calls.push_back( key );
-				throw IECore::Exception( boost::str(
-					boost::format( "Get failed for %1%" ) % key
-				) );
+				throw IECore::Exception(
+					fmt::format( "Get failed for {}", key )
+				);
 				return 0;
 			},
 			1000,

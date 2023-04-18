@@ -359,12 +359,12 @@ void GafferTest::testCopyEditableScope()
 	// the same data.
 
 	ContextPtr copy2 = new Context( *copy );
-	GAFFERTEST_ASSERTEQUAL( &copy->get<int>( "a" ), &copy2->get<int>( "a" ) );
-	GAFFERTEST_ASSERTEQUAL( &copy->get<int>( "b" ), &copy2->get<int>( "b" ) );
-	GAFFERTEST_ASSERTEQUAL( &copy->get<int>( "c" ), &copy2->get<int>( "c" ) );
-	GAFFERTEST_ASSERTEQUAL( &copy->get<int>( "d" ), &copy2->get<int>( "d" ) );
-	GAFFERTEST_ASSERTEQUAL( &copy->get<int>( "e" ), &copy2->get<int>( "e" ) );
-	GAFFERTEST_ASSERTEQUAL( &copy->get<string>( "f" ), &copy2->get<string>( "f" ) );
+	GAFFERTEST_ASSERTEQUAL( (void *)&copy->get<int>( "a" ), (void *)&copy2->get<int>( "a" ) );
+	GAFFERTEST_ASSERTEQUAL( (void *)&copy->get<int>( "b" ), (void *)&copy2->get<int>( "b" ) );
+	GAFFERTEST_ASSERTEQUAL( (void *)&copy->get<int>( "c" ), (void *)&copy2->get<int>( "c" ) );
+	GAFFERTEST_ASSERTEQUAL( (void *)&copy->get<int>( "d" ), (void *)&copy2->get<int>( "d" ) );
+	GAFFERTEST_ASSERTEQUAL( (void *)&copy->get<int>( "e" ), (void *)&copy2->get<int>( "e" ) );
+	GAFFERTEST_ASSERTEQUAL( (void *)&copy->get<string>( "f" ), (void *)&copy2->get<string>( "f" ) );
 
 	// And the second copy should still be valid if the first
 	// one is destroyed.

@@ -38,7 +38,7 @@
 
 #include "IECore/Exception.h"
 
-#include "boost/format.hpp"
+#include "fmt/format.h"
 
 namespace GafferTest
 {
@@ -46,9 +46,9 @@ namespace GafferTest
 #define GAFFERTEST_ASSERT( x ) \
 	if( !( x ) ) \
 	{ \
-		throw IECore::Exception( boost::str( \
-			boost::format( "Failed assertion \"%s\" : %s line %d" ) % #x % __FILE__ % __LINE__ \
-		) ); \
+		throw IECore::Exception( \
+			fmt::format( "Failed assertion \"{}\" : {} line {}", #x, __FILE__, __LINE__ ) \
+		); \
 	}
 
 #define GAFFERTEST_ASSERTEQUAL( x, y ) \
@@ -57,9 +57,9 @@ namespace GafferTest
 		const auto yy = y; /* only once */ \
 		if( xx != yy ) \
 		{ \
-			throw IECore::Exception( boost::str( \
-				boost::format( "Failed assertion \"%1% == %2%\" : %3% line %4%" ) % (xx) % (yy) % __FILE__ % __LINE__ \
-			) ); \
+			throw IECore::Exception( \
+				fmt::format( "Failed assertion \"{} == {}\" : {} line {}", (xx), (yy), __FILE__, __LINE__ ) \
+			); \
 		} \
 	}
 
