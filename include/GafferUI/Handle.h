@@ -41,6 +41,8 @@
 #include "GafferUI/Gadget.h"
 #include "GafferUI/Style.h"
 
+#include <variant>
+
 namespace GafferUI
 {
 
@@ -190,7 +192,9 @@ class GAFFERUI_API Handle : public Gadget
 
 				float closestRotation( const Imath::V2f &p, float targetRotation );
 
-				PlanarDrag m_drag;
+				const Gadget *m_gadget;
+
+				std::variant<std::monostate, PlanarDrag, LinearDrag> m_drag;
 				float m_rotation;
 
 				Imath::V3f m_axis0;

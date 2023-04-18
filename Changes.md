@@ -41,6 +41,7 @@ Improvements
 - VectorDataPlugValueWidget : Computation errors are now reflected by a red background colour.
 - VectorWarp : Added `Bilinear` filter, for faster but lower quality warping.
 - Dilate, Erode, Median, Resample, Resize, ImageTransform, Blur, VectorWarp : Improved performance significantly. For example, a Blur with a large radius is now almost 6x faster.
+- RotateTool : Added the ability to rotate an axis whose plane of rotation is parallel or nearly parallel to the view.
 
 Fixes
 -----

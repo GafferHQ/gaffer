@@ -72,6 +72,7 @@ using namespace IECoreScene;
 using namespace GafferUI;
 
 const float g_planarToLinearDragThreshold = 0.15f;  // Approx. 9 degrees from perpendicular
+constexpr float g_planarRotationScaleFactor = 5.f / M_PI;
 
 namespace
 {
@@ -82,7 +83,7 @@ struct WorldGadgetDragData
 	V3f worldAxis0;
 	V3f worldAxis1;
 	Line3f worldLine;
-	Plane3f worldPlane;
+	V3f worldPlaneNormal;
 };
 
 void worldGadgetDragData(
@@ -103,11 +104,7 @@ void worldGadgetDragData(
 		dragEvent.line.p0 * transform,
 		dragEvent.line.p1 * transform
 	);
-	result.worldPlane = Plane3f(
-		result.worldOrigin,
-		result.worldOrigin + result.worldAxis0,
-		result.worldOrigin + result.worldAxis1
-	);
+	result.worldPlaneNormal = ( result.worldAxis0.cross( result.worldAxis1 ) ).normalized();
 }
 
 }  // namespace
@@ -520,8 +517,7 @@ void Handle::PlanarDrag::init( const Gadget *gadget, const Imath::V3f &origin, c
 	m_worldAxis0 = dragData.worldAxis0;
 	m_worldAxis1 = dragData.worldAxis1;
 
-
-	if( abs( dragData.worldPlane.normal.dot( dragData.worldLine.dir ) ) < g_planarToLinearDragThreshold )
+	if( abs( dragData.worldPlaneNormal.dot( dragData.worldLine.dir ) ) < g_planarToLinearDragThreshold )
 	{
 		bool useAxis0 = abs( m_worldAxis0.dot( dragData.worldLine.dir ) ) < abs( m_worldAxis1.dot( dragData.worldLine.dir ) );
 
@@ -547,7 +543,8 @@ void Handle::PlanarDrag::init( const Gadget *gadget, const Imath::V3f &origin, c
 //////////////////////////////////////////////////////////////////////////
 
 Handle::AngularDrag::AngularDrag( bool processModifiers )
-	:	m_rotation( 0.0f ),
+	:	m_gadget( nullptr ),
+		m_rotation( 0.0f ),
 		m_dragBeginRotation( 0.0f ),
 		m_processModifiers( processModifiers ),
 		m_preciseMotionEnabled( false )
@@ -556,7 +553,8 @@ Handle::AngularDrag::AngularDrag( bool processModifiers )
 }
 
 Handle::AngularDrag::AngularDrag( const Gadget *gadget, const Imath::V3f &origin, const Imath::V3f &axis0, const Imath::V3f axis1, const DragDropEvent &dragBeginEvent, bool processModifiers )
-	:	m_rotation( 0.0f ),
+	:	m_gadget( gadget ),
+		m_rotation( 0.0f ),
 		m_axis0( axis0 ),
 		m_axis1( axis1 ),
 		m_processModifiers( processModifiers ),
@@ -564,10 +562,53 @@ Handle::AngularDrag::AngularDrag( const Gadget *gadget, const Imath::V3f &origin
 {
 	// We need to negate this, or rotation is opposite to the mouse movement direction
 	V3f planeAxis0 = -axis0.cross( axis1 );
-	// Disable modifier processing as we'll do our own precision mode in angle space
-	m_drag = PlanarDrag( gadget, origin, planeAxis0, axis1, dragBeginEvent, false );
 
-	m_dragBeginRotation = closestRotation( m_drag.startPosition(), m_rotation );
+	WorldGadgetDragData dragData;
+	worldGadgetDragData( gadget, origin, planeAxis0, axis1, dragBeginEvent, dragData );
+
+	if( abs( dragData.worldPlaneNormal.dot( dragData.worldLine.dir ) ) < g_planarToLinearDragThreshold )
+	{
+		// Do a LinearDrag in raster space instead of world space
+
+		float axis0Dot = dragData.worldAxis0.normalized().dot( dragData.worldLine.dir );
+		float axis1Dot = dragData.worldAxis1.normalized().dot( dragData.worldLine.dir );
+
+		int dragAxis = abs( axis0Dot ) < abs( axis1Dot ) ? 0 : 1;
+
+		// Looking down the normal of the rotation plane, positive values rotate
+		// counterclockwise. Find the gadget-space vector pointing in the direction
+		// of positive rotation to use for the start direction of the linear drag.
+		V3f parallelAxis = dragAxis == 0 ? axis1 : planeAxis0;
+		float parallelDot = dragAxis == 0 ? axis1Dot : axis0Dot;
+
+		// If the parallel axis is pointing in the same direction as the view,
+		// reverse the drag direction.
+		float sign = -( ( 0 < parallelDot ) - ( parallelDot < 0 ) );
+
+		V3f dragDirection = axis0.cross( parallelAxis );
+
+		const ViewportGadget *viewport = gadget->ancestor<ViewportGadget>();
+		const V2f rasterOrigin = viewport->gadgetToRasterSpace( V3f( 0 ), gadget );
+		V2f rasterLine =
+			( viewport->gadgetToRasterSpace( dragDirection, gadget ) - rasterOrigin ) *
+			V2f( 1.f, -1.f ) *  // Y is positive down in raster space, flip the Y direction
+			V2f( sign )  // compensate for looking "along" or "into"
+		;
+
+		m_drag = LinearDrag(
+			gadget,
+			rasterLine,
+			dragBeginEvent,
+			m_processModifiers
+		);
+		m_dragBeginRotation = std::get<LinearDrag>( m_drag ).startPosition();
+	}
+	else
+	{
+		// Disable modifier processing as we'll do our own precision mode in angle space
+		m_drag = PlanarDrag( gadget, origin, planeAxis0, axis1, dragBeginEvent, false );
+		m_dragBeginRotation = closestRotation( std::get<PlanarDrag>( m_drag ).startPosition(), m_rotation );
+	}
 
 	m_preciseMotionEnabled = dragBeginEvent.modifiers & ModifiableEvent::Shift;
 	m_preciseMotionOrigin = m_dragBeginRotation;
@@ -591,11 +632,26 @@ float Handle::AngularDrag::startRotation() const
 
 float Handle::AngularDrag::updatedRotation( const DragDropEvent &event )
 {
-	// We can only recover an angle in the range -PI, PI from the 2d position
-	// that our drag gives us, but we want to be able to support continuous
-	// values and multiple revolutions. We need to store the un-modified rotation
-	// such that we pick the closest rotation to the mouse itself.
-	float rotation = closestRotation( m_drag.updatedPosition( event ), m_rotation );
+	float rotation;
+	if( LinearDrag *linearDrag = std::get_if<LinearDrag>( &m_drag ) )
+	{
+		auto handle = runTimeCast<const Handle>( m_gadget );
+
+		float rasterScaleFactor = handle->rasterScaleFactor().x;
+
+		float rotationFactor = linearDrag->updatedPosition( event ) - linearDrag->startPosition();
+		rotation = m_dragBeginRotation + ( rotationFactor / rasterScaleFactor ) * g_planarRotationScaleFactor;
+	}
+	else
+	{
+		PlanarDrag planarDrag = std::get<PlanarDrag>( m_drag );
+
+		// We can only recover an angle in the range -PI, PI from the 2d position
+		// that our drag gives us, but we want to be able to support continuous
+		// values and multiple revolutions. We need to store the un-modified rotation
+		// such that we pick the closest rotation to the mouse itself.
+		rotation = closestRotation( planarDrag.updatedPosition( event ), m_rotation );
+	}
 	m_rotation = rotation;
 
 	if( m_processModifiers )
