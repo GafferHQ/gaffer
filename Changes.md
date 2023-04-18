@@ -5,6 +5,10 @@ Features
 --------
 
 - FramingConstraint : Added a new node for moving cameras to frame a chosen target.
+
+Improvements
+------------
+
 - CollectImages : Added `mergeMetadata` plug. This allows the metadata from all collected images to be merged, whereas before only the metadata from the first image was passed through.
 
 Fixes
