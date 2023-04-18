@@ -405,6 +405,11 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( self.__rgbFilePath )
+		if ext != "exr" :
+			# All our expected reference images were written using an old OCIO config
+			# where the source EXR file was assumed to have sRGB primaries. Set the
+			# source color space to account for that.
+			r["colorSpace"].setValue( "Linear Rec.709 (sRGB)" )
 		expectedFile = self.__rgbFilePath.with_suffix( "." + ext )
 
 		tests = [
@@ -560,6 +565,10 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( filePath )
+		# All our expected reference images were written using an old OCIO config
+		# where the source EXR file was assumed to have sRGB primaries. Set the
+		# source color space to account for that.
+		r["colorSpace"].setValue( "Linear Rec.709 (sRGB)" )
 		w = GafferImage.ImageWriter()
 
 		testFile = self.__testFile( filePath.with_suffix("").name, "RGBA", ext )

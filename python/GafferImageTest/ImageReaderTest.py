@@ -131,6 +131,7 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 
 		exrReader = GafferImage.ImageReader()
 		exrReader["fileName"].setValue( self.fileName )
+		exrReader["colorSpace"].setValue( "Linear Rec.709 (sRGB)" )
 
 		jpgReader = GafferImage.ImageReader()
 		jpgReader["fileName"].setValue( self.jpgFileName )
