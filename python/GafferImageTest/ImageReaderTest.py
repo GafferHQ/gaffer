@@ -51,7 +51,6 @@ import GafferImageTest
 class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 
 	fileName = GafferImageTest.ImageTestCase.imagesPath() / "circles.exr"
-	colorSpaceFileName = GafferImageTest.ImageTestCase.imagesPath() / "circles_as_cineon.exr"
 	offsetDataWindowFileName = GafferImageTest.ImageTestCase.imagesPath() / "rgb.100x100.exr"
 	jpgFileName = GafferImageTest.ImageTestCase.imagesPath() / "circles.jpg"
 	largeFileName = GafferImageTest.ImageTestCase.imagesPath() / "colorbars_max_clamp.exr"
@@ -108,17 +107,25 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 
 	def testColorSpaceOverride( self ) :
 
+		# Default reader assumes that image is already in `scene_linear`
+		# space, so no transform is applied during loading.
 		exrReader = GafferImage.ImageReader()
 		exrReader["fileName"].setValue( self.fileName )
-		exrReader["colorSpace"].setValue( "Cineon" )
 
-		colorSpaceOverrideReader = GafferImage.ImageReader()
-		colorSpaceOverrideReader["fileName"].setValue( self.colorSpaceFileName )
+		# Override reader requires a transform from sRGB primaries to
+		# ACEScg primaries (the primaries for `scene_linear`).
+		overrideReader = GafferImage.ImageReader()
+		overrideReader["fileName"].setValue( self.fileName )
+		overrideReader["colorSpace"].setValue( "Linear Rec.709 (sRGB)" )
 
-		exrImage = exrReader["out"]
-		colorSpaceOverrideImage = colorSpaceOverrideReader["out"]
+		# Transform back manually and we should end up with the default
+		# image.
+		colorSpace = GafferImage.ColorSpace()
+		colorSpace["in"].setInput( overrideReader["out"] )
+		colorSpace["inputSpace"].setValue( "scene_linear" )
+		colorSpace["outputSpace"].setValue( "Linear Rec.709 (sRGB)" )
 
-		self.assertImagesEqual( colorSpaceOverrideImage, exrImage, ignoreMetadata = True, maxDifference = 0.005 )
+		self.assertImagesEqual( colorSpace["out"], exrReader["out"], ignoreMetadata = True, maxDifference = 0.000001 )
 
 	def testJpgRead( self ) :
 
