@@ -262,6 +262,8 @@ class _Parser( ast.NodeVisitor ) :
 				contextName = self.__contextName( path )
 				if contextName :
 					self.contextReads.add( contextName )
+				else :
+					ast.NodeVisitor.generic_visit( self, node )
 
 	def visit_Call( self, node ) :
 

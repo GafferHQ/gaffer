@@ -237,6 +237,23 @@ class ExpressionTest( GafferTest.TestCase ) :
 				c.setFrame( i )
 				self.assertEqual( s["n"]["sum"].getValue(), i )
 
+	def testContextGetFrameMethodInSubscript( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = GafferTest.AddNode()
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression(
+			"d = { 1 : 2, 2 : 3 }; parent['n']['op1'] = d[int( context.getFrame() )]",
+			"python",
+		)
+
+		with Gaffer.Context() as c :
+			for i in ( 1, 2 ) :
+				c.setFrame( i )
+				self.assertEqual( s["n"]["op1"].getValue(), i + 1 )
+
 	def testContextGetMethod( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -269,6 +286,23 @@ class ExpressionTest( GafferTest.TestCase ) :
 		)
 
 		self.assertEqual( s["n"]["sum"].getValue(), 101 )
+
+	def testContextGetWithSubscript( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = GafferTest.AddNode()
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression(
+			"parent['n']['op1'] = context.get( 'myArray' )[0]",
+			"python",
+		)
+
+		with Gaffer.Context() as c :
+			for i in ( 1, 2 ) :
+				c["myArray"] = IECore.IntVectorData( [ i ] )
+				self.assertEqual( s["n"]["op1"].getValue(), i )
 
 	def testDirtyPropagation( self ) :
 

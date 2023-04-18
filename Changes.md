@@ -20,6 +20,7 @@ Fixes
 
 - UVInspector : Removed display transform from UV wireframes and grid.
 - Viewer : Gamma is now applied after the display transform, not before.
+- Expression : Fixed parsing of Python expressions combining subscripts (`[]`) and `context` methods (#3088, #3613, #5250).
 
 API
 ---
