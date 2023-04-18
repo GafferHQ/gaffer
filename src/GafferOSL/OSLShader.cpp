@@ -60,6 +60,8 @@
 
 #include "tbb/mutex.h"
 
+#include "fmt/format.h"
+
 using namespace std;
 using namespace Imath;
 using namespace IECore;
@@ -225,7 +227,7 @@ const Gaffer::Plug *OSLShader::correspondingInput( const Gaffer::Plug *output ) 
 	const Plug *result = parametersPlug()->getChild<Plug>( input->readable() );
 	if( !result )
 	{
-		IECore::msg( IECore::Msg::Error, "OSLShader::correspondingInput", boost::format( "Parameter \"%s\" does not exist" ) % input->readable() );
+		IECore::msg( IECore::Msg::Error, "OSLShader::correspondingInput", fmt::format( "Parameter \"{}\" does not exist", input->readable() ) );
 		return nullptr;
 	}
 
@@ -968,7 +970,7 @@ Plug *loadShaderParameter( const OSLQuery &query, const OSLQuery::Parameter *par
 
 	if( !result )
 	{
-		msg( Msg::Warning, "OSLShader::loadShader", boost::format( "Parameter \"%s\" has unsupported type" ) % parameter->name.c_str() );
+		msg( Msg::Warning, "OSLShader::loadShader", fmt::format( "Parameter \"{}\" has unsupported type", parameter->name.c_str() ) );
 	}
 
 	return result;

@@ -239,5 +239,27 @@ class CollectImagesTest( GafferImageTest.ImageTestCase ) :
 		with self.assertRaisesRegex( Gaffer.ProcessException, r'DataWindows on deep input to CollectImages must match. Received both -5,-13 -> 1920,1080 and 0,0 -> 1920,1080' ) as raised:
 			collect["out"].dataWindow()
 
+	def testMergeMetadata( self ) :
+		imageMetadata = GafferImage.ImageMetadata()
+		imageMetadata["expression"] = Gaffer.Expression()
+		imageMetadata["expression"].setExpression( inspect.cleandoc(
+			"""
+			n = int( context.get( "collect:layerName" ) )
+			parent["extraMetadata"] = IECore.CompoundData( { str(i) : IECore.IntData( n ) for i in range( n ) } )
+			"""
+		) )
+		collectImages = GafferImage.CollectImages()
+		collectImages["in"].setInput( imageMetadata["out"] )
+		collectImages["rootLayers"].setValue( IECore.StringVectorData( [ '4', '3', '2', '1' ] ) )
+		self.assertEqual(
+			collectImages["out"].metadata(),
+			IECore.CompoundData( { str(i) : IECore.IntData(4) for i in range( 4 ) } )
+		)
+		collectImages["mergeMetadata"].setValue( True )
+		self.assertEqual(
+			collectImages["out"].metadata(),
+			IECore.CompoundData( { str(i) : IECore.IntData(i+1) for i in range( 4 ) } )
+		)
+
 if __name__ == "__main__":
 	unittest.main()

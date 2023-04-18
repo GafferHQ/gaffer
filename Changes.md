@@ -59,6 +59,21 @@ Build
 1.2.x.x (relative to 1.2.3.0)
 =======
 
+Features
+--------
+
+- FramingConstraint : Added a new node for moving cameras to frame a chosen target.
+
+Improvements
+------------
+
+- CollectImages : Added `mergeMetadata` plug. This allows the metadata from all collected images to be merged, whereas before only the metadata from the first image was passed through.
+
+Fixes
+-----
+
+- Arnold : Moved `distance` shader to the `Shader/Utility` section of the node menu (previously in `Shader/Other`).
+
 1.2.3.0 (relative to 1.2.2.0)
 =======
 
