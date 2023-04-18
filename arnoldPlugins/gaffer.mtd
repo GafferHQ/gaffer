@@ -1337,6 +1337,11 @@
 	gaffer.nodeMenu.category STRING "Utility"
 
 
+[node distance]
+
+	gaffer.nodeMenu.category STRING "Utility"
+
+
 [node divide]
 
 	primaryInput STRING "input1"
@@ -2947,7 +2952,7 @@
 
 	[attr cell_rotate]
 		gaffer.layout.activator STRING "cellEnabled"
-	
+
 	[attr cell_blend]
 		gaffer.layout.activator STRING "cellEnabled"
 
