@@ -158,6 +158,9 @@ class GAFFERUI_API Handle : public Gadget
 				bool m_preciseMotionEnabled;
 				Imath::V2f m_preciseMotionOrigin;
 
+				std::optional<LinearDrag> m_linearDrag;
+				Imath::V2f m_linearDragAxisMask;
+
 		};
 
 		// Returns the current scale factor needed to keep the handles

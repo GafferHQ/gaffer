@@ -71,6 +71,47 @@ using namespace IECore;
 using namespace IECoreScene;
 using namespace GafferUI;
 
+const float g_planarToLinearDragThreshold = 0.15f;  // Approx. 9 degrees from perpendicular
+
+namespace
+{
+
+struct WorldGadgetDragData
+{
+	V3f worldOrigin;
+	V3f worldAxis0;
+	V3f worldAxis1;
+	Line3f worldLine;
+	Plane3f worldPlane;
+};
+
+void worldGadgetDragData(
+	const Gadget *gadget,
+	const V3f &origin,
+	const V3f &axis0,
+	const V3f &axis1,
+	const DragDropEvent &dragEvent,
+	WorldGadgetDragData &result
+)
+{
+	const M44f transform = gadget->fullTransform();
+	result.worldOrigin = origin * transform;
+	transform.multDirMatrix( axis0, result.worldAxis0 );
+	transform.multDirMatrix( axis1, result.worldAxis1 );
+
+	result.worldLine = Line3f(
+		dragEvent.line.p0 * transform,
+		dragEvent.line.p1 * transform
+	);
+	result.worldPlane = Plane3f(
+		result.worldOrigin,
+		result.worldOrigin + result.worldAxis0,
+		result.worldOrigin + result.worldAxis1
+	);
+}
+
+}  // namespace
+
 //////////////////////////////////////////////////////////////////////////
 // Handle
 //////////////////////////////////////////////////////////////////////////
@@ -421,6 +462,14 @@ Imath::V2f Handle::PlanarDrag::updatedPosition( const DragDropEvent &event )
 		event.line.p0 * m_gadget->fullTransform(),
 		event.line.p1 * m_gadget->fullTransform()
 	);
+
+	if( m_linearDrag )
+	{
+		float linearPosition = m_linearDrag->updatedPosition( event );
+
+		return V2f( linearPosition, linearPosition ) * m_linearDragAxisMask;
+	}
+
 	Plane3f worldPlane(
 		m_worldOrigin,
 		m_worldOrigin + m_worldAxis0,
@@ -462,11 +511,29 @@ void Handle::PlanarDrag::init( const Gadget *gadget, const Imath::V3f &origin, c
 {
 	m_axis0 = axis0;
 	m_axis1 = axis1;
+
 	m_gadget = gadget;
-	const M44f transform = gadget->fullTransform();
-	m_worldOrigin = origin * transform;
-	transform.multDirMatrix( axis0, m_worldAxis0 );
-	transform.multDirMatrix( axis1, m_worldAxis1 );
+
+	WorldGadgetDragData dragData;
+	worldGadgetDragData( gadget, origin, axis0, axis1, dragBeginEvent, dragData );
+	m_worldOrigin = dragData.worldOrigin;
+	m_worldAxis0 = dragData.worldAxis0;
+	m_worldAxis1 = dragData.worldAxis1;
+
+
+	if( abs( dragData.worldPlane.normal.dot( dragData.worldLine.dir ) ) < g_planarToLinearDragThreshold )
+	{
+		bool useAxis0 = abs( m_worldAxis0.dot( dragData.worldLine.dir ) ) < abs( m_worldAxis1.dot( dragData.worldLine.dir ) );
+
+		m_linearDragAxisMask = V2f( (float)useAxis0, (float)!useAxis0);
+
+		m_linearDrag = LinearDrag(
+			m_gadget,
+			LineSegment3f( V3f( 0 ), useAxis0 ? m_axis0 : m_axis1 ),
+			dragBeginEvent,
+			m_processModifiers
+		);
+	}
 
 	m_dragBeginPosition = updatedPosition( dragBeginEvent );
 

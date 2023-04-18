@@ -58,6 +58,7 @@ Fixes
   - Fixed handling of points exactly at the density threshold.
 - ObjectSource, Group : Prevented the creation of locations with invalid names - `..`, `...` or anything containing `/` or a filter wildcard.
 - BranchCreator : Prevented the use of `...` and other filter wildcards in the `destination`.
+- TranslateTool : Fixed dragging in a plane parallel to an orthographic view. Translation in that case now behaves the same as dragging an axis.
 
 API
 ---
