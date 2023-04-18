@@ -259,8 +259,8 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["outputs"].addOutput(
 			"beauty",
 			IECoreScene.Output(
-				( self.temporaryDirectory() / "${wedge:value}.tif" ).as_posix(),
-				"tiff",
+				( self.temporaryDirectory() / "${wedge:value}.exr" ).as_posix(),
+				"exr",
 				"rgba",
 				{
 				}
@@ -288,10 +288,10 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		dispatcher.dispatch( [ s["wedge"] ] )
 
 		hidden = GafferImage.ImageReader()
-		hidden["fileName"].setValue( self.temporaryDirectory() / "hidden.tif" )
+		hidden["fileName"].setValue( self.temporaryDirectory() / "hidden.exr" )
 
 		visible = GafferImage.ImageReader()
-		visible["fileName"].setValue( self.temporaryDirectory() / "visible.tif" )
+		visible["fileName"].setValue( self.temporaryDirectory() / "visible.exr" )
 
 		hiddenStats = GafferImage.ImageStats()
 		hiddenStats["in"].setInput( hidden["out"] )
