@@ -48,8 +48,10 @@ else :
 
 # Determine default archive URL.
 
-platform = { "darwin" : "osx", "win32" : "windows" }.get( sys.platform, "linux" )
-defaultURL = "https://github.com/GafferHQ/dependencies/releases/download/5.0.0a5/gafferDependencies-5.0.0a5-Python3-" + platform + ".tar.gz"
+defaultURL = "https://github.com/GafferHQ/dependencies/releases/download/7.0.0a1/gafferDependencies-7.0.0a1-{platform}.{extension}".format(
+	platform = { "darwin" : "osx", "win32" : "windows" }.get( sys.platform, "linux" ),
+	extension = "tar.gz" if sys.platform != "win32" else "zip"
+)
 
 # Parse command line arguments.
 
@@ -83,7 +85,7 @@ sys.stderr.write( "Downloading dependencies \"%s\"\n" % args.archiveURL )
 archiveFileName, headers = urlretrieve( args.archiveURL )
 
 pathlib.Path( args.dependenciesDir ).mkdir( parents = True )
-if platform != "windows":
+if sys.platform != "win32" :
 	subprocess.check_call( [ "tar", "xf", archiveFileName, "-C", args.dependenciesDir, "--strip-components=1" ] )
 else:
 	subprocess.check_call(
@@ -95,7 +97,7 @@ else:
 	extractedPath = pathlib.Path( args.dependenciesDir ) / pathlib.Path( args.archiveURL ).stem
 	for p in extractedPath.glob( "*" ) :
 		shutil.move( str( p ), args.dependenciesDir )
-	
+
 	extractedPath.rmdir()
 
 # Tell the world
