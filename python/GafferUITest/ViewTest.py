@@ -45,6 +45,20 @@ import GafferUITest
 
 class ViewTest( GafferUITest.TestCase ) :
 
+	def setUp( self ) :
+
+		GafferUITest.TestCase.setUp( self )
+
+		self.originalDisplayTransforms = GafferUI.View.DisplayTransform.registeredDisplayTransforms()
+
+	def tearDown( self ) :
+
+		GafferUITest.TestCase.tearDown( self )
+
+		for name in GafferUI.View.DisplayTransform.registeredDisplayTransforms() :
+			if name not in self.originalDisplayTransforms :
+				GafferUI.View.DisplayTransform.deregisterDisplayTransform( name )
+
 	class MyView( GafferUI.View ) :
 
 		def __init__( self, viewedPlug = None ) :
@@ -86,6 +100,46 @@ class ViewTest( GafferUITest.TestCase ) :
 		self.assertEqual( view.editScope(), None )
 		view["editScope"].setInput( editScope["out"] )
 		self.assertEqual( view.editScope(), editScope )
+
+	def testDisplayTransformRegistrations( self ) :
+
+		def dummyTransform() :
+			# OK, because we're not expecting this to be called.
+			raise NotImplementedError
+
+		# Register some transforms, and check they are returned in the order
+		# we registered them.
+
+		newNames = [ "z", "a", "c", "b" ]
+		for name in newNames :
+			GafferUI.View.DisplayTransform.registerDisplayTransform( name, dummyTransform )
+
+		self.assertEqual(
+			GafferUI.View.DisplayTransform.registeredDisplayTransforms(),
+			self.originalDisplayTransforms + newNames
+		)
+
+		# Deregister them, and check we're back where we started.
+
+		for name in newNames :
+			GafferUI.View.DisplayTransform.deregisterDisplayTransform( name )
+
+		self.assertEqual(
+			GafferUI.View.DisplayTransform.registeredDisplayTransforms(),
+			self.originalDisplayTransforms
+		)
+
+		# Repeat, this time in reverse order, in case the original ordering matched by fluke.
+
+		for name in reversed( newNames  ) :
+			GafferUI.View.DisplayTransform.registerDisplayTransform( name, dummyTransform )
+
+		self.assertEqual(
+			GafferUI.View.DisplayTransform.registeredDisplayTransforms(),
+			self.originalDisplayTransforms + list( reversed( newNames ) )
+		)
+
+		# No need to clean up - `tearDown()` will do that for us.
 
 if __name__ == "__main__":
 	unittest.main()

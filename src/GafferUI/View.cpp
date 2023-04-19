@@ -46,6 +46,11 @@
 
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/bind/bind.hpp"
+#include "boost/multi_index/member.hpp"
+#include "boost/multi_index/ordered_index.hpp"
+#include "boost/multi_index/sequenced_index.hpp"
+#include "boost/multi_index_container.hpp"
+
 
 using namespace boost::placeholders;
 using namespace IECore;
@@ -283,7 +288,16 @@ void View::toolPlugSet( Gaffer::Plug *plug ) const
 namespace
 {
 
-using DisplayTransformCreatorMap = std::map<std::string, View::DisplayTransform::DisplayTransformCreator>;
+using NamedTransform = std::pair<std::string, View::DisplayTransform::DisplayTransformCreator>;
+using DisplayTransformCreatorMap = boost::multi_index::multi_index_container<
+	NamedTransform,
+	boost::multi_index::indexed_by<
+		boost::multi_index::ordered_unique<
+			boost::multi_index::member<NamedTransform, std::string, &NamedTransform::first>
+		>,
+		boost::multi_index::sequenced<>
+	>
+>;
 
 DisplayTransformCreatorMap &displayTransformCreators()
 {
@@ -521,14 +535,25 @@ bool View::DisplayTransform::keyPress( const KeyEvent &event )
 
 void View::DisplayTransform::registerDisplayTransform( const std::string &name, DisplayTransformCreator creator )
 {
-	displayTransformCreators()[name] = creator;
+	auto &m = displayTransformCreators();
+	auto [it, inserted] = m.insert( { name, creator } );
+	if( !inserted )
+	{
+		m.replace( it, { name, creator } );
+	}
+	registrationChangedSignal()( name );
+}
+
+void View::DisplayTransform::deregisterDisplayTransform( const std::string &name )
+{
+	displayTransformCreators().erase( name );
 	registrationChangedSignal()( name );
 }
 
 std::vector<std::string> View::DisplayTransform::registeredDisplayTransforms()
 {
 	std::vector<std::string> result;
-	for( auto &d : displayTransformCreators() )
+	for( auto &d : displayTransformCreators().get<1>() )
 	{
 		result.push_back( d.first );
 	}
