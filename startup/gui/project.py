@@ -126,7 +126,3 @@ with IECore.IgnoredExceptions( ImportError ) :
 	import GafferArnold
 	Gaffer.Metadata.registerValue( GafferArnold.ArnoldRender, "fileName", "userDefault", "${project:rootDirectory}/asses/${script:name}/${script:name}.####.ass" )
 	Gaffer.Metadata.registerValue( GafferArnold.ArnoldTextureBake, "bakeDirectory", "userDefault", "${project:rootDirectory}/bakedTextures/${script:name}/" )
-
-with IECore.IgnoredExceptions( ImportError ) :
-	import GafferAppleseed
-	Gaffer.Metadata.registerValue( GafferAppleseed.AppleseedRender, "fileName", "userDefault", "${project:rootDirectory}/appleseeds/${script:name}/${script:name}.####.appleseed" )

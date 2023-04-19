@@ -36,6 +36,7 @@ API
 Breaking Changes
 ----------------
 
+- Appleseed : Removed Appleseed support. We suggest Cycles as an actively maintained open-source alternative.
 - GLWidget :
   - A GL context is no longer available in `_resize()`.
   - Removed `BufferOptions.Double`.

@@ -89,10 +89,6 @@ for module in (
 	requiredPaths.append( os.path.join( "python", module ) )
 	requiredPaths.append( os.path.join( "python", "%sUI" % module ) )
 
-if os.name != "nt" :
-	requiredPaths.append( os.path.join( "python", "GafferAppleseed" ) )
-	requiredPaths.append( os.path.join( "python", "%sUI" % "GafferAppleseed" ) )
-
 rawMembers = []
 
 if args.archive.endswith( ".tar.gz" ) :

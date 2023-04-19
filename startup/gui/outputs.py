@@ -203,68 +203,6 @@ with IECore.IgnoredExceptions( ImportError ) :
 			)
 		)
 
-
-# Add standard appleseed AOVs
-
-if os.environ.get( "GAFFERAPPLESEED_HIDE_UI", "" ) != "1" :
-
-	with IECore.IgnoredExceptions( ImportError ) :
-
-		# If appleseed isn't available for any reason, this will fail
-		# and we won't add any unnecessary output definitions.
-		import GafferAppleseed
-
-		for aov in [
-			"diffuse",
-			"glossy",
-			"emission",
-			"direct_diffuse",
-			"indirect_diffuse",
-			"direct_glossy",
-			"indirect_glossy",
-			"albedo",
-
-			"npr_contour",
-			"npr_shading",
-
-			"depth",
-			"normal",
-			"position",
-			"uv",
-
-			"pixel_variation",
-			"pixel_sample_count",
-			"pixel_time",
-			"invalid_samples"
-		] :
-
-			label = aov.replace( "_", " " ).title().replace( " ", "_" )
-			aovModel = aov + "_aov"
-
-			GafferScene.Outputs.registerOutput(
-				"Interactive/Appleseed/" + label,
-				IECoreScene.Output(
-					aov,
-					"ieDisplay",
-					aovModel,
-					{
-						"driverType" : "ClientDisplayDriver",
-						"displayHost" : "localhost",
-						"displayPort" : "${image:catalogue:port}",
-						"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
-					}
-				)
-			)
-
-			GafferScene.Outputs.registerOutput(
-				"Batch/Appleseed/" + label,
-				IECoreScene.Output(
-					"${project:rootDirectory}/renders/${script:name}/%s/%s.####.exr" % ( aov, aov ),
-					"exr",
-					aovModel
-				)
-			)
-
 # Add standard cycles AOVs
 
 if os.environ.get( "CYCLES_ROOT" ) and os.environ.get( "GAFFERCYCLES_HIDE_UI", "" ) != "1" :

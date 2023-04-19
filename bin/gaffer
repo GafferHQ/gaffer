@@ -198,36 +198,6 @@ export QT_XCB_TABLET_LEGACY_COORDINATES=1
 
 prependToPath "$GAFFER_ROOT/bin" PATH
 
-# Set up Appleseed
-##########################################################################
-
-if [[ -z $APPLESEED && -d $GAFFER_ROOT/appleseed ]] ; then
-
-	export APPLESEED="$GAFFER_ROOT/appleseed"
-
-fi
-
-if [[ $APPLESEED ]] ; then
-
-	if [[ `uname` = "Linux" ]] ; then
-		prependToPath "$APPLESEED/lib" LD_LIBRARY_PATH
-	else
-		prependToPath "$APPLESEED/lib" DYLD_LIBRARY_PATH
-	fi
-
-	# Using a glob to keep the wrapper agnostic of python version.
-	for appleseedPython in "$APPLESEED"/lib/python* ; do
-		prependToPath "$appleseedPython" PYTHONPATH
-	done
-
-	prependToPath "$APPLESEED/shaders/appleseed" OSL_SHADER_PATHS
-	prependToPath "$GAFFER_ROOT/appleseedDisplays" APPLESEED_SEARCHPATH
-	prependToPath "$OSL_SHADER_PATHS" APPLESEED_SEARCHPATH
-
-	prependToPath "$APPLESEED/bin" PATH
-
-fi
-
 # Set up Cycles
 ##########################################################################
 

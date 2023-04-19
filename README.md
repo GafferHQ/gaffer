@@ -96,7 +96,7 @@ With any luck, you now have a functioning version of Gaffer.
 
 ### Building with third-party renderer support
 
-Gaffer dependencies ships with Appleseed, but to build the modules for one of the other supported third-party renderers, you will need to set appropriate `scons` options pointing to your installation. The options are:
+Gaffer dependencies ships with Cycles, but to build the modules for one of the other supported third-party renderers, you will need to set appropriate `scons` options pointing to your installation. The options are:
 
 - Arnold: `ARNOLD_ROOT`
 - 3Delight: `DELIGHT_ROOT`

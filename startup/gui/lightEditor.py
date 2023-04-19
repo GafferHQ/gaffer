@@ -40,18 +40,6 @@ import IECore
 import Gaffer
 import GafferSceneUI
 
-if os.environ.get( "GAFFERAPPLESEED_HIDE_UI", "" ) != "1" :
-
-	with IECore.IgnoredExceptions( ImportError ) :
-
-		# Register Light Editor sections for Appleseed before the generic "Visualisation" section
-		import GafferAppleseedUI
-
-		Gaffer.Metadata.registerValue( GafferSceneUI.LightEditor.Settings, "attribute", "preset:Appleseed", "as:light" )
-		# Default to showing Appleseed lights, since that is the renderer we ship with.
-		Gaffer.Metadata.registerValue( GafferSceneUI.LightEditor.Settings, "attribute", "userDefault", "as:light" )
-
-
 if os.environ.get( "CYCLES_ROOT" ) and os.environ.get( "GAFFERCYCLES_HIDE_UI", "" ) != "1" :
 
 	Gaffer.Metadata.registerValue( GafferSceneUI.LightEditor.Settings, "attribute", "preset:Cycles", "cycles:light" )
@@ -74,7 +62,6 @@ if os.environ.get( "CYCLES_ROOT" ) and os.environ.get( "GAFFERCYCLES_HIDE_UI", "
 	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "spread", "Shape" )
 	GafferSceneUI.LightEditor.registerParameter( "cycles:light", "angle", "Shape" )
 
-	# Assume that Cycles would be preferred to Appleseed.
 	Gaffer.Metadata.registerValue( GafferSceneUI.LightEditor.Settings, "attribute", "userDefault", "cycles:light" )
 
 with IECore.IgnoredExceptions( ImportError ) :
@@ -100,7 +87,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 			)
 
 	Gaffer.Metadata.registerValue( GafferSceneUI.LightEditor.Settings, "attribute", "preset:OSL", "osl:light" )
-	# If 3Delight is available, then assume it will be used in preference to Appleseed.
+	# If 3Delight is available, then assume it will be used in preference to Cycles.
 	Gaffer.Metadata.registerValue( GafferSceneUI.LightEditor.Settings, "attribute", "userDefault", "osl:light" )
 
 with IECore.IgnoredExceptions( ImportError ) :

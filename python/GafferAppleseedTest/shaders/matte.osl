@@ -1,5 +1,0 @@
-
-surface matte(color Kd_color = color(1))
-{
-    Ci = Kd_color * diffuse(N);
-}
