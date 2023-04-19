@@ -15,7 +15,7 @@ Improvements
   - Improved colorspace menus :
     - Organised colorspaces into submenus by family.
     - Removed unwanted title-casing, so that names are now displayed verbatim.
-    - Removed Roles submenu, which is deemed unsuitable by the OpenColorIO UX working group. It may be reintroduced by registering `openColorIO:includeRoles` metadata to the relevant plugs.
+    - Added control over the presence of roles by registering `openColorIO:includeRoles` metadata to the relevant plugs.
 - VectorDataPlugValueWidget : Computation errors are now reflected by a red background colour.
 
 Fixes
