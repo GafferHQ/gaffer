@@ -65,14 +65,15 @@ Breaking Changes
 Build
 -----
 
-- OpenEXR : Stopped linking unnecessarily to the `IlmImf` library.
 - Boost :
   - Updated to version 1.80.0.
   - Stopped linking unnecessarily to `iostreams`, `date_time`, `wave` and `system` libraries.
 - Cortex : Updated to version 10.5.0.0.
 - Imath : Added version 3.1.7.
 - Minizip : Added version 3.0.9.
-- OpenEXR : Updated to version 3.1.7.
+- OpenEXR :
+  - Updated to version 3.1.7.
+  - Stopped linking unnecessarily to the `IlmImf` library.
 - OpenColorIO : Updated to version 2.2.1.
 - PyBind11 : Updated to version 2.10.4.
 - PySide : Updated to version 5.15.8.
