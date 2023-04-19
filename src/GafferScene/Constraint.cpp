@@ -1103,7 +1103,6 @@ Imath::M44f Constraint::computeTargetModeMatrix( const Gaffer::Context *context 
 		case Constraint::UV:
 		{
 			const IECore::ConstObjectPtr object = target.scene->object( target.path );
-			Imath::M44f surfaceTransform;
 			const Imath::V2f uv = targetUVPlug()->getValue();
 			const bool throwOnError = !( ignoreMissingTargetPlug()->getValue() );
 			M44f result;
@@ -1113,7 +1112,6 @@ Imath::M44f Constraint::computeTargetModeMatrix( const Gaffer::Context *context 
 		case Constraint::Vertex:
 		{
 			const IECore::ConstObjectPtr object = target.scene->object( target.path );
-			Imath::M44f surfaceTransform;
 			const int vertexId = targetVertexPlug()->getValue();
 			const bool throwOnError = !( ignoreMissingTargetPlug()->getValue() );
 			M44f result;
