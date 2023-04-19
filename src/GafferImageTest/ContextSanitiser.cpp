@@ -43,6 +43,8 @@
 
 #include "IECore/MessageHandler.h"
 
+#include "fmt/format.h"
+
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferImage;
@@ -99,22 +101,22 @@ void ContextSanitiser::warn( const Gaffer::Process &process, const IECore::Inter
 
 	if( m_warningsEmitted.insert( warning ).second )
 	{
-		std::string message = boost::str(
-			boost::format( "%s in context for %s %s" )
-				% contextVariable.string()
-				% process.plug()->relativeName(
-					process.plug()->ancestor<ScriptNode>()
-				)
-				% process.type()
+		std::string message = fmt::format(
+			"{} in context for {} {}",
+			contextVariable.string(),
+			process.plug()->relativeName(
+				process.plug()->ancestor<ScriptNode>()
+			),
+			process.type().string()
 		);
 		if( process.parent() )
 		{
-			message += boost::str(
-				boost::format( " (called from %s %s)" )
-					% process.parent()->plug()->relativeName(
-						process.parent()->plug()->ancestor<ScriptNode>()
-					)
-					% process.parent()->type()
+			message += fmt::format(
+				" (called from {} {})",
+				process.parent()->plug()->relativeName(
+					process.parent()->plug()->ancestor<ScriptNode>()
+				),
+				process.parent()->type().string()
 			);
 		}
 		IECore::msg(

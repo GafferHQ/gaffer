@@ -52,6 +52,8 @@
 #include "Gaffer/ParallelAlgo.h"
 #include "Gaffer/ValuePlug.h"
 
+#include "fmt/format.h"
+
 using namespace boost::placeholders;
 using namespace IECore;
 using namespace IECoreScene;
@@ -280,9 +282,9 @@ Gaffer::ValuePlugPtr AttributeInspector::source( const GafferScene::SceneAlgo::H
 				/// \todo This is overly conservative. We should test to see if there is more than
 				/// one filter match (but make sure to early-out once two are found, rather than test
 				/// the rest of the scene).
-				editWarning = boost::str(
-					boost::format( "Edits to \"%s\" may affect other locations in the scene." )
-						% m_attribute.string()
+				editWarning = fmt::format(
+					"Edits to \"{}\" may affect other locations in the scene.",
+					m_attribute.string()
 				);
 				return plug;
 			}
@@ -330,9 +332,7 @@ Inspector::EditFunctionOrFailure AttributeInspector::editFunction( Gaffer::EditS
 		// If we don't have an edit and the scope is locked, we error,
 		// as we can't add an edit. Other cases where we already _have_
 		// an edit will have been found by `source()`.
-		return boost::str(
-			boost::format( "%s is locked." ) % readOnlyReason->relativeName( readOnlyReason->ancestor<ScriptNode>() )
-		);
+		return fmt::format( "{} is locked.", readOnlyReason->relativeName( readOnlyReason->ancestor<ScriptNode>() ) );
 	}
 	else
 	{

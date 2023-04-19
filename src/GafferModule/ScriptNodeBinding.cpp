@@ -62,6 +62,8 @@
 #include "boost/lexical_cast.hpp"
 #include "boost/regex.hpp"
 
+#include "fmt/format.h"
+
 #include <memory>
 
 using namespace boost;
@@ -116,11 +118,9 @@ namespace
 
 const std::string formattedErrorContext( int lineNumber, const std::string &context )
 {
-	return boost::str(
-		boost::format( "Line %d%s%s" ) %
-			lineNumber %
-			(!context.empty() ? " of " : "") %
-			context
+	return fmt::format( "Line {}{}{}",
+		lineNumber, !context.empty() ? " of " : "",
+		context
 	);
 }
 

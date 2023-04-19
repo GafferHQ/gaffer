@@ -39,6 +39,8 @@
 #include "IECore/MessageHandler.h"
 #include "IECore/SimpleTypedData.h"
 
+#include "fmt/format.h"
+
 using namespace std;
 using namespace IECore;
 using namespace IECoreScenePreview;
@@ -145,7 +147,7 @@ Renderer::ObjectInterfacePtr CapturingRenderer::object( const std::string &name,
 	if( !m_capturedObjects.insert( a, name ) )
 	{
 		IECore::msg( IECore::Msg::Warning, "CapturingRenderer::object",
-			boost::str( boost::format( "Object named \"%s\" already exists" ) % name )
+			fmt::format( "Object named \"{}\" already exists", name )
 		);
 		return nullptr;
 	}
