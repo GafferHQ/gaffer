@@ -77,11 +77,11 @@ Gaffer.Metadata.registerValue( preferences["displayColorSpace"]["context"], "lay
 
 # Register with `GafferUI.DisplayTransform` for use by Widgets.
 
-def __processor( view ) :
+def __processor( display, view ) :
 
 	d = OCIO.DisplayViewTransform()
 	d.setSrc( OCIO.ROLE_SCENE_LINEAR )
-	d.setDisplay( defaultDisplay )
+	d.setDisplay( display )
 	d.setView( view )
 
 	context = copy.deepcopy( config.getCurrentContext() )
@@ -94,7 +94,7 @@ def __processor( view ) :
 
 def __setDisplayTransform() :
 
-	cpuProcessor = __processor( preferences["displayColorSpace"]["view"].getValue() ).getDefaultCPUProcessor()
+	cpuProcessor = __processor( defaultDisplay, preferences["displayColorSpace"]["view"].getValue() ).getDefaultCPUProcessor()
 
 	def f( c ) :
 
@@ -118,22 +118,23 @@ preferences.plugSetSignal().connect( __plugSet, scoped = False )
 
 # Register with `GafferUI.View.DisplayTransform` for use in the Viewer.
 
-def __displayTransformCreator( view ) :
+def __displayTransformCreator( display, view ) :
 
-	processor = __processor( view )
+	processor = __processor( display, view )
 	return GafferImageUI.OpenColorIOAlgo.displayTransformToFramebufferShader( processor )
 
 def __registerViewerDisplayTransforms() :
 
-	for name in config.getViews( defaultDisplay ) :
-		GafferUI.View.DisplayTransform.registerDisplayTransform(
-			name,
-			functools.partial( __displayTransformCreator, name )
-		)
+	for display in config.getDisplays() :
+		for view in config.getViews( display ) :
+			GafferUI.View.DisplayTransform.registerDisplayTransform(
+				f"{display}/{view}",
+				functools.partial( __displayTransformCreator, display, view )
+			)
 
 __registerViewerDisplayTransforms()
 
-Gaffer.Metadata.registerValue( GafferUI.View, "displayTransform.name", "userDefault", config.getDefaultView( defaultDisplay ) )
+Gaffer.Metadata.registerValue( GafferUI.View, "displayTransform.name", "userDefault", "{}/{}".format( defaultDisplay, config.getDefaultView( defaultDisplay ) ) )
 
 # Add "Roles" submenus to various colorspace plugs. The OCIO UX guidelines suggest we
 # shouldn't do this, but they do seem like they might be useful, and historically they
