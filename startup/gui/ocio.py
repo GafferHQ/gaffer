@@ -105,6 +105,17 @@ def __setDisplayTransform() :
 
 __setDisplayTransform()
 
+# And connect to `plugSet()` to update `GafferUI.DisplayTransform` again when the user modifies something.
+
+def __plugSet( plug ) :
+
+	if plug.relativeName( plug.node() ) != "displayColorSpace" :
+		return
+
+	__setDisplayTransform()
+
+preferences.plugSetSignal().connect( __plugSet, scoped = False )
+
 # Register with `GafferUI.View.DisplayTransform` for use in the Viewer.
 
 def __displayTransformCreator( view ) :
@@ -120,26 +131,9 @@ def __registerViewerDisplayTransforms() :
 			functools.partial( __displayTransformCreator, name )
 		)
 
-	GafferUI.View.DisplayTransform.registerDisplayTransform(
-		"Default",
-		functools.partial( __displayTransformCreator, preferences["displayColorSpace"]["view"].getValue() )
-	)
-
 __registerViewerDisplayTransforms()
 
-# And connect to `plugSet()` to update everything again when the user modifies something.
-
-def __plugSet( plug ) :
-
-	if plug.relativeName( plug.node() ) != "displayColorSpace" :
-		return
-
-	__registerViewerDisplayTransforms()
-	__setDisplayTransform()
-
-preferences.plugSetSignal().connect( __plugSet, scoped = False )
-
-Gaffer.Metadata.registerValue( GafferUI.View, "displayTransform.name", "userDefault", "Default" )
+Gaffer.Metadata.registerValue( GafferUI.View, "displayTransform.name", "userDefault", config.getDefaultView( defaultDisplay ) )
 
 # Add "Roles" submenus to various colorspace plugs. The OCIO UX guidelines suggest we
 # shouldn't do this, but they do seem like they might be useful, and historically they

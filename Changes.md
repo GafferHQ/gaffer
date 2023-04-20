@@ -18,6 +18,7 @@ Improvements
     - Added control over the presence of roles by registering `openColorIO:includeRoles` metadata to the relevant plugs.
   - Improved View display transform menu :
     - Ordered menu items to match the order in the OpenColorIO config.
+    - Removed "Default" view.
 - VectorDataPlugValueWidget : Computation errors are now reflected by a red background colour.
 
 Fixes
