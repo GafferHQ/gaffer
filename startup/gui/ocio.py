@@ -35,6 +35,7 @@
 #
 ##########################################################################
 
+import copy
 import functools
 import imath
 
@@ -83,9 +84,7 @@ def __processor( view ) :
 	d.setDisplay( defaultDisplay )
 	d.setView( view )
 
-	# \todo : Should be `context = copy.deepcopy( config.getCurrentContext() )`
-	# once https://github.com/AcademySoftwareFoundation/OpenColorIO/pull/1575 gets merged into OCIO2.1.2
-	context = OCIO.Context( searchPaths = list( config.getCurrentContext().getSearchPaths() ), workingDir = config.getCurrentContext().getWorkingDir(), environmentMode = config.getCurrentContext().getEnvironmentMode(), stringVars = dict( config.getCurrentContext().getStringVars() ) )
+	context = copy.deepcopy( config.getCurrentContext() )
 	gafferContext = Gaffer.Context.current()
 	for variable in preferences["displayColorSpace"]["context"] :
 		if variable["enabled"].getValue() :
