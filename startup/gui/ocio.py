@@ -134,7 +134,84 @@ def __registerViewerDisplayTransforms() :
 
 __registerViewerDisplayTransforms()
 
+class DisplayTransformPlugValueWidget( GafferUI.PlugValueWidget ) :
+
+	def __init__( self, plugs, **kw ) :
+
+		self.__menuButton = GafferUI.MenuButton( "", menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ) )
+		GafferUI.PlugValueWidget.__init__( self, self.__menuButton, plugs, **kw )
+
+		self.__currentValue = ""
+
+	def _updateFromValues( self, values, exception ) :
+
+		if exception is not None :
+			self.__menuButton.setText( "" )
+			self.__currentValue = ""
+		else :
+			assert( len( values ) == 1 )
+			self.__currentValue = values[0]
+			# Only show the View name, because the Display name is more of
+			# a "set once and forget" affair. The menu shows both for when
+			# you need to check.
+			self.__menuButton.setText( self.__currentValue.partition( "/" )[-1] )
+
+		self.__menuButton.setErrored( exception is not None )
+
+	def _updateFromEditable( self ) :
+
+		self.__menuButton.setEnabled( self._editable() )
+
+	def __menuDefinition( self ) :
+
+		result = IECore.MenuDefinition()
+
+		activeViews = Gaffer.Metadata.value( self.getPlug(), "openColorIO:activeViews" ) or "*"
+
+		# View section
+
+		result.append( "/__ViewDivider__", { "divider" : True, "label" : "View" } )
+
+		displayToViews = {}
+
+		currentDisplay, currentView = self.__currentValue.split( "/" )
+		for displayTransform in GafferUI.View.DisplayTransform.registeredDisplayTransforms() :
+			display, view = displayTransform.split( "/" )
+			if not IECore.StringAlgo.matchMultiple( view, activeViews ) :
+				continue
+			displayToViews.setdefault( display, [] ).append( view )
+			if display != currentDisplay :
+				continue
+			result.append(
+				f"/{view}", {
+					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), f"{currentDisplay}/{view}" ),
+					"checkBox" : view == currentView
+				}
+			)
+
+		# Display section
+
+		result.append( "/__DisplayDivider__", { "divider" : True, "label" : "Display" } )
+
+		for display, views in displayToViews.items() :
+			newValue = "{}/{}".format( display, currentView if currentView in views else views[0] )
+			result.append(
+				f"/{display}", {
+					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), newValue ),
+					"checkBox" : display == currentDisplay
+				}
+			)
+
+		return result
+
+	def __setValue( self, value, unused ) :
+
+		self.getPlug().setValue( value )
+
+GafferImageUI._OpenColorIODisplayTransformPlugValueWidget = DisplayTransformPlugValueWidget
+Gaffer.Metadata.registerValue( GafferUI.View, "displayTransform.name", "plugValueWidget:type", "GafferImageUI._OpenColorIODisplayTransformPlugValueWidget" )
 Gaffer.Metadata.registerValue( GafferUI.View, "displayTransform.name", "userDefault", "{}/{}".format( defaultDisplay, config.getDefaultView( defaultDisplay ) ) )
+Gaffer.Metadata.registerValue( GafferUI.View, "displayTransform.name", "layout:minimumWidth", 150 )
 
 # Add "Roles" submenus to various colorspace plugs. The OCIO UX guidelines suggest we
 # shouldn't do this, but they do seem like they might be useful, and historically they

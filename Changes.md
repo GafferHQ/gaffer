@@ -19,6 +19,8 @@ Improvements
   - Improved View display transform menu :
     - Ordered menu items to match the order in the OpenColorIO config.
     - Removed "Default" view.
+    - Added menu options for changing the current Display.
+    - Allowed the available views to be filtered using an `openColorIO:activeViews` metadata value registered on the View's `displayTransform.name` plug. Values should be space-separated names, optionally containing wildcards.
 - VectorDataPlugValueWidget : Computation errors are now reflected by a red background colour.
 
 Fixes
