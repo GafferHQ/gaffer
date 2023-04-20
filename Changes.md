@@ -43,6 +43,7 @@ API
 - Color4fVectorDataPlug : Added a plug type for storing arrays of `Color4f`.
 - TypedObjectPlug : Added default value for `direction` and `defaultValue` constructor arguments.
 - VectorDataWidget : Added `setErrored()` and `getErrored()` methods to control an error state. Errors are reflected by a red background colour.
+- PlugLayout : Added support for `layout:minimumWidth` metadata.
 
 Breaking Changes
 ----------------

@@ -403,8 +403,13 @@ class PlugLayout( GafferUI.Widget ) :
 		width = self.__itemMetadataValue( plug, "width" )
 		if width is not None :
 			result._qtWidget().setFixedWidth( width )
-			if result._qtWidget().layout() is not None :
-				result._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetDefaultConstraint )
+
+		minimumWidth = self.__itemMetadataValue( plug, "minimumWidth" )
+		if minimumWidth is not None :
+			result._qtWidget().setMinimumWidth( minimumWidth )
+
+		if result._qtWidget().layout() is not None and ( width is not None or minimumWidth is not None ) :
+			result._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetDefaultConstraint )
 
 		if isinstance( result, GafferUI.PlugValueWidget ) and not result.hasLabel() and self.__itemMetadataValue( plug, "label" ) != "" :
 			result = GafferUI.PlugWidget( result )
