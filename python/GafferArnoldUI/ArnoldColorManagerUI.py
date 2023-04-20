@@ -34,13 +34,10 @@
 #
 ##########################################################################
 
-import functools
-
 import PyOpenColorIO
 
-import IECore
-
 import Gaffer
+import GafferImageUI
 import GafferArnold
 
 def __parameterUserDefault( plug ) :
@@ -66,24 +63,16 @@ def __ocioConfig( plug ) :
 	except :
 		return None
 
-def __roles( config ) :
-
-	return [ r[0] for r in config.getRoles() ]
-
-def __colorSpaces( config ) :
-
-	return [ cs.getName() for cs in config.getColorSpaces() ]
-
 def __colorSpacePresetNames( plug ) :
 
 	config = __ocioConfig( plug )
 	if config is None :
 		return None
 
-	return IECore.StringVectorData(
-		[ "Roles/{}".format( x.replace( "_", " ").title() ) for x in __roles( config ) ] +
-		__colorSpaces( config ) + [ "None" ]
+	return GafferImageUI.OpenColorIOTransformUI.colorSpacePresetNames(
+		plug, config = config
 	)
+
 
 def __colorSpacePresetValues( plug ) :
 
@@ -91,7 +80,9 @@ def __colorSpacePresetValues( plug ) :
 	if config is None :
 		return None
 
-	return IECore.StringVectorData( __roles( config ) + __colorSpaces( config ) + [ "" ] )
+	return GafferImageUI.OpenColorIOTransformUI.colorSpacePresetValues(
+		plug, config = config
+	)
 
 def __colorSpacePlugValueWidget( plug ) :
 
@@ -134,6 +125,7 @@ Gaffer.Metadata.registerNode(
 			"presetNames", __colorSpacePresetNames,
 			"presetValues", __colorSpacePresetValues,
 			"plugValueWidget:type", __colorSpacePlugValueWidget,
+			"openColorIO:includeRoles", True,
 
 		],
 
@@ -142,6 +134,7 @@ Gaffer.Metadata.registerNode(
 			"presetNames", __colorSpacePresetNames,
 			"presetValues", __colorSpacePresetValues,
 			"plugValueWidget:type", __colorSpacePlugValueWidget,
+			"openColorIO:includeRoles", True,
 
 		]
 
