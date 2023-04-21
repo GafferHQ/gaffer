@@ -70,8 +70,8 @@ class IECORE_EXPORT TypedObjectPlug : public ValuePlug
 		/// A copy of defaultValue is taken - it must not be null.
 		TypedObjectPlug(
 			const std::string &name,
-			Direction direction,
-			ConstValuePtr defaultValue,
+			Direction direction = In,
+			ConstValuePtr defaultValue = new ValueType,
 			unsigned flags = Default
 		);
 		~TypedObjectPlug() override;
