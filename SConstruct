@@ -565,6 +565,7 @@ else:
 				# suppress warning about exported class deriving from non-exported class. See
 				# comment for /wd4251 for more explanation.
 				"/wd4275",
+				"/wd4324",  # suppress warning "structure was padded due to alignment specifier". Needed by cycles\kernel\types.h
 			],
 		)
 
