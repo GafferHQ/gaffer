@@ -566,6 +566,7 @@ else:
 				# comment for /wd4251 for more explanation.
 				"/wd4275",
 				"/wd4324",  # suppress warning "structure was padded due to alignment specifier". Needed by cycles\kernel\types.h
+				"/wd4458",  # suppress warning "declaration of 'variable' hides class member". Needed by cycles\scene\shader_nodes.h and cycles\util\ssef.h
 			],
 		)
 

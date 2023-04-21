@@ -223,11 +223,11 @@ class DownstreamIterator : public boost::iterator_facade<DownstreamIterator, con
 					plug = plug->parent<Plug>();
 					while( plug )
 					{
-						for( Plug::OutputContainer::const_iterator it = plug->outputs().begin(), eIt = plug->outputs().end(); it!=eIt; ++it )
+						for( Plug::OutputContainer::const_iterator pIt = plug->outputs().begin(), eIt = plug->outputs().end(); pIt!=eIt; ++pIt )
 						{
-							if( (*it)->children().empty() )
+							if( (*pIt)->children().empty() )
 							{
-								plugs.push_back( *it );
+								plugs.push_back( *pIt );
 							}
 						}
 						plug = plug->parent<Plug>();

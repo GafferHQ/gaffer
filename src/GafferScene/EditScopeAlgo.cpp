@@ -255,12 +255,12 @@ EditScopeAlgo::TransformEdit::TransformEdit(
 
 Imath::M44f EditScopeAlgo::TransformEdit::matrix() const
 {
-	const V3f pivot = this->pivot->getValue();
+	const V3f p = this->pivot->getValue();
 	M44f result;
-	result.translate( pivot + translate->getValue() );
+	result.translate( p + translate->getValue() );
 	result.rotate( IECore::degreesToRadians( rotate->getValue() ) );
 	result.scale( scale->getValue() );
-	result.translate( -pivot );
+	result.translate( -p );
 	return result;
 }
 
