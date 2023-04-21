@@ -396,12 +396,11 @@ struct TestLRUCacheExceptions
 
 		using Cache = IECorePreview::LRUCache<int, int, Policy>;
 		Cache cache(
-			[&calls]( int key, size_t &cost, const IECore::Canceller *canceller ) {
+			[&calls]( int key, size_t &cost, const IECore::Canceller *canceller ) -> int {
 				calls.push_back( key );
 				throw IECore::Exception( boost::str(
 					boost::format( "Get failed for %1%" ) % key
 				) );
-				return 0;
 			},
 			1000
 		);
@@ -492,12 +491,11 @@ struct TestLRUCacheExceptions
 		// Check that if we don't cache errors, then it gets called twice
 		calls.clear();
 		Cache noErrorsCache(
-			[&calls]( int key, size_t &cost, const IECore::Canceller *canceller ) {
+			[&calls]( int key, size_t &cost, const IECore::Canceller *canceller ) -> int {
 				calls.push_back( key );
 				throw IECore::Exception( boost::str(
 					boost::format( "Get failed for %1%" ) % key
 				) );
-				return 0;
 			},
 			1000,
 			typename Cache::RemovalCallback(),

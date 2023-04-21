@@ -214,8 +214,6 @@ struct DispatcherHelper
 		{
 			ExceptionAlgo::translatePythonException();
 		}
-
-		return nullptr;
 	}
 
 	void operator()( Plug *parentPlug )
