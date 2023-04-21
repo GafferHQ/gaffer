@@ -328,7 +328,7 @@ void CollectImages::hashDeep( const GafferImage::ImagePlug *parent, const Gaffer
 
 bool CollectImages::computeDeep( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	int outDeep = -1;
+	std::optional<bool> outDeep = std::nullopt;
 	const std::string layerVariable = layerVariablePlug()->getValue();
 
 	ConstStringVectorDataPtr rootLayersData = rootLayersPlug()->getValue();
@@ -338,20 +338,20 @@ bool CollectImages::computeDeep( const Gaffer::Context *context, const ImagePlug
 	{
 		editScope.set( layerVariable, &i );
 		bool curDeep = inPlug()->deepPlug()->getValue();
-		if( outDeep == -1 )
+		if( !outDeep.has_value() )
 		{
 			outDeep = curDeep;
 		}
 		else
 		{
-			if( outDeep != curDeep )
+			if( outDeep.value() != curDeep )
 			{
 				throw IECore::Exception( "Input to CollectImages must be consistent, but it is sometimes deep." );
 			}
 		}
 	}
 
-	return outDeep == 1;
+	return outDeep.value_or( false );
 }
 
 void CollectImages::hashSampleOffsets( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
