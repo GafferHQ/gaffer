@@ -44,9 +44,9 @@ import GafferImage
 
 import PyOpenColorIO
 
-def __colorSpaceMenuHelper( plug ) :
+def __colorSpaceMenuHelper( plug, config = None ) :
 
-	config = PyOpenColorIO.GetCurrentConfig()
+	config = PyOpenColorIO.GetCurrentConfig() if config is None else config
 	parameters = PyOpenColorIO.ColorSpaceMenuParameters( config )
 
 	categories = Gaffer.Metadata.value( plug, "openColorIO:categories" )
@@ -59,9 +59,9 @@ def __colorSpaceMenuHelper( plug ) :
 
 	return PyOpenColorIO.ColorSpaceMenuHelper( parameters )
 
-def colorSpacePresetNames( plug, noneLabel = "None" ) :
+def colorSpacePresetNames( plug, noneLabel = "None", config = None ) :
 
-	helper = __colorSpaceMenuHelper( plug )
+	helper = __colorSpaceMenuHelper( plug, config )
 	return IECore.StringVectorData(
 		[ noneLabel ] + [
 			"/".join(
@@ -72,9 +72,9 @@ def colorSpacePresetNames( plug, noneLabel = "None" ) :
 		]
 	)
 
-def colorSpacePresetValues( plug ) :
+def colorSpacePresetValues( plug, config = None ) :
 
-	helper = __colorSpaceMenuHelper( plug )
+	helper = __colorSpaceMenuHelper( plug, config )
 	return IECore.StringVectorData(
 		[ "" ] +
 		[ helper.getName( i ) for i in range( 0, helper.getNumColorSpaces() ) ]
