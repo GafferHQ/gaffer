@@ -40,6 +40,8 @@
 
 #include "IECore/SimpleTypedData.h"
 
+#include "boost/algorithm/string/predicate.hpp"
+
 IECORE_PUSH_DEFAULT_VISIBILITY
 // Cycles (for ustring)
 #include "util/param.h"
@@ -351,6 +353,14 @@ void convertPrimitiveVariable( const std::string &name, const IECoreScene::Primi
 	else if( name == "uv" && attr->type == ccl::TypeFloat2 )
 	{
 		attr->std = ccl::ATTR_STD_UV;
+	}
+	else if( boost::ends_with( name, "tangent_sign" ) && attr->element == ccl::ATTR_ELEMENT_CORNER && attr->type == ccl::TypeDesc::TypeFloat )
+	{
+		attr->std = ccl::ATTR_STD_UV_TANGENT_SIGN;
+	}
+	else if( boost::ends_with( name, "tangent" ) && attr->element == ccl::ATTR_ELEMENT_CORNER && attr->type == ccl::TypeDesc::TypeVector )
+	{
+		attr->std = ccl::ATTR_STD_UV_TANGENT;
 	}
 }
 

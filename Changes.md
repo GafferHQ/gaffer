@@ -1,6 +1,11 @@
 1.1.9.x (relative to 1.1.9.4)
 =======
 
+Fixes
+-----
+
+- Cycles : Correct tagging of tangent primitive variables to allow normal maps to render properly.
+
 1.1.9.4 (relative to 1.1.9.3)
 =======
 
