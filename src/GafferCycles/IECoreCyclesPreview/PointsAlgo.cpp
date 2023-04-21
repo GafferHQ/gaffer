@@ -224,12 +224,12 @@ ccl::Geometry *convert( const vector<const IECoreScene::PointsPrimitive *> &poin
 				if( pInterpolation == PrimitiveVariable::Varying || pInterpolation == PrimitiveVariable::Vertex || pInterpolation == PrimitiveVariable::FaceVarying )
 				{
 					// Vertex positions
-					const V3fVectorData *p = samples[i]->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
-					const std::vector<V3f> &points = p->readable();
-					size_t numVerts = p->readable().size();
+					const V3fVectorData *samplePData = samples[i]->variableData<V3fVectorData>( "P", PrimitiveVariable::Vertex );
+					const std::vector<V3f> &sampleP = samplePData->readable();
+					size_t numVerts = samplePData->readable().size();
 
 					for( size_t j = 0; j < numVerts; ++j, ++mP )
-						*mP = ccl::make_float3( points[j].x, points[j].y, points[j].z );
+						*mP = ccl::make_float3( sampleP[j].x, sampleP[j].y, sampleP[j].z );
 				}
 				else
 				{

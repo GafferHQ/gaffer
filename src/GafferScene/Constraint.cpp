@@ -746,9 +746,9 @@ void computeMeshUVLocalFrame( const IECoreScene::MeshPrimitive& primitive, Imath
 					const Imath::V3f v0 = points[ indices[ ip ] ] - pv;
 					const Imath::V3f v2 = points[ indices[ in ] ] - pv;
 
-					const Imath::V2f uv = uvs[ iv ];
-					const Imath::V2f e0 = uvs[ ip ] - uv;
-					const Imath::V2f e2 = uvs[ in ] - uv;
+					const Imath::V2f uvv = uvs[ iv ];
+					const Imath::V2f e0 = uvs[ ip ] - uvv;
+					const Imath::V2f e2 = uvs[ in ] - uvv;
 
 					ft += ( v0 * -e2.y + v2 * e0.y ).normalized();
 					fb += ( v0 * -e2.x + v2 * e0.x ).normalized();
