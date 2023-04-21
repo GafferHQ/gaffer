@@ -188,6 +188,18 @@ class VectorDataWidget( GafferUI.Widget ) :
 
 		GafferUI.Widget.setHighlighted( self, highlighted )
 
+	def setErrored( self, errored ) :
+
+		if errored == self.getErrored() :
+			return
+
+		self.__tableView.setProperty( "gafferError", GafferUI._Variant.toVariant( bool( errored ) ) )
+		self._repolish()
+
+	def getErrored( self ) :
+
+		return GafferUI._Variant.fromVariant( self.__tableView.property( "gafferError" ) ) or False
+
 	def addButton( self ) :
 
 		return self.__buttonRow[0]

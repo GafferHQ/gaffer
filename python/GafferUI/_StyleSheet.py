@@ -1402,6 +1402,12 @@ _styleSheet = string.Template(
 		border-color: $brightColor;
 	}
 
+	/* error state for VectorDataWidget */
+
+	_TableView[gafferError="true"]::item {
+		background-color: $errorColor;
+	}
+
 	/* progress bars */
 
 	QProgressBar {

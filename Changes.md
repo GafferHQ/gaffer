@@ -14,6 +14,7 @@ Improvements
   - Organised colorspaces into submenus by family.
   - Removed unwanted title-casing, so that names are now displayed verbatim.
   - Removed Roles submenu, which is deemed unsuitable by the OpenColorIO UX working group. It may be reintroduced by registering `openColorIO:includeRoles` metadata to the relevant plugs.
+- VectorDataPlugValueWidget : Computation errors are now reflected by a red background colour.
 
 Fixes
 -----
@@ -36,6 +37,7 @@ API
 - ValuePlugs : Added Python bindings for `ValueType` type alias.
 - Color4fVectorDataPlug : Added a plug type for storing arrays of `Color4f`.
 - TypedObjectPlug : Added default value for `direction` and `defaultValue` constructor arguments.
+- VectorDataWidget : Added `setErrored()` and `getErrored()` methods to control an error state. Errors are reflected by a red background colour.
 
 Breaking Changes
 ----------------
