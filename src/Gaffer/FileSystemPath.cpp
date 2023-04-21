@@ -105,11 +105,11 @@ std::string getFileSecurityInfo( const std::string &pathString, SECURITY_INFORMA
 		NULL  // Out : Security Descriptor
 	);
 
-	if( info == OWNER_SECURITY_INFORMATION )
+	if( result == ERROR_SUCCESS && info == OWNER_SECURITY_INFORMATION )
 	{
 		pSid = pSidOwner;
 	}
-	else if( info == GROUP_SECURITY_INFORMATION )
+	else if( result == ERROR_SUCCESS && info == GROUP_SECURITY_INFORMATION )
 	{
 		pSid = pSidGroup;
 	}
