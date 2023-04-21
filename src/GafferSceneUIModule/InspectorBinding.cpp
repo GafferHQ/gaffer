@@ -96,7 +96,7 @@ struct DirtiedSlotCaller
 		{
 			slot( inspector );
 		}
-		catch( const error_already_set &e )
+		catch( const error_already_set & )
 		{
 			IECorePython::ExceptionAlgo::translatePythonException();
 		}

@@ -1691,7 +1691,7 @@ void RenderController::updateInternal( const ProgressCallback &callback, const I
 			callback( BackgroundTask::Completed );
 		}
 	}
-	catch( const IECore::Cancelled &e )
+	catch( const IECore::Cancelled & )
 	{
 		if( callback )
 		{

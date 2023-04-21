@@ -71,7 +71,7 @@ BackgroundTask *backgroundTaskConstructor( const Plug *subject, object f )
 				// still hold the GIL.
 				fPtr.reset();
 			}
-			catch( boost::python::error_already_set &e )
+			catch( boost::python::error_already_set & )
 			{
 				fPtr.reset();
 				IECorePython::ExceptionAlgo::translatePythonException();
@@ -147,7 +147,7 @@ void callOnUIThread( boost::python::object f )
 				// still hold the GIL.
 				fPtr.reset();
 			}
-			catch( boost::python::error_already_set &e )
+			catch( boost::python::error_already_set & )
 			{
 				fPtr.reset();
 				IECorePython::ExceptionAlgo::translatePythonException();
@@ -184,7 +184,7 @@ void pushUIThreadCallHandler( boost::python::object handler )
 			{
 				(*handlerPtr)( pythonFunction );
 			}
-			catch( boost::python::error_already_set &e )
+			catch( boost::python::error_already_set & )
 			{
 				IECorePython::ExceptionAlgo::translatePythonException();
 			}
@@ -219,7 +219,7 @@ std::shared_ptr<BackgroundTask> callOnBackgroundThread( const Plug *subject, boo
 			{
 				(*fPtr)();
 			}
-			catch( boost::python::error_already_set &e )
+			catch( boost::python::error_already_set & )
 			{
 				IECorePython::ExceptionAlgo::translatePythonException();
 			}

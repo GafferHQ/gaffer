@@ -128,7 +128,7 @@ class PathWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 						return f( boost::python::ptr( canceller ) );
 					}
 				}
-				catch( const error_already_set &e )
+				catch( const error_already_set & )
 				{
 					ExceptionAlgo::translatePythonException();
 				}
@@ -149,7 +149,7 @@ class PathWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 						return f( boost::python::ptr( canceller ) );
 					}
 				}
-				catch( const error_already_set &e )
+				catch( const error_already_set & )
 				{
 					ExceptionAlgo::translatePythonException();
 				}
@@ -182,7 +182,7 @@ class PathWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 						return;
 					}
 				}
-				catch( const error_already_set &e )
+				catch( const error_already_set & )
 				{
 					ExceptionAlgo::translatePythonException();
 				}
@@ -215,7 +215,7 @@ class PathWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 						return nullptr;
 					}
 				}
-				catch( const error_already_set &e )
+				catch( const error_already_set & )
 				{
 					ExceptionAlgo::translatePythonException();
 				}
@@ -240,7 +240,7 @@ class PathWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 						throw IECore::Exception( "Path.copy() not implemented." );
 					}
 				}
-				catch( const error_already_set &e )
+				catch( const error_already_set & )
 				{
 					ExceptionAlgo::translatePythonException();
 				}
@@ -261,7 +261,7 @@ class PathWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 						return extract<Plug *>( f() );
 					}
 				}
-				catch( const error_already_set &e )
+				catch( const error_already_set & )
 				{
 					ExceptionAlgo::translatePythonException();
 				}
@@ -284,7 +284,7 @@ class PathWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 						return;
 					}
 				}
-				catch( const error_already_set &e )
+				catch( const error_already_set & )
 				{
 					ExceptionAlgo::translatePythonException();
 				}
@@ -306,7 +306,7 @@ class PathWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 						return;
 					}
 				}
-				catch( const error_already_set &e )
+				catch( const error_already_set & )
 				{
 					ExceptionAlgo::translatePythonException();
 				}

@@ -102,7 +102,7 @@ UCharVectorDataPtr createMemoryBuffer(const IECoreVDB::VDBObject* vdbObject)
 			gridsToWrite.push_back( grid );
 		}
 	}
-	catch( const std::exception &e )
+	catch( const std::exception & )
 	{
 		IECore::msg( IECore::MessageHandler::Warning, "VDBObject::memoryBuffer", "Unable to estimate vdb size." );
 	}

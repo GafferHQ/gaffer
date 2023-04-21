@@ -85,7 +85,7 @@ class SerialiserWrapper : public IECorePython::RefCountedWrapper<WrappedType>
 						return;
 					}
 				}
-				catch( const boost::python::error_already_set &e )
+				catch( const boost::python::error_already_set & )
 				{
 					IECorePython::ExceptionAlgo::translatePythonException();
 				}
@@ -108,7 +108,7 @@ class SerialiserWrapper : public IECorePython::RefCountedWrapper<WrappedType>
 						);
 					}
 				}
-				catch( const boost::python::error_already_set &e )
+				catch( const boost::python::error_already_set & )
 				{
 					IECorePython::ExceptionAlgo::translatePythonException();
 				}
@@ -131,7 +131,7 @@ class SerialiserWrapper : public IECorePython::RefCountedWrapper<WrappedType>
 						);
 					}
 				}
-				catch( const boost::python::error_already_set &e )
+				catch( const boost::python::error_already_set & )
 				{
 					IECorePython::ExceptionAlgo::translatePythonException();
 				}
@@ -154,7 +154,7 @@ class SerialiserWrapper : public IECorePython::RefCountedWrapper<WrappedType>
 						);
 					}
 				}
-				catch( const boost::python::error_already_set &e )
+				catch( const boost::python::error_already_set & )
 				{
 					IECorePython::ExceptionAlgo::translatePythonException();
 				}
@@ -177,7 +177,7 @@ class SerialiserWrapper : public IECorePython::RefCountedWrapper<WrappedType>
 						);
 					}
 				}
-				catch( const boost::python::error_already_set &e )
+				catch( const boost::python::error_already_set & )
 				{
 					IECorePython::ExceptionAlgo::translatePythonException();
 				}
@@ -198,7 +198,7 @@ class SerialiserWrapper : public IECorePython::RefCountedWrapper<WrappedType>
 						return f( Gaffer::GraphComponentPtr( const_cast<Gaffer::GraphComponent *>( child ) ), boost::ref( serialisation ) );
 					}
 				}
-				catch( const boost::python::error_already_set &e )
+				catch( const boost::python::error_already_set & )
 				{
 					IECorePython::ExceptionAlgo::translatePythonException();
 				}
@@ -219,7 +219,7 @@ class SerialiserWrapper : public IECorePython::RefCountedWrapper<WrappedType>
 						return f( Gaffer::GraphComponentPtr( const_cast<Gaffer::GraphComponent *>( child ) ), boost::ref( serialisation ) );
 					}
 				}
-				catch( const boost::python::error_already_set &e )
+				catch( const boost::python::error_already_set & )
 				{
 					IECorePython::ExceptionAlgo::translatePythonException();
 				}

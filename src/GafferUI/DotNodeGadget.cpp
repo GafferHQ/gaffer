@@ -189,7 +189,7 @@ void DotNodeGadget::updateLabel()
 			m_label = dot->labelPlug()->getValue();
 		}
 	}
-	catch( const Gaffer::ProcessException &e )
+	catch( const Gaffer::ProcessException & )
 	{
 		m_label = "Error";
 	}

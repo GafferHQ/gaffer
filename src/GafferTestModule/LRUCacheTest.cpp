@@ -587,7 +587,7 @@ struct TestLRUCacheCancellation
 		{
 			val = cache.get( 3, &canceller );
 		}
-		catch( IECore::Cancelled const &c )
+		catch( IECore::Cancelled const & )
 		{
 			caughtCancel = true;
 		}
@@ -671,7 +671,7 @@ struct TestLRUCacheCancellationOfSecondGet
 		{
 			cache.get( 1, &secondCanceller );
 		}
-		catch( const IECore::Cancelled &e )
+		catch( const IECore::Cancelled & )
 		{
 			firstCanceller.cancel();
 		}
@@ -686,7 +686,7 @@ struct TestLRUCacheCancellationOfSecondGet
 		{
 			taskGroup.wait();
 		}
-		catch( IECore::Cancelled &e )
+		catch( IECore::Cancelled & )
 		{
 			firstCancelled = true;
 		}

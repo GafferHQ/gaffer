@@ -85,7 +85,7 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 				{
 					f( boost::const_pointer_cast<Dispatcher::TaskBatch>( ConstTaskBatchPtr( batch ) ) );
 				}
-				catch( const boost::python::error_already_set &e )
+				catch( const boost::python::error_already_set & )
 				{
 					ExceptionAlgo::translatePythonException();
 				}
@@ -112,7 +112,7 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 
 					return extract<FrameListPtr>( obj );
 				}
-				catch( const boost::python::error_already_set &e )
+				catch( const boost::python::error_already_set & )
 				{
 					ExceptionAlgo::translatePythonException();
 				}
@@ -210,7 +210,7 @@ struct DispatcherHelper
 			DispatcherPtr result = extract<DispatcherPtr>( m_fn() );
 			return result;
 		}
-		catch( const boost::python::error_already_set &e )
+		catch( const boost::python::error_already_set & )
 		{
 			ExceptionAlgo::translatePythonException();
 		}
@@ -227,7 +227,7 @@ struct DispatcherHelper
 			{
 				m_setupFn( PlugPtr( parentPlug ) );
 			}
-			catch( const boost::python::error_already_set &e )
+			catch( const boost::python::error_already_set & )
 			{
 				ExceptionAlgo::translatePythonException();
 			}
@@ -297,7 +297,7 @@ struct PreDispatchSlotCaller
 			DispatcherPtr dd = const_cast<Dispatcher*>(d);
 			return slot( dd, nodeList );
 		}
-		catch( const boost::python::error_already_set &e )
+		catch( const boost::python::error_already_set & )
 		{
 			ExceptionAlgo::translatePythonException();
 		}
@@ -319,7 +319,7 @@ struct DispatchSlotCaller
 			DispatcherPtr dd = const_cast<Dispatcher*>(d);
 			slot( dd, nodeList );
 		}
-		catch( const boost::python::error_already_set &e )
+		catch( const boost::python::error_already_set & )
 		{
 			ExceptionAlgo::translatePythonException();
 		}
@@ -340,7 +340,7 @@ struct PostDispatchSlotCaller
 			DispatcherPtr dd = const_cast<Dispatcher*>(d);
 			slot( dd, nodeList, success );
 		}
-		catch( const boost::python::error_already_set &e )
+		catch( const boost::python::error_already_set & )
 		{
 			ExceptionAlgo::translatePythonException();
 		}

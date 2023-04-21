@@ -64,7 +64,7 @@ void registerTool( const std::string &toolName, IECore::TypeId viewType, object 
 			{
 				return extract<ToolPtr>( toolCreator( ViewPtr( view ) ) );
 			}
-			catch( const boost::python::error_already_set &e )
+			catch( const boost::python::error_already_set & )
 			{
 				IECorePython::ExceptionAlgo::translatePythonException();
 			}

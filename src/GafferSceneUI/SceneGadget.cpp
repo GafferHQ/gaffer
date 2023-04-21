@@ -871,7 +871,7 @@ void SceneGadget::updateRenderer()
 		{
 			m_controller->updateMatchingPaths( m_blockingPaths );
 		}
-		catch( std::exception &e )
+		catch( std::exception & )
 		{
 			// Leave it to the rest of the UI to report the error.
 			m_updateErrored = true;

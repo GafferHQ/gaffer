@@ -269,7 +269,7 @@ struct SceneChangedSlotCaller
 		{
 			slot( v );
 		}
-		catch( const boost::python::error_already_set &e )
+		catch( const boost::python::error_already_set & )
 		{
 			IECorePython::ExceptionAlgo::translatePythonException();
 		}
@@ -299,7 +299,7 @@ struct UVViewSlotCaller
 		{
 			slot( g );
 		}
-		catch( const error_already_set &e )
+		catch( const error_already_set & )
 		{
 			ExceptionAlgo::translatePythonException();
 		}

@@ -942,13 +942,13 @@ class File
 			{
 				return *m_views.at( viewName );
 			}
-			catch( const std::out_of_range &e )
+			catch( const std::out_of_range & )
 			{
 				try
 				{
 					return *m_views.at( ImagePlug::defaultViewName );
 				}
-				catch( const std::out_of_range &e )
+				catch( const std::out_of_range & )
 				{
 				}
 			}

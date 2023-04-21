@@ -471,7 +471,7 @@ void testTaskMutexDontSilentlyCancel()
 			}
 		);
 	}
-	catch( TestCancelled &e )
+	catch( TestCancelled & )
 	{
 	}
 

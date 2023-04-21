@@ -98,7 +98,7 @@ struct ExpressionChangedSlotCaller
 		{
 			slot( e );
 		}
-		catch( const error_already_set &e )
+		catch( const error_already_set & )
 		{
 			IECorePython::ExceptionAlgo::translatePythonException();
 		}
@@ -171,7 +171,7 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 						return;
 					}
 				}
-				catch( const error_already_set &e )
+				catch( const error_already_set & )
 				{
 					IECorePython::ExceptionAlgo::translatePythonException();
 				}
@@ -200,7 +200,7 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 						return extract<IECore::ConstObjectVectorPtr>( result );
 					}
 				}
-				catch( const error_already_set &e )
+				catch( const error_already_set & )
 				{
 					IECorePython::ExceptionAlgo::translatePythonException();
 				}
@@ -228,7 +228,7 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 						return;
 					}
 				}
-				catch( const error_already_set &e )
+				catch( const error_already_set & )
 				{
 					IECorePython::ExceptionAlgo::translatePythonException();
 				}
@@ -251,7 +251,7 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 						return extract<std::string>( result );
 					}
 				}
-				catch( const error_already_set &e )
+				catch( const error_already_set & )
 				{
 					IECorePython::ExceptionAlgo::translatePythonException();
 				}
@@ -284,7 +284,7 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 						return extract<std::string>( result );
 					}
 				}
-				catch( const error_already_set &e )
+				catch( const error_already_set & )
 				{
 					IECorePython::ExceptionAlgo::translatePythonException();
 				}
@@ -307,7 +307,7 @@ class EngineWrapper : public IECorePython::RefCountedWrapper<Expression::Engine>
 						return extract<std::string>( result );
 					}
 				}
-				catch( const error_already_set &e )
+				catch( const error_already_set & )
 				{
 					IECorePython::ExceptionAlgo::translatePythonException();
 				}

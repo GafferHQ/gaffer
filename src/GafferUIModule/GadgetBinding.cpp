@@ -64,7 +64,7 @@ struct VisibilityChangedSlotCaller
 		{
 			slot( g );
 		}
-		catch( const boost::python::error_already_set &e )
+		catch( const boost::python::error_already_set & )
 		{
 			IECorePython::ExceptionAlgo::translatePythonException();
 		}
@@ -79,7 +79,7 @@ struct ButtonSlotCaller
 		{
 			return boost::python::extract<bool>( slot( g, event ) )();
 		}
-		catch( const boost::python::error_already_set &e )
+		catch( const boost::python::error_already_set & )
 		{
 			IECorePython::ExceptionAlgo::translatePythonException();
 		}
@@ -94,7 +94,7 @@ struct EnterLeaveSlotCaller
 		{
 			slot( g, event );
 		}
-		catch( const boost::python::error_already_set &e )
+		catch( const boost::python::error_already_set & )
 		{
 			IECorePython::ExceptionAlgo::translatePythonException();
 		}
@@ -109,7 +109,7 @@ struct DragBeginSlotCaller
 		{
 			return boost::python::extract<IECore::RunTimeTypedPtr>( slot( g, event ) )();
 		}
-		catch( const boost::python::error_already_set &e )
+		catch( const boost::python::error_already_set & )
 		{
 			IECorePython::ExceptionAlgo::translatePythonException();
 		}
@@ -124,7 +124,7 @@ struct DragDropSlotCaller
 		{
 			return boost::python::extract<bool>( slot( g, event ) )();
 		}
-		catch( const boost::python::error_already_set &e )
+		catch( const boost::python::error_already_set & )
 		{
 			IECorePython::ExceptionAlgo::translatePythonException();
 		}
@@ -139,7 +139,7 @@ struct KeySlotCaller
 		{
 			return boost::python::extract<bool>( slot( g, event ) )();
 		}
-		catch( const boost::python::error_already_set &e )
+		catch( const boost::python::error_already_set & )
 		{
 			IECorePython::ExceptionAlgo::translatePythonException();
 		}

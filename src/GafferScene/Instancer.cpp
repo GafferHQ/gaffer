@@ -583,7 +583,7 @@ class Instancer::EngineData : public Data
 				{
 					IECore::dispatch( v.primVar->data.get(), AccessPrototypeContextVariable(), v, index, scope );
 				}
-				catch( QuantizeException &e )
+				catch( QuantizeException & )
 				{
 					throw IECore::Exception( fmt::format( "Context variable \"{}\" : cannot quantize variable of type {}", index, v.primVar->data->typeName() ) );
 				}
@@ -611,7 +611,7 @@ class Instancer::EngineData : public Data
 			{
 				IECore::dispatch( v.primVar->data.get(), UniqueHashPrototypeContextVariable(), v, index, result );
 			}
-			catch( QuantizeException &e )
+			catch( QuantizeException & )
 			{
 				throw IECore::Exception( fmt::format( "Context variable \"{}\" : cannot quantize variable of type {}", index, v.primVar->data->typeName() ) );
 			}

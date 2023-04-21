@@ -260,7 +260,7 @@ struct UnarySlotCaller
 		{
 			slot( g );
 		}
-		catch( const error_already_set &e )
+		catch( const error_already_set & )
 		{
 			IECorePython::ExceptionAlgo::translatePythonException();
 		}
@@ -276,7 +276,7 @@ struct BinarySlotCaller
 		{
 			slot( g, gg );
 		}
-		catch( const error_already_set &e )
+		catch( const error_already_set & )
 		{
 			IECorePython::ExceptionAlgo::translatePythonException();
 		}
@@ -297,7 +297,7 @@ struct ChildrenReorderedSlotCaller
 			}
 			slot( g, oldIndicesList );
 		}
-		catch( const error_already_set &e )
+		catch( const error_already_set & )
 		{
 			IECorePython::ExceptionAlgo::translatePythonException();
 		}

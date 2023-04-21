@@ -133,7 +133,7 @@ struct ViewportGadgetSlotCaller
 		{
 			slot( g, std::forward<Args>( args )... );
 		}
-		catch( const error_already_set &e )
+		catch( const error_already_set & )
 		{
 			IECorePython::ExceptionAlgo::translatePythonException();
 		}

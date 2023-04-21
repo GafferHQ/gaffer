@@ -317,7 +317,7 @@ FrameListPtr Dispatcher::frameRange( const ScriptNode *script, const Context *co
 	{
 		return FrameList::parse( context->substitute( frameRangePlug()->getValue() ) );
 	}
-	catch ( IECore::Exception &e )
+	catch ( IECore::Exception & )
 	{
 		throw IECore::Exception( "Dispatcher: Custom Frame Range is not a valid IECore::FrameList" );
 	}

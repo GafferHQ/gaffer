@@ -649,7 +649,7 @@ void Cryptomatte::compute( Gaffer::ValuePlug *output, const Gaffer::Context *con
 				{
 					matteValues.insert( std::stof( name.substr(1, name.size() - 2) ) );
 				}
-				catch( const std::exception &e )
+				catch( const std::exception & )
 				{
 					IECore::msg( IECore::Msg::Error, "Cryptomatte::matteValues", fmt::format( "Error converting value: {}", name ) );
 					continue;

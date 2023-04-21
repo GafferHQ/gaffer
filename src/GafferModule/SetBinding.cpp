@@ -103,7 +103,7 @@ struct MemberSignalSlotCaller
 		{
 			slot( s, m );
 		}
-		catch( const boost::python::error_already_set &e )
+		catch( const boost::python::error_already_set & )
 		{
 			ExceptionAlgo::translatePythonException();
 		}
@@ -144,7 +144,7 @@ struct MemberAcceptanceSlotCaller
 		{
 			return slot( boost::const_pointer_cast<Set>( s ), boost::const_pointer_cast<IECore::RunTimeTyped>( m ) );
 		}
-		catch( const boost::python::error_already_set &e )
+		catch( const boost::python::error_already_set & )
 		{
 			IECorePython::ExceptionAlgo::translatePythonException();
 		}

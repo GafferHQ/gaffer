@@ -755,7 +755,7 @@ void computeMeshUVLocalFrame( const IECoreScene::MeshPrimitive& primitive, Imath
 					fn += ( -v0 % v2 ).normalized();
 				}
 			}
-			catch( const IECore::Exception& e )
+			catch( const IECore::Exception & )
 			{
 				if( throwOnError )
 				{

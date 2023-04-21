@@ -903,7 +903,7 @@ class PathModel : public QAbstractItemModel
 							}
 						);
 					}
-					catch( const IECore::Cancelled &e )
+					catch( const IECore::Cancelled & )
 					{
 						// Cancellation could be due to several causes :
 						//
@@ -1217,7 +1217,7 @@ class PathModel : public QAbstractItemModel
 						{
 							cellVariants = CellVariants( model->m_columns[i]->cellData( *path, canceller ) );
 						}
-						catch( const IECore::Cancelled &e )
+						catch( const IECore::Cancelled & )
 						{
 							throw;
 						}

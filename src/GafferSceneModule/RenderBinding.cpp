@@ -232,7 +232,7 @@ class ProceduralWrapper : public IECorePython::RunTimeTypedWrapper<IECoreScenePr
 					return extract<Imath::Box3f>( f() );
 				}
 			}
-			catch( const boost::python::error_already_set &e )
+			catch( const boost::python::error_already_set & )
 			{
 				IECorePython::ExceptionAlgo::translatePythonException();
 			}
@@ -252,7 +252,7 @@ class ProceduralWrapper : public IECorePython::RunTimeTypedWrapper<IECoreScenePr
 					return;
 				}
 			}
-			catch( const boost::python::error_already_set &e )
+			catch( const boost::python::error_already_set & )
 			{
 				IECorePython::ExceptionAlgo::translatePythonException();
 			}

@@ -84,7 +84,7 @@ struct Slot<Gaffer::Signals::Signal<Result( Args... ), Combiner>, Caller>
 				return Caller()( boost::python::object( m_slot ), std::forward<Args>( args )... );
 			}
 		}
-		catch( const boost::python::error_already_set &e )
+		catch( const boost::python::error_already_set & )
 		{
 			IECorePython::ExceptionAlgo::translatePythonException();
 		}
@@ -173,7 +173,7 @@ struct DefaultSlotCaller<Gaffer::Signals::Signal<Result( Args... ), Combiner>>
 				return boost::python::extract<Result>( slot( std::forward<Args>( args )... ) )();
 			}
 		}
-		catch( const boost::python::error_already_set &e )
+		catch( const boost::python::error_already_set & )
 		{
 			IECorePython::ExceptionAlgo::translatePythonException();
 		}
