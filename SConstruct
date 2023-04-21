@@ -546,6 +546,10 @@ else:
 		env.Append(
 			CXXFLAGS = [
 				"/WX",  # Treat warnings as errors
+				# We are building all client code in the exact same environment, so we can safely
+				# disable warnings about missing dll interfaces, and require clients to use
+				# the same compiler for maximum compatibility.
+				"/wd4251",
 				"/wd4100",  # Suppress warning about unused parameters
 				"/wd4706",	# Suppress warning about using assignment in conditionals
 				"/wd4267",  # Suppress warning about conversion from int to size_t
