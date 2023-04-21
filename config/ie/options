@@ -463,7 +463,7 @@ if targetApp == "maya" :
 		usdIncludePath = os.path.join( mayaUsdReg["location"], mayaMajorVersion, "mayausd", "USD{}".format( mayaPythonMajorVersion ), "include" )
 		usdLibPath = os.path.join( mayaUsdReg["location"], mayaMajorVersion, "mayausd", "USD{}".format( mayaPythonMajorVersion ), "lib" )
 
-elif targetApp in ( "houdini", "nuke" ) :
+elif targetApp in ( "houdini", ) :
 	# Both nuke and houdini provide USD in their distribution.
 	# However, nuke doesn't provide includes, and the libs don't have python support, which prevents us from using them.
 	# And houdini has a mangled boost install which includes an "h" prefix which also messes up the GafferUSD build
