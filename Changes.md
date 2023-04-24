@@ -1,6 +1,11 @@
 1.1.9.x (relative to 1.1.9.4)
 =======
 
+Fixes
+-----
+
+- VectorDataWidget : Fixed bugs preventing the display of headers and values for matrix and box data.
+
 1.1.9.4 (relative to 1.1.9.3)
 =======
 
