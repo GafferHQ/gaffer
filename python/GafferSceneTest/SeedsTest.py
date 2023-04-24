@@ -35,6 +35,7 @@
 #
 ##########################################################################
 
+import imath
 import unittest
 import threading
 
@@ -222,6 +223,35 @@ class SeedsTest( GafferSceneTest.SceneTestCase ) :
 
 		primitiveVariables["primitiveVariables"].addChild( Gaffer.NameValuePlug( "d", IECore.FloatData( 0.5 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 		self.assertLess( seeds["out"].object( "/plane/seeds" ).numPoints, p.numPoints )
+
+	def testPrimitiveVariables( self ) :
+
+		plane = GafferScene.Plane()
+
+		filter = GafferScene.PathFilter()
+		filter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		seeds = GafferScene.Seeds()
+		seeds["in"].setInput( plane["out"] )
+		seeds["parent"].setValue( "/plane" )
+		seeds["name"].setValue( "seeds" )
+		seeds["density"].setValue( 10 )
+
+		self.assertEqual( seeds["out"].object( "/plane/seeds" ).keys(), ["P", "type"] )
+
+		seeds["primitiveVariables"].setValue( "*" )
+
+		points = seeds["out"].object( "/plane/seeds" )
+		self.assertEqual( points.keys(), ["N", "P", "type", "uv" ] )
+		for a, b in zip( points["uv"].data, points["P"].data ):
+			self.assertTrue( a.equalWithRelError( imath.V2f( b[0], b[1] ) + 0.5, 0.00001 ) )
+
+		for a in points["N"].data:
+			self.assertEqual( a, imath.V3f( 0, 0, 1 ) )
+
+		seeds["primitiveVariables"].setValue( "N" )
+
+		self.assertEqual( seeds["out"].object( "/plane/seeds" ).keys(), ["N", "P", "type"] )
 
 	def testInternalConnectionsNotSerialised( self ) :
 
