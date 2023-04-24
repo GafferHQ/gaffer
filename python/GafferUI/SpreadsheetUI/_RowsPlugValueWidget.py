@@ -239,7 +239,10 @@ class _RowsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def _updateFromEditable( self ) :
 
-		editable = self._editable() and self.getPlug().getInput() is None
+		# Not using `_editable()` as it considers the whole plug to be non-editable if
+		# any child has an input connection, but that shouldn't prevent us adding new
+		# rows or columns.
+		editable = self.getPlug().getInput() is None and not Gaffer.MetadataAlgo.readOnly( self.getPlug() )
 		self.__addRowButton.setEnabled( editable )
 		self.__addColumnButton.setEnabled( editable )
 
