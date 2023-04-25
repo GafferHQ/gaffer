@@ -126,7 +126,7 @@ void validateName( const InternedString &name )
 struct GraphComponent::MemberSignals : boost::noncopyable
 {
 
-	UnarySignal nameChangedSignal;
+	NameChangedSignal nameChangedSignal;
 	BinarySignal childAddedSignal;
 	BinarySignal childRemovedSignal;
 	BinarySignal parentChangedSignal;
@@ -243,8 +243,9 @@ const IECore::InternedString &GraphComponent::setName( const IECore::InternedStr
 
 void GraphComponent::setNameInternal( const IECore::InternedString &name )
 {
+	const InternedString oldName = m_name;
 	m_name = name;
-	MemberSignals::emitLazily( m_signals.get(), &MemberSignals::nameChangedSignal, this );
+	MemberSignals::emitLazily( m_signals.get(), &MemberSignals::nameChangedSignal, this, oldName );
 }
 
 const IECore::InternedString &GraphComponent::getName() const
@@ -274,7 +275,7 @@ std::string GraphComponent::relativeName( const GraphComponent *ancestor ) const
 	return fullName;
 }
 
-GraphComponent::UnarySignal &GraphComponent::nameChangedSignal()
+GraphComponent::NameChangedSignal &GraphComponent::nameChangedSignal()
 {
 	return signals()->nameChangedSignal;
 }

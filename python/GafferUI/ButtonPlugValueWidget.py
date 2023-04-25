@@ -74,7 +74,7 @@ class ButtonPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__updateLabel()
 
-	def __nameChanged( self, plug ) :
+	def __nameChanged( self, plug, oldName ) :
 
 		self.__updateLabel()
 

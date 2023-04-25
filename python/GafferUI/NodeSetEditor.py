@@ -268,7 +268,7 @@ class NodeSetEditor( GafferUI.Editor ) :
 
 		self.__nodeSetChangedSignal( self )
 
-	def __nameChanged( self, node ) :
+	def __nameChanged( self, node, oldName ) :
 
 		self.titleChangedSignal()( self )
 

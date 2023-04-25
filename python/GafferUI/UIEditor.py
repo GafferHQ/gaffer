@@ -789,7 +789,7 @@ class _PlugListing( GafferUI.Widget ) :
 		self.__updateChildNameChangedConnection( child )
 		self.__updatePathLazily()
 
-	def __childNameChanged( self, child ) :
+	def __childNameChanged( self, child, oldName ) :
 
 		selection = self.getSelection()
 		self.__updatePath()

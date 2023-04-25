@@ -54,7 +54,7 @@ class GraphComponentTest( GafferTest.TestCase ) :
 		self.assertEqual( c.getName(), "GraphComponent" )
 		self.assertEqual( c.fullName(), "GraphComponent" )
 
-		def f( c ) :
+		def f( c, oldName ) :
 			GraphComponentTest.name = c.getName()
 
 		con = c.nameChangedSignal().connect( f, scoped = True )
@@ -1093,6 +1093,47 @@ class GraphComponentTest( GafferTest.TestCase ) :
 
 		with self.assertRaisesRegex( Exception, 'Child "c2" is in more than one position' ) :
 			p.reorderChildren( [ c1, c2, c2 ] )
+
+	def testNameChangedSignal( self ) :
+
+		s = Gaffer.ScriptNode()
+		g = Gaffer.Node()
+		s.addChild( g )
+
+		names = []
+		def f( g, oldName ) :
+			self.assertIsInstance( oldName, str )
+			names.append( ( oldName, g.getName() ) )
+
+		g.nameChangedSignal().connect( f, scoped = False )
+
+		with Gaffer.UndoScope( s ) :
+			g.setName( "newName" )
+
+		self.assertEqual(
+			names, [
+				( "Node", "newName" ),
+			]
+		)
+
+		s.undo()
+
+		self.assertEqual(
+			names, [
+				( "Node", "newName" ),
+				( "newName", "Node" ),
+			]
+		)
+
+		s.redo()
+
+		self.assertEqual(
+			names, [
+				( "Node", "newName" ),
+				( "newName", "Node" ),
+				( "Node", "newName" ),
+			]
+		)
 
 if __name__ == "__main__":
 	unittest.main()

@@ -123,7 +123,7 @@ class _AnimationPathFilter( Gaffer.PathFilter ) :
 		# when an AnimationNode is involved.
 		self.changedSignal()( self )
 
-	def __nameChanged( self, graphComponent ) :
+	def __nameChanged( self, graphComponent, oldName ) :
 
 		self.changedSignal()( self )
 

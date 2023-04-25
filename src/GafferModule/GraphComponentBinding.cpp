@@ -267,6 +267,21 @@ struct UnarySlotCaller
 	}
 };
 
+struct NameChangedSlotCaller
+{
+	void operator()( boost::python::object slot, GraphComponentPtr g, IECore::InternedString oldName )
+	{
+		try
+		{
+			slot( g, oldName.string() );
+		}
+		catch( const error_already_set &e )
+		{
+			IECorePython::ExceptionAlgo::translatePythonException();
+		}
+	}
+};
+
 struct BinarySlotCaller
 {
 
@@ -353,6 +368,7 @@ void GafferModule::bindGraphComponent()
 	;
 
 	SignalClass<GraphComponent::UnarySignal, DefaultSignalCaller<GraphComponent::UnarySignal>, UnarySlotCaller>( "UnarySignal" );
+	SignalClass<GraphComponent::NameChangedSignal, DefaultSignalCaller<GraphComponent::NameChangedSignal>, NameChangedSlotCaller>( "NameChangedSignal" );
 	SignalClass<GraphComponent::BinarySignal, DefaultSignalCaller<GraphComponent::BinarySignal>, BinarySlotCaller>( "BinarySignal" );
 	SignalClass<GraphComponent::ChildrenReorderedSignal, DefaultSignalCaller<GraphComponent::ChildrenReorderedSignal>, ChildrenReorderedSlotCaller>( "BinarySignal" );
 

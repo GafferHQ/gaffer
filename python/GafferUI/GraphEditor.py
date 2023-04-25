@@ -580,7 +580,7 @@ class GraphEditor( GafferUI.Editor ) :
 
 		self.titleChangedSignal()( self )
 
-	def __rootNameChanged( self, root ) :
+	def __rootNameChanged( self, root, oldName ) :
 
 		self.titleChangedSignal()( self )
 
