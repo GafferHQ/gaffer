@@ -1135,5 +1135,61 @@ class GraphComponentTest( GafferTest.TestCase ) :
 			]
 		)
 
+	def testNameChangedMethod( self ) :
+
+		class NameTracker( Gaffer.Node ) :
+
+			def __init__( self, name = "NameTracker" ) :
+
+				Gaffer.Node.__init__( self, name )
+
+				self.nameChangedSignal().connect( Gaffer.WeakMethod( self.__nameChanged ), scoped = False )
+
+				self.nameChanges = []
+
+			# Override for virtual method defined by base class.
+			def _nameChanged( self, oldName ) :
+
+				self.nameChanges.append( ( "Method", oldName, self.getName() ) )
+
+			# Connected to public slot.
+			def __nameChanged( self, graphComponent, oldName ) :
+
+				assert( graphComponent.isSame( self ) )
+				self.nameChanges.append( ( "Slot", oldName, self.getName() ) )
+
+		s = Gaffer.ScriptNode()
+		n = NameTracker()
+		s.addChild( n )
+
+		self.assertEqual( n.nameChanges, [] )
+
+		with Gaffer.UndoScope( s ) :
+			n.setName( "newName" )
+
+		self.assertEqual(
+			n.nameChanges, [
+				( "Method", "NameTracker", "newName" ),
+				( "Slot", "NameTracker", "newName" ),
+		] )
+
+		del n.nameChanges[:]
+		s.undo()
+
+		self.assertEqual(
+			n.nameChanges, [
+				( "Method", "newName", "NameTracker" ),
+				( "Slot", "newName", "NameTracker" ),
+		] )
+
+		del n.nameChanges[:]
+		s.redo()
+
+		self.assertEqual(
+			n.nameChanges, [
+				( "Method", "NameTracker", "newName" ),
+				( "Slot", "NameTracker", "newName" ),
+		] )
+
 if __name__ == "__main__":
 	unittest.main()

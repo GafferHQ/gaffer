@@ -245,6 +245,7 @@ void GraphComponent::setNameInternal( const IECore::InternedString &name )
 {
 	const InternedString oldName = m_name;
 	m_name = name;
+	nameChanged( oldName );
 	MemberSignals::emitLazily( m_signals.get(), &MemberSignals::nameChangedSignal, this, oldName );
 }
 
@@ -652,6 +653,10 @@ GraphComponent::BinarySignal &GraphComponent::parentChangedSignal()
 GraphComponent::ChildrenReorderedSignal &GraphComponent::childrenReorderedSignal()
 {
 	return signals()->childrenReorderedSignal;
+}
+
+void GraphComponent::nameChanged( IECore::InternedString oldName )
+{
 }
 
 void GraphComponent::parentChanging( Gaffer::GraphComponent *newParent )

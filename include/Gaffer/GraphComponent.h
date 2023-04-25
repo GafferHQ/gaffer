@@ -233,6 +233,13 @@ class GAFFER_API GraphComponent : public IECore::RunTimeTyped, public Signals::T
 
 	protected :
 
+		/// Called by `setName()` immediately prior to emitting
+		/// `nameChangedSignal()`. This provides an opportunity to respond to
+		/// the change before outside observers are notified. Implementations
+		/// should call the base class implementation before doing their own
+		/// work.
+		virtual void nameChanged( IECore::InternedString oldName );
+
 		/// Called just /before/ the parent of this GraphComponent is
 		/// changed to newParent. This is an opportunity to do things
 		/// in preparation for the new relationship - currently it allows

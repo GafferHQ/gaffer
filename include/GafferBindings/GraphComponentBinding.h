@@ -110,6 +110,28 @@ class GraphComponentWrapper : public IECorePython::RunTimeTypedWrapper<WrappedTy
 			return WrappedType::acceptsParent( potentialParent );
 		}
 
+		void nameChanged( IECore::InternedString oldName ) override
+		{
+			if( this->isSubclassed() )
+			{
+				IECorePython::ScopedGILLock gilLock;
+				try
+				{
+					boost::python::object f = this->methodOverride( "_nameChanged" );
+					if( f )
+					{
+						f( oldName.string() );
+						return;
+					}
+				}
+				catch( const boost::python::error_already_set &e )
+				{
+					IECorePython::ExceptionAlgo::translatePythonException();
+				}
+			}
+			WrappedType::nameChanged( oldName );
+		}
+
 		void parentChanging( Gaffer::GraphComponent *newParent ) override
 		{
 			if( this->isSubclassed() )
