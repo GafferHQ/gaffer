@@ -243,6 +243,7 @@ const IECore::InternedString &GraphComponent::setName( const IECore::InternedStr
 
 void GraphComponent::setNameInternal( const IECore::InternedString &name )
 {
+	DirtyPropagationScope dirtyPropagationScope;
 	const InternedString oldName = m_name;
 	m_name = name;
 	nameChanged( oldName );

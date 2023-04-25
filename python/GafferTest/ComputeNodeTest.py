@@ -711,5 +711,34 @@ class ComputeNodeTest( GafferTest.TestCase ) :
 
 		self.assertEqual( raised.exception.plug(), thrower["out"] )
 
+	def testUsePlugNameInCompute( self ) :
+
+		class NameSensitiveComputeNode( Gaffer.ComputeNode ) :
+
+			def __init__( self, name="PassThrough" ) :
+
+				Gaffer.ComputeNode.__init__( self, name )
+
+				self.plug = Gaffer.StringPlug( "out", Gaffer.Plug.Direction.Out )
+				self.addChild( self.plug )
+
+			# No need to override `hash()`, because the base class includes
+			# the plug name in the hash anyway.
+
+			def compute( self, plug, context ) :
+
+				plug.setValue( plug.getName() )
+
+		IECore.registerRunTimeTyped( NameSensitiveComputeNode )
+
+		n = NameSensitiveComputeNode()
+		h1 = n.plug.hash()
+		self.assertEqual( n.plug.getValue(), "out" )
+
+		n.plug.setName( "out2" )
+		h2 = n.plug.hash()
+		self.assertNotEqual( h2, h1 )
+		self.assertEqual( n.plug.getValue(), "out2" )
+
 if __name__ == "__main__":
 	unittest.main()
