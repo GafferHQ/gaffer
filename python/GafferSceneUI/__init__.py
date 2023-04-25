@@ -103,7 +103,7 @@ from . import TextUI
 from . import AimConstraintUI
 from . import CoordinateSystemUI
 from . import DeleteAttributesUI
-from . import SeedsUI
+from . import ScatterUI
 from . import UnionFilterUI
 from . import PathFilterUI
 from . import GroupUI

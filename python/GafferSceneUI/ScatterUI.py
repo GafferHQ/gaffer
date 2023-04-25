@@ -40,7 +40,7 @@ import GafferScene
 
 Gaffer.Metadata.registerNode(
 
-	GafferScene.Seeds,
+	GafferScene.Scatter,
 
 	"description",
 	"""

@@ -42,15 +42,15 @@
 namespace GafferScene
 {
 
-class GAFFERSCENE_API Seeds : public BranchCreator
+class GAFFERSCENE_API Scatter : public BranchCreator
 {
 
 	public :
 
-		explicit Seeds( const std::string &name=defaultName<Seeds>() );
-		~Seeds() override;
+		explicit Scatter( const std::string &name=defaultName<Scatter>() );
+		~Scatter() override;
 
-		GAFFER_NODE_DECLARE_TYPE( GafferScene::Seeds, SeedsTypeId, BranchCreator );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::Scatter, ScatterTypeId, BranchCreator );
 
 		Gaffer::StringPlug *namePlug();
 		const Gaffer::StringPlug *namePlug() const;
@@ -95,6 +95,6 @@ class GAFFERSCENE_API Seeds : public BranchCreator
 
 };
 
-IE_CORE_DECLAREPTR( Seeds )
+IE_CORE_DECLAREPTR( Scatter )
 
 } // namespace GafferScene

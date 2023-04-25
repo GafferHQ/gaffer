@@ -49,7 +49,7 @@
 #include "GafferScene/Parent.h"
 #include "GafferScene/Prune.h"
 #include "GafferScene/Rename.h"
-#include "GafferScene/Seeds.h"
+#include "GafferScene/Scatter.h"
 #include "GafferScene/SubTree.h"
 #include "GafferScene/Unencapsulate.h"
 #include "GafferScene/MotionPath.h"
@@ -115,7 +115,7 @@ void GafferSceneModule::bindHierarchy()
 	GafferBindings::DependencyNodeClass<Prune>();
 	GafferBindings::DependencyNodeClass<Isolate>();
 	GafferBindings::DependencyNodeClass<CollectScenes>();
-	GafferBindings::DependencyNodeClass<Seeds>();
+	GafferBindings::DependencyNodeClass<Scatter>();
 	GafferBindings::DependencyNodeClass<Encapsulate>();
 	GafferBindings::DependencyNodeClass<Unencapsulate>();
 	GafferBindings::DependencyNodeClass<Rename>();

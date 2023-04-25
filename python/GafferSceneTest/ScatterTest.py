@@ -46,19 +46,19 @@ import Gaffer
 import GafferScene
 import GafferSceneTest
 
-class SeedsTest( GafferSceneTest.SceneTestCase ) :
+class ScatterTest( GafferSceneTest.SceneTestCase ) :
 
 	def testChildNames( self ) :
 
 		p = GafferScene.Plane()
-		s = GafferScene.Seeds()
+		s = GafferScene.Scatter()
 		s["in"].setInput( p["out"] )
 		s["parent"].setValue( "/plane" )
-		s["name"].setValue( "seeds" )
+		s["name"].setValue( "scatter" )
 
 		self.assertEqual( s["out"].childNames( "/" ), IECore.InternedStringVectorData( [ "plane" ] ) )
-		self.assertEqual( s["out"].childNames( "/plane" ), IECore.InternedStringVectorData( [ "seeds" ] ) )
-		self.assertEqual( s["out"].childNames( "/plane/seeds" ), IECore.InternedStringVectorData() )
+		self.assertEqual( s["out"].childNames( "/plane" ), IECore.InternedStringVectorData( [ "scatter" ] ) )
+		self.assertEqual( s["out"].childNames( "/plane/scatter" ), IECore.InternedStringVectorData() )
 
 		s["name"].setValue( "points" )
 
@@ -69,45 +69,45 @@ class SeedsTest( GafferSceneTest.SceneTestCase ) :
 	def testObject( self ) :
 
 		p = GafferScene.Plane()
-		s = GafferScene.Seeds()
+		s = GafferScene.Scatter()
 		s["in"].setInput( p["out"] )
 		s["parent"].setValue( "/plane" )
-		s["name"].setValue( "seeds" )
+		s["name"].setValue( "scatter" )
 
 		self.assertEqual( s["out"].objectHash( "/plane" ), p["out"].objectHash( "/plane" ) )
 		self.assertEqual( s["out"].object( "/plane" ), p["out"].object( "/plane" ) )
 
-		self.assertIsInstance( s["out"].object( "/plane/seeds" ), IECoreScene.PointsPrimitive )
-		numPoints = s["out"].object( "/plane/seeds" ).numPoints
+		self.assertIsInstance( s["out"].object( "/plane/scatter" ), IECoreScene.PointsPrimitive )
+		numPoints = s["out"].object( "/plane/scatter" ).numPoints
 
 		s["density"].setValue( 10 )
-		self.assertGreater( s["out"].object( "/plane/seeds" ).numPoints, numPoints )
+		self.assertGreater( s["out"].object( "/plane/scatter" ).numPoints, numPoints )
 
-		h = s["out"].objectHash( "/plane/seeds" )
-		m = s["out"].object( "/plane/seeds" )
-		s["name"].setValue( "notSeeds" )
-		self.assertEqual( h, s["out"].objectHash( "/plane/notSeeds" ) )
-		self.assertEqual( m, s["out"].object( "/plane/notSeeds" ) )
+		h = s["out"].objectHash( "/plane/scatter" )
+		m = s["out"].object( "/plane/scatter" )
+		s["name"].setValue( "notScatter" )
+		self.assertEqual( h, s["out"].objectHash( "/plane/notScatter" ) )
+		self.assertEqual( m, s["out"].object( "/plane/notScatter" ) )
 
 	def testSceneValidity( self ) :
 
 		p = GafferScene.Plane()
-		s = GafferScene.Seeds()
+		s = GafferScene.Scatter()
 		s["in"].setInput( p["out"] )
 		s["parent"].setValue( "/plane" )
-		s["name"].setValue( "seeds" )
+		s["name"].setValue( "scatter" )
 
 		self.assertSceneValid( s["out"] )
 
 	def testDisabled( self ) :
 
 		p = GafferScene.Plane()
-		s = GafferScene.Seeds()
+		s = GafferScene.Scatter()
 		s["in"].setInput( p["out"] )
 		s["parent"].setValue( "/plane" )
-		s["name"].setValue( "seeds" )
+		s["name"].setValue( "scatter" )
 
-		self.assertEqual( s["out"].childNames( "/plane" ), IECore.InternedStringVectorData( [ "seeds" ] ) )
+		self.assertEqual( s["out"].childNames( "/plane" ), IECore.InternedStringVectorData( [ "scatter" ] ) )
 
 		s["enabled"].setValue( False )
 
@@ -116,13 +116,13 @@ class SeedsTest( GafferSceneTest.SceneTestCase ) :
 
 	def testNamePlugDefaultValue( self ) :
 
-		s = GafferScene.Seeds()
+		s = GafferScene.Scatter()
 		self.assertEqual( s["name"].defaultValue(), "seeds" )
 		self.assertEqual( s["name"].getValue(), "seeds" )
 
 	def testAffects( self ) :
 
-		s = GafferScene.Seeds()
+		s = GafferScene.Scatter()
 		a = s.affects( s["name"] )
 		self.assertGreaterEqual( { x.relativeName( s ) for x in a }, { "out.childNames" } )
 
@@ -130,28 +130,28 @@ class SeedsTest( GafferSceneTest.SceneTestCase ) :
 
 		p = GafferScene.Plane()
 
-		s = GafferScene.Seeds()
+		s = GafferScene.Scatter()
 		s["in"].setInput( p["out"] )
 		s["parent"].setValue( "/plane" )
-		s["name"].setValue( "seeds" )
+		s["name"].setValue( "scatter" )
 
-		s2 = GafferScene.Seeds()
+		s2 = GafferScene.Scatter()
 		s2["in"].setInput( s["out"] )
 		s2["parent"].setValue( "/plane" )
-		s2["name"].setValue( "seeds" )
+		s2["name"].setValue( "scatter" )
 		s2["density"].setValue( 10 )
 
-		self.assertEqual( s2["out"].childNames( "/plane" ), IECore.InternedStringVectorData( [ "seeds", "seeds1" ] ) )
-		self.assertTrue( len( s2["out"].object( "/plane/seeds" )["P"].data ) < len( s2["out"].object( "/plane/seeds1" )["P"].data ) )
+		self.assertEqual( s2["out"].childNames( "/plane" ), IECore.InternedStringVectorData( [ "scatter", "scatter1" ] ) )
+		self.assertTrue( len( s2["out"].object( "/plane/scatter" )["P"].data ) < len( s2["out"].object( "/plane/scatter1" )["P"].data ) )
 
 		self.assertSceneValid( s["out"] )
 		self.assertSceneValid( s2["out"] )
 
-		s["name"].setValue( "seeds1" )
-		self.assertEqual( s2["out"].childNames( "/plane" ), IECore.InternedStringVectorData( [ "seeds1", "seeds" ] ) )
-		self.assertTrue( len( s2["out"].object( "/plane/seeds1" )["P"].data ) < len( s2["out"].object( "/plane/seeds" )["P"].data ) )
+		s["name"].setValue( "scatter1" )
+		self.assertEqual( s2["out"].childNames( "/plane" ), IECore.InternedStringVectorData( [ "scatter1", "scatter" ] ) )
+		self.assertTrue( len( s2["out"].object( "/plane/scatter1" )["P"].data ) < len( s2["out"].object( "/plane/scatter" )["P"].data ) )
 
-		self.assertEqual( s2["out"].objectHash( "/plane/seeds1" ), s["out"].objectHash( "/plane/seeds1" ) )
+		self.assertEqual( s2["out"].objectHash( "/plane/scatter1" ), s["out"].objectHash( "/plane/scatter1" ) )
 
 		self.assertSceneValid( s["out"] )
 		self.assertSceneValid( s2["out"] )
@@ -160,7 +160,7 @@ class SeedsTest( GafferSceneTest.SceneTestCase ) :
 
 		p = GafferScene.Plane()
 
-		s = GafferScene.Seeds()
+		s = GafferScene.Scatter()
 		s["in"].setInput( p["out"] )
 		s["parent"].setValue( "/plane" )
 		s["name"].setValue( "" )
@@ -170,7 +170,7 @@ class SeedsTest( GafferSceneTest.SceneTestCase ) :
 	def testEmptyParent( self ) :
 
 		p = GafferScene.Plane()
-		s = GafferScene.Seeds()
+		s = GafferScene.Scatter()
 
 		s["in"].setInput( p["out"] )
 		s["parent"].setValue( "" )
@@ -187,7 +187,7 @@ class SeedsTest( GafferSceneTest.SceneTestCase ) :
 		g["in"][0].setInput( p["out"] )
 		g["in"][1].setInput( l["out"] )
 
-		s = GafferScene.Seeds()
+		s = GafferScene.Scatter()
 		s["in"].setInput( g["out"] )
 		s["parent"].setValue( "/group/plane" )
 
@@ -205,24 +205,24 @@ class SeedsTest( GafferSceneTest.SceneTestCase ) :
 		primitiveVariables["in"].setInput( plane["out"] )
 		primitiveVariables["filter"].setInput( filter["out"] )
 
-		seeds = GafferScene.Seeds()
-		seeds["in"].setInput( primitiveVariables["out"] )
-		seeds["parent"].setValue( "/plane" )
-		seeds["name"].setValue( "seeds" )
-		seeds["density"].setValue( 100 )
+		scatter = GafferScene.Scatter()
+		scatter["in"].setInput( primitiveVariables["out"] )
+		scatter["parent"].setValue( "/plane" )
+		scatter["name"].setValue( "scatter" )
+		scatter["density"].setValue( 100 )
 
-		p = seeds["out"].object( "/plane/seeds" )
+		p = scatter["out"].object( "/plane/scatter" )
 
 		# Density variable doesn't exist, result should be
 		# the same.
 
-		seeds["densityPrimitiveVariable"].setValue( "d" )
-		self.assertEqual( seeds["out"].object( "/plane/seeds" ), p )
+		scatter["densityPrimitiveVariable"].setValue( "d" )
+		self.assertEqual( scatter["out"].object( "/plane/scatter" ), p )
 
 		# Add the primitive variable, it should take effect.
 
 		primitiveVariables["primitiveVariables"].addChild( Gaffer.NameValuePlug( "d", IECore.FloatData( 0.5 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
-		self.assertLess( seeds["out"].object( "/plane/seeds" ).numPoints, p.numPoints )
+		self.assertLess( scatter["out"].object( "/plane/scatter" ).numPoints, p.numPoints )
 
 	def testPrimitiveVariables( self ) :
 
@@ -231,17 +231,17 @@ class SeedsTest( GafferSceneTest.SceneTestCase ) :
 		filter = GafferScene.PathFilter()
 		filter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
 
-		seeds = GafferScene.Seeds()
-		seeds["in"].setInput( plane["out"] )
-		seeds["parent"].setValue( "/plane" )
-		seeds["name"].setValue( "seeds" )
-		seeds["density"].setValue( 10 )
+		scatter = GafferScene.Scatter()
+		scatter["in"].setInput( plane["out"] )
+		scatter["parent"].setValue( "/plane" )
+		scatter["name"].setValue( "scatter" )
+		scatter["density"].setValue( 10 )
 
-		self.assertEqual( seeds["out"].object( "/plane/seeds" ).keys(), ["P", "type"] )
+		self.assertEqual( scatter["out"].object( "/plane/scatter" ).keys(), ["P", "type"] )
 
-		seeds["primitiveVariables"].setValue( "*" )
+		scatter["primitiveVariables"].setValue( "*" )
 
-		points = seeds["out"].object( "/plane/seeds" )
+		points = scatter["out"].object( "/plane/scatter" )
 		self.assertEqual( points.keys(), ["N", "P", "type", "uv" ] )
 		for a, b in zip( points["uv"].data, points["P"].data ):
 			self.assertTrue( a.equalWithRelError( imath.V2f( b[0], b[1] ) + 0.5, 0.00001 ) )
@@ -249,14 +249,14 @@ class SeedsTest( GafferSceneTest.SceneTestCase ) :
 		for a in points["N"].data:
 			self.assertEqual( a, imath.V3f( 0, 0, 1 ) )
 
-		seeds["primitiveVariables"].setValue( "N" )
+		scatter["primitiveVariables"].setValue( "N" )
 
-		self.assertEqual( seeds["out"].object( "/plane/seeds" ).keys(), ["N", "P", "type"] )
+		self.assertEqual( scatter["out"].object( "/plane/scatter" ).keys(), ["N", "P", "type"] )
 
 	def testInternalConnectionsNotSerialised( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["seeds"] = GafferScene.Seeds()
+		s["scatter"] = GafferScene.Scatter()
 		self.assertNotIn( "setInput", s.serialise() )
 
 if __name__ == "__main__":

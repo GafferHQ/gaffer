@@ -58,7 +58,7 @@ from .PathFilterTest import PathFilterTest
 from .ShaderAssignmentTest import ShaderAssignmentTest
 from .CustomAttributesTest import CustomAttributesTest
 from .DeletePrimitiveVariablesTest import DeletePrimitiveVariablesTest
-from .SeedsTest import SeedsTest
+from .ScatterTest import ScatterTest
 from .SceneContextVariablesTest import SceneContextVariablesTest
 from .DeleteSceneContextVariablesTest import DeleteSceneContextVariablesTest
 from .SubTreeTest import SubTreeTest
