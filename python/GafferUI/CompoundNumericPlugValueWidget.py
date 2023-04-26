@@ -116,7 +116,7 @@ class CompoundNumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		if event.key == "G" and event.modifiers & event.Modifiers.Control :
 
-			if not all( hasattr( p, "isGanged" ) for p in self.getPlugs() ) :
+			if not all( hasattr( p, "isGanged" ) and p.direction() == p.Direction.In for p in self.getPlugs() ) :
 				return False
 
 			if all( p.isGanged() for p in self.getPlugs() ) :
@@ -155,7 +155,7 @@ class CompoundNumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 			return
 
 		plugs = compoundNumericPlugValueWidget.getPlugs()
-		if not all( hasattr( p, "isGanged" ) for p in plugs ) :
+		if not all( hasattr( p, "isGanged" ) and p.direction() == p.Direction.In for p in plugs ) :
 			return
 
 		readOnly = any( Gaffer.MetadataAlgo.readOnly( p ) for p in plugs )
