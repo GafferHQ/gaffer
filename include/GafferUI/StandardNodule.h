@@ -56,7 +56,7 @@ class GAFFERUI_API StandardNodule : public Nodule
 
 	public :
 
-		StandardNodule( Gaffer::PlugPtr plug );
+		explicit StandardNodule( Gaffer::PlugPtr plug );
 		~StandardNodule() override;
 
 		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::StandardNodule, StandardNoduleTypeId, Nodule );

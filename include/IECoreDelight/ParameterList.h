@@ -59,7 +59,7 @@ class IECOREDELIGHT_API ParameterList
 
 		ParameterList();
 		ParameterList( std::initializer_list<NSIParam_t> parameters );
-		ParameterList( const IECore::CompoundDataMap &values );
+		explicit ParameterList( const IECore::CompoundDataMap &values );
 
 		~ParameterList();
 

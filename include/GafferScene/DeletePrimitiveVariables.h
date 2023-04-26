@@ -46,7 +46,7 @@ class GAFFERSCENE_API DeletePrimitiveVariables : public PrimitiveVariableProcess
 
 	public :
 
-		DeletePrimitiveVariables( const std::string &name=defaultName<DeletePrimitiveVariables>() );
+		explicit DeletePrimitiveVariables( const std::string &name=defaultName<DeletePrimitiveVariables>() );
 		~DeletePrimitiveVariables() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::DeletePrimitiveVariables, DeletePrimitiveVariablesTypeId, PrimitiveVariableProcessor );

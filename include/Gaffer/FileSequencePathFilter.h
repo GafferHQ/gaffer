@@ -66,7 +66,7 @@ class GAFFER_API FileSequencePathFilter : public PathFilter
 			All = Files | SequentialFiles | Sequences,
 		};
 
-		FileSequencePathFilter( Keep mode = Concise, IECore::CompoundDataPtr userData = nullptr );
+		explicit FileSequencePathFilter( Keep mode = Concise, IECore::CompoundDataPtr userData = nullptr );
 		~FileSequencePathFilter() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::FileSequencePathFilter, FileSequencePathFilterTypeId, Gaffer::PathFilter );

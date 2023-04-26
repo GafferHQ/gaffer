@@ -85,7 +85,7 @@ class GAFFERUI_API Gadget : public Gaffer::GraphComponent
 
 	public :
 
-		Gadget( const std::string &name=defaultName<Gadget>() );
+		explicit Gadget( const std::string &name=defaultName<Gadget>() );
 		~Gadget() override;
 
 		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::Gadget, GadgetTypeId, Gaffer::GraphComponent );

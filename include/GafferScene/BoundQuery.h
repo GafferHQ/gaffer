@@ -60,7 +60,7 @@ struct GAFFERSCENE_API BoundQuery : Gaffer::ComputeNode
 		Relative = 0x02
 	};
 
-	BoundQuery( std::string const& name = defaultName< BoundQuery >() );
+	explicit BoundQuery( std::string const& name = defaultName< BoundQuery >() );
 	~BoundQuery() override;
 
 	GAFFER_NODE_DECLARE_TYPE( GafferScene::BoundQuery, BoundQueryTypeId, Gaffer::ComputeNode );

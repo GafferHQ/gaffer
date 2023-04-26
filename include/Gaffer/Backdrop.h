@@ -51,7 +51,7 @@ class GAFFER_API Backdrop : public Node
 
 	public :
 
-		Backdrop( const std::string &name=defaultName<Backdrop>() );
+		explicit Backdrop( const std::string &name=defaultName<Backdrop>() );
 		~Backdrop() override;
 
 		GAFFER_NODE_DECLARE_TYPE( Gaffer::Backdrop, BackdropTypeId, Node );

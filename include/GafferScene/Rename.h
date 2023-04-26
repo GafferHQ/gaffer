@@ -48,7 +48,7 @@ class GAFFERSCENE_API Rename : public FilteredSceneProcessor
 
 	public :
 
-		Rename( const std::string &name=defaultName<Rename>() );
+		explicit Rename( const std::string &name=defaultName<Rename>() );
 		~Rename() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::Rename, RenameTypeId, FilteredSceneProcessor );

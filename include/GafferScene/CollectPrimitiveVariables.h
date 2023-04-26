@@ -53,7 +53,7 @@ class GAFFERSCENE_API CollectPrimitiveVariables : public ObjectProcessor
 
 	public :
 
-		CollectPrimitiveVariables( const std::string &name=defaultName<CollectPrimitiveVariables>() );
+		explicit CollectPrimitiveVariables( const std::string &name=defaultName<CollectPrimitiveVariables>() );
 		~CollectPrimitiveVariables() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::CollectPrimitiveVariables, CollectPrimitiveVariablesTypeId, ObjectProcessor );

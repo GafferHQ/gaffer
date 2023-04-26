@@ -46,7 +46,7 @@ class GAFFERSCENE_API AimConstraint : public Constraint
 
 	public :
 
-		AimConstraint( const std::string &name=defaultName<AimConstraint>() );
+		explicit AimConstraint( const std::string &name=defaultName<AimConstraint>() );
 		~AimConstraint() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::AimConstraint, AimConstraintTypeId, Constraint );

@@ -141,7 +141,7 @@ class GAFFER_API Plug : public GraphComponent
 			All = Dynamic | Serialisable | AcceptsInputs | Cacheable | AcceptsDependencyCycles
 		};
 
-		Plug( const std::string &name=defaultName<Plug>(), Direction direction=In, unsigned flags=Default );
+		explicit Plug( const std::string &name=defaultName<Plug>(), Direction direction=In, unsigned flags=Default );
 		~Plug() override;
 
 		template<typename T=Plug, Plug::Direction D=Plug::Invalid>

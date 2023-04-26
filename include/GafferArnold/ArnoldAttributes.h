@@ -49,7 +49,7 @@ class GAFFERARNOLD_API ArnoldAttributes : public GafferScene::Attributes
 
 	public :
 
-		ArnoldAttributes( const std::string &name=defaultName<ArnoldAttributes>() );
+		explicit ArnoldAttributes( const std::string &name=defaultName<ArnoldAttributes>() );
 		~ArnoldAttributes() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferArnold::ArnoldAttributes, ArnoldAttributesTypeId, GafferScene::Attributes );

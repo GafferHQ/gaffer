@@ -56,7 +56,7 @@ class GAFFERVDB_API PointsToLevelSet : public GafferScene::ObjectProcessor
 
 	public :
 
-		PointsToLevelSet( const std::string &name=defaultName<PointsToLevelSet>() );
+		explicit PointsToLevelSet( const std::string &name=defaultName<PointsToLevelSet>() );
 		~PointsToLevelSet() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferVDB::PointsToLevelSet, PointsToLevelSetTypeId, GafferScene::ObjectProcessor );

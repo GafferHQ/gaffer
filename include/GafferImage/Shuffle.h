@@ -49,7 +49,7 @@ class GAFFERIMAGE_API Shuffle : public ImageProcessor
 
 	public :
 
-		Shuffle( const std::string &name=defaultName<Shuffle>() );
+		explicit Shuffle( const std::string &name=defaultName<Shuffle>() );
 		~Shuffle() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::Shuffle, ShuffleTypeId, ImageProcessor );

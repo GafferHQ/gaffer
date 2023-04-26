@@ -49,7 +49,7 @@ class IECORE_EXPORT TimeWarp : public ContextProcessor
 
 		GAFFER_NODE_DECLARE_TYPE( Gaffer::TimeWarp, TimeWarpTypeId, ContextProcessor );
 
-		TimeWarp( const std::string &name=GraphComponent::defaultName<TimeWarp>() );
+		explicit TimeWarp( const std::string &name=GraphComponent::defaultName<TimeWarp>() );
 		~TimeWarp() override;
 
 		FloatPlug *speedPlug();

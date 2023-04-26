@@ -55,7 +55,7 @@ class GAFFER_API ShufflePlug : public ValuePlug
 
 		ShufflePlug( const std::string &source, const std::string &destination, bool deleteSource=false, bool enabled=true, bool replaceDestination=true );
 		/// Primarily used for serialisation.
-		ShufflePlug( const std::string &name = defaultName<ShufflePlug>(), Direction direction=In, unsigned flags = Default );
+		explicit ShufflePlug( const std::string &name = defaultName<ShufflePlug>(), Direction direction=In, unsigned flags = Default );
 
 		StringPlug *sourcePlug();
 		const StringPlug *sourcePlug() const;

@@ -51,7 +51,7 @@ class GAFFER_API LeafPathFilter : public Gaffer::PathFilter
 		/// one or more of the patterns (using StringAlgo match()).
 		/// If leafOnly is true then directories will always be passed
 		/// through.
-		LeafPathFilter( IECore::CompoundDataPtr userData = nullptr );
+		explicit LeafPathFilter( IECore::CompoundDataPtr userData = nullptr );
 		~LeafPathFilter() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::LeafPathFilter, LeafPathFilterTypeId, PathFilter );

@@ -61,7 +61,7 @@ class GAFFERUI_API ImageGadget : public Gadget
 		/// Images are searched for on the paths defined by
 		/// the GAFFERUI_IMAGE_PATHS environment variable.
 		/// Throws if the file cannot be loaded.
-		ImageGadget( const std::string &fileName );
+		explicit ImageGadget( const std::string &fileName );
 		/// A copy of the image is taken.
 		ImageGadget( const IECoreImage::ConstImagePrimitivePtr image );
 		~ImageGadget() override;

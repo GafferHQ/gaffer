@@ -61,7 +61,7 @@ class GAFFERSCENEUI_API UVView : public GafferUI::View
 
 	public :
 
-		UVView( const std::string &name = defaultName<UVView>() );
+		explicit UVView( const std::string &name = defaultName<UVView>() );
 		~UVView() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferSceneUI::UVView, UVViewTypeId, View );

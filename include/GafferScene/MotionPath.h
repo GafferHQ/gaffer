@@ -46,7 +46,7 @@ class GAFFERSCENE_API MotionPath : public FilteredSceneProcessor
 
 	public :
 
-		MotionPath( const std::string &name=defaultName<MotionPath>() );
+		explicit MotionPath( const std::string &name=defaultName<MotionPath>() );
 		~MotionPath() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::MotionPath, MotionPathTypeId, FilteredSceneProcessor );

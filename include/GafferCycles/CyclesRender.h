@@ -49,7 +49,7 @@ class GAFFERCYCLES_API CyclesRender : public GafferScene::Render
 
 	public :
 
-		CyclesRender( const std::string &name=defaultName<CyclesRender>() );
+		explicit CyclesRender( const std::string &name=defaultName<CyclesRender>() );
 		~CyclesRender() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferCycles::CyclesRender, CyclesRenderTypeId, GafferScene::Render );

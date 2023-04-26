@@ -64,7 +64,7 @@ class GAFFERIMAGE_API FormatPlug : public Gaffer::ValuePlug
 
 		GAFFER_PLUG_DECLARE_TYPE( GafferImage::FormatPlug, FormatPlugTypeId, Gaffer::ValuePlug );
 
-		FormatPlug(
+		explicit FormatPlug(
 			const std::string &name = defaultName<FormatPlug>(),
 			Direction direction=In,
 			Format defaultValue = Format(),

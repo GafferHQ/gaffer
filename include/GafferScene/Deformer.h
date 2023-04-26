@@ -65,7 +65,7 @@ class GAFFERSCENE_API Deformer : public ObjectProcessor
 
 		/// Constructs with a single input ScenePlug named "in". Use inPlug()
 		/// to access this plug.
-		Deformer( const std::string &name );
+		explicit Deformer( const std::string &name );
 		/// Constructs with an ArrayPlug called "in". Use inPlug() as a
 		/// convenience for accessing the first child in the array, and use
 		/// inPlugs() to access the array itself.

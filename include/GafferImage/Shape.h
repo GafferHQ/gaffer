@@ -55,7 +55,7 @@ class GAFFERIMAGE_API Shape : public FlatImageProcessor
 
 	public :
 
-		Shape( const std::string &name=defaultName<Shape>() );
+		explicit Shape( const std::string &name=defaultName<Shape>() );
 		~Shape() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::Shape, ShapeTypeId, FlatImageProcessor );

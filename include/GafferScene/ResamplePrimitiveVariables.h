@@ -46,7 +46,7 @@ class GAFFERSCENE_API ResamplePrimitiveVariables : public PrimitiveVariableProce
 
 	public :
 
-		ResamplePrimitiveVariables( const std::string &name = defaultName<ResamplePrimitiveVariables>() );
+		explicit ResamplePrimitiveVariables( const std::string &name = defaultName<ResamplePrimitiveVariables>() );
 		~ResamplePrimitiveVariables() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::ResamplePrimitiveVariables, ResamplePrimitiveVariablesTypeId, PrimitiveVariableProcessor );

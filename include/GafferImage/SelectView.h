@@ -49,7 +49,7 @@ class GAFFERIMAGE_API SelectView : public ImageProcessor
 
 	public :
 
-		SelectView( const std::string &name=defaultName<SelectView>() );
+		explicit SelectView( const std::string &name=defaultName<SelectView>() );
 		~SelectView() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::SelectView, SelectViewTypeId, ImageProcessor );

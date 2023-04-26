@@ -46,7 +46,7 @@ class GAFFERSCENE_API UVSampler : public PrimitiveSampler
 
 	public :
 
-		UVSampler( const std::string &name = defaultName<UVSampler>() );
+		explicit UVSampler( const std::string &name = defaultName<UVSampler>() );
 		~UVSampler() override;
 
 		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferScene::UVSampler, UVSamplerTypeId, PrimitiveSampler );

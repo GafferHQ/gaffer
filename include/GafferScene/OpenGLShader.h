@@ -46,7 +46,7 @@ class GAFFERSCENE_API OpenGLShader : public GafferScene::Shader
 
 	public :
 
-		OpenGLShader( const std::string &name=defaultName<OpenGLShader>() );
+		explicit OpenGLShader( const std::string &name=defaultName<OpenGLShader>() );
 		~OpenGLShader() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::OpenGLShader, OpenGLShaderTypeId, GafferScene::Shader );

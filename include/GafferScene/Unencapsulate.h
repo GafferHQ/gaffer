@@ -48,7 +48,7 @@ class GAFFERSCENE_API Unencapsulate : public BranchCreator
 
 	public :
 
-		Unencapsulate( const std::string &name=defaultName<Unencapsulate>() );
+		explicit Unencapsulate( const std::string &name=defaultName<Unencapsulate>() );
 		~Unencapsulate() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::Unencapsulate, UnencapsulateTypeId, BranchCreator );

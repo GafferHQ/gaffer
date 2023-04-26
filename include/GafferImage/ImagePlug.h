@@ -82,7 +82,7 @@ class GAFFERIMAGE_API ImagePlug : public Gaffer::ValuePlug
 
 	public :
 
-		ImagePlug( const std::string &name=defaultName<ImagePlug>(), Direction direction=In, unsigned flags=Default );
+		explicit ImagePlug( const std::string &name=defaultName<ImagePlug>(), Direction direction=In, unsigned flags=Default );
 		~ImagePlug() override;
 
 		GAFFER_PLUG_DECLARE_TYPE( GafferImage::ImagePlug, ImagePlugTypeId, ValuePlug );

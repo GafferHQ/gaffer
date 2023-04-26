@@ -49,7 +49,7 @@ class GAFFERCYCLES_API InteractiveCyclesRender : public GafferScene::Interactive
 
 	public :
 
-		InteractiveCyclesRender( const std::string &name=defaultName<InteractiveCyclesRender>() );
+		explicit InteractiveCyclesRender( const std::string &name=defaultName<InteractiveCyclesRender>() );
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferCycles::InteractiveCyclesRender, InteractiveCyclesRenderTypeId, GafferScene::InteractiveRender );
 

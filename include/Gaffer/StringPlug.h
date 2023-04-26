@@ -91,7 +91,7 @@ class GAFFER_API StringPlug : public ValuePlug
 
 		GAFFER_PLUG_DECLARE_TYPE( Gaffer::StringPlug, StringPlugTypeId, ValuePlug );
 
-		StringPlug(
+		explicit StringPlug(
 			const std::string &name = defaultName<StringPlug>(),
 			Direction direction=In,
 			const std::string &defaultValue = "",

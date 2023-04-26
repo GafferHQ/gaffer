@@ -46,7 +46,7 @@ class GAFFERIMAGE_API Dilate : public RankFilter
 
 	public :
 
-		Dilate( const std::string &name=defaultName<Dilate>() );
+		explicit Dilate( const std::string &name=defaultName<Dilate>() );
 		~Dilate() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::Dilate, DilateTypeId, RankFilter );

@@ -46,7 +46,7 @@ class GAFFERSCENE_API OpenGLRender : public Render
 
 	public :
 
-		OpenGLRender( const std::string &name=defaultName<OpenGLRender>() );
+		explicit OpenGLRender( const std::string &name=defaultName<OpenGLRender>() );
 		~OpenGLRender() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::OpenGLRender, OpenGLRenderTypeId, Render );

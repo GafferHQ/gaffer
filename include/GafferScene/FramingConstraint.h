@@ -53,7 +53,7 @@ class GAFFERSCENE_API FramingConstraint : public SceneElementProcessor
 
 	public :
 
-		FramingConstraint( const std::string &name=defaultName<FramingConstraint>() );
+		explicit FramingConstraint( const std::string &name=defaultName<FramingConstraint>() );
 		~FramingConstraint() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::FramingConstraint, FramingConstraintTypeId, SceneElementProcessor );

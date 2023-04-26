@@ -54,7 +54,7 @@ class GAFFER_API MatchPatternPathFilter : public Gaffer::PathFilter
 		/// one or more of the patterns (using StringAlgo match()).
 		/// If leafOnly is true then directories will always be passed
 		/// through.
-		MatchPatternPathFilter( const std::vector<IECore::StringAlgo::MatchPattern> &patterns, IECore::InternedString propertyName = "name", bool leafOnly = true, IECore::CompoundDataPtr userData = nullptr );
+		explicit MatchPatternPathFilter( const std::vector<IECore::StringAlgo::MatchPattern> &patterns, IECore::InternedString propertyName = "name", bool leafOnly = true, IECore::CompoundDataPtr userData = nullptr );
 		~MatchPatternPathFilter() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::MatchPatternPathFilter, MatchPatternPathFilterTypeId, PathFilter );

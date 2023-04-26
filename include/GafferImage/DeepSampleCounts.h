@@ -48,7 +48,7 @@ class GAFFERIMAGE_API DeepSampleCounts : public ImageProcessor
 
 	public :
 
-		DeepSampleCounts( const std::string &name=defaultName<DeepSampleCounts>() );
+		explicit DeepSampleCounts( const std::string &name=defaultName<DeepSampleCounts>() );
 		~DeepSampleCounts() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::DeepSampleCounts, DeepSampleCountsTypeId, ImageProcessor );

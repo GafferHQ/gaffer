@@ -56,7 +56,7 @@ class GAFFER_API CompoundDataPlug : public Gaffer::ValuePlug
 
 	public :
 
-		CompoundDataPlug(
+		explicit CompoundDataPlug(
 			const std::string &name = defaultName<CompoundDataPlug>(),
 			Direction direction=In,
 			unsigned flags = Default

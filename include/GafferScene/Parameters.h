@@ -48,7 +48,7 @@ class GAFFERSCENE_API Parameters : public ObjectProcessor
 
 	public :
 
-		Parameters( const std::string &name=defaultName<Parameters>() );
+		explicit Parameters( const std::string &name=defaultName<Parameters>() );
 		~Parameters() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::Parameters, ParametersTypeId, ObjectProcessor );

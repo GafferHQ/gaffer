@@ -54,7 +54,7 @@ class GAFFERSCENE_API Render : public GafferDispatch::TaskNode
 
 	public :
 
-		Render( const std::string &name=defaultName<Render>() );
+		explicit Render( const std::string &name=defaultName<Render>() );
 		~Render() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::Render, GafferScene::RenderTypeId, GafferDispatch::TaskNode );

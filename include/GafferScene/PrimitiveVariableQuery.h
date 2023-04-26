@@ -51,7 +51,7 @@ namespace GafferScene
 
 struct GAFFERSCENE_API PrimitiveVariableQuery : Gaffer::ComputeNode
 {
-	PrimitiveVariableQuery( const std::string& name = defaultName< PrimitiveVariableQuery >() );
+	explicit PrimitiveVariableQuery( const std::string& name = defaultName< PrimitiveVariableQuery >() );
 	~PrimitiveVariableQuery() override;
 
 	GAFFER_NODE_DECLARE_TYPE( GafferScene::PrimitiveVariableQuery, PrimitiveVariableQueryTypeId, Gaffer::ComputeNode );

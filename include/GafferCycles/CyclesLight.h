@@ -53,7 +53,7 @@ class GAFFERCYCLES_API CyclesLight : public GafferScene::Light
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferCycles::CyclesLight, CyclesLightTypeId, GafferScene::Light );
 
-		CyclesLight( const std::string &name=defaultName<CyclesLight>() );
+		explicit CyclesLight( const std::string &name=defaultName<CyclesLight>() );
 		~CyclesLight() override;
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;

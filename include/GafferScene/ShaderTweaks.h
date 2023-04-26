@@ -51,7 +51,7 @@ class GAFFERSCENE_API ShaderTweaks : public AttributeProcessor
 
 	public :
 
-		ShaderTweaks( const std::string &name=defaultName<ShaderTweaks>() );
+		explicit ShaderTweaks( const std::string &name=defaultName<ShaderTweaks>() );
 		~ShaderTweaks() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::ShaderTweaks, ShaderTweaksTypeId, AttributeProcessor );

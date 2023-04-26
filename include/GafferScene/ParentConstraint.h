@@ -48,7 +48,7 @@ class GAFFERSCENE_API ParentConstraint : public Constraint
 
 	public :
 
-		ParentConstraint( const std::string &name=defaultName<ParentConstraint>() );
+		explicit ParentConstraint( const std::string &name=defaultName<ParentConstraint>() );
 		~ParentConstraint() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::ParentConstraint, ParentConstraintTypeId, Constraint );

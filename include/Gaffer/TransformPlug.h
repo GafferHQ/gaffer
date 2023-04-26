@@ -47,7 +47,7 @@ class GAFFER_API TransformPlug : public ValuePlug
 
 	public :
 
-		TransformPlug(
+		explicit TransformPlug(
 			const std::string &name = defaultName<TransformPlug>(),
 			Direction direction=In,
 			const Imath::V3f &defaultTranslate = Imath::V3f( 0 ),

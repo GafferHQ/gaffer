@@ -67,7 +67,7 @@ class GAFFER_API CompoundNumericPlug : public ValuePlug
 
 		GAFFER_PLUG_DECLARE_TEMPLATE_TYPE( CompoundNumericPlug<T>, ValuePlug );
 
-		CompoundNumericPlug(
+		explicit CompoundNumericPlug(
 			const std::string &name = defaultName<CompoundNumericPlug>(),
 			Direction direction=In,
 			T defaultValue = T( 0 ),

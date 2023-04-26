@@ -49,7 +49,7 @@ class GAFFERCYCLES_API CyclesBackground : public GafferScene::GlobalShader
 
 	public :
 
-		CyclesBackground( const std::string &name=defaultName<CyclesBackground>() );
+		explicit CyclesBackground( const std::string &name=defaultName<CyclesBackground>() );
 		~CyclesBackground() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferCycles::CyclesBackground, CyclesBackgroundTypeId, GafferScene::GlobalShader );

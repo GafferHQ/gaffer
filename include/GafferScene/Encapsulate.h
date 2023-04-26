@@ -46,7 +46,7 @@ class GAFFERSCENE_API Encapsulate : public FilteredSceneProcessor
 
 	public :
 
-		Encapsulate( const std::string &name=defaultName<Encapsulate>() );
+		explicit Encapsulate( const std::string &name=defaultName<Encapsulate>() );
 		~Encapsulate() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::Encapsulate, EncapsulateTypeId, FilteredSceneProcessor );

@@ -48,7 +48,7 @@ class GAFFERSCENE_API PrimitiveVariables : public ObjectProcessor
 
 	public :
 
-		PrimitiveVariables( const std::string &name=defaultName<PrimitiveVariables>() );
+		explicit PrimitiveVariables( const std::string &name=defaultName<PrimitiveVariables>() );
 		~PrimitiveVariables() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::PrimitiveVariables, PrimitiveVariablesTypeId, ObjectProcessor );

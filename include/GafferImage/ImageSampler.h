@@ -56,7 +56,7 @@ class GAFFERIMAGE_API ImageSampler : public Gaffer::ComputeNode
 
 	public :
 
-		ImageSampler( const std::string &name=defaultName<ImageSampler>() );
+		explicit ImageSampler( const std::string &name=defaultName<ImageSampler>() );
 		~ImageSampler() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::ImageSampler, ImageSamplerTypeId, ComputeNode );

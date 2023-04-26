@@ -53,7 +53,7 @@ class GAFFERSCENE_API Orientation : public ObjectProcessor
 
 	public :
 
-		Orientation( const std::string &name=defaultName<Orientation>() );
+		explicit Orientation( const std::string &name=defaultName<Orientation>() );
 		~Orientation() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::Orientation, OrientationTypeId, ObjectProcessor );

@@ -50,7 +50,7 @@ class GAFFERSCENE_API Sphere : public ObjectSource
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::Sphere, SphereTypeId, ObjectSource );
 
-		Sphere( const std::string &name=defaultName<Sphere>() );
+		explicit Sphere( const std::string &name=defaultName<Sphere>() );
 		~Sphere() override;
 
 		enum Type

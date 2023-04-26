@@ -49,7 +49,7 @@ class GAFFERCYCLES_API CyclesShader : public GafferScene::Shader
 
 	public :
 
-		CyclesShader( const std::string &name=defaultName<CyclesShader>() );
+		explicit CyclesShader( const std::string &name=defaultName<CyclesShader>() );
 		~CyclesShader() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferCycles::CyclesShader, CyclesShaderTypeId, GafferScene::Shader );

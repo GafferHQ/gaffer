@@ -68,7 +68,7 @@ class GAFFERSCENE_API Shader : public Gaffer::ComputeNode
 
 	public :
 
-		Shader( const std::string &name=defaultName<Shader>() );
+		explicit Shader( const std::string &name=defaultName<Shader>() );
 		~Shader() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::Shader, ShaderTypeId, Gaffer::ComputeNode );

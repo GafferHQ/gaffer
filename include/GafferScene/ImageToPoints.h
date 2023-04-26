@@ -50,7 +50,7 @@ class GAFFERSCENE_API ImageToPoints : public ObjectSource
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::ImageToPoints, ImageToPointsTypeId, ObjectSource );
 
-		ImageToPoints( const std::string &name=defaultName<ImageToPoints>() );
+		explicit ImageToPoints( const std::string &name=defaultName<ImageToPoints>() );
 		~ImageToPoints() override;
 
 		GafferImage::ImagePlug *imagePlug();

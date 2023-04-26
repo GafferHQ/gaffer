@@ -49,7 +49,7 @@ class GAFFERCYCLES_API CyclesAttributes : public GafferScene::Attributes
 
 	public :
 
-		CyclesAttributes( const std::string &name=defaultName<CyclesAttributes>() );
+		explicit CyclesAttributes( const std::string &name=defaultName<CyclesAttributes>() );
 		~CyclesAttributes() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferCycles::CyclesAttributes, CyclesAttributesTypeId, GafferScene::Attributes );

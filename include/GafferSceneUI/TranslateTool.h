@@ -51,7 +51,7 @@ class GAFFERSCENEUI_API TranslateTool : public TransformTool
 
 	public :
 
-		TranslateTool( SceneView *view, const std::string &name = defaultName<TranslateTool>() );
+		explicit TranslateTool( SceneView *view, const std::string &name = defaultName<TranslateTool>() );
 		~TranslateTool() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferSceneUI::TranslateTool, TranslateToolTypeId, TransformTool );

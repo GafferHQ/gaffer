@@ -59,7 +59,7 @@ struct GAFFERSCENE_API TransformQuery : Gaffer::ComputeNode
 		Relative = 0x02
 	};
 
-	TransformQuery( std::string const& name = defaultName< TransformQuery >() );
+	explicit TransformQuery( std::string const& name = defaultName< TransformQuery >() );
 	~TransformQuery() override;
 
 	GAFFER_NODE_DECLARE_TYPE( GafferScene::TransformQuery, TransformQueryTypeId, Gaffer::ComputeNode );

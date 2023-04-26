@@ -48,7 +48,7 @@ IE_CORE_FORWARDDECLARE( Gadget )
 struct GAFFERUI_API DragDropEvent : public ButtonEvent
 {
 
-	DragDropEvent(
+	explicit DragDropEvent(
 		Buttons button = None,
 		Buttons buttons = None,
 		const IECore::LineSegment3f &Line=IECore::LineSegment3f(),

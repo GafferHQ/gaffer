@@ -52,7 +52,7 @@ class IECORE_EXPORT ContextProcessor : public ComputeNode
 
 		GAFFER_NODE_DECLARE_TYPE( Gaffer::ContextProcessor, ContextProcessorTypeId, ComputeNode );
 
-		ContextProcessor( const std::string &name=GraphComponent::defaultName<ContextProcessor>() );
+		explicit ContextProcessor( const std::string &name=GraphComponent::defaultName<ContextProcessor>() );
 		~ContextProcessor() override;
 
 		/// \undoable

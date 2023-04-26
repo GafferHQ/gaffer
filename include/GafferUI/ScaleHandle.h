@@ -47,7 +47,7 @@ class GAFFERUI_API ScaleHandle : public Handle
 
 	public :
 
-		ScaleHandle( Style::Axes axes );
+		explicit ScaleHandle( Style::Axes axes );
 		~ScaleHandle() override;
 
 		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::ScaleHandle, ScaleHandleTypeId, Handle );

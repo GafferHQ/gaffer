@@ -57,7 +57,7 @@ class GAFFERIMAGE_API Display : public ImageNode
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::Display, DisplayTypeId, ImageNode );
 
-		Display( const std::string &name = defaultName<Display>() );
+		explicit Display( const std::string &name = defaultName<Display>() );
 		~Display() override;
 
 		/// Sets the driver used to provide the

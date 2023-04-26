@@ -71,7 +71,7 @@ class GAFFERSCENEUI_API SceneView : public GafferUI::View
 
 	public :
 
-		SceneView( const std::string &name = defaultName<SceneView>() );
+		explicit SceneView( const std::string &name = defaultName<SceneView>() );
 		~SceneView() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferSceneUI::SceneView, SceneViewTypeId, GafferUI::View );

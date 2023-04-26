@@ -51,7 +51,7 @@ class GAFFERCORTEX_API CompoundParameterHandler : public ParameterHandler
 
 		IE_CORE_DECLAREMEMBERPTR( CompoundParameterHandler );
 
-		CompoundParameterHandler( IECore::CompoundParameterPtr parameter );
+		explicit CompoundParameterHandler( IECore::CompoundParameterPtr parameter );
 		~CompoundParameterHandler() override;
 
 		IECore::Parameter *parameter() override;

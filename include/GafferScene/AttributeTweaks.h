@@ -50,7 +50,7 @@ class GAFFERSCENE_API AttributeTweaks : public AttributeProcessor
 
 	public :
 
-		AttributeTweaks( const std::string &name=defaultName<AttributeTweaks>() );
+		explicit AttributeTweaks( const std::string &name=defaultName<AttributeTweaks>() );
 		~AttributeTweaks() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::AttributeTweaks, AttributeTweaksTypeId, AttributeProcessor );

@@ -45,7 +45,7 @@ class GAFFERIMAGE_API VectorWarp : public Warp
 {
 	public :
 
-		VectorWarp( const std::string &name=defaultName<Warp>() );
+		explicit VectorWarp( const std::string &name=defaultName<Warp>() );
 		~VectorWarp() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::VectorWarp, VectorWarpTypeId, Warp );

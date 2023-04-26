@@ -53,7 +53,7 @@ class GAFFERSCENE_API Constraint : public SceneElementProcessor
 
 	public :
 
-		Constraint( const std::string &name=defaultName<Constraint>() );
+		explicit Constraint( const std::string &name=defaultName<Constraint>() );
 		~Constraint() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::Constraint, ConstraintTypeId, SceneElementProcessor );

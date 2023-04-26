@@ -47,7 +47,7 @@ class GAFFERIMAGE_API Offset : public ImageProcessor
 {
 	public :
 
-		Offset( const std::string &name=defaultName<Offset>() );
+		explicit Offset( const std::string &name=defaultName<Offset>() );
 		~Offset() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::Offset, OffsetTypeId, ImageProcessor );

@@ -61,7 +61,7 @@ class GAFFERSCENE_API ObjectProcessor : public FilteredSceneProcessor
 
 		/// Constructs with a single input ScenePlug named "in". Use inPlug()
 		/// to access this plug.
-		ObjectProcessor( const std::string &name );
+		explicit ObjectProcessor( const std::string &name );
 		/// Constructs with an ArrayPlug called "in". Use inPlug() as a
 		/// convenience for accessing the first child in the array, and use
 		/// inPlugs() to access the array itself.

@@ -50,7 +50,7 @@ class GAFFERARNOLD_API ArnoldShader : public GafferScene::Shader
 
 	public :
 
-		ArnoldShader( const std::string &name=defaultName<ArnoldShader>() );
+		explicit ArnoldShader( const std::string &name=defaultName<ArnoldShader>() );
 		~ArnoldShader() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferArnold::ArnoldShader, ArnoldShaderTypeId, GafferScene::Shader );

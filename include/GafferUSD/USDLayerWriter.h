@@ -55,7 +55,7 @@ class GAFFERUSD_API USDLayerWriter : public GafferDispatch::TaskNode
 
 	public :
 
-		USDLayerWriter( const std::string &name=defaultName<USDLayerWriter>() );
+		explicit USDLayerWriter( const std::string &name=defaultName<USDLayerWriter>() );
 		~USDLayerWriter() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferUSD::USDLayerWriter, USDLayerWriterTypeId, GafferDispatch::TaskNode );

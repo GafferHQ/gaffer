@@ -51,7 +51,7 @@ class GAFFERARNOLD_API ArnoldAOVShader : public GafferScene::GlobalShader
 
 	public :
 
-		ArnoldAOVShader( const std::string &name=defaultName<ArnoldAOVShader>() );
+		explicit ArnoldAOVShader( const std::string &name=defaultName<ArnoldAOVShader>() );
 		~ArnoldAOVShader() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferArnold::ArnoldAOVShader, ArnoldAOVShaderTypeId, GafferScene::GlobalShader );

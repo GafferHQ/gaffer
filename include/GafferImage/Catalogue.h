@@ -65,7 +65,7 @@ class GAFFERIMAGE_API Catalogue : public ImageNode
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::Catalogue, CatalogueTypeId, ImageNode );
 
-		Catalogue( const std::string &name = defaultName<Catalogue>() );
+		explicit Catalogue( const std::string &name = defaultName<Catalogue>() );
 		~Catalogue() override;
 
 		/// Plug type used to represent an image in the catalogue.

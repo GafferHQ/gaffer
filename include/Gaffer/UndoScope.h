@@ -71,7 +71,7 @@ class GAFFER_API UndoScope : DirtyPropagationScope
 		/// can be used by UI elements to compress a series of individual
 		/// editing events such as an interactively updated drag into
 		/// a single item on the undo stack.
-		UndoScope( ScriptNodePtr script, State state=Enabled, const std::string &mergeGroup=std::string() );
+		explicit UndoScope( ScriptNodePtr script, State state=Enabled, const std::string &mergeGroup=std::string() );
 		~UndoScope();
 
 	private :

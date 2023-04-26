@@ -53,7 +53,7 @@ class GAFFERSCENE_API MeshToPoints : public Deformer
 
 	public :
 
-		MeshToPoints( const std::string &name=defaultName<MeshToPoints>() );
+		explicit MeshToPoints( const std::string &name=defaultName<MeshToPoints>() );
 		~MeshToPoints() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::MeshToPoints, MeshToPointsTypeId, Deformer );

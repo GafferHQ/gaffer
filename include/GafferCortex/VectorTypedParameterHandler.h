@@ -55,7 +55,7 @@ class GAFFERCORTEX_API VectorTypedParameterHandler : public ParameterHandler
 		using DataType = typename ParameterType::ObjectType;
 		using PlugType = Gaffer::TypedObjectPlug<DataType>;
 
-		VectorTypedParameterHandler( typename ParameterType::Ptr parameter );
+		explicit VectorTypedParameterHandler( typename ParameterType::Ptr parameter );
 		~VectorTypedParameterHandler() override;
 
 		IECore::Parameter *parameter() override;

@@ -52,7 +52,7 @@ class GAFFERIMAGE_API DeepSampler : public Gaffer::ComputeNode
 
 	public :
 
-		DeepSampler( const std::string &name=defaultName<DeepSampler>() );
+		explicit DeepSampler( const std::string &name=defaultName<DeepSampler>() );
 		~DeepSampler() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::DeepSampler, DeepSamplerTypeId, ComputeNode );

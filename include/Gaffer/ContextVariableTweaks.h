@@ -49,7 +49,7 @@ class GAFFER_API ContextVariableTweaks : public ContextProcessor
 
 	public :
 
-		ContextVariableTweaks( const std::string &name=defaultName<ContextVariableTweaks>() );
+		explicit ContextVariableTweaks( const std::string &name=defaultName<ContextVariableTweaks>() );
 		~ContextVariableTweaks() override;
 
 		GAFFER_NODE_DECLARE_TYPE( Gaffer::ContextVariableTweaks, ContextVariableTweaksTypeId, ContextProcessor );

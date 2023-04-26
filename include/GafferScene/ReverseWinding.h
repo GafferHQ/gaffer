@@ -46,7 +46,7 @@ class GAFFERSCENE_API ReverseWinding : public ObjectProcessor
 
 	public :
 
-		ReverseWinding( const std::string &name=defaultName<ReverseWinding>() );
+		explicit ReverseWinding( const std::string &name=defaultName<ReverseWinding>() );
 		~ReverseWinding() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::ReverseWinding, ReverseWindingTypeId, ObjectProcessor );

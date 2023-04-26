@@ -52,7 +52,7 @@ class GAFFERSCENE_API SceneNode : public Gaffer::ComputeNode
 
 	public :
 
-		SceneNode( const std::string &name=defaultName<SceneNode>() );
+		explicit SceneNode( const std::string &name=defaultName<SceneNode>() );
 		~SceneNode() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::SceneNode, SceneNodeTypeId, Gaffer::ComputeNode );

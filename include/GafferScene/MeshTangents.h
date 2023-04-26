@@ -49,7 +49,7 @@ class GAFFERSCENE_API MeshTangents : public ObjectProcessor
 
 	public :
 
-		MeshTangents( const std::string &name=defaultName<MeshTangents>() );
+		explicit MeshTangents( const std::string &name=defaultName<MeshTangents>() );
 		~MeshTangents() override;
 
 		enum Mode

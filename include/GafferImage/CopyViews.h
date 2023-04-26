@@ -49,7 +49,7 @@ class GAFFERIMAGE_API CopyViews : public ImageProcessor
 
 	public :
 
-		CopyViews( const std::string &name=defaultName<CopyViews>() );
+		explicit CopyViews( const std::string &name=defaultName<CopyViews>() );
 		~CopyViews() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::CopyViews, CopyViewsTypeId, ImageProcessor );

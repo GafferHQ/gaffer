@@ -56,7 +56,7 @@ class GAFFERIMAGE_API DeepToFlat : public ImageProcessor
 			None
 		};
 
-		DeepToFlat( const std::string &name=defaultName<DeepToFlat>() );
+		explicit DeepToFlat( const std::string &name=defaultName<DeepToFlat>() );
 		~DeepToFlat() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::DeepToFlat, DeepToFlatTypeId, ImageProcessor );

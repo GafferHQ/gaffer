@@ -60,7 +60,7 @@ class GAFFER_API FileSystemPath : public Path
 
 	public :
 
-		FileSystemPath( PathFilterPtr filter = nullptr, bool includeSequences = false );
+		explicit FileSystemPath( PathFilterPtr filter = nullptr, bool includeSequences = false );
 		FileSystemPath( const std::string &path, PathFilterPtr filter = nullptr, bool includeSequences = false );
 		FileSystemPath( const std::filesystem::path &path, PathFilterPtr filter = nullptr, bool includeSequences = false );
 		FileSystemPath( const Names &names, const IECore::InternedString &root = "/", PathFilterPtr filter = nullptr, bool includeSequences = false );

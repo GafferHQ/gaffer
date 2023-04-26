@@ -73,7 +73,7 @@ class GAFFERUI_API PathColumn : public IECore::RefCounted, public Gaffer::Signal
 			Default = Interactive,
 		};
 
-		PathColumn( SizeMode sizeMode = Default );
+		explicit PathColumn( SizeMode sizeMode = Default );
 
 		/// Returns the current column size mode.
 		SizeMode getSizeMode() const;

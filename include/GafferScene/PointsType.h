@@ -53,7 +53,7 @@ class GAFFERSCENE_API PointsType : public ObjectProcessor
 
 	public :
 
-		PointsType( const std::string &name=defaultName<PointsType>() );
+		explicit PointsType( const std::string &name=defaultName<PointsType>() );
 		~PointsType() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::PointsType, PointsTypeTypeId, ObjectProcessor );

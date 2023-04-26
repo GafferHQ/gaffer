@@ -91,7 +91,7 @@ class GAFFERUI_API GraphGadget : public ContainerGadget
 		/// Creates a graph showing the children of root, optionally
 		/// filtered by the specified set. Nodes are only displayed if
 		/// they are both a child of root and a member of filter.
-		GraphGadget( Gaffer::NodePtr root, Gaffer::SetPtr filter = nullptr );
+		explicit GraphGadget( Gaffer::NodePtr root, Gaffer::SetPtr filter = nullptr );
 
 		~GraphGadget() override;
 

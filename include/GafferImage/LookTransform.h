@@ -46,7 +46,7 @@ class GAFFERIMAGE_API LookTransform : public OpenColorIOTransform
 
 	public :
 
-		LookTransform( const std::string &name=defaultName<LookTransform>() );
+		explicit LookTransform( const std::string &name=defaultName<LookTransform>() );
 		~LookTransform() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::LookTransform, LookTransformTypeId, OpenColorIOTransform );

@@ -49,7 +49,7 @@ class GAFFERDELIGHT_API InteractiveDelightRender : public GafferScene::Interacti
 
 	public :
 
-		InteractiveDelightRender( const std::string &name=defaultName<InteractiveDelightRender>() );
+		explicit InteractiveDelightRender( const std::string &name=defaultName<InteractiveDelightRender>() );
 
 		GAFFER_NODE_DECLARE_TYPE( GafferDelight::InteractiveDelightRender, InteractiveDelightRenderTypeId, GafferScene::InteractiveRender );
 

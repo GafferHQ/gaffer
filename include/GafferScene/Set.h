@@ -57,7 +57,7 @@ class GAFFERSCENE_API Set : public FilteredSceneProcessor
 
 	public :
 
-		Set( const std::string &name=defaultName<Set>() );
+		explicit Set( const std::string &name=defaultName<Set>() );
 		~Set() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::Set, SetTypeId, FilteredSceneProcessor );

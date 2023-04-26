@@ -55,7 +55,7 @@ class GAFFERSCENEUI_API CameraTool : public GafferSceneUI::SelectionTool
 
 	public :
 
-		CameraTool( SceneView *view, const std::string &name = defaultName<CameraTool>() );
+		explicit CameraTool( SceneView *view, const std::string &name = defaultName<CameraTool>() );
 		~CameraTool() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferSceneUI::CameraTool, CameraToolTypeId, GafferSceneUI::SelectionTool );

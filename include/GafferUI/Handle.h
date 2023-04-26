@@ -65,7 +65,7 @@ class GAFFERUI_API Handle : public Gadget
 
 	protected :
 
-		Handle( const std::string &name=defaultName<Handle>() );
+		explicit Handle( const std::string &name=defaultName<Handle>() );
 
 		// Implemented to call renderHandle() after applying
 		// the raster scale.

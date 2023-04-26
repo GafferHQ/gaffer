@@ -52,7 +52,7 @@ namespace GafferScene
 
 struct GAFFERSCENE_API AttributeQuery : Gaffer::ComputeNode
 {
-	AttributeQuery( const std::string& name = defaultName< AttributeQuery >() );
+	explicit AttributeQuery( const std::string& name = defaultName< AttributeQuery >() );
 	~AttributeQuery() override;
 
 	GAFFER_NODE_DECLARE_TYPE( GafferScene::AttributeQuery, AttributeQueryTypeId, Gaffer::ComputeNode );

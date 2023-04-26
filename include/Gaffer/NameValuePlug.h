@@ -111,7 +111,7 @@ class GAFFER_API NameValuePlug : public Gaffer::ValuePlug
 		// Bare constructor required for compatibility with old CompoundDataPlug::MemberPlug constructor.
 		// Deprecated, and dangerous, since if you don't manually construct child plugs in the expected order of
 		// "name", "value", and optionally "enabled" then you will get a crash.
-		NameValuePlug(
+		explicit NameValuePlug(
 			const std::string &name=defaultName<NameValuePlug>(),
 			Direction direction=In,
 			unsigned flags=Default

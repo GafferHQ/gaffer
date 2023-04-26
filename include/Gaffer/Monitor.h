@@ -65,10 +65,10 @@ class GAFFER_API Monitor : public IECore::RefCounted
 
 				/// Constructs a Scope where the monitor has the specified
 				/// active state. If monitor is null, the scope is a no-op.
-				Scope( const MonitorPtr &monitor, bool active = true );
+				explicit Scope( const MonitorPtr &monitor, bool active = true );
 				/// Constructs a Scope where each of `monitors` has the
 				/// specified `active` state.
-				Scope( const MonitorSet &monitors, bool active = true );
+				explicit Scope( const MonitorSet &monitors, bool active = true );
 				/// Returns to the previously active set of monitors.
 				~Scope();
 

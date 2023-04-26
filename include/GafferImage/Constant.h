@@ -50,7 +50,7 @@ class GAFFERIMAGE_API Constant : public FlatImageSource
 
 	public :
 
-		Constant( const std::string &name=defaultName<Constant>() );
+		explicit Constant( const std::string &name=defaultName<Constant>() );
 		~Constant() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::Constant, ConstantTypeId, FlatImageSource );

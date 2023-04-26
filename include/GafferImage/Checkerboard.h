@@ -58,7 +58,7 @@ class GAFFERIMAGE_API Checkerboard : public FlatImageSource
 
 	public :
 
-		Checkerboard( const std::string &name=defaultName<Checkerboard>() );
+		explicit Checkerboard( const std::string &name=defaultName<Checkerboard>() );
 		~Checkerboard() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::Checkerboard, CheckerboardTypeId, FlatImageSource );

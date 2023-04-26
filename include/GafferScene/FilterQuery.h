@@ -55,7 +55,7 @@ class GAFFERSCENE_API FilterQuery : public Gaffer::ComputeNode
 
 	public :
 
-		FilterQuery( const std::string &name=defaultName<FilterQuery>() );
+		explicit FilterQuery( const std::string &name=defaultName<FilterQuery>() );
 		~FilterQuery() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::FilterQuery, FilterQueryTypeId, ComputeNode );

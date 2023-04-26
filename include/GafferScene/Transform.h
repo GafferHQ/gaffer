@@ -48,7 +48,7 @@ class GAFFERSCENE_API Transform : public SceneElementProcessor
 
 	public :
 
-		Transform( const std::string &name=defaultName<Transform>() );
+		explicit Transform( const std::string &name=defaultName<Transform>() );
 		~Transform() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::Transform, TransformTypeId, SceneElementProcessor );

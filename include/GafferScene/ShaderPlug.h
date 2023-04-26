@@ -53,7 +53,7 @@ class GAFFERSCENE_API ShaderPlug : public Gaffer::Plug
 
 	public :
 
-		ShaderPlug( const std::string &name=defaultName<ShaderPlug>(), Direction direction=In, unsigned flags=Default );
+		explicit ShaderPlug( const std::string &name=defaultName<ShaderPlug>(), Direction direction=In, unsigned flags=Default );
 		~ShaderPlug() override;
 
 		GAFFER_PLUG_DECLARE_TYPE( GafferScene::ShaderPlug, ShaderPlugTypeId, Plug );

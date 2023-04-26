@@ -68,7 +68,7 @@ class GAFFER_API Node : public GraphComponent
 
 	public :
 
-		Node( const std::string &name=defaultName<Node>() );
+		explicit Node( const std::string &name=defaultName<Node>() );
 		~Node() override;
 
 		GAFFER_NODE_DECLARE_TYPE( Gaffer::Node, NodeTypeId, GraphComponent );

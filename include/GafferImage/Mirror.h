@@ -48,7 +48,7 @@ class GAFFERIMAGE_API Mirror : public FlatImageProcessor
 
 	public :
 
-		Mirror( const std::string &name=defaultName<Mirror>() );
+		explicit Mirror( const std::string &name=defaultName<Mirror>() );
 		~Mirror() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::Mirror, MirrorTypeId, FlatImageProcessor );

@@ -58,7 +58,7 @@ class GAFFERSCENE_API FilterPlug : public Gaffer::IntPlug
 
 	public :
 
-		FilterPlug(
+		explicit FilterPlug(
 			const std::string &name = defaultName<FilterPlug>(),
 			Direction direction = In,
 			unsigned flags = Default

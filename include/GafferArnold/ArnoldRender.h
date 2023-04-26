@@ -49,7 +49,7 @@ class GAFFERARNOLD_API ArnoldRender : public GafferScene::Render
 
 	public :
 
-		ArnoldRender( const std::string &name=defaultName<ArnoldRender>() );
+		explicit ArnoldRender( const std::string &name=defaultName<ArnoldRender>() );
 		~ArnoldRender() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferArnold::ArnoldRender, ArnoldRenderTypeId, GafferScene::Render );

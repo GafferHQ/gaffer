@@ -79,7 +79,7 @@ class GAFFER_API ScriptNode : public Node
 
 	public :
 
-		ScriptNode( const std::string &name=defaultName<Node>() );
+		explicit ScriptNode( const std::string &name=defaultName<Node>() );
 		~ScriptNode() override;
 
 		GAFFER_NODE_DECLARE_TYPE( Gaffer::ScriptNode, ScriptNodeTypeId, Node );

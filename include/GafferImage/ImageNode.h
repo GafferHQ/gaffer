@@ -52,7 +52,7 @@ class GAFFERIMAGE_API ImageNode : public Gaffer::ComputeNode
 
 	public :
 
-		ImageNode( const std::string &name=defaultName<ImageNode>() );
+		explicit ImageNode( const std::string &name=defaultName<ImageNode>() );
 		~ImageNode() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::ImageNode, ImageNodeTypeId, Gaffer::ComputeNode );

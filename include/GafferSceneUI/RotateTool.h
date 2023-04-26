@@ -59,7 +59,7 @@ class GAFFERSCENEUI_API RotateTool : public TransformTool
 
 	public :
 
-		RotateTool( SceneView *view, const std::string &name = defaultName<RotateTool>() );
+		explicit RotateTool( SceneView *view, const std::string &name = defaultName<RotateTool>() );
 		~RotateTool() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferSceneUI::RotateTool, RotateToolTypeId, TransformTool );

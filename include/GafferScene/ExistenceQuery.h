@@ -51,7 +51,7 @@ namespace GafferScene
 
 struct GAFFERSCENE_API ExistenceQuery : Gaffer::ComputeNode
 {
-	ExistenceQuery( const std::string& name = defaultName< ExistenceQuery >() );
+	explicit ExistenceQuery( const std::string& name = defaultName< ExistenceQuery >() );
 	~ExistenceQuery() override;
 
 	GAFFER_NODE_DECLARE_TYPE( GafferScene::ExistenceQuery, ExistenceQueryTypeId, Gaffer::ComputeNode );

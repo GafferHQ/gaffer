@@ -54,7 +54,7 @@ class GAFFER_API NumericPlug : public ValuePlug
 
 		GAFFER_PLUG_DECLARE_TEMPLATE_TYPE( NumericPlug<T>, ValuePlug );
 
-		NumericPlug(
+		explicit NumericPlug(
 			const std::string &name = defaultName<NumericPlug>(),
 			Direction direction=In,
 			T defaultValue = T(),

@@ -48,7 +48,7 @@ class GAFFERSCENE_API DeleteAttributes : public AttributeProcessor
 
 	public :
 
-		DeleteAttributes( const std::string &name=defaultName<DeleteAttributes>() );
+		explicit DeleteAttributes( const std::string &name=defaultName<DeleteAttributes>() );
 		~DeleteAttributes() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::DeleteAttributes, DeleteAttributesTypeId, AttributeProcessor );

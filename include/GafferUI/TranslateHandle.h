@@ -47,7 +47,7 @@ class GAFFERUI_API TranslateHandle : public Handle
 
 	public :
 
-		TranslateHandle( Style::Axes axes );
+		explicit TranslateHandle( Style::Axes axes );
 		~TranslateHandle() override;
 
 		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::TranslateHandle, TranslateHandleTypeId, Handle );

@@ -50,7 +50,7 @@ class GAFFERARNOLD_API ArnoldImager : public GafferScene::GlobalsProcessor
 
 	public :
 
-		ArnoldImager( const std::string &name=defaultName<ArnoldImager>() );
+		explicit ArnoldImager( const std::string &name=defaultName<ArnoldImager>() );
 		~ArnoldImager() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferArnold::ArnoldImager, ArnoldImagerTypeId, GafferScene::GlobalsProcessor );

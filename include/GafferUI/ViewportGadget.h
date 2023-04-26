@@ -63,7 +63,7 @@ class GAFFERUI_API ViewportGadget : public Gadget
 
 		using UnarySignal = Gaffer::Signals::Signal<void (ViewportGadget *), Gaffer::Signals::CatchingCombiner<void>>;
 
-		ViewportGadget( GadgetPtr primaryChild = nullptr );
+		explicit ViewportGadget( GadgetPtr primaryChild = nullptr );
 		~ViewportGadget() override;
 
 		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::ViewportGadget, ViewportGadgetTypeId, Gadget );

@@ -46,7 +46,7 @@ class GAFFER_API BoxIn : public BoxIO
 
 	public :
 
-		BoxIn( const std::string &name=defaultName<BoxIn>() );
+		explicit BoxIn( const std::string &name=defaultName<BoxIn>() );
 		~BoxIn() override;
 
 		GAFFER_NODE_DECLARE_TYPE( Gaffer::BoxIn, BoxInTypeId, BoxIO );

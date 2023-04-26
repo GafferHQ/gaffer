@@ -76,7 +76,7 @@ class GAFFERUI_API StandardNodeGadget : public NodeGadget
 			InvalidEdge
 		};
 
-		StandardNodeGadget( Gaffer::NodePtr node );
+		explicit StandardNodeGadget( Gaffer::NodePtr node );
 		~StandardNodeGadget() override;
 
 		Nodule *nodule( const Gaffer::Plug *plug ) override;

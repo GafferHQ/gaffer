@@ -46,7 +46,7 @@ class GAFFERIMAGE_API Median : public RankFilter
 
 	public :
 
-		Median( const std::string &name=defaultName<Median>() );
+		explicit Median( const std::string &name=defaultName<Median>() );
 		~Median() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::Median, MedianTypeId, RankFilter );

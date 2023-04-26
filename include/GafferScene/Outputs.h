@@ -49,7 +49,7 @@ class GAFFERSCENE_API Outputs : public GlobalsProcessor
 
 	public :
 
-		Outputs( const std::string &name=defaultName<Outputs>() );
+		explicit Outputs( const std::string &name=defaultName<Outputs>() );
 		~Outputs() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::Outputs, OutputsTypeId, GlobalsProcessor );

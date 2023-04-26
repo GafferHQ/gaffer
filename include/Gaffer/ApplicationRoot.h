@@ -52,7 +52,7 @@ class GAFFER_API ApplicationRoot : public GraphComponent
 
 	public :
 
-		ApplicationRoot( const std::string &name = defaultName<ApplicationRoot>() );
+		explicit ApplicationRoot( const std::string &name = defaultName<ApplicationRoot>() );
 		~ApplicationRoot() override;
 
 		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( Gaffer::ApplicationRoot, ApplicationRootTypeId, GraphComponent );

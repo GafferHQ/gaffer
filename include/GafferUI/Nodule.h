@@ -87,7 +87,7 @@ class GAFFERUI_API Nodule : public ConnectionCreator
 
 	protected :
 
-		Nodule( Gaffer::PlugPtr plug );
+		explicit Nodule( Gaffer::PlugPtr plug );
 
 		/// Creating a static one of these is a convenient way of registering a Nodule type.
 		template<class T>

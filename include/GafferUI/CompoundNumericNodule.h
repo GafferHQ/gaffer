@@ -51,7 +51,7 @@ class GAFFERUI_API CompoundNumericNodule : public StandardNodule
 
 	public :
 
-		CompoundNumericNodule( Gaffer::PlugPtr plug );
+		explicit CompoundNumericNodule( Gaffer::PlugPtr plug );
 		~CompoundNumericNodule() override;
 
 		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::CompoundNumericNodule, CompoundNumericNoduleTypeId, StandardNodule );

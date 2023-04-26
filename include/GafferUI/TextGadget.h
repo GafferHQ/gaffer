@@ -49,7 +49,7 @@ class GAFFERUI_API TextGadget : public Gadget
 
 	public :
 
-		TextGadget( const std::string &text );
+		explicit TextGadget( const std::string &text );
 		~TextGadget() override;
 
 		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::TextGadget, TextGadgetTypeId, Gadget );

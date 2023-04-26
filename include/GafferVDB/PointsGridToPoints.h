@@ -56,7 +56,7 @@ class GAFFERVDB_API PointsGridToPoints : public GafferScene::ObjectProcessor
 
 	public :
 
-		PointsGridToPoints( const std::string &name=defaultName<PointsGridToPoints>() );
+		explicit PointsGridToPoints( const std::string &name=defaultName<PointsGridToPoints>() );
 		~PointsGridToPoints() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferVDB::PointsGridToPoints, PointsGridToPointsTypeId, GafferScene::ObjectProcessor );

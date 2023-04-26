@@ -49,7 +49,7 @@ class GAFFERSCENE_API CameraTweaks : public ObjectProcessor
 
 	public :
 
-		CameraTweaks( const std::string &name=defaultName<CameraTweaks>() );
+		explicit CameraTweaks( const std::string &name=defaultName<CameraTweaks>() );
 		~CameraTweaks() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::CameraTweaks, CameraTweaksTypeId, ObjectProcessor );

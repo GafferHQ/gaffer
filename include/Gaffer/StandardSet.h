@@ -82,7 +82,7 @@ class GAFFER_API StandardSet : public Gaffer::Set
 
 	public :
 
-		StandardSet( bool removeOrphans = false );
+		explicit StandardSet( bool removeOrphans = false );
 		~StandardSet() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::StandardSet, StandardSetTypeId, Gaffer::Set );

@@ -49,7 +49,7 @@ class GAFFERCYCLES_API CyclesMeshLight : public GafferScene::FilteredSceneProces
 
 	public :
 
-		CyclesMeshLight( const std::string &name=defaultName<CyclesMeshLight>() );
+		explicit CyclesMeshLight( const std::string &name=defaultName<CyclesMeshLight>() );
 		~CyclesMeshLight() override;
 
 		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferCycles::CyclesMeshLight, CyclesMeshLightTypeId, FilteredSceneProcessor );

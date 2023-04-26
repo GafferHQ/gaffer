@@ -51,7 +51,7 @@ class GAFFERSCENE_API Plane : public ObjectSource
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::Plane, PlaneTypeId, ObjectSource );
 
-		Plane( const std::string &name=defaultName<Plane>() );
+		explicit Plane( const std::string &name=defaultName<Plane>() );
 		~Plane() override;
 
 		Gaffer::V2fPlug *dimensionsPlug();
