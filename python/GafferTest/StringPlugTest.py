@@ -446,5 +446,9 @@ class StringPlugTest( GafferTest.TestCase ) :
 		p.setValue( pathlib.Path.cwd() )
 		self.assertEqual( p.getValue(), pathlib.Path.cwd().as_posix() )
 
+	def testValueType( self ) :
+
+		self.assertIs( Gaffer.StringPlug.ValueType, str )
+
 if __name__ == "__main__":
 	unittest.main()

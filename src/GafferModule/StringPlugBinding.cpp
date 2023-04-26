@@ -143,7 +143,7 @@ class StringPlugSerialiser : public ValuePlugSerialiser
 void GafferModule::bindStringPlug()
 {
 
-	PlugClass<StringPlug>()
+	boost::python::scope s = PlugClass<StringPlug>()
 		.def(
 			boost::python::init<const std::string &, Gaffer::Plug::Direction, const std::string &, unsigned, unsigned>(
 				(
@@ -163,6 +163,8 @@ void GafferModule::bindStringPlug()
 		.def( "setValue", &setValue )
 		.def( "getValue", &getValue, ( boost::python::arg( "_precomputedHash" ) = object() ) )
 	;
+
+	s.attr( "ValueType" ) = boost::python::object( boost::python::handle<>( boost::python::borrowed( &PyUnicode_Type ) ) );
 
 	Serialisation::registerSerialiser( StringPlug::staticTypeId(), new StringPlugSerialiser );
 

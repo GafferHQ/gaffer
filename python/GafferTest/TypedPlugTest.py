@@ -37,6 +37,8 @@
 
 import unittest
 
+import imath
+
 import IECore
 
 import Gaffer
@@ -243,6 +245,15 @@ class TypedPlugTest( GafferTest.TestCase ) :
 
 			c["test"] = ""
 			self.assertEqual( n["sum"].getValue(), 0 )
+
+	def testValueType( self ) :
+
+		self.assertIs( Gaffer.BoolPlug.ValueType, bool )
+		self.assertIs( Gaffer.M33fPlug.ValueType, imath.M33f )
+		self.assertIs( Gaffer.M44fPlug.ValueType, imath.M44f )
+		self.assertIs( Gaffer.AtomicBox2fPlug.ValueType, imath.Box2f )
+		self.assertIs( Gaffer.AtomicBox2iPlug.ValueType, imath.Box2i )
+		self.assertIs( Gaffer.AtomicBox3fPlug.ValueType, imath.Box3f )
 
 if __name__ == "__main__":
 	unittest.main()

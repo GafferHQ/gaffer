@@ -115,6 +115,9 @@ void dispatchPlugFunction( const ValuePlug *plug, F &&functor )
 		case Color3fPlugTypeId :
 			functor( static_cast<const Color3fPlug *>( plug ) );
 			break;
+		case Color4fPlugTypeId :
+			functor( static_cast<const Color4fPlug *>( plug ) );
+			break;
 		default :
 			break;
 	}

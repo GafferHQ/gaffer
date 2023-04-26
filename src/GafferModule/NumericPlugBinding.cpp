@@ -79,7 +79,7 @@ void bind()
 {
 	using V = typename T::ValueType;
 
-	PlugClass<T>()
+	scope s = PlugClass<T>()
 		.def( init<const char *, Plug::Direction, typename T::ValueType, typename T::ValueType, typename T::ValueType, unsigned>(
 				(
 					boost::python::arg_( "name" )=GraphComponent::defaultName<T>(),
@@ -100,6 +100,8 @@ void bind()
 		.def( "getValue", &getValue<T>, ( boost::python::arg( "_precomputedHash" ) = boost::python::object() ) )
 	;
 
+	const PyTypeObject *valueType = boost::python::to_python_value<const V &>().get_pytype();
+	s.attr( "ValueType" ) = boost::python::object( boost::python::handle<>( boost::python::borrowed( const_cast<PyTypeObject *>( valueType ) ) ) );
 }
 
 } // namespace

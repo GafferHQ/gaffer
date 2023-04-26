@@ -140,7 +140,7 @@ void bind()
 {
 	using V = typename T::ValueType;
 
-	PlugClass<T>()
+	scope s = PlugClass<T>()
 		.def( init<const char *, Plug::Direction, V, V, V, unsigned, IECore::GeometricData::Interpretation>(
 				(
 					boost::python::arg_( "name" )=GraphComponent::defaultName<T>(),
@@ -167,6 +167,9 @@ void bind()
 		.def( "ungang", &ungang<T> )
 		.def( "__repr__", &repr<T> )
 	;
+
+	const PyTypeObject *valueType = boost::python::to_python_value<const V &>().get_pytype();
+	s.attr( "ValueType" ) = boost::python::object( boost::python::handle<>( boost::python::borrowed( const_cast<PyTypeObject *>( valueType ) ) ) );
 
 	Serialisation::registerSerialiser( T::staticTypeId(), new CompoundNumericPlugSerialiser<T>() );
 

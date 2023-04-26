@@ -94,6 +94,8 @@ class VectorDataPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if values :
 			self.__dataWidget.setData( [ values[p] for p in self.__dataPlugs() ] )
 
+		self.__dataWidget.setErrored( exception is not None )
+
 	def _updateFromMetadata( self ) :
 
 		dragPointer = None

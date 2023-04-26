@@ -149,6 +149,7 @@ enum TypeId
 	V3iVectorDataPlugTypeId = 110103,
 	ContextVariableTweaksTypeId = 110104,
 	HiddenFilePathFilterTypeId = 110105,
+	Color4fVectorDataPlugTypeId = 110106,
 
 	LastTypeId = 110159,
 

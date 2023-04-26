@@ -14,6 +14,7 @@ Improvements
   - Organised colorspaces into submenus by family.
   - Removed unwanted title-casing, so that names are now displayed verbatim.
   - Removed Roles submenu, which is deemed unsuitable by the OpenColorIO UX working group. It may be reintroduced by registering `openColorIO:includeRoles` metadata to the relevant plugs.
+- VectorDataPlugValueWidget : Computation errors are now reflected by a red background colour.
 
 Fixes
 -----
@@ -21,6 +22,7 @@ Fixes
 - UVInspector : Removed display transform from UV wireframes and grid.
 - Viewer : Gamma is now applied after the display transform, not before.
 - Expression : Fixed parsing of Python expressions combining subscripts (`[]`) and `context` methods (#3088, #3613, #5250).
+- ConnectionCreatorWrapper : Fixed bug which forced PlugAdder derived classes to implement `updateDragEndPoint()` unnecessarily.
 
 API
 ---
@@ -32,6 +34,10 @@ API
 - OpenColorIOTransformUI :
   - Added `noneLabel` argument to `colorSpacePresetNames()`.
   - Added support for `openColorIO:categories` and `openColorIO:includeRoles` metadata to `colorSpacePresetNames()`. These may be registered on a per-plug basis to control the colorspaces shown for that plug.
+- ValuePlugs : Added Python bindings for `ValueType` type alias.
+- Color4fVectorDataPlug : Added a plug type for storing arrays of `Color4f`.
+- TypedObjectPlug : Added default value for `direction` and `defaultValue` constructor arguments.
+- VectorDataWidget : Added `setErrored()` and `getErrored()` methods to control an error state. Errors are reflected by a red background colour.
 
 Breaking Changes
 ----------------
