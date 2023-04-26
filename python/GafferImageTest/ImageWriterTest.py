@@ -405,6 +405,11 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( self.__rgbFilePath )
+		if ext != "exr" :
+			# All our expected reference images were written using an old OCIO config
+			# where the source EXR file was assumed to have sRGB primaries. Set the
+			# source color space to account for that.
+			r["colorSpace"].setValue( "Linear Rec.709 (sRGB)" )
 		expectedFile = self.__rgbFilePath.with_suffix( "." + ext )
 
 		tests = [
@@ -560,6 +565,10 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 		r = GafferImage.ImageReader()
 		r["fileName"].setValue( filePath )
+		# All our expected reference images were written using an old OCIO config
+		# where the source EXR file was assumed to have sRGB primaries. Set the
+		# source color space to account for that.
+		r["colorSpace"].setValue( "Linear Rec.709 (sRGB)" )
 		w = GafferImage.ImageWriter()
 
 		testFile = self.__testFile( filePath.with_suffix("").name, "RGBA", ext )
@@ -1192,7 +1201,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 					"metadata" : metadata,
 				}
 			)
-			return "linear"
+			return "scene_linear"
 
 		GafferImage.ImageWriter.setDefaultColorSpaceFunction( f )
 
@@ -1234,17 +1243,19 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 			return colorSpace
 
-		for colorSpace in [ "Cineon", "rec709", "AlexaV3LogC", "linear" ] :
+		for colorSpace in [ "Linear V-Gamut", "CanonLog3 CinemaGamut D55", "Linear ARRI Wide Gamut 3", "scene_linear" ] :
 
-			GafferImage.ImageWriter.setDefaultColorSpaceFunction(
-				functools.partial( hardcodedColorSpaceConfig, colorSpace )
-			)
+			with self.subTest( colorSpace = colorSpace ) :
 
-			writer["fileName"].setValue( self.temporaryDirectory() / "{}.exr".format( colorSpace ) )
-			writer["task"].execute()
+				GafferImage.ImageWriter.setDefaultColorSpaceFunction(
+					functools.partial( hardcodedColorSpaceConfig, colorSpace )
+				)
 
-			reader["colorSpace"].setValue( colorSpace )
-			self.assertImagesEqual( reader["out"], image["out"], ignoreMetadata = True, maxDifference = 0.000001 )
+				writer["fileName"].setValue( self.temporaryDirectory() / "{}.exr".format( colorSpace ) )
+				writer["task"].execute()
+
+				reader["colorSpace"].setValue( colorSpace )
+				self.assertImagesEqual( reader["out"], image["out"], ignoreMetadata = True, maxDifference = 0.000001 )
 
 	def testNonDefaultColorSpace( self ) :
 
@@ -1264,7 +1275,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		resultWithoutExtra["in"].setInput( resultReader["out"] )
 		resultWithoutExtra["channels"].setValue( "Q" )
 
-		for colorSpace in [ "Cineon", "rec709", "AlexaV3LogC" ] :
+		for colorSpace in [ "Linear V-Gamut", "CanonLog3 CinemaGamut D55", "Linear ARRI Wide Gamut 3" ] :
 
 			writer["in"].setInput( reader["out"] )
 			writer["fileName"].setValue( self.temporaryDirectory() / "{}.exr".format( colorSpace ) )

@@ -41,6 +41,8 @@
 #include "IECoreGL/Shader.h"
 #include "IECoreGL/Texture.h"
 
+#include "boost/algorithm/string/replace.hpp"
+
 namespace
 {
 
@@ -132,35 +134,31 @@ void AllocateTexture2D(
 	}
 }
 
-} // namespace
+static const std::string g_vertexSource = R"(
+#version 120
 
-namespace GafferImageUI
+#if __VERSION__ <= 120
+#define in attribute
+#define out varying
+#endif
+
+in vec3 vertexP;
+in vec2 vertexuv;
+out vec2 fragmentuv;
+
+void main()
 {
+	gl_Position = vec4( vertexP, 1.0 );
+	fragmentuv = vertexuv;
+}
 
-namespace OpenColorIOAlgo
-{
+)";
 
-IECoreGL::Shader::SetupPtr displayTransformToFramebufferShader( const OCIO_NAMESPACE::Processor *processor )
-{
-	std::string colorTransformCode;
-	OCIO_NAMESPACE::GpuShaderDescRcPtr shaderDesc;
-	if( processor )
-	{
-		shaderDesc = OCIO_NAMESPACE::GpuShaderDesc::CreateShaderDesc();
-		shaderDesc->setLanguage( OCIO_NAMESPACE::GPU_LANGUAGE_GLSL_1_3 );
-		shaderDesc->setFunctionName( "OCIODisplay" );
+static const std::string g_fragmentSource = R"(
+#version 120
 
-		OCIO_NAMESPACE::ConstGPUProcessorRcPtr gpuProc = processor->getOptimizedGPUProcessor( OCIO_NAMESPACE::OPTIMIZATION_VERY_GOOD );
-		gpuProc->extractGpuShaderInfo(shaderDesc);
+<OCIODisplay>
 
-		colorTransformCode = shaderDesc->getShaderText();
-	}
-	else
-	{
-		colorTransformCode = "vec4 OCIODisplay(vec4 inPixel) { return inPixel; }\n";
-	}
-
-	colorTransformCode += R"(
 vec4 luminance( vec4 c )
 {
 	return vec4( vec3( c.r * 0.2126 + c.g * 0.7152 + c.b * 0.0722 ), c.a );
@@ -225,31 +223,11 @@ vec4 colorTransformWithSolo( vec4 inPixel, bool absoluteValue, bool clipping, ve
 
 	return result;
 }
-)";
-
-	// Build and compile GLSL shader
-	static const char *g_vertexSource = R"(
-#version 120
 
 #if __VERSION__ <= 120
-#define in attribute
-#define out varying
+#define in varying
 #endif
 
-in vec3 vertexP;
-in vec2 vertexuv;
-out vec2 fragmentuv;
-
-void main()
-{
-	gl_Position = vec4( vertexP, 1.0 );
-	fragmentuv = vertexuv;
-})";
-
-	std::string combinedFragmentCode;
-	if( IECoreGL::glslVersion() >= 330 )
-	{
-		static const char *g_fragmentSuffixNew = R"(
 uniform sampler2D framebufferTexture;
 uniform bool absoluteValue;
 uniform bool clipping;
@@ -257,32 +235,50 @@ uniform vec3 multiply;
 uniform float power;
 uniform int soloChannel;
 in vec2 fragmentuv;
-layout( location=0 ) out vec4 outColor;
+
 void main()
 {
-	outColor = colorTransformWithSolo( texture2D( framebufferTexture, fragmentuv ), absoluteValue, clipping, multiply, power, soloChannel );
-})";
-		combinedFragmentCode = "#version 330 compatibility\n" + colorTransformCode + g_fragmentSuffixNew;
+	gl_FragColor = colorTransformWithSolo( texture2D( framebufferTexture, fragmentuv ), absoluteValue, clipping, multiply, power, soloChannel );
+}
+
+)";
+
+} // namespace
+
+namespace GafferImageUI
+{
+
+namespace OpenColorIOAlgo
+{
+
+IECoreGL::Shader::SetupPtr displayTransformToFramebufferShader( const OCIO_NAMESPACE::Processor *processor )
+{
+	std::string colorTransformCode;
+	OCIO_NAMESPACE::GpuShaderDescRcPtr shaderDesc;
+	if( processor )
+	{
+		shaderDesc = OCIO_NAMESPACE::GpuShaderDesc::CreateShaderDesc();
+		shaderDesc->setLanguage( OCIO_NAMESPACE::GPU_LANGUAGE_GLSL_1_2 );
+		shaderDesc->setFunctionName( "OCIODisplay" );
+
+		OCIO_NAMESPACE::ConstGPUProcessorRcPtr gpuProc = processor->getOptimizedGPUProcessor( OCIO_NAMESPACE::OPTIMIZATION_VERY_GOOD );
+		gpuProc->extractGpuShaderInfo(shaderDesc);
+
+		colorTransformCode = shaderDesc->getShaderText();
 	}
 	else
 	{
-		static const char *g_fragmentSuffixOld = R"(
-uniform sampler2D framebufferTexture;
-uniform bool absoluteValue;
-uniform bool clipping;
-uniform vec3 multiply;
-uniform float power;
-uniform int soloChannel;
-varying vec2 fragmentuv;
-void main()
-{
-	gl_FragColor = colorTransform( texture2D( framebufferTexture, fragmentuv ), absoluteValue, clipping, multiply, power, soloChannel );
-})";
-		combinedFragmentCode = colorTransformCode + g_fragmentSuffixOld;
+		colorTransformCode = "vec4 OCIODisplay(vec4 inPixel) { return inPixel; }\n";
 	}
 
+	// Build and compile GLSL shader
+
+	const std::string fragmentSource = boost::replace_first_copy(
+		g_fragmentSource, "<OCIODisplay>", colorTransformCode
+	);
+
 	IECoreGL::Shader::SetupPtr shaderSetup = new IECoreGL::Shader::Setup(
-		IECoreGL::ShaderLoader::defaultShaderLoader()->create( g_vertexSource, "", combinedFragmentCode )
+		IECoreGL::ShaderLoader::defaultShaderLoader()->create( g_vertexSource, "", fragmentSource )
 	);
 
 	shaderSetup->addUniformParameter( "absoluteValue", new IECore::BoolData( false ) );

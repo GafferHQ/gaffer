@@ -10,10 +10,12 @@ Improvements
 - UVInspector : Added exposure, gamma and solo channel settings.
 - ImageReader : The `colorSpace` widget now displays the name of the assumed colorspace when in `Automatic` mode.
 - ImageReader, ImageWriter : The `colorSpace` menu is now filtered using the `file-io` category, if the current OpenColorIO config provides it.
-- OpenColorIO : Improved colorspace menus :
-  - Organised colorspaces into submenus by family.
-  - Removed unwanted title-casing, so that names are now displayed verbatim.
-  - Removed Roles submenu, which is deemed unsuitable by the OpenColorIO UX working group. It may be reintroduced by registering `openColorIO:includeRoles` metadata to the relevant plugs.
+- OpenColorIO :
+  - Updated default config to ACES Studio 1.3.
+  - Improved colorspace menus :
+    - Organised colorspaces into submenus by family.
+    - Removed unwanted title-casing, so that names are now displayed verbatim.
+    - Removed Roles submenu, which is deemed unsuitable by the OpenColorIO UX working group. It may be reintroduced by registering `openColorIO:includeRoles` metadata to the relevant plugs.
 - VectorDataPlugValueWidget : Computation errors are now reflected by a red background colour.
 
 Fixes
@@ -56,12 +58,26 @@ Breaking Changes
 - UVInspector : Moved the `displayTransform` plug to `displayTransform.name`.
 - ImageReader : Renamed `None` preset to `Automatic`.
 - OpenColorIOTransform : Removed `availableColorSpaces()` and `availableRoles()` methods.
+- OpenColorIO : Changed default config.
+- Subprocess32 : Removed Python module.
+- Six : Removed Python module.
 
 Build
 -----
 
 - OpenEXR : Stopped linking unnecessarily to the `IlmImf` library.
-- Boost : Stopped linking unnecessarily to `iostreams`, `date_time`, `wave` and `system` libraries.
+- Boost :
+  - Updated to version 1.80.0.
+  - Stopped linking unnecessarily to `iostreams`, `date_time`, `wave` and `system` libraries.
+- Cortex : Updated to version 10.5.0.0.
+- Imath : Added version 3.1.7.
+- Minizip : Added version 3.0.9.
+- OpenEXR : Updated to version 3.1.7.
+- OpenColorIO : Updated to version 2.2.1.
+- PyBind11 : Updated to version 2.10.4.
+- PySide : Updated to version 5.15.8.
+- Qt : Updated to version 5.15.8.
+- ZLib : Added version 1.2.13.
 
 1.2.x.x (relative to 1.2.3.0)
 =======

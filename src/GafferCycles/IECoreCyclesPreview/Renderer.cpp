@@ -1353,7 +1353,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 			bool apply( ccl::Shader *shader ) const
 			{
-				shader->set_use_mis( useMIS ? useMIS.get() : true );
+				shader->set_emission_sampling_method( useMIS.value_or( true ) ? ccl::EMISSION_SAMPLING_FRONT_BACK : ccl::EMISSION_SAMPLING_NONE );
 				shader->set_use_transparent_shadow(useTransparentShadow ? useTransparentShadow.get() : true );
 				shader->set_heterogeneous_volume( heterogeneousVolume ? heterogeneousVolume.get() : true );
 				shader->set_volume_sampling_method( volumeSamplingMethod ? nameToVolumeSamplingMethodEnum( volumeSamplingMethod.get() ) : ccl::VOLUME_SAMPLING_MULTIPLE_IMPORTANCE );

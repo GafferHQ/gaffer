@@ -633,7 +633,7 @@ void convertLight( const IECoreScene::ShaderNetwork *light, ccl::Light *cyclesLi
 		cyclesLight->set_sizeu( 2.0f );
 		cyclesLight->set_sizev( 2.0f );
 
-		cyclesLight->set_round( false );
+		cyclesLight->set_ellipse( false );
 	}
 	else if( lightShader->getName() == "disk_light" )
 	{
@@ -642,7 +642,7 @@ void convertLight( const IECoreScene::ShaderNetwork *light, ccl::Light *cyclesLi
 		cyclesLight->set_sizeu( 2.0f );
 		cyclesLight->set_sizev( 2.0f );
 
-		cyclesLight->set_round( true );
+		cyclesLight->set_ellipse( true );
 	}
 	else
 	{

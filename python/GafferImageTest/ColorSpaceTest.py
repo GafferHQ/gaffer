@@ -62,8 +62,8 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 		self.assertImageHashesEqual( n["out"], o["out"] )
 		self.assertImagesEqual( n["out"], o["out"] )
 
-		o["inputSpace"].setValue( "linear" )
-		o["outputSpace"].setValue( "sRGB" )
+		o["inputSpace"].setValue( "scene_linear" )
+		o["outputSpace"].setValue( "color_picking" )
 
 		self.assertNotEqual( GafferImage.ImageAlgo.image( n["out"] ), GafferImage.ImageAlgo.image( o["out"] ) )
 
@@ -78,8 +78,8 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 		self.assertImageHashesEqual( n["out"], o["out"] )
 		self.assertImagesEqual( n["out"], o["out"] )
 
-		o["inputSpace"].setValue( "linear" )
-		o["outputSpace"].setValue( "sRGB" )
+		o["inputSpace"].setValue( "scene_linear" )
+		o["outputSpace"].setValue( "color_picking" )
 
 		self.assertNotEqual( GafferImage.ImageAlgo.image( n["out"] ), GafferImage.ImageAlgo.image( o["out"] ) )
 
@@ -99,8 +99,8 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 
 		o["enabled"].setValue( True )
 
-		o["inputSpace"].setValue( "linear" )
-		o["outputSpace"].setValue( "linear" )
+		o["inputSpace"].setValue( "scene_linear" )
+		o["outputSpace"].setValue( "scene_linear" )
 		self.assertImageHashesEqual( n["out"], o["out"] )
 		self.assertImagesEqual( n["out"], o["out"] )
 		self.assertEqual( n["out"]['format'].hash(), o["out"]['format'].hash() )
@@ -123,8 +123,8 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertEqual( GafferImage.ImageAlgo.imageHash( i["out"] ), GafferImage.ImageAlgo.imageHash( o["out"] ) )
 
-		o["inputSpace"].setValue( "linear" )
-		o["outputSpace"].setValue( "sRGB" )
+		o["inputSpace"].setValue( "scene_linear" )
+		o["outputSpace"].setValue( "color_picking" )
 
 		self.assertNotEqual( GafferImage.ImageAlgo.imageHash( i["out"] ), GafferImage.ImageAlgo.imageHash( o["out"] ) )
 
@@ -136,8 +136,8 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 		o = GafferImage.ColorSpace()
 		o["in"].setInput( i["out"] )
 
-		o["inputSpace"].setValue( "linear" )
-		o["outputSpace"].setValue( "sRGB" )
+		o["inputSpace"].setValue( "scene_linear" )
+		o["outputSpace"].setValue( "color_picking" )
 
 		self.assertNotEqual(
 			o["out"].channelDataHash( "R", imath.V2i( 0 ) ),
@@ -156,8 +156,8 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 
 		o = GafferImage.ColorSpace()
 		o["in"].setInput( i["out"] )
-		o["inputSpace"].setValue( "linear" )
-		o["outputSpace"].setValue( "sRGB" )
+		o["inputSpace"].setValue( "scene_linear" )
+		o["outputSpace"].setValue( "color_picking" )
 
 		self.assertEqual( i["out"]["format"].hash(), o["out"]["format"].hash() )
 		self.assertEqual( i["out"]["dataWindow"].hash(), o["out"]["dataWindow"].hash() )
@@ -250,15 +250,22 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 		s["channels"].addChild( s.ChannelPlug( "G", "R" ) )
 		s["channels"].addChild( s.ChannelPlug( "B", "R" ) )
 
+		# This test is primarily to check that the ColorSpace node doesn't pull
+		# on non-existent input channels, and can still transform a single-channel
+		# image. In order for the transform to be comparable to an RGB image, we
+		# must test with a transform that contains no channel cross-talk, hence the
+		# use of simple gamma encodings with identical primaries for our input and
+		# output spaces.
+
 		c1 = GafferImage.ColorSpace()
 		c1["in"].setInput( r["out"] )
-		c1["inputSpace"].setValue( "linear" )
-		c1["outputSpace"].setValue( "sRGB" )
+		c1["inputSpace"].setValue( "Gamma 2.2 Rec.709 - Texture" )
+		c1["outputSpace"].setValue( "Gamma 2.4 Rec.709 - Texture" )
 
 		c2 = GafferImage.ColorSpace()
 		c2["in"].setInput( s["out"] )
-		c2["inputSpace"].setValue( "linear" )
-		c2["outputSpace"].setValue( "sRGB" )
+		c2["inputSpace"].setValue( "Gamma 2.2 Rec.709 - Texture" )
+		c2["outputSpace"].setValue( "Gamma 2.4 Rec.709 - Texture" )
 
 		self.assertEqual( c2["out"].channelData( "R", imath.V2i( 0 ) ), c1["out"].channelData( "R", imath.V2i( 0 ) ) )
 
@@ -281,16 +288,16 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 		unpremultipliedColorSpace = GafferImage.ColorSpace()
 		unpremultipliedColorSpace["in"].setInput( gradeAlpha["out"] )
 		unpremultipliedColorSpace["processUnpremultiplied"].setValue( True )
-		unpremultipliedColorSpace["inputSpace"].setValue( 'linear' )
-		unpremultipliedColorSpace["outputSpace"].setValue( 'sRGB' )
+		unpremultipliedColorSpace["inputSpace"].setValue( "scene_linear" )
+		unpremultipliedColorSpace["outputSpace"].setValue( "color_picking" )
 
 		unpremultiply = GafferImage.Unpremultiply()
 		unpremultiply["in"].setInput( gradeAlpha["out"] )
 
 		bareColorSpace = GafferImage.ColorSpace()
 		bareColorSpace["in"].setInput( unpremultiply["out"] )
-		bareColorSpace["inputSpace"].setValue( 'linear' )
-		bareColorSpace["outputSpace"].setValue( 'sRGB' )
+		bareColorSpace["inputSpace"].setValue( "scene_linear" )
+		bareColorSpace["outputSpace"].setValue( "color_picking" )
 
 		premultiply = GafferImage.Premultiply()
 		premultiply["in"].setInput( bareColorSpace["out"] )
@@ -305,8 +312,8 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 		# Assert that when alpha is zero, processUnpremultiplied doesn't affect the result
 		defaultColorSpace = GafferImage.ColorSpace()
 		defaultColorSpace["in"].setInput( gradeAlpha["out"] )
-		defaultColorSpace["inputSpace"].setValue( 'linear' )
-		defaultColorSpace["outputSpace"].setValue( 'sRGB' )
+		defaultColorSpace["inputSpace"].setValue( "scene_linear" )
+		defaultColorSpace["outputSpace"].setValue( "color_picking" )
 
 		self.assertImagesEqual( unpremultipliedColorSpace["out"], defaultColorSpace["out"] )
 

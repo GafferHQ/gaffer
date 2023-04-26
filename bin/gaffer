@@ -326,6 +326,13 @@ if [[ $GAFFER_JEMALLOC != "0" ]] ; then
 	fi
 fi
 
+# Set up OCIO
+##########################################################################
+
+if [[ -z $OCIO ]] ; then
+	export OCIO="ocio://studio-config-v1.0.0_aces-v1.3_ocio-v2.1"
+fi
+
 # Run gaffer itself
 ##########################################################################
 
