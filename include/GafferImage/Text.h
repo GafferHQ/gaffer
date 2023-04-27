@@ -56,7 +56,7 @@ class GAFFERIMAGE_API Text : public Shape
 
 	public :
 
-		Text( const std::string &name=defaultName<Text>() );
+		explicit Text( const std::string &name=defaultName<Text>() );
 		~Text() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::Text, TextTypeId, Shape );

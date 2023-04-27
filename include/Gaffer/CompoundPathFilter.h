@@ -52,7 +52,7 @@ class GAFFER_API CompoundPathFilter : public Gaffer::PathFilter
 
 		using Filters = std::vector<PathFilterPtr>;
 
-		CompoundPathFilter( IECore::CompoundDataPtr userData = nullptr );
+		explicit CompoundPathFilter( IECore::CompoundDataPtr userData = nullptr );
 		~CompoundPathFilter() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::CompoundPathFilter, CompoundPathFilterTypeId, PathFilter );

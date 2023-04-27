@@ -57,7 +57,7 @@ class GAFFERCORTEX_API TypedParameterHandler : public ParameterHandler
 		using ParameterType = IECore::TypedParameter<T>;
 		using PlugType = typename Gaffer::PlugType<T>::Type;
 
-		TypedParameterHandler( typename ParameterType::Ptr parameter );
+		explicit TypedParameterHandler( typename ParameterType::Ptr parameter );
 		~TypedParameterHandler() override;
 
 		IECore::Parameter *parameter() override;

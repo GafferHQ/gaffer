@@ -47,7 +47,7 @@ class GAFFERIMAGE_API Empty : public ImageNode
 
 	public :
 
-		Empty( const std::string &name=defaultName<Empty>() );
+		explicit Empty( const std::string &name=defaultName<Empty>() );
 		~Empty() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::Empty, EmptyTypeId, ImageNode );

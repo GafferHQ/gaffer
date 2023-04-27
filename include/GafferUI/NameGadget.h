@@ -48,7 +48,7 @@ class GAFFERUI_API NameGadget : public TextGadget
 
 	public :
 
-		NameGadget( Gaffer::GraphComponentPtr object );
+		explicit NameGadget( Gaffer::GraphComponentPtr object );
 		~NameGadget() override;
 
 		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::NameGadget, NameGadgetTypeId, TextGadget );

@@ -54,7 +54,7 @@ class GAFFERSCENE_API FilterResults : public Gaffer::ComputeNode
 
 	public :
 
-		FilterResults( const std::string &name=defaultName<FilterResults>() );
+		explicit FilterResults( const std::string &name=defaultName<FilterResults>() );
 		~FilterResults() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::FilterResults, FilterResultsTypeId, ComputeNode );

@@ -48,7 +48,7 @@ class GAFFERIMAGE_API CollectImages : public ImageProcessor
 
 	public :
 
-		CollectImages( const std::string &name=defaultName<CollectImages>() );
+		explicit CollectImages( const std::string &name=defaultName<CollectImages>() );
 		~CollectImages() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::CollectImages, CollectImagesTypeId, ImageProcessor );

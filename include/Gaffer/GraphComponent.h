@@ -81,7 +81,7 @@ class GAFFER_API GraphComponent : public IECore::RunTimeTyped, public Signals::T
 
 	public :
 
-		GraphComponent( const std::string &name=GraphComponent::defaultName<GraphComponent>() );
+		explicit GraphComponent( const std::string &name=GraphComponent::defaultName<GraphComponent>() );
 		~GraphComponent() override;
 
 		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( Gaffer::GraphComponent, GraphComponentTypeId, IECore::RunTimeTyped );

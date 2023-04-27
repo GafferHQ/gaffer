@@ -57,7 +57,7 @@ class GAFFER_API ComputeNode : public DependencyNode
 
 	public :
 
-		ComputeNode( const std::string &name=defaultName<ComputeNode>() );
+		explicit ComputeNode( const std::string &name=defaultName<ComputeNode>() );
 		~ComputeNode() override;
 
 		GAFFER_NODE_DECLARE_TYPE( Gaffer::ComputeNode, ComputeNodeTypeId, DependencyNode );

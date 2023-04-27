@@ -49,7 +49,7 @@ class GAFFERUI_API FPSGadget : public Gadget
 
 	public :
 
-		FPSGadget( Imath::V3f defaultPosition = Imath::V3f( 5.0f, 50.0f, 0.0f ) );
+		explicit FPSGadget( Imath::V3f defaultPosition = Imath::V3f( 5.0f, 50.0f, 0.0f ) );
 		~FPSGadget() override;
 
 		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::FPSGadget, FPSGadgetTypeId, Gadget );

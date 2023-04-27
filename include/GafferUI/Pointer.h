@@ -57,7 +57,7 @@ class GAFFERUI_API Pointer : public IECore::RefCounted
 		IE_CORE_DECLAREMEMBERPTR( Pointer )
 
 		/// A copy of the image is taken.
-		Pointer( const IECoreImage::ImagePrimitive *image, const Imath::V2i &hotspot = Imath::V2i( -1 ) );
+		explicit Pointer( const IECoreImage::ImagePrimitive *image, const Imath::V2i &hotspot = Imath::V2i( -1 ) );
 		/// Images are loaded from the paths specified by the
 		/// GAFFERUI_IMAGE_PATHS environment variable.
 		Pointer( const std::string &fileName, const Imath::V2i &hotspot = Imath::V2i( -1 ) );

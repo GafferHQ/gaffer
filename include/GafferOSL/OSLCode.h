@@ -52,7 +52,7 @@ class GAFFEROSL_API OSLCode : public OSLShader
 
 	public :
 
-		OSLCode( const std::string &name=defaultName<OSLCode>() );
+		explicit OSLCode( const std::string &name=defaultName<OSLCode>() );
 		~OSLCode() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferOSL::OSLCode, OSLCodeTypeId, OSLShader );

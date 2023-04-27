@@ -60,7 +60,7 @@ class GAFFERIMAGE_API ImageProcessor : public ImageNode
 
 		/// Constructs with a single input ImagePlug named "in". Use inPlug()
 		/// to access this plug.
-		ImageProcessor( const std::string &name=defaultName<ImageProcessor>() );
+		explicit ImageProcessor( const std::string &name=defaultName<ImageProcessor>() );
 
 		/// Constructs with an ArrayPlug called "in". Use inPlug() as a
 		/// convenience for accessing the first child in the array, and use

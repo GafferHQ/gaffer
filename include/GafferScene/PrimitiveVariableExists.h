@@ -51,7 +51,7 @@ class GAFFERSCENE_API PrimitiveVariableExists : public Gaffer::ComputeNode
 
 	public :
 
-		PrimitiveVariableExists( const std::string &name=defaultName<PrimitiveVariableExists>() );
+		explicit PrimitiveVariableExists( const std::string &name=defaultName<PrimitiveVariableExists>() );
 		~PrimitiveVariableExists() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::PrimitiveVariableExists, PrimitiveVariableExistsTypeId, Gaffer::ComputeNode );

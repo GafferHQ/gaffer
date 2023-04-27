@@ -55,7 +55,7 @@ class GAFFERIMAGE_API DeleteChannels : public ImageProcessor
 			Keep = 1
 		};
 
-		DeleteChannels( const std::string &name=defaultName<DeleteChannels>() );
+		explicit DeleteChannels( const std::string &name=defaultName<DeleteChannels>() );
 		~DeleteChannels() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::DeleteChannels, DeleteChannelsTypeId, ImageProcessor );

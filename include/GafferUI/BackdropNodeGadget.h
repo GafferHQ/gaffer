@@ -49,7 +49,7 @@ class GAFFERUI_API BackdropNodeGadget : public NodeGadget
 
 	public :
 
-		BackdropNodeGadget( Gaffer::NodePtr node );
+		explicit BackdropNodeGadget( Gaffer::NodePtr node );
 		~BackdropNodeGadget() override;
 
 		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::BackdropNodeGadget, BackdropNodeGadgetTypeId, NodeGadget );

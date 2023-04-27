@@ -58,7 +58,7 @@ class GAFFERUI_API PlugGadget : public ContainerGadget
 
 	public :
 
-		PlugGadget( Gaffer::PlugPtr plug );
+		explicit PlugGadget( Gaffer::PlugPtr plug );
 		~PlugGadget() override;
 
 		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::PlugGadget, PlugGadgetTypeId, Gadget );

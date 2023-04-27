@@ -57,7 +57,7 @@ class GAFFERCORTEX_API NumericParameterHandler : public ParameterHandler
 		using ParameterType = IECore::NumericParameter<T>;
 		using PlugType = Gaffer::NumericPlug<T>;
 
-		NumericParameterHandler( typename ParameterType::Ptr parameter );
+		explicit NumericParameterHandler( typename ParameterType::Ptr parameter );
 		~NumericParameterHandler() override;
 
 		IECore::Parameter *parameter() override;

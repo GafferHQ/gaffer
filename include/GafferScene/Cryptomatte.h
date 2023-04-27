@@ -50,7 +50,7 @@ class GAFFERSCENE_API Cryptomatte : public GafferImage::FlatImageProcessor
 {
 
 	public:
-		Cryptomatte(const std::string &name = defaultName<Cryptomatte>());
+		explicit Cryptomatte(const std::string &name = defaultName<Cryptomatte>());
 		~Cryptomatte() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION(GafferScene::Cryptomatte, CryptomatteTypeId, GafferImage::FlatImageProcessor);

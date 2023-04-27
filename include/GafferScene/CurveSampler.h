@@ -46,7 +46,7 @@ class GAFFERSCENE_API CurveSampler : public PrimitiveSampler
 
 	public :
 
-		CurveSampler( const std::string &name = defaultName<CurveSampler>() );
+		explicit CurveSampler( const std::string &name = defaultName<CurveSampler>() );
 		~CurveSampler() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::CurveSampler, CurveSamplerTypeId, PrimitiveSampler );

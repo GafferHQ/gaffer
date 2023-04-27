@@ -55,7 +55,7 @@ class GAFFERIMAGE_API Rectangle : public Shape
 
 	public :
 
-		Rectangle( const std::string &name=defaultName<Rectangle>() );
+		explicit Rectangle( const std::string &name=defaultName<Rectangle>() );
 		~Rectangle() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::Rectangle, RectangleTypeId, Shape );

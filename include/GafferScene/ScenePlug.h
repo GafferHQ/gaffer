@@ -55,7 +55,7 @@ class GAFFERSCENE_API ScenePlug : public Gaffer::ValuePlug
 
 	public :
 
-		ScenePlug( const std::string &name=defaultName<ScenePlug>(), Direction direction=In, unsigned flags=Default );
+		explicit ScenePlug( const std::string &name=defaultName<ScenePlug>(), Direction direction=In, unsigned flags=Default );
 		~ScenePlug() override;
 
 		GAFFER_PLUG_DECLARE_TYPE( GafferScene::ScenePlug, ScenePlugTypeId, ValuePlug );

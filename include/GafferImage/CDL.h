@@ -49,7 +49,7 @@ class GAFFERIMAGE_API CDL : public OpenColorIOTransform
 
 	public :
 
-		CDL( const std::string &name=defaultName<CDL>() );
+		explicit CDL( const std::string &name=defaultName<CDL>() );
 		~CDL() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::CDL, CDLTypeId, OpenColorIOTransform );

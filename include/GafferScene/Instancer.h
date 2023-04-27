@@ -58,7 +58,7 @@ class GAFFERSCENE_API Instancer : public BranchCreator
 
 				GAFFER_PLUG_DECLARE_TYPE( ContextVariablePlug, InstancerContextVariablePlugTypeId, Gaffer::ValuePlug );
 
-				ContextVariablePlug(
+				explicit ContextVariablePlug(
 					const std::string &name = defaultName<ContextVariablePlug>(),
 					Direction direction=In,
 					bool defaultEnable = true,

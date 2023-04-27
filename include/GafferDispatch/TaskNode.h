@@ -117,7 +117,7 @@ class GAFFERDISPATCH_API TaskNode : public Gaffer::DependencyNode
 
 		GAFFER_NODE_DECLARE_TYPE( GafferDispatch::TaskNode, TaskNodeTypeId, Gaffer::DependencyNode );
 
-		TaskNode( const std::string &name=defaultName<TaskNode>() );
+		explicit TaskNode( const std::string &name=defaultName<TaskNode>() );
 		~TaskNode() override;
 
 		/// Plug type used to represent tasks within the

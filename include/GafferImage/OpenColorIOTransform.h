@@ -78,7 +78,7 @@ class GAFFERIMAGE_API OpenColorIOTransform : public ColorProcessor
 
 	protected :
 
-		OpenColorIOTransform( const std::string &name=defaultName<OpenColorIOTransform>(), bool withContextPlug=false );
+		explicit OpenColorIOTransform( const std::string &name=defaultName<OpenColorIOTransform>(), bool withContextPlug=false );
 		/// Implemented to return true if hashTransform() has
 		/// an affect. Derived classed should implement
 		/// hashTransform() to return a default hash if the

@@ -54,7 +54,7 @@ class GAFFERSCENE_API DeleteFaces : public Deformer
 
 	public :
 
-		DeleteFaces( const std::string &name = defaultName<DeleteFaces>() );
+		explicit DeleteFaces( const std::string &name = defaultName<DeleteFaces>() );
 		~DeleteFaces() override;
 
 		Gaffer::StringPlug *facesPlug();

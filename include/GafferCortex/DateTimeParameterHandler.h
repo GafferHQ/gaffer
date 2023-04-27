@@ -57,7 +57,7 @@ class GAFFERCORTEX_API DateTimeParameterHandler : public ParameterHandler
 
 		IE_CORE_DECLAREMEMBERPTR( DateTimeParameterHandler );
 
-		DateTimeParameterHandler( IECore::DateTimeParameterPtr parameter );
+		explicit DateTimeParameterHandler( IECore::DateTimeParameterPtr parameter );
 		~DateTimeParameterHandler() override;
 
 		IECore::Parameter *parameter() override;

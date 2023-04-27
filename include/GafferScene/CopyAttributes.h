@@ -48,7 +48,7 @@ class GAFFERSCENE_API CopyAttributes : public FilteredSceneProcessor
 
 	public :
 
-		CopyAttributes( const std::string &name=defaultName<CopyAttributes>() );
+		explicit CopyAttributes( const std::string &name=defaultName<CopyAttributes>() );
 		~CopyAttributes() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::CopyAttributes, CopyAttributesTypeId, FilteredSceneProcessor );

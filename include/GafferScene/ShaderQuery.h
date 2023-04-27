@@ -51,7 +51,7 @@ namespace GafferScene
 class GAFFERSCENE_API ShaderQuery : public Gaffer::ComputeNode
 {
 	public:
-		ShaderQuery( const std::string &name = defaultName<ShaderQuery>() );
+		explicit ShaderQuery( const std::string &name = defaultName<ShaderQuery>() );
 		~ShaderQuery() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::ShaderQuery, ShaderQueryTypeId, Gaffer::ComputeNode );

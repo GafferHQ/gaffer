@@ -49,7 +49,7 @@ class GAFFERSCENE_API UnionFilter : public FilterProcessor
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::UnionFilter, UnionFilterTypeId, FilterProcessor );
 
-		UnionFilter( const std::string &name=defaultName<UnionFilter>() );
+		explicit UnionFilter( const std::string &name=defaultName<UnionFilter>() );
 		~UnionFilter() override;
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;

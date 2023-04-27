@@ -54,7 +54,7 @@ class GAFFERIMAGE_API Grade : public ChannelDataProcessor
 
 	public :
 
-		Grade( const std::string &name=defaultName<Grade>() );
+		explicit Grade( const std::string &name=defaultName<Grade>() );
 		~Grade() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::Grade, GradeTypeId, ChannelDataProcessor );

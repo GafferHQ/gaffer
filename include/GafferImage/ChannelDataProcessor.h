@@ -51,7 +51,7 @@ class GAFFERIMAGE_API ChannelDataProcessor : public ImageProcessor
 
 	public :
 
-		ChannelDataProcessor( const std::string &name=defaultName<ChannelDataProcessor>(), bool premultiplyPlug = false );
+		explicit ChannelDataProcessor( const std::string &name=defaultName<ChannelDataProcessor>(), bool premultiplyPlug = false );
 		~ChannelDataProcessor() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::ChannelDataProcessor, ChannelDataProcessorTypeId, ImageProcessor );

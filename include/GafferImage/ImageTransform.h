@@ -55,7 +55,7 @@ class GAFFERIMAGE_API ImageTransform : public FlatImageProcessor
 {
 	public :
 
-		ImageTransform( const std::string &name=defaultName<ImageTransform>() );
+		explicit ImageTransform( const std::string &name=defaultName<ImageTransform>() );
 		~ImageTransform() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::ImageTransform, ImageTransformTypeId, FlatImageProcessor );

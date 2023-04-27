@@ -65,7 +65,7 @@ class GAFFER_API ContextMonitor : public Monitor
 
 		/// Statistics are only collected for the root and its
 		/// descendants.
-		ContextMonitor( const GraphComponent *root = nullptr );
+		explicit ContextMonitor( const GraphComponent *root = nullptr );
 		~ContextMonitor() override;
 
 		IE_CORE_DECLAREMEMBERPTR( ContextMonitor )

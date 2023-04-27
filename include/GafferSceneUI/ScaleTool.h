@@ -50,7 +50,7 @@ class GAFFERSCENEUI_API ScaleTool : public TransformTool
 
 	public :
 
-		ScaleTool( SceneView *view, const std::string &name = defaultName<ScaleTool>() );
+		explicit ScaleTool( SceneView *view, const std::string &name = defaultName<ScaleTool>() );
 		~ScaleTool() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferSceneUI::ScaleTool, ScaleToolTypeId, TransformTool );

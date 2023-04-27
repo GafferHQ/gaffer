@@ -53,7 +53,7 @@ class GAFFERARNOLD_API ArnoldCameraShaders : public GafferScene::Shader
 
 	public :
 
-		ArnoldCameraShaders( const std::string &name=defaultName<ArnoldCameraShaders>() );
+		explicit ArnoldCameraShaders( const std::string &name=defaultName<ArnoldCameraShaders>() );
 		~ArnoldCameraShaders() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferArnold::ArnoldCameraShaders, ArnoldCameraShadersTypeId, GafferScene::Shader );

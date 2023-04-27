@@ -48,7 +48,7 @@ class GAFFERIMAGE_API CopyImageMetadata : public MetadataProcessor
 
 	public :
 
-		CopyImageMetadata( const std::string &name=defaultName<CopyImageMetadata>() );
+		explicit CopyImageMetadata( const std::string &name=defaultName<CopyImageMetadata>() );
 		~CopyImageMetadata() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::CopyImageMetadata, CopyImageMetadataTypeId, MetadataProcessor );

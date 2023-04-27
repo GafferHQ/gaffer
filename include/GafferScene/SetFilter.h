@@ -58,7 +58,7 @@ class GAFFERSCENE_API SetFilter : public Filter
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::SetFilter, SetFilterTypeId, Filter );
 
-		SetFilter( const std::string &name=defaultName<SetFilter>() );
+		explicit SetFilter( const std::string &name=defaultName<SetFilter>() );
 		~SetFilter() override;
 
 		Gaffer::StringPlug *setExpressionPlug();

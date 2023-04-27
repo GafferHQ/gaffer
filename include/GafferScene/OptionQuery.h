@@ -54,7 +54,7 @@ namespace GafferScene
 class GAFFERSCENE_API OptionQuery : public Gaffer::ComputeNode
 {
 	public :
-		OptionQuery( const std::string& name = defaultName< OptionQuery >() );
+		explicit OptionQuery( const std::string& name = defaultName< OptionQuery >() );
 		~OptionQuery() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::OptionQuery, OptionQueryTypeId, Gaffer::ComputeNode );

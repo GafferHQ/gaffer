@@ -48,7 +48,7 @@ class GAFFERIMAGE_API ImageMetadata : public MetadataProcessor
 
 	public :
 
-		ImageMetadata( const std::string &name=defaultName<ImageMetadata>() );
+		explicit ImageMetadata( const std::string &name=defaultName<ImageMetadata>() );
 		~ImageMetadata() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::ImageMetadata, ImageMetadataTypeId, MetadataProcessor );

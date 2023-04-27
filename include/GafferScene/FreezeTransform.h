@@ -46,7 +46,7 @@ class GAFFERSCENE_API FreezeTransform : public FilteredSceneProcessor
 
 	public :
 
-		FreezeTransform( const std::string &name=defaultName<FreezeTransform>() );
+		explicit FreezeTransform( const std::string &name=defaultName<FreezeTransform>() );
 		~FreezeTransform() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::FreezeTransform, FreezeTransformTypeId, FilteredSceneProcessor );

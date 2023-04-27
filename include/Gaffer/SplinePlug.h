@@ -126,7 +126,7 @@ class GAFFER_API SplinePlug : public ValuePlug
 
 		GAFFER_PLUG_DECLARE_TEMPLATE_TYPE( SplinePlug<T>, ValuePlug );
 
-		SplinePlug(
+		explicit SplinePlug(
 			const std::string &name = defaultName<SplinePlug>(),
 			Direction direction=In,
 			const T &defaultValue = T(),

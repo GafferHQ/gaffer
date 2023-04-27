@@ -46,7 +46,7 @@ class GAFFERSCENE_API OpenGLAttributes : public GafferScene::Attributes
 
 	public :
 
-		OpenGLAttributes( const std::string &name=defaultName<OpenGLAttributes>() );
+		explicit OpenGLAttributes( const std::string &name=defaultName<OpenGLAttributes>() );
 		~OpenGLAttributes() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::OpenGLAttributes, OpenGLAttributesTypeId, Attributes );

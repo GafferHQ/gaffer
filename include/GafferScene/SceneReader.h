@@ -58,7 +58,7 @@ class GAFFERSCENE_API SceneReader : public SceneNode
 
 	public :
 
-		SceneReader( const std::string &name=defaultName<SceneReader>() );
+		explicit SceneReader( const std::string &name=defaultName<SceneReader>() );
 		~SceneReader() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::SceneReader, SceneReaderTypeId, SceneNode )

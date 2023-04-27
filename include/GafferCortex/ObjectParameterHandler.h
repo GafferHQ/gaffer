@@ -56,7 +56,7 @@ class GAFFERCORTEX_API ObjectParameterHandler : public ParameterHandler
 
 		IE_CORE_DECLAREMEMBERPTR( ObjectParameterHandler );
 
-		ObjectParameterHandler( IECore::ObjectParameter::Ptr parameter );
+		explicit ObjectParameterHandler( IECore::ObjectParameter::Ptr parameter );
 		~ObjectParameterHandler() override;
 
 		IECore::Parameter *parameter() override;

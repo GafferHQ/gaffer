@@ -54,7 +54,7 @@ class GAFFERIMAGE_API ImageStats : public Gaffer::ComputeNode
 
 	public :
 
-		ImageStats( const std::string &name=defaultName<ImageStats>() );
+		explicit ImageStats( const std::string &name=defaultName<ImageStats>() );
 		~ImageStats() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::ImageStats, ImageStatsTypeId, Gaffer::ComputeNode );

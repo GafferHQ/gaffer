@@ -54,7 +54,7 @@ class GAFFER_API DependencyNode : public Node
 
 	public :
 
-		DependencyNode( const std::string &name=defaultName<DependencyNode>() );
+		explicit DependencyNode( const std::string &name=defaultName<DependencyNode>() );
 		~DependencyNode() override;
 
 		GAFFER_NODE_DECLARE_TYPE( Gaffer::DependencyNode, DependencyNodeTypeId, Node );

@@ -48,7 +48,7 @@ class GAFFERUI_API Frame : public IndividualContainer
 
 	public :
 
-		Frame( GadgetPtr child );
+		explicit Frame( GadgetPtr child );
 		~Frame() override;
 
 		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::Frame, FrameTypeId, IndividualContainer );

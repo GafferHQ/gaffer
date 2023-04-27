@@ -51,7 +51,7 @@ class GAFFER_API Dot : public DependencyNode
 
 	public :
 
-		Dot( const std::string &name=defaultName<Dot>() );
+		explicit Dot( const std::string &name=defaultName<Dot>() );
 		~Dot() override;
 
 		GAFFER_NODE_DECLARE_TYPE( Gaffer::Dot, DotTypeId, DependencyNode );

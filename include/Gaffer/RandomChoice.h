@@ -49,7 +49,7 @@ class GAFFER_API RandomChoice : public ComputeNode
 
 	public :
 
-		RandomChoice( const std::string &name=defaultName<RandomChoice>() );
+		explicit RandomChoice( const std::string &name=defaultName<RandomChoice>() );
 		~RandomChoice() override;
 
 		GAFFER_NODE_DECLARE_TYPE( Gaffer::RandomChoice, RandomChoiceTypeId, ComputeNode );

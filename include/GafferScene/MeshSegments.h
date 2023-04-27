@@ -49,7 +49,7 @@ class GAFFERSCENE_API MeshSegments : public ObjectProcessor
 
 	public :
 
-		MeshSegments( const std::string &name=defaultName<MeshSegments>() );
+		explicit MeshSegments( const std::string &name=defaultName<MeshSegments>() );
 		~MeshSegments() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::MeshSegments, MeshSegmentsTypeId, ObjectProcessor );

@@ -52,7 +52,7 @@ class GAFFERUI_API CompoundNodule : public Nodule
 
 	public :
 
-		CompoundNodule( Gaffer::PlugPtr plug );
+		explicit CompoundNodule( Gaffer::PlugPtr plug );
 		~CompoundNodule() override;
 
 		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::CompoundNodule, CompoundNoduleTypeId, Nodule );

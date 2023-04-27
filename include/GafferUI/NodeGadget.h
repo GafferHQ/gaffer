@@ -103,7 +103,7 @@ class GAFFERUI_API NodeGadget : public Gadget
 
 	protected :
 
-		NodeGadget( Gaffer::NodePtr node );
+		explicit NodeGadget( Gaffer::NodePtr node );
 
 		/// Creating a static one of these is a convenient way of registering a NodeGadget type.
 		template<class T>

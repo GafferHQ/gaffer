@@ -54,7 +54,7 @@ class GAFFERARNOLD_API ArnoldColorManager : public GafferScene::GlobalsProcessor
 
 	public :
 
-		ArnoldColorManager( const std::string &name=defaultName<ArnoldColorManager>() );
+		explicit ArnoldColorManager( const std::string &name=defaultName<ArnoldColorManager>() );
 		~ArnoldColorManager() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferArnold::ArnoldColorManager, ArnoldColorManagerTypeId, GafferScene::GlobalsProcessor );

@@ -57,7 +57,7 @@ class GAFFERSCENE_API FilterProcessor : public Filter
 
 		/// Constructs with a single input filter plug named "in". Use inPlug()
 		/// to access this plug.
-		FilterProcessor( const std::string &name=defaultName<FilterProcessor>() );
+		explicit FilterProcessor( const std::string &name=defaultName<FilterProcessor>() );
 		/// Constructs with an ArrayPlug called "in". Use inPlug() as a
 		/// convenience for accessing the first child in the array, and use
 		/// inPlugs() to access the array itself.

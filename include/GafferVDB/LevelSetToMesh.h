@@ -52,7 +52,7 @@ class GAFFERVDB_API LevelSetToMesh : public GafferScene::Deformer
 
 	public :
 
-		LevelSetToMesh( const std::string &name=defaultName<LevelSetToMesh>() );
+		explicit LevelSetToMesh( const std::string &name=defaultName<LevelSetToMesh>() );
 		~LevelSetToMesh() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferVDB::LevelSetToMesh, LevelSetToMeshTypeId, GafferScene::Deformer );

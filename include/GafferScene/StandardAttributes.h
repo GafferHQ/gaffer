@@ -46,7 +46,7 @@ class GAFFERSCENE_API StandardAttributes : public Attributes
 
 	public :
 
-		StandardAttributes( const std::string &name=defaultName<StandardAttributes>() );
+		explicit StandardAttributes( const std::string &name=defaultName<StandardAttributes>() );
 		~StandardAttributes() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::StandardAttributes, StandardAttributesTypeId, Attributes );

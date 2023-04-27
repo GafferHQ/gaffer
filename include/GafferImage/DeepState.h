@@ -56,7 +56,7 @@ class GAFFERIMAGE_API DeepState : public ImageProcessor
 		};
 
 
-		DeepState( const std::string &name=defaultName<DeepState>() );
+		explicit DeepState( const std::string &name=defaultName<DeepState>() );
 		~DeepState() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::DeepState, DeepStateTypeId, ImageProcessor );

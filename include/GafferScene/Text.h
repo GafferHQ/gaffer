@@ -48,7 +48,7 @@ class GAFFERSCENE_API Text : public ObjectSource
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::Text, TextTypeId, ObjectSource );
 
-		Text( const std::string &name=defaultName<Text>() );
+		explicit Text( const std::string &name=defaultName<Text>() );
 		~Text() override;
 
 		Gaffer::StringPlug *textPlug();

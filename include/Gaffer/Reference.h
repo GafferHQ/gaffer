@@ -50,7 +50,7 @@ class GAFFER_API Reference : public SubGraph
 
 	public :
 
-		Reference( const std::string &name=defaultName<Reference>() );
+		explicit Reference( const std::string &name=defaultName<Reference>() );
 		~Reference() override;
 
 		GAFFER_NODE_DECLARE_TYPE( Gaffer::Reference, ReferenceTypeId, SubGraph );

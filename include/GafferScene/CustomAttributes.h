@@ -46,7 +46,7 @@ class GAFFERSCENE_API CustomAttributes : public GafferScene::Attributes
 
 	public :
 
-		CustomAttributes( const std::string &name=defaultName<CustomAttributes>() );
+		explicit CustomAttributes( const std::string &name=defaultName<CustomAttributes>() );
 		~CustomAttributes() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::CustomAttributes,CustomAttributesTypeId, Attributes );

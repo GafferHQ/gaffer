@@ -60,7 +60,7 @@ struct GAFFERUI_API ModifiableEvent : public Event
 		All = Shift | Control | Alt
 	};
 
-	ModifiableEvent( Modifiers m = None ) : modifiers( m ) {};
+	explicit ModifiableEvent( Modifiers m = None ) : modifiers( m ) {};
 
 	/// The state of the modifier keys.
 	Modifiers modifiers;

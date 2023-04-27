@@ -49,7 +49,7 @@ class GAFFER_API VTuneMonitor : public Monitor
 
 	public :
 
-		VTuneMonitor( bool monitorHashProcess = false );
+		explicit VTuneMonitor( bool monitorHashProcess = false );
 		~VTuneMonitor() override;
 
 		IE_CORE_DECLAREMEMBERPTR( VTuneMonitor )

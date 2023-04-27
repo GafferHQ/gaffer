@@ -46,7 +46,7 @@ class GAFFERSCENE_API Prune : public FilteredSceneProcessor
 
 	public :
 
-		Prune( const std::string &name=defaultName<Prune>() );
+		explicit Prune( const std::string &name=defaultName<Prune>() );
 		~Prune() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::Prune, PruneTypeId, FilteredSceneProcessor );

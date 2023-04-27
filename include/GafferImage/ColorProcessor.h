@@ -50,7 +50,7 @@ class GAFFERIMAGE_API ColorProcessor : public ImageProcessor
 
 	public :
 
-		ColorProcessor( const std::string &name=defaultName<ColorProcessor>() );
+		explicit ColorProcessor( const std::string &name=defaultName<ColorProcessor>() );
 		~ColorProcessor() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::ColorProcessor, ColorProcessorTypeId, ImageProcessor );

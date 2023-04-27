@@ -48,7 +48,7 @@ class GAFFER_API ChildSet : public Gaffer::Set
 
 	public :
 
-		ChildSet( GraphComponentPtr parent );
+		explicit ChildSet( GraphComponentPtr parent );
 		~ChildSet() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::ChildSet, ChildSetTypeId, Gaffer::Set );

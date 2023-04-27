@@ -61,6 +61,7 @@ Breaking Changes
 - OpenColorIO : Changed default config.
 - Subprocess32 : Removed Python module.
 - Six : Removed Python module.
+- Gaffer : Class constructors are now declared explicit disabling implicit conversions.
 
 Build
 -----

@@ -55,7 +55,7 @@ class GAFFERSCENE_API Group : public SceneProcessor
 
 	public :
 
-		Group( const std::string &name=defaultName<Group>() );
+		explicit Group( const std::string &name=defaultName<Group>() );
 		~Group() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::Group, GroupTypeId, SceneProcessor );

@@ -46,7 +46,7 @@ class GAFFERSCENE_API DeleteOptions : public DeleteGlobals
 
 	public :
 
-		DeleteOptions( const std::string &name=defaultName<DeleteOptions>() );
+		explicit DeleteOptions( const std::string &name=defaultName<DeleteOptions>() );
 		~DeleteOptions() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::DeleteOptions, DeleteOptionsTypeId, DeleteGlobals );

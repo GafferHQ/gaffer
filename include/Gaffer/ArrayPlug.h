@@ -56,7 +56,7 @@ class GAFFER_API ArrayPlug : public Plug
 		/// but this may change in the future. It is strongly
 		/// recommended that ArrayPlug children are only accessed
 		/// through numeric indexing and never via names.
-		ArrayPlug(
+		explicit ArrayPlug(
 			const std::string &name = defaultName<ArrayPlug>(),
 			Direction direction = In,
 			PlugPtr element = nullptr,

@@ -54,7 +54,7 @@ class GAFFERVDB_API SphereLevelSet : public GafferScene::ObjectSource
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferVDB::SphereLevelSet, GafferVDB::SphereLevelSetTypeId, ObjectSource );
 
-		SphereLevelSet( const std::string &name=defaultName<SphereLevelSet>() );
+		explicit SphereLevelSet( const std::string &name=defaultName<SphereLevelSet>() );
 		~SphereLevelSet() override;
 
 		Gaffer::StringPlug *gridPlug();

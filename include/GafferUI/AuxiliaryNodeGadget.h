@@ -48,7 +48,7 @@ class GAFFERUI_API AuxiliaryNodeGadget : public StandardNodeGadget
 
 		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::AuxiliaryNodeGadget, AuxiliaryNodeGadgetTypeId, StandardNodeGadget );
 
-		AuxiliaryNodeGadget( Gaffer::NodePtr node );
+		explicit AuxiliaryNodeGadget( Gaffer::NodePtr node );
 		~AuxiliaryNodeGadget() override;
 
 		Imath::Box3f bound() const override;

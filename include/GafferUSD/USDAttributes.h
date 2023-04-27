@@ -49,7 +49,7 @@ class GAFFERUSD_API USDAttributes : public GafferScene::Attributes
 
 	public :
 
-		USDAttributes( const std::string &name=defaultName<USDAttributes>() );
+		explicit USDAttributes( const std::string &name=defaultName<USDAttributes>() );
 		~USDAttributes() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferUSD::USDAttributes, USDAttributesTypeId, GafferScene::Attributes );

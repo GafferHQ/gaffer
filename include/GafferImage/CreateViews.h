@@ -48,7 +48,7 @@ class GAFFERIMAGE_API CreateViews : public ImageNode
 
 	public :
 
-		CreateViews( const std::string &name=defaultName<CreateViews>() );
+		explicit CreateViews( const std::string &name=defaultName<CreateViews>() );
 		~CreateViews() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::CreateViews, CreateViewsTypeId, ImageNode );

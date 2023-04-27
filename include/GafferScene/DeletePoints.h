@@ -54,7 +54,7 @@ class GAFFERSCENE_API DeletePoints : public Deformer
 
 	public :
 
-		DeletePoints( const std::string &name = defaultName<DeletePoints>() );
+		explicit DeletePoints( const std::string &name = defaultName<DeletePoints>() );
 		~DeletePoints() override;
 
 		Gaffer::StringPlug *pointsPlug();

@@ -72,7 +72,7 @@ class GAFFERSCENE_API LightFilter : public ObjectSource
 
 	protected :
 
-		LightFilter( GafferScene::ShaderPtr shader, const std::string &name=defaultName<LightFilter>() );
+		explicit LightFilter( GafferScene::ShaderPtr shader, const std::string &name=defaultName<LightFilter>() );
 
 		void hashSource( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		IECore::ConstObjectPtr computeSource( const Gaffer::Context *context ) const override;

@@ -59,7 +59,7 @@ class GAFFERSCENE_API InteractiveRender : public Gaffer::ComputeNode
 
 	public :
 
-		InteractiveRender( const std::string &name=defaultName<InteractiveRender>() );
+		explicit InteractiveRender( const std::string &name=defaultName<InteractiveRender>() );
 		~InteractiveRender() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::InteractiveRender, GafferScene::InteractiveRenderTypeId, Gaffer::ComputeNode );

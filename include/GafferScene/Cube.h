@@ -50,7 +50,7 @@ class GAFFERSCENE_API Cube : public ObjectSource
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::Cube, CubeTypeId, ObjectSource );
 
-		Cube( const std::string &name=defaultName<Cube>() );
+		explicit Cube( const std::string &name=defaultName<Cube>() );
 		~Cube() override;
 
 		Gaffer::V3fPlug *dimensionsPlug();

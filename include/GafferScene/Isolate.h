@@ -53,7 +53,7 @@ class GAFFERSCENE_API Isolate : public FilteredSceneProcessor
 
 	public :
 
-		Isolate( const std::string &name=defaultName<Isolate>() );
+		explicit Isolate( const std::string &name=defaultName<Isolate>() );
 		~Isolate() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::Isolate, IsolateTypeId, FilteredSceneProcessor );

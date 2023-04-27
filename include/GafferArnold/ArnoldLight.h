@@ -54,7 +54,7 @@ class GAFFERARNOLD_API ArnoldLight : public GafferScene::Light
 
 		GAFFER_NODE_DECLARE_TYPE( GafferArnold::ArnoldLight, ArnoldLightTypeId, GafferScene::Light );
 
-		ArnoldLight( const std::string &name=defaultName<ArnoldLight>() );
+		explicit ArnoldLight( const std::string &name=defaultName<ArnoldLight>() );
 		~ArnoldLight() override;
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;

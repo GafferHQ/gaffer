@@ -55,7 +55,7 @@ class GAFFERUI_API RotateHandle : public Handle
 
 	public :
 
-		RotateHandle( Style::Axes axes );
+		explicit RotateHandle( Style::Axes axes );
 		~RotateHandle() override;
 
 		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::RotateHandle, RotateHandleTypeId, Handle );

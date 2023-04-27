@@ -141,7 +141,7 @@ class GAFFER_API BoxIO : public Node
 
 	protected :
 
-		BoxIO( Plug::Direction direction, const std::string &name=defaultName<BoxIO>() );
+		explicit BoxIO( Plug::Direction direction, const std::string &name=defaultName<BoxIO>() );
 
 		Gaffer::Plug *inPlugInternal();
 		const Gaffer::Plug *inPlugInternal() const;

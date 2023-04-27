@@ -53,7 +53,7 @@ class GAFFERSCENE_API SetQuery : public Gaffer::ComputeNode
 
 	public :
 
-		SetQuery( const std::string &name=defaultName<SetQuery>() );
+		explicit SetQuery( const std::string &name=defaultName<SetQuery>() );
 		~SetQuery() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::SetQuery, SetQueryTypeId, ComputeNode );

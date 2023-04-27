@@ -68,7 +68,7 @@ class IECORE_EXPORT TypedObjectPlug : public ValuePlug
 		GAFFER_PLUG_DECLARE_TEMPLATE_TYPE( TypedObjectPlug<T>, ValuePlug );
 
 		/// A copy of defaultValue is taken - it must not be null.
-		TypedObjectPlug(
+		explicit TypedObjectPlug(
 			const std::string &name,
 			Direction direction = In,
 			ConstValuePtr defaultValue = new ValueType,

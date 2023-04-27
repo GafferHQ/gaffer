@@ -46,7 +46,7 @@ class GAFFERUI_API SpacerGadget : public Gadget
 
 	public :
 
-		SpacerGadget( const Imath::Box3f &size );
+		explicit SpacerGadget( const Imath::Box3f &size );
 		~SpacerGadget() override;
 
 		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::SpacerGadget, SpacerGadgetTypeId, Gadget );

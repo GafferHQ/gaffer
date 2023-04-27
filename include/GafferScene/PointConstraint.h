@@ -46,7 +46,7 @@ class GAFFERSCENE_API PointConstraint : public Constraint
 
 	public :
 
-		PointConstraint( const std::string &name=defaultName<PointConstraint>() );
+		explicit PointConstraint( const std::string &name=defaultName<PointConstraint>() );
 		~PointConstraint() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::PointConstraint, PointConstraintTypeId, Constraint );

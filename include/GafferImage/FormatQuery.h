@@ -51,7 +51,7 @@ namespace GafferImage
 struct GAFFERIMAGE_API FormatQuery : Gaffer::ComputeNode
 {
 
-	FormatQuery( std::string const& name = defaultName< FormatQuery >() );
+	explicit FormatQuery( std::string const& name = defaultName< FormatQuery >() );
 	~FormatQuery() override;
 
 	GAFFER_NODE_DECLARE_TYPE( GafferImage::FormatQuery, FormatQueryTypeId, Gaffer::ComputeNode );

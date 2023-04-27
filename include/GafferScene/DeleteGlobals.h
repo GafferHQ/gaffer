@@ -60,7 +60,7 @@ class GAFFERSCENE_API DeleteGlobals : public GlobalsProcessor
 
 	public :
 
-		DeleteGlobals( const std::string &name=defaultName<DeleteGlobals>() );
+		explicit DeleteGlobals( const std::string &name=defaultName<DeleteGlobals>() );
 		~DeleteGlobals() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::DeleteGlobals, DeleteGlobalsTypeId, GlobalsProcessor );

@@ -50,7 +50,7 @@ class GAFFER_API Spreadsheet : public ComputeNode
 
 	public :
 
-		Spreadsheet( const std::string &name=defaultName<Spreadsheet>() );
+		explicit Spreadsheet( const std::string &name=defaultName<Spreadsheet>() );
 		~Spreadsheet() override;
 
 		GAFFER_NODE_DECLARE_TYPE( Gaffer::Spreadsheet, SpreadsheetTypeId, ComputeNode );

@@ -55,7 +55,7 @@ class GAFFERUI_API ConnectionCreator : public Gadget
 
 		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::ConnectionCreator, ConnectionCreatorTypeId, Gadget );
 
-		ConnectionCreator( const std::string &name=defaultName<ConnectionCreator>() );
+		explicit ConnectionCreator( const std::string &name=defaultName<ConnectionCreator>() );
 		~ConnectionCreator() override;
 
 		/// May be called by the recipient of a drag to figure out if this

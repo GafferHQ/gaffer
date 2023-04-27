@@ -56,7 +56,7 @@ class IECOREARNOLD_API UniverseBlock : public boost::noncopyable
 		/// Constructs with a uniquely owned universe if `writable == true`, and
 		/// a potentially shared universe otherwise. The latter is useful for
 		/// making queries via the `AiNodeEntry` API.
-		UniverseBlock( bool writable );
+		explicit UniverseBlock( bool writable );
 		/// Releases the universe created by the constructor.
 		~UniverseBlock();
 

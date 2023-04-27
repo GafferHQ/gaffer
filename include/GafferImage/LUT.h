@@ -55,7 +55,7 @@ class GAFFERIMAGE_API LUT : public OpenColorIOTransform
 
 	public :
 
-		LUT( const std::string &name=defaultName<LUT>() );
+		explicit LUT( const std::string &name=defaultName<LUT>() );
 		~LUT() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::LUT, LUTTypeId, OpenColorIOTransform );

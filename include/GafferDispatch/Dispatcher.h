@@ -100,7 +100,7 @@ class GAFFERDISPATCH_API Dispatcher : public Gaffer::Node
 {
 	public :
 
-		Dispatcher( const std::string &name=defaultName<Dispatcher>() );
+		explicit Dispatcher( const std::string &name=defaultName<Dispatcher>() );
 		~Dispatcher() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferDispatch::Dispatcher, DispatcherTypeId, Gaffer::Node );

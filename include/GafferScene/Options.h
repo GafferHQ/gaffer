@@ -49,7 +49,7 @@ class GAFFERSCENE_API Options : public GlobalsProcessor
 
 	public :
 
-		Options( const std::string &name=defaultName<Options>() );
+		explicit Options( const std::string &name=defaultName<Options>() );
 		~Options() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::Options, OptionsTypeId, GlobalsProcessor );

@@ -57,7 +57,7 @@ class GAFFERUI_API DotNodeGadget : public StandardNodeGadget
 
 		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::DotNodeGadget, DotNodeGadgetTypeId, StandardNodeGadget );
 
-		DotNodeGadget( Gaffer::NodePtr node );
+		explicit DotNodeGadget( Gaffer::NodePtr node );
 		~DotNodeGadget() override;
 
 		Imath::Box3f bound() const override;

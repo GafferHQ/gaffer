@@ -55,7 +55,7 @@ class GAFFERIMAGE_API DeleteViews : public ImageProcessor
 			Keep = 1
 		};
 
-		DeleteViews( const std::string &name=defaultName<DeleteViews>() );
+		explicit DeleteViews( const std::string &name=defaultName<DeleteViews>() );
 		~DeleteViews() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::DeleteViews, DeleteViewsTypeId, ImageProcessor );

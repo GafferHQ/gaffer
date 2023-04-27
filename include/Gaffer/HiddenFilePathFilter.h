@@ -52,7 +52,7 @@ class GAFFER_API HiddenFilePathFilter : public PathFilter
 
 	public :
 
-		HiddenFilePathFilter( IECore::CompoundDataPtr userData = nullptr );
+		explicit HiddenFilePathFilter( IECore::CompoundDataPtr userData = nullptr );
 		~HiddenFilePathFilter() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::HiddenFilePathFilter, HiddenFilePathFilterTypeId, Gaffer::PathFilter );

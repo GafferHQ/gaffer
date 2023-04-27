@@ -53,7 +53,7 @@ class GAFFERSCENE_API SubTree : public SceneProcessor
 
 	public :
 
-		SubTree( const std::string &name=defaultName<SubTree>() );
+		explicit SubTree( const std::string &name=defaultName<SubTree>() );
 		~SubTree() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::SubTree, SubTreeTypeId, SceneProcessor );

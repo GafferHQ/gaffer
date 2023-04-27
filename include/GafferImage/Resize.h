@@ -57,7 +57,7 @@ class GAFFERIMAGE_API Resize : public FlatImageProcessor
 {
 	public :
 
-		Resize( const std::string &name=defaultName<Resize>() );
+		explicit Resize( const std::string &name=defaultName<Resize>() );
 		~Resize() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::Resize, ResizeTypeId, FlatImageProcessor );

@@ -48,7 +48,7 @@ class GAFFERSCENE_API CustomOptions : public GafferScene::Options
 
 	public :
 
-		CustomOptions( const std::string &name=defaultName<CustomOptions>() );
+		explicit CustomOptions( const std::string &name=defaultName<CustomOptions>() );
 		~CustomOptions() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::CustomOptions, CustomOptionsTypeId, Options );

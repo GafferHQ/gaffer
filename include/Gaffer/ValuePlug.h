@@ -57,7 +57,7 @@ class GAFFER_API ValuePlug : public Plug
 	public :
 
 		/// Constructs a ValuePlug which can be used as a parent for other ValuePlugs.
-		ValuePlug( const std::string &name=defaultName<ValuePlug>(), Direction direction=In, unsigned flags=Default );
+		explicit ValuePlug( const std::string &name=defaultName<ValuePlug>(), Direction direction=In, unsigned flags=Default );
 		~ValuePlug() override;
 
 		GAFFER_PLUG_DECLARE_TYPE( Gaffer::ValuePlug, ValuePlugTypeId, Plug );

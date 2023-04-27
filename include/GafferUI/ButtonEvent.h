@@ -66,7 +66,7 @@ struct GAFFERUI_API ButtonEvent : public ModifiableEvent
 		All = Left | Middle | Right
 	};
 
-	ButtonEvent(
+	explicit ButtonEvent(
 		Buttons button_ = None,
 		Buttons buttons_ = None,
 		const IECore::LineSegment3f &Line=IECore::LineSegment3f(),

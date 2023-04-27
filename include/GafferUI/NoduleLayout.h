@@ -81,7 +81,7 @@ class GAFFERUI_API NoduleLayout : public Gadget
 
 		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::NoduleLayout, NoduleLayoutTypeId, Gadget );
 
-		NoduleLayout( Gaffer::GraphComponentPtr parent, IECore::InternedString section = IECore::InternedString() );
+		explicit NoduleLayout( Gaffer::GraphComponentPtr parent, IECore::InternedString section = IECore::InternedString() );
 		~NoduleLayout() override;
 
 		/// \todo These do not need to be virtual, since this is

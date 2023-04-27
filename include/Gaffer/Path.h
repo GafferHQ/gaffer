@@ -77,9 +77,9 @@ class GAFFER_API Path : public IECore::RunTimeTyped
 
 		using Names = std::vector<IECore::InternedString>;
 
-		Path( PathFilterPtr filter = nullptr );
-		Path( const std::string &path, PathFilterPtr filter = nullptr );
-		Path( const Names &names, const IECore::InternedString &root = "/", PathFilterPtr filter = nullptr );
+		explicit Path( PathFilterPtr filter = nullptr );
+		explicit Path( const std::string &path, PathFilterPtr filter = nullptr );
+		explicit Path( const Names &names, const IECore::InternedString &root = "/", PathFilterPtr filter = nullptr );
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::Path, PathTypeId, IECore::RunTimeTyped );
 

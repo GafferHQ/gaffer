@@ -48,7 +48,7 @@ class GAFFERSCENE_API MeshSplit : public BranchCreator
 
 	public :
 
-		MeshSplit( const std::string &name=defaultName<MeshSplit>() );
+		explicit MeshSplit( const std::string &name=defaultName<MeshSplit>() );
 		~MeshSplit() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::MeshSplit, MeshSplitTypeId, BranchCreator );

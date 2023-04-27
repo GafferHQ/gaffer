@@ -50,7 +50,7 @@ class IECORE_EXPORT Container : public Base
 
 		IE_CORE_DECLAREMEMBERPTR( Container );
 
-		Container( const std::string &name=GraphComponent::defaultName<Container>() );
+		explicit Container( const std::string &name=GraphComponent::defaultName<Container>() );
 		~Container() override;
 
 		//! @name RunTimeTyped interface

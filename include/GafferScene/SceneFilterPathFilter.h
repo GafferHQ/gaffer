@@ -53,7 +53,7 @@ class GAFFERSCENE_API SceneFilterPathFilter : public Gaffer::PathFilter
 
 	public :
 
-		SceneFilterPathFilter( FilterPtr sceneFilter, IECore::CompoundDataPtr userData = nullptr );
+		explicit SceneFilterPathFilter( FilterPtr sceneFilter, IECore::CompoundDataPtr userData = nullptr );
 		~SceneFilterPathFilter() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferScene::SceneFilterPathFilter, SceneFilterPathFilterTypeId, Gaffer::PathFilter );

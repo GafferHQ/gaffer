@@ -58,7 +58,7 @@ class GAFFERIMAGE_API Ramp : public FlatImageSource
 
 	public :
 
-		Ramp( const std::string &name=defaultName<Ramp>() );
+		explicit Ramp( const std::string &name=defaultName<Ramp>() );
 		~Ramp() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::Ramp, RampTypeId, FlatImageSource );

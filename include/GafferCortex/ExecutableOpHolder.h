@@ -58,7 +58,7 @@ class GAFFERCORTEX_API ExecutableOpHolder : public ParameterisedHolderTaskNode
 
 		GAFFER_NODE_DECLARE_TYPE( GafferCortex::ExecutableOpHolder, ExecutableOpHolderTypeId, ParameterisedHolderTaskNode );
 
-		ExecutableOpHolder( const std::string &name=defaultName<ExecutableOpHolder>() );
+		explicit ExecutableOpHolder( const std::string &name=defaultName<ExecutableOpHolder>() );
 
 		void setParameterised( IECore::RunTimeTypedPtr parameterised, bool keepExistingValues=false ) override;
 

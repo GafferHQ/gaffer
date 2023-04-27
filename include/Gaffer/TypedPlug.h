@@ -54,7 +54,7 @@ class IECORE_EXPORT TypedPlug : public ValuePlug
 
 		GAFFER_PLUG_DECLARE_TEMPLATE_TYPE( TypedPlug<T>, ValuePlug );
 
-		TypedPlug(
+		explicit TypedPlug(
 			const std::string &name = defaultName<TypedPlug>(),
 			Direction direction=In,
 			const T &defaultValue = T(),

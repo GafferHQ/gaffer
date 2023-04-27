@@ -49,7 +49,7 @@ class GAFFERCYCLES_API CyclesOptions : public GafferScene::Options
 
 	public :
 
-		CyclesOptions( const std::string &name=defaultName<CyclesOptions>() );
+		explicit CyclesOptions( const std::string &name=defaultName<CyclesOptions>() );
 		~CyclesOptions() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( GafferCycles::CyclesOptions, CyclesOptionsTypeId, GafferScene::Options );

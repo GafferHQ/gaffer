@@ -70,7 +70,7 @@ class GAFFERUI_API LinearContainer : public ContainerGadget
 			Decreasing
 		};
 
-		LinearContainer( const std::string &name=defaultName<LinearContainer>(), Orientation orientation=X,
+		explicit LinearContainer( const std::string &name=defaultName<LinearContainer>(), Orientation orientation=X,
 			Alignment alignment=Centre, float spacing = 0.0f, Direction=Increasing );
 
 		~LinearContainer() override;

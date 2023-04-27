@@ -59,7 +59,7 @@ class GAFFER_API PathFilter : public IECore::RunTimeTyped
 
 	public :
 
-		PathFilter( IECore::CompoundDataPtr userData = nullptr );
+		explicit PathFilter( IECore::CompoundDataPtr userData = nullptr );
 		~PathFilter() override;
 
 		IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Gaffer::PathFilter, PathFilterTypeId, IECore::RunTimeTyped );

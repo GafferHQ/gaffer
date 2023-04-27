@@ -51,7 +51,7 @@ namespace Gaffer
 class GAFFER_API ContextQuery : public Gaffer::ComputeNode
 {
 	public:
-		ContextQuery( const std::string &name = defaultName<ContextQuery>() );
+		explicit ContextQuery( const std::string &name = defaultName<ContextQuery>() );
 		~ContextQuery() override;
 
 		GAFFER_NODE_DECLARE_TYPE( Gaffer::ContextQuery, ContextQueryTypeId, Gaffer::ComputeNode );

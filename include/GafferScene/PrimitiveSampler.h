@@ -73,7 +73,7 @@ class GAFFERSCENE_API PrimitiveSampler : public Deformer
 
 	protected :
 
-		PrimitiveSampler( const std::string &name = defaultName<PrimitiveSampler>() );
+		explicit PrimitiveSampler( const std::string &name = defaultName<PrimitiveSampler>() );
 
 		/// SamplingFunction
 		/// ================

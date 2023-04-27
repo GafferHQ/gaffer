@@ -47,7 +47,7 @@ class GAFFERIMAGE_API Saturation : public ColorProcessor
 
 	public :
 
-		Saturation( const std::string &name=defaultName<Saturation>() );
+		explicit Saturation( const std::string &name=defaultName<Saturation>() );
 		~Saturation() override;
 
 		Gaffer::FloatPlug *saturationPlug();

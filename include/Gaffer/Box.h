@@ -53,7 +53,7 @@ class GAFFER_API Box : public SubGraph
 
 	public :
 
-		Box( const std::string &name=defaultName<Box>() );
+		explicit Box( const std::string &name=defaultName<Box>() );
 		~Box() override;
 
 		GAFFER_NODE_DECLARE_TYPE( Gaffer::Box, BoxTypeId, SubGraph );

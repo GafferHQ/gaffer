@@ -52,7 +52,7 @@ class GAFFERIMAGE_API FlatImageProcessor : public ImageProcessor
 
 		/// Constructs with a single input ImagePlug named "in". Use inPlug()
 		/// to access this plug.
-		FlatImageProcessor( const std::string &name=defaultName<FlatImageProcessor>() );
+		explicit FlatImageProcessor( const std::string &name=defaultName<FlatImageProcessor>() );
 
 		/// Constructs with an ArrayPlug called "in". Use inPlug() as a
 		/// convenience for accessing the first child in the array, and use

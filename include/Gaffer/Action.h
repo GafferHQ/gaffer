@@ -110,7 +110,7 @@ class GAFFER_API Action : public IECore::RunTimeTyped
 
 	protected :
 
-		Action( bool cancelBackgroundTasks = true );
+		explicit Action( bool cancelBackgroundTasks = true );
 		~Action() override;
 
 		/// Must be implemented by derived classes to

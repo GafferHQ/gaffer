@@ -56,7 +56,7 @@ class GAFFERSCENE_API AttributeVisualiser : public AttributeProcessor
 
 	public :
 
-		AttributeVisualiser( const std::string &name=defaultName<AttributeVisualiser>() );
+		explicit AttributeVisualiser( const std::string &name=defaultName<AttributeVisualiser>() );
 		~AttributeVisualiser() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferScene::AttributeVisualiser, AttributeVisualiserTypeId, AttributeProcessor );

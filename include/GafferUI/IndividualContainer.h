@@ -49,7 +49,7 @@ class GAFFERUI_API IndividualContainer : public ContainerGadget
 
 	public :
 
-		IndividualContainer( GadgetPtr child=nullptr );
+		explicit IndividualContainer( GadgetPtr child=nullptr );
 		~IndividualContainer() override;
 
 		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( GafferUI::IndividualContainer, IndividualContainerTypeId, ContainerGadget );

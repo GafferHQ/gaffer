@@ -56,7 +56,7 @@ class GAFFEROSL_API OSLObject : public GafferScene::Deformer
 
 	public :
 
-		OSLObject( const std::string &name=defaultName<OSLObject>() );
+		explicit OSLObject( const std::string &name=defaultName<OSLObject>() );
 		~OSLObject() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferOSL::OSLObject, OSLObjectTypeId, GafferScene::Deformer );
