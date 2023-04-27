@@ -424,7 +424,7 @@ class UVOrientedQuadPrimitive : public IECoreGL::QuadPrimitive
 			addVertexAttribute( "uv", uvData );
 		}
 
-		~UVOrientedQuadPrimitive()
+		~UVOrientedQuadPrimitive() override
 		{
 
 		}

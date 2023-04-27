@@ -203,7 +203,7 @@ class GAFFERSCENEUI_API Inspector : public IECore::RefCounted, public Gaffer::Si
 
 				IE_CORE_DECLARERUNTIMETYPEDEXTENSION( Inspector::HistoryPath, HistoryPathTypeId, Path );
 
-				~HistoryPath();
+				~HistoryPath() override;
 
 				void propertyNames( std::vector<IECore::InternedString> &names, const IECore::Canceller *canceller = nullptr) const override;
 				IECore::ConstRunTimeTypedPtr property( const IECore::InternedString &name, const IECore::Canceller *canceller = nullptr ) const override;
