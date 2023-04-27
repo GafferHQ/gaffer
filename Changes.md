@@ -46,7 +46,9 @@ Improvements
 - Dilate, Erode, Median, Resample, Resize, ImageTransform, Blur, VectorWarp : Improved performance significantly. For example, a Blur with a large radius is now almost 6x faster.
 - RotateTool : Added the ability to rotate an axis whose plane of rotation is parallel or nearly parallel to the view.
 - OptionQuery : Added support for querying generic `IECore::Object` values using an `ObjectPlug`.
-- SceneView : Ancestors and siblings of locations included in the Visible Set are no longer drawn while their ancestors are collapsed.
+- SceneView :
+  - Ancestors and siblings of locations included in the Visible Set are no longer drawn while their ancestors are collapsed.
+  - Added red wireframe colour to the bounding box of locations excluded from the Visible Set.
 
 Fixes
 -----

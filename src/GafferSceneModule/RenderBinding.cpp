@@ -536,11 +536,24 @@ void GafferSceneModule::bindRender()
 			.def( "parameters", (IECore::CompoundData *(Geometry::*)())&Geometry::parameters, return_value_policy<IECorePython::CastToIntrusivePtr>() )
 		;
 
-		IECorePython::RunTimeTypedClass<Placeholder>()
-			.def( init<const Box3f &>( arg( "bound" ) = Box3f() ) )
-			.def( "setBound", &Placeholder::setBound )
-			.def( "getBound", &Placeholder::getBound, return_value_policy<copy_const_reference>() )
-		;
+		IECorePython::RunTimeTypedClass<Placeholder> placeholderClass( "Placeholder" );
+		{
+			scope s = placeholderClass;
+
+			enum_<Placeholder::Mode>( "Mode" )
+				.value( "Default", Placeholder::Default )
+				.value( "Excluded", Placeholder::Excluded )
+			;
+
+			placeholderClass
+				.def( init<const Box3f &, const Placeholder::Mode>( ( arg( "bound" ) = Box3f(), arg( "mode" ) = Placeholder::Mode::Default ) ) )
+				.def( "setMode", &Placeholder::setMode )
+				.def( "getMode", &Placeholder::getMode )
+				.def( "setBound", &Placeholder::setBound )
+				.def( "getBound", &Placeholder::getBound, return_value_policy<copy_const_reference>() )
+			;
+
+		}
 
 		scope capturingRendererScope = IECorePython::RefCountedClass<CapturingRenderer, Renderer>( "CapturingRenderer" )
 			.def( init<Renderer::RenderType, const std::string &, const IECore::MessageHandlerPtr &>( ( arg( "renderType" ) = Renderer::RenderType::Interactive, arg( "fileName" ) = "", arg( "messageHandler") = IECore::MessageHandlerPtr() ) ) )

@@ -1410,6 +1410,32 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertIsNotNone( renderer.capturedObject( "/group/plane" ) )
 		self.assertIsNotNone( renderer.capturedObject( "/group/sphere" ) )
 
+	def testExcludedLocationPlaceholderMode( self ) :
+
+		plane = GafferScene.Plane()
+		sphere = GafferScene.Sphere()
+		group = GafferScene.Group()
+		group["in"][0].setInput( plane["out"] )
+		group["in"][1].setInput( sphere["out"] )
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer()
+		controller = GafferScene.RenderController( group["out"], Gaffer.Context(), renderer )
+		controller.update()
+
+		self.assertEqual( renderer.capturedObject( "/group/__unexpandedChildren__" ).capturedSamples()[0].getMode(), GafferScene.Private.IECoreScenePreview.Placeholder.Mode.Default )
+
+		v = GafferScene.VisibleSet()
+		v.exclusions.addPath( "/group" )
+		controller.setVisibleSet( v )
+		controller.update()
+
+		self.assertEqual( renderer.capturedObject( "/group/__unexpandedChildren__" ).capturedSamples()[0].getMode(), GafferScene.Private.IECoreScenePreview.Placeholder.Mode.Excluded )
+
+		controller.setVisibleSet( GafferScene.VisibleSet() )
+		controller.update()
+
+		self.assertEqual( renderer.capturedObject( "/group/__unexpandedChildren__" ).capturedSamples()[0].getMode(), GafferScene.Private.IECoreScenePreview.Placeholder.Mode.Default )
+
 	def testIncludeLocation( self ) :
 
 		plane = GafferScene.Plane()

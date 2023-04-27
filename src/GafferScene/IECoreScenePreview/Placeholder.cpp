@@ -46,9 +46,19 @@ using namespace IECoreScenePreview;
 const unsigned int Placeholder::m_ioVersion = 0;
 IE_CORE_DEFINEOBJECTTYPEDESCRIPTION( Placeholder );
 
-Placeholder::Placeholder( const Imath::Box3f &bound )
-	:	m_bound( bound )
+Placeholder::Placeholder( const Imath::Box3f &bound, const Placeholder::Mode mode )
+	:	 m_mode( mode ), m_bound( bound )
 {
+}
+
+void Placeholder::setMode( Mode mode )
+{
+	m_mode = mode;
+}
+
+Placeholder::Mode Placeholder::getMode() const
+{
+	return m_mode;
 }
 
 void Placeholder::setBound( const Imath::Box3f &bound )
@@ -78,19 +88,23 @@ bool Placeholder::isEqualTo( const IECore::Object *other ) const
 		return false;
 	}
 
-	return m_bound == static_cast<const Placeholder *>( other )->m_bound;
+	const Placeholder *placeholder = static_cast<const Placeholder *>( other );
+	return m_bound == placeholder->m_bound && m_mode == placeholder->m_mode;
 }
 
 void Placeholder::hash( IECore::MurmurHash &h ) const
 {
 	VisibleRenderable::hash( h );
 	h.append( m_bound );
+	h.append( m_mode );
 }
 
 void Placeholder::copyFrom( const IECore::Object *other, IECore::Object::CopyContext *context )
 {
 	VisibleRenderable::copyFrom( other, context );
-	m_bound = static_cast<const Placeholder *>( other )->m_bound;
+	const Placeholder *placeholder = static_cast<const Placeholder *>( other );
+	m_bound = placeholder->m_bound;
+	m_mode = placeholder->m_mode;
 }
 
 void Placeholder::save( IECore::Object::SaveContext *context ) const
@@ -99,6 +113,7 @@ void Placeholder::save( IECore::Object::SaveContext *context ) const
 
 	IndexedIOPtr container = context->container( staticTypeName(), m_ioVersion );
 	container->write( "bound", m_bound.min.getValue(), 6 );
+	container->write( "mode", m_mode );
 }
 
 void Placeholder::load( IECore::Object::LoadContextPtr context )
@@ -109,10 +124,14 @@ void Placeholder::load( IECore::Object::LoadContextPtr context )
 	ConstIndexedIOPtr container = context->container( staticTypeName(), v );
 	float *b = m_bound.min.getValue();
 	container->read( "bound", b, 6 );
+	unsigned int mode = 0;
+	container->read( "mode", mode );
+	m_mode = Mode( mode );
 }
 
 void Placeholder::memoryUsage( IECore::Object::MemoryAccumulator &accumulator ) const
 {
 	VisibleRenderable::memoryUsage( accumulator );
 	accumulator.accumulate( sizeof( m_bound ) );
+	accumulator.accumulate( sizeof( m_mode ) );
 }

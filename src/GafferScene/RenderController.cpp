@@ -546,7 +546,10 @@ class RenderController::SceneGraph
 
 				if( !bound.isEmpty() )
 				{
-					IECoreScenePreview::PlaceholderPtr placeholder = new IECoreScenePreview::Placeholder( bound );
+					IECoreScenePreview::PlaceholderPtr placeholder = new IECoreScenePreview::Placeholder(
+						bound,
+						m_drawMode == VisibleSet::Visibility::ExcludedBounds ? IECoreScenePreview::Placeholder::Mode::Excluded : IECoreScenePreview::Placeholder::Mode::Default
+					);
 
 					std::string boundName;
 					ScenePlug::pathToString( path, boundName );

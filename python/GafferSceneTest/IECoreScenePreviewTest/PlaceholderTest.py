@@ -50,6 +50,7 @@ class PlaceholderTest( GafferTest.TestCase ) :
 		o = IECore.Object.create( "IECoreScenePreview::Placeholder" )
 		self.assertIsInstance( o, GafferScene.Private.IECoreScenePreview.Placeholder )
 		self.assertEqual( o.getBound(), imath.Box3f() )
+		self.assertEqual( o.getMode(), GafferScene.Private.IECoreScenePreview.Placeholder.Mode.Default )
 
 	def testBound( self ) :
 
@@ -67,23 +68,48 @@ class PlaceholderTest( GafferTest.TestCase ) :
 			imath.Box3f( imath.V3f( 2, 3, 4 ), imath.V3f( 5, 6, 7 ) )
 		)
 
+	def testMode( self ) :
+
+		o = GafferScene.Private.IECoreScenePreview.Placeholder()
+		self.assertEqual(
+			o.getMode(),
+			GafferScene.Private.IECoreScenePreview.Placeholder.Mode.Default
+		)
+
+		o.setMode( GafferScene.Private.IECoreScenePreview.Placeholder.Mode.Excluded )
+		self.assertEqual(
+			o.getMode(),
+			GafferScene.Private.IECoreScenePreview.Placeholder.Mode.Excluded
+		)
+
+		o2 = GafferScene.Private.IECoreScenePreview.Placeholder( mode = GafferScene.Private.IECoreScenePreview.Placeholder.Mode.Excluded )
+		self.assertEqual(
+			o2.getMode(),
+			GafferScene.Private.IECoreScenePreview.Placeholder.Mode.Excluded
+		)
+
 	def testCopy( self ) :
 
 		o = GafferScene.Private.IECoreScenePreview.Placeholder(
-			imath.Box3f( imath.V3f( 1, 2, 3 ), imath.V3f( 4, 5, 6 ) )
+			imath.Box3f( imath.V3f( 1, 2, 3 ), imath.V3f( 4, 5, 6 ) ),
+			GafferScene.Private.IECoreScenePreview.Placeholder.Mode.Excluded,
 		)
 		o2 = o.copy()
 		self.assertEqual( o.getBound(), o2.getBound() )
+		self.assertEqual( o.getMode(), o2.getMode() )
 		self.assertEqual( o, o2 )
 
 		o2.setBound( imath.Box3f( imath.V3f( 2, 3, 4 ), imath.V3f( 5, 6, 7 ) ) )
 		self.assertNotEqual( o.getBound(), o2.getBound() )
+		o2.setMode( GafferScene.Private.IECoreScenePreview.Placeholder.Mode.Default )
+		self.assertNotEqual( o.getMode(), o2.getMode() )
 		self.assertNotEqual( o, o2 )
 
 	def testSerialisation( self ) :
 
 		o = GafferScene.Private.IECoreScenePreview.Placeholder(
-			imath.Box3f( imath.V3f( 1, 2, 3 ), imath.V3f( 4, 5, 6 ) )
+			imath.Box3f( imath.V3f( 1, 2, 3 ), imath.V3f( 4, 5, 6 ) ),
+			GafferScene.Private.IECoreScenePreview.Placeholder.Mode.Excluded
 		)
 
 		m = IECore.MemoryIndexedIO( IECore.CharVectorData(), [], IECore.IndexedIO.OpenMode.Write )
@@ -93,6 +119,7 @@ class PlaceholderTest( GafferTest.TestCase ) :
 		o2 = IECore.Object.load( m2, "o" )
 
 		self.assertEqual( o.getBound(), o2.getBound() )
+		self.assertEqual( o.getMode(), o2.getMode() )
 		self.assertEqual( o, o2 )
 
 if __name__ == "__main__":
