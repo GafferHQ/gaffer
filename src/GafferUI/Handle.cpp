@@ -467,11 +467,7 @@ Imath::V2f Handle::PlanarDrag::updatedPosition( const DragDropEvent &event )
 		return V2f( linearPosition, linearPosition ) * m_linearDragAxisMask;
 	}
 
-	Plane3f worldPlane(
-		m_worldOrigin,
-		m_worldOrigin + m_worldAxis0,
-		m_worldOrigin + m_worldAxis1
-	);
+	Plane3f worldPlane( m_worldOrigin, m_worldPlaneNormal );
 	V3f worldIntersection( 0 );
 	worldPlane.intersect( worldLine, worldIntersection );
 
@@ -516,6 +512,7 @@ void Handle::PlanarDrag::init( const Gadget *gadget, const Imath::V3f &origin, c
 	m_worldOrigin = dragData.worldOrigin;
 	m_worldAxis0 = dragData.worldAxis0;
 	m_worldAxis1 = dragData.worldAxis1;
+	m_worldPlaneNormal = dragData.worldPlaneNormal;
 
 	if( abs( dragData.worldPlaneNormal.dot( dragData.worldLine.dir ) ) < g_planarToLinearDragThreshold )
 	{

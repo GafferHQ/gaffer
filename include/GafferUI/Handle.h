@@ -151,6 +151,7 @@ class GAFFERUI_API Handle : public Gadget
 				Imath::V3f m_worldOrigin;
 				Imath::V3f m_worldAxis0;
 				Imath::V3f m_worldAxis1;
+				Imath::V3f m_worldPlaneNormal;
 				Imath::V2f m_dragBeginPosition;
 
 				bool m_processModifiers;
