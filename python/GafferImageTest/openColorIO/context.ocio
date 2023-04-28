@@ -90,3 +90,13 @@ colorspaces:
     allocation: uniform
     allocationvars: [-0.125, 1.125]
     to_reference: !<FileTransform> {src: cineon.spi1d, interpolation: linear}
+
+  - !<ColorSpace>
+    name: raw
+    family: ""
+    equalitygroup: ""
+    bitdepth: 32f
+    description: |
+      Raw Data. Used for normals, points, etc.
+    isdata: true
+    allocation: uniform
