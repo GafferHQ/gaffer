@@ -64,6 +64,7 @@ API
 - OpenColorIOTransformUI :
   - Added `noneLabel` argument to `colorSpacePresetNames()`.
   - Added support for `openColorIO:categories` and `openColorIO:includeRoles` metadata to `colorSpacePresetNames()`. These may be registered on a per-plug basis to control the colorspaces shown for that plug.
+- OpenColorIOAlgo : Added a new namespace that allows the OpenColorIO config to be defined via the Gaffer context.
 - ValuePlugs : Added Python bindings for `ValueType` type alias.
 - Color4fVectorDataPlug : Added a plug type for storing arrays of `Color4f`.
 - TypedObjectPlug : Added default value for `direction` and `defaultValue` constructor arguments.
