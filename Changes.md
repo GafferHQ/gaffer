@@ -17,6 +17,7 @@ Fixes
 - Arnold : Moved `distance` shader to the `Shader/Utility` section of the node menu (previously in `Shader/Other`).
 - Graph Editor : Fixed a bug for some video drivers that led to a crash when using nodes with icons.
 - Node Editor : Removed `Gang/Ungang` menu options from output plugs.
+- SpreadsheetUI : Fixed bug which prevented the addition of new rows and columns when an existing plug had an input connection (#5248).
 
 1.2.3.0 (relative to 1.2.2.0)
 =======
