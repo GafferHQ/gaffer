@@ -41,4 +41,4 @@ namespace GafferImageUIModule
 
 void bindOpenColorIOAlgo();
 
-} // namespace GafferUIModule
+} // namespace GafferImageUIModule
