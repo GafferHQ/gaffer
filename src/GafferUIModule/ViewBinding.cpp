@@ -168,6 +168,8 @@ void bindView()
 		.def( init<View *>() )
 		.def( "registerDisplayTransform", &registerDisplayTransformWrapper )
 		.staticmethod( "registerDisplayTransform" )
+		.def( "deregisterDisplayTransform", &View::DisplayTransform::deregisterDisplayTransform )
+		.staticmethod( "deregisterDisplayTransform" )
 		.def( "registeredDisplayTransforms", &registeredDisplayTransformsWrapper )
 		.staticmethod( "registeredDisplayTransforms" )
 	;

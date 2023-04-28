@@ -238,6 +238,7 @@ class GAFFERUI_API View::DisplayTransform : public Gaffer::Node
 		using DisplayTransformCreator = std::function<IECoreGL::Shader::SetupPtr ()>;
 
 		static void registerDisplayTransform( const std::string &name, DisplayTransformCreator creator );
+		static void deregisterDisplayTransform( const std::string &name );
 		static std::vector<std::string> registeredDisplayTransforms();
 
 	private :

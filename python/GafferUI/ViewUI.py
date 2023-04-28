@@ -109,7 +109,6 @@ Gaffer.Metadata.registerNode(
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 			"label", "",
-			"layout:width", 100,
 
 			"presetNames", lambda plug : IECore.StringVectorData( GafferUI.View.DisplayTransform.registeredDisplayTransforms() ),
 			"presetValues", lambda plug : IECore.StringVectorData( GafferUI.View.DisplayTransform.registeredDisplayTransforms() ),

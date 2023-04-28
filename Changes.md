@@ -15,7 +15,12 @@ Improvements
   - Improved colorspace menus :
     - Organised colorspaces into submenus by family.
     - Removed unwanted title-casing, so that names are now displayed verbatim.
-    - Removed Roles submenu, which is deemed unsuitable by the OpenColorIO UX working group. It may be reintroduced by registering `openColorIO:includeRoles` metadata to the relevant plugs.
+    - Added control over the presence of roles by registering `openColorIO:includeRoles` metadata to the relevant plugs.
+  - Improved View display transform menu :
+    - Ordered menu items to match the order in the OpenColorIO config.
+    - Removed "Default" view.
+    - Added menu options for changing the current Display.
+    - Allowed the available views to be filtered using an `openColorIO:activeViews` metadata value registered on the View's `displayTransform.name` plug. Values should be space-separated names, optionally containing wildcards.
 - VectorDataPlugValueWidget : Computation errors are now reflected by a red background colour.
 
 Fixes
@@ -40,6 +45,7 @@ API
 - Color4fVectorDataPlug : Added a plug type for storing arrays of `Color4f`.
 - TypedObjectPlug : Added default value for `direction` and `defaultValue` constructor arguments.
 - VectorDataWidget : Added `setErrored()` and `getErrored()` methods to control an error state. Errors are reflected by a red background colour.
+- PlugLayout : Added support for `layout:minimumWidth` metadata.
 
 Breaking Changes
 ----------------
@@ -66,14 +72,15 @@ Breaking Changes
 Build
 -----
 
-- OpenEXR : Stopped linking unnecessarily to the `IlmImf` library.
 - Boost :
   - Updated to version 1.80.0.
   - Stopped linking unnecessarily to `iostreams`, `date_time`, `wave` and `system` libraries.
 - Cortex : Updated to version 10.5.0.0.
 - Imath : Added version 3.1.7.
 - Minizip : Added version 3.0.9.
-- OpenEXR : Updated to version 3.1.7.
+- OpenEXR :
+  - Updated to version 3.1.7.
+  - Stopped linking unnecessarily to the `IlmImf` library.
 - OpenColorIO : Updated to version 2.2.1.
 - PyBind11 : Updated to version 2.10.4.
 - PySide : Updated to version 5.15.8.

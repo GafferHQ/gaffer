@@ -30,7 +30,8 @@ Name                              | Purpose                                     
 `layout:section`                  | Specifies the section the plug belongs in     | `TabName.SectionName`
 `layout:section:<name>:collapsed` | Specifies whether the section is collapsed    | `True` (collapsed), `False` (expanded)
 `layout:accessory`                | Places widget on same line as previous widget | `True`
-
+`layout:width`                    | Specifies a fixed width for the widget        | `100`
+`layout:minimumWidth`             | Specifies a minimum width for the widget      | `100`
 
 GraphEditor layout
 ------------------
