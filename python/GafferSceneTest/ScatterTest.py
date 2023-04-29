@@ -224,6 +224,62 @@ class ScatterTest( GafferSceneTest.SceneTestCase ) :
 		primitiveVariables["primitiveVariables"].addChild( Gaffer.NameValuePlug( "d", IECore.FloatData( 0.5 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 		self.assertLess( scatter["out"].object( "/plane/scatter" ).numPoints, p.numPoints )
 
+	def testReferencePosition( self ) :
+
+		plane = GafferScene.Plane()
+
+		filter = GafferScene.PathFilter()
+		filter["paths"].setValue( IECore.StringVectorData( [ '/plane' ] ) )
+
+		freeze = GafferScene.FreezeTransform()
+		freeze["in"].setInput( plane["out"] )
+		freeze["filter"].setInput( filter["out"] )
+
+		copyVars = GafferScene.CopyPrimitiveVariables()
+		copyVars["in"].setInput( freeze["out"] )
+		copyVars["source"].setInput( plane["out"] )
+		copyVars["filter"].setInput( filter["out"] )
+		copyVars["primitiveVariables"].setValue( 'P' )
+		copyVars["sourceLocation"].setValue( '/plane' )
+		copyVars["prefix"].setValue( 'ref' )
+
+		scatter = GafferScene.Scatter()
+		scatter["in"].setInput( copyVars["out"] )
+		scatter["filter"].setInput( filter["out"] )
+		scatter["name"].setValue( 'points' )
+		scatter["density"].setValue( 10.0 )
+
+		self.assertEqual( scatter["out"].object( "/plane/points" ).numPoints, 10 )
+		plane["transform"]["scale"].setValue( imath.V3f( 3, 3, 3 ) )
+		self.assertEqual( scatter["out"].object( "/plane/points" ).numPoints, 90 )
+		scatter["referencePosition"].setValue( "refP" )
+		self.assertEqual( scatter["out"].object( "/plane/points" ).numPoints, 10 )
+
+	def testUV( self ) :
+
+		plane = GafferScene.Plane()
+
+		filter = GafferScene.PathFilter()
+		filter["paths"].setValue( IECore.StringVectorData( [ '/plane' ] ) )
+
+		shuffle = GafferScene.ShufflePrimitiveVariables()
+		shuffle["in"].setInput( plane["out"] )
+		shuffle["filter"].setInput( filter["out"] )
+		shuffle["shuffles"].addChild( Gaffer.ShufflePlug( "uv", "uvX", True ) )
+
+		scatter = GafferScene.Scatter()
+		scatter["in"].setInput( shuffle["out"] )
+		scatter["filter"].setInput( filter["out"] )
+		scatter["name"].setValue( 'points' )
+		scatter["density"].setValue( 10.0 )
+
+		with self.assertRaisesRegex( RuntimeError, 'MeshPrimitive has no uv primitive variable named "uv" of type FaceVarying or Vertex.' ) :
+			scatter["out"].object( "/plane/points" )
+
+		scatter["uv"].setValue( "uvX" )
+
+		self.assertEqual( scatter["out"].object( "/plane/points" ).numPoints, 10 )
+
 	def testPrimitiveVariables( self ) :
 
 		plane = GafferScene.Plane()

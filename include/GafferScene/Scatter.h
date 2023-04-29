@@ -61,6 +61,12 @@ class GAFFERSCENE_API Scatter : public BranchCreator
 		Gaffer::StringPlug *densityPrimitiveVariablePlug();
 		const Gaffer::StringPlug *densityPrimitiveVariablePlug() const;
 
+		Gaffer::StringPlug *referencePositionPlug();
+		const Gaffer::StringPlug *referencePositionPlug() const;
+
+		Gaffer::StringPlug *uvPlug();
+		const Gaffer::StringPlug *uvPlug() const;
+
 		Gaffer::StringPlug *primitiveVariablesPlug();
 		const Gaffer::StringPlug *primitiveVariablesPlug() const;
 

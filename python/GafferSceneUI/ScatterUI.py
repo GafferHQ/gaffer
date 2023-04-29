@@ -97,6 +97,33 @@ Gaffer.Metadata.registerNode(
 			with the density setting above.
 			""",
 
+			"divider", True,
+		],
+
+		"referencePosition" : [
+
+			"description",
+			"""
+			If you want to preserve the uv positions of the points while the mesh animates, you can
+			set up an alternate reference position primitive variable ( usually the same as P, but
+			not animated ).  This primitive variable will be used to compute the areas of the faces,
+			and therefore how many points each face receives.
+			""",
+
+		],
+
+		"uv" : [
+
+			"description",
+			"""
+			The UV set used to distribute points. The size of faces in 3D space is used to determine
+			the number of points on each face, so the UV set should not affect the overall look of
+			the distribution for a particular seed, but using the UVs provides continuity when
+			adjusting density. If polygons that are large in 3D space are small and narrow in UV
+			space for the given UV set, you may encounter performance problems.
+			""",
+
+			"divider", True,
 		],
 
 		"primitiveVariables" : [

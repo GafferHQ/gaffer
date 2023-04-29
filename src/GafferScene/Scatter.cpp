@@ -63,6 +63,8 @@ Scatter::Scatter( const std::string &name )
 
 	addChild( new FloatPlug( "density", Plug::In, 1.0f, 0.0f ) );
 	addChild( new StringPlug( "densityPrimitiveVariable" ) );
+	addChild( new StringPlug( "referencePosition", Plug::In, "P" ) );
+	addChild( new StringPlug( "uv", Plug::In, "uv" ) );
 	addChild( new StringPlug( "primitiveVariables" ) );
 	addChild( new StringPlug( "pointType", Plug::In, "gl:point" ) );
 }
@@ -101,24 +103,44 @@ const Gaffer::StringPlug *Scatter::densityPrimitiveVariablePlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 2 );
 }
 
-Gaffer::StringPlug *Scatter::primitiveVariablesPlug()
+Gaffer::StringPlug *Scatter::referencePositionPlug()
 {
 	return getChild<StringPlug>( g_firstPlugIndex + 3 );
+}
+
+const Gaffer::StringPlug *Scatter::referencePositionPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 3 );
+}
+
+Gaffer::StringPlug *Scatter::uvPlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 4 );
+}
+
+const Gaffer::StringPlug *Scatter::uvPlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 4 );
+}
+
+Gaffer::StringPlug *Scatter::primitiveVariablesPlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex + 5 );
 }
 
 const Gaffer::StringPlug *Scatter::primitiveVariablesPlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 3 );
+	return getChild<StringPlug>( g_firstPlugIndex + 5 );
 }
 
 Gaffer::StringPlug *Scatter::pointTypePlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 4 );
+	return getChild<StringPlug>( g_firstPlugIndex + 6 );
 }
 
 const Gaffer::StringPlug *Scatter::pointTypePlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 4 );
+	return getChild<StringPlug>( g_firstPlugIndex + 6 );
 }
 
 bool Scatter::affectsBranchBound( const Gaffer::Plug *input ) const
@@ -181,6 +203,8 @@ bool Scatter::affectsBranchObject( const Gaffer::Plug *input ) const
 		input == inPlug()->objectPlug() ||
 		input == densityPlug() ||
 		input == densityPrimitiveVariablePlug() ||
+		input == referencePositionPlug() ||
+		input == uvPlug() ||
 		input == primitiveVariablesPlug() ||
 		input == pointTypePlug()
 	;
@@ -194,6 +218,8 @@ void Scatter::hashBranchObject( const ScenePath &sourcePath, const ScenePath &br
 		h.append( inPlug()->objectHash( sourcePath ) );
 		densityPlug()->hash( h );
 		densityPrimitiveVariablePlug()->hash( h );
+		referencePositionPlug()->hash( h );
+		uvPlug()->hash( h );
 		primitiveVariablesPlug()->hash( h );
 		pointTypePlug()->hash( h );
 		return;
@@ -218,8 +244,8 @@ IECore::ConstObjectPtr Scatter::computeBranchObject( const ScenePath &sourcePath
 			densityPlug()->getValue(),
 			V2f( 0 ),
 			densityPrimitiveVariablePlug()->getValue(),
-			"uv",
-			"P",
+			uvPlug()->getValue(),
+			referencePositionPlug()->getValue(),
 			primitiveVariablesPlug()->getValue(),
 			context->canceller()
 		);
