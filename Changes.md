@@ -87,7 +87,10 @@ Build
 - Qt : Updated to version 5.15.8.
 - ZLib : Added version 1.2.13.
 
-1.2.x.x (relative to 1.2.3.0)
+1.2.x.x (relative to 1.2.4.0)
+=======
+
+1.2.4.0 (relative to 1.2.3.0)
 =======
 
 Features
@@ -99,6 +102,7 @@ Improvements
 ------------
 
 - CollectImages : Added `mergeMetadata` plug. This allows the metadata from all collected images to be merged, whereas before only the metadata from the first image was passed through.
+- SpreadsheetUI : Added the ability to filter the rows displayed in a spreadsheet's UI (#5092).
 
 Fixes
 -----
@@ -106,6 +110,8 @@ Fixes
 - Arnold : Moved `distance` shader to the `Shader/Utility` section of the node menu (previously in `Shader/Other`).
 - Graph Editor : Fixed a bug for some video drivers that led to a crash when using nodes with icons.
 - Node Editor : Removed `Gang/Ungang` menu options from output plugs.
+- SpreadsheetUI : Fixed bug which prevented the addition of new rows and columns when an existing plug had an input connection (#5248).
+- VectorDataWidget : Fixed bugs preventing the display of headers and values for matrix and box data.
 
 1.2.3.0 (relative to 1.2.2.0)
 =======
@@ -453,8 +459,16 @@ Build
   - YAML-CPP : Added version 0.7.0.
 - 3Delight : Updated to 3Delight version 2.9.17.
 
-1.1.9.x (relative to 1.1.9.4)
+1.1.9.x (relative to 1.1.9.5)
 =======
+
+1.1.9.5 (relative to 1.1.9.4)
+=======
+
+Fixes
+-----
+
+- VectorDataWidget : Fixed bugs preventing the display of headers and values for matrix and box data.
 
 1.1.9.4 (relative to 1.1.9.3)
 =======

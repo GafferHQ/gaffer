@@ -76,6 +76,7 @@ class _PlugTableView( GafferUI.Widget ) :
 		QtCompat.setSectionResizeMode( tableView.verticalHeader(), QtWidgets.QHeaderView.Fixed )
 		tableView.verticalHeader().setDefaultSectionSize( 25 )
 		tableView.verticalHeader().setVisible( False )
+		tableView.setAlternatingRowColors( True )
 
 		self.__horizontalHeader = GafferUI.Widget( QtWidgets.QHeaderView( QtCore.Qt.Horizontal, tableView ) )
 		self.__horizontalHeader._qtWidget().setDefaultAlignment( QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter )
@@ -127,6 +128,11 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		self.__visibleSection = None
 		tableView.model().modelReset.connect( Gaffer.WeakMethod( self.__modelReset ) )
+
+		# Row filtering
+
+		self.__rowFilterPattern = ""
+		self.__rowPlugsToHide = set()
 
 		# Selection and editing. We disable all edit triggers so that
 		# the QTableView itself won't edit anything, and we then implement
@@ -216,6 +222,42 @@ class _PlugTableView( GafferUI.Widget ) :
 	def getVisibleSection( self ) :
 
 		return self.__visibleSection
+
+	def setRowFilter( self, pattern ) :
+
+		self.__rowFilterPattern = pattern
+		self.__rowPlugsToHide = set()
+
+		if pattern != "" :
+			model = self._qtWidget().model()
+			with self.ancestor( GafferUI.PlugValueWidget ).getContext() :
+				for i in range( 0, model.rowCount() ) :
+					plug = model.plugForIndex( model.index( i, 0 ) )
+					if plug is not None :
+						rowPlug = plug.ancestor( Gaffer.Spreadsheet.RowPlug )
+						rowName = rowPlug["name"].getValue()
+						if not IECore.StringAlgo.matchMultiple( rowName, pattern ) :
+							self.__rowPlugsToHide.add( rowPlug )
+
+		self.__applyRowFilter()
+
+	def getRowFilter( self ) :
+
+		return self.__rowFilterPattern
+
+	def __applyRowFilter( self ) :
+
+		model = self._qtWidget().model()
+		for i in range( 0, model.rowCount() ) :
+			visible = True
+			if self.__rowPlugsToHide :
+				plug = model.plugForIndex( model.index( i, 0 ) )
+				if plug is not None :
+					visible = plug.ancestor( Gaffer.Spreadsheet.RowPlug ) not in self.__rowPlugsToHide
+
+			self._qtWidget().setRowHidden( i, not visible )
+
+		self._qtWidget().updateGeometry()
 
 	def __setupModels( self, selectionModel ) :
 
@@ -1231,6 +1273,7 @@ class _PlugTableView( GafferUI.Widget ) :
 		self.__applyColumnOrderMetadata()
 		self.__applyColumnWidthMetadata()
 		self.__applyRowNamesWidth()
+		self.__applyRowFilter()
 
 	def __moveToSection( self, cellPlug, sectionName = None ) :
 

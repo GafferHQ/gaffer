@@ -154,7 +154,7 @@ __children["DashedRectangle_RowDefault"]["out"].setInput( __children["DashedRect
 __children["DashedRectangle_RowDefault"]["in"].setInput( __children["Merge"]["out"] )
 __children["DashedRectangle_RowDefault"]["color"].setValue( imath.Color4f( 0, 0.862699986, 0, 1 ) )
 __children["DashedRectangle_RowDefault"]["dashLength"].setValue( 15.0 )
-__children["DashedRectangle_RowDefault"]["area"].setValue( imath.Box2f( imath.V2f( 13, 237 ), imath.V2f( 394, 259 ) ) )
+__children["DashedRectangle_RowDefault"]["area"].setValue( imath.Box2f( imath.V2f( 140, 237 ), imath.V2f( 394, 259 ) ) )
 __children["DashedRectangle_RowDefault"]["lineWidth"].setValue( 2.0 )
 __children["DashedRectangle_RowDefault"]["__uiPosition"].setValue( imath.V2f( -33.6602669, -5.9528017 ) )
 __children["Rectangle_RowDefaultLine"]["out"].setInput( __children["Rectangle_RowDefaultLine"]["__merge"]["out"] )

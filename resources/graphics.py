@@ -496,6 +496,7 @@
 		'sceneInspectorHistory',
 		'sceneInspectorInheritance',
 		'search',
+		'searchOn',
 		'setMembershipDot',
 		'shuffleArrow',
 		'subMenuArrow',
