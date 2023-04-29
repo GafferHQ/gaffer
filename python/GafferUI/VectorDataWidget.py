@@ -1127,9 +1127,9 @@ class _BoxDataAccessor( _CompoundDataAccessor ) :
 	def headerLabel( self, columnIndex ) :
 
 		if self.numColumns() == 4:
-			return [ self.heading + ".minX", self.heading + ".minY", self.heading + ".maxX", self.heading + ".maxY"][columnIndex]
+			return [ "minX", "minY", "maxX", "maxY" ][columnIndex]
 		else:
-			return [ self.heading + ".minX", self.heading + ".minY", self.heading + ".minZ", self.heading + ".maxX", self.heading + ".maxY", self.heading + ".maxZ"][columnIndex]
+			return [ "minX", "minY", "minZ", "maxX", "maxY", "maxZ" ][columnIndex]
 
 	def setElement( self, rowIndex, columnIndex, value ) :
 
@@ -1139,7 +1139,7 @@ class _BoxDataAccessor( _CompoundDataAccessor ) :
 
 	def getElement( self, rowIndex, columnIndex ) :
 
-		dimension = self.numColumns() / 2
+		dimension = self.numColumns() // 2
 
 		index = columnIndex % dimension
 		minMax = (columnIndex - index) / dimension
@@ -1174,7 +1174,7 @@ class _MatrixDataAccessor( _DataAccessor ) :
 
 	def headerLabel( self, columnIndex ) :
 
-		return "{0}[{1}]".format(self.heading, columnIndex)
+		return "[{}]".format( columnIndex )
 
 	def setElement( self, rowIndex, columnIndex, value ) :
 
@@ -1190,11 +1190,10 @@ class _MatrixDataAccessor( _DataAccessor ) :
 			dimension = 3
 
 		y = columnIndex % dimension
-		x = (columnIndex - y) / dimension
+		x = (columnIndex - y) // dimension
 		item = self.data()[rowIndex]
 
 		return GafferUI._Variant.toVariant( item[x][y] )
-
 
 _DataAccessor.registerType( IECore.M33fVectorData.staticTypeId(), _MatrixDataAccessor )
 _DataAccessor.registerType( IECore.M33dVectorData.staticTypeId(), _MatrixDataAccessor )

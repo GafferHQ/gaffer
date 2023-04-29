@@ -19,6 +19,7 @@ Fixes
 - Graph Editor : Fixed a bug for some video drivers that led to a crash when using nodes with icons.
 - Node Editor : Removed `Gang/Ungang` menu options from output plugs.
 - SpreadsheetUI : Fixed bug which prevented the addition of new rows and columns when an existing plug had an input connection (#5248).
+- VectorDataWidget : Fixed bugs preventing the display of headers and values for matrix and box data.
 
 1.2.3.0 (relative to 1.2.2.0)
 =======
@@ -366,8 +367,16 @@ Build
   - YAML-CPP : Added version 0.7.0.
 - 3Delight : Updated to 3Delight version 2.9.17.
 
-1.1.9.x (relative to 1.1.9.4)
+1.1.9.x (relative to 1.1.9.5)
 =======
+
+1.1.9.5 (relative to 1.1.9.4)
+=======
+
+Fixes
+-----
+
+- VectorDataWidget : Fixed bugs preventing the display of headers and values for matrix and box data.
 
 1.1.9.4 (relative to 1.1.9.3)
 =======
