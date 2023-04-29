@@ -10,6 +10,7 @@ Improvements
 ------------
 
 - CollectImages : Added `mergeMetadata` plug. This allows the metadata from all collected images to be merged, whereas before only the metadata from the first image was passed through.
+- SpreadsheetUI : Added the ability to filter the rows displayed in a spreadsheet's UI (#5092).
 
 Fixes
 -----

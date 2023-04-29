@@ -256,6 +256,10 @@ _styleSheet = string.Template(
 		padding-left: 16px;
 	}
 
+	QLabel#gafferDefaultRowLabel {
+		margin-bottom: 6px;
+	}
+
 	QMenuBar {
 		background-color: $backgroundDarkest;
 		font-weight: bold;
@@ -1306,6 +1310,30 @@ _styleSheet = string.Template(
 	QTableView QTableCornerButton::section {
 		background-color: transparent;
 		border: none;
+	}
+
+	*[gafferClass="GafferUI.SpreadsheetUI._PlugTableView"]::item {
+		background-color: $background;
+	}
+
+	*[gafferClass="GafferUI.SpreadsheetUI._PlugTableView"]::item:alternate {
+		background-color: $backgroundAlt;
+	}
+
+	*[gafferClass="GafferUI.SpreadsheetUI._PlugTableView"]::item:selected {
+		background-color: $brightColor;
+	}
+
+	*[gafferClass="GafferUI.SpreadsheetUI._PlugTableView"][gafferReverseRowColors="true"]::item {
+		background-color: $backgroundAlt;
+	}
+
+	*[gafferClass="GafferUI.SpreadsheetUI._PlugTableView"][gafferReverseRowColors="true"]::item:alternate {
+		background-color: $background;
+	}
+
+	*[gafferClass="GafferUI.SpreadsheetUI._PlugTableView"][gafferReverseRowColors="true"]::item:selected {
+		background-color: $brightColor;
 	}
 
 	_TableView {
