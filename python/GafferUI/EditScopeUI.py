@@ -155,7 +155,7 @@ class EditScopePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__menuButton.setText( editScope.getName() if editScope is not None else "None" )
 
-	def __editScopeNameChanged( self, editScope ) :
+	def __editScopeNameChanged( self, editScope, oldName ) :
 
 		self.__updateMenuButton( editScope )
 

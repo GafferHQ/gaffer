@@ -565,6 +565,12 @@ PlugPtr Plug::createCounterpart( const std::string &name, Direction direction ) 
 	return result;
 }
 
+void Plug::nameChanged( IECore::InternedString oldName )
+{
+	GraphComponent::nameChanged( oldName );
+	propagateDirtinessAtLeaves( this );
+}
+
 void Plug::parentChanging( Gaffer::GraphComponent *newParent )
 {
 	// When a plug is removed from a node, we need to propagate dirtiness for
@@ -576,7 +582,7 @@ void Plug::parentChanging( Gaffer::GraphComponent *newParent )
 	// deferred until after `parentChanged()`, when the operation is complete.
 	if( node() )
 	{
-		propagateDirtinessForParentChange( this );
+		propagateDirtinessAtLeaves( this );
 	}
 
 	// This method manages the connections between plugs when
@@ -663,7 +669,7 @@ void Plug::parentChanged( Gaffer::GraphComponent *oldParent )
 	{
 		// If a plug has been added to a node, we need to
 		// propagate dirtiness.
-		propagateDirtinessForParentChange( this );
+		propagateDirtinessAtLeaves( this );
 	}
 }
 
@@ -702,7 +708,7 @@ void Plug::childrenReordered( const std::vector<size_t> &oldIndices )
 	}
 }
 
-void Plug::propagateDirtinessForParentChange( Plug *plugToDirty )
+void Plug::propagateDirtinessAtLeaves( Plug *plugToDirty )
 {
 	// When a plug is reparented, we need to take into account
 	// all the descendants it brings with it, so we recurse to
@@ -711,7 +717,7 @@ void Plug::propagateDirtinessForParentChange( Plug *plugToDirty )
 	{
 		for( Plug::Iterator it( plugToDirty ); !it.done(); ++it )
 		{
-			propagateDirtinessForParentChange( it->get() );
+			propagateDirtinessAtLeaves( it->get() );
 		}
 	}
 	else

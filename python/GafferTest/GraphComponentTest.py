@@ -54,7 +54,7 @@ class GraphComponentTest( GafferTest.TestCase ) :
 		self.assertEqual( c.getName(), "GraphComponent" )
 		self.assertEqual( c.fullName(), "GraphComponent" )
 
-		def f( c ) :
+		def f( c, oldName ) :
 			GraphComponentTest.name = c.getName()
 
 		con = c.nameChangedSignal().connect( f, scoped = True )
@@ -1093,6 +1093,103 @@ class GraphComponentTest( GafferTest.TestCase ) :
 
 		with self.assertRaisesRegex( Exception, 'Child "c2" is in more than one position' ) :
 			p.reorderChildren( [ c1, c2, c2 ] )
+
+	def testNameChangedSignal( self ) :
+
+		s = Gaffer.ScriptNode()
+		g = Gaffer.Node()
+		s.addChild( g )
+
+		names = []
+		def f( g, oldName ) :
+			self.assertIsInstance( oldName, str )
+			names.append( ( oldName, g.getName() ) )
+
+		g.nameChangedSignal().connect( f, scoped = False )
+
+		with Gaffer.UndoScope( s ) :
+			g.setName( "newName" )
+
+		self.assertEqual(
+			names, [
+				( "Node", "newName" ),
+			]
+		)
+
+		s.undo()
+
+		self.assertEqual(
+			names, [
+				( "Node", "newName" ),
+				( "newName", "Node" ),
+			]
+		)
+
+		s.redo()
+
+		self.assertEqual(
+			names, [
+				( "Node", "newName" ),
+				( "newName", "Node" ),
+				( "Node", "newName" ),
+			]
+		)
+
+	def testNameChangedMethod( self ) :
+
+		class NameTracker( Gaffer.Node ) :
+
+			def __init__( self, name = "NameTracker" ) :
+
+				Gaffer.Node.__init__( self, name )
+
+				self.nameChangedSignal().connect( Gaffer.WeakMethod( self.__nameChanged ), scoped = False )
+
+				self.nameChanges = []
+
+			# Override for virtual method defined by base class.
+			def _nameChanged( self, oldName ) :
+
+				self.nameChanges.append( ( "Method", oldName, self.getName() ) )
+
+			# Connected to public slot.
+			def __nameChanged( self, graphComponent, oldName ) :
+
+				assert( graphComponent.isSame( self ) )
+				self.nameChanges.append( ( "Slot", oldName, self.getName() ) )
+
+		s = Gaffer.ScriptNode()
+		n = NameTracker()
+		s.addChild( n )
+
+		self.assertEqual( n.nameChanges, [] )
+
+		with Gaffer.UndoScope( s ) :
+			n.setName( "newName" )
+
+		self.assertEqual(
+			n.nameChanges, [
+				( "Method", "NameTracker", "newName" ),
+				( "Slot", "NameTracker", "newName" ),
+		] )
+
+		del n.nameChanges[:]
+		s.undo()
+
+		self.assertEqual(
+			n.nameChanges, [
+				( "Method", "newName", "NameTracker" ),
+				( "Slot", "newName", "NameTracker" ),
+		] )
+
+		del n.nameChanges[:]
+		s.redo()
+
+		self.assertEqual(
+			n.nameChanges, [
+				( "Method", "NameTracker", "newName" ),
+				( "Slot", "NameTracker", "newName" ),
+		] )
 
 if __name__ == "__main__":
 	unittest.main()

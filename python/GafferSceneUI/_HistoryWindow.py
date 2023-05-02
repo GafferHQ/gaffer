@@ -296,6 +296,6 @@ class _HistoryWindow( GafferUI.Window ) :
 
 				node = node.parent()
 
-	def __nodeNameChanged( self, node ) :
+	def __nodeNameChanged( self, node, oldName ) :
 
 		self.__path._emitPathChanged()

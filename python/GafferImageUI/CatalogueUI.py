@@ -680,7 +680,7 @@ class _ImagesPath( Gaffer.Path ) :
 		del self.__nameChangedConnections[child]
 		self._emitPathChanged()
 
-	def __nameChanged( self, child ) :
+	def __nameChanged( self, child, oldName ) :
 
 		self._emitPathChanged()
 

@@ -30,10 +30,15 @@ Fixes
 - Viewer : Gamma is now applied after the display transform, not before.
 - Expression : Fixed parsing of Python expressions combining subscripts (`[]`) and `context` methods (#3088, #3613, #5250).
 - ConnectionCreatorWrapper : Fixed bug which forced PlugAdder derived classes to implement `updateDragEndPoint()` unnecessarily.
+- Plug : Fixed bug which caused stale values to be retrieved from the cache for plugs that had been renamed.
 
 API
 ---
 
+- GraphComponent :
+  - Added an `oldName` argument to `nameChangedSignal()` slot signature.
+  - Added a `nameChanged()` protected virtual method, which can be overridden to receive notifications of name changes before
+    they are made public by `nameChangedSignal()`.
 - View : Added DisplayTransform add-on class which can be used to add colourspace management to any View.
 - ViewportGadget : A post-process shader can now be applied to any layer, not just the main one.
 - SceneGadget : Added `setLayer()` and `getLayer()` methods, which allow the destination `Gadget::Layer` to be specified.
@@ -51,6 +56,7 @@ Breaking Changes
 ----------------
 
 - Appleseed : Removed Appleseed support. We suggest Cycles as an actively maintained open-source alternative.
+- GraphComponent : Changed slot signature for `nameChangedSignal()`.
 - GLWidget :
   - A GL context is no longer available in `_resize()`.
   - Removed `BufferOptions.Double`.

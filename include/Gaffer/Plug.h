@@ -227,6 +227,7 @@ class GAFFER_API Plug : public GraphComponent
 
 	protected :
 
+		void nameChanged( IECore::InternedString oldName ) override;
 		void parentChanging( Gaffer::GraphComponent *newParent ) override;
 		void parentChanged( Gaffer::GraphComponent *oldParent ) override;
 		void childrenReordered( const std::vector<size_t> &oldIndices ) override;
@@ -246,7 +247,7 @@ class GAFFER_API Plug : public GraphComponent
 
 	private :
 
-		static void propagateDirtinessForParentChange( Plug *plugToDirty );
+		static void propagateDirtinessAtLeaves( Plug *plugToDirty );
 
 		void setFlagsInternal( unsigned flags );
 

@@ -87,6 +87,7 @@ class GAFFER_API GraphComponent : public IECore::RunTimeTyped, public Signals::T
 		GAFFER_GRAPHCOMPONENT_DECLARE_TYPE( Gaffer::GraphComponent, GraphComponentTypeId, IECore::RunTimeTyped );
 
 		using UnarySignal = Signals::Signal<void (GraphComponent *), Signals::CatchingCombiner<void>>;
+		using NameChangedSignal = Signals::Signal<void (GraphComponent *, IECore::InternedString), Signals::CatchingCombiner<void>>;
 		using BinarySignal = Signals::Signal<void (GraphComponent *, GraphComponent *), Signals::CatchingCombiner<void>>;
 		using ChildrenReorderedSignal = Signals::Signal<void (GraphComponent *, const std::vector<size_t> &originalIndices ), Signals::CatchingCombiner<void>>;
 
@@ -109,8 +110,9 @@ class GAFFER_API GraphComponent : public IECore::RunTimeTyped, public Signals::T
 		/// Returns the relative path name from the specified ancestor to this component.
 		/// Passing nullptr for ancestor yields the same result as calling fullName().
 		std::string relativeName( const GraphComponent *ancestor ) const;
-		/// A signal which is emitted whenever a name is changed.
-		UnarySignal &nameChangedSignal();
+		/// A signal which is emitted whenever a name is changed. The old name is passed
+		/// as an argument to the slot.
+		NameChangedSignal &nameChangedSignal();
 		/// Returns T::staticTypeName() without namespace prefixes, for use as the
 		/// default name in GraphComponent constructors.
 		template<typename T>
@@ -230,6 +232,13 @@ class GAFFER_API GraphComponent : public IECore::RunTimeTyped, public Signals::T
 		//@}
 
 	protected :
+
+		/// Called by `setName()` immediately prior to emitting
+		/// `nameChangedSignal()`. This provides an opportunity to respond to
+		/// the change before outside observers are notified. Implementations
+		/// should call the base class implementation before doing their own
+		/// work.
+		virtual void nameChanged( IECore::InternedString oldName );
 
 		/// Called just /before/ the parent of this GraphComponent is
 		/// changed to newParent. This is an opportunity to do things
