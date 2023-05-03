@@ -91,6 +91,7 @@ API
 - Removed use of `RTLD_GLOBAL` for loading Python modules.
 - SceneAlgo : Added `validateName()` function.
 - Sampler : Added `visitPixels()` method, which provides an optimised method for accessing all pixels in a region.
+- Handle::AngularDrag : Added `isLinearDrag()` method.
 
 Breaking Changes
 ----------------

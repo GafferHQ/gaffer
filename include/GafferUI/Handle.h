@@ -189,6 +189,8 @@ class GAFFERUI_API Handle : public Gadget
 			float startRotation() const;
 			float updatedRotation( const DragDropEvent &event );
 
+			bool isLinearDrag() const;
+
 			private :
 
 				float closestRotation( const Imath::V2f &p, float targetRotation );

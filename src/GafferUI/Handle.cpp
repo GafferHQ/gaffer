@@ -671,6 +671,11 @@ float Handle::AngularDrag::updatedRotation( const DragDropEvent &event )
 	return rotation;
 }
 
+bool Handle::AngularDrag::isLinearDrag() const
+{
+	return std::holds_alternative<LinearDrag>( m_drag );
+}
+
 float Handle::AngularDrag::closestRotation( const V2f &p, float targetRotation )
 {
 	const float r = atan2( p.y, p.x );
