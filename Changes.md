@@ -131,6 +131,7 @@ Breaking Changes
   - Removed support for deprecated `layout:widgetType` metadata. Use `plugValueWidget:type` metadata instead.
   - Removed `useTypeOnly` argument from `create()` function. Pass `typeMetadata = None` instead.
 - MeshTangents : Changed the edge used by `Mode::FirstEdge`.
+- Handle::AngularDrag : Fix mismatch between comment and implementation regarding the axis for zero rotation. The constructor arguments `axis0` and `axis1` were changed to `normal` and `axis0` respectively.
 
 Build
 -----

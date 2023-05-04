@@ -81,16 +81,17 @@ struct WorldGadgetDragData
 {
 	V3f worldOrigin;
 	V3f worldAxis0;
-	V3f worldAxis1;
+	V3f worldAxis90;
 	Line3f worldLine;
-	V3f worldPlaneNormal;
+	V3f worldNormal;
 };
 
 void worldGadgetDragData(
 	const Gadget *gadget,
 	const V3f &origin,
+	const V3f &normal,
 	const V3f &axis0,
-	const V3f &axis1,
+	const V3f &axis90,
 	const DragDropEvent &dragEvent,
 	WorldGadgetDragData &result
 )
@@ -98,13 +99,13 @@ void worldGadgetDragData(
 	const M44f transform = gadget->fullTransform();
 	result.worldOrigin = origin * transform;
 	transform.multDirMatrix( axis0, result.worldAxis0 );
-	transform.multDirMatrix( axis1, result.worldAxis1 );
+	transform.multDirMatrix( axis90, result.worldAxis90 );
+	transform.multDirMatrix( normal, result.worldNormal );
 
 	result.worldLine = Line3f(
 		dragEvent.line.p0 * transform,
 		dragEvent.line.p1 * transform
 	);
-	result.worldPlaneNormal = ( result.worldAxis0.cross( result.worldAxis1 ) ).normalized();
 }
 
 }  // namespace
@@ -508,13 +509,13 @@ void Handle::PlanarDrag::init( const Gadget *gadget, const Imath::V3f &origin, c
 	m_gadget = gadget;
 
 	WorldGadgetDragData dragData;
-	worldGadgetDragData( gadget, origin, axis0, axis1, dragBeginEvent, dragData );
+	worldGadgetDragData( gadget, origin, axis0.cross( axis1 ), axis0, axis1, dragBeginEvent, dragData );
 	m_worldOrigin = dragData.worldOrigin;
 	m_worldAxis0 = dragData.worldAxis0;
-	m_worldAxis1 = dragData.worldAxis1;
-	m_worldPlaneNormal = dragData.worldPlaneNormal;
+	m_worldAxis1 = dragData.worldAxis90;
+	m_worldPlaneNormal = dragData.worldNormal;
 
-	if( abs( dragData.worldPlaneNormal.dot( dragData.worldLine.dir ) ) < g_planarToLinearDragThreshold )
+	if( abs( dragData.worldNormal.dot( dragData.worldLine.dir ) ) < g_planarToLinearDragThreshold )
 	{
 		bool useAxis0 = abs( m_worldAxis0.dot( dragData.worldLine.dir ) ) < abs( m_worldAxis1.dot( dragData.worldLine.dir ) );
 
@@ -549,52 +550,39 @@ Handle::AngularDrag::AngularDrag( bool processModifiers )
 	m_drag = PlanarDrag( false );
 }
 
-Handle::AngularDrag::AngularDrag( const Gadget *gadget, const Imath::V3f &origin, const Imath::V3f &axis0, const Imath::V3f axis1, const DragDropEvent &dragBeginEvent, bool processModifiers )
+Handle::AngularDrag::AngularDrag( const Gadget *gadget, const Imath::V3f &origin, const Imath::V3f &normal, const Imath::V3f &axis0, const DragDropEvent &dragBeginEvent, bool processModifiers )
 	:	m_gadget( gadget ),
 		m_rotation( 0.0f ),
+		m_normal( normal ),
 		m_axis0( axis0 ),
-		m_axis1( axis1 ),
 		m_processModifiers( processModifiers ),
 		m_preciseMotionEnabled( false )
 {
-	// We need to negate this, or rotation is opposite to the mouse movement direction
-	V3f planeAxis0 = -axis0.cross( axis1 );
+	V3f axis90 = normal.cross( axis0 );
 
 	WorldGadgetDragData dragData;
-	worldGadgetDragData( gadget, origin, planeAxis0, axis1, dragBeginEvent, dragData );
+	worldGadgetDragData( gadget, origin, normal, axis0, axis90, dragBeginEvent, dragData );
 
-	if( abs( dragData.worldPlaneNormal.dot( dragData.worldLine.dir ) ) < g_planarToLinearDragThreshold )
+	if( abs( dragData.worldNormal.dot( dragData.worldLine.dir ) ) < g_planarToLinearDragThreshold )
 	{
 		// Do a LinearDrag in raster space instead of world space
 
-		float axis0Dot = dragData.worldAxis0.normalized().dot( dragData.worldLine.dir );
-		float axis1Dot = dragData.worldAxis1.normalized().dot( dragData.worldLine.dir );
+		// We're going to find a direction in raster space where all movement along this axis will
+		// be treated as rotation. We want a direction in the 2d plane that is perpendicular to the
+		// normal, which we can get via cross product between the normal and the view direction.
+		V3f worldRotationDirection = dragData.worldLine.dir.cross( dragData.worldNormal );
 
-		int dragAxis = abs( axis0Dot ) < abs( axis1Dot ) ? 0 : 1;
-
-		// Looking down the normal of the rotation plane, positive values rotate
-		// counterclockwise. Find the gadget-space vector pointing in the direction
-		// of positive rotation to use for the start direction of the linear drag.
-		V3f parallelAxis = dragAxis == 0 ? axis1 : planeAxis0;
-		float parallelDot = dragAxis == 0 ? axis1Dot : axis0Dot;
-
-		// If the parallel axis is pointing in the same direction as the view,
-		// reverse the drag direction.
-		float sign = -( ( 0 < parallelDot ) - ( parallelDot < 0 ) );
-
-		V3f dragDirection = axis0.cross( parallelAxis );
-
+		// Convert to raster space
 		const ViewportGadget *viewport = gadget->ancestor<ViewportGadget>();
-		const V2f rasterOrigin = viewport->gadgetToRasterSpace( V3f( 0 ), gadget );
-		V2f rasterLine =
-			( viewport->gadgetToRasterSpace( dragDirection, gadget ) - rasterOrigin ) *
-			V2f( 1.f, -1.f ) *  // Y is positive down in raster space, flip the Y direction
-			V2f( sign )  // compensate for looking "along" or "into"
+		V2f rasterRotationDirection =
+			( viewport->worldToRasterSpace( worldRotationDirection + dragData.worldOrigin )
+			- viewport->worldToRasterSpace( dragData.worldOrigin ) ).normalized()
+			* V2f( 1.f, -1.f ) // Y is positive down in raster space, flip the Y direction
 		;
 
 		m_drag = LinearDrag(
 			gadget,
-			rasterLine,
+			rasterRotationDirection,
 			dragBeginEvent,
 			m_processModifiers
 		);
@@ -603,7 +591,7 @@ Handle::AngularDrag::AngularDrag( const Gadget *gadget, const Imath::V3f &origin
 	else
 	{
 		// Disable modifier processing as we'll do our own precision mode in angle space
-		m_drag = PlanarDrag( gadget, origin, planeAxis0, axis1, dragBeginEvent, false );
+		m_drag = PlanarDrag( gadget, origin, axis0, axis90, dragBeginEvent, false );
 		m_dragBeginRotation = closestRotation( std::get<PlanarDrag>( m_drag ).startPosition(), m_rotation );
 	}
 
@@ -612,14 +600,14 @@ Handle::AngularDrag::AngularDrag( const Gadget *gadget, const Imath::V3f &origin
 }
 
 
+const Imath::V3f &Handle::AngularDrag::normal() const
+{
+	return m_normal;
+}
+
 const Imath::V3f &Handle::AngularDrag::axis0() const
 {
 	return m_axis0;
-}
-
-const Imath::V3f &Handle::AngularDrag::axis1() const
-{
-	return m_axis1;
 }
 
 float Handle::AngularDrag::startRotation() const
