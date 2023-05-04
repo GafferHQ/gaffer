@@ -80,7 +80,7 @@ class NodeGadgetWrapper : public GadgetWrapper<WrappedType>
 						);
 					}
 				}
-				catch( const boost::python::error_already_set &e )
+				catch( const boost::python::error_already_set & )
 				{
 					IECorePython::ExceptionAlgo::translatePythonException();
 				}
@@ -109,7 +109,7 @@ class NodeGadgetWrapper : public GadgetWrapper<WrappedType>
 						);
 					}
 				}
-				catch( const boost::python::error_already_set &e )
+				catch( const boost::python::error_already_set & )
 				{
 					IECorePython::ExceptionAlgo::translatePythonException();
 				}

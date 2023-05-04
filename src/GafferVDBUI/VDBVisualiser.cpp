@@ -134,8 +134,8 @@ private:
 		openvdb::Index64 count = openvdb::points::pointCount( pointsGrid->tree() );
 
 		IECore::V3fVectorDataPtr pointData = new IECore::V3fVectorData();
-		auto &points = pointData->writable();
-		points.reserve( count );
+		auto &pts = pointData->writable();
+		pts.reserve( count );
 
 		for (auto leafIter = pointsGrid->tree().cbeginLeaf(); leafIter; ++leafIter) {
 			const openvdb::points::AttributeArray& array =  leafIter->constAttributeArray("P");
@@ -146,7 +146,7 @@ private:
 				openvdb::Vec3f voxelPosition = positionHandle.get( *indexIter );
 				const openvdb::Vec3d xyz = indexIter.getCoord().asVec3d();
 				openvdb::Vec3f worldPosition =  pointsGrid->transform().indexToWorld( voxelPosition + xyz );
-				points.push_back( Imath::Vec3<float>( worldPosition[0], worldPosition[1], worldPosition[2] ) );
+				pts.push_back( Imath::Vec3<float>( worldPosition[0], worldPosition[1], worldPosition[2] ) );
 			}
 		}
 

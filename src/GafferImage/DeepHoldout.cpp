@@ -266,7 +266,6 @@ IECore::ConstFloatVectorDataPtr DeepHoldout::computeChannelData( const std::stri
 {
 	if( parent == intermediateInPlug() )
 	{
-		const std::string &channelName = context->get<std::string>( ImagePlug::channelNameContextName );
 		if( channelName == g_premultipliedAverageZName )
 		{
 			ImagePlug::ChannelDataScope channelScope( context );

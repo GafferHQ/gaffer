@@ -337,7 +337,6 @@ IECore::ConstFloatVectorDataPtr CopyChannels::computeChannelData( const std::str
 	if( const IntData *i = mapping->member<const IntData>( channelName ) )
 	{
 		const ImagePlug *inputImage = inPlugs()->getChild<ImagePlug>( i->readable() );
-		const V2i tileOrigin = context->get<V2i>( ImagePlug::tileOriginContextName );
 		const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
 
 		if( !ImageAlgo::viewIsValid( context, inputImage->viewNames()->readable() ) )

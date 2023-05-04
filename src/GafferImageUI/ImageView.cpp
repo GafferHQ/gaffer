@@ -1821,7 +1821,7 @@ void ImageView::setContext( Gaffer::ContextPtr context )
 
 void ImageView::contextChanged( const IECore::InternedString &name )
 {
-	for( auto &[name, displayTransform] : m_displayTransforms )
+	for( auto &[displayName, displayTransform] : m_displayTransforms )
 	{
 		// The values on the OpenColorIOTransform node can contain
 		// context variable substitutions.

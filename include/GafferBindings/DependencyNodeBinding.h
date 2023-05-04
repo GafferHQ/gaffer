@@ -113,7 +113,7 @@ class DependencyNodeWrapper : public NodeWrapper<WrappedType>, public Dependency
 						return;
 					}
 				}
-				catch( const boost::python::error_already_set &e )
+				catch( const boost::python::error_already_set & )
 				{
 					IECorePython::ExceptionAlgo::translatePythonException();
 				}
@@ -134,7 +134,7 @@ class DependencyNodeWrapper : public NodeWrapper<WrappedType>, public Dependency
 						return boost::python::extract<Gaffer::BoolPlug *>( f() );
 					}
 				}
-				catch( const boost::python::error_already_set &e )
+				catch( const boost::python::error_already_set & )
 				{
 					IECorePython::ExceptionAlgo::translatePythonException();
 				}
@@ -164,7 +164,7 @@ class DependencyNodeWrapper : public NodeWrapper<WrappedType>, public Dependency
 						return value.get();
 					}
 				}
-				catch( const boost::python::error_already_set &e )
+				catch( const boost::python::error_already_set & )
 				{
 					IECorePython::ExceptionAlgo::translatePythonException();
 				}

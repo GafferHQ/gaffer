@@ -75,7 +75,18 @@ struct OpAtop
 };
 struct OpDivide
 {
+// MSVC warns that the following lines could result in a division by zero.
+// (incorrectly marking the `for()` loop start as the problem line)
+// Ideally this would be fixed by changing `OpDivide`, but it's not clear
+// if it should return zero or infinity when dividing by zero. For now
+// we retain the current behavior and disable the warning.
+#ifdef _MSC_VER
+#pragma warning( disable: 4723 )
+#endif
 	static float operate( float A, float B, float a, float b){ return A / B; }
+#ifdef _MSC_VER
+#pragma warning( default: 4723 )
+#endif
 	static const SingleInputMode onlyA = Operate;
 	static const SingleInputMode onlyB = Black;
 };

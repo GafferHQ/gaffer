@@ -180,7 +180,7 @@ class PathColumnWrapper : public IECorePython::RefCountedWrapper<PathColumn>
 						);
 					}
 				}
-				catch( const error_already_set &e )
+				catch( const error_already_set & )
 				{
 					IECorePython::ExceptionAlgo::translatePythonException();
 				}
@@ -204,7 +204,7 @@ class PathColumnWrapper : public IECorePython::RefCountedWrapper<PathColumn>
 						);
 					}
 				}
-				catch( const error_already_set &e )
+				catch( const error_already_set & )
 				{
 					IECorePython::ExceptionAlgo::translatePythonException();
 				}
@@ -268,7 +268,7 @@ struct ChangedSignalSlotCaller
 		{
 			slot( c );
 		}
-		catch( const error_already_set &e )
+		catch( const error_already_set & )
 		{
 			IECorePython::ExceptionAlgo::translatePythonException();
 		}
@@ -297,7 +297,7 @@ struct ButtonSignalSlotCaller
 			// PathListingWidget, so they have full access to everything.
 			return slot( PathPtr( &path ), static_cast<PathListingWidgetAccessor&>( widget ).widget(), event );
 		}
-		catch( const error_already_set &e )
+		catch( const error_already_set & )
 		{
 			IECorePython::ExceptionAlgo::translatePythonException();
 		}

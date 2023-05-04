@@ -66,7 +66,7 @@ struct UnaryPlugSlotCaller
 		{
 			slot( p );
 		}
-		catch( const error_already_set &e )
+		catch( const error_already_set & )
 		{
 			IECorePython::ExceptionAlgo::translatePythonException();
 		}
@@ -82,7 +82,7 @@ struct BinaryPlugSlotCaller
 		{
 			slot( p1, p2 );
 		}
-		catch( const error_already_set &e )
+		catch( const error_already_set & )
 		{
 			IECorePython::ExceptionAlgo::translatePythonException();
 		}
@@ -97,7 +97,7 @@ struct ErrorSlotCaller
 		{
 			slot( PlugPtr( const_cast<Plug *>( plug ) ), PlugPtr( const_cast<Plug *>( source ) ), error );
 		}
-		catch( const error_already_set &e )
+		catch( const error_already_set & )
 		{
 			ExceptionAlgo::translatePythonException();
 		}

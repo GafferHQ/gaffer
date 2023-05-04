@@ -178,7 +178,7 @@ BackgroundTask::BackgroundTask( const Plug *subject, const Function &function )
 				);
 				status = Errored;
 			}
-			catch( const IECore::Cancelled &e )
+			catch( const IECore::Cancelled & )
 			{
 				// No need to do anything
 				status = Cancelled;

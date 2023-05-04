@@ -81,7 +81,7 @@ class GadgetWrapper : public GafferBindings::GraphComponentWrapper<WrappedType>
 						return;
 					}
 				}
-				catch( const boost::python::error_already_set &e )
+				catch( const boost::python::error_already_set & )
 				{
 					IECorePython::ExceptionAlgo::translatePythonException();
 				}
@@ -102,7 +102,7 @@ class GadgetWrapper : public GafferBindings::GraphComponentWrapper<WrappedType>
 						return boost::python::extract<Imath::Box3f>( f() );
 					}
 				}
-				catch( const boost::python::error_already_set &e )
+				catch( const boost::python::error_already_set & )
 				{
 					IECorePython::ExceptionAlgo::translatePythonException();
 				}
@@ -123,7 +123,7 @@ class GadgetWrapper : public GafferBindings::GraphComponentWrapper<WrappedType>
 						return boost::python::extract<std::string>( f( line ) );
 					}
 				}
-				catch( const boost::python::error_already_set &e )
+				catch( const boost::python::error_already_set & )
 				{
 					IECorePython::ExceptionAlgo::translatePythonException();
 				}
@@ -145,7 +145,7 @@ class GadgetWrapper : public GafferBindings::GraphComponentWrapper<WrappedType>
 						return;
 					}
 				}
-				catch( const boost::python::error_already_set &e )
+				catch( const boost::python::error_already_set & )
 				{
 					IECorePython::ExceptionAlgo::translatePythonException();
 				}
@@ -167,7 +167,7 @@ class GadgetWrapper : public GafferBindings::GraphComponentWrapper<WrappedType>
 						return;
 					}
 				}
-				catch( const boost::python::error_already_set &e )
+				catch( const boost::python::error_already_set & )
 				{
 					IECorePython::ExceptionAlgo::translatePythonException();
 				}
@@ -188,7 +188,7 @@ class GadgetWrapper : public GafferBindings::GraphComponentWrapper<WrappedType>
 						return boost::python::extract<unsigned>( f() );
 					}
 				}
-				catch( const boost::python::error_already_set &e )
+				catch( const boost::python::error_already_set & )
 				{
 					IECorePython::ExceptionAlgo::translatePythonException();
 				}
@@ -209,7 +209,7 @@ class GadgetWrapper : public GafferBindings::GraphComponentWrapper<WrappedType>
 						return boost::python::extract<Imath::Box3f>( f() );
 					}
 				}
-				catch( const boost::python::error_already_set &e )
+				catch( const boost::python::error_already_set & )
 				{
 					IECorePython::ExceptionAlgo::translatePythonException();
 				}

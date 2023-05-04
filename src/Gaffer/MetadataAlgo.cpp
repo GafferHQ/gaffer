@@ -330,12 +330,8 @@ void setNumericBookmark( ScriptNode *scriptNode, int bookmark, Node *node )
 Node *getNumericBookmark( ScriptNode *scriptNode, int bookmark )
 {
 	// Return the first valid one we find. There should only ever be just one valid matching node.
-	for( Node *nodeWithMetadata : Metadata::nodesWithMetadata( scriptNode, numericBookmarkMetadataName( bookmark ), /* instanceOnly = */ true ) )
-	{
-		return nodeWithMetadata;
-	}
-
-	return nullptr;
+	std::vector<Node *> nodes = Metadata::nodesWithMetadata( scriptNode, numericBookmarkMetadataName( bookmark ), /* instanceOnly = */ true );
+	return !nodes.empty() ? nodes.front() : nullptr;
 }
 
 int numericBookmark( const Node *node )

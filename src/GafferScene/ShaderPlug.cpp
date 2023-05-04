@@ -98,7 +98,6 @@ bool isParameterType( const Plug *plug )
 			// to GafferScene anyway.
 			return plug->isInstanceOf( "GafferOSL::ClosurePlug" );
 	}
-	return false;
 }
 
 } // namespace

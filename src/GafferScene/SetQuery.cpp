@@ -478,6 +478,4 @@ IECore::ConstObjectPtr SetQuery::computeMatchesInternal( const Gaffer::Context *
 
 		return new MatchesData( matchesData, std::move( descendantMatches ), parentMatches->inherit );
 	}
-
-	return nullptr;
 }
