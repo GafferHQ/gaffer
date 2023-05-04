@@ -184,6 +184,7 @@ from . import MeshSegmentsUI
 from . import ImageToPointsUI
 from . import MeshSplitUI
 from . import FramingConstraintUI
+from . import MeshNormalsUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.

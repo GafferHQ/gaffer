@@ -175,6 +175,7 @@ enum TypeId
 	VisibleSetDataTypeId = 110631,
 	MeshSplitTypeId = 110632,
 	FramingConstraintTypeId = 110633,
+	MeshNormalsTypeId = 110634,
 
 	PreviewPlaceholderTypeId = 110647,
 	PreviewGeometryTypeId = 110648,
