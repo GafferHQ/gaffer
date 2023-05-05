@@ -51,6 +51,9 @@ def __renderingSummary( plug ) :
 			"Order {}".format( Gaffer.NodeAlgo.currentPreset( plug["bucketOrder"]["value"] ) )
 		)
 
+	if plug["renderAtLowPriority"]["enabled"].getValue() :
+		info.append( "Low Priority {}".format( "On" if plug["renderAtLowPriority"]["value"].getValue() else "Off" ) )
+
 	return ", ".join( info )
 
 def __qualitySummary( plug ) :
@@ -60,8 +63,36 @@ def __qualitySummary( plug ) :
 	if plug["oversampling"]["enabled"].getValue() :
 		info.append( "Oversampling {}".format( plug["oversampling"]["value"].getValue() ) )
 
-	if plug["shadingSamples"]["enabled"].getValue() :
-		info.append( "Shading Samples {}".format( plug["shadingSamples"]["value"].getValue() ) )
+	for samples in ( "shading", "volume" ) :
+		childName = samples + "Samples"
+		if plug[childName]["enabled"].getValue() :
+			info.append( "{} Samples {}".format( samples.capitalize(), plug[childName]["value"].getValue() ) )
+
+	if plug["clampIndirect"]["enabled"].getValue() :
+		info.append( "Clamp Indirect {}".format( plug["clampIndirect"]["value"].getValue() ) )
+
+	return ", ".join( info )
+
+def __featuresSummary( plug ) :
+
+	info = []
+
+	for show in ( "Displacement", "Subsurface" ) :
+		childName = "show" + show
+		if plug[childName]["enabled"].getValue() :
+			info.append( "Show {} {}".format( show, "On" if plug[childName]["value"].getValue() else "Off" ) )
+
+	return ", ".join( info )
+
+def __statisticsSummary( plug ) :
+
+	info = []
+
+	if plug["showProgress"]["enabled"].getValue() :
+		info.append( "Progress {}".format( "On" if plug["showProgress"]["value"].getValue() else "Off" ) )
+
+	if plug["statisticsFileName"]["enabled"].getValue() :
+		info.append( "Stats File: {}".format( plug["statisticsFileName"]["value"].getValue() ) )
 
 	return ", ".join( info )
 
@@ -69,11 +100,24 @@ def __rayDepthSummary( plug ) :
 
 	info = []
 
-	for rayType in ( "Diffuse", "Hair", "Reflection", "Refraction" ) :
+	for rayType in ( "Diffuse", "Hair", "Reflection", "Refraction", "Volume" ) :
 		childName = "maximumRayDepth" + rayType
 		if plug[childName]["enabled"].getValue() :
 			info.append(
 				"{} {}".format( rayType, plug[childName]["value"].getValue() )
+			)
+
+	return ", ".join( info )
+
+def __rayLengthSummary( plug ) :
+
+	info = []
+
+	for rayLength in ( "Diffuse", "Hair", "Reflection", "Refraction", "Specular", "Volume" ) :
+		childName = "maximumRayLength" + rayLength
+		if plug[childName]["enabled"].getValue() :
+			info.append(
+				"{} {}".format( rayLength, plug[childName]["value"].getValue() )
 			)
 
 	return ", ".join( info )
@@ -126,7 +170,10 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section:Rendering:summary", __renderingSummary,
 			"layout:section:Quality:summary", __qualitySummary,
+			"layout:section:Features:summary", __featuresSummary,
+			"layout:section:Statistics:summary", __statisticsSummary,
 			"layout:section:Ray Depth:summary", __rayDepthSummary,
+			"layout:section:Ray Length:summary", __rayLengthSummary,
 			"layout:section:Texturing:summary", __texturingSummary,
 			"layout:section:Network Cache:summary", __networkCacheSummary,
 			"layout:section:Licensing:summary", __licensingSummary,
@@ -177,6 +224,19 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"options.renderAtLowPriority" : [
+
+			"description",
+			"""
+			Causes 3Delight to render at a lower thread priority. This
+			can make other applications running at the same time more
+			responsive.
+			""",
+
+			"layout:section", "Rendering",
+
+		],
+
 		# Quality
 
 		"options.oversampling" : [
@@ -203,6 +263,108 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"layout:section", "Quality",
+
+		],
+
+		"options.volumeSamples" : [
+
+			"description",
+			"""
+			The number of samples to take when evaluating volumes.
+			""",
+
+			"layout:section", "Quality",
+
+		],
+
+		"options.clampIndirect" : [
+
+			"description",
+			"""
+			The maximum value to clamp indirect light rays to.
+			""",
+
+			"layout:section", "Quality",
+
+		],
+
+		# Features
+
+		"options.showDisplacement" : [
+
+			"description",
+			"""
+			Enables or disables displacement in the entire scene.
+			""",
+
+			"layout:section", "Features",
+
+		],
+
+		"options.showSubsurface" : [
+
+			"description",
+			"""
+			Enables or disables subsurface shading in the entire scene.
+			""",
+
+			"layout:section", "Features",
+
+		],
+
+		"options.showAtmosphere" : [
+
+			"description",
+			"""
+			Enables or disables atmosphere shading in the entire scene.
+			""",
+
+			"layout:section", "Features",
+
+		],
+
+		"options.showMultipleScattering" : [
+
+			"description",
+			"""
+			Enables or disables multiple scattering shading in the entire scene.
+			""",
+
+			"layout:section", "Features",
+
+		],
+
+		# Statistics
+
+		"options.showProgress" : [
+
+			"description",
+			"""
+			Causes the percentage of pixels rendered to be output
+			during rendering.
+			""",
+
+			"layout:section", "Statistics",
+
+		],
+
+		"options.statisticsFileName" : [
+
+			"description",
+			"""
+			The path to the file where render statistics will be written.
+			Using an empty value will output statistics to the terminal.
+			A value of \"null\" will disable statistics output.
+			""",
+
+			"layout:section", "Statistics",
+
+		],
+
+		"options.statisticsFileName.value" : [
+
+			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
+			"path:leaf", True,
 
 		],
 
@@ -261,6 +423,100 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Ray Depth",
 			"label", "Refraction",
+
+		],
+
+		"options.maximumRayDepthVolume" : [
+
+			"description",
+			"""
+			The maximum bounce depth a volume ray can reach.
+			""",
+
+			"layout:section", "Ray Depth",
+			"label", "Volume",
+
+		],
+
+		# Ray Length
+
+		"options.maximumRayLengthDiffuse" : [
+
+			"description",
+			"""
+			The maximum distance a ray emitted from a diffuse material
+			can travel. Using a relatively low value may improve performance
+			without significant image effects by limiting the effect of global
+			illumination. Setting it to a negative value disables the limit.
+			""",
+
+			"layout:section", "Ray Length",
+			"label", "Diffuse",
+
+		],
+
+		"options.maximumRayLengthHair" : [
+
+			"description",
+			"""
+			The maximum distance a ray emitted from a hair shader can travel.
+			Setting it to a negative value disables the limit.
+			""",
+
+			"layout:section", "Ray Length",
+			"label", "Hair",
+
+		],
+
+		"options.maximumRayLengthReflection" : [
+
+			"description",
+			"""
+			The maximum distance a reflection ray can travel.
+			Setting it to a negative value disables the limit.
+			""",
+
+			"layout:section", "Ray Length",
+			"label", "Reflection",
+
+		],
+
+		"options.maximumRayLengthRefraction" : [
+
+			"description",
+			"""
+			The maximum distance a refraction ray can travel.
+			Setting it to a negative value disables the limit.
+			""",
+
+			"layout:section", "Ray Length",
+			"label", "Refraction",
+
+		],
+
+		"options.maximumRayLengthSpecular" : [
+
+			"description",
+			"""
+			The maximum distance a specular ray can travel.
+			Setting it to a negative value disables the limit.
+			""",
+
+			"layout:section", "Ray Length",
+			"label", "Specular",
+
+		],
+
+		"options.maximumRayLengthVolume" : [
+
+			"description",
+			"""
+			The maximum distance a volume ray can travel.
+			Setting it to a negative value disables the limit.
+			""",
+
+			"layout:section", "Ray Length",
+			"label", "Volume",
 
 		],
 

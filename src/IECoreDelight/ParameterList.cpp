@@ -163,6 +163,11 @@ NSIParam_t ParameterList::parameter( const char *name, const IECore::Data *value
 			result.data = static_cast<const FloatData *>( value )->baseReadable();
 			result.count = 1;
 			break;
+		case DoubleDataTypeId :
+			result.type = NSITypeDouble;
+			result.data = static_cast<const DoubleData *>( value )->baseReadable();
+			result.count = 1;
+			break;
 		case V2fDataTypeId :
 			result.type = NSITypeFloat;
 			result.arraylength = 2;
