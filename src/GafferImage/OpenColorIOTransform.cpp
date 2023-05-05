@@ -242,6 +242,13 @@ OCIO_NAMESPACE::ConstContextRcPtr OpenColorIOTransform::ocioContext( OCIO_NAMESP
 
 void OpenColorIOTransform::processColorData( const Gaffer::Context *context, IECore::FloatVectorData *r, IECore::FloatVectorData *g, IECore::FloatVectorData *b ) const
 {
+	if( !r->readable().size() )
+	{
+		// Deep image with no samples. OCIO will throw if we give it an empty
+		// PlanarImageDesc.
+		return;
+	}
+
 	OCIO_NAMESPACE::ConstProcessorRcPtr processor;
 	{
 		ImagePlug::GlobalScope c( context );
