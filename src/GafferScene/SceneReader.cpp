@@ -210,10 +210,15 @@ void SceneReader::hashBound( const ScenePath &path, const Gaffer::Context *conte
 	else
 	{
 		// Deliberately not using `childBoundsPlug()->hash()`
-		// here because `fileName/path` uniquely identifies the
-		// result, and is quicker to compute.
-		fileNamePlug()->hash( h );
-		h.append( &path.front(), path.size() );
+		// here because `HierarchyHash` also uniquely identifies the
+		// result, and is quicker to compute (at least in all current
+		// SceneInterface implementations). In current implementations,
+		// `HierarchyHash` is equivalent to hashing `fileName` and `path`
+		// but with one big improvement : USDScene and LinkedScene can
+		// account for scenegraph instancing and save us from repeating
+		// the bounding box computation for _every_ instance. This is
+		// a _big_ performance win for complex scenes.
+		s->hash( SceneInterface::HierarchyHash, context->getTime(), h );
 	}
 
 	if( path.size() == 0 )

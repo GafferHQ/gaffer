@@ -1,6 +1,11 @@
 1.2.x.x (relative to 1.2.4.0)
 =======
 
+Improvements
+------------
+
+- SceneReader : Improved performance when computing bounds for complex USD stages containing scenegraph instancing.
+
 1.2.4.0 (relative to 1.2.3.0)
 =======
 

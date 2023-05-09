@@ -39,10 +39,13 @@ import unittest
 import inspect
 import imath
 
+import pxr
+
 import IECore
 import IECoreScene
 
 import Gaffer
+import GafferTest
 import GafferScene
 import GafferSceneTest
 
@@ -666,6 +669,47 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 			for setName in writer["in"].setNames() :
 				self.assertIn( setName, reader["out"].setNames() )
 				self.assertEqual( reader["out"].set( setName ), writer["in"].set( setName ) )
+
+	def __createInstancedComposition( self, numInstances, numInstanceChildren ) :
+
+		instanceFileName = self.temporaryDirectory() / "instance.usd"
+		stage = pxr.Usd.Stage.CreateNew( str( instanceFileName ) )
+		pxr.UsdGeom.Xform.Define( stage, "/root/group" )
+		for i in range( 0, numInstanceChildren ) :
+			pxr.UsdGeom.Sphere.Define( stage, f"/root/group/sphere{i}" )
+		stage.GetRootLayer().Save()
+		del stage
+
+		compositionFileName = self.temporaryDirectory() / "composition.usd"
+		stage = pxr.Usd.Stage.CreateNew( str( compositionFileName ) )
+		for i in range( 0, numInstances ) :
+			instance = stage.DefinePrim( f"/instance{i}" )
+			instance.GetReferences().AddReference( str( instanceFileName ), "/root" )
+			instance.SetInstanceable( True )
+		stage.GetRootLayer().Save()
+
+		return compositionFileName
+
+	def testUSDInstanceBoundsHash( self ) :
+
+		sceneReader = GafferScene.SceneReader()
+		sceneReader["fileName"].setValue( self.__createInstancedComposition( 2, 10 ) )
+
+		# We want the hash for the bounds to be shared between instances, so
+		# that we can avoid repeated redundant computations.
+		self.assertEqual(
+			sceneReader["out"].boundHash( "/instance0/group" ),
+			sceneReader["out"].boundHash( "/instance1/group" )
+		)
+
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 1 )
+	def testUSDInstanceBoundsPerformance( self ) :
+
+		sceneReader = GafferScene.SceneReader()
+		sceneReader["fileName"].setValue( self.__createInstancedComposition( 1000, 100 ) )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			sceneReader["out"].bound( "/" )
 
 if __name__ == "__main__":
 	unittest.main()
