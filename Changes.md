@@ -9,7 +9,15 @@ Improvements
 Fixes
 -----
 
-- SceneReader : Fixed rounding errors which could cause the wrong sample to be read from a USD file. This was particularly noticeable for non-interpolable attributes such as visibility.
+- SceneReader :
+  - Fixed rounding errors which could cause the wrong sample to be read from a USD file. This was particularly noticeable for non-interpolable attributes such as visibility.
+  - Fixed transforms loaded from USD files using the `UsdGeomXformable::ResetXformStack` operator.
+- SceneWriter : The UsdShadeMaterialBindingAPI schema is now applied to all prims with material bindings, making the written files compatible with `USD_SHADE_MATERIAL_BINDING_API_CHECK=strict` mode.
+
+Build
+-----
+
+- Cortex : Updated to version 10.4.7.1.
 
 1.2.4.0 (relative to 1.2.3.0)
 =======
