@@ -50,6 +50,8 @@
 #include "openvdb/openvdb.h"
 #include "openvdb/tools/ParticlesToLevelSet.h"
 
+#include "fmt/format.h"
+
 using namespace std;
 using namespace Imath;
 using namespace IECore;
@@ -313,8 +315,10 @@ IECore::ConstObjectPtr PointsToLevelSet::computeProcessedObject( const ScenePath
 	{
 		IECore::msg(
 			IECore::Msg::Warning, relativeName( scriptNode() ),
-			boost::format( "%1% points from \"%2%\" were ignored because they were too small" )
-				% particlesToLevelSet.getMinCount() % ScenePlug::pathToString( path )
+			fmt::format(
+				"{} points from \"{}\" were ignored because they were too small",
+				particlesToLevelSet.getMinCount(), ScenePlug::pathToString( path )
+			)
 		);
 	}
 
