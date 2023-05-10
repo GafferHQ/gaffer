@@ -92,6 +92,29 @@ bool shouldEmulateDefaultLightsSet( const IECoreScene::SceneInterface *scene, co
 	;
 }
 
+double timeAsDouble( const Context *context )
+{
+	// The SceneInterface expects time as a `double` in seconds, but Gaffer's
+	// primary representation is a `float` frame number. We need to take care
+	// with this conversion, particularly with respect to USDScene and USD's own
+	// representation for time.
+	//
+	// USD uses `double` UsdTimeCode values to store time, with an arbitrary
+	// mapping between timecode, frames and seconds being specified by the
+	// `framesPerSecond` and `timeCodesPerSecond` stage metadata (also
+	// `double`). One common setup is to set `timeCodesPerSecond ==
+	// framesPerSecond` so that timecodes are equivalent to frame numbers. In
+	// this case we should be able to do an exact mapping from Gaffer's frame
+	// number to USD's timecode, by converting to seconds here and then multiplying
+	// by `timeCodesPerSecond` inside the USDScene implementation. But this is
+	// only lossless if we perform the division here at double precision, rather
+	// than use `Context::getTime()` which operates only with float precision.
+	//
+	/// \todo Reconsider Gaffer's time representation. Perhaps we should simply
+	/// move to `double` for storing `frame` and `framesPerSecond`?
+	return static_cast<double>( context->getFrame() ) / static_cast<double>( context->getFramesPerSecond() );
+}
+
 } // namespace
 
 SceneReader::SceneReader( const std::string &name )
@@ -205,7 +228,7 @@ void SceneReader::hashBound( const ScenePath &path, const Gaffer::Context *conte
 
 	if( s->hasBound() )
 	{
-		s->hash( SceneInterface::BoundHash, context->getTime(), h );
+		s->hash( SceneInterface::BoundHash, timeAsDouble( context ), h );
 	}
 	else
 	{
@@ -238,7 +261,7 @@ Imath::Box3f SceneReader::computeBound( const ScenePath &path, const Gaffer::Con
 	Box3f result;
 	if( s->hasBound() )
 	{
-		const Box3d b = s->readBound( context->getTime() );
+		const Box3d b = s->readBound( timeAsDouble( context ) );
 		if( b.isEmpty() )
 		{
 			return Box3f();
@@ -269,7 +292,7 @@ void SceneReader::hashTransform( const ScenePath &path, const Gaffer::Context *c
 	}
 
 	refreshCountPlug()->hash( h );
-	s->hash( SceneInterface::TransformHash, context->getTime(), h );
+	s->hash( SceneInterface::TransformHash, timeAsDouble( context ), h );
 
 	if( path.size() == 1 )
 	{
@@ -285,7 +308,7 @@ Imath::M44f SceneReader::computeTransform( const ScenePath &path, const Gaffer::
 		return M44f();
 	}
 
-	const M44d t = s->readTransformAsMatrix( context->getTime() );
+	const M44d t = s->readTransformAsMatrix( timeAsDouble( context ) );
 	M44f result = M44f(
 		t[0][0], t[0][1], t[0][2], t[0][3],
 		t[1][0], t[1][1], t[1][2], t[1][3],
@@ -312,7 +335,7 @@ void SceneReader::hashAttributes( const ScenePath &path, const Gaffer::Context *
 	SceneNode::hashAttributes( path, context, parent, h );
 
 	refreshCountPlug()->hash( h );
-	s->hash( SceneInterface::AttributesHash, context->getTime(), h );
+	s->hash( SceneInterface::AttributesHash, timeAsDouble( context ), h );
 }
 
 IECore::ConstCompoundObjectPtr SceneReader::computeAttributes( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
@@ -341,7 +364,7 @@ IECore::ConstCompoundObjectPtr SceneReader::computeAttributes( const ScenePath &
 			continue;
 		}
 
-		ConstObjectPtr attribute = s->readAttribute( *it, context->getTime() );
+		ConstObjectPtr attribute = s->readAttribute( *it, timeAsDouble( context ) );
 		if( attribute )
 		{
 			// The const cast is ok, because we're only using it to put the object into a CompoundObject that will
@@ -377,7 +400,7 @@ void SceneReader::hashObject( const ScenePath &path, const Gaffer::Context *cont
 	SceneNode::hashObject( path, context, parent, h );
 
 	refreshCountPlug()->hash( h );
-	s->hash( SceneInterface::ObjectHash, context->getTime(), h );
+	s->hash( SceneInterface::ObjectHash, timeAsDouble( context ), h );
 }
 
 IECore::ConstObjectPtr SceneReader::computeObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const
@@ -388,7 +411,7 @@ IECore::ConstObjectPtr SceneReader::computeObject( const ScenePath &path, const 
 		return parent->objectPlug()->defaultValue();
 	}
 
-	return s->readObject( context->getTime(), context->canceller() );
+	return s->readObject( timeAsDouble( context ), context->canceller() );
 }
 
 void SceneReader::hashChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
@@ -407,7 +430,7 @@ void SceneReader::hashChildNames( const ScenePath &path, const Gaffer::Context *
 	// append a hash of the tags plug, as restricting the tags can affect the hierarchy
 	tagsPlug()->hash( h );
 
-	s->hash( SceneInterface::ChildNamesHash, context->getTime(), h );
+	s->hash( SceneInterface::ChildNamesHash, timeAsDouble( context ), h );
 }
 
 IECore::ConstInternedStringVectorDataPtr SceneReader::computeChildNames( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent ) const

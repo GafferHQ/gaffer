@@ -38,6 +38,7 @@ import pathlib
 import unittest
 import inspect
 import imath
+import pxr
 
 import pxr
 
@@ -710,6 +711,40 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 
 		with GafferTest.TestRunner.PerformanceScope() :
 			sceneReader["out"].bound( "/" )
+
+	def testUSDTimeCodeAccuracy( self ) :
+
+		# Write a sample on all integer frames up to 100000.
+
+		fileName = self.temporaryDirectory() / "test.usda"
+		stage = pxr.Usd.Stage.CreateNew( str( fileName ) )
+		stage.SetTimeCodesPerSecond( 24 )
+		stage.SetFramesPerSecond( 24 )
+
+		sphere = pxr.UsdGeom.Sphere.Define( stage, "/sphere" )
+		visibility = sphere.CreateVisibilityAttr()
+
+		frames = range( 0, 100000 )
+		for frame in frames :
+			visibility.Set( "inherited" if frame % 2 else "invisible", frame )
+
+		stage.GetRootLayer().Save()
+
+		# Check that we can read every sample accurately. Any inaccuracy
+		# mapping from Gaffer's frame to USD timecode will put us on the wrong
+		# sample. We are deliberately testing with a non-interpolable type so
+		# that interpolation won't mask the problem by being _almost_ right.
+
+		sceneReader = GafferScene.SceneReader()
+		sceneReader["fileName"].setValue( fileName )
+
+		with Gaffer.Context() as c :
+			for frame in frames :
+				c.setFrame( frame )
+				self.assertEqual(
+					sceneReader["out"].attributes( "/sphere" )["scene:visible"].value,
+					True if frame % 2 else False
+				)
 
 if __name__ == "__main__":
 	unittest.main()

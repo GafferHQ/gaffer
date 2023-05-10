@@ -6,6 +6,11 @@ Improvements
 
 - SceneReader : Improved performance when computing bounds for complex USD stages containing scenegraph instancing.
 
+Fixes
+-----
+
+- SceneReader : Fixed rounding errors which could cause the wrong sample to be read from a USD file. This was particularly noticeable for non-interpolable attributes such as visibility.
+
 1.2.4.0 (relative to 1.2.3.0)
 =======
 
@@ -375,8 +380,16 @@ Build
   - YAML-CPP : Added version 0.7.0.
 - 3Delight : Updated to 3Delight version 2.9.17.
 
-1.1.9.x (relative to 1.1.9.5)
+1.1.9.x (relative to 1.1.9.6)
 =======
+
+1.1.9.6 (relative to 1.1.9.5)
+=======
+
+Fixes
+-----
+
+- SceneReader : Fixed rounding errors which could cause the wrong sample to be read from a USD file. This was particularly noticeable for non-interpolable attributes such as visibility.
 
 1.1.9.5 (relative to 1.1.9.4)
 =======
