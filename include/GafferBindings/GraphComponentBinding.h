@@ -124,7 +124,7 @@ class GraphComponentWrapper : public IECorePython::RunTimeTypedWrapper<WrappedTy
 						return;
 					}
 				}
-				catch( const boost::python::error_already_set &e )
+				catch( const boost::python::error_already_set & )
 				{
 					IECorePython::ExceptionAlgo::translatePythonException();
 				}
