@@ -1,6 +1,11 @@
 1.2.x.x (relative to 1.2.7.0)
 =======
 
+Improvements
+------------
+
+- EditScope : Hid the `BoxIn.name` and `BoxOut.name` plugs from the NodeEditor, since it is not editable and the name is _always_ `in` or `out` respectively.
+
 1.2.7.0 (relative to 1.2.6.0)
 =======
 

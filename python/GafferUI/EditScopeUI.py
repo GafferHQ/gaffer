@@ -98,7 +98,9 @@ Gaffer.Metadata.registerNode(
 # Disable editing of `EditScope.BoxIn` and `EditScope.BoxOut`
 
 Gaffer.Metadata.registerValue( Gaffer.EditScope, "BoxIn.name", "readOnly", True )
+Gaffer.Metadata.registerValue( Gaffer.EditScope, "BoxIn.name", "layout:visibilityActivator", False )
 Gaffer.Metadata.registerValue( Gaffer.EditScope, "BoxOut.name", "readOnly", True )
+Gaffer.Metadata.registerValue( Gaffer.EditScope, "BoxOut.name", "layout:visibilityActivator", False )
 Gaffer.Metadata.registerValue( Gaffer.BoxIn, "renameable", lambda node : not isinstance( node.parent(), Gaffer.EditScope ) or node.getName() != "BoxIn" )
 Gaffer.Metadata.registerValue( Gaffer.BoxOut, "renameable", lambda node : not isinstance( node.parent(), Gaffer.EditScope ) or node.getName() != "BoxOut" )
 
