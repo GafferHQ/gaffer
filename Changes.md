@@ -1,6 +1,11 @@
 1.1.9.x (relative to 1.1.9.5)
 =======
 
+Fixes
+-----
+
+- SceneReader : Fixed rounding errors which could cause the wrong sample to be read from a USD file. This was particularly noticeable for non-interpolable attributes such as visibility.
+
 1.1.9.5 (relative to 1.1.9.4)
 =======
 
