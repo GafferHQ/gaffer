@@ -275,7 +275,7 @@ struct NameChangedSlotCaller
 		{
 			slot( g, oldName.string() );
 		}
-		catch( const error_already_set &e )
+		catch( const error_already_set & )
 		{
 			IECorePython::ExceptionAlgo::translatePythonException();
 		}
