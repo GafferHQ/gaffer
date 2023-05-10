@@ -961,7 +961,8 @@ void StandardStyle::renderAnimationCurve( const std::vector< Imath::V2f > &verti
 
 	// set line stipple (dotted line) when not drawing curve in range of keys
 
-	GLint lineStippleRepeat, lineStipplePattern;
+	GLint lineStippleRepeat = 0;
+	GLint lineStipplePattern = 0;
 	const bool lineStipple = ( glIsEnabled( GL_LINE_STIPPLE ) == GL_TRUE );
 	if( ! inKeyRange && ! selectMode )
 	{

@@ -1724,10 +1724,6 @@ IECore::RunTimeTypedPtr ViewportGadget::dragBegin( GadgetPtr gadget, const DragD
 		// noone else will accept to make sure we keep the drag to ourself.
 		return IECore::NullObject::defaultNullObject();
 	}
-	else
-	{
-		return nullptr;
-	}
 
 	return nullptr;
 }

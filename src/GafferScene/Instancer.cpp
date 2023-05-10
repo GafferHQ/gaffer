@@ -583,7 +583,7 @@ class Instancer::EngineData : public Data
 				{
 					IECore::dispatch( v.primVar->data.get(), AccessPrototypeContextVariable(), v, index, scope );
 				}
-				catch( QuantizeException &e )
+				catch( QuantizeException & )
 				{
 					throw IECore::Exception( fmt::format( "Context variable \"{}\" : cannot quantize variable of type {}", index, v.primVar->data->typeName() ) );
 				}
@@ -611,7 +611,7 @@ class Instancer::EngineData : public Data
 			{
 				IECore::dispatch( v.primVar->data.get(), UniqueHashPrototypeContextVariable(), v, index, result );
 			}
-			catch( QuantizeException &e )
+			catch( QuantizeException & )
 			{
 				throw IECore::Exception( fmt::format( "Context variable \"{}\" : cannot quantize variable of type {}", index, v.primVar->data->typeName() ) );
 			}
@@ -1794,15 +1794,15 @@ Imath::Box3f Instancer::computeBranchBound( const ScenePath &sourcePath, const S
 			childBound = prototypesPlug()->boundPlug()->getValue();
 		}
 
-		using Iterator = vector<InternedString>::const_iterator;
-		using Range = blocked_range<Iterator>;
+		using ISIterator = vector<InternedString>::const_iterator;
+		using ISRange = blocked_range<ISIterator>;
 
 		task_group_context taskGroupContext( task_group_context::isolated );
 		return parallel_reduce(
-			Range( childNames.begin(), childNames.end() ),
+			ISRange( childNames.begin(), childNames.end() ),
 			Box3f(),
-			[ &e, &childBound, &childTransform ] ( const Range &r, Box3f u ) {
-				for( Iterator i = r.begin(); i != r.end(); ++i )
+			[ &e, &childBound, &childTransform ] ( const ISRange &r, Box3f u ) {
+				for( ISIterator i = r.begin(); i != r.end(); ++i )
 				{
 					const size_t pointIndex = e->pointIndex( *i );
 					const M44f m = childTransform * e->instanceTransform( pointIndex );

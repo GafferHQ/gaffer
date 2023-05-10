@@ -6,7 +6,7 @@ After you have installed Gaffer, it will remain a collection of files and direct
 > For these instructions, we will assume you have Gaffer installed to the `/opt/` directory. If you have installed it elsewhere, replace `/opt/` with the directory you installed it to.
 
 
-### Environment variables ###
+## Environment variables ##
 
 An environment variable is simply a value, such as a string, number, boolean, or location that your terminal is aware of. For instance, when you ran the `tar` command to extract the downloaded Gaffer package, the `tar` command was not located in your `~/Downloads` directory, but actually in `/usr/bin/`. Whenever you open your terminal, several folders are added to your terminal's `PATH` environment variable, which provides it with a list of locations in the file system from which it can source commands.
 

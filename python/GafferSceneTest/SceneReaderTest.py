@@ -38,11 +38,15 @@ import pathlib
 import unittest
 import inspect
 import imath
+import pxr
+
+import pxr
 
 import IECore
 import IECoreScene
 
 import Gaffer
+import GafferTest
 import GafferScene
 import GafferSceneTest
 
@@ -666,6 +670,81 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 			for setName in writer["in"].setNames() :
 				self.assertIn( setName, reader["out"].setNames() )
 				self.assertEqual( reader["out"].set( setName ), writer["in"].set( setName ) )
+
+	def __createInstancedComposition( self, numInstances, numInstanceChildren ) :
+
+		instanceFileName = self.temporaryDirectory() / "instance.usd"
+		stage = pxr.Usd.Stage.CreateNew( str( instanceFileName ) )
+		pxr.UsdGeom.Xform.Define( stage, "/root/group" )
+		for i in range( 0, numInstanceChildren ) :
+			pxr.UsdGeom.Sphere.Define( stage, f"/root/group/sphere{i}" )
+		stage.GetRootLayer().Save()
+		del stage
+
+		compositionFileName = self.temporaryDirectory() / "composition.usd"
+		stage = pxr.Usd.Stage.CreateNew( str( compositionFileName ) )
+		for i in range( 0, numInstances ) :
+			instance = stage.DefinePrim( f"/instance{i}" )
+			instance.GetReferences().AddReference( str( instanceFileName ), "/root" )
+			instance.SetInstanceable( True )
+		stage.GetRootLayer().Save()
+
+		return compositionFileName
+
+	def testUSDInstanceBoundsHash( self ) :
+
+		sceneReader = GafferScene.SceneReader()
+		sceneReader["fileName"].setValue( self.__createInstancedComposition( 2, 10 ) )
+
+		# We want the hash for the bounds to be shared between instances, so
+		# that we can avoid repeated redundant computations.
+		self.assertEqual(
+			sceneReader["out"].boundHash( "/instance0/group" ),
+			sceneReader["out"].boundHash( "/instance1/group" )
+		)
+
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 1 )
+	def testUSDInstanceBoundsPerformance( self ) :
+
+		sceneReader = GafferScene.SceneReader()
+		sceneReader["fileName"].setValue( self.__createInstancedComposition( 1000, 100 ) )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			sceneReader["out"].bound( "/" )
+
+	def testUSDTimeCodeAccuracy( self ) :
+
+		# Write a sample on all integer frames up to 100000.
+
+		fileName = self.temporaryDirectory() / "test.usda"
+		stage = pxr.Usd.Stage.CreateNew( str( fileName ) )
+		stage.SetTimeCodesPerSecond( 24 )
+		stage.SetFramesPerSecond( 24 )
+
+		sphere = pxr.UsdGeom.Sphere.Define( stage, "/sphere" )
+		visibility = sphere.CreateVisibilityAttr()
+
+		frames = range( 0, 100000 )
+		for frame in frames :
+			visibility.Set( "inherited" if frame % 2 else "invisible", frame )
+
+		stage.GetRootLayer().Save()
+
+		# Check that we can read every sample accurately. Any inaccuracy
+		# mapping from Gaffer's frame to USD timecode will put us on the wrong
+		# sample. We are deliberately testing with a non-interpolable type so
+		# that interpolation won't mask the problem by being _almost_ right.
+
+		sceneReader = GafferScene.SceneReader()
+		sceneReader["fileName"].setValue( fileName )
+
+		with Gaffer.Context() as c :
+			for frame in frames :
+				c.setFrame( frame )
+				self.assertEqual(
+					sceneReader["out"].attributes( "/sphere" )["scene:visible"].value,
+					True if frame % 2 else False
+				)
 
 if __name__ == "__main__":
 	unittest.main()

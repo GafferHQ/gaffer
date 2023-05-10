@@ -103,7 +103,7 @@ class PlugWrapper : public GraphComponentWrapper<WrappedType>
 						return f( Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( input ) ) );
 					}
 				}
-				catch( const boost::python::error_already_set &e )
+				catch( const boost::python::error_already_set & )
 				{
 					IECorePython::ExceptionAlgo::translatePythonException();
 				}
@@ -125,7 +125,7 @@ class PlugWrapper : public GraphComponentWrapper<WrappedType>
 						return;
 					}
 				}
-				catch( const boost::python::error_already_set &e )
+				catch( const boost::python::error_already_set & )
 				{
 					IECorePython::ExceptionAlgo::translatePythonException();
 				}
@@ -147,7 +147,7 @@ class PlugWrapper : public GraphComponentWrapper<WrappedType>
 						return result;
 					}
 				}
-				catch( const boost::python::error_already_set &e )
+				catch( const boost::python::error_already_set & )
 				{
 					IECorePython::ExceptionAlgo::translatePythonException();
 				}

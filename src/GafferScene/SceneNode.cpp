@@ -591,13 +591,13 @@ void SceneNode::hashChildBounds( const Gaffer::Context *context, const ScenePlug
 	}
 
 	const ThreadState &threadState = ThreadState::current();
-	using Range = blocked_range<size_t>;
+	using SizeRange = blocked_range<size_t>;
 	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
 
 	const IECore::MurmurHash reduction = parallel_deterministic_reduce(
-		Range( 0, childNames.size() ),
+		SizeRange( 0, childNames.size() ),
 		h,
-		[&] ( const Range &range, const MurmurHash &hash ) {
+		[&] ( const SizeRange &range, const MurmurHash &hash ) {
 
 			ScenePlug::PathScope pathScope( threadState );
 			auto childPath = context->get<ScenePath>( ScenePlug::scenePathContextName );
@@ -637,13 +637,13 @@ Imath::Box3f SceneNode::computeChildBounds( const Gaffer::Context *context, cons
 	}
 
 	const ThreadState &threadState = ThreadState::current();
-	using Range = blocked_range<size_t>;
+	using sizeRange = blocked_range<size_t>;
 	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
 
 	return tbb::parallel_reduce(
-		Range( 0, childNames.size() ),
+		sizeRange( 0, childNames.size() ),
 		Box3f(),
-		[&] ( const Range &range, const Box3f &bound ) {
+		[&] ( const sizeRange &range, const Box3f &bound ) {
 
 			ScenePlug::PathScope pathScope( threadState );
 			auto childPath = context->get<ScenePath>( ScenePlug::scenePathContextName );

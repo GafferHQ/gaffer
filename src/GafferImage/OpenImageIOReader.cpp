@@ -613,14 +613,14 @@ class File
 				}
 			}
 
-			for( int c = 0; c < nchannels; c++ )
+			for( int channelIdx = 0; channelIdx < nchannels; channelIdx++ )
 			{
 				for( int ty = batchFirstTile.y; ty < batchFirstTile.y + view.tileBatchSize.y; ty++ )
 				{
 					for( int tx = batchFirstTile.x; tx < batchFirstTile.x + view.tileBatchSize.x; tx++ )
 					{
 						V2i tileOffset = ImagePlug::tileSize() * V2i( tx, ty );
-						int subIndex = tileBatchSubIndex( view, c, tileOffset );
+						int subIndex = tileBatchSubIndex( view, channelIdx, tileOffset );
 
 						Box2i tileRelativeFileRegion( fileDataRegion.min - tileOffset, fileDataRegion.max - tileOffset );
 						Box2i tileRegion = BufferAlgo::intersection(
@@ -661,7 +661,7 @@ class File
 								int scanline = fileDataRegion.size().y - 1 - (y - tileRelativeFileRegion.min.y);
 								float *dataIndex = &fileData[
 									( scanline * fileDataRegion.size().x + tileRegion.min.x - tileRelativeFileRegion.min.x
-									) * nchannels + c
+									) * nchannels + channelIdx
 								];
 								for( int x = tileRegion.min.x; x < tileRegion.max.x; x++ )
 								{
@@ -693,7 +693,7 @@ class File
 									int s = fileDeepData.samples( dataIndex );
 									for( int i = 0; i < s; i++ )
 									{
-										*tileIndex = fileDeepData.deep_value( dataIndex, c, i );
+										*tileIndex = fileDeepData.deep_value( dataIndex, channelIdx, i );
 										tileIndex++;
 									}
 									dataIndex++;
@@ -942,13 +942,13 @@ class File
 			{
 				return *m_views.at( viewName );
 			}
-			catch( const std::out_of_range &e )
+			catch( const std::out_of_range & )
 			{
 				try
 				{
 					return *m_views.at( ImagePlug::defaultViewName );
 				}
-				catch( const std::out_of_range &e )
+				catch( const std::out_of_range & )
 				{
 				}
 			}

@@ -82,7 +82,7 @@ class ConnectionCreatorWrapper : public GafferUIBindings::GadgetWrapper<WrappedT
 					{
 						return f( Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( endpoint ) ) );
 					}
-					catch( const boost::python::error_already_set &e )
+					catch( const boost::python::error_already_set & )
 					{
 						IECorePython::ExceptionAlgo::translatePythonException();
 					}
@@ -104,7 +104,7 @@ class ConnectionCreatorWrapper : public GafferUIBindings::GadgetWrapper<WrappedT
 						f( position, tangent );
 						return;
 					}
-					catch( const boost::python::error_already_set &e )
+					catch( const boost::python::error_already_set & )
 					{
 						IECorePython::ExceptionAlgo::translatePythonException();
 					}
@@ -135,7 +135,7 @@ class ConnectionCreatorWrapper : public GafferUIBindings::GadgetWrapper<WrappedT
 						f( Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( endpoint ) ) );
 						return;
 					}
-					catch( const boost::python::error_already_set &e )
+					catch( const boost::python::error_already_set & )
 					{
 						IECorePython::ExceptionAlgo::translatePythonException();
 					}

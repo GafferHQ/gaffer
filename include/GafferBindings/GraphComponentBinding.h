@@ -81,7 +81,7 @@ class GraphComponentWrapper : public IECorePython::RunTimeTypedWrapper<WrappedTy
 						return f( Gaffer::GraphComponentPtr( const_cast<Gaffer::GraphComponent *>( potentialChild ) ) );
 					}
 				}
-				catch( const boost::python::error_already_set &e )
+				catch( const boost::python::error_already_set & )
 				{
 					IECorePython::ExceptionAlgo::translatePythonException();
 				}
@@ -102,7 +102,7 @@ class GraphComponentWrapper : public IECorePython::RunTimeTypedWrapper<WrappedTy
 						return f( Gaffer::GraphComponentPtr( const_cast<Gaffer::GraphComponent *>( potentialParent ) ) );
 					}
 				}
-				catch( const boost::python::error_already_set &e )
+				catch( const boost::python::error_already_set & )
 				{
 					IECorePython::ExceptionAlgo::translatePythonException();
 				}
@@ -146,7 +146,7 @@ class GraphComponentWrapper : public IECorePython::RunTimeTypedWrapper<WrappedTy
 						return;
 					}
 				}
-				catch( const boost::python::error_already_set &e )
+				catch( const boost::python::error_already_set & )
 				{
 					IECorePython::ExceptionAlgo::translatePythonException();
 				}
@@ -168,7 +168,7 @@ class GraphComponentWrapper : public IECorePython::RunTimeTypedWrapper<WrappedTy
 						return;
 					}
 				}
-				catch( const boost::python::error_already_set &e )
+				catch( const boost::python::error_already_set & )
 				{
 					IECorePython::ExceptionAlgo::translatePythonException();
 				}

@@ -125,7 +125,7 @@ void Process::handleException()
 		// so we can examine it.
 		throw;
 	}
-	catch( const IECore::Cancelled &e )
+	catch( const IECore::Cancelled & )
 	{
 		// Process is just being cancelled. No need
 		// to report via `emitError()`.
@@ -235,11 +235,11 @@ void ProcessException::wrapCurrentException( const ConstPlugPtr &plug, const Con
 	{
 		throw;
 	}
-	catch( const IECore::Cancelled &e )
+	catch( const IECore::Cancelled & )
 	{
 		throw;
 	}
-	catch( const ProcessException &e )
+	catch( const ProcessException & )
 	{
 		throw;
 	}

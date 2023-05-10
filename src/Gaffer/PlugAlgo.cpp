@@ -826,8 +826,6 @@ bool canSetValueFromData( const ValuePlug *plug, const IECore::Data *value )
 		default:
 			return false;
 	}
-
-	return false;
 }
 
 bool setValueFromData( ValuePlug *plug, const IECore::Data *value )

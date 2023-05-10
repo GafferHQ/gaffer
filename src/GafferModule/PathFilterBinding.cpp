@@ -100,7 +100,7 @@ class PathFilterWrapper : public IECorePython::RunTimeTypedWrapper<WrappedType>
 						return;
 					}
 				}
-				catch( const boost::python::error_already_set &e )
+				catch( const boost::python::error_already_set & )
 				{
 					IECorePython::ExceptionAlgo::translatePythonException();
 				}

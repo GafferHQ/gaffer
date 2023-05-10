@@ -218,7 +218,7 @@ bool tolerantExec( const std::string &pythonScript, boost::python::object global
 		{
 			exec( line.c_str(), globals, locals );
 		}
-		catch( const boost::python::error_already_set &e )
+		catch( const boost::python::error_already_set & )
 		{
 			const std::string message = IECorePython::ExceptionAlgo::formatPythonException( /* withTraceback = */ false );
 			IECore::msg( IECore::Msg::Error, formattedErrorContext( lineNumber, context ), message );
@@ -284,7 +284,7 @@ std::string serialise( const Node *parent, const Set *filter )
 		Serialisation serialisation( parent, "parent", filter );
 		result = serialisation.result();
 	}
-	catch( boost::python::error_already_set &e )
+	catch( boost::python::error_already_set & )
 	{
 		IECorePython::ExceptionAlgo::translatePythonException();
 	}
@@ -365,7 +365,7 @@ bool execute( ScriptNode *script, const std::string &serialisation, Node *parent
 			{
 				exec( toExecute.c_str(), e, e );
 			}
-			catch( boost::python::error_already_set &e )
+			catch( boost::python::error_already_set & )
 			{
 				int lineNumber = 0;
 				std::string message = IECorePython::ExceptionAlgo::formatPythonException( /* withTraceback = */ false, &lineNumber );
@@ -377,7 +377,7 @@ bool execute( ScriptNode *script, const std::string &serialisation, Node *parent
 			result = tolerantExec( toExecute, e, e, context );
 		}
 	}
-	catch( boost::python::error_already_set &e )
+	catch( boost::python::error_already_set & )
 	{
 		IECorePython::ExceptionAlgo::translatePythonException();
 	}
@@ -526,7 +526,7 @@ struct ActionSlotCaller
 		{
 			slot( script, boost::const_pointer_cast<Action>( action ), stage );
 		}
-		catch( const boost::python::error_already_set &e )
+		catch( const boost::python::error_already_set & )
 		{
 			IECorePython::ExceptionAlgo::translatePythonException();
 		}
@@ -543,7 +543,7 @@ struct UndoAddedSlotCaller
 		{
 			slot( script );
 		}
-		catch( const boost::python::error_already_set &e )
+		catch( const boost::python::error_already_set & )
 		{
 			IECorePython::ExceptionAlgo::translatePythonException();
 		}
@@ -560,7 +560,7 @@ struct FocusChangedSlotCaller
 		{
 			slot( script, node );
 		}
-		catch( const boost::python::error_already_set &e )
+		catch( const boost::python::error_already_set & )
 		{
 			IECorePython::ExceptionAlgo::translatePythonException();
 		}

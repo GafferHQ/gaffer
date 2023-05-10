@@ -1140,7 +1140,7 @@ void Catalogue::driverCreated( IECoreImage::DisplayDriver *driver, const IECore:
 				return;
 			}
 		}
-		catch( boost::bad_lexical_cast &e )
+		catch( boost::bad_lexical_cast & )
 		{
 			throw IECore::Exception( "Invalid port number: <" + portNumberData->readable() + ">\n" );
 		}

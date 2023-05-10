@@ -198,7 +198,7 @@ struct CurvePlugKeySlotCaller
 		{
 			slot( c, k );
 		}
-		catch( const boost::python::error_already_set &e )
+		catch( const boost::python::error_already_set & )
 		{
 			ExceptionAlgo::translatePythonException();
 		}
@@ -213,7 +213,7 @@ struct CurvePlugDirectionSlotCaller
 		{
 			slot( c, d );
 		}
-		catch( const boost::python::error_already_set &e )
+		catch( const boost::python::error_already_set & )
 		{
 			ExceptionAlgo::translatePythonException();
 		}

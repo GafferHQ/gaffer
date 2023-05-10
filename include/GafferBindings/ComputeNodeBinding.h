@@ -86,7 +86,7 @@ class ComputeNodeWrapper : public DependencyNodeWrapper<WrappedType>
 						h = boost::python::extract<IECore::MurmurHash>( pythonHash );
 					}
 				}
-				catch( const boost::python::error_already_set &e )
+				catch( const boost::python::error_already_set & )
 				{
 					IECorePython::ExceptionAlgo::translatePythonException();
 				}
@@ -107,7 +107,7 @@ class ComputeNodeWrapper : public DependencyNodeWrapper<WrappedType>
 						return;
 					}
 				}
-				catch( const boost::python::error_already_set &e )
+				catch( const boost::python::error_already_set & )
 				{
 					IECorePython::ExceptionAlgo::translatePythonException();
 				}
@@ -129,7 +129,7 @@ class ComputeNodeWrapper : public DependencyNodeWrapper<WrappedType>
 						return boost::python::extract<Gaffer::ValuePlug::CachePolicy>( policy );
 					}
 				}
-				catch( const boost::python::error_already_set &e )
+				catch( const boost::python::error_already_set & )
 				{
 					IECorePython::ExceptionAlgo::translatePythonException();
 				}
@@ -151,7 +151,7 @@ class ComputeNodeWrapper : public DependencyNodeWrapper<WrappedType>
 						return boost::python::extract<Gaffer::ValuePlug::CachePolicy>( policy );
 					}
 				}
-				catch( const boost::python::error_already_set &e )
+				catch( const boost::python::error_already_set & )
 				{
 					IECorePython::ExceptionAlgo::translatePythonException();
 				}

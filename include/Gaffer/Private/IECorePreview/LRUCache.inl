@@ -1114,7 +1114,7 @@ Value LRUCache<Key, Value, Policy, GetterKey>::get( const GetterKey &key, const 
 		{
 			handle.execute( [this, &value, &key, &cost, canceller] { value = m_getter( key, cost, canceller ); } );
 		}
-		catch( IECore::Cancelled const &c )
+		catch( IECore::Cancelled const & )
 		{
 			throw;
 		}

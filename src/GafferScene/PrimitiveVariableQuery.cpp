@@ -344,13 +344,13 @@ const Gaffer::ValuePlug* PrimitiveVariableQuery::outPlug( const Gaffer::ValuePlu
 {
 	const size_t childIndex = getChildIndex( outPlug(), outputPlug );
 
-	if( const Gaffer::ValuePlug* const outputPlug = outPlug()->getChild< const Gaffer::ValuePlug >( childIndex ) )
+	if( const Gaffer::ValuePlug* const childOutputPlug = outPlug()->getChild< const Gaffer::ValuePlug >( childIndex ) )
 	{
-		if( outputPlug->typeId() != Gaffer::ValuePlug::staticTypeId() )
+		if( childOutputPlug->typeId() != Gaffer::ValuePlug::staticTypeId() )
 		{
 			throw IECore::Exception( "PrimitiveVariableQuery : \"out\" plug must be a `ValuePlug`." );
 		}
-		return outputPlug;
+		return childOutputPlug;
 	}
 
 	throw IECore::Exception( "PrimitiveVariableQuery : \"out\" plug is missing or of the wrong type.");

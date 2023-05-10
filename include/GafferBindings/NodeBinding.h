@@ -130,7 +130,7 @@ class NodeWrapper : public GraphComponentWrapper<T>
 						return f( Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( plug ) ), Gaffer::PlugPtr( const_cast<Gaffer::Plug *>( inputPlug ) ) );
 					}
 				}
-				catch( const boost::python::error_already_set &e )
+				catch( const boost::python::error_already_set & )
 				{
 					IECorePython::ExceptionAlgo::translatePythonException();
 				}

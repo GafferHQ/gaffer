@@ -396,12 +396,11 @@ struct TestLRUCacheExceptions
 
 		using Cache = IECorePreview::LRUCache<int, int, Policy>;
 		Cache cache(
-			[&calls]( int key, size_t &cost, const IECore::Canceller *canceller ) {
+			[&calls]( int key, size_t &cost, const IECore::Canceller *canceller ) -> int {
 				calls.push_back( key );
 				throw IECore::Exception(
 					fmt::format( "Get failed for {}", key )
 				);
-				return 0;
 			},
 			1000
 		);
@@ -492,12 +491,11 @@ struct TestLRUCacheExceptions
 		// Check that if we don't cache errors, then it gets called twice
 		calls.clear();
 		Cache noErrorsCache(
-			[&calls]( int key, size_t &cost, const IECore::Canceller *canceller ) {
+			[&calls]( int key, size_t &cost, const IECore::Canceller *canceller ) -> int {
 				calls.push_back( key );
 				throw IECore::Exception(
 					fmt::format( "Get failed for {}", key )
 				);
-				return 0;
 			},
 			1000,
 			typename Cache::RemovalCallback(),
@@ -587,7 +585,7 @@ struct TestLRUCacheCancellation
 		{
 			val = cache.get( 3, &canceller );
 		}
-		catch( IECore::Cancelled const &c )
+		catch( IECore::Cancelled const & )
 		{
 			caughtCancel = true;
 		}
@@ -671,7 +669,7 @@ struct TestLRUCacheCancellationOfSecondGet
 		{
 			cache.get( 1, &secondCanceller );
 		}
-		catch( const IECore::Cancelled &e )
+		catch( const IECore::Cancelled & )
 		{
 			firstCanceller.cancel();
 		}
@@ -686,7 +684,7 @@ struct TestLRUCacheCancellationOfSecondGet
 		{
 			taskGroup.wait();
 		}
-		catch( IECore::Cancelled &e )
+		catch( IECore::Cancelled & )
 		{
 			firstCancelled = true;
 		}

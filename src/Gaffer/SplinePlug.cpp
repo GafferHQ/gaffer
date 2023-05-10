@@ -125,7 +125,7 @@ void monotoneCubicCVsToBezierCurve( const typename T::PointContainer &cvs, typen
 		typename T::YType nextSlope;
 
 
-		const typename T::Point *pNext;
+		const typename T::Point *pNext = nullptr;
 		if( i == cvs.end() )
 		{
 			nextSlope = typename T::YType( 0 );
