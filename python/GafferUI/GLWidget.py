@@ -66,6 +66,7 @@ from Qt import QtCore
 # if we can coax the project into bridging Qt 5/6 instead of 4/5?
 from PySide2 import QtGui
 from PySide2 import QtWidgets
+from Qt import QtOpenGL
 
 ## The GLWidget is a base class for all widgets which wish to draw using OpenGL.
 # Derived classes override the _draw() method to achieve this.
@@ -208,11 +209,7 @@ class _GLGraphicsView( QtWidgets.QGraphicsView ) :
 		self.setHorizontalScrollBarPolicy( QtCore.Qt.ScrollBarAlwaysOff )
 		self.setVerticalScrollBarPolicy( QtCore.Qt.ScrollBarAlwaysOff )
 
-		glWidget = QtWidgets.QOpenGLWidget()
-		# Avoid `QOpenGLFramebufferObject: Framebuffer incomplete attachment`
-		# errors caused by Qt trying to make a framebuffer with zero size.
-		glWidget.setMinimumSize( 1, 1 )
-		glWidget.setFormat( format )
+		glWidget = self.__createGLWidget( format )
 		self.setViewport( glWidget )
 		self.setViewportUpdateMode( self.FullViewportUpdate )
 
@@ -248,6 +245,93 @@ class _GLGraphicsView( QtWidgets.QGraphicsView ) :
 				return
 
 		QtWidgets.QFrame.keyPressEvent( self, event )
+
+	@classmethod
+	def __createGLWidget( cls, format ) :
+
+		# try to make a host specific widget if necessary.
+		result = cls.__createMayaQGLWidget( format )
+		if result is not None :
+			return result
+
+		result = cls.__createHoudiniQGLWidget( format )
+		if result is not None :
+			return result
+
+		glWidget = QtWidgets.QOpenGLWidget()
+		# Avoid `QOpenGLFramebufferObject: Framebuffer incomplete attachment`
+		# errors caused by Qt trying to make a framebuffer with zero size.
+		glWidget.setMinimumSize( 1, 1 )
+		glWidget.setFormat( format )
+
+		return glWidget
+
+	@classmethod
+	def __createQGLFormat( cls, format ):
+		"""
+		Create a QGLFormat based on the configuration of
+		QSurfaceFormat where possible.
+		"""
+		qGLFormat = QtOpenGL.QGLFormat()
+		qGLFormat.setRgba( True )
+
+		qGLFormat.setAlpha( format.hasAlpha() )
+
+		if format.depthBufferSize() > 1:
+			qGLFormat.setDepth( True )
+
+		if format.samples() > 1:
+			qGLFormat.setSampleBuffers( True )
+
+		return qGLFormat
+
+	@classmethod
+	def __createHostedQGLWidget( cls, format ) :
+
+		# When running Gaffer embedded in a host application such as Maya
+		# or Houdini, we want to be able to share OpenGL resources between
+		# gaffer uis and host viewport uis, because IECoreGL will be used
+		# in both. So we implement our own QGLContext class which creates a
+		# context which shares with the host. The custom QGLContext is
+		# implemented in GLWidgetBinding.cpp, and automatically shares with
+		# the context which is current at the time of its creation. The host
+		# context should therefore be made current before calling this
+		# method.
+
+		qGLFormat = cls.__createQGLFormat( format )
+		result = QtOpenGL.QGLWidget()
+		_GafferUI._glWidgetSetHostedContext( GafferUI._qtAddress( result ), GafferUI._qtAddress( qGLFormat ) )
+		return result
+
+	@classmethod
+	def __createMayaQGLWidget( cls, format ) :
+
+		try :
+			import maya.OpenMayaRender
+		except ImportError :
+			# we're not in maya - createGLWidget() will just make a
+			# normal widget.
+			return None
+
+		mayaRenderer = maya.OpenMayaRender.MHardwareRenderer.theRenderer()
+		mayaRenderer.makeResourceContextCurrent( mayaRenderer.backEndString() )
+		return cls.__createHostedQGLWidget( format )
+
+	@classmethod
+	def __createHoudiniQGLWidget( cls, format ) :
+
+		try :
+			import hou
+		except ImportError :
+			# we're not in houdini - createGLWidget() will just make a
+			# normal widget.
+			return None
+
+		import IECoreHoudini
+
+		# Force the Houdini GL context to be current, and share it.
+		IECoreHoudini.makeMainGLContextCurrent()
+		return cls.__createHostedQGLWidget( format )
 
 class _GLGraphicsScene( QtWidgets.QGraphicsScene ) :
 
