@@ -96,7 +96,7 @@ void CyclesShader::loadShader( const std::string &shaderName, bool keepExistingV
 
 	if( !shaderNodeType )
 	{
-		throw Exception( str( format( "Shader \"%s\" not found" ) % shaderName ) );
+		throw Exception( fmt::format( "Shader \"{}\" not found", shaderName ) );
 	}
 
 	const bool outPlugWasEmpty = outPlug()->children().empty();

@@ -127,7 +127,7 @@ void ArnoldShader::loadShader( const std::string &shaderName, bool keepExistingV
 	const AtNodeEntry *shader = AiNodeEntryLookUp( AtString( shaderName.c_str() ) );
 	if( !shader )
 	{
-		throw Exception( str( format( "Shader \"%s\" not found" ) % shaderName ) );
+		throw Exception( fmt::format( "Shader \"{}\" not found", shaderName ) );
 	}
 
 	Plug *parametersPlug = this->parametersPlug()->source<Plug>();
@@ -251,7 +251,7 @@ static IECore::ConstCompoundDataPtr metadataGetter( const std::string &key, size
 	const AtNodeEntry *shader = AiNodeEntryLookUp( AtString( key.c_str() ) );
 	if( !shader )
 	{
-		throw Exception( str( format( "Shader \"%s\" not found" ) % key ) );
+		throw Exception( fmt::format( "Shader \"{}\" not found", key ) );
 	}
 
 	CompoundDataPtr metadata = new CompoundData;

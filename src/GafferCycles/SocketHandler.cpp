@@ -290,10 +290,12 @@ Gaffer::Plug *setupPlug( const IECore::InternedString &socketName, int socketTyp
 			msg(
 				Msg::Warning,
 				"GafferCycles::SocketHandler::setupPlug",
-				format( "Unsupported socket type \"%s\" for \"%s\" on node \"%s\"" ) %
-					ccl::SocketType::type_name( (ccl::SocketType::Type)socketType ) %
-					socketName.string() %
+				fmt::format(
+					"Unsupported socket type \"{}\" for \"{}\" on node \"{}\"",
+					ccl::SocketType::type_name( (ccl::SocketType::Type)socketType ),
+					socketName.string(),
 					nodeName( plugParent )
+				)
 			);
 			return nullptr;
 
@@ -467,11 +469,13 @@ Gaffer::Plug *setupPlug( const ccl::NodeType *nodeType, const ccl::SocketType so
 		msg(
 			Msg::Warning,
 			"GafferCycles::SocketHandler::setupPlug",
-			format( "Unsupported socket \"%s\" of type \"%s\" on node \"%s\" of type \"%s\"" ) %
-				socketType.name.c_str() %
-				ccl::SocketType::type_name(socketType.type).c_str() %
-				nodeName( plugParent ) %
+			fmt::format(
+				"Unsupported socket \"{}\" of type \"{}\" on node \"{}\" of type \"{}\"",
+				socketType.name.c_str(),
+				ccl::SocketType::type_name(socketType.type).c_str(),
+				nodeName( plugParent ),
 				nodeType->name.c_str()
+			)
 		);
 	}
 
