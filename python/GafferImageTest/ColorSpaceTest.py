@@ -317,5 +317,23 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertImagesEqual( unpremultipliedColorSpace["out"], defaultColorSpace["out"] )
 
+	def testDeepTileWithNoSamples( self ) :
+
+		reader = GafferImage.ImageReader()
+		reader["fileName"].setValue( GafferImageTest.ImageTestCase.imagesPath() / "representativeDeepImage.exr" )
+
+		crop = GafferImage.Crop()
+		crop["in"].setInput( reader["out"] )
+		crop["area"].setValue( imath.Box2i( imath.V2i( 0, 47 ), imath.V2i( 13, 59 ) ) )
+		self.assertEqual( sum( crop["out"].sampleOffsets( imath.V2i( 0 ) ) ), 0 )
+		self.assertEqual( crop["out"].channelData( "R", imath.V2i( 0 ) ), IECore.FloatVectorData() )
+
+		colorSpace = GafferImage.ColorSpace()
+		colorSpace["in"].setInput( crop["out"] )
+		colorSpace["inputSpace"].setValue( "scene_linear" )
+		colorSpace["outputSpace"].setValue( "color_picking" )
+
+		self.assertImagesEqual( colorSpace["out"], colorSpace["in"] )
+
 if __name__ == "__main__":
 	unittest.main()
