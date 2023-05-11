@@ -1122,6 +1122,43 @@ Imath::Box3f GafferScene::SceneAlgo::bound( const IECore::Object *object )
 	}
 }
 
+namespace
+{
+
+const InternedString g_emptyInternedString;
+const InternedString g_ellipsisInternedString( "..." );
+const InternedString g_parentInternedString( ".." );
+
+} // namespace
+
+void GafferScene::SceneAlgo::validateName( IECore::InternedString name )
+{
+	const char *invalidReason = nullptr;
+	if( name == g_emptyInternedString )
+	{
+		invalidReason = "it is empty";
+	}
+	else if( name == g_ellipsisInternedString )
+	{
+		invalidReason = "`...` is a filter wildcard";
+	}
+	else if( name == g_parentInternedString )
+	{
+		invalidReason = "`..` denotes the parent location";
+	}
+	else if( name.string().find( '/' ) != string::npos )
+	{
+		invalidReason = "`/` is the path separator";
+	}
+
+	if( invalidReason )
+	{
+		throw IECore::Exception(
+			fmt::format( "Name `{}` is invalid (because {})", name.string(), invalidReason )
+		);
+	}
+}
+
 //////////////////////////////////////////////////////////////////////////
 // Render Adaptor Registry
 //////////////////////////////////////////////////////////////////////////

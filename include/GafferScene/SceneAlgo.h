@@ -269,6 +269,10 @@ GAFFERSCENE_API bool visible( const ScenePlug *scene, const ScenePlug::ScenePath
 /// for other object types we must return a synthetic bound.
 GAFFERSCENE_API Imath::Box3f bound( const IECore::Object *object );
 
+/// Throws an exception if `name` is not valid to be used as the name of a scene
+/// location.
+GAFFERSCENE_API void validateName( IECore::InternedString name );
+
 /// Render Adaptors
 /// ===============
 

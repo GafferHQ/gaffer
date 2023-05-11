@@ -1818,11 +1818,21 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( mh.messages[0].context, "SceneAlgo::createRenderAdaptors" )
 		self.assertEqual( mh.messages[0].message, "Adaptor \"Test\" returned null" )
 
+	def testValidateName( self ) :
+
+		for goodName in [ "obi", "lewis", "ludo" ] :
+			with self.subTest( name = goodName ) :
+				GafferScene.SceneAlgo.validateName( goodName )
+
+		for badName in [ "..", "...", "", "a/b", "/", "a/", "/b" ] :
+			with self.subTest( name = badName ) :
+				with self.assertRaises( RuntimeError ) :
+					GafferScene.SceneAlgo.validateName( badName )
+
 	def tearDown( self ) :
 
 		GafferSceneTest.SceneTestCase.tearDown( self )
 		GafferScene.SceneAlgo.deregisterRenderAdaptor( "Test" )
-
 
 if __name__ == "__main__":
 	unittest.main()

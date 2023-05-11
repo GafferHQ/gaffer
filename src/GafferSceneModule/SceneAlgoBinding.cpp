@@ -310,6 +310,7 @@ void bindSceneAlgo()
 
 	def( "exists", &existsWrapper );
 	def( "visible", visibleWrapper );
+	def( "validateName", &SceneAlgo::validateName );
 
 	def( "filteredNodes", &filteredNodesWrapper );
 	def( "matchingPaths", &matchingPathsWrapper1 );
