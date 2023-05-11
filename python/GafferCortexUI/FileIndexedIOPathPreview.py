@@ -104,7 +104,7 @@ class FileIndexedIOPathPreview( GafferUI.DeferredPathPreview ) :
 		with Gaffer.Signals.BlockedConnection( self.__pathListingSelectionChangedConnection ) :
 			## \todo This functionality might be nice in the PathChooserWidget. We could
 			# maybe even use a PathChooserWidget here anyway.
-			self.__pathListing.setSelection( IECore.PathMatcher( [ str( pathCopy ) ] ), expandNonLeaf=False )
+			self.__pathListing.setSelection( IECore.PathMatcher( [ str( pathCopy ) ] ) )
 			# expand as people type forwards
 			if len( pathCopy ) > len( self.__prevPath ) :
 				self.__pathListing.setPathExpanded( pathCopy, True )

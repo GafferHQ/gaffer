@@ -91,6 +91,7 @@ Breaking Changes
 - ImageReader : Renamed `None` preset to `Automatic`.
 - OpenColorIOTransform : Removed `availableColorSpaces()` and `availableRoles()` methods.
 - OpenColorIO : Changed default config.
+- PathListingWidget : Removed `expandNonLeaf` argument from `setSelection()` and `setSelectedPaths()` methods.
 - Subprocess32 : Removed Python module.
 - Six : Removed Python module.
 - Gaffer : Class constructors are now declared explicit disabling implicit conversions.

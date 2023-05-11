@@ -333,7 +333,7 @@ class PathListingWidget( GafferUI.Widget ) :
 	## Sets the currently selected paths. Accepts a single `IECore.PathMatcher`
 	# for `Row` and `Rows` modes, and a list of `IECore.PathMatcher`, one for
 	# each column, for `Cell` and `Cells` modes.
-	def setSelection( self, paths, scrollToFirst=True, expandNonLeaf=True ) :
+	def setSelection( self, paths, scrollToFirst=True ) :
 
 		if self.__rowSelectionMode() :
 			assert( isinstance( paths, IECore.PathMatcher ) )
@@ -354,7 +354,7 @@ class PathListingWidget( GafferUI.Widget ) :
 			) :
 				raise ValueError( "More than one cell selected" )
 
-		self.__setSelectionInternal( paths, scrollToFirst, expandNonLeaf )
+		self.__setSelectionInternal( paths, scrollToFirst )
 
 	## Returns an `IECore.PathMatcher` object containing the currently selected
 	# paths for `Row` or `Rows` modes, and a list of `IECore.PathMatcher`
@@ -379,7 +379,7 @@ class PathListingWidget( GafferUI.Widget ) :
 		)
 
 	## \deprecated
-	def setSelectedPaths( self, pathOrPaths, scrollToFirst=True, expandNonLeaf=True ) :
+	def setSelectedPaths( self, pathOrPaths, scrollToFirst=True ) :
 
 		paths = pathOrPaths
 		if isinstance( pathOrPaths, Gaffer.Path ) :
@@ -387,7 +387,7 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		self.setSelection(
 			IECore.PathMatcher( [ str( path ) for path in paths ] ),
-			scrollToFirst, expandNonLeaf
+			scrollToFirst
 		)
 
 	## \deprecated Use getSelectedPaths() instead.
@@ -417,13 +417,13 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		return self.__dragPointer
 
-	def __setSelectionInternal( self, paths, scrollToFirst=True, expandNonLeaf=True ) :
+	def __setSelectionInternal( self, paths, scrollToFirst=True ) :
 
 		paths = paths if isinstance( paths, list ) else [paths] * len( self.getColumns() )
 
 		_GafferUI._pathListingWidgetSetSelection(
 			GafferUI._qtAddress( self._qtWidget() ),
-			paths, scrollToFirst, expandNonLeaf
+			paths, scrollToFirst
 		)
 
 	def __getSelectionInternal( self ) :
@@ -593,7 +593,7 @@ class PathListingWidget( GafferUI.Widget ) :
 			else :
 				selection = [IECore.PathMatcher()] * len( self.getColumns() )
 
-			self.__setSelectionInternal( selection, scrollToFirst=False, expandNonLeaf=False )
+			self.__setSelectionInternal( selection, scrollToFirst=False )
 			return True
 
 		return False
@@ -782,7 +782,7 @@ class PathListingWidget( GafferUI.Widget ) :
 				) :
 					selection[i].addPaths( newPaths )
 
-			self.__setSelectionInternal( selection, scrollToFirst=False, expandNonLeaf=False )
+			self.__setSelectionInternal( selection, scrollToFirst=False )
 			self.__lastSelectedIndex = QtCore.QPersistentModelIndex( index )
 
 	def __toggleSelect( self, index ) :
@@ -809,7 +809,7 @@ class PathListingWidget( GafferUI.Widget ) :
 		# for doing keyboard-based expansion, and we can make use
 		# of if in our Shift-click range selection.
 		self._qtWidget().setCurrentIndex( index )
-		self.__setSelectionInternal( selection, scrollToFirst=False, expandNonLeaf=False )
+		self.__setSelectionInternal( selection, scrollToFirst=False )
 
 		self.__lastSelectedIndex = QtCore.QPersistentModelIndex( index )
 
@@ -822,7 +822,7 @@ class PathListingWidget( GafferUI.Widget ) :
 			paths = IECore.PathMatcher( [ path ] )
 		elif self.__cellSelectionMode :
 			paths = [ IECore.PathMatcher( [ path ] ) if i == index.column() else IECore.PathMatcher() for i in range( 0, len( self.getColumns() ) ) ]
-		self.setSelection( paths, scrollToFirst=False, expandNonLeaf=False )
+		self.setSelection( paths, scrollToFirst=False )
 
 		self.__lastSelectedIndex = QtCore.QPersistentModelIndex( index )
 

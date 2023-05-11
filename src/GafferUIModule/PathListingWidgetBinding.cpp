@@ -401,7 +401,6 @@ class PathModel : public QAbstractItemModel
 				m_sortColumn( -1 ),
 				m_sortOrder( Qt::AscendingOrder ),
 				m_modifyingTreeViewExpansion( false ),
-				m_expandNonLeafSelection( false ),
 				m_updateScheduled( false )
 		{
 			connect( parent, &QTreeView::expanded, this, &PathModel::treeViewExpanded );
@@ -538,11 +537,9 @@ class PathModel : public QAbstractItemModel
 
 		// See comments for `setExpansion()`. The PathMatcher vector is our source of
 		// truth, and we don't even use the QItemSelectionModel.
-		void setSelection( const Selection &selectedPaths, bool scrollToFirst = true, bool expandNonLeaf = true )
+		void setSelection( const Selection &selectedPaths, bool scrollToFirst = true )
 		{
 			cancelUpdate();
-
-			m_expandNonLeafSelection = expandNonLeaf;
 
 			IECore::PathMatcher mergedPaths;
 			for( auto &p : selectedPaths )
@@ -566,7 +563,7 @@ class PathModel : public QAbstractItemModel
 			// Copy, so can't be modified without `setSelection()` call.
 			m_selection = Selection( selectedPaths );
 
-			if( m_expandNonLeafSelection || m_scrollToCandidates )
+			if( m_scrollToCandidates )
 			{
 				m_rootItem->dirtyExpansion();
 				scheduleUpdate();
@@ -1352,34 +1349,6 @@ class PathModel : public QAbstractItemModel
 						}
 					}
 
-					if( model->m_expandNonLeafSelection )
-					{
-						// OK to read `m_selectedPaths` from background thread, because write on UI
-						// thread is preceded by `cancelUpdate()`.
-						const unsigned selectionMatch = model->m_selectedPaths.match( path->names() );
-						/// \todo I don't understand the purpose of this logic. It seems it might be
-						/// more useful to expand all ancestors of the selection (even if they're not
-						/// selected themselves).
-						if( selectionMatch & IECore::PathMatcher::ExactMatch && !path->isLeaf() )
-						{
-							model->queueEdit(
-								[this, model] {
-									QTreeView *treeView = dynamic_cast<QTreeView *>( model->QObject::parent() );
-									const QModelIndex index = model->createIndex( m_row, 0, this );
-									// Not setting `m_modifyingTreeViewExpansion`, because we _do_ want the
-									// change to be reflected back in to `m_expandedPaths`.
-									treeView->setExpanded( index, true );
-								}
-							);
-						}
-
-						if( selectionMatch & IECore::PathMatcher::DescendantMatch )
-						{
-							// Force creation of children so we can expand them.
-							dirtyIfUnrequested( m_childItemsState );
-						}
-					}
-
 					m_expansionDirty = false;
 				}
 
@@ -1787,7 +1756,6 @@ class PathModel : public QAbstractItemModel
 		// Parameters used to control expansion update following call to
 		// `setSelection()`.
 		std::optional<IECore::PathMatcher> m_scrollToCandidates;
-		bool m_expandNonLeafSelection;
 
 		std::unique_ptr<Gaffer::BackgroundTask> m_updateTask;
 		bool m_updateScheduled;
@@ -1888,7 +1856,7 @@ IECore::PathMatcher getExpansion( uint64_t treeViewAddress )
 	return model ? model->getExpansion() : IECore::PathMatcher();
 }
 
-void setSelection( uint64_t treeViewAddress, object pythonPaths, bool scrollToFirst, bool expandNonLeaf )
+void setSelection( uint64_t treeViewAddress, object pythonPaths, bool scrollToFirst )
 {
 	QTreeView *treeView = reinterpret_cast<QTreeView *>( treeViewAddress );
 	PathModel *model = dynamic_cast<PathModel *>( treeView->model() );
@@ -1897,7 +1865,7 @@ void setSelection( uint64_t treeViewAddress, object pythonPaths, bool scrollToFi
 	boost::python::container_utils::extend_container( paths, pythonPaths );
 
 	IECorePython::ScopedGILRelease gilRelease;
-	model->setSelection( paths, scrollToFirst, expandNonLeaf );
+	model->setSelection( paths, scrollToFirst );
 }
 
 list getSelection( uint64_t treeViewAddress )
