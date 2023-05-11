@@ -89,6 +89,8 @@ Build
   - Updated to version 3.1.7.
   - Stopped linking unnecessarily to the `IlmImf` library.
 - OpenColorIO : Updated to version 2.2.1.
+- OpenImageIO : Updated to version 2.4.11.0.
+- Partio : Added version 1.14.6.
 - PyBind11 : Updated to version 2.10.4.
 - PySide : Updated to version 5.15.8.
 - Qt : Updated to version 5.15.8.
