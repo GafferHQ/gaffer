@@ -48,6 +48,8 @@
 
 #include "GafferBindings/DependencyNodeBinding.h"
 
+#include "OpenColorIO/OpenColorIO.h"
+
 #include "boost/mpl/vector.hpp"
 
 using namespace std;
@@ -67,13 +69,13 @@ struct DefaultColorSpaceFunction
 	{
 	}
 
-	string operator()( const std::string &fileName, const std::string &fileFormat, const std::string &dataType, const IECore::CompoundData *metadata )
+	string operator()( const std::string &fileName, const std::string &fileFormat, const std::string &dataType, const IECore::CompoundData *metadata, const OCIO_NAMESPACE::ConstConfigRcPtr &config )
 	{
 
 		IECorePython::ScopedGILLock gilock;
 		try
 		{
-			return extract<string>( m_fn( fileName, fileFormat, dataType, IECore::CompoundDataPtr( const_cast<IECore::CompoundData *>( metadata ) ) ) );
+			return extract<string>( m_fn( fileName, fileFormat, dataType, IECore::CompoundDataPtr( const_cast<IECore::CompoundData *>( metadata ) ), config ) );
 		}
 		catch( const error_already_set & )
 		{
@@ -98,7 +100,7 @@ object getDefaultColorSpaceFunction()
 	return make_function(
 		T::getDefaultColorSpaceFunction(),
 		default_call_policies(),
-		boost::mpl::vector<string, const string &, const string &, const string &, const IECore::CompoundData *>()
+		boost::mpl::vector<string, const string &, const string &, const string &, const IECore::CompoundData *, const OCIO_NAMESPACE::ConstConfigRcPtr &>()
 	);
 }
 

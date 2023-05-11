@@ -44,6 +44,7 @@
 #include "GafferImage/ImageAlgo.h"
 #include "GafferImage/ImagePlug.h"
 #include "GafferImage/Merge.h"
+#include "GafferImage/OpenColorIOAlgo.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/ContextQuery.h"
@@ -1793,7 +1794,8 @@ std::string ImageWriter::colorSpace( const std::string &dataType ) const
 		fileNamePlug()->getValue(),
 		fileFormat,
 		dataType,
-		metadata.get()
+		metadata.get(),
+		OpenColorIOAlgo::currentConfig()
 	);
 }
 

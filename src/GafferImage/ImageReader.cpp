@@ -37,6 +37,7 @@
 #include "GafferImage/ImageReader.h"
 
 #include "GafferImage/ColorSpace.h"
+#include "GafferImage/OpenColorIOAlgo.h"
 #include "GafferImage/OpenImageIOReader.h"
 
 #include "Gaffer/StringPlug.h"
@@ -374,6 +375,7 @@ void ImageReader::hash( const ValuePlug *output, const Context *context, IECore:
 		intermediateMetadataPlug()->hash( h );
 		colorSpacePlug()->hash( h );
 		fileNamePlug()->hash( h );
+		h.append( OpenColorIOAlgo::currentConfigHash() );
 	}
 }
 
@@ -392,7 +394,8 @@ void ImageReader::compute( ValuePlug *output, const Context *context ) const
 					fileNamePlug()->getValue(),
 					fileFormatData->readable(),
 					dataTypeData ? dataTypeData->readable() : "",
-					metadata.get()
+					metadata.get(),
+					OpenColorIOAlgo::currentConfig()
 				);
 			}
 		}

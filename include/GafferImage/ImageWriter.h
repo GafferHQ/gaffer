@@ -43,6 +43,8 @@
 
 #include "IECore/CompoundData.h"
 
+#include "OpenColorIO/OpenColorTypes.h"
+
 #include <functional>
 
 namespace Gaffer
@@ -105,7 +107,7 @@ class GAFFERIMAGE_API ImageWriter : public GafferDispatch::TaskNode
 
 		/// Note that this is intentionally identical to the ImageReader's DefaultColorSpaceFunction
 		/// definition, so that the same function can be used with both nodes.
-		using DefaultColorSpaceFunction = std::function<const std::string ( const std::string &fileName, const std::string &fileFormat, const std::string &dataType, const IECore::CompoundData *metadata )>;
+		using DefaultColorSpaceFunction = std::function<const std::string ( const std::string &fileName, const std::string &fileFormat, const std::string &dataType, const IECore::CompoundData *metadata, const OCIO_NAMESPACE::ConstConfigRcPtr &config )>;
 		static void setDefaultColorSpaceFunction( DefaultColorSpaceFunction f );
 		static DefaultColorSpaceFunction getDefaultColorSpaceFunction();
 
