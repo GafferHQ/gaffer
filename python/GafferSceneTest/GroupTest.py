@@ -795,6 +795,22 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		self.assertFalse( group["out"].exists( "/group/plane" ) )
 		self.assertFalse( group["out"].exists( "/road/to/nowhere" ) )
 
+	def testInvalidNames( self ) :
+
+		plane = GafferScene.Plane()
+		plane["sets"].setValue( "A" )
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( plane["out"] )
+
+		for name in [ "a/b", "a/", "/b", "/", "..", "..." ] :
+			with self.subTest( name = name ) :
+				group["name"].setValue( name )
+				with self.assertRaises( Gaffer.ProcessException ) :
+					group["out"].childNames( "/" )
+				with self.assertRaises( Gaffer.ProcessException ) :
+					group["out"].set( "A" )
+
 	def setUp( self ) :
 
 		GafferSceneTest.SceneTestCase.setUp( self )

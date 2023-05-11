@@ -43,7 +43,7 @@ Fixes
 - Seeds :
   - Fixed duplicate points at triangle edges.
   - Fixed handling of points exactly at the density threshold.
-- ObjectSource : Prevented the creation of locations with invalid names - `..`, `...` or anything containing `/`.
+- ObjectSource, Group : Prevented the creation of locations with invalid names - `..`, `...` or anything containing `/`.
 
 API
 ---
