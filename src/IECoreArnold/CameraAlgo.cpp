@@ -54,6 +54,8 @@
 #include "ai_array.h"
 #include "ai_msg.h" // Required for __AI_FILE__ macro used by `ai_array.h`
 
+#include "fmt/format.h"
+
 using namespace IECore;
 using namespace IECoreScene;
 using namespace IECoreArnold;
@@ -94,7 +96,7 @@ void setShutterCurveParameter( AtNode *camera, const IECore::Data *value )
 	auto *splineData = runTimeCast<const SplineffData>( value );
 	if( !splineData )
 	{
-		msg( Msg::Warning, "setShutterCurveParameter", boost::format( "Unsupported value type \"%s\" (expected SplineffData)." ) % value->typeName() );
+		msg( Msg::Warning, "setShutterCurveParameter", fmt::format( "Unsupported value type \"{}\" (expected SplineffData).", value->typeName() ) );
 		return;
 	}
 

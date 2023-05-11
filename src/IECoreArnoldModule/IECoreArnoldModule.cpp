@@ -43,6 +43,8 @@
 
 #include "boost/python/suite/indexing/container_utils.hpp"
 
+#include "fmt/format.h"
+
 using namespace boost::python;
 using namespace IECoreArnold;
 
@@ -94,7 +96,7 @@ AtUniverse *pythonObjectToAtUniverse( const boost::python::object &universe )
 	const std::string className = extract<std::string>( universe.attr( "__class__" ).attr( "__name__" ) );
 	if( className != "LP_AtUniverse" )
 	{
-		throw IECore::Exception( boost::str( boost::format( "%1% is not an AtUniverse" ) % className ) );
+		throw IECore::Exception( fmt::format( "{} is not an AtUniverse", className ) );
 	}
 
 	object ctypes = import( "ctypes" );

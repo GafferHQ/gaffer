@@ -45,6 +45,8 @@
 #include "ai_array.h"
 #include "ai_msg.h" // Required for __AI_FILE__ macro used by `ai_array.h`
 
+#include "fmt/format.h"
+
 using namespace std;
 using namespace IECore;
 using namespace IECoreScene;
@@ -199,7 +201,7 @@ void convertPrimitiveVariable( const IECoreScene::Primitive *primitive, const Pr
 		msg(
 			Msg::Warning,
 			"ShapeAlgo::convertPrimitiveVariable",
-			boost::format( "Primitive variable \"%s\" will be ignored because it clashes with Arnold's built-in parameters" ) % name.c_str()
+			fmt::format( "Primitive variable \"{}\" will be ignored because it clashes with Arnold's built-in parameters", name.c_str() )
 		);
 		return;
 	}
@@ -248,7 +250,7 @@ void convertPrimitiveVariable( const IECoreScene::Primitive *primitive, const Pr
 		msg(
 			Msg::Warning,
 			"ShapeAlgo::convertPrimitiveVariable",
-			boost::format( "Unable to create user parameter \"%s\" because primitive variable has unsupported interpolation" ) % name
+			fmt::format( "Unable to create user parameter \"{}\" because primitive variable has unsupported interpolation", name )
 		);
 		return;
 	}
@@ -284,7 +286,7 @@ void convertPrimitiveVariable( const IECoreScene::Primitive *primitive, const Pr
 		msg(
 			Msg::Warning,
 			"ShapeAlgo::convertPrimitiveVariable",
-			boost::format( "Unable to create user parameter \"%s\" for primitive variable of type \"%s\"" ) % name % primitiveVariable.data->typeName()
+			fmt::format( "Unable to create user parameter \"{}\" for primitive variable of type \"{}\"", name, primitiveVariable.data->typeName() )
 		);
 		return;
 	}
@@ -341,7 +343,7 @@ void convertPrimitiveVariable( const IECoreScene::Primitive *primitive, const Pr
 	msg(
 		Msg::Warning,
 		"ShapeAlgo::convertPrimitiveVariable",
-		boost::format( "Failed to create array for parameter \"%s\" from data of type \"%s\"" ) % name % primitiveVariable.data->typeName()
+		fmt::format( "Failed to create array for parameter \"{}\" from data of type \"{}\"", name, primitiveVariable.data->typeName() )
 	);
 }
 

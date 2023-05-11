@@ -149,7 +149,7 @@ AtNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECo
 
 	if( !node )
 	{
-		msg( Msg::Warning, "IECoreArnold::ShaderNetworkAlgo", boost::format( "Couldn't load shader \"%s\"" ) % shader->getName() );
+		msg( Msg::Warning, "IECoreArnold::ShaderNetworkAlgo", fmt::format( "Couldn't load shader \"{}\"", shader->getName() ) );
 		return node;
 	}
 
@@ -1036,7 +1036,7 @@ void IECoreArnold::ShaderNetworkAlgo::convertUSDShaders( ShaderNetwork *shaderNe
 			}
 			else if( format != "angular" && format != "latlong" )
 			{
-				IECore::msg( IECore::Msg::Warning, "convertUSDShaders", boost::format( "Unsupported value \"%1%\" for DomeLight.format" ) % format );
+				IECore::msg( IECore::Msg::Warning, "convertUSDShaders", fmt::format( "Unsupported value \"{}\" for DomeLight.format", format ) );
 				format = "latlong";
 			}
 			newShader->parameters()[g_formatParameter] = new StringData( format );
