@@ -51,6 +51,7 @@
 #include "boost/multi_index/sequenced_index.hpp"
 #include "boost/multi_index_container.hpp"
 
+#include "fmt/format.h"
 
 using namespace boost::placeholders;
 using namespace IECore;
@@ -484,7 +485,7 @@ void View::DisplayTransform::preRender()
 			{
 				IECore::msg(
 					IECore::Msg::Warning, "View::DisplayTransform",
-					boost::format( "Transform \"%1%\" not registered" ) % name
+					fmt::format( "Transform \"{}\" not registered", name )
 				);
 			}
 		}

@@ -78,6 +78,8 @@
 #include "QtWidgets/QTreeView"
 #include "QtWidgets/QStyledItemDelegate"
 
+#include "fmt/format.h"
+
 #include <chrono>
 #include <unordered_map>
 
@@ -159,7 +161,7 @@ IECorePreview::LRUCache<std::string, QPixmap> g_pixmapCache(
 		boost::filesystem::path path = sp.find( fileName );
 		if( path.empty() )
 		{
-			IECore::msg( IECore::Msg::Warning, "PathListingWidget", boost::str( boost::format( "Could not find file \"%s\"" ) % fileName ) );
+			IECore::msg( IECore::Msg::Warning, "PathListingWidget", fmt::format( "Could not find file \"{}\"", fileName ) );
 			return QPixmap();
 		}
 		return QPixmap( QString( path.generic_string().c_str() ) );
