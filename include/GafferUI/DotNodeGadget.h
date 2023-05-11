@@ -73,7 +73,7 @@ class GAFFERUI_API DotNodeGadget : public StandardNodeGadget
 		Gaffer::Node *upstreamNode();
 
 		void plugDirtied( const Gaffer::Plug *plug );
-		void nameChanged( const Gaffer::GraphComponent *graphComponent );
+		void nodeNameChanged( const Gaffer::GraphComponent *graphComponent );
 		void updateUpstreamNameChangedConnection();
 		void updateLabel();
 

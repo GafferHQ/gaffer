@@ -765,7 +765,6 @@ Shader::Shader( const std::string &name )
 	nodeColorPlug()->setFlags( Plug::Serialisable | Plug::AcceptsInputs, false );
 	addChild( new CompoundObjectPlug( "__outAttributes", Plug::Out, new IECore::CompoundObject ) );
 
-	nameChangedSignal().connect( boost::bind( &Shader::nameChanged, this ) );
 	Metadata::nodeValueChangedSignal( this ).connect( boost::bind( &Shader::nodeMetadataChanged, this, ::_2 ) );
 }
 
@@ -1046,7 +1045,7 @@ IECore::DataPtr Shader::parameterValue( const Gaffer::Plug *parameterPlug ) cons
 	return nullptr;
 }
 
-void Shader::nameChanged()
+void Shader::nameChanged( IECore::InternedString oldName )
 {
 	nodeNamePlug()->setValue( getName() );
 }

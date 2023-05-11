@@ -162,7 +162,7 @@ class GAFFERSCENE_API Shader : public Gaffer::ComputeNode
 
 		class NetworkBuilder;
 
-		void nameChanged();
+		void nameChanged( IECore::InternedString oldName ) override;
 		void nodeMetadataChanged( IECore::InternedString key );
 
 		// We want to use the node name when computing the shader, so that we
