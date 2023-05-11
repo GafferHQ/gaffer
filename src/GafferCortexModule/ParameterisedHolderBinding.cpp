@@ -48,7 +48,7 @@
 #include "GafferBindings/DependencyNodeBinding.h"
 #include "GafferBindings/Serialisation.h"
 
-#include "boost/format.hpp"
+#include "fmt/format.h"
 
 using namespace boost::python;
 using namespace GafferBindings;
@@ -79,7 +79,7 @@ class ParameterisedHolderSerialiser : public NodeSerialiser
 
 		if( className.size() )
 		{
-			return boost::str( boost::format( "%s.setParameterised( \"%s\", %d, \"%s\", keepExistingValues=True )\n" ) % identifier % className % classVersion % searchPathEnvVar );
+			return fmt::format( "{}.setParameterised( \"{}\", {}, \"{}\", keepExistingValues=True )\n", identifier, className, classVersion, searchPathEnvVar );
 		}
 
 		return "";
