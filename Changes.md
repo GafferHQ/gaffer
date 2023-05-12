@@ -1,5 +1,19 @@
-1.2.x.x (relative to 1.2.5.0)
+1.2.x.x (relative to 1.2.6.0)
 =======
+
+
+1.2.6.0 (relative to 1.2.5.0)
+=======
+
+Improvements
+------------
+
+- SceneReader : Improved error messages when encountering unexpected problems reading USD files.
+
+Build
+-----
+
+- Cortex : Updated to version 10.4.8.0.
 
 1.2.5.0 (relative to 1.2.4.0)
 =======
