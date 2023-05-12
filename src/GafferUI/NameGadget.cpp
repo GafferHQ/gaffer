@@ -47,14 +47,14 @@ GAFFER_GRAPHCOMPONENT_DEFINE_TYPE( NameGadget );
 NameGadget::NameGadget( Gaffer::GraphComponentPtr object )
 	:	TextGadget( object->getName() )
 {
-	object->nameChangedSignal().connect( boost::bind( &NameGadget::nameChanged, this, ::_1 ) );
+	object->nameChangedSignal().connect( boost::bind( &NameGadget::graphComponentNameChanged, this, ::_1 ) );
 }
 
 NameGadget::~NameGadget()
 {
 }
 
-void NameGadget::nameChanged( Gaffer::GraphComponentPtr object )
+void NameGadget::graphComponentNameChanged( Gaffer::GraphComponentPtr object )
 {
 	setText( object->getName() );
 }

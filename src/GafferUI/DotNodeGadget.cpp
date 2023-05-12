@@ -76,7 +76,7 @@ DotNodeGadget::DotNodeGadget( Gaffer::NodePtr node )
 	setContents( new SpacerGadget( Box3f( V3f( -0.25 ), V3f( 0.25 ) ) ) );
 
 	node->plugDirtiedSignal().connect( boost::bind( &DotNodeGadget::plugDirtied, this, ::_1 ) );
-	node->nameChangedSignal().connect( boost::bind( &DotNodeGadget::nameChanged, this, ::_1 ) );
+	node->nameChangedSignal().connect( boost::bind( &DotNodeGadget::nodeNameChanged, this, ::_1 ) );
 
 	dragEnterSignal().connect( boost::bind( &DotNodeGadget::dragEnter, this, ::_2 ) );
 	dropSignal().connect( boost::bind( &DotNodeGadget::drop, this, ::_2 ) );
@@ -150,7 +150,7 @@ void DotNodeGadget::plugDirtied( const Gaffer::Plug *plug )
 	}
 }
 
-void DotNodeGadget::nameChanged( const Gaffer::GraphComponent *graphComponent )
+void DotNodeGadget::nodeNameChanged( const Gaffer::GraphComponent *graphComponent )
 {
 	updateLabel();
 }
@@ -160,7 +160,7 @@ void DotNodeGadget::updateUpstreamNameChangedConnection()
 	m_upstreamNameChangedConnection.disconnect();
 	if( Node *n = upstreamNode() )
 	{
-		m_upstreamNameChangedConnection = n->nameChangedSignal().connect( boost::bind( &DotNodeGadget::nameChanged, this, ::_1 ) );
+		m_upstreamNameChangedConnection = n->nameChangedSignal().connect( boost::bind( &DotNodeGadget::nodeNameChanged, this, ::_1 ) );
 	}
 }
 

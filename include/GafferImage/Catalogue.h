@@ -105,7 +105,7 @@ class GAFFERIMAGE_API Catalogue : public ImageNode
 				// variable. But computes can only depend on plugs,
 				// so we transfer the name into this private plug
 				// each time it changes.
-				void nameChanged();
+				void nameChanged( IECore::InternedString oldName ) override;
 
 				Gaffer::StringPlug *namePlug();
 				const Gaffer::StringPlug *namePlug() const;

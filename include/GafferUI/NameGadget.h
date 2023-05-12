@@ -55,7 +55,7 @@ class GAFFERUI_API NameGadget : public TextGadget
 
 	private :
 
-		void nameChanged( Gaffer::GraphComponentPtr object );
+		void graphComponentNameChanged( Gaffer::GraphComponentPtr object );
 
 };
 

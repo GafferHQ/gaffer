@@ -669,8 +669,6 @@ Catalogue::Image::Image( const std::string &name, Direction direction, unsigned 
 	addChild( new StringPlug( "description" ) );
 	addChild( new IntPlug( "outputIndex" ) );
 	addChild( new StringPlug( "__name", Plug::In, name, Plug::Default & ~Plug::Serialisable ) );
-
-	nameChangedSignal().connect( boost::bind( &Image::nameChanged, this ) );
 }
 
 Gaffer::StringPlug *Catalogue::Image::fileNamePlug()
@@ -754,7 +752,7 @@ Gaffer::PlugPtr Catalogue::Image::createCounterpart( const std::string &name, Di
 	return new Image( name, direction, getFlags() );
 }
 
-void Catalogue::Image::nameChanged()
+void Catalogue::Image::nameChanged( IECore::InternedString oldName )
 {
 	if( !getInput() )
 	{
