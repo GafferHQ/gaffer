@@ -915,5 +915,24 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 			parent["in"].boundHash( "/GAFFERBOT/C_torso_GRP" )
 		)
 
+	def testEllipsisInDestination( self ) :
+
+		sphere = GafferScene.Sphere()
+
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		cube = GafferScene.Cube()
+
+		parent = GafferScene.Parent()
+		parent["in"].setInput( sphere["out"] )
+		parent["children"][0].setInput( cube["out"] )
+		parent["filter"].setInput( sphereFilter["out"] )
+
+		parent["destination"].setValue( "/woops/..." )
+
+		with self.assertRaisesRegex( Gaffer.ProcessException, r".*Invalid destination `/woops/...` \(must not contain `...`\)" ) :
+			parent["out"].childNames( "/" )
+
 if __name__ == "__main__":
 	unittest.main()
