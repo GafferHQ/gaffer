@@ -49,6 +49,8 @@
 #include "boost/mpl/for_each.hpp"
 #include "boost/mpl/list.hpp"
 
+#include "fmt/format.h"
+
 using namespace std;
 using namespace Imath;
 using namespace IECoreGLPreview;
@@ -86,7 +88,7 @@ public:
 		}
 		else
 		{
-			throw IECore::InvalidArgumentException( boost::str( boost::format( "VDBVisualiser: Incompatible Grid found name: '%1%' type: '%2' " ) % grid->valueType() % grid->getName() ) );
+			throw IECore::InvalidArgumentException( fmt::format( "VDBVisualiser: Incompatible Grid found name: '{}' type: '{}' ", grid->valueType(), grid->getName() ) );
 		}
 	}
 

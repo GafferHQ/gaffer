@@ -45,6 +45,8 @@
 #include "openvdb/openvdb.h"
 #include "openvdb/tools/VolumeToMesh.h"
 
+#include "fmt/format.h"
+
 using namespace std;
 using namespace Imath;
 using namespace IECore;
@@ -101,7 +103,7 @@ IECoreScene::MeshPrimitivePtr volumeToMesh( openvdb::GridBase::ConstPtr grid, do
 	}
 	else
 	{
-		throw IECore::InvalidArgumentException( boost::str( boost::format( "Incompatible Grid found name: '%1%' type: '%2' " ) % grid->valueType() % grid->getName() ) );
+		throw IECore::InvalidArgumentException( fmt::format( "Incompatible Grid found name: '{}' type: '{}' ", grid->valueType(), grid->getName() ) );
 	}
 
 	// Copy out topology

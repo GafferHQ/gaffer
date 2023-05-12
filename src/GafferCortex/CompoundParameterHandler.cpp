@@ -44,6 +44,8 @@
 
 #include "boost/container/flat_set.hpp"
 
+#include "fmt/format.h"
+
 using namespace IECore;
 using namespace GafferCortex;
 
@@ -235,7 +237,7 @@ ParameterHandler *CompoundParameterHandler::handler( Parameter *child, bool crea
 			h = ParameterHandler::create( child );
 			if( !h )
 			{
-				IECore::msg( IECore::Msg::Warning, "Gaffer::CompoundParameterHandler", boost::format(  "Unable to create handler for parameter \"%s\" of type \"%s\"" ) % child->name() % child->typeName() );
+				IECore::msg( IECore::Msg::Warning, "Gaffer::CompoundParameterHandler", fmt::format(  "Unable to create handler for parameter \"{}\" of type \"{}\"", child->name(), child->typeName() ) );
 			}
 		}
 	}

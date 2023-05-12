@@ -55,6 +55,8 @@
 
 #include "tbb/concurrent_hash_map.h"
 
+#include "fmt/format.h"
+
 #include <unordered_map>
 
 #include <nsi.h>
@@ -82,7 +84,7 @@ T *reportedCast( const IECore::RunTimeTyped *v, const char *type, const IECore::
 		return t;
 	}
 
-	IECore::msg( IECore::Msg::Warning, "IECoreDelight::Renderer", boost::format( "Expected %s but got %s for %s \"%s\"." ) % T::staticTypeName() % v->typeName() % type % name.c_str() );
+	IECore::msg( IECore::Msg::Warning, "IECoreDelight::Renderer", fmt::format( "Expected {} but got {} for {} \"{}\".", T::staticTypeName(), v->typeName(), type, name.c_str() ) );
 	return nullptr;
 }
 
@@ -632,11 +634,11 @@ class DelightAttributes : public IECoreScenePreview::Renderer::AttributesInterfa
 				}
 				else if( boost::starts_with( m.first.string(), "render:" ) )
 				{
-					msg( Msg::Warning, "DelightRenderer", boost::format( "Render attribute \"%s\" not supported" ) % m.first.string() );
+					msg( Msg::Warning, "DelightRenderer", fmt::format( "Render attribute \"{}\" not supported", m.first.string() ) );
 				}
 				else if( boost::starts_with( m.first.string(), "user:" ) )
 				{
-					msg( Msg::Warning, "DelightRenderer", boost::format( "User attribute \"%s\" not supported" ) % m.first.string() );
+					msg( Msg::Warning, "DelightRenderer", fmt::format( "User attribute \"{}\" not supported", m.first.string() ) );
 				}
 				else if( boost::contains( m.first.string(), ":" ) )
 				{
@@ -644,7 +646,7 @@ class DelightAttributes : public IECoreScenePreview::Renderer::AttributesInterfa
 				}
 				else
 				{
-					msg( Msg::Warning, "DelightRenderer", boost::format( "Attribute \"%s\" not supported" ) % m.first.string() );
+					msg( Msg::Warning, "DelightRenderer", fmt::format( "Attribute \"{}\" not supported", m.first.string() ) );
 				}
 			}
 
@@ -1126,7 +1128,7 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 			}
 			else if( boost::starts_with( name.string(), "user:" ) )
 			{
-				msg( Msg::Warning, "DelightRenderer::option", boost::format( "User option \"%s\" not supported" ) % name.string() );
+				msg( Msg::Warning, "DelightRenderer::option", fmt::format( "User option \"{}\" not supported", name.string() ) );
 			}
 			else if( boost::contains( name.c_str(), ":" ) )
 			{
@@ -1134,7 +1136,7 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 			}
 			else
 			{
-				IECore::msg( IECore::Msg::Warning, "DelightRenderer::option", boost::format( "Unknown option \"%s\"." ) % name.string() );
+				IECore::msg( IECore::Msg::Warning, "DelightRenderer::option", fmt::format( "Unknown option \"{}\".", name.string() ) );
 			}
 		}
 
@@ -1375,7 +1377,7 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 				{
 					IECore::msg(
 						IECore::Msg::Warning, "DelightRenderer",
-						boost::format( "Camera \"%s\" does not exist" ) % m_camera
+						fmt::format( "Camera \"{}\" does not exist", m_camera )
 					);
 				}
 

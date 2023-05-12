@@ -37,6 +37,8 @@
 #include "IECore/MessageHandler.h"
 #include "IECore/SimpleTypedData.h"
 
+#include "fmt/format.h"
+
 using namespace std;
 using namespace Imath;
 using namespace IECore;
@@ -234,7 +236,7 @@ NSIParam_t ParameterList::parameter( const char *name, const IECore::Data *value
 		}
 		default :
 			result.type = NSITypeInvalid;
-			msg( Msg::Warning, "ParameterList", boost::format( "Attribute \"%s\" has unsupported datatype \"%s\"." ) % name % value->typeName() );
+			msg( Msg::Warning, "ParameterList", fmt::format( "Attribute \"{}\" has unsupported datatype \"{}\".", name, value->typeName() ) );
 			break;
 	}
 	return result;

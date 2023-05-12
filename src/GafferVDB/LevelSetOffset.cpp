@@ -45,6 +45,8 @@
 #include "openvdb/openvdb.h"
 #include "openvdb/tools/LevelSetFilter.h"
 
+#include "fmt/format.h"
+
 using namespace std;
 using namespace Imath;
 using namespace IECore;
@@ -142,7 +144,7 @@ IECore::ConstObjectPtr LevelSetOffset::computeProcessedObject( const ScenePath &
 	}
 	else
 	{
-		throw IECore::Exception( boost::str( boost::format( "Unable to Offset LevelSet grid: '%1%' with type: %2% " ) % gridName % newGrid->type()) );
+		throw IECore::Exception( fmt::format( "Unable to Offset LevelSet grid: '{}' with type: {}", gridName, newGrid->type() ) );
 	}
 
 	// If the interrupter has stopped the VDB operation, throw
