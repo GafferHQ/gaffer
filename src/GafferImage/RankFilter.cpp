@@ -237,15 +237,14 @@ void RankFilter::compute( Gaffer::ValuePlug *output, const Gaffer::Context *cont
 				IECore::Canceller::check( context->canceller() );
 
 				// Fill array with all nearby samples
-				V2i o;
 				vector<float>::iterator pixelsIt = pixels.begin();
-				for( o.y = -radius.y; o.y <= radius.y; ++o.y )
-				{
-					for( o.x = -radius.x; o.x <= radius.x; ++o.x )
+				sampler.visitPixels(
+					Imath::Box2i( p - radius, p + radius + Imath::V2i( 1 ) ),
+					[&pixelsIt] ( float v, int x, int y )
 					{
-						*pixelsIt++ = sampler.sample( p.x + o.x, p.y + o.y );
+						*pixelsIt++ = v;
 					}
-				}
+				);
 
 				switch( m_mode )
 				{
@@ -269,6 +268,7 @@ void RankFilter::compute( Gaffer::ValuePlug *output, const Gaffer::Context *cont
 
 				int closestMatch = INT_MAX;
 				pixelsIt = pixels.begin();
+				V2i o;
 				for( o.y = -radius.y; o.y <= radius.y; ++o.y )
 				{
 					for( o.x = -radius.x; o.x <= radius.x; ++o.x )
@@ -408,15 +408,14 @@ IECore::ConstFloatVectorDataPtr RankFilter::computeChannelData( const std::strin
 		{
 			IECore::Canceller::check( context->canceller() );
 
-			V2i o;
 			vector<float>::iterator pixelsIt = pixels.begin();
-			for( o.y = -radius.y; o.y <= radius.y; ++o.y )
-			{
-				for( o.x = -radius.x; o.x <= radius.x; ++o.x )
+			sampler.visitPixels(
+				Imath::Box2i( p - radius, p + radius + Imath::V2i( 1 ) ),
+				[&pixelsIt] ( float v, int x, int y )
 				{
-					*pixelsIt++ = sampler.sample( p.x + o.x, p.y + o.y );
+					*pixelsIt++ = v;
 				}
-			}
+			);
 			switch( m_mode )
 			{
 				case MedianRank:
