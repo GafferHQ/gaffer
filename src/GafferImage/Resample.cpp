@@ -639,20 +639,20 @@ IECore::ConstFloatVectorDataPtr Resample::computeChannelData( const std::string 
 				iX = ( oP.x + 0.5 ) / ratio.x + offset.x;
 				OIIO::floorfrac( iX, &iXI );
 
-				int fX; // relative filter position
 				float v = 0.0f;
 				float totalW = 0.0f;
-				for( fX = -filterRadius.x; fX<= filterRadius.x; ++fX )
-				{
-					const float w = *wIt++;
-					if( w == 0.0f )
-					{
-						continue;
-					}
 
-					v += w * sampler.sample( iXI + fX, oP.y );
-					totalW += w;
-				}
+				sampler.visitPixels( Imath::Box2i(
+						Imath::V2i( iXI - filterRadius.x, oP.y ),
+						Imath::V2i( iXI + filterRadius.x + 1, oP.y + 1 )
+					),
+					[&wIt, &v, &totalW]( float cur, int x, int y )
+					{
+						const float w = *wIt++;
+						v += w * cur;
+						totalW += w;
+					}
+				);
 
 				if( totalW != 0.0f )
 				{
@@ -683,21 +683,20 @@ IECore::ConstFloatVectorDataPtr Resample::computeChannelData( const std::string 
 
 			for( oP.x = tileBound.min.x; oP.x < tileBound.max.x; ++oP.x )
 			{
-				int fY; // relative filter position
 				float v = 0.0f;
 				float totalW = 0.0f;
 				std::vector<float>::const_iterator wIt = weights.begin() + ( oP.y - tileBound.min.y ) * ( filterRadius.y * 2 + 1);
-				for( fY = -filterRadius.y; fY<= filterRadius.y; ++fY )
-				{
-					const float w = *wIt++;
-					if( w == 0.0f )
+				sampler.visitPixels( Imath::Box2i(
+						Imath::V2i( oP.x, iYI - filterRadius.y ),
+						Imath::V2i( oP.x + 1, iYI + filterRadius.y + 1 )
+					),
+					[&wIt, &v, &totalW]( float cur, int x, int y )
 					{
-						continue;
+						const float w = *wIt++;
+						v += w * cur;
+						totalW += w;
 					}
-
-					v += w * sampler.sample( oP.x, iYI + fY );
-					totalW += w;
-				}
+				);
 
 				if( totalW != 0.0f )
 				{
