@@ -256,8 +256,8 @@ class GAFFERIMAGE_API ImagePlug : public Gaffer::ValuePlug
 		static const IECore::FloatVectorData *blackTile();
 		static const IECore::FloatVectorData *whiteTile();
 
-		static int tileSize() { return 1 << tileSizeLog2(); };
-		static int tilePixels() { return tileSize() * tileSize(); };
+		static constexpr int tileSize() { return 1 << tileSizeLog2(); };
+		static constexpr int tilePixels() { return tileSize() * tileSize(); };
 
 		/// Returns the index of the tile containing a point
 		/// This just means dividing by tile size ( always rounding down )
@@ -286,9 +286,9 @@ class GAFFERIMAGE_API ImagePlug : public Gaffer::ValuePlug
 		};
 		//@}
 
-	private :
+		static constexpr int tileSizeLog2() { return 7; };
 
-		static int tileSizeLog2() { return 7; };
+	private :
 
 		static void compoundObjectToCompoundData( const IECore::CompoundObject *object, IECore::CompoundData *data );
 
