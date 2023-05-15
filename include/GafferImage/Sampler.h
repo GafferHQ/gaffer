@@ -94,6 +94,14 @@ class GAFFERIMAGE_API Sampler
 		/// 0.5, 0.5.
 		float sample( float x, float y );
 
+		/// Call a functor for all pixels in the region.
+		/// Much faster than calling sample(int,int) repeatedly for every pixel in the
+		/// region, up to 5 times faster in practical cases.
+		/// The signature of the functor must be `F( float value, int x, int y )`.
+		/// Each pixel is visited in order of increasing X, then increasing Y.
+		template<typename F>
+		inline void visitPixels( const Imath::Box2i &region, F &&lambda );
+
 		/// Appends a hash that represent all the pixel
 		/// values within the requested sample area.
 		void hash( IECore::MurmurHash &h ) const;
