@@ -82,6 +82,30 @@ inline float Sampler::sample( float x, float y )
 	int yi;
 	float yf = OIIO::floorfrac( y - 0.5, &yi );
 
+	constexpr int tileLowMask = ImagePlug::tileSize() - 1;
+	if(
+		( xi & tileLowMask ) != tileLowMask &&
+		( yi & tileLowMask ) != tileLowMask &&
+		xi >= m_dataWindow.min.x && xi < m_dataWindow.max.x - 1 &&
+		yi >= m_dataWindow.min.y && yi < m_dataWindow.max.y - 1
+	)
+	{
+		const float *tileData;
+		int tilePixelIndex;
+		cachedData( Imath::V2i( xi, yi ), tileData, tilePixelIndex );
+		return OIIO::bilerp(
+			tileData[tilePixelIndex], tileData[tilePixelIndex + 1],
+			tileData[tilePixelIndex + ImagePlug::tileSize()], tileData[tilePixelIndex + ImagePlug::tileSize() + 1],
+			xf, yf
+		);
+	}
+	// Note that if we care about performance in the case of accessing outside the data window, we
+	// could add more special cases here. If boundingMode isn't clamped, this is trivial: check
+	// if fully outside bound, return 0.0 without even computing xf and yf. Clamped is trickier -
+	// above or below you need just xf, to the left or right you just need yf, and in the corners
+	// you need neither
+
+
 	float x0y0 = sample( xi, yi );
 	float x1y0 = sample( xi + 1, yi );
 	float x0y1 = sample( xi, yi + 1 );
