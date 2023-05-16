@@ -712,6 +712,38 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 		with GafferTest.TestRunner.PerformanceScope() :
 			sceneReader["out"].bound( "/" )
 
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 1 )
+	def testUSDEmptySetsPerformance( self ) :
+
+		# This creates a node graph where the SceneReader will be asked to load
+		# sets that it doesn't provide, because it is connected in to a Group
+		# where other inputs _are_ providing sets. If we're not smart about it,
+		# this can cause us to recurse the entire USD stage trying to load a set
+		# that isn't even in `SceneReader.out.setNames`.
+
+		sceneReader = GafferScene.SceneReader()
+		sceneReader["fileName"].setValue( self.__createInstancedComposition( 1000, 100 ) )
+
+		cube = GafferScene.Cube()
+		cube["sets"].setValue( "setA setB setC setD setE setF" )
+
+		light = GafferSceneTest.TestLight()
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( sceneReader["out"] )
+		group["in"][1].setInput( cube["out"] )
+		group["in"][2].setInput( light["out"] )
+
+		self.assertTrue(
+			{ "setA", "setB", "setC", "defaultLights" }.issubset(
+				{ str( n ) for n in group["out"].setNames() }
+			)
+		)
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			for name in group["out"].setNames() :
+				group["out"].set( name )
+
 	def testUSDTimeCodeAccuracy( self ) :
 
 		# Write a sample on all integer frames up to 100000.

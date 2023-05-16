@@ -4,7 +4,9 @@
 Improvements
 ------------
 
-- SceneReader : Removed `scene:path` and `scene:setName` variables from context used to evaluate `fileName`, `refreshCount` and `tags` plugs. This prevents logical impossibilities like changing the file per location, and also reduces pressure on the hash cache.
+- SceneReader :
+  - Removed `scene:path` and `scene:setName` variables from context used to evaluate `fileName`, `refreshCount` and `tags` plugs. This prevents logical impossibilities like changing the file per location, and also reduces pressure on the hash cache.
+  - Improved performance when USD files are queried for sets which don't exist. This can be a substantial improvement when a complex USD file without sets is used within a node graph which adds many sets downstream.
 
 Fixes
 -----
