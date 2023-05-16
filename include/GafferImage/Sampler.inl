@@ -65,18 +65,14 @@ inline float Sampler::sample( int x, int y )
 		}
 		else
 		{
-			if( BufferAlgo::empty( m_dataWindow ) )
-			{
-				return 0.0f;
-			}
 			p = BufferAlgo::clamp( p, m_dataWindow );
 		}
 	}
 
 	const float *tileData;
-	Imath::V2i tileIndex;
-	cachedData( p, tileData, tileIndex );
-	return *(tileData + tileIndex.y * ImagePlug::tileSize() + tileIndex.x);
+	int tilePixelIndex;
+	cachedData( p, tileData, tilePixelIndex );
+	return *( tileData + tilePixelIndex );
 }
 
 inline float Sampler::sample( float x, float y )
@@ -94,23 +90,23 @@ inline float Sampler::sample( float x, float y )
 	return OIIO::bilerp( x0y0, x1y0, x0y1, x1y1, xf, yf );
 }
 
-inline void Sampler::cachedData( Imath::V2i p, const float *& tileData, Imath::V2i &tilePixelIndex )
+inline void Sampler::cachedData( Imath::V2i p, const float *& tileData, int &tilePixelIndex )
 {
 	// Get the smart pointer to the tile we want.
-	Imath::V2i relP = p - m_cacheWindow.min;
-	Imath::V2i cacheIndex = ImagePlug::tileIndex( relP );
 
-	tilePixelIndex = relP - cacheIndex * ImagePlug::tileSize();
+	constexpr int lowMask = ( 1 << ImagePlug::tileSizeLog2() ) - 1;
+	int cacheIndex = ( p.x >> ImagePlug::tileSizeLog2() ) + m_cacheWidth * ( p.y >> ImagePlug::tileSizeLog2() ) - m_cacheOriginIndex;
 
-	int cacheI = cacheIndex.x + cacheIndex.y * m_cacheWidth;
-	const float *&cacheTileRawPtr = m_dataCacheRaw[cacheI];
+	tilePixelIndex = ( p.x & lowMask ) + ( ( p.y & lowMask ) << ImagePlug::tileSizeLog2() );
+
+	const float *&cacheTileRawPtr = m_dataCacheRaw[cacheIndex];
 
 	if ( cacheTileRawPtr == nullptr )
 	{
 		// Get the origin of the tile we want.
-		Imath::V2i tileOrigin = ( ImagePlug::tileIndex( m_cacheWindow.min ) + cacheIndex ) * ImagePlug::tileSize();
+		Imath::V2i tileOrigin( p.x & ~( ImagePlug::tileSize() - 1 ), p.y & ~( ImagePlug::tileSize() - 1 ) );
 
-		IECore::ConstFloatVectorDataPtr &cacheTilePtr = m_dataCache[ cacheI ];
+		IECore::ConstFloatVectorDataPtr &cacheTilePtr = m_dataCache[ cacheIndex ];
 		cacheTilePtr = m_plug->channelData( m_channelName, tileOrigin );
 		cacheTileRawPtr = &cacheTilePtr->readable()[0];
 	}

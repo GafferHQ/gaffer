@@ -73,6 +73,10 @@ Sampler::Sampler( const GafferImage::ImagePlug *plug, const std::string &channel
 		// all bounds checking.
 		m_boundingMode = -1;
 	}
+	else if( BufferAlgo::empty( m_dataWindow ) )
+	{
+		m_boundingMode = Black;
+	}
 
 	// Compute the area we need to cache in order to
 	// be able to service calls within m_sampleWindow
@@ -105,6 +109,8 @@ Sampler::Sampler( const GafferImage::ImagePlug *plug, const std::string &channel
 	int cacheHeight = int( ceil( float( m_cacheWindow.size().y ) / ImagePlug::tileSize() ) );
 	m_dataCache.resize( m_cacheWidth * cacheHeight, nullptr );
 	m_dataCacheRaw.resize( m_cacheWidth * cacheHeight, nullptr );
+
+	m_cacheOriginIndex = ( m_cacheWindow.min.x >> ImagePlug::tileSizeLog2() ) + m_cacheWidth * ( m_cacheWindow.min.y >> ImagePlug::tileSizeLog2() );
 }
 
 void Sampler::hash( IECore::MurmurHash &h ) const

@@ -106,8 +106,8 @@ class GAFFERIMAGE_API Sampler
 		/// Cached data access
 		/// @param p Any point within the cache that we wish to retrieve the data for.
 		/// @param tileData Is set to the tile's channel data.
-		/// @param tilePixelIndex XY indices that can be used to access the colour value of point 'p' from tileData.
-		void cachedData( Imath::V2i p, const float *& tileData, Imath::V2i &tilePixelIndex );
+		/// @param tilePixelIndex Is set to the index used to access the colour value of point 'p' from tileData.
+		void cachedData( Imath::V2i p, const float *& tileData, int &tilePixelIndex );
 
 		const ImagePlug *m_plug;
 		const std::string m_channelName;
@@ -117,6 +117,7 @@ class GAFFERIMAGE_API Sampler
 		std::vector< IECore::ConstFloatVectorDataPtr > m_dataCache;
 		std::vector< const float * > m_dataCacheRaw;
 		Imath::Box2i m_cacheWindow;
+		int m_cacheOriginIndex;
 		int m_cacheWidth;
 
 		int m_boundingMode;
