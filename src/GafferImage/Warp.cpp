@@ -309,7 +309,8 @@ void Warp::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context
 		h.append( tileOrigin );
 		enginePlug()->hash( h );
 
-		bool useDerivatives = useDerivativesPlug()->getValue();
+		std::string filterName = filterPlug()->getValue();
+		bool useDerivatives = ( filterName != "bilinear" ) && useDerivativesPlug()->getValue();
 		h.append( useDerivatives );
 		if( useDerivatives )
 		{
@@ -331,7 +332,7 @@ void Warp::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context
 
 		// The sampleRegionsPlug() includes an overall bound for the tile which depends on the filter
 		// support width
-		filterPlug()->hash( h );
+		h.append( filterName );
 	}
 
 	FlatImageProcessor::hash( output, context, h );
@@ -359,8 +360,14 @@ void Warp::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) 
 			dataWindow = outPlug()->dataWindowPlug()->getValue();
 		}
 
-		const OIIO::Filter2D *filter = FilterAlgo::acquireFilter( filterPlug()->getValue() );
-		const float filterWidth = filter->width();
+		std::string filterName = filterPlug()->getValue();
+		const OIIO::Filter2D *filter = nullptr;
+		float filterWidth = 1.0f;
+		if( filterName != "bilinear" )
+		{
+			filter = FilterAlgo::acquireFilter( filterPlug()->getValue() );
+			filterWidth = filter->width();
+		}
 
 		const V2i tileOrigin = context->get<V2i>( ImagePlug::tileOriginContextName );
 
@@ -417,7 +424,7 @@ void Warp::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) 
 		std::vector< V2f > &pixelInputDerivatives = pixelInputDerivativesData->writable();
 		pixelInputDerivatives.reserve( ImagePlug::tileSize() * ImagePlug::tileSize() );
 
-		bool useDerivatives = useDerivativesPlug()->getValue();
+		bool useDerivatives = filter && useDerivativesPlug()->getValue();
 
 		if( useDerivatives )
 		{
@@ -650,7 +657,12 @@ IECore::ConstFloatVectorDataPtr Warp::computeChannelData( const std::string &cha
 	vector<float> &result = resultData->writable();
 	result.reserve( ImagePlug::tileSize() * ImagePlug::tileSize() );
 
-	const OIIO::Filter2D *filter = FilterAlgo::acquireFilter( filterPlug()->getValue() );
+	std::string filterName = filterPlug()->getValue();
+	const OIIO::Filter2D *filter = nullptr;
+	if( filterName != "bilinear" )
+	{
+		filter = FilterAlgo::acquireFilter( filterPlug()->getValue() );
+	}
 
 
 	const Box2i &tileInputBound = sampleRegions->member< Box2iData >( g_tileInputBoundName, true )->readable();
@@ -685,7 +697,14 @@ IECore::ConstFloatVectorDataPtr Warp::computeChannelData( const std::string &cha
 				const V2f &input = pixelInputPositions[i];
 				if( input != Engine::black )
 				{
-					v = FilterAlgo::sampleBox( sampler, input, pixelInputDerivatives[i].x, pixelInputDerivatives[i].y, filter, scratchMemory );
+					if( filter )
+					{
+						v = FilterAlgo::sampleBox( sampler, input, pixelInputDerivatives[i].x, pixelInputDerivatives[i].y, filter, scratchMemory );
+					}
+					else
+					{
+						v = sampler.sample( input.x, input.y );
+					}
 				}
 			}
 			result.push_back( v );
