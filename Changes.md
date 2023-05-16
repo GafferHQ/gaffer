@@ -1,6 +1,10 @@
 1.2.x.x (relative to 1.2.6.0)
 =======
 
+Fixes
+-----
+
+- Gaffer module : Moved config loading after all name definitions
 
 1.2.6.0 (relative to 1.2.5.0)
 =======
