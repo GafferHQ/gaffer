@@ -139,6 +139,21 @@ bool variantLess( const QVariant &left, const QVariant &right )
 	}
 }
 
+IECore::PathMatcher ancestorPaths( const IECore::PathMatcher &paths )
+{
+	IECore::PathMatcher ancestorPaths;
+	for( auto &path : paths )
+	{
+		if( path.size() > 0 )
+		{
+			auto parentPath = path; parentPath.pop_back();
+			ancestorPaths.addPath( parentPath );
+		}
+	}
+
+	return ancestorPaths;
+}
+
 IECorePreview::LRUCache<std::string, QPixmap> g_pixmapCache(
 	// Getter
 	[] ( const std::string &fileName, size_t &cost, const IECore::Canceller *canceller ) -> QPixmap
@@ -2117,6 +2132,7 @@ void GafferUIModule::bindPathListingWidget()
 	def( "_pathListingWidgetPathsForIndexRange", &pathsForIndexRange );
 	def( "_pathListingWidgetPathsForPathMatcher", &pathsForPathMatcher );
 	def( "_pathListingWidgetAttachTester", &attachTester );
+	def( "_pathListingWidgetAncestorPaths", &ancestorPaths );
 	def( "_pathModelWaitForPendingUpdates", &waitForPendingUpdates );
 }
 
