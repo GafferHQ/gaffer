@@ -408,35 +408,40 @@ float GafferImage::FilterAlgo::sampleBox( Sampler &sampler, const V2f &p, float 
 			scratchMemory[i] = filter->xfilt( ( (pixelBounds.min.x + i) + 0.5f - p.x ) * xscale );
 		}
 
+		Imath::Box2i visitBounds = pixelBounds;
 		for( int y = pixelBounds.min.y; y < pixelBounds.max.y; y++ )
 		{
+			visitBounds.min.y = y;
+			visitBounds.max.y = y + 1;
 			float yFilterWeight = filter->yfilt( ( y + 0.5f - p.y ) * yscale );
-			for( int x = pixelBounds.min.x; x < pixelBounds.max.x; x++ )
-			{
-				float w = scratchMemory[ x - pixelBounds.min.x ] * yFilterWeight;
+			sampler.visitPixels(
+				visitBounds,
+				[ &totalW, &v, &p, &pixelBounds, &scratchMemory, &yFilterWeight ] ( float value, int x, int y )
+				{
+					float w = scratchMemory[ x - pixelBounds.min.x ] * yFilterWeight;
 
-				// \todo : I can't think of any way to keep this around cleanly for testing, since
-				// it's right down in this inner loop, but replacing the filter with one value for
-				// pixels within the bounding box, and another value for pixels actually touched
-				// by the filter, is a good way to check that the bounding box is correct
-				//w = w != 0.0f ? 1.0f : 0.1f;
+					// \todo : I can't think of any way to keep this around cleanly for testing, since
+					// it's right down in this inner loop, but replacing the filter with one value for
+					// pixels within the bounding box, and another value for pixels actually touched
+					// by the filter, is a good way to check that the bounding box is correct
+					//w = w != 0.0f ? 1.0f : 0.1f;
 
-				totalW += w;
-				v += w * sampler.sample( x, y );
-			}
+					totalW += w;
+					v += w * value;
+				}
+			);
 		}
 	}
 	else
 	{
-		for( int y = pixelBounds.min.y; y < pixelBounds.max.y; y++ )
-		{
-			for( int x = pixelBounds.min.x; x < pixelBounds.max.x; x++ )
+		sampler.visitPixels( pixelBounds,
+			[ &totalW, &v, &p, &xscale, &yscale, &filter ] ( float value, int x, int y )
 			{
 				float w = (*filter)( ( x + 0.5f - p.x ) * xscale, ( y + 0.5f - p.y ) * yscale );
 				totalW += w;
-				v += w * sampler.sample( x, y );
+				v += w * value;
 			}
-		}
+		);
 	}
 
 	if( totalW != 0.0f )
