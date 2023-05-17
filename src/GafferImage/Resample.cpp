@@ -580,27 +580,24 @@ IECore::ConstFloatVectorDataPtr Resample::computeChannelData( const std::string 
 				// seperable case.  Once that is done, we should probably also hoist the multiply by
 				// filterCoordinateMult out of the loop.
 
-				V2i fP; // relative filter position
 				float v = 0.0f;
 				float totalW = 0.0f;
-				for( fP.y = -filterRadius.y; fP.y<= filterRadius.y; ++fP.y )
-				{
-					for( fP.x = -filterRadius.x; fP.x<= filterRadius.x; ++fP.x )
+				V2f filterOrigin = filterCoordinateMult.x * ( iPF - V2f( 0.5f ) );
+				sampler.visitPixels( Imath::Box2i(
+						iPI - filterRadius,
+						iPI + filterRadius + Imath::V2i( 1 )
+					),
+					[&filter, &filterOrigin, &filterCoordinateMult, &iPI, &v, &totalW]( float cur, int x, int y )
 					{
 						const float w = (*filter)(
-							filterCoordinateMult.x * (fP.x - ( iPF.x - 0.5f )),
-							filterCoordinateMult.y * (fP.y - ( iPF.y - 0.5f ))
+							filterOrigin.x + filterCoordinateMult.x * ( x - iPI.x ),
+							filterOrigin.y + filterCoordinateMult.y * ( y - iPI.y )
 						);
 
-						if( w == 0.0f )
-						{
-							continue;
-						}
-
-						v += w * sampler.sample( iPI.x + fP.x, iPI.y + fP.y );
+						v += w * cur;
 						totalW += w;
 					}
-				}
+				);
 
 				if( totalW != 0.0f )
 				{
