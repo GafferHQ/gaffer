@@ -546,6 +546,22 @@ class PathModel : public QAbstractItemModel
 			return m_expandedPaths;
 		}
 
+		void scrollToFirst( const IECore::PathMatcher &paths )
+		{
+			cancelUpdate();
+
+			if( paths.isEmpty() )
+			{
+				m_scrollToCandidates.reset();
+				return;
+			}
+
+			m_scrollToCandidates = IECore::PathMatcher( paths );
+			m_rootItem->dirtyExpansion();
+
+			scheduleUpdate();
+		}
+
 		// See comments for `setExpansion()`. The PathMatcher vector is our source of
 		// truth, and we don't even use the QItemSelectionModel.
 		void setSelection( const Selection &selectedPaths, bool scrollToFirst = true )
@@ -2007,6 +2023,14 @@ list getSelection( uint64_t treeViewAddress )
 	return result;
 }
 
+void scrollToFirst( uint64_t treeViewAddress, const IECore::PathMatcher &paths )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	QTreeView *treeView = reinterpret_cast<QTreeView *>( treeViewAddress );
+	PathModel *model = dynamic_cast<PathModel *>( treeView->model() );
+	model->scrollToFirst( IECore::PathMatcher( paths ) );
+}
+
 PathPtr pathForIndex( uint64_t treeViewAddress, uint64_t modelIndexAddress )
 {
 	// put a GIL release here in case scene child name computations etc triggered by
@@ -2133,6 +2157,7 @@ void GafferUIModule::bindPathListingWidget()
 	def( "_pathListingWidgetPathsForPathMatcher", &pathsForPathMatcher );
 	def( "_pathListingWidgetAttachTester", &attachTester );
 	def( "_pathListingWidgetAncestorPaths", &ancestorPaths );
+	def( "_pathListingWidgetScrollToFirst", &scrollToFirst );
 	def( "_pathModelWaitForPendingUpdates", &waitForPendingUpdates );
 }
 

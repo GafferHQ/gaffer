@@ -444,6 +444,37 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
 		self.assertEqual( w.getExpansion(), IECore.PathMatcher( [ "/", "/2", "/3" ] ) )
 
+	def testScrollToFirstExpandsAncestors( self ) :
+
+		d = {}
+		for i in range( 0, 10 ) :
+			dd = {}
+			for j in range( 0, 10 ) :
+				dd[str(j)] = j
+			d[str(i)] = dd
+
+		p = Gaffer.DictPath( d, "/" )
+
+		w = GafferUI.PathListingWidget(
+			p,
+			selectionMode = GafferUI.PathListingWidget.SelectionMode.Rows,
+			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree
+		)
+		_GafferUI._pathListingWidgetAttachTester( GafferUI._qtAddress( w._qtWidget() ) )
+		self.assertTrue( w.getExpansion().isEmpty() )
+
+		w.scrollToFirst( IECore.PathMatcher( [ "/2" ] ) )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
+		self.assertTrue( w.getExpansion().isEmpty() )
+
+		w.scrollToFirst( IECore.PathMatcher( [ "/3/7" ] ) )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
+		self.assertEqual( w.getExpansion(), IECore.PathMatcher( [ "/3" ] ) )
+
+		w.scrollToFirst( IECore.PathMatcher( [ "/2/5" ] ) )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( w._qtWidget().model() ) )
+		self.assertEqual( w.getExpansion(), IECore.PathMatcher( [ "/2", "/3" ] ) )
+
 	def testSelectionSignalFrequency( self ) :
 
 		d = {

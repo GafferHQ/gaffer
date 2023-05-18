@@ -112,7 +112,9 @@ API
 - Widget : Added per-widget control over colour display transforms via new `setDisplayTransform()`, `getDisplayTransform()` and `displayTransform()` methods.
 - VisibleSet : Added `VisibleSet::Visibility` struct containing `drawMode` and `descendantsVisible` members.
 - ValuePlug : Improved `getValue()` performance, particularly when retrieving previously computed values from the cache. One benchmark shows a 50% reduction in runtime when the cache is under heavy contention from many threads.
-- PathListingWidget : Added `expandToSelection()` method.
+- PathListingWidget :
+  - Added `expandToSelection()` method.
+  - Added `scrollToFirst()` method to scroll to the first path found in the provided PathMatcher.
 
 Breaking Changes
 ----------------
