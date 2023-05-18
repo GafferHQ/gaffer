@@ -57,7 +57,7 @@ enum TypeId
 	WireframeTypeId = 110513,
 	ObjectSourceTypeId = 110514,
 	PlaneTypeId = 110515,
-	SeedsTypeId = 110516,
+	ScatterTypeId = 110516,
 	InstancerTypeId = 110517,
 	BranchCreatorTypeId = 110518,
 	ObjectToSceneTypeId = 110519,
