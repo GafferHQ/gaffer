@@ -51,7 +51,9 @@ Improvements
 - SceneView :
   - Ancestors and siblings of locations included in the Visible Set are no longer drawn while their ancestors are collapsed.
   - Added red wireframe colour to the bounding box of locations excluded from the Visible Set.
-- HierarchyView : Added support for inclusion and exclusion of leaf level locations to the Visible Set.
+- HierarchyView :
+  - Added support for inclusion and exclusion of leaf level locations to the Visible Set.
+  - Added <kbd>F</kbd> shortcut to expand ancestors and frame selected paths.
 
 Fixes
 -----
