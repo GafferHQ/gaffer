@@ -21,6 +21,14 @@ Improvements
     - Removed "Default" view.
     - Added menu options for changing the current Display.
     - Allowed the available views to be filtered using an `openColorIO:activeViews` metadata value registered on the View's `displayTransform.name` plug. Values should be space-separated names, optionally containing wildcards.
+- Seeds :
+  - Renamed to Scatter.
+  - Added sampling of primitive variables from the source mesh onto the scattered points, controlled using the new `primitiveVariables` plug.
+  - Added `referencePosition` plug to allow point distribution to be fixed on animated meshes.
+  - Added `uv` plug to allow the space within which the points are scattered to be controlled.
+  - Added support for density primitive variable values above `1`.
+  - Improved numerical accuracy.
+  - Improved performance.
 - VectorDataPlugValueWidget : Computation errors are now reflected by a red background colour.
 
 Fixes
@@ -32,6 +40,9 @@ Fixes
 - ConnectionCreatorWrapper : Fixed bug which forced PlugAdder derived classes to implement `updateDragEndPoint()` unnecessarily.
 - Plug : Fixed bug which caused stale values to be retrieved from the cache for plugs that had been renamed.
 - OpenColorIOTransform : Fixed error processing deep image tiles containing no samples.
+- Seeds :
+  - Fixed duplicate points at triangle edges.
+  - Fixed handling of points exactly at the density threshold.
 
 API
 ---
@@ -76,6 +87,9 @@ Breaking Changes
 - Subprocess32 : Removed Python module.
 - Six : Removed Python module.
 - Gaffer : Class constructors are now declared explicit disabling implicit conversions.
+- Seeds :
+  - Renamed to Scatter.
+  - Bugs fixes have made small changes to the point distribution.
 
 Build
 -----
