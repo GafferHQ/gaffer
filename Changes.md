@@ -1,6 +1,10 @@
 1.2.x.x (relative to 1.2.6.0)
 =======
 
+API
+---
+
+- Widget : Exposed the top level Gaffer widget to the api so deriving classes from GafferUI.Widget sub classes is easier.
 
 1.2.6.0 (relative to 1.2.5.0)
 =======

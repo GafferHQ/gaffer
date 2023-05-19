@@ -128,6 +128,8 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 
 		assert( isinstance( topLevelWidget, ( QtWidgets.QWidget, Widget ) ) )
 
+		self.__gafferWidget = None
+
 		if isinstance( topLevelWidget, QtWidgets.QWidget ) :
 			assert( Widget.__qtWidgetOwners.get( topLevelWidget ) is None )
 			self.__qtWidget = topLevelWidget
@@ -669,6 +671,13 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 	def _postConstructor( self ) :
 
 		pass
+
+	## Returns the top level GafferUI widget. If the
+	# top level widget set is a native qt widget
+	# will return None
+	def _gafferWidget( self ) :
+
+		return self.__gafferWidget
 
 	## Returns the top level QWidget instance used to implement
 	# the GafferUI.Widget functionality.
