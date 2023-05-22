@@ -4,7 +4,7 @@
 Fixes
 -----
 
-- Gaffer module : Moved config loading after all name definitions
+- Gaffer module : Delayed loading of config files until the Gaffer module is completely defined.
 
 1.2.6.0 (relative to 1.2.5.0)
 =======
