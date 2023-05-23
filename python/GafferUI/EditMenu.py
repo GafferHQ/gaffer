@@ -239,8 +239,10 @@ def duplicateWithInputs( menu ) :
 						dest.setInput( source.getInput() )
 					return
 
-			for i in range( 0, len( source.children() ) ) :
-				duplicateInputs( source[i], dest[i] )
+			for sourceChild in source.children() :
+				destChild = dest.getChild( sourceChild.getName() )
+				if destChild is not None :
+					duplicateInputs( sourceChild, destChild )
 
 		for i in range( 0, len( newNodes ) ) :
 			duplicateInputs(
