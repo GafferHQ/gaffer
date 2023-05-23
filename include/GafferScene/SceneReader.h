@@ -125,9 +125,11 @@ class GAFFERSCENE_API SceneReader : public SceneNode
 			IECoreScene::ConstSceneInterfacePtr pathScene;
 		};
 		mutable tbb::enumerable_thread_specific<LastScene> m_lastScene;
-		// Returns the SceneInterface for the current filename (in the current Context)
-		// and specified path, using m_lastScene to accelerate the lookups.
-		IECoreScene::ConstSceneInterfacePtr scene( const ScenePath &path ) const;
+		// Returns the SceneInterface for the current filename and specified
+		// path, using `m_lastScene` to accelerate the lookups. If `refreshCount`
+		// or `tags` are provided, they are filled from `refreshCountPlug()` and
+		// `tagsPlug()` respectively.
+		IECoreScene::ConstSceneInterfacePtr scene( const ScenePath &path, const Gaffer::Context *context, int *refreshCount = nullptr, std::string *tags = nullptr ) const;
 
 		static const double g_frameRate;
 		static size_t g_firstPlugIndex;

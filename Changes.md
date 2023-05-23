@@ -1,6 +1,11 @@
 1.2.x.x (relative to 1.2.6.0)
 =======
 
+Improvements
+------------
+
+- SceneReader : Removed `scene:path` and `scene:setName` variables from context used to evaluate `fileName`, `refreshCount` and `tags` plugs. This prevents logical impossibilities like changing the file per location, and also reduces pressure on the hash cache.
+
 Fixes
 -----
 
