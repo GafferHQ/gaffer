@@ -96,7 +96,7 @@ class GAFFERIMAGE_API OpenColorIOTransform : public ColorProcessor
 		void hashColorProcessor( const Gaffer::Context *context, IECore::MurmurHash &h ) const final;
 		ColorProcessorFunction colorProcessor( const Gaffer::Context *context ) const final;
 
-		OCIO_NAMESPACE::ConstContextRcPtr ocioContext( OCIO_NAMESPACE::ConstConfigRcPtr config ) const;
+		OCIO_NAMESPACE::ConstContextRcPtr modifiedOCIOContext( OCIO_NAMESPACE::ConstContextRcPtr context ) const;
 
 		static size_t g_firstPlugIndex;
 		bool m_hasContextPlug;

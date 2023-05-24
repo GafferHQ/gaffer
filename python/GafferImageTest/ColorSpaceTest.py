@@ -169,7 +169,7 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( i["out"]["dataWindow"].getValue(), o["out"]["dataWindow"].getValue() )
 		self.assertEqual( i["out"]["channelNames"].getValue(), o["out"]["channelNames"].getValue() )
 
-	def testContext( self ) :
+	def testContextPlugs( self ) :
 
 		scriptFileName = self.temporaryDirectory() / "script.gfr"
 		contextImageFile = self.temporaryDirectory() / "context.exr"
@@ -231,6 +231,27 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 
 		# check override produce expected output
 		self.assertImagesEqual( actual["out"], expected["out"], ignoreMetadata = True )
+
+	def testConfigFromGafferContext( self ) :
+
+		reader = GafferImage.ImageReader()
+		reader["fileName"].setValue( self.fileName )
+
+		colorSpace = GafferImage.ColorSpace()
+		colorSpace["in"].setInput( reader["out"] )
+		colorSpace["inputSpace"].setValue( "linear" )
+		colorSpace["outputSpace"].setValue( "context" )
+
+		expected = GafferImage.ImageReader()
+		expected["fileName"].setValue( self.imagesPath() / "checker_ocio_context.exr" )
+
+		with Gaffer.Context() as c :
+
+			GafferImage.OpenColorIOAlgo.setConfig( c, str( self.openColorIOPath() / "context.ocio" ) )
+			GafferImage.OpenColorIOAlgo.addVariable( c, "LUT", "srgb.spi1d" )
+			GafferImage.OpenColorIOAlgo.addVariable( c, "CDL", "cineon.spi1d" )
+
+			self.assertImagesEqual( expected["out"], colorSpace["out"], maxDifference = 0.0002, ignoreMetadata = True )
 
 	def testSingleChannelImage( self ) :
 

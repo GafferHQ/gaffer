@@ -46,26 +46,24 @@ from . import OpenColorIOTransformUI
 
 def __displayPresetNames( plug ) :
 
-	config = PyOpenColorIO.GetCurrentConfig()
-
+	config = GafferImage.OpenColorIOAlgo.currentConfig()
 	return IECore.StringVectorData( [ "None" ] + list( config.getDisplays() ) )
 
 def __displayPresetValues( plug ) :
 
-	config = PyOpenColorIO.GetCurrentConfig()
-
+	config = GafferImage.OpenColorIOAlgo.currentConfig()
 	return IECore.StringVectorData( [ "" ] + list( config.getDisplays() ) )
 
 def __viewPresetNames( plug ) :
 
-	config = PyOpenColorIO.GetCurrentConfig()
+	config = GafferImage.OpenColorIOAlgo.currentConfig()
 	display = plug.parent()["display"].getValue()
 
 	return IECore.StringVectorData( [ "None" ] + list( config.getViews( display ) ) )
 
 def __viewPresetValues( plug ) :
 
-	config = PyOpenColorIO.GetCurrentConfig()
+	config = GafferImage.OpenColorIOAlgo.currentConfig()
 	display = plug.parent()["display"].getValue()
 
 	return IECore.StringVectorData( [ "" ] + list( config.getViews( display ) ) )

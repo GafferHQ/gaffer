@@ -46,7 +46,7 @@ import PyOpenColorIO
 
 def __colorSpaceMenuHelper( plug, config = None ) :
 
-	config = PyOpenColorIO.GetCurrentConfig() if config is None else config
+	config = GafferImage.OpenColorIOAlgo.currentConfig() if config is None else config
 	parameters = PyOpenColorIO.ColorSpaceMenuParameters( config )
 
 	categories = Gaffer.Metadata.value( plug, "openColorIO:categories" )
