@@ -5,12 +5,15 @@ Improvements
 ------------
 
 - SceneReader :
+  - Improved performance when reading sets from USD compositions with many instances.
+  - Improved performance when reading materials from USD instances.
   - Removed `scene:path` and `scene:setName` variables from context used to evaluate `fileName`, `refreshCount` and `tags` plugs. This prevents logical impossibilities like changing the file per location, and also reduces pressure on the hash cache.
   - Improved performance when USD files are queried for sets which don't exist. This can be a substantial improvement when a complex USD file without sets is used within a node graph which adds many sets downstream.
 
 Fixes
 -----
 
+- SceneReader : Fixed loading of `__cameras`, `__lights` and `usd:pointInstancers` sets from USD instances.
 - Gaffer module : Delayed loading of config files until the Gaffer module is completely defined.
 
 API
@@ -22,6 +25,11 @@ API
   - `GAFFERSCENE_SCENEREADER_SET_CACHEPOLICY` controls the policy for sets.
   - Default policies remain unchanged, but `Standard` policy may yield improved performance and
     reduced memory usage for Alembic or USD files making heavy use of instancing.
+
+Build
+-----
+
+- Cortex : Updated to 10.4.9.0.
 
 1.2.6.0 (relative to 1.2.5.0)
 =======
