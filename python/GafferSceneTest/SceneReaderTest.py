@@ -746,5 +746,37 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 					True if frame % 2 else False
 				)
 
+	def testContextSanitisation( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["reader"] = GafferScene.SceneReader()
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression( inspect.cleandoc(
+			"""
+			parent["reader"]["fileName"] = "${GAFFER_ROOT}/python/GafferSceneTest/usdFiles/sphereLight.usda"
+			parent["reader"]["tags"] = ""
+			parent["reader"]["refreshCount"] = 0
+			"""
+		) )
+
+		with Gaffer.ContextMonitor( script["expression"] ) as contextMonitor :
+
+			GafferSceneTest.traverseScene( script["reader"]["out"] )
+
+			self.assertNotIn( "scene:path", contextMonitor.combinedStatistics().variableNames() )
+			self.assertNotIn( "scene:setName", contextMonitor.combinedStatistics().variableNames() )
+
+			self.assertIn( "defaultLights", script["reader"]["out"].setNames() )
+
+			self.assertNotIn( "scene:path", contextMonitor.combinedStatistics().variableNames() )
+			self.assertNotIn( "scene:setName", contextMonitor.combinedStatistics().variableNames() )
+
+			script["reader"]["out"].set( "defaultLights" )
+			script["reader"]["out"].globals()
+
+			self.assertNotIn( "scene:path", contextMonitor.combinedStatistics().variableNames() )
+			self.assertNotIn( "scene:setName", contextMonitor.combinedStatistics().variableNames() )
+
 if __name__ == "__main__":
 	unittest.main()
