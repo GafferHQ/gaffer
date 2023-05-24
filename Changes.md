@@ -21,6 +21,7 @@ Improvements
     - Removed "Default" view.
     - Added menu options for changing the current Display.
     - Allowed the available views to be filtered using an `openColorIO:activeViews` metadata value registered on the View's `displayTransform.name` plug. Values should be space-separated names, optionally containing wildcards.
+  - OpenColorIOContext : Added a new node that creates Gaffer context variables to define the OpenColorIO config used by upstream nodes. This allows different OpenColorIO configs to be used in different Gaffer contexts.
   - OpenColorIOTransform :
     - Improved performance.
     - Improved detection of no-op transforms, such as when converting between colorspace aliases like `scene_linear` and `ACEScg`.
