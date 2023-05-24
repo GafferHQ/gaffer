@@ -365,10 +365,12 @@ Gaffer::Plug *ParameterHandler::setupPlug( const IECore::InternedString &paramet
 			msg(
 				Msg::Warning,
 				"GafferArnold::ParameterHandler::setupPlug",
-				format( "Unsupported parameter type \"%s\" for \"%s\" on node \"%s\"" ) %
-					AiParamGetTypeName( parameterType ) %
-					parameterName.string() %
+				fmt::format(
+					"Unsupported parameter type \"{}\" for \"{}\" on node \"{}\"",
+					AiParamGetTypeName( parameterType ),
+					parameterName.string(),
 					nodeName( plugParent )
+				)
 			);
 			return nullptr;
 
@@ -406,9 +408,11 @@ Gaffer::Plug *ParameterHandler::setupPlug( const AtNodeEntry *node, const AtPara
 			msg(
 				Msg::Warning,
 				"GafferArnold::ParameterHandler::setupPlug",
-				format( "Unsupported plug type \"%s\" for parameter \"%s\"" ) %
-				plugTypeOverride %
-				name.c_str()
+				fmt::format(
+					"Unsupported plug type \"{}\" for parameter \"{}\"",
+					plugTypeOverride,
+					name.c_str()
+				)
 			);
 		}
 	}
@@ -557,11 +561,13 @@ Gaffer::Plug *ParameterHandler::setupPlug( const AtNodeEntry *node, const AtPara
 		msg(
 			Msg::Warning,
 			"GafferArnold::ParameterHandler::setupPlug",
-			format( "Unsupported parameter \"%s\" of type \"%s\" on node \"%s\" of type \"%s\"" ) %
-				AiParamGetName( parameter ) %
-				AiParamGetTypeName( AiParamGetType( parameter ) ) %
-				nodeName( plugParent ) %
+			fmt::format(
+				"Unsupported parameter \"{}\" of type \"{}\" on node \"{}\" of type \"{}\"",
+				AiParamGetName( parameter ),
+				AiParamGetTypeName( AiParamGetType( parameter ) ),
+				nodeName( plugParent ),
 				AiNodeEntryGetName( node )
+			)
 		);
 	}
 

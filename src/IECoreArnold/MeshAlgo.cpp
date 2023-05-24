@@ -47,6 +47,8 @@
 #include "ai_array.h"
 #include "ai_msg.h" // Required for __AI_FILE__ macro used by `ai_array.h`
 
+#include "fmt/format.h"
+
 #include <algorithm>
 
 using namespace std;
@@ -111,7 +113,7 @@ void convertUVSet( const std::string &uvSet, const PrimitiveVariable &uvVariable
 	{
 		msg(
 			Msg::Warning, "ToArnoldMeshConverter::doConversion",
-			boost::format( "Variable \"%s\" has an invalid interpolation type - not generating uvs." ) % uvSet
+			fmt::format( "Variable \"{}\" has an invalid interpolation type - not generating uvs.", uvSet )
 		);
 		return;
 	}
@@ -305,7 +307,7 @@ const V3fVectorData *normal( const IECoreScene::MeshPrimitive *mesh, PrimitiveVa
 	const V3fVectorData *n = runTimeCast<const V3fVectorData>( it->second.data.get() );
 	if( !n )
 	{
-		msg( Msg::Warning, "MeshAlgo", boost::format( "Variable \"N\" has unsupported type \"%s\" (expected V3fVectorData)." ) % it->second.data->typeName() );
+		msg( Msg::Warning, "MeshAlgo", fmt::format( "Variable \"N\" has unsupported type \"{}\" (expected V3fVectorData).", it->second.data->typeName() ) );
 		return nullptr;
 	}
 

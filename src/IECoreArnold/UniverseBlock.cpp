@@ -45,6 +45,8 @@
 #include "ai_render.h"
 #include "ai_universe.h"
 
+#include "fmt/format.h"
+
 #include <filesystem>
 
 using namespace IECore;
@@ -72,7 +74,7 @@ void loadMetadata( const std::string &pluginPaths )
 				{
 					if( !AiMetaDataLoadFile( d.path().string().c_str() ) )
 					{
-						throw IECore::Exception( boost::str( boost::format( "Failed to load \"%s\"" ) % d.path().string() ) );
+						throw IECore::Exception( fmt::format( "Failed to load \"{}\"", d.path().string() ) );
 					}
 				}
 			}

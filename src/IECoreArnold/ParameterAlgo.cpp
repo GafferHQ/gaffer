@@ -42,6 +42,8 @@
 #include "ai_msg.h" // Required for __AI_FILE__ macro used by `ai_array.h`
 #include "ai_version.h"
 
+#include "fmt/format.h"
+
 using namespace std;
 using namespace IECore;
 using namespace IECoreArnold;
@@ -63,7 +65,7 @@ inline const T *dataCast( const char *name, const IECore::Data *data )
 	{
 		return result;
 	}
-	msg( Msg::Warning, "setParameter", boost::format( "Unsupported value type \"%s\" for parameter \"%s\" (expected %s)." ) % data->typeName() % name % T::staticTypeName() );
+	msg( Msg::Warning, "setParameter", fmt::format( "Unsupported value type \"{}\" for parameter \"{}\" (expected {}).", data->typeName(), name, T::staticTypeName() ) );
 	return nullptr;
 }
 
@@ -74,12 +76,12 @@ void setParameterInternal( AtNode *node, AtString name, int parameterType, bool 
 		AtArray *a = ParameterAlgo::dataToArray( value, parameterType );
 		if( !a )
 		{
-			msg( Msg::Warning, "setParameter", boost::format( "Unable to create array from data of type \"%s\" for parameter \"%s\"" ) % value->typeName() % name );
+			msg( Msg::Warning, "setParameter", fmt::format( "Unable to create array from data of type \"{}\" for parameter \"{}\"", value->typeName(), name ) );
 			return;
 		}
 		if( AiArrayGetType( a ) != parameterType )
 		{
-			msg( Msg::Warning, "setParameter", boost::format( "Unable to create array of type %s from data of type \"%s\" for parameter \"%s\"" ) % AiParamGetTypeName( parameterType ) % value->typeName() % name );
+			msg( Msg::Warning, "setParameter", fmt::format( "Unable to create array of type {} from data of type \"{}\" for parameter \"{}\"", AiParamGetTypeName( parameterType ), value->typeName(), name ) );
 			return;
 		}
 		AiNodeSetArray( node, name, a );
@@ -222,7 +224,7 @@ void setParameterInternal( AtNode *node, AtString name, int parameterType, bool 
 					nodeStr = AiNodeEntryGetName( AiNodeGetNodeEntry( node ) );
 				}
 
-				msg( Msg::Warning, "setParameter", boost::format( "Arnold parameter \"%s\" on node \"%s\" has unsupported type \"%s\"." ) % name % nodeStr % AiParamGetTypeName( parameterType ) );
+				msg( Msg::Warning, "setParameter", fmt::format( "Arnold parameter \"{}\" on node \"{}\" has unsupported type \"{}\".", name, nodeStr, AiParamGetTypeName( parameterType ) ) );
 			}
 		}
 	}
@@ -367,7 +369,7 @@ void setParameter( AtNode *node, AtString name, const IECore::Data *value )
 			msg(
 				Msg::Warning,
 				"setParameter",
-				boost::format( "Unsupported data type \"%s\" for name \"%s\"" ) % value->typeName() % name
+				fmt::format( "Unsupported data type \"{}\" for name \"{}\"", value->typeName(), name )
 			);
 		}
 	}
@@ -440,7 +442,7 @@ void getParameters( AtNode *node, IECore::CompoundDataMap &values )
 			msg(
 				Msg::Warning,
 				"getParameters",
-				boost::format( "Unable to convert user parameter \"%s\"" ) % AiUserParamGetName( param )
+				fmt::format( "Unable to convert user parameter \"{}\"", AiUserParamGetName( param ) )
 			);
 		}
 	}

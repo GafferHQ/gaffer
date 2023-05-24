@@ -40,6 +40,8 @@
 #include "IECore/MessageHandler.h"
 #include "IECore/SimpleTypedData.h"
 
+#include "fmt/format.h"
+
 using namespace std;
 using namespace IECore;
 using namespace IECoreScene;
@@ -79,7 +81,7 @@ AtNode *convertCommon( const IECoreScene::PointsPrimitive *points, AtUniverse *u
 		}
 		else
 		{
-			IECore::msg( IECore::Msg::Warning, "ToArnoldPointsConverter::doConversion", boost::format( "Unknown type \"%s\" - reverting to disk mode." ) % t->readable() );
+			IECore::msg( IECore::Msg::Warning, "ToArnoldPointsConverter::doConversion", fmt::format( "Unknown type \"{}\" - reverting to disk mode.", t->readable() ) );
 		}
 	}
 

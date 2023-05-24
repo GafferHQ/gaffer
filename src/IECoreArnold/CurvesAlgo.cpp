@@ -44,6 +44,8 @@
 #include "ai_array.h"
 #include "ai_msg.h" // Required for __AI_FILE__ macro used by `ai_array.h`
 
+#include "fmt/format.h"
+
 using namespace std;
 using namespace Imath;
 using namespace IECore;
@@ -98,7 +100,10 @@ ConstCurvesPrimitivePtr resampleCurves( const CurvesPrimitive *curves )
 				msg(
 					Msg::Warning,
 					"ShapeAlgo::convertPrimitiveVariable",
-					boost::format( "Unable to create user parameter \"%s\" for primitive variable of type \"%s\"" ) % it.first % it.second.data->typeName()
+					fmt::format(
+						"Unable to create user parameter \"{}\" for primitive variable of type \"{}\"",
+						it.first, it.second.data->typeName()
+					)
 				);
 				continue;
 			}
@@ -120,7 +125,7 @@ void convertUVs( const IECoreScene::CurvesPrimitive *curves, AtNode *node )
 
 	if( !runTimeCast<const V2fVectorData>( it->second.data.get() ) )
 	{
-		msg( Msg::Warning, "CurvesAlgo", boost::format( "Variable \"uv\" has unsupported type \"%s\" (expected V2fVectorData)." ) % it->second.data->typeName() );
+		msg( Msg::Warning, "CurvesAlgo", fmt::format( "Variable \"uv\" has unsupported type \"{}\" (expected V2fVectorData).", it->second.data->typeName() ) );
 		return;
 	}
 

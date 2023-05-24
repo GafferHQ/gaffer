@@ -64,7 +64,6 @@
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/container/flat_map.hpp"
 #include "boost/date_time/posix_time/posix_time.hpp"
-#include "boost/format.hpp"
 #include "boost/lexical_cast.hpp"
 
 #include "ai_array.h"
@@ -79,6 +78,8 @@
 #include "tbb/concurrent_vector.h"
 #include "tbb/partitioner.h"
 #include "tbb/spin_mutex.h"
+
+#include "fmt/format.h"
 
 #include <condition_variable>
 #include <filesystem>
@@ -134,7 +135,7 @@ T *reportedCast( const IECore::RunTimeTyped *v, const char *type, const IECore::
 		return t;
 	}
 
-	IECore::msg( IECore::Msg::Warning, "IECoreArnold::Renderer", boost::format( "Expected %s but got %s for %s \"%s\"." ) % T::staticTypeName() % v->typeName() % type % name.c_str() );
+	IECore::msg( IECore::Msg::Warning, "IECoreArnold::Renderer", fmt::format( "Expected {} but got {} for {} \"{}\".", T::staticTypeName(), v->typeName(), type, name.c_str() ) );
 	return nullptr;
 }
 
@@ -187,47 +188,47 @@ std::string formatHeaderParameter( const std::string name, const IECore::Data *d
 {
 	if( const IECore::BoolData *boolData = IECore::runTimeCast<const IECore::BoolData>( data ) )
 	{
-		return boost::str( boost::format( "int '%s' %i" ) % name % int(boolData->readable()) );
+		return fmt::format( "int '{}' {}", name, int(boolData->readable()) );
 	}
 	else if( const IECore::FloatData *floatData = IECore::runTimeCast<const IECore::FloatData>( data ) )
 	{
-		return boost::str( boost::format( "float '%s' %f" ) % name % floatData->readable() );
+		return fmt::format( "float '{}' {}", name, floatData->readable() );
 	}
 	else if( const IECore::IntData *intData = IECore::runTimeCast<const IECore::IntData>( data ) )
 	{
-		return boost::str( boost::format( "int '%s' %i" ) % name % intData->readable() );
+		return fmt::format( "int '{}' {}", name, intData->readable() );
 	}
 	else if( const IECore::StringData *stringData = IECore::runTimeCast<const IECore::StringData>( data ) )
 	{
-		return boost::str( boost::format( "string '%s' %s" ) % name % stringData->readable() );
+		return fmt::format( "string '{}' {}", name, stringData->readable() );
 	}
 	else if( const IECore::V2iData *v2iData = IECore::runTimeCast<const IECore::V2iData>( data ) )
 	{
-		return boost::str( boost::format( "string '%s' %s" ) % name % v2iData->readable() );
+		return fmt::format( "string '{}' ({} {})", name, v2iData->readable().x, v2iData->readable().y );
 	}
 	else if( const IECore::V3iData *v3iData = IECore::runTimeCast<const IECore::V3iData>( data ) )
 	{
-		return boost::str( boost::format( "string '%s' %s" ) % name % v3iData->readable() );
+		return fmt::format( "string '{}' ({} {} {})", name, v3iData->readable().x, v3iData->readable().y, v3iData->readable().z );
 	}
 	else if( const IECore::V2fData *v2fData = IECore::runTimeCast<const IECore::V2fData>( data ) )
 	{
-		return boost::str( boost::format( "string '%s' %s" ) % name % v2fData->readable() );
+		return fmt::format( "string '{}' ({} {})", name, v2fData->readable().x, v2fData->readable().y );
 	}
 	else if( const IECore::V3fData *v3fData = IECore::runTimeCast<const IECore::V3fData>( data ) )
 	{
-		return boost::str( boost::format( "string '%s' %s" ) % name % v3fData->readable() );
+		return fmt::format( "string '{}' ({} {} {})", name, v3fData->readable().x, v3fData->readable().y, v3fData->readable().z );
 	}
 	else if( const IECore::Color3fData *c3fData = IECore::runTimeCast<const IECore::Color3fData>( data ) )
 	{
-		return boost::str( boost::format( "string '%s' %s" ) % name % c3fData->readable() );
+		return fmt::format( "string '{}' ({} {} {})", name, c3fData->readable().x, c3fData->readable().y, c3fData->readable().z );
 	}
 	else if( const IECore::Color4fData *c4fData = IECore::runTimeCast<const IECore::Color4fData>( data ) )
 	{
-		return boost::str( boost::format( "string '%s' %s" ) % name % c4fData->readable() );
+		return fmt::format( "string '{}' ({} {} {} {})", name, c4fData->readable().r, c4fData->readable().g, c4fData->readable().b, c4fData->readable().a );
 	}
 	else
 	{
-		IECore::msg( IECore::Msg::Warning, "IECoreArnold::Renderer", boost::format( "Cannot convert data \"%s\" of type \"%s\"." ) % name % data->typeName() );
+		IECore::msg( IECore::Msg::Warning, "IECoreArnold::Renderer", fmt::format( "Cannot convert data \"{}\" of type \"{}\".", name, data->typeName() ) );
 		return "";
 	}
 }
@@ -482,14 +483,14 @@ class ArnoldOutput : public IECore::RefCounted
 				}
 			}
 
-			const std::string driverNodeName = boost::str( boost::format( "ieCoreArnold:display:%s" ) % name.string() );
+			const std::string driverNodeName = fmt::format( "ieCoreArnold:display:{}", name.string() );
 			m_driver.reset(
 				AiNode( universe, driverNodeType, AtString( driverNodeName.c_str() ) ),
 				nodeDeleter
 			);
 			if( !m_driver )
 			{
-				throw IECore::Exception( boost::str( boost::format( "Unable to create output driver of type \"%s\"" ) % driverNodeType.c_str() ) );
+				throw IECore::Exception( fmt::format( "Unable to create output driver of type \"{}\"", driverNodeType.c_str() ) );
 			}
 
 			if( const AtParamEntry *fileNameParameter = AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( m_driver.get() ), g_fileNameArnoldString ) )
@@ -549,14 +550,14 @@ class ArnoldOutput : public IECore::RefCounted
 				filterNodeType = filterNodeType + "_filter";
 			}
 
-			const std::string filterNodeName = boost::str( boost::format( "ieCoreArnold:filter:%s" ) % name.string() );
+			const std::string filterNodeName = fmt::format( "ieCoreArnold:filter:{}", name.string() );
 			m_filter.reset(
 				AiNode( universe, AtString( filterNodeType.c_str() ), AtString( filterNodeName.c_str() ) ),
 				nodeDeleter
 			);
 			if( AiNodeEntryGetType( AiNodeGetNodeEntry( m_filter.get() ) ) != AI_NODE_FILTER )
 			{
-				throw IECore::Exception( boost::str( boost::format( "Unable to create filter of type \"%s\"" ) % filterNodeType ) );
+				throw IECore::Exception( fmt::format( "Unable to create filter of type \"{}\"", filterNodeType ) );
 			}
 
 			for( IECore::CompoundDataMap::const_iterator it = output->parameters().begin(), eIt = output->parameters().end(); it != eIt; ++it )
@@ -648,7 +649,7 @@ class ArnoldOutput : public IECore::RefCounted
 						/// to use the standard Cortex formatting instead.
 						IECore::msg(
 							IECore::Msg::Warning, "ArnoldRenderer",
-							boost::format( "Unknown data type \"%1%\" for output \"%2%\"" ) % tokens[0] % name
+							fmt::format( "Unknown data type \"{}\" for output \"{}\"", tokens[0], name.string() )
 						);
 						m_data = tokens[0];
 						m_type = tokens[1];
@@ -659,7 +660,7 @@ class ArnoldOutput : public IECore::RefCounted
 					/// \todo See above.
 					IECore::msg(
 						IECore::Msg::Warning, "ArnoldRenderer",
-						boost::format( "Unknown data specification \"%1%\" for output \"%2%\"" ) % output->getData() % name
+						fmt::format( "Unknown data specification \"{}\" for output \"{}\"", output->getData(), name.string() )
 					);
 					m_data = output->getData();
 					m_type = "";
@@ -683,7 +684,7 @@ class ArnoldOutput : public IECore::RefCounted
 					if( m_lpeName.empty() )
 					{
 						IECore::msg( IECore::Msg::Warning, "ArnoldRenderer",
-							boost::format( "Cannot use `layerName` with `layerPerLightGroup` for non-LPE output \"%1%\", due to Arnold bug #12282" ) % name
+							fmt::format( "Cannot use `layerName` with `layerPerLightGroup` for non-LPE output \"{}\", due to Arnold bug #12282", name.string() )
 						);
 					}
 					else
@@ -712,7 +713,7 @@ class ArnoldOutput : public IECore::RefCounted
 		void append( std::vector<std::string> &outputs, std::vector<std::string> &lightPathExpressions ) const
 		{
 			const string layerNameSuffix = m_layerName.size() ? " " + m_layerName : "";
-			outputs.push_back( boost::str( boost::format( "%s %s %s %s%s" ) % m_data % m_type % AiNodeGetName( m_filter.get() ) % AiNodeGetName( m_driver.get() ) % layerNameSuffix ) );
+			outputs.push_back( fmt::format( "{} {} {} {}{}", m_data, m_type, AiNodeGetName( m_filter.get() ), AiNodeGetName( m_driver.get() ), layerNameSuffix ) );
 			if( m_lpeValue.size() )
 			{
 				lightPathExpressions.push_back( m_lpeName + " " + m_lpeValue );
@@ -1303,7 +1304,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					IECore::msg(
 						IECore::Msg::Warning,
 						"Renderer::attributes",
-						boost::format( "Custom attribute \"%s\" will be ignored because it clashes with Arnold's built-in parameters" ) % attr.first.c_str()
+						fmt::format( "Custom attribute \"{}\" will be ignored because it clashes with Arnold's built-in parameters", attr.first.c_str() )
 					);
 					continue;
 				}
@@ -3498,7 +3499,7 @@ class ArnoldGlobals
 				const AtParamEntry *parameter = AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( options ), arnoldName );
 				if( parameter )
 				{
-					IECore::msg( IECore::Msg::Warning, "IECoreArnold::Renderer::option", boost::format( "Unable to declare existing option \"%s\"." ) % arnoldName.c_str() );
+					IECore::msg( IECore::Msg::Warning, "IECoreArnold::Renderer::option", fmt::format( "Unable to declare existing option \"{}\".", arnoldName.c_str() ) );
 				}
 				else
 				{
@@ -3519,7 +3520,7 @@ class ArnoldGlobals
 			{
 				if( name == "ai:ignore_motion_blur" )
 				{
-					IECore::msg( IECore::Msg::Warning, "IECoreArnold::Renderer::option", boost::format( "ai:ignore_motion_blur is not supported directly - set generic Gaffer option sampleMotion to False to control this option." ) );
+					IECore::msg( IECore::Msg::Warning, "IECoreArnold::Renderer::option", "ai:ignore_motion_blur is not supported directly - set generic Gaffer option sampleMotion to False to control this option." );
 					return;
 				}
 				AtString arnoldName( name.c_str() + 3 );
@@ -3571,7 +3572,7 @@ class ArnoldGlobals
 				return;
 			}
 
-			IECore::msg( IECore::Msg::Warning, "IECoreArnold::Renderer::option", boost::format( "Unknown option \"%s\"." ) % name.c_str() );
+			IECore::msg( IECore::Msg::Warning, "IECoreArnold::Renderer::option", fmt::format( "Unknown option \"{}\".", name.c_str() ) );
 		}
 
 		void output( const IECore::InternedString &name, const IECoreScene::Output *output )
@@ -3961,7 +3962,7 @@ class ArnoldGlobals
 					}
 				}
 
-				throw IECore::Exception( boost::str( boost::format( "While outputting camera \"%s\", could not find target mesh at \"%s\"" ) % it.first % meshPath ) );
+				throw IECore::Exception( fmt::format( "While outputting camera \"{}\", could not find target mesh at \"{}\"", it.first, meshPath ) );
 			}
 		}
 
@@ -4293,7 +4294,7 @@ class ArnoldRenderer final : public ArnoldRendererBase
 			}
 			else if( boost::starts_with( name.string(), "ai:" ) || name.string().find( ":" ) == string::npos )
 			{
-				IECore::msg( IECore::Msg::Warning, "IECoreArnold::Renderer::command", boost::format( "Unknown command \"%s\"." ) % name.c_str() );
+				IECore::msg( IECore::Msg::Warning, "IECoreArnold::Renderer::command", fmt::format( "Unknown command \"{}\".", name.c_str() ) );
 			}
 
 			return nullptr;
