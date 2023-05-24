@@ -239,12 +239,16 @@ void SceneReader::affects( const Gaffer::Plug *input, AffectedPlugsContainer &ou
 		outputs.push_back( outPlug()->childNamesPlug() );
 	}
 
+	if( affectsScene || input == outPlug()->setNamesPlug() )
+	{
+		outputs.push_back( outPlug()->setPlug() );
+	}
+
 	if( affectsScene )
 	{
 		outputs.push_back( outPlug()->attributesPlug() );
 		outputs.push_back( outPlug()->objectPlug() );
 		outputs.push_back( outPlug()->setNamesPlug() );
-		outputs.push_back( outPlug()->setPlug() );
 	}
 }
 
@@ -602,6 +606,8 @@ void SceneReader::hashSet( const IECore::InternedString &setName, const Gaffer::
 	ScenePlug::GlobalScope globalScope( context );
 	fileNamePlug()->hash( h );
 	refreshCountPlug()->hash( h );
+	// Technically speaking, we should also call `outPlug()->setNamesPlug()->hash( h )` here,
+	// but it doesn't append anything we haven't already appended.
 	h.append( setName );
 }
 
@@ -638,6 +644,21 @@ static void loadSetWalk( const SceneInterface *s, const InternedString &setName,
 
 IECore::ConstPathMatcherDataPtr SceneReader::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
 {
+	ConstInternedStringVectorDataPtr setNamesData = parent->setNames();
+	if( find( setNamesData->readable().begin(), setNamesData->readable().end(), setName ) == setNamesData->readable().end() )
+	{
+		// As documented on `SceneNode::computeSet()`, we may be called with set names
+		// that are not present in `out.setNames`, and it is our responsibility to
+		// return an empty set in this case. Reading an empty set from a USDScene can
+		// be arbitrarily expensive though, because it will traverse the entire stage
+		// looking for matching collections. We perform our own check here first, to
+		// avoid that expense.
+		/// \todo Elsewhere in Gaffer it is the client's responsibility to only use
+		/// valid contexts with names that have been advertised (e.g. `scene:path`,
+		/// `image:channelName`). Perhaps that would be a better approach here?
+		return outPlug()->setPlug()->defaultValue();
+	}
+
 	ConstSceneInterfacePtr rootScene = scene( ScenePath(), context );
 	if( !rootScene )
 	{
