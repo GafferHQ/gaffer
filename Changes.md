@@ -95,7 +95,9 @@ Breaking Changes
 - UVInspector : Moved the `displayTransform` plug to `displayTransform.name`.
 - ImageReader : Renamed `None` preset to `Automatic`.
 - ImageReader/ImageWriter : Added a `config` argument to `DefaultColorSpaceFunction`. If implementing such a function in Python, it can be compatible with both Gaffer 1.2 and 1.3 if the argument is declared as `config = PyOpenColorIO.GetCurrentConfig()`.
-- OpenColorIOTransform : Removed `availableColorSpaces()` and `availableRoles()` methods.
+- OpenColorIOTransform :
+  - Removed `availableColorSpaces()` and `availableRoles()` methods.
+  - Deprecated `context` plug.
 - OpenColorIO : Changed default config.
 - Subprocess32 : Removed Python module.
 - Six : Removed Python module.

@@ -63,6 +63,7 @@ class GAFFERIMAGE_API OpenColorIOTransform : public ColorProcessor
 
 		/// May return null if the derived class does not
 		/// request OCIO context variable support.
+		/// \deprecated Use the OpenColorIOContext node instead.
 		Gaffer::CompoundDataPlug *contextPlug();
 		const Gaffer::CompoundDataPlug *contextPlug() const;
 
