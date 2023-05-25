@@ -44,9 +44,25 @@
 #include "IECorePython/RunTimeTypedBinding.h"
 #include "IECorePython/SimpleTypedDataBinding.h"
 
+#include "fmt/format.h"
+
 using namespace boost::python;
 using namespace IECore;
 using namespace GafferScene;
+
+namespace
+{
+
+std::string visibilityRepr( const VisibleSet::Visibility &visibility )
+{
+	const std::string drawMode = extract<std::string>( object( visibility.drawMode ).attr( "__str__" )() );
+	return fmt::format(
+		"GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.{}, {} )",
+		drawMode, visibility.descendantsVisible ? "True" : "False"
+	);
+}
+
+} // namespace
 
 void GafferSceneModule::bindVisibleSet()
 {
@@ -60,14 +76,29 @@ void GafferSceneModule::bindVisibleSet()
 
 	IECorePython::TypedDataFromType<VisibleSetData>();
 
-	class_<VisibleSet>( "VisibleSet" )
+	scope s = class_<VisibleSet>( "VisibleSet" )
 		.def( init<>() )
 		.def( init<const VisibleSet &>() )
-		.def( "match", (PathMatcher::Result (VisibleSet ::*)( const std::vector<InternedString> &, const size_t ) const)&VisibleSet::match, arg( "minimumExpansionDepth" ) = 0 )
+		.def( "visibility", (VisibleSet::Visibility (VisibleSet ::*)( const std::vector<InternedString> &, const size_t ) const)&VisibleSet::visibility, arg( "minimumExpansionDepth" ) = 0 )
 		.def_readwrite( "expansions", &VisibleSet::expansions )
 		.def_readwrite( "inclusions", &VisibleSet::inclusions )
 		.def_readwrite( "exclusions", &VisibleSet::exclusions )
 		.def( "__eq__", &VisibleSet::operator== )
+	;
+
+	scope r = class_<VisibleSet::Visibility>( "Visibility" )
+		.def( init<>() )
+		.def( init<VisibleSet::Visibility::DrawMode, bool>() )
+		.def_readwrite( "descendantsVisible", &VisibleSet::Visibility::descendantsVisible )
+		.def_readwrite( "drawMode", &VisibleSet::Visibility::drawMode )
+		.def( self == self )
+		.def( "__repr__", &visibilityRepr )
+	;
+
+	enum_<VisibleSet::Visibility::DrawMode>( "DrawMode" )
+		.value( "None_", VisibleSet::Visibility::DrawMode::None )
+		.value( "Visible", VisibleSet::Visibility::DrawMode::Visible )
+		.value( "ExcludedBounds", VisibleSet::Visibility::DrawMode::ExcludedBounds )
 	;
 
 }

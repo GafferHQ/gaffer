@@ -959,15 +959,15 @@ class RenderController::SceneGraph
 
 		bool updateExpansion( const ScenePlug::ScenePath &path, const GafferScene::VisibleSet &visibleSet, size_t minimumExpansionDepth )
 		{
-			/// \todo We also include DescendantMatch here to ensure the ancestors of visible paths are also visible,
-			/// ideally we'd avoid expanding those ancestors and instead render only the ExactMatch.
-			const bool expanded = visibleSet.match( path, minimumExpansionDepth ) & ( PathMatcher::ExactMatch | PathMatcher::DescendantMatch );
+			/// \todo We expand based on the descendant visibility to ensure the ancestors of visible paths are expanded,
+			/// ideally we'd avoid drawing those ancestors and instead render only the visible locations.
+			const auto visibility = visibleSet.visibility( path, minimumExpansionDepth );
 
-			if( expanded == m_expanded )
+			if( visibility.descendantsVisible == m_expanded )
 			{
 				return false;
 			}
-			m_expanded = expanded;
+			m_expanded = visibility.descendantsVisible;
 			return true;
 		}
 
