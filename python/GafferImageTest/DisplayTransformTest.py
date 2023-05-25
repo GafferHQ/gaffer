@@ -190,11 +190,11 @@ class DisplayTransformTest( GafferImageTest.ImageTestCase ) :
 		s["dt"]["display"].setValue( "default" )
 		s["dt"]["view"].setValue( "context" )
 
-
 		s["writer"] = GafferImage.ImageWriter()
 		s["writer"]["fileName"].setValue( contextImageFile )
 		s["writer"]["in"].setInput( s["dt"]["out"] )
 		s["writer"]["channels"].setValue( "R G B A" )
+		s["writer"]["openexr"]["dataType"].setValue( "float" )
 
 		s["fileName"].setValue( scriptFileName )
 		s.save()
