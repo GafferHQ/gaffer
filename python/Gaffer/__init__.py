@@ -60,8 +60,6 @@ from .Monitor import Monitor
 from . import NodeAlgo
 from . import ExtensionAlgo
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "Gaffer" )
-
 # Class-level non-UI metadata registration
 Metadata.registerValue( Reference, "childNodesAreReadOnly", True )
 
@@ -80,3 +78,5 @@ def executablePath( absolute = True ) :
 		return rootPath() / "bin" / executable
 
 	return executable
+
+__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "Gaffer" )

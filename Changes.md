@@ -111,8 +111,65 @@ Build
 - Qt : Updated to version 5.15.8.
 - ZLib : Added version 1.2.13.
 
-1.2.x.x (relative to 1.2.5.0)
+1.2.x.x (relative to 1.2.7.0)
 =======
+
+Improvements
+------------
+
+- EditScope : Hid the `BoxIn.name` and `BoxOut.name` plugs from the NodeEditor, since it is not editable and the name is _always_ `in` or `out` respectively.
+
+Fixes
+-----
+
+- NodeEditor : Reverted change that prevented a plug being unlocked if static `readOnly` metadata was registered against it.
+- EditMenu : Fixed errors using "Duplicate with Inputs" with certain configurations of Dot node (#5309).
+
+1.2.7.0 (relative to 1.2.6.0)
+=======
+
+Improvements
+------------
+
+- SceneReader :
+  - Improved performance when reading sets from USD compositions with many instances.
+  - Improved performance when reading materials from USD instances.
+  - Removed `scene:path` and `scene:setName` variables from context used to evaluate `fileName`, `refreshCount` and `tags` plugs. This prevents logical impossibilities like changing the file per location, and also reduces pressure on the hash cache.
+  - Improved performance when USD files are queried for sets which don't exist. This can be a substantial improvement when a complex USD file without sets is used within a node graph which adds many sets downstream.
+
+Fixes
+-----
+
+- SceneReader : Fixed loading of `__cameras`, `__lights` and `usd:pointInstancers` sets from USD instances.
+- Gaffer module : Delayed loading of config files until the Gaffer module is completely defined.
+
+API
+---
+
+- SceneReader : Added environment variables to control cache policies.
+  - `GAFFERSCENE_SCENEREADER_OBJECT_CACHEPOLICY` controls the policy for objects.
+  - `GAFFERSCENE_SCENEREADER_SETNAMES_CACHEPOLICY` controls the policy for set names.
+  - `GAFFERSCENE_SCENEREADER_SET_CACHEPOLICY` controls the policy for sets.
+  - Default policies remain unchanged, but `Standard` policy may yield improved performance and
+    reduced memory usage for Alembic or USD files making heavy use of instancing.
+
+Build
+-----
+
+- Cortex : Updated to 10.4.9.0.
+
+1.2.6.0 (relative to 1.2.5.0)
+=======
+
+Improvements
+------------
+
+- SceneReader : Improved error messages when encountering unexpected problems reading USD files.
+
+Build
+-----
+
+- Cortex : Updated to version 10.4.8.0.
 
 1.2.5.0 (relative to 1.2.4.0)
 =======
@@ -506,6 +563,11 @@ Build
 
 1.1.9.x (relative to 1.1.9.6)
 =======
+
+Fixes
+-----
+
+- EditMenu : Fixed errors using "Duplicate with Inputs" with certain configurations of Dot node (#5309).
 
 1.1.9.6 (relative to 1.1.9.5)
 =======

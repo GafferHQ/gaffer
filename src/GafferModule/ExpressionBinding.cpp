@@ -135,7 +135,7 @@ ValuePlug::CachePolicy defaultExecuteCachePolicy()
 		}
 		else
 		{
-			IECore::msg( IECore::Msg::Warning, "Expression", "Invalid value for GAFFER_GAFFER_PYTHONEXPRESSION_CACHEPOLICY. Must be Standard, TaskCollaboration, TaskIsolation or Legacy." );
+			IECore::msg( IECore::Msg::Warning, "Expression", "Invalid value for GAFFER_PYTHONEXPRESSION_CACHEPOLICY. Must be Standard, TaskCollaboration, TaskIsolation or Legacy." );
 		}
 	}
 
