@@ -915,7 +915,7 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 			parent["in"].boundHash( "/GAFFERBOT/C_torso_GRP" )
 		)
 
-	def testEllipsisInDestination( self ) :
+	def testInvalidDestinationNames( self ) :
 
 		sphere = GafferScene.Sphere()
 
@@ -930,8 +930,11 @@ class ParentTest( GafferSceneTest.SceneTestCase ) :
 		parent["filter"].setInput( sphereFilter["out"] )
 
 		parent["destination"].setValue( "/woops/..." )
+		with self.assertRaisesRegex( Gaffer.ProcessException, r'.*Invalid destination `/woops/...`. Name `...` is invalid \(because `...` is a filter wildcard\)' ) :
+			parent["out"].childNames( "/" )
 
-		with self.assertRaisesRegex( Gaffer.ProcessException, r".*Invalid destination `/woops/...` \(must not contain `...`\)" ) :
+		parent["destination"].setValue( "/woops/a*" )
+		with self.assertRaisesRegex( Gaffer.ProcessException, r".*Invalid destination `/woops/a\*`. Name `a\*` is invalid \(because it contains filter wildcards\)" ) :
 			parent["out"].childNames( "/" )
 
 if __name__ == "__main__":

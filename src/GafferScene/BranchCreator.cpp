@@ -114,12 +114,17 @@ void validateDestination( const ScenePlug::ScenePath &destination )
 {
 	for( auto &n : destination )
 	{
-		if( n == g_ellipsis )
+		try
+		{
+			SceneAlgo::validateName( n );
+		}
+		catch( const std::exception &e )
 		{
 			throw IECore::Exception(
 				fmt::format(
-					"Invalid destination `{}` (must not contain `...`)",
-					ScenePlug::pathToString( destination )
+					"Invalid destination `{}`. {}",
+					ScenePlug::pathToString( destination ),
+					e.what()
 				)
 			);
 		}
