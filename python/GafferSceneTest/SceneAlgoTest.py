@@ -1824,7 +1824,7 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 			with self.subTest( name = goodName ) :
 				GafferScene.SceneAlgo.validateName( goodName )
 
-		for badName in [ "..", "...", "", "a/b", "/", "a/", "/b" ] :
+		for badName in [ "..", "...", "", "a/b", "/", "a/", "/b", "*", "a*", "b*", "[", "b[a-z]", "\\", "\\a", "b\\", "a?", "?a" ] :
 			with self.subTest( name = badName ) :
 				with self.assertRaises( RuntimeError ) :
 					GafferScene.SceneAlgo.validateName( badName )

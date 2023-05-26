@@ -220,7 +220,7 @@ class SphereTest( GafferSceneTest.SceneTestCase ) :
 		sphere = GafferScene.Sphere()
 		sphere["sets"].setValue( "A" )
 
-		for name in [ "a/b", "a/", "/b", "/", "..", "..." ] :
+		for name in [ "a/b", "a/", "/b", "/", "..", "...", "*", "a*", "b*", "[", "b[a-z]", r"\\" ] :
 			with self.subTest( name = name ) :
 				sphere["name"].setValue( name )
 				with self.assertRaises( Gaffer.ProcessException ) :

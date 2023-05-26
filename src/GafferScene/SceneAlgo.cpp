@@ -1150,6 +1150,10 @@ void GafferScene::SceneAlgo::validateName( IECore::InternedString name )
 	{
 		invalidReason = "`/` is the path separator";
 	}
+	else if( StringAlgo::hasWildcards( name.string() ) )
+	{
+		invalidReason = "it contains filter wildcards";
+	}
 
 	if( invalidReason )
 	{

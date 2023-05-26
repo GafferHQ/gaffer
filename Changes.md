@@ -43,7 +43,7 @@ Fixes
 - Seeds :
   - Fixed duplicate points at triangle edges.
   - Fixed handling of points exactly at the density threshold.
-- ObjectSource, Group : Prevented the creation of locations with invalid names - `..`, `...` or anything containing `/`.
+- ObjectSource, Group : Prevented the creation of locations with invalid names - `..`, `...` or anything containing `/` or a filter wildcard.
 - BranchCreator : Prevented the use of `...` in the `destination` - because it is a wildcard it should not be used as the name of a location.
 
 API
