@@ -429,7 +429,7 @@ Gaffer.Metadata.registerNode(
 			from the catalogue node.
 			""",
 
-			"plugValueWidget:type", "GafferImageUI.CatalogueUI._ImageListing",
+			"plugValueWidget:type", "GafferImageUI.CatalogueUI.ImageListing",
 			"label", "",
 			"layout:section", "Images",
 
@@ -690,10 +690,10 @@ class _ImagesPath( Gaffer.Path ) :
 			self._emitPathChanged()
 
 ##########################################################################
-# _ImageListing
+# ImageListing
 ##########################################################################
 
-class _ImageListing( GafferUI.PlugValueWidget ) :
+class ImageListing( GafferUI.PlugValueWidget ) :
 
 	def __init__( self, plug, **kw ) :
 
@@ -729,7 +729,7 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 			)
 			self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
 
-			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) as self.__buttonRow :
 
 				addButton = GafferUI.Button( image = "pathChooser.png", hasFrame = False, toolTip = "Load image" )
 				addButton.clickedSignal().connect( Gaffer.WeakMethod( self.__addClicked ), scoped = False )
@@ -768,6 +768,12 @@ class _ImageListing( GafferUI.PlugValueWidget ) :
 		Gaffer.Metadata.plugValueChangedSignal( plug.node() ).connect( Gaffer.WeakMethod( self.__plugMetadataValueChanged ), scoped = False )
 
 		self.contextMenuSignal().connect( Gaffer.WeakMethod( self.__contextMenu ), scoped = False )
+
+	def buttonRow( self ):
+
+		# Convenience method to get the button row list container to make
+		# it easier to add additional buttons to the Image Listing widget
+		return self.__buttonRow
 
 	def getToolTip( self ) :
 

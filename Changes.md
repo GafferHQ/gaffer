@@ -137,6 +137,11 @@ Fixes
 - NodeEditor : Reverted change that prevented a plug being unlocked if static `readOnly` metadata was registered against it.
 - EditMenu : Fixed errors using "Duplicate with Inputs" with certain configurations of Dot node (#5309).
 
+API
+---
+
+- CatalogueUI : Made ImageListing widget public so it can be customized using the API.
+
 1.2.7.0 (relative to 1.2.6.0)
 =======
 
