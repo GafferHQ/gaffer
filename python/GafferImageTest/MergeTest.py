@@ -657,7 +657,7 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		#imageWriter["in"].setInput( loop["out"] )
 		#imageWriter['openexr']['dataType'].setValue( "float" )
 		#imageWriter["fileName"].setValue( "/tmp/mergeBoundaries.exr" )
-		#imageWriter.execute()
+		#imageWriter["task"].execute()
 
 		reader = GafferImage.ImageReader()
 		reader["fileName"].setValue( self.mergeBoundariesRefPath )
