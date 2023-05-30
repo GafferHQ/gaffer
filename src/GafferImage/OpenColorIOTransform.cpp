@@ -149,6 +149,7 @@ IECore::MurmurHash OpenColorIOTransform::processorHash() const
 
 	IECore::MurmurHash result;
 	hashTransform( Context::current(), result );
+
 	if( auto *p = contextPlug() )
 	{
 		p->hash( result );
@@ -156,27 +157,8 @@ IECore::MurmurHash OpenColorIOTransform::processorHash() const
 	return result;
 }
 
-bool OpenColorIOTransform::enabled() const
+bool OpenColorIOTransform::affectsColorProcessor( const Gaffer::Plug *input ) const
 {
-	if( !ColorProcessor::enabled() )
-	{
-		return false;
-	}
-
-	MurmurHash h;
-	{
-		ImagePlug::GlobalScope c( Context::current() );
-		hashTransform( Context::current(), h );
-	}
-	return ( h != MurmurHash() );
-}
-
-bool OpenColorIOTransform::affectsColorData( const Gaffer::Plug *input ) const
-{
-	if( ColorProcessor::affectsColorData( input ) )
-	{
-		return true;
-	}
 	if( contextPlug() && contextPlug()->isAncestorOf( input ) )
 	{
 		return true;
@@ -184,11 +166,8 @@ bool OpenColorIOTransform::affectsColorData( const Gaffer::Plug *input ) const
 	return affectsTransform( input );
 }
 
-void OpenColorIOTransform::hashColorData( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void OpenColorIOTransform::hashColorProcessor( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ColorProcessor::hashColorData( context, h );
-
-	ImagePlug::GlobalScope c( context );
 	h.append( processorHash() );
 }
 
@@ -240,35 +219,34 @@ OCIO_NAMESPACE::ConstContextRcPtr OpenColorIOTransform::ocioContext( OCIO_NAMESP
 	return context;
 }
 
-void OpenColorIOTransform::processColorData( const Gaffer::Context *context, IECore::FloatVectorData *r, IECore::FloatVectorData *g, IECore::FloatVectorData *b ) const
+ColorProcessor::ColorProcessorFunction OpenColorIOTransform::colorProcessor( const Gaffer::Context *context ) const
 {
-	if( !r->readable().size() )
+	OCIO_NAMESPACE::ConstProcessorRcPtr processor = this->processor();
+	if( !processor || processor->isNoOp() )
 	{
-		// Deep image with no samples. OCIO will throw if we give it an empty
-		// PlanarImageDesc.
-		return;
+		return ColorProcessorFunction();
 	}
-
-	OCIO_NAMESPACE::ConstProcessorRcPtr processor;
-	{
-		ImagePlug::GlobalScope c( context );
-		processor = this->processor();
-	}
-
-	if( !processor )
-	{
-		return;
-	}
-
-	OCIO_NAMESPACE::PlanarImageDesc image(
-		r->baseWritable(),
-		g->baseWritable(),
-		b->baseWritable(),
-		nullptr, // alpha
-		r->readable().size(), // Treat all pixels as a single line, since geometry doesn't affect OCIO
-		1 // height
-	);
 
 	OCIO_NAMESPACE::ConstCPUProcessorRcPtr cpuProcessor = processor->getDefaultCPUProcessor();
-	cpuProcessor->apply( image );
+
+	return [cpuProcessor] ( IECore::FloatVectorData *r, IECore::FloatVectorData *g, IECore::FloatVectorData *b ) {
+
+		if( !r->readable().size() )
+		{
+			// Deep image with no samples. OCIO will throw if we give it an empty
+			// PlanarImageDesc.
+			return;
+		}
+
+		OCIO_NAMESPACE::PlanarImageDesc image(
+			r->baseWritable(),
+			g->baseWritable(),
+			b->baseWritable(),
+			nullptr, // alpha
+			r->readable().size(), // Treat all pixels as a single line, since geometry doesn't affect OCIO
+			1 // height
+		);
+
+		cpuProcessor->apply( image );
+	};
 }

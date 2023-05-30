@@ -97,19 +97,9 @@ bool DisplayTransform::affectsTransform( const Gaffer::Plug *input ) const
 
 void DisplayTransform::hashTransform( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	std::string colorSpace = inputColorSpacePlug()->getValue();
-	std::string display = displayPlug()->getValue();
-	std::string view = viewPlug()->getValue();
-
-	if( colorSpace.empty() || display.empty() || view.empty() )
-	{
-		h = MurmurHash();
-		return;
-	}
-
-	h.append( colorSpace );
-	h.append( display );
-	h.append( view );
+	inputColorSpacePlug()->hash( h );
+	displayPlug()->hash( h );
+	viewPlug()->hash( h );
 }
 
 OCIO_NAMESPACE::ConstTransformRcPtr DisplayTransform::transform() const
@@ -118,8 +108,7 @@ OCIO_NAMESPACE::ConstTransformRcPtr DisplayTransform::transform() const
 	std::string display = displayPlug()->getValue();
 	std::string view = viewPlug()->getValue();
 
-	// no need to run the processor if we don't
-	// have valid inputs
+	// Can't create a processor if we don't have valid inputs.
 	if( colorSpace.empty() || display.empty() || view.empty() )
 	{
 		return OCIO_NAMESPACE::ConstTransformRcPtr();

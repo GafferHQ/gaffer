@@ -57,10 +57,9 @@ class GAFFERIMAGE_API Saturation : public ColorProcessor
 
 	protected :
 
-		bool enabled() const override;
-		bool affectsColorData( const Gaffer::Plug *input ) const override;
-		void hashColorData( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		void processColorData( const Gaffer::Context *context, IECore::FloatVectorData *r, IECore::FloatVectorData *g, IECore::FloatVectorData *b ) const override;
+		bool affectsColorProcessor( const Gaffer::Plug *input ) const override;
+		void hashColorProcessor( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		ColorProcessorFunction colorProcessor( const Gaffer::Context *context ) const override;
 
 	private :
 

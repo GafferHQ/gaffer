@@ -66,61 +66,36 @@ const Gaffer::FloatPlug *Saturation::saturationPlug() const
 	return getChild<FloatPlug>( g_firstPlugIndex );
 }
 
-bool Saturation::affectsColorData( const Gaffer::Plug *input ) const
+bool Saturation::affectsColorProcessor( const Gaffer::Plug *input ) const
 {
-	if( ColorProcessor::affectsColorData( input ) )
-	{
-		return true;
-	}
-
-	if( input == saturationPlug() )
-	{
-		return true;
-	}
-
-	return false;
+	return input == saturationPlug();
 }
 
-bool Saturation::enabled() const
+void Saturation::hashColorProcessor( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	if( !ColorProcessor::enabled() )
-	{
-		return false;
-	}
-
-	return saturationPlug()->getValue() != 1.0f;
-}
-
-void Saturation::hashColorData( const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	ColorProcessor::hashColorData( context, h );
-
-	ImagePlug::GlobalScope c( context );
 	saturationPlug()->hash( h );
 }
 
-void Saturation::processColorData( const Gaffer::Context *context, IECore::FloatVectorData *rData, IECore::FloatVectorData *gData, IECore::FloatVectorData *bData ) const
+ColorProcessor::ColorProcessorFunction Saturation::colorProcessor( const Gaffer::Context *context ) const
 {
-	float saturation;
-	{
-		ImagePlug::GlobalScope c( context );
-		saturation = saturationPlug()->getValue();
-	}
-
+	const float saturation = saturationPlug()->getValue();
 	if( saturation == 1.0f )
 	{
-		return;
+		return ColorProcessorFunction();
 	}
 
-	std::vector<float> &r = rData->writable();
-	std::vector<float> &g = gData->writable();
-	std::vector<float> &b = bData->writable();
-
-	for( int i = 0; i < ImagePlug::tilePixels(); i++ )
+	return [saturation] ( IECore::FloatVectorData *rData, IECore::FloatVectorData *gData, IECore::FloatVectorData *bData )
 	{
-		float lum = r[i] * 0.2126 + g[i] * 0.7152 + b[i] * 0.0722;
-		r[i] = ( r[i] - lum ) * saturation + lum;
-		g[i] = ( g[i] - lum ) * saturation + lum;
-		b[i] = ( b[i] - lum ) * saturation + lum;
-	}
+		std::vector<float> &r = rData->writable();
+		std::vector<float> &g = gData->writable();
+		std::vector<float> &b = bData->writable();
+
+		for( int i = 0; i < ImagePlug::tilePixels(); i++ )
+		{
+			float lum = r[i] * 0.2126 + g[i] * 0.7152 + b[i] * 0.0722;
+			r[i] = ( r[i] - lum ) * saturation + lum;
+			g[i] = ( g[i] - lum ) * saturation + lum;
+			b[i] = ( b[i] - lum ) * saturation + lum;
+		}
+	};
 }

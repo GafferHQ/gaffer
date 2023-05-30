@@ -87,37 +87,22 @@ bool LookTransform::affectsTransform( const Gaffer::Plug *input ) const
 
 void LookTransform::hashTransform( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	std::string look = lookPlug()->getValue();
-	if( look.empty() )
-	{
-		h = MurmurHash();
-		return;
-	}
-
 	lookPlug()->hash( h );
 	directionPlug()->hash( h );
 }
 
 OCIO_NAMESPACE::ConstTransformRcPtr LookTransform::transform() const
 {
-	OCIO_NAMESPACE::ConstConfigRcPtr config = OCIO_NAMESPACE::GetCurrentConfig();
-	OCIO_NAMESPACE::ConstColorSpaceRcPtr linearcs = config->getColorSpace( OCIO_NAMESPACE::ROLE_SCENE_LINEAR );
-	if (!linearcs)
-		throw IECore::Exception( "LookTransform: exception thrown during OCIO setup; ROLE_SCENE_LINEAR not defined." );
-
-	string colorSpace( linearcs->getName() );
-	string look( lookPlug()->getValue() );
-
-	// no need to run the processor if we're not actually changing the color space.
-	if( colorSpace.empty() || look.empty() )
+	const string look( lookPlug()->getValue() );
+	if( look.empty() )
 	{
 		return OCIO_NAMESPACE::ColorSpaceTransformRcPtr();
 	}
 
 	OCIO_NAMESPACE::LookTransformRcPtr transform = OCIO_NAMESPACE::LookTransform::Create();
-	transform->setSrc( colorSpace.c_str() );
+	transform->setSrc( OCIO_NAMESPACE::ROLE_SCENE_LINEAR );
 	transform->setLooks( look.c_str() );
-	transform->setDst( colorSpace.c_str() );
+	transform->setDst( OCIO_NAMESPACE::ROLE_SCENE_LINEAR );
 	transform->setDirection( directionPlug()->getValue() == Forward ? OCIO_NAMESPACE::TRANSFORM_DIR_FORWARD : OCIO_NAMESPACE::TRANSFORM_DIR_INVERSE );
 
 	return transform;

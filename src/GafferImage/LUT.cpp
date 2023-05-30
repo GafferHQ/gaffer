@@ -121,12 +121,6 @@ bool LUT::affectsTransform( const Gaffer::Plug *input ) const
 
 void LUT::hashTransform( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	if( fileNamePlug()->getValue().empty() )
-	{
-		h = MurmurHash();
-		return;
-	}
-
 	fileNamePlug()->hash( h );
 	directionPlug()->hash( h );
 	interpolationPlug()->hash( h );

@@ -21,6 +21,9 @@ Improvements
     - Removed "Default" view.
     - Added menu options for changing the current Display.
     - Allowed the available views to be filtered using an `openColorIO:activeViews` metadata value registered on the View's `displayTransform.name` plug. Values should be space-separated names, optionally containing wildcards.
+  - OpenColorIOTransform :
+    - Improved performance.
+    - Improved detection of no-op transforms, such as when converting between colorspace aliases like `scene_linear` and `ACEScg`.
 - Seeds :
   - Renamed to Scatter.
   - Added sampling of primitive variables from the source mesh onto the scattered points, controlled using the new `primitiveVariables` plug.
@@ -55,6 +58,7 @@ API
 - ViewportGadget : A post-process shader can now be applied to any layer, not just the main one.
 - SceneGadget : Added `setLayer()` and `getLayer()` methods, which allow the destination `Gadget::Layer` to be specified.
 - TestCase : Added `ignoreMessage()` method, to register messages that should not be treated as test failures.
+- OpenColorIOTransform : Automated image pass-throughs when the `transform()` method returns a no-op. Derived classes no longer need to implement their own pass-through.
 - OpenColorIOTransformUI :
   - Added `noneLabel` argument to `colorSpacePresetNames()`.
   - Added support for `openColorIO:categories` and `openColorIO:includeRoles` metadata to `colorSpacePresetNames()`. These may be registered on a per-plug basis to control the colorspaces shown for that plug.
@@ -90,6 +94,11 @@ Breaking Changes
 - Seeds :
   - Renamed to Scatter.
   - Bugs fixes have made small changes to the point distribution.
+- ColorProcessor : Refactored virtual methods that must be implemented by derived classes :
+  - Replaced `processColorData()` with `colorProcessor()` method that returns a `ColorProcessorFunction`.
+  - Replaced `affectsColorData()` with `affectsColorProcessor()` and `hashColorData()` with `hashColorProcessor()`.
+  - Simplified implementation of pass-throughs when the color processor is a no-op. Derived classes may simply
+    return an empty `ColorProcessorFunction`, and everything else is taken care of in the base class.
 
 Build
 -----
