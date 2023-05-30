@@ -128,7 +128,7 @@ class DisplayTransformTest( GafferImageTest.ImageTestCase ) :
 
 		o["inputColorSpace"].setValue( "scene_linear" )
 		o["display"].setValue( "sRGB - Display" )
-		o["view"].setValue( "rec709" )
+		o["view"].setValue( "ACES 1.0 - SDR Video" )
 
 		self.assertNotEqual( GafferImage.ImageAlgo.imageHash( i["out"] ), GafferImage.ImageAlgo.imageHash( o["out"] ) )
 
