@@ -69,6 +69,7 @@ API
 - TypedObjectPlug : Added default value for `direction` and `defaultValue` constructor arguments.
 - VectorDataWidget : Added `setErrored()` and `getErrored()` methods to control an error state. Errors are reflected by a red background colour.
 - PlugLayout : Added support for `layout:minimumWidth` metadata.
+- TabbedContainer : Added `setTabVisible()` and `getTabVisible()` methods.
 - Removed use of `RTLD_GLOBAL` for loading Python modules.
 - SceneAlgo : Added `validateName()` function.
 
