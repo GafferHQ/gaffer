@@ -319,8 +319,8 @@ class RenderController::SceneGraph
 			AttributesComponent = 4,
 			ObjectComponent = 8,
 			ChildNamesComponent = 16,
-			ExpansionComponent = 32,
-			AllComponents = BoundComponent | TransformComponent | AttributesComponent | ObjectComponent | ChildNamesComponent | ExpansionComponent,
+			VisibleSetComponent = 32,
+			AllComponents = BoundComponent | TransformComponent | AttributesComponent | ObjectComponent | ChildNamesComponent | VisibleSetComponent,
 		};
 
 		// Constructs the root of the scene graph.
@@ -437,6 +437,14 @@ class RenderController::SceneGraph
 
 			clean( TransformComponent );
 
+			// VisibleSet
+
+			if( ( m_dirtyComponents & VisibleSetComponent ) && updateVisibleSet( path, controller->m_visibleSet, controller->m_minimumExpansionDepth ) )
+			{
+				m_changedComponents |= VisibleSetComponent;
+				m_dirtyComponents |= ObjectComponent;
+			}
+
 			// Object
 
 			if( ( m_dirtyComponents & ObjectComponent ) && updateObject( controller->m_scene->objectPlug(), type, controller->m_renderer.get(), controller->m_globals.get(), controller->m_scene.get(), controller->m_lightLinks.get(), controller->m_motionBlurOptions ) )
@@ -523,22 +531,15 @@ class RenderController::SceneGraph
 
 			clean( ChildNamesComponent );
 
-			// Expansion
-
-			if( ( m_dirtyComponents & ExpansionComponent ) && updateExpansion( path, controller->m_visibleSet, controller->m_minimumExpansionDepth ) )
-			{
-				m_changedComponents |= ExpansionComponent;
-			}
-
 			bool newBound = false;
 			if(
-				( m_changedComponents & ( ExpansionComponent | ChildNamesComponent ) ) ||
+				( m_changedComponents & ( VisibleSetComponent | ChildNamesComponent ) ) ||
 				( m_dirtyComponents & BoundComponent )
 			)
 			{
 				// Create bounding box if needed
 				Box3f bound;
-				if( !m_expanded && m_children.size() )
+				if( ( m_drawMode == VisibleSet::Visibility::Visible && !m_expanded && m_children.size() ) || m_drawMode == VisibleSet::Visibility::ExcludedBounds )
 				{
 					bound = controller->m_scene->boundPlug()->getValue();
 				}
@@ -583,7 +584,7 @@ class RenderController::SceneGraph
 				}
 			}
 
-			clean( ExpansionComponent | BoundComponent );
+			clean( VisibleSetComponent | BoundComponent );
 
 			m_cleared = false;
 
@@ -621,6 +622,7 @@ class RenderController::SceneGraph
 			m_attributesHash = m_lightLinksHash = m_transformHash = m_childNamesHash = IECore::MurmurHash();
 			m_cleared = true;
 			m_expanded = false;
+			m_drawMode = VisibleSet::Visibility::None;
 			m_boundInterface = nullptr;
 			m_dirtyComponents = AllComponents;
 		}
@@ -761,7 +763,7 @@ class RenderController::SceneGraph
 		bool updateObject( const ObjectPlug *objectPlug, Type type, IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const ScenePlug *scene, LightLinks *lightLinks, const MotionBlurOptions &motionBlurOptions )
 		{
 			const bool hadObjectInterface = static_cast<bool>( m_objectInterface );
-			if( type == NoType )
+			if( type == NoType || m_drawMode != VisibleSet::Visibility::Visible )
 			{
 				clearObject();
 				return hadObjectInterface;
@@ -957,17 +959,17 @@ class RenderController::SceneGraph
 			m_objectHash = MurmurHash();
 		}
 
-		bool updateExpansion( const ScenePlug::ScenePath &path, const GafferScene::VisibleSet &visibleSet, size_t minimumExpansionDepth )
+		bool updateVisibleSet( const ScenePlug::ScenePath &path, const GafferScene::VisibleSet &visibleSet, size_t minimumExpansionDepth )
 		{
-			/// \todo We expand based on the descendant visibility to ensure the ancestors of visible paths are expanded,
-			/// ideally we'd avoid drawing those ancestors and instead render only the visible locations.
 			const auto visibility = visibleSet.visibility( path, minimumExpansionDepth );
 
-			if( visibility.descendantsVisible == m_expanded )
+			if( visibility.descendantsVisible == m_expanded && visibility.drawMode == m_drawMode )
 			{
 				return false;
 			}
 			m_expanded = visibility.descendantsVisible;
+			m_drawMode = visibility.drawMode;
+
 			return true;
 		}
 
@@ -1107,6 +1109,7 @@ class RenderController::SceneGraph
 
 		IECoreScenePreview::Renderer::ObjectInterfacePtr m_boundInterface;
 		bool m_expanded;
+		VisibleSet::Visibility::DrawMode m_drawMode;
 
 		// Tracks work which needs to be done on
 		// the next call to `update()`.
@@ -1393,7 +1396,7 @@ void RenderController::setVisibleSet( const GafferScene::VisibleSet &visibleSet 
 	cancelBackgroundTask();
 
 	m_visibleSet = visibleSet;
-	dirtySceneGraphs( SceneGraph::ExpansionComponent );
+	dirtySceneGraphs( SceneGraph::VisibleSetComponent );
 	requestUpdate();
 }
 
@@ -1412,7 +1415,7 @@ void RenderController::setMinimumExpansionDepth( size_t depth )
 	cancelBackgroundTask();
 
 	m_minimumExpansionDepth = depth;
-	dirtySceneGraphs( SceneGraph::ExpansionComponent );
+	dirtySceneGraphs( SceneGraph::VisibleSetComponent );
 	requestUpdate();
 }
 
