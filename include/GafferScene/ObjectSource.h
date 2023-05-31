@@ -108,6 +108,7 @@ class GAFFERSCENE_API ObjectSource : public SceneNode
 
 	private :
 
+		IECore::InternedString validatedName() const;
 		bool setNameValid( const IECore::InternedString &setName ) const;
 
 		static size_t g_firstPlugIndex;

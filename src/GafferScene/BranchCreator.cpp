@@ -108,6 +108,29 @@ bool internedStringValueLess( const InternedString &a, const InternedString &b )
 	return a.string() < b.string();
 }
 
+const InternedString g_ellipsis( "..." );
+
+void validateDestination( const ScenePlug::ScenePath &destination )
+{
+	for( auto &n : destination )
+	{
+		try
+		{
+			SceneAlgo::validateName( n );
+		}
+		catch( const std::exception &e )
+		{
+			throw IECore::Exception(
+				fmt::format(
+					"Invalid destination `{}`. {}",
+					ScenePlug::pathToString( destination ),
+					e.what()
+				)
+			);
+		}
+	}
+}
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -301,7 +324,9 @@ class BranchCreator::BranchesData : public IECore::Data
 			h.append( path.data(), path.size() );
 			h.append( (uint64_t)path.size() );
 
-			ScenePlug::ScenePath destination = ScenePlug::stringToPath( branchCreator->destinationPlug()->getValue() );
+			const ScenePlug::ScenePath destination = ScenePlug::stringToPath( branchCreator->destinationPlug()->getValue() );
+			validateDestination( destination );
+
 			h.append( destination.data(), destination.size() );
 			h.append( (uint64_t)destination.size() );
 
@@ -312,7 +337,8 @@ class BranchCreator::BranchesData : public IECore::Data
 
 		void addBranch( const BranchCreator *branchCreator, const ScenePlug::ScenePath &path )
 		{
-			ScenePlug::ScenePath destination = ScenePlug::stringToPath( branchCreator->destinationPlug()->getValue() );
+			const ScenePlug::ScenePath destination = ScenePlug::stringToPath( branchCreator->destinationPlug()->getValue() );
+			validateDestination( destination );
 			const ScenePlug::ScenePath existing = closestExistingPath( branchCreator->inPlug(), destination );
 
 			tbb::spin_mutex::scoped_lock lock( m_mutex );

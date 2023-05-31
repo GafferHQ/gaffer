@@ -253,15 +253,7 @@ IECore::ConstInternedStringVectorDataPtr ObjectSource::computeChildNames( const 
 	if( path.size() == 0 )
 	{
 		IECore::InternedStringVectorDataPtr result = new IECore::InternedStringVectorData();
-		const std::string &name = namePlug()->getValue();
-		if( name.size() )
-		{
-			result->writable().push_back( name );
-		}
-		else
-		{
-			result->writable().push_back( "unnamed" );
-		}
+		result->writable().push_back( validatedName() );
 		return result;
 	}
 	return parent->childNamesPlug()->defaultValue();
@@ -314,7 +306,7 @@ IECore::ConstPathMatcherDataPtr ObjectSource::computeSet( const IECore::Interned
 	if( setNameValid( setName ) )
 	{
 		IECore::PathMatcherDataPtr result = new IECore::PathMatcherData;
-		result->writable().addPath( namePlug()->getValue() );
+		result->writable().addPath( ScenePlug::ScenePath( { validatedName() } ) );
 		return result;
 	}
 	else
@@ -327,6 +319,21 @@ IECore::ConstInternedStringVectorDataPtr ObjectSource::computeStandardSetNames()
 {
 	IECore::InternedStringVectorDataPtr result = new IECore::InternedStringVectorData();
 	return result;
+}
+
+IECore::InternedString ObjectSource::validatedName() const
+{
+	const IECore::InternedString name = namePlug()->getValue();
+	if( name.string().size() )
+	{
+		SceneAlgo::validateName( name );
+		return name;
+	}
+	else
+	{
+		/// \todo Why don't we just let `validateName()` throw for us instead?
+		return "unnamed";
+	}
 }
 
 bool ObjectSource::setNameValid( const IECore::InternedString &setName ) const

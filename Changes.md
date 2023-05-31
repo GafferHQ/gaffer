@@ -43,6 +43,8 @@ Fixes
 - Seeds :
   - Fixed duplicate points at triangle edges.
   - Fixed handling of points exactly at the density threshold.
+- ObjectSource, Group : Prevented the creation of locations with invalid names - `..`, `...` or anything containing `/` or a filter wildcard.
+- BranchCreator : Prevented the use of `...` and other filter wildcards in the `destination`.
 
 API
 ---
@@ -64,6 +66,7 @@ API
 - VectorDataWidget : Added `setErrored()` and `getErrored()` methods to control an error state. Errors are reflected by a red background colour.
 - PlugLayout : Added support for `layout:minimumWidth` metadata.
 - Removed use of `RTLD_GLOBAL` for loading Python modules.
+- SceneAlgo : Added `validateName()` function.
 
 Breaking Changes
 ----------------

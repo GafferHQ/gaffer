@@ -38,6 +38,7 @@
 #include "GafferScene/Group.h"
 
 #include "GafferScene/Private/ChildNamesMap.h"
+#include "GafferScene/SceneAlgo.h"
 
 #include "Gaffer/ArrayPlug.h"
 #include "Gaffer/Context.h"
@@ -375,8 +376,10 @@ IECore::ConstInternedStringVectorDataPtr Group::computeChildNames( const ScenePa
 {
 	if( path.size() == 0 )
 	{
+		const InternedString name = namePlug()->getValue();
+		SceneAlgo::validateName( name );
 		InternedStringVectorDataPtr result = new InternedStringVectorData();
-		result->writable().push_back( namePlug()->getValue() );
+		result->writable().push_back( name );
 		return result;
 	}
 	else if( path.size() == 1 )
@@ -449,6 +452,7 @@ IECore::ConstPathMatcherDataPtr Group::computeSet( const IECore::InternedString 
 	ScenePlug::GlobalScope s( context );
 	Private::ConstChildNamesMapPtr mapping = boost::static_pointer_cast<const Private::ChildNamesMap>( mappingPlug()->getValue() );
 	const InternedString name = namePlug()->getValue();
+	SceneAlgo::validateName( name );
 
 	PathMatcherDataPtr resultData = new PathMatcherData;
 	resultData->writable().addPaths( mapping->set( inputSets ), { name } );
