@@ -615,6 +615,8 @@ class _Layout( GafferUI.Widget ) :
 
 		return self.__orientation
 
+	# Returns `True` if the layout contains any visible widgets,
+	# `False` otherwise.
 	def update( self, section ) :
 
 		raise NotImplementedError
@@ -654,6 +656,7 @@ class _TabLayout( _Layout ) :
 			existingTabs[self.__tabbedContainer.getLabel( tab )] = tab
 
 		updatedTabs = collections.OrderedDict()
+		updatedTabVisibilities = []
 		for name, subsection in section.subsections.items() :
 			tab = existingTabs.get( name )
 			if tab is None :
@@ -668,7 +671,7 @@ class _TabLayout( _Layout ) :
 						tab.setVerticalMode( GafferUI.ScrollMode.Never )
 
 				tab.setChild( _CollapsibleLayout( self.orientation() ) )
-			tab.getChild().update( subsection )
+			updatedTabVisibilities.append( tab.getChild().update( subsection ) )
 			updatedTabs[name] = tab
 
 		if existingTabs.keys() != updatedTabs.keys() :
@@ -678,6 +681,7 @@ class _TabLayout( _Layout ) :
 					self.__tabbedContainer.append( tab, label = name )
 
 		for index, subsection in enumerate( section.subsections.values() ) :
+			self.__tabbedContainer.setTabVisible( self.__tabbedContainer[index], updatedTabVisibilities[index] )
 			## \todo Consider how/if we should add a public tooltip API to TabbedContainer.
 			self.__tabbedContainer._qtWidget().setTabToolTip( index, subsection.summary )
 
@@ -686,8 +690,13 @@ class _TabLayout( _Layout ) :
 			if currentTabIndex < len( self.__tabbedContainer ) :
 				self.__tabbedContainer.setCurrent( self.__tabbedContainer[currentTabIndex] )
 
-		self.__widgetsColumn.setVisible( len( section.widgets ) )
-		self.__tabbedContainer.setVisible( len( self.__tabbedContainer ) )
+		haveVisibleWidgets = any( w.getVisible() for w in self.__widgetsColumn )
+		haveVisibleTabs = any( self.__tabbedContainer.getTabVisible( t ) for t in self.__tabbedContainer )
+
+		self.__widgetsColumn.setVisible( haveVisibleWidgets )
+		self.__tabbedContainer.setVisible( haveVisibleTabs )
+
+		return haveVisibleWidgets or haveVisibleTabs
 
 	def __currentTabChanged( self, tabbedContainer, currentTab ) :
 
@@ -736,11 +745,8 @@ class _CollapsibleLayout( _Layout ) :
 
 				self.__collapsibles[name] = collapsible
 
-			collapsible.getChild().update( subsection )
-
 			collapsible.setVisible(
-				any( [ w.getVisible() for w in subsection.widgets ] ) or
-				any( [ w.getVisible() for w in collapsible.getChild().__collapsibles.values() ] )
+				collapsible.getChild().update( subsection )
 			)
 
 			collapsible.getCornerWidget().setText(
@@ -755,6 +761,8 @@ class _CollapsibleLayout( _Layout ) :
 			widgets.append( collapsible )
 
 		self.__column[:] = widgets
+
+		return any( w.getVisible() for w in self.__column )
 
 	def __collapsibleStateChanged( self, collapsible, subsection ) :
 
