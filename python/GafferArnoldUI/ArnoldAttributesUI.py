@@ -149,6 +149,14 @@ def __curvesSummary( plug ) :
 
 	return ", ".join( info )
 
+def __pointsSummary( plug ) :
+
+	info = []
+	if plug["pointsMinPixelWidth"]["enabled"].getValue() :
+		info.append( "Min Pixel Width {}".format( GafferUI.NumericWidget.valueToString( plug["pointsMinPixelWidth"]["value"].getValue() ) ) )
+
+	return ", ".join( info )
+
 def __volumeSummary( plug ) :
 
 	info = []
@@ -200,6 +208,7 @@ Gaffer.Metadata.registerNode(
 			"layout:section:Shading:summary", __shadingSummary,
 			"layout:section:Subdivision:summary", __subdivisionSummary,
 			"layout:section:Curves:summary", __curvesSummary,
+			"layout:section:Points:summary", __pointsSummary,
 			"layout:section:Volume:summary", __volumeSummary,
 			"layout:section:Toon:summary", __toonSummary,
 
@@ -761,6 +770,24 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"layout:section", "Curves",
+			"label", "Min Pixel Width",
+
+		],
+
+		# Points
+
+		"attributes.pointsMinPixelWidth" : [
+
+			"description",
+			"""
+			The minimum width of rendered points primitives, measured in pixels on the screen.
+			When rendering very small points, a large number of AA samples are required to avoid
+			aliasing. In these cases a minimum pixel width may be specified to artificially enlarge
+			the points, meaning that fewer AA samples may be used. The additional size is
+			compensated for automatically by lowering the opacity of the points.
+			""",
+
+			"layout:section", "Points",
 			"label", "Min Pixel Width",
 
 		],

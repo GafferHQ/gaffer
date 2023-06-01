@@ -4,6 +4,7 @@
 Improvements
 ------------
 
+- ArnoldAttributes : Added `pointsMinPixelWidth` plug.
 - EditScope : Hid the `BoxIn.name` and `BoxOut.name` plugs from the NodeEditor, since it is not editable and the name is _always_ `in` or `out` respectively.
 
 Fixes
