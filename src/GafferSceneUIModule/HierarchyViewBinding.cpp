@@ -529,15 +529,6 @@ class InclusionsColumn : public PathColumn
 				return result;
 			}
 
-			Context::EditableScope scope( m_context.get() );
-			scope.setCanceller( canceller );
-
-			if( scenePath->getScene()->childNames( scenePath->names() )->readable().empty() )
-			{
-				// To limit the amount of duplicate information presented we don't provide custom cellData to leaf locations
-				return result;
-			}
-
 			const auto visibleSet = ContextAlgo::getVisibleSet( m_context.get() );
 			const auto inclusionsMatch = visibleSet.inclusions.match( scenePath->names() );
 			const auto locationExcluded = visibleSet.exclusions.match( scenePath->names() ) & (IECore::PathMatcher::Result::ExactMatch | IECore::PathMatcher::Result::AncestorMatch);
@@ -627,14 +618,6 @@ class InclusionsColumn : public PathColumn
 			auto scenePath = IECore::runTimeCast<const ScenePath>( &path );
 			if( !scenePath )
 			{
-				return false;
-			}
-
-			Context::EditableScope scope( m_context.get() );
-
-			if( scenePath->getScene()->childNames( scenePath->names() )->readable().empty() )
-			{
-				// Leaf locations are not treated as clickable, user interaction should occur at the parent location
 				return false;
 			}
 
@@ -776,15 +759,6 @@ class ExclusionsColumn : public PathColumn
 				return result;
 			}
 
-			Context::EditableScope scope( m_context.get() );
-			scope.setCanceller( canceller );
-
-			if( scenePath->getScene()->childNames( scenePath->names() )->readable().empty() )
-			{
-				// To limit the amount of duplicate information presented we don't provide custom cellData to leaf locations
-				return result;
-			}
-
 			auto visibleSet = ContextAlgo::getVisibleSet( m_context.get() );
 			auto exclusionsMatch = visibleSet.exclusions.match( scenePath->names() );
 
@@ -847,14 +821,6 @@ class ExclusionsColumn : public PathColumn
 			auto scenePath = IECore::runTimeCast<const ScenePath>( &path );
 			if( !scenePath )
 			{
-				return false;
-			}
-
-			Context::EditableScope scope( m_context.get() );
-
-			if( scenePath->getScene()->childNames( scenePath->names() )->readable().empty() )
-			{
-				// Leaf locations are not treated as clickable, user interaction should occur at the parent location
 				return false;
 			}
 
