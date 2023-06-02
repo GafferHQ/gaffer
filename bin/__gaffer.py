@@ -52,8 +52,17 @@ signal.signal( signal.SIGINT, signal.SIG_DFL )
 warnings.simplefilter( "default", DeprecationWarning )
 
 import IECore
-from Gaffer._Gaffer import _nameProcess
 
+# Increase the soft limit for file handles as high as we can - we need everything we can get for
+# opening models, textures etc.
+if os.name != "nt" :
+	import resource
+	softFileLimit, hardFileLimit = resource.getrlimit( resource.RLIMIT_NOFILE )
+	if softFileLimit < hardFileLimit :
+		resource.setrlimit( resource.RLIMIT_NOFILE, ( hardFileLimit, hardFileLimit ) )
+		IECore.msg( IECore.Msg.Level.Info, "Gaffer", "Increased file handle limit to {}".format( hardFileLimit ) )
+
+from Gaffer._Gaffer import _nameProcess
 _nameProcess()
 
 helpText = """Usage :

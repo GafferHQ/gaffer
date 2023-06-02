@@ -130,6 +130,8 @@ Improvements
 ------------
 
 - EditScope : Hid the `BoxIn.name` and `BoxOut.name` plugs from the NodeEditor, since it is not editable and the name is _always_ `in` or `out` respectively.
+- Limits : Increased soft file handle limit (`RLIMIT_NOFILE`) to match the hard limit (Linux only).
+- SceneReader : Increased the default limit for the number of open files to 2000 (or 25% of the file handle limit, whichever is lowest).
 
 Fixes
 -----
