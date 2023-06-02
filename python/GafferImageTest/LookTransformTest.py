@@ -53,7 +53,7 @@ class LookTransformTest( GafferImageTest.ImageTestCase ) :
 	groundTruth = GafferImageTest.ImageTestCase.imagesPath() / "checker_ocio_look.exr"
 	ocioConfig = GafferImageTest.ImageTestCase.openColorIOPath() / "context.ocio"
 
-	def test( self ) :
+	def testInvalidLook( self ) :
 
 		n = GafferImage.ImageReader()
 		n["fileName"].setValue( self.fileName )
@@ -64,10 +64,10 @@ class LookTransformTest( GafferImageTest.ImageTestCase ) :
 		self.assertImageHashesEqual( n["out"], o["out"] )
 		self.assertImagesEqual( n["out"], o["out"] )
 
-		o["look"].setValue( "primary" )
+		o["look"].setValue( "nonexistent" )
 
-		self.assertRaises( AssertionError, lambda: self.assertImageHashesEqual( n["out"], o["out"] ) )
-		self.assertRaises( Exception, lambda: self.assertImagesEqual( n["out"], o["out"] ) )
+		with self.assertRaisesRegex( Gaffer.ProcessException, ".* The specified look, 'nonexistent', cannot be found.*" ) :
+			GafferImage.ImageAlgo.tiles( o["out"] )
 
 	def testPrimary( self ):
 

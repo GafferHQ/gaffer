@@ -131,17 +131,6 @@ bool CDL::affectsTransform( const Gaffer::Plug *input ) const
 
 void CDL::hashTransform( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	if(
-		slopePlug()->isSetToDefault() &&
-		offsetPlug()->isSetToDefault() &&
-		powerPlug()->isSetToDefault() &&
-		saturationPlug()->isSetToDefault()
-	)
-	{
-		h = MurmurHash();
-		return;
-	}
-
 	slopePlug()->hash( h );
 	offsetPlug()->hash( h );
 	powerPlug()->hash( h );

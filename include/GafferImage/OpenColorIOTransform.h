@@ -79,25 +79,6 @@ class GAFFERIMAGE_API OpenColorIOTransform : public ColorProcessor
 	protected :
 
 		explicit OpenColorIOTransform( const std::string &name=defaultName<OpenColorIOTransform>(), bool withContextPlug=false );
-		/// Implemented to return true if hashTransform() has
-		/// an affect. Derived classed should implement
-		/// hashTransform() to return a default hash if the
-		/// node should be in a disabled state.
-		/// \todo: rework ColorProcessor so we can remove this.
-		bool enabled() const override;
-
-		/// Implemented to call affectsTransform() if the base class
-		/// does not affect the color data for this input. Derived
-		/// classes should implement affectsTransform() instead.
-		bool affectsColorData( const Gaffer::Plug *input ) const override;
-		/// Implemented to call hashTransform() after hashing the
-		/// affect of the base class. Derived classes should
-		/// implement hashTransform() instead.
-		void hashColorData( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		/// Implemented to fetch an OpenColorIO Processor from the
-		/// OpenColorIO Config and apply it to the output channels.
-		/// Derived classes should implement transform() instead.
-		void processColorData( const Gaffer::Context *context, IECore::FloatVectorData *r, IECore::FloatVectorData *g, IECore::FloatVectorData *b ) const override;
 
 		/// Derived classes must implement this to return true if the specified input
 		/// is used in transform().
@@ -110,6 +91,10 @@ class GAFFERIMAGE_API OpenColorIOTransform : public ColorProcessor
 		virtual OCIO_NAMESPACE::ConstTransformRcPtr transform() const = 0;
 
 	private :
+
+		bool affectsColorProcessor( const Gaffer::Plug *input ) const final;
+		void hashColorProcessor( const Gaffer::Context *context, IECore::MurmurHash &h ) const final;
+		ColorProcessorFunction colorProcessor( const Gaffer::Context *context ) const final;
 
 		OCIO_NAMESPACE::ConstContextRcPtr ocioContext( OCIO_NAMESPACE::ConstConfigRcPtr config ) const;
 

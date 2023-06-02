@@ -40,6 +40,8 @@ import unittest
 import subprocess
 import imath
 
+import PyOpenColorIO
+
 import IECore
 
 import Gaffer
@@ -334,6 +336,31 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 		colorSpace["outputSpace"].setValue( "color_picking" )
 
 		self.assertImagesEqual( colorSpace["out"], colorSpace["in"] )
+
+	def testRolePassThrough( self ) :
+
+		# There's nothing particularly special about this image, except that it contains
+		# pixels that don't round-trip through unpremultiplication and re-premultiplication.
+
+		reader = GafferImage.ImageReader()
+		reader["fileName"].setValue( GafferImageTest.ImageTestCase.imagesPath() / "mergeBoundariesRef.exr" )
+
+		# This color transform should be a no-op, but if we don't realise that
+		# then we'll end up modifying the pixels slightly by an unnecessary
+		# unpremult and repremult.
+
+		colorSpace = GafferImage.ColorSpace()
+		colorSpace["in"].setInput( reader["out"] )
+		colorSpace["processUnpremultiplied"].setValue( True )
+		colorSpace["inputSpace"].setValue( PyOpenColorIO.ROLE_SCENE_LINEAR )
+		colorSpace["outputSpace"].setValue(
+			PyOpenColorIO.GetCurrentConfig().getCanonicalName(
+				PyOpenColorIO.ROLE_SCENE_LINEAR
+			)
+		)
+
+		self.assertImagesEqual( colorSpace["out"], reader["out"] )
+		self.assertImageHashesEqual( colorSpace["out"], reader["out"] )
 
 if __name__ == "__main__":
 	unittest.main()

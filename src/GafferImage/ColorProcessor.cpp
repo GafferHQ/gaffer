@@ -40,6 +40,7 @@
 
 #include "Gaffer/Context.h"
 
+#include "IECore/NullObject.h"
 #include "IECore/StringAlgo.h"
 
 using namespace std;
@@ -49,6 +50,14 @@ using namespace GafferImage;
 
 namespace
 {
+
+struct ColorProcessorData : public IECore::Data
+{
+	using ColorProcessorFunction = std::function<void ( IECore::FloatVectorData *r, IECore::FloatVectorData *g, IECore::FloatVectorData *b )>;
+	ColorProcessorFunction colorProcessor;
+};
+
+IE_CORE_DECLAREPTR( ColorProcessorData );
 
 const IECore::InternedString g_layerNameKey( "image:colorProcessor:__layerName" );
 
@@ -65,6 +74,14 @@ ColorProcessor::ColorProcessor( const std::string &name )
 
 	addChild( new StringPlug( "channels", Plug::In, "[RGB]" ) );
 	addChild( new BoolPlug( "processUnpremultiplied", Plug::In, false ) );
+
+	addChild(
+		new ObjectPlug(
+			"__colorProcessor",
+			Gaffer::Plug::Out,
+			NullObject::defaultNullObject()
+		)
+	);
 
 	addChild(
 		new ObjectPlug(
@@ -88,8 +105,6 @@ ColorProcessor::~ColorProcessor()
 {
 }
 
-
-
 Gaffer::StringPlug *ColorProcessor::channelsPlug()
 {
 	return getChild<StringPlug>( g_firstPlugIndex );
@@ -110,25 +125,47 @@ const Gaffer::BoolPlug *ColorProcessor::processUnpremultipliedPlug() const
 	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
 }
 
-Gaffer::ObjectPlug *ColorProcessor::colorDataPlug()
+Gaffer::ObjectPlug *ColorProcessor::colorProcessorPlug()
 {
 	return getChild<ObjectPlug>( g_firstPlugIndex + 2 );
 }
 
-const Gaffer::ObjectPlug *ColorProcessor::colorDataPlug() const
+const Gaffer::ObjectPlug *ColorProcessor::colorProcessorPlug() const
 {
 	return getChild<ObjectPlug>( g_firstPlugIndex + 2 );
+}
+
+Gaffer::ObjectPlug *ColorProcessor::colorDataPlug()
+{
+	return getChild<ObjectPlug>( g_firstPlugIndex + 3 );
+}
+
+const Gaffer::ObjectPlug *ColorProcessor::colorDataPlug() const
+{
+	return getChild<ObjectPlug>( g_firstPlugIndex + 3 );
 }
 
 void ColorProcessor::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ImageProcessor::affects( input, outputs );
 
-	if( affectsColorData( input ) )
+	if( affectsColorProcessor( input ) )
+	{
+		outputs.push_back( colorProcessorPlug() );
+	}
+
+	if(
+		input == inPlug()->channelDataPlug() ||
+		input == inPlug()->channelNamesPlug() ||
+		input == processUnpremultipliedPlug() ||
+		input == colorProcessorPlug()
+	)
 	{
 		outputs.push_back( colorDataPlug() );
 	}
-	else if(
+
+	if(
+		input == colorProcessorPlug() ||
 		input == channelsPlug() ||
 		input == colorDataPlug()
 	)
@@ -141,15 +178,11 @@ void ColorProcessor::hash( const Gaffer::ValuePlug *output, const Gaffer::Contex
 {
 	ImageProcessor::hash( output, context, h );
 
-	if( output == colorDataPlug() )
+	if( output == colorProcessorPlug() )
 	{
-		hashColorData( context, h );
+		hashColorProcessor( context, h );
 	}
-}
-
-void ColorProcessor::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const
-{
-	if( output == colorDataPlug() )
+	else if( output == colorDataPlug() )
 	{
 		ConstStringVectorDataPtr channelNamesData;
 		bool unpremult;
@@ -157,6 +190,54 @@ void ColorProcessor::compute( Gaffer::ValuePlug *output, const Gaffer::Context *
 			ImagePlug::GlobalScope globalScope( context );
 			channelNamesData = inPlug()->channelNamesPlug()->getValue();
 			unpremult = processUnpremultipliedPlug()->getValue();
+			colorProcessorPlug()->hash( h );
+		}
+		const vector<string> &channelNames = channelNamesData->readable();
+
+		const string &layerName = context->get<string>( g_layerNameKey );
+
+		ImagePlug::ChannelDataScope channelDataScope( context );
+		for( const auto &baseName : { "R", "G", "B" } )
+		{
+			string channelName = ImageAlgo::channelName( layerName, baseName );
+			if( ImageAlgo::channelExists( channelNames, channelName ) )
+			{
+				channelDataScope.setChannelName( &channelName );
+				inPlug()->channelDataPlug()->hash( h );
+			}
+			else
+			{
+				ImagePlug::blackTile()->hash( h );
+			}
+		}
+
+		if( unpremult && ImageAlgo::channelExists( channelNames, ImageAlgo::channelNameA ) )
+		{
+			channelDataScope.setChannelName( &ImageAlgo::channelNameA );
+			inPlug()->channelDataPlug()->hash( h );
+		}
+	}
+}
+
+void ColorProcessor::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const
+{
+	if( output == colorProcessorPlug() )
+	{
+		ColorProcessorDataPtr data = new ColorProcessorData;
+		data->colorProcessor = colorProcessor( context );
+		static_cast<ObjectPlug *>( output )->setValue( data );
+		return;
+	}
+	else if( output == colorDataPlug() )
+	{
+		ConstStringVectorDataPtr channelNamesData;
+		ConstColorProcessorDataPtr colorProcessorData;
+		bool unpremult;
+		{
+			ImagePlug::GlobalScope globalScope( context );
+			channelNamesData = inPlug()->channelNamesPlug()->getValue();
+			unpremult = processUnpremultipliedPlug()->getValue();
+			colorProcessorData = boost::static_pointer_cast<const ColorProcessorData>( colorProcessorPlug()->getValue() );
 		}
 		const vector<string> &channelNames = channelNamesData->readable();
 
@@ -223,7 +304,7 @@ void ColorProcessor::compute( Gaffer::ValuePlug *output, const Gaffer::Context *
 
 		}
 
-		processColorData( context, rgb[0].get(), rgb[1].get(), rgb[2].get() );
+		colorProcessorData->colorProcessor( rgb[0].get(), rgb[1].get(), rgb[2].get() );
 
 		if( unpremult && alpha )
 		{
@@ -273,7 +354,21 @@ Gaffer::ValuePlug::CachePolicy ColorProcessor::computeCachePolicy( const Gaffer:
 
 void ColorProcessor::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	const std::string &channels = channelsPlug()->getValue();
+	std::string channels;
+	ConstColorProcessorDataPtr colorProcessorData;
+	{
+		ImagePlug::GlobalScope globalScope( context );
+		colorProcessorData = boost::static_pointer_cast<const ColorProcessorData>( colorProcessorPlug()->getValue() );
+		channels = channelsPlug()->getValue();
+	}
+
+	if( !colorProcessorData->colorProcessor )
+	{
+		// No processor - pass through.
+		h = inPlug()->channelDataPlug()->hash();
+		return;
+	}
+
 	const std::string &channel = context->get<std::string>( ImagePlug::channelNameContextName );
 	const std::string &baseName = ImageAlgo::baseName( channel );
 
@@ -299,7 +394,20 @@ void ColorProcessor::hashChannelData( const GafferImage::ImagePlug *output, cons
 
 IECore::ConstFloatVectorDataPtr ColorProcessor::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	const std::string &channels = channelsPlug()->getValue();
+	std::string channels;
+	ConstColorProcessorDataPtr colorProcessorData;
+	{
+		ImagePlug::GlobalScope globalScope( context );
+		colorProcessorData = boost::static_pointer_cast<const ColorProcessorData>( colorProcessorPlug()->getValue() );
+		channels = channelsPlug()->getValue();
+	}
+
+	if( !colorProcessorData->colorProcessor )
+	{
+		// No processor - pass through.
+		return inPlug()->channelDataPlug()->getValue();
+	}
+
 	const std::string &channel = context->get<std::string>( ImagePlug::channelNameContextName );
 	const std::string &baseName = ImageAlgo::baseName( channel );
 
@@ -320,44 +428,4 @@ IECore::ConstFloatVectorDataPtr ColorProcessor::computeChannelData( const std::s
 		colorData = boost::static_pointer_cast<const ObjectVector>( colorDataPlug()->getValue() );
 	}
 	return boost::static_pointer_cast<const FloatVectorData>( colorData->members()[ImageAlgo::colorIndex( baseName)] );
-}
-
-bool ColorProcessor::affectsColorData( const Gaffer::Plug *input ) const
-{
-	return input == inPlug()->channelDataPlug() || input == inPlug()->channelNamesPlug() || input == processUnpremultipliedPlug();
-}
-
-void ColorProcessor::hashColorData( const Gaffer::Context *context, IECore::MurmurHash &h ) const
-{
-	ConstStringVectorDataPtr channelNamesData;
-	bool unpremult;
-	{
-		ImagePlug::GlobalScope globalScope( context );
-		channelNamesData = inPlug()->channelNamesPlug()->getValue();
-		unpremult = processUnpremultipliedPlug()->getValue();
-	}
-	const vector<string> &channelNames = channelNamesData->readable();
-
-	const string &layerName = context->get<string>( g_layerNameKey );
-
-	ImagePlug::ChannelDataScope channelDataScope( context );
-	for( const auto &baseName : { "R", "G", "B" } )
-	{
-		string channelName = ImageAlgo::channelName( layerName, baseName );
-		if( ImageAlgo::channelExists( channelNames, channelName ) )
-		{
-			channelDataScope.setChannelName( &channelName );
-			inPlug()->channelDataPlug()->hash( h );
-		}
-		else
-		{
-			ImagePlug::blackTile()->hash( h );
-		}
-	}
-
-	if( unpremult && ImageAlgo::channelExists( channelNames, ImageAlgo::channelNameA ) )
-	{
-		channelDataScope.setChannelName( &ImageAlgo::channelNameA );
-		inPlug()->channelDataPlug()->hash( h );
-	}
 }

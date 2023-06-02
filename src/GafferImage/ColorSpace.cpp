@@ -91,27 +91,16 @@ bool ColorSpace::affectsTransform( const Gaffer::Plug *input ) const
 
 void ColorSpace::hashTransform( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	std::string inSpace = inputSpacePlug()->getValue();
-	std::string outSpace = outputSpacePlug()->getValue();
-
-	if( inSpace == outSpace || inSpace.empty() || outSpace.empty() )
-	{
-		h = MurmurHash();
-		return;
-	}
-
 	inputSpacePlug()->hash( h );
 	outputSpacePlug()->hash( h );
 }
 
 OCIO_NAMESPACE::ConstTransformRcPtr ColorSpace::transform() const
 {
-	string inputSpace( inputSpacePlug()->getValue() );
-	string outputSpace( outputSpacePlug()->getValue() );
+	const string inputSpace = inputSpacePlug()->getValue();
+	const string outputSpace = outputSpacePlug()->getValue();
 
-	// no need to run the processor if we're not
-	// actually changing the color space.
-	if( ( inputSpace == outputSpace ) || inputSpace.empty() || outputSpace.empty() )
+	if( inputSpace.empty() || outputSpace.empty() )
 	{
 		return OCIO_NAMESPACE::ColorSpaceTransformRcPtr();
 	}
