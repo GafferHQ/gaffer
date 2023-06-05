@@ -36,6 +36,7 @@
 
 #include "GafferSceneUI/Private/Inspector.h"
 
+#include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/PathFilter.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/Spreadsheet.h"
@@ -230,8 +231,19 @@ void Inspector::inspectHistoryWalk( const GafferScene::SceneAlgo::History *histo
 
 					if( !result->m_editScope || node->ancestor<EditScope>() == result->m_editScope )
 					{
-						result->m_editFunction = [source = result->m_source] () { return source; };
-						result->m_editWarning = editWarning;
+						const GraphComponent *readOnlyReason = MetadataAlgo::readOnlyReason( result->m_source.get() );
+						if( !result->m_editScope && readOnlyReason )
+						{
+							result->m_editFunction = fmt::format(
+								"{} is locked.",
+								readOnlyReason->relativeName( readOnlyReason->ancestor<ScriptNode>() )
+							);
+						}
+						else
+						{
+							result->m_editFunction = [source = result->m_source] () { return source; };
+							result->m_editWarning = editWarning;
+						}
 					}
 				}
 			}
