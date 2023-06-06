@@ -44,6 +44,7 @@
 #include "GafferImage/ImageAlgo.h"
 #include "GafferImage/ImagePlug.h"
 #include "GafferImage/Merge.h"
+#include "GafferImage/OpenColorIOAlgo.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/ContextQuery.h"
@@ -1525,10 +1526,7 @@ ImageWriter::ImageWriter( const std::string &name )
 	ColorSpacePtr colorSpaceChild = new ColorSpace( "__colorSpace" );
 	addChild( colorSpaceChild );
 
-	OCIO_NAMESPACE::ConstConfigRcPtr config = OCIO_NAMESPACE::GetCurrentConfig();
-
-	colorSpaceChild->inputSpacePlug()->setValue( config->getColorSpace( OCIO_NAMESPACE::ROLE_SCENE_LINEAR )->getName() );
-
+	colorSpaceChild->inputSpacePlug()->setValue( OCIO_NAMESPACE::ROLE_SCENE_LINEAR );
 	colorSpaceChild->outputSpacePlug()->setValue( "${__imageWriter:colorSpace}" );
 
 	ValuePlugPtr layoutPlug = new ValuePlug( "layout" );
@@ -1796,7 +1794,8 @@ std::string ImageWriter::colorSpace( const std::string &dataType ) const
 		fileNamePlug()->getValue(),
 		fileFormat,
 		dataType,
-		metadata.get()
+		metadata.get(),
+		OpenColorIOAlgo::currentConfig()
 	);
 }
 

@@ -36,13 +36,12 @@
 
 #include "GafferImage/OpenColorIOTransform.h"
 
+#include "GafferImage/OpenColorIOAlgo.h"
+
 #include "Gaffer/Context.h"
 #include "Gaffer/Process.h"
 
 #include "IECore/SimpleTypedData.h"
-
-#include "tbb/mutex.h"
-#include "tbb/null_mutex.h"
 
 using namespace std;
 using namespace IECore;
@@ -51,21 +50,6 @@ using namespace GafferImage;
 
 namespace
 {
-
-// Although the OpenColorIO library is advertised as threadsafe,
-// it seems to crash regularly on OS X in getProcessor(), while
-// mucking around with the locale(). we mutex the call to getProcessor()
-// but still do the actual processing in parallel - this seems to
-// have negligible performance impact but a nice not-crashing impact.
-// On other platforms we use a null_mutex so there should be no
-// performance impact at all.
-#ifdef __APPLE__
-using OCIOMutex = tbb::mutex;
-#else
-using OCIOMutex = tbb::null_mutex;
-#endif
-
-OCIOMutex g_ocioMutex;
 
 struct ProcessorProcess : public Process
 {
@@ -135,9 +119,8 @@ OCIO_NAMESPACE::ConstProcessorRcPtr OpenColorIOTransform::processor() const
 		return OCIO_NAMESPACE::ConstProcessorRcPtr();
 	}
 
-	OCIOMutex::scoped_lock lock( g_ocioMutex );
-	OCIO_NAMESPACE::ConstConfigRcPtr config = OCIO_NAMESPACE::GetCurrentConfig();
-	OCIO_NAMESPACE::ConstContextRcPtr context = ocioContext( config );
+	auto [config, context] = OpenColorIOAlgo::currentConfigAndContext();
+	context = modifiedOCIOContext( context );
 	return config->getProcessor( context, colorTransform, OCIO_NAMESPACE::TRANSFORM_DIR_FORWARD );
 }
 
@@ -149,6 +132,8 @@ IECore::MurmurHash OpenColorIOTransform::processorHash() const
 
 	IECore::MurmurHash result;
 	hashTransform( Context::current(), result );
+
+	result.append( OpenColorIOAlgo::currentConfigAndContextHash() );
 
 	if( auto *p = contextPlug() )
 	{
@@ -171,10 +156,9 @@ void OpenColorIOTransform::hashColorProcessor( const Gaffer::Context *context, I
 	h.append( processorHash() );
 }
 
-OCIO_NAMESPACE::ConstContextRcPtr OpenColorIOTransform::ocioContext( OCIO_NAMESPACE::ConstConfigRcPtr config ) const
+OCIO_NAMESPACE::ConstContextRcPtr OpenColorIOTransform::modifiedOCIOContext( OCIO_NAMESPACE::ConstContextRcPtr context ) const
 {
 
-	OCIO_NAMESPACE::ConstContextRcPtr context = config->getCurrentContext();
 	const CompoundDataPlug *p = contextPlug();
 	if( !p )
 	{
@@ -212,11 +196,7 @@ OCIO_NAMESPACE::ConstContextRcPtr OpenColorIOTransform::ocioContext( OCIO_NAMESP
 		}
 	}
 
-	if( mutableContext )
-	{
-		context = mutableContext;
-	}
-	return context;
+	return mutableContext ? mutableContext : context;
 }
 
 ColorProcessor::ColorProcessorFunction OpenColorIOTransform::colorProcessor( const Gaffer::Context *context ) const

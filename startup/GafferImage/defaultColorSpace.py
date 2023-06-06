@@ -2,9 +2,7 @@ import PyOpenColorIO
 
 import GafferImage
 
-def defaultColorSpace( fileName, fileFormat, dataType, metadata ) :
-
-	config = PyOpenColorIO.GetCurrentConfig()
+def defaultColorSpace( fileName, fileFormat, dataType, metadata, config ) :
 
 	linear = config.getColorSpace( PyOpenColorIO.ROLE_SCENE_LINEAR ).getName()
 	log = config.getColorSpace( PyOpenColorIO.ROLE_COMPOSITING_LOG ).getName()

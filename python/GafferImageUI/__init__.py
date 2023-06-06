@@ -119,5 +119,6 @@ from . import DeleteViewsUI
 from . import CopyViewsUI
 from . import AnaglyphUI
 from . import LookTransformUI
+from . import OpenColorIOContextUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferImageUI" )

@@ -45,7 +45,7 @@ enum TypeId
 	ImagePlugTypeId = 110750,
 	ImageNodeTypeId = 110751,
 	ImageReaderTypeId = 110752,
-	ImagePrimitiveNodeTypeId = 110753, // Obsolete - available for reuse
+	OpenColorIOContextTypeId = 110753,
 	DisplayTypeId = 110754,
 	GafferDisplayDriverTypeId = 110755,
 	ImageProcessorTypeId = 110756,

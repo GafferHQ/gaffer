@@ -46,7 +46,7 @@ import PyOpenColorIO
 
 def __colorSpaceMenuHelper( plug, config = None ) :
 
-	config = PyOpenColorIO.GetCurrentConfig() if config is None else config
+	config = GafferImage.OpenColorIOAlgo.currentConfig() if config is None else config
 	parameters = PyOpenColorIO.ColorSpaceMenuParameters( config )
 
 	categories = Gaffer.Metadata.value( plug, "openColorIO:categories" )
@@ -96,7 +96,8 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			Context override for OCIO config.
+			> Warning : Deprecated - please use the `OpenColorIOContext`
+			> node instead.
 			""",
 
 			# We don't use the default CompoundDataPlugValueWidget because
@@ -111,6 +112,9 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Context",
 			"layout:index", -3,
+			# Only show plug if it has been used previously, to discourage new
+			# use (since the plug is deprecated).
+			"layout:visibilityActivator", lambda plug : bool( len( plug ) ),
 
 		],
 

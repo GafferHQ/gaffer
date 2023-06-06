@@ -21,6 +21,7 @@ Improvements
     - Removed "Default" view.
     - Added menu options for changing the current Display.
     - Allowed the available views to be filtered using an `openColorIO:activeViews` metadata value registered on the View's `displayTransform.name` plug. Values should be space-separated names, optionally containing wildcards.
+  - OpenColorIOContext : Added a new node that creates Gaffer context variables to define the OpenColorIO config used by upstream nodes. This allows different OpenColorIO configs to be used in different Gaffer contexts.
   - OpenColorIOTransform :
     - Improved performance.
     - Improved detection of no-op transforms, such as when converting between colorspace aliases like `scene_linear` and `ACEScg`.
@@ -64,11 +65,16 @@ API
 - OpenColorIOTransformUI :
   - Added `noneLabel` argument to `colorSpacePresetNames()`.
   - Added support for `openColorIO:categories` and `openColorIO:includeRoles` metadata to `colorSpacePresetNames()`. These may be registered on a per-plug basis to control the colorspaces shown for that plug.
+- OpenColorIOAlgo : Added a new namespace that allows the OpenColorIO config to be defined via the Gaffer context.
+- ImageReader/ImageWriter : Added a `config` argument to the `DefaultColorSpaceFunction` definition. This is passed the OpenColorIO config currently being used by the node.
 - ValuePlugs : Added Python bindings for `ValueType` type alias.
 - Color4fVectorDataPlug : Added a plug type for storing arrays of `Color4f`.
 - TypedObjectPlug : Added default value for `direction` and `defaultValue` constructor arguments.
 - VectorDataWidget : Added `setErrored()` and `getErrored()` methods to control an error state. Errors are reflected by a red background colour.
-- PlugLayout : Added support for `layout:minimumWidth` metadata.
+- PlugLayout :
+  - Added support for `layout:minimumWidth` metadata.
+  - Tabs are now hidden if all their child plugs are hidden by `layout:visibilityActivator` metadata.
+- TabbedContainer : Added `setTabVisible()` and `getTabVisible()` methods.
 - Removed use of `RTLD_GLOBAL` for loading Python modules.
 - SceneAlgo : Added `validateName()` function.
 
@@ -89,7 +95,10 @@ Breaking Changes
 - ViewportGadget : Changed function signature for `setPostProcessShader()` and `getPostProcessShader()`.
 - UVInspector : Moved the `displayTransform` plug to `displayTransform.name`.
 - ImageReader : Renamed `None` preset to `Automatic`.
-- OpenColorIOTransform : Removed `availableColorSpaces()` and `availableRoles()` methods.
+- ImageReader/ImageWriter : Added a `config` argument to `DefaultColorSpaceFunction`. If implementing such a function in Python, it can be compatible with both Gaffer 1.2 and 1.3 if the argument is declared as `config = PyOpenColorIO.GetCurrentConfig()`.
+- OpenColorIOTransform :
+  - Removed `availableColorSpaces()` and `availableRoles()` methods.
+  - Deprecated `context` plug.
 - OpenColorIO : Changed default config.
 - Subprocess32 : Removed Python module.
 - Six : Removed Python module.

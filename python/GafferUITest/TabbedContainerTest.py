@@ -294,6 +294,31 @@ class TabbedContainerTest( GafferUITest.TestCase ) :
 		self.assertTrue( t1.getCurrent() is t3 )
 		self.assertTrue( t3.getCurrent() is c3 )
 
+	def testTabVisibility( self ) :
+
+		with GafferUI.TabbedContainer() as container :
+			t1 = GafferUI.Label()
+			t2 = GafferUI.Label()
+			t3 = GafferUI.Label()
+
+		for tab in t1, t2, t3 :
+			self.assertTrue( container.getTabVisible( tab ) )
+
+		container.setTabVisible( t2, False )
+
+		for tab in t1, t2, t3 :
+			self.assertEqual( container.getTabVisible( tab ), tab is not t2 )
+
+		container.removeChild( t1 )
+
+		for tab in t2, t3 :
+			self.assertEqual( container.getTabVisible( tab ), tab is not t2 )
+
+		container.setTabVisible( t2, True )
+
+		for tab in t2, t3 :
+			self.assertTrue( container.getTabVisible( tab ) )
+
 	def tearDown( self ) :
 
 		self.__current = None

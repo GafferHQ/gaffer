@@ -169,11 +169,11 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( i["out"]["dataWindow"].getValue(), o["out"]["dataWindow"].getValue() )
 		self.assertEqual( i["out"]["channelNames"].getValue(), o["out"]["channelNames"].getValue() )
 
-	def testContext( self ) :
+	def testContextPlugs( self ) :
 
 		scriptFileName = self.temporaryDirectory() / "script.gfr"
-		contextImageFile = self.temporaryDirectory() / "context.#.exr"
-		contextOverrideImageFile = self.temporaryDirectory() / "context_override.#.exr"
+		contextImageFile = self.temporaryDirectory() / "context.exr"
+		contextOverrideImageFile = self.temporaryDirectory() / "context_override.exr"
 
 		s = Gaffer.ScriptNode()
 
@@ -185,11 +185,11 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 		s["cs"]["inputSpace"].setValue( "linear" )
 		s["cs"]["outputSpace"].setValue( "context" )
 
-
 		s["writer"] = GafferImage.ImageWriter()
 		s["writer"]["fileName"].setValue( contextImageFile )
 		s["writer"]["in"].setInput( s["cs"]["out"] )
 		s["writer"]["channels"].setValue( "R G B A" )
+		s["writer"]["openexr"]["dataType"].setValue( "float" )
 
 		s["fileName"].setValue( scriptFileName )
 		s.save()
@@ -200,46 +200,58 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 		env["CDL"] = "cineon.spi1d"
 
 		subprocess.check_call(
-			[ str( Gaffer.executablePath() ), "execute", str( scriptFileName ),"-frames", "1" ],
+			[ str( Gaffer.executablePath() ), "execute", str( scriptFileName ), "-frames", "1" ],
 			stderr = subprocess.PIPE,
 			env = env,
 		)
 
-		i = GafferImage.ImageReader()
-		i["fileName"].setValue( self.imagesPath() / "checker_ocio_context.exr" )
+		expected = GafferImage.ImageReader()
+		expected["fileName"].setValue( self.imagesPath() / "checker_ocio_context.exr" )
 
-		o = GafferImage.ImageReader()
-		o["fileName"].setValue( contextImageFile )
-
-		expected = i["out"]
-		context = o["out"]
+		actual = GafferImage.ImageReader()
+		actual["fileName"].setValue( contextImageFile )
 
 		# check against expected output
-		self.assertImagesEqual( expected, context, ignoreMetadata = True )
+		self.assertImagesEqual( actual["out"], expected["out"], ignoreMetadata = True )
 
 		# override context
 		s["writer"]["fileName"].setValue( contextOverrideImageFile )
-		s["cs"]["context"].addChild( Gaffer.NameValuePlug("LUT", "cineon.spi1d", True, "LUT", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
-		s["cs"]["context"].addChild( Gaffer.NameValuePlug("CDL", "rec709.spi1d", True, "CDL", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		s["cs"]["context"].addChild( Gaffer.NameValuePlug( "LUT", "cineon.spi1d", True, "LUT", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		s["cs"]["context"].addChild( Gaffer.NameValuePlug( "CDL", "rec709.spi1d", True, "CDL", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 		s.save()
 
 		subprocess.check_call(
-			[ str( Gaffer.executablePath() ), "execute", str( scriptFileName ),"-frames", "1" ],
+			[ str( Gaffer.executablePath() ), "execute", str( scriptFileName ), "-frames", "1" ],
 			stderr = subprocess.PIPE,
 			env = env
 		)
 
-		i = GafferImage.ImageReader()
-		i["fileName"].setValue( self.imagesPath() / "checker_ocio_context_override.exr" )
-
-		o = GafferImage.ImageReader()
-		o["fileName"].setValue( contextOverrideImageFile )
-
-		expected = i["out"]
-		context = o["out"]
+		expected["fileName"].setValue( self.imagesPath() / "checker_ocio_context_override.exr" )
+		actual["fileName"].setValue( contextOverrideImageFile )
 
 		# check override produce expected output
-		self.assertImagesEqual( expected, context, ignoreMetadata = True )
+		self.assertImagesEqual( actual["out"], expected["out"], ignoreMetadata = True )
+
+	def testConfigFromGafferContext( self ) :
+
+		reader = GafferImage.ImageReader()
+		reader["fileName"].setValue( self.fileName )
+
+		colorSpace = GafferImage.ColorSpace()
+		colorSpace["in"].setInput( reader["out"] )
+		colorSpace["inputSpace"].setValue( "linear" )
+		colorSpace["outputSpace"].setValue( "context" )
+
+		expected = GafferImage.ImageReader()
+		expected["fileName"].setValue( self.imagesPath() / "checker_ocio_context.exr" )
+
+		with Gaffer.Context() as c :
+
+			GafferImage.OpenColorIOAlgo.setConfig( c, str( self.openColorIOPath() / "context.ocio" ) )
+			GafferImage.OpenColorIOAlgo.addVariable( c, "LUT", "srgb.spi1d" )
+			GafferImage.OpenColorIOAlgo.addVariable( c, "CDL", "cineon.spi1d" )
+
+			self.assertImagesEqual( expected["out"], colorSpace["out"], maxDifference = 0.0002, ignoreMetadata = True )
 
 	def testSingleChannelImage( self ) :
 

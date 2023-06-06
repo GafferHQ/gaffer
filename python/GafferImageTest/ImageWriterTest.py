@@ -1191,7 +1191,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		# just captures its arguments.
 
 		capturedArguments = {}
-		def f( fileName, fileFormat, dataType, metadata ) :
+		def f( fileName, fileFormat, dataType, metadata, config ) :
 
 			capturedArguments.update(
 				{
@@ -1199,6 +1199,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 					"fileFormat" : fileFormat,
 					"dataType" : dataType,
 					"metadata" : metadata,
+					"config" : config,
 				}
 			)
 			return "scene_linear"
@@ -1208,24 +1209,29 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		# Verify that the correct arguments are passed for
 		# a variety of fileNames and dataTypes.
 
-		for ext, fileFormat, dataType in [
-			( "exr", "openexr", "half" ),
-			( "dpx", "dpx", "uint12" ),
-			( "TIFF", "tiff", "float" ),
-			( "tif", "tiff", "uint32" ),
+		for ext, fileFormat, dataType, config in [
+			( "exr", "openexr", "half", "" ),
+			( "dpx", "dpx", "uint12", "" ),
+			( "TIFF", "tiff", "float", "" ),
+			( "tif", "tiff", "uint32", str( self.openColorIOPath() / "context.ocio" ) ),
 		] :
 
 			w["fileName"].setValue( self.temporaryDirectory() / "{0}.{1}".format( dataType, ext ) )
 			w[fileFormat]["dataType"].setValue( dataType )
 
-			capturedArguments.clear()
-			w["task"].execute()
+			with Gaffer.Context() as context :
 
-			self.assertEqual( len( capturedArguments ), 4 )
-			self.assertEqual( capturedArguments["fileName"], w["fileName"].getValue() )
-			self.assertEqual( capturedArguments["fileFormat"], fileFormat )
-			self.assertEqual( capturedArguments["dataType"], dataType )
-			self.assertEqual( capturedArguments["metadata"], w["in"]["metadata"].getValue() )
+				GafferImage.OpenColorIOAlgo.setConfig( context, config )
+
+				capturedArguments.clear()
+				w["task"].execute()
+
+				self.assertEqual( len( capturedArguments ), 5 )
+				self.assertEqual( capturedArguments["fileName"], w["fileName"].getValue() )
+				self.assertEqual( capturedArguments["fileFormat"], fileFormat )
+				self.assertEqual( capturedArguments["dataType"], dataType )
+				self.assertEqual( capturedArguments["metadata"], w["in"]["metadata"].getValue() )
+				self.assertEqual( capturedArguments["config"], GafferImage.OpenColorIOAlgo.currentConfig() )
 
 	def testDefaultColorSpace( self ) :
 

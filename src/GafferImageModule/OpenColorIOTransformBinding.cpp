@@ -43,6 +43,7 @@
 #include "GafferImage/DisplayTransform.h"
 #include "GafferImage/LookTransform.h"
 #include "GafferImage/LUT.h"
+#include "GafferImage/OpenColorIOContext.h"
 #include "GafferImage/OpenColorIOTransform.h"
 #include "GafferImage/Saturation.h"
 
@@ -105,4 +106,5 @@ void GafferImageModule::bindOpenColorIOTransform()
 
 	GafferBindings::DependencyNodeClass<CDL>();
 	GafferBindings::DependencyNodeClass<LookTransform>();
+	GafferBindings::DependencyNodeClass<OpenColorIOContext>();
 }

@@ -110,6 +110,8 @@ from .DeleteViewsTest import DeleteViewsTest
 from .CopyViewsTest import CopyViewsTest
 from .AnaglyphTest import AnaglyphTest
 from .LookTransformTest import LookTransformTest
+from .OpenColorIOAlgoTest import OpenColorIOAlgoTest
+from .OpenColorIOContextTest import OpenColorIOContextTest
 
 if __name__ == "__main__":
 	import unittest

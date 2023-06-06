@@ -37,6 +37,7 @@
 #include "GafferImage/ImageReader.h"
 
 #include "GafferImage/ColorSpace.h"
+#include "GafferImage/OpenColorIOAlgo.h"
 #include "GafferImage/OpenImageIOReader.h"
 
 #include "Gaffer/StringPlug.h"
@@ -165,8 +166,7 @@ ImageReader::ImageReader( const std::string &name )
 	addChild( colorSpace );
 	colorSpace->inPlug()->setInput( oiioReader->outPlug() );
 	colorSpace->inputSpacePlug()->setInput( intermediateColorSpacePlug() );
-	OCIO_NAMESPACE::ConstConfigRcPtr config = OCIO_NAMESPACE::GetCurrentConfig();
-	colorSpace->outputSpacePlug()->setValue( config->getColorSpace( OCIO_NAMESPACE::ROLE_SCENE_LINEAR )->getName() );
+	colorSpace->outputSpacePlug()->setValue( OCIO_NAMESPACE::ROLE_SCENE_LINEAR );
 	colorSpace->processUnpremultipliedPlug()->setValue( true );
 	intermediateImagePlug()->setInput( colorSpace->outPlug() );
 }
@@ -375,6 +375,7 @@ void ImageReader::hash( const ValuePlug *output, const Context *context, IECore:
 		intermediateMetadataPlug()->hash( h );
 		colorSpacePlug()->hash( h );
 		fileNamePlug()->hash( h );
+		h.append( OpenColorIOAlgo::currentConfigHash() );
 	}
 }
 
@@ -393,7 +394,8 @@ void ImageReader::compute( ValuePlug *output, const Context *context ) const
 					fileNamePlug()->getValue(),
 					fileFormatData->readable(),
 					dataTypeData ? dataTypeData->readable() : "",
-					metadata.get()
+					metadata.get(),
+					OpenColorIOAlgo::currentConfig()
 				);
 			}
 		}

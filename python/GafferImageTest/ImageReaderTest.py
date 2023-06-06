@@ -432,7 +432,7 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 		# just captures its arguments.
 
 		capturedArguments = {}
-		def f( fileName, fileFormat, dataType, metadata ) :
+		def f( fileName, fileFormat, dataType, metadata, config ) :
 
 			capturedArguments.update(
 				{
@@ -440,6 +440,7 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 					"fileFormat" : fileFormat,
 					"dataType" : dataType,
 					"metadata" : metadata,
+					"config" : config,
 				}
 			)
 			return "scene_linear"
@@ -449,25 +450,30 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 		# Verify that the correct arguments are passed for
 		# a variety of fileNames and dataTypes.
 
-		for ext, fileFormat, dataType in [
-			( "exr", "openexr", "half" ),
-			( "dpx", "dpx", "uint12" ),
-			( "TIFF", "tiff", "float" ),
-			( "tif", "tiff", "uint32" ),
+		for ext, fileFormat, dataType, config in [
+			( "exr", "openexr", "half", "" ),
+			( "dpx", "dpx", "uint12", "" ),
+			( "TIFF", "tiff", "float", "" ),
+			( "tif", "tiff", "uint32", str( self.openColorIOPath() / "context.ocio" ) ),
 		] :
 
 			w["fileName"].setValue( self.temporaryDirectory() / "{0}.{1}".format( dataType, ext ) )
 			w[fileFormat]["dataType"].setValue( dataType )
 			w["task"].execute()
 
-			capturedArguments.clear()
-			r["out"].channelData( "R", imath.V2i( 0 ) ) # Triggers call to color space function
+			with Gaffer.Context() as context :
 
-			self.assertEqual( len( capturedArguments ), 4 )
-			self.assertEqual( capturedArguments["fileName"], w["fileName"].getValue() )
-			self.assertEqual( capturedArguments["fileFormat"], fileFormat )
-			self.assertEqual( capturedArguments["dataType"], dataType )
-			self.assertEqual( capturedArguments["metadata"], r["out"]["metadata"].getValue() )
+				GafferImage.OpenColorIOAlgo.setConfig( context, config )
+
+				capturedArguments.clear()
+				r["out"].channelData( "R", imath.V2i( 0 ) ) # Triggers call to color space function
+
+				self.assertEqual( len( capturedArguments ), 5 )
+				self.assertEqual( capturedArguments["fileName"], w["fileName"].getValue() )
+				self.assertEqual( capturedArguments["fileFormat"], fileFormat )
+				self.assertEqual( capturedArguments["dataType"], dataType )
+				self.assertEqual( capturedArguments["metadata"], r["out"]["metadata"].getValue() )
+				self.assertEqual( capturedArguments["config"], GafferImage.OpenColorIOAlgo.currentConfig() )
 
 	def testDisabling( self ) :
 
