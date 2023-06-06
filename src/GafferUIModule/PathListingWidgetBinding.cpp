@@ -574,11 +574,15 @@ class PathModel : public QAbstractItemModel
 				mergedPaths.addPaths( p );
 			}
 
+			// Copy, so can't be modified without `setSelection()` call.
+			m_selection = Selection( selectedPaths );
+
 			if( scrollToFirst )
 			{
 				// Only scroll to previously unselected paths.
-				m_scrollToCandidates = mergedPaths;
-				m_scrollToCandidates->removePaths( m_selectedPaths );
+				IECore::PathMatcher scrollToCandidates = mergedPaths;
+				scrollToCandidates.removePaths( m_selectedPaths );
+				PathModel::scrollToFirst( scrollToCandidates );
 			}
 			else
 			{
@@ -586,15 +590,6 @@ class PathModel : public QAbstractItemModel
 			}
 
 			m_selectedPaths = mergedPaths;
-
-			// Copy, so can't be modified without `setSelection()` call.
-			m_selection = Selection( selectedPaths );
-
-			if( m_scrollToCandidates )
-			{
-				m_rootItem->dirtyExpansion();
-				scheduleUpdate();
-			}
 
 			selectionChanged();
 		}
