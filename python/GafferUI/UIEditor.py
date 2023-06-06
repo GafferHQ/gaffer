@@ -889,7 +889,7 @@ class _PlugListing( GafferUI.Widget ) :
 
 		selection = self.__pathListing.getPath().copy()
 		selection[:] = self.__dragItem.fullName().split( "." )
-		self.__pathListing.setSelectedPaths( [ selection ], scrollToFirst = False, expandNonLeaf = False )
+		self.__pathListing.setSelectedPaths( [ selection ], scrollToFirst = False )
 
 		return True
 

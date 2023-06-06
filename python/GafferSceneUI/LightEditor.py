@@ -300,7 +300,7 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 		selectedPaths = ContextAlgo.getSelectedPaths( self.getContext() )
 		with Gaffer.Signals.BlockedConnection( self.__selectionChangedConnection ) :
 			selection = [selectedPaths] + ( [IECore.PathMatcher()] * ( len( self.__pathListing.getColumns() ) - 1 ) )
-			self.__pathListing.setSelection( selection, scrollToFirst=True, expandNonLeaf=False )
+			self.__pathListing.setSelection( selection, scrollToFirst=True )
 
 	def __buttonDoubleClick( self, pathListing, event ) :
 
@@ -573,7 +573,7 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 			for p in selection :
 				p.clear()
 			selection[columnIndex].addPath( str( cellPath ) )
-			pathListing.setSelection( selection, expandNonLeaf = False, scrollToFirst = False )
+			pathListing.setSelection( selection, scrollToFirst = False )
 
 		menuDefinition = IECore.MenuDefinition()
 
