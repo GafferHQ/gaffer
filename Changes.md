@@ -5,6 +5,7 @@ Fixes
 -----
 
 - EditMenu : Fixed errors using "Duplicate with Inputs" with certain configurations of Dot node (#5309).
+- Dot : Fixed the display of context-sensitive `label` values.
 
 1.1.9.6 (relative to 1.1.9.5)
 =======
