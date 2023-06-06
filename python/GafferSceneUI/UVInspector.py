@@ -54,6 +54,8 @@ class UVInspector( GafferUI.NodeSetEditor ) :
 		GafferUI.NodeSetEditor.__init__( self, column, scriptNode, nodeSet = scriptNode.focusSet(), **kw )
 
 		self.__uvView = GafferSceneUI.UVView()
+		Gaffer.NodeAlgo.applyUserDefaults( self.__uvView )
+		self.__uvView.setContext( self.getContext() )
 
 		with column :
 
@@ -61,9 +63,6 @@ class UVInspector( GafferUI.NodeSetEditor ) :
 				toolbar = GafferUI.NodeToolbar.create( self.__uvView )
 
 			self.__gadgetWidget = GafferUI.GadgetWidget()
-
-			Gaffer.NodeAlgo.applyUserDefaults( self.__uvView )
-			self.__uvView.setContext( self.getContext() )
 
 			self.__gadgetWidget.setViewportGadget( self.__uvView.viewportGadget() )
 			self.__gadgetWidget.getViewportGadget().frame( imath.Box3f( imath.V3f( 0, 0, 0 ), imath.V3f( 1, 1, 0 ) ) )
