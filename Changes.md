@@ -94,6 +94,7 @@ API
 - SceneAlgo : Added `validateName()` function.
 - Sampler : Added `visitPixels()` method, which provides an optimised method for accessing all pixels in a region.
 - Handle::AngularDrag : Added `isLinearDrag()` method.
+- Widget : Added per-widget control over colour display transforms via new `setDisplayTransform()`, `getDisplayTransform()` and `displayTransform()` methods.
 
 Breaking Changes
 ----------------
