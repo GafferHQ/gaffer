@@ -237,7 +237,7 @@ class _PlugTableModel( QtCore.QAbstractTableModel ) :
 			if value is None :
 				return None
 			elif isinstance( value, imath.Color3f ) :
-				displayTransform = GafferUI.DisplayTransform.get()
+				displayTransform = GafferUI.Widget._owner( self.parent() ).displayTransform()
 				return GafferUI.Widget._qtColor( displayTransform( value ) )
 			else :
 				IECore.msg( IECore.Msg.Level.Error, "Spreadsheet Decoration", "Unsupported type {}".format( type( value ) ) )

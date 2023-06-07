@@ -74,8 +74,6 @@ class SplineWidget( GafferUI.Widget ) :
 
 		self.setSpline( spline )
 
-		GafferUI.DisplayTransform.changedSignal().connect( Gaffer.WeakMethod( self.__displayTransformChanged ), scoped = False )
-
 		self._qtWidget().paintEvent = Gaffer.WeakMethod( self.__paintEvent )
 
 	def setSpline( self, spline ) :
@@ -131,7 +129,7 @@ class SplineWidget( GafferUI.Widget ) :
 
 			self.__gradientToDraw = QtGui.QImage( QtCore.QSize( numStops, 1 ), QtGui.QImage.Format.Format_RGB32 )
 
-			displayTransform = GafferUI.DisplayTransform.get()
+			displayTransform = self.displayTransform()
 
 			for i in range( 0, numStops ) :
 				t = float( i + 0.5 ) / numStops
@@ -231,7 +229,9 @@ class SplineWidget( GafferUI.Widget ) :
 			painter.setPen( pen )
 			painter.drawPath( s.path )
 
-	def __displayTransformChanged( self ) :
+	def _displayTransformChanged( self ) :
+
+		GafferUI.Widget._displayTransformChanged( self )
 
 		self.__gradientToDraw = None
 		self._qtWidget().update()

@@ -329,7 +329,7 @@ class UIEditor( GafferUI.NodeSetEditor ) :
 	def __setColor( cls, menu, node ) :
 
 		color = Gaffer.Metadata.value( node, "nodeGadget:color" ) or imath.Color3f( 1 )
-		dialogue = GafferUI.ColorChooserDialogue( color = color, useDisplayTransform = False )
+		dialogue = GafferUI.ColorChooserDialogue( color = color, displayTransform = GafferUI.Widget.identityDisplayTransform )
 		color = dialogue.waitForColor( parentWindow = menu.ancestor( GafferUI.Window ) )
 		if color is not None :
 			with Gaffer.UndoScope( node.ancestor( Gaffer.ScriptNode ) ) :

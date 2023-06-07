@@ -48,7 +48,7 @@ from Qt import QtGui
 # A custom slider for drawing the backgrounds.
 class _ComponentSlider( GafferUI.Slider ) :
 
-	def __init__( self, color, component, useDisplayTransform = True, **kw ) :
+	def __init__( self, color, component, **kw ) :
 
 		min = hardMin = 0
 		max = hardMax = 1
@@ -60,10 +60,6 @@ class _ComponentSlider( GafferUI.Slider ) :
 
 		self.color = color
 		self.component = component
-		self.__useDisplayTransform = useDisplayTransform
-
-		if self.__useDisplayTransform :
-			GafferUI.DisplayTransform.changedSignal().connect( Gaffer.WeakMethod( self.__displayTransformChanged ), scoped = False )
 
 	def setColor( self, color ) :
 
@@ -79,7 +75,7 @@ class _ComponentSlider( GafferUI.Slider ) :
 		size = self.size()
 		grad = QtGui.QLinearGradient( 0, 0, size.x, 0 )
 
-		displayTransform = GafferUI.DisplayTransform.get() if self.__useDisplayTransform else lambda x : x
+		displayTransform = self.displayTransform()
 
 		if self.component == "a" :
 			c1 = imath.Color3f( 0 )
@@ -107,15 +103,16 @@ class _ComponentSlider( GafferUI.Slider ) :
 		brush = QtGui.QBrush( grad )
 		painter.fillRect( 0, 0, size.x, size.y, brush )
 
-	def __displayTransformChanged( self ) :
+	def _displayTransformChanged( self ) :
 
+		GafferUI.Slider._displayTransformChanged( self )
 		self._qtWidget().update()
 
 class ColorChooser( GafferUI.Widget ) :
 
 	ColorChangedReason = IECore.Enum.create( "Invalid", "SetColor", "Reset" )
 
-	def __init__( self, color=imath.Color3f( 1 ), useDisplayTransform = True, **kw ) :
+	def __init__( self, color=imath.Color3f( 1 ), **kw ) :
 
 		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 4 )
 
@@ -139,7 +136,7 @@ class ColorChooser( GafferUI.Widget ) :
 					numericWidget.component = component
 					self.__numericWidgets[component] = numericWidget
 
-					slider = _ComponentSlider( color, component, useDisplayTransform = useDisplayTransform )
+					slider = _ComponentSlider( color, component )
 					self.__sliders[component] = slider
 
 					self.__componentValueChangedConnections.append(
@@ -153,11 +150,11 @@ class ColorChooser( GafferUI.Widget ) :
 			# initial and current colour swatches
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) as self.__swatchRow :
 
-				self.__initialColorSwatch = GafferUI.ColorSwatch( color, useDisplayTransform = useDisplayTransform, parenting = { "expand" : True } )
+				self.__initialColorSwatch = GafferUI.ColorSwatch( color, parenting = { "expand" : True } )
 				self.__initialColorSwatch._qtWidget().setFixedHeight( 40 )
 				self.__initialColorSwatch.buttonPressSignal().connect( Gaffer.WeakMethod( self.__initialColorPress ), scoped = False )
 
-				self.__colorSwatch = GafferUI.ColorSwatch( color, useDisplayTransform = useDisplayTransform, parenting = { "expand" : True } )
+				self.__colorSwatch = GafferUI.ColorSwatch( color, parenting = { "expand" : True } )
 				self.__colorSwatch._qtWidget().setFixedHeight( 40 )
 
 		self.__colorChangedSignal = Gaffer.Signals.Signal2()

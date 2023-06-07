@@ -100,6 +100,7 @@ Breaking Changes
 ----------------
 
 - Appleseed : Removed Appleseed support. We suggest Cycles as an actively maintained open-source alternative.
+- ColorSwatch, ColorChooser, ColorChooserDialogue : Removed `useDisplayTransform` constructor argument. Use `Widget.setDisplayTransform()` instead.
 - GraphComponent : Changed slot signature for `nameChangedSignal()`.
 - GLWidget :
   - A GL context is no longer available in `_resize()`.
