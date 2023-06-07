@@ -57,7 +57,7 @@ class Window( GafferUI.ContainerWidget ) :
 	def __init__( self, title="GafferUI.Window", borderWidth=0, resizeable=None, child=None, sizeMode=SizeMode.Manual, icon="GafferLogoMini.png", **kw ) :
 
 		GafferUI.ContainerWidget.__init__(
-			self, QtWidgets.QWidget( None, QtCore.Qt.WindowFlags( QtCore.Qt.Window ), **kw )
+			self, QtWidgets.QWidget( None, QtCore.Qt.WindowFlags( QtCore.Qt.Window ) ), **kw
 		)
 
 		self.__child = None
