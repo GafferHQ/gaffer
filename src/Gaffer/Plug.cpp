@@ -760,6 +760,8 @@ class Plug::DirtyPlugs
 				return;
 			}
 
+			m_flushPending = true;
+
 			if( !insertVertex( plugToDirty ).second )
 			{
 				// Previously inserted, so we'll already
@@ -803,8 +805,22 @@ class Plug::DirtyPlugs
 			{
 				if( !m_emitting ) // see comment in emit()
 				{
+					flush();
 					emit();
 				}
+			}
+		}
+
+		void flush()
+		{
+			if( !m_flushPending )
+			{
+				return;
+			}
+			m_flushPending = false;
+			for( const auto &[ plug, vertex ] : m_plugs )
+			{
+				plug->dirty();
 			}
 		}
 
@@ -827,7 +843,7 @@ class Plug::DirtyPlugs
 		using VertexDescriptor = Graph::vertex_descriptor;
 		using EdgeDescriptor = Graph::edge_descriptor;
 
-		using PlugMap = std::unordered_map<const Plug *, VertexDescriptor>;
+		using PlugMap = std::unordered_map<Plug *, VertexDescriptor>;
 
 		// Equivalent to the return type for map::insert - the first
 		// field is the vertex descriptor, and the second field is
@@ -854,7 +870,6 @@ class Plug::DirtyPlugs
 			VertexDescriptor result = add_vertex( m_graph );
 			m_graph[result] = plug;
 			m_plugs[plug] = result;
-			plug->dirty();
 
 			// Insert parent plug.
 			if( auto parent = plug->parent<Plug>() )
@@ -962,6 +977,7 @@ class Plug::DirtyPlugs
 		Graph m_graph;
 		PlugMap m_plugs;
 		size_t m_scopeCount;
+		bool m_flushPending;
 		bool m_emitting;
 
 };
@@ -980,6 +996,11 @@ void Plug::pushDirtyPropagationScope()
 void Plug::popDirtyPropagationScope()
 {
 	DirtyPlugs::local().popScope();
+}
+
+void Plug::flushDirtyPropagationScope()
+{
+	DirtyPlugs::local().flush();
 }
 
 void Plug::dirty()
