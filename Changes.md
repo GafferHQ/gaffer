@@ -112,6 +112,7 @@ Breaking Changes
   - Replaced `affectsColorData()` with `affectsColorProcessor()` and `hashColorData()` with `hashColorProcessor()`.
   - Simplified implementation of pass-throughs when the color processor is a no-op. Derived classes may simply
     return an empty `ColorProcessorFunction`, and everything else is taken care of in the base class.
+- PlugValueWidget : Removed support for deprecated `layout:widgetType` metadata. Use `plugValueWidget:type` metadata instead.
 
 Build
 -----

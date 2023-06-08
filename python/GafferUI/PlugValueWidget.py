@@ -918,12 +918,6 @@ class PlugValueWidget( GafferUI.Widget ) :
 		if not useTypeOnly :
 
 			widgetType = Gaffer.Metadata.value( plug, "plugValueWidget:type" )
-			if widgetType is None :
-				widgetType = Gaffer.Metadata.value( plug, "layout:widgetType" )
-				if widgetType is not None :
-					warnings.warn( "The \"layout:widgetType\" metadata entry is deprecated, use \"plugValueWidget:type\" instead.", DeprecationWarning )
-					if widgetType == "None" :
-						return None
 
 			if widgetType is not None :
 				if widgetType == "" :
