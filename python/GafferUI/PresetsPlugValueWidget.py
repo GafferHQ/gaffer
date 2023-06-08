@@ -57,7 +57,7 @@ class PresetsPlugValueWidget( GafferUI.PlugValueWidget ) :
 		self.__menuButton = GafferUI.MenuButton( "", menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ) )
 		cont.addChild( self.__menuButton )
 
-		self.__customValuePlugWidget = GafferUI.PlugValueWidget.create( plugs, useTypeOnly=True )
+		self.__customValuePlugWidget = GafferUI.PlugValueWidget.create( plugs, typeMetadata = None )
 		if type( self.__customValuePlugWidget ) == GafferUI.ConnectionPlugValueWidget and len( self.getPlugs() ) and next( iter( self.getPlugs() ) ).children():
 			# If we couldn't find a meaningful plug widget type, and the plug has children, try using
 			# a layout widget to show child plugs when in "custom" mode

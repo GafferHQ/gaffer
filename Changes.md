@@ -74,6 +74,7 @@ API
 - PlugLayout :
   - Added support for `layout:minimumWidth` metadata.
   - Tabs are now hidden if all their child plugs are hidden by `layout:visibilityActivator` metadata.
+- PlugValueWidget : Added `typeMetadata` argument to `create()` to use an alternative key to `plugValueWidget:type` when looking up widget type.
 - TabbedContainer : Added `setTabVisible()` and `getTabVisible()` methods.
 - Removed use of `RTLD_GLOBAL` for loading Python modules.
 - SceneAlgo : Added `validateName()` function.
@@ -112,7 +113,9 @@ Breaking Changes
   - Replaced `affectsColorData()` with `affectsColorProcessor()` and `hashColorData()` with `hashColorProcessor()`.
   - Simplified implementation of pass-throughs when the color processor is a no-op. Derived classes may simply
     return an empty `ColorProcessorFunction`, and everything else is taken care of in the base class.
-- PlugValueWidget : Removed support for deprecated `layout:widgetType` metadata. Use `plugValueWidget:type` metadata instead.
+- PlugValueWidget :
+  - Removed support for deprecated `layout:widgetType` metadata. Use `plugValueWidget:type` metadata instead.
+  - Removed `useTypeOnly` argument from `create()` function. Pass `typeMetadata = None` instead.
 
 Build
 -----

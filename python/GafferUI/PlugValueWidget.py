@@ -218,19 +218,22 @@ class PlugValueWidget( GafferUI.Widget ) :
 		return cls.__popupMenuSignal
 
 	## Returns a PlugValueWidget suitable for representing the specified plugs.
-	# The type of widget returned may be customised on a per-plug basis by a
-	# "plugValueWidget:type" metadata value, specifying the fully qualified
-	# python type name for a widget class. To suppress the creation of a widget,
-	# a value of "" may be registered - in this case None will be returned from
-	# create(). If useTypeOnly is True, then the metadata will be ignored and
-	# only the plug type will be taken into account in creating a PlugValueWidget.
+	# By default, the type of widget returned may be customised on a per-plug
+	# basis by a `plugValueWidget:type`` metadata value, specifying the fully
+	# qualified python type name for a widget class. To suppress the creation of
+	# a widget, a value of "" may be registered - in this case `None` will be
+	# returned from `create()``.
+	#
+	# Callers may pass an alternative metadata key to look up via the `typeMetadata`
+	# parameter. Passing `typeMetadata = None` bypasses any types registered via
+	# metadata and returns a default widget based on the plug type instead.
 	@classmethod
-	def create( cls, plugs, useTypeOnly=False ) :
+	def create( cls, plugs, typeMetadata = "plugValueWidget:type" ) :
 
 		if isinstance( plugs, Gaffer.Plug ) :
-			creators = { cls.__creator( plugs, useTypeOnly ) }
+			creators = { cls.__creator( plugs, typeMetadata ) }
 		else :
-			creators = { cls.__creator( p, useTypeOnly ) for p in plugs }
+			creators = { cls.__creator( p, typeMetadata ) for p in plugs }
 			# Not all PlugValueWidgets support multiple plugs, and some
 			# except in their constructors if passed a sequence type.
 			# Unwrap where possible.
@@ -912,12 +915,12 @@ class PlugValueWidget( GafferUI.Widget ) :
 	# Type registry internals
 
 	@classmethod
-	def __creator( cls, plug, useTypeOnly ) :
+	def __creator( cls, plug, typeMetadata ) :
 
 		# First try to create one using a creator registered for the specific plug.
-		if not useTypeOnly :
+		if typeMetadata :
 
-			widgetType = Gaffer.Metadata.value( plug, "plugValueWidget:type" )
+			widgetType = Gaffer.Metadata.value( plug, typeMetadata )
 
 			if widgetType is not None :
 				if widgetType == "" :
