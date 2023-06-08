@@ -75,6 +75,7 @@ API
   - Added support for `layout:minimumWidth` metadata.
   - Tabs are now hidden if all their child plugs are hidden by `layout:visibilityActivator` metadata.
 - PlugValueWidget : Added `typeMetadata` argument to `create()` to use an alternative key to `plugValueWidget:type` when looking up widget type.
+- PresetsPlugValueWidget : Added `presetsPlugValueWidget:customWidgetType` metadata, to allow the type for the custom widget to be specified.
 - TabbedContainer : Added `setTabVisible()` and `getTabVisible()` methods.
 - Removed use of `RTLD_GLOBAL` for loading Python modules.
 - SceneAlgo : Added `validateName()` function.
