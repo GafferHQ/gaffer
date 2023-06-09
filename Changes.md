@@ -17,6 +17,7 @@ Improvements
 - ImageReader, ImageWriter : The `colorSpace` menu is now filtered using the `file-io` category, if the current OpenColorIO config provides it.
 - OpenColorIO :
   - Updated default config to ACES Studio 1.3.
+  - Added `openColorIO` plug to ScriptNode, allowing the OpenColorIO config, variables and display transform to be customised on a per-script basis.
   - Improved colorspace menus :
     - Organised colorspaces into submenus by family.
     - Removed unwanted title-casing, so that names are now displayed verbatim.
@@ -136,7 +137,8 @@ Breaking Changes
   - Removed support for deprecated `layout:widgetType` metadata. Use `plugValueWidget:type` metadata instead.
   - Removed `useTypeOnly` argument from `create()` function. Pass `typeMetadata = None` instead.
 - MeshTangents : Changed the edge used by `Mode::FirstEdge`.
-- Handle::AngularDrag : Fix mismatch between comment and implementation regarding the axis for zero rotation. The constructor arguments `axis0` and `axis1` were changed to `normal` and `axis0` respectively.
+- Handle::AngularDrag : Fixed mismatch between comment and implementation regarding the axis for zero rotation. The constructor arguments `axis0` and `axis1` were changed to `normal` and `axis0` respectively.
+- Preferences : Removed `displayColorSpace` plug. Use the ScriptNode's `openColorIO` plug instead.
 
 Build
 -----
