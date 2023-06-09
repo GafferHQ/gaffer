@@ -139,6 +139,7 @@ Breaking Changes
 - MeshTangents : Changed the edge used by `Mode::FirstEdge`.
 - Handle::AngularDrag : Fixed mismatch between comment and implementation regarding the axis for zero rotation. The constructor arguments `axis0` and `axis1` were changed to `normal` and `axis0` respectively.
 - Preferences : Removed `displayColorSpace` plug. Use the ScriptNode's `openColorIO` plug instead.
+- GafferUI.DisplayTransform : Removed. Use `Widget.setDisplayTransform()` instead.
 
 Build
 -----

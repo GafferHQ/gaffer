@@ -178,7 +178,6 @@ from .MenuButton import MenuButton
 from .MultiSelectionMenu import MultiSelectionMenu
 from .PopupWindow import PopupWindow
 from .ConfirmationDialogue import ConfirmationDialogue
-from .DisplayTransform import DisplayTransform
 from .Divider import Divider
 from . import _Pointer
 from .SplineWidget import SplineWidget

@@ -835,8 +835,7 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 
 		return GafferUI.ModifiableEvent.Modifiers( modifiers )
 
-	## Converts an IECore.Color[34]f to a QtColor. Note that this
-	# does not take into account GafferUI.DisplayTransform.
+	## Converts an IECore.Color[34]f to a QtColor.
 	@staticmethod
 	def _qtColor( color ) :
 
