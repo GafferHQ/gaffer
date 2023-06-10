@@ -89,10 +89,10 @@ namespace
 
 M44f signOnlyScaling( const M44f &m )
 {
-	V3f scale;
-	V3f shear;
-	V3f rotate;
-	V3f translate;
+	V3f scale( 1 );
+	V3f shear( 0 );
+	V3f rotate( 0 );
+	V3f translate( 0 );
 
 	extractSHRT( m, scale, shear, rotate, translate );
 
