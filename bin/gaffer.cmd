@@ -16,6 +16,7 @@ call :prependToPath "%GAFFER_ROOT%\fonts" IECORE_FONT_PATHS
 call :prependToPath "%GAFFER_ROOT%\ops" IECORE_OP_PATHS
 
 call :prependToPath "%GAFFER_ROOT%\resources\IECoreUSD" PXR_PLUGINPATH_NAME
+call :prependToPath "%GAFFER_ROOT%\materialX" PXR_MTLX_STDLIB_SEARCH_PATHS
 
 call :prependToPath "%USERPROFILE%\gaffer\opPresets;%GAFFER_ROOT%\opPresets" IECORE_OP_PRESET_PATHS
 call :prependToPath "%USERPROFILE%\gaffer\procedurals;%GAFFER_ROOT%\procedurals" IECORE_PROCEDURAL_PATHS
