@@ -186,6 +186,7 @@ Gaffer.Metadata.registerNode(
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 			"presetsPlugValueWidget:allowCustom", True,
+			"presetsPlugValueWidget:customWidgetType", "GafferUI.LayoutPlugValueWidget",
 
 		],
 		"layout.partName" : [

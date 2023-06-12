@@ -1134,7 +1134,7 @@ class _PresetsEditor( GafferUI.Widget ) :
 			)
 			self.__valueNode["presetValue"] = plug.createCounterpart( "presetValue", plug.Direction.In )
 			if hasattr( self.__plug, "getValue" ) :
-				plugValueWidget = GafferUI.PlugValueWidget.create( self.__valueNode["presetValue"], useTypeOnly = True )
+				plugValueWidget = GafferUI.PlugValueWidget.create( self.__valueNode["presetValue"], typeMetadata = None )
 
 		self.__editingColumn.append( plugValueWidget if plugValueWidget is not None else GafferUI.TextWidget() )
 

@@ -263,7 +263,7 @@ class _TogglePlugValueWidget( GafferUI.PlugValueWidget ) :
 			self.__button.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ), scoped = False )
 
 			if not isinstance( plug, Gaffer.BoolPlug ) :
-				plugValueWidget = GafferUI.PlugValueWidget.create( plug, useTypeOnly=True )
+				plugValueWidget = GafferUI.PlugValueWidget.create( plug, typeMetadata = None )
 				plugValueWidget.numericWidget().setFixedCharacterWidth( 5 )
 
 		self.__toggleValue = Gaffer.Metadata.value( plug, "togglePlugValueWidget:defaultToggleValue" )
