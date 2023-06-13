@@ -186,7 +186,14 @@ void DotNodeGadget::updateLabel()
 		}
 		else
 		{
+			const auto script = dot->scriptNode();
+			const Context *context = script ? script->context() : nullptr;
+			Context::Scope scope( context );
 			m_label = dot->labelPlug()->getValue();
+			if( context )
+			{
+				m_label = context->substitute( m_label );
+			}
 		}
 	}
 	catch( const Gaffer::ProcessException & )

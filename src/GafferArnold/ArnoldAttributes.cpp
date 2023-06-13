@@ -102,6 +102,10 @@ ArnoldAttributes::ArnoldAttributes( const std::string &name )
 	attributes->addChild( new Gaffer::NameValuePlug( "ai:curves:mode", new StringPlug( "value", Plug::In, "ribbon" ), false, "curvesMode" ) );
 	attributes->addChild( new Gaffer::NameValuePlug( "ai:curves:min_pixel_width", new FloatPlug( "value", Plug::In, 0.0f, 0.0f ), false, "curvesMinPixelWidth" ) );
 
+	// Points parameters
+
+	attributes->addChild( new Gaffer::NameValuePlug( "ai:points:min_pixel_width", new FloatPlug( "value", Plug::In, 0.0f, 0.0f ), false, "pointsMinPixelWidth" ) );
+
 	// Volume parameters
 
 	attributes->addChild( new Gaffer::NameValuePlug( "ai:volume:step_size", new FloatPlug( "value", Plug::In, 0.0f, 0.0f ), false, "volumeStepSize" ) );

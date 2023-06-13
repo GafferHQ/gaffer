@@ -138,26 +138,38 @@ Build
 - Qt : Updated to version 5.15.8.
 - ZLib : Added version 1.2.13.
 
-1.2.x.x (relative to 1.2.7.0)
+1.2.x.x (relative to 1.2.8.0)
+=======
+
+1.2.8.0 (relative to 1.2.7.0)
 =======
 
 Improvements
 ------------
 
+- ArnoldAttributes : Added `pointsMinPixelWidth` plug.
 - EditScope : Hid the `BoxIn.name` and `BoxOut.name` plugs from the NodeEditor, since it is not editable and the name is _always_ `in` or `out` respectively.
 - Limits : Increased soft file handle limit (`RLIMIT_NOFILE`) to match the hard limit (Linux only).
-- SceneReader : Increased the default limit for the number of open files to 2000 (or 25% of the file handle limit, whichever is lowest).
+- SceneReader :
+  - Fixed `I/O Exception` errors triggered by closing and reopening the same USD file.
+  - Increased the default limit for the number of open files to 2000 (or 25% of the file handle limit, whichever is lowest).
 
 Fixes
 -----
 
 - NodeEditor : Reverted change that prevented a plug being unlocked if static `readOnly` metadata was registered against it.
 - EditMenu : Fixed errors using "Duplicate with Inputs" with certain configurations of Dot node (#5309).
+- Dot : Fixed the display of context-sensitive `label` values (#5330).
 
 API
 ---
 
 - CatalogueUI : Made ImageListing widget public so it can be customized using the API.
+
+Build
+-----
+
+- Cortex : Updated to 10.4.9.1.
 
 1.2.7.0 (relative to 1.2.6.0)
 =======
@@ -595,13 +607,17 @@ Build
   - YAML-CPP : Added version 0.7.0.
 - 3Delight : Updated to 3Delight version 2.9.17.
 
-1.1.9.x (relative to 1.1.9.6)
+1.1.9.x (relative to 1.1.9.7)
+=======
+
+1.1.9.7 (relative to 1.1.9.6)
 =======
 
 Fixes
 -----
 
 - EditMenu : Fixed errors using "Duplicate with Inputs" with certain configurations of Dot node (#5309).
+- Dot : Fixed the display of context-sensitive `label` values (#5330).
 
 1.1.9.6 (relative to 1.1.9.5)
 =======

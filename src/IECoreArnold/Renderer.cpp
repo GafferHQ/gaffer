@@ -47,6 +47,7 @@
 #include "IECoreScene/CurvesPrimitive.h"
 #include "IECoreScene/ExternalProcedural.h"
 #include "IECoreScene/MeshPrimitive.h"
+#include "IECoreScene/PointsPrimitive.h"
 #include "IECoreScene/Shader.h"
 #include "IECoreScene/SpherePrimitive.h"
 
@@ -342,6 +343,7 @@ const AtString g_nameArnoldString( "name" );
 const AtString g_nodeArnoldString("node");
 const AtString g_objectArnoldString( "object" );
 const AtString g_opaqueArnoldString( "opaque" );
+const AtString g_pointsArnoldString( "points" );
 const AtString g_preserveLayerNameArnoldString( "preserve_layer_name" );
 const AtString g_proceduralArnoldString( "procedural" );
 const AtString g_pinCornersArnoldString( "pin_corners" );
@@ -979,6 +981,7 @@ IECore::InternedString g_dispAutoBumpAttributeName( "ai:disp_autobump" );
 
 IECore::InternedString g_curvesMinPixelWidthAttributeName( "ai:curves:min_pixel_width" );
 IECore::InternedString g_curvesModeAttributeName( "ai:curves:mode" );
+IECore::InternedString g_pointsMinPixelWidthAttributeName( "ai:points:min_pixel_width" );
 IECore::InternedString g_sssSetNameName( "ai:sss_setname" );
 IECore::InternedString g_toonIdName( "ai:toon_id" );
 
@@ -1015,7 +1018,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 	public :
 
 		ArnoldAttributes( const IECore::CompoundObject *attributes, ShaderCache *shaderCache )
-			:	m_visibility( AI_RAY_ALL ), m_sidedness( AI_RAY_ALL ), m_shadingFlags( Default ), m_stepSize( 0.0f ), m_stepScale( 1.0f ), m_volumePadding( 0.0f ), m_polyMesh( attributes ), m_displacement( attributes, shaderCache ), m_curves( attributes ), m_volume( attributes ), m_allAttributes( attributes )
+			:	m_visibility( AI_RAY_ALL ), m_sidedness( AI_RAY_ALL ), m_shadingFlags( Default ), m_stepSize( 0.0f ), m_stepScale( 1.0f ), m_volumePadding( 0.0f ), m_polyMesh( attributes ), m_displacement( attributes, shaderCache ), m_curves( attributes ), m_points( attributes ), m_volume( attributes ), m_allAttributes( attributes )
 		{
 			updateVisibility( m_visibility, g_cameraVisibilityAttributeName, AI_RAY_CAMERA, attributes );
 			updateVisibility( m_visibility, g_shadowVisibilityAttributeName, AI_RAY_SHADOW, attributes );
@@ -1116,6 +1119,10 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			{
 				m_curves.apply( node );
 			}
+			else if( IECore::runTimeCast<const IECoreScene::PointsPrimitive>( object ) )
+			{
+				m_points.apply( node );
+			}
 			else if( IECore::runTimeCast<const IECoreVDB::VDBObject>( object ) )
 			{
 				m_volume.apply( node );
@@ -1198,6 +1205,10 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				// Min pixel width is a screen-space metric, and hence not compatible with instancing.
 				return m_curves.minPixelWidth == 0.0f;
 			}
+			else if( IECore::runTimeCast<const IECoreScene::PointsPrimitive>( object ) )
+			{
+				return m_points.minPixelWidth == 0.0f;
+			}
 			else if( const IECoreScene::ExternalProcedural *procedural = IECore::runTimeCast<const IECoreScene::ExternalProcedural>( object ) )
 			{
 				// We don't instance "ass archive" procedurals, because Arnold
@@ -1247,6 +1258,10 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				else if( AiNodeIs( geometry, g_curvesArnoldString ) )
 				{
 					objectType = IECoreScene::CurvesPrimitive::staticTypeId();
+				}
+				else if( AiNodeIs( geometry, g_pointsArnoldString ) )
+				{
+					objectType = IECoreScene::PointsPrimitive::staticTypeId();
 				}
 				else if( AiNodeIs( geometry, g_boxArnoldString ) )
 				{
@@ -1747,6 +1762,26 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			}
 		};
 
+		struct Points
+		{
+			Points( const IECore::CompoundObject *attributes )
+			{
+				minPixelWidth = attributeValue<float>( g_pointsMinPixelWidthAttributeName, attributes, 0.0f );
+			}
+
+			float minPixelWidth;
+
+			void hash( IECore::MurmurHash &h ) const
+			{
+				h.append( minPixelWidth );
+			}
+
+			void apply( AtNode *node ) const
+			{
+				AiNodeSetFlt( node, g_minPixelWidthArnoldString, minPixelWidth );
+			}
+		};
+
 		enum ShadingFlags
 		{
 			ReceiveShadows = 1,
@@ -1848,6 +1883,9 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				case IECoreScene::CurvesPrimitiveTypeId :
 					m_curves.hash( h );
 					break;
+				case IECoreScene::PointsPrimitiveTypeId :
+					m_points.hash( h );
+					break;
 				case IECoreScene::SpherePrimitiveTypeId :
 					h.append( m_stepSize );
 					h.append( m_stepScale );
@@ -1919,6 +1957,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			m_polyMesh.hash( false, h );
 			m_displacement.hash( h );
 			m_curves.hash( h );
+			m_points.hash( h );
 			m_volume.hash( h );
 			h.append( m_toonId.c_str() ? m_toonId.c_str() : "" );
 			h.append( m_sssSetName.c_str() ? m_sssSetName.c_str() : "" );
@@ -1943,6 +1982,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		PolyMesh m_polyMesh;
 		Displacement m_displacement;
 		Curves m_curves;
+		Points m_points;
 		Volume m_volume;
 		AtString m_toonId;
 		AtString m_sssSetName;

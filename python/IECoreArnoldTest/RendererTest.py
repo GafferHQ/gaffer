@@ -2316,6 +2316,81 @@ class RendererTest( GafferTest.TestCase ) :
 				self.assertEqual( arnold.AiNodeGetFlt( shape, "min_pixel_width" ), minPixelWidth )
 				self.assertEqual( arnold.AiNodeGetStr( shape, "mode" ), mode )
 
+	def testPointsAttributes( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.ass" )
+		)
+
+		points = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [ imath.V3f( i ) for i in range( 0, 10 ) ] ) )
+
+		defaultAttributes = r.attributes( IECore.CompoundObject() )
+
+		pixelWidth1Attributes = r.attributes(
+			IECore.CompoundObject( {
+				"ai:points:min_pixel_width" : IECore.FloatData( 1 ),
+			} )
+		)
+
+		pixelWidth2Attributes = r.attributes(
+			IECore.CompoundObject( {
+				"ai:points:min_pixel_width" : IECore.FloatData( 2 ),
+			} )
+		)
+
+		r.object( "default", points, defaultAttributes )
+		r.object( "defaultDuplicate", points, defaultAttributes )
+		r.object( "pixelWidth1", points, pixelWidth1Attributes )
+		r.object( "pixelWidth1Duplicate", points, pixelWidth1Attributes )
+		r.object( "pixelWidth2", points, pixelWidth2Attributes )
+
+		del defaultAttributes, pixelWidth1Attributes, pixelWidth2Attributes
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
+
+			shapes = self.__allNodes( universe, type = arnold.AI_NODE_SHAPE )
+			numInstances = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "ginstance" ] )
+			numPoints = len( [ s for s in shapes if arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( s ) ) == "points" ] )
+
+			self.assertEqual( numInstances, 2 ) # Can't instance when min_pixel_width != 0
+			self.assertEqual( numPoints, 4 )
+
+			self.__assertInstanced(
+				universe,
+				"default",
+				"defaultDuplicate",
+			)
+
+			self.__assertNotInstanced(
+				universe,
+				"pixelWidth1",
+				"pixelWidth1Duplicate",
+				"pixelWidth2",
+			)
+
+			for name, minPixelWidth in (
+				( "default", 0 ),
+				( "defaultDuplicate", 0 ),
+				( "pixelWidth1", 1 ),
+				( "pixelWidth1Duplicate", 1 ),
+				( "pixelWidth2", 2 ),
+			) :
+
+				node = arnold.AiNodeLookUpByName( universe, name )
+				if arnold.AiNodeIs( node, "ginstance" ) :
+					shape = arnold.AiNodeGetPtr( node, "node" )
+				else :
+					shape = node
+
+				self.assertEqual( arnold.AiNodeGetFlt( shape, "min_pixel_width" ), minPixelWidth )
+
 	def testAttributeEditFailures( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
