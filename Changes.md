@@ -19,6 +19,7 @@ Fixes
 
 - NodeEditor : Reverted change that prevented a plug being unlocked if static `readOnly` metadata was registered against it.
 - EditMenu : Fixed errors using "Duplicate with Inputs" with certain configurations of Dot node (#5309).
+- Dot : Fixed the display of context-sensitive `label` values (#5330).
 
 API
 ---
@@ -466,13 +467,17 @@ Build
   - YAML-CPP : Added version 0.7.0.
 - 3Delight : Updated to 3Delight version 2.9.17.
 
-1.1.9.x (relative to 1.1.9.6)
+1.1.9.x (relative to 1.1.9.7)
+=======
+
+1.1.9.7 (relative to 1.1.9.6)
 =======
 
 Fixes
 -----
 
 - EditMenu : Fixed errors using "Duplicate with Inputs" with certain configurations of Dot node (#5309).
+- Dot : Fixed the display of context-sensitive `label` values (#5330).
 
 1.1.9.6 (relative to 1.1.9.5)
 =======
