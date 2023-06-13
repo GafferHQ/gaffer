@@ -39,7 +39,9 @@ Fixes
 -----
 
 - UVInspector : Removed display transform from UV wireframes and grid.
-- Viewer : Gamma is now applied after the display transform, not before.
+- Viewer :
+  - Gamma is now applied after the display transform, not before.
+  - Fixed image viewer's active tile indicators from becoming stuck when a computation was cancelled.
 - Expression : Fixed parsing of Python expressions combining subscripts (`[]`) and `context` methods (#3088, #3613, #5250).
 - ConnectionCreatorWrapper : Fixed bug which forced PlugAdder derived classes to implement `updateDragEndPoint()` unnecessarily.
 - Plug : Fixed bug which caused stale values to be retrieved from the cache for plugs that had been renamed.

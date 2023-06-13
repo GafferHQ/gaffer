@@ -717,28 +717,32 @@ ImageGadget::Tile::Tile( const Tile &other )
 
 ImageGadget::Tile::Update ImageGadget::Tile::computeUpdate( const GafferImage::ImagePlug *image )
 {
-	const IECore::MurmurHash h = image->channelDataPlug()->hash();
-	Mutex::scoped_lock lock( m_mutex );
-	if( m_channelDataHash != MurmurHash() && m_channelDataHash == h )
+	try
 	{
-		return Update{ nullptr, nullptr, MurmurHash() };
-	}
+		const IECore::MurmurHash h = image->channelDataPlug()->hash();
+		Mutex::scoped_lock lock( m_mutex );
+		if( m_channelDataHash != MurmurHash() && m_channelDataHash == h )
+		{
+			return Update{ this, nullptr, MurmurHash() };
+		}
 
-	m_active = true;
-	m_activeStartTime = std::chrono::steady_clock::now();
-	lock.release(); // Release while doing expensive calculation so UI thread doesn't wait.
-	ConstFloatVectorDataPtr channelData = image->channelDataPlug()->getValue( &h );
-	return Update{ this, channelData, h };
+		m_active = true;
+		m_activeStartTime = std::chrono::steady_clock::now();
+		lock.release(); // Release while doing expensive calculation so UI thread doesn't wait.
+		ConstFloatVectorDataPtr channelData = image->channelDataPlug()->getValue( &h );
+		return Update{ this, channelData, h };
+	}
+	catch( ... )
+	{
+		return Update{ this, nullptr, MurmurHash() };
+	}
 }
 
 void ImageGadget::Tile::applyUpdates( const std::vector<Update> &updates )
 {
 	for( const auto &u : updates )
 	{
-		if( u.tile )
-		{
-			u.tile->m_mutex.lock();
-		}
+		u.tile->m_mutex.lock();
 	}
 
 	for( const auto &u : updates )
@@ -747,16 +751,13 @@ void ImageGadget::Tile::applyUpdates( const std::vector<Update> &updates )
 		{
 			u.tile->m_channelDataToConvert = u.channelData;
 			u.tile->m_channelDataHash = u.channelDataHash;
-			u.tile->m_active = false;
 		}
+		u.tile->m_active = false;
 	}
 
 	for( const auto &u : updates )
 	{
-		if( u.tile )
-		{
-			u.tile->m_mutex.unlock();
-		}
+		u.tile->m_mutex.unlock();
 	}
 }
 
