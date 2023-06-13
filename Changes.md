@@ -1,11 +1,14 @@
-1.1.9.x (relative to 1.1.9.6)
+1.1.9.x (relative to 1.1.9.7)
+=======
+
+1.1.9.7 (relative to 1.1.9.6)
 =======
 
 Fixes
 -----
 
 - EditMenu : Fixed errors using "Duplicate with Inputs" with certain configurations of Dot node (#5309).
-- Dot : Fixed the display of context-sensitive `label` values.
+- Dot : Fixed the display of context-sensitive `label` values (#5330).
 
 1.1.9.6 (relative to 1.1.9.5)
 =======
