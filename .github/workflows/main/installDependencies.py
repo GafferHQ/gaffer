@@ -48,7 +48,7 @@ else :
 
 # Determine default archive URL.
 
-defaultURL = "https://github.com/GafferHQ/dependencies/releases/download/7.0.0a2/gafferDependencies-7.0.0a2-{platform}.{extension}".format(
+defaultURL = "https://github.com/GafferHQ/dependencies/releases/download/7.0.0a3/gafferDependencies-7.0.0a3-{platform}.{extension}".format(
 	platform = { "darwin" : "osx", "win32" : "windows" }.get( sys.platform, "linux" ),
 	extension = "tar.gz" if sys.platform != "win32" else "zip"
 )

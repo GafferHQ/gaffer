@@ -123,6 +123,7 @@ prependToPath "$GAFFER_ROOT/fonts" IECORE_FONT_PATHS
 prependToPath "$HOME/gaffer/ops:$GAFFER_ROOT/ops" IECORE_OP_PATHS
 
 prependToPath "$GAFFER_ROOT/resources/IECoreUSD" PXR_PLUGINPATH_NAME
+prependToPath "$GAFFER_ROOT/materialX" PXR_MTLX_STDLIB_SEARCH_PATHS
 
 prependToPath "$HOME/gaffer/opPresets:$GAFFER_ROOT/opPresets" IECORE_OP_PRESET_PATHS
 prependToPath "$HOME/gaffer/procedurals:$GAFFER_ROOT/procedurals" IECORE_PROCEDURAL_PATHS

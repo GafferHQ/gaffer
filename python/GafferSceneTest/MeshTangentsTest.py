@@ -135,10 +135,10 @@ class MeshTangentsTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( len( tangent.data ), 3 )
 		self.assertEqual( len( biTangent.data ), 3 )
 
-		for v, v1 in zip( tangent.data, [imath.V3f( 1, 0, 0 ), imath.V3f( -1, 0, 0 ), imath.V3f( 0, -1, 0 ) ] ):
+		for v, v1 in zip( tangent.data, [ imath.V3f( 1, 0, 0 ), imath.V3f( -1, 0, 0 ), imath.V3f( 1, -1, 0 ).normalized() ] ) :
 			self.assertTrue( v.equalWithAbsError( v1, 0.000001 ) )
 
-		for v, v1 in zip( biTangent.data, [imath.V3f( 0, -1, 0 ), imath.V3f( 0, 1, 0 ), imath.V3f( -1, 0, 0 ) ] ):
+		for v, v1 in zip( biTangent.data, [ imath.V3f( 0, -1, 0 ), imath.V3f( 0, 1, 0 ), imath.V3f( -1, -1, 0 ).normalized() ] ) :
 			self.assertTrue( v.equalWithAbsError( v1, 0.000001 ) )
 
 	def testModeTwoEdges( self ) :

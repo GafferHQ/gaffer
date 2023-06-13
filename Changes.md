@@ -117,6 +117,7 @@ Breaking Changes
 - PlugValueWidget :
   - Removed support for deprecated `layout:widgetType` metadata. Use `plugValueWidget:type` metadata instead.
   - Removed `useTypeOnly` argument from `create()` function. Pass `typeMetadata = None` instead.
+- MeshTangents : Changed the edge used by `Mode::FirstEdge`.
 
 Build
 -----
@@ -126,6 +127,7 @@ Build
   - Stopped linking unnecessarily to `iostreams`, `date_time`, `wave` and `system` libraries.
 - Cortex : Updated to version 10.5.0.0.
 - Imath : Added version 3.1.7.
+- MaterialX : Added version 1.38.4.
 - Minizip : Added version 3.0.9.
 - OpenEXR :
   - Updated to version 3.1.7.
@@ -136,6 +138,8 @@ Build
 - PyBind11 : Updated to version 2.10.4.
 - PySide : Updated to version 5.15.8.
 - Qt : Updated to version 5.15.8.
+- USD : Updated to version 23.05.
+- Xerces : Removed.
 - ZLib : Added version 1.2.13.
 
 1.2.x.x (relative to 1.2.8.0)
