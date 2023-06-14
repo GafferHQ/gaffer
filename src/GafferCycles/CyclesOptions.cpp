@@ -116,6 +116,7 @@ CyclesOptions::CyclesOptions( const std::string &name )
 
 	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:sampling_pattern", new IECore::StringData( "sobol" ), false, "samplingPattern" ) );
 
+	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:use_denoise", new IECore::BoolData( false ), false, "useDenoise" ) );
 	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:denoiser_type", new IECore::StringData( "openimagedenoise" ), false, "denoiserType" ) );
 	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:denoise_start_sample", new IECore::IntData( 0 ), false, "denoiseStartSample" ) );
 	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:use_denoise_pass_albedo", new IECore::BoolData( true ), false, "useDenoisePassAlbedo" ) );

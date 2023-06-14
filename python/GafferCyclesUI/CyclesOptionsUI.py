@@ -246,6 +246,9 @@ def __denoisingSummary( plug ) :
 
 	info = []
 
+	if plug["useDenoise"]["enabled"].getValue() :
+		info.append( "Use Denoising {}".format( plug["useDenoise"]["value"].getValue() ) )
+
 	if plug["denoiserType"]["enabled"].getValue() :
 		info.append( "Denoise Type {}".format( plug["denoiserType"]["value"].getValue() ) )
 
@@ -1369,6 +1372,18 @@ Gaffer.Metadata.registerNode(
 		],
 
 		# Denoising
+
+		"options.useDenoise" : [
+
+			"description",
+			"""
+			Enable the Denoiser.
+			""",
+
+			"layout:section", "Denoising",
+			"label", "Use Denoising",
+
+		],
 
 		"options.denoiserType" : [
 
