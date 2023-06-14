@@ -134,11 +134,14 @@ class MatchPatternPathFilterWidget( GafferUI.PathFilterWidget ) :
 
 	def __propertyMenuDefinition( self ) :
 
-		## \todo Make this configurable
 		propertiesAndLabels = (
 			( "name", "Name" ),
 			( "fileSystem:owner", "Owner" ),
 		)
+
+		with IECore.IgnoredExceptions( KeyError ) :
+			propertyFilters = self.pathFilter().userData()["UI"]["propertyFilters"]
+			propertiesAndLabels = [ ( k, v.value ) for k, v in propertyFilters.items() ]
 
 		menuDefinition = IECore.MenuDefinition()
 		for property, label in propertiesAndLabels :

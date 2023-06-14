@@ -13,6 +13,11 @@ Fixes
 
 - Arnold : Fixed bug that caused `ai:volume:step_scale` to be ignored if `ai:volume_step` was set explicitly to `0.0`. This was different to the behaviour when `ai:volume_step` was not set at all.
 
+API
+---
+
+- MatchPatternPathFilterWidget : Made the entries in the property menu configurable.
+
 1.2.8.0 (relative to 1.2.7.0)
 =======
 
