@@ -46,6 +46,7 @@
 #include "GafferScene/DeletePoints.h"
 #include "GafferScene/LightToCamera.h"
 #include "GafferScene/MeshDistortion.h"
+#include "GafferScene/MeshNormals.h"
 #include "GafferScene/MeshSegments.h"
 #include "GafferScene/MeshTangents.h"
 #include "GafferScene/MeshToPoints.h"
@@ -85,6 +86,7 @@ void GafferSceneModule::bindObjectProcessor()
 	GafferBindings::DependencyNodeClass<UDIMQuery>();
 	GafferBindings::DependencyNodeClass<Wireframe>();
 	GafferBindings::DependencyNodeClass<CopyPrimitiveVariables>();
+	GafferBindings::DependencyNodeClass<MeshNormals>();
 
 	{
 		scope s = GafferBindings::DependencyNodeClass<GafferScene::MeshTangents>();

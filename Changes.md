@@ -1,6 +1,11 @@
 1.x.x.x (relative to 1.2.x.x)
 =======
 
+Features
+--------
+
+- MeshNormals : Added a new node for adjusting mesh normals.
+
 Improvements
 ------------
 

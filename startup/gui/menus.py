@@ -301,6 +301,7 @@ nodeMenu.append( "/Scene/Object/Light To Camera", GafferScene.LightToCamera, sea
 nodeMenu.append( "/Scene/Object/Map Projection", GafferScene.MapProjection, searchText = "MapProjection" )
 nodeMenu.append( "/Scene/Object/Map Offset", GafferScene.MapOffset, searchText = "MapOffset"  )
 nodeMenu.append( "/Scene/Object/Parameters", GafferScene.Parameters )
+nodeMenu.append( "/Scene/Object/Mesh Normals", GafferScene.MeshNormals, searchText = "MeshNormals" )
 nodeMenu.append( "/Scene/Object/Mesh Tangents", GafferScene.MeshTangents, searchText = "MeshTangents", postCreator = GafferSceneUI.MeshTangentsUI.postCreate )
 nodeMenu.append( "/Scene/Object/Delete Faces", GafferScene.DeleteFaces, searchText = "DeleteFaces" )
 nodeMenu.append( "/Scene/Object/Delete Curves", GafferScene.DeleteCurves, searchText = "DeleteCurves" )
