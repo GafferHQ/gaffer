@@ -38,6 +38,7 @@ from .ModuleTest import ModuleTest
 from .USDAttributesTest import USDAttributesTest
 from .USDLayerWriterTest import USDLayerWriterTest
 from .USDShaderTest import USDShaderTest
+from .USDLightTest import USDLightTest
 
 if __name__ == "__main__":
 	import unittest

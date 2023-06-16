@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2022, Cinesite VFX Ltd. All rights reserved.
+//  Copyright (c) 2023, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -15,7 +15,7 @@
 //        disclaimer in the documentation and/or other materials provided with
 //        the distribution.
 //
-//      * Neither the name of Image Engine Design nor the names of
+//      * Neither the name of John Haddon nor the names of
 //        any other contributors to this software may be used to endorse or
 //        promote products derived from this software without specific prior
 //        written permission.
@@ -34,37 +34,49 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#pragma once
 
-#include "GafferUSD/USDAttributes.h"
-#include "GafferUSD/USDLayerWriter.h"
-#include "GafferUSD/USDLight.h"
+#include "GafferUSD/Export.h"
+#include "GafferUSD/TypeIds.h"
 #include "GafferUSD/USDShader.h"
 
-#include "GafferDispatchBindings/TaskNodeBinding.h"
+#include "GafferScene/Light.h"
+#include "GafferScene/ShaderPlug.h"
 
-using namespace boost::python;
-using namespace GafferUSD;
-
-namespace
+namespace GafferUSD
 {
 
-void loadShaderWrapper( USDLight &light, const std::string &shader, bool keepExistingValues )
-{
-	IECorePython::ScopedGILRelease gilRelease;
-	light.loadShader( shader, keepExistingValues );
-}
-
-} // namespace
-
-BOOST_PYTHON_MODULE( _GafferUSD )
+class GAFFERUSD_API USDLight : public GafferScene::Light
 {
 
-	GafferBindings::DependencyNodeClass<USDAttributes>();
-	GafferBindings::DependencyNodeClass<USDShader>();
-	GafferDispatchBindings::TaskNodeClass<USDLayerWriter>();
-	GafferBindings::DependencyNodeClass<USDLight>()
-		.def( "loadShader", &loadShaderWrapper, ( arg( "shader" ), arg( "keepExistingValues" ) = true ) )
-	;
+	public :
 
-}
+		GAFFER_NODE_DECLARE_TYPE( GafferUSD::USDLight, USDLightTypeId, GafferScene::Light );
+
+		USDLight( const std::string &name=defaultName<USDLight>() );
+		~USDLight() override;
+
+		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
+
+		void loadShader( const std::string &shaderName, bool keepExistingValues = false );
+
+	protected :
+
+		void hashLight( const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECoreScene::ConstShaderNetworkPtr computeLight( const Gaffer::Context *context ) const override;
+
+	private :
+
+		USDShader *shaderNode();
+		const USDShader *shaderNode() const;
+
+		GafferScene::ShaderPlug *shaderInPlug();
+		const GafferScene::ShaderPlug *shaderInPlug() const;
+
+		static size_t g_firstPlugIndex;
+
+};
+
+IE_CORE_DECLAREPTR( USDLight )
+
+} // namespace GafferUSD

@@ -38,6 +38,7 @@
 
 #include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/NumericPlug.h"
+#include "Gaffer/OptionalValuePlug.h"
 #include "Gaffer/PlugAlgo.h"
 #include "Gaffer/StringPlug.h"
 
@@ -53,6 +54,8 @@
 #include "pxr/usd/sdr/registry.h"
 #include "pxr/usd/sdr/shaderNode.h"
 #include "pxr/usd/sdr/shaderProperty.h"
+
+#include "boost/algorithm/string/predicate.hpp"
 
 #include "fmt/format.h"
 
@@ -95,14 +98,22 @@ GeometricData::Interpretation interpretation( TfToken role )
 	return GeometricData::None;
 }
 
+Plug::Direction direction( const SdrShaderProperty &property )
+{
+	return property.IsOutput() ? Plug::Out : Plug::In;
+}
+
+// The various `acquire*PropertyPlug()` methods have similar semantics to other
+// `acquire()` methods in Gaffer - they either reuse a pre-existing plug that is
+// suitable, or they create a new one. But they differ in that the caller is
+// responsible for passing in the candidate for reuse, and also for storing any
+// newly created plug.
+
 template<typename PlugType>
-Plug *loadTypedProperty( const SdrShaderProperty &property, Plug *parent )
+PlugPtr acquireTypedPropertyPlug( const SdrShaderProperty &property, Plug *candidate )
 {
 	using ValueType = typename PlugType::ValueType;
 	using USDValueType = typename IECoreUSD::CortexTypeTraits<ValueType>::USDType;
-
-	InternedString name = property.GetName().GetString();
-	PlugType *existingPlug = parent->getChild<PlugType>( name );
 
 	ValueType defaultValue = ValueType();
 	VtValue defaultVtValue = property.GetDefaultValue();
@@ -117,22 +128,18 @@ Plug *loadTypedProperty( const SdrShaderProperty &property, Plug *parent )
 		defaultValue = IECoreUSD::DataAlgo::fromUSD( defaultVtValue.Get<USDValueType>() );
 	}
 
+	PlugType *existingPlug = runTimeCast<PlugType>( candidate );
 	if( existingPlug && existingPlug->defaultValue() == defaultValue )
 	{
 		return existingPlug;
 	}
 
-	typename PlugType::Ptr plug = new PlugType( name, parent->direction(), defaultValue );
-	PlugAlgo::replacePlug( parent, plug );
-	return plug.get();
+	return new PlugType( property.GetName().GetString(), direction( property ), defaultValue );
 }
 
 template<typename PlugType>
-Plug *loadCompoundNumericProperty( const SdrShaderProperty &property, Plug *parent )
+PlugPtr acquireCompoundNumericPropertyPlug( const SdrShaderProperty &property, Plug *candidate )
 {
-	InternedString name = property.GetName().GetString();
-	PlugType *existingPlug = parent->getChild<PlugType>( name );
-
 	IECore::GeometricData::Interpretation interpretation = ::interpretation( property.GetTypeAsSdfType().first.GetRole() );
 
 	using ValueType = typename PlugType::ValueType;
@@ -145,6 +152,7 @@ Plug *loadCompoundNumericProperty( const SdrShaderProperty &property, Plug *pare
 		defaultValue = IECoreUSD::DataAlgo::fromUSD( defaultVtValue.Get<USDValueType>() );
 	}
 
+	PlugType *existingPlug = runTimeCast<PlugType>( candidate );
 	if(
 		existingPlug &&
 		existingPlug->defaultValue() == defaultValue &&
@@ -154,20 +162,15 @@ Plug *loadCompoundNumericProperty( const SdrShaderProperty &property, Plug *pare
 		return existingPlug;
 	}
 
-	typename PlugType::Ptr plug = new PlugType(
-		name, parent->direction(), defaultValue,
+	return new PlugType(
+		property.GetName().GetString(), direction( property ), defaultValue,
 		ValueType( std::numeric_limits<float>::lowest() ), ValueType( std::numeric_limits<float>::max() ),
 		Plug::Default, interpretation
 	);
-	PlugAlgo::replacePlug( parent, plug );
-	return plug.get();
 }
 
-Plug *loadAssetProperty( const SdrShaderProperty &property, Plug *parent )
+PlugPtr acquireAssetPropertyPlug( const SdrShaderProperty &property, Plug *candidate )
 {
-	InternedString name = property.GetName().GetString();
-	StringPlug *existingPlug = parent->getChild<StringPlug>( name );
-
 	string defaultValue;
 	VtValue defaultVtValue = property.GetDefaultValue();
 	if( !defaultVtValue.IsEmpty() )
@@ -175,53 +178,68 @@ Plug *loadAssetProperty( const SdrShaderProperty &property, Plug *parent )
 		defaultValue = defaultVtValue.Get<SdfAssetPath>().GetAssetPath();
 	}
 
+	StringPlug *existingPlug = runTimeCast<StringPlug>( candidate );
 	if( existingPlug && existingPlug->defaultValue() == defaultValue )
 	{
 		return existingPlug;
 	}
 
-	StringPlugPtr plug = new StringPlug( name, parent->direction(), defaultValue );
-	PlugAlgo::replacePlug( parent, plug );
-	return plug.get();
+	return new StringPlug( property.GetName().GetString(), direction( property ), defaultValue );
 }
 
-Plug *loadTokenProperty( const SdrShaderProperty &property, Plug *parent )
+PlugPtr acquireTokenPropertyPlug( const SdrShaderProperty &property, Plug *candidate )
 {
 	// Sdr uses the `token` type to represent terminals, vstructs
 	// and unknown types. As I understand it, these don't carry values,
 	// so the Plug base class is the best way of representing them
 	// in Gaffer.
-	InternedString name = property.GetName().GetString();
-	Plug *existingPlug = parent->getChild<Plug>( name );
-
-	if( existingPlug && existingPlug->typeId() == Plug::staticTypeId() )
+	if( candidate && candidate->typeId() == Plug::staticTypeId() )
 	{
-		return existingPlug;
+		return candidate;
 	}
 
-	PlugPtr plug = new Plug( name, parent->direction() );
-	PlugAlgo::replacePlug( parent, plug );
-	return plug.get();
+	return new Plug( property.GetName().GetString(), direction( property ) );
 }
 
 Plug *loadShaderProperty( const SdrShaderProperty &property, Plug *parent )
 {
+	// We host properties from bolt-on schemas in OptionalValuePlugs, so users
+	// can opt in and out of authoring them.
+	const bool optional =
+		boost::starts_with( property.GetName().GetString(), "shaping:" ) ||
+		boost::starts_with( property.GetName().GetString(), "shadow:" )
+	;
+
+	Plug *candidatePlug = parent->getChild<Plug>( property.GetName().GetString() );
+	if( candidatePlug && optional )
+	{
+		if( auto optionalPlug = runTimeCast<OptionalValuePlug>( candidatePlug ) )
+		{
+			candidatePlug = optionalPlug->valuePlug();
+		}
+		else
+		{
+			candidatePlug = nullptr;
+		}
+	}
+
+	PlugPtr acquiredPlug;
 	const SdfValueTypeName type = property.GetTypeAsSdfType().first;
 	if( type == SdfValueTypeNames->Bool )
 	{
-		return loadTypedProperty<BoolPlug>( property, parent );
+		acquiredPlug = acquireTypedPropertyPlug<BoolPlug>( property, candidatePlug );
 	}
 	else if( type == SdfValueTypeNames->Int )
 	{
-		return loadTypedProperty<IntPlug>( property, parent );
+		acquiredPlug = acquireTypedPropertyPlug<IntPlug>( property, candidatePlug );
 	}
 	else if( type == SdfValueTypeNames->Float )
 	{
-		return loadTypedProperty<FloatPlug>( property, parent );
+		acquiredPlug = acquireTypedPropertyPlug<FloatPlug>( property, candidatePlug );
 	}
 	else if( type == SdfValueTypeNames->Float2 )
 	{
-		return loadCompoundNumericProperty<V2fPlug>( property, parent );
+		acquiredPlug = acquireCompoundNumericPropertyPlug<V2fPlug>( property, candidatePlug );
 	}
 	else if(
 		type == SdfValueTypeNames->Point3f ||
@@ -230,27 +248,27 @@ Plug *loadShaderProperty( const SdrShaderProperty &property, Plug *parent )
 		type == SdfValueTypeNames->Float3
 	)
 	{
-		return loadCompoundNumericProperty<V3fPlug>( property, parent );
+		acquiredPlug = acquireCompoundNumericPropertyPlug<V3fPlug>( property, candidatePlug );
 	}
 	else if( type == SdfValueTypeNames->Color3f )
 	{
-		return loadCompoundNumericProperty<Color3fPlug>( property, parent );
+		acquiredPlug = acquireCompoundNumericPropertyPlug<Color3fPlug>( property, candidatePlug );
 	}
 	else if( type == SdfValueTypeNames->Float4 )
 	{
-		return loadCompoundNumericProperty<Color4fPlug>( property, parent );
+		acquiredPlug = acquireCompoundNumericPropertyPlug<Color4fPlug>( property, candidatePlug );
 	}
 	else if( type == SdfValueTypeNames->String )
 	{
-		return loadTypedProperty<StringPlug>( property, parent );
+		acquiredPlug = acquireTypedPropertyPlug<StringPlug>( property, candidatePlug );
 	}
 	else if( type == SdfValueTypeNames->Asset )
 	{
-		return loadAssetProperty( property, parent );
+		acquiredPlug = acquireAssetPropertyPlug( property, candidatePlug );
 	}
 	else if( type == SdfValueTypeNames->Token )
 	{
-		return loadTokenProperty( property, parent );
+		acquiredPlug = acquireTokenPropertyPlug( property, candidatePlug );
 	}
 	else
 	{
@@ -263,6 +281,33 @@ Plug *loadShaderProperty( const SdrShaderProperty &property, Plug *parent )
 		);
 		return nullptr;
 	}
+
+	assert( acquiredPlug );
+
+	if( acquiredPlug != candidatePlug )
+	{
+		// We created a new plug, and need to parent it in.
+		if( optional )
+		{
+			ValuePlugPtr acquiredValuePlug = runTimeCast<ValuePlug>( acquiredPlug );
+			if( !acquiredValuePlug )
+			{
+				throw IECore::Exception( fmt::format( "Cannot create OptionalValuePlug for property `{}`", property.GetName().GetString() ) );
+			}
+			PlugAlgo::replacePlug(
+				parent, new OptionalValuePlug(
+					property.GetName().GetString(), acquiredValuePlug, /* enabledPlugDefaultValue = */ false,
+					direction( property )
+				)
+			);
+		}
+		else
+		{
+			PlugAlgo::replacePlug( parent, acquiredPlug );
+		}
+	}
+
+	return optional ? acquiredPlug->parent<Plug>() : acquiredPlug.get();
 }
 
 const IECore::InternedString g_surface( "surface" );
