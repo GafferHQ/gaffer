@@ -139,5 +139,56 @@ class MatchPatternPathFilterTest( GafferTest.TestCase ) :
 		self.assertEqual( len( c ), 1 )
 		self.assertEqual( str( c[0] ), "/a" )
 
+	def testLeafOnly( self ) :
+
+		p = Gaffer.DictPath(
+			{
+				"a" : "aardvark",
+				"b" : {
+					"c" : "cow",
+					"d" : "dingo"
+				}
+			},
+			"/"
+		)
+
+		pb = p.children()[1]
+
+		self.assertEqual( set( [ str( c ) for c in p.children() ] ), set( [ "/a", "/b" ] ) )
+		self.assertEqual( set( [ str( c ) for c in pb.children() ] ), set( [ "/b/c", "/b/d" ] ) )
+		self.assertTrue( p.children()[0].isLeaf() )  # /a
+		self.assertFalse( pb.isLeaf() )  # /b
+		self.assertTrue( pb.children()[0].isLeaf() )  # /b/c
+
+		p.setFilter( Gaffer.MatchPatternPathFilter( [ "a*" ], leafOnly = True ) )
+		self.assertEqual( set( [ str( c ) for c in p.children() ] ), set( [ "/a", "/b" ] ) )
+
+		p.setFilter( Gaffer.MatchPatternPathFilter( [ "b*" ], leafOnly = True ) )
+		self.assertEqual( set( [ str( c ) for c in p.children() ] ), set( [ "/b" ] ) )
+
+		pb.setFilter( Gaffer.MatchPatternPathFilter( [ "b*" ], leafOnly = True ) )
+		self.assertEqual( set( [ str( c ) for c in pb.children() ] ), set() )
+
+		p.setFilter( Gaffer.MatchPatternPathFilter( [ "c*" ], leafOnly = True ) )
+		self.assertEqual( set( [ str( c ) for c in p.children() ] ), set( [ "/b" ] ) )
+
+		pb.setFilter( Gaffer.MatchPatternPathFilter( [ "c*" ], leafOnly = True ) )
+		self.assertEqual( set( [ str( c ) for c in pb.children() ] ), set( [ "/b/c" ] ) )
+
+		p.setFilter( Gaffer.MatchPatternPathFilter( [ "a*" ], leafOnly = False ) )
+		self.assertEqual( set( [ str( c ) for c in p.children() ] ), set( [ "/a" ] ) )
+
+		p.setFilter( Gaffer.MatchPatternPathFilter( [ "b*" ], leafOnly = False ) )
+		self.assertEqual( set( [ str( c ) for c in p.children() ] ), set( [ "/b" ] ) )
+
+		pb.setFilter( Gaffer.MatchPatternPathFilter( [ "b*" ], leafOnly = False ) )
+		self.assertEqual( set( [ str( c ) for c in pb.children() ] ), set() )
+
+		p.setFilter( Gaffer.MatchPatternPathFilter( [ "c*" ], leafOnly = False ) )
+		self.assertEqual( set( [ str( c ) for c in p.children() ] ), set() )
+
+		pb.setFilter( Gaffer.MatchPatternPathFilter( [ "c*" ], leafOnly = False ) )
+		self.assertEqual( set( [ str( c ) for c in pb.children() ] ), set( [ "/b/c" ] ) )
+
 if __name__ == "__main__":
 	unittest.main()
