@@ -1,6 +1,13 @@
 1.2.x.x (relative to 1.2.8.0)
 =======
 
+> Caution : A bug fix in the handling of the `ai:volume:step_scale` attribute may change the appearance of Arnold volume renders.
+
+Fixes
+-----
+
+- Arnold : Fixed bug that caused `ai:volume:step_scale` to be ignored if `ai:volume_step` was set explicitly to `0.0`. This was different to the behaviour when `ai:volume_step` was not set at all.
+
 1.2.8.0 (relative to 1.2.7.0)
 =======
 

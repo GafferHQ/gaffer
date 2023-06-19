@@ -3589,6 +3589,9 @@ class RendererTest( GafferTest.TestCase ) :
 		self.__testVDB( stepSize = 0.1, stepScale = None, expectedSize = 0.1, expectedScale = 1.0 )
 		self.__testVDB( stepSize = None, stepScale = None, expectedSize = 0.0, expectedScale = 1.0 )
 		self.__testVDB( stepSize = 1.0, stepScale = 0.5, expectedSize = 0.5, expectedScale = 1.0 )
+		self.__testVDB( stepSize = 10.0, stepScale = 0.5, expectedSize = 5.0, expectedScale = 1.0 )
+		self.__testVDB( stepSize = 0.0, stepScale = 10, expectedSize = 0.0, expectedScale = 10 )
+		self.__testVDB( stepSize = 0.0, stepScale = None, expectedSize = 0.0, expectedScale = 1.0 )
 
 	def testCameraAttributes( self ) :
 
