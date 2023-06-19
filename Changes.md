@@ -77,8 +77,8 @@ API
 - TestCase : Added `ignoreMessage()` method, to register messages that should not be treated as test failures.
 - OpenColorIOTransform : Automated image pass-throughs when the `transform()` method returns a no-op. Derived classes no longer need to implement their own pass-through.
 - OpenColorIOTransformUI :
-  - Added `noneLabel` argument to `colorSpacePresetNames()`.
   - Added support for `openColorIO:categories` and `openColorIO:includeRoles` metadata to `colorSpacePresetNames()`. These may be registered on a per-plug basis to control the colorspaces shown for that plug.
+  - Added support for `openColorIO:extraPresetNames` and `openColorIO:extraPresetValues` metadata to add presets not defined by the OpenColorIO config.
 - OpenColorIOAlgo : Added a new namespace that allows the OpenColorIO config to be defined via the Gaffer context.
 - OpenColorIOConfigPlug : Added a new plug type to aid in configuring the OpenColorIO context for a ScriptNode.
 - ImageReader/ImageWriter : Added a `config` argument to the `DefaultColorSpaceFunction` definition. This is passed the OpenColorIO config currently being used by the node.

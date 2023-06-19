@@ -219,9 +219,11 @@ Gaffer.Metadata.registerNode(
 			function registered with `ImageReader::setDefaultColorSpaceFunction()`.
 			""",
 
-			"presetNames", lambda plug : OpenColorIOTransformUI.colorSpacePresetNames( plug, noneLabel = "Automatic" ),
+			"presetNames", OpenColorIOTransformUI.colorSpacePresetNames,
 			"presetValues", OpenColorIOTransformUI.colorSpacePresetValues,
 			"openColorIO:categories", "file-io",
+			"openColorIO:extraPresetNames", IECore.StringVectorData( [ "Automatic" ] ),
+			"openColorIO:extraPresetValues", IECore.StringVectorData( [ "" ] ),
 
 			"plugValueWidget:type", "GafferImageUI.ImageReaderUI._ColorSpacePlugValueWidget",
 
