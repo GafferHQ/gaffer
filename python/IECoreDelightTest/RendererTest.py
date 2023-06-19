@@ -551,6 +551,64 @@ class RendererTest( GafferTest.TestCase ) :
 
 				self.assertEqual( [ m.message for m in fallbackHandler.messages ], [], msg=str(renderType) )
 
+	def testOptions( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"3Delight",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.nsi" )
+		)
+
+		options = [
+			( "dl:bucketorder", IECore.StringData( "spiral" ), "string" ),
+			( "dl:numberofthreads", IECore.IntData( 16 ), "int" ),
+			( "dl:renderatlowpriority", IECore.BoolData( True ), "int" ),
+			( "dl:quality.shadingsamples", IECore.IntData( 32 ), "int" ),
+			( "dl:quality.volumesamples", IECore.IntData( 99 ), "int" ),
+			( "dl:clampindirect", IECore.FloatData( 10.5 ), "double" ),
+			( "dl:show.displacement", IECore.BoolData( False ), "int" ),
+			( "dl:show.osl.subsurface", IECore.BoolData( False ), "int" ),
+			( "dl:show.atmosphere", IECore.BoolData( False ), "int" ),
+			( "dl:show.multiplescattering", IECore.BoolData( False ), "double" ),
+			( "dl:statistics.progress", IECore.BoolData( True ), "int" ),
+			( "dl:statistics.filename", IECore.StringData( "/stats" ), "string" ),
+			( "dl:maximumraydepth.diffuse", IECore.IntData( 10 ), "int" ),
+			( "dl:maximumraydepth.hair", IECore.IntData( 10 ), "int" ),
+			( "dl:maximumraydepth.reflection", IECore.IntData( 10 ), "int" ),
+			( "dl:maximumraydepth.refraction", IECore.IntData( 10 ), "int" ),
+			( "dl:maximumraydepth.volume", IECore.IntData( 10 ), "int" ),
+			( "dl:maximumraylength.diffuse", IECore.FloatData( 99.5 ), "double" ),
+			( "dl:maximumraylength.hair", IECore.FloatData( 99.5 ), "double" ),
+			( "dl:maximumraylength.reflection", IECore.FloatData( 99.5 ), "double" ),
+			( "dl:maximumraylength.specular", IECore.FloatData( 99.5 ), "double" ),
+			( "dl:maximumraylength.volume", IECore.FloatData( 99.5), "double" ),
+			( "dl:texturememory", IECore.IntData( 100 ), "int" ),
+			( "dl:networkcache.size", IECore.IntData( 5 ), "int" ),
+			( "dl:networkcache.directory", IECore.StringData( "/network" ), "string" ),
+			( "dl:license.server", IECore.StringData( "server" ), "string" ),
+			( "dl:license.wait", IECore.BoolData( False ), "int" ),
+		]
+
+		for name, value, type in options :
+			r.option( name, value )
+
+		r.render()
+		del r
+
+		nsi = self.__parse( self.temporaryDirectory() / "test.nsi" )
+
+		for name, value, type in options :
+			self.__assertInNSI(
+				'SetAttribute ".global" "{}" "{}" 1 {}{}{}'.format(
+				name[3:],
+				type,
+				"\"" if type == "string" else "",
+				value.value if not isinstance( value, IECore.BoolData ) else int( value.value ),
+				"\"" if type == "string" else ""
+			),
+			nsi
+		)
+
 	# Helper methods used to check that NSI files we write contain what we
 	# expect. This is a very poor substitute to being able to directly query
 	# an NSI scene. We could try to write a proper parser that builds a node

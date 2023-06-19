@@ -3,6 +3,11 @@
 
 > Caution : A bug fix in the handling of the `ai:volume:step_scale` attribute may change the appearance of Arnold volume renders.
 
+Improvements
+------------
+
+- DelightOptions : Added new options for modern 3Delight, as of version `2.9.39`.
+
 Fixes
 -----
 

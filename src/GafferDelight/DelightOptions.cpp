@@ -50,11 +50,26 @@ DelightOptions::DelightOptions( const std::string &name )
 
 	options->addChild( new Gaffer::NameValuePlug( "dl:bucketorder", new IECore::StringData( "horizontal" ), false, "bucketOrder" ) );
 	options->addChild( new Gaffer::NameValuePlug( "dl:numberofthreads", new IECore::IntData( 0 ), false, "numberOfThreads" ) );
+	options->addChild( new Gaffer::NameValuePlug( "dl:renderatlowpriority", new IECore::BoolData( false ), false, "renderAtLowPriority" ) );
 
 	// Quality
 
 	options->addChild( new Gaffer::NameValuePlug( "dl:oversampling", new IECore::IntData( 9 ), false, "oversampling" ) );
 	options->addChild( new Gaffer::NameValuePlug( "dl:quality.shadingsamples", new IECore::IntData( 64 ), false, "shadingSamples" ) );
+	options->addChild( new Gaffer::NameValuePlug( "dl:quality.volumesamples", new IECore::IntData( 1 ), false, "volumeSamples" ) );
+	options->addChild( new Gaffer::NameValuePlug( "dl:clampindirect", new IECore::FloatData( 2 ), false, "clampIndirect" ) );
+
+	// Features
+
+	options->addChild( new Gaffer::NameValuePlug( "dl:show.displacement", new IECore::BoolData( true ), false, "showDisplacement" ) );
+	options->addChild( new Gaffer::NameValuePlug( "dl:show.osl.subsurface", new IECore::BoolData( true ), false, "showSubsurface" ) );
+	options->addChild( new Gaffer::NameValuePlug( "dl:show.atmosphere", new IECore::BoolData( true ) , false, "showAtmosphere" ) );
+	options->addChild( new Gaffer::NameValuePlug( "dl:show.multiplescattering", new IECore::BoolData( true ), false, "showMultipleScattering" ) );
+
+	// Statistics
+
+	options->addChild( new Gaffer::NameValuePlug( "dl:statistics.progress", new IECore::BoolData( false ), false, "showProgress" ) );
+	options->addChild( new Gaffer::NameValuePlug( "dl:statistics.filename", new IECore::StringData( "" ), false, "statisticsFileName" ) );
 
 	// Ray depth
 
@@ -62,6 +77,15 @@ DelightOptions::DelightOptions( const std::string &name )
 	options->addChild( new Gaffer::NameValuePlug( "dl:maximumraydepth.hair", new IECore::IntData( 4 ), false, "maximumRayDepthHair" ) );
 	options->addChild( new Gaffer::NameValuePlug( "dl:maximumraydepth.reflection", new IECore::IntData( 1 ), false, "maximumRayDepthReflection" ) );
 	options->addChild( new Gaffer::NameValuePlug( "dl:maximumraydepth.refraction", new IECore::IntData( 4 ), false, "maximumRayDepthRefraction" ) );
+	options->addChild( new Gaffer::NameValuePlug( "dl:maximumraydepth.volume", new IECore::IntData( 0 ), false, "maximumRayDepthVolume" ) );
+
+	// Ray length
+	options->addChild( new Gaffer::NameValuePlug( "dl:maximumraylength.diffuse", new IECore::FloatData( -1.f ), false, "maximumRayLengthDiffuse" ) );
+	options->addChild( new Gaffer::NameValuePlug( "dl:maximumraylength.hair", new IECore::FloatData( -1.f ), false, "maximumRayLengthHair" ) );
+	options->addChild( new Gaffer::NameValuePlug( "dl:maximumraylength.reflection", new IECore::FloatData( -1.f ), false, "maximumRayLengthReflection" ) );
+	options->addChild( new Gaffer::NameValuePlug( "dl:maximumraylength.refraction", new IECore::FloatData( -1.f ), false, "maximumRayLengthRefraction" ) );
+	options->addChild( new Gaffer::NameValuePlug( "dl:maximumraylength.specular", new IECore::FloatData( -1.f ), false, "maximumRayLengthSpecular" ) );
+	options->addChild( new Gaffer::NameValuePlug( "dl:maximumraylength.volume", new IECore::FloatData( -1.f ), false, "maximumRayLengthVolume" ) );
 
 	// Texturing
 
