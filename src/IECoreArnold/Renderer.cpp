@@ -1751,11 +1751,16 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					AiNodeSetFlt( node, g_velocityOutlierThresholdArnoldString, velocityOutlierThreshold.value() );
 				}
 
-				if ( stepSize )
+				// Arnold only applies `step_scale` when `step_size == 0` (auto), which we think is highly
+				// confusing. So when `step_size` is non-zero, we bake `step_scale` into it, so that the
+				// scale still has an effect.
+
+				const float stepValue = stepSize.value_or( 0.0f );
+				if( stepValue > 0.0f )
 				{
-					AiNodeSetFlt( node, g_stepSizeArnoldString, stepSize.value() * stepScale.value_or( 1.0f ) );
+					AiNodeSetFlt( node, g_stepSizeArnoldString, stepValue * stepScale.value_or( 1.0f ) );
 				}
-				else if ( stepScale )
+				else if( stepScale )
 				{
 					AiNodeSetFlt( node, g_stepScaleArnoldString, stepScale.value() );
 				}

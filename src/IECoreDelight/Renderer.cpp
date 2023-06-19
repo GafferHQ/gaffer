@@ -988,7 +988,38 @@ IECore::InternedString g_frameOptionName( "frame" );
 IECore::InternedString g_cameraOptionName( "camera" );
 IECore::InternedString g_sampleMotionOptionName( "sampleMotion" );
 IECore::InternedString g_oversamplingOptionName( "dl:oversampling" );
+
+IECore::InternedString g_maxLengthDiffuseOptionName( "dl:maximumraylength.diffuse" );
+IECore::InternedString g_maxLengthHairOptionName( "dl:maximumraylength.hair" );
+IECore::InternedString g_maxLengthReflectionOptionName( "dl:maximumraylength.reflection" );
+IECore::InternedString g_maxLengthRefractionOptionName( "dl:maximumraylength.refraction" );
+IECore::InternedString g_maxLengthSpecularOptionName( "dl:maximumraylength.specular" );
+IECore::InternedString g_maxLengthVolumeOptionName( "dl:maximumraylength.volume" );
+IECore::InternedString g_clampIndirectOptionName( "dl:clampindirect" );
+IECore::InternedString g_showMultipleScatteringOptionName( "dl:show.multiplescattering" );
+
 const char *g_screenHandle = "ieCoreDelight:defaultScreen";
+
+void setNSIGlobalOption( NSIContext_t context, const InternedString &name, const Object *value )
+{
+	if( value )
+	{
+		if( const Data *data = reportedCast<const Data>( value, "option", name ) )
+		{
+			ParameterList params;
+			params.add( name.c_str() + 3, data );
+			NSISetAttribute( context, NSI_SCENE_GLOBAL, params.size(), params.data() );
+		}
+		else
+		{
+			NSIDeleteAttribute( context, NSI_SCENE_GLOBAL, name.c_str() + 3 );
+		}
+	}
+	else
+	{
+		NSIDeleteAttribute( context, NSI_SCENE_GLOBAL, name.c_str() + 3 );
+	}
+}
 
 IE_CORE_FORWARDDECLARE( DelightRenderer )
 
@@ -1106,25 +1137,28 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 					m_oversampling = 9;
 				}
 			}
+			else if(
+				name == g_maxLengthDiffuseOptionName ||
+				name == g_maxLengthHairOptionName ||
+				name == g_maxLengthReflectionOptionName ||
+				name == g_maxLengthRefractionOptionName ||
+				name == g_maxLengthSpecularOptionName ||
+				name == g_maxLengthVolumeOptionName ||
+				name == g_clampIndirectOptionName
+			)
+			{
+				// These parameters fail to set properly if they are not doubles
+				auto data = runTimeCast<const FloatData>( value );
+				setNSIGlobalOption( m_context, name, data ? new DoubleData( data->readable() ) : nullptr );
+			}
+			else if( name == g_showMultipleScatteringOptionName )
+			{
+				auto data = runTimeCast<const BoolData>( value );
+				setNSIGlobalOption( m_context, name, data ? new DoubleData( data->readable() ) : nullptr );
+			}
 			else if( boost::starts_with( name.string(), "dl:" ) )
 			{
-				if( value )
-				{
-					if( const Data *data = reportedCast<const Data>( value, "option", name ) )
-					{
-						ParameterList params;
-						params.add( name.c_str() + 3, data );
-						NSISetAttribute( m_context, NSI_SCENE_GLOBAL, params.size(), params.data() );
-					}
-					else
-					{
-						NSIDeleteAttribute( m_context, NSI_SCENE_GLOBAL, name.c_str() + 3 );
-					}
-				}
-				else
-				{
-					NSIDeleteAttribute( m_context, NSI_SCENE_GLOBAL, name.c_str() + 3 );
-				}
+				setNSIGlobalOption( m_context, name, value );
 			}
 			else if( boost::starts_with( name.string(), "user:" ) )
 			{
