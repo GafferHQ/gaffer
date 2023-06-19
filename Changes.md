@@ -7,6 +7,7 @@ Features
 - MeshNormals : Added a new node for adjusting mesh normals.
 - VolumeScatter : Added a new node for scattering points throughout a volume.
 - Cycles : Updated to version 3.5.0.
+- LightTool : Added 3d viewer tool for manipulating lights. Manipulation of spot light cone and penumbra angles is currently supported.
 
 Improvements
 ------------

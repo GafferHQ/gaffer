@@ -2350,6 +2350,14 @@
          width="25"
          id="gafferSceneUICropWindowTool"
          style="display:inline;opacity:1;fill:none;fill-opacity:0.99215686;stroke:none;stroke-width:0.91766292;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173225;stroke-opacity:1;paint-order:markers stroke fill" />
+      <rect
+         style="display:inline;opacity:1;fill:none;fill-opacity:0.99607843;stroke:none;stroke-width:0.91766292;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173225;stroke-opacity:1;paint-order:markers stroke fill"
+         id="gafferSceneUILightTool"
+         width="25"
+         height="25"
+         x="220"
+         y="1774"
+         inkscape:label="gafferSceneUILightTool" />
     </g>
     <g
        id="g3414"
@@ -4861,6 +4869,29 @@
            id="path5257"
            d="m 225.80927,261.0942 -9.28125,10.71875 10.71875,-9.28125 z"
            style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:Sans;-inkscape-font-specification:Sans;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;baseline-shift:baseline;text-anchor:start;display:inline;overflow:visible;visibility:visible;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:2;marker:none;enable-background:accumulate" />
+      </g>
+      <g
+         id="layer2"
+         inkscape:label="spotlight">
+        <path
+           style="fill:none;stroke:#efc618;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:0.99215686"
+           d="m 222,1841.8622 10.5,-13.5 10.5,13.5"
+           id="path6061"
+           inkscape:connector-curvature="0"
+           sodipodi:nodetypes="ccc" />
+        <path
+           style="fill:#ffffff;fill-opacity:1;stroke:#3c3c3c;stroke-width:0.99999994;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           d="m 228.5,1840.8622 -6.5,4 6.52539,4.5 -0.0254,-3 h 7.96522 l 0.009,3 6.52539,-4.5 -6.5,-4 -0.0152,2.5 H 228.5 Z"
+           id="path6000"
+           inkscape:connector-curvature="0"
+           sodipodi:nodetypes="ccccccccccc" />
+        <ellipse
+           style="fill:none;fill-opacity:0.99215686;fill-rule:nonzero;stroke:#efc618;stroke-width:1.1381886;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.99215686"
+           id="path5989"
+           cx="232.5"
+           cy="1842.3622"
+           rx="10.430905"
+           ry="3.4309056" />
       </g>
       <g
          transform="translate(-85.371089,1575.9524)"

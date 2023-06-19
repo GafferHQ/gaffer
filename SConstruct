@@ -784,6 +784,7 @@ baseLibEnv.Append(
 		"fmt",
 		"Imath$IMATH_LIB_SUFFIX",
 		"IECore$CORTEX_LIB_SUFFIX",
+		"fmt"
 	],
 
 )
