@@ -65,6 +65,15 @@ class GAFFERIMAGE_API OpenColorIOContext : public Gaffer::ContextProcessor
 		Gaffer::StringPlug *configValuePlug();
 		const Gaffer::StringPlug *configValuePlug() const;
 
+		Gaffer::ValuePlug *workingSpacePlug();
+		const Gaffer::ValuePlug *workingSpacePlug() const;
+
+		Gaffer::BoolPlug *workingSpaceEnabledPlug();
+		const Gaffer::BoolPlug *workingSpaceEnabledPlug() const;
+
+		Gaffer::StringPlug *workingSpaceValuePlug();
+		const Gaffer::StringPlug *workingSpaceValuePlug() const;
+
 		Gaffer::ValuePlug *variablesPlug();
 		const Gaffer::ValuePlug *variablesPlug() const;
 
