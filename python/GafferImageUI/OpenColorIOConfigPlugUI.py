@@ -62,6 +62,12 @@ Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "config", "fil
 Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "config", "path:leaf", True )
 Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "config", "path:valid", True )
 
+Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "workingSpace", "plugValueWidget:type", "GafferUI.PresetsPlugValueWidget" )
+Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "workingSpace", "presetNames", GafferImageUI.OpenColorIOTransformUI.colorSpacePresetNames )
+Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "workingSpace", "presetValues", GafferImageUI.OpenColorIOTransformUI.colorSpacePresetValues )
+Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "workingSpace", "openColorIO:categories", "working-space" )
+Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "workingSpace", "openColorIO:includeRoles", True )
+
 Gaffer.Metadata.registerValue( Gaffer.ScriptNode, "openColorIO.displayTransform", "plugValueWidget:type", "GafferImageUI.OpenColorIOConfigPlugUI.DisplayTransformPlugValueWidget" )
 
 Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "variables", "layout:section", "Variables" )
@@ -91,6 +97,16 @@ Gaffer.Metadata.registerNode(
 
 			> Note : An OpenColorIOContext node can be used to override the config within specific parts
 			of the node graph, or to perform wedging across several contexts.
+			""",
+
+		],
+
+		"openColorIO.workingSpace" : [
+
+			"description",
+			"""
+			The color space in which Gaffer performs image processing. ImageReaders will automatically load
+			images into this space, and ImageWriters will automatically convert images from this space.
 			""",
 
 		],
@@ -260,10 +276,10 @@ def connect( script ) :
 	script.plugDirtiedSignal().connect( __scriptPlugDirtied, scoped = False )
 	__scriptPlugDirtied( plug )
 
-def __displayTransformProcessor( config, context, display, view ) :
+def __displayTransformProcessor( config, context, workingSpace, display, view ) :
 
 	transform = PyOpenColorIO.DisplayViewTransform()
-	transform.setSrc( PyOpenColorIO.ROLE_SCENE_LINEAR )
+	transform.setSrc( workingSpace )
 	transform.setDisplay( display )
 	transform.setView( view )
 
@@ -272,13 +288,14 @@ def __displayTransformProcessor( config, context, display, view ) :
 def __viewDisplayTransformCreator( display, view ) :
 
 	config, context = GafferImage.OpenColorIOAlgo.currentConfigAndContext()
-	processor = __displayTransformProcessor( config, context, display, view )
+	workingSpace = GafferImage.OpenColorIOAlgo.getWorkingSpace( Gaffer.Context.current() )
+	processor = __displayTransformProcessor( config, context, workingSpace, display, view )
 	return GafferImageUI.OpenColorIOAlgo.displayTransformToFramebufferShader( processor )
 
-def __widgetDisplayTransform( config, context, display, view ) :
+def __widgetDisplayTransform( config, context, workingSpace, display, view ) :
 
 	try :
-		processor = __displayTransformProcessor( config, context, display, view ).getDefaultCPUProcessor()
+		processor = __displayTransformProcessor( config, context, workingSpace, display, view ).getDefaultCPUProcessor()
 	except Exception as e :
 		IECore.msg( IECore.Msg.Level.Error, "OpenColorIO", str( e ) )
 		processor = None
@@ -318,6 +335,8 @@ def __scriptPlugDirtied( plug ) :
 		display = config.getDefaultDisplay()
 		view = config.getDefaultView( display )
 
+	workingSpace = GafferImage.OpenColorIOAlgo.getWorkingSpace( plug.parent().context() )
+
 	scriptWindow = GafferUI.ScriptWindow.acquire( plug.parent(), createIfNecessary = False )
 	if scriptWindow is not None :
-		scriptWindow.setDisplayTransform( __widgetDisplayTransform( config, context, display, view ) )
+		scriptWindow.setDisplayTransform( __widgetDisplayTransform( config, context, workingSpace, display, view ) )

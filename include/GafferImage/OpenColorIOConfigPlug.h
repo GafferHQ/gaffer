@@ -61,6 +61,9 @@ class GAFFERIMAGE_API OpenColorIOConfigPlug final : public Gaffer::ValuePlug
 		Gaffer::StringPlug *configPlug();
 		const Gaffer::StringPlug *configPlug() const;
 
+		Gaffer::StringPlug *workingSpacePlug();
+		const Gaffer::StringPlug *workingSpacePlug() const;
+
 		Gaffer::ValuePlug *variablesPlug();
 		const Gaffer::ValuePlug *variablesPlug() const;
 

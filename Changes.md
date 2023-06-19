@@ -17,7 +17,7 @@ Improvements
 - ImageReader, ImageWriter : The `colorSpace` menu is now filtered using the `file-io` category, if the current OpenColorIO config provides it.
 - OpenColorIO :
   - Updated default config to ACES Studio 1.3.
-  - Added `openColorIO` plug to ScriptNode, allowing the OpenColorIO config, variables and display transform to be customised on a per-script basis.
+  - Added `openColorIO` plug to ScriptNode, allowing the OpenColorIO config, working space, variables and display transform to be customised on a per-script basis.
   - Improved colorspace menus :
     - Organised colorspaces into submenus by family.
     - Removed unwanted title-casing, so that names are now displayed verbatim.

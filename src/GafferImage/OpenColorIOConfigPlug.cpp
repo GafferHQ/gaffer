@@ -65,6 +65,7 @@ OpenColorIOConfigPlug::OpenColorIOConfigPlug( const std::string &name, Direction
 {
 	const unsigned childFlags = flags & ~Dynamic;
 	addChild( new StringPlug( "config", direction, "", childFlags ) );
+	addChild( new StringPlug( "workingSpace", direction, OCIO_NAMESPACE::ROLE_SCENE_LINEAR, childFlags ) );
 	addChild( new ValuePlug( "variables", direction, childFlags ) );
 	addChild( new StringPlug( "displayTransform", direction, "", childFlags ) );
 }
@@ -79,31 +80,41 @@ const Gaffer::StringPlug *OpenColorIOConfigPlug::configPlug() const
 	return getChild<StringPlug>( 0 );
 }
 
+Gaffer::StringPlug *OpenColorIOConfigPlug::workingSpacePlug()
+{
+	return getChild<StringPlug>( 1 );
+}
+
+const Gaffer::StringPlug *OpenColorIOConfigPlug::workingSpacePlug() const
+{
+	return getChild<StringPlug>( 1 );
+}
+
 Gaffer::ValuePlug *OpenColorIOConfigPlug::variablesPlug()
 {
-	return getChild<ValuePlug>( 1 );
+	return getChild<ValuePlug>( 2 );
 }
 
 const Gaffer::ValuePlug *OpenColorIOConfigPlug::variablesPlug() const
 {
-	return getChild<ValuePlug>( 1 );
+	return getChild<ValuePlug>( 2 );
 }
 
 Gaffer::StringPlug *OpenColorIOConfigPlug::displayTransformPlug()
 {
-	return getChild<StringPlug>( 2 );
+	return getChild<StringPlug>( 3 );
 }
 
 const Gaffer::ValuePlug *OpenColorIOConfigPlug::displayTransformPlug() const
 {
-	return getChild<StringPlug>( 2 );
+	return getChild<StringPlug>( 3 );
 }
 
 bool OpenColorIOConfigPlug::acceptsChild( const GraphComponent *potentialChild ) const
 {
 	return
 		ValuePlug::acceptsChild( potentialChild ) &&
-		children().size() < 3
+		children().size() < 4
 	;
 }
 
@@ -160,6 +171,7 @@ void OpenColorIOConfigPlug::plugSet( Gaffer::Plug *plug )
 	assert( scriptNode );
 
 	OpenColorIOAlgo::setConfig( scriptNode->context(), configPlug()->getValue() );
+	OpenColorIOAlgo::setWorkingSpace( scriptNode->context(), workingSpacePlug()->getValue() );
 
 	// Add variables
 
