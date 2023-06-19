@@ -62,6 +62,17 @@ const std::string getConfigWrapper( const Gaffer::Context &context )
 	return OpenColorIOAlgo::getConfig( &context );
 }
 
+void setWorkingSpaceWrapper( Gaffer::Context &context, const std::string &colorSpace )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	OpenColorIOAlgo::setWorkingSpace( &context, colorSpace );
+}
+
+const std::string getWorkingSpaceWrapper( const Gaffer::Context &context )
+{
+	return OpenColorIOAlgo::getWorkingSpace( &context );
+}
+
 void addVariableWrapper( Gaffer::Context &context, const std::string &name, const std::string &value )
 {
 	IECorePython::ScopedGILRelease gilRelease;
@@ -156,6 +167,9 @@ void GafferImageModule::bindOpenColorIOAlgo()
 
 	boost::python::def( "setConfig", &setConfigWrapper );
 	boost::python::def( "getConfig", &getConfigWrapper );
+
+	boost::python::def( "setWorkingSpace", &setWorkingSpaceWrapper );
+	boost::python::def( "getWorkingSpace", &getWorkingSpaceWrapper );
 
 	boost::python::def( "addVariable", &addVariableWrapper );
 	boost::python::def( "getVariable", &getVariableWrapper );

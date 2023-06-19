@@ -89,6 +89,8 @@ Gaffer.Metadata.registerNode(
 
 			"presetNames", OpenColorIOTransformUI.colorSpacePresetNames,
 			"presetValues", OpenColorIOTransformUI.colorSpacePresetValues,
+			"openColorIO:extraPresetNames", IECore.StringVectorData( [ "Working Space" ] ),
+			"openColorIO:extraPresetValues", IECore.StringVectorData( [ "" ] ),
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 		],

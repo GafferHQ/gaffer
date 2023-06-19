@@ -166,7 +166,6 @@ ImageReader::ImageReader( const std::string &name )
 	addChild( colorSpace );
 	colorSpace->inPlug()->setInput( oiioReader->outPlug() );
 	colorSpace->inputSpacePlug()->setInput( intermediateColorSpacePlug() );
-	colorSpace->outputSpacePlug()->setValue( OCIO_NAMESPACE::ROLE_SCENE_LINEAR );
 	colorSpace->processUnpremultipliedPlug()->setValue( true );
 	intermediateImagePlug()->setInput( colorSpace->outPlug() );
 }

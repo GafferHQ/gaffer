@@ -31,6 +31,7 @@ Improvements
   - OpenColorIOTransform :
     - Improved performance.
     - Improved detection of no-op transforms, such as when converting between colorspace aliases like `scene_linear` and `ACEScg`.
+  - ColorSpace : Defaulted the input and output space to the current working space.
 - Seeds :
   - Renamed to Scatter.
   - Added sampling of primitive variables from the source mesh onto the scattered points, controlled using the new `primitiveVariables` plug.
@@ -79,7 +80,7 @@ API
 - OpenColorIOTransformUI :
   - Added support for `openColorIO:categories` and `openColorIO:includeRoles` metadata to `colorSpacePresetNames()`. These may be registered on a per-plug basis to control the colorspaces shown for that plug.
   - Added support for `openColorIO:extraPresetNames` and `openColorIO:extraPresetValues` metadata to add presets not defined by the OpenColorIO config.
-- OpenColorIOAlgo : Added a new namespace that allows the OpenColorIO config to be defined via the Gaffer context.
+- OpenColorIOAlgo : Added a new namespace that allows the OpenColorIO config and working space to be defined via the Gaffer context.
 - OpenColorIOConfigPlug : Added a new plug type to aid in configuring the OpenColorIO context for a ScriptNode.
 - ImageReader/ImageWriter : Added a `config` argument to the `DefaultColorSpaceFunction` definition. This is passed the OpenColorIO config currently being used by the node.
 - ValuePlugs : Added Python bindings for `ValueType` type alias.
@@ -140,6 +141,8 @@ Breaking Changes
 - Handle::AngularDrag : Fixed mismatch between comment and implementation regarding the axis for zero rotation. The constructor arguments `axis0` and `axis1` were changed to `normal` and `axis0` respectively.
 - Preferences : Removed `displayColorSpace` plug. Use the ScriptNode's `openColorIO` plug instead.
 - GafferUI.DisplayTransform : Removed. Use `Widget.setDisplayTransform()` instead.
+- ColorSpace : The `inputSpace` and `outputSpace` default values are now interpreted as the working space rather than as invalid spaces. This means that a node where only one space has been specified is no longer a pass-through as it was before.
+- DisplayTransform : The `inputSpace` default value is now interpreted as the working space rather than as an invalid space. This means that a node without `inputSpace` specified is no longer a pass-through as it was before.
 
 Build
 -----

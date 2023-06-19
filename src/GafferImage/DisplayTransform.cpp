@@ -36,6 +36,8 @@
 
 #include "GafferImage/DisplayTransform.h"
 
+#include "GafferImage/OpenColorIOAlgo.h"
+
 #include "Gaffer/StringPlug.h"
 
 using namespace std;
@@ -97,7 +99,13 @@ bool DisplayTransform::affectsTransform( const Gaffer::Plug *input ) const
 
 void DisplayTransform::hashTransform( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	inputColorSpacePlug()->hash( h );
+	std::string colorSpace = inputColorSpacePlug()->getValue();
+	if( colorSpace.empty() )
+	{
+		colorSpace = OpenColorIOAlgo::getWorkingSpace( context );
+	}
+	h.append( colorSpace );
+
 	displayPlug()->hash( h );
 	viewPlug()->hash( h );
 }
@@ -109,9 +117,14 @@ OCIO_NAMESPACE::ConstTransformRcPtr DisplayTransform::transform() const
 	std::string view = viewPlug()->getValue();
 
 	// Can't create a processor if we don't have valid inputs.
-	if( colorSpace.empty() || display.empty() || view.empty() )
+	if( display.empty() || view.empty() )
 	{
 		return OCIO_NAMESPACE::ConstTransformRcPtr();
+	}
+
+	if( colorSpace.empty() )
+	{
+		colorSpace = OpenColorIOAlgo::getWorkingSpace( Context::current() );
 	}
 
 	OCIO_NAMESPACE::DisplayViewTransformRcPtr result = OCIO_NAMESPACE::DisplayViewTransform::Create();

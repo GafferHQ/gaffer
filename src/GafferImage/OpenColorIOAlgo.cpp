@@ -52,8 +52,10 @@ namespace
 {
 
 const IECore::InternedString g_ocioConfigContextName( "ocio:config" );
+const IECore::InternedString g_ocioWorkingSpaceContextName( "ocio:workingSpace" );
 const string g_ocioStringVarPrefix( "ocio:stringVar:" );
 const string g_emptyString;
+const string g_sceneLinearString( OCIO_NAMESPACE::ROLE_SCENE_LINEAR );
 
 IECorePreview::LRUCache<std::string, OCIO_NAMESPACE::ConstConfigRcPtr> g_configCache(
 	[] ( const std::string &fileName, size_t &cost, const IECore::Canceller *canceller ) {
@@ -90,6 +92,21 @@ void GafferImage::OpenColorIOAlgo::setConfig( Gaffer::Context::EditableScope &co
 const std::string &GafferImage::OpenColorIOAlgo::getConfig( const Gaffer::Context *context )
 {
 	return context->get<string>( g_ocioConfigContextName, g_emptyString );
+}
+
+void GafferImage::OpenColorIOAlgo::setWorkingSpace( Gaffer::Context *context, const std::string &colorSpace )
+{
+	context->set( g_ocioWorkingSpaceContextName, colorSpace );
+}
+
+void GafferImage::OpenColorIOAlgo::setWorkingSpace( Gaffer::Context::EditableScope &context, const std::string *colorSpace )
+{
+	context.set( g_ocioWorkingSpaceContextName, colorSpace );
+}
+
+const std::string &GafferImage::OpenColorIOAlgo::getWorkingSpace( const Gaffer::Context *context )
+{
+	return context->get<string>( g_ocioWorkingSpaceContextName, g_sceneLinearString );
 }
 
 void GafferImage::OpenColorIOAlgo::addVariable( Gaffer::Context *context, const std::string &name, const std::string &value )

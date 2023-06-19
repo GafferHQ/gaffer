@@ -114,6 +114,14 @@ class OpenColorIOAlgoTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertEqual( len( { h1, h2, h3 } ), 3 )
 
+	def testWorkingSpace( self ) :
+
+		c = Gaffer.Context()
+		self.assertEqual( GafferImage.OpenColorIOAlgo.getWorkingSpace( c ), PyOpenColorIO.ROLE_SCENE_LINEAR )
+
+		GafferImage.OpenColorIOAlgo.setWorkingSpace( c, "test" )
+		self.assertEqual( GafferImage.OpenColorIOAlgo.getWorkingSpace( c ), "test" )
+
 	def __assertContextsEqual( self, a, b ) :
 
 		self.assertEqual( a.getSearchPath(), b.getSearchPath() )

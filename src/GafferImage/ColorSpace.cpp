@@ -36,6 +36,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GafferImage/ColorSpace.h"
+#include "GafferImage/OpenColorIOAlgo.h"
 
 #include "Gaffer/StringPlug.h"
 
@@ -91,18 +92,36 @@ bool ColorSpace::affectsTransform( const Gaffer::Plug *input ) const
 
 void ColorSpace::hashTransform( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	inputSpacePlug()->hash( h );
-	outputSpacePlug()->hash( h );
+	string inputSpace = inputSpacePlug()->getValue();
+	string outputSpace = outputSpacePlug()->getValue();
+
+	if( inputSpace.empty() )
+	{
+		inputSpace = OpenColorIOAlgo::getWorkingSpace( Context::current() );
+	}
+
+	if( outputSpace.empty() )
+	{
+		outputSpace = OpenColorIOAlgo::getWorkingSpace( Context::current() );
+	}
+
+	h.append( inputSpace );
+	h.append( outputSpace );
 }
 
 OCIO_NAMESPACE::ConstTransformRcPtr ColorSpace::transform() const
 {
-	const string inputSpace = inputSpacePlug()->getValue();
-	const string outputSpace = outputSpacePlug()->getValue();
+	string inputSpace = inputSpacePlug()->getValue();
+	string outputSpace = outputSpacePlug()->getValue();
 
-	if( inputSpace.empty() || outputSpace.empty() )
+	if( inputSpace.empty() )
 	{
-		return OCIO_NAMESPACE::ColorSpaceTransformRcPtr();
+		inputSpace = OpenColorIOAlgo::getWorkingSpace( Context::current() );
+	}
+
+	if( outputSpace.empty() )
+	{
+		outputSpace = OpenColorIOAlgo::getWorkingSpace( Context::current() );
 	}
 
 	OCIO_NAMESPACE::ColorSpaceTransformRcPtr result = OCIO_NAMESPACE::ColorSpaceTransform::Create();

@@ -91,7 +91,6 @@ class DisplayTransformTest( GafferImageTest.ImageTestCase ) :
 		self.assertImageHashesEqual( n["out"], o["out"] )
 		self.assertImagesEqual( n["out"], o["out"] )
 
-		o["inputColorSpace"].setValue( "scene_linear" )
 		o["display"].setValue( "sRGB - Display" )
 		o["view"].setValue( "ACES 1.0 - SDR Video" )
 
@@ -99,16 +98,6 @@ class DisplayTransformTest( GafferImageTest.ImageTestCase ) :
 
 		o["enabled"].setValue( False )
 
-		self.assertImageHashesEqual( n["out"], o["out"] )
-		self.assertImagesEqual( n["out"], o["out"] )
-		self.assertEqual( n["out"]['format'].hash(), o["out"]['format'].hash() )
-		self.assertEqual( n["out"]['dataWindow'].hash(), o["out"]['dataWindow'].hash() )
-		self.assertEqual( n["out"]["metadata"].getValue(), o["out"]["metadata"].getValue() )
-		self.assertEqual( n["out"]['channelNames'].hash(), o["out"]['channelNames'].hash() )
-
-		o["enabled"].setValue( True )
-
-		o["inputColorSpace"].setValue( "" )
 		self.assertImageHashesEqual( n["out"], o["out"] )
 		self.assertImagesEqual( n["out"], o["out"] )
 		self.assertEqual( n["out"]['format'].hash(), o["out"]['format'].hash() )
@@ -236,6 +225,23 @@ class DisplayTransformTest( GafferImageTest.ImageTestCase ) :
 
 		# check override produce expected output
 		self.assertImagesEqual( actual["out"], expected["out"], ignoreMetadata = True )
+
+	def testChangingWorkingSpace( self ) :
+
+		checker = GafferImage.Checkerboard()
+
+		displayTransform = GafferImage.DisplayTransform()
+		displayTransform["in"].setInput( checker["out"] )
+		displayTransform["display"].setValue( "sRGB - Display" )
+		displayTransform["view"].setValue( "ACES 1.0 - SDR Video" )
+
+		with Gaffer.Context() as context :
+
+			GafferImage.OpenColorIOAlgo.setWorkingSpace( context, "scene_linear" )
+			tile = displayTransform["out"].channelData( "R", imath.V2i( 0 ) )
+
+			GafferImage.OpenColorIOAlgo.setWorkingSpace( context, "color_picking" )
+			self.assertNotEqual( displayTransform["out"].channelData( "R", imath.V2i( 0 ) ), tile )
 
 if __name__ == "__main__":
 	unittest.main()

@@ -1526,7 +1526,6 @@ ImageWriter::ImageWriter( const std::string &name )
 	ColorSpacePtr colorSpaceChild = new ColorSpace( "__colorSpace" );
 	addChild( colorSpaceChild );
 
-	colorSpaceChild->inputSpacePlug()->setValue( OCIO_NAMESPACE::ROLE_SCENE_LINEAR );
 	colorSpaceChild->outputSpacePlug()->setValue( "${__imageWriter:colorSpace}" );
 
 	ValuePlugPtr layoutPlug = new ValuePlug( "layout" );

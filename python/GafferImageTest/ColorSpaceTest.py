@@ -374,5 +374,42 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 		self.assertImagesEqual( colorSpace["out"], reader["out"] )
 		self.assertImageHashesEqual( colorSpace["out"], reader["out"] )
 
+	def testEmptyColorSpaceIsSameAsWorkingSpace( self ) :
+
+		checker = GafferImage.Checkerboard()
+
+		colorSpace1 = GafferImage.ColorSpace()
+		colorSpace1["in"].setInput( checker["out"] )
+		colorSpace1["inputSpace"].setValue( "scene_linear" )
+		colorSpace1["outputSpace"].setValue( "color_picking" )
+
+		self.assertNotEqual(
+			colorSpace1["out"].channelData( "R", imath.V2i( 0 ) ),
+			colorSpace1["in"].channelData( "R", imath.V2i( 0 ) )
+		)
+
+		colorSpace2 = GafferImage.ColorSpace()
+		colorSpace2["in"].setInput( checker["out"] )
+		self.assertEqual( colorSpace2["inputSpace"].getValue(), "" )
+		colorSpace2["outputSpace"].setValue( "color_picking" )
+
+		self.assertImagesEqual( colorSpace2["out"], colorSpace1["out"] )
+
+	def testChangingWorkingSpace( self ) :
+
+		checker = GafferImage.Checkerboard()
+
+		colorSpace = GafferImage.ColorSpace()
+		colorSpace["in"].setInput( checker["out"] )
+		colorSpace["outputSpace"].setValue( "color_picking" )
+
+		with Gaffer.Context() as context :
+
+			GafferImage.OpenColorIOAlgo.setWorkingSpace( context, "scene_linear" )
+			tile = colorSpace["out"].channelData( "R", imath.V2i( 0 ) )
+
+			GafferImage.OpenColorIOAlgo.setWorkingSpace( context, "color_picking" )
+			self.assertNotEqual( colorSpace["out"].channelData( "R", imath.V2i( 0 ) ), tile )
+
 if __name__ == "__main__":
 	unittest.main()
