@@ -54,6 +54,16 @@ using namespace GafferImage;
 namespace
 {
 
+string substitutedValue( const StringPlug *plug )
+{
+	string result = plug->getValue();
+	if( auto script = plug->ancestor<ScriptNode>() )
+	{
+		result = script->context()->substitute( result );
+	}
+	return result;
+}
+
 const IECore::InternedString g_defaultConfigPlugName( "openColorIO" );
 
 } // namespace
@@ -170,8 +180,8 @@ void OpenColorIOConfigPlug::plugSet( Gaffer::Plug *plug )
 	auto *scriptNode = parent<ScriptNode>();
 	assert( scriptNode );
 
-	OpenColorIOAlgo::setConfig( scriptNode->context(), configPlug()->getValue() );
-	OpenColorIOAlgo::setWorkingSpace( scriptNode->context(), workingSpacePlug()->getValue() );
+	OpenColorIOAlgo::setConfig( scriptNode->context(), substitutedValue( configPlug() ) );
+	OpenColorIOAlgo::setWorkingSpace( scriptNode->context(), substitutedValue( workingSpacePlug() ) );
 
 	// Add variables
 
@@ -186,7 +196,7 @@ void OpenColorIOConfigPlug::plugSet( Gaffer::Plug *plug )
 			}
 		}
 
-		const string name = variable->namePlug()->getValue();
+		const string name = substitutedValue( variable->namePlug() );
 		if( name.empty() )
 		{
 			continue;
@@ -194,7 +204,7 @@ void OpenColorIOConfigPlug::plugSet( Gaffer::Plug *plug )
 
 		if( auto stringPlug = variable->valuePlug<StringPlug>() )
 		{
-			OpenColorIOAlgo::addVariable( scriptNode->context(), name, stringPlug->getValue() );
+			OpenColorIOAlgo::addVariable( scriptNode->context(), name, substitutedValue( stringPlug ) );
 			validVariables.insert( name );
 		}
 		else

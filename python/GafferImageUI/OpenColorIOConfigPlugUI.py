@@ -56,6 +56,8 @@ Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "config", "plu
 Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "config", "preset:$OCIO", "" )
 Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "config", "preset:ACES 1.3 - CG Config", "ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1" )
 Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "config", "preset:ACES 1.3 - Studio Config", "ocio://studio-config-v1.0.0_aces-v1.3_ocio-v2.1" )
+Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "config", "preset:Legacy (Gaffer 1.2)", "${GAFFER_ROOT}/openColorIO/config.ocio" )
+
 Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "config", "presetsPlugValueWidget:allowCustom", True )
 Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "config", "presetsPlugValueWidget:customWidgetType", "GafferUI.FileSystemPathPlugValueWidget" )
 Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "config", "fileSystemPath:extensions", "ocio" )

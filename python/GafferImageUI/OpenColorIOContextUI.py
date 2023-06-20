@@ -115,6 +115,7 @@ Gaffer.Metadata.registerNode(
 			"preset:$OCIO", "",
 			"preset:ACES 1.3 - CG Config", "ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1",
 			"preset:ACES 1.3 - Studio Config", "ocio://studio-config-v1.0.0_aces-v1.3_ocio-v2.1",
+			"preset:Legacy (Gaffer 1.2)", "${GAFFER_ROOT}/openColorIO/config.ocio",
 
 		],
 
