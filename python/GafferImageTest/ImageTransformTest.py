@@ -356,6 +356,8 @@ class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 		transform["transform"]["pivot"].setValue( imath.V2f( 1500 ) )
 		transform["transform"]["rotate"].setValue( 2.5 )
 
+		GafferImageTest.processTiles( checker["out"] )
+
 		with GafferTest.TestRunner.PerformanceScope() :
 			GafferImageTest.processTiles( transform["out"] )
 
@@ -368,6 +370,8 @@ class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 		transform = GafferImage.ImageTransform()
 		transform["in"].setInput( checker["out"] )
 		transform["transform"]["translate"].setValue( imath.V2f( 2.2 ) )
+
+		GafferImageTest.processTiles( checker["out"] )
 
 		with GafferTest.TestRunner.PerformanceScope() :
 			GafferImageTest.processTiles( transform["out"] )
@@ -382,6 +386,8 @@ class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 		transform["in"].setInput( checker["out"] )
 		transform["transform"]["scale"].setValue( imath.V2f( 0.1 ) )
 
+		GafferImageTest.processTiles( checker["out"] )
+
 		with GafferTest.TestRunner.PerformanceScope() :
 			GafferImageTest.processTiles( transform["out"] )
 
@@ -394,6 +400,8 @@ class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 		transform = GafferImage.ImageTransform()
 		transform["in"].setInput( checker["out"] )
 		transform["transform"]["scale"].setValue( imath.V2f( 3 ) )
+
+		GafferImageTest.processTiles( checker["out"] )
 
 		with GafferTest.TestRunner.PerformanceScope() :
 			GafferImageTest.processTiles( transform["out"] )
@@ -409,6 +417,8 @@ class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 		transform["transform"]["pivot"].setValue( imath.V2f( 1500 ) )
 		transform["transform"]["rotate"].setValue( 2.5 )
 		transform["transform"]["scale"].setValue( imath.V2f( 0.75 ) )
+
+		GafferImageTest.processTiles( checker["out"] )
 
 		with GafferTest.TestRunner.PerformanceScope() :
 			GafferImageTest.processTiles( transform["out"] )
@@ -428,6 +438,8 @@ class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 		transform2["in"].setInput( transform1["out"] )
 		transform2["transform"]["translate"].setValue( imath.V2f( 10 ) )
 
+		GafferImageTest.processTiles( checker["out"] )
+
 		with GafferTest.TestRunner.PerformanceScope() :
 			GafferImageTest.processTiles( transform2["out"] )
 
@@ -446,6 +458,8 @@ class ImageTransformTest( GafferImageTest.ImageTestCase ) :
 		transform2 = GafferImage.ImageTransform( "Transform2" )
 		transform2["in"].setInput( transform1["out"] )
 		transform2["transform"]["translate"].setValue( imath.V2f( 10 ) )
+
+		GafferImageTest.processTiles( checker["out"] )
 
 		with GafferTest.TestRunner.PerformanceScope() :
 			GafferImageTest.processTiles( transform2["out"] )
