@@ -39,6 +39,8 @@ Improvements
   - Improved numerical accuracy.
   - Improved performance.
 - VectorDataPlugValueWidget : Computation errors are now reflected by a red background colour.
+- VectorWarp : Added `Bilinear` filter, for faster but lower quality warping.
+- Dilate, Erode, Median, Resample, Resize, ImageTransform, Blur, VectorWarp : Improved performance significantly. For example, a Blur with a large radius is now almost 6x faster.
 
 Fixes
 -----
@@ -86,6 +88,7 @@ API
 - TabbedContainer : Added `setTabVisible()` and `getTabVisible()` methods.
 - Removed use of `RTLD_GLOBAL` for loading Python modules.
 - SceneAlgo : Added `validateName()` function.
+- Sampler : Added `visitPixels()` method, which provides an optimised method for accessing all pixels in a region.
 
 Breaking Changes
 ----------------
