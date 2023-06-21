@@ -306,5 +306,35 @@ class ResizeTest( GafferImageTest.ImageTestCase ) :
 
 						self.assertEqual( r["out"]["dataWindow"].getValue(), r["out"]["format"].getValue().getDisplayWindow() )
 
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5 )
+	def testSimplestUpscalePerf( self ) :
+		imageReader = GafferImage.ImageReader()
+		imageReader["fileName"].setValue( self.imagesPath() / 'deepMergeReference.exr' )
+
+		r = GafferImage.Resize()
+		r["in"].setInput( imageReader["out"] )
+		r["format"].setValue( GafferImage.Format( 10000, 10000 ) )
+		r["filter"].setValue( 'box' )
+
+		GafferImageTest.processTiles( imageReader["out"] )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			GafferImageTest.processTiles( r["out"] )
+
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5 )
+	def testSimpleUpscalePerf( self ) :
+		imageReader = GafferImage.ImageReader()
+		imageReader["fileName"].setValue( self.imagesPath() / 'deepMergeReference.exr' )
+
+		r = GafferImage.Resize()
+		r["in"].setInput( imageReader["out"] )
+		r["format"].setValue( GafferImage.Format( 10000, 10000 ) )
+		r["filter"].setValue( 'triangle' )
+
+		GafferImageTest.processTiles( imageReader["out"] )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			GafferImageTest.processTiles( r["out"] )
+
 if __name__ == "__main__":
 	unittest.main()

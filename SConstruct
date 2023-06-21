@@ -476,6 +476,14 @@ if env["PLATFORM"] != "win32" :
 		# Turn off the parts of `-Wextra` that we don't like.
 		env.Append( CXXFLAGS = [ "-Wno-cast-function-type", "-Wno-unused-parameter" ] )
 
+		# Set this weird compiler flag that in general is expected to cause compiled code to be about
+		# half a percent slower, but works around this ridiculous bug:
+		# https://gcc.gnu.org/bugzilla//show_bug.cgi?id=51041
+		# It's a 10 year old bug that sometimes causes important inner loops to get 4X slower for no
+		# reason ( it affects use of visitPixels depending on exact register usage patterns at the call
+		# site ), and there appears to be no real solution ... maybe we should be moving away from GCC?
+		env.Append( CXXFLAGS = [ "-fira-region=all" ] )
+
 		env.Append(
 			CXXFLAGS = [ "-pthread" ],
 			SHLINKFLAGS = [ "-pthread", "-Wl,--no-undefined" ],
@@ -1099,7 +1107,7 @@ libraries = {
 			"LIBS" : [ "Gaffer", "GafferImage", "OpenImageIO$OIIO_LIB_SUFFIX" ],
 		},
 		"pythonEnvAppends" : {
-			"LIBS" : [ "GafferImage", "GafferImageTest" ],
+			"LIBS" : [ "GafferImage", "GafferImageTest", "fmt" ],
 		},
 		"additionalFiles" :
 			glob.glob( "python/GafferImageTest/scripts/*" ) + glob.glob( "python/GafferImageTest/images/*" ) +

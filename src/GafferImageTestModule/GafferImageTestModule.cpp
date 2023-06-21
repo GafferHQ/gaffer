@@ -35,6 +35,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "boost/python.hpp"
+#include "fmt/format.h"
 
 #include "GafferImageTest/ContextSanitiser.h"
 
@@ -43,6 +44,7 @@
 #include "GafferImage/ImageAlgo.h"
 #include "GafferImage/ImagePlug.h"
 #include "GafferImage/Format.h"
+#include "GafferImage/Sampler.h"
 
 #include "Gaffer/Node.h"
 
@@ -119,6 +121,43 @@ void testEditableScopeForFormat()
 	);
 }
 
+void validateVisitPixels( GafferImage::Sampler &sampler, const Imath::Box2i &region )
+{
+	int i = 0;
+	int sizeX = region.size().x;
+	sampler.visitPixels( region,
+		[&region, &sampler, &i, sizeX ] ( float value, int x, int y )
+		{
+			int expectedX = ( i % sizeX ) + region.min.x;
+			int expectedY = ( i / sizeX ) + region.min.y;
+			if( x != expectedX || y != expectedY )
+			{
+				throw IECore::Exception( fmt::format (
+					"visitPixels passed incorrect coordinate - expected {},{}, received {},{}",
+					expectedX, expectedY, x, y
+				) );
+			}
+
+			float expectedValue = sampler.sample( x, y );
+			if( value != expectedValue )
+			{
+				throw IECore::Exception( fmt::format(
+					"visitPixels passed incorrect value for pixel {},{} - expected {} received {}",
+					x, y, expectedValue, value
+				) );
+			}
+			i++;
+		}
+	);
+	if( i != region.size().x * region.size().y )
+	{
+		throw IECore::Exception( fmt::format(
+			"visitPixels processed wrong number of pixels: visited {} in region of size {},{}",
+			i, region.size().x, region.size().y
+		) );
+	}
+}
+
 } // namespace
 
 BOOST_PYTHON_MODULE( _GafferImageTest )
@@ -130,4 +169,5 @@ BOOST_PYTHON_MODULE( _GafferImageTest )
 	def( "processTiles", &processTilesWrapper );
 	def( "connectProcessTilesToPlugDirtiedSignal", &connectProcessTilesToPlugDirtiedSignal );
 	def( "testEditableScopeForFormat", &testEditableScopeForFormat );
+	def( "validateVisitPixels", &validateVisitPixels );
 }

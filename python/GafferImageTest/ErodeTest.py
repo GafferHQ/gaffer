@@ -140,5 +140,20 @@ class ErodeTest( GafferImageTest.ImageTestCase ) :
 			# a master
 			self.assertImagesEqual( masterErodeSingleChannel["out"], defaultErodeSingleChannel["out"] )
 
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 1 )
+	def testPerf( self ) :
+
+		imageReader = GafferImage.ImageReader()
+		imageReader["fileName"].setValue( self.imagesPath() / 'deepMergeReference.exr' )
+
+		GafferImageTest.processTiles( imageReader["out"] )
+
+		erode = GafferImage.Erode()
+		erode["in"].setInput( imageReader["out"] )
+		erode["radius"].setValue( imath.V2i( 128 ) )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			GafferImageTest.processTiles( erode["out"] )
+
 if __name__ == "__main__":
 	unittest.main()

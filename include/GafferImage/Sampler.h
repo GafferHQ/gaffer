@@ -94,6 +94,14 @@ class GAFFERIMAGE_API Sampler
 		/// 0.5, 0.5.
 		float sample( float x, float y );
 
+		/// Call a functor for all pixels in the region.
+		/// Much faster than calling sample(int,int) repeatedly for every pixel in the
+		/// region, up to 5 times faster in practical cases.
+		/// The signature of the functor must be `F( float value, int x, int y )`.
+		/// Each pixel is visited in order of increasing X, then increasing Y.
+		template<typename F>
+		inline void visitPixels( const Imath::Box2i &region, F &&lambda );
+
 		/// Appends a hash that represent all the pixel
 		/// values within the requested sample area.
 		void hash( IECore::MurmurHash &h ) const;
@@ -106,8 +114,8 @@ class GAFFERIMAGE_API Sampler
 		/// Cached data access
 		/// @param p Any point within the cache that we wish to retrieve the data for.
 		/// @param tileData Is set to the tile's channel data.
-		/// @param tilePixelIndex XY indices that can be used to access the colour value of point 'p' from tileData.
-		void cachedData( Imath::V2i p, const float *& tileData, Imath::V2i &tilePixelIndex );
+		/// @param tilePixelIndex Is set to the index used to access the colour value of point 'p' from tileData.
+		void cachedData( Imath::V2i p, const float *& tileData, int &tilePixelIndex );
 
 		const ImagePlug *m_plug;
 		const std::string m_channelName;
@@ -117,6 +125,7 @@ class GAFFERIMAGE_API Sampler
 		std::vector< IECore::ConstFloatVectorDataPtr > m_dataCache;
 		std::vector< const float * > m_dataCacheRaw;
 		Imath::Box2i m_cacheWindow;
+		int m_cacheOriginIndex;
 		int m_cacheWidth;
 
 		int m_boundingMode;

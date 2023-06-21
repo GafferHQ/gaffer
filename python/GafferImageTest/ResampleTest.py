@@ -151,7 +151,8 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 		]
 
 		for args in tests :
-			__test( *args )
+			with self.subTest( fileName = args[0], size = args[1], ftilter = args[2] ):
+				__test( *args )
 
 	def testSincUpsize( self ) :
 
@@ -219,6 +220,127 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 		resample["matrix"].setValue( imath.M33f().scale( imath.V2f( 0.5 ) ) )
 
 		self.assertRaisesDeepNotSupported( resample )
+
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5 )
+	def testPerfHorizontal( self ) :
+
+		imageReader = GafferImage.ImageReader()
+		imageReader["fileName"].setValue( self.imagesPath() / 'deepMergeReference.exr' )
+
+		resize = GafferImage.Resize()
+		resize["in"].setInput( imageReader["out"] )
+		resize["format"].setValue( GafferImage.Format( 1920, 1080, 1.000 ) )
+
+		resample = GafferImage.Resample()
+		resample["in"].setInput( resize["out"] )
+		resample["filter"].setValue( 'box' )
+		resample["filterScale"].setValue( imath.V2f( 300.0 ) )
+
+		GafferImageTest.processTiles( resize["out"] )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			GafferImageTest.processTiles( resample["__horizontalPass"] )
+
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5 )
+	def testPerfVertical( self ) :
+
+		imageReader = GafferImage.ImageReader()
+		imageReader["fileName"].setValue( self.imagesPath() / 'deepMergeReference.exr' )
+
+		resize = GafferImage.Resize()
+		resize["in"].setInput( imageReader["out"] )
+		resize["format"].setValue( GafferImage.Format( 1920, 1080, 1.000 ) )
+
+		resample = GafferImage.Resample()
+		resample["in"].setInput( resize["out"] )
+		resample["filter"].setValue( 'box' )
+		resample["filterScale"].setValue( imath.V2f( 300.0 ) )
+
+		GafferImageTest.processTiles( resample["__horizontalPass"] )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			GafferImageTest.processTiles( resample["out"] )
+
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5 )
+	def testPerfSmallFilter( self ) :
+
+		imageReader = GafferImage.ImageReader()
+		imageReader["fileName"].setValue( self.imagesPath() / 'deepMergeReference.exr' )
+
+		resize = GafferImage.Resize()
+		resize["in"].setInput( imageReader["out"] )
+		resize["format"].setValue( GafferImage.Format( 4000, 4000, 1.000 ) )
+
+		resample = GafferImage.Resample()
+		resample["in"].setInput( resize["out"] )
+		resample["filter"].setValue( 'box' )
+		resample["filterScale"].setValue( imath.V2f( 4.0 ) )
+
+		GafferImageTest.processTiles( resize["out"] )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			GafferImageTest.processTiles( resample["out"] )
+
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5 )
+	def testPerfVerySmallFilter( self ) :
+
+		imageReader = GafferImage.ImageReader()
+		imageReader["fileName"].setValue( self.imagesPath() / 'deepMergeReference.exr' )
+
+		resize = GafferImage.Resize()
+		resize["in"].setInput( imageReader["out"] )
+		resize["format"].setValue( GafferImage.Format( 4000, 4000, 1.000 ) )
+
+		resample = GafferImage.Resample()
+		resample["in"].setInput( resize["out"] )
+		resample["filter"].setValue( 'box' )
+		resample["filterScale"].setValue( imath.V2f( 2.0 ) )
+
+		GafferImageTest.processTiles( resize["out"] )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			GafferImageTest.processTiles( resample["out"] )
+
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 1 )
+	def testPerfInseparableLanczos( self ) :
+
+		imageReader = GafferImage.ImageReader()
+		imageReader["fileName"].setValue( self.imagesPath() / 'deepMergeReference.exr' )
+
+		resize = GafferImage.Resize()
+		resize["in"].setInput( imageReader["out"] )
+		resize["format"].setValue( GafferImage.Format( 64, 64 ) )
+
+		resample = GafferImage.Resample()
+		resample["in"].setInput( resize["out"] )
+		resample["filter"].setValue( 'radial-lanczos3' )
+		resample["filterScale"].setValue( imath.V2f( 20.0 ) )
+
+		GafferImageTest.processTiles( resize["out"] )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			GafferImageTest.processTiles( resample["out"] )
+
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 1 )
+	def testPerfInseparableDisk( self ) :
+
+		imageReader = GafferImage.ImageReader()
+		imageReader["fileName"].setValue( self.imagesPath() / 'deepMergeReference.exr' )
+
+		resize = GafferImage.Resize()
+		resize["in"].setInput( imageReader["out"] )
+		resize["format"].setValue( GafferImage.Format( 1920, 1920 ) )
+
+		resample = GafferImage.Resample()
+		resample["in"].setInput( resize["out"] )
+		resample["filter"].setValue( 'disk' )
+		resample["filterScale"].setValue( imath.V2f( 20.0 ) )
+
+		GafferImageTest.processTiles( resize["out"] )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			GafferImageTest.processTiles( resample["out"] )
+
 
 if __name__ == "__main__":
 	unittest.main()
