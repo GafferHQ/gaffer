@@ -41,6 +41,8 @@
 #include "GafferUI/Gadget.h"
 #include "GafferUI/Style.h"
 
+#include <variant>
+
 namespace GafferUI
 {
 
@@ -149,6 +151,7 @@ class GAFFERUI_API Handle : public Gadget
 				Imath::V3f m_worldOrigin;
 				Imath::V3f m_worldAxis0;
 				Imath::V3f m_worldAxis1;
+				Imath::V3f m_worldPlaneNormal;
 				Imath::V2f m_dragBeginPosition;
 
 				bool m_processModifiers;
@@ -157,6 +160,9 @@ class GAFFERUI_API Handle : public Gadget
 				// and scale movement after that point accordingly (x0.1)
 				bool m_preciseMotionEnabled;
 				Imath::V2f m_preciseMotionOrigin;
+
+				std::optional<LinearDrag> m_linearDrag;
+				Imath::V2f m_linearDragAxisMask;
 
 		};
 
@@ -169,29 +175,33 @@ class GAFFERUI_API Handle : public Gadget
 		{
 
 			AngularDrag( bool processModifiers = true );
-			// Origin and axes are in gadget space. Rotations will be around
-			// axis0, with 0 rotation along axis1. Axes are assumed to be
+			// Origin, normal and axis0 are in gadget space. Rotations will be around
+			// normal, with 0 rotation along axis0. Axes are assumed to be
 			// orthogonal, but may have any length.
-			AngularDrag( const Gadget *gadget, const Imath::V3f &origin, const Imath::V3f &axis0, const Imath::V3f axis1, const DragDropEvent &dragBeginEvent, bool processModifiers = true );
+			AngularDrag( const Gadget *gadget, const Imath::V3f &origin, const Imath::V3f &normal, const Imath::V3f &axis0, const DragDropEvent &dragBeginEvent, bool processModifiers = true );
 
 			// The axis of rotation in Gadget space.
-			const Imath::V3f &axis0() const;
+			const Imath::V3f &normal() const;
 			// The direction on which zero rotation lies.
-			const Imath::V3f &axis1() const;
+			const Imath::V3f &axis0() const;
 
 			// Rotation is in radians
 			float startRotation() const;
 			float updatedRotation( const DragDropEvent &event );
 
+			bool isLinearDrag() const;
+
 			private :
 
 				float closestRotation( const Imath::V2f &p, float targetRotation );
 
-				PlanarDrag m_drag;
+				const Gadget *m_gadget;
+
+				std::variant<std::monostate, PlanarDrag, LinearDrag> m_drag;
 				float m_rotation;
 
+				Imath::V3f m_normal;
 				Imath::V3f m_axis0;
-				Imath::V3f m_axis1;
 				float m_dragBeginRotation;
 
 				bool m_processModifiers;

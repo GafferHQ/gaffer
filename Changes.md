@@ -41,6 +41,7 @@ Improvements
 - VectorDataPlugValueWidget : Computation errors are now reflected by a red background colour.
 - VectorWarp : Added `Bilinear` filter, for faster but lower quality warping.
 - Dilate, Erode, Median, Resample, Resize, ImageTransform, Blur, VectorWarp : Improved performance significantly. For example, a Blur with a large radius is now almost 6x faster.
+- RotateTool : Added the ability to rotate an axis whose plane of rotation is parallel or nearly parallel to the view.
 
 Fixes
 -----
@@ -58,6 +59,7 @@ Fixes
   - Fixed handling of points exactly at the density threshold.
 - ObjectSource, Group : Prevented the creation of locations with invalid names - `..`, `...` or anything containing `/` or a filter wildcard.
 - BranchCreator : Prevented the use of `...` and other filter wildcards in the `destination`.
+- TranslateTool : Fixed dragging in a plane parallel to an orthographic view. Translation in that case now behaves the same as dragging an axis.
 
 API
 ---
@@ -89,6 +91,7 @@ API
 - Removed use of `RTLD_GLOBAL` for loading Python modules.
 - SceneAlgo : Added `validateName()` function.
 - Sampler : Added `visitPixels()` method, which provides an optimised method for accessing all pixels in a region.
+- Handle::AngularDrag : Added `isLinearDrag()` method.
 
 Breaking Changes
 ----------------
@@ -128,6 +131,7 @@ Breaking Changes
   - Removed support for deprecated `layout:widgetType` metadata. Use `plugValueWidget:type` metadata instead.
   - Removed `useTypeOnly` argument from `create()` function. Pass `typeMetadata = None` instead.
 - MeshTangents : Changed the edge used by `Mode::FirstEdge`.
+- Handle::AngularDrag : Fix mismatch between comment and implementation regarding the axis for zero rotation. The constructor arguments `axis0` and `axis1` were changed to `normal` and `axis0` respectively.
 
 Build
 -----
