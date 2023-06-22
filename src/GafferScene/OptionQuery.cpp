@@ -291,44 +291,40 @@ void OptionQuery::compute( Gaffer::ValuePlug *output, const Gaffer::Context *con
 
 		if( output == oPlug->getChild( g_existsPlugIndex ) )
 		{
-			const NameValuePlug *childQueryPlug = queryPlug( output );
-
-			const std::string optionName = childQueryPlug->namePlug()->getValue();
-
+			const std::string optionName = queryPlug( output )->namePlug()->getValue();
+			bool exists = false;
 			if( optionName.size() )
 			{
 				ConstCompoundObjectPtr globals = scenePlug()->globalsPlug()->getValue();
-				const Data *resultData = globals->member<const Data>( g_namePrefix + optionName );
-
-				static_cast<BoolPlug *>( output )->setValue( resultData != nullptr );
-
-				return;
+				exists = globals->members().count( g_namePrefix + optionName );
 			}
-
-			static_cast<BoolPlug *>( output )->setValue( false );
-
+			static_cast<BoolPlug *>( output )->setValue( exists );
 			return;
 		}
 
-		else if(
-			oPlug->getChild( g_valuePlugIndex )->isAncestorOf( output ) ||
-			output == oPlug->getChild( g_valuePlugIndex )
-		)
+		const ValuePlug *valuePlug = oPlug->getChild<ValuePlug>( g_valuePlugIndex );
+		if( output == valuePlug || valuePlug->isAncestorOf( output ) )
 		{
 			const NameValuePlug *childQueryPlug = queryPlug( output );
 
 			const std::string optionName = childQueryPlug->namePlug()->getValue();
-
-			const ValuePlug *vPlug = valuePlugFromQuery( childQueryPlug );
-
+			ConstObjectPtr object;
 			if( optionName.size() )
 			{
 				ConstCompoundObjectPtr globals = scenePlug()->globalsPlug()->getValue();
-				const Data *resultData = globals->member<const Data>( g_namePrefix + optionName );
+				object = globals->member<Object>( g_namePrefix + optionName );
+			}
 
-				if( resultData != nullptr )
+			if( object )
+			{
+				if( auto objectPlug = runTimeCast<ObjectPlug>( output ) )
 				{
-					if( PlugAlgo::setValueFromData( vPlug, output, resultData ) )
+					objectPlug->setValue( object );
+					return;
+				}
+				else if( auto data = runTimeCast<const Data>( object.get() ) )
+				{
+					if( PlugAlgo::setValueFromData( valuePlug, output, data ) )
 					{
 						return;
 					}
@@ -336,15 +332,8 @@ void OptionQuery::compute( Gaffer::ValuePlug *output, const Gaffer::Context *con
 			}
 
 			output->setFrom(
-				static_cast<const Gaffer::ValuePlug *>(
-					correspondingPlug(
-						vPlug,
-						output,
-						static_cast<const ValuePlug *>( childQueryPlug->valuePlug() )
-					)
-				)
+				correspondingPlug( valuePlug, output, childQueryPlug->valuePlug<ValuePlug>() )
 			);
-
 			return;
 		}
 	}
