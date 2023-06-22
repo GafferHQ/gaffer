@@ -330,28 +330,30 @@ class _OptionQueryFooter( GafferUI.PlugValueWidget ) :
 
 		result.append( "/FromPathsDivider", { "divider" : True } )
 
-		for item in [
-			Gaffer.BoolPlug,
-			Gaffer.FloatPlug,
-			Gaffer.IntPlug,
-			"NumericDivider",
-			Gaffer.StringPlug,
-			"StringDivider",
-			Gaffer.V2iPlug,
-			Gaffer.V3iPlug,
-			Gaffer.V2fPlug,
-			Gaffer.V3fPlug,
-			"VectorDivider",
-			Gaffer.Color3fPlug,
-			Gaffer.Color4fPlug,
+		for label, plugCreator in [
+			( "Bool", Gaffer.BoolPlug ),
+			( "Float", Gaffer.FloatPlug ),
+			( "Int", Gaffer.IntPlug ),
+			( "NumericDivider", None ),
+			( "String", Gaffer.StringPlug ),
+			( "StringDivider", None ),
+			( "V2i", Gaffer.V2iPlug ),
+			( "V3i", Gaffer.V3iPlug ),
+			( "V2f", Gaffer.V2fPlug ),
+			( "V3f", Gaffer.V3fPlug ),
+			( "VectorDivider", None ),
+			( "Color3f", Gaffer.Color3fPlug ),
+			( "Color4f", Gaffer.Color4fPlug ),
+			( "ObjectDivider", None ),
+			( "Object", functools.partial( Gaffer.ObjectPlug, defaultValue = IECore.NullObject.defaultNullObject() ) ),
 		] :
-			if isinstance( item, str ) :
-				result.append( "/" + item, { "divider": True } )
+			if plugCreator is None :
+				result.append( f"/{label}", { "divider": True } )
 			else :
 				result.append(
-					"/" + item.__name__.replace( "Plug", "" ),
+					f"/{label}",
 					{
-						"command" : functools.partial( Gaffer.WeakMethod( self.__addQuery ), "", "", item ),
+						"command" : functools.partial( Gaffer.WeakMethod( self.__addQuery ), "", "", plugCreator ),
 					}
 				)
 
@@ -393,22 +395,22 @@ class _OptionQueryFooter( GafferUI.PlugValueWidget ) :
 
 		return result
 
-	def __addQuery( self, plugName, optionName, plugTypeOrValue ) :
+	def __addQuery( self, plugName, optionName, plugCreatorOrValue ) :
 
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 
 			node = self.getPlug().node()
 
-			if isinstance( plugTypeOrValue, IECore.Data ) :
+			if isinstance( plugCreatorOrValue, IECore.Data ) :
 				dummyPlug = Gaffer.PlugAlgo.createPlugFromData(
 					plugName,
 					Gaffer.Plug.Direction.In,
 					Gaffer.Plug.Flags.Default,
-					plugTypeOrValue
+					plugCreatorOrValue
 				)
 				node.addQuery( dummyPlug, optionName )
 			else:
-				node.addQuery( plugTypeOrValue(), optionName )
+				node.addQuery( plugCreatorOrValue(), optionName )
 
 	def __updateQueryMetadata( self, plug ) :
 

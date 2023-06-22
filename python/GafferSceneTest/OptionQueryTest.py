@@ -38,10 +38,11 @@ import unittest
 import imath
 
 import IECore
+import IECoreScene
+
 import Gaffer
 import GafferScene
 import GafferSceneTest
-
 
 class OptionQueryTest( GafferSceneTest.SceneTestCase ):
 
@@ -348,6 +349,58 @@ class OptionQueryTest( GafferSceneTest.SceneTestCase ):
 		self.assertEqual( str( scriptNode["target"]["options"]["b"]["value"].getInput() ), str( query["out"][1]["value"] ) )
 		self.assertEqual( str( scriptNode["target"]["options"]["c"]["value"].getInput() ), str( query["out"][2]["value"] ) )
 
+	def testObjectPlugQuery( self ) :
+
+		value1 = IECoreScene.ShaderNetwork(
+			shaders = {
+				"output" : IECoreScene.Shader( "test1" ),
+			},
+			output = "output"
+		)
+
+		value2 = IECoreScene.ShaderNetwork(
+			shaders = {
+				"output" : IECoreScene.Shader( "test2" ),
+			},
+			output = "output"
+		)
+
+		customOptions = GafferScene.CustomOptions()
+		customOptions["extraOptions"].setValue( {
+			"testObject" : value1,
+		} )
+
+		query = GafferScene.OptionQuery()
+		query["scene"].setInput( customOptions["out"] )
+		query.addQuery( Gaffer.ObjectPlug( defaultValue = IECore.NullObject.defaultNullObject() ), "testObject" )
+
+		self.assertTrue( query["out"][0]["exists"].getValue() )
+		self.assertEqual( query["out"][0]["value"].getValue(), value1 )
+
+		customOptions["extraOptions"].setValue( {
+			"testObject" : value2,
+		} )
+
+		self.assertTrue( query["out"][0]["exists"].getValue() )
+		self.assertEqual( query["out"][0]["value"].getValue(), value2 )
+
+		query["queries"][0]["name"].setValue( "blah" )
+		self.assertFalse( query["out"][0]["exists"].getValue() )
+		self.assertEqual( query["out"][0]["value"].getValue(), IECore.NullObject.defaultNullObject() )
+
+	def testMismatchedTypes( self ) :
+
+		customOptions = GafferScene.CustomOptions()
+		customOptions["extraOptions"].setValue( {
+			"test" : IECore.StringData( "i am a string" ),
+		} )
+
+		query = GafferScene.OptionQuery()
+		query["scene"].setInput( customOptions["out"] )
+		query.addQuery( Gaffer.FloatPlug( defaultValue = 2.0 ), "test" )
+
+		self.assertTrue( query["out"][0]["exists"].getValue() )
+		self.assertEqual( query["out"][0]["value"].getValue(), 2.0 )
 
 if __name__ == "__main__":
 	unittest.main()
