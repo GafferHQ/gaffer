@@ -332,6 +332,17 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		return []
 
+	## Determines whether or not `_updateFromValues()` will be called when
+	# the context changes. The default implementation returns True if any
+	# plugs are dependent on a compute. May be overridden by derived classes
+	# if they depend on the context for any other reason.
+	def _valuesDependOnContext( self ) :
+
+		return any(
+			p.source().direction() == Gaffer.Plug.Direction.Out for p in
+			itertools.chain( self.getPlugs(), *self.__auxiliaryPlugs )
+		)
+
 	## Called whenever metadata relating to the plug has changed. Should
 	# be implemented by derived classes to display the changes in the UI
 	# as necessary.
@@ -680,7 +691,6 @@ class PlugValueWidget( GafferUI.Widget ) :
 		]
 
 		self.__context = next( ( self.__defaultContext( p ) for p in self.__plugs ), self.__fallbackContext )
-		self.__updateContextConnection()
 
 		self.__auxiliaryPlugs = []
 		auxiliaryNodes = set()
@@ -700,6 +710,8 @@ class PlugValueWidget( GafferUI.Widget ) :
 			for node in auxiliaryNodes
 		]
 
+		self.__updateContextConnection()
+
 		if callUpdateMethods :
 			self.__callLegacyUpdateMethods()
 			self._updateFromMetadata()
@@ -708,15 +720,8 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 	def __updateContextConnection( self ) :
 
-		# We only want to be notified of context changes for plugs whose values are
-		# computed.
-
-		context = self.__context
-		if all( p.source().direction() == Gaffer.Plug.Direction.In for p in self.getPlugs() ) :
-			context = None
-
-		if context is not None :
-			self.__contextChangedConnection = context.changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ), scoped = True )
+		if self._valuesDependOnContext() :
+			self.__contextChangedConnection = self.__context.changedSignal().connect( Gaffer.WeakMethod( self.__contextChanged ), scoped = True )
 		else :
 			self.__contextChangedConnection = None
 

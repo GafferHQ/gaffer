@@ -64,6 +64,8 @@ Fixes
 - BranchCreator : Prevented the use of `...` and other filter wildcards in the `destination`.
 - TranslateTool : Fixed dragging in a plane parallel to an orthographic view. Translation in that case now behaves the same as dragging an axis.
 - Window : Fixed handling of `**kw` constructor arguments. These were being passed to the `QWidget` constructor where they caused errors, instead of being passed to the ContainerWidget base class.
+- PresetsPlugValueWidget : Fixed label update for context-sensitive presets.
+- PlugValueWidget : Fixed value update when auxiliary plugs depend on the context but the primary plugs do not.
 
 API
 ---
@@ -90,7 +92,9 @@ API
 - PlugLayout :
   - Added support for `layout:minimumWidth` metadata.
   - Tabs are now hidden if all their child plugs are hidden by `layout:visibilityActivator` metadata.
-- PlugValueWidget : Added `typeMetadata` argument to `create()` to use an alternative key to `plugValueWidget:type` when looking up widget type.
+- PlugValueWidget :
+  - Added `typeMetadata` argument to `create()` to use an alternative key to `plugValueWidget:type` when looking up widget type.
+  - Added `_valuesDependOnContext()` method which may be overridden by derived classes.
 - PresetsPlugValueWidget : Added `presetsPlugValueWidget:customWidgetType` metadata, to allow the type for the custom widget to be specified.
 - TabbedContainer : Added `setTabVisible()` and `getTabVisible()` methods.
 - Removed use of `RTLD_GLOBAL` for loading Python modules.
