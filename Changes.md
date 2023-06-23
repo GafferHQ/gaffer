@@ -32,6 +32,7 @@ Improvements
     - Improved performance.
     - Improved detection of no-op transforms, such as when converting between colorspace aliases like `scene_linear` and `ACEScg`.
   - ColorSpace : Defaulted the input and output space to the current working space.
+  - DisplayTransform : Defaulted the input space to the current working space, and the display and view to the defaults defined by the current OpenColorIO config.
 - Seeds :
   - Renamed to Scatter.
   - Added sampling of primitive variables from the source mesh onto the scattered points, controlled using the new `primitiveVariables` plug.
@@ -146,7 +147,9 @@ Breaking Changes
 - Preferences : Removed `displayColorSpace` plug. Use the ScriptNode's `openColorIO` plug instead.
 - GafferUI.DisplayTransform : Removed. Use `Widget.setDisplayTransform()` instead.
 - ColorSpace : The `inputSpace` and `outputSpace` default values are now interpreted as the working space rather than as invalid spaces. This means that a node where only one space has been specified is no longer a pass-through as it was before.
-- DisplayTransform : The `inputSpace` default value is now interpreted as the working space rather than as an invalid space. This means that a node without `inputSpace` specified is no longer a pass-through as it was before.
+- DisplayTransform :
+  - The `inputSpace` default value is now interpreted as the working space rather than as an invalid space. This means that a node without `inputSpace` specified is no longer a pass-through as it was before.
+  - The `display` and `view` default values are now interpreted as the default defined by the current OpenColorIO config, rather than as invalid values. This means that a node without `display` or `view` specified is no longer a pass-through as it was before.
 
 Build
 -----

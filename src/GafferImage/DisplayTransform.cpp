@@ -116,10 +116,15 @@ OCIO_NAMESPACE::ConstTransformRcPtr DisplayTransform::transform() const
 	std::string display = displayPlug()->getValue();
 	std::string view = viewPlug()->getValue();
 
-	// Can't create a processor if we don't have valid inputs.
-	if( display.empty() || view.empty() )
+	OCIO_NAMESPACE::ConstConfigRcPtr config = OpenColorIOAlgo::currentConfig();
+	if( display.empty() )
 	{
-		return OCIO_NAMESPACE::ConstTransformRcPtr();
+		display = config->getDefaultDisplay();
+	}
+
+	if( view.empty() )
+	{
+		view = config->getDefaultView( display.c_str() );
 	}
 
 	if( colorSpace.empty() )

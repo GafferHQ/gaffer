@@ -40,6 +40,8 @@ import unittest
 import subprocess
 import imath
 
+import PyOpenColorIO
+
 import IECore
 
 import Gaffer
@@ -242,6 +244,35 @@ class DisplayTransformTest( GafferImageTest.ImageTestCase ) :
 
 			GafferImage.OpenColorIOAlgo.setWorkingSpace( context, "color_picking" )
 			self.assertNotEqual( displayTransform["out"].channelData( "R", imath.V2i( 0 ) ), tile )
+
+	def testDisplayAndViewDefaultToConfig( self ) :
+
+		checker = GafferImage.Checkerboard()
+
+		# Test default config
+
+		defaultDisplayTransform = GafferImage.DisplayTransform()
+		defaultDisplayTransform["in"].setInput( checker["out"] )
+
+		config = GafferImage.OpenColorIOAlgo.currentConfig()
+		explicitDisplayTransform = GafferImage.DisplayTransform()
+		explicitDisplayTransform["in"].setInput( checker["out"] )
+		explicitDisplayTransform["display"].setValue( config.getDefaultDisplay() )
+		explicitDisplayTransform["view"].setValue( config.getDefaultView( config.getDefaultDisplay() ) )
+
+		self.assertImagesEqual( defaultDisplayTransform["out"], explicitDisplayTransform["out"] )
+
+		# Test alternative config
+
+		configPath = Gaffer.rootPath() / "openColorIO" / "config.ocio"
+		config = PyOpenColorIO.Config.CreateFromFile( str( configPath ) )
+
+		explicitDisplayTransform["display"].setValue( config.getDefaultDisplay() )
+		explicitDisplayTransform["view"].setValue( config.getDefaultView( config.getDefaultDisplay() ) )
+
+		with Gaffer.Context() as context :
+			GafferImage.OpenColorIOAlgo.setConfig( context, str( configPath ) )
+			self.assertImagesEqual( defaultDisplayTransform["out"], explicitDisplayTransform["out"] )
 
 if __name__ == "__main__":
 	unittest.main()
