@@ -13,6 +13,7 @@ Improvements
 - LightEditor : Added section displaying UsdLux shadow parameters.
 - Cycles : Added support for UsdLux lights.
 - LightTool : Added support for editing animated plugs.
+- Median/Erode/Dilate : Dramatic speedup of these nodes for wide filters. Measured improvements of 100X faster for Erode/Dilate, and 10X faster for Median.
 
 Fixes
 -----
@@ -33,6 +34,7 @@ Fixes
 - Merge :
   - Fixed the Difference operation to return correct values for exceptional floating point values. Now there is 0 difference between `inf` and `inf`, or `NaN` and `NaN`. Additionally, there is infinite difference between `NaN` and any other number, so assertImagesEqual will correctly report `NaN`s that don't belong.
   - Fixed the Divide operation to return 0 for 0/0. This is consistent with how we previously handled fully black tiles, and avoids introducing `NaN` values which create problems in compositing.
+- Median/Erode/Dilate : Fixed possible crash bug if there were `NaN`s in the input image.
 
 API
 ---
