@@ -150,6 +150,7 @@ Breaking Changes
 - DisplayTransform :
   - The `inputSpace` default value is now interpreted as the working space rather than as an invalid space. This means that a node without `inputSpace` specified is no longer a pass-through as it was before.
   - The `display` and `view` default values are now interpreted as the default defined by the current OpenColorIO config, rather than as invalid values. This means that a node without `display` or `view` specified is no longer a pass-through as it was before.
+- gaffer test : Replaced -performanceOnly flag with -category argument which may be set to "performance" for the same as the old "-performanceOnly", or "standard" for the converse.
 
 Build
 -----

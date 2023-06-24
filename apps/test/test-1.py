@@ -93,10 +93,10 @@ class test( Gaffer.Application ) :
 					defaultValue = 1,
 				),
 
-				IECore.BoolParameter(
-					name = "performanceOnly",
-					description = "Skips tests that don't compute performance metrics.",
-					defaultValue = False,
+				IECore.StringParameter(
+					name = "category",
+					description = 'If set, restricts tests to only a certain category. Currently supported categories are "performance" and "standard" (where standard means any test that is not a performance test).',
+					defaultValue = "",
 				),
 
 				IECore.FileNameParameter(
@@ -142,8 +142,8 @@ class test( Gaffer.Application ) :
 				testCase = unittest.defaultTestLoader.loadTestsFromName( name )
 				testSuite.addTest( testCase )
 
-			if args["performanceOnly"].value :
-				GafferTest.TestRunner.filterPerformanceTests( testSuite )
+			if args["category"].value :
+				GafferTest.TestRunner.filterTestCategory( testSuite, args["category"].value )
 
 			testRunner = GafferTest.TestRunner( previousResultsFile = args["previousOutputFile"].value )
 			if args["stopOnFailure"].value :

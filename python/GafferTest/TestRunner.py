@@ -135,18 +135,28 @@ class TestRunner( unittest.TextTestRunner ) :
 
 	# Adds a skip decorator to all non-performance-related tests.
 	@staticmethod
-	def filterPerformanceTests( test ) :
+	def filterTestCategory( test, category ) :
+		if category == "":
+			return
 
 		if isinstance( test, unittest.TestSuite ) :
 			for t in test :
-				TestRunner.filterPerformanceTests( t )
+				TestRunner.filterTestCategory( t, category )
 		elif isinstance( test, unittest.TestCase ) :
 			testMethod = getattr( test, test._testMethodName )
-			if not getattr( testMethod, "performanceTestMethod", False  ) :
-				setattr(
-					test, test._testMethodName,
-					unittest.skip( "Not a performance test" )( testMethod )
-				)
+			isPerf = getattr( testMethod, "performanceTestMethod", False )
+			if category == "performance":
+				if not isPerf:
+					setattr(
+						test, test._testMethodName,
+						unittest.skip( "Not a performance test" )( testMethod )
+					)
+			else:
+				if isPerf:
+					setattr(
+						test, test._testMethodName,
+						unittest.skip( "Skipping performance test" )( testMethod )
+					)
 
 	def _makeResult( self ) :
 
