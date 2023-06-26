@@ -124,6 +124,9 @@ class GAFFERIMAGE_API ImageReader : public ImageNode
 		Gaffer::IntPlug *channelInterpretationPlug();
 		const Gaffer::IntPlug *channelInterpretationPlug() const;
 
+		Gaffer::IntVectorDataPlug *availableFramesPlug();
+		const Gaffer::IntVectorDataPlug *availableFramesPlug() const;
+
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 		static size_t supportedExtensions( std::vector<std::string> &extensions );

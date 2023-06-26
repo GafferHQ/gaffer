@@ -8,6 +8,7 @@ Improvements
 
 - DelightOptions : Added new options for modern 3Delight, as of version `2.9.39`.
 - ShaderQuery and ShaderTweaks : Added a filter for shader parameter names in the shader browser (#5293).
+- ImageReader : Added `availableFrames` output plug, listing all the available frames in the current file sequence.
 - MatchPatternPathFilterWidget : Added the name of the property being filtered to the placeholder text.
 - OpenImageIOReader : The `availableFrames` plug no longer errors for a missing file sequence - instead it outputs an empty list.
 
