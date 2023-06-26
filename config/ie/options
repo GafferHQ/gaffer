@@ -461,6 +461,9 @@ if usdIncludePath:
 if usdLibPath:
 	LOCATE_DEPENDENCY_LIBPATH.insert(0, usdLibPath)
 
+# ImageEngine is now using a monolithic build of USD
+USD_MONOLITHIC = True
+
 ##########################################################################
 # get compiler and other build tools set up
 ##########################################################################
