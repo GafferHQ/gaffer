@@ -158,12 +158,12 @@ class PathListingWidget( GafferUI.Widget ) :
 		self.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ), scoped = False )
 		self.__dragPointer = "paths"
 
-		GafferUI.DisplayTransform.changedSignal().connect( Gaffer.WeakMethod( self.__displayTransformChanged ), scoped = False )
-
 		self.__path = None
 
 		self.setDisplayMode( displayMode )
 		self.setPath( path )
+
+		self._displayTransformChanged()
 
 	def setPath( self, path ) :
 
@@ -416,6 +416,16 @@ class PathListingWidget( GafferUI.Widget ) :
 	def getDragPointer( self ) :
 
 		return self.__dragPointer
+
+	def _displayTransformChanged( self ) :
+
+		GafferUI.Widget._displayTransformChanged( self )
+
+		displayTransform = self.displayTransform()
+		_GafferUI._pathListingWidgetUpdateDelegate(
+			GafferUI._qtAddress( self._qtWidget() ),
+			displayTransform if displayTransform is not GafferUI.Widget.identityDisplayTransform else None
+		)
 
 	def __setSelectionInternal( self, paths, scrollToFirst=True ) :
 
@@ -720,12 +730,6 @@ class PathListingWidget( GafferUI.Widget ) :
 	def __dragEnd( self, widget, event ) :
 
 		GafferUI.Pointer.setCurrent( None )
-
-	def __displayTransformChanged( self ) :
-
-		# The PathModel bakes the display transform into icon colours,
-		# so when the transform changes we need to trigger an update.
-		self.__path.pathChangedSignal()( self.__path )
 
 	def __indexAt( self, position ) :
 

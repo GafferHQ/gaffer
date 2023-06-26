@@ -107,6 +107,12 @@ class PresetsPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__menuButton.setErrored( exception is not None )
 
+	def _valuesDependOnContext( self ) :
+
+		# We allow the presets metadata to be context-sensitive, so must
+		# update whenever the context changes.
+		return True
+
 	def _updateFromMetadata( self ) :
 
 		self._requestUpdateFromValues()

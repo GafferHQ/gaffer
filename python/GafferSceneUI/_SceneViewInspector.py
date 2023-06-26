@@ -452,7 +452,6 @@ class _ValueWidget( GafferUI.Widget ) :
 		self.buttonPressSignal().connect( Gaffer.WeakMethod( self.__buttonPress ), scoped = False )
 		self.dragBeginSignal().connect( Gaffer.WeakMethod( self.__dragBegin ), scoped = False )
 		self.dragEndSignal().connect( Gaffer.WeakMethod( self.__dragEnd ), scoped = False )
-		GafferUI.DisplayTransform.changedSignal().connect( Gaffer.WeakMethod( self.__updateLabel ), scoped = False )
 
 		self.__values = []
 		self.setValues( values )
@@ -483,6 +482,11 @@ class _ValueWidget( GafferUI.Widget ) :
 			self.__formatValue( v ) for v in self.__values
 		)
 
+	def _displayTransformChanged( self ) :
+
+		GafferUI.Widget._displayTransformChanged( self )
+		self.__updateLabel()
+
 	def __updateLabel( self ) :
 
 		if not len( self.__values ) :
@@ -497,18 +501,17 @@ class _ValueWidget( GafferUI.Widget ) :
 		# All values the same
 		self._qtWidget().setText( self.__formatValue( self.__values[0] ) )
 
-	@classmethod
-	def __formatValue( cls, value ) :
+	def __formatValue( self, value ) :
 
 		if isinstance( value, IECore.Data ) and hasattr( value, "value" ) :
-			return cls.__formatValue( value.value )
+			return self.__formatValue( value.value )
 		elif isinstance( value, ( int, float ) ) :
 			return GafferUI.NumericWidget.valueToString( value )
 		elif isinstance( value, imath.Color3f ) :
-			color = GafferUI.Widget._qtColor( GafferUI.DisplayTransform.get()( value ) ).name()
+			color = GafferUI.Widget._qtColor( self.displayTransform()( value ) ).name()
 			return "<table><tr><td bgcolor={} style=\"padding-right:12px\"></td><td style=\"padding-left:4px\">{}</td></tr></table>".format(
 				color,
-				cls.__formatValue( imath.V3f( value ) )
+				self.__formatValue( imath.V3f( value ) )
 			)
 		elif isinstance( value, ( imath.V3f, imath.V2f, imath.V3i, imath.V2i ) ) :
 			return " ".join( GafferUI.NumericWidget.valueToString( x ) for x in value )

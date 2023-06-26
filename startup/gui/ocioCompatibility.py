@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
+#  Copyright (c) 2023, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -36,33 +36,25 @@
 
 import Gaffer
 
-## Although the Style and Widget classes deal with uncorrected colour
-# for their drawing, widgets such as colour choosers may be used in
-# colour-sensitive applications where correcting for the display's
-# characteristics is fundamentally important. Rather than introduce
-# a GafferUI dependency on a specific colour management system, this
-# class allows the registration of a function to perform linear->display
-# transforms, and to signal when this is changed. It is expected that
-# specific application configurations will set this appropriately.
-class DisplayTransform( object ) :
+# Backwards compatibility for old `preferences.py` files that reference the
+# `displayColorSpace` plug we had before we moved all color management into
+# settings on the ScriptNode.
 
-	# have to store it inside a list so python doesn't
-	# keep trying to turn it into a method.
-	__linearToDisplay = [ lambda c : c ]
+def __preferencesGetItemWrapper( originalGetItem ) :
 
-	@classmethod
-	def set( cls, linearToDisplayCallable ) :
+	def getItem( self, key ) :
 
-		cls.__linearToDisplay[0] = linearToDisplayCallable
-		cls.changedSignal()()
+		if key == "displayColorSpace" and key not in self :
+			# This plug no longer exists, so we provide a non-serialisable
+			# surrogate just to keep old scripts loading without
+			# error.
+			self["displayColorSpace"] = Gaffer.Plug( "displayColorSpace", flags = Gaffer.Plug.Flags.Default & ~Gaffer.Plug.Flags.Serialisable )
+			self["displayColorSpace"]["view"] = Gaffer.StringPlug()
+			self["displayColorSpace"]["context"] = Gaffer.CompoundDataPlug()
+			Gaffer.Metadata.registerValue( self["displayColorSpace"], "layout:visibilityActivator", False )
 
-	@classmethod
-	def get( cls ) :
+		return originalGetItem( self, key )
 
-		return cls.__linearToDisplay[0]
+	return getItem
 
-	__changedSignal = Gaffer.Signals.Signal0()
-	@classmethod
-	def changedSignal( cls ) :
-
-		return cls.__changedSignal
+Gaffer.Preferences.__getitem__ = __preferencesGetItemWrapper( Gaffer.Preferences.__getitem__ )

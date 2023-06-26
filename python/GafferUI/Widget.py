@@ -122,7 +122,7 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 	# If a current parent has been defined using the `with` syntax described above,
 	# the parenting argument may be passed as a dictionay of optional keywords for the
 	# automatic `parent.addChild()` call.
-	def __init__( self, topLevelWidget, toolTip="", parenting = None ) :
+	def __init__( self, topLevelWidget, toolTip="", parenting = None, displayTransform = None ) :
 
 		Gaffer.Signals.Trackable.__init__( self )
 
@@ -181,6 +181,7 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 		self._parentChangedSignal = None
 
 		self.__visible = not isinstance( self, GafferUI.Window )
+		self.__displayTransform = displayTransform
 
 		# perform automatic parenting if necessary. we don't want to do this
 		# for menus, because they don't have the same parenting semantics. if other
@@ -312,6 +313,42 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 			relativeTo = relativeTo.__qtWidget
 
 		return self.__qtWidget.isEnabledTo( relativeTo )
+
+	## Specifies a function used to correct colours for display, for
+	# instance by converting from linear to sRGB. The display transform
+	# is inherited by all descendant widgets unless they have a transform
+	# of their own.
+	def setDisplayTransform( self, displayTransform ) :
+
+		if displayTransform == self.__displayTransform :
+			return
+
+		self.__displayTransform = displayTransform
+		self.__propagateDisplayTransformChange()
+
+	## Returns the display transform specified on this widget, or
+	# `None` if `setDisplayTransform()` has not been called (in
+	# which case this widget will inherit the display transform
+	# from its parent).
+	def getDisplayTransform( self ) :
+
+		return self.__displayTransform
+
+	## Returns the display transform to be used by this widget, accounting
+	# for inheritance of any transforms from the parent widgets.
+	def displayTransform( self ) :
+
+		widget = self
+		while widget is not None :
+			if widget.__displayTransform is not None :
+				return widget.__displayTransform
+			widget = widget.parent()
+
+		return Widget.identityDisplayTransform
+
+	## The default display transform, which performs no modification to
+	# the colours being displayed.
+	identityDisplayTransform = lambda x : x
 
 	## Sets whether or not this Widget should be rendered in a highlighted
 	# state. This status is not inherited by child widgets. Note that highlighted
@@ -716,6 +753,12 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 			if self.__visible != ( not self.__qtWidget.isHidden() ) :
 				self.__qtWidget.setVisible( self.__visible )
 
+	## Called whenever the result of `displayTransform()` has changed, to allow
+	# subclasses to adjust as necessary.
+	def _displayTransformChanged( self ) :
+
+		pass
+
 	## Used by the ContainerWidget classes to implement the automatic parenting
 	# using the with statement.
 	@classmethod
@@ -792,8 +835,7 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 
 		return GafferUI.ModifiableEvent.Modifiers( modifiers )
 
-	## Converts an IECore.Color[34]f to a QtColor. Note that this
-	# does not take into account GafferUI.DisplayTransform.
+	## Converts an IECore.Color[34]f to a QtColor.
 	@staticmethod
 	def _qtColor( color ) :
 
@@ -893,6 +935,36 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 				allClasses.append( cls.__styleClassName() )
 
 		self._qtWidget().setProperty( "gafferClasses", allClasses )
+
+	def __propagateDisplayTransformChange( self ) :
+
+		def propagateChangeToChildren( qtWidget ) :
+
+			for child in qtWidget.children() :
+
+				if isinstance( child, QtWidgets.QGraphicsScene ) :
+					for item in child.items() :
+						if isinstance( item, QtWidgets.QGraphicsProxyWidget ) :
+							propagateChangeToChildren( item.widget() )
+					continue
+
+				if not isinstance( child, QtWidgets.QWidget ) :
+					continue
+
+				owner = GafferUI.Widget.__qtWidgetOwners.get( child )
+				owner = owner() if owner is not None else None # Extract `weakref``
+				if owner is not None :
+					if owner.__displayTransform is None :
+						owner._displayTransformChanged()
+					else :
+						# More local display transform overrides parent
+						# transform, so no need to propagate change.
+						continue
+
+				propagateChangeToChildren( child )
+
+		self._displayTransformChanged()
+		propagateChangeToChildren( self._qtWidget() )
 
 class _EventFilter( QtCore.QObject ) :
 
@@ -1211,6 +1283,15 @@ class _EventFilter( QtCore.QObject ) :
 		if widget._parentChangedSignal is not None :
 			widget._parentChangedSignal( widget )
 			return True
+
+		if isinstance( widget, GafferUI.Window ) :
+			# Strictly speaking, the reparenting of _any_ widget might require
+			# use to propagate display transform changes. But in practice we
+			# don't currently need that, and don't want to incure the expense
+			# either. So we just propagate changes when windows are reparented.
+			parent = widget.parent()
+			if widget.getDisplayTransform() is None and parent is not None and parent.displayTransform() is not None :
+				widget._Widget__propagateDisplayTransformChange()
 
 		return False
 

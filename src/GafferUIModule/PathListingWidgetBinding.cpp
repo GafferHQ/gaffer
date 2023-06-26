@@ -169,16 +169,6 @@ IECorePreview::LRUCache<std::string, QPixmap> g_pixmapCache(
 	/* maxCost = */ 10000
 );
 
-QColor displayColor( const Imath::Color3f &color )
-{
-	/// \todo Move `GafferUI.DisplayTransform` to C++.
-	IECorePython::ScopedGILLock gilLock;
-	object displayTransform = import( "GafferUI" ).attr( "DisplayTransform" ).attr( "get" )();
-	Imath::Color3f c = extract<Imath::Color3f>( displayTransform( color ) );
-	c *= 255.0f;
-	return QColor( Imath::clamp( c[0], 0.0f, 255.0f ), Imath::clamp( c[1], 0.0f, 255.0f ), Imath::clamp( c[2], 0.0f, 255.0f ) );
-}
-
 // Equivalent to `GafferUI.NumericWidget.formatValue()`.
 QString doubleToString( double v )
 {
@@ -228,8 +218,10 @@ QVariant dataToVariant( const IECore::Data *value, int role )
 		{
 			case IECore::StringDataTypeId :
 				return g_pixmapCache.get( static_cast<const IECore::StringData *>( value )->readable() );
-			case IECore::Color3fDataTypeId :
-				return displayColor( static_cast<const IECore::Color3fData *>( value )->readable() );
+			case IECore::Color3fDataTypeId : {
+				const Imath::Color3f &c = static_cast<const IECore::Color3fData *>( value )->readable();
+				return QColor::fromRgbF( c[0], c[1], c[2] );
+			}
 			case IECore::CompoundDataTypeId : {
 				auto d = static_cast<const IECore::CompoundData *>( value );
 				QIcon icon;
@@ -1772,11 +1764,33 @@ class PathListingWidgetItemDelegate : public QStyledItemDelegate
 		{
 		}
 
+		using DisplayTransform = std::function<Imath::Color3f ( const Imath::Color3f & )>;
+		DisplayTransform displayTransform;
+
 	protected :
 
 		void initStyleOption( QStyleOptionViewItem *option, const QModelIndex &index ) const override
 		{
 			QStyledItemDelegate::initStyleOption( option, index );
+
+			if( displayTransform )
+			{
+				const QVariant decoration = index.data( Qt::DecorationRole );
+				if( decoration.userType() == QMetaType::QColor )
+				{
+					// Apply display transform to the colour.
+					const QColor qc = qvariant_cast<QColor>( decoration );
+					const Imath::Color3f c = displayTransform(
+						Imath::Color3f( qc.redF(), qc.greenF(), qc. blueF() )
+					);
+					// Update `option`. Making a QPixmap for this seems wasteful,
+					// but that's what the QStyledItemDelegate does.
+					QPixmap pixmap( option->decorationSize );
+					pixmap.fill( QColor::fromRgbF( c[0], c[1], c[2] ) );
+					option->icon = QIcon( pixmap );
+				}
+			}
+
 			if( option->state & QStyle::State_MouseOver )
 			{
 				// Ideally the QStyle would automatically use `State_MouseOver`
@@ -1820,9 +1834,53 @@ void updateModel( uint64_t treeViewAddress, Gaffer::PathPtr path )
 	if( !model )
 	{
 		model = new PathModel( treeView );
-		treeView->setItemDelegate( new PathListingWidgetItemDelegate( treeView ) );
 	}
 	model->setRoot( path );
+}
+
+void updateDelegate( uint64_t treeViewAddress, boost::python::object pythonDisplayTransform )
+{
+	QTreeView *treeView = reinterpret_cast<QTreeView *>( treeViewAddress );
+	auto *delegate = dynamic_cast<PathListingWidgetItemDelegate *>( treeView->itemDelegate() );
+	if( !delegate )
+	{
+		delegate = new PathListingWidgetItemDelegate( treeView );
+		treeView->setItemDelegate( delegate );
+	}
+
+	PathListingWidgetItemDelegate::DisplayTransform displayTransform;
+	if( pythonDisplayTransform )
+	{
+		// The lambda below needs to own a reference to `pythonDisplayTransform`,
+		// and in turn will be owned by the PathListingWidgetItemDelegate C++ object.
+		// Wrap `pythonDisplayTransform` so we acquire the GIL when the lambda is
+		// destroyed from C++.
+		auto pythonDisplayTransformPtr = std::shared_ptr<boost::python::object>(
+			new boost::python::object( pythonDisplayTransform ),
+			[]( boost::python::object *o ) {
+				IECorePython::ScopedGILLock gilLock;
+				delete o;
+			}
+		);
+
+		delegate->displayTransform = [pythonDisplayTransformPtr] ( const Imath::Color3f &color ) -> Imath::Color3f {
+			IECorePython::ScopedGILLock gilLock;
+			try
+			{
+				return extract<Imath::Color3f>( (*pythonDisplayTransformPtr)( color ) );
+			}
+			catch( const boost::python::error_already_set & )
+			{
+				return color;
+			}
+		};
+	}
+	else
+	{
+		delegate->displayTransform = nullptr;
+	}
+
+	treeView->update();
 }
 
 void setFlat( uint64_t treeViewAddress, bool flat )
@@ -1996,6 +2054,7 @@ void GafferUIModule::bindPathListingWidget()
 	def( "_pathListingWidgetSetColumns", &setColumns );
 	def( "_pathListingWidgetGetColumns", &getColumns );
 	def( "_pathListingWidgetUpdateModel", &updateModel );
+	def( "_pathListingWidgetUpdateDelegate", &updateDelegate );
 	def( "_pathListingWidgetSetFlat", &setFlat );
 	def( "_pathListingWidgetGetFlat", &getFlat );
 	def( "_pathListingWidgetSetExpansion", &setExpansion );

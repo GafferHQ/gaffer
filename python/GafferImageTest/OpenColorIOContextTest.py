@@ -51,7 +51,8 @@ class OpenColorIOContextTest( GafferImageTest.ImageTestCase ) :
 				"config=${ocio:config} "
 				"testA=${ocio:stringVar:testA} "
 				"testB=${ocio:stringVar:testB} "
-				"testC=${ocio:stringVar:testC}"
+				"testC=${ocio:stringVar:testC} "
+				"workingSpace=${ocio:workingSpace}"
 			)
 		)
 
@@ -61,20 +62,20 @@ class OpenColorIOContextTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertEqual(
 			ocioContext["out"].metadata()["capturedContext"].value,
-			"config= testA= testB= testC="
+			"config= testA= testB= testC= workingSpace="
 		)
 
 		studioConfig = "ocio://studio-config-v1.0.0_aces-v1.3_ocio-v2.1"
 		ocioContext["config"]["value"].setValue( studioConfig )
 		self.assertEqual(
 			ocioContext["out"].metadata()["capturedContext"].value,
-			"config= testA= testB= testC="
+			"config= testA= testB= testC= workingSpace="
 		)
 
 		ocioContext["config"]["enabled"].setValue( True )
 		self.assertEqual(
 			ocioContext["out"].metadata()["capturedContext"].value,
-			f"config={studioConfig} testA= testB= testC="
+			f"config={studioConfig} testA= testB= testC= workingSpace="
 		)
 
 		ocioContext["extraVariables"].setValue(
@@ -86,7 +87,7 @@ class OpenColorIOContextTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertEqual(
 			ocioContext["out"].metadata()["capturedContext"].value,
-			f"config={studioConfig} testA= testB=extraB testC=extraC"
+			f"config={studioConfig} testA= testB=extraB testC=extraC workingSpace="
 		)
 
 		ocioContext["variables"].addChild( Gaffer.NameValuePlug( "testA", "a", defaultEnabled = True ) )
@@ -94,14 +95,22 @@ class OpenColorIOContextTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertEqual(
 			ocioContext["out"].metadata()["capturedContext"].value,
-			f"config={studioConfig} testA=a testB=b testC=extraC"
+			f"config={studioConfig} testA=a testB=b testC=extraC workingSpace="
 		)
 
 		ocioContext["variables"][0]["enabled"].setValue( False )
 
 		self.assertEqual(
 			ocioContext["out"].metadata()["capturedContext"].value,
-			f"config={studioConfig} testA= testB=b testC=extraC"
+			f"config={studioConfig} testA= testB=b testC=extraC workingSpace="
+		)
+
+		ocioContext["workingSpace"]["value"].setValue( "testSpace" )
+		ocioContext["workingSpace"]["enabled"].setValue( True )
+
+		self.assertEqual(
+			ocioContext["out"].metadata()["capturedContext"].value,
+			f"config={studioConfig} testA= testB=b testC=extraC workingSpace=testSpace"
 		)
 
 if __name__ == "__main__":

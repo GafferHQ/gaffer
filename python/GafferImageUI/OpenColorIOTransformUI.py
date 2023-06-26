@@ -59,26 +59,37 @@ def __colorSpaceMenuHelper( plug, config = None ) :
 
 	return PyOpenColorIO.ColorSpaceMenuHelper( parameters )
 
-def colorSpacePresetNames( plug, noneLabel = "None", config = None ) :
+def colorSpacePresetNames( plug, config = None ) :
 
 	helper = __colorSpaceMenuHelper( plug, config )
-	return IECore.StringVectorData(
-		[ noneLabel ] + [
-			"/".join(
-				list( helper.getHierarchyLevels( i ) ) +
-				[ helper.getUIName( i ) ]
-			)
-			for i in range( 0, helper.getNumColorSpaces() )
-		]
-	)
+
+	names = IECore.StringVectorData( [
+		"/".join(
+			list( helper.getHierarchyLevels( i ) ) +
+			[ helper.getUIName( i ) ]
+		)
+		for i in range( 0, helper.getNumColorSpaces() )
+	] )
+
+	extraNames = Gaffer.Metadata.value( plug, "openColorIO:extraPresetNames" )
+	if extraNames is not None :
+		names[0:0] = extraNames
+
+	return names
 
 def colorSpacePresetValues( plug, config = None ) :
 
 	helper = __colorSpaceMenuHelper( plug, config )
-	return IECore.StringVectorData(
-		[ "" ] +
-		[ helper.getName( i ) for i in range( 0, helper.getNumColorSpaces() ) ]
-	)
+
+	values = IECore.StringVectorData( [
+		helper.getName( i ) for i in range( 0, helper.getNumColorSpaces() )
+	] )
+
+	extraValues = Gaffer.Metadata.value( plug, "openColorIO:extraPresetValues" )
+	if extraValues is not None :
+		values[0:0] = extraValues
+
+	return values
 
 Gaffer.Metadata.registerNode(
 

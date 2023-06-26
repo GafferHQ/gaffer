@@ -95,7 +95,7 @@ class __AnnotationsDialogue( GafferUI.Dialogue ) :
 			if not template :
 				self.__colorChooser = GafferUI.ColorChooser(
 					annotation.color() if annotation else imath.Color3f( 0.15, 0.26, 0.26 ),
-					useDisplayTransform = False
+					displayTransform = GafferUI.Widget.identityDisplayTransform
 				)
 				self.__colorChooser.colorChangedSignal().connect(
 					Gaffer.WeakMethod( self.__updateButtonStatus ), scoped = False

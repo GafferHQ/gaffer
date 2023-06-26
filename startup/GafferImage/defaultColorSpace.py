@@ -4,7 +4,7 @@ import GafferImage
 
 def defaultColorSpace( fileName, fileFormat, dataType, metadata, config ) :
 
-	linear = config.getColorSpace( PyOpenColorIO.ROLE_SCENE_LINEAR ).getName()
+	linear = "" # Will be automatically substituted with the current value of `${ocio:workingSpace}`
 	log = config.getColorSpace( PyOpenColorIO.ROLE_COMPOSITING_LOG ).getName()
 	display = config.getColorSpace( PyOpenColorIO.ROLE_COLOR_PICKING ).getName()
 

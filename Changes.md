@@ -17,6 +17,7 @@ Improvements
 - ImageReader, ImageWriter : The `colorSpace` menu is now filtered using the `file-io` category, if the current OpenColorIO config provides it.
 - OpenColorIO :
   - Updated default config to ACES Studio 1.3.
+  - Added `openColorIO` plug to ScriptNode, allowing the OpenColorIO config, working space, variables and display transform to be customised on a per-script basis.
   - Improved colorspace menus :
     - Organised colorspaces into submenus by family.
     - Removed unwanted title-casing, so that names are now displayed verbatim.
@@ -30,6 +31,8 @@ Improvements
   - OpenColorIOTransform :
     - Improved performance.
     - Improved detection of no-op transforms, such as when converting between colorspace aliases like `scene_linear` and `ACEScg`.
+  - ColorSpace : Defaulted the input and output space to the current working space.
+  - DisplayTransform : Defaulted the input space to the current working space, and the display and view to the defaults defined by the current OpenColorIO config.
 - Seeds :
   - Renamed to Scatter.
   - Added sampling of primitive variables from the source mesh onto the scattered points, controlled using the new `primitiveVariables` plug.
@@ -61,6 +64,9 @@ Fixes
 - ObjectSource, Group : Prevented the creation of locations with invalid names - `..`, `...` or anything containing `/` or a filter wildcard.
 - BranchCreator : Prevented the use of `...` and other filter wildcards in the `destination`.
 - TranslateTool : Fixed dragging in a plane parallel to an orthographic view. Translation in that case now behaves the same as dragging an axis.
+- Window : Fixed handling of `**kw` constructor arguments. These were being passed to the `QWidget` constructor where they caused errors, instead of being passed to the ContainerWidget base class.
+- PresetsPlugValueWidget : Fixed label update for context-sensitive presets.
+- PlugValueWidget : Fixed value update when auxiliary plugs depend on the context but the primary plugs do not.
 
 API
 ---
@@ -75,9 +81,10 @@ API
 - TestCase : Added `ignoreMessage()` method, to register messages that should not be treated as test failures.
 - OpenColorIOTransform : Automated image pass-throughs when the `transform()` method returns a no-op. Derived classes no longer need to implement their own pass-through.
 - OpenColorIOTransformUI :
-  - Added `noneLabel` argument to `colorSpacePresetNames()`.
   - Added support for `openColorIO:categories` and `openColorIO:includeRoles` metadata to `colorSpacePresetNames()`. These may be registered on a per-plug basis to control the colorspaces shown for that plug.
-- OpenColorIOAlgo : Added a new namespace that allows the OpenColorIO config to be defined via the Gaffer context.
+  - Added support for `openColorIO:extraPresetNames` and `openColorIO:extraPresetValues` metadata to add presets not defined by the OpenColorIO config.
+- OpenColorIOAlgo : Added a new namespace that allows the OpenColorIO config and working space to be defined via the Gaffer context.
+- OpenColorIOConfigPlug : Added a new plug type to aid in configuring the OpenColorIO context for a ScriptNode.
 - ImageReader/ImageWriter : Added a `config` argument to the `DefaultColorSpaceFunction` definition. This is passed the OpenColorIO config currently being used by the node.
 - ValuePlugs : Added Python bindings for `ValueType` type alias.
 - Color4fVectorDataPlug : Added a plug type for storing arrays of `Color4f`.
@@ -86,18 +93,22 @@ API
 - PlugLayout :
   - Added support for `layout:minimumWidth` metadata.
   - Tabs are now hidden if all their child plugs are hidden by `layout:visibilityActivator` metadata.
-- PlugValueWidget : Added `typeMetadata` argument to `create()` to use an alternative key to `plugValueWidget:type` when looking up widget type.
+- PlugValueWidget :
+  - Added `typeMetadata` argument to `create()` to use an alternative key to `plugValueWidget:type` when looking up widget type.
+  - Added `_valuesDependOnContext()` method which may be overridden by derived classes.
 - PresetsPlugValueWidget : Added `presetsPlugValueWidget:customWidgetType` metadata, to allow the type for the custom widget to be specified.
 - TabbedContainer : Added `setTabVisible()` and `getTabVisible()` methods.
 - Removed use of `RTLD_GLOBAL` for loading Python modules.
 - SceneAlgo : Added `validateName()` function.
 - Sampler : Added `visitPixels()` method, which provides an optimised method for accessing all pixels in a region.
 - Handle::AngularDrag : Added `isLinearDrag()` method.
+- Widget : Added per-widget control over colour display transforms via new `setDisplayTransform()`, `getDisplayTransform()` and `displayTransform()` methods.
 
 Breaking Changes
 ----------------
 
 - Appleseed : Removed Appleseed support. We suggest Cycles as an actively maintained open-source alternative.
+- ColorSwatch, ColorChooser, ColorChooserDialogue : Removed `useDisplayTransform` constructor argument. Use `Widget.setDisplayTransform()` instead.
 - GraphComponent : Changed slot signature for `nameChangedSignal()`.
 - GLWidget :
   - A GL context is no longer available in `_resize()`.
@@ -132,7 +143,13 @@ Breaking Changes
   - Removed support for deprecated `layout:widgetType` metadata. Use `plugValueWidget:type` metadata instead.
   - Removed `useTypeOnly` argument from `create()` function. Pass `typeMetadata = None` instead.
 - MeshTangents : Changed the edge used by `Mode::FirstEdge`.
-- Handle::AngularDrag : Fix mismatch between comment and implementation regarding the axis for zero rotation. The constructor arguments `axis0` and `axis1` were changed to `normal` and `axis0` respectively.
+- Handle::AngularDrag : Fixed mismatch between comment and implementation regarding the axis for zero rotation. The constructor arguments `axis0` and `axis1` were changed to `normal` and `axis0` respectively.
+- Preferences : Removed `displayColorSpace` plug. Use the ScriptNode's `openColorIO` plug instead.
+- GafferUI.DisplayTransform : Removed. Use `Widget.setDisplayTransform()` instead.
+- ColorSpace : The `inputSpace` and `outputSpace` default values are now interpreted as the working space rather than as invalid spaces. This means that a node where only one space has been specified is no longer a pass-through as it was before.
+- DisplayTransform :
+  - The `inputSpace` default value is now interpreted as the working space rather than as an invalid space. This means that a node without `inputSpace` specified is no longer a pass-through as it was before.
+  - The `display` and `view` default values are now interpreted as the default defined by the current OpenColorIO config, rather than as invalid values. This means that a node without `display` or `view` specified is no longer a pass-through as it was before.
 
 Build
 -----

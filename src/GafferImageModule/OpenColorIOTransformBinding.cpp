@@ -43,11 +43,13 @@
 #include "GafferImage/DisplayTransform.h"
 #include "GafferImage/LookTransform.h"
 #include "GafferImage/LUT.h"
+#include "GafferImage/OpenColorIOConfigPlug.h"
 #include "GafferImage/OpenColorIOContext.h"
 #include "GafferImage/OpenColorIOTransform.h"
 #include "GafferImage/Saturation.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
+#include "GafferBindings/PlugBinding.h"
 
 using namespace boost::python;
 using namespace GafferImage;
@@ -107,4 +109,22 @@ void GafferImageModule::bindOpenColorIOTransform()
 	GafferBindings::DependencyNodeClass<CDL>();
 	GafferBindings::DependencyNodeClass<LookTransform>();
 	GafferBindings::DependencyNodeClass<OpenColorIOContext>();
+
+	GafferBindings::PlugClass<OpenColorIOConfigPlug>()
+		.def(
+			boost::python::init<const std::string &, Gaffer::Plug::Direction, unsigned>(
+				(
+					boost::python::arg_( "name" ) = Gaffer::GraphComponent::defaultName<OpenColorIOConfigPlug>(),
+					boost::python::arg_( "direction" ) = Gaffer::Plug::In,
+					boost::python::arg_( "flags" ) = Gaffer::Plug::Default
+				)
+			)
+		)
+		.def(
+			"acquireDefaultConfigPlug", &OpenColorIOConfigPlug::acquireDefaultConfigPlug,
+			( arg( "scriptNode" ), arg( "createIfNecessary" ) = true ),
+			boost::python::return_value_policy<IECorePython::CastToIntrusivePtr>()
+		)
+		.staticmethod( "acquireDefaultConfigPlug" )
+	;
 }

@@ -60,6 +60,11 @@ GAFFERIMAGE_API void setConfig( Gaffer::Context *context, const std::string &con
 GAFFERIMAGE_API void setConfig( Gaffer::Context::EditableScope &context, const std::string *configFileName );
 GAFFERIMAGE_API const std::string &getConfig( const Gaffer::Context *context );
 
+/// Sets the colour space in which GafferImage stores colours for processing. Defaults to the `scene_linear` role.
+GAFFERIMAGE_API void setWorkingSpace( Gaffer::Context *context, const std::string &colorSpace );
+GAFFERIMAGE_API void setWorkingSpace( Gaffer::Context::EditableScope &context, const std::string *colorSpace );
+GAFFERIMAGE_API const std::string &getWorkingSpace( const Gaffer::Context *context );
+
 /// Adds an OCIO "string var" to be used in `context`. Note that OCIO also calls these
 /// "environment vars" and "context vars" but they're all the same thing.
 GAFFERIMAGE_API void addVariable( Gaffer::Context *context, const std::string &name, const std::string &value );

@@ -39,69 +39,50 @@
 #include "GafferImage/Export.h"
 #include "GafferImage/TypeIds.h"
 
-#include "Gaffer/CompoundDataPlug.h"
-#include "Gaffer/ContextProcessor.h"
-#include "Gaffer/TypedObjectPlug.h"
+#include "Gaffer/Context.h"
+#include "Gaffer/ScriptNode.h"
+#include "Gaffer/StringPlug.h"
+
+#include "OpenColorIO/OpenColorTypes.h"
 
 namespace GafferImage
 {
-
-class GAFFERIMAGE_API OpenColorIOContext : public Gaffer::ContextProcessor
+/// Plug to provide user-level control over the default OCIO config for a ScriptNode.
+/// Would typically be used by calling `acquireDefaultConfigPlug()` from a startup file.
+class GAFFERIMAGE_API OpenColorIOConfigPlug final : public Gaffer::ValuePlug
 {
 
 	public :
 
-		GAFFER_NODE_DECLARE_TYPE( GafferImage::OpenColorIOContext, OpenColorIOContextTypeId, Gaffer::ContextProcessor );
+		GAFFER_PLUG_DECLARE_TYPE( GafferImage::OpenColorIOConfigPlug, OpenColorIOConfigPlugTypeId, Gaffer::ValuePlug );
 
-		explicit OpenColorIOContext( const std::string &name=GraphComponent::defaultName<OpenColorIOContext>() );
-		~OpenColorIOContext() override;
+		explicit OpenColorIOConfigPlug( const std::string &name = defaultName<OpenColorIOConfigPlug>(), Direction direction = In, unsigned flags = Default );
 
-		Gaffer::ValuePlug *configPlug();
-		const Gaffer::ValuePlug *configPlug() const;
+		Gaffer::StringPlug *configPlug();
+		const Gaffer::StringPlug *configPlug() const;
 
-		Gaffer::BoolPlug *configEnabledPlug();
-		const Gaffer::BoolPlug *configEnabledPlug() const;
-
-		Gaffer::StringPlug *configValuePlug();
-		const Gaffer::StringPlug *configValuePlug() const;
-
-		Gaffer::ValuePlug *workingSpacePlug();
-		const Gaffer::ValuePlug *workingSpacePlug() const;
-
-		Gaffer::BoolPlug *workingSpaceEnabledPlug();
-		const Gaffer::BoolPlug *workingSpaceEnabledPlug() const;
-
-		Gaffer::StringPlug *workingSpaceValuePlug();
-		const Gaffer::StringPlug *workingSpaceValuePlug() const;
+		Gaffer::StringPlug *workingSpacePlug();
+		const Gaffer::StringPlug *workingSpacePlug() const;
 
 		Gaffer::ValuePlug *variablesPlug();
 		const Gaffer::ValuePlug *variablesPlug() const;
 
-		Gaffer::AtomicCompoundDataPlug *extraVariablesPlug();
-		const Gaffer::AtomicCompoundDataPlug *extraVariablesPlug() const;
+		Gaffer::StringPlug *displayTransformPlug();
+		const Gaffer::ValuePlug *displayTransformPlug() const;
 
-		void affects( const Gaffer::Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const override;
+		bool acceptsChild( const GraphComponent *potentialChild ) const override;
+		Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
+
+		static OpenColorIOConfigPlug *acquireDefaultConfigPlug( Gaffer::ScriptNode *scriptNode, bool createIfNecessary = true );
 
 	protected :
 
-		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
-		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
-
-		bool affectsContext( const Gaffer::Plug *input ) const override;
-		void processContext( Gaffer::Context::EditableScope &context, IECore::ConstRefCountedPtr &storage ) const override;
+		void parentChanged( Gaffer::GraphComponent *oldParent ) override;
 
 	private :
 
-		// We combine everything into this plug, so that we have all variables
-		// cached and can push them into the context without needing to perform
-		// any allocations.
-		Gaffer::AtomicCompoundDataPlug *combinedVariablesPlug();
-		const Gaffer::AtomicCompoundDataPlug *combinedVariablesPlug() const;
-
-		static size_t g_firstPlugIndex;
-
+		void plugSet( Gaffer::Plug *plug );
+		Gaffer::Signals::ScopedConnection m_plugSetConnection;
 };
-
-IE_CORE_DECLAREPTR( OpenColorIOContext );
 
 } // namespace GafferImage

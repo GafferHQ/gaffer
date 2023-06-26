@@ -52,20 +52,30 @@ namespace
 {
 
 const IECore::InternedString g_ocioConfigContextName( "ocio:config" );
+const IECore::InternedString g_ocioWorkingSpaceContextName( "ocio:workingSpace" );
 const string g_ocioStringVarPrefix( "ocio:stringVar:" );
 const string g_emptyString;
+const string g_sceneLinearString( OCIO_NAMESPACE::ROLE_SCENE_LINEAR );
 
 IECorePreview::LRUCache<std::string, OCIO_NAMESPACE::ConstConfigRcPtr> g_configCache(
 	[] ( const std::string &fileName, size_t &cost, const IECore::Canceller *canceller ) {
 		cost = 1;
+		OCIO_NAMESPACE::ConstConfigRcPtr config;
 		if( fileName.empty() )
 		{
-			return OCIO_NAMESPACE::Config::CreateFromEnv();
+			config = OCIO_NAMESPACE::Config::CreateFromEnv();
 		}
 		else
 		{
-			return OCIO_NAMESPACE::Config::CreateFromFile( fileName.c_str() );
+			config = OCIO_NAMESPACE::Config::CreateFromFile( fileName.c_str() );
 		}
+		// Various config queries such as `getDefaultDisplay()` are not
+		// threadsafe, because they do an unguarded lazy-initialisation of a
+		// data structure within the config. Force that initialisation now
+		// while it's protected by our LRUCache mutex, freeing OpenColorIOTransform
+		// nodes from worrying about it later.
+		config->getDefaultDisplay();
+		return config;
 	},
 	1000
 );
@@ -90,6 +100,21 @@ void GafferImage::OpenColorIOAlgo::setConfig( Gaffer::Context::EditableScope &co
 const std::string &GafferImage::OpenColorIOAlgo::getConfig( const Gaffer::Context *context )
 {
 	return context->get<string>( g_ocioConfigContextName, g_emptyString );
+}
+
+void GafferImage::OpenColorIOAlgo::setWorkingSpace( Gaffer::Context *context, const std::string &colorSpace )
+{
+	context->set( g_ocioWorkingSpaceContextName, colorSpace );
+}
+
+void GafferImage::OpenColorIOAlgo::setWorkingSpace( Gaffer::Context::EditableScope &context, const std::string *colorSpace )
+{
+	context.set( g_ocioWorkingSpaceContextName, colorSpace );
+}
+
+const std::string &GafferImage::OpenColorIOAlgo::getWorkingSpace( const Gaffer::Context *context )
+{
+	return context->get<string>( g_ocioWorkingSpaceContextName, g_sceneLinearString );
 }
 
 void GafferImage::OpenColorIOAlgo::addVariable( Gaffer::Context *context, const std::string &name, const std::string &value )

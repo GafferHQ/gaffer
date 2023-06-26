@@ -39,6 +39,7 @@ import imath
 import Gaffer
 import GafferUI
 import GafferImage
+import GafferImageUI
 
 ##########################################################################
 # Metadata
@@ -114,6 +115,52 @@ Gaffer.Metadata.registerNode(
 			"preset:$OCIO", "",
 			"preset:ACES 1.3 - CG Config", "ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1",
 			"preset:ACES 1.3 - Studio Config", "ocio://studio-config-v1.0.0_aces-v1.3_ocio-v2.1",
+			"preset:Legacy (Gaffer 1.2)", "${GAFFER_ROOT}/openColorIO/config.ocio",
+
+		],
+
+		"workingSpace" : [
+
+			"description",
+			"""
+			Specifies the color space in which Gaffer processes images.
+			""",
+
+			"nodule:type", "",
+			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
+			"layoutPlugValueWidget:orientation", "horizontal",
+
+		],
+
+		"workingSpace.enabled" : [
+
+			"description",
+			"""
+			Enables the `workingSpace.value` plug, allowing the working space
+			to be specified.
+			""",
+
+			"nodule:type", "",
+			"boolPlugValueWidget:displayMode", "switch",
+			"label", "",
+
+		],
+
+		"workingSpace.value" : [
+
+			"description",
+			"""
+			Specifies the working color space to be used.
+			""",
+
+			"nodule:type", "",
+			"label", "",
+			"layout:activator", lambda plug : plug.parent()["enabled"].getValue(),
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"presetNames", GafferImageUI.OpenColorIOTransformUI.colorSpacePresetNames,
+			"presetValues", GafferImageUI.OpenColorIOTransformUI.colorSpacePresetValues,
+			"openColorIO:categories", "working-space",
+			"openColorIO:includeRoles", True,
 
 		],
 

@@ -112,6 +112,8 @@ from .AnaglyphTest import AnaglyphTest
 from .LookTransformTest import LookTransformTest
 from .OpenColorIOAlgoTest import OpenColorIOAlgoTest
 from .OpenColorIOContextTest import OpenColorIOContextTest
+from .OpenColorIOConfigPlugTest import OpenColorIOConfigPlugTest
+
 
 if __name__ == "__main__":
 	import unittest

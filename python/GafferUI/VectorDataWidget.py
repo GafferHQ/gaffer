@@ -484,6 +484,11 @@ class VectorDataWidget( GafferUI.Widget ) :
 
 		return newData
 
+	def _displayTransformChanged( self ) :
+
+		GafferUI.Widget._displayTransformChanged( self )
+		self._qtWidget().update()
+
 	def __modelDataChanged( self, topLeft, bottomRight, roles ) :
 
 		if self.__propagatingDataChangesToSelection :
@@ -1435,7 +1440,7 @@ class _ColorDelegate( _Delegate ) :
 			# draw the background
 
 			widget.style().drawControl( QtWidgets.QStyle.CE_ItemViewItem, option, painter, widget )
-			displayTransform = GafferUI.DisplayTransform.get()
+			displayTransform = GafferUI.Widget._owner( widget ).displayTransform()
 			transformedColor = displayTransform( value )
 
 			opaqueCheckerColor0 = GafferUI.Widget._qtColor( transformedColor )

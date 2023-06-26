@@ -35,7 +35,8 @@
 //////////////////////////////////////////////////////////////////////////
 
 #include "GafferImage/LookTransform.h"
-#include "GafferImage/LUT.h"
+
+#include "GafferImage/OpenColorIOAlgo.h"
 
 #include "Gaffer/StringPlug.h"
 
@@ -88,6 +89,7 @@ bool LookTransform::affectsTransform( const Gaffer::Plug *input ) const
 void LookTransform::hashTransform( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	lookPlug()->hash( h );
+	h.append( OpenColorIOAlgo::getWorkingSpace( context ) );
 	directionPlug()->hash( h );
 }
 
@@ -99,10 +101,12 @@ OCIO_NAMESPACE::ConstTransformRcPtr LookTransform::transform() const
 		return OCIO_NAMESPACE::ColorSpaceTransformRcPtr();
 	}
 
+	const std::string &workingSpace = OpenColorIOAlgo::getWorkingSpace( Context::current() );
+
 	OCIO_NAMESPACE::LookTransformRcPtr transform = OCIO_NAMESPACE::LookTransform::Create();
-	transform->setSrc( OCIO_NAMESPACE::ROLE_SCENE_LINEAR );
+	transform->setSrc( workingSpace.c_str() );
 	transform->setLooks( look.c_str() );
-	transform->setDst( OCIO_NAMESPACE::ROLE_SCENE_LINEAR );
+	transform->setDst( workingSpace.c_str() );
 	transform->setDirection( directionPlug()->getValue() == Forward ? OCIO_NAMESPACE::TRANSFORM_DIR_FORWARD : OCIO_NAMESPACE::TRANSFORM_DIR_INVERSE );
 
 	return transform;

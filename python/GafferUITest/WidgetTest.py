@@ -501,5 +501,108 @@ class WidgetTest( GafferUITest.TestCase ) :
 		w = DerivedWidget()
 		self.assertTrue( w.postConstructed )
 
+	def testDisplayTransform( self ) :
+
+		with GafferUI.ListContainer() as parent :
+			child = TestWidget()
+
+		self.assertIsNone( parent.getDisplayTransform() )
+		self.assertIsNone( child.getDisplayTransform() )
+		self.assertIs( parent.displayTransform(), GafferUI.Widget.identityDisplayTransform )
+		self.assertIs( child.displayTransform(), GafferUI.Widget.identityDisplayTransform )
+
+		displayTransform1 = lambda x : x * 1
+		displayTransform2 = lambda x : x * 2
+
+		parent.setDisplayTransform( displayTransform1 )
+		self.assertIs( parent.getDisplayTransform(), displayTransform1 )
+		self.assertIsNone( child.getDisplayTransform() )
+		self.assertIs( parent.displayTransform(), displayTransform1 )
+		self.assertIs( child.displayTransform(), displayTransform1 )
+
+		child.setDisplayTransform( displayTransform2 )
+		self.assertIs( parent.getDisplayTransform(), displayTransform1 )
+		self.assertIs( child.getDisplayTransform(), displayTransform2 )
+		self.assertIs( parent.displayTransform(), displayTransform1 )
+		self.assertIs( child.displayTransform(), displayTransform2 )
+
+		parent.setDisplayTransform( None )
+		self.assertIs( parent.getDisplayTransform(), None )
+		self.assertIs( child.getDisplayTransform(), displayTransform2 )
+		self.assertIs( parent.displayTransform(), GafferUI.Widget.identityDisplayTransform )
+		self.assertIs( child.displayTransform(), displayTransform2 )
+
+		widget = TestWidget( displayTransform = displayTransform1 )
+		self.assertIs( widget.displayTransform(), displayTransform1 )
+
+	def testDisplayTransformChanged( self ) :
+
+		class CapturingWidget( GafferUI.Widget ) :
+
+			def __init__( self, **kw ) :
+
+				GafferUI.Widget.__init__( self, QtWidgets.QWidget(), **kw )
+
+				# Add a child, to check that multiple QWidgets with the same
+				# `Widget._owner()` don't result in multiple calls to
+				# `_displayTransformChanged()`.
+				self.__childQtWidget = QtWidgets.QWidget( self._qtWidget() )
+
+				self.displayTransformChanges = []
+
+			def _displayTransformChanged( self ) :
+
+				GafferUI.Widget._displayTransformChanged( self )
+				self.displayTransformChanges.append( self.displayTransform() )
+
+		with GafferUI.ListContainer() as outer :
+			with GafferUI.ListContainer() as inner :
+				widget = CapturingWidget()
+
+		displayTransform1 = lambda x : x * 1
+		displayTransform2 = lambda x : x * 2
+
+		# Change propagated to `widget`
+		outer.setDisplayTransform( displayTransform1 )
+		self.assertEqual( widget.displayTransformChanges, [ displayTransform1 ] )
+		# No-op, so no change propagated.
+		outer.setDisplayTransform( displayTransform1 )
+		self.assertEqual( widget.displayTransformChanges, [ displayTransform1 ] )
+		# Change propagated to `widget`.
+		inner.setDisplayTransform( displayTransform2 )
+		self.assertEqual( widget.displayTransformChanges, [ displayTransform1, displayTransform2 ] )
+		# Change not propagated to `widget`, because it is overridden by
+		# the transform on `inner`.
+		outer.setDisplayTransform( GafferUI.Widget.identityDisplayTransform )
+		self.assertEqual( widget.displayTransformChanges, [ displayTransform1, displayTransform2 ] )
+		# Change is directly on `widget`, so notified regardless.
+		widget.setDisplayTransform( GafferUI.Widget.identityDisplayTransform )
+		self.assertEqual( widget.displayTransformChanges, [ displayTransform1, displayTransform2, GafferUI.Widget.identityDisplayTransform ] )
+
+		# Check that changes are propagated when we parent one window
+		# to another with a different transform.
+
+		window1 = GafferUI.Window()
+		window1.setDisplayTransform( displayTransform1 )
+
+		with GafferUI.Window() as window2 :
+			CapturingWidget()
+
+		self.assertEqual( window2.getChild().displayTransformChanges, [] )
+
+		window1.addChildWindow( window2 )
+		self.assertEqual( window2.getChild().displayTransformChanges, [ displayTransform1 ] )
+
+		# But not if the child window already has its own transform.
+
+		with GafferUI.Window() as window3 :
+			CapturingWidget()
+
+		window3.setDisplayTransform( displayTransform2 )
+		self.assertEqual( window3.getChild().displayTransformChanges, [ displayTransform2 ] )
+
+		window1.addChildWindow( window3 )
+		self.assertEqual( window3.getChild().displayTransformChanges, [ displayTransform2 ] )
+
 if __name__ == "__main__":
 	unittest.main()

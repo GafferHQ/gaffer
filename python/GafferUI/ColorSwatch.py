@@ -46,16 +46,14 @@ from Qt import QtCore
 from Qt import QtGui
 from Qt import QtWidgets
 
-## The ColorSwatch simply displays a flat patch of colour. By default, the colour
-# is specified in linear space and GafferUI.DisplayTransform is used to ensure it
-# is correctly corrected when displayed. To specify the colour directly in display
-# space, pass `useDisplayTransform = False` to the constructor.
+## The ColorSwatch simply displays a flat patch of colour. The colour is assumed to
+# be in a linear space : use `Widget.setDisplayTransform()` to control how it is displayed.
 class ColorSwatch( GafferUI.Widget ) :
 
 	__linearBackgroundColor0 = imath.Color3f( 0.1 )
 	__linearBackgroundColor1 = imath.Color3f( 0.2 )
 
-	def __init__( self, color=imath.Color4f( 1 ), useDisplayTransform = True, **kw ) :
+	def __init__( self, color=imath.Color4f( 1 ), **kw ) :
 
 		GafferUI.Widget.__init__( self, QtWidgets.QWidget(), **kw )
 
@@ -75,11 +73,7 @@ class ColorSwatch( GafferUI.Widget ) :
 		self.__opaqueChecker.setMinimumSize( 12, 6 )
 		self.__transparentChecker.setMinimumSize( 12, 6 )
 
-		self.__useDisplayTransform = useDisplayTransform
 		self.__color = color
-
-		GafferUI.DisplayTransform.changedSignal().connect( Gaffer.WeakMethod( self.__displayTransformChanged ), scoped = False )
-
 		self.__updateCheckerColors()
 
 	def setHighlighted( self, highlighted ) :
@@ -103,44 +97,6 @@ class ColorSwatch( GafferUI.Widget ) :
 
 		return self.__color
 
-	def __updateCheckerColors( self ) :
-
-		displayTransform = GafferUI.DisplayTransform.get()
-		effectiveDisplayTransform = displayTransform if self.__useDisplayTransform else lambda x : x
-
-		opaqueDisplayColor = self._qtColor( effectiveDisplayTransform( self.__color ) )
-		self.__opaqueChecker.color0 = self.__opaqueChecker.color1 = opaqueDisplayColor
-		if self.__color.dimensions()==3 :
-			self.__transparentChecker.color0 = self.__transparentChecker.color1 = opaqueDisplayColor
-		else :
-			c = self.__color
-			# We want the background colour to be the same whether or not we're using the display transform for
-			# the main colour, so if we're not using the display transform later after compositing, we pre-apply
-			# it to the background colours before compositing.
-			bg0 = self.__linearBackgroundColor0 if self.__useDisplayTransform else displayTransform( self.__linearBackgroundColor0 )
-			bg1 = self.__linearBackgroundColor1 if self.__useDisplayTransform else displayTransform( self.__linearBackgroundColor1 )
-			# Now composite the main colour with the background colour. This is happening in linear space
-			# if __useDisplayTransform is True, and in display space otherwise.
-			color0 = bg0 * ( 1.0 - c.a ) + imath.Color3f( c.r, c.g, c.b ) * c.a
-			color1 = bg1 * ( 1.0 - c.a ) + imath.Color3f( c.r, c.g, c.b ) * c.a
-
-			self.__transparentChecker.color0 = self._qtColor( effectiveDisplayTransform( color0 ) )
-			self.__transparentChecker.color1 = self._qtColor( effectiveDisplayTransform( color1 ) )
-
-		## \todo Colour should come from the style when we have styles applying to Widgets as well as Gadgets
-		if not self.__errored:
-			self.__opaqueChecker.borderColor = QtGui.QColor( 119, 156, 255 ) if self.getHighlighted() else None
-			self.__transparentChecker.borderColor = QtGui.QColor( 119, 156, 255 ) if self.getHighlighted() else None
-		else:
-			self.__opaqueChecker.borderColor = QtGui.QColor( 255, 85, 85 )
-			self.__transparentChecker.borderColor = QtGui.QColor( 255, 85, 85 )
-
-		self._qtWidget().update()
-
-	def __displayTransformChanged( self ) :
-
-		self.__updateCheckerColors()
-
 	def setErrored( self, errored ) :
 
 		if errored == self.getErrored() :
@@ -153,6 +109,35 @@ class ColorSwatch( GafferUI.Widget ) :
 
 		return self.__errored
 
+	def _displayTransformChanged( self ) :
+
+		GafferUI.Widget._displayTransformChanged( self )
+		self.__updateCheckerColors()
+
+	def __updateCheckerColors( self ) :
+
+		displayTransform = self.displayTransform()
+
+		opaqueDisplayColor = self._qtColor( displayTransform( self.__color ) )
+		self.__opaqueChecker.color0 = self.__opaqueChecker.color1 = opaqueDisplayColor
+		if self.__color.dimensions()==3 :
+			self.__transparentChecker.color0 = self.__transparentChecker.color1 = opaqueDisplayColor
+		else :
+			c = self.__color
+			color0 = self.__linearBackgroundColor0 * ( 1.0 - c.a ) + imath.Color3f( c.r, c.g, c.b ) * c.a
+			color1 = self.__linearBackgroundColor1 * ( 1.0 - c.a ) + imath.Color3f( c.r, c.g, c.b ) * c.a
+			self.__transparentChecker.color0 = self._qtColor( displayTransform( color0 ) )
+			self.__transparentChecker.color1 = self._qtColor( displayTransform( color1 ) )
+
+		## \todo Colour should come from the style when we have styles applying to Widgets as well as Gadgets
+		if not self.__errored:
+			self.__opaqueChecker.borderColor = QtGui.QColor( 119, 156, 255 ) if self.getHighlighted() else None
+			self.__transparentChecker.borderColor = QtGui.QColor( 119, 156, 255 ) if self.getHighlighted() else None
+		else:
+			self.__opaqueChecker.borderColor = QtGui.QColor( 255, 85, 85 )
+			self.__transparentChecker.borderColor = QtGui.QColor( 255, 85, 85 )
+
+		self._qtWidget().update()
 
 # Private implementation - a QWidget derived class which just draws a checker with
 # no knowledge of colour spaces or anything.

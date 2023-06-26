@@ -38,6 +38,8 @@
 
 #include "Gaffer/Context.h"
 
+#include "OpenColorIO/OpenColorIO.h"
+
 using namespace std;
 using namespace IECore;
 using namespace Gaffer;
@@ -57,6 +59,10 @@ OpenColorIOContext::OpenColorIOContext( const std::string &name )
 	addChild( new ValuePlug( "config" ) );
 	configPlug()->addChild( new BoolPlug( "enabled", Plug::In, false ) );
 	configPlug()->addChild( new StringPlug( "value" ) );
+
+	addChild( new ValuePlug( "workingSpace" ) );
+	workingSpacePlug()->addChild( new BoolPlug( "enabled", Plug::In, false ) );
+	workingSpacePlug()->addChild( new StringPlug( "value", Plug::In, OCIO_NAMESPACE::ROLE_SCENE_LINEAR ) );
 
 	addChild( new ValuePlug( "variables" ) );
 	addChild( new AtomicCompoundDataPlug( "extraVariables", Plug::In, new IECore::CompoundData ) );
@@ -97,34 +103,64 @@ const Gaffer::StringPlug *OpenColorIOContext::configValuePlug() const
 	return configPlug()->getChild<StringPlug>( 1 );
 }
 
-Gaffer::ValuePlug *OpenColorIOContext::variablesPlug()
+Gaffer::ValuePlug *OpenColorIOContext::workingSpacePlug()
 {
 	return getChild<ValuePlug>( g_firstPlugIndex + 1 );
+}
+
+const Gaffer::ValuePlug *OpenColorIOContext::workingSpacePlug() const
+{
+	return getChild<ValuePlug>( g_firstPlugIndex + 1 );
+}
+
+Gaffer::BoolPlug *OpenColorIOContext::workingSpaceEnabledPlug()
+{
+	return workingSpacePlug()->getChild<BoolPlug>( 0 );
+}
+
+const Gaffer::BoolPlug *OpenColorIOContext::workingSpaceEnabledPlug() const
+{
+	return workingSpacePlug()->getChild<BoolPlug>( 0 );
+}
+
+Gaffer::StringPlug *OpenColorIOContext::workingSpaceValuePlug()
+{
+	return workingSpacePlug()->getChild<StringPlug>( 1 );
+}
+
+const Gaffer::StringPlug *OpenColorIOContext::workingSpaceValuePlug() const
+{
+	return workingSpacePlug()->getChild<StringPlug>( 1 );
+}
+
+Gaffer::ValuePlug *OpenColorIOContext::variablesPlug()
+{
+	return getChild<ValuePlug>( g_firstPlugIndex + 2 );
 }
 
 const Gaffer::ValuePlug *OpenColorIOContext::variablesPlug() const
 {
-	return getChild<ValuePlug>( g_firstPlugIndex + 1 );
+	return getChild<ValuePlug>( g_firstPlugIndex + 2 );
 }
 
 Gaffer::AtomicCompoundDataPlug *OpenColorIOContext::extraVariablesPlug()
 {
-	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 2 );
+	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 3 );
 }
 
 const Gaffer::AtomicCompoundDataPlug *OpenColorIOContext::extraVariablesPlug() const
 {
-	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 2 );
+	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 3 );
 }
 
 Gaffer::AtomicCompoundDataPlug *OpenColorIOContext::combinedVariablesPlug()
 {
-	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 3 );
+	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 4 );
 }
 
 const Gaffer::AtomicCompoundDataPlug *OpenColorIOContext::combinedVariablesPlug() const
 {
-	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 3 );
+	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 4 );
 }
 
 void OpenColorIOContext::affects( const Gaffer::Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const
@@ -133,6 +169,7 @@ void OpenColorIOContext::affects( const Gaffer::Plug *input, DependencyNode::Aff
 
 	if(
 		configPlug()->isAncestorOf( input ) ||
+		workingSpacePlug()->isAncestorOf( input ) ||
 		variablesPlug()->isAncestorOf( input ) ||
 		input == extraVariablesPlug()
 	)
@@ -153,6 +190,7 @@ void OpenColorIOContext::hash( const ValuePlug *output, const Context *context, 
 	if( output == combinedVariablesPlug() )
 	{
 		configPlug()->hash( h );
+		workingSpacePlug()->hash( h );
 		variablesPlug()->hash( h );
 		extraVariablesPlug()->hash( h );
 	}
@@ -168,6 +206,11 @@ void OpenColorIOContext::compute( ValuePlug *output, const Context *context ) co
 		if( configEnabledPlug()->getValue() )
 		{
 			result["ocio:config"] = new StringData( configValuePlug()->getValue() );
+		}
+
+		if( workingSpaceEnabledPlug()->getValue() )
+		{
+			result["ocio:workingSpace"] = new StringData( workingSpaceValuePlug()->getValue() );
 		}
 
 		ConstCompoundDataPtr extraVariables = extraVariablesPlug()->getValue();

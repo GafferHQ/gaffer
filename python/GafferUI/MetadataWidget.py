@@ -233,7 +233,7 @@ class ColorSwatchMetadataWidget( MetadataWidget ) :
 
 	def __init__( self, key, target = None, defaultValue = imath.Color4f( 0, 0, 0, 0 ), **kw ) :
 
-		self.__swatch = GafferUI.ColorSwatch( useDisplayTransform = False )
+		self.__swatch = GafferUI.ColorSwatch( displayTransform = GafferUI.Widget.identityDisplayTransform )
 
 		MetadataWidget.__init__( self, self.__swatch, key, target, defaultValue = defaultValue, **kw )
 
@@ -251,7 +251,7 @@ class ColorSwatchMetadataWidget( MetadataWidget ) :
 		if event.button != event.Buttons.Left :
 			return False
 
-		dialogue = GafferUI.ColorChooserDialogue( color = self.__swatch.getColor(), useDisplayTransform = False )
+		dialogue = GafferUI.ColorChooserDialogue( color = self.__swatch.getColor(), displayTransform = GafferUI.Widget.identityDisplayTransform )
 		color = dialogue.waitForColor( parentWindow = self.ancestor( GafferUI.Window ) )
 
 		if color is not None :

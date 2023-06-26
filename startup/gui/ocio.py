@@ -35,182 +35,21 @@
 #
 ##########################################################################
 
-import copy
-import functools
-import imath
-
-import IECore
-
-import PyOpenColorIO as OCIO
-
 import Gaffer
 import GafferUI
 import GafferImage
 import GafferImageUI
 
-# get default display setup
+# Make sure every script has a config plug added to it, and that we update
+# the View and Widget display transforms appropriately when the config is changed.
 
-config = OCIO.GetCurrentConfig()
-defaultDisplay = config.getDefaultDisplay()
+def __scriptAdded( container, script ) :
 
-# add preferences plugs
+	GafferImageUI.OpenColorIOConfigPlugUI.connect( script )
 
-preferences = application.root()["preferences"]
-preferences["displayColorSpace"] = Gaffer.Plug()
-preferences["displayColorSpace"]["view"] = Gaffer.StringPlug( defaultValue = config.getDefaultView( defaultDisplay ) )
-preferences["displayColorSpace"]["context"] = Gaffer.CompoundDataPlug()
+application.root()["scripts"].childAddedSignal().connect( __scriptAdded, scoped = False )
 
-# configure ui for preferences plugs
-
-Gaffer.Metadata.registerValue( preferences["displayColorSpace"], "plugValueWidget:type", "GafferUI.LayoutPlugValueWidget", persistent = False )
-Gaffer.Metadata.registerValue( preferences["displayColorSpace"], "layout:section", "Display Color Space", persistent = False )
-
-Gaffer.Metadata.registerValue( preferences["displayColorSpace"]["view"], "plugValueWidget:type", "GafferUI.PresetsPlugValueWidget", persistent = False )
-for view in config.getViews( defaultDisplay ) :
-	Gaffer.Metadata.registerValue( preferences["displayColorSpace"]["view"], str( "preset:" + view ), view, persistent = False )
-
-Gaffer.Metadata.registerValue( preferences["displayColorSpace"]["context"], "plugValueWidget:type", "GafferUI.LayoutPlugValueWidget", persistent = False )
-Gaffer.Metadata.registerValue( preferences["displayColorSpace"]["context"], "layout:section", "OCIO Context", persistent = False )
-Gaffer.Metadata.registerValue( preferences["displayColorSpace"], "layout:section:OCIO Context:collapsed", False, persistent = False )
-Gaffer.Metadata.registerValue( preferences["displayColorSpace"]["context"], "layout:customWidget:addButton:widgetType", "GafferImageUI.OpenColorIOTransformUI._ContextFooter", persistent = False )
-Gaffer.Metadata.registerValue( preferences["displayColorSpace"]["context"], "layout:customWidget:addButton:index", -1, persistent = False )
-
-# Register with `GafferUI.DisplayTransform` for use by Widgets.
-
-def __processor( display, view ) :
-
-	d = OCIO.DisplayViewTransform()
-	d.setSrc( OCIO.ROLE_SCENE_LINEAR )
-	d.setDisplay( display )
-	d.setView( view )
-
-	context = copy.deepcopy( config.getCurrentContext() )
-	gafferContext = Gaffer.Context.current()
-	for variable in preferences["displayColorSpace"]["context"] :
-		if variable["enabled"].getValue() :
-			context[ variable["name"].getValue() ] = gafferContext.substitute( variable["value"].getValue() )
-
-	return config.getProcessor( transform = d, context = context, direction = OCIO.TRANSFORM_DIR_FORWARD )
-
-def __setDisplayTransform() :
-
-	cpuProcessor = __processor( defaultDisplay, preferences["displayColorSpace"]["view"].getValue() ).getDefaultCPUProcessor()
-
-	def f( c ) :
-
-		cc = cpuProcessor.applyRGB( [ c.r, c.g, c.b ] )
-		return imath.Color3f( *cc )
-
-	GafferUI.DisplayTransform.set( f )
-
-__setDisplayTransform()
-
-# And connect to `plugSet()` to update `GafferUI.DisplayTransform` again when the user modifies something.
-
-def __plugSet( plug ) :
-
-	if plug.relativeName( plug.node() ) != "displayColorSpace" :
-		return
-
-	__setDisplayTransform()
-
-preferences.plugSetSignal().connect( __plugSet, scoped = False )
-
-# Register with `GafferUI.View.DisplayTransform` for use in the Viewer.
-
-def __displayTransformCreator( display, view ) :
-
-	processor = __processor( display, view )
-	return GafferImageUI.OpenColorIOAlgo.displayTransformToFramebufferShader( processor )
-
-def __registerViewerDisplayTransforms() :
-
-	for display in config.getDisplays() :
-		for view in config.getViews( display ) :
-			GafferUI.View.DisplayTransform.registerDisplayTransform(
-				f"{display}/{view}",
-				functools.partial( __displayTransformCreator, display, view )
-			)
-
-__registerViewerDisplayTransforms()
-
-class DisplayTransformPlugValueWidget( GafferUI.PlugValueWidget ) :
-
-	def __init__( self, plugs, **kw ) :
-
-		self.__menuButton = GafferUI.MenuButton( "", menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ) )
-		GafferUI.PlugValueWidget.__init__( self, self.__menuButton, plugs, **kw )
-
-		self.__currentValue = ""
-
-	def _updateFromValues( self, values, exception ) :
-
-		if exception is not None :
-			self.__menuButton.setText( "" )
-			self.__currentValue = ""
-		else :
-			assert( len( values ) == 1 )
-			self.__currentValue = values[0]
-			# Only show the View name, because the Display name is more of
-			# a "set once and forget" affair. The menu shows both for when
-			# you need to check.
-			self.__menuButton.setText( self.__currentValue.partition( "/" )[-1] )
-
-		self.__menuButton.setErrored( exception is not None )
-
-	def _updateFromEditable( self ) :
-
-		self.__menuButton.setEnabled( self._editable() )
-
-	def __menuDefinition( self ) :
-
-		result = IECore.MenuDefinition()
-
-		activeViews = Gaffer.Metadata.value( self.getPlug(), "openColorIO:activeViews" ) or "*"
-
-		# View section
-
-		result.append( "/__ViewDivider__", { "divider" : True, "label" : "View" } )
-
-		displayToViews = {}
-
-		currentDisplay, currentView = self.__currentValue.split( "/" )
-		for displayTransform in GafferUI.View.DisplayTransform.registeredDisplayTransforms() :
-			display, view = displayTransform.split( "/" )
-			if not IECore.StringAlgo.matchMultiple( view, activeViews ) :
-				continue
-			displayToViews.setdefault( display, [] ).append( view )
-			if display != currentDisplay :
-				continue
-			result.append(
-				f"/{view}", {
-					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), f"{currentDisplay}/{view}" ),
-					"checkBox" : view == currentView
-				}
-			)
-
-		# Display section
-
-		result.append( "/__DisplayDivider__", { "divider" : True, "label" : "Display" } )
-
-		for display, views in displayToViews.items() :
-			newValue = "{}/{}".format( display, currentView if currentView in views else views[0] )
-			result.append(
-				f"/{display}", {
-					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), newValue ),
-					"checkBox" : display == currentDisplay
-				}
-			)
-
-		return result
-
-	def __setValue( self, value, unused ) :
-
-		self.getPlug().setValue( value )
-
-GafferImageUI._OpenColorIODisplayTransformPlugValueWidget = DisplayTransformPlugValueWidget
-Gaffer.Metadata.registerValue( GafferUI.View, "displayTransform.name", "plugValueWidget:type", "GafferImageUI._OpenColorIODisplayTransformPlugValueWidget" )
-Gaffer.Metadata.registerValue( GafferUI.View, "displayTransform.name", "userDefault", "{}/{}".format( defaultDisplay, config.getDefaultView( defaultDisplay ) ) )
+Gaffer.Metadata.registerValue( GafferUI.View, "displayTransform.name", "plugValueWidget:type", "GafferImageUI.OpenColorIOConfigPlugUI.DisplayTransformPlugValueWidget" )
 Gaffer.Metadata.registerValue( GafferUI.View, "displayTransform.name", "layout:minimumWidth", 150 )
 
 # Add "Roles" submenus to various colorspace plugs. The OCIO UX guidelines suggest we

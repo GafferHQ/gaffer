@@ -72,7 +72,7 @@ enum TypeId
 	SelectViewTypeId = 110777,
 	DeleteViewsTypeId = 110778,
 	CopyViewsTypeId = 110779,
-	CatmullRomFilterTypeId = 110780, // Obsolete - available for reuse
+	OpenColorIOConfigPlugTypeId = 110780,
 	SincFilterTypeId = 110781, // Obsolete - available for reuse
 	LanczosFilterTypeId = 110782, // Obsolete - available for reuse
 	ImageStatsTypeId = 110783,

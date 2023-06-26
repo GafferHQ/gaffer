@@ -213,15 +213,17 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The colour space of the input image, used to convert the input image to
-			the scene linear space defined by the OpenColorIO config. When set
-			to `Automatic`, the colour space is determined automatically using the
-			function registered with `ImageReader::setDefaultColorSpaceFunction()`.
+			The colour space of the input image, used to convert the input to
+			the working space. When set to `Automatic`, the colour space is
+			determined automatically using the function registered with
+			`ImageReader::setDefaultColorSpaceFunction()`.
 			""",
 
-			"presetNames", lambda plug : OpenColorIOTransformUI.colorSpacePresetNames( plug, noneLabel = "Automatic" ),
+			"presetNames", OpenColorIOTransformUI.colorSpacePresetNames,
 			"presetValues", OpenColorIOTransformUI.colorSpacePresetValues,
 			"openColorIO:categories", "file-io",
+			"openColorIO:extraPresetNames", IECore.StringVectorData( [ "Automatic" ] ),
+			"openColorIO:extraPresetValues", IECore.StringVectorData( [ "" ] ),
 
 			"plugValueWidget:type", "GafferImageUI.ImageReaderUI._ColorSpacePlugValueWidget",
 
@@ -278,7 +280,7 @@ class _ColorSpacePlugValueWidget( GafferUI.PresetsPlugValueWidget ) :
 			automaticSpace = ""
 			if len( colorSpacePlugs ) and preset == "Automatic" :
 				with IECore.IgnoredExceptions( Gaffer.ProcessException ) :
-					automaticSpace = colorSpacePlugs[0].getValue()
+					automaticSpace = colorSpacePlugs[0].getValue() or "Working Space"
 
 			result.append( {
 				"preset" : preset,

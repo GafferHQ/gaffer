@@ -43,11 +43,11 @@ import GafferUI
 
 class ColorChooserDialogue( GafferUI.Dialogue ) :
 
-	def __init__( self, title="Select color", color=imath.Color3f( 1 ), cancelLabel="Cancel", confirmLabel="OK", useDisplayTransform = True, **kw ) :
+	def __init__( self, title="Select color", color=imath.Color3f( 1 ), cancelLabel="Cancel", confirmLabel="OK", **kw ) :
 
 		GafferUI.Dialogue.__init__( self, title, **kw )
 
-		self.__colorChooserWidget = GafferUI.ColorChooser( color, useDisplayTransform = useDisplayTransform )
+		self.__colorChooserWidget = GafferUI.ColorChooser( color )
 		self._setWidget( self.__colorChooserWidget )
 
 		self.cancelButton = self._addButton( cancelLabel )
