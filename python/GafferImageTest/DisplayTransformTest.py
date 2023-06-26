@@ -62,8 +62,6 @@ class DisplayTransformTest( GafferImageTest.ImageTestCase ) :
 		o = GafferImage.DisplayTransform()
 		o["in"].setInput( n["out"] )
 
-		self.assertEqual( orig, GafferImage.ImageAlgo.image( o["out"] ) )
-
 		o["inputColorSpace"].setValue( "scene_linear" )
 		o["display"].setValue( "sRGB - Display" )
 		o["view"].setValue( "ACES 1.0 - SDR Video" )
@@ -90,6 +88,9 @@ class DisplayTransformTest( GafferImageTest.ImageTestCase ) :
 		o = GafferImage.DisplayTransform()
 		o["in"].setInput( n["out"] )
 
+		o["display"].setValue( "sRGB - Display" )
+		o["view"].setValue( "Raw" ) # No-op view
+
 		self.assertImageHashesEqual( n["out"], o["out"] )
 		self.assertImagesEqual( n["out"], o["out"] )
 
@@ -106,22 +107,6 @@ class DisplayTransformTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( n["out"]['dataWindow'].hash(), o["out"]['dataWindow'].hash() )
 		self.assertEqual( n["out"]["metadata"].getValue(), o["out"]["metadata"].getValue() )
 		self.assertEqual( n["out"]['channelNames'].hash(), o["out"]['channelNames'].hash() )
-
-	def testImageHashPassThrough( self ) :
-
-		i = GafferImage.ImageReader()
-		i["fileName"].setValue( self.imageFile )
-
-		o = GafferImage.DisplayTransform()
-		o["in"].setInput( i["out"] )
-
-		self.assertEqual( GafferImage.ImageAlgo.imageHash( i["out"] ), GafferImage.ImageAlgo.imageHash( o["out"] ) )
-
-		o["inputColorSpace"].setValue( "scene_linear" )
-		o["display"].setValue( "sRGB - Display" )
-		o["view"].setValue( "ACES 1.0 - SDR Video" )
-
-		self.assertNotEqual( GafferImage.ImageAlgo.imageHash( i["out"] ), GafferImage.ImageAlgo.imageHash( o["out"] ) )
 
 	def testChannelsAreSeparate( self ) :
 
