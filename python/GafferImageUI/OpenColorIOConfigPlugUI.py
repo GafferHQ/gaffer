@@ -204,7 +204,7 @@ class DisplayTransformPlugValueWidget( GafferUI.PlugValueWidget ) :
 				continue
 			result.append(
 				f"/{view}", {
-					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), f"{currentDisplay}/{view}" ),
+					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), currentDisplay, view ),
 					"checkBox" : view == currentView
 				}
 			)
@@ -217,17 +217,22 @@ class DisplayTransformPlugValueWidget( GafferUI.PlugValueWidget ) :
 			view = currentView if currentView in config.getViews( display ) else config.getDefaultView( display )
 			result.append(
 				f"/{display}", {
-					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), f"{display}/{view}" ),
+					"command" : functools.partial( Gaffer.WeakMethod( self.__setValue ), display, view ),
 					"checkBox" : display == currentDisplay
 				}
 			)
 
 		return result
 
-	def __setValue( self, value, *unused ) :
+	def __setValue( self, display, view, *unused ) :
+
+		GafferUI.View.DisplayTransform.registerDisplayTransform(
+			f"{display}/{view}",
+			functools.partial( _viewDisplayTransformCreator, display, view )
+		)
 
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
-			self.getPlug().setValue( value )
+			self.getPlug().setValue( f"{display}/{view}" )
 
 	def __updateContextConnection( self ) :
 
@@ -263,7 +268,7 @@ class DisplayTransformPlugValueWidget( GafferUI.PlugValueWidget ) :
 		if view not in config.getViews( display ) :
 			view = config.getDefaultView( display )
 
-		self.__setValue( f"{display}/{view}" )
+		self.__setValue( display, view )
 
 # Connection between default script config and Widget and View display transforms.
 # Calling `connect()` from an application startup file is what makes the UI OpenColorIO-aware.
@@ -287,7 +292,7 @@ def __displayTransformProcessor( config, context, workingSpace, display, view ) 
 
 	return config.getProcessor( transform = transform, context = context, direction = PyOpenColorIO.TRANSFORM_DIR_FORWARD )
 
-def __viewDisplayTransformCreator( display, view ) :
+def _viewDisplayTransformCreator( display, view ) :
 
 	config, context = GafferImage.OpenColorIOAlgo.currentConfigAndContext()
 	workingSpace = GafferImage.OpenColorIOAlgo.getWorkingSpace( Gaffer.Context.current() )
@@ -327,7 +332,7 @@ def __scriptPlugDirtied( plug ) :
 		for view in config.getViews( display ) :
 			GafferUI.View.DisplayTransform.registerDisplayTransform(
 				f"{display}/{view}",
-				functools.partial( __viewDisplayTransformCreator, display, view )
+				functools.partial( _viewDisplayTransformCreator, display, view )
 			)
 
 	displayTransform = plug["displayTransform"].getValue()
