@@ -136,21 +136,6 @@ bool Plug::acceptsParent( const GraphComponent *potentialParent ) const
 	return potentialParent->isInstanceOf( (IECore::TypeId)NodeTypeId ) || potentialParent->isInstanceOf( Plug::staticTypeId() );
 }
 
-Node *Plug::node()
-{
-	return ancestor<Node>();
-}
-
-const Node *Plug::node() const
-{
-	return ancestor<Node>();
-}
-
-Plug::Direction Plug::direction() const
-{
-	return m_direction;
-}
-
 unsigned Plug::getFlags() const
 {
 	return m_flags;

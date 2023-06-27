@@ -37,8 +37,25 @@
 
 #pragma once
 
+#include "Gaffer/Node.h"
+
 namespace Gaffer
 {
+
+inline Node *Plug::node()
+{
+	return ancestor<Node>();
+}
+
+inline const Node *Plug::node() const
+{
+	return ancestor<Node>();
+}
+
+inline Plug::Direction Plug::direction() const
+{
+	return m_direction;
+}
 
 template<typename T>
 T *Plug::getInput()
@@ -51,7 +68,6 @@ const T *Plug::getInput() const
 {
 	return IECore::runTimeCast<const T>( m_input );
 }
-
 
 template<typename T>
 T *Plug::source()
