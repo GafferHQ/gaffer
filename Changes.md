@@ -16,6 +16,7 @@ Fixes
 -----
 
 - Arnold : Fixed bug that caused `ai:volume:step_scale` to be ignored if `ai:volume_step` was set explicitly to `0.0`. This was different to the behaviour when `ai:volume_step` was not set at all.
+- OSLImage : Fixed bug preventing channels / layers from being deleted using the right-click menu.
 
 API
 ---
