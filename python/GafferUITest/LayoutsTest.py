@@ -35,6 +35,7 @@
 ##########################################################################
 
 import os
+import subprocess
 
 import Gaffer
 import GafferUI
@@ -84,19 +85,28 @@ class LayoutsTest( GafferUITest.TestCase ) :
 
 	def testNoPersistentLayoutsInDefaultConfigs( self ) :
 
+		if "GAFFERUITEST_LAYOUTTEST_SUBPROCESS" not in os.environ :
+			# Run test in subprocess, because we don't want to pollute the other
+			# tests with the configs we load.
+			try :
+				env = os.environ.copy()
+				env["GAFFERUITEST_LAYOUTTEST_SUBPROCESS"] = "1"
+				subprocess.check_output(
+					[ str( Gaffer.executablePath() ), "test", "GafferUITest.LayoutsTest.testNoPersistentLayoutsInDefaultConfigs" ],
+					stderr = subprocess.STDOUT,
+					env = env,
+				)
+			except subprocess.CalledProcessError as e :
+				self.fail( e.output )
+			return
+
 		app = Gaffer.Application()
 
 		# Load the GUI config, making sure we only use the standard
 		# startup files, and not any others from the current environment
 		# (the user running these tests may have their own personal configs).
-		startupPaths = os.environ["GAFFER_STARTUP_PATHS"]
-		try :
-			os.environ["GAFFER_STARTUP_PATHS"] = str( Gaffer.rootPath() / "startup" )
-			app._executeStartupFiles( "gui" )
-		finally :
-			os.environ["GAFFER_STARTUP_PATHS"] = startupPaths
-
-		self.assertEqual( os.environ["GAFFER_STARTUP_PATHS"], startupPaths )
+		os.environ["GAFFER_STARTUP_PATHS"] = str( Gaffer.rootPath() / "startup" )
+		app._executeStartupFiles( "gui" )
 
 		layouts = GafferUI.Layouts.acquire( app )
 		self.assertEqual( layouts.names( persistent = True ), [] )
