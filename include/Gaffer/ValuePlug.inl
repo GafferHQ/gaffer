@@ -43,28 +43,18 @@ template<typename T>
 boost::intrusive_ptr<const T> ValuePlug::getObjectValue( const IECore::MurmurHash *precomputedHash ) const
 {
 	IECore::ConstObjectPtr value = getValueInternal( precomputedHash );
-	boost::intrusive_ptr<const T> result = IECore::runTimeCast<const T>( value );
-	if( !result )
+	if( value && value->isInstanceOf( T::staticTypeId() ) )
 	{
-		if( !value )
-		{
-			// This is quite a serious error, and it may occur when a calculation has already been cancelled,
-			// which could result in the exception that first cancelled the calculation being displayed, but
-			// not this error - print the error as a message as well as throwing an exception
-			const std::string error = fmt::format(
-				"{} : getValueInternal() returned NULL. This should be impossible, something has gone badly wrong internally to Gaffer.",
-				fullName()
-			);
-			IECore::msg( IECore::Msg::Error, "ValuePlug::getObjectValue", error );
-			throw IECore::Exception( error );
-		}
-
-		throw IECore::Exception( fmt::format(
-			"{} : getValueInternal() didn't return expected type (wanted {} but got {}). Is the hash being computed correctly?",
-			fullName(), T::staticTypeName(), value->typeName()
-		) );
+		// Steal the reference from `value`, to avoid incrementing and decrementing the refcount
+		// unnecessarily.
+		/// \todo Add a move-aware variant of `IECore::runTimeCast()` and use it instead.
+		return boost::intrusive_ptr<const T>( static_cast<const T *>( value.detach() ), /* add_ref = */ false );
 	}
-	return result;
+
+	throw IECore::Exception( fmt::format(
+		"{} : getValueInternal() didn't return expected type (wanted {} but got {}). Is the hash being computed correctly?",
+		fullName(), T::staticTypeName(), value ? value->typeName() : "nullptr"
+	) );
 }
 
 } // namespace Gaffer
