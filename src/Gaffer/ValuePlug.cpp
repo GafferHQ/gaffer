@@ -645,7 +645,8 @@ class ValuePlug::ComputeProcess : public Process
 				// the same item from the cache, leading to deadlock.
 				if( auto result = g_cache.getIfCached( processKey ) )
 				{
-					return *result;
+					// Move avoids unnecessary additional addRef/removeRef.
+					return std::move( *result );
 				}
 				ComputeProcess process( processKey );
 				// Store the value in the cache, but only if it isn't there
