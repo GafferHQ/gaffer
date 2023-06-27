@@ -143,12 +143,6 @@ void NumericPlug<T>::setValue( T value )
 }
 
 template<class T>
-T NumericPlug<T>::getValue( const IECore::MurmurHash *precomputedHash ) const
-{
-	return getObjectValue<DataType>( precomputedHash )->readable();
-}
-
-template<class T>
 void NumericPlug<T>::setFrom( const ValuePlug *other )
 {
 	if( const FloatPlug *p = runTimeCast<const FloatPlug>( other ) )

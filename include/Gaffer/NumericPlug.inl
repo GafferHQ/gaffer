@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2013-2014, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2023, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -37,71 +36,13 @@
 
 #pragma once
 
-#include "Gaffer/ValuePlug.h"
-
-#include "IECore/SimpleTypedData.h"
-
 namespace Gaffer
 {
 
 template<typename T>
-class IECORE_EXPORT NumericPlug : public ValuePlug
+inline T NumericPlug<T>::getValue( const IECore::MurmurHash *precomputedHash ) const
 {
-
-	public :
-
-		using ValueType = T;
-
-		GAFFER_PLUG_DECLARE_TEMPLATE_TYPE( NumericPlug<T>, ValuePlug );
-
-		explicit NumericPlug(
-			const std::string &name = defaultName<NumericPlug>(),
-			Direction direction=In,
-			T defaultValue = T(),
-			T minValue = std::numeric_limits<T>::lowest(),
-			T maxValue = std::numeric_limits<T>::max(),
-			unsigned flags = Default
-		);
-		~NumericPlug() override;
-
-		/// Accepts other NumericPlugs, including those of different types, and BoolPlugs.
-		bool acceptsInput( const Plug *input ) const override;
-		PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
-
-		T defaultValue() const;
-
-		bool hasMinValue() const;
-		bool hasMaxValue() const;
-
-		T minValue() const;
-		T maxValue() const;
-
-		/// Clamps the value between min and max.
-		/// \undoable
-		void setValue( T value );
-		/// Returns the value.
-		/// See comments in TypedObjectPlug::getValue() for details of
-		/// the optional precomputedHash argument - and use with care!
-		T getValue( const IECore::MurmurHash *precomputedHash = nullptr ) const;
-
-		void setFrom( const ValuePlug *other ) override;
-
-	private :
-
-		using DataType = IECore::TypedData<T>;
-		using DataTypePtr = typename DataType::Ptr;
-
-		T m_minValue;
-		T m_maxValue;
-
-};
-
-using FloatPlug = NumericPlug<float>;
-using IntPlug = NumericPlug<int>;
-
-IE_CORE_DECLAREPTR( FloatPlug );
-IE_CORE_DECLAREPTR( IntPlug );
+	return getObjectValue<DataType>( precomputedHash )->readable();
+}
 
 } // namespace Gaffer
-
-#include "Gaffer/NumericPlug.inl"
