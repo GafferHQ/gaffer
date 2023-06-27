@@ -69,9 +69,13 @@ namespace
 /// and avoids the creation of lots of unnecessary cache entries.
 inline const ValuePlug *sourcePlug( const ValuePlug *p )
 {
-	const IECore::TypeId typeId = p->typeId();
-
 	const ValuePlug *in = p->getInput<ValuePlug>();
+	if( !in )
+	{
+		return p;
+	}
+
+	const IECore::TypeId typeId = p->typeId();
 	while( in && in->typeId() == typeId )
 	{
 		p = in;
