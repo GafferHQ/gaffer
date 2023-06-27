@@ -41,6 +41,8 @@ import GafferUI
 import GafferImage
 from . import OpenColorIOTransformUI
 
+from GafferUI.PlugValueWidget import sole
+
 Gaffer.Metadata.registerNode(
 
 	GafferImage.ImageReader,
@@ -249,6 +251,36 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"availableFrames" : [
+
+			"description",
+			"""
+			A list of the available frames for the current file sequence.
+			Empty when the input `fileName` is not a file sequence.
+			""",
+
+			"layout:section", "Frames",
+			"plugValueWidget:type", "GafferImageUI.ImageReaderUI._AvailableFramesPlugValueWidget",
+
+		],
+
 	}
 
 )
+
+class _AvailableFramesPlugValueWidget( GafferUI.PlugValueWidget ) :
+
+	def __init__( self, plug, **kw ) :
+
+		self.__textWidget = GafferUI.TextWidget( editable = False )
+		GafferUI.PlugValueWidget.__init__( self, self.__textWidget, plug, **kw )
+
+	def _updateFromValues( self, values, exception ) :
+
+		value = sole( values )
+		if value is None :
+			self.__textWidget.setText( "---" )
+		else :
+			self.__textWidget.setText( str( IECore.frameListFromList( list( value ) ) ) )
+
+		self.__textWidget.setErrored( exception is not None )
