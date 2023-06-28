@@ -218,6 +218,7 @@ Gaffer.Metadata.registerNode(
 		],
 		"channels.*" : [
 
+			"deletable", True,
 			# Although the parameters plug is positioned
 			# as we want above, we must also register
 			# appropriate values for each individual parameter,
