@@ -216,6 +216,10 @@ void OpenColorIOContext::compute( ValuePlug *output, const Context *context ) co
 		ConstCompoundDataPtr extraVariables = extraVariablesPlug()->getValue();
 		for( auto &[name, value] : extraVariables->readable() )
 		{
+			if( name.string().empty() )
+			{
+				continue;
+			}
 			if( auto stringData = runTimeCast<const StringData>( value ) )
 			{
 				result["ocio:stringVar:"+name.string()] = boost::const_pointer_cast<StringData>( stringData );
@@ -237,6 +241,10 @@ void OpenColorIOContext::compute( ValuePlug *output, const Context *context ) co
 			}
 
 			const string name = plug->namePlug()->getValue();
+			if( name.empty() )
+			{
+				continue;
+			}
 			if( auto stringPlug = plug->valuePlug<StringPlug>() )
 			{
 				result["ocio:stringVar:"+name] = new StringData( stringPlug->getValue() );
