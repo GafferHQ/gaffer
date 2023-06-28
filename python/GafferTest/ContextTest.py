@@ -787,5 +787,26 @@ class ContextTest( GafferTest.TestCase ) :
 		c["test2"] = IECore.InternedStringData( "recursion!" )
 		self.assertEqual( c.substitute( "${test1}" ), "recursion!" )
 
+	def testReentrantSet( self ) :
+
+		maxDepth = 20
+
+		def changed( context, variable ) :
+
+			value = context[variable]
+			if value.size() < maxDepth :
+				value.addPath( "/a" * (value.size() + 1) )
+				context[variable] = IECore.PathMatcherData( value )
+
+		context = Gaffer.Context()
+		context.changedSignal().connect( changed, scoped = False )
+		context["test"] = IECore.PathMatcherData()
+
+		expected = IECore.PathMatcher()
+		for i in range( 0, maxDepth + 1 ) :
+			expected.addPath( "/a" * i )
+
+		self.assertEqual( context["test"], expected )
+
 if __name__ == "__main__":
 	unittest.main()
