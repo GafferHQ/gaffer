@@ -96,12 +96,6 @@ void TypedObjectPlug<T>::setValue( ConstValuePtr value )
 }
 
 template<class T>
-typename TypedObjectPlug<T>::ConstValuePtr TypedObjectPlug<T>::getValue( const IECore::MurmurHash *precomputedHash ) const
-{
-	return getObjectValue<ValueType>( precomputedHash );
-}
-
-template<class T>
 void TypedObjectPlug<T>::setFrom( const ValuePlug *other )
 {
 	const TypedObjectPlug<T> *tOther = IECore::runTimeCast<const TypedObjectPlug>( other );

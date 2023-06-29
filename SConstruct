@@ -1093,7 +1093,7 @@ libraries = {
 
 	"GafferSceneTest" : {
 		"envAppends" : {
-			"LIBS" : [ "Gaffer", "GafferDispatch", "GafferScene", "IECoreScene$CORTEX_LIB_SUFFIX" ],
+			"LIBS" : [ "Gaffer", "GafferDispatch", "GafferScene", "GafferImage", "IECoreScene$CORTEX_LIB_SUFFIX" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "Gaffer", "GafferDispatch", "GafferBindings", "GafferScene", "GafferSceneTest" ],
@@ -1106,7 +1106,7 @@ libraries = {
 			"LIBS" : [ "Gaffer", "GafferUI", "GafferImage", "GafferImageUI", "GafferScene", "Iex$IMATH_LIB_SUFFIX", "IECoreGL$CORTEX_LIB_SUFFIX", "IECoreImage$CORTEX_LIB_SUFFIX", "IECoreScene$CORTEX_LIB_SUFFIX" ],
 		},
 		"pythonEnvAppends" : {
-			"LIBS" : [ "IECoreGL$CORTEX_LIB_SUFFIX", "GafferBindings", "GafferScene", "GafferUI", "GafferImageUI", "GafferSceneUI", "IECoreScene$CORTEX_LIB_SUFFIX" ],
+			"LIBS" : [ "IECoreGL$CORTEX_LIB_SUFFIX", "GafferBindings", "GafferScene", "GafferImage", "GafferUI", "GafferImageUI", "GafferSceneUI", "IECoreScene$CORTEX_LIB_SUFFIX" ],
 		},
 	},
 
@@ -1246,7 +1246,7 @@ libraries = {
 
 	"GafferOSLUI" : {
 		"envAppends" : {
-			"LIBS" : [ "Gaffer", "GafferUI", "GafferOSL" ],
+			"LIBS" : [ "Gaffer", "GafferImage", "GafferUI", "GafferOSL" ],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "IECoreGL$CORTEX_LIB_SUFFIX", "GafferBindings", "GafferScene", "GafferUI", "GafferImageUI", "GafferOSLUI" ],
@@ -1351,7 +1351,7 @@ libraries = {
 
 	"GafferUSD" : {
 		"envAppends" : {
-			"LIBS" : [ "Gaffer", "GafferDispatch", "GafferScene", "IECoreScene$CORTEX_LIB_SUFFIX" ] + [ "${USD_LIB_PREFIX}" + x for x in ( [ "sdf", "arch", "tf", "vt" ] if not env["USD_MONOLITHIC"] else [ "usd_ms" ] ) ],
+			"LIBS" : [ "Gaffer", "GafferDispatch", "GafferScene", "GafferImage", "IECoreScene$CORTEX_LIB_SUFFIX" ] + [ "${USD_LIB_PREFIX}" + x for x in ( [ "sdf", "arch", "tf", "vt" ] if not env["USD_MONOLITHIC"] else [ "usd_ms" ] ) ],
 			# USD includes "at least one deprecated or antiquated header", so we
 			# have to drop our usual strict warning levels.
 			"CXXFLAGS" : [ "-Wno-deprecated" if env["PLATFORM"] != "win32" else "/wd4996" ],

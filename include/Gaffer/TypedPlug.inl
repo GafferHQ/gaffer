@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012-2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2023, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,27 +36,13 @@
 
 #pragma once
 
-#include "GafferImage/FormatData.h"
-#include "GafferImage/TypeIds.h"
-
-#include "Gaffer/TypedPlug.h"
-
-namespace GafferImage
-{
-
-using AtomicFormatPlug = Gaffer::TypedPlug<GafferImage::Format>;
-
-IE_CORE_DECLAREPTR( AtomicFormatPlug );
-
-} // namespace GafferImage
-
 namespace Gaffer
 {
 
-template<>
-GafferImage::Format GafferImage::AtomicFormatPlug::getValue( const IECore::MurmurHash *precomputedHash ) const;
-
-template<>
-IECore::MurmurHash GafferImage::AtomicFormatPlug::hash() const;
+template<typename T>
+inline T TypedPlug<T>::getValue( const IECore::MurmurHash *precomputedHash ) const
+{
+	return getObjectValue<DataType>( precomputedHash )->readable();
+}
 
 } // namespace Gaffer
