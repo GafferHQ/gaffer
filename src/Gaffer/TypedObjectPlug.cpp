@@ -38,7 +38,7 @@
 #include "Gaffer/TypedObjectPlug.h"
 
 #include "Gaffer/StringPlug.h"
-#include "Gaffer/TypedObjectPlug.inl"
+#include "Gaffer/TypedObjectPlugImplementation.h"
 
 #include "boost/algorithm/string/classification.hpp"
 #include "boost/algorithm/string/split.hpp"

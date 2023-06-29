@@ -161,6 +161,8 @@ Breaking Changes
 - gaffer test : Replaced `-performanceOnly` flag with `-category` argument which may be set to `performance` for the same as the old `-performanceOnly`, or `standard` for the converse.
 - VisibleSet : Renamed `VisibleSet::match()` to `visibility()` and changed return type.
 - SceneView : Removed `gridPlug()` method.
+- TypedPlug : Moved implementation code from `TypedPlug.inl` to `TypedPlugImplementation.h`.
+- TypedObjectPlug : Moved implementation code from `TypedObjectPlug.inl` to `TypedObjectPlugImplementation.h`.
 
 Build
 -----

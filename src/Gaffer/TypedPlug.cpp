@@ -39,7 +39,7 @@
 
 #include "Gaffer/NumericPlug.h"
 #include "Gaffer/StringPlug.h"
-#include "Gaffer/TypedPlug.inl"
+#include "Gaffer/TypedPlugImplementation.h"
 
 namespace Gaffer
 {

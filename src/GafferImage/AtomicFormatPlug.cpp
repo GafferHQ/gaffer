@@ -42,7 +42,7 @@
 #include "Gaffer/Context.h"
 #include "Gaffer/Process.h"
 #include "Gaffer/TypedPlug.h"
-#include "Gaffer/TypedPlug.inl"
+#include "Gaffer/TypedPlugImplementation.h"
 
 using namespace Gaffer;
 using namespace GafferImage;
