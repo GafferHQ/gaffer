@@ -53,7 +53,7 @@ Improvements
   - Added red wireframe colour to the bounding box of locations excluded from the Visible Set.
 - HierarchyView :
   - Added support for inclusion and exclusion of leaf level locations to the Visible Set.
-  - Added <kbd>F</kbd> shortcut to expand ancestors and frame selected paths.
+  - Added <kbd>F</kbd> shortcut to expand ancestors and frame selected paths. This replaces the previous behaviour of automatic updates to expansion and framing in the HierarchyView on selection change.
 
 Fixes
 -----

@@ -249,7 +249,7 @@ class HierarchyView( GafferUI.NodeSetEditor ) :
 
 		selection = ContextAlgo.getSelectedPaths( self.getContext() )
 		with Gaffer.Signals.BlockedConnection( self.__selectionChangedConnection ) :
-			self.__pathListing.setSelection( selection, scrollToFirst=True )
+			self.__pathListing.setSelection( selection, scrollToFirst=False )
 
 GafferUI.Editor.registerType( "HierarchyView", HierarchyView )
 
