@@ -202,6 +202,31 @@ GraphComponentPtr setMembershipReadOnlyReasonWrapper( Gaffer::EditScope &scope, 
 	return const_cast<GraphComponent *>( EditScopeAlgo::setMembershipReadOnlyReason( &scope, set, state ) );
 }
 
+// Options
+// =======
+
+bool hasOptionEditWrapper( const Gaffer::EditScope &scope, const std::string &option )
+{
+	return EditScopeAlgo::hasOptionEdit( &scope, option );
+}
+
+TweakPlugPtr acquireOptionEditWrapper( Gaffer::EditScope &scope, const std::string &option, bool createIfNecessary )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return EditScopeAlgo::acquireOptionEdit( &scope, option, createIfNecessary );
+}
+
+void removeOptionEditWrapper( Gaffer::EditScope &scope, const std::string &option )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return EditScopeAlgo::removeOptionEdit( &scope, option );
+}
+
+GraphComponentPtr optionEditReadOnlyReasonWrapper( Gaffer::EditScope &scope, const std::string &option )
+{
+	return const_cast<GraphComponent *>( EditScopeAlgo::optionEditReadOnlyReason( &scope, option ) );
+}
+
 } // namespace
 
 namespace GafferSceneModule
@@ -253,6 +278,12 @@ void bindEditScopeAlgo()
 		.value( "Removed", EditScopeAlgo::SetMembership::Removed )
 		.value( "Unchanged", EditScopeAlgo::SetMembership::Unchanged )
 	;
+
+	def( "acquireOptionEdit", &acquireOptionEditWrapper, ( arg( "scope" ), arg( "option" ), arg( "createIfNecessary" ) = true ) );
+	def( "hasOptionEdit", &hasOptionEditWrapper, ( arg( "scope" ), arg( "option" ) ) );
+	def( "removeOptionEdit", &removeOptionEditWrapper, ( arg( "scope" ), arg( "option" ) ) );
+	def( "optionEditReadOnlyReason", &optionEditReadOnlyReasonWrapper, ( arg( "scope" ), arg( "option" ) ) );
+
 }
 
 } // namespace GafferSceneModule

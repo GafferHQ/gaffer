@@ -293,6 +293,10 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.assertNotEqual( sphereEdit, planeEdit )
 		self.assertTrue( sphereEdit != planeEdit )
 
+	##########################################################################
+	# Parameters
+	##########################################################################
+
 	def testParameterEdits( self ) :
 
 		light = GafferSceneTest.TestLight()
@@ -626,6 +630,10 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 			editScope["out"].attributes( "/light" )["test:light"].outputShader().parameters["intensity"].value,
 			imath.Color3f( 0 )
 		)
+
+	##########################################################################
+	# Attributes
+	##########################################################################
 
 	def testAttributeEdits( self ) :
 
@@ -1237,6 +1245,187 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 				GafferScene.EditScopeAlgo.setMembershipReadOnlyReason( s["box"]["scope"], "A", membership.Added ),
 				component
 			)
+
+	##########################################################################
+	# Options
+	##########################################################################
+
+	def testOptionEdits( self ) :
+
+		options = GafferScene.CustomOptions()
+		options["options"].addChild( Gaffer.NameValuePlug( "test", IECore.IntData( 10 ) ) )
+
+		editScope = Gaffer.EditScope()
+		editScope.setup( options["out"] )
+		editScope["in"].setInput( options["out"] )
+
+		self.assertFalse( GafferScene.EditScopeAlgo.hasOptionEdit( editScope, "test" ) )
+		self.assertIsNone(
+			GafferScene.EditScopeAlgo.acquireOptionEdit(
+				editScope, "test", createIfNecessary = False
+			)
+		)
+
+		edit = GafferScene.EditScopeAlgo.acquireOptionEdit( editScope, "test" )
+		self.assertIsInstance( edit, Gaffer.TweakPlug )
+		self.assertIsInstance( edit["value"], Gaffer.IntPlug )
+		self.assertEqual( edit["mode"].getValue(), Gaffer.TweakPlug.Mode.Create )
+		self.assertEqual( edit["value"].getValue(), 10 )
+		self.assertEqual( edit["enabled"].getValue(), False )
+
+		edit["enabled"].setValue( True )
+		edit["value"].setValue( 20 )
+		self.assertIn( "option:test", editScope["out"].globals() )
+		self.assertEqual( editScope["out"].globals()["option:test"].value, 20 )
+
+		self.assertEqual(
+			GafferScene.EditScopeAlgo.acquireOptionEdit( editScope, "test"),
+			edit
+		)
+
+	def testOptionEditReadOnlyReason( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["options"] = GafferScene.CustomOptions()
+		s["options"]["options"].addChild( Gaffer.NameValuePlug( "test", IECore.IntData( 10 ) ) )
+
+		s["scope"] = Gaffer.EditScope()
+		s["scope"].setup( s["options"]["out"] )
+		s["scope"]["in"].setInput( s["options"]["out"] )
+
+		s["box"] = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["options"], s["scope"] ] ) )
+
+		self.assertIsNone(
+			GafferScene.EditScopeAlgo.optionEditReadOnlyReason( s["box"]["scope"], "test" )
+		)
+
+		for component in ( s["box"], s["box"]["scope"] ) :
+			Gaffer.MetadataAlgo.setReadOnly( component, True )
+			self.assertEqual(
+				GafferScene.EditScopeAlgo.optionEditReadOnlyReason( s["box"]["scope"], "test" ),
+				s["box"]
+			)
+
+		Gaffer.MetadataAlgo.setReadOnly( s["box"], False )
+		self.assertEqual(
+			GafferScene.EditScopeAlgo.optionEditReadOnlyReason( s["box"]["scope"], "test" ),
+			s["box"]["scope"]
+		)
+
+		Gaffer.MetadataAlgo.setReadOnly( s["box"]["scope"], False )
+		GafferScene.EditScopeAlgo.acquireOptionEdit( s["box"]["scope"], "test" )
+
+		self.assertIsNone(
+			GafferScene.EditScopeAlgo.optionEditReadOnlyReason( s["box"]["scope"], "test" )
+		)
+
+		candidateComponents = (
+			s["box"]["scope"]["OptionEdits"]["edits"][0]["value"],
+			s["box"]["scope"]["OptionEdits"]["edits"][0]["mode"],
+			s["box"]["scope"]["OptionEdits"]["edits"][0]["enabled"],
+			s["box"]["scope"]["OptionEdits"]["edits"][0]["name"],
+			s["box"]["scope"]["OptionEdits"]["edits"][0],
+			s["box"]["scope"]["OptionEdits"]["edits"],
+			s["box"]["scope"]["OptionEdits"],
+			s["box"]["scope"],
+			s["box"]
+		)
+
+		for component in candidateComponents :
+			Gaffer.MetadataAlgo.setReadOnly( component, True )
+			self.assertEqual(
+				GafferScene.EditScopeAlgo.optionEditReadOnlyReason(
+					s["box"]["scope"],
+					"test"
+				),
+				component
+			)
+
+		for component in candidateComponents :
+			Gaffer.MetadataAlgo.setReadOnly( component, False )
+
+		GafferScene.EditScopeAlgo.removeOptionEdit( s["box"]["scope"], "test" )
+
+		self.assertIsNone(
+			GafferScene.EditScopeAlgo.acquireOptionEdit(
+				s["box"]["scope"],
+				"test",
+				createIfNecessary = False
+			)
+		)
+
+		for component in (
+			s["box"]["scope"]["OptionEdits"]["edits"],
+			s["box"]["scope"]["OptionEdits"]
+		) :
+			Gaffer.MetadataAlgo.setReadOnly( component, True )
+			self.assertEqual(
+				GafferScene.EditScopeAlgo.optionEditReadOnlyReason(
+					s["box"]["scope"],
+					"test"
+				),
+				component
+			)
+
+	def testOptionEditRemoval( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["options"] = GafferScene.CustomOptions()
+		s["options"]["options"].addChild( Gaffer.NameValuePlug( "test", IECore.IntData( 10 ) ) )
+
+		s["scope"] = Gaffer.EditScope()
+		s["scope"].setup( s["options"]["out"] )
+		s["scope"]["in"].setInput( s["options"]["out"] )
+
+		edit1 = GafferScene.EditScopeAlgo.acquireOptionEdit( s["scope"], "test" )
+
+		self.assertEqual( len( s["scope"]["OptionEdits"]["edits"].children() ), 1 )
+		self.assertEqual( s["scope"]["OptionEdits"]["edits"][0], edit1 )
+
+		GafferScene.EditScopeAlgo.removeOptionEdit( s["scope"], "test" )
+
+		self.assertEqual( len( s["scope"]["OptionEdits"]["edits"].children() ), 0 )
+
+	def testOptionEditExceptions( self ) :
+
+		options = GafferScene.Options()
+		editScope = Gaffer.EditScope()
+		editScope.setup( options["out"] )
+		editScope["in"].setInput( options["out"] )
+		emptyKeys = editScope.keys()
+
+		with self.assertRaisesRegex( RuntimeError, 'Option "bogus" does not exist' ) :
+			GafferScene.EditScopeAlgo.acquireOptionEdit( editScope, "bogus" )
+		self.assertEqual( editScope.keys(), emptyKeys )
+
+	def testOptionEditSerialisation( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["options"] = GafferScene.CustomOptions()
+		script["options"]["options"].addChild( Gaffer.NameValuePlug( "test", IECore.IntData( 10 ) ) )
+
+		script["editScope"] = Gaffer.EditScope()
+		script["editScope"].setup( script["options"]["out"] )
+		script["editScope"]["in"].setInput( script["options"]["out"] )
+
+		edit = GafferScene.EditScopeAlgo.acquireOptionEdit( script["editScope"], "test" )
+		edit["enabled"].setValue( True )
+		edit["value"].setValue( 20 )
+
+		script2 = Gaffer.ScriptNode()
+		script2.execute( script.serialise() )
+
+		self.assertScenesEqual( script2["editScope"]["out"], script["editScope"]["out"] )
+
+		edit = GafferScene.EditScopeAlgo.acquireOptionEdit(
+			script2["editScope"], "test", createIfNecessary = False
+		)
+		self.assertIsNotNone( edit )
+		self.assertEqual( edit["enabled"].getValue(), True )
+		self.assertEqual( edit["value"].getValue(), 20 )
 
 
 if __name__ == "__main__":
