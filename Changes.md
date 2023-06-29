@@ -17,6 +17,8 @@ Fixes
 
 - Arnold : Fixed bug that caused `ai:volume:step_scale` to be ignored if `ai:volume_step` was set explicitly to `0.0`. This was different to the behaviour when `ai:volume_step` was not set at all.
 - OSLImage : Fixed bug preventing channels / layers from being deleted using the right-click menu.
+- HierarchyView : Fixed crash triggered by layouts with two or more HierarchyViews (#5364).
+- Context : Fixed crash triggered by a reentrant call to `Context::set()` from within a slot connected to `Context::changedSignal()`.
 
 API
 ---

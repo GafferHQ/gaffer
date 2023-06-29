@@ -357,10 +357,9 @@ class GAFFER_API Context : public IECore::RefCounted
 		};
 
 		// Sets a variable and emits `changedSignal()` as appropriate. Does not
-		// manage ownership in any way. Returns true if the value was assigned,
-		// and false if the value was not (due to it being equal to the
-		// previously stored value).
-		bool internalSet( const IECore::InternedString &name, const Value &value );
+		// manage ownership in any way. If ownership is required, the caller must
+		// update `m_allocMap` appropriately _before_ calling `internalSet()`.
+		void internalSet( const IECore::InternedString &name, const Value &value );
 		// Throws if variable doesn't exist.
 		const Value &internalGet( const IECore::InternedString &name ) const;
 		// Returns nullptr if variable doesn't exist.
