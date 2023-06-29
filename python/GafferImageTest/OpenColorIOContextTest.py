@@ -113,5 +113,19 @@ class OpenColorIOContextTest( GafferImageTest.ImageTestCase ) :
 			f"config={studioConfig} testA= testB=b testC=extraC workingSpace=testSpace"
 		)
 
+	def testEmptyVariableNamesAreIgnored( self ) :
+
+		checkerboard = GafferImage.Checkerboard()
+
+		ocioContext = GafferImage.OpenColorIOContext()
+		ocioContext.setup( checkerboard["out"] )
+		ocioContext["in"].setInput( checkerboard["out"] )
+		ocioContext["variables"].addChild( Gaffer.NameValuePlug( "", "a", defaultEnabled = True ) )
+
+		with Gaffer.ContextMonitor( checkerboard ) as monitor :
+			GafferImage.ImageAlgo.tiles( ocioContext["out"] )
+
+		self.assertNotIn( "ocio", " ".join( monitor.combinedStatistics().variableNames() ) )
+
 if __name__ == "__main__":
 	unittest.main()

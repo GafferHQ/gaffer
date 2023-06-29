@@ -183,6 +183,12 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"variables.*" : [
+
+			"deletable", True,
+
+		],
+
 		"variables.*.name" : [
 
 			"description",
