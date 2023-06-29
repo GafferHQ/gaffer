@@ -235,6 +235,8 @@ class ValuePlug::HashProcess : public Process
 			// one per context, computed by ComputeNode::hash(). Pull the value from our cache, or compute it
 			// using a HashProcess instance.
 
+			Plug::flushDirtyPropagationScope(); // Ensure any pending calls to `dirty()` are made before we look up `m_dirtyCount`.
+
 			const ComputeNode *computeNode = IECore::runTimeCast<const ComputeNode>( p->node() );
 			const ThreadState &threadState = ThreadState::current();
 			const Context *currentContext = threadState.context();
@@ -313,7 +315,6 @@ class ValuePlug::HashProcess : public Process
 					// HashCacheMode::Legacy
 					HashProcessKey legacyProcessKey( processKey );
 					legacyProcessKey.dirtyCount = g_legacyGlobalDirtyCount + DIRTY_COUNT_RANGE_MAX + 1;
-
 					return threadData.cache.get( legacyProcessKey, currentContext->canceller() );
 				}
 			}

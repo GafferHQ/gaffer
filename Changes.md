@@ -57,6 +57,7 @@ Fixes
 - Expression : Fixed parsing of Python expressions combining subscripts (`[]`) and `context` methods (#3088, #3613, #5250).
 - ConnectionCreatorWrapper : Fixed bug which forced PlugAdder derived classes to implement `updateDragEndPoint()` unnecessarily.
 - Plug : Fixed bug which caused stale values to be retrieved from the cache for plugs that had been renamed.
+- ValuePlug : Fixed results when graph edits and computes are interleaved within a DirtyPropagationScope (#1971).
 - OpenColorIOTransform : Fixed error processing deep image tiles containing no samples.
 - Seeds :
   - Fixed duplicate points at triangle edges.

@@ -1225,5 +1225,41 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 			imath.V3f( 1, 2, 3 )
 		)
 
+	def testMultipleSelectionWithEditScope( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["cube1"] = GafferScene.Cube()
+		script["cube2"] = GafferScene.Cube()
+		script["cube3"] = GafferScene.Cube()
+
+		script["parent"] = GafferScene.Parent()
+		script["parent"]["parent"].setValue( "/" )
+		script["parent"]["children"][0].setInput( script["cube1"]["out"] )
+		script["parent"]["children"][1].setInput( script["cube2"]["out"] )
+		script["parent"]["children"][2].setInput( script["cube3"]["out"] )
+
+		script["editScope"] = Gaffer.EditScope()
+		script["editScope"].setup( script["parent"]["out"] )
+		script["editScope"]["in"].setInput( script["parent"]["out"] )
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["editScope"]["out"] )
+		view["editScope"].setInput( script["editScope"]["out"] )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/cube", "/cube1", "/cube2" ] ) )
+		GafferSceneUI.ContextAlgo.setLastSelectedPath( view.getContext(), "/cube" )
+
+		tool = GafferSceneUI.TranslateTool( view )
+		tool["active"].setValue( True )
+
+		with Gaffer.UndoScope( script ) :
+			tool.translate( imath.V3f( 10, 0, 0 ) )
+
+		with view.getContext() :
+			self.assertEqual( script["editScope"]["out"].transform( "/cube" ).translation(), imath.V3f( 10, 0, 0 ) )
+			self.assertEqual( script["editScope"]["out"].transform( "/cube1" ).translation(), imath.V3f( 10, 0, 0 ) )
+			self.assertEqual( script["editScope"]["out"].transform( "/cube2" ).translation(), imath.V3f( 10, 0, 0 ) )
+
 if __name__ == "__main__":
 	unittest.main()
