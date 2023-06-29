@@ -438,7 +438,9 @@ class SetMembershipColumn : public InspectorColumn
 			{
 				auto scriptNode = sceneInput->ancestor<ScriptNode>();
 
-				Context::Scope contextScope( scriptNode->context() );
+				Context::EditableScope contextScope( scriptNode->context() );
+				contextScope.setCanceller( canceller );
+
 				ConstPathMatcherDataPtr setMembersData = m_scene->set( m_setName );
 				result.icon = setMembersData->readable().isEmpty() ? m_setEmpty : m_setHasMembers;
 			}
