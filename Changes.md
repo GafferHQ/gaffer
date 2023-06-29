@@ -12,6 +12,7 @@ Improvements
 - MatchPatternPathFilterWidget : Added the name of the property being filtered to the placeholder text.
 - OpenImageIOReader : The `availableFrames` plug no longer errors for a missing file sequence - instead it outputs an empty list.
 - PathListingWidget : Header data is now computed asynchronously, without locking the UI.
+- CollectScenes : Improved cancellation responsiveness for large lists of `rootNames`.
 
 Fixes
 -----
