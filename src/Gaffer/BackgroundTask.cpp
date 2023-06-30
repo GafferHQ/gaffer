@@ -48,6 +48,8 @@
 
 #include "tbb/task_arena.h"
 
+#include "fmt/format.h"
+
 using namespace IECore;
 using namespace Gaffer;
 
@@ -151,7 +153,13 @@ struct BackgroundTask::TaskData : public boost::noncopyable
 BackgroundTask::BackgroundTask( const Plug *subject, const Function &function )
 	:	m_function( function ), m_taskData( std::make_shared<TaskData>( &m_function ) )
 {
-	activeTasks().insert( ActiveTask{ this, scriptNode( subject ) } );
+	const ScriptNode *s = scriptNode( subject );
+	if( subject && !s )
+	{
+		IECore::msg( IECore::Msg::Level::Warning, "BackgroundTask", fmt::format( "Unable to find ScriptNode for {}", subject->fullName() ) );
+	}
+
+	activeTasks().insert( ActiveTask{ this, s } );
 
 	// Enqueue task into current arena.
 	tbb::task_arena( tbb::task_arena::attach() ).enqueue(

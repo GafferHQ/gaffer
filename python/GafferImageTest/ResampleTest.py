@@ -188,13 +188,15 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 
 	def testCancellation( self ) :
 
-		c = GafferImage.Constant()
+		script = Gaffer.ScriptNode()
 
-		r = GafferImage.Resample()
-		r["in"].setInput( c["out"] )
-		r["filterScale"].setValue( imath.V2f( 2000 ) )
+		script["c"] = GafferImage.Constant()
 
-		bt = Gaffer.ParallelAlgo.callOnBackgroundThread( r["out"], lambda : GafferImageTest.processTiles( r["out"] ) )
+		script["r"] = GafferImage.Resample()
+		script["r"]["in"].setInput( script["c"]["out"] )
+		script["r"]["filterScale"].setValue( imath.V2f( 2000 ) )
+
+		bt = Gaffer.ParallelAlgo.callOnBackgroundThread( script["r"]["out"], lambda : GafferImageTest.processTiles( script["r"]["out"] ) )
 		# Give background tasks time to get into full swing
 		time.sleep( 0.1 )
 
@@ -205,9 +207,9 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 		self.assertLess( time.time() - t, acceptableCancellationDelay )
 
 		# Check that we can do the same when using a non-separable filter
-		r["filter"].setValue( "disk" )
+		script["r"]["filter"].setValue( "disk" )
 
-		bt = Gaffer.ParallelAlgo.callOnBackgroundThread( r["out"], lambda : GafferImageTest.processTiles( r["out"] ) )
+		bt = Gaffer.ParallelAlgo.callOnBackgroundThread( script["r"]["out"], lambda : GafferImageTest.processTiles( script["r"]["out"] ) )
 		time.sleep( 0.1 )
 
 		t = time.time()

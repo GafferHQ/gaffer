@@ -844,21 +844,23 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 
 	def testProgressCallback( self ) :
 
-		sphere = GafferScene.Sphere()
-		group = GafferScene.Group()
-		group["in"][0].setInput( sphere["out"] )
-		group["in"][1].setInput( sphere["out"] )
-		group["in"][2].setInput( sphere["out"] )
+		script = Gaffer.ScriptNode()
 
-		allFilter = GafferScene.PathFilter()
-		allFilter["paths"].setValue( IECore.StringVectorData( [ "/*", "/*/*" ] ) )
+		script["sphere"] = GafferScene.Sphere()
+		script["group"] = GafferScene.Group()
+		script["group"]["in"][0].setInput( script["sphere"]["out"] )
+		script["group"]["in"][1].setInput( script["sphere"]["out"] )
+		script["group"]["in"][2].setInput( script["sphere"]["out"] )
 
-		transform = GafferScene.Transform()
-		transform["in"].setInput( group["out"] )
-		transform["filter"].setInput( allFilter["out"] )
+		script["allFilter"] = GafferScene.PathFilter()
+		script["allFilter"]["paths"].setValue( IECore.StringVectorData( [ "/*", "/*/*" ] ) )
+
+		script["transform"] = GafferScene.Transform()
+		script["transform"]["in"].setInput( script["group"]["out"] )
+		script["transform"]["filter"].setInput( script["allFilter"]["out"] )
 
 		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer()
-		controller = GafferScene.RenderController( transform["out"], Gaffer.Context(), renderer )
+		controller = GafferScene.RenderController( script["transform"]["out"], Gaffer.Context(), renderer )
 		controller.setMinimumExpansionDepth( 2 )
 
 		statuses = []
@@ -882,7 +884,7 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		# path we requested, and it's ancestors (not including the root, because
 		# its transform hasn't changed).
 		del statuses[:]
-		transform["transform"]["translate"]["x"].setValue( 1 )
+		script["transform"]["transform"]["translate"]["x"].setValue( 1 )
 		controller.updateMatchingPaths( IECore.PathMatcher( [ "/group/sphere" ] ), callback )
 		self.assertEqual( statuses, [ Status.Running ] * 2 + [ Status.Completed ] )
 
@@ -890,7 +892,7 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		# We expect updates to all locations (except the root, because its transform
 		# hasn't changed).
 		del statuses[:]
-		transform["transform"]["translate"]["x"].setValue( 2 )
+		script["transform"]["transform"]["translate"]["x"].setValue( 2 )
 		task = controller.updateInBackground( callback, priorityPaths = IECore.PathMatcher( [ "/group/sphere" ] ) )
 		task.wait()
 		self.assertEqual( statuses, [ Status.Running ] * 4 + [ Status.Completed ] )

@@ -233,6 +233,7 @@ API
   - Added support for creating a `PathMatcherDataPlug` from `PathMatcherData` in `createPlugFromData()`.
   - Added support for getting `PathMatcherData` from a `PathMatcherDataPlug` in `getValueAsData()`.
 - EditScopeAlgo : Added support for editing options.
+- BackgroundTask : A warning is now emitted if the `subject` can not be associated with a ScriptNode for cancellation purposes.
 
 1.2.8.0 (relative to 1.2.7.0)
 =======

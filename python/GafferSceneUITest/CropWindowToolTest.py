@@ -46,9 +46,11 @@ class CropWindowToolTest( GafferUITest.TestCase ) :
 
 	def testSceneViewStatus( self ) :
 
-		camera = GafferScene.Camera()
+		script = Gaffer.ScriptNode()
 
-		view = GafferUI.View.create( camera["out"] )
+		script["camera"] = GafferScene.Camera()
+
+		view = GafferUI.View.create( script["camera"]["out"] )
 
 		tool = GafferSceneUI.CropWindowTool( view )
 		tool["active"].setValue( True )
@@ -75,28 +77,28 @@ class CropWindowToolTest( GafferUITest.TestCase ) :
 
 		# Editable
 
-		options = GafferScene.StandardOptions()
-		options["in"].setInput( camera["out"] )
-		view["in"].setInput( options["out"] )
+		script["options"] = GafferScene.StandardOptions()
+		script["options"]["in"].setInput( script["camera"]["out"] )
+		view["in"].setInput( script["options"]["out"] )
 
 		self.waitForIdle( 1000 )
-		self.assertEqual( tool.status(), "Info: Editing <b>StandardOptions.options.renderCropWindow.value</b>" )
+		self.assertEqual( tool.status(), "Info: Editing <b>options.options.renderCropWindow.value</b>" )
 
 		# Locked value plug
 
-		Gaffer.MetadataAlgo.setReadOnly( options["options"]["renderCropWindow"]["value"], True )
+		Gaffer.MetadataAlgo.setReadOnly( script["options"]["options"]["renderCropWindow"]["value"], True )
 
 		self.waitForIdle( 1000 )
-		self.assertEqual( tool.status(), "Warning: <b>StandardOptions.options.renderCropWindow.value</b> is locked" )
+		self.assertEqual( tool.status(), "Warning: <b>options.options.renderCropWindow.value</b> is locked" )
 
 		# Locked/off enabled plug
 
-		Gaffer.MetadataAlgo.setReadOnly( options["options"]["renderCropWindow"]["value"], False )
-		options["options"]["renderCropWindow"]["enabled"].setValue( False )
-		Gaffer.MetadataAlgo.setReadOnly( options["options"]["renderCropWindow"]["enabled"], True )
+		Gaffer.MetadataAlgo.setReadOnly( script["options"]["options"]["renderCropWindow"]["value"], False )
+		script["options"]["options"]["renderCropWindow"]["enabled"].setValue( False )
+		Gaffer.MetadataAlgo.setReadOnly( script["options"]["options"]["renderCropWindow"]["enabled"], True )
 
 		self.waitForIdle( 1000 )
-		self.assertEqual( tool.status(), "Warning: <b>StandardOptions.options.renderCropWindow.value</b> isn't editable" )
+		self.assertEqual( tool.status(), "Warning: <b>options.options.renderCropWindow.value</b> isn't editable" )
 
 		# Check status across visible/invisible overlay transitions (this is
 		# really testing one of the gnarly parts of the status implementation
@@ -110,7 +112,7 @@ class CropWindowToolTest( GafferUITest.TestCase ) :
 		view["camera"]["lookThroughEnabled"].setValue( True )
 
 		self.waitForIdle( 1000 )
-		self.assertEqual( tool.status(), "Warning: <b>StandardOptions.options.renderCropWindow.value</b> isn't editable" )
+		self.assertEqual( tool.status(), "Warning: <b>options.options.renderCropWindow.value</b> isn't editable" )
 
 	def testImageViewStatus( self ) :
 

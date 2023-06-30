@@ -83,18 +83,20 @@ class BoolPlugValueWidgetTest( GafferUITest.TestCase ) :
 
 	def testErrorHandling( self ) :
 
-		n = Gaffer.Node()
-		n["user"]["p"] = Gaffer.BoolPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		script = Gaffer.ScriptNode()
 
-		w = GafferUI.BoolPlugValueWidget( n["user"]["p"] )
+		script["n"] = Gaffer.Node()
+		script["n"]["user"]["p"] = Gaffer.BoolPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		w = GafferUI.BoolPlugValueWidget( script["n"]["user"]["p"] )
 		self.assertFalse( w.boolWidget().getErrored() )
 
-		b = GafferTest.BadNode()
-		n["user"]["p"].setInput( b["out3"] )
+		script["b"] = GafferTest.BadNode()
+		script["n"]["user"]["p"].setInput( script["b"]["out3"] )
 		GafferUITest.PlugValueWidgetTest.waitForUpdate( w )
 		self.assertTrue( w.boolWidget().getErrored() )
 
-		n["user"]["p"].setInput( None )
+		script["n"]["user"]["p"].setInput( None )
 		GafferUITest.PlugValueWidgetTest.waitForUpdate( w )
 		self.assertFalse( w.boolWidget().getErrored() )
 

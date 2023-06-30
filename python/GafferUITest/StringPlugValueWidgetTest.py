@@ -141,15 +141,17 @@ class StringPlugValueWidgetTest( GafferUITest.TestCase ) :
 
 	def testExceptionHandling( self ) :
 
-		# Compute for `n["p"]` will error because it's an output plug
+		# Compute for `script["n"]["p"]` will error because it's an output plug
 		# that ComputeNode knows nothing about.
 
-		n = Gaffer.ComputeNode()
-		n["p"] = Gaffer.StringPlug( direction = Gaffer.Plug.Direction.Out )
+		script = Gaffer.ScriptNode()
+
+		script["n"] = Gaffer.ComputeNode()
+		script["n"]["p"] = Gaffer.StringPlug( direction = Gaffer.Plug.Direction.Out )
 
 		# We want that to be reflected in the UI.
 
-		w = GafferUI.StringPlugValueWidget( n["p"] )
+		w = GafferUI.StringPlugValueWidget( script["n"]["p"] )
 		GafferUITest.PlugValueWidgetTest.waitForUpdate( w )
 		self.assertEqual( w.textWidget().getText(), "" )
 		self.assertTrue( w.textWidget().getErrored() )

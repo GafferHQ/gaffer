@@ -145,13 +145,14 @@ class MedianTest( GafferImageTest.ImageTestCase ) :
 
 	def testCancellation( self ) :
 
-		c = GafferImage.Constant()
+		script = Gaffer.ScriptNode()
+		script["c"] = GafferImage.Constant()
 
-		m = GafferImage.Median()
-		m["in"].setInput( c["out"] )
-		m["radius"].setValue( imath.V2i( 2000 ) )
+		script["m"] = GafferImage.Median()
+		script["m"]["in"].setInput( script["c"]["out"] )
+		script["m"]["radius"].setValue( imath.V2i( 2000 ) )
 
-		bt = Gaffer.ParallelAlgo.callOnBackgroundThread( m["out"], lambda : GafferImageTest.processTiles( m["out"] ) )
+		bt = Gaffer.ParallelAlgo.callOnBackgroundThread( script["m"]["out"], lambda : GafferImageTest.processTiles( script["m"]["out"] ) )
 		# Give background tasks time to get into full swing
 		time.sleep( 0.1 )
 
@@ -163,9 +164,9 @@ class MedianTest( GafferImageTest.ImageTestCase ) :
 
 		# Check that we can do the same when using a master
 		# channel.
-		m["masterChannel"].setValue( "R" )
+		script["m"]["masterChannel"].setValue( "R" )
 
-		bt = Gaffer.ParallelAlgo.callOnBackgroundThread( m["out"], lambda : GafferImageTest.processTiles( m["out"] ) )
+		bt = Gaffer.ParallelAlgo.callOnBackgroundThread( script["m"]["out"], lambda : GafferImageTest.processTiles( script["m"]["out"] ) )
 		time.sleep( 0.1 )
 
 		t = time.time()
