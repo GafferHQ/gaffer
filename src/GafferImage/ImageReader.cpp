@@ -147,6 +147,8 @@ ImageReader::ImageReader( const std::string &name )
 
 	addChild( new IntPlug( "channelInterpretation", Plug::In, (int)ChannelInterpretation::Default, /* min */ (int)ChannelInterpretation::Legacy, /* max */ (int)ChannelInterpretation::Specification ) );
 
+	addChild( new IntVectorDataPlug( "availableFrames", Plug::Out, new IntVectorData, Plug::Default & ~Plug::Serialisable ) );
+
 	addChild( new AtomicCompoundDataPlug( "__intermediateMetadata", Plug::In, new CompoundData, Plug::Default & ~Plug::Serialisable ) );
 	addChild( new StringPlug( "__intermediateColorSpace", Plug::Out, "", Plug::Default & ~Plug::Serialisable ) );
 	addChild( new ImagePlug( "__intermediateImage", Plug::In, Plug::Default & ~Plug::Serialisable ) );
@@ -168,6 +170,8 @@ ImageReader::ImageReader( const std::string &name )
 	colorSpace->inputSpacePlug()->setInput( intermediateColorSpacePlug() );
 	colorSpace->processUnpremultipliedPlug()->setValue( true );
 	intermediateImagePlug()->setInput( colorSpace->outPlug() );
+
+	availableFramesPlug()->setInput( oiioReader->availableFramesPlug() );
 }
 
 ImageReader::~ImageReader()
@@ -264,54 +268,64 @@ const IntPlug *ImageReader::channelInterpretationPlug() const
 	return getChild<IntPlug>( g_firstChildIndex + 6 );
 }
 
+Gaffer::IntVectorDataPlug *ImageReader::availableFramesPlug()
+{
+	return getChild<IntVectorDataPlug>( g_firstChildIndex + 7 );
+}
+
+const Gaffer::IntVectorDataPlug *ImageReader::availableFramesPlug() const
+{
+	return getChild<IntVectorDataPlug>( g_firstChildIndex + 7 );
+}
+
 AtomicCompoundDataPlug *ImageReader::intermediateMetadataPlug()
 {
-	return getChild<AtomicCompoundDataPlug>( g_firstChildIndex + 7 );
+	return getChild<AtomicCompoundDataPlug>( g_firstChildIndex + 8 );
 }
 
 const AtomicCompoundDataPlug *ImageReader::intermediateMetadataPlug() const
 {
-	return getChild<AtomicCompoundDataPlug>( g_firstChildIndex + 7 );
+	return getChild<AtomicCompoundDataPlug>( g_firstChildIndex + 8 );
 }
 
 StringPlug *ImageReader::intermediateColorSpacePlug()
 {
-	return getChild<StringPlug>( g_firstChildIndex + 8 );
+	return getChild<StringPlug>( g_firstChildIndex + 9 );
 }
 
 const StringPlug *ImageReader::intermediateColorSpacePlug() const
 {
-	return getChild<StringPlug>( g_firstChildIndex + 8 );
+	return getChild<StringPlug>( g_firstChildIndex + 9 );
 }
 
 ImagePlug *ImageReader::intermediateImagePlug()
 {
-	return getChild<ImagePlug>( g_firstChildIndex + 9 );
+	return getChild<ImagePlug>( g_firstChildIndex + 10 );
 }
 
 const ImagePlug *ImageReader::intermediateImagePlug() const
 {
-	return getChild<ImagePlug>( g_firstChildIndex + 9 );
+	return getChild<ImagePlug>( g_firstChildIndex + 10 );
 }
 
 OpenImageIOReader *ImageReader::oiioReader()
 {
-	return getChild<OpenImageIOReader>( g_firstChildIndex + 10 );
+	return getChild<OpenImageIOReader>( g_firstChildIndex + 11 );
 }
 
 const OpenImageIOReader *ImageReader::oiioReader() const
 {
-	return getChild<OpenImageIOReader>( g_firstChildIndex + 10 );
+	return getChild<OpenImageIOReader>( g_firstChildIndex + 11 );
 }
 
 ColorSpace *ImageReader::colorSpace()
 {
-	return getChild<ColorSpace>( g_firstChildIndex + 11 );
+	return getChild<ColorSpace>( g_firstChildIndex + 12 );
 }
 
 const ColorSpace *ImageReader::colorSpace() const
 {
-	return getChild<ColorSpace>( g_firstChildIndex + 11 );
+	return getChild<ColorSpace>( g_firstChildIndex + 12 );
 }
 
 size_t ImageReader::supportedExtensions( std::vector<std::string> &extensions )

@@ -139,6 +139,16 @@ GAFFERSCENE_API void setSetMembership( Gaffer::EditScope *scope, const IECore::P
 GAFFERSCENE_API SetMembership getSetMembership( Gaffer::EditScope *scope, const ScenePlug::ScenePath &path, const std::string &set );
 GAFFERSCENE_API const Gaffer::GraphComponent *setMembershipReadOnlyReason( const Gaffer::EditScope *scope, const std::string &set, SetMembership state );
 
+// Options
+// =======
+//
+// These methods edit global scene options.
+
+GAFFERSCENE_API bool hasOptionEdit( const Gaffer::EditScope *scope, const std::string &option );
+GAFFERSCENE_API Gaffer::TweakPlug *acquireOptionEdit( Gaffer::EditScope *scope, const std::string &option, bool createIfNecessary = true );
+GAFFERSCENE_API void removeOptionEdit( Gaffer::EditScope *scope, const std::string &option );
+GAFFERSCENE_API const Gaffer::GraphComponent *optionEditReadOnlyReason( const Gaffer::EditScope *scope, const std::string &option );
+
 } // namespace EditScopeAlgo
 
 } // namespace GafferScene

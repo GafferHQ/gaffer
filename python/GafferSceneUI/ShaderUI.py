@@ -621,6 +621,105 @@ class _ShaderPath( Gaffer.Path ) :
 
 		return None
 
+# A path filter that keeps a path if it, any of its ancestors or any of its descendants have a
+# property `propertyName` that matches `patterns`.
+
+class _PathMatcherPathFilter( Gaffer.PathFilter ) :
+
+	def __init__( self, patterns, rootPath = None, propertyName = "name", userData = {} ) :
+
+		Gaffer.PathFilter.__init__( self, userData )
+
+		self.__patterns = patterns
+		self.__rootPath = rootPath
+		self.__propertyName = propertyName
+
+		self.__pathMatcherDirty = True
+		self.__pathMatcher = IECore.PathMatcher()
+
+		rootPath.pathChangedSignal().connect( Gaffer.WeakMethod( self.__rootPathChanged ), scoped = False )
+
+	def setMatchPatterns( self, patterns ) :
+
+		if self.__patterns == patterns :
+			return
+
+		self.__patterns = patterns
+		self.__pathMatcherDirty = True
+		self.changedSignal()( self )
+
+	def getMatchPatterns( self ) :
+
+		return self.__patterns
+
+	def setPropertyName( self, propertyName ) :
+
+		if( self.__propertyName == propertyName ) :
+			return
+
+		self.__propertyName = propertyName
+		self.__pathMatcherDirty = True
+		self.changedSignal()( self )
+
+	def getPropertyName( self ) :
+
+		return self.__propertyName
+
+	def _filter( self, paths, canceller ) :
+
+		if len( paths ) == 0 :
+			return []
+
+		self.__updatePathMatcher()
+
+		if self.__pathMatcher.isEmpty() :
+			return []
+
+		result = [ p for p in paths if self.__pathMatcher.match( str( p ) ) ]
+
+		return result
+
+	def __updatePathMatcher( self ) :
+
+		if not self.__pathMatcherDirty :
+			return
+
+		newPathMatcher = IECore.PathMatcher()
+		self.__pathMatcherDirty = False
+
+		for p in self.__paths() :
+			property = p.property( self.__propertyName )
+			if property is None :
+				continue
+
+			for pattern in self.__patterns :
+				if IECore.StringAlgo.match( property, pattern ) :
+					newPathMatcher.addPath( str( p ) )
+					break
+
+		if self.__pathMatcher == newPathMatcher :
+			return
+
+		self.__pathMatcher = newPathMatcher
+
+	def __paths( self ) :
+
+		def collectPaths( parentPath ) :
+			result = []
+			for p in parentPath.children() :
+				result.append( p )
+				result += collectPaths( p )
+
+			return result
+
+		return collectPaths( self.__rootPath )
+
+	def __rootPathChanged( self, path ) :
+
+		self.__pathMatcherDirty = True
+
+GafferUI.PathFilterWidget.registerType( _PathMatcherPathFilter, GafferUI.MatchPatternPathFilterWidget )
+
 class _ShaderParameterDialogue( GafferUI.Dialogue ) :
 
 	def __init__( self, shaderNetworks, title = None, **kw ) :
@@ -631,26 +730,39 @@ class _ShaderParameterDialogue( GafferUI.Dialogue ) :
 		GafferUI.Dialogue.__init__( self, title, **kw )
 
 		self.__shaderNetworks = shaderNetworks
-		self.__path = None
 
-		tmpPath = Gaffer.DictPath( {}, "/" )
-		self.__pathListingWidget = GafferUI.PathListingWidget(
-			tmpPath,
-			columns = (
-				_DuplicateIconColumn( "Name", "name" ),
-				GafferUI.PathListingWidget.StandardColumn( "Type", "shader:type" ),
-				GafferUI.PathListingWidget.StandardColumn( "Value", "shader:value" ),
-				_ShaderInputColumn( "Input" ),
-			),
-			allowMultipleSelection = True,
-			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
-			sortable = False,
-			horizontalScrollMode = GafferUI.ScrollMode.Automatic
-		)
+		self.__path = _ShaderPath( self.__shaderNetworks, path = "/" )
+
+		self.__filter = _PathMatcherPathFilter( [ "" ], self.__path.copy() )
+		self.__filter.setEnabled( False )
+		self.__filter.userData()["UI"] = {
+			"editable" : True,
+			"label" : "Filter",
+			"propertyFilters" : { "name": "Name", "shader:type": "Type" }
+		}
+
+		self.__path.setFilter( self.__filter )
+
+		with GafferUI.ListContainer( spacing = 4 ) as mainColumn :
+			self.__pathListingWidget = GafferUI.PathListingWidget(
+				self.__path,
+				columns = (
+					_DuplicateIconColumn( "Name", "name" ),
+					GafferUI.PathListingWidget.StandardColumn( "Type", "shader:type" ),
+					GafferUI.PathListingWidget.StandardColumn( "Value", "shader:value" ),
+					_ShaderInputColumn( "Input" ),
+				),
+				allowMultipleSelection = True,
+				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
+				sortable = False,
+				horizontalScrollMode = GafferUI.ScrollMode.Automatic
+			)
+
+			GafferUI.PathFilterWidget.create( self.__filter )
 
 		self.__inputNavigateColumn = self.__pathListingWidget.getColumns()[3]
 
-		self._setWidget( self.__pathListingWidget )
+		self._setWidget( mainColumn )
 
 		self.__pathListingWidget.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__updateButtonState ), scoped = False )
 		self.__pathListingWidget.buttonReleaseSignal().connectFront( Gaffer.WeakMethod( self.__buttonRelease ), scoped = False )
@@ -663,22 +775,6 @@ class _ShaderParameterDialogue( GafferUI.Dialogue ) :
 		self.__parametersSelectedSignal = Gaffer.Signal1()
 
 		self.__updateButtonState()
-
-		self.setPath( _ShaderPath( self.__shaderNetworks, path = "/" ) )
-
-
-	def getPath( self ) :
-
-		return self.__path
-
-	def setPath(self, path ) :
-
-		if path.isSame( self.__path ) :
-			return
-
-		self.__path = path
-
-		self.__pathListingWidget.setPath( self.__path )
 
 	def parametersSelectedSignal( self ) :
 

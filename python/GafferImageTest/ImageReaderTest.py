@@ -877,5 +877,17 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 			# data window when comparing
 			self.assertImagesEqual( multiPartReader["out"], singlePartReader["out"], metadataBlacklist = [ "openexr:chunkCount" ], ignoreChannelNamesOrder = True, ignoreDataWindow = True )
 
+	def testSerialisation( self ) :
+
+		script1 = Gaffer.ScriptNode()
+		script1["reader"] = GafferImage.ImageReader()
+
+		serialisation = script1.serialise( filter = Gaffer.StandardSet( { script1["reader"] } ) )
+		self.assertNotIn( "setInput", serialisation ) # Check we don't serialise internal connections
+
+		script2 = Gaffer.ScriptNode()
+		script2.execute( serialisation )
+		self.assertIsInstance( script2["reader"], GafferImage.ImageReader )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -185,11 +185,28 @@ Improvements
 ------------
 
 - DelightOptions : Added new options for modern 3Delight, as of version `2.9.39`.
+- ShaderQuery and ShaderTweaks : Added a filter for shader parameter names in the shader browser (#5293).
+- ImageReader : Added `availableFrames` output plug, listing all the available frames in the current file sequence.
+- MatchPatternPathFilterWidget : Added the name of the property being filtered to the placeholder text.
+- OpenImageIOReader : The `availableFrames` plug no longer errors for a missing file sequence - instead it outputs an empty list.
 
 Fixes
 -----
 
 - Arnold : Fixed bug that caused `ai:volume:step_scale` to be ignored if `ai:volume_step` was set explicitly to `0.0`. This was different to the behaviour when `ai:volume_step` was not set at all.
+- OSLImage : Fixed bug preventing channels / layers from being deleted using the right-click menu.
+- HierarchyView : Fixed crash triggered by layouts with two or more HierarchyViews (#5364).
+- Context : Fixed crash triggered by a reentrant call to `Context::set()` from within a slot connected to `Context::changedSignal()`.
+
+API
+---
+
+- MatchPatternPathFilterWidget : Made the entries in the property menu configurable.
+- TweakPlug : Added `PathMatcherData` compatibility in `Replace`, `Create`, `ListAppend`, `ListPrepend` and `ListRemove` modes.
+- PlugAlgo :
+  - Added support for creating a `PathMatcherDataPlug` from `PathMatcherData` in `createPlugFromData()`.
+  - Added support for getting `PathMatcherData` from a `PathMatcherDataPlug` in `getValueAsData()`.
+- EditScopeAlgo : Added support for editing options.
 
 1.2.8.0 (relative to 1.2.7.0)
 =======

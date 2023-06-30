@@ -48,6 +48,7 @@ class MatchPatternPathFilterWidget( GafferUI.PathFilterWidget ) :
 		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=2, borderWidth=0 )
 
 		GafferUI.PathFilterWidget.__init__( self, self.__row, pathFilter, **kw )
+		pathFilter.changedSignal().connect( Gaffer.WeakMethod( self.__updatePlaceholderText ), scoped = False )
 
 		with self.__row :
 
@@ -61,11 +62,11 @@ class MatchPatternPathFilterWidget( GafferUI.PathFilterWidget ) :
 			)
 
 			self.__patternWidget = GafferUI.TextWidget()
-			self.__patternWidget._qtWidget().setPlaceholderText( "Filter..." )
 
 			self.__patternWidget.editingFinishedSignal().connect( Gaffer.WeakMethod( self.__patternEditingFinished ), scoped = False )
 			self.__patternWidget.textChangedSignal().connect( Gaffer.WeakMethod( self.__patternTextChanged ), scoped = False )
 
+		self.__updatePlaceholderText( pathFilter )
 		self._updateFromPathFilter()
 
 	def _updateFromPathFilter( self ) :
@@ -134,11 +135,7 @@ class MatchPatternPathFilterWidget( GafferUI.PathFilterWidget ) :
 
 	def __propertyMenuDefinition( self ) :
 
-		## \todo Make this configurable
-		propertiesAndLabels = (
-			( "name", "Name" ),
-			( "fileSystem:owner", "Owner" ),
-		)
+		propertiesAndLabels = [ ( k, v.value ) for k, v in self.__propertyFilters().items() ]
 
 		menuDefinition = IECore.MenuDefinition()
 		for property, label in propertiesAndLabels :
@@ -156,5 +153,23 @@ class MatchPatternPathFilterWidget( GafferUI.PathFilterWidget ) :
 
 		with Gaffer.Signals.BlockedConnection( self._pathFilterChangedConnection() ) :
 			self.pathFilter().setPropertyName( property )
+
+	def __updatePlaceholderText( self, pathFilter ) :
+
+		propertyNameData = self.__propertyFilters().get( pathFilter.getPropertyName(), None )
+
+		self.__patternWidget._qtWidget().setPlaceholderText(
+			"Filter{}".format( ( " by " + propertyNameData.value + "..." ) if propertyNameData is not None else "..." )
+		)
+
+	def __propertyFilters( self ) :
+
+		result = { "name": IECore.StringData( "Name" ), "filesystem:owner": IECore.StringData( "Owner" ) }
+
+		with IECore.IgnoredExceptions( KeyError ) :
+			result = self.pathFilter().userData()["UI"]["propertyFilters"]
+
+		return result
+
 
 GafferUI.PathFilterWidget.registerType( Gaffer.MatchPatternPathFilter, MatchPatternPathFilterWidget )

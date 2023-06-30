@@ -312,10 +312,8 @@ void Context::set( const IECore::InternedString &name, const IECore::Data *value
 {
 	// We copy the value so that the client can't invalidate this context by changing it.
 	ConstDataPtr copy = value->copy();
-	if( internalSet( name, Value( name, copy.get() ) ) )
-	{
-		m_allocMap[name] = copy;
-	}
+	m_allocMap[name] = copy;
+	internalSet( name, Value( name, copy.get() ) );
 }
 
 IECore::DataPtr Context::getAsData( const IECore::InternedString &name ) const

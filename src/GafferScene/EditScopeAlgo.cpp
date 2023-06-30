@@ -37,6 +37,7 @@
 #include "GafferScene/EditScopeAlgo.h"
 
 #include "GafferScene/AttributeTweaks.h"
+#include "GafferScene/OptionTweaks.h"
 #include "GafferScene/Prune.h"
 #include "GafferScene/PathFilter.h"
 #include "GafferScene/SceneProcessor.h"
@@ -77,9 +78,6 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
-// Pruning
-// =======
-
 namespace
 {
 
@@ -87,8 +85,8 @@ namespace
 /// default values they want to make available. This is needed to get the value of an
 /// attribute that _could_ exist if the user activates it, allowing it to be discovered
 /// in clients of history related APIs such as `AttributeInspector`.
-typedef std::unordered_map<std::string, const IECore::DataPtr> AttributeRegistry;
-AttributeRegistry g_attributeRegistry {
+using CreatableRegistry = std::unordered_map<std::string, const IECore::DataPtr>;
+CreatableRegistry g_attributeRegistry {
 	{ "gl:visualiser:scale", new IECore::FloatData( 1.0f ) },
 	{ "gl:visualiser:maxTextureResolution", new IECore::IntData( 512 ) },
 	{ "gl:visualiser:frustum", new IECore::StringData( "whenSelected" ) },
@@ -96,6 +94,12 @@ AttributeRegistry g_attributeRegistry {
 	{ "gl:light:drawingMode", new IECore::StringData( "texture" ) },
 	{ "light:mute", new IECore::BoolData( false ) }
 };
+
+/// Entry keys for `g_optionRegistry` should not include the "option:" prefix.
+CreatableRegistry g_optionRegistry;
+
+// Pruning
+// =======
 
 SceneProcessorPtr pruningProcessor()
 {
@@ -447,7 +451,7 @@ ConstObjectPtr attributeValue( const ScenePlug *scene, const ScenePlug::ScenePat
 
 	if( !result )
 	{
-		AttributeRegistry::const_iterator registeredAttribute = g_attributeRegistry.find( attribute );
+		CreatableRegistry::const_iterator registeredAttribute = g_attributeRegistry.find( attribute );
 		if( registeredAttribute != g_attributeRegistry.end() )
 		{
 			return registeredAttribute->second;
@@ -1073,6 +1077,210 @@ const Gaffer::GraphComponent *EditScopeAlgo::setMembershipReadOnlyReason( const 
 		if( MetadataAlgo::getReadOnly( plug ) )
 		{
 			return plug;
+		}
+	}
+
+	return nullptr;
+}
+
+
+// Options
+// =======
+
+namespace
+{
+
+const std::string g_optionProcessorName = "OptionEdits";
+const std::string g_optionPrefix = "option:";
+
+SceneProcessorPtr optionProcessor( const std::string &name )
+{
+	SceneProcessorPtr result = new SceneProcessor( name );
+
+	OptionTweaksPtr optionTweaks = new OptionTweaks;
+	result->addChild( optionTweaks );
+	optionTweaks->inPlug()->setInput( result->inPlug() );
+	optionTweaks->enabledPlug()->setValue( result->enabledPlug() );
+	optionTweaks->ignoreMissingPlug()->setValue( true );
+
+	PlugAlgo::promoteWithName( optionTweaks->tweaksPlug(), "edits" );
+
+	result->outPlug()->setInput( optionTweaks->outPlug() );
+
+	return result;
+}
+
+SceneProcessor *acquireOptionProcessor( EditScope *editScope, bool createIfNecessary )
+{
+	static bool isRegistered = false;
+	if( !isRegistered )
+	{
+		EditScope::registerProcessor(
+			g_optionProcessorName,
+			[]() {
+				return optionProcessor( g_optionProcessorName );
+			}
+		);
+
+		isRegistered = true;
+	}
+
+	return editScope->acquireProcessor<SceneProcessor>( g_optionProcessorName, createIfNecessary );
+}
+
+ConstObjectPtr optionValue( const ScenePlug *scene, const std::string &option )
+{
+	auto options = scene->globals();
+
+	ObjectPtr result = nullptr;
+
+	const CompoundObject::ObjectMap &map = options->members();
+	CompoundObject::ObjectMap::const_iterator it = map.find( g_optionPrefix + option );
+	if( it != map.end() )
+	{
+		result = it->second;
+	}
+
+	if( !result )
+	{
+		CreatableRegistry::const_iterator registeredOption = g_optionRegistry.find( g_optionPrefix + option );
+		if( registeredOption != g_optionRegistry.end() )
+		{
+			return registeredOption->second;
+		}
+
+		throw IECore::Exception( boost::str( boost::format( "Option \"%s\" does not exist" ) % option ) );
+	}
+
+	return result;
+}
+
+/// \todo Finding a child tweak plug by the tweak name is needed in a few different
+/// places (AttributeInspector, ParameterInspector). Consider adding this to TweaksPlug.
+
+TweakPlug *tweakPlug( TweaksPlug *tweaks, const std::string &tweakName )
+{
+	for( auto &p : TweakPlug::Range( *tweaks ) )
+	{
+		if( p->namePlug()->getValue() == tweakName )
+		{
+			return p.get();
+		}
+	}
+	return nullptr;
+}
+
+}  // namespace
+
+
+bool GafferScene::EditScopeAlgo::hasOptionEdit( const Gaffer::EditScope *scope, const std::string &option )
+{
+	return acquireOptionEdit( const_cast<EditScope *>( scope ), option, /* createIfNecessary = */ false );
+}
+
+TweakPlug *GafferScene::EditScopeAlgo::acquireOptionEdit( Gaffer::EditScope *scope, const std::string &option, bool createIfNecessary )
+{
+	// If we need to create an edit, we'll need to do a compute to figure our the option
+	// type and value. But we don't want to do that if we already have an edit. And since the
+	// compute could error, we need to get the option value before making _any_ changes, so we
+	// don't leave things in a partial state. We use `ensureOptionValue()` to get the value
+	// lazily at the first point we know it will be needed.
+	ConstDataPtr optionValue;
+	auto ensureOptionValue = [&] {
+		if( !optionValue )
+		{
+			optionValue = runTimeCast<const Data>(
+				::optionValue( scope->outPlug<ScenePlug>(), option )
+			);
+			if( !optionValue )
+			{
+				throw IECore::Exception( boost::str( boost::format( "Option \"%s\" cannot be tweaked" ) % option ) );
+			}
+		}
+	};
+
+	// Find processor
+
+	auto *processor = acquireOptionProcessor( scope, /* createIfNecessary */ false );
+	if( !processor )
+	{
+		if( !createIfNecessary )
+		{
+			return nullptr;
+		}
+		else
+		{
+			ensureOptionValue();
+			processor = acquireOptionProcessor( scope, /* createIfNecessary */ true );
+		}
+	}
+
+	auto *tweaks = processor->getChild<TweaksPlug>( "edits" );
+
+	if( TweakPlug *tweak = tweakPlug( tweaks, option ) )
+	{
+		return tweak;
+	}
+
+	if( !createIfNecessary )
+	{
+		return nullptr;
+	}
+
+	// No tweak for the option yet. Create it.
+
+	ensureOptionValue();
+
+	ValuePlugPtr valuePlug = PlugAlgo::createPlugFromData( "value", Plug::In, Plug::Default, optionValue.get() );
+
+	tweaks->addChild( new TweakPlug( option, valuePlug, TweakPlug::Create, false ) );
+
+	return tweakPlug( tweaks, option );
+}
+
+void GafferScene::EditScopeAlgo::removeOptionEdit( Gaffer::EditScope *scope, const std::string &option )
+{
+	TweakPlug *edit = acquireOptionEdit( scope, option, /* createIfNecessary */ false );
+	if( !edit )
+	{
+		return;
+	}
+
+	edit->parent()->removeChild( edit );
+}
+
+const Gaffer::GraphComponent *GafferScene::EditScopeAlgo::optionEditReadOnlyReason( const Gaffer::EditScope *scope, const std::string &option )
+{
+	auto *processor = acquireOptionProcessor( const_cast<EditScope *>( scope ), /*createIfNecessary */ false );
+	if( !processor )
+	{
+		return MetadataAlgo::readOnlyReason( scope );
+	}
+
+	auto *tweaks = processor->getChild<TweaksPlug>( "edits" );
+	if( !tweaks )
+	{
+		return MetadataAlgo::readOnlyReason( processor );
+	}
+
+	if( const auto reason = MetadataAlgo::readOnlyReason( tweaks ) )
+	{
+		return reason;
+	}
+
+	TweakPlug *tweak = tweakPlug( tweaks, option );
+	if( tweak )
+	{
+		if( MetadataAlgo::getReadOnly( tweak ) )
+		{
+			return tweak;
+		}
+		for( const auto &plug : Plug::RecursiveRange( *tweak ) )
+		{
+			if( MetadataAlgo::getReadOnly( plug.get() ) )
+			{
+				return plug.get();
+			}
 		}
 	}
 

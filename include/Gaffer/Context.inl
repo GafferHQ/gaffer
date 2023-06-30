@@ -159,13 +159,11 @@ void Context::set( const IECore::InternedString &name, const T &value )
 	// and call internalSet to reference it in the main m_map
 	using DataType = typename Gaffer::Detail::DataTraits<T>::DataType;
 	typename DataType::Ptr d = new DataType( value );
-	if( internalSet( name, Value( name, &d->readable() ) ) )
-	{
-		m_allocMap[name] = d;
-	}
+	m_allocMap[name] = d;
+	internalSet( name, Value( name, &d->readable() ) );
 }
 
-inline bool Context::internalSet( const IECore::InternedString &name, const Value &value )
+inline void Context::internalSet( const IECore::InternedString &name, const Value &value )
 {
 	if( !m_changedSignal )
 	{
@@ -174,24 +172,21 @@ inline bool Context::internalSet( const IECore::InternedString &name, const Valu
 		// expense of checking.
 		m_map[name] = value;
 		m_hashValid = false;
-		return true;
 	}
 	else
 	{
-		// Avoid emitting `changedSignal` if the value hasn't
-		// actually changed. We want to avoid expensive re-evaluations
-		// that might otherwise be triggered in the UI.
+		// Always assign to the value, because the caller might have updated
+		// `m_allocMap` already (removing the previous value).
 		Value &v = m_map[name];
-		if( v != value )
+		const bool changed = v != value;
+		v = value;
+		if( changed )
 		{
-			v = value;
+			// But avoid emitting `changedSignal` if the value hasn't
+			// actually changed. We want to avoid expensive re-evaluations
+			// that might otherwise be triggered in the UI.
 			m_hashValid = false;
 			(*m_changedSignal)( this, name );
-			return true;
-		}
-		else
-		{
-			return false;
 		}
 	}
 }
