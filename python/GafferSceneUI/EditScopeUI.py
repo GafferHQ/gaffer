@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import IECore
+
 import Gaffer
 import GafferUI
 import GafferScene
@@ -43,6 +45,11 @@ def addPruningActions( editor ) :
 
 	if isinstance( editor, GafferUI.Viewer ) :
 		editor.keyPressSignal().connect( __pruningKeyPress, scoped = False )
+
+def addVisibilityActions( editor ) :
+
+	if isinstance( editor, GafferUI.Viewer ) :
+		editor.keyPressSignal().connect( __visibilityKeyPress, scoped = False )
 
 def __pruningKeyPress( viewer, event ) :
 
@@ -99,5 +106,51 @@ def __pruningKeyPress( viewer, event ) :
 	if not selection.isEmpty() :
 		with Gaffer.UndoScope( editScope.ancestor( Gaffer.ScriptNode ) ) :
 			GafferScene.EditScopeAlgo.setPruned( editScope, selection, True )
+
+	return True
+
+def __visibilityKeyPress( viewer, event ) :
+
+	if not ( event.key == "H" and event.Modifiers.Control ) :
+		return False
+
+	if not isinstance( viewer.view(), GafferSceneUI.SceneView ) :
+		return False
+
+	editScope = viewer.view().editScope()
+	if editScope is None or Gaffer.MetadataAlgo.readOnly( editScope ) :
+		return True
+
+	sceneGadget = viewer.view().viewportGadget().getPrimaryChild()
+	selection = sceneGadget.getSelection()
+
+	if selection.isEmpty() :
+		return True
+
+	inspector = GafferSceneUI.Private.AttributeInspector(
+		viewer.view()["in"].getInput(),
+		viewer.view()["editScope"],
+		"scene:visible"
+	)
+
+	with viewer.getContext() as context :
+		attributeEdits = editScope.acquireProcessor( "AttributeEdits", createIfNecessary = False )
+		if not editScope["enabled"].getValue() or ( attributeEdits is not None and not attributeEdits["enabled"].getValue() ) :
+			# Spare folks from hiding something when it won't be
+			# apparent what they've done until they reenable the
+			# EditScope or processor.
+			return True
+
+		with Gaffer.UndoScope( editScope.ancestor( Gaffer.ScriptNode ) ) :
+			for path in selection.paths() :
+				context["scene:path"] = IECore.InternedStringVectorData( path.split( "/" )[1:] )
+				inspection = inspector.inspect()
+
+				if inspection is None or not inspection.editable() :
+					continue
+
+				tweakPlug = inspection.acquireEdit()
+				tweakPlug["enabled"].setValue( True )
+				tweakPlug["value"].setValue( False )
 
 	return True

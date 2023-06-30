@@ -1,6 +1,11 @@
 1.2.x.x (relative to 1.2.9.0)
 =======
 
+Improvements
+------------
+
+- EditScopeUI : Added the ability to turn off visibility of selected objects in the viewer using the <kbd>Ctrl</kbd>+<kbd>H</kbd> shortcut.
+
 Fixes
 -----
 

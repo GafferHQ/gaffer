@@ -87,6 +87,7 @@ namespace
 /// in clients of history related APIs such as `AttributeInspector`.
 using CreatableRegistry = std::unordered_map<std::string, const IECore::DataPtr>;
 CreatableRegistry g_attributeRegistry {
+	{ "scene:visible", new BoolData( true ) },
 	{ "gl:visualiser:scale", new IECore::FloatData( 1.0f ) },
 	{ "gl:visualiser:maxTextureResolution", new IECore::IntData( 512 ) },
 	{ "gl:visualiser:frustum", new IECore::StringData( "whenSelected" ) },
