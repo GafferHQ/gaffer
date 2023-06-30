@@ -256,6 +256,7 @@ vdbVersion = targetAppReg.get( "OpenVDBVersion", cortexReg["OpenVDBVersion"] )
 oslVersion = targetAppReg.get( "OpenShadingLanguageVersion", gafferReg.get( "OpenShadingLanguageVersion", cortexReg["OpenShadingLanguageVersion"] ) )
 tbbVersion = targetAppReg.get( "tbbVersion", cortexReg["tbbVersion"] )
 usdVersion = targetAppReg.get( "usdVersion", cortexReg["usdVersion"] )
+pcgVersion = "0.1.0" # At IE, we have labelled the current main, commit 428802d, as 0.1.0
 
 OSLHOME = os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenShadingLanguage", oslVersion, IEEnv.platform(), compiler, compilerVersion )
 
@@ -273,6 +274,7 @@ LOCATE_DEPENDENCY_SYSTEMPATH = [
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "boost", boostVersion ),
 	os.path.join( pythonReg["location"], compiler, compilerVersion, pythonReg["include"], "python" + pythonVersion ),
 	"/usr/include/freetype2",
+	os.path.join( IEEnv.Environment.rootPath(), "tools", "include", IEEnv.platform(), "pcg", pcgVersion ),
 ]
 
 # append openVDB header when we are not building for Houdini.
