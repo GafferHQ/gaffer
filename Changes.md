@@ -17,6 +17,7 @@ Fixes
   - Fixed error when `resize()` removed plugs with input connections.
   - Fixed error when `resize()` was used on an output plug.
 - CreateViews : Fixed loading of files saved from Gaffer 1.5+.
+- Cycles : OpenVDBs will now render and allow shader updates in a live render.
 
 1.4.13.0 (relative to 1.4.12.0)
 ========

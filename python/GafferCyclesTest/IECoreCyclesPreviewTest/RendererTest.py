@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import pathlib
 import math
 import time
 import unittest
@@ -43,6 +44,7 @@ import imath
 import IECore
 import IECoreScene
 import IECoreImage
+import IECoreVDB
 
 import GafferScene
 import GafferCycles
@@ -2741,6 +2743,79 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( testPixel.b, 0 )
 
 		del light, plane
+
+	def testVDB( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		camera = renderer.camera(
+			"testCamera",
+			IECoreScene.Camera(
+				parameters = {
+					"resolution" : imath.V2i( 64, 64 ),
+				}
+			),
+			renderer.attributes( IECore.CompoundObject() )
+		)
+		camera.transform( imath.M44f().translate( imath.V3f( 0, 45, 150 ) ) )
+
+		renderer.option( "camera", IECore.StringData( "testCamera" ) )
+
+		renderer.output(
+			"testOutput",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testVDB",
+				}
+			)
+		)
+
+		renderer.object(
+			"/vdb",
+			IECoreVDB.VDBObject( pathlib.Path( __file__ ).parent / ".." / ".." / "GafferVDBTest" / "data" / "smoke.vdb" ), # todo - can't figure out how to load in a vdb...
+			renderer.attributes( IECore.CompoundObject ( {
+				"cycles:volume" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader( "principled_volume", "cycles:volume", { "density_attribute" : "density" } )
+					},
+					output = "output",
+				)
+			} ) )
+		)
+
+		renderer.light(
+			"/light",
+			None,
+			renderer.attributes( IECore.CompoundObject ( {
+				"cycles:light" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader( "background_light", "cycles:light", { "color" : imath.Color3f( 1, 1, 1 ) } ),
+					},
+					output = "output",
+				),
+			} ) )
+		)
+
+		renderer.render()
+		time.sleep( 2 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testVDB" )
+		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+
+		testPixel = self.__colorAtUV( image, imath.V2f( 0.5 ) )
+		self.assertGreater( testPixel.r, 0 )
+		self.assertGreater( testPixel.g, 0 )
+		self.assertGreater( testPixel.b, 0 )
+
+		del camera
+		del v
 
 if __name__ == "__main__":
 	unittest.main()

@@ -135,14 +135,14 @@ ccl::PointCloud *convertCommon( const IECoreScene::PointsPrimitive *points )
 	return pointcloud;
 }
 
-ccl::Geometry *convert( const IECoreScene::PointsPrimitive *points, const std::string &nodeName, ccl::Scene *scene )
+ccl::Geometry *convert( const IECoreScene::PointsPrimitive *points, const std::string &nodeName )
 {
 	ccl::PointCloud *pointCloud = convertCommon( points );
 	pointCloud->name = ccl::ustring( nodeName.c_str() );
 	return pointCloud;
 }
 
-ccl::Geometry *convert( const vector<const IECoreScene::PointsPrimitive *> &points, const std::vector<float> &times, const int frameIdx, const std::string &nodeName, ccl::Scene *scene )
+ccl::Geometry *convert( const vector<const IECoreScene::PointsPrimitive *> &points, const std::vector<float> &times, const int frameIdx, const std::string &nodeName )
 {
 	const int numSamples = points.size();
 
