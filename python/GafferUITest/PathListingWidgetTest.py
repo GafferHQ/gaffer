@@ -1556,6 +1556,84 @@ class PathListingWidgetTest( GafferUITest.TestCase ) :
 		self.assertEqual( model.data( model.index( 0, 0 ) ), "a" )
 		self.assertEqual( model.data( model.index( 1, 0 ) ), "b" )
 
+	def testModelHeaderData( self ) :
+
+		class HeaderColumn( GafferUI.PathColumn ) :
+
+			def __init__( self, title = "Title" ) :
+
+				GafferUI.PathColumn.__init__( self )
+
+				self.__title = title
+
+			def setTitle( self, title ) :
+
+				if title == self.__title :
+					return
+
+				self.__title = title
+				self.changedSignal()( self )
+
+			def getTitle( self ) :
+
+				return self.__titles
+
+			def cellData( self, path, canceller = None ) :
+
+				return self.CellData()
+
+			def headerData( self, canceller = None ) :
+
+				return self.CellData( value = self.__title )
+
+		path = self.InfinitePath( "/" )
+
+		widget = GafferUI.PathListingWidget(
+			path = path,
+			displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
+			sortable = False,
+			columns = [
+				HeaderColumn(),
+			],
+		)
+		model = widget._qtWidget().model()
+
+		changes = []
+		def headerDataChanged( *args ) :
+			changes.append( args )
+
+		model.headerDataChanged.connect( headerDataChanged )
+
+		# When we first query the header, we should get nothing, because it won't
+		# have been evaluated yet.
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal ), None )
+		# But the query should trigger a background update that should update it
+		# asynchronously.
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
+		self.assertEqual( changes, [ ( QtCore.Qt.Horizontal, 0, 0 ) ] )
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal ), "Title" )
+		# The next query shouldn't trigger any update.
+		del changes[:]
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal ), "Title" )
+		self.assertEqual( changes, [] )
+
+		# Changing the column title should trigger another async update.
+		widget.getColumns()[0].setTitle( "Title 2" )
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal ), "Title" )
+		self.assertEqual( changes, [] )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
+		self.assertEqual( changes, [ ( QtCore.Qt.Horizontal, 0, 0 ) ] )
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal ), "Title 2" )
+
+		# If the column changes for some other reason, then even though we'll
+		# get an async update happening, it won't find any changes to notify us
+		# about.
+		del changes[:]
+		widget.getColumns()[0].changedSignal()( widget.getColumns()[0] )
+		_GafferUI._pathModelWaitForPendingUpdates( GafferUI._qtAddress( model ) )
+		self.assertEqual( changes, [] )
+		self.assertEqual( model.headerData( 0, QtCore.Qt.Horizontal ), "Title 2" )
+
 	@staticmethod
 	def __emitPathChanged( widget ) :
 
