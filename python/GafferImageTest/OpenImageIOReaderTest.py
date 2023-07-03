@@ -288,6 +288,80 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		reader["fileName"].setValue( self.missingFileName )
 		self.assertEqual( reader["availableFrames"].getValue(), IECore.IntVectorData( [] ) )
 
+	def testFileValid( self ) :
+
+		testFile = self.temporaryDirectory() / "single_file.exr"
+
+		reader = GafferImage.OpenImageIOReader()
+		reader["fileName"].setValue( testFile )
+
+		context = Gaffer.Context()
+		context.setFrame( 1 )
+
+		with context:
+			self.assertFalse( reader["fileValid"].getValue() )
+
+		shutil.copyfile( self.fileName, testFile )
+		with context:
+			self.assertFalse( reader["fileValid"].getValue() )
+
+		# changing missingFrameMode doesn't affect the fileValid plug
+		reader["missingFrameMode"].setValue( GafferImage.OpenImageIOReader.MissingFrameMode.Black )
+		with context:
+			self.assertFalse( reader["fileValid"].getValue() )
+
+		# whereas refreshCount should affect the fileValid plug
+		reader['refreshCount'].setValue( reader['refreshCount'].getValue() + 1 )
+		with context:
+			self.assertTrue( reader["fileValid"].getValue() )
+
+	def testFilesValid( self ):
+
+		testSequence = IECore.FileSequence( str( self.temporaryDirectory() / "incompleteSequence.####.exr" ) )
+		shutil.copyfile( self.fileName, testSequence.fileNameForFrame( 1 ) )
+		shutil.copyfile( self.offsetDataWindowFileName, testSequence.fileNameForFrame( 3 ) )
+
+		reader = GafferImage.OpenImageIOReader()
+		reader["fileName"].setValue( pathlib.Path( testSequence.fileName ) )
+
+		context = Gaffer.Context()
+
+		# frame 0 - missing
+		context.setFrame( 0 )
+
+		with context :
+			self.assertFalse( reader["fileValid"].getValue() )
+
+		# frame 1 - found
+		context.setFrame( 1 )
+
+		with context:
+			self.assertTrue( reader["fileValid"].getValue() )
+
+		# frame 2 - goes missing and then is found
+		context.setFrame( 2 )
+
+		with context:
+			self.assertFalse( reader["fileValid"].getValue() )
+		shutil.copyfile( self.offsetDataWindowFileName, testSequence.fileNameForFrame( 2 ) )
+		with context:
+			self.assertFalse( reader["fileValid"].getValue() )
+		reader['refreshCount'].setValue( reader['refreshCount'].getValue() + 1 )
+		with context:
+			self.assertTrue( reader["fileValid"].getValue() )
+
+		# frame 3: found
+		context.setFrame( 3 )
+
+		with context:
+			self.assertTrue( reader["fileValid"].getValue() )
+
+		# frame 4: missing
+		context.setFrame( 4 )
+
+		with context:
+			self.assertFalse( reader["fileValid"].getValue() )
+
 	def testMissingFrameMode( self ) :
 
 		testSequence = IECore.FileSequence( str( self.temporaryDirectory() / "incompleteSequence.####.exr" ) )

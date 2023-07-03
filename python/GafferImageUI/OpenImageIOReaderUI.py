@@ -127,6 +127,19 @@ Gaffer.Metadata.registerNode(
 			"Documented in ImageReader, where it is exposed to users."
 		],
 
+		"fileValid" : [
+
+			"description",
+			"""
+			Whether or not the files exists and can be read into memory,
+			value calculated per frame if an image sequence. MissingFrameMode
+			does not change the behaviour of this plug.
+			""",
+
+			"plugValueWidget:type", "",
+
+		]
+
 	}
 
 )

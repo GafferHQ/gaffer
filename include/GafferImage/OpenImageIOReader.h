@@ -81,6 +81,9 @@ class GAFFERIMAGE_API OpenImageIOReader : public ImageNode
 		Gaffer::IntVectorDataPlug *availableFramesPlug();
 		const Gaffer::IntVectorDataPlug *availableFramesPlug() const;
 
+		Gaffer::BoolPlug *fileValidPlug();
+		const Gaffer::BoolPlug *fileValidPlug() const;
+
 		Gaffer::IntPlug *channelInterpretationPlug();
 		const Gaffer::IntPlug *channelInterpretationPlug() const;
 
