@@ -1,4 +1,8 @@
-1.2.x.x (relative to 1.2.8.0)
+1.2.x.x (relative to 1.2.9.0)
+=======
+
+
+1.2.9.0 (relative to 1.2.8.0)
 =======
 
 > Caution : A bug fix in the handling of the `ai:volume:step_scale` attribute may change the appearance of Arnold volume renders.
