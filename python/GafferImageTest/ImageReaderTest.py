@@ -298,8 +298,10 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 		# so we can tell if BlackOutside is working.
 		blackTile = IECore.FloatVectorData( [ 0 ] * GafferImage.ImagePlug.tileSize() * GafferImage.ImagePlug.tileSize() )
 		with context :
+			self.assertEqual( reader["availableFrames"].getValue(), IECore.IntVectorData( [ 1, 3 , 5, 7 ] ) )
 			for i in range( 1, 11 ) :
 				context.setFrame( i )
+				self.assertEqual( reader["fileValid"].getValue(), i in ( 1, 3, 5, 7 ), "frame {}".format( i ) )
 				self.assertNotEqual( reader["out"].channelData( "R", imath.V2i( 0 ) ), blackTile )
 
 		def assertBlack() :

@@ -270,6 +270,17 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"fileValid" : [
+			"description",
+			"""
+			Whether or not the files exists and can be read into memory,
+			value calculated per frame if an image sequence.
+			""",
+
+			"layout:section", "Frames",
+
+		]
+
 	}
 
 )
