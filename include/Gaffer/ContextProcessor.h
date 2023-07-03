@@ -45,7 +45,7 @@ namespace Gaffer
 /// The ContextProcessor provides a base class to simplify the creation of nodes
 /// which evaluate their inputs using a modified context to that provided for the output
 /// evaluation - time warps being one good example.
-class IECORE_EXPORT ContextProcessor : public ComputeNode
+class GAFFER_API ContextProcessor : public ComputeNode
 {
 
 	public :

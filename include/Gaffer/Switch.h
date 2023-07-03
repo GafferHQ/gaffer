@@ -43,7 +43,7 @@
 namespace Gaffer
 {
 
-class IECORE_EXPORT Switch : public ComputeNode
+class GAFFER_API Switch : public ComputeNode
 {
 
 	public :
