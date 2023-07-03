@@ -14,6 +14,7 @@ Fixes
   - Fixed bug causing the cursor position to be reset to the end if the number of digits in the plug value changed while incrementing/decrementing with the keyboard up/down arrow keys.
   - Fixed bug causing the cursor position to be reset to the end when incrementing an animated plug.
   - Fixed intermittent `---` values when drag-changing an animated plug value.
+- EditScopes : Fixed bug where the enabled state of `AttributeEdits`, `OptionEdits` and `SetMembershipEdits` did not have any effect. This fix will only apply to newly created `AttributeEdits`, `OptionEdits` and `SetMembershipEdits`.
 
 1.2.9.0 (relative to 1.2.8.0)
 =======

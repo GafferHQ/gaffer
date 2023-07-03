@@ -73,6 +73,7 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.assertFalse( GafferScene.EditScopeAlgo.getPruned( scope, "/group/cube" ) )
 		self.assertEqual( len( list( GafferScene.SceneProcessor.Range( scope ) ) ), 1 )
 		self.assertEqual( scope["PruningEdits"]["paths"].getValue(), IECore.StringVectorData( [ "/group/plane" ] ) )
+		self.assertEqual( scope["PruningEdits"]["Prune"]["enabled"].getInput(), scope["PruningEdits"]["enabled"] )
 		self.assertFalse( GafferScene.SceneAlgo.exists( scope["out"], "/group/plane" ) )
 		self.assertTrue( GafferScene.SceneAlgo.exists( scope["out"], "/group/cube" ) )
 
@@ -162,6 +163,7 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.assertIsInstance( edit, GafferScene.EditScopeAlgo.TransformEdit )
 		self.assertTrue( GafferScene.EditScopeAlgo.hasTransformEdit( editScope, "/plane" ) )
 		self.assertIsNotNone( GafferScene.EditScopeAlgo.acquireTransformEdit( editScope, "/plane", createIfNecessary = False ) )
+		self.assertEqual( editScope["TransformEdits"]["Transform"]["enabled"].getInput(), editScope["TransformEdits"]["enabled"] )
 		self.assertEqual( editScope["out"].transform( "/plane" ), imath.M44f() )
 		edit.translate.setValue( imath.V3f( 2, 3, 4 ) )
 		self.assertEqual( editScope["out"].transform( "/plane" ), imath.M44f().translate( imath.V3f( 2, 3, 4 ) ) )
@@ -318,6 +320,7 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( edit["mode"].getValue(), Gaffer.TweakPlug.Mode.Replace )
 		self.assertEqual( edit["value"].getValue(), imath.Color3f( 0 ) )
 		self.assertEqual( edit["enabled"].getValue(), False )
+		self.assertEqual( editScope["LightEdits"]["ShaderTweaks"]["enabled"].getInput(), editScope["LightEdits"]["enabled"] )
 
 		edit["enabled"].setValue( True )
 		edit["value"].setValue( imath.Color3f( 1 ) )
@@ -667,6 +670,7 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( edit["mode"].getValue(), Gaffer.TweakPlug.Mode.Create )
 		self.assertEqual( edit["value"].getValue(), 1.0 )
 		self.assertEqual( edit["enabled"].getValue(), False )
+		self.assertEqual( editScope["AttributeEdits"]["AttributeTweaks"]["enabled"].getInput(), editScope["AttributeEdits"]["enabled"] )
 
 		edit["enabled"].setValue( True )
 		edit["value"].setValue( 2.0 )
@@ -1084,6 +1088,9 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		GafferScene.EditScopeAlgo.setSetMembership( scope, IECore.PathMatcher( ["/group/cube"] ), "A", membership.Added )
 
+		self.assertEqual( scope["SetMembershipEdits"]["Set"]["enabled"].getInput(), scope["SetMembershipEdits"]["enabled"] )
+		self.assertEqual( scope["SetMembershipEdits"]["Set1"]["enabled"].getInput(), scope["SetMembershipEdits"]["enabled"] )
+
 		for path, set, status in (
 			( "/group/plane", "A", membership.Unchanged ),
 			( "/group/plane", "B", membership.Unchanged ),
@@ -1272,6 +1279,7 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( edit["mode"].getValue(), Gaffer.TweakPlug.Mode.Create )
 		self.assertEqual( edit["value"].getValue(), 10 )
 		self.assertEqual( edit["enabled"].getValue(), False )
+		self.assertEqual( editScope["OptionEdits"]["OptionTweaks"]["enabled"].getInput(), editScope["OptionEdits"]["enabled"] )
 
 		edit["enabled"].setValue( True )
 		edit["value"].setValue( 20 )
