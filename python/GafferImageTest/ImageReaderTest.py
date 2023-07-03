@@ -276,6 +276,42 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 			self.assertTrue( GafferImage.BufferAlgo.empty( reader["out"]['dataWindow'].getValue() ) )
 			self.assertTrue( GafferImage.BufferAlgo.empty( oiio["out"]['dataWindow'].getValue() ) )
 
+	def testFileValid( self ):
+
+		testSequence = IECore.FileSequence( str( self.temporaryDirectory() / "incompleteSequence.####.exr" ) )
+		shutil.copyfile( self.fileName, testSequence.fileNameForFrame( 1001 ) )
+		shutil.copyfile( self.fileName, testSequence.fileNameForFrame( 1002 ) )
+		shutil.copyfile( self.fileName, testSequence.fileNameForFrame( 1004 ) )
+
+		reader = GafferImage.ImageReader()
+		reader["fileName"].setValue( pathlib.Path( testSequence.fileName ) )
+		reader["start"]["frame"].setValue( 1001 )
+		reader["end"]["frame"].setValue( 1005 )
+
+		context = Gaffer.Context( Gaffer.Context.current() )
+
+		# test with no frame mask set yet
+		with context :
+			for i in range( 1000, 1006 ) :
+				context.setFrame( i )
+				self.assertEqual( reader["fileValid"].getValue(), i in ( 1001, 1002, 1004 ) )
+
+		# test with frame mask set to hold with range 1001-1005
+		reader["start"]["mode"].setValue( GafferImage.ImageReader.FrameMaskMode.ClampToFrame )
+		reader["end"]["mode"].setValue( GafferImage.ImageReader.FrameMaskMode.ClampToFrame )
+		with context :
+			for i in range( 1000, 1006 ) :
+				context.setFrame( i )
+				self.assertEqual( reader["fileValid"].getValue(), i in ( 1000, 1001, 1002, 1004 ) )
+
+		# test with frame mask set to black with range 1001-1005
+		reader["start"]["mode"].setValue( GafferImage.ImageReader.FrameMaskMode.BlackOutside )
+		reader["end"]["mode"].setValue( GafferImage.ImageReader.FrameMaskMode.BlackOutside )
+		with context :
+			for i in range( 1000, 1006 ) :
+				context.setFrame( i )
+				self.assertEqual( reader["fileValid"].getValue(), i in (1000, 1001, 1002, 1004) )
+
 	def testFrameRangeMask( self ) :
 
 		testSequence = IECore.FileSequence( str( self.temporaryDirectory() / "incompleteSequence.####.exr" ) )

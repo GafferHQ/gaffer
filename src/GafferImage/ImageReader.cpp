@@ -148,7 +148,9 @@ ImageReader::ImageReader( const std::string &name )
 	addChild( new IntPlug( "channelInterpretation", Plug::In, (int)ChannelInterpretation::Default, /* min */ (int)ChannelInterpretation::Legacy, /* max */ (int)ChannelInterpretation::Specification ) );
 
 	addChild( new IntVectorDataPlug( "availableFrames", Plug::Out, new IntVectorData, Plug::Default & ~Plug::Serialisable ) );
+	addChild( new BoolPlug( "fileValid", Plug::Out, false, Plug::Default & ~Plug::Serialisable ) );
 
+	addChild( new BoolPlug( "__intermediateFileValid", Plug::In, false, Plug::Default & ~Plug::Serialisable ) );
 	addChild( new AtomicCompoundDataPlug( "__intermediateMetadata", Plug::In, new CompoundData, Plug::Default & ~Plug::Serialisable ) );
 	addChild( new StringPlug( "__intermediateColorSpace", Plug::Out, "", Plug::Default & ~Plug::Serialisable ) );
 	addChild( new ImagePlug( "__intermediateImage", Plug::In, Plug::Default & ~Plug::Serialisable ) );
@@ -163,6 +165,7 @@ ImageReader::ImageReader( const std::string &name )
 	oiioReader->missingFrameModePlug()->setInput( missingFrameModePlug() );
 	oiioReader->channelInterpretationPlug()->setInput( channelInterpretationPlug() );
 	intermediateMetadataPlug()->setInput( oiioReader->outPlug()->metadataPlug() );
+	intermediateFileValidPlug()->setInput( oiioReader->fileValidPlug() );
 
 	ColorSpacePtr colorSpace = new ColorSpace( "__colorSpace" );
 	addChild( colorSpace );
@@ -278,54 +281,74 @@ const Gaffer::IntVectorDataPlug *ImageReader::availableFramesPlug() const
 	return getChild<IntVectorDataPlug>( g_firstChildIndex + 7 );
 }
 
+Gaffer::BoolPlug *ImageReader::fileValidPlug()
+{
+	return getChild<BoolPlug>( g_firstChildIndex + 8 );
+}
+
+const Gaffer::BoolPlug *ImageReader::fileValidPlug() const
+{
+	return getChild<BoolPlug>( g_firstChildIndex + 8 );
+}
+
+Gaffer::BoolPlug *ImageReader::intermediateFileValidPlug()
+{
+	return getChild<BoolPlug>( g_firstChildIndex + 9 );
+}
+
+const Gaffer::BoolPlug *ImageReader::intermediateFileValidPlug() const
+{
+	return getChild<BoolPlug>( g_firstChildIndex + 9 );
+}
+
 AtomicCompoundDataPlug *ImageReader::intermediateMetadataPlug()
 {
-	return getChild<AtomicCompoundDataPlug>( g_firstChildIndex + 8 );
+	return getChild<AtomicCompoundDataPlug>( g_firstChildIndex + 10 );
 }
 
 const AtomicCompoundDataPlug *ImageReader::intermediateMetadataPlug() const
 {
-	return getChild<AtomicCompoundDataPlug>( g_firstChildIndex + 8 );
+	return getChild<AtomicCompoundDataPlug>( g_firstChildIndex + 10 );
 }
 
 StringPlug *ImageReader::intermediateColorSpacePlug()
 {
-	return getChild<StringPlug>( g_firstChildIndex + 9 );
+	return getChild<StringPlug>( g_firstChildIndex + 11 );
 }
 
 const StringPlug *ImageReader::intermediateColorSpacePlug() const
 {
-	return getChild<StringPlug>( g_firstChildIndex + 9 );
+	return getChild<StringPlug>( g_firstChildIndex + 11 );
 }
 
 ImagePlug *ImageReader::intermediateImagePlug()
 {
-	return getChild<ImagePlug>( g_firstChildIndex + 10 );
+	return getChild<ImagePlug>( g_firstChildIndex + 12 );
 }
 
 const ImagePlug *ImageReader::intermediateImagePlug() const
 {
-	return getChild<ImagePlug>( g_firstChildIndex + 10 );
+	return getChild<ImagePlug>( g_firstChildIndex + 12 );
 }
 
 OpenImageIOReader *ImageReader::oiioReader()
 {
-	return getChild<OpenImageIOReader>( g_firstChildIndex + 11 );
+	return getChild<OpenImageIOReader>( g_firstChildIndex + 13 );
 }
 
 const OpenImageIOReader *ImageReader::oiioReader() const
 {
-	return getChild<OpenImageIOReader>( g_firstChildIndex + 11 );
+	return getChild<OpenImageIOReader>( g_firstChildIndex + 13 );
 }
 
 ColorSpace *ImageReader::colorSpace()
 {
-	return getChild<ColorSpace>( g_firstChildIndex + 12 );
+	return getChild<ColorSpace>( g_firstChildIndex + 14 );
 }
 
 const ColorSpace *ImageReader::colorSpace() const
 {
-	return getChild<ColorSpace>( g_firstChildIndex + 12 );
+	return getChild<ColorSpace>( g_firstChildIndex + 14 );
 }
 
 size_t ImageReader::supportedExtensions( std::vector<std::string> &extensions )
@@ -356,8 +379,11 @@ ImageReader::DefaultColorSpaceFunction &ImageReader::defaultColorSpaceFunction()
 void ImageReader::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ImageNode::affects( input, outputs );
-
-	if( input == intermediateMetadataPlug() || input == colorSpacePlug() )
+	if( input == intermediateFileValidPlug() )
+	{
+		outputs.push_back( fileValidPlug() );
+	}
+	else if( input == intermediateMetadataPlug() || input == colorSpacePlug() )
 	{
 		outputs.push_back( intermediateColorSpacePlug() );
 	}
@@ -372,6 +398,7 @@ void ImageReader::affects( const Plug *input, AffectedPlugsContainer &outputs ) 
 		input == endModePlug()
 	)
 	{
+		outputs.push_back( fileValidPlug() );
 		for( ValuePlug::Iterator it( outPlug() ); !it.done(); ++it )
 		{
 			outputs.push_back( it->get() );
@@ -389,6 +416,11 @@ void ImageReader::hash( const ValuePlug *output, const Context *context, IECore:
 		colorSpacePlug()->hash( h );
 		fileNamePlug()->hash( h );
 		h.append( OpenColorIOAlgo::currentConfigHash() );
+	}
+	else if ( output == fileValidPlug() )
+	{
+		FrameMaskScope scope( context, this, /* clampBlack = */ true );
+		oiioReader()->fileValidPlug()->hash( h );
 	}
 }
 
@@ -413,6 +445,11 @@ void ImageReader::compute( ValuePlug *output, const Context *context ) const
 			}
 		}
 		static_cast<StringPlug *>( output )->setValue( colorSpace );
+	}
+	else if ( output == fileValidPlug() )
+	{
+		FrameMaskScope scope( context, this, /* clampBlack = */ true );
+		static_cast<BoolPlug *>( output )->setValue( oiioReader()->fileValidPlug()->getValue() );
 	}
 	else
 	{

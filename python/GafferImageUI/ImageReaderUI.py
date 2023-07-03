@@ -270,6 +270,19 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"fileValid" : [
+			"description",
+			"""
+			Whether or not the files exists and can be read into memory,
+			value calculated per frame if an image sequence. Behaviour changes
+			if a frame mask of ClampToFrame or Black is selected, if outside
+			the frame mask fileValid will be set to True if the nearest frame is valid.
+			""",
+
+			"layout:section", "Frames",
+
+		]
+
 	}
 
 )

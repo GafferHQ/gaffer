@@ -129,6 +129,9 @@ class GAFFERIMAGE_API ImageReader : public ImageNode
 		Gaffer::IntVectorDataPlug *availableFramesPlug();
 		const Gaffer::IntVectorDataPlug *availableFramesPlug() const;
 
+		Gaffer::BoolPlug *fileValidPlug();
+		const Gaffer::BoolPlug *fileValidPlug() const;
+
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 		static size_t supportedExtensions( std::vector<std::string> &extensions );
@@ -191,6 +194,9 @@ class GAFFERIMAGE_API ImageReader : public ImageNode
 		const GafferImage::ImagePlug *intermediateImagePlug() const;
 
 		static DefaultColorSpaceFunction &defaultColorSpaceFunction();
+
+		Gaffer::BoolPlug *intermediateFileValidPlug();
+		const Gaffer::BoolPlug *intermediateFileValidPlug() const;
 
 		static size_t g_firstChildIndex;
 

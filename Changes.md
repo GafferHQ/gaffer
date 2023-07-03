@@ -20,6 +20,7 @@ Improvements
 - UVInspector : Added exposure, gamma and solo channel settings.
 - ImageReader : The `colorSpace` widget now displays the name of the assumed colorspace when in `Automatic` mode.
 - ImageReader, ImageWriter : The `colorSpace` menu is now filtered using the `file-io` category, if the current OpenColorIO config provides it.
+- ImageReader, OpenImageIOReader : Added `fileValid` BoolPlug that outputs `True` if the required file exists for the current frame.
 - OpenColorIO :
   - Updated default config to ACES Studio 1.3.
   - Added `openColorIO` plug to ScriptNode, allowing the OpenColorIO config, working space, variables and display transform to be customised on a per-script basis.
@@ -62,7 +63,6 @@ Improvements
   - Added `emissionSamplingMethod` plug.
   - Added `isCausticsCaster` and `isCausticsReceiver` plugs.
 - Render : Improved clearing of the compute and hash caches prior to rendering, potentially providing more memory to the renderer. Note that clearing is now only performed in the `execute` and `dispatch` apps.
-- OpenImageIOReader : Added `fileValid` BoolPlug that outputs `True` if a file exists for the current frame.
 
 Fixes
 -----
