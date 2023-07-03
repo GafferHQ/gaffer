@@ -60,6 +60,8 @@ namespace
 
 const ScriptNode *scriptNode( const GraphComponent *subject )
 {
+	// Simple cases - there is no subject, or it is part of a script.
+
 	if( !subject )
 	{
 		return nullptr;
@@ -72,22 +74,32 @@ const ScriptNode *scriptNode( const GraphComponent *subject )
 	{
 		return s;
 	}
-	else
+
+	// Special cases to accommodate the UI.
+
+	// UI classes often house their own internal plugs which receive their input
+	// from nodes in the graph. Follow the inputs to see if we can find the
+	// graph.
+	if( auto p = runTimeCast<const Plug>( subject ) )
 	{
-		// Unfortunately the GafferUI::View classes house internal
-		// nodes which live outside any ScriptNode, but must still
-		// take part in cancellation. This hack recovers the ScriptNode
-		// for the node the view is currently connected to.
-		while( subject )
+		if( auto s = scriptNode( p->getInput() ) )
 		{
-			if( subject->isInstanceOf( "GafferUI::View" ) )
-			{
-				return scriptNode( subject->getChild<Plug>( "in" )->getInput() );
-			}
-			subject = subject->parent();
+			return s;
 		}
-		return nullptr;
 	}
+
+	// The `GafferUI::View` classes house internal nodes which might not be
+	// directly connected to the graph. This hack recovers the ScriptNode from
+	// the node the view is currently connected to.
+	while( subject )
+	{
+		if( subject->isInstanceOf( "GafferUI::View" ) )
+		{
+			return scriptNode( subject->getChild<Plug>( "in" )->getInput() );
+		}
+		subject = subject->parent();
+	}
+	return nullptr;
 }
 
 struct ActiveTask

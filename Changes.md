@@ -176,7 +176,11 @@ Build
 - Xerces : Removed.
 - ZLib : Added version 1.2.13.
 
-1.2.x.x (relative to 1.2.8.0)
+1.2.x.x (relative to 1.2.9.0)
+=======
+
+
+1.2.9.0 (relative to 1.2.8.0)
 =======
 
 > Caution : A bug fix in the handling of the `ai:volume:step_scale` attribute may change the appearance of Arnold volume renders.
@@ -189,11 +193,16 @@ Improvements
 - ImageReader : Added `availableFrames` output plug, listing all the available frames in the current file sequence.
 - MatchPatternPathFilterWidget : Added the name of the property being filtered to the placeholder text.
 - OpenImageIOReader : The `availableFrames` plug no longer errors for a missing file sequence - instead it outputs an empty list.
+- PathListingWidget : Header data is now computed asynchronously, without locking the UI.
+- CollectScenes : Improved cancellation responsiveness for large lists of `rootNames`.
 
 Fixes
 -----
 
 - Arnold : Fixed bug that caused `ai:volume:step_scale` to be ignored if `ai:volume_step` was set explicitly to `0.0`. This was different to the behaviour when `ai:volume_step` was not set at all.
+- LightEditor :
+  - Fixed hang caused by the `soloLights` set triggering on an upstream Python expression or ComputeNode (#5365).
+  - Fixed thread-safety bug that meant the LightEditor attempted to perform computes while the graph was being edited.
 - OSLImage : Fixed bug preventing channels / layers from being deleted using the right-click menu.
 - HierarchyView : Fixed crash triggered by layouts with two or more HierarchyViews (#5364).
 - Context : Fixed crash triggered by a reentrant call to `Context::set()` from within a slot connected to `Context::changedSignal()`.

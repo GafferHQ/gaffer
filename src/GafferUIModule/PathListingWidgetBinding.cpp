@@ -388,6 +388,7 @@ class PathModel : public QAbstractItemModel
 
 		PathModel( QTreeView *parent )
 			:	QAbstractItemModel( parent ),
+				m_headerDataState( State::Unrequested ),
 				m_rootItem( new Item( IECore::InternedString(), nullptr ) ),
 				m_flat( true ),
 				m_sortColumn( -1 ),
@@ -452,6 +453,9 @@ class PathModel : public QAbstractItemModel
 			}
 
 			m_rootItem = new Item( IECore::InternedString(), nullptr );
+			m_headerData.clear();
+			m_headerDataState = State::Unrequested;
+
 			endResetModel();
 		}
 
@@ -733,8 +737,16 @@ class PathModel : public QAbstractItemModel
 				return QVariant();
 			}
 
-			const CellVariants v = CellVariants( m_columns[section]->headerData() );
-			return v.variant( role );
+			if( dirtyIfUnrequested( m_headerDataState ) )
+			{
+				const_cast<PathModel *>( this )->scheduleUpdate();
+			}
+
+			if( section < (int)m_headerData.size() )
+			{
+				return m_headerData[section].variant( role );
+			}
+			return QVariant();
 		}
 
 		QModelIndex index( int row, int column, const QModelIndex &parentIndex = QModelIndex() ) const override
@@ -886,7 +898,9 @@ class PathModel : public QAbstractItemModel
 				[this] {
 					try
 					{
-						m_rootItem->update( this, Context::current()->canceller() );
+						const IECore::Canceller *canceller = Context::current()->canceller();
+						updateHeaderData( canceller );
+						m_rootItem->update( this, canceller );
 						queueEdit(
 							[this] () {
 								finaliseRecursiveExpansion();
@@ -1014,6 +1028,61 @@ class PathModel : public QAbstractItemModel
 			}
 
 			return false;
+		}
+
+		void updateHeaderData( const IECore::Canceller *canceller )
+		{
+			if( m_headerDataState != State::Dirty )
+			{
+				return;
+			}
+
+			std::vector<CellVariants> newHeaderData;
+			for( auto &column : m_columns )
+			{
+				newHeaderData.push_back( column->headerData( canceller ) );
+			}
+
+			if( m_headerData == newHeaderData )
+			{
+				m_headerDataState = State::Clean;
+				return;
+			}
+
+			queueEdit(
+
+				[this, newHeaderData = std::move( newHeaderData )] () mutable {
+
+					m_headerData.swap( newHeaderData );
+					m_headerDataState = State::Clean;
+					headerDataChanged( Qt::Horizontal, 0, m_headerData.size() - 1 );
+
+				}
+
+			);
+		}
+
+		// State transitions :
+		//
+		// - Unrequested->Dirty : When first queried.
+		// - Dirty->Clean : When updated.
+		// - Clean->Dirty : When path changes.
+		enum class State
+		{
+			// Initial state. Not yet requested by clients
+			// of the model, therefore not yet computed, and not
+			// in need of consideration during recursive updates.
+			Unrequested,
+			// Computed and up to date.
+			Clean,
+			// Stale data that needs recomputing.
+			Dirty
+		};
+
+		static bool dirtyIfUnrequested( std::atomic<State> &state )
+		{
+			State unrequested = State::Unrequested;
+			return state.compare_exchange_strong( unrequested, State::Dirty );
 		}
 
 		// A single item in the PathModel - stores a path and caches
@@ -1532,29 +1601,6 @@ class PathModel : public QAbstractItemModel
 				Item *m_parent;
 				int m_row;
 
-				// State transitions :
-				//
-				// - Unrequested->Dirty : When first queried.
-				// - Dirty->Clean : When updated.
-				// - Clean->Dirty : When path changes.
-				enum class State
-				{
-					// Initial state. Not yet requested by clients
-					// of the model, therefore not yet computed, and not
-					// in need of consideration during recursive updates.
-					Unrequested,
-					// Computed and up to date.
-					Clean,
-					// Stale data that needs recomputing.
-					Dirty
-				};
-
-				static bool dirtyIfUnrequested( std::atomic<State> &state )
-				{
-					State unrequested = State::Unrequested;
-					return state.compare_exchange_strong( unrequested, State::Dirty );
-				}
-
 				std::atomic<State> m_dataState;
 				std::vector<CellVariants> m_data;
 
@@ -1720,7 +1766,10 @@ class PathModel : public QAbstractItemModel
 		{
 			cancelUpdate();
 			m_rootItem->dirty( /* dirtyChildItems = */ false, /* dirtyData = */ true );
-			headerDataChanged( Qt::Horizontal, 0, m_columns.size() - 1 );
+			if( m_headerDataState == State::Clean )
+			{
+				m_headerDataState = State::Dirty;
+			}
 			scheduleUpdate();
 		}
 
@@ -1728,6 +1777,8 @@ class PathModel : public QAbstractItemModel
 
 		Gaffer::PathPtr m_rootPath;
 
+		std::vector<CellVariants> m_headerData;
+		mutable std::atomic<State> m_headerDataState;
 		Item::Ptr m_rootItem;
 		bool m_flat;
 		std::vector<GafferUI::PathColumnPtr> m_columns;

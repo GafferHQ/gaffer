@@ -95,12 +95,14 @@ class RootTree : public IECore::Data
 
 		};
 
-		RootTree( const IECore::StringVectorData *roots )
+		RootTree( const IECore::StringVectorData *roots, const IECore::Canceller *canceller )
 			:	m_treeRoot( new Location( 0 ) )
 		{
 			ScenePlug::ScenePath path;
 			for( const auto &root : roots->readable() )
 			{
+				IECore::Canceller::check( canceller );
+
 				ScenePlug::stringToPath( root, path );
 				if( path.empty() )
 				{
@@ -415,7 +417,7 @@ void CollectScenes::compute( Gaffer::ValuePlug *output, const Gaffer::Context *c
 	{
 		ConstStringVectorDataPtr roots = rootNamesPlug()->getValue();
 		static_cast<ObjectPlug *>( output )->setValue(
-			new RootTree( roots.get() )
+			new RootTree( roots.get(), context->canceller() )
 		);
 		return;
 	}
