@@ -179,6 +179,10 @@ Build
 1.2.x.x (relative to 1.2.9.0)
 =======
 
+Improvements
+------------
+
+- OpenImageIOReader: Added 'fileValid' Bool plug that returns a value per frame whether that files exists or not.
 
 1.2.9.0 (relative to 1.2.8.0)
 =======

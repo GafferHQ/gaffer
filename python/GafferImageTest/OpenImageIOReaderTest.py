@@ -288,6 +288,56 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		reader["fileName"].setValue( self.missingFileName )
 		self.assertEqual( reader["availableFrames"].getValue(), IECore.IntVectorData( [] ) )
 
+	def testFileValid( self ) :
+
+		testFile = self.temporaryDirectory() / "single_file.exr"
+
+		reader = GafferImage.OpenImageIOReader()
+		reader["fileName"].setValue( pathlib.Path( testFile ) )
+
+		context = Gaffer.Context()
+		context.setFrame( 1 )
+
+		with context:
+			self.assertFalse( reader["fileValid"].getValue() )
+
+		shutil.copyfile( self.fileName, testFile )
+		reader["refreshCount"].setValue( reader["refreshCount"].getValue() + 1 )
+
+		with context:
+			self.assertTrue( reader["fileValid"].getValue() )
+
+		testSequence = IECore.FileSequence( str( self.temporaryDirectory() / "incompleteSequence.####.exr" ) )
+		shutil.copyfile( self.fileName, testSequence.fileNameForFrame( 1 ) )
+		shutil.copyfile( self.offsetDataWindowFileName, testSequence.fileNameForFrame( 3 ) )
+
+		reader["fileName"].setValue( pathlib.Path( testSequence.fileName ) )
+
+		with context:
+			self.assertTrue( reader["fileValid"].getValue() )
+
+		context.setFrame( 2 )
+		with context:
+			self.assertFalse( reader["fileValid"].getValue() )
+
+		shutil.copyfile( self.offsetDataWindowFileName, testSequence.fileNameForFrame( 2 ) )
+
+		with context:
+			self.assertFalse( reader["fileValid"].getValue() )
+
+		reader["refreshCount"].setValue( reader["refreshCount"].getValue() + 1 )
+
+		with context:
+			self.assertTrue( reader["fileValid"].getValue() )
+
+		context.setFrame( 3 )
+		with context:
+			self.assertTrue( reader["fileValid"].getValue() )
+
+		context.setFrame( 4 )
+		with context:
+			self.assertFalse( reader["fileValid"].getValue() )
+
 	def testMissingFrameMode( self ) :
 
 		testSequence = IECore.FileSequence( str( self.temporaryDirectory() / "incompleteSequence.####.exr" ) )

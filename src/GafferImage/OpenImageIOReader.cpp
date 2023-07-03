@@ -1056,6 +1056,7 @@ OpenImageIOReader::OpenImageIOReader( const std::string &name )
 	addChild( new IntPlug( "refreshCount" ) );
 	addChild( new IntPlug( "missingFrameMode", Plug::In, Error, /* min */ Error, /* max */ Hold ) );
 	addChild( new IntVectorDataPlug( "availableFrames", Plug::Out, new IntVectorData ) );
+	addChild( new BoolPlug( "fileValid", Plug::Out ) );
 	addChild( new IntPlug( "channelInterpretation", Plug::In, (int)ImageReader::ChannelInterpretation::Default, /* min */ (int)ImageReader::ChannelInterpretation::Legacy, /* max */ (int)ImageReader::ChannelInterpretation::Specification ) );
 	addChild( new ObjectVectorPlug( "__tileBatch", Plug::Out, new ObjectVector ) );
 
@@ -1106,24 +1107,34 @@ const Gaffer::IntVectorDataPlug *OpenImageIOReader::availableFramesPlug() const
 	return getChild<IntVectorDataPlug>( g_firstPlugIndex + 3 );
 }
 
+Gaffer::BoolPlug *OpenImageIOReader::fileValidPlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 4 );
+}
+
+const Gaffer::BoolPlug *OpenImageIOReader::fileValidPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 4 );
+}
+
 Gaffer::IntPlug *OpenImageIOReader::channelInterpretationPlug()
 {
-	return getChild<IntPlug>( g_firstPlugIndex + 4 );
+	return getChild<IntPlug>( g_firstPlugIndex + 5 );
 }
 
 const Gaffer::IntPlug *OpenImageIOReader::channelInterpretationPlug() const
 {
-	return getChild<IntPlug>( g_firstPlugIndex + 4 );
+	return getChild<IntPlug>( g_firstPlugIndex + 5 );
 }
 
 Gaffer::ObjectVectorPlug *OpenImageIOReader::tileBatchPlug()
 {
-	return getChild<ObjectVectorPlug>( g_firstPlugIndex + 5 );
+	return getChild<ObjectVectorPlug>( g_firstPlugIndex + 6 );
 }
 
 const Gaffer::ObjectVectorPlug *OpenImageIOReader::tileBatchPlug() const
 {
-	return getChild<ObjectVectorPlug>( g_firstPlugIndex + 5 );
+	return getChild<ObjectVectorPlug>( g_firstPlugIndex + 6 );
 }
 
 void OpenImageIOReader::setOpenFilesLimit( size_t maxOpenFiles )
@@ -1167,6 +1178,7 @@ void OpenImageIOReader::affects( const Gaffer::Plug *input, AffectedPlugsContain
 	if( input == fileNamePlug() || input == refreshCountPlug() )
 	{
 		outputs.push_back( availableFramesPlug() );
+		outputs.push_back( fileValidPlug() );
 	}
 
 	if( input == fileNamePlug() || input == refreshCountPlug() || input == missingFrameModePlug() || input == channelInterpretationPlug() )
@@ -1187,7 +1199,14 @@ void OpenImageIOReader::hash( const ValuePlug *output, const Context *context, I
 {
 	ImageNode::hash( output, context, h );
 
-	if( output == availableFramesPlug() )
+	if ( output == fileValidPlug() )
+	{
+		fileNamePlug()->hash( h );
+		refreshCountPlug()->hash( h );
+		channelInterpretationPlug()->hash( h );
+		hashFileName( context, h );
+	}
+	else if( output == availableFramesPlug() )
 	{
 		fileNamePlug()->hash( h );
 		refreshCountPlug()->hash( h );
@@ -1209,7 +1228,24 @@ void OpenImageIOReader::hash( const ValuePlug *output, const Context *context, I
 
 void OpenImageIOReader::compute( ValuePlug *output, const Context *context ) const
 {
-	if( output == availableFramesPlug() )
+	if ( output == fileValidPlug() )
+	{
+		std::string fileName = fileNamePlug()->getValue();
+		if( fileName.empty() )
+		{
+			static_cast<BoolPlug *>( output )->setValue( false );
+			return;
+		}
+
+		ImageReader::ChannelInterpretation channelNaming = (ImageReader::ChannelInterpretation)channelInterpretationPlug()->getValue();
+
+		const std::string resolvedFileName = context->substitute( fileName );
+
+		FileHandleCache *cache = fileCache();
+		CacheEntry cacheEntry = cache->get( std::make_pair( resolvedFileName, channelNaming ) );
+		static_cast<BoolPlug *>( output )->setValue( bool( cacheEntry.file ) );
+	}
+	else if( output == availableFramesPlug() )
 	{
 		FileSequencePtr fileSequence = nullptr;
 		// In case the image sequence is simply missing, the availableFrames should be set to 0
