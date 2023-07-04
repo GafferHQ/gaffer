@@ -1344,7 +1344,7 @@ void Instancer::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *co
 			// requested were actually invalid, then we can use the same fast approximate hash used in
 			// hashBranchSet.
 			//
-			// This is a little bit weird, because in this scenario, this plug will never be evaluated:
+			// This is a little bit weird, because in this scenario, this plug will never be computed :
 			// computeBranchSet checks the accurate hasContextVariables before evaluating setCollaboratePlug.
 			// But hashBranchSet is evaluating us, so we have to give a hash that will work for it.
 			//
@@ -1353,6 +1353,8 @@ void Instancer::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *co
 			// if point locations change, unlike the engineHash which includes all changes
 			engineHash( sourcePath, context, h );
 			prototypeChildNamesHash( sourcePath, context, h );
+			Context::EditableScope scope( context );
+			scope.remove( ScenePlug::scenePathContextName );
 			prototypesPlug()->setPlug()->hash( h );
 			namePlug()->hash( h );
 			return;

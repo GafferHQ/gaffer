@@ -1,6 +1,10 @@
 1.2.x.x (relative to 1.2.9.0)
 =======
 
+Fixes
+-----
+
+- Instancer : Fixed bug that could cause the `scene:path` context variable to be leaked into the evaluation of `propotypes.set` in rare circumstances.
 
 1.2.9.0 (relative to 1.2.8.0)
 =======
