@@ -159,6 +159,7 @@ Breaking Changes
   - The `display` and `view` default values are now interpreted as the default defined by the current OpenColorIO config, rather than as invalid values. This means that a node without `display` or `view` specified is no longer a pass-through as it was before.
 - gaffer test : Replaced `-performanceOnly` flag with `-category` argument which may be set to `performance` for the same as the old `-performanceOnly`, or `standard` for the converse.
 - VisibleSet : Renamed `VisibleSet::match()` to `visibility()` and changed return type.
+- SceneView : Removed `gridPlug()` method.
 
 Build
 -----
