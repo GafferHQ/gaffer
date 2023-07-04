@@ -55,7 +55,7 @@ def __ocioConfig( plug ) :
 		with context :
 			if plug.node()["__shader"]["name"].getValue() != "color_manager_ocio" :
 				return None
-			config = plug.node()["parameters"]["config"].getValue()
+			config = context.substitute( plug.node()["parameters"]["config"].getValue() )
 		if not config :
 			return PyOpenColorIO.GetCurrentConfig()
 		else :
