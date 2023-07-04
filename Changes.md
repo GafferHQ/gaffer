@@ -7,7 +7,6 @@ Features
 - MeshNormals : Added a new node for adjusting mesh normals.
 - VolumeScatter : Added a new node for scattering points throughout a volume.
 
-
 Improvements
 ------------
 
@@ -170,6 +169,7 @@ Build
 - OpenColorIO : Updated to version 2.2.1.
 - OpenImageIO : Updated to version 2.4.11.0.
 - Partio : Added version 1.14.6.
+- PCG : Added latest version.
 - PyBind11 : Updated to version 2.10.4.
 - PySide : Updated to version 5.15.8.
 - Qt : Updated to version 5.15.8.
