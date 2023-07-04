@@ -46,6 +46,8 @@ Improvements
 - Dilate, Erode, Median, Resample, Resize, ImageTransform, Blur, VectorWarp : Improved performance significantly. For example, a Blur with a large radius is now almost 6x faster.
 - RotateTool : Added the ability to rotate an axis whose plane of rotation is parallel or nearly parallel to the view.
 - OptionQuery : Added support for querying generic `IECore::Object` values using an `ObjectPlug`.
+- ImageReader: promoted 'fileValid' from the internal OpenImageIOReader that reports per frame whether that files exists or not and works in conjunction with frame masks.
+- OpenImageIOReader: Added 'fileValid' Bool plug that returns a value per frame whether that files exists or not, takes into account the missingFrameMode.
 
 Fixes
 -----
@@ -178,12 +180,6 @@ Build
 
 1.2.x.x (relative to 1.2.9.0)
 =======
-
-Improvements
-------------
-
-- ImageReader: promoted 'fileValid' from the internal OpenImageIOReader that reports per frame whether that files exists or not.
-- OpenImageIOReader: Added 'fileValid' Bool plug that returns a value per frame whether that files exists or not.
 
 1.2.9.0 (relative to 1.2.8.0)
 =======
