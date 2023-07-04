@@ -293,48 +293,107 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 		testFile = self.temporaryDirectory() / "single_file.exr"
 
 		reader = GafferImage.OpenImageIOReader()
-		reader["fileName"].setValue( pathlib.Path( testFile ) )
+		reader["fileName"].setValue( testFile )
 
 		context = Gaffer.Context()
 		context.setFrame( 1 )
 
+		reader["missingFrameMode"].setValue( GafferImage.OpenImageIOReader.MissingFrameMode.Black )
+		with context:
+			self.assertTrue( reader["fileValid"].getValue() )
+
+		reader["missingFrameMode"].setValue( GafferImage.OpenImageIOReader.MissingFrameMode.Hold )
 		with context:
 			self.assertFalse( reader["fileValid"].getValue() )
 
+		reader["missingFrameMode"].setValue( GafferImage.OpenImageIOReader.MissingFrameMode.Error )
+		with context:
+			self.assertFalse( reader["fileValid"].getValue() )
 		shutil.copyfile( self.fileName, testFile )
-		reader["refreshCount"].setValue( reader["refreshCount"].getValue() + 1 )
-
+		with context:
+			self.assertFalse( reader["fileValid"].getValue() )
+		reader['refreshCount'].setValue( reader['refreshCount'].getValue() + 1 )
 		with context:
 			self.assertTrue( reader["fileValid"].getValue() )
+
+		reader["missingFrameMode"].setValue( GafferImage.OpenImageIOReader.MissingFrameMode.Hold )
+		with context:
+			self.assertTrue( reader["fileValid"].getValue() )
+
+	def testFilesValid( self ):
 
 		testSequence = IECore.FileSequence( str( self.temporaryDirectory() / "incompleteSequence.####.exr" ) )
 		shutil.copyfile( self.fileName, testSequence.fileNameForFrame( 1 ) )
 		shutil.copyfile( self.offsetDataWindowFileName, testSequence.fileNameForFrame( 3 ) )
 
+		reader = GafferImage.OpenImageIOReader()
 		reader["fileName"].setValue( pathlib.Path( testSequence.fileName ) )
 
+		context = Gaffer.Context()
+
+		# frame 1 - found
+		context.setFrame( 1 )
+
+		reader["missingFrameMode"].setValue( GafferImage.OpenImageIOReader.MissingFrameMode.Black )
 		with context:
 			self.assertTrue( reader["fileValid"].getValue() )
 
+		reader["missingFrameMode"].setValue( GafferImage.OpenImageIOReader.MissingFrameMode.Hold )
+		with context:
+			self.assertTrue( reader["fileValid"].getValue() )
+
+		reader["missingFrameMode"].setValue( GafferImage.OpenImageIOReader.MissingFrameMode.Error )
+		with context:
+			self.assertTrue( reader["fileValid"].getValue() )
+
+		# frame 2 - goes missing and then is found
 		context.setFrame( 2 )
+
+		reader["missingFrameMode"].setValue( GafferImage.OpenImageIOReader.MissingFrameMode.Black )
+		with context:
+			self.assertTrue( reader["fileValid"].getValue() )
+
+		reader["missingFrameMode"].setValue( GafferImage.OpenImageIOReader.MissingFrameMode.Hold )
+		with context:
+			self.assertTrue( reader["fileValid"].getValue() )
+
+		reader["missingFrameMode"].setValue( GafferImage.OpenImageIOReader.MissingFrameMode.Error )
 		with context:
 			self.assertFalse( reader["fileValid"].getValue() )
-
 		shutil.copyfile( self.offsetDataWindowFileName, testSequence.fileNameForFrame( 2 ) )
-
 		with context:
 			self.assertFalse( reader["fileValid"].getValue() )
-
-		reader["refreshCount"].setValue( reader["refreshCount"].getValue() + 1 )
-
+		reader['refreshCount'].setValue( reader['refreshCount'].getValue() + 1 )
 		with context:
 			self.assertTrue( reader["fileValid"].getValue() )
 
+		# frame 3: found
 		context.setFrame( 3 )
+
+		reader["missingFrameMode"].setValue( GafferImage.OpenImageIOReader.MissingFrameMode.Black )
 		with context:
 			self.assertTrue( reader["fileValid"].getValue() )
 
+		reader["missingFrameMode"].setValue( GafferImage.OpenImageIOReader.MissingFrameMode.Hold )
+		with context:
+			self.assertTrue( reader["fileValid"].getValue() )
+
+		reader["missingFrameMode"].setValue( GafferImage.OpenImageIOReader.MissingFrameMode.Error )
+		with context:
+			self.assertTrue( reader["fileValid"].getValue() )
+
+		# frame 4: missing
 		context.setFrame( 4 )
+
+		reader["missingFrameMode"].setValue( GafferImage.OpenImageIOReader.MissingFrameMode.Black )
+		with context:
+			self.assertTrue( reader["fileValid"].getValue() )
+
+		reader["missingFrameMode"].setValue( GafferImage.OpenImageIOReader.MissingFrameMode.Hold )
+		with context:
+			self.assertTrue( reader["fileValid"].getValue() )
+
+		reader["missingFrameMode"].setValue( GafferImage.OpenImageIOReader.MissingFrameMode.Error )
 		with context:
 			self.assertFalse( reader["fileValid"].getValue() )
 
