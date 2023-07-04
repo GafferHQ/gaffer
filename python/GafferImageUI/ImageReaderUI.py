@@ -274,7 +274,10 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			Whether or not the files exists and can be read into memory,
-			value calculated per frame if an image sequence.
+			value calculated per frame if an image sequence. MissingFrameMode
+			changes the behaviour, Error is the default behaviour, Black will
+			always returns true and hold will return true as long as the
+			nearest frame is valid.
 			""",
 
 			"layout:section", "Frames",

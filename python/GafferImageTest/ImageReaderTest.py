@@ -298,14 +298,14 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 		# so we can tell if BlackOutside is working.
 		blackTile = IECore.FloatVectorData( [ 0 ] * GafferImage.ImagePlug.tileSize() * GafferImage.ImagePlug.tileSize() )
 		with context :
-			self.assertEqual( reader["availableFrames"].getValue(), IECore.IntVectorData( [ 1, 3 , 5, 7 ] ) )
 			for i in range( 1, 11 ) :
 				context.setFrame( i )
-				self.assertEqual( reader["fileValid"].getValue(), i in ( 1, 3, 5, 7 ), "frame {}".format( i ) )
 				self.assertNotEqual( reader["out"].channelData( "R", imath.V2i( 0 ) ), blackTile )
 
 		def assertBlack() :
 
+			# fileValid should always be true; aka black
+			self.assertTrue( reader["fileValid"].getValue() )
 			# format and data window still match
 			self.assertEqual( reader["out"]["format"].getValue(), oiio["out"]["format"].getValue() )
 			self.assertEqual( reader["out"]["dataWindow"].getValue(), oiio["out"]["dataWindow"].getValue() )
@@ -318,6 +318,7 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 
 		def assertMatch() :
 
+			self.assertEqual( reader["fileValid"].getValue(), oiio["fileValid"].getValue() )
 			self.assertEqual( reader["out"]["format"].getValue(), oiio["out"]["format"].getValue() )
 			self.assertEqual( reader["out"]["dataWindow"].getValue(), oiio["out"]["dataWindow"].getValue() )
 			self.assertEqual( reader["out"]["metadata"].getValue(), oiio["out"]["metadata"].getValue() )
@@ -336,7 +337,9 @@ class ImageReaderTest( GafferImageTest.ImageTestCase ) :
 				holdMetadata = reader["out"]["metadata"].getValue()
 				holdChannelNames = reader["out"]["channelNames"].getValue()
 				holdTile = reader["out"].channelData( "R", imath.V2i( 0 ) )
+				fileValid = reader["fileValid"].getValue()
 
+			self.assertEqual( reader["fileValid"].getValue(), fileValid )
 			self.assertEqual( reader["out"]["format"].getValue(), holdFormat )
 			self.assertEqual( reader["out"]["dataWindow"].getValue(), holdDataWindow )
 			self.assertEqual( reader["out"]["metadata"].getValue(), holdMetadata )
