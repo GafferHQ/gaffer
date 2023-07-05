@@ -545,7 +545,7 @@ class RenderController::SceneGraph
 			{
 				// Create bounding box if needed
 				Box3f bound;
-				if( ( m_drawMode == VisibleSet::Visibility::Visible && !m_expanded && m_children.size() ) || m_drawMode == VisibleSet::Visibility::ExcludedBounds )
+				if( ( m_drawMode == VisibleSet::Visibility::Visible && !m_descendantsVisible && m_children.size() ) || m_drawMode == VisibleSet::Visibility::ExcludedBounds )
 				{
 					bound = controller->m_scene->boundPlug()->getValue();
 				}
@@ -604,7 +604,7 @@ class RenderController::SceneGraph
 
 		bool expanded() const
 		{
-			return m_expanded;
+			return m_descendantsVisible;
 		}
 
 		const std::vector<std::unique_ptr<SceneGraph>> &children()
@@ -630,7 +630,7 @@ class RenderController::SceneGraph
 			clearObject();
 			m_attributesHash = m_lightLinksHash = m_transformHash = m_childNamesHash = IECore::MurmurHash();
 			m_cleared = true;
-			m_expanded = false;
+			m_descendantsVisible = false;
 			m_drawMode = VisibleSet::Visibility::None;
 			m_boundInterface = nullptr;
 			m_dirtyComponents = AllComponents;
@@ -972,11 +972,11 @@ class RenderController::SceneGraph
 		{
 			const auto visibility = visibleSet.visibility( path, minimumExpansionDepth );
 
-			if( visibility.descendantsVisible == m_expanded && visibility.drawMode == m_drawMode )
+			if( visibility.descendantsVisible == m_descendantsVisible && visibility.drawMode == m_drawMode )
 			{
 				return false;
 			}
-			m_expanded = visibility.descendantsVisible;
+			m_descendantsVisible = visibility.descendantsVisible;
 			m_drawMode = visibility.drawMode;
 
 			return true;
@@ -1117,7 +1117,7 @@ class RenderController::SceneGraph
 		std::vector<std::unique_ptr<SceneGraph>> m_children;
 
 		IECoreScenePreview::Renderer::ObjectInterfacePtr m_boundInterface;
-		bool m_expanded;
+		bool m_descendantsVisible;
 		VisibleSet::Visibility::DrawMode m_drawMode;
 
 		// Tracks work which needs to be done on
