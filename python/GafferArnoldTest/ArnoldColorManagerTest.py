@@ -41,6 +41,7 @@ import IECoreScene
 
 import Gaffer
 import GafferTest
+import GafferImage
 import GafferScene
 import GafferSceneTest
 import GafferArnold
@@ -122,6 +123,57 @@ class ArnoldColorManagerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( s2["m"]["parameters"]["color_space_linear"].getValue(), "linear" )
 
 		self.assertEqual( s2["m"]["out"].globals(), s["m"]["out"].globals() )
+
+	def testOCIOAdaptor( self ) :
+
+		# This tests the "DefaultArnoldColorManager" adaptor registered
+		# by `startup/GafferArnold/ocio.py`.
+
+		colorManager = GafferArnold.ArnoldColorManager()
+		colorManager.loadColorManager( "color_manager_ocio" )
+		colorManager["parameters"]["config"].setValue( "explicitConfig.ocio" )
+		colorManager["parameters"]["color_space_linear"].setValue( "explicitLinearSpace" )
+		colorManager["parameters"]["color_space_narrow"].setValue( "explicitNarrowSpace" )
+		colorManager["enabled"].setValue( False )
+
+		adaptor = GafferScene.SceneAlgo.createRenderAdaptors()
+		adaptor["in"].setInput( colorManager["out"] )
+
+		def assertColorManager( scene, config, linear, narrow ) :
+
+			network = adaptor["out"].globals().get( "option:ai:color_manager" )
+			self.assertIsInstance( network, IECoreScene.ShaderNetwork )
+			shader = network.outputShader()
+			self.assertEqual( shader.name, "color_manager_ocio" )
+			self.assertEqual( shader.type, "ai:color_manager" )
+			self.assertEqual(
+				shader.parameters,
+				IECore.CompoundData( {
+					"config" : config,
+					"color_space_linear" : linear,
+					"color_space_narrow" : narrow,
+				} )
+			)
+
+		with Gaffer.Context() as context :
+
+			# No color manager in the scene, so adaptor should add a default
+			# one based on the context.
+
+			self.assertNotIn( "option:ai:color_manager", adaptor["in"].globals() )
+
+			GafferImage.OpenColorIOAlgo.setConfig( context, "testConfig.ocio" )
+			GafferImage.OpenColorIOAlgo.setWorkingSpace( context, "testWorkingSpace" )
+			assertColorManager( adaptor["out"], "testConfig.ocio", "testWorkingSpace", "matte_paint" )
+
+			GafferImage.OpenColorIOAlgo.setConfig( context, "testConfig2.ocio" )
+			GafferImage.OpenColorIOAlgo.setWorkingSpace( context, "testWorkingSpace2" )
+			assertColorManager( adaptor["out"], "testConfig2.ocio", "testWorkingSpace2", "matte_paint" )
+
+			# Color manager defined explicitly in the scene, so adaptor should do nothing.
+
+			colorManager["enabled"].setValue( True )
+			assertColorManager( adaptor["out"], "explicitConfig.ocio", "explicitLinearSpace", "explicitNarrowSpace" )
 
 if __name__ == "__main__":
 	unittest.main()

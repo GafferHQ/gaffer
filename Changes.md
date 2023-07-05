@@ -10,6 +10,7 @@ Features
 Improvements
 ------------
 
+- Arnold : Gaffer's native OpenColorIO config is now automatically translated to Arnold. Use an ArnoldColorManager node to override this behaviour.
 - Toolbars : Changed hotkey behavior to toogle any tool on and off. Exclusive tools such as the Translate and Crop Window tools activate the first tool (currently Selection Tool) when they are toggled off.
 - CropWindowTool : Added <kbd>`Alt` + <kbd>`C` for toggling both the crop window tool and the relevant crop window `enabled` plug.
 - TaskList, FrameMask : Reimplemented in C++ for improved performance.
@@ -615,6 +616,7 @@ Improvements
 - OpenColorIO :
   - Updated default config to ACES Studio 1.3.
   - Added `openColorIO` plug to ScriptNode, allowing the OpenColorIO config, working space, variables and display transform to be customised on a per-script basis.
+  - Added automatic configuration of Arnold color manager from Gaffer's OpenColorIO configuration. This may be overridden by using an ArnoldColorManager node to define an alternative color manager.
   - Improved colorspace menus :
     - Organised colorspaces into submenus by family.
     - Removed unwanted title-casing, so that names are now displayed verbatim.
