@@ -1472,5 +1472,38 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertIsNone( renderer.capturedObject( "/group/plane" ) )
 		self.assertIsNone( renderer.capturedObject( "/group/sphere" ) )
 
+	def testDescendantVisibilityChangeDoesntUpdateObject( self ) :
+
+		sphere = GafferScene.Sphere()
+		group = GafferScene.Group()
+		group["in"][0].setInput( sphere["out"] )
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer()
+		controller = GafferScene.RenderController( group["out"], Gaffer.Context(), renderer )
+		controller.update()
+
+		v = GafferScene.VisibleSet()
+		v.expansions = IECore.PathMatcher( [ "/group" ] )
+
+		controller.setVisibleSet( v )
+		controller.update()
+
+		self.assertIsNotNone( renderer.capturedObject( "/group/sphere" ) )
+		self.assertEqual( v.visibility( "/group/sphere" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.Visible, False ) )
+
+		# Adding sphere to the VisibleSet `inclusions` will not change its drawMode but will change descendantVisibility
+		v.inclusions = IECore.PathMatcher( [ "/group/sphere" ] )
+		self.assertEqual( v.visibility( "/group/sphere" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.Visible, True ) )
+
+		# As sphere's drawMode is unchanged, this update shouldn't result in any object hashes or computes
+		Gaffer.ValuePlug.clearCache()
+		Gaffer.ValuePlug.clearHashCache()
+		with Gaffer.PerformanceMonitor() as monitor :
+			controller.setVisibleSet( v )
+			controller.update()
+
+		self.assertEqual( monitor.plugStatistics( sphere["out"]["object"] ).hashCount, 0 )
+		self.assertEqual( monitor.plugStatistics( sphere["out"]["object"] ).computeCount, 0 )
+
 if __name__ == "__main__":
 	unittest.main()
