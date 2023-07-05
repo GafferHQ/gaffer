@@ -42,7 +42,7 @@
 namespace Gaffer
 {
 
-class IECORE_EXPORT TimeWarp : public ContextProcessor
+class GAFFER_API TimeWarp : public ContextProcessor
 {
 
 	public :

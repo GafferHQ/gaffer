@@ -43,7 +43,7 @@
 namespace Gaffer
 {
 
-class IECORE_EXPORT ContextVariables : public ContextProcessor
+class GAFFER_API ContextVariables : public ContextProcessor
 {
 
 	public :

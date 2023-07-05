@@ -44,7 +44,7 @@
 namespace Gaffer
 {
 
-class IECORE_EXPORT Loop : public ComputeNode
+class GAFFER_API Loop : public ComputeNode
 {
 
 	public :

@@ -43,7 +43,7 @@ namespace Gaffer
 
 class StringPlug;
 
-class IECORE_EXPORT NameSwitch : public Switch
+class GAFFER_API NameSwitch : public Switch
 {
 
 	public :
