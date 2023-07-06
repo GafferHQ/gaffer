@@ -50,6 +50,7 @@ enum TypeId
 	PointsGridToPointsTypeId = 110956,
 	SphereLevelSetTypeId = 110957,
 	PointsToLevelSetTypeId = 110958,
+	VolumeScatterTypeId = 110959,
 	LastTypeId = 110974
 };
 
