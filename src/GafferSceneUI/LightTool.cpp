@@ -97,6 +97,10 @@ using namespace GafferScene;
 using namespace GafferSceneUI;
 using namespace GafferSceneUI::Private;
 
+// ============================================================================
+// Utility Functions
+// ============================================================================
+
 namespace
 {
 
@@ -488,6 +492,10 @@ float sphereSpokeClickAngle( const Line3f &eventLine, float radius, float spokeA
 	return true;
 }
 
+// ============================================================================
+// LightToolHandle
+// ============================================================================
+
 class LightToolHandle : public Handle
 {
 
@@ -575,6 +583,10 @@ class LightToolHandle : public Handle
 
 		bool m_lookThroughLight;
 };
+
+// ============================================================================
+// SpotLightHandle
+// ============================================================================
 
 class SpotLightHandle : public LightToolHandle
 {
@@ -1531,6 +1543,276 @@ class SpotLightHandle : public LightToolHandle
 		float m_arcRadius;
 };
 
+// ============================================================================
+// QuadLightHandle
+// ============================================================================
+
+class QuadLightHandle : public LightToolHandle
+{
+	public :
+
+		enum HandleType
+		{
+			Width = 1,
+			Height = 2
+		};
+
+		QuadLightHandle(
+			const std::string &attributePattern,
+			unsigned handleType,
+			const SceneView *view,
+			const float xSign,
+			const float ySign,
+			const std::string &name = "QuadLightHandle"
+		) :
+			LightToolHandle( attributePattern, name ),
+			m_view( view ),
+			m_handleType( handleType ),
+			m_dragStartInfo(),
+			m_xSign( xSign ),
+			m_ySign( ySign ),
+			m_scale( V2f( 1.f ) )
+		{
+			mouseMoveSignal().connect( boost::bind( &QuadLightHandle::mouseMove, this, ::_2 ) );
+		}
+
+		~QuadLightHandle() override
+		{
+
+		}
+
+		void update( ScenePathPtr scenePath, const PlugPtr &editScope ) override
+		{
+			LightToolHandle::update( scenePath, editScope );
+
+			m_widthInspector.reset();
+			m_heightInspector.reset();
+
+			if( !handleScenePath()->isValid() )
+			{
+				return;
+			}
+
+			/// \todo This can be simplified and some of the logic, especially getting the inspectors, can
+			/// be moved to the constructor when we standardize on a single USDLux light representation.
+
+			ConstCompoundObjectPtr attributes = handleScenePath()->getScene()->fullAttributes( handleScenePath()->names() );
+
+			for( const auto &[attributeName, value ] : attributes->members() )
+			{
+				if(
+					StringAlgo::match( attributeName, attributePattern() ) &&
+					value->typeId() == (IECore::TypeId)ShaderNetworkTypeId
+				)
+				{
+					const auto shader = attributes->member<ShaderNetwork>( attributeName )->outputShader();
+					std::string shaderAttribute = shader->getType() + ":" + shader->getName();
+
+					auto widthParameterName = Metadata::value<StringData>( shaderAttribute, "widthParameter" );
+					auto heightParameterName = Metadata::value<StringData>( shaderAttribute, "heightParameter" );
+					if( !widthParameterName || !heightParameterName )
+					{
+						continue;
+					}
+
+					m_widthInspector = new ParameterInspector(
+						handleScenePath()->getScene(),
+						this->editScope(),
+						attributeName,
+						ShaderNetwork::Parameter( "", widthParameterName->readable() )
+					);
+					m_heightInspector = new ParameterInspector(
+						handleScenePath()->getScene(),
+						this->editScope(),
+						attributeName,
+						ShaderNetwork::Parameter( "", heightParameterName->readable() )
+					);
+
+					break;
+				}
+			}
+		}
+
+		void addDragInspection() override
+		{
+			InspectionInfo i = inspectionInfo();
+			const auto &[widthInspection, originalWidth, heightInspection, originalHeight] = i;
+			if( !widthInspection || !heightInspection )
+			{
+				return;
+			}
+
+			m_inspections.push_back( i );
+		}
+
+		void clearDragInspections() override
+		{
+			m_inspections.clear();
+		}
+
+		bool handleDragMove( const GafferUI::DragDropEvent &event ) override
+		{
+			/// \todo Implement me
+			return false;
+		}
+
+		bool handleDragEnd() override
+		{
+			m_drag = std::monostate{};
+			return false;
+		}
+
+		void updateLocalTransform( const V3f &scale, const V3f & ) override
+		{
+			// Translate the handle to the center of the appropriate edge or corner.
+			const auto &[widthInspection, originalWidth, heightInspection, originalHeight] = handleInspections();
+			m_scale = V2f( scale.x, scale.y );
+
+			M44f transform;
+			if( m_handleType & HandleType::Width )
+			{
+				transform *= M44f().translate( V3f( originalWidth * 0.5f * m_xSign * m_scale.x, 0, 0 ) );
+			}
+			if( m_handleType & HandleType::Height )
+			{
+				transform *= M44f().translate( V3f( 0, originalHeight * 0.5f * m_ySign * m_scale.y, 0 ) );
+			}
+
+			setTransform( transform );
+		}
+
+		bool visible() const override
+		{
+			/// \todo Implement me
+			return true;
+		}
+
+		bool enabled() const override
+		{
+			if( !m_widthInspector || !m_heightInspector )
+			{
+				return false;
+			}
+
+			// Return true without checking the `enabled()` state of our inspections.
+			// This allows the tooltip-on-highlight behavior to show a tooltip explaining
+			// why an edit is not possible. The alternative is to draw the tooltip for all
+			// handles regardless of mouse position because a handle can only be in a disabled
+			// or highlighted drawing state.
+			// The drawing code takes care of graying out uneditable handles and the inspections
+			// prevent the value from being changed.
+			return true;
+		}
+
+		std::vector<GafferSceneUI::Private::Inspector *> inspectors() const override
+		{
+			return {m_widthInspector.get(), m_heightInspector.get()};
+		}
+
+	protected :
+
+		void renderHandle( const Style *style, Style::State state ) const override
+		{
+			/// \todo Implement me
+		}
+
+	private :
+
+		struct InspectionInfo
+		{
+			Inspector::ResultPtr widthInspection;
+			float originalWidth;
+			Inspector::ResultPtr heightInspection;
+			float originalHeight;
+		};
+
+		bool mouseMove( const ButtonEvent &event )
+		{
+			/// \todo Implement me
+			return false;
+		}
+
+		void dragBegin( const DragDropEvent &event ) override
+		{
+			/// \todo Implement me
+
+		}
+
+		InspectionInfo handleInspections() const
+		{
+			ScenePlug::PathScope pathScope( handleScenePath()->getContext() );
+			pathScope.setPath( &handleScenePath()->names() );
+
+			return inspectionInfo();
+		}
+
+		// Returns a `InspectionInfo` object for the current context.
+		InspectionInfo inspectionInfo() const
+		{
+			Inspector::ResultPtr widthInspection = nullptr;
+			float originalWidth = 0;
+
+			// Get an inspection if possible regardless of the handle type because drawing
+			// edge lines requires the opposite dimension's value.
+			if( m_widthInspector )
+			{
+				widthInspection = m_widthInspector->inspect();
+				if( widthInspection )
+				{
+					auto originalWidthData = runTimeCast<const IECore::FloatData>( widthInspection->value() );
+					assert( originalWidthData );
+					originalWidth = originalWidthData->readable();
+				}
+			}
+
+			Inspector::ResultPtr heightInspection = nullptr;
+			float originalHeight = 0;
+			if( m_heightInspector )
+			{
+				heightInspection = m_heightInspector->inspect();
+				if( heightInspection )
+				{
+					auto originalHeightData = runTimeCast<const IECore::FloatData>( heightInspection->value() );
+					assert( originalHeightData );
+					originalHeight = originalHeightData->readable();
+				}
+			}
+
+			return { widthInspection, originalWidth, heightInspection, originalHeight };
+		}
+
+		bool allInspectionsEnabled() const
+		{
+			/// \todo Implement me
+			bool enabled = true;
+
+			return enabled;
+		}
+
+		ParameterInspectorPtr m_widthInspector;
+		ParameterInspectorPtr m_heightInspector;
+
+		const SceneView *m_view;
+
+		std::vector<InspectionInfo> m_inspections;
+
+		std::variant<std::monostate, Handle::LinearDrag, Handle::PlanarDrag> m_drag;
+
+		const unsigned m_handleType;
+
+		InspectionInfo m_dragStartInfo;
+
+		// The sign for each axis of the handle
+		const float m_xSign;
+		const float m_ySign;
+
+		V2f m_scale;  // width and height scale of the light's transform
+};
+
+// ============================================================================
+// HandlesGadget
+// ============================================================================
+
 class HandlesGadget : public Gadget
 {
 
@@ -1588,6 +1870,10 @@ class HandlesGadget : public Gadget
 
 }  // namespace
 
+// ============================================================================
+// LightTool
+// ============================================================================
+
 GAFFER_NODE_DEFINE_TYPE( LightTool );
 
 LightTool::ToolDescription<LightTool, SceneView> LightTool::g_toolDescription;
@@ -1606,6 +1892,8 @@ LightTool::LightTool( SceneView *view, const std::string &name ) :
 	view->viewportGadget()->addChild( m_handles );
 	m_handles->setVisible( false );
 
+	// Spotlight handles
+
 	m_handles->addChild( new SpotLightHandle( "*light", SpotLightHandle::HandleType::Penumbra, view, 0, "westConeAngleParameter" ) );
 	m_handles->addChild( new SpotLightHandle( "*light", SpotLightHandle::HandleType::Cone, view, 0, "westPenumbraAngleParameter" ) );
 	m_handles->addChild( new SpotLightHandle( "*light", SpotLightHandle::HandleType::Penumbra, view, 90, "southConeAngleParameter" ) );
@@ -1614,6 +1902,18 @@ LightTool::LightTool( SceneView *view, const std::string &name ) :
 	m_handles->addChild( new SpotLightHandle( "*light", SpotLightHandle::HandleType::Cone, view, 180, "eastPenumbraAngleParameter" ) );
 	m_handles->addChild( new SpotLightHandle( "*light", SpotLightHandle::HandleType::Penumbra, view, 270, "northConeAngleParameter" ) );
 	m_handles->addChild( new SpotLightHandle( "*light", SpotLightHandle::HandleType::Cone, view, 270, "northPenumbraAngleParameter" ) );
+
+	// Quadlight handles
+
+	m_handles->addChild( new QuadLightHandle( "*light", QuadLightHandle::HandleType::Width, view, -1.f, 0, "westParameter" ) );
+	m_handles->addChild( new QuadLightHandle( "*light", QuadLightHandle::HandleType::Width | QuadLightHandle::HandleType::Height, view, -1.f, -1.f, "southWestParameter" ) );
+	m_handles->addChild( new QuadLightHandle( "*light", QuadLightHandle::HandleType::Height, view, 0, -1.f, "southParameter" ) );
+	m_handles->addChild( new QuadLightHandle( "*light", QuadLightHandle::HandleType::Width | QuadLightHandle::HandleType::Height, view, 1.f, -1.f, "soutEastParameter" ) );
+	m_handles->addChild( new QuadLightHandle( "*light", QuadLightHandle::HandleType::Width, view, 1.f, 0.f, "eastParameter" ) );
+	m_handles->addChild( new QuadLightHandle( "*light", QuadLightHandle::HandleType::Width | QuadLightHandle::HandleType::Height, view, 1.f, 1.f, "northEastParameter" ) );
+	m_handles->addChild( new QuadLightHandle( "*light", QuadLightHandle::HandleType::Height, view, 0, 1.f, "northParameter" ) );
+	m_handles->addChild( new QuadLightHandle( "*light", QuadLightHandle::HandleType::Width | QuadLightHandle::HandleType::Height, view, -1.f, 1.f, "northWestParameter" ) );
+
 
 	for( const auto &c : m_handles->children() )
 	{
