@@ -1320,6 +1320,190 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( renderer.capturedObject( "/group/plane" ).numAttributeEdits(), 3 )
 
+	def testExcludedLocationsHaveNoObject( self ) :
+
+		plane = GafferScene.Plane()
+		sphere = GafferScene.Sphere()
+		group = GafferScene.Group()
+		group["in"][0].setInput( plane["out"] )
+		group["in"][1].setInput( sphere["out"] )
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer()
+		controller = GafferScene.RenderController( group["out"], Gaffer.Context(), renderer )
+		controller.setMinimumExpansionDepth( 10 )
+		controller.update()
+
+		self.assertIsNotNone( renderer.capturedObject( "/group/plane" ) )
+		self.assertIsNotNone( renderer.capturedObject( "/group/sphere" ) )
+
+		v = GafferScene.VisibleSet()
+		v.exclusions.addPath( "/group/plane" )
+		controller.setVisibleSet( v )
+		controller.update()
+
+		self.assertIsNone( renderer.capturedObject( "/group/plane" ) )
+		self.assertIsNotNone( renderer.capturedObject( "/group/sphere" ) )
+
+		v.exclusions = IECore.PathMatcher( [ "/group" ] )
+		controller.setVisibleSet( v )
+		controller.update()
+
+		self.assertIsNone( renderer.capturedObject( "/group/plane" ) )
+		self.assertIsNone( renderer.capturedObject( "/group/sphere" ) )
+
+		controller.setVisibleSet( GafferScene.VisibleSet() )
+		controller.update()
+
+		self.assertIsNotNone( renderer.capturedObject( "/group/plane" ) )
+		self.assertIsNotNone( renderer.capturedObject( "/group/sphere" ) )
+
+	def testExcludedLocationBoundsVisibility( self ) :
+
+		plane = GafferScene.Plane()
+		sphere = GafferScene.Sphere()
+		group = GafferScene.Group()
+		group["in"][0].setInput( plane["out"] )
+		group["in"][1].setInput( sphere["out"] )
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer()
+		controller = GafferScene.RenderController( group["out"], Gaffer.Context(), renderer )
+		controller.setMinimumExpansionDepth( 10 )
+		controller.update()
+
+		self.assertIsNotNone( renderer.capturedObject( "/group/plane" ) )
+		self.assertIsNotNone( renderer.capturedObject( "/group/sphere" ) )
+
+		v = GafferScene.VisibleSet()
+		v.exclusions.addPath( "/group/plane" )
+		controller.setVisibleSet( v )
+		controller.update()
+
+		self.assertIsNone( renderer.capturedObject( "/group/plane" ) )
+		self.assertIsNotNone( renderer.capturedObject( "/group/sphere" ) )
+
+		v.expansions.addPath( "/group" )
+		controller.setVisibleSet( v )
+		controller.update()
+
+		self.assertIsNone( renderer.capturedObject( "/group/plane" ) )
+		self.assertIsNotNone( renderer.capturedObject( "/group/plane/__unexpandedChildren__" ) )
+		self.assertIsNotNone( renderer.capturedObject( "/group/sphere" ) )
+
+		v.expansions.removePath( "/group" )
+		controller.setVisibleSet( v )
+		controller.update()
+
+		self.assertIsNone( renderer.capturedObject( "/group/plane" ) )
+		self.assertIsNotNone( renderer.capturedObject( "/group/sphere" ) )
+
+		v.exclusions = IECore.PathMatcher( [ "/group" ] )
+		controller.setVisibleSet( v )
+		controller.update()
+
+		self.assertIsNone( renderer.capturedObject( "/group/plane" ) )
+		self.assertIsNone( renderer.capturedObject( "/group/sphere" ) )
+		self.assertIsNotNone( renderer.capturedObject( "/group/__unexpandedChildren__" ) )
+
+		controller.setVisibleSet( GafferScene.VisibleSet() )
+		controller.update()
+
+		self.assertIsNotNone( renderer.capturedObject( "/group/plane" ) )
+		self.assertIsNotNone( renderer.capturedObject( "/group/sphere" ) )
+
+	def testExcludedLocationPlaceholderMode( self ) :
+
+		plane = GafferScene.Plane()
+		sphere = GafferScene.Sphere()
+		group = GafferScene.Group()
+		group["in"][0].setInput( plane["out"] )
+		group["in"][1].setInput( sphere["out"] )
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer()
+		controller = GafferScene.RenderController( group["out"], Gaffer.Context(), renderer )
+		controller.update()
+
+		self.assertEqual( renderer.capturedObject( "/group/__unexpandedChildren__" ).capturedSamples()[0].getMode(), GafferScene.Private.IECoreScenePreview.Placeholder.Mode.Default )
+
+		v = GafferScene.VisibleSet()
+		v.exclusions.addPath( "/group" )
+		controller.setVisibleSet( v )
+		controller.update()
+
+		self.assertEqual( renderer.capturedObject( "/group/__unexpandedChildren__" ).capturedSamples()[0].getMode(), GafferScene.Private.IECoreScenePreview.Placeholder.Mode.Excluded )
+
+		controller.setVisibleSet( GafferScene.VisibleSet() )
+		controller.update()
+
+		self.assertEqual( renderer.capturedObject( "/group/__unexpandedChildren__" ).capturedSamples()[0].getMode(), GafferScene.Private.IECoreScenePreview.Placeholder.Mode.Default )
+
+	def testIncludeLocation( self ) :
+
+		plane = GafferScene.Plane()
+		sphere = GafferScene.Sphere()
+		group = GafferScene.Group()
+		group["in"][0].setInput( plane["out"] )
+		group["in"][1].setInput( sphere["out"] )
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer()
+		controller = GafferScene.RenderController( group["out"], Gaffer.Context(), renderer )
+		controller.update()
+
+		self.assertIsNone( renderer.capturedObject( "/group/plane" ) )
+		self.assertIsNone( renderer.capturedObject( "/group/sphere" ) )
+
+		v = GafferScene.VisibleSet()
+		v.inclusions.addPath( "/group/plane" )
+		controller.setVisibleSet( v )
+		controller.update()
+
+		self.assertIsNotNone( renderer.capturedObject( "/group/plane" ) )
+		self.assertIsNone( renderer.capturedObject( "/group/sphere" ) )
+
+		v.inclusions = IECore.PathMatcher( [ "/group" ] )
+		controller.setVisibleSet( v )
+		controller.update()
+
+		self.assertIsNotNone( renderer.capturedObject( "/group/plane" ) )
+		self.assertIsNotNone( renderer.capturedObject( "/group/sphere" ) )
+
+		controller.setVisibleSet( GafferScene.VisibleSet() )
+		controller.update()
+
+		self.assertIsNone( renderer.capturedObject( "/group/plane" ) )
+		self.assertIsNone( renderer.capturedObject( "/group/sphere" ) )
+
+	def testDescendantVisibilityChangeDoesntUpdateObject( self ) :
+
+		sphere = GafferScene.Sphere()
+		group = GafferScene.Group()
+		group["in"][0].setInput( sphere["out"] )
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer()
+		controller = GafferScene.RenderController( group["out"], Gaffer.Context(), renderer )
+		controller.update()
+
+		v = GafferScene.VisibleSet()
+		v.expansions = IECore.PathMatcher( [ "/group" ] )
+
+		controller.setVisibleSet( v )
+		controller.update()
+
+		self.assertIsNotNone( renderer.capturedObject( "/group/sphere" ) )
+		self.assertEqual( v.visibility( "/group/sphere" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.Visible, False ) )
+
+		# Adding sphere to the VisibleSet `inclusions` will not change its drawMode but will change descendantVisibility
+		v.inclusions = IECore.PathMatcher( [ "/group/sphere" ] )
+		self.assertEqual( v.visibility( "/group/sphere" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.Visible, True ) )
+
+		# As sphere's drawMode is unchanged, this update shouldn't result in any object hashes or computes
+		Gaffer.ValuePlug.clearCache()
+		Gaffer.ValuePlug.clearHashCache()
+		with Gaffer.PerformanceMonitor() as monitor :
+			controller.setVisibleSet( v )
+			controller.update()
+
+		self.assertEqual( monitor.plugStatistics( sphere["out"]["object"] ).hashCount, 0 )
+		self.assertEqual( monitor.plugStatistics( sphere["out"]["object"] ).computeCount, 0 )
 
 if __name__ == "__main__":
 	unittest.main()

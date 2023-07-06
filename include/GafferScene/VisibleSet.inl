@@ -38,61 +38,72 @@
 
 #include "IECore/PathMatcher.h"
 
+namespace
+{
+
+bool allAncestorsMatch( const std::vector<InternedString> &path, const IECore::PathMatcher &pathMatcher, const size_t minimumExpansionDepth )
+{
+	std::vector<InternedString> parentPath = path;
+	while( parentPath.size() > minimumExpansionDepth + 1 )
+	{
+		parentPath.pop_back();
+		if( !( pathMatcher.match( parentPath ) & PathMatcher::ExactMatch ) )
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+} // namespace
+
 namespace GafferScene
 {
 
-inline PathMatcher::Result VisibleSet::match( const std::vector<InternedString> &path, const size_t minimumExpansionDepth ) const
+inline VisibleSet::Visibility VisibleSet::visibility( const std::vector<InternedString> &path, const size_t minimumExpansionDepth ) const
 {
 
-	if( exclusions.match( path ) & ( PathMatcher::ExactMatch | PathMatcher::AncestorMatch ) )
+	const unsigned exclusionsMatch = exclusions.match( path );
+	if( exclusionsMatch & PathMatcher::ExactMatch && allAncestorsMatch( path, expansions, minimumExpansionDepth ) )
 	{
-		// Exclusions override all other potential matches for the excluded path and all of its descendants
-		return PathMatcher::Result::NoMatch;
+		// If all ancestors are expanded then we consider the bounds of this excluded path to be visible,
+		// but none of its descendants to be
+		return VisibleSet::Visibility( VisibleSet::Visibility::ExcludedBounds, false );
+	}
+	else if( exclusionsMatch & ( PathMatcher::ExactMatch | PathMatcher::AncestorMatch ) )
+	{
+		// This path and its descendants are not visible as it or an ancestor are in `exclusions`
+		return VisibleSet::Visibility( VisibleSet::Visibility::None, false );
 	}
 
-	unsigned result = PathMatcher::NoMatch;
 	if( minimumExpansionDepth >= path.size() )
 	{
-		// Paths within minimumExpansionDepth are considered visible and having visible children
-		/// \todo Return ExactMatch for child locations of paths equal to the minimumExpansionDepth,
-		/// and AncestorMatch for locations with ancestors within the minimumExpansionDepth. We should
-		/// also be able to return early and avoid testing inclusions and expansions for these paths.
-		result |= ( PathMatcher::ExactMatch | PathMatcher::DescendantMatch );
+		// Paths within minimumExpansionDepth are visible and have visible children
+		return VisibleSet::Visibility( VisibleSet::Visibility::Visible, true );
 	}
 
-	result |= inclusions.match( path );
-	if( result & PathMatcher::AncestorMatch )
+	const unsigned inclusionsMatch = inclusions.match( path );
+	if( inclusionsMatch & ( PathMatcher::ExactMatch | PathMatcher::AncestorMatch ) )
 	{
-		// An ancestor in inclusions will cause this path to be visible so ensure that ExactMatch is also set
-		result |= PathMatcher::ExactMatch;
+		// This path and its descendants are visible as it or an ancestor are in `inclusions`
+		return VisibleSet::Visibility( VisibleSet::Visibility::Visible, true );
 	}
 
-	/// \todo For compatibility with existing RenderController behaviour we are returning an ExactMatch
-	/// only for locations that are expanded, rather than locations that are _visible_ as a result of expansion,
-	/// as that would currently result in an unnecessary additional level of expansion. This will be addressed as
-	/// part of future RenderController changes allowing for independent visibility of sibling locations.
-	const unsigned expansionsMatch = expansions.match( path );
-	if( expansionsMatch & PathMatcher::ExactMatch )
+	auto result = VisibleSet::Visibility(
+		VisibleSet::Visibility::None,
+		// Any descendants in `inclusions` are visible
+		inclusionsMatch & PathMatcher::DescendantMatch
+	);
+
+	if( allAncestorsMatch( path, expansions, minimumExpansionDepth ) )
 	{
-		if( path.size() > 1 )
-		{
-			std::vector<InternedString> parentPath = path; parentPath.pop_back();
-			// Expansions also require an expanded parent to be visible
-			/// \todo This would be improved by testing all ancestors rather than only the immediate parent.
-			/// We'll need to consider how to handle `/` as the root location is implicitly expanded and would
-			/// need to be present in expansions for a successful AllAncestorsMatch.
-			if( expansions.match( parentPath ) & PathMatcher::ExactMatch )
-			{
-				result |= expansionsMatch;
-			}
-		}
-		else
-		{
-			result |= expansionsMatch;
-		}
+		// This path is visible as all its ancestors are expanded
+		result.drawMode = VisibleSet::Visibility::Visible;
+		// If the path is also expanded then it could have visible children
+		result.descendantsVisible |= (bool)(expansions.match( path ) & PathMatcher::ExactMatch);
 	}
 
-	return (PathMatcher::Result)result;
+	return result;
 
 }
 

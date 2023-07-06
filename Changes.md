@@ -46,6 +46,10 @@ Improvements
 - Dilate, Erode, Median, Resample, Resize, ImageTransform, Blur, VectorWarp : Improved performance significantly. For example, a Blur with a large radius is now almost 6x faster.
 - RotateTool : Added the ability to rotate an axis whose plane of rotation is parallel or nearly parallel to the view.
 - OptionQuery : Added support for querying generic `IECore::Object` values using an `ObjectPlug`.
+- SceneView :
+  - Ancestors and siblings of locations included in the Visible Set are no longer drawn while their ancestors are collapsed.
+  - Added red wireframe colour to the bounding box of locations excluded from the Visible Set.
+- HierarchyView : Added support for inclusion and exclusion of leaf level locations to the Visible Set.
 
 Fixes
 -----
@@ -104,6 +108,7 @@ API
 - Sampler : Added `visitPixels()` method, which provides an optimised method for accessing all pixels in a region.
 - Handle::AngularDrag : Added `isLinearDrag()` method.
 - Widget : Added per-widget control over colour display transforms via new `setDisplayTransform()`, `getDisplayTransform()` and `displayTransform()` methods.
+- VisibleSet : Added `VisibleSet::Visibility` struct containing `drawMode` and `descendantsVisible` members.
 
 Breaking Changes
 ----------------
@@ -152,6 +157,7 @@ Breaking Changes
   - The `inputSpace` default value is now interpreted as the working space rather than as an invalid space. This means that a node without `inputSpace` specified is no longer a pass-through as it was before.
   - The `display` and `view` default values are now interpreted as the default defined by the current OpenColorIO config, rather than as invalid values. This means that a node without `display` or `view` specified is no longer a pass-through as it was before.
 - gaffer test : Replaced `-performanceOnly` flag with `-category` argument which may be set to `performance` for the same as the old `-performanceOnly`, or `standard` for the converse.
+- VisibleSet : Renamed `VisibleSet::match()` to `visibility()` and changed return type.
 
 Build
 -----

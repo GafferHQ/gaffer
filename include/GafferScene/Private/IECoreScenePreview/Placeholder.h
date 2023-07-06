@@ -51,9 +51,20 @@ class GAFFERSCENE_API Placeholder : public IECoreScene::VisibleRenderable
 
 	public :
 
-		Placeholder( const Imath::Box3f &bound = Imath::Box3f() );
+		enum Mode
+		{
+			/// A standard collapsed location
+			Default = 0,
+			/// A location that has been excluded from the VisibleSet
+			Excluded = 1,
+		};
+
+		Placeholder( const Imath::Box3f &bound = Imath::Box3f(), const Placeholder::Mode mode = Placeholder::Mode::Default );
 
 		IE_CORE_DECLAREEXTENSIONOBJECT( IECoreScenePreview::Placeholder, GafferScene::PreviewPlaceholderTypeId, IECoreScene::VisibleRenderable );
+
+		void setMode( Mode mode );
+		Mode getMode() const;
 
 		void setBound( const Imath::Box3f &bound );
 		const Imath::Box3f &getBound() const;
@@ -64,7 +75,7 @@ class GAFFERSCENE_API Placeholder : public IECoreScene::VisibleRenderable
 	private :
 
 		static const unsigned int m_ioVersion;
-
+		Mode m_mode;
 		Imath::Box3f m_bound;
 
 };

@@ -63,10 +63,36 @@ struct GAFFERSCENE_API VisibleSet
 	PathMatcher inclusions;
 	PathMatcher exclusions;
 
-	/// Returns the result of a match made against the VisibleSet.
-	/// ExactMatch : The location should be rendered.
-	/// DescendantMatch : Some (but not necessarily all) descendants of the location should be rendered (but this location shouldn't be unless ExactMatch is also set).
-	PathMatcher::Result match( const std::vector<InternedString> &path, const size_t minimumExpansionDepth = 0 ) const;
+	struct Visibility
+	{
+		/// The draw mode of a location as defined by the VisibleSet.
+		enum DrawMode
+		{
+			/// The location is not visible.
+			None = 0,
+			/// The location is visible and will be drawn. If the location has descendants then their combined bounding
+			/// box will also be drawn when `descendantsVisible` is false.
+			Visible = 1,
+			/// The location is visible, but only ever drawn as a bounding box as it is excluded from the VisibleSet.
+			ExcludedBounds = 2,
+		};
+
+		Visibility( DrawMode drawMode = DrawMode::None, bool descendantsVisible = false )
+			: drawMode( drawMode ), descendantsVisible( descendantsVisible )
+		{
+		}
+
+		bool operator == ( const Visibility &rhs ) const
+		{
+			return drawMode == rhs.drawMode && descendantsVisible == rhs.descendantsVisible;
+		}
+
+		DrawMode drawMode;
+		bool descendantsVisible;
+	};
+
+	/// Returns the Visibility of a path tested against the VisibleSet.
+	Visibility visibility( const std::vector<InternedString> &path, const size_t minimumExpansionDepth = 0 ) const;
 
 	bool operator == ( const VisibleSet &rhs ) const;
 	bool operator != ( const VisibleSet &rhs ) const;

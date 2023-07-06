@@ -72,6 +72,14 @@ class BoundVisualiser : public ObjectVisualiser
 			group->getState()->add( new IECoreGL::Primitive::DrawSolid( false ) );
 			group->getState()->add( new IECoreGL::CurvesPrimitive::UseGLLines( true ) );
 
+			if( const IECoreScenePreview::Placeholder *placeholder = IECore::runTimeCast<const IECoreScenePreview::Placeholder>( object ) )
+			{
+				if( placeholder->getMode() == IECoreScenePreview::Placeholder::Mode::Excluded )
+				{
+					group->getState()->add( new IECoreGL::WireframeColorStateComponent( Color4f( 0.3, 0.18, 0.18, 1 ) ) );
+				}
+			}
+
 			IECore::V3fVectorDataPtr pData = new IECore::V3fVectorData;
 			IECore::IntVectorDataPtr vertsPerCurveData = new IECore::IntVectorData;
 			vector<V3f> &p = pData->writable();

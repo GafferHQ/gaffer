@@ -46,51 +46,45 @@ class VisibleSetTest( GafferSceneTest.SceneTestCase ) :
 		e = GafferScene.VisibleSet()
 		e.expansions = IECore.PathMatcher( [ "/a", "/b", "/a/b", "/b/c", "/a/b/c", "/c/d/e", "/c/d", "/d" ] )
 
-		self.assertEqual( e.match( "/a" ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.DescendantMatch ) )
-		self.assertEqual( e.match( "/b" ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.DescendantMatch ) )
-		self.assertEqual( e.match( "/d" ), IECore.PathMatcher.Result.ExactMatch )
-		self.assertEqual( e.match( "/a/b" ), IECore.PathMatcher.Result.EveryMatch )
-		self.assertEqual( e.match( "/b/c" ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.AncestorMatch ) )
-		self.assertEqual( e.match( "/a/b/c" ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.AncestorMatch ) )
+		for path in [ "/a", "/a/b", "/a/b/c", "/b", "/b/c", "/d" ] :
 
-		# Although "/c/d" is a member of `expansions` we return NoMatch as its parent "/c" is not expanded.
-		self.assertEqual( e.match( "/c/d" ), IECore.PathMatcher.Result.NoMatch )
+			self.assertEqual( e.visibility( path ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.Visible, True ) )
 
-		## \todo "/c/d/e" returns an ExactMatch and AncestorMatch as it and its parent "/c/d" are members of `expansions`, but in
-		# practice neither of these locations would be visible as "/c" is not in `expansions`.
-		# Updating IECore.PathMatcher to be able to test whether all ancestors match could give us an efficient way of
-		# returning NoMatch in this situation.
-		self.assertEqual( e.match( "/c/d/e" ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.AncestorMatch ) )
+		# Although "/c/d" is a member of `expansions` it is not visible as its parent "/c" is not expanded.
+		self.assertEqual( e.visibility( "/c/d" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.None_, False ) )
 
-		# While "/c" has descendants in `expansions`, we do not return a DescendantMatch as "/c" itself is not in `expansions` so
-		# its descendants cannot be visible.
-		## \todo We should be returning an ExactMatch here to show that "/c" is visible as "/" is implicitly expanded, but doing so
-		# currently would result in "/c" being expanded and its children being visible.
-		self.assertEqual( e.match( "/c" ), IECore.PathMatcher.Result.NoMatch )
+		# Likewise, "/c/d/e" is not visible as its ancestor "/c" is not expanded.
+		self.assertEqual( e.visibility( "/c/d/e" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.None_, False ) )
+
+		# While "/c" has descendants in `expansions`, they are not visible as "/c" itself is not in `expansions`
+		self.assertEqual( e.visibility( "/c" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.Visible, False ) )
 
 		# While "/" is not a member of `expansions`, it still returns a match as it meets the default minimumExpansionDepth of 0
-		self.assertEqual( e.match( "/" ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.DescendantMatch ) )
+		self.assertEqual( e.visibility( "/" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.Visible, True ) )
 
 	def testInclusions( self ) :
 
 		e = GafferScene.VisibleSet()
-		e.inclusions = IECore.PathMatcher( [ "/a", "/b/c" ] )
+		e.inclusions = IECore.PathMatcher( [ "/a", "/b/c/d" ] )
 
-		# Paths specifically added as inclusions
-		self.assertEqual( e.match( "/a" ), IECore.PathMatcher.Result.ExactMatch )
-		self.assertEqual( e.match( "/b/c" ), IECore.PathMatcher.Result.ExactMatch )
+		# Paths specifically added as inclusions are visible and have visible descendants.
+		self.assertEqual( e.visibility( "/a" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.Visible, True ) )
+		self.assertEqual( e.visibility( "/b/c/d" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.Visible, True ) )
 
 		# Paths with included descendants
-		self.assertEqual( e.match( "/" ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.DescendantMatch ) )
-		self.assertEqual( e.match( "/b" ), IECore.PathMatcher.Result.DescendantMatch )
+		self.assertEqual( e.visibility( "/" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.Visible, True ) )
+		self.assertEqual( e.visibility( "/b" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.Visible, True ) )
 
-		# Paths with included ancestors, these locations are also an ExactMatch as all descendants of an included location are visible
-		self.assertEqual( e.match( "/a/b" ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.AncestorMatch ) )
-		self.assertEqual( e.match( "/b/c/d/e" ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.AncestorMatch ) )
+		# "/b/c" should not be drawn as "/b" is not included or expanded, but has a visible descendant "/b/c/d"
+		self.assertEqual( e.visibility( "/b/c" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.None_, True ) )
+
+		# Paths with included ancestors. These locations are visible and have visible descendants
+		self.assertEqual( e.visibility( "/a/b" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.Visible, True ) )
+		self.assertEqual( e.visibility( "/b/c/d/e" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.Visible, True ) )
 
 		# Paths unrelated to those in inclusions
-		self.assertEqual( e.match( "/c" ), IECore.PathMatcher.Result.NoMatch )
-		self.assertEqual( e.match( "/a2" ), IECore.PathMatcher.Result.NoMatch )
+		self.assertEqual( e.visibility( "/c/d" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.None_, False ) )
+		self.assertEqual( e.visibility( "/a2/b2" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.None_, False ) )
 
 	def testExpansionsCombineWithInclusions( self ) :
 
@@ -98,25 +92,22 @@ class VisibleSetTest( GafferSceneTest.SceneTestCase ) :
 		e.expansions = IECore.PathMatcher( [ "/a", "/b", "/a/b" ] )
 		e.inclusions = IECore.PathMatcher( [ "/a", "/b/c", "/c" ] )
 
-		self.assertEqual( e.match( "/a" ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.DescendantMatch ) )
-		self.assertEqual( e.match( "/a/b" ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.AncestorMatch ) )
-		self.assertEqual( e.match( "/b" ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.DescendantMatch ) )
-		self.assertEqual( e.match( "/b/c" ), IECore.PathMatcher.Result.ExactMatch )
-		self.assertEqual( e.match( "/c" ), IECore.PathMatcher.Result.ExactMatch )
-		self.assertEqual( e.match( "/c/d" ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.AncestorMatch ) )
+		for path in [ "/a", "/a/b", "/b", "/b/c", "/c", "/c/d" ] :
 
-		# Expanding "/d/e/f" without also expanding its ancestors results in none of those locations being visible.
+			self.assertEqual( e.visibility( path ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.Visible, True ) )
+
+		# Expanding "/d/e/f" without also expanding its ancestors results in only "/d" being visible.
 		e.expansions.addPath( "/d/e/f" )
-		self.assertEqual( e.match( "/d" ), IECore.PathMatcher.Result.NoMatch )
-		self.assertEqual( e.match( "/d/e" ), IECore.PathMatcher.Result.NoMatch )
-		self.assertEqual( e.match( "/d/e/f" ), IECore.PathMatcher.Result.NoMatch )
+		self.assertEqual( e.visibility( "/d" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.Visible, False ) )
+		self.assertEqual( e.visibility( "/d/e" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.None_, False ) )
+		self.assertEqual( e.visibility( "/d/e/f" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.None_, False ) )
 
 		# Including "/d/g/h" without including its ancestors should not affect "/d/e/f"
 		e.inclusions.addPath( "/d/g/h" )
-		self.assertEqual( e.match( "/d" ), IECore.PathMatcher.Result.DescendantMatch )
-		self.assertEqual( e.match( "/d/g" ), IECore.PathMatcher.Result.DescendantMatch )
-		self.assertEqual( e.match( "/d/g/h" ), IECore.PathMatcher.Result.ExactMatch )
-		self.assertEqual( e.match( "/d/e/f" ), IECore.PathMatcher.Result.NoMatch )
+		self.assertEqual( e.visibility( "/d" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.Visible, True ) )
+		self.assertEqual( e.visibility( "/d/g" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.None_, True ) )
+		self.assertEqual( e.visibility( "/d/g/h" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.Visible, True ) )
+		self.assertEqual( e.visibility( "/d/e/f" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.None_, False ) )
 
 	def testExclusionsOverrideExpansions( self ) :
 
@@ -125,34 +116,36 @@ class VisibleSetTest( GafferSceneTest.SceneTestCase ) :
 
 		# Excluding "/b" should only affect "/b" and its descendants
 		e.exclusions = IECore.PathMatcher( [ "/b" ] )
-		self.assertEqual( e.match( "/a" ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.DescendantMatch ) )
-		self.assertEqual( e.match( "/a/b" ), IECore.PathMatcher.Result.EveryMatch )
-		self.assertEqual( e.match( "/a/b/c" ), IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.AncestorMatch )
+		self.assertEqual( e.visibility( "/a" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.Visible, True ) )
+		self.assertEqual( e.visibility( "/a/b" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.Visible, True ) )
+		self.assertEqual( e.visibility( "/a/b/c" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.Visible, True ) )
 
-		self.assertEqual( e.match( "/b" ), IECore.PathMatcher.Result.NoMatch )
-		self.assertEqual( e.match( "/b/c" ), IECore.PathMatcher.Result.NoMatch )
+		self.assertEqual( e.visibility( "/b" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.ExcludedBounds, False ) )
+		self.assertEqual( e.visibility( "/b/c" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.None_, False ) )
 
-		# Removing the exclusion on "/b" should result in "/b" and "/b/c" matching
+		# Removing the exclusion on "/b" should result in "/b" and "/b/c" becoming visible
 		e.exclusions.removePath( "/b" )
-		self.assertEqual( e.match( "/a" ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.DescendantMatch ) )
-		self.assertEqual( e.match( "/a/b" ), IECore.PathMatcher.Result.EveryMatch )
-		self.assertEqual( e.match( "/a/b/c" ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.AncestorMatch ) )
+		self.assertEqual( e.visibility( "/a" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.Visible, True ) )
+		self.assertEqual( e.visibility( "/a/b" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.Visible, True ) )
+		self.assertEqual( e.visibility( "/a/b/c" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.Visible, True ) )
 
-		self.assertEqual( e.match( "/b" ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.DescendantMatch ) )
-		self.assertEqual( e.match( "/b/c" ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.AncestorMatch ) )
+		self.assertEqual( e.visibility( "/b" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.Visible, True ) )
+		self.assertEqual( e.visibility( "/b/c" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.Visible, True ) )
 
-		# Excluding "/a/b" should not affect "/a", but also exclude "/a/b/c"
 		e.exclusions.addPath( "/a/b" )
-		# We still return a DescendantMatch here as descendants of "/a" are members of `expansions` though overridden by the exclusion
-		# of "/a/b"
-		self.assertEqual( e.match( "/a" ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.DescendantMatch ) )
-		# Testing the descendants directly clarifies the situation, with NoMatch returned as they have been excluded.
-		self.assertEqual( e.match( "/a/b" ), IECore.PathMatcher.Result.NoMatch )
-		self.assertEqual( e.match( "/a/b/c" ), IECore.PathMatcher.Result.NoMatch )
+		# "/a" is still visible and may have visible descendants as it is expanded
+		self.assertEqual( e.visibility( "/a" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.Visible, True ) )
+		# "/a/b" should draw as excluded bounds as "/a" is expanded, and have no visible descendants
+		self.assertEqual( e.visibility( "/a/b" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.ExcludedBounds, False ) )
+		# "/a/b/c" should not draw
+		self.assertEqual( e.visibility( "/a/b/c" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.None_, False ) )
+		# collapsing "/a" should cause "/a/b" to not draw
+		e.expansions.removePath( "/a" )
+		self.assertEqual( e.visibility( "/a/b" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.None_, False ) )
 
-		# Excluding "/a/b" should not have affected "/b" or its descendants.
-		self.assertEqual( e.match( "/b" ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.DescendantMatch ) )
-		self.assertEqual( e.match( "/b/c" ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.AncestorMatch ) )
+		# Excluding "/a/b" should not have affected "/b" or its descendants
+		self.assertEqual( e.visibility( "/b" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.Visible, True ) )
+		self.assertEqual( e.visibility( "/b/c" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.Visible, True ) )
 
 	def testExclusionsOverrideInclusions( self ) :
 
@@ -161,46 +154,64 @@ class VisibleSetTest( GafferSceneTest.SceneTestCase ) :
 
 		# Excluding "/d" & "/e" should not affect "/a"
 		e.exclusions = IECore.PathMatcher( [ "/d", "/e" ] )
-		self.assertEqual( e.match( "/a" ), IECore.PathMatcher.Result.ExactMatch )
-
-		self.assertEqual( e.match( "/d" ), IECore.PathMatcher.Result.NoMatch )
-		self.assertEqual( e.match( "/d/e" ), IECore.PathMatcher.Result.NoMatch )
-		self.assertEqual( e.match( "/e" ), IECore.PathMatcher.Result.NoMatch )
+		self.assertEqual( e.visibility( "/a" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.Visible, True ) )
+		self.assertEqual( e.visibility( "/d" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.ExcludedBounds, False )  )
+		self.assertEqual( e.visibility( "/d/e" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.None_, False ) )
+		self.assertEqual( e.visibility( "/e" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.ExcludedBounds, False ) )
 
 		# Removing the exclusion on "/d" should result in only "/e" not matching
 		e.exclusions.removePath( "/d" )
-		self.assertEqual( e.match( "/a" ), IECore.PathMatcher.Result.ExactMatch )
-		self.assertEqual( e.match( "/d" ), IECore.PathMatcher.Result.ExactMatch )
-		self.assertEqual( e.match( "/d/e" ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.AncestorMatch ) )
-
-		self.assertEqual( e.match( "/e" ), IECore.PathMatcher.Result.NoMatch )
+		self.assertEqual( e.visibility( "/a" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.Visible, True ) )
+		self.assertEqual( e.visibility( "/d" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.Visible, True ) )
+		self.assertEqual( e.visibility( "/d/e" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.Visible, True ) )
+		self.assertEqual( e.visibility( "/e" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.ExcludedBounds, False ) )
 
 	def testMinimumExpansionDepth( self ) :
 
 		e = GafferScene.VisibleSet()
 
-		## \todo Return ExactMatch rather than NoMatch
-		self.assertEqual( e.match( "/a" ), IECore.PathMatcher.Result.NoMatch )
-		self.assertEqual( e.match( "/a", minimumExpansionDepth = 1 ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.DescendantMatch ) )
-		## \todo Return AncestorMatch rather than NoMatch
-		self.assertEqual( e.match( "/a/b", minimumExpansionDepth = 1 ), IECore.PathMatcher.Result.NoMatch )
-		self.assertEqual( e.match( "/a/b", minimumExpansionDepth = 2 ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.DescendantMatch ) )
+		self.assertEqual( e.visibility( "/a" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.Visible, False ) )
+		self.assertEqual( e.visibility( "/a", minimumExpansionDepth = 1 ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.Visible, True ) )
+		self.assertEqual( e.visibility( "/a/b", minimumExpansionDepth = 1 ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.Visible, False ) )
+
+		self.assertEqual( e.visibility( "/a/b", minimumExpansionDepth = 2 ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.Visible, True ) )
+		self.assertEqual( e.visibility( "/a/b/c", minimumExpansionDepth = 2 ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.Visible, False ) )
+		self.assertEqual( e.visibility( "/a/b/c/d", minimumExpansionDepth = 2 ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.None_, False ) )
+
+	def testInclusionsCombineWithMinimumExpansionDepth( self ) :
+
+		e = GafferScene.VisibleSet()
+
+		self.assertEqual( e.visibility( "/a/b", minimumExpansionDepth = 1 ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.Visible, False ) )
+		self.assertEqual( e.visibility( "/a/b/c", minimumExpansionDepth = 1 ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.None_, False ) )
 
 		e.inclusions.addPath( "/a/b/c" )
-		self.assertEqual( e.match( "/a/b", minimumExpansionDepth = 1 ), IECore.PathMatcher.Result.DescendantMatch )
-		self.assertEqual( e.match( "/a/b", minimumExpansionDepth = 2 ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.DescendantMatch ) )
+		self.assertEqual( e.visibility( "/a/b", minimumExpansionDepth = 1 ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.Visible, True ) )
+		self.assertEqual( e.visibility( "/a/b/c", minimumExpansionDepth = 1 ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.Visible, True ) )
+
+	def testExpansionsCombineWithMinimumExpansionDepth( self ) :
+
+		e = GafferScene.VisibleSet()
+
+		self.assertEqual( e.visibility( "/d/e", minimumExpansionDepth = 1 ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.Visible, False ) )
+		self.assertEqual( e.visibility( "/d/e/f", minimumExpansionDepth = 1 ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.None_, False ) )
+
+		e.expansions.addPath( "/d/e" )
+		self.assertEqual( e.visibility( "/d/e", minimumExpansionDepth = 1 ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.Visible, True ) )
+		self.assertEqual( e.visibility( "/d/e/f", minimumExpansionDepth = 1 ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.Visible, False ) )
+
+		self.assertEqual( e.visibility( "/d/e" ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.None_, False ) )
 
 	def testExclusionsOverrideMinimumExpansionDepth( self ) :
 
 		e = GafferScene.VisibleSet()
 
-		self.assertEqual( e.match( "/a", minimumExpansionDepth = 2 ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.DescendantMatch ) )
-		self.assertEqual( e.match( "/a/b", minimumExpansionDepth = 2 ), ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.DescendantMatch ) )
+		self.assertEqual( e.visibility( "/a", minimumExpansionDepth = 2 ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.Visible, True ) )
+		self.assertEqual( e.visibility( "/a/b", minimumExpansionDepth = 2 ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.Visible, True ) )
 
 		e.exclusions.addPath( "/a" )
-
-		self.assertEqual( e.match( "/a", minimumExpansionDepth = 2 ), IECore.PathMatcher.Result.NoMatch )
-		self.assertEqual( e.match( "/a/b", minimumExpansionDepth = 2 ), IECore.PathMatcher.Result.NoMatch )
+		self.assertEqual( e.visibility( "/a", minimumExpansionDepth = 2 ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.ExcludedBounds, False ) )
+		self.assertEqual( e.visibility( "/a/b", minimumExpansionDepth = 2 ), GafferScene.VisibleSet.Visibility( GafferScene.VisibleSet.Visibility.DrawMode.None_, False ) )
 
 if __name__ == "__main__":
 	unittest.main()
