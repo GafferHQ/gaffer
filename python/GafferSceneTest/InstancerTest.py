@@ -2225,6 +2225,36 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( instancer["out"].childNames( "/points/instances" ), IECore.InternedStringVectorData() )
 		self.assertSceneValid( instancer["out"] )
 
+	def testNoScenePathInPrototypeSetContext( self ) :
+
+		plane = GafferScene.Plane()
+		planeFilter = GafferScene.PathFilter()
+		planeFilter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		cube = GafferScene.Cube()
+		cube["sets"].setValue( "setA" )
+
+		instancer = GafferScene.Instancer()
+		instancer["in"].setInput( plane["out"] )
+		instancer["prototypes"].setInput( cube["out"] )
+		instancer["filter"].setInput( planeFilter["out"] )
+
+		instancer["user"]["contextVariableEnabler"] = Gaffer.BoolPlug( defaultValue = False, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		instancer["contextVariables"].addChild( GafferScene.Instancer.ContextVariablePlug() )
+		instancer["contextVariables"][0]["name"].setValue( "test" )
+		# Although the input has a value of `False`, this is sufficient to trick
+		# `Instancer::hashBranchSet()` into thinking there will be context
+		# variables, which causes it to call `setCollaboratePlug()->hash()`,
+		# which then accurately concludes that actually there are no context
+		# variables. It then hits a very rare code path which wasn't well tested
+		# until now.
+		instancer["contextVariables"][0]["enabled"].setInput( instancer["user"]["contextVariableEnabler"] )
+
+		# We're not asserting anything here, but the ContextSanitiser installed by `SceneTestCase.setUp()`
+		# is checking that we're not leaking `scene:path` upstream.
+		instancer["out"].set( "setA" )
+
 	def runTestContextSetPerf( self, useContexts, parallelEvaluate ):
 
 		plane = GafferScene.Plane()
