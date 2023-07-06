@@ -215,10 +215,11 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 			for path in paths :
 				attr = node["in"].fullAttributes( path ) if useFullAttr else node["in"].attributes( path )
 				attributes.update( attr )
+			existingTweaks = { tweak["name"].getValue() for tweak in node["tweaks"] }
 
 		attributes = collections.OrderedDict( sorted( attributes.items() ) )
 
-		for key, value in [ ( k, v ) for k, v in attributes.items() if k.replace( ':', '_' ) not in node["tweaks"] ] :
+		for key, value in attributes.items() :
 			result.append(
 				"/" + key,
 				{
@@ -226,7 +227,8 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 						Gaffer.WeakMethod( self.__addTweak ),
 						key,
 						value
-					)
+					),
+					"active" : key not in existingTweaks
 				}
 			)
 
@@ -245,8 +247,7 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 		else :
 			plug = Gaffer.TweakPlug( name, plugTypeOrValue() )
 
-		if name :
-			plug.setName( name.replace( ':', '_' ) )
+		plug.setName( "tweak0" )
 
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			self.getPlug().addChild( plug )
