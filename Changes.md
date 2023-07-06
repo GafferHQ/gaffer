@@ -83,6 +83,7 @@ Fixes
 - PresetsPlugValueWidget : Fixed label update for context-sensitive presets.
 - PlugValueWidget : Fixed value update when auxiliary plugs depend on the context but the primary plugs do not.
 - Cycles : Fixed handling of `cycles:shader:volume_sampling_method` and `cycles:shader:volume_interpolation_method` attributes, which were being ignored previously.
+- OptionQuery : Fixed bug which allowed duplicate queries to be added in the UI.
 
 API
 ---
