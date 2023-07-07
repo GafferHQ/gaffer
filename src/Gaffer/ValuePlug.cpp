@@ -349,10 +349,6 @@ class ValuePlug::HashProcess : public Process
 				// in use by the owning thread. Instead we set this flag to
 				// politely request that the thread clears the cache itself
 				// at its earliest convenience - in the HashProcess constructor.
-				// This delay in clearing is OK, because it is illegal to modify
-				// a graph while a computation is being performed with it, and
-				// we know that the plug requesting the clear will be removed
-				// from the cache before the next computation starts.
 				it->clearCache.store( 1, std::memory_order_release );
 			}
 		}
