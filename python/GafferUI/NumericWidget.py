@@ -289,10 +289,10 @@ class NumericWidget( GafferUI.TextWidget ) :
 		text = self.__valueToString( value )
 		dragBeginOrEnd = reason in ( self.ValueChangedReason.DragBegin, self.ValueChangedReason.DragEnd )
 
-		if text == self.getText() and not dragBeginOrEnd :
-			# early out if the text hasn't changed. we never early out if the reason is
-			# drag start or drag end, as we want to maintain matching pairs so things
-			# make sense to client code.
+		if self.getText() and self.__numericType( text ) == self.getValue() and not dragBeginOrEnd :
+			# early out if the value, after text formatting, hasn't changed. we never
+			# early out if the reason is drag start or drag end, as we want to maintain
+			# matching pairs so things make sense to client code.
 			return
 
 		self.setText( text )

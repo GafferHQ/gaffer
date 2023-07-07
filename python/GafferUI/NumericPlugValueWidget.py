@@ -84,6 +84,14 @@ class NumericPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def _updateFromValues( self, values, exception ) :
 
+		if len( values ) == 0 and exception is None and self.getPlugs() :
+			# Placeholder update for a pending background compute. If we're animated,
+			# we don't want to use a `---` placeholder because it messes up editing for
+			# the user. Animation is quick enough to compute that there is no need
+			# for a placeholder anyway, so we'll just wait for the final update.
+			if all( Gaffer.Animation.isAnimated( p ) for p in self.getPlugs() ) :
+				return
+
 		# Update value and error state.
 
 		value = sole( values )
