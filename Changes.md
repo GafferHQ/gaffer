@@ -4,7 +4,7 @@
 Fixes
 -----
 
-- Instancer : Fixed bug that could cause the `scene:path` context variable to be leaked into the evaluation of `propotypes.set` in rare circumstances.
+- Instancer : Fixed bug that could cause the `scene:path` context variable to be leaked into the evaluation of `prototypes.set` in rare circumstances.
 - NumericPlugValueWidget (#5335) :
   - Fixed bug causing the cursor position to be reset to the end if the number of digits in the plug value changed while incrementing/decrementing with the keyboard up/down arrow keys.
   - Fixed bug causing the cursor position to be reset to the end when incrementing an animated plug.
