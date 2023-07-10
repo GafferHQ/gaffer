@@ -338,10 +338,10 @@ class ValuePlug::HashProcess : public Process
 		static void clearCache()
 		{
 			g_globalCache.clear();
-			// The docs for enumerable_thread_specific aren't particularly clear
-			// on whether or not it's ok to iterate an e_t_s while concurrently using
-			// local(), which is what we do here. So far in practice it seems to be
-			// OK.
+			// It's not documented explicitly, but it is safe to iterate over an
+			// `enumerable_thread_specific` while `local()` is being called on
+			// other threads, because the underlying container is a
+			// `concurrent_vector`.
 			tbb::enumerable_thread_specific<ThreadData>::iterator it, eIt;
 			for( it = g_threadData.begin(), eIt = g_threadData.end(); it != eIt; ++it )
 			{
