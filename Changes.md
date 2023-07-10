@@ -60,6 +60,7 @@ Improvements
 - CyclesAttributes :
   - Added `emissionSamplingMethod` plug.
   - Added `isCausticsCaster` and `isCausticsReceiver` plugs.
+- Render : Improved clearing of the compute and hash caches prior to rendering, potentially providing more memory to the renderer. Note that clearing is now only performed in the `execute` and `dispatch` apps.
 
 Fixes
 -----

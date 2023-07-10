@@ -43,6 +43,7 @@
 #include "GafferScene/ScenePlug.h"
 #include "GafferScene/SceneProcessor.h"
 
+#include "Gaffer/ApplicationRoot.h"
 #include "Gaffer/MonitorAlgo.h"
 #include "Gaffer/PerformanceMonitor.h"
 
@@ -336,16 +337,21 @@ void Render::executeInternal( bool flushCaches ) const
 	if( flushCaches )
 	{
 		// Now we have generated the scene, flush Cortex and Gaffer caches to
-		// provide more memory to the renderer.
-		/// \todo If executing directly within the gui app flushing the caches
-		/// is definitely not wanted. Since this scenario is currently uncommon,
-		/// we prioritise the common case of performing a single render from within
-		/// `gaffer execute`, but it would be good to do better.
-		ObjectPool::defaultObjectPool()->clear();
-		ValuePlug::clearCache();
-		/// \todo This is not as effective as it could be, because it doesn't actually
-		/// clear the per-thread caches until the next operation on each thread.
-		ValuePlug::clearHashCache();
+		// provide more memory to the renderer. We limit this to the `execute`
+		// and `dispatch` applications for two reasons :
+		//
+		// - In a GUI application, we don't want to clear the caches because
+		//   we'll probably benefit from using them again later.
+		// - In `execute` and `dispatch` we know we're not executing concurrently
+		//   with anything else, and can therefore pass `now = true` to
+		//   `clearHashCache()` safely.
+		auto *application = ancestor<ApplicationRoot>();
+		if( application && ( application->getName() == "execute" || application->getName() == "dispatch" ) )
+		{
+			ObjectPool::defaultObjectPool()->clear();
+			ValuePlug::clearCache();
+			ValuePlug::clearHashCache( /* now = */ true );
+		}
 	}
 
 	renderer->render();
