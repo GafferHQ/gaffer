@@ -121,17 +121,24 @@ const InternedString g_insetPenumbraType( "inset" );
 const InternedString g_outsetPenumbraType( "outset" );
 const InternedString g_absolutePenumbraType( "absolute" );
 
-const float g_spotLightHandleWidth = 2.5f;
-const float g_spotLightHandleWidthLarge = 3.f;
-const float g_coneSpokeLineWidth = 0.5f;
-const float g_coneSpokeLineWidthLarge = 1.f;
-const float g_penumbraSpokeLineWidth = 0.25f;
-const float g_penumbraSpokeLineWidthLarge = 0.5f;
+const float g_circleHandleWidth = 2.5f;
+const float g_circleHandleWidthLarge = 3.f;
+const float g_circleHandleSelectionWidth = 5.f;
+
+const float g_lineHandleWidth = 0.5f;
+const float g_lineHandleWidthLarge = 1.f;
+const float g_lineSelectionWidth = 3.f;
+
+const float g_minorLineHandleWidth = 0.25f;
+const float g_minorLineHandleWidthLarge = 0.5f;
+
 const float g_dragArcWidth = 24.f;
 
-// For both cone and penumbra
-const float g_spokeSelectionWidth = 3.f;
-const float g_spotLightHandleSelectionWidth = 5.f;
+const float g_arrowHandleSize = g_circleHandleWidth * 2.f;
+const float g_arrowHandleSizeLarge = g_circleHandleWidthLarge * 2.f;
+const float g_arrowHandleSelectionSize = g_circleHandleSelectionWidth * 2.f;
+
+const float g_quadLightHandleSizeMultiplier = 1.75f;
 
 const Color4f g_hoverTextColor( 1, 1, 1, 1 );
 
@@ -446,6 +453,12 @@ IECoreGL::MeshPrimitivePtr cone( float height, float startRadius, float endRadiu
 	IECoreGL::ToGLMeshConverterPtr converter = new ToGLMeshConverter( mesh );
 	result = runTimeCast<IECoreGL::MeshPrimitive>( converter->convert() );
 
+	return result;
+}
+
+IECoreGL::MeshPrimitivePtr unitCone()
+{
+	static IECoreGL::MeshPrimitivePtr result = cone( 1.5f, 0.5f, 0 );
 	return result;
 }
 
@@ -957,7 +970,7 @@ class SpotLightHandle : public LightToolHandle
 					this
 				);
 
-				if( ( coneRaster - penumbraRaster ).length() < ( 2.f * g_spotLightHandleWidthLarge ) )
+				if( ( coneRaster - penumbraRaster ).length() < ( 2.f * g_circleHandleWidthLarge ) )
 				{
 					return false;
 				}
@@ -1035,18 +1048,18 @@ class SpotLightHandle : public LightToolHandle
 
 			if( IECoreGL::Selector::currentSelector() )
 			{
-				spokeRadius = g_spokeSelectionWidth;
-				handleRadius = g_spotLightHandleSelectionWidth;
+				spokeRadius = g_lineSelectionWidth;
+				handleRadius = g_circleHandleSelectionWidth;
 			}
 			else
 			{
 				spokeRadius = m_handleType == HandleType::Cone ? (
-					highlighted ? g_coneSpokeLineWidthLarge : g_coneSpokeLineWidth
+					highlighted ? g_lineHandleWidthLarge : g_lineHandleWidth
 				) : (
-					highlighted ? g_penumbraSpokeLineWidthLarge : g_penumbraSpokeLineWidth
+					highlighted ? g_minorLineHandleWidthLarge : g_minorLineHandleWidth
 				);
 
-				handleRadius = highlighted ? g_spotLightHandleWidthLarge : g_spotLightHandleWidth;
+				handleRadius = highlighted ? g_circleHandleWidthLarge : g_circleHandleWidth;
 			}
 
 			const V3f farP = V3f( 0, 0, m_frustumScale * m_visualiserScale * -10.f );
@@ -1683,7 +1696,20 @@ class QuadLightHandle : public LightToolHandle
 
 		bool visible() const override
 		{
-			/// \todo Implement me
+			// We require both width and height to be present to be a valid quad light
+			if( !m_widthInspector || !m_heightInspector )
+			{
+				return false;
+			}
+
+			Inspector::ResultPtr contextWidthInspection = m_widthInspector->inspect();
+			Inspector::ResultPtr contextHeightInspection = m_heightInspector->inspect();
+
+			if( !contextWidthInspection || !contextHeightInspection )
+			{
+				return false;
+			}
+
 			return true;
 		}
 
@@ -1713,7 +1739,164 @@ class QuadLightHandle : public LightToolHandle
 
 		void renderHandle( const Style *style, Style::State state ) const override
 		{
-			/// \todo Implement me
+			if( getLookThroughLight() )
+			{
+				return;
+			}
+
+			State::bindBaseState();
+			auto glState = const_cast<State *>( State::defaultState() );
+
+			IECoreGL::GroupPtr group = new IECoreGL::Group;
+
+			const bool highlighted = state == Style::State::HighlightedState;
+
+			float spokeRadius = 0;
+			float coneSize = 0;
+			float cornerRadius = 0;
+
+			if( IECoreGL::Selector::currentSelector() )
+			{
+				spokeRadius = g_lineSelectionWidth;
+				coneSize = g_arrowHandleSelectionSize;
+				cornerRadius = g_circleHandleSelectionWidth;
+			}
+			else
+			{
+				spokeRadius = highlighted ? g_lineHandleWidthLarge : g_lineHandleWidth;
+				coneSize = highlighted ? g_arrowHandleSizeLarge : g_arrowHandleSize;
+				cornerRadius = highlighted ? g_circleHandleWidthLarge : g_circleHandleWidth;
+			}
+
+			spokeRadius *= g_quadLightHandleSizeMultiplier;
+			coneSize *= g_quadLightHandleSizeMultiplier;
+			cornerRadius *= g_quadLightHandleSizeMultiplier;
+
+			group->getState()->add(
+				new IECoreGL::ShaderStateComponent(
+					ShaderLoader::defaultShaderLoader(),
+					TextureLoader::defaultTextureLoader(),
+					"",
+					"",
+					constantFragSource(),
+					new CompoundObject
+				)
+			);
+
+			auto standardStyle = runTimeCast<const StandardStyle>( style );
+			assert( standardStyle );
+			const Color3f highlightColor3 = standardStyle->getColor( StandardStyle::Color::HighlightColor );
+			const Color4f highlightColor4 = Color4f( highlightColor3.x, highlightColor3.y, highlightColor3.z, 1.f );
+
+			const bool enabled = allInspectionsEnabled();
+
+			group->getState()->add(
+				new IECoreGL::Color(
+					enabled ? ( highlighted ? g_lightToolHighlightColor4 : highlightColor4 ) : g_lightToolDisabledColor4
+				)
+			);
+
+			if( ( m_handleType & HandleType::Width ) && ( m_handleType & HandleType::Height ) )
+			{
+				// Circles at corners for planar drag
+
+				IECoreGL::GroupPtr iconGroup = new IECoreGL::Group;
+				iconGroup->getState()->add(
+					new IECoreGL::ShaderStateComponent(
+						ShaderLoader::defaultShaderLoader(),
+						TextureLoader::defaultTextureLoader(),
+						faceCameraVertexSource(),
+						"",
+						constantFragSource(),
+						new CompoundObject
+					)
+				);
+				iconGroup->setTransform(
+					M44f().scale( V3f( cornerRadius ) * ::rasterScaleFactor( this, V3f( 0 ) ) )
+				);
+				iconGroup->addChild( circle() );
+				group->addChild( iconGroup );
+			}
+			else
+			{
+				// Lines and arrows on edges for linear drag
+
+				V3f p0(0, 0, 0);
+				V3f p1(0, 0, 0);
+
+				const auto &[widthInspection, width, heightInspection, height] = handleInspections();
+
+				float fullEdgeLength = 0;
+				float fullEdgeLengthHalf = 0;
+				float radius0 = 0;
+				float radius1 = 0;
+				if( m_handleType & HandleType::Width )
+				{
+					fullEdgeLength = height;
+					fullEdgeLengthHalf = fullEdgeLength * 0.5f;
+					radius0 = g_circleHandleWidthLarge * ::rasterScaleFactor( this, V3f( 0, -fullEdgeLengthHalf, 0 ) ) * g_quadLightHandleSizeMultiplier;
+					radius1 = g_circleHandleWidthLarge * ::rasterScaleFactor( this, V3f( 0, fullEdgeLengthHalf, 0 ) ) * g_quadLightHandleSizeMultiplier;
+				}
+				else
+				{
+					fullEdgeLength = width;
+					fullEdgeLengthHalf = fullEdgeLength * 0.5f;
+					radius0 = g_circleHandleWidthLarge * ::rasterScaleFactor( this, V3f( -fullEdgeLengthHalf, 0, 0 ) ) * g_quadLightHandleSizeMultiplier;
+					radius1 = g_circleHandleWidthLarge * ::rasterScaleFactor( this, V3f( fullEdgeLengthHalf, 0, 0 ) ) * g_quadLightHandleSizeMultiplier;
+				}
+
+				const float edgeLength = fullEdgeLength - radius0 - radius1;
+
+				M44f coneTransform;
+				M44f edgeTransform;
+
+				if( m_handleType & HandleType::Width )
+				{
+					coneTransform = M44f().rotate( V3f( 0, M_PI * 0.5f * m_xSign, 0 ) );
+					edgeTransform =
+						M44f().rotate( V3f( -M_PI * 0.5f, 0, 0 ) ) *
+						M44f().translate( V3f( 0, -fullEdgeLengthHalf + radius0, 0 ) )
+					;
+					p0 = V3f( 0, -fullEdgeLengthHalf + radius0, 0 );
+					p1 = V3f( 0, fullEdgeLengthHalf - radius1, 0 );
+				}
+				else
+				{
+					coneTransform = M44f().rotate( V3f( M_PI * 0.5f * -m_ySign, 0, 0 ) );
+					edgeTransform =
+						M44f().rotate( V3f( 0, M_PI * 0.5f, 0 ) ) *
+						M44f().translate( V3f( -fullEdgeLengthHalf + radius0, 0, 0 ) )
+					;
+					p0 = V3f( -fullEdgeLengthHalf + radius0, 0, 0 );
+					p1 = V3f( fullEdgeLengthHalf - radius1, 0, 0 );
+				}
+				coneTransform *=
+					M44f().scale( V3f( ::rasterScaleFactor( this, V3f( 0 ) ) ) ) *
+					M44f().scale( V3f( coneSize ) )
+				;
+
+				IECoreGL::GroupPtr coneGroup = new IECoreGL::Group;
+				coneGroup->setTransform( coneTransform );
+				coneGroup->addChild( unitCone() );
+				group->addChild( coneGroup );
+
+				IECoreGL::GroupPtr edgeGroup = new IECoreGL::Group;
+				edgeGroup->addChild(
+					cone(
+						edgeLength,
+						spokeRadius * ::rasterScaleFactor( this, p0 ),
+						spokeRadius * ::rasterScaleFactor( this, p1 )
+					)
+				);
+				edgeGroup->setTransform( edgeTransform );
+
+				group->addChild( edgeGroup );
+			}
+
+			group->render( glState );
+
+			/// \todo Implement text indicator
+
 		}
 
 	private :
