@@ -82,7 +82,7 @@ CyclesAttributes::CyclesAttributes( const std::string &name )
 	attributes->addChild( new Gaffer::NameValuePlug( "cycles:asset_name", new IECore::StringData( "" ), false, "assetName" ) );
 
 	// Shader-specific
-	attributes->addChild( new Gaffer::NameValuePlug( "cycles:shader:use_mis", new IECore::BoolData( true ), false, "useMis" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "cycles:shader:emission_sampling_method", new IECore::StringData( "auto" ), false, "emissionSamplingMethod" ) );
 	attributes->addChild( new Gaffer::NameValuePlug( "cycles:shader:use_transparent_shadow", new IECore::BoolData( true ), false, "useTransparentShadow" ) );
 	attributes->addChild( new Gaffer::NameValuePlug( "cycles:shader:heterogeneous_volume", new IECore::BoolData( true ), false, "heterogeneousVolume" ) );
 	attributes->addChild( new Gaffer::NameValuePlug( "cycles:shader:volume_sampling_method", new IECore::StringData( "multiple_importance" ), false, "volumeSamplingMethod" ) );

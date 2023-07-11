@@ -54,6 +54,7 @@ Improvements
   - Added support for inclusion and exclusion of leaf level locations to the Visible Set.
   - Added <kbd>F</kbd> shortcut to expand ancestors and frame selected paths. This replaces the previous behaviour of automatic updates to expansion and framing in the HierarchyView on selection change.
 - CyclesOptions : Added `useLightTree` plug.
+- CyclesAttributes : Added `emissionSamplingMethod` plug.
 
 Fixes
 -----
@@ -171,6 +172,7 @@ Breaking Changes
 - TypedPlug : Moved implementation code from `TypedPlug.inl` to `TypedPlugImplementation.h`.
 - TypedObjectPlug : Moved implementation code from `TypedObjectPlug.inl` to `TypedObjectPlugImplementation.h`.
 - Xerces : Removed. This library was only needed by Appleseed.
+- CyclesAttributes : Replaced `useMis` with `emissionSamplingMethod`.
 
 Build
 -----

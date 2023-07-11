@@ -425,7 +425,8 @@ ccl::DisplacementMethod displacementMethodFromString( const string &name )
 	return ccl::DisplacementMethod::DISPLACE_TRUE;
 }
 
-IECore::InternedString g_shaderUseMisAttributeName( "cycles:shader:use_mis" );
+IECore::InternedString g_shaderEmissionSamplingMethodAttributeName( "cycles:shader:emission_sampling_method" );
+IECore::ConstStringDataPtr g_shaderEmissionSamplingMethodAttributeDefault = new StringData( "auto" );
 IECore::InternedString g_shaderUseTransparentShadowAttributeName( "cycles:shader:use_transparent_shadow" );
 IECore::InternedString g_shaderHeterogeneousVolumeAttributeName( "cycles:shader:heterogeneous_volume" );
 IECore::InternedString g_shaderVolumeSamplingMethodAttributeName( "cycles:shader:volume_sampling_method" );
@@ -1294,7 +1295,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		{
 			ShaderAttributes( const IECore::CompoundObject *attributes )
 			{
-				useMIS = optionalAttribute<bool>( g_shaderUseMisAttributeName, attributes );
+				emissionSamplingMethod = attribute<StringData>( g_shaderEmissionSamplingMethodAttributeName, attributes, g_shaderEmissionSamplingMethodAttributeDefault.get() );
 				useTransparentShadow = optionalAttribute<bool>( g_shaderUseTransparentShadowAttributeName, attributes );
 				heterogeneousVolume = optionalAttribute<bool>( g_shaderHeterogeneousVolumeAttributeName, attributes );
 				volumeSamplingMethod = attribute<StringData>( g_shaderVolumeSamplingMethodAttributeName, attributes, g_shaderVolumeSamplingMethodAttributeDefault.get() );
@@ -1302,7 +1303,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				volumeStepRate = optionalAttribute<float>( g_shaderVolumeStepRateAttributeName, attributes );
 			}
 
-			boost::optional<bool> useMIS;
+			ConstDataPtr emissionSamplingMethod;
 			boost::optional<bool> useTransparentShadow;
 			boost::optional<bool> heterogeneousVolume;
 			ConstDataPtr volumeSamplingMethod;
@@ -1311,8 +1312,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 			void hash( IECore::MurmurHash &h, const IECore::CompoundObject *attributes ) const
 			{
-				if( useMIS && !useMIS.get() )
-					h.append( "no_mis" );
+				emissionSamplingMethod->hash( h );
 
 				// Volume-related attributes hash
 				auto it = attributes->members().find( g_cyclesVolumeShaderAttributeName );
@@ -1329,7 +1329,7 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 			bool apply( ccl::Shader *shader ) const
 			{
-				shader->set_emission_sampling_method( useMIS.value_or( true ) ? ccl::EMISSION_SAMPLING_FRONT_BACK : ccl::EMISSION_SAMPLING_NONE );
+				SocketAlgo::setSocket( shader, shader->get_emission_sampling_method_socket(), emissionSamplingMethod.get() );
 				shader->set_use_transparent_shadow(useTransparentShadow ? useTransparentShadow.get() : true );
 				shader->set_heterogeneous_volume( heterogeneousVolume ? heterogeneousVolume.get() : true );
 				SocketAlgo::setSocket( shader, shader->get_volume_sampling_method_socket(), volumeSamplingMethod.get() );
