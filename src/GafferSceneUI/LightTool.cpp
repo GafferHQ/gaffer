@@ -1681,6 +1681,7 @@ class QuadLightHandle : public LightToolHandle
 			m_dragStartInfo(),
 			m_xSign( xSign ),
 			m_ySign( ySign ),
+			m_edgeCursorPoint( V3f( 0 ) ),
 			m_scale( V2f( 1.f ) )
 		{
 			mouseMoveSignal().connect( boost::bind( &QuadLightHandle::mouseMove, this, ::_2 ) );
@@ -1918,71 +1919,23 @@ class QuadLightHandle : public LightToolHandle
 			{
 				// Lines and arrows on edges for linear drag
 
-				V3f p0(0, 0, 0);
-				V3f p1(0, 0, 0);
-
-				const auto &[widthInspection, width, heightInspection, height] = handleInspections();
-
-				float fullEdgeLength = 0;
-				float fullEdgeLengthHalf = 0;
-				float radius0 = 0;
-				float radius1 = 0;
-				if( m_handleType & HandleType::Width )
-				{
-					fullEdgeLength = height;
-					fullEdgeLengthHalf = fullEdgeLength * 0.5f;
-					radius0 = g_circleHandleWidthLarge * ::rasterScaleFactor( this, V3f( 0, -fullEdgeLengthHalf, 0 ) ) * g_quadLightHandleSizeMultiplier;
-					radius1 = g_circleHandleWidthLarge * ::rasterScaleFactor( this, V3f( 0, fullEdgeLengthHalf, 0 ) ) * g_quadLightHandleSizeMultiplier;
-				}
-				else
-				{
-					fullEdgeLength = width;
-					fullEdgeLengthHalf = fullEdgeLength * 0.5f;
-					radius0 = g_circleHandleWidthLarge * ::rasterScaleFactor( this, V3f( -fullEdgeLengthHalf, 0, 0 ) ) * g_quadLightHandleSizeMultiplier;
-					radius1 = g_circleHandleWidthLarge * ::rasterScaleFactor( this, V3f( fullEdgeLengthHalf, 0, 0 ) ) * g_quadLightHandleSizeMultiplier;
-				}
-
-				const float edgeLength = fullEdgeLength - radius0 - radius1;
+				LineSegment3f edgeSegment = this->edgeSegment( handleInspections() );
 
 				M44f coneTransform;
 				M44f edgeTransform;
-
-				if( m_handleType & HandleType::Width )
-				{
-					coneTransform = M44f().rotate( V3f( 0, M_PI * 0.5f * m_xSign, 0 ) );
-					edgeTransform =
-						M44f().rotate( V3f( -M_PI * 0.5f, 0, 0 ) ) *
-						M44f().translate( V3f( 0, -fullEdgeLengthHalf + radius0, 0 ) )
-					;
-					p0 = V3f( 0, -fullEdgeLengthHalf + radius0, 0 );
-					p1 = V3f( 0, fullEdgeLengthHalf - radius1, 0 );
-				}
-				else
-				{
-					coneTransform = M44f().rotate( V3f( M_PI * 0.5f * -m_ySign, 0, 0 ) );
-					edgeTransform =
-						M44f().rotate( V3f( 0, M_PI * 0.5f, 0 ) ) *
-						M44f().translate( V3f( -fullEdgeLengthHalf + radius0, 0, 0 ) )
-					;
-					p0 = V3f( -fullEdgeLengthHalf + radius0, 0, 0 );
-					p1 = V3f( fullEdgeLengthHalf - radius1, 0, 0 );
-				}
-				coneTransform *=
-					M44f().scale( V3f( ::rasterScaleFactor( this, V3f( 0 ) ) ) ) *
-					M44f().scale( V3f( coneSize ) )
-				;
+				edgeTransforms( edgeSegment, coneTransform, edgeTransform );
 
 				IECoreGL::GroupPtr coneGroup = new IECoreGL::Group;
-				coneGroup->setTransform( coneTransform );
+				coneGroup->setTransform( coneTransform * M44f().scale( V3f( coneSize ) ) );
 				coneGroup->addChild( unitCone() );
 				group->addChild( coneGroup );
 
 				IECoreGL::GroupPtr edgeGroup = new IECoreGL::Group;
 				edgeGroup->addChild(
 					cone(
-						edgeLength,
-						spokeRadius * ::rasterScaleFactor( this, p0 ),
-						spokeRadius * ::rasterScaleFactor( this, p1 )
+						edgeSegment.length(),
+						spokeRadius * ::rasterScaleFactor( this, edgeSegment.p0 ),
+						spokeRadius * ::rasterScaleFactor( this, edgeSegment.p1 )
 					)
 				);
 				edgeGroup->setTransform( edgeTransform );
@@ -2017,7 +1970,7 @@ class QuadLightHandle : public LightToolHandle
 				}
 
 				drawSelectionTips(
-					V3f( 0 ),
+					m_edgeCursorPoint,
 					inspections,
 					tipSuffix,
 					"Hold Ctrl to maintain aspect ratio",
@@ -2026,7 +1979,6 @@ class QuadLightHandle : public LightToolHandle
 					style
 				);
 			}
-
 		}
 
 	private :
@@ -2041,7 +1993,24 @@ class QuadLightHandle : public LightToolHandle
 
 		bool mouseMove( const ButtonEvent &event )
 		{
-			/// \todo Implement me
+			if( !m_widthInspector || ! m_heightInspector )
+			{
+				return false;
+			}
+
+			if( m_handleType & HandleType::Width && m_handleType &HandleType::Height )
+			{
+				m_edgeCursorPoint = V3f( 0, 0, 0 );
+				return false;
+			}
+
+			LineSegment3f edgeSegment = this->edgeSegment( handleInspections() );
+
+			V3f eventClosest;
+			m_edgeCursorPoint = edgeSegment.closestPoints( LineSegment3f( event.line.p0, event.line.p1 ), eventClosest );
+
+			dirty( DirtyType::Render );
+
 			return false;
 		}
 
@@ -2112,6 +2081,66 @@ class QuadLightHandle : public LightToolHandle
 			return enabled;
 		}
 
+		LineSegment3f edgeSegment( const InspectionInfo &inspectionInfo ) const
+		{
+			const auto &[widthInspection, width, heightInspection, height] = inspectionInfo;
+
+			float fullEdgeLength = 0;
+			float fullEdgeLengthHalf = 0;
+			float radius0 = 0;
+			float radius1 = 0;
+			if( m_handleType & HandleType::Width )
+			{
+				fullEdgeLength = height * m_scale.y;
+				fullEdgeLengthHalf = fullEdgeLength * 0.5f;
+				radius0 = g_circleHandleWidthLarge * ::rasterScaleFactor( this, V3f( 0, -fullEdgeLengthHalf, 0 ) ) * g_quadLightHandleSizeMultiplier;
+				radius1 = g_circleHandleWidthLarge * ::rasterScaleFactor( this, V3f( 0, fullEdgeLengthHalf, 0 ) ) * g_quadLightHandleSizeMultiplier;
+			}
+			else
+			{
+				fullEdgeLength = width * m_scale.x;
+				fullEdgeLengthHalf = fullEdgeLength * 0.5f;
+				radius0 = g_circleHandleWidthLarge * ::rasterScaleFactor( this, V3f( -fullEdgeLengthHalf, 0, 0 ) ) * g_quadLightHandleSizeMultiplier;
+				radius1 = g_circleHandleWidthLarge * ::rasterScaleFactor( this, V3f( fullEdgeLengthHalf, 0, 0 ) ) * g_quadLightHandleSizeMultiplier;
+			}
+
+			LineSegment3f result;
+
+			if( m_handleType & HandleType::Width )
+			{
+				result.p0 = V3f( 0, std::min( 0.f, -fullEdgeLengthHalf + radius0 ), 0 );
+				result.p1 = V3f( 0, std::max( 0.f, fullEdgeLengthHalf - radius1 ), 0 );
+			}
+			else
+			{
+				result.p0 = V3f( std::min( 0.f, -fullEdgeLengthHalf + radius0 ), 0, 0 );
+				result.p1 = V3f( std::max( 0.f, fullEdgeLengthHalf - radius1 ), 0, 0 );
+			}
+
+			return result;
+		}
+
+		void edgeTransforms( const LineSegment3f &edgeSegment, M44f &coneTransform, M44f &edgeTransform ) const
+		{
+			if( m_handleType & HandleType::Width )
+			{
+				coneTransform = M44f().rotate( V3f( 0, M_PI * 0.5f * m_xSign, 0 ) );
+				edgeTransform =
+					M44f().rotate( V3f( -M_PI * 0.5f, 0, 0 ) ) *
+					M44f().translate( V3f( 0, edgeSegment.p0.y, 0 ) )
+				;
+			}
+			else
+			{
+				coneTransform = M44f().rotate( V3f( M_PI * 0.5f * -m_ySign, 0, 0 ) );
+				edgeTransform =
+					M44f().rotate( V3f( 0, M_PI * 0.5f, 0 ) ) *
+					M44f().translate( V3f( edgeSegment.p0.x, 0, 0 ) )
+				;
+			}
+			coneTransform *= M44f().scale( V3f( ::rasterScaleFactor( this, V3f( 0.0 ) ) ) );
+		}
+
 		ParameterInspectorPtr m_widthInspector;
 		ParameterInspectorPtr m_heightInspector;
 
@@ -2129,6 +2158,7 @@ class QuadLightHandle : public LightToolHandle
 		const float m_xSign;
 		const float m_ySign;
 
+		V3f m_edgeCursorPoint;
 		V2f m_scale;  // width and height scale of the light's transform
 };
 
