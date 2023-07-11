@@ -13,6 +13,8 @@ Improvements
 - 3D Viewer :
   - Added OpenColorIO colour management.
   - Added exposure, gamma and solo channel settings.
+  - Ancestors and siblings of locations included in the Visible Set are no longer drawn while their ancestors are collapsed.
+  - Added red wireframe colour to the bounding box of locations excluded from the Visible Set.
 - UVInspector : Added exposure, gamma and solo channel settings.
 - ImageReader : The `colorSpace` widget now displays the name of the assumed colorspace when in `Automatic` mode.
 - ImageReader, ImageWriter : The `colorSpace` menu is now filtered using the `file-io` category, if the current OpenColorIO config provides it.
@@ -48,9 +50,6 @@ Improvements
 - Dilate, Erode, Median, Resample, Resize, ImageTransform, Blur, VectorWarp : Improved performance significantly. For example, a Blur with a large radius is now almost 6x faster.
 - RotateTool : Added the ability to rotate an axis whose plane of rotation is parallel or nearly parallel to the view.
 - OptionQuery : Added support for querying generic `IECore::Object` values using an `ObjectPlug`.
-- SceneView :
-  - Ancestors and siblings of locations included in the Visible Set are no longer drawn while their ancestors are collapsed.
-  - Added red wireframe colour to the bounding box of locations excluded from the Visible Set.
 - HierarchyView :
   - Added support for inclusion and exclusion of leaf level locations to the Visible Set.
   - Added <kbd>F</kbd> shortcut to expand ancestors and frame selected paths. This replaces the previous behaviour of automatic updates to expansion and framing in the HierarchyView on selection change.
