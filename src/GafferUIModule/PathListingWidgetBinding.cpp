@@ -139,6 +139,21 @@ bool variantLess( const QVariant &left, const QVariant &right )
 	}
 }
 
+IECore::PathMatcher ancestorPaths( const IECore::PathMatcher &paths )
+{
+	IECore::PathMatcher ancestorPaths;
+	for( auto &path : paths )
+	{
+		if( path.size() > 0 )
+		{
+			auto parentPath = path; parentPath.pop_back();
+			ancestorPaths.addPath( parentPath );
+		}
+	}
+
+	return ancestorPaths;
+}
+
 IECorePreview::LRUCache<std::string, QPixmap> g_pixmapCache(
 	// Getter
 	[] ( const std::string &fileName, size_t &cost, const IECore::Canceller *canceller ) -> QPixmap
@@ -531,6 +546,22 @@ class PathModel : public QAbstractItemModel
 			return m_expandedPaths;
 		}
 
+		void scrollToFirst( const IECore::PathMatcher &paths )
+		{
+			cancelUpdate();
+
+			if( paths.isEmpty() )
+			{
+				m_scrollToCandidates.reset();
+				return;
+			}
+
+			m_scrollToCandidates = IECore::PathMatcher( paths );
+			m_rootItem->dirtyExpansion();
+
+			scheduleUpdate();
+		}
+
 		// See comments for `setExpansion()`. The PathMatcher vector is our source of
 		// truth, and we don't even use the QItemSelectionModel.
 		void setSelection( const Selection &selectedPaths, bool scrollToFirst = true )
@@ -543,11 +574,15 @@ class PathModel : public QAbstractItemModel
 				mergedPaths.addPaths( p );
 			}
 
+			// Copy, so can't be modified without `setSelection()` call.
+			m_selection = Selection( selectedPaths );
+
 			if( scrollToFirst )
 			{
 				// Only scroll to previously unselected paths.
-				m_scrollToCandidates = mergedPaths;
-				m_scrollToCandidates->removePaths( m_selectedPaths );
+				IECore::PathMatcher scrollToCandidates = mergedPaths;
+				scrollToCandidates.removePaths( m_selectedPaths );
+				PathModel::scrollToFirst( scrollToCandidates );
 			}
 			else
 			{
@@ -555,15 +590,6 @@ class PathModel : public QAbstractItemModel
 			}
 
 			m_selectedPaths = mergedPaths;
-
-			// Copy, so can't be modified without `setSelection()` call.
-			m_selection = Selection( selectedPaths );
-
-			if( m_scrollToCandidates )
-			{
-				m_rootItem->dirtyExpansion();
-				scheduleUpdate();
-			}
 
 			selectionChanged();
 		}
@@ -1992,6 +2018,14 @@ list getSelection( uint64_t treeViewAddress )
 	return result;
 }
 
+void scrollToFirst( uint64_t treeViewAddress, const IECore::PathMatcher &paths )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	QTreeView *treeView = reinterpret_cast<QTreeView *>( treeViewAddress );
+	PathModel *model = dynamic_cast<PathModel *>( treeView->model() );
+	model->scrollToFirst( IECore::PathMatcher( paths ) );
+}
+
 PathPtr pathForIndex( uint64_t treeViewAddress, uint64_t modelIndexAddress )
 {
 	// put a GIL release here in case scene child name computations etc triggered by
@@ -2117,6 +2151,8 @@ void GafferUIModule::bindPathListingWidget()
 	def( "_pathListingWidgetPathsForIndexRange", &pathsForIndexRange );
 	def( "_pathListingWidgetPathsForPathMatcher", &pathsForPathMatcher );
 	def( "_pathListingWidgetAttachTester", &attachTester );
+	def( "_pathListingWidgetAncestorPaths", &ancestorPaths );
+	def( "_pathListingWidgetScrollToFirst", &scrollToFirst );
 	def( "_pathModelWaitForPendingUpdates", &waitForPendingUpdates );
 }
 

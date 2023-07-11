@@ -51,7 +51,9 @@ Improvements
 - SceneView :
   - Ancestors and siblings of locations included in the Visible Set are no longer drawn while their ancestors are collapsed.
   - Added red wireframe colour to the bounding box of locations excluded from the Visible Set.
-- HierarchyView : Added support for inclusion and exclusion of leaf level locations to the Visible Set.
+- HierarchyView :
+  - Added support for inclusion and exclusion of leaf level locations to the Visible Set.
+  - Added <kbd>F</kbd> shortcut to expand ancestors and frame selected paths. This replaces the previous behaviour of automatic updates to expansion and framing in the HierarchyView on selection change.
 
 Fixes
 -----
@@ -112,6 +114,9 @@ API
 - Widget : Added per-widget control over colour display transforms via new `setDisplayTransform()`, `getDisplayTransform()` and `displayTransform()` methods.
 - VisibleSet : Added `VisibleSet::Visibility` struct containing `drawMode` and `descendantsVisible` members.
 - ValuePlug : Improved `getValue()` performance, particularly when retrieving previously computed values from the cache. One benchmark shows a 50% reduction in runtime when the cache is under heavy contention from many threads.
+- PathListingWidget :
+  - Added `expandToSelection()` method.
+  - Added `scrollToFirst()` method to scroll to the first path found in the provided PathMatcher.
 
 Breaking Changes
 ----------------

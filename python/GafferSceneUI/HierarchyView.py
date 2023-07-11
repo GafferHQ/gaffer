@@ -89,7 +89,7 @@ class HierarchyView( GafferUI.NodeSetEditor ) :
 			self.__expansionChangedConnection = self.__pathListing.expansionChangedSignal().connect( Gaffer.WeakMethod( self.__expansionChanged ), scoped = False )
 
 			self.__pathListing.contextMenuSignal().connect( Gaffer.WeakMethod( self.__contextMenuSignal ), scoped = False )
-			self.__pathListing.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPressSignal ), scoped = False )
+			self.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPressSignal ), scoped = False )
 
 		self.__plug = None
 		self._updateFromSet()
@@ -195,6 +195,10 @@ class HierarchyView( GafferUI.NodeSetEditor ) :
 			self.__copySelectedPaths()
 			return True
 
+		elif event.key == "F" :
+			self.__frameSelectedPaths()
+			return True
+
 		return False
 
 	def __contextMenuSignal( self, widget ) :
@@ -226,6 +230,13 @@ class HierarchyView( GafferUI.NodeSetEditor ) :
 			data = IECore.StringVectorData( selection.paths() )
 			self.__plug.ancestor( Gaffer.ApplicationRoot ).setClipboardContents( data )
 
+	def __frameSelectedPaths( self ) :
+
+		selection = self.__pathListing.getSelection()
+		if not selection.isEmpty() :
+			self.__pathListing.expandToSelection()
+			self.__pathListing.scrollToFirst( selection )
+
 	@GafferUI.LazyMethod( deferUntilPlaybackStops = True )
 	def __transferExpansionFromContext( self ) :
 
@@ -238,7 +249,7 @@ class HierarchyView( GafferUI.NodeSetEditor ) :
 
 		selection = ContextAlgo.getSelectedPaths( self.getContext() )
 		with Gaffer.Signals.BlockedConnection( self.__selectionChangedConnection ) :
-			self.__pathListing.setSelection( selection, scrollToFirst=True )
+			self.__pathListing.setSelection( selection, scrollToFirst=False )
 
 GafferUI.Editor.registerType( "HierarchyView", HierarchyView )
 

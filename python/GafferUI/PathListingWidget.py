@@ -186,6 +186,13 @@ class PathListingWidget( GafferUI.Widget ) :
 		if index.isValid() :
 			self._qtWidget().scrollTo( index, self._qtWidget().EnsureVisible )
 
+	## Scrolls to the first path found in the provided
+	# `IECore.PathMatcher`.
+	def scrollToFirst( self, paths ) :
+
+		assert( isinstance( paths, IECore.PathMatcher ) )
+		GafferUI._GafferUI._pathListingWidgetScrollToFirst( GafferUI._qtAddress( self._qtWidget() ), paths )
+
 	## Returns the path being displayed at the specified
 	# position within the widget. May return None if no path
 	# exists at that position.
@@ -255,6 +262,12 @@ class PathListingWidget( GafferUI.Widget ) :
 			GafferUI._qtAddress( self._qtWidget() ),
 			self.getExpansion()
 		)
+
+	def expandToSelection( self ) :
+
+		expansion = self.getExpansion()
+		expansion.addPaths( _GafferUI._pathListingWidgetAncestorPaths( self.getSelection() ) )
+		self.setExpansion( expansion )
 
 	def expansionChangedSignal( self ) :
 
