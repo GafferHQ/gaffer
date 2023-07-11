@@ -214,6 +214,14 @@ class HierarchyView( GafferUI.NodeSetEditor ) :
 				"shortCut" : "Ctrl+C"
 			}
 		)
+		menuDefinition.append(
+			"Frame Selection",
+			{
+				"command" : Gaffer.WeakMethod( self.__frameSelectedPaths ),
+				"active" : not selection.isEmpty(),
+				"shortCut" : "F"
+			}
+		)
 
 		self.__contextMenu = GafferUI.Menu( menuDefinition )
 		self.__contextMenu.popup( widget )
