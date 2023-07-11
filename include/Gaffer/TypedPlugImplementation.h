@@ -1,7 +1,7 @@
 //////////////////////////////////////////////////////////////////////////
 //
 //  Copyright (c) 2011-2012, John Haddon. All rights reserved.
-//  Copyright (c) 2011, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2011-2013, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,26 +35,36 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "Gaffer/TypedPlug.h"
-
-#include "Gaffer/NumericPlug.h"
-#include "Gaffer/StringPlug.h"
-#include "Gaffer/TypedPlugImplementation.h"
+/// This file contains the implementation of TypedPlug. Rather than include it
+/// in a public header it is #included in TypedPlug.cpp,
+/// and the relevant template classes are explicitly instantiated there. This prevents
+/// a host of problems to do with the definition of the same symbols in multiple object
+/// files.
 
 namespace Gaffer
 {
 
-GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::BoolPlug, BoolPlugTypeId )
-GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::M33fPlug, M33fPlugTypeId )
-GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::M44fPlug, M44fPlugTypeId )
-GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::AtomicBox2fPlug, AtomicBox2fPlugTypeId )
-GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::AtomicBox3fPlug, AtomicBox3fPlugTypeId )
-GAFFER_PLUG_DEFINE_TEMPLATE_TYPE( Gaffer::AtomicBox2iPlug, AtomicBox2iPlugTypeId )
+template<class T>
+const IECore::RunTimeTyped::TypeDescription<TypedPlug<T> > TypedPlug<T>::g_typeDescription;
 
-// Specialise BoolPlug to accept connections from NumericPlugs and StringPlugs
+template<class T>
+TypedPlug<T>::TypedPlug(
+	const std::string &name,
+	Direction direction,
+	const T &defaultValue,
+	unsigned flags
+)
+	:	ValuePlug( name, direction, new DataType( defaultValue ), flags )
+{
+}
 
-template<>
-bool BoolPlug::acceptsInput( const Plug *input ) const
+template<class T>
+TypedPlug<T>::~TypedPlug()
+{
+}
+
+template<class T>
+bool TypedPlug<T>::acceptsInput( const Plug *input ) const
 {
 	if( !ValuePlug::acceptsInput( input ) )
 	{
@@ -62,44 +72,47 @@ bool BoolPlug::acceptsInput( const Plug *input ) const
 	}
 	if( input )
 	{
-		return
-			input->isInstanceOf( staticTypeId() ) ||
-			input->isInstanceOf( IntPlug::staticTypeId() ) ||
-			input->isInstanceOf( FloatPlug::staticTypeId() ) ||
-			input->isInstanceOf( StringPlug::staticTypeId() )
-		;
+		return input->isInstanceOf( staticTypeId() );
 	}
 	return true;
 }
 
-template<>
-void BoolPlug::setFrom( const ValuePlug *other )
+template<class T>
+PlugPtr TypedPlug<T>::createCounterpart( const std::string &name, Direction direction ) const
 {
-	switch( static_cast<Gaffer::TypeId>(other->typeId()) )
+	return new TypedPlug<T>( name, direction, defaultValue(), getFlags() );
+}
+
+template<class T>
+const T &TypedPlug<T>::defaultValue() const
+{
+	return static_cast<const DataType *>( defaultObjectValue() )->readable();
+}
+
+template<class T>
+void TypedPlug<T>::setValue( const T &value )
+{
+	setObjectValue( new DataType( value ) );
+}
+
+template<class T>
+void TypedPlug<T>::setFrom( const ValuePlug *other )
+{
+	const TypedPlug<T> *tOther = IECore::runTimeCast<const TypedPlug<T> >( other );
+	if( tOther )
 	{
-		case BoolPlugTypeId :
-			setValue( static_cast<const BoolPlug *>( other )->getValue() );
-			break;
-		case FloatPlugTypeId :
-			setValue( static_cast<const FloatPlug *>( other )->getValue() );
-			break;
-		case IntPlugTypeId :
-			setValue( static_cast<const IntPlug *>( other )->getValue() );
-			break;
-		case StringPlugTypeId :
-			setValue( static_cast<const StringPlug *>( other )->getValue().size() );
-			break;
-		default :
-			throw IECore::Exception( "Unsupported plug type" );
+		setValue( tOther->getValue() );
+	}
+	else
+	{
+		throw IECore::Exception( "Unsupported plug type" );
 	}
 }
 
-// explicit instantiation
-template class TypedPlug<bool>;
-template class TypedPlug<Imath::M33f>;
-template class TypedPlug<Imath::M44f>;
-template class TypedPlug<Imath::Box2f>;
-template class TypedPlug<Imath::Box3f>;
-template class TypedPlug<Imath::Box2i>;
+template<class T>
+IECore::MurmurHash TypedPlug<T>::hash() const
+{
+	return ValuePlug::hash();
+}
 
 } // namespace Gaffer

@@ -40,7 +40,7 @@ namespace Gaffer
 {
 
 template<typename T>
-inline T TypedPlug<T>::getValue( const IECore::MurmurHash *precomputedHash ) const
+inline T NumericPlug<T>::getValue( const IECore::MurmurHash *precomputedHash ) const
 {
 	return getObjectValue<DataType>( precomputedHash )->readable();
 }

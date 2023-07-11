@@ -110,6 +110,7 @@ API
 - Handle::AngularDrag : Added `isLinearDrag()` method.
 - Widget : Added per-widget control over colour display transforms via new `setDisplayTransform()`, `getDisplayTransform()` and `displayTransform()` methods.
 - VisibleSet : Added `VisibleSet::Visibility` struct containing `drawMode` and `descendantsVisible` members.
+- ValuePlug : Improved `getValue()` performance, particularly when retrieving previously computed values from the cache. One benchmark shows a 50% reduction in runtime when the cache is under heavy contention from many threads.
 
 Breaking Changes
 ----------------
@@ -160,6 +161,8 @@ Breaking Changes
 - gaffer test : Replaced `-performanceOnly` flag with `-category` argument which may be set to `performance` for the same as the old `-performanceOnly`, or `standard` for the converse.
 - VisibleSet : Renamed `VisibleSet::match()` to `visibility()` and changed return type.
 - SceneView : Removed `gridPlug()` method.
+- TypedPlug : Moved implementation code from `TypedPlug.inl` to `TypedPlugImplementation.h`.
+- TypedObjectPlug : Moved implementation code from `TypedObjectPlug.inl` to `TypedObjectPlugImplementation.h`.
 
 Build
 -----

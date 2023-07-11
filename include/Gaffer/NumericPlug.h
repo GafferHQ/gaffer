@@ -45,7 +45,7 @@ namespace Gaffer
 {
 
 template<typename T>
-class GAFFER_API NumericPlug : public ValuePlug
+class IECORE_EXPORT NumericPlug : public ValuePlug
 {
 
 	public :
@@ -103,3 +103,5 @@ IE_CORE_DECLAREPTR( FloatPlug );
 IE_CORE_DECLAREPTR( IntPlug );
 
 } // namespace Gaffer
+
+#include "Gaffer/NumericPlug.inl"

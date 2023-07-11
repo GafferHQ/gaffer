@@ -181,3 +181,5 @@ IE_CORE_DECLAREPTR( AtomicCompoundDataPlug );
 IE_CORE_DECLAREPTR( PathMatcherDataPlug );
 
 } // namespace Gaffer
+
+#include "TypedObjectPlug.inl"

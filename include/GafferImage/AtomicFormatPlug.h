@@ -49,3 +49,14 @@ using AtomicFormatPlug = Gaffer::TypedPlug<GafferImage::Format>;
 IE_CORE_DECLAREPTR( AtomicFormatPlug );
 
 } // namespace GafferImage
+
+namespace Gaffer
+{
+
+template<>
+GafferImage::Format GafferImage::AtomicFormatPlug::getValue( const IECore::MurmurHash *precomputedHash ) const;
+
+template<>
+IECore::MurmurHash GafferImage::AtomicFormatPlug::hash() const;
+
+} // namespace Gaffer
