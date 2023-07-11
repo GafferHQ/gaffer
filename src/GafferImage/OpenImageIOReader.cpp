@@ -1180,14 +1180,14 @@ void OpenImageIOReader::affects( const Gaffer::Plug *input, AffectedPlugsContain
 		outputs.push_back( availableFramesPlug() );
 	}
 
-	if( input == fileNamePlug() || input == refreshCountPlug() || input == missingFrameModePlug() || input == channelInterpretationPlug() )
+	if( input == fileNamePlug() || input == refreshCountPlug() || input == channelInterpretationPlug() )
 	{
-		outputs.push_back( tileBatchPlug() );
 		outputs.push_back( fileValidPlug() );
 	}
 
 	if( input == fileNamePlug() || input == refreshCountPlug() || input == missingFrameModePlug() || input == channelInterpretationPlug() )
 	{
+		outputs.push_back( tileBatchPlug() );
 		for( ValuePlug::Iterator it( outPlug() ); !it.done(); ++it )
 		{
 			outputs.push_back( it->get() );
@@ -1204,7 +1204,6 @@ void OpenImageIOReader::hash( const ValuePlug *output, const Context *context, I
 		refreshCountPlug()->hash( h );
 		channelInterpretationPlug()->hash( h );
 		hashFileName( context, h );
-		missingFrameModePlug()->hash( h );
 	}
 	else if( output == availableFramesPlug() )
 	{
@@ -1237,47 +1236,12 @@ void OpenImageIOReader::compute( ValuePlug *output, const Context *context ) con
 			return;
 		}
 
-		MissingFrameMode mode = (MissingFrameMode)missingFrameModePlug()->getValue();
 		ImageReader::ChannelInterpretation channelNaming = (ImageReader::ChannelInterpretation)channelInterpretationPlug()->getValue();
 
 		const std::string resolvedFileName = context->substitute( fileName );
 
 		FileHandleCache *cache = fileCache();
 		CacheEntry cacheEntry = cache->get( std::make_pair( resolvedFileName, channelNaming ) );
-
-		// if the cacheEntry file doesn't exist than let's check the missing frame mode
-		if ( !cacheEntry.file )
-		{
-			// missing frame mode set to black means we consider the file to exist
-			if( mode == OpenImageIOReader::Black )
-			{
-				static_cast<BoolPlug *>( output )->setValue( true );
-				return;
-			// if we're set to hold, let's find the nearest frame and make sure it's valid and can be loaded
-			} else if( mode == OpenImageIOReader::Hold ) {
-				ConstIntVectorDataPtr frameData = availableFramesPlug()->getValue();
-				const std::vector<int> &frames = frameData->readable();
-				if( frames.size() )
-				{
-					std::vector<int>::const_iterator fIt = std::lower_bound( frames.begin(), frames.end(), (int)context->getFrame() );
-
-					// decrement to get the previous frame, unless
-					// this is the first frame, in which case we
-					// hold to the beginning of the sequence
-					if( fIt != frames.begin() )
-					{
-						fIt--;
-					}
-
-					// setup a context with the new frame
-					Context::EditableScope holdScope( context );
-					holdScope.setFrame( *fIt );
-
-					const std::string resolvedFileNameHeld = holdScope.context()->substitute( fileName );
-					cacheEntry = cache->get( std::make_pair( resolvedFileNameHeld, channelNaming ) );
-				}
-			}
-		}
 
 		static_cast<BoolPlug *>( output )->setValue( bool( cacheEntry.file ) );
 	}
