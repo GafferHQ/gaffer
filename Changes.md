@@ -164,6 +164,7 @@ Breaking Changes
 - SceneView : Removed `gridPlug()` method.
 - TypedPlug : Moved implementation code from `TypedPlug.inl` to `TypedPlugImplementation.h`.
 - TypedObjectPlug : Moved implementation code from `TypedObjectPlug.inl` to `TypedObjectPlugImplementation.h`.
+- Xerces : Removed. This library was only needed by Appleseed.
 
 Build
 -----
@@ -175,18 +176,18 @@ Build
 - Imath : Added version 3.1.7.
 - MaterialX : Added version 1.38.4.
 - Minizip : Added version 3.0.9.
+- OpenColorIO : Updated to version 2.2.1.
 - OpenEXR :
   - Updated to version 3.1.7.
   - Stopped linking unnecessarily to the `IlmImf` library.
-- OpenColorIO : Updated to version 2.2.1.
 - OpenImageIO : Updated to version 2.4.11.0.
+- OpenPGL : Added version 0.4.1.
 - Partio : Added version 1.14.6.
 - PCG : Added latest version.
 - PyBind11 : Updated to version 2.10.4.
 - PySide : Updated to version 5.15.8.
 - Qt : Updated to version 5.15.8.
 - USD : Updated to version 23.05.
-- Xerces : Removed.
 - ZLib : Added version 1.2.13.
 
 1.2.x.x (relative to 1.2.9.0)
