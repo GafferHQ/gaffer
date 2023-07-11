@@ -142,6 +142,8 @@ const float g_quadLightHandleSizeMultiplier = 1.75f;
 
 const Color4f g_hoverTextColor( 1, 1, 1, 1 );
 
+const int g_warningTipCount = 3;
+
 enum class Axis { X, Y, Z };
 
 // Return the plug that holds the value we need to edit, and make sure it's enabled.
@@ -456,10 +458,194 @@ IECoreGL::MeshPrimitivePtr cone( float height, float startRadius, float endRadiu
 	return result;
 }
 
+const float g_tipScale = 10.f;
+const float g_tipIconSize = 1.25f;
+const float g_tipIconOffset = -0.25f;
+const float g_tipIndent = 1.75f;
+const float g_tipLineSpacing = -1.375f;
+
 IECoreGL::MeshPrimitivePtr unitCone()
 {
 	static IECoreGL::MeshPrimitivePtr result = cone( 1.5f, 0.5f, 0 );
 	return result;
+}
+
+GraphComponent *commonAncestor( std::vector<GraphComponent *> &graphComponents )
+{
+	const size_t gcSize = graphComponents.size();
+	if( gcSize == 0 )
+	{
+		return nullptr;
+	}
+	if( gcSize == 1 )
+	{
+		return graphComponents[0];
+	}
+
+	GraphComponent *commonAncestor = graphComponents[0]->commonAncestor( graphComponents[1] );
+
+	for( size_t i = 2; i < gcSize; ++i )
+	{
+		if( commonAncestor->isAncestorOf( graphComponents[i] ) )
+		{
+			continue;
+		}
+		commonAncestor = graphComponents[i]->commonAncestor( commonAncestor );
+	}
+
+	return commonAncestor;
+}
+
+void drawSelectionTips(
+	const V3f &gadgetSpacePosition,
+	std::vector<const Inspector::Result *> inspections,
+	const std::string multiPlugDescription,
+	const std::string infoSuffix,
+	const Handle *handle,
+	const ViewportGadget *viewport,
+	const GafferUI::Style *style
+)
+{
+	std::vector<GraphComponent *> parameterSources;
+	std::vector<std::string> warningTips;
+	for( const auto &inspection : inspections )
+	{
+		if( auto source = inspection->source() )
+		{
+			EditScope *editScope = inspection->editScope();
+			if( !editScope || ( editScope && editScope->isAncestorOf( source ) ) )
+			{
+				parameterSources.push_back( source );
+			}
+			else
+			{
+				parameterSources.push_back( editScope );
+			}
+
+			if( inspection->editable() && !inspection->editWarning().empty() )
+			{
+				warningTips.push_back( inspection->editWarning() );
+			}
+			else if( !inspection->editable() )
+			{
+				warningTips.push_back( inspection->nonEditableReason() );
+			}
+		}
+	}
+
+	std::string parameterInfo;
+	if( parameterSources.size() == 1 )
+	{
+		parameterInfo = fmt::format(
+			"Editing : {}",
+			parameterSources.front()->relativeName( parameterSources.front()->ancestor<ScriptNode>() )
+		);
+	}
+	else if( parameterSources.size() > 1 )
+	{
+		GraphComponent *commonAncestor = ::commonAncestor( parameterSources );
+
+		parameterInfo = fmt::format( "Editing {} {}", parameterSources.size(), multiPlugDescription );
+
+		if( commonAncestor && (Gaffer::TypeId)commonAncestor->typeId() != Gaffer::TypeId::ScriptNodeTypeId )
+		{
+			parameterInfo += fmt::format(
+				" on {}",
+				commonAncestor->relativeName( commonAncestor->ancestor<ScriptNode>() )
+			);
+		}
+	}
+
+	std::string warningInfo;
+	int warningSize = (int)warningTips.size();
+	int warningLines = 0;
+	for( int i = 0, eI = std::min( warningSize, g_warningTipCount ); i < eI; ++i )
+	{
+		warningInfo += warningTips[i] + ( i < eI -1 ? "\n" : "" );
+		warningLines++;
+	}
+	if( warningSize == g_warningTipCount + 1 )
+	{
+		// May as well print the real warning instead of a mysterious "and 1 more"
+		warningInfo += "\n" + warningTips[warningSize - 1];
+		warningLines++;
+	}
+	if( warningSize > g_warningTipCount + 1 )
+	{
+		warningInfo += fmt::format( "\nand {} more", warningSize - g_warningTipCount );
+		warningLines++;
+	}
+
+	ViewportGadget::RasterScope rasterScope( viewport );
+
+	glPushAttrib( GL_DEPTH_BUFFER_BIT );
+
+	glDisable( GL_DEPTH_TEST );
+	glDepthMask( GL_FALSE );
+
+	glPushMatrix();
+
+	const V2f rasterPosition = viewport->gadgetToRasterSpace( gadgetSpacePosition, handle );
+	const Box3f infoBound = style->textBound( Style::TextType::BodyText, parameterInfo );
+	const Box3f warningBound = style->textBound( Style::TextType::BodyText, warningInfo );
+
+	const float maxWidth = std::max( infoBound.max.x, warningBound.max.x );
+
+	const V2i screenBound = viewport->getViewport();
+
+	const float x =
+		(rasterPosition.x + 15.f ) -
+		std::max( ( rasterPosition.x + 15.f + maxWidth * g_tipScale ) - ( screenBound.x - 45.f ), 0.f )
+	;
+	float y = rasterPosition.y + g_tipLineSpacing * g_tipScale;
+	if( !warningInfo.empty() )
+	{
+		y += g_tipLineSpacing * g_tipScale;
+	}
+	if( !infoSuffix.empty() )
+	{
+		y += g_tipLineSpacing * g_tipScale;
+	}
+
+	glTranslate( V2f( x, y ) );
+	glScalef( g_tipScale, -g_tipScale, g_tipScale );
+
+	IECoreGL::ConstTexturePtr infoTexture = ImageGadget::loadTexture( "infoSmall.png" );
+	glPushMatrix();
+	glTranslate( V2f( 0, g_tipIconOffset ) );
+	style->renderImage( Box2f( V2f( 0 ), V2f( g_tipIconSize ) ), infoTexture.get() );
+	glPopMatrix();
+
+	glPushMatrix();
+	glTranslate( V2f( g_tipIndent, 0 ) );
+	style->renderText( Style::TextType::BodyText, parameterInfo, Style::NormalState, &g_hoverTextColor );
+	glPopMatrix();
+
+	if( !warningInfo.empty() )
+	{
+		IECoreGL::ConstTexturePtr warningTexture = ImageGadget::loadTexture( "warningSmall.png" );
+		glPushMatrix();
+		glTranslate( V2f( 0, g_tipIconOffset) );
+		for( int i = 0; i < warningLines; ++i )
+		{
+			glTranslate( V2f( 0, g_tipLineSpacing ) );
+			style->renderImage( Box2f( V2f( 0 ), V2f( g_tipIconSize ) ), warningTexture.get() );
+		}
+		glPopMatrix();
+
+		glPushMatrix();
+		glTranslate( V2f( g_tipIndent, g_tipLineSpacing ) );
+		style->renderText( Style::TextType::BodyText, warningInfo, Style::NormalState, &g_hoverTextColor );
+		glPopMatrix();
+	}
+	if( !infoSuffix.empty() )
+	{
+		glTranslate( V2f( g_tipIndent, g_tipLineSpacing * ( warningLines + 1 ) ) );
+		style->renderText( Style::TextType::BodyText, infoSuffix, Style::NormalState, &g_hoverTextColor );
+	}
+
+	glPopMatrix();
+	glPopAttrib();
 }
 
 float sphereSpokeClickAngle( const Line3f &eventLine, float radius, float spokeAngle, float &newAngle )
@@ -1212,115 +1398,26 @@ class SpotLightHandle : public LightToolHandle
 
 			// Selection info
 
-			std::vector<std::string> parameterTips;
-			std::vector<std::string> warningTips;
 			if( highlighted )
 			{
+				std::vector<const Inspector::Result *> inspections;
 				for( const auto &inspectionPair : m_inspections )
 				{
-					const Inspector::Result *inspection = m_handleType == HandleType::Cone ? inspectionPair.coneInspection.get() : inspectionPair.penumbraInspection.get();
-					if( auto source = inspection->source() )
-					{
-						EditScope * editScope = inspection->editScope();
-						if( !editScope || ( editScope && editScope->isAncestorOf( source ) ) )
-						{
-							parameterTips.push_back( source->relativeName( source->ancestor<ScriptNode>() ) );
-						}
-						else
-						{
-							parameterTips.push_back( editScope->relativeName( editScope->ancestor<ScriptNode>() ) );
-						}
-
-
-						if( inspection->editable() && !inspection->editWarning().empty() )
-						{
-							warningTips.push_back( inspection->editWarning() );
-						}
-						else if( !inspection->editable() )
-						{
-							warningTips.push_back( inspection->nonEditableReason() );
-						}
-					}
-				}
-
-				std::string parameterInfo;
-				if( parameterTips.size() == 1 )
-				{
-					parameterInfo = fmt::format( "Editing : {}", parameterTips.front() );
-				}
-				else if( parameterTips.size() > 1 )
-				{
-					parameterInfo = fmt::format(
-						"Editing {} {} angles",
-						parameterTips.size(),
-						m_handleType == HandleType::Cone ? "cone" : "penumbra"
+					inspections.push_back(
+						m_handleType == HandleType::Cone ? inspectionPair.coneInspection.get() :
+						inspectionPair.penumbraInspection.get()
 					);
 				}
 
-				std::string warningInfo;
-				if( warningTips.size() == 1 )
-				{
-					warningInfo = fmt::format( "{}", warningTips.front() );
-				}
-				else if( warningTips.size() > 1 )
-				{
-					warningInfo = fmt::format( "{} warnings", warningTips.size() );
-				}
-
-				ViewportGadget::RasterScope rasterScope( m_view->viewportGadget() );
-
-				glPushAttrib( GL_DEPTH_BUFFER_BIT );
-
-				glDisable( GL_DEPTH_TEST );
-				glDepthMask( GL_FALSE );
-
-				glPushMatrix();
-
-				const V2f rasterPosition = m_view->viewportGadget()->gadgetToRasterSpace(
+				drawSelectionTips(
 					V3f( 0, 0, !getLookThroughLight() ? -m_arcRadius : 1.f ) * handleTransform,
-					this
+					inspections,
+					fmt::format( "{} angles", m_handleType == HandleType::Cone ? "cone" : "penumbra" ),
+					"",  // infoSuffix
+					this,
+					m_view->viewportGadget(),
+					style
 				);
-				const Box3f infoBound = style->textBound( Style::TextType::BodyText, parameterInfo );
-				const Box3f warningBound = style->textBound( Style::TextType::BodyText, warningInfo );
-
-				const float scale = 10.f;
-
-				const float maxWidth = std::max( infoBound.max.x, warningBound.max.x );
-
-				const V2i screenBound = m_view->viewportGadget()->getViewport();
-
-				const float x = ( rasterPosition.x + 15.f ) - std::max( ( rasterPosition.x + 15.f + maxWidth * scale ) - ( screenBound.x - 45.f ), 0.f );
-				const float y = rasterPosition.y - ( warningInfo.empty() ? 10.f : 20.f );
-				glTranslate( V2f( x, y ) );
-				glScalef( scale, -scale, scale );
-
-				IECoreGL::ConstTexturePtr infoTexture = ImageGadget::loadTexture( "infoSmall.png" );
-				glPushMatrix();
-				glTranslate( V2f( 0, -0.25f ) );
-				style->renderImage( Box2f( V2f( 0 ), V2f( 1.25f ) ), infoTexture.get() );
-				glPopMatrix();
-
-				glPushMatrix();
-				glTranslate( V2f( 1.75f, 0 ) );
-				style->renderText( Style::TextType::BodyText, parameterInfo, Style::NormalState, &g_hoverTextColor );
-				glPopMatrix();
-
-				if( !warningInfo.empty() )
-				{
-					glTranslate( V2f( 0, -1.5f ) );
-
-					glPushMatrix();
-					glTranslate( V2f( 0, -0.25f ) );
-					IECoreGL::ConstTexturePtr warningTexture = ImageGadget::loadTexture( "warningSmall.png" );
-					style->renderImage( Box2f( V2f( 0 ), V2f( 1.25f ) ), warningTexture.get() );
-					glPopMatrix();
-
-					glTranslate( V2f( 1.75f, 0 ) );
-					style->renderText( Style::TextType::BodyText, warningInfo, Style::NormalState, &g_hoverTextColor );
-				}
-
-				glPopMatrix();
-				glPopAttrib();
 			}
 		}
 
@@ -1895,7 +1992,40 @@ class QuadLightHandle : public LightToolHandle
 
 			group->render( glState );
 
-			/// \todo Implement text indicator
+			if( highlighted )
+			{
+				std::vector<const Inspector::Result *> inspections;
+				for( const auto &[widthInspection, originalWidth, heightInspection, originalHeight] : m_inspections )
+				{
+					if( m_handleType & HandleType::Width )
+					{
+						inspections.push_back( widthInspection.get() );
+					}
+					if( m_handleType & HandleType::Height )
+					{
+						inspections.push_back( heightInspection.get() );
+					}
+				}
+				std::string tipSuffix = "";
+				if( m_handleType & HandleType::Width )
+				{
+					tipSuffix = "widths";
+				}
+				if( m_handleType & HandleType::Height )
+				{
+					tipSuffix = m_handleType & HandleType::Width ? "plugs" : "heights";
+				}
+
+				drawSelectionTips(
+					V3f( 0 ),
+					inspections,
+					tipSuffix,
+					"Hold Ctrl to maintain aspect ratio",
+					this,
+					m_view->viewportGadget(),
+					style
+				);
+			}
 
 		}
 
