@@ -173,7 +173,6 @@ ImageReader::ImageReader( const std::string &name )
 	intermediateImagePlug()->setInput( colorSpace->outPlug() );
 
 	availableFramesPlug()->setInput( oiioReader->availableFramesPlug() );
-	fileValidPlug()->setInput( oiioReader->fileValidPlug() );
 }
 
 ImageReader::~ImageReader()
@@ -368,8 +367,11 @@ ImageReader::DefaultColorSpaceFunction &ImageReader::defaultColorSpaceFunction()
 void ImageReader::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ImageNode::affects( input, outputs );
-
-	if( input == intermediateMetadataPlug() || input == colorSpacePlug() )
+	if( input == fileNamePlug() || input == refreshCountPlug() || input == channelInterpretationPlug() )
+	{
+		outputs.push_back( fileValidPlug() );
+	}
+	else if( input == intermediateMetadataPlug() || input == colorSpacePlug() )
 	{
 		outputs.push_back( intermediateColorSpacePlug() );
 	}
@@ -384,6 +386,7 @@ void ImageReader::affects( const Plug *input, AffectedPlugsContainer &outputs ) 
 		input == endModePlug()
 	)
 	{
+		outputs.push_back( fileValidPlug() );
 		for( ValuePlug::Iterator it( outPlug() ); !it.done(); ++it )
 		{
 			outputs.push_back( it->get() );
@@ -401,6 +404,14 @@ void ImageReader::hash( const ValuePlug *output, const Context *context, IECore:
 		colorSpacePlug()->hash( h );
 		fileNamePlug()->hash( h );
 		h.append( OpenColorIOAlgo::currentConfigHash() );
+	}
+	else if ( output == fileValidPlug() )
+	{
+		oiioReader()->fileValidPlug()->hash( h );
+		startModePlug()->hash( h );
+		startFramePlug()->hash( h );
+		endModePlug()->hash( h );
+		endFramePlug()->hash( h );
 	}
 }
 
@@ -425,6 +436,11 @@ void ImageReader::compute( ValuePlug *output, const Context *context ) const
 			}
 		}
 		static_cast<StringPlug *>( output )->setValue( colorSpace );
+	}
+	else if ( output == fileValidPlug() )
+	{
+		FrameMaskScope scope( context, this, /* clampBlack = */ true );
+		static_cast<BoolPlug *>( output )->setValue( oiioReader()->fileValidPlug()->getValue() );
 	}
 	else
 	{
