@@ -35,6 +35,8 @@
 #
 ##########################################################################
 
+import IECore
+
 import Gaffer
 import GafferUI
 import GafferImage
@@ -65,3 +67,28 @@ for node, plug in [
 	( GafferImage.ImageWriter, "colorSpace" ),
 ] :
 	Gaffer.Metadata.registerValue( node, plug, "openColorIO:includeRoles", True )
+
+# Set up Arnold colour manager with metadata that integrates with our OCIO configs.
+
+with IECore.IgnoredExceptions( ImportError ) :
+
+	import GafferArnold
+
+	Gaffer.Metadata.registerValue( GafferArnold.ArnoldColorManager, "parameters.config", "userDefault", "${ocio:config}" )
+
+	Gaffer.Metadata.registerValue( GafferArnold.ArnoldColorManager, "parameters.config", "plugValueWidget:type", "GafferUI.PresetsPlugValueWidget" )
+	Gaffer.Metadata.registerValue( GafferArnold.ArnoldColorManager, "parameters.config", "preset:$OCIO", "" )
+	Gaffer.Metadata.registerValue( GafferArnold.ArnoldColorManager, "parameters.config", "preset:ACES 1.3 - CG Config", "ocio://cg-config-v1.0.0_aces-v1.3_ocio-v2.1" )
+	Gaffer.Metadata.registerValue( GafferArnold.ArnoldColorManager, "parameters.config", "preset:ACES 1.3 - Studio Config", "ocio://studio-config-v1.0.0_aces-v1.3_ocio-v2.1" )
+	Gaffer.Metadata.registerValue( GafferArnold.ArnoldColorManager, "parameters.config", "preset:Legacy (Gaffer 1.2)", "${GAFFER_ROOT}/openColorIO/config.ocio" )
+
+	Gaffer.Metadata.registerValue( GafferArnold.ArnoldColorManager, "parameters.config", "presetsPlugValueWidget:allowCustom", True )
+	Gaffer.Metadata.registerValue( GafferArnold.ArnoldColorManager, "parameters.config", "presetsPlugValueWidget:customWidgetType", "GafferUI.FileSystemPathPlugValueWidget" )
+	Gaffer.Metadata.registerValue( GafferArnold.ArnoldColorManager, "parameters.config", "fileSystemPath:extensions", "ocio" )
+	Gaffer.Metadata.registerValue( GafferArnold.ArnoldColorManager, "parameters.config", "path:leaf", True )
+	Gaffer.Metadata.registerValue( GafferArnold.ArnoldColorManager, "parameters.config", "path:valid", True )
+
+	Gaffer.Metadata.registerValue( GafferArnold.ArnoldColorManager, "parameters.color_space_linear", "userDefault", "${ocio:workingSpace}" )
+	Gaffer.Metadata.registerValue( GafferArnold.ArnoldColorManager, "parameters.color_space_linear", "preset:Working Space", "${ocio:workingSpace}" )
+
+	Gaffer.Metadata.registerValue( GafferArnold.ArnoldColorManager, "parameters.color_space_narrow", "userDefault", "matte_paint" )

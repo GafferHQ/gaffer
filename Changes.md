@@ -34,6 +34,7 @@ Improvements
     - Improved detection of no-op transforms, such as when converting between colorspace aliases like `scene_linear` and `ACEScg`.
   - ColorSpace : Defaulted the input and output space to the current working space.
   - DisplayTransform : Defaulted the input space to the current working space, and the display and view to the defaults defined by the current OpenColorIO config.
+  - ArnoldColorManager : Improved defaults to match Gaffer's current OpenColorIO configuration.
 - Seeds :
   - Renamed to Scatter.
   - Added sampling of primitive variables from the source mesh onto the scattered points, controlled using the new `primitiveVariables` plug.
