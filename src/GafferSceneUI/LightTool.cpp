@@ -2096,8 +2096,18 @@ class QuadLightHandle : public LightToolHandle
 
 		bool allInspectionsEnabled() const
 		{
-			/// \todo Implement me
 			bool enabled = true;
+			for( auto &[widthInspection, originalWidth, heightInspection, originalHeight] : m_inspections )
+			{
+				if( m_handleType & HandleType::Width )
+				{
+					enabled &= widthInspection ? widthInspection->editable() : false;
+				}
+				if( m_handleType & HandleType::Height )
+				{
+					enabled &= heightInspection ? heightInspection->editable() : false;
+				}
+			}
 
 			return enabled;
 		}
