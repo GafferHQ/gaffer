@@ -87,6 +87,7 @@ namespace
 /// in clients of history related APIs such as `AttributeInspector`.
 using CreatableRegistry = std::unordered_map<std::string, const IECore::DataPtr>;
 CreatableRegistry g_attributeRegistry {
+	{ "scene:visible", new BoolData( true ) },
 	{ "gl:visualiser:scale", new IECore::FloatData( 1.0f ) },
 	{ "gl:visualiser:maxTextureResolution", new IECore::IntData( 512 ) },
 	{ "gl:visualiser:frustum", new IECore::StringData( "whenSelected" ) },
@@ -683,7 +684,7 @@ SceneProcessorPtr attributeProcessor( const std::string &name )
 	result->addChild( attributeTweaks );
 	attributeTweaks->inPlug()->setInput( result->inPlug() );
 	attributeTweaks->filterPlug()->setInput( pathFilter->outPlug() );
-	attributeTweaks->enabledPlug()->setValue( result->enabledPlug() );
+	attributeTweaks->enabledPlug()->setInput( result->enabledPlug() );
 	attributeTweaks->localisePlug()->setValue( true );
 	attributeTweaks->ignoreMissingPlug()->setValue( true );
 
@@ -901,6 +902,7 @@ SceneProcessorPtr setMembershipProcessor()
 	addSet->filterPlug()->setInput( addPathFilter->outPlug() );
 	addSet->namePlug()->setInput( spreadsheet->enabledRowNamesPlug() );
 	addSet->modePlug()->setValue( GafferScene::Set::Mode::Add );
+	addSet->enabledPlug()->setInput( result->enabledPlug() );
 	addSet->setVariablePlug()->setValue( "setMembership:set" );
 
 	GafferScene::SetPtr removeSet = new GafferScene::Set();
@@ -909,6 +911,7 @@ SceneProcessorPtr setMembershipProcessor()
 	removeSet->filterPlug()->setInput( removePathFilter->outPlug() );
 	removeSet->namePlug()->setInput( spreadsheet->enabledRowNamesPlug() );
 	removeSet->modePlug()->setValue( GafferScene::Set::Mode::Remove );
+	removeSet->enabledPlug()->setInput( result->enabledPlug() );
 	removeSet->setVariablePlug()->setValue( "setMembership:set" );
 
 	auto rowsPlug = static_cast<Spreadsheet::RowsPlug *>(
@@ -1101,7 +1104,7 @@ SceneProcessorPtr optionProcessor( const std::string &name )
 	OptionTweaksPtr optionTweaks = new OptionTweaks;
 	result->addChild( optionTweaks );
 	optionTweaks->inPlug()->setInput( result->inPlug() );
-	optionTweaks->enabledPlug()->setValue( result->enabledPlug() );
+	optionTweaks->enabledPlug()->setInput( result->enabledPlug() );
 	optionTweaks->ignoreMissingPlug()->setValue( true );
 
 	PlugAlgo::promoteWithName( optionTweaks->tweaksPlug(), "edits" );
