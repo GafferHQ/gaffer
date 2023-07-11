@@ -82,9 +82,6 @@ class GAFFERSCENEUI_API SceneView : public GafferUI::View
 		Gaffer::ValuePlug *cameraPlug();
 		const Gaffer::ValuePlug *cameraPlug() const;
 
-		Gaffer::ValuePlug *gridPlug();
-		const Gaffer::ValuePlug *gridPlug() const;
-
 		Gaffer::ValuePlug *gnomonPlug();
 		const Gaffer::ValuePlug *gnomonPlug() const;
 
@@ -131,6 +128,11 @@ class GAFFERSCENEUI_API SceneView : public GafferUI::View
 
 		SceneGadgetPtr m_sceneGadget;
 
+		/// \todo Refactor all these bolt-on classes to follow the model of
+		/// `View::DisplayTransform` and `SceneView::Grid` :
+		///
+		/// - Derive from `Node`, and add child plugs to provide settings.
+		/// - Parent under the `View` and promote settings plugs to the view.
 		class Renderer;
 		std::unique_ptr<Renderer> m_renderer;
 		class SelectionMask;
@@ -142,7 +144,6 @@ class GAFFERSCENEUI_API SceneView : public GafferUI::View
 		class Camera;
 		std::unique_ptr<Camera> m_camera;
 		class Grid;
-		std::unique_ptr<Grid> m_grid;
 		class Gnomon;
 		std::unique_ptr<Gnomon> m_gnomon;
 		class FPS;

@@ -135,19 +135,21 @@ class MeshToLevelSetTest( GafferVDBTest.VDBTestCase ) :
 		# Start a computation in the background, and
 		# then cancel it.
 
-		sphere = GafferScene.Sphere()
+		script = Gaffer.ScriptNode()
 
-		meshToLevelSet = GafferVDB.MeshToLevelSet()
-		meshToLevelSet["in"].setInput( sphere["out"] )
-		self.setFilter( meshToLevelSet, path = "/sphere" )
-		meshToLevelSet["voxelSize"].setValue( 0.01 )
+		script["sphere"] = GafferScene.Sphere()
+
+		script["meshToLevelSet"] = GafferVDB.MeshToLevelSet()
+		script["meshToLevelSet"]["in"].setInput( script["sphere"]["out"] )
+		self.setFilter( script["meshToLevelSet"], path = "/sphere" )
+		script["meshToLevelSet"]["voxelSize"].setValue( 0.01 )
 
 		def computeObject() :
 
-			meshToLevelSet["out"].object( "/sphere" )
+			script["meshToLevelSet"]["out"].object( "/sphere" )
 
 		backgroundTask = Gaffer.ParallelAlgo.callOnBackgroundThread(
-			meshToLevelSet["out"]["object"], computeObject
+			script["meshToLevelSet"]["out"]["object"], computeObject
 		)
 		# Delay so that the computation actually starts, rather
 		# than being avoided entirely.
@@ -157,11 +159,11 @@ class MeshToLevelSetTest( GafferVDBTest.VDBTestCase ) :
 		# Get the value again. If cancellation has been managed properly, this
 		# will do a fresh compute to get a full result, and not pull a half-finished
 		# result out of the cache.
-		vdbAfterCancellation = meshToLevelSet["out"].object( "/sphere" )
+		vdbAfterCancellation = script["meshToLevelSet"]["out"].object( "/sphere" )
 
 		# Compare against a result computed from scratch.
 		Gaffer.ValuePlug.clearCache()
-		vdb = meshToLevelSet["out"].object( "/sphere" )
+		vdb = script["meshToLevelSet"]["out"].object( "/sphere" )
 
 		self.assertEqual(
 			vdbAfterCancellation.findGrid( "surface" ).activeVoxelCount(),

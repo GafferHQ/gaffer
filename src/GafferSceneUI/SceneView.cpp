@@ -57,6 +57,7 @@
 #include "Gaffer/Context.h"
 #include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/NameSwitch.h"
+#include "Gaffer/PlugAlgo.h"
 #include "Gaffer/StringPlug.h"
 
 #include "IECoreGL/Camera.h"
@@ -553,53 +554,55 @@ class SceneView::ShadingMode : public Signals::Trackable
 // SceneView::Grid implementation
 //////////////////////////////////////////////////////////////////////////
 
-class SceneView::Grid : public Signals::Trackable
+class SceneView::Grid : public Gaffer::Node
 {
 
 	public :
 
 		Grid( SceneView *view )
-			:	m_view( view ), m_node( new GafferScene::Grid ), m_gadget( new SceneGadget )
+			:	m_gadget( new SceneGadget )
 		{
-			m_node->transformPlug()->rotatePlug()->setValue( V3f( 90, 0, 0 ) );
-			m_node->gridColorPlug()->setValue( Color3f( 0.21 ) );
-			m_node->gridPixelWidthPlug()->setValue( 1 );
-			m_node->borderColorPlug()->setValue( Color3f( 0.1 ) );
+			// Add plugs to represent our settings
 
-			ValuePlugPtr plug = new ValuePlug( "grid" );
-			view->addChild( plug );
+			storeIndexOfNextChild( g_firstChildIndex );
 
-			plug->addChild( new BoolPlug( "visible", Plug::In, true ) );
+			addChild( new BoolPlug( "visible", Plug::In, true ) );
+			addChild( new V2fPlug( "dimensions", Plug::In, V2f( 10.0f ), V2f( 0.0f ) ) );
 
-			PlugPtr dimensionsPlug(
-				m_node->dimensionsPlug()->createCounterpart(
-					m_node->dimensionsPlug()->getName(),
-					Plug::In
-				)
-			);
-			plug->addChild( dimensionsPlug );
+			// Wire up an internal grid node
 
-			m_node->dimensionsPlug()->setInput( dimensionsPlug );
+			addChild( new GafferScene::Grid( "__grid" ) );
+
+			grid()->dimensionsPlug()->setInput( dimensionsPlug() );
+			grid()->transformPlug()->rotatePlug()->setValue( V3f( 90, 0, 0 ) );
+			grid()->gridColorPlug()->setValue( Color3f( 0.21 ) );
+			grid()->gridPixelWidthPlug()->setValue( 1 );
+			grid()->borderColorPlug()->setValue( Color3f( 0.1 ) );
+
+			// And create a gadget for displaying it
 
 			m_gadget->setMinimumExpansionDepth( 1 );
-			m_gadget->setScene( m_node->outPlug() );
+			m_gadget->setScene( grid()->outPlug() );
 			m_gadget->setLayer( Gadget::Layer::MidFront );
 
 			view->viewportGadget()->setChild( "__grid", m_gadget );
 
-			view->plugDirtiedSignal().connect( boost::bind( &Grid::plugDirtied, this, ::_1 ) );
+			// Parent ourselves to the View, and promote our plugs so that
+			// they can be edited publicly.
 
-			update();
-		}
+			view->setChild( "__grid", this );
+			PlugPtr promoted = new Plug();
+			view->setChild( "grid", promoted );
 
-		Gaffer::ValuePlug *plug()
-		{
-			return m_view->getChild<Gaffer::ValuePlug>( "grid" );
-		}
+			for( size_t i = g_firstChildIndex; i < children().size() - 1; ++i )
+			{
+				PlugAlgo::promote( getChild<Plug>( i ), promoted.get() );
+			}
 
-		const Gaffer::ValuePlug *plug() const
-		{
-			return m_view->getChild<Gaffer::ValuePlug>( "grid" );
+			// Connect to `plugDirtied()` so we can update when our settings
+			// change.
+
+			plugDirtiedSignal().connect( boost::bind( &Grid::plugDirtied, this, ::_1 ) );
 		}
 
 		SceneGadget *gadget()
@@ -614,24 +617,36 @@ class SceneView::Grid : public Signals::Trackable
 
 	private :
 
+		BoolPlug *visiblePlug()
+		{
+			return getChild<BoolPlug>( g_firstChildIndex );
+		}
+
+		V2fPlug *dimensionsPlug()
+		{
+			return getChild<V2fPlug>( g_firstChildIndex + 1 );
+		}
+
+		GafferScene::Grid *grid()
+		{
+			return getChild<GafferScene::Grid>( g_firstChildIndex + 2 );
+		}
+
 		void plugDirtied( Gaffer::Plug *plug )
 		{
-			if( plug == this->plug() )
+			if( plug == visiblePlug() )
 			{
-				update();
+				m_gadget->setVisible( visiblePlug()->getValue() );
 			}
 		}
 
-		void update()
-		{
-			m_gadget->setVisible( plug()->getChild<BoolPlug>( "visible" )->getValue() );
-		}
-
-		SceneView *m_view;
-		GafferScene::GridPtr m_node;
 		SceneGadgetPtr m_gadget;
 
+		static size_t g_firstChildIndex;
+
 };
+
+size_t SceneView::Grid::g_firstChildIndex = 0;
 
 //////////////////////////////////////////////////////////////////////////
 // SceneView::Gnomon implementation
@@ -1959,7 +1974,7 @@ SceneView::SceneView( const std::string &name )
 	m_drawingMode.reset( new DrawingMode( this ) );
 	m_shadingMode.reset( new ShadingMode( this ) );
 	m_camera.reset( new Camera( this ) );
-	m_grid.reset( new Grid( this ) );
+	new Grid( this );
 	m_gnomon.reset( new Gnomon( this ) );
 	m_fps.reset( new FPS( this ) );
 
@@ -2055,16 +2070,6 @@ const Gaffer::ValuePlug *SceneView::cameraPlug() const
 	return m_camera->plug();
 }
 
-Gaffer::ValuePlug *SceneView::gridPlug()
-{
-	return m_grid->plug();
-}
-
-const Gaffer::ValuePlug *SceneView::gridPlug() const
-{
-	return m_grid->plug();
-}
-
 Gaffer::ValuePlug *SceneView::gnomonPlug()
 {
 	return m_gnomon->plug();
@@ -2151,10 +2156,14 @@ Imath::Box3f SceneView::framingBound() const
 	}
 
 	b = m_sceneGadget->bound( false, &omitted );
-	if( b.isEmpty() && m_grid->gadget()->getVisible() )
+	if( b.isEmpty() )
 	{
-		m_grid->gadget()->waitForCompletion();
-		b.extendBy( m_grid->gadget()->bound() );
+		SceneGadget *gridGadget = const_cast<SceneGadget *>( getChild<Grid>( "__grid" )->gadget() );
+		if( gridGadget->visible() )
+		{
+			gridGadget->waitForCompletion();
+			b.extendBy( gridGadget->bound() );
+		}
 	}
 
 	return b;

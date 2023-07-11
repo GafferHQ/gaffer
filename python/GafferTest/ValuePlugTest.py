@@ -953,13 +953,14 @@ class ValuePlugTest( GafferTest.TestCase ) :
 			# in `LRUCachePolicy.TaskParallel.Handle.acquire`.
 		) :
 
-			node = InfiniteLoop( cachePolicy = cachePolicy )
+			script = Gaffer.ScriptNode()
+			script["node"] = InfiniteLoop( cachePolicy = cachePolicy )
 
 			# Launch a compute in the background, and wait for it to start.
 
-			with node.computeStartedCondition :
-				backgroundTask1 = Gaffer.ParallelAlgo.callOnBackgroundThread( node["out"], lambda : node["out"].getValue() )
-				node.computeStartedCondition.wait()
+			with script["node"].computeStartedCondition :
+				backgroundTask1 = Gaffer.ParallelAlgo.callOnBackgroundThread( script["node"]["out"], lambda : script["node"]["out"].getValue() )
+				script["node"].computeStartedCondition.wait()
 
 			# Launch a second compute in the background, wait for it to start, and
 			# then make sure we can cancel it even though the compute is already in
@@ -973,10 +974,10 @@ class ValuePlugTest( GafferTest.TestCase ) :
 					startedCondition.notify()
 
 				with self.assertRaises( IECore.Cancelled ) :
-					node["out"].getValue()
+					script["node"]["out"].getValue()
 
 			with startedCondition :
-				backgroundTask2 = Gaffer.ParallelAlgo.callOnBackgroundThread( node["out"], getValueExpectingCancellation )
+				backgroundTask2 = Gaffer.ParallelAlgo.callOnBackgroundThread( script["node"]["out"], getValueExpectingCancellation )
 				startedCondition.wait()
 
 			backgroundTask2.cancelAndWait()

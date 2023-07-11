@@ -371,23 +371,25 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 
 	def testObjectsAtBox( self ) :
 
-		plane = GafferScene.Plane()
+		script = Gaffer.ScriptNode()
 
-		sphere = GafferScene.Sphere()
-		sphere["radius"].setValue( 0.25 )
+		script["plane"] = GafferScene.Plane()
 
-		instancer = GafferScene.Instancer()
-		instancer["in"].setInput( plane["out"] )
-		instancer["prototypes"].setInput( sphere["out"] )
-		instancer["parent"].setValue( "/plane" )
+		script["sphere"] = GafferScene.Sphere()
+		script["sphere"]["radius"].setValue( 0.25 )
 
-		subTree = GafferScene.SubTree()
-		subTree["in"].setInput( instancer["out"] )
-		subTree["root"].setValue( "/plane" )
+		script["instancer"] = GafferScene.Instancer()
+		script["instancer"]["in"].setInput( script["plane"]["out"] )
+		script["instancer"]["prototypes"].setInput( script["sphere"]["out"] )
+		script["instancer"]["parent"].setValue( "/plane" )
+
+		script["subTree"] = GafferScene.SubTree()
+		script["subTree"]["in"].setInput( script["instancer"]["out"] )
+		script["subTree"]["root"].setValue( "/plane" )
 
 		sg = GafferSceneUI.SceneGadget()
 		sg.setRenderer( self.renderer )
-		sg.setScene( subTree["out"] )
+		sg.setScene( script["subTree"]["out"] )
 		sg.setMinimumExpansionDepth( 100 )
 
 		with GafferUI.Window() as w :
@@ -436,21 +438,19 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 
 	def testObjectAtLine( self ) :
 
-		cubes = []
-		names = ( "left", "center", "right" )
-		for i in range( 3 ) :
+		script = Gaffer.ScriptNode()
+		script["group"] = GafferScene.Group()
+
+		for i, name in enumerate( [ "left", "center", "right" ] ) :
 			cube = GafferScene.Cube()
 			cube["transform"]["translate"].setValue( imath.V3f( ( i - 1 ) * 2.0, 0.0, -2.5 ) )
-			cube["name"].setValue( names[i] )
-			cubes.append( cube )
-
-		group = GafferScene.Group()
-		for i, cube in enumerate( cubes ) :
-			group["in"][i].setInput( cube["out"] )
+			cube["name"].setValue( name )
+			script.addChild( cube )
+			script["group"]["in"][i].setInput( cube["out"] )
 
 		sg = GafferSceneUI.SceneGadget()
 		sg.setRenderer( self.renderer )
-		sg.setScene( group["out"] )
+		sg.setScene( script["group"]["out"] )
 		sg.setMinimumExpansionDepth( 100 )
 
 		with GafferUI.Window() as w :
@@ -532,13 +532,15 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 
 	def testBoundOfUnexpandedEmptyChildren( self ) :
 
-		group1 = GafferScene.Group()
-		group2 = GafferScene.Group()
-		group2["in"][0].setInput( group1["out"] )
+		script = Gaffer.ScriptNode()
+
+		script["group1"] = GafferScene.Group()
+		script["group2"] = GafferScene.Group()
+		script["group2"]["in"][0].setInput( script["group1"]["out"] )
 
 		sg = GafferSceneUI.SceneGadget()
 		sg.setRenderer( self.renderer )
-		sg.setScene( group2["out"] )
+		sg.setScene( script["group2"]["out"] )
 
 		self.waitForRender( sg )
 		self.assertEqual( sg.bound(), imath.Box3f() )
@@ -563,18 +565,20 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 
 	def testSelectionMask( self ) :
 
-		plane = GafferScene.Plane()
-		plane["dimensions"].setValue( imath.V2f( 10 ) )
-		plane["transform"]["translate"]["z"].setValue( 4 )
+		script = Gaffer.ScriptNode()
 
-		camera = GafferScene.Camera()
-		group = GafferScene.Group()
-		group["in"][0].setInput( plane["out"] )
-		group["in"][1].setInput( camera["out"] )
+		script["plane"] = GafferScene.Plane()
+		script["plane"]["dimensions"].setValue( imath.V2f( 10 ) )
+		script["plane"]["transform"]["translate"]["z"].setValue( 4 )
+
+		script["camera"] = GafferScene.Camera()
+		script["group"] = GafferScene.Group()
+		script["group"]["in"][0].setInput( script["plane"]["out"] )
+		script["group"]["in"][1].setInput( script["camera"]["out"] )
 
 		sg = GafferSceneUI.SceneGadget()
 		sg.setRenderer( self.renderer )
-		sg.setScene( group["out"] )
+		sg.setScene( script["group"]["out"] )
 		sg.setMinimumExpansionDepth( 100 )
 
 		with GafferUI.Window() as w :
