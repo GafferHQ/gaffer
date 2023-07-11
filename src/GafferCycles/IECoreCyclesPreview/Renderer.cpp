@@ -192,19 +192,25 @@ T *reportedCast( const IECore::RunTimeTyped *v, const char *type, const IECore::
 }
 
 template<typename T>
-const T *attribute( const IECore::InternedString &name, const IECore::CompoundObject *attributes )
+const T *attribute( const IECore::InternedString &name, const IECore::CompoundObject *attributes, const T *defaultValue = nullptr )
 {
 	if( !attributes )
 	{
-		return nullptr;
+		return defaultValue;
 	}
 
 	IECore::CompoundObject::ObjectMap::const_iterator it = attributes->members().find( name );
 	if( it == attributes->members().end() )
 	{
-		return nullptr;
+		return defaultValue;
 	}
-	return reportedCast<const T>( it->second.get(), "attribute", name );
+
+	if( auto r = reportedCast<const T>( it->second.get(), "attribute", name ) )
+	{
+		return r;
+	}
+
+	return defaultValue;
 }
 
 template<typename T>
@@ -423,38 +429,10 @@ IECore::InternedString g_shaderUseMisAttributeName( "cycles:shader:use_mis" );
 IECore::InternedString g_shaderUseTransparentShadowAttributeName( "cycles:shader:use_transparent_shadow" );
 IECore::InternedString g_shaderHeterogeneousVolumeAttributeName( "cycles:shader:heterogeneous_volume" );
 IECore::InternedString g_shaderVolumeSamplingMethodAttributeName( "cycles:shader:volume_sampling_method" );
+IECore::ConstStringDataPtr g_shaderVolumeSamplingMethodAttributeDefault = new StringData( "multiple_importance" );
 IECore::InternedString g_shaderVolumeInterpolationMethodAttributeName( "cycles:shader:volume_interpolation_method" );
+IECore::ConstStringDataPtr g_shaderVolumeInterpolationMethodAttributeDefault = new StringData( "linear" );
 IECore::InternedString g_shaderVolumeStepRateAttributeName( "cycles:shader:volume_step_rate" );
-
-std::array<IECore::InternedString, ccl::VOLUME_NUM_SAMPLING> g_volumeSamplingEnumNames = { {
-	"distance",
-	"equiangular",
-	"multiple_importance"
-} };
-ccl::VolumeSampling nameToVolumeSamplingMethodEnum( const IECore::InternedString &name )
-{
-#define MAP_NAME(enumName, enum) if(name == enumName) return enum;
-	MAP_NAME(g_volumeSamplingEnumNames[0], ccl::VOLUME_SAMPLING_DISTANCE);
-	MAP_NAME(g_volumeSamplingEnumNames[1], ccl::VOLUME_SAMPLING_EQUIANGULAR);
-	MAP_NAME(g_volumeSamplingEnumNames[1], ccl::VOLUME_SAMPLING_MULTIPLE_IMPORTANCE);
-#undef MAP_NAME
-
-	return ccl::VOLUME_SAMPLING_MULTIPLE_IMPORTANCE;
-}
-
-std::array<IECore::InternedString, ccl::VOLUME_NUM_INTERPOLATION> g_volumeInterpolationEnumNames = { {
-	"linear",
-	"cubic"
-} };
-ccl::VolumeInterpolation nameToVolumeInterpolationMethodEnum( const IECore::InternedString &name )
-{
-#define MAP_NAME(enumName, enum) if(name == enumName) return enum;
-	MAP_NAME(g_volumeInterpolationEnumNames[0], ccl::VOLUME_INTERPOLATION_LINEAR);
-	MAP_NAME(g_volumeInterpolationEnumNames[1], ccl::VOLUME_INTERPOLATION_CUBIC);
-#undef MAP_NAME
-
-	return ccl::VOLUME_INTERPOLATION_LINEAR;
-}
 
 class CyclesShader : public IECore::RefCounted
 {
@@ -1319,16 +1297,16 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				useMIS = optionalAttribute<bool>( g_shaderUseMisAttributeName, attributes );
 				useTransparentShadow = optionalAttribute<bool>( g_shaderUseTransparentShadowAttributeName, attributes );
 				heterogeneousVolume = optionalAttribute<bool>( g_shaderHeterogeneousVolumeAttributeName, attributes );
-				volumeSamplingMethod = optionalAttribute<InternedString>( g_shaderVolumeSamplingMethodAttributeName, attributes );
-				volumeInterpolationMethod = optionalAttribute<InternedString>( g_shaderVolumeInterpolationMethodAttributeName, attributes );
+				volumeSamplingMethod = attribute<StringData>( g_shaderVolumeSamplingMethodAttributeName, attributes, g_shaderVolumeSamplingMethodAttributeDefault.get() );
+				volumeInterpolationMethod = attribute<StringData>( g_shaderVolumeInterpolationMethodAttributeName, attributes, g_shaderVolumeInterpolationMethodAttributeDefault.get() );
 				volumeStepRate = optionalAttribute<float>( g_shaderVolumeStepRateAttributeName, attributes );
 			}
 
 			boost::optional<bool> useMIS;
 			boost::optional<bool> useTransparentShadow;
 			boost::optional<bool> heterogeneousVolume;
-			boost::optional<InternedString> volumeSamplingMethod;
-			boost::optional<InternedString> volumeInterpolationMethod;
+			ConstDataPtr volumeSamplingMethod;
+			ConstDataPtr volumeInterpolationMethod;
 			boost::optional<float> volumeStepRate;
 
 			void hash( IECore::MurmurHash &h, const IECore::CompoundObject *attributes ) const
@@ -1342,10 +1320,8 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				{
 					if( heterogeneousVolume && !heterogeneousVolume.get() )
 						h.append( "homogeneous_volume" );
-					if( volumeSamplingMethod && volumeSamplingMethod.get() != "multiple_importance" )
-						h.append( volumeSamplingMethod.get() );
-					if( volumeInterpolationMethod && volumeInterpolationMethod.get() != "linear" )
-						h.append( volumeInterpolationMethod.get() );
+					volumeSamplingMethod->hash( h );
+					volumeInterpolationMethod->hash( h );
 					if( volumeStepRate && volumeStepRate.get() != 1.0f )
 						h.append( volumeStepRate.get() );
 				}
@@ -1356,8 +1332,8 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				shader->set_emission_sampling_method( useMIS.value_or( true ) ? ccl::EMISSION_SAMPLING_FRONT_BACK : ccl::EMISSION_SAMPLING_NONE );
 				shader->set_use_transparent_shadow(useTransparentShadow ? useTransparentShadow.get() : true );
 				shader->set_heterogeneous_volume( heterogeneousVolume ? heterogeneousVolume.get() : true );
-				shader->set_volume_sampling_method( volumeSamplingMethod ? nameToVolumeSamplingMethodEnum( volumeSamplingMethod.get() ) : ccl::VOLUME_SAMPLING_MULTIPLE_IMPORTANCE );
-				shader->set_volume_interpolation_method( volumeInterpolationMethod ? nameToVolumeInterpolationMethodEnum( volumeInterpolationMethod.get() ) : ccl::VOLUME_INTERPOLATION_LINEAR );
+				SocketAlgo::setSocket( shader, shader->get_volume_sampling_method_socket(), volumeSamplingMethod.get() );
+				SocketAlgo::setSocket( shader, shader->get_volume_interpolation_method_socket(), volumeInterpolationMethod.get() );
 				shader->set_volume_step_rate( volumeStepRate ? volumeStepRate.get() : 1.0f );
 
 				return true;
