@@ -263,6 +263,17 @@ Adjust, snapping to rounded increments              | Hold {kbd}`Ctrl` during ac
 Target mode (Translate and Rotate only)             | Hold {kbd}`V` then {{leftClick}} on target geometry
 
 
+### Light Tool ###
+
+> Note :
+> For the following controls and shortcuts, the Light Tool must be active
+
+Action                                        | Control or shortcut
+----------------------------------------------|--------------------
+Adjust, fine precision                        | Hold {kbd}`Shift` during action
+Constrain to aspect ratio (Quad lights only)  | Hold {kbd}`Ctrl` during action
+
+
 ### 2D images ###
 
 Action                               | Control or shortcut

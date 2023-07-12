@@ -144,6 +144,8 @@ const Color4f g_hoverTextColor( 1, 1, 1, 1 );
 
 const int g_warningTipCount = 3;
 
+const ModifiableEvent::Modifiers g_quadLightConstrainAspectRatioKey = ModifiableEvent::Modifiers::Control;
+
 enum class Axis { X, Y, Z };
 
 // Return the plug that holds the value we need to edit, and make sure it's enabled.
@@ -1763,8 +1765,95 @@ class QuadLightHandle : public LightToolHandle
 
 		bool handleDragMove( const GafferUI::DragDropEvent &event ) override
 		{
-			/// \todo Implement me
-			return false;
+			if( m_inspections.empty() || !allInspectionsEnabled() )
+			{
+				return true;
+			}
+
+			float xMult = 1.f;
+			float yMult = 1.f;
+
+			float nonZeroWidth = m_dragStartInfo.originalWidth == 0 ? 1.f : m_dragStartInfo.originalWidth;
+			float nonZeroHeight = m_dragStartInfo.originalHeight == 0 ? 1.f : m_dragStartInfo.originalHeight;
+
+			if( m_handleType & HandleType::Width && m_handleType & HandleType::Height )
+			{
+				auto &drag = std::get<PlanarDrag>( m_drag );
+				V2f newPosition = drag.updatedPosition( event ) - drag.startPosition();
+				xMult = ( newPosition.x * 2.f ) / ( nonZeroWidth * m_scale.x ) + 1.f;
+				yMult = ( newPosition.y * 2.f ) / ( nonZeroHeight * m_scale.y ) + 1.f;
+			}
+			else if( m_handleType & HandleType::Width )
+			{
+				auto &drag = std::get<LinearDrag>( m_drag );
+				float newPosition = drag.updatedPosition( event ) - drag.startPosition();
+				xMult = ( newPosition * 2.f ) / ( nonZeroWidth * m_scale.x ) + 1.f;
+			}
+			else if( m_handleType &HandleType::Height )
+			{
+				auto &drag = std::get<LinearDrag>( m_drag );
+				float newPosition = drag.updatedPosition( event ) - drag.startPosition();
+				yMult = ( newPosition * 2.f ) / ( nonZeroHeight * m_scale.y ) + 1.f;
+			}
+
+			if(
+				event.modifiers == g_quadLightConstrainAspectRatioKey &&
+				m_handleType & HandleType::Width &&
+				m_handleType & HandleType::Height
+			)
+			{
+				if( m_dragStartInfo.originalWidth > m_dragStartInfo.originalHeight )
+				{
+					yMult = xMult;
+				}
+				else
+				{
+					xMult = yMult;
+				}
+			}
+
+			xMult = std::max( xMult, 0.f );
+			yMult = std::max( yMult, 0.f );
+
+			for( auto &[widthInspection, originalWidth, heightInspection, originalHeight] : m_inspections )
+			{
+				nonZeroWidth = originalWidth == 0 ? 1.f : originalWidth;
+				nonZeroHeight = originalHeight == 0 ? 1.f : originalHeight;
+
+				if( m_handleType & HandleType::Width && widthInspection && widthInspection->editable() )
+				{
+					ValuePlugPtr widthPlug = widthInspection->acquireEdit();
+					auto widthFloatPlug = runTimeCast<FloatPlug>( activeValuePlug( widthPlug.get() ) );
+					if( !widthFloatPlug )
+					{
+						throw Exception( "Invalid type of \"widthParameter\"" );
+					}
+
+					setValueOrAddKey(
+						widthFloatPlug,
+						m_view->getContext()->getTime(),
+						nonZeroWidth * xMult
+					);
+				}
+
+				if( m_handleType & HandleType::Height && heightInspection && heightInspection->editable() )
+				{
+					ValuePlugPtr heightPlug = heightInspection->acquireEdit();
+					auto heightFloatPlug = runTimeCast<FloatPlug>( activeValuePlug( heightPlug.get() ) );
+					if( !heightFloatPlug )
+					{
+						throw Exception( "Invalid type of \"heightParameter\"" );
+					}
+
+					setValueOrAddKey(
+						heightFloatPlug,
+						m_view->getContext()->getTime(),
+						nonZeroHeight * yMult
+					);
+				}
+			}
+
+			return true;
 		}
 
 		bool handleDragEnd() override
@@ -1973,7 +2062,7 @@ class QuadLightHandle : public LightToolHandle
 					m_edgeCursorPoint,
 					inspections,
 					tipSuffix,
-					"Hold Ctrl to maintain aspect ratio",
+					( m_handleType & HandleType::Width && m_handleType &HandleType::Height ) ? "Hold Ctrl to maintain aspect ratio" : "",
 					this,
 					m_view->viewportGadget(),
 					style
@@ -2016,8 +2105,25 @@ class QuadLightHandle : public LightToolHandle
 
 		void dragBegin( const DragDropEvent &event ) override
 		{
-			/// \todo Implement me
+			const auto &[widthInspection, originalWidth, heightInspection, originalHeight] = handleInspections();
 
+			m_dragStartInfo.widthInspection = widthInspection;
+			m_dragStartInfo.originalWidth = originalWidth;
+			m_dragStartInfo.heightInspection = heightInspection;
+			m_dragStartInfo.originalHeight = originalHeight;
+
+			if( m_handleType & HandleType::Width && m_handleType & HandleType::Height )
+			{
+				m_drag = Handle::PlanarDrag( this, V3f( 0 ), V3f( m_xSign, 0, 0 ), V3f( 0, m_ySign, 0 ), event, true );
+			}
+			else if( m_handleType & HandleType::Width )
+			{
+				m_drag = Handle::LinearDrag( this, LineSegment3f( V3f( 0 ), V3f( m_xSign, 0, 0 ) ), event, true );
+			}
+			else if( m_handleType & HandleType::Height )
+			{
+				m_drag = Handle::LinearDrag( this, LineSegment3f( V3f( 0 ), V3f( 0, m_ySign, 0 ) ), event, true );
+			}
 		}
 
 		InspectionInfo handleInspections() const
