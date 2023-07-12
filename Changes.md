@@ -83,6 +83,7 @@ Fixes
 - PresetsPlugValueWidget : Fixed label update for context-sensitive presets.
 - PlugValueWidget : Fixed value update when auxiliary plugs depend on the context but the primary plugs do not.
 - Cycles : Fixed handling of `cycles:shader:volume_sampling_method` and `cycles:shader:volume_interpolation_method` attributes, which were being ignored previously.
+- OptionQuery : Fixed bug which allowed duplicate queries to be added in the UI.
 
 API
 ---
@@ -91,6 +92,7 @@ API
   - Added an `oldName` argument to `nameChangedSignal()` slot signature.
   - Added a `nameChanged()` protected virtual method, which can be overridden to receive notifications of name changes before
     they are made public by `nameChangedSignal()`.
+  - Colon (`:`) is now an allowed character in names.
 - View : Added DisplayTransform add-on class which can be used to add colourspace management to any View.
 - ViewportGadget : A post-process shader can now be applied to any layer, not just the main one.
 - SceneGadget : Added `setLayer()` and `getLayer()` methods, which allow the destination `Gadget::Layer` to be specified.

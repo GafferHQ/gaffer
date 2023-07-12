@@ -63,7 +63,7 @@ using namespace std;
 namespace
 {
 
-// Equivalent to checking a regex match against "^[A-Za-z_]+[A-Za-z_0-9]*",
+// Equivalent to checking a regex match against "^[A-Za-z_:]+[A-Za-z_:0-9]*",
 // but significantly quicker.
 //
 /// \todo Relax restrictions to only disallow '.' and `/'? We originally had
@@ -80,7 +80,7 @@ bool validName( const std::string &name )
 	if(
 		!(f >= 'A' && f <= 'Z') &&
 		!(f >= 'a' && f <= 'z' ) &&
-		f != '_'
+		f != '_' && f != ':'
 	)
 	{
 		return false;
@@ -92,7 +92,7 @@ bool validName( const std::string &name )
 			!(c >= 'A' && c <= 'Z') &&
 			!(c >= 'a' && c <= 'z' ) &&
 			!(c >= '0' && c <= '9' ) &&
-			c != '_'
+			c != '_' && c != ':'
 		)
 		{
 			return false;

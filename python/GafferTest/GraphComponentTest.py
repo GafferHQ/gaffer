@@ -382,7 +382,7 @@ class GraphComponentTest( GafferTest.TestCase ) :
 
 		n = Gaffer.GraphComponent()
 
-		for name in ( "0", "0a", "@A", "a.A", ".", "A:", "a|", "a(" ) :
+		for name in ( "0", "0a", "@A", "a.A", ".", "A!", "a|", "a(" ) :
 			self.assertRaises( Exception, n.setName, name )
 			self.assertRaises( Exception, Gaffer.GraphComponent, name )
 
@@ -1190,6 +1190,21 @@ class GraphComponentTest( GafferTest.TestCase ) :
 				( "Method", "NameTracker", "newName" ),
 				( "Slot", "NameTracker", "newName" ),
 		] )
+
+	def testColonInName( self ) :
+
+		g = Gaffer.GraphComponent( "test:a" )
+		self.assertEqual( g.getName(), "test:a" )
+
+		g.setName( "test:a:b" )
+		self.assertEqual( g.getName(), "test:a:b" )
+
+		p = Gaffer.GraphComponent()
+		p.addChild( g )
+		self.assertIn( "test:a:b", p )
+		self.assertTrue( p["test:a:b"].isSame( g ) )
+		self.assertTrue( p.getChild( "test:a:b" ).isSame( g ) )
+		self.assertTrue( p.descendant( "test:a:b" ).isSame( g ) )
 
 if __name__ == "__main__":
 	unittest.main()

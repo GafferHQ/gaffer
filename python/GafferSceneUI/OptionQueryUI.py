@@ -353,7 +353,7 @@ class _OptionQueryFooter( GafferUI.PlugValueWidget ) :
 				result.append(
 					f"/{label}",
 					{
-						"command" : functools.partial( Gaffer.WeakMethod( self.__addQuery ), "", "", plugCreator ),
+						"command" : functools.partial( Gaffer.WeakMethod( self.__addQuery ), "", plugCreator ),
 					}
 				)
 
@@ -368,22 +368,18 @@ class _OptionQueryFooter( GafferUI.PlugValueWidget ) :
 
 		with self.getContext() :
 			options = node["scene"]["globals"].getValue()
+			existingQueries = { query["name"].getValue() for query in node["queries"] }
 
 		prefix = "option:"
 
-		options = collections.OrderedDict( ( k, v ) for k, v in options.items() if k.startswith( prefix ) )
-
-		for key, value in [ ( k, v ) for k, v in options.items() if k.replace( ':', '_' ) not in node["queries"] ] :
-			nameWithoutPrefix = key[ len( prefix ): ]
+		for name, value in [ ( k[len( prefix ):], v ) for k, v in options.items() if k.startswith( prefix ) ] :
 			result.append(
-				"/" + nameWithoutPrefix,
+				"/{}".format( name ),
 				{
 					"command" : functools.partial(
-						Gaffer.WeakMethod( self.__addQuery ),
-						key.replace( ':', '_' ),
-						nameWithoutPrefix,
-						value
-					)
+						Gaffer.WeakMethod( self.__addQuery ), name, value
+					),
+					"active" : name not in existingQueries
 				}
 			)
 
@@ -395,20 +391,20 @@ class _OptionQueryFooter( GafferUI.PlugValueWidget ) :
 
 		return result
 
-	def __addQuery( self, plugName, optionName, plugCreatorOrValue ) :
+	def __addQuery( self, optionName, plugCreatorOrValue ) :
 
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 
 			node = self.getPlug().node()
 
 			if isinstance( plugCreatorOrValue, IECore.Data ) :
-				dummyPlug = Gaffer.PlugAlgo.createPlugFromData(
-					plugName,
+				prototypePlug = Gaffer.PlugAlgo.createPlugFromData(
+					"valuePrototype",
 					Gaffer.Plug.Direction.In,
 					Gaffer.Plug.Flags.Default,
 					plugCreatorOrValue
 				)
-				node.addQuery( dummyPlug, optionName )
+				node.addQuery( prototypePlug, optionName )
 			else:
 				node.addQuery( plugCreatorOrValue(), optionName )
 

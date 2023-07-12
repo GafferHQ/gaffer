@@ -158,7 +158,7 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 				result.append(
 					"/" + item.__name__.replace( "Plug", "" ),
 					{
-						"command" : functools.partial( Gaffer.WeakMethod( self.__addTweak ), "", "", item ),
+						"command" : functools.partial( Gaffer.WeakMethod( self.__addTweak ), "", item ),
 					}
 				)
 
@@ -173,22 +173,19 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 
 		with self.getContext() :
 			options = node["out"]["globals"].getValue()
+			existingTweaks = { tweak["name"].getValue() for tweak in node["tweaks"] }
 
 		prefix = "option:"
 
-		options = collections.OrderedDict( ( k, v ) for k, v in options.items() if k.startswith( prefix ) )
-
-		for key, value in [ ( k, v ) for k, v in options.items() if k.replace( ':', '_' ) not in node["tweaks"] ] :
-			nameWithoutPrefix = key[ len( prefix ): ]
+		for name, value in [ ( k[len(prefix):], v ) for k, v in options.items() if k.startswith( prefix ) ] :
 			result.append(
-				"/" + nameWithoutPrefix,
+				"/{}".format( name ),
 				{
 					"command" : functools.partial(
 						Gaffer.WeakMethod( self.__addTweak ),
-						key.replace( ':', '_' ),
-						nameWithoutPrefix,
-						value
-					)
+						name, value
+					),
+					"active" : name not in existingTweaks
 				}
 			)
 
@@ -200,15 +197,14 @@ class _TweaksFooter( GafferUI.PlugValueWidget ) :
 
 		return result
 
-	def __addTweak( self, plugName, optionName, plugTypeOrValue ) :
+	def __addTweak( self, optionName, plugTypeOrValue ) :
 
 		if isinstance( plugTypeOrValue, IECore.Data ) :
 			plug = Gaffer.TweakPlug( optionName, plugTypeOrValue )
 		else :
 			plug = Gaffer.TweakPlug( optionName, plugTypeOrValue() )
 
-		if plugName :
-			plug.setName( plugName )
+		plug.setName( "tweak0" )
 
 		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
 			self.getPlug().addChild( plug )
