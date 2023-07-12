@@ -914,6 +914,9 @@ IECore::InternedString g_glossyVisibilityAttributeName( "cycles:visibility:gloss
 IECore::InternedString g_transmissionVisibilityAttributeName( "cycles:visibility:transmission" );
 IECore::InternedString g_shadowVisibilityAttributeName( "cycles:visibility:shadow" );
 IECore::InternedString g_scatterVisibilityAttributeName( "cycles:visibility:scatter" );
+// Caustics
+IECore::InternedString g_isCausticsCasterAttributeName( "cycles:is_caustics_caster" );
+IECore::InternedString g_isCausticsReceiverAttributeName( "cycles:is_caustics_receiver" );
 
 // Cryptomatte asset
 IECore::InternedString g_cryptomatteAssetAttributeName( "cycles:asset_name" );
@@ -964,6 +967,8 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				m_shaderAttributes( attributes ),
 				m_assetName( "" ),
 				m_lightGroup( "" ),
+				m_isCausticsCaster( false ),
+				m_isCausticsReceiver( false ),
 				m_shaderCache( shaderCache )
 		{
 			updateVisibility( g_cameraVisibilityAttributeName,       (int)ccl::PATH_RAY_CAMERA,         attributes );
@@ -984,6 +989,8 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			m_dupliUV = attributeValue<V2f>( g_dupliUVAttributeName, attributes, m_dupliUV );
 			m_lightGroup = attributeValue<std::string>( g_lightGroupAttributeName, attributes, m_lightGroup );
 			m_assetName = attributeValue<std::string>( g_cryptomatteAssetAttributeName, attributes, m_assetName );
+			m_isCausticsCaster = attributeValue<bool>( g_isCausticsCasterAttributeName, attributes, m_isCausticsCaster );
+			m_isCausticsReceiver = attributeValue<bool>( g_isCausticsReceiverAttributeName, attributes, m_isCausticsReceiver );
 
 			// Surface shader
 			const IECoreScene::ShaderNetwork *surfaceShaderAttribute = attribute<IECoreScene::ShaderNetwork>( g_cyclesSurfaceShaderAttributeName, attributes );
@@ -1120,6 +1127,8 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			object->set_dupli_generated( SocketAlgo::setVector( m_dupliGenerated ) );
 			object->set_dupli_uv( SocketAlgo::setVector( m_dupliUV ) );
 			object->set_asset_name( ccl::ustring( m_assetName.c_str() ) );
+			object->set_is_caustics_caster( m_isCausticsCaster );
+			object->set_is_caustics_receiver( m_isCausticsReceiver );
 
 			if( object->get_geometry() )
 			{
@@ -1358,6 +1367,8 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		ShaderAttributes m_shaderAttributes;
 		InternedString m_assetName;
 		InternedString m_lightGroup;
+		bool m_isCausticsCaster;
+		bool m_isCausticsReceiver;
 		// Need to assign shaders in a deferred manner
 		ShaderCache *m_shaderCache;
 		bool m_muteLight;

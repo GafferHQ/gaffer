@@ -54,7 +54,9 @@ Improvements
   - Added support for inclusion and exclusion of leaf level locations to the Visible Set.
   - Added <kbd>F</kbd> shortcut to expand ancestors and frame selected paths. This replaces the previous behaviour of automatic updates to expansion and framing in the HierarchyView on selection change.
 - CyclesOptions : Added `useLightTree` plug.
-- CyclesAttributes : Added `emissionSamplingMethod` plug.
+- CyclesAttributes :
+  - Added `emissionSamplingMethod` plug.
+  - Added `isCausticsCaster` and `isCausticsReceiver` plugs.
 
 Fixes
 -----

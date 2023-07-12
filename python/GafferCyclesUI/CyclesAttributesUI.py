@@ -51,7 +51,7 @@ def __visibilitySummary( plug ) :
 def __renderingSummary( plug ) :
 
 	info = []
-	for childName in ( "useHoldout", "isShadowCatcher", "dupliGenerated", "dupliUV", "lightGroup" ) :
+	for childName in ( "useHoldout", "isShadowCatcher", "isCausticsCaster", "isCausticsReceiver", "dupliGenerated", "dupliUV", "lightGroup" ) :
 		if plug[childName]["enabled"].getValue() :
 			info.append( IECore.CamelCase.toSpaced( childName ) + ( " On" if plug[childName]["value"].getValue() else " Off" ) )
 
@@ -277,6 +277,28 @@ Gaffer.Metadata.registerNode(
 			"layout:section", "Rendering",
 		],
 
+		"attributes.isCausticsCaster" : [
+
+			"description",
+			"""
+			Cast Shadow Caustics.
+			""",
+
+			"layout:section", "Rendering",
+
+		],
+
+		"attributes.isCausticsReceiver" : [
+
+			"description",
+			"""
+			Receive Shadow Caustics.
+			""",
+
+			"layout:section", "Rendering",
+
+		],
+
 		# Subdivision
 
 		"attributes.maxLevel" : [
@@ -340,6 +362,8 @@ Gaffer.Metadata.registerNode(
 			"layout:section", "Volume",
 
 		],
+
+		# Object
 
 		"attributes.assetName" : [
 

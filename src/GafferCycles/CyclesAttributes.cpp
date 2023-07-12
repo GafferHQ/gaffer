@@ -61,6 +61,8 @@ CyclesAttributes::CyclesAttributes( const std::string &name )
 	attributes->addChild( new Gaffer::NameValuePlug( "cycles:is_shadow_catcher", new IECore::BoolData( false ), false, "isShadowCatcher" ) );
 	attributes->addChild( new Gaffer::NameValuePlug( "cycles:shadow_terminator_shading_offset", new IECore::FloatData( 0.0f ), false, "shadowTerminatorShadingOffset" ) );
 	attributes->addChild( new Gaffer::NameValuePlug( "cycles:shadow_terminator_geometry_offset", new IECore::FloatData( 0.0f ), false, "shadowTerminatorGeometryOffset" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "cycles:is_caustics_caster", new IECore::BoolData( false ), false, "isCausticsCaster" ) );
+	attributes->addChild( new Gaffer::NameValuePlug( "cycles:is_caustics_receiver", new IECore::BoolData( false ), false, "isCausticsReceiver" ) );
 
 	// Subdivision parameters
 	attributes->addChild( new Gaffer::NameValuePlug( "cycles:max_level", new IECore::IntData( 1 ), false, "maxLevel" ) );
