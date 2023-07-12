@@ -195,6 +195,9 @@ class GAFFERIMAGE_API ImageReader : public ImageNode
 
 		static DefaultColorSpaceFunction &defaultColorSpaceFunction();
 
+		Gaffer::BoolPlug *intermediateFileValidPlug();
+		const Gaffer::BoolPlug *intermediateFileValidPlug() const;
+
 		static size_t g_firstChildIndex;
 
 };
