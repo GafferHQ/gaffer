@@ -6,6 +6,7 @@ Features
 
 - MeshNormals : Added a new node for adjusting mesh normals.
 - VolumeScatter : Added a new node for scattering points throughout a volume.
+- Cycles : Updated to version 3.5.0.
 
 Improvements
 ------------
@@ -185,6 +186,7 @@ Build
   - Updated to version 1.80.0.
   - Stopped linking unnecessarily to `iostreams`, `date_time`, `wave` and `system` libraries.
 - Cortex : Updated to version 10.5.0.0.
+- Cycles : Updated to version 3.5.0.
 - Imath : Added version 3.1.7.
 - MaterialX : Added version 1.38.4.
 - Minizip : Added version 3.0.9.
