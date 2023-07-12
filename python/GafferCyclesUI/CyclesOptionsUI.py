@@ -139,6 +139,23 @@ def __samplingSummary( plug ) :
 
 	return ", ".join( info )
 
+def __pathGuidingSummary( plug ) :
+
+	info = []
+
+	for label, childName in (
+		( "Guiding", "useGuiding" ),
+		( "Surface", "useSurfaceGuiding" ),
+		( "Volume", "useVolumeGuiding" ),
+	) :
+		if plug[childName]["enabled"].getValue() :
+			info.append( "{} {}".format( label, "On" if plug[childName]["value"].getValue() else "Off" ) )
+
+	if plug["guidingTrainingSamples"]["enabled"].getValue() :
+			info.append( "Samples {}".format( plug["guidingTrainingSamples"]["value"].getValue() ) )
+
+	return ", ".join( info )
+
 def __rayDepthSummary( plug ) :
 
 	info = []
@@ -414,6 +431,7 @@ Gaffer.Metadata.registerNode(
 			"layout:section:Session:summary", __sessionSummary,
 			"layout:section:Scene:summary", __sceneSummary,
 			"layout:section:Sampling:summary", __samplingSummary,
+			"layout:section:Path-Guiding:summary", __pathGuidingSummary,
 			"layout:section:Ray Depth:summary", __rayDepthSummary,
 			"layout:section:Volumes:summary", __volumesSummary,
 			"layout:section:Caustics:summary", __causticsSummary,
@@ -837,6 +855,57 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"layout:section", "Sampling",
+
+		],
+
+		# Path Guiding
+
+		"options.useGuiding" : [
+
+			"description",
+			"""
+			Use path guiding for sampling paths. Path guiding incrementally
+			learns the light distribution of the scene and guides path into directions
+			with high direct and indirect light contributions.
+			""",
+
+			"layout:section", "Path-Guiding",
+
+		],
+
+		"options.useSurfaceGuiding" : [
+
+			"description",
+			"""
+			Use guiding when sampling directions on a surface.
+			""",
+
+			"layout:section", "Path-Guiding",
+
+		],
+
+		"options.useVolumeGuiding" : [
+
+			"description",
+			"""
+			Use guiding when sampling directions inside a volume.
+			""",
+
+			"layout:section", "Path-Guiding",
+
+		],
+
+		"options.guidingTrainingSamples" : [
+
+			"description",
+			"""
+			The maximum number of samples used for training path guiding.
+			Higher samples lead to more accurate guiding, however may also unnecessarily slow
+			down rendering once guiding is accurate enough.
+			A value of 0 will continue training until the last sample.
+			""",
+
+			"layout:section", "Path-Guiding",
 
 		],
 

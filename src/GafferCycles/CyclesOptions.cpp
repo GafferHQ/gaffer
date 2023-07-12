@@ -123,6 +123,11 @@ CyclesOptions::CyclesOptions( const std::string &name )
 	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:use_denoise_pass_normal", new IECore::BoolData( true ), false, "useDenoisePassNormal" ) );
 	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:denoiser_prefilter", new IECore::StringData( "accurate" ), false, "denoiserPrefilter" ) );
 
+	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:use_guiding", new IECore::BoolData( false ), false, "useGuiding" ) );
+	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:use_surface_guiding", new IECore::BoolData( true ), false, "useSurfaceGuiding" ) );
+	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:use_volume_guiding", new IECore::BoolData( true ), false, "useVolumeGuiding" ) );
+	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:guiding_training_samples", new IECore::IntData( 128 ), false, "guidingTrainingSamples" ) );
+
 	// Background
 	options->addChild( new Gaffer::NameValuePlug( "cycles:background:use_shader", new IECore::BoolData( true ), false, "bgUseShader" ) );
 
