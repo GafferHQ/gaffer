@@ -132,6 +132,12 @@ GafferSceneUI.LightEditor.registerParameter( "light", "shaping:ies:file", "Shapi
 GafferSceneUI.LightEditor.registerParameter( "light", "shaping:ies:angleScale", "Shaping" )
 GafferSceneUI.LightEditor.registerParameter( "light", "shaping:ies:normalize", "Shaping" )
 
+GafferSceneUI.LightEditor.registerParameter( "light", "shadow:enable", "Shadow" )
+GafferSceneUI.LightEditor.registerParameter( "light", "shadow:color", "Shadow" )
+GafferSceneUI.LightEditor.registerParameter( "light", "shadow:distance", "Shadow" )
+GafferSceneUI.LightEditor.registerParameter( "light", "shadow:falloff", "Shadow" )
+GafferSceneUI.LightEditor.registerParameter( "light", "shadow:falloffGamma", "Shadow" )
+
 # Register generic light attributes
 for attributeName in [
 	"gl:visualiser:scale",

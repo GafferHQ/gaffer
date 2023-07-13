@@ -9,6 +9,7 @@ Features
 Improvements
 ------------
 
+- LightEditor : Added section displaying UsdLux shadow parameters.
 - LightTool : Added support for editing animated plugs.
 
 Fixes
