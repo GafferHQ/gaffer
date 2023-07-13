@@ -50,12 +50,14 @@ class PlugValueWidgetTest( GafferUITest.TestCase ) :
 	@staticmethod
 	def waitForUpdate( widget ) :
 
-		# Updates are done lazily, so we need to flush any pending updates.
-		widget._PlugValueWidget__callUpdateFromValues.flush( widget )
-		# And updates for computed values are done in the background, so we
-		# need to wait until they're done.
-		if any( isinstance( p, Gaffer.ValuePlug ) and Gaffer.PlugAlgo.dependsOnCompute( p ) for p in widget.getPlugs() ) :
-			with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as handler :
+		with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as handler :
+
+			# Updates are done lazily, so we need to flush any pending updates.
+			widget._PlugValueWidget__callUpdateFromValues.flush( widget )
+
+			# And updates for computed values are done in the background, so we
+			# need to wait until they're done.
+			if any( isinstance( p, Gaffer.ValuePlug ) and Gaffer.PlugAlgo.dependsOnCompute( p ) for p in widget.getPlugs() ) :
 				handler.assertCalled()
 
 	def testContext( self ) :
