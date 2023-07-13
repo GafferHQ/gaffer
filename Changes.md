@@ -61,6 +61,7 @@ Improvements
 - CyclesAttributes :
   - Added `emissionSamplingMethod` plug.
   - Added `isCausticsCaster` and `isCausticsReceiver` plugs.
+- Render : Improved clearing of the compute and hash caches prior to rendering, potentially providing more memory to the renderer. Note that clearing is now only performed in the `execute` and `dispatch` apps.
 
 Fixes
 -----
@@ -105,7 +106,9 @@ API
 - OpenColorIOAlgo : Added a new namespace that allows the OpenColorIO config and working space to be defined via the Gaffer context.
 - OpenColorIOConfigPlug : Added a new plug type to aid in configuring the OpenColorIO context for a ScriptNode.
 - ImageReader/ImageWriter : Added a `config` argument to the `DefaultColorSpaceFunction` definition. This is passed the OpenColorIO config currently being used by the node.
-- ValuePlugs : Added Python bindings for `ValueType` type alias.
+- ValuePlug :
+  - Added Python bindings for derived classes' `ValueType` type alias.
+  - Added `now` argument to `clearHashCache()` method.
 - Color4fVectorDataPlug : Added a plug type for storing arrays of `Color4f`.
 - TypedObjectPlug : Added default value for `direction` and `defaultValue` constructor arguments.
 - VectorDataWidget : Added `setErrored()` and `getErrored()` methods to control an error state. Errors are reflected by a red background colour.

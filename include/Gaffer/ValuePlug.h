@@ -185,9 +185,11 @@ class GAFFER_API ValuePlug : public Plug
 		/// Returns the total number of entries in both global and per-thread hash caches
 		static size_t hashCacheTotalUsage();
 		/// Clears the hash cache.
-		/// > Note : Clearing occurs on a per-thread basis as and when
-		/// > each thread next accesses the cache.
-		static void clearHashCache();
+		/// > Note : By default, clearing occurs on a per-thread basis as
+		/// > and when each thread next accesses its cache. Pass `now = true`
+		/// > to force all thread-local caches to be cleared immediately
+		/// > (this is not thread-safe with respect to concurrent computations).
+		static void clearHashCache( bool now = false );
 
 		/// The standard hash cache mode relies on correctly implemented
 		/// affects() methods to selectively clear the cache for dirtied

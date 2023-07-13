@@ -335,25 +335,30 @@ class ValuePlug::HashProcess : public Process
 			g_globalCache.setMaxCost( g_cacheSizeLimit );
 		}
 
-		static void clearCache()
+		static void clearCache( bool now = false )
 		{
 			g_globalCache.clear();
-			// The docs for enumerable_thread_specific aren't particularly clear
-			// on whether or not it's ok to iterate an e_t_s while concurrently using
-			// local(), which is what we do here. So far in practice it seems to be
-			// OK.
+			// It's not documented explicitly, but it is safe to iterate over an
+			// `enumerable_thread_specific` while `local()` is being called on
+			// other threads, because the underlying container is a
+			// `concurrent_vector`.
 			tbb::enumerable_thread_specific<ThreadData>::iterator it, eIt;
 			for( it = g_threadData.begin(), eIt = g_threadData.end(); it != eIt; ++it )
 			{
-				// We can't clear the cache now, because it is most likely
-				// in use by the owning thread. Instead we set this flag to
-				// politely request that the thread clears the cache itself
-				// at its earliest convenience - in the HashProcess constructor.
-				// This delay in clearing is OK, because it is illegal to modify
-				// a graph while a computation is being performed with it, and
-				// we know that the plug requesting the clear will be removed
-				// from the cache before the next computation starts.
-				it->clearCache.store( 1, std::memory_order_release );
+				if( now )
+				{
+					// Not thread-safe - caller is responsible for ensuring there
+					// are no concurrent computes.
+					it->cache.clear();
+				}
+				else
+				{
+					// We can't clear the cache now, because it is most likely
+					// in use by the owning thread. Instead we set this flag to
+					// politely request that the thread clears the cache itself
+					// at its earliest convenience - in the HashProcess constructor.
+					it->clearCache.store( 1, std::memory_order_release );
+				}
 			}
 		}
 
@@ -1248,9 +1253,9 @@ void ValuePlug::setHashCacheSizeLimit( size_t maxEntriesPerThread )
 	HashProcess::setCacheSizeLimit( maxEntriesPerThread );
 }
 
-void ValuePlug::clearHashCache()
+void ValuePlug::clearHashCache( bool now )
 {
-	HashProcess::clearCache();
+	HashProcess::clearCache( now );
 }
 
 size_t ValuePlug::hashCacheTotalUsage()
