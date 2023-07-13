@@ -227,25 +227,26 @@ Pin to numeric bookmark              | {kbd}`1` … {kbd}`9`
 
 ### 3D scenes ###
 
-Action                                               | Control or shortcut
------------------------------------------------------|--------------------
-Tumble                                               | {kbd}`Alt` + {{leftClick}} and drag
-Tumble, fine precision                               | Hold {kbd}`Shift` during action
-Select objects                                       | {{leftClick}} and drag marquee, then release
-Add/remove object from selection                     | {kbd}`Ctrl` + {{leftClick}}
-Add objects to selection                             | {kbd}`Shift` + {{leftClick}} and drag marquee, then release
-Deselect objects                                     | {kbd}`Ctrl` + {{leftClick}} and drag marquee, then release
-Expand selection                                     | {kbd}`↓`
-Fully expand selection                               | {kbd}`Shift` + {kbd}`↓`
-Collapse selection                                   | {kbd}`↑`
-Edit source node of selection                        | {kbd}`Alt` + {kbd}`E`
-Edit tweaks node for selection                       | {kbd}`Alt` + {kbd}`Shift` + {kbd}`E`
-Fit clipping planes to scene                         | {{rightClick}} > *Clipping Planes* > *Fit To Scene*
-Fit clipping planes to selection                     | {{rightClick}} > *Clipping Planes* > *Fit To Selection*<br>or<br>{kbd}`Ctrl` + {kbd}`K`
-Frame view, and fit clipping planes                  | {kbd}`Ctrl` + {kbd}`F`
-Reset clipping planes                                | {{rightClick}} > *Clipping Planes* > *Default*
-Toggle Inspector                                     | {kbd}`I`
-Prune selected objects from current EditScope        | {kbd}`Ctrl` + {kbd}`Delete`<br>or<br>{kbd}`Ctrl` + {kbd}`Backspace`
+Action                                                           | Control or shortcut
+-----------------------------------------------------------------|--------------------
+Tumble                                                           | {kbd}`Alt` + {{leftClick}} and drag
+Tumble, fine precision                                           | Hold {kbd}`Shift` during action
+Select objects                                                   | {{leftClick}} and drag marquee, then release
+Add/remove object from selection                                 | {kbd}`Ctrl` + {{leftClick}}
+Add objects to selection                                         | {kbd}`Shift` + {{leftClick}} and drag marquee, then release
+Deselect objects                                                 | {kbd}`Ctrl` + {{leftClick}} and drag marquee, then release
+Expand selection                                                 | {kbd}`↓`
+Fully expand selection                                           | {kbd}`Shift` + {kbd}`↓`
+Collapse selection                                               | {kbd}`↑`
+Edit source node of selection                                    | {kbd}`Alt` + {kbd}`E`
+Edit tweaks node for selection                                   | {kbd}`Alt` + {kbd}`Shift` + {kbd}`E`
+Fit clipping planes to scene                                     | {{rightClick}} > *Clipping Planes* > *Fit To Scene*
+Fit clipping planes to selection                                 | {{rightClick}} > *Clipping Planes* > *Fit To Selection*<br>or<br>{kbd}`Ctrl` + {kbd}`K`
+Frame view, and fit clipping planes                              | {kbd}`Ctrl` + {kbd}`F`
+Reset clipping planes                                            | {{rightClick}} > *Clipping Planes* > *Default*
+Toggle Inspector                                                 | {kbd}`I`
+Prune selected objects from current EditScope                    | {kbd}`Ctrl` + {kbd}`Delete`<br>or<br>{kbd}`Ctrl` + {kbd}`Backspace`
+Turn off visibility for selected objects from current EditScope  | {kbd}`Ctrl` + {kbd}`H`
 
 ### Transform tools ###
 
