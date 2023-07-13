@@ -1,5 +1,9 @@
-1.2.x.x (relative to 1.2.9.0)
-=======
+1.2.10.x (relative to 1.2.10.0)
+========
+
+
+1.2.10.0 (relative to 1.2.9.0)
+========
 
 Improvements
 ------------
