@@ -1,4 +1,8 @@
-1.x.x.x (relative to 1.2.x.x)
+1.3.x.x (relative to 1.3.0.0)
+=======
+
+
+1.3.0.0 (relative to 1.2.10.0)
 =======
 
 Features
