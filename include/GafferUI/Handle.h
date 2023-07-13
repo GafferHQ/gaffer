@@ -171,7 +171,7 @@ class GAFFERUI_API Handle : public Gadget
 		Imath::V3f rasterScaleFactor() const;
 
 		// Helper for performing drags around a rotation axis.
-		struct AngularDrag
+		struct GAFFERUI_API AngularDrag
 		{
 
 			AngularDrag( bool processModifiers = true );

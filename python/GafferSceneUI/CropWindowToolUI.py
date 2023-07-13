@@ -57,6 +57,7 @@ Gaffer.Metadata.registerNode(
 	""",
 
 	"viewer:shortCut", "C",
+	"order", 5,
 	"viewer:shouldAutoActivate", False,
 
 	"nodeToolbar:bottom:type", "GafferUI.StandardNodeToolbar.bottom",

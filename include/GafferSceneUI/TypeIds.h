@@ -56,6 +56,7 @@ enum TypeId
 	UVSceneTypeId = 110663,
 	HistoryPathTypeId = 110664,
 	SetPathTypeId = 110665,
+	LightToolTypeId = 110666,
 
 	LastTypeId = 110700
 };

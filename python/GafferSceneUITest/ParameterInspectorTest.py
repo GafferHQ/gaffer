@@ -623,6 +623,32 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 			edit = edit
 		)
 
+	def testReadOnlyPlug( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["light"] = GafferSceneTest.TestLight()
+
+		SourceType = GafferSceneUI.Private.Inspector.Result.SourceType
+
+		self.__assertExpectedResult(
+			self.__inspect( s["light"]["out"], "/light", "intensity", None ),
+			source = s["light"]["parameters"]["intensity"],
+			sourceType = SourceType.Other,
+			editable = True,
+			edit = s["light"]["parameters"]["intensity"]
+		)
+
+		Gaffer.MetadataAlgo.setReadOnly( s["light"]["parameters"]["intensity"], True )
+
+		self.__assertExpectedResult(
+			self.__inspect( s["light"]["out"], "/light", "intensity", None ),
+			source = s["light"]["parameters"]["intensity"],
+			sourceType = SourceType.Other,
+			editable = False,
+			nonEditableReason = "light.parameters.intensity is locked."
+		)
+
 
 if __name__ == "__main__":
 	unittest.main()
