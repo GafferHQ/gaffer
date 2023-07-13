@@ -15,6 +15,11 @@ Fixes
   - Fixed translation of `vector` typed outputs defined as `vector <name>` in an output definition.
   - Fixed translation of `shadow:enable` and `shadow:color` parameters on UsdLux lights, which were previously ignored.
 
+API
+---
+
+- OptionalValuePlug : Added a new plug type that pairs an `enabled` BoolPlug with a `value` ValuePlug.
+
 1.3.0.0 (relative to 1.2.10.0)
 =======
 
