@@ -718,6 +718,14 @@ void StandardLightVisualiser::spotlightParameters( const InternedString &attribu
 		}
 	}
 
+	if( ConstStringDataPtr coneAngleType = Metadata::value<StringData>( metadataTarget, "coneAngleType" ) )
+	{
+		if( coneAngleType->readable() == "half" )
+		{
+			coneAngle *= 2;
+		}
+	}
+
 	innerAngle = 0;
 	outerAngle = 0;
 

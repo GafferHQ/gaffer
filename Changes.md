@@ -5,6 +5,7 @@ Fixes
 -----
 
 - Arnold : Fixed translation of `vector` typed outputs defined as `vector <name>` in an output definition.
+- Viewer : Fixed visualisation of shaping cones for UsdLux lights, which were previously drawn at half the correct angle.
 
 1.2.10.0 (relative to 1.2.9.0)
 ========
