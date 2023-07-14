@@ -1,6 +1,10 @@
 1.2.10.x (relative to 1.2.10.0)
 ========
 
+Fixes
+-----
+
+- Arnold : Fixed translation of `vector` typed outputs defined as `vector <name>` in an output definition.
 
 1.2.10.0 (relative to 1.2.9.0)
 ========

@@ -680,6 +680,7 @@ class RendererTest( GafferTest.TestCase ) :
 			( "C", "float" ),
 			( "D", "int" ),
 			( "E", "uint" ),
+			( "F", "vector" ),
 		] :
 
 			r.output(
@@ -703,6 +704,7 @@ class RendererTest( GafferTest.TestCase ) :
 				"C FLOAT ieCoreArnold:filter:testC ieCoreArnold:display:testC",
 				"D INT ieCoreArnold:filter:testD ieCoreArnold:display:testD",
 				"E UINT ieCoreArnold:filter:testE ieCoreArnold:display:testE",
+				"F VECTOR ieCoreArnold:filter:testF ieCoreArnold:display:testF",
 			] ) )
 
 	def testOutputFilters( self ) :
