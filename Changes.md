@@ -1,6 +1,10 @@
 1.3.x.x (relative to 1.3.0.0)
 =======
 
+Fixes
+-----
+
+- DisplayTransform : Fixed missing `view` presets when `display` is at the default value (#5392).
 
 1.3.0.0 (relative to 1.2.10.0)
 =======
