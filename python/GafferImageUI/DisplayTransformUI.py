@@ -63,7 +63,7 @@ def __viewPresetNames( plug ) :
 def __viewPresetValues( plug ) :
 
 	config = GafferImage.OpenColorIOAlgo.currentConfig()
-	display = plug.parent()["display"].getValue()
+	display = plug.parent()["display"].getValue() or config.getDefaultDisplay()
 
 	return IECore.StringVectorData( [ "" ] + list( config.getViews( display ) ) )
 
