@@ -37,6 +37,7 @@
 #include "GafferSceneTest/TestShader.h"
 
 #include "Gaffer/CompoundNumericPlug.h"
+#include "Gaffer/OptionalValuePlug.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/SplinePlug.h"
 
@@ -59,6 +60,7 @@ TestShader::TestShader( const std::string &name )
 	parametersPlug()->addChild( new IntPlug( "i" ) );
 	parametersPlug()->addChild( new Color3fPlug( "c" ) );
 	parametersPlug()->addChild( new SplinefColor3fPlug( "spline" ) );
+	parametersPlug()->addChild( new OptionalValuePlug( "optionalString", new Gaffer::StringPlug() ) );
 }
 
 TestShader::~TestShader()

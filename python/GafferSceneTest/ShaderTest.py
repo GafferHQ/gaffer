@@ -429,5 +429,27 @@ class ShaderTest( GafferSceneTest.SceneTestCase ) :
 		with self.assertRaisesRegex( RuntimeError, "n1.__outAttributes : Cannot support monotone cubic interpolation for splines with inputs, for plug n1.parameters.spline" ):
 			network = n1.attributes()["test:surface"]
 
+	def testOptionalParameter( self ) :
+
+		node = GafferSceneTest.TestShader( "n1" )
+		node["type"].setValue( "test:surface" )
+
+		shader = node.attributes()["test:surface"].outputShader()
+		self.assertNotIn( "optionalString", shader.parameters )
+
+		node["parameters"]["optionalString"]["enabled"].setValue( True )
+		shader = node.attributes()["test:surface"].outputShader()
+		self.assertIn( "optionalString", shader.parameters )
+		self.assertEqual( shader.parameters["optionalString"], IECore.StringData() )
+
+		node["parameters"]["optionalString"]["value"].setValue( "test" )
+		shader = node.attributes()["test:surface"].outputShader()
+		self.assertIn( "optionalString", shader.parameters )
+		self.assertEqual( shader.parameters["optionalString"], IECore.StringData( "test" ) )
+
+		node["parameters"]["optionalString"]["enabled"].setValue( False )
+		shader = node.attributes()["test:surface"].outputShader()
+		self.assertNotIn( "optionalString", shader.parameters )
+
 if __name__ == "__main__":
 	unittest.main()

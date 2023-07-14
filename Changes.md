@@ -19,6 +19,7 @@ API
 ---
 
 - OptionalValuePlug : Added a new plug type that pairs an `enabled` BoolPlug with a `value` ValuePlug.
+- Shader : Added support for using OptionalValuePlug to represent optional parameters.
 
 1.3.0.0 (relative to 1.2.10.0)
 =======

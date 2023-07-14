@@ -40,6 +40,7 @@
 #include "Gaffer/PlugAlgo.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/NumericPlug.h"
+#include "Gaffer/OptionalValuePlug.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/SplinePlug.h"
@@ -1024,10 +1025,16 @@ void Shader::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context 
 
 void Shader::parameterHash( const Gaffer::Plug *parameterPlug, IECore::MurmurHash &h ) const
 {
-	const ValuePlug *vplug = IECore::runTimeCast<const ValuePlug>( parameterPlug );
-	if( vplug )
+	if( auto optionalValuePlug = IECore::runTimeCast<const OptionalValuePlug>( parameterPlug ) )
 	{
-		vplug->hash( h );
+		if( optionalValuePlug->enabledPlug()->getValue() )
+		{
+			optionalValuePlug->valuePlug()->hash( h );
+		}
+	}
+	else if( auto valuePlug = IECore::runTimeCast<const ValuePlug>( parameterPlug ) )
+	{
+		valuePlug->hash( h );
 	}
 	else
 	{
@@ -1037,7 +1044,18 @@ void Shader::parameterHash( const Gaffer::Plug *parameterPlug, IECore::MurmurHas
 
 IECore::DataPtr Shader::parameterValue( const Gaffer::Plug *parameterPlug ) const
 {
-	if( const Gaffer::ValuePlug *valuePlug = IECore::runTimeCast<const Gaffer::ValuePlug>( parameterPlug ) )
+	if( auto optionalValuePlug = IECore::runTimeCast<const OptionalValuePlug>( parameterPlug ) )
+	{
+		if( optionalValuePlug->enabledPlug()->getValue() )
+		{
+			return Gaffer::PlugAlgo::getValueAsData( optionalValuePlug->valuePlug() );
+		}
+		else
+		{
+			return nullptr;
+		}
+	}
+	else if( auto valuePlug = IECore::runTimeCast<const Gaffer::ValuePlug>( parameterPlug ) )
 	{
 		return Gaffer::PlugAlgo::getValueAsData( valuePlug );
 	}
