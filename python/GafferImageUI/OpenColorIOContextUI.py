@@ -80,8 +80,6 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"nodule:type", "",
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
-			"layoutPlugValueWidget:orientation", "horizontal",
 
 		],
 
@@ -93,10 +91,6 @@ Gaffer.Metadata.registerNode(
 			to be specified.
 			""",
 
-			"nodule:type", "",
-			"boolPlugValueWidget:displayMode", "switch",
-			"label", "",
-
 		],
 
 		"config.value" : [
@@ -106,9 +100,6 @@ Gaffer.Metadata.registerNode(
 			Specifies the OpenColorIO config to be used.
 			""",
 
-			"nodule:type", "",
-			"label", "",
-			"layout:activator", lambda plug : plug.parent()["enabled"].getValue(),
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 			"presetsPlugValueWidget:allowCustom", True,
 
@@ -127,8 +118,6 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"nodule:type", "",
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
-			"layoutPlugValueWidget:orientation", "horizontal",
 
 		],
 
@@ -140,10 +129,6 @@ Gaffer.Metadata.registerNode(
 			to be specified.
 			""",
 
-			"nodule:type", "",
-			"boolPlugValueWidget:displayMode", "switch",
-			"label", "",
-
 		],
 
 		"workingSpace.value" : [
@@ -153,9 +138,6 @@ Gaffer.Metadata.registerNode(
 			Specifies the working color space to be used.
 			""",
 
-			"nodule:type", "",
-			"label", "",
-			"layout:activator", lambda plug : plug.parent()["enabled"].getValue(),
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 			"presetNames", GafferImageUI.OpenColorIOTransformUI.colorSpacePresetNames,
 			"presetValues", GafferImageUI.OpenColorIOTransformUI.colorSpacePresetValues,
