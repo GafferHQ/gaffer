@@ -114,6 +114,7 @@ IECORE_PUSH_DEFAULT_VISIBILITY
 #include "util/time.h"
 #include "util/types.h"
 #include "util/vector.h"
+#include "util/version.h"
 IECORE_POP_DEFAULT_VISIBILITY
 
 using namespace std;
@@ -728,9 +729,9 @@ class ShaderCache : public IECore::RefCounted
 
 		bool hasOSLShader()
 		{
-			for( ccl::Shader *shader : m_scene->shaders )
+			for( Cache::iterator i = m_cache.begin(); i != m_cache.end(); ++i )
 			{
-				if( IECoreCycles::ShaderNetworkAlgo::hasOSL( shader ) )
+				if( IECoreCycles::ShaderNetworkAlgo::hasOSL( i->second->shader() ) )
 					return true;
 			}
 			return false;
@@ -2428,8 +2429,9 @@ ccl::ShadingSystem nameToShadingSystemEnum( const IECore::InternedString &name )
 	return ccl::ShadingSystem::SHADINGSYSTEM_SVM;
 }
 
-// Default device
+// Device Names
 IECore::InternedString g_defaultDeviceName( "CPU" );
+IECore::InternedString g_multiDeviceName( "MULTI" );
 
 // Core
 IECore::InternedString g_frameOptionName( "frame" );
@@ -2437,7 +2439,27 @@ IECore::InternedString g_cameraOptionName( "camera" );
 IECore::InternedString g_sampleMotionOptionName( "sampleMotion" );
 IECore::InternedString g_deviceOptionName( "cycles:device" );
 IECore::InternedString g_shadingsystemOptionName( "cycles:shadingsystem" );
-IECore::InternedString g_squareSamplesOptionName( "cycles:square_samples" );
+// Device
+IECore::InternedString g_useDeviceFallbackOptionName( "cycles:device:use_fallback" );
+IECore::InternedString g_peerMemoryOptionName( "cycles:device:peer_memory" );
+IECore::InternedString g_useHardwareRTOptionName( "cycles:device:use_hardwarert" );
+IECore::InternedString g_kernelOptimizationLevelOptionName( "cycles:device:kernel_optimization_level" );
+
+IECore::InternedString g_kernelOptimizationLevelOff( "OFF" );
+IECore::InternedString g_kernelOptimizationLevelIntersect( "INTERSECT" );
+IECore::InternedString g_kernelOptimizationLevelFull( "FULL" );
+
+ccl::KernelOptimizationLevel nameToKernelOptimizatioNLevelEnum( const IECore::InternedString &name )
+{
+#define MAP_NAME(enumName, enum) if(name == enumName) return enum;
+	MAP_NAME(g_kernelOptimizationLevelOff, ccl::KERNEL_OPTIMIZATION_LEVEL_OFF);
+	MAP_NAME(g_kernelOptimizationLevelIntersect, ccl::KERNEL_OPTIMIZATION_LEVEL_INTERSECT);
+	MAP_NAME(g_kernelOptimizationLevelFull, ccl::KERNEL_OPTIMIZATION_LEVEL_FULL);
+#undef MAP_NAME
+
+	return ccl::KernelOptimizationLevel::KERNEL_OPTIMIZATION_LEVEL_FULL;
+}
+
 // Logging
 IECore::InternedString g_logLevelOptionName( "cycles:log_level" );
 IECore::InternedString g_progressLevelOptionName( "cycles:progress_level" );
@@ -2533,6 +2555,9 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_cryptomatteDepth( 0 ),
 				m_seed( 0 ),
 				m_useFrameAsSeed( true ),
+				m_useDeviceFallback( false ),
+				m_peerMemory( false ),
+				m_useHardwareRT( false ),
 				m_messageHandler( messageHandler )
 		{
 			// Define internal device names
@@ -2550,6 +2575,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_sessionParams.headless = true;
 				m_sessionParams.background = true;
 				m_sceneParams.bvh_type = ccl::BVH_TYPE_STATIC;
+				m_kernelOptimizationLevel = ccl::KERNEL_OPTIMIZATION_LEVEL_FULL;
 			}
 			else
 			{
@@ -2557,6 +2583,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_sessionParams.background = false;
 				m_sessionParams.use_auto_tile = false;
 				m_sceneParams.bvh_type = ccl::BVH_TYPE_DYNAMIC;
+				m_kernelOptimizationLevel = ccl::KERNEL_OPTIMIZATION_LEVEL_OFF;
 			}
 
 			m_sessionParamsDefault = m_sessionParams;
@@ -2685,7 +2712,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				{
 					m_multiDevices.clear();
 					auto deviceName = data->readable();
-					m_deviceName = "MULTI";
+					std::string lastDeviceName;
 
 					std::vector<std::string> split;
 					if( boost::contains( deviceName, " " ) )
@@ -2705,12 +2732,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 							if( device != m_deviceMap.end() )
 							{
 								m_multiDevices.push_back( device->second );
-
-								if( split.size() == 1 )
-								{
-									m_deviceName = g_defaultDeviceName;
-									break;
-								}
+								lastDeviceName = g_defaultDeviceName;
 								continue;
 							}
 						}
@@ -2722,12 +2744,22 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 							if( _split[1] == "*" )
 							{
+								bool found = false;
 								for( const auto &device : m_deviceMap )
 								{
 									if( deviceType == device.second.type )
 									{
 										m_multiDevices.push_back( device.second );
+										lastDeviceName = device.second.id;
+										found = true;
 									}
+								}
+								if( !found )
+								{
+									IECore::msg(
+										IECore::Msg::Warning, "CyclesRenderer::option",
+										fmt::format( "Cannot find any \"{}\" devices for option \"{}\".", _split[0], name.string() )
+									);
 								}
 							}
 							else
@@ -2736,12 +2768,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 								if( device != m_deviceMap.end() )
 								{
 									m_multiDevices.push_back( device->second );
-
-									if( split.size() == 1 )
-									{
-										m_deviceName = device->second.id;
-										break;
-									}
+									lastDeviceName = device->second.id;
 									continue;
 								}
 								else
@@ -2761,6 +2788,21 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 							);
 						}
 					}
+
+					if( m_multiDevices.size() == 0 )
+					{
+						// For warning or error-reporting
+						m_deviceName = deviceName;
+					}
+					else if( m_multiDevices.size() > 1 )
+					{
+						m_deviceName = g_multiDeviceName;
+					}
+					else
+					{
+						// If only one device was found, make sure we just pick that one device.
+						m_deviceName = lastDeviceName;
+					}
 				}
 				else
 				{
@@ -2772,6 +2814,74 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					}
 					m_deviceName = g_defaultDeviceName;
 					IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", fmt::format( "Unknown value for option \"{}\".", name.string() ) );
+				}
+				return;
+			}
+			else if( name == g_useDeviceFallbackOptionName )
+			{
+				if( m_renderState == RENDERSTATE_RENDERING )
+				{
+					IECore::msg( IECore::Msg::Error, "CyclesRenderer::option", boost::format( "\"%s\" requires a manual render restart." ) % name );
+				}
+
+				if( value == nullptr )
+				{
+					m_useDeviceFallback = false;
+				}
+				else if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
+				{
+					m_useDeviceFallback = data->readable();
+				}
+				return;
+			}
+			else if( name == g_peerMemoryOptionName )
+			{
+				if( m_renderState == RENDERSTATE_RENDERING )
+				{
+					IECore::msg( IECore::Msg::Error, "CyclesRenderer::option", boost::format( "\"%s\" requires a manual render restart." ) % name );
+				}
+
+				if( value == nullptr )
+				{
+					m_peerMemory = false;
+				}
+				else if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
+				{
+					m_peerMemory = data->readable();
+				}
+				return;
+			}
+			else if( name == g_useHardwareRTOptionName )
+			{
+				if( m_renderState == RENDERSTATE_RENDERING )
+				{
+					IECore::msg( IECore::Msg::Error, "CyclesRenderer::option", boost::format( "\"%s\" requires a manual render restart." ) % name );
+				}
+
+				if( value == nullptr )
+				{
+					m_useHardwareRT = false;
+				}
+				else if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
+				{
+					m_useHardwareRT = data->readable();
+				}
+				return;
+			}
+			else if( name == g_kernelOptimizationLevelOptionName )
+			{
+				if( m_renderState == RENDERSTATE_RENDERING )
+				{
+					IECore::msg( IECore::Msg::Error, "CyclesRenderer::option", boost::format( "\"%s\" requires a manual render restart." ) % name );
+				}
+
+				if( value == nullptr )
+				{
+					m_kernelOptimizationLevel = m_renderType != Interactive ? ccl::KERNEL_OPTIMIZATION_LEVEL_FULL : ccl::KERNEL_OPTIMIZATION_LEVEL_OFF;
+				}
+				else if ( const StringData *data = reportedCast<const StringData>( value, "option", name ) )
+				{
+					m_kernelOptimizationLevel = nameToKernelOptimizatioNLevelEnum( data->readable() );
 				}
 				return;
 			}
@@ -3206,6 +3316,12 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 
 			{
+				// If the requested device wasn't found & we don't have device fallback to CPU, error out.
+				if( !m_deviceAvailable )
+				{
+					return;
+				}
+
 				std::scoped_lock sceneLock( m_scene->mutex );
 				if( m_renderState == RENDERSTATE_RENDERING && m_renderType == Interactive )
 				{
@@ -3275,7 +3391,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			ccl::DeviceType deviceTypeFallback = ccl::DEVICE_CPU;
 			ccl::DeviceInfo deviceFallback;
 
-			bool deviceAvailable = false;
+			m_deviceAvailable = false;
+
 			for( const ccl::DeviceInfo& device : IECoreCycles::devices() )
 			{
 				if( deviceTypeFallback == device.type )
@@ -3285,16 +3402,44 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				}
 			}
 
-			if( m_multiDevices.size() == 0 )
+			// Set GPU-specific options
+			for( ccl::DeviceInfo& device : IECoreCycles::devices() )
 			{
-				m_deviceName = g_defaultDeviceName;
+				if( device.type == ccl::DEVICE_CUDA || device.type == ccl::DEVICE_OPTIX )
+				{
+					device.has_peer_memory = m_peerMemory;
+				}
+				else if( device.type == ccl::DEVICE_METAL )
+				{
+					device.has_peer_memory = m_peerMemory;
+#if CYCLES_VERSION_MAJOR == 3 && CYCLES_VERSION_MINOR < 6
+					device.use_metalrt = m_useHardwareRT;
+#else
+					device.use_hardware_raytracing = m_useHardwareRT;
+#endif
+					// This seems to only be for Metal currently
+					device.kernel_optimization_level = m_renderType != Interactive ? m_kernelOptimizationLevel : ccl::KERNEL_OPTIMIZATION_LEVEL_OFF;
+				}
+				else if( device.type == ccl::DEVICE_HIP || device.type == ccl::DEVICE_ONEAPI )
+				{
+					device.has_peer_memory = m_peerMemory;
+#if !( CYCLES_VERSION_MAJOR == 3 && CYCLES_VERSION_MINOR < 6 )
+					device.use_hardware_raytracing = m_useHardwareRT;
+#endif
+				}
 			}
 
-			if( m_deviceName == "MULTI" )
+			if( m_deviceName == g_multiDeviceName.c_str() )
 			{
 				ccl::DeviceInfo multidevice = ccl::Device::get_multi_device( m_multiDevices, m_sessionParams.threads, m_sessionParams.background );
 				m_sessionParams.device = multidevice;
-				deviceAvailable = true;
+				m_deviceAvailable = true;
+				vector<string> deviceList;
+				for( const ccl::DeviceInfo& device : m_multiDevices )
+				{
+					deviceList.push_back( device.id );
+				}
+				IECore::msg( IECore::Msg::Info, "CyclesRenderer", fmt::format( "Using the following devices in multi-device mode: \"{}\".", fmt::join( deviceList, ", " ) ) );
 			}
 			else
 			{
@@ -3303,22 +3448,40 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					if( m_deviceName ==  device.id )
 					{
 						m_sessionParams.device = device;
-						deviceAvailable = true;
+						m_deviceAvailable = true;
+						IECore::msg( IECore::Msg::Info, "CyclesRenderer", fmt::format( "Using device: \"{}\".", device.id ) );
 						break;
 					}
 				}
 			}
 
-			if( !deviceAvailable )
+			if( !m_deviceAvailable )
 			{
-				IECore::msg( IECore::Msg::Warning, "CyclesRenderer", fmt::format( "Cannot find the device \"{}\" requested, reverting to CPU.", m_deviceName ) );
-				m_sessionParams.device = deviceFallback;
+				if( m_useDeviceFallback )
+				{
+					IECore::msg( IECore::Msg::Warning, "CyclesRenderer", fmt::format( "Cannot find the device \"{}\" requested, reverting to CPU.", m_deviceName ) );
+					m_sessionParams.device = deviceFallback;
+					m_deviceAvailable = true;
+				}
+				else
+				{
+					IECore::msg( IECore::Msg::Error, "CyclesRenderer", fmt::format( "Cannot find the device \"{}\" requested.", m_deviceName ) );
+				}
 			}
 
-			if( m_sessionParams.device.type != ccl::DEVICE_CPU && m_sessionParams.shadingsystem == ccl::SHADINGSYSTEM_OSL )
+			if( !m_sessionParams.device.has_osl && m_sessionParams.shadingsystem == ccl::SHADINGSYSTEM_OSL )
 			{
-				IECore::msg( IECore::Msg::Warning, "CyclesRenderer", "Shading system set to OSL, reverting to CPU." );
-				m_sessionParams.device = deviceFallback;
+				if( m_useDeviceFallback )
+				{
+					IECore::msg( IECore::Msg::Warning, "CyclesRenderer", "Shading system is set to OSL but the device doesn't support it, reverting to CPU." );
+					m_sessionParams.device = deviceFallback;
+					m_deviceAvailable = true;
+				}
+				else
+				{
+					IECore::msg( IECore::Msg::Error, "CyclesRenderer", "Shading system is set to OSL but the device doesn't support it." );
+					m_deviceAvailable = false;
+				}
 			}
 
 			if( m_session )
@@ -3833,6 +3996,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			int indexHIP = 0;
 			int indexOptiX = 0;
 			int indexMetal = 0;
+			int indexOneAPI = 0;
 			for( const ccl::DeviceInfo &device : IECoreCycles::devices() )
 			{
 				if( device.type == ccl::DEVICE_CPU )
@@ -3867,6 +4031,13 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					auto optionName = fmt::format( "METAL:{:02}", indexMetal );
 					m_deviceMap[optionName] = device;
 					++indexMetal;
+					continue;
+				}
+				if( device.type == ccl::DEVICE_ONEAPI )
+				{
+					auto optionName = fmt::format( "ONEAPI:{:02}", indexOneAPI );
+					m_deviceMap[optionName] = device;
+					++indexOneAPI;
 					continue;
 				}
 			}
@@ -3917,6 +4088,13 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		int m_cryptomatteDepth;
 		int m_seed;
 		bool m_useFrameAsSeed;
+
+		// GPU Device options
+		bool m_useDeviceFallback;
+		bool m_peerMemory;
+		bool m_useHardwareRT;
+		ccl::KernelOptimizationLevel m_kernelOptimizationLevel;
+		bool m_deviceAvailable;
 
 		// Logging
 		IECore::MessageHandlerPtr m_messageHandler;

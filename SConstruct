@@ -1304,7 +1304,7 @@ libraries = {
 				"IECoreScene$CORTEX_LIB_SUFFIX", "IECoreImage$CORTEX_LIB_SUFFIX", "IECoreVDB$CORTEX_LIB_SUFFIX",
 				"Gaffer", "GafferScene", "GafferDispatch", "GafferOSL",
 				"cycles_session", "cycles_scene", "cycles_graph", "cycles_bvh", "cycles_device", "cycles_kernel", "cycles_kernel_osl",
-				"cycles_integrator", "cycles_util", "cycles_subd", "extern_sky",
+				"cycles_integrator", "cycles_util", "cycles_subd", "extern_sky", "extern_cuew", "extern_hipew",
 				"OpenImageIO$OIIO_LIB_SUFFIX", "OpenImageIO_Util$OIIO_LIB_SUFFIX", "oslexec$OSL_LIB_SUFFIX", "oslquery$OSL_LIB_SUFFIX",
 				"openvdb$VDB_LIB_SUFFIX", "Alembic", "osdCPU", "OpenColorIO$OCIO_LIB_SUFFIX", "embree3", "Iex", "openpgl",
 			],
@@ -1322,7 +1322,7 @@ libraries = {
 			"LIBS" : [
 				"Gaffer", "GafferScene", "GafferDispatch", "GafferBindings", "GafferCycles",
 				"cycles_session", "cycles_scene", "cycles_graph", "cycles_bvh", "cycles_device", "cycles_kernel", "cycles_kernel_osl",
-				"cycles_integrator", "cycles_util", "cycles_subd", "extern_sky",
+				"cycles_integrator", "cycles_util", "cycles_subd", "extern_sky", "extern_cuew", "extern_hipew",
 				"OpenImageIO$OIIO_LIB_SUFFIX", "OpenImageIO_Util$OIIO_LIB_SUFFIX", "oslexec$OSL_LIB_SUFFIX", "openvdb$VDB_LIB_SUFFIX",
 				"oslquery$OSL_LIB_SUFFIX", "Alembic", "osdCPU", "OpenColorIO$OCIO_LIB_SUFFIX", "embree3", "Iex", "openpgl",
 			],
@@ -1462,6 +1462,15 @@ for library in ( "GafferUI", ) :
 	addQtLibrary( library, "Test" )
 	addQtLibrary( library, "Widgets" )
 
+# Add required libraries for Linux
+
+if env["PLATFORM"] != "win32" and env["PLATFORM"] != "darwin" :
+
+	for library in ( "GafferCycles", ) :
+
+		libraries[library].setdefault( "envAppends", {} )
+		libraries[library]["envAppends"].setdefault( "LIBS", [] ).extend( [ "dl" ] )
+
 # Add required libraries for Windows
 
 if env["PLATFORM"] == "win32" :
@@ -1470,6 +1479,13 @@ if env["PLATFORM"] == "win32" :
 
 		libraries[library].setdefault( "envAppends", {} )
 		libraries[library]["envAppends"].setdefault( "LIBS", [] ).extend( [ "Advapi32" ] )
+	
+	for library in ( "GafferCycles", ) :
+
+		libraries[library].setdefault( "envAppends", {} )
+		libraries[library]["envAppends"].setdefault( "LIBS", [] ).extend( [ "Advapi32", "Version" ] )
+		libraries[library].setdefault( "pythonEnvAppends", {} )
+		libraries[library]["pythonEnvAppends"].setdefault( "LIBS", [] ).extend( [ "Advapi32", "Version" ] )
 
 # Optionally add vTune requirements
 

@@ -6,6 +6,11 @@ Features
 
 - USDShader : Added a node for loading shaders from USD's `SdrRegistry`. This includes shaders such as `UsdPreviewSurface` and `UsdUVTexture`, which are now available in the `USD/Shader` section of the node menu.
 
+Improvements
+------------
+
+- Cycles : Improved GPU support when Cycles is compiled with GPU devices.
+
 Fixes
 -----
 
