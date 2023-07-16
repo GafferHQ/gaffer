@@ -1128,7 +1128,7 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( self.__colorAtUV( image, imath.V2f( 0.48, 0.5 ) ), imath.Color4f( 1, 0, 0, 1 ) )
 		self.assertEqual( self.__colorAtUV( image, imath.V2f( 0.52, 0.5 ) ), imath.Color4f( 0, 1, 0, 1 ) )
 
-	def __colorAtUV( self, image, uv, channelName = "" ) :
+	def __colorAtUV( self, image, uv, channelName = "", alpha = True ) :
 
 		dimensions = image.dataWindow.size() + imath.V2i( 1 )
 
@@ -1140,7 +1140,11 @@ class RendererTest( GafferTest.TestCase ) :
 		if c != "":
 			c = "%s." % channelName
 
-		return imath.Color4f( image[c+"R"][i], image[c+"G"][i], image[c+"B"][i], image[c+"A"][i] )
+		a = 1
+		if alpha:
+			a = image[c+"A"][i]
+
+		return imath.Color4f( image[c+"R"][i], image[c+"G"][i], image[c+"B"][i], a )
 
 	def __testCustomAttributeType( self, primitive, prefix, customAttribute, outputPlug, data, expectedResult, maxDifference = 0.0 ) :
 
@@ -1822,6 +1826,87 @@ class RendererTest( GafferTest.TestCase ) :
 			mh.messages[0].message,
 			"Unsupported socket type `transform` for socket `ob_tfm` on node .*"
 		)
+
+	def testBackgroundLightgroup( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		renderer.output(
+			"testOutput",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testOutput",
+				}
+			)
+		)
+
+		renderer.output(
+			"testEnvOutput",
+			IECoreScene.Output(
+				"env",
+				"ieDisplay",
+				"lg env",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testEnvOutput",
+				}
+			)
+		)
+
+		renderer.light(
+			"/light",
+			None,
+			renderer.attributes( IECore.CompoundObject ( {
+				"cycles:light" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader( "background_light", "cycles:light", { "color" : imath.Color3f( 0, 1, 0 ), "lightgroup" : "env" } ),
+					},
+					output = "output",
+				),
+			} ) )
+		)
+
+		plane = renderer.object(
+			"/plane",
+			IECoreScene.MeshPrimitive.createPlane(
+				imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ),
+			),
+			renderer.attributes( IECore.CompoundObject ( {
+				"cycles:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader(
+							"principled_bsdf", "cycles:shader",
+							{ "base_color" : imath.Color3f( 1, 1, 1 ) }
+						),
+					},
+					output = "output",
+				)
+			} ) )
+		)
+		## \todo Default camera is facing down +ve Z but should be facing
+		# down -ve Z.
+		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
+
+		renderer.render()
+		time.sleep( 2 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testEnvOutput" )
+		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+
+		# Slightly off-centre, to avoid triangle edge artifact in centre of image.
+		testPixel = self.__colorAtUV( image, imath.V2f( 0.55 ), "env", False )
+		self.assertEqual( testPixel.r, 0 )
+		self.assertGreater( testPixel.g, 0.99 )
+		self.assertEqual( testPixel.b, 0 )
+
+		del plane
 
 if __name__ == "__main__":
 	unittest.main()

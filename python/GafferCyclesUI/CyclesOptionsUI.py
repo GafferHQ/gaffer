@@ -302,6 +302,9 @@ def __backgroundSummary( plug ) :
 	if plug["bgTransparentRoughnessThreshold"]["enabled"].getValue() :
 		info.append( "Roughness Threshold {}".format( plug["bgTransparentRoughnessThreshold"]["value"].getValue() ) )
 
+	if plug["bgLightgroup"]["enabled"].getValue() :
+		info.append( "Lightgroup {}".format( plug["bgLightgroup"]["value"].getValue() ) )
+
 	for childName in ( "Camera", "Diffuse", "Glossy", "Transmission", "Shadow", "Scatter" ) :
 		if plug["bg" + childName + "Visibility"]["enabled"].getValue() :
 			info.append( IECore.CamelCase.toSpaced( childName ) + ( " On" if plug["bg" + childName + "Visibility"]["value"].getValue() else " Off" ) )
@@ -1306,6 +1309,20 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Background",
 			"label", "Scatter Visible",
+
+		],
+
+		"options.bgLightgroup" : [
+
+			"description",
+			"""
+			The background lightgroup name. This will only be set if a
+			CyclesBackground is used instead of a background light,
+			otherwise it will use the lightgroup name from the light itself.
+			""",
+
+			"layout:section", "Background",
+			"label", "Lightgroup",
 
 		],
 

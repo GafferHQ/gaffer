@@ -5,6 +5,7 @@ Fixes
 -----
 
 - DisplayTransform : Fixed missing `view` presets when `display` is at the default value (#5392).
+- Cycles : The background light's lightgroup is now being set correctly as well as adding a way to set a lightgroup from CyclesOptions when a CyclesBackground is being used instead.
 
 1.3.0.0 (relative to 1.2.10.0)
 =======
