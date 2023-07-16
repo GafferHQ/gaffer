@@ -144,6 +144,8 @@ CyclesOptions::CyclesOptions( const std::string &name )
 
 	options->addChild( new Gaffer::NameValuePlug( "cycles:background:volume_step_size", new IECore::FloatData( 0.1f ), false, "volumeStepSize" ) );
 
+	options->addChild( new Gaffer::NameValuePlug( "cycles:background:lightgroup", new IECore::StringData( "" ), false, "bgLightgroup" ) );
+
 	// Film
 	options->addChild( new Gaffer::NameValuePlug( "cycles:film:exposure", new IECore::FloatData( 1.0f ), false, "exposure" ) );
 	options->addChild( new Gaffer::NameValuePlug( "cycles:film:pass_alpha_threshold", new IECore::FloatData( 0.5f ), false, "passAlphaThreshold" ) );
