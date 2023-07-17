@@ -636,7 +636,7 @@ class ArnoldOutput : public IECore::RefCounted
 						m_data = m_lpeName;
 						m_type = colorType;
 					}
-					else if( tokens[0] == "float" || tokens[0] == "int" || tokens[0] == "uint" )
+					else if( tokens[0] == "float" || tokens[0] == "int" || tokens[0] == "uint" || tokens[0] == "vector" )
 					{
 						// Cortex convention is `<type> <name>`. Arnold
 						// convention is `<name> <TYPE>`.
