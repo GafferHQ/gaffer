@@ -4,8 +4,11 @@
 Fixes
 -----
 
+- Viewer : Fixed visualisation of shaping cones for UsdLux lights, which were previously drawn at half the correct angle.
 - DisplayTransform : Fixed missing `view` presets when `display` is at the default value (#5392).
-- Arnold : Fixed translation of `vector` typed outputs defined as `vector <name>` in an output definition.
+- Arnold
+  - Fixed translation of `vector` typed outputs defined as `vector <name>` in an output definition.
+  - Fixed translation of `shadow:enable` and `shadow:color` parameters on UsdLux lights, which were previously ignored.
 
 1.3.0.0 (relative to 1.2.10.0)
 =======
@@ -226,7 +229,10 @@ Build
 Fixes
 -----
 
-- Arnold : Fixed translation of `vector` typed outputs defined as `vector <name>` in an output definition.
+- Viewer : Fixed visualisation of shaping cones for UsdLux lights, which were previously drawn at half the correct angle.
+- Arnold
+  - Fixed translation of `vector` typed outputs defined as `vector <name>` in an output definition.
+  - Fixed translation of `shadow:enable` and `shadow:color` parameters on UsdLux lights, which were previously ignored.
 
 1.2.10.0 (relative to 1.2.9.0)
 ========

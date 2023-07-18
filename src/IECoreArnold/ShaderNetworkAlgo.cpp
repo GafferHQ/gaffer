@@ -572,6 +572,7 @@ const InternedString g_biasParameter( "bias" );
 const InternedString g_bParameter( "b" );
 const InternedString g_baseColorParameter( "base_color" );
 const InternedString g_bottomParameter( "bottom" );
+const InternedString g_castShadowsParameter( "cast_shadows" );
 const InternedString g_clearcoatParameter( "clearcoat" );
 const InternedString g_clearcoatRoughnessParameter( "clearcoatRoughness" );
 const InternedString g_coatParameter( "coat" );
@@ -623,6 +624,9 @@ const InternedString g_roughnessParameter( "roughness" );
 const InternedString g_rotationParameter( "rotation" );
 const InternedString g_scaleParameter( "scale" );
 const InternedString g_shadeModeParameter( "shade_mode" );
+const InternedString g_shadowEnableParameter( "shadow:enable" );
+const InternedString g_shadowColorParameter( "shadow:color" );
+const InternedString g_shadowColorArnoldParameter( "shadow_color" );
 const InternedString g_shapingConeAngleParameter( "shaping:cone:angle" );
 const InternedString g_shapingConeSoftnessParameter( "shaping:cone:softness" );
 const InternedString g_shapingSoftnessParameter( "shaping:softness" );
@@ -665,6 +669,9 @@ void transferUSDLightParameters( ShaderNetwork *network, InternedString shaderHa
 	transferUSDParameter( network, shaderHandle, usdShader, g_intensityParameter, shader, g_intensityParameter, 1.0f );
 	transferUSDParameter( network, shaderHandle, usdShader, g_normalizeParameter, shader, g_normalizeParameter, false );
 	transferUSDParameter( network, shaderHandle, usdShader, g_specularParameter, shader, g_specularParameter, 1.0f );
+
+	transferUSDParameter( network, shaderHandle, usdShader, g_shadowEnableParameter, shader, g_castShadowsParameter, true );
+	transferUSDParameter( network, shaderHandle, usdShader, g_shadowColorParameter, shader, g_shadowColorArnoldParameter, Color3f( 0 ) );
 }
 
 void transferUSDShapingParameters( ShaderNetwork *network, InternedString shaderHandle, const Shader *usdShader, Shader *shader )
