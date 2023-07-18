@@ -5,11 +5,19 @@
 1.3.x.x (relative to 1.3.0.0)
 =======
 
+Features
+--------
+
+- USDShader : Added a node for loading shaders from USD's `SdrRegistry`. This includes shaders such as `UsdPreviewSurface` and `UsdUVTexture`, which are now available in the `USD/Shader` section of the node menu.
+
 Fixes
 -----
 
+- Viewer : Fixed visualisation of shaping cones for UsdLux lights, which were previously drawn at half the correct angle.
 - DisplayTransform : Fixed missing `view` presets when `display` is at the default value (#5392).
-- Arnold : Fixed translation of `vector` typed outputs defined as `vector <name>` in an output definition.
+- Arnold
+  - Fixed translation of `vector` typed outputs defined as `vector <name>` in an output definition.
+  - Fixed translation of `shadow:enable` and `shadow:color` parameters on UsdLux lights, which were previously ignored.
 
 1.3.0.0 (relative to 1.2.10.0)
 =======
@@ -230,7 +238,10 @@ Build
 Fixes
 -----
 
-- Arnold : Fixed translation of `vector` typed outputs defined as `vector <name>` in an output definition.
+- Viewer : Fixed visualisation of shaping cones for UsdLux lights, which were previously drawn at half the correct angle.
+- Arnold
+  - Fixed translation of `vector` typed outputs defined as `vector <name>` in an output definition.
+  - Fixed translation of `shadow:enable` and `shadow:color` parameters on UsdLux lights, which were previously ignored.
 
 1.2.10.0 (relative to 1.2.9.0)
 ========

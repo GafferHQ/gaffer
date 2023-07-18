@@ -790,6 +790,8 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 				"diffuse" : 1.0,
 				"specular" : 1.0,
 				"normalize" : False,
+				"cast_shadows" : True,
+				"shadow_color" : imath.Color3f( 0 ),
 			}
 			result.update( parameters )
 			return result
@@ -1033,20 +1035,44 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 
 			],
 
+			# SphereLight with ShadowAPI parameters.
+
+			"shadowAPI" : [
+
+				IECoreScene.Shader(
+					"SphereLight", "light",
+					{
+						"shadow:enable" : False,
+						"shadow:color" : imath.V3f( 1, 0, 0 ),
+					}
+				),
+
+				IECoreScene.Shader(
+					"point_light", "light",
+					expectedLightParameters( {
+						"radius" : 0.5,
+						"cast_shadows" : False,
+						"shadow_color" : imath.Color3f( 1, 0, 0 ),
+					} )
+				),
+
+			],
 
 		}.items() :
 
-			network = IECoreScene.ShaderNetwork(
-				shaders = {
-					"light" : shaders[0],
-				},
-				output = "light",
-			)
+			with self.subTest( testName = testName ) :
 
-			IECoreArnold.ShaderNetworkAlgo.convertUSDShaders( network )
+				network = IECoreScene.ShaderNetwork(
+					shaders = {
+						"light" : shaders[0],
+					},
+					output = "light",
+				)
 
-			light = network.getShader( "light" )
-			self.__assertShadersEqual( network.getShader( "light" ), shaders[1], "Testing {}".format( testName ) )
+				IECoreArnold.ShaderNetworkAlgo.convertUSDShaders( network )
+
+				light = network.getShader( "light" )
+				self.__assertShadersEqual( network.getShader( "light" ), shaders[1], "Testing {}".format( testName ) )
 
 	def testConvertUSDRectLightTexture( self ) :
 
