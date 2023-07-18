@@ -998,6 +998,9 @@ void transferUSDTextureFile( ShaderNetwork *network, InternedString shaderHandle
 			IECore::msg( IECore::Msg::Warning, "convertUSDShaders", fmt::format( "Unsupported value \"{}\" for DomeLight.format", format ) );
 			format = "equirectangular";
 		}
+		/// \todo We're missing a 90 degree rotation about Y here, which we could easily
+		// add as a `tex_mapping.rotation` parameter value. Except that it would get clobbered
+		// by `ShaderCache::updateShaders()` in `Renderer.cpp` - see additional comments there.
 		imageShader->parameters()[g_projectionParameter] = new StringData( format );
 		imageShader->parameters()[g_texMappingScaleParameter] = new V3fData( V3f( -1.0f, 1.0f, 1.0f ) );
 		imageShader->parameters()[g_texMappingYMappingParameter] = new StringData( "z" );
@@ -1096,6 +1099,13 @@ void IECoreCycles::ShaderNetworkAlgo::convertUSDShaders( ShaderNetwork *shaderNe
 			newShader = new Shader( "background_light", "cycles:light" );
 			transferUSDLightParameters( shaderNetwork, handle, shader.get(), newShader.get() );
 			transferUSDTextureFile( shaderNetwork, handle, shader.get(), newShader.get() );
+			/// \todo This brings performance into line with a default-created `background_light`
+			/// using the CyclesLight node, which will define a resolution of 1024 to override
+			/// the auto-resolution-from-map behaviour of Cycles. If we don't do this, viewer
+			/// update gets very choppy when using high resolution maps. I suspect this may
+			/// indicate a problem whereby we are causing Cycles to rebuild importance maps
+			/// unnecessarily when moving the free camera.
+			newShader->parameters()["map_resolution"] = new IntData( 1024 );
 		}
 		else if( shader->getName() == "RectLight" )
 		{

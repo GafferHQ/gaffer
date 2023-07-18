@@ -821,7 +821,15 @@ class ShaderCache : public IECore::RefCounted
 			}
 			m_shaderAssignPairs.clear();
 
-			// TODO: Optimise
+			/// \todo There are several problems here :
+			///
+			/// - We're clobbering the `tex_mapping.rotation` parameter, which is exposed to users
+			///   but now has no effect for them. This also prevents us getting the orientation of USD
+			///   DomeLights correct - see ShaderNetworkAlgo.
+			/// - We're iterating through all N lights just to find the background light, and we're
+			///   doing it even when the transform hasn't changed. Can't we just do this in `CyclesLight::transform()`?
+			/// - The light shader was created via `ShaderCache::get()`, and could therefore be shared
+			///   between several lights, so we're not at liberty to clobber the shader anyway.
 			for( ccl::Light *light : m_scene->lights )
 			{
 				if( light->get_light_type() == ccl::LIGHT_BACKGROUND )
