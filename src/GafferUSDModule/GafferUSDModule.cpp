@@ -38,6 +38,7 @@
 
 #include "GafferUSD/USDAttributes.h"
 #include "GafferUSD/USDLayerWriter.h"
+#include "GafferUSD/USDShader.h"
 
 #include "GafferDispatchBindings/TaskNodeBinding.h"
 
@@ -48,6 +49,7 @@ BOOST_PYTHON_MODULE( _GafferUSD )
 {
 
 	GafferBindings::DependencyNodeClass<USDAttributes>();
+	GafferBindings::DependencyNodeClass<USDShader>();
 	GafferDispatchBindings::TaskNodeClass<USDLayerWriter>();
 
 }

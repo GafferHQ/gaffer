@@ -1,6 +1,11 @@
 1.3.x.x (relative to 1.3.0.0)
 =======
 
+Features
+--------
+
+- USDShader : Added a node for loading shaders from USD's `SdrRegistry`. This includes shaders such as `UsdPreviewSurface` and `UsdUVTexture`, which are now available in the `USD/Shader` section of the node menu.
+
 Fixes
 -----
 

@@ -514,6 +514,28 @@ nodeMenu.append( "/VDB/Volume Scatter", GafferVDB.VolumeScatter, searchText = "V
 import GafferUSD
 import GafferUSDUI
 
+def __usdShaderCreator( shaderName ) :
+
+	node = GafferUSD.USDShader( name = shaderName )
+	node.loadShader( shaderName )
+	return node
+
+for menuPath, shader in [
+	[ "Preview Surface", "UsdPreviewSurface" ],
+	[ "UV Texture", "UsdUVTexture" ],
+	[ "Transform 2D", "UsdTransform2d" ],
+	[ "Primvar Reader/Int", "UsdPrimvarReader_int" ],
+	[ "Primvar Reader/Float", "UsdPrimvarReader_float" ],
+	[ "Primvar Reader/Float2", "UsdPrimvarReader_float2" ],
+	[ "Primvar Reader/Float3", "UsdPrimvarReader_float3" ],
+	[ "Primvar Reader/Float4", "UsdPrimvarReader_float4" ],
+	[ "Primvar Reader/String", "UsdPrimvarReader_string" ],
+	[ "Primvar Reader/Point", "UsdPrimvarReader_point" ],
+	[ "Primvar Reader/Vector", "UsdPrimvarReader_vector" ],
+	[ "Primvar Reader/Normal", "UsdPrimvarReader_normal" ],
+] :
+	nodeMenu.append( "/USD/Shader/{}".format( menuPath ), functools.partial( __usdShaderCreator, shader ), searchText = shader )
+
 nodeMenu.append( "/USD/Attributes", GafferUSD.USDAttributes, searchText = "USDAttributes" )
 nodeMenu.append( "/USD/Layer Writer", GafferUSD.USDLayerWriter, searchText = "USDLayerWriter" )
 
