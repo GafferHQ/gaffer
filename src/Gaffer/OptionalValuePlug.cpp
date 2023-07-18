@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2023, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,35 +34,42 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferSceneTest/TestShader.h"
-
-#include "Gaffer/CompoundNumericPlug.h"
 #include "Gaffer/OptionalValuePlug.h"
-#include "Gaffer/StringPlug.h"
-#include "Gaffer/SplinePlug.h"
 
+using namespace Imath;
 using namespace IECore;
 using namespace Gaffer;
-using namespace GafferSceneTest;
 
-GAFFER_NODE_DEFINE_TYPE( TestShader )
+GAFFER_PLUG_DEFINE_TYPE( OptionalValuePlug );
 
-TestShader::TestShader( const std::string &name )
-	:	Shader( name )
+OptionalValuePlug::OptionalValuePlug( IECore::InternedString name, const Gaffer::ValuePlugPtr &valuePlug, bool enabledPlugDefaultValue, Direction direction, unsigned flags )
+	:	ValuePlug( name, direction, flags )
 {
-	// The base class expects us to serialise a `loadShader()`
-	// call to set the values for these, but we just represent
-	// a fixed shader. Turn serialisation back on.
-	namePlug()->setFlags( Plug::Serialisable, true );
-	typePlug()->setFlags( Plug::Serialisable, true );
-
-	addChild( new Color3fPlug( "out", Plug::Out ) );
-	parametersPlug()->addChild( new IntPlug( "i" ) );
-	parametersPlug()->addChild( new Color3fPlug( "c" ) );
-	parametersPlug()->addChild( new SplinefColor3fPlug( "spline" ) );
-	parametersPlug()->addChild( new OptionalValuePlug( "optionalString", new Gaffer::StringPlug() ) );
+	addChild( new BoolPlug( "enabled", direction, enabledPlugDefaultValue ) );
+	setChild( "value", valuePlug );
 }
 
-TestShader::~TestShader()
+Gaffer::BoolPlug *OptionalValuePlug::enabledPlug()
 {
+	return getChild<BoolPlug>( 0 );
+}
+
+const Gaffer::BoolPlug *OptionalValuePlug::enabledPlug() const
+{
+	return getChild<BoolPlug>( 0 );
+}
+
+bool OptionalValuePlug::acceptsChild( const Gaffer::GraphComponent *potentialChild ) const
+{
+	return ValuePlug::acceptsChild( potentialChild ) && children().size() < 2;
+}
+
+PlugPtr OptionalValuePlug::createCounterpart( const std::string &name, Direction direction ) const
+{
+	ValuePlugPtr valueCounterpart = boost::static_pointer_cast<ValuePlug>(
+		valuePlug()->createCounterpart( "value", direction )
+	);
+	return new OptionalValuePlug(
+		name, valueCounterpart, enabledPlug()->defaultValue(), direction, getFlags()
+	);
 }

@@ -274,6 +274,7 @@ from .BackgroundTaskDialogue import BackgroundTaskDialogue
 from . import AnnotationsUI
 from .TweakPlugValueWidget import TweakPlugValueWidget
 from .PlugPopup import PlugPopup
+from .OptionalValuePlugValueWidget import OptionalValuePlugValueWidget
 
 # and then specific node uis
 

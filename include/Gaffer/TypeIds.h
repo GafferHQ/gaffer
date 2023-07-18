@@ -150,6 +150,7 @@ enum TypeId
 	ContextVariableTweaksTypeId = 110104,
 	HiddenFilePathFilterTypeId = 110105,
 	Color4fVectorDataPlugTypeId = 110106,
+	OptionalValuePlugTypeId = 110107,
 
 	LastTypeId = 110159,
 

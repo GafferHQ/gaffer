@@ -55,6 +55,7 @@
 #include "NodeAlgoBinding.h"
 #include "NodeBinding.h"
 #include "NumericPlugBinding.h"
+#include "OptionalValuePlugBinding.h"
 #include "ParallelAlgoBinding.h"
 #include "PathBinding.h"
 #include "PathFilterBinding.h"
@@ -245,6 +246,7 @@ BOOST_PYTHON_MODULE( _Gaffer )
 	bindShuffles();
 	bindMessages();
 	bindTweakPlugs();
+	bindOptionalValuePlug();
 
 	NodeClass<Backdrop>();
 
