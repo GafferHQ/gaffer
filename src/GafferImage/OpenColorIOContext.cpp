@@ -37,6 +37,7 @@
 #include "GafferImage/OpenColorIOContext.h"
 
 #include "Gaffer/Context.h"
+#include "Gaffer/OptionalValuePlug.h"
 
 #include "OpenColorIO/OpenColorIO.h"
 
@@ -54,15 +55,8 @@ OpenColorIOContext::OpenColorIOContext( const std::string &name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
-	/// \todo Would it be useful to have an OptionalPlug type,
-	/// like NameValuePlug, but without the name?
-	addChild( new ValuePlug( "config" ) );
-	configPlug()->addChild( new BoolPlug( "enabled", Plug::In, false ) );
-	configPlug()->addChild( new StringPlug( "value" ) );
-
-	addChild( new ValuePlug( "workingSpace" ) );
-	workingSpacePlug()->addChild( new BoolPlug( "enabled", Plug::In, false ) );
-	workingSpacePlug()->addChild( new StringPlug( "value", Plug::In, OCIO_NAMESPACE::ROLE_SCENE_LINEAR ) );
+	addChild( new OptionalValuePlug( "config", new StringPlug( "value" ) ) );
+	addChild( new OptionalValuePlug( "workingSpace", new StringPlug( "value", Plug::In, OCIO_NAMESPACE::ROLE_SCENE_LINEAR ) ) );
 
 	addChild( new ValuePlug( "variables" ) );
 	addChild( new AtomicCompoundDataPlug( "extraVariables", Plug::In, new IECore::CompoundData ) );

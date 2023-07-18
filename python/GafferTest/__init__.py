@@ -156,6 +156,7 @@ from .ContextQueryTest import ContextQueryTest
 from .TweakPlugTest import TweakPlugTest
 from .HiddenFilePathFilterTest import HiddenFilePathFilterTest
 from .ContextVariableTweaksTest import ContextVariableTweaksTest
+from .OptionalValuePlugTest import OptionalValuePlugTest
 
 from .IECorePreviewTest import *
 

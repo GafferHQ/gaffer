@@ -56,6 +56,8 @@ class GAFFERIMAGE_API OpenColorIOContext : public Gaffer::ContextProcessor
 		explicit OpenColorIOContext( const std::string &name=GraphComponent::defaultName<OpenColorIOContext>() );
 		~OpenColorIOContext() override;
 
+		/// \todo Return OptionalValuePlug, and remove `configEnabledPlug()` and
+		/// `configValuePlug()` methods. Do the same for `workingSpace` plugs.
 		Gaffer::ValuePlug *configPlug();
 		const Gaffer::ValuePlug *configPlug() const;
 
