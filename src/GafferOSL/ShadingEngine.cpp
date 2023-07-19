@@ -1460,59 +1460,63 @@ IECore::CompoundDataPtr executeShade( const ExecuteShadeParameters &params, cons
 	// Allocate data for the result
 	ShadingResults results( params.numPoints );
 
-	// Iterate over the input points, doing the shading as we go
-	auto f = [&params, &renderState, &shaderGroup, &shadingSystem, &results]( const tbb::blocked_range<size_t> &r )
-	{
-		ThreadInfo &threadInfo = params.threadInfoCache.local();
+	tbb::this_task_arena::isolate( [ &params, &renderState, &shaderGroup, &shadingSystem, &results ]{
 
-		ThreadRenderState threadRenderState( renderState );
-
-		ShaderGlobals threadShaderGlobals = params.shaderGlobals;
-
-		threadShaderGlobals.renderstate = &threadRenderState;
-
-		for( size_t i = r.begin(); i < r.end(); ++i )
+		// Iterate over the input points, doing the shading as we go
+		auto f = [&params, &renderState, &shaderGroup, &shadingSystem, &results]( const tbb::blocked_range<size_t> &r )
 		{
-			IECore::Canceller::check( params.canceller );
+			ThreadInfo &threadInfo = params.threadInfoCache.local();
 
-			threadShaderGlobals.P = params.p[i];
+			ThreadRenderState threadRenderState( renderState );
 
-			if( params.uv )
+			ShaderGlobals threadShaderGlobals = params.shaderGlobals;
+
+			threadShaderGlobals.renderstate = &threadRenderState;
+
+			for( size_t i = r.begin(); i < r.end(); ++i )
 			{
-				threadShaderGlobals.u = params.uv[i].x;
-				threadShaderGlobals.v = params.uv[i].y;
-			}
-			else
-			{
-				if( params.u )
+				IECore::Canceller::check( params.canceller );
+
+				threadShaderGlobals.P = params.p[i];
+
+				if( params.uv )
 				{
-					threadShaderGlobals.u = params.u[i];
+					threadShaderGlobals.u = params.uv[i].x;
+					threadShaderGlobals.v = params.uv[i].y;
 				}
-				if( params.v )
+				else
 				{
-					threadShaderGlobals.v = params.v[i];
+					if( params.u )
+					{
+						threadShaderGlobals.u = params.u[i];
+					}
+					if( params.v )
+					{
+						threadShaderGlobals.v = params.v[i];
+					}
 				}
+
+				if( params.n )
+				{
+					threadShaderGlobals.N = params.n[i];
+				}
+
+				threadShaderGlobals.Ci = nullptr;
+
+				threadRenderState.pointIndex = i;
+				shadingSystem->execute( threadInfo.shadingContext, shaderGroup, threadShaderGlobals );
+
+				results.addResult( i, threadShaderGlobals.Ci, threadInfo.debugResults );
 			}
+		};
 
-			if( params.n )
-			{
-				threadShaderGlobals.N = params.n[i];
-			}
+		// Use `task_group_context::isolated` to prevent TBB cancellation in outer
+		// tasks from propagating down and stopping our tasks from being started.
+		// Otherwise we silently return results with black gaps where tasks were omitted.
+		tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
+		tbb::parallel_for( tbb::blocked_range<size_t>( 0, params.numPoints, 5000 ), f, taskGroupContext );
 
-			threadShaderGlobals.Ci = nullptr;
-
-			threadRenderState.pointIndex = i;
-			shadingSystem->execute( threadInfo.shadingContext, shaderGroup, threadShaderGlobals );
-
-			results.addResult( i, threadShaderGlobals.Ci, threadInfo.debugResults );
-		}
-	};
-
-	// Use `task_group_context::isolated` to prevent TBB cancellation in outer
-	// tasks from propagating down and stopping our tasks from being started.
-	// Otherwise we silently return results with black gaps where tasks were omitted.
-	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
-	tbb::parallel_for( tbb::blocked_range<size_t>( 0, params.numPoints, 5000 ), f, taskGroupContext );
+	} );
 
 	return results.results();
 }
@@ -1528,105 +1532,110 @@ IECore::CompoundDataPtr executeShadeBatched( const ExecuteShadeParameters &param
 
 	// Iterate over the input points, doing the shading as we go
 
-	auto f = [&params, &renderState, &shaderGroup, &executor, &results]( const tbb::blocked_range<size_t> &r )
-	{
-		ThreadInfo &threadInfo = params.threadInfoCache.local();
 
-		ThreadRenderState threadRenderState( renderState );
+	tbb::this_task_arena::isolate( [ &params, &renderState, &shaderGroup, &executor, &results ]{
 
-		BatchedShaderGlobals< WidthT > threadShaderGlobals;
-		memset( (void *)&threadShaderGlobals, 0, sizeof( BatchedShaderGlobals<WidthT> ) );
-
-		OSL::assign_all( threadShaderGlobals.varying.time, params.shaderGlobals.time );
-
-		OSL::assign_all( threadShaderGlobals.varying.dPdx, params.shaderGlobals.dPdx );
-		OSL::assign_all( threadShaderGlobals.varying.dPdy, params.shaderGlobals.dPdy );
-		OSL::assign_all( threadShaderGlobals.varying.dPdz, params.shaderGlobals.dPdz );
-
-		OSL::assign_all( threadShaderGlobals.varying.I, params.shaderGlobals.I );
-		OSL::assign_all( threadShaderGlobals.varying.dIdx, params.shaderGlobals.dIdx );
-		OSL::assign_all( threadShaderGlobals.varying.dIdy, params.shaderGlobals.dIdy );
-
-		OSL::assign_all( threadShaderGlobals.varying.N, params.shaderGlobals.N );
-		OSL::assign_all( threadShaderGlobals.varying.Ng, params.shaderGlobals.Ng );
-
-		OSL::assign_all( threadShaderGlobals.varying.u, params.shaderGlobals.u );
-		OSL::assign_all( threadShaderGlobals.varying.dudx, params.shaderGlobals.dudx );
-		OSL::assign_all( threadShaderGlobals.varying.dudy, params.shaderGlobals.dudy );
-
-		OSL::assign_all( threadShaderGlobals.varying.v, params.shaderGlobals.v );
-		OSL::assign_all( threadShaderGlobals.varying.dvdx, params.shaderGlobals.dvdx );
-		OSL::assign_all( threadShaderGlobals.varying.dvdy, params.shaderGlobals.dvdy );
-
-		OSL::assign_all( threadShaderGlobals.varying.dPdu, params.shaderGlobals.dPdu );
-		OSL::assign_all( threadShaderGlobals.varying.dPdv, params.shaderGlobals.dPdv );
-
-		threadShaderGlobals.uniform.renderstate = &threadRenderState;
-
-		for( size_t i = r.begin(); i < r.end(); i += WidthT )
+		auto f = [&params, &renderState, &shaderGroup, &executor, &results]( const tbb::blocked_range<size_t> &r )
 		{
-			IECore::Canceller::check( params.canceller );
+			ThreadInfo &threadInfo = params.threadInfoCache.local();
 
-			int batchSize = std::min( size_t( WidthT ), size_t( r.end() ) - i );
+			ThreadRenderState threadRenderState( renderState );
 
-			OSL::Block<int, WidthT> wideShadeIndex;
-			for( int j = 0; j < batchSize; j++ )
+			BatchedShaderGlobals< WidthT > threadShaderGlobals;
+			memset( (void *)&threadShaderGlobals, 0, sizeof( BatchedShaderGlobals<WidthT> ) );
+
+			OSL::assign_all( threadShaderGlobals.varying.time, params.shaderGlobals.time );
+
+			OSL::assign_all( threadShaderGlobals.varying.dPdx, params.shaderGlobals.dPdx );
+			OSL::assign_all( threadShaderGlobals.varying.dPdy, params.shaderGlobals.dPdy );
+			OSL::assign_all( threadShaderGlobals.varying.dPdz, params.shaderGlobals.dPdz );
+
+			OSL::assign_all( threadShaderGlobals.varying.I, params.shaderGlobals.I );
+			OSL::assign_all( threadShaderGlobals.varying.dIdx, params.shaderGlobals.dIdx );
+			OSL::assign_all( threadShaderGlobals.varying.dIdy, params.shaderGlobals.dIdy );
+
+			OSL::assign_all( threadShaderGlobals.varying.N, params.shaderGlobals.N );
+			OSL::assign_all( threadShaderGlobals.varying.Ng, params.shaderGlobals.Ng );
+
+			OSL::assign_all( threadShaderGlobals.varying.u, params.shaderGlobals.u );
+			OSL::assign_all( threadShaderGlobals.varying.dudx, params.shaderGlobals.dudx );
+			OSL::assign_all( threadShaderGlobals.varying.dudy, params.shaderGlobals.dudy );
+
+			OSL::assign_all( threadShaderGlobals.varying.v, params.shaderGlobals.v );
+			OSL::assign_all( threadShaderGlobals.varying.dvdx, params.shaderGlobals.dvdx );
+			OSL::assign_all( threadShaderGlobals.varying.dvdy, params.shaderGlobals.dvdy );
+
+			OSL::assign_all( threadShaderGlobals.varying.dPdu, params.shaderGlobals.dPdu );
+			OSL::assign_all( threadShaderGlobals.varying.dPdv, params.shaderGlobals.dPdv );
+
+			threadShaderGlobals.uniform.renderstate = &threadRenderState;
+
+			for( size_t i = r.begin(); i < r.end(); i += WidthT )
 			{
-				wideShadeIndex[j] = i + j;
-				threadShaderGlobals.varying.P[j] = params.p[i + j];
-			}
+				IECore::Canceller::check( params.canceller );
 
-			if( params.uv )
-			{
+				int batchSize = std::min( size_t( WidthT ), size_t( r.end() ) - i );
+
+				OSL::Block<int, WidthT> wideShadeIndex;
 				for( int j = 0; j < batchSize; j++ )
 				{
-					threadShaderGlobals.varying.u[j] = params.uv[i + j].x;
-					threadShaderGlobals.varying.v[j] = params.uv[i + j].y;
+					wideShadeIndex[j] = i + j;
+					threadShaderGlobals.varying.P[j] = params.p[i + j];
 				}
-			}
-			else
-			{
-				if( params.u )
+
+				if( params.uv )
 				{
 					for( int j = 0; j < batchSize; j++ )
 					{
-						threadShaderGlobals.varying.u[j] = params.u[i + j];
+						threadShaderGlobals.varying.u[j] = params.uv[i + j].x;
+						threadShaderGlobals.varying.v[j] = params.uv[i + j].y;
 					}
 				}
-				if( params.v )
+				else
+				{
+					if( params.u )
+					{
+						for( int j = 0; j < batchSize; j++ )
+						{
+							threadShaderGlobals.varying.u[j] = params.u[i + j];
+						}
+					}
+					if( params.v )
+					{
+						for( int j = 0; j < batchSize; j++ )
+						{
+							threadShaderGlobals.varying.v[j] = params.v[i + j];
+						}
+					}
+				}
+
+				if( params.n )
 				{
 					for( int j = 0; j < batchSize; j++ )
 					{
-						threadShaderGlobals.varying.v[j] = params.v[i + j];
+						threadShaderGlobals.varying.N[j] = params.n[i + j];
 					}
 				}
-			}
 
-			if( params.n )
-			{
+				OSL::assign_all( threadShaderGlobals.varying.Ci, (OSL::ClosureColor*)nullptr );
+
+				threadRenderState.pointIndex = i;
+				executor.execute( *threadInfo.shadingContext, shaderGroup, batchSize, wideShadeIndex, threadShaderGlobals, nullptr, nullptr );
+
 				for( int j = 0; j < batchSize; j++ )
 				{
-					threadShaderGlobals.varying.N[j] = params.n[i + j];
+					results.addResult( i + j, threadShaderGlobals.varying.Ci[j], threadInfo.debugResults );
 				}
 			}
+		};
 
-			OSL::assign_all( threadShaderGlobals.varying.Ci, (OSL::ClosureColor*)nullptr );
+		// Use `task_group_context::isolated` to prevent TBB cancellation in outer
+		// tasks from propagating down and stopping our tasks from being started.
+		// Otherwise we silently return results with black gaps where tasks were omitted.
+		tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
+		tbb::parallel_for( tbb::blocked_range<size_t>( 0, params.numPoints, 5000 ), f, taskGroupContext );
 
-			threadRenderState.pointIndex = i;
-			executor.execute( *threadInfo.shadingContext, shaderGroup, batchSize, wideShadeIndex, threadShaderGlobals, nullptr, nullptr );
-
-			for( int j = 0; j < batchSize; j++ )
-			{
-				results.addResult( i + j, threadShaderGlobals.varying.Ci[j], threadInfo.debugResults );
-			}
-		}
-	};
-
-	// Use `task_group_context::isolated` to prevent TBB cancellation in outer
-	// tasks from propagating down and stopping our tasks from being started.
-	// Otherwise we silently return results with black gaps where tasks were omitted.
-	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
-	tbb::parallel_for( tbb::blocked_range<size_t>( 0, params.numPoints, 5000 ), f, taskGroupContext );
+	} );
 
 	return results.results();
 }
