@@ -904,8 +904,10 @@ const InternedString g_lengthParameter( "length" );
 const InternedString g_mathTypeParameter( "math_type" );
 const InternedString g_normalizeParameter( "normalize" );
 const InternedString g_parametricParameter( "parametric" );
+const InternedString g_positionParameter( "position");
 const InternedString g_projectionParameter( "projection");
 const InternedString g_radiusParameter( "radius" );
+const InternedString g_rotationParameter( "rotation" );
 const InternedString g_shadowEnableParameter( "shadow:enable" );
 const InternedString g_shapingConeAngleParameter( "shaping:cone:angle" );
 const InternedString g_shapingConeSoftnessParameter( "shaping:cone:softness" );
@@ -998,9 +1000,6 @@ void transferUSDTextureFile( ShaderNetwork *network, InternedString shaderHandle
 			IECore::msg( IECore::Msg::Warning, "convertUSDShaders", fmt::format( "Unsupported value \"{}\" for DomeLight.format", format ) );
 			format = "equirectangular";
 		}
-		/// \todo We're missing a 90 degree rotation about Y here, which we could easily
-		// add as a `tex_mapping.rotation` parameter value. Except that it would get clobbered
-		// by `ShaderCache::updateShaders()` in `Renderer.cpp` - see additional comments there.
 		imageShader->parameters()[g_projectionParameter] = new StringData( format );
 		imageShader->parameters()[g_texMappingScaleParameter] = new V3fData( V3f( -1.0f, 1.0f, 1.0f ) );
 		imageShader->parameters()[g_texMappingYMappingParameter] = new StringData( "z" );
@@ -1033,13 +1032,29 @@ void transferUSDTextureFile( ShaderNetwork *network, InternedString shaderHandle
 		network->addConnection( ShaderNetwork::Connection( { imageHandle, g_colorParameter }, { shaderHandle, g_colorParameter } ) );
 	}
 
-	// For the correct coordinate mapping for quad lights, a geometry
-	// shader with the parametric output is needed.
 	if( shader->getName() == "quad_light" )
 	{
+		// For the correct coordinate mapping for quad lights, a geometry
+		// shader with the parametric output is needed.
 		ShaderPtr geometryShader = new Shader( "geometry" );
 		const InternedString geometryHandle = network->addShader( shaderHandle.string() + "Geometry", std::move( geometryShader ) );
 		network->addConnection( ShaderNetwork::Connection( { geometryHandle, g_parametricParameter }, { imageHandle, g_vectorParameter } ) );
+	}
+	else if( shader->getName() == "background_light" )
+	{
+		// We need a 90 degree rotation about Y on the map, which we could
+		// easily add as a `tex_mapping.rotation` parameter value on
+		// `imageShader`. Except that it would get clobbered by
+		// `ShaderCache::updateShaders()` in `Renderer.cpp` - see additional
+		// comments there. So instead we insert a `mapping` shader to do that
+		// separately.
+		ShaderPtr mappingShader = new Shader( "mapping" );
+		mappingShader->parameters()[g_rotationParameter] = new V3fData( V3f( 0, -M_PI / 2.0, 0 ) );
+		const InternedString mappingHandle = network->addShader( shaderHandle.string() + "Mapping", std::move( mappingShader ) );
+		network->addConnection( ShaderNetwork::Connection( { mappingHandle, g_vectorParameter }, { imageHandle, g_vectorParameter } ) );
+		ShaderPtr geometryShader = new Shader( "geometry" );
+		const InternedString geometryHandle = network->addShader( shaderHandle.string() + "Geometry", std::move( geometryShader ) );
+		network->addConnection( ShaderNetwork::Connection( { geometryHandle, g_positionParameter }, { mappingHandle, g_vectorParameter } ) );
 	}
 }
 
