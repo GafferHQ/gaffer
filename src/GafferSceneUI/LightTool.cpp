@@ -47,6 +47,7 @@
 #include "GafferUI/ImageGadget.h"
 #include "GafferUI/StandardStyle.h"
 
+#include "Gaffer/Animation.h"
 #include "Gaffer/Metadata.h"
 #include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/NameValuePlug.h"
@@ -142,6 +143,19 @@ Plug *activeValuePlug( Plug *sourcePlug )
 		return tweakPlug->valuePlug();
 	}
 	return sourcePlug;
+}
+
+void setValueOrAddKey( FloatPlug *plug, float time, float value )
+{
+	if( Animation::isAnimated( plug ) )
+	{
+		Animation::CurvePlug *curve = Animation::acquire( plug );
+		curve->insertKey( time, value );
+	}
+	else
+	{
+		plug->setValue( value );
+	}
 }
 
 const char *constantFragSource()
@@ -791,7 +805,9 @@ class SpotLightHandle : public LightToolHandle
 					}
 
 					// Clamp each individual cone angle as well
-					coneFloatPlug->setValue(
+					setValueOrAddKey(
+						coneFloatPlug,
+						m_view->getContext()->getTime(),
 						conePlugAngle(
 							clampHandleAngle(
 								originalConeHandleAngle + angleDelta,
@@ -812,7 +828,9 @@ class SpotLightHandle : public LightToolHandle
 					}
 
 					// Clamp each individual cone angle as well
-					penumbraFloatPlug->setValue(
+					setValueOrAddKey(
+						penumbraFloatPlug,
+						m_view->getContext()->getTime(),
 						penumbraPlugAngle(
 							clampHandleAngle(
 								originalPenumbraHandleAngle.value() + angleDelta,
