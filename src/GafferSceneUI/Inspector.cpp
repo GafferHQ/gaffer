@@ -36,6 +36,7 @@
 
 #include "GafferSceneUI/Private/Inspector.h"
 
+#include "Gaffer/Animation.h"
 #include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/PathFilter.h"
 #include "Gaffer/ScriptNode.h"
@@ -99,19 +100,58 @@ Gaffer::Plug *spreadsheetAwareSource( Gaffer::Plug *plug )
 		{
 			if( spreadsheet->outPlug()->isAncestorOf( sourceValuePlug ) )
 			{
-				Gaffer::Plug *inPlug = spreadsheet->activeInPlug( sourceValuePlug );
-				if( inPlug->ancestor<Spreadsheet::RowPlug>() == spreadsheet->rowsPlug()->defaultRow() )
-				{
-					// Don't want to edit the default row, as that could affect
-					// all sorts of other things.
-					return nullptr;
-				}
-				return sourceInput( inPlug );
+				return sourceInput( spreadsheet->activeInPlug( sourceValuePlug ) );
 			}
 		}
 	}
 
 	return sourceInput( plug );
+}
+
+std::string nonEditableReason( const ValuePlug *plug )
+{
+	const ValuePlug *sourcePlug = ( plug && Animation::isAnimated( plug ) ) ? plug->source<ValuePlug>() : plug;
+
+	const GraphComponent *readOnlyReason = MetadataAlgo::readOnlyReason( sourcePlug );
+	if( readOnlyReason )
+	{
+		return fmt::format(
+			"{} is locked.",
+			readOnlyReason->relativeName( readOnlyReason->ancestor<ScriptNode>() )
+		);
+	}
+
+	if( sourcePlug->getInput() )
+	{
+		return fmt::format(
+			"{} has a non-settable input.",
+			sourcePlug->relativeName( sourcePlug->ancestor<ScriptNode>() )
+		);
+	}
+
+	if( auto spreadsheet = runTimeCast<const Spreadsheet>( plug->node() ) )
+	{
+		if( plug->ancestor<Spreadsheet::RowPlug>() == spreadsheet->rowsPlug()->defaultRow() )
+		{
+			// Don't want to edit the default row, as that could affect
+			// all sorts of other things.
+			return fmt::format(
+				"{} is a spreadsheet default row.",
+				plug->relativeName( plug->ancestor<ScriptNode>() )
+			);
+		}
+	}
+
+	for( const auto &c : ValuePlug::Range( *plug ) )
+	{
+		const std::string result = nonEditableReason( c.get() );
+		if( !result.empty() )
+		{
+			return result;
+		}
+	}
+
+	return "";
 }
 
 } // namespace
@@ -231,18 +271,16 @@ void Inspector::inspectHistoryWalk( const GafferScene::SceneAlgo::History *histo
 
 					if( !result->m_editScope || node->ancestor<EditScope>() == result->m_editScope )
 					{
-						const GraphComponent *readOnlyReason = MetadataAlgo::readOnlyReason( result->m_source.get() );
-						if( !result->m_editScope && readOnlyReason )
-						{
-							result->m_editFunction = fmt::format(
-								"{} is locked.",
-								readOnlyReason->relativeName( readOnlyReason->ancestor<ScriptNode>() )
-							);
-						}
-						else
+						const std::string nonEditableReason = ::nonEditableReason( result->m_source.get() );
+
+						if( nonEditableReason.empty() )
 						{
 							result->m_editFunction = [source = result->m_source] () { return source; };
 							result->m_editWarning = editWarning;
+						}
+						else
+						{
+							result->m_editFunction = nonEditableReason;
 						}
 					}
 				}

@@ -6,6 +6,11 @@ Features
 
 - USDShader : Added a node for loading shaders from USD's `SdrRegistry`. This includes shaders such as `UsdPreviewSurface` and `UsdUVTexture`, which are now available in the `USD/Shader` section of the node menu.
 
+Improvements
+------------
+
+- LightTool : Added support for editing animated plugs.
+
 Fixes
 -----
 
@@ -14,6 +19,7 @@ Fixes
 - Arnold
   - Fixed translation of `vector` typed outputs defined as `vector <name>` in an output definition.
   - Fixed translation of `shadow:enable` and `shadow:color` parameters on UsdLux lights, which were previously ignored.
+- LightTool : Fixed bug causing non-settable plugs to be enabled, such as plugs with an expression as input or those using the default spreadsheet row for their value. This generated the error `ERROR : EventSignalCombiner : Cannot set value for plug {plug} except during computation.`
 
 API
 ---
