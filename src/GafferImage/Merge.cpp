@@ -44,6 +44,7 @@
 #include "IECore/BoxOps.h"
 
 #include "fmt/format.h"
+#include <limits>
 
 using namespace std;
 using namespace Imath;
@@ -134,7 +135,19 @@ struct OpSubtract
 };
 struct OpDifference
 {
-	static float operate( float A, float B, float a, float b){ return fabs( A - B ); }
+	static float operate( float A, float B, float a, float b)
+	{
+		if( memcmp( &A, &B, 4 ) == 0 )
+		{
+			return 0.0f;
+		}
+		float ret = fabs( A - B );
+		if( std::isnan( ret ) )
+		{
+			ret = std::numeric_limits<float>::infinity();
+		}
+		return ret;
+	}
 	static const SingleInputMode onlyA = Operate;
 	static const SingleInputMode onlyB = Operate;
 };

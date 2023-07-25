@@ -397,6 +397,64 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 			self.assertAlmostEqual( sampler["color"]["b"].getValue(), expected[2], msg=operation )
 			self.assertAlmostEqual( sampler["color"]["a"].getValue(), expected[3], msg=operation )
 
+	def testDifferenceExceptionalValues( self ) :
+
+		black = GafferImage.Constant()
+		black["color"].setValue( imath.Color4f( 0 ) )
+
+		nan = GafferImage.Constant()
+		nan["color"].setValue( imath.Color4f( float( "nan" ) ) )
+
+		# Float plugs by default are capped at 3.4e38 - to get infinity, we multiply that by itself.
+		infSource = GafferImage.Constant()
+		infSource["color"].setValue( imath.Color4f( float( "inf" ) ) )
+
+		inf = GafferImage.Grade()
+		inf["in"].setInput( infSource["out"] )
+		inf["multiply"].setValue( imath.Color4f( float( "inf" ) ) )
+
+		minusInf = GafferImage.Grade()
+		minusInf["in"].setInput( infSource["out"] )
+		minusInf["multiply"].setValue( imath.Color4f( -float( "inf" ) ) )
+
+		b = GafferImage.Constant()
+		a = GafferImage.Constant()
+
+		merge = GafferImage.Merge()
+		merge["operation"].setValue( GafferImage.Merge.Operation.Difference )
+
+		sampler = GafferImage.ImageSampler()
+		sampler["image"].setInput( merge["out"] )
+		sampler["pixel"].setValue( imath.V2f( 10 ) )
+
+		merge["in"][0].setInput( inf["out"] )
+		merge["in"][1].setInput( inf["out"] )
+		self.assertEqual( sampler["color"]["r"].getValue(), 0.0 )
+
+		merge["in"][0].setInput( minusInf["out"] )
+		merge["in"][1].setInput( minusInf["out"] )
+		self.assertEqual( sampler["color"]["r"].getValue(), 0.0 )
+
+		merge["in"][0].setInput( nan["out"] )
+		merge["in"][1].setInput( nan["out"] )
+		self.assertEqual( sampler["color"]["r"].getValue(), 0.0 )
+
+		merge["in"][0].setInput( black["out"] )
+		merge["in"][1].setInput( nan["out"] )
+		self.assertEqual( sampler["color"]["r"].getValue(), float( "inf" ) )
+
+		merge["in"][0].setInput( inf["out"] )
+		merge["in"][1].setInput( black["out"] )
+		self.assertEqual( sampler["color"]["r"].getValue(), float( "inf" ) )
+
+		merge["in"][0].setInput( inf["out"] )
+		merge["in"][1].setInput( minusInf["out"] )
+		self.assertEqual( sampler["color"]["r"].getValue(), float( "inf" ) )
+
+		merge["in"][0].setInput( nan["out"] )
+		merge["in"][1].setInput( inf["out"] )
+		self.assertEqual( sampler["color"]["r"].getValue(), float( "inf" ) )
+
 	def testChannelRequest( self ) :
 
 		a = GafferImage.Constant()
