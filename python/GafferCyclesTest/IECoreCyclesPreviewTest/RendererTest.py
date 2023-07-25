@@ -694,7 +694,9 @@ class RendererTest( GafferTest.TestCase ) :
 					"Primitive variable \"test\" has unsupported type \"{}\"".format( data.typeName() )
 				)
 
-	def __testPrimitiveVariableInterpolation( self, primitive, primitiveVariable, expectedPixels, maxDifference = 0.0 ) :
+	def __testPrimitiveVariableInterpolation( self, primitive, primitiveVariable, expectedPixels, maxDifference = 0.0, attributeName = None ) :
+
+		attributeName = primitiveVariable if attributeName is None else attributeName
 
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Cycles",
@@ -732,7 +734,7 @@ class RendererTest( GafferTest.TestCase ) :
 		shader = IECoreScene.ShaderNetwork(
 			shaders = {
 				"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", { "base_color" : imath.Color3f( 0 ) } ),
-				"attribute" : IECoreScene.Shader( "attribute", "cycles:shader", { "attribute" : primitiveVariable } ),
+				"attribute" : IECoreScene.Shader( "attribute", "cycles:shader", { "attribute" : attributeName } ),
 			},
 			connections = [
 				( ( "attribute", "color" ), ( "output", "emission" ) ),
@@ -894,6 +896,24 @@ class RendererTest( GafferTest.TestCase ) :
 					},
 					maxDifference = 0.01
 				)
+
+	def testUniformMeshNormal( self ) :
+
+		plane = IECoreScene.MeshPrimitive.createPlane(
+			imath.Box2f( imath.V2f( -0.5 ), imath.V2f( 0.5 ) ),
+			imath.V2i( 1 )
+		)
+		plane["N"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Uniform,
+			# Note : not the true geometric normal - actually a tangent.
+			# This way we can be sure our data is making it through and
+			# not being clobbered by a default normal.
+			IECore.V3fVectorData( [ imath.V3f( 1, 0, 0 ) ], IECore.GeometricData.Interpretation.Normal ),
+		)
+
+		self.__testPrimitiveVariableInterpolation(
+			plane, "N", { imath.V2f( 0.6 ) : plane["N"].data[0] }, attributeName = "Ng"
+		)
 
 	def testPointsPrimitiveVariableInterpolation( self ) :
 

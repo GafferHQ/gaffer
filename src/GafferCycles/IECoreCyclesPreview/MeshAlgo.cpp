@@ -71,6 +71,9 @@ namespace
 //  triangle-by-triangle basis using the `smooth` flag passed
 //  to `Mesh::add_triangle()`.
 // - Cycles does not support facevarying normals.
+//
+// Also see `convertPrimitiveVariable()` where we handle the tagging
+// of normal attributes with ATTR_STD_VERTEX_NORMAL and ATTR_STD_FACE_NORMAL.
 bool hasSmoothNormals( const IECoreScene::MeshPrimitive *mesh )
 {
 	auto it = mesh->variables.find( "N" );
