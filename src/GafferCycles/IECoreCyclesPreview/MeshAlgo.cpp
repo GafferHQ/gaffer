@@ -59,6 +59,43 @@ using namespace IECoreCycles;
 namespace
 {
 
+// Notes on Cycles normals :
+//
+// - Cycles meshes store two sets of normals as attributes :
+//    - A vertex normal ("N", ATTR_STD_VERTEX_NORMAL)
+//    - A face normal ("Ng", ATTR_STD_FACE_NORMAL)
+// - If we don't specify these attributes, they are computed for us
+//   and added to the mesh by Cycles itself by `Mesh::add_vertex_normals()`
+//   and `Mesh::add_face_normals()` respectively.
+// - Which normal is actually used for shading is determined on a
+//  triangle-by-triangle basis using the `smooth` flag passed
+//  to `Mesh::add_triangle()`.
+// - Cycles does not support facevarying normals.
+bool hasSmoothNormals( const IECoreScene::MeshPrimitive *mesh )
+{
+	auto it = mesh->variables.find( "N" );
+	if( it == mesh->variables.end() )
+	{
+		return false;
+	}
+
+	switch( it->second.interpolation )
+	{
+		case PrimitiveVariable::Constant :
+		case PrimitiveVariable::Uniform :
+			// These are definitely intended to be faceted.
+			return false;
+		case PrimitiveVariable::FaceVarying :
+			// Could be a mix of faceted and non-faceted triangles, including
+			// triangles with a mix of soft and hard edges, which aren't
+			// representable in Cycles. Plump for faceted, among other things
+			// because the native Cortex cube geometry has FaceVarying normals.
+			return false;
+		default :
+			return true;
+	}
+}
+
 ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 {
 	assert( mesh->typeId() == IECoreScene::MeshPrimitive::staticTypeId() );
@@ -158,10 +195,11 @@ ccl::Mesh *convertCommon( const IECoreScene::MeshPrimitive *mesh )
 		for( size_t i = 0; i < numVerts; i++ )
 			cmesh->add_vertex( ccl::make_float3( points[i].x, points[i].y, points[i].z ) );
 
+		const bool smooth = hasSmoothNormals( mesh );
 		for( size_t i = 0; i < vertexIds.size(); i+= 3 )
 			cmesh->add_triangle(
 				vertexIds[i], vertexIds[i+1], vertexIds[i+2],
-				/* shader = */ 0, /* smooth = */ true
+				/* shader = */ 0, /* smooth = */ smooth
 			);
 	}
 
