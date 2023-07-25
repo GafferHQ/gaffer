@@ -209,7 +209,7 @@ class BranchCreator::BranchesData : public IECore::Data
 		static void hash( const BranchCreator *branchCreator, const Context *context, IECore::MurmurHash &h )
 		{
 			// See `SceneAlgo::matchingPathsHash()` for documentation of this hashing strategy.
-			std::atomic<uint64_t> h1, h2;
+			std::atomic<uint64_t> h1( 0 ), h2( 0 );
 			auto f = [branchCreator, &h1, &h2]( const GafferScene::ScenePlug *scene, const GafferScene::ScenePlug::ScenePath &path )
 			{
 				IECore::MurmurHash h;
