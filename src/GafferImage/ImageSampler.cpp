@@ -39,6 +39,8 @@
 #include "GafferImage/ImagePlug.h"
 #include "GafferImage/Sampler.h"
 
+#include <limits>
+
 using namespace std;
 using namespace Imath;
 using namespace IECore;
@@ -67,7 +69,11 @@ ImageSampler::ImageSampler( const std::string &name )
 	addChild( new StringVectorDataPlug( "channels", Plug::In, defaultChannelsData ) );
 
 	addChild( new V2fPlug( "pixel" ) );
-	addChild( new Color4fPlug( "color", Plug::Out ) );
+	addChild( new Color4fPlug("color", Plug::Out, Imath::Color4f( 0.0f ),
+		// Override the standard limits on FloatPlug - if there is an inf value in the image,
+		// ImageSampler should be able to report that
+		Imath::Color4f( -std::numeric_limits<float>::infinity() ), Imath::Color4f( std::numeric_limits<float>::infinity() )
+	) );
 
 	addChild( new ImagePlug( "__flattenedIn", Plug::In, Plug::Default & ~Plug::Serialisable ) );
 

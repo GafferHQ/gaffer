@@ -29,6 +29,7 @@ Fixes
 - Cycles :
   - Fixed rendering of meshes with faceted normals, which were previously being rendered as smooth. This applies to meshes without an `N` primitive variable, and meshes where `N` has `Uniform` or `FaceVarying` interpolation. Note that Cycles has no native support for `FaceVarying` interpolation so that in this case all faces are rendered faceted.
   - Fixed translation of Uniform `N` primitive variables. These are now available to be queried from the standard `Ng` attribute in Cycles.
+- ImageSampler : Fixed handling of exceptional floating point values. Now returns `inf` if `inf` values are present in the image, rather than `3.4e38`.
 
 API
 ---
