@@ -30,7 +30,9 @@ Fixes
   - Fixed rendering of meshes with faceted normals, which were previously being rendered as smooth. This applies to meshes without an `N` primitive variable, and meshes where `N` has `Uniform` or `FaceVarying` interpolation. Note that Cycles has no native support for `FaceVarying` interpolation so that in this case all faces are rendered faceted.
   - Fixed translation of Uniform `N` primitive variables. These are now available to be queried from the standard `Ng` attribute in Cycles.
 - ImageSampler : Fixed handling of exceptional floating point values. Now returns `inf` if `inf` values are present in the image, rather than `3.4e38`.
-- Merge : Fixed the Difference operation to return correct values for exceptional floating point values. Now there is 0 difference between `inf` and `inf`, or `NaN` and `NaN`. Additionally, there is infinite difference between `NaN` and any other number, so assertImagesEqual will correctly report `NaN`s that don't belong.
+- Merge :
+  - Fixed the Difference operation to return correct values for exceptional floating point values. Now there is 0 difference between `inf` and `inf`, or `NaN` and `NaN`. Additionally, there is infinite difference between `NaN` and any other number, so assertImagesEqual will correctly report `NaN`s that don't belong.
+  - Fixed the Divide operation to return 0 for 0/0. This is consistent with how we previously handled fully black tiles, and avoids introducing `NaN` values which create problems in compositing.
 
 API
 ---
