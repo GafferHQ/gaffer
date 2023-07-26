@@ -45,10 +45,11 @@ import platform
 import shutil
 import subprocess
 import distutils.dir_util
+import codecs
 
 EnsureSConsVersion( 3, 0, 2 ) # Substfile is a default builder as of 3.0.2
 
-if locale.getpreferredencoding() != "UTF-8" :
+if codecs.lookup( locale.getpreferredencoding() ).name != "utf-8" :
 	# The `Substfile` builder uses `open()` without specifying an encoding, and
 	# so gets Python's default encoding. Unless this is `UTF-8`, any `.py` files
 	# containing unicode characters will be corrupted during installation.
