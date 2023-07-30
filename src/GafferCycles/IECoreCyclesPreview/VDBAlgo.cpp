@@ -46,12 +46,7 @@ IECORE_POP_DEFAULT_VISIBILITY
 
 // Cycles
 IECORE_PUSH_DEFAULT_VISIBILITY
-#include "kernel/types.h"
-#include "scene/image.h"
-#include "scene/image_vdb.h"
 #include "scene/volume.h"
-#include "util/param.h"
-#include "util/types.h"
 IECORE_POP_DEFAULT_VISIBILITY
 
 using namespace std;
@@ -63,142 +58,16 @@ using namespace IECoreCycles;
 namespace
 {
 
-class GafferVolumeLoader : public ccl::VDBImageLoader
+ccl::Geometry *convert( const IECoreVDB::VDBObject *vdbObject, const std::string &nodeName )
 {
-	public:
-		GafferVolumeLoader( const IECoreVDB::VDBObject *ieVolume, const string &gridName )
-		: VDBImageLoader( gridName ), m_ieVolume( ieVolume )
-		{
-		}
-
-		~GafferVolumeLoader() override
-		{
-		}
-
-		bool load_metadata(const ccl::ImageDeviceFeatures &features, ccl::ImageMetaData &metadata) override
-		{
-			return ccl::VDBImageLoader::load_metadata( features, metadata );
-		}
-
-		bool load_pixels(
-			const ccl::ImageMetaData &metadata,
-			void *pixels,
-			const size_t pixel_size,
-			const bool associate_alpha
-		) override
-		{
-			if( m_ieVolume )
-				return ccl::VDBImageLoader::load_pixels( metadata, pixels, pixel_size, associate_alpha );
-			else
-				return false;
-		}
-
-		bool equals(const ccl::ImageLoader &other) const override
-		{
-			const GafferVolumeLoader &otherLoader = (const GafferVolumeLoader &)other;
-			return ( m_ieVolume == otherLoader.m_ieVolume ) && ( name() == otherLoader.name() );
-		}
-
-		void cleanup() override
-		{
-		}
-
-		const IECoreVDB::VDBObject *m_ieVolume;
-};
-
-ccl::Geometry *convert( const IECoreVDB::VDBObject *vdbObject, const std::string &nodeName, ccl::Scene *scene )
-{
-	ccl::TypeDesc ctype;// = ccl::TypeDesc::TypeUnknown;
-
 	ccl::Volume *volume = new ccl::Volume();
-
-	volume->set_object_space( true );
-
-	std::vector<std::string> gridNames = vdbObject->gridNames();
-
-	for( const std::string& gridName : gridNames )
-	{
-		ccl::AttributeStandard std = ccl::ATTR_STD_NONE;
-
-		if( ccl::ustring( gridName.c_str() ) == ccl::Attribute::standard_name( ccl::ATTR_STD_VOLUME_DENSITY ) )
-		{
-			std = ccl::ATTR_STD_VOLUME_DENSITY;
-		}
-		else if( ccl::ustring( gridName.c_str() ) == ccl::Attribute::standard_name( ccl::ATTR_STD_VOLUME_COLOR ) )
-		{
-			std = ccl::ATTR_STD_VOLUME_COLOR;
-		}
-		else if( ccl::ustring( gridName.c_str() ) == ccl::Attribute::standard_name( ccl::ATTR_STD_VOLUME_FLAME ) )
-		{
-			std = ccl::ATTR_STD_VOLUME_FLAME;
-		}
-		else if( ccl::ustring( gridName.c_str() ) == ccl::Attribute::standard_name( ccl::ATTR_STD_VOLUME_HEAT ) )
-		{
-			std = ccl::ATTR_STD_VOLUME_HEAT;
-		}
-		else if( ccl::ustring( gridName.c_str() ) == ccl::Attribute::standard_name( ccl::ATTR_STD_VOLUME_TEMPERATURE ) )
-		{
-			std = ccl::ATTR_STD_VOLUME_TEMPERATURE;
-		}
-		else if( ccl::ustring( gridName.c_str() ) == ccl::Attribute::standard_name( ccl::ATTR_STD_VOLUME_VELOCITY ) )
-		{
-			std = ccl::ATTR_STD_VOLUME_VELOCITY;
-		}
-		else
-		{
-			openvdb::GridBase::ConstPtr grid = vdbObject->findGrid( gridName );
-			if( grid->isType<openvdb::BoolGrid>() )
-			{
-				ctype = ccl::TypeDesc::TypeInt;
-			}
-			else if( grid->isType<openvdb::DoubleGrid>() )
-			{
-				ctype = ccl::TypeDesc::TypeFloat;
-			}
-			else if( grid->isType<openvdb::FloatGrid>() )
-			{
-				ctype = ccl::TypeDesc::TypeFloat;
-			}
-			else if( grid->isType<openvdb::Int32Grid>() )
-			{
-				ctype = ccl::TypeDesc::TypeInt;
-			}
-			else if( grid->isType<openvdb::Int64Grid>() )
-			{
-				ctype = ccl::TypeDesc::TypeInt;
-			}
-			else if( grid->isType<openvdb::Vec3DGrid>() )
-			{
-				ctype = ccl::TypeDesc::TypeVector;
-			}
-			else if( grid->isType<openvdb::Vec3IGrid>() )
-			{
-				ctype = ccl::TypeDesc::TypeVector;
-			}
-			else if( grid->isType<openvdb::Vec3SGrid>() )
-			{
-				ctype = ccl::TypeDesc::TypeVector;
-			}
-		}
-
-		ccl::Attribute *attr = ( std != ccl::ATTR_STD_NONE ) ?
-							volume->attributes.add( std ) :
-							volume->attributes.add( ccl::ustring( gridName.c_str() ), ctype, ccl::ATTR_ELEMENT_VOXEL );
-
-		ccl::ImageLoader *loader = new GafferVolumeLoader( vdbObject, gridName );
-		ccl::ImageParams params;
-		params.frame = 0.0f;
-
-		attr->data_voxel() = scene->image_manager->add_image( loader, params );
-	}
-
 	volume->name = ccl::ustring( nodeName.c_str() );
 	return volume;
 }
 
-ccl::Geometry *convert( const std::vector<const IECoreVDB::VDBObject *> &samples, const std::vector<float> &times, const int frameIdx, const std::string &nodeName, ccl::Scene *scene )
+ccl::Geometry *convert( const std::vector<const IECoreVDB::VDBObject *> &samples, const std::vector<float> &times, const int frameIdx, const std::string &nodeName )
 {
-	return convert( samples.front(), nodeName, scene );
+	return convert( samples.front(), nodeName );
 }
 
 GeometryAlgo::ConverterDescription<IECoreVDB::VDBObject> g_description( convert, convert );
