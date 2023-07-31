@@ -713,7 +713,10 @@ class SpotLightHandle : public LightToolHandle
 			Inspector::ResultPtr penumbraAngleInspection = m_penumbraAngleInspector ? m_penumbraAngleInspector->inspect() : nullptr;
 
 			ConstFloatDataPtr originalConeAngleData = runTimeCast<const IECore::FloatData>( coneAngleInspection->value() );
-			assert( originalConeAngleData );
+			if( !originalConeAngleData )
+			{
+				return;
+			}
 
 			ConstFloatDataPtr originalPenumbraAngleData;
 			if( penumbraAngleInspection )
@@ -1356,7 +1359,10 @@ class SpotLightHandle : public LightToolHandle
 			}
 
 			const FloatData *coneAngleData = runTimeCast<const FloatData>( coneInspection->value() );
-			assert( coneAngleData );
+			if( !coneAngleData )
+			{
+				return {nullptr, 0, nullptr, std::nullopt};
+			}
 
 			const FloatData *penumbraAngleData = nullptr;
 
