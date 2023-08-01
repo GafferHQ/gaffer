@@ -35,6 +35,7 @@ Fixes
   - Fixed the Difference operation to return correct values for exceptional floating point values. Now there is 0 difference between `inf` and `inf`, or `NaN` and `NaN`. Additionally, there is infinite difference between `NaN` and any other number, so assertImagesEqual will correctly report `NaN`s that don't belong.
   - Fixed the Divide operation to return 0 for 0/0. This is consistent with how we previously handled fully black tiles, and avoids introducing `NaN` values which create problems in compositing.
 - Median/Erode/Dilate : Fixed possible crash bug if there were `NaN`s in the input image.
+- ValuePlug : Fixed bug which caused `ComputeNode::computeCachePolicy()` to be called unnecessarily for input plugs in some circumstances. This could affect performance, particularly when the plug belonged to a node implemented in Python.
 
 API
 ---

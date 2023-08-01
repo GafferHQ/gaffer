@@ -983,6 +983,38 @@ class ValuePlugTest( GafferTest.TestCase ) :
 			backgroundTask2.cancelAndWait()
 			backgroundTask1.cancelAndWait()
 
+	# A node that inherits from ComputeNode, but doesn't implement a compute.
+	# We would expect the cache policies to never be evaluated
+	class NoComputeNode( Gaffer.ComputeNode ) :
+
+		def __init__( self, name="NoComputeNode" ) :
+
+			Gaffer.ComputeNode.__init__( self, name )
+
+			self["in"] = Gaffer.BoolPlug()
+
+		def computeCachePolicy( self, plug ) :
+
+			raise IECore.Exception( "Cache policy should not be called" )
+
+		def hashCachePolicy( self, plug ) :
+
+			raise IECore.Exception( "Hash cache policy should not be called" )
+
+	IECore.registerRunTimeTyped( NoComputeNode )
+
+	def testNoCachePolicyForConversions( self ) :
+
+		m = GafferTest.MultiplyNode()
+		n = self.NoComputeNode()
+
+		# Make sure that the conversion triggered by connecting a float plug to a bool plug
+		# does not use the nodes cache policies
+		n["in"].setInput( m["product"] )
+
+		n["in"].hash()
+		self.assertEqual( n["in"].getValue(), False )
+
 	def setUp( self ) :
 
 		GafferTest.TestCase.setUp( self )
