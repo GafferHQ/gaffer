@@ -51,6 +51,7 @@
 #include "Gaffer/Metadata.h"
 #include "Gaffer/MetadataAlgo.h"
 #include "Gaffer/NameValuePlug.h"
+#include "Gaffer/OptionalValuePlug.h"
 #include "Gaffer/PathFilter.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/TweakPlug.h"
@@ -147,6 +148,11 @@ Plug *activeValuePlug( Plug *sourcePlug )
 	{
 		tweakPlug->enabledPlug()->setValue( true );
 		return tweakPlug->valuePlug();
+	}
+	if( auto optionalValuePlug = runTimeCast<OptionalValuePlug>( sourcePlug ) )
+	{
+		optionalValuePlug->enabledPlug()->setValue( true );
+		return optionalValuePlug->valuePlug();
 	}
 	return sourcePlug;
 }
