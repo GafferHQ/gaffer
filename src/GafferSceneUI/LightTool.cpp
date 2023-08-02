@@ -612,6 +612,7 @@ class SpotLightHandle : public LightToolHandle
 			m_view( view ),
 			m_zRotation( zRotation ),
 			m_handleType( handleType ),
+			m_angleMultiplier( 1.f ),
 			m_visualiserScale( 1.f ),
 			m_frustumScale( 1.f ),
 			m_lensRadius( 0 ),
@@ -702,6 +703,16 @@ class SpotLightHandle : public LightToolHandle
 						{
 							m_lensRadius = lensRadiusData->readable();
 						}
+					}
+
+					auto angleType = Metadata::value<StringData>( shaderAttribute, "coneAngleType" );
+					if( angleType && angleType->readable() == "half" )
+					{
+						m_angleMultiplier = 2.f;
+					}
+					else
+					{
+						m_angleMultiplier = 1.f;
 					}
 
 					break;
@@ -1399,12 +1410,12 @@ class SpotLightHandle : public LightToolHandle
 					penumbraAngle = penumbraAngleData->readable() * 0.5f;
 				}
 			}
-			return {coneAngleData->readable() * 0.5f, penumbraAngle};
+			return {coneAngleData->readable() * 0.5f * m_angleMultiplier, penumbraAngle};
 		}
 
 		float conePlugAngle(const float a ) const
 		{
-			return a * 2.f;
+			return a * 2.f / m_angleMultiplier;
 		}
 
 		float penumbraPlugAngle(const float a ) const
@@ -1502,6 +1513,8 @@ class SpotLightHandle : public LightToolHandle
 
 		HandleType m_handleType;
 		std::optional<InternedString> m_penumbraType;
+
+		float m_angleMultiplier;
 
 		float m_visualiserScale;
 		float m_frustumScale;
