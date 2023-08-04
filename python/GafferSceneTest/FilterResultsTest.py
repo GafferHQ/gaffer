@@ -254,6 +254,33 @@ class FilterResultsTest( GafferSceneTest.SceneTestCase ) :
 		pathFilter["paths"].setValue( IECore.StringVectorData( [ "/" ] ) )
 		self.assertEqual( filterResults["outStrings"].getValue(), IECore.StringVectorData( [ "/" ] ) )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "taskCollaboration" } )
+	def testTaskCollaboration( self ) :
+
+		infiniteScene = GafferScene.ScenePlug()
+		infiniteScene["childNames"].setValue( IECore.InternedStringVectorData( [ "one", "two" ] ) )
+
+		pathFilter = GafferScene.PathFilter()
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ "/*" * 12 ] ) )
+
+		filterResults = GafferScene.FilterResults()
+		filterResults["scene"].setInput( infiniteScene )
+		filterResults["filter"].setInput( pathFilter["out"] )
+
+		# This checks that we only do a single compute when lots of threads hammer on the same
+		# result. We repeat it a number of times to increase the chances of exposing bugs that
+		# allow duplicate computes (we had one during development that only showed up very
+		# intermittently).
+
+		for i in range( 0, 100 ) :
+
+			Gaffer.ValuePlug.clearCache()
+
+			with Gaffer.PerformanceMonitor() as pm :
+				GafferTest.parallelGetValue( filterResults["out"], 10000 )
+
+			self.assertEqual( pm.plugStatistics( filterResults["__internalOut"] ).computeCount, 1 )
+
 	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
 	@GafferTest.TestRunner.PerformanceTestMethod()
 	def testHashPerformance( self ):
