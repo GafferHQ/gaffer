@@ -45,11 +45,17 @@ import GafferUI
 import GafferSceneUI
 import GafferUSD
 
+def __shaderName( plug ) :
+
+	node = plug.node()
+	if isinstance( node, GafferUSD.USDLight ) :
+		return plug.node()["__shader"]["name"].getValue()
+	else :
+		return plug.node()["name"].getValue()
+
 def __sdrProperty( plug ) :
 
-	shaderName = plug.node()["name"].getValue()
-
-	sdrNode = Sdr.Registry().GetNodeByName( shaderName )
+	sdrNode = Sdr.Registry().GetNodeByName( __shaderName( plug ) )
 	if plug.direction() == Gaffer.Plug.Direction.In :
 		return sdrNode.GetInput( plug.getName() )
 	else :
@@ -69,7 +75,7 @@ def __layoutIndex( plug ) :
 	#
 	# See https://github.com/PixarAnimationStudios/OpenUSD/pull/2497.
 
-	shaderName = plug.node()["name"].getValue()
+	shaderName = __shaderName( plug )
 	order = __propertyOrder.get( shaderName )
 	if order is None :
 		return None
@@ -95,7 +101,7 @@ def __widgetType( plug ) :
 
 	# Fall back to metadata we provide ourselves.
 	return __widgetTypes.get(
-		"{}.{}".format( plug.node()["name"].getValue(), plug.getName() )
+		"{}.{}".format( __shaderName( plug ), plug.getName() )
 	)
 
 def __presetNames( plug ) :
@@ -146,15 +152,6 @@ Gaffer.Metadata.registerNode(
 
 		"parameters.*" : [
 
-			## \todo Get USD to actually provide help metadata. It's defined in a `doc`
-			# attribute in `shaderDefs.usda`, but not actually converted to Sdr by
-			# UsdShadeShaderDefUtils.
-			"description", functools.partial( __sdrMetadata, name = "help" ),
-			"layout:index", __layoutIndex,
-			"noduleLayout:index", __layoutIndex,
-			"plugValueWidget:type", __widgetType,
-			"presetNames", __presetNames,
-			"presetValues", __presetValues,
 			"nodule:type", __noduleType,
 
 		],
@@ -170,9 +167,43 @@ Gaffer.Metadata.registerNode(
 	}
 )
 
+for nodeType in ( GafferUSD.USDShader, GafferUSD.USDLight ) :
+
+	Gaffer.Metadata.registerNode(
+
+		nodeType,
+
+		plugs = {
+
+			"parameters.*" : [
+
+				## \todo Get USD to actually provide help metadata. It's defined in a `doc`
+				# attribute in `shaderDefs.usda`, but not actually converted to Sdr by
+				# UsdShadeShaderDefUtils.
+				"description", functools.partial( __sdrMetadata, name = "help" ),
+				"layout:index", __layoutIndex,
+				"noduleLayout:index", __layoutIndex,
+				"plugValueWidget:type", __widgetType,
+				"presetNames", __presetNames,
+				"presetValues", __presetValues,
+
+			],
+
+		}
+
+	)
+
 def __orderDict( names ) :
 
 	return dict( zip( names, range( 0, len( names ) ) ) )
+
+__lightPropertyOrder = [ "color", "intensity", "exposure", "enableColorTemperature", "colorTemperature", "normalize", "diffuse", "specular" ]
+__apiPropertyOrder = [
+	# ShapingAPI
+	"shaping:focus", "shaping:focusTint", "shaping:cone:angle", "shaping:cone:softness", "shaping:ies:file", "shaping:ies:angleScale", "shaping:ies:normalize",
+	# ShadowAPI
+	"shadow:enable", "shadow:color", "shadow:distance", "shadow:falloff", "shadow:falloffGamma",
+]
 
 __propertyOrder = {
 
@@ -189,11 +220,21 @@ __propertyOrder = {
 	"UsdPrimvarReader_vector" : __orderDict( [ "varname", "fallback", "result" ] ),
 	"UsdPrimvarReader_normal" : __orderDict( [ "varname", "fallback", "result" ] ),
 
+	"DistantLight" : __orderDict( __lightPropertyOrder + [ "angle" ] + __apiPropertyOrder ),
+	"DiskLight" : __orderDict( __lightPropertyOrder + [ "radius" ] + __apiPropertyOrder ),
+	"DomeLight" : __orderDict( __lightPropertyOrder + [ "texture:file", "texture:format" ] + __apiPropertyOrder ),
+	"RectLight" : __orderDict( __lightPropertyOrder + [ "width", "height", "texture:file" ] + __apiPropertyOrder ),
+	"SphereLight" : __orderDict( __lightPropertyOrder + [ "radius" ] + __apiPropertyOrder ),
+	"CylinderLight" : __orderDict( __lightPropertyOrder + [ "length", "radius" ] + __apiPropertyOrder ),
+
 }
 
 __widgetTypes = {
 
 	"UsdPreviewSurface.useSpecularWorkflow" : "GafferUI.BoolPlugValueWidget",
 	"UsdUVTexture.file" : "GafferUI.FileSystemPathPlugValueWidget",
+
+	"DomeLight.texture:file" : "GafferUI.FileSystemPathPlugValueWidget",
+	"RectLight.texture:file" : "GafferUI.FileSystemPathPlugValueWidget",
 
 }

@@ -1,6 +1,7 @@
+
 ##########################################################################
 #
-#  Copyright (c) 2022, Cinesite VFX Ltd. All rights reserved.
+#  Copyright (c) 2023, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -15,7 +16,7 @@
 #        disclaimer in the documentation and/or other materials provided with
 #        the distribution.
 #
-#      * Neither the name of Image Engine Design Inc nor the names of
+#      * Neither the name of John Haddon nor the names of
 #        any other contributors to this software may be used to endorse or
 #        promote products derived from this software without specific prior
 #        written permission.
@@ -34,9 +35,13 @@
 #
 ##########################################################################
 
-from .RendererTest import RendererTest
-from .ShaderNetworkAlgoTest import ShaderNetworkAlgoTest
+import Gaffer
+import GafferUSD
 
-if __name__ == "__main__":
-	import unittest
-	unittest.main()
+# Default cone angle is 90 (an entire hemisphere), so replace with something
+# that actually looks like a cone for all user-created lights.
+Gaffer.Metadata.registerValue( GafferUSD.USDLight, "parameters.shaping:cone:angle.value", "userDefault", 25.0 )
+
+# `texture:format == automatic` isn't well supported at present, so default
+# user-created lights to `latlong`.
+Gaffer.Metadata.registerValue( GafferUSD.USDLight, "parameters.texture:format", "userDefault", "latlong" )

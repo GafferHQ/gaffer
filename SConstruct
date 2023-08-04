@@ -1320,7 +1320,7 @@ libraries = {
 		"pythonEnvAppends" : {
 			"LIBPATH" : [ "$CYCLES_ROOT/lib" ],
 			"LIBS" : [
-				"Gaffer", "GafferScene", "GafferDispatch", "GafferBindings", "GafferCycles",
+				"Gaffer", "GafferScene", "GafferDispatch", "GafferBindings", "GafferCycles", "IECoreScene",
 				"cycles_session", "cycles_scene", "cycles_graph", "cycles_bvh", "cycles_device", "cycles_kernel", "cycles_kernel_osl",
 				"cycles_integrator", "cycles_util", "cycles_subd", "extern_sky",
 				"OpenImageIO$OIIO_LIB_SUFFIX", "OpenImageIO_Util$OIIO_LIB_SUFFIX", "oslexec$OSL_LIB_SUFFIX", "openvdb$VDB_LIB_SUFFIX",

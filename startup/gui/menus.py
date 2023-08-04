@@ -536,6 +536,26 @@ for menuPath, shader in [
 ] :
 	nodeMenu.append( "/USD/Shader/{}".format( menuPath ), functools.partial( __usdShaderCreator, shader ), searchText = shader )
 
+def __usdLightCreator( lightType ) :
+
+	light = GafferUSD.USDLight( name = lightType )
+	light["name"].setValue( lightType[0].lower() + lightType[1:] )
+
+	if lightType == "SpotLight" :
+		# There's no such thing as a SpotLight in USD, but it's convenient to provide
+		# a shortcut for creating a light with a shaping cone.
+		light.loadShader( "SphereLight" )
+		light["parameters"]["shaping:cone:angle"]["enabled"].setValue( True )
+	else :
+		light.loadShader( lightType )
+
+	return light
+
+for lightType in [
+	"DistantLight", "DiskLight", "RectLight", "SphereLight", "CylinderLight", "DomeLight", "SpotLight"
+] :
+	nodeMenu.append( "/USD/Light/{}".format( IECore.CamelCase.toSpaced( lightType ) ), functools.partial( __usdLightCreator, lightType ), searchText = lightType )
+
 nodeMenu.append( "/USD/Attributes", GafferUSD.USDAttributes, searchText = "USDAttributes" )
 nodeMenu.append( "/USD/Layer Writer", GafferUSD.USDLayerWriter, searchText = "USDLayerWriter" )
 

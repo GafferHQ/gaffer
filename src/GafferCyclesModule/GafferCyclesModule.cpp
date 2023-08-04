@@ -42,6 +42,7 @@
 #include "GafferDispatchBindings/TaskNodeBinding.h"
 
 #include "GafferCycles/IECoreCyclesPreview/IECoreCycles.h"
+#include "GafferCycles/IECoreCyclesPreview/ShaderNetworkAlgo.h"
 #include "GafferCycles/CyclesAttributes.h"
 #include "GafferCycles/CyclesBackground.h"
 #include "GafferCycles/CyclesOptions.h"
@@ -59,6 +60,7 @@
 #include "util/openimagedenoise.h"
 
 namespace py = boost::python;
+using namespace boost::python;
 using namespace GafferBindings;
 using namespace GafferDispatchBindings;
 using namespace GafferCycles;
@@ -481,5 +483,17 @@ BOOST_PYTHON_MODULE( _GafferCycles )
 	DependencyNodeClass<CyclesShader>();
 	TaskNodeClass<CyclesRender>();
 	NodeClass<InteractiveCyclesRender>();
+
+	{
+		object ieCoreCyclesModule( borrowed( PyImport_AddModule( "GafferCycles.IECoreCyclesPreview" ) ) );
+		scope().attr( "IECoreCyclesPreview" ) = ieCoreCyclesModule;
+		scope ieCoreCyclesScope( ieCoreCyclesModule );
+
+		object shaderNetworkAlgoModule( borrowed( PyImport_AddModule( "GafferCycles.IECoreCyclesPreview.ShaderNetworkAlgo" ) ) );
+		scope().attr( "ShaderNetworkAlgo" ) = shaderNetworkAlgoModule;
+		scope shaderNetworkAlgoScope( shaderNetworkAlgoModule );
+
+		def( "convertUSDShaders", &IECoreCycles::ShaderNetworkAlgo::convertUSDShaders );
+	}
 
 }

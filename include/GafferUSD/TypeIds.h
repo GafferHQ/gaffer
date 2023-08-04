@@ -45,6 +45,7 @@ enum TypeId
 	USDLayerWriterTypeId = 110225,
 	USDAttributesTypeId = 110226,
 	USDShaderTypeId = 110227,
+	USDLightTypeId = 110228,
 
 	LastTypeId = 110250,
 
