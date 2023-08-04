@@ -749,5 +749,18 @@ class ComputeNodeTest( GafferTest.TestCase ) :
 				n["op1"].setValue( i )
 				self.assertEqual( n["sum"].getValue(), i )
 
+	def testCacheSharedBetweenNodes( self ) :
+
+		n1 = GafferTest.AddNode()
+		n2 = GafferTest.AddNode()
+
+		with Gaffer.PerformanceMonitor() as pm :
+
+			self.assertEqual( n1["sum"].getValue(), 0 )
+			self.assertEqual( n2["sum"].getValue(), 0 )
+
+		self.assertEqual( pm.plugStatistics( n1["sum"] ).computeCount, 1 )
+		self.assertEqual( pm.plugStatistics( n2["sum"] ).computeCount, 0 )
+
 if __name__ == "__main__":
 	unittest.main()
