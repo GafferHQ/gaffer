@@ -73,8 +73,14 @@
 #include "boost/algorithm/string/predicate.hpp"
 #include "boost/bind/bind.hpp"
 
+#include "OpenEXR/OpenEXRConfig.h"
+#if OPENEXR_VERSION_MAJOR < 3
+#include "OpenEXR/ImathMatrixAlgo.h"
+#include "OpenEXR/ImathSphere.h"
+#else
 #include "Imath/ImathMatrixAlgo.h"
 #include "Imath/ImathSphere.h"
+#endif
 
 #include "fmt/format.h"
 
