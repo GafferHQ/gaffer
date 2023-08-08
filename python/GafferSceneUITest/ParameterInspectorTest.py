@@ -649,6 +649,123 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 			nonEditableReason = "light.parameters.intensity is locked."
 		)
 
+	def testAnimatedPlugEditability( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["light"] = GafferSceneTest.TestLight()
+
+		SourceType = GafferSceneUI.Private.Inspector.Result.SourceType
+
+		curve = Gaffer.Animation.acquire( s["light"]["parameters"]["exposure"] )
+		key = Gaffer.Animation.Key( time = 10, value = 10 )
+		curve.addKey( key )
+
+		self.assertTrue( Gaffer.Animation.isAnimated( s["light"]["parameters"]["exposure"] ) )
+
+		with Gaffer.Context() as context :
+			context.setFrame( 10 )
+
+			self.__assertExpectedResult(
+				self.__inspect( s["light"]["out"], "/light", "exposure", None ),
+				source = s["light"]["parameters"]["exposure"],
+				sourceType = SourceType.Other,
+				editable = True,
+				edit = s["light"]["parameters"]["exposure"]
+			)
+
+		Gaffer.MetadataAlgo.setReadOnly( curve, True )
+
+		with Gaffer.Context() as context :
+			context.setFrame( 10 )
+
+			self.__assertExpectedResult(
+				self.__inspect( s["light"]["out"], "/light", "exposure", None ),
+				source = s["light"]["parameters"]["exposure"],
+				sourceType = SourceType.Other,
+				editable = False,
+				nonEditableReason = "Animation.curves.curve0 is locked."
+			)
+
+	def testPlugWithInput( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["light"] = GafferSceneTest.TestLight()
+
+		s["scope"] = Gaffer.EditScope()
+		s["scope"].setup( s["light"]["out"] )
+		s["scope"]["in"].setInput( s["light"]["out"] )
+
+		s["expression"] = Gaffer.Expression()
+		s["expression"].setExpression(
+			"parent[\"light\"][\"parameters\"][\"exposure\"] = 10.0",
+			"python"
+		)
+
+		SourceType = GafferSceneUI.Private.Inspector.Result.SourceType
+
+		self.assertEqual( s["light"]["parameters"]["exposure"].getValue(), 10 )
+
+		self.__assertExpectedResult(
+			self.__inspect( s["scope"]["out"], "/light", "exposure", None ),
+			source = s["light"]["parameters"]["exposure"],
+			sourceType = SourceType.Other,
+			editable = False,
+			nonEditableReason = "light.parameters.exposure has a non-settable input."
+		)
+
+		inspection = self.__inspect( s["scope"]["out"], "/light", "exposure", s["scope"] )
+
+		self.assertTrue( inspection.editable() )
+
+		edit = inspection.acquireEdit()
+		edit["enabled"].setValue( True )
+		edit["value"].setValue( 5 )
+
+		self.__assertExpectedResult(
+			self.__inspect( s["scope"]["out"], "/light", "exposure", s["scope"] ),
+			source = edit,
+			sourceType = SourceType.EditScope,
+			editable = True,
+			edit = s["scope"]["LightEdits"]["edits"]["row1"]["cells"]["exposure"]["value"]
+		)
+
+		s["expression2"] = Gaffer.Expression()
+		s["expression2"].setExpression(
+			"parent[\"scope\"][\"LightEdits\"][\"edits\"][\"row1\"][\"cells\"][\"exposure\"][\"value\"][\"value\"] = 20",
+			"python"
+		)
+
+		self.__assertExpectedResult(
+			self.__inspect( s["scope"]["out"], "/light", "exposure", s["scope"] ),
+			source = edit,
+			sourceType = SourceType.EditScope,
+			editable = False,
+			nonEditableReason = "scope.LightEdits.edits.row1.cells.exposure.value.value has a non-settable input."
+		)
+
+	def testDefaultSpreadsheetRow( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["spreadsheet"] = Gaffer.Spreadsheet()
+		s["spreadsheet"]["rows"].addColumn( Gaffer.FloatPlug( "exposure" ) )
+		s["spreadsheet"]["rows"]["default"]["cells"]["exposure"]["value"].setValue( 5 )
+
+		s["light"] = GafferSceneTest.TestLight()
+		s["light"]["parameters"]["exposure"].setInput( s["spreadsheet"]["out"]["exposure"] )
+
+		self.assertEqual( s["light"]["parameters"]["exposure"].getValue(), 5 )
+
+		self.__assertExpectedResult(
+			self.__inspect( s["light"]["out"], "/light", "exposure", None ),
+			source = s["spreadsheet"]["rows"]["default"]["cells"]["exposure"]["value"],
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			editable = False,
+			nonEditableReason = "spreadsheet.rows.default.cells.exposure.value is a spreadsheet default row."
+		)
+
 
 if __name__ == "__main__":
 	unittest.main()

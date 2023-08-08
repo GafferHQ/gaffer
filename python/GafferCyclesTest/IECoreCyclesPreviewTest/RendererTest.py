@@ -1823,5 +1823,77 @@ class RendererTest( GafferTest.TestCase ) :
 			"Unsupported socket type `transform` for socket `ob_tfm` on node .*"
 		)
 
+	def testUSDLightColorTemperature( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		renderer.output(
+			"testOutput",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testUsdLightColorTemperature",
+				}
+			)
+		)
+
+		plane = renderer.object(
+			"/plane",
+			IECoreScene.MeshPrimitive.createPlane(
+				imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ),
+			),
+			renderer.attributes( IECore.CompoundObject ( {
+				"cycles:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface" )
+					},
+					output = "output",
+				)
+			} ) )
+		)
+		## \todo Default camera is facing down +ve Z but should be facing
+		# down -ve Z.
+		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
+
+		# Pure red light, with the colour being provided by an input shader, _not_
+		# a direct parameter value. This requires some translation in the renderer backend.
+
+		light = renderer.light(
+			"/light",
+			None,
+			renderer.attributes( IECore.CompoundObject ( {
+				"light" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader( "SphereLight", "light", { "enableColorTemperature" : True, "colorTemperature" : 3000.0, "exposure" : 6.0 } ),
+					},
+					output = "output",
+				),
+			} ) )
+		)
+		light.transform( imath.M44f().rotate( imath.V3f( 0, math.pi, 0 ) ) )
+
+		renderer.render()
+		time.sleep( 2.0 )
+
+		# Check that the color temperature has tinted the image red.
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testUsdLightColorTemperature" )
+		IECoreImage.ImageWriter( image, "/tmp/test.exr" ).write()
+		self.assertTrue( isinstance( image, IECoreImage.ImagePrimitive ) )
+
+		testPixel = self.__colorAtUV( image, imath.V2f( 0.55 ) )
+		testPixel /= testPixel.r # Normalise, to negate impact of noise
+		self.assertAlmostEqual( testPixel.r, 1.0, delta = 0.01 )
+		self.assertAlmostEqual( testPixel.g, 0.476725, delta = 0.01 )
+		self.assertAlmostEqual( testPixel.b, 0.153601, delta = 0.01 )
+
+		del plane, light
+
 if __name__ == "__main__":
 	unittest.main()

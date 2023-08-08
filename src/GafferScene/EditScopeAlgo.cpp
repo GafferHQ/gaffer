@@ -1152,7 +1152,7 @@ ConstObjectPtr optionValue( const ScenePlug *scene, const std::string &option )
 			return registeredOption->second;
 		}
 
-		throw IECore::Exception( boost::str( boost::format( "Option \"%s\" does not exist" ) % option ) );
+		throw IECore::Exception( fmt::format( "Option \"{}\" does not exist", option ) );
 	}
 
 	return result;
@@ -1197,7 +1197,7 @@ TweakPlug *GafferScene::EditScopeAlgo::acquireOptionEdit( Gaffer::EditScope *sco
 			);
 			if( !optionValue )
 			{
-				throw IECore::Exception( boost::str( boost::format( "Option \"%s\" cannot be tweaked" ) % option ) );
+				throw IECore::Exception( fmt::format( "Option \"{}\" cannot be tweaked", option ) );
 			}
 		}
 	};

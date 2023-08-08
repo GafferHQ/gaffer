@@ -172,14 +172,21 @@ class GLWidget( GafferUI.Widget ) :
 			return False
 
 		self._qtWidget().viewport().makeCurrent()
+
+		# We need to call the init method after a GL context has been
+		# created, this is true either in __draw or after we call makeCurrent().
+		# Calling it in all these circumstances does mean we call init() way more
+		# than needed, but it's safe.
+		IECoreGL.init( True )
+
 		return True
 
 	def __draw( self ) :
 
-		# we need to call the init method after a GL context has been
-		# created, and this seems like the only place that is guaranteed.
-		# calling it here does mean we call init() way more than needed,
-		# but it's safe.
+		# We need to call the init method after a GL context has been
+		# created, this is true either in __draw or after we call makeCurrent().
+		# Calling it in all these circumstances does mean we call init() way more
+		# than needed, but it's safe.
 		IECoreGL.init( True )
 
 		if self.__multisample:
