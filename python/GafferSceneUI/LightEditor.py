@@ -371,17 +371,18 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 		nonEditable = [ i for i in inspections if not i.editable() ]
 
 		if len( nonEditable ) == 0 :
-			if not quickBoolean or not self.__toggleBoolean( inspectors, inspections ) :
-				edits = [ i.acquireEdit() for i in inspections ]
-				warnings = "\n".join( [ i.editWarning() for i in inspections if i.editWarning() != "" ] )
-				# The plugs are either not boolean, boolean with mixed values,
-				# or attributes that don't exist and are not boolean. Show the popup.
-				self.__popup = GafferUI.PlugPopup( edits, warning = warnings )
+			with Gaffer.Context( self.getContext() ) as context :
+				if not quickBoolean or not self.__toggleBoolean( inspectors, inspections ) :
+					edits = [ i.acquireEdit() for i in inspections ]
+					warnings = "\n".join( [ i.editWarning() for i in inspections if i.editWarning() != "" ] )
+					# The plugs are either not boolean, boolean with mixed values,
+					# or attributes that don't exist and are not boolean. Show the popup.
+					self.__popup = GafferUI.PlugPopup( edits, warning = warnings )
 
-				if isinstance( self.__popup.plugValueWidget(), GafferUI.TweakPlugValueWidget ) :
-					self.__popup.plugValueWidget().setNameVisible( False )
+					if isinstance( self.__popup.plugValueWidget(), GafferUI.TweakPlugValueWidget ) :
+						self.__popup.plugValueWidget().setNameVisible( False )
 
-				self.__popup.popup()
+					self.__popup.popup()
 
 		else :
 

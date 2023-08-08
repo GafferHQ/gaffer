@@ -22,8 +22,10 @@ Fixes
 - Arnold
   - Fixed translation of `vector` typed outputs defined as `vector <name>` in an output definition.
   - Fixed translation of `shadow:enable` and `shadow:color` parameters on UsdLux lights, which were previously ignored.
-- LightTool : Fixed bug causing non-settable plugs to be enabled, such as plugs with an expression as input or those using the default spreadsheet row for their value. This generated the error `ERROR : EventSignalCombiner : Cannot set value for plug {plug} except during computation.`
+- LightTool : Fixed bug causing non-settable plugs to be enabled, such as plugs with an expression as input or those using the default spreadsheet row for their value. This generated the error `ERROR : EventSignalCombiner : Cannot set value for plug {plug} except during computation`.
+- LightEditor : Fixed toggling values in cases where inherited light attributes were set by a script context variable without including a default.
 - GLWidget : Fixed rare crash when showing a GLWidget for the first time.
+- BranchCreator : Fixed bug which could cause inconsistent hashes to be generated.
 
 API
 ---
@@ -254,6 +256,8 @@ Fixes
 - Arnold
   - Fixed translation of `vector` typed outputs defined as `vector <name>` in an output definition.
   - Fixed translation of `shadow:enable` and `shadow:color` parameters on UsdLux lights, which were previously ignored.
+- BranchCreator : Fixed bug which could cause inconsistent hashes to be generated.
+- LightEditor : Fixed toggling values in cases where inherited light attributes were set by a script context variable without including a default.
 
 1.2.10.0 (relative to 1.2.9.0)
 ========
