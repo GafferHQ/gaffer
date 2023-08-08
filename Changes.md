@@ -26,6 +26,9 @@ Fixes
 - LightEditor : Fixed toggling values in cases where inherited light attributes were set by a script context variable without including a default.
 - GLWidget : Fixed rare crash when showing a GLWidget for the first time.
 - BranchCreator : Fixed bug which could cause inconsistent hashes to be generated.
+- Cycles :
+  - Fixed rendering of meshes with faceted normals, which were previously being rendered as smooth. This applies to meshes without an `N` primitive variable, and meshes where `N` has `Uniform` or `FaceVarying` interpolation. Note that Cycles has no native support for `FaceVarying` interpolation so that in this case all faces are rendered faceted.
+  - Fixed translation of Uniform `N` primitive variables. These are now available to be queried from the standard `Ng` attribute in Cycles.
 
 API
 ---
