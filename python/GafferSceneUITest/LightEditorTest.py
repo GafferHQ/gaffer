@@ -49,6 +49,23 @@ import GafferUITest
 
 class LightEditorTest( GafferUITest.TestCase ) :
 
+	def setLightEditorMuteSelection( self, widget, togglePaths ) :
+
+		columns = widget.getColumns()
+
+		muteIndex = None
+		for i, c in zip( range( 0, len( columns ) ), columns ) :
+			if isinstance( c, _GafferSceneUI._LightEditorMuteColumn ) :
+				muteIndex = i
+
+		self.assertIsNotNone( muteIndex )
+
+		selection = [ IECore.PathMatcher() for i in range( 0, len( columns ) ) ]
+		for path in togglePaths :
+			selection[muteIndex].addPath( path )
+
+		widget.setSelection( selection )
+
 	def testMuteToggle( self ) :
 
 		# Scene Hierarchy
@@ -622,8 +639,6 @@ class LightEditorTest( GafferUITest.TestCase ) :
 			)
 		}
 
-		muteIndex = None
-
 		for togglePaths, toggleData in toggles.items() :
 
 			firstNewStates, secondNewStates = toggleData
@@ -633,20 +648,7 @@ class LightEditorTest( GafferUITest.TestCase ) :
 			editor._LightEditor__settingsNode["editScope"].setInput( script["editScope"]["out"] )
 
 			widget = editor._LightEditor__pathListing
-			columns = widget.getColumns()
-
-			if muteIndex is None :
-				for i, c in zip( range( 0, len( columns ) ), columns ) :
-					if isinstance( c, _GafferSceneUI._LightEditorMuteColumn ) :
-						muteIndex = i
-
-			self.assertIsNotNone( muteIndex )
-
-			selection = [ IECore.PathMatcher() for i in range( 0, len( columns ) ) ]
-			for path in togglePaths :
-				selection[muteIndex].addPath( path )
-
-			widget.setSelection( selection )
+			self.setLightEditorMuteSelection( widget, togglePaths )
 
 			editor._LightEditor__editSelectedCells( widget )
 			testLightMuteAttribute( 1, togglePaths, firstNewStates )
@@ -656,6 +658,51 @@ class LightEditorTest( GafferUITest.TestCase ) :
 
 			del widget, editor
 
+	def testToggleContext( self ) :
+
+		# Make sure the correct context is scoped when evaluating attributes
+		# to determine a new toggle value
+
+		script = Gaffer.ScriptNode()
+		script["variables"].addChild( Gaffer.NameValuePlug( "test", IECore.FloatData( 5.0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+
+		script["light"] = GafferSceneTest.TestLight()
+
+		script["group"] = GafferScene.Group()
+		script["group"]["in"][0].setInput( script["light"]["out"] )
+
+		script["filter"] = GafferScene.PathFilter()
+		script["filter"]["paths"].setValue( IECore.StringVectorData( ["/group"] ) )
+
+		script["custAttr"] = GafferScene.CustomAttributes()
+		script["custAttr"]["in"].setInput( script["group"]["out"] )
+		script["custAttr"]["filter"].setInput( script["filter"]["out"] )
+		script["custAttr"]["attributes"].addChild( Gaffer.NameValuePlug( "gl:visualiser:scale", IECore.FloatData( 2.0 ), "scale", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression(
+			'parent["custAttr"]["attributes"]["scale"]["value"] = context["test"]',
+			"python"
+		)
+
+		self.assertEqual( script.context().get( "test" ), 5.0 )
+
+		with script.context() :
+			attr = script["custAttr"]["out"].attributes( "/group" )
+
+		self.assertIn( "gl:visualiser:scale", attr )
+		self.assertEqual( attr["gl:visualiser:scale"].value, 5.0 )
+
+		editor = GafferSceneUI.LightEditor( script )
+		widget = editor._LightEditor__pathListing
+		editor.setNodeSet( Gaffer.StandardSet( [ script["custAttr"] ] ) )
+		self.setLightEditorMuteSelection( widget, ["/group/light"] )
+
+		# This will raise an exception if the context is not scoped correctly.
+		editor._LightEditor__editSelectedCells(
+			widget,
+			True  # quickBoolean
+		)
 
 if __name__ == "__main__" :
 	unittest.main()

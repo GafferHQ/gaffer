@@ -9,6 +9,7 @@ Fixes
   - Fixed translation of `vector` typed outputs defined as `vector <name>` in an output definition.
   - Fixed translation of `shadow:enable` and `shadow:color` parameters on UsdLux lights, which were previously ignored.
 - BranchCreator : Fixed bug which could cause inconsistent hashes to be generated.
+- LightEditor : Fixed toggling values in cases where inherited light attributes were set by a script context variable without including a default.
 
 1.2.10.0 (relative to 1.2.9.0)
 ========
