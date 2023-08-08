@@ -1003,30 +1003,6 @@ class SpotLightHandle : public LightToolHandle
 			return {m_penumbraAngleInspector.get()};
 		}
 
-		bool mouseMove( const ButtonEvent &event )
-		{
-			if( m_drag || !m_coneAngleInspector || handleScenePath()->isEmpty() )
-			{
-				return false;
-			}
-
-			const auto &[coneInspection, coneHandleAngle, penumbraInspection, penumbraHandleAngle] = spotLightHandleAngles();
-
-			const float angle = m_handleType == HandleType::Cone ? coneHandleAngle : penumbraHandleAngle.value();
-
-			const M44f r = M44f().rotate( V3f( 0, degreesToRadians( angle ), 0 ) );
-			const Line3f rayLine(
-				V3f( 0 ),
-				V3f( 0, 0, m_visualiserScale * m_frustumScale * -10.f ) * r
-			);
-			const V3f dragPoint = rayLine.closestPointTo( Line3f( event.line.p0, event.line.p1 ) );
-			m_arcRadius = dragPoint.length();
-
-			dirty( DirtyType::Render );
-
-			return false;
-		}
-
 	protected :
 
 		void renderHandle( const Style *style, Style::State state ) const override
@@ -1336,6 +1312,30 @@ class SpotLightHandle : public LightToolHandle
 		}
 
 	private :
+
+		bool mouseMove( const ButtonEvent &event )
+		{
+			if( m_drag || !m_coneAngleInspector || handleScenePath()->isEmpty() )
+			{
+				return false;
+			}
+
+			const auto &[coneInspection, coneHandleAngle, penumbraInspection, penumbraHandleAngle] = spotLightHandleAngles();
+
+			const float angle = m_handleType == HandleType::Cone ? coneHandleAngle : penumbraHandleAngle.value();
+
+			const M44f r = M44f().rotate( V3f( 0, degreesToRadians( angle ), 0 ) );
+			const Line3f rayLine(
+				V3f( 0 ),
+				V3f( 0, 0, m_visualiserScale * m_frustumScale * -10.f ) * r
+			);
+			const V3f dragPoint = rayLine.closestPointTo( Line3f( event.line.p0, event.line.p1 ) );
+			m_arcRadius = dragPoint.length();
+
+			dirty( DirtyType::Render );
+
+			return false;
+		}
 
 		void dragBegin( const DragDropEvent &event ) override
 		{
