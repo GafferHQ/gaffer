@@ -1,4 +1,4 @@
-1.3.x.x (relative to 1.3.0.0)
+1.3.1.0 (relative to 1.3.0.0)
 =======
 
 Features
@@ -14,7 +14,7 @@ Improvements
 - LightEditor : Added section displaying UsdLux shadow parameters.
 - Cycles : Added support for UsdLux lights.
 - LightTool : Added support for editing animated plugs.
-- Median/Erode/Dilate : Dramatic speedup of these nodes for wide filters. Measured improvements of 100X faster for Erode/Dilate, and 10X faster for Median.
+- Median, Erode, Dilate : Improved performance significantly for wide filters. Measured improvements of 100x faster for Erode/Dilate, and 10x faster for Median.
 
 Fixes
 -----
