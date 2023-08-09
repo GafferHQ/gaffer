@@ -35,7 +35,7 @@
 ##########################################################################
 
 import imath
-import os
+import math
 
 import IECore
 import IECoreImage
@@ -137,6 +137,31 @@ class ImageSamplerTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( sampler["color"].getValue(), imath.Color4f( 0, 0, 0.5, 0.5 ) )
 		sampler["view"].setValue( "right" )
 		self.assertEqual( sampler["color"].getValue(), imath.Color4f( 0, 0, 0.5, 0.5 ) )
+
+	def testExceptionalValues( self ) :
+
+		c = GafferImage.Constant()
+		c["color"].setValue( imath.Color4f( 1 ) )
+
+		inf = GafferImage.Grade()
+		inf["in"].setInput( c["out"] )
+		inf["multiply"].setValue( imath.Color4f( float( "inf" ) ) )
+		inf["offset"].setValue( imath.Color4f( float( "inf" ) ) )
+		inf["blackClamp"].setValue( False )
+
+		sampler = GafferImage.ImageSampler()
+		sampler["image"].setInput( inf["out"] )
+		sampler["pixel"].setValue( imath.V2f( 0 ) )
+
+		self.assertEqual( sampler["color"].getValue()[0], float( "inf" ) )
+
+		inf["multiply"].setValue( imath.Color4f( -float( "inf" ) ) )
+		inf["offset"].setValue( imath.Color4f( -float( "inf" ) ) )
+		self.assertEqual( sampler["color"].getValue()[0], -float( "inf" ) )
+
+		inf["multiply"].setValue( imath.Color4f( float( "nan" ) ) )
+		self.assertTrue( math.isnan( sampler["color"].getValue()[0] ) )
+
 
 if __name__ == "__main__":
 	unittest.main()
