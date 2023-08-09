@@ -37,6 +37,7 @@
 #include "GafferSceneTest/TestLight.h"
 
 #include "Gaffer/CompoundNumericPlug.h"
+#include "Gaffer/PlugAlgo.h"
 
 #include "IECoreScene/Shader.h"
 
@@ -48,9 +49,10 @@ GAFFER_NODE_DEFINE_TYPE( TestLight )
 TestLight::TestLight( const std::string &name )
 	:	Light( name )
 {
+	addChild( new StringPlug( "lightShaderName", Plug::In, "testLight" ) );
 	parametersPlug()->addChild( new Color3fPlug( "intensity" ) );
 	parametersPlug()->addChild( new FloatPlug( "exposure" ) );
-	parametersPlug()->addChild( new BoolPlug( "areaLight" ) );
+	parametersPlug()->addChild( new BoolPlug( "__areaLight" ) );
 }
 
 TestLight::~TestLight()
@@ -67,10 +69,24 @@ void TestLight::hashLight( const Gaffer::Context *context, IECore::MurmurHash &h
 
 IECoreScene::ConstShaderNetworkPtr TestLight::computeLight( const Gaffer::Context *context ) const
 {
-	IECoreScene::ShaderPtr shader = new IECoreScene::Shader( "testLight", "light" );
-	shader->parameters()["intensity"] = new IECore::Color3fData( parametersPlug()->getChild<Color3fPlug>( "intensity" )->getValue() );
-	shader->parameters()["exposure"] = new IECore::FloatData( parametersPlug()->getChild<FloatPlug>( "exposure" )->getValue() );
-	shader->parameters()["__areaLight"] = new IECore::BoolData( parametersPlug()->getChild<BoolPlug>( "areaLight" )->getValue() );
+	IECoreScene::ShaderPtr shader = new IECoreScene::Shader( getChild<StringPlug>( "lightShaderName" )->getValue(), "light" );
+
+	for( const auto &c : ValuePlug::Range( *parametersPlug() ) )
+	{
+		IECore::DataPtr data = PlugAlgo::getValueAsData( c.get() );
+		if( auto compoundData = IECore::runTimeCast<IECore::CompoundData>( data.get() ) )
+		{
+			auto enabledData = compoundData->member<IECore::BoolData>( "enabled" );
+			if( enabledData && enabledData->readable() )
+			{
+				shader->parameters()[ c->getName() ] = compoundData->member( "value" );
+			}
+		}
+		else
+		{
+			shader->parameters()[ c->getName() ] = data;
+		}
+	}
 
 	IECoreScene::ShaderNetworkPtr network = new IECoreScene::ShaderNetwork();
 	network->addShader( "light", std::move( shader ) );

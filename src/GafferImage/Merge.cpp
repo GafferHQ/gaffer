@@ -44,6 +44,7 @@
 #include "IECore/BoxOps.h"
 
 #include "fmt/format.h"
+#include <limits>
 
 using namespace std;
 using namespace Imath;
@@ -83,7 +84,18 @@ struct OpDivide
 #ifdef _MSC_VER
 #pragma warning( disable: 4723 )
 #endif
-	static float operate( float A, float B, float a, float b){ return A / B; }
+	static float operate( float A, float B, float a, float b)
+	{
+		if( A == 0.0f )
+		{
+			// This early out affects the result of 0/0. Setting it to NaN would be more mathematically
+			// precise, but not useful in a compositing context.
+			// Using 0 matches Nuke, and allows us to be consistent with the passthrough when the whole
+			// input is a black tile.
+			return 0.0f;
+		}
+		return A / B;
+	}
 #ifdef _MSC_VER
 #pragma warning( default: 4723 )
 #endif
@@ -134,7 +146,19 @@ struct OpSubtract
 };
 struct OpDifference
 {
-	static float operate( float A, float B, float a, float b){ return fabs( A - B ); }
+	static float operate( float A, float B, float a, float b)
+	{
+		if( memcmp( &A, &B, 4 ) == 0 )
+		{
+			return 0.0f;
+		}
+		float ret = fabs( A - B );
+		if( std::isnan( ret ) )
+		{
+			ret = std::numeric_limits<float>::infinity();
+		}
+		return ret;
+	}
 	static const SingleInputMode onlyA = Operate;
 	static const SingleInputMode onlyB = Operate;
 };

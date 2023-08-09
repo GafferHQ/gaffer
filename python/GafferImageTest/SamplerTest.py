@@ -37,6 +37,7 @@
 import os
 import unittest
 import imath
+import math
 
 import IECore
 
@@ -66,7 +67,7 @@ class SamplerTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( s.sample( dw.max().x - 1, dw.max().y - 1 ), 1 )
 		self.assertEqual( s.sample( dw.min().x, dw.max().y - 1 ), 1 )
 
-		# Pixels just outside dataWindow should be white.
+		# Pixels just outside dataWindow should be black.
 
 		self.assertEqual( s.sample( dw.min().x - 1, dw.min().y - 1 ), 0 )
 		self.assertEqual( s.sample( dw.max().x, dw.min().y - 1 ), 0 )
@@ -91,6 +92,27 @@ class SamplerTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( s.sample( float( dw.max().x - 0.5 ), float( dw.min().y + 0.5 ) ), 1 )
 		self.assertEqual( s.sample( float( dw.max().x - 0.5 ), float( dw.max().y - 0.5 ) ), 1 )
 		self.assertEqual( s.sample( float( dw.min().x + 0.5 ), float( dw.max().y - 0.5 ) ), 1 )
+
+	def testExceptionalValues( self ) :
+
+		c = GafferImage.Constant()
+		c["color"].setValue( imath.Color4f( 1 ) )
+
+		inf = GafferImage.Grade()
+		inf["in"].setInput( c["out"] )
+		inf["multiply"].setValue( imath.Color4f( float( "inf" ) ) )
+		inf["offset"].setValue( imath.Color4f( float( "inf" ) ) )
+		inf["blackClamp"].setValue( False )
+
+		dw = imath.Box2i( imath.V2i( 0 ), imath.V2i( 1 ) )
+		self.assertEqual( GafferImage.Sampler( inf["out"], "R", dw ).sample( 0, 0 ), float( "inf" ) )
+
+		inf["multiply"].setValue( imath.Color4f( -float( "inf" ) ) )
+		inf["offset"].setValue( imath.Color4f( -float( "inf" ) ) )
+		self.assertEqual( GafferImage.Sampler( inf["out"], "R", dw ).sample( 0, 0 ), -float( "inf" ) )
+
+		inf["multiply"].setValue( imath.Color4f( float( "nan" ) ) )
+		self.assertTrue( math.isnan( GafferImage.Sampler( inf["out"], "R", dw ).sample( 0, 0 ) ) )
 
 	def testOutOfBoundsSampleModeClamp( self ) :
 

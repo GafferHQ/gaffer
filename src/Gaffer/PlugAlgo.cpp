@@ -513,7 +513,8 @@ IECore::DataPtr getValueAsData( const ValuePlug *plug )
 			return new M44fData( static_cast<const M44fPlug *>( plug )->getValue() );
 		case M33fPlugTypeId :
 			return new M33fData( static_cast<const M33fPlug *>( plug )->getValue() );
-		case NameValuePlugTypeId : {
+		case NameValuePlugTypeId :
+		case OptionalValuePlugTypeId : {
 			CompoundDataPtr result = new CompoundData;
 			for( auto &childPlug : ValuePlug::Range( *plug ) )
 			{

@@ -634,6 +634,29 @@ class PlugAlgoTest( GafferTest.TestCase ) :
 			IECore.CompoundData( { "name" : "test", "value" : 20 } )
 		)
 
+	def testGetValueFromOptionalValuePlug( self ) :
+
+		enabled = Gaffer.OptionalValuePlug(
+			"test",
+			Gaffer.IntPlug( "test", Gaffer.Plug.Direction.In, 10 ),
+			enabledPlugDefaultValue = True
+		)
+		disabled = Gaffer.OptionalValuePlug(
+			"test",
+			Gaffer.IntPlug( "test", Gaffer.Plug.Direction.In, 20 ),
+			enabledPlugDefaultValue = False
+		)
+
+		self.assertEqual(
+			Gaffer.PlugAlgo.getValueAsData( enabled ),
+			IECore.CompoundData( { "value" : 10, "enabled" : True } )
+		)
+
+		self.assertEqual(
+			Gaffer.PlugAlgo.getValueAsData( disabled ),
+			IECore.CompoundData( { "value" : 20, "enabled" : False } )
+		)
+
 	def testGetValueAsData( self ) :
 
 		n = Gaffer.Node()

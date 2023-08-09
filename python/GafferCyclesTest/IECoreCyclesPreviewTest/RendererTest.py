@@ -582,6 +582,86 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( color.g, points["N"].data[0].y )
 		self.assertEqual( color.b, points["N"].data[0].z )
 
+	def __testMeshSmoothing( self, cube, smoothingExpected ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		renderer.output(
+			"meshSmoothing",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "meshSmoothing",
+				}
+			)
+		)
+
+		# Render the cube, rotated so an edge faces the camera, shaded with the
+		# standard facing-ratio shader.
+
+		cubeObject = renderer.object( "/cube", cube, renderer.attributes( IECore.CompoundObject() ) )
+		cubeObject.transform( imath.M44f().translate( imath.V3f( 0, 0, 2 ) ).rotate( imath.V3f( 0, math.pi / 4.0, 0 ) ) )
+
+		renderer.render()
+		time.sleep( 2 )
+
+		del cubeObject
+		del renderer
+
+		# Check the shading on the center edge, and close to the back left and right edges.
+		# If normals have been smoothed, then the back edges should be close to zero.
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "meshSmoothing" )
+		self.assertTrue( isinstance( image, IECoreImage.ImagePrimitive ) )
+
+		center = self.__colorAtUV( image, imath.V2f( 0.5, 0.5 ) )
+		left = self.__colorAtUV( image, imath.V2f( 0.3, 0.5 ) )
+		right = self.__colorAtUV( image, imath.V2f( 0.7, 0.5 ) )
+
+		# Everything should have solid alpha.
+
+		self.assertEqual( center[3], 1 )
+		self.assertEqual( left[3], 1 )
+		self.assertEqual( right[3], 1 )
+
+		# Shading is down to whether the normals are smoothed or not.
+
+		if smoothingExpected :
+			# Center normal faces straight at us
+			self.assertGreater( center[0], 0.95 )
+			# Outer normals actually face slightly away
+			self.assertLess( left[0], 0 )
+			self.assertLess( right[0], 0 )
+		else :
+			# Everything faces towards and to the side of us.
+			self.assertGreater( center[0], 0.4 )
+			self.assertGreater( left[0], 0.4 )
+			self.assertGreater( right[0], 0.4 )
+
+	def testNoMeshNormals( self ) :
+
+		cube = IECoreScene.MeshPrimitive.createBox( imath.Box3f( imath.V3f( -0.5 ), imath.V3f( 0.5 ) ) )
+		del cube["N"]
+		self.__testMeshSmoothing( cube, smoothingExpected = False )
+
+	def testFaceVaryingMeshNormals( self ) :
+
+		# These are treated like non-existent normals, since Cycles doesn't support them.
+		cube = IECoreScene.MeshPrimitive.createBox( imath.Box3f( imath.V3f( -0.5 ), imath.V3f( 0.5 ) ) )
+		self.__testMeshSmoothing( cube, smoothingExpected = False )
+
+	def testVertexMeshNormals( self ) :
+
+		cube = IECoreScene.MeshPrimitive.createBox( imath.Box3f( imath.V3f( -0.5 ), imath.V3f( 0.5 ) ) )
+		cube["N"] = IECoreScene.MeshAlgo.calculateVertexNormals( cube, IECoreScene.MeshAlgo.NormalWeighting.Equal )
+		self.__testMeshSmoothing( cube, smoothingExpected = True )
+
 	def testUnsupportedPrimitiveVariables( self ) :
 
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
@@ -614,7 +694,9 @@ class RendererTest( GafferTest.TestCase ) :
 					"Primitive variable \"test\" has unsupported type \"{}\"".format( data.typeName() )
 				)
 
-	def __testPrimitiveVariableInterpolation( self, primitive, primitiveVariable, expectedPixels, maxDifference = 0.0 ) :
+	def __testPrimitiveVariableInterpolation( self, primitive, primitiveVariable, expectedPixels, maxDifference = 0.0, attributeName = None ) :
+
+		attributeName = primitiveVariable if attributeName is None else attributeName
 
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Cycles",
@@ -652,7 +734,7 @@ class RendererTest( GafferTest.TestCase ) :
 		shader = IECoreScene.ShaderNetwork(
 			shaders = {
 				"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", { "base_color" : imath.Color3f( 0 ) } ),
-				"attribute" : IECoreScene.Shader( "attribute", "cycles:shader", { "attribute" : primitiveVariable } ),
+				"attribute" : IECoreScene.Shader( "attribute", "cycles:shader", { "attribute" : attributeName } ),
 			},
 			connections = [
 				( ( "attribute", "color" ), ( "output", "emission" ) ),
@@ -814,6 +896,24 @@ class RendererTest( GafferTest.TestCase ) :
 					},
 					maxDifference = 0.01
 				)
+
+	def testUniformMeshNormal( self ) :
+
+		plane = IECoreScene.MeshPrimitive.createPlane(
+			imath.Box2f( imath.V2f( -0.5 ), imath.V2f( 0.5 ) ),
+			imath.V2i( 1 )
+		)
+		plane["N"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Uniform,
+			# Note : not the true geometric normal - actually a tangent.
+			# This way we can be sure our data is making it through and
+			# not being clobbered by a default normal.
+			IECore.V3fVectorData( [ imath.V3f( 1, 0, 0 ) ], IECore.GeometricData.Interpretation.Normal ),
+		)
+
+		self.__testPrimitiveVariableInterpolation(
+			plane, "N", { imath.V2f( 0.6 ) : plane["N"].data[0] }, attributeName = "Ng"
+		)
 
 	def testPointsPrimitiveVariableInterpolation( self ) :
 

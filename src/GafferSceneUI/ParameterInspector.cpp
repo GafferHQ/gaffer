@@ -44,6 +44,7 @@
 #include "GafferScene/ShaderAssignment.h"
 #include "GafferScene/ShaderTweaks.h"
 
+#include "Gaffer/OptionalValuePlug.h"
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/Switch.h"
 
@@ -107,6 +108,10 @@ Gaffer::ValuePlugPtr ParameterInspector::source( const GafferScene::SceneAlgo::H
 
 	if( auto light = runTimeCast<Light>( sceneNode ) )
 	{
+		if( auto optionalPlug = light->parametersPlug()->getChild<OptionalValuePlug>( m_parameter.name ) )
+		{
+			return optionalPlug->enabledPlug()->getValue() ? optionalPlug : nullptr;
+		}
 		return light->parametersPlug()->getChild<ValuePlug>( m_parameter.name );
 	}
 	else if( auto lightFilter = runTimeCast<LightFilter>( sceneNode ) )
@@ -166,6 +171,12 @@ Gaffer::ValuePlugPtr ParameterInspector::source( const GafferScene::SceneAlgo::H
 Inspector::EditFunctionOrFailure ParameterInspector::editFunction( Gaffer::EditScope *editScope, const GafferScene::SceneAlgo::History *history ) const
 {
 	auto attributeHistory = static_cast<const SceneAlgo::AttributeHistory *>( history );
+
+	ConstObjectPtr v = value( history );
+	if( !v )
+	{
+		return fmt::format( "Parameter \"{}\" does not exist.", m_parameter.name.string() );
+	}
 
 	const GraphComponent *readOnlyReason = EditScopeAlgo::parameterEditReadOnlyReason(
 		editScope,
