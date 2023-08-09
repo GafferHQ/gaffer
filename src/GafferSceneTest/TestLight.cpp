@@ -49,6 +49,7 @@ GAFFER_NODE_DEFINE_TYPE( TestLight )
 TestLight::TestLight( const std::string &name )
 	:	Light( name )
 {
+	addChild( new StringPlug( "lightShaderName", Plug::In, "testLight" ) );
 	parametersPlug()->addChild( new Color3fPlug( "intensity" ) );
 	parametersPlug()->addChild( new FloatPlug( "exposure" ) );
 	parametersPlug()->addChild( new BoolPlug( "__areaLight" ) );
@@ -68,7 +69,7 @@ void TestLight::hashLight( const Gaffer::Context *context, IECore::MurmurHash &h
 
 IECoreScene::ConstShaderNetworkPtr TestLight::computeLight( const Gaffer::Context *context ) const
 {
-	IECoreScene::ShaderPtr shader = new IECoreScene::Shader( "testLight", "light" );
+	IECoreScene::ShaderPtr shader = new IECoreScene::Shader( getChild<StringPlug>( "lightShaderName" )->getValue(), "light" );
 
 	for( const auto &c : ValuePlug::Range( *parametersPlug() ) )
 	{
