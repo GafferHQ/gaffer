@@ -332,6 +332,7 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 
 		shader = GafferSceneTest.TestShader()
 		shader["type"].setValue( "test:surface" )
+		shader["parameters"]["optionalString"]["enabled"].setValue( True )
 
 		plane = GafferScene.Plane()
 
@@ -345,6 +346,12 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 		self.__assertExpectedResult(
 			self.__inspect( shaderAssignment["out"], "/plane", "c", None, attribute="test:surface" ),
 			source = shader["parameters"]["c"], sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
+			editable = True, editWarning = "Edits to TestShader may affect other locations in the scene."
+		)
+
+		self.__assertExpectedResult(
+			self.__inspect( shaderAssignment["out"], "/plane", "optionalString", None, attribute="test:surface" ),
+			source = shader["parameters"]["optionalString"], sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
 			editable = True, editWarning = "Edits to TestShader may affect other locations in the scene."
 		)
 
@@ -558,12 +565,47 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 	def testNonExistentAttribute( self ) :
 
 		light = GafferSceneTest.TestLight()
+
+		editScope = Gaffer.EditScope()
+		editScope.setup( light["out"] )
+		editScope["in"].setInput( light["out"] )
+
 		self.assertIsNone( self.__inspect( light["out"], "/light", "exposure", attribute = "nothingHere" ) )
+		self.assertIsNone( self.__inspect( editScope["out"], "/light", "exposure", editScope, attribute = "nothingHere" ) )
 
 	def testNonExistentParameter( self ) :
 
 		light = GafferSceneTest.TestLight()
+
+		editScope = Gaffer.EditScope()
+		editScope.setup( light["out"] )
+		editScope["in"].setInput( light["out"] )
+
 		self.assertIsNone( self.__inspect( light["out"], "/light", "nothingHere" ) )
+		self.assertIsNone( self.__inspect( editScope["out"], "/light", "nothingHere", editScope ) )
+
+	def testWrongAttributeType( self ) :
+
+		light = GafferSceneTest.TestLight()
+
+		filter = GafferScene.PathFilter()
+		filter["paths"].setValue( IECore.StringVectorData( [ "/light" ] ) )
+
+		attr = GafferScene.CustomAttributes()
+		attr["attributes"].addChild(
+			Gaffer.NameValuePlug( "test", 10, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		)
+		attr["in"].setInput( light["out"] )
+		attr["filter"].setInput( filter["out"] )
+
+		editScope = Gaffer.EditScope()
+		editScope.setup( light["out"] )
+		editScope["in"].setInput( attr["out"] )
+
+		self.assertIn( "test", editScope["out"].attributes( "/light" ) )
+
+		self.assertIsNone( self.__inspect( editScope["out"], "/light", "nothingHere", None, attribute = "test" ) )
+		self.assertIsNone( self.__inspect( editScope["out"], "/light", "nothingHere", editScope, attribute = "test" ) )
 
 	def testReadOnlyMetadataSignalling( self ) :
 
@@ -764,6 +806,47 @@ class ParameterInspectorTest( GafferUITest.TestCase ) :
 			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.Other,
 			editable = False,
 			nonEditableReason = "spreadsheet.rows.default.cells.exposure.value is a spreadsheet default row."
+		)
+
+	def testLightOptionalValuePlug( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["light"] = GafferSceneTest.TestLight()
+
+		s["light"]["parameters"].addChild( Gaffer.OptionalValuePlug( "testFloat", Gaffer.FloatPlug(), False ) )
+
+		s["editScope"] = Gaffer.EditScope()
+		s["editScope"].setup( s["light"]["out"] )
+		s["editScope"]["in"].setInput( s["light"]["out"] )
+
+		self.assertIsNone( self.__inspect( s["editScope"]["out"], "/light", "testFloat" ) )
+		self.assertIsNone( self.__inspect( s["editScope"]["out"], "/light", "testFloat", s["editScope"] ) )
+
+		s["light"]["parameters"]["testFloat"]["enabled"].setValue( True )
+
+		SourceType = GafferSceneUI.Private.Inspector.Result.SourceType
+
+		self.__assertExpectedResult(
+			self.__inspect( s["editScope"]["out"], "/light", "testFloat" ),
+			source = s["light"]["parameters"]["testFloat"],
+			sourceType = SourceType.Other,
+			editable = True,
+			edit = s["light"]["parameters"]["testFloat"]
+		)
+
+		inspection = self.__inspect( s["editScope"]["out"], "/light", "testFloat", s["editScope"] )
+		self.assertIsNotNone( inspection )
+		edit = inspection.acquireEdit()
+		edit["enabled"].setValue( True )
+		edit["value"].setValue( 5.0 )
+
+		self.__assertExpectedResult(
+			self.__inspect( s["editScope"]["out"], "/light", "testFloat", s["editScope"] ),
+			source = edit,
+			sourceType = SourceType.EditScope,
+			editable = True,
+			edit = edit
 		)
 
 
