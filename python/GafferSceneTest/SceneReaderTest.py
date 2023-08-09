@@ -617,9 +617,13 @@ class SceneReaderTest( GafferSceneTest.SceneTestCase ) :
 
 		light1 = GafferSceneTest.TestLight()
 		light1["name"].setValue( "light1" )
+		light1["lightShaderName"].setValue( "SphereLight" ) # USDScene requires valid USD light type
+		light1["parameters"]["intensity"] = Gaffer.FloatPlug( defaultValue = 1 ) # USD expects float, not colour
 		light1["defaultLight"].setValue( False )
 
 		light2 = GafferSceneTest.TestLight()
+		light2["lightShaderName"].setValue( "SphereLight" )
+		light2["parameters"]["intensity"] = Gaffer.FloatPlug( defaultValue = 1 )
 		light2["name"].setValue( "light2" )
 
 		group = GafferScene.Group()

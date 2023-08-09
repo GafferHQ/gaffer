@@ -6,6 +6,7 @@ Features
 
 - USDShader : Added a node for loading shaders from USD's `SdrRegistry`. This includes shaders such as `UsdPreviewSurface` and `UsdUVTexture`, which are now available in the `USD/Shader` section of the node menu.
 - USDLight : Added a node for defining UsdLux lights. This is available from the `USD/Light` section of the node menu.
+- SceneReader, SceneWriter : Added limited support for reading and writing Usd Volume prims.
 
 Improvements
 ------------
@@ -18,6 +19,7 @@ Improvements
 Fixes
 -----
 
+- SceneWriter : Fixed writing of UsdLux lights.
 - Viewer : Fixed visualisation of shaping cones for UsdLux lights, which were previously drawn at half the correct angle.
 - DisplayTransform : Fixed missing `view` presets when `display` is at the default value (#5392).
 - Arnold
@@ -42,6 +44,11 @@ API
 
 - OptionalValuePlug : Added a new plug type that pairs an `enabled` BoolPlug with a `value` ValuePlug.
 - Shader : Added support for using OptionalValuePlug to represent optional parameters.
+
+Build
+-----
+
+- Cortex : Updated to version 10.5.1.0.
 
 1.3.0.0 (relative to 1.2.10.0)
 =======
