@@ -208,7 +208,7 @@ class RendererTest( GafferTest.TestCase ) :
 		)
 		self.assertEqual( mesh["nvertices"], [ 4, 4 ] )
 		self.assertEqual(
-			mesh["uv"],
+			mesh["st"],
 			[
 				imath.V2f( 0, 0 ),
 				imath.V2f( 0.5, 0 ),
@@ -218,7 +218,10 @@ class RendererTest( GafferTest.TestCase ) :
 				imath.V2f( 1, 1 )
 			]
 		)
-		self.assertEqual( mesh["uv.indices"], [ 0, 1, 4, 3, 1, 2, 5, 4 ] )
+		self.assertEqual( mesh["st.indices"], [ 0, 1, 4, 3, 1, 2, 5, 4 ] )
+
+		self.assertNotIn( "uv.indices", mesh )
+		self.assertNotIn( "uv", mesh )
 
 	def testAnimatedMesh( self ) :
 

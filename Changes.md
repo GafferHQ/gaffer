@@ -18,6 +18,7 @@ Improvements
 - 3Delight :
   - Moved shaders to `3Delight/Shader` menu and removed outdated shaders from the menu.
   - Shaders (including light shaders) are only loaded from the `osl` subdirectory of the 3Delight installation.
+  - Primitive variables named `uv` are now automatically renamed `st` for compatibility with the `uvCoord` shader's expectation.
 
 Fixes
 -----
