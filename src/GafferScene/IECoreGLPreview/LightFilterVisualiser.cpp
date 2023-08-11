@@ -132,6 +132,17 @@ Visualisations LightFilterVisualiser::allVisualisations( const IECore::CompoundO
 		boost::split( tokens, attributeName, boost::is_any_of(":") );
 		const IECoreScene::ShaderNetwork *lightShaderNetwork = attributes->member<IECoreScene::ShaderNetwork>( tokens.front() + ":light" );
 
+		// If the light is a USD light, the renderer-specific `lightShaderNetwork` won't be valid
+		if( !lightShaderNetwork )
+		{
+			lightShaderNetwork = attributes->member<IECoreScene::ShaderNetwork>( "light" );
+		}
+
+		if( !lightShaderNetwork )
+		{
+			continue;
+		}
+
 		// It's possible that we found a light filter defined in world space
 		// that isn't assigned to a light just yet. If we found a filter in
 		// light space it must have a valid light shader, though.

@@ -1,6 +1,16 @@
 1.3.x.x (relative to 1.3.1.0)
 =======
 
+Improvements
+------------
+
+- Viewer : Added visualisation of light filters for USD lights.
+
+Fixes
+-----
+
+- Viewer : Fixed crash when visualising lights with a light filter intended for a different renderer.
+
 
 1.3.1.0 (relative to 1.3.0.0)
 =======
