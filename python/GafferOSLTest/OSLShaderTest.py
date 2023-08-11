@@ -1169,5 +1169,18 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		parameters["c"].setValue( imath.Color3f( 0.2, 0.4, 0 ) )
 		self.assertEqual( Gaffer.Metadata.value( parameters["test4"], "layout:visibilityActivator" ), True )
 
+	def testVdbVolumeType( self ) :
+
+		s = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "vdbVolume.osl" )
+		n = GafferOSL.OSLShader()
+		n.loadShader( s )
+
+		self.assertEqual( n["type"].getValue(), "osl:volume" )
+
+		s = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "notAvdbVolume.osl" )
+		n.loadShader( s )
+
+		self.assertEqual( n["type"].getValue(), "osl:shader" )
+
 if __name__ == "__main__":
 	unittest.main()

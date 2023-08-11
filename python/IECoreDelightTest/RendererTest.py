@@ -675,15 +675,94 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( volume["vdbfilename"], vdb.fileName() )
 		self.assertEqual( volume["densitygrid"], "density" )
 
+	def testShaderAttributes( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"3Delight",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.nsi" ),
+		)
+
+		surfaceNetwork = IECoreScene.ShaderNetwork(
+			shaders = { "constHandle" : IECoreScene.Shader( "Surface/Constant", "osl:surface", { "Cs": imath.Color3f( 0, 0, 0 ) } ) },
+			output = "constHandle"
+		)
+		volumeNetwork = IECoreScene.ShaderNetwork(
+			shaders = { "constHandle" : IECoreScene.Shader( "Surface/Constant", "osl:volume", { "Cs": imath.Color3f( 0.5, 0.5, 0.5 ) } ) },
+			output = "constHandle"
+		)
+		displacementNetwork = IECoreScene.ShaderNetwork(
+			shaders = { "constHandle" : IECoreScene.Shader( "Surface/Constant", "osl:displacement", { "Cs": imath.Color3f( 1.0, 1.0, 1.0 ) } ) },
+			output = "constHandle"
+		)
+
+		o = r.object(
+			"testPlane",
+			IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) ),
+			r.attributes(
+				IECore.CompoundObject(
+					{
+						"osl:surface" : surfaceNetwork,
+						"osl:volume" : volumeNetwork,
+						"osl:displacement" : displacementNetwork,
+					}
+				)
+			)
+		)
+		del o
+
+		r.render()
+		del r
+
+		nsi = self.__parseDict( self.temporaryDirectory() / "test.nsi" )
+
+		allAttributes = { k: v for k, v in nsi.items() if nsi[k]["nodeType"] == "attributes" }
+		self.assertEqual( len( allAttributes ), 1 )
+		attributes = allAttributes[next( iter( allAttributes ) )]
+
+		self.assertIn( "surfaceshader", attributes )
+		self.assertIn( "volumeshader", attributes )
+		self.assertIn( "displacementshader", attributes )
+
+		self.assertGreater( len( attributes["surfaceshader"] ), 0 )
+		self.assertGreater( len( attributes["volumeshader"] ), 0 )
+		self.assertGreater( len( attributes["displacementshader"] ), 0 )
+
+		surfaceShader = self.__connectionSource( attributes["surfaceshader"][0], nsi )
+		volumeShader = self.__connectionSource( attributes["volumeshader"][0], nsi )
+		displacementShader = self.__connectionSource( attributes["displacementshader"][0], nsi )
+
+		self.assertEqual( surfaceShader["nodeType"], "shader" )
+		self.assertEqual( volumeShader["nodeType"], "shader" )
+		self.assertEqual( displacementShader["nodeType"], "shader" )
+
+		self.assertEqual( surfaceShader["Cs"], imath.Color3f( 0, 0, 0 ) )
+		self.assertEqual( volumeShader["Cs"], imath.Color3f( 0.5, 0.5, 0.5 ) )
+		self.assertEqual( displacementShader["Cs"], imath.Color3f( 1.0, 1.0, 1.0 ) )
+
 	# Helper methods used to check that NSI files we write contain what we
 	# expect. The 3delight API only allows values to be set, not queried,
 	# so we build a simple dictionary-based node graph for now.
+
+	def __connectionSource( self, connection, nsi ) :
+
+		cSplit = connection.split( '.' )
+		if len( cSplit ) == 0 :
+			return None
+
+		if len( cSplit ) == 1 :
+			return nsi[cSplit[0][1:-1]]  # remove <>
+
+		return nsi[cSplit[0][1:-1]][cSplit[1]]
 
 	def __parseDict( self, nsiFile ) :
 
 		reArraySplit = re.compile( r'(?P<varType>.*)\[(?P<arrayLength>[0-9]+)\]' )
 
-		root = {}
+		root = {
+			".root": { "nodeType": "root", "objects": [], "geometryattributes": [], },
+			".global": { "nodeType": "global", },
+		}
 		tokens = deque()
 		with open( nsiFile, encoding = "utf-8" ) as f :
 			for i in f.readlines() :
@@ -705,10 +784,14 @@ class RendererTest( GafferTest.TestCase ) :
 				currentNode = tokens.popleft()
 				currentTime = float( tokens.popleft() )
 			elif token == "Connect" :
-				tokens.popleft()  # source node
-				tokens.popleft()  # source attribute
-				tokens.popleft()  # destination node
-				tokens.popleft()  # destination attribute
+				sourceNode = tokens.popleft()
+				sourceAttr = tokens.popleft()
+				destNode = tokens.popleft()
+				destAttr = tokens.popleft()
+
+				source = "<{}>".format( sourceNode ) + ( ( "." + sourceAttr ) if sourceAttr != "" else "" )
+
+				root[destNode].setdefault( destAttr, [] ).append( source )
 			elif token == "Delete" :
 				pass
 			elif token == "DeleteAttribute" :

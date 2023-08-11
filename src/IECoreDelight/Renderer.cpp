@@ -583,12 +583,9 @@ namespace
 // Although 3delight only really has surface shaders (lights are just emissive
 // surfaces), we support "light" attributes as well for compatibility with
 // other renderers and some specific workflows in Gaffer.
-std::array<IECore::InternedString, 4> g_shaderAttributeNames = { {
-	"osl:light",
-	"light",
-	"osl:surface",
-	"surface",
-} };
+std::array<std::string, 4> g_surfaceShaderAttributeNames = { "osl:light", "light", "osl:surface", "surface" };
+std::array<std::string, 2> g_volumeShaderAttributeNames = { "osl:volume", "volume" };
+std::array<std::string, 2> g_displacementShaderAttributeNames = { "osl:displacement", "displacement" };
 
 IECore::InternedString g_setsAttributeName( "sets" );
 
@@ -600,14 +597,29 @@ class DelightAttributes : public IECoreScenePreview::Renderer::AttributesInterfa
 		DelightAttributes( NSIContext_t context, const IECore::CompoundObject *attributes, ShaderCache *shaderCache, DelightHandle::Ownership ownership )
 			:	m_handle( context, "attributes:" + attributes->Object::hash().toString(), ownership, "attributes", {} )
 		{
-			for( const auto &name : g_shaderAttributeNames )
+			for( const auto &attributeName : g_surfaceShaderAttributeNames )
 			{
-				if( const Object *o = attributes->member<const Object>( name ) )
+				m_surfaceShader = shader(attributeName, attributes, shaderCache );
+				if( m_surfaceShader )
 				{
-					if( const ShaderNetwork *shader = reportedCast<const ShaderNetwork>( o, "attribute", name ) )
-					{
-						m_shader = shaderCache->get( shader, attributes );
-					}
+					break;
+				}
+			}
+
+			for( const auto &attributeName : g_volumeShaderAttributeNames )
+			{
+				m_volumeShader = shader(attributeName, attributes, shaderCache );
+				if( m_volumeShader )
+				{
+					break;
+				}
+			}
+
+			for( const auto &attributeName : g_displacementShaderAttributeNames )
+			{
+				m_displacementShader = shader(attributeName, attributes, shaderCache );
+				if( m_displacementShader )
+				{
 					break;
 				}
 			}
@@ -652,17 +664,36 @@ class DelightAttributes : public IECoreScenePreview::Renderer::AttributesInterfa
 
 			NSISetAttribute( m_handle.context(), m_handle.name(), params.size(), params.data() );
 
-			if( !m_shader )
+			if( !m_surfaceShader )
 			{
-				m_shader = shaderCache->defaultSurface();
+				m_surfaceShader = shaderCache->defaultSurface();
 			}
 
 			NSIConnect(
 				context,
-				m_shader->handle().name(), "",
+				m_surfaceShader->handle().name(), "",
 				m_handle.name(), "surfaceshader",
 				0, nullptr
 			);
+
+			if( m_volumeShader )
+			{
+				NSIConnect(
+					context,
+					m_volumeShader->handle().name(), "",
+					m_handle.name(), "volumeshader",
+					0, nullptr
+				);
+			}
+			if( m_displacementShader )
+			{
+				NSIConnect(
+					context,
+					m_displacementShader->handle().name(), "",
+					m_handle.name(), "displacementshader",
+					0, nullptr
+				);
+			}
 		}
 
 		const DelightHandle &handle() const
@@ -672,8 +703,22 @@ class DelightAttributes : public IECoreScenePreview::Renderer::AttributesInterfa
 
 	private :
 
+		static ConstDelightShaderPtr shader( const IECore::InternedString &name, const IECore::CompoundObject *attributes, ShaderCache *shaderCache )
+		{
+			if( const Object *o = attributes->member<const Object>( name ) )
+			{
+				if( const ShaderNetwork *shader = reportedCast<const ShaderNetwork>( o, "attribute", name ) )
+				{
+					return shaderCache->get( shader, attributes );
+				}
+			}
+			return nullptr;
+		}
+
 		DelightHandle m_handle;
-		ConstDelightShaderPtr m_shader;
+		ConstDelightShaderPtr m_surfaceShader;
+		ConstDelightShaderPtr m_volumeShader;
+		ConstDelightShaderPtr m_displacementShader;
 
 };
 

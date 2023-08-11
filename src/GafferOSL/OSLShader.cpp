@@ -62,6 +62,8 @@
 
 #include "fmt/format.h"
 
+#include <filesystem>
+
 using namespace std;
 using namespace Imath;
 using namespace IECore;
@@ -1078,7 +1080,13 @@ void OSLShader::loadShader( const std::string &shaderName, bool keepExistingValu
 
 	m_metadata = nullptr;
 	namePlug->source<StringPlug>()->setValue( shaderName );
-	typePlug->source<StringPlug>()->setValue( std::string( "osl:" ) + query->shadertype().c_str() );
+	// 3delight sets it's vdbVolume shader as a "shader" type but requires the
+	// attribute name be `volumeshader` which we handle when spooling the scene.
+	typePlug->source<StringPlug>()->setValue(
+		std::string( "osl:" ) + (
+			std::filesystem::path( shaderName ).stem() != "vdbVolume" ? query->shadertype().c_str() : "volume"
+		)
+	);
 
 	const IECore::CompoundData *metadata = OSLShader::metadata();
 	const IECore::CompoundData *parameterMetadata = nullptr;

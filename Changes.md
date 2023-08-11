@@ -4,7 +4,10 @@
 Features
 --------
 
-- 3Delight : Added support for VDB volume objects.
+- 3Delight :
+  - Added support for VDB volume objects.
+  - Added support for `vdbVolume` shader.
+  - Added support for `volumeshader` and `displacementshader` attributes.
 
 API
 ---
