@@ -2462,6 +2462,11 @@ void LightTool::metadataChanged( InternedString key )
 
 void LightTool::updateHandleInspections()
 {
+	if( m_dragging )
+	{
+		return;
+	}
+
 	auto scene = scenePlug()->getInput<ScenePlug>();
 	scene = scene ? scene->getInput<ScenePlug>() : scene;
 	if( !scene )
