@@ -190,7 +190,7 @@ Imath::Box2f screenWindow( const IECoreScene::Camera *camera )
 {
 	Imath::Box2f result = camera->frustum();
 
-	if( camera->getProjection() == "perspective" )
+	if( camera->getProjection() == "perspective" || camera->getProjection() == "lentil_camera" )
 	{
 		// Normalise so that Arnold's NDC space goes from 0-1 across the aperture.
 		// This is helpful when using Arnold `uv_remap` shaders.
