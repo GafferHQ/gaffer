@@ -1213,7 +1213,7 @@ class SpotLightHandle : public LightToolHandle
 
 			IECoreGL::GroupPtr group = new IECoreGL::Group;
 
-			const bool highlighted = state == Style::State::HighlightedState || m_drag;
+			const bool highlighted = state == Style::State::HighlightedState;
 
 			// Line along cone. Use a cylinder because GL_LINE with width > 1
 			// are not reliably selected.
