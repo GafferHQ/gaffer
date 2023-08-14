@@ -1,5 +1,6 @@
 # BuildTarget: images/mainDefaultLayout.png
 # BuildTarget: images/mainSceneReaderNode.png
+# BuildTarget: images/mainSceneReaderNodeFocussed.png
 # BuildTarget: images/sceneReaderBound.png
 # BuildTarget: images/viewerSceneReaderBounding.png
 # BuildTarget: images/hierarchyViewExpandedTwoLevels.png
