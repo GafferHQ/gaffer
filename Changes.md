@@ -1,6 +1,10 @@
 1.2.10.x (relative to 1.2.10.1)
 ========
 
+Fixes
+-----
+
+- Arnold : Fixed screen window export for Lentil cameras.
 
 1.2.10.1 (relative to 1.2.10.0)
 ========
