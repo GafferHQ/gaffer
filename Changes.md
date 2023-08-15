@@ -11,6 +11,10 @@ Fixes
 
 - Viewer : Fixed crash when visualising lights with a light filter intended for a different renderer.
 
+Documentation
+-------------
+
+- Removed release notes for versions prior to 1.0.0.0.
 
 1.3.1.0 (relative to 1.3.0.0)
 =======
