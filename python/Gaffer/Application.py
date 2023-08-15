@@ -64,10 +64,12 @@ class Application( IECore.Parameterised ) :
 				IECore.IntParameter(
 					name = "threads",
 					description = "The maximum number of threads used for computation. "
-						"The default value of zero causes the number of threads to "
-						" be chosen automatically based on the available hardware.",
+						"The default value of zero matches the number of threads to "
+						"the available hardware cores. Negative values specify a thread count "
+						"relative to the available cores, leaving some in reserve for other "
+						"applications. Positive values specify the thread count explicitly, "
+						"but are clamped so it does not exceed the available cores.",
 					defaultValue = 0,
-					minValue = 0,
 				),
 
 				IECore.FileNameParameter(
@@ -131,11 +133,17 @@ class Application( IECore.Parameterised ) :
 
 	def __run( self ) :
 
+		maxThreads = IECore.hardwareConcurrency()
 		threads = self.parameters()["threads"].getTypedValue()
+		if threads <= 0 :
+			threads = max( maxThreads + threads, 1 )
+		elif threads > maxThreads :
+			IECore.msg( IECore.Msg.Level.Warning, "Application", f"Clamping to `-threads {maxThreads}` to avoid oversubscription" )
+			threads = maxThreads
 
 		with IECore.tbb_global_control(
 			IECore.tbb_global_control.parameter.max_allowed_parallelism,
-			IECore.hardwareConcurrency() if threads == 0 else threads
+			threads
 		) :
 
 			self._executeStartupFiles( self.root().getName() )
