@@ -408,6 +408,433 @@ class SetNameColumn : public StandardPathColumn
 };
 
 //////////////////////////////////////////////////////////////////////////
+// VisibleSetInclusionsColumn - displays and modifies inclusions membership
+// of the VisibleSet in the provided context.
+//////////////////////////////////////////////////////////////////////////
+
+class VisibleSetInclusionsColumn : public PathColumn
+{
+
+	public :
+
+		IE_CORE_DECLAREMEMBERPTR( VisibleSetInclusionsColumn )
+
+		VisibleSetInclusionsColumn( ContextPtr context )
+			:	PathColumn(), m_context( context )
+		{
+			buttonPressSignal().connect( boost::bind( &VisibleSetInclusionsColumn::buttonPress, this, ::_3 ) );
+			buttonReleaseSignal().connect( boost::bind( &VisibleSetInclusionsColumn::buttonRelease, this, ::_1, ::_2, ::_3 ) );
+			m_context->changedSignal().connect( boost::bind( &VisibleSetInclusionsColumn::contextChanged, this, ::_2 ) );
+		}
+
+		CellData cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const override
+		{
+			CellData result;
+
+			auto setPath = IECore::runTimeCast<const SetPath>( &path );
+			if( !setPath )
+			{
+				return result;
+			}
+
+			const auto setName = runTimeCast<const IECore::StringData>( setPath->property( g_setNamePropertyName ) );
+			if( !setName )
+			{
+				// We only interact with locations representing sets
+				return result;
+			}
+
+			auto iconData = new CompoundData;
+			iconData->writable()["state:highlighted"] = g_setIncludedHighlightedTransparentIconName;
+			result.icon = iconData;
+			result.toolTip = g_inclusionToolTip;
+
+			const auto visibleSet = ContextAlgo::getVisibleSet( m_context.get() );
+			if( visibleSet.inclusions.isEmpty() )
+			{
+				result.value = new IntData( 0 );
+				return result;
+			}
+
+			Context::Scope scopedContext( m_context.get() );
+			const auto setMembers = setPath->getScene()->set( setName->readable() );
+			const auto includedSetMembers = setMembers->readable().intersection( visibleSet.inclusions );
+			result.value = new IntData( includedSetMembers.size() );
+			if( includedSetMembers.isEmpty() )
+			{
+				return result;
+			}
+
+			size_t excludedSetMemberCount = 0;
+			if( !visibleSet.exclusions.isEmpty() )
+			{
+				for( IECore::PathMatcher::Iterator it = includedSetMembers.begin(), eIt = includedSetMembers.end(); it != eIt; ++it )
+				{
+					const auto visibility = visibleSet.visibility( *it );
+					if( visibility.drawMode != GafferScene::VisibleSet::Visibility::Visible )
+					{
+						excludedSetMemberCount++;
+					}
+				}
+			}
+
+			iconData->writable()["state:highlighted"] = g_setIncludedHighlightedIconName;
+			const bool allSetMembersIncluded = includedSetMembers.size() == setMembers->readable().size();
+			if( excludedSetMemberCount == 0 )
+			{
+				iconData->writable()["state:normal"] = allSetMembersIncluded ? g_setIncludedIconName : g_setPartiallyIncludedIconName;
+				result.toolTip = allSetMembersIncluded ? g_setIncludedToolTip : g_setPartiallyIncludedToolTip;
+			}
+			else if( includedSetMembers.size() == excludedSetMemberCount )
+			{
+				iconData->writable()["state:normal"] = g_setIncludedDisabledIconName;
+				result.toolTip = allSetMembersIncluded ? g_setIncludedOverrideToolTip : g_setPartiallyIncludedOverrideToolTip;
+			}
+			else
+			{
+				iconData->writable()["state:normal"] = g_setPartiallyDisabledIconName;
+				result.toolTip = allSetMembersIncluded ? g_setIncludedPartialOverrideToolTip : g_setPartiallyIncludedPartialOverrideToolTip;
+			}
+
+			return result;
+		}
+
+		CellData headerData( const IECore::Canceller *canceller ) const override
+		{
+			const auto visibleSet = ContextAlgo::getVisibleSet( m_context.get() );
+			return CellData( /* value = */ nullptr, /* icon = */ visibleSet.inclusions.isEmpty() ? g_inclusionsEmptyIconName : g_setIncludedIconName, /* background = */ nullptr, /* tooltip = */ new StringData( "Visible Set Inclusions" ) );
+		}
+
+	private :
+
+		void contextChanged( const IECore::InternedString &name )
+		{
+			if( ContextAlgo::affectsVisibleSet( name ) )
+			{
+				changedSignal()( this );
+			}
+		}
+
+		bool buttonPress( const ButtonEvent &event )
+		{
+			if( event.buttons != ButtonEvent::Left )
+			{
+				return false;
+			}
+
+			return true;
+		}
+
+		bool buttonRelease( const Gaffer::Path &path, const GafferUI::PathListingWidget &widget, const ButtonEvent &event )
+		{
+			auto setPath = IECore::runTimeCast<const SetPath>( &path );
+			if( !setPath )
+			{
+				return false;
+			}
+
+			const auto setName = runTimeCast<const IECore::StringData>( setPath->property( g_setNamePropertyName ) );
+			if( !setName )
+			{
+				// We only interact with locations representing sets
+				return false;
+			}
+
+			Context::Scope scopedContext( m_context.get() );
+			const auto setMembers = setPath->getScene()->set( setName->readable() );
+			auto pathsToInclude = IECore::PathMatcher( setMembers->readable() );
+			const auto selection = widget.getSelection();
+			if( std::holds_alternative<IECore::PathMatcher>( selection ) )
+			{
+				// Permit bulk editing of a selection of set names when clicking on one of the selected set names
+				const auto selectedPaths = std::get<IECore::PathMatcher>( selection );
+				if( selectedPaths.match( setPath->names() ) & IECore::PathMatcher::Result::ExactMatch )
+				{
+					auto selectedSetPath = setPath->copy();
+					for( IECore::PathMatcher::Iterator it = selectedPaths.begin(), eIt = selectedPaths.end(); it != eIt; ++it )
+					{
+						selectedSetPath->setFromString( ScenePlug::pathToString( *it ) );
+						const auto selectedSetName = runTimeCast<const IECore::StringData>( selectedSetPath->property( g_setNamePropertyName ) );
+						if( selectedSetName && selectedSetName->readable() != setName->readable() )
+						{
+							pathsToInclude.addPaths( setPath->getScene()->set( selectedSetName->readable() )->readable() );
+						}
+					}
+				}
+			}
+
+			bool update = false;
+			auto visibleSet = ContextAlgo::getVisibleSet( m_context.get() );
+			if( event.button == ButtonEvent::Left && !event.modifiers )
+			{
+				const auto includedSetMembers = setMembers->readable().intersection( visibleSet.inclusions );
+				if( includedSetMembers.isEmpty() )
+				{
+					update = visibleSet.inclusions.addPaths( pathsToInclude );
+				}
+				else
+				{
+					update = visibleSet.inclusions.removePaths( pathsToInclude );
+				}
+			}
+			else if( event.button == ButtonEvent::Left && event.modifiers == ButtonEvent::Modifiers::Shift )
+			{
+				update = visibleSet.inclusions.addPaths( pathsToInclude );
+			}
+
+			if( update )
+			{
+				ContextAlgo::setVisibleSet( m_context.get(), visibleSet );
+			}
+
+			return true;
+		}
+
+		ContextPtr m_context;
+
+		static IECore::StringDataPtr g_setIncludedIconName;
+		static IECore::StringDataPtr g_setIncludedDisabledIconName;
+		static IECore::StringDataPtr g_setIncludedHighlightedIconName;
+		static IECore::StringDataPtr g_setIncludedHighlightedTransparentIconName;
+		static IECore::StringDataPtr g_setPartiallyIncludedIconName;
+		static IECore::StringDataPtr g_setPartiallyDisabledIconName;
+		static IECore::StringDataPtr g_inclusionsEmptyIconName;
+
+		static IECore::StringDataPtr g_inclusionToolTip;
+		static IECore::StringDataPtr g_setIncludedToolTip;
+		static IECore::StringDataPtr g_setIncludedOverrideToolTip;
+		static IECore::StringDataPtr g_setIncludedPartialOverrideToolTip;
+		static IECore::StringDataPtr g_setPartiallyIncludedToolTip;
+		static IECore::StringDataPtr g_setPartiallyIncludedOverrideToolTip;
+		static IECore::StringDataPtr g_setPartiallyIncludedPartialOverrideToolTip;
+
+};
+
+StringDataPtr VisibleSetInclusionsColumn::g_setIncludedIconName = new StringData( "locationIncluded.png" );
+StringDataPtr VisibleSetInclusionsColumn::g_setIncludedDisabledIconName = new StringData( "locationIncludedDisabled.png" );
+StringDataPtr VisibleSetInclusionsColumn::g_setIncludedHighlightedIconName = new StringData( "locationIncludedHighlighted.png" );
+StringDataPtr VisibleSetInclusionsColumn::g_setIncludedHighlightedTransparentIconName = new StringData( "locationIncludedHighlightedTransparent.png" );
+StringDataPtr VisibleSetInclusionsColumn::g_setPartiallyIncludedIconName = new StringData( "descendantIncluded.png" );
+StringDataPtr VisibleSetInclusionsColumn::g_setPartiallyDisabledIconName = new StringData( "descendantIncludedTransparent.png" );
+StringDataPtr VisibleSetInclusionsColumn::g_inclusionsEmptyIconName = new StringData( "locationIncludedTransparent.png" );
+
+StringDataPtr VisibleSetInclusionsColumn::g_inclusionToolTip = new StringData( "Click to include the current members of this set in the Visible Set, causing them to always appear in Viewers." );
+StringDataPtr VisibleSetInclusionsColumn::g_setIncludedToolTip = new StringData(
+	"All members are in the Visible Set, causing them to always appear in Viewers.\n\n"
+	"Click to remove members from the Visible Set."
+);
+StringDataPtr VisibleSetInclusionsColumn::g_setIncludedOverrideToolTip = new StringData(
+	"All members are in the Visible Set, but aren't visible due to being overridden by an exclusion.\n\n"
+	"Click to remove members from the Visible Set."
+);
+StringDataPtr VisibleSetInclusionsColumn::g_setIncludedPartialOverrideToolTip = new StringData(
+	"All members are in the Visible Set, but some aren't visible due to being overridden by an exclusion.\n\n"
+	"Click to remove members from the Visible Set."
+);
+StringDataPtr VisibleSetInclusionsColumn::g_setPartiallyIncludedToolTip = new StringData(
+	"Some members are in the Visible Set, causing them to always appear in Viewers.\n\n"
+	"Click to remove members from the Visible Set.\n"
+	"Shift-click to include members in the Visible Set."
+);
+StringDataPtr VisibleSetInclusionsColumn::g_setPartiallyIncludedOverrideToolTip = new StringData(
+	"Some members are in the Visible Set, but aren't visible due to being overridden by an exclusion.\n\n"
+	"Click to remove members from the Visible Set.\n"
+	"Shift-click to include members in the Visible Set."
+);
+StringDataPtr VisibleSetInclusionsColumn::g_setPartiallyIncludedPartialOverrideToolTip = new StringData(
+	"Some members are in the Visible Set, but some aren't visible due to being overridden by an exclusion.\n\n"
+	"Click to remove members from the Visible Set.\n"
+	"Shift-click to include members in the Visible Set."
+);
+
+//////////////////////////////////////////////////////////////////////////
+// VisibleSetExclusionsColumn - displays and modifies exclusions membership
+// of the VisibleSet in the provided context.
+//////////////////////////////////////////////////////////////////////////
+
+class VisibleSetExclusionsColumn : public PathColumn
+{
+
+	public :
+
+		IE_CORE_DECLAREMEMBERPTR( VisibleSetExclusionsColumn )
+
+		VisibleSetExclusionsColumn( ContextPtr context )
+			:	PathColumn(), m_context( context )
+		{
+			buttonPressSignal().connect( boost::bind( &VisibleSetExclusionsColumn::buttonPress, this, ::_3 ) );
+			buttonReleaseSignal().connect( boost::bind( &VisibleSetExclusionsColumn::buttonRelease, this, ::_1, ::_2, ::_3 ) );
+			m_context->changedSignal().connect( boost::bind( &VisibleSetExclusionsColumn::contextChanged, this, ::_2 ) );
+		}
+
+		CellData cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const override
+		{
+			CellData result;
+
+			auto setPath = IECore::runTimeCast<const SetPath>( &path );
+			if( !setPath )
+			{
+				return result;
+			}
+
+			const auto setName = runTimeCast<const IECore::StringData>( setPath->property( g_setNamePropertyName ) );
+			if( !setName )
+			{
+				// We only interact with locations representing sets
+				return result;
+			}
+
+			auto iconData = new CompoundData;
+			iconData->writable()["state:highlighted"] = g_setExcludedHighlightedTransparentIconName;
+			result.icon = iconData;
+			result.toolTip = g_exclusionToolTip;
+
+			const auto visibleSet = ContextAlgo::getVisibleSet( m_context.get() );
+			if( visibleSet.exclusions.isEmpty() )
+			{
+				result.value = new IntData( 0 );
+				return result;
+			}
+
+			Context::Scope scopedContext( m_context.get() );
+			const auto setMembers = setPath->getScene()->set( setName->readable() );
+			const auto excludedSetMembers = setMembers->readable().intersection( visibleSet.exclusions );
+			result.value = new IntData( excludedSetMembers.size() );
+			if( excludedSetMembers.isEmpty() )
+			{
+				return result;
+			}
+
+			const bool allSetMembersExcluded = excludedSetMembers.size() == setMembers->readable().size();
+			iconData->writable()["state:highlighted"] = g_setExcludedHighlightedIconName;
+			iconData->writable()["state:normal"] = allSetMembersExcluded ? g_setExcludedIconName : g_setPartiallyExcludedIconName;
+			result.toolTip = allSetMembersExcluded ? g_setExcludedToolTip : g_setPartiallyExcludedToolTip;
+
+			return result;
+		}
+
+		CellData headerData( const IECore::Canceller *canceller ) const override
+		{
+			const auto visibleSet = ContextAlgo::getVisibleSet( m_context.get() );
+			return CellData( /* value = */ nullptr, /* icon = */ visibleSet.exclusions.isEmpty() ? g_exclusionsEmptyIconName : g_setExcludedIconName, /* background = */ nullptr, /* tooltip = */ new StringData( "Visible Set Exclusions" ) );
+		}
+
+	private :
+
+		void contextChanged( const IECore::InternedString &name )
+		{
+			if( ContextAlgo::affectsVisibleSet( name ) )
+			{
+				changedSignal()( this );
+			}
+		}
+
+		bool buttonPress( const ButtonEvent &event )
+		{
+			if( event.buttons != ButtonEvent::Left )
+			{
+				return false;
+			}
+
+			return true;
+		}
+
+		bool buttonRelease( const Gaffer::Path &path, const GafferUI::PathListingWidget &widget, const ButtonEvent &event )
+		{
+			auto setPath = IECore::runTimeCast<const SetPath>( &path );
+			if( !setPath )
+			{
+				return false;
+			}
+
+			const auto setName = runTimeCast<const IECore::StringData>( setPath->property( g_setNamePropertyName ) );
+			if( !setName )
+			{
+				// We only interact with locations representing sets
+				return false;
+			}
+
+			Context::Scope scopedContext( m_context.get() );
+			const auto setMembers = setPath->getScene()->set( setName->readable() );
+			auto pathsToExclude = IECore::PathMatcher( setMembers->readable() );
+			const auto selection = widget.getSelection();
+			if( std::holds_alternative<IECore::PathMatcher>( selection ) )
+			{
+				// Permit bulk editing of a selection of set names when clicking on one of the selected set names
+				const auto selectedPaths = std::get<IECore::PathMatcher>( selection );
+				if( selectedPaths.match( setPath->names() ) & IECore::PathMatcher::Result::ExactMatch )
+				{
+					auto selectedSetPath = setPath->copy();
+					for( IECore::PathMatcher::Iterator it = selectedPaths.begin(), eIt = selectedPaths.end(); it != eIt; ++it )
+					{
+						selectedSetPath->setFromString( ScenePlug::pathToString( *it ) );
+						const auto selectedSetName = runTimeCast<const IECore::StringData>( selectedSetPath->property( g_setNamePropertyName ) );
+						if( selectedSetName && selectedSetName->readable() != setName->readable() )
+						{
+							pathsToExclude.addPaths( setPath->getScene()->set( selectedSetName->readable() )->readable() );
+						}
+					}
+				}
+			}
+
+			bool update = false;
+			auto visibleSet = ContextAlgo::getVisibleSet( m_context.get() );
+			if( event.button == ButtonEvent::Left && !event.modifiers )
+			{
+				const auto excludedSetMembers = setMembers->readable().intersection( visibleSet.exclusions );
+				if( excludedSetMembers.isEmpty() )
+				{
+					update = visibleSet.exclusions.addPaths( pathsToExclude );
+				}
+				else
+				{
+					update = visibleSet.exclusions.removePaths( pathsToExclude );
+				}
+			}
+			else if( event.button == ButtonEvent::Left && event.modifiers == ButtonEvent::Modifiers::Shift )
+			{
+				update = visibleSet.exclusions.addPaths( pathsToExclude );
+			}
+
+			if( update )
+			{
+				ContextAlgo::setVisibleSet( m_context.get(), visibleSet );
+			}
+
+			return true;
+		}
+
+		ContextPtr m_context;
+
+		static IECore::StringDataPtr g_setExcludedIconName;
+		static IECore::StringDataPtr g_setPartiallyExcludedIconName;
+		static IECore::StringDataPtr g_setExcludedHighlightedIconName;
+		static IECore::StringDataPtr g_setExcludedHighlightedTransparentIconName;
+		static IECore::StringDataPtr g_exclusionsEmptyIconName;
+
+		static IECore::StringDataPtr g_exclusionToolTip;
+		static IECore::StringDataPtr g_setExcludedToolTip;
+		static IECore::StringDataPtr g_setPartiallyExcludedToolTip;
+};
+
+StringDataPtr VisibleSetExclusionsColumn::g_setExcludedIconName = new StringData( "locationExcluded.png" );
+StringDataPtr VisibleSetExclusionsColumn::g_setPartiallyExcludedIconName = new StringData( "descendantExcluded.png" );
+StringDataPtr VisibleSetExclusionsColumn::g_setExcludedHighlightedIconName = new StringData( "locationExcludedHighlighted.png" );
+StringDataPtr VisibleSetExclusionsColumn::g_setExcludedHighlightedTransparentIconName = new StringData( "locationExcludedHighlightedTransparent.png" );
+StringDataPtr VisibleSetExclusionsColumn::g_exclusionsEmptyIconName = new StringData( "locationExcludedTransparent.png" );
+
+StringDataPtr VisibleSetExclusionsColumn::g_exclusionToolTip = new StringData( "Click to exclude the current members of this set from the Visible Set, causing them to not appear in Viewers." );
+StringDataPtr VisibleSetExclusionsColumn::g_setExcludedToolTip = new StringData(
+	"All members are excluded from the Visible Set, causing them to not appear in Viewers.\n\n"
+	"Click to remove the exclusion."
+);
+StringDataPtr VisibleSetExclusionsColumn::g_setPartiallyExcludedToolTip = new StringData(
+	"Some members are excluded from the Visible Set, causing them to not appear in Viewers.\n\n"
+	"Click to remove the exclusion.\n"
+	"Shift-click to exclude members from the Visible Set."
+);
+
+//////////////////////////////////////////////////////////////////////////
 // SetEditorSearchFilter - filters based on a match pattern. This
 // removes non-leaf paths if all their children have also been
 // removed by the filter.
@@ -602,6 +1029,14 @@ void GafferSceneUIModule::bindSetEditor()
 
 	RefCountedClass<SetNameColumn, GafferUI::PathColumn>( "SetNameColumn" )
 		.def( init<>() )
+	;
+
+	RefCountedClass<VisibleSetInclusionsColumn, GafferUI::PathColumn>( "VisibleSetInclusionsColumn" )
+		.def( init< ContextPtr >() )
+	;
+
+	RefCountedClass<VisibleSetExclusionsColumn, GafferUI::PathColumn>( "VisibleSetExclusionsColumn" )
+		.def( init< ContextPtr >() )
 	;
 
 }
