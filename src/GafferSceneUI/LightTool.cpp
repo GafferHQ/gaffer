@@ -817,7 +817,7 @@ class SpotLightHandle : public LightToolHandle
 		SpotLightHandle(
 			const std::string &attributePattern,
 			HandleType handleType,
-			SceneViewPtr view,
+			const SceneView *view,
 			const float zRotation,
 			const std::string &name = "SpotLightHandle"
 		) :
@@ -1627,7 +1627,7 @@ class SpotLightHandle : public LightToolHandle
 		ParameterInspectorPtr m_coneAngleInspector;
 		ParameterInspectorPtr m_penumbraAngleInspector;
 
-		SceneViewPtr m_view;
+		const SceneView *m_view;
 
 		const float m_zRotation;
 
