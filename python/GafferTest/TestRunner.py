@@ -40,6 +40,7 @@ import json
 import time
 import collections
 
+import IECore
 import Gaffer
 
 # TestRunner capable of measuring performance of certain
@@ -56,16 +57,50 @@ class TestRunner( unittest.TextTestRunner ) :
 
 		self.__previousResultsFile = previousResultsFile
 
+	# Decorator used to assign categories to tests. Usage :
+	#
+	# ```
+	# @GafferTest.TestRunner.CategorisedTestMethod( { "category1", "category2" } )
+	# def testFoo( self ) :
+	# ```
+	#
+	# Tests may then be filtered by category in `gaffer test` :
+	#
+	# ```
+	# # Only run tests in category1
+	# gaffer test -category category1
+	# # Run all tests except those in category2
+	# gaffer test -excludedCategories category2
+	# ```
+	class CategorisedTestMethod( object ) :
+
+		def __init__( self, categories = [] ) :
+
+			self.__categories = set( categories )
+
+		# Called to return the decorated method
+		def __call__( self, method ) :
+
+			c = getattr( method, "categories", set() )
+			c.update( self.__categories )
+			method.categories = c
+
+			return method
+
 	# Decorator used to annotate tests which measure performance.
-	class PerformanceTestMethod( object ) :
+	class PerformanceTestMethod( CategorisedTestMethod ) :
 
 		def __init__( self, repeat = 3, acceptableDifference = 0.01 ) :
+
+			TestRunner.CategorisedTestMethod.__init__( self, { "performance" } )
 
 			self.__repeat = repeat
 			self.__acceptableDifference = acceptableDifference
 
 		# Called to return the decorated method.
 		def __call__( self, method ) :
+
+			method = TestRunner.CategorisedTestMethod.__call__( self, method )
 
 			@functools.wraps( method )
 			def wrapper( *args, **kw ) :
@@ -93,8 +128,6 @@ class TestRunner( unittest.TextTestRunner ) :
 					args[0].assertLessEqual( min( timings ), min( previousTimings ) + self.__acceptableDifference )
 
 				return result
-
-			wrapper.performanceTestMethod = True
 
 			return wrapper
 
@@ -133,30 +166,48 @@ class TestRunner( unittest.TextTestRunner ) :
 		result.writePerformance()
 		return result
 
-	# Adds a skip decorator to all non-performance-related tests.
+	# Returns the set of all test categories in a TestSuite or TestCase.
+	@staticmethod
+	def categories( test ) :
+
+		result = set()
+		if isinstance( test, unittest.TestSuite ) :
+			for t in test :
+				result.update( TestRunner.categories( t ) )
+		elif isinstance( test, unittest.TestCase ) :
+			testMethod = getattr( test, test._testMethodName )
+			result.update( getattr( testMethod, "categories", [] ) )
+
+		return result
+
+	@staticmethod
+	def filterCategories( test, inclusions = "*", exclusions = "" ) :
+
+		if isinstance( test, unittest.TestSuite ) :
+			for t in test :
+				TestRunner.filterCategories( t, inclusions, exclusions )
+		elif isinstance( test, unittest.TestCase ) :
+			testMethod = getattr( test, test._testMethodName )
+			## \todo Remove `standard` fallback (breaking change).
+			categories = getattr( testMethod, "categories", { "standard" } )
+			if not any( IECore.StringAlgo.match( c, inclusions ) for c in categories ) :
+				setattr(
+					test, test._testMethodName,
+					unittest.skip( f"Categories not included by `{inclusions}`" )( testMethod )
+				)
+			elif any( IECore.StringAlgo.match( c, exclusions ) for c in categories ) :
+				setattr(
+					test, test._testMethodName,
+					unittest.skip( f"Categories excluded by `{exclusions}`" )( testMethod )
+				)
+
+	## \todo Remove (breaking change)
 	@staticmethod
 	def filterTestCategory( test, category ) :
 		if category == "":
 			return
 
-		if isinstance( test, unittest.TestSuite ) :
-			for t in test :
-				TestRunner.filterTestCategory( t, category )
-		elif isinstance( test, unittest.TestCase ) :
-			testMethod = getattr( test, test._testMethodName )
-			isPerf = getattr( testMethod, "performanceTestMethod", False )
-			if category == "performance":
-				if not isPerf:
-					setattr(
-						test, test._testMethodName,
-						unittest.skip( "Not a performance test" )( testMethod )
-					)
-			else:
-				if isPerf:
-					setattr(
-						test, test._testMethodName,
-						unittest.skip( "Skipping performance test" )( testMethod )
-					)
+		return TestRunner.filterCategories( inclusions = category )
 
 	def _makeResult( self ) :
 
