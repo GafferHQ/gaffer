@@ -60,3 +60,11 @@ for p in [ "intensity", "exposure", "color", "size", "spot_angle", "samples" ] :
 
 for p in ["base_color", "subsurface_color", "metallic", "subsurface", "subsurface_radius", "specular", "roughness", "specular_tint" ] :
 	GafferSceneUI._SceneViewInspector.registerShaderParameter( "cycles:surface", p )
+
+# USD
+
+for p in [ "intensity", "exposure", "color", "enableColorTemperature", "colorTemperature", "width", "height", "radius", "angle", "shaping:cone:angle", "shaping:cone:softness" ] :
+	GafferSceneUI._SceneViewInspector.registerShaderParameter( "light", p )
+
+for p in [ "diffuseColor", "emissiveColor", "useSpecularWorkflow", "specularColor", "metallic", "roughness", "clearcoat", "clearcoatRoughness" ] :
+	GafferSceneUI._SceneViewInspector.registerShaderParameter( "surface", p )

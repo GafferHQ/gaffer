@@ -67,7 +67,8 @@ _rendererAttributePrefixes = {
 	"dl" : "Delight",
 	"gl" : "OpenGL",
 	"osl" : "OSL",
-	"cycles" : "Cycles"
+	"cycles" : "Cycles",
+	"" : "USD",
 };
 
 __registeredShaderParameters = OrderedDict()
@@ -176,7 +177,11 @@ class _SceneViewInspector( GafferUI.Widget ) :
 	@staticmethod
 	def __attributeLabel( attribute ) :
 
-		prefix, name = attribute.split( ":", 1 )
+		prefix, _, name = attribute.partition( ":" )
+		if not name :
+			name = prefix
+			prefix = ""
+
 		prefix = _rendererAttributePrefixes.get( prefix, prefix )
 		name = " ".join( [ IECore.CamelCase.toSpaced( n ) for n in name.split( ":" ) ] )
 		return "{} {}".format( prefix, name )
