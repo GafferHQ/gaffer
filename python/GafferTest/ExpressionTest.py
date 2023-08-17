@@ -1513,6 +1513,7 @@ class ExpressionTest( GafferTest.TestCase ) :
 		)
 
 	@GafferTest.TestRunner.PerformanceTestMethod()
+	@GafferTest.TestRunner.CategorisedTestMethod( { "taskCollaboration:performance" } )
 	def testParallelPerformance( self ):
 		s = Gaffer.ScriptNode()
 		s["n"] = Gaffer.Node()

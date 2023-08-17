@@ -169,6 +169,7 @@ class FilterResultsTest( GafferSceneTest.SceneTestCase ) :
 			] )
 		)
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "taskCollaboration:hashAliasing" } )
 	def testComputeCacheRecursion( self ) :
 
 		script = Gaffer.ScriptNode()
