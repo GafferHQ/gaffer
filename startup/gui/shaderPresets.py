@@ -84,4 +84,10 @@ with IECore.IgnoredExceptions( ImportError ) :
 
 	] )
 
-__registerShaderPresets( [ ( "OpenGL Surface", "gl:surface" ) ] )
+__registerShaderPresets( [
+
+		( "OpenGL Surface", "gl:surface" ),
+		( "USD Surface", "surface" ),
+		( "USD Light", "light" ),
+
+	] )
