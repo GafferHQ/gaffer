@@ -423,7 +423,7 @@ class DelightShader : public IECore::RefCounted
 
 					for( const auto &parameter : shader->parameters() )
 					{
-						parameterList.add( parameter.first.c_str(), parameter.second.get() );
+						parameterList.add( parameter.first.c_str(), parameter.second.get(), true );
 					}
 
 					NSISetAttribute(
@@ -641,7 +641,7 @@ class DelightAttributes : public IECoreScenePreview::Renderer::AttributesInterfa
 				{
 					if( const Data *d = reportedCast<const IECore::Data>( m.second.get(), "attribute", m.first ) )
 					{
-						params.add( m.first.c_str() + 3, d );
+						params.add( m.first.c_str() + 3, d, true );
 					}
 				}
 				else if( boost::starts_with( m.first.string(), "render:" ) )
@@ -1052,7 +1052,7 @@ void setNSIGlobalOption( NSIContext_t context, const InternedString &name, const
 		if( const Data *data = reportedCast<const Data>( value, "option", name ) )
 		{
 			ParameterList params;
-			params.add( name.c_str() + 3, data );
+			params.add( name.c_str() + 3, data, true );
 			NSISetAttribute( context, NSI_SCENE_GLOBAL, params.size(), params.data() );
 		}
 		else
