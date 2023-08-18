@@ -84,4 +84,20 @@ std::invoke_result_t<Predicate, Plug *> findDestination( Plug *plug, Predicate &
 	return std::invoke_result_t<Predicate, Plug *>();
 }
 
+template<typename Predicate>
+std::invoke_result_t<Predicate, Plug *> findSource( Plug *plug, Predicate &&predicate )
+{
+	while( plug )
+	{
+		if( auto source = predicate( plug ) )
+		{
+			return source;
+		}
+		plug = plug->getInput();
+	}
+
+	// Typically a null pointer.
+	return std::invoke_result_t<Predicate, Plug *>();
+}
+
 } // namespace Gaffer::PlugAlgo

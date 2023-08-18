@@ -1013,5 +1013,28 @@ class PlugAlgoTest( GafferTest.TestCase ) :
 			Gaffer.PlugAlgo.findDestination( None, lambda plug : plug )
 		)
 
+	def testFindSource( self ) :
+
+		self.assertIsNone( Gaffer.PlugAlgo.findSource( None, lambda plug : plug ) )
+		self.assertIsNone( Gaffer.PlugAlgo.findSource( Gaffer.IntPlug(), lambda plug : None ) )
+
+		node = GafferTest.AddNode()
+		self.assertTrue(
+			Gaffer.PlugAlgo.findSource( node["op1"], lambda plug : plug ).isSame( node["op1"] )
+		)
+
+		node2 = GafferTest.MultiplyNode()
+		node["op1"].setInput( node2["product"] )
+
+		self.assertTrue(
+			Gaffer.PlugAlgo.findSource( node["op1"], lambda plug : plug ).isSame( node["op1"] )
+		)
+
+		self.assertTrue(
+			Gaffer.PlugAlgo.findSource(
+				node["op1"], lambda plug : plug if isinstance( plug.node(), GafferTest.MultiplyNode ) else None
+			).isSame( node2["product"] )
+		)
+
 if __name__ == "__main__":
 	unittest.main()

@@ -27,6 +27,7 @@ API
 ---
 
 - ThreadMonitor : Added new class for tracking the threads used to perform processes.
+- PlugAlgo : Added `findSource()` method.
 
 Documentation
 -------------
