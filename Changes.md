@@ -14,6 +14,11 @@ Fixes
 
 - Viewer : Fixed crash when visualising lights with a light filter intended for a different renderer.
 
+API
+---
+
+- ThreadMonitor : Added new class for tracking the threads used to perform processes.
+
 Documentation
 -------------
 
