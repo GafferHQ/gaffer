@@ -41,8 +41,6 @@
 
 using namespace Gaffer;
 
-/// \todo If we expose ValuePlug::HashProcess and ValuePlug::ComputeProcess
-/// then we can use the types defined there directly.
 static IECore::InternedString g_hashType( "computeNode:hash" );
 static IECore::InternedString g_computeType( "computeNode:compute" );
 static PerformanceMonitor::Statistics g_emptyStatistics;

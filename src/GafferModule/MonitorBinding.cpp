@@ -44,10 +44,13 @@
 #include "Gaffer/Node.h"
 #include "Gaffer/PerformanceMonitor.h"
 #include "Gaffer/Plug.h"
+#include "Gaffer/ThreadMonitor.h"
 #include "Gaffer/VTuneMonitor.h"
 
 #include "IECorePython/RefCountedBinding.h"
 #include "IECorePython/ScopedGILRelease.h"
+
+#include "boost/python/suite/indexing/container_utils.hpp"
 
 #include "fmt/format.h"
 
@@ -147,6 +150,43 @@ void removeContextAnnotationsWrapper( Node &root )
 {
 	IECorePython::ScopedGILRelease gilRelease;
 	MonitorAlgo::removeContextAnnotations( root );
+}
+
+ThreadMonitor::Ptr threadMonitorConstructor( boost::python::object pythonProcessMask )
+{
+	std::vector<IECore::InternedString> processMask;
+	container_utils::extend_container( processMask, pythonProcessMask );
+	return new ThreadMonitor( processMask );
+}
+
+dict processesPerThreadToPython( const ThreadMonitor::ProcessesPerThread &processesPerThread )
+{
+	dict result;
+	for( auto [id, count] : processesPerThread )
+	{
+		result[id] = count;
+	}
+	return result;
+}
+
+dict threadMonitorAllStatisticsWrapper( const ThreadMonitor &monitor )
+{
+	dict result;
+	for( const auto &[plug, processesPerThread] : monitor.allStatistics() )
+	{
+		result[boost::const_pointer_cast<Plug>( plug )] = processesPerThreadToPython( processesPerThread );
+	}
+	return result;
+}
+
+dict threadMonitorPlugStatisticsWrapper( const ThreadMonitor &monitor, const Plug &plug )
+{
+	return processesPerThreadToPython( monitor.plugStatistics( &plug ) );
+}
+
+dict threadMonitorCombinedStatisticsWrapper( const ThreadMonitor &monitor )
+{
+	return processesPerThreadToPython( monitor.combinedStatistics() );
 }
 
 } // namespace
@@ -261,6 +301,23 @@ void GafferModule::bindMonitor()
 			.def( "numUniqueValues", &ContextMonitor::Statistics::numUniqueValues )
 			.def( self == self )
 			.def( self != self )
+		;
+	}
+
+	{
+		scope s = IECorePython::RefCountedClass<ThreadMonitor, Monitor>( "ThreadMonitor" )
+			.def(
+				"__init__",
+				make_constructor(
+					threadMonitorConstructor, default_call_policies(),
+					arg( "processMask" ) = boost::python::make_tuple( "computeNode:compute" )
+				)
+			)
+			.def( "thisThreadId", &ThreadMonitor::thisThreadId )
+			.staticmethod( "thisThreadId" )
+			.def( "allStatistics", &threadMonitorAllStatisticsWrapper )
+			.def( "plugStatistics", &threadMonitorPlugStatisticsWrapper )
+			.def( "combinedStatistics", &threadMonitorCombinedStatisticsWrapper )
 		;
 	}
 
