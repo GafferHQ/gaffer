@@ -11,6 +11,7 @@ Improvements
 - Test app :
   - The `-category` argument now accepts a space-separated list of categories, optionally containing wildcards.
   - Added `-excludedCategories` and `-showCategories` arguments.
+  - Added information about performance test timings to the output stream.
 
 API
 ---

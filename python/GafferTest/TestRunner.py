@@ -267,16 +267,20 @@ class TestRunner( unittest.TextTestRunner ) :
 			unittest.TextTestResult.addSuccess( self, test )
 
 			timings = getattr( test, "timings", None )
-			if timings and test.previousTimings :
-				new = min( timings )
-				old = min( test.previousTimings )
-				reduction = 100 * (old-new)/old
-				if reduction > 2 :
-					self.__performanceImprovements.append(
-						"- {test} : was {old:.2f}s now {new:.2f}s ({reduction:.0f}% reduction)".format(
-							test = str( test), old = old, new = new, reduction = reduction
+			if timings :
+				if self.showAll :
+					self.stream.write( "    Times : " + ", ".join( f"{t:.3g}s" for t in timings ) + "\n" )
+					self.stream.write( "    Best  : " + "{:.3g}s".format( min( timings ) ) + "\n" )
+				if test.previousTimings :
+					new = min( timings )
+					old = min( test.previousTimings )
+					reduction = 100 * (old-new)/old
+					if reduction > 2 :
+						self.__performanceImprovements.append(
+							"- {test} : was {old:.2f}s now {new:.2f}s ({reduction:.0f}% reduction)".format(
+								test = str( test), old = old, new = new, reduction = reduction
+							)
 						)
-					)
 
 			self.__addResult( test, "success" )
 
