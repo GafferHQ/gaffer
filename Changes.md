@@ -4,7 +4,9 @@
 Improvements
 ------------
 
-- Viewer : Added visualisation of light filters for USD lights.
+- Viewer :
+  - Added visualisation of light filters for USD lights.
+  - Added support for USD lights and shaders in the floating inspector panel.
 - ShaderTweaks/ShaderQuery : Added presets for USD light and surface shaders.
 
 Fixes
