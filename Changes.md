@@ -16,6 +16,7 @@ Improvements
 Fixes
 -----
 
+- ValuePlug : Fixed hangs and poor performance caused by plugs depending on upstream plugs with an identical hash (#4978).
 - Filter : Fixed bug which allowed the `scene:path` context variable to "leak" upstream via the `Filter.enabled` plug. This caused unnecessary evaluations of the input, and also provided a loophole via which the filter result could be made inconsistent with respect to descendant and ancestor matches.
 - Windows :
   - Fixed a bug preventing anything except strings from being copied and pasted.
