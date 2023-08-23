@@ -62,26 +62,26 @@ shader CompareFloat
 {
 	if( condition == CONDITION_EQUAL )
 	{
-		success = a == b;
+		success = a == b ? 1 : 0;
 	}
 	else if( condition == CONDITION_NOT_EQUAL )
 	{
-		success = a != b;
+		success = a != b ? 1 : 0;
 	}
 	else if( condition == CONDITION_GREATER )
 	{
-		success = a > b;
+		success = a > b ? 1 : 0;
 	}
 	else if( condition == CONDITION_GREATER_OR_EQUAL )
 	{
-		success = a >= b;
+		success = a >= b ? 1 : 0;
 	}
 	else if( condition == CONDITION_LESS )
 	{
-		success = a < b;
+		success = a < b ? 1 : 0;
 	}
 	else
 	{
-		success = a <= b;
+		success = a <= b ? 1 : 0;
 	}
 }

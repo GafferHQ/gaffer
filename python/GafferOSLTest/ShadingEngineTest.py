@@ -971,5 +971,26 @@ class ShadingEngineTest( GafferOSLTest.OSLTestCase ) :
 				imath.Color3f( 1, 2, 3 )
 			)
 
+	def testCompareFloat( self ) :
+
+		e = GafferOSL.ShadingEngine( IECoreScene.ShaderNetwork(
+			shaders = {
+				"globals" : IECoreScene.Shader( "Utility/Globals", "osl:shader" ),
+				"compareFloat" : IECoreScene.Shader( "Utility/CompareFloat", "osl:shader" ),
+				"output" : IECoreScene.Shader( "Surface/Constant", "osl:surface" )
+			},
+			connections = [
+				( ( "globals", "globalU" ), ( "compareFloat", "a" ) ),
+				( ( "globals", "globalV" ), ( "compareFloat", "b" ) ),
+				( ( "compareFloat", "success" ), ( "output", "Cs.r" ) ),
+			],
+			output = "output"
+		) )
+
+		r = e.shade( self.rectanglePoints() )
+		for x in range( 0, 10 ) :
+			for y in range( 0, 10 ) :
+				self.assertEqual( r["Ci"][y*10+x].r, 1 if x == y else 0 )
+
 if __name__ == "__main__":
 	unittest.main()
