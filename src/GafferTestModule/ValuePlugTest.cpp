@@ -64,6 +64,18 @@ void repeatGetValue( const T *plug, int iterations )
 	}
 }
 
+template<typename T>
+void repeatGetValueWithVar( const T *plug, int iterations, const IECore::InternedString iterationVar )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	Context::EditableScope scope( Context::current() );
+	for( int i = 0; i < iterations; i++ )
+	{
+		scope.set( iterationVar, &i );
+		plug->getValue();
+	}
+}
+
 // Call getValue() on the given plug many times in parallel.
 //
 // Evaluating the same value over and over again is obviously not useful,
@@ -115,6 +127,10 @@ void GafferTestModule::bindValuePlugTest()
 	def( "repeatGetValue", &repeatGetValue<FloatPlug> );
 	def( "repeatGetValue", &repeatGetValue<ObjectPlug> );
 	def( "repeatGetValue", &repeatGetValue<PathMatcherDataPlug> );
+	def( "repeatGetValue", &repeatGetValueWithVar<IntPlug> );
+	def( "repeatGetValue", &repeatGetValueWithVar<FloatPlug> );
+	def( "repeatGetValue", &repeatGetValueWithVar<ObjectPlug> );
+	def( "repeatGetValue", &repeatGetValueWithVar<PathMatcherDataPlug> );
 	def( "parallelGetValue", &parallelGetValue<IntPlug> );
 	def( "parallelGetValue", &parallelGetValue<FloatPlug> );
 	def( "parallelGetValue", &parallelGetValue<ObjectPlug> );
