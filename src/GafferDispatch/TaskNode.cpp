@@ -106,7 +106,7 @@ class TaskNodeProcess : public Gaffer::Process
 			return n;
 		}
 
-		void handleException()
+		void handleException() const
 		{
 			Gaffer::Process::handleException();
 		}

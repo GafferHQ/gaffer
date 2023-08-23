@@ -97,8 +97,8 @@ class GAFFER_API Process : private ThreadState::Scope
 		/// report the error appropriately via Node::errorSignal()
 		/// and rethrow the exception for propagation back to
 		/// the original caller.
-		/// \todo Consider ways of dealing with this automatically - could
-		/// we use C++11's current_exception() in our destructor perhaps?
+		[[noreturn]] void handleException() const;
+		/// \todo This just exists for ABI compatibility. Remove it.
 		void handleException();
 
 	private :
