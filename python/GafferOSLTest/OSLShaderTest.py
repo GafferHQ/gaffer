@@ -772,6 +772,109 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 			)
 		)
 
+	def test3delightSplineParameters( self ) :
+
+		s = self.compileShader( pathlib.Path( __file__ ).parent / "shaders" / "delightSplineParameters.osl" )
+		n = GafferOSL.OSLShader()
+		n.loadShader( s )
+
+		self.assertEqual(
+			n["parameters"].keys(),
+			[
+				"floatSpline",
+				"colorSpline",
+				"dualInterpolationSpline",
+				"trimmedFloatSpline",
+				"mayaSpline",
+				"inconsistentNameSpline",
+				"notASpline",
+				"alsoNotASpline",
+				"sameHere",
+				"norMe",
+			]
+		)
+
+		self.assertTrue( isinstance( n["parameters"]["floatSpline"], Gaffer.SplineffPlug ) )
+		self.assertEqual(
+			n["parameters"]["floatSpline"].getValue().spline(),
+			IECore.Splineff(
+				IECore.CubicBasisf.linear(),
+				[
+					( 0, 0 ),
+					( 0, 0 ),
+					( 1, 1 ),
+					( 1, 1 ),
+				]
+			)
+		)
+
+		self.assertTrue( isinstance( n["parameters"]["colorSpline"], Gaffer.SplinefColor3fPlug ) )
+		self.assertEqual(
+			n["parameters"]["colorSpline"].getValue().spline(),
+			IECore.SplinefColor3f(
+				IECore.CubicBasisf.catmullRom(),
+				[
+					( 0, imath.Color3f( 0 ) ),
+					( 0, imath.Color3f( 0 ) ),
+					( 0, imath.Color3f( 0 ) ),
+					( 1, imath.Color3f( 1 ) ),
+					( 1, imath.Color3f( 1 ) ),
+					( 1, imath.Color3f( 1 ) ),
+				]
+			)
+		)
+
+		self.assertTrue( isinstance( n["parameters"]["dualInterpolationSpline"], Gaffer.SplineffPlug ) )
+		self.assertEqual(
+			n["parameters"]["dualInterpolationSpline"].getValue().spline(),
+			IECore.Splineff(
+				IECore.CubicBasisf.linear(),
+				[
+					( 0, 0 ),
+					( 0, 0 ),
+					( 1, 1 ),
+					( 1, 1 ),
+				]
+			)
+		)
+
+		self.assertTrue( isinstance( n["parameters"]["trimmedFloatSpline"], Gaffer.SplineffPlug ) )
+		self.assertEqual(
+			n["parameters"]["trimmedFloatSpline"].getValue().spline(),
+			IECore.Splineff(
+				IECore.CubicBasisf.catmullRom(),
+				[
+					( 0, 0 ),
+					( 0, 0 ),
+					( 1, 1 ),
+					( 1, 1 ),
+				]
+			)
+		)
+
+		self.assertTrue( isinstance( n["parameters"]["mayaSpline"], Gaffer.SplineffPlug ) )
+		self.assertEqual(
+			n["parameters"]["mayaSpline"].getValue().spline(),
+			IECore.Splineff(
+				IECore.CubicBasisf.linear(),
+				[
+					( 0, 0 ),
+					( 0, 0 ),
+					( 1, 1 ),
+					( 1, 1 ),
+				]
+			)
+		)
+
+		self.assertTrue( isinstance( n["parameters"]["inconsistentNameSpline"], Gaffer.SplineffPlug ) )
+		self.assertEqual(
+			n["parameters"]["inconsistentNameSpline"].getValue().spline(),
+			Gaffer.SplineDefinitionff(
+				((0, 0), (0,0), (0,0), (1,1), (1,1), (1,1)),
+				Gaffer.SplineDefinitionInterpolation.MonotoneCubic
+			).spline()
+		)
+
 	def testSplineParameterEvaluation( self ) :
 
 		numSamples = 100
