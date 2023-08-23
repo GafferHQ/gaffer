@@ -72,14 +72,52 @@ std::string prefixedWhat( const IECore::Exception &e )
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
+// Collaboration
+//////////////////////////////////////////////////////////////////////////
+
+Process::Collaboration::~Collaboration() noexcept( true )
+{
+}
+
+bool Process::Collaboration::dependsOn( const Collaboration *collaboration ) const
+{
+	if( collaboration == this ) // TODO : WHY DO WE HAVE THIS????
+	{
+		return true;
+	}
+
+	std::unordered_set<const Collaboration *> visited;
+	std::deque<const Collaboration *> toVisit( { collaboration } );
+
+	while( !toVisit.empty() )
+	{
+		const Collaboration *c = toVisit.front();
+		toVisit.pop_front();
+		if( !visited.insert( c ).second )
+		{
+			continue;
+		}
+		if( c->dependents.count( this ) )
+		{
+			return true;
+		}
+		toVisit.insert( toVisit.end(), c->dependents.begin(), c->dependents.end() );
+	}
+
+	return false;
+}
+
+tbb::spin_mutex Process::Collaboration::g_dependentsMutex;
+
+//////////////////////////////////////////////////////////////////////////
 // Process
 //////////////////////////////////////////////////////////////////////////
 
 Process::Process( const IECore::InternedString &type, const Plug *plug, const Plug *destinationPlug )
-	:	m_type( type ), m_plug( plug ), m_destinationPlug( destinationPlug ? destinationPlug : plug )
+	:	m_type( type ), m_plug( plug ), m_destinationPlug( destinationPlug ? destinationPlug : plug ),
+		m_parent( m_threadState->m_process ), m_collaboration( m_parent ? m_parent->m_collaboration : nullptr )
 {
 	IECore::Canceller::check( context()->canceller() );
-	m_parent = m_threadState->m_process;
 	m_threadState->m_process = this;
 
 	for( const auto &m : *m_threadState->m_monitors )

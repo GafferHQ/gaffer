@@ -101,7 +101,33 @@ class GAFFER_API Process : private ThreadState::Scope
 		/// \todo This just exists for ABI compatibility. Remove it.
 		void handleException();
 
+		/// Searches for an in-flight process and waits for its result, collaborating
+		/// on any TBB tasks it spawns. If no such process exists, constructs one
+		/// using `args` and makes it available for collaboration by other threads,
+		/// publishing the result to a cache when the process completes.
+		///
+		/// Requirements :
+		///
+		/// - `ProcessType( args... )` constructs a process suitable for computing
+		///   the result for `cacheKey`.
+		/// - `ProcessType::ResultType` defines the result type for the process.
+		/// - `ProcessType::run()` does the work for the process and returns the
+		///   result.
+		/// - `ProcessType::g_cache` is a static LRUCache of type `ProcessType::CacheType`
+		///   to be used for the caching of the result.
+		/// - `ProcessType::cacheCostFunction()` is a static function suitable
+		///   for use with `CacheType::setIfUncached()`.
+		///
+		template<typename ProcessType, typename... ProcessArguments>
+		static typename ProcessType::ResultType acquireCollaborativeResult(
+			const typename ProcessType::CacheType::KeyType &cacheKey, ProcessArguments... args
+		);
+
 	private :
+
+		class Collaboration;
+		template<typename T>
+		class TypedCollaboration;
 
 		static bool forceMonitoringInternal( const ThreadState &s, const Plug *plug, const IECore::InternedString &processType );
 
@@ -111,6 +137,7 @@ class GAFFER_API Process : private ThreadState::Scope
 		const Plug *m_plug;
 		const Plug *m_destinationPlug;
 		const Process *m_parent;
+		const Collaboration *m_collaboration;
 
 };
 
