@@ -1,6 +1,11 @@
 1.3.x.x (relative to 1.3.1.0)
 =======
 
+Features
+--------
+
+- LightTool : Added manipulator for quad lights.
+
 Improvements
 ------------
 
