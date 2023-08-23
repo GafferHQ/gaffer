@@ -58,10 +58,10 @@ shader CompareColor
 {
 	if( condition == CONDITION_EQUAL )
 	{
-		success = a == b;
+		success = a == b ? 1 : 0;
 	}
 	else
 	{
-		success = a != b;
+		success = a != b ? 1 : 0;
 	}
 }

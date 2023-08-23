@@ -695,7 +695,10 @@ class PlugValueWidget( GafferUI.Widget ) :
 		self.__auxiliaryPlugs = []
 		auxiliaryNodes = set()
 		for plug in self.__plugs :
-			auxiliaryPlugs = Gaffer.PlugAlgo.findDestination( plug, lambda plug : self._auxiliaryPlugs( plug ) ) or []
+			if plug.direction() == Gaffer.Plug.Direction.In :
+				auxiliaryPlugs = Gaffer.PlugAlgo.findDestination( plug, lambda plug : self._auxiliaryPlugs( plug ) ) or []
+			else :
+				auxiliaryPlugs = Gaffer.PlugAlgo.findSource( plug, lambda plug : self._auxiliaryPlugs( plug ) ) or []
 			self.__auxiliaryPlugs.append( auxiliaryPlugs )
 			auxiliaryNodes.update( [ plug.node() for plug in auxiliaryPlugs ] )
 			# > Note : Which `auxiliaryPlugs` we find depends on the output connections

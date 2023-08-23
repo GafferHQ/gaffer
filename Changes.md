@@ -5,6 +5,12 @@
 1.3.x.x (relative to 1.3.1.0)
 =======
 
+Features
+--------
+
+- LightTool : Added manipulator for quad lights.
+- Collect : Added a utility node for collecting the values of arbitrary inputs across a range of contexts.
+
 Improvements
 ------------
 
@@ -19,11 +25,14 @@ Fixes
 - Viewer : Fixed crash when visualising lights with a light filter intended for a different renderer.
 - Arnold : Fixed screen window export for Lentil cameras.
 - Application : Fixed the `-threads` argument to clamp the number of threads to the number of available hardware cores (#5403).
+- CompareFloat, CompareColor, CompareVector : Worked around crashes in OSL's batched shading system (#5430).
+- PlugValueWidget : Fixed search for auxiliary plugs of output plugs. In this case, the inputs are now searched instead of the outputs.
 
 API
 ---
 
 - ThreadMonitor : Added new class for tracking the threads used to perform processes.
+- PlugAlgo : Added `findSource()` method.
 
 Documentation
 -------------
@@ -303,6 +312,7 @@ Fixes
 
 - Arnold : Fixed screen window export for Lentil cameras.
 - Application : Fixed the `-threads` argument to clamp the number of threads to the number of available hardware cores (#5403).
+- CompareFloat, CompareColor, CompareVector : Worked around crashes in OSL's batched shading system (#5430).
 
 1.2.10.1 (relative to 1.2.10.0)
 ========

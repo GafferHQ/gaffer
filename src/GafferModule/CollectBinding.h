@@ -1,7 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2018, Image Engine Design Inc. All rights reserved.
-//
+//  Copyright (c) 2023, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -35,33 +34,11 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferOSL/MetaUtils.h"
+#pragma once
 
-#define CONDITION_EQUAL 0
-#define CONDITION_NOT_EQUAL 1
-
-shader CompareVector
-[[
-	string help = "Compare two colors, and output whether the comparison succeeded.  You will often want to plug the success value into a Switch or Mix node."
-]]
-(
-	int condition = CONDITION_EQUAL [[
-		int connectable = 0,
-		string widget = "mapper",
-		string options = MAKE_STR( Equal:CONDITION_EQUAL|Not Equal:CONDITION_NOT_EQUAL)
-	]],
-
-	vector a = 0,
-	vector b = 0,
-	output int success = 0
-)
+namespace GafferModule
 {
-	if( condition == CONDITION_EQUAL )
-	{
-		success = a == b ? 1 : 0;
-	}
-	else
-	{
-		success = a != b ? 1 : 0;
-	}
-}
+
+void bindCollect();
+
+} // namespace GafferModule

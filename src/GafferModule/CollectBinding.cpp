@@ -34,70 +34,65 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#pragma once
+#include "boost/python.hpp"
 
-#include "Gaffer/Spreadsheet.h"
+#include "CollectBinding.h"
 
-namespace Gaffer::PlugAlgo
+#include "GafferBindings/ComputeNodeBinding.h"
+
+#include "Gaffer/Collect.h"
+
+using namespace boost::python;
+using namespace GafferBindings;
+using namespace Gaffer;
+
+namespace
 {
 
-template<typename Predicate>
-std::invoke_result_t<Predicate, Plug *> findDestination( Plug *plug, Predicate &&predicate )
+Gaffer::ValuePlugPtr addInputWrapper( Collect &c, const Gaffer::ValuePlug &p )
 {
-	if( !plug )
-	{
-		// Typically a null pointer.
-		return std::invoke_result_t<Predicate, Plug *>();
-	}
-
-	if( auto destination = predicate( plug ) )
-	{
-		return destination;
-	}
-
-	for( const auto &output : plug->outputs() )
-	{
-		if( auto destination = findDestination( output, predicate ) )
-		{
-			return destination;
-		}
-	}
-
-	if( auto cell = plug->ancestor<Spreadsheet::CellPlug>() )
-	{
-		if( plug == cell->valuePlug() || cell->valuePlug()->isAncestorOf( plug ) )
-		{
-			if( auto spreadsheet = IECore::runTimeCast<Spreadsheet>( cell->node() ) )
-			{
-				if( auto output = spreadsheet->outPlug()->getChild<Plug>( cell->getName() ) )
-				{
-					if( plug != cell->valuePlug() )
-					{
-						output = output->descendant<Plug>( plug->relativeName( cell->valuePlug() ) );
-					}
-					return findDestination( output, predicate );
-				}
-			}
-		}
-	}
-
-	return std::invoke_result_t<Predicate, Plug *>();
+	IECorePython::ScopedGILRelease gilRelease;
+	return c.addInput( &p );
 }
 
-template<typename Predicate>
-std::invoke_result_t<Predicate, Plug *> findSource( Plug *plug, Predicate &&predicate )
+void removeInputWrapper( Collect &c, Gaffer::ValuePlug &p )
 {
-	while( plug )
-	{
-		if( auto source = predicate( plug ) )
-		{
-			return source;
-		}
-		plug = plug->getInput();
-	}
-
-	// Typically a null pointer.
-	return std::invoke_result_t<Predicate, Plug *>();
+	IECorePython::ScopedGILRelease gilRelease;
+	return c.removeInput( &p );
 }
 
-} // namespace Gaffer::PlugAlgo
+class CollectSerialiser : public NodeSerialiser
+{
+
+	std::string postConstructor( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, Serialisation &serialisation ) const override
+	{
+		std::string result = NodeSerialiser::postConstructor( graphComponent, identifier, serialisation );
+
+		const Collect *node = static_cast<const Collect *>( graphComponent );
+		for( auto &input : ValuePlug::InputRange( *node->inPlug() ) )
+		{
+			const Serialiser *plugSerialiser = Serialisation::acquireSerialiser( input.get() );
+			result += identifier + ".addInput( " + plugSerialiser->constructor( input.get(), serialisation ) + " )\n";
+		}
+
+		return result;
+	}
+
+};
+
+} // namespace
+
+void GafferModule::bindCollect()
+{
+
+	DependencyNodeClass<Collect>()
+		.def( "canAddInput", &Collect::canAddInput )
+		.def( "addInput", &addInputWrapper )
+		.def( "removeInput", &removeInputWrapper )
+		.def( "outputPlugForInput", (ValuePlug *(Collect::*)( const ValuePlug *))&Collect::outputPlugForInput, return_value_policy<IECorePython::CastToIntrusivePtr>() )
+		.def( "inputPlugForOutput", (ValuePlug *(Collect::*)( const ValuePlug *))&Collect::inputPlugForOutput, return_value_policy<IECorePython::CastToIntrusivePtr>() )
+	;
+
+	Serialisation::registerSerialiser( Collect::staticTypeId(), new CollectSerialiser );
+
+}
