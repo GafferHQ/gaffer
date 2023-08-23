@@ -20,6 +20,7 @@ Fixes
 - Viewer : Fixed crash when visualising lights with a light filter intended for a different renderer.
 - Arnold : Fixed screen window export for Lentil cameras.
 - Application : Fixed the `-threads` argument to clamp the number of threads to the number of available hardware cores (#5403).
+- CompareFloat, CompareColor, CompareVector : Worked around crashes in OSL's batched shading system (#5430).
 
 API
 ---
@@ -304,6 +305,7 @@ Fixes
 
 - Arnold : Fixed screen window export for Lentil cameras.
 - Application : Fixed the `-threads` argument to clamp the number of threads to the number of available hardware cores (#5403).
+- CompareFloat, CompareColor, CompareVector : Worked around crashes in OSL's batched shading system (#5430).
 
 1.2.10.1 (relative to 1.2.10.0)
 ========
