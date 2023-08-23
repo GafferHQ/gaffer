@@ -40,6 +40,7 @@
 
 #include "IECoreDelight/NodeAlgo.h"
 #include "IECoreDelight/ParameterList.h"
+#include "IECoreDelight/ShaderNetworkAlgo.h"
 
 #include "IECoreScene/Shader.h"
 #include "IECoreScene/ShaderNetwork.h"
@@ -391,14 +392,14 @@ namespace
 
 class DelightShader : public IECore::RefCounted
 {
-
 	public :
-
 		DelightShader( NSIContext_t context, const IECoreScene::ShaderNetwork *shaderNetwork, DelightHandle::Ownership ownership )
 		{
-			const string name = "shader:" + shaderNetwork->Object::hash().toString();
-			ShaderNetworkAlgo::depthFirstTraverse(
-				shaderNetwork,
+			ConstShaderNetworkPtr preprocessedNetwork = IECoreDelight::ShaderNetworkAlgo::preprocessedNetwork( shaderNetwork );
+
+			const string name = "shader:" + preprocessedNetwork->Object::hash().toString();
+			IECoreScene::ShaderNetworkAlgo::depthFirstTraverse(
+				preprocessedNetwork.get(),
 				[this, &name, &context, &ownership] ( const ShaderNetwork *shaderNetwork, const InternedString &handle ) {
 
 					// Create node

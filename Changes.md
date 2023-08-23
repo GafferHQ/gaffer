@@ -8,6 +8,7 @@ Features
   - Added support for VDB volume objects.
   - Added support for `vdbVolume` shader.
   - Added support for `volumeshader` and `displacementshader` attributes.
+  - Added support for spline parameters in shaders.
 
 API
 ---

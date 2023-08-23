@@ -40,6 +40,8 @@ import unittest
 from collections import deque
 import shlex
 import pathlib
+import os
+import subprocess
 
 import imath
 
@@ -740,6 +742,235 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( volumeShader["Cs"], imath.Color3f( 0.5, 0.5, 0.5 ) )
 		self.assertEqual( displacementShader["Cs"], imath.Color3f( 1.0, 1.0, 1.0 ) )
 
+	def test3DelightSplineParameters( self ) :
+
+		# Converting from OSL parameters to Gaffer spline parameters is
+		# tested in GafferOSLTest.OSLShaderTest
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"3Delight",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.nsi" ),
+		)
+
+		os.environ["OSL_SHADER_PATHS"] += os.pathsep + ( pathlib.Path( __file__ ).parent / "shaders" ).as_posix()
+
+		s = self.__compileShader( pathlib.Path( __file__ ).parent / "shaders" / "delightSplineParameters.osl" )
+
+		network = IECoreScene.ShaderNetwork(
+			shaders = {
+				"splineHandle" : IECoreScene.Shader(
+					s,
+					"osl:shader",
+					{
+						"floatSpline" : IECore.Splineff(
+							IECore.CubicBasisf.linear(),
+							[
+								( 0, 0.25 ),
+								( 0, 0.25 ),
+								( 1, 0.75 ),
+								( 1, 0.75 ),
+							]
+						),
+						"colorSpline" : IECore.SplinefColor3f(
+							IECore.CubicBasisf.bSpline(),
+							[
+								( 0, imath.Color3f( 0.25 ) ),
+								( 0, imath.Color3f( 0.25 ) ),
+								( 0, imath.Color3f( 0.25 ) ),
+								( 1, imath.Color3f( 0.75 ) ),
+								( 1, imath.Color3f( 0.75 ) ),
+								( 1, imath.Color3f( 0.75 ) ),
+							]
+						),
+						"dualInterpolationSpline" : IECore.Splineff(
+							IECore.CubicBasisf.linear(),
+							[
+								( 0, 0.25 ),
+								( 0, 0.25 ),
+								( 1, 0.75 ),
+								( 1, 0.75 ),
+							]
+						),
+						"trimmedFloatSpline" : IECore.Splineff(
+							IECore.CubicBasisf.catmullRom(),
+							[
+								( 0, 0.25 ),
+								( 0, 0.25 ),
+								( 1, 0.75 ),
+								( 1, 0.75 ),
+							]
+						),
+						"mayaSpline" : IECore.Splineff(
+							IECore.CubicBasisf.linear(),
+							[
+								( 0, 0.25 ),
+								( 0, 0.25 ),
+								( 1, 0.75 ),
+								( 1, 0.75 ),
+							]
+						),
+						"inconsistentNameSpline": IECore.Splineff(
+							IECore.CubicBasisf.bSpline(),
+							[
+								( 0, 0.25 ),
+								( 0, 0.25 ),
+								( 0, 0.25 ),
+								( 1, 0.75 ),
+								( 1, 0.75 ),
+								( 1, 0.75 ),
+							]
+						),
+					}
+				),
+			},
+			output = "splineHandle"
+		)
+
+		o = r.object(
+			"testPlane",
+			IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) ),
+			r.attributes( IECore.CompoundObject( { "osl:surface" : network } ) )
+		)
+		del o
+
+		r.render()
+		del r
+
+		nsi = self.__parseDict( self.temporaryDirectory() / "test.nsi" )
+
+		shaders = { k: v for k, v in nsi.items() if nsi[k]["nodeType"] == "shader" }
+		self.assertEqual( len( shaders ), 1 )
+		shader = shaders[next( iter( shaders ) )]
+
+		# 3Delight gives defaults for linear splines as though they have a multiplicity of 2,
+		# whereas we expect a multiplicity of 1. These tests mirror 3Delight's convention.
+		# This results in two extra segments, with the first and last of zero length.
+		# In practice this seems to give correct results, so we leave it as-is rather than
+		# adding more edge-case handling.
+		self.assertEqual( shader["floatSpline_Knots"], [ 0, 0, 0, 1, 1, 1 ] )
+		self.assertEqual( shader["floatSpline_Floats"], [ 0.25, 0.25, 0.25, 0.75, 0.75, 0.75 ] )
+		self.assertEqual( shader["floatSpline_Interp"], [ 1, 1, 1, 1, 1, 1 ] )
+
+		self.assertNotIn( "floatSplinePositions", shader )
+		self.assertNotIn( "floatSplineValues", shader )
+		self.assertNotIn( "floatSplineBasis", shader )
+
+		self.assertEqual( shader["colorSpline_Knots"], [ 0, 0, 0, 1, 1, 1 ] )
+		self.assertEqual(
+			shader["colorSpline_Colors"],
+			[
+				imath.Color3f( 0.25, 0.25, 0.25 ),
+				imath.Color3f( 0.25, 0.25, 0.25 ),
+				imath.Color3f( 0.25, 0.25, 0.25 ),
+				imath.Color3f( 0.75, 0.75, 0.75 ),
+				imath.Color3f( 0.75, 0.75, 0.75 ),
+				imath.Color3f( 0.75, 0.75, 0.75 )
+			]
+		)
+		self.assertEqual( shader["colorSpline_Interp"], [ 3, 3, 3, 3, 3, 3 ] )
+
+		self.assertNotIn( "colorSplinePositions", shader )
+		self.assertNotIn( "colorSplineValues", shader )
+		self.assertNotIn( "colorSplineBasis", shader )
+
+		self.assertEqual( shader["dualInterpolationSpline_Knots"], [ 0, 0, 0, 1, 1, 1 ] )
+		self.assertEqual( shader["dualInterpolationSpline_Floats"], [ 0.25, 0.25, 0.25, 0.75, 0.75, 0.75 ] )
+		self.assertEqual( shader["dualInterpolationSpline_Interp"], [ 1, 1, 1, 1, 1, 1 ] )
+
+		self.assertNotIn( "dualInterpolationSplinePositions", shader )
+		self.assertNotIn( "dualInterpolationSplineValues", shader )
+		self.assertNotIn( "dualInterpolationSplineBasis", shader )
+
+		# Monotone cubic splines - tested here consistently with how 3Delight presents defaults -
+		# have a multiplicity of 1, resulting in a single segment.
+		self.assertEqual( shader["trimmedFloatSpline_Knots"], [ 0, 0, 1, 1 ] )
+		self.assertEqual( shader["trimmedFloatSpline_Floats"], [ 0.25, 0.25, 0.75, 0.75 ] )
+		self.assertEqual( shader["trimmedFloatSpline_Interp"], [ 3, 3, 3, 3 ] )
+
+		self.assertNotIn( "trimmedFloatSplinePositions", shader )
+		self.assertNotIn( "trimmedFloatSplineValues", shader )
+		self.assertNotIn( "trimmedFloatSplineBasis", shader )
+
+		self.assertEqual( shader["mayaSpline_Knots"], [ 0, 0, 0, 1, 1, 1 ] )
+		self.assertEqual( shader["mayaSpline_Floats"], [ 0.25, 0.25, 0.25, 0.75, 0.75, 0.75 ] )
+		self.assertEqual( shader["mayaSpline_Interp"], [ 1, 1, 1, 1, 1, 1 ] )
+
+		self.assertNotIn( "mayaSplinePositions", shader )
+		self.assertNotIn( "maysSplineValues", shader )
+		self.assertNotIn( "mayaSplineBasis", shader )
+
+		self.assertEqual( shader["inconsistentNameSpline_chaos"], [ 0, 0, 0, 1, 1, 1 ] )
+		self.assertEqual( shader["inconsistentNameSpline_moreChaos"], [ 0.25, 0.25, 0.25, 0.75, 0.75, 0.75 ] )
+		self.assertEqual( shader["inconsistentNameSpline_ahhh"], [ 3, 3, 3, 3, 3, 3 ] )
+
+		self.assertNotIn( "inconsistentNameSplinePositions", shader )
+		self.assertNotIn( "inconsistentNameSplineValues", shader )
+		self.assertNotIn( "inconsistentNameSplineBasis", shader )
+
+	def testGafferSplineParameters( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"3Delight",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.nsi" ),
+		)
+
+		network = IECoreScene.ShaderNetwork(
+			shaders = {
+				"splineHandle" : IECoreScene.Shader(
+					"Pattern/ColorSpline",
+					"osl:shader",
+					{
+						"spline" : IECore.SplinefColor3f(
+							IECore.CubicBasisf.linear(),
+							[
+								( 0, imath.Color3f( 1, 0, 0 ) ),
+								( 0, imath.Color3f( 1, 0, 0 ) ),
+								( 1, imath.Color3f( 0, 0, 1 ) ),
+								( 1, imath.Color3f( 0, 0, 1 ) ),
+							]
+						),
+					}
+				),
+				"constHandle" : IECoreScene.Shader( "Surface/Constant", "osl:surface", {} )
+			},
+			connections = [
+				( ( "splineHandle", "" ), ( "constHandle", "Cs" ) ),
+			],
+			output = "splineHandle"
+		)
+
+		o = r.object(
+			"testPlane",
+			IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) ),
+			r.attributes( IECore.CompoundObject( { "osl:surface" : network } ) )
+		)
+		del o
+
+		r.render()
+		del r
+
+		nsi = self.__parseDict( self.temporaryDirectory() / "test.nsi" )
+
+		shaders = { k: v for k, v in nsi.items() if nsi[k]["nodeType"] == "shader" }
+		self.assertEqual( len( shaders ), 1 )
+		shader = shaders[next( iter( shaders ) )]
+
+		self.assertEqual( shader["splinePositions"], [ 0, 0, 0, 1, 1, 1 ] )
+		self.assertEqual(
+			shader["splineValues"],
+			[
+				imath.Color3f( 1, 0, 0 ),
+				imath.Color3f( 1, 0, 0 ),
+				imath.Color3f( 1, 0, 0 ),
+				imath.Color3f( 0, 0, 1 ),
+				imath.Color3f( 0, 0, 1 ),
+				imath.Color3f( 0, 0, 1 )
+			]
+		)
+		self.assertEqual( shader["splineBasis"], "linear" )
+
 	# Helper methods used to check that NSI files we write contain what we
 	# expect. The 3delight API only allows values to be set, not queried,
 	# so we build a simple dictionary-based node graph for now.
@@ -907,6 +1138,18 @@ class RendererTest( GafferTest.TestCase ) :
 			else :
 				# Continue search at next position
 				pos += 1
+
+	def __compileShader( self, sourceFileName ) :
+
+		outputFileName = self.temporaryDirectory() / pathlib.Path( sourceFileName ).with_suffix( ".oso" ).name
+
+		subprocess.check_call(
+			[ "oslc", "-q" ] +
+			[ "-I" + p for p in os.environ.get( "OSL_SHADER_PATHS", "" ).split( os.pathsep ) ] +
+			[ "-o", str( outputFileName ), str( sourceFileName ) ]
+		)
+
+		return outputFileName.with_suffix("").as_posix()
 
 if __name__ == "__main__":
 	unittest.main()
