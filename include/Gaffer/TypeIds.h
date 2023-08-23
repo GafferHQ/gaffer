@@ -151,6 +151,7 @@ enum TypeId
 	HiddenFilePathFilterTypeId = 110105,
 	Color4fVectorDataPlugTypeId = 110106,
 	OptionalValuePlugTypeId = 110107,
+	CollectTypeId = 110108,
 
 	LastTypeId = 110159,
 

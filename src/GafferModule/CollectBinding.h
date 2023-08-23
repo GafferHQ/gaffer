@@ -36,68 +36,9 @@
 
 #pragma once
 
-#include "Gaffer/Spreadsheet.h"
-
-namespace Gaffer::PlugAlgo
+namespace GafferModule
 {
 
-template<typename Predicate>
-std::invoke_result_t<Predicate, Plug *> findDestination( Plug *plug, Predicate &&predicate )
-{
-	if( !plug )
-	{
-		// Typically a null pointer.
-		return std::invoke_result_t<Predicate, Plug *>();
-	}
+void bindCollect();
 
-	if( auto destination = predicate( plug ) )
-	{
-		return destination;
-	}
-
-	for( const auto &output : plug->outputs() )
-	{
-		if( auto destination = findDestination( output, predicate ) )
-		{
-			return destination;
-		}
-	}
-
-	if( auto cell = plug->ancestor<Spreadsheet::CellPlug>() )
-	{
-		if( plug == cell->valuePlug() || cell->valuePlug()->isAncestorOf( plug ) )
-		{
-			if( auto spreadsheet = IECore::runTimeCast<Spreadsheet>( cell->node() ) )
-			{
-				if( auto output = spreadsheet->outPlug()->getChild<Plug>( cell->getName() ) )
-				{
-					if( plug != cell->valuePlug() )
-					{
-						output = output->descendant<Plug>( plug->relativeName( cell->valuePlug() ) );
-					}
-					return findDestination( output, predicate );
-				}
-			}
-		}
-	}
-
-	return std::invoke_result_t<Predicate, Plug *>();
-}
-
-template<typename Predicate>
-std::invoke_result_t<Predicate, Plug *> findSource( Plug *plug, Predicate &&predicate )
-{
-	while( plug )
-	{
-		if( auto source = predicate( plug ) )
-		{
-			return source;
-		}
-		plug = plug->getInput();
-	}
-
-	// Typically a null pointer.
-	return std::invoke_result_t<Predicate, Plug *>();
-}
-
-} // namespace Gaffer::PlugAlgo
+} // namespace GafferModule
