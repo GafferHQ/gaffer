@@ -104,6 +104,8 @@ using namespace GafferSceneUI::Private;
 namespace
 {
 
+const std::string g_lightAttributePattern = "light *:light";
+
 const Color3f g_lightToolHandleColor = Color3f( 0.825, 0.720f, 0.230f );
 
 // Color from `StandardLightVisualiser`
@@ -147,6 +149,9 @@ const int g_warningTipCount = 3;
 const ModifiableEvent::Modifiers g_quadLightConstrainAspectRatioKey = ModifiableEvent::Modifiers::Control;
 
 enum class Axis { X, Y, Z };
+
+const InternedString g_coneAngleParameter = "coneAngleParameter";
+const InternedString g_penumbraAngleParameter = "penumbraAngleParameter";
 
 // Return the plug that holds the value we need to edit, and make sure it's enabled.
 
@@ -702,45 +707,87 @@ class LightToolHandle : public Handle
 
 	public :
 
-		LightToolHandle(
-			const std::string &attributePattern,
-			const std::string &name
-		) :
-			Handle( name ),
-			m_attributePattern( attributePattern ),
-			m_lookThroughLight( false )
-		{
+		using InspectionMap = std::unordered_map<InternedString, Inspector::ResultPtr>;
 
-		}
 		~LightToolHandle() override
 		{
 
 		}
 
-		// Update inspectors and data needed to display and interact with the tool. Called
+		// Update inspectors and data needed to display and interact with the handle. Called
 		// in `preRender()` if the inspections are dirty.
-		// Derived classes should call this parent method first, then implement custom logic.
-		virtual void update( ScenePathPtr scenePath, const PlugPtr &editScope )
+		void updateHandlePath( ScenePlugPtr scene, const Context *context, const ScenePlug::ScenePath &handlePath )
 		{
-			m_handleScenePath = scenePath;
-			m_editScope = editScope;
+			m_scene = scene;
+			m_context = context;
+			m_handlePath = handlePath;
+
+			m_inspectors.clear();
+
+			if( !m_scene->exists( m_handlePath ) )
+			{
+				return;
+			}
+
+			m_editScope = m_view->editScopePlug();
+
+			/// \todo This can be simplified and some of the logic, especially getting the inspectors, can
+			/// be moved to the constructor when we standardize on a single USDLux light representation.
+
+			ConstCompoundObjectPtr attributes = m_scene->fullAttributes( m_handlePath );
+
+			for( const auto &[attributeName, value ] : attributes->members() )
+			{
+				if(
+					StringAlgo::matchMultiple( attributeName, g_lightAttributePattern ) &&
+					value->typeId() == (IECore::TypeId)ShaderNetworkTypeId
+				)
+				{
+					const auto shader = attributes->member<ShaderNetwork>( attributeName )->outputShader();
+					std::string shaderAttribute = shader->getType() + ":" + shader->getName();
+
+					if( !isLightType( shaderAttribute ) )
+					{
+						continue;
+					}
+
+					for( const auto &m : m_metaParameters )
+					{
+						if( auto parameter = Metadata::value<StringData>( shaderAttribute, m ) )
+						{
+							m_inspectors[m] = new ParameterInspector(
+								m_scene,
+								m_editScope,
+								attributeName,
+								ShaderNetwork::Parameter( "", parameter->readable() )
+							);
+						}
+					}
+
+					break;
+				}
+			}
+
+			handlePathChanged();
 		}
 
-		const std::string attributePattern() const
+		/// \todo Should these three be protected, or left out entirely until they are needed by client code?
+		const ScenePlug *scene() const
 		{
-			return m_attributePattern;
+			return m_scene.get();
 		}
 
-		ScenePath *handleScenePath() const
+		const Context *context() const
 		{
-			return m_handleScenePath.get();
+			return m_context;
 		}
 
-		Plug *editScope() const
+		const ScenePlug::ScenePath &handlePath() const
 		{
-			return m_editScope.get();
+			return m_handlePath;
 		}
 
+		/// \todo Remove these and handle the lookThrough logic internally?
 		void setLookThroughLight( bool lookThroughLight )
 		{
 			m_lookThroughLight = lookThroughLight;
@@ -751,429 +798,58 @@ class LightToolHandle : public Handle
 			return m_lookThroughLight;
 		}
 
-		// Must be implemented by derived classes to create inspections needed
-		// by the handle. Called during `preRender()` if the inspections are dirty.
-		virtual void addDragInspection() = 0;
-
-		virtual void clearDragInspections() = 0;
-
-		virtual bool handleDragMove( const GafferUI::DragDropEvent &event ) = 0;
-		virtual bool handleDragEnd() = 0;
-
-		// Must be implemented by derived classes to set the local transform of the handle
-		// relative to the light. The parent of the handle will have rotation and translation
-		// set independently. `scale` and `shear` are passed here to allow the handle to decide
-		// how to deal with those transforms.
-		virtual void updateLocalTransform( const V3f &scale, const V3f &shear ) = 0;
-
-		// Must be implemented by derived classes to return the visible and enabled state for
-		// the `scenePath` in the current context.
-		virtual bool visible() const = 0;
-		virtual bool enabled() const = 0;
-
-		// Must be implemented by derived classes to return all of the inspectors the handle uses.
-		virtual std::vector<GafferSceneUI::Private::Inspector *> inspectors() const = 0;
-
-	private :
-
-		ScenePathPtr m_handleScenePath;
-
-		const std::string m_attributePattern;
-
-		Gaffer::PlugPtr m_editScope;
-
-		bool m_lookThroughLight;
-};
-
-// ============================================================================
-// SpotLightHandle
-// ============================================================================
-
-class SpotLightHandle : public LightToolHandle
-{
-
-	private :
-
-		// A struct holding the angle inspections and the original angles during a drag.
-		// Angles are in "handle-space" (generally 1/2 the full cone for the cone angle
-		// and the full penumbra angle for penumbras. See `handleAngles` and `plugAngles`
-		// for conversion details.)
-		struct DragStartData
+		// Adds an inspection for all metaParameters for the current context.
+		void addInspection()
 		{
-			Inspector::ResultPtr coneInspection;
-			float originalConeHandleAngle;
-			Inspector::ResultPtr penumbraInspection;
-			std::optional<float> originalPenumbraHandleAngle;
-		};
-
-	public :
-
-		enum class HandleType
-		{
-			Cone,
-			Penumbra
-		};
-
-		SpotLightHandle(
-			const std::string &attributePattern,
-			HandleType handleType,
-			const SceneView *view,
-			const float zRotation,
-			const std::string &name = "SpotLightHandle"
-		) :
-			LightToolHandle( attributePattern, name ),
-			m_view( view ),
-			m_zRotation( zRotation ),
-			m_handleType( handleType ),
-			m_angleMultiplier( 1.f ),
-			m_visualiserScale( 1.f ),
-			m_frustumScale( 1.f ),
-			m_lensRadius( 0 ),
-			m_dragStartData {}
-		{
-
-			mouseMoveSignal().connect( boost::bind( &SpotLightHandle::mouseMove, this, ::_2 ) );
-
-		}
-		~SpotLightHandle() override
-		{
-
-		}
-
-		void update( ScenePathPtr scenePath, const PlugPtr &editScope ) override
-		{
-			LightToolHandle::update( scenePath, editScope );
-
-			if( !handleScenePath()->isValid() )
+			InspectionMap inspectionMap;
+			for( const auto &m : m_metaParameters )
 			{
-				m_coneAngleInspector.reset();
-				m_penumbraAngleInspector.reset();
-				return;
-			}
-
-			ConstCompoundObjectPtr attributes = handleScenePath()->getScene()->fullAttributes( handleScenePath()->names() );
-
-			float defaultVisualiserScale = 1.f;
-			if( auto p = m_view->descendant<const FloatPlug>( "drawingMode.visualiser.scale" ) )
-			{
-				defaultVisualiserScale = p->getValue();
-			}
-			auto visualiserScaleData = attributes->member<FloatData>( g_lightVisualiserScaleAttributeName );
-			m_visualiserScale = visualiserScaleData ? visualiserScaleData->readable() : defaultVisualiserScale;
-
-			float defaultFrustumScale = 1.f;
-			if( auto p = m_view->descendant<const FloatPlug>( "drawingMode.light.frustumScale" ) )
-			{
-				defaultFrustumScale = p->getValue();
-			}
-			auto frustumScaleData = attributes->member<FloatData>( g_frustumScaleAttributeName );
-			m_frustumScale = frustumScaleData ? frustumScaleData->readable() : defaultFrustumScale;
-
-			/// \todo This can be simplified and some of the logic, especially getting the inspectors, can
-			/// be moved to the constructor when we standardize on a single USDLux light representation.
-
-			for( const auto &[attributeName, value] : attributes->members() )
-			{
-				if(
-					StringAlgo::match( attributeName, attributePattern() ) &&
-					value->typeId() == (IECore::TypeId)ShaderNetworkTypeId
-				)
+				if( Inspector::ResultPtr i = inspection( m ) )
 				{
-					const auto shader = attributes->member<ShaderNetwork>( attributeName )->outputShader();
-					std::string shaderAttribute = shader->getType() + ":" + shader->getName();
-
-					auto coneParameterName = Metadata::value<StringData>( shaderAttribute, "coneAngleParameter" );
-					if( !coneParameterName )
-					{
-						continue;
-					}
-
-					m_coneAngleInspector = new ParameterInspector(
-						handleScenePath()->getScene(),
-						this->editScope(),
-						attributeName,
-						ShaderNetwork::Parameter( "", coneParameterName->readable() )
-					);
-
-					auto penumbraTypeData = Metadata::value<StringData>( shaderAttribute, "penumbraType" );
-					m_penumbraType = penumbraTypeData ? std::optional<InternedString>( InternedString( penumbraTypeData->readable() ) ) : std::nullopt;
-
-					m_penumbraAngleInspector.reset();
-					if( auto penumbraParameterName = Metadata::value<StringData>( shaderAttribute, "penumbraAngleParameter" ) )
-					{
-						m_penumbraAngleInspector = new ParameterInspector(
-							handleScenePath()->getScene(),
-							this->editScope(),
-							attributeName,
-							ShaderNetwork::Parameter( "", penumbraParameterName->readable() )
-						);
-					}
-
-					m_lensRadius = 0;
-					if( auto lensRadiusParameterName = Metadata::value<StringData>( shaderAttribute, "lensRadiusParameter" ) )
-					{
-						if( auto lensRadiusData = shader->parametersData()->member<FloatData>( lensRadiusParameterName->readable() ) )
-						{
-							m_lensRadius = lensRadiusData->readable();
-						}
-					}
-
-					auto angleType = Metadata::value<StringData>( shaderAttribute, "coneAngleType" );
-					if( angleType && angleType->readable() == "half" )
-					{
-						m_angleMultiplier = 2.f;
-					}
-					else
-					{
-						m_angleMultiplier = 1.f;
-					}
-
-					break;
+					inspectionMap[m] = i;
 				}
 			}
+
+			m_inspections.push_back( inspectionMap );
 		}
 
-		void addDragInspection() override
-		{
-			Inspector::ResultPtr coneAngleInspection = m_coneAngleInspector->inspect();
-			if( !coneAngleInspection )
-			{
-				return;
-			}
-			Inspector::ResultPtr penumbraAngleInspection = m_penumbraAngleInspector ? m_penumbraAngleInspector->inspect() : nullptr;
-
-			ConstFloatDataPtr originalConeAngleData = runTimeCast<const IECore::FloatData>( coneAngleInspection->value() );
-			if( !originalConeAngleData )
-			{
-				return;
-			}
-
-			ConstFloatDataPtr originalPenumbraAngleData;
-			if( penumbraAngleInspection )
-			{
-				originalPenumbraAngleData = runTimeCast<const IECore::FloatData>( penumbraAngleInspection->value() );
-				assert( originalPenumbraAngleData );
-			}
-
-			const auto &[coneHandleAngle, penumbraHandleAngle] = handleAngles(
-				originalConeAngleData.get(),
-				originalPenumbraAngleData ? originalPenumbraAngleData.get() : nullptr
-			);
-
-			m_inspections.push_back(
-				{
-					coneAngleInspection,
-					coneHandleAngle,
-					penumbraAngleInspection,
-					penumbraHandleAngle
-				}
-			);
-		}
-
-		void clearDragInspections() override
+		void clearInspections()
 		{
 			m_inspections.clear();
 		}
 
-		bool handleDragMove( const GafferUI::DragDropEvent &event ) override
+		// Called by `LightTool` to handle `dragMove` events.
+		bool handleDragMove( const GafferUI::DragDropEvent &event )
 		{
 			if( m_inspections.empty() || !allInspectionsEnabled() )
 			{
 				return true;
 			}
 
-			float newHandleAngle = 0;
-			if( getLookThroughLight() )
-			{
-				// When looking through a light, the viewport field of view changes
-				// with the cone angle. When dragging, taking just the `event` coordinates
-				// causes a feedback loop where the `event` coordinates as a fraction of
-				// the viewport cause the viewport to get smaller / larger, which causes the fraction
-				// to get smaller / larger, quickly going to zero / 180.
-				// We can avoid the feedback loop by using raster coordinates, which unproject
-				// the local coordinates to a fixed frame of reference (the screen).
-				const Line3f dragLine( event.line.p0, event.line.p1 );
+			const bool result = handleDragMoveInternal( event );
+			updateTooltipPosition( event.line );
 
-				newHandleAngle = radiansToDegrees(
-					atan2( rasterDragDistance( dragLine ) + m_rasterXOffset, m_rasterZPosition )
-				);
-			}
-			else if( m_drag.value().isLinearDrag() )
-			{
-				// Intersect the gadget-local `event` line with the sphere centered at the gadget
-				// origin with radius equal to the distance along the handle where the user clicked.
-				// `Imath::Sphere3::intersect()` returns the closest (if any) intersection, but we
-				// want the intersection closest to the handle line, so we do the calculation here.
-
-				const Line3f eventLine( event.line.p0, event.line.p1 );
-
-				const auto &[coneInspection, coneHandleAngle, penumbraInspection, penumbraHandleAngle] = spotLightHandleAngles();
-				const float angle = m_handleType == HandleType::Cone ? coneHandleAngle : penumbraHandleAngle.value();
-
-				if( !sphereSpokeClickAngle( eventLine, m_arcRadius, angle, newHandleAngle ) )
-				{
-					return true;
-				}
-			}
-			else
-			{
-				// All other drags can use the `AngularDrag` directly.
-				newHandleAngle = radiansToDegrees( m_drag.value().updatedRotation( event ) );
-			}
-
-			// Clamp the handle being dragged, then calculate the angle delta.
-
-			const float clampedHandleAngle = clampHandleAngle(
-				newHandleAngle,
-				m_dragStartData.originalConeHandleAngle,
-				m_dragStartData.originalPenumbraHandleAngle
-			);
-			const float angleDelta = clampedHandleAngle - (
-				m_handleType == HandleType::Cone ? m_dragStartData.originalConeHandleAngle : m_dragStartData.originalPenumbraHandleAngle.value()
-			);
-
-			for( auto &[coneInspection, originalConeHandleAngle, penumbraInspection, originalPenumbraHandleAngle] : m_inspections )
-			{
-				if( m_handleType == HandleType::Cone )
-				{
-					ValuePlugPtr conePlug = coneInspection->acquireEdit();
-					auto coneFloatPlug = runTimeCast<FloatPlug>( activeValuePlug( conePlug.get() ) );
-					if( !coneFloatPlug )
-					{
-						throw Exception( "Invalid type for \"coneAngleParameter\"" );
-					}
-
-					// Clamp each individual cone angle as well
-					setValueOrAddKey(
-						coneFloatPlug,
-						m_view->getContext()->getTime(),
-						conePlugAngle(
-							clampHandleAngle(
-								originalConeHandleAngle + angleDelta,
-								originalConeHandleAngle,
-								originalPenumbraHandleAngle
-							)
-						)
-					);
-				}
-
-				if( m_handleType == HandleType::Penumbra )
-				{
-					ValuePlugPtr penumbraPlug = penumbraInspection->acquireEdit();
-					auto penumbraFloatPlug = runTimeCast<FloatPlug>( activeValuePlug( penumbraPlug.get() ) );
-					if( !penumbraFloatPlug )
-					{
-						throw Exception( "Inavlid type for \"penumbraAngleParameter\"" );
-					}
-
-					// Clamp each individual cone angle as well
-					setValueOrAddKey(
-						penumbraFloatPlug,
-						m_view->getContext()->getTime(),
-						penumbraPlugAngle(
-							clampHandleAngle(
-								originalPenumbraHandleAngle.value() + angleDelta,
-								originalConeHandleAngle,
-								originalPenumbraHandleAngle
-							)
-						)
-					);
-				}
-			}
-
-			return true;
+			return result;
 		}
 
-		bool handleDragEnd() override
+		// Called by `LightTool` at the end of a drag event.
+		bool handleDragEnd()
 		{
-			m_drag = std::nullopt;
+			m_dragStartInspection.clear();
 
-			return false;
+			return handleDragEndInternal();
 		}
 
-		void updateLocalTransform( const V3f &, const V3f & ) override
+		// Called by `LightTool` when the transform changes for the scene location the handle
+		// is attached to.
+		void updateLocalTransform( const V3f &scale, const V3f &shear )
 		{
-			M44f transform;
-			if( m_handleType == HandleType::Penumbra && ( !m_penumbraType || m_penumbraType == g_insetPenumbraType ) )
-			{
-				// Rotate 180 on the Z-axis to make positive rotations inset
-				transform *= M44f().rotate( V3f( 0, 0, M_PI ) );
-			}
-
-			if( m_handleType == HandleType::Penumbra )
-			{
-				// For inset and outset penumbras, transform the handle so the -Z axis
-				// points along the cone line, making all angles relative to the cone angle.
-				const auto &[coneInspection, coneHandleAngle, penumbraInspection, penumbraHandleAngle] = spotLightHandleAngles();
-				if( !m_penumbraType || m_penumbraType == g_insetPenumbraType || m_penumbraType == g_outsetPenumbraType )
-				{
-					transform *= M44f().rotate( V3f( 0, degreesToRadians( coneHandleAngle ), 0 ) );
-				}
-			}
-
-			transform *= M44f().translate( V3f( -m_lensRadius, 0, 0 ) );
-			transform *= M44f().rotate( V3f( 0, 0, degreesToRadians( m_zRotation ) ) );
-
-			setTransform( transform );
+			updateLocalTransformInternal( scale, shear );
 		}
 
-		bool visible() const override
+		// Called by `LightTool` to determine if the handle is enabled.
+		bool enabled() const
 		{
-			if( !m_coneAngleInspector || ( m_handleType == HandleType::Penumbra && !m_penumbraAngleInspector ) )
-			{
-				return false;
-			}
-
-			// We can be called to check visibility for any scene location set in the current context, spot light
-			// or otherwise. If there isn't an inspection, this handle should be hidden (likely because the scene
-			// location is not a spot light).
-
-			Inspector::ResultPtr contextConeInspection = m_coneAngleInspector->inspect();
-			Inspector::ResultPtr contextPenumbraInspection = m_penumbraAngleInspector ? m_penumbraAngleInspector->inspect() : nullptr;
-
-			if( !contextConeInspection || ( m_handleType == HandleType::Penumbra && !contextPenumbraInspection ) )
-			{
-				return false;
-			}
-
-			// We are a spot light, but the penumbra will be hidden if it's too close to the cone angle, for
-			// the location we're attaching the handles to.
-
-			/// \todo This checks the penumbra / cone angles only for the last selected location, causing
-			/// repeated checks of the same location when `visible()` is called in a loop over multiple scene
-			/// locations. We rely on history caching to make this relatively fast, but ideally this could be
-			/// tested only once per selection list.
-
-			const auto &[coneInspection, coneAngle, penumbraInspection, penumbraAngle] = spotLightHandleAngles();
-			if( m_handleType == HandleType::Penumbra && penumbraAngle )
-			{
-				const float radius = m_visualiserScale * m_frustumScale * -10.f;
-				const V2f coneRaster = m_view->viewportGadget()->gadgetToRasterSpace(
-					V3f( 0, 0, radius ),
-					this
-				);
-				const M44f rot = M44f().rotate( V3f( 0, degreesToRadians( penumbraAngle.value() ), 0 ) );
-				const V2f penumbraRaster = m_view->viewportGadget()->gadgetToRasterSpace(
-					V3f( 0, 0, radius ) * rot,
-					this
-				);
-
-				if( ( coneRaster - penumbraRaster ).length() < ( 2.f * g_circleHandleWidthLarge ) )
-				{
-					return false;
-				}
-			}
-
-			return true;
-		}
-
-		bool enabled() const override
-		{
-			if( !m_coneAngleInspector )
-			{
-				return false;
-			}
-
 			// Return true without checking the `enabled()` state of our inspections.
 			// This allows the tooltip-on-highlight behavior to show a tooltip explaining
 			// why an edit is not possible. The alternative is to draw the tooltip for all
@@ -1181,30 +857,238 @@ class SpotLightHandle : public LightToolHandle
 			// or highlighted drawing state.
 			// The drawing code takes care of graying out uneditable handles and the inspections
 			// prevent the value from being changed.
+			return !m_inspectors.empty();
+		}
+
+		// Called by `LightTool` to determine if the handle is visible.
+		bool visible() const
+		{
+			if( m_inspectors.empty() )
+			{
+				return false;
+			}
+
+			for( const auto &i : m_inspectors )
+			{
+				if( !i.second->inspect() )
+				{
+					return false;
+				}
+			}
+
+			return visibleInternal();
+		}
+
+	protected :
+
+		// Protected to reinforce that `LightToolHandle` can not be created directly, only
+		// derived classes.
+		LightToolHandle(
+			const std::string &lightTypePattern,
+			SceneView *view,
+			const std::vector<InternedString> &metaParameters,
+			const std::string &name
+		) :
+			Handle( name ),
+			m_lightTypePattern( lightTypePattern ),
+			m_view( view ),
+			m_metaParameters( metaParameters ),
+			m_inspectors(),
+			m_inspections(),
+			m_dragStartInspection(),
+			m_tooltipPosition(),
+			m_lookThroughLight( false )
+		{
+			mouseMoveSignal().connect( boost::bind( &LightToolHandle::mouseMove, this, ::_2 ) );
+		}
+
+		// Returns true if `shaderAttribute` refers to the same light type
+		// as this handle was constructed to apply to.
+		bool isLightType( const std::string &shaderAttribute ) const
+		{
+			auto lightType = Metadata::value<StringData>( shaderAttribute, "type" );
+
+			if( !lightType || !StringAlgo::matchMultiple( lightType->readable(), m_lightTypePattern ) )
+			{
+				return false;
+			}
 
 			return true;
 		}
 
-		std::vector<GafferSceneUI::Private::Inspector *> inspectors() const override
+		// Returns the inspection stored when the drag event started. Returns `nullptr`
+		// if not inspection was stored.
+		Inspector::ResultPtr dragStartInspection( const InternedString &metaParameter ) const
 		{
-			if( m_handleType == HandleType::Cone )
+			auto it = m_dragStartInspection.find( metaParameter );
+			if( it != m_dragStartInspection.end() )
 			{
-				return {m_coneAngleInspector.get()};
+				return it->second;
 			}
-			if(
-				(
-					!m_penumbraType ||
-					m_penumbraType == g_insetPenumbraType ||
-					m_penumbraType == g_outsetPenumbraType
-				)
-			)
-			{
-				return {m_coneAngleInspector.get(), m_penumbraAngleInspector.get()};
-			}
-			return {m_penumbraAngleInspector.get()};
+			return nullptr;
 		}
 
-	protected :
+		// Returns the inspection for the scene location the handle is attached to.
+		// Returns `nullptr` if no inspection exists for the handle.
+		Inspector::ResultPtr handleInspection( const InternedString &metaParameter ) const
+		{
+			ScenePlug::PathScope pathScope( m_context );
+			pathScope.setPath( &m_handlePath );
+
+			return inspection( metaParameter );
+		}
+
+		// Applies an multiplier edit to all of the inspections for `metaParameter`.
+		void applyMultiplier( const InternedString &metaParameter, const float mult )
+		{
+			for( const auto &i : m_inspections )
+			{
+				auto it = i.find( metaParameter );
+				if( it == i.end() )
+				{
+					continue;
+				}
+
+				ValuePlugPtr parameterPlug = it->second->acquireEdit();
+				auto floatPlug = runTimeCast<FloatPlug>( activeValuePlug( parameterPlug.get() ) );
+				if( !floatPlug )
+				{
+					throw Exception( fmt::format( "\"{}\" parameter must use `FloatPlug`", metaParameter.string() ) );
+				}
+
+				const float originalValue = it->second->typedValue<float>( 0.f );
+				const float nonZeroValue = originalValue == 0 ? 1.f : originalValue;
+				setValueOrAddKey( floatPlug, m_view->getContext()->getTime(), nonZeroValue * mult );
+
+			}
+		}
+
+		bool hasInspectors() const
+		{
+			return !m_inspectors.empty();
+		}
+
+		const std::vector<InspectionMap> &inspections() const
+		{
+			return m_inspections;
+		}
+
+		// Sets the position of the tooltip in gadget space.
+		void setTooltipPosition( const V3f &p )
+		{
+			m_tooltipPosition = p;
+		}
+
+		const V3f getTooltipPosition() const
+		{
+			return m_tooltipPosition;
+		}
+
+		const SceneView *view() const
+		{
+			return m_view;
+		}
+
+		const Inspector *inspector( const InternedString &metaParameter ) const
+		{
+			const auto it = m_inspectors.find( metaParameter );
+			if( it == m_inspectors.end() )
+			{
+				return nullptr;
+			}
+
+			return it->second.get();
+		}
+
+		// The following protected methods are used by derived classes to implement
+		// handle-specific behavior.
+
+		// May be overriden to update internal state when the scene location the handle
+		// is attached to changes.
+		virtual void handlePathChanged()
+		{
+
+		}
+
+		// May be overriden to clean up internal state after a drag.
+		virtual bool handleDragEndInternal()
+		{
+			return false;
+		}
+
+		// May be overridden to set the local transform of the handle
+		// relative to the light. The parent of the handle will have rotation and translation
+		// set independently. `scale` and `shear` are passed here to allow the handle to decide
+		// how to deal with those transforms.
+		/// \todo Should this be something like `setScaleAndShear()` and rework `updateLocalTransform()`?
+		virtual void updateLocalTransformInternal( const V3f &, const V3f & )
+		{
+
+		}
+
+		// Called by `visible()`, may be overridden to extend the logic determining visibility.
+		// Called with `scenePath` set in the current context.
+		virtual bool visibleInternal() const
+		{
+			return true;
+		}
+
+		// Called by `renderHandle()`, may be overridden to return a string suffix to be
+		// displayed in a tool tip after the plug count in the case of modifying multiple
+		// unrelated plugs.
+		virtual std::string tipPlugSuffix() const
+		{
+			return "";
+		}
+
+		// Called by `renderHandle()`, may be overridden to include a string suffix to be
+		// displayed at the end of the entire tool tip.
+		virtual std::string tipInfoSuffix() const
+		{
+			return "";
+		}
+
+		// May be overridden to return a vector of inspection results that will receive
+		// edits from this handle. By default, returns all inspections.
+		// Handles can hold inspections for additional parameters
+		// than those being edited, but only the inspections returned from `handleValueInspections()`
+		// will be considered for editing and related UI indications.
+		virtual std::vector<const Inspector::Result *> handleValueInspections() const
+		{
+			std::vector<const Inspector::Result *> result;
+			for( const auto &i : m_inspections )
+			{
+				for( const auto &p : i )
+				{
+					result.push_back( p.second.get() );
+				}
+			}
+
+			return result;
+		}
+
+		// Must be overriden to set the tooltip position in gadget space based
+		// on `eventLine` from a `DragDropEvent` or `ButtonEvent`.
+		virtual void updateTooltipPosition( const LineSegment3f &eventLine ) = 0;
+
+		// Must be overriden to make edits to the inspections in `handleDragMove()`.
+		virtual bool handleDragMoveInternal( const GafferUI::DragDropEvent &event ) = 0;
+
+		// Must be overridden to add `IECoreGL` components to `rootGroup` in `renderHandle()`.
+		virtual void addHandleVisualisation( IECoreGL::Group *rootGroup, const bool selectionPass, const bool highlighted ) const = 0;
+
+		// Must be overridden to prepare for the drag in `dragBegin()`.
+		virtual void setupDrag( const DragDropEvent &event ) = 0;
+
+	private :
+
+		bool mouseMove( const ButtonEvent &event )
+		{
+			updateTooltipPosition( event.line );
+			dirty( DirtyType::Render );
+
+			return false;
+		}
 
 		void renderHandle( const Style *style, Style::State state ) const override
 		{
@@ -1214,13 +1098,9 @@ class SpotLightHandle : public LightToolHandle
 			IECoreGL::GroupPtr group = new IECoreGL::Group;
 
 			const bool highlighted = state == Style::State::HighlightedState;
+			const bool selectionPass = (bool)IECoreGL::Selector::currentSelector();
 
-			// Line along cone. Use a cylinder because GL_LINE with width > 1
-			// are not reliably selected.
-
-			GroupPtr spokeGroup = new Group;
-
-			spokeGroup->getState()->add(
+			group->getState()->add(
 				new IECoreGL::ShaderStateComponent(
 					ShaderLoader::defaultShaderLoader(),
 					TextureLoader::defaultTextureLoader(),
@@ -1231,10 +1111,154 @@ class SpotLightHandle : public LightToolHandle
 				)
 			);
 
+			auto standardStyle = runTimeCast<const StandardStyle>( style );
+			assert( standardStyle );
+			const Color3f highlightColor3 = standardStyle->getColor( StandardStyle::Color::HighlightColor );
+			const Color4f highlightColor4 = Color4f( highlightColor3.x, highlightColor3.y, highlightColor3.z, 1.f );
+
+			const bool enabled = allInspectionsEnabled();
+
+			group->getState()->add(
+				new IECoreGL::Color(
+					enabled ? ( highlighted ? g_lightToolHighlightColor4 : highlightColor4 ) : g_lightToolDisabledColor4
+				)
+			);
+
+			addHandleVisualisation( group.get(), selectionPass, highlighted );
+
+			group->render( glState );
+
+			if( highlighted )
+			{
+				std::vector<const Inspector::Result *> inspections = handleValueInspections();
+
+				drawSelectionTips(
+					m_tooltipPosition,
+					inspections,
+					tipPlugSuffix(),
+					tipInfoSuffix(),
+					this,
+					m_view->viewportGadget(),
+					style
+				);
+			}
+		}
+
+		void dragBegin( const DragDropEvent &event ) override
+		{
+			for( const auto &m : m_metaParameters )
+			{
+				if( Inspector::ResultPtr i = handleInspection( m ) )
+				{
+					m_dragStartInspection[m] = i;
+				}
+			}
+
+			setupDrag( event );
+		}
+
+		// Returns the inspection for `metaParameter` in the current context.
+		// Returns `nullptr` if no inspector or no inspection exists.
+		Inspector::ResultPtr inspection( const InternedString &metaParameter ) const
+		{
+			auto it = m_inspectors.find( metaParameter );
+			if( it == m_inspectors.end() )
+			{
+				return nullptr;
+			}
+
+			if( Inspector::ResultPtr inspection = it->second->inspect() )
+			{
+				return inspection;
+			}
+
+			return nullptr;
+		}
+
+		bool allInspectionsEnabled() const
+		{
+			std::vector<const Inspector::Result *> requiredInspections = handleValueInspections();
+			if( requiredInspections.empty() )
+			{
+				return false;
+			}
+
+			bool enabled = true;
+			for( const auto &i : requiredInspections )
+			{
+				enabled &= i && i->editable();
+			}
+
+			return enabled;
+		}
+
+		ScenePlugPtr m_scene;
+		const Context *m_context;
+		ScenePlug::ScenePath m_handlePath;
+
+		const std::string m_lightTypePattern;
+		SceneView *m_view;
+		Gaffer::PlugPtr m_editScope;
+		const std::vector<InternedString> m_metaParameters;
+
+		using InspectorMap = std::unordered_map<InternedString, InspectorPtr>;
+		InspectorMap m_inspectors;
+
+		std::vector<InspectionMap> m_inspections;
+		InspectionMap m_dragStartInspection;
+		V3f m_tooltipPosition;
+
+		bool m_lookThroughLight;
+};
+
+// ============================================================================
+// SpotLightHandle
+// ============================================================================
+
+class SpotLightHandle : public LightToolHandle
+{
+	public :
+
+		enum class HandleType
+		{
+			Cone,
+			Penumbra
+		};
+
+		SpotLightHandle(
+			const std::string &lightType,
+			HandleType handleType,
+			SceneView *view,
+			const float zRotation,
+			const std::string &name
+		) :
+			LightToolHandle( lightType, view, { g_coneAngleParameter, g_penumbraAngleParameter }, name ),
+			m_zRotation( zRotation ),
+			m_handleType( handleType ),
+			m_angleMultiplier( 1.f ),
+			m_visualiserScale( 1.f ),
+			m_frustumScale( 1.f ),
+			m_lensRadius( 0 )
+		{
+		}
+		~SpotLightHandle() override
+		{
+
+		}
+
+	protected :
+
+		void addHandleVisualisation( IECoreGL::Group *rootGroup, const bool selectionPass, const bool highlighted ) const override
+		{
+			// Line along cone. Use a cylinder because GL_LINE with width > 1
+			// are not reliably selected.
+
+			GroupPtr spokeGroup = new Group;
+
 			float spokeRadius = 0;
 			float handleRadius = 0;
 
-			if( IECoreGL::Selector::currentSelector() )
+			if( selectionPass )
 			{
 				spokeRadius = g_lineSelectionWidth;
 				handleRadius = g_circleHandleSelectionWidth;
@@ -1251,7 +1275,7 @@ class SpotLightHandle : public LightToolHandle
 			}
 
 			const V3f farP = V3f( 0, 0, m_frustumScale * m_visualiserScale * -10.f );
-			const auto &[coneInspection, coneHandleAngle, penumbraInspection, penumbraHandleAngle] = spotLightHandleAngles();
+			const auto &[coneHandleAngle, penumbraHandleAngle] = handleAngles();
 			const float angle = m_handleType == HandleType::Cone ? coneHandleAngle : penumbraHandleAngle.value();
 
 			const M44f handleTransform = M44f().rotate( V3f( 0, degreesToRadians( angle ), 0 ) );
@@ -1264,20 +1288,7 @@ class SpotLightHandle : public LightToolHandle
 				)
 			);
 
-			auto standardStyle = runTimeCast<const StandardStyle>( style );
-			assert( standardStyle );
-			const Color3f highlightColor3 = standardStyle->getColor( StandardStyle::Color::HighlightColor );
-			const Color4f highlightColor4 = Color4f( highlightColor3.x, highlightColor3.y, highlightColor3.z, 1.f );
-
-			const bool enabled = allInspectionsEnabled();
-
-			spokeGroup->getState()->add(
-				new IECoreGL::Color(
-					enabled ? ( highlighted ? g_lightToolHighlightColor4 : highlightColor4 ) : g_lightToolDisabledColor4
-				)
-			);
-
-			group->addChild( spokeGroup );
+			rootGroup->addChild( spokeGroup );
 
 			// Circles at end of cone and frustum
 
@@ -1296,7 +1307,7 @@ class SpotLightHandle : public LightToolHandle
 
 			IECoreGL::MeshPrimitivePtr decoration;
 			if(
-				( m_handleType == HandleType::Cone && m_penumbraAngleInspector && ( !m_penumbraType || m_penumbraType == g_insetPenumbraType ) ) ||
+				( m_handleType == HandleType::Cone && inspector( g_penumbraAngleParameter ) && ( !m_penumbraType || m_penumbraType == g_insetPenumbraType ) ) ||
 				( m_handleType == HandleType::Penumbra && ( m_penumbraType == g_outsetPenumbraType || m_penumbraType == g_absolutePenumbraType ) )
 			)
 			{
@@ -1327,23 +1338,21 @@ class SpotLightHandle : public LightToolHandle
 			);
 			iconGroup->addChild( farIconGroup );
 
-			iconGroup->getState()->add(
-				new IECoreGL::Color(
-					enabled ? ( highlighted ? g_lightToolHighlightColor4 : highlightColor4 ) : g_lightToolDisabledColor4
-				)
-			);
-
-			group->addChild( iconGroup );
+			rootGroup->addChild( iconGroup );
 
 			// Drag arcs
 
 			if( m_drag && !getLookThroughLight() )
 			{
 				const float currentFraction = angle / 360.f;
-				const float previousFraction = !m_inspections.empty() ?
+
+				Inspector::ResultPtr coneInspection = dragStartInspection( g_coneAngleParameter );
+				Inspector::ResultPtr penumbraInspection = dragStartInspection( g_penumbraAngleParameter );
+
+				const float previousFraction = !inspections().empty() ?
 					( m_handleType == HandleType::Cone ?
-						m_dragStartData.originalConeHandleAngle :
-						m_dragStartData.originalPenumbraHandleAngle.value()
+						this->coneHandleAngle( coneInspection->typedValue<float>( 0.f ) ) :
+						this->penumbraHandleAngle( penumbraInspection->typedValue<float>( 0.f ) )
 					) / 360.f : currentFraction;
 
 				IECoreScene::MeshPrimitivePtr previousSolidArc = nullptr;
@@ -1391,73 +1400,296 @@ class SpotLightHandle : public LightToolHandle
 					solidAngleGroup->addChild( runTimeCast<IECoreGL::Renderable>( meshConverter->convert() ) );
 				}
 
-				group->addChild( solidAngleGroup );
+				rootGroup->addChild( solidAngleGroup );
 			}
 
-			group->setTransform( handleTransform );
+			rootGroup->setTransform( handleTransform );
+		}
 
-			group->render( glState );
-
-			// Selection info
-
-			if( highlighted )
+		std::vector<const Inspector::Result *> handleValueInspections()
+		{
+			std::vector<const Inspector::Result *> result;
+			for( const auto &i : inspections() )
 			{
-				std::vector<const Inspector::Result *> inspections;
-				for( const auto &inspectionPair : m_inspections )
+				for( const auto &p: i )
 				{
-					inspections.push_back(
-						m_handleType == HandleType::Cone ? inspectionPair.coneInspection.get() :
-						inspectionPair.penumbraInspection.get()
-					);
+					if( p.first == ( m_handleType == HandleType::Cone ? g_coneAngleParameter : g_penumbraAngleParameter ) )
+					{
+						result.push_back( p.second.get() );
+					}
 				}
+			}
 
-				drawSelectionTips(
-					V3f( 0, 0, !getLookThroughLight() ? -m_arcRadius : 1.f ) * handleTransform,
-					inspections,
-					fmt::format( "{} angles", m_handleType == HandleType::Cone ? "cone" : "penumbra" ),
-					"",  // infoSuffix
-					this,
-					m_view->viewportGadget(),
-					style
-				);
+			return result;
+		}
+
+		std::string tipPlugSuffix() const override
+		{
+			return m_handleType == HandleType::Cone ? "cone angles" : "penumbra angles";
+		}
+
+		void handlePathChanged() override
+		{
+			ConstCompoundObjectPtr attributes = scene()->fullAttributes( handlePath() );
+
+			float defaultVisualiserScale = 1.f;
+			if( auto p = view()->descendant<const FloatPlug>( "drawingMode.visualiser.scale" ) )
+			{
+				defaultVisualiserScale = p->getValue();
+			}
+			auto visualiserScaleData = attributes->member<FloatData>( g_lightVisualiserScaleAttributeName );
+			m_visualiserScale = visualiserScaleData ? visualiserScaleData->readable() : defaultVisualiserScale;
+
+			float defaultFrustumScale = 1.f;
+			if( auto p = view()->descendant<const FloatPlug>( "drawingMode.light.frustumScale" ) )
+			{
+				defaultFrustumScale = p->getValue();
+			}
+			auto frustumScaleData = attributes->member<FloatData>( g_frustumScaleAttributeName );
+			m_frustumScale = frustumScaleData ? frustumScaleData->readable() : defaultFrustumScale;
+
+			/// \todo This can be simplified and some of the logic, especially getting the inspectors, can
+			/// be moved to the constructor when we standardize on a single USDLux light representation.
+
+			for( const auto &[attributeName, value] : attributes->members() )
+			{
+				if(
+					StringAlgo::matchMultiple( attributeName, g_lightAttributePattern ) &&
+					value->typeId() == (IECore::TypeId)ShaderNetworkTypeId
+				)
+				{
+					const auto shader = attributes->member<ShaderNetwork>( attributeName )->outputShader();
+					std::string shaderAttribute = shader->getType() + ":" + shader->getName();
+
+					if( !isLightType( shaderAttribute ) )
+					{
+						continue;
+					}
+
+					auto penumbraTypeData = Metadata::value<StringData>( shaderAttribute, "penumbraType" );
+					m_penumbraType = penumbraTypeData ? std::optional<InternedString>( InternedString( penumbraTypeData->readable() ) ) : std::nullopt;
+
+					m_lensRadius = 0;
+					if( auto lensRadiusParameterName = Metadata::value<StringData>( shaderAttribute, "lensRadiusParameter" ) )
+					{
+						if( auto lensRadiusData = shader->parametersData()->member<FloatData>( lensRadiusParameterName->readable() ) )
+						{
+							m_lensRadius = lensRadiusData->readable();
+						}
+					}
+
+					auto angleType = Metadata::value<StringData>( shaderAttribute, "coneAngleType" );
+					if( angleType && angleType->readable() == "half" )
+					{
+						m_angleMultiplier = 2.f;
+					}
+					else
+					{
+						m_angleMultiplier = 1.f;
+					}
+
+					break;
+				}
 			}
 		}
 
-	private :
-
-		bool mouseMove( const ButtonEvent &event )
+		bool handleDragMoveInternal( const GafferUI::DragDropEvent &event ) override
 		{
-			if( m_drag || !m_coneAngleInspector || handleScenePath()->isEmpty() )
+			float newHandleAngle = 0;
+			if( getLookThroughLight() )
 			{
-				return false;
+				// When looking through a light, the viewport field of view changes
+				// with the cone angle. When dragging, taking just the `event` coordinates
+				// causes a feedback loop where the `event` coordinates as a fraction of
+				// the viewport cause the viewport to get smaller / larger, which causes the fraction
+				// to get smaller / larger, quickly going to zero / 180.
+				// We can avoid the feedback loop by using raster coordinates, which unproject
+				// the local coordinates to a fixed frame of reference (the screen).
+				const Line3f dragLine( event.line.p0, event.line.p1 );
+
+				newHandleAngle = radiansToDegrees(
+					atan2( rasterDragDistance( dragLine ) + m_rasterXOffset, m_rasterZPosition )
+				);
+			}
+			else if( m_drag.value().isLinearDrag() )
+			{
+				// Intersect the gadget-local `event` line with the sphere centered at the gadget
+				// origin with radius equal to the distance along the handle where the user clicked.
+				// `Imath::Sphere3::intersect()` returns the closest (if any) intersection, but we
+				// want the intersection closest to the handle line, so we do the calculation here.
+
+				const Line3f eventLine( event.line.p0, event.line.p1 );
+
+				const auto &[coneHandleAngle, penumbraHandleAngle] = handleAngles();
+				const float angle = m_handleType == HandleType::Cone ? coneHandleAngle : penumbraHandleAngle.value();
+
+				if( !sphereSpokeClickAngle( eventLine, m_arcRadius, angle, newHandleAngle ) )
+				{
+					return true;
+				}
+			}
+			else
+			{
+				// All other drags can use the `AngularDrag` directly.
+				newHandleAngle = radiansToDegrees( m_drag.value().updatedRotation( event ) );
 			}
 
-			const auto &[coneInspection, coneHandleAngle, penumbraInspection, penumbraHandleAngle] = spotLightHandleAngles();
+			// Clamp the handle being dragged, then calculate the angle delta.
 
-			const float angle = m_handleType == HandleType::Cone ? coneHandleAngle : penumbraHandleAngle.value();
+			Inspector::ResultPtr coneDragStartInspection = dragStartInspection( g_coneAngleParameter );
+			Inspector::ResultPtr penumbraDragStartInspection = dragStartInspection( g_penumbraAngleParameter );
 
-			const M44f r = M44f().rotate( V3f( 0, degreesToRadians( angle ), 0 ) );
-			const Line3f rayLine(
-				V3f( 0 ),
-				V3f( 0, 0, m_visualiserScale * m_frustumScale * -10.f ) * r
+			const float clampedPlugAngle = clampPlugAngle(
+				m_handleType == HandleType::Cone ? conePlugAngle( newHandleAngle ) : penumbraPlugAngle( newHandleAngle ),
+				coneDragStartInspection->typedValue<float>( 0.f ),
+				penumbraDragStartInspection ? penumbraDragStartInspection->typedValue<float>( 0.f ) : 0.f
 			);
-			const V3f dragPoint = rayLine.closestPointTo( Line3f( event.line.p0, event.line.p1 ) );
-			m_arcRadius = dragPoint.length();
+			const float angleDelta =
+				clampedPlugAngle -
+				(
+					m_handleType == HandleType::Cone ?
+					coneDragStartInspection->typedValue<float>( 0.f ) :
+					penumbraDragStartInspection->typedValue<float>( 0.f )
+				)
+			;
 
-			dirty( DirtyType::Render );
+			for( const auto &i : inspections() )
+			{
+				auto coneIt = i.find( g_coneAngleParameter );
+				if( coneIt == i.end() )
+				{
+					continue;
+				}
+
+				auto penumbraIt = i.find( g_penumbraAngleParameter );
+				if( penumbraIt == i.end() && m_handleType == HandleType::Penumbra )
+				{
+					continue;
+				}
+
+				float penumbraHandleAngle = 0;
+				if( penumbraIt != i.end() )
+				{
+					penumbraHandleAngle = penumbraIt->second->typedValue<float>( 0.f );
+				}
+
+				auto it = m_handleType == HandleType::Cone ? coneIt : penumbraIt;
+
+				ValuePlugPtr plug = it->second->acquireEdit();
+				auto floatPlug = runTimeCast<FloatPlug>( activeValuePlug( plug.get() ) );
+				if( !floatPlug )
+				{
+					throw Exception(
+						fmt::format(
+							"Invalid type for \"{}\"",
+							m_handleType == HandleType::Cone ? g_coneAngleParameter.string() : g_penumbraAngleParameter.string()
+						)
+					);
+				}
+
+				// Clamp each individual cone angle as well
+				setValueOrAddKey(
+					floatPlug,
+					view()->getContext()->getTime(),
+					clampPlugAngle(
+						it->second->typedValue<float>( 0.f ) + angleDelta,
+						coneIt->second->typedValue<float>( 0.f ),
+						penumbraHandleAngle
+					)
+				);
+
+			}
+
+			return true;
+		}
+
+		bool handleDragEndInternal() override
+		{
+			m_drag = std::nullopt;
 
 			return false;
 		}
 
-		void dragBegin( const DragDropEvent &event ) override
+		void updateLocalTransformInternal( const V3f &, const V3f & ) override
 		{
-			const auto &[ coneInspection, coneHandleAngle, penumbraInspection, penumbraHandleAngle] = spotLightHandleAngles();
+			M44f transform;
+			if( m_handleType == HandleType::Penumbra && ( !m_penumbraType || m_penumbraType == g_insetPenumbraType ) )
+			{
+				// Rotate 180 on the Z-axis to make positive rotations inset
+				transform *= M44f().rotate( V3f( 0, 0, M_PI ) );
+			}
 
-			m_dragStartData.coneInspection = coneInspection;
-			m_dragStartData.originalConeHandleAngle = coneHandleAngle;
-			m_dragStartData.penumbraInspection = penumbraInspection;
-			m_dragStartData.originalPenumbraHandleAngle = penumbraHandleAngle;
+			if( m_handleType == HandleType::Penumbra )
+			{
+				// For inset and outset penumbras, transform the handle so the -Z axis
+				// points along the cone line, making all angles relative to the cone angle.
+				const auto &[coneHandleAngle, penumbraHandleAngle] = handleAngles();
+				if( !m_penumbraType || m_penumbraType == g_insetPenumbraType || m_penumbraType == g_outsetPenumbraType )
+				{
+					transform *= M44f().rotate( V3f( 0, degreesToRadians( coneHandleAngle ), 0 ) );
+				}
+			}
 
+			transform *= M44f().translate( V3f( -m_lensRadius, 0, 0 ) );
+			transform *= M44f().rotate( V3f( 0, 0, degreesToRadians( m_zRotation ) ) );
+
+			setTransform( transform );
+		}
+
+		bool visibleInternal() const override
+		{
+			const Inspector *coneInspector = inspector( g_coneAngleParameter );
+			const Inspector *penumbraInspector = inspector( g_penumbraAngleParameter );
+			if( !coneInspector || ( m_handleType == HandleType::Penumbra && !penumbraInspector ) )
+			{
+				return false;
+			}
+
+			// We can be called to check visibility for any scene location set in the current context, spot light
+			// or otherwise. If there isn't an inspection, this handle should be hidden (likely because the scene
+			// location is not a spot light).
+
+			Inspector::ResultPtr contextConeInspection = coneInspector->inspect();
+			Inspector::ResultPtr contextPenumbraInspection = penumbraInspector ? penumbraInspector->inspect() : nullptr;
+
+			if( !contextConeInspection || ( m_handleType == HandleType::Penumbra && !contextPenumbraInspection ) )
+			{
+				return false;
+			}
+
+			// We are a spot light, but the penumbra will be hidden if it's too close to the cone angle, for
+			// the location we're attaching the handles to.
+
+			/// \todo This checks the penumbra / cone angles only for the last selected location, causing
+			/// repeated checks of the same location when `visible()` is called in a loop over multiple scene
+			/// locations. We rely on history caching to make this relatively fast, but ideally this could be
+			/// tested only once per selection list.
+
+			const auto &[coneAngle, penumbraAngle] = handleAngles();
+			if( m_handleType == HandleType::Penumbra && penumbraAngle )
+			{
+				const float radius = m_visualiserScale * m_frustumScale * -10.f;
+				const V2f coneRaster = view()->viewportGadget()->gadgetToRasterSpace(
+					V3f( 0, 0, radius ),
+					this
+				);
+				const M44f rot = M44f().rotate( V3f( 0, degreesToRadians( penumbraAngle.value() ), 0 ) );
+				const V2f penumbraRaster = view()->viewportGadget()->gadgetToRasterSpace(
+					V3f( 0, 0, radius ) * rot,
+					this
+				);
+
+				if( ( coneRaster - penumbraRaster ).length() < ( 2.f * g_circleHandleWidthLarge ) )
+				{
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		void setupDrag( const DragDropEvent &event ) override
+		{
 			m_drag = AngularDrag(
 				this,
 				V3f( 0, 0, 0 ),
@@ -1468,6 +1700,8 @@ class SpotLightHandle : public LightToolHandle
 
 			if( getLookThroughLight() )
 			{
+				const auto &[ coneHandleAngle, penumbraHandleAngle] = handleAngles();
+
 				const float dragStartAngle = m_handleType == HandleType::Cone ? coneHandleAngle : penumbraHandleAngle.value();
 
 				const Line3f clickLine( event.line.p0, event.line.p1 );
@@ -1488,53 +1722,85 @@ class SpotLightHandle : public LightToolHandle
 			}
 		}
 
-		DragStartData spotLightHandleAngles() const
+		std::vector<const Inspector::Result *> handleValueInspections() const override
 		{
-			ScenePlug::PathScope pathScope( handleScenePath()->getContext() );
-			pathScope.setPath( &handleScenePath()->names() );
-
-			Inspector::ResultPtr coneInspection = m_coneAngleInspector->inspect();
-			if( !coneInspection )
+			std::vector<const Inspector::Result *> result;
+			for( const auto &i : inspections() )
 			{
-				return {nullptr, 0, nullptr, std::nullopt};
+				for( const auto &p : i )
+				{
+					if( m_handleType == HandleType::Cone && p.first == g_coneAngleParameter )
+					{
+						result.push_back( p.second.get() );
+					}
+					else if( m_handleType == HandleType::Penumbra && p.first == g_penumbraAngleParameter )
+					{
+						result.push_back( p.second.get() );
+					}
+				}
+			}
+			return result;
+		}
+
+		void updateTooltipPosition( const LineSegment3f &eventLine ) override
+		{
+			if( !hasInspectors() )
+			{
+				return;
 			}
 
-			const FloatData *coneAngleData = runTimeCast<const FloatData>( coneInspection->value() );
-			if( !coneAngleData )
+			const auto &[coneHandleAngle, penumbraHandleAngle] = handleAngles();
+
+			const float angle = m_handleType == HandleType::Cone ? coneHandleAngle : penumbraHandleAngle.value();
+
+			const M44f r = M44f().rotate( V3f( 0, degreesToRadians( angle ), 0 ) );
+
+			if( getLookThroughLight() )
 			{
-				return {nullptr, 0, nullptr, std::nullopt};
+				setTooltipPosition( V3f( 0, 0, -1.f ) * r );
+				return;
 			}
 
-			const FloatData *penumbraAngleData = nullptr;
+			const Line3f rayLine(
+				V3f( 0 ),
+				V3f( 0, 0, m_visualiserScale * m_frustumScale * -10.f ) * r
+			);
+			const V3f dragPoint = rayLine.closestPointTo( Line3f( eventLine.p0, eventLine.p1 ) );
 
-			Inspector::ResultPtr penumbraInspection = m_penumbraAngleInspector ? m_penumbraAngleInspector->inspect() : nullptr;
-			if( penumbraInspection )
+			setTooltipPosition( dragPoint );
+
+			if( !m_drag )
 			{
-				penumbraAngleData = runTimeCast<const FloatData>( penumbraInspection->value() );
-				assert( penumbraAngleData );
+				m_arcRadius = dragPoint.length();
 			}
+		}
 
-			const auto &[coneAngle, penumbraAngle] = handleAngles( coneAngleData, penumbraAngleData );
+	private :
 
-			return {coneInspection, coneAngle, penumbraInspection, penumbraAngle};
+		std::pair<float, std::optional<float>> handleAngles() const
+		{
+			Inspector::ResultPtr coneHandleInspection = handleInspection( g_coneAngleParameter );
+			Inspector::ResultPtr penumbraHandleInspection = handleInspection( g_penumbraAngleParameter );
+
+			return {
+				coneHandleAngle( coneHandleInspection->typedValue<float>( 0.f ) ),
+				penumbraHandleInspection ? std::optional<float>( penumbraHandleAngle( penumbraHandleInspection->typedValue<float>( 0.f ) ) ) : std::nullopt
+			};
 		}
 
 		// Convert from the angle representation used by plugs to that used by handles.
-		std::pair<float, std::optional<float>> handleAngles( const FloatData *coneAngleData, const FloatData *penumbraAngleData ) const
+		float coneHandleAngle( const float angle ) const
 		{
-			std::optional<float> penumbraAngle = std::nullopt;
-			if( penumbraAngleData )
+			return angle * 0.5f;
+		}
+
+		float penumbraHandleAngle( const float angle ) const
+		{
+			if( m_penumbraType != g_absolutePenumbraType )
 			{
-				if( m_penumbraType != g_absolutePenumbraType )
-				{
-					penumbraAngle = penumbraAngleData->readable();
-				}
-				else
-				{
-					penumbraAngle = penumbraAngleData->readable() * 0.5f;
-				}
+				return angle;
 			}
-			return {coneAngleData->readable() * 0.5f * m_angleMultiplier, penumbraAngle};
+			return angle * 0.5f;
 		}
 
 		float conePlugAngle(const float a ) const
@@ -1555,9 +1821,9 @@ class SpotLightHandle : public LightToolHandle
 			V3f sphereIntersection;
 			Sphere3f( V3f( 0 ), 1.f ).intersect( ray, sphereIntersection );
 
-			const V2f gadgetRasterOrigin = m_view->viewportGadget()->gadgetToRasterSpace( V3f( 0, 0, -1.f ), this );
-			const V2f rasterSphereIntersection = m_view->viewportGadget()->gadgetToRasterSpace( sphereIntersection, this );
-			const V2f rasterNormal = ( m_view->viewportGadget()->gadgetToRasterSpace( V3f( 0, 1.f, -1.f ), this ) - gadgetRasterOrigin ).normalized();
+			const V2f gadgetRasterOrigin = view()->viewportGadget()->gadgetToRasterSpace( V3f( 0, 0, -1.f ), this );
+			const V2f rasterSphereIntersection = view()->viewportGadget()->gadgetToRasterSpace( sphereIntersection, this );
+			const V2f rasterNormal = ( view()->viewportGadget()->gadgetToRasterSpace( V3f( 0, 1.f, -1.f ), this ) - gadgetRasterOrigin ).normalized();
 
 			const V2f projectedPoint = rasterSphereIntersection - (rasterSphereIntersection - gadgetRasterOrigin).dot( rasterNormal ) * rasterNormal;
 
@@ -1573,22 +1839,22 @@ class SpotLightHandle : public LightToolHandle
 			return rasterNormal.x > 0 ? rasterDistance.y : -rasterDistance.y;
 		}
 
-		float clampHandleAngle(
+		float clampPlugAngle(
 			const float angle,
 			const float originalConeAngle,
 			const std::optional<float> originalPenumbraAngle
 		)
 		{
-			float result = std::clamp( angle, 0.f, 90.f );
+			float result = std::clamp( angle, 0.f, 180.f );
 			if( m_handleType == HandleType::Cone )
 			{
 				if( originalPenumbraAngle && ( !m_penumbraType || m_penumbraType == g_insetPenumbraType ) )
 				{
-					result = std::max( result, originalPenumbraAngle.value() );
+					result = std::max( result, originalPenumbraAngle.value() * 2.f );
 				}
 				else if( m_penumbraType == g_outsetPenumbraType )
 				{
-					result = std::min( result, 90.f - originalPenumbraAngle.value() );
+					result = std::min( result, 180.f - originalPenumbraAngle.value() * 2.f );
 				}
 			}
 
@@ -1596,42 +1862,17 @@ class SpotLightHandle : public LightToolHandle
 			{
 				if( !m_penumbraType || m_penumbraType == g_insetPenumbraType )
 				{
-					result = std::min( result, originalConeAngle );
+					result = std::min( result, originalConeAngle * 0.5f );
 				}
 				else if( m_penumbraType == g_outsetPenumbraType )
 				{
-					result = std::min( result, 90.f - originalConeAngle );
+					result = std::min( result, ( 180.f - originalConeAngle ) * 0.5f );
 				}
 			}
 			return result;
 		}
 
-		bool allInspectionsEnabled() const
-		{
-			bool enabled = true;
-			for( auto &[coneInspection, originalConeAngle, penumbraInspection, originalPenumbraAngle] : m_inspections )
-			{
-				if( m_handleType == HandleType::Cone )
-				{
-					enabled &= coneInspection ? coneInspection->editable() : false;
-				}
-				else
-				{
-					enabled &= penumbraInspection ? penumbraInspection->editable() : false;
-				}
-			}
-
-			return enabled;
-		}
-
-		ParameterInspectorPtr m_coneAngleInspector;
-		ParameterInspectorPtr m_penumbraAngleInspector;
-
-		const SceneView *m_view;
-
 		const float m_zRotation;
-
-		std::vector<DragStartData> m_inspections;
 
 		std::optional<AngularDrag> m_drag;
 
@@ -1644,7 +1885,6 @@ class SpotLightHandle : public LightToolHandle
 		float m_frustumScale;
 		float m_lensRadius;
 
-		DragStartData m_dragStartData;
 		// The reference coordinates of the start of a drag
 		// when looking through a light. `x` is the x distance, in raster
 		// space, on the plane of the gadget. `y` is the depth, into the
@@ -1655,564 +1895,224 @@ class SpotLightHandle : public LightToolHandle
 		float m_arcRadius;
 };
 
-// ============================================================================
-// QuadLightHandle
-// ============================================================================
-
-class QuadLightHandle : public LightToolHandle
+class EdgeHandle : public LightToolHandle
 {
 	public :
-
-		enum HandleType
+		enum class LightAxis
 		{
 			Width = 1,
 			Height = 2
 		};
 
-		QuadLightHandle(
-			const std::string &attributePattern,
-			unsigned handleType,
-			const SceneView *view,
-			const float xSign,
-			const float ySign,
-			const std::string &name = "QuadLightHandle"
+		EdgeHandle(
+			const std::string &lightType,
+			SceneView *view,
+			LightAxis lightAxis,
+			const InternedString &edgeParameter,
+			const V3f &edgeAxis,
+			const float edgeToHandleRatio,
+			const InternedString &oppositeParameter,
+			const V3f &oppositeAxis,
+			const float oppositeToHandleRatio,
+			const std::string &name
 		) :
-			LightToolHandle( attributePattern, name ),
-			m_view( view ),
-			m_handleType( handleType ),
-			m_dragStartInfo(),
-			m_xSign( xSign ),
-			m_ySign( ySign ),
-			m_edgeCursorPoint( V3f( 0 ) ),
-			m_scale( V2f( 1.f ) )
+			LightToolHandle( lightType, view, {edgeParameter, oppositeParameter}, name ),
+			m_lightAxis( lightAxis ),
+			m_edgeParameter( edgeParameter ),
+			m_edgeAxis( edgeAxis ),
+			m_edgeToHandleRatio( edgeToHandleRatio ),
+			m_oppositeParameter( oppositeParameter ),
+			m_oppositeAxis( oppositeAxis ),
+			m_oppositeToHandleRatio( oppositeToHandleRatio ),
+			m_scale( 1.f )
 		{
-			mouseMoveSignal().connect( boost::bind( &QuadLightHandle::mouseMove, this, ::_2 ) );
 		}
 
-		~QuadLightHandle() override
+		~EdgeHandle() override
 		{
 
-		}
-
-		void update( ScenePathPtr scenePath, const PlugPtr &editScope ) override
-		{
-			LightToolHandle::update( scenePath, editScope );
-
-			m_widthInspector.reset();
-			m_heightInspector.reset();
-
-			if( !handleScenePath()->isValid() )
-			{
-				return;
-			}
-
-			/// \todo This can be simplified and some of the logic, especially getting the inspectors, can
-			/// be moved to the constructor when we standardize on a single USDLux light representation.
-
-			ConstCompoundObjectPtr attributes = handleScenePath()->getScene()->fullAttributes( handleScenePath()->names() );
-
-			for( const auto &[attributeName, value ] : attributes->members() )
-			{
-				if(
-					StringAlgo::match( attributeName, attributePattern() ) &&
-					value->typeId() == (IECore::TypeId)ShaderNetworkTypeId
-				)
-				{
-					const auto shader = attributes->member<ShaderNetwork>( attributeName )->outputShader();
-					std::string shaderAttribute = shader->getType() + ":" + shader->getName();
-
-					auto widthParameterName = Metadata::value<StringData>( shaderAttribute, "widthParameter" );
-					auto heightParameterName = Metadata::value<StringData>( shaderAttribute, "heightParameter" );
-					if( !widthParameterName || !heightParameterName )
-					{
-						continue;
-					}
-
-					m_widthInspector = new ParameterInspector(
-						handleScenePath()->getScene(),
-						this->editScope(),
-						attributeName,
-						ShaderNetwork::Parameter( "", widthParameterName->readable() )
-					);
-					m_heightInspector = new ParameterInspector(
-						handleScenePath()->getScene(),
-						this->editScope(),
-						attributeName,
-						ShaderNetwork::Parameter( "", heightParameterName->readable() )
-					);
-
-					break;
-				}
-			}
-		}
-
-		void addDragInspection() override
-		{
-			InspectionInfo i = inspectionInfo();
-			const auto &[widthInspection, originalWidth, heightInspection, originalHeight] = i;
-			if( !widthInspection || !heightInspection )
-			{
-				return;
-			}
-
-			m_inspections.push_back( i );
-		}
-
-		void clearDragInspections() override
-		{
-			m_inspections.clear();
-		}
-
-		bool handleDragMove( const GafferUI::DragDropEvent &event ) override
-		{
-			if( m_inspections.empty() || !allInspectionsEnabled() )
-			{
-				return true;
-			}
-
-			float xMult = 1.f;
-			float yMult = 1.f;
-
-			float nonZeroWidth = m_dragStartInfo.originalWidth == 0 ? 1.f : m_dragStartInfo.originalWidth;
-			float nonZeroHeight = m_dragStartInfo.originalHeight == 0 ? 1.f : m_dragStartInfo.originalHeight;
-
-			if( m_handleType & HandleType::Width && m_handleType & HandleType::Height )
-			{
-				auto &drag = std::get<PlanarDrag>( m_drag );
-				V2f newPosition = drag.updatedPosition( event ) - drag.startPosition();
-				xMult = ( newPosition.x * 2.f ) / ( nonZeroWidth * m_scale.x ) + 1.f;
-				yMult = ( newPosition.y * 2.f ) / ( nonZeroHeight * m_scale.y ) + 1.f;
-			}
-			else if( m_handleType & HandleType::Width )
-			{
-				auto &drag = std::get<LinearDrag>( m_drag );
-				float newPosition = drag.updatedPosition( event ) - drag.startPosition();
-				xMult = ( newPosition * 2.f ) / ( nonZeroWidth * m_scale.x ) + 1.f;
-			}
-			else if( m_handleType &HandleType::Height )
-			{
-				auto &drag = std::get<LinearDrag>( m_drag );
-				float newPosition = drag.updatedPosition( event ) - drag.startPosition();
-				yMult = ( newPosition * 2.f ) / ( nonZeroHeight * m_scale.y ) + 1.f;
-			}
-
-			if(
-				event.modifiers == g_quadLightConstrainAspectRatioKey &&
-				m_handleType & HandleType::Width &&
-				m_handleType & HandleType::Height
-			)
-			{
-				if( m_dragStartInfo.originalWidth > m_dragStartInfo.originalHeight )
-				{
-					yMult = xMult;
-				}
-				else
-				{
-					xMult = yMult;
-				}
-			}
-
-			xMult = std::max( xMult, 0.f );
-			yMult = std::max( yMult, 0.f );
-
-			for( auto &[widthInspection, originalWidth, heightInspection, originalHeight] : m_inspections )
-			{
-				nonZeroWidth = originalWidth == 0 ? 1.f : originalWidth;
-				nonZeroHeight = originalHeight == 0 ? 1.f : originalHeight;
-
-				if( m_handleType & HandleType::Width && widthInspection && widthInspection->editable() )
-				{
-					ValuePlugPtr widthPlug = widthInspection->acquireEdit();
-					auto widthFloatPlug = runTimeCast<FloatPlug>( activeValuePlug( widthPlug.get() ) );
-					if( !widthFloatPlug )
-					{
-						throw Exception( "Invalid type of \"widthParameter\"" );
-					}
-
-					setValueOrAddKey(
-						widthFloatPlug,
-						m_view->getContext()->getTime(),
-						nonZeroWidth * xMult
-					);
-				}
-
-				if( m_handleType & HandleType::Height && heightInspection && heightInspection->editable() )
-				{
-					ValuePlugPtr heightPlug = heightInspection->acquireEdit();
-					auto heightFloatPlug = runTimeCast<FloatPlug>( activeValuePlug( heightPlug.get() ) );
-					if( !heightFloatPlug )
-					{
-						throw Exception( "Invalid type of \"heightParameter\"" );
-					}
-
-					setValueOrAddKey(
-						heightFloatPlug,
-						m_view->getContext()->getTime(),
-						nonZeroHeight * yMult
-					);
-				}
-			}
-
-			return true;
-		}
-
-		bool handleDragEnd() override
-		{
-			m_drag = std::monostate{};
-			return false;
-		}
-
-		void updateLocalTransform( const V3f &scale, const V3f & ) override
-		{
-			// Translate the handle to the center of the appropriate edge or corner.
-			const auto &[widthInspection, originalWidth, heightInspection, originalHeight] = handleInspections();
-			m_scale = V2f( scale.x, scale.y );
-
-			M44f transform;
-			if( m_handleType & HandleType::Width )
-			{
-				transform *= M44f().translate( V3f( originalWidth * 0.5f * m_xSign * m_scale.x, 0, 0 ) );
-			}
-			if( m_handleType & HandleType::Height )
-			{
-				transform *= M44f().translate( V3f( 0, originalHeight * 0.5f * m_ySign * m_scale.y, 0 ) );
-			}
-
-			setTransform( transform );
-		}
-
-		bool visible() const override
-		{
-			// We require both width and height to be present to be a valid quad light
-			if( !m_widthInspector || !m_heightInspector )
-			{
-				return false;
-			}
-
-			Inspector::ResultPtr contextWidthInspection = m_widthInspector->inspect();
-			Inspector::ResultPtr contextHeightInspection = m_heightInspector->inspect();
-
-			if( !contextWidthInspection || !contextHeightInspection )
-			{
-				return false;
-			}
-
-			return true;
-		}
-
-		bool enabled() const override
-		{
-			if( !m_widthInspector || !m_heightInspector )
-			{
-				return false;
-			}
-
-			// Return true without checking the `enabled()` state of our inspections.
-			// This allows the tooltip-on-highlight behavior to show a tooltip explaining
-			// why an edit is not possible. The alternative is to draw the tooltip for all
-			// handles regardless of mouse position because a handle can only be in a disabled
-			// or highlighted drawing state.
-			// The drawing code takes care of graying out uneditable handles and the inspections
-			// prevent the value from being changed.
-			return true;
-		}
-
-		std::vector<GafferSceneUI::Private::Inspector *> inspectors() const override
-		{
-			return {m_widthInspector.get(), m_heightInspector.get()};
 		}
 
 	protected :
 
-		void renderHandle( const Style *style, Style::State state ) const override
+		bool handleDragMoveInternal( const GafferUI::DragDropEvent &event ) override
+		{
+			Inspector::ResultPtr edgeInspection = dragStartInspection( m_edgeParameter );
+			if( !edgeInspection )
+			{
+				return true;
+			}
+
+			const float nonZeroValue = edgeInspection->typedValue<float>( 0.f ) == 0 ? 1.f : edgeInspection->typedValue<float>( 0.f );
+			const float newValue = m_drag.value().updatedPosition( event ) - m_drag.value().startPosition();
+
+			const float scale = m_lightAxis == LightAxis::Width ? m_scale.x : m_scale.y;
+
+			float mult = std::max( ( newValue * 2.f ) / ( nonZeroValue * scale ) + 1.f, 0.f );
+
+			applyMultiplier( m_edgeParameter, mult );
+
+			return true;
+		}
+
+		void updateLocalTransformInternal( const V3f &scale, const V3f & ) override
+		{
+			m_scale = V2f( scale.x, scale.y );
+		}
+
+		bool handleDragEndInternal() override
+		{
+			m_drag = std::nullopt;
+			return false;
+		}
+
+		void addHandleVisualisation( IECoreGL::Group *rootGroup, const bool selectionPass, const bool highlighted ) const override
 		{
 			if( getLookThroughLight() )
 			{
 				return;
 			}
 
-			State::bindBaseState();
-			auto glState = const_cast<State *>( State::defaultState() );
-
-			IECoreGL::GroupPtr group = new IECoreGL::Group;
-
-			const bool highlighted = state == Style::State::HighlightedState;
+			Inspector::ResultPtr edgeInspection = handleInspection( m_edgeParameter );
+			Inspector::ResultPtr oppositeInspection = handleInspection( m_oppositeParameter );
+			if( !edgeInspection || !oppositeInspection )
+			{
+				return;
+			}
 
 			float spokeRadius = 0;
 			float coneSize = 0;
-			float cornerRadius = 0;
 
-			if( IECoreGL::Selector::currentSelector() )
+			if( selectionPass )
 			{
 				spokeRadius = g_lineSelectionWidth;
 				coneSize = g_arrowHandleSelectionSize;
-				cornerRadius = g_circleHandleSelectionWidth;
 			}
 			else
 			{
 				spokeRadius = highlighted ? g_lineHandleWidthLarge : g_lineHandleWidth;
 				coneSize = highlighted ? g_arrowHandleSizeLarge : g_arrowHandleSize;
-				cornerRadius = highlighted ? g_circleHandleWidthLarge : g_circleHandleWidth;
 			}
 
 			spokeRadius *= g_quadLightHandleSizeMultiplier;
 			coneSize *= g_quadLightHandleSizeMultiplier;
-			cornerRadius *= g_quadLightHandleSizeMultiplier;
 
-			group->getState()->add(
-				new IECoreGL::ShaderStateComponent(
-					ShaderLoader::defaultShaderLoader(),
-					TextureLoader::defaultTextureLoader(),
-					"",
-					"",
-					constantFragSource(),
-					new CompoundObject
-				)
+			LineSegment3f edgeSegment = this->edgeSegment(
+				edgeInspection->typedValue<float>( 0.f ),
+				oppositeInspection->typedValue<float>( 0.f )
 			);
 
-			auto standardStyle = runTimeCast<const StandardStyle>( style );
-			assert( standardStyle );
-			const Color3f highlightColor3 = standardStyle->getColor( StandardStyle::Color::HighlightColor );
-			const Color4f highlightColor4 = Color4f( highlightColor3.x, highlightColor3.y, highlightColor3.z, 1.f );
+			M44f edgeTransform;
+			this->edgeTransform( edgeInspection->typedValue<float>( 0.f ), edgeSegment, edgeTransform );
+			M44f coneTransform;
+			this->coneTransform( edgeInspection->typedValue<float>( 0.f ), coneTransform );
 
-			const bool enabled = allInspectionsEnabled();
+			IECoreGL::GroupPtr coneGroup = new IECoreGL::Group;
+			coneGroup->setTransform( M44f().scale( V3f( coneSize ) ) * coneTransform );
+			coneGroup->addChild( unitCone() );
+			rootGroup->addChild( coneGroup );
 
-			group->getState()->add(
-				new IECoreGL::Color(
-					enabled ? ( highlighted ? g_lightToolHighlightColor4 : highlightColor4 ) : g_lightToolDisabledColor4
+			IECoreGL::GroupPtr edgeGroup = new IECoreGL::Group;
+			edgeGroup->addChild(
+				cone(
+					edgeSegment.length(),
+					spokeRadius * ::rasterScaleFactor( this, edgeSegment.p0 ),
+					spokeRadius * ::rasterScaleFactor( this, edgeSegment.p1 )
 				)
 			);
+			edgeGroup->setTransform( edgeTransform );
 
-			if( ( m_handleType & HandleType::Width ) && ( m_handleType & HandleType::Height ) )
+			rootGroup->addChild( edgeGroup );
+		}
+
+		void setupDrag( const DragDropEvent &event ) override
+		{
+			m_drag = LinearDrag( this, LineSegment3f( V3f( 0 ), m_edgeAxis ), event );
+		}
+
+		std::vector<const Inspector::Result *> handleValueInspections() const override
+		{
+			std::vector<const Inspector::Result *> result;
+			for( const auto &i : inspections() )
 			{
-				// Circles at corners for planar drag
-
-				IECoreGL::GroupPtr iconGroup = new IECoreGL::Group;
-				iconGroup->getState()->add(
-					new IECoreGL::ShaderStateComponent(
-						ShaderLoader::defaultShaderLoader(),
-						TextureLoader::defaultTextureLoader(),
-						faceCameraVertexSource(),
-						"",
-						constantFragSource(),
-						new CompoundObject
-					)
-				);
-				iconGroup->setTransform(
-					M44f().scale( V3f( cornerRadius ) * ::rasterScaleFactor( this, V3f( 0 ) ) )
-				);
-				iconGroup->addChild( circle() );
-				group->addChild( iconGroup );
-			}
-			else
-			{
-				// Lines and arrows on edges for linear drag
-
-				LineSegment3f edgeSegment = this->edgeSegment( handleInspections() );
-
-				M44f coneTransform;
-				M44f edgeTransform;
-				edgeTransforms( edgeSegment, coneTransform, edgeTransform );
-
-				IECoreGL::GroupPtr coneGroup = new IECoreGL::Group;
-				coneGroup->setTransform( coneTransform * M44f().scale( V3f( coneSize ) ) );
-				coneGroup->addChild( unitCone() );
-				group->addChild( coneGroup );
-
-				IECoreGL::GroupPtr edgeGroup = new IECoreGL::Group;
-				edgeGroup->addChild(
-					cone(
-						edgeSegment.length(),
-						spokeRadius * ::rasterScaleFactor( this, edgeSegment.p0 ),
-						spokeRadius * ::rasterScaleFactor( this, edgeSegment.p1 )
-					)
-				);
-				edgeGroup->setTransform( edgeTransform );
-
-				group->addChild( edgeGroup );
-			}
-
-			group->render( glState );
-
-			if( highlighted )
-			{
-				std::vector<const Inspector::Result *> inspections;
-				for( const auto &[widthInspection, originalWidth, heightInspection, originalHeight] : m_inspections )
+				for( const auto &p: i )
 				{
-					if( m_handleType & HandleType::Width )
+					if( p.first == m_edgeParameter )
 					{
-						inspections.push_back( widthInspection.get() );
-					}
-					if( m_handleType & HandleType::Height )
-					{
-						inspections.push_back( heightInspection.get() );
+						result.push_back( p.second.get() );
 					}
 				}
-				std::string tipSuffix = "";
-				if( m_handleType & HandleType::Width )
-				{
-					tipSuffix = "widths";
-				}
-				if( m_handleType & HandleType::Height )
-				{
-					tipSuffix = m_handleType & HandleType::Width ? "plugs" : "heights";
-				}
-
-				drawSelectionTips(
-					m_edgeCursorPoint,
-					inspections,
-					tipSuffix,
-					( m_handleType & HandleType::Width && m_handleType &HandleType::Height ) ? "Hold Ctrl to maintain aspect ratio" : "",
-					this,
-					m_view->viewportGadget(),
-					style
-				);
 			}
+
+			return result;
+		}
+
+		std::string tipPlugSuffix() const override
+		{
+			return m_lightAxis == LightAxis::Width ? "widths" : "heights";
+		}
+
+		std::string tipInfoSuffix() const override
+		{
+			return "";
+		}
+
+		void updateTooltipPosition( const LineSegment3f &eventLine ) override
+		{
+			if( !hasInspectors() )
+			{
+				return;
+			}
+
+			Inspector::ResultPtr edgeInspection = handleInspection( m_edgeParameter );
+			Inspector::ResultPtr oppositeInspection = handleInspection( m_oppositeParameter );
+			if( !edgeInspection || !oppositeInspection )
+			{
+				return;
+			}
+
+			LineSegment3f edgeSegment = this->edgeSegment( edgeInspection->typedValue<float>( 0.f ), oppositeInspection->typedValue<float>( 0.f ) );
+			V3f offset = edgeToGadgetSpace( edgeInspection->typedValue<float>( 0.f ) );
+			edgeSegment.p0 += offset;
+			edgeSegment.p1 += offset;
+
+			V3f eventClosest;
+			setTooltipPosition( edgeSegment.closestPoints( LineSegment3f( eventLine.p0, eventLine.p1 ), eventClosest ) );
 		}
 
 	private :
 
-		struct InspectionInfo
+		V3f edgeToGadgetSpace( const float edge ) const
 		{
-			Inspector::ResultPtr widthInspection;
-			float originalWidth;
-			Inspector::ResultPtr heightInspection;
-			float originalHeight;
-		};
-
-		bool mouseMove( const ButtonEvent &event )
-		{
-			if( !m_widthInspector || ! m_heightInspector )
-			{
-				return false;
-			}
-
-			if( m_handleType & HandleType::Width && m_handleType &HandleType::Height )
-			{
-				m_edgeCursorPoint = V3f( 0, 0, 0 );
-				return false;
-			}
-
-			LineSegment3f edgeSegment = this->edgeSegment( handleInspections() );
-
-			V3f eventClosest;
-			m_edgeCursorPoint = edgeSegment.closestPoints( LineSegment3f( event.line.p0, event.line.p1 ), eventClosest );
-
-			dirty( DirtyType::Render );
-
-			return false;
+			const float scale = m_lightAxis == LightAxis::Width ? m_scale.x : m_scale.y;
+			return ( ( m_edgeAxis * edge * scale ) / m_edgeToHandleRatio );
 		}
 
-		void dragBegin( const DragDropEvent &event ) override
+		LineSegment3f edgeSegment( const float edgeLength, const float oppositeLength ) const
 		{
-			const auto &[widthInspection, originalWidth, heightInspection, originalHeight] = handleInspections();
-
-			m_dragStartInfo.widthInspection = widthInspection;
-			m_dragStartInfo.originalWidth = originalWidth;
-			m_dragStartInfo.heightInspection = heightInspection;
-			m_dragStartInfo.originalHeight = originalHeight;
-
-			if( m_handleType & HandleType::Width && m_handleType & HandleType::Height )
-			{
-				m_drag = Handle::PlanarDrag( this, V3f( 0 ), V3f( m_xSign, 0, 0 ), V3f( 0, m_ySign, 0 ), event, true );
-			}
-			else if( m_handleType & HandleType::Width )
-			{
-				m_drag = Handle::LinearDrag( this, LineSegment3f( V3f( 0 ), V3f( m_xSign, 0, 0 ) ), event, true );
-			}
-			else if( m_handleType & HandleType::Height )
-			{
-				m_drag = Handle::LinearDrag( this, LineSegment3f( V3f( 0 ), V3f( 0, m_ySign, 0 ) ), event, true );
-			}
-		}
-
-		InspectionInfo handleInspections() const
-		{
-			ScenePlug::PathScope pathScope( handleScenePath()->getContext() );
-			pathScope.setPath( &handleScenePath()->names() );
-
-			return inspectionInfo();
-		}
-
-		// Returns a `InspectionInfo` object for the current context.
-		InspectionInfo inspectionInfo() const
-		{
-			Inspector::ResultPtr widthInspection = nullptr;
-			float originalWidth = 0;
-
-			// Get an inspection if possible regardless of the handle type because drawing
-			// edge lines requires the opposite dimension's value.
-			if( m_widthInspector )
-			{
-				widthInspection = m_widthInspector->inspect();
-				if( widthInspection )
-				{
-					auto originalWidthData = runTimeCast<const IECore::FloatData>( widthInspection->value() );
-					assert( originalWidthData );
-					originalWidth = originalWidthData->readable();
-				}
-			}
-
-			Inspector::ResultPtr heightInspection = nullptr;
-			float originalHeight = 0;
-			if( m_heightInspector )
-			{
-				heightInspection = m_heightInspector->inspect();
-				if( heightInspection )
-				{
-					auto originalHeightData = runTimeCast<const IECore::FloatData>( heightInspection->value() );
-					assert( originalHeightData );
-					originalHeight = originalHeightData->readable();
-				}
-			}
-
-			return { widthInspection, originalWidth, heightInspection, originalHeight };
-		}
-
-		bool allInspectionsEnabled() const
-		{
-			bool enabled = true;
-			for( auto &[widthInspection, originalWidth, heightInspection, originalHeight] : m_inspections )
-			{
-				if( m_handleType & HandleType::Width )
-				{
-					enabled &= widthInspection ? widthInspection->editable() : false;
-				}
-				if( m_handleType & HandleType::Height )
-				{
-					enabled &= heightInspection ? heightInspection->editable() : false;
-				}
-			}
-
-			return enabled;
-		}
-
-		LineSegment3f edgeSegment( const InspectionInfo &inspectionInfo ) const
-		{
-			const auto &[widthInspection, width, heightInspection, height] = inspectionInfo;
-
 			float fullEdgeLength = 0;
 			float fullEdgeLengthHalf = 0;
 			float radius0 = 0;
 			float radius1 = 0;
-			if( m_handleType & HandleType::Width )
+
+			const float scale = m_lightAxis == LightAxis::Width ? m_scale.y : m_scale.x;
+			fullEdgeLength = oppositeLength * scale;
+			fullEdgeLengthHalf = fullEdgeLength * 0.5f;
+
+			if( m_lightAxis == LightAxis::Width )
 			{
-				fullEdgeLength = height * m_scale.y;
-				fullEdgeLengthHalf = fullEdgeLength * 0.5f;
 				radius0 = g_circleHandleWidthLarge * ::rasterScaleFactor( this, V3f( 0, -fullEdgeLengthHalf, 0 ) ) * g_quadLightHandleSizeMultiplier;
 				radius1 = g_circleHandleWidthLarge * ::rasterScaleFactor( this, V3f( 0, fullEdgeLengthHalf, 0 ) ) * g_quadLightHandleSizeMultiplier;
 			}
 			else
 			{
-				fullEdgeLength = width * m_scale.x;
-				fullEdgeLengthHalf = fullEdgeLength * 0.5f;
 				radius0 = g_circleHandleWidthLarge * ::rasterScaleFactor( this, V3f( -fullEdgeLengthHalf, 0, 0 ) ) * g_quadLightHandleSizeMultiplier;
 				radius1 = g_circleHandleWidthLarge * ::rasterScaleFactor( this, V3f( fullEdgeLengthHalf, 0, 0 ) ) * g_quadLightHandleSizeMultiplier;
 			}
 
 			LineSegment3f result;
 
-			if( m_handleType & HandleType::Width )
+			if( m_lightAxis == LightAxis::Width )
 			{
 				result.p0 = V3f( 0, std::min( 0.f, -fullEdgeLengthHalf + radius0 ), 0 );
 				result.p1 = V3f( 0, std::max( 0.f, fullEdgeLengthHalf - radius1 ), 0 );
@@ -2226,46 +2126,249 @@ class QuadLightHandle : public LightToolHandle
 			return result;
 		}
 
-		void edgeTransforms( const LineSegment3f &edgeSegment, M44f &coneTransform, M44f &edgeTransform ) const
+		void edgeTransform( const float edgeLength, const LineSegment3f &edgeSegment, M44f &edgeTransform ) const
 		{
-			if( m_handleType & HandleType::Width )
+			if( m_lightAxis == LightAxis::Width )
 			{
-				coneTransform = M44f().rotate( V3f( 0, M_PI * 0.5f * m_xSign, 0 ) );
 				edgeTransform =
 					M44f().rotate( V3f( -M_PI * 0.5f, 0, 0 ) ) *
-					M44f().translate( V3f( 0, edgeSegment.p0.y, 0 ) )
+					M44f().translate(
+						V3f( 0, edgeSegment.p0.y, 0 ) + edgeToGadgetSpace( edgeLength )
+					)
 				;
 			}
 			else
 			{
-				coneTransform = M44f().rotate( V3f( M_PI * 0.5f * -m_ySign, 0, 0 ) );
 				edgeTransform =
 					M44f().rotate( V3f( 0, M_PI * 0.5f, 0 ) ) *
-					M44f().translate( V3f( edgeSegment.p0.x, 0, 0 ) )
+					M44f().translate(
+						V3f( edgeSegment.p0.x, 0, 0 ) + edgeToGadgetSpace( edgeLength )
+					)
 				;
 			}
-			coneTransform *= M44f().scale( V3f( ::rasterScaleFactor( this, V3f( 0.0 ) ) ) );
 		}
 
-		ParameterInspectorPtr m_widthInspector;
-		ParameterInspectorPtr m_heightInspector;
+		void coneTransform( const float edgeLength, M44f &coneTransform ) const
+		{
+			const V3f gadgetSpaceEdge = edgeToGadgetSpace( edgeLength );
+			// Rotate the cone 90 degrees around the axis that is the width axis rotated 90 degrees around the z axis.
+			coneTransform =
+				M44f().rotate( m_edgeAxis * M44f().rotate( V3f( 0, 0, M_PI * 0.5f ) ) * M_PI * 0.5f ) *
+				M44f().scale( V3f( ::rasterScaleFactor( this, gadgetSpaceEdge ) ) ) *
+				M44f().translate( gadgetSpaceEdge )
+			;
+		}
 
-		const SceneView *m_view;
+		const LightAxis m_lightAxis;
+		const InternedString m_edgeParameter;
+		const V3f m_edgeAxis;
+		const float m_edgeToHandleRatio;
+		const InternedString m_oppositeParameter;
+		const V3f m_oppositeAxis;
+		const float m_oppositeToHandleRatio;
+		V2f m_scale;
+		std::optional<LinearDrag> m_drag;
+};
 
-		std::vector<InspectionInfo> m_inspections;
+class CornerHandle : public LightToolHandle
+{
+	public :
 
-		std::variant<std::monostate, Handle::LinearDrag, Handle::PlanarDrag> m_drag;
+		CornerHandle(
+			const std::string &lightType,
+			SceneView *view,
+			const InternedString &widthParameter,
+			const V3f &widthAxis,
+			const float widthToHandleRatio,
+			const InternedString &heightParameter,
+			const V3f &heightAxis,
+			const float heightToHandleRatio,
+			const std::string &name
+		) :
+			LightToolHandle( lightType, view, {widthParameter, heightParameter}, name ),
+			m_widthParameter( widthParameter ),
+			m_widthAxis( widthAxis ),
+			m_widthToHandleRatio( widthToHandleRatio ),
+			m_heightParameter( heightParameter ),
+			m_heightAxis( heightAxis ),
+			m_heightToHandleRatio( heightToHandleRatio ),
+			m_scale( V2f( 1.f ) ),
+			m_drag()
+		{
+		}
 
-		const unsigned m_handleType;
+		~CornerHandle() override
+		{
 
-		InspectionInfo m_dragStartInfo;
+		}
 
-		// The sign for each axis of the handle
-		const float m_xSign;
-		const float m_ySign;
+	protected :
 
-		V3f m_edgeCursorPoint;
-		V2f m_scale;  // width and height scale of the light's transform
+		bool handleDragMoveInternal( const GafferUI::DragDropEvent &event ) override
+		{
+			if( !m_drag )
+			{
+				return true;
+			}
+
+			Inspector::ResultPtr widthInspection = dragStartInspection( m_widthParameter );
+			Inspector::ResultPtr heightInspection = dragStartInspection( m_heightParameter );
+			if( !widthInspection || !heightInspection )
+			{
+				return true;
+			}
+
+			const float nonZeroWidth = widthInspection->typedValue<float>( 0.f ) == 0 ? 1.f : widthInspection->typedValue<float>( 0.f );
+			const float nonZeroHeight = heightInspection->typedValue<float>( 0.f ) == 0 ? 1.f : heightInspection->typedValue<float>( 0.f );
+
+			const V2f newPosition = m_drag.value().updatedPosition( event ) - m_drag.value().startPosition();
+
+			float xMult = ( newPosition.x * m_widthToHandleRatio ) / ( nonZeroWidth * m_scale.x ) + 1.f;
+			float yMult = ( newPosition.y * m_heightToHandleRatio ) / ( nonZeroHeight * m_scale.y ) + 1.f;
+
+			if( event.modifiers == g_quadLightConstrainAspectRatioKey )
+			{
+				if( widthInspection->typedValue<float>( 0.f ) > heightInspection->typedValue<float>( 0.f ) )
+				{
+					yMult = xMult;
+				}
+				else{
+					xMult = yMult;
+				}
+			}
+
+			xMult = std::max( xMult, 0.f );
+			yMult = std::max( yMult, 0.f );
+
+			applyMultiplier( m_widthParameter, xMult );
+			applyMultiplier( m_heightParameter, yMult );
+
+			return true;
+		}
+
+		void updateLocalTransformInternal( const V3f &scale, const V3f & ) override
+		{
+			m_scale = V2f( scale.x, scale.y );
+		}
+
+		bool handleDragEndInternal() override
+		{
+			m_drag = std::nullopt;
+			return false;
+		}
+
+		void addHandleVisualisation( IECoreGL::Group *rootGroup, const bool selectionPass, const bool highlighted ) const override
+		{
+			if( getLookThroughLight() )
+			{
+				return;
+			}
+
+			Inspector::ResultPtr widthInspection = handleInspection( m_widthParameter );
+			Inspector::ResultPtr heightInspection = handleInspection( m_heightParameter );
+			if( !widthInspection || !heightInspection )
+			{
+				return;
+			}
+
+			float cornerRadius = 0;
+
+			if( selectionPass )
+			{
+				cornerRadius = g_circleHandleSelectionWidth;
+			}
+			else
+			{
+				cornerRadius = highlighted ? g_circleHandleWidthLarge : g_circleHandleWidth;
+			}
+
+			cornerRadius *= g_quadLightHandleSizeMultiplier;
+
+			IECoreGL::GroupPtr iconGroup = new IECoreGL::Group;
+			iconGroup->getState()->add(
+				new IECoreGL::ShaderStateComponent(
+					ShaderLoader::defaultShaderLoader(),
+					TextureLoader::defaultTextureLoader(),
+					faceCameraVertexSource(),
+					"",
+					constantFragSource(),
+					new CompoundObject
+				)
+			);
+
+			const V3f widthOffset = ( ( m_widthAxis * widthInspection->typedValue<float>( 0.f ) * m_scale.x ) / m_widthToHandleRatio );
+			const V3f heightOffset = (( m_heightAxis * heightInspection->typedValue<float>( 0.f ) * m_scale.y ) / m_heightToHandleRatio );
+
+			iconGroup->setTransform(
+				M44f().scale( V3f( cornerRadius ) * ::rasterScaleFactor( this, V3f( 0 ) ) ) *
+				M44f().translate( widthOffset + heightOffset )
+			);
+			iconGroup->addChild( circle() );
+
+			rootGroup->addChild( iconGroup );
+		}
+
+		void setupDrag( const DragDropEvent &event ) override
+		{
+			m_drag = PlanarDrag( this, V3f( 0 ), m_widthAxis, m_heightAxis, event, true );
+		}
+
+		std::vector<const Inspector::Result *> handleValueInspections() const override
+		{
+			std::vector<const Inspector::Result *> result;
+			for( const auto &i : inspections() )
+			{
+				for( const auto &p: i )
+				{
+					result.push_back( p.second.get() );
+				}
+			}
+
+			return result;
+		}
+
+		std::string tipPlugSuffix() const override
+		{
+			return "plugs";
+		}
+
+		std::string tipInfoSuffix() const override
+		{
+			return "Hold Ctrl to maintain aspect ratio";
+		}
+
+		void updateTooltipPosition( const LineSegment3f &eventLine ) override
+		{
+			if( !hasInspectors() )
+			{
+				return;
+			}
+
+			Inspector::ResultPtr widthInspection = handleInspection( m_widthParameter );
+			Inspector::ResultPtr heightInspection = handleInspection( m_heightParameter );
+			if( !widthInspection || !heightInspection )
+			{
+				return;
+			}
+
+			setTooltipPosition( edgeTooltipPosition( widthInspection->typedValue<float>( 0.f ), heightInspection->typedValue<float>( 0.f ) ) );
+		}
+
+	private :
+
+		V3f edgeTooltipPosition( const float width, const float height ) const
+		{
+			return ( width * 0.5f * m_widthAxis * m_scale.x ) + ( height * 0.5f * m_heightAxis * m_scale.y );
+		}
+
+		const InternedString m_widthParameter;
+		const V3f m_widthAxis;
+		const float m_widthToHandleRatio;
+		const InternedString m_heightParameter;
+		const V3f m_heightAxis;
+		const float m_heightToHandleRatio;
+		V2f m_scale;
+		std::optional<PlanarDrag> m_drag;
 };
 
 // ============================================================================
@@ -2353,26 +2456,25 @@ LightTool::LightTool( SceneView *view, const std::string &name ) :
 
 	// Spotlight handles
 
-	m_handles->addChild( new SpotLightHandle( "*light", SpotLightHandle::HandleType::Penumbra, view, 0, "westConeAngleParameter" ) );
-	m_handles->addChild( new SpotLightHandle( "*light", SpotLightHandle::HandleType::Cone, view, 0, "westPenumbraAngleParameter" ) );
-	m_handles->addChild( new SpotLightHandle( "*light", SpotLightHandle::HandleType::Penumbra, view, 90, "southConeAngleParameter" ) );
-	m_handles->addChild( new SpotLightHandle( "*light", SpotLightHandle::HandleType::Cone, view, 90, "southPenumbraAngleParameter" ) );
-	m_handles->addChild( new SpotLightHandle( "*light", SpotLightHandle::HandleType::Penumbra, view, 180, "eastConeAngleParameter" ) );
-	m_handles->addChild( new SpotLightHandle( "*light", SpotLightHandle::HandleType::Cone, view, 180, "eastPenumbraAngleParameter" ) );
-	m_handles->addChild( new SpotLightHandle( "*light", SpotLightHandle::HandleType::Penumbra, view, 270, "northConeAngleParameter" ) );
-	m_handles->addChild( new SpotLightHandle( "*light", SpotLightHandle::HandleType::Cone, view, 270, "northPenumbraAngleParameter" ) );
+	m_handles->addChild( new SpotLightHandle( "spot", SpotLightHandle::HandleType::Penumbra, view, 0, "westConeAngleParameter" ) );
+	m_handles->addChild( new SpotLightHandle( "spot", SpotLightHandle::HandleType::Cone, view, 0, "westPenumbraAngleParameter" ) );
+	m_handles->addChild( new SpotLightHandle( "spot", SpotLightHandle::HandleType::Penumbra, view, 90, "southConeAngleParameter" ) );
+	m_handles->addChild( new SpotLightHandle( "spot", SpotLightHandle::HandleType::Cone, view, 90, "southPenumbraAngleParameter" ) );
+	m_handles->addChild( new SpotLightHandle( "spot", SpotLightHandle::HandleType::Penumbra, view, 180, "eastConeAngleParameter" ) );
+	m_handles->addChild( new SpotLightHandle( "spot", SpotLightHandle::HandleType::Cone, view, 180, "eastPenumbraAngleParameter" ) );
+	m_handles->addChild( new SpotLightHandle( "spot", SpotLightHandle::HandleType::Penumbra, view, 270, "northConeAngleParameter" ) );
+	m_handles->addChild( new SpotLightHandle( "spot", SpotLightHandle::HandleType::Cone, view, 270, "northPenumbraAngleParameter" ) );
 
 	// Quadlight handles
 
-	m_handles->addChild( new QuadLightHandle( "*light", QuadLightHandle::HandleType::Width, view, -1.f, 0, "westParameter" ) );
-	m_handles->addChild( new QuadLightHandle( "*light", QuadLightHandle::HandleType::Width | QuadLightHandle::HandleType::Height, view, -1.f, -1.f, "southWestParameter" ) );
-	m_handles->addChild( new QuadLightHandle( "*light", QuadLightHandle::HandleType::Height, view, 0, -1.f, "southParameter" ) );
-	m_handles->addChild( new QuadLightHandle( "*light", QuadLightHandle::HandleType::Width | QuadLightHandle::HandleType::Height, view, 1.f, -1.f, "soutEastParameter" ) );
-	m_handles->addChild( new QuadLightHandle( "*light", QuadLightHandle::HandleType::Width, view, 1.f, 0.f, "eastParameter" ) );
-	m_handles->addChild( new QuadLightHandle( "*light", QuadLightHandle::HandleType::Width | QuadLightHandle::HandleType::Height, view, 1.f, 1.f, "northEastParameter" ) );
-	m_handles->addChild( new QuadLightHandle( "*light", QuadLightHandle::HandleType::Height, view, 0, 1.f, "northParameter" ) );
-	m_handles->addChild( new QuadLightHandle( "*light", QuadLightHandle::HandleType::Width | QuadLightHandle::HandleType::Height, view, -1.f, 1.f, "northWestParameter" ) );
-
+	m_handles->addChild( new EdgeHandle( "quad", view, EdgeHandle::LightAxis::Width, "widthParameter", V3f( -1.f, 0, 0 ), 2.f, "heightParameter", V3f( 0, 0, 0 ), 2.f, "westParameter" ) );
+	m_handles->addChild( new CornerHandle( "quad", view, "widthParameter", V3f( -1.f, 0, 0 ), 2.f, "heightParameter", V3f( 0, -1.f, 0 ), 2.f, "southWestParameter" ) );
+	m_handles->addChild( new EdgeHandle( "quad", view, EdgeHandle::LightAxis::Height, "heightParameter", V3f( 0, -1.f, 0 ), 2.f, "widthParameter", V3f( 0, 0, 0 ), 2.f, "southParameter" ) );
+	m_handles->addChild( new CornerHandle( "quad", view, "widthParameter", V3f( 1.f, 0, 0 ), 2.f, "heightParameter", V3f( 0, -1.f, 0 ), 2.f, "soutEastParameter" ) );
+	m_handles->addChild( new EdgeHandle( "quad", view, EdgeHandle::LightAxis::Width, "widthParameter", V3f( 1.f, 0, 0 ), 2.f, "heightParameter", V3f( 0, 0, 0 ), 2.f, "eastParameter" ) );
+	m_handles->addChild( new CornerHandle( "quad", view, "widthParameter", V3f( 1.f, 0, 0 ), 2.f, "heightParameter", V3f( 0, 1.f, 0 ), 2.f, "northEastParameter" ) );
+	m_handles->addChild( new EdgeHandle( "quad", view, EdgeHandle::LightAxis::Height, "heightParameter", V3f( 0, 1.f, 0 ), 2.f, "widthParameter", V3f( 0, 0, 0 ), 2.f, "northParameter" ) );
+	m_handles->addChild( new CornerHandle( "quad", view, "widthParameter", V3f( -1.f, 0, 0 ), 2.f, "heightParameter", V3f( 0, 1.f, 0 ), 2.f, "northWestParameter" ) );
 
 	for( const auto &c : m_handles->children() )
 	{
@@ -2508,10 +2610,7 @@ void LightTool::updateHandleInspections()
 		auto handle = runTimeCast<LightToolHandle>( c );
 		assert( handle );
 
-		handle->update(
-			new ScenePath( scene, view()->getContext(), lastSelectedPath ),
-			view()->editScopePlug()
-		);
+		handle->updateHandlePath( scene, view()->getContext(), lastSelectedPath );
 
 		bool handleVisible = true;
 		bool handleEnabled = true;
@@ -2529,14 +2628,14 @@ void LightTool::updateHandleInspections()
 		handle->setEnabled( handleEnabled );
 		handle->setVisible( handleVisible );
 
-		handle->clearDragInspections();
+		handle->clearInspections();
 
 		if( handleVisible )
 		{
 			for( PathMatcher::Iterator it = selection.begin(), eIt = selection.end(); it != eIt; ++it )
 			{
 				pathScope.setPath( &(*it) );
-				handle->addDragInspection();
+				handle->addInspection();
 			}
 		}
 	}
@@ -2567,6 +2666,8 @@ void LightTool::updateHandleTransforms( float rasterScale )
 	}
 
 	const M44f fullTransform = scene->fullTransform( lastSelectedPath );
+	/// \todo Should this be handled in the LightToolHandle derived classes
+	/// and make `updateLocalTransform()` a more general `setTransform()` method?
 	m_handles->setTransform( sansScalingAndShear( fullTransform ) );
 
 	V3f scale;
@@ -2697,25 +2798,7 @@ void LightTool::dirtyHandleTransforms()
 RunTimeTypedPtr LightTool::dragBegin( Gadget *gadget )
 {
 	m_dragging = true;
-
-	auto handle = runTimeCast<LightToolHandle>( gadget );
-	assert( handle );
-	const PathMatcher selection = this->selection();
-
-	std::vector<Inspector *> inspectors = handle->inspectors();
-	if( !inspectors.empty() )
-	{
-		ScenePlug::PathScope pathScope( view()->getContext() );
-		PathMatcher::Iterator it = selection.begin();
-		pathScope.setPath( &( *it ) );
-		if( Inspector::ResultPtr inspection = inspectors[0]->inspect() )
-		{
-			if( ValuePlug *source = inspection->source() )
-			{
-				m_scriptNode = source->ancestor<ScriptNode>();
-			}
-		}
-	}
+	m_scriptNode = view()->inPlug()->source()->ancestor<ScriptNode>();
 
 	return nullptr;
 }
