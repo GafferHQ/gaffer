@@ -8,6 +8,7 @@ Fixes
 - Application : Fixed the `-threads` argument to clamp the number of threads to the number of available hardware cores (#5403).
 - CompareFloat, CompareColor, CompareVector : Worked around crashes in OSL's batched shading system (#5430).
 - GafferUI : Fixed TableView bug causing the horizontal scrollbar to potentially overlap the last row (#5328).
+- Viewer : Fixed visualisation of Cycles point light size.
 
 1.2.10.1 (relative to 1.2.10.0)
 ========
