@@ -465,12 +465,6 @@ IECoreGL::MeshPrimitivePtr cone( float height, float startRadius, float endRadiu
 	return result;
 }
 
-const float g_tipScale = 10.f;
-const float g_tipIconSize = 1.25f;
-const float g_tipIconOffset = -0.25f;
-const float g_tipIndent = 1.75f;
-const float g_tipLineSpacing = -1.375f;
-
 IECoreGL::MeshPrimitivePtr unitCone()
 {
 	static IECoreGL::MeshPrimitivePtr result = cone( 1.5f, 0.5f, 0 );
@@ -502,6 +496,12 @@ GraphComponent *commonAncestor( std::vector<GraphComponent *> &graphComponents )
 
 	return commonAncestor;
 }
+
+const float g_tipScale = 10.f;
+const float g_tipIconSize = 1.25f;
+const float g_tipIconOffset = -0.25f;
+const float g_tipIndent = 1.75f;
+const float g_tipLineSpacing = -1.375f;
 
 void drawSelectionTips(
 	const V3f &gadgetSpacePosition,
