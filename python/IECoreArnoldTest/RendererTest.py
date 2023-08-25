@@ -45,6 +45,8 @@ import unittest
 import arnold
 import imath
 
+import OpenImageIO
+
 import IECore
 import IECoreScene
 import IECoreImage
@@ -899,7 +901,35 @@ class RendererTest( GafferTest.TestCase ) :
 				arnold.AiNodeGetName( mesh )
 			)
 
-	def testExrMetadata( self ) :
+	def testUnsupportedMetadataType( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.ass" )
+		)
+
+		with IECore.CapturingMessageHandler() as mh :
+			r.output(
+				"unsupportedMetadata",
+				IECoreScene.Output(
+					"beauty.exr",
+					"exr",
+					"rgba",
+					{
+						"header:stringArray" : IECore.StringVectorData( [ "a", "b" "c" ] ),
+					}
+				)
+			)
+
+		r.render()
+		del r
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].message, 'Cannot convert data "stringArray" of type "StringVectorData".' )
+		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Warning)
+
+	def testCustomAttributesForTIFF( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"Arnold",
@@ -908,108 +938,84 @@ class RendererTest( GafferTest.TestCase ) :
 		)
 
 		r.output(
-			"exrTest",
+			"tiffTest",
 			IECoreScene.Output(
-				"beauty.exr",
-				"exr",
+				"beauty.tiff",
+				"tiff",
 				"rgba",
 				{
-					"filter" : "gaussian",
-					"filterwidth" : imath.V2f( 3.5 ),
-					"custom_attributes" : IECore.StringVectorData([ "string 'original data' test" ]),
-					"header:bar" : IECore.BoolData( True ),
+					"header:test" : IECore.IntData( 10 ),
 				}
 			)
 		)
-
-		r.output(
-			"exrDataTest",
-			IECoreScene.Output(
-				"beauty.exr",
-				"exr",
-				"rgba",
-				{
-					"filter" : "gaussian",
-					"filterwidth" : imath.V2f( 3.5 ),
-					"header:foo" : IECore.StringData( "bar" ),
-					"header:bar" : IECore.BoolData( True ),
-					"header:nobar" : IECore.BoolData( False ),
-					"header:floatbar" : IECore.FloatData( 1.618034 ),
-					"header:intbar" : IECore.IntData( 42 ),
-					"header:vec2i" : IECore.V2iData( imath.V2i( 100 ) ),
-					"header:vec3i" : IECore.V3iData( imath.V3i( 100 ) ),
-					"header:vec2f" : IECore.V2fData( imath.V2f( 100 ) ),
-					"header:vec3f" : IECore.V3fData( imath.V3f( 100 ) ),
-					"header:color3f" : IECore.Color3fData( imath.Color3f( 100 ) ),
-					"header:color4f" : IECore.Color4fData( imath.Color4f( 100 ) ),
-				}
-			)
-		)
-
-		msg = IECore.CapturingMessageHandler()
-		with msg:
-			r.output(
-				"tiffTest",
-				IECoreScene.Output(
-					"beauty.tiff",
-					"tiff",
-					"rgba",
-					{
-						"filter" : "gaussian",
-						"filterwidth" : imath.V2f( 3.5 ),
-						"header:foo" : IECore.StringData( "bar" ),
-						"header:bar" : IECore.StringVectorData([ 'one', 'two', 'three' ])  # not supported and should print a warning
-					}
-				)
-			)
 
 		r.render()
 		del r
-
-		expectedMessage = 'Cannot convert data "bar" of type "StringVectorData".'
-
-		self.assertEqual( len(msg.messages), 1 )
-		self.assertEqual( msg.messages[-1].message, expectedMessage )
-		self.assertEqual( msg.messages[-1].level, IECore.Msg.Level.Warning)
 
 		with IECoreArnold.UniverseBlock( writable = True ) as universe :
 
 			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
 
-			# test if data was added correctly to existing data
-			exrDriver = arnold.AiNodeLookUpByName( universe, "ieCoreArnold:display:exrTest" )
-			customAttributes = arnold.AiNodeGetArray( exrDriver, "custom_attributes" )
-			customAttributesValues = set([ arnold.AiArrayGetStr( customAttributes, i ) for i in range( arnold.AiArrayGetNumElements( customAttributes.contents ) ) ])
-			customAttributesExpected = set([
-				"int 'bar' 1",
-				"string 'original data' test"])
-
-			self.assertEqual( customAttributesValues, customAttributesExpected )
-
-			# test if all data types work correctly
-			exrDriver = arnold.AiNodeLookUpByName( universe, "ieCoreArnold:display:exrDataTest" )
-			customAttributes = arnold.AiNodeGetArray( exrDriver, "custom_attributes" )
-			customAttributesValues = set([ arnold.AiArrayGetStr( customAttributes, i ) for i in range( arnold.AiArrayGetNumElements( customAttributes.contents ) ) ])
-
-			customAttributesExpected = set([
-				"string 'foo' bar",
-				"int 'bar' 1",
-				"int 'nobar' 0",
-				"float 'floatbar' 1.618034",
-				"int 'intbar' 42",
-				"string 'vec2i' (100 100)",
-				"string 'vec3i' (100 100 100)",
-				"string 'vec2f' (100 100)",
-				"string 'vec3f' (100 100 100)",
-				"string 'color3f' (100 100 100)",
-				"string 'color4f' (100 100 100 100)"])
-
-			self.assertEqual( customAttributesValues, customAttributesExpected )
-
-			# make sure that attribute isn't added to drivers that don't support it
+			# TIFF driver doesn't have a `custom_attributes` parameter.
 			tiffDriver = arnold.AiNodeLookUpByName( universe, "ieCoreArnold:display:tiffTest" )
-			customAttributes = arnold.AiNodeGetArray( tiffDriver, "custom_attributes" )
-			self.assertEqual(customAttributes, None)
+			self.assertIsNone(
+				arnold.AiNodeEntryLookUpParameter(
+					arnold.AiNodeGetNodeEntry( tiffDriver ), "custom_attributes"
+				)
+			)
+			# And we shouldn't have attempted to create one.
+			self.assertIsNone( arnold.AiNodeLookUpUserParameter( tiffDriver, "custom_attributes" ) )
+
+	def testExrMetadata( self ) :
+
+		# Write an output with custom header metadata of various types.
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+		)
+
+		r.output(
+			"exrDataTest",
+			IECoreScene.Output(
+				str( self.temporaryDirectory() / "beauty.exr" ),
+				"exr",
+				"rgba",
+				{
+					"header:foo" : IECore.StringData( "bar" ),
+					"header:bar" : IECore.BoolData( True ),
+					"header:nobar" : IECore.BoolData( False ),
+					"header:floatbar" : IECore.FloatData( 0.25 ),
+					"header:intbar" : IECore.IntData( 42 ),
+					"header:vec2i" : IECore.V2iData( imath.V2i( 1, 2 ) ),
+					"header:vec3i" : IECore.V3iData( imath.V3i( 1, 2, 3 ) ),
+					"header:vec2f" : IECore.V2fData( imath.V2f( 1, 2 ) ),
+					"header:vec3f" : IECore.V3fData( imath.V3f( 1, 2, 3 ) ),
+					"header:color3f" : IECore.Color3fData( imath.Color3f( 1, 2, 3 ) ),
+					"header:color4f" : IECore.Color4fData( imath.Color4f( 1, 2, 3, 4 ) ),
+				}
+			)
+		)
+
+		r.render()
+
+		# Check that we can read the metadata using OpenImageIO.
+
+		imageSpec = OpenImageIO.ImageInput.open( str( self.temporaryDirectory() / "beauty.exr" ) ).spec()
+		# We can preserve some types.
+		self.assertEqual( imageSpec.getattribute( "foo" ), "bar" )
+		self.assertEqual( imageSpec.getattribute( "bar" ), True )
+		self.assertEqual( imageSpec.getattribute( "nobar" ), False )
+		self.assertEqual( imageSpec.getattribute( "floatbar" ), 0.25 )
+		self.assertEqual( imageSpec.getattribute( "intbar" ), 42 )
+		# But others we have to format as strings because Arnold doesn't support them,
+		# even though EXR does.
+		self.assertEqual( imageSpec.getattribute( "vec2i" ), "(1 2)" )
+		self.assertEqual( imageSpec.getattribute( "vec3i" ), "(1 2 3)" )
+		self.assertEqual( imageSpec.getattribute( "vec2f" ), "(1 2)" )
+		self.assertEqual( imageSpec.getattribute( "vec3f" ), "(1 2 3)" )
+		self.assertEqual( imageSpec.getattribute( "color3f" ), "(1 2 3)" )
+		self.assertEqual( imageSpec.getattribute( "color4f" ), "(1 2 3 4)" )
 
 	def testInstancing( self ) :
 
