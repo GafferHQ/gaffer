@@ -1,6 +1,7 @@
 # BuildTarget: images/tutorialSettingUpASpreadsheetCleanColumn.png
 # BuildTarget: images/tutorialSettingUpASpreadsheetCyclesOptionsNode.png
 # BuildTarget: images/tutorialSettingUpASpreadsheetDefaultCell.png
+# BuildTarget: images/tutorialSettingUpASpreadsheetExtraColumns.png
 # BuildTarget: images/tutorialSettingUpASpreadsheetFullName.png
 # BuildTarget: images/tutorialSettingUpASpreadsheetGlobalContextVariables.png
 # BuildTarget: images/tutorialSettingUpASpreadsheetNewSpreadsheet.png

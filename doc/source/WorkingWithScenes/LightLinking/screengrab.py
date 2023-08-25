@@ -2,6 +2,7 @@
 # BuildTarget: images/interfaceLightLinkSetupGraphEditor.png
 # BuildTarget: images/interfaceLightSetGraphEditor.png
 # BuildTarget: images/interfaceLightSetNodeEditor.png
+# BuildTarget: images/interfaceLinkedLightsAttribute.png
 # BuildTarget: images/interfaceLinkedLightsPlug.png
 # BuildTarget: images/taskLightLinkingSetExpressionLocation.png
 # BuildTarget: images/taskLightLinkingSetExpressionSet.png
