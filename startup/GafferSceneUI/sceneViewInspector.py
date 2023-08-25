@@ -45,6 +45,18 @@ for p in [ "exposure", "color", "width", "height", "radius", "roundness", "sprea
 for p in ["geometry_type", "density", "filtered_lights", "shader" ] :
 	GafferSceneUI._SceneViewInspector.registerShaderParameter( "ai:lightFilter:filter", p )
 
+for p in [
+	"barndoor_top_left", "barndoor_top_right", "barndoor_top_edge", "barndoor_right_top", "barndoor_right_bottom", "barndoor_right_edge",
+	"barndoor_bottom_left", "barndoor_bottom_right", "barndoor_bottom_edge", "barndoor_left_top", "barndoor_left_bottom", "barndoor_left_edge"
+] :
+	GafferSceneUI._SceneViewInspector.registerShaderParameter( "ai:lightFilter:barndoor", p )
+
+for p in [ "filter_mode", "density", "rotate", "offset" ] :
+	GafferSceneUI._SceneViewInspector.registerShaderParameter( "ai:lightFilter:gobo", p )
+
+for p in [ "use_near_atten", "near_start", "near_end", "use_far_atten", "far_start", "far_end" ] :
+	GafferSceneUI._SceneViewInspector.registerShaderParameter( "ai:lightFilter:light_decay", p )
+
 for p in ["base", "base_color", "diffuse_roughness", "metallness", "specular", "specular_color", "specular_roughness" ] :
 	GafferSceneUI._SceneViewInspector.registerShaderParameter( "ai:surface", p )
 

@@ -13,6 +13,7 @@ Improvements
 - Viewer :
   - Added visualisation of light filters for USD lights.
   - Added support for USD lights and shaders in the floating inspector panel.
+  - Added support for Arnold barndoor, gobo, and light_decay light filters in the floating inspector panel.
 - ShaderTweaks/ShaderQuery : Added presets for USD light and surface shaders.
 
 Fixes
