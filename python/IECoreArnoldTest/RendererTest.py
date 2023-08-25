@@ -983,6 +983,8 @@ class RendererTest( GafferTest.TestCase ) :
 				"rgba",
 				{
 					"header:foo" : IECore.StringData( "bar" ),
+					"header:emptyString" : IECore.StringData(),
+					"header:spaceyString" : IECore.StringData( "mind the gap" ),
 					"header:bar" : IECore.BoolData( True ),
 					"header:nobar" : IECore.BoolData( False ),
 					"header:floatbar" : IECore.FloatData( 0.25 ),
@@ -1004,6 +1006,8 @@ class RendererTest( GafferTest.TestCase ) :
 		imageSpec = OpenImageIO.ImageInput.open( str( self.temporaryDirectory() / "beauty.exr" ) ).spec()
 		# We can preserve some types.
 		self.assertEqual( imageSpec.getattribute( "foo" ), "bar" )
+		self.assertEqual( imageSpec.get_string_attribute( "emptyString" ), "" )
+		self.assertEqual( imageSpec.getattribute( "spaceyString" ), "mind the gap" )
 		self.assertEqual( imageSpec.getattribute( "bar" ), True )
 		self.assertEqual( imageSpec.getattribute( "nobar" ), False )
 		self.assertEqual( imageSpec.getattribute( "floatbar" ), 0.25 )
