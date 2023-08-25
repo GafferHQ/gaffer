@@ -92,6 +92,10 @@ class _TableView( QtWidgets.QTableView ) :
 
 		if not self.horizontalHeader().isHidden() :
 			minimumHeight += self.horizontalHeader().sizeHint().height()
+		# allow room for a visible horizontal scrollbar to prevent it overlapping
+		# the last row.
+		if self.horizontalScrollBarPolicy() != QtCore.Qt.ScrollBarAlwaysOff and not self.horizontalScrollBar().isHidden() :
+			minimumHeight += self.horizontalScrollBar().sizeHint().height()
 
 		numRows = self.verticalHeader().count()
 		if numRows :
@@ -124,6 +128,10 @@ class _TableView( QtWidgets.QTableView ) :
 		h = self.verticalHeader().length() + margins.top() + margins.bottom()
 		if not self.horizontalHeader().isHidden() :
 			h += self.horizontalHeader().sizeHint().height()
+		# allow room for a visible horizontal scrollbar to prevent it overlapping
+		# the last row.
+		if self.horizontalScrollBarPolicy() != QtCore.Qt.ScrollBarAlwaysOff and not self.horizontalScrollBar().isHidden() :
+			h += self.horizontalScrollBar().sizeHint().height()
 
 		return QtCore.QSize( w, h )
 
