@@ -11,6 +11,7 @@ Fixes
 - Viewer :
   - Fixed visualisation of Cycles point light size.
   - Fixed visualisation of Arnold light gobo textures with scaled UV coordinates.
+- Dispatch App : Fixed bug that prevented setting specific dispatcher plug values from the command line (#5434).
 
 1.2.10.1 (relative to 1.2.10.0)
 ========
