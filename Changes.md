@@ -13,11 +13,13 @@ Improvements
 - Viewer :
   - Added visualisation of light filters for USD lights.
   - Added support for USD lights and shaders in the floating inspector panel.
+  - Improved support for looking through USD spot lights.
 - ShaderTweaks/ShaderQuery : Added presets for USD light and surface shaders.
 - Test app :
   - The `-category` argument now accepts a space-separated list of categories, optionally containing wildcards.
   - Added `-excludedCategories` and `-showCategories` arguments.
   - Added information about performance test timings to the output stream.
+- LightToCamera : Added support for USD spot lights.
 
 Fixes
 -----
