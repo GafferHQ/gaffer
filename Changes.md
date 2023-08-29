@@ -19,7 +19,9 @@ Fixes
 -----
 
 - Viewer : Fixed crash when visualising lights with a light filter intended for a different renderer.
-- Arnold : Fixed screen window export for Lentil cameras.
+- Arnold :
+  - Fixed screen window export for Lentil cameras.
+  - Fixed writing of image metadata for empty strings and strings containing spaces. This fixes the `malformed line "string 'gaffer:context:ocio:config'"` warning.
 - Application : Fixed the `-threads` argument to clamp the number of threads to the number of available hardware cores (#5403).
 - CompareFloat, CompareColor, CompareVector : Worked around crashes in OSL's batched shading system (#5430).
 - PlugValueWidget : Fixed search for auxiliary plugs of output plugs. In this case, the inputs are now searched instead of the outputs.
