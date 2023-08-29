@@ -19,14 +19,6 @@ Improvements
   - Added `-excludedCategories` and `-showCategories` arguments.
   - Added information about performance test timings to the output stream.
 
-API
----
-
-- TestRunner :
-  - Added `CategorisedTestMethod` decorator used to assign categories to test methods.
-  - Added `categories()` static method to return the list of available categories in a test suite.
-  - Added `filterCategories()` static method to skip tests according to included and excluded categories.
-
 Fixes
 -----
 
@@ -43,6 +35,10 @@ API
 
 - ThreadMonitor : Added new class for tracking the threads used to perform processes.
 - PlugAlgo : Added `findSource()` method.
+- TestRunner :
+  - Added `CategorisedTestMethod` decorator used to assign categories to test methods.
+  - Added `categories()` static method to return the list of available categories in a test suite.
+  - Added `filterCategories()` static method to skip tests according to included and excluded categories.
 
 Documentation
 -------------
