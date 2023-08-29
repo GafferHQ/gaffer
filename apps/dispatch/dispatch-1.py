@@ -186,7 +186,10 @@ class dispatch( Gaffer.Application ) :
 			return 1
 
 		if args["gui"].value and len(args["alternateDispatchers"]) :
-			dispatchers.extend( GafferDispatch.Dispatcher.createMatching( " ".join( args["alternateDispatchers"] ) ) )
+			pattern = " ".join( args[ "alternateDispatchers" ] )
+			for name in GafferDispatch.Dispatcher.registeredDispatchers() :
+				if name != dispatcherType and IECore.StringAlgo.matchMultiple( name, pattern ) :
+					dispatchers.append( GafferDispatch.Dispatcher.create( name ) )
 
 		dispatcherNames = {}
 		for dispatcher in dispatchers :
