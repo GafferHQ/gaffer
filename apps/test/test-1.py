@@ -93,10 +93,24 @@ class test( Gaffer.Application ) :
 					defaultValue = 1,
 				),
 
+				## \todo Rename to `categories` (breaking change).
 				IECore.StringParameter(
 					name = "category",
-					description = 'If set, restricts tests to only a certain category. Currently supported categories are "performance" and "standard" (where standard means any test that is not a performance test).',
+					description = "Only runs tests matching certain categories. Accepts a space-separated list of categories, optionally containing wildcards. "
+						"Use `-showCategories` to see a list of available categories. Use the `TestRunner.Categories` decorator to assign categories.",
+					defaultValue = "*",
+				),
+
+				IECore.StringParameter(
+					name = "excludedCategories",
+					description = "Excludes tests matching certain categories. Accepts a space-separated list of categories, optionally containing wildcards.",
 					defaultValue = "",
+				),
+
+				IECore.BoolParameter(
+					name = "showCategories",
+					description = "Prints a list of available test categories to `stdout`.",
+					defaultValue = False,
 				),
 
 				IECore.FileNameParameter(
@@ -142,8 +156,11 @@ class test( Gaffer.Application ) :
 				testCase = unittest.defaultTestLoader.loadTestsFromName( name )
 				testSuite.addTest( testCase )
 
-			if args["category"].value :
-				GafferTest.TestRunner.filterTestCategory( testSuite, args["category"].value )
+			if args["showCategories"].value :
+				print( " ".join( sorted( GafferTest.TestRunner.categories( testSuite ) ) ) )
+				return 0
+
+			GafferTest.TestRunner.filterCategories( testSuite, args["category"].value, args["excludedCategories"].value )
 
 			testRunner = GafferTest.TestRunner( previousResultsFile = args["previousOutputFile"].value )
 			if args["stopOnFailure"].value :
