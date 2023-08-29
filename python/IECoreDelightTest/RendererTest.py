@@ -37,6 +37,8 @@
 import re
 import time
 import unittest
+from collections import deque
+import shlex
 
 import imath
 
@@ -97,42 +99,42 @@ class RendererTest( GafferTest.TestCase ) :
 	def testAOVs( self ) :
 
 		for data, expected in {
-			"rgba" : [
-				'"variablename" "string" 1 "Ci"',
-				'"variablesource" "string" 1 "shader"',
-				'"layertype" "string" 1 "color"',
-				'"withalpha" "int" 1 1',
-			],
-			"z" : [
-				'"variablename" "string" 1 "z"',
-				'"variablesource" "string" 1 "builtin"',
-				'"layertype" "string" 1 "scalar"',
-				'"withalpha" "int" 1 0',
-			],
-			"color diffuse" : [
-				'"variablename" "string" 1 "diffuse"',
-				'"variablesource" "string" 1 "shader"',
-				'"layertype" "string" 1 "color"',
-				'"withalpha" "int" 1 0',
-			],
-			"color attribute:test" : [
-				'"variablename" "string" 1 "test"',
-				'"variablesource" "string" 1 "attribute"',
-				'"layertype" "string" 1 "color"',
-				'"withalpha" "int" 1 0',
-			],
-			"point builtin:P" : [
-				'"variablename" "string" 1 "P"',
-				'"variablesource" "string" 1 "builtin"',
-				'"layertype" "string" 1 "vector"',
-				'"withalpha" "int" 1 0',
-			],
-			"float builtin:alpha" : [
-				'"variablename" "string" 1 "alpha"',
-				'"variablesource" "string" 1 "builtin"',
-				'"layertype" "string" 1 "scalar"',
-				'"withalpha" "int" 1 0',
-			],
+			"rgba" : {
+				"variablename": "Ci",
+				"variablesource": "shader",
+				"layertype": "color",
+				"withalpha": 1
+			},
+			"z" : {
+				"variablename": "z",
+				"variablesource": "builtin",
+				"layertype": "scalar",
+				"withalpha": 0,
+			},
+			"color diffuse" : {
+				"variablename": "diffuse",
+				"variablesource": "shader",
+				"layertype": "color",
+				"withalpha": 0,
+			},
+			"color attribute:test" : {
+				"variablename": "test",
+				"variablesource": "attribute",
+				"layertype": "color",
+				"withalpha": 0,
+			},
+			"point builtin:P" : {
+				"variablename": "P",
+				"variablesource": "builtin",
+				"layertype": "vector",
+				"withalpha": 0,
+			},
+			"float builtin:alpha" : {
+				"variablename": "alpha",
+				"variablesource": "builtin",
+				"layertype": "scalar",
+				"withalpha": 0,
+			},
 		}.items() :
 
 			r = GafferScene.Private.IECoreScenePreview.Renderer.create(
@@ -157,9 +159,12 @@ class RendererTest( GafferTest.TestCase ) :
 			r.render()
 			del r
 
-			nsi = self.__parse( self.temporaryDirectory() / "test.nsi" )
-			for e in expected :
-				self.__assertInNSI( e, nsi )
+			nsi = self.__parseDict( self.temporaryDirectory() / "test.nsi" )
+			self.assertIn( "outputLayer:test", nsi )
+			self.assertEqual( nsi["outputLayer:test"]["nodeType"], "outputlayer")
+			for k, v in expected.items() :
+				self.assertIn( k, nsi["outputLayer:test"] )
+				self.assertEqual( nsi["outputLayer:test"][k], v )
 
 	def testMesh( self ) :
 
@@ -178,13 +183,38 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		nsi = self.__parse( self.temporaryDirectory() / "test.nsi" )
+		nsi = self.__parseDict( self.temporaryDirectory() / "test.nsi" )
 
-		self.__assertInNSI( '"P.indices" "int" 8 [ 0 1 4 3 1 2 5 4 ]', nsi )
-		self.__assertInNSI( '"P" "v point" 6 [ -1 -1 0 0 -1 0 1 -1 0 -1 1 0 0 1 0 1 1 0 ]', nsi )
-		self.__assertInNSI( '"nvertices" "int" 2 [ 4 4 ]', nsi )
-		self.__assertInNSI( '"uv" "float[2]" 6 [ 0 0 0.5 0 1 0 0 1 0.5 1 1 1 ]', nsi )
-		self.__assertInNSI( '"uv.indices" "int" 8 [ 0 1 4 3 1 2 5 4 ]', nsi )
+		meshes = { k: v for k, v in nsi.items() if nsi[k]["nodeType"] == "mesh" }
+		self.assertEqual( len( meshes ), 1 )
+
+		mesh = meshes[next( iter( meshes ) ) ]
+
+		self.assertEqual( mesh["P.indices"], [ 0, 1, 4, 3, 1, 2, 5, 4 ] )
+		self.assertEqual(
+			mesh["P"],
+			[
+				imath.V3f( -1, -1, 0 ),
+				imath.V3f( 0, -1, 0 ),
+				imath.V3f( 1, -1, 0 ),
+				imath.V3f( -1, 1, 0 ),
+				imath.V3f( 0, 1, 0 ),
+				imath.V3f( 1, 1, 0 ),
+			]
+		)
+		self.assertEqual( mesh["nvertices"], [ 4, 4 ] )
+		self.assertEqual(
+			mesh["uv"],
+			[
+				imath.V2f( 0, 0 ),
+				imath.V2f( 0.5, 0 ),
+				imath.V2f( 1, 0 ),
+				imath.V2f( 0, 1 ),
+				imath.V2f( 0.5, 1 ),
+				imath.V2f( 1, 1 )
+			]
+		)
+		self.assertEqual( mesh["uv.indices"], [ 0, 1, 4, 3, 1, 2, 5, 4 ] )
 
 	def testAnimatedMesh( self ) :
 
@@ -207,14 +237,21 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		nsi = self.__parse( self.temporaryDirectory() / "test.nsi" )
+		nsi = self.__parseDict( self.temporaryDirectory() / "test.nsi" )
 
-		self.__assertInNSI( '"P.indices" "int" 4 [ 0 1 3 2 ]', nsi )
-		self.assertEqual( nsi.count( '"P.indices"' ), 1 )
-		self.__assertInNSI( '"P" "v point" 4 [ -1 -1 0 1 -1 0 -1 1 0 1 1 0 ]', nsi )
-		self.__assertInNSI( '"P" "v point" 4 [ -2 -2 0 2 -2 0 -2 2 0 2 2 0 ]', nsi )
-		self.__assertInNSI( '"nvertices" "int" 1 4', nsi )
-		self.assertEqual( nsi.count( '"nvertices"' ), 1 )
+		meshes = { k: v for k, v in nsi.items() if nsi[k]["nodeType"] == "mesh" }
+		self.assertEqual( len( meshes ), 1 )
+
+		mesh = meshes[next( iter( meshes ) ) ]
+		self.assertEqual( mesh["P.indices"], [ 0, 1, 3, 2 ] )
+		self.assertEqual(
+			mesh["P"],
+			{
+				0 : [ imath.V3f( -1, -1, 0 ), imath.V3f( 1, -1, 0 ), imath.V3f( -1, 1, 0 ), imath.V3f( 1, 1, 0 ) ],
+				1 : [ imath.V3f( -2, -2, 0 ), imath.V3f( 2, -2, 0 ), imath.V3f( -2, 2, 0 ), imath.V3f( 2, 2, 0 ) ],
+			}
+		)
+		self.assertEqual( mesh["nvertices"], 4 )
 
 	def testPoints( self ) :
 
@@ -608,6 +645,109 @@ class RendererTest( GafferTest.TestCase ) :
 			),
 			nsi
 		)
+
+	# Helper methods used to check that NSI files we write contain what we
+	# expect. The 3delight API only allows values to be set, not queried,
+	# so we build a simple dictionary-based node graph for now.
+
+	def __parseDict( self, nsiFile ) :
+
+		reArraySplit = re.compile( r'(?P<varType>.*)\[(?P<arrayLength>[0-9]+)\]' )
+
+		root = {}
+		tokens = deque()
+		with open( nsiFile, encoding = "utf-8" ) as f :
+			for i in f.readlines() :
+				if not i.startswith( '#' ) :
+					tokens += shlex.split( i )
+
+		currentNode = None  # The node to add attributes to
+		currentTime = None # The time to add attributes to
+
+		while len( tokens ) :
+			token = tokens.popleft()
+			if token == "Create" :
+				node = tokens.popleft()
+				root.setdefault( node, {} )["nodeType"] = tokens.popleft()
+			elif token == "SetAttribute" :
+				currentNode = tokens.popleft()
+				currentTime = None
+			elif token == "SetAttributeAtTime" :
+				currentNode = tokens.popleft()
+				currentTime = float( tokens.popleft() )
+			elif token == "Connect" :
+				tokens.popleft()  # source node
+				tokens.popleft()  # source attribute
+				tokens.popleft()  # destination node
+				tokens.popleft()  # destination attribute
+			elif token == "Delete" :
+				pass
+			elif token == "DeleteAttribute" :
+				pass
+			elif token == "Disconnect" :
+				pass
+			elif token == "Evaluate" :
+				pass
+			elif token == "RenderControl" :
+				# Pop attributes but don't bother assigning them for now
+				currentNode = None
+			else :
+				# List of attributes
+				pType = tokens.popleft()
+				if pType == "v normal" or pType == "v point" :
+					pType = "v"
+				pSize = int( tokens.popleft() )
+				pLength = 1
+
+				arraySplit = reArraySplit.match( pType )
+				# Currently it seems impossible to reprsent an array of arrays, i.e. an array
+				# of float[2] arrays. We treat `float[2]` as it's own unique type.
+				if arraySplit is not None and pType != "float[2]" :
+					pLength = int( arraySplit.groupdict()["arrayLength"] )
+					pType = arraySplit.groupdict()["varType"]
+
+				numComponents = { "v": 3, "color": 3, "doublematrix": 16, "float[2]": 2 }.get( pType, 1 )
+				numElements = pLength * numComponents * pSize
+				if numElements > 1 :
+					tokens.popleft()  # First `[` of an array
+				value = []
+				for i in range( 0, pSize * pLength ) :
+					if pType == "int" :
+						value.append( int( tokens.popleft() ) )
+					elif pType == "float" or pType == "double" :
+						value.append( float( tokens.popleft() ) )
+					elif pType == "string" :
+						value.append( tokens.popleft() )
+					elif pType == "color" :
+						value.append( imath.Color3f( float( tokens.popleft() ), float( tokens.popleft() ), float( tokens.popleft() ) ) )
+					elif pType == "v" :
+						value.append( imath.V3f( float( tokens.popleft() ), float( tokens.popleft() ), float( tokens.popleft() ) ) )
+					elif pType == "doublematrix" :
+						value.append(
+							imath.M44f(
+								float( tokens.popleft() ), float( tokens.popleft() ), float( tokens.popleft() ), float( tokens.popleft() ),
+								float( tokens.popleft() ), float( tokens.popleft() ), float( tokens.popleft() ), float( tokens.popleft() ),
+								float( tokens.popleft() ), float( tokens.popleft() ), float( tokens.popleft() ), float( tokens.popleft() ),
+								float( tokens.popleft() ), float( tokens.popleft() ), float( tokens.popleft() ), float( tokens.popleft() ),
+							)
+						)
+					elif pType == "float[2]" :
+						value.append( imath.V2f( float( tokens.popleft() ), float( tokens.popleft() ) ) )
+
+				if numElements > 1 :
+					self.assertEqual( tokens.popleft(), ']' )  # If we don't see the closing bracket, we've done something wrong above
+
+				if currentNode is not None :
+					if len( value ) == 1 :
+						value = value[0]
+
+					if currentTime is None :
+						root[currentNode][token] = value
+					else :
+						root[currentNode].setdefault( token, {} )[currentTime] = value
+
+		return root
+
 
 	# Helper methods used to check that NSI files we write contain what we
 	# expect. This is a very poor substitute to being able to directly query
