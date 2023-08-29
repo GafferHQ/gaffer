@@ -902,22 +902,6 @@ DispatcherPtr Dispatcher::create( const std::string &dispatcherType )
 	return it->second.first();
 }
 
-std::vector<DispatcherPtr> Dispatcher::createMatching( const IECore::StringAlgo::MatchPattern &pattern )
-{
-	std::vector<DispatcherPtr> dispatchers;
-
-	const CreatorMap &m = creators();
-	for( const auto &it : m )
-	{
-		if( IECore::StringAlgo::matchMultiple( it.first, pattern ) )
-		{
-			dispatchers.push_back( it.second.first() );
-		}
-	}
-
-	return dispatchers;
-}
-
 const std::string &Dispatcher::getDefaultDispatcherType()
 {
 	return g_defaultDispatcherType;

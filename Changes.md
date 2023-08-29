@@ -1,6 +1,10 @@
 1.x.x.x (relative to 1.3.x.x)
 =======
 
+Breaking Changes
+----------------
+
+- Dispatcher : Removed `createMatching()` method.
 
 1.3.x.x (relative to 1.3.1.0)
 =======

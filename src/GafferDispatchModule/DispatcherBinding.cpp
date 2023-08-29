@@ -270,17 +270,6 @@ tuple registeredDispatchersWrapper()
 	return boost::python::tuple( result );
 }
 
-list createMatching( std::string pattern )
-{
-	std::vector<DispatcherPtr> dispatchers = Dispatcher::createMatching( pattern );
-	list result;
-	for( auto &d : dispatchers )
-	{
-		result.append( d );
-	}
-	return result;
-}
-
 struct PreDispatchSlotCaller
 {
 	bool operator()( boost::python::object slot, const Dispatcher *d, const std::vector<TaskNodePtr> &nodes )
@@ -354,7 +343,6 @@ void GafferDispatchModule::bindDispatcher()
 		.def( "jobDirectory", &Dispatcher::jobDirectory )
 		.def( "frameRange", &frameRange )
 		.def( "create", &Dispatcher::create ).staticmethod( "create" )
-		.def( "createMatching", &createMatching, ( arg( "matchPattern" ) ) ).staticmethod( "createMatching" )
 		.def( "getDefaultDispatcherType", &Dispatcher::getDefaultDispatcherType, return_value_policy<copy_const_reference>() ).staticmethod( "getDefaultDispatcherType" )
 		.def( "setDefaultDispatcherType", &Dispatcher::setDefaultDispatcherType ).staticmethod( "setDefaultDispatcherType" )
 		.def( "registerDispatcher", &registerDispatcher, ( arg( "dispatcherType" ), arg( "creator" ), arg( "setupPlugsFn" ) = 0 ) ).staticmethod( "registerDispatcher" )
