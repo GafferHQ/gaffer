@@ -18,12 +18,26 @@ Improvements
   - Added visualisation of light filters for USD lights.
   - Added support for USD lights and shaders in the floating inspector panel.
 - ShaderTweaks/ShaderQuery : Added presets for USD light and surface shaders.
+- Test app :
+  - The `-category` argument now accepts a space-separated list of categories, optionally containing wildcards.
+  - Added `-excludedCategories` and `-showCategories` arguments.
+  - Added information about performance test timings to the output stream.
+
+API
+---
+
+- TestRunner :
+  - Added `CategorisedTestMethod` decorator used to assign categories to test methods.
+  - Added `categories()` static method to return the list of available categories in a test suite.
+  - Added `filterCategories()` static method to skip tests according to included and excluded categories.
 
 Fixes
 -----
 
 - Viewer : Fixed crash when visualising lights with a light filter intended for a different renderer.
-- Arnold : Fixed screen window export for Lentil cameras.
+- Arnold :
+  - Fixed screen window export for Lentil cameras.
+  - Fixed writing of image metadata for empty strings and strings containing spaces. This fixes the `malformed line "string 'gaffer:context:ocio:config'"` warning.
 - Application : Fixed the `-threads` argument to clamp the number of threads to the number of available hardware cores (#5403).
 - CompareFloat, CompareColor, CompareVector : Worked around crashes in OSL's batched shading system (#5430).
 - PlugValueWidget : Fixed search for auxiliary plugs of output plugs. In this case, the inputs are now searched instead of the outputs.
@@ -313,6 +327,11 @@ Fixes
 - Arnold : Fixed screen window export for Lentil cameras.
 - Application : Fixed the `-threads` argument to clamp the number of threads to the number of available hardware cores (#5403).
 - CompareFloat, CompareColor, CompareVector : Worked around crashes in OSL's batched shading system (#5430).
+- GafferUI : Fixed TableView bug causing the horizontal scrollbar to potentially overlap the last row (#5328).
+- Viewer :
+  - Fixed visualisation of Cycles point light size.
+  - Fixed visualisation of Arnold light gobo textures with scaled UV coordinates.
+- Dispatch App : Fixed bug that prevented setting specific dispatcher plug values from the command line (#5434).
 
 1.2.10.1 (relative to 1.2.10.0)
 ========

@@ -138,11 +138,6 @@ Visualisations LightFilterVisualiser::allVisualisations( const IECore::CompoundO
 			lightShaderNetwork = attributes->member<IECoreScene::ShaderNetwork>( "light" );
 		}
 
-		if( !lightShaderNetwork )
-		{
-			continue;
-		}
-
 		// It's possible that we found a light filter defined in world space
 		// that isn't assigned to a light just yet. If we found a filter in
 		// light space it must have a valid light shader, though.

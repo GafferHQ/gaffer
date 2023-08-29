@@ -53,7 +53,7 @@ jobs:
             publish: false
             containerImage: ghcr.io/gafferhq/build/build:2.0.0
             testRunner: su testUser -c
-            testArguments: -category standard
+            testArguments: -excludedCategories performance
             # Debug builds are ludicrously big, so we must use a larger cache
             # limit. In practice this compresses down to 4-500Mb.
             sconsCacheMegabytes: 2500
@@ -64,7 +64,7 @@ jobs:
             publish: true
             containerImage:
             testRunner: Invoke-Expression
-            testArguments: -category standard GafferTest GafferVDBTest GafferUSDTest GafferSceneTest GafferDispatchTest GafferOSLTest GafferImageTest GafferUITest GafferImageUITest GafferSceneUITest GafferDispatchUITest GafferOSLUITest GafferUSDUITest GafferVDBUITest GafferDelightUITest
+            testArguments: -excludedCategories performance GafferTest GafferVDBTest GafferUSDTest GafferSceneTest GafferDispatchTest GafferOSLTest GafferImageTest GafferUITest GafferImageUITest GafferSceneUITest GafferDispatchUITest GafferOSLUITest GafferUSDUITest GafferVDBUITest GafferDelightUITest
             sconsCacheMegabytes: 400
 
     runs-on: ${{ matrix.os }}

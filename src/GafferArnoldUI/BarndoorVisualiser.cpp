@@ -180,6 +180,11 @@ BarndoorVisualiser::~BarndoorVisualiser()
 
 Visualisations BarndoorVisualiser::visualise( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, const IECoreScene::ShaderNetwork *lightShaderNetwork, const IECore::CompoundObject *attributes, IECoreGL::ConstStatePtr &state ) const
 {
+	if( !lightShaderNetwork )
+	{
+		return {};
+	}
+
 	IECoreGL::GroupPtr result = new IECoreGL::Group();
 
 	const IECore::CompoundData *filterShaderParameters = shaderNetwork->outputShader()->parametersData();

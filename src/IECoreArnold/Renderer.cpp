@@ -201,7 +201,7 @@ std::string formatHeaderParameter( const std::string name, const IECore::Data *d
 	}
 	else if( const IECore::StringData *stringData = IECore::runTimeCast<const IECore::StringData>( data ) )
 	{
-		return fmt::format( "string '{}' {}", name, stringData->readable() );
+		return fmt::format( "string '{}' '{}'", name, stringData->readable() );
 	}
 	else if( const IECore::V2iData *v2iData = IECore::runTimeCast<const IECore::V2iData>( data ) )
 	{

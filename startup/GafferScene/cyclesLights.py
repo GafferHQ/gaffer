@@ -50,6 +50,7 @@ Gaffer.Metadata.registerValue( "cycles:light:point_light", "type", "point" )
 Gaffer.Metadata.registerValue( "cycles:light:point_light", "intensityParameter", "intensity" )
 Gaffer.Metadata.registerValue( "cycles:light:point_light", "exposureParameter", "exposure" )
 Gaffer.Metadata.registerValue( "cycles:light:point_light", "colorParameter", "color" )
+Gaffer.Metadata.registerValue( "cycles:light:point_light", "radiusParameter", "size" )
 
 Gaffer.Metadata.registerValue( "cycles:light:distant_light", "type", "distant" )
 Gaffer.Metadata.registerValue( "cycles:light:distant_light", "intensityParameter", "intensity" )
