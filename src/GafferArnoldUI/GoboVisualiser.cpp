@@ -308,8 +308,8 @@ Visualisations GoboVisualiser::visualise( const IECore::InternedString &attribut
 	const float baseDistance = cos( halfAngle );
 
 	float rotate = parameterOrDefault( filterParameters, "rotate", 0.0f );
-	float scaleS = parameterOrDefault( filterParameters, "scale_s", 1.0f );
-	float scaleT = parameterOrDefault( filterParameters, "scale_t", 1.0f );
+	float scaleS = parameterOrDefault( filterParameters, "sscale", 1.0f );
+	float scaleT = parameterOrDefault( filterParameters, "tscale", 1.0f );
 	V2f offset = parameterOrDefault( filterParameters, "offset", V2f( 0.0f ) );
 
 	Imath::M44f goboTrans;
