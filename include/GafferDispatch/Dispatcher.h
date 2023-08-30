@@ -194,8 +194,6 @@ class GAFFERDISPATCH_API Dispatcher : public Gaffer::Node
 		//@{
 		/// Create a registered Dispatcher of the specified type.
 		static DispatcherPtr create( const std::string &dispatcherType );
-		/// Create any dispatchers if the type matches the pattern.
-		static std::vector<DispatcherPtr> createMatching( const IECore::StringAlgo::MatchPattern &pattern );
 		static const std::string &getDefaultDispatcherType();
 		static void setDefaultDispatcherType( const std::string &dispatcherType );
 		/// Register a Dispatcher creation function.
