@@ -24,13 +24,18 @@ Improvements
 Fixes
 -----
 
-- Viewer : Fixed crash when visualising lights with a light filter intended for a different renderer.
+- Viewer :
+  - Fixed crash when visualising lights with a light filter intended for a different renderer.
+  - Fixed visualisation of Cycles point light size.
+  - Fixed visualisation of Arnold light gobo textures with scaled UV coordinates.
 - Arnold :
   - Fixed screen window export for Lentil cameras.
   - Fixed writing of image metadata for empty strings and strings containing spaces. This fixes the `malformed line "string 'gaffer:context:ocio:config'"` warning.
 - Application : Fixed the `-threads` argument to clamp the number of threads to the number of available hardware cores (#5403).
 - CompareFloat, CompareColor, CompareVector : Worked around crashes in OSL's batched shading system (#5430).
 - PlugValueWidget : Fixed search for auxiliary plugs of output plugs. In this case, the inputs are now searched instead of the outputs.
+- GafferUI : Fixed TableView bug causing the horizontal scrollbar to potentially overlap the last row (#5328).
+- Dispatch App : Fixed bug that prevented setting specific dispatcher plug values from the command line (#5434).
 
 API
 ---
@@ -312,7 +317,10 @@ Build
 - USD : Updated to version 23.05.
 - ZLib : Added version 1.2.13.
 
-1.2.10.x (relative to 1.2.10.1)
+1.2.10.x (relative to 1.2.10.2)
+========
+
+1.2.10.2 (relative to 1.2.10.1)
 ========
 
 Fixes
