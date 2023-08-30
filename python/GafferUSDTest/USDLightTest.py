@@ -125,5 +125,74 @@ class USDLightTest( GafferSceneTest.SceneTestCase ) :
 			light["parameters"]["shaping:focus"]["value"]
 		)
 
+	def testLightToCamera( self ) :
+
+		g = GafferScene.Group()
+
+		inputs = {}
+		for shader, name in [
+			("SphereLight", "sphere1"),
+			("SphereLight", "sphere2"),
+			("DistantLight", "distant1"),
+			("DomeLight", "env1"),
+		] :
+			light = GafferUSD.USDLight()
+			light.loadShader( shader )
+			light["name"].setValue( name )
+			inputs[name] = light
+
+		inputs["camera"] = GafferScene.Camera()
+		for i in inputs.values() :
+			g["in"][-1].setInput( i["out"] )
+
+		f = GafferScene.PathFilter()
+		f["paths"].setValue( IECore.StringVectorData( [ "/group/sphere1", "/group/env1", "/group/distant1" ] ) )
+
+		lc = GafferScene.LightToCamera()
+		lc["in"].setInput( g["out"] )
+		lc["filter"].setInput( f["out"] )
+
+		# Test light with no corresponding camera outputs default camera
+		self.assertEqual(
+			lc["out"].object( "/group/sphere1" ).parameters(),
+			IECore.CompoundData( {
+				"projection" : IECore.StringData( "perspective" ),
+			} )
+		)
+
+		def assertSpotCamera( camera ) :
+
+			calculatedFieldOfView = camera.calculateFieldOfView()
+			self.assertAlmostEqual( calculatedFieldOfView[0], 65, 4 )
+			self.assertAlmostEqual( calculatedFieldOfView[1], 65, 4 )
+			self.assertEqual( camera.getClippingPlanes(), imath.V2f( 0.01, 100000 ) )
+			self.assertEqual( camera.getProjection(), "perspective" )
+			self.assertEqual( camera.getFilmFit(), IECoreScene.Camera.FilmFit.Fit )
+			self.assertEqual( camera.hasResolution(), False )
+
+		# Test adding a spot cone to sphere light will output a persp cam
+		inputs["sphere1"]["parameters"]["shaping:cone:angle"]["enabled"].setValue( True )
+		inputs["sphere1"]["parameters"]["shaping:cone:angle"]["value"].setValue( 32.5 )
+		assertSpotCamera( lc["out"].object( "/group/sphere1" ) )
+
+		# Test distant light outputs ortho cam
+		distantCam = lc["out"].object( "/group/distant1" )
+		self.assertEqual( distantCam.getAperture(), imath.V2f( 2, 2 ) )
+		self.assertEqual( distantCam.getClippingPlanes(), imath.V2f( -100000, 100000 ) )
+		self.assertEqual( distantCam.getProjection(), "orthographic" )
+		self.assertEqual( distantCam.getFilmFit(), IECoreScene.Camera.FilmFit.Fit )
+		self.assertEqual( distantCam.hasResolution(), False )
+
+		# Test adding a cone to a distant light will output a persp cam
+		inputs["distant1"]["parameters"]["shaping:cone:angle"]["enabled"].setValue( True )
+		inputs["distant1"]["parameters"]["shaping:cone:angle"]["value"].setValue( 32.5 )
+		assertSpotCamera( lc["out"].object( "/group/distant1" ) )
+
+		self.assertEqual( lc["out"].set( "__lights" ).value.paths(), [ "/group/sphere2" ] )
+		self.assertEqual(
+			set( lc["out"].set( "__cameras" ).value.paths() ),
+			set( [ "/group/camera", "/group/sphere1", "/group/distant1", "/group/env1" ] )
+		)
+
 if __name__ == "__main__":
 	unittest.main()

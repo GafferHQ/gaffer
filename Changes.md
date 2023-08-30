@@ -6,7 +6,11 @@ Breaking Changes
 
 - Dispatcher : Removed `createMatching()` method.
 
-1.3.x.x (relative to 1.3.1.0)
+1.3.x.x (relative to 1.3.2.0)
+=======
+
+
+1.3.2.0 (relative to 1.3.1.0)
 =======
 
 Features
@@ -21,36 +25,39 @@ Improvements
 - Viewer :
   - Added visualisation of light filters for USD lights.
   - Added support for USD lights and shaders in the floating inspector panel.
+  - Improved support for looking through USD spot lights.
 - ShaderTweaks/ShaderQuery : Added presets for USD light and surface shaders.
 - Test app :
   - The `-category` argument now accepts a space-separated list of categories, optionally containing wildcards.
   - Added `-excludedCategories` and `-showCategories` arguments.
   - Added information about performance test timings to the output stream.
-
-API
----
-
-- TestRunner :
-  - Added `CategorisedTestMethod` decorator used to assign categories to test methods.
-  - Added `categories()` static method to return the list of available categories in a test suite.
-  - Added `filterCategories()` static method to skip tests according to included and excluded categories.
+- LightToCamera : Added support for USD spot lights.
 
 Fixes
 -----
 
-- Viewer : Fixed crash when visualising lights with a light filter intended for a different renderer.
+- Viewer :
+  - Fixed crash when visualising lights with a light filter intended for a different renderer.
+  - Fixed visualisation of Cycles point light size.
+  - Fixed visualisation of Arnold light gobo textures with scaled UV coordinates.
 - Arnold :
   - Fixed screen window export for Lentil cameras.
   - Fixed writing of image metadata for empty strings and strings containing spaces. This fixes the `malformed line "string 'gaffer:context:ocio:config'"` warning.
 - Application : Fixed the `-threads` argument to clamp the number of threads to the number of available hardware cores (#5403).
 - CompareFloat, CompareColor, CompareVector : Worked around crashes in OSL's batched shading system (#5430).
 - PlugValueWidget : Fixed search for auxiliary plugs of output plugs. In this case, the inputs are now searched instead of the outputs.
+- GafferUI : Fixed TableView bug causing the horizontal scrollbar to potentially overlap the last row (#5328).
+- Dispatch App : Fixed bug that prevented setting specific dispatcher plug values from the command line (#5434).
 
 API
 ---
 
 - ThreadMonitor : Added new class for tracking the threads used to perform processes.
 - PlugAlgo : Added `findSource()` method.
+- TestRunner :
+  - Added `CategorisedTestMethod` decorator used to assign categories to test methods.
+  - Added `categories()` static method to return the list of available categories in a test suite.
+  - Added `filterCategories()` static method to skip tests according to included and excluded categories.
 
 Documentation
 -------------
@@ -322,7 +329,10 @@ Build
 - USD : Updated to version 23.05.
 - ZLib : Added version 1.2.13.
 
-1.2.10.x (relative to 1.2.10.1)
+1.2.10.x (relative to 1.2.10.2)
+========
+
+1.2.10.2 (relative to 1.2.10.1)
 ========
 
 Fixes

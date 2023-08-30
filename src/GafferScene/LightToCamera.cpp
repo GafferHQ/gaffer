@@ -134,6 +134,12 @@ const char *lightType( const IECore::CompoundData *shaderParameters, const std::
 		return "";
 	}
 
+	if( boost::starts_with( metadataTarget, "light:" ) && shaderParameters->member<FloatData>( "shaping:cone:angle" ) )
+	{
+		// USD lights with a cone angle defined are treated as spot lights
+		return "spot";
+	}
+
 	return type->readable().c_str();
 }
 
@@ -148,6 +154,14 @@ float lightOuterAngle( const IECore::CompoundData *shaderParameters, const std::
 		{
 			coneAngle *= 180.0 / M_PI;
 			penumbraAngle *= 180 / M_PI;
+		}
+	}
+
+	if( ConstStringDataPtr coneAngleType = Metadata::value<StringData>( metadataTarget, "coneAngleType" ) )
+	{
+		if( coneAngleType->readable() == "half" )
+		{
+			coneAngle *= 2.0f;
 		}
 	}
 
