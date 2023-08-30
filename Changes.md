@@ -1,4 +1,7 @@
-1.2.10.x (relative to 1.2.10.1)
+1.2.10.x (relative to 1.2.10.2)
+========
+
+1.2.10.2 (relative to 1.2.10.1)
 ========
 
 Fixes
