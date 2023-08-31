@@ -672,6 +672,18 @@ class ValuePlugTest( GafferTest.TestCase ) :
 			GafferTest.repeatGetValue( m["product"], 5000000 )
 
 	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testHashCacheOverhead( self ) :
+
+		m = GafferTest.MultiplyNode()
+		m["product"].getValue()
+
+		# As for `testCacheOverhead`, but with an additional context variable, so
+		# that we have to redo the hash before getting the cached value for the
+		# compute.
+		with GafferTest.TestRunner.PerformanceScope() :
+			GafferTest.repeatGetValue( m["product"], 2000000, "unusedContextVariable" )
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
 	def testContentionForOneItem( self ) :
 		m = GafferTest.MultiplyNode()
 		m["product"].getValue()

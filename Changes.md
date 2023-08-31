@@ -1,6 +1,11 @@
 1.3.x.x (relative to 1.3.2.0)
 =======
 
+API
+---
+
+- ThreadState : Added `process()` method.
+- Process : Added const overload for `handleException()` method. The non-const version will be removed in future.
 
 1.3.2.0 (relative to 1.3.1.0)
 =======

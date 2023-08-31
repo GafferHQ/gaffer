@@ -59,7 +59,7 @@ IE_CORE_FORWARDDECLARE( Monitor );
 /// Context and Monitor classes. The exception to this is when using
 /// task-based TBB algorithms, in which case it is necessary to manually
 /// transfer the current ThreadState from the calling code to the tasks
-/// running on it's behalf. For example :
+/// running on its behalf. For example :
 ///
 /// ```
 /// const ThreadState &threadState = ThreadState::current();
@@ -116,10 +116,8 @@ class GAFFER_API ThreadState
 
 		static const ThreadState &current();
 
-		const Context *context() const
-		{
-			return m_context;
-		}
+		const Context *context() const { return m_context; }
+		const Process *process() const { return m_process; }
 
 	private :
 

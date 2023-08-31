@@ -174,6 +174,7 @@ class UDIMQueryTest( GafferSceneTest.SceneTestCase ) :
 		self.assertNotEqual( initialHash, udimQuery["out"].hash() )
 		self.assertEqual( dictResult(), {'1001': {'/test': {}}} )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "taskCollaboration:performance" } )
 	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 1)
 	def testCollaboratePerf( self ) :
 
