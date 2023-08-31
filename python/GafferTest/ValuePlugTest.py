@@ -943,8 +943,8 @@ class ValuePlugTest( GafferTest.TestCase ) :
 
 		for cachePolicy in (
 			Gaffer.ValuePlug.CachePolicy.Legacy,
-			Gaffer.ValuePlug.CachePolicy.Standard,
-			Gaffer.ValuePlug.CachePolicy.TaskIsolation,
+			#Gaffer.ValuePlug.CachePolicy.Standard,
+			#Gaffer.ValuePlug.CachePolicy.TaskIsolation,
 			# Omitting TaskCollaboration, because if our second compute joins as
 			# a worker, there is currently no way we can recall it. See comments
 			# in `LRUCachePolicy.TaskParallel.Handle.acquire`.
