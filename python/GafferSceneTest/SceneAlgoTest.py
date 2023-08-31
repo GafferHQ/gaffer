@@ -1829,6 +1829,40 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 				with self.assertRaises( RuntimeError ) :
 					GafferScene.SceneAlgo.validateName( badName )
 
+	def testFindAll( self ) :
+
+		plane = GafferScene.Plane()
+
+		planeFilter = GafferScene.PathFilter()
+		planeFilter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		sphere = GafferScene.Sphere()
+
+		instancer = GafferScene.Instancer()
+		instancer["in"].setInput( plane["out"] )
+		instancer["prototypes"].setInput( sphere["out"] )
+		instancer["filter"].setInput( planeFilter["out"] )
+
+		self.assertEqual(
+			GafferScene.SceneAlgo.findAll(
+				instancer["out"],
+				lambda scene, path : scene["transform"].getValue().translation().x > 0
+			),
+			IECore.PathMatcher( [
+				"/plane/instances/sphere/1",
+				"/plane/instances/sphere/3",
+			] )
+		)
+
+		self.assertEqual(
+			GafferScene.SceneAlgo.findAll(
+				instancer["out"],
+				lambda scene, path : scene["transform"].getValue().translation().x > 0,
+				root = "/not/a/location"
+			),
+			IECore.PathMatcher()
+		)
+
 	def tearDown( self ) :
 
 		GafferSceneTest.SceneTestCase.tearDown( self )

@@ -128,6 +128,20 @@ IECore::MurmurHash matchingPathsHashWrapper2( const IECore::PathMatcher &filter,
 	return SceneAlgo::matchingPathsHash( filter, &scene );
 }
 
+IECore::PathMatcher findAllWrapper( const ScenePlug &scene, object predicate, const ScenePlug::ScenePath &root )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return SceneAlgo::findAll(
+		&scene,
+		[&] ( ConstScenePlugPtr scene, const ScenePlug::ScenePath &path ) {
+			const std::string pathString = ScenePlug::pathToString( path );
+			IECorePython::ScopedGILLock gilLock;
+			return predicate( boost::const_pointer_cast<ScenePlug>( scene ), pathString );
+		},
+		root
+	);
+}
+
 Imath::V2f shutterWrapper( const IECore::CompoundObject &globals, const ScenePlug &scene )
 {
 	IECorePython::ScopedGILRelease r;
@@ -319,6 +333,9 @@ void bindSceneAlgo()
 	def( "matchingPaths", &matchingPathsWrapper4 );
 	def( "matchingPathsHash", &matchingPathsHashWrapper1, ( arg( "filter" ), arg( "scene" ), arg( "root" ) = "/" ) );
 	def( "matchingPathsHash", &matchingPathsHashWrapper2, ( arg( "filter" ), arg( "scene" ) ) );
+
+	def( "findAll", &findAllWrapper, ( arg( "scene" ), arg( "predicate" ), arg( "root" ) = "/" ) );
+
 	def( "shutter", &shutterWrapper );
 	def( "setExists", &setExistsWrapper );
 	def(

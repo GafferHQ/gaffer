@@ -36,6 +36,7 @@
 
 #include "Gaffer/Context.h"
 
+#include "tbb/enumerable_thread_specific.h"
 #include "tbb/parallel_for.h"
 
 namespace GafferScene
@@ -177,6 +178,30 @@ void filteredParallelTraverse( const ScenePlug *scene, const IECore::PathMatcher
 {
 	Detail::PathMatcherFunctor<ThreadableFunctor> ff( f, filter );
 	parallelTraverse( scene, ff, root );
+}
+
+template<typename Predicate>
+IECore::PathMatcher findAll( const ScenePlug *scene, Predicate &&predicate, const ScenePlug::ScenePath &root )
+{
+	tbb::enumerable_thread_specific<IECore::PathMatcher> threadResults;
+
+	auto f = [&] ( const ScenePlug *scene, const ScenePlug::ScenePath &path ) {
+		if( predicate( scene, path ) )
+		{
+			threadResults.local().addPath( path );
+		}
+		return true;
+	};
+
+	parallelTraverse( scene, f, root );
+
+	return threadResults.combine(
+		[] ( const IECore::PathMatcher &a, const IECore::PathMatcher &b ) {
+			IECore::PathMatcher c = a;
+			c.addPaths( b );
+			return c;
+		}
+	);
 }
 
 } // namespace SceneAlgo
