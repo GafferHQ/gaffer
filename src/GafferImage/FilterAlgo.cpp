@@ -416,7 +416,7 @@ float GafferImage::FilterAlgo::sampleBox( Sampler &sampler, const V2f &p, float 
 			float yFilterWeight = filter->yfilt( ( y + 0.5f - p.y ) * yscale );
 			sampler.visitPixels(
 				visitBounds,
-				[ &totalW, &v, &p, &pixelBounds, &scratchMemory, &yFilterWeight ] ( float value, int x, int y )
+				[ &totalW, &v, &pixelBounds, &scratchMemory, &yFilterWeight ] ( float value, int x, int y )
 				{
 					float w = scratchMemory[ x - pixelBounds.min.x ] * yFilterWeight;
 
