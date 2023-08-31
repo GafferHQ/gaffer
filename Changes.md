@@ -1,6 +1,11 @@
 1.3.x.x (relative to 1.3.2.0)
 =======
 
+Features
+--------
+
+- 3Delight : Added support for VDB volume objects.
+
 API
 ---
 

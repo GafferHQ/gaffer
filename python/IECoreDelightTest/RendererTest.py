@@ -39,12 +39,14 @@ import time
 import unittest
 from collections import deque
 import shlex
+import pathlib
 
 import imath
 
 import IECore
 import IECoreScene
 import IECoreDelight
+import IECoreVDB
 
 import GafferTest
 import GafferScene
@@ -645,6 +647,33 @@ class RendererTest( GafferTest.TestCase ) :
 			),
 			nsi
 		)
+
+	def testVDB( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"3Delight",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.nsi" ),
+		)
+
+		vdb = IECoreVDB.VDBObject( ( pathlib.Path( __file__ ).parent / "volumes" / "sphere.vdb" ).as_posix() )
+		r.object( "test_vdb", vdb, r.attributes( IECore.CompoundObject() ) )
+
+		r.render()
+		del r
+
+		nsi = self.__parseDict( self.temporaryDirectory() / "test.nsi" )
+
+		self.assertIn( "test_vdb", nsi )
+		self.assertEqual( nsi["test_vdb"]["nodeType"], "transform" )
+
+		volumes = { k: v for k, v in nsi.items() if nsi[k]["nodeType"] == "volume" }
+		self.assertEqual( len( volumes ), 1 )
+
+		volume = volumes[next( iter( volumes ) )]
+
+		self.assertEqual( volume["vdbfilename"], vdb.fileName() )
+		self.assertEqual( volume["densitygrid"], "density" )
 
 	# Helper methods used to check that NSI files we write contain what we
 	# expect. The 3delight API only allows values to be set, not queried,
