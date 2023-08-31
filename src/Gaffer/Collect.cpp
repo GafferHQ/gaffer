@@ -566,7 +566,7 @@ void Collect::compute( ValuePlug *output, const Context *context) const
 					{
 						dispatchPlugFunction(
 							input,
-							[&] ( auto *plug ) {
+							[&, object=object] ( auto *plug ) {
 								using OutputTraits = OutputTraits<remove_const_t<remove_pointer_t<decltype( plug )>>>;
 								auto typedObject = static_cast<typename OutputTraits::ObjectType *>( object );
 								OutputTraits::container( *typedObject )[index] = OutputTraits::collect( plug );
