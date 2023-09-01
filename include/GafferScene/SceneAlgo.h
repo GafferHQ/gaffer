@@ -154,6 +154,10 @@ void filteredParallelTraverse( const ScenePlug *scene, const IECore::PathMatcher
 template<typename Predicate>
 IECore::PathMatcher findAll( const ScenePlug *scene, Predicate &&predicate, const ScenePlug::ScenePath &root = ScenePlug::ScenePath() );
 
+/// Returns all the locations which have a local attribute called `name`. If `value` is specified, then only
+/// returns locations where the attribute has that value.
+GAFFERSCENE_API IECore::PathMatcher findAllWithAttribute( const ScenePlug *scene, IECore::InternedString name, const IECore::Object *value = nullptr, const ScenePlug::ScenePath &root = ScenePlug::ScenePath() );
+
 /// Globals
 /// =======
 

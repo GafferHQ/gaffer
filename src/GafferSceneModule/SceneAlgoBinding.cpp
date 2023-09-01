@@ -142,6 +142,12 @@ IECore::PathMatcher findAllWrapper( const ScenePlug &scene, object predicate, co
 	);
 }
 
+IECore::PathMatcher findAllWithAttributeWrapper( const ScenePlug &scene, InternedString name, const Object *value, const ScenePlug::ScenePath &root )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return SceneAlgo::findAllWithAttribute( &scene, name, value, root );
+}
+
 Imath::V2f shutterWrapper( const IECore::CompoundObject &globals, const ScenePlug &scene )
 {
 	IECorePython::ScopedGILRelease r;
@@ -335,6 +341,7 @@ void bindSceneAlgo()
 	def( "matchingPathsHash", &matchingPathsHashWrapper2, ( arg( "filter" ), arg( "scene" ) ) );
 
 	def( "findAll", &findAllWrapper, ( arg( "scene" ), arg( "predicate" ), arg( "root" ) = "/" ) );
+	def( "findAllWithAttribute", &findAllWithAttributeWrapper, ( arg( "scene" ), arg( "name" ), arg( "value" ) = object(), arg( "root" ) = "/" ) );
 
 	def( "shutter", &shutterWrapper );
 	def( "setExists", &setExistsWrapper );

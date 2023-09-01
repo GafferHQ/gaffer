@@ -239,6 +239,26 @@ IECore::MurmurHash GafferScene::SceneAlgo::matchingPathsHash( const PathMatcher 
 }
 
 //////////////////////////////////////////////////////////////////////////
+// Searching
+//////////////////////////////////////////////////////////////////////////
+
+IECore::PathMatcher GafferScene::SceneAlgo::findAllWithAttribute( const ScenePlug *scene, IECore::InternedString name, const IECore::Object *value, const ScenePlug::ScenePath &root )
+{
+	return findAll(
+		scene,
+		[&] ( const ScenePlug *scene, const ScenePlug::ScenePath &path ) {
+			ConstCompoundObjectPtr attributes = scene->attributesPlug()->getValue();
+			if( const Object *attribute = attributes->member<Object>( name ) )
+			{
+				return !value || attribute->isEqualTo( value );
+			}
+			return false;
+		},
+		root
+	);
+}
+
+//////////////////////////////////////////////////////////////////////////
 // Globals
 //////////////////////////////////////////////////////////////////////////
 

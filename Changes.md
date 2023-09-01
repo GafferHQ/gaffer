@@ -4,7 +4,9 @@
 API
 ---
 
-- SceneAlgo : Added `findAll()` method, for finding all scene locations matching a predicate.
+- SceneAlgo :
+  - Added `findAll()` method, for finding all scene locations matching a predicate.
+  - Added `findAllWithAttribute()` method, for finding all scene locations with a particular attribute.
 - ThreadState : Added `process()` method.
 - Process : Added const overload for `handleException()` method. The non-const version will be removed in future.
 

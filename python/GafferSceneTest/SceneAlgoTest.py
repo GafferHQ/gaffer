@@ -1863,6 +1863,57 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 			IECore.PathMatcher()
 		)
 
+	def testFindAllWithAttribute( self ) :
+
+		# /group
+		#	/light1
+		# /light2
+
+		light1 = GafferSceneTest.TestLight()
+		light1["name"].setValue( "light1" )
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( light1["out"] )
+
+		light2 = GafferSceneTest.TestLight()
+		light2["name"].setValue( "light2" )
+
+		parent = GafferScene.Parent()
+		parent["in"].setInput( group["out"] )
+		parent["children"][0].setInput( light2["out"] )
+		parent["parent"].setValue( "/" )
+
+		self.assertEqual(
+			GafferScene.SceneAlgo.findAllWithAttribute( parent["out"], "light:mute" ),
+			IECore.PathMatcher()
+		)
+
+		light1["mute"]["enabled"].setValue( True )
+		light1["mute"]["value"].setValue( True )
+
+		light2["mute"]["enabled"].setValue( True )
+		light2["mute"]["value"].setValue( False )
+
+		self.assertEqual(
+			GafferScene.SceneAlgo.findAllWithAttribute( parent["out"], "light:mute" ),
+			IECore.PathMatcher( [ "/group/light1", "/light2" ] )
+		)
+
+		self.assertEqual(
+			GafferScene.SceneAlgo.findAllWithAttribute( parent["out"], "light:mute", value = IECore.BoolData( True ) ),
+			IECore.PathMatcher( [ "/group/light1" ] )
+		)
+
+		self.assertEqual(
+			GafferScene.SceneAlgo.findAllWithAttribute( parent["out"], "light:mute", value = IECore.BoolData( False ) ),
+			IECore.PathMatcher( [ "/light2" ] )
+		)
+
+		self.assertEqual(
+			GafferScene.SceneAlgo.findAllWithAttribute( parent["out"], "light:mute", root = "/group" ),
+			IECore.PathMatcher( [ "/group/light1" ] )
+		)
+
 	def tearDown( self ) :
 
 		GafferSceneTest.SceneTestCase.tearDown( self )
