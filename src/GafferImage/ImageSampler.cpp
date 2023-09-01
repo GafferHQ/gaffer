@@ -199,9 +199,8 @@ void ImageSampler::hash( const Gaffer::ValuePlug *output, const Gaffer::Context 
 		if( channel.size() )
 		{
 			V2f pixel = pixelPlug()->getValue();
-			Box2i sampleWindow;
-			sampleWindow.extendBy( V2i( pixel ) - V2i( 1 ) );
-			sampleWindow.extendBy( V2i( pixel ) + V2i( 1 ) );
+			V2i intPixel( floorf( pixel.x ), floorf( pixel.y ) );
+			Box2i sampleWindow( intPixel, intPixel + V2i( 1 ) );
 			Sampler sampler( flattenedInPlug(), channel, sampleWindow );
 
 			sampler.hash( h );
@@ -229,9 +228,8 @@ void ImageSampler::compute( Gaffer::ValuePlug *output, const Gaffer::Context *co
 		if( channel.size() )
 		{
 			V2f pixel = pixelPlug()->getValue();
-			Box2i sampleWindow;
-			sampleWindow.extendBy( V2i( pixel ) - V2i( 1 ) );
-			sampleWindow.extendBy( V2i( pixel ) + V2i( 1 ) );
+			V2i intPixel( floorf( pixel.x ), floorf( pixel.y ) );
+			Box2i sampleWindow( intPixel, intPixel + V2i( 1 ) );
 			Sampler sampler( flattenedInPlug(), channel, sampleWindow );
 			sample = sampler.sample( pixel.x, pixel.y );
 		}
