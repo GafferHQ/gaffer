@@ -26,6 +26,11 @@ API
 
 - RenderController : Added missing `updateRequired()` Python binding.
 
+Build
+-----
+
+- Fixed compilation with Boost versions prior to 1.74.
+
 1.3.3.0 (relative to 1.3.2.0)
 =======
 
