@@ -96,6 +96,18 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"interpolate" : [
+
+			"description",
+			"""
+			Turn on to blend with adjacent pixels when sampling away from the center of the pixel at 0.5, 0.5.
+			If off, you always sample exactly one pixel.
+			""",
+
+			"userDefault", False,
+
+		],
+
 		"color" : [
 
 			"description",

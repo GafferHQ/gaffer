@@ -14,6 +14,7 @@ Improvements
 ------------
 
 - Resample, Resize, Blur, ImageTransform : Improved performance, resulting in a 3x speedup in an obscure case, and a 5-10% speedup in more common cases.
+- ImageSampler : Added `interpolate` plug to control interpolation. Previously created ImageSamplers are unaffected, but interpolation is off by default for newly created ImageSamplers.
 
 Fixes
 -----

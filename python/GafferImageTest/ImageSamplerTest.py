@@ -76,6 +76,7 @@ class ImageSamplerTest( GafferImageTest.ImageTestCase ) :
 		count = 0
 		for px in list( range( -10, 10 ) ) + list( range( -75, -10, 7 ) ) + list( range( 10, 300, 17 ) ):
 			for py in list( range( -10, 10 ) ) + list( range( -75, -10, 7 ) ) + list( range( 10, 300, 17 ) ):
+				sampler["interpolate"].setValue( True )
 				for ox in [ 0, 0.25, 0.5, 0.75 ]:
 					for oy in [ 0, 0.25, 0.5, 0.75 ]:
 						x = px + ox
@@ -92,6 +93,19 @@ class ImageSamplerTest( GafferImageTest.ImageTestCase ) :
 							self.assertAlmostEqual( c[i], [ x, y, 0, 0 ][i], places = 3 )
 						hashes.add( str( sampler["color"].hash() ) )
 						count += 1
+
+				sampler["pixel"].setValue( imath.V2f( px + 0.5, py + 0.5 ) )
+				centerColor = sampler["color"].getValue()
+
+				sampler["interpolate"].setValue( False )
+
+				for ox in [ 0, 0.25, 0.5, 0.75 ]:
+					for oy in [ 0, 0.25, 0.5, 0.75 ]:
+						x = px + ox
+						y = py + oy
+
+						sampler["pixel"].setValue( imath.V2f( x, y ) )
+						self.assertEqual( centerColor, sampler["color"].getValue() )
 
 		self.assertEqual( len( hashes ), count )
 
