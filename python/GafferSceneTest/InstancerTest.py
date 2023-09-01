@@ -1380,7 +1380,6 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( instancer["out"].transform( "/object/instances/sphere/2" ), imath.M44f().translate( imath.V3f( 2, 0, 0 ) ) )
 		self.assertEqual( instancer["out"].transform( "/object/instances/sphere/4" ), imath.M44f().translate( imath.V3f( 4, 0, 0 ) ) )
 
-
 	def testAttributes( self ) :
 
 		points = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [ imath.V3f( x, 0, 0 ) for x in range( 0, 2 ) ] ) )
@@ -2439,6 +2438,104 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 	@GafferTest.TestRunner.PerformanceTestMethod()
 	def testContextSetPerfWithVariationsParallelEvaluate( self ):
 		self.runTestContextSetPerf( True, True )
+
+	def initSimpleInstancer( self, withPrototypes = False, withIds = False ):
+		mesh = IECoreScene.MeshPrimitive.createPlane(
+			imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ),
+			imath.V2i( 2499 )
+		)
+
+		if withPrototypes:
+			mesh["index"] = IECoreScene.PrimitiveVariable(
+				IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+				IECore.IntVectorData( [ 0, 1 ] * 3125000 ),
+			)
+
+		if withIds:
+			mesh["instanceId"] = IECoreScene.PrimitiveVariable(
+				IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+				IECore.IntVectorData( [ i for i in range( 6250000 ) ] ),
+			)
+
+		nodes = {}
+		nodes["meshSource"] = GafferScene.ObjectToScene()
+		nodes["meshSource"]["name"].setValue( "plane" )
+		nodes["meshSource"]["object"].setValue( mesh )
+
+		# Pre-evaluate the big object, so we just measure the instancer time
+		nodes["meshSource"]["out"].object( "/plane" )
+
+		nodes["sphere"] = GafferScene.Sphere()
+		nodes["cube"] = GafferScene.Cube()
+
+		nodes["parent"] = GafferScene.Parent()
+		nodes["parent"]["parent"].setValue( '/' )
+		nodes["parent"]["in"].setInput( nodes["sphere"]["out"] )
+		nodes["parent"]["children"][0].setInput( nodes["cube"]["out"] )
+
+
+		# Instancer
+		nodes["instancerFilter"] = GafferScene.PathFilter()
+		nodes["instancerFilter"]["paths"].setValue( IECore.StringVectorData( [ '/plane' ] ) )
+
+		nodes["instancer"] = GafferScene.Instancer()
+		nodes["instancer"]["in"].setInput( nodes["meshSource"]["out"] )
+		nodes["instancer"]["filter"].setInput( nodes["instancerFilter"]["out"] )
+		nodes["instancer"]["prototypes"].setInput( nodes["parent"]["out"] )
+		if withPrototypes:
+			nodes["instancer"]["prototypeIndex"].setValue( "index" )
+		if withIds:
+			nodes["instancer"]["id"].setValue( "instanceId" )
+
+		return nodes
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testEngineDataPerf( self ):
+		Gaffer.ValuePlug.clearCache()
+		Gaffer.ValuePlug.clearHashCache( True )
+		nodes = self.initSimpleInstancer()
+		with GafferTest.TestRunner.PerformanceScope() :
+			self.assertEqual( nodes["instancer"]["out"].childNames( "/plane/instances" ), IECore.InternedStringVectorData( [ "sphere", "cube" ] ) )
+
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testChildNamesPerf( self ):
+		nodes = self.initSimpleInstancer()
+		with GafferTest.TestRunner.PerformanceScope() :
+			nodes["instancer"]["out"].childNames( "/plane/instances/sphere" )
+			nodes["instancer"]["out"].childNames( "/plane/instances/cube" )
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testEngineDataPerfWithPrototypes( self ):
+		Gaffer.ValuePlug.clearCache()
+		Gaffer.ValuePlug.clearHashCache( True )
+		nodes = self.initSimpleInstancer( withPrototypes = True )
+		with GafferTest.TestRunner.PerformanceScope() :
+			self.assertEqual( nodes["instancer"]["out"].childNames( "/plane/instances" ), IECore.InternedStringVectorData( [ "sphere", "cube" ] ) )
+
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testChildNamesPerfWithPrototypes( self ):
+		nodes = self.initSimpleInstancer( withPrototypes = True )
+		with GafferTest.TestRunner.PerformanceScope() :
+			nodes["instancer"]["out"].childNames( "/plane/instances/sphere" )
+			nodes["instancer"]["out"].childNames( "/plane/instances/cube" )
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testEngineDataPerfWithPrototypesAndIds( self ):
+		Gaffer.ValuePlug.clearCache()
+		Gaffer.ValuePlug.clearHashCache( True )
+		nodes = self.initSimpleInstancer( withPrototypes = True, withIds = True )
+		with GafferTest.TestRunner.PerformanceScope() :
+			self.assertEqual( nodes["instancer"]["out"].childNames( "/plane/instances" ), IECore.InternedStringVectorData( [ "sphere", "cube" ] ) )
+
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testChildNamesPerfWithPrototypesAndIds( self ):
+		nodes = self.initSimpleInstancer( withPrototypes = True, withIds = True )
+		with GafferTest.TestRunner.PerformanceScope() :
+			nodes["instancer"]["out"].childNames( "/plane/instances/sphere" )
+			nodes["instancer"]["out"].childNames( "/plane/instances/cube" )
 
 
 if __name__ == "__main__":
