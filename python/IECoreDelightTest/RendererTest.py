@@ -37,12 +37,18 @@
 import re
 import time
 import unittest
+from collections import deque
+import shlex
+import pathlib
+import os
+import subprocess
 
 import imath
 
 import IECore
 import IECoreScene
 import IECoreDelight
+import IECoreVDB
 
 import GafferTest
 import GafferScene
@@ -97,42 +103,42 @@ class RendererTest( GafferTest.TestCase ) :
 	def testAOVs( self ) :
 
 		for data, expected in {
-			"rgba" : [
-				'"variablename" "string" 1 "Ci"',
-				'"variablesource" "string" 1 "shader"',
-				'"layertype" "string" 1 "color"',
-				'"withalpha" "int" 1 1',
-			],
-			"z" : [
-				'"variablename" "string" 1 "z"',
-				'"variablesource" "string" 1 "builtin"',
-				'"layertype" "string" 1 "scalar"',
-				'"withalpha" "int" 1 0',
-			],
-			"color diffuse" : [
-				'"variablename" "string" 1 "diffuse"',
-				'"variablesource" "string" 1 "shader"',
-				'"layertype" "string" 1 "color"',
-				'"withalpha" "int" 1 0',
-			],
-			"color attribute:test" : [
-				'"variablename" "string" 1 "test"',
-				'"variablesource" "string" 1 "attribute"',
-				'"layertype" "string" 1 "color"',
-				'"withalpha" "int" 1 0',
-			],
-			"point builtin:P" : [
-				'"variablename" "string" 1 "P"',
-				'"variablesource" "string" 1 "builtin"',
-				'"layertype" "string" 1 "vector"',
-				'"withalpha" "int" 1 0',
-			],
-			"float builtin:alpha" : [
-				'"variablename" "string" 1 "alpha"',
-				'"variablesource" "string" 1 "builtin"',
-				'"layertype" "string" 1 "scalar"',
-				'"withalpha" "int" 1 0',
-			],
+			"rgba" : {
+				"variablename": "Ci",
+				"variablesource": "shader",
+				"layertype": "color",
+				"withalpha": 1
+			},
+			"z" : {
+				"variablename": "z",
+				"variablesource": "builtin",
+				"layertype": "scalar",
+				"withalpha": 0,
+			},
+			"color diffuse" : {
+				"variablename": "diffuse",
+				"variablesource": "shader",
+				"layertype": "color",
+				"withalpha": 0,
+			},
+			"color attribute:test" : {
+				"variablename": "test",
+				"variablesource": "attribute",
+				"layertype": "color",
+				"withalpha": 0,
+			},
+			"point builtin:P" : {
+				"variablename": "P",
+				"variablesource": "builtin",
+				"layertype": "vector",
+				"withalpha": 0,
+			},
+			"float builtin:alpha" : {
+				"variablename": "alpha",
+				"variablesource": "builtin",
+				"layertype": "scalar",
+				"withalpha": 0,
+			},
 		}.items() :
 
 			r = GafferScene.Private.IECoreScenePreview.Renderer.create(
@@ -157,9 +163,12 @@ class RendererTest( GafferTest.TestCase ) :
 			r.render()
 			del r
 
-			nsi = self.__parse( self.temporaryDirectory() / "test.nsi" )
-			for e in expected :
-				self.__assertInNSI( e, nsi )
+			nsi = self.__parseDict( self.temporaryDirectory() / "test.nsi" )
+			self.assertIn( "outputLayer:test", nsi )
+			self.assertEqual( nsi["outputLayer:test"]["nodeType"], "outputlayer")
+			for k, v in expected.items() :
+				self.assertIn( k, nsi["outputLayer:test"] )
+				self.assertEqual( nsi["outputLayer:test"][k], v )
 
 	def testMesh( self ) :
 
@@ -178,13 +187,38 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		nsi = self.__parse( self.temporaryDirectory() / "test.nsi" )
+		nsi = self.__parseDict( self.temporaryDirectory() / "test.nsi" )
 
-		self.__assertInNSI( '"P.indices" "int" 8 [ 0 1 4 3 1 2 5 4 ]', nsi )
-		self.__assertInNSI( '"P" "v point" 6 [ -1 -1 0 0 -1 0 1 -1 0 -1 1 0 0 1 0 1 1 0 ]', nsi )
-		self.__assertInNSI( '"nvertices" "int" 2 [ 4 4 ]', nsi )
-		self.__assertInNSI( '"uv" "float[2]" 6 [ 0 0 0.5 0 1 0 0 1 0.5 1 1 1 ]', nsi )
-		self.__assertInNSI( '"uv.indices" "int" 8 [ 0 1 4 3 1 2 5 4 ]', nsi )
+		meshes = { k: v for k, v in nsi.items() if nsi[k]["nodeType"] == "mesh" }
+		self.assertEqual( len( meshes ), 1 )
+
+		mesh = meshes[next( iter( meshes ) ) ]
+
+		self.assertEqual( mesh["P.indices"], [ 0, 1, 4, 3, 1, 2, 5, 4 ] )
+		self.assertEqual(
+			mesh["P"],
+			[
+				imath.V3f( -1, -1, 0 ),
+				imath.V3f( 0, -1, 0 ),
+				imath.V3f( 1, -1, 0 ),
+				imath.V3f( -1, 1, 0 ),
+				imath.V3f( 0, 1, 0 ),
+				imath.V3f( 1, 1, 0 ),
+			]
+		)
+		self.assertEqual( mesh["nvertices"], [ 4, 4 ] )
+		self.assertEqual(
+			mesh["uv"],
+			[
+				imath.V2f( 0, 0 ),
+				imath.V2f( 0.5, 0 ),
+				imath.V2f( 1, 0 ),
+				imath.V2f( 0, 1 ),
+				imath.V2f( 0.5, 1 ),
+				imath.V2f( 1, 1 )
+			]
+		)
+		self.assertEqual( mesh["uv.indices"], [ 0, 1, 4, 3, 1, 2, 5, 4 ] )
 
 	def testAnimatedMesh( self ) :
 
@@ -207,14 +241,21 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		nsi = self.__parse( self.temporaryDirectory() / "test.nsi" )
+		nsi = self.__parseDict( self.temporaryDirectory() / "test.nsi" )
 
-		self.__assertInNSI( '"P.indices" "int" 4 [ 0 1 3 2 ]', nsi )
-		self.assertEqual( nsi.count( '"P.indices"' ), 1 )
-		self.__assertInNSI( '"P" "v point" 4 [ -1 -1 0 1 -1 0 -1 1 0 1 1 0 ]', nsi )
-		self.__assertInNSI( '"P" "v point" 4 [ -2 -2 0 2 -2 0 -2 2 0 2 2 0 ]', nsi )
-		self.__assertInNSI( '"nvertices" "int" 1 4', nsi )
-		self.assertEqual( nsi.count( '"nvertices"' ), 1 )
+		meshes = { k: v for k, v in nsi.items() if nsi[k]["nodeType"] == "mesh" }
+		self.assertEqual( len( meshes ), 1 )
+
+		mesh = meshes[next( iter( meshes ) ) ]
+		self.assertEqual( mesh["P.indices"], [ 0, 1, 3, 2 ] )
+		self.assertEqual(
+			mesh["P"],
+			{
+				0 : [ imath.V3f( -1, -1, 0 ), imath.V3f( 1, -1, 0 ), imath.V3f( -1, 1, 0 ), imath.V3f( 1, 1, 0 ) ],
+				1 : [ imath.V3f( -2, -2, 0 ), imath.V3f( 2, -2, 0 ), imath.V3f( -2, 2, 0 ), imath.V3f( 2, 2, 0 ) ],
+			}
+		)
+		self.assertEqual( mesh["nvertices"], 4 )
 
 	def testPoints( self ) :
 
@@ -609,6 +650,448 @@ class RendererTest( GafferTest.TestCase ) :
 			nsi
 		)
 
+	def testVDB( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"3Delight",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.nsi" ),
+		)
+
+		vdb = IECoreVDB.VDBObject( ( pathlib.Path( __file__ ).parent / "volumes" / "sphere.vdb" ).as_posix() )
+		r.object( "test_vdb", vdb, r.attributes( IECore.CompoundObject() ) )
+
+		r.render()
+		del r
+
+		nsi = self.__parseDict( self.temporaryDirectory() / "test.nsi" )
+
+		self.assertIn( "test_vdb", nsi )
+		self.assertEqual( nsi["test_vdb"]["nodeType"], "transform" )
+
+		volumes = { k: v for k, v in nsi.items() if nsi[k]["nodeType"] == "volume" }
+		self.assertEqual( len( volumes ), 1 )
+
+		volume = volumes[next( iter( volumes ) )]
+
+		self.assertEqual( volume["vdbfilename"], vdb.fileName() )
+		self.assertEqual( volume["densitygrid"], "density" )
+
+	def testShaderAttributes( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"3Delight",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.nsi" ),
+		)
+
+		surfaceNetwork = IECoreScene.ShaderNetwork(
+			shaders = { "constHandle" : IECoreScene.Shader( "Surface/Constant", "osl:surface", { "Cs": imath.Color3f( 0, 0, 0 ) } ) },
+			output = "constHandle"
+		)
+		volumeNetwork = IECoreScene.ShaderNetwork(
+			shaders = { "constHandle" : IECoreScene.Shader( "Surface/Constant", "osl:volume", { "Cs": imath.Color3f( 0.5, 0.5, 0.5 ) } ) },
+			output = "constHandle"
+		)
+		displacementNetwork = IECoreScene.ShaderNetwork(
+			shaders = { "constHandle" : IECoreScene.Shader( "Surface/Constant", "osl:displacement", { "Cs": imath.Color3f( 1.0, 1.0, 1.0 ) } ) },
+			output = "constHandle"
+		)
+
+		o = r.object(
+			"testPlane",
+			IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) ),
+			r.attributes(
+				IECore.CompoundObject(
+					{
+						"osl:surface" : surfaceNetwork,
+						"osl:volume" : volumeNetwork,
+						"osl:displacement" : displacementNetwork,
+					}
+				)
+			)
+		)
+		del o
+
+		r.render()
+		del r
+
+		nsi = self.__parseDict( self.temporaryDirectory() / "test.nsi" )
+
+		allAttributes = { k: v for k, v in nsi.items() if nsi[k]["nodeType"] == "attributes" }
+		self.assertEqual( len( allAttributes ), 1 )
+		attributes = allAttributes[next( iter( allAttributes ) )]
+
+		self.assertIn( "surfaceshader", attributes )
+		self.assertIn( "volumeshader", attributes )
+		self.assertIn( "displacementshader", attributes )
+
+		self.assertGreater( len( attributes["surfaceshader"] ), 0 )
+		self.assertGreater( len( attributes["volumeshader"] ), 0 )
+		self.assertGreater( len( attributes["displacementshader"] ), 0 )
+
+		surfaceShader = self.__connectionSource( attributes["surfaceshader"][0], nsi )
+		volumeShader = self.__connectionSource( attributes["volumeshader"][0], nsi )
+		displacementShader = self.__connectionSource( attributes["displacementshader"][0], nsi )
+
+		self.assertEqual( surfaceShader["nodeType"], "shader" )
+		self.assertEqual( volumeShader["nodeType"], "shader" )
+		self.assertEqual( displacementShader["nodeType"], "shader" )
+
+		self.assertEqual( surfaceShader["Cs"], imath.Color3f( 0, 0, 0 ) )
+		self.assertEqual( volumeShader["Cs"], imath.Color3f( 0.5, 0.5, 0.5 ) )
+		self.assertEqual( displacementShader["Cs"], imath.Color3f( 1.0, 1.0, 1.0 ) )
+
+	def test3DelightSplineParameters( self ) :
+
+		# Converting from OSL parameters to Gaffer spline parameters is
+		# tested in GafferOSLTest.OSLShaderTest
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"3Delight",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.nsi" ),
+		)
+
+		os.environ["OSL_SHADER_PATHS"] += os.pathsep + ( pathlib.Path( __file__ ).parent / "shaders" ).as_posix()
+
+		s = self.__compileShader( pathlib.Path( __file__ ).parent / "shaders" / "delightSplineParameters.osl" )
+
+		network = IECoreScene.ShaderNetwork(
+			shaders = {
+				"splineHandle" : IECoreScene.Shader(
+					s,
+					"osl:shader",
+					{
+						"floatSpline" : IECore.Splineff(
+							IECore.CubicBasisf.linear(),
+							[
+								( 0, 0.25 ),
+								( 0, 0.25 ),
+								( 1, 0.75 ),
+								( 1, 0.75 ),
+							]
+						),
+						"colorSpline" : IECore.SplinefColor3f(
+							IECore.CubicBasisf.bSpline(),
+							[
+								( 0, imath.Color3f( 0.25 ) ),
+								( 0, imath.Color3f( 0.25 ) ),
+								( 0, imath.Color3f( 0.25 ) ),
+								( 1, imath.Color3f( 0.75 ) ),
+								( 1, imath.Color3f( 0.75 ) ),
+								( 1, imath.Color3f( 0.75 ) ),
+							]
+						),
+						"dualInterpolationSpline" : IECore.Splineff(
+							IECore.CubicBasisf.linear(),
+							[
+								( 0, 0.25 ),
+								( 0, 0.25 ),
+								( 1, 0.75 ),
+								( 1, 0.75 ),
+							]
+						),
+						"trimmedFloatSpline" : IECore.Splineff(
+							IECore.CubicBasisf.catmullRom(),
+							[
+								( 0, 0.25 ),
+								( 0, 0.25 ),
+								( 1, 0.75 ),
+								( 1, 0.75 ),
+							]
+						),
+						"mayaSpline" : IECore.Splineff(
+							IECore.CubicBasisf.linear(),
+							[
+								( 0, 0.25 ),
+								( 0, 0.25 ),
+								( 1, 0.75 ),
+								( 1, 0.75 ),
+							]
+						),
+						"inconsistentNameSpline": IECore.Splineff(
+							IECore.CubicBasisf.bSpline(),
+							[
+								( 0, 0.25 ),
+								( 0, 0.25 ),
+								( 0, 0.25 ),
+								( 1, 0.75 ),
+								( 1, 0.75 ),
+								( 1, 0.75 ),
+							]
+						),
+					}
+				),
+			},
+			output = "splineHandle"
+		)
+
+		o = r.object(
+			"testPlane",
+			IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) ),
+			r.attributes( IECore.CompoundObject( { "osl:surface" : network } ) )
+		)
+		del o
+
+		r.render()
+		del r
+
+		nsi = self.__parseDict( self.temporaryDirectory() / "test.nsi" )
+
+		shaders = { k: v for k, v in nsi.items() if nsi[k]["nodeType"] == "shader" }
+		self.assertEqual( len( shaders ), 1 )
+		shader = shaders[next( iter( shaders ) )]
+
+		# 3Delight gives defaults for linear splines as though they have a multiplicity of 2,
+		# whereas we expect a multiplicity of 1. These tests mirror 3Delight's convention.
+		# This results in two extra segments, with the first and last of zero length.
+		# In practice this seems to give correct results, so we leave it as-is rather than
+		# adding more edge-case handling.
+		self.assertEqual( shader["floatSpline_Knots"], [ 0, 0, 0, 1, 1, 1 ] )
+		self.assertEqual( shader["floatSpline_Floats"], [ 0.25, 0.25, 0.25, 0.75, 0.75, 0.75 ] )
+		self.assertEqual( shader["floatSpline_Interp"], [ 1, 1, 1, 1, 1, 1 ] )
+
+		self.assertNotIn( "floatSplinePositions", shader )
+		self.assertNotIn( "floatSplineValues", shader )
+		self.assertNotIn( "floatSplineBasis", shader )
+
+		self.assertEqual( shader["colorSpline_Knots"], [ 0, 0, 0, 1, 1, 1 ] )
+		self.assertEqual(
+			shader["colorSpline_Colors"],
+			[
+				imath.Color3f( 0.25, 0.25, 0.25 ),
+				imath.Color3f( 0.25, 0.25, 0.25 ),
+				imath.Color3f( 0.25, 0.25, 0.25 ),
+				imath.Color3f( 0.75, 0.75, 0.75 ),
+				imath.Color3f( 0.75, 0.75, 0.75 ),
+				imath.Color3f( 0.75, 0.75, 0.75 )
+			]
+		)
+		self.assertEqual( shader["colorSpline_Interp"], [ 3, 3, 3, 3, 3, 3 ] )
+
+		self.assertNotIn( "colorSplinePositions", shader )
+		self.assertNotIn( "colorSplineValues", shader )
+		self.assertNotIn( "colorSplineBasis", shader )
+
+		self.assertEqual( shader["dualInterpolationSpline_Knots"], [ 0, 0, 0, 1, 1, 1 ] )
+		self.assertEqual( shader["dualInterpolationSpline_Floats"], [ 0.25, 0.25, 0.25, 0.75, 0.75, 0.75 ] )
+		self.assertEqual( shader["dualInterpolationSpline_Interp"], [ 1, 1, 1, 1, 1, 1 ] )
+
+		self.assertNotIn( "dualInterpolationSplinePositions", shader )
+		self.assertNotIn( "dualInterpolationSplineValues", shader )
+		self.assertNotIn( "dualInterpolationSplineBasis", shader )
+
+		# Monotone cubic splines - tested here consistently with how 3Delight presents defaults -
+		# have a multiplicity of 1, resulting in a single segment.
+		self.assertEqual( shader["trimmedFloatSpline_Knots"], [ 0, 0, 1, 1 ] )
+		self.assertEqual( shader["trimmedFloatSpline_Floats"], [ 0.25, 0.25, 0.75, 0.75 ] )
+		self.assertEqual( shader["trimmedFloatSpline_Interp"], [ 3, 3, 3, 3 ] )
+
+		self.assertNotIn( "trimmedFloatSplinePositions", shader )
+		self.assertNotIn( "trimmedFloatSplineValues", shader )
+		self.assertNotIn( "trimmedFloatSplineBasis", shader )
+
+		self.assertEqual( shader["mayaSpline_Knots"], [ 0, 0, 0, 1, 1, 1 ] )
+		self.assertEqual( shader["mayaSpline_Floats"], [ 0.25, 0.25, 0.25, 0.75, 0.75, 0.75 ] )
+		self.assertEqual( shader["mayaSpline_Interp"], [ 1, 1, 1, 1, 1, 1 ] )
+
+		self.assertNotIn( "mayaSplinePositions", shader )
+		self.assertNotIn( "maysSplineValues", shader )
+		self.assertNotIn( "mayaSplineBasis", shader )
+
+		self.assertEqual( shader["inconsistentNameSpline_chaos"], [ 0, 0, 0, 1, 1, 1 ] )
+		self.assertEqual( shader["inconsistentNameSpline_moreChaos"], [ 0.25, 0.25, 0.25, 0.75, 0.75, 0.75 ] )
+		self.assertEqual( shader["inconsistentNameSpline_ahhh"], [ 3, 3, 3, 3, 3, 3 ] )
+
+		self.assertNotIn( "inconsistentNameSplinePositions", shader )
+		self.assertNotIn( "inconsistentNameSplineValues", shader )
+		self.assertNotIn( "inconsistentNameSplineBasis", shader )
+
+	def testGafferSplineParameters( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"3Delight",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.nsi" ),
+		)
+
+		network = IECoreScene.ShaderNetwork(
+			shaders = {
+				"splineHandle" : IECoreScene.Shader(
+					"Pattern/ColorSpline",
+					"osl:shader",
+					{
+						"spline" : IECore.SplinefColor3f(
+							IECore.CubicBasisf.linear(),
+							[
+								( 0, imath.Color3f( 1, 0, 0 ) ),
+								( 0, imath.Color3f( 1, 0, 0 ) ),
+								( 1, imath.Color3f( 0, 0, 1 ) ),
+								( 1, imath.Color3f( 0, 0, 1 ) ),
+							]
+						),
+					}
+				),
+				"constHandle" : IECoreScene.Shader( "Surface/Constant", "osl:surface", {} )
+			},
+			connections = [
+				( ( "splineHandle", "" ), ( "constHandle", "Cs" ) ),
+			],
+			output = "splineHandle"
+		)
+
+		o = r.object(
+			"testPlane",
+			IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) ),
+			r.attributes( IECore.CompoundObject( { "osl:surface" : network } ) )
+		)
+		del o
+
+		r.render()
+		del r
+
+		nsi = self.__parseDict( self.temporaryDirectory() / "test.nsi" )
+
+		shaders = { k: v for k, v in nsi.items() if nsi[k]["nodeType"] == "shader" }
+		self.assertEqual( len( shaders ), 1 )
+		shader = shaders[next( iter( shaders ) )]
+
+		self.assertEqual( shader["splinePositions"], [ 0, 0, 0, 1, 1, 1 ] )
+		self.assertEqual(
+			shader["splineValues"],
+			[
+				imath.Color3f( 1, 0, 0 ),
+				imath.Color3f( 1, 0, 0 ),
+				imath.Color3f( 1, 0, 0 ),
+				imath.Color3f( 0, 0, 1 ),
+				imath.Color3f( 0, 0, 1 ),
+				imath.Color3f( 0, 0, 1 )
+			]
+		)
+		self.assertEqual( shader["splineBasis"], "linear" )
+
+	# Helper methods used to check that NSI files we write contain what we
+	# expect. The 3delight API only allows values to be set, not queried,
+	# so we build a simple dictionary-based node graph for now.
+
+	def __connectionSource( self, connection, nsi ) :
+
+		cSplit = connection.split( '.' )
+		if len( cSplit ) == 0 :
+			return None
+
+		if len( cSplit ) == 1 :
+			return nsi[cSplit[0][1:-1]]  # remove <>
+
+		return nsi[cSplit[0][1:-1]][cSplit[1]]
+
+	def __parseDict( self, nsiFile ) :
+
+		reArraySplit = re.compile( r'(?P<varType>.*)\[(?P<arrayLength>[0-9]+)\]' )
+
+		root = {
+			".root": { "nodeType": "root", "objects": [], "geometryattributes": [], },
+			".global": { "nodeType": "global", },
+		}
+		tokens = deque()
+		with open( nsiFile, encoding = "utf-8" ) as f :
+			for i in f.readlines() :
+				if not i.startswith( '#' ) :
+					tokens += shlex.split( i )
+
+		currentNode = None  # The node to add attributes to
+		currentTime = None # The time to add attributes to
+
+		while len( tokens ) :
+			token = tokens.popleft()
+			if token == "Create" :
+				node = tokens.popleft()
+				root.setdefault( node, {} )["nodeType"] = tokens.popleft()
+			elif token == "SetAttribute" :
+				currentNode = tokens.popleft()
+				currentTime = None
+			elif token == "SetAttributeAtTime" :
+				currentNode = tokens.popleft()
+				currentTime = float( tokens.popleft() )
+			elif token == "Connect" :
+				sourceNode = tokens.popleft()
+				sourceAttr = tokens.popleft()
+				destNode = tokens.popleft()
+				destAttr = tokens.popleft()
+
+				source = "<{}>".format( sourceNode ) + ( ( "." + sourceAttr ) if sourceAttr != "" else "" )
+
+				root[destNode].setdefault( destAttr, [] ).append( source )
+			elif token == "Delete" :
+				pass
+			elif token == "DeleteAttribute" :
+				pass
+			elif token == "Disconnect" :
+				pass
+			elif token == "Evaluate" :
+				pass
+			elif token == "RenderControl" :
+				# Pop attributes but don't bother assigning them for now
+				currentNode = None
+			else :
+				# List of attributes
+				pType = tokens.popleft()
+				if pType == "v normal" or pType == "v point" :
+					pType = "v"
+				pSize = int( tokens.popleft() )
+				pLength = 1
+
+				arraySplit = reArraySplit.match( pType )
+				# Currently it seems impossible to reprsent an array of arrays, i.e. an array
+				# of float[2] arrays. We treat `float[2]` as it's own unique type.
+				if arraySplit is not None and pType != "float[2]" :
+					pLength = int( arraySplit.groupdict()["arrayLength"] )
+					pType = arraySplit.groupdict()["varType"]
+
+				numComponents = { "v": 3, "color": 3, "doublematrix": 16, "float[2]": 2 }.get( pType, 1 )
+				numElements = pLength * numComponents * pSize
+				if numElements > 1 :
+					tokens.popleft()  # First `[` of an array
+				value = []
+				for i in range( 0, pSize * pLength ) :
+					if pType == "int" :
+						value.append( int( tokens.popleft() ) )
+					elif pType == "float" or pType == "double" :
+						value.append( float( tokens.popleft() ) )
+					elif pType == "string" :
+						value.append( tokens.popleft() )
+					elif pType == "color" :
+						value.append( imath.Color3f( float( tokens.popleft() ), float( tokens.popleft() ), float( tokens.popleft() ) ) )
+					elif pType == "v" :
+						value.append( imath.V3f( float( tokens.popleft() ), float( tokens.popleft() ), float( tokens.popleft() ) ) )
+					elif pType == "doublematrix" :
+						value.append(
+							imath.M44f(
+								float( tokens.popleft() ), float( tokens.popleft() ), float( tokens.popleft() ), float( tokens.popleft() ),
+								float( tokens.popleft() ), float( tokens.popleft() ), float( tokens.popleft() ), float( tokens.popleft() ),
+								float( tokens.popleft() ), float( tokens.popleft() ), float( tokens.popleft() ), float( tokens.popleft() ),
+								float( tokens.popleft() ), float( tokens.popleft() ), float( tokens.popleft() ), float( tokens.popleft() ),
+							)
+						)
+					elif pType == "float[2]" :
+						value.append( imath.V2f( float( tokens.popleft() ), float( tokens.popleft() ) ) )
+
+				if numElements > 1 :
+					self.assertEqual( tokens.popleft(), ']' )  # If we don't see the closing bracket, we've done something wrong above
+
+				if currentNode is not None :
+					if len( value ) == 1 :
+						value = value[0]
+
+					if currentTime is None :
+						root[currentNode][token] = value
+					else :
+						root[currentNode].setdefault( token, {} )[currentTime] = value
+
+		return root
+
+
 	# Helper methods used to check that NSI files we write contain what we
 	# expect. This is a very poor substitute to being able to directly query
 	# an NSI scene. We could try to write a proper parser that builds a node
@@ -655,6 +1138,18 @@ class RendererTest( GafferTest.TestCase ) :
 			else :
 				# Continue search at next position
 				pos += 1
+
+	def __compileShader( self, sourceFileName ) :
+
+		outputFileName = self.temporaryDirectory() / pathlib.Path( sourceFileName ).with_suffix( ".oso" ).name
+
+		subprocess.check_call(
+			[ "oslc", "-q" ] +
+			[ "-I" + p for p in os.environ.get( "OSL_SHADER_PATHS", "" ).split( os.pathsep ) ] +
+			[ "-o", str( outputFileName ), str( sourceFileName ) ]
+		)
+
+		return outputFileName.with_suffix("").as_posix()
 
 if __name__ == "__main__":
 	unittest.main()

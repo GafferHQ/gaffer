@@ -62,6 +62,8 @@
 
 #include "fmt/format.h"
 
+#include <filesystem>
+
 using namespace std;
 using namespace Imath;
 using namespace IECore;
@@ -277,6 +279,126 @@ bool OSLShader::acceptsInput( const Plug *plug, const Plug *inputPlug ) const
 
 	return true;
 }
+
+//////////////////////////////////////////////////////////////////////////
+// 3Delight Shader loading code
+//////////////////////////////////////////////////////////////////////////
+
+bool is3DelightSplineValueParameter( const OSLQuery::Parameter *parameter )
+{
+	auto widgetIt = std::find_if(
+		parameter->metadata.begin(),
+		parameter->metadata.end(),
+		[]( const OSLQuery::Parameter &m )
+		{
+			return m.name == "widget";
+		}
+	);
+	if( widgetIt != parameter->metadata.end() && widgetIt->sdefault.front().find( "Ramp" ) != std::string::npos )
+	{
+		return true;
+	}
+	return false;
+}
+
+bool is3DelightSplineNonValueParameter( const OSLQuery::Parameter *parameter )
+{
+	auto relatedWidgetIt = std::find_if(
+		parameter->metadata.begin(),
+		parameter->metadata.end(),
+		[]( const OSLQuery::Parameter &m )
+		{
+			return m.name == "related_to_widget";
+		}
+	);
+	if( relatedWidgetIt != parameter->metadata.end() && relatedWidgetIt->sdefault.front().find( "Ramp" ) != std::string::npos )
+	{
+		return true;
+	}
+	return false;
+}
+
+bool find3DelightSplineParameters(
+	const OSLQuery &query,
+	const OSLQuery::Parameter *parameter,
+	std::string &nameWithoutSuffix,
+	const OSLQuery::Parameter * &positionsParameter,
+	const OSLQuery::Parameter * &valuesParameter,
+	const OSLQuery::Parameter * &basisParameter
+)
+{
+	if(
+		!( !parameter->type.is_array() && parameter->type == TypeDesc::STRING ) &&  // Interpolation
+		!(
+			parameter->type.is_array() &&
+			parameter->type.basetype == TypeDesc::FLOAT &&
+			(
+				parameter->type.aggregate == TypeDesc::SCALAR ||
+				parameter->type.vecsemantics == TypeDesc::COLOR
+			)
+		) &&  // float or color values or positions
+		!( parameter->type.is_array() && parameter->type.basetype == TypeDesc::INT )  // per-point interpolation
+	)
+	{
+		return false;
+	}
+
+	nameWithoutSuffix = parameter->name.string().substr( 0, parameter->name.rfind( '_' ) );
+
+	if( is3DelightSplineValueParameter( parameter ) )
+	{
+		valuesParameter = parameter;
+	}
+	else if( is3DelightSplineNonValueParameter( parameter ) )
+	{
+		valuesParameter = nullptr;
+	}
+	else
+	{
+		return false;
+	}
+	positionsParameter = nullptr;
+	basisParameter = nullptr;
+
+	const OSLQuery::Parameter *perPointInterpolationParameter = nullptr;
+
+	for( size_t i = 0, eI = query.nparams(); i < eI; ++i )
+	{
+		const OSLQuery::Parameter *p = query.getparam( i );
+		if( !boost::starts_with( p->name, nameWithoutSuffix ) || p == valuesParameter )
+		{
+			continue;
+		}
+		if( p->type == TypeDesc::STRING )
+		{
+			basisParameter = p;
+		}
+		else if( p->type.is_array() && p->type.aggregate == TypeDesc::VEC3 && p->type.vecsemantics == TypeDesc::COLOR )
+		{
+			valuesParameter = p;
+		}
+		else if( p->type.is_array() && p->type.basetype == TypeDesc::INT && p->type.aggregate == TypeDesc::SCALAR )
+		{
+			perPointInterpolationParameter = p;
+		}
+		else if( p->type.is_array() && p->type.basetype == TypeDesc::FLOAT && p->type.aggregate == TypeDesc::SCALAR )
+		{
+			if( is3DelightSplineValueParameter( p ) )
+			{
+				valuesParameter = p;
+			}
+			else
+			{
+				positionsParameter = p;
+			}
+		}
+	}
+
+	basisParameter = basisParameter ? basisParameter : perPointInterpolationParameter;
+
+	return positionsParameter && valuesParameter && basisParameter;
+}
+
 
 //////////////////////////////////////////////////////////////////////////
 // Shader loading code
@@ -704,37 +826,60 @@ void updatePoints( SplinefColor3f::PointContainer &points, const OSLQuery::Param
 	}
 }
 
-template <typename PlugType>
-Plug *loadSplineParameters( const OSLQuery::Parameter *positionsParameter, const OSLQuery::Parameter *valuesParameter, const OSLQuery::Parameter *basisParameter, const InternedString &name, Gaffer::Plug *parent )
+// From https://gitlab.com/3Delight/3delight-for-houdini/-/blob/master/osl_utilities.cpp
+SplineDefinitionInterpolation basisFrom3DelightInt( int basis )
 {
-	const std::string &basis = basisParameter->sdefault.front().string();
+	switch( basis )
+	{
+		case 0 : return SplineDefinitionInterpolationConstant;
+		case 1 : return SplineDefinitionInterpolationLinear;
+		case 2 : return SplineDefinitionInterpolationMonotoneCubic;
+		default : return SplineDefinitionInterpolationCatmullRom;
+	}
+}
 
-	typename PlugType::ValueType defaultValue;
-
-	defaultValue.interpolation = SplineDefinitionInterpolationCatmullRom;
+SplineDefinitionInterpolation basisFromString( const std::string &basis )
+{
 	if( basis == "bspline" )
 	{
-		defaultValue.interpolation = SplineDefinitionInterpolationBSpline;
+		return SplineDefinitionInterpolationBSpline;
 	}
 	else if( basis == "linear" )
 	{
-		defaultValue.interpolation = SplineDefinitionInterpolationLinear;
+		return SplineDefinitionInterpolationLinear;
 	}
 	else if( basis == "constant" )
 	{
-		defaultValue.interpolation = SplineDefinitionInterpolationConstant;
+		return SplineDefinitionInterpolationConstant;
+	}
+	else if( basis == "monotonecubic" )
+	{
+		return SplineDefinitionInterpolationMonotoneCubic;
+	}
+
+	return SplineDefinitionInterpolationCatmullRom;
+}
+
+template <typename PlugType>
+Plug *loadSplineParameters( const OSLQuery::Parameter *positionsParameter, const OSLQuery::Parameter *valuesParameter, const OSLQuery::Parameter *basisParameter, const InternedString &name, Gaffer::Plug *parent )
+{
+	typename PlugType::ValueType defaultValue;
+
+	if( basisParameter->type.basetype == TypeDesc::INT )
+	{
+		defaultValue.interpolation = basisFrom3DelightInt( basisParameter->idefault.front() );
+	}
+	else
+	{
+		defaultValue.interpolation = basisFromString( basisParameter->sdefault.front().string() );
 	}
 
 	updatePoints( defaultValue.points, positionsParameter, valuesParameter );
 
 	// The OSL spline representation includes the need for duplicated end points in order to hit the end.
-	// We need to remove these
-	if( !defaultValue.trimEndPoints() )
-	{
-		// Failed to trim end points - the value of the OSL spline can't be represented,
-		// so just wipe out the control points
-		defaultValue.points.clear();
-	}
+	// We need to remove these. We ignore the success or failure of trimming because some renderers have
+	// default values that are already trimmed.
+	defaultValue.trimEndPoints();
 
 	PlugType *existingPlug = parent->getChild<PlugType>( name );
 	if( existingPlug && existingPlug->defaultValue() == defaultValue )
@@ -748,7 +893,7 @@ Plug *loadSplineParameters( const OSLQuery::Parameter *positionsParameter, const
 	return plug.get();
 }
 
-bool findSplineParameters( const OSLQuery &query, const OSLQuery::Parameter *parameter, std::string &nameWithoutSuffix, const OSLQuery::Parameter * &positionsParameter, const OSLQuery::Parameter * &valuesParameter, const OSLQuery::Parameter * &basisParameter )
+bool findGafferSplineParameters( const OSLQuery &query, const OSLQuery::Parameter *parameter, std::string &nameWithoutSuffix, const OSLQuery::Parameter * &positionsParameter, const OSLQuery::Parameter * &valuesParameter, const OSLQuery::Parameter * &basisParameter )
 {
 	const char *suffixes[] = { "Positions", "Values", "Basis", nullptr };
 	const char *suffix = nullptr;
@@ -797,6 +942,14 @@ bool findSplineParameters( const OSLQuery &query, const OSLQuery::Parameter *par
 	}
 
 	return true;
+}
+
+bool findSplineParameters( const OSLQuery &query, const OSLQuery::Parameter *parameter, std::string &nameWithoutSuffix, const OSLQuery::Parameter * &positionsParameter, const OSLQuery::Parameter * &valuesParameter, const OSLQuery::Parameter * &basisParameter )
+{
+	return
+		findGafferSplineParameters( query, parameter, nameWithoutSuffix, positionsParameter, valuesParameter, basisParameter ) ||
+		find3DelightSplineParameters( query, parameter, nameWithoutSuffix, positionsParameter, valuesParameter, basisParameter )
+	;
 }
 
 Plug *loadSplineParameter( const OSLQuery &query, const OSLQuery::Parameter *parameter, Gaffer::Plug *parent, const std::string &prefix )
@@ -1078,7 +1231,13 @@ void OSLShader::loadShader( const std::string &shaderName, bool keepExistingValu
 
 	m_metadata = nullptr;
 	namePlug->source<StringPlug>()->setValue( shaderName );
-	typePlug->source<StringPlug>()->setValue( std::string( "osl:" ) + query->shadertype().c_str() );
+	// 3delight sets it's vdbVolume shader as a "shader" type but requires the
+	// attribute name be `volumeshader` which we handle when spooling the scene.
+	typePlug->source<StringPlug>()->setValue(
+		std::string( "osl:" ) + (
+			std::filesystem::path( shaderName ).stem() != "vdbVolume" ? query->shadertype().c_str() : "volume"
+		)
+	);
 
 	const IECore::CompoundData *metadata = OSLShader::metadata();
 	const IECore::CompoundData *parameterMetadata = nullptr;
@@ -1254,6 +1413,9 @@ static IECore::ConstCompoundDataPtr metadataGetter( const std::string &key, size
 				// If you specify conflicting metadata on the different parameters you may get inconsistent results.
 				CompoundData *prevData = parameterMetadata->member<CompoundData>( nameWithoutSuffix );
 				CompoundDataPtr data = convertMetadata( parameter->metadata );
+
+				data->writable().erase( "widget" );
+
 				if( prevData )
 				{
 					data->writable().insert( prevData->readable().begin(), prevData->readable().end() );

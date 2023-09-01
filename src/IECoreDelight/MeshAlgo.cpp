@@ -51,7 +51,7 @@ const char *g_catmullClark = "catmull-clark";
 
 void staticParameters( const IECoreScene::MeshPrimitive *mesh, ParameterList &parameters )
 {
-	parameters.add( "nvertices", mesh->verticesPerFace() );
+	parameters.add( "nvertices", mesh->verticesPerFace(), false );
 
 	if( mesh->interpolation() == "catmullClark" )
 	{

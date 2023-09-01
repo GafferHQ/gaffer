@@ -86,7 +86,7 @@ Registry &registry()
 
 void addPrimitiveVariableParameters( const char *name, const IECoreScene::PrimitiveVariable &value, const IECore::IntVectorData *vertexIndices, ParameterList &parameterList, ParameterList *indicesParameterList )
 {
-	NSIParam_t p = parameterList.parameter( name, value.data.get() );
+	NSIParam_t p = parameterList.parameter( name, value.data.get(), false );
 	if( p.type == NSITypeInvalid )
 	{
 		return;
