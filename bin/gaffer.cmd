@@ -83,11 +83,10 @@ rem 3Delight
 if "%DELIGHT%" NEQ "" (
 	call :appendToPath "%DELIGHT%\bin" PATH
 	call :appendToPath "%DELIGHT%\python" PYTHONPATH
-	call :appendToPath "%DELIGHT%\shaders" DL_SHADERS_PATH
 
-	call :appendToPath "%DELIGHT%" OSL_SHADER_PATHS
-
-	call :appendToPath "%GAFFER_ROOT%\renderMan\displayDrivers" DL_RESOURCES_PATH
+	rem The %DELIGHT% component is included for backward compatibility and can be removed
+	rem when users have had time to update to %DELIGHT%\osl pathed shaders.
+	call :appendToPath "%DELIGHT%\osl;%DELIGHT%" OSL_SHADER_PATHS
 )
 
 rem cycles

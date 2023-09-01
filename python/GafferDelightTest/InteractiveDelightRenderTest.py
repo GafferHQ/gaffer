@@ -103,7 +103,7 @@ class InteractiveDelightRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 	def _createMatteShader( self ) :
 
 		shader = GafferOSL.OSLShader()
-		shader.loadShader( "maya/osl/lambert" )
+		shader.loadShader( "lambert" )
 		return shader, shader["parameters"]["i_color"]
 
 	def _createPointLight( self ) :
@@ -111,7 +111,7 @@ class InteractiveDelightRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		light = GafferOSL.OSLLight()
 		light["shape"].setValue( light.Shape.Sphere )
 		light["radius"].setValue( 0.01 )
-		light.loadShader( "maya/osl/pointLight" )
+		light.loadShader( "pointLight" )
 		light["attributes"].addChild( Gaffer.NameValuePlug( "dl:visibility.camera", False ) )
 
 		return light, light["parameters"]["i_color"]

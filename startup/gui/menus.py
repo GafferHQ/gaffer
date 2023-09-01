@@ -192,10 +192,10 @@ if moduleSearchPath.find( "nsi.py" ) and moduleSearchPath.find( "GafferDelight" 
 			return node
 
 		for label, shader, shape in [
-			[ "PointLight", "maya/osl/pointLight", GafferOSL.OSLLight.Shape.Sphere ],
-			[ "SpotLight", "maya/osl/spotLight", GafferOSL.OSLLight.Shape.Disk ],
-			[ "DistantLight", "maya/osl/distantLight", "distant" ],
-			[ "EnvironmentLight", "maya/osl/environmentLight", "environment" ],
+			[ "PointLight", "pointLight", GafferOSL.OSLLight.Shape.Sphere ],
+			[ "SpotLight", "spotLight", GafferOSL.OSLLight.Shape.Disk ],
+			[ "DistantLight", "distantLight", "distant" ],
+			[ "EnvironmentLight", "environmentLight", "environment" ],
 		] :
 			nodeMenu.append(
 				"/3Delight/Light/" + label,
