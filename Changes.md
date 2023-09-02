@@ -10,6 +10,11 @@ Features
   - Added support for `volumeshader` and `displacementshader` attributes.
   - Added support for spline parameters in shaders.
 
+Improvements
+------------
+
+- Resample, Resize, Blur, ImageTransform : Improved performance, resulting in a 3x speedup in an obscure case, and a 5-10% speedup in more common cases.
+
 Fixes
 -----
 
