@@ -582,16 +582,15 @@ IECore::ConstFloatVectorDataPtr Resample::computeChannelData( const std::string 
 
 				float v = 0.0f;
 				float totalW = 0.0f;
-				V2f filterOrigin = filterCoordinateMult.x * ( iPF - V2f( 0.5f ) );
 				sampler.visitPixels( Imath::Box2i(
 						iPI - filterRadius,
 						iPI + filterRadius + Imath::V2i( 1 )
 					),
-					[&filter, &filterOrigin, &filterCoordinateMult, &iPI, &v, &totalW]( float cur, int x, int y )
+					[&filter, &filterCoordinateMult, &iP, &v, &totalW]( float cur, int x, int y )
 					{
 						const float w = (*filter)(
-							filterOrigin.x + filterCoordinateMult.x * ( x - iPI.x ),
-							filterOrigin.y + filterCoordinateMult.y * ( y - iPI.y )
+							filterCoordinateMult.x * ( float(x) + 0.5f - iP.x ),
+							filterCoordinateMult.y * ( float(y) + 0.5f - iP.y )
 						);
 
 						v += w * cur;
