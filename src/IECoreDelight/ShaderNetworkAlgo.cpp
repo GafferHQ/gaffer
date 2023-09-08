@@ -261,6 +261,38 @@ void renameSplineParameters( ShaderNetwork *shaderNetwork )
 	}
 }
 
+const InternedString g_uvCoordParameterName( "uvCoord" );
+const std::string g_uvCoordNodeName = "__uvCoordsDefault";
+const std::string g_uvCoordShaderName = "uvCoord";
+const InternedString g_uvCoordOutputParameter( "o_outUV" );
+
+void addDefaultUVShader( ShaderNetwork *shaderNetwork )
+{
+	InternedString uvCoordHandle;
+
+	for( const auto &[handle, shader] : shaderNetwork->shaders() )
+	{
+		auto it = shader->parameters().find( g_uvCoordParameterName );
+		if(
+			it != shader->parameters().end() &&
+			!shaderNetwork->input( ShaderNetwork::Parameter( handle, g_uvCoordParameterName) )
+		)
+		{
+			if( uvCoordHandle.string().empty() )
+			{
+				ShaderPtr uvCoordShader = new Shader( g_uvCoordShaderName, "osl:shader" );
+				uvCoordHandle = shaderNetwork->addShader( g_uvCoordNodeName, std::move( uvCoordShader ) );
+			}
+			shaderNetwork->addConnection(
+				ShaderNetwork::Connection(
+					ShaderNetwork::Parameter( uvCoordHandle, g_uvCoordOutputParameter ),
+					ShaderNetwork::Parameter( handle, g_uvCoordParameterName )
+				)
+			);
+		}
+	}
+}
+
 }  // namespace
 
 namespace IECoreDelight
@@ -276,6 +308,7 @@ ShaderNetworkPtr preprocessedNetwork( const ShaderNetwork *shaderNetwork )
 	IECoreScene::ShaderNetworkAlgo::expandSplines( result.get() );
 
 	renameSplineParameters( result.get() );
+	addDefaultUVShader( result.get() );
 
 	IECoreScene::ShaderNetworkAlgo::removeUnusedShaders( result.get() );
 
