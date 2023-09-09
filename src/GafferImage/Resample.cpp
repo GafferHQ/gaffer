@@ -64,10 +64,14 @@ enum Passes
 {
 	Horizontal = 1,
 	Vertical = 2,
-	Both = Horizontal | Vertical
+	Both = Horizontal | Vertical,
+
+	// Special pass label when we must compute both passes in one, but there is no scaling.
+	// This allows a special code path which is up to 6X faster.
+	BothOptimized = Both | 4
 };
 
-unsigned requiredPasses( const Resample *resample, const ImagePlug *image, const OIIO::Filter2D *filter )
+unsigned requiredPasses( const Resample *resample, const ImagePlug *image, const OIIO::Filter2D *filter, V2f &ratio )
 {
 	int debug = resample->debugPlug()->getValue();
 	if( debug == Resample::HorizontalPass )
@@ -76,12 +80,24 @@ unsigned requiredPasses( const Resample *resample, const ImagePlug *image, const
 	}
 	else if( debug == Resample::SinglePass )
 	{
+		// For a SinglePass debug mode, we always use Both.
+		// Note that we don't use the optimized pass here, even if the ratio is 1 - we want debug to always
+		// use the same path.
 		return Horizontal | Vertical;
 	}
 
 	if( image == image->parent<ImageNode>()->outPlug() )
 	{
-		return filter->separable() ? Vertical : Both;
+		if( filter->separable() )
+		{
+			return Vertical;
+		}
+		else
+		{
+			// The filter isn't separable, so we must process everything at once. If the ratio has no
+			// scaling though, we can use the optimized path.
+			return ( ratio == V2f( 1.0 ) ) ? BothOptimized : Both;
+		}
 	}
 	return Horizontal;
 }
@@ -193,7 +209,7 @@ const OIIO::Filter2D *filterAndScale( const std::string &name, V2f ratio, V2f &i
 /// only computed once and then reused. At the time of writing, profiles indicate that
 /// accessing pixels via the Sampler is the main bottleneck, but once that is optimised
 /// perhaps cached filter weights could have a benefit.
-void filterWeights( const OIIO::Filter2D *filter, const float inputFilterScale, const float filterRadius, const int x, const float ratio, const float offset, Passes pass, std::vector<int> &supportRanges, std::vector<float> &weights )
+void filterWeights1D( const OIIO::Filter2D *filter, const float inputFilterScale, const float filterRadius, const int x, const float ratio, const float offset, Passes pass, std::vector<int> &supportRanges, std::vector<float> &weights )
 {
 	weights.reserve( ( 2 * ceilf( filterRadius ) + 1 ) * ImagePlug::tileSize() );
 	supportRanges.reserve( 2 * ImagePlug::tileSize() );
@@ -218,6 +234,42 @@ void filterWeights( const OIIO::Filter2D *filter, const float inputFilterScale, 
 			weights.push_back( w );
 		}
 
+	}
+}
+
+// For the inseparable case, we can't always reuse the weights for an adjacent row or column.
+// There are a lot of possible scaling factors where the ratio can be represented as a fraction,
+// and the weights needed would repeat after a certain number of pixels, and we could compute weights
+// for a limited section of pixels, and reuse them in a tiling way.
+// That's a bit complicated though, so we're just handling the simplest case currently ( since it is
+// a common case ):
+// if there is no scaling, then we only need to compute the weights for one pixel, and we can reuse them
+// for all pixels. This means we don't loop over output pixels at all here - we just compute the weights
+// for one output pixel, and return one 2D support for this pixel - it just gets shifted for each adjacent
+// pixel.
+void filterWeights2D( const OIIO::Filter2D *filter, const V2f inputFilterScale, const V2f filterRadius, const V2i p,  const V2f offset, Box2i &support, std::vector<float> &weights )
+{
+	weights.reserve( ( 2 * ceilf( filterRadius.x ) + 1 ) * ( 2 * ceilf( filterRadius.y ) + 1 )  );
+
+	const V2f filterCoordinateMult( 1.0f / inputFilterScale.x, 1.0f / inputFilterScale.y );
+
+	// input pixel position (floating point)
+	V2f i = V2f( p ) + V2f( 0.5 ) + offset;
+
+	support = Box2i(
+		V2i( ceilf( i.x - 0.5f - filterRadius.x ), ceilf( i.y - 0.5f - filterRadius.y ) ),
+		V2i( floorf( i.x + 0.5f + filterRadius.x ), floorf( i.y + 0.5f + filterRadius.y ) )
+	);
+
+	for( int fY = support.min.y; fY < support.max.y; ++fY )
+	{
+		const float fy = filterCoordinateMult.y * ( float( fY ) + 0.5 - i.y );
+		for( int fX = support.min.x; fX < support.max.x; ++fX )
+		{
+			const float fx = filterCoordinateMult.x * ( float( fX ) + 0.5f - i.x );
+			const float w = (*filter)( fx, fy );
+			weights.push_back( w );
+		}
 	}
 }
 
@@ -477,7 +529,7 @@ void Resample::hashChannelData( const GafferImage::ImagePlug *parent, const Gaff
 
 	filterPlug()->hash( h );
 
-	const unsigned passes = requiredPasses( this, parent, filter );
+	const unsigned passes = requiredPasses( this, parent, filter, ratio );
 	if( passes & Horizontal )
 	{
 		h.append( inputFilterScale.x );
@@ -489,6 +541,12 @@ void Resample::hashChannelData( const GafferImage::ImagePlug *parent, const Gaff
 		h.append( inputFilterScale.y );
 		h.append( ratio.y );
 		h.append( offset.y );
+	}
+
+	if( passes == BothOptimized )
+	{
+		// Append an extra flag so our hash reflects that we are going to take the optimized path
+		h.append( true );
 	}
 
 	const V2i tileOrigin = context->get<V2i>( ImagePlug::tileOriginContextName );
@@ -518,7 +576,7 @@ IECore::ConstFloatVectorDataPtr Resample::computeChannelData( const std::string 
 	const OIIO::Filter2D *filter = filterAndScale( filterPlug()->getValue(), ratio, inputFilterScale );
 	inputFilterScale *= filterScalePlug()->getValue();
 
-	const unsigned passes = requiredPasses( this, parent, filter );
+	const unsigned passes = requiredPasses( this, parent, filter, ratio );
 
 	Sampler sampler(
 		passes == Vertical ? horizontalPassPlug() : inPlug(),
@@ -588,6 +646,47 @@ IECore::ConstFloatVectorDataPtr Resample::computeChannelData( const std::string 
 			}
 		}
 	}
+	else if( passes == BothOptimized )
+	{
+		Box2i support;
+		std::vector<float> weights;
+		filterWeights2D( filter, inputFilterScale, filterRadius, tileBound.min, offset, support, weights );
+
+		V2i oP; // output pixel position
+		V2i supportOffset;
+		for( oP.y = tileBound.min.y; oP.y < tileBound.max.y; ++oP.y )
+		{
+			supportOffset.y = oP.y - tileBound.min.y;
+
+			for( oP.x = tileBound.min.x; oP.x < tileBound.max.x; ++oP.x )
+			{
+				Canceller::check( context->canceller() );
+
+				supportOffset.x = oP.x - tileBound.min.x;
+				std::vector<float>::const_iterator wIt = weights.begin();
+
+				float v = 0.0f;
+				float totalW = 0.0f;
+				sampler.visitPixels(
+					Imath::Box2i( support.min + supportOffset, support.max + supportOffset ),
+					[&wIt, &v, &totalW]( float cur, int x, int y )
+					{
+						const float w = *wIt++;
+						v += w * cur;
+						totalW += w;
+					}
+				);
+
+				if( totalW != 0.0f )
+				{
+					*pIt = v / totalW;
+				}
+
+				++pIt;
+			}
+		}
+
+	}
 	else if( passes == Horizontal )
 	{
 		// When the filter is separable we can perform filtering in two
@@ -600,7 +699,7 @@ IECore::ConstFloatVectorDataPtr Resample::computeChannelData( const std::string 
 		// we precompute the weights now to avoid repeating work later.
 		std::vector<int> supportRanges;
 		std::vector<float> weights;
-		filterWeights( filter, inputFilterScale.x, filterRadius.x, tileBound.min.x, ratio.x, offset.x, Horizontal, supportRanges, weights );
+		filterWeights1D( filter, inputFilterScale.x, filterRadius.x, tileBound.min.x, ratio.x, offset.x, Horizontal, supportRanges, weights );
 
 		V2i oP; // output pixel position
 
@@ -646,7 +745,7 @@ IECore::ConstFloatVectorDataPtr Resample::computeChannelData( const std::string 
 		// we precompute the weights now to avoid repeating work later.
 		std::vector<int> supportRanges;
 		std::vector<float> weights;
-		filterWeights( filter, inputFilterScale.y, filterRadius.y, tileBound.min.y, ratio.y, offset.y, Vertical, supportRanges, weights );
+		filterWeights1D( filter, inputFilterScale.y, filterRadius.y, tileBound.min.y, ratio.y, offset.y, Vertical, supportRanges, weights );
 
 		std::vector<int>::const_iterator supportIt = supportRanges.begin();
 		std::vector<float>::const_iterator rowWeightsIt = weights.begin();

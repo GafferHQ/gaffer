@@ -154,6 +154,27 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 			with self.subTest( fileName = args[0], size = args[1], ftilter = args[2] ):
 				__test( *args )
 
+	def testInseparableFastPath( self ) :
+
+		reader = GafferImage.ImageReader()
+		reader["fileName"].setValue( self.imagesPath() / "resamplePatterns.exr" )
+
+		# When applying an inseparable filter with no scaling, we can use a much faster code path.
+		# This code path should not have any effect on the result
+		resampleFastPath = GafferImage.Resample()
+		resampleFastPath["in"].setInput( reader["out"] )
+		resampleFastPath['filterScale'].setValue( imath.V2f( 4 ) )
+		resampleFastPath["filter"].setValue( "radial-lanczos3" )
+
+		# Force the slow code path using the "debug" parameter
+		resampleReference = GafferImage.Resample()
+		resampleReference["in"].setInput( reader["out"] )
+		resampleReference['filterScale'].setValue( imath.V2f( 4 ) )
+		resampleReference["filter"].setValue( "radial-lanczos3" )
+		resampleReference["debug"].setValue( GafferImage.Resample.Debug.SinglePass )
+
+		self.assertImagesEqual( resampleFastPath["out"], resampleReference["out"] )
+
 	def testSincUpsize( self ) :
 
 		c = GafferImage.Constant()
