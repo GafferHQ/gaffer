@@ -144,6 +144,20 @@ void filteredParallelTraverse( const ScenePlug *scene, const FilterPlug *filterP
 template <class ThreadableFunctor>
 void filteredParallelTraverse( const ScenePlug *scene, const IECore::PathMatcher &filter, ThreadableFunctor &f, const ScenePlug::ScenePath &root = ScenePlug::ScenePath() );
 
+/// Searching
+/// =========
+
+/// Returns all the locations for which `predicate( scene, path )` returns `true`.
+///
+/// > Caution : The search is performed in parallel, so `predicate` must be safe to call
+///   concurrently from multiple threads.
+template<typename Predicate>
+IECore::PathMatcher findAll( const ScenePlug *scene, Predicate &&predicate, const ScenePlug::ScenePath &root = ScenePlug::ScenePath() );
+
+/// Returns all the locations which have a local attribute called `name`. If `value` is specified, then only
+/// returns locations where the attribute has that value.
+GAFFERSCENE_API IECore::PathMatcher findAllWithAttribute( const ScenePlug *scene, IECore::InternedString name, const IECore::Object *value = nullptr, const ScenePlug::ScenePath &root = ScenePlug::ScenePath() );
+
 /// Globals
 /// =======
 

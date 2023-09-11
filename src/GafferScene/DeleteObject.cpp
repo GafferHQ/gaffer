@@ -45,7 +45,7 @@ using namespace IECore;
 using namespace Gaffer;
 using namespace GafferScene;
 
-GAFFER_NODE_DEFINE_TYPE( DeleteObject );
+GAFFER_NODE_DEFINE_TYPE( GafferScene::DeleteObject );
 
 size_t DeleteObject::g_firstPlugIndex = 0;
 
