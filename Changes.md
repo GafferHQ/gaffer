@@ -10,6 +10,11 @@ Features
   - Added support for `volumeshader` and `displacementshader` attributes.
   - Added support for spline parameters in shaders.
 
+Fixes
+-----
+
+- DispatchDialogue : Changed the button label for the results display from "Ok" to "Close".
+
 API
 ---
 
@@ -345,6 +350,11 @@ Build
 
 1.2.10.x (relative to 1.2.10.2)
 ========
+
+Fixes
+-----
+
+- DispatchDialogue : Changed the button label for the results display from "Ok" to "Close".
 
 1.2.10.2 (relative to 1.2.10.1)
 ========
