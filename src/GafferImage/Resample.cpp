@@ -105,11 +105,11 @@ void ratioAndOffset( const M33f &matrix, V2f &ratio, V2f &offset )
 
 // The radius for the filter is specified in the output space. This
 // method returns it as a number of pixels in the input space.
-V2i inputFilterRadius( const OIIO::Filter2D *filter, const V2f &inputFilterScale )
+V2f inputFilterRadius( const OIIO::Filter2D *filter, const V2f &inputFilterScale )
 {
-	return V2i(
-		(int)ceilf( filter->width() * inputFilterScale.x * 0.5f ),
-		(int)ceilf( filter->height() * inputFilterScale.y * 0.5f )
+	return V2f(
+		filter->width() * inputFilterScale.x * 0.5f,
+		filter->height() * inputFilterScale.y * 0.5f
 	);
 }
 
@@ -118,7 +118,8 @@ V2i inputFilterRadius( const OIIO::Filter2D *filter, const V2f &inputFilterScale
 Box2i inputRegion( const V2i &tileOrigin, unsigned passes, const V2f &ratio, const V2f &offset, const OIIO::Filter2D *filter, const V2f &inputFilterScale )
 {
 	Box2f outputRegion( V2f( tileOrigin ), tileOrigin + V2f( ImagePlug::tileSize() ) );
-	V2i filterRadius = inputFilterRadius( filter, inputFilterScale );
+	V2f filterRadius = inputFilterRadius( filter, inputFilterScale );
+	V2i filterRadiusCeil( ceilf( filterRadius.x ), ceilf( filterRadius.y ) );
 
 	Box2f result = outputRegion;
 	if( passes & Horizontal )
@@ -131,8 +132,8 @@ Box2i inputRegion( const V2i &tileOrigin, unsigned passes, const V2f &ratio, con
 			// the relationship between min and max.
 			std::swap( result.min.x, result.max.x );
 		}
-		result.min.x -= filterRadius.x;
-		result.max.x += filterRadius.x;
+		result.min.x -= filterRadiusCeil.x;
+		result.max.x += filterRadiusCeil.x;
 	}
 	if( passes & Vertical )
 	{
@@ -142,8 +143,8 @@ Box2i inputRegion( const V2i &tileOrigin, unsigned passes, const V2f &ratio, con
 		{
 			std::swap( result.min.y, result.max.y );
 		}
-		result.min.y -= filterRadius.y;
-		result.max.y += filterRadius.y;
+		result.min.y -= filterRadiusCeil.y;
+		result.max.y += filterRadiusCeil.y;
 	}
 
 	return box2fToBox2i( result );
@@ -192,27 +193,31 @@ const OIIO::Filter2D *filterAndScale( const std::string &name, V2f ratio, V2f &i
 /// only computed once and then reused. At the time of writing, profiles indicate that
 /// accessing pixels via the Sampler is the main bottleneck, but once that is optimised
 /// perhaps cached filter weights could have a benefit.
-void filterWeights( const OIIO::Filter2D *filter, const float inputFilterScale, const int filterRadius, const int x, const float ratio, const float offset, Passes pass, std::vector<float> &weights )
+void filterWeights( const OIIO::Filter2D *filter, const float inputFilterScale, const float filterRadius, const int x, const float ratio, const float offset, Passes pass, std::vector<int> &supportRanges, std::vector<float> &weights )
 {
-	weights.reserve( ( 2 * filterRadius + 1 ) * ImagePlug::tileSize() );
+	weights.reserve( ( 2 * ceilf( filterRadius ) + 1 ) * ImagePlug::tileSize() );
+	supportRanges.reserve( 2 * ImagePlug::tileSize() );
 
 	const float filterCoordinateMult = 1.0f / inputFilterScale;
 
-	float iX; // input pixel position (floating point)
-	int iXI; // input pixel position (floored to int)
-	float iXF; // fractional part of input pixel position after flooring
 	for( int oX = x, eX = x + ImagePlug::tileSize(); oX < eX; ++oX )
 	{
-		iX = ( oX + 0.5 ) / ratio + offset;
-		iXF = OIIO::floorfrac( iX, &iXI );
+		// input pixel position (floating point)
+		float iX = ( oX + 0.5 ) / ratio + offset;
 
-		int fX; // relative filter position
-		for( fX = -filterRadius; fX<= filterRadius; ++fX )
+		int minX = ceilf( iX - 0.5f - filterRadius );
+		int maxX = floorf( iX + 0.5f + filterRadius );
+
+		supportRanges.push_back( minX );
+		supportRanges.push_back( maxX );
+
+		for( int fX = minX; fX < maxX; ++fX )
 		{
-			const float f = filterCoordinateMult * (fX - ( iXF - 0.5f ) );
+			const float f = filterCoordinateMult * ( float( fX ) + 0.5f - iX );
 			const float w = pass == Horizontal ? filter->xfilt( f ) : filter->yfilt( f );
 			weights.push_back( w );
 		}
+
 	}
 }
 
@@ -522,12 +527,13 @@ IECore::ConstFloatVectorDataPtr Resample::computeChannelData( const std::string 
 		(Sampler::BoundingMode)boundingModePlug()->getValue()
 	);
 
-	const V2i filterRadius = inputFilterRadius( filter, inputFilterScale );
+	const V2f filterRadius = inputFilterRadius( filter, inputFilterScale );
 	const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
 
 	FloatVectorDataPtr resultData = new FloatVectorData;
-	resultData->writable().resize( ImagePlug::tileSize() * ImagePlug::tileSize() );
-	std::vector<float>::iterator pIt = resultData->writable().begin();
+	std::vector<float> &result = resultData->writable();
+	result.resize( ImagePlug::tileSize() * ImagePlug::tileSize() );
+	std::vector<float>::iterator pIt = result.begin();
 
 	if( passes == Both )
 	{
@@ -539,59 +545,33 @@ IECore::ConstFloatVectorDataPtr Resample::computeChannelData( const std::string 
 
 		V2i oP; // output pixel position
 		V2f iP; // input pixel position (floating point)
-		V2i iPI; // input pixel position (floored to int)
-		V2f iPF; // fractional part of input pixel position after flooring
 
 		V2f	filterCoordinateMult = V2f(1.0f) / inputFilterScale;
 
 		for( oP.y = tileBound.min.y; oP.y < tileBound.max.y; ++oP.y )
 		{
 			iP.y = ( oP.y + 0.5 ) / ratio.y + offset.y;
-			iPF.y = OIIO::floorfrac( iP.y, &iPI.y );
+			int minY = ceilf( iP.y - 0.5f - filterRadius.y );
+			int maxY = floorf( iP.y + 0.5f + filterRadius.y );
 
 			for( oP.x = tileBound.min.x; oP.x < tileBound.max.x; ++oP.x )
 			{
 				Canceller::check( context->canceller() );
 
 				iP.x = ( oP.x + 0.5 ) / ratio.x + offset.x;
-				iPF.x = OIIO::floorfrac( iP.x, &iPI.x );
 
-				// \todo : When refactoring the filter code, I seem to have introduced a performance
-				// regression here: in a worst case test of a 20x20 box filter using the debug parameter
-				// to force non-separable, the time was 22 seconds originally, went down to 12 seconds
-				// after the Sampler optimization, but is now back up to 14.
-				//
-				// It seems this may just be due to the extra divide by inputFilterScale above, which is
-				// somewhat surprising, but I can reduce this time to 13 seconds by hoisting some
-				// multiplies out of this loop, so this code does seem quite sensitive ( assuming my
-				// test checks out - I'm not spending much time verifying now that I've realized this
-				// code is probably going to need an overhaul anyway ).
-				//
-				// There seems to be a more important issue here that will need revisiting for performance
-				// - this currently has the potential to hit a lot of extra pixels.  Consider a filter
-				// with a width of 2.1 in X in input space. Depending on how it lines up, usually 2 or
-				// occasionally 3 columns of pixel centers will lie inside this window.  However, currently,
-				// we will take 2.1, compute an integer filterRadius of ceil( 2.1 / 2.0 ) == 2, and then
-				// access 5 columns from (fP.x - 2) to (fP.x + 2 ).  Once both axes are taken into account,
-				// this means that a filter that usually only needs to access 4 input pixels will instead
-				// always access 25.  This is a worst case example, but it seems like it would definitely
-				// be worth the couple of extra floor/ceils per output pixel to only access pixels where the
-				// center is actually within the filter support.  This fix should also be done to the
-				// seperable case.  Once that is done, we should probably also hoist the multiply by
-				// filterCoordinateMult out of the loop.
+				int minX = ceilf( iP.x - 0.5f - filterRadius.x );
+				int maxX = floorf( iP.x + 0.5f + filterRadius.x );
 
 				float v = 0.0f;
 				float totalW = 0.0f;
-				V2f filterOrigin = filterCoordinateMult.x * ( iPF - V2f( 0.5f ) );
-				sampler.visitPixels( Imath::Box2i(
-						iPI - filterRadius,
-						iPI + filterRadius + Imath::V2i( 1 )
-					),
-					[&filter, &filterOrigin, &filterCoordinateMult, &iPI, &v, &totalW]( float cur, int x, int y )
+				sampler.visitPixels(
+					Imath::Box2i( Imath::V2i( minX, minY ), Imath::V2i( maxX, maxY ) ),
+					[&filter, &filterCoordinateMult, &iP, &v, &totalW]( float cur, int x, int y )
 					{
 						const float w = (*filter)(
-							filterOrigin.x + filterCoordinateMult.x * ( x - iPI.x ),
-							filterOrigin.y + filterCoordinateMult.y * ( y - iPI.y )
+							filterCoordinateMult.x * ( float(x) + 0.5f - iP.x ),
+							filterCoordinateMult.y * ( float(y) + 0.5f - iP.y )
 						);
 
 						v += w * cur;
@@ -616,32 +596,28 @@ IECore::ConstFloatVectorDataPtr Resample::computeChannelData( const std::string 
 		// it is cached for use in the vertical pass. The HorizontalPass
 		// debug mode causes this pass to be output directly for inspection.
 
-		// Pixels in the same column share the same filter weights, so
+		// Pixels in the same column share the same support ranges and filter weights, so
 		// we precompute the weights now to avoid repeating work later.
+		std::vector<int> supportRanges;
 		std::vector<float> weights;
-		filterWeights( filter, inputFilterScale.x, filterRadius.x, tileBound.min.x, ratio.x, offset.x, Horizontal, weights );
+		filterWeights( filter, inputFilterScale.x, filterRadius.x, tileBound.min.x, ratio.x, offset.x, Horizontal, supportRanges, weights );
 
 		V2i oP; // output pixel position
-		float iX; // input pixel x coordinate (floating point)
-		int iXI; // input pixel position (floored to int)
 
 		for( oP.y = tileBound.min.y; oP.y < tileBound.max.y; ++oP.y )
 		{
 			Canceller::check( context->canceller() );
 
+			std::vector<int>::const_iterator supportIt = supportRanges.begin();
 			std::vector<float>::const_iterator wIt = weights.begin();
 			for( oP.x = tileBound.min.x; oP.x < tileBound.max.x; ++oP.x )
 			{
-
-				iX = ( oP.x + 0.5 ) / ratio.x + offset.x;
-				OIIO::floorfrac( iX, &iXI );
-
 				float v = 0.0f;
 				float totalW = 0.0f;
 
 				sampler.visitPixels( Imath::Box2i(
-						Imath::V2i( iXI - filterRadius.x, oP.y ),
-						Imath::V2i( iXI + filterRadius.x + 1, oP.y + 1 )
+						Imath::V2i( *supportIt, oP.y ),
+						Imath::V2i( *( supportIt + 1 ), oP.y + 1 )
 					),
 					[&wIt, &v, &totalW]( float cur, int x, int y )
 					{
@@ -650,6 +626,8 @@ IECore::ConstFloatVectorDataPtr Resample::computeChannelData( const std::string 
 						totalW += w;
 					}
 				);
+
+				supportIt += 2;
 
 				if( totalW != 0.0f )
 				{
@@ -663,29 +641,30 @@ IECore::ConstFloatVectorDataPtr Resample::computeChannelData( const std::string 
 	else if( passes == Vertical )
 	{
 		V2i oP; // output pixel position
-		float iY; // input pixel position (floating point)
-		int iYI; // input pixel position (floored to int)
 
-		// Pixels in the same row share the same filter weights, so
+		// Pixels in the same row share the same support ranges and filter weights, so
 		// we precompute the weights now to avoid repeating work later.
+		std::vector<int> supportRanges;
 		std::vector<float> weights;
-		filterWeights( filter, inputFilterScale.y, filterRadius.y, tileBound.min.y, ratio.y, offset.y, Vertical, weights );
+		filterWeights( filter, inputFilterScale.y, filterRadius.y, tileBound.min.y, ratio.y, offset.y, Vertical, supportRanges, weights );
+
+		std::vector<int>::const_iterator supportIt = supportRanges.begin();
+		std::vector<float>::const_iterator rowWeightsIt = weights.begin();
 
 		for( oP.y = tileBound.min.y; oP.y < tileBound.max.y; ++oP.y )
 		{
 			Canceller::check( context->canceller() );
 
-			iY = ( oP.y + 0.5 ) / ratio.y + offset.y;
-			OIIO::floorfrac( iY, &iYI );
-
 			for( oP.x = tileBound.min.x; oP.x < tileBound.max.x; ++oP.x )
 			{
 				float v = 0.0f;
 				float totalW = 0.0f;
-				std::vector<float>::const_iterator wIt = weights.begin() + ( oP.y - tileBound.min.y ) * ( filterRadius.y * 2 + 1);
+
+				std::vector<float>::const_iterator wIt = rowWeightsIt;
+
 				sampler.visitPixels( Imath::Box2i(
-						Imath::V2i( oP.x, iYI - filterRadius.y ),
-						Imath::V2i( oP.x + 1, iYI + filterRadius.y + 1 )
+						Imath::V2i( oP.x, *supportIt ),
+						Imath::V2i( oP.x + 1, *(supportIt + 1) )
 					),
 					[&wIt, &v, &totalW]( float cur, int x, int y )
 					{
@@ -695,6 +674,7 @@ IECore::ConstFloatVectorDataPtr Resample::computeChannelData( const std::string 
 					}
 				);
 
+
 				if( totalW != 0.0f )
 				{
 					*pIt = v / totalW;
@@ -702,6 +682,9 @@ IECore::ConstFloatVectorDataPtr Resample::computeChannelData( const std::string 
 
 				++pIt;
 			}
+
+			rowWeightsIt += (*(supportIt + 1)) - (*supportIt);
+			supportIt += 2;
 		}
 	}
 
