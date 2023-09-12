@@ -309,7 +309,7 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 		self.__backButton.setEnabled( True )
 		self.__backButton.setVisible( True )
 
-		self.__primaryButton.setText( "Ok" )
+		self.__primaryButton.setText( "Close" )
 		self.__primaryButton.setEnabled( True )
 		self.__primaryButton.setVisible( True )
 		self.__primaryButtonConnection = self.__primaryButton.clickedSignal().connect( Gaffer.WeakMethod( self.__close ), scoped = True )
