@@ -3,7 +3,8 @@
 
 Fixes
 -----
-- DispatchDialogue : Changed the button label for the results display from Ok to Close
+
+- DispatchDialogue : Changed the button label for the results display from "Ok" to "Close".
 
 1.2.10.2 (relative to 1.2.10.1)
 ========
