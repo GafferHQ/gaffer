@@ -14,11 +14,13 @@ Improvements
 ------------
 
 - Resample, Resize, Blur, ImageTransform : Improved performance, resulting in a 3x speedup in an obscure case, and a 5-10% speedup in more common cases.
+- ImageSampler : Added `interpolate` plug to control interpolation. Previously created ImageSamplers are unaffected, but interpolation is off by default for newly created ImageSamplers.
 
 Fixes
 -----
 
 - DispatchDialogue : Changed the button label for the results display from "Ok" to "Close".
+- Viewer : Fixed display of infinite values in the pixel inspectors. These were being incorrectly displayed as `nan` instead of `inf`.
 
 API
 ---

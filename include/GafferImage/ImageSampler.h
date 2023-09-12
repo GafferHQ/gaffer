@@ -73,6 +73,9 @@ class GAFFERIMAGE_API ImageSampler : public Gaffer::ComputeNode
 		Gaffer::V2fPlug *pixelPlug();
 		const Gaffer::V2fPlug *pixelPlug() const;
 
+		Gaffer::BoolPlug *interpolatePlug();
+		const Gaffer::BoolPlug *interpolatePlug() const;
+
 		Gaffer::Color4fPlug *colorPlug();
 		const Gaffer::Color4fPlug *colorPlug() const;
 
