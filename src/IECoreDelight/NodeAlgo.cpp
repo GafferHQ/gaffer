@@ -86,13 +86,15 @@ Registry &registry()
 
 void addPrimitiveVariableParameters( const char *name, const IECoreScene::PrimitiveVariable &value, const IECore::IntVectorData *vertexIndices, ParameterList &parameterList, ParameterList *indicesParameterList )
 {
-	NSIParam_t p = parameterList.parameter( name, value.data.get(), false );
+	const char *conformedName = strcmp( name, "uv" ) == 0 ? "st" : name;
+
+	NSIParam_t p = parameterList.parameter( conformedName, value.data.get(), false );
 	if( p.type == NSITypeInvalid )
 	{
 		return;
 	}
 
-	if( strcmp( name, "P" ) == 0 )
+	if( strcmp( conformedName, "P" ) == 0 )
 	{
 		// Work around sloppy use of geometric interpretation
 		p.type = NSITypePoint;
@@ -137,7 +139,7 @@ void addPrimitiveVariableParameters( const char *name, const IECoreScene::Primit
 	{
 		if( indicesParameterList )
 		{
-			const string indicesName = name + string( ".indices" );
+			const string indicesName = conformedName + string( ".indices" );
 			indicesParameterList->add( {
 				indicesParameterList->allocate( indicesName ),
 				indices->readable().data(),

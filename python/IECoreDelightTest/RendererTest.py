@@ -208,7 +208,7 @@ class RendererTest( GafferTest.TestCase ) :
 		)
 		self.assertEqual( mesh["nvertices"], [ 4, 4 ] )
 		self.assertEqual(
-			mesh["uv"],
+			mesh["st"],
 			[
 				imath.V2f( 0, 0 ),
 				imath.V2f( 0.5, 0 ),
@@ -218,7 +218,10 @@ class RendererTest( GafferTest.TestCase ) :
 				imath.V2f( 1, 1 )
 			]
 		)
-		self.assertEqual( mesh["uv.indices"], [ 0, 1, 4, 3, 1, 2, 5, 4 ] )
+		self.assertEqual( mesh["st.indices"], [ 0, 1, 4, 3, 1, 2, 5, 4 ] )
+
+		self.assertNotIn( "uv.indices", mesh )
+		self.assertNotIn( "uv", mesh )
 
 	def testAnimatedMesh( self ) :
 
@@ -971,6 +974,80 @@ class RendererTest( GafferTest.TestCase ) :
 		)
 		self.assertEqual( shader["splineBasis"], "linear" )
 
+	def testUVCoordShaderInserted( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"3Delight",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.nsi" ),
+		)
+
+		s = IECoreScene.ShaderNetwork(
+			{
+				"output" : IECoreScene.Shader( "testShader", "surface", { "uvCoord" : IECore.FloatVectorData() } )
+			},
+			output = "output"
+		)
+
+		m = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) )
+		a = r.attributes( IECore.CompoundObject( { "osl:surface": s } ) )
+
+		r.object( "object", m, a )
+
+		r.render()
+		del r
+
+		nsi = self.__parseDict( self.temporaryDirectory() / "test.nsi" )
+
+		shaders = { k: v for k, v in nsi.items() if nsi[k]["nodeType"] == "shader" }
+
+		self.assertEqual( len( shaders ), 2 )
+
+		testShader = next( k for k, v in shaders.items() if v["shaderfilename"] == "testShader" )
+		uvShader = next( k for k, v in shaders.items() if pathlib.Path( v["shaderfilename"] ).name == "uvCoord.oso" )
+
+		self.assertEqual( len( nsi[testShader]["uvCoord"] ), 1 )
+		self.assertEqual( self.__connectionSource( nsi[testShader]["uvCoord"][0], nsi ), nsi[uvShader] )
+
+	def testUVCoordShaderNotInserted( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"3Delight",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.nsi" ),
+		)
+
+		s = IECoreScene.ShaderNetwork(
+			shaders = {
+				"output" : IECoreScene.Shader( "testShader", "surface", { "uvCoord" : IECore.FloatVectorData() } ),
+				"input" : IECoreScene.Shader( "testUVShader" )
+			},
+			connections = [
+				( ( "input", "" ), ( "output", "uvCoord" ) )
+			],
+			output = "output"
+		)
+
+		m = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) )
+		a = r.attributes( IECore.CompoundObject( { "osl:surface": s } ) )
+
+		r.object( "object", m, a )
+
+		r.render()
+		del r
+
+		nsi = self.__parseDict( self.temporaryDirectory() / "test.nsi" )
+
+		shaders = { k: v for k, v in nsi.items() if nsi[k]["nodeType"] == "shader" }
+
+		self.assertEqual( len( shaders ), 2 )
+
+		testShader = next( k for k, v in shaders.items() if v["shaderfilename"] == "testShader" )
+		uvShader = next( k for k, v in shaders.items() if v["shaderfilename"] == "testUVShader" )
+
+		self.assertEqual( len( nsi[testShader]["uvCoord"] ), 1 )
+		self.assertEqual( self.__connectionSource( nsi[testShader]["uvCoord"][0], nsi ), nsi[uvShader] )
+
 	# Helper methods used to check that NSI files we write contain what we
 	# expect. The 3delight API only allows values to be set, not queried,
 	# so we build a simple dictionary-based node graph for now.
@@ -984,7 +1061,14 @@ class RendererTest( GafferTest.TestCase ) :
 		if len( cSplit ) == 1 :
 			return nsi[cSplit[0][1:-1]]  # remove <>
 
-		return nsi[cSplit[0][1:-1]][cSplit[1]]
+		nodeName = cSplit[0][1:-1]
+		parameterName = cSplit[1]
+
+		if parameterName not in nsi[nodeName] :
+			# Shaders don't list their outputs as parameters, just return the node
+			return nsi[nodeName]
+
+		return nsi[nodeName][parameterName]
 
 	def __parseDict( self, nsiFile ) :
 
@@ -1048,6 +1132,11 @@ class RendererTest( GafferTest.TestCase ) :
 				if arraySplit is not None and pType != "float[2]" :
 					pLength = int( arraySplit.groupdict()["arrayLength"] )
 					pType = arraySplit.groupdict()["varType"]
+
+				if pLength == 0 :
+					tokens.popleft()  # Opening `[`
+					tokens.popleft()  # Closing	`]`
+					continue  # And we're done
 
 				numComponents = { "v": 3, "color": 3, "doublematrix": 16, "float[2]": 2 }.get( pType, 1 )
 				numElements = pLength * numComponents * pSize
