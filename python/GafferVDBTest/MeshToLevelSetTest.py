@@ -183,6 +183,7 @@ class MeshToLevelSetTest( GafferVDBTest.VDBTestCase ) :
 
 		self.assertParallelGetValueComputesObjectOnce( meshToLevelSet["out"], "/cube" )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "taskCollaboration:hashAliasing" } )
 	def testRecursionViaIntermediateQuery( self ) :
 
 		cube = GafferScene.Cube()

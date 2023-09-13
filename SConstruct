@@ -1267,7 +1267,10 @@ libraries = {
 			"LIBPATH" : [ "$DELIGHT_ROOT/lib" ],
 			## \todo Remove GafferScene. We need it at present to get access to `IECoreScenePreview::Renderer`,
 			# but IECoreDelight must never depend on Gaffer code; logically it is in the layer below Gaffer.
-			"LIBS" : [ "GafferScene", "3delight", "IECoreImage$CORTEX_LIB_SUFFIX", "IECoreScene$CORTEX_LIB_SUFFIX" ],
+			"LIBS" : [
+				"GafferScene", "3delight", "IECoreImage$CORTEX_LIB_SUFFIX", "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreVDB$CORTEX_LIB_SUFFIX",
+				"openvdb$VDB_LIB_SUFFIX", "OpenImageIO_Util$OIIO_LIB_SUFFIX", "oslquery$OSL_LIB_SUFFIX"
+			],
 		},
 		"pythonEnvAppends" : {
 			"LIBS" : [ "IECoreScene$CORTEX_LIB_SUFFIX", "IECoreDelight" ],
@@ -1277,6 +1280,7 @@ libraries = {
 
 	"IECoreDelightTest" : {
 		"requiredOptions" : [ "DELIGHT_ROOT" ],
+		"additionalFiles" : glob.glob( "python/IECoreDelightTest/*/*" ),
 	},
 
 	"GafferDelight" : {

@@ -286,6 +286,20 @@ class ImageStatsTest( GafferImageTest.ImageTestCase ) :
 		s["view"].setValue( "right" )
 		self.assertEqual( s["max"].getValue(), imath.Color4f( 0.5, 0.5, 0.5, 0.875 ) )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "taskCollaboration" } )
+	def testTaskCollaboration( self ) :
+
+		checker = GafferImage.Checkerboard()
+
+		stats = GafferImage.ImageStats()
+		stats["in"].setInput( checker["out"] )
+		stats["area"].setValue( stats["in"].format().getDisplayWindow() )
+
+		with Gaffer.PerformanceMonitor() as pm :
+			GafferTest.parallelGetValue( stats["average"]["r"], 10000 )
+
+		self.assertEqual( pm.plugStatistics( stats["__allStats" ] ).computeCount, 1 )
+
 	def __assertColour( self, colour1, colour2 ) :
 		for i in range( 0, 4 ):
 			self.assertEqual( "%.4f" % colour2[i], "%.4f" % colour1[i] )

@@ -49,14 +49,20 @@ class ImageSamplerTest( GafferImageTest.ImageTestCase ) :
 
 	def test( self ) :
 
+		window = imath.Box2i( imath.V2i( -75 ), imath.V2i( 300 ) )
+
 		xRamp = GafferImage.Ramp()
-		xRamp["format"].setValue( GafferImage.Format( 75, 75, 1.000 ) )
-		xRamp["endPosition"].setValue( imath.V2f( 75, 0 ) )
-		xRamp["ramp"]["p1"]["y"].setValue( imath.Color4f( 75, 0, 0, 0 ) )
+		xRamp["format"].setValue( GafferImage.Format( window ) )
+		xRamp["startPosition"].setValue( imath.V2f( window.min().x, 0 ) )
+		xRamp["endPosition"].setValue( imath.V2f( window.max().x, 0 ) )
+		xRamp["ramp"]["p0"]["y"].setValue( imath.Color4f( window.min().x, 0, 0, 0 ) )
+		xRamp["ramp"]["p1"]["y"].setValue( imath.Color4f( window.max().x, 0, 0, 0 ) )
 		yRamp = GafferImage.Ramp()
-		yRamp["format"].setValue( GafferImage.Format( 75, 75, 1.000 ) )
-		yRamp["endPosition"].setValue( imath.V2f( 0, 75 ) )
-		yRamp["ramp"]["p1"]["y"].setValue( imath.Color4f( 0, 75, 0, 0 ) )
+		yRamp["format"].setValue( GafferImage.Format( window ) )
+		yRamp["startPosition"].setValue( imath.V2f( 0, window.min().y ) )
+		yRamp["endPosition"].setValue( imath.V2f( 0, window.max().y ) )
+		yRamp["ramp"]["p0"]["y"].setValue( imath.Color4f( 0, window.min().y, 0, 0 ) )
+		yRamp["ramp"]["p1"]["y"].setValue( imath.Color4f( 0, window.max().y, 0, 0 ) )
 
 		rampMerge = GafferImage.Merge()
 		rampMerge["operation"].setValue( GafferImage.Merge.Operation.Add )
@@ -67,16 +73,41 @@ class ImageSamplerTest( GafferImageTest.ImageTestCase ) :
 		sampler["image"].setInput( rampMerge["out"] )
 
 		hashes = set()
-		for x in range( 0, 75 ) :
-			for y in range( 0, 75 ) :
-				sampler["pixel"].setValue( imath.V2f( x + 0.5, y + 0.5 ) )
+		count = 0
+		for px in list( range( -10, 10 ) ) + list( range( -75, -10, 7 ) ) + list( range( 10, 300, 17 ) ):
+			for py in list( range( -10, 10 ) ) + list( range( -75, -10, 7 ) ) + list( range( 10, 300, 17 ) ):
+				sampler["interpolate"].setValue( True )
+				for ox in [ 0, 0.25, 0.5, 0.75 ]:
+					for oy in [ 0, 0.25, 0.5, 0.75 ]:
+						x = px + ox
+						y = py + oy
 
-				c = sampler["color"].getValue()
-				for i in range( 4 ):
-					self.assertAlmostEqual( c[i], [ x + 0.5, y + 0.5, 0, 0 ][i], places = 4 )
-				hashes.add( str( sampler["color"].hash() ) )
+						if x < -74.5 or y < -74.5 or x > 299.5 or y > 299.5:
+							# Border pixels blend to zero, and don't match the linear gradient
+							continue
 
-		self.assertEqual( len( hashes ), 75 * 75 )
+						sampler["pixel"].setValue( imath.V2f( x, y ) )
+
+						c = sampler["color"].getValue()
+						for i in range( 4 ):
+							self.assertAlmostEqual( c[i], [ x, y, 0, 0 ][i], places = 3 )
+						hashes.add( str( sampler["color"].hash() ) )
+						count += 1
+
+				sampler["pixel"].setValue( imath.V2f( px + 0.5, py + 0.5 ) )
+				centerColor = sampler["color"].getValue()
+
+				sampler["interpolate"].setValue( False )
+
+				for ox in [ 0, 0.25, 0.5, 0.75 ]:
+					for oy in [ 0, 0.25, 0.5, 0.75 ]:
+						x = px + ox
+						y = py + oy
+
+						sampler["pixel"].setValue( imath.V2f( x, y ) )
+						self.assertEqual( centerColor, sampler["color"].getValue() )
+
+		self.assertEqual( len( hashes ), count )
 
 	def testChannelsPlug( self ) :
 

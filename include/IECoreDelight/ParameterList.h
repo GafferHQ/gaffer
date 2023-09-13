@@ -65,10 +65,14 @@ class IECOREDELIGHT_API ParameterList
 
 		void add( const NSIParam_t &parameter );
 		void add( const char *name, const std::string &value );
+		/// \deprecated Use the version below.
 		void add( const char *name, const IECore::Data *value );
+		void add( const char *name, const IECore::Data *value, bool isSingleArray );
 		void add( const char *name, const IECore::Data *value, const IECore::IntVectorData *indices );
 
+		/// \deprecated Use the version below.
 		NSIParam_t parameter( const char *name, const IECore::Data *value );
+		NSIParam_t parameter( const char *name, const IECore::Data *value, bool isSingleArray );
 		const char *allocate( const std::string &s );
 
 		int size() const;

@@ -42,6 +42,8 @@
 #include "Gaffer/TypedObjectPlug.h"
 #include "Gaffer/TypeIds.h"
 
+#include <unordered_map>
+
 namespace Gaffer
 {
 

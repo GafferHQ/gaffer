@@ -74,10 +74,10 @@ with IECore.IgnoredExceptions( ImportError ) :
 	shader = GafferOSL.OSLShader()
 
 	for light in [
-		"maya/osl/pointLight",
-		"maya/osl/spotLight",
-		"maya/osl/distantLight",
-		"maya/osl/environmentLight"
+		"pointLight",
+		"spotLight",
+		"distantLight",
+		"environmentLight"
 	] :
 		shader.loadShader( light )
 		for parameter in shader["parameters"] :

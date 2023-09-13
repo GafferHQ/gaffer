@@ -1513,6 +1513,7 @@ class ExpressionTest( GafferTest.TestCase ) :
 		)
 
 	@GafferTest.TestRunner.PerformanceTestMethod()
+	@GafferTest.TestRunner.CategorisedTestMethod( { "taskCollaboration:performance" } )
 	def testParallelPerformance( self ):
 		s = Gaffer.ScriptNode()
 		s["n"] = Gaffer.Node()
@@ -1530,6 +1531,27 @@ class ExpressionTest( GafferTest.TestCase ) :
 
 		with GafferTest.TestRunner.PerformanceScope() :
 			GafferTest.parallelGetValue( s["n"]["user"]["p"], 100 )
+
+	def testParallelGetValueComputesOnce( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["p"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression( inspect.cleandoc(
+			"""
+			import time
+			time.sleep( 0.1 )
+			parent["n"]["user"]["p"] = 0
+			"""
+		) )
+
+		with Gaffer.PerformanceMonitor() as pm :
+			GafferTest.parallelGetValue( s["n"]["user"]["p"], 10000 )
+
+		self.assertEqual( pm.plugStatistics( s["e"]["__execute"] ).computeCount, 1 )
 
 	def testRemoveDrivenSpreadsheetRow( self ) :
 

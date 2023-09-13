@@ -54,7 +54,7 @@ const char *g_bSpline = "b-spline";
 
 void staticParameters( const IECoreScene::CurvesPrimitive *object, ParameterList &parameters )
 {
-	parameters.add( "nvertices", object->verticesPerCurve() );
+	parameters.add( "nvertices", object->verticesPerCurve(), false );
 
 	const char **basis = nullptr;
 	if( object->basis() == CubicBasisf::catmullRom() )

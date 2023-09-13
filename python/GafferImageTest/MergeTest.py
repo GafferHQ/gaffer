@@ -721,35 +721,7 @@ class MergeTest( GafferImageTest.ImageTestCase ) :
 		reader = GafferImage.ImageReader()
 		reader["fileName"].setValue( self.mergeBoundariesRefPath )
 
-		# We should be able to do this simple test, but there's currently a problem: ImageTransform currently
-		# screws up values of inf, even with a simple box filter. I think this is because of the comment in
-		# Resample::computeChannelData about the filter support being computed incorrectly. This is very bad for
-		# performance, because we visit pixels outside the true filter support ... also those extra values
-		# that are read and then multiplied by 0 can lead to a inf * 0, producing a NaNs in incorrect places
-		#self.assertImagesEqual( loop["out"], reader["out"], ignoreMetadata = True, maxDifference = 1e-5 if scale > 1 else 0 )
-
-		# To work around this, we use two hacks: when the scale is 1, we disable the ImageTransform, so it
-		# doesn't screw up the inf values. When the scale is not 1, we just use some messy hacks to avoid
-		# checking the part of the image where the NaNs are
-		if scale == 1.0:
-			inverseScale["enabled"].setValue( False )
-			self.assertImagesEqual( loop["out"], reader["out"], ignoreMetadata = True, maxDifference = 0 )
-		else:
-			testCrop = GafferImage.Crop()
-			testCrop["in"].setInput( loop["out"] )
-
-			refCrop = GafferImage.Crop()
-			refCrop["in"].setInput( reader["out"] )
-			refCrop["area"].setInput( testCrop["area"] )
-
-			testCrop["area"].setValue( imath.Box2i( imath.V2i( 0 ), imath.V2i( 135, 64 ) ) )
-			self.assertImagesEqual( testCrop["out"], refCrop["out"], ignoreMetadata = True, maxDifference = 1e-5 )
-
-			testCrop["area"].setValue( imath.Box2i( imath.V2i( 151, 0 ), imath.V2i( 169, 64 ) ) )
-			self.assertImagesEqual( testCrop["out"], refCrop["out"], ignoreMetadata = True, maxDifference = 1e-5 )
-
-			testCrop["area"].setValue( imath.Box2i( imath.V2i( 175, 0 ), imath.V2i( 896, 64 ) ) )
-			self.assertImagesEqual( testCrop["out"], refCrop["out"], ignoreMetadata = True, maxDifference = 1e-5 )
+		self.assertImagesEqual( loop["out"], reader["out"], ignoreMetadata = True, maxDifference = 1e-5 if scale > 1 else 0 )
 
 	def testBoundaryCorrectness( self ):
 		self.runBoundaryCorrectness( 1 )

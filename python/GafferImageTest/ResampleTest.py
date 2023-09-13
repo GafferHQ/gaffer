@@ -343,6 +343,26 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 		with GafferTest.TestRunner.PerformanceScope() :
 			GafferImageTest.processTiles( resample["out"] )
 
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 1 )
+	def testPerfInseparableAwkwardSize( self ) :
+
+		imageReader = GafferImage.ImageReader()
+		imageReader["fileName"].setValue( self.imagesPath() / 'deepMergeReference.exr' )
+
+		resize = GafferImage.Resize()
+		resize["in"].setInput( imageReader["out"] )
+		resize["format"].setValue( GafferImage.Format( 6000, 6000 ) )
+
+		resample = GafferImage.Resample()
+		resample["in"].setInput( resize["out"] )
+		resample["filter"].setValue( 'disk' )
+		resample["filterScale"].setValue( imath.V2f( 1.1 ) )
+
+		GafferImageTest.processTiles( resize["out"] )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			GafferImageTest.processTiles( resample["out"] )
+
 
 if __name__ == "__main__":
 	unittest.main()

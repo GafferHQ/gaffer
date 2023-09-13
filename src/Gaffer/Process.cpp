@@ -117,7 +117,7 @@ const Process *Process::current()
 	return ThreadState::current().m_process;
 }
 
-void Process::handleException()
+void Process::handleException() const
 {
 	try
 	{
@@ -159,6 +159,11 @@ void Process::handleException()
 		emitError( "Unknown error" );
 		ProcessException::wrapCurrentException( *this );
 	}
+}
+
+void Process::handleException()
+{
+	const_cast<const Process *>( this )->handleException();
 }
 
 void Process::emitError( const std::string &error, const Plug *source ) const

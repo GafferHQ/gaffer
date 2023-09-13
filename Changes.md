@@ -9,6 +9,45 @@ Breaking Changes
 1.3.x.x (relative to 1.3.2.0)
 =======
 
+Features
+--------
+
+- 3Delight :
+  - Added support for VDB volume objects.
+  - Added support for `vdbVolume` shader.
+  - Added support for `volumeshader` and `displacementshader` attributes.
+  - Added support for spline parameters in shaders.
+
+Improvements
+------------
+
+- Resample, Resize, Blur, ImageTransform : Improved performance, resulting in a 3x speedup in an obscure case, and a 5-10% speedup in more common cases.
+- ImageSampler : Added `interpolate` plug to control interpolation. Previously created ImageSamplers are unaffected, but interpolation is off by default for newly created ImageSamplers.
+- 3Delight :
+  - Moved shaders to `3Delight/Shader` menu and removed outdated shaders from the menu.
+  - Shaders (including light shaders) are only loaded from the `osl` subdirectory of the 3Delight installation.
+  - Primitive variables named `uv` are now automatically renamed `st` for compatibility with the `uvCoord` shader's expectation.
+  - Added a default `uvCoord` shader during internal shader network preprocessing to shader parameters that do not have an input connection.
+
+Fixes
+-----
+
+- DispatchDialogue : Changed the button label for the results display from "Ok" to "Close".
+- Viewer : Fixed display of infinite values in the pixel inspectors. These were being incorrectly displayed as `nan` instead of `inf`.
+
+API
+---
+
+- SceneAlgo :
+  - Added `findAll()` method, for finding all scene locations matching a predicate.
+  - Added `findAllWithAttribute()` method, for finding all scene locations with a particular attribute.
+- ThreadState : Added `process()` method.
+- Process : Added const overload for `handleException()` method. The non-const version will be removed in future.
+
+Build
+-----
+
+- MacOS : Fixed compilation with Clang 13.
 
 1.3.2.0 (relative to 1.3.1.0)
 =======
@@ -331,6 +370,11 @@ Build
 
 1.2.10.x (relative to 1.2.10.2)
 ========
+
+Fixes
+-----
+
+- DispatchDialogue : Changed the button label for the results display from "Ok" to "Close".
 
 1.2.10.2 (relative to 1.2.10.1)
 ========

@@ -1313,6 +1313,7 @@ class ImageView::ColorInspector : public Signals::Trackable
 
 			ValuePlugPtr v2iValuePlug = m_contextQuery->valuePlugFromQueryPlug( m_contextQuery->queriesPlug()->getChild<NameValuePlug>( 0 ) );
 			m_sampler->pixelPlug()->setInput( v2iValuePlug );
+			m_sampler->interpolatePlug()->setValue( false );
 
 			evaluatorPlug->getChild<Color4fPlug>( "pixelColor" )->setInput( m_sampler->colorPlug() );
 
