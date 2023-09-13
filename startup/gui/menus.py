@@ -163,34 +163,7 @@ if moduleSearchPath.find( "nsi.py" ) and moduleSearchPath.find( "GafferDelight" 
 		import GafferDelight
 		import GafferDelightUI
 
-		def __shaderNodeCreator( nodeName, shaderName ) :
-
-			node = GafferOSL.OSLShader( nodeName )
-			node.loadShader( "maya/osl/" + shaderName )
-
-			return node
-
-		for label, shader in [
-			( "Standard", "material3Delight" ),
-			( "Glass", "material3DelightGlass" ),
-			( "Metal", "material3DelightMetal" ),
-			( "Skin", "material3DelightSkin" ),
-			( "Hair", "materialHairAndFur" ),
-		] :
-
-			nodeMenu.append(
-				"/3Delight/Shader/" + label,
-				functools.partial( __shaderNodeCreator, label, shader ),
-				searchText = "dl" + label
-			)
-
-		GafferSceneUI.ShaderUI.appendShaders(
-			nodeMenu.definition(), "/3Delight/Shader/Maya",
-			[ os.path.join( os.environ["DELIGHT"], "maya", "osl" ) ],
-			[ "oso" ],
-			__shaderNodeCreator,
-			searchTextPrefix = "maya"
-		)
+		GafferDelightUI.ShaderMenu.appendShaders( nodeMenu.definition() )
 
 		def __lightCreator( nodeName, shaderName, shape ) :
 
@@ -219,10 +192,10 @@ if moduleSearchPath.find( "nsi.py" ) and moduleSearchPath.find( "GafferDelight" 
 			return node
 
 		for label, shader, shape in [
-			[ "PointLight", "maya/osl/pointLight", GafferOSL.OSLLight.Shape.Sphere ],
-			[ "SpotLight", "maya/osl/spotLight", GafferOSL.OSLLight.Shape.Disk ],
-			[ "DistantLight", "maya/osl/distantLight", "distant" ],
-			[ "EnvironmentLight", "maya/osl/environmentLight", "environment" ],
+			[ "PointLight", "pointLight", GafferOSL.OSLLight.Shape.Sphere ],
+			[ "SpotLight", "spotLight", GafferOSL.OSLLight.Shape.Disk ],
+			[ "DistantLight", "distantLight", "distant" ],
+			[ "EnvironmentLight", "environmentLight", "environment" ],
 		] :
 			nodeMenu.append(
 				"/3Delight/Light/" + label,
@@ -451,9 +424,6 @@ if moduleSearchPath.find( "GafferOSL" ) :
 		os.environ["OSL_SHADER_PATHS"].split( os.path.pathsep ),
 		[ "oso" ],
 		__shaderNodeCreator,
-		# 3Delight comes with a library of shaders that we show
-		# in the 3Delight menu and don't want to show here.
-		#
 		# The OSLCode node also generates a great many shaders behind
 		# the scenes that we don't want to place in the menus. Typically
 		# these aren't on the OSL_SHADER_PATHS anyway because they are
@@ -469,17 +439,12 @@ if moduleSearchPath.find( "GafferOSL" ) :
 		#
 		# - (^|.*/) matches any number (including zero) of directory
 		#   names preceding the shader name.
-		# - (?<!maya/osl/) is a negative lookbehind, asserting that the
-		#   directory is not maya/osl, the directory containing 3delight's
-		#   shaders.
-		# - (?<!3DelightForKatana/osl/) is the same, but for another location
-		#   where 3delight seems to put copies of the same shaders.
 		# - (?!oslCode) is a negative lookahead, asserting that the shader
 		#   name does not start "oslCode", the prefix for all OSLCode
 		#   shaders.
 		# - [^/]*$ matches the rest of the shader name, ensuring it
 		#   doesn't include any directory separators.
-		matchExpression = re.compile( "(^|.*/)(?<!maya/osl/)(?<!3DelightForKatana/osl/)(?!oslCode)[^/]*$"),
+		matchExpression = re.compile( "(^|.*/)(?!oslCode)[^/]*$"),
 		searchTextPrefix = "osl",
 	)
 

@@ -289,11 +289,10 @@ if [[ -n $DELIGHT ]] ; then
 
 	appendToPath "$DELIGHT/bin" PATH
 	appendToPath "$DELIGHT/python" PYTHONPATH
-	appendToPath "$DELIGHT/shaders" DL_SHADERS_PATH
 
-	appendToPath "$DELIGHT" OSL_SHADER_PATHS
-
-	appendToPath "$GAFFER_ROOT/renderMan/displayDrivers" DL_RESOURCES_PATH
+	# The `$DELIGHT` component is included for backward compatibility and can be removed
+	# when users have had time to update to `$DELIGHT/osl` pathed shaders.
+	appendToPath "$DELIGHT/osl:$DELIGHT" OSL_SHADER_PATHS
 
 fi
 

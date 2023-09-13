@@ -15,6 +15,9 @@ Improvements
 
 - Resample, Resize, Blur, ImageTransform : Improved performance, resulting in a 3x speedup in an obscure case, and a 5-10% speedup in more common cases.
 - ImageSampler : Added `interpolate` plug to control interpolation. Previously created ImageSamplers are unaffected, but interpolation is off by default for newly created ImageSamplers.
+- 3Delight :
+  - Moved shaders to `3Delight/Shader` menu and removed outdated shaders from the menu.
+  - Shaders (including light shaders) are only loaded from the `osl` subdirectory of the 3Delight installation.
 
 Fixes
 -----
