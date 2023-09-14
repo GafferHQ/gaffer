@@ -35,6 +35,7 @@ API
   - Added `findAllWithAttribute()` method, for finding all scene locations with a particular attribute.
 - ThreadState : Added `process()` method.
 - Process : Added const overload for `handleException()` method. The non-const version will be removed in future.
+- ContextMonitor : Added `Statistics::variableHashes()` method, allowing introspection of specific variable values.
 
 Build
 -----

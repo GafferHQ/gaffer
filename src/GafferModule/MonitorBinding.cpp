@@ -122,6 +122,16 @@ list contextMonitorVariableNames( const ContextMonitor::Statistics &s )
 	return result;
 }
 
+dict contextMonitorVariableHashes( const ContextMonitor::Statistics &s, IECore::InternedString variableName )
+{
+	dict result;
+	for( const auto &[hash, count] : s.variableHashes( variableName ) )
+	{
+		result[hash] = count;
+	}
+	return result;
+}
+
 void annotateWrapper1( Node &root, const PerformanceMonitor &monitor, bool persistent )
 {
 	IECorePython::ScopedGILRelease gilRelease;
@@ -299,6 +309,7 @@ void GafferModule::bindMonitor()
 			.def( "numUniqueContexts", &ContextMonitor::Statistics::numUniqueContexts )
 			.def( "variableNames", &contextMonitorVariableNames )
 			.def( "numUniqueValues", &ContextMonitor::Statistics::numUniqueValues )
+			.def( "variableHashes", &contextMonitorVariableHashes )
 			.def( self == self )
 			.def( self != self )
 		;
