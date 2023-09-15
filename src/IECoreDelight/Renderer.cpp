@@ -46,6 +46,7 @@
 #include "IECoreScene/ShaderNetwork.h"
 #include "IECoreScene/ShaderNetworkAlgo.h"
 
+#include "IECore/CamelCase.h"
 #include "IECore/MessageHandler.h"
 #include "IECore/SearchPath.h"
 #include "IECore/SimpleTypedData.h"
@@ -319,7 +320,11 @@ class DelightOutput : public IECore::RefCounted
 					variableName = nameTokens[1];
 					variableSource = nameTokens[0];
 				}
-				layerName = variableName;
+
+				// Remove the `.` character and use camel case
+				vector<string> layerTokens;
+				IECore::StringAlgo::tokenize( variableName, '.', layerTokens );
+				layerName = IECore::CamelCase::join( layerTokens.begin(), layerTokens.end(), IECore::CamelCase::AllExceptFirst);
 			}
 
 			ParameterList layerParams;
