@@ -169,22 +169,56 @@ with IECore.IgnoredExceptions( ImportError ) :
 	# and we won't add any unnecessary output definitions.
 	import GafferDelight
 
-	for aov in [
-		"diffuse",
-		"subsurface",
-		"reflection",
-		"refraction",
-		"incandescence",
+	# Should be kept up to date with
+	# https://gitlab.com/3Delight/3delight-for-houdini/-/blob/master/ui/aov.cpp
+	# See `contrib/scripts/3delightOutputs.py` in this repository for a helper script.
+
+	for name, displayName, source, dataType in [
+		( "Ci", "Ci", "shader", "color" ),
+		( "Ci.direct", "Ci (direct)", "shader", "color" ),
+		( "Ci.indirect", "Ci (indirect)", "shader", "color" ),
+		( "diffuse", "Diffuse", "shader", "color" ),
+		( "diffuse.direct", "Diffuse (direct)", "shader", "color" ),
+		( "diffuse.indirect", "Diffuse (indirect)", "shader", "color" ),
+		( "hair", "Hair and Fur", "shader", "color" ),
+		( "subsurface", "Subsurface Scattering", "shader", "color" ),
+		( "reflection", "Reflection", "shader", "color" ),
+		( "reflection.direct", "Reflection (direct)", "shader", "color" ),
+		( "reflection.indirect", "Reflection (indirect)", "shader", "color" ),
+		( "refraction", "Refraction", "shader", "color" ),
+		( "volume", "Volume Scattering", "shader", "color" ),
+		( "volume.direct", "Volume Scattering (direct)", "shader", "color" ),
+		( "volume.indirect", "Volume Scattering (indirect)", "shader", "color" ),
+		( "incandescence", "Incandescence", "shader", "color" ),
+		( "toon_base", "Toon Base", "shader", "color" ),
+		( "toon_diffuse", "Toon Diffuse", "shader", "color" ),
+		( "toon_specular", "Toon Specular", "shader", "color" ),
+		( "toon_matte", "Toon Matte", "shader", "color" ),
+		( "toon_tint", "Toon Tint", "shader", "color" ),
+		( "outlines", "Outlines", "shader", "quad" ),
+		( "albedo", "Albedo", "shader", "color" ),
+		( "z", "Z (depth)", "builtin", "float" ),
+		( "P.camera", "Camera Space Position", "builtin", "point" ),
+		( "N.camera", "Camera Space Normal", "builtin", "point" ),
+		( "P.world", "World Space Position", "builtin", "point" ),
+		( "N.world", "World Space Normal", "builtin", "point" ),
+		( "Pref", "Reference Position", "attribute", "point" ),
+		( "shadow_mask", "Shadow Mask", "shader", "color" ),
+		( "st", "UV", "attribute", "point" ),
+		( "id.geometry", "Geometry Cryptomatte", "builtin", "float" ),
+		( "id.scenepath", "Scene Path Cryptomatte", "builtin", "float" ),
+		( "id.surfaceshader", "Surface Shader Cryptomatte", "builtin", "float" ),
+		( "relighting_multiplier", "Relighting Multiplier", "shader", "color" ),
+		( "relighting_reference", "Relighting Reference", "shader", "color" ),
+		( "motionvector", "Motion Vector", "builtin", "point" ),
+		( "occlusion", "Ambient Occlusion", "shader", "color" ),
 	] :
-
-		label = aov.title()
-
 		GafferScene.Outputs.registerOutput(
-			"Interactive/3Delight/" + label,
+			"Interactive/3Delight/{}/{}".format( source.capitalize(), displayName ),
 			IECoreScene.Output(
-				aov,
+				name,
 				"ieDisplay",
-				"color " + aov,
+				"{} {}:{}".format( dataType, source, name ),
 				{
 					"driverType" : "ClientDisplayDriver",
 					"displayHost" : "localhost",
@@ -195,11 +229,11 @@ with IECore.IgnoredExceptions( ImportError ) :
 		)
 
 		GafferScene.Outputs.registerOutput(
-			"Batch/3Delight/" + label,
+			"Batch/3Delight/{}/{}".format( source.capitalize(), displayName ),
 			IECoreScene.Output(
-				"${project:rootDirectory}/renders/${script:name}/%s/%s.####.exr" % ( aov, aov ),
+				"${project:rootDirectory}/renders/${script:name}/%s/%s.####.exr" % ( name, name ),
 				"exr",
-				"color " + aov,
+				"{} {}:{}".format( dataType, source, name ),
 			)
 		)
 

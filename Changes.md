@@ -8,6 +8,7 @@ Improvements
   - The Drawing Mode dropdown menu can be used to to choose the visible purposes.
   - The default purposes can be specified in a startup file using `Gaffer.Metadata.registerValue( GafferSceneUI.SceneView, "drawingMode.includedPurposes.value", "userDefault", IECore.StringVectorData( [ "default", "proxy" ] ) )`.
 - StandardOptions : Added `includedPurposes` plug, to control which locations are included in a render based on the value of their `usd:purpose` attribute.
+- 3Delight : Added additional output presets.
 
 Fixes
 -----
