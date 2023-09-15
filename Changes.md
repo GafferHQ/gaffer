@@ -13,6 +13,7 @@ Features
 Improvements
 ------------
 
+- SceneReader : Added support for reading from in-memory USD stages using a filename of the form `stageCache:{id}.usd` where `{id}` specifies a stage which has been inserted in the `UsdUtilsStageCache`.
 - Resample, Resize, Blur, ImageTransform : Improved performance, resulting in a 3x speedup in an obscure case, and a 5-10% speedup in more common cases.
 - ImageSampler : Added `interpolate` plug to control interpolation. Previously created ImageSamplers are unaffected, but interpolation is off by default for newly created ImageSamplers.
 - 3Delight :
@@ -24,6 +25,14 @@ Improvements
 Fixes
 -----
 
+- SceneReader :
+  - Fixed handling of invalid values on the following USD attributes :
+    - PointBased : `positions`, `normals`, `velocities`, `accelerations`.
+    - Curves : `widths`.
+    - PointInstancer : `ids`, `protoIndices`, `orientations`, `scales`, `velocities`, `accelerations`, `angularVelocities`.
+    - Points : `ids`, `widths`.
+    Invalid values are now ignored with a warning, instead of loading as invalid primitive variables.
+  - Fixed treatment of unconnected material outputs. If they were "authored" but not connected to a source, they were incorrectly being treated as valid attributes, and were being loaded as empty ShaderNetworks which caused problems elsewhere.
 - DispatchDialogue : Changed the button label for the results display from "Ok" to "Close".
 - Viewer : Fixed display of infinite values in the pixel inspectors. These were being incorrectly displayed as `nan` instead of `inf`.
 
@@ -40,6 +49,7 @@ Build
 -----
 
 - MacOS : Fixed compilation with Clang 13.
+- Cortex : Updated to version 10.5.2.0.
 
 1.3.2.0 (relative to 1.3.1.0)
 =======
