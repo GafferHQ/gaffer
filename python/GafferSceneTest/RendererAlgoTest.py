@@ -589,5 +589,164 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 			self.assertEqual( [ s.translation().x for s in samples ], [ 0.0 ] )
 			self.assertNotEqual( h, IECore.MurmurHash() )
 
+	def testPurposes( self ) :
+
+		# /group
+		#    /innerGroup1   (default)
+		#		 /cube
+		#        /sphere    (render)
+		#    /innerGroup2
+		#        /cube      (proxy)
+		#        /sphere
+
+		def purposeAttribute( purpose ) :
+
+			result = GafferScene.CustomAttributes()
+			result["attributes"].addChild( Gaffer.NameValuePlug( "usd:purpose", purpose ) )
+			return result
+
+		rootFilter = GafferScene.PathFilter()
+		rootFilter["paths"].setValue( IECore.StringVectorData( [ "*" ] ) )
+
+		cube = GafferScene.Cube()
+
+		renderSphere = GafferScene.Sphere()
+		renderSphereAttributes = purposeAttribute( "render" )
+		renderSphereAttributes["in"].setInput( renderSphere["out"] )
+		renderSphereAttributes["filter"].setInput( rootFilter["out"] )
+
+		innerGroup1 = GafferScene.Group()
+		innerGroup1["name"].setValue( "innerGroup1" )
+		innerGroup1["in"][0].setInput( cube["out"] )
+		innerGroup1["in"][1].setInput( renderSphereAttributes["out"] )
+
+		innerGroup1Attributes = purposeAttribute( "default" )
+		innerGroup1Attributes["in"].setInput( innerGroup1["out"] )
+		innerGroup1Attributes["filter"].setInput( rootFilter["out"] )
+
+		proxyCube = GafferScene.Cube()
+
+		proxyCubeAttributes = purposeAttribute( "proxy" )
+		proxyCubeAttributes["in"].setInput( proxyCube["out"] )
+		proxyCubeAttributes["filter"].setInput( rootFilter["out"] )
+
+		sphere = GafferScene.Sphere()
+
+		innerGroup2 = GafferScene.Group()
+		innerGroup2["name"].setValue( "innerGroup2" )
+		innerGroup2["in"][0].setInput( proxyCubeAttributes["out"] )
+		innerGroup2["in"][1].setInput( sphere["out"] )
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( innerGroup1Attributes["out"] )
+		group["in"][1].setInput( innerGroup2["out"] )
+
+		def assertIncludedObjects( scene, includedPurposes, paths ) :
+
+			globals = IECore.CompoundObject()
+			if includedPurposes :
+				globals["option:render:includedPurposes"] = IECore.StringVectorData( includedPurposes )
+
+			renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer(
+				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+			)
+			GafferScene.Private.RendererAlgo.outputObjects(
+				group["out"], globals, GafferScene.Private.RendererAlgo.RenderSets( scene ), GafferScene.Private.RendererAlgo.LightLinks(),
+				renderer
+			)
+
+			allPaths = {
+				"/group/innerGroup1/cube",
+				"/group/innerGroup1/sphere",
+				"/group/innerGroup2/cube",
+				"/group/innerGroup2/sphere",
+			}
+
+			self.assertTrue( paths.issubset( allPaths ) )
+			for path in allPaths :
+				if path in paths :
+					self.assertIsNotNone( renderer.capturedObject( path ) )
+				else :
+					self.assertIsNone( renderer.capturedObject( path ) )
+
+		# If we don't specify a purpose, then we should get everything.
+
+		assertIncludedObjects(
+			group["out"], None,
+			{
+				"/group/innerGroup1/cube",
+				"/group/innerGroup1/sphere",
+				"/group/innerGroup2/cube",
+				"/group/innerGroup2/sphere",
+			}
+		)
+
+		# The default purpose should pick objects without any purpose attribute,
+		# and those that explicitly have a value of "default".
+
+		assertIncludedObjects(
+			group["out"], [ "default" ],
+			{
+				"/group/innerGroup1/cube",
+				"/group/innerGroup2/sphere",
+			}
+		)
+
+		# Purpose-based visibility isn't pruning, so we can see a child location
+		# with the right purpose even if it is parented below a location with the
+		# wrong purpose.
+
+		assertIncludedObjects(
+			group["out"], [ "render" ],
+			{
+				"/group/innerGroup1/sphere",
+			}
+		)
+
+		assertIncludedObjects(
+			group["out"], [ "proxy" ],
+			{
+				"/group/innerGroup2/cube",
+			}
+		)
+
+		# Multiple purposes can be rendered at once.
+
+		assertIncludedObjects(
+			group["out"], [ "render", "default" ],
+			{
+				"/group/innerGroup1/cube",
+				"/group/innerGroup1/sphere",
+				"/group/innerGroup2/sphere",
+			}
+		)
+
+		assertIncludedObjects(
+			group["out"], [ "proxy", "default" ],
+			{
+				"/group/innerGroup1/cube",
+				"/group/innerGroup2/cube",
+				"/group/innerGroup2/sphere",
+			}
+		)
+
+		assertIncludedObjects(
+			group["out"], [ "render", "proxy", "default" ],
+			{
+				"/group/innerGroup1/cube",
+				"/group/innerGroup1/sphere",
+				"/group/innerGroup2/cube",
+				"/group/innerGroup2/sphere",
+			}
+		)
+
+		assertIncludedObjects(
+			group["out"], [ "proxy", "render" ],
+			{
+				"/group/innerGroup1/sphere",
+				"/group/innerGroup2/cube",
+			}
+		)
+
 if __name__ == "__main__":
 	unittest.main()
