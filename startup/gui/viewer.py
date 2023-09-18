@@ -69,6 +69,8 @@ def __sceneView( plug ) :
 
 GafferUI.View.registerView( GafferScene.ScenePlug.staticTypeId(), __sceneView )
 
+Gaffer.Metadata.registerValue( GafferSceneUI.SceneView, "drawingMode.includedPurposes.value", "userDefault", IECore.StringVectorData( [ "default", "proxy" ] ) )
+
 # Add items to the viewer's right click menu
 
 def __viewContextMenu( viewer, view, menuDefinition ) :
