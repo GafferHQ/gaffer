@@ -34,12 +34,16 @@
 #
 ##########################################################################
 
+import functools
+
 import IECore
 import IECoreScene
 
 import Gaffer
 import GafferUI
 import GafferScene
+
+from GafferUI.PlugValueWidget import sole
 
 ##########################################################################
 # Metadata
@@ -73,6 +77,13 @@ def __cameraSummary( plug ) :
 
 	return ", ".join( info )
 
+def __purposeSummary( plug ) :
+
+	if plug["includedPurposes"]["enabled"].getValue() :
+		return ", ".join( [ p.capitalize() for p in plug["includedPurposes"]["value"].getValue() ] )
+
+	return ""
+
 def __motionBlurSummary( plug ) :
 
 	info = []
@@ -104,6 +115,7 @@ plugsMetadata = {
 	"options" : [
 
 		"layout:section:Camera:summary", __cameraSummary,
+		"layout:section:Purpose:summary", __purposeSummary,
 		"layout:section:Motion Blur:summary", __motionBlurSummary,
 		"layout:section:Statistics:summary", __statisticsSummary,
 
@@ -320,6 +332,28 @@ plugsMetadata = {
 		"layout:section", "Camera",
 	],
 
+	# Purpose
+
+	"options.includedPurposes" : [
+
+		"description",
+		"""
+		Limits the objects included in the render according to the values of their `usd:purpose`
+		attribute.
+
+		> Tip : Use the USDAttributes node to assign the `usd:purpose` attribute.
+		""",
+
+		"layout:section", "Purpose",
+
+	],
+
+	"options.includedPurposes.value" : [
+
+		"plugValueWidget:type", "GafferSceneUI.StandardOptionsUI._IncludedPurposesPlugValueWidget",
+
+	],
+
 	# Motion blur plugs
 
 	"options.transformBlur" : [
@@ -409,3 +443,59 @@ Gaffer.Metadata.registerNode(
 	plugs = plugsMetadata
 
 )
+
+class _IncludedPurposesPlugValueWidget( GafferUI.PlugValueWidget ) :
+
+	__allPurposes = [ "default", "render", "proxy", "guide" ]
+
+	def __init__( self, plugs, **kw ) :
+
+		self.__menuButton = GafferUI.MenuButton( "", menu = GafferUI.Menu( Gaffer.WeakMethod( self.__menuDefinition ) ) )
+		GafferUI.PlugValueWidget.__init__( self, self.__menuButton, plugs, **kw )
+
+		self._addPopupMenu( self.__menuButton )
+
+		self.__currentValue = None
+
+	def _updateFromValues( self, values, exception ) :
+
+		self.__currentValue = sole( values )
+		self.__menuButton.setText( ", ".join( [ p.capitalize() for p in self.__currentValue ] ) if self.__currentValue is not None else "---" )
+		self.__menuButton.setErrored( exception is not None )
+
+	def _updateFromEditable( self ) :
+
+		self.__menuButton.setEnabled( self._editable() )
+
+	def __menuDefinition( self ) :
+
+		result = IECore.MenuDefinition()
+
+		currentValue = self.__currentValue or []
+		for purpose in self.__allPurposes :
+
+			result.append(
+				"/{}".format( purpose.capitalize() ),
+				{
+					"checkBox" : purpose in currentValue,
+					"command" : functools.partial( Gaffer.WeakMethod( self.__togglePurpose ), purpose = purpose )
+				}
+			)
+
+
+		return result
+
+	def __togglePurpose( self, checked, purpose ) :
+
+		with self.getContext() :
+			with Gaffer.UndoScope( next( iter( self.getPlugs() ) ).ancestor( Gaffer.ScriptNode ) ) :
+				for plug in self.getPlugs() :
+					value = plug.getValue()
+					# Conform value so that only valid purposes are present, and they are
+					# always presented in the same order.
+					value = [
+						p for p in self.__allPurposes
+						if
+						( p != purpose and p in value ) or ( p == purpose and checked )
+					]
+					plug.setValue( IECore.StringVectorData( value ) )

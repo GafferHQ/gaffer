@@ -1,6 +1,10 @@
 1.3.x.x (relative to 1.3.3.0)
 =======
 
+Improvements
+------------
+
+- StandardOptions : Added `includedPurposes` plug, to control which locations are included in a render based on the value of their `usd:purpose` attribute.
 
 1.3.3.0 (relative to 1.3.2.0)
 =======
