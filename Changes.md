@@ -6,6 +6,11 @@ Improvements
 
 - StandardOptions : Added `includedPurposes` plug, to control which locations are included in a render based on the value of their `usd:purpose` attribute.
 
+API
+---
+
+- RenderController : Added missing `updateRequired()` Python binding.
+
 1.3.3.0 (relative to 1.3.2.0)
 =======
 
