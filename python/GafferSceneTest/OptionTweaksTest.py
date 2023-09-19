@@ -139,6 +139,15 @@ class OptionTweaksTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( tweaks["out"]["globals"].getValue()["option:test"], IECore.IntData( 10 ) )
 
+	def testChainedTweaks( self ) :
+
+		tweaks = GafferScene.OptionTweaks()
+
+		tweaks["tweaks"].addChild( Gaffer.TweakPlug( "test", 1, Gaffer.TweakPlug.Mode.Create ) )
+		tweaks["tweaks"].addChild( Gaffer.TweakPlug( "test", 10, Gaffer.TweakPlug.Mode.Multiply ) )
+		tweaks["tweaks"].addChild( Gaffer.TweakPlug( "test", 2, Gaffer.TweakPlug.Mode.Add ) )
+
+		self.assertEqual( tweaks["out"].globals()["option:test"].value, 12 )
 
 if __name__ == "__main__" :
 	unittest.main()

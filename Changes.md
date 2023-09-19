@@ -26,6 +26,7 @@ Fixes
 
 - DispatchDialogue : Changed the button label for the results display from "Ok" to "Close".
 - Viewer : Fixed display of infinite values in the pixel inspectors. These were being incorrectly displayed as `nan` instead of `inf`.
+- OptionTweaks : Fixed bug that prevented multiple tweaks being made to the same option in one node.
 
 API
 ---
