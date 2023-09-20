@@ -1037,7 +1037,8 @@ struct LocationOutput
 {
 
 	LocationOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::Private::RendererAlgo::RenderSets &renderSets, const ScenePlug::ScenePath &root, const ScenePlug *scene )
-		:	m_renderer( renderer ), m_attributes( SceneAlgo::globalAttributes( globals ) ), m_renderSets( renderSets ), m_root( root )
+		:	m_renderer( renderer ), m_attributes( root.empty() ? SceneAlgo::globalAttributes( globals ) : new CompoundObject ),
+			m_renderSets( renderSets ), m_root( root )
 	{
 		const BoolData *transformBlurData = globals->member<BoolData>( g_transformBlurOptionName );
 		m_options.transformBlur = transformBlurData ? transformBlurData->readable() : false;
