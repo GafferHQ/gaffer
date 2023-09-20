@@ -103,6 +103,16 @@ void Capsule::hash( IECore::MurmurHash &h ) const
 
 	Procedural::hash( h );
 	h.append( m_hash );
+
+	if( m_renderOptions )
+	{
+		// Hash only what affects our rendering, not everything in
+		// `RenderOptions::globals`.
+		h.append( m_renderOptions->transformBlur );
+		h.append( m_renderOptions->deformationBlur );
+		h.append( m_renderOptions->shutter );
+		m_renderOptions->includedPurposes->hash( h );
+	}
 }
 
 void Capsule::copyFrom( const IECore::Object *other, IECore::Object::CopyContext *context )
@@ -147,9 +157,13 @@ void Capsule::render( IECoreScenePreview::Renderer *renderer ) const
 {
 	throwIfNoScene();
 	ScenePlug::GlobalScope scope( m_context.get() );
-	GafferScene::Private::RendererAlgo::RenderOptions renderOptions( m_scene );
+	std::optional<GafferScene::Private::RendererAlgo::RenderOptions> renderOptions = m_renderOptions;
+	if( !renderOptions )
+	{
+		renderOptions = GafferScene::Private::RendererAlgo::RenderOptions( m_scene );
+	}
 	GafferScene::Private::RendererAlgo::RenderSets renderSets( m_scene );
-	GafferScene::Private::RendererAlgo::outputObjects( m_scene, renderOptions, renderSets, /* lightLinks = */ nullptr, renderer, m_root );
+	GafferScene::Private::RendererAlgo::outputObjects( m_scene, *renderOptions, renderSets, /* lightLinks = */ nullptr, renderer, m_root );
 }
 
 const ScenePlug *Capsule::scene() const
@@ -168,6 +182,19 @@ const Gaffer::Context *Capsule::context() const
 {
 	throwIfNoScene();
 	return m_context.get();
+}
+
+void Capsule::setRenderOptions( const GafferScene::Private::RendererAlgo::RenderOptions &renderOptions )
+{
+	// This is not pretty, but it allows the capsule to render with the correct
+	// motion blur and `includedPurposes`, taken from the downstream node being
+	// rendered rather than from the capsule's own globals.
+	m_renderOptions = renderOptions;
+}
+
+std::optional<GafferScene::Private::RendererAlgo::RenderOptions> Capsule::getRenderOptions() const
+{
+	return m_renderOptions;
 }
 
 void Capsule::throwIfNoScene() const

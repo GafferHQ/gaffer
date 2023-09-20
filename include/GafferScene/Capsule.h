@@ -37,6 +37,7 @@
 #pragma once
 
 #include "GafferScene/Private/IECoreScenePreview/Procedural.h"
+#include "GafferScene/Private/RendererAlgo.h"
 #include "GafferScene/ScenePlug.h"
 
 #include "Gaffer/Context.h"
@@ -90,6 +91,11 @@ class GAFFERSCENE_API Capsule : public IECoreScenePreview::Procedural
 		const ScenePlug::ScenePath &root() const;
 		const Gaffer::Context *context() const;
 
+		/// Used to apply the correct render settings to the capsule before rendering it.
+		/// For internal use only.
+		void setRenderOptions( const GafferScene::Private::RendererAlgo::RenderOptions &renderOptions );
+		std::optional<GafferScene::Private::RendererAlgo::RenderOptions> getRenderOptions() const;
+
 	private :
 
 		void throwIfNoScene() const;
@@ -106,6 +112,7 @@ class GAFFERSCENE_API Capsule : public IECoreScenePreview::Procedural
 		const ScenePlug *m_scene;
 		ScenePlug::ScenePath m_root;
 		Gaffer::ConstContextPtr m_context;
+		std::optional<GafferScene::Private::RendererAlgo::RenderOptions> m_renderOptions;
 
 };
 

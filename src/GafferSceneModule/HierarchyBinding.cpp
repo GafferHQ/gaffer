@@ -67,6 +67,15 @@ using namespace GafferScene;
 namespace
 {
 
+object getRenderOptionsWrapper( const Capsule &c )
+{
+	if( auto o = c.getRenderOptions() )
+	{
+		return object( *o );
+	}
+	return object();
+}
+
 ScenePlugPtr scene( const Capsule &c )
 {
 	return const_cast<ScenePlug *>( c.scene() );
@@ -102,6 +111,8 @@ void GafferSceneModule::bindHierarchy()
 		.def( "scene", &scene )
 		.def( "root", &root )
 		.def( "context", &context )
+		.def( "setRenderOptions", &Capsule::setRenderOptions )
+		.def( "getRenderOptions", &getRenderOptionsWrapper )
 	;
 
 	GafferBindings::DependencyNodeClass<Group>()

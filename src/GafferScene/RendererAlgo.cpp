@@ -36,6 +36,7 @@
 
 #include "GafferScene/Private/RendererAlgo.h"
 
+#include "GafferScene/Capsule.h"
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 #include "GafferScene/SceneAlgo.h"
 #include "GafferScene/SceneProcessor.h"
@@ -1119,6 +1120,11 @@ struct LocationOutput
 
 	protected :
 
+		const GafferScene::Private::RendererAlgo::RenderOptions &renderOptions() const
+		{
+			return m_options;
+		}
+
 		bool purposeIncluded() const
 		{
 			return m_options.purposeIncluded( m_attributes.get() );
@@ -1505,12 +1511,20 @@ struct ObjectOutput : public LocationOutput
 
 		IECoreScenePreview::Renderer::ObjectInterfacePtr objectInterface;
 		IECoreScenePreview::Renderer::AttributesInterfacePtr attributesInterface = this->attributesInterface();
-		if( !sampleTimes.size() )
+		if( samples.size() == 1 )
 		{
-			objectInterface = renderer()->object( name( path ), samples[0].get(), attributesInterface.get() );
+			ConstObjectPtr sample = samples[0];
+			if( auto capsule = runTimeCast<const Capsule>( sample.get() ) )
+			{
+				CapsulePtr capsuleCopy = capsule->copy();
+				capsuleCopy->setRenderOptions( renderOptions() );
+				sample = capsuleCopy;
+			}
+			objectInterface = renderer()->object( name( path ), sample.get(), attributesInterface.get() );
 		}
 		else
 		{
+			assert( sampleTimes.size() == samples.size() );
 			/// \todo Can we rejig things so this conversion isn't necessary?
 			vector<const Object *> objectsVector; objectsVector.reserve( samples.size() );
 			for( const auto &sample : samples )
