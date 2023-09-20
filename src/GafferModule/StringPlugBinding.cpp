@@ -63,12 +63,12 @@ void setPathValue( StringPlug *plug, const std::filesystem::path &value )
 	plug->setValue( value );
 }
 
-std::string getValue( const StringPlug *plug, const IECore::MurmurHash *precomputedHash )
+std::string getValue( const StringPlug *plug )
 {
 	// Must release GIL in case computation spawns threads which need
 	// to reenter Python.
 	IECorePython::ScopedGILRelease r;
-	return plug->getValue( precomputedHash );
+	return plug->getValue();
 }
 
 std::string substitutionsRepr( unsigned substitutions )
@@ -161,7 +161,7 @@ void GafferModule::bindStringPlug()
 		// Must be registered before string-based `setValue()`, to give it weaker overloading precedence.
 		.def( "setValue", &setPathValue )
 		.def( "setValue", &setValue )
-		.def( "getValue", &getValue, ( boost::python::arg( "_precomputedHash" ) = object() ) )
+		.def( "getValue", &getValue )
 	;
 
 	s.attr( "ValueType" ) = boost::python::object( boost::python::handle<>( boost::python::borrowed( &PyUnicode_Type ) ) );
