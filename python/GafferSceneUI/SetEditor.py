@@ -71,11 +71,15 @@ class SetEditor( GafferUI.NodeSetEditor ) :
 				GafferUI.BasicPathFilterWidget( emptySetFilter )
 
 			self.__setMembersColumn = GafferUI.StandardPathColumn( "Members", "setPath:memberCount" )
+			self.__includedSetMembersColumn = _GafferSceneUI._SetEditor.VisibleSetInclusionsColumn( scriptNode.context() )
+			self.__excludedSetMembersColumn = _GafferSceneUI._SetEditor.VisibleSetExclusionsColumn( scriptNode.context() )
 			self.__pathListing = GafferUI.PathListingWidget(
 				Gaffer.DictPath( {}, "/" ), # temp till we make a SetPath
 				columns = [
 					_GafferSceneUI._SetEditor.SetNameColumn(),
 					self.__setMembersColumn,
+					self.__includedSetMembersColumn,
+					self.__excludedSetMembersColumn,
 				],
 				selectionMode = GafferUI.PathListingWidget.SelectionMode.Rows,
 				displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
@@ -164,23 +168,29 @@ class SetEditor( GafferUI.NodeSetEditor ) :
 	def __dragBegin( self, widget, event ) :
 
 		path = self.__pathListing.pathAt( imath.V2f( event.line.p0.x, event.line.p0.y ) )
-		column = self.__pathListing.columnAt( imath.V2f( event.line.p0.x, event.line.p0.y ) )
 		selection = self.__pathListing.getSelection()
-
+		setNames = []
 		if selection.match( str( path ) ) & IECore.PathMatcher.Result.ExactMatch :
-			if column == self.__setMembersColumn :
-				GafferUI.Pointer.setCurrent( "paths" )
-				return IECore.StringVectorData( self.__getSetMembers().paths() )
-			else :
-				selectedSetNames = self.__selectedSetNames()
-				if len( selectedSetNames ) > 0 :
-					GafferUI.Pointer.setCurrent( "paths" )
-					return IECore.StringVectorData( selectedSetNames )
-				else :
-					# prevent the path itself from being dragged
-					return IECore.StringVectorData()
+			setNames = self.__selectedSetNames()
+		else :
+			setName = path.property( "setPath:setName" )
+			if setName is not None :
+				setNames.append( setName )
 
-		return None
+		if len( setNames ) == 0 :
+			# prevent the path itself from being dragged
+			return IECore.StringVectorData()
+
+		GafferUI.Pointer.setCurrent( "paths" )
+		column = self.__pathListing.columnAt( imath.V2f( event.line.p0.x, event.line.p0.y ) )
+		if column == self.__setMembersColumn :
+			return IECore.StringVectorData( self.__getSetMembers( setNames ).paths() )
+		elif column == self.__includedSetMembersColumn :
+			return IECore.StringVectorData( self.__getIncludedSetMembers( setNames ).paths() )
+		elif column == self.__excludedSetMembersColumn :
+			return IECore.StringVectorData( self.__getExcludedSetMembers( setNames ).paths() )
+		else :
+			return IECore.StringVectorData( setNames )
 
 	def __keyPressSignal( self, widget, event ) :
 
@@ -240,7 +250,7 @@ class SetEditor( GafferUI.NodeSetEditor ) :
 
 		self.__plug.ancestor( Gaffer.ApplicationRoot ).setClipboardContents( data )
 
-	def __getSetMembers( self, *unused ) :
+	def __getSetMembers( self, setNames, *unused ) :
 
 		result = IECore.PathMatcher()
 
@@ -248,21 +258,29 @@ class SetEditor( GafferUI.NodeSetEditor ) :
 			return result
 
 		with Gaffer.Context( self.getContext() ) :
-			for setName in self.__selectedSetNames() :
+			for setName in setNames :
 				result.addPaths( self.__plug.set( setName ).value )
 
 		return result
 
+	def __getIncludedSetMembers( self, setNames, *unused ) :
+
+		return self.__getSetMembers( setNames ).intersection( ContextAlgo.getVisibleSet( self.getContext() ).inclusions )
+
+	def __getExcludedSetMembers( self, setNames, *unused ) :
+
+		return self.__getSetMembers( setNames ).intersection( ContextAlgo.getVisibleSet( self.getContext() ).exclusions )
+
 	def __selectSetMembers( self, *unused ) :
 
-		ContextAlgo.setSelectedPaths( self.getContext(), self.__getSetMembers() )
+		ContextAlgo.setSelectedPaths( self.getContext(), self.__getSetMembers( self.__selectedSetNames() ) )
 
 	def __copySetMembers( self, *unused ) :
 
 		data = IECore.StringVectorData()
 
 		if self.__plug is not None :
-			data.extend( self.__getSetMembers().paths() )
+			data.extend( self.__getSetMembers( self.__selectedSetNames() ).paths() )
 
 		self.__plug.ancestor( Gaffer.ApplicationRoot ).setClipboardContents( data )
 

@@ -21,6 +21,7 @@ Improvements
   - Shaders (including light shaders) are only loaded from the `osl` subdirectory of the 3Delight installation.
   - Primitive variables named `uv` are now automatically renamed `st` for compatibility with the `uvCoord` shader's expectation.
   - Added a default `uvCoord` shader during internal shader network preprocessing to shader parameters that do not have an input connection.
+- SetEditor : Added columns for controlling the Visible Set membership of set members. These allow the current members of a set to be included or excluded from the Visible Set by clicking within the Set Editor's Inclusions and Exclusions columns.
 
 Fixes
 -----
