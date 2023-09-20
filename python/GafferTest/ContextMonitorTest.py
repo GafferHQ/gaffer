@@ -107,5 +107,31 @@ class ContextMonitorTest( GafferTest.TestCase ) :
 		self.assertFalse( a1["sum"] in m.allStatistics() )
 		self.assertTrue( a2["sum"] in m.allStatistics() )
 
+	def testVariableHashes( self ) :
+
+		node = GafferTest.AddNode()
+
+		context1 = Gaffer.Context()
+		context1["test"] = 10
+
+		context2 = Gaffer.Context()
+		context2["test"] = 20
+
+		with Gaffer.ContextMonitor() as monitor :
+
+			with context1 :
+				node["sum"].getValue()
+
+			with context2 :
+				node["sum"].getValue()
+
+		statistics = monitor.plugStatistics( node["sum"] )
+		hashes = statistics.variableHashes( "test" )
+		self.assertEqual( len( hashes ), 2 )
+		self.assertEqual( hashes.get( context1.variableHash( "test" ) ), 2 ) # A hash and a compute
+		self.assertEqual( hashes.get( context2.variableHash( "test" ) ), 1 ) # Just a hash
+
+		self.assertEqual( statistics.variableHashes( "nonExistentVariable" ), {} )
+
 if __name__ == "__main__":
 	unittest.main()

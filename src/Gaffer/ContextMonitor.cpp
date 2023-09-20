@@ -45,6 +45,7 @@ using namespace IECore;
 using namespace Gaffer;
 
 static ContextMonitor::Statistics g_emptyStatistics;
+static ContextMonitor::Statistics::CountingMap g_emptyCountingMap;
 
 //////////////////////////////////////////////////////////////////////////
 // ContextMonitor::Statistics
@@ -73,6 +74,16 @@ size_t ContextMonitor::Statistics::numUniqueValues( IECore::InternedString varia
 		return it->second.size();
 	}
 	return 0;
+}
+
+const ContextMonitor::Statistics::CountingMap &ContextMonitor::Statistics::variableHashes( IECore::InternedString variableName ) const
+{
+	VariableMap::const_iterator it = m_variables.find( variableName );
+	if( it != m_variables.end() )
+	{
+		return it->second;
+	}
+	return g_emptyCountingMap;
 }
 
 ContextMonitor::Statistics & ContextMonitor::Statistics::operator += ( const Context *context )
