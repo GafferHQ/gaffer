@@ -161,11 +161,6 @@ void Process::handleException() const
 	}
 }
 
-void Process::handleException()
-{
-	const_cast<const Process *>( this )->handleException();
-}
-
 void Process::emitError( const std::string &error, const Plug *source ) const
 {
 	const Plug *plug = m_destinationPlug;

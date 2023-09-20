@@ -5,6 +5,7 @@ Breaking Changes
 ----------------
 
 - Dispatcher : Removed `createMatching()` method.
+- Process : Removed non-const variant of the `handleException()` method.
 
 1.3.x.x (relative to 1.3.3.0)
 =======
