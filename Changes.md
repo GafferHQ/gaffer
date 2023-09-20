@@ -6,7 +6,11 @@ Breaking Changes
 
 - Dispatcher : Removed `createMatching()` method.
 
-1.3.x.x (relative to 1.3.2.0)
+1.3.x.x (relative to 1.3.3.0)
+=======
+
+
+1.3.3.0 (relative to 1.3.2.0)
 =======
 
 Features
@@ -21,6 +25,7 @@ Features
 Improvements
 ------------
 
+- SceneReader : Added support for reading from in-memory USD stages using a filename of the form `stageCache:{id}.usd` where `{id}` specifies a stage which has been inserted in the `UsdUtilsStageCache`.
 - Resample, Resize, Blur, ImageTransform : Improved performance, resulting in a 3x speedup in an obscure case, and a 5-10% speedup in more common cases.
 - ImageSampler : Added `interpolate` plug to control interpolation. Previously created ImageSamplers are unaffected, but interpolation is off by default for newly created ImageSamplers.
 - 3Delight :
@@ -28,12 +33,22 @@ Improvements
   - Shaders (including light shaders) are only loaded from the `osl` subdirectory of the 3Delight installation.
   - Primitive variables named `uv` are now automatically renamed `st` for compatibility with the `uvCoord` shader's expectation.
   - Added a default `uvCoord` shader during internal shader network preprocessing to shader parameters that do not have an input connection.
+- SetEditor : Added columns for controlling the Visible Set membership of set members. These allow the current members of a set to be included or excluded from the Visible Set by clicking within the Set Editor's Inclusions and Exclusions columns.
 
 Fixes
 -----
 
+- SceneReader :
+  - Fixed handling of invalid values on the following USD attributes :
+    - PointBased : `positions`, `normals`, `velocities`, `accelerations`.
+    - Curves : `widths`.
+    - PointInstancer : `ids`, `protoIndices`, `orientations`, `scales`, `velocities`, `accelerations`, `angularVelocities`.
+    - Points : `ids`, `widths`.
+    Invalid values are now ignored with a warning, instead of loading as invalid primitive variables.
+  - Fixed treatment of unconnected material outputs. If they were "authored" but not connected to a source, they were incorrectly being treated as valid attributes, and were being loaded as empty ShaderNetworks which caused problems elsewhere.
 - DispatchDialogue : Changed the button label for the results display from "Ok" to "Close".
 - Viewer : Fixed display of infinite values in the pixel inspectors. These were being incorrectly displayed as `nan` instead of `inf`.
+- OptionTweaks : Fixed bug that prevented multiple tweaks being made to the same option in one node.
 
 API
 ---
@@ -43,11 +58,13 @@ API
   - Added `findAllWithAttribute()` method, for finding all scene locations with a particular attribute.
 - ThreadState : Added `process()` method.
 - Process : Added const overload for `handleException()` method. The non-const version will be removed in future.
+- ContextMonitor : Added `Statistics::variableHashes()` method, allowing introspection of specific variable values.
 
 Build
 -----
 
 - MacOS : Fixed compilation with Clang 13.
+- Cortex : Updated to version 10.5.2.0.
 
 1.3.2.0 (relative to 1.3.1.0)
 =======
@@ -368,7 +385,11 @@ Build
 - USD : Updated to version 23.05.
 - ZLib : Added version 1.2.13.
 
-1.2.10.x (relative to 1.2.10.2)
+1.2.10.x (relative to 1.2.10.3)
+========
+
+
+1.2.10.3 (relative to 1.2.10.2)
 ========
 
 Fixes

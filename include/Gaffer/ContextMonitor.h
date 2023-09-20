@@ -73,9 +73,14 @@ class GAFFER_API ContextMonitor : public Monitor
 		struct GAFFER_API Statistics
 		{
 
+			using CountingMap = boost::unordered_map<IECore::MurmurHash, size_t>;
+
 			size_t numUniqueContexts() const;
 			std::vector<IECore::InternedString> variableNames() const;
 			size_t numUniqueValues( IECore::InternedString variableName ) const;
+			/// Maps from the `Context::variableHash()` for each unique value to
+			/// the number of times that value appeared.
+			const CountingMap &variableHashes( IECore::InternedString variableName ) const;
 
 			Statistics & operator += ( const Context *rhs );
 			Statistics & operator += ( const Statistics &rhs );
@@ -86,7 +91,6 @@ class GAFFER_API ContextMonitor : public Monitor
 			private :
 
 				using ContextSet = boost::unordered_set<IECore::MurmurHash>;
-				using CountingMap = boost::unordered_map<IECore::MurmurHash, size_t>;
 				using VariableMap = std::map<IECore::InternedString, CountingMap>;
 
 				ContextSet m_contexts;

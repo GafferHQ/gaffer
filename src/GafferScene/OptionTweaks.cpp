@@ -120,12 +120,10 @@ IECore::ConstCompoundObjectPtr OptionTweaks::computeProcessedGlobals(
 	CompoundObjectPtr result = new CompoundObject();
 	result->members() = inputGlobals->members();
 
-	const CompoundObject *source = inputGlobals.get();
-
 	tweaksPlug->applyTweaks(
-		[&source]( const std::string &valueName )
+		[&result]( const std::string &valueName )
 		{
-			return source->member<Data>( g_namePrefix + valueName );
+			return result->member<Data>( g_namePrefix + valueName );
 		},
 		[&result]( const std::string &valueName, DataPtr newData )
 		{
