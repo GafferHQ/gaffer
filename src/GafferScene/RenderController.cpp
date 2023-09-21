@@ -429,7 +429,7 @@ class RenderController::SceneGraph
 			const bool parentTransformChanged = m_parent && ( m_parent->m_changedComponents & TransformComponent );
 			if( ( m_dirtyComponents & TransformComponent ) || parentTransformChanged )
 			{
-				if( updateTransform( controller->m_scene->transformPlug(), parentTransformChanged, controller->m_motionBlurOptions ) )
+				if( updateTransform( controller->m_scene->transformPlug(), parentTransformChanged ) )
 				{
 					m_changedComponents |= TransformComponent;
 				}
@@ -453,7 +453,7 @@ class RenderController::SceneGraph
 
 			// Object
 
-			if( ( m_dirtyComponents & ObjectComponent ) && updateObject( controller->m_scene->objectPlug(), type, controller->m_renderer.get(), controller->m_globals.get(), controller->m_scene.get(), controller->m_lightLinks.get(), controller->m_motionBlurOptions ) )
+			if( ( m_dirtyComponents & ObjectComponent ) && updateObject( controller->m_scene->objectPlug(), type, controller->m_renderer.get(), controller->m_globals.get(), controller->m_scene.get(), controller->m_lightLinks.get() ) )
 			{
 				m_changedComponents |= ObjectComponent;
 			}
@@ -477,7 +477,7 @@ class RenderController::SceneGraph
 						{
 							// Failed to apply attributes - must replace entire object.
 							m_objectHash = MurmurHash();
-							if( updateObject( controller->m_scene->objectPlug(), type, controller->m_renderer.get(), controller->m_globals.get(), controller->m_scene.get(), controller->m_lightLinks.get(), controller->m_motionBlurOptions ) )
+							if( updateObject( controller->m_scene->objectPlug(), type, controller->m_renderer.get(), controller->m_globals.get(), controller->m_scene.get(), controller->m_lightLinks.get() ) )
 							{
 								m_changedComponents |= ObjectComponent;
 								controller->m_failedAttributeEdits++;
@@ -722,7 +722,7 @@ class RenderController::SceneGraph
 		}
 
 		// Returns true if the transform changed.
-		bool updateTransform( const M44fPlug *transformPlug, bool parentTransformChanged, const MotionBlurOptions &motionBlurOptions  )
+		bool updateTransform( const M44fPlug *transformPlug, bool parentTransformChanged )
 		{
 			if( parentTransformChanged )
 			{
@@ -769,7 +769,7 @@ class RenderController::SceneGraph
 		}
 
 		// Returns true if the object changed.
-		bool updateObject( const ObjectPlug *objectPlug, Type type, IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const ScenePlug *scene, LightLinks *lightLinks, const MotionBlurOptions &motionBlurOptions )
+		bool updateObject( const ObjectPlug *objectPlug, Type type, IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const ScenePlug *scene, LightLinks *lightLinks )
 		{
 			const bool hadObjectInterface = static_cast<bool>( m_objectInterface );
 			if( type == NoType || m_drawMode != VisibleSet::Visibility::Visible )
