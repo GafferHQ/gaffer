@@ -286,22 +286,18 @@ class ValuePlugTest( GafferTest.TestCase ) :
 		self.assertEqual( a1, IECore.StringData( "a" ) )
 		self.assertEqual( n.numHashCalls, 1 )
 
-		# We apply some leeway in our test for how many hash calls are
-		# made - a good ValuePlug implementation will probably avoid
-		# unecessary repeated calls in most cases, but it's not
-		# what this unit test is about.
 		a2 = n["out"].getValue( _copy = False )
 		self.assertTrue( a2.isSame( a1 ) )
-		self.assertTrue( n.numHashCalls == 1 or n.numHashCalls == 2 )
+		self.assertEqual( n.numHashCalls, 1 )
 
 		h = n["out"].hash()
-		self.assertTrue( n.numHashCalls >= 1 and n.numHashCalls <= 3 )
-		numHashCalls = n.numHashCalls
+		self.assertEqual( n.numHashCalls, 1 )
 
-		# What we care about is that calling getValue() with a precomputed hash
-		# definitely doesn't recompute the hash again.
+		# Calling `getValue()` with a precomputed hash shouldn't recompute the
+		# hash again, even if it has been cleared from the cache.
+		Gaffer.ValuePlug.clearHashCache()
 		a3 = n["out"].getValue( _copy = False, _precomputedHash = h )
-		self.assertEqual( n.numHashCalls, numHashCalls )
+		self.assertEqual( n.numHashCalls, 1 )
 		self.assertTrue( a3.isSame( a1 ) )
 
 	def testSerialisationOfChildValues( self ) :

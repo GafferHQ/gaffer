@@ -67,64 +67,24 @@ OpenColorIOContext::~OpenColorIOContext()
 {
 }
 
-Gaffer::ValuePlug *OpenColorIOContext::configPlug()
+Gaffer::OptionalValuePlug *OpenColorIOContext::configPlug()
 {
-	return getChild<ValuePlug>( g_firstPlugIndex );
+	return getChild<OptionalValuePlug>( g_firstPlugIndex );
 }
 
-const Gaffer::ValuePlug *OpenColorIOContext::configPlug() const
+const Gaffer::OptionalValuePlug *OpenColorIOContext::configPlug() const
 {
-	return getChild<ValuePlug>( g_firstPlugIndex );
+	return getChild<OptionalValuePlug>( g_firstPlugIndex );
 }
 
-Gaffer::BoolPlug *OpenColorIOContext::configEnabledPlug()
+Gaffer::OptionalValuePlug *OpenColorIOContext::workingSpacePlug()
 {
-	return configPlug()->getChild<BoolPlug>( 0 );
+	return getChild<OptionalValuePlug>( g_firstPlugIndex + 1 );
 }
 
-const Gaffer::BoolPlug *OpenColorIOContext::configEnabledPlug() const
+const Gaffer::OptionalValuePlug *OpenColorIOContext::workingSpacePlug() const
 {
-	return configPlug()->getChild<BoolPlug>( 0 );
-}
-
-Gaffer::StringPlug *OpenColorIOContext::configValuePlug()
-{
-	return configPlug()->getChild<StringPlug>( 1 );
-}
-
-const Gaffer::StringPlug *OpenColorIOContext::configValuePlug() const
-{
-	return configPlug()->getChild<StringPlug>( 1 );
-}
-
-Gaffer::ValuePlug *OpenColorIOContext::workingSpacePlug()
-{
-	return getChild<ValuePlug>( g_firstPlugIndex + 1 );
-}
-
-const Gaffer::ValuePlug *OpenColorIOContext::workingSpacePlug() const
-{
-	return getChild<ValuePlug>( g_firstPlugIndex + 1 );
-}
-
-Gaffer::BoolPlug *OpenColorIOContext::workingSpaceEnabledPlug()
-{
-	return workingSpacePlug()->getChild<BoolPlug>( 0 );
-}
-
-const Gaffer::BoolPlug *OpenColorIOContext::workingSpaceEnabledPlug() const
-{
-	return workingSpacePlug()->getChild<BoolPlug>( 0 );
-}
-
-Gaffer::StringPlug *OpenColorIOContext::workingSpaceValuePlug()
-{
-	return workingSpacePlug()->getChild<StringPlug>( 1 );
-}
-
-const Gaffer::StringPlug *OpenColorIOContext::workingSpaceValuePlug() const
-{
-	return workingSpacePlug()->getChild<StringPlug>( 1 );
+	return getChild<OptionalValuePlug>( g_firstPlugIndex + 1 );
 }
 
 Gaffer::ValuePlug *OpenColorIOContext::variablesPlug()
@@ -197,14 +157,14 @@ void OpenColorIOContext::compute( ValuePlug *output, const Context *context ) co
 		IECore::CompoundDataPtr resultData = new IECore::CompoundData;
 		IECore::CompoundDataMap &result = resultData->writable();
 
-		if( configEnabledPlug()->getValue() )
+		if( configPlug()->enabledPlug()->getValue() )
 		{
-			result["ocio:config"] = new StringData( configValuePlug()->getValue() );
+			result["ocio:config"] = new StringData( configPlug()->valuePlug<StringPlug>()->getValue() );
 		}
 
-		if( workingSpaceEnabledPlug()->getValue() )
+		if( workingSpacePlug()->enabledPlug()->getValue() )
 		{
-			result["ocio:workingSpace"] = new StringData( workingSpaceValuePlug()->getValue() );
+			result["ocio:workingSpace"] = new StringData( workingSpacePlug()->valuePlug<StringPlug>()->getValue() );
 		}
 
 		ConstCompoundDataPtr extraVariables = extraVariablesPlug()->getValue();

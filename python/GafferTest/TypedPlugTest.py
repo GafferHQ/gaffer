@@ -200,25 +200,60 @@ class TypedPlugTest( GafferTest.TestCase ) :
 
 	def testPrecomputedHash( self ) :
 
-		n = GafferTest.StringInOutNode()
-		n["in"].setValue( "hi" )
+		class MatrixMultiplyNode( Gaffer.ComputeNode ) :
 
-		self.assertEqual( n["out"].getValue(), "hi" )
+			def __init__( self, name = "MatrixMultiply" ) :
+
+				Gaffer.ComputeNode.__init__( self, name )
+
+				self["in1"] = Gaffer.M44fPlug()
+				self["in2"] = Gaffer.M44fPlug()
+				self["out"] = Gaffer.M44fPlug( direction = Gaffer.Plug.Direction.Out )
+
+				self.numComputeCalls = 0
+				self.numHashCalls = 0
+
+			def affects( self, input ) :
+
+				outputs = Gaffer.ComputeNode.affects( self, input )
+				if input.isSame( self["in1"] ) or input.isSame( self["in2"] ) :
+					outputs.append( self.getChild( "out" ) )
+
+				return outputs
+
+			def hash( self, output, context, h ) :
+
+				assert( output.isSame( self.getChild( "out" ) ) )
+
+				self["in1"].hash( h )
+				self["in2"].hash( h )
+
+				self.numHashCalls += 1
+
+			def compute( self, output, context ) :
+
+				assert( output.isSame( self.getChild( "out" ) ) )
+				output.setValue( self["in1"].getValue() * self["in2"].getValue() )
+
+				self.numComputeCalls += 1
+
+		IECore.registerRunTimeTyped( MatrixMultiplyNode )
+
+		n = MatrixMultiplyNode()
+
+		self.assertEqual( n["out"].getValue(), imath.M44f() )
 		self.assertEqual( n.numHashCalls, 1 )
 		self.assertEqual( n.numComputeCalls, 1 )
 
 		h = n["out"].hash()
-		numHashCalls = n.numHashCalls
-		# Accept either 1 or 2 - it would be reasonable for the ValuePlug
-		# to have either cached the hash or not, but that's not what we're
-		# testing here.
-		self.assertTrue( numHashCalls == 1 or numHashCalls == 2 )
+		self.assertEqual( n.numHashCalls, 1 )
 		self.assertEqual( n.numComputeCalls, 1 )
 
-		# What we care about is that calling getValue() with a precomputed hash
-		# definitely doesn't recompute the hash again.
-		self.assertEqual( n["out"].getValue( _precomputedHash = h ), "hi" )
-		self.assertEqual( n.numHashCalls, numHashCalls )
+		# Calling `getValue()` with a precomputed hash shouldn't recompute the
+		# hash again, even if it has been cleared from the cache.
+		Gaffer.ValuePlug.clearHashCache()
+		self.assertEqual( n["out"].getValue( _precomputedHash = h ), imath.M44f() )
+		self.assertEqual( n.numHashCalls, 1 )
 		self.assertEqual( n.numComputeCalls, 1 )
 
 	def testBoolPlugStringConnections( self ) :

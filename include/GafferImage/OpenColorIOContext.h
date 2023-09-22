@@ -41,6 +41,7 @@
 
 #include "Gaffer/CompoundDataPlug.h"
 #include "Gaffer/ContextProcessor.h"
+#include "Gaffer/OptionalValuePlug.h"
 #include "Gaffer/TypedObjectPlug.h"
 
 namespace GafferImage
@@ -56,25 +57,11 @@ class GAFFERIMAGE_API OpenColorIOContext : public Gaffer::ContextProcessor
 		explicit OpenColorIOContext( const std::string &name=GraphComponent::defaultName<OpenColorIOContext>() );
 		~OpenColorIOContext() override;
 
-		/// \todo Return OptionalValuePlug, and remove `configEnabledPlug()` and
-		/// `configValuePlug()` methods. Do the same for `workingSpace` plugs.
-		Gaffer::ValuePlug *configPlug();
-		const Gaffer::ValuePlug *configPlug() const;
+		Gaffer::OptionalValuePlug *configPlug();
+		const Gaffer::OptionalValuePlug *configPlug() const;
 
-		Gaffer::BoolPlug *configEnabledPlug();
-		const Gaffer::BoolPlug *configEnabledPlug() const;
-
-		Gaffer::StringPlug *configValuePlug();
-		const Gaffer::StringPlug *configValuePlug() const;
-
-		Gaffer::ValuePlug *workingSpacePlug();
-		const Gaffer::ValuePlug *workingSpacePlug() const;
-
-		Gaffer::BoolPlug *workingSpaceEnabledPlug();
-		const Gaffer::BoolPlug *workingSpaceEnabledPlug() const;
-
-		Gaffer::StringPlug *workingSpaceValuePlug();
-		const Gaffer::StringPlug *workingSpaceValuePlug() const;
+		Gaffer::OptionalValuePlug *workingSpacePlug();
+		const Gaffer::OptionalValuePlug *workingSpacePlug() const;
 
 		Gaffer::ValuePlug *variablesPlug();
 		const Gaffer::ValuePlug *variablesPlug() const;

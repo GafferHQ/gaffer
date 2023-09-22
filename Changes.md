@@ -5,6 +5,9 @@ Breaking Changes
 ----------------
 
 - Dispatcher : Removed `createMatching()` method.
+- Process : Removed non-const variant of the `handleException()` method.
+- StringPlug : Removed deprecated `precomputedHash` argument from `getValue()` method.
+- OpenColorIOContext : Removed `configEnabledPlug()`, `configValuePlug()`, `workingSpaceEnabledPlug()` and `workingSpaceValuePlug()` methods. Use the OptionalValuePlug child accessors instead.
 
 1.3.x.x (relative to 1.3.3.0)
 =======

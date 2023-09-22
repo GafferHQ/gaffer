@@ -106,9 +106,9 @@ void StringPlug::setValue( const std::filesystem::path &value )
 	setValue( value.generic_string() );
 }
 
-std::string StringPlug::getValue( const IECore::MurmurHash *precomputedHash ) const
+std::string StringPlug::getValue() const
 {
-	ConstStringDataPtr s = getObjectValue<StringData>( precomputedHash );
+	ConstStringDataPtr s = getObjectValue<StringData>();
 
 	const bool performSubstitutions =
 		m_substitutions &&

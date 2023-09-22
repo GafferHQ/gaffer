@@ -304,13 +304,11 @@ class StringPlugTest( GafferTest.TestCase ) :
 
 			self.assertEqual( s["substitionsOn"]["out"].getValue(), "test.1.exr" )
 			substitutionsOnHash1 = s["substitionsOn"]["out"].hash()
-			self.assertEqual( s["substitionsOn"]["out"].getValue( _precomputedHash = substitutionsOnHash1 ), "test.1.exr" )
 
 			# We should get sequences out of the non-substituting node.
 
 			self.assertEqual( s["substitionsOff"]["out"].getValue(), "test.#.exr" )
 			substitutionsOffHash1 = s["substitionsOff"]["out"].hash()
-			self.assertEqual( s["substitionsOff"]["out"].getValue( _precomputedHash = substitutionsOffHash1 ), "test.#.exr" )
 			self.assertNotEqual( substitutionsOnHash1, substitutionsOffHash1 )
 
 			# We shouldn't get frame numbers out of the third node, because the
@@ -320,7 +318,6 @@ class StringPlugTest( GafferTest.TestCase ) :
 
 			self.assertEqual( s["substitionsOnIndirectly"]["out"].getValue(), "test.#.exr" )
 			substitionsOnIndirectlyHash1 = s["substitionsOnIndirectly"]["out"].hash()
-			self.assertEqual( s["substitionsOnIndirectly"]["out"].getValue( _precomputedHash = substitionsOnIndirectlyHash1 ), "test.#.exr" )
 
 			# Frame 2
 			#########
@@ -339,7 +336,6 @@ class StringPlugTest( GafferTest.TestCase ) :
 
 			self.assertEqual( s["substitionsOn"]["out"].getValue(), "test.2.exr" )
 			substitutionsOnHash2 = s["substitionsOn"]["out"].hash()
-			self.assertEqual( s["substitionsOn"]["out"].getValue( _precomputedHash = substitutionsOnHash2 ), "test.2.exr" )
 			self.assertNotEqual( substitutionsOnHash2, substitutionsOnHash1 )
 
 			# We should still get sequences out of the non-substituting node,
@@ -347,7 +343,6 @@ class StringPlugTest( GafferTest.TestCase ) :
 
 			self.assertEqual( s["substitionsOff"]["out"].getValue(), "test.#.exr" )
 			substitutionsOffHash2 = s["substitionsOff"]["out"].hash()
-			self.assertEqual( s["substitionsOff"]["out"].getValue( _precomputedHash = substitutionsOffHash2 ), "test.#.exr" )
 			self.assertEqual( substitutionsOffHash1, substitutionsOffHash2 )
 			self.assertNotEqual( substitutionsOnHash2, substitutionsOffHash2 )
 
@@ -355,7 +350,6 @@ class StringPlugTest( GafferTest.TestCase ) :
 
 			self.assertEqual( s["substitionsOnIndirectly"]["out"].getValue(), "test.#.exr" )
 			substitionsOnIndirectlyHash2 = s["substitionsOnIndirectly"]["out"].hash()
-			self.assertEqual( s["substitionsOnIndirectly"]["out"].getValue( _precomputedHash = substitionsOnIndirectlyHash2 ), "test.#.exr" )
 			self.assertEqual( substitionsOnIndirectlyHash2, substitionsOnIndirectlyHash1 )
 
 	def testHashUsesValue( self ) :

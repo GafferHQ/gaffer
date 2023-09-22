@@ -118,10 +118,8 @@ class GAFFER_API StringPlug : public ValuePlug
 		/// > (which would be `\` on Windows).
 		/// \undoable
 		void setValue( const std::filesystem::path &value );
-		/// Returns the value. The `precomputedHash` argument is deprecated, and
-		/// will be removed in a future release.
-		/// \todo Remove `precomputedHash` argument.
-		std::string getValue( const IECore::MurmurHash *precomputedHash = nullptr ) const;
+		/// Returns the value.
+		std::string getValue() const;
 
 		void setFrom( const ValuePlug *other ) override;
 

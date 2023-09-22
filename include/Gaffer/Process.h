@@ -98,8 +98,6 @@ class GAFFER_API Process : private ThreadState::Scope
 		/// and rethrow the exception for propagation back to
 		/// the original caller.
 		[[noreturn]] void handleException() const;
-		/// \todo This just exists for ABI compatibility. Remove it.
-		void handleException();
 
 	private :
 
