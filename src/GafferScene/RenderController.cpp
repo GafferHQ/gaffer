@@ -1564,10 +1564,9 @@ void RenderController::dirtySceneGraphs( unsigned components )
 
 	if( components & SceneGraph::ObjectComponent )
 	{
-		// We don't track dirtiness of different SceneGraphs separately anyway,
-		// so just recheck if a camera has changed a shutter override whenever
-		// any object is dirtied
-		m_changedGlobalComponents |= CameraShutterGlobalComponent;
+		// Changes to a camera object may include changing the
+		// shutter that overrides the global shutter.
+		m_dirtyGlobalComponents |= CameraShutterGlobalComponent;
 	}
 }
 
@@ -1653,7 +1652,7 @@ void RenderController::updateInternal( const ProgressCallback &callback, const I
 		}
 
 		// Update motion blur options
-		if( m_changedGlobalComponents & ( GlobalsGlobalComponent | CameraShutterGlobalComponent ) )
+		if( ( m_changedGlobalComponents & GlobalsGlobalComponent ) || ( m_dirtyGlobalComponents & CameraShutterGlobalComponent ) )
 		{
 			const BoolData *transformBlurData = m_globals->member<BoolData>( g_transformBlurOptionName );
 			bool transformBlur = transformBlurData ? transformBlurData->readable() : false;
