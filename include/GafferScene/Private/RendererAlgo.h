@@ -63,14 +63,33 @@ namespace Private
 namespace RendererAlgo
 {
 
+struct GAFFERSCENE_API RenderOptions
+{
+	RenderOptions();
+	RenderOptions( const ScenePlug *scene );
+	RenderOptions( const RenderOptions &other ) = default;
+	RenderOptions& operator=( const RenderOptions &other ) = default;
+	/// The globals from the scene.
+	IECore::ConstCompoundObjectPtr globals;
+	/// Convenient access to specific properties, taking into account default
+	/// values if they have not been specified in the scene.
+	bool transformBlur;
+	bool deformationBlur;
+	Imath::V2f shutter;
+	IECore::ConstStringVectorDataPtr includedPurposes;
+	/// Returns true if `includedPurposes` includes the purpose defined by
+	/// `attributes`.
+	bool purposeIncluded( const IECore::CompoundObject *attributes ) const;
+};
+
 /// Creates the directories necessary to receive the outputs defined in globals.
 GAFFERSCENE_API void createOutputDirectories( const IECore::CompoundObject *globals );
 
-/// Set the "times" to a list of times to sample the transform or deformation of a location at, based on the
-/// "motionBlur" enable coming from the options, a shutter, and location attributes.  Returns a boolean for
-/// whether times has been altered ( returns false if times was already set correctly ).
-GAFFERSCENE_API bool transformMotionTimes( bool motionBlur, const Imath::V2f &shutter, const IECore::CompoundObject *attributes, std::vector<float> &times );
-GAFFERSCENE_API bool deformationMotionTimes( bool motionBlur, const Imath::V2f &shutter, const IECore::CompoundObject *attributes, std::vector<float> &times );
+/// Sets `times` to a list of times to sample the transform or deformation of a
+/// location at, based on the render options and location attributes. Returns `true`
+/// if `times` was altered and `false` if it was already set correctly.
+GAFFERSCENE_API bool transformMotionTimes( const RenderOptions &renderOptions, const IECore::CompoundObject *attributes, std::vector<float> &times );
+GAFFERSCENE_API bool deformationMotionTimes( const RenderOptions &renderOptions, const IECore::CompoundObject *attributes, std::vector<float> &times );
 
 /// Samples the local transform from the current location in preparation for output to the renderer.
 /// "samples" will be set to contain one sample for each sampleTime, unless the samples are all identical,
@@ -259,10 +278,10 @@ class GAFFERSCENE_API LightLinks : boost::noncopyable
 
 };
 
-GAFFERSCENE_API void outputCameras( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, IECoreScenePreview::Renderer *renderer );
-GAFFERSCENE_API void outputLightFilters( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, LightLinks *lightLinks, IECoreScenePreview::Renderer *renderer );
-GAFFERSCENE_API void outputLights( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, LightLinks *lightLinks, IECoreScenePreview::Renderer *renderer );
-GAFFERSCENE_API void outputObjects( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, const LightLinks *lightLinks, IECoreScenePreview::Renderer *renderer, const ScenePlug::ScenePath &root = ScenePlug::ScenePath() );
+GAFFERSCENE_API void outputCameras( const ScenePlug *scene, const RenderOptions &renderOptions, const RenderSets &renderSets, IECoreScenePreview::Renderer *renderer );
+GAFFERSCENE_API void outputLightFilters( const ScenePlug *scene, const RenderOptions &renderOptions, const RenderSets &renderSets, LightLinks *lightLinks, IECoreScenePreview::Renderer *renderer );
+GAFFERSCENE_API void outputLights( const ScenePlug *scene, const RenderOptions &renderOptions, const RenderSets &renderSets, LightLinks *lightLinks, IECoreScenePreview::Renderer *renderer );
+GAFFERSCENE_API void outputObjects( const ScenePlug *scene, const RenderOptions &renderOptions, const RenderSets &renderSets, const LightLinks *lightLinks, IECoreScenePreview::Renderer *renderer, const ScenePlug::ScenePath &root = ScenePlug::ScenePath() );
 
 } // namespace RendererAlgo
 

@@ -297,14 +297,14 @@ void Render::executeInternal( bool flushCaches ) const
 		return;
 	}
 
-	ConstCompoundObjectPtr globals = adaptedInPlug()->globalsPlug()->getValue();
+	GafferScene::Private::RendererAlgo::RenderOptions renderOptions( adaptedInPlug() );
 	if( !renderScope.sceneTranslationOnly() )
 	{
-		GafferScene::Private::RendererAlgo::createOutputDirectories( globals.get() );
+		GafferScene::Private::RendererAlgo::createOutputDirectories( renderOptions.globals.get() );
 	}
 
 	PerformanceMonitorPtr performanceMonitor;
-	if( const BoolData *d = globals->member<const BoolData>( g_performanceMonitorOptionName ) )
+	if( const BoolData *d = renderOptions.globals->member<const BoolData>( g_performanceMonitorOptionName ) )
 	{
 		if( d->readable() )
 		{
@@ -313,8 +313,8 @@ void Render::executeInternal( bool flushCaches ) const
 	}
 	Monitor::Scope performanceMonitorScope( performanceMonitor );
 
-	GafferScene::Private::RendererAlgo::outputOptions( globals.get(), renderer.get() );
-	GafferScene::Private::RendererAlgo::outputOutputs( inPlug(), globals.get(), renderer.get() );
+	GafferScene::Private::RendererAlgo::outputOptions( renderOptions.globals.get(), renderer.get() );
+	GafferScene::Private::RendererAlgo::outputOutputs( inPlug(), renderOptions.globals.get(), renderer.get() );
 
 	{
 		// Using nested scope so that we free the memory used by `renderSets`
@@ -322,11 +322,11 @@ void Render::executeInternal( bool flushCaches ) const
 		GafferScene::Private::RendererAlgo::RenderSets renderSets( adaptedInPlug() );
 		GafferScene::Private::RendererAlgo::LightLinks lightLinks;
 
-		GafferScene::Private::RendererAlgo::outputCameras( adaptedInPlug(), globals.get(), renderSets, renderer.get() );
-		GafferScene::Private::RendererAlgo::outputLights( adaptedInPlug(), globals.get(), renderSets, &lightLinks, renderer.get() );
-		GafferScene::Private::RendererAlgo::outputLightFilters( adaptedInPlug(), globals.get(), renderSets, &lightLinks, renderer.get() );
+		GafferScene::Private::RendererAlgo::outputCameras( adaptedInPlug(), renderOptions, renderSets, renderer.get() );
+		GafferScene::Private::RendererAlgo::outputLights( adaptedInPlug(), renderOptions, renderSets, &lightLinks, renderer.get() );
+		GafferScene::Private::RendererAlgo::outputLightFilters( adaptedInPlug(), renderOptions, renderSets, &lightLinks, renderer.get() );
 		lightLinks.outputLightFilterLinks( adaptedInPlug() );
-		GafferScene::Private::RendererAlgo::outputObjects( adaptedInPlug(), globals.get(), renderSets, &lightLinks, renderer.get() );
+		GafferScene::Private::RendererAlgo::outputObjects( adaptedInPlug(), renderOptions, renderSets, &lightLinks, renderer.get() );
 	}
 
 	if( renderScope.sceneTranslationOnly() )

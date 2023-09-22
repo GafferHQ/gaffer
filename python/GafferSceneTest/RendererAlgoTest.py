@@ -97,6 +97,7 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 		options = GafferScene.StandardOptions()
 		options["in"].setInput( camera["out"] )
 
+		renderOptions = GafferScene.Private.RendererAlgo.RenderOptions( options["out"] )
 		renderSets = GafferScene.Private.RendererAlgo.RenderSets( options["out"] )
 
 		def expectedCamera( frame ) :
@@ -105,7 +106,7 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 				c.setFrame( frame )
 				camera = options["out"].object( "/camera" )
 
-			GafferScene.SceneAlgo.applyCameraGlobals( camera, sceneGlobals, options["out"] )
+			GafferScene.SceneAlgo.applyCameraGlobals( camera, options["out"].globals(), options["out"] )
 			return camera
 
 		# Non-animated case
@@ -113,8 +114,7 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer(
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 		)
-		sceneGlobals = options["out"].globals()
-		GafferScene.Private.RendererAlgo.outputCameras( options["out"], sceneGlobals, renderSets, renderer )
+		GafferScene.Private.RendererAlgo.outputCameras( options["out"], renderOptions, renderSets, renderer )
 
 		capturedCamera = renderer.capturedObject( "/camera" )
 
@@ -129,8 +129,8 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer(
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 		)
-		sceneGlobals = options["out"].globals()
-		GafferScene.Private.RendererAlgo.outputCameras( options["out"], sceneGlobals, renderSets, renderer )
+		renderOptions = GafferScene.Private.RendererAlgo.RenderOptions( options["out"] )
+		GafferScene.Private.RendererAlgo.outputCameras( options["out"], renderOptions, renderSets, renderer )
 
 		capturedCamera = renderer.capturedObject( "/camera" )
 		self.assertEqual( capturedCamera.capturedSamples(), [ expectedCamera( 0.75 ), expectedCamera( 1.25 ) ] )
@@ -155,7 +155,8 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 		)
 		with self.assertRaisesRegex( RuntimeError, "Camera \"/camera\" is hidden" ) :
 			GafferScene.Private.RendererAlgo.outputCameras(
-				standardOptions["out"], standardOptions["out"].globals(),
+				standardOptions["out"],
+				GafferScene.Private.RendererAlgo.RenderOptions( standardOptions["out"] ),
 				GafferScene.Private.RendererAlgo.RenderSets( standardOptions["out"] ),
 				renderer
 			)
@@ -317,14 +318,14 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		# Output the lights to the renderer
 
+		renderOptions = GafferScene.Private.RendererAlgo.RenderOptions( soloSet["out"] )
 		renderSets = GafferScene.Private.RendererAlgo.RenderSets( soloSet["out"] )
 		lightLinks = GafferScene.Private.RendererAlgo.LightLinks()
 
 		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer(
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 		)
-		sceneGlobals = soloSet["out"].globals()
-		GafferScene.Private.RendererAlgo.outputLights( soloSet["out"], sceneGlobals, renderSets, lightLinks, renderer )
+		GafferScene.Private.RendererAlgo.outputLights( soloSet["out"], renderOptions, renderSets, lightLinks, renderer )
 
 		# Check that the output is correct
 
@@ -448,14 +449,14 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		# Output the lights to the renderer
 
+		renderOptions = GafferScene.Private.RendererAlgo.RenderOptions( muteAttributes["out"] )
 		renderSets = GafferScene.Private.RendererAlgo.RenderSets( muteAttributes["out"] )
 		lightLinks = GafferScene.Private.RendererAlgo.LightLinks()
 
 		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer(
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 		)
-		sceneGlobals = muteAttributes["out"].globals()
-		GafferScene.Private.RendererAlgo.outputLights( muteAttributes["out"], sceneGlobals, renderSets, lightLinks, renderer )
+		GafferScene.Private.RendererAlgo.outputLights( muteAttributes["out"], renderOptions, renderSets, lightLinks, renderer )
 
 		# Check that the output is correct
 
@@ -643,15 +644,15 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		def assertIncludedObjects( scene, includedPurposes, paths ) :
 
-			globals = IECore.CompoundObject()
+			renderOptions = GafferScene.Private.RendererAlgo.RenderOptions( scene )
 			if includedPurposes :
-				globals["option:render:includedPurposes"] = IECore.StringVectorData( includedPurposes )
+				renderOptions.includedPurposes = IECore.StringVectorData( includedPurposes )
 
 			renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer(
 				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 			)
 			GafferScene.Private.RendererAlgo.outputObjects(
-				group["out"], globals, GafferScene.Private.RendererAlgo.RenderSets( scene ), GafferScene.Private.RendererAlgo.LightLinks(),
+				group["out"], renderOptions, GafferScene.Private.RendererAlgo.RenderSets( scene ), GafferScene.Private.RendererAlgo.LightLinks(),
 				renderer
 			)
 

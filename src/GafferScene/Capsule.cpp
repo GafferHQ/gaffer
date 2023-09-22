@@ -147,9 +147,9 @@ void Capsule::render( IECoreScenePreview::Renderer *renderer ) const
 {
 	throwIfNoScene();
 	ScenePlug::GlobalScope scope( m_context.get() );
-	IECore::ConstCompoundObjectPtr globals = m_scene->globalsPlug()->getValue();
+	GafferScene::Private::RendererAlgo::RenderOptions renderOptions( m_scene );
 	GafferScene::Private::RendererAlgo::RenderSets renderSets( m_scene );
-	GafferScene::Private::RendererAlgo::outputObjects( m_scene, globals.get(), renderSets, /* lightLinks = */ nullptr, renderer, m_root );
+	GafferScene::Private::RendererAlgo::outputObjects( m_scene, renderOptions, renderSets, /* lightLinks = */ nullptr, renderer, m_root );
 }
 
 const ScenePlug *Capsule::scene() const
