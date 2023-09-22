@@ -80,7 +80,11 @@ def __cameraSummary( plug ) :
 def __purposeSummary( plug ) :
 
 	if plug["includedPurposes"]["enabled"].getValue() :
-		return ", ".join( [ p.capitalize() for p in plug["includedPurposes"]["value"].getValue() ] )
+		purposes = plug["includedPurposes"]["value"].getValue()
+		if purposes :
+			return ", ".join( [ p.capitalize() for p in purposes ] )
+		else :
+			return "None"
 
 	return ""
 
@@ -339,7 +343,8 @@ plugsMetadata = {
 		"description",
 		"""
 		Limits the objects included in the render according to the values of their `usd:purpose`
-		attribute.
+		attribute. The "Default" purpose includes all objects which have no `usd:purpose` attribute;
+		other than for debugging, there is probably no good reason to omit it.
 
 		> Tip : Use the USDAttributes node to assign the `usd:purpose` attribute.
 		""",
@@ -460,7 +465,12 @@ class _IncludedPurposesPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def _updateFromValues( self, values, exception ) :
 
 		self.__currentValue = sole( values )
-		self.__menuButton.setText( ", ".join( [ p.capitalize() for p in self.__currentValue ] ) if self.__currentValue is not None else "---" )
+		if self.__currentValue :
+			self.__menuButton.setText( ", ".join( [ p.capitalize() for p in self.__currentValue ] ) )
+		else :
+			# A value of `None` means we have multiple different values (from different plugs),
+			# and a value of `[]` means the user has disabled all purposes.
+			self.__menuButton.setText( "---" if self.__currentValue is None else "None" )
 		self.__menuButton.setErrored( exception is not None )
 
 	def _updateFromEditable( self ) :
