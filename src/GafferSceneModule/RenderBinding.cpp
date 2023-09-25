@@ -401,6 +401,11 @@ void outputLightsWrapper( const ScenePlug &scene, const IECore::CompoundObject &
 	GafferScene::Private::RendererAlgo::outputLights( &scene, &globals, renderSets, &lightLinks, &renderer );
 }
 
+void outputObjectsWrapper( const ScenePlug &scene, const IECore::CompoundObject &globals, const GafferScene::Private::RendererAlgo::RenderSets &renderSets, GafferScene::Private::RendererAlgo::LightLinks &lightLinks, IECoreScenePreview::Renderer &renderer, const ScenePlug::ScenePath &root )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	GafferScene::Private::RendererAlgo::outputObjects( &scene, &globals, renderSets, &lightLinks, &renderer, root );
+}
 
 } // namespace
 
@@ -451,6 +456,7 @@ void GafferSceneModule::bindRender()
 
 			def( "outputCameras", &outputCamerasWrapper );
 			def( "outputLights", &outputLightsWrapper );
+			def( "outputObjects", &outputObjectsWrapper, ( arg( "scene" ), arg( "globals" ), arg( "renderSets" ), arg( "lightLinks" ), arg( "renderer" ), arg( "root" ) = "/" ) );
 		}
 
 		object ieCoreScenePreviewModule( borrowed( PyImport_AddModule( "GafferScene.Private.IECoreScenePreview" ) ) );

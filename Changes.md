@@ -12,6 +12,23 @@ Breaking Changes
 1.3.x.x (relative to 1.3.3.0)
 =======
 
+Improvements
+------------
+
+- Viewer : Added per-purpose control over which locations are shown in the viewer, according to their `usd:purpose` attribute.
+  - The Drawing Mode dropdown menu can be used to to choose the visible purposes.
+  - The default purposes can be specified in a startup file using `Gaffer.Metadata.registerValue( GafferSceneUI.SceneView, "drawingMode.includedPurposes.value", "userDefault", IECore.StringVectorData( [ "default", "proxy" ] ) )`.
+- StandardOptions : Added `includedPurposes` plug, to control which locations are included in a render based on the value of their `usd:purpose` attribute.
+
+Fixes
+-----
+
+- GraphEditor : Removed dynamic raster-space sizing of focus icon, as it caused excessive overlap with other nodes at certain zoom levels and on certain high resolution displays (#5435).
+
+API
+---
+
+- RenderController : Added missing `updateRequired()` Python binding.
 
 1.3.3.0 (relative to 1.3.2.0)
 =======
@@ -391,6 +408,10 @@ Build
 1.2.10.x (relative to 1.2.10.3)
 ========
 
+Fixes
+-----
+
+- GraphEditor : Removed dynamic raster-space sizing of focus icon, as it caused excessive overlap with other nodes at certain zoom levels and on certain high resolution displays (#5435).
 
 1.2.10.3 (relative to 1.2.10.2)
 ========

@@ -1009,12 +1009,15 @@ namespace
 {
 
 const std::string g_optionPrefix( "option:" );
+const std::string g_defaultPurpose( "default" );
 
 const IECore::InternedString g_frameOptionName( "frame" );
 const IECore::InternedString g_cameraOptionLegacyName( "option:render:camera" );
 const InternedString g_transformBlurOptionName( "option:render:transformBlur" );
 const InternedString g_deformationBlurOptionName( "option:render:deformationBlur" );
 const InternedString g_shutterOptionName( "option:render:shutter" );
+const InternedString g_includedPurposesOptionName( "option:render:includedPurposes" );
+const InternedString g_purposeAttributeName( "usd:purpose" );
 
 InternedString g_visibleAttributeName( "scene:visible" );
 
@@ -1044,6 +1047,8 @@ struct LocationOutput
 
 		m_options.shutter = SceneAlgo::shutter( globals, scene );
 
+		m_options.includedPurposes = globals->member<StringVectorData>( g_includedPurposesOptionName );
+
 		m_transformSamples.push_back( M44f() );
 	}
 
@@ -1071,6 +1076,19 @@ struct LocationOutput
 	}
 
 	protected :
+
+		bool purposeIncluded() const
+		{
+			if( !m_options.includedPurposes )
+			{
+				return true;
+			}
+			const auto purposeData = m_attributes->member<StringData>( g_purposeAttributeName );
+			const std::string &purpose = purposeData ? purposeData->readable() : g_defaultPurpose;
+			const vector<string> &purposes = m_options.includedPurposes->readable();
+			return std::find( purposes.begin(), purposes.end(), purpose ) != purposes.end();
+
+		}
 
 		std::string name( const ScenePlug::ScenePath &path ) const
 		{
@@ -1227,6 +1245,7 @@ struct LocationOutput
 			bool transformBlur;
 			bool deformationBlur;
 			Imath::V2f shutter;
+			ConstStringVectorDataPtr includedPurposes;
 		};
 
 		Options m_options;
@@ -1255,7 +1274,7 @@ struct CameraOutput : public LocationOutput
 		}
 
 		const size_t cameraMatch = m_cameraSet.match( path );
-		if( cameraMatch & IECore::PathMatcher::ExactMatch )
+		if( ( cameraMatch & IECore::PathMatcher::ExactMatch ) && purposeIncluded() )
 		{
 			// Sample cameras and apply globals
 			vector<float> sampleTimes;
@@ -1347,7 +1366,7 @@ struct LightOutput : public LocationOutput
 		}
 
 		const size_t lightMatch = m_lightSet.match( path );
-		if( lightMatch & IECore::PathMatcher::ExactMatch )
+		if( ( lightMatch & IECore::PathMatcher::ExactMatch ) && purposeIncluded() )
 		{
 			IECore::ConstObjectPtr object = scene->objectPlug()->getValue();
 
@@ -1439,6 +1458,11 @@ struct ObjectOutput : public LocationOutput
 		}
 
 		if( ( m_cameraSet.match( path ) & IECore::PathMatcher::ExactMatch ) || ( m_lightFiltersSet.match( path ) & IECore::PathMatcher::ExactMatch ) || ( m_lightSet.match( path ) & IECore::PathMatcher::ExactMatch ) )
+		{
+			return true;
+		}
+
+		if( !purposeIncluded() )
 		{
 			return true;
 		}
