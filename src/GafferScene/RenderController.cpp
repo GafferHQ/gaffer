@@ -882,7 +882,6 @@ class RenderController::SceneGraph
 				}
 
 				return true;
-
 			}
 
 			vector<ConstObjectPtr> samples;
@@ -891,16 +890,12 @@ class RenderController::SceneGraph
 				return false;
 			}
 
-			bool isNull = true;
-			for( ConstObjectPtr &i : samples )
-			{
-				if( !runTimeCast<const IECore::NullObject>( i.get() ) )
-				{
-					isNull = false;
-				}
-			}
-
-			if( (type != LightType && type != LightFilterType) && isNull )
+			if(
+				std::all_of(
+					samples.begin(), samples.end(),
+					[] ( const ConstObjectPtr &sample ) { return runTimeCast<const IECore::NullObject>( sample.get() ); }
+				)
+			)
 			{
 				m_objectInterface = nullptr;
 				return hadObjectInterface;
