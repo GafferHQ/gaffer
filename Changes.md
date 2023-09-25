@@ -17,7 +17,9 @@ Fixes
 - StringPlugValueWidget : Fixed bug handling <kbd>Esc</kbd>.
 - Arnold : Fixed unnecessary `opaque` attribute deprecation warnings. These are now only emitted in the case that `opaque` has been explicitly turned off.
 - ShaderUI : Fixed bug causing identical but independent shaders in a shader network from being included in the shader browser.
-- Encapsulate : Fixed bug where global attributes (from the point of encapsulation) were baked into the contents of the capsule instead of being inherited naturally (from the node being rendered).
+- Encapsulate :
+  - Fixed bug where global attributes (from the point of encapsulation) were baked into the contents of the capsule instead of being inherited naturally (from the node being rendered).
+  - Fixed motion blur so that global settings are now taken from the downstream node being rendered, not from the input to the Encapsulate node.
 
 API
 ---

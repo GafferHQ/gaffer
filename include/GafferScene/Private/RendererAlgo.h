@@ -69,6 +69,7 @@ struct GAFFERSCENE_API RenderOptions
 	RenderOptions( const ScenePlug *scene );
 	RenderOptions( const RenderOptions &other ) = default;
 	RenderOptions& operator=( const RenderOptions &other ) = default;
+	bool operator==( const RenderOptions &other ) const;
 	/// The globals from the scene.
 	IECore::ConstCompoundObjectPtr globals;
 	/// Convenient access to specific properties, taking into account default

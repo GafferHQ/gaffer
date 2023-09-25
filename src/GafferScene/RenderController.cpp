@@ -36,6 +36,7 @@
 
 #include "GafferScene/RenderController.h"
 
+#include "GafferScene/Capsule.h"
 #include "GafferScene/Private/IECoreScenePreview/Placeholder.h"
 #include "GafferScene/SceneAlgo.h"
 
@@ -173,6 +174,7 @@ struct ObjectInterfaceHandle : public boost::noncopyable
 	using RemovalCallback = std::function<void ()>;
 
 	ObjectInterfaceHandle()
+		:	m_isCapsule( false )
 	{
 	}
 
@@ -189,7 +191,7 @@ struct ObjectInterfaceHandle : public boost::noncopyable
 		assign( p, RemovalCallback() );
 	}
 
-	void assign( const IECoreScenePreview::Renderer::ObjectInterfacePtr &p, const RemovalCallback &removalCallback )
+	void assign( const IECoreScenePreview::Renderer::ObjectInterfacePtr &p, const RemovalCallback &removalCallback, bool isCapsule = false )
 	{
 		if( m_removalCallback )
 		{
@@ -197,6 +199,7 @@ struct ObjectInterfaceHandle : public boost::noncopyable
 		}
 		m_objectInterface = p;
 		m_removalCallback = removalCallback;
+		m_isCapsule = isCapsule;
 	}
 
 	IECoreScenePreview::Renderer::ObjectInterface *operator->() const
@@ -214,10 +217,16 @@ struct ObjectInterfaceHandle : public boost::noncopyable
 		return m_objectInterface.get();
 	}
 
+	bool isCapsule() const
+	{
+		return m_isCapsule;
+	}
+
 	private :
 
 		IECoreScenePreview::Renderer::ObjectInterfacePtr m_objectInterface;
 		RemovalCallback m_removalCallback;
+		bool m_isCapsule;
 
 };
 
@@ -471,7 +480,14 @@ class RenderController::SceneGraph
 
 			// Object
 
-			if( ( m_dirtyComponents & ObjectComponent ) && updateObject( controller->m_scene->objectPlug(), type, controller->m_renderer.get(), controller->m_renderOptions.globals.get(), controller->m_scene.get(), controller->m_lightLinks.get() ) )
+			if( m_objectInterface.isCapsule() && ( changedGlobals & CapsuleAffectingGlobalComponents ) )
+			{
+				// Account for `Capsule::setRenderOptions()` being called in `updateObject()`.
+				m_dirtyComponents |= ObjectComponent;
+				m_objectHash = MurmurHash();
+			}
+
+			if( ( m_dirtyComponents & ObjectComponent ) && updateObject( controller->m_scene->objectPlug(), type, controller->m_renderer.get(), controller->m_renderOptions, controller->m_scene.get(), controller->m_lightLinks.get() ) )
 			{
 				m_changedComponents |= ObjectComponent;
 			}
@@ -495,7 +511,7 @@ class RenderController::SceneGraph
 						{
 							// Failed to apply attributes - must replace entire object.
 							m_objectHash = MurmurHash();
-							if( updateObject( controller->m_scene->objectPlug(), type, controller->m_renderer.get(), controller->m_renderOptions.globals.get(), controller->m_scene.get(), controller->m_lightLinks.get() ) )
+							if( updateObject( controller->m_scene->objectPlug(), type, controller->m_renderer.get(), controller->m_renderOptions, controller->m_scene.get(), controller->m_lightLinks.get() ) )
 							{
 								m_changedComponents |= ObjectComponent;
 								controller->m_failedAttributeEdits++;
@@ -787,7 +803,7 @@ class RenderController::SceneGraph
 		}
 
 		// Returns true if the object changed.
-		bool updateObject( const ObjectPlug *objectPlug, Type type, IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const ScenePlug *scene, LightLinks *lightLinks )
+		bool updateObject( const ObjectPlug *objectPlug, Type type, IECoreScenePreview::Renderer *renderer, const GafferScene::Private::RendererAlgo::RenderOptions &renderOptions, const ScenePlug *scene, LightLinks *lightLinks )
 		{
 			const bool hadObjectInterface = static_cast<bool>( m_objectInterface );
 			if( type == NoType || m_drawMode != VisibleSet::Visibility::Visible || !m_purposeIncluded )
@@ -905,7 +921,7 @@ class RenderController::SceneGraph
 					if( auto cameraSample = runTimeCast<const Camera>( sample.get() ) )
 					{
 						IECoreScene::CameraPtr cameraSampleCopy = cameraSample->copy();
-						SceneAlgo::applyCameraGlobals( cameraSampleCopy.get(), globals, scene );
+						SceneAlgo::applyCameraGlobals( cameraSampleCopy.get(), renderOptions.globals.get(), scene );
 						cameraSamples.push_back( cameraSampleCopy );
 					}
 				}
@@ -958,7 +974,18 @@ class RenderController::SceneGraph
 
 				if( samples.size() == 1 )
 				{
-					m_objectInterface = renderer->object( name, samples[0].get(), attributesInterface( renderer ) );
+					ConstObjectPtr sample = samples[0];
+					if( auto capsule = runTimeCast<const Capsule>( sample.get() ) )
+					{
+						CapsulePtr capsuleCopy = capsule->copy();
+						capsuleCopy->setRenderOptions( renderOptions );
+						sample = capsuleCopy;
+					}
+					m_objectInterface.assign(
+						renderer->object( name, sample.get(), attributesInterface( renderer ) ),
+						ObjectInterfaceHandle::RemovalCallback(),
+						/* isCapsule = */ runTimeCast<const Capsule>( sample.get() )
+					);
 				}
 				else
 				{

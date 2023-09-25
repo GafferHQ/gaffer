@@ -451,6 +451,7 @@ void GafferSceneModule::bindRender()
 				.def_readwrite( "deformationBlur", &GafferScene::Private::RendererAlgo::RenderOptions::deformationBlur )
 				.def_readwrite( "shutter", &GafferScene::Private::RendererAlgo::RenderOptions::shutter )
 				.def_readwrite( "includedPurposes", &GafferScene::Private::RendererAlgo::RenderOptions::includedPurposes )
+				.def( self == self )
 			;
 
 			def( "objectSamples", &objectSamplesWrapper, ( arg( "objectPlug" ), arg( "sampleTimes" ), arg( "hash" ) = object(), arg( "_copy" ) = true ) );

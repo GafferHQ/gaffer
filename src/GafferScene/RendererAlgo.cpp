@@ -126,6 +126,13 @@ RenderOptions::RenderOptions( const ScenePlug *scene )
 	includedPurposes = includedPurposesData ? includedPurposesData : g_defaultIncludedPurposes;
 }
 
+bool RenderOptions::operator==( const RenderOptions &other ) const
+{
+	// No need to test other fields because they are all derived directly
+	// from the globals.
+	return *globals == *other.globals && shutter == other.shutter;
+}
+
 bool RenderOptions::purposeIncluded( const CompoundObject *attributes ) const
 {
 	const auto purposeData = attributes->member<StringData>( g_purposeAttributeName );
