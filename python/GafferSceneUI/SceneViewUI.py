@@ -376,6 +376,34 @@ class _DrawingModePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		m.append( "/ComponentsDivider", { "divider" : True } )
 
+		includedPurposes = self.getPlug()["includedPurposes"]["value"].getValue()
+		includedPurposesEnabled = self.getPlug()["includedPurposes"]["enabled"].getValue()
+		allPurposes = [ "default", "render", "proxy", "guide" ]
+		for purpose in allPurposes :
+			newPurposes = IECore.StringVectorData( [
+				p for p in allPurposes
+				if
+				( p != purpose and p in includedPurposes ) or ( p == purpose and p not in includedPurposes )
+			] )
+			m.append(
+				"/Purposes/{}".format( purpose.capitalize() ),
+				{
+					"checkBox" : purpose in includedPurposes,
+					"active" : includedPurposesEnabled,
+					"command" : functools.partial( self.getPlug()["includedPurposes"]["value"].setValue, newPurposes ),
+				}
+			)
+			m.append( "/Purposes/SceneDivider", { "divider" : True } )
+			m.append(
+				"/Purposes/From Scene",
+				{
+					"checkBox" : not includedPurposesEnabled,
+					"command" : lambda checked : self.getPlug()["includedPurposes"]["enabled"].setValue( not checked ),
+				}
+			)
+
+		m.append( "/PurposesDivider", { "divider" : True } )
+
 		lightDrawingModePlug = self.getPlug()["light"]["drawingMode"]
 		for mode in ( "wireframe", "color", "texture" ) :
 			m.append(

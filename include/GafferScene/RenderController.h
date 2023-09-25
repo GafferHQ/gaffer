@@ -121,7 +121,8 @@ class GAFFERSCENE_API RenderController : public Gaffer::Signals::Trackable
 			TransformBlurGlobalComponent = 16,
 			DeformationBlurGlobalComponent = 32,
 			CameraShutterGlobalComponent = 64,
-			AllGlobalComponents = GlobalsGlobalComponent | SetsGlobalComponent | RenderSetsGlobalComponent | CameraOptionsGlobalComponent | TransformBlurGlobalComponent | DeformationBlurGlobalComponent
+			IncludedPurposesGlobalComponent = 128,
+			AllGlobalComponents = GlobalsGlobalComponent | SetsGlobalComponent | RenderSetsGlobalComponent | CameraOptionsGlobalComponent | TransformBlurGlobalComponent | DeformationBlurGlobalComponent | IncludedPurposesGlobalComponent
 		};
 
 		struct MotionBlurOptions

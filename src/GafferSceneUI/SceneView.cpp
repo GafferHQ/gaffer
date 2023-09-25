@@ -289,23 +289,9 @@ class SceneView::DrawingMode : public Signals::Trackable
 		DrawingMode( SceneView *view )
 			:	m_view( view )
 		{
-			// We can implement many drawing mode controls via render options.
-			// They simply modify the state used to render existing
-			// renderables. Visualisers however, may generate different
-			// renderables all together and so we need to modify the in-scene
-			// attribute values rather than any renderer option, which will
-			// cause the visualisers to be re-evaluated. We use a general
-			// purpose CustomAttributes preprocessor to set globals attributes
-			// with the desired values.  This allows them to be overridden at
-			// specific locations in the user's graph if desired.
 
-			// Global attributes preprocessor
-
-			m_preprocessor = new CustomAttributes();
-			m_preprocessor->globalPlug()->setValue( true );
-			CompoundDataPlug *attr = m_preprocessor->attributesPlug();
-
-			// View plugs controlling renderer options
+			// Plugs controlling OpenGL render options. We use these to
+			// drive `SceneGadget::setOpenGLOptions()` directly.
 
 			ValuePlugPtr drawingMode = new ValuePlug( "drawingMode" );
 			m_view->addChild( drawingMode );
@@ -323,9 +309,34 @@ class SceneView::DrawingMode : public Signals::Trackable
 			drawingMode->addChild( points );
 			points->addChild( new BoolPlug( "useGLPoints", Plug::In, true ) );
 
-			// View plugs controlling attribute values
+			// A preprocessor which modifies the scene before it is displayed by
+			// the SceneGadget. We use this for drawing settings that aren't
+			// simple OpenGL options.
 
-			// General :
+			m_preprocessor = new SceneProcessor();
+
+			CustomAttributesPtr customAttributes = new CustomAttributes();
+			m_preprocessor->addChild( customAttributes );
+			customAttributes->inPlug()->setInput( m_preprocessor->inPlug() );
+			customAttributes->globalPlug()->setValue( true );
+			CompoundDataPlug *attr = customAttributes->attributesPlug();
+
+			StandardOptionsPtr standardOptions = new StandardOptions();
+			m_preprocessor->addChild( standardOptions );
+			standardOptions->inPlug()->setInput( customAttributes->outPlug() );
+			m_preprocessor->outPlug()->setInput( standardOptions->outPlug() );
+
+			// Included purposes
+
+			auto *includedPurposesPlug = standardOptions->optionsPlug()->getChild<NameValuePlug>( "includedPurposes" );
+			auto viewIncludedPurposesPlug = boost::static_pointer_cast<NameValuePlug>(
+				includedPurposesPlug->createCounterpart( "includedPurposes", Plug::In )
+			);
+			viewIncludedPurposesPlug->enabledPlug()->setValue( true );
+			drawingMode->addChild( viewIncludedPurposesPlug );
+			includedPurposesPlug->setInput( viewIncludedPurposesPlug );
+
+			// Visualiser settings.
 
 			ValuePlugPtr visualiser = new ValuePlug( "visualiser" );
 			drawingMode->addChild( visualiser );
@@ -431,7 +442,7 @@ class SceneView::DrawingMode : public Signals::Trackable
 			sceneGadget()->setOpenGLOptions( options.get() );
 		}
 
-		CustomAttributesPtr m_preprocessor;
+		SceneProcessorPtr m_preprocessor;
 
 		SceneView *m_view;
 

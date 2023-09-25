@@ -82,9 +82,13 @@ const InternedString g_compoundRendererName( "Compound" );
 const InternedString g_cameraGlobalName( "option:render:camera" );
 const InternedString g_transformBlurOptionName( "option:render:transformBlur" );
 const InternedString g_deformationBlurOptionName( "option:render:deformationBlur" );
+const InternedString g_includedPurposesOptionName( "option:render:includedPurposes" );
 
+const InternedString g_purposeAttributeName( "usd:purpose" );
 const InternedString g_visibleAttributeName( "scene:visible" );
 const InternedString g_rendererContextName( "scene:renderer" );
+
+const std::string g_defaultPurpose( "default" );
 
 bool visible( const CompoundObject *attributes )
 {
@@ -104,6 +108,34 @@ bool cameraGlobalsChanged( const CompoundObject *globals, const CompoundObject *
 	SceneAlgo::applyCameraGlobals( camera2.get(), previousGlobals, scene );
 
 	return *camera1 != *camera2;
+}
+
+const IECore::ConstStringVectorDataPtr g_defaultIncludedPurposes = new StringVectorData( { "default", "render", "proxy", "guide" } );
+
+bool includedPurposesChanged( const CompoundObject *globals, const CompoundObject *previousGlobals )
+{
+	if( !previousGlobals )
+	{
+		return true;
+	}
+
+	auto *v1 = globals->member<StringVectorData>( g_includedPurposesOptionName );
+	v1 = v1 ? v1 : g_defaultIncludedPurposes.get();
+
+	auto *v2 = previousGlobals->member<StringVectorData>( g_includedPurposesOptionName );
+	v2 = v2 ? v2 : g_defaultIncludedPurposes.get();
+
+	return *v1 != *v2;
+}
+
+bool purposeIncluded( const CompoundObject *attributes, const CompoundObject *globals )
+{
+	const auto purposeData = attributes->member<StringData>( g_purposeAttributeName );
+	const std::string &purpose = purposeData ? purposeData->readable() : g_defaultPurpose;
+
+	const auto includedPurposesData = globals->member<StringVectorData>( g_includedPurposesOptionName );
+	const vector<string> &includedPurposes = includedPurposesData ? includedPurposesData->readable() : g_defaultIncludedPurposes->readable();
+	return std::find( includedPurposes.begin(), includedPurposes.end(), purpose ) != includedPurposes.end();
 }
 
 // This is for the very specific case of determining change for global
@@ -326,7 +358,7 @@ class RenderController::SceneGraph
 		// Constructs the root of the scene graph.
 		// Children are constructed using updateChildren().
 		SceneGraph()
-			:	m_parent( nullptr ), m_fullAttributes( new CompoundObject ), m_dirtyComponents( AllComponents ), m_changedComponents( NoComponent )
+			:	m_parent( nullptr ), m_fullAttributes( new CompoundObject ), m_purposeIncluded( true ), m_dirtyComponents( AllComponents ), m_changedComponents( NoComponent )
 		{
 			clear();
 		}
@@ -424,12 +456,26 @@ class RenderController::SceneGraph
 
 			clean( AttributesComponent );
 
+			// Purpose
+
+			if( ( m_changedComponents & AttributesComponent ) || ( changedGlobals & IncludedPurposesGlobalComponent ) )
+			{
+				const bool purposeIncludedPreviously = m_purposeIncluded;
+				m_purposeIncluded = purposeIncluded( m_fullAttributes.get(), controller->m_globals.get() );
+				if( m_purposeIncluded != purposeIncludedPreviously )
+				{
+					// We'll need to hide or show the object by considering `m_purposeIncluded` in
+					// `updateObject().`
+					m_dirtyComponents |= ObjectComponent;
+				}
+			}
+
 			// Transform
 
 			const bool parentTransformChanged = m_parent && ( m_parent->m_changedComponents & TransformComponent );
 			if( ( m_dirtyComponents & TransformComponent ) || parentTransformChanged )
 			{
-				if( updateTransform( controller->m_scene->transformPlug(), parentTransformChanged, controller->m_motionBlurOptions ) )
+				if( updateTransform( controller->m_scene->transformPlug(), parentTransformChanged ) )
 				{
 					m_changedComponents |= TransformComponent;
 				}
@@ -453,7 +499,7 @@ class RenderController::SceneGraph
 
 			// Object
 
-			if( ( m_dirtyComponents & ObjectComponent ) && updateObject( controller->m_scene->objectPlug(), type, controller->m_renderer.get(), controller->m_globals.get(), controller->m_scene.get(), controller->m_lightLinks.get(), controller->m_motionBlurOptions ) )
+			if( ( m_dirtyComponents & ObjectComponent ) && updateObject( controller->m_scene->objectPlug(), type, controller->m_renderer.get(), controller->m_globals.get(), controller->m_scene.get(), controller->m_lightLinks.get() ) )
 			{
 				m_changedComponents |= ObjectComponent;
 			}
@@ -477,7 +523,7 @@ class RenderController::SceneGraph
 						{
 							// Failed to apply attributes - must replace entire object.
 							m_objectHash = MurmurHash();
-							if( updateObject( controller->m_scene->objectPlug(), type, controller->m_renderer.get(), controller->m_globals.get(), controller->m_scene.get(), controller->m_lightLinks.get(), controller->m_motionBlurOptions ) )
+							if( updateObject( controller->m_scene->objectPlug(), type, controller->m_renderer.get(), controller->m_globals.get(), controller->m_scene.get(), controller->m_lightLinks.get() ) )
 							{
 								m_changedComponents |= ObjectComponent;
 								controller->m_failedAttributeEdits++;
@@ -647,7 +693,7 @@ class RenderController::SceneGraph
 	private :
 
 		SceneGraph( const InternedString &name, const SceneGraph *parent )
-			:	m_name( name ), m_parent( parent ), m_fullAttributes( new CompoundObject )
+			:	m_name( name ), m_parent( parent ), m_fullAttributes( new CompoundObject ), m_purposeIncluded( true )
 		{
 			clear();
 		}
@@ -722,7 +768,7 @@ class RenderController::SceneGraph
 		}
 
 		// Returns true if the transform changed.
-		bool updateTransform( const M44fPlug *transformPlug, bool parentTransformChanged, const MotionBlurOptions &motionBlurOptions  )
+		bool updateTransform( const M44fPlug *transformPlug, bool parentTransformChanged )
 		{
 			if( parentTransformChanged )
 			{
@@ -769,10 +815,10 @@ class RenderController::SceneGraph
 		}
 
 		// Returns true if the object changed.
-		bool updateObject( const ObjectPlug *objectPlug, Type type, IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const ScenePlug *scene, LightLinks *lightLinks, const MotionBlurOptions &motionBlurOptions )
+		bool updateObject( const ObjectPlug *objectPlug, Type type, IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const ScenePlug *scene, LightLinks *lightLinks )
 		{
 			const bool hadObjectInterface = static_cast<bool>( m_objectInterface );
-			if( type == NoType || m_drawMode != VisibleSet::Visibility::Visible )
+			if( type == NoType || m_drawMode != VisibleSet::Visibility::Visible || !m_purposeIncluded )
 			{
 				clearObject();
 				return hadObjectInterface;
@@ -1103,6 +1149,7 @@ class RenderController::SceneGraph
 		IECore::CompoundObjectPtr m_fullAttributes;
 		IECoreScenePreview::Renderer::AttributesInterfacePtr m_attributesInterface;
 		IECore::MurmurHash m_lightLinksHash;
+		bool m_purposeIncluded;
 
 		IECore::MurmurHash m_transformHash;
 		std::vector<Imath::M44f> m_fullTransform;
@@ -1597,6 +1644,10 @@ void RenderController::updateInternal( const ProgressCallback &callback, const I
 			if( cameraGlobalsChanged( globals.get(), m_globals.get(), m_scene.get() ) )
 			{
 				m_changedGlobalComponents |= CameraOptionsGlobalComponent;
+			}
+			if( includedPurposesChanged( globals.get(), m_globals.get() ) )
+			{
+				m_changedGlobalComponents |= IncludedPurposesGlobalComponent;
 			}
 			m_globals = globals;
 		}

@@ -1507,5 +1507,82 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( monitor.plugStatistics( sphere["out"]["object"] ).hashCount, 0 )
 		self.assertEqual( monitor.plugStatistics( sphere["out"]["object"] ).computeCount, 0 )
 
+	def testIncludedPurposes( self ) :
+
+		rootFilter = GafferScene.PathFilter()
+		rootFilter["paths"].setValue( IECore.StringVectorData( [ "*" ] ) )
+
+		sphere = GafferScene.Sphere()
+		sphereAttributes = GafferScene.CustomAttributes()
+		sphereAttributes["in"].setInput( sphere["out"] )
+		sphereAttributes["filter"].setInput( rootFilter["out"] )
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( sphereAttributes["out"] )
+		groupAttributes = GafferScene.CustomAttributes()
+		groupAttributes["in"].setInput( group["out"] )
+		groupAttributes["filter"].setInput( rootFilter["out"] )
+
+		standardOptions = GafferScene.StandardOptions()
+		standardOptions["in"].setInput( groupAttributes["out"] )
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer()
+		controller = GafferScene.RenderController( standardOptions["out"], Gaffer.Context(), renderer )
+		controller.setMinimumExpansionDepth( 2 )
+		controller.update()
+
+		# Should be visible by default - we haven't used any purpose attributes or options.
+
+		self.assertIsNotNone( renderer.capturedObject( "/group/sphere" ) )
+
+		# Should still be visible when we add a purpose attribute, because we haven't
+		# specified the `render:includedPurposes` option.
+
+		sphereAttributes["attributes"].addChild( Gaffer.NameValuePlug( "usd:purpose", "proxy", defaultEnabled = True ) )
+		self.assertTrue( controller.updateRequired() )
+		controller.update()
+		self.assertIsNotNone( renderer.capturedObject( "/group/sphere" ) )
+
+		# But should be hidden when we add `render:includedPurposes` to exclude it.
+
+		standardOptions["options"]["includedPurposes"]["enabled"].setValue( True )
+		self.assertEqual(
+			standardOptions["options"]["includedPurposes"]["value"].getValue(),
+			IECore.StringVectorData( [ "default", "render" ] ),
+		)
+		self.assertTrue( controller.updateRequired() )
+		controller.update()
+		self.assertIsNone( renderer.capturedObject( "/group/sphere" ) )
+
+		# Should be shown again if we change purpose to one that is included.
+
+		sphereAttributes["attributes"][0]["value"].setValue( "render" )
+		self.assertTrue( controller.updateRequired() )
+		controller.update()
+		self.assertIsNotNone( renderer.capturedObject( "/group/sphere" ) )
+
+		# Shouldn't matter if parent has a purpose which is excluded, because local
+		# purpose will override that.
+
+		groupAttributes["attributes"].addChild( Gaffer.NameValuePlug( "usd:purpose", "proxy", defaultEnabled = True ) )
+		self.assertTrue( controller.updateRequired() )
+		controller.update()
+		self.assertIsNotNone( renderer.capturedObject( "/group/sphere" ) )
+
+		# Unless there is no local purpose, in which case we inherit the parent
+		# purpose and will get hidden.
+
+		sphereAttributes["attributes"][0]["enabled"].setValue( False )
+		self.assertTrue( controller.updateRequired() )
+		controller.update()
+		self.assertIsNone( renderer.capturedObject( "/group/sphere" ) )
+
+		# Reverting to no `includedPurposes` option should revert to showing everything.
+
+		standardOptions["options"]["includedPurposes"]["enabled"].setValue( False )
+		self.assertTrue( controller.updateRequired() )
+		controller.update()
+		self.assertIsNotNone( renderer.capturedObject( "/group/sphere" ) )
+
 if __name__ == "__main__":
 	unittest.main()
