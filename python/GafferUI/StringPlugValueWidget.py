@@ -142,7 +142,7 @@ class StringPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		# escape abandons everything
 		if event.key == "Escape" :
-			self._updateFromPlugs()
+			self._requestUpdateFromValues()
 			return True
 		elif event.key == "Backspace" :
 			# Allow a 'delete' press with the initial keyboard focus and a
