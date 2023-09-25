@@ -1,6 +1,10 @@
 1.2.10.x (relative to 1.2.10.3)
 ========
 
+Fixes
+-----
+
+- GraphEditor : Removed dynamic raster-space sizing of focus icon, as it caused excessive overlap with other nodes at certain zoom levels and on certain high resolution displays (#5435).
 
 1.2.10.3 (relative to 1.2.10.2)
 ========
