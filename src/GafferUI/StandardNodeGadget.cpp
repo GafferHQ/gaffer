@@ -778,12 +778,7 @@ void StandardNodeGadget::renderLayer( Layer layer, const Style *style, RenderRea
 
 float StandardNodeGadget::focusBorderWidth() const
 {
-	// Compute a fixed size in raster space, clamped to a maximum
-	const ViewportGadget *viewport = ancestor<ViewportGadget>();
-	const V3f p0 = viewport->rasterToGadgetSpace( V2f( 0 ), this ).p0;
-	const V3f p1 = viewport->rasterToGadgetSpace( V2f( 0, 1.0f ), this ).p0;
-	float pixelSize = ( p0 - p1 ).length();
-	return min( g_maxFocusWidth, max( 0.75f, 8.0f * pixelSize ) );
+	return 0.8;
 }
 
 void StandardNodeGadget::setHighlighted( bool highlighted )
