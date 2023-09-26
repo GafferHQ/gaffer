@@ -413,6 +413,7 @@ Fixes
 
 - GraphEditor : Removed dynamic raster-space sizing of focus icon, as it caused excessive overlap with other nodes at certain zoom levels and on certain high resolution displays (#5435).
 - StringPlugValueWidget : Fixed bug handling <kbd>Esc</kbd>.
+- Don't set deprecated "opaque" attribute in Arnold unless explicitly requested ( avoids deprecation warning from Arnold )
 
 1.2.10.3 (relative to 1.2.10.2)
 ========
