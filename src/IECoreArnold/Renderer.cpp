@@ -1352,7 +1352,16 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				AiNodeSetStr( node, g_transformTypeArnoldString, m_transformType );
 				AiNodeSetBool( node, g_receiveShadowsArnoldString, m_shadingFlags & ArnoldAttributes::ReceiveShadows );
 				AiNodeSetBool( node, g_selfShadowsArnoldString, m_shadingFlags & ArnoldAttributes::SelfShadows );
-				AiNodeSetBool( node, g_opaqueArnoldString, m_shadingFlags & ArnoldAttributes::Opaque );
+
+				if( !( m_shadingFlags & ArnoldAttributes::Opaque ) )
+				{
+					AiNodeSetBool( node, g_opaqueArnoldString, false );
+				}
+				else
+				{
+					AiNodeResetParameter( node, g_opaqueArnoldString );
+				}
+
 				AiNodeSetBool( node, g_matteArnoldString, m_shadingFlags & ArnoldAttributes::Matte );
 
 				if( m_surfaceShader && m_surfaceShader->root() )
