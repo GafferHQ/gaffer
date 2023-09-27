@@ -14,6 +14,8 @@ Fixes
 -----
 
 - GraphEditor : Removed dynamic raster-space sizing of focus icon, as it caused excessive overlap with other nodes at certain zoom levels and on certain high resolution displays (#5435).
+- StringPlugValueWidget : Fixed bug handling <kbd>Esc</kbd>.
+- Arnold : Fixed unnecessary `opaque` attribute deprecation warnings. These are now only emitted in the case that `opaque` has been explicitly turned off.
 
 API
 ---
@@ -402,6 +404,8 @@ Fixes
 -----
 
 - GraphEditor : Removed dynamic raster-space sizing of focus icon, as it caused excessive overlap with other nodes at certain zoom levels and on certain high resolution displays (#5435).
+- StringPlugValueWidget : Fixed bug handling <kbd>Esc</kbd>.
+- Arnold : Fixed unnecessary `opaque` attribute deprecation warnings. These are now only emitted in the case that `opaque` has been explicitly turned off.
 
 1.2.10.3 (relative to 1.2.10.2)
 ========
