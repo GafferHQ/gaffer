@@ -45,6 +45,8 @@
 
 #include "boost/bind/bind.hpp"
 
+#include <mutex>
+
 using namespace boost::placeholders;
 using namespace IECore;
 using namespace IECoreScene;
@@ -53,6 +55,7 @@ using namespace GafferScene;
 
 namespace
 {
+
 	Gaffer::Context *capsuleContext( const Context &context )
 	{
 		Gaffer::Context *result = new Gaffer::Context( context );
@@ -62,6 +65,10 @@ namespace
 		result->remove( ScenePlug::scenePathContextName );
 		return result;
 	}
+
+std::mutex g_renderOptionsMutex;
+std::unordered_map<const Capsule *, Private::RendererAlgo::RenderOptions> g_renderOptions;
+
 }
 
 IE_CORE_DEFINEOBJECTTYPEDESCRIPTION( Capsule );
@@ -84,6 +91,8 @@ Capsule::Capsule(
 
 Capsule::~Capsule()
 {
+	std::unique_lock renderOptionsLock( g_renderOptionsMutex );
+	g_renderOptions.erase( this );
 }
 
 bool Capsule::isEqualTo( const IECore::Object *other ) const
@@ -104,14 +113,14 @@ void Capsule::hash( IECore::MurmurHash &h ) const
 	Procedural::hash( h );
 	h.append( m_hash );
 
-	if( m_renderOptions )
+	if( auto renderOptions = getRenderOptions() )
 	{
 		// Hash only what affects our rendering, not everything in
 		// `RenderOptions::globals`.
-		h.append( m_renderOptions->transformBlur );
-		h.append( m_renderOptions->deformationBlur );
-		h.append( m_renderOptions->shutter );
-		m_renderOptions->includedPurposes->hash( h );
+		h.append( renderOptions->transformBlur );
+		h.append( renderOptions->deformationBlur );
+		h.append( renderOptions->shutter );
+		renderOptions->includedPurposes->hash( h );
 	}
 }
 
@@ -157,7 +166,7 @@ void Capsule::render( IECoreScenePreview::Renderer *renderer ) const
 {
 	throwIfNoScene();
 	ScenePlug::GlobalScope scope( m_context.get() );
-	std::optional<GafferScene::Private::RendererAlgo::RenderOptions> renderOptions = m_renderOptions;
+	std::optional<GafferScene::Private::RendererAlgo::RenderOptions> renderOptions = getRenderOptions();
 	if( !renderOptions )
 	{
 		renderOptions = GafferScene::Private::RendererAlgo::RenderOptions( m_scene );
@@ -189,12 +198,19 @@ void Capsule::setRenderOptions( const GafferScene::Private::RendererAlgo::Render
 	// This is not pretty, but it allows the capsule to render with the correct
 	// motion blur and `includedPurposes`, taken from the downstream node being
 	// rendered rather than from the capsule's own globals.
-	m_renderOptions = renderOptions;
+	std::unique_lock renderOptionsLock( g_renderOptionsMutex );
+	g_renderOptions[this] = renderOptions;
 }
 
 std::optional<GafferScene::Private::RendererAlgo::RenderOptions> Capsule::getRenderOptions() const
 {
-	return m_renderOptions;
+	std::unique_lock renderOptionsLock( g_renderOptionsMutex );
+	auto it = g_renderOptions.find( this );
+	if( it != g_renderOptions.end() )
+	{
+		return it->second;
+	}
+	return std::nullopt;
 }
 
 void Capsule::throwIfNoScene() const

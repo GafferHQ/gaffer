@@ -380,7 +380,7 @@ class RenderController::SceneGraph
 				// Root - get attributes from globals.
 				if( changedGlobals & GlobalsGlobalComponent )
 				{
-					if( updateAttributes( controller->m_renderOptions.globals.get() ) )
+					if( updateAttributes( controller->m_renderOptions->globals.get() ) )
 					{
 						m_changedComponents |= AttributesComponent;
 					}
@@ -401,7 +401,7 @@ class RenderController::SceneGraph
 				// If attributes have changed, need to check if this has affected our motion sample times
 				if( ( m_changedComponents & AttributesComponent ) || ( changedGlobals & TransformBlurGlobalComponent ) )
 				{
-					if( Private::RendererAlgo::transformMotionTimes( controller->m_renderOptions, m_fullAttributes.get(), m_transformTimes ) )
+					if( Private::RendererAlgo::transformMotionTimes( *controller->m_renderOptions, m_fullAttributes.get(), m_transformTimes ) )
 					{
 						m_dirtyComponents |= TransformComponent;
 					}
@@ -409,7 +409,7 @@ class RenderController::SceneGraph
 
 				if( ( m_changedComponents & AttributesComponent ) || ( changedGlobals & DeformationBlurGlobalComponent ) )
 				{
-					if( Private::RendererAlgo::deformationMotionTimes( controller->m_renderOptions, m_fullAttributes.get(), m_deformationTimes ) )
+					if( Private::RendererAlgo::deformationMotionTimes( *controller->m_renderOptions, m_fullAttributes.get(), m_deformationTimes ) )
 					{
 						m_dirtyComponents |= ObjectComponent;
 					}
@@ -442,7 +442,7 @@ class RenderController::SceneGraph
 			if( ( m_changedComponents & AttributesComponent ) || ( changedGlobals & IncludedPurposesGlobalComponent ) )
 			{
 				const bool purposeIncludedPreviously = m_purposeIncluded;
-				m_purposeIncluded = controller->m_renderOptions.purposeIncluded( m_fullAttributes.get() );
+				m_purposeIncluded = controller->m_renderOptions->purposeIncluded( m_fullAttributes.get() );
 				if( m_purposeIncluded != purposeIncludedPreviously )
 				{
 					// We'll need to hide or show the object by considering `m_purposeIncluded` in
@@ -487,7 +487,7 @@ class RenderController::SceneGraph
 				m_objectHash = MurmurHash();
 			}
 
-			if( ( m_dirtyComponents & ObjectComponent ) && updateObject( controller->m_scene->objectPlug(), type, controller->m_renderer.get(), controller->m_renderOptions, controller->m_scene.get(), controller->m_lightLinks.get() ) )
+			if( ( m_dirtyComponents & ObjectComponent ) && updateObject( controller->m_scene->objectPlug(), type, controller->m_renderer.get(), *controller->m_renderOptions, controller->m_scene.get(), controller->m_lightLinks.get() ) )
 			{
 				m_changedComponents |= ObjectComponent;
 			}
@@ -511,7 +511,7 @@ class RenderController::SceneGraph
 						{
 							// Failed to apply attributes - must replace entire object.
 							m_objectHash = MurmurHash();
-							if( updateObject( controller->m_scene->objectPlug(), type, controller->m_renderer.get(), controller->m_renderOptions, controller->m_scene.get(), controller->m_lightLinks.get() ) )
+							if( updateObject( controller->m_scene->objectPlug(), type, controller->m_renderer.get(), *controller->m_renderOptions, controller->m_scene.get(), controller->m_lightLinks.get() ) )
 							{
 								m_changedComponents |= ObjectComponent;
 								controller->m_failedAttributeEdits++;
@@ -1347,7 +1347,8 @@ RenderController::RenderController( const ConstScenePlugPtr &scene, const Gaffer
 		m_updateRequested( false ),
 		m_failedAttributeEdits( 0 ),
 		m_dirtyGlobalComponents( NoGlobalComponent ),
-		m_changedGlobalComponents( NoGlobalComponent )
+		m_changedGlobalComponents( NoGlobalComponent ),
+		m_renderOptions( make_unique<Private::RendererAlgo::RenderOptions>() )
 {
 	for( int i = SceneGraph::FirstType; i <= SceneGraph::LastType; ++i )
 	{
@@ -1627,43 +1628,43 @@ void RenderController::updateInternal( const ProgressCallback &callback, const I
 		if( m_dirtyGlobalComponents & GlobalsGlobalComponent )
 		{
 			RenderOptions renderOptions( m_scene.get() );
-			Private::RendererAlgo::outputOptions( renderOptions.globals.get(), m_renderOptions.globals.get(), m_renderer.get() );
-			Private::RendererAlgo::outputOutputs( m_scene.get(), renderOptions.globals.get(), m_renderOptions.globals.get(), m_renderer.get() );
-			if( *renderOptions.globals != *m_renderOptions.globals )
+			Private::RendererAlgo::outputOptions( renderOptions.globals.get(), m_renderOptions->globals.get(), m_renderer.get() );
+			Private::RendererAlgo::outputOutputs( m_scene.get(), renderOptions.globals.get(), m_renderOptions->globals.get(), m_renderer.get() );
+			if( *renderOptions.globals != *m_renderOptions->globals )
 			{
 				m_changedGlobalComponents |= GlobalsGlobalComponent;
 			}
-			if( cameraGlobalsChanged( renderOptions.globals.get(), m_renderOptions.globals.get(), m_scene.get() ) )
+			if( cameraGlobalsChanged( renderOptions.globals.get(), m_renderOptions->globals.get(), m_scene.get() ) )
 			{
 				m_changedGlobalComponents |= CameraOptionsGlobalComponent;
 			}
-			if( *renderOptions.includedPurposes != *m_renderOptions.includedPurposes )
+			if( *renderOptions.includedPurposes != *m_renderOptions->includedPurposes )
 			{
 				m_changedGlobalComponents |= IncludedPurposesGlobalComponent;
 			}
-			if( renderOptions.shutter != m_renderOptions.shutter || renderOptions.transformBlur != m_renderOptions.transformBlur )
+			if( renderOptions.shutter != m_renderOptions->shutter || renderOptions.transformBlur != m_renderOptions->transformBlur )
 			{
 				m_changedGlobalComponents |= TransformBlurGlobalComponent;
 			}
-			if( renderOptions.shutter != m_renderOptions.shutter || renderOptions.deformationBlur != m_renderOptions.deformationBlur )
+			if( renderOptions.shutter != m_renderOptions->shutter || renderOptions.deformationBlur != m_renderOptions->deformationBlur )
 			{
 				m_changedGlobalComponents |= DeformationBlurGlobalComponent;
 			}
-			if( renderOptions.shutter != m_renderOptions.shutter )
+			if( renderOptions.shutter != m_renderOptions->shutter )
 			{
 				m_changedGlobalComponents |= CameraOptionsGlobalComponent;
 			}
-			m_renderOptions = renderOptions;
+			*m_renderOptions = renderOptions;
 		}
 
 		if( ( m_dirtyGlobalComponents & CameraShutterGlobalComponent ) && !( m_dirtyGlobalComponents & GlobalsGlobalComponent ) )
 		{
 			// Shutter override from a camera may have changed, and won't have been covered by
 			// the block above (because the globals weren't dirty).
-			const V2f shutter = SceneAlgo::shutter( m_renderOptions.globals.get(), m_scene.get() );
-			if( shutter != m_renderOptions.shutter )
+			const V2f shutter = SceneAlgo::shutter( m_renderOptions->globals.get(), m_scene.get() );
+			if( shutter != m_renderOptions->shutter )
 			{
-				m_renderOptions.shutter = shutter;
+				m_renderOptions->shutter = shutter;
 				m_changedGlobalComponents |= ( DeformationBlurGlobalComponent | TransformBlurGlobalComponent );
 			}
 		}
@@ -1774,7 +1775,7 @@ void RenderController::updateDefaultCamera()
 		return;
 	}
 
-	const StringData *cameraOption = m_renderOptions.globals->member<StringData>( g_cameraGlobalName );
+	const StringData *cameraOption = m_renderOptions->globals->member<StringData>( g_cameraGlobalName );
 	m_defaultCamera = nullptr;
 	if( cameraOption && !cameraOption->readable().empty() )
 	{
@@ -1782,7 +1783,7 @@ void RenderController::updateDefaultCamera()
 	}
 
 	CameraPtr defaultCamera = new IECoreScene::Camera;
-	SceneAlgo::applyCameraGlobals( defaultCamera.get(), m_renderOptions.globals.get(), m_scene.get() );
+	SceneAlgo::applyCameraGlobals( defaultCamera.get(), m_renderOptions->globals.get(), m_scene.get() );
 	IECoreScenePreview::Renderer::AttributesInterfacePtr defaultAttributes = m_renderer->attributes( m_scene->attributesPlug()->defaultValue() );
 	ConstStringDataPtr name = new StringData( "gaffer:defaultCamera" );
 	m_defaultCamera = m_renderer->camera( name->readable(), defaultCamera.get(), defaultAttributes.get() );

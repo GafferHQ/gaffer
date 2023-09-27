@@ -126,6 +126,13 @@ class GAFFERSCENE_API RenderController : public Gaffer::Signals::Trackable
 			AllGlobalComponents = GlobalsGlobalComponent | SetsGlobalComponent | RenderSetsGlobalComponent | CameraOptionsGlobalComponent | TransformBlurGlobalComponent | DeformationBlurGlobalComponent | IncludedPurposesGlobalComponent
 		};
 
+		struct Unused
+		{
+			bool unused1;
+			bool unused2;
+			Imath::V2f unused3;
+		};
+
 		void plugDirtied( const Gaffer::Plug *plug );
 		void contextChanged( const IECore::InternedString &name );
 		void requestUpdate();
@@ -159,7 +166,8 @@ class GAFFERSCENE_API RenderController : public Gaffer::Signals::Trackable
 		std::vector<std::unique_ptr<SceneGraph> > m_sceneGraphs;
 		unsigned m_dirtyGlobalComponents;
 		unsigned m_changedGlobalComponents;
-		Private::RendererAlgo::RenderOptions m_renderOptions;
+		std::unique_ptr<Private::RendererAlgo::RenderOptions> m_renderOptions;
+		Unused m_unused;
 		Private::RendererAlgo::RenderSets m_renderSets;
 		std::unique_ptr<Private::RendererAlgo::LightLinks> m_lightLinks;
 		IECoreScenePreview::Renderer::ObjectInterfacePtr m_defaultCamera;
