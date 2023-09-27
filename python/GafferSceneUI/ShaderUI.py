@@ -549,7 +549,7 @@ class _ShaderPath( Gaffer.Path ) :
 				shaderNetwork, shaderHandle = stack.popleft()
 				shader = shaderNetwork.shaders()[shaderHandle]
 
-				h = shaderNetwork.hash().append( shader.hash() )
+				h = shaderNetwork.hash().append( shaderHandle )
 
 				if h not in visited :
 					visited.add( h )
