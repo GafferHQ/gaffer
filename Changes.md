@@ -24,6 +24,7 @@ Fixes
 API
 ---
 
+- SceneTestCase : Added `assertScenesRenderSame()` method.
 - RenderController : Added missing `updateRequired()` Python binding.
 - CapturingRenderer :
   - Added `capturedObjectNames()` method.
