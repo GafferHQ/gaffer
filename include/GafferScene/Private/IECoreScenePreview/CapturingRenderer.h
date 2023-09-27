@@ -106,6 +106,8 @@ class GAFFERSCENE_API CapturingRenderer : public Renderer
 				/// Introspection
 				/// =============
 
+				const std::string &capturedName() const;
+
 				const std::vector<IECore::ConstObjectPtr> &capturedSamples() const;
 				const std::vector<float> &capturedSampleTimes() const;
 
@@ -113,6 +115,7 @@ class GAFFERSCENE_API CapturingRenderer : public Renderer
 				const std::vector<float> &capturedTransformTimes() const;
 
 				const CapturedAttributes *capturedAttributes() const;
+				std::vector< IECore::InternedString > capturedLinkTypes() const;
 				const ObjectSet *capturedLinks( const IECore::InternedString &type ) const;
 
 				int numAttributeEdits() const;
@@ -150,6 +153,7 @@ class GAFFERSCENE_API CapturingRenderer : public Renderer
 
 		IE_CORE_DECLAREPTR( CapturedObject );
 
+		std::vector<std::string> capturedObjectNames() const;
 		const CapturedObject *capturedObject( const std::string &name ) const;
 
 		/// Renderer interface

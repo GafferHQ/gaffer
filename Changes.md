@@ -25,6 +25,9 @@ API
 ---
 
 - RenderController : Added missing `updateRequired()` Python binding.
+- CapturingRenderer :
+  - Added `capturedObjectNames()` method.
+  - Added `capturedName()` and `capturedLinkTypes()` methods to CapturedObject class.
 
 Build
 -----

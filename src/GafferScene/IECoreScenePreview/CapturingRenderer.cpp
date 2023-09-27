@@ -71,6 +71,16 @@ CapturingRenderer::~CapturingRenderer()
 	}
 }
 
+std::vector< std::string > CapturingRenderer::capturedObjectNames() const
+{
+	std::vector< std::string > result;
+	for( auto &i : m_capturedObjects )
+	{
+		result.push_back( i.first );
+	}
+	return result;
+}
+
 const CapturingRenderer::CapturedObject *CapturingRenderer::capturedObject( const std::string &name ) const
 {
 	ObjectMap::accessor a;
@@ -242,6 +252,11 @@ CapturingRenderer::CapturedObject::~CapturedObject()
 	}
 }
 
+const std::string &CapturingRenderer::CapturedObject::capturedName() const
+{
+	return m_name;
+}
+
 const std::vector<IECore::ConstObjectPtr> &CapturingRenderer::CapturedObject::capturedSamples() const
 {
 	return m_capturedSamples;
@@ -266,6 +281,17 @@ const CapturingRenderer::CapturedAttributes *CapturingRenderer::CapturedObject::
 {
 	return m_capturedAttributes.get();
 }
+
+std::vector< IECore::InternedString > CapturingRenderer::CapturedObject::capturedLinkTypes() const
+{
+	std::vector< IECore::InternedString > result;
+	for( const auto &i : m_capturedLinks )
+	{
+		result.push_back( i.first );
+	}
+	return result;
+}
+
 
 const Renderer::ObjectSet *CapturingRenderer::CapturedObject::capturedLinks( const IECore::InternedString &type ) const
 {
