@@ -547,7 +547,6 @@ class _ShaderPath( Gaffer.Path ) :
 
 			while stack :
 				shaderNetwork, shaderHandle = stack.popleft()
-				shader = shaderNetwork.shaders()[shaderHandle]
 
 				h = shaderNetwork.hash().append( shaderHandle )
 
@@ -571,9 +570,7 @@ class _ShaderPath( Gaffer.Path ) :
 
 		# Parameters
 		elif self.__isShader() :
-			shader = self.__shaders()
 			parameterNames = sorted( set( self.__parameters() ) )
-
 			for p in parameterNames :
 				result.append(
 					_ShaderPath(
