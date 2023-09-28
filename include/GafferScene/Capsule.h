@@ -112,6 +112,7 @@ class GAFFERSCENE_API Capsule : public IECoreScenePreview::Procedural
 		const ScenePlug *m_scene;
 		ScenePlug::ScenePath m_root;
 		Gaffer::ConstContextPtr m_context;
+		std::optional<GafferScene::Private::RendererAlgo::RenderOptions> m_renderOptions;
 
 };
 
