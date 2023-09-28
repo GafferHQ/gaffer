@@ -66,8 +66,13 @@ namespace
 		return result;
 	}
 
-std::mutex g_renderOptionsMutex;
-std::unordered_map<const Capsule *, Private::RendererAlgo::RenderOptions> g_renderOptions;
+// Deliberately "leaking" these variables to avoid static destruction order fiasco.
+// Capsules may be held in the ValuePlug cache and destroyed during shutdown, and if
+// the `RenderOptionsMap` is destroyed first then `~Capsule` will crash attempting
+// to access it.
+std::mutex *g_renderOptionsMutex = new std::mutex;
+using RenderOptionsMap = std::unordered_map<const Capsule *, Private::RendererAlgo::RenderOptions>;
+RenderOptionsMap *g_renderOptions = new RenderOptionsMap;
 
 }
 
@@ -91,8 +96,8 @@ Capsule::Capsule(
 
 Capsule::~Capsule()
 {
-	std::unique_lock renderOptionsLock( g_renderOptionsMutex );
-	g_renderOptions.erase( this );
+	std::unique_lock renderOptionsLock( *g_renderOptionsMutex );
+	g_renderOptions->erase( this );
 }
 
 bool Capsule::isEqualTo( const IECore::Object *other ) const
@@ -198,15 +203,15 @@ void Capsule::setRenderOptions( const GafferScene::Private::RendererAlgo::Render
 	// This is not pretty, but it allows the capsule to render with the correct
 	// motion blur and `includedPurposes`, taken from the downstream node being
 	// rendered rather than from the capsule's own globals.
-	std::unique_lock renderOptionsLock( g_renderOptionsMutex );
-	g_renderOptions[this] = renderOptions;
+	std::unique_lock renderOptionsLock( *g_renderOptionsMutex );
+	(*g_renderOptions)[this] = renderOptions;
 }
 
 std::optional<GafferScene::Private::RendererAlgo::RenderOptions> Capsule::getRenderOptions() const
 {
-	std::unique_lock renderOptionsLock( g_renderOptionsMutex );
-	auto it = g_renderOptions.find( this );
-	if( it != g_renderOptions.end() )
+	std::unique_lock renderOptionsLock( *g_renderOptionsMutex );
+	auto it = g_renderOptions->find( this );
+	if( it != g_renderOptions->end() )
 	{
 		return it->second;
 	}
