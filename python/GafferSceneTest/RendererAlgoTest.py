@@ -36,6 +36,8 @@
 
 import unittest
 
+import imath
+
 import IECore
 
 import Gaffer
@@ -97,6 +99,7 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 		options = GafferScene.StandardOptions()
 		options["in"].setInput( camera["out"] )
 
+		renderOptions = GafferScene.Private.RendererAlgo.RenderOptions( options["out"] )
 		renderSets = GafferScene.Private.RendererAlgo.RenderSets( options["out"] )
 
 		def expectedCamera( frame ) :
@@ -105,7 +108,7 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 				c.setFrame( frame )
 				camera = options["out"].object( "/camera" )
 
-			GafferScene.SceneAlgo.applyCameraGlobals( camera, sceneGlobals, options["out"] )
+			GafferScene.SceneAlgo.applyCameraGlobals( camera, options["out"].globals(), options["out"] )
 			return camera
 
 		# Non-animated case
@@ -113,8 +116,7 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer(
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 		)
-		sceneGlobals = options["out"].globals()
-		GafferScene.Private.RendererAlgo.outputCameras( options["out"], sceneGlobals, renderSets, renderer )
+		GafferScene.Private.RendererAlgo.outputCameras( options["out"], renderOptions, renderSets, renderer )
 
 		capturedCamera = renderer.capturedObject( "/camera" )
 
@@ -129,8 +131,8 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer(
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 		)
-		sceneGlobals = options["out"].globals()
-		GafferScene.Private.RendererAlgo.outputCameras( options["out"], sceneGlobals, renderSets, renderer )
+		renderOptions = GafferScene.Private.RendererAlgo.RenderOptions( options["out"] )
+		GafferScene.Private.RendererAlgo.outputCameras( options["out"], renderOptions, renderSets, renderer )
 
 		capturedCamera = renderer.capturedObject( "/camera" )
 		self.assertEqual( capturedCamera.capturedSamples(), [ expectedCamera( 0.75 ), expectedCamera( 1.25 ) ] )
@@ -155,7 +157,8 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 		)
 		with self.assertRaisesRegex( RuntimeError, "Camera \"/camera\" is hidden" ) :
 			GafferScene.Private.RendererAlgo.outputCameras(
-				standardOptions["out"], standardOptions["out"].globals(),
+				standardOptions["out"],
+				GafferScene.Private.RendererAlgo.RenderOptions( standardOptions["out"] ),
 				GafferScene.Private.RendererAlgo.RenderSets( standardOptions["out"] ),
 				renderer
 			)
@@ -317,14 +320,14 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		# Output the lights to the renderer
 
+		renderOptions = GafferScene.Private.RendererAlgo.RenderOptions( soloSet["out"] )
 		renderSets = GafferScene.Private.RendererAlgo.RenderSets( soloSet["out"] )
 		lightLinks = GafferScene.Private.RendererAlgo.LightLinks()
 
 		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer(
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 		)
-		sceneGlobals = soloSet["out"].globals()
-		GafferScene.Private.RendererAlgo.outputLights( soloSet["out"], sceneGlobals, renderSets, lightLinks, renderer )
+		GafferScene.Private.RendererAlgo.outputLights( soloSet["out"], renderOptions, renderSets, lightLinks, renderer )
 
 		# Check that the output is correct
 
@@ -448,14 +451,14 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		# Output the lights to the renderer
 
+		renderOptions = GafferScene.Private.RendererAlgo.RenderOptions( muteAttributes["out"] )
 		renderSets = GafferScene.Private.RendererAlgo.RenderSets( muteAttributes["out"] )
 		lightLinks = GafferScene.Private.RendererAlgo.LightLinks()
 
 		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer(
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 		)
-		sceneGlobals = muteAttributes["out"].globals()
-		GafferScene.Private.RendererAlgo.outputLights( muteAttributes["out"], sceneGlobals, renderSets, lightLinks, renderer )
+		GafferScene.Private.RendererAlgo.outputLights( muteAttributes["out"], renderOptions, renderSets, lightLinks, renderer )
 
 		# Check that the output is correct
 
@@ -643,15 +646,15 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 
 		def assertIncludedObjects( scene, includedPurposes, paths ) :
 
-			globals = IECore.CompoundObject()
+			renderOptions = GafferScene.Private.RendererAlgo.RenderOptions( scene )
 			if includedPurposes :
-				globals["option:render:includedPurposes"] = IECore.StringVectorData( includedPurposes )
+				renderOptions.includedPurposes = IECore.StringVectorData( includedPurposes )
 
 			renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer(
 				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
 			)
 			GafferScene.Private.RendererAlgo.outputObjects(
-				group["out"], globals, GafferScene.Private.RendererAlgo.RenderSets( scene ), GafferScene.Private.RendererAlgo.LightLinks(),
+				group["out"], renderOptions, GafferScene.Private.RendererAlgo.RenderSets( scene ), GafferScene.Private.RendererAlgo.LightLinks(),
 				renderer
 			)
 
@@ -747,6 +750,180 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 				"/group/innerGroup2/cube",
 			}
 		)
+
+	def testCapsuleMotionBlur( self ) :
+
+		sphere = GafferScene.Sphere()
+		sphere["type"].setValue( sphere.Type.Primitive )
+		sphere["expression"] = Gaffer.Expression()
+		sphere["expression"].setExpression(
+			'parent["radius"] = context.getFrame() + 1; parent["transform"]["translate"]["x"] = context.getFrame()'
+		)
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( sphere["out"] )
+
+		groupFilter = GafferScene.PathFilter()
+		groupFilter["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
+
+		encapsulate = GafferScene.Encapsulate()
+		encapsulate["in"].setInput( group["out"] )
+		encapsulate["filter"].setInput( groupFilter["out"] )
+
+		camera = GafferScene.Camera()
+		camera["renderSettingOverrides"]["shutter"]["value"].setValue( imath.V2f( -0.5, 0.5 ) )
+
+		parent = GafferScene.Parent()
+		parent["in"].setInput( encapsulate["out"] )
+		parent["parent"].setValue( "/" )
+		parent["in"].setInput( encapsulate["out"] )
+		parent["children"][0].setInput( camera["out"] )
+
+		standardOptions = GafferScene.StandardOptions()
+		standardOptions["in"].setInput( parent["out"] )
+		standardOptions["options"]["transformBlur"]["enabled"].setValue( True )
+		standardOptions["options"]["deformationBlur"]["enabled"].setValue( True )
+		standardOptions["options"]["shutter"]["enabled"].setValue( True )
+		standardOptions["options"]["renderCamera"]["enabled"].setValue( True )
+		standardOptions["options"]["renderCamera"]["value"].setValue( "/camera" )
+
+		def assertExpectedMotion( scene ) :
+
+			# Render to capture Capsule. This will always contain only a single
+			# motion sample because procedurals themselves can't have motion samples
+			# (although their contents can).
+
+			renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer(
+				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+			)
+			GafferScene.Private.RendererAlgo.outputObjects(
+				scene, GafferScene.Private.RendererAlgo.RenderOptions( scene ),
+				GafferScene.Private.RendererAlgo.RenderSets( scene ), GafferScene.Private.RendererAlgo.LightLinks(),
+				renderer
+			)
+
+			capsule = renderer.capturedObject( "/group" )
+			self.assertEqual( len( capsule.capturedSamples() ), 1 )
+			capsule = capsule.capturedSamples()[0]
+			self.assertIsInstance( capsule, GafferScene.Capsule )
+
+			# Render again to expand contents of Capsule.
+
+			capsuleRenderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer(
+				GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+			)
+			capsule.render( capsuleRenderer )
+
+			# Check transform blur of contents matches what was requested by the scene globals.
+
+			motionTimes = list( GafferScene.SceneAlgo.shutter( scene.globals(), scene ) )
+			sphere = capsuleRenderer.capturedObject( "/sphere" )
+			if scene.globals()["option:render:transformBlur"].value :
+				transformTimes = motionTimes
+			else :
+				transformTimes = [ Gaffer.Context.current().getFrame() ]
+
+			self.assertEqual( len( sphere.capturedTransforms() ), len( transformTimes ) )
+			self.assertEqual( sphere.capturedTransformTimes(), transformTimes if len( transformTimes ) > 1 else [] )
+			for index, time in enumerate( transformTimes ) :
+				with Gaffer.Context() as context :
+					context.setFrame( time )
+					self.assertEqual( sphere.capturedTransforms()[index], capsule.scene().transform( "/group/sphere" ) )
+
+			# Check deformation blur of contents matches what was requested by the scene globals.
+
+			if scene.globals()["option:render:deformationBlur"].value :
+				objectTimes = motionTimes
+			else :
+				objectTimes = [ Gaffer.Context.current().getFrame() ]
+
+			self.assertEqual( len( sphere.capturedSamples() ), len( objectTimes ) )
+			self.assertEqual( sphere.capturedSampleTimes(), objectTimes if len( objectTimes ) > 1 else [] )
+			for index, time in enumerate( objectTimes ) :
+				with Gaffer.Context() as context :
+					context.setFrame( time )
+					self.assertEqual( sphere.capturedSamples()[index].radius, capsule.scene().object( "/group/sphere" ).radius )
+
+		for frame in ( 0, 1 ) :
+			for deformation in ( False, True ) :
+				for transform in ( False, True ) :
+					for shutter in ( imath.V2f( -0.25, 0.25 ), imath.V2f( 0, 0.5 ) ) :
+						for overrideShutter in ( False, True ) :
+							with self.subTest( frame = frame, deformation = deformation, transform = transform, shutter = shutter, overrideShutter = overrideShutter ) :
+								standardOptions["options"]["transformBlur"]["value"].setValue( transform )
+								standardOptions["options"]["deformationBlur"]["value"].setValue( deformation )
+								standardOptions["options"]["shutter"]["value"].setValue( shutter )
+								camera["renderSettingOverrides"]["shutter"]["enabled"].setValue( overrideShutter )
+								with Gaffer.Context() as context :
+									context.setFrame( frame )
+									assertExpectedMotion( standardOptions["out"] )
+
+	def testCapsulePurposes( self ) :
+
+		rootFilter = GafferScene.PathFilter()
+		rootFilter["paths"].setValue( IECore.StringVectorData( [ "*" ] ) )
+
+		cube = GafferScene.Cube()
+
+		attributes = GafferScene.CustomAttributes()
+		attributes["in"].setInput( cube["out"] )
+		attributes["filter"].setInput( rootFilter["out"] )
+		attributes["attributes"].addChild( Gaffer.NameValuePlug( "usd:purpose", "${collect:rootName}" ) )
+
+		collect = GafferScene.CollectScenes()
+		collect["in"].setInput( attributes["out"] )
+		collect["rootNames"].setValue( IECore.StringVectorData( [ "default", "render", "proxy", "guide" ] ) )
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( collect["out"] )
+
+		encapsulate = GafferScene.Encapsulate()
+		encapsulate["in"].setInput( group["out"] )
+		encapsulate["filter"].setInput( rootFilter["out"] )
+
+		standardOptions = GafferScene.StandardOptions()
+		standardOptions["in"].setInput( encapsulate["out"] )
+		standardOptions["options"]["includedPurposes"]["enabled"].setValue( True )
+
+		for includedPurposes in [
+			[ "default", "render" ],
+			[ "default", "proxy" ],
+			[ "default", "render", "proxy", "guide" ],
+			[ "default" ],
+		] :
+			with self.subTest( includedPurposes = includedPurposes ) :
+
+				standardOptions["options"]["includedPurposes"]["value"].setValue( IECore.StringVectorData( includedPurposes ) )
+
+				# Render to capture Capsule.
+
+				renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer(
+					GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+				)
+				GafferScene.Private.RendererAlgo.outputObjects(
+					standardOptions["out"], GafferScene.Private.RendererAlgo.RenderOptions( standardOptions["out"] ),
+					GafferScene.Private.RendererAlgo.RenderSets( standardOptions["out"] ), GafferScene.Private.RendererAlgo.LightLinks(),
+					renderer
+				)
+
+				capsule = renderer.capturedObject( "/group" )
+				capsule = capsule.capturedSamples()[0]
+				self.assertIsInstance( capsule, GafferScene.Capsule )
+
+				# Render again to expand contents of Capsule.
+
+				capsuleRenderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer(
+					GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch
+				)
+				capsule.render( capsuleRenderer )
+
+				# Check that only objects with the right purpose have been included.
+
+				for purpose in [ "default", "render", "proxy", "guide" ] :
+					if purpose in includedPurposes :
+						self.assertIsNotNone( capsuleRenderer.capturedObject( f"/{purpose}/cube" ) )
+					else :
+						self.assertIsNone( capsuleRenderer.capturedObject( f"/{purpose}/cube" ) )
 
 if __name__ == "__main__":
 	unittest.main()

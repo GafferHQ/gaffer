@@ -389,22 +389,22 @@ object transformSamplesWrapper( const Gaffer::M44fPlug &transformPlug, const std
 	return pythonSamples;
 }
 
-void outputCamerasWrapper( const ScenePlug &scene, const IECore::CompoundObject &globals, const GafferScene::Private::RendererAlgo::RenderSets &renderSets, IECoreScenePreview::Renderer &renderer )
+void outputCamerasWrapper( const ScenePlug &scene, const GafferScene::Private::RendererAlgo::RenderOptions &renderOptions, const GafferScene::Private::RendererAlgo::RenderSets &renderSets, IECoreScenePreview::Renderer &renderer )
 {
 	IECorePython::ScopedGILRelease gilRelease;
-	GafferScene::Private::RendererAlgo::outputCameras( &scene, &globals, renderSets, &renderer );
+	GafferScene::Private::RendererAlgo::outputCameras( &scene, renderOptions, renderSets, &renderer );
 }
 
-void outputLightsWrapper( const ScenePlug &scene, const IECore::CompoundObject &globals, const GafferScene::Private::RendererAlgo::RenderSets &renderSets, GafferScene::Private::RendererAlgo::LightLinks &lightLinks, IECoreScenePreview::Renderer &renderer )
+void outputLightsWrapper( const ScenePlug &scene, const GafferScene::Private::RendererAlgo::RenderOptions &renderOptions, const GafferScene::Private::RendererAlgo::RenderSets &renderSets, GafferScene::Private::RendererAlgo::LightLinks &lightLinks, IECoreScenePreview::Renderer &renderer )
 {
 	IECorePython::ScopedGILRelease gilRelease;
-	GafferScene::Private::RendererAlgo::outputLights( &scene, &globals, renderSets, &lightLinks, &renderer );
+	GafferScene::Private::RendererAlgo::outputLights( &scene, renderOptions, renderSets, &lightLinks, &renderer );
 }
 
-void outputObjectsWrapper( const ScenePlug &scene, const IECore::CompoundObject &globals, const GafferScene::Private::RendererAlgo::RenderSets &renderSets, GafferScene::Private::RendererAlgo::LightLinks &lightLinks, IECoreScenePreview::Renderer &renderer, const ScenePlug::ScenePath &root )
+void outputObjectsWrapper( const ScenePlug &scene, const GafferScene::Private::RendererAlgo::RenderOptions &renderOptions, const GafferScene::Private::RendererAlgo::RenderSets &renderSets, GafferScene::Private::RendererAlgo::LightLinks &lightLinks, IECoreScenePreview::Renderer &renderer, const ScenePlug::ScenePath &root )
 {
 	IECorePython::ScopedGILRelease gilRelease;
-	GafferScene::Private::RendererAlgo::outputObjects( &scene, &globals, renderSets, &lightLinks, &renderer, root );
+	GafferScene::Private::RendererAlgo::outputObjects( &scene, renderOptions, renderSets, &lightLinks, &renderer, root );
 }
 
 } // namespace
@@ -443,6 +443,16 @@ void GafferSceneModule::bindRender()
 			scope().attr( "Private" ).attr( "RendererAlgo" ) = rendererAlgoModule;
 
 			scope rendererAlgomoduleScope( rendererAlgoModule );
+
+			class_<GafferScene::Private::RendererAlgo::RenderOptions>( "RenderOptions" )
+				.def( init<const ScenePlug *>() )
+				.def_readwrite( "globals", &GafferScene::Private::RendererAlgo::RenderOptions::globals )
+				.def_readwrite( "transformBlur", &GafferScene::Private::RendererAlgo::RenderOptions::transformBlur )
+				.def_readwrite( "deformationBlur", &GafferScene::Private::RendererAlgo::RenderOptions::deformationBlur )
+				.def_readwrite( "shutter", &GafferScene::Private::RendererAlgo::RenderOptions::shutter )
+				.def_readwrite( "includedPurposes", &GafferScene::Private::RendererAlgo::RenderOptions::includedPurposes )
+				.def( self == self )
+			;
 
 			def( "objectSamples", &objectSamplesWrapper, ( arg( "objectPlug" ), arg( "sampleTimes" ), arg( "hash" ) = object(), arg( "_copy" ) = true ) );
 			def( "transformSamples", &transformSamplesWrapper, ( arg( "transformPlug" ), arg( "sampleTimes" ), arg( "hash" ) = object() ) );

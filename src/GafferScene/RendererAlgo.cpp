@@ -36,6 +36,7 @@
 
 #include "GafferScene/Private/RendererAlgo.h"
 
+#include "GafferScene/Capsule.h"
 #include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 #include "GafferScene/SceneAlgo.h"
 #include "GafferScene/SceneProcessor.h"
@@ -76,6 +77,71 @@ using namespace IECore;
 using namespace IECoreScene;
 using namespace Gaffer;
 using namespace GafferScene;
+
+//////////////////////////////////////////////////////////////////////////
+// RenderOptions
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+const InternedString g_transformBlurOptionName( "option:render:transformBlur" );
+const InternedString g_deformationBlurOptionName( "option:render:deformationBlur" );
+const InternedString g_shutterOptionName( "option:render:shutter" );
+const InternedString g_includedPurposesOptionName( "option:render:includedPurposes" );
+const InternedString g_purposeAttributeName( "usd:purpose" );
+
+/// \todo We should really default to `{ "default", "render" }`, but can only
+/// change that on a major version update.
+const ConstStringVectorDataPtr g_defaultIncludedPurposes( new StringVectorData( { "default", "render", "proxy", "guide" } ) );
+const std::string g_defaultPurpose( "default" );
+
+} // namespace
+
+namespace GafferScene::Private::RendererAlgo
+{
+
+RenderOptions::RenderOptions()
+	:	globals( new CompoundObject ),
+		transformBlur( false ),
+		deformationBlur( false ),
+		shutter( V2f( -0.25, 0.25 ) ),
+		includedPurposes( g_defaultIncludedPurposes )
+{
+}
+
+RenderOptions::RenderOptions( const ScenePlug *scene )
+{
+	globals = scene->globals();
+
+	const BoolData *transformBlurData = globals->member<BoolData>( g_transformBlurOptionName );
+	transformBlur = transformBlurData ? transformBlurData->readable() : false;
+
+	const BoolData *deformationBlurData = globals->member<BoolData>( g_deformationBlurOptionName );
+	deformationBlur = deformationBlurData ? deformationBlurData->readable() : false;
+
+	shutter = SceneAlgo::shutter( globals.get(), scene );
+
+	const StringVectorData *includedPurposesData = globals->member<StringVectorData>( g_includedPurposesOptionName );
+	includedPurposes = includedPurposesData ? includedPurposesData : g_defaultIncludedPurposes;
+}
+
+bool RenderOptions::operator==( const RenderOptions &other ) const
+{
+	// No need to test other fields because they are all derived directly
+	// from the globals.
+	return *globals == *other.globals && shutter == other.shutter;
+}
+
+bool RenderOptions::purposeIncluded( const CompoundObject *attributes ) const
+{
+	const auto purposeData = attributes->member<StringData>( g_purposeAttributeName );
+	const std::string &purpose = purposeData ? purposeData->readable() : g_defaultPurpose;
+	const vector<string> &purposes = includedPurposes->readable();
+	return std::find( purposes.begin(), purposes.end(), purpose ) != purposes.end();
+}
+
+} // namespace GafferScene::Private::RendererAlgo
 
 //////////////////////////////////////////////////////////////////////////
 // RendererAlgo implementation
@@ -157,14 +223,14 @@ bool motionTimes( bool motionBlur, const V2f &shutter, const CompoundObject *att
 	return changed;
 }
 
-bool transformMotionTimes( bool motionBlur, const V2f &shutter, const CompoundObject *attributes, std::vector<float> &times )
+bool transformMotionTimes( const RenderOptions &renderOptions, const CompoundObject *attributes, std::vector<float> &times )
 {
-	return motionTimes( motionBlur, shutter, attributes, g_transformBlurAttributeName, g_transformBlurSegmentsAttributeName, times );
+	return motionTimes( renderOptions.transformBlur, renderOptions.shutter, attributes, g_transformBlurAttributeName, g_transformBlurSegmentsAttributeName, times );
 }
 
-bool deformationMotionTimes( bool motionBlur, const V2f &shutter, const CompoundObject *attributes, std::vector<float> &times )
+bool deformationMotionTimes( const RenderOptions &renderOptions, const CompoundObject *attributes, std::vector<float> &times )
 {
-	return motionTimes( motionBlur, shutter, attributes, g_deformationBlurAttributeName, g_deformationBlurSegmentsAttributeName, times );
+	return motionTimes( renderOptions.deformationBlur, renderOptions.shutter, attributes, g_deformationBlurAttributeName, g_deformationBlurSegmentsAttributeName, times );
 }
 
 bool transformSamples( const M44fPlug *transformPlug, const std::vector<float> &sampleTimes, std::vector<Imath::M44f> &samples, IECore::MurmurHash *hash )
@@ -1009,15 +1075,9 @@ namespace
 {
 
 const std::string g_optionPrefix( "option:" );
-const std::string g_defaultPurpose( "default" );
 
 const IECore::InternedString g_frameOptionName( "frame" );
 const IECore::InternedString g_cameraOptionLegacyName( "option:render:camera" );
-const InternedString g_transformBlurOptionName( "option:render:transformBlur" );
-const InternedString g_deformationBlurOptionName( "option:render:deformationBlur" );
-const InternedString g_shutterOptionName( "option:render:shutter" );
-const InternedString g_includedPurposesOptionName( "option:render:includedPurposes" );
-const InternedString g_purposeAttributeName( "usd:purpose" );
 
 InternedString g_visibleAttributeName( "scene:visible" );
 
@@ -1036,19 +1096,9 @@ IECore::InternedString optionName( const IECore::InternedString &globalsName )
 struct LocationOutput
 {
 
-	LocationOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::Private::RendererAlgo::RenderSets &renderSets, const ScenePlug::ScenePath &root, const ScenePlug *scene )
-		:	m_renderer( renderer ), m_attributes( SceneAlgo::globalAttributes( globals ) ), m_renderSets( renderSets ), m_root( root )
+	LocationOutput( IECoreScenePreview::Renderer *renderer, const GafferScene::Private::RendererAlgo::RenderOptions &renderOptions, const GafferScene::Private::RendererAlgo::RenderSets &renderSets, const ScenePlug::ScenePath &root, const ScenePlug *scene )
+		:	m_renderer( renderer ), m_options( renderOptions ), m_attributes( root.empty() ? SceneAlgo::globalAttributes( renderOptions.globals.get() ) : new CompoundObject ), m_renderSets( renderSets ), m_root( root )
 	{
-		const BoolData *transformBlurData = globals->member<BoolData>( g_transformBlurOptionName );
-		m_options.transformBlur = transformBlurData ? transformBlurData->readable() : false;
-
-		const BoolData *deformationBlurData = globals->member<BoolData>( g_deformationBlurOptionName );
-		m_options.deformationBlur = deformationBlurData ? deformationBlurData->readable() : false;
-
-		m_options.shutter = SceneAlgo::shutter( globals, scene );
-
-		m_options.includedPurposes = globals->member<StringVectorData>( g_includedPurposesOptionName );
-
 		m_transformSamples.push_back( M44f() );
 	}
 
@@ -1077,17 +1127,14 @@ struct LocationOutput
 
 	protected :
 
+		const GafferScene::Private::RendererAlgo::RenderOptions &renderOptions() const
+		{
+			return m_options;
+		}
+
 		bool purposeIncluded() const
 		{
-			if( !m_options.includedPurposes )
-			{
-				return true;
-			}
-			const auto purposeData = m_attributes->member<StringData>( g_purposeAttributeName );
-			const std::string &purpose = purposeData ? purposeData->readable() : g_defaultPurpose;
-			const vector<string> &purposes = m_options.includedPurposes->readable();
-			return std::find( purposes.begin(), purposes.end(), purpose ) != purposes.end();
-
+			return m_options.purposeIncluded( m_attributes.get() );
 		}
 
 		std::string name( const ScenePlug::ScenePath &path ) const
@@ -1114,7 +1161,7 @@ struct LocationOutput
 
 		void deformationMotionTimes( std::vector<float> &times )
 		{
-			GafferScene::Private::RendererAlgo::deformationMotionTimes( m_options.deformationBlur, m_options.shutter, m_attributes.get(), times );
+			GafferScene::Private::RendererAlgo::deformationMotionTimes( m_options, m_attributes.get(), times );
 		}
 
 		const IECore::CompoundObject *attributes() const
@@ -1179,7 +1226,7 @@ struct LocationOutput
 		void updateTransform( const ScenePlug *scene )
 		{
 			vector<float> sampleTimes;
-			GafferScene::Private::RendererAlgo::transformMotionTimes( m_options.transformBlur, m_options.shutter, m_attributes.get(), sampleTimes );
+			GafferScene::Private::RendererAlgo::transformMotionTimes( m_options, m_attributes.get(), sampleTimes );
 			vector<M44f> samples;
 			GafferScene::Private::RendererAlgo::transformSamples( scene->transformPlug(), sampleTimes, samples );
 
@@ -1240,15 +1287,7 @@ struct LocationOutput
 
 		IECoreScenePreview::Renderer *m_renderer;
 
-		struct Options
-		{
-			bool transformBlur;
-			bool deformationBlur;
-			Imath::V2f shutter;
-			ConstStringVectorDataPtr includedPurposes;
-		};
-
-		Options m_options;
+		const GafferScene::Private::RendererAlgo::RenderOptions m_options;
 		IECore::ConstCompoundObjectPtr m_attributes;
 		const GafferScene::Private::RendererAlgo::RenderSets &m_renderSets;
 		const ScenePlug::ScenePath &m_root;
@@ -1261,8 +1300,8 @@ struct LocationOutput
 struct CameraOutput : public LocationOutput
 {
 
-	CameraOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::Private::RendererAlgo::RenderSets &renderSets, const ScenePlug::ScenePath &root, const ScenePlug *scene )
-		:	LocationOutput( renderer, globals, renderSets, root, scene ), m_globals( globals ), m_cameraSet( renderSets.camerasSet() )
+	CameraOutput( IECoreScenePreview::Renderer *renderer, const GafferScene::Private::RendererAlgo::RenderOptions &renderOptions, const GafferScene::Private::RendererAlgo::RenderSets &renderSets, const ScenePlug::ScenePath &root, const ScenePlug *scene )
+		:	LocationOutput( renderer, renderOptions, renderSets, root, scene ), m_globals( renderOptions.globals.get() ), m_cameraSet( renderSets.camerasSet() )
 	{
 	}
 
@@ -1353,8 +1392,8 @@ struct CameraOutput : public LocationOutput
 struct LightOutput : public LocationOutput
 {
 
-	LightOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::Private::RendererAlgo::RenderSets &renderSets, GafferScene::Private::RendererAlgo::LightLinks *lightLinks, const ScenePlug::ScenePath &root, const ScenePlug *scene )
-		:	LocationOutput( renderer, globals, renderSets, root, scene ), m_lightSet( renderSets.lightsSet() ), m_lightLinks( lightLinks )
+	LightOutput( IECoreScenePreview::Renderer *renderer, const GafferScene::Private::RendererAlgo::RenderOptions &renderOptions, const GafferScene::Private::RendererAlgo::RenderSets &renderSets, GafferScene::Private::RendererAlgo::LightLinks *lightLinks, const ScenePlug::ScenePath &root, const ScenePlug *scene )
+		:	LocationOutput( renderer, renderOptions, renderSets, root, scene ), m_lightSet( renderSets.lightsSet() ), m_lightLinks( lightLinks )
 	{
 	}
 
@@ -1399,8 +1438,8 @@ struct LightOutput : public LocationOutput
 struct LightFiltersOutput : public LocationOutput
 {
 
-	LightFiltersOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::Private::RendererAlgo::RenderSets &renderSets, GafferScene::Private::RendererAlgo::LightLinks *lightLinks, const ScenePlug::ScenePath &root, const ScenePlug *scene )
-		:	LocationOutput( renderer, globals, renderSets, root, scene ), m_lightFiltersSet( renderSets.lightFiltersSet() ), m_lightLinks( lightLinks )
+	LightFiltersOutput( IECoreScenePreview::Renderer *renderer, const GafferScene::Private::RendererAlgo::RenderOptions &renderOptions, const GafferScene::Private::RendererAlgo::RenderSets &renderSets, GafferScene::Private::RendererAlgo::LightLinks *lightLinks, const ScenePlug::ScenePath &root, const ScenePlug *scene )
+		:	LocationOutput( renderer, renderOptions, renderSets, root, scene ), m_lightFiltersSet( renderSets.lightFiltersSet() ), m_lightLinks( lightLinks )
 	{
 	}
 
@@ -1445,8 +1484,8 @@ struct LightFiltersOutput : public LocationOutput
 struct ObjectOutput : public LocationOutput
 {
 
-	ObjectOutput( IECoreScenePreview::Renderer *renderer, const IECore::CompoundObject *globals, const GafferScene::Private::RendererAlgo::RenderSets &renderSets, const GafferScene::Private::RendererAlgo::LightLinks *lightLinks, const ScenePlug::ScenePath &root, const ScenePlug *scene )
-		:	LocationOutput( renderer, globals, renderSets, root, scene ), m_cameraSet( renderSets.camerasSet() ), m_lightSet( renderSets.lightsSet() ), m_lightFiltersSet( renderSets.lightFiltersSet() ), m_lightLinks( lightLinks )
+	ObjectOutput( IECoreScenePreview::Renderer *renderer, const GafferScene::Private::RendererAlgo::RenderOptions &renderOptions, const GafferScene::Private::RendererAlgo::RenderSets &renderSets, const GafferScene::Private::RendererAlgo::LightLinks *lightLinks, const ScenePlug::ScenePath &root, const ScenePlug *scene )
+		:	LocationOutput( renderer, renderOptions, renderSets, root, scene ), m_cameraSet( renderSets.camerasSet() ), m_lightSet( renderSets.lightsSet() ), m_lightFiltersSet( renderSets.lightFiltersSet() ), m_lightLinks( lightLinks )
 	{
 	}
 
@@ -1479,12 +1518,20 @@ struct ObjectOutput : public LocationOutput
 
 		IECoreScenePreview::Renderer::ObjectInterfacePtr objectInterface;
 		IECoreScenePreview::Renderer::AttributesInterfacePtr attributesInterface = this->attributesInterface();
-		if( !sampleTimes.size() )
+		if( samples.size() == 1 )
 		{
-			objectInterface = renderer()->object( name( path ), samples[0].get(), attributesInterface.get() );
+			ConstObjectPtr sample = samples[0];
+			if( auto capsule = runTimeCast<const Capsule>( sample.get() ) )
+			{
+				CapsulePtr capsuleCopy = capsule->copy();
+				capsuleCopy->setRenderOptions( renderOptions() );
+				sample = capsuleCopy;
+			}
+			objectInterface = renderer()->object( name( path ), sample.get(), attributesInterface.get() );
 		}
 		else
 		{
+			assert( sampleTimes.size() == samples.size() );
 			/// \todo Can we rejig things so this conversion isn't necessary?
 			vector<const Object *> objectsVector; objectsVector.reserve( samples.size() );
 			for( const auto &sample : samples )
@@ -1708,9 +1755,9 @@ void outputOutputs( const ScenePlug *scene, const IECore::CompoundObject *global
 	}
 }
 
-void outputCameras( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, IECoreScenePreview::Renderer *renderer )
+void outputCameras( const ScenePlug *scene, const RenderOptions &renderOptions, const RenderSets &renderSets, IECoreScenePreview::Renderer *renderer )
 {
-	const StringData *cameraOption = globals->member<StringData>( g_cameraOptionLegacyName );
+	const StringData *cameraOption = renderOptions.globals->member<StringData>( g_cameraOptionLegacyName );
 	if( cameraOption && !cameraOption->readable().empty() )
 	{
 		ScenePlug::ScenePath cameraPath; ScenePlug::stringToPath( cameraOption->readable(), cameraPath );
@@ -1729,13 +1776,13 @@ void outputCameras( const ScenePlug *scene, const IECore::CompoundObject *global
 	}
 
 	const ScenePlug::ScenePath root;
-	CameraOutput output( renderer, globals, renderSets, root, scene );
+	CameraOutput output( renderer, renderOptions, renderSets, root, scene );
 	SceneAlgo::parallelProcessLocations( scene, output );
 
 	if( !cameraOption || cameraOption->readable().empty() )
 	{
 		CameraPtr defaultCamera = new IECoreScene::Camera;
-		SceneAlgo::applyCameraGlobals( defaultCamera.get(), globals, scene );
+		SceneAlgo::applyCameraGlobals( defaultCamera.get(), renderOptions.globals.get(), scene );
 		IECoreScenePreview::Renderer::AttributesInterfacePtr defaultAttributes = renderer->attributes( scene->attributesPlug()->defaultValue() );
 		ConstStringDataPtr name = new StringData( "gaffer:defaultCamera" );
 		renderer->camera( name->readable(), defaultCamera.get(), defaultAttributes.get() );
@@ -1743,23 +1790,23 @@ void outputCameras( const ScenePlug *scene, const IECore::CompoundObject *global
 	}
 }
 
-void outputLightFilters( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, LightLinks *lightLinks, IECoreScenePreview::Renderer *renderer )
+void outputLightFilters( const ScenePlug *scene, const RenderOptions &renderOptions, const RenderSets &renderSets, LightLinks *lightLinks, IECoreScenePreview::Renderer *renderer )
 {
 	const ScenePlug::ScenePath root;
-	LightFiltersOutput output( renderer, globals, renderSets, lightLinks, root, scene );
+	LightFiltersOutput output( renderer, renderOptions, renderSets, lightLinks, root, scene );
 	SceneAlgo::parallelProcessLocations( scene, output );
 }
 
-void outputLights( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, LightLinks *lightLinks, IECoreScenePreview::Renderer *renderer )
+void outputLights( const ScenePlug *scene, const RenderOptions &renderOptions, const RenderSets &renderSets, LightLinks *lightLinks, IECoreScenePreview::Renderer *renderer )
 {
 	const ScenePlug::ScenePath root;
-	LightOutput output( renderer, globals, renderSets, lightLinks, root, scene );
+	LightOutput output( renderer, renderOptions, renderSets, lightLinks, root, scene );
 	SceneAlgo::parallelProcessLocations( scene, output );
 }
 
-void outputObjects( const ScenePlug *scene, const IECore::CompoundObject *globals, const RenderSets &renderSets, const LightLinks *lightLinks, IECoreScenePreview::Renderer *renderer, const ScenePlug::ScenePath &root )
+void outputObjects( const ScenePlug *scene, const RenderOptions &renderOptions, const RenderSets &renderSets, const LightLinks *lightLinks, IECoreScenePreview::Renderer *renderer, const ScenePlug::ScenePath &root )
 {
-	ObjectOutput output( renderer, globals, renderSets, lightLinks, root, scene );
+	ObjectOutput output( renderer, renderOptions, renderSets, lightLinks, root, scene );
 	SceneAlgo::parallelProcessLocations( scene, output, root );
 }
 

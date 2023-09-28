@@ -122,14 +122,15 @@ class GAFFERSCENE_API RenderController : public Gaffer::Signals::Trackable
 			DeformationBlurGlobalComponent = 32,
 			CameraShutterGlobalComponent = 64,
 			IncludedPurposesGlobalComponent = 128,
+			CapsuleAffectingGlobalComponents = TransformBlurGlobalComponent | DeformationBlurGlobalComponent | IncludedPurposesGlobalComponent,
 			AllGlobalComponents = GlobalsGlobalComponent | SetsGlobalComponent | RenderSetsGlobalComponent | CameraOptionsGlobalComponent | TransformBlurGlobalComponent | DeformationBlurGlobalComponent | IncludedPurposesGlobalComponent
 		};
 
-		struct MotionBlurOptions
+		struct Unused
 		{
-			bool transformBlur = false;
-			bool deformationBlur = false;
-			Imath::V2f shutter = Imath::V2f( 0 );
+			bool unused1;
+			bool unused2;
+			Imath::V2f unused3;
 		};
 
 		void plugDirtied( const Gaffer::Plug *plug );
@@ -165,8 +166,8 @@ class GAFFERSCENE_API RenderController : public Gaffer::Signals::Trackable
 		std::vector<std::unique_ptr<SceneGraph> > m_sceneGraphs;
 		unsigned m_dirtyGlobalComponents;
 		unsigned m_changedGlobalComponents;
-		IECore::ConstCompoundObjectPtr m_globals;
-		MotionBlurOptions m_motionBlurOptions;
+		std::unique_ptr<Private::RendererAlgo::RenderOptions> m_renderOptions;
+		Unused m_unused;
 		Private::RendererAlgo::RenderSets m_renderSets;
 		std::unique_ptr<Private::RendererAlgo::LightLinks> m_lightLinks;
 		IECoreScenePreview::Renderer::ObjectInterfacePtr m_defaultCamera;
