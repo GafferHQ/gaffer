@@ -61,11 +61,11 @@ Gaffer.Metadata.registerNode(
 
 	> Note : Encapsulation currently has some limitations
 	>
-	> - Motion blur options are taken from the globals at the
-	>   point of Encapsulation, not the downstream globals
-	>   at the point of rendering.
 	> - Motion blur attributes are not inherited - only
-	>   attributes within the encapsulate hierarchy are
+	>   attributes within the encapsulated hierarchy are
+	>   considered.
+	> - The `usd:purpose` attribute is not inherited - only
+	>   attributes within the encapsulated hierarchy are
 	>   considered.
 	""",
 

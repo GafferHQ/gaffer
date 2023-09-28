@@ -272,6 +272,22 @@ CapturingRenderer::CapturedObjectPtr capturingRendererCapturedObject( const Capt
 	return const_cast<CapturingRenderer::CapturedObject *>( r.capturedObject( name ) );
 }
 
+list capturingRendererCapturedObjectNames( const CapturingRenderer &r )
+{
+	std::vector<std::string> t = r.capturedObjectNames();
+	list result;
+	for( auto &i : t )
+	{
+		result.append( i );
+	}
+	return result;
+}
+
+std::string capturedObjectCapturedName( const CapturingRenderer::CapturedObject &o )
+{
+	return o.capturedName();
+}
+
 list capturedObjectCapturedSamples( const CapturingRenderer::CapturedObject &o )
 {
 	list result;
@@ -315,6 +331,16 @@ list capturedObjectCapturedTransformTimes( const CapturingRenderer::CapturedObje
 CapturingRenderer::CapturedAttributesPtr capturedObjectCapturedAttributes( const CapturingRenderer::CapturedObject &o )
 {
 	return const_cast<CapturingRenderer::CapturedAttributes *>( o.capturedAttributes() );
+}
+
+list capturedObjectCapturedLinkTypes( const CapturingRenderer::CapturedObject &o )
+{
+	list l;
+	for( auto &s : o.capturedLinkTypes() )
+	{
+		l.append( s );
+	}
+	return l;
 }
 
 object capturedObjectCapturedLinks( const CapturingRenderer::CapturedObject &o, const IECore::InternedString &type )
@@ -389,22 +415,22 @@ object transformSamplesWrapper( const Gaffer::M44fPlug &transformPlug, const std
 	return pythonSamples;
 }
 
-void outputCamerasWrapper( const ScenePlug &scene, const IECore::CompoundObject &globals, const GafferScene::Private::RendererAlgo::RenderSets &renderSets, IECoreScenePreview::Renderer &renderer )
+void outputCamerasWrapper( const ScenePlug &scene, const GafferScene::Private::RendererAlgo::RenderOptions &renderOptions, const GafferScene::Private::RendererAlgo::RenderSets &renderSets, IECoreScenePreview::Renderer &renderer )
 {
 	IECorePython::ScopedGILRelease gilRelease;
-	GafferScene::Private::RendererAlgo::outputCameras( &scene, &globals, renderSets, &renderer );
+	GafferScene::Private::RendererAlgo::outputCameras( &scene, renderOptions, renderSets, &renderer );
 }
 
-void outputLightsWrapper( const ScenePlug &scene, const IECore::CompoundObject &globals, const GafferScene::Private::RendererAlgo::RenderSets &renderSets, GafferScene::Private::RendererAlgo::LightLinks &lightLinks, IECoreScenePreview::Renderer &renderer )
+void outputLightsWrapper( const ScenePlug &scene, const GafferScene::Private::RendererAlgo::RenderOptions &renderOptions, const GafferScene::Private::RendererAlgo::RenderSets &renderSets, GafferScene::Private::RendererAlgo::LightLinks &lightLinks, IECoreScenePreview::Renderer &renderer )
 {
 	IECorePython::ScopedGILRelease gilRelease;
-	GafferScene::Private::RendererAlgo::outputLights( &scene, &globals, renderSets, &lightLinks, &renderer );
+	GafferScene::Private::RendererAlgo::outputLights( &scene, renderOptions, renderSets, &lightLinks, &renderer );
 }
 
-void outputObjectsWrapper( const ScenePlug &scene, const IECore::CompoundObject &globals, const GafferScene::Private::RendererAlgo::RenderSets &renderSets, GafferScene::Private::RendererAlgo::LightLinks &lightLinks, IECoreScenePreview::Renderer &renderer, const ScenePlug::ScenePath &root )
+void outputObjectsWrapper( const ScenePlug &scene, const GafferScene::Private::RendererAlgo::RenderOptions &renderOptions, const GafferScene::Private::RendererAlgo::RenderSets &renderSets, GafferScene::Private::RendererAlgo::LightLinks &lightLinks, IECoreScenePreview::Renderer &renderer, const ScenePlug::ScenePath &root )
 {
 	IECorePython::ScopedGILRelease gilRelease;
-	GafferScene::Private::RendererAlgo::outputObjects( &scene, &globals, renderSets, &lightLinks, &renderer, root );
+	GafferScene::Private::RendererAlgo::outputObjects( &scene, renderOptions, renderSets, &lightLinks, &renderer, root );
 }
 
 } // namespace
@@ -443,6 +469,16 @@ void GafferSceneModule::bindRender()
 			scope().attr( "Private" ).attr( "RendererAlgo" ) = rendererAlgoModule;
 
 			scope rendererAlgomoduleScope( rendererAlgoModule );
+
+			class_<GafferScene::Private::RendererAlgo::RenderOptions>( "RenderOptions" )
+				.def( init<const ScenePlug *>() )
+				.def_readwrite( "globals", &GafferScene::Private::RendererAlgo::RenderOptions::globals )
+				.def_readwrite( "transformBlur", &GafferScene::Private::RendererAlgo::RenderOptions::transformBlur )
+				.def_readwrite( "deformationBlur", &GafferScene::Private::RendererAlgo::RenderOptions::deformationBlur )
+				.def_readwrite( "shutter", &GafferScene::Private::RendererAlgo::RenderOptions::shutter )
+				.def_readwrite( "includedPurposes", &GafferScene::Private::RendererAlgo::RenderOptions::includedPurposes )
+				.def( self == self )
+			;
 
 			def( "objectSamples", &objectSamplesWrapper, ( arg( "objectPlug" ), arg( "sampleTimes" ), arg( "hash" ) = object(), arg( "_copy" ) = true ) );
 			def( "transformSamples", &transformSamplesWrapper, ( arg( "transformPlug" ), arg( "sampleTimes" ), arg( "hash" ) = object() ) );
@@ -563,6 +599,7 @@ void GafferSceneModule::bindRender()
 
 		scope capturingRendererScope = IECorePython::RefCountedClass<CapturingRenderer, Renderer>( "CapturingRenderer" )
 			.def( init<Renderer::RenderType, const std::string &, const IECore::MessageHandlerPtr &>( ( arg( "renderType" ) = Renderer::RenderType::Interactive, arg( "fileName" ) = "", arg( "messageHandler") = IECore::MessageHandlerPtr() ) ) )
+			.def( "capturedObjectNames", &capturingRendererCapturedObjectNames )
 			.def( "capturedObject", &capturingRendererCapturedObject )
 		;
 
@@ -571,11 +608,13 @@ void GafferSceneModule::bindRender()
 		;
 
 		IECorePython::RefCountedClass<CapturingRenderer::CapturedObject, Renderer::ObjectInterface>( "CapturedObject" )
+			.def( "capturedName", &capturedObjectCapturedName )
 			.def( "capturedSamples", &capturedObjectCapturedSamples )
 			.def( "capturedSampleTimes", &capturedObjectCapturedSampleTimes )
 			.def( "capturedTransforms", &capturedObjectCapturedTransforms )
 			.def( "capturedTransformTimes", &capturedObjectCapturedTransformTimes )
 			.def( "capturedAttributes", &capturedObjectCapturedAttributes )
+			.def( "capturedLinkTypes", &capturedObjectCapturedLinkTypes )
 			.def( "capturedLinks", &capturedObjectCapturedLinks )
 			.def( "numAttributeEdits", &CapturingRenderer::CapturedObject::numAttributeEdits )
 			.def( "numLinkEdits", &CapturingRenderer::CapturedObject::numLinkEdits )

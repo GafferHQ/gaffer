@@ -1584,5 +1584,104 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		controller.update()
 		self.assertIsNotNone( renderer.capturedObject( "/group/sphere" ) )
 
+	def testCapsuleRenderOptions( self ) :
+
+		rootFilter = GafferScene.PathFilter()
+		rootFilter["paths"].setValue( IECore.StringVectorData( [ "*" ] ) )
+
+		cube = GafferScene.Cube()
+
+		encapsulate = GafferScene.Encapsulate()
+		encapsulate["in"].setInput( cube["out"] )
+		encapsulate["filter"].setInput( rootFilter["out"] )
+
+		standardOptions = GafferScene.StandardOptions()
+		standardOptions["in"].setInput( encapsulate["out"] )
+		standardOptions["options"]["includedPurposes"]["enabled"].setValue( True )
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer()
+		controller = GafferScene.RenderController( standardOptions["out"], Gaffer.Context(), renderer )
+		controller.setMinimumExpansionDepth( 2 )
+
+		def assertExpectedRenderOptions() :
+
+			captured = renderer.capturedObject( "/cube" )
+			self.assertIsNotNone( captured )
+			self.assertEqual( len( captured.capturedSamples() ), 1 )
+			self.assertIsInstance( captured.capturedSamples()[0], GafferScene.Capsule )
+			self.assertEqual(
+				captured.capturedSamples()[0].getRenderOptions(),
+				GafferScene.Private.RendererAlgo.RenderOptions( standardOptions["out"] )
+			)
+
+		# Check that a capsule has the initial RenderOptions we expect.
+
+		self.assertTrue( controller.updateRequired() )
+		controller.update()
+		assertExpectedRenderOptions()
+
+		# Check that the capsule is updated when the RenderOptions change.
+
+		standardOptions["options"]["includedPurposes"]["value"].setValue( IECore.StringVectorData( [ "default", "proxy" ] ) )
+		self.assertTrue( controller.updateRequired() )
+		controller.update()
+		assertExpectedRenderOptions()
+
+		# Check that the capsule is not updated when the globals change
+		# but the RenderOptions that the capsule uses aren't affected.
+
+		capture = renderer.capturedObject( "/cube" )
+		standardOptions["options"]["performanceMonitor"]["enabled"].setValue( True )
+		self.assertTrue( controller.updateRequired() )
+		controller.update()
+		self.assertTrue( renderer.capturedObject( "/cube" ).isSame( capture ) )
+
+		# Change RenderOptions again, this time to the default, and check we
+		# get another update.
+
+		del capture
+		standardOptions["options"]["includedPurposes"]["value"].setValue( IECore.StringVectorData( [ "default", "render", "proxy", "guide" ] ) )
+		self.assertTrue( controller.updateRequired() )
+		controller.update()
+		assertExpectedRenderOptions()
+
+		# Remove `includedPurposes` option, so it's not in the globals. The
+		# fallback is the same as the previous value, so we should get no
+		# update.
+
+		capture = renderer.capturedObject( "/cube" )
+		standardOptions["options"]["includedPurposes"]["enabled"].setValue( False )
+		self.assertTrue( controller.updateRequired() )
+		controller.update()
+		self.assertTrue( renderer.capturedObject( "/cube" ).isSame( capture ) )
+
+	def testNoUnnecessaryObjectUpdatesOnPurposeChange( self ) :
+
+		cube = GafferScene.Cube()
+
+		standardOptions = GafferScene.StandardOptions()
+		standardOptions["in"].setInput( cube["out"] )
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer()
+		controller = GafferScene.RenderController( standardOptions["out"], Gaffer.Context(), renderer )
+		controller.setMinimumExpansionDepth( 2 )
+
+		# Check initial capture
+
+		self.assertTrue( controller.updateRequired() )
+		controller.update()
+		capture = renderer.capturedObject( "/cube" )
+		self.assertIsNotNone( capture )
+
+		# Check that changing the purposes doesn't make an unnecessary edit for
+		# the object. It was included before and it is still included, so we
+		# want to reuse the old object.
+
+		standardOptions["options"]["includedPurposes"]["enabled"].setValue( True )
+		standardOptions["options"]["includedPurposes"]["value"].setValue( IECore.StringVectorData( [ "default", "proxy" ] ) )
+		self.assertTrue( controller.updateRequired() )
+		controller.update()
+		self.assertTrue( capture.isSame( renderer.capturedObject( "/cube" ) ) )
+
 if __name__ == "__main__":
 	unittest.main()

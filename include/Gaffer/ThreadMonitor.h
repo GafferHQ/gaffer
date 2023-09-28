@@ -42,6 +42,25 @@
 
 #include <unordered_map>
 
+// Image Engine is on Boost 107300 which doesn't have the specialization of std::hash
+// for boost smart pointers
+#if BOOST_VERSION < 107400
+namespace std
+{
+
+template <>
+struct hash<Gaffer::ConstPlugPtr>
+{
+	size_t operator()( const Gaffer::ConstPlugPtr &p ) const
+	{
+		return std::hash<const void*>()( p.get() );
+	}
+};
+
+} // namespace std
+#endif
+
+
 namespace Gaffer
 {
 

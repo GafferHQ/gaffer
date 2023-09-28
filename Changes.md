@@ -9,7 +9,10 @@ Breaking Changes
 - StringPlug : Removed deprecated `precomputedHash` argument from `getValue()` method.
 - OpenColorIOContext : Removed `configEnabledPlug()`, `configValuePlug()`, `workingSpaceEnabledPlug()` and `workingSpaceValuePlug()` methods. Use the OptionalValuePlug child accessors instead.
 
-1.3.x.x (relative to 1.3.3.0)
+1.3.x.x (relative to 1.3.4.0)
+=======
+
+1.3.4.0 (relative to 1.3.3.0)
 =======
 
 Improvements
@@ -28,11 +31,23 @@ Fixes
 - StringPlugValueWidget : Fixed bug handling <kbd>Esc</kbd>.
 - Arnold : Fixed unnecessary `opaque` attribute deprecation warnings. These are now only emitted in the case that `opaque` has been explicitly turned off.
 - ShaderUI : Fixed bug causing identical but independent shaders in a shader network from being included in the shader browser.
+- Encapsulate :
+  - Fixed bug where global attributes (from the point of encapsulation) were baked into the contents of the capsule instead of being inherited naturally (from the node being rendered).
+  - Fixed motion blur so that global settings are now taken from the downstream node being rendered, not from the input to the Encapsulate node.
 
 API
 ---
 
+- SceneTestCase : Added `assertScenesRenderSame()` method.
 - RenderController : Added missing `updateRequired()` Python binding.
+- CapturingRenderer :
+  - Added `capturedObjectNames()` method.
+  - Added `capturedName()` and `capturedLinkTypes()` methods to CapturedObject class.
+
+Build
+-----
+
+- Fixed compilation with Boost versions prior to 1.74.
 
 1.3.3.0 (relative to 1.3.2.0)
 =======
@@ -409,7 +424,10 @@ Build
 - USD : Updated to version 23.05.
 - ZLib : Added version 1.2.13.
 
-1.2.10.x (relative to 1.2.10.3)
+1.2.10.x (relative to 1.2.10.4)
+========
+
+1.2.10.4 (relative to 1.2.10.3)
 ========
 
 Fixes
