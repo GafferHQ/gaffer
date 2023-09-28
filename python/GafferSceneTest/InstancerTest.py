@@ -152,6 +152,10 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		encapInstancer["name"].setValue( "instances" )
 		encapInstancer["encapsulateInstanceGroups"].setValue( True )
 
+		# Check that the capsule expands during rendering to render the same as the unencapsulated scene.
+		# ( Except for the light links, which aren't output by the Capsule currently )
+		self.assertScenesRenderSame( instancer["out"], encapInstancer["out"], expandProcedurals = True, ignoreLinks = True )
+
 		unencapFilter = GafferScene.PathFilter()
 		unencapFilter["paths"].setValue( IECore.StringVectorData( [ "/..." ] ) )
 

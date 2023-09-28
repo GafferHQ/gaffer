@@ -406,3 +406,20 @@ class SceneTestCase( GafferImageTest.ImageTestCase ) :
 			return "\"{0}\"".format( path1 )
 		else :
 			return "\"{0}\" and \"{1}\"".format( path1, path2 )
+
+	@staticmethod
+	def assertScenesRenderSame( plugA, plugB, expandProcedurals = False, ignoreLinks = False ):
+		# \todo - could be nice to have an option for using a Render node instead of a RenderController,
+		# which should have the same effect, but is a separate code path.
+
+		rendererA = GafferScene.Private.IECoreScenePreview.CapturingRenderer( GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch )
+		controllerA = GafferScene.RenderController( plugA, Gaffer.Context(), rendererA )
+		controllerA.setMinimumExpansionDepth( 1024 )
+		controllerA.update()
+
+		rendererB = GafferScene.Private.IECoreScenePreview.CapturingRenderer( GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch )
+		controllerB = GafferScene.RenderController( plugB, Gaffer.Context(), rendererB )
+		controllerB.setMinimumExpansionDepth( 1024 )
+		controllerB.update()
+
+		GafferSceneTest.IECoreScenePreviewTest.CapturingRendererTest.assertRendersMatch( rendererA, rendererB, expandProcedurals = expandProcedurals, ignoreLinks = ignoreLinks )

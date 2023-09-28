@@ -272,6 +272,22 @@ CapturingRenderer::CapturedObjectPtr capturingRendererCapturedObject( const Capt
 	return const_cast<CapturingRenderer::CapturedObject *>( r.capturedObject( name ) );
 }
 
+list capturingRendererCapturedObjectNames( const CapturingRenderer &r )
+{
+	std::vector<std::string> t = r.capturedObjectNames();
+	list result;
+	for( auto &i : t )
+	{
+		result.append( i );
+	}
+	return result;
+}
+
+std::string capturedObjectCapturedName( const CapturingRenderer::CapturedObject &o )
+{
+	return o.capturedName();
+}
+
 list capturedObjectCapturedSamples( const CapturingRenderer::CapturedObject &o )
 {
 	list result;
@@ -315,6 +331,16 @@ list capturedObjectCapturedTransformTimes( const CapturingRenderer::CapturedObje
 CapturingRenderer::CapturedAttributesPtr capturedObjectCapturedAttributes( const CapturingRenderer::CapturedObject &o )
 {
 	return const_cast<CapturingRenderer::CapturedAttributes *>( o.capturedAttributes() );
+}
+
+list capturedObjectCapturedLinkTypes( const CapturingRenderer::CapturedObject &o )
+{
+	list l;
+	for( auto &s : o.capturedLinkTypes() )
+	{
+		l.append( s );
+	}
+	return l;
 }
 
 object capturedObjectCapturedLinks( const CapturingRenderer::CapturedObject &o, const IECore::InternedString &type )
@@ -573,6 +599,7 @@ void GafferSceneModule::bindRender()
 
 		scope capturingRendererScope = IECorePython::RefCountedClass<CapturingRenderer, Renderer>( "CapturingRenderer" )
 			.def( init<Renderer::RenderType, const std::string &, const IECore::MessageHandlerPtr &>( ( arg( "renderType" ) = Renderer::RenderType::Interactive, arg( "fileName" ) = "", arg( "messageHandler") = IECore::MessageHandlerPtr() ) ) )
+			.def( "capturedObjectNames", &capturingRendererCapturedObjectNames )
 			.def( "capturedObject", &capturingRendererCapturedObject )
 		;
 
@@ -581,11 +608,13 @@ void GafferSceneModule::bindRender()
 		;
 
 		IECorePython::RefCountedClass<CapturingRenderer::CapturedObject, Renderer::ObjectInterface>( "CapturedObject" )
+			.def( "capturedName", &capturedObjectCapturedName )
 			.def( "capturedSamples", &capturedObjectCapturedSamples )
 			.def( "capturedSampleTimes", &capturedObjectCapturedSampleTimes )
 			.def( "capturedTransforms", &capturedObjectCapturedTransforms )
 			.def( "capturedTransformTimes", &capturedObjectCapturedTransformTimes )
 			.def( "capturedAttributes", &capturedObjectCapturedAttributes )
+			.def( "capturedLinkTypes", &capturedObjectCapturedLinkTypes )
 			.def( "capturedLinks", &capturedObjectCapturedLinks )
 			.def( "numAttributeEdits", &CapturingRenderer::CapturedObject::numAttributeEdits )
 			.def( "numLinkEdits", &CapturingRenderer::CapturedObject::numLinkEdits )

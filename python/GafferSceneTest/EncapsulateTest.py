@@ -34,7 +34,7 @@
 #
 ##########################################################################
 
-import inspect
+import imath
 import unittest
 import subprocess
 
@@ -56,6 +56,7 @@ class EncapsulateTest( GafferSceneTest.SceneTestCase ) :
 
 		sphere = GafferScene.Sphere()
 		sphere["sets"].setValue( "sphereSet" )
+		sphere["transform"]["translate"].setValue( imath.V3f( 1, 2, 3 ) )
 
 		cube = GafferScene.Cube()
 		cube["sets"].setValue( "cubeSet" )
@@ -64,11 +65,13 @@ class EncapsulateTest( GafferSceneTest.SceneTestCase ) :
 		groupB["in"][0].setInput( sphere["out"] )
 		groupB["in"][1].setInput( cube["out"] )
 		groupB["name"].setValue( "groupB" )
+		groupB["transform"]["rotate"].setValue( imath.V3f( 100, 200, 300 ) )
 
 		groupA = GafferScene.Group()
 		groupA["in"][0].setInput( groupB["out"] )
 		groupA["in"][1].setInput( sphere["out"] )
 		groupA["name"].setValue( "groupA" )
+		groupA["transform"]["rotate"].setValue( imath.V3f( 400, 500, 600 ) )
 
 		# When there is no filter attached, the node
 		# should be an exact pass-through.
@@ -135,6 +138,10 @@ class EncapsulateTest( GafferSceneTest.SceneTestCase ) :
 
 		with self.assertRaisesRegex( Gaffer.ProcessException, "Encapsulate.out.object : Tried to access path \"/groupA/groupB/sphere\", but its ancestor has been converted to a capsule" ):
 			encapsulate["out"].object( "/groupA/groupB/sphere" )
+
+		# Check that the capsule expands during rendering to render the same as the unencapsulated scene.
+		# ( Except for the light links, which aren't output by the Capsule currently )
+		self.assertScenesRenderSame( encapsulate["in"], encapsulate["out"], expandProcedurals = True, ignoreLinks = True )
 
 		# As a double check, test that this setup works properly with Unencapsulate
 		unencapsulateFilter = GafferScene.PathFilter()

@@ -24,7 +24,16 @@ Fixes
 API
 ---
 
+- SceneTestCase : Added `assertScenesRenderSame()` method.
 - RenderController : Added missing `updateRequired()` Python binding.
+- CapturingRenderer :
+  - Added `capturedObjectNames()` method.
+  - Added `capturedName()` and `capturedLinkTypes()` methods to CapturedObject class.
+
+Build
+-----
+
+- Fixed compilation with Boost versions prior to 1.74.
 
 1.3.3.0 (relative to 1.3.2.0)
 =======
