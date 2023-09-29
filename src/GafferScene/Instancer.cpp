@@ -585,7 +585,7 @@ class Instancer::EngineData : public Data
 				}
 				catch( QuantizeException & )
 				{
-					throw IECore::Exception( fmt::format( "Context variable \"{}\" : cannot quantize variable of type {}", index, v.primVar->data->typeName() ) );
+					throw IECore::Exception( fmt::format( "Context variable \"{}\" : cannot quantize variable of type {}", v.name.string(), v.primVar->data->typeName() ) );
 				}
 			}
 		}
@@ -613,7 +613,7 @@ class Instancer::EngineData : public Data
 			}
 			catch( QuantizeException & )
 			{
-				throw IECore::Exception( fmt::format( "Context variable \"{}\" : cannot quantize variable of type {}", index, v.primVar->data->typeName() ) );
+				throw IECore::Exception( fmt::format( "Context variable \"{}\" : cannot quantize variable of type {}", v.name.string(), v.primVar->data->typeName() ) );
 			}
 		}
 

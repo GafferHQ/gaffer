@@ -1963,11 +1963,11 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 		instancer["contextVariables"][1]["quantize"].setValue( 10 )
 		self.assertRaisesRegex(
-			Gaffer.ProcessException, 'Instancer.out.attributes : Context variable "0" : cannot quantize variable of type StringVectorData',
+			Gaffer.ProcessException, 'Instancer.out.attributes : Context variable "stringVar" : cannot quantize variable of type StringVectorData',
 			instancer['out'].attributes, "points/instances/withAttrs/0/sphere"
 		)
 		self.assertRaisesRegex(
-			Gaffer.ProcessException, 'Instancer.variations : Context variable "0" : cannot quantize variable of type StringVectorData',
+			Gaffer.ProcessException, 'Instancer.variations : Context variable "stringVar" : cannot quantize variable of type StringVectorData',
 			uniqueCounts
 		)
 
