@@ -1126,6 +1126,13 @@ class _PlugTableView( GafferUI.Widget ) :
 		self.__editorWidget = GafferUI.PlugPopup( plugs, title = "" )
 		self.__editorWidget.popup( plugBound.center() )
 
+		widget = self.__editorWidget.plugValueWidget()
+		if isinstance( widget, GafferUI.StringPlugValueWidget ) :
+			columnWidth = Gaffer.Metadata.value( self._qtWidget().model().rowsPlug().defaultRow(), "spreadsheet:rowNameWidth" ) or 0
+			widget._qtWidget().setFixedWidth( max( columnWidth, 250 ) )
+			widget._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetNoConstraint )
+			widget.textWidget().setFixedCharacterWidth( None )
+
 	# Clears and selects a non-contiguous list of indexes if they're not already selected.
 	def __selectIndexes( self, indexes ) :
 
