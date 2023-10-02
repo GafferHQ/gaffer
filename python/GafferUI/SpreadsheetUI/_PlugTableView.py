@@ -907,6 +907,8 @@ class _PlugTableView( GafferUI.Widget ) :
 			( "Half", GafferUI.PlugWidget.labelWidth() * 0.5 ),
 			( "Single", GafferUI.PlugWidget.labelWidth() ),
 			( "Double", GafferUI.PlugWidget.labelWidth() * 2 ),
+			( "Triple", GafferUI.PlugWidget.labelWidth() * 3 ),
+			( "Quadruple", GafferUI.PlugWidget.labelWidth() * 4 ),
 		]
 
 		currentWidth = self.__getRowNameWidth()
