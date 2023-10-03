@@ -1,6 +1,13 @@
 1.3.x.x (relative to 1.3.4.0)
 =======
 
+Improvements
+------------
+
+- Spreadsheet :
+  - Popups for string cells and row names are now sized to fit their column.
+  - Added "Triple" and "Quadruple" width options to the spreadsheet row name popup menu.
+
 1.3.4.0 (relative to 1.3.3.0)
 =======
 
