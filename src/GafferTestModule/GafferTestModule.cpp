@@ -50,6 +50,7 @@
 #include "ValuePlugTest.h"
 #include "MessagesTest.h"
 #include "MetadataTest.h"
+#include "ProcessTest.h"
 #include "SignalsTest.h"
 
 #include "IECorePython/ScopedGILRelease.h"
@@ -116,6 +117,7 @@ BOOST_PYTHON_MODULE( _GafferTest )
 	bindValuePlugTest();
 	bindMessagesTest();
 	bindSignalsTest();
+	bindProcessTest();
 
 	object module( borrowed( PyImport_AddModule( "GafferTest._MetadataTest" ) ) );
 	scope().attr( "_MetadataTest" ) = module;
