@@ -226,7 +226,9 @@ class CapturingRendererTest( GafferTest.TestCase ) :
 
 			for subName, subObject in procExpanded.items():
 
-				if subName.startswith( "/" ):
+				if subName == "" or subName == "/":
+					newName = objectName
+				elif subName.startswith( "/" ):
 					newName = objectName + subName
 				else:
 					newName = objectName + "/" + subName
