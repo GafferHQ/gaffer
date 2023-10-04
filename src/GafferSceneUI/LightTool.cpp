@@ -123,16 +123,16 @@ const InternedString g_insetPenumbraType( "inset" );
 const InternedString g_outsetPenumbraType( "outset" );
 const InternedString g_absolutePenumbraType( "absolute" );
 
-const float g_circleHandleWidth = 2.5f;
-const float g_circleHandleWidthLarge = 3.f;
-const float g_circleHandleSelectionWidth = 5.f;
+const float g_circleHandleWidth = 4.375f;
+const float g_circleHandleWidthLarge = 5.25f;
+const float g_circleHandleSelectionWidth = 8.875f;
 
-const float g_lineHandleWidth = 0.5f;
-const float g_lineHandleWidthLarge = 1.f;
-const float g_lineSelectionWidth = 3.f;
+const float g_lineHandleWidth = 0.875f;
+const float g_lineHandleWidthLarge = 1.75f;
+const float g_lineSelectionWidth = 5.25f;
 
-const float g_minorLineHandleWidth = 0.25f;
-const float g_minorLineHandleWidthLarge = 0.5f;
+const float g_minorLineHandleWidth = 0.4375f;
+const float g_minorLineHandleWidthLarge = 0.875f;
 
 const float g_dragArcWidth = 24.f;
 
@@ -140,15 +140,13 @@ const float g_arrowHandleSize = g_circleHandleWidth * 2.f;
 const float g_arrowHandleSizeLarge = g_circleHandleWidthLarge * 2.f;
 const float g_arrowHandleSelectionSize = g_circleHandleSelectionWidth * 2.f;
 
-const float g_quadLightHandleSizeMultiplier = 1.75f;
+const float g_spotLightHandleSizeMultiplier = 1 / 1.75f;
 
 const Color4f g_hoverTextColor( 1, 1, 1, 1 );
 
 const int g_warningTipCount = 3;
 
 const ModifiableEvent::Modifiers g_quadLightConstrainAspectRatioKey = ModifiableEvent::Modifiers::Control;
-
-enum class Axis { X, Y, Z };
 
 const InternedString g_coneAngleParameter = "coneAngleParameter";
 const InternedString g_penumbraAngleParameter = "penumbraAngleParameter";
@@ -349,14 +347,16 @@ IECoreScene::MeshPrimitivePtr solidArc( float minorRadius, float majorRadius, fl
 	return solidAngle;
 }
 
-IECoreGL::MeshPrimitivePtr circle()
-{
-	static IECoreGL::MeshPrimitivePtr result;
-	if( result )
-	{
-		return result;
-	}
+enum class Axis { X, Y, Z };
 
+// Reorients `p` so that `p.z` points along the positive `axis`
+V3f axisAlignedVector( const Axis axis, const V3f &p )
+{
+	return axis == Axis::X ? V3f( p.z, p.y, p.x ) : ( axis == Axis::Y ? V3f( p.x, p.z, p.y ) : p );
+}
+
+IECoreGL::MeshPrimitivePtr circle( const Axis axis = Axis::X, const V3f &offset = V3f( 0 ) )
+{
 	IntVectorDataPtr vertsPerPolyData = new IntVectorData;
 	IntVectorDataPtr vertIdsData = new IntVectorData;
 	V3fVectorDataPtr pData = new V3fVectorData;
@@ -365,13 +365,14 @@ IECoreGL::MeshPrimitivePtr circle()
 	std::vector<int> &vertIds = vertIdsData->writable();
 	std::vector<V3f> &p = pData->writable();
 
-	p.push_back( V3f( 0 ) );
+	p.push_back( offset );
 
 	const int numSegments = 20;
 	for( int i = 0; i < numSegments + 1; ++i )
 	{
 		const float a = ( (float)i / (float)numSegments ) * 2.f * M_PI;
-		p.push_back( V3f( 0, cos( a ), -sin( a ) ) );  // Face the X-axis
+		const V3f v = axisAlignedVector( axis, V3f( -sin( a ), cos( a ), 0 ) );
+		p.push_back( v + offset );
 	}
 	for( int i = 0; i < numSegments; ++i )
 	{
@@ -383,7 +384,7 @@ IECoreGL::MeshPrimitivePtr circle()
 
 	IECoreScene::MeshPrimitivePtr circle = new IECoreScene::MeshPrimitive( vertsPerPolyData, vertIdsData, "linear", pData );
 	ToGLMeshConverterPtr converter = new ToGLMeshConverter( circle );
-	result = runTimeCast<IECoreGL::MeshPrimitive>( converter->convert() );
+	IECoreGL::MeshPrimitivePtr result = runTimeCast<IECoreGL::MeshPrimitive>( converter->convert() );
 
 	return result;
 }
@@ -468,6 +469,62 @@ IECoreGL::MeshPrimitivePtr cone( float height, float startRadius, float endRadiu
 IECoreGL::MeshPrimitivePtr unitCone()
 {
 	static IECoreGL::MeshPrimitivePtr result = cone( 1.5f, 0.5f, 0 );
+	return result;
+}
+
+IECoreGL::MeshPrimitivePtr torus( const float width, const float height, const float tubeRadius, const Handle *handle, const Axis axis )
+{
+	IECoreGL::MeshPrimitivePtr result;
+
+	IECore::IntVectorDataPtr verticesPerFaceData = new IECore::IntVectorData;
+	std::vector<int> &verticesPerFace = verticesPerFaceData->writable();
+
+	IECore::IntVectorDataPtr vertexIdsData = new IECore::IntVectorData;
+	std::vector<int> &vertexIds = vertexIdsData->writable();
+
+	IECore::V3fVectorDataPtr pData = new IECore::V3fVectorData;
+	std::vector<V3f> &p = pData->writable();
+
+	const V3f radiusScale = V3f( width, height, 0 );
+
+	const int numDivisionsI = 60;
+	const int numDivisionsJ = 15;
+	for( int i = 0; i < numDivisionsI; ++i )
+	{
+		const float iAngle = 2 * M_PI * (float)i / (float)( numDivisionsI - 1 );
+		const V3f v = V3f( -sin( iAngle ), cos( iAngle ), 0 );
+		const V3f tubeCenter = v * radiusScale;
+
+		const int ii = i == numDivisionsI - 1 ? 0 : i + 1;
+
+		const float jRadius = tubeRadius * rasterScaleFactor( handle, tubeCenter );
+
+		for( int j = 0; j < numDivisionsJ; ++j )
+		{
+			const float jAngle = 2 * M_PI * (float)j / (float)( numDivisionsJ - 1 );
+
+			p.push_back(
+				axisAlignedVector(
+					axis,
+					tubeCenter + jRadius * ( cos( jAngle ) * v + V3f( 0, 0, sin( jAngle ) ) )
+				)
+			);
+
+			const int jj = j == numDivisionsJ - 1 ? 0 : j + 1;
+
+			verticesPerFace.push_back( 4 );
+
+			vertexIds.push_back( i * numDivisionsJ + j );
+			vertexIds.push_back( i * numDivisionsJ + jj );
+			vertexIds.push_back( ii * numDivisionsJ + jj );
+			vertexIds.push_back( ii * numDivisionsJ + j );
+		}
+	}
+
+	IECoreScene::MeshPrimitivePtr mesh = new IECoreScene::MeshPrimitive( verticesPerFaceData, vertexIdsData, "linear", pData );
+	IECoreGL::ToGLMeshConverterPtr converter = new ToGLMeshConverter( mesh );
+	result = runTimeCast<IECoreGL::MeshPrimitive>( converter->convert() );
+
 	return result;
 }
 
@@ -696,6 +753,26 @@ float sphereSpokeClickAngle( const Line3f &eventLine, float radius, float spokeA
 	newAngle = radiansToDegrees( atan2( -p.x, -p.z ) );
 
 	return true;
+}
+
+// Returns the intersection point between the line and sphere closest to the line origin.
+// If the line and sphere don't intersect, returns the closest point between them.
+template<typename T>
+T lineSphereIntersection( const LineSegment<T> &line, const T &center, const float radius )
+{
+	const LineSegment<T> offsetLine( line.p0 - center, line.p1 - center );
+	const T direction = line.direction();
+	const float A = direction.dot( direction );
+	const float B = 2.f * ( direction ^ ( offsetLine.p0 ) );
+	const float C = ( offsetLine.p0 ^ offsetLine.p0 ) - ( radius * radius );
+
+	const float discriminant = B * B - 4.f * A * C;
+	if( discriminant < 0 )
+	{
+		return line.closestPointTo( center );
+	}
+
+	return line( ( -B - std::sqrt( discriminant ) ) / ( 2.f * A ) );
 }
 
 // ============================================================================
@@ -960,6 +1037,34 @@ class LightToolHandle : public Handle
 				const float nonZeroValue = originalValue == 0 ? 1.f : originalValue;
 				setValueOrAddKey( floatPlug, m_view->getContext()->getTime(), nonZeroValue * mult );
 
+			}
+		}
+
+		// Increments the values for all inspections for `metaParameter`, limiting the resulting
+		// values to minimum and maximum values.
+		void applyIncrement( const InternedString &metaParameter, const float incr, const float minValue, const float maxValue )
+		{
+			for( const auto &i : m_inspections )
+			{
+				auto it = i.find( metaParameter );
+				if( it == i.end() )
+				{
+					continue;
+				}
+
+				ValuePlugPtr parameterPlug = it->second->acquireEdit();
+				auto floatPlug = runTimeCast<FloatPlug>( activeValuePlug( parameterPlug.get() ) );
+				if( !floatPlug )
+				{
+					throw Exception( fmt::format( "\"{}\" parameter must use `FloatPlug`", metaParameter.string() ) );
+				}
+
+				const float originalValue = it->second->typedValue<float>( 0.f );
+				setValueOrAddKey(
+					floatPlug,
+					m_view->getContext()->getTime(),
+					std::clamp( originalValue + incr, minValue, maxValue )
+				);
 			}
 		}
 
@@ -1273,6 +1378,9 @@ class SpotLightHandle : public LightToolHandle
 
 				handleRadius = highlighted ? g_circleHandleWidthLarge : g_circleHandleWidth;
 			}
+
+			spokeRadius *= g_spotLightHandleSizeMultiplier;
+			handleRadius *= g_spotLightHandleSizeMultiplier;
 
 			const V3f farP = V3f( 0, 0, m_frustumScale * m_visualiserScale * -10.f );
 			const auto &[coneHandleAngle, penumbraHandleAngle] = handleAngles();
@@ -1994,9 +2102,6 @@ class EdgeHandle : public LightToolHandle
 				coneSize = highlighted ? g_arrowHandleSizeLarge : g_arrowHandleSize;
 			}
 
-			spokeRadius *= g_quadLightHandleSizeMultiplier;
-			coneSize *= g_quadLightHandleSizeMultiplier;
-
 			LineSegment3f edgeSegment = this->edgeSegment(
 				edgeInspection->typedValue<float>( 0.f ),
 				oppositeInspection->typedValue<float>( 0.f )
@@ -2101,13 +2206,13 @@ class EdgeHandle : public LightToolHandle
 
 			if( m_lightAxis == LightAxis::Width )
 			{
-				radius0 = g_circleHandleWidthLarge * ::rasterScaleFactor( this, V3f( 0, -fullEdgeLengthHalf, 0 ) ) * g_quadLightHandleSizeMultiplier;
-				radius1 = g_circleHandleWidthLarge * ::rasterScaleFactor( this, V3f( 0, fullEdgeLengthHalf, 0 ) ) * g_quadLightHandleSizeMultiplier;
+				radius0 = g_circleHandleWidthLarge * ::rasterScaleFactor( this, V3f( 0, -fullEdgeLengthHalf, 0 ) );
+				radius1 = g_circleHandleWidthLarge * ::rasterScaleFactor( this, V3f( 0, fullEdgeLengthHalf, 0 ) );
 			}
 			else
 			{
-				radius0 = g_circleHandleWidthLarge * ::rasterScaleFactor( this, V3f( -fullEdgeLengthHalf, 0, 0 ) ) * g_quadLightHandleSizeMultiplier;
-				radius1 = g_circleHandleWidthLarge * ::rasterScaleFactor( this, V3f( fullEdgeLengthHalf, 0, 0 ) ) * g_quadLightHandleSizeMultiplier;
+				radius0 = g_circleHandleWidthLarge * ::rasterScaleFactor( this, V3f( -fullEdgeLengthHalf, 0, 0 ) );
+				radius1 = g_circleHandleWidthLarge * ::rasterScaleFactor( this, V3f( fullEdgeLengthHalf, 0, 0 ) );
 			}
 
 			LineSegment3f result;
@@ -2282,8 +2387,6 @@ class CornerHandle : public LightToolHandle
 				cornerRadius = highlighted ? g_circleHandleWidthLarge : g_circleHandleWidth;
 			}
 
-			cornerRadius *= g_quadLightHandleSizeMultiplier;
-
 			IECoreGL::GroupPtr iconGroup = new IECoreGL::Group;
 			iconGroup->getState()->add(
 				new IECoreGL::ShaderStateComponent(
@@ -2369,6 +2472,227 @@ class CornerHandle : public LightToolHandle
 		const float m_heightToHandleRatio;
 		V2f m_scale;
 		std::optional<PlanarDrag> m_drag;
+};
+
+class RadiusHandle : public LightToolHandle
+{
+	public :
+		RadiusHandle(
+			const std::string &lightType,
+			SceneView *view,
+			const InternedString &radiusParameter,
+			const float radiusToHandleRatio,
+			const bool faceCamera,
+			const bool useScale,
+			const std::string &name
+		) :
+			LightToolHandle( lightType, view, {radiusParameter}, name ),
+			m_radiusParameter( radiusParameter ),
+			m_radiusToHandleRatio( radiusToHandleRatio ),
+			m_faceCamera( faceCamera ),
+			m_useScale( useScale ),
+			m_dragDirection()
+		{
+		}
+
+	protected :
+		bool handleDragMoveInternal( const GafferUI::DragDropEvent &event ) override
+		{
+			if( !m_drag )
+			{
+				return true;
+			}
+
+			if( !dragStartInspection( m_radiusParameter ) )
+			{
+				return true;
+			}
+
+			const float increment =
+				(
+					( m_drag.value().updatedPosition( event ) ) -
+					( m_drag.value().startPosition() )
+				) * m_radiusToHandleRatio
+			;
+
+			applyIncrement( m_radiusParameter, increment, 0, std::numeric_limits<float>::max() );
+
+			return true;
+		}
+
+		void updateLocalTransformInternal( const V3f &scale, const V3f & ) override
+		{
+			if( m_useScale )
+			{
+				setTransform( M44f().scale( scale ) );
+			}
+		}
+
+		bool handleDragEndInternal() override
+		{
+			m_drag = std::nullopt;
+			return false;
+		}
+
+		void addHandleVisualisation( IECoreGL::Group *rootGroup, const bool selectionPass, const bool highlighted ) const override
+		{
+			if( getLookThroughLight() )
+			{
+				return;
+			}
+
+			Inspector::ResultPtr radiusInspection = handleInspection( m_radiusParameter );
+			if( !radiusInspection )
+			{
+				return;
+			}
+
+			float thickness = 0.f;
+			float iconRadius = 0.f;
+
+			if( selectionPass )
+			{
+				thickness = g_lineSelectionWidth;
+				iconRadius = g_circleHandleSelectionWidth;
+			}
+			else
+			{
+				thickness = highlighted ? g_lineHandleWidthLarge : g_lineHandleWidth;
+				iconRadius = highlighted ? g_circleHandleWidthLarge : g_circleHandleWidth;
+			}
+
+			const float radius = radiusInspection->typedValue<float>( 0.f ) / m_radiusToHandleRatio;
+
+			IECoreGL::GroupPtr torusGroup = new IECoreGL::Group;
+			if( m_faceCamera )
+			{
+				torusGroup->getState()->add(
+					new IECoreGL::ShaderStateComponent(
+						ShaderLoader::defaultShaderLoader(),
+						TextureLoader::defaultTextureLoader(),
+						faceCameraVertexSource(),
+						"",
+						constantFragSource(),
+						new CompoundObject
+					)
+				);
+			}
+
+			V3f scale;
+			extractScaling( getTransform(), scale );
+			torusGroup->addChild(
+				torus(
+					radius * scale.x,
+					radius * scale.y,
+					thickness,
+					this,
+					m_faceCamera ? Axis::X : Axis::Z
+				)
+			);
+			rootGroup->addChild( torusGroup );
+
+			IECoreGL::GroupPtr iconGroup = new IECoreGL::Group;
+			iconGroup->getState()->add(
+				new IECoreGL::ShaderStateComponent(
+					ShaderLoader::defaultShaderLoader(),
+					TextureLoader::defaultTextureLoader(),
+					faceCameraVertexSource(),
+					"",
+					constantFragSource(),
+					new CompoundObject
+				)
+			);
+
+			const float xOffset = radius * scale.x;
+
+			const V3f iconScale = V3f( iconRadius ) * ::rasterScaleFactor( this, V3f( xOffset, 0, 0 ) );
+			M44f transform = M44f().scale( iconScale );
+			if( !m_faceCamera )
+			{
+				// If the entire handle is not facing the camera, offset the icon in
+				// gadget space so the center of the rotation is the center of the circle icon.
+				// Otherwise we bake in the offset below into the circle geometry so the center
+				// of "facing" rotation is the center of the handle.
+				transform *= M44f().translate( V3f( xOffset, 0, 0 ) );
+			}
+			iconGroup->setTransform( transform );
+			iconGroup->addChild( circle( Axis::X, m_faceCamera ? ( V3f( 0, 0, xOffset ) / iconScale ) : V3f( 0 ) ) );
+
+			rootGroup->addChild( iconGroup );
+			rootGroup->setTransform( M44f().scale( V3f( 1.f / scale.x, 1.f / scale.y, 1.f / scale.z ) ) );
+		}
+
+		void setupDrag( const DragDropEvent &event ) override
+		{
+			m_dragDirection = circlePosition( event.line ).normalized();
+			m_drag = Handle::LinearDrag(
+				this,
+				LineSegment3f( V3f( 0 ), m_dragDirection ),
+				event,
+				true
+			);
+		}
+
+		std::string tipPlugSuffix() const override
+		{
+			return "radii";
+		}
+
+		void updateTooltipPosition( const LineSegment3f &eventLine ) override
+		{
+			if( m_drag )
+			{
+				const Inspector::ResultPtr radiusInspection = handleInspection( m_radiusParameter );
+				const float radius = radiusInspection->typedValue<float>( 0 );
+				setTooltipPosition( ( m_dragDirection * radius ) / m_radiusToHandleRatio );
+			}
+			else
+			{
+				setTooltipPosition( circlePosition( eventLine ) );
+			}
+		}
+
+	private :
+
+		V3f circlePosition( const LineSegment3f &line ) const
+		{
+			if( m_faceCamera )
+			{
+				// Closest intersection of the line and a sphere at the origin with our radius
+				Inspector::ResultPtr radiusInspection = handleInspection( m_radiusParameter );
+				const float radius = radiusInspection->typedValue<float>( 0.f ) / m_radiusToHandleRatio;
+				return lineSphereIntersection( line, V3f( 0 ), radius );
+			}
+
+			// If the line intersects the plane, the result is simply the intersection point
+			V3f planeIntersection;
+			if( line.intersect( Plane3f( V3f( 0 ), V3f( 0, 0, -1 ) ), planeIntersection ) )
+			{
+				return planeIntersection;
+			}
+
+			// If no line / plane intersection, project the line to the Z plane and take
+			// the first intersection with the circle
+			const LineSegment2f projectedLine(
+				V2f( line.p0.x, line.p0.y ), V2f( line.p1.x, line.p1.y )
+			);
+
+			Inspector::ResultPtr radiusInspection = handleInspection( m_radiusParameter );
+			const float radius = radiusInspection->typedValue<float>( 0.f ) / m_radiusToHandleRatio;
+			const V2f intersection = lineSphereIntersection( projectedLine, V2f( 0 ), radius );
+
+			// We don't scale here on purpose : when used for a linear drag axis, we normalize
+			// the returned value, and when drawing the tooltip, the scale transform is part
+			// of the gadget transform already.
+			return V3f( intersection.x, intersection.y, 0 );
+		}
+
+		const InternedString m_radiusParameter;
+		const float m_radiusToHandleRatio;
+		const bool m_faceCamera;
+		const float m_useScale;
+		V3f m_dragDirection;
+		std::optional<LinearDrag> m_drag;
 };
 
 // ============================================================================
@@ -2475,6 +2799,13 @@ LightTool::LightTool( SceneView *view, const std::string &name ) :
 	m_handles->addChild( new CornerHandle( "quad", view, "widthParameter", V3f( 1.f, 0, 0 ), 2.f, "heightParameter", V3f( 0, 1.f, 0 ), 2.f, "northEastParameter" ) );
 	m_handles->addChild( new EdgeHandle( "quad", view, EdgeHandle::LightAxis::Height, "heightParameter", V3f( 0, 1.f, 0 ), 2.f, "widthParameter", V3f( 0, 0, 0 ), 2.f, "northParameter" ) );
 	m_handles->addChild( new CornerHandle( "quad", view, "widthParameter", V3f( -1.f, 0, 0 ), 2.f, "heightParameter", V3f( 0, 1.f, 0 ), 2.f, "northWestParameter" ) );
+
+	// DiskLight handles
+	m_handles->addChild( new RadiusHandle( "disk", view, "radiusParameter", 1.f, false, true, "diskHandle" ) );
+	m_handles->addChild( new RadiusHandle( "disk", view, "widthParameter", 2.f, false, true, "diskHandle" ) );
+
+	// Sphere / PointLight handles
+	m_handles->addChild( new RadiusHandle( "point", view, "radiusParameter", 1.f, true, false, "pointHandle" ) );
 
 	for( const auto &c : m_handles->children() )
 	{
