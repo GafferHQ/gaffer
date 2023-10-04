@@ -1,6 +1,11 @@
 1.2.10.x (relative to 1.2.10.4)
 ========
 
+Fixes
+-----
+
+- NameSwitch : Fixed bug which prevented drag and drop reordering of rows with an input connection.
+
 1.2.10.4 (relative to 1.2.10.3)
 ========
 
