@@ -44,6 +44,7 @@
 #include "tbb/spin_rw_mutex.h"
 
 #include "tbb/task_arena.h"
+#define TBB_PREVIEW_ISOLATED_TASK_GROUP 1
 #include "tbb/task_group.h"
 // Enable preview feature that allows us to construct a `task_scheduler_observer`
 // for a specific `task_arena`. This feature becomes officially supported in
