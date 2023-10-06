@@ -430,6 +430,7 @@ IECoreGL::MeshPrimitivePtr ring()
 	return result;
 }
 
+// Returns a (potentially truncated) cone facing the +Z axis.
 IECoreGL::MeshPrimitivePtr cone( float height, float startRadius, float endRadius )
 {
 	IECoreGL::MeshPrimitivePtr result;
@@ -448,7 +449,7 @@ IECoreGL::MeshPrimitivePtr cone( float height, float startRadius, float endRadiu
 		const float a = ( (float)i / (float)numSegments ) * 2.f * M_PI;
 
 		p.push_back( V3f( -sin( a ) * startRadius, cos( a ) * startRadius, 0 ) );
-		p.push_back( V3f( -sin( a ) * endRadius, cos( a ) * endRadius, height ) );  // Face the -Z axis
+		p.push_back( V3f( -sin( a ) * endRadius, cos( a ) * endRadius, height ) );  // Face the +Z axis
 	}
 	for( int i = 0; i < numSegments; ++i )
 	{
@@ -466,6 +467,7 @@ IECoreGL::MeshPrimitivePtr cone( float height, float startRadius, float endRadiu
 	return result;
 }
 
+// Returns a cone faceing the +Z axis.
 IECoreGL::MeshPrimitivePtr unitCone()
 {
 	static IECoreGL::MeshPrimitivePtr result = cone( 1.5f, 0.5f, 0 );
@@ -2695,6 +2697,184 @@ class RadiusHandle : public LightToolHandle
 		std::optional<LinearDrag> m_drag;
 };
 
+class LengthHandle : public LightToolHandle
+{
+	public :
+		LengthHandle(
+			const std::string &lightType,
+			SceneView *view,
+			const InternedString &parameter,
+			const V3f &axis,
+			const float lengthToHandleRatio,
+			const std::string &name
+		) :
+			LightToolHandle( lightType, view, {parameter}, name ),
+			m_parameter( parameter ),
+			m_axis( axis ),
+			m_lengthToHandleRatio( lengthToHandleRatio ),
+			m_orientation(),
+			m_scale()
+		{
+		}
+
+		~LengthHandle() override
+		{
+
+		}
+
+	protected :
+		void handlePathChanged() override
+		{
+			/// \todo This can be simplified and some of the logic, especially getting the inspectors, can
+			/// be moved to the constructor when we standardize on a single USDLux light representation.
+
+			ConstCompoundObjectPtr attributes = scene()->fullAttributes( handlePath() );
+
+			for( const auto &[attributeName, value] : attributes->members() )
+			{
+				if(
+					StringAlgo::matchMultiple( attributeName, g_lightAttributePattern ) &&
+					value->typeId() == (IECore::TypeId)ShaderNetworkTypeId
+				)
+				{
+					const auto shader = attributes->member<ShaderNetwork>( attributeName )->outputShader();
+					std::string shaderAttribute = shader->getType() + ":" + shader->getName();
+
+					if( !isLightType( shaderAttribute ) )
+					{
+						continue;
+					}
+
+					m_orientation = M44f();
+					if( auto orientationData = Metadata::value<M44fData>( shaderAttribute, "visualiserOrientation" ) )
+					{
+						m_orientation = orientationData->readable();
+					}
+
+					break;
+				}
+			}
+		}
+
+		bool handleDragMoveInternal( const GafferUI::DragDropEvent &event ) override
+		{
+			if( !m_drag )
+			{
+				return true;
+			}
+
+			if( !dragStartInspection( m_parameter ) )
+			{
+				return true;
+			}
+
+			const float updatedPosition = m_drag.value().updatedPosition( event ) / m_scale;
+			const float startPosition = m_drag.value().startPosition() / m_scale;
+			const float increment = ( updatedPosition - startPosition ) * m_lengthToHandleRatio;
+
+			applyIncrement( m_parameter, increment, 0, std::numeric_limits<float>::max() );
+
+			return true;
+		}
+
+		void updateLocalTransformInternal( const V3f &scale, const V3f & ) override
+		{
+			m_scale = abs( m_axis.dot( scale * m_orientation ) );
+		}
+
+		bool handleDragEndInternal() override
+		{
+			m_drag = std::nullopt;
+			return false;
+		}
+
+		void addHandleVisualisation( IECoreGL::Group *rootGroup, const bool selectionPass, const bool highlighted ) const override
+		{
+			if( getLookThroughLight() )
+			{
+				return;
+			}
+
+			Inspector::ResultPtr inspection = handleInspection( m_parameter );
+			if( !inspection )
+			{
+				return;
+			}
+
+			float coneSize = 0.f;
+			if( selectionPass )
+			{
+				coneSize = g_arrowHandleSelectionSize;
+			}
+			else
+			{
+				coneSize = highlighted ? g_arrowHandleSizeLarge : g_arrowHandleSize;
+			}
+
+			const V3f offset = this->offset( inspection.get() );
+
+			IECoreGL::GroupPtr coneGroup = new IECoreGL::Group;
+			coneGroup->setTransform(
+				M44f().scale( V3f( coneSize ) * ::rasterScaleFactor( this, offset ) ) *
+				rotationMatrix( V3f( 0, 0, 1.f ), m_axis ) *
+				M44f().translate( offset ) *
+				m_orientation
+			);
+			coneGroup->addChild( unitCone() );
+
+			rootGroup->addChild( coneGroup );
+		}
+
+		void setupDrag( const DragDropEvent &event ) override
+		{
+			Inspector::ResultPtr inspection = handleInspection( m_parameter );
+			V3f offset = this->offset( inspection.get() );
+
+			m_drag = Handle::LinearDrag(
+				this,
+				LineSegment3f( V3f( 0 ), ( m_axis * m_orientation ) ),
+				event,
+				true
+			);
+		}
+
+		std::string tipPlugSuffix() const override
+		{
+			return "lengths";
+		}
+
+		void updateTooltipPosition( const LineSegment3f &eventLine ) override
+		{
+			if( !hasInspectors() )
+			{
+				return;
+			}
+
+			Inspector::ResultPtr inspection = handleInspection( m_parameter );
+
+			const M44f transform =
+				M44f().translate( offset( inspection.get() ) ) *
+				m_orientation
+			;
+
+			setTooltipPosition( V3f( 0 ) * transform );
+		}
+
+	private :
+
+		V3f offset( Inspector::Result *inspection ) const
+		{
+			return ( m_axis * inspection->typedValue<float>( 0.f ) * m_scale ) / m_lengthToHandleRatio;
+		}
+
+		const InternedString m_parameter;
+		const V3f m_axis;
+		const float m_lengthToHandleRatio;
+		M44f m_orientation;
+		float m_scale;
+		std::optional<LinearDrag> m_drag;
+};
+
 // ============================================================================
 // HandlesGadget
 // ============================================================================
@@ -2806,6 +2986,10 @@ LightTool::LightTool( SceneView *view, const std::string &name ) :
 
 	// Sphere / PointLight handles
 	m_handles->addChild( new RadiusHandle( "point", view, "radiusParameter", 1.f, true, false, "pointHandle" ) );
+
+	// CylinderLight handles
+	m_handles->addChild( new LengthHandle( "cylinder", view, "lengthParameter", V3f( 0, 0, 1.f ), 2.f, "cylinderLengthTop" ) );
+	m_handles->addChild( new LengthHandle( "cylinder", view, "lengthParameter", V3f( 0, 0, -1.f ), 2.f, "cylinderLengthBottom" ) );
 
 	for( const auto &c : m_handles->children() )
 	{
