@@ -278,5 +278,39 @@ class EncapsulateTest( GafferSceneTest.SceneTestCase ) :
 		# will throw if the subprocess crashes.
 		subprocess.check_output( [ str( Gaffer.executablePath() ), "stats", script["fileName"].getValue(), "-scene", "collect" ] )
 
+	@unittest.expectedFailure
+	def testInheritTransformSamples( self ):
+		# This turns out to be just an illustration of the known issue where you can't set motion blur
+		# attributes from outside the Capsule. In this case, it feels like the attributes should be set inside
+		# the Capsule, because they are set on '/group' before the Encapsulate, but attributes on the root
+		# location are stored outside the Capsule, so it hits the same problem.
+
+		sphere = GafferScene.Sphere()
+		sphere["expression"] = Gaffer.Expression()
+		sphere["expression"].setExpression( 'parent["transform"]["translate"]["x"] = context.getFrame()' )
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( sphere["out"] )
+
+		pathFilter = GafferScene.PathFilter()
+		pathFilter["paths"].setValue( IECore.StringVectorData( [ '/group' ] ) )
+
+		standardAttributes = GafferScene.StandardAttributes()
+		standardAttributes["in"].setInput( group["out"] )
+		standardAttributes["filter"].setInput( pathFilter["out"] )
+		standardAttributes["attributes"]["transformBlurSegments"]["value"].setValue( 4 )
+		standardAttributes["attributes"]["transformBlurSegments"]["enabled"].setValue( True )
+
+		standardOptions = GafferScene.StandardOptions()
+		standardOptions["in"].setInput( standardAttributes["out"] )
+		standardOptions["options"]["transformBlur"]["value"].setValue( True )
+		standardOptions["options"]["transformBlur"]["enabled"].setValue( True )
+
+		encapsulate = GafferScene.Encapsulate()
+		encapsulate["in"].setInput( standardOptions["out"] )
+		encapsulate["filter"].setInput( pathFilter["out"] )
+
+		self.assertScenesRenderSame( encapsulate["in"], encapsulate["out"], expandProcedurals = True, ignoreLinks = True )
+
 if __name__ == "__main__":
 	unittest.main()
