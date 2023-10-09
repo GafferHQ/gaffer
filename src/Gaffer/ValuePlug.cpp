@@ -266,7 +266,7 @@ class ValuePlug::HashProcess : public Process
 				// No value in local cache, so either compute it directly or get it via
 				// the global cache if it's expensive enough to warrant collaboration.
 				IECore::MurmurHash result;
-				if( cachePolicy == CachePolicy::Legacy || cachePolicy == CachePolicy::Standard )
+				if( cachePolicy == CachePolicy::Default || cachePolicy == CachePolicy::Standard )
 				{
 					result = HashProcess( p, plug, computeNode ).run();
 				}
@@ -538,7 +538,7 @@ class ValuePlug::ComputeProcess : public Process
 			{
 				// Type conversion will be implemented by `setFrom()`.
 				// \todo Determine if caching is actually worthwhile for this.
-				cachePolicy = CachePolicy::Legacy;
+				cachePolicy = CachePolicy::Default;
 			}
 			else if( computeNode )
 			{
@@ -580,7 +580,7 @@ class ValuePlug::ComputeProcess : public Process
 			// The value isn't in the cache, so we'll need to compute it,
 			// taking account of the cache policy.
 
-			if( cachePolicy == CachePolicy::Legacy )
+			if( cachePolicy == CachePolicy::Default )
 			{
 				// Do the compute ourselves, without worrying if the same
 				// compute is in flight elsewhere. We assume the compute is

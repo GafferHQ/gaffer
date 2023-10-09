@@ -951,7 +951,7 @@ class ValuePlugTest( GafferTest.TestCase ) :
 		IECore.registerRunTimeTyped( InfiniteLoop )
 
 		for cachePolicy in (
-			Gaffer.ValuePlug.CachePolicy.Legacy,
+			Gaffer.ValuePlug.CachePolicy.Default,
 			Gaffer.ValuePlug.CachePolicy.Standard,
 			Gaffer.ValuePlug.CachePolicy.TaskIsolation,
 			# Omitting TaskCollaboration, because if our second compute joins as

@@ -336,10 +336,6 @@ Gaffer::ValuePlug::CachePolicy Expression::computeCachePolicy( const Gaffer::Val
 		{
 			return m_engine->executeCachePolicy();
 		}
-		else
-		{
-			return ValuePlug::CachePolicy::Legacy;
-		}
 	}
 	return ComputeNode::computeCachePolicy( output );
 }
