@@ -258,7 +258,27 @@ bool FileSystemPath::isValid( const IECore::Canceller *canceller ) const
 
 	std::error_code e;
 
-	const std::filesystem::file_type t = std::filesystem::symlink_status( std::filesystem::path( this->string() ), e ).type();
+	std::filesystem::file_type t = std::filesystem::symlink_status( std::filesystem::path( this->string() ), e ).type();
+
+#if defined(_MSC_VER) && _MSC_VER < 1932
+
+// Fix MSVC bug preventing `symlink_status()` working with exFAT partitions, and possibly FAT.
+// Filtering to error 87 is based on experimentation and backed up by
+// https://github.com/microsoft/STL/issues/233. Using `status()` instead of `symlink_status()`
+// allows exFAT partitions to be used, and because exFAT does not support symlinks, this
+// should be a valid workaround provided filtering to error value `87` doesn't include
+// partitions that do support symlinks.
+if(
+	(
+		t == std::filesystem::file_type::none || t == std::filesystem::file_type::not_found
+	) && e.value() == 87 // "The parameter is incorrect."
+)
+{
+	t = std::filesystem::status( std::filesystem::path( this->string() ), e ).type();
+}
+
+#endif
+
 	return t != std::filesystem::file_type::none && t != std::filesystem::file_type::not_found;
 }
 
