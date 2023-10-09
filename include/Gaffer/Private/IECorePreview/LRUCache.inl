@@ -167,21 +167,12 @@ class Serial
 				return m_it->cacheEntry;
 			}
 
-			// Returns true if it is OK to call `writable()`.
-			// This is typically determined by the AcquireMode
-			// passed to `acquire()`, with special cases for
-			// recursion.
+			// Returns true if it is OK to call `writable()`. This is determined
+			// by the AcquireMode passed to `acquire()`.
 			bool isWritable() const
 			{
-				// Because this policy is serial, it would technically
-				// always be OK to write. But we return false for recursive
-				// calls to avoid unnecessary overhead updating the LRU list
-				// for inner calls.
-				/// \todo Is this distinction worth it, and do we really need
-				/// to support recursion on a single item in the Serial policy?
-				/// This is a remnant of a more complex system that allowed recursion
-				/// in the TaskParallel policy, but that has since been removed.
-				return m_it->handleCount == 1;
+				// Because this policy is serial, it is always OK to write
+				return true;
 			}
 
 			// Executes the functor F. This is used to
@@ -1093,6 +1084,7 @@ Value LRUCache<Key, Value, Policy, GetterKey>::get( const GetterKey &key, const 
 
 	if( status==Uncached )
 	{
+		assert( handle.isWritable() );
 		Value value = Value();
 		Cost cost = 0;
 		try
@@ -1105,24 +1097,21 @@ Value LRUCache<Key, Value, Policy, GetterKey>::get( const GetterKey &key, const 
 		}
 		catch( ... )
 		{
-			if( handle.isWritable() && m_cacheErrors )
+			if( m_cacheErrors )
 			{
 				handle.writable().state = std::current_exception();
 			}
 			throw;
 		}
 
-		if( handle.isWritable() )
-		{
-			assert( cacheEntry.status() != Cached ); // this would indicate that another thread somehow
-			assert( cacheEntry.status() != Failed ); // loaded the same thing as us, which is not the intention.
+		assert( cacheEntry.status() != Cached ); // this would indicate that another thread somehow
+		assert( cacheEntry.status() != Failed ); // loaded the same thing as us, which is not the intention.
 
-			setInternal( key, handle.writable(), value, cost );
-			m_policy.push( handle );
+		setInternal( key, handle.writable(), value, cost );
+		m_policy.push( handle );
 
-			handle.release();
-			limitCost( m_maxCost );
-		}
+		handle.release();
+		limitCost( m_maxCost );
 
 		return value;
 	}
@@ -1187,8 +1176,9 @@ bool LRUCache<Key, Value, Policy, GetterKey>::setIfUncached( const Key &key, con
 	const Status status = cacheEntry.status();
 
 	bool result = false;
-	if( status == Uncached && handle.isWritable() )
+	if( status == Uncached )
 	{
+		assert( handle.isWritable() );
 		result = setInternal( key, handle.writable(), value, costFunction( value ) );
 		m_policy.push( handle );
 
