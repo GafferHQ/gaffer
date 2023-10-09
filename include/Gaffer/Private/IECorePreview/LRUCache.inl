@@ -836,18 +836,7 @@ class TaskParallel
 								// The only canceller being checked at that
 								// point will be the one passed to the
 								// `LRUCache::get()` call that we work in
-								// service of. This isn't ideal, as it can cause
-								// UI stalls if one UI element is waiting to
-								// cancel an operation, but it's tasks have been
-								// "captured" by collaboration on a compute
-								// started by another UI element (which hasn't
-								// requested cancellation).  One alternative is
-								// that we would only accept work if our
-								// canceller matches the one in use by the
-								// original caller. This would rule out
-								// collaboration between UI elements, but would
-								// still allow diamond dependencies in graph
-								// evaluation to use collaboration.
+								// service of.
 								return (!canceller || !canceller->cancelled());
 							}
 						);
