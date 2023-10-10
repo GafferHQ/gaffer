@@ -132,7 +132,7 @@ for /f "tokens=1* delims=;" %%A in ("%EXTENSION_PATH%") do (
 )
 
 if "%GAFFER_DEBUG%" NEQ "" (
-	%GAFFER_DEBUGGER% /debugexe "%GAFFER_ROOT%\bin\python.exe" "%GAFFER_ROOT%"/bin/__gaffer.py %*
+	%GAFFER_DEBUGGER% "%GAFFER_ROOT%\bin\python.exe" "%GAFFER_ROOT%"/bin/__gaffer.py %*
 ) else (
 	"%GAFFER_ROOT%"\bin\python.exe "%GAFFER_ROOT%"/bin/__gaffer.py %*
 )
