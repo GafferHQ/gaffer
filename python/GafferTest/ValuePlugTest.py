@@ -700,6 +700,24 @@ class ValuePlugTest( GafferTest.TestCase ) :
 		with GafferTest.TestRunner.PerformanceScope() :
 			GafferTest.parallelGetValue( node["plug"], 10000000 )
 
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testStaticStringValuePerformance( self ) :
+
+		node = Gaffer.Node()
+		node["plug"] = Gaffer.StringPlug()
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			GafferTest.parallelGetValue( node["plug"], 10000000 )
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testStaticObjectValuePerformance( self ) :
+
+		node = Gaffer.Node()
+		node["plug"] = Gaffer.ObjectPlug( defaultValue = IECore.IntVectorData() )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			GafferTest.parallelGetValue( node["plug"], 10000000 )
+
 	def testIsSetToDefault( self ) :
 
 		n1 = GafferTest.AddNode()

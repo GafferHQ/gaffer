@@ -42,7 +42,8 @@ namespace Gaffer
 template<typename T>
 inline T NumericPlug<T>::getValue( const IECore::MurmurHash *precomputedHash ) const
 {
-	return getObjectValue<DataType>( precomputedHash )->readable();
+	IECore::ConstObjectPtr owner;
+	return getObjectValue<DataType>( owner, precomputedHash )->readable();
 }
 
 } // namespace Gaffer
