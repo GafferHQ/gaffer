@@ -38,9 +38,8 @@ import pathlib
 import unittest
 import inspect
 import imath
-import pxr
 
-import pxr
+import pxr.Usd
 
 import IECore
 import IECoreScene
