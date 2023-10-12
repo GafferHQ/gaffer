@@ -96,9 +96,11 @@ class GAFFERSCENE_API Capsule : public IECoreScenePreview::Procedural
 		void setRenderOptions( const GafferScene::Private::RendererAlgo::RenderOptions &renderOptions );
 		std::optional<GafferScene::Private::RendererAlgo::RenderOptions> getRenderOptions() const;
 
-	private :
+	protected :
 
 		void throwIfNoScene() const;
+
+	private :
 
 		IECore::MurmurHash m_hash;
 		Imath::Box3f m_bound;
