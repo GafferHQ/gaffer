@@ -8,6 +8,11 @@ Improvements
   - Popups for string cells and row names are now sized to fit their column.
   - Added "Triple" and "Quadruple" width options to the spreadsheet row name popup menu.
 
+API
+---
+
+- Sampler : Added `populate()` method, which populates the internal tile cache in parallel, and subsequently allows `sample()` to be called concurrently.
+
 1.3.4.0 (relative to 1.3.3.0)
 =======
 
