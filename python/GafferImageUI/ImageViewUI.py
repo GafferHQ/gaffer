@@ -1152,7 +1152,7 @@ class _CompareModePlugValueWidget( GafferUI.PlugValueWidget ) :
 			v = self.getPlug().getValue()
 
 		if v == "":
-			return Gaffer.Metadata.value( self.getPlug(), "imageViewer:lastCompareMode" ) or "over"
+			return Gaffer.Metadata.value( self.getPlug(), "imageViewer:lastCompareMode" ) or "replace"
 		else:
 			return ""
 
