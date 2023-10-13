@@ -247,6 +247,7 @@ nodeMenu.append( "/Scene/File/Reader", GafferScene.SceneReader, searchText = "Sc
 nodeMenu.append( "/Scene/File/Writer", GafferScene.SceneWriter, searchText = "SceneWriter" )
 nodeMenu.append( "/Scene/Source/Object To Scene", GafferScene.ObjectToScene, searchText = "ObjectToScene" )
 nodeMenu.append( "/Scene/Source/Image To Points", GafferScene.ImageToPoints, searchText = "ImageToPoints" )
+nodeMenu.append( "/Scene/Source/Image Scatter", GafferScene.ImageScatter, searchText = "ImageScatter" )
 nodeMenu.append( "/Scene/Source/Camera", GafferScene.Camera )
 nodeMenu.append( "/Scene/Source/Coordinate System", GafferScene.CoordinateSystem, searchText = "CoordinateSystem" )
 nodeMenu.append( "/Scene/Source/Clipping Plane", GafferScene.ClippingPlane, searchText = "ClippingPlane" )

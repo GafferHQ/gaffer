@@ -1,6 +1,11 @@
 1.3.x.x (relative to 1.3.4.0)
 =======
 
+Features
+--------
+
+- ImageScatter : Added a new node for scattering points across an image, with density controlled by an image channel.
+
 Improvements
 ------------
 

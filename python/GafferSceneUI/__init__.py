@@ -186,6 +186,7 @@ from . import MeshSplitUI
 from . import FramingConstraintUI
 from . import MeshNormalsUI
 from . import LightToolUI
+from . import ImageScatterUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.
