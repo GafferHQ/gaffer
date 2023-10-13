@@ -117,6 +117,9 @@ class GAFFERSCENE_API Instancer : public BranchCreator
 		Gaffer::StringPlug *idPlug();
 		const Gaffer::StringPlug *idPlug() const;
 
+		Gaffer::BoolPlug *omitDuplicateIdsPlug();
+		const Gaffer::BoolPlug *omitDuplicateIdsPlug() const;
+
 		Gaffer::StringPlug *positionPlug();
 		const Gaffer::StringPlug *positionPlug() const;
 

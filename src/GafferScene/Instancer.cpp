@@ -308,6 +308,7 @@ class Instancer::EngineData : public Data
 			const StringVectorData *rootsList,
 			const ScenePlug *prototypes,
 			const std::string &idName,
+			bool omitDuplicateIds,
 			const std::string &position,
 			const std::string &orientation,
 			const std::string &scale,
@@ -386,6 +387,15 @@ class Instancer::EngineData : public Data
 					auto ins = m_idsToPointIndices.try_emplace( id, i );
 					if( !ins.second )
 					{
+						if( !omitDuplicateIds )
+						{
+							throw IECore::Exception( fmt::format( "Instance id \"{}\" is duplicated at index {} and {}. This probably indicates invalid source data, if you want to hack around it, you can set \"omitDuplicateIds\".", id, m_idsToPointIndices[id], i ) );
+						}
+
+						// Invalidate the existing entry in the m_idsToPointIndices map - since we can't assign
+						// a consistent point index to this id, we omit all point indices that try to use this
+						// id
+						ins.first->second = std::numeric_limits<size_t>::max();
 						hasDuplicates = true;
 					}
 				}
@@ -426,6 +436,7 @@ class Instancer::EngineData : public Data
 				}
 			}
 
+			// We need a list of which point indices belong to each prototype
 			std::vector< std::vector<int> > pointIndicesForPrototypeIndex( m_numPrototypes );
 			// Pre allocate if there's just one prototype, since we know the length will just be every point
 			if( constantPrototypeIndex != -1 )
@@ -1005,6 +1016,7 @@ Instancer::Instancer( const std::string &name )
 	addChild( new StringPlug( "prototypeRoots", Plug::In, "prototypeRoots" ) );
 	addChild( new StringVectorDataPlug( "prototypeRootsList", Plug::In, new StringVectorData ) );
 	addChild( new StringPlug( "id", Plug::In, "instanceId" ) );
+	addChild( new BoolPlug( "omitDuplicateIds", Plug::In, true ) );
 	addChild( new StringPlug( "position", Plug::In, "P" ) );
 	addChild( new StringPlug( "orientation", Plug::In ) );
 	addChild( new StringPlug( "scale", Plug::In ) );
@@ -1108,174 +1120,184 @@ const Gaffer::StringPlug *Instancer::idPlug() const
 	return getChild<StringPlug>( g_firstPlugIndex + 6 );
 }
 
+Gaffer::BoolPlug *Instancer::omitDuplicateIdsPlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 7 );
+}
+
+const Gaffer::BoolPlug *Instancer::omitDuplicateIdsPlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex + 7 );
+}
+
 Gaffer::StringPlug *Instancer::positionPlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 7 );
+	return getChild<StringPlug>( g_firstPlugIndex + 8 );
 }
 
 const Gaffer::StringPlug *Instancer::positionPlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 7 );
+	return getChild<StringPlug>( g_firstPlugIndex + 8 );
 }
 
 Gaffer::StringPlug *Instancer::orientationPlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 8 );
+	return getChild<StringPlug>( g_firstPlugIndex + 9 );
 }
 
 const Gaffer::StringPlug *Instancer::orientationPlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 8 );
+	return getChild<StringPlug>( g_firstPlugIndex + 9 );
 }
 
 Gaffer::StringPlug *Instancer::scalePlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 9 );
+	return getChild<StringPlug>( g_firstPlugIndex + 10 );
 }
 
 const Gaffer::StringPlug *Instancer::scalePlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 9 );
+	return getChild<StringPlug>( g_firstPlugIndex + 10 );
 }
 
 Gaffer::StringPlug *Instancer::attributesPlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 10 );
+	return getChild<StringPlug>( g_firstPlugIndex + 11 );
 }
 
 const Gaffer::StringPlug *Instancer::attributesPlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 10 );
+	return getChild<StringPlug>( g_firstPlugIndex + 11 );
 }
 
 Gaffer::StringPlug *Instancer::attributePrefixPlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 11 );
+	return getChild<StringPlug>( g_firstPlugIndex + 12 );
 }
 
 const Gaffer::StringPlug *Instancer::attributePrefixPlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 11 );
+	return getChild<StringPlug>( g_firstPlugIndex + 12 );
 }
 
 Gaffer::BoolPlug *Instancer::encapsulateInstanceGroupsPlug()
 {
-	return getChild<BoolPlug>( g_firstPlugIndex + 12 );
+	return getChild<BoolPlug>( g_firstPlugIndex + 13 );
 }
 
 const Gaffer::BoolPlug *Instancer::encapsulateInstanceGroupsPlug() const
 {
-	return getChild<BoolPlug>( g_firstPlugIndex + 12 );
+	return getChild<BoolPlug>( g_firstPlugIndex + 13 );
 }
 
 Gaffer::BoolPlug *Instancer::seedEnabledPlug()
 {
-	return getChild<BoolPlug>( g_firstPlugIndex + 13 );
+	return getChild<BoolPlug>( g_firstPlugIndex + 14 );
 }
 
 const Gaffer::BoolPlug *Instancer::seedEnabledPlug() const
 {
-	return getChild<BoolPlug>( g_firstPlugIndex + 13 );
+	return getChild<BoolPlug>( g_firstPlugIndex + 14 );
 }
 
 Gaffer::StringPlug *Instancer::seedVariablePlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 14 );
+	return getChild<StringPlug>( g_firstPlugIndex + 15 );
 }
 
 const Gaffer::StringPlug *Instancer::seedVariablePlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 14 );
+	return getChild<StringPlug>( g_firstPlugIndex + 15 );
 }
 
 Gaffer::IntPlug *Instancer::seedsPlug()
 {
-	return getChild<IntPlug>( g_firstPlugIndex + 15 );
+	return getChild<IntPlug>( g_firstPlugIndex + 16 );
 }
 
 const Gaffer::IntPlug *Instancer::seedsPlug() const
 {
-	return getChild<IntPlug>( g_firstPlugIndex + 15 );
+	return getChild<IntPlug>( g_firstPlugIndex + 16 );
 }
 
 Gaffer::IntPlug *Instancer::seedPermutationPlug()
 {
-	return getChild<IntPlug>( g_firstPlugIndex + 16 );
+	return getChild<IntPlug>( g_firstPlugIndex + 17 );
 }
 
 const Gaffer::IntPlug *Instancer::seedPermutationPlug() const
 {
-	return getChild<IntPlug>( g_firstPlugIndex + 16 );
+	return getChild<IntPlug>( g_firstPlugIndex + 17 );
 }
 
 Gaffer::BoolPlug *Instancer::rawSeedPlug()
 {
-	return getChild<BoolPlug>( g_firstPlugIndex + 17 );
+	return getChild<BoolPlug>( g_firstPlugIndex + 18 );
 }
 
 const Gaffer::BoolPlug *Instancer::rawSeedPlug() const
 {
-	return getChild<BoolPlug>( g_firstPlugIndex + 17 );
+	return getChild<BoolPlug>( g_firstPlugIndex + 18 );
 }
 
 Gaffer::ValuePlug *Instancer::contextVariablesPlug()
 {
-	return getChild<ValuePlug>( g_firstPlugIndex + 18 );
+	return getChild<ValuePlug>( g_firstPlugIndex + 19 );
 }
 
 const Gaffer::ValuePlug *Instancer::contextVariablesPlug() const
 {
-	return getChild<ValuePlug>( g_firstPlugIndex + 18 );
+	return getChild<ValuePlug>( g_firstPlugIndex + 19 );
 }
 
 GafferScene::Instancer::ContextVariablePlug *Instancer::timeOffsetPlug()
 {
-	return getChild<ContextVariablePlug>( g_firstPlugIndex + 19 );
+	return getChild<ContextVariablePlug>( g_firstPlugIndex + 20 );
 }
 
 const GafferScene::Instancer::ContextVariablePlug *Instancer::timeOffsetPlug() const
 {
-	return getChild<ContextVariablePlug>( g_firstPlugIndex + 19 );
+	return getChild<ContextVariablePlug>( g_firstPlugIndex + 20 );
 }
 
 Gaffer::AtomicCompoundDataPlug *Instancer::variationsPlug()
 {
-	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 20 );
+	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 21 );
 }
 
 const Gaffer::AtomicCompoundDataPlug *Instancer::variationsPlug() const
 {
-	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 20 );
+	return getChild<AtomicCompoundDataPlug>( g_firstPlugIndex + 21 );
 }
 
 Gaffer::ObjectPlug *Instancer::enginePlug()
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 21 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 22 );
 }
 
 const Gaffer::ObjectPlug *Instancer::enginePlug() const
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 21 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 22 );
 }
 
 GafferScene::ScenePlug *Instancer::capsuleScenePlug()
 {
-	return getChild<ScenePlug>( g_firstPlugIndex + 22 );
+	return getChild<ScenePlug>( g_firstPlugIndex + 23 );
 }
 
 const GafferScene::ScenePlug *Instancer::capsuleScenePlug() const
 {
-	return getChild<ScenePlug>( g_firstPlugIndex + 22 );
+	return getChild<ScenePlug>( g_firstPlugIndex + 23 );
 }
 
 Gaffer::PathMatcherDataPlug *Instancer::setCollaboratePlug()
 {
-	return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 23 );
+	return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 24 );
 }
 
 const Gaffer::PathMatcherDataPlug *Instancer::setCollaboratePlug() const
 {
-	return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 23 );
+	return getChild<PathMatcherDataPlug>( g_firstPlugIndex + 24 );
 }
 
 void Instancer::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
@@ -1291,6 +1313,7 @@ void Instancer::affects( const Plug *input, AffectedPlugsContainer &outputs ) co
 		input == prototypesPlug()->childNamesPlug() ||
 		input == prototypesPlug()->existsPlug() ||
 		input == idPlug() ||
+		input == omitDuplicateIdsPlug() ||
 		input == positionPlug() ||
 		input == orientationPlug() ||
 		input == scalePlug() ||
@@ -1378,6 +1401,7 @@ void Instancer::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *co
 		h.append( prototypesPlug()->childNamesHash( ScenePath() ) );
 
 		idPlug()->hash( h );
+		omitDuplicateIdsPlug()->hash( h );
 		positionPlug()->hash( h );
 		orientationPlug()->hash( h );
 		scalePlug()->hash( h );
@@ -1600,6 +1624,7 @@ void Instancer::compute( Gaffer::ValuePlug *output, const Gaffer::Context *conte
 				prototypeRootsList.get(),
 				prototypesPlug(),
 				idPlug()->getValue(),
+				omitDuplicateIdsPlug()->getValue(),
 				positionPlug()->getValue(),
 				orientationPlug()->getValue(),
 				scalePlug()->getValue(),

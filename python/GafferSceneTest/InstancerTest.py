@@ -1358,27 +1358,66 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		points = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [ imath.V3f( x, 0, 0 ) for x in range( 6 ) ] ) )
 		points["id"] = IECoreScene.PrimitiveVariable(
 			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
-			IECore.IntVectorData( [ 0, 0, 2, 2, 4, 4 ] ),
+			IECore.IntVectorData( [ 0, 1, 2, 2, 3, 4 ] ),
 		)
 
 		objectToScene = GafferScene.ObjectToScene()
 		objectToScene["object"].setValue( points )
 
 		sphere = GafferScene.Sphere()
+		parent = GafferScene.Parent()
+		parent["parent"].setValue( "/" )
+		parent["in"].setInput( sphere["out"] )
+		parent["children"][0].setInput( sphere["out"] )
 
 		instancer = GafferScene.Instancer()
 		instancer["in"].setInput( objectToScene["out"] )
-		instancer["prototypes"].setInput( sphere["out"] )
+		instancer["prototypes"].setInput( parent["out"] )
 		instancer["parent"].setValue( "/object" )
 		instancer["id"].setValue( "id" )
 
+		instancer["omitDuplicateIds"].setValue( False )
+
+		with self.assertRaisesRegex( RuntimeError, 'Instancer.__engine : Instance id "2" is duplicated at index 2 and 3. This probably indicates invalid source data, if you want to hack around it, you can set "omitDuplicateIds"' ) :
+			self.assertSceneValid( instancer["out"] )
+
+		instancer["omitDuplicateIds"].setValue( True )
 		self.assertSceneValid( instancer["out"] )
 
-		self.assertEqual( instancer["out"].childNames( "/object/instances/sphere" ), IECore.InternedStringVectorData( [ "0", "2", "4" ] ) )
+		self.assertEqual( instancer["out"].childNames( "/object/instances/sphere" ), IECore.InternedStringVectorData( [ "0", "1", "3", "4" ] ) )
 
 		self.assertEqual( instancer["out"].transform( "/object/instances/sphere/0" ), imath.M44f().translate( imath.V3f( 0, 0, 0 ) ) )
-		self.assertEqual( instancer["out"].transform( "/object/instances/sphere/2" ), imath.M44f().translate( imath.V3f( 2, 0, 0 ) ) )
-		self.assertEqual( instancer["out"].transform( "/object/instances/sphere/4" ), imath.M44f().translate( imath.V3f( 4, 0, 0 ) ) )
+		self.assertEqual( instancer["out"].transform( "/object/instances/sphere/1" ), imath.M44f().translate( imath.V3f( 1, 0, 0 ) ) )
+		self.assertEqual( instancer["out"].transform( "/object/instances/sphere/3" ), imath.M44f().translate( imath.V3f( 4, 0, 0 ) ) )
+		self.assertEqual( instancer["out"].transform( "/object/instances/sphere/4" ), imath.M44f().translate( imath.V3f( 5, 0, 0 ) ) )
+
+		instancer["prototypeIndex"].setValue( "prototypeIndex" )
+
+		# Test duplicate ids between different prototypes - the handling of this is now pretty consistent, but
+		# it used to be treated quite differently
+
+		points["prototypeIndex"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECore.IntVectorData( [ 0, 1, 0, 1, 0, 1 ] ),
+		)
+		objectToScene["object"].setValue( points )
+
+		instancer["omitDuplicateIds"].setValue( False )
+
+		with self.assertRaisesRegex( RuntimeError, 'Instancer.__engine : Instance id "2" is duplicated at index 2 and 3. This probably indicates invalid source data, if you want to hack around it, you can set "omitDuplicateIds"' ) :
+			self.assertSceneValid( instancer["out"] )
+
+		instancer["omitDuplicateIds"].setValue( True )
+
+		self.assertEqual( instancer["out"].childNames( "/object/instances" ), IECore.InternedStringVectorData( [ "sphere", "sphere1" ] ) )
+		self.assertEqual( instancer["out"].childNames( "/object/instances/sphere" ), IECore.InternedStringVectorData( [ "0", "3" ] ) )
+		self.assertEqual( instancer["out"].childNames( "/object/instances/sphere1" ), IECore.InternedStringVectorData( [ "1", "4" ] ) )
+
+		self.assertEqual( instancer["out"].transform( "/object/instances/sphere/0" ), imath.M44f().translate( imath.V3f( 0, 0, 0 ) ) )
+		self.assertEqual( instancer["out"].transform( "/object/instances/sphere/3" ), imath.M44f().translate( imath.V3f( 4, 0, 0 ) ) )
+
+		self.assertEqual( instancer["out"].transform( "/object/instances/sphere1/1" ), imath.M44f().translate( imath.V3f( 1, 0, 0 ) ) )
+		self.assertEqual( instancer["out"].transform( "/object/instances/sphere1/4" ), imath.M44f().translate( imath.V3f( 5, 0, 0 ) ) )
 
 	def testAttributes( self ) :
 
