@@ -11,7 +11,9 @@ Improvements
 Fixes
 -----
 
-- PythonEditor : Fixed bug that prevented editors being destroyed at the right time.
+- PythonEditor :
+  - Fixed output for `print()` calls with multiple arguments, which was previously spread across multiple lines.
+  - Fixed bug that prevented editors being destroyed at the right time.
 
 1.3.4.0 (relative to 1.3.3.0)
 =======

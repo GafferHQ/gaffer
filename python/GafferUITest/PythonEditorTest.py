@@ -55,6 +55,35 @@ class PythonEditorTest( GafferUITest.TestCase ) :
 		del editor
 		self.assertIsNone( weakEditor() )
 
+	def testPrint( self ) :
+
+		script = Gaffer.ScriptNode()
+		editor = GafferUI.PythonEditor( script )
+		weakEditor = weakref.ref( editor )
+
+		editor.inputWidget().setText( "print( 1, 2 )" )
+		editor.execute()
+		self.assertEqual(
+			editor.outputWidget().getText(),
+			"print( 1, 2 )\n1 2"
+		)
+
+		del editor
+		self.assertIsNone( weakEditor() )
+
+	def testLifetimeAfterExecuteException( self ) :
+
+		script = Gaffer.ScriptNode()
+		editor = GafferUI.PythonEditor( script )
+		weakEditor = weakref.ref( editor )
+
+		editor.inputWidget().setText( "ohDearThisVariableDoesntExist" )
+		editor.execute()
+		self.assertIn( "name 'ohDearThisVariableDoesntExist' is not defined", editor.outputWidget().getText() )
+
+		del editor
+		self.assertIsNone( weakEditor() )
+
 	def testMessageHandler( self ) :
 
 		script = Gaffer.ScriptNode()
