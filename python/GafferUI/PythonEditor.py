@@ -39,6 +39,7 @@ import ast
 import functools
 import sys
 import traceback
+import weakref
 import imath
 
 import IECore
@@ -279,9 +280,13 @@ class _MessageHandler( IECore.MessageHandler ) :
 
 		IECore.MessageHandler.__init__( self )
 
-		self.__textWidget = textWidget
+		self.__textWidget = weakref.ref( textWidget )
 
 	def handle( self, level, context, message ) :
+
+		widget = self.__textWidget()
+		if widget is None :
+			return
 
 		html = formatted = "<h1 class='%s'>%s : %s </h1><pre class='message'>%s</pre><br>" % (
 			IECore.Msg.levelAsString( level ),
@@ -289,7 +294,7 @@ class _MessageHandler( IECore.MessageHandler ) :
 			context,
 			message
 		)
-		self.__textWidget.appendHTML( html )
+		widget.appendHTML( html )
 		# update the gui so messages are output as they occur, rather than all getting queued
 		# up till the end.
 		QtWidgets.QApplication.instance().processEvents( QtCore.QEventLoop.ExcludeUserInputEvents )

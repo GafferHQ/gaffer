@@ -129,6 +129,7 @@ from .PathColumnTest import PathColumnTest
 from .ToolTest import ToolTest
 from .StandardNodeToolbarTest import StandardNodeToolbarTest
 from .LabelPlugValueWidgetTest import LabelPlugValueWidgetTest
+from .PythonEditorTest import PythonEditorTest
 
 if __name__ == "__main__":
 	unittest.main()
