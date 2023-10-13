@@ -53,6 +53,27 @@ import GafferSceneTest
 
 class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
+	def assertEncapsulatedRendersSame( self, instancer ):
+
+		encapInstancer = GafferScene.Instancer()
+		for i in instancer["contextVariables"]:
+			encapInstancer["contextVariables"].addChild( GafferScene.Instancer.ContextVariablePlug( i.getName() ) )
+
+		for i in Gaffer.ValuePlug.RecursiveInputRange( instancer ):
+			if not i.isSetToDefault():
+				corresponding = encapInstancer.descendant( i.relativeName( instancer ) )
+				if i.getInput():
+					corresponding.setInput( i.getInput() )
+				else:
+					if not hasattr( i, "getValue" ):
+						# Probably a compound plug, can't setValue, but children will get transferred
+						continue
+					corresponding.setValue( i.getValue() )
+
+		encapInstancer["encapsulateInstanceGroups"].setValue( True )
+
+		self.assertScenesRenderSame( instancer["out"], encapInstancer["out"], expandProcedurals = True, ignoreLinks = True )
+
 	def test( self ) :
 
 		sphere = IECoreScene.SpherePrimitive()
@@ -151,6 +172,13 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		encapInstancer["parent"].setValue( "/seeds" )
 		encapInstancer["name"].setValue( "instances" )
 		encapInstancer["encapsulateInstanceGroups"].setValue( True )
+
+		# Test an edge case, and make sure while we're at it that we're actually getting an InstancerCapsule
+		# ( Because it's private, it's bound to Python in a sorta weird way that means its typeName() will
+		# report Capsule, not InstancerCapsule, but this error is a quick test that we are actually dealing with
+		# the right thing. )
+		with self.assertRaisesRegex( RuntimeError, "Null renderer passed to InstancerCapsule" ) :
+			encapInstancer["out"].object( "/seeds/instances/sphere" ).render( None )
 
 		# Check that the capsule expands during rendering to render the same as the unencapsulated scene.
 		# ( Except for the light links, which aren't output by the Capsule currently )
@@ -272,6 +300,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		deleteObject["filter"].setInput( f["out"] )
 
 		self.assertScenesEqual( instancer["out"], deleteObject["out"] )
+		self.assertEncapsulatedRendersSame( instancer )
 
 	def testEmptyParent( self ) :
 
@@ -286,6 +315,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertScenesEqual( instancer["out"], plane["out"] )
 		self.assertSceneHashesEqual( instancer["out"], plane["out"] )
+		self.assertEncapsulatedRendersSame( instancer )
 
 	def testSeedsAffectBound( self ) :
 
@@ -651,6 +681,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		instancer["parent"].setValue( "/object" )
 
 		self.assertEqual( instancer["out"].transform( "/object/instances/sphere/0" ), imath.M44f().translate( imath.V3f( 4, 0, 0 ) ) )
+		self.assertEncapsulatedRendersSame( instancer )
 
 		instancer["orientation"].setValue( "orientation" )
 		self.assertTrue(
@@ -659,6 +690,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 				0.00001
 			)
 		)
+		self.assertEncapsulatedRendersSame( instancer )
 
 		instancer["scale"].setValue( "scale" )
 		self.assertTrue(
@@ -667,6 +699,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 				0.00001
 			)
 		)
+		self.assertEncapsulatedRendersSame( instancer )
 
 		instancer["scale"].setValue( "uniformScale" )
 		self.assertTrue(
@@ -675,6 +708,168 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 				0.00001
 			)
 		)
+		self.assertEncapsulatedRendersSame( instancer )
+
+	def testAnimation( self ) :
+
+		pointA = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [
+			imath.V3f( 4, 0, 0 ), imath.V3f( 6, 0, 0 ), imath.V3f( 8, 0, 0 )
+		] ) )
+		objectToSceneA = GafferScene.ObjectToScene()
+		objectToSceneA["object"].setValue( pointA )
+
+		pointB = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [
+			imath.V3f( 7, 0, 0 ), imath.V3f( 9, 0, 0 ), imath.V3f( 11, 0, 0 )
+		] ) )
+		objectToSceneB = GafferScene.ObjectToScene()
+		objectToSceneB["object"].setValue( pointB )
+
+		switch = Gaffer.Switch()
+		switch.setup( objectToSceneA["out"] )
+		switch["expression"] = Gaffer.Expression()
+		switch["expression"].setExpression( 'parent["index"] = context.getFrame() > 0', "python" )
+		switch["in"][0].setInput( objectToSceneA["out"] )
+		switch["in"][1].setInput( objectToSceneB["out"] )
+
+		allFilter = GafferScene.PathFilter()
+		# It feels weird that we need to explicitly include /group/sphere here, when you
+		# should just be able to set attributes at the root locations and have them inherited,
+		# but we're working around the issue where attributes cannot be inherited from "outside"
+		# a Capsule, and attributes at the root of a Capsule are treated as outside it
+		allFilter["paths"].setValue( IECore.StringVectorData( [ "/*", "/group/sphere" ] ) )
+
+		pointsAttributes = GafferScene.StandardAttributes()
+		pointsAttributes["in"].setInput( switch["out"] )
+		pointsAttributes["attributes"]["transformBlurSegments"]["value"].setValue( 4 )
+		pointsAttributes["attributes"]["transformBlurSegments"]["enabled"].setValue( True )
+		pointsAttributes["attributes"]["deformationBlurSegments"]["value"].setValue( 3 )
+		pointsAttributes["attributes"]["deformationBlurSegments"]["enabled"].setValue( True )
+		pointsAttributes["filter"].setInput( allFilter["out"] )
+
+		pointsOptions = GafferScene.StandardOptions()
+		pointsOptions["in"].setInput( pointsAttributes["out"] )
+		pointsOptions["options"]["transformBlur"]["value"].setValue( True )
+		pointsOptions["options"]["transformBlur"]["enabled"].setValue( True )
+		pointsOptions["options"]["deformationBlur"]["value"].setValue( True )
+		pointsOptions["options"]["deformationBlur"]["enabled"].setValue( True )
+
+		sphere = GafferScene.Sphere()
+		sphere["type"].setValue( GafferScene.Sphere.Type.Primitive )
+		sphere["expression"] = Gaffer.Expression()
+		sphere["expression"].setExpression( """
+parent["transform"]["translate"] = context.getFrame() * imath.V3f( 0, 0, 5 )
+parent["radius"] = ( 2 + context.getFrame() ) * 15
+""" )
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( sphere["out"] )
+		group["expression"] = Gaffer.Expression()
+		group["expression"].setExpression( 'parent["transform"]["translate"] = context.getFrame() * imath.V3f( 0, 7, 0 )' )
+
+		prototypeAttributes = GafferScene.StandardAttributes()
+		prototypeAttributes["in"].setInput( group["out"] )
+		prototypeAttributes["attributes"]["transformBlurSegments"]["value"].setValue( 4 )
+		prototypeAttributes["attributes"]["transformBlurSegments"]["enabled"].setValue( True )
+		prototypeAttributes["attributes"]["deformationBlurSegments"]["value"].setValue( 3 )
+		prototypeAttributes["attributes"]["deformationBlurSegments"]["enabled"].setValue( True )
+		prototypeAttributes["filter"].setInput( allFilter["out"] )
+
+		instancer = GafferScene.Instancer()
+		instancer["in"].setInput( pointsOptions["out"] )
+		instancer["prototypes"].setInput( prototypeAttributes["out"] )
+		instancer["parent"].setValue( "/object" )
+
+		testContext = Gaffer.Context()
+		testContext.setFrame( 0 )
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer( GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch )
+		controller = GafferScene.RenderController( instancer["out"], testContext, renderer )
+		controller.setMinimumExpansionDepth( 1024 )
+		controller.update()
+
+		co = renderer.capturedObject( "/object/instances/group/1/sphere" )
+		self.assertEqual(
+			[ i.translation() for i in co.capturedTransforms() ],
+			[
+				imath.V3f(6, -1.75, -1.25),
+				imath.V3f(6, -0.875, -0.625),
+				imath.V3f(6, 0, 0),
+				imath.V3f(9, 0.875, 0.625),
+				imath.V3f(9, 1.75, 1.25)
+			]
+		)
+		self.assertEqual( [ i.radius() for i in co.capturedSamples() ], [26.25, 28.75, 31.25, 33.75] )
+
+		with testContext:
+
+			self.assertEncapsulatedRendersSame( instancer )
+
+			# Throw a bit of rotation in the mix to make sure we're composing in the correct order when encapsulating
+			group["transform"]["rotate"].setValue( imath.V3f( 30, 30, 0 ) )
+
+			self.assertEncapsulatedRendersSame( instancer )
+
+			group["transform"]["rotate"].setValue( imath.V3f( 0 ) )
+
+
+		# Remove the hierarchy from the prototype - this doesn't make things any harder for the non-encapsulated
+		# case, but it enables a special case in the encapsulated case for protypes without hierarchy
+		prototypeAttributes["in"].setInput( sphere["out"] )
+		with testContext:
+			self.assertEncapsulatedRendersSame( instancer )
+		# Restore hierarchy
+		prototypeAttributes["in"].setInput( group["out"] )
+
+
+		# Now test the nastiest case: the assignment of ids to points changes during the shutter.
+		# It would quite possibly be better to just prohibit this ... but it would be a bit tricky to detect
+		# it and raise an exception in the non-encapsulated case, and we generally want parity between
+		# encapsulated and non-encapsulated. I think I probably want to remove this functionality in
+		# the name of simpler code, but we'll see what John thinks
+		pointB["instanceId"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, IECore.IntVectorData( [ 1, 2, 0 ] ) )
+		objectToSceneB["object"].setValue( pointB )
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer( GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch )
+		controller = GafferScene.RenderController( instancer["out"], testContext, renderer )
+		controller.setMinimumExpansionDepth( 1024 )
+		controller.update()
+
+		co = renderer.capturedObject( "/object/instances/group/1/sphere" )
+		self.assertEqual(
+			[ i.translation() for i in co.capturedTransforms() ],
+			[
+				imath.V3f(6, -1.75, -1.25),
+				imath.V3f(6, -0.875, -0.625),
+				imath.V3f(6, 0, 0),
+				imath.V3f(7, 0.875, 0.625),
+				imath.V3f(7, 1.75, 1.25)
+			]
+		)
+
+		with testContext:
+			self.assertEncapsulatedRendersSame( instancer )
+
+		# Try a different frame, just in case
+		testContext.setFrame( 100 )
+		with testContext:
+			self.assertEncapsulatedRendersSame( instancer )
+		testContext.setFrame( 0 )
+
+		# Finally, the case where things must fail: if the point counts don't match across the shutter,
+		# we must get an exception, whether encapsulating or not.
+
+		pointB = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [ imath.V3f( 0 ) ] * 2 ) )
+		objectToSceneB["object"].setValue( pointB )
+
+		with testContext:
+			with self.assertRaisesRegex( RuntimeError, 'Instancer.out.transform : Instance id "2" is invalid, instancer produces only 2 children. Topology may have changed during shutter.' ):
+				self.assertScenesRenderSame( instancer["out"], instancer["out"], expandProcedurals = True, ignoreLinks = True )
+
+		instancer["encapsulateInstanceGroups"].setValue( True )
+
+		with testContext:
+			with self.assertRaisesRegex( RuntimeError, 'Instance id "2" is invalid, instancer produces only 2 children. Topology may have changed during shutter.' ):
+				self.assertScenesRenderSame( instancer["out"], instancer["out"], expandProcedurals = True, ignoreLinks = True )
 
 	def testIndexedRootsListWithEmptyList( self ) :
 
@@ -717,6 +912,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( instancer["out"].object( "/object/instances/cube/2" ), cube["out"].object( "/cube" ) )
 
 		self.assertSceneValid( instancer["out"] )
+		self.assertEncapsulatedRendersSame( instancer )
 
 	def buildPrototypeRootsScript( self ) :
 
@@ -764,6 +960,12 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		script["group2"]["name"].setValue( "foo" )
 		script["group2"]["in"][0].setInput( script["group"]["out"] )
 
+		# /foo/baseSphere - this won't get attributes assigned in testPrototypeAttributes, allowing us to
+		# test rendering with the attributes inherited from the base of the prototype
+		script["baseSphere"] = GafferScene.Sphere()
+		script["baseSphere"]["name"].setValue( "baseSphere" )
+		script["group2"]["in"][1].setInput( script["baseSphere"]["out"] )
+
 		# /bar/baz/cube
 		script["cube"] = GafferScene.Cube()
 		script["group3"] = GafferScene.Group()
@@ -798,7 +1000,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 		for i in [ "0", "3" ] :
 
-			self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/foo/{i}".format( i=i ) ), IECore.InternedStringVectorData( [ "bar" ] ) )
+			self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/foo/{i}".format( i=i ) ), IECore.InternedStringVectorData( [ "bar", "baseSphere" ] ) )
 			self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/foo/{i}/bar".format( i=i ) ), IECore.InternedStringVectorData( [ "sphere" ] ) )
 
 			self.assertEqual( script["instancer"]["out"].object( "/object/instances/foo/{i}".format( i=i ) ), IECore.NullObject.defaultNullObject() )
@@ -828,7 +1030,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 		for i in [ "0", "1", "2", "3" ] :
 
-			self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/foo/{i}".format( i=i ) ), IECore.InternedStringVectorData( [ "bar" ] ) )
+			self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/foo/{i}".format( i=i ) ), IECore.InternedStringVectorData( [ "bar", "baseSphere" ] ) )
 			self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/foo/{i}/bar".format( i=i ) ), IECore.InternedStringVectorData( [ "sphere" ] ) )
 
 			self.assertEqual( script["instancer"]["out"].object( "/object/instances/foo/{i}".format( i=i ) ), IECore.NullObject.defaultNullObject() )
@@ -887,7 +1089,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 		for i in [ "1", "2" ] :
 
-			self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/foo/{i}".format( i=i ) ), IECore.InternedStringVectorData( [ "bar" ] ) )
+			self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/foo/{i}".format( i=i ) ), IECore.InternedStringVectorData( [ "bar", "baseSphere" ] ) )
 			self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/foo/{i}/bar".format( i=i ) ), IECore.InternedStringVectorData( [ "sphere" ] ) )
 
 			self.assertEqual( script["instancer"]["out"].object( "/object/instances/foo/{i}".format( i=i ) ), IECore.NullObject.defaultNullObject() )
@@ -950,7 +1152,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		for i in [ "0", "1", "2", "3" ] :
 
 			self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/root/{i}".format( i=i ) ), IECore.InternedStringVectorData( [ "foo", "bar" ] ) )
-			self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/root/{i}/foo".format( i=i ) ), IECore.InternedStringVectorData( [ "bar" ] ) )
+			self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/root/{i}/foo".format( i=i ) ), IECore.InternedStringVectorData( [ "bar", "baseSphere" ] ) )
 			self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/root/{i}/foo/bar".format( i=i ) ), IECore.InternedStringVectorData( [ "sphere" ] ) )
 			self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/root/{i}/bar".format( i=i ) ), IECore.InternedStringVectorData( [ "baz" ] ) )
 			self.assertEqual( script["instancer"]["out"].childNames( "/object/instances/root/{i}/bar/baz".format( i=i ) ), IECore.InternedStringVectorData( [ "cube" ] ) )
@@ -970,35 +1172,44 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 		script["instancer"]["prototypeRootsList"].setValue( IECore.StringVectorData( [] ) )
 		self.assertRootsMatchPrototypeSceneChildren( script )
+		self.assertEncapsulatedRendersSame( script["instancer"] )
 
 		script["instancer"]["prototypeRootsList"].setValue( IECore.StringVectorData( [ "", ] ) )
 		self.assertUnderspecifiedRoots( script )
+		self.assertEncapsulatedRendersSame( script["instancer"] )
 
 		script["instancer"]["prototypeRootsList"].setValue( IECore.StringVectorData( [ "/foo", ] ) )
 		self.assertSingleRoot( script )
+		self.assertEncapsulatedRendersSame( script["instancer"] )
 
 		# roots list matching the prototype root children
 		# we expect the same results as without a roots list
 		script["instancer"]["prototypeRootsList"].setValue( IECore.StringVectorData( [ "/foo", "/bar" ] ) )
 		self.assertRootsMatchPrototypeSceneChildren( script )
+		self.assertEncapsulatedRendersSame( script["instancer"] )
 
 		script["instancer"]["prototypeRootsList"].setValue( IECore.StringVectorData( [ "/foo/bar", "/bar" ] ) )
 		self.assertConflictingRootNames( script )
+		self.assertEncapsulatedRendersSame( script["instancer"] )
 
 		# opposite order to the prototype root children
 		script["instancer"]["prototypeRootsList"].setValue( IECore.StringVectorData( [ "/bar", "/foo" ] ) )
 		self.assertSwappedRoots( script )
+		self.assertEncapsulatedRendersSame( script["instancer"] )
 
 		script["instancer"]["prototypeRootsList"].setValue( IECore.StringVectorData( [ "", "/bar" ] ) )
 		self.assertSkippedRoots( script )
+		self.assertEncapsulatedRendersSame( script["instancer"] )
 
 		# roots all the way to the leaf level of the prototype scene
 		script["instancer"]["prototypeRootsList"].setValue( IECore.StringVectorData( [ "/foo/bar/sphere", "/bar/baz/cube" ] ) )
 		self.assertRootsToLeaves( script )
+		self.assertEncapsulatedRendersSame( script["instancer"] )
 
 		# we can specify the root of the prototype scene
 		script["instancer"]["prototypeRootsList"].setValue( IECore.StringVectorData( [ "/" ] ) )
 		self.assertRootsToRoot( script )
+		self.assertEncapsulatedRendersSame( script["instancer"] )
 
 		script["instancer"]["prototypeRootsList"].setValue( IECore.StringVectorData( [ "/foo", "/does/not/exist" ] ) )
 		self.assertRaisesRegex(
@@ -1019,32 +1230,40 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 		script["variables"]["primitiveVariables"]["prototypeRoots"]["value"].setValue( IECore.StringVectorData( [ "", ] ) )
 		self.assertUnderspecifiedRoots( script )
+		self.assertEncapsulatedRendersSame( script["instancer"] )
 
 		script["variables"]["primitiveVariables"]["prototypeRoots"]["value"].setValue( IECore.StringVectorData( [ "/foo", ] ) )
 		self.assertSingleRoot( script )
+		self.assertEncapsulatedRendersSame( script["instancer"] )
 
 		# roots list matching the prototype root children
 		# we expect the same results as without a roots list
 		script["variables"]["primitiveVariables"]["prototypeRoots"]["value"].setValue( IECore.StringVectorData( [ "/foo", "/bar" ] ) )
 		self.assertRootsMatchPrototypeSceneChildren( script )
+		self.assertEncapsulatedRendersSame( script["instancer"] )
 
 		script["variables"]["primitiveVariables"]["prototypeRoots"]["value"].setValue( IECore.StringVectorData( [ "/foo/bar", "/bar" ] ) )
 		self.assertConflictingRootNames( script )
+		self.assertEncapsulatedRendersSame( script["instancer"] )
 
 		# opposite order to the prototype root children
 		script["variables"]["primitiveVariables"]["prototypeRoots"]["value"].setValue( IECore.StringVectorData( [ "/bar", "/foo" ] ) )
 		self.assertSwappedRoots( script )
+		self.assertEncapsulatedRendersSame( script["instancer"] )
 
 		script["variables"]["primitiveVariables"]["prototypeRoots"]["value"].setValue( IECore.StringVectorData( [ "", "/bar" ] ) )
 		self.assertSkippedRoots( script )
+		self.assertEncapsulatedRendersSame( script["instancer"] )
 
 		# roots all the way to the leaf level of the prototype scene
 		script["variables"]["primitiveVariables"]["prototypeRoots"]["value"].setValue( IECore.StringVectorData( [ "/foo/bar/sphere", "/bar/baz/cube" ] ) )
 		self.assertRootsToLeaves( script )
+		self.assertEncapsulatedRendersSame( script["instancer"] )
 
 		# we can specify the root of the prototype scene
 		script["variables"]["primitiveVariables"]["prototypeRoots"]["value"].setValue( IECore.StringVectorData( [ "/" ] ) )
 		self.assertRootsToRoot( script )
+		self.assertEncapsulatedRendersSame( script["instancer"] )
 
 		script["variables"]["primitiveVariables"]["prototypeRoots"]["value"].setValue( IECore.StringVectorData( [ "/foo", "/does/not/exist" ] ) )
 		self.assertRaisesRegex(
@@ -1080,32 +1299,41 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 		updateRoots( IECore.StringVectorData( [ "", ] ), IECore.IntVectorData( [ 0, 0, 0, 0 ] ) )
 		self.assertUnderspecifiedRoots( script )
+		self.assertEncapsulatedRendersSame( script["instancer"] )
 
 		updateRoots( IECore.StringVectorData( [ "/foo", ] ), IECore.IntVectorData( [ 0, 0, 0, 0 ] ) )
 		self.assertSingleRoot( script )
+		self.assertEncapsulatedRendersSame( script["instancer"] )
 
 		# roots list matching the prototype root children
 		# we expect the same results as without a roots list
 		updateRoots( IECore.StringVectorData( [ "/foo", "/bar" ] ), IECore.IntVectorData( [ 0, 1, 1, 0 ] ) )
 		self.assertRootsMatchPrototypeSceneChildren( script )
+		self.assertEncapsulatedRendersSame( script["instancer"] )
 
 		updateRoots( IECore.StringVectorData( [ "/foo/bar", "/bar" ] ), IECore.IntVectorData( [ 0, 1, 1, 0 ] ) )
 		self.assertConflictingRootNames( script )
+		self.assertEncapsulatedRendersSame( script["instancer"] )
 
 		# opposite order to the prototype root children
 		updateRoots( IECore.StringVectorData( [ "/bar", "/foo" ] ), IECore.IntVectorData( [ 0, 1, 1, 0 ] ) )
 		self.assertSwappedRoots( script )
+		self.assertEncapsulatedRendersSame( script["instancer"] )
 
 		updateRoots( IECore.StringVectorData( [ "", "/bar" ] ), IECore.IntVectorData( [ 0, 1, 1, 0 ] ) )
 		self.assertSkippedRoots( script )
+		self.assertEncapsulatedRendersSame( script["instancer"] )
 
 		# roots all the way to the leaf level of the prototype scene
 		updateRoots( IECore.StringVectorData( [ "/foo/bar/sphere", "/bar/baz/cube" ] ), IECore.IntVectorData( [ 0, 1, 1, 0 ] ) )
 		self.assertRootsToLeaves( script )
+		self.assertEncapsulatedRendersSame( script["instancer"] )
 
 		# we can specify the root of the prototype scene
 		updateRoots( IECore.StringVectorData( [ "/", ] ), IECore.IntVectorData( [ 0, 0, 0, 0 ] ) )
 		self.assertRootsToRoot( script )
+
+		self.assertEncapsulatedRendersSame( script["instancer"] )
 
 		updateRoots( IECore.StringVectorData( [ "/foo", "/does/not/exist" ] ), IECore.IntVectorData( [ 0, 1, 1, 0 ] ) )
 		self.assertRaisesRegex(
@@ -1310,6 +1538,8 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertSceneValid( instancer["out"] )
 
+		self.assertEncapsulatedRendersSame( instancer )
+
 	def testNegativeIdsAndIndices( self ) :
 
 		points = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [ imath.V3f( x, 0, 0 ) for x in range( 0, 2 ) ] ) )
@@ -1353,6 +1583,8 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertSceneValid( instancer["out"] )
 
+		self.assertEncapsulatedRendersSame( instancer )
+
 	def testDuplicateIds( self ) :
 
 		points = IECoreScene.PointsPrimitive( IECore.V3fVectorData( [ imath.V3f( x, 0, 0 ) for x in range( 6 ) ] ) )
@@ -1390,6 +1622,8 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( instancer["out"].transform( "/object/instances/sphere/1" ), imath.M44f().translate( imath.V3f( 1, 0, 0 ) ) )
 		self.assertEqual( instancer["out"].transform( "/object/instances/sphere/3" ), imath.M44f().translate( imath.V3f( 4, 0, 0 ) ) )
 		self.assertEqual( instancer["out"].transform( "/object/instances/sphere/4" ), imath.M44f().translate( imath.V3f( 5, 0, 0 ) ) )
+
+		self.assertEncapsulatedRendersSame( instancer )
 
 		instancer["prototypeIndex"].setValue( "prototypeIndex" )
 
@@ -1437,15 +1671,38 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 				IECore.GeometricData.Interpretation.Point
 			),
 		)
+		points["prototypeAttr"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECore.FloatVectorData( [ 12, 13 ] ),
+		)
 
 		objectToScene = GafferScene.ObjectToScene()
 		objectToScene["object"].setValue( points )
 
+		pointsFilter = GafferScene.PathFilter()
+		pointsFilter["paths"].setValue( IECore.StringVectorData( [ '/object' ] ) )
+
+		pointsAttrs = GafferScene.CustomAttributes()
+		pointsAttrs["filter"].setInput( pointsFilter["out"] )
+		pointsAttrs["in"].setInput( objectToScene["out"] )
+		pointsAttrs["attributes"].addChild( Gaffer.NameValuePlug( "inheritedAttr", Gaffer.FloatPlug( "value", defaultValue = 7.0 ), True ) )
+		pointsAttrs["attributes"].addChild( Gaffer.NameValuePlug( "testFloat", Gaffer.FloatPlug( "value", defaultValue = 7.0 ), True ) )
+		pointsAttrs["attributes"].addChild( Gaffer.NameValuePlug( "prototypeAttr", Gaffer.FloatPlug( "value", defaultValue = -1 ), True ) )
+
 		sphere = GafferScene.Sphere()
 
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ '/sphere' ] ) )
+
+		sphereAttributes = GafferScene.CustomAttributes()
+		sphereAttributes["in"].setInput( sphere["out"] )
+		sphereAttributes["filter"].setInput( sphereFilter["out"] )
+		sphereAttributes["attributes"].addChild( Gaffer.NameValuePlug( "prototypeAttr", Gaffer.FloatPlug( "value", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ), True ) )
+		sphereAttributes["attributes"][0]["value"].setValue( 42.0 )
+
 		instancer = GafferScene.Instancer()
-		instancer["in"].setInput( objectToScene["out"] )
-		instancer["prototypes"].setInput( sphere["out"] )
+		instancer["in"].setInput( pointsAttrs["out"] )
+		instancer["prototypes"].setInput( sphereAttributes["out"] )
 		instancer["parent"].setValue( "/object" )
 
 		self.assertEqual(
@@ -1460,8 +1717,10 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual(
 			instancer["out"].attributes( "/object/instances/sphere/0" ),
-			IECore.CompoundObject()
+			IECore.CompoundObject( { 'prototypeAttr' : IECore.FloatData( 42 ) } )
 		)
+
+		self.assertEncapsulatedRendersSame( instancer )
 
 		instancer["attributes"].setValue( "testFloat testColor testPoint" )
 
@@ -1473,7 +1732,8 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 				"testPoint" : IECore.V3fData(
 					imath.V3f( 0 ),
 					IECore.GeometricData.Interpretation.Point
-				)
+				),
+				'prototypeAttr' : IECore.FloatData( 42 )
 			} )
 		)
 
@@ -1485,9 +1745,12 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 				"testPoint" : IECore.V3fData(
 					imath.V3f( 1 ),
 					IECore.GeometricData.Interpretation.Point
-				)
+				),
+				'prototypeAttr' : IECore.FloatData( 42 )
 			} )
 		)
+
+		self.assertEncapsulatedRendersSame( instancer )
 
 		instancer["attributePrefix"].setValue( "user:" )
 
@@ -1499,7 +1762,8 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 				"user:testPoint" : IECore.V3fData(
 					imath.V3f( 0 ),
 					IECore.GeometricData.Interpretation.Point
-				)
+				),
+				'prototypeAttr' : IECore.FloatData( 42 )
 			} )
 		)
 
@@ -1511,9 +1775,12 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 				"user:testPoint" : IECore.V3fData(
 					imath.V3f( 1 ),
 					IECore.GeometricData.Interpretation.Point
-				)
+				),
+				'prototypeAttr' : IECore.FloatData( 42 )
 			} )
 		)
+
+		self.assertEncapsulatedRendersSame( instancer )
 
 		instancer["attributePrefix"].setValue( "foo:" )
 
@@ -1525,7 +1792,8 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 				"foo:testPoint" : IECore.V3fData(
 					imath.V3f( 0 ),
 					IECore.GeometricData.Interpretation.Point
-				)
+				),
+				'prototypeAttr' : IECore.FloatData( 42 )
 			} )
 		)
 
@@ -1537,9 +1805,31 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 				"foo:testPoint" : IECore.V3fData(
 					imath.V3f( 1 ),
 					IECore.GeometricData.Interpretation.Point
-				)
+				),
+				'prototypeAttr' : IECore.FloatData( 42 )
 			} )
 		)
+
+		self.assertEncapsulatedRendersSame( instancer )
+
+		# Test that point attributes can override prototype attributes
+		instancer["attributePrefix"].setValue( "" )
+		instancer["attributes"].setValue( "testFloat testColor testPoint prototypeAttr" )
+
+		self.assertEqual(
+			instancer["out"].attributes( "/object/instances/sphere/0" ),
+			IECore.CompoundObject( {
+				"testFloat" : IECore.FloatData( 0.0 ),
+				"testColor" : IECore.Color3fData( imath.Color3f( 1, 0, 0 ) ),
+				"testPoint" : IECore.V3fData(
+					imath.V3f( 0 ),
+					IECore.GeometricData.Interpretation.Point
+				),
+				'prototypeAttr' : IECore.FloatData( 12 )
+			} )
+		)
+
+		self.assertEncapsulatedRendersSame( instancer )
 
 	def testEmptyAttributesHaveConstantHash( self ) :
 
@@ -1618,6 +1908,8 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 			} )
 		)
 
+		self.assertEncapsulatedRendersSame( instancer )
+
 	def testPrototypeAttributes( self ) :
 
 		script = self.buildPrototypeRootsScript()
@@ -1662,6 +1954,8 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 			self.assertEqual( script["instancer"]["out"].attributes( "/object/instances/bar/{i}/baz/cube".format( i=i ) )["gaffer:deformationBlur"].value, False )
 
 		self.assertSceneValid( script["instancer"]["out"] )
+
+		self.assertEncapsulatedRendersSame( script["instancer"] )
 
 	def testUnconnectedInstanceInput( self ) :
 
@@ -1794,6 +2088,10 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		customAttributes["attributes"].addChild( Gaffer.NameValuePlug( "seedAttr", Gaffer.IntPlug( "value", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ), True, "member8" ) )
 		customAttributes["attributes"].addChild( Gaffer.NameValuePlug( "frameAttr", Gaffer.FloatPlug( "value", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ), True, "member9" ) )
 
+
+		# NOTE : It kinda feels like we ought to be able to omit the default values, and just use
+		# context["floatVar"] - but this fails because for some evaluations ( like deciding the bounding box
+		# of the whole output group ), we use the bound of the prototype with the context variable unset
 		customAttributes["ReadContextExpression"] = Gaffer.Expression()
 		customAttributes["ReadContextExpression"].setExpression( inspect.cleandoc(
 			"""
@@ -1876,12 +2174,16 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( childNameStrings( "points/instances/plane" ), [] )
 		self.assertEqual( childNameStrings( "points/instances/sphere" ), [] )
 
+		self.assertEncapsulatedRendersSame( instancer )
+
 		instancer["prototypeMode"].setValue( GafferScene.Instancer.PrototypeMode.RootPerVertex )
 		instancer["prototypeRoots"].setValue( "indexedRoots" )
 		self.assertEqual( uniqueCounts(), { "" : 3 } )
 		self.assertEqual( childNameStrings( "points/instances/cube" ), [ str(i) for i in range( 0, 34 ) ] )
 		self.assertEqual( childNameStrings( "points/instances/plane" ), [ str(i) for i in range( 34, 68 ) ] )
 		self.assertEqual( childNameStrings( "points/instances/sphere" ), [ str(i) for i in range( 68, 100 ) ] )
+
+		self.assertEncapsulatedRendersSame( instancer )
 
 		instancer["prototypeRoots"].setValue( "unindexedRoots" )
 		"""
@@ -1897,6 +2199,8 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( childNameStrings( "points/instances/plane" ), [] )
 		self.assertEqual( childNameStrings( "points/instances/sphere" ), [] )
 
+		self.assertEncapsulatedRendersSame( instancer )
+
 		instancer["prototypeMode"].setValue( GafferScene.Instancer.PrototypeMode.IndexedRootsList )
 		instancer["prototypeIndex"].setValue( 'intVar' )
 
@@ -1905,6 +2209,8 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( childNameStrings( "points/instances/cube" ), [ str(i) for i in range( 1, 100, 4 ) ] )
 		self.assertEqual( childNameStrings( "points/instances/plane" ), [ str(i) for i in range( 2, 100, 4 ) ] )
 		self.assertEqual( childNameStrings( "points/instances/sphere" ), [ str(i) for i in range( 3, 100, 4 ) ] )
+
+		self.assertEncapsulatedRendersSame( instancer )
 
 		# No context overrides yet
 		testAttributes( frameAttr = [ 1 ] * 25 )
@@ -1918,10 +2224,14 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		# Check both the global unique count, and the per-context variable unique counts
 		self.assertEqual( uniqueCounts(), { "" : 100, "floatVar" : 100 } )
 
+		self.assertEncapsulatedRendersSame( instancer )
+
 		# With massive quantization, all values collapse
 		instancer["contextVariables"][0]["quantize"].setValue( 100 )
 		testAttributes( frameAttr = [ 1 ] * 25, floatAttr = [ 0 for i in range(0, 100, 4) ] )
 		self.assertEqual( uniqueCounts(), { "" : 4, "floatVar" : 1 } )
+
+		self.assertEncapsulatedRendersSame( instancer )
 
 		# With moderate quantization, we can see how different prototypes combine with the contexts to produce
 		# more unique values
@@ -1930,13 +2240,19 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		testAttributes( frameAttr = [ 1 ] * 25, floatAttr = floatExpected )
 		self.assertEqual( uniqueCounts(), { "" : 20, "floatVar" : 5 } )
 
+		self.assertEncapsulatedRendersSame( instancer )
+
 		instancer["prototypeRootsList"].setValue( IECore.StringVectorData( [ "withAttrs", "cube", "plane", "sphere" ] ) )
 		testAttributes( frameAttr = [ 1 ] * 25, floatAttr = floatExpected )
 		self.assertEqual( uniqueCounts(), { "" : 20, "floatVar" : 5 } )
 
+		self.assertEncapsulatedRendersSame( instancer )
+
 		# Test an empty root
 		instancer["prototypeRootsList"].setValue( IECore.StringVectorData( [ "withAttrs", "", "plane", "sphere" ] ) )
 		self.assertEqual( uniqueCounts(), { "" : 15, "floatVar" : 5 } )
+
+		self.assertEncapsulatedRendersSame( instancer )
 
 		# Now lets just focus on context variation
 		instancer["prototypeRootsList"].setValue( IECore.StringVectorData( [] ) )
@@ -1944,6 +2260,8 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		floatExpected = [ compatRound( 2 * math.sin( i ) ) for i in range(0, 100) ]
 		testAttributes( frameAttr = [ 1 ] * 100, floatAttr = floatExpected )
 		self.assertEqual( uniqueCounts(), { "" : 5, "floatVar" : 5 } )
+
+		self.assertEncapsulatedRendersSame( instancer )
 
 		# Add a second context variation
 		instancer["contextVariables"].addChild( GafferScene.Instancer.ContextVariablePlug( "context" ) )
@@ -1955,11 +2273,15 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		)
 		self.assertEqual( uniqueCounts(), { "floatVar" : 5, "vectorVar" : 100, "" : 100 } )
 
+		self.assertEncapsulatedRendersSame( instancer )
+
 		instancer["contextVariables"][1]["quantize"].setValue( 10 )
 		testAttributes( frameAttr = [ 1 ] * 100, floatAttr = floatExpected,
 			vectorAttr = [ imath.V3f( quant( i + 2, 10 ), quant( i + 3, 10 ), quant( i + 4, 10 ) ) for i in range(0, 100) ]
 		)
 		self.assertEqual( uniqueCounts(), { "floatVar" : 5, "vectorVar" : 31, "" : 64 } )
+
+		self.assertEncapsulatedRendersSame( instancer )
 
 		# Try all the different types
 		instancer["contextVariables"][1]["name"].setValue( "uvVar" )
@@ -1970,11 +2292,15 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		)
 		self.assertEqual( uniqueCounts(), { "floatVar" : 5, "uvVar" : 100, "" : 100 } )
 
+		self.assertEncapsulatedRendersSame( instancer )
+
 		instancer["contextVariables"][1]["quantize"].setValue( 1 )
 		testAttributes( frameAttr = [ 1 ] * 100, floatAttr = floatExpected,
 			uvAttr = [ imath.V2f( compatRound( i * 0.01 ), compatRound( i * 0.02 ) ) for i in range(0, 100) ]
 		)
 		self.assertEqual( uniqueCounts(), { "floatVar" : 5, "uvVar" : 4, "" : 20 } )
+
+		self.assertEncapsulatedRendersSame( instancer )
 
 
 		instancer["contextVariables"][1]["name"].setValue( "intVar" )
@@ -1985,11 +2311,15 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		)
 		self.assertEqual( uniqueCounts(), { "floatVar" : 5, "intVar" : 100, "" : 100 } )
 
+		self.assertEncapsulatedRendersSame( instancer )
+
 		instancer["contextVariables"][1]["quantize"].setValue( 10 )
 		testAttributes( frameAttr = [ 1 ] * 100, floatAttr = floatExpected,
 			intAttr = [ quant( i, 10 ) for i in range(0, 100) ]
 		)
 		self.assertEqual( uniqueCounts(), { "floatVar" : 5, "intVar" : 11, "" : 48 } )
+
+		self.assertEncapsulatedRendersSame( instancer )
 
 
 		instancer["contextVariables"][1]["name"].setValue( "stringVar" )
@@ -1999,6 +2329,8 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 			stringAttr = [ "foo%i" % ( i / 34 ) for i in range(100) ]
 		)
 		self.assertEqual( uniqueCounts(), { "floatVar" : 5, "stringVar" : 3, "" : 15 } )
+
+		self.assertEncapsulatedRendersSame( instancer )
 
 		instancer["contextVariables"][1]["quantize"].setValue( 10 )
 		self.assertRaisesRegex(
@@ -2019,11 +2351,15 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		)
 		self.assertEqual( uniqueCounts(), { "floatVar" : 5, "colorVar" : 100, "" : 100 } )
 
+		self.assertEncapsulatedRendersSame( instancer )
+
 		instancer["contextVariables"][1]["quantize"].setValue( 1 )
 		testAttributes( frameAttr = [ 1 ] * 100, floatAttr = floatExpected,
 			colorAttr = [ imath.Color3f( compatRound( i * 0.1 + 2 ), compatRound( i * 0.1 + 3 ), compatRound( i * 0.1 + 4 ) ) for i in range(0, 100) ]
 		)
 		self.assertEqual( uniqueCounts(), { "floatVar" : 5, "colorVar" : 11, "" : 48 } )
+
+		self.assertEncapsulatedRendersSame( instancer )
 
 		instancer["contextVariables"][1]["name"].setValue( "color4fVar" )
 		instancer["contextVariables"][1]["quantize"].setValue( 0 )
@@ -2033,11 +2369,15 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		)
 		self.assertEqual( uniqueCounts(), { "floatVar" : 5, "color4fVar" : 100, "" : 100 } )
 
+		self.assertEncapsulatedRendersSame( instancer )
+
 		instancer["contextVariables"][1]["quantize"].setValue( 1 )
 		testAttributes( frameAttr = [ 1 ] * 100, floatAttr = floatExpected,
 			color4fAttr = [ imath.Color4f( compatRound( i * 0.1 + 2 ), compatRound( i * 0.1 + 3 ), compatRound( i * 0.1 + 4 ), compatRound( i * 0.1 + 5 ) ) for i in range(0, 100) ]
 		)
 		self.assertEqual( uniqueCounts(), { "floatVar" : 5, "color4fVar" : 11, "" : 48 } )
+
+		self.assertEncapsulatedRendersSame( instancer )
 
 		# Set a high quantize so we can see how these variations interact with other types of variations
 		instancer["contextVariables"][1]["quantize"].setValue( 10 )
@@ -2045,16 +2385,22 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		testAttributes( frameAttr = [ 1 ] * 100, floatAttr = floatExpected, color4fAttr = color4fExpected )
 		self.assertEqual( uniqueCounts(), { "floatVar" : 5, "color4fVar" : 4, "" : 20 } )
 
+		self.assertEncapsulatedRendersSame( instancer )
+
 		instancer["seedEnabled"].setValue( True )
 		instancer["rawSeed"].setValue( True )
 		testAttributes( frameAttr = [ 1 ] * 100, floatAttr = floatExpected, color4fAttr = color4fExpected, seedAttr = list( range( 100 ) ) )
 		self.assertEqual( uniqueCounts(), { "floatVar" : 5, "color4fVar" : 4, "seed" : 100, "" : 100 } )
+
+		self.assertEncapsulatedRendersSame( instancer )
 
 		instancer["rawSeed"].setValue( False )
 		instancer["seeds"].setValue( 10 )
 		testAttributes( frameAttr = [ 1 ] * 100, floatAttr = floatExpected, color4fAttr = color4fExpected, seedAttr_seedCount = 10 )
 		initialFirstVal = instancer['out'].attributes( '/points/instances/withAttrs/0/sphere' )["seedAttr"]
 		self.assertEqual( uniqueCounts(), { "floatVar" : 5, "color4fVar" : 4, "seed" : 10, "" : 67 } )
+
+		self.assertEncapsulatedRendersSame( instancer )
 
 		# Changing the seed changes individual values, but not the overall behaviour
 		instancer["seedPermutation"].setValue( 1 )
@@ -2063,10 +2409,14 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		# Total variation count is a bit different because the different variation sources line up differently
 		self.assertEqual( uniqueCounts(), { "floatVar" : 5, "color4fVar" : 4, "seed" : 10, "" : 69 } )
 
+		self.assertEncapsulatedRendersSame( instancer )
+
 		# If we generate 100 seeds from 100 ids, we will get many collisions, and only 67 unique values
 		instancer["seeds"].setValue( 100 )
 		testAttributes( frameAttr = [ 1 ] * 100, floatAttr = floatExpected, color4fAttr = color4fExpected, seedAttr_seedCount = 67 )
 		self.assertEqual( uniqueCounts(), { "floatVar" : 5, "color4fVar" : 4, "seed" : 67, "" : 94 } )
+
+		self.assertEncapsulatedRendersSame( instancer )
 
 		# Now turn on time offset as well and play with everything together
 		instancer["seeds"].setValue( 10 )
@@ -2075,6 +2425,8 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		instancer["timeOffset"]["quantize"].setValue( 0.0 )
 		testAttributes( frameAttr = [ 1 + 2 * math.sin( i ) for i in range(0, 100) ], floatAttr = floatExpected, color4fAttr = color4fExpected, seedAttr_seedCount = 10 )
 		self.assertEqual( uniqueCounts(), { "floatVar" : 5, "color4fVar" : 4, "seed" : 10, "frame" : 100, "" : 100 } )
+
+		self.assertEncapsulatedRendersSame( instancer )
 
 		instancer["timeOffset"]["quantize"].setValue( 0.5 )
 		self.assertEqual( uniqueCounts(), { "floatVar" : 5, "color4fVar" : 4, "seed" : 10, "frame" : 9, "" : 82 } )
@@ -2087,11 +2439,15 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		with c:
 			testAttributes( frameAttr = [ i + 42 for i in floatExpected ], floatAttr = floatExpected, color4fAttr = color4fExpected, seedAttr_seedCount = 10 )
 			self.assertEqual( uniqueCounts(), { "floatVar" : 5, "color4fVar" : 4, "seed" : 10, "frame" : 5, "" : 69 } )
+			self.assertEncapsulatedRendersSame( instancer )
+
 
 		# Now reduce back down the variations to test different cumulative combinations
 		instancer["seedEnabled"].setValue( False )
 		testAttributes( frameAttr = [ i + 1 for i in floatExpected ], floatAttr = floatExpected, color4fAttr = color4fExpected )
 		self.assertEqual( uniqueCounts(), { "floatVar" : 5, "color4fVar" : 4, "frame" : 5, "" : 20 } )
+
+		self.assertEncapsulatedRendersSame( instancer )
 
 		# With just one context var, driven by the same prim var as frame, with the same quantization,
 		# the variations don't multiply
@@ -2099,15 +2455,21 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		testAttributes( frameAttr = [ i + 1 for i in floatExpected ], floatAttr = floatExpected )
 		self.assertEqual( uniqueCounts(), { "floatVar" : 5, "frame" : 5, "" : 5 } )
 
+		self.assertEncapsulatedRendersSame( instancer )
+
 		# Using a different source primVar means the variations will multiply
 		instancer["timeOffset"]["name"].setValue( 'intVar' )
 		instancer["timeOffset"]["quantize"].setValue( 0 )
 		testAttributes( frameAttr = [ i + 1 for i in range(100) ], floatAttr = floatExpected )
 		self.assertEqual( uniqueCounts(), { "floatVar" : 5, "frame" : 100, "" : 100 } )
 
+		self.assertEncapsulatedRendersSame( instancer )
+
 		instancer["timeOffset"]["quantize"].setValue( 20 )
 		testAttributes( frameAttr = [ ((i+10)//20)*20 + 1 for i in range(100) ], floatAttr = floatExpected )
 		self.assertEqual( uniqueCounts(), { "floatVar" : 5, "frame" : 6, "" : 30 } )
+
+		self.assertEncapsulatedRendersSame( instancer )
 
 
 		# Test with multiple point sources
@@ -2140,11 +2502,15 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertAlmostEqual( instancer['out'].attributes( "points2/instances/withAttrs/5/sphere" )["floatAttr"].value, 2.5 )
 		self.assertEqual( uniqueCounts(), { "floatVar" : 30, "" : 30 } )
 
+		self.assertEncapsulatedRendersSame( instancer )
+
 		instancer["contextVariables"][0]["quantize"].setValue( 0.2001 )
 		self.assertAlmostEqual( instancer['out'].attributes( "points/instances/withAttrs/2/sphere" )["floatAttr"].value, 0.2001, places = 6 )
 		self.assertAlmostEqual( instancer['out'].attributes( "points1/instances/withAttrs/3/sphere" )["floatAttr"].value, 1.2006, places = 6 )
 		self.assertAlmostEqual( instancer['out'].attributes( "points2/instances/withAttrs/5/sphere" )["floatAttr"].value, 2.4012, places = 6 )
 		self.assertEqual( uniqueCounts(), { "floatVar" : 15, "" : 15 } )
+
+		self.assertEncapsulatedRendersSame( instancer )
 
 
 		# Test invalid location

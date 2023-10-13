@@ -177,6 +177,7 @@ enum TypeId
 	FramingConstraintTypeId = 110633,
 	MeshNormalsTypeId = 110634,
 	ImageScatterTypeId = 110635,
+	InstancerCapsuleTypeId = 110636,
 
 	PreviewPlaceholderTypeId = 110647,
 	PreviewGeometryTypeId = 110648,

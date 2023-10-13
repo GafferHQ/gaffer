@@ -41,9 +41,12 @@
 #include "GafferScene/SceneAlgo.h"
 
 #include "GafferScene/Private/ChildNamesMap.h"
+#include "GafferScene/Private/RendererAlgo.h"
+#include "GafferScene/Private/IECoreScenePreview/Renderer.h"
 
 #include "Gaffer/Context.h"
 #include "Gaffer/StringPlug.h"
+#include "Gaffer/Private/IECorePreview/LRUCache.h"
 
 #include "IECoreScene/Primitive.h"
 
@@ -942,6 +945,95 @@ class Instancer::EngineData : public Data
 
 		std::unordered_map< InternedString, std::vector<int> > m_pointIndicesForPrototype;
 };
+
+
+//////////////////////////////////////////////////////////////////////////
+// InstancerCapsule
+//////////////////////////////////////////////////////////////////////////
+
+// We can achieve better performance using a special capsule that understands EngineData instead of
+// using a generic Capsule that only understands generic ScenePlugs
+class Instancer::InstancerCapsule : public Capsule
+{
+
+	public :
+
+		InstancerCapsule()
+			: m_instancer( nullptr )
+		{
+		}
+
+		InstancerCapsule(
+			const Instancer *instancer,
+			const ScenePlug::ScenePath &root,
+			const Gaffer::Context &context,
+			const IECore::MurmurHash &hash,
+			const Imath::Box3f &bound
+		)
+			: Capsule( instancer->capsuleScenePlug(), root, context, hash, bound ),
+				m_instancer( instancer )
+		{
+		}
+
+		~InstancerCapsule() override
+		{
+		}
+
+		IE_CORE_DECLAREEXTENSIONOBJECT( InstancerCapsule, GafferScene::InstancerCapsuleTypeId, GafferScene::Capsule );
+
+		// Defined at the bottom of this file, where it makes more sense
+		void render( IECoreScenePreview::Renderer *renderer ) const override;
+
+	private :
+
+		const Instancer *m_instancer;
+};
+
+IE_CORE_DEFINEOBJECTTYPEDESCRIPTION( Instancer::InstancerCapsule );
+
+bool Instancer::InstancerCapsule::isEqualTo( const IECore::Object *other ) const
+{
+	return Capsule::isEqualTo( other );
+}
+
+void Instancer::InstancerCapsule::hash( IECore::MurmurHash &h ) const
+{
+	Capsule::hash( h );
+}
+
+void Instancer::InstancerCapsule::copyFrom( const IECore::Object *other, IECore::Object::CopyContext *context )
+{
+	Capsule::copyFrom( other, context );
+
+	const InstancerCapsule *instancerCapsule = static_cast<const InstancerCapsule *>( other );
+
+	m_instancer = instancerCapsule->m_instancer;
+}
+
+void Instancer::InstancerCapsule::save( IECore::Object::SaveContext *context ) const
+{
+	// Parent class just takes care of printing warning about not being supported
+	Capsule::save( context );
+}
+
+void Instancer::InstancerCapsule::load( IECore::Object::LoadContextPtr context )
+{
+	// Parent class just takes care of printing warning about not being supported
+	Capsule::load( context );
+}
+
+void Instancer::InstancerCapsule::memoryUsage( IECore::Object::MemoryAccumulator &accumulator ) const
+{
+	Capsule::memoryUsage( accumulator );
+
+	// The size of the base class is already included, so no need to duplicate that
+	accumulator.accumulate( sizeof( InstancerCapsule ) - sizeof( Capsule ) );
+
+}
+
+// Implementation of InstancerCapsule::render()
+// is defined at the bottom of this file, where it makes more sense
+
 
 //////////////////////////////////////////////////////////////////////////
 // Instancer
@@ -2112,8 +2204,8 @@ IECore::ConstObjectPtr Instancer::computeObject( const ScenePath &path, const Ga
 		parentAndBranchPaths( path, sourcePath, branchPath );
 		if( branchPath.size() == 2 )
 		{
-			return new Capsule(
-				capsuleScenePlug(),
+			return new InstancerCapsule(
+				this,
 				context->get<ScenePlug::ScenePath>( ScenePlug::scenePathContextName ) ,
 				*context,
 				outPlug()->objectPlug()->hash(),
@@ -2398,6 +2490,11 @@ void Instancer::engineHash( const ScenePath &sourcePath, const Gaffer::Context *
 	enginePlug()->hash( h );
 }
 
+const std::type_info &Instancer::instancerCapsuleTypeInfo()
+{
+	return typeid( InstancerCapsule );
+}
+
 Instancer::PrototypeScope::PrototypeScope( const Gaffer::ObjectPlug *enginePlug, const Gaffer::Context *context, const ScenePath *sourcePath, const ScenePath *branchPath )
 	:	Gaffer::Context::EditableScope( context )
 {
@@ -2438,4 +2535,329 @@ void Instancer::PrototypeScope::setPrototype( const EngineData *engine, const Sc
 	{
 		set( ScenePlug::scenePathContextName, prototypeRoot );
 	}
+}
+
+namespace
+{
+
+// It shouldn't be necessary for this to be refcounted - but LRUCache is set up to make it impossible
+// to get a pointer to the internal storage, since things could be evicted. We are disabling evictions,
+// but we're still stuck with needing a shared pointer of some sort.
+struct Prototype : public IECore::RefCounted
+{
+	Prototype(
+		const ScenePlug *prototypesPlug, const ScenePlug::ScenePath *prototypeRoot,
+		const std::vector<float> &sampleTimes, const IECore::MurmurHash &hash,
+		const GafferScene::Private::RendererAlgo::RenderOptions &renderOptions,
+		const Context *prototypeContext,
+		IECoreScenePreview::Renderer *renderer,
+		bool prepareRendererAttributes
+	)
+	{
+		const float onFrameTime = prototypeContext->getFrame();
+
+		Context::EditableScope scope( prototypeContext );
+
+		scope.set( ScenePlug::scenePathContextName, prototypeRoot );
+
+		m_attributes = prototypesPlug->attributesPlug()->getValue();
+		if( prepareRendererAttributes )
+		{
+			m_rendererAttributes = renderer->attributes( m_attributes.get() );
+		}
+
+		for( unsigned int i = 0; i < sampleTimes.size(); i++ )
+		{
+			scope.setFrame( sampleTimes[i] );
+			m_transforms.push_back( prototypesPlug->transformPlug()->getValue() );
+		}
+
+		IECore::MurmurHash h = hash;
+		h.append( prototypeContext->hash() );
+
+		// We find the capsules using the engine at shutter open, but the time used to construct the capsules
+		// must be the on-frame time, since the capsules will add their own shutter
+		scope.setFrame( onFrameTime );
+
+		if( prototypesPlug->childNamesPlug()->getValue()->readable().size() == 0 )
+		{
+			if( !renderOptions.purposeIncluded( m_attributes.get() ) )
+			{
+				// This prototype is not included. Leave m_object empty, which means this prototype will be skipped.
+				return;
+			}
+
+			GafferScene::Private::RendererAlgo::deformationMotionTimes( renderOptions, m_attributes.get(), m_objectSampleTimes );
+			GafferScene::Private::RendererAlgo::objectSamples( prototypesPlug->objectPlug(), m_objectSampleTimes, m_object );
+
+			m_objectPointers.reserve( m_object.size() );
+			for( ConstObjectPtr &i : m_object )
+			{
+				m_objectPointers.push_back( i.get() );
+			}
+		}
+		else
+		{
+			// \todo - are there situations where this will be slow, and the renderer doesn't use it?
+			const Box3f bound = prototypesPlug->boundPlug()->getValue();
+
+			CapsulePtr newCapsule = new Capsule(
+				prototypesPlug,
+				*prototypeRoot,
+				*prototypeContext,
+				h,
+				bound
+			);
+
+			// Pass through our render options to the sub-capsules
+			newCapsule->setRenderOptions( renderOptions );
+			m_object.push_back( std::move( newCapsule ) );
+		}
+	}
+
+	std::vector<ConstObjectPtr> m_object;
+
+	// Rather awkwardly, we need to store the objects as raw pointers as well, because Renderer::object
+	// requires a vector of pointers for the animated case.
+	std::vector<const Object *> m_objectPointers;
+	std::vector<float> m_objectSampleTimes;
+	ConstCompoundObjectPtr m_attributes;
+	IECoreScenePreview::Renderer::AttributesInterfacePtr m_rendererAttributes;
+	std::vector<M44f> m_transforms;
+};
+
+typedef boost::intrusive_ptr< const Prototype > ConstPrototypePtr;
+
+struct PrototypeCacheGetterKey
+{
+
+	PrototypeCacheGetterKey( const Context *context )
+		: context( context )
+	{
+	}
+
+	operator IECore::MurmurHash () const
+	{
+		return context->hash();
+	}
+
+	const Context *context;
+};
+
+} // namespace
+
+void Instancer::InstancerCapsule::render( IECoreScenePreview::Renderer *renderer ) const
+{
+	if( !renderer )
+	{
+		throw IECore::Exception( "Null renderer passed to InstancerCapsule" );
+	}
+	throwIfNoScene();
+
+	// ============================================================================
+	// Prepare context for scene evaluation
+	// ============================================================================
+
+	const float onFrameTime = context()->getFrame();
+	Context::EditableScope scope( context() );
+
+	const ScenePlug::ScenePath enginePath( root().begin(), root().begin() + root().size() - 2 );
+
+	const GafferScene::Private::RendererAlgo::RenderOptions renderOpts = renderOptions();
+
+	// This is a bit of a weird convention for using a const variable with an initialization that doesn't
+	// fit in one line ... not sure how I feel about it. In this case, it's crucial that sampleTimes is
+	// const, because it is used from multiple threads simultaneously.
+	const vector<float> sampleTimes = [this, &enginePath, &renderOpts]()
+	{
+		vector<float> result;
+		const ConstCompoundObjectPtr sceneAttributes = m_instancer->inPlug()->fullAttributes( enginePath );
+		GafferScene::Private::RendererAlgo::transformMotionTimes( renderOpts, sceneAttributes.get(), result );
+
+		if( result.size() == 0 )
+		{
+			result.push_back( context()->getFrame() );
+		}
+
+		return result;
+	}();
+
+	// ============================================================================
+	// Get the Engines
+	// ============================================================================
+
+	std::vector< ConstEngineDataPtr > engines( sampleTimes.size() );
+	for( unsigned int i = 0; i < sampleTimes.size(); i++ )
+	{
+		scope.setFrame( sampleTimes[i] );
+		engines[i] = m_instancer->engine( enginePath, scope.context() );
+	}
+
+	scope.setFrame( onFrameTime );
+
+	// ============================================================================
+	// Get a constant prototype ( or set up cache that will be used to find
+	// prototypes if the protoype is not constant )
+	// ============================================================================
+	const ScenePlug::ScenePath *prototypeRoot = engines[0]->prototypeRoot( root().back() );
+
+	const ScenePlug *prototypesPlug = m_instancer->prototypesPlug();
+
+	const IECore::MurmurHash outerCapsuleHash = Object::hash();
+
+	const bool hasAttributes = engines[0]->numInstanceAttributes() > 0;
+
+	// If constantPrototype is set, then every instance will use the same prototype.
+	ConstPrototypePtr constantPrototype;
+	if( !engines[0]->hasContextVariables() )
+	{
+		constantPrototype = new Prototype(
+			prototypesPlug, prototypeRoot, sampleTimes, outerCapsuleHash, renderOpts,
+			scope.context(), renderer,
+			// If we don't have instance attributes, we can prepare renderer attributes ahead of time
+			!hasAttributes
+		);
+	}
+
+	// If constantPrototype is not set, we will put prototypes in this cache whenever we first encounter
+	// a prototype using a given context.
+	IECorePreview::LRUCache<IECore::MurmurHash, ConstPrototypePtr, IECorePreview::LRUCachePolicy::Parallel, PrototypeCacheGetterKey> prototypeCache(
+		[
+			&prototypesPlug, &prototypeRoot, &sampleTimes, &outerCapsuleHash, &renderOpts,
+			&renderer, &hasAttributes
+		]
+		( const PrototypeCacheGetterKey &key, size_t &cost, const IECore::Canceller *canceller ) -> ConstPrototypePtr
+		{
+			cost = 1;
+			return new Prototype(
+				prototypesPlug, prototypeRoot, sampleTimes, outerCapsuleHash, renderOpts,
+				key.context, renderer,
+				// If we don't have instance attributes, we can prepare renderer attributes ahead of time
+				!hasAttributes
+			);
+		},
+		std::numeric_limits<size_t>::max() // Never evict, even if prototypes are all unique
+	);
+
+	// ============================================================================
+	// Output the instances
+	// ============================================================================
+
+	const std::vector<int> &pointIndicesForPrototype = engines[0]->pointIndicesForPrototype( root().back() );
+
+	// We've found problems with performance when running too many iterations in parallel, which appear
+	// to be related with hitting AiNode too hard in parallel ( perhaps related to threads spread between
+	// separate processors ). To partially solve this, we set the grain size so that we shouldn't use more
+	// than 32 threads, which appears to help some in testing.
+	size_t grainSize = std::max( (size_t)1, pointIndicesForPrototype.size() / 32 );
+	task_group_context taskGroupContext( task_group_context::isolated );
+
+	const ThreadState &threadState = ThreadState::current();
+	tbb::parallel_for( tbb::blocked_range<size_t>( 0, pointIndicesForPrototype.size(), grainSize ),
+		[&]( const tbb::blocked_range<size_t> &r )
+		{
+			Context::EditableScope prototypeScope( threadState );
+
+			vector<M44f> pointTransforms( sampleTimes.size() );
+			std::string name;
+			IECoreScenePreview::Renderer::AttributesInterfacePtr attribsStorage;
+
+
+			for( size_t idx = r.begin(); idx != r.end(); ++idx )
+			{
+				int pointIndex = pointIndicesForPrototype[idx];
+
+				const Prototype *proto;
+				if( constantPrototype )
+				{
+					proto = constantPrototype.get();
+				}
+				else
+				{
+					// The prototype depends on the context, so we need to find the prototype context for
+					// this instance.
+
+
+					// We find the capsules using the engine at shutter open, but the time used to construct the capsules
+					// must be the on-frame time, since the capsules will add their own shutter ( and we also handle
+					// the shutter ourselves for transform matrices )
+					//
+					// For most context variables, we are overwriting them for each prototype anyway, so
+					// we can reuse the context. But timeOffset is relative, so it's important that we reset the
+					// time before we do setPrototypeContextVariables for the next element. ( Should this be more
+					// general instead of assuming that frame is the only variable for which offsetMode may be set? )
+					prototypeScope.setFrame( onFrameTime );
+
+					engines[0]->setPrototypeContextVariables( pointIndex, prototypeScope );
+
+					proto = prototypeCache.get( PrototypeCacheGetterKey( prototypeScope.context() ) ).get();
+				}
+
+				if( !proto->m_object.size() )
+				{
+					// No object to render. This could happen if the protype didn't meet the
+					// RenderOptions::purposeIncluded test.
+					continue;
+				}
+
+				IECoreScenePreview::Renderer::AttributesInterface *attribs;
+				if( hasAttributes )
+				{
+					CompoundObjectPtr currentAttributes = new CompoundObject();
+
+					// Since we're not going to modify any existing members (only add new ones),
+					// and our result is only read in this function, and never written, we can
+					// directly reference the input members in our result without copying. Be
+					// careful not to modify them though!
+					currentAttributes->members() = proto->m_attributes->members();
+
+					engines[0]->instanceAttributes( pointIndex, *currentAttributes );
+					attribsStorage = renderer->attributes( currentAttributes.get() );
+					attribs = attribsStorage.get();
+				}
+				else
+				{
+					attribs = proto->m_rendererAttributes.get();
+				}
+
+				int instanceId = engines[0]->instanceId( pointIndex );
+
+				// We are running inside a procedural, so we don't need globally unique name. We are making a whole
+				// lot of these names for instances, so we make these names as absolutely minimal as possible.
+				name.resize( std::numeric_limits< int >::digits10 + 1 );
+				name.resize( std::to_chars( &name[0], &(*name.end()), instanceId ).ptr - &name[0] );
+
+				IECoreScenePreview::Renderer::ObjectInterfacePtr objectInterface;
+				if( proto->m_objectSampleTimes.size() )
+				{
+					objectInterface = renderer->object(
+						name, proto->m_objectPointers, proto->m_objectSampleTimes, attribs
+					);
+				}
+				else
+				{
+					objectInterface = renderer->object(
+						name, proto->m_object[0].get(), attribs
+					);
+				}
+
+				if( sampleTimes.size() == 1 )
+				{
+					objectInterface->transform( proto->m_transforms[0] * engines[0]->instanceTransform( pointIndex ) );
+				}
+				else
+				{
+					for( unsigned int i = 0; i < engines.size(); i++ )
+					{
+						int curPointIndex = i == 0 ? pointIndex : engines[i]->pointIndex( instanceId );
+						pointTransforms[i] = proto->m_transforms[i] * engines[i]->instanceTransform( curPointIndex );
+					}
+
+					objectInterface->transform( pointTransforms, sampleTimes );
+				}
+
+			}
+		},
+		taskGroupContext
+	);
 }

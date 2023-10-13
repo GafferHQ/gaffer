@@ -39,6 +39,15 @@
 
 #include "GafferScene/Export.h"
 #include "GafferScene/BranchCreator.h"
+#include "GafferScene/Capsule.h"
+
+namespace GafferSceneModule
+{
+
+// Forward declaration to enable friend declaration.
+void bindHierarchy();
+
+} // namespace GafferSceneModule
 
 namespace GafferScene
 {
@@ -214,6 +223,7 @@ class GAFFERSCENE_API Instancer : public BranchCreator
 	private :
 
 		IE_CORE_FORWARDDECLARE( EngineData );
+		IE_CORE_FORWARDDECLARE( InstancerCapsule );
 
 		Gaffer::ObjectPlug *enginePlug();
 		const Gaffer::ObjectPlug *enginePlug() const;
@@ -243,6 +253,10 @@ class GAFFERSCENE_API Instancer : public BranchCreator
 		};
 
 		static size_t g_firstPlugIndex;
+
+		// For bindings
+		friend void GafferSceneModule::bindHierarchy();
+		static const std::type_info &instancerCapsuleTypeInfo();
 
 };
 

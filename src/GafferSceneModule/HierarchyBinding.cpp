@@ -162,6 +162,18 @@ void GafferSceneModule::bindHierarchy()
 			.attr( "__qualname__" ) = "Instancer.ContextVariablePlug"
 		;
 
+		// Expose InstancerCapsules as if they were plain Capsules. We don't
+		// want to bind them fully because then we'd be exposing a private class, but
+		// we need to register them so that they can be returned to Python
+		// successfully when testing expansion in Python
+		//
+		// See "Boost.Python and slightly more tricky inheritance" at
+		// http://lists.boost.org/Archives/boost/2005/09/93017.php for more details.
+
+		boost::python::objects::copy_class_object(
+			type_id<Capsule>(), Instancer::instancerCapsuleTypeInfo()
+		);
+
 	}
 
 	{
