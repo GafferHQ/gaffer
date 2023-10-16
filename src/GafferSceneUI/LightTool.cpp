@@ -2017,24 +2017,31 @@ class EdgeHandle : public LightToolHandle
 		EdgeHandle(
 			const std::string &lightType,
 			SceneView *view,
-			LightAxis lightAxis,
 			const InternedString &edgeParameter,
 			const V3f &edgeAxis,
 			const float edgeToHandleRatio,
 			const InternedString &oppositeParameter,
 			const V3f &oppositeAxis,
 			const float oppositeToHandleRatio,
+			const InternedString &oppositeScaleAttributeName,
+			const float edgeMargin,
+			const std::string &tipPlugSuffix,
 			const std::string &name
 		) :
 			LightToolHandle( lightType, view, {edgeParameter, oppositeParameter}, name ),
-			m_lightAxis( lightAxis ),
 			m_edgeParameter( edgeParameter ),
 			m_edgeAxis( edgeAxis ),
 			m_edgeToHandleRatio( edgeToHandleRatio ),
 			m_oppositeParameter( oppositeParameter ),
 			m_oppositeAxis( oppositeAxis ),
 			m_oppositeToHandleRatio( oppositeToHandleRatio ),
-			m_scale( 1.f )
+			m_oppositeScaleAttributeName( oppositeScaleAttributeName ),
+			m_edgeMargin( edgeMargin ),
+			m_tipPlugSuffix( tipPlugSuffix ),
+			m_edgeScale( 1.f ),
+			m_oppositeScale( 1.f ),
+			m_orientation(),
+			m_oppositeAdditionalScale( 1.f )
 		{
 		}
 
@@ -2044,6 +2051,45 @@ class EdgeHandle : public LightToolHandle
 		}
 
 	protected :
+
+		void handlePathChanged() override
+		{
+			/// \todo This can be simplified and some of the logic, especially getting the inspectors, can
+			/// be moved to the constructor when we standardize on a single USDLux light representation.
+
+			ConstCompoundObjectPtr attributes = scene()->fullAttributes( handlePath() );
+
+			for( const auto &[attributeName, value] : attributes->members() )
+			{
+				if(
+					StringAlgo::matchMultiple( attributeName, g_lightAttributePattern ) &&
+					value->typeId() == (IECore::TypeId)ShaderNetworkTypeId
+				)
+				{
+					const auto shader = attributes->member<ShaderNetwork>( attributeName )->outputShader();
+					std::string shaderAttribute = shader->getType() + ":" + shader->getName();
+
+					if( !isLightType( shaderAttribute ) )
+					{
+						continue;
+					}
+
+					m_orientation = M44f();
+					if( auto orientationData = Metadata::value<M44fData>( shaderAttribute, "visualiserOrientation" ) )
+					{
+						m_orientation = orientationData->readable();
+					}
+
+					m_oppositeAdditionalScale = 1.f;
+					if( auto scaleData = Metadata::value<FloatData>( shaderAttribute, m_oppositeScaleAttributeName ) )
+					{
+						m_oppositeAdditionalScale = scaleData->readable();
+					}
+
+					break;
+				}
+			}
+		}
 
 		bool handleDragMoveInternal( const GafferUI::DragDropEvent &event ) override
 		{
@@ -2056,9 +2102,7 @@ class EdgeHandle : public LightToolHandle
 			const float nonZeroValue = edgeInspection->typedValue<float>( 0.f ) == 0 ? 1.f : edgeInspection->typedValue<float>( 0.f );
 			const float newValue = m_drag.value().updatedPosition( event ) - m_drag.value().startPosition();
 
-			const float scale = m_lightAxis == LightAxis::Width ? m_scale.x : m_scale.y;
-
-			float mult = std::max( ( newValue * 2.f ) / ( nonZeroValue * scale ) + 1.f, 0.f );
+			float mult = std::max( ( newValue * m_edgeToHandleRatio ) / ( nonZeroValue * m_edgeScale ) + 1.f, 0.f );
 
 			applyMultiplier( m_edgeParameter, mult );
 
@@ -2067,7 +2111,8 @@ class EdgeHandle : public LightToolHandle
 
 		void updateLocalTransformInternal( const V3f &scale, const V3f & ) override
 		{
-			m_scale = V2f( scale.x, scale.y );
+			m_edgeScale = abs( scale.dot( m_edgeAxis * m_orientation ) );
+			m_oppositeScale = abs( scale.dot( m_oppositeAxis * m_orientation ) ) * m_oppositeAdditionalScale;
 		}
 
 		bool handleDragEndInternal() override
@@ -2084,8 +2129,7 @@ class EdgeHandle : public LightToolHandle
 			}
 
 			Inspector::ResultPtr edgeInspection = handleInspection( m_edgeParameter );
-			Inspector::ResultPtr oppositeInspection = handleInspection( m_oppositeParameter );
-			if( !edgeInspection || !oppositeInspection )
+			if( !edgeInspection )
 			{
 				return;
 			}
@@ -2106,7 +2150,7 @@ class EdgeHandle : public LightToolHandle
 
 			LineSegment3f edgeSegment = this->edgeSegment(
 				edgeInspection->typedValue<float>( 0.f ),
-				oppositeInspection->typedValue<float>( 0.f )
+				oppositeInspectionValue()
 			);
 
 			M44f edgeTransform;
@@ -2130,11 +2174,12 @@ class EdgeHandle : public LightToolHandle
 			edgeGroup->setTransform( edgeTransform );
 
 			rootGroup->addChild( edgeGroup );
+			rootGroup->setTransform( m_orientation );
 		}
 
 		void setupDrag( const DragDropEvent &event ) override
 		{
-			m_drag = LinearDrag( this, LineSegment3f( V3f( 0 ), m_edgeAxis ), event );
+			m_drag = LinearDrag( this, LineSegment3f( V3f( 0 ), m_edgeAxis * m_orientation ), event );
 		}
 
 		std::vector<const Inspector::Result *> handleValueInspections() const override
@@ -2156,7 +2201,7 @@ class EdgeHandle : public LightToolHandle
 
 		std::string tipPlugSuffix() const override
 		{
-			return m_lightAxis == LightAxis::Width ? "widths" : "heights";
+			return m_tipPlugSuffix;
 		}
 
 		std::string tipInfoSuffix() const override
@@ -2172,16 +2217,16 @@ class EdgeHandle : public LightToolHandle
 			}
 
 			Inspector::ResultPtr edgeInspection = handleInspection( m_edgeParameter );
-			Inspector::ResultPtr oppositeInspection = handleInspection( m_oppositeParameter );
-			if( !edgeInspection || !oppositeInspection )
+			if( !edgeInspection )
 			{
 				return;
 			}
 
-			LineSegment3f edgeSegment = this->edgeSegment( edgeInspection->typedValue<float>( 0.f ), oppositeInspection->typedValue<float>( 0.f ) );
+			LineSegment3f edgeSegment = this->edgeSegment( edgeInspection->typedValue<float>( 0.f ), oppositeInspectionValue() );
 			V3f offset = edgeToGadgetSpace( edgeInspection->typedValue<float>( 0.f ) );
 			edgeSegment.p0 += offset;
 			edgeSegment.p1 += offset;
+			edgeSegment *= m_orientation;
 
 			V3f eventClosest;
 			setTooltipPosition( edgeSegment.closestPoints( LineSegment3f( eventLine.p0, eventLine.p1 ), eventClosest ) );
@@ -2189,10 +2234,15 @@ class EdgeHandle : public LightToolHandle
 
 	private :
 
+		float oppositeInspectionValue() const
+		{
+			Inspector::ResultPtr oppositeInspection = handleInspection( m_oppositeParameter );
+			return oppositeInspection ? oppositeInspection->typedValue<float>( 0.f ) : 1.f;
+		}
+
 		V3f edgeToGadgetSpace( const float edge ) const
 		{
-			const float scale = m_lightAxis == LightAxis::Width ? m_scale.x : m_scale.y;
-			return ( ( m_edgeAxis * edge * scale ) / m_edgeToHandleRatio );
+			return ( ( m_edgeAxis * edge * m_edgeScale ) / m_edgeToHandleRatio );
 		}
 
 		LineSegment3f edgeSegment( const float edgeLength, const float oppositeLength ) const
@@ -2202,57 +2252,28 @@ class EdgeHandle : public LightToolHandle
 			float radius0 = 0;
 			float radius1 = 0;
 
-			const float scale = m_lightAxis == LightAxis::Width ? m_scale.y : m_scale.x;
-			fullEdgeLength = oppositeLength * scale;
+			fullEdgeLength = oppositeLength * m_oppositeScale;
 			fullEdgeLengthHalf = fullEdgeLength * 0.5f;
 
-			if( m_lightAxis == LightAxis::Width )
-			{
-				radius0 = g_circleHandleWidthLarge * ::rasterScaleFactor( this, V3f( 0, -fullEdgeLengthHalf, 0 ) );
-				radius1 = g_circleHandleWidthLarge * ::rasterScaleFactor( this, V3f( 0, fullEdgeLengthHalf, 0 ) );
-			}
-			else
-			{
-				radius0 = g_circleHandleWidthLarge * ::rasterScaleFactor( this, V3f( -fullEdgeLengthHalf, 0, 0 ) );
-				radius1 = g_circleHandleWidthLarge * ::rasterScaleFactor( this, V3f( fullEdgeLengthHalf, 0, 0 ) );
-			}
+			radius0 = m_edgeMargin * ::rasterScaleFactor( this, -fullEdgeLengthHalf * m_oppositeAxis );
+			radius1 = m_edgeMargin * ::rasterScaleFactor( this, fullEdgeLengthHalf * m_oppositeAxis );
 
 			LineSegment3f result;
 
-			if( m_lightAxis == LightAxis::Width )
-			{
-				result.p0 = V3f( 0, std::min( 0.f, -fullEdgeLengthHalf + radius0 ), 0 );
-				result.p1 = V3f( 0, std::max( 0.f, fullEdgeLengthHalf - radius1 ), 0 );
-			}
-			else
-			{
-				result.p0 = V3f( std::min( 0.f, -fullEdgeLengthHalf + radius0 ), 0, 0 );
-				result.p1 = V3f( std::max( 0.f, fullEdgeLengthHalf - radius1 ), 0, 0 );
-			}
+			result.p0 = std::min( 0.f, -fullEdgeLengthHalf + radius0 ) * m_oppositeAxis;
+			result.p1 = std::max( 0.f, fullEdgeLengthHalf - radius1  ) * m_oppositeAxis;
 
 			return result;
 		}
 
 		void edgeTransform( const float edgeLength, const LineSegment3f &edgeSegment, M44f &edgeTransform ) const
 		{
-			if( m_lightAxis == LightAxis::Width )
-			{
-				edgeTransform =
-					M44f().rotate( V3f( -M_PI * 0.5f, 0, 0 ) ) *
-					M44f().translate(
-						V3f( 0, edgeSegment.p0.y, 0 ) + edgeToGadgetSpace( edgeLength )
-					)
-				;
-			}
-			else
-			{
-				edgeTransform =
-					M44f().rotate( V3f( 0, M_PI * 0.5f, 0 ) ) *
-					M44f().translate(
-						V3f( edgeSegment.p0.x, 0, 0 ) + edgeToGadgetSpace( edgeLength )
-					)
-				;
-			}
+			edgeTransform =
+				rotationMatrix( V3f( 0, 0, 1.f ), m_oppositeAxis ) *
+				M44f().translate(
+					edgeSegment.p0 * m_oppositeAxis + edgeToGadgetSpace( edgeLength )
+				)
+			;
 		}
 
 		void coneTransform( const float edgeLength, M44f &coneTransform ) const
@@ -2260,20 +2281,26 @@ class EdgeHandle : public LightToolHandle
 			const V3f gadgetSpaceEdge = edgeToGadgetSpace( edgeLength );
 			// Rotate the cone 90 degrees around the axis that is the width axis rotated 90 degrees around the z axis.
 			coneTransform =
-				M44f().rotate( m_edgeAxis * M44f().rotate( V3f( 0, 0, M_PI * 0.5f ) ) * M_PI * 0.5f ) *
+				rotationMatrix( V3f( 0, 0, 1.f ), m_edgeAxis ) *
 				M44f().scale( V3f( ::rasterScaleFactor( this, gadgetSpaceEdge ) ) ) *
 				M44f().translate( gadgetSpaceEdge )
 			;
 		}
 
-		const LightAxis m_lightAxis;
 		const InternedString m_edgeParameter;
 		const V3f m_edgeAxis;
 		const float m_edgeToHandleRatio;
 		const InternedString m_oppositeParameter;
 		const V3f m_oppositeAxis;
 		const float m_oppositeToHandleRatio;
-		V2f m_scale;
+		const InternedString m_oppositeScaleAttributeName;
+		const float m_edgeMargin;
+		const std::string m_tipPlugSuffix;
+
+		float m_edgeScale;
+		float m_oppositeScale;
+		M44f m_orientation;
+		float m_oppositeAdditionalScale;
 		std::optional<LinearDrag> m_drag;
 };
 
@@ -2971,13 +2998,13 @@ LightTool::LightTool( SceneView *view, const std::string &name ) :
 
 	// Quadlight handles
 
-	m_handles->addChild( new EdgeHandle( "quad", view, EdgeHandle::LightAxis::Width, "widthParameter", V3f( -1.f, 0, 0 ), 2.f, "heightParameter", V3f( 0, 0, 0 ), 2.f, "westParameter" ) );
+	m_handles->addChild( new EdgeHandle( "quad", view, "widthParameter", V3f( -1.f, 0, 0 ), 2.f, "heightParameter", V3f( 0, 1.f, 0 ), 2.f, "", g_circleHandleWidthLarge, "widths", "westParameter" ) );
 	m_handles->addChild( new CornerHandle( "quad", view, "widthParameter", V3f( -1.f, 0, 0 ), 2.f, "heightParameter", V3f( 0, -1.f, 0 ), 2.f, "southWestParameter" ) );
-	m_handles->addChild( new EdgeHandle( "quad", view, EdgeHandle::LightAxis::Height, "heightParameter", V3f( 0, -1.f, 0 ), 2.f, "widthParameter", V3f( 0, 0, 0 ), 2.f, "southParameter" ) );
+	m_handles->addChild( new EdgeHandle( "quad", view, "heightParameter", V3f( 0, -1.f, 0 ), 2.f, "widthParameter", V3f( 1.f, 0, 0 ), 2.f, "", g_circleHandleWidthLarge, "heights", "southParameter" ) );
 	m_handles->addChild( new CornerHandle( "quad", view, "widthParameter", V3f( 1.f, 0, 0 ), 2.f, "heightParameter", V3f( 0, -1.f, 0 ), 2.f, "soutEastParameter" ) );
-	m_handles->addChild( new EdgeHandle( "quad", view, EdgeHandle::LightAxis::Width, "widthParameter", V3f( 1.f, 0, 0 ), 2.f, "heightParameter", V3f( 0, 0, 0 ), 2.f, "eastParameter" ) );
+	m_handles->addChild( new EdgeHandle( "quad", view, "widthParameter", V3f( 1.f, 0, 0 ), 2.f, "heightParameter", V3f( 0, 1.f, 0 ), 2.f, "", g_circleHandleWidthLarge, "widths", "eastParameter" ) );
 	m_handles->addChild( new CornerHandle( "quad", view, "widthParameter", V3f( 1.f, 0, 0 ), 2.f, "heightParameter", V3f( 0, 1.f, 0 ), 2.f, "northEastParameter" ) );
-	m_handles->addChild( new EdgeHandle( "quad", view, EdgeHandle::LightAxis::Height, "heightParameter", V3f( 0, 1.f, 0 ), 2.f, "widthParameter", V3f( 0, 0, 0 ), 2.f, "northParameter" ) );
+	m_handles->addChild( new EdgeHandle( "quad", view, "heightParameter", V3f( 0, 1.f, 0 ), 2.f, "widthParameter", V3f( 1.f, 0, 0 ), 2.f, "", g_circleHandleWidthLarge, "heights", "northParameter" ) );
 	m_handles->addChild( new CornerHandle( "quad", view, "widthParameter", V3f( -1.f, 0, 0 ), 2.f, "heightParameter", V3f( 0, 1.f, 0 ), 2.f, "northWestParameter" ) );
 
 	// DiskLight handles
@@ -2988,6 +3015,10 @@ LightTool::LightTool( SceneView *view, const std::string &name ) :
 	m_handles->addChild( new RadiusHandle( "point", view, "radiusParameter", 1.f, true, false, "pointHandle" ) );
 
 	// CylinderLight handles
+	m_handles->addChild( new EdgeHandle( "cylinder", view, "radiusParameter", V3f( 0, 1.f, 0 ), 1.f, "lengthParameter", V3f( 0, 0, 1.f ), 2.f, "heightToScaleRatio", 0, "radii", "northRadiusParameter" ) );
+	m_handles->addChild( new EdgeHandle( "cylinder", view, "radiusParameter", V3f( 1.f, 0, 0 ), 1.f, "lengthParameter", V3f( 0, 0, 1.f ), 2.f, "heightToScaleRatio", 0, "radii", "northRadiusParameter" ) );
+	m_handles->addChild( new EdgeHandle( "cylinder", view, "radiusParameter", V3f( 0, -1.f, 0 ), 1.f, "lengthParameter", V3f( 0, 0, 1.f ), 2.f, "heightToScaleRatio", 0, "radii", "northRadiusParameter" ) );
+	m_handles->addChild( new EdgeHandle( "cylinder", view, "radiusParameter", V3f( -1.f, 0, 0 ), 1.f, "lengthParameter", V3f( 0, 0, 1.f ), 2.f, "heightToScaleRatio", 0, "radii", "northRadiusParameter" ) );
 	m_handles->addChild( new LengthHandle( "cylinder", view, "lengthParameter", V3f( 0, 0, 1.f ), 2.f, "cylinderLengthTop" ) );
 	m_handles->addChild( new LengthHandle( "cylinder", view, "lengthParameter", V3f( 0, 0, -1.f ), 2.f, "cylinderLengthBottom" ) );
 

@@ -6,7 +6,7 @@ Features
 
 - LightTool :
   - Added manipulator for disk and point light radii.
-  - Added manipulator for cylinder length.
+  - Added manipulators for cylinder length and radius.
 
 Fixes
 -----
