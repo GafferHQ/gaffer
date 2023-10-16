@@ -179,6 +179,7 @@ enum TypeId
 	ImageScatterTypeId = 110635,
 	InstancerCapsuleTypeId = 110636,
 	PassesTypeId = 110637,
+	DeletePassesTypeId = 110638,
 
 	PreviewPlaceholderTypeId = 110647,
 	PreviewGeometryTypeId = 110648,
