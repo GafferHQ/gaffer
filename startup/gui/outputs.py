@@ -67,7 +67,7 @@ GafferScene.Outputs.registerOutput(
 GafferScene.Outputs.registerOutput(
 	"Batch/Beauty",
 	IECoreScene.Output(
-		"${project:rootDirectory}/renders/${script:name}/beauty/beauty.####.exr",
+		"${project:rootDirectory}/renders/${script:name}/${renderPass}/beauty/beauty.####.exr",
 		"exr",
 		"rgba",
 		{
@@ -154,7 +154,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 		GafferScene.Outputs.registerOutput(
 			"Batch/Arnold/" + label,
 			IECoreScene.Output(
-				"${project:rootDirectory}/renders/${script:name}/%s/%s.####.exr" % ( aov, aov ),
+				"${project:rootDirectory}/renders/${script:name}/${renderPass}/%s/%s.####.exr" % ( aov, aov ),
 				"exr",
 				data,
 				parameters,
@@ -231,7 +231,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 		GafferScene.Outputs.registerOutput(
 			"Batch/3Delight/{}/{}".format( source.capitalize(), displayName ),
 			IECoreScene.Output(
-				"${project:rootDirectory}/renders/${script:name}/%s/%s.####.exr" % ( name, name ),
+				"${project:rootDirectory}/renders/${script:name}/${renderPass}/%s/%s.####.exr" % ( name, name ),
 				"exr",
 				"{} {}:{}".format( dataType, source, name ),
 			)
@@ -342,7 +342,7 @@ if os.environ.get( "CYCLES_ROOT" ) and os.environ.get( "GAFFERCYCLES_HIDE_UI", "
 				GafferScene.Outputs.registerOutput(
 									"Batch/Cycles/" + label,
 					IECoreScene.Output(
-						"${project:rootDirectory}/renders/${script:name}/%s/%s.####.exr" % ( aov, aov ),
+						"${project:rootDirectory}/renders/${script:name}/${renderPass}/%s/%s.####.exr" % ( aov, aov ),
 						"exr",
 						data,
 						batchOutput
@@ -367,7 +367,7 @@ if os.environ.get( "CYCLES_ROOT" ) and os.environ.get( "GAFFERCYCLES_HIDE_UI", "
 					GafferScene.Outputs.registerOutput(
 						"Batch/Cycles/" + label + "_Denoised",
 						IECoreScene.Output(
-							"${project:rootDirectory}/renders/${script:name}/%s/%s_denoised.####.exr" % ( aov, aov ),
+							"${project:rootDirectory}/renders/${script:name}/${renderPass}/%s/%s_denoised.####.exr" % ( aov, aov ),
 							"exr",
 							data,
 							batchOutput
@@ -395,7 +395,7 @@ if os.environ.get( "CYCLES_ROOT" ) and os.environ.get( "GAFFERCYCLES_HIDE_UI", "
 					GafferScene.Outputs.registerOutput(
 						"Batch/Cycles/Beauty_Denoised",
 						IECoreScene.Output(
-							"${project:rootDirectory}/renders/${script:name}/beauty/beauty_denoised.####.exr",
+							"${project:rootDirectory}/renders/${script:name}/${renderPass}/beauty/beauty_denoised.####.exr",
 							"exr",
 							"rgba",
 							{
