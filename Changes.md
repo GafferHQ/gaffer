@@ -8,6 +8,7 @@ Features
 - Passes : Added new nodes for working with Passes. Passes are defined as a list of names stored in the `pass:names` option in the globals, and can be used to dispatch tasks that vary based on those names. This can be useful for purposes such as producing multiple renders with varying object visibility and shading, or for writing variations of a scene to individual files.
   - Passes : Added a new node for appending names to the `pass:names` option.
   - DeletePasses : Added a new node for removing names from the `pass:names` option.
+  - PassWedge : Added a new node for dispatching upstream tasks in a range of contexts where the value of the `pass` context variable is varied based on the names defined in the `pass:names` option.
 
 Improvements
 ------------

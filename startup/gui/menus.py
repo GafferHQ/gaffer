@@ -344,6 +344,7 @@ nodeMenu.append( "/Scene/Utility/Option Query", GafferScene.OptionQuery, searchT
 nodeMenu.append( "/Scene/Utility/Primitive Variable Query", GafferScene.PrimitiveVariableQuery, searchText = "PrimitiveVariableQuery" )
 nodeMenu.append( "/Scene/Passes/Passes", GafferScene.Passes )
 nodeMenu.append( "/Scene/Passes/Delete Passes", GafferScene.DeletePasses, searchText = "DeletePasses" )
+nodeMenu.append( "/Scene/Passes/Pass Wedge", GafferScene.PassWedge, searchText = "PassWedge" )
 
 # Image nodes
 
