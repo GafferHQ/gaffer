@@ -178,6 +178,7 @@ enum TypeId
 	MeshNormalsTypeId = 110634,
 	ImageScatterTypeId = 110635,
 	InstancerCapsuleTypeId = 110636,
+	PassesTypeId = 110637,
 
 	PreviewPlaceholderTypeId = 110647,
 	PreviewGeometryTypeId = 110648,

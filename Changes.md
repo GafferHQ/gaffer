@@ -5,6 +5,7 @@ Features
 --------
 
 - Viewer : Added "Snapshot To Catalogue" command to the right-click menu of the 3D view.
+- Passes : Added a new node for appending names to the `pass:names` option.
 
 Improvements
 ------------

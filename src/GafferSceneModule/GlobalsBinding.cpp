@@ -42,6 +42,7 @@
 #include "GafferScene/DeleteSets.h"
 #include "GafferScene/GlobalShader.h"
 #include "GafferScene/Outputs.h"
+#include "GafferScene/Passes.h"
 #include "GafferScene/Set.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
@@ -112,5 +113,7 @@ void GafferSceneModule::bindGlobals()
 	}
 
 	DependencyNodeClass<GlobalShader>();
+
+	DependencyNodeClass<Passes>();
 
 }

@@ -342,6 +342,7 @@ nodeMenu.append( "/Scene/Utility/Set Query", GafferScene.SetQuery, searchText = 
 nodeMenu.append( "/Scene/Utility/Shader Query", GafferScene.ShaderQuery, searchText = "ShaderQuery" )
 nodeMenu.append( "/Scene/Utility/Option Query", GafferScene.OptionQuery, searchText = "OptionQuery" )
 nodeMenu.append( "/Scene/Utility/Primitive Variable Query", GafferScene.PrimitiveVariableQuery, searchText = "PrimitiveVariableQuery" )
+nodeMenu.append( "/Scene/Passes/Passes", GafferScene.Passes )
 
 # Image nodes
 

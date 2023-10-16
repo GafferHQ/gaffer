@@ -173,6 +173,7 @@ from .MeshSplitTest import MeshSplitTest
 from .FramingConstraintTest import FramingConstraintTest
 from .MeshNormalsTest import MeshNormalsTest
 from .ImageScatterTest import ImageScatterTest
+from .PassesTest import PassesTest
 
 from .IECoreScenePreviewTest import *
 from .IECoreGLPreviewTest import *
