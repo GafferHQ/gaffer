@@ -15,6 +15,7 @@ Improvements
 
 - ImageTransform, Resample : Improved performance for non-separable filters without scaling, with 2-6x speedups in some benchmark cases.
 - Outputs : Included `renderPass` in the filename for newly created Arnold, Cycles and 3Delight outputs. Allowing rendered images to be written to a specific directory based on the name of the current render pass.
+- GUI Config : Included `renderPass` in the default filename when writing ass files from an ArnoldRender node.
 
 Fixes
 -----
