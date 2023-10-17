@@ -1342,7 +1342,7 @@ class SpotLightHandle : public LightToolHandle
 			LightToolHandle( lightType, view, { g_coneAngleParameter, g_penumbraAngleParameter }, name ),
 			m_zRotation( zRotation ),
 			m_handleType( handleType ),
-			m_angleMultiplier( 1.f ),
+			m_angleHandleRatio( 2.f ),
 			m_visualiserScale( 1.f ),
 			m_frustumScale( 1.f ),
 			m_lensRadius( 0 )
@@ -1591,11 +1591,11 @@ class SpotLightHandle : public LightToolHandle
 					auto angleType = Metadata::value<StringData>( shaderAttribute, "coneAngleType" );
 					if( angleType && angleType->readable() == "half" )
 					{
-						m_angleMultiplier = 2.f;
+						m_angleHandleRatio = 1.f;
 					}
 					else
 					{
-						m_angleMultiplier = 1.f;
+						m_angleHandleRatio = 2.f;
 					}
 
 					break;
@@ -1907,7 +1907,7 @@ class SpotLightHandle : public LightToolHandle
 		// Convert from the angle representation used by plugs to that used by handles.
 		float coneHandleAngle( const float angle ) const
 		{
-			return angle * 0.5f;
+			return angle / m_angleHandleRatio;
 		}
 
 		float penumbraHandleAngle( const float angle ) const
@@ -1921,7 +1921,7 @@ class SpotLightHandle : public LightToolHandle
 
 		float conePlugAngle(const float a ) const
 		{
-			return a * 2.f / m_angleMultiplier;
+			return a * m_angleHandleRatio;
 		}
 
 		float penumbraPlugAngle(const float a ) const
@@ -1995,7 +1995,7 @@ class SpotLightHandle : public LightToolHandle
 		HandleType m_handleType;
 		std::optional<InternedString> m_penumbraType;
 
-		float m_angleMultiplier;
+		float m_angleHandleRatio;
 
 		float m_visualiserScale;
 		float m_frustumScale;
@@ -3002,14 +3002,14 @@ LightTool::LightTool( SceneView *view, const std::string &name ) :
 
 	// Spotlight handles
 
-	m_handles->addChild( new SpotLightHandle( "spot", SpotLightHandle::HandleType::Penumbra, view, 0, "westConeAngleParameter" ) );
-	m_handles->addChild( new SpotLightHandle( "spot", SpotLightHandle::HandleType::Cone, view, 0, "westPenumbraAngleParameter" ) );
-	m_handles->addChild( new SpotLightHandle( "spot", SpotLightHandle::HandleType::Penumbra, view, 90, "southConeAngleParameter" ) );
-	m_handles->addChild( new SpotLightHandle( "spot", SpotLightHandle::HandleType::Cone, view, 90, "southPenumbraAngleParameter" ) );
-	m_handles->addChild( new SpotLightHandle( "spot", SpotLightHandle::HandleType::Penumbra, view, 180, "eastConeAngleParameter" ) );
-	m_handles->addChild( new SpotLightHandle( "spot", SpotLightHandle::HandleType::Cone, view, 180, "eastPenumbraAngleParameter" ) );
-	m_handles->addChild( new SpotLightHandle( "spot", SpotLightHandle::HandleType::Penumbra, view, 270, "northConeAngleParameter" ) );
-	m_handles->addChild( new SpotLightHandle( "spot", SpotLightHandle::HandleType::Cone, view, 270, "northPenumbraAngleParameter" ) );
+	m_handles->addChild( new SpotLightHandle( "spot quad point disk distant", SpotLightHandle::HandleType::Penumbra, view, 0, "westConeAngleParameter" ) );
+	m_handles->addChild( new SpotLightHandle( "spot quad point disk distant", SpotLightHandle::HandleType::Cone, view, 0, "westPenumbraAngleParameter" ) );
+	m_handles->addChild( new SpotLightHandle( "spot quad point disk distant", SpotLightHandle::HandleType::Penumbra, view, 90, "southConeAngleParameter" ) );
+	m_handles->addChild( new SpotLightHandle( "spot quad point disk distant", SpotLightHandle::HandleType::Cone, view, 90, "southPenumbraAngleParameter" ) );
+	m_handles->addChild( new SpotLightHandle( "spot quad point disk distant", SpotLightHandle::HandleType::Penumbra, view, 180, "eastConeAngleParameter" ) );
+	m_handles->addChild( new SpotLightHandle( "spot quad point disk distant", SpotLightHandle::HandleType::Cone, view, 180, "eastPenumbraAngleParameter" ) );
+	m_handles->addChild( new SpotLightHandle( "spot quad point disk distant", SpotLightHandle::HandleType::Penumbra, view, 270, "northConeAngleParameter" ) );
+	m_handles->addChild( new SpotLightHandle( "spot quad point disk distant", SpotLightHandle::HandleType::Cone, view, 270, "northPenumbraAngleParameter" ) );
 
 	// Quadlight handles
 
