@@ -2044,10 +2044,12 @@ class EdgeHandle : public LightToolHandle
 			m_oppositeScaleAttributeName( oppositeScaleAttributeName ),
 			m_edgeMargin( edgeMargin ),
 			m_tipPlugSuffix( tipPlugSuffix ),
+
 			m_edgeScale( 1.f ),
 			m_oppositeScale( 1.f ),
 			m_orientation(),
-			m_oppositeAdditionalScale( 1.f )
+			m_oppositeAdditionalScale( 1.f ),
+			m_tooltipT( 0 )
 		{
 		}
 
@@ -2234,8 +2236,14 @@ class EdgeHandle : public LightToolHandle
 			edgeSegment.p1 += offset;
 			edgeSegment *= m_orientation;
 
-			V3f eventClosest;
-			setTooltipPosition( edgeSegment.closestPoints( LineSegment3f( eventLine.p0, eventLine.p1 ), eventClosest ) );
+			if( !m_drag )
+			{
+				V3f eventClosest;
+				const V3f closestPoint = edgeSegment.closestPoints( LineSegment3f( eventLine.p0, eventLine.p1 ), eventClosest );
+				m_tooltipT = ( closestPoint - edgeSegment.p0 ).length() / edgeSegment.length();
+			}
+
+			setTooltipPosition( edgeSegment( m_tooltipT ) );
 		}
 
 	private :
@@ -2307,6 +2315,7 @@ class EdgeHandle : public LightToolHandle
 		float m_oppositeScale;
 		M44f m_orientation;
 		float m_oppositeAdditionalScale;
+		float m_tooltipT;  // Parameter `t` along the edge set at the start of the drag
 		std::optional<LinearDrag> m_drag;
 };
 

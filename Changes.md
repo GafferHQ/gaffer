@@ -11,7 +11,7 @@ Features
 Improvements
 ------------
 
-- LightTool : Changed spot light tool tip location so that it follows the cone during drag.
+- LightTool : Changed spot light and quad light edge tool tip locations so that they follow the cone and edge during drag.
 
 Fixes
 -----
