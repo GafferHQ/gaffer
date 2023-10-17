@@ -8,6 +8,11 @@ Features
   - Added manipulator for disk and point light radii.
   - Added manipulators for cylinder length and radius.
 
+Improvements
+------------
+
+- LightTool : Changed spot light tool tip location so that it follows the cone during drag.
+
 Fixes
 -----
 

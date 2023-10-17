@@ -1871,6 +1871,12 @@ class SpotLightHandle : public LightToolHandle
 				return;
 			}
 
+			if( m_drag )
+			{
+				setTooltipPosition( V3f( 0, 0, -m_arcRadius ) * r );
+				return;
+			}
+
 			const Line3f rayLine(
 				V3f( 0 ),
 				V3f( 0, 0, m_visualiserScale * m_frustumScale * -10.f ) * r
