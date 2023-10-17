@@ -44,7 +44,6 @@
 #include "tbb/spin_rw_mutex.h"
 
 #include "tbb/task_arena.h"
-#define TBB_PREVIEW_ISOLATED_TASK_GROUP 1
 #include "tbb/task_group.h"
 
 #include <iostream>
