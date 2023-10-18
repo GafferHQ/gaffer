@@ -277,6 +277,7 @@ class GAFFER_API Plug : public GraphComponent
 		friend class DirtyPropagationScope;
 
 		class DirtyPlugs;
+		static thread_local DirtyPlugs g_localDirtyPlugs;
 
 		Direction m_direction;
 		Plug *m_input;

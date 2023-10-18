@@ -809,12 +809,6 @@ class Plug::DirtyPlugs
 			}
 		}
 
-		static DirtyPlugs &local()
-		{
-			static tbb::enumerable_thread_specific<Plug::DirtyPlugs> g_dirtyPlugs;
-			return g_dirtyPlugs.local();
-		}
-
 	private :
 
 		// We use this graph structure to keep track of the dirty propagation.
@@ -967,25 +961,27 @@ class Plug::DirtyPlugs
 
 };
 
+thread_local Plug::DirtyPlugs Plug::g_localDirtyPlugs;
+
 void Plug::propagateDirtiness( Plug *plugToDirty )
 {
 	DirtyPropagationScope scope;
-	DirtyPlugs::local().insert( plugToDirty );
+	g_localDirtyPlugs.insert( plugToDirty );
 }
 
 void Plug::pushDirtyPropagationScope()
 {
-	DirtyPlugs::local().pushScope();
+	g_localDirtyPlugs.pushScope();
 }
 
 void Plug::popDirtyPropagationScope()
 {
-	DirtyPlugs::local().popScope();
+	g_localDirtyPlugs.popScope();
 }
 
 void Plug::flushDirtyPropagationScope()
 {
-	DirtyPlugs::local().flush();
+	g_localDirtyPlugs.flush();
 }
 
 void Plug::dirty()
