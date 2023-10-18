@@ -606,11 +606,9 @@ class ValuePlug::ComputeProcess : public Process
 		{
 			const ValuePlug *p = sourcePlug( plug );
 
-			const ComputeNode *computeNode = IECore::runTimeCast<const ComputeNode>( p->node() );
-
 			if( !p->getInput() )
 			{
-				if( p->direction()==In || !computeNode )
+				if( p->direction()==In || !IECore::runTimeCast<const ComputeNode>( p->node() ) )
 				{
 					// No input connection, and no means of computing
 					// a value. There can only ever be a single value,
@@ -626,19 +624,8 @@ class ValuePlug::ComputeProcess : public Process
 			const ThreadState &threadState = ThreadState::current();
 			const Context *currentContext = threadState.context();
 
-			CachePolicy cachePolicy = CachePolicy::Uncached;
-			if( p->getInput() )
-			{
-				// Type conversion will be implemented by `setFrom()`.
-				// \todo Determine if caching is actually worthwhile for this.
-				cachePolicy = CachePolicy::Legacy;
-			}
-			else if( computeNode )
-			{
-				cachePolicy = computeNode->computeCachePolicy( p );
-			}
-
-			const ComputeProcessKey processKey( p, plug, computeNode, cachePolicy, precomputedHash );
+			const ComputeNode *computeNode = IECore::runTimeCast<const ComputeNode>( p->node() );
+			const ComputeProcessKey processKey( p, plug, computeNode, computeNode ? computeNode->computeCachePolicy( p ) : CachePolicy::Uncached, precomputedHash );
 
 			if( processKey.cachePolicy == CachePolicy::Uncached )
 			{
