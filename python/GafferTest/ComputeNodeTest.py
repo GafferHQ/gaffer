@@ -740,15 +740,6 @@ class ComputeNodeTest( GafferTest.TestCase ) :
 		self.assertNotEqual( h2, h1 )
 		self.assertEqual( n.plug.getValue(), "out2" )
 
-	def testInterleavedEditsAndComputes( self ) :
-
-		n = GafferTest.AddNode()
-
-		with Gaffer.DirtyPropagationScope() :
-			for i in range( 0, 100 ) :
-				n["op1"].setValue( i )
-				self.assertEqual( n["sum"].getValue(), i )
-
 	def testCacheSharedBetweenNodes( self ) :
 
 		n1 = GafferTest.AddNode()

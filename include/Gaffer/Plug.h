@@ -245,16 +245,6 @@ class GAFFER_API Plug : public GraphComponent
 		/// connected to the signal.
 		virtual void dirty();
 
-		/// Makes any pending calls to `dirty()` that would otherwise be
-		/// delayed by a DirtyPropagationScope. May be called by plugs
-		/// that wish to allow edits and computes to be interleaved within
-		/// a single DirtyPropagationScope, requiring caches to be invalidated
-		/// before the scope is closed.
-		///
-		/// > Note : Never calls `plugDirtiedSignal()` - that is always
-		/// > deferred until the DirtyPropagationScope closes.
-		static void flushDirtyPropagationScope();
-
 	private :
 
 		static void propagateDirtinessAtLeaves( Plug *plugToDirty );
