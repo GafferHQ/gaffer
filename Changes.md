@@ -9,6 +9,13 @@ Improvements
   - Popups for string cells and row names are now sized to fit their column.
   - Added "Triple" and "Quadruple" width options to the spreadsheet row name popup menu.
 
+Fixes
+-----
+
+- PythonEditor :
+  - Fixed output for `print()` calls with multiple arguments, which was previously spread across multiple lines.
+  - Fixed bug that prevented editors being destroyed at the right time.
+
 1.3.4.0 (relative to 1.3.3.0)
 =======
 

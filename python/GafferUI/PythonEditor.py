@@ -36,9 +36,11 @@
 ##########################################################################
 
 import ast
+import contextlib
 import functools
 import sys
 import traceback
+import weakref
 import imath
 
 import IECore
@@ -124,7 +126,7 @@ class PythonEditor( GafferUI.Editor ) :
 
 		self.__outputWidget.appendHTML( self.__codeToHTML( toExecute ) )
 
-		with Gaffer.OutputRedirection( stdOut = Gaffer.WeakMethod( self.__redirectOutput ), stdErr = Gaffer.WeakMethod( self.__redirectOutput ) ) :
+		with self.__outputRedirection() :
 			with _MessageHandler( self.__outputWidget ) :
 				with Gaffer.UndoScope( self.scriptNode() ) :
 					with self.getContext() :
@@ -199,13 +201,40 @@ class PythonEditor( GafferUI.Editor ) :
 
 		return result
 
-	def __redirectOutput( self, output ) :
+	# Context manager used to redirect `sys.stdout` and `sys.stderr` into our
+	# output widget during execution. This is a little bit of a faff for several
+	# reasons :
+	#
+	# 1. `__outputWidget.appendText()` automatically appends the text on a new
+	#    line.
+	# 2. A simple call to `print( 1, 2 )` makes four separate calls to
+	#    `stdout.write()`, with values of "1" "2", " " and "\n".
+	# 3. We don't want to simply buffer up all the writes and print them after
+	#    execution. Instead we want to update the UI for each new `print()` so
+	#    that users can get feedback on the progress of their script.
+	#
+	# So we maintain a buffer that we flush to `appendText()` every time we
+	# encounter a newline.
+	@contextlib.contextmanager
+	def __outputRedirection( self ) :
 
-		if output != "\n" :
-			self.__outputWidget.appendText( output )
-			# update the gui so messages are output as they occur, rather than all getting queued
-			# up till the end.
-			QtWidgets.QApplication.instance().processEvents( QtCore.QEventLoop.ExcludeUserInputEvents )
+		buffer = ""
+		def __redirect( output ) :
+
+			nonlocal buffer
+			buffer += output
+			if buffer.endswith( "\n" ) :
+				self.__outputWidget.appendText( buffer[:-1] )
+				buffer = ""
+				# Update the GUI so messages are output as they occur, rather
+				# than all getting queued up till the end.
+				QtWidgets.QApplication.instance().processEvents( QtCore.QEventLoop.ExcludeUserInputEvents )
+
+		with Gaffer.OutputRedirection( stdOut = __redirect, stdErr = __redirect ) :
+			yield
+
+		if buffer :
+			self.__outputWidget.appendText( buffer )
 
 	def __contextMenu( self, widget ) :
 
@@ -279,9 +308,13 @@ class _MessageHandler( IECore.MessageHandler ) :
 
 		IECore.MessageHandler.__init__( self )
 
-		self.__textWidget = textWidget
+		self.__textWidget = weakref.ref( textWidget )
 
 	def handle( self, level, context, message ) :
+
+		widget = self.__textWidget()
+		if widget is None :
+			return
 
 		html = formatted = "<h1 class='%s'>%s : %s </h1><pre class='message'>%s</pre><br>" % (
 			IECore.Msg.levelAsString( level ),
@@ -289,7 +322,7 @@ class _MessageHandler( IECore.MessageHandler ) :
 			context,
 			message
 		)
-		self.__textWidget.appendHTML( html )
+		widget.appendHTML( html )
 		# update the gui so messages are output as they occur, rather than all getting queued
 		# up till the end.
 		QtWidgets.QApplication.instance().processEvents( QtCore.QEventLoop.ExcludeUserInputEvents )
