@@ -91,23 +91,45 @@ class _LinkedScrollBar( GafferUI.Widget ) :
 			scrollBar.rangeChanged.connect( Gaffer.WeakMethod( self.__rangeChanged ) )
 			scrollBar.stepsChanged.connect( Gaffer.WeakMethod( self.__stepsChanged ) )
 
+		self.__isUpdating = False
+
 	def __valueChanged( self, value ) :
 
-		for scrollBar in self.__scrollBars :
-			scrollBar.setValue( value )
+		if self.__isUpdating :
+			return
+
+		try :
+			self.__isUpdating = True
+			for scrollBar in self.__scrollBars :
+				scrollBar.setValue( value )
+		finally :
+			self.__isUpdating = False
 
 	def __rangeChanged( self, min, max ) :
 
-		for scrollBar in self.__scrollBars :
-			scrollBar.setRange( min, max )
+		if self.__isUpdating :
+			return
 
-		self.setVisible( min != max )
+		try :
+			self.__isUpdating = True
+			for scrollBar in self.__scrollBars :
+				scrollBar.setRange( min, max )
+			self.setVisible( min != max )
+		finally :
+			self.__isUpdating = False
 
 	def __stepsChanged( self, page, single ) :
 
-		for scrollBar in self.__scrollBars :
-			scrollBar.setPageStep( page )
-			scrollBar.setSingleStep( single )
+		if self.__isUpdating :
+			return
+
+		try :
+			self.__isUpdating = True
+			for scrollBar in self.__scrollBars :
+				scrollBar.setPageStep( page )
+				scrollBar.setSingleStep( single )
+		finally :
+			self.__isUpdating = False
 
 # QScrollBar provides signals for when the value and range are changed,
 # but not for when the page step is changed. This subclass adds the missing
