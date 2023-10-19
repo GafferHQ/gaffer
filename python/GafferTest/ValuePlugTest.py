@@ -691,6 +691,15 @@ class ValuePlugTest( GafferTest.TestCase ) :
 		with GafferTest.TestRunner.PerformanceScope() :
 			GafferTest.parallelGetValue( m["product"], 10000000 )
 
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testStaticNumericValuePerformance( self ) :
+
+		node = Gaffer.Node()
+		node["plug"] = Gaffer.IntPlug()
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			GafferTest.parallelGetValue( node["plug"], 10000000 )
+
 	def testIsSetToDefault( self ) :
 
 		n1 = GafferTest.AddNode()
@@ -1011,6 +1020,21 @@ class ValuePlugTest( GafferTest.TestCase ) :
 
 		n["in"].hash()
 		self.assertEqual( n["in"].getValue(), False )
+
+	def testOutputPlugWithConvertingInput( self ) :
+
+		for nodeType in ( Gaffer.Node, Gaffer.ComputeNode ) :
+			with self.subTest( nodeType = nodeType ) :
+
+				node = nodeType()
+				node["in"] = Gaffer.IntPlug()
+				node["out"] = Gaffer.FloatPlug( direction = Gaffer.Plug.Direction.Out )
+				node["out"].setInput( node["in"] )
+
+				for i in range( 0, 10 ) :
+
+					node["in"].setValue( i )
+					self.assertEqual( node["out"].getValue(), i )
 
 	def setUp( self ) :
 

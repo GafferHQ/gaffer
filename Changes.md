@@ -13,6 +13,7 @@ Improvements
 Fixes
 -----
 
+- ValuePlug : Fixed performance regression (introduced in 1.3.1.0) getting values from plugs without an input connection. This could severely affect scene generation times in some cases.
 - NameSwitch : Fixed bug which prevented drag and drop reordering of rows with an input connection.
 - PythonEditor :
   - Fixed output for `print()` calls with multiple arguments, which was previously spread across multiple lines.

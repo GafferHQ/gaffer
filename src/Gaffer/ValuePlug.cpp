@@ -606,11 +606,13 @@ class ValuePlug::ComputeProcess : public Process
 		{
 			const ValuePlug *p = sourcePlug( plug );
 
-			const ComputeNode *computeNode = IECore::runTimeCast<const ComputeNode>( p->node() );
-
+			const ComputeNode *computeNode = nullptr;
 			if( !p->getInput() )
 			{
-				if( p->direction()==In || !computeNode )
+				// Note the assignment to `computeNode` for use later. It is important that this is short-circuited
+				// for input plugs, as the unnecessary `runTimeCast()` would add measurable overhead for our most
+				// common case.
+				if( p->direction()==In || !(computeNode = IECore::runTimeCast<const ComputeNode>( p->node() )) )
 				{
 					// No input connection, and no means of computing
 					// a value. There can only ever be a single value,
@@ -622,6 +624,8 @@ class ValuePlug::ComputeProcess : public Process
 			// A plug with an input connection or an output plug on a ComputeNode. There can be many values -
 			// one per context, computed via ComputeNode::compute(). Pull the value out of our cache, or compute
 			// it with a ComputeProcess.
+
+			assert( (plug->getInput() && !computeNode) || computeNode );
 
 			const ThreadState &threadState = ThreadState::current();
 			const Context *currentContext = threadState.context();
