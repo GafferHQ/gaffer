@@ -8,6 +8,7 @@ Improvements
 - Spreadsheet :
   - Popups for string cells and row names are now sized to fit their column.
   - Added "Triple" and "Quadruple" width options to the spreadsheet row name popup menu.
+- Node : Improved performance when casting Python-derived types to ComputeNode.
 
 Fixes
 -----
