@@ -13,6 +13,7 @@ Breaking Changes
 
 - Render : Changed `render:includedPurposes` default to `"default", "render"`.
 - ValuePlug : Removed deprecated `getObjectValue()` overload.
+- Preferences : Removed `cache` plug.
 - Dispatcher : Removed `createMatching()` method.
 - Process : Removed non-const variant of the `handleException()` method.
 - StringPlug : Removed deprecated `precomputedHash` argument from `getValue()` method.

@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2023, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -36,38 +35,25 @@
 ##########################################################################
 
 import Gaffer
-import GafferImage
 
-# add plugs to the preferences node
+# Backwards compatibility for old `preferences.py` files that reference the
+# `cache` plug we had at one point.
 
-preferences = application.root()["preferences"]
-preferences["cache"] = Gaffer.Plug()
-preferences["cache"]["enabled"] = Gaffer.BoolPlug( defaultValue = True )
-preferences["cache"]["memoryLimit"] = Gaffer.IntPlug( defaultValue = Gaffer.ValuePlug.getCacheMemoryLimit() // ( 1024 * 1024 ) )
+def __preferencesGetItemWrapper( originalGetItem ) :
 
-Gaffer.Metadata.registerValue( preferences["cache"], "plugValueWidget:type", "GafferUI.LayoutPlugValueWidget", persistent = False )
-Gaffer.Metadata.registerValue( preferences["cache"], "layout:section", "Cache", persistent = False )
+	def getItem( self, key ) :
 
-Gaffer.Metadata.registerValue(
-	preferences["cache"]["memoryLimit"],
-	"description",
-	"""
-	Controls the memory limit for Gaffer's ValuePlug cache.
-	""",
-	persistent = False
-)
+		if key == "cache" and key not in self :
+			# Just return a dangling plug that does nothing, but is
+			# enough to keep the `setValue()` calls in the preferences
+			# happy.
+			result = Gaffer.Plug( "cache" )
+			result["enabled"] = Gaffer.BoolPlug()
+			result["memoryLimit"] = Gaffer.IntPlug()
+			return result
 
-# update cache settings when they change
+		return originalGetItem( self, key )
 
-def __plugSet( plug ) :
+	return getItem
 
-	if plug.relativeName( plug.node() ) != "cache" :
-		return
-
-	memoryLimit = plug["memoryLimit"].getValue() * 1024 * 1024
-	if not plug["enabled"].getValue() :
-		memoryLimit = 0
-
-	Gaffer.ValuePlug.setCacheMemoryLimit( memoryLimit )
-
-preferences.plugSetSignal().connect( __plugSet, scoped = False )
+Gaffer.Preferences.__getitem__ = __preferencesGetItemWrapper( Gaffer.Preferences.__getitem__ )
