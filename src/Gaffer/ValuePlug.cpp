@@ -695,6 +695,7 @@ class ValuePlug::ComputeProcess : public Process
 
 const IECore::InternedString ValuePlug::ComputeProcess::staticType( ValuePlug::computeProcessType() );
 // Using a null `GetterFunction` because it will never get called, because we only ever call `getIfCached()`.
+// Note : The default size here is overridden by `startup/Gaffer/cache.py`.
 ValuePlug::ComputeProcess::CacheType ValuePlug::ComputeProcess::g_cache( CacheType::GetterFunction(), 1024 * 1024 * 1024 * 1, CacheType::RemovalCallback(), /* cacheErrors = */ false ); // 1 gig
 
 //////////////////////////////////////////////////////////////////////////
