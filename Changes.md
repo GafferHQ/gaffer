@@ -5,6 +5,7 @@ Fixes
 -----
 
 - NameSwitch : Fixed bug which prevented drag and drop reordering of rows with an input connection.
+- Scatter : Fixed loading of Scatter nodes saved from Gaffer 1.3+ (where the Seeds node was renamed to Scatter).
 
 1.2.10.4 (relative to 1.2.10.3)
 ========
