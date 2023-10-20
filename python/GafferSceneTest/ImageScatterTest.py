@@ -90,9 +90,9 @@ class ImageScatterTest( GafferSceneTest.SceneTestCase ) :
 	def testPrimitiveVariables( self ) :
 
 		ramp = GafferImage.Ramp()
-		ramp["format"].setValue( GafferImage.Format( 2, 3 ) )
-		ramp["startPosition"].setValue( imath.V2f( 0, 0.5 ) )
-		ramp["endPosition"].setValue( imath.V2f( 0, 2.5 ) )
+		ramp["format"].setValue( GafferImage.Format( 3, 2 ) )
+		ramp["startPosition"].setValue( imath.V2f( 0.5, 0 ) )
+		ramp["endPosition"].setValue( imath.V2f( 2.5, 0 ) )
 		ramp["ramp"]["p0"]["y"]["a"].setValue( 1 ) # Solid alpha
 		ramp["ramp"]["interpolation"].setValue( Gaffer.SplineDefinitionInterpolation.Linear )
 
@@ -107,29 +107,36 @@ class ImageScatterTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( set( points.keys() ), { "P", "width" } )
 
 		scatter["primitiveVariables"].setValue( "[RGBA]" )
-		points = scatter["out"].object( "/points" )
-		self.assertEqual( set( points.keys() ), { "P", "width", "Cs", "A" } )
-		self.assertIsInstance( points["Cs"].data, IECore.Color3fVectorData )
-		self.assertEqual( len( points["Cs"].data ), len( points["P"].data ) )
-		self.assertIsInstance( points["width"].data, IECore.FloatVectorData )
-		self.assertEqual( len( points["width"].data ), len( points["P"].data ) )
 
-		for i, c in enumerate( points["Cs"].data ) :
-			# Expected spline value
-			y = points["P"].data[i].y
-			y = (y - 0.5) / 2.0
-			y = max( 0, min( y, 1 ) )
-			# Should match what we sampled for `Cs`
-			self.assertAlmostEqual( c[0], y, delta = 0.000001 )
-			self.assertAlmostEqual( c[1], y, delta = 0.000001 )
-			self.assertAlmostEqual( c[2], y, delta = 0.000001 )
-			# And width should be double that
-			self.assertAlmostEqual( points["width"].data[i], y * 2, delta = 0.000001 )
+		for pixelAspect in ( 1, 2 ) :
 
-		self.assertEqual(
-			points["A"].data,
-			IECore.FloatVectorData( [ 1.0 ] * len( points["P"].data ) )
-		)
+			with self.subTest( pixelAspect = pixelAspect ) :
+
+				ramp["format"]["pixelAspect"].setValue( pixelAspect )
+
+				points = scatter["out"].object( "/points" )
+				self.assertEqual( set( points.keys() ), { "P", "width", "Cs", "A" } )
+				self.assertIsInstance( points["Cs"].data, IECore.Color3fVectorData )
+				self.assertEqual( len( points["Cs"].data ), len( points["P"].data ) )
+				self.assertIsInstance( points["width"].data, IECore.FloatVectorData )
+				self.assertEqual( len( points["width"].data ), len( points["P"].data ) )
+
+				for i, c in enumerate( points["Cs"].data ) :
+					# Expected spline value
+					x = points["P"].data[i].x / pixelAspect
+					x = (x - 0.5) / 2.0
+					x = max( 0, min( x, 1 ) )
+					# Should match what we sampled for `Cs`
+					self.assertAlmostEqual( c[0], x, delta = 0.000001 )
+					self.assertAlmostEqual( c[1], x, delta = 0.000001 )
+					self.assertAlmostEqual( c[2], x, delta = 0.000001 )
+					# And width should be double that
+					self.assertAlmostEqual( points["width"].data[i], x * 2, delta = 0.000001 )
+
+				self.assertEqual(
+					points["A"].data,
+					IECore.FloatVectorData( [ 1.0 ] * len( points["P"].data ) )
+				)
 
 	def testWidth( self ) :
 

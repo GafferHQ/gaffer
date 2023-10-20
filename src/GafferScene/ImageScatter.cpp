@@ -62,7 +62,7 @@ using namespace std;
 namespace
 {
 
-void sampleChannel( const ImagePlug *image, const Box2i &displayWindow, const string &channelName, const vector<V3f> &positions, const IECore::Canceller *canceller, float *outData, int stride, float multiplier = 1.0f )
+void sampleChannel( const ImagePlug *image, const Box2i &displayWindow, const string &channelName, const vector<V3f> &positions, float pixelAspect, const IECore::Canceller *canceller, float *outData, int stride, float multiplier = 1.0f )
 {
 	Sampler sampler( image, channelName, displayWindow, Sampler::Clamp );
 	sampler.populate(); // Multithread the population of image tiles
@@ -73,7 +73,7 @@ void sampleChannel( const ImagePlug *image, const Box2i &displayWindow, const st
 			IECore::Canceller::check( canceller );
 			for( size_t i = range.begin(); i < range.end(); ++i )
 			{
-				outData[i*stride] = sampler.sample( positions[i].x, positions[i].y ) * multiplier;
+				outData[i*stride] = sampler.sample( positions[i].x / pixelAspect, positions[i].y ) * multiplier;
 			}
 		},
 		taskGroupContext
@@ -336,7 +336,7 @@ IECore::ConstObjectPtr ImageScatter::computeSource( const Context *context ) con
 					colorData->writable().resize( positions.size() );
 					result->variables[name] = PrimitiveVariable( PrimitiveVariable::Vertex, colorData );
 				}
-				sampleChannel( imagePlug(), displayWindow, channelName, positions, context->canceller(), colorData->baseWritable() + colorIndex, 3 );
+				sampleChannel( imagePlug(), displayWindow, channelName, positions, pixelAspect, context->canceller(), colorData->baseWritable() + colorIndex, 3 );
 			}
 			else
 			{
@@ -345,7 +345,7 @@ IECore::ConstObjectPtr ImageScatter::computeSource( const Context *context ) con
 				FloatVectorDataPtr floatData = new FloatVectorData;
 				floatData->writable().resize( positions.size() );
 				result->variables[name] = PrimitiveVariable( PrimitiveVariable::Vertex, floatData );
-				sampleChannel( imagePlug(), displayWindow, channelName, positions, context->canceller(), floatData->writable().data(), 1 );
+				sampleChannel( imagePlug(), displayWindow, channelName, positions, pixelAspect, context->canceller(), floatData->writable().data(), 1 );
 			}
 		}
 
@@ -354,7 +354,7 @@ IECore::ConstObjectPtr ImageScatter::computeSource( const Context *context ) con
 			FloatVectorDataPtr widthData = new FloatVectorData;
 			widthData->writable().resize( positions.size() );
 			result->variables["width"] = PrimitiveVariable( PrimitiveVariable::Vertex, widthData );
-			sampleChannel( imagePlug(), displayWindow, channelName, positions, context->canceller(), widthData->writable().data(), 1, width );
+			sampleChannel( imagePlug(), displayWindow, channelName, positions, pixelAspect, context->canceller(), widthData->writable().data(), 1, width );
 		}
 	}
 
