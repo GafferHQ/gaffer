@@ -8,10 +8,12 @@ Improvements
 - Spreadsheet :
   - Popups for string cells and row names are now sized to fit their column.
   - Added "Triple" and "Quadruple" width options to the spreadsheet row name popup menu.
+- Node : Improved performance when casting Python-derived types to ComputeNode.
 
 Fixes
 -----
 
+- ValuePlug : Fixed performance regression (introduced in 1.3.1.0) getting values from plugs without an input connection. This could severely affect scene generation times in some cases.
 - NameSwitch : Fixed bug which prevented drag and drop reordering of rows with an input connection.
 - PythonEditor :
   - Fixed output for `print()` calls with multiple arguments, which was previously spread across multiple lines.
