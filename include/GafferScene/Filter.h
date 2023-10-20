@@ -113,6 +113,8 @@ class GAFFERSCENE_API Filter : public Gaffer::ComputeNode
 
 	private :
 
+		bool enabled( const Gaffer::Context *context ) const;
+
 		friend class FilterPlug;
 
 		static size_t g_firstPlugIndex;

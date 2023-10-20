@@ -52,5 +52,28 @@ class FilterTest( GafferSceneTest.SceneTestCase ) :
 		GafferScene.Filter.setInputScene( c, p["out"] )
 		self.assertEqual( GafferScene.Filter.getInputScene( c ), p["out"] )
 
+	def testEnabledPlugContextSanitisation( self ) :
+
+		# Make a graph where `pathFilter.enabled` reads from the
+		# scene globals.
+		plane = GafferScene.Plane()
+
+		optionQuery = GafferScene.OptionQuery()
+		optionQuery["scene"].setInput( plane["out"] )
+		query = optionQuery.addQuery( Gaffer.BoolPlug(), "test" )
+
+		pathFilter = GafferScene.PathFilter()
+		pathFilter["enabled"] .setInput( optionQuery.outPlugFromQuery( query )["value"] )
+
+		attributes = GafferScene.StandardAttributes()
+		attributes["in"].setInput( plane["out"] )
+		attributes["filter"].setInput( pathFilter["out"] )
+
+		# Trigger an evaluation of the filter. We don't need to assert anything
+		# here, because all tests run with a ContextSanitiser active, and that
+		# will cause a failure if the filter leaks a context variable like
+		# `scene:path` into the evaluation of the scene globals.
+		attributes["out"].attributes( "/plane" )
+
 if __name__ == "__main__":
 	unittest.main()
