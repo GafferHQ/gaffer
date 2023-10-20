@@ -46,6 +46,7 @@
 #include "GafferScene/Cube.h"
 #include "GafferScene/ExternalProcedural.h"
 #include "GafferScene/Grid.h"
+#include "GafferScene/ImageScatter.h"
 #include "GafferScene/ImageToPoints.h"
 #include "GafferScene/Light.h"
 #include "GafferScene/ObjectToScene.h"
@@ -150,6 +151,7 @@ void GafferSceneModule::bindPrimitives()
 	GafferBindings::DependencyNodeClass<Cube>();
 	GafferBindings::DependencyNodeClass<Text>();
 	GafferBindings::DependencyNodeClass<ObjectToScene>();
+	GafferBindings::DependencyNodeClass<ImageScatter>();
 	GafferBindings::DependencyNodeClass<ImageToPoints>();
 
 	{

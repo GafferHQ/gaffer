@@ -1,6 +1,11 @@
 1.3.x.x (relative to 1.3.4.0)
 =======
 
+Features
+--------
+
+- ImageScatter : Added a new node for scattering points across an image, with density controlled by an image channel.
+
 Improvements
 ------------
 
@@ -19,6 +24,11 @@ Fixes
   - Fixed output for `print()` calls with multiple arguments, which was previously spread across multiple lines.
   - Fixed bug that prevented editors being destroyed at the right time.
 - FileSystemPath : Fixed bug on Windows where paths on an exFAT partition were not considered valid.
+
+API
+---
+
+- Sampler : Added `populate()` method, which populates the internal tile cache in parallel, and subsequently allows `sample()` to be called concurrently.
 
 1.3.4.0 (relative to 1.3.3.0)
 =======

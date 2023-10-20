@@ -48,9 +48,18 @@ namespace GafferImage
 /// access via pixel coordinates, dealing with pixels outside
 /// the data window by either clamping or returning black.
 ///
-/// The Sampler is sensitive to the Context which is current
-/// during its operation, so a sampler should only be used in
-/// the context in which it is constructed.
+/// By default, the Sampler populates its internal tile cache
+/// on demand, only querying tiles as they are needed by `sample()`
+/// or `visitPixels()`. This has two implications :
+///
+/// - It is not safe to call `sample()` or `visitPixels()`
+///   from multiple threads concurrently.
+/// - `sample()` and `visitPixels()` must be called with the
+///   same `Context` that was used to construct the sampler.
+///
+/// If concurrency is required or it is necessary to change
+/// Context while using the sampler, use the `populate()` method
+/// to fill the tile cache in advance.
 class GAFFERIMAGE_API Sampler
 {
 
@@ -73,6 +82,11 @@ class GAFFERIMAGE_API Sampler
 		/// @param sampleWindow The area from which samples may be requested. It is an error to request samples outside this area.
 		/// @param boundingMode The method of handling samples that fall outside the data window.
 		Sampler( const GafferImage::ImagePlug *plug, const std::string &channelName, const Imath::Box2i &sampleWindow, BoundingMode boundingMode = Black );
+
+		/// Uses `parallelProcessTiles()` to fill the internal tile cache
+		/// with all tiles in the sample window. Allows `sample()` and
+		/// `visitPixels()` to subsequently be called concurrently.
+		void populate();
 
 		/// Samples the channel value at the specified
 		/// integer pixel coordinate. It is the caller's

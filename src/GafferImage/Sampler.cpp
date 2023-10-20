@@ -36,6 +36,8 @@
 
 #include "GafferImage/Sampler.h"
 
+#include "GafferImage/ImageAlgo.h"
+
 using namespace IECore;
 using namespace Imath;
 using namespace Gaffer;
@@ -111,6 +113,20 @@ Sampler::Sampler( const GafferImage::ImagePlug *plug, const std::string &channel
 	m_dataCacheRaw.resize( m_cacheWidth * cacheHeight, nullptr );
 
 	m_cacheOriginIndex = ( m_cacheWindow.min.x >> ImagePlug::tileSizeLog2() ) + m_cacheWidth * ( m_cacheWindow.min.y >> ImagePlug::tileSizeLog2() );
+}
+
+void Sampler::populate()
+{
+	ImageAlgo::parallelProcessTiles(
+		m_plug,
+		[&] ( const ImagePlug *imagePlug, const V2i &tileOrigin ) {
+			const float *tileData;
+			int tilePixelIndex;
+			cachedData( tileOrigin, tileData, tilePixelIndex );
+			assert( tilePixelIndex == 0 );
+		},
+		m_cacheWindow
+	);
 }
 
 void Sampler::hash( IECore::MurmurHash &h ) const

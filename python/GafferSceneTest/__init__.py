@@ -172,6 +172,7 @@ from .ImageToPointsTest import ImageToPointsTest
 from .MeshSplitTest import MeshSplitTest
 from .FramingConstraintTest import FramingConstraintTest
 from .MeshNormalsTest import MeshNormalsTest
+from .ImageScatterTest import ImageScatterTest
 
 from .IECoreScenePreviewTest import *
 from .IECoreGLPreviewTest import *
