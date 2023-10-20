@@ -1,6 +1,11 @@
 1.3.x.x (relative to 1.3.5.0)
 =======
 
+Fixes
+-----
+
+- Windows : Fixed a bug preventing anything except strings from being copied and pasted.
+
 
 1.3.5.0 (relative to 1.3.4.0)
 =======
