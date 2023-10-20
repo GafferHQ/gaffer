@@ -442,7 +442,10 @@ Build
 - USD : Updated to version 23.05.
 - ZLib : Added version 1.2.13.
 
-1.2.10.x (relative to 1.2.10.4)
+1.2.10.x (relative to 1.2.10.5)
+========
+
+1.2.10.5 (relative to 1.2.10.4)
 ========
 
 Fixes
