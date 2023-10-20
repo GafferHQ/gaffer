@@ -395,6 +395,11 @@ class Reference::PlugEdits : public Signals::Trackable
 				return;
 			}
 
+			for( Plug::RecursiveIterator it( plug ); !it.done(); ++it )
+			{
+				m_plugEdits.erase( it->get() );
+			}
+
 			m_plugEdits.erase( plug );
 		}
 
