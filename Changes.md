@@ -1,11 +1,22 @@
 1.3.x.x (relative to 1.3.5.0)
 =======
 
+Features
+--------
+
+- LightTool :
+  - Added manipulator for disk and point light radii.
+  - Added manipulators for cylinder length and radius.
+
+Improvements
+------------
+
+- LightTool : Changed spot light and quad light edge tool tip locations so that they follow the cone and edge during drag.
+
 Fixes
 -----
 
 - Windows : Fixed a bug preventing anything except strings from being copied and pasted.
-
 
 1.3.5.0 (relative to 1.3.4.0)
 =======

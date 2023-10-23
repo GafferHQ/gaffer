@@ -284,6 +284,12 @@ class GAFFERSCENEUI_API Inspector::Result : public IECore::RefCounted
 
 		/// The inspected value that should be displayed by the UI.
 		const IECore::Object *value() const;
+		/// The inspected value cast to its native type. If the inspected
+		/// value is not of the requested type, the given default value
+		/// will be returned.
+		template<typename T>
+		const T typedValue( const T &defaultValue ) const;
+
 		/// The plug that was used to author the current value, or null if
 		/// it cannot be determined.
 		Gaffer::ValuePlug *source() const;
@@ -346,3 +352,5 @@ class GAFFERSCENEUI_API Inspector::Result : public IECore::RefCounted
 } // namespace Private
 
 } // namespace GafferSceneUI
+
+#include "GafferSceneUI/Private/Inspector.inl"
