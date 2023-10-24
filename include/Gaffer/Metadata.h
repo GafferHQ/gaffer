@@ -94,11 +94,22 @@ class GAFFER_API Metadata
 		/// Registration queries
 		/// ====================
 
+		enum RegistrationTypes
+		{
+			None = 0,
+			TypeId = 1,
+			TypeIdDescendant = 2,
+			InstancePersistent = 4,
+			InstanceNonPersistent = 8,
+			Instance = InstancePersistent | InstanceNonPersistent,
+			All = TypeId | TypeIdDescendant | Instance
+		};
+
 		/// Fills the keys vector with keys for all values registered with the methods above.
 		static void registeredValues( IECore::InternedString target, std::vector<IECore::InternedString> &keys );
-		/// Fills the keys vector with keys for all values registered for the specified graphComponent.
-		/// If instanceOnly is true, then only the values registered for that exact instance are returned.
-		/// If persistentOnly is true, then non-persistent instance values are ignored.
+		/// Returns the keys for all values relevant to `target`, taking into account only the specified `registrationTypes`.
+		static std::vector<IECore::InternedString> registeredValues( const GraphComponent *target, unsigned registrationTypes = RegistrationTypes::All );
+		/// \deprecated Pass RegistrationTypes instead.
 		static void registeredValues( const GraphComponent *target, std::vector<IECore::InternedString> &keys, bool instanceOnly = false, bool persistentOnly = false );
 
 		/// Value retrieval
@@ -107,6 +118,11 @@ class GAFFER_API Metadata
 		/// Retrieves a value, returning null if none exists.
 		template<typename T=IECore::Data>
 		static typename T::ConstPtr value( IECore::InternedString target, IECore::InternedString key );
+		/// Ignores any values not included in `registrationTypes`.
+		template<typename T=IECore::Data>
+		static typename T::ConstPtr value( const GraphComponent *target, IECore::InternedString key, unsigned registrationTypes );
+		/// \deprecated Pass RegistrationTypes instead. When we remove this,
+		/// default `registrationTypes` to `All` in overload above.
 		template<typename T=IECore::Data>
 		static typename T::ConstPtr value( const GraphComponent *target, IECore::InternedString key, bool instanceOnly = false );
 
@@ -189,6 +205,8 @@ class GAFFER_API Metadata
 		static void instanceDestroyed( GraphComponent *graphComponent );
 
 		static IECore::ConstDataPtr valueInternal( IECore::InternedString target, IECore::InternedString key );
+		static IECore::ConstDataPtr valueInternal( const GraphComponent *target, IECore::InternedString key, unsigned registrationTypes );
+		/// \deprecated
 		static IECore::ConstDataPtr valueInternal( const GraphComponent *target, IECore::InternedString key, bool instanceOnly );
 
 };

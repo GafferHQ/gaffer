@@ -33,6 +33,10 @@ API
 
 - Process : Added `acquireCollaborativeResult()` method, providing an improved mechanism for multiple threads to collaborate on TBB tasks spawned by a single process they all depend on.
 - ValuePlug : Added `Default` CachePolicy and deprecated `Standard`, `TaskIsolation` and `Legacy` policies.
+- Metadata :
+  - Added `RegistrationTypes` enum that allows the different types of registrations to be identified.
+  - Added improved `registeredValues()` and `value()` overloads that provide finer-grained queries based on the type of registration.
+  - Deprecated `instanceOnly` and `persistentOnly` arguments in favour of new `registrationTypes` arguments.
 
 1.3.5.0 (relative to 1.3.4.0)
 =======
