@@ -154,7 +154,7 @@ class _SectionChooser( GafferUI.Widget ) :
 
 		# Remove metadata for sections that no longer exist
 
-		registeredValues = Gaffer.Metadata.registeredValues( rowsPlug, instanceOnly = True )
+		registeredValues = Gaffer.Metadata.registeredValues( rowsPlug, Gaffer.Metadata.RegistrationTypes.Instance )
 		for key in registeredValues :
 			m = re.match( "spreadsheet:section:(.+):index", key )
 			if m and m.group( 1 ) not in sectionNames :

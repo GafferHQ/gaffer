@@ -48,8 +48,7 @@ namespace MetadataAlgo
 template<typename Predicate>
 void copyIf( const GraphComponent *from, GraphComponent *to, Predicate &&predicate, bool persistent )
 {
-	std::vector<IECore::InternedString> names;
-	Metadata::registeredValues( from, names, /* instanceOnly = */ false, /* persistentOnly = */ false );
+	const std::vector<IECore::InternedString> names = Metadata::registeredValues( from );
 	for( const auto &name : names )
 	{
 		if( predicate( from, const_cast<const GraphComponent *>( to ), name ) )

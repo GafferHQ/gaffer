@@ -94,7 +94,7 @@ class MonitorAlgoTest( GafferTest.TestCase ) :
 		Gaffer.MonitorAlgo.removePerformanceAnnotations( s )
 		for node in Gaffer.Node.RecursiveRange( s ) :
 			self.assertEqual(
-				Gaffer.Metadata.registeredValues( node, instanceOnly = True ),
+				Gaffer.Metadata.registeredValues( node, Gaffer.Metadata.RegistrationTypes.Instance ),
 				[]
 			)
 
