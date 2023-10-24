@@ -254,13 +254,13 @@ void View::registerView( const IECore::TypeId nodeType, const std::string &plugP
 	namedCreators()[nodeType].push_back( RegexAndCreator( boost::regex( plugPath ), creator ) );
 }
 
-void View::toolsChildAdded( Gaffer::GraphComponent *child ) const
+void View::toolsChildAdded( Gaffer::GraphComponent *child )
 {
 	auto tool = static_cast<Tool *>( child ); // Type guaranteed by `ToolContainer::acceptsChild()`
-	tool->plugSetSignal().connect( boost::bind( &View::toolPlugSet, this, ::_1 ) );
+	m_toolPlugSetConnections[tool] = tool->plugSetSignal().connect( boost::bind( &View::toolPlugSet, this, ::_1 ) );
 }
 
-void View::toolPlugSet( Gaffer::Plug *plug ) const
+void View::toolPlugSet( Gaffer::Plug *plug )
 {
 	auto tool = plug->ancestor<Tool>();
 	if( plug != tool->activePlug() )
@@ -268,16 +268,35 @@ void View::toolPlugSet( Gaffer::Plug *plug ) const
 		return;
 	}
 
-	if( !tool->activePlug()->getValue() || !exclusive( tool ) )
+	if( !exclusive( tool ) )
 	{
 		return;
 	}
 
-	for( auto &t : Tool::Range( *tools() ) )
+	if( tool->activePlug()->getValue() )
 	{
-		if( t != tool && exclusive( t.get() ) )
+		for( auto &t : Tool::Range( *tools() ) )
 		{
-			t->activePlug()->setValue( false );
+			if( t != tool && exclusive( t.get() ) )
+			{
+				// Prevent re-entering `toolPlugSet()` when disabling other exclusive tools
+				Signals::BlockedConnection toolPlugSetBlocker( m_toolPlugSetConnections[t.get()] );
+				t->activePlug()->setValue( false );
+			}
+		}
+	}
+	else
+	{
+		for( auto &t : Tool::Range( *tools() ) )
+		{
+			auto order = Metadata::value<IntData>( t.get(), "order" );
+			if( order && order->readable() == 0 )
+			{
+				// Prevent re-entering `toolPlugSet()` when enabling the default tool
+				Signals::BlockedConnection toolPlugSetBlocker( m_toolPlugSetConnections[t.get()] );
+				t->activePlug()->setValue( true );
+				break;
+			}
 		}
 	}
 }

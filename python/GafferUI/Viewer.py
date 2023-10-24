@@ -225,13 +225,8 @@ class Viewer( GafferUI.NodeSetEditor ) :
 
 		for t in self.__toolChooser.tools() :
 			if Gaffer.Metadata.value( t, "viewer:shortCut" ) == event.key :
-				if not t["active"].getValue():
-					t["active"].setValue( True )
-				else:
-					# If it's already active, and it's a non-exclusive tool, then pressing the key
-					# again should deactivate it
-					if Gaffer.Metadata.value( t, "tool:exclusive" ) == False:
-						t["active"].setValue( False )
+				t["active"].setValue( not t["active"].getValue() )
+
 				return True
 
 			# \todo The Viewer should not need to know about `TransformTool` and orientations.

@@ -1,6 +1,11 @@
 1.x.x.x (relative to 1.3.x.x)
 =======
 
+Improvements
+------------
+
+- Toolbars : Changed hotkey behavior to toogle any tool on and off. Exclusive tools such as the Translate and Crop Window tools activate the first tool (currently Selection Tool) when they are toggled off.
+
 Breaking Changes
 ----------------
 

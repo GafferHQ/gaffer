@@ -189,8 +189,11 @@ class GAFFERUI_API View : public Gaffer::Node
 
 	private :
 
-		void toolsChildAdded( Gaffer::GraphComponent *child ) const;
-		void toolPlugSet( Gaffer::Plug *plug ) const;
+		void toolsChildAdded( Gaffer::GraphComponent *child );
+		void toolPlugSet( Gaffer::Plug *plug );
+
+		using ToolPlugSetMap = std::unordered_map<Tool *, Gaffer::Signals::ScopedConnection>;
+		ToolPlugSetMap m_toolPlugSetConnections;
 
 		ViewportGadgetPtr m_viewportGadget;
 		Gaffer::ContextPtr m_context;
