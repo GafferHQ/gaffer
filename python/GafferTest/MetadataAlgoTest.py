@@ -486,13 +486,13 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["n"] = Gaffer.Node()
-		self.assertEqual( len( Gaffer.Metadata.registeredValues( s["n"], instanceOnly = True ) ), 0 )
+		self.assertEqual( len( Gaffer.Metadata.registeredValues( s["n"], Gaffer.Metadata.RegistrationTypes.Instance ) ), 0 )
 
 		Gaffer.MetadataAlgo.setBookmarked( s["n"], True )
-		self.assertEqual( len( Gaffer.Metadata.registeredValues( s["n"], instanceOnly = True ) ), 1 )
+		self.assertEqual( len( Gaffer.Metadata.registeredValues( s["n"], Gaffer.Metadata.RegistrationTypes.Instance ) ), 1 )
 
 		Gaffer.MetadataAlgo.setBookmarked( s["n"], False )
-		self.assertEqual( len( Gaffer.Metadata.registeredValues( s["n"], instanceOnly = True ) ), 0 )
+		self.assertEqual( len( Gaffer.Metadata.registeredValues( s["n"], Gaffer.Metadata.RegistrationTypes.Instance ) ), 0 )
 
 	def testNumericBookmarks( self ) :
 
@@ -708,21 +708,21 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 
 		n = Gaffer.Node()
 		Gaffer.MetadataAlgo.addAnnotation( n, "test", Gaffer.MetadataAlgo.Annotation( text = "abc" ) )
-		self.assertEqual( len( Gaffer.Metadata.registeredValues( n, instanceOnly = True ) ), 1 )
+		self.assertEqual( len( Gaffer.Metadata.registeredValues( n, Gaffer.Metadata.RegistrationTypes.Instance ) ), 1 )
 		self.assertEqual(
 			Gaffer.MetadataAlgo.getAnnotation( n, "test" ),
 			Gaffer.MetadataAlgo.Annotation( text = "abc" )
 		)
 
 		Gaffer.MetadataAlgo.addAnnotation( n, "test", Gaffer.MetadataAlgo.Annotation( text = "xyz", color = imath.Color3f( 1 ) ) )
-		self.assertEqual( len( Gaffer.Metadata.registeredValues( n, instanceOnly = True ) ), 2 )
+		self.assertEqual( len( Gaffer.Metadata.registeredValues( n, Gaffer.Metadata.RegistrationTypes.Instance ) ), 2 )
 		self.assertEqual(
 			Gaffer.MetadataAlgo.getAnnotation( n, "test" ),
 			Gaffer.MetadataAlgo.Annotation( text = "xyz", color = imath.Color3f( 1 ) )
 		)
 
 		Gaffer.MetadataAlgo.addAnnotation( n, "test", Gaffer.MetadataAlgo.Annotation( text = "abc" ) )
-		self.assertEqual( len( Gaffer.Metadata.registeredValues( n, instanceOnly = True ) ), 1 )
+		self.assertEqual( len( Gaffer.Metadata.registeredValues( n, Gaffer.Metadata.RegistrationTypes.Instance ) ), 1 )
 		self.assertEqual(
 			Gaffer.MetadataAlgo.getAnnotation( n, "test" ),
 			Gaffer.MetadataAlgo.Annotation( text = "abc" )

@@ -195,7 +195,7 @@ class BoxInTest( GafferTest.TestCase ) :
 		s["b1"]["i"].setup( s["b1"]["n"]["op1"] )
 
 		self.assertEqual( Gaffer.Metadata.value( s["b1"]["i"].promotedPlug(), "test" ), "testValue" )
-		self.assertNotIn( "layout:section", Gaffer.Metadata.registeredValues( s["b1"]["i"].promotedPlug(), instanceOnly = True ) )
+		self.assertNotIn( "layout:section", Gaffer.Metadata.registeredValues( s["b1"]["i"].promotedPlug(), Gaffer.Metadata.RegistrationTypes.Instance ) )
 
 		s["b2"] = Gaffer.Box()
 		s.execute(
@@ -204,7 +204,7 @@ class BoxInTest( GafferTest.TestCase ) :
 		)
 
 		self.assertEqual( Gaffer.Metadata.value( s["b2"]["i"].promotedPlug(), "test" ), "testValue" )
-		self.assertNotIn( "layout:section", Gaffer.Metadata.registeredValues( s["b2"]["i"].promotedPlug(), instanceOnly = True ) )
+		self.assertNotIn( "layout:section", Gaffer.Metadata.registeredValues( s["b2"]["i"].promotedPlug(), Gaffer.Metadata.RegistrationTypes.Instance ) )
 
 	def testNoduleSectionMetadata( self ) :
 

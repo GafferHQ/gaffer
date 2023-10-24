@@ -436,8 +436,7 @@ Annotation getAnnotation( const Node *node, const std::string &name, bool inheri
 void removeAnnotation( Node *node, const std::string &name )
 {
 	const string prefix = g_annotationPrefix + name + ":";
-	vector<InternedString> keys;
-	Metadata::registeredValues( node, keys );
+	const vector<InternedString> keys = Metadata::registeredValues( node );
 
 	for( const auto &key : keys )
 	{
@@ -450,8 +449,7 @@ void removeAnnotation( Node *node, const std::string &name )
 
 void annotations( const Node *node, std::vector<std::string> &names )
 {
-	vector<InternedString> keys;
-	Metadata::registeredValues( node, keys );
+	const vector<InternedString> keys = Metadata::registeredValues( node );
 
 	for( const auto &key : keys )
 	{
@@ -695,8 +693,14 @@ void copy( const GraphComponent *from, GraphComponent *to, bool persistent )
 
 void copy( const GraphComponent *from, GraphComponent *to, const IECore::StringAlgo::MatchPattern &exclude, bool persistentOnly, bool persistent )
 {
-	vector<IECore::InternedString> keys;
-	Metadata::registeredValues( from, keys, /* instanceOnly = */ false, /* persistentOnly = */ persistentOnly );
+	/// \todo Change function signature to take `RegistrationTypes` directly.
+	unsigned registrationTypes = Metadata::RegistrationTypes::TypeId | Metadata::RegistrationTypes::TypeIdDescendant | Metadata::RegistrationTypes::InstancePersistent;
+	if( !persistentOnly )
+	{
+		registrationTypes |= Metadata::RegistrationTypes::InstanceNonPersistent;
+	}
+
+	const vector<IECore::InternedString> keys = Metadata::registeredValues( from, registrationTypes );
 	for( vector<IECore::InternedString>::const_iterator it = keys.begin(), eIt = keys.end(); it != eIt; ++it )
 	{
 		if( StringAlgo::matchMultiple( it->string(), exclude ) )

@@ -577,8 +577,7 @@ std::vector<NoduleLayout::GadgetKey> NoduleLayout::layoutOrder()
 
 	// Then any custom gadgets specified by the metadata
 
-	vector<InternedString> metadata;
-	Metadata::registeredValues( m_parent.get(), metadata );
+	const vector<InternedString> metadata = Metadata::registeredValues( m_parent.get() );
 	static boost::regex g_customGadgetRegex( "noduleLayout:customGadget:(.+):gadgetType" );
 	for( vector<InternedString>::const_iterator it = metadata.begin(), eIt = metadata.end(); it != eIt; ++it )
 	{

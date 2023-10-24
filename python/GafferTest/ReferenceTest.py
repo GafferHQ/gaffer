@@ -799,10 +799,10 @@ class ReferenceTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.value( s["r"], "serialiser:minorVersion" ), Gaffer.About.minorVersion() )
 		self.assertEqual( Gaffer.Metadata.value( s["r"], "serialiser:patchVersion" ), Gaffer.About.patchVersion() )
 
-		self.assertTrue( "serialiser:milestoneVersion" not in Gaffer.Metadata.registeredValues( s["r"], persistentOnly = True ) )
-		self.assertTrue( "serialiser:majorVersion" not in Gaffer.Metadata.registeredValues( s["r"], persistentOnly = True ) )
-		self.assertTrue( "serialiser:minorVersion" not in Gaffer.Metadata.registeredValues( s["r"], persistentOnly = True ) )
-		self.assertTrue( "serialiser:patchVersion" not in Gaffer.Metadata.registeredValues( s["r"], persistentOnly = True ) )
+		self.assertNotIn( "serialiser:milestoneVersion", Gaffer.Metadata.registeredValues( s["r"], Gaffer.Metadata.RegistrationTypes.InstancePersistent ) )
+		self.assertNotIn( "serialiser:majorVersion", Gaffer.Metadata.registeredValues( s["r"], Gaffer.Metadata.RegistrationTypes.InstancePersistent ) )
+		self.assertNotIn( "serialiser:minorVersion", Gaffer.Metadata.registeredValues( s["r"], Gaffer.Metadata.RegistrationTypes.InstancePersistent ) )
+		self.assertNotIn( "serialiser:patchVersion", Gaffer.Metadata.registeredValues( s["r"], Gaffer.Metadata.RegistrationTypes.InstancePersistent ) )
 
 	def testSerialiseWithoutLoading( self ) :
 

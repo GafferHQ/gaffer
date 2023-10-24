@@ -206,7 +206,7 @@ def __uiDefinition( box, extension ) :
 def __metadata( graphComponent ) :
 
 	items = []
-	for k in Gaffer.Metadata.registeredValues( graphComponent, instanceOnly = True, persistentOnly = True ) :
+	for k in Gaffer.Metadata.registeredValues( graphComponent, Gaffer.Metadata.RegistrationTypes.InstancePersistent ) :
 
 		v = Gaffer.Metadata.value( graphComponent, k )
 		items.append(
