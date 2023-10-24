@@ -879,5 +879,10 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.value( promoted[1]["cells"]["column1"]["value"], "plugValueWidget:type" ), "GafferUI.MultiLineStringPlugValueWidget" )
 		self.assertIsNone( Gaffer.Metadata.value( promoted[1]["cells"]["column1"]["value"], "plugValueWidget:type", instanceOnly = True ) )
 
+		# And we don't want any other metadata to be copied for the non-default rows.
+
+		for plug in Gaffer.Plug.RecursiveRange( promoted[1] ) :
+			self.assertEqual( Gaffer.Metadata.registeredValues( plug, instanceOnly = True ), [] )
+
 if __name__ == "__main__":
 	unittest.main()
