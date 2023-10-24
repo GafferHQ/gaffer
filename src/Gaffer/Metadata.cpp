@@ -428,7 +428,7 @@ void registerInstanceValue( GraphComponent *instance, IECore::InternedString key
 	);
 }
 
-void registeredInstanceValues( const GraphComponent *graphComponent, std::vector<IECore::InternedString> &keys, bool persistentOnly )
+void registeredInstanceValues( const GraphComponent *graphComponent, std::vector<IECore::InternedString> &keys, unsigned registrationTypes )
 {
 	InstanceMetadataMap &m = instanceMetadataMap();
 	InstanceMetadataMap::const_accessor accessor;
@@ -440,11 +440,32 @@ void registeredInstanceValues( const GraphComponent *graphComponent, std::vector
 	const InstanceValues::nth_index<1>::type &index = accessor->second->get<1>();
 	for( InstanceValues::nth_index<1>::type::const_iterator vIt = index.begin(), veIt = index.end(); vIt != veIt; ++vIt )
 	{
-		if( !persistentOnly || vIt->persistent )
+		if(
+			( vIt->persistent && ( registrationTypes & Metadata::RegistrationTypes::InstancePersistent ) ) ||
+			( !vIt->persistent && ( registrationTypes & Metadata::RegistrationTypes::InstanceNonPersistent ) )
+		)
 		{
 			keys.push_back( vIt->name );
 		}
 	}
+}
+
+// Utilities
+// =========
+
+// Converts from deprecated arguments to new RegistrationTypes.
+unsigned registrationTypes( bool instanceOnly, bool persistentOnly = false )
+{
+	unsigned result = Metadata::RegistrationTypes::InstancePersistent;
+	if( !instanceOnly )
+	{
+		result |= Metadata::RegistrationTypes::TypeId | Metadata::RegistrationTypes::TypeIdDescendant;
+	}
+	if( !persistentOnly )
+	{
+		result |= Metadata::RegistrationTypes::InstanceNonPersistent;
+	}
+	return result;
 }
 
 } // namespace
@@ -688,9 +709,11 @@ void Metadata::registerValue( GraphComponent *target, IECore::InternedString key
 	registerInstanceValue( target, key, value, persistent );
 }
 
-void Metadata::registeredValues( const GraphComponent *target, std::vector<IECore::InternedString> &keys, bool instanceOnly, bool persistentOnly )
+std::vector<IECore::InternedString> Metadata::registeredValues( const GraphComponent *target, unsigned registrationTypes )
 {
-	if( !instanceOnly )
+	std::vector<IECore::InternedString> keys;
+
+	if( registrationTypes & RegistrationTypes::TypeId  )
 	{
 		IECore::TypeId typeId = target->typeId();
 		while( typeId != InvalidTypeId )
@@ -707,7 +730,10 @@ void Metadata::registeredValues( const GraphComponent *target, std::vector<IECor
 			typeId = RunTimeTyped::baseTypeId( typeId );
 		}
 		std::reverse( keys.begin(), keys.end() );
+	}
 
+	if( registrationTypes & RegistrationTypes::TypeIdDescendant )
+	{
 		if( const Plug *plug = runTimeCast<const Plug>( target ) )
 		{
 			vector<InternedString> plugPathKeys;
@@ -743,55 +769,61 @@ void Metadata::registeredValues( const GraphComponent *target, std::vector<IECor
 			keys.insert( keys.end(), plugPathKeys.rbegin(), plugPathKeys.rend() );
 		}
 	}
-	registeredInstanceValues( target, keys, persistentOnly );
+
+	if( registrationTypes & RegistrationTypes::Instance )
+	{
+		registeredInstanceValues( target, keys, registrationTypes );
+	}
+
+	return keys;
 }
 
-IECore::ConstDataPtr Metadata::valueInternal( const GraphComponent *target, IECore::InternedString key, bool instanceOnly )
+void Metadata::registeredValues( const GraphComponent *target, std::vector<IECore::InternedString> &keys, bool instanceOnly, bool persistentOnly )
+{
+	keys = registeredValues( target, registrationTypes( instanceOnly, persistentOnly ) );
+}
+
+IECore::ConstDataPtr Metadata::valueInternal( const GraphComponent *target, IECore::InternedString key, unsigned registrationTypes )
 {
 	// Look for instance values first. These override
 	// everything else.
 
-	if( OptionalData iv = instanceValue( target, key ) )
+	if( registrationTypes & RegistrationTypes::Instance )
 	{
-		return *iv;
-	}
-
-	if( instanceOnly )
-	{
-		return nullptr;
+		bool persistent;
+		if( OptionalData iv = instanceValue( target, key, &persistent ) )
+		{
+			if(
+				( !persistent && ( registrationTypes & RegistrationTypes::InstanceNonPersistent ) ) ||
+				( persistent  && ( registrationTypes & RegistrationTypes::InstancePersistent ) )
+			)
+			{
+				return *iv;
+			}
+		}
 	}
 
 	// If the target is a plug, then look for a path-based
 	// value. These are more specific than type-based values.
 
-	if( const Plug *plug = runTimeCast<const Plug>( target ) )
+	if( registrationTypes & RegistrationTypes::TypeIdDescendant )
 	{
-		const GraphComponent *ancestor = plug->parent();
-		vector<InternedString> plugPath( { plug->getName() } );
-		while( ancestor )
+		if( const Plug *plug = runTimeCast<const Plug>( target ) )
 		{
-			IECore::TypeId typeId = ancestor->typeId();
-			while( typeId != InvalidTypeId )
+			const GraphComponent *ancestor = plug->parent();
+			vector<InternedString> plugPath( { plug->getName() } );
+			while( ancestor )
 			{
-				auto nIt = graphComponentMetadataMap().find( typeId );
-				if( nIt != graphComponentMetadataMap().end() )
+				IECore::TypeId typeId = ancestor->typeId();
+				while( typeId != InvalidTypeId )
 				{
-					// First do a direct lookup using the plug path.
-					auto it = nIt->second.plugPathsToValues.find( plugPath );
-					const auto eIt = nIt->second.plugPathsToValues.end();
-					if( it != eIt )
+					auto nIt = graphComponentMetadataMap().find( typeId );
+					if( nIt != graphComponentMetadataMap().end() )
 					{
-						auto vIt = it->second.find( key );
-						if( vIt != it->second.end() )
-						{
-							return vIt->second( plug );
-						}
-					}
-					// And only if the direct lookup fails, do a full search using
-					// wildcard matches.
-					for( it = nIt->second.plugPathsToValues.begin(); it != eIt; ++it )
-					{
-						if( StringAlgo::match( plugPath, it->first ) )
+						// First do a direct lookup using the plug path.
+						auto it = nIt->second.plugPathsToValues.find( plugPath );
+						const auto eIt = nIt->second.plugPathsToValues.end();
+						if( it != eIt )
 						{
 							auto vIt = it->second.find( key );
 							if( vIt != it->second.end() )
@@ -799,34 +831,55 @@ IECore::ConstDataPtr Metadata::valueInternal( const GraphComponent *target, IECo
 								return vIt->second( plug );
 							}
 						}
+						// And only if the direct lookup fails, do a full search using
+						// wildcard matches.
+						for( it = nIt->second.plugPathsToValues.begin(); it != eIt; ++it )
+						{
+							if( StringAlgo::match( plugPath, it->first ) )
+							{
+								auto vIt = it->second.find( key );
+								if( vIt != it->second.end() )
+								{
+									return vIt->second( plug );
+								}
+							}
+						}
 					}
+					typeId = RunTimeTyped::baseTypeId( typeId );
 				}
-				typeId = RunTimeTyped::baseTypeId( typeId );
-			}
 
-			plugPath.insert( plugPath.begin(), ancestor->getName() );
-			ancestor = ancestor->parent();
+				plugPath.insert( plugPath.begin(), ancestor->getName() );
+				ancestor = ancestor->parent();
+			}
 		}
 	}
 
 	// Finally look for values registered to the type
 
-	IECore::TypeId typeId = target->typeId();
-	while( typeId != InvalidTypeId )
+	if( registrationTypes & RegistrationTypes::TypeId )
 	{
-		auto nIt = graphComponentMetadataMap().find( typeId );
-		if( nIt != graphComponentMetadataMap().end() )
+		IECore::TypeId typeId = target->typeId();
+		while( typeId != InvalidTypeId )
 		{
-			auto vIt = nIt->second.values.find( key );
-			if( vIt != nIt->second.values.end() )
+			auto nIt = graphComponentMetadataMap().find( typeId );
+			if( nIt != graphComponentMetadataMap().end() )
 			{
-				return vIt->second( target );
+				auto vIt = nIt->second.values.find( key );
+				if( vIt != nIt->second.values.end() )
+				{
+					return vIt->second( target );
+				}
 			}
+			typeId = RunTimeTyped::baseTypeId( typeId );
 		}
-		typeId = RunTimeTyped::baseTypeId( typeId );
 	}
 
 	return nullptr;
+}
+
+IECore::ConstDataPtr Metadata::valueInternal( const GraphComponent *target, IECore::InternedString key, bool instanceOnly )
+{
+	return Metadata::valueInternal( target, key, registrationTypes( instanceOnly ) );
 }
 
 Metadata::ValueChangedSignal &Metadata::valueChangedSignal()

@@ -1055,6 +1055,43 @@ class MetadataTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.registeredValues( n, instanceOnly = True ), [] )
 		self.assertEqual( Gaffer.Metadata.registeredValues( n["op1"], instanceOnly = True ), [] )
 
+	def testQueryTypeIdRegistrationIgnoringInstanceRegistration( self ) :
+
+		Gaffer.Metadata.registerValue( GafferTest.AddNode, "testMetadata", "typeIdValue" )
+		self.addCleanup( Gaffer.Metadata.deregisterValue, GafferTest.AddNode, "testMetadata" )
+
+		node = GafferTest.AddNode()
+		Gaffer.Metadata.registerValue( node, "testMetadata", "instanceValue" )
+
+		self.assertEqual( Gaffer.Metadata.value(  node, "testMetadata" ), "instanceValue" )
+		self.assertEqual(
+			Gaffer.Metadata.value(  node, "testMetadata", registrationTypes = Gaffer.Metadata.RegistrationTypes.TypeId ),
+			"typeIdValue"
+		)
+
+	def testRegistrationTypeVsInstanceOnly( self ) :
+
+		# Check that we resolve the deprecated and non-deprecated function overloads
+		# correctly. Can be removed when we remove the deprecated ones.
+
+		n = GafferTest.AddNode()
+		Gaffer.Metadata.registerValue( n["op1"], "persistent", 2 )
+		Gaffer.Metadata.registerValue( n["op1"], "nonPersistent", 3, persistent = False )
+
+		# Keyword arguments should allow us to distinguish old and new overloads.
+
+		self.assertEqual( Gaffer.Metadata.registeredValues( n["op1"], instanceOnly = True ), [ "persistent" , "nonPersistent" ] )
+		self.assertEqual( Gaffer.Metadata.registeredValues( n["op1"], instanceOnly = True, persistentOnly = True ), [ "persistent" ] )
+		self.assertEqual( Gaffer.Metadata.registeredValues( n["op1"], registrationTypes = Gaffer.Metadata.RegistrationTypes.Instance ), [ "persistent" , "nonPersistent" ] )
+		self.assertEqual( Gaffer.Metadata.registeredValues( n["op1"], registrationTypes = Gaffer.Metadata.RegistrationTypes.InstanceNonPersistent ), [ "nonPersistent" ] )
+
+		# And even if we don't use keyword arguments, the argument types should allow us to disambiguate.
+
+		self.assertEqual( Gaffer.Metadata.registeredValues( n["op1"], True ), [ "persistent" , "nonPersistent" ] )
+		self.assertEqual( Gaffer.Metadata.registeredValues( n["op1"], True, True ), [ "persistent" ] )
+		self.assertEqual( Gaffer.Metadata.registeredValues( n["op1"], Gaffer.Metadata.RegistrationTypes.Instance ), [ "persistent" , "nonPersistent" ] )
+		self.assertEqual( Gaffer.Metadata.registeredValues( n["op1"], Gaffer.Metadata.RegistrationTypes.InstanceNonPersistent ), [ "nonPersistent" ] )
+
 	@staticmethod
 	def testPythonUnload() :
 
