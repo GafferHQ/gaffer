@@ -205,11 +205,19 @@ void copyColorsWrapper( const Gaffer::Plug &srcPlug, Gaffer::Plug &dstPlug, bool
 // Promotability
 // =============
 
-
 bool isPromotableWrapper( const GraphComponent &from, const GraphComponent &to, const IECore::InternedString &name )
 {
 	IECorePython::ScopedGILRelease gilRelease;
 	return isPromotable( &from, &to, name );
+}
+
+// Cleanup
+// =======
+
+void deregisterRedundantValuesWrapper( GraphComponent &g )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return deregisterRedundantValues( &g );
 }
 
 } // namespace
@@ -338,5 +346,10 @@ void GafferModule::bindMetadataAlgo()
 	// =============
 
 	def( "isPromotable", &isPromotableWrapper, ( arg( "from" ), arg( "to" ), arg( "name" ) ) );
+
+	// Cleanup
+	// =======
+
+	def( "deregisterRedundantValues", &deregisterRedundantValuesWrapper );
 
 }
