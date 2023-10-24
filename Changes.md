@@ -32,6 +32,7 @@ API
 
 - Process : Added `acquireCollaborativeResult()` method, providing an improved mechanism for multiple threads to collaborate on TBB tasks spawned by a single process they all depend on.
 - ValuePlug : Added `Default` CachePolicy and deprecated `Standard`, `TaskIsolation` and `Legacy` policies.
+- Metadata : Fixed redundant copying of metadata when promoting plugs.
 
 1.3.5.0 (relative to 1.3.4.0)
 =======
