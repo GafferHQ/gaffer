@@ -234,6 +234,16 @@ GAFFER_API void copyColors( const Gaffer::Plug *srcPlug, Gaffer::Plug *dstPlug, 
 /// Returns true if metadata can be promoted from one plug to another.
 GAFFER_API bool isPromotable( const GraphComponent *from, const GraphComponent *to, const IECore::InternedString &name );
 
+/// Cleanup
+/// =======
+
+/// Removes any redundant metadata registrations from `graphComponent` and all
+/// its descendants. By redundant we mean instance-level registrations that have
+/// the same value as an exising type-based fallback, so that removing the
+/// instance registration has no effect on the composed result.
+/// \undoable
+GAFFER_API void deregisterRedundantValues( GraphComponent *graphComponent );
+
 } // namespace MetadataAlgo
 
 } // namespace Gaffer

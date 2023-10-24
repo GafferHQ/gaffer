@@ -751,6 +751,32 @@ bool isPromotable( const GraphComponent *from, const GraphComponent *to, const I
 	return true;
 }
 
+/// Cleanup
+/// =======
+
+void deregisterRedundantValues( GraphComponent *graphComponent )
+{
+	for( const auto &key : Metadata::registeredValues( graphComponent, Metadata::RegistrationTypes::Instance ) )
+	{
+		ConstDataPtr instanceValue = Metadata::value( graphComponent, key, (unsigned)Metadata::RegistrationTypes::Instance );
+		ConstDataPtr typeValue = Metadata::value( graphComponent, key, (unsigned)Metadata::RegistrationTypes::TypeId | Metadata::RegistrationTypes::TypeIdDescendant );
+		if(
+			( (bool)instanceValue == (bool)typeValue ) &&
+			( !instanceValue || instanceValue->isEqualTo( typeValue.get() ) )
+		)
+		{
+			// We can remove the instance value, because the lookup will fall
+			// back to an identical value.
+			Gaffer::Metadata::deregisterValue( graphComponent, key );
+		}
+	}
+
+	for( auto &child : GraphComponent::Range( *graphComponent ) )
+	{
+		deregisterRedundantValues( child.get() );
+	}
+}
+
 } // namespace MetadataAlgo
 
 } // namespace Gaffer
