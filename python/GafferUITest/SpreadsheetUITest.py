@@ -852,5 +852,32 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.value( s["rows"][1]["cells"]["a"]["value"], "plugValueWidget:type" ), "Test2" )
 		self.assertEqual( Gaffer.Metadata.value( s["rows"][1]["cells"]["b"]["value"], "plugValueWidget:type" ), "Test3" )
 
+	def testRowMetadataNotPromotedRedundantly( self ) :
+
+		Gaffer.Metadata.registerValue( Gaffer.IntPlug, "plugAlgoTest:b", "testValueB" )
+		self.addCleanup( Gaffer.Metadata.deregisterValue, Gaffer.IntPlug, "plugAlgoTest:b" )
+
+		# Metadata is automatically inherited from the default row to the other rows
+		# so that we can avoid lots of redundant registrations.
+
+		box = Gaffer.Box()
+		box["spreadsheet"] = Gaffer.Spreadsheet()
+		box["spreadsheet"]["rows"].addColumn( Gaffer.StringPlug( "column1" ) )
+		box["spreadsheet"]["rows"].addRows( 1 )
+		Gaffer.Metadata.registerValue(
+			box["spreadsheet"]["rows"][0]["cells"]["column1"]["value"],
+			"plugValueWidget:type", "GafferUI.MultiLineStringPlugValueWidget"
+		)
+		self.assertEqual( Gaffer.Metadata.value( box["spreadsheet"]["rows"][0]["cells"]["column1"]["value"], "plugValueWidget:type" ), "GafferUI.MultiLineStringPlugValueWidget" )
+		self.assertEqual( Gaffer.Metadata.value( box["spreadsheet"]["rows"][1]["cells"]["column1"]["value"], "plugValueWidget:type" ), "GafferUI.MultiLineStringPlugValueWidget" )
+
+		# So we want to avoid promoting that metadata redundantly for the non-default rows.
+
+		promoted = Gaffer.PlugAlgo.promote( box["spreadsheet"]["rows"] )
+		self.assertEqual( Gaffer.Metadata.value( promoted[0]["cells"]["column1"]["value"], "plugValueWidget:type" ), "GafferUI.MultiLineStringPlugValueWidget" )
+		self.assertEqual( Gaffer.Metadata.value( promoted[0]["cells"]["column1"]["value"], "plugValueWidget:type", instanceOnly = True ), "GafferUI.MultiLineStringPlugValueWidget" )
+		self.assertEqual( Gaffer.Metadata.value( promoted[1]["cells"]["column1"]["value"], "plugValueWidget:type" ), "GafferUI.MultiLineStringPlugValueWidget" )
+		self.assertIsNone( Gaffer.Metadata.value( promoted[1]["cells"]["column1"]["value"], "plugValueWidget:type", instanceOnly = True ) )
+
 if __name__ == "__main__":
 	unittest.main()
