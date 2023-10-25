@@ -97,4 +97,66 @@ string context( string name )
 	return context( name, "" );
 }
 
+// Vector context variable queries with index
+
+int contextElement( string name, int index, int defaultValue )
+{
+	int result = defaultValue;
+	getattribute( "gaffer:context", name, index, result );
+	return result;
+}
+
+int contextElement( string name, int index )
+{
+	return contextElement( name, index, 0 );
+}
+
+float contextElement( string name, int index, float defaultValue )
+{
+	float result = defaultValue;
+	getattribute( "gaffer:context", name, index, result );
+	return result;
+}
+
+float contextElement( string name, int index )
+{
+	return contextElement( name, index, 0.0 );
+}
+
+color contextElement( string name, int index, color defaultValue )
+{
+	color result = defaultValue;
+	getattribute( "gaffer:context", name, index, result );
+	return result;
+}
+
+color contextElement( string name, int index )
+{
+	return contextElement( name, index, color( 0.0 ) );
+}
+
+vector contextElement( string name, int index, vector defaultValue )
+{
+	vector result = defaultValue;
+	getattribute( "gaffer:context", name, index, result );
+	return result;
+}
+
+vector contextElement( string name, int index )
+{
+	return contextElement( name, index, vector( 0.0 ) );
+}
+
+string contextElement( string name, int index, string defaultValue )
+{
+	string result = defaultValue;
+	getattribute( "gaffer:context", name, index, result );
+	return result;
+}
+
+string contextElement( string name, int index )
+{
+	return contextElement( name, index, "" );
+}
+
 #endif // GAFFEROSL_EXPRESSION_H

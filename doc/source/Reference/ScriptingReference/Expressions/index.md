@@ -23,7 +23,11 @@ Set value          | `parent["NodeName"]["plugName"] = value` | `parent.NodeName
 Context Variables
 -----------------
 
-Operation             | Python                                    | OSL
-----------------------|-------------------------------------------|----
-Get variable          | `context["variableName"]`                 | `context( "variableName" )`
-Get with default      | `context.get( "variableName", default )`  | `context( "variableName", default )`
+Operation                       | Python                                                                                   | OSL
+--------------------------------|------------------------------------------------------------------------------------------|----
+Get variable                    | `context["variableName"]`                                                                | `context( "variableName" )`
+Get with default                | `context.get( "variableName", default )`                                                 | `context( "variableName", default )`
+Get array element               | `context["variableName"][index]`                                                         | `contextElement( "variableName", index )`
+Get array element with default  | `a = context.get( "variableName", [] )`<br/>`a[index] if len( a ) > index else default`  | `contextElement( "variableName", index, default )`
+Get array element from end      | `context["variableName"][-index]`                                                        | `contextElement( "variableName", -index )`
+

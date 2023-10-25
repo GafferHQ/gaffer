@@ -54,8 +54,10 @@
 
 #include "IECoreImage/OpenImageIOAlgo.h"
 
+#include "IECore/DataAlgo.h"
 #include "IECore/SearchPath.h"
 #include "IECore/StringAlgo.h"
+#include "IECore/TypeTraits.h"
 
 #include "OSL/oslcomp.h"
 #include "OSL/oslexec.h"
@@ -102,6 +104,65 @@ struct RenderState
 // our RenderState.
 //////////////////////////////////////////////////////////////////////////
 
+
+bool getAttributeInternal( OSL::ShaderGlobals *sg, bool derivatives, ustring object, TypeDesc type, ustring name, std::optional<int> index, void *value )
+{
+	const RenderState *renderState = sg ? static_cast<RenderState *>( sg->renderstate ) : nullptr;
+	if( !renderState )
+	{
+		return false;
+	}
+
+	// TODO - might be nice if there was some way to speed this up by directly querying the type matching
+	// the TypeDesc, instead of getting as a generic Data?
+	DataPtr data = renderState->context->getAsData( name.c_str(), nullptr );
+	if( !data )
+	{
+		return false;
+	}
+
+	if( derivatives )
+	{
+		memset( (char*)value + type.size(), 0, 2 * type.size() );
+	}
+
+	IECoreImage::OpenImageIOAlgo::DataView dataView( data.get(), /* createUStrings = */ true );
+	if( !dataView.data )
+	{
+		if( auto b = runTimeCast<BoolData>( data.get() ) )
+		{
+			// BoolData isn't supported by `DataView` because `OIIO::TypeDesc` doesn't
+			// have a boolean type. We could work around this in `DataView` by casting to
+			// `TypeDesc::UCHAR` (along with a `static_assert( sizeof( bool ) == 1`). But that
+			// wouldn't be round-trippable via `OpenImageIOAlgo::data()`, so it's not clear
+			// that it would be a good thing in general. Here we don't care about round
+			// tripping, so we simply perform a conversion ourselves.
+			const unsigned char c = b->readable();
+			return ShadingSystem::convert_value( value, type, &c, TypeDesc::UCHAR );
+		}
+		return false;
+	}
+
+	int effectiveIndex = 0;
+	if( index )
+	{
+		effectiveIndex = index.value() < 0 ? dataView.type.arraylen + index.value() : index.value();
+		if( effectiveIndex >= dataView.type.arraylen || effectiveIndex < 0 )
+		{
+			return false;
+		}
+		dataView.type.arraylen = 0;
+	}
+
+	return ShadingSystem::convert_value(
+		value,
+		type,
+		(char *)dataView.data + dataView.type.size() * effectiveIndex,
+		dataView.type
+	);
+}
+
+
 /// \todo Share with OSLRenderer
 
 class RendererServices : public OSL::RendererServices
@@ -135,47 +196,12 @@ class RendererServices : public OSL::RendererServices
 
 		bool get_attribute( OSL::ShaderGlobals *sg, bool derivatives, ustring object, TypeDesc type, ustring name, void *value ) override
 		{
-			const RenderState *renderState = sg ? static_cast<RenderState *>( sg->renderstate ) : nullptr;
-			if( !renderState )
-			{
-				return false;
-			}
-
-			// TODO - might be nice if there was some way to speed this up by directly querying the type matching
-			// the TypeDesc, instead of getting as a generic Data?
-			const DataPtr data = renderState->context->getAsData( name.c_str(), nullptr );
-			if( !data )
-			{
-				return false;
-			}
-
-			if( derivatives )
-			{
-				memset( (char*)value + type.size(), 0, 2 * type.size() );
-			}
-
-			IECoreImage::OpenImageIOAlgo::DataView dataView( data.get(), /* createUStrings = */ true );
-			if( !dataView.data )
-			{
-				if( auto b = runTimeCast<BoolData>( data.get() ) )
-				{
-					// BoolData isn't supported by `DataView` because `OIIO::TypeDesc` doesn't
-					// have a boolean type. We could work around this in `DataView` by casting to
-					// `TypeDesc::UCHAR` (along with a `static_assert( sizeof( bool ) == 1`). But that
-					// wouldn't be round-trippable via `OpenImageIOAlgo::data()`, so it's not clear
-					// that it would be a good thing in general. Here we don't care about round
-					// tripping, so we simply perform a conversion ourselves.
-					const unsigned char c = b->readable();
-					return ShadingSystem::convert_value( value, type, &c, TypeDesc::UCHAR );
-				}
-				return false;
-			}
-			return ShadingSystem::convert_value( value, type, dataView.data, dataView.type );
+			return getAttributeInternal( sg, derivatives, object, type, name, std::nullopt, value );
 		}
 
 		bool get_array_attribute( OSL::ShaderGlobals *sg, bool derivatives, ustring object, TypeDesc type, ustring name, int index, void *value ) override
 		{
-			return false;
+			return getAttributeInternal( sg, derivatives, object, type, name, index, value );
 		}
 
 		// OSL tries to populate shader parameter values per-object by calling this method.

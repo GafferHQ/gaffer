@@ -221,6 +221,160 @@ class OSLExpressionEngineTest( GafferOSLTest.OSLTestCase ) :
 			self.assertEqual( s["n"]["user"]["s"].getValue(), "non-default" )
 			self.assertEqual( s["n"]["user"]["b"].getValue(), True )
 
+	def testContextVectorTypes( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		for i in range( 0, 5 ) :
+			s["n"]["user"]["f" + str( i )] = Gaffer.FloatPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+			s["n"]["user"]["i" + str( i )] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+			s["n"]["user"]["c" + str( i )] = Gaffer.Color3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+			s["n"]["user"]["v" + str( i )] = Gaffer.V3fPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+			s["n"]["user"]["s" + str( i )] = Gaffer.StringPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+			s["n"]["user"]["b" + str( i )] = Gaffer.BoolPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression(
+			inspect.cleandoc(
+				"""
+				parent.n.user.f0 = contextElement( "f", 0,  1 );
+				parent.n.user.i0 = contextElement( "i", 0, 1 );
+				parent.n.user.c0 = contextElement( "c", 0, color( 1, 2, 3 ) );
+				parent.n.user.v0 = contextElement( "v", 0 );
+				parent.n.user.s0 = contextElement( "s", 0, "default0" );
+
+				parent.n.user.f1 = contextElement( "f", 1, 2 );
+				parent.n.user.i1 = contextElement( "i", 1, 2 );
+				parent.n.user.c1 = contextElement( "c", 1, color( 4, 5, 6 ) );
+				parent.n.user.v1 = contextElement( "v", 1 );
+				parent.n.user.s1 = contextElement( "s", 1, "default1" );
+
+				parent.n.user.f2 = contextElement( "f", 2,  3 );
+				parent.n.user.i2 = contextElement( "i", 2, 3 );
+				parent.n.user.c2 = contextElement( "c", 2, color( 7, 8, 9 ) );
+				parent.n.user.v2 = contextElement( "v", 2 );
+				parent.n.user.s2 = contextElement( "s", 2, "default2" );
+
+				parent.n.user.f3 = contextElement( "f", -1 );
+				parent.n.user.i3 = contextElement( "i", -1 );
+				parent.n.user.c3 = contextElement( "c", -1 );
+				parent.n.user.v3 = contextElement( "v", -1 );
+				parent.n.user.s3 = contextElement( "s", -1 );
+
+				parent.n.user.f4 = contextElement( "f", -3 );
+				parent.n.user.i4 = contextElement( "i", -3 );
+				parent.n.user.c4 = contextElement( "c", -3 );
+				parent.n.user.v4 = contextElement( "v", -3 );
+				parent.n.user.s4 = contextElement( "s", -3 );
+				"""
+			),
+			"OSL"
+		)
+
+		with Gaffer.Context() as c :
+
+			self.assertEqual( s["n"]["user"]["f0"].getValue(), 1 )
+			self.assertEqual( s["n"]["user"]["i0"].getValue(), 1 )
+			self.assertEqual( s["n"]["user"]["c0"].getValue(), imath.Color3f( 1, 2, 3 ) )
+			self.assertEqual( s["n"]["user"]["v0"].getValue(), imath.V3f( 0 ) )
+			self.assertEqual( s["n"]["user"]["s0"].getValue(), "default0" )
+
+			self.assertEqual( s["n"]["user"]["f1"].getValue(), 2 )
+			self.assertEqual( s["n"]["user"]["i1"].getValue(), 2 )
+			self.assertEqual( s["n"]["user"]["c1"].getValue(), imath.Color3f( 4, 5, 6 ) )
+			self.assertEqual( s["n"]["user"]["v1"].getValue(), imath.V3f( 0 ) )
+			self.assertEqual( s["n"]["user"]["s1"].getValue(), "default1" )
+
+			self.assertEqual( s["n"]["user"]["f2"].getValue(), 3 )
+			self.assertEqual( s["n"]["user"]["i2"].getValue(), 3 )
+			self.assertEqual( s["n"]["user"]["c2"].getValue(), imath.Color3f( 7, 8, 9 ) )
+			self.assertEqual( s["n"]["user"]["v2"].getValue(), imath.V3f( 0 ) )
+			self.assertEqual( s["n"]["user"]["s2"].getValue(), "default2" )
+
+			self.assertEqual( s["n"]["user"]["f3"].getValue(), 0 )
+			self.assertEqual( s["n"]["user"]["i3"].getValue(), 0 )
+			self.assertEqual( s["n"]["user"]["c3"].getValue(), imath.Color3f( 0 ) )
+			self.assertEqual( s["n"]["user"]["v3"].getValue(), imath.V3f( 0 ) )
+			self.assertEqual( s["n"]["user"]["s3"].getValue(), "" )
+
+			self.assertEqual( s["n"]["user"]["f4"].getValue(), 0 )
+			self.assertEqual( s["n"]["user"]["i4"].getValue(), 0 )
+			self.assertEqual( s["n"]["user"]["c4"].getValue(), imath.Color3f( 0 ) )
+			self.assertEqual( s["n"]["user"]["v4"].getValue(), imath.V3f( 0 ) )
+			self.assertEqual( s["n"]["user"]["s4"].getValue(), "" )
+
+			c["f"] = IECore.FloatVectorData( [ 10, 11 ] )
+			c["i"] = IECore.IntVectorData( [ 11, 12 ] )
+			c["c"] = IECore.Color3fVectorData( [ imath.Color3f( 10, 11, 12 ), imath.Color3f( 13, 14, 15 ) ] )
+			c["v"] = IECore.V3fVectorData( [ imath.V3f( 9, 10, 11 ), imath.V3f( 12, 13, 14 ) ] )
+			c["s"] = IECore.StringVectorData( [ "non-default0", "non-default1" ] )
+
+			self.assertEqual( s["n"]["user"]["f0"].getValue(), 10 )
+			self.assertEqual( s["n"]["user"]["i0"].getValue(), 11 )
+			self.assertEqual( s["n"]["user"]["c0"].getValue(), imath.Color3f( 10, 11, 12 ) )
+			self.assertEqual( s["n"]["user"]["v0"].getValue(), imath.V3f( 9, 10, 11 ) )
+			self.assertEqual( s["n"]["user"]["s0"].getValue(), "non-default0" )
+
+			self.assertEqual( s["n"]["user"]["f1"].getValue(), 11 )
+			self.assertEqual( s["n"]["user"]["i1"].getValue(), 12 )
+			self.assertEqual( s["n"]["user"]["c1"].getValue(), imath.Color3f( 13, 14, 15 ) )
+			self.assertEqual( s["n"]["user"]["v1"].getValue(), imath.V3f( 12, 13, 14 ) )
+			self.assertEqual( s["n"]["user"]["s1"].getValue(), "non-default1" )
+
+			self.assertEqual( s["n"]["user"]["f2"].getValue(), 3 )
+			self.assertEqual( s["n"]["user"]["i2"].getValue(), 3 )
+			self.assertEqual( s["n"]["user"]["c2"].getValue(), imath.Color3f( 7, 8, 9 ) )
+			self.assertEqual( s["n"]["user"]["v2"].getValue(), imath.V3f( 0 ) )
+			self.assertEqual( s["n"]["user"]["s2"].getValue(), "default2" )
+
+			self.assertEqual( s["n"]["user"]["f3"].getValue(), 11 )
+			self.assertEqual( s["n"]["user"]["i3"].getValue(), 12 )
+			self.assertEqual( s["n"]["user"]["c3"].getValue(), imath.Color3f( 13, 14, 15 ) )
+			self.assertEqual( s["n"]["user"]["v3"].getValue(), imath.V3f( 12, 13, 14 ) )
+			self.assertEqual( s["n"]["user"]["s3"].getValue(), "non-default1" )
+
+			self.assertEqual( s["n"]["user"]["f4"].getValue(), 0 )
+			self.assertEqual( s["n"]["user"]["i4"].getValue(), 0 )
+			self.assertEqual( s["n"]["user"]["c4"].getValue(), imath.Color3f( 0 ) )
+			self.assertEqual( s["n"]["user"]["v4"].getValue(), imath.V3f( 0 ) )
+			self.assertEqual( s["n"]["user"]["s4"].getValue(), "" )
+
+	def testScenePathContext( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["n"] = Gaffer.Node()
+		s["n"]["user"]["p1"] = Gaffer.StringPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["p2"] = Gaffer.StringPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["p3"] = Gaffer.StringPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		s["n"]["user"]["p4"] = Gaffer.StringPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		s["e"] = Gaffer.Expression()
+		s["e"].setExpression(
+			inspect.cleandoc(
+				"""
+				parent.n.user.p1 = contextElement( "scene:path", 0, "noPath1" );
+				parent.n.user.p2 = contextElement( "scene:path", 1, "noPath2" );
+				parent.n.user.p3 = contextElement( "scene:path", 2 );
+				parent.n.user.p4 = contextElement( "scene:path", 3 );
+				"""
+			),
+			"OSL"
+		)
+
+		with Gaffer.Context() as c :
+
+			self.assertEqual( s["n"]["user"]["p1"].getValue(), "noPath1" )
+			self.assertEqual( s["n"]["user"]["p2"].getValue(), "noPath2" )
+			self.assertEqual( s["n"]["user"]["p3"].getValue(), "" )
+			self.assertEqual( s["n"]["user"]["p4"].getValue(), "" )
+
+			c["scene:path"] = IECore.InternedStringVectorData( [ "yellow", "brick", "road" ] )
+
+			self.assertEqual( s["n"]["user"]["p1"].getValue(), "yellow" )
+			self.assertEqual( s["n"]["user"]["p2"].getValue(), "brick" )
+			self.assertEqual( s["n"]["user"]["p3"].getValue(), "road" )
+			self.assertEqual( s["n"]["user"]["p4"].getValue(), "" )
+
 	def testDefaultExpression( self ) :
 
 		s = Gaffer.ScriptNode()

@@ -16,6 +16,7 @@ Improvements
 - LightTool : Changed spot light and quad light edge tool tip locations so that they follow the cone and edge during drag.
 - Arnold : Improved speed of translation of encapsulated scenes when using many threads.
 - CollectImages : Added `addLayerPrefix` plug, to allow the layer prefix to be omitted in the case that the input images are already prefixed.
+- OSL Expression : Added support for getting an element of an array context variable using `contextElement( variableName, index )` or `contextElement( variableName, index, defaultValue )`. Negative indices can be used to get elements relative to the end of the array.
 
 Fixes
 -----
