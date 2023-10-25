@@ -95,6 +95,15 @@ Gaffer.Metadata.registerNode(
 
 		),
 
+		"..." : (
+
+			# Just because a plug is renameable and/or deletable on one node
+			# does not mean it should still be when promoted to another.
+			"renameable:promotable", False,
+			"deletable:promotable", False,
+
+		),
+
 	}
 
 )
