@@ -1282,5 +1282,26 @@ class MetadataTest( GafferTest.TestCase ) :
 		Gaffer.Metadata.registerValue( node, "test", 2 )
 		self.assertEqual( Gaffer.Metadata.value( node, "test" ), 1 )
 
+	def tearDown( self ) :
+
+		GafferTest.TestCase.tearDown( self )
+
+		Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "aKey" )
+		Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "iKey" )
+		Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "k" )
+		Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "imt" )
+		Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "maskTest" )
+		Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "deleteMe" )
+		Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "nodeData3" )
+
+		Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "op1", "description" )
+		Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "op1", "iKey" )
+		Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "op1", "imt" )
+		Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "op1", "k" )
+		Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "op1", "deleteMe" )
+		Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "op1", "plugData3" )
+		Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "op1", "rp" )
+		Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "op*", "aKey" )
+
 if __name__ == "__main__":
 	unittest.main()
