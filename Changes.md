@@ -7,6 +7,7 @@ Features
 - LightTool :
   - Added manipulator for disk and point light radii.
   - Added manipulators for cylinder length and radius.
+- Tools Menu : Added "Metadata/Clean Up" menu item to optimise file size by removing redundant metadata.
 
 Improvements
 ------------
