@@ -37,6 +37,7 @@
 #include "GafferScene/Filter.h"
 
 #include "GafferScene/FilterPlug.h"
+#include "GafferScene/ScenePlug.h"
 
 #include "Gaffer/Context.h"
 
@@ -117,7 +118,7 @@ void Filter::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *conte
 	ComputeNode::hash( output, context, h );
 	if( output == outPlug() )
 	{
-		if( enabledPlug()->getValue() )
+		if( enabled( context ) )
 		{
 			/// \todo In SceneNode (and other enableable nodes) we
 			/// require methods like hashMatch() to call the base class
@@ -137,7 +138,7 @@ void Filter::compute( ValuePlug *output, const Context *context ) const
 	if( output == outPlug() )
 	{
 		unsigned match = IECore::PathMatcher::NoMatch;
-		if( enabledPlug()->getValue() )
+		if( enabled( context ) )
 		{
 			match = computeMatch( getInputScene( context ), context );
 		}
@@ -165,4 +166,31 @@ void Filter::hashMatch( const ScenePlug *scene, const Gaffer::Context *context, 
 unsigned Filter::computeMatch( const ScenePlug *scene, const Gaffer::Context *context ) const
 {
 	return IECore::PathMatcher::NoMatch;
+}
+
+bool Filter::enabled( const Gaffer::Context *context ) const
+{
+	const BoolPlug *plug = enabledPlug();
+	const BoolPlug *sourcePlug = plug->source<BoolPlug>();
+	if( !sourcePlug || sourcePlug->direction() == Plug::Out )
+	{
+		// Value may be computed. We use a global scope for two reasons :
+		//
+		// - Because our implementation assumes the result is constant across
+		//   the scene, and allowing it to vary by `scene:path` could produce
+		//   results where AncestorMatch and DescendantMatch are not consistent across locations.
+		// - To reduce pressure on the hash cache.
+		//
+		// > Note : `sourcePlug` will be null if the source is not a BoolPlug.
+		// > In this case we call `getValue()` on `plug` and it will perform the
+		// > appropriate type conversion.
+		ScenePlug::GlobalScope globalScope( context );
+		return sourcePlug ? sourcePlug->getValue() : plug->getValue();
+	}
+	else
+	{
+		// Value is not computed so context is irrelevant.
+		// Avoid overhead of context creation.
+		return sourcePlug->getValue();
+	}
 }
