@@ -36,6 +36,8 @@
 
 import unittest
 
+import imath
+
 import Gaffer
 import GafferTest
 import GafferUI
@@ -56,6 +58,24 @@ class BoxIOUITest( GafferUITest.TestCase ) :
 		Gaffer.PlugAlgo.promote( box["switch"]["in"][1] )
 		Gaffer.BoxIO.insert( box )
 		self.assertEqual( Gaffer.Metadata.registeredValues( box["BoxIn"]["__in"], Gaffer.Metadata.RegistrationTypes.Instance ), [] )
+
+		oldColor = GafferUI.Metadata.value( box["add"]["op1"], "nodule:color", Gaffer.Metadata.RegistrationTypes.TypeId )
+		self.addCleanup( Gaffer.Metadata.registerValue, Gaffer.IntPlug, "nodule:color", oldColor )
+
+		newColor = imath.Color3f( 1, 0, 0 )
+		Gaffer.Metadata.registerValue( Gaffer.IntPlug, "nodule:color", newColor )
+		self.assertEqual( Gaffer.Metadata.value( box["add"]["op1"], "nodule:color" ), newColor )
+
+		promoted = Gaffer.BoxIO.promote( box["switch"]["out"] )
+		self.assertEqual(
+			set( Gaffer.Metadata.registeredValues( box["BoxOut"]["__out"], Gaffer.Metadata.RegistrationTypes.Instance ) ),
+			# We allow `description` and `plugValueWidget:type` because we do want those to be transferred through to
+			# the promoted plug, even though `description` doesn't always make sense in the new context. But we definitely
+			# don't want `nodule:color` to be promoted to instance metadata, because it is inherited from the type anyway.
+			{ "description", "plugValueWidget:type" }
+		)
+		self.assertEqual( Gaffer.Metadata.value( promoted, "nodule:color" ), newColor )
+		self.assertEqual( Gaffer.Metadata.value( box["BoxOut"]["__out"], "nodule:color" ), newColor )
 
 if __name__ == "__main__":
 	unittest.main()
