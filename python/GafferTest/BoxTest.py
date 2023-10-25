@@ -1119,5 +1119,24 @@ class BoxTest( GafferTest.TestCase ) :
 
 		assertPassThrough( s2 )
 
+	def testComputeNodeCastDoesntRequirePython( self ) :
+
+		class CastChecker( Gaffer.Box ) :
+
+			def __init__( self, name = "CastChecker" ) :
+
+				Gaffer.Box.__init__( self, name )
+				self["out"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out )
+
+			def isInstanceOf( self, typeId ) :
+
+				raise Exception( "Cast to ComputeNode should not require Python" )
+
+		# The call to `dependsOnCompute()` will internally cast to `ComputeNode`
+		# in C++. We don't want that to require entry into Python because it is
+		# far too costly and the answer can be determined on the C++ side anyway.
+		node = CastChecker()
+		self.assertFalse( Gaffer.PlugAlgo.dependsOnCompute( node["out"] ) )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -401,7 +401,9 @@ class _RowPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 	def _updateFromEditable( self ) :
 
-		self.__dragHandle.setEnabled( self._editable() )
+		# Not using `_editable()` as it considers the whole plug to be non-editable if
+		# any child has an input connection, but that shouldn't prevent us reordering rows.
+		self.__dragHandle.setEnabled( not Gaffer.MetadataAlgo.readOnly( self.getPlug() ) )
 
 	def __updateWidgetVisibility( self ) :
 

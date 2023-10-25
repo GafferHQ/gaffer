@@ -176,6 +176,7 @@ enum TypeId
 	MeshSplitTypeId = 110632,
 	FramingConstraintTypeId = 110633,
 	MeshNormalsTypeId = 110634,
+	ImageScatterTypeId = 110635,
 
 	PreviewPlaceholderTypeId = 110647,
 	PreviewGeometryTypeId = 110648,

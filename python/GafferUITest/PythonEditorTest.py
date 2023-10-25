@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2014, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2023, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,45 +35,71 @@
 ##########################################################################
 
 import unittest
+import weakref
 
 import Gaffer
-import GafferScene
-import GafferSceneTest
+import GafferUI
+import GafferUITest
 
-class FilterTest( GafferSceneTest.SceneTestCase ) :
+class PythonEditorTest( GafferUITest.TestCase ) :
 
-	def testInputScene( self ) :
+	def testLifetimeAfterExecute( self ) :
 
-		c = Gaffer.Context()
+		script = Gaffer.ScriptNode()
+		editor = GafferUI.PythonEditor( script )
+		weakEditor = weakref.ref( editor )
 
-		self.assertEqual( GafferScene.Filter.getInputScene( c ), None )
+		editor.inputWidget().setText( "a = 10" )
+		editor.execute()
 
-		p = GafferScene.Plane()
-		GafferScene.Filter.setInputScene( c, p["out"] )
-		self.assertEqual( GafferScene.Filter.getInputScene( c ), p["out"] )
+		del editor
+		self.assertIsNone( weakEditor() )
 
-	def testEnabledPlugContextSanitisation( self ) :
+	def testPrint( self ) :
 
-		# Make a graph where `pathFilter.enabled` reads from the
-		# scene globals.
-		plane = GafferScene.Plane()
+		script = Gaffer.ScriptNode()
+		editor = GafferUI.PythonEditor( script )
+		weakEditor = weakref.ref( editor )
 
-		optionQuery = GafferScene.OptionQuery()
-		optionQuery["scene"].setInput( plane["out"] )
-		query = optionQuery.addQuery( Gaffer.BoolPlug(), "test" )
+		editor.inputWidget().setText( "print( 1, 2 )" )
+		editor.execute()
+		self.assertEqual(
+			editor.outputWidget().getText(),
+			"print( 1, 2 )\n1 2"
+		)
 
-		pathFilter = GafferScene.PathFilter()
-		pathFilter["enabled"] .setInput( optionQuery.outPlugFromQuery( query )["value"] )
+		del editor
+		self.assertIsNone( weakEditor() )
 
-		attributes = GafferScene.StandardAttributes()
-		attributes["in"].setInput( plane["out"] )
-		attributes["filter"].setInput( pathFilter["out"] )
+	def testLifetimeAfterExecuteException( self ) :
 
-		# Trigger an evaluation of the filter. We don't need to assert anything
-		# here, because all tests run with a ContextSanitiser active, and that
-		# will cause a failure if the filter leaks a context variable like
-		# `scene:path` into the evaluation of the scene globals.
-		attributes["out"].attributes( "/plane" )
+		script = Gaffer.ScriptNode()
+		editor = GafferUI.PythonEditor( script )
+		weakEditor = weakref.ref( editor )
+
+		editor.inputWidget().setText( "ohDearThisVariableDoesntExist" )
+		editor.execute()
+		self.assertIn( "name 'ohDearThisVariableDoesntExist' is not defined", editor.outputWidget().getText() )
+
+		del editor
+		self.assertIsNone( weakEditor() )
+
+	def testMessageHandler( self ) :
+
+		script = Gaffer.ScriptNode()
+		editor = GafferUI.PythonEditor( script )
+		weakEditor = weakref.ref( editor )
+
+		editor.inputWidget().setText( 'import IECore; IECore.msg( IECore.Msg.Level.Warning, "PythonEditorTest", "Alert!" )' )
+		editor.execute()
+
+		output = editor.outputWidget().getText()
+		self.assertIn( "import IECore", output )
+		self.assertIn( "WARNING : PythonEditorTest", output )
+		self.assertIn( "Alert!", output )
+
+		del editor
+		self.assertIsNone( weakEditor() )
 
 if __name__ == "__main__":
 	unittest.main()

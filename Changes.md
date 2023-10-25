@@ -10,8 +10,60 @@ Breaking Changes
 - OpenColorIOContext : Removed `configEnabledPlug()`, `configValuePlug()`, `workingSpaceEnabledPlug()` and `workingSpaceValuePlug()` methods. Use the OptionalValuePlug child accessors instead.
 - Windows launch script : Removed the hardcoded `/debugexe` switch used when `GAFFER_DEBUG` is enabled, making it possible to use debuggers other than Visual Studio. Debug switches can be added to the `GAFFER_DEBUGGER` environment variable instead.
 
-1.3.x.x (relative to 1.3.4.0)
+1.3.x.x (relative to 1.3.5.0)
 =======
+
+Features
+--------
+
+- LightTool :
+  - Added manipulator for disk and point light radii.
+  - Added manipulators for cylinder length and radius.
+
+Improvements
+------------
+
+- LightTool : Changed spot light and quad light edge tool tip locations so that they follow the cone and edge during drag.
+
+Fixes
+-----
+
+- Filter : Fixed bug which allowed the `scene:path` context variable to "leak" upstream via the `Filter.enabled` plug. This caused unnecessary evaluations of the input, and also provided a loophole via which the filter result could be made inconsistent with respect to descendant and ancestor matches.
+- Windows :
+  - Fixed a bug preventing anything except strings from being copied and pasted.
+  - Fixed likely cause of crash when resizing Spreadsheet column width (#5296).
+
+1.3.5.0 (relative to 1.3.4.0)
+=======
+
+Features
+--------
+
+- ImageScatter : Added a new node for scattering points across an image, with density controlled by an image channel.
+
+Improvements
+------------
+
+- Viewer : Changed the default image comparison (wipe) mode from `Over` to `Replace`.
+- Spreadsheet :
+  - Popups for string cells and row names are now sized to fit their column.
+  - Added "Triple" and "Quadruple" width options to the spreadsheet row name popup menu.
+- Node : Improved performance when casting Python-derived types to ComputeNode.
+
+Fixes
+-----
+
+- ValuePlug : Fixed performance regression (introduced in 1.3.1.0) getting values from plugs without an input connection. This could severely affect scene generation times in some cases.
+- NameSwitch : Fixed bug which prevented drag and drop reordering of rows with an input connection.
+- PythonEditor :
+  - Fixed output for `print()` calls with multiple arguments, which was previously spread across multiple lines.
+  - Fixed bug that prevented editors being destroyed at the right time.
+- FileSystemPath : Fixed bug on Windows where paths on an exFAT partition were not considered valid.
+
+API
+---
+
+- Sampler : Added `populate()` method, which populates the internal tile cache in parallel, and subsequently allows `sample()` to be called concurrently.
 
 1.3.4.0 (relative to 1.3.3.0)
 =======
@@ -425,8 +477,17 @@ Build
 - USD : Updated to version 23.05.
 - ZLib : Added version 1.2.13.
 
-1.2.10.x (relative to 1.2.10.4)
+1.2.10.x (relative to 1.2.10.5)
 ========
+
+1.2.10.5 (relative to 1.2.10.4)
+========
+
+Fixes
+-----
+
+- NameSwitch : Fixed bug which prevented drag and drop reordering of rows with an input connection.
+- Scatter : Fixed loading of Scatter nodes saved from Gaffer 1.3+ (where the Seeds node was renamed to Scatter).
 
 1.2.10.4 (relative to 1.2.10.3)
 ========
