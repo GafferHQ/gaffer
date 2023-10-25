@@ -42,6 +42,7 @@ API
   - Added `RegistrationTypes` enum that allows the different types of registrations to be identified.
   - Added improved `registeredValues()` and `value()` overloads that provide finer-grained queries based on the type of registration.
   - Deprecated `instanceOnly` and `persistentOnly` arguments in favour of new `registrationTypes` arguments.
+  - Prevented `renameable` and `deletable` metadata from being copied during plug promotion.
 - MetadataAlgo : Added `deregisterRedundantValues()` method.
 
 1.3.5.0 (relative to 1.3.4.0)
