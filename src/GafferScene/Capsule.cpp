@@ -46,6 +46,7 @@
 #include "boost/bind/bind.hpp"
 
 #include <mutex>
+#include <unordered_map>
 
 using namespace boost::placeholders;
 using namespace IECore;
