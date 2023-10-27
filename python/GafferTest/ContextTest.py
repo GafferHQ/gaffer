@@ -137,6 +137,15 @@ class ContextTest( GafferTest.TestCase ) :
 		self.assertIsInstance( c["v2i"], imath.V2i )
 		self.assertNotEqual( compare, c.hash() )
 
+		c["v2iv"] = IECore.V2iVectorData( [ imath.V2i( 1, 2 ), imath.V2i( 3, 4 ) ] )
+		self.assertEqual( c["v2iv"], IECore.V2iVectorData( [ imath.V2i( 1, 2 ), imath.V2i( 3, 4 ) ] ) )
+		self.assertEqual( c.get( "v2iv" ), IECore.V2iVectorData( [ imath.V2i( 1, 2 ), imath.V2i( 3, 4 ) ] ) )
+		compare = c.hash()
+		c.set( "v2iv", IECore.V2iVectorData( [ imath.V2i( 5, 6 ), imath.V2i( 7, 8 ) ] ) )
+		self.assertEqual( c["v2iv"], IECore.V2iVectorData( [ imath.V2i( 5, 6 ), imath.V2i( 7, 8 ) ] ) )
+		self.assertIsInstance( c["v2iv"], IECore.V2iVectorData )
+		self.assertNotEqual( compare, c.hash() )
+
 		c["v3i"] = imath.V3i( 1, 2, 3 )
 		self.assertEqual( c["v3i"], imath.V3i( 1, 2, 3 ) )
 		self.assertEqual( c.get( "v3i" ), imath.V3i( 1, 2, 3 ) )
@@ -144,6 +153,15 @@ class ContextTest( GafferTest.TestCase ) :
 		c.set( "v3i", imath.V3i( 4, 5, 6 ) )
 		self.assertEqual( c["v3i"], imath.V3i( 4, 5, 6 ) )
 		self.assertIsInstance( c["v3i"], imath.V3i )
+		self.assertNotEqual( compare, c.hash() )
+
+		c["v3iv"] = IECore.V3iVectorData( [ imath.V3i( 1, 2, 3 ), imath.V3i( 4, 5, 6 ) ] )
+		self.assertEqual( c["v3iv"], IECore.V3iVectorData( [ imath.V3i( 1, 2, 3 ), imath.V3i( 4, 5, 6 ) ] ) )
+		self.assertEqual( c.get( "v3iv" ), IECore.V3iVectorData( [ imath.V3i( 1, 2, 3 ), imath.V3i( 4, 5, 6 ) ] ) )
+		compare = c.hash()
+		c.set( "v3iv", IECore.V3iVectorData( [ imath.V3i( 7, 8, 9 ), imath.V3i( 10, 11, 12 ) ] ) )
+		self.assertEqual( c["v3iv"], IECore.V3iVectorData( [ imath.V3i( 7, 8, 9 ), imath.V3i( 10, 11, 12 ) ] ) )
+		self.assertIsInstance( c["v3iv"], IECore.V3iVectorData )
 		self.assertNotEqual( compare, c.hash() )
 
 		c["v2f"] = imath.V2f( 1, 2 )
@@ -155,6 +173,15 @@ class ContextTest( GafferTest.TestCase ) :
 		self.assertIsInstance( c["v2f"], imath.V2f )
 		self.assertNotEqual( compare, c.hash() )
 
+		c["v2fv"] = IECore.V2fVectorData( [ imath.V2f( 1, 2 ), imath.V2f( 3, 4 ) ] )
+		self.assertEqual( c["v2fv"], IECore.V2fVectorData( [ imath.V2f( 1, 2 ), imath.V2f( 3, 4 ) ] ) )
+		self.assertEqual( c.get( "v2fv" ), IECore.V2fVectorData( [ imath.V2f( 1, 2 ), imath.V2f( 3, 4 ) ] ) )
+		compare = c.hash()
+		c.set( "v2fv", IECore.V2fVectorData( [ imath.V2f( 5, 6 ), imath.V2f( 7, 8 ) ] ) )
+		self.assertEqual( c["v2fv"], IECore.V2fVectorData( [ imath.V2f( 5, 6 ), imath.V2f( 7, 8 ) ] ) )
+		self.assertIsInstance( c["v2fv"], IECore.V2fVectorData )
+		self.assertNotEqual( compare, c.hash() )
+
 		c["v3f"] = imath.V3f( 1, 2, 3 )
 		self.assertEqual( c["v3f"], imath.V3f( 1, 2, 3 ) )
 		self.assertEqual( c.get( "v3f" ), imath.V3f( 1, 2, 3 ) )
@@ -162,6 +189,15 @@ class ContextTest( GafferTest.TestCase ) :
 		c.set( "v3f", imath.V3f( 4, 5, 6 ) )
 		self.assertEqual( c["v3f"], imath.V3f( 4, 5, 6 ) )
 		self.assertIsInstance( c["v3f"], imath.V3f )
+		self.assertNotEqual( compare, c.hash() )
+
+		c["v3fv"] = IECore.V3fVectorData( [ imath.V3f( 1, 2, 3 ), imath.V3f( 4, 5, 6 ) ] )
+		self.assertEqual( c["v3fv"], IECore.V3fVectorData( [ imath.V3f( 1, 2, 3 ), imath.V3f( 4, 5, 6 ) ] ) )
+		self.assertEqual( c.get( "v3fv" ), IECore.V3fVectorData( [ imath.V3f( 1, 2, 3 ), imath.V3f( 4, 5, 6 ) ] ) )
+		compare = c.hash()
+		c.set( "v3fv", IECore.V3fVectorData( [ imath.V3f( 7, 8, 9 ), imath.V3f( 10, 11, 12 ) ] ) )
+		self.assertEqual( c["v3fv"], IECore.V3fVectorData( [ imath.V3f( 7, 8, 9 ), imath.V3f( 10, 11, 12 ) ] ) )
+		self.assertIsInstance( c["v3fv"], IECore.V3fVectorData )
 		self.assertNotEqual( compare, c.hash() )
 
 	def testSwitchTypes( self ) :

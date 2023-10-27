@@ -82,6 +82,22 @@ struct DataTraits<Imath::Vec3<T> >
 
 };
 
+template<typename T>
+struct DataTraits<std::vector<Imath::Vec2<T> > >
+{
+
+	using DataType = IECore::GeometricTypedData<std::vector<Imath::Vec2<T>>>;
+
+};
+
+template<typename T>
+struct DataTraits<std::vector<Imath::Vec3<T> > >
+{
+
+	using DataType = IECore::GeometricTypedData<std::vector<Imath::Vec3<T>>>;
+
+};
+
 } // namespace Detail
 
 inline Context::Value::Value()
