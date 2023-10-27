@@ -129,9 +129,9 @@ ValuePlug::CachePolicy defaultExecuteCachePolicy()
 		{
 			return ValuePlug::CachePolicy::TaskIsolation;
 		}
-		else if( !strcmp( cp, "Legacy" ) )
+		else if( !strcmp( cp, "Legacy" ) || !strcmp( cp, "Default" ) )
 		{
-			return ValuePlug::CachePolicy::Legacy;
+			return ValuePlug::CachePolicy::Default;
 		}
 		else
 		{

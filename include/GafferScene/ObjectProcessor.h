@@ -79,8 +79,8 @@ class GAFFERSCENE_API ObjectProcessor : public FilteredSceneProcessor
 		virtual void hashProcessedObject( const ScenePath &path, const Gaffer::Context *context, IECore::MurmurHash &h ) const = 0;
 		/// Must be implemented by derived classes to return the processed object.
 		virtual IECore::ConstObjectPtr computeProcessedObject( const ScenePath &path, const Gaffer::Context *context, const IECore::Object *inputObject ) const = 0;
-		/// Must be implemented to return an appropriate policy if `computeProcessedObject()` spawns
-		/// TBB tasks. The default implementation returns `ValuePlug::CachePolicy::Legacy`.
+		/// Must be implemented to return `ValuePlug::CachePolicy::TaskCollaboration` if `computeProcessedObject()` spawns
+		/// TBB tasks. The default implementation returns `ValuePlug::CachePolicy::Default`.
 		virtual Gaffer::ValuePlug::CachePolicy processedObjectComputeCachePolicy() const;
 
 		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;

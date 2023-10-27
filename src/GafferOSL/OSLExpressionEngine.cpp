@@ -475,7 +475,7 @@ class OSLExpressionEngine : public Gaffer::Expression::Engine
 
 		ValuePlug::CachePolicy executeCachePolicy() const override
 		{
-			return ValuePlug::CachePolicy::Legacy;
+			return ValuePlug::CachePolicy::Default;
 		}
 
 		void apply( Gaffer::ValuePlug *proxyOutput, const Gaffer::ValuePlug *topLevelProxyOutput, const IECore::Object *value ) const override

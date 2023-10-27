@@ -119,41 +119,29 @@ class GAFFER_API ValuePlug : public Plug
 		/// and hash for output plugs.
 		enum class CachePolicy
 		{
-			/// No caching is performed. Suitable for
-			/// extremely quick processes. Also useful
-			/// to avoid double-counting of cache memory when
-			/// a compute always returns a sub-object of another
-			/// cache entry.
+			/// No caching is performed. Suitable for extremely quick processes.
+			/// Also useful to avoid double-counting of cache memory when a
+			/// compute always returns a sub-object of another cache entry.
 			Uncached,
-			/// Suitable for regular processes that don't spawn
-			/// TBB tasks. It is essential that any task-spawning
-			/// processes use one of the dedicated policies below.
-			/// \todo It isn't actually clear that the locking of the
-			/// Standard policy is an improvement over the non-locked
-			/// Legacy policy. Locking on a downstream Standard
-			/// compute might prevent multiple threads from participating
-			/// in an upstream TaskCollaboration. And for small computes
-			/// that are unlikely to be needed by multiple threads,
-			/// we may well prefer to avoid the contention. Note that
-			/// many scene computes may fit this category, as every
-			/// non-filtered location is implemented as a very cheap
-			/// pass-through compute. There's also a decent argument
-			/// that any non-trivial amount of work should be using TBB,
-			/// so it would be a mistake to do anything expensive with
-			/// a Standard policy anyway.
+			/// Deprecated synonym for TaskCollaboration (for
+			/// `computeCachePolicy()`) and Default (for `hashCachePolicy()`).
+			/// Will be removed in a future release.
 			Standard,
-			/// Suitable for processes that spawn TBB tasks.
-			/// Threads waiting for the same result will collaborate
-			/// to perform tasks together until the work is complete.
+			/// Must be used for processes that spawn TBB tasks. Results are
+			/// stored in a global cache, and threads waiting for the same
+			/// result will collaborate to perform tasks together until the work
+			/// is complete.
 			TaskCollaboration,
-			/// Suitable for processes that spawn TBB tasks. Threads
-			/// waiting for an in-progress compute will block until
-			/// it is complete. In theory this is inferior to TaskCollaboration,
-			/// but due to TBB overhead it may be preferable for small
-			/// but frequent computes.
+			/// Deprecated synonym for TaskCollaboration. Will be removed in a
+			/// future release.
 			TaskIsolation,
-			/// Legacy policy, to be removed.
-			Legacy
+			/// Suitable for relatively lightweight processes that could benefit
+			/// from caching, but do not spawn TBB tasks, and are unlikely to be
+			/// required from multiple threads concurrently.
+			Default,
+			/// Deprecated synonym for Default. Will be removed in a future
+			/// release.
+			Legacy = Default
 		};
 
 		/// @name Cache management

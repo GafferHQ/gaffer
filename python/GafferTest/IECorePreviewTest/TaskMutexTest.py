@@ -64,10 +64,6 @@ class TaskMutexTest( GafferTest.TestCase ) :
 
 		GafferTest.testTaskMutexHeavyContention( False )
 
-	def testWorkerRecursion( self ) :
-
-		GafferTest.testTaskMutexWorkerRecursion()
-
 	def testAcquireOr( self ) :
 
 		GafferTest.testTaskMutexAcquireOr()

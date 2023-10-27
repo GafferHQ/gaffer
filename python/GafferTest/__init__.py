@@ -159,6 +159,7 @@ from .ContextVariableTweaksTest import ContextVariableTweaksTest
 from .OptionalValuePlugTest import OptionalValuePlugTest
 from .ThreadMonitorTest import ThreadMonitorTest
 from .CollectTest import CollectTest
+from .ProcessTest import ProcessTest
 
 from .IECorePreviewTest import *
 

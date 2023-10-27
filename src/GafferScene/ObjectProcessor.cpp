@@ -158,7 +158,7 @@ void ObjectProcessor::hashProcessedObject( const ScenePath &path, const Gaffer::
 
 Gaffer::ValuePlug::CachePolicy ObjectProcessor::processedObjectComputeCachePolicy() const
 {
-	return ValuePlug::CachePolicy::Legacy;
+	return ValuePlug::CachePolicy::Default;
 }
 
 void ObjectProcessor::hashObject( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
