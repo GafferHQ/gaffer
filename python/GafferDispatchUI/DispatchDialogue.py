@@ -76,6 +76,12 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 
 		self.__postDispatchBehaviour = postDispatchBehaviour
 
+		# Hide bits of the dispatcher UIs that don't make sense in this context.
+		for dispatcher in self.__dispatchers :
+			Gaffer.Metadata.registerValue( dispatcher, "layout:customWidget:dispatchButton:visibilityActivator", False )
+			Gaffer.Metadata.registerValue( dispatcher["dispatcher"], "layout:visibilityActivator", False )
+			Gaffer.Metadata.registerValue( dispatcher["user"], "layout:visibilityActivator", False )
+
 		# build tabs for all the node, dispatcher, and context settings
 		with GafferUI.ListContainer() as self.__settings :
 
