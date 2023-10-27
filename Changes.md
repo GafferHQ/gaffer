@@ -21,6 +21,8 @@ Fixes
   - Fixed a bug preventing anything except strings from being copied and pasted.
   - Fixed likely cause of crash when resizing Spreadsheet column width (#5296).
 - Reference : Fixed rare reloading error.
+- PlugLayout : Fixed lack of update when `layout:customWidget:*` metadata changes.
+- Dispatch app : Removed unnecessary and misleading "Execute" button.
 
 1.3.5.0 (relative to 1.3.4.0)
 =======
