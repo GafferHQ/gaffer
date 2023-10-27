@@ -539,6 +539,7 @@ nodeMenu.append( "/Dispatch/Python Command", GafferDispatch.PythonCommand, searc
 nodeMenu.append( "/Dispatch/Task List", GafferDispatch.TaskList, searchText = "TaskList" )
 nodeMenu.append( "/Dispatch/Wedge", GafferDispatch.Wedge )
 nodeMenu.append( "/Dispatch/Frame Mask", GafferDispatch.FrameMask, searchText = "FrameMask" )
+nodeMenu.append( "/Dispatch/Local Dispatcher", GafferDispatch.LocalDispatcher, searchText = "LocalDispatcher" )
 
 # Utility nodes
 
@@ -574,7 +575,10 @@ with IECore.IgnoredExceptions( ImportError ) :
 	# TractorDispatcher.
 	import tractor.api.author
 
+	import GafferTractor
 	import GafferTractorUI
+
+	nodeMenu.append( "/Dispatch/Tractor Dispatcher", GafferTractor.TractorDispatcher, searchText = "TractorDispatcher" )
 
 ## Metadata cleanup
 ###########################################################################
