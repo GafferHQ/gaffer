@@ -2869,9 +2869,6 @@ class LengthHandle : public LightToolHandle
 
 		void setupDrag( const DragDropEvent &event ) override
 		{
-			Inspector::ResultPtr inspection = handleInspection( m_parameter );
-			V3f offset = this->offset( inspection.get() );
-
 			m_drag = Handle::LinearDrag(
 				this,
 				LineSegment3f( V3f( 0 ), ( m_axis * m_orientation ) ),
