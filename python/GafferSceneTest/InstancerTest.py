@@ -2417,21 +2417,25 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 				)
 
 	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
+	@GafferTest.TestRunner.CategorisedTestMethod( { "expensivePerformance" } )
 	@GafferTest.TestRunner.PerformanceTestMethod()
 	def testContextSetPerfNoVariationsSingleEvaluate( self ):
 		self.runTestContextSetPerf( False, False )
 
 	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
+	@GafferTest.TestRunner.CategorisedTestMethod( { "expensivePerformance" } )
 	@GafferTest.TestRunner.PerformanceTestMethod()
 	def testContextSetPerfNoVariationsParallelEvaluate( self ):
 		self.runTestContextSetPerf( False, True )
 
 	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
+	@GafferTest.TestRunner.CategorisedTestMethod( { "expensivePerformance" } )
 	@GafferTest.TestRunner.PerformanceTestMethod()
 	def testContextSetPerfWithVariationsSingleEvaluate( self ):
 		self.runTestContextSetPerf( True, False )
 
 	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
+	@GafferTest.TestRunner.CategorisedTestMethod( { "expensivePerformance" } )
 	@GafferTest.TestRunner.PerformanceTestMethod()
 	def testContextSetPerfWithVariationsParallelEvaluate( self ):
 		self.runTestContextSetPerf( True, True )
