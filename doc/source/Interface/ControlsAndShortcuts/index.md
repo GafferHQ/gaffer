@@ -223,6 +223,7 @@ Cycle Transform Tool Orientation     | {kbd}`O`
 Scale Tool                           | {kbd}`R`
 Camera Tool                          | {kbd}`T`
 Crop Window Tool                     | {kbd}`C`
+Crop Window Tool and crop enabled    | {kbd}`Alt` + {kbd}`C`
 Pin to numeric bookmark              | {kbd}`1` … {kbd}`9`
 
 ### 3D scenes ###
