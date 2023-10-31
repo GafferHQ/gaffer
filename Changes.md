@@ -25,6 +25,7 @@ Fixes
 - Reference : Fixed rare reloading error.
 - PlugLayout : Fixed lack of update when `layout:customWidget:*` metadata changes.
 - Dispatch app : Removed unnecessary and misleading "Execute" button.
+- SceneAlgo : Fixed computation of `ScenePlug.object` in networks with nodes derived from `ObjectProcessor`. These include : `CameraTweaks`, `ClosestPointSampler`, `CollectPrimitiveVariables`, `CopyPrimitiveVariables`, `CurveSampler`, `DeleteCurves`, `DeleteFaces`, `DeletePoints`, `MapOffset`, `MapProjection`, `MeshDistortion`, `MeshNormals`, `MeshSegments`, `MeshTangents`, `MeshToPoints`, `MeshType`, `Orientation`, `PointsType`, `PrimitiveSampler`, `PrimitiveVariables`, `ReverseWinding`, `ShufflePrimitiveVariables` and `UVSampler` (#5406).
 
 API
 ---
