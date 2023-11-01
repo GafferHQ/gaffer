@@ -884,5 +884,35 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 		for plug in Gaffer.Plug.RecursiveRange( promoted[1] ) :
 			self.assertEqual( Gaffer.Metadata.registeredValues( plug, Gaffer.Metadata.RegistrationTypes.Instance ), [] )
 
+	def testMetadataAlgoRemovesNonDefaultRowMetadata( self ) :
+
+		spreadsheet = Gaffer.Spreadsheet()
+		spreadsheet["rows"].addColumn( Gaffer.StringPlug( "column1" ) )
+		spreadsheet["rows"].addRows( 1 )
+
+		# Create Spreadsheet where non-default row has its own metadata that conflicts with the values
+		# that should be mirrored from the default row. It used to be possible for the user to get into
+		# this situation because we redundantly promoted metadata onto the non-default rows.
+
+		Gaffer.Metadata.registerValue( spreadsheet["rows"][0]["cells"][0], "spreadsheet:columnWidth", 100 )
+		Gaffer.Metadata.registerValue( spreadsheet["rows"][1]["cells"][0], "spreadsheet:columnWidth", 200 )
+		Gaffer.Metadata.registerValue( spreadsheet["rows"][0]["cells"][0], "spreadsheet:columnLabel", "Label 1" )
+		Gaffer.Metadata.registerValue( spreadsheet["rows"][1]["cells"][0], "spreadsheet:columnLabel", "Label 2" )
+
+		# Even though the non-default-row values are different to the default row ones, we still want
+		# `deregisterRedundantValues()` to clean them up, because having different column widths/labels
+		# on different rows is logically impossible.
+
+		Gaffer.MetadataAlgo.deregisterRedundantValues( spreadsheet["rows"] )
+
+		for row in spreadsheet["rows"] :
+			self.assertEqual( Gaffer.Metadata.value( row["cells"][0], "spreadsheet:columnWidth" ), 100 )
+			self.assertEqual( Gaffer.Metadata.value( row["cells"][0], "spreadsheet:columnLabel" ), "Label 1" )
+
+		self.assertEqual(
+			Gaffer.Metadata.registeredValues( spreadsheet["rows"][1]["cells"][0], Gaffer.Metadata.RegistrationTypes.Instance ),
+			[]
+		)
+
 if __name__ == "__main__":
 	unittest.main()
