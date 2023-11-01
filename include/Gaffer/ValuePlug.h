@@ -238,10 +238,10 @@ class GAFFER_API ValuePlug : public Plug
 		/// objects with each query - this allows it to support the calculation
 		/// of values in different contexts and on different threads.
 		///
-		/// The value is returned via a reference counted pointer, as
-		/// following return from getObjectValue(), it is possible that nothing
-		/// else references the value - the value could have come from the cache
-		/// and then have been immediately removed by another thread.
+		/// The value is returned directly via a raw pointer, allowing us to omit
+		/// reference counting for the common case where the plug owns its own static
+		/// (non-computed) value. In cases where the value will be computed, a
+		/// a reference must be taken, so `owner` is assigned to keep the value alive.
 		///
 		/// If a precomputed hash is available it may be passed to avoid computing
 		/// it again unnecessarily.
@@ -249,6 +249,9 @@ class GAFFER_API ValuePlug : public Plug
 		/// > Caution : Passing an incorrect `precomputedHash` has dire consequences,
 		/// so use with care. The hash must be the direct result of `ValuePlug::hash()`,
 		/// so this feature is not suitable for use in classes that override that method.
+		template<typename T = IECore::Object>
+		const T *getObjectValue( IECore::ConstObjectPtr &owner, const IECore::MurmurHash *precomputedHash = nullptr ) const;
+		/// \deprecated
 		template<typename T = IECore::Object>
 		boost::intrusive_ptr<const T> getObjectValue( const IECore::MurmurHash *precomputedHash = nullptr ) const;
 		/// Should be called by derived classes when they wish to set the plug
@@ -267,6 +270,8 @@ class GAFFER_API ValuePlug : public Plug
 		class ComputeProcess;
 		class SetValueAction;
 
+		const IECore::Object *getValueInternal( IECore::ConstObjectPtr &owner, const IECore::MurmurHash *precomputedHash = nullptr ) const;
+		/// \deprecated
 		IECore::ConstObjectPtr getValueInternal( const IECore::MurmurHash *precomputedHash = nullptr ) const;
 		void setValueInternal( IECore::ConstObjectPtr value, bool propagateDirtiness );
 		void childAddedOrRemoved();

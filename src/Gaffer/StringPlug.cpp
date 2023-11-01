@@ -108,7 +108,8 @@ void StringPlug::setValue( const std::filesystem::path &value )
 
 std::string StringPlug::getValue( const IECore::MurmurHash *precomputedHash ) const
 {
-	ConstStringDataPtr s = getObjectValue<StringData>( precomputedHash );
+	ConstObjectPtr owner;
+	const StringData *s = getObjectValue<StringData>( owner, precomputedHash );
 
 	const bool performSubstitutions =
 		m_substitutions &&
@@ -146,7 +147,8 @@ IECore::MurmurHash StringPlug::hash() const
 
 	if( performSubstitutions )
 	{
-		ConstStringDataPtr s = getObjectValue<StringData>();
+		ConstObjectPtr owner;
+		const StringData *s = getObjectValue<StringData>( owner );
 		if( IECore::StringAlgo::hasSubstitutions( s->readable() ) )
 		{
 			IECore::MurmurHash result;

@@ -40,6 +40,7 @@
 
 #include "Gaffer/Context.h"
 #include "Gaffer/NumericPlug.h"
+#include "Gaffer/StringPlug.h"
 #include "Gaffer/TypedObjectPlug.h"
 #include "Gaffer/ValuePlug.h"
 
@@ -125,18 +126,22 @@ void GafferTestModule::bindValuePlugTest()
 {
 	def( "repeatGetValue", &repeatGetValue<IntPlug> );
 	def( "repeatGetValue", &repeatGetValue<FloatPlug> );
+	def( "repeatGetValue", &repeatGetValue<StringPlug> );
 	def( "repeatGetValue", &repeatGetValue<ObjectPlug> );
 	def( "repeatGetValue", &repeatGetValue<PathMatcherDataPlug> );
 	def( "repeatGetValue", &repeatGetValueWithVar<IntPlug> );
 	def( "repeatGetValue", &repeatGetValueWithVar<FloatPlug> );
+	def( "repeatGetValue", &repeatGetValueWithVar<StringPlug> );
 	def( "repeatGetValue", &repeatGetValueWithVar<ObjectPlug> );
 	def( "repeatGetValue", &repeatGetValueWithVar<PathMatcherDataPlug> );
 	def( "parallelGetValue", &parallelGetValue<IntPlug> );
 	def( "parallelGetValue", &parallelGetValue<FloatPlug> );
+	def( "parallelGetValue", &parallelGetValue<StringPlug> );
 	def( "parallelGetValue", &parallelGetValue<ObjectPlug> );
 	def( "parallelGetValue", &parallelGetValue<PathMatcherDataPlug> );
 	def( "parallelGetValue", &parallelGetValueWithVar<IntPlug> );
 	def( "parallelGetValue", &parallelGetValueWithVar<FloatPlug> );
+	def( "parallelGetValue", &parallelGetValueWithVar<StringPlug> );
 	def( "parallelGetValue", &parallelGetValueWithVar<ObjectPlug> );
 	def( "parallelGetValue", &parallelGetValueWithVar<PathMatcherDataPlug> );
 }

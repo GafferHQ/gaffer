@@ -42,7 +42,17 @@ namespace Gaffer
 template<class T>
 inline typename TypedObjectPlug<T>::ConstValuePtr TypedObjectPlug<T>::getValue( const IECore::MurmurHash *precomputedHash ) const
 {
-	return getObjectValue<ValueType>( precomputedHash );
+	IECore::ConstObjectPtr owner;
+	const ValueType *value = getObjectValue<ValueType>( owner, precomputedHash );
+	if( owner )
+	{
+		// Avoid unnecessary reference count manipulations.
+		return boost::static_pointer_cast<const ValueType>( std::move( owner ) );
+	}
+	else
+	{
+		return ConstValuePtr( value );
+	}
 }
 
 } // namespace Gaffer

@@ -40,21 +40,35 @@ namespace Gaffer
 {
 
 template<typename T>
-boost::intrusive_ptr<const T> ValuePlug::getObjectValue( const IECore::MurmurHash *precomputedHash ) const
+const T *ValuePlug::getObjectValue( IECore::ConstObjectPtr &owner, const IECore::MurmurHash *precomputedHash ) const
 {
-	IECore::ConstObjectPtr value = getValueInternal( precomputedHash );
+	const IECore::Object *value = getValueInternal( owner, precomputedHash );
 	if( value && value->isInstanceOf( T::staticTypeId() ) )
 	{
-		// Steal the reference from `value`, to avoid incrementing and decrementing the refcount
-		// unnecessarily.
-		/// \todo Add a move-aware variant of `IECore::runTimeCast()` and use it instead.
-		return boost::intrusive_ptr<const T>( static_cast<const T *>( value.detach() ), /* add_ref = */ false );
+		return static_cast<const T *>( value );
 	}
 
 	throw IECore::Exception( fmt::format(
 		"{} : getValueInternal() didn't return expected type (wanted {} but got {}). Is the hash being computed correctly?",
 		fullName(), T::staticTypeName(), value ? value->typeName() : "nullptr"
 	) );
+}
+
+template<typename T>
+boost::intrusive_ptr<const T> ValuePlug::getObjectValue( const IECore::MurmurHash *precomputedHash ) const
+{
+	IECore::ConstObjectPtr owner;
+	const T *value = getObjectValue<T>( owner, precomputedHash );
+	if( owner )
+	{
+		// Avoid unnecessary reference count manipulations.
+		return boost::static_pointer_cast<const T>( std::move( owner ) );
+	}
+	else
+	{
+		return value;
+	}
+
 }
 
 } // namespace Gaffer

@@ -508,7 +508,7 @@ class ValuePlug::ComputeProcess : public Process
 			g_cache.clear();
 		}
 
-		static IECore::ConstObjectPtr value( const ValuePlug *plug, const IECore::MurmurHash *precomputedHash )
+		static const IECore::Object *value( const ValuePlug *plug, IECore::ConstObjectPtr &owner, const IECore::MurmurHash *precomputedHash )
 		{
 			const ValuePlug *p = sourcePlug( plug );
 
@@ -523,7 +523,7 @@ class ValuePlug::ComputeProcess : public Process
 					// No input connection, and no means of computing
 					// a value. There can only ever be a single value,
 					// which is stored directly on the plug.
-					return p->m_staticValue;
+					return p->m_staticValue.get();
 				}
 			}
 
@@ -551,7 +551,8 @@ class ValuePlug::ComputeProcess : public Process
 
 			if( cachePolicy == CachePolicy::Uncached )
 			{
-				return ComputeProcess( p, plug, computeNode ).run();
+				owner = ComputeProcess( p, plug, computeNode ).run();
+				return owner.get();
 			}
 
 			const ThreadState &threadState = ThreadState::current();
@@ -573,7 +574,8 @@ class ValuePlug::ComputeProcess : public Process
 				if( auto result = g_cache.getIfCached( hash ) )
 				{
 					// Move avoids unnecessary additional addRef/removeRef.
-					return std::move( *result );
+					owner = std::move( *result );
+					return owner.get();
 				}
 			}
 
@@ -587,7 +589,7 @@ class ValuePlug::ComputeProcess : public Process
 				// lightweight enough and unlikely enough to be shared that in
 				// the worst case it's OK to do it redundantly on a few threads
 				// before it gets cached.
-				IECore::ConstObjectPtr result = ComputeProcess( p, plug, computeNode ).run();
+				owner = ComputeProcess( p, plug, computeNode ).run();
 				// Store the value in the cache, but only if it isn't there already.
 				// The check is useful because it's common for an upstream compute
 				// triggered by us to have already done the work, and calling
@@ -598,14 +600,15 @@ class ValuePlug::ComputeProcess : public Process
 				// upstream node will already have computed the same result) and the
 				// attribute data itself consists of many small objects for which
 				// computing memory usage is slow.
-				g_cache.setIfUncached( hash, result, cacheCostFunction );
-				return result;
+				g_cache.setIfUncached( hash, owner, cacheCostFunction );
+				return owner.get();
 			}
 			else
 			{
-				return acquireCollaborativeResult<ComputeProcess>(
+				owner = acquireCollaborativeResult<ComputeProcess>(
 					hash, p, plug, computeNode
 				);
+				return owner.get();
 			}
 		}
 
@@ -664,7 +667,9 @@ class ValuePlug::ComputeProcess : public Process
 				{
 					throw IECore::Exception( "Compute did not set plug value." );
 				}
-				return m_result;
+				// Move to avoid unnecessary reference count increment/decrement - we don't
+				// need `m_result` any more.
+				return std::move( m_result );
 			}
 			catch( ... )
 			{
@@ -1030,9 +1035,16 @@ const IECore::Object *ValuePlug::defaultObjectValue() const
 	return m_defaultValue.get();
 }
 
+const IECore::Object *ValuePlug::getValueInternal( IECore::ConstObjectPtr &owner, const IECore::MurmurHash *precomputedHash ) const
+{
+	return ComputeProcess::value( this, owner, precomputedHash );
+}
+
 IECore::ConstObjectPtr ValuePlug::getValueInternal( const IECore::MurmurHash *precomputedHash ) const
 {
-	return ComputeProcess::value( this, precomputedHash );
+	IECore::ConstObjectPtr owner;
+	const IECore::Object *result = getValueInternal( owner, precomputedHash );
+	return owner ? owner : result;
 }
 
 void ValuePlug::setObjectValue( IECore::ConstObjectPtr value )
