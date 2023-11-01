@@ -36,14 +36,9 @@
 
 #pragma once
 
-namespace Gaffer
+namespace GafferTestModule
 {
 
-template<typename T>
-inline T TypedPlug<T>::getValue( const IECore::MurmurHash *precomputedHash ) const
-{
-	IECore::ConstObjectPtr owner;
-	return getObjectValue<DataType>( owner, precomputedHash )->readable();
-}
+void bindProcessTest();
 
-} // namespace Gaffer
+} // namespace GafferTestModule

@@ -1650,5 +1650,60 @@ class ExpressionTest( GafferTest.TestCase ) :
 
 		self.assertEqual( script["node"]["in"].getValue(), pathlib.Path.cwd().as_posix() )
 
+	@GafferTest.TestRunner.CategorisedTestMethod( { "taskCollaboration:hashAliasing" } )
+	def testHashAliasing( self ) :
+
+		#   p1
+		#   |
+		#   e1
+		#   |
+		#   p2
+		#   |
+		#   e2
+		#   |
+		#   p3
+		#   |
+		#   e3 (aliases the hash from e1)
+		#   |
+		#   p4
+
+		script = Gaffer.ScriptNode()
+
+		script["n"] = Gaffer.Node()
+		script["n"]["user"]["p1"] = Gaffer.StringPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		script["n"]["user"]["p2"] = Gaffer.StringPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		script["n"]["user"]["p3"] = Gaffer.StringPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		script["n"]["user"]["p4"] = Gaffer.StringPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		script["e1"] = Gaffer.Expression()
+		script["e1"].setExpression( """import time; time.sleep( 0.01 ); parent["n"]["user"]["p2"] = parent["n"]["user"]["p1"]""" )
+
+		script["e2"] = Gaffer.Expression()
+		script["e2"].setExpression( """import time; time.sleep( 0.01 ); parent["n"]["user"]["p3"] = parent["n"]["user"]["p2"] and ''""" )
+
+		script["e3"] = Gaffer.Expression()
+		script["e3"].setExpression( """import time; time.sleep( 0.01 ); parent["n"]["user"]["p4"] = parent["n"]["user"]["p3"]""" )
+
+		# Because the input StringPlugs hash by value (see de8ab79d6f958cef3b80954798f8083a346945a7),
+		# and the expression is stored in an internalised form that omits the names of the source
+		# and destination plugs, the hashes for `e3` and `e1`` are identical, even though one depends
+		# on the other.
+		self.assertEqual( script["e1"]["__execute"].hash(), script["e3"]["__execute"].hash() )
+		# But the hash for `e2` is different, because it has different expression source code
+		# (even though it will generate the same value).
+		self.assertNotEqual( script["e2"]["__execute"].hash(), script["e1"]["__execute"].hash() )
+
+		# Get the value for `p4`, which will actually compute and cache `p2` first due to the hash
+		# computation done before the compute. So we never actually do a compute on `p4`, as the value
+		# for that comes from the cache.
+		script["n"]["user"]["p4"].getValue()
+		# Simulate a cache eviction, so we have the hash cached, but not the value.
+		Gaffer.ValuePlug.clearCache()
+
+		# Now, getting the value of `p4` will trigger an immediate compute for `e3`, which will
+		# recurse to an upstream compute for `e1`, which has the same hash. If we don't have a
+		# mechanism for handling it, this will deadlock.
+		script["n"]["user"]["p4"].getValue()
+
 if __name__ == "__main__":
 	unittest.main()

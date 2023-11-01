@@ -77,6 +77,7 @@
 
 #include "tbb/concurrent_unordered_map.h"
 #include "tbb/concurrent_vector.h"
+#include "tbb/enumerable_thread_specific.h"
 #include "tbb/partitioner.h"
 #include "tbb/spin_mutex.h"
 
@@ -2964,9 +2965,9 @@ class ProceduralRenderer final : public ArnoldRendererBase
 				ArnoldRendererBase::light( name, object, attributes )
 			);
 
-			NodesCreatedMutex::scoped_lock lock( m_nodesCreatedMutex );
-			result->instance().nodesCreated( m_nodesCreated );
-			result->nodesCreated( m_nodesCreated );
+			auto &nodesCreatedLocal = m_nodesCreated.local();
+			result->instance().nodesCreated( nodesCreatedLocal );
+			result->nodesCreated( nodesCreatedLocal );
 			return result;
 		}
 
@@ -2976,9 +2977,9 @@ class ProceduralRenderer final : public ArnoldRendererBase
 				ArnoldRendererBase::lightFilter( name, object, attributes )
 			);
 
-			NodesCreatedMutex::scoped_lock lock( m_nodesCreatedMutex );
-			result->instance().nodesCreated( m_nodesCreated );
-			result->nodesCreated( m_nodesCreated );
+			auto &nodesCreatedLocal = m_nodesCreated.local();
+			result->instance().nodesCreated( nodesCreatedLocal );
+			result->nodesCreated( nodesCreatedLocal );
 			return result;
 		}
 
@@ -2988,8 +2989,7 @@ class ProceduralRenderer final : public ArnoldRendererBase
 				ArnoldRendererBase::object( name, object, attributes )
 			);
 
-			NodesCreatedMutex::scoped_lock lock( m_nodesCreatedMutex );
-			result->instance().nodesCreated( m_nodesCreated );
+			result->instance().nodesCreated( m_nodesCreated.local() );
 			return result;
 		}
 
@@ -2999,8 +2999,7 @@ class ProceduralRenderer final : public ArnoldRendererBase
 				ArnoldRendererBase::object( name, samples, times, attributes )
 			);
 
-			NodesCreatedMutex::scoped_lock lock( m_nodesCreatedMutex );
-			result->instance().nodesCreated( m_nodesCreated );
+			result->instance().nodesCreated( m_nodesCreated.local() );
 			return result;
 		}
 
@@ -3016,7 +3015,10 @@ class ProceduralRenderer final : public ArnoldRendererBase
 
 		void nodesCreated( vector<AtNode *> &nodes )
 		{
-			nodes.insert( nodes.begin(), m_nodesCreated.begin(), m_nodesCreated.end() );
+			for( const auto &nodesCreated : m_nodesCreated )
+			{
+				nodes.insert( nodes.end(), nodesCreated.begin(), nodesCreated.end() );
+			}
 			m_instanceCache->nodesCreated( nodes );
 			m_shaderCache->nodesCreated( nodes );
 		}
@@ -3024,10 +3026,7 @@ class ProceduralRenderer final : public ArnoldRendererBase
 	private :
 
 		IECore::ConstCompoundObjectPtr m_attributesToInherit;
-
-		using NodesCreatedMutex = tbb::spin_mutex;
-		NodesCreatedMutex m_nodesCreatedMutex;
-		vector<AtNode *> m_nodesCreated;
+		tbb::enumerable_thread_specific<vector<AtNode *>> m_nodesCreated;
 
 };
 

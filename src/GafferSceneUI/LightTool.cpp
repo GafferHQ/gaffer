@@ -2028,7 +2028,6 @@ class EdgeHandle : public LightToolHandle
 			const float edgeToHandleRatio,
 			const InternedString &oppositeParameter,
 			const V3f &oppositeAxis,
-			const float oppositeToHandleRatio,
 			const InternedString &oppositeScaleAttributeName,
 			const float edgeMargin,
 			const std::string &tipPlugSuffix,
@@ -2040,7 +2039,6 @@ class EdgeHandle : public LightToolHandle
 			m_edgeToHandleRatio( edgeToHandleRatio ),
 			m_oppositeParameter( oppositeParameter ),
 			m_oppositeAxis( oppositeAxis ),
-			m_oppositeToHandleRatio( oppositeToHandleRatio ),
 			m_oppositeScaleAttributeName( oppositeScaleAttributeName ),
 			m_edgeMargin( edgeMargin ),
 			m_tipPlugSuffix( tipPlugSuffix ),
@@ -2306,7 +2304,6 @@ class EdgeHandle : public LightToolHandle
 		const float m_edgeToHandleRatio;
 		const InternedString m_oppositeParameter;
 		const V3f m_oppositeAxis;
-		const float m_oppositeToHandleRatio;
 		const InternedString m_oppositeScaleAttributeName;
 		const float m_edgeMargin;
 		const std::string m_tipPlugSuffix;
@@ -2869,9 +2866,6 @@ class LengthHandle : public LightToolHandle
 
 		void setupDrag( const DragDropEvent &event ) override
 		{
-			Inspector::ResultPtr inspection = handleInspection( m_parameter );
-			V3f offset = this->offset( inspection.get() );
-
 			m_drag = Handle::LinearDrag(
 				this,
 				LineSegment3f( V3f( 0 ), ( m_axis * m_orientation ) ),
@@ -3013,13 +3007,13 @@ LightTool::LightTool( SceneView *view, const std::string &name ) :
 
 	// Quadlight handles
 
-	m_handles->addChild( new EdgeHandle( "quad", view, "widthParameter", V3f( -1.f, 0, 0 ), 2.f, "heightParameter", V3f( 0, 1.f, 0 ), 2.f, "", g_circleHandleWidthLarge, "widths", "westParameter" ) );
+	m_handles->addChild( new EdgeHandle( "quad", view, "widthParameter", V3f( -1.f, 0, 0 ), 2.f, "heightParameter", V3f( 0, 1.f, 0 ), "", g_circleHandleWidthLarge, "widths", "westParameter" ) );
 	m_handles->addChild( new CornerHandle( "quad", view, "widthParameter", V3f( -1.f, 0, 0 ), 2.f, "heightParameter", V3f( 0, -1.f, 0 ), 2.f, "southWestParameter" ) );
-	m_handles->addChild( new EdgeHandle( "quad", view, "heightParameter", V3f( 0, -1.f, 0 ), 2.f, "widthParameter", V3f( 1.f, 0, 0 ), 2.f, "", g_circleHandleWidthLarge, "heights", "southParameter" ) );
+	m_handles->addChild( new EdgeHandle( "quad", view, "heightParameter", V3f( 0, -1.f, 0 ), 2.f, "widthParameter", V3f( 1.f, 0, 0 ), "", g_circleHandleWidthLarge, "heights", "southParameter" ) );
 	m_handles->addChild( new CornerHandle( "quad", view, "widthParameter", V3f( 1.f, 0, 0 ), 2.f, "heightParameter", V3f( 0, -1.f, 0 ), 2.f, "soutEastParameter" ) );
-	m_handles->addChild( new EdgeHandle( "quad", view, "widthParameter", V3f( 1.f, 0, 0 ), 2.f, "heightParameter", V3f( 0, 1.f, 0 ), 2.f, "", g_circleHandleWidthLarge, "widths", "eastParameter" ) );
+	m_handles->addChild( new EdgeHandle( "quad", view, "widthParameter", V3f( 1.f, 0, 0 ), 2.f, "heightParameter", V3f( 0, 1.f, 0 ), "", g_circleHandleWidthLarge, "widths", "eastParameter" ) );
 	m_handles->addChild( new CornerHandle( "quad", view, "widthParameter", V3f( 1.f, 0, 0 ), 2.f, "heightParameter", V3f( 0, 1.f, 0 ), 2.f, "northEastParameter" ) );
-	m_handles->addChild( new EdgeHandle( "quad", view, "heightParameter", V3f( 0, 1.f, 0 ), 2.f, "widthParameter", V3f( 1.f, 0, 0 ), 2.f, "", g_circleHandleWidthLarge, "heights", "northParameter" ) );
+	m_handles->addChild( new EdgeHandle( "quad", view, "heightParameter", V3f( 0, 1.f, 0 ), 2.f, "widthParameter", V3f( 1.f, 0, 0 ), "", g_circleHandleWidthLarge, "heights", "northParameter" ) );
 	m_handles->addChild( new CornerHandle( "quad", view, "widthParameter", V3f( -1.f, 0, 0 ), 2.f, "heightParameter", V3f( 0, 1.f, 0 ), 2.f, "northWestParameter" ) );
 
 	// DiskLight handles
@@ -3030,10 +3024,10 @@ LightTool::LightTool( SceneView *view, const std::string &name ) :
 	m_handles->addChild( new RadiusHandle( "point", view, "radiusParameter", 1.f, true, false, "pointHandle" ) );
 
 	// CylinderLight handles
-	m_handles->addChild( new EdgeHandle( "cylinder", view, "radiusParameter", V3f( 0, 1.f, 0 ), 1.f, "lengthParameter", V3f( 0, 0, 1.f ), 2.f, "heightToScaleRatio", 0, "radii", "northRadiusParameter" ) );
-	m_handles->addChild( new EdgeHandle( "cylinder", view, "radiusParameter", V3f( 1.f, 0, 0 ), 1.f, "lengthParameter", V3f( 0, 0, 1.f ), 2.f, "heightToScaleRatio", 0, "radii", "northRadiusParameter" ) );
-	m_handles->addChild( new EdgeHandle( "cylinder", view, "radiusParameter", V3f( 0, -1.f, 0 ), 1.f, "lengthParameter", V3f( 0, 0, 1.f ), 2.f, "heightToScaleRatio", 0, "radii", "northRadiusParameter" ) );
-	m_handles->addChild( new EdgeHandle( "cylinder", view, "radiusParameter", V3f( -1.f, 0, 0 ), 1.f, "lengthParameter", V3f( 0, 0, 1.f ), 2.f, "heightToScaleRatio", 0, "radii", "northRadiusParameter" ) );
+	m_handles->addChild( new EdgeHandle( "cylinder", view, "radiusParameter", V3f( 0, 1.f, 0 ), 1.f, "lengthParameter", V3f( 0, 0, 1.f ), "heightToScaleRatio", 0, "radii", "northRadiusParameter" ) );
+	m_handles->addChild( new EdgeHandle( "cylinder", view, "radiusParameter", V3f( 1.f, 0, 0 ), 1.f, "lengthParameter", V3f( 0, 0, 1.f ), "heightToScaleRatio", 0, "radii", "northRadiusParameter" ) );
+	m_handles->addChild( new EdgeHandle( "cylinder", view, "radiusParameter", V3f( 0, -1.f, 0 ), 1.f, "lengthParameter", V3f( 0, 0, 1.f ), "heightToScaleRatio", 0, "radii", "northRadiusParameter" ) );
+	m_handles->addChild( new EdgeHandle( "cylinder", view, "radiusParameter", V3f( -1.f, 0, 0 ), 1.f, "lengthParameter", V3f( 0, 0, 1.f ), "heightToScaleRatio", 0, "radii", "northRadiusParameter" ) );
 	m_handles->addChild( new LengthHandle( "cylinder", view, "lengthParameter", V3f( 0, 0, 1.f ), 2.f, "cylinderLengthTop" ) );
 	m_handles->addChild( new LengthHandle( "cylinder", view, "lengthParameter", V3f( 0, 0, -1.f ), 2.f, "cylinderLengthBottom" ) );
 

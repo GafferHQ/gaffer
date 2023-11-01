@@ -608,6 +608,7 @@ class ComputeNodeTest( GafferTest.TestCase ) :
 		def __init__( self, name="ThrowingNode" ) :
 
 			self.hashFail = False
+			self.cachePolicy = Gaffer.ValuePlug.CachePolicy.Standard
 
 			Gaffer.ComputeNode.__init__( self, name )
 
@@ -639,11 +640,11 @@ class ComputeNodeTest( GafferTest.TestCase ) :
 
 		def hashCachePolicy( self, plug ) :
 
-			return Gaffer.ValuePlug.CachePolicy.Standard
+			return self.cachePolicy
 
 		def computeCachePolicy( self, plug ) :
 
-			return Gaffer.ValuePlug.CachePolicy.Standard
+			return self.cachePolicy
 
 	IECore.registerRunTimeTyped( ThrowingNode )
 
@@ -684,18 +685,25 @@ class ComputeNodeTest( GafferTest.TestCase ) :
 
 	def testProcessExceptionNotShared( self ) :
 
-		thrower1 = self.ThrowingNode( "thrower1" )
-		thrower2 = self.ThrowingNode( "thrower2" )
+		for policy in Gaffer.ValuePlug.CachePolicy.names.values() :
+			with self.subTest( policy = policy ) :
 
-		with self.assertRaisesRegex( Gaffer.ProcessException, r'thrower1.out : [\s\S]*Eeek!' ) as raised :
-			thrower1["out"].getValue()
+				Gaffer.ValuePlug.clearCache()
 
-		self.assertEqual( raised.exception.plug(), thrower1["out"] )
+				thrower1 = self.ThrowingNode( "thrower1" )
+				thrower1.cachePolicy = policy
+				thrower2 = self.ThrowingNode( "thrower2" )
+				thrower2.cachePolicy = policy
 
-		with self.assertRaisesRegex( Gaffer.ProcessException, r'thrower2.out : [\s\S]*Eeek!' ) as raised :
-			thrower2["out"].getValue()
+				with self.assertRaisesRegex( Gaffer.ProcessException, r'thrower1.out : [\s\S]*Eeek!' ) as raised :
+					thrower1["out"].getValue()
 
-		self.assertEqual( raised.exception.plug(), thrower2["out"] )
+				self.assertEqual( raised.exception.plug(), thrower1["out"] )
+
+				with self.assertRaisesRegex( Gaffer.ProcessException, r'thrower2.out : [\s\S]*Eeek!' ) as raised :
+					thrower2["out"].getValue()
+
+				self.assertEqual( raised.exception.plug(), thrower2["out"] )
 
 	def testProcessExceptionRespectsNameChanges( self ) :
 
