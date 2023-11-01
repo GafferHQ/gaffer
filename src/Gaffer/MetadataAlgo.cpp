@@ -42,6 +42,7 @@
 #include "Gaffer/Plug.h"
 #include "Gaffer/Reference.h"
 #include "Gaffer/ScriptNode.h"
+#include "Gaffer/Spreadsheet.h"
 
 #include "IECore/SimpleTypedData.h"
 
@@ -62,6 +63,8 @@ IECore::InternedString g_connectionColorKey( "connectionGadget:color" );
 IECore::InternedString g_noduleColorKey( "nodule:color" );
 const std::string g_annotationPrefix( "annotation:" );
 const InternedString g_annotations( "annotations" );
+const InternedString g_spreadsheetColumnWidth( "spreadsheet:columnWidth" );
+const InternedString g_spreadsheetColumnLabel( "spreadsheet:columnLabel" );
 
 void copy( const Gaffer::GraphComponent *src , Gaffer::GraphComponent *dst , IECore::InternedString key , bool overwrite )
 {
@@ -768,6 +771,23 @@ void deregisterRedundantValues( GraphComponent *graphComponent )
 			// We can remove the instance value, because the lookup will fall
 			// back to an identical value.
 			Gaffer::Metadata::deregisterValue( graphComponent, key );
+		}
+
+		// Special-case for badly promoted spreadsheet metadata of old.
+		if( key == g_spreadsheetColumnWidth || key == g_spreadsheetColumnLabel )
+		{
+			if( auto row = graphComponent->ancestor<Spreadsheet::RowPlug>() )
+			{
+				if( auto rows = row->parent<Spreadsheet::RowsPlug>() )
+				{
+					if( row != rows->defaultRow() )
+					{
+						// Override on non-default row doesn't agree with the value
+						// that should be mirrored from the default row. Remove it.
+						Gaffer::Metadata::deregisterValue( graphComponent, key );
+					}
+				}
+			}
 		}
 	}
 
