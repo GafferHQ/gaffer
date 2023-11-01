@@ -100,6 +100,9 @@ class PlugLayoutTest( GafferUITest.TestCase ) :
 		self.assertTrue( isinstance( p.customWidget( "test" ), self.CustomWidget ) )
 		self.assertTrue( p.customWidget( "test" ).node.isSame( n ) )
 
+		Gaffer.Metadata.registerValue( n, "layout:customWidget:test:widgetType", "" )
+		self.assertIsNone( p.customWidget( "test") )
+
 	def testSectionQueries( self ) :
 
 		n = Gaffer.Node()

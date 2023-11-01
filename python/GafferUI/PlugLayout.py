@@ -530,6 +530,9 @@ class PlugLayout( GafferUI.Widget ) :
 		if re.match( self.__layoutName + ":section:.*:summary", key ) :
 			self.__summariesDirty = True
 			self.__updateLazily()
+		elif re.match( self.__layoutName + ":customWidget:.*", key ) :
+			self.__layoutDirty = True
+			self.__updateLazily()
 
 	def __plugDirtied( self, plug ) :
 
