@@ -43,6 +43,8 @@
 #include "Gaffer/ArrayPlug.h"
 #include "Gaffer/Context.h"
 
+#include "IECore/NullObject.h"
+
 #include "fmt/format.h"
 
 #include <numeric>
@@ -78,28 +80,63 @@ void copyRegion( const float *fromBuffer, const Box2i &fromWindow, const Box2i &
 	}
 }
 
-void sourceLayerAndChannel( const string &destChannel, const vector<string> &rootLayers, string &srcLayer, string &srcChannel )
+class MappingData : public IECore::Data
 {
-	for( unsigned int i = 0; i < rootLayers.size(); i++ )
-	{
-		if(
-			destChannel.size() >= rootLayers[i].size() + 2 &&
-			destChannel.compare( 0, rootLayers[i].size(), rootLayers[i] ) == 0 &&
-			destChannel[rootLayers[i].size()] == '.' )
+
+	public :
+
+		MappingData()
+			:	m_outputChannelNames( new StringVectorData )
 		{
-			srcLayer = rootLayers[i];
-			srcChannel = destChannel.substr( rootLayers[i].size() + 1 );
-
-			// Note that if multiple layer names could match this channel, we just take the first one.
-			// This would only apply in strange circumstances, and in this case of ambiguity, just taking the
-			// first one seems reasonable
-			return;
 		}
-	}
 
-	srcLayer = "";
-	srcChannel = destChannel;
-}
+		void addLayer( const string &layerName, const vector<string> &channelNames )
+		{
+			for( const auto &channelName : channelNames )
+			{
+				const string outputChannelName = ImageAlgo::channelName( layerName, channelName );
+				const Input input = { layerName, channelName };
+				// Duplicate channel names could arise because either :
+				//
+				// - The user entered the same layer name twice. In this case we ignore the second.
+				// - Name overlap due to complex hierachical naming, such as a layer named `A` with
+				//   a channel named `B.R` and a layer named `A.B` with a channel named `R`.
+				//   In this unlikely case, we just take the channel from the first layer.
+				if( m_mapping.try_emplace( outputChannelName, input ).second )
+				{
+					m_outputChannelNames->writable().push_back( outputChannelName );
+				}
+			}
+		}
+
+		const StringVectorData *outputChannelNames() const { return m_outputChannelNames.get(); }
+
+		struct Input
+		{
+			const string layerName;
+			const string channelName;
+		};
+
+		const Input &input( const string &outputChannelName ) const
+		{
+			auto it = m_mapping.find( outputChannelName );
+			if( it == m_mapping.end() )
+			{
+				throw IECore::Exception( fmt::format( "Invalid output channel {}", outputChannelName ) );
+			}
+			return it->second;
+		}
+
+	private :
+
+		StringVectorDataPtr m_outputChannelNames;
+
+		using Map = unordered_map<string, Input>;
+		Map m_mapping;
+
+};
+
+IE_CORE_DECLAREPTR( MappingData )
 
 } // namespace
 
@@ -119,6 +156,7 @@ CollectImages::CollectImages( const std::string &name )
 	addChild( new StringVectorDataPlug( "rootLayers", Plug::In, new StringVectorData ) );
 	addChild( new StringPlug( "layerVariable", Plug::In, "collect:layerName" ) );
 	addChild( new BoolPlug( "mergeMetadata", Plug::In ) );
+	addChild( new ObjectPlug( "__mapping", Plug::Out, NullObject::defaultNullObject() ) );
 }
 
 CollectImages::~CollectImages()
@@ -155,9 +193,44 @@ const Gaffer::BoolPlug *CollectImages::mergeMetadataPlug() const
 	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 2 );
 }
 
+Gaffer::ObjectPlug *CollectImages::mappingPlug()
+{
+	return getChild<Gaffer::ObjectPlug>( g_firstPlugIndex + 3 );
+}
+
+const Gaffer::ObjectPlug *CollectImages::mappingPlug() const
+{
+	return getChild<Gaffer::ObjectPlug>( g_firstPlugIndex + 3 );
+}
+
 void CollectImages::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ImageProcessor::affects( input, outputs );
+
+	if(
+		input == layerVariablePlug() ||
+		input == rootLayersPlug() ||
+		input == inPlug()->channelNamesPlug()
+	)
+	{
+		outputs.push_back( mappingPlug() );
+	}
+
+	if( input == mappingPlug() )
+	{
+		outputs.push_back( outPlug()->channelNamesPlug() );
+	}
+
+	if(
+		input == mappingPlug() ||
+		input == layerVariablePlug() ||
+		input == inPlug()->deepPlug() ||
+		input == inPlug()->dataWindowPlug() ||
+		input == inPlug()->channelDataPlug()
+	)
+	{
+		outputs.push_back( outPlug()->channelDataPlug() );
+	}
 
 	const ImagePlug *imagePlug = input->parent<ImagePlug>();
 	if( imagePlug && imagePlug == inPlug() )
@@ -165,16 +238,6 @@ void CollectImages::affects( const Gaffer::Plug *input, AffectedPlugsContainer &
 		if( input == imagePlug->dataWindowPlug() )
 		{
 			outputs.push_back( outPlug()->dataWindowPlug() );
-		}
-
-		if( input == imagePlug->channelNamesPlug() )
-		{
-			outputs.push_back( outPlug()->channelNamesPlug() );
-		}
-
-		if( input == imagePlug->channelDataPlug() )
-		{
-			outputs.push_back( outPlug()->channelDataPlug() );
 		}
 
 		if( input == imagePlug->formatPlug() )
@@ -201,8 +264,6 @@ void CollectImages::affects( const Gaffer::Plug *input, AffectedPlugsContainer &
 	}
 	else if( input == rootLayersPlug() || input == layerVariablePlug() )
 	{
-		outputs.push_back( outPlug()->channelNamesPlug() );
-		outputs.push_back( outPlug()->channelDataPlug() );
 		outputs.push_back( outPlug()->dataWindowPlug() );
 		outputs.push_back( outPlug()->formatPlug() );
 		outputs.push_back( outPlug()->metadataPlug() );
@@ -215,6 +276,55 @@ void CollectImages::affects( const Gaffer::Plug *input, AffectedPlugsContainer &
 	}
 
 }
+
+void CollectImages::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	if( output == mappingPlug() )
+	{
+		ImageProcessor::hash( output, context, h );
+
+		const std::string layerVariable = layerVariablePlug()->getValue();
+		Context::EditableScope layerScope( context );
+
+		ConstStringVectorDataPtr rootLayersData = rootLayersPlug()->getValue();
+		for( auto &rootLayer : rootLayersData->readable() )
+		{
+			h.append( rootLayer );
+			layerScope.set( layerVariable, &rootLayer );
+			inPlug()->channelNamesPlug()->hash( h );
+		}
+	}
+	else
+	{
+		ImageProcessor::hash( output, context, h );
+	}
+}
+
+void CollectImages::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const
+{
+	if( output == mappingPlug() )
+	{
+		MappingDataPtr mapping = new MappingData;
+
+		const std::string layerVariable = layerVariablePlug()->getValue();
+		Context::EditableScope layerScope( context );
+
+		ConstStringVectorDataPtr rootLayersData = rootLayersPlug()->getValue();
+		for( auto &rootLayer : rootLayersData->readable() )
+		{
+			layerScope.set( layerVariable, &rootLayer );
+			ConstStringVectorDataPtr inputChannelNamesData = inPlug()->channelNamesPlug()->getValue();
+			mapping->addLayer( rootLayer, inputChannelNamesData->readable() );
+		}
+
+		static_cast<ObjectPlug *>( output )->setValue( mapping );
+	}
+	else
+	{
+		ImageProcessor::compute( output, context );
+	}
+}
+
 
 void CollectImages::hashViewNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
@@ -543,78 +653,30 @@ Imath::Box2i CollectImages::computeDataWindow( const Gaffer::Context *context, c
 void CollectImages::hashChannelNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ImageProcessor::hashChannelNames( output, context, h );
-
-	const std::string layerVariable = layerVariablePlug()->getValue();
-
-	ConstStringVectorDataPtr rootLayersData = rootLayersPlug()->getValue();
-	const vector<string> &rootLayers = rootLayersData->readable();
-
-	h.append( &(rootLayers[0]), rootLayers.size() );
-
-	Context::EditableScope editScope( context );
-	for( unsigned int i = 0; i < rootLayers.size(); i++ )
-	{
-		editScope.set( layerVariable, &( rootLayers[i] ) );
-		inPlug()->channelNamesPlug()->hash( h );
-	}
+	mappingPlug()->hash( h );
 }
 
 IECore::ConstStringVectorDataPtr CollectImages::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	StringVectorDataPtr channelNamesData = new StringVectorData();
-	std::vector<string> &outChannelNames = channelNamesData->writable();
-
-	const std::string layerVariable = layerVariablePlug()->getValue();
-
-	ConstStringVectorDataPtr rootLayersData = rootLayersPlug()->getValue();
-	const vector<string> &rootLayers = rootLayersData->readable();
-
-	Context::EditableScope editScope( context );
-	for( unsigned int i = 0; i < rootLayers.size(); i++ )
-	{
-		editScope.set( layerVariable, &( rootLayers[i] ) );
-		ConstStringVectorDataPtr layerChannelsData = inPlug()->channelNamesPlug()->getValue();
-		const std::vector<string> &layerChannels = layerChannelsData->readable();
-
-		for( unsigned int j = 0; j < layerChannels.size(); j++ )
-		{
-			std::string curName = GafferImage::ImageAlgo::channelName( rootLayers[i], layerChannels[j] );
-
-			// Duplicate channel names could arise because either:
-			// * The user entered the same layer name twice ( just ignore one of them )
-			// * A name overlap due to complex hierachical naming:
-			//   ie. both a layer named A with a channel named B.R
-			//        and a layer named A.B with a channel named R
-			//   ( In this complicated and unlikely case, we just take the one listed first in rootLayers )
-			if( find( outChannelNames.begin(), outChannelNames.end(), curName ) == outChannelNames.end() )
-			{
-				outChannelNames.push_back( curName );
-			}
-		}
-	}
-
-	return channelNamesData;
+	auto mapping = boost::static_pointer_cast<const MappingData>( mappingPlug()->getValue() );
+	return mapping->outputChannelNames();
 }
 
 void CollectImages::hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	ConstStringVectorDataPtr rootLayersData;
+	ConstMappingDataPtr mapping;
 	string layerVariable;
 	{
 		ImagePlug::GlobalScope c( context );
-		rootLayersData = rootLayersPlug()->getValue();
+		mapping = boost::static_pointer_cast<const MappingData>( mappingPlug()->getValue() );
 		layerVariable = layerVariablePlug()->getValue();
 	}
 
-	const vector<string> &rootLayers = rootLayersData->readable();
-
-	const std::string &channelName = context->get<string>( ImagePlug::channelNameContextName );
-	std::string srcLayer, srcChannel;
-	sourceLayerAndChannel( channelName, rootLayers, srcLayer, srcChannel );
+	const MappingData::Input &input = mapping->input( context->get<string>( ImagePlug::channelNameContextName ) );
 
 	Context::EditableScope editScope( context );
-	editScope.set( ImagePlug::channelNameContextName, &srcChannel );
-	editScope.set( layerVariable, &srcLayer );
+	editScope.set( ImagePlug::channelNameContextName, &input.channelName );
+	editScope.set( layerVariable, &input.layerName );
 
 	const V2i tileOrigin = context->get<V2i>( ImagePlug::tileOriginContextName );
 	const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
@@ -646,21 +708,18 @@ void CollectImages::hashChannelData( const GafferImage::ImagePlug *parent, const
 
 IECore::ConstFloatVectorDataPtr CollectImages::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	ConstStringVectorDataPtr rootLayersData;
+	ConstMappingDataPtr mapping;
 	string layerVariable;
 	{
 		ImagePlug::GlobalScope c( context );
-		rootLayersData = rootLayersPlug()->getValue();
+		mapping = boost::static_pointer_cast<const MappingData>( mappingPlug()->getValue() );
 		layerVariable = layerVariablePlug()->getValue();
 	}
 
-	const vector<string> &rootLayers = rootLayersData->readable();
-
-	std::string srcLayer, srcChannel;
-	sourceLayerAndChannel( channelName, rootLayers, srcLayer, srcChannel );
+	const MappingData::Input &input = mapping->input( channelName );
 
 	Context::EditableScope editScope( context );
-	editScope.set( layerVariable, &srcLayer );
+	editScope.set( layerVariable, &input.layerName );
 
 	// First use this EditableScope as a global scope
 	editScope.remove( ImagePlug::channelNameContextName );
@@ -676,7 +735,7 @@ IECore::ConstFloatVectorDataPtr CollectImages::computeChannelData( const std::st
 	}
 
 	// Then set up the scope to evaluate the input channel data
-	editScope.set( ImagePlug::channelNameContextName, &srcChannel );
+	editScope.set( ImagePlug::channelNameContextName, &input.channelName );
 	editScope.set( ImagePlug::tileOriginContextName, &tileOrigin );
 
 	ConstFloatVectorDataPtr inputData = inPlug()->channelDataPlug()->getValue();

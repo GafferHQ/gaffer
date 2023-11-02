@@ -261,5 +261,17 @@ class CollectImagesTest( GafferImageTest.ImageTestCase ) :
 			IECore.CompoundData( { str(i) : IECore.IntData(i+1) for i in range( 4 ) } )
 		)
 
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testHighLayerCountPerformance( self ) :
+
+		constant = GafferImage.Constant()
+
+		collect = GafferImage.CollectImages()
+		collect["in"].setInput( constant["out"] )
+		collect["rootLayers"].setValue( IECore.StringVectorData( [ "layer{}".format( i ) for i in range( 0, 1000 ) ] ) )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			GafferImageTest.processTiles( collect["out"] )
+
 if __name__ == "__main__":
 	unittest.main()

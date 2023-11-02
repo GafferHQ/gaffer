@@ -66,6 +66,9 @@ class GAFFERIMAGE_API CollectImages : public ImageProcessor
 
 	protected :
 
+		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
+
 		void hashViewNames( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		IECore::ConstStringVectorDataPtr computeViewNames( const Gaffer::Context *context, const ImagePlug *parent ) const override;
 
@@ -91,6 +94,9 @@ class GAFFERIMAGE_API CollectImages : public ImageProcessor
 		IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const override;
 
 	private :
+
+		Gaffer::ObjectPlug *mappingPlug();
+		const Gaffer::ObjectPlug *mappingPlug() const;
 
 		static size_t g_firstPlugIndex;
 
