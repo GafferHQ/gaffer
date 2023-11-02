@@ -400,6 +400,8 @@ struct CapturedProcess
 
 };
 
+const InternedString g_processedObjectPlugName( "__processedObject" );
+
 /// \todo Perhaps add this to the Gaffer module as a
 /// public class, and expose it within the stats app?
 /// Give a bit more thought to the CapturedProcess
@@ -432,7 +434,7 @@ class CapturingMonitor : public Monitor
 
 			CapturedProcess::Ptr capturedProcess;
 			ProcessOrScope entry;
-			if( !p->parent<ScenePlug>() || p->getName() != m_scenePlugChildName )
+			if( !shouldCapture( p ) )
 			{
 				// Parents may spawn other processes in support of the requested plug. This is one
 				// of these other plugs that isn't directly the requested plug.  Instead of creating
@@ -491,10 +493,7 @@ class CapturingMonitor : public Monitor
 
 		bool forceMonitoring( const Plug *plug, const IECore::InternedString &processType ) override
 		{
-			if(
-				processType == g_hashProcessType &&
-				plug->parent<ScenePlug>() && plug->getName() == m_scenePlugChildName
-			)
+			if( processType == g_hashProcessType && shouldCapture( plug ) )
 			{
 				return true;
 			}
@@ -503,6 +502,14 @@ class CapturingMonitor : public Monitor
 		}
 
 	private :
+
+		bool shouldCapture( const Plug *plug ) const
+		{
+			return
+				( plug->parent<ScenePlug>() && plug->getName() == m_scenePlugChildName ) ||
+				( (Gaffer::TypeId)plug->typeId() == Gaffer::TypeId::ObjectPlugTypeId && plug->getName() == g_processedObjectPlugName )
+			;
+		}
 
 		using Mutex = tbb::spin_mutex;
 
