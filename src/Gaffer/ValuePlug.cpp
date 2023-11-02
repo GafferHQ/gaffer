@@ -967,7 +967,8 @@ void ValuePlug::resetDefault()
 {
 	if( m_defaultValue != nullptr )
 	{
-		IECore::ConstObjectPtr newDefault = getObjectValue();
+		IECore::ConstObjectPtr newDefaultOwner;
+		IECore::ConstObjectPtr newDefault = getObjectValue( newDefaultOwner );
 		IECore::ConstObjectPtr oldDefault = m_defaultValue;
 		Action::enact(
 			this,
@@ -1038,13 +1039,6 @@ const IECore::Object *ValuePlug::defaultObjectValue() const
 const IECore::Object *ValuePlug::getValueInternal( IECore::ConstObjectPtr &owner, const IECore::MurmurHash *precomputedHash ) const
 {
 	return ComputeProcess::value( this, owner, precomputedHash );
-}
-
-IECore::ConstObjectPtr ValuePlug::getValueInternal( const IECore::MurmurHash *precomputedHash ) const
-{
-	IECore::ConstObjectPtr owner;
-	const IECore::Object *result = getValueInternal( owner, precomputedHash );
-	return owner ? owner : result;
 }
 
 void ValuePlug::setObjectValue( IECore::ConstObjectPtr value )
