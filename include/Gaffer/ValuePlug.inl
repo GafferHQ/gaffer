@@ -54,21 +54,4 @@ const T *ValuePlug::getObjectValue( IECore::ConstObjectPtr &owner, const IECore:
 	) );
 }
 
-template<typename T>
-boost::intrusive_ptr<const T> ValuePlug::getObjectValue( const IECore::MurmurHash *precomputedHash ) const
-{
-	IECore::ConstObjectPtr owner;
-	const T *value = getObjectValue<T>( owner, precomputedHash );
-	if( owner )
-	{
-		// Avoid unnecessary reference count manipulations.
-		return boost::static_pointer_cast<const T>( std::move( owner ) );
-	}
-	else
-	{
-		return value;
-	}
-
-}
-
 } // namespace Gaffer

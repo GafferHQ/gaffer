@@ -4,6 +4,7 @@
 Breaking Changes
 ----------------
 
+- ValuePlug : Removed deprecated `getObjectValue()` overload.
 - Dispatcher : Removed `createMatching()` method.
 - Process : Removed non-const variant of the `handleException()` method.
 - StringPlug : Removed deprecated `precomputedHash` argument from `getValue()` method.

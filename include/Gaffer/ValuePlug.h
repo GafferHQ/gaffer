@@ -251,9 +251,6 @@ class GAFFER_API ValuePlug : public Plug
 		/// so this feature is not suitable for use in classes that override that method.
 		template<typename T = IECore::Object>
 		const T *getObjectValue( IECore::ConstObjectPtr &owner, const IECore::MurmurHash *precomputedHash = nullptr ) const;
-		/// \deprecated
-		template<typename T = IECore::Object>
-		boost::intrusive_ptr<const T> getObjectValue( const IECore::MurmurHash *precomputedHash = nullptr ) const;
 		/// Should be called by derived classes when they wish to set the plug
 		/// value - the value is referenced directly (not copied) and so must
 		/// not be changed following the call.
@@ -271,8 +268,6 @@ class GAFFER_API ValuePlug : public Plug
 		class SetValueAction;
 
 		const IECore::Object *getValueInternal( IECore::ConstObjectPtr &owner, const IECore::MurmurHash *precomputedHash = nullptr ) const;
-		/// \deprecated
-		IECore::ConstObjectPtr getValueInternal( const IECore::MurmurHash *precomputedHash = nullptr ) const;
 		void setValueInternal( IECore::ConstObjectPtr value, bool propagateDirtiness );
 		void childAddedOrRemoved();
 		// Emits the appropriate Node::plugSetSignal() for this plug and all its
