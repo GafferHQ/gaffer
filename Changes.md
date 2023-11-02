@@ -39,17 +39,13 @@ Fixes
 - PlugLayout : Fixed lack of update when `layout:customWidget:*` metadata changes.
 - Dispatch app : Removed unnecessary and misleading "Execute" button.
 - SceneAlgo : Fixed computation of `ScenePlug.object` in networks with nodes derived from `ObjectProcessor`. These include : `CameraTweaks`, `ClosestPointSampler`, `CollectPrimitiveVariables`, `CopyPrimitiveVariables`, `CurveSampler`, `DeleteCurves`, `DeleteFaces`, `DeletePoints`, `MapOffset`, `MapProjection`, `MeshDistortion`, `MeshNormals`, `MeshSegments`, `MeshTangents`, `MeshToPoints`, `MeshType`, `Orientation`, `PointsType`, `PrimitiveSampler`, `PrimitiveVariables`, `ReverseWinding`, `ShufflePrimitiveVariables` and `UVSampler` (#5406).
+- Metadata : Fixed redundant copying of metadata when promoting plugs.
 
 API
 ---
 
 - Process : Added `acquireCollaborativeResult()` method, providing an improved mechanism for multiple threads to collaborate on TBB tasks spawned by a single process they all depend on.
 - ValuePlug : Added `Default` CachePolicy and deprecated `Standard`, `TaskIsolation` and `Legacy` policies.
-- Metadata : Fixed redundant copying of metadata when promoting plugs.
-
-API
----
-
 - Metadata :
   - Added `RegistrationTypes` enum that allows the different types of registrations to be identified.
   - Added improved `registeredValues()` and `value()` overloads that provide finer-grained queries based on the type of registration.
