@@ -755,11 +755,8 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 
 		g["in"][0].setInput( p["out"] )
 
-		noduleColor = Gaffer.Metadata.value( p, "nodule:color", instanceOnly = True )
-		connectionColor = Gaffer.Metadata.value( p, "connectionGadget:color", instanceOnly = True )
-
-		self.assertEqual( noduleColor, None )
-		self.assertEqual( noduleColor, connectionColor )
+		self.assertIsNone( Gaffer.Metadata.value( p, "nodule:color", Gaffer.Metadata.RegistrationTypes.Instance ) )
+		self.assertIsNone( Gaffer.Metadata.value( p, "connectionGadget:color", Gaffer.Metadata.RegistrationTypes.Instance ) )
 
 	def testProcessInvalidSet( self ) :
 

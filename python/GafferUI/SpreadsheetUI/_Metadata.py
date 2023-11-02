@@ -252,6 +252,7 @@ def __defaultCellMetadata( plug, key ) :
 	return Gaffer.Metadata.value( __correspondingDefaultPlug( plug ), key )
 
 for key in [
+	"description",
 	"spreadsheet:columnLabel",
 	"spreadsheet:columnWidth",
 	"plugValueWidget:type",

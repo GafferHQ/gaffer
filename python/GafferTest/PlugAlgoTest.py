@@ -49,6 +49,7 @@ class PlugAlgoTest( GafferTest.TestCase ) :
 		GafferTest.TestCase.tearDown( self )
 
 		Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "op1", "plugAlgoTest:a" )
+		Gaffer.Metadata.deregisterValue( Gaffer.IntPlug, "plugAlgoTest:b" )
 
 	def testPromote( self ) :
 
@@ -474,7 +475,7 @@ class PlugAlgoTest( GafferTest.TestCase ) :
 		p = Gaffer.PlugAlgo.promote( n["a"]["op1"] )
 		self.assertEqual( Gaffer.Metadata.value( p, "testPersistence" ), 10 )
 		self.assertTrue( "testPersistence" in Gaffer.Metadata.registeredValues( p ) )
-		self.assertTrue( "testPersistence" not in Gaffer.Metadata.registeredValues( p, persistentOnly = True ) )
+		self.assertTrue( "testPersistence" not in Gaffer.Metadata.registeredValues( p, Gaffer.Metadata.RegistrationTypes.InstancePersistent ) )
 
 	def testPromoteWithName( self ) :
 
@@ -577,14 +578,14 @@ class PlugAlgoTest( GafferTest.TestCase ) :
 
 		self.assertEqual( Gaffer.Metadata.value( script["box"]["n"]["in"], "plugAlgoTest:a" ), "a" )
 		self.assertIn( "plugAlgoTest:a", Gaffer.Metadata.registeredValues( script["box"]["n"]["in"] ) )
-		self.assertNotIn( "plugAlgoTest:a", Gaffer.Metadata.registeredValues( script["box"]["n"]["in"], persistentOnly = True ) )
+		self.assertNotIn( "plugAlgoTest:a", Gaffer.Metadata.registeredValues( script["box"]["n"]["in"], Gaffer.Metadata.RegistrationTypes.InstancePersistent ) )
 
 		# And if we promote up one more level, we want that to work, and we want the
 		# new metadata to be persistent so that it will be serialised and restored.
 
 		Gaffer.PlugAlgo.promote( script["box"]["n"]["in"] )
 		self.assertIn( "plugAlgoTest:a", Gaffer.Metadata.registeredValues( script["box"]["in"] ) )
-		self.assertIn( "plugAlgoTest:a", Gaffer.Metadata.registeredValues( script["box"]["in"], persistentOnly = True ) )
+		self.assertIn( "plugAlgoTest:a", Gaffer.Metadata.registeredValues( script["box"]["in"], Gaffer.Metadata.RegistrationTypes.InstancePersistent ) )
 
 		# After serialisation and loading, everything should look the same.
 
@@ -593,9 +594,9 @@ class PlugAlgoTest( GafferTest.TestCase ) :
 
 		self.assertEqual( Gaffer.Metadata.value( script2["box"]["n"]["in"], "plugAlgoTest:a" ), "a" )
 		self.assertIn( "plugAlgoTest:a", Gaffer.Metadata.registeredValues( script2["box"]["n"]["in"] ) )
-		self.assertNotIn( "plugAlgoTest:a", Gaffer.Metadata.registeredValues( script2["box"]["n"]["in"], persistentOnly = True ) )
+		self.assertNotIn( "plugAlgoTest:a", Gaffer.Metadata.registeredValues( script2["box"]["n"]["in"], Gaffer.Metadata.RegistrationTypes.InstancePersistent ) )
 		self.assertIn( "plugAlgoTest:a", Gaffer.Metadata.registeredValues( script2["box"]["in"] ) )
-		self.assertIn( "plugAlgoTest:a", Gaffer.Metadata.registeredValues( script2["box"]["in"], persistentOnly = True ) )
+		self.assertIn( "plugAlgoTest:a", Gaffer.Metadata.registeredValues( script2["box"]["in"], Gaffer.Metadata.RegistrationTypes.InstancePersistent ) )
 
 	def testPromotableMetadata( self ) :
 
@@ -618,6 +619,39 @@ class PlugAlgoTest( GafferTest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.value( p, "c" ), 30 )
 		self.assertIsNone( Gaffer.Metadata.value( p, "b:promotable" ) )
 		self.assertNotIn( "c:promotable", Gaffer.Metadata.registeredValues( p ) )
+
+	def testPromoteDoesntMakeRedundantMetadata( self ) :
+
+		# Make plug with metadata registered statically against its type.
+
+		Gaffer.Metadata.registerValue( Gaffer.IntPlug, "plugAlgoTest:b", "testValueB" )
+		self.addCleanup( Gaffer.Metadata.deregisterValue, Gaffer.IntPlug, "plugAlgoTest:b" )
+
+		box = Gaffer.Box()
+		box["node"] = Gaffer.Node()
+		box["node"]["plug"] = Gaffer.IntPlug( flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+		self.assertEqual( Gaffer.Metadata.value( box["node"]["plug"], "plugAlgoTest:b" ), "testValueB" )
+
+		# When promoting, we shouldn't need to make a per-instance copy of the
+		# static metadata, because the static registration also applies to the
+		# promoted plug.
+
+		promoted = Gaffer.PlugAlgo.promote( box["node"]["plug"] )
+		self.assertTrue( promoted.node().isSame( box ) )
+		self.assertEqual( Gaffer.Metadata.value( promoted, "plugAlgoTest:b" ), "testValueB" )
+		self.assertIsNone( Gaffer.Metadata.value( promoted, "plugAlgoTest:b", Gaffer.Metadata.RegistrationTypes.Instance ) )
+
+		box.removeChild( promoted )
+		Gaffer.Metadata.registerValue( box["node"]["plug"], "plugAlgoTest:b", "testValueC" )
+		self.assertEqual( Gaffer.Metadata.value( box["node"]["plug"], "plugAlgoTest:b" ), "testValueC" )
+
+		# But if the plug to be promoted has a unique per-instance value, then
+		# we'll need to promote that explicitly.
+
+		promoted = Gaffer.PlugAlgo.promote( box["node"]["plug"] )
+		self.assertTrue( promoted.node().isSame( box ) )
+		self.assertEqual( Gaffer.Metadata.value( promoted, "plugAlgoTest:b" ), "testValueC" )
+		self.assertEqual( Gaffer.Metadata.value( promoted, "plugAlgoTest:b", Gaffer.Metadata.RegistrationTypes.Instance ), "testValueC" )
 
 	def testGetValueFromNameValuePlug( self ) :
 

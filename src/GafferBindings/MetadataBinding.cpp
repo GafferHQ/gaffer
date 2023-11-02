@@ -66,8 +66,7 @@ namespace GafferBindings
 
 std::string metadataSerialisation( const Gaffer::GraphComponent *graphComponent, const std::string &identifier, Serialisation &serialisation )
 {
-	std::vector<InternedString> keys;
-	Metadata::registeredValues( graphComponent, keys, /* instanceOnly = */ true, /* persistentOnly = */ true );
+	const std::vector<InternedString> keys = Metadata::registeredValues( graphComponent, Metadata::RegistrationTypes::InstancePersistent );
 
 	const Plug *plug = runTimeCast<const Plug>( graphComponent );
 	const Reference *reference = plug ? runTimeCast<const Reference>( plug->node() ) : nullptr;

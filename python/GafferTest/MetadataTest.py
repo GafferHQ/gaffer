@@ -352,8 +352,8 @@ class MetadataTest( GafferTest.TestCase ) :
 		self.assertTrue( "ri" in Gaffer.Metadata.registeredValues( n ) )
 		self.assertTrue( "rpi" in Gaffer.Metadata.registeredValues( n["op1"] ) )
 
-		self.assertTrue( "r" not in Gaffer.Metadata.registeredValues( n, instanceOnly=True ) )
-		self.assertTrue( "rp" not in Gaffer.Metadata.registeredValues( n["op1"], instanceOnly=True ) )
+		self.assertTrue( "r" not in Gaffer.Metadata.registeredValues( n, Gaffer.Metadata.RegistrationTypes.Instance ) )
+		self.assertTrue( "rp" not in Gaffer.Metadata.registeredValues( n["op1"], Gaffer.Metadata.RegistrationTypes.Instance ) )
 		self.assertTrue( "ri" in Gaffer.Metadata.registeredValues( n ) )
 		self.assertTrue( "rpi" in Gaffer.Metadata.registeredValues( n["op1"] ) )
 
@@ -626,19 +626,19 @@ class MetadataTest( GafferTest.TestCase ) :
 
 		def assertPersistent() :
 
-			self.assertEqual( Gaffer.Metadata.registeredValues( s["n"], instanceOnly = True ), [ "a" ] )
-			self.assertEqual( Gaffer.Metadata.registeredValues( s["n"]["op1"], instanceOnly = True ), [ "b" ] )
-			self.assertEqual( Gaffer.Metadata.registeredValues( s["n"], instanceOnly = True, persistentOnly = True ), [ "a" ] )
-			self.assertEqual( Gaffer.Metadata.registeredValues( s["n"]["op1"], instanceOnly = True, persistentOnly = True ), [ "b" ] )
+			self.assertEqual( Gaffer.Metadata.registeredValues( s["n"], Gaffer.Metadata.RegistrationTypes.Instance ), [ "a" ] )
+			self.assertEqual( Gaffer.Metadata.registeredValues( s["n"]["op1"], Gaffer.Metadata.RegistrationTypes.Instance ), [ "b" ] )
+			self.assertEqual( Gaffer.Metadata.registeredValues( s["n"], Gaffer.Metadata.RegistrationTypes.InstancePersistent ), [ "a" ] )
+			self.assertEqual( Gaffer.Metadata.registeredValues( s["n"]["op1"], Gaffer.Metadata.RegistrationTypes.InstancePersistent ), [ "b" ] )
 			self.assertEqual( Gaffer.Metadata.value( s["n"], "a" ), 1 )
 			self.assertEqual( Gaffer.Metadata.value( s["n"]["op1"], "b" ), 2 )
 
 		def assertNonPersistent() :
 
-			self.assertEqual( Gaffer.Metadata.registeredValues( s["n"], instanceOnly = True ), [ "a" ] )
-			self.assertEqual( Gaffer.Metadata.registeredValues( s["n"]["op1"], instanceOnly = True ), [ "b" ] )
-			self.assertEqual( Gaffer.Metadata.registeredValues( s["n"], instanceOnly = True, persistentOnly = True ), [] )
-			self.assertEqual( Gaffer.Metadata.registeredValues( s["n"]["op1"], instanceOnly = True, persistentOnly = True ), [] )
+			self.assertEqual( Gaffer.Metadata.registeredValues( s["n"], Gaffer.Metadata.RegistrationTypes.Instance ), [ "a" ] )
+			self.assertEqual( Gaffer.Metadata.registeredValues( s["n"]["op1"], Gaffer.Metadata.RegistrationTypes.Instance ), [ "b" ] )
+			self.assertEqual( Gaffer.Metadata.registeredValues( s["n"], Gaffer.Metadata.RegistrationTypes.InstancePersistent ), [] )
+			self.assertEqual( Gaffer.Metadata.registeredValues( s["n"]["op1"], Gaffer.Metadata.RegistrationTypes.InstancePersistent ), [] )
 			self.assertEqual( Gaffer.Metadata.value( s["n"], "a" ), 1 )
 			self.assertEqual( Gaffer.Metadata.value( s["n"]["op1"], "b" ), 2 )
 
@@ -1043,8 +1043,8 @@ class MetadataTest( GafferTest.TestCase ) :
 		Gaffer.Metadata.registerValue( n, "one", 1 )
 		Gaffer.Metadata.registerValue( n["op1"], "two", 2 )
 
-		self.assertEqual( Gaffer.Metadata.registeredValues( n, instanceOnly = True ), [ "one" ] )
-		self.assertEqual( Gaffer.Metadata.registeredValues( n["op1"], instanceOnly = True ), [ "two" ] )
+		self.assertEqual( Gaffer.Metadata.registeredValues( n, Gaffer.Metadata.RegistrationTypes.Instance), [ "one" ] )
+		self.assertEqual( Gaffer.Metadata.registeredValues( n["op1"], Gaffer.Metadata.RegistrationTypes.Instance ), [ "two" ] )
 
 		self.assertEqual( Gaffer.Metadata.value( n, "one" ), 1 )
 		self.assertEqual( Gaffer.Metadata.value( n["op1"], "two" ), 2 )
@@ -1052,8 +1052,45 @@ class MetadataTest( GafferTest.TestCase ) :
 		Gaffer.Metadata.deregisterValue( n, "one" )
 		Gaffer.Metadata.deregisterValue( n["op1"], "two" )
 
-		self.assertEqual( Gaffer.Metadata.registeredValues( n, instanceOnly = True ), [] )
-		self.assertEqual( Gaffer.Metadata.registeredValues( n["op1"], instanceOnly = True ), [] )
+		self.assertEqual( Gaffer.Metadata.registeredValues( n, Gaffer.Metadata.RegistrationTypes.Instance ), [] )
+		self.assertEqual( Gaffer.Metadata.registeredValues( n["op1"], Gaffer.Metadata.RegistrationTypes.Instance ), [] )
+
+	def testQueryTypeIdRegistrationIgnoringInstanceRegistration( self ) :
+
+		Gaffer.Metadata.registerValue( GafferTest.AddNode, "testMetadata", "typeIdValue" )
+		self.addCleanup( Gaffer.Metadata.deregisterValue, GafferTest.AddNode, "testMetadata" )
+
+		node = GafferTest.AddNode()
+		Gaffer.Metadata.registerValue( node, "testMetadata", "instanceValue" )
+
+		self.assertEqual( Gaffer.Metadata.value(  node, "testMetadata" ), "instanceValue" )
+		self.assertEqual(
+			Gaffer.Metadata.value(  node, "testMetadata", registrationTypes = Gaffer.Metadata.RegistrationTypes.TypeId ),
+			"typeIdValue"
+		)
+
+	def testRegistrationTypeVsInstanceOnly( self ) :
+
+		# Check that we resolve the deprecated and non-deprecated function overloads
+		# correctly. Can be removed when we remove the deprecated ones.
+
+		n = GafferTest.AddNode()
+		Gaffer.Metadata.registerValue( n["op1"], "persistent", 2 )
+		Gaffer.Metadata.registerValue( n["op1"], "nonPersistent", 3, persistent = False )
+
+		# Keyword arguments should allow us to distinguish old and new overloads.
+
+		self.assertEqual( Gaffer.Metadata.registeredValues( n["op1"], instanceOnly = True ), [ "persistent" , "nonPersistent" ] )
+		self.assertEqual( Gaffer.Metadata.registeredValues( n["op1"], instanceOnly = True, persistentOnly = True ), [ "persistent" ] )
+		self.assertEqual( Gaffer.Metadata.registeredValues( n["op1"], registrationTypes = Gaffer.Metadata.RegistrationTypes.Instance ), [ "persistent" , "nonPersistent" ] )
+		self.assertEqual( Gaffer.Metadata.registeredValues( n["op1"], registrationTypes = Gaffer.Metadata.RegistrationTypes.InstanceNonPersistent ), [ "nonPersistent" ] )
+
+		# And even if we don't use keyword arguments, the argument types should allow us to disambiguate.
+
+		self.assertEqual( Gaffer.Metadata.registeredValues( n["op1"], True ), [ "persistent" , "nonPersistent" ] )
+		self.assertEqual( Gaffer.Metadata.registeredValues( n["op1"], True, True ), [ "persistent" ] )
+		self.assertEqual( Gaffer.Metadata.registeredValues( n["op1"], Gaffer.Metadata.RegistrationTypes.Instance ), [ "persistent" , "nonPersistent" ] )
+		self.assertEqual( Gaffer.Metadata.registeredValues( n["op1"], Gaffer.Metadata.RegistrationTypes.InstanceNonPersistent ), [ "nonPersistent" ] )
 
 	@staticmethod
 	def testPythonUnload() :
@@ -1244,6 +1281,27 @@ class MetadataTest( GafferTest.TestCase ) :
 		Gaffer.Metadata.nodeValueChangedSignal( node ).connect( changed, scoped = False )
 		Gaffer.Metadata.registerValue( node, "test", 2 )
 		self.assertEqual( Gaffer.Metadata.value( node, "test" ), 1 )
+
+	def tearDown( self ) :
+
+		GafferTest.TestCase.tearDown( self )
+
+		Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "aKey" )
+		Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "iKey" )
+		Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "k" )
+		Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "imt" )
+		Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "maskTest" )
+		Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "deleteMe" )
+		Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "nodeData3" )
+
+		Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "op1", "description" )
+		Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "op1", "iKey" )
+		Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "op1", "imt" )
+		Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "op1", "k" )
+		Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "op1", "deleteMe" )
+		Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "op1", "plugData3" )
+		Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "op1", "rp" )
+		Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "op*", "aKey" )
 
 if __name__ == "__main__":
 	unittest.main()

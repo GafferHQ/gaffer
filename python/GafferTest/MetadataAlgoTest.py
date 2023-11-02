@@ -486,13 +486,13 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["n"] = Gaffer.Node()
-		self.assertEqual( len( Gaffer.Metadata.registeredValues( s["n"], instanceOnly = True ) ), 0 )
+		self.assertEqual( len( Gaffer.Metadata.registeredValues( s["n"], Gaffer.Metadata.RegistrationTypes.Instance ) ), 0 )
 
 		Gaffer.MetadataAlgo.setBookmarked( s["n"], True )
-		self.assertEqual( len( Gaffer.Metadata.registeredValues( s["n"], instanceOnly = True ) ), 1 )
+		self.assertEqual( len( Gaffer.Metadata.registeredValues( s["n"], Gaffer.Metadata.RegistrationTypes.Instance ) ), 1 )
 
 		Gaffer.MetadataAlgo.setBookmarked( s["n"], False )
-		self.assertEqual( len( Gaffer.Metadata.registeredValues( s["n"], instanceOnly = True ) ), 0 )
+		self.assertEqual( len( Gaffer.Metadata.registeredValues( s["n"], Gaffer.Metadata.RegistrationTypes.Instance ) ), 0 )
 
 	def testNumericBookmarks( self ) :
 
@@ -708,21 +708,21 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 
 		n = Gaffer.Node()
 		Gaffer.MetadataAlgo.addAnnotation( n, "test", Gaffer.MetadataAlgo.Annotation( text = "abc" ) )
-		self.assertEqual( len( Gaffer.Metadata.registeredValues( n, instanceOnly = True ) ), 1 )
+		self.assertEqual( len( Gaffer.Metadata.registeredValues( n, Gaffer.Metadata.RegistrationTypes.Instance ) ), 1 )
 		self.assertEqual(
 			Gaffer.MetadataAlgo.getAnnotation( n, "test" ),
 			Gaffer.MetadataAlgo.Annotation( text = "abc" )
 		)
 
 		Gaffer.MetadataAlgo.addAnnotation( n, "test", Gaffer.MetadataAlgo.Annotation( text = "xyz", color = imath.Color3f( 1 ) ) )
-		self.assertEqual( len( Gaffer.Metadata.registeredValues( n, instanceOnly = True ) ), 2 )
+		self.assertEqual( len( Gaffer.Metadata.registeredValues( n, Gaffer.Metadata.RegistrationTypes.Instance ) ), 2 )
 		self.assertEqual(
 			Gaffer.MetadataAlgo.getAnnotation( n, "test" ),
 			Gaffer.MetadataAlgo.Annotation( text = "xyz", color = imath.Color3f( 1 ) )
 		)
 
 		Gaffer.MetadataAlgo.addAnnotation( n, "test", Gaffer.MetadataAlgo.Annotation( text = "abc" ) )
-		self.assertEqual( len( Gaffer.Metadata.registeredValues( n, instanceOnly = True ) ), 1 )
+		self.assertEqual( len( Gaffer.Metadata.registeredValues( n, Gaffer.Metadata.RegistrationTypes.Instance ) ), 1 )
 		self.assertEqual(
 			Gaffer.MetadataAlgo.getAnnotation( n, "test" ),
 			Gaffer.MetadataAlgo.Annotation( text = "abc" )
@@ -781,6 +781,43 @@ class MetadataAlgoTest( GafferTest.TestCase ) :
 		Gaffer.MetadataAlgo.addAnnotationTemplate( "test2", a, user = True )
 		self.assertEqual( Gaffer.MetadataAlgo.annotationTemplates(), defaultTemplates + [ "test", "test2" ] )
 		self.assertEqual( Gaffer.MetadataAlgo.annotationTemplates( userOnly = True ), userOnlyDefaultTemplates + [ "test2" ] )
+
+	def testDeregisterRedundantValues( self ) :
+
+		values = [ False, None, 1, 2 ] # False means "no registration", None means "None is registered as the value"
+		for typeValue in values :
+			for instanceValue in values :
+				for nested in ( True, False ) :
+					with self.subTest( typeValue = typeValue, instanceValue = instanceValue, nested = nested ) :
+
+						node = GafferTest.AddNode()
+
+						if typeValue is not False :
+							Gaffer.Metadata.registerValue( GafferTest.AddNode, "metadataAlgoTest", typeValue )
+						else :
+							Gaffer.Metadata.deregisterValue( GafferTest.AddNode, "metadataAlgoTest" )
+
+						if instanceValue is not False :
+							Gaffer.Metadata.registerValue( node, "metadataAlgoTest", instanceValue )
+
+						if typeValue is not False :
+							self.assertEqual( Gaffer.Metadata.value( node, "metadataAlgoTest", registrationTypes = Gaffer.Metadata.RegistrationTypes.TypeId ), typeValue )
+
+						if instanceValue is not False :
+							self.assertEqual( Gaffer.Metadata.value( node, "metadataAlgoTest", registrationTypes = Gaffer.Metadata.RegistrationTypes.Instance ), instanceValue )
+
+						if nested :
+							nodeToPass = Gaffer.Box()
+							nodeToPass.addChild( node )
+						else :
+							nodeToPass = node
+
+						valueBefore = Gaffer.Metadata.value( node, "metadataAlgoTest" )
+						Gaffer.MetadataAlgo.deregisterRedundantValues( nodeToPass )
+						self.assertEqual( Gaffer.Metadata.value( node, "metadataAlgoTest" ), valueBefore )
+
+						if typeValue == instanceValue :
+							self.assertIsNone( Gaffer.Metadata.value( node, "metadataAlgoTest", registrationTypes = Gaffer.Metadata.RegistrationTypes.Instance ) )
 
 	def tearDown( self ) :
 

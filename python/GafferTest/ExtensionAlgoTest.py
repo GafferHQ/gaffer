@@ -86,9 +86,9 @@ class ExtensionAlgoTest( GafferTest.TestCase ) :
 
 		def assertExpectedMetadata( node ) :
 
-			self.assertEqual( Gaffer.Metadata.registeredValues( node, instanceOnly = True ), [] )
-			self.assertEqual( Gaffer.Metadata.registeredValues( node["in"], instanceOnly = True ), [] )
-			self.assertEqual( Gaffer.Metadata.registeredValues( node["out"], instanceOnly = True ), [] )
+			self.assertEqual( Gaffer.Metadata.registeredValues( node, Gaffer.Metadata.RegistrationTypes.Instance ), [] )
+			self.assertEqual( Gaffer.Metadata.registeredValues( node["in"], Gaffer.Metadata.RegistrationTypes.Instance ), [] )
+			self.assertEqual( Gaffer.Metadata.registeredValues( node["out"], Gaffer.Metadata.RegistrationTypes.Instance ), [] )
 
 			self.assertEqual( Gaffer.Metadata.value( node, "description" ), "Test" )
 			self.assertEqual( Gaffer.Metadata.value( node["in"], "description" ), "The input" )

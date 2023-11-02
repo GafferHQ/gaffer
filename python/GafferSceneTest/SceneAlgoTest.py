@@ -404,6 +404,38 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 			h = h.predecessors[-1]
 		self.assertEqual( h.context["seed"], 5 )
 
+	def testObjectProcessorHistory( self ) :
+
+		plane = GafferScene.Plane()
+
+		meshType = GafferScene.MeshType()
+		meshType["in"].setInput( plane["out"] )
+
+		def runTest() :
+
+			history = GafferScene.SceneAlgo.history( meshType["out"]["object"], "/plane" )
+
+			for plug, scenePath in [
+				( meshType["out"], "/plane" ),
+				( meshType["in"], "/plane" ),
+				( plane["out"], "/plane" ),
+			] :
+				self.assertEqual( history.scene, plug )
+				self.assertEqual( GafferScene.ScenePlug.pathToString( history.context["scene:path"] ), scenePath )
+				history = history.predecessors[0] if history.predecessors else None
+
+			self.assertIsNone( history )
+
+		runTest()
+
+		# Test running the test while everything is already cached still works, and doesn't add any
+		# new entries to the cache
+		Gaffer.ValuePlug.clearHashCache()
+		runTest()
+		before = Gaffer.ValuePlug.hashCacheTotalUsage()
+		runTest()
+		self.assertEqual( Gaffer.ValuePlug.hashCacheTotalUsage(), before )
+
 	def testHistoryWithNoComputes( self ) :
 
 		switch = Gaffer.Switch()

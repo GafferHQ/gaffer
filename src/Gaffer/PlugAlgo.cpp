@@ -1216,7 +1216,20 @@ Plug *promoteWithName( Plug *plug, const InternedString &name, Plug *parent, con
 				/// individual exclusions.
 				return false;
 			}
-			return MetadataAlgo::isPromotable( from, to, name );
+			if( !MetadataAlgo::isPromotable( from, to, name ) )
+			{
+				return false;
+			}
+			// Only copy if the destination doesn't already have the metadata.
+			// This avoids making unnecessary instance-level metadata when the
+			// same value is registered statically (against the plug type).
+			ConstDataPtr fromValue = Gaffer::Metadata::value( from, name );
+			ConstDataPtr toValue = Gaffer::Metadata::value( to, name );
+			if( fromValue && toValue )
+			{
+				return !toValue->isEqualTo( fromValue.get() );
+			}
+			return (bool)fromValue != (bool)toValue;
 		},
 		// We use `persistent = dynamic` so that `promoteWithName()` can be used in
 		// constructors for custom nodes, to promote a plug from an internal

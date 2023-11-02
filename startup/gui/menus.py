@@ -567,3 +567,31 @@ GafferUI.DotUI.connect( application.root() )
 with IECore.IgnoredExceptions( ImportError ) :
 
 	import GafferTractorUI
+
+
+## Metadata cleanup
+###########################################################################
+
+## \todo This shouldn't be necessary forever, since we've fixed the
+# problems that caused redundant metadata to be produced in the first
+# place. Remove the menu item when it is no longer needed.
+
+def __removeRedundantMetadata( menu ) :
+
+	script = menu.ancestor( GafferUI.ScriptWindow ).scriptNode()
+	with Gaffer.UndoScope( script ) :
+		Gaffer.MetadataAlgo.deregisterRedundantValues( script )
+
+def __removeRedundantMetadataActive( menu ) :
+
+	script = menu.ancestor( GafferUI.ScriptWindow ).scriptNode()
+	return not Gaffer.MetadataAlgo.readOnly( script )
+
+scriptWindowMenu.append(
+	"/Tools/Metadata/Clean Up",
+	{
+		"command" : __removeRedundantMetadata,
+		"active" : __removeRedundantMetadataActive,
+		"description" : "Optimises file size by removing redundant node metadata."
+	}
+)

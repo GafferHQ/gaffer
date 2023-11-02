@@ -1153,7 +1153,7 @@ class _PresetsEditor( GafferUI.Widget ) :
 		d = self.__pathListing.getPath().dict()
 		d.clear()
 		if self.__plug is not None :
-			for name in Gaffer.Metadata.registeredValues( self.__plug, instanceOnly = True, persistentOnly = True ) :
+			for name in Gaffer.Metadata.registeredValues( self.__plug, Gaffer.Metadata.RegistrationTypes.InstancePersistent ) :
 				if name.startswith( "preset:" ) :
 					d[name[7:]] = Gaffer.Metadata.value( self.__plug, name )
 
@@ -1699,7 +1699,7 @@ class _SectionEditor( GafferUI.Widget ) :
 					emptySections[i] = newSection( emptySections[i] )
 				Gaffer.Metadata.registerValue( self.getPlugParent(), "uiEditor:emptySections", emptySections )
 
-			for name in Gaffer.Metadata.registeredValues( self.getPlugParent(), instanceOnly = True, persistentOnly = True ) :
+			for name in Gaffer.Metadata.registeredValues( self.getPlugParent(), Gaffer.Metadata.RegistrationTypes.InstancePersistent ) :
 				m = re.match( "(layout:section:)(.*)(:.*)", name )
 				if m :
 					if newSection( m.group( 2 ) ) != m.group( 2 ) :

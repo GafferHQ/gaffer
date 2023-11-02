@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2019, John Haddon. All rights reserved.
+#  Copyright (c) 2023, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -36,67 +36,46 @@
 
 import unittest
 
+import imath
+
 import Gaffer
 import GafferTest
+import GafferUI
+import GafferUITest
 
-class MonitorAlgoTest( GafferTest.TestCase ) :
+class BoxIOUITest( GafferUITest.TestCase ) :
 
-	def testAnnotate( self ) :
+	def testNoRedundantMetadata( self ) :
 
-		s = Gaffer.ScriptNode()
-		s["b"] = Gaffer.Box()
+		box = Gaffer.Box()
 
-		s["b"]["n1"] = GafferTest.AddNode()
-		s["b"]["n1"]["op1"].setValue( 10024 )
+		box["add"] = GafferTest.AddNode()
 
-		s["b"]["n2"] = GafferTest.AddNode()
-		s["b"]["n2"]["op1"].setValue( 10023 )
+		box["switch"] = Gaffer.Switch()
+		box["switch"].setup( box["add"]["sum"] )
+		box["switch"]["in"][0].setInput( box["add"]["sum"] )
 
-		with Gaffer.PerformanceMonitor() as m :
-			with Gaffer.Context() as c :
+		Gaffer.PlugAlgo.promote( box["switch"]["in"][1] )
+		Gaffer.BoxIO.insert( box )
+		self.assertEqual( Gaffer.Metadata.registeredValues( box["BoxIn"]["__in"], Gaffer.Metadata.RegistrationTypes.Instance ), [] )
 
-				s["b"]["n1"]["sum"].getValue()
-				s["b"]["n2"]["sum"].getValue()
+		oldColor = GafferUI.Metadata.value( box["add"]["op1"], "nodule:color", Gaffer.Metadata.RegistrationTypes.TypeId )
+		self.addCleanup( Gaffer.Metadata.registerValue, Gaffer.IntPlug, "nodule:color", oldColor )
 
-				c.setFrame( 2 )
-				s["b"]["n1"]["sum"].getValue()
+		newColor = imath.Color3f( 1, 0, 0 )
+		Gaffer.Metadata.registerValue( Gaffer.IntPlug, "nodule:color", newColor )
+		self.assertEqual( Gaffer.Metadata.value( box["add"]["op1"], "nodule:color" ), newColor )
 
-		Gaffer.MonitorAlgo.annotate( s, m, Gaffer.MonitorAlgo.PerformanceMetric.ComputeCount )
-
+		promoted = Gaffer.BoxIO.promote( box["switch"]["out"] )
 		self.assertEqual(
-			Gaffer.MetadataAlgo.getAnnotation( s["b"]["n1"], "performanceMonitor:computeCount" ).text(),
-			"Compute count : 1"
+			set( Gaffer.Metadata.registeredValues( box["BoxOut"]["__out"], Gaffer.Metadata.RegistrationTypes.Instance ) ),
+			# We allow `description` and `plugValueWidget:type` because we do want those to be transferred through to
+			# the promoted plug, even though `description` doesn't always make sense in the new context. But we definitely
+			# don't want `nodule:color` to be promoted to instance metadata, because it is inherited from the type anyway.
+			{ "description", "plugValueWidget:type" }
 		)
-		self.assertEqual(
-			Gaffer.MetadataAlgo.getAnnotation( s["b"]["n2"], "performanceMonitor:computeCount" ).text(),
-			"Compute count : 1"
-		)
-		self.assertEqual(
-			Gaffer.MetadataAlgo.getAnnotation( s["b"], "performanceMonitor:computeCount" ).text(),
-			"Compute count : 2"
-		)
-
-		Gaffer.MonitorAlgo.annotate( s, m, Gaffer.MonitorAlgo.PerformanceMetric.HashesPerCompute )
-
-		self.assertEqual(
-			Gaffer.MetadataAlgo.getAnnotation( s["b"]["n1"], "performanceMonitor:hashesPerCompute" ).text(),
-			"Hashes per compute : 2"
-		)
-		self.assertEqual(
-			Gaffer.MetadataAlgo.getAnnotation( s["b"]["n2"], "performanceMonitor:hashesPerCompute" ).text(),
-			"Hashes per compute : 1"
-		)
-		self.assertEqual(
-			Gaffer.MetadataAlgo.getAnnotation( s["b"], "performanceMonitor:hashesPerCompute" ).text(),
-			"Hashes per compute : 1.5"
-		)
-
-		Gaffer.MonitorAlgo.removePerformanceAnnotations( s )
-		for node in Gaffer.Node.RecursiveRange( s ) :
-			self.assertEqual(
-				Gaffer.Metadata.registeredValues( node, Gaffer.Metadata.RegistrationTypes.Instance ),
-				[]
-			)
+		self.assertEqual( Gaffer.Metadata.value( promoted, "nodule:color" ), newColor )
+		self.assertEqual( Gaffer.Metadata.value( box["BoxOut"]["__out"], "nodule:color" ), newColor )
 
 if __name__ == "__main__":
 	unittest.main()

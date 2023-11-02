@@ -852,5 +852,67 @@ class SpreadsheetUITest( GafferUITest.TestCase ) :
 		self.assertEqual( Gaffer.Metadata.value( s["rows"][1]["cells"]["a"]["value"], "plugValueWidget:type" ), "Test2" )
 		self.assertEqual( Gaffer.Metadata.value( s["rows"][1]["cells"]["b"]["value"], "plugValueWidget:type" ), "Test3" )
 
+	def testRowMetadataNotPromotedRedundantly( self ) :
+
+		Gaffer.Metadata.registerValue( Gaffer.IntPlug, "plugAlgoTest:b", "testValueB" )
+		self.addCleanup( Gaffer.Metadata.deregisterValue, Gaffer.IntPlug, "plugAlgoTest:b" )
+
+		# Metadata is automatically inherited from the default row to the other rows
+		# so that we can avoid lots of redundant registrations.
+
+		box = Gaffer.Box()
+		box["spreadsheet"] = Gaffer.Spreadsheet()
+		box["spreadsheet"]["rows"].addColumn( Gaffer.StringPlug( "column1" ) )
+		box["spreadsheet"]["rows"].addRows( 1 )
+		Gaffer.Metadata.registerValue(
+			box["spreadsheet"]["rows"][0]["cells"]["column1"]["value"],
+			"plugValueWidget:type", "GafferUI.MultiLineStringPlugValueWidget"
+		)
+		self.assertEqual( Gaffer.Metadata.value( box["spreadsheet"]["rows"][0]["cells"]["column1"]["value"], "plugValueWidget:type" ), "GafferUI.MultiLineStringPlugValueWidget" )
+		self.assertEqual( Gaffer.Metadata.value( box["spreadsheet"]["rows"][1]["cells"]["column1"]["value"], "plugValueWidget:type" ), "GafferUI.MultiLineStringPlugValueWidget" )
+
+		# So we want to avoid promoting that metadata redundantly for the non-default rows.
+
+		promoted = Gaffer.PlugAlgo.promote( box["spreadsheet"]["rows"] )
+		self.assertEqual( Gaffer.Metadata.value( promoted[0]["cells"]["column1"]["value"], "plugValueWidget:type" ), "GafferUI.MultiLineStringPlugValueWidget" )
+		self.assertEqual( Gaffer.Metadata.value( promoted[0]["cells"]["column1"]["value"], "plugValueWidget:type", Gaffer.Metadata.RegistrationTypes.Instance ), "GafferUI.MultiLineStringPlugValueWidget" )
+		self.assertEqual( Gaffer.Metadata.value( promoted[1]["cells"]["column1"]["value"], "plugValueWidget:type" ), "GafferUI.MultiLineStringPlugValueWidget" )
+		self.assertIsNone( Gaffer.Metadata.value( promoted[1]["cells"]["column1"]["value"], "plugValueWidget:type", Gaffer.Metadata.RegistrationTypes.Instance ) )
+
+		# And we don't want any other metadata to be copied for the non-default rows.
+
+		for plug in Gaffer.Plug.RecursiveRange( promoted[1] ) :
+			self.assertEqual( Gaffer.Metadata.registeredValues( plug, Gaffer.Metadata.RegistrationTypes.Instance ), [] )
+
+	def testMetadataAlgoRemovesNonDefaultRowMetadata( self ) :
+
+		spreadsheet = Gaffer.Spreadsheet()
+		spreadsheet["rows"].addColumn( Gaffer.StringPlug( "column1" ) )
+		spreadsheet["rows"].addRows( 1 )
+
+		# Create Spreadsheet where non-default row has its own metadata that conflicts with the values
+		# that should be mirrored from the default row. It used to be possible for the user to get into
+		# this situation because we redundantly promoted metadata onto the non-default rows.
+
+		Gaffer.Metadata.registerValue( spreadsheet["rows"][0]["cells"][0], "spreadsheet:columnWidth", 100 )
+		Gaffer.Metadata.registerValue( spreadsheet["rows"][1]["cells"][0], "spreadsheet:columnWidth", 200 )
+		Gaffer.Metadata.registerValue( spreadsheet["rows"][0]["cells"][0], "spreadsheet:columnLabel", "Label 1" )
+		Gaffer.Metadata.registerValue( spreadsheet["rows"][1]["cells"][0], "spreadsheet:columnLabel", "Label 2" )
+
+		# Even though the non-default-row values are different to the default row ones, we still want
+		# `deregisterRedundantValues()` to clean them up, because having different column widths/labels
+		# on different rows is logically impossible.
+
+		Gaffer.MetadataAlgo.deregisterRedundantValues( spreadsheet["rows"] )
+
+		for row in spreadsheet["rows"] :
+			self.assertEqual( Gaffer.Metadata.value( row["cells"][0], "spreadsheet:columnWidth" ), 100 )
+			self.assertEqual( Gaffer.Metadata.value( row["cells"][0], "spreadsheet:columnLabel" ), "Label 1" )
+
+		self.assertEqual(
+			Gaffer.Metadata.registeredValues( spreadsheet["rows"][1]["cells"][0], Gaffer.Metadata.RegistrationTypes.Instance ),
+			[]
+		)
+
 if __name__ == "__main__":
 	unittest.main()

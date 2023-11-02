@@ -42,6 +42,7 @@
 #include "Gaffer/Plug.h"
 #include "Gaffer/Reference.h"
 #include "Gaffer/ScriptNode.h"
+#include "Gaffer/Spreadsheet.h"
 
 #include "IECore/SimpleTypedData.h"
 
@@ -62,6 +63,8 @@ IECore::InternedString g_connectionColorKey( "connectionGadget:color" );
 IECore::InternedString g_noduleColorKey( "nodule:color" );
 const std::string g_annotationPrefix( "annotation:" );
 const InternedString g_annotations( "annotations" );
+const InternedString g_spreadsheetColumnWidth( "spreadsheet:columnWidth" );
+const InternedString g_spreadsheetColumnLabel( "spreadsheet:columnLabel" );
 
 void copy( const Gaffer::GraphComponent *src , Gaffer::GraphComponent *dst , IECore::InternedString key , bool overwrite )
 {
@@ -436,8 +439,7 @@ Annotation getAnnotation( const Node *node, const std::string &name, bool inheri
 void removeAnnotation( Node *node, const std::string &name )
 {
 	const string prefix = g_annotationPrefix + name + ":";
-	vector<InternedString> keys;
-	Metadata::registeredValues( node, keys );
+	const vector<InternedString> keys = Metadata::registeredValues( node );
 
 	for( const auto &key : keys )
 	{
@@ -450,8 +452,7 @@ void removeAnnotation( Node *node, const std::string &name )
 
 void annotations( const Node *node, std::vector<std::string> &names )
 {
-	vector<InternedString> keys;
-	Metadata::registeredValues( node, keys );
+	const vector<InternedString> keys = Metadata::registeredValues( node );
 
 	for( const auto &key : keys )
 	{
@@ -695,8 +696,14 @@ void copy( const GraphComponent *from, GraphComponent *to, bool persistent )
 
 void copy( const GraphComponent *from, GraphComponent *to, const IECore::StringAlgo::MatchPattern &exclude, bool persistentOnly, bool persistent )
 {
-	vector<IECore::InternedString> keys;
-	Metadata::registeredValues( from, keys, /* instanceOnly = */ false, /* persistentOnly = */ persistentOnly );
+	/// \todo Change function signature to take `RegistrationTypes` directly.
+	unsigned registrationTypes = Metadata::RegistrationTypes::TypeId | Metadata::RegistrationTypes::TypeIdDescendant | Metadata::RegistrationTypes::InstancePersistent;
+	if( !persistentOnly )
+	{
+		registrationTypes |= Metadata::RegistrationTypes::InstanceNonPersistent;
+	}
+
+	const vector<IECore::InternedString> keys = Metadata::registeredValues( from, registrationTypes );
 	for( vector<IECore::InternedString>::const_iterator it = keys.begin(), eIt = keys.end(); it != eIt; ++it )
 	{
 		if( StringAlgo::matchMultiple( it->string(), exclude ) )
@@ -745,6 +752,49 @@ bool isPromotable( const GraphComponent *from, const GraphComponent *to, const I
 		}
 	}
 	return true;
+}
+
+/// Cleanup
+/// =======
+
+void deregisterRedundantValues( GraphComponent *graphComponent )
+{
+	for( const auto &key : Metadata::registeredValues( graphComponent, Metadata::RegistrationTypes::Instance ) )
+	{
+		ConstDataPtr instanceValue = Metadata::value( graphComponent, key, (unsigned)Metadata::RegistrationTypes::Instance );
+		ConstDataPtr typeValue = Metadata::value( graphComponent, key, (unsigned)Metadata::RegistrationTypes::TypeId | Metadata::RegistrationTypes::TypeIdDescendant );
+		if(
+			( (bool)instanceValue == (bool)typeValue ) &&
+			( !instanceValue || instanceValue->isEqualTo( typeValue.get() ) )
+		)
+		{
+			// We can remove the instance value, because the lookup will fall
+			// back to an identical value.
+			Gaffer::Metadata::deregisterValue( graphComponent, key );
+		}
+
+		// Special-case for badly promoted spreadsheet metadata of old.
+		if( key == g_spreadsheetColumnWidth || key == g_spreadsheetColumnLabel )
+		{
+			if( auto row = graphComponent->ancestor<Spreadsheet::RowPlug>() )
+			{
+				if( auto rows = row->parent<Spreadsheet::RowsPlug>() )
+				{
+					if( row != rows->defaultRow() )
+					{
+						// Override on non-default row doesn't agree with the value
+						// that should be mirrored from the default row. Remove it.
+						Gaffer::Metadata::deregisterValue( graphComponent, key );
+					}
+				}
+			}
+		}
+	}
+
+	for( auto &child : GraphComponent::Range( *graphComponent ) )
+	{
+		deregisterRedundantValues( child.get() );
+	}
 }
 
 } // namespace MetadataAlgo

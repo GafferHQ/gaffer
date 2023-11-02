@@ -164,7 +164,7 @@ def __nonDefaultPlugs( box ) :
 
 	def __nonDefaultWalk( plug ) :
 
-		if Gaffer.Metadata.value( plug, "userDefault", instanceOnly = True ) is not None :
+		if Gaffer.Metadata.value( plug, "userDefault", Gaffer.Metadata.RegistrationTypes.Instance ) is not None :
 			return True
 
 		if len( plug ) == 0 :

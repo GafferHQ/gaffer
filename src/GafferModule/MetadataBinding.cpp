@@ -193,7 +193,13 @@ object value( IECore::InternedString target, IECore::InternedString key, bool co
 	return dataToPython( d.get(), copy );
 }
 
-object graphComponentValue( const GraphComponent &graphComponent, IECore::InternedString key, bool instanceOnly, bool copy )
+object graphComponentValue( const GraphComponent &graphComponent, IECore::InternedString key, unsigned registrationTypes, bool copy )
+{
+	ConstDataPtr d = Metadata::value( &graphComponent, key, registrationTypes );
+	return dataToPython( d.get(), copy );
+}
+
+object graphComponentValueDeprecated( const GraphComponent &graphComponent, IECore::InternedString key, bool instanceOnly, bool copy )
 {
 	ConstDataPtr d = Metadata::value( &graphComponent, key, instanceOnly );
 	return dataToPython( d.get(), copy );
@@ -304,7 +310,13 @@ list registeredValues( IECore::InternedString target )
 	return keysToList( keys );
 }
 
-list registeredGraphComponentValues( const GraphComponent *target, bool instanceOnly, bool persistentOnly )
+list registeredGraphComponentValues( const GraphComponent *target, Metadata::RegistrationTypes registrationTypes )
+{
+	const std::vector<InternedString> keys = Metadata::registeredValues( target, registrationTypes );
+	return keysToList( keys );
+}
+
+list registeredGraphComponentValuesDeprecated( const GraphComponent *target, bool instanceOnly, bool persistentOnly )
 {
 	std::vector<InternedString> keys;
 	Metadata::registeredValues( target, keys, instanceOnly, persistentOnly );
@@ -339,8 +351,35 @@ list nodesWithMetadata( GraphComponent *root, const std::string &key, bool insta
 
 void GafferModule::bindMetadata()
 {
-	scope s = class_<Metadata>( "Metadata", no_init )
+	class_<Metadata> metadataClass( "Metadata", no_init );
 
+	{
+		scope s = metadataClass;
+		enum_<Metadata::RegistrationTypes>( "RegistrationTypes" )
+			.value( "None_", Metadata::RegistrationTypes::None )
+			.value( "TypeId", Metadata::RegistrationTypes::TypeId )
+			.value( "TypeIdDescendant", Metadata::RegistrationTypes::TypeIdDescendant )
+			.value( "InstancePersistent", Metadata::RegistrationTypes::InstancePersistent )
+			.value( "InstanceNonPersistent", Metadata::RegistrationTypes::InstanceNonPersistent )
+			.value( "Instance", Metadata::RegistrationTypes::Instance )
+			.value( "All", Metadata::RegistrationTypes::All )
+		;
+
+		enum_<Metadata::ValueChangedReason>( "ValueChangedReason" )
+			.value( "StaticRegistration", Metadata::ValueChangedReason::StaticRegistration )
+			.value( "StaticDeregistration", Metadata::ValueChangedReason::StaticDeregistration )
+			.value( "InstanceRegistration", Metadata::ValueChangedReason::InstanceRegistration )
+			.value( "InstanceDeregistration", Metadata::ValueChangedReason::InstanceDeregistration )
+		;
+
+		SignalClass<Metadata::ValueChangedSignal, DefaultSignalCaller<Metadata::ValueChangedSignal>, ValueChangedSlotCaller>( "ValueChangedSignal" );
+		SignalClass<Metadata::NodeValueChangedSignal, DefaultSignalCaller<Metadata::NodeValueChangedSignal>, ValueChangedSlotCaller>( "NodeValueChangedSignal" );
+		SignalClass<Metadata::PlugValueChangedSignal, DefaultSignalCaller<Metadata::PlugValueChangedSignal>, ValueChangedSlotCaller>( "PlugValueChangedSignal" );
+		SignalClass<Metadata::LegacyNodeValueChangedSignal, DefaultSignalCaller<Metadata::LegacyNodeValueChangedSignal>, ValueChangedSlotCaller>( "LegacyNodeValueChangedSignal" );
+		SignalClass<Metadata::LegacyPlugValueChangedSignal, DefaultSignalCaller<Metadata::LegacyPlugValueChangedSignal>, ValueChangedSlotCaller>( "LegacyPlugValueChangedSignal" );
+	}
+
+	metadataClass
 		.def( "registerValue", &registerValue )
 		.def( "registerValue", &registerNodeValue )
 		.def( "registerValue", &registerPlugValue )
@@ -354,11 +393,17 @@ void GafferModule::bindMetadata()
 		.staticmethod( "registerValue" )
 
 		.def( "registeredValues", &registeredValues )
-		.def( "registeredValues", &registeredGraphComponentValues,
+		.def( "registeredValues", &registeredGraphComponentValuesDeprecated,
 			(
 				boost::python::arg( "target" ),
 				boost::python::arg( "instanceOnly" ) = false,
 				boost::python::arg( "persistentOnly" ) = false
+			)
+		)
+		.def( "registeredValues", &registeredGraphComponentValues,
+			(
+				boost::python::arg( "target" ),
+				boost::python::arg( "registrationTypes" ) = Metadata::RegistrationTypes::All
 			)
 		)
 		.staticmethod( "registeredValues" )
@@ -370,11 +415,18 @@ void GafferModule::bindMetadata()
 				boost::python::arg( "_copy" ) = true
 			)
 		)
-		.def( "value", &graphComponentValue,
+		.def( "value", &graphComponentValueDeprecated,
 			(
 				boost::python::arg( "target" ),
 				boost::python::arg( "key" ),
 				boost::python::arg( "instanceOnly" ) = false,
+				boost::python::arg( "_copy" ) = true
+			)
+		)
+		.def( "value", &graphComponentValue,
+			(
+				boost::python::arg( "target" ),
+				boost::python::arg( "registrationTypes" ) = Metadata::RegistrationTypes::All,
 				boost::python::arg( "_copy" ) = true
 			)
 		)
@@ -418,18 +470,5 @@ void GafferModule::bindMetadata()
 		)
 		.staticmethod( "nodesWithMetadata" )
 	;
-
-	enum_<Metadata::ValueChangedReason>( "ValueChangedReason" )
-		.value( "StaticRegistration", Metadata::ValueChangedReason::StaticRegistration )
-		.value( "StaticDeregistration", Metadata::ValueChangedReason::StaticDeregistration )
-		.value( "InstanceRegistration", Metadata::ValueChangedReason::InstanceRegistration )
-		.value( "InstanceDeregistration", Metadata::ValueChangedReason::InstanceDeregistration )
-	;
-
-	SignalClass<Metadata::ValueChangedSignal, DefaultSignalCaller<Metadata::ValueChangedSignal>, ValueChangedSlotCaller>( "ValueChangedSignal" );
-	SignalClass<Metadata::NodeValueChangedSignal, DefaultSignalCaller<Metadata::NodeValueChangedSignal>, ValueChangedSlotCaller>( "NodeValueChangedSignal" );
-	SignalClass<Metadata::PlugValueChangedSignal, DefaultSignalCaller<Metadata::PlugValueChangedSignal>, ValueChangedSlotCaller>( "PlugValueChangedSignal" );
-	SignalClass<Metadata::LegacyNodeValueChangedSignal, DefaultSignalCaller<Metadata::LegacyNodeValueChangedSignal>, ValueChangedSlotCaller>( "LegacyNodeValueChangedSignal" );
-	SignalClass<Metadata::LegacyPlugValueChangedSignal, DefaultSignalCaller<Metadata::LegacyPlugValueChangedSignal>, ValueChangedSlotCaller>( "LegacyPlugValueChangedSignal" );
 
 }
