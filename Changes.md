@@ -9,6 +9,7 @@ Improvements
   - Improved scene generation for encapsulated instancers significantly, with some production scenes now generating 5-7x faster.
   - Added `omitDuplicateIds` plug, to determine whether points with duplicate IDs are ignored or should trigger an error.
 - ScenePathPlugValueWidget : Added fallback to browsing the focussed scene when no other scene can be found. This makes the widget suitable for use on ShaderNodes.
+- Windows : Disabled Arnold's ADP usage and crash reporting module by default. Users can enable it by setting `ARNOLD_ADP_DISABLE=0` for Arnold versions after 7.1.4.0 or `ARNOLD_ADP_OPTIN=1` for earlier versions.
 
 API
 ---
