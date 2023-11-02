@@ -81,6 +81,17 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"addLayerPrefix" : [
+
+			"description",
+			"""
+			When on, the output channel names are automatically prefixed with
+			the name of the layer being collected. Should be turned off when
+			the input channel names already contain the layer name.
+			""",
+
+		],
+
 		"mergeMetadata" : [
 
 			"description",

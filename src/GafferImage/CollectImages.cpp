@@ -85,8 +85,8 @@ class MappingData : public IECore::Data
 
 	public :
 
-		MappingData()
-			:	m_outputChannelNames( new StringVectorData )
+		MappingData( bool addLayerPrefix )
+			:	m_addLayerPrefix( addLayerPrefix ), m_outputChannelNames( new StringVectorData )
 		{
 		}
 
@@ -94,17 +94,28 @@ class MappingData : public IECore::Data
 		{
 			for( const auto &channelName : channelNames )
 			{
-				const string outputChannelName = ImageAlgo::channelName( layerName, channelName );
+				const string outputChannelName = m_addLayerPrefix ? ImageAlgo::channelName( layerName, channelName ) : channelName;
 				const Input input = { layerName, channelName };
-				// Duplicate channel names could arise because either :
-				//
-				// - The user entered the same layer name twice. In this case we ignore the second.
-				// - Name overlap due to complex hierachical naming, such as a layer named `A` with
-				//   a channel named `B.R` and a layer named `A.B` with a channel named `R`.
-				//   In this unlikely case, we just take the channel from the first layer.
 				if( m_mapping.try_emplace( outputChannelName, input ).second )
 				{
 					m_outputChannelNames->writable().push_back( outputChannelName );
+				}
+				else
+				{
+					// Duplicate channel names could arise for several reasons :
+					//
+					// - The user entered the same layer name twice.
+					// - Names overlap due to complex hierachical naming, such as a layer named `A` with
+					//   a channel named `B.R` and a layer named `A.B` with a channel named `R`.
+					// - `addLayerPrefix` is off, but the input channels do not have a suitable
+					//   prefix of their own.
+					//
+					// In all cases we take the first channel and ignore the duplicate, but we
+					// also emit a warning so the user can fix the setup.
+					msg(
+						Msg::Warning, "CollectImages",
+						fmt::format( "Ignoring duplicate channel \"{}\" from layer \"{}\"", outputChannelName, layerName )
+					);
 				}
 			}
 		}
@@ -129,6 +140,7 @@ class MappingData : public IECore::Data
 
 	private :
 
+		const bool m_addLayerPrefix;
 		StringVectorDataPtr m_outputChannelNames;
 
 		using Map = unordered_map<string, Input>;
@@ -155,6 +167,7 @@ CollectImages::CollectImages( const std::string &name )
 
 	addChild( new StringVectorDataPlug( "rootLayers", Plug::In, new StringVectorData ) );
 	addChild( new StringPlug( "layerVariable", Plug::In, "collect:layerName" ) );
+	addChild( new BoolPlug( "addLayerPrefix", Plug::In, true ) );
 	addChild( new BoolPlug( "mergeMetadata", Plug::In ) );
 	addChild( new ObjectPlug( "__mapping", Plug::Out, NullObject::defaultNullObject() ) );
 }
@@ -183,24 +196,34 @@ const Gaffer::StringPlug *CollectImages::layerVariablePlug() const
 	return getChild<Gaffer::StringPlug>( g_firstPlugIndex + 1 );
 }
 
-Gaffer::BoolPlug *CollectImages::mergeMetadataPlug()
+Gaffer::BoolPlug *CollectImages::addLayerPrefixPlug()
 {
 	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 2 );
+}
+
+const Gaffer::BoolPlug *CollectImages::addLayerPrefixPlug() const
+{
+	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 2 );
+}
+
+Gaffer::BoolPlug *CollectImages::mergeMetadataPlug()
+{
+	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 3 );
 }
 
 const Gaffer::BoolPlug *CollectImages::mergeMetadataPlug() const
 {
-	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 2 );
+	return getChild<Gaffer::BoolPlug>( g_firstPlugIndex + 3 );
 }
 
 Gaffer::ObjectPlug *CollectImages::mappingPlug()
 {
-	return getChild<Gaffer::ObjectPlug>( g_firstPlugIndex + 3 );
+	return getChild<Gaffer::ObjectPlug>( g_firstPlugIndex + 4 );
 }
 
 const Gaffer::ObjectPlug *CollectImages::mappingPlug() const
 {
-	return getChild<Gaffer::ObjectPlug>( g_firstPlugIndex + 3 );
+	return getChild<Gaffer::ObjectPlug>( g_firstPlugIndex + 4 );
 }
 
 void CollectImages::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -208,6 +231,7 @@ void CollectImages::affects( const Gaffer::Plug *input, AffectedPlugsContainer &
 	ImageProcessor::affects( input, outputs );
 
 	if(
+		input == addLayerPrefixPlug() ||
 		input == layerVariablePlug() ||
 		input == rootLayersPlug() ||
 		input == inPlug()->channelNamesPlug()
@@ -283,6 +307,8 @@ void CollectImages::hash( const Gaffer::ValuePlug *output, const Gaffer::Context
 	{
 		ImageProcessor::hash( output, context, h );
 
+		addLayerPrefixPlug()->hash( h );
+
 		const std::string layerVariable = layerVariablePlug()->getValue();
 		Context::EditableScope layerScope( context );
 
@@ -304,7 +330,7 @@ void CollectImages::compute( Gaffer::ValuePlug *output, const Gaffer::Context *c
 {
 	if( output == mappingPlug() )
 	{
-		MappingDataPtr mapping = new MappingData;
+		MappingDataPtr mapping = new MappingData( addLayerPrefixPlug()->getValue() );
 
 		const std::string layerVariable = layerVariablePlug()->getValue();
 		Context::EditableScope layerScope( context );

@@ -59,6 +59,9 @@ class GAFFERIMAGE_API CollectImages : public ImageProcessor
 		Gaffer::StringPlug *layerVariablePlug();
 		const Gaffer::StringPlug *layerVariablePlug() const;
 
+		Gaffer::BoolPlug *addLayerPrefixPlug();
+		const Gaffer::BoolPlug *addLayerPrefixPlug() const;
+
 		Gaffer::BoolPlug *mergeMetadataPlug();
 		const Gaffer::BoolPlug *mergeMetadataPlug() const;
 
