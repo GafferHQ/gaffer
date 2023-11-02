@@ -66,7 +66,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			A list of the new layers to create.
+			A list of values for the `layerVariable`, defining the layers to be collected.
 			""",
 
 		],
