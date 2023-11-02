@@ -567,7 +567,7 @@ class ValuePlug::ComputeProcess : public Process
 			// > `StringPlug::hash()` account for additional processing (such as
 			// > substitutions) performed in public `getValue()` methods _after_
 			// > calling `getValueInternal()`.
-			const IECore::MurmurHash hash = p->ValuePlug::hash();
+			const IECore::MurmurHash hash = precomputedHash ? *precomputedHash : p->ValuePlug::hash();
 
 			if( !Process::forceMonitoring( threadState, plug, staticType ) )
 			{
