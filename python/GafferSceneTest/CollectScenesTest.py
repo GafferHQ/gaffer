@@ -42,6 +42,7 @@ import imath
 import IECore
 
 import Gaffer
+import GafferTest
 import GafferScene
 import GafferSceneTest
 
@@ -508,6 +509,58 @@ class CollectScenesTest( GafferSceneTest.SceneTestCase ) :
 			set( contextMonitor.combinedStatistics().variableNames() ),
 			{ "frame", "framesPerSecond", "scene:path" }
 		)
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testSetPerformance( self ) :
+
+		# Collecting sets from 1000 instancers, each with a differing
+		# number of points.
+
+		random = Gaffer.Random()
+		random["seedVariable"].setValue( "collect:rootName" )
+		random["floatRange"][0].setValue( 10 )
+		random["floatRange"][0].setValue( 1000 )
+
+		plane = GafferScene.Plane()
+		plane["divisions"]["y"].setInput( random["outFloat"] )
+
+		sphere = GafferScene.Sphere()
+		sphere["sets"].setValue( "A" )
+
+		planeFilter = GafferScene.PathFilter()
+		planeFilter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		instancer = GafferScene.Instancer()
+		instancer["in"].setInput( plane["out"] )
+		instancer["filter"].setInput( planeFilter["out"] )
+		instancer["prototypes"].setInput( sphere["out"] )
+
+		collect = GafferScene.CollectScenes()
+		collect["in"].setInput( instancer["out"] )
+		collect["rootNames"].setValue( IECore.StringVectorData( [ "root{}".format( i ) for i in range( 0, 1000 ) ] ) )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			collect["out"].set( "A" )
+
+	def testSetHashStability( self ) :
+
+		randomChoice = Gaffer.RandomChoice()
+		randomChoice.setup( Gaffer.StringPlug() )
+		randomChoice["choices"]["values"].setValue( IECore.StringVectorData( [ "A", "" ] ) )
+		randomChoice["choices"]["weights"].setValue( IECore.FloatVectorData( [ 1, 1 ] ) )
+		randomChoice["seedVariable"].setValue( "collect:rootName" )
+
+		cube = GafferScene.Cube()
+		cube["sets"].setInput( randomChoice["out"] )
+
+		collect = GafferScene.CollectScenes()
+		collect["in"].setInput( cube["out"] )
+		collect["rootNames"].setValue( IECore.StringVectorData( [ "root{}".format( i ) for i in range( 0, 1000 ) ] ) )
+
+		h = collect["out"].setHash( "A" )
+		for i in range( 0, 100 ) :
+			Gaffer.ValuePlug.clearHashCache()
+			self.assertEqual( collect["out"].setHash( "A" ), h )
 
 if __name__ == "__main__":
 	unittest.main()

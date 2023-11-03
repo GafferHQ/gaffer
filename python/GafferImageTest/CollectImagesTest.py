@@ -151,10 +151,24 @@ class CollectImagesTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( sampler["color"].getValue(), imath.Color4f( 0.1, 0.2, 0.3, 0.4 ) )
 
 		# Test simple duplicate
+
+		def assertExpectedMessages( messageHandler, layerName, channelNames ) :
+
+			self.assertEqual( [ m.level for m in messageHandler.messages ], [ IECore.Msg.Level.Warning ] * len( channelNames ) )
+			self.assertEqual( [ m.context for m in messageHandler.messages ], [ "CollectImages" ] * len( channelNames ) )
+
+			self.assertEqual(
+				[ m.message for m in messageHandler.messages ],
+				[ "Ignoring duplicate channel \"{}\" from layer \"{}\"".format( c, layerName ) for c in channelNames ]
+			)
+
 		collect["rootLayers"].setValue( IECore.StringVectorData( [ 'A', 'A' ] ) )
 
-		self.assertEqual( list(collect["out"]["channelNames"].getValue()), [ "A.R", "A.G", "A.B", "A.A" ] )
-		self.assertEqual( sampler["color"].getValue(), imath.Color4f( 0.1, 0.2, 0.3, 0.4 ) )
+		with IECore.CapturingMessageHandler() as mh :
+			self.assertEqual( list(collect["out"]["channelNames"].getValue()), [ "A.R", "A.G", "A.B", "A.A" ] )
+			self.assertEqual( sampler["color"].getValue(), imath.Color4f( 0.1, 0.2, 0.3, 0.4 ) )
+
+		assertExpectedMessages( mh, "A", [ "A.R", "A.G", "A.B", "A.A" ] )
 
 		collect["rootLayers"].setValue( IECore.StringVectorData( [ 'A', 'B' ] ) )
 		self.assertEqual( list(collect["out"]["channelNames"].getValue()), [
@@ -165,13 +179,24 @@ class CollectImagesTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( sampler["color"].getValue(), imath.Color4f( 0.2, 0.4, 0.6, 0.8 ) )
 
 		# Test overlapping names take the first layer
+
 		constant1["layer"].setValue( "B" )
 		collect["rootLayers"].setValue( IECore.StringVectorData( [ 'A', 'A.B' ] ) )
 		sampler["channels"].setValue( IECore.StringVectorData( [ "A.B.R", "A.B.G","A.B.B","A.B.A" ] ) )
-		self.assertEqual( list(collect["out"]["channelNames"].getValue()), [ "A.B.R", "A.B.G", "A.B.B", "A.B.A" ] )
+
+		with IECore.CapturingMessageHandler() as mh :
+			self.assertEqual( list(collect["out"]["channelNames"].getValue()), [ "A.B.R", "A.B.G", "A.B.B", "A.B.A" ] )
+
+		assertExpectedMessages( mh, "A.B", [ "A.B.R", "A.B.G", "A.B.B", "A.B.A" ] )
+
 		self.assertEqual( sampler["color"].getValue(), imath.Color4f( 0.1, 0.2, 0.3, 0.4 ) )
 		collect["rootLayers"].setValue( IECore.StringVectorData( [ 'A.B', 'A' ] ) )
-		self.assertEqual( list(collect["out"]["channelNames"].getValue()), [ "A.B.R", "A.B.G", "A.B.B", "A.B.A" ] )
+
+		with IECore.CapturingMessageHandler() as mh :
+			self.assertEqual( list(collect["out"]["channelNames"].getValue()), [ "A.B.R", "A.B.G", "A.B.B", "A.B.A" ] )
+
+		assertExpectedMessages( mh, "A", [ "A.B.R", "A.B.G", "A.B.B", "A.B.A" ] )
+
 		self.assertEqual( sampler["color"].getValue(), imath.Color4f( 0.2, 0.4, 0.6, 0.8 ) )
 
 	def testDeep( self ) :
@@ -259,6 +284,61 @@ class CollectImagesTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual(
 			collectImages["out"].metadata(),
 			IECore.CompoundData( { str(i) : IECore.IntData(i+1) for i in range( 4 ) } )
+		)
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testHighLayerCountPerformance( self ) :
+
+		constant = GafferImage.Constant()
+
+		collect = GafferImage.CollectImages()
+		collect["in"].setInput( constant["out"] )
+		collect["rootLayers"].setValue( IECore.StringVectorData( [ "layer{}".format( i ) for i in range( 0, 1000 ) ] ) )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			GafferImageTest.processTiles( collect["out"] )
+
+	def testLayerPrefix( self ) :
+
+		# By default, we add a layer name prefix to all channel names.
+
+		constant = GafferImage.Constant()
+
+		collect = GafferImage.CollectImages()
+		collect["in"].setInput( constant["out"] )
+		collect["rootLayers"].setValue( IECore.StringVectorData( [ "diffuse", "specular" ] ) )
+
+		self.assertEqual(
+			collect["out"].channelNames(),
+			IECore.StringVectorData( [
+				"diffuse.R", "diffuse.G", "diffuse.B", "diffuse.A",
+				"specular.R", "specular.G", "specular.B", "specular.A",
+			] )
+		)
+
+		# But that is inconvenient if you've already got the layer name in the
+		# channel name.
+
+		constant["layer"].setValue( "${collect:layerName}" )
+
+		self.assertEqual(
+			collect["out"].channelNames(),
+			IECore.StringVectorData( [
+				"diffuse.diffuse.R", "diffuse.diffuse.G", "diffuse.diffuse.B", "diffuse.diffuse.A",
+				"specular.specular.R", "specular.specular.G", "specular.specular.B", "specular.specular.A",
+			] )
+		)
+
+		# So we let people turn it off.
+
+		collect["addLayerPrefix"].setValue( False )
+
+		self.assertEqual(
+			collect["out"].channelNames(),
+			IECore.StringVectorData( [
+				"diffuse.R", "diffuse.G", "diffuse.B", "diffuse.A",
+				"specular.R", "specular.G", "specular.B", "specular.A",
+			] )
 		)
 
 if __name__ == "__main__":
