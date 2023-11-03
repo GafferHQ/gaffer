@@ -45,6 +45,8 @@
 
 #include "boost/container/flat_map.hpp"
 
+#include "tbb/parallel_reduce.h"
+
 #include "fmt/format.h"
 
 using namespace std;
@@ -164,6 +166,12 @@ class RootTree : public IECore::Data
 			return m_roots;
 		}
 
+		using RootRange = tbb::blocked_range<vector<string>::const_iterator>;
+		RootRange rootRange() const
+		{
+			return RootRange( m_roots.begin(), m_roots.end() );
+		}
+
 	private :
 
 		LocationPtr m_treeRoot;
@@ -186,6 +194,11 @@ class CollectScenes::SourceScope : public Context::EditableScope
 
 		SourceScope( const Context *context, const InternedString &rootVariable )
 			:	EditableScope( context ), m_rootVariable( rootVariable )
+		{
+		}
+
+		SourceScope( const ThreadState &threadState, const InternedString &rootVariable )
+			:	EditableScope( threadState ), m_rootVariable( rootVariable )
 		{
 		}
 
@@ -423,6 +436,24 @@ void CollectScenes::compute( Gaffer::ValuePlug *output, const Gaffer::Context *c
 	}
 
 	SceneProcessor::compute( output, context );
+}
+
+Gaffer::ValuePlug::CachePolicy CollectScenes::hashCachePolicy( const Gaffer::ValuePlug *output ) const
+{
+	if( output == outPlug()->setPlug() )
+	{
+		return ValuePlug::CachePolicy::TaskCollaboration;
+	}
+	return SceneProcessor::hashCachePolicy( output );
+}
+
+Gaffer::ValuePlug::CachePolicy CollectScenes::computeCachePolicy( const Gaffer::ValuePlug *output ) const
+{
+	if( output == outPlug()->setPlug() )
+	{
+		return ValuePlug::CachePolicy::TaskCollaboration;
+	}
+	return SceneProcessor::computeCachePolicy( output );
 }
 
 void CollectScenes::hashBound( const ScenePath &path, const Gaffer::Context *context, const ScenePlug *parent, IECore::MurmurHash &h ) const
@@ -681,15 +712,46 @@ void CollectScenes::hashSet( const IECore::InternedString &setName, const Gaffer
 
 	const PathMatcherDataPlug *inSetPlug = inPlug()->setPlug();
 	const StringPlug *sourceRootPlug = this->sourceRootPlug();
+	const std::string rootNameVariable = rootNameVariablePlug()->getValue();
 
-	SourceScope sourceScope( context, rootNameVariablePlug()->getValue() );
-	for( const auto &root : rootTree->roots() )
-	{
-		sourceScope.setRoot( &root );
-		inSetPlug->hash( h );
-		sourceRootPlug->hash( h );
-		h.append( root );
-	}
+	const ThreadState &threadState = ThreadState::current();
+	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
+
+	const IECore::MurmurHash setsHash = parallel_deterministic_reduce(
+
+		rootTree->rootRange(),
+
+		IECore::MurmurHash(),
+
+		[&] ( const RootTree::RootRange &range, const MurmurHash &x ) {
+
+			SourceScope sourceScope( threadState, rootNameVariable );
+
+			MurmurHash result = x;
+			for( auto it = range.begin(); it != range.end(); ++it )
+			{
+				const string &root = *it;
+				sourceScope.setRoot( &root );
+				inSetPlug->hash( result );
+				sourceRootPlug->hash( result );
+				result.append( root );
+			}
+			return result;
+
+		},
+
+		[] ( const MurmurHash &x, const MurmurHash &y ) {
+
+			MurmurHash result = x;
+			result.append( y );
+			return result;
+		},
+
+		taskGroupContext
+
+	);
+
+	h.append( setsHash );
 }
 
 IECore::ConstPathMatcherDataPtr CollectScenes::computeSet( const IECore::InternedString &setName, const Gaffer::Context *context, const ScenePlug *parent ) const
@@ -700,33 +762,59 @@ IECore::ConstPathMatcherDataPtr CollectScenes::computeSet( const IECore::Interne
 		rootTree = boost::static_pointer_cast<const RootTree>( rootTreePlug()->getValue() );
 	}
 
-	PathMatcherDataPtr setData = new PathMatcherData;
-	PathMatcher &set = setData->writable();
-
 	const PathMatcherDataPlug *inSetPlug = inPlug()->setPlug();
 	const StringPlug *sourceRootPlug = this->sourceRootPlug();
+	const std::string rootNameVariable = rootNameVariablePlug()->getValue();
 
-	SourceScope sourceScope( context, rootNameVariablePlug()->getValue() );
-	ScenePlug::ScenePath prefix;
-	for( const auto &root : rootTree->roots() )
-	{
-		sourceScope.setRoot( &root );
-		ConstPathMatcherDataPtr inSetData = inSetPlug->getValue();
-		const PathMatcher &inSet = inSetData->readable();
-		if( !inSet.isEmpty() )
-		{
-			ScenePlug::stringToPath( root, prefix );
-			const string root = sourceRootPlug->getValue();
-			if( !root.empty() )
-			{
-				set.addPaths( inSet.subTree( root ), prefix );
-			}
-			else
-			{
-				set.addPaths( inSet, prefix );
-			}
-		}
-	}
+	const ThreadState &threadState = ThreadState::current();
+	tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
 
-	return setData;
+	IECore::PathMatcher set = parallel_reduce(
+
+		rootTree->rootRange(),
+
+		PathMatcher(),
+
+		[&] ( const RootTree::RootRange &range, const IECore::PathMatcher &x ) {
+
+			SourceScope sourceScope( threadState, rootNameVariable );
+
+			PathMatcher result = x;
+			ScenePlug::ScenePath prefix;
+			for( auto it = range.begin(); it != range.end(); ++it )
+			{
+				const string &root = *it;
+				sourceScope.setRoot( &root );
+				ConstPathMatcherDataPtr inSetData = inSetPlug->getValue();
+				const PathMatcher &inSet = inSetData->readable();
+				if( !inSet.isEmpty() )
+				{
+					ScenePlug::stringToPath( root, prefix );
+					const string sourceRoot = sourceRootPlug->getValue();
+					if( !sourceRoot.empty() )
+					{
+						result.addPaths( inSet.subTree( sourceRoot ), prefix );
+					}
+					else
+					{
+						result.addPaths( inSet, prefix );
+					}
+				}
+			}
+			return result;
+
+		},
+
+		[] ( const PathMatcher &x, const PathMatcher &y ) {
+
+			PathMatcher result = x;
+			result.addPaths( y );
+			return result;
+		},
+
+		taskGroupContext
+
+	);
+
+	return new PathMatcherData( set );
 }
