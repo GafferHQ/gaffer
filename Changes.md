@@ -43,6 +43,11 @@ API
   - Prevented `renameable` and `deletable` metadata from being copied during plug promotion.
 - MetadataAlgo : Added `deregisterRedundantValues()` method.
 
+Build
+-----
+
+- Cortex : Updated to version 10.5.3.0.
+
 1.3.5.0 (relative to 1.3.4.0)
 =======
 
