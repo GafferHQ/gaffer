@@ -85,4 +85,6 @@ class GAFFERIMAGE_API OpenColorIOConfigPlug final : public Gaffer::ValuePlug
 		Gaffer::Signals::ScopedConnection m_plugSetConnection;
 };
 
+IE_CORE_DECLAREPTR( OpenColorIOConfigPlug );
+
 } // namespace GafferImage

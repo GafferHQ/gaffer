@@ -71,6 +71,12 @@ boost::python::list supportedExtensions()
 	return result;
 }
 
+OpenColorIOConfigPlugPtr acquireDefaultConfigPlugWrapper( Gaffer::ScriptNode &scriptNode, bool createIfNecessary )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return OpenColorIOConfigPlug::acquireDefaultConfigPlug( &scriptNode, createIfNecessary );
+}
+
 } // namespace
 
 void GafferImageModule::bindOpenColorIOTransform()
@@ -121,9 +127,8 @@ void GafferImageModule::bindOpenColorIOTransform()
 			)
 		)
 		.def(
-			"acquireDefaultConfigPlug", &OpenColorIOConfigPlug::acquireDefaultConfigPlug,
-			( arg( "scriptNode" ), arg( "createIfNecessary" ) = true ),
-			boost::python::return_value_policy<IECorePython::CastToIntrusivePtr>()
+			"acquireDefaultConfigPlug", &acquireDefaultConfigPlugWrapper,
+			( arg( "scriptNode" ), arg( "createIfNecessary" ) = true )
 		)
 		.staticmethod( "acquireDefaultConfigPlug" )
 	;
