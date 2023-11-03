@@ -30,6 +30,7 @@ Fixes
 - Dispatch app : Removed unnecessary and misleading "Execute" button.
 - SceneAlgo : Fixed computation of `ScenePlug.object` in networks with nodes derived from `ObjectProcessor`. These include : `CameraTweaks`, `ClosestPointSampler`, `CollectPrimitiveVariables`, `CopyPrimitiveVariables`, `CurveSampler`, `DeleteCurves`, `DeleteFaces`, `DeletePoints`, `MapOffset`, `MapProjection`, `MeshDistortion`, `MeshNormals`, `MeshSegments`, `MeshTangents`, `MeshToPoints`, `MeshType`, `Orientation`, `PointsType`, `PrimitiveSampler`, `PrimitiveVariables`, `ReverseWinding`, `ShufflePrimitiveVariables` and `UVSampler` (#5406).
 - Metadata : Fixed redundant copying of metadata when promoting plugs.
+- OpenColorIO : Fixed hang when opening a script which didn't yet have the `openColorIO.config` plug.
 
 API
 ---
