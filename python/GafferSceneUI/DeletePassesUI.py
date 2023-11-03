@@ -34,7 +34,11 @@
 #
 ##########################################################################
 
+import functools
+
 import Gaffer
+import GafferUI
+
 import GafferScene
 
 Gaffer.Metadata.registerNode(
@@ -74,8 +78,61 @@ Gaffer.Metadata.registerNode(
 			wildcards.
 			""",
 
+			"ui:scene:acceptsPassNames", True,
+
 		],
 
 	}
 
 )
+
+##########################################################################
+# Right click menu for adding pass names to plugs
+# This is driven by metadata so it can be used for plugs on other
+# nodes too.
+##########################################################################
+
+def __setValue( plug, value, *unused ) :
+
+	with Gaffer.UndoScope( plug.ancestor( Gaffer.ScriptNode ) ) :
+		plug.setValue( value )
+
+def __passPopupMenu( menuDefinition, plugValueWidget ) :
+
+	plug = plugValueWidget.getPlug()
+	if plug is None :
+		return
+
+	if not Gaffer.Metadata.value( plug, "ui:scene:acceptsPassNames" ) :
+		return
+
+	with plugValueWidget.getContext() :
+		globals = plug.node()["in"]["globals"].getValue()
+		currentNames = set( plug.getValue().split() )
+
+	menuDefinition.prepend( "/PassesDivider", { "divider" : True } )
+
+	passNames = globals.get( "option:pass:names" ) or []
+	if not len( passNames ) :
+		menuDefinition.prepend( "/Passes/No Passes Available", { "active" : False } )
+		return
+
+	for passName in reversed( sorted( list( passNames ) ) ) :
+
+		newNames = set( currentNames )
+
+		if passName not in currentNames :
+			newNames.add( passName )
+		else :
+			newNames.discard( passName )
+
+		menuDefinition.prepend(
+			"/Passes/{}".format( passName ),
+			{
+				"command" : functools.partial( __setValue, plug, " ".join( sorted( newNames ) ) ),
+				"checkBox" : passName in currentNames,
+				"active" : plug.settable() and not Gaffer.MetadataAlgo.readOnly( plug ),
+			}
+		)
+
+GafferUI.PlugValueWidget.popupMenuSignal().connect( __passPopupMenu, scoped = False )
