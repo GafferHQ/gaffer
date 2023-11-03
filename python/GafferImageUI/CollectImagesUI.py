@@ -66,7 +66,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			A list of the new layers to create.
+			A list of values for the `layerVariable`, defining the layers to be collected.
 			""",
 
 		],
@@ -77,6 +77,17 @@ Gaffer.Metadata.registerNode(
 			"""
 			This Context Variable will be set with the current layer name when evaluating the in plug.
 			This allows you to vary the upstream processing for each new layer.
+			""",
+
+		],
+
+		"addLayerPrefix" : [
+
+			"description",
+			"""
+			When on, the output channel names are automatically prefixed with
+			the name of the layer being collected. Should be turned off when
+			the input channel names already contain the layer name.
 			""",
 
 		],
