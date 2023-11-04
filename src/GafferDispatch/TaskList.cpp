@@ -36,6 +36,8 @@
 
 #include "GafferDispatch/TaskList.h"
 
+#include "Gaffer/Context.h"
+
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferDispatch;
