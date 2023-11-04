@@ -6,7 +6,7 @@ Improvements
 
 - Toolbars : Changed hotkey behavior to toogle any tool on and off. Exclusive tools such as the Translate and Crop Window tools activate the first tool (currently Selection Tool) when they are toggled off.
 - CropWindowTool : Added <kbd>`Alt` + <kbd>`C` for toggling both the crop window tool and the relevant crop window `enabled` plug.
-- TaskList : Reimplemented in C++ for improved performance.
+- TaskList, FrameMask : Reimplemented in C++ for improved performance.
 
 Breaking Changes
 ----------------

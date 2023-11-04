@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2023, John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,20 +36,38 @@
 
 #pragma once
 
+#include "GafferDispatch/TaskNode.h"
+
+#include "Gaffer/StringPlug.h"
+
 namespace GafferDispatch
 {
 
-enum TypeId
+class GAFFERDISPATCH_API FrameMask : public TaskNode
 {
 
-	TaskNodeTypeId = 110160,
-	TaskNodeTaskPlugTypeId = 110161,
-	DispatcherTypeId = 110162,
-	TaskListTypeId = 110163,
-	FrameMaskTypeId = 110164,
+	public :
 
-	LastTypeId = 110180,
+		GAFFER_NODE_DECLARE_TYPE( GafferDispatch::FrameMask, FrameMaskTypeId, TaskNode );
 
+		explicit FrameMask( const std::string &name=defaultName<FrameMask>() );
+		~FrameMask() override;
+
+		Gaffer::StringPlug *maskPlug();
+		const Gaffer::StringPlug *maskPlug() const;
+
+	protected :
+
+		void preTasks( const Gaffer::Context *context, Tasks &tasks ) const override;
+		IECore::MurmurHash hash( const Gaffer::Context *context ) const override;
+		void execute() const override;
+
+	private :
+
+		static size_t g_firstPlugIndex;
+
+		// Friendship for the bindings
+		friend struct GafferDispatchBindings::Detail::TaskNodeAccessor;
 };
 
 } // namespace GafferDispatch

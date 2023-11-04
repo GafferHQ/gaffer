@@ -41,6 +41,7 @@
 
 #include "GafferDispatchBindings/TaskNodeBinding.h"
 
+#include "GafferDispatch/FrameMask.h"
 #include "GafferDispatch/TaskList.h"
 #include "GafferDispatch/TaskNode.h"
 
@@ -170,5 +171,6 @@ void GafferDispatchModule::bindTaskNode()
 	}
 
 	TaskNodeClass<TaskList>();
+	TaskNodeClass<FrameMask>();
 
 }
