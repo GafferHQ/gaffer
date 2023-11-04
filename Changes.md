@@ -11,7 +11,12 @@ Breaking Changes
 - OpenColorIOContext : Removed `configEnabledPlug()`, `configValuePlug()`, `workingSpaceEnabledPlug()` and `workingSpaceValuePlug()` methods. Use the OptionalValuePlug child accessors instead.
 - Windows launch script : Removed the hardcoded `/debugexe` switch used when `GAFFER_DEBUG` is enabled, making it possible to use debuggers other than Visual Studio. Debug switches can be added to the `GAFFER_DEBUGGER` environment variable instead.
 
-1.3.x.x (relative to 1.3.5.0)
+1.3.x.x (relative to 1.3.6.0)
+=======
+
+
+
+1.3.6.0 (relative to 1.3.5.0)
 =======
 
 Features
@@ -26,9 +31,10 @@ Improvements
 ------------
 
 - CollectScenes : Improved performance when computing sets, with a 3x speedup being seen in one particular benchmark.
-- LightTool : Changed spot light and quad light edge tool tip locations so that they follow the cone and edge during drag.
+- LightTool : Changed spot light and quad light edge tooltip locations so that they follow the cone and edge during drag.
 - Arnold : Improved speed of translation of encapsulated scenes when using many threads.
 - CollectImages : Added `addLayerPrefix` plug, to allow the layer prefix to be omitted in the case that the input images are already prefixed.
+- OSL Expression : Added support for getting an element of an array context variable using `contextElement( variableName, index )` or `contextElement( variableName, index, defaultValue )`. Negative indices can be used to get elements relative to the end of the array.
 
 Fixes
 -----
@@ -41,8 +47,10 @@ Fixes
 - Reference : Fixed rare reloading error.
 - PlugLayout : Fixed lack of update when `layout:customWidget:*` metadata changes.
 - Dispatch app : Removed unnecessary and misleading "Execute" button.
-- SceneAlgo : Fixed computation of `ScenePlug.object` in networks with nodes derived from `ObjectProcessor`. These include : `CameraTweaks`, `ClosestPointSampler`, `CollectPrimitiveVariables`, `CopyPrimitiveVariables`, `CurveSampler`, `DeleteCurves`, `DeleteFaces`, `DeletePoints`, `MapOffset`, `MapProjection`, `MeshDistortion`, `MeshNormals`, `MeshSegments`, `MeshTangents`, `MeshToPoints`, `MeshType`, `Orientation`, `PointsType`, `PrimitiveSampler`, `PrimitiveVariables`, `ReverseWinding`, `ShufflePrimitiveVariables` and `UVSampler` (#5406).
+- SceneAlgo : Fixed history queries for `ScenePlug.object` in networks with nodes derived from `ObjectProcessor`. These include : `CameraTweaks`, `ClosestPointSampler`, `CollectPrimitiveVariables`, `CopyPrimitiveVariables`, `CurveSampler`, `DeleteCurves`, `DeleteFaces`, `DeletePoints`, `MapOffset`, `MapProjection`, `MeshDistortion`, `MeshNormals`, `MeshSegments`, `MeshTangents`, `MeshToPoints`, `MeshType`, `Orientation`, `PointsType`, `PrimitiveSampler`, `PrimitiveVariables`, `ReverseWinding`, `ShufflePrimitiveVariables` and `UVSampler` (#5406).
 - Metadata : Fixed redundant copying of metadata when promoting plugs.
+- OpenColorIO : Fixed hang when opening a script which didn't yet have the `openColorIO.config` plug.
+- Context : Fixed bug preventing the retrieval of `V2iVectorData`, `V2fVectorData`, `V3iVectorData` and `V3fVectorData` from a context.
 
 API
 ---
@@ -55,6 +63,11 @@ API
   - Deprecated `instanceOnly` and `persistentOnly` arguments in favour of new `registrationTypes` arguments.
   - Prevented `renameable` and `deletable` metadata from being copied during plug promotion.
 - MetadataAlgo : Added `deregisterRedundantValues()` method.
+
+Build
+-----
+
+- Cortex : Updated to version 10.5.3.0.
 
 1.3.5.0 (relative to 1.3.4.0)
 =======
