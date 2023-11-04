@@ -39,7 +39,6 @@ __import__( "Gaffer" )
 from ._GafferDispatch import *
 from .LocalDispatcher import LocalDispatcher
 from .SystemCommand import SystemCommand
-from .TaskList import TaskList
 from .TaskContextProcessor import TaskContextProcessor
 from .Wedge import Wedge
 from .TaskContextVariables import TaskContextVariables

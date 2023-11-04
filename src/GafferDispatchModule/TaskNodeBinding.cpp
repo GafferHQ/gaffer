@@ -41,6 +41,7 @@
 
 #include "GafferDispatchBindings/TaskNodeBinding.h"
 
+#include "GafferDispatch/TaskList.h"
 #include "GafferDispatch/TaskNode.h"
 
 #include "GafferBindings/PlugBinding.h"
@@ -135,35 +136,39 @@ void GafferDispatchModule::bindTaskNode()
 {
 	using Wrapper = TaskNodeWrapper<TaskNode>;
 
-	scope s = TaskNodeClass<TaskNode, Wrapper>();
+	{
+		scope s = TaskNodeClass<TaskNode, Wrapper>();
 
-	class_<TaskNode::Task>( "Task", no_init )
-		.def( init<TaskNode::Task>() )
-		.def( init<GafferDispatch::TaskNode::TaskPlugPtr, const Gaffer::Context *>() )
-		.def( init<GafferDispatch::TaskNodePtr, const Gaffer::Context *>() )
-		.def( "plug", &taskPlug )
-		.def( "context", &taskContext, ( boost::python::arg_( "_copy" ) = true ) )
-		.def("__eq__", &TaskNode::Task::operator== )
-	;
+		class_<TaskNode::Task>( "Task", no_init )
+			.def( init<TaskNode::Task>() )
+			.def( init<GafferDispatch::TaskNode::TaskPlugPtr, const Gaffer::Context *>() )
+			.def( init<GafferDispatch::TaskNodePtr, const Gaffer::Context *>() )
+			.def( "plug", &taskPlug )
+			.def( "context", &taskContext, ( boost::python::arg_( "_copy" ) = true ) )
+			.def("__eq__", &TaskNode::Task::operator== )
+		;
 
-	PlugClass<TaskNode::TaskPlug>()
-		.def( init<const char *, Plug::Direction, unsigned>(
-				(
-					boost::python::arg_( "name" )=GraphComponent::defaultName<TaskNode::TaskPlug>(),
-					boost::python::arg_( "direction" )=Plug::In,
-					boost::python::arg_( "flags" )=Plug::Default
+		PlugClass<TaskNode::TaskPlug>()
+			.def( init<const char *, Plug::Direction, unsigned>(
+					(
+						boost::python::arg_( "name" )=GraphComponent::defaultName<TaskNode::TaskPlug>(),
+						boost::python::arg_( "direction" )=Plug::In,
+						boost::python::arg_( "flags" )=Plug::Default
+					)
 				)
 			)
-		)
-		.def( "hash", &taskPlugHash )
-		.def( "execute", &taskPlugExecute )
-		.def( "executeSequence", &taskPlugExecuteSequence )
-		.def( "requiresSequenceExecution", &TaskNode::TaskPlug::requiresSequenceExecution )
-		.def( "preTasks", &taskPlugPreTasks )
-		.def( "postTasks", &taskPlugPostTasks )
-		// Adjusting the name so that it correctly reflects
-		// the nesting, and can be used by the PlugSerialiser.
-		.attr( "__qualname__" ) = "TaskNode.TaskPlug"
-	;
+			.def( "hash", &taskPlugHash )
+			.def( "execute", &taskPlugExecute )
+			.def( "executeSequence", &taskPlugExecuteSequence )
+			.def( "requiresSequenceExecution", &TaskNode::TaskPlug::requiresSequenceExecution )
+			.def( "preTasks", &taskPlugPreTasks )
+			.def( "postTasks", &taskPlugPostTasks )
+			// Adjusting the name so that it correctly reflects
+			// the nesting, and can be used by the PlugSerialiser.
+			.attr( "__qualname__" ) = "TaskNode.TaskPlug"
+		;
+	}
+
+	TaskNodeClass<TaskList>();
 
 }
