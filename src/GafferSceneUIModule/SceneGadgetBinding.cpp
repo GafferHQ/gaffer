@@ -179,6 +179,12 @@ Imath::Box3f bound( SceneGadget &g, bool selected, const IECore::PathMatcher *om
 	return g.bound( selected, omitted );
 }
 
+void snapshotToFile( SceneGadget &g, const std::filesystem::path &fileName, const Imath::Box2f &resolutionGate, const IECore::CompoundData *metadata )
+{
+	ScopedGILRelease gilRelease;
+	g.snapshotToFile( fileName, resolutionGate, metadata );
+}
+
 } // namespace
 
 void GafferSceneUIModule::bindSceneGadget()
@@ -214,6 +220,11 @@ void GafferSceneUIModule::bindSceneGadget()
 		.def( "getSelection", &SceneGadget::getSelection, return_value_policy<copy_const_reference>() )
 		.def( "selectionBound", &selectionBound )
 		.def( "bound", &bound, ( arg( "selected" ), arg( "omitted" ) = object() ) )
+		.def(
+			"snapshotToFile",
+			&snapshotToFile,
+			( arg( "fileName" ), arg( "resolutionGate" ) = Imath::Box2f(), arg( "metadata" ) = object() )
+		)
 	;
 
 	enum_<SceneGadget::State>( "State" )

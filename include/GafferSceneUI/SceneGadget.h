@@ -53,6 +53,8 @@
 
 #include "IECoreGL/State.h"
 
+#include <filesystem>
+
 namespace GafferSceneUI
 {
 
@@ -190,6 +192,17 @@ class GAFFERSCENEUI_API SceneGadget : public GafferUI::Gadget
 
 		/// Implemented to return the name of the object under the mouse.
 		std::string getToolTip( const IECore::LineSegment3f &line ) const override;
+
+		/// Saves a snapshot of the current rendered scene. All renderers are supported _except_
+		/// the OpenGL renderer. All formats supported by OpenImageIO can be used. The output
+		/// display window will be set to `resolutionGate` if it is not an empty `Box2f`.
+		/// All of the supplied metadata will be written, regardless of conflicts with
+		/// OpenImageIO built-in metadata.
+		void snapshotToFile(
+			const std::filesystem::path &fileName,
+			const Imath::Box2f &resolutionGate =  Imath::Box2f(),
+			const IECore::CompoundData *metadata = nullptr
+		) const;
 
 	protected :
 
