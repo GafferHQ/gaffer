@@ -1,6 +1,11 @@
 1.3.x.x (relative to 1.3.7.0)
 =======
 
+Features
+--------
+
+- Viewer : Added "Snapshot To Catalogue" command to the right-click menu of the 3D view.
+
 Fixes
 -----
 
