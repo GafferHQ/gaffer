@@ -2267,6 +2267,58 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( instancer["out"].childNames( "/points/instances" ), IECore.InternedStringVectorData() )
 		self.assertSceneValid( instancer["out"] )
 
+	def testPurpose( self ):
+
+		points = IECoreScene.PointsPrimitive(
+			IECore.V3fVectorData(
+				[ imath.V3f( i, 0, 0 ) for i in range( 100 ) ]
+			)
+		)
+
+		points["intVar"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECore.IntVectorData(
+				[ i for i in range( 100 ) ]
+			)
+		)
+		pointsSource = GafferScene.ObjectToScene()
+		pointsSource["name"].setValue( "points" )
+		pointsSource["object"].setValue( points )
+
+		purposeOption = GafferScene.StandardOptions()
+		purposeOption["in"].setInput( pointsSource["out"] )
+		purposeOption['options']['includedPurposes']["value"].setValue( IECore.StringVectorData( [ "default" ] ) )
+		purposeOption['options']['includedPurposes']["enabled"].setValue( True )
+
+		sphere = GafferScene.Sphere()
+
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ '/*' ] ) )
+
+		purposeAttr = GafferScene.CustomAttributes()
+		purposeAttr["in"].setInput( sphere["out"] )
+		purposeAttr["filter"].setInput( sphereFilter["out"] )
+		purposeAttr["attributes"].addChild( Gaffer.NameValuePlug( "usd:purpose", "default" ) )
+		purposeAttr["expression"] = Gaffer.Expression()
+		purposeAttr["expression"].setExpression( 'parent["attributes"]["NameValuePlug"]["value"] = "default" if context.get("intVar", 1 ) % 2 else "proxy"', "python" )
+
+		pointsFilter = GafferScene.PathFilter()
+		pointsFilter["paths"].setValue( IECore.StringVectorData( [ '/points' ] ) )
+
+		instancer = GafferScene.Instancer()
+		instancer["in"].setInput( purposeOption["out"] )
+		instancer["filter"].setInput( pointsFilter["out"] )
+		instancer["prototypes"].setInput( purposeAttr["out"] )
+
+		instancer["contextVariables"].addChild( GafferScene.Instancer.ContextVariablePlug( "context" ) )
+		instancer["contextVariables"][0]["name"].setValue( "intVar" )
+		instancer["contextVariables"][0]["quantize"].setValue( 0 )
+
+		# We don't need to do anything special with purpose if not encapsulated - it just uses the standard
+		# renderer code. But when encapsulated, we have to handle it ourselves, so we just check that the
+		# encapsulated matches the non-encapsulated
+		self.assertEncapsulatedRendersSame( instancer )
+
 	def testNoScenePathInPrototypeSetContext( self ) :
 
 		plane = GafferScene.Plane()
