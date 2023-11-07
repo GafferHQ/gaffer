@@ -671,7 +671,6 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 							"displayPort" : str( script["catalogue"].displayDriverServer().portNumber() ),
 							"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
 							"layerPerLightGroup" : True,
-							"layerName" : "beauty",
 						}
 					)
 				)
@@ -680,8 +679,8 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 				script["renderer"]["in"].setInput( script["outputs"]["out"] )
 
 				# Start a render, give it time to finish, and check the output.
-				# Because there are no light groups at all, Arnold chooses to
-				# render just `beauty`.
+				# Because there are no light groups yet, Arnold chooses to
+				# render just the `RGBA_default` catch-all.
 
 				script["renderer"]["state"].setValue( script["renderer"].State.Running )
 				self.uiThreadCallHandler.waitFor( 1 )
@@ -690,12 +689,12 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 				self.assertEqual(
 					set( script["catalogue"]["out"].channelNames() ),
 					otherChannels |
-					{ "beauty.{}".format( c ) for c in "RGBA" }
+					{ "RGBA_default.{}".format( c ) for c in "RGBA" }
 				)
 				self.assertEqual( script["catalogue"]["out"].metadata()["gaffer:isRendering"], IECore.BoolData( True ) )
 
-				# Add a light group. We should now get `beauty_groupA` for the
-				# light group we made, and `beauty_default` as a catch-all for
+				# Add a light group. We should now get `RGBA_groupA` for the
+				# light group we made, and `RGBA_default` as a catch-all for
 				# anything else.
 
 				script["light1"]["parameters"]["aov"].setValue( "groupA" )
@@ -706,12 +705,12 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 				self.assertEqual(
 					set( script["catalogue"]["out"].channelNames() ),
 					otherChannels |
-					{ "beauty_default.{}".format( c ) for c in "RGBA" } |
-					{ "beauty_groupA.{}".format( c ) for c in "RGBA" }
+					{ "RGBA_default.{}".format( c ) for c in "RGBA" } |
+					{ "RGBA_groupA.{}".format( c ) for c in "RGBA" }
 				)
 
 				# Add another light group and check it appears. Ideally the
-				# `beauty_default` fallback would disappear as well, but Arnold doesn't
+				# `RGBA_default` catch-all would disappear as well, but Arnold doesn't
 				# do that yet.
 
 				script["light2"]["parameters"]["aov"].setValue( "groupB" )
@@ -722,9 +721,9 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 				self.assertEqual(
 					set( script["catalogue"]["out"].channelNames() ),
 					otherChannels |
-					{ "beauty_default.{}".format( c ) for c in "RGBA" } |
-					{ "beauty_groupA.{}".format( c ) for c in "RGBA" } |
-					{ "beauty_groupB.{}".format( c ) for c in "RGBA" }
+					{ "RGBA_default.{}".format( c ) for c in "RGBA" } |
+					{ "RGBA_groupA.{}".format( c ) for c in "RGBA" } |
+					{ "RGBA_groupB.{}".format( c ) for c in "RGBA" }
 				)
 
 				# Remove a light group. Ideally we'd assert that the additional image
