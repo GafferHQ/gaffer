@@ -6,6 +6,11 @@ Fixes
 
 - Process : Fixed bug which caused a `No result found` exception to be thrown when a more descriptive exception should have been thrown instead.
 
+API
+---
+
+- Display : Added `driverClosed()` method.
+
 1.3.6.0 (relative to 1.3.5.0)
 =======
 

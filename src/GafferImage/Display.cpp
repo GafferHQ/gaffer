@@ -84,7 +84,8 @@ class GafferDisplayDriver : public IECoreImage::DisplayDriver
 			const vector<string> &channelNames, ConstCompoundDataPtr parameters )
 			:	DisplayDriver( displayWindow, dataWindow, channelNames, parameters ),
 				m_gafferFormat( displayWindow, 1, /* fromEXRSpace = */ true ),
-				m_gafferDataWindow( m_gafferFormat.fromEXRSpace( dataWindow ) )
+				m_gafferDataWindow( m_gafferFormat.fromEXRSpace( dataWindow ) ),
+				m_closed( false )
 		{
 			const V2i dataWindowMinTileIndex = ImagePlug::tileOrigin( m_gafferDataWindow.min ) / ImagePlug::tileSize();
 			const V2i dataWindowMaxTileIndex = ImagePlug::tileOrigin( m_gafferDataWindow.max - Imath::V2i( 1 ) ) / ImagePlug::tileSize();
@@ -122,7 +123,8 @@ class GafferDisplayDriver : public IECoreImage::DisplayDriver
 		GafferDisplayDriver( GafferDisplayDriver &other )
 			:	DisplayDriver( other.displayWindow(), other.dataWindow(), other.channelNames(), other.parameters() ),
 				m_gafferFormat( other.m_gafferFormat ), m_gafferDataWindow( other.m_gafferDataWindow ),
-				m_parameters( other.m_parameters ), m_metadata( other.m_metadata )
+				m_parameters( other.m_parameters ), m_metadata( other.m_metadata ),
+				m_closed( true )
 		{
 			m_tileRange = other.m_tileRange;
 
@@ -206,6 +208,7 @@ class GafferDisplayDriver : public IECoreImage::DisplayDriver
 
 		void imageClose() override
 		{
+			m_closed = true;
 			imageReceivedSignal()( this );
 		}
 
@@ -294,6 +297,11 @@ class GafferDisplayDriver : public IECoreImage::DisplayDriver
 			return m_imageReceivedSignal;
 		}
 
+		bool closed() const
+		{
+			return m_closed;
+		}
+
 	private :
 
 		static const DisplayDriverDescription<GafferDisplayDriver> g_description;
@@ -367,6 +375,7 @@ class GafferDisplayDriver : public IECoreImage::DisplayDriver
 		IECore::ConstCompoundDataPtr m_metadata;
 		DataReceivedSignal m_dataReceivedSignal;
 		ImageReceivedSignal m_imageReceivedSignal;
+		std::atomic_bool m_closed;
 
 };
 
@@ -492,6 +501,11 @@ IECoreImage::DisplayDriver *Display::getDriver()
 const IECoreImage::DisplayDriver *Display::getDriver() const
 {
 	return m_driver.get();
+}
+
+bool Display::driverClosed() const
+{
+	return m_driver && m_driver->closed();
 }
 
 void Display::hashViewNames( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const

@@ -263,12 +263,14 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 			self.assertTrue( len( driversCreated ), 1 )
 
 			display = GafferImage.Display()
-			self.assertTrue( display.getDriver() is None )
+			self.assertIsNone( display.getDriver() )
+			self.assertFalse( display.driverClosed() )
 
 			dirtiedPlugs = GafferTest.CapturingSlot( display.plugDirtiedSignal() )
 
 			display.setDriver( driversCreated[0][0] )
 			self.assertTrue( display.getDriver().isSame( driversCreated[0][0] ) )
+			self.assertFalse( display.driverClosed() )
 
 			# Ensure all the output plugs have been dirtied
 			expectedDirty = { "__driverCount", "__channelDataCount", "out" }.union( { c.getName() for c in display["out"].children() } )
@@ -285,13 +287,16 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 				display["out"].channelData( "Y", imath.V2i( 0 ) ),
 				IECore.FloatVectorData( [ 0.5 ] * GafferImage.ImagePlug.tileSize() * GafferImage.ImagePlug.tileSize() )
 			)
+			self.assertFalse( display.driverClosed() )
 
 			# Ensure only channel data has been dirtied
 			expectedDirty = { "channelData", "__channelDataCount", "out" }
 			self.assertEqual( set( e[0].getName() for e in dirtiedPlugs ), expectedDirty )
 
 			display2 = GafferImage.Display()
+			self.assertFalse( display2.driverClosed() )
 			display2.setDriver( display.getDriver(), copy = True )
+			self.assertTrue( display2.driverClosed() )
 
 			self.assertImagesEqual( display["out"], display2["out"] )
 
@@ -308,6 +313,7 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 			)
 		finally:
 			driver.close()
+			self.assertTrue( display.driverClosed() )
 
 	def __testTransferImage( self, fileName ) :
 
@@ -317,6 +323,8 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 		imagesReceived = GafferTest.CapturingSlot( GafferImage.Display.imageReceivedSignal() )
 
 		node = GafferImage.Display()
+		self.assertFalse( node.driverClosed() )
+
 		server = IECoreImage.DisplayDriverServer()
 		driverCreatedConnection = GafferImage.Display.driverCreatedSignal().connect( lambda driver, parameters : node.setDriver( driver ), scoped = True )
 
@@ -328,6 +336,7 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertEqual( len( imagesReceived ), 1 )
 		self.assertEqual( imagesReceived[0][0], node["out"] )
+		self.assertTrue( node.driverClosed() )
 
 		return node
 
