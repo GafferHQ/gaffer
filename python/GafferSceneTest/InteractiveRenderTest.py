@@ -2147,6 +2147,12 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		script["renderer"]["state"].setValue( script["renderer"].State.Stopped )
 		self.uiThreadCallHandler.assertCalled() # Wait for saving to complete
 
+		if script["renderer"].typeName() == "GafferCycles::InteractiveCyclesRender" :
+			# Cycles somehow manages to do stuff after we've deleted the CyclesRenderer.
+			# Wait for it to finish.
+			## \todo Figure out why this is needed, and fix it.
+			self.uiThreadCallHandler.waitFor( 1 )
+
 		self.assertNotIn( "gaffer:isRendering", script["catalogue"]["out"].metadata() )
 
 	def tearDown( self ) :
