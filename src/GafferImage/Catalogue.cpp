@@ -115,7 +115,7 @@ class Catalogue::InternalImage : public ImageNode
 	public :
 
 		InternalImage( const std::string &name = "InternalImage" )
-			:	ImageNode( name ), m_clientPID( -1 ), m_numDriversClosed( 0 )
+			:	ImageNode( name )
 		{
 			storeIndexOfNextChild( g_firstChildIndex );
 
@@ -230,7 +230,7 @@ class Catalogue::InternalImage : public ImageNode
 				m_saver = AsynchronousSaver::create( this );
 			}
 
-			m_clientPID = -2; // Make sure insertDriver() will reject new drivers
+			m_renderID = "invalid"; // Make sure `insertDriver()` will reject new drivers
 		}
 
 		void save( const std::filesystem::path &fileName ) const
@@ -253,49 +253,70 @@ class Catalogue::InternalImage : public ImageNode
 				return false;
 			}
 
-			// If we already represent a render, we can't
-			// accept a different one.
-			const IntData *clientPID = parameters->member<IntData>( "clientPID" );
-			if( m_clientPID != -1 && clientPID && clientPID->readable() != m_clientPID )
+			// If we already represent a render, we can't accept a driver from a
+			// different one. Gaffer provides a `gaffer:renderID` parameter for
+			// this purpose, and if that isn't available we fall back to the
+			// `clientPID` parameter provided by `IECoreImage::ClientDisplayDriver`.
+			const StringData *renderIDData = parameters->member<StringData>( "gaffer:renderID" );
+			const IntData *clientPIDData = parameters->member<IntData>( "clientPID" );
+			const string renderID = renderIDData ? renderIDData->readable() : ( clientPIDData ? to_string( clientPIDData->readable() ) : "unknown" );
+			if( !m_renderID.empty() && m_renderID != renderID )
 			{
 				return false;
 			}
 
-			// The clientPID mechanism isn't foolproof,
-			// so if the channels in the new driver clash
-			// with the existing channels, we must assume
-			// they're from another render.
-			const vector<string> &channels = driver->channelNames();
-			ConstStringVectorDataPtr existingChannelsData = copyChannels()->outPlug()->channelNamesPlug()->getValue();
-			const vector<string> &existingChannels = existingChannelsData->readable();
-			for( vector<string>::const_iterator it = channels.begin(), eIt = channels.end(); it != eIt; ++it )
+			// The DisplayDriver API doesn't allow the crop window or channel
+			// names to be changed on the fly, so we'll always receive a new
+			// driver if they change. In these cases we want to replace the
+			// existing driver rather than insert a new one. We can only find
+			// the driver to replace if we have a unique identifier for the
+			// output, which Gaffer provides via the `gaffer:outputID`
+			// parameter.
+			const StringData *outputIDData = parameters->member<StringData>( "gaffer:outputID" );
+			string outputID;
+			if( outputIDData )
 			{
-				if( find( existingChannels.begin(), existingChannels.end(), *it ) != existingChannels.end() )
+				outputID = outputIDData->readable();
+			}
+			else
+			{
+				// We don't have a foolproof way of knowing when we can replace
+				// an existing driver. So reject any driver that conflicts with
+				// the existing channel names.
+				ConstStringVectorDataPtr existingChannelsData = copyChannels()->outPlug()->channelNamesPlug()->getValue();
+				const vector<string> &existingChannels = existingChannelsData->readable();
+				for( const auto &channel : driver->channelNames() )
 				{
-					return false;
+					if( find( existingChannels.begin(), existingChannels.end(), channel ) != existingChannels.end() )
+					{
+						return false;
+					}
 				}
+				outputID = boost::algorithm::join( driver->channelNames(), ", " );
 			}
 
-			// All is well - insert the display.
-			DisplayPtr display = new Display;
+			// Insert the driver by hosting it in a Display node, reusing an
+			// existing node if we have one.
+
+			DisplayPtr &display = m_displays[outputID];
+			if( !display )
+			{
+				display = new Display;
+				addChild( display );
+				ArrayPlug *a = copyChannels()->inPlugs();
+				size_t nextIndex = a->children().size() - 1;
+				if( nextIndex == 1 && !a->getChild<ImagePlug>( 0 )->getInput() )
+				{
+					// CopyChannels starts with two input plugs, and we must use
+					// the first one to make sure the format etc is passed through.
+					nextIndex = 0;
+				}
+				a->getChild<ImagePlug>( nextIndex )->setInput( display->outPlug() );
+				imageSwitch()->indexPlug()->setValue( 1 );
+			}
 			display->setDriver( driver );
-			addChild( display );
-			ArrayPlug *a = copyChannels()->inPlugs();
-			size_t nextIndex = a->children().size() - 1;
-			if( nextIndex == 1 && !a->getChild<ImagePlug>( 0 )->getInput() )
-			{
-				// CopyChannels starts with two input plugs, and we must use
-				// the first one to make sure the format etc is passed through.
-				nextIndex = 0;
-			}
 
-			a->getChild<ImagePlug>( nextIndex )->setInput( display->outPlug() );
-			imageSwitch()->indexPlug()->setValue( 1 );
-
-			if( clientPID )
-			{
-				m_clientPID = clientPID->readable();
-			}
+			m_renderID = renderID;
 
 			if( auto nameData = parameters->member<StringData>( "catalogue:imageName" ) )
 			{
@@ -324,16 +345,19 @@ class Catalogue::InternalImage : public ImageNode
 
 		void driverClosed()
 		{
-			m_numDriversClosed++;
-			if( m_numDriversClosed != copyChannels()->inPlugs()->children().size() - 1 )
+			for( const auto &[outputID, display] : m_displays )
 			{
-				return;
+				if( !display->driverClosed() )
+				{
+					return;
+				}
 			}
 
 			// All our drivers have been closed, so the render has completed.
 			// Save the image to disk. We do this in the background because
 			// saving large images with many AOVs takes several seconds.
 
+			m_renderID = "invalid";
 			isRendering( false );
 			m_saver = AsynchronousSaver::create( this );
 		}
@@ -387,15 +411,11 @@ class Catalogue::InternalImage : public ImageNode
 
 		void removeDisplays()
 		{
-			vector<Display *> toDelete;
-			for( Display::Iterator it( this ); !it.done(); ++it )
+			for( auto &[outputID, display] : m_displays )
 			{
-				toDelete.push_back( it->get() );
+				removeChild( display );
 			}
-			for( vector<Display *>::const_iterator it = toDelete.begin(), eIt = toDelete.end(); it != eIt; ++it )
-			{
-				removeChild( *it );
-			}
+			m_displays.clear();
 		}
 
 		ImageReader *imageReader()
@@ -624,8 +644,11 @@ class Catalogue::InternalImage : public ImageNode
 
 		};
 
-		int m_clientPID;
-		size_t m_numDriversClosed;
+		string m_renderID;
+
+		using DisplayMap = unordered_map<string, DisplayPtr>;
+		DisplayMap m_displays;
+
 		AsynchronousSaver::Ptr m_saver;
 
 		static size_t g_firstChildIndex;

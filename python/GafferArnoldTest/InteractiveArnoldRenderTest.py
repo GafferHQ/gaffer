@@ -615,6 +615,129 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 		self.assertGreater( litColor.g, 0.1 )
 		self.assertGreater( litColor.b, 0.1 )
 
+	def testEditLightGroups( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["catalogue"] = GafferImage.Catalogue()
+
+		script["sphere"] = GafferScene.Sphere()
+
+		script["light1"] = GafferArnold.ArnoldLight()
+		script["light1"].loadShader( "point_light" )
+		script["light2"] = GafferArnold.ArnoldLight()
+		script["light2"].loadShader( "point_light" )
+
+		script["parent"] = GafferScene.Parent()
+		script["parent"]["parent"].setValue( "/" )
+		script["parent"]["children"][0].setInput( script["sphere"]["out"] )
+		script["parent"]["children"][1].setInput( script["light1"]["out"] )
+		script["parent"]["children"][2].setInput( script["light2"]["out"] )
+
+		script["outputs"] = GafferScene.Outputs()
+		script["outputs"]["in"].setInput( script["parent"]["out"] )
+		script["outputs"].addOutput(
+			"beauty",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ClientDisplayDriver",
+					"displayHost" : "localhost",
+					"displayPort" : str( script["catalogue"].displayDriverServer().portNumber() ),
+					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+				}
+			)
+		)
+		script["outputs"].addOutput(
+			"beautyPerLight",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ClientDisplayDriver",
+					"displayHost" : "localhost",
+					"displayPort" : str( script["catalogue"].displayDriverServer().portNumber() ),
+					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+					"layerPerLightGroup" : True,
+					"layerName" : "beauty",
+				}
+			)
+		)
+
+		script["renderer"] = self._createInteractiveRender()
+		script["renderer"]["in"].setInput( script["outputs"]["out"] )
+
+		# Start a render, give it time to finish, and check the output.
+		# Because there are no light groups at all, Arnold chooses to
+		# render just `beauty`.
+
+		script["renderer"]["state"].setValue( script["renderer"].State.Running )
+		self.uiThreadCallHandler.waitFor( 2 )
+
+		self.assertEqual( len( script["catalogue"]["images"] ), 1 )
+		self.assertEqual(
+			set( script["catalogue"]["out"].channelNames() ),
+			{ "R", "G", "B", "A" } |
+			{ "beauty.{}".format( c ) for c in "RGBA" }
+		)
+		self.assertEqual( script["catalogue"]["out"].metadata()["gaffer:isRendering"], IECore.BoolData( True ) )
+
+		# Add a light group. We should now get `beauty_groupA` for the
+		# light group we made, and `beauty_default` as a catch-all for
+		# anything else.
+
+		script["light1"]["parameters"]["aov"].setValue( "groupA" )
+		self.uiThreadCallHandler.waitFor( 1 )
+
+		self.assertEqual( len( script["catalogue"]["images"] ), 1 )
+		self.assertEqual( script["catalogue"]["out"].metadata()["gaffer:isRendering"], IECore.BoolData( True ) )
+		self.assertEqual(
+			set( script["catalogue"]["out"].channelNames() ),
+			{ "R", "G", "B", "A" } |
+			{ "beauty_default.{}".format( c ) for c in "RGBA" } |
+			{ "beauty_groupA.{}".format( c ) for c in "RGBA" }
+		)
+
+		# Add another light group and check it appears. Ideally the
+		# `beauty_default` fallback would disappear as well, but Arnold doesn't
+		# do that yet.
+
+		script["light2"]["parameters"]["aov"].setValue( "groupB" )
+		self.uiThreadCallHandler.waitFor( 1 )
+
+		self.assertEqual( len( script["catalogue"]["images"] ), 1 )
+		self.assertEqual( script["catalogue"]["out"].metadata()["gaffer:isRendering"], IECore.BoolData( True ) )
+		self.assertEqual(
+			set( script["catalogue"]["out"].channelNames() ),
+			{ "R", "G", "B", "A" } |
+			{ "beauty_default.{}".format( c ) for c in "RGBA" } |
+			{ "beauty_groupA.{}".format( c ) for c in "RGBA" } |
+			{ "beauty_groupB.{}".format( c ) for c in "RGBA" }
+		)
+
+		# Remove a light group. Ideally we'd assert that the additional image
+		# layers have been removed now, but Arnold doesn't seem to reliably
+		# reopen the driver with fewer layers. So we satisfy ourselves with
+		# checking that at least we haven't made any unnecessary catalogue
+		# images.
+
+		script["light1"]["enabled"].setValue( False )
+		self.uiThreadCallHandler.waitFor( 1 )
+
+		self.assertEqual( len( script["catalogue"]["images"] ), 1 )
+		self.assertEqual( script["catalogue"]["out"].metadata()["gaffer:isRendering"], IECore.BoolData( True ) )
+
+		# Stop the renderer, and check we still have only one image, and
+		# that it is no longer rendering.
+
+		script["renderer"]["state"].setValue( script["renderer"].State.Stopped )
+		self.uiThreadCallHandler.assertCalled() # Wait for saving to complete
+
+		self.assertEqual( len( script["catalogue"]["images"] ), 1 )
+		self.assertNotIn( "gaffer:isRendering", script["catalogue"]["out"].metadata() )
+
 	def _createConstantShader( self ) :
 
 		shader = GafferArnold.ArnoldShader()

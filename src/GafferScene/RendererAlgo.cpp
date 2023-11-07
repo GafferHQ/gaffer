@@ -1569,9 +1569,15 @@ struct ObjectOutput : public LocationOutput
 namespace
 {
 
-ConstOutputPtr addGafferOutputHeaders( const Output *output, const ScenePlug *scene )
+ConstOutputPtr addGafferOutputParameters( const Output *output, const ScenePlug *scene, const std::string &outputID, const IECoreScenePreview::Renderer *renderer )
 {
 	CompoundDataPtr param = output->parametersData()->copy();
+
+	// Add parameters that provide unique identifiers for the render and the
+	// output. This is used by the Catalogue to know when to start a new image
+	// and when to just update an existing one.
+	param->writable()["gaffer:renderID"] = new StringData( fmt::format( "{}:{}", getpid(), reinterpret_cast<uintptr_t>( renderer ) ) );
+	param->writable()["gaffer:outputID"] = new StringData( outputID );
 
 	const Node *node = scene->node();
 	const ScriptNode *script = node->scriptNode();
@@ -1722,8 +1728,9 @@ void outputOutputs( const ScenePlug *scene, const IECore::CompoundObject *global
 			}
 			if( changedOrAdded )
 			{
-				ConstOutputPtr updatedOutput = addGafferOutputHeaders( output, scene );
-				renderer->output( it->first.string().substr( prefix.size() ), updatedOutput.get() );
+				const string outputID = it->first.string().substr( prefix.size() );
+				ConstOutputPtr updatedOutput = addGafferOutputParameters( output, scene, outputID, renderer );
+				renderer->output( outputID, updatedOutput.get() );
 			}
 		}
 		else
