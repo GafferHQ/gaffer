@@ -2073,9 +2073,6 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 
 		# Test with multiple point sources
-		pointsMerge = GafferScene.Parent()
-		pointsMerge["parent"].setValue( '/' )
-
 		pointSources = []
 
 		for j in range( 3 ):
