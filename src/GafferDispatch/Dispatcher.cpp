@@ -429,8 +429,7 @@ class Dispatcher::Batcher
 			// Switches and ContextProcessors.
 			{
 				Context::Scope scopedTaskContext( task.context() );
-				const Plug *sourcePlug; ConstContextPtr sourceContext;
-				tie( sourcePlug, sourceContext ) = computedSource( task.plug() );
+				auto [sourcePlug, sourceContext] = computedSource( task.plug() );
 				if( auto sourceTaskPlug = runTimeCast<const TaskNode::TaskPlug>( sourcePlug ) )
 				{
 					task = TaskNode::Task( sourceTaskPlug, sourceContext ? sourceContext.get() : task.context() );
