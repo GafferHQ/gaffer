@@ -75,24 +75,24 @@ struct LocalData
 	ConstCompoundDataPtr displayDriverParameters;
 	int numOutputs;
 
-	void imageClose()
+	void assignDisplayDriver( const DisplayDriverPtr &newDisplayDriver )
 	{
-		if( !displayDriver )
-		{
-			return;
-		}
+		DisplayDriverPtr oldDisplayDriver = displayDriver;
+		displayDriver = newDisplayDriver;
 
-		try
+		if( oldDisplayDriver )
 		{
-			displayDriver->imageClose();
+			try
+			{
+				oldDisplayDriver->imageClose();
+			}
+			catch( const std::exception &e )
+			{
+				// We have to catch and report exceptions because letting them out into pure c land
+				// just causes aborts.
+				msg( Msg::Error, "ieOutputDriver", e.what() );
+			}
 		}
-		catch( const std::exception &e )
-		{
-			// We have to catch and report exceptions because letting them out into pure c land
-			// just causes aborts.
-			msg( Msg::Error, "ieOutputDriver:driverClose", e.what() );
-		}
-		displayDriver = nullptr;
 	}
 
 };
@@ -225,17 +225,12 @@ void driverOpen( AtNode *node, struct AtOutputIterator *iterator, AtBBox2 displa
 			// Can reuse
 			return;
 		}
-		else
-		{
-			// Can't reuse, so must close before making a new one.
-			localData->imageClose();
-		}
 	}
 
 	// Couldn't reuse a driver, so create one from scratch.
 	try
 	{
-		localData->displayDriver = IECoreImage::DisplayDriver::create( driverType, cortexDisplayWindow, cortexDataWindow, channelNames, parameters );
+		localData->assignDisplayDriver( IECoreImage::DisplayDriver::create( driverType, cortexDisplayWindow, cortexDataWindow, channelNames, parameters ) );
 		localData->displayDriverParameters = parameters;
 	}
 	catch( const std::exception &e )
@@ -350,7 +345,7 @@ void driverClose( AtNode *node, struct AtOutputIterator *iterator )
 	// driverOpen if it appears that a progressive render is taking place.
 	if( localData->displayDriver && !localData->displayDriver->acceptsRepeatedData() )
 	{
-		localData->imageClose();
+		localData->assignDisplayDriver( nullptr );
 	}
 }
 
@@ -358,7 +353,7 @@ void driverFinish( AtNode *node )
 {
 	LocalData *localData = (LocalData *)AiNodeGetLocalData( node );
 	// Perform any pending close we may have deferred in driverClose().
-	localData->imageClose();
+	localData->assignDisplayDriver( nullptr );
 	delete localData;
 }
 

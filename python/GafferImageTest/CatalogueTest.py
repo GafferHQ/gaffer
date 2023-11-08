@@ -221,8 +221,9 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		aov2["color"].setValue( imath.Color4f( 0, 1, 0, 1 ) )
 		aov2["layer"].setValue( "diffuse" )
 
-		self.sendImage( aov1["out"], c )
+		driver = self.sendImage( aov1["out"], c, close = False )
 		self.sendImage( aov2["out"], c )
+		driver.close()
 
 		self.assertEqual( len( c["images"] ), 1 )
 		self.assertEqual(

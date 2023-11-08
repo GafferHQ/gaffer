@@ -40,6 +40,7 @@
 #include "tbb/task_group.h"
 
 #include <unordered_set>
+#include <variant>
 
 namespace Gaffer
 {
@@ -267,7 +268,30 @@ class Process::TypedCollaboration : public Process::Collaboration
 {
 	public :
 
-		std::optional<typename ProcessType::ResultType> result;
+		std::variant<std::monostate, std::exception_ptr, typename ProcessType::ResultType> result;
+
+		typename ProcessType::ResultType resultOrException() const
+		{
+			return std::visit(
+				[] ( auto &&v ) -> typename ProcessType::ResultType
+				{
+					using T = std::decay_t<decltype( v )>;
+					if constexpr( std::is_same_v<T, typename ProcessType::ResultType> )
+					{
+						return v;
+					}
+					else if constexpr( std::is_same_v<T, std::exception_ptr> )
+					{
+						std::rethrow_exception( v );
+					}
+					else
+					{
+						throw IECore::Cancelled();
+					}
+				},
+				result
+			);
+		}
 
 		IE_CORE_DECLAREMEMBERPTR( TypedCollaboration );
 
@@ -349,14 +373,7 @@ typename ProcessType::ResultType Process::acquireCollaborativeResult(
 			[&]{ return collaboration->taskGroup.wait(); }
 		);
 
-		if( collaboration->result )
-		{
-			return *collaboration->result;
-		}
-		else
-		{
-			throw IECore::Exception( "Process::acquireCollaborativeResult : No result found" );
-		}
+		return collaboration->resultOrException();
 	}
 
 	// No suitable in-flight collaborations, so we'll create one of our own.
@@ -376,9 +393,7 @@ typename ProcessType::ResultType Process::acquireCollaborativeResult(
 		collaboration->dependents.insert( currentCollaboration );
 	}
 
-	std::exception_ptr exception;
-
-	auto status = collaboration->arena.execute(
+	collaboration->arena.execute(
 		[&] {
 			return collaboration->taskGroup.run_and_wait(
 				[&] {
@@ -396,16 +411,17 @@ typename ProcessType::ResultType Process::acquireCollaborativeResult(
 						// `g_pendingCollaborations`, so that other threads will
 						// be able to get the result one way or the other.
 						ProcessType::g_cache.setIfUncached(
-							cacheKey, *collaboration->result,
+							cacheKey, std::get<typename ProcessType::ResultType>( collaboration->result ),
 							ProcessType::cacheCostFunction
 						);
 					}
 					catch( ... )
 					{
-						// Don't allow `task_group::wait()` to see exceptions,
-						// because then we'd hit a thread-safety bug in
+						// We want to manage the exception ourselves anyway,
+						// but its also imperative that we don't allow `task_group::wait()`
+						// to see it, because then we'd hit a thread-safety bug in
 						// `tbb::task_group_context::reset()`.
-						exception = std::current_exception();
+						collaboration->result = std::current_exception();
 					}
 
 					// Now we're done, remove `collaboration` from the pending collaborations.
@@ -424,16 +440,7 @@ typename ProcessType::ResultType Process::acquireCollaborativeResult(
 		}
 	);
 
-	if( exception )
-	{
-		std::rethrow_exception( exception );
-	}
-	else if( status == tbb::task_group_status::canceled )
-	{
-		throw IECore::Cancelled();
-	}
-
-	return *collaboration->result;
+	return collaboration->resultOrException();
 }
 
 inline bool Process::forceMonitoring( const ThreadState &s, const Plug *plug, const IECore::InternedString &processType )

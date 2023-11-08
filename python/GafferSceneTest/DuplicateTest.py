@@ -314,5 +314,29 @@ class DuplicateTest( GafferSceneTest.SceneTestCase ) :
 			imath.M44f().translate( imath.V3f( 5, 0, 0 ) )
 		)
 
+	def testUpstreamError( self ):
+
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ '/sphere' ] ) )
+
+		sphere = GafferScene.Sphere()
+
+		attributes = GafferScene.CustomAttributes()
+		attributes["in"].setInput( sphere["out"] )
+		attributes["filter"].setInput( sphereFilter["out"] )
+		attributes["attributes"]["attribute1"] = ( Gaffer.NameValuePlug( "testAttribute", 0 ) )
+		attributes["expression"] = Gaffer.Expression()
+		attributes["expression"].setExpression( 'parent["attributes"]["attribute1"]["value"] = 1 / 0', "python" )
+
+		duplicate = GafferScene.Duplicate()
+		duplicate["in"].setInput( attributes["out"] )
+		duplicate["filter"].setInput( sphereFilter["out"] )
+		duplicate["copies"].setValue( 100 )
+
+		for i in range( 20 ) :
+			with self.subTest( i = i ) :
+				with self.assertRaisesRegex( RuntimeError, "division by zero" ):
+					GafferSceneTest.traverseScene( duplicate["out"] )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -50,6 +50,8 @@
 
 #include "tbb/parallel_for_each.h"
 
+#include <unordered_map>
+
 using namespace boost::python;
 using namespace IECore;
 using namespace Gaffer;

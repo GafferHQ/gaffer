@@ -14,7 +14,16 @@ Breaking Changes
 1.3.x.x (relative to 1.3.6.0)
 =======
 
+Fixes
+-----
 
+- Catalogue : Fixed bugs which caused additional images to appear when changing light groups or crop in an Arnold render (#4267, #4633).
+- Process : Fixed bug which caused a `No result found` exception to be thrown when a more descriptive exception should have been thrown instead.
+
+API
+---
+
+- Display : Added `driverClosed()` method.
 
 1.3.6.0 (relative to 1.3.5.0)
 =======

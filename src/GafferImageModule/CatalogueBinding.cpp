@@ -127,6 +127,7 @@ void GafferImageModule::bindCatalogue()
 		scope s = GafferBindings::DependencyNodeClass<Display>()
 			.def( "setDriver", &Display::setDriver, ( arg( "driver" ), arg( "copy" ) = false ) )
 			.def( "getDriver", (IECoreImage::DisplayDriver *(Display::*)())&Display::getDriver, return_value_policy<CastToIntrusivePtr>() )
+			.def( "driverClosed", &Display::driverClosed )
 			.def( "driverCreatedSignal", &Display::driverCreatedSignal, return_value_policy<reference_existing_object>() ).staticmethod( "driverCreatedSignal" )
 			.def( "imageReceivedSignal", &Display::imageReceivedSignal, return_value_policy<reference_existing_object>() ).staticmethod( "imageReceivedSignal" )
 		;
