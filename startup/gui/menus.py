@@ -59,7 +59,6 @@ GafferUI.FileMenu.appendDefinitions( scriptWindowMenu, prefix="/File" )
 GafferUI.EditMenu.appendDefinitions( scriptWindowMenu, prefix="/Edit" )
 GafferUI.LayoutMenu.appendDefinitions( scriptWindowMenu, name="/Layout" )
 GafferDispatchUI.DispatcherUI.appendMenuDefinitions( scriptWindowMenu, prefix="/Execute" )
-GafferDispatchUI.LocalDispatcherUI.appendMenuDefinitions( scriptWindowMenu, prefix="/Execute" )
 GafferUI.GraphBookmarksUI.appendScriptWindowMenuDefinitions( scriptWindowMenu, prefix="/Edit" )
 
 # Turn on backups by default, so they are supported by the open functions
