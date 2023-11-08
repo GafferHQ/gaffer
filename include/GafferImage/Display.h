@@ -60,11 +60,16 @@ class GAFFERIMAGE_API Display : public ImageNode
 		explicit Display( const std::string &name = defaultName<Display>() );
 		~Display() override;
 
-		/// Sets the driver used to provide the
-		/// image to this node.
+		/// Sets the driver used to provide the image to this node. If `copy` is
+		/// true then a static copy of the current state of the driver is taken,
+		/// in which case `driverClosed()` will return `true`.
 		void setDriver( IECoreImage::DisplayDriverPtr driver, bool copy = false );
 		IECoreImage::DisplayDriver *getDriver();
 		const IECoreImage::DisplayDriver *getDriver() const;
+
+		/// Returns true if this node has a driver and it has been closed, and
+		/// therefore won't be receiving any more image data.
+		bool driverClosed() const;
 
 		/// Emitted when a new driver has been created. This can
 		/// then be passed to `Display::setDriver()` to populate
@@ -73,6 +78,7 @@ class GAFFERIMAGE_API Display : public ImageNode
 		static DriverCreatedSignal &driverCreatedSignal();
 
 		/// Emitted when a complete image has been received.
+		/// \todo It would make more sense to call this `driverClosedSignal()`.
 		static UnaryPlugSignal &imageReceivedSignal();
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;

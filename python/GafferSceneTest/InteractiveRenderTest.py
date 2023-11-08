@@ -2095,6 +2095,66 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		with self.assertRaisesRegex( Exception, 'Plug "%s.state" rejects input "AddNode.sum".' % r.getName() ) :
 			r["state"].setInput( a["sum"] )
 
+	def testEditCropWindow( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["catalogue"] = GafferImage.Catalogue()
+
+		script["outputs"] = GafferScene.Outputs()
+		script["outputs"].addOutput(
+			"beauty",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ClientDisplayDriver",
+					"displayHost" : "localhost",
+					"displayPort" : str( script["catalogue"].displayDriverServer().portNumber() ),
+					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+				}
+			)
+		)
+
+		script["options"] = GafferScene.StandardOptions()
+		script["options"]["in"].setInput( script["outputs"]["out"] )
+
+		script["renderer"] = self._createInteractiveRender()
+		script["renderer"]["in"].setInput( script["options"]["out"] )
+
+		# Start a render, give it time to finish, and check the output.
+
+		script["renderer"]["state"].setValue( script["renderer"].State.Running )
+		self.uiThreadCallHandler.waitFor( 1 )
+
+		self.assertEqual( len( script["catalogue"]["images"] ), 1 )
+		self.assertEqual( script["catalogue"]["out"].dataWindow(), imath.Box2i( imath.V2i( 0 ), imath.V2i( 640, 480 ) ) )
+		self.assertEqual( script["catalogue"]["out"].metadata()["gaffer:isRendering"], IECore.BoolData( True ) )
+
+		# Change the crop. The current image should change its data window,
+		# and no new image should be created.
+
+		with Gaffer.DirtyPropagationScope() :
+			script["options"]["options"]["renderCropWindow"]["enabled"].setValue( True )
+			script["options"]["options"]["renderCropWindow"]["value"].setValue( imath.Box2f( imath.V2f( 0 ), imath.V2f( 0.5 ) ) )
+
+		self.uiThreadCallHandler.waitFor( 1 )
+
+		self.assertEqual( len( script["catalogue"]["images"] ), 1 )
+		self.assertEqual( script["catalogue"]["out"].dataWindow(), imath.Box2i( imath.V2i( 0, 240 ), imath.V2i( 320, 480 ) ) )
+		self.assertEqual( script["catalogue"]["out"].metadata()["gaffer:isRendering"], IECore.BoolData( True ) )
+
+		script["renderer"]["state"].setValue( script["renderer"].State.Stopped )
+		self.uiThreadCallHandler.assertCalled() # Wait for saving to complete
+
+		if script["renderer"].typeName() == "GafferCycles::InteractiveCyclesRender" :
+			# Cycles somehow manages to do stuff after we've deleted the CyclesRenderer.
+			# Wait for it to finish.
+			## \todo Figure out why this is needed, and fix it.
+			self.uiThreadCallHandler.waitFor( 1 )
+
+		self.assertNotIn( "gaffer:isRendering", script["catalogue"]["out"].metadata() )
+
 	def tearDown( self ) :
 
 		GafferSceneTest.SceneTestCase.tearDown( self )

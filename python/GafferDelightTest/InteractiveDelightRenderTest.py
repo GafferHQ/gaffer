@@ -86,6 +86,11 @@ class InteractiveDelightRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		pass
 
+	@unittest.skip( "Need to be able to close old driver _after_ opening new one" )
+	def testEditCropWindow( self ) :
+
+		pass
+
 	def _createConstantShader( self ) :
 
 		shader = GafferOSL.OSLShader()

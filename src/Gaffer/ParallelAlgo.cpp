@@ -73,7 +73,8 @@ void ParallelAlgo::callOnUIThread( const UIThreadFunction &function )
 		}
 		else
 		{
-			throw IECore::Exception( "No UIThreadCallHandler installed" );
+			IECore::msg( IECore::Msg::Error, "ParallelAlgo::callOnUIThread", "No UIThreadCallHandler installed" );
+			return;
 		}
 	}
 
