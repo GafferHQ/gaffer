@@ -5,6 +5,9 @@ Fixes
 -----
 
 - Catalogue : Fixed bugs which caused additional images to appear when changing light groups or crop in an Arnold render (#4267, #4633).
+- Instancer :
+  - Fixed failure to update encapsulated instancers when prototype properties changed during interactive renders.
+  - Prevented unnecessary updates for encapsulated instancers when prototype globals changed.
 - Process : Fixed bug which caused a `No result found` exception to be thrown when a more descriptive exception should have been thrown instead.
 
 API
