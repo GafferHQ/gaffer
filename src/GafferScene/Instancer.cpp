@@ -1233,6 +1233,15 @@ void Instancer::affects( const Plug *input, AffectedPlugsContainer &outputs ) co
 		outputs.push_back( outPlug()->setPlug() );
 	}
 
+	if(
+		input->parent() == prototypesPlug() &&
+		input != prototypesPlug()->globalsPlug() &&
+		!encapsulateInstanceGroupsPlug()->isSetToDefault()
+	)
+	{
+		outputs.push_back( outPlug()->objectPlug() );
+	}
+
 	// The capsule scene depends on all the same things as the regular output scene ( aside from not
 	// being affected by the encapsulate plug, which always must be true when it's evaluated anyway ),
 	// so we can leverage the logic in BranchCreator to drive it
@@ -2022,11 +2031,13 @@ void Instancer::hashObject( const ScenePath &path, const Gaffer::Context *contex
 			BranchCreator::hashBranchObject( sourcePath, branchPath, context, h );
 			h.append( reinterpret_cast<uint64_t>( this ) );
 			/// We need to include anything that will affect how the capsule will expand.
-			/// \todo Once we fix motion blur behaviour so that Capsules don't
-			/// depend on the source scene's shutter settings, we should be able to omit
-			/// the `dirtyCount` for `prototypesPlug()->globalsPlug()`, by summing the
-			/// count for its siblings instead.
-			h.append( prototypesPlug()->dirtyCount() );
+			for( const auto &prototypePlug : ValuePlug::Range( *prototypesPlug() ) )
+			{
+				if( prototypePlug != prototypesPlug()->globalsPlug() )
+				{
+					h.append( prototypePlug->dirtyCount() );
+				}
+			}
 			engineHash( sourcePath, context, h );
 			h.append( context->hash() );
 			outPlug()->boundPlug()->hash( h );

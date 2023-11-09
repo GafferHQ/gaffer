@@ -2340,6 +2340,85 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertEqual( instancer["variations"].getValue(), IECore.CompoundData( { "" : IECore.IntData( 0 ) } ) )
 
+	def testPrototypePropertiesAffectCapsule( self ) :
+
+		plane = GafferScene.Plane()
+
+		planeFilter = GafferScene.PathFilter()
+		planeFilter["paths"].setValue( IECore.StringVectorData( [ "/plane" ] ) )
+
+		sphere = GafferScene.Sphere()
+
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ "/sphere" ] ) )
+
+		sphereAttributes = GafferScene.CustomAttributes()
+		sphereAttributes["in"].setInput( sphere["out"] )
+		sphereAttributes["filter"].setInput( sphereFilter["out"] )
+
+		sphereOptions = GafferScene.CustomOptions()
+		sphereOptions["in"].setInput( sphereAttributes["out"] )
+
+		instancer = GafferScene.Instancer()
+		instancer["in"].setInput( plane["out"] )
+		instancer["prototypes"].setInput( sphereOptions["out"] )
+		instancer["filter"].setInput( planeFilter["out"] )
+
+		for encapsulate in ( False, True ) :
+
+			with self.subTest( encapsulate = encapsulate ) :
+
+				instancer["encapsulateInstanceGroups"].setValue( encapsulate )
+
+				# Prototype properties used by the capsule should be reflected
+				# in the object hash. For the hash to be updated successfully,
+				# the `object` plug must also be dirtied (because we cache
+				# hashes).
+
+				hashes = set()
+				hashes.add( instancer["out"].objectHash( "/plane/instances/sphere" ) )
+				self.assertEqual( len( hashes ), 1 )
+
+				sphere["radius"].setValue( 2 + int( encapsulate ) )
+				hashes.add( instancer["out"].objectHash( "/plane/instances/sphere" ) )
+				self.assertEqual( len( hashes ), 2 if encapsulate else 1 )
+
+				dirtiedPlugs = GafferTest.CapturingSlot( instancer.plugDirtiedSignal() )
+
+				sphere["transform"]["translate"]["x"].setValue( 2 + int( encapsulate ) )
+				hashes.add( instancer["out"].objectHash( "/plane/instances/sphere" ) )
+				self.assertEqual( len( hashes ), 3 if encapsulate else 1 )
+
+				sphereAttributes["attributes"]["test"] = Gaffer.NameValuePlug( "test", encapsulate )
+				hashes.add( instancer["out"].objectHash( "/plane/instances/sphere" ) )
+				self.assertEqual( len( hashes ), 4 if encapsulate else 1 )
+
+				sphere["sets"].setValue( "testSet{}".format( encapsulate ) )
+				hashes.add( instancer["out"].objectHash( "/plane/instances/sphere" ) )
+				self.assertEqual( len( hashes ), 5 if encapsulate else 1 )
+
+				# When not encapsulating, there should be no unnecessary
+				# dirtying of the `object` plug.
+
+				if not encapsulate :
+					self.assertNotIn(
+						instancer["out"]["object"],
+						{ x[0] for x in dirtiedPlugs }
+					)
+
+				# And prototype globals shouldn't affect `object` in either
+				# mode, because they're not used by the capsule.
+
+				del dirtiedPlugs[:]
+
+				sphereOptions["options"]["test"] = Gaffer.NameValuePlug( "test", encapsulate )
+				hashes.add( instancer["out"].objectHash( "/plane/instances/sphere" ) )
+				self.assertEqual( len( hashes ), 5 if encapsulate else 1 )
+				self.assertNotIn(
+					instancer["out"]["object"],
+					{ x[0] for x in dirtiedPlugs }
+				)
+
 	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
 	@GafferTest.TestRunner.PerformanceTestMethod()
 	def testContextSetPerfNoVariationsSingleEvaluate( self ):
