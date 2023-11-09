@@ -1736,10 +1736,10 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 	def testContexts( self ):
 
 		points = IECoreScene.PointsPrimitive(
-					IECore.V3fVectorData(
-						[ imath.V3f( i, 0, 0 ) for i in range( 100 ) ]
-					)
-				)
+			IECore.V3fVectorData(
+				[ imath.V3f( i, 0, 0 ) for i in range( 100 ) ]
+			)
+		)
 
 		points["floatVar"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, IECore.FloatVectorData(
 						[ 2 * math.sin( i ) for i in range( 100 ) ]
@@ -2115,14 +2115,17 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 		for j in range( 3 ):
 			points = IECoreScene.PointsPrimitive(
-						IECore.V3fVectorData(
-							[ imath.V3f( i, 0, 0 ) for i in range( 10 ) ]
-						)
-					)
+				IECore.V3fVectorData(
+					[ imath.V3f( i, 0, 0 ) for i in range( 10 ) ]
+				)
+			)
 
-			points["floatVar"] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, IECore.FloatVectorData(
-							[ i * 0.1 + j for i in range( 10 ) ]
-						) )
+			points["floatVar"] = IECoreScene.PrimitiveVariable(
+				IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+				IECore.FloatVectorData(
+					[ i * 0.1 + j for i in range( 10 ) ]
+				)
+			)
 			pointSources.append( GafferScene.ObjectToScene() )
 			pointSources[-1]["name"].setValue( "points" )
 			pointSources[-1]["object"].setValue( points )
