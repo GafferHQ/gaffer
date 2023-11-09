@@ -742,7 +742,7 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 				# that it is no longer rendering.
 
 				script["renderer"]["state"].setValue( script["renderer"].State.Stopped )
-				self.uiThreadCallHandler.assertCalled() # Wait for saving to complete
+				self.uiThreadCallHandler.waitFor( 0.5 ) # Wait for saving to complete
 
 				self.assertEqual( len( script["catalogue"]["images"] ), 1 )
 				self.assertNotIn( "gaffer:isRendering", script["catalogue"]["out"].metadata() )
