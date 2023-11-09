@@ -98,6 +98,10 @@ class GAFFERSCENE_API Capsule : public IECoreScenePreview::Procedural
 
 	protected :
 
+		// Returns the current render options - this will be the override if setRenderOptions has been called,
+		// otherwise it will construct render options based on the `scene()`.
+		GafferScene::Private::RendererAlgo::RenderOptions renderOptions() const;
+
 		void throwIfNoScene() const;
 
 	private :
