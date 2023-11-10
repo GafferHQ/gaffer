@@ -442,11 +442,15 @@ bool objectSamples( const ObjectPlug *objectPlug, const std::vector<float> &samp
 				Context::Scope frameScope( frameContext );
 				std::vector<float> tempTimes = {};
 
+				// \todo - this is quite bad for the case of any Capsules, which use a naive hash
+				// that always varies with the context. This should be investigated soon as a follow
+				// up.
+				//
 				// This is a pretty weird case - we would have taken an earlier branch if the hashes
 				// had all matched, so it looks like this object is actual animated, despite not supporting
 				// animation.
 				// The most correct thing to do here is reset the hash, since we may not have included the
-				// on frame in the samples we hashed, and in theory, the on frame value could vary indepndently
+				// on frame in the samples we hashed, and in theory, the on frame value could vary independently
 				// of shutter open and close.  This means that an animated non-animateable object will never have
 				// a matching hash, and will be updated every pass.  May be a performance hazard, but probably
 				// preferable to incorrect behaviour?  Just means people need to be careful to make sure their

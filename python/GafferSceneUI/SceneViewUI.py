@@ -604,6 +604,15 @@ def _leafTypes( typeId ) :
 		typeId = IECore.RunTimeTyped.typeIdFromTypeName( typeId )
 
 	derivedTypes = IECore.RunTimeTyped.derivedTypeIds( typeId )
+
+	# By "leaf" we really mean "derived enough to appear in the Selection Mask
+	# menu". So we must pretend that the private InstancerCapsule subclass of
+	# Capsule doesn't exist.
+	## \todo No doubt this could be expressed more naturally somehow, perhaps
+	# just with a set union of `derivedTypes` and `typesWeUseInTheMenu`.
+	instancerCapsuleTypeId = IECore.RunTimeTyped.typeIdFromTypeName( "InstancerCapsule" )
+	derivedTypes = [ t for t in derivedTypes if t != instancerCapsuleTypeId ]
+
 	if derivedTypes :
 		return set().union( *[ _leafTypes( t ) for t in derivedTypes ] )
 	else :

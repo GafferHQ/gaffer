@@ -172,13 +172,9 @@ void Capsule::render( IECoreScenePreview::Renderer *renderer ) const
 {
 	throwIfNoScene();
 	ScenePlug::GlobalScope scope( m_context.get() );
-	std::optional<GafferScene::Private::RendererAlgo::RenderOptions> renderOptions = getRenderOptions();
-	if( !renderOptions )
-	{
-		renderOptions = GafferScene::Private::RendererAlgo::RenderOptions( m_scene );
-	}
+	const GafferScene::Private::RendererAlgo::RenderOptions renderOpts = renderOptions();
 	GafferScene::Private::RendererAlgo::RenderSets renderSets( m_scene );
-	GafferScene::Private::RendererAlgo::outputObjects( m_scene, *renderOptions, renderSets, /* lightLinks = */ nullptr, renderer, m_root );
+	GafferScene::Private::RendererAlgo::outputObjects( m_scene, renderOpts, renderSets, /* lightLinks = */ nullptr, renderer, m_root );
 }
 
 const ScenePlug *Capsule::scene() const
@@ -217,6 +213,19 @@ std::optional<GafferScene::Private::RendererAlgo::RenderOptions> Capsule::getRen
 		return it->second;
 	}
 	return std::nullopt;
+}
+
+GafferScene::Private::RendererAlgo::RenderOptions Capsule::renderOptions() const
+{
+	std::optional<GafferScene::Private::RendererAlgo::RenderOptions> renderOptions = getRenderOptions();
+	if( renderOptions )
+	{
+		return *renderOptions;
+	}
+	else
+	{
+		return GafferScene::Private::RendererAlgo::RenderOptions( m_scene );
+	}
 }
 
 void Capsule::throwIfNoScene() const

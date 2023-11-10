@@ -286,50 +286,50 @@ Gaffer.Metadata.registerNode(
 
 	"layout:customWidget:seedColumnHeadings:widgetType", "GafferSceneUI.InstancerUI._SeedColumnHeadings",
 	"layout:customWidget:seedColumnHeadings:section", "Context Variations",
-	"layout:customWidget:seedColumnHeadings:index", 18,
+	"layout:customWidget:seedColumnHeadings:index", 19,
 
 	"layout:customWidget:idContextCountSpacer:widgetType", "GafferSceneUI.InstancerUI._SeedCountSpacer",
 	"layout:customWidget:idContextCountSpacer:section", "Context Variations",
-	"layout:customWidget:idContextCountSpacer:index", 19,
+	"layout:customWidget:idContextCountSpacer:index", 20,
 	"layout:customWidget:idContextCountSpacer:accessory", True,
 
 	"layout:customWidget:idContextCount:widgetType", "GafferSceneUI.InstancerUI._SeedCountWidget",
 	"layout:customWidget:idContextCount:section", "Context Variations",
-	"layout:customWidget:idContextCount:index", 19,
+	"layout:customWidget:idContextCount:index", 20,
 	"layout:customWidget:idContextCount:accessory", True,
 
 	"layout:customWidget:seedVariableSpacer:widgetType", "GafferSceneUI.InstancerUI._VariationSpacer",
 	"layout:customWidget:seedVariableSpacer:section", "Context Variations",
-	"layout:customWidget:seedVariableSpacer:index", 20,
+	"layout:customWidget:seedVariableSpacer:index", 21,
 	"layout:customWidget:seedVariableSpacer:accessory", True,
 
 	"layout:customWidget:seedsSpacer:widgetType", "GafferSceneUI.InstancerUI._VariationSpacer",
 	"layout:customWidget:seedsSpacer:section", "Context Variations",
-	"layout:customWidget:seedsSpacer:index", 21,
+	"layout:customWidget:seedsSpacer:index", 22,
 	"layout:customWidget:seedsSpacer:accessory", True,
 
 	"layout:customWidget:seedPermutationSpacer:widgetType", "GafferSceneUI.InstancerUI._VariationSpacer",
 	"layout:customWidget:seedPermutationSpacer:section", "Context Variations",
-	"layout:customWidget:seedPermutationSpacer:index", 22,
+	"layout:customWidget:seedPermutationSpacer:index", 23,
 	"layout:customWidget:seedPermutationSpacer:accessory", True,
 
 	"layout:customWidget:seedSpacer:widgetType", "GafferSceneUI.InstancerUI._SectionSpacer",
 	"layout:customWidget:seedSpacer:section", "Context Variations",
-	"layout:customWidget:seedSpacer:index", 23,
+	"layout:customWidget:seedSpacer:index", 24,
 
 	"layout:customWidget:timeOffsetHeadings:widgetType", "GafferSceneUI.InstancerUI._TimeOffsetColumnHeadings",
 	"layout:customWidget:timeOffsetHeadings:section", "Context Variations",
-	"layout:customWidget:timeOffsetHeadings:index", 24,
+	"layout:customWidget:timeOffsetHeadings:index", 25,
 	"layout:customWidget:timeOffsetHeadings:description", "Testing description",
 
 	"layout:customWidget:timeOffsetSpacer:widgetType", "GafferSceneUI.InstancerUI._SectionSpacer",
 	"layout:customWidget:timeOffsetSpacer:section", "Context Variations",
-	"layout:customWidget:timeOffsetSpacer:index", 25,
+	"layout:customWidget:timeOffsetSpacer:index", 26,
 	"layout:customWidget:timeOffsetSpacer:divider", True,
 
 	"layout:customWidget:totalSpacer:widgetType", "GafferSceneUI.InstancerUI._SectionSpacer",
 	"layout:customWidget:totalSpacer:section", "Context Variations",
-	"layout:customWidget:totalSpacer:index", 26,
+	"layout:customWidget:totalSpacer:index", 27,
 
 	plugs = {
 
@@ -480,6 +480,21 @@ Gaffer.Metadata.registerNode(
 			""",
 
 			"layout:section", "Settings.General",
+
+		],
+
+		"omitDuplicateIds" : [
+
+			"description",
+			"""
+			When off, having the same ids on multiple points is considered
+			an error. Setting on will allow a render to proceed, with all
+			instances that share an id being omitted.
+			""",
+
+			"layout:section", "Settings.General",
+
+			"userDefault", False,
 
 		],
 

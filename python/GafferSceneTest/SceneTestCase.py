@@ -413,12 +413,12 @@ class SceneTestCase( GafferImageTest.ImageTestCase ) :
 		# which should have the same effect, but is a separate code path.
 
 		rendererA = GafferScene.Private.IECoreScenePreview.CapturingRenderer( GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch )
-		controllerA = GafferScene.RenderController( plugA, Gaffer.Context(), rendererA )
+		controllerA = GafferScene.RenderController( plugA, Gaffer.Context.current(), rendererA )
 		controllerA.setMinimumExpansionDepth( 1024 )
 		controllerA.update()
 
 		rendererB = GafferScene.Private.IECoreScenePreview.CapturingRenderer( GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch )
-		controllerB = GafferScene.RenderController( plugB, Gaffer.Context(), rendererB )
+		controllerB = GafferScene.RenderController( plugB, Gaffer.Context.current(), rendererB )
 		controllerB.setMinimumExpansionDepth( 1024 )
 		controllerB.update()
 
