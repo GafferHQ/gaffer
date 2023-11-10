@@ -39,6 +39,15 @@
 
 #include "GafferScene/Export.h"
 #include "GafferScene/BranchCreator.h"
+#include "GafferScene/Capsule.h"
+
+namespace GafferSceneModule
+{
+
+// Forward declaration to enable friend declaration.
+void bindHierarchy();
+
+} // namespace GafferSceneModule
 
 namespace GafferScene
 {
@@ -116,6 +125,9 @@ class GAFFERSCENE_API Instancer : public BranchCreator
 
 		Gaffer::StringPlug *idPlug();
 		const Gaffer::StringPlug *idPlug() const;
+
+		Gaffer::BoolPlug *omitDuplicateIdsPlug();
+		const Gaffer::BoolPlug *omitDuplicateIdsPlug() const;
 
 		Gaffer::StringPlug *positionPlug();
 		const Gaffer::StringPlug *positionPlug() const;
@@ -211,12 +223,10 @@ class GAFFERSCENE_API Instancer : public BranchCreator
 	private :
 
 		IE_CORE_FORWARDDECLARE( EngineData );
+		IE_CORE_FORWARDDECLARE( InstancerCapsule );
 
 		Gaffer::ObjectPlug *enginePlug();
 		const Gaffer::ObjectPlug *enginePlug() const;
-
-		Gaffer::AtomicCompoundDataPlug *prototypeChildNamesPlug();
-		const Gaffer::AtomicCompoundDataPlug *prototypeChildNamesPlug() const;
 
 		GafferScene::ScenePlug *capsuleScenePlug();
 		const GafferScene::ScenePlug *capsuleScenePlug() const;
@@ -229,9 +239,6 @@ class GAFFERSCENE_API Instancer : public BranchCreator
 
 		ConstEngineDataPtr engine( const ScenePath &sourcePath, const Gaffer::Context *context ) const;
 		void engineHash( const ScenePath &sourcePath, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
-
-		IECore::ConstCompoundDataPtr prototypeChildNames( const ScenePath &sourcePath, const Gaffer::Context *context ) const;
-		void prototypeChildNamesHash( const ScenePath &sourcePath, const Gaffer::Context *context, IECore::MurmurHash &h ) const;
 
 		struct PrototypeScope : public Gaffer::Context::EditableScope
 		{
@@ -246,6 +253,10 @@ class GAFFERSCENE_API Instancer : public BranchCreator
 		};
 
 		static size_t g_firstPlugIndex;
+
+		// For bindings
+		friend void GafferSceneModule::bindHierarchy();
+		static const std::type_info &instancerCapsuleTypeInfo();
 
 };
 

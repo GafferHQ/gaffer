@@ -14,7 +14,17 @@ Breaking Changes
 1.3.x.x (relative to 1.3.6.1)
 =======
 
+Improvements
+------------
 
+- Instancer :
+  - Improved scene generation for encapsulated instancers significantly, with some production scenes now generating 5-7x faster.
+  - Added `omitDuplicateIds` plug, to determine whether points with duplicate IDs are ignored or should trigger an error.
+
+API
+---
+
+- Capsule : Added protected `renderOptions()` and `throwIfNoScene()` methods.
 
 1.3.6.1 (relative to 1.3.6.0)
 =======

@@ -1256,7 +1256,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 	def __arrayToSet( self, a ) :
 
 		result = set()
-		for i in range( 0,  arnold.AiArrayGetNumElements( a.contents ) ) :
+		for i in range( 0, arnold.AiArrayGetNumElements( a.contents ) ) :
 			if arnold.AiArrayGetType( a.contents ) == arnold.AI_TYPE_STRING :
 				result.add( arnold.AiArrayGetStr( a, i ) )
 			else :
@@ -1477,6 +1477,272 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 			# Arnold doesn't support coordinate systems, so we don't expect a
 			# node to have been created for ours.
 			self.assertIsNone( arnold.AiNodeLookUpByName( universe, "/coordinateSystem" ) )
+
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 1 )
+	def testInstancerPerf( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["plane"] = GafferScene.Plane()
+		s["plane"]["divisions"].setValue( imath.V2i( 500 ) )
+
+		s["sphere"] = GafferScene.Sphere()
+
+		s["pathFilter"] = GafferScene.PathFilter()
+		s["pathFilter"]["paths"].setValue( IECore.StringVectorData( [ '/plane' ] ) )
+
+		s["instancer"] = GafferScene.Instancer()
+		s["instancer"]["in"].setInput( s["plane"]["out"] )
+		s["instancer"]["filter"].setInput( s["pathFilter"]["out"] )
+		s["instancer"]["prototypes"].setInput( s["sphere"]["out"] )
+
+		s["render"] = GafferArnold.ArnoldRender()
+		s["render"]["in"].setInput( s["instancer"]["out"] )
+
+		with Gaffer.Context() as c :
+			c["scene:render:sceneTranslationOnly"] = IECore.BoolData( True )
+			with GafferTest.TestRunner.PerformanceScope() :
+				s["render"]["task"].execute()
+
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5 )
+	def testInstancerEncapsulatePerf( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["plane"] = GafferScene.Plane()
+		s["plane"]["divisions"].setValue( imath.V2i( 500 ) )
+
+		s["sphere"] = GafferScene.Sphere()
+
+		s["pathFilter"] = GafferScene.PathFilter()
+		s["pathFilter"]["paths"].setValue( IECore.StringVectorData( [ '/plane' ] ) )
+
+		s["instancer"] = GafferScene.Instancer()
+		s["instancer"]["in"].setInput( s["plane"]["out"] )
+		s["instancer"]["filter"].setInput( s["pathFilter"]["out"] )
+		s["instancer"]["prototypes"].setInput( s["sphere"]["out"] )
+
+		s["instancer"]["encapsulateInstanceGroups"].setValue( True )
+
+		s["render"] = GafferArnold.ArnoldRender()
+		s["render"]["in"].setInput( s["instancer"]["out"] )
+
+		with Gaffer.Context() as c :
+			c["scene:render:sceneTranslationOnly"] = IECore.BoolData( True )
+			with GafferTest.TestRunner.PerformanceScope() :
+				s["render"]["task"].execute()
+
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 1 )
+	def testInstancerManyPrototypesPerf( self ) :
+		# Having a context variable set without anything in the prototype being affected by that
+		# context variable is mostly just going to add stress to the hash cache. This test exists
+		# mostly for comparison with the encapsulated case below.
+
+		s = Gaffer.ScriptNode()
+
+		s["plane"] = GafferScene.Plane()
+		s["plane"]["divisions"].setValue( imath.V2i( 500 ) )
+
+		s["sphere"] = GafferScene.Sphere()
+
+		s["pathFilter"] = GafferScene.PathFilter()
+		s["pathFilter"]["paths"].setValue( IECore.StringVectorData( [ '/plane' ] ) )
+
+		s["instancer"] = GafferScene.Instancer()
+		s["instancer"]["in"].setInput( s["plane"]["out"] )
+		s["instancer"]["filter"].setInput( s["pathFilter"]["out"] )
+		s["instancer"]["prototypes"].setInput( s["sphere"]["out"] )
+
+		s["instancer"]["contextVariables"].addChild( GafferScene.Instancer.ContextVariablePlug( "context" ) )
+		s["instancer"]["contextVariables"][0]["name"].setValue( "P" )
+		s["instancer"]["contextVariables"][0]["quantize"].setValue( 0 )
+
+		s["render"] = GafferArnold.ArnoldRender()
+		s["render"]["in"].setInput( s["instancer"]["out"] )
+
+		with Gaffer.Context() as c :
+			c["scene:render:sceneTranslationOnly"] = IECore.BoolData( True )
+			with GafferTest.TestRunner.PerformanceScope() :
+				s["render"]["task"].execute()
+
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 1 )
+	def testInstancerManyPrototypesEncapsulatePerf( self ) :
+		# Having a context variable set ( even without anything in the prototype reading it ), will force
+		# the encapsulate code path to allocate a bunch of separate prototypes, even if they all end up the same.
+
+		s = Gaffer.ScriptNode()
+
+		s["plane"] = GafferScene.Plane()
+		s["plane"]["divisions"].setValue( imath.V2i( 500 ) )
+
+		s["sphere"] = GafferScene.Sphere()
+
+		s["pathFilter"] = GafferScene.PathFilter()
+		s["pathFilter"]["paths"].setValue( IECore.StringVectorData( [ '/plane' ] ) )
+
+		s["instancer"] = GafferScene.Instancer()
+		s["instancer"]["in"].setInput( s["plane"]["out"] )
+		s["instancer"]["filter"].setInput( s["pathFilter"]["out"] )
+		s["instancer"]["prototypes"].setInput( s["sphere"]["out"] )
+
+		s["instancer"]["contextVariables"].addChild( GafferScene.Instancer.ContextVariablePlug( "context" ) )
+		s["instancer"]["contextVariables"][0]["name"].setValue( "P" )
+		s["instancer"]["contextVariables"][0]["quantize"].setValue( 0 )
+
+		s["instancer"]["encapsulateInstanceGroups"].setValue( True )
+
+		s["render"] = GafferArnold.ArnoldRender()
+		s["render"]["in"].setInput( s["instancer"]["out"] )
+
+		with Gaffer.Context() as c :
+			c["scene:render:sceneTranslationOnly"] = IECore.BoolData( True )
+			with GafferTest.TestRunner.PerformanceScope() :
+				s["render"]["task"].execute()
+
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 1 )
+	def testInstancerFewPrototypesPerf( self ) :
+
+		# A slightly weird test, but it tests one extreme: there is a context variable, but quantize is
+		# set so high that all the contexts end up the same, and only one prototype is needed.
+		# This case is particularly bad for the unencapsulated code path, but quite good for the
+		# encapsulated path.
+
+		s = Gaffer.ScriptNode()
+
+		s["plane"] = GafferScene.Plane()
+		s["plane"]["divisions"].setValue( imath.V2i( 500 ) )
+
+		s["sphere"] = GafferScene.Sphere()
+
+		s["pathFilter"] = GafferScene.PathFilter()
+		s["pathFilter"]["paths"].setValue( IECore.StringVectorData( [ '/plane' ] ) )
+
+		s["instancer"] = GafferScene.Instancer()
+		s["instancer"]["in"].setInput( s["plane"]["out"] )
+		s["instancer"]["filter"].setInput( s["pathFilter"]["out"] )
+		s["instancer"]["prototypes"].setInput( s["sphere"]["out"] )
+
+		s["instancer"]["contextVariables"].addChild( GafferScene.Instancer.ContextVariablePlug( "context" ) )
+		s["instancer"]["contextVariables"][0]["name"].setValue( "P" )
+		s["instancer"]["contextVariables"][0]["quantize"].setValue( 100000 )
+
+		s["render"] = GafferArnold.ArnoldRender()
+		s["render"]["in"].setInput( s["instancer"]["out"] )
+
+		with Gaffer.Context() as c :
+			c["scene:render:sceneTranslationOnly"] = IECore.BoolData( True )
+			with GafferTest.TestRunner.PerformanceScope() :
+				s["render"]["task"].execute()
+
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 1 )
+	def testInstancerFewPrototypesEncapsulatePerf( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["plane"] = GafferScene.Plane()
+		s["plane"]["divisions"].setValue( imath.V2i( 500 ) )
+
+		s["sphere"] = GafferScene.Sphere()
+
+		s["pathFilter"] = GafferScene.PathFilter()
+		s["pathFilter"]["paths"].setValue( IECore.StringVectorData( [ '/plane' ] ) )
+
+		s["instancer"] = GafferScene.Instancer()
+		s["instancer"]["in"].setInput( s["plane"]["out"] )
+		s["instancer"]["filter"].setInput( s["pathFilter"]["out"] )
+		s["instancer"]["prototypes"].setInput( s["sphere"]["out"] )
+
+		s["instancer"]["contextVariables"].addChild( GafferScene.Instancer.ContextVariablePlug( "context" ) )
+		s["instancer"]["contextVariables"][0]["name"].setValue( "P" )
+		s["instancer"]["contextVariables"][0]["quantize"].setValue( 1000000 )
+
+		s["instancer"]["encapsulateInstanceGroups"].setValue( True )
+
+		s["render"] = GafferArnold.ArnoldRender()
+		s["render"]["in"].setInput( s["instancer"]["out"] )
+
+		with Gaffer.Context() as c :
+			c["scene:render:sceneTranslationOnly"] = IECore.BoolData( True )
+			with GafferTest.TestRunner.PerformanceScope() :
+				s["render"]["task"].execute()
+
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 1 )
+	def testInstancerWithAttributesPerf( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["plane"] = GafferScene.Plane()
+		s["plane"]["divisions"].setValue( imath.V2i( 500 ) )
+
+		s["pathFilter"] = GafferScene.PathFilter()
+		s["pathFilter"]["paths"].setValue( IECore.StringVectorData( [ '/plane' ] ) )
+
+		s["shuffle"] = GafferScene.ShufflePrimitiveVariables()
+		s["shuffle"]["in"].setInput( s["plane"]["out"] )
+		s["shuffle"]["filter"].setInput( s["pathFilter"]["out"] )
+		for v in [ "A", "B", "C", "D", "E", "F", "G", "H" ]:
+			s["shuffle"]["shuffles"].addChild( Gaffer.ShufflePlug( "P", v ) )
+
+		s["sphere"] = GafferScene.Sphere()
+
+		s["sphereAttrs"] = GafferScene.CustomAttributes()
+		s["sphereAttrs"]["in"].setInput( s["sphere"]["out"] )
+		for v in [ "I", "J", "K", "L", "M", "N", "O", "P" ]:
+			s["sphereAttrs"]["attributes"].addChild( Gaffer.NameValuePlug( v, Gaffer.IntPlug( "value", defaultValue = 7 ) ) )
+
+		s["instancer"] = GafferScene.Instancer()
+		s["instancer"]["in"].setInput( s["shuffle"]["out"] )
+		s["instancer"]["filter"].setInput( s["pathFilter"]["out"] )
+		s["instancer"]["prototypes"].setInput( s["sphereAttrs"]["out"] )
+		s["instancer"]["attributes"].setValue( "P N uv A B C D E F G H" )
+
+		s["render"] = GafferArnold.ArnoldRender()
+		s["render"]["in"].setInput( s["instancer"]["out"] )
+
+		with Gaffer.Context() as c :
+			c["scene:render:sceneTranslationOnly"] = IECore.BoolData( True )
+			with GafferTest.TestRunner.PerformanceScope() :
+				s["render"]["task"].execute()
+
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 5 )
+	def testInstancerWithAttributesEncapsulatePerf( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["plane"] = GafferScene.Plane()
+		s["plane"]["divisions"].setValue( imath.V2i( 500 ) )
+
+		s["pathFilter"] = GafferScene.PathFilter()
+		s["pathFilter"]["paths"].setValue( IECore.StringVectorData( [ '/plane' ] ) )
+
+		s["shuffle"] = GafferScene.ShufflePrimitiveVariables()
+		s["shuffle"]["in"].setInput( s["plane"]["out"] )
+		s["shuffle"]["filter"].setInput( s["pathFilter"]["out"] )
+		for v in [ "A", "B", "C", "D", "E", "F", "G", "H" ]:
+			s["shuffle"]["shuffles"].addChild( Gaffer.ShufflePlug( "P", v ) )
+
+		s["sphere"] = GafferScene.Sphere()
+
+		s["sphereAttrs"] = GafferScene.CustomAttributes()
+		s["sphereAttrs"]["in"].setInput( s["sphere"]["out"] )
+		for v in [ "I", "J", "K", "L", "M", "N", "O", "P" ]:
+			s["sphereAttrs"]["attributes"].addChild( Gaffer.NameValuePlug( v, Gaffer.IntPlug( "value", defaultValue = 7 ) ) )
+
+		s["instancer"] = GafferScene.Instancer()
+		s["instancer"]["in"].setInput( s["shuffle"]["out"] )
+		s["instancer"]["filter"].setInput( s["pathFilter"]["out"] )
+		s["instancer"]["prototypes"].setInput( s["sphereAttrs"]["out"] )
+		s["instancer"]["attributes"].setValue( "P N uv A B C D E F G H" )
+
+		s["instancer"]["encapsulateInstanceGroups"].setValue( True )
+
+		s["render"] = GafferArnold.ArnoldRender()
+		s["render"]["in"].setInput( s["instancer"]["out"] )
+
+		with Gaffer.Context() as c :
+			c["scene:render:sceneTranslationOnly"] = IECore.BoolData( True )
+			with GafferTest.TestRunner.PerformanceScope() :
+				s["render"]["task"].execute()
 
 if __name__ == "__main__":
 	unittest.main()
