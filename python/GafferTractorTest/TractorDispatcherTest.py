@@ -120,6 +120,22 @@ class TractorDispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( job.service, "myService" )
 		self.assertEqual( job.envkey, [ "myEnvKey" ] )
 
+		dispatcher["jobName"].setValue( "${jobName}" )
+		dispatcher["service"].setValue( "${service}" )
+		dispatcher["envKey"].setValue( "${envKey}" )
+
+		with Gaffer.Context() as context :
+
+			context["jobName"] = "a"
+			context["service"] = "b"
+			context["envKey"] = "c"
+
+			job = self.__job( [ s["n" ] ], dispatcher )
+
+		self.assertEqual( job.title, "a" )
+		self.assertEqual( job.service, "b" )
+		self.assertEqual( job.envkey, [ "c" ] )
+
 	def testTaskAttributes( self ) :
 
 		s = Gaffer.ScriptNode()

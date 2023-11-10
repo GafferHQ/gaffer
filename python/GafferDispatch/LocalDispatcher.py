@@ -83,17 +83,13 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			# Store all dispatcher settings now, as we can't access the dispatcher
 			# again if we're executing in the background (as it may be modified on
 			# the main thread).
-			self.__name = Gaffer.Context.current().substitute( dispatcher["jobName"].getValue() )
+			self.__name = dispatcher["jobName"].getValue()
 			self.__directory = Gaffer.Context.current()["dispatcher:jobDirectory"]
 			self.__scriptFile = Gaffer.Context.current()["dispatcher:scriptFileName"]
 			self.__frameRange = dispatcher.frameRange( script, self.__context )
 			self.__id = os.path.basename( self.__directory )
 			self.__ignoreScriptLoadErrors = dispatcher["ignoreScriptLoadErrors"].getValue()
-			## \todo Make `Dispatcher::dispatch()` use a Process, so we don't need to
-			# do substitutions manually like this.
-			self.__environmentCommand = Gaffer.Context.current().substitute(
-				dispatcher["environmentCommand"].getValue()
-			)
+			self.__environmentCommand = dispatcher["environmentCommand"].getValue()
 			self.__executeInBackground = dispatcher["executeInBackground"].getValue()
 
 			self.__startTime = datetime.datetime.now( datetime.timezone.utc )

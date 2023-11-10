@@ -84,10 +84,9 @@ class TractorDispatcher( GafferDispatch.Dispatcher ) :
 		context = Gaffer.Context.current()
 
 		job = self.__tractorAPI.Job(
-			## \todo Remove these manual substitutions once #887 is resolved.
-			title = context.substitute( self["jobName"].getValue() ) or "untitled",
-			service = context.substitute( self["service"].getValue() ),
-			envkey = context.substitute( self["envKey"].getValue() ).split(),
+			title = self["jobName"].getValue() or "untitled",
+			service = self["service"].getValue(),
+			envkey = self["envKey"].getValue().split(),
 		)
 
 		# Populate the job with tasks from the batch tree
@@ -184,11 +183,8 @@ class TractorDispatcher( GafferDispatch.Dispatcher ) :
 					# tags and services can not be varied per-frame within a batch, but we provide the context variable
 					# as a concession to existing production setups that would error without it
 					batchContextWithFrame["frame"] = min( batch.frames() )
-					## \todo Remove these manual substitutions once #887 is resolved.
-					# Note though that we will need to use `with batch.context()` to
-					# ensure the substitutions occur in the right context.
-					command.service = batchContextWithFrame.substitute( tractorPlug["service"].getValue() )
-					command.tags = batchContextWithFrame.substitute( tractorPlug["tags"].getValue() ).split()
+					command.service = tractorPlug["service"].getValue()
+					command.tags = tractorPlug["tags"].getValue().split()
 
 		# Remember the task for next time, and return it.
 

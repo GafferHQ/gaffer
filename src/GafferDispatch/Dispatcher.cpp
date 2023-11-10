@@ -245,8 +245,8 @@ const std::filesystem::path Dispatcher::jobDirectory() const
 
 void Dispatcher::createJobDirectory( const Gaffer::ScriptNode *script, Gaffer::Context *context ) const
 {
-	std::filesystem::path jobDirectory( context->substitute( jobsDirectoryPlug()->getValue() ) );
-	jobDirectory /= context->substitute( jobNamePlug()->getValue() );
+	std::filesystem::path jobDirectory( jobsDirectoryPlug()->getValue() );
+	jobDirectory /= jobNamePlug()->getValue();
 
 	if( jobDirectory == "" )
 	{
