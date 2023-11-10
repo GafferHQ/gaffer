@@ -86,7 +86,6 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			self.__directory = Gaffer.Context.current()["dispatcher:jobDirectory"]
 			self.__scriptFile = Gaffer.Context.current()["dispatcher:scriptFileName"]
 			self.__id = os.path.basename( self.__directory )
-			self.__stats = {}
 			self.__ignoreScriptLoadErrors = dispatcher["ignoreScriptLoadErrors"].getValue()
 			## \todo Make `Dispatcher::dispatch()` use a Process, so we don't need to
 			# do substitutions manually like this.
