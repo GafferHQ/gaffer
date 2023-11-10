@@ -871,5 +871,19 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 			open( self.temporaryDirectory() / "outer.txt", encoding = "utf-8" ).readlines(),
 		)
 
+	def testBackgroundJobFailureStatus( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["pythonCommand"] = GafferDispatch.PythonCommand()
+		script["pythonCommand"]["command"].setValue( "a = nonExistentVariable" )
+
+		dispatcher = self.__createLocalDispatcher()
+		dispatcher["executeInBackground"].setValue( True )
+
+		dispatcher.dispatch( [ script["pythonCommand"] ] )
+		dispatcher.jobPool().waitForAll()
+		self.assertTrue( dispatcher.jobPool().failedJobs()[0].failed() )
+
 if __name__ == "__main__":
 	unittest.main()
