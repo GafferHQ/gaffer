@@ -48,7 +48,7 @@ else :
 
 # Determine default archive URL.
 
-defaultURL = "https://github.com/ImageEngine/cortex/releases/download/10.5.3.0/cortex-10.5.3.0-{platform}-python3.{extension}".format(
+defaultURL = "https://github.com/ImageEngine/cortex/releases/download/10.5.4.0/cortex-10.5.4.0-{platform}-python3.{extension}".format(
 	platform = { "darwin" : "osx", "win32" : "windows" }.get( sys.platform, "linux" ),
 	extension = "tar.gz" if sys.platform != "win32" else "zip"
 )

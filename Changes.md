@@ -11,7 +11,12 @@ Breaking Changes
 - OpenColorIOContext : Removed `configEnabledPlug()`, `configValuePlug()`, `workingSpaceEnabledPlug()` and `workingSpaceValuePlug()` methods. Use the OptionalValuePlug child accessors instead.
 - Windows launch script : Removed the hardcoded `/debugexe` switch used when `GAFFER_DEBUG` is enabled, making it possible to use debuggers other than Visual Studio. Debug switches can be added to the `GAFFER_DEBUGGER` environment variable instead.
 
-1.3.x.x (relative to 1.3.6.0)
+1.3.x.x (relative to 1.3.6.1)
+=======
+
+
+
+1.3.6.1 (relative to 1.3.6.0)
 =======
 
 Fixes
@@ -22,11 +27,17 @@ Fixes
   - Fixed failure to update encapsulated instancers when prototype properties changed during interactive renders.
   - Prevented unnecessary updates for encapsulated instancers when prototype globals changed.
 - Process : Fixed bug which caused a `No result found` exception to be thrown when a more descriptive exception should have been thrown instead.
+- Shader : Added support for reading from USD `token` attributes in `<attr:>` string parameter substitutions.
 
 API
 ---
 
 - Display : Added `driverClosed()` method.
+
+Build
+-----
+
+- Cortex : Updated to version 10.5.4.0.
 
 1.3.6.0 (relative to 1.3.5.0)
 =======
