@@ -8,6 +8,9 @@
 Features
 --------
 
+- Dispatcher : Dispatchers are now TaskNodes, allowing them to be nested in a task graph. Possibilities include :
+  - Using a LocalDispatcher and a Wedge to launch multiple TractorDispatcher jobs.
+  - Using a nested LocalDispatcher to perform a group of tasks on a single blade within a TractorDispatcher job.
 - DeepSlice : Added a new node for clipping out part of an image based on depth.
 - ImageInspector : Added a new panel for inspecting image format, metadata and channel statistics.
 

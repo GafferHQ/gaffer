@@ -64,6 +64,28 @@ Gaffer.Metadata.registerNode(
 
 		),
 
+		"tasks" : (
+
+			"description",
+			"""
+			The tasks to be executed by this dispatcher.
+			""",
+
+			"nodule:type", "GafferUI::CompoundNodule",
+			"noduleLayout:spacing", 0.4,
+
+			"plugValueWidget:type", "",
+
+		),
+
+		"preTasks" : (
+
+			# Move to the left to give greater precedence to
+			# the `tasks` plug at the top.
+			"noduleLayout:section", "left",
+
+		),
+
 		"framesMode" : (
 
 			"description",

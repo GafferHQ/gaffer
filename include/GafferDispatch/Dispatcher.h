@@ -97,14 +97,14 @@ IE_CORE_FORWARDDECLARE( Dispatcher )
 /// of Context specific Tasks from TaskNodes which exist within a ScriptNode.
 /// Dispatchers can also modify TaskNodes during construction, adding
 /// plugs which affect Task execution.
-class GAFFERDISPATCH_API Dispatcher : public Gaffer::Node
+class GAFFERDISPATCH_API Dispatcher : public TaskNode
 {
 	public :
 
 		explicit Dispatcher( const std::string &name=defaultName<Dispatcher>() );
 		~Dispatcher() override;
 
-		GAFFER_NODE_DECLARE_TYPE( GafferDispatch::Dispatcher, DispatcherTypeId, Gaffer::Node );
+		GAFFER_NODE_DECLARE_TYPE( GafferDispatch::Dispatcher, DispatcherTypeId, TaskNode );
 
 		using PreDispatchSignal = Gaffer::Signals::Signal<bool ( const Dispatcher *, const std::vector<TaskNodePtr> & ), Detail::PreDispatchSignalCombiner>;
 		using DispatchSignal = Gaffer::Signals::Signal<void ( const Dispatcher *, const std::vector<TaskNodePtr> & ), Gaffer::Signals::CatchingCombiner<void>>;
@@ -128,15 +128,8 @@ class GAFFERDISPATCH_API Dispatcher : public Gaffer::Node
 		static PostDispatchSignal &postDispatchSignal();
 		//@}
 
-		/// Calls doDispatch, taking care to trigger the dispatch signals at the appropriate times.
-		/// Note that this will throw unless all of the nodes are either TaskNodes or Boxes,
-		/// and it will also throw if cycles are detected in the resulting TaskBatch graph.
-		/// \todo Replace this with a version taking vector<TaskPlugPtr>. This will plug the
-		/// type safety issue whereby currently any old node can be passed to dispatch.
-		/// Alternatively, perhaps the tasks to dispatch should be specified via connections
-		/// into a "tasks" ArrayPlug, so dispatchers can optionally live directly in the node
-		/// graph.
-		void dispatch( const std::vector<Gaffer::NodePtr> &nodes ) const;
+		Gaffer::ArrayPlug *tasksPlug();
+		const Gaffer::ArrayPlug *tasksPlug() const;
 
 		enum FramesMode
 		{
@@ -286,6 +279,11 @@ class GAFFERDISPATCH_API Dispatcher : public Gaffer::Node
 		//@}
 
 	private :
+
+		void preTasks( const Gaffer::Context *context, Tasks &tasks ) const final;
+		void postTasks( const Gaffer::Context *context, Tasks &tasks ) const final;
+		IECore::MurmurHash hash( const Gaffer::Context *context ) const final;
+		void execute() const final;
 
 		void createJobDirectory( const Gaffer::ScriptNode *script, Gaffer::Context *context ) const;
 		mutable std::filesystem::path m_jobDirectory;

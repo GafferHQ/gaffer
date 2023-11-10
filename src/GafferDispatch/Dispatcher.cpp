@@ -173,10 +173,11 @@ std::string Dispatcher::g_defaultDispatcherType = "";
 GAFFER_NODE_DEFINE_TYPE( Dispatcher )
 
 Dispatcher::Dispatcher( const std::string &name )
-	: Node( name )
+	: TaskNode( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
+	addChild( new ArrayPlug( "tasks", Plug::In, new TaskPlug( "task0" ) ) );
 	addChild( new IntPlug( "framesMode", Plug::In, CurrentFrame, CurrentFrame ) );
 	addChild( new StringPlug( "frameRange", Plug::In, "1-100x10" ) );
 	addChild( new StringPlug( "jobName", Plug::In, "" ) );
@@ -187,44 +188,54 @@ Dispatcher::~Dispatcher()
 {
 }
 
+Gaffer::ArrayPlug *Dispatcher::tasksPlug()
+{
+	return getChild<ArrayPlug>( g_firstPlugIndex );
+}
+
+const Gaffer::ArrayPlug *Dispatcher::tasksPlug() const
+{
+	return getChild<ArrayPlug>( g_firstPlugIndex );
+}
+
 IntPlug *Dispatcher::framesModePlug()
 {
-	return getChild<IntPlug>( g_firstPlugIndex );
+	return getChild<IntPlug>( g_firstPlugIndex + 1 );
 }
 
 const IntPlug *Dispatcher::framesModePlug() const
 {
-	return getChild<IntPlug>( g_firstPlugIndex );
+	return getChild<IntPlug>( g_firstPlugIndex + 1 );
 }
 
 StringPlug *Dispatcher::frameRangePlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+	return getChild<StringPlug>( g_firstPlugIndex + 2 );
 }
 
 const StringPlug *Dispatcher::frameRangePlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 1 );
+	return getChild<StringPlug>( g_firstPlugIndex + 2 );
 }
 
 StringPlug *Dispatcher::jobNamePlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 2 );
+	return getChild<StringPlug>( g_firstPlugIndex + 3 );
 }
 
 const StringPlug *Dispatcher::jobNamePlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 2 );
+	return getChild<StringPlug>( g_firstPlugIndex + 3 );
 }
 
 StringPlug *Dispatcher::jobsDirectoryPlug()
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 3 );
+	return getChild<StringPlug>( g_firstPlugIndex + 4 );
 }
 
 const StringPlug *Dispatcher::jobsDirectoryPlug() const
 {
-	return getChild<StringPlug>( g_firstPlugIndex + 3 );
+	return getChild<StringPlug>( g_firstPlugIndex + 4 );
 }
 
 const std::filesystem::path Dispatcher::jobDirectory() const
@@ -241,13 +252,8 @@ void Dispatcher::createJobDirectory( const Gaffer::ScriptNode *script, Gaffer::C
 	{
 		const string outerJobDirectory = context->get<string>( g_jobDirectoryContextEntry, "" );
 		const string outerScriptFileName = context->get<string>( g_scriptFileNameContextEntry, "" );
-		const Process *outerProcess = Process::current();
-		InternedString outerProcessType = outerProcess ? outerProcess->type() : "";
-		if(
-			outerJobDirectory.size() && outerScriptFileName.size() &&
-			( outerProcessType == "taskNode:execute" || outerProcessType == "taskNode:executeSequence" ) &&
-			outerProcess->plug()->ancestor<ScriptNode>() == script
-		)
+
+		if( outerJobDirectory.size() && outerScriptFileName.size() )
 		{
 			// We're being run inside a task executing in another dispatch
 			// for the same script. Borrow the job directory created by that dispatch.
@@ -459,6 +465,21 @@ class Dispatcher::Batcher
 		TaskBatch *rootBatch()
 		{
 			return m_rootBatch.get();
+		}
+
+		// Returns a hash representing all the tasks that will be
+		// executed, but _not_ the dependencies between them. This
+		// is used by `Dispatcher::hash()`.
+		IECore::MurmurHash hash() const
+		{
+			IECore::MurmurHash h;
+			for( const auto &[taskHash, taskBatch] : m_tasksToBatches )
+			{
+				// `unordered_map` doesn't guarantee deterministic order, so
+				// we use the "sum of hashes" trick to get a stable hash.
+				h = MurmurHash( h.h1() + taskHash.h1(), h.h2() + taskHash.h2() );
+			}
+			return h;
 		}
 
 	private :
@@ -712,7 +733,7 @@ class Dispatcher::Batcher
 };
 
 //////////////////////////////////////////////////////////////////////////
-// Dispatcher::dispatch()
+// Dispatcher TaskNode implementation
 //////////////////////////////////////////////////////////////////////////
 
 namespace
@@ -756,48 +777,108 @@ class DispatcherSignalGuard
 
 } // namespace
 
-void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
+void Dispatcher::preTasks( const Gaffer::Context *context, Tasks &tasks ) const
+{
+	vector<int64_t> frames;
+	frameRange( scriptNode(), context )->asList( frames );
+
+	tasks.reserve( frames.size() * preTasksPlug()->children().size() );
+	for( auto frame : frames )
+	{
+		ContextPtr frameContext = new Context( *context );
+		frameContext->setFrame( frame );
+		for( const auto &p : TaskPlug::Range( *preTasksPlug() ) )
+		{
+			tasks.emplace_back( p, frameContext.get() );
+		}
+	}
+}
+
+void Dispatcher::postTasks( const Gaffer::Context *context, Tasks &tasks ) const
+{
+	vector<int64_t> frames;
+	frameRange()->asList( frames );
+
+	tasks.reserve( frames.size() * postTasksPlug()->children().size() );
+	for( auto frame : frames )
+	{
+		ContextPtr frameContext = new Context( *context );
+		frameContext->setFrame( frame );
+		for( const auto &p : TaskPlug::Range( *postTasksPlug() ) )
+		{
+			tasks.emplace_back( p, frameContext.get() );
+		}
+	}
+}
+
+IECore::MurmurHash Dispatcher::hash( const Gaffer::Context *context ) const
+{
+	MurmurHash h = TaskNode::hash( context );
+
+	std::vector<int64_t> frames;
+	frameRange( scriptNode(), context )->asList( frames );
+
+	Context::EditableScope jobContext( context );
+
+	Batcher batcher;
+	for( auto frame : frames )
+	{
+		jobContext.setFrame( frame );
+		for( auto &task : TaskNode::TaskPlug::Range( *tasksPlug() ) )
+		{
+			batcher.addTask( TaskNode::Task( task, Context::current() ) );
+		}
+	}
+
+	h.append( batcher.hash() );
+
+	return h;
+}
+
+void Dispatcher::execute() const
 {
 	// clear job directory, so that if our node validation fails,
 	// jobDirectory() won't return the result from the previous dispatch.
 	m_jobDirectory = "";
 
-	// validate the nodes we've been given
-
-	if ( nodes.empty() )
-	{
-		throw IECore::Exception( getName().string() + ": Must specify at least one node to dispatch." );
-	}
+	// Validate the tasks to be dispatched
 
 	std::vector<TaskNodePtr> taskNodes;
-	const ScriptNode *script = (*nodes.begin())->scriptNode();
-	for ( std::vector<NodePtr>::const_iterator nIt = nodes.begin(); nIt != nodes.end(); ++nIt )
+
+	const ScriptNode *script = scriptNode();
+	for( const auto &taskPlug : TaskPlug::Range( *tasksPlug() ) )
 	{
-		const ScriptNode *currentScript = (*nIt)->scriptNode();
-		if ( !currentScript || currentScript != script )
+		if( !taskPlug->getInput() )
 		{
-			throw IECore::Exception( getName().string() + ": Dispatched nodes must all belong to the same ScriptNode." );
+			continue;
 		}
 
-		if ( TaskNode *taskNode = runTimeCast<TaskNode>( nIt->get() ) )
+		if( const ScriptNode *s = taskPlug->source()->ancestor<ScriptNode>() )
 		{
-			taskNodes.push_back( taskNode );
-		}
-		else if ( const SubGraph *subGraph = runTimeCast<const SubGraph>( nIt->get() ) )
-		{
-			for( auto &plug : TaskNode::TaskPlug::RecursiveOutputRange( *subGraph ) )
+			if( script && s != script )
 			{
-				Node *sourceNode = plug->source()->node();
-				if ( TaskNode *taskNode = runTimeCast<TaskNode>( sourceNode ) )
-				{
-					taskNodes.push_back( taskNode );
-				}
+				throw IECore::Exception( fmt::format( "{} does not belong to ScriptNode {}.", taskPlug->fullName(), script->fullName() ) );
 			}
+			script = s;
 		}
 		else
 		{
-			throw IECore::Exception( getName().string() + ": Dispatched nodes must be TaskNodes or SubGraphs containing TaskNodes." );
+			throw IECore::Exception( fmt::format( "{} does not belong to a ScriptNode.", taskPlug->fullName() ) );
 		}
+
+		if( TaskNode *taskNode = runTimeCast<TaskNode>( taskPlug->source()->node() ) )
+		{
+			taskNodes.push_back( taskNode );
+		}
+		else
+		{
+			throw IECore::Exception( fmt::format( "{} does not belong to a TaskNode.", taskPlug->fullName() ) );
+		}
+	}
+
+	if( taskNodes.empty() )
+	{
+		return;
 	}
 
 	// create the job directory now, so it's available in preDispatchSignal().

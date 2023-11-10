@@ -1867,5 +1867,101 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( log[0].frames, [ 1, 2, 3, 4 ] )
 		self.assertEqual( [ l.context.getFrame() for l in log[1:] ], [ 1, 2, 3, 4 ] )
 
+	def testNestedDispatch( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["node"] = GafferDispatchTest.LoggingTaskNode()
+
+		script["innerDispatcher"] = self.TestDispatcher()
+		script["innerDispatcher"]["tasks"][0].setInput( script["node"]["task"] )
+
+		script["outerDispatcher"] = self.TestDispatcher()
+		script["outerDispatcher"]["tasks"][0].setInput( script["innerDispatcher"]["task"] )
+		script["outerDispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+
+		# Outer with frame range, inner doing a frame at a time. We only expect
+		# the inner dispatcher to be executed once, because the thing it is
+		# dispatching doesn't vary by frame.
+
+		script["innerDispatcher"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CurrentFrame )
+		script["outerDispatcher"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CustomRange )
+		script["outerDispatcher"]["frameRange"].setValue( "1-10" )
+
+		script["outerDispatcher"]["task"].execute()
+
+		self.assertEqual( len( script["node"].log ), 1 )
+		self.assertEqual( script["node"].log[0].context.getFrame(), 1 )
+
+		# Make the node vary by frame, and now we expect to see multiple inner dispatches.
+
+		script["node"]["frameDependency"] = Gaffer.StringPlug( defaultValue = "${frame}", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+
+		del script["node"].log[:]
+		script["outerDispatcher"]["task"].execute()
+
+		self.assertEqual( len( script["node"].log ), 10 )
+		for i in range( 0, 10 ) :
+			self.assertEqual( script["node"].log[i].context.getFrame(), i + 1 )
+
+		# Outer on current frame, inner doing a frame range.
+
+		script["innerDispatcher"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CustomRange )
+		script["innerDispatcher"]["frameRange"].setValue( "11-20" )
+		script["outerDispatcher"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CurrentFrame )
+
+		del script["node"].log[:]
+		script["outerDispatcher"]["task"].execute()
+
+		self.assertEqual( len( script["node"].log ), 10 )
+		for i in range( 0, 10 ) :
+			self.assertEqual( script["node"].log[i].context.getFrame(), i + 11 )
+
+	def testPreAndPostTasks( self ) :
+
+		dispatcher = self.TestDispatcher()
+		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() )
+
+		# When dispatching just the current frame, the `preTasks` and
+		# `postTasks` are just for that frame.
+
+		dispatcher["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CurrentFrame )
+		with Gaffer.Context() as context :
+			for frame in range( 0, 10 ) :
+				context.setFrame( frame )
+				self.assertEqual(
+					dispatcher["task"].preTasks(),
+					[ GafferDispatch.TaskNode.Task( dispatcher["preTasks"][0], context ) ]
+				)
+				self.assertEqual(
+					dispatcher["task"].postTasks(),
+					[ GafferDispatch.TaskNode.Task( dispatcher["postTasks"][0], context ) ]
+				)
+
+		# But when dispatching a frame range, the `preTasks` and `postTasks`
+		# should cover the entire range, no matter what frame the dispatcher
+		# will be executed on.
+
+		dispatcher["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CustomRange )
+		dispatcher["frameRange"].setValue( "1-50x10" )
+
+		taskContexts = []
+		for frame in [ 1, 11, 21, 31, 41 ] :
+			taskContext = Gaffer.Context()
+			taskContext.setFrame( frame )
+			taskContexts.append( taskContext )
+
+		with Gaffer.Context() as context :
+			for frame in range( 0, 10 ) :
+				context.setFrame( frame )
+				self.assertEqual(
+					dispatcher["task"].preTasks(),
+					[ GafferDispatch.TaskNode.Task( dispatcher["preTasks"][0], c ) for c in taskContexts ]
+				)
+				self.assertEqual(
+					dispatcher["task"].postTasks(),
+					[ GafferDispatch.TaskNode.Task( dispatcher["postTasks"][0], c ) for c in taskContexts ]
+				)
+
 if __name__ == "__main__":
 	unittest.main()

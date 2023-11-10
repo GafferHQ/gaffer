@@ -239,14 +239,6 @@ struct DispatcherHelper
 
 };
 
-void dispatch( Dispatcher &dispatcher, object pythonNodes )
-{
-	std::vector<NodePtr> nodes;
-	boost::python::container_utils::extend_container( nodes, pythonNodes );
-	IECorePython::ScopedGILRelease gilRelease;
-	dispatcher.dispatch( nodes );
-}
-
 IECore::FrameListPtr frameRange( Dispatcher &n, const ScriptNode &script, const Context &context )
 {
 	return n.Dispatcher::frameRange( &script, &context );
@@ -339,7 +331,6 @@ struct PostDispatchSlotCaller
 void GafferDispatchModule::bindDispatcher()
 {
 	scope s = NodeClass<Dispatcher, DispatcherWrapper>()
-		.def( "dispatch", &dispatch )
 		.def( "jobDirectory", &Dispatcher::jobDirectory )
 		.def( "frameRange", &frameRange )
 		.def( "create", &Dispatcher::create ).staticmethod( "create" )
