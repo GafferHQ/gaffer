@@ -99,6 +99,9 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 			self.__initBatchWalk( batch )
 
+			self.__currentBatch = None
+			self.__status = self.Status.Waiting
+
 		def name( self ) :
 
 			return self.__name
@@ -113,7 +116,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 		def description( self ) :
 
-			batch = self.__currentBatch()
+			batch = self.__currentBatch
 			if batch is None or batch.plug() is None :
 				return "N/A"
 
@@ -123,7 +126,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 		def statistics( self ) :
 
-			batch = self.__currentBatch()
+			batch = self.__currentBatch
 			if batch is None or "pid" not in batch.blindData().keys() :
 				return {}
 
@@ -162,7 +165,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 		def failed( self ) :
 
-			return self.__getStatus( self.__batch ) == LocalDispatcher.Job.Status.Failed
+			return self.__status == self.Status.Failed
 
 		def kill( self ) :
 
@@ -171,11 +174,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 		def killed( self ) :
 
-			return "killed" in self.__batch.blindData().keys()
-
-		def _fail( self ) :
-
-			self.__setStatus( self.__batch, LocalDispatcher.Job.Status.Failed )
+			return self.__status == self.Status.Killed
 
 		def __killBatchWalk( self, batch ) :
 
@@ -192,12 +191,13 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 		def __executeInternal( self ) :
 
 			with self.__messageHandler :
+				self.__status = self.Status.Running
 				if self.__executeWalk( self.__batch ) :
-					self.__reportCompleted( self.__batch )
+					self.__reportCompleted()
 
 		def __executeWalk( self, batch ) :
 
-			if self.__getStatus( batch ) == LocalDispatcher.Job.Status.Complete :
+			if "localDispatcher:executed" in batch.blindData() :
 				# Visited this batch by another path
 				return True
 
@@ -206,7 +206,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 					return False
 
 			if batch.blindData().get( "killed" ) :
-				self.__reportKilled( batch )
+				self.__reportKilled()
 				return False
 
 			IECore.msg(
@@ -218,10 +218,10 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 				)
 			)
 
-			self.__setStatus( batch, LocalDispatcher.Job.Status.Running )
-
 			try :
+				self.__currentBatch = batch
 				self.__executeBatch( batch )
+				batch.blindData()["localDispatcher:executed"] = IECore.BoolData( True )
 			except Exception as e :
 				IECore.msg( IECore.MessageHandler.Level.Debug, self.__messageTitle, traceback.format_exc() )
 				self.__reportFailed( batch )
@@ -229,8 +229,8 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 					return False
 				else :
 					raise e
-
-			self.__setStatus( batch, LocalDispatcher.Job.Status.Complete )
+			finally :
+				self.__currentBatch = None
 
 			return True
 
@@ -286,7 +286,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 						subprocess.check_call( [ "TASKKILL", "/F", "/PID", str( process.pid ), "/T" ] )
 					else :
 						os.killpg( process.pid, signal.SIGTERM )
-					self.__reportKilled( batch )
+					self.__reportKilled()
 					return False
 
 				time.sleep( 0.01 )
@@ -297,55 +297,24 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 					" ".join( shlex.quote( a ) for a in args )
 				)
 
-		def __getStatus( self, batch ) :
+		def __reportCompleted( self ) :
 
-			return LocalDispatcher.Job.Status( batch.blindData().get( "status", IECore.IntData( int(LocalDispatcher.Job.Status.Waiting) ) ).value )
-
-		def __setStatus( self, batch, status ) :
-
-			batch.blindData()["status"] = IECore.IntData( int(status) )
-
-		def __reportCompleted( self, batch ) :
-
-			self.__setStatus( batch, LocalDispatcher.Job.Status.Complete )
+			self.__status = LocalDispatcher.Job.Status.Complete
 			self.__dispatcher.jobPool()._remove( self )
 			IECore.msg( IECore.MessageHandler.Level.Info, self.__messageTitle, "Dispatched all tasks for " + self.name() )
 
 		def __reportFailed( self, batch ) :
 
-			self.__setStatus( batch, LocalDispatcher.Job.Status.Failed )
+			self.__status = LocalDispatcher.Job.Status.Failed
 			self.__dispatcher.jobPool()._fail( self )
 			frames = str( IECore.frameListFromList( [ int(x) for x in batch.frames() ] ) )
 			IECore.msg( IECore.MessageHandler.Level.Error, self.__messageTitle, "Failed to execute " + batch.blindData()["nodeName"].value + " on frames " + frames )
 
-		def __reportKilled( self, batch ) :
+		def __reportKilled( self ) :
 
-			self.__setStatus( batch, LocalDispatcher.Job.Status.Killed )
+			self.__status = LocalDispatcher.Job.Status.Killed
 			self.__dispatcher.jobPool()._remove( self )
 			IECore.msg( IECore.MessageHandler.Level.Info, self.__messageTitle, "Killed " + self.name() )
-
-		def __currentBatch( self ) :
-
-			## \todo Consider just storing the current batch, rather
-			# than searching each time it is requested.
-			return self.__currentBatchWalk( self.__batch, set() )
-
-		def __currentBatchWalk( self, batch, visited ) :
-
-			if batch in visited :
-				return None
-
-			visited.add( batch )
-
-			if self.__getStatus( batch ) == LocalDispatcher.Job.Status.Running :
-				return batch
-
-			for upstreamBatch in batch.preTasks() :
-				currentBatch = self.__currentBatchWalk( upstreamBatch, visited )
-				if currentBatch is not None :
-					return currentBatch
-
-			return None
 
 		def __initBatchWalk( self, batch ) :
 
@@ -357,8 +326,6 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			if batch.plug() is not None :
 				nodeName = batch.plug().node().relativeName( batch.plug().node().scriptNode() )
 			batch.blindData()["nodeName"] = nodeName
-
-			self.__setStatus( batch, LocalDispatcher.Job.Status.Waiting )
 
 			for upstreamBatch in batch.preTasks() :
 				self.__initBatchWalk( upstreamBatch )
@@ -412,7 +379,6 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 		def _fail( self, job ) :
 
 			if job in self.__jobs and job not in self.__failedJobs :
-				job._fail()
 				self.__failedJobs.append( job )
 				self._remove( job )
 
