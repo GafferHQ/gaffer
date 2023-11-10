@@ -9,11 +9,17 @@ Fixes
   - Fixed failure to update encapsulated instancers when prototype properties changed during interactive renders.
   - Prevented unnecessary updates for encapsulated instancers when prototype globals changed.
 - Process : Fixed bug which caused a `No result found` exception to be thrown when a more descriptive exception should have been thrown instead.
+- Shader : Added support for reading from USD `token` attributes in `<attr:>` string parameter substitutions.
 
 API
 ---
 
 - Display : Added `driverClosed()` method.
+
+Build
+-----
+
+- Cortex : Updated to version 10.5.4.0.
 
 1.3.6.0 (relative to 1.3.5.0)
 =======
