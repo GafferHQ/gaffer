@@ -120,6 +120,9 @@ Breaking Changes
   - Removed `createMatching()` method.
   - Removed non-const TaskBatch accessors `frames()` and `preTasks()`.
   - Made `TaskBatch` constructors private.
+- DispatcherUI :
+  - Removed `appendMenuDefinitions()`, `appendNodeContextMenuDefinitions()`, `executeSelected()` and `repeatPrevious()` functions.
+  - Removed `DispatcherWindow` class.
 - LocalDispatcher :
   - Removed `JobPool.jobFailedSignal()`.
   - Removed `JobPool.failedJobs()` method. Failed jobs now remain in place in the main `jobs()` container.

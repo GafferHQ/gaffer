@@ -38,11 +38,15 @@
 import weakref
 import functools
 
+import imath
+
 import Gaffer
 import GafferUI
 import GafferDispatch
 
-from Qt import QtCore
+from GafferUI._StyleSheet import _styleColors
+
+from Qt import QtGui
 
 Gaffer.Metadata.registerNode(
 
@@ -55,6 +59,7 @@ Gaffer.Metadata.registerNode(
 	""",
 
 	"layout:activator:framesModeIsCustomRange", lambda node : node["framesMode"].getValue() == GafferDispatch.Dispatcher.FramesMode.CustomRange,
+	"layout:customWidget:dispatchButton:widgetType", "GafferDispatchUI.DispatcherUI._DispatchButton",
 
 	plugs = {
 
@@ -144,6 +149,28 @@ Gaffer.Metadata.registerNode(
 
 )
 
+##################################################################################
+# DispatchButton
+##################################################################################
+
+class _DispatchButton( GafferUI.Button ) :
+
+	def __init__( self, node, **kw ) :
+
+		GafferUI.Button.__init__( self, "Dispatch", **kw )
+
+		self.__node = node
+		self.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ), scoped = False )
+
+	def __clicked( self, button ) :
+
+		with self.__node.scriptNode().context() :
+			with GafferUI.ErrorDialogue.ErrorHandler(
+				title = "Errors Occurred During Dispatch",
+				parentWindow = self.ancestor( GafferUI.Window )
+			) :
+				self.__node["task"].execute()
+
 ##########################################################################
 # Additional Metadata for TaskNode
 ##########################################################################
@@ -152,7 +179,7 @@ Gaffer.Metadata.registerNode(
 
 	GafferDispatch.TaskNode,
 
-	"layout:customWidget:dispatchButton:widgetType", "GafferDispatchUI.DispatcherUI._DispatchButton",
+	"layout:customWidget:dispatcherCreationWidget:widgetType", "GafferDispatchUI.DispatcherUI._DispatcherCreationWidget",
 
 	plugs = {
 
@@ -194,249 +221,56 @@ Gaffer.Metadata.registerNode(
 
 )
 
-##########################################################################
-# Public functions
-##########################################################################
-
-def appendMenuDefinitions( menuDefinition, prefix="" ) :
-
-	menuDefinition.append( prefix + "/Execute Selected", { "command" : executeSelected, "shortCut" : "Ctrl+E", "active" : selectionAvailable } )
-	menuDefinition.append( prefix + "/Repeat Previous", { "command" : repeatPrevious, "shortCut" : "Ctrl+R", "active" : previousAvailable } )
-
-def appendNodeContextMenuDefinitions( graphEditor, node, menuDefinition ) :
-
-	if not hasattr( node, "execute" ) :
-		return
-
-	menuDefinition.append( "/ExecuteDivider", { "divider" : True } )
-	menuDefinition.append( "/Execute", { "command" : functools.partial( _showDispatcherWindow, [ node ] ) } )
-
-def executeSelected( menu ) :
-	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	script = scriptWindow.scriptNode()
-	_showDispatcherWindow( selectedNodes( script ) )
-
-def repeatPrevious( menu ) :
-
-	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	script = scriptWindow.scriptNode()
-	_dispatch( __previous( script ) )
-
-##################################################################################
-# Dispatcher Window
-##################################################################################
-
-class DispatcherWindow( GafferUI.Window ) :
-
-	def __init__( self, **kw ) :
-
-		GafferUI.Window.__init__( self, **kw )
-
-		self.__dispatchers = {}
-		for dispatcherType in GafferDispatch.Dispatcher.registeredDispatchers() :
-			dispatcher = GafferDispatch.Dispatcher.create( dispatcherType )
-			Gaffer.NodeAlgo.applyUserDefaults( dispatcher )
-			self.__dispatchers[dispatcherType] = dispatcher
-
-		defaultType = GafferDispatch.Dispatcher.getDefaultDispatcherType()
-		self.__currentDispatcher = self.__dispatchers[ defaultType ]
-		self.__nodes = []
-
-		with self :
-
-			with GafferUI.ListContainer( orientation = GafferUI.ListContainer.Orientation.Vertical, spacing = 2, borderWidth = 6 ) :
-
-				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
-					GafferUI.Label( "Dispatcher" )
-					self.__dispatchersMenu = GafferUI.MultiSelectionMenu( allowMultipleSelection = False, allowEmptySelection = False )
-					self.__dispatchersMenu.append( list( self.__dispatchers.keys() ) )
-					self.__dispatchersMenu.setSelection( [ defaultType ] )
-					self.__dispatchersMenu.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__dispatcherChanged ), scoped = False )
-
-				self.__frame = GafferUI.Frame( borderStyle=GafferUI.Frame.BorderStyle.None_, borderWidth=0 )
-				self.__dispatchButton = GafferUI.Button( "Dispatch" )
-				self.__dispatchButton.clickedSignal().connect( Gaffer.WeakMethod( self.__dispatchClicked ), scoped = False )
-
-		self.__update( resizeToFit = True )
-
-	def setVisible( self, visible ) :
-
-		GafferUI.Window.setVisible( self, visible )
-
-		if visible :
-			self.__dispatchButton._qtWidget().setFocus( QtCore.Qt.OtherFocusReason )
-
-	def addDispatcher( self, label, dispatcher ) :
-
-		if label not in self.__dispatchers.keys() :
-			self.__dispatchersMenu.append( label )
-
-		self.__dispatchers[label] = dispatcher
-
-	def removeDispatcher( self, label ) :
-
-		if label in self.__dispatchers.keys() :
-			toRemove = self.__dispatchers.get( label, None )
-			if toRemove and self.__currentDispatcher.isSame( toRemove ) :
-				if len(self.__dispatchers.items()) < 2 :
-					raise RuntimeError( "DispatcherWindow: " + label + " is the only dispatcher, so it cannot be removed." )
-				self.setCurrentDispatcher( self.__dispatchers.values()[0] )
-
-			del self.__dispatchers[label]
-			self.__dispatchersMenu.remove( label )
-
-	def dispatcher( self, label ) :
-
-		return self.__dispatchers.get( label, None )
-
-	def getCurrentDispatcher( self ) :
-
-		return self.__currentDispatcher
-
-	def setCurrentDispatcher( self, dispatcher ) :
-
-		dispatcherLabel = ""
-		for label, d in self.__dispatchers.items() :
-			if d.isSame( dispatcher ) :
-				dispatcherLabel = label
-				break
-
-		if not dispatcherLabel :
-			raise RuntimeError( "DispatcherWindow: The current dispatcher must be added first. Use DispatcherWindow.addDispatcher( label, dispatcher )" )
-
-		self.__currentDispatcher = dispatcher
-		self.__dispatchersMenu.setSelection( [ dispatcherLabel ] )
-		self.__update()
-
-	def setNodesToDispatch( self, nodes ) :
-
-		self.__nodes = nodes
-		self.__updateTitle()
-
-	## Acquires the DispatcherWindow for the specified application.
-	@staticmethod
-	def acquire( applicationOrApplicationRoot ) :
-
-		if isinstance( applicationOrApplicationRoot, Gaffer.Application ) :
-			applicationRoot = applicationOrApplicationRoot.root()
-		else :
-			assert( isinstance( applicationOrApplicationRoot, Gaffer.ApplicationRoot ) )
-			applicationRoot = applicationOrApplicationRoot
-
-		window = getattr( applicationRoot, "_dispatcherWindow", None )
-		if window is not None and window() :
-			return window()
-
-		window = DispatcherWindow()
-
-		applicationRoot._dispatcherWindow = weakref.ref( window )
-
-		return window
-
-	def __update( self, resizeToFit = False ) :
-
-		nodeUI = GafferUI.NodeUI.create( self.__currentDispatcher )
-		self.__frame.setChild( nodeUI )
-		self.__updateTitle()
-
-		if resizeToFit :
-			self.resizeToFitChild()
-
-	def __updateTitle( self ) :
-
-		title = "Dispatching"
-		if len(self.__nodes) :
-			title += ": " + ", ".join( [ x.getName() for x in self.__nodes ] )
-
-		self.setTitle( title )
-
-	def __dispatchClicked( self, button ) :
-
-		if _dispatch( self.__nodes ) :
-			self.close()
-
-	def __dispatcherChanged( self, menu ) :
-
-		self.__currentDispatcher = self.__dispatchers[ menu.getSelection()[0] ]
-		self.__update()
-
-##################################################################################
-# Button for dispatching - this forms the header for the TaskNode ui.
-##################################################################################
-
-class _DispatchButton( GafferUI.Button ) :
+class _DispatcherCreationWidget( GafferUI.Widget ) :
 
 	def __init__( self, node, **kw ) :
 
-		GafferUI.Button.__init__( self, "Execute", **kw )
+		self.__frame = GafferUI.Frame(
+			borderWidth = 4,
+			borderStyle = GafferUI.Frame.BorderStyle.None_,
+		)
+
+		## \todo Add public "role" property to Frame widget and use that to determine styling.
+		self.__frame._qtWidget().setProperty( "gafferDiff", "Other" )
+
+		GafferUI.Widget.__init__( self, self.__frame, **kw )
+
+		with self.__frame :
+			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+
+				GafferUI.Image( "infoSmall.png" )
+
+				textColor = QtGui.QColor( *_styleColors["foregroundFaded"] ).name()
+				label = GafferUI.Label(
+					# Dummy `gaffer://...` URL is sufficient to trigger `linkActivatedSignal`, which is all we need.
+					f'<a href="gaffer://createDispatcher"><font color={textColor}>Create a dispatcher</font></a> <font color={textColor}>to execute this node</font>',
+				)
+				label.linkActivatedSignal().connect( Gaffer.WeakMethod( self.__linkActivated ), scoped = False )
+
+				GafferUI.Spacer( size = imath.V2i( 0 ), parenting = { "expand" : True } )
 
 		self.__node = node
-		self.clickedSignal().connect( Gaffer.WeakMethod( self.__clicked ), scoped = False )
+		self.__updateVisibility()
 
-	def __clicked( self, button ) :
+	def __updateVisibility( self ) :
 
-		_showDispatcherWindow( [ self.__node ] )
+		self.__frame.setVisible(
+			not self.__node["task"].outputs() and
+			not isinstance( self.__node, GafferDispatch.Dispatcher ) and
+			not Gaffer.MetadataAlgo.readOnly( self.__node.parent() )
+		)
 
-##########################################################################
-# Implementation Details
-##########################################################################
+	def __linkActivated( self, label, url ) :
 
-def _dispatch( nodes ) :
+		with Gaffer.UndoScope( self.__node.scriptNode() ) :
 
-	script = nodes[0].scriptNode()
-	with script.context() :
-		success = False
-		with GafferUI.ErrorDialogue.ErrorHandler( title = "Dispatch Error" ) :
-			__dispatcherWindow( script ).getCurrentDispatcher().dispatch( nodes )
-			success = True
+			dispatcher = GafferDispatch.LocalDispatcher()
+			Gaffer.NodeAlgo.applyUserDefaults( dispatcher )
+			self.__node.parent().addChild( dispatcher )
+			dispatcher["tasks"][0].setInput( self.__node["task"] )
 
-	if success :
-		scriptWindow = GafferUI.ScriptWindow.acquire( script )
-		scriptWindow._lastDispatch = [ weakref.ref( node ) for node in nodes ]
+		selection = self.__node.scriptNode().selection()
+		selection.clear()
+		selection.add( dispatcher )
 
-	return success
-
-def __dispatcherWindow( script ) :
-
-	window = DispatcherWindow.acquire( script.applicationRoot() )
-	scriptWindow = GafferUI.ScriptWindow.acquire( script )
-	scriptWindow.addChildWindow( window )
-
-	return window
-
-def _showDispatcherWindow( nodes ) :
-
-	window = __dispatcherWindow( nodes[0].scriptNode() )
-	window.setNodesToDispatch( nodes )
-	window.setVisible( True )
-
-def selectedNodes( script ) :
-	result = []
-	for n in script.selection() :
-		if isinstance( n, GafferDispatch.TaskNode ) :
-			result.append( n )
-		elif isinstance( n, Gaffer.SubGraph ) :
-			for p in GafferDispatch.TaskNode.TaskPlug.RecursiveOutputRange( n ) :
-				if isinstance( p.source().node(), GafferDispatch.TaskNode ) :
-					result.append( n )
-					break
-
-	return result
-
-def selectionAvailable( menu ) :
-
-	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	script = scriptWindow.scriptNode()
-	return bool( selectedNodes( script ) )
-
-def __previous( script ) :
-
-	scriptWindow = GafferUI.ScriptWindow.acquire( script )
-	nodes = getattr( scriptWindow, "_lastDispatch", [] )
-	return [ w() for w in nodes if w() is not None and script.isSame( w().scriptNode() ) ]
-
-def previousAvailable( menu ) :
-
-	scriptWindow = menu.ancestor( GafferUI.ScriptWindow )
-	script = scriptWindow.scriptNode()
-	return bool( __previous( script ) )
+		self.__updateVisibility()
