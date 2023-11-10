@@ -17,6 +17,7 @@ Breaking Changes
 - ValuePlug : Removed deprecated `getObjectValue()` overload.
 - Preferences : Removed `cache` plug.
 - Dispatcher : Removed `createMatching()` method.
+- LocalDispatcher : Removed `JobPool.jobFailedSignal()`.
 - LocalDispatcherUI : Removed `appendMenuDefinitions()` function.
 - Process : Removed non-const variant of the `handleException()` method.
 - StringPlug : Removed deprecated `precomputedHash` argument from `getValue()` method.
