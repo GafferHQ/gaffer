@@ -371,7 +371,6 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			self.__failedJobs = []
 			self.__jobAddedSignal = Gaffer.Signals.Signal1()
 			self.__jobRemovedSignal = Gaffer.Signals.Signal1()
-			self.__jobFailedSignal = Gaffer.Signals.Signal1()
 
 		def jobs( self ) :
 
@@ -394,10 +393,6 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 			return self.__jobRemovedSignal
 
-		def jobFailedSignal( self ) :
-
-			return self.__jobFailedSignal
-
 		def _append( self, job ) :
 
 			assert( isinstance( job, LocalDispatcher.Job ) )
@@ -419,7 +414,6 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			if job in self.__jobs and job not in self.__failedJobs :
 				job._fail()
 				self.__failedJobs.append( job )
-				self.jobFailedSignal()( job )
 				self._remove( job )
 
 	__jobPool = JobPool()
