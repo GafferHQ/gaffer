@@ -15,6 +15,7 @@ Fixes
 -----
 
 - BackgroundTask : Fixed potential deadlock caused by destroying a BackgroundTask from Python while it was still running.
+- LocalDispatcher : Stopped failed jobs jumping to the end of the Local Jobs UI.
 
 API
 ---
@@ -35,7 +36,9 @@ Breaking Changes
   - Removed `createMatching()` method.
   - Removed non-const TaskBatch accessors `frames()` and `preTasks()`.
   - Made `TaskBatch` constructors private.
-- LocalDispatcher : Removed `JobPool.jobFailedSignal()`.
+- LocalDispatcher :
+  - Removed `JobPool.jobFailedSignal()`.
+  - Removed `JobPool.failedJobs()` method. Failed jobs now remain in place in the main `jobs()` container.
 - LocalDispatcherUI : Removed `appendMenuDefinitions()` function.
 - Process : Removed non-const variant of the `handleException()` method.
 - StringPlug : Removed deprecated `precomputedHash` argument from `getValue()` method.

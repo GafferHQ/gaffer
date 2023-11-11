@@ -306,7 +306,6 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 		def __reportFailed( self, batch ) :
 
 			self.__status = LocalDispatcher.Job.Status.Failed
-			self.__dispatcher.jobPool()._fail( self )
 			frames = str( IECore.frameListFromList( [ int(x) for x in batch.frames() ] ) )
 			IECore.msg( IECore.MessageHandler.Level.Error, self.__messageTitle, "Failed to execute " + batch.blindData()["nodeName"].value + " on frames " + frames )
 
@@ -335,7 +334,6 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 		def __init__( self ) :
 
 			self.__jobs = []
-			self.__failedJobs = []
 			self.__jobAddedSignal = Gaffer.Signals.Signal1()
 			self.__jobRemovedSignal = Gaffer.Signals.Signal1()
 
@@ -343,13 +341,9 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 			return list(self.__jobs)
 
-		def failedJobs( self ) :
-
-			return list(self.__failedJobs)
-
 		def waitForAll( self ) :
 
-			while len(self.__jobs) :
+			while any( not j.failed() and not j.killed() for j in self.__jobs ) :
 				time.sleep( 0.2 )
 
 		def jobAddedSignal( self ) :
@@ -367,20 +361,11 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			self.__jobs.append( job )
 			self.jobAddedSignal()( job )
 
-		def _remove( self, job, force = False ) :
+		def _remove( self, job ) :
 
 			if job in self.__jobs :
 				self.__jobs.remove( job )
 				self.jobRemovedSignal()( job )
-
-			if force and job in self.__failedJobs :
-				self.__failedJobs.remove( job )
-
-		def _fail( self, job ) :
-
-			if job in self.__jobs and job not in self.__failedJobs :
-				self.__failedJobs.append( job )
-				self._remove( job )
 
 	__jobPool = JobPool()
 

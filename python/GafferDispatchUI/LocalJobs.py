@@ -116,7 +116,7 @@ class _LocalJobsPath( Gaffer.Path ) :
 			return []
 
 		result = []
-		jobs = self.__jobPool.jobs() + self.__jobPool.failedJobs()
+		jobs = self.__jobPool.jobs()
 		for job in jobs :
 			result.append(
 				_LocalJobsPath(
@@ -248,7 +248,7 @@ class LocalJobs( GafferUI.Editor ) :
 		jobPool = self.__jobListingWidget.getPath().jobPool()
 		for job in self.__selectedJobs() :
 			if job.failed() :
-				jobPool._remove( job, force = True )
+				jobPool._remove( job )
 
 		self.__update()
 

@@ -53,9 +53,15 @@ import GafferDispatchTest
 
 class LocalDispatcherTest( GafferTest.TestCase ) :
 
-	def __createLocalDispatcher( self ) :
+	def __createLocalDispatcher( self, jobPool = None ) :
 
-		result = GafferDispatch.LocalDispatcher()
+		if jobPool is None :
+			# By default we run each test with its own JobPool,
+			# to avoid polluting the default pool, and having
+			# that spill from one test to the next.
+			jobPool = GafferDispatch.LocalDispatcher.JobPool()
+
+		result = GafferDispatch.LocalDispatcher( jobPool = jobPool )
 		result["jobsDirectory"].setValue( self.temporaryDirectory() )
 		return result
 
@@ -456,9 +462,11 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		s["n1"]["fileName"].setValue( self.temporaryDirectory() / "n1_####.txt" )
 		s["n1"]["text"].setValue( "n1 on ${frame}" )
 
-		dispatcher = self.__createLocalDispatcher()
+		jobPool = GafferDispatch.LocalDispatcher.JobPool()
+
+		dispatcher = self.__createLocalDispatcher( jobPool )
 		dispatcher["executeInBackground"].setValue( True )
-		dispatcher2 = self.__createLocalDispatcher()
+		dispatcher2 = self.__createLocalDispatcher( jobPool )
 		dispatcher2["executeInBackground"].setValue( True )
 		dispatcher.dispatch( [ s["n1"] ] )
 		c = s.context()
@@ -467,9 +475,9 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 			dispatcher2.dispatch( [ s["n1"] ] )
 
 		# wait long enough for background execution to finish
-		self.assertEqual( len(dispatcher.jobPool().jobs()), 2 )
+		self.assertEqual( len( jobPool.jobs() ), 2 )
 		dispatcher.jobPool().waitForAll()
-		self.assertEqual( len(dispatcher.jobPool().jobs()), 0 )
+		self.assertEqual( len( jobPool.jobs() ), 0 )
 
 		self.assertTrue( os.path.isfile( s.context().substitute( s["n1"]["fileName"].getValue() ) ) )
 		self.assertTrue( os.path.isfile( c.substitute( s["n1"]["fileName"].getValue() ) ) )
@@ -493,9 +501,8 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 		# fails because n2 doesn't have a valid fileName
 		self.assertRaisesRegex( RuntimeError, "No such file or directory", functools.partial( dispatcher.dispatch, [ s["n1"] ] ) )
-
-		# it still cleans up the JobPool
-		self.assertEqual( len(dispatcher.jobPool().jobs()), 0 )
+		self.assertEqual( len( dispatcher.jobPool().jobs() ), 1 )
+		self.assertTrue( dispatcher.jobPool().jobs()[0].failed() )
 
 		# n3 executed correctly
 		self.assertTrue( os.path.isfile( s.context().substitute( s["n3"]["fileName"].getValue() ) ) )
@@ -513,9 +520,9 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		dispatcher.dispatch( [ s["n1"] ] )
 
 		# wait long enough for background execution to finish
-		self.assertEqual( len(dispatcher.jobPool().jobs()), 1 )
 		dispatcher.jobPool().waitForAll()
-		self.assertEqual( len(dispatcher.jobPool().jobs()), 0 )
+		self.assertEqual( len( dispatcher.jobPool().jobs() ), 2 )
+		self.assertTrue( dispatcher.jobPool().jobs()[1].failed() )
 
 		# n3 executed correctly
 		self.assertTrue( os.path.isfile( s.context().substitute( s["n3"]["fileName"].getValue() ) ) )
@@ -883,7 +890,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 		dispatcher.dispatch( [ script["pythonCommand"] ] )
 		dispatcher.jobPool().waitForAll()
-		self.assertTrue( dispatcher.jobPool().failedJobs()[0].failed() )
+		self.assertTrue( dispatcher.jobPool().jobs()[0].failed() )
 
 if __name__ == "__main__":
 	unittest.main()
