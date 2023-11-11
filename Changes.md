@@ -25,6 +25,7 @@ Breaking Changes
 - LocalDispatcher :
   - Removed `JobPool.jobFailedSignal()`.
   - Removed `JobPool.failedJobs()` method. Failed jobs now remain in place in the main `jobs()` container.
+  - JobPool no longer derives from RunTimeTyped.
 - LocalDispatcherUI : Removed `appendMenuDefinitions()` function.
 - Process : Removed non-const variant of the `handleException()` method.
 - StringPlug : Removed deprecated `precomputedHash` argument from `getValue()` method.
