@@ -10,6 +10,11 @@ Improvements
 - LocalDispatcher : Added a new dockable LocalJobs editor, to replace the floating window previously accessible via the "Execute/Local Jobs" menu item.
 - Cache : Increased default computation cache size to 8Gb. Call `Gaffer.ValuePlug.setCacheMemoryLimit()` from a startup file to override this.
 
+Fixes
+-----
+
+- LocalDispatcher : Stopped failed jobs jumping to the end of the Local Jobs UI.
+
 Breaking Changes
 ----------------
 
@@ -17,7 +22,9 @@ Breaking Changes
 - ValuePlug : Removed deprecated `getObjectValue()` overload.
 - Preferences : Removed `cache` plug.
 - Dispatcher : Removed `createMatching()` method.
-- LocalDispatcher : Removed `JobPool.jobFailedSignal()`.
+- LocalDispatcher :
+  - Removed `JobPool.jobFailedSignal()`.
+  - Removed `JobPool.failedJobs()` method. Failed jobs now remain in place in the main `jobs()` container.
 - LocalDispatcherUI : Removed `appendMenuDefinitions()` function.
 - Process : Removed non-const variant of the `handleException()` method.
 - StringPlug : Removed deprecated `precomputedHash` argument from `getValue()` method.

@@ -111,7 +111,6 @@ class TaskContextVariablesTest( GafferTest.TestCase ) :
 		dispatcher.dispatch( [ script["variables"] ] )
 
 		dispatcher.jobPool().waitForAll()
-		self.assertEqual( len( dispatcher.jobPool().failedJobs() ), 0 )
 
 		self.assertEqual(
 			set( self.temporaryDirectory().glob( "*.txt" ) ),

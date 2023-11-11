@@ -531,7 +531,7 @@ class OSLExpressionEngineTest( GafferOSLTest.OSLTestCase ) :
 		dispatcher.dispatch( [ script["writer"] ] )
 
 		dispatcher.jobPool().waitForAll()
-		self.assertEqual( len( dispatcher.jobPool().failedJobs() ), 0 )
+		self.assertEqual( len( dispatcher.jobPool().jobs() ), 0 )
 
 		self.assertTrue( ( self.temporaryDirectory() / "test.txt" ).exists() )
 
