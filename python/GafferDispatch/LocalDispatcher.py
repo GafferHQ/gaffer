@@ -71,17 +71,13 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			assert( isinstance( dispatcher, GafferDispatch.Dispatcher ) )
 
 			self.__batch = batch
-			## \todo Stop storing this. It's just a temptation to access potentially
-			# invalid data during background dispatches - all dispatcher settings _must_
-			# be copied to the job upon construction, because nothing stops a user changing
-			# the dispatcher settings during a background dispatch. Currently __dispatcher
-			# is used to access the JobPool in __reportCompleted etc - instead the job should
-			# use signals to report changes in status, and the JobPool should connect to those
-			# signals. Jobs should be blissfully ignorant of JobPools.
-			self.__dispatcher = dispatcher
+
 			script = batch.preTasks()[0].plug().ancestor( Gaffer.ScriptNode )
 			self.__context = Gaffer.Context( script.context() )
 
+			# Store all dispatcher settings now, as we can't access the dispatcher
+			# again if we're executing in the background (as it may be modified on
+			# the main thread).
 			self.__name = Gaffer.Context.current().substitute( dispatcher["jobName"].getValue() )
 			self.__directory = Gaffer.Context.current()["dispatcher:jobDirectory"]
 			self.__scriptFile = Gaffer.Context.current()["dispatcher:scriptFileName"]
@@ -95,7 +91,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			self.__executeInBackground = dispatcher["executeInBackground"].getValue()
 
 			self.__messageHandler = IECore.CapturingMessageHandler()
-			self.__messageTitle = "%s : Job %s %s" % ( self.__dispatcher.getName(), self.__name, self.__id )
+			self.__messageTitle = "%s : Job %s %s" % ( dispatcher.getName(), self.__name, self.__id )
 
 			self.__initBatchWalk( batch )
 
@@ -163,18 +159,13 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			else :
 				self.__executeInternal()
 
-		def failed( self ) :
+		def status( self ) :
 
-			return self.__status == self.Status.Failed
+			return self.__status
 
 		def kill( self ) :
 
-			if not self.failed() :
-				self.__killBatchWalk( self.__batch )
-
-		def killed( self ) :
-
-			return self.__status == self.Status.Killed
+			self.__killBatchWalk( self.__batch )
 
 		def __killBatchWalk( self, batch ) :
 
@@ -300,7 +291,6 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 		def __reportCompleted( self ) :
 
 			self.__status = LocalDispatcher.Job.Status.Complete
-			self.__dispatcher.jobPool()._remove( self )
 			IECore.msg( IECore.MessageHandler.Level.Info, self.__messageTitle, "Dispatched all tasks for " + self.name() )
 
 		def __reportFailed( self, batch ) :
@@ -312,7 +302,6 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 		def __reportKilled( self ) :
 
 			self.__status = LocalDispatcher.Job.Status.Killed
-			self.__dispatcher.jobPool()._remove( self )
 			IECore.msg( IECore.MessageHandler.Level.Info, self.__messageTitle, "Killed " + self.name() )
 
 		def __initBatchWalk( self, batch ) :
@@ -343,7 +332,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 		def waitForAll( self ) :
 
-			while any( not j.failed() and not j.killed() for j in self.__jobs ) :
+			while any( j.status() == j.Status.Running for j in self.__jobs ) :
 				time.sleep( 0.2 )
 
 		def jobAddedSignal( self ) :
