@@ -329,7 +329,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			for upstreamBatch in batch.preTasks() :
 				self.__initBatchWalk( upstreamBatch )
 
-	class JobPool( IECore.RunTimeTyped ) :
+	class JobPool :
 
 		def __init__( self ) :
 
@@ -390,6 +390,4 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 		job.execute()
 
 IECore.registerRunTimeTyped( LocalDispatcher, typeName = "GafferDispatch::LocalDispatcher" )
-IECore.registerRunTimeTyped( LocalDispatcher.JobPool, typeName = "GafferDispatch::LocalDispatcher::JobPool" )
-
 GafferDispatch.Dispatcher.registerDispatcher( "Local", LocalDispatcher )
