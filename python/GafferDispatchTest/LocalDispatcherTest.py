@@ -372,9 +372,9 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		self.assertFalse( os.path.isfile( s.context().substitute( s["n1"]["fileName"].getValue() ) ) )
 
 		# wait long enough to finish execution
-		self.assertEqual( len(dispatcher.jobPool().jobs()), 1 )
 		dispatcher.jobPool().waitForAll()
-		self.assertEqual( len(dispatcher.jobPool().jobs()), 0 )
+		self.assertEqual( len( dispatcher.jobPool().jobs() ), 1 )
+		self.assertEqual( dispatcher.jobPool().jobs()[0].status(), GafferDispatch.LocalDispatcher.Job.Status.Complete )
 
 		self.assertTrue( os.path.isfile( s.context().substitute( s["n1"]["fileName"].getValue() ) ) )
 
@@ -441,9 +441,9 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( text, expectedText )
 
 		# wait long enough for background execution to finish
-		self.assertEqual( len(dispatcher.jobPool().jobs()), 1 )
 		dispatcher.jobPool().waitForAll()
-		self.assertEqual( len(dispatcher.jobPool().jobs()), 0 )
+		self.assertEqual( len( dispatcher.jobPool().jobs() ), 1 )
+		self.assertEqual( dispatcher.jobPool().jobs()[0].status(), GafferDispatch.LocalDispatcher.Job.Status.Complete )
 
 		self.assertTrue( fileName.is_file() )
 		with open( fileName, "r", encoding = "utf-8" ) as f :
@@ -477,7 +477,11 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		# wait long enough for background execution to finish
 		self.assertEqual( len( jobPool.jobs() ), 2 )
 		dispatcher.jobPool().waitForAll()
-		self.assertEqual( len( jobPool.jobs() ), 0 )
+		self.assertEqual( len( jobPool.jobs() ), 2 )
+		self.assertEqual(
+			[ j.status() for j in jobPool.jobs() ],
+			[ GafferDispatch.LocalDispatcher.Job.Status.Complete ] * 2
+		)
 
 		self.assertTrue( os.path.isfile( s.context().substitute( s["n1"]["fileName"].getValue() ) ) )
 		self.assertTrue( os.path.isfile( c.substitute( s["n1"]["fileName"].getValue() ) ) )
@@ -502,7 +506,10 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		# fails because n2 doesn't have a valid fileName
 		self.assertRaisesRegex( RuntimeError, "No such file or directory", functools.partial( dispatcher.dispatch, [ s["n1"] ] ) )
 		self.assertEqual( len( dispatcher.jobPool().jobs() ), 1 )
-		self.assertTrue( dispatcher.jobPool().jobs()[0].failed() )
+		self.assertEqual(
+			dispatcher.jobPool().jobs()[0].status(),
+			GafferDispatch.LocalDispatcher.Job.Status.Failed
+		)
 
 		# n3 executed correctly
 		self.assertTrue( os.path.isfile( s.context().substitute( s["n3"]["fileName"].getValue() ) ) )
@@ -522,7 +529,10 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		# wait long enough for background execution to finish
 		dispatcher.jobPool().waitForAll()
 		self.assertEqual( len( dispatcher.jobPool().jobs() ), 2 )
-		self.assertTrue( dispatcher.jobPool().jobs()[1].failed() )
+		self.assertEqual(
+			dispatcher.jobPool().jobs()[1].status(),
+			GafferDispatch.LocalDispatcher.Job.Status.Failed
+		)
 
 		# n3 executed correctly
 		self.assertTrue( os.path.isfile( s.context().substitute( s["n3"]["fileName"].getValue() ) ) )
@@ -556,7 +566,8 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 		# wait long enough for the process to die
 		dispatcher.jobPool().waitForAll()
-		self.assertEqual( len(dispatcher.jobPool().jobs()), 0 )
+		self.assertEqual( len( dispatcher.jobPool().jobs() ), 1 )
+		self.assertEqual( dispatcher.jobPool().jobs()[0].status(), GafferDispatch.LocalDispatcher.Job.Status.Killed )
 
 		# make sure it never wrote the file
 		self.assertFalse( os.path.isfile( s.context().substitute( s["n1"]["fileName"].getValue() ) ) )
@@ -809,7 +820,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		d.dispatch( [ lastTask ] )
 
 		t = time.process_time()
-		d.jobPool().jobs()[0].kill()
+		d.jobPool().jobs()[-1].kill()
 		self.assertLess( time.process_time() - t, 1 )
 
 		d.jobPool().waitForAll()
@@ -890,7 +901,10 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 		dispatcher.dispatch( [ script["pythonCommand"] ] )
 		dispatcher.jobPool().waitForAll()
-		self.assertTrue( dispatcher.jobPool().jobs()[0].failed() )
+		self.assertEqual(
+			dispatcher.jobPool().jobs()[0].status(),
+			GafferDispatch.LocalDispatcher.Job.Status.Failed
+		)
 
 if __name__ == "__main__":
 	unittest.main()

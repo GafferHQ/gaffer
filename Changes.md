@@ -7,13 +7,20 @@ Improvements
 - Toolbars : Changed hotkey behavior to toogle any tool on and off. Exclusive tools such as the Translate and Crop Window tools activate the first tool (currently Selection Tool) when they are toggled off.
 - CropWindowTool : Added <kbd>`Alt` + <kbd>`C` for toggling both the crop window tool and the relevant crop window `enabled` plug.
 - TaskList, FrameMask : Reimplemented in C++ for improved performance.
-- LocalDispatcher : Added a new dockable LocalJobs editor, to replace the floating window previously accessible via the "Execute/Local Jobs" menu item.
+- LocalDispatcher :
+  - Added a new dockable LocalJobs editor, to replace the floating window previously accessible via the "Execute/Local Jobs" menu item.
+  - Jobs are no longer removed from the UI as soon as they complete.
 - Cache : Increased default computation cache size to 8Gb. Call `Gaffer.ValuePlug.setCacheMemoryLimit()` from a startup file to override this.
 
 Fixes
 -----
 
 - LocalDispatcher : Stopped failed jobs jumping to the end of the Local Jobs UI.
+
+API
+---
+
+- LocalDispatcher : Added `Job.status()` method.
 
 Breaking Changes
 ----------------
@@ -25,6 +32,7 @@ Breaking Changes
 - LocalDispatcher :
   - Removed `JobPool.jobFailedSignal()`.
   - Removed `JobPool.failedJobs()` method. Failed jobs now remain in place in the main `jobs()` container.
+  - Removed `Job.failed()` and `Job.killed()` methods. Use `Job.status()` instead.
   - JobPool no longer derives from RunTimeTyped.
 - LocalDispatcherUI : Removed `appendMenuDefinitions()` function.
 - Process : Removed non-const variant of the `handleException()` method.

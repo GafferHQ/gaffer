@@ -77,12 +77,7 @@ class _LocalJobsPath( Gaffer.Path ) :
 			return None
 
 		if name == "localDispatcher:status" :
-			if self.__job.failed() :
-				return "Failed"
-			elif self.__job.killed() :
-				return "Killed"
-			else :
-				return "Running"
+			return str( self.__job.status() )
 		elif name == "localDispatcher:id" :
 			return self.__job.id()
 		elif name == "localDispatcher:jobName" :
@@ -176,7 +171,7 @@ class LocalJobs( GafferUI.Editor ) :
 				self.__killButton = GafferUI.Button( "Kill Selected Jobs" )
 				self.__killButton.setEnabled( False )
 				self.__killButton.clickedSignal().connect( Gaffer.WeakMethod( self.__killClicked ), scoped = False )
-				self.__removeButton = GafferUI.Button( "Remove Failed Jobs" )
+				self.__removeButton = GafferUI.Button( "Remove Selected Jobs" )
 				self.__removeButton.setEnabled( False )
 				self.__removeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__removeClicked ), scoped = False )
 
@@ -246,8 +241,8 @@ class LocalJobs( GafferUI.Editor ) :
 
 		jobPool = self.__jobListingWidget.getPath().jobPool()
 		for job in self.__selectedJobs() :
-			if job.failed() :
-				jobPool._remove( job )
+			job.kill()
+			jobPool._remove( job )
 
 		self.__update()
 
@@ -263,9 +258,8 @@ class LocalJobs( GafferUI.Editor ) :
 	def __jobSelectionChanged( self, widget ) :
 
 		jobs = self.__selectedJobs()
-		numFailed = len( [ job for job in jobs if job.failed() ] )
-		self.__removeButton.setEnabled( numFailed )
-		self.__killButton.setEnabled( len( jobs ) - numFailed > 0 )
+		self.__removeButton.setEnabled( len( jobs ) )
+		self.__killButton.setEnabled( any( j.status() == j.Status.Running for j in jobs ) )
 
 		currentTab = self.__tabs.getCurrent()
 		if currentTab is self.__detailsTab :
