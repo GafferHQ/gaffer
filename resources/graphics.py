@@ -472,6 +472,7 @@
 		'localDispatcherStatusFailed',
 		'localDispatcherStatusKilled',
 		'localDispatcherStatusRunning',
+		'localDispatcherStatusComplete',
 		'minus',
 		'navigationArrow',
 		'nodeSetNodeSelection',
