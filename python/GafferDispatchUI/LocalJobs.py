@@ -116,13 +116,12 @@ class _LocalJobsPath( Gaffer.Path ) :
 			return []
 
 		result = []
-		jobs = self.__jobPool.jobs()
-		for job in jobs :
+		for index, job in enumerate( self.__jobPool.jobs() ) :
 			result.append(
 				_LocalJobsPath(
 					jobPool = self.__jobPool,
 					job = job,
-					path = [ str(jobs.index(job)) ],
+					path = [ str( index ) ],
 				)
 			)
 
