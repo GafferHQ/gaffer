@@ -771,7 +771,7 @@ class ArnoldShader : public IECore::RefCounted
 		ArnoldShader( const IECoreScene::ShaderNetwork *shaderNetwork, NodeDeleter nodeDeleter, AtUniverse *universe, const std::string &name, const AtNode *parentNode )
 			:	m_nodeDeleter( nodeDeleter ), m_hash( shaderNetwork->Object::hash() )
 		{
-			m_nodes = ShaderNetworkAlgo::convert( shaderNetwork, universe, name, parentNode );
+			m_nodes = ShaderNetworkAlgo::convert( shaderNetwork, universe, name, m_nodeParameters, parentNode );
 		}
 
 		~ArnoldShader() override
@@ -787,7 +787,7 @@ class ArnoldShader : public IECore::RefCounted
 			// `ShaderNetworkAlgo::update()` will destroy unwanted nodes, so we can
 			// only call it if we're responsible for deleting them in the first place.
 			assert( m_nodeDeleter == AiNodeDestroy );
-			return ShaderNetworkAlgo::update( m_nodes, shaderNetwork );
+			return ShaderNetworkAlgo::update( m_nodes, m_nodeParameters, shaderNetwork );
 		}
 
 		AtNode *root() const
@@ -805,10 +805,19 @@ class ArnoldShader : public IECore::RefCounted
 			h.append( m_hash );
 		}
 
+		void updateNodeParameters() const
+		{
+			for( const auto &p : m_nodeParameters )
+			{
+				p.updateParameter();
+			}
+		}
+
 	private :
 
 		NodeDeleter m_nodeDeleter;
 		std::vector<AtNode *> m_nodes;
+		std::vector<ShaderNetworkAlgo::NodeParameter> m_nodeParameters;
 		const IECore::MurmurHash m_hash;
 
 };
@@ -860,18 +869,25 @@ class ShaderCache : public IECore::RefCounted
 			return writeAccessor->second;
 		}
 
-		// Must not be called concurrently with anything.
-		void clearUnused()
+		// _Must_ be called before `render()` launches Arnold, and must not be
+		// called concurrently with anything. This removes shaders that are no
+		// longer in use during interactive renders, and ensures all
+		// `ShaderNetworkAlgo::NodeParameters` are updated appropriately.
+		void preRender( IECoreScenePreview::Renderer::RenderType renderType )
 		{
 			vector<IECore::MurmurHash> toErase;
 			for( Cache::iterator it = m_cache.begin(), eIt = m_cache.end(); it != eIt; ++it )
 			{
-				if( it->second->refCount() == 1 )
+				if( renderType == IECoreScenePreview::Renderer::RenderType::Interactive && it->second->refCount() == 1 )
 				{
 					// Only one reference - this is ours, so
 					// nothing outside of the cache is using the
 					// shader.
 					toErase.push_back( it->first );
+				}
+				else
+				{
+					it->second->updateNodeParameters();
 				}
 			}
 			for( vector<IECore::MurmurHash>::const_iterator it = toErase.begin(), eIt = toErase.end(); it != eIt; ++it )
@@ -3258,6 +3274,8 @@ class ArnoldGlobals
 
 		AtUniverse *universe() { return m_universeBlock->universe(); }
 
+		IECoreScenePreview::Renderer::RenderType renderType() const { return m_renderType; }
+
 		void option( const IECore::InternedString &name, const IECore::Object *value )
 		{
 			AtNode *options = AiUniverseGetOptions( m_universeBlock->universe() );
@@ -3692,7 +3710,7 @@ class ArnoldGlobals
 				AiNodeResetParameter( options, g_subdivDicingCameraString );
 			}
 
-			m_shaderCache->clearUnused();
+			m_shaderCache->preRender( m_renderType );
 
 			// Do the appropriate render based on
 			// m_renderType.
@@ -4320,7 +4338,7 @@ class ArnoldRenderer final : public ArnoldRendererBase
 		{
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 
-			m_shaderCache->clearUnused();
+			m_shaderCache->preRender( m_globals->renderType() );
 			m_instanceCache->clearUnused();
 			m_globals->render();
 		}

@@ -62,6 +62,7 @@ using namespace IECoreArnold;
 namespace
 {
 
+const AtString g_emptyArnoldString( "" );
 const AtString g_outputArnoldString( "output" );
 const AtString g_shaderNameArnoldString( "shadername" );
 const AtString g_oslArnoldString( "osl" );
@@ -98,7 +99,7 @@ InternedString partitionEnd( const InternedString &s, char c )
 }
 
 template<typename NodeCreator>
-AtNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECoreScene::ShaderNetwork *shaderNetwork, const std::string &name, const NodeCreator &nodeCreator, vector<AtNode *> &nodes, ShaderMap &converted )
+AtNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECoreScene::ShaderNetwork *shaderNetwork, const std::string &name, const NodeCreator &nodeCreator, vector<AtNode *> &nodes, ShaderMap &converted, std::vector<IECoreArnold::ShaderNetworkAlgo::NodeParameter> &nodeParameters )
 {
 	// Reuse previously created node if we can. OSL shaders
 	// can have multiple outputs, but each Arnold shader node
@@ -171,14 +172,25 @@ AtNode *convertWalk( const ShaderNetwork::Parameter &outputParameter, const IECo
 			parameterName = namedParameter.first.string();
 		}
 
-		ParameterAlgo::setParameter( node, AtString( parameterName.c_str() ), namedParameter.second.get() );
+		const AtString arnoldParameterName( parameterName.c_str() );
+
+		if( AiParamGetType( AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( node ), arnoldParameterName ) ) == AI_TYPE_NODE )
+		{
+			if( auto stringValue = runTimeCast<StringData>( namedParameter.second ) )
+			{
+				nodeParameters.emplace_back( node, arnoldParameterName, AtString( stringValue->readable().c_str() ) );
+				continue;
+			}
+		}
+
+		ParameterAlgo::setParameter( node, arnoldParameterName, namedParameter.second.get() );
 	}
 
 	// Recurse through input connections
 
 	for( const auto &connection : shaderNetwork->inputConnections( outputParameter.shader ) )
 	{
-		AtNode *sourceNode = convertWalk( connection.source, shaderNetwork, name, nodeCreator, nodes, converted );
+		AtNode *sourceNode = convertWalk( connection.source, shaderNetwork, name, nodeCreator, nodes, converted, nodeParameters );
 		if( !sourceNode )
 		{
 			continue;
@@ -400,7 +412,35 @@ namespace IECoreArnold
 namespace ShaderNetworkAlgo
 {
 
-std::vector<AtNode *> convert( const IECoreScene::ShaderNetwork *shaderNetwork, AtUniverse *universe, const std::string &name, const AtNode *parentNode )
+NodeParameter::NodeParameter( AtNode *node, AtString parameterName, AtString parameterValue )
+	:	m_node( node ), m_parameterName( parameterName ), m_parameterValue( parameterValue )
+{
+}
+
+void NodeParameter::updateParameter() const
+{
+	if( m_parameterValue == g_emptyArnoldString )
+	{
+		AiNodeResetParameter( m_node, m_parameterName );
+	}
+	else
+	{
+		if( AtNode *n = AiNodeLookUpByName( AiNodeGetUniverse( m_node ), m_parameterValue ) )
+		{
+			AiNodeSetPtr( m_node, m_parameterName, n );
+		}
+		else
+		{
+			AiNodeResetParameter( m_node, m_parameterName );
+			msg(
+				Msg::Warning, "NodeParameter",
+				fmt::format( "{}.{} : Node \"{}\" not found", AiNodeGetName( m_node ), m_parameterName, m_parameterValue )
+			);
+		}
+	}
+}
+
+std::vector<AtNode *> convert( const IECoreScene::ShaderNetwork *shaderNetwork, AtUniverse *universe, const std::string &name, std::vector<NodeParameter> &nodeParameters, const AtNode *parentNode )
 {
 	ConstShaderNetworkPtr network = preprocessedNetwork( shaderNetwork );
 
@@ -416,7 +456,7 @@ std::vector<AtNode *> convert( const IECoreScene::ShaderNetwork *shaderNetwork, 
 		auto nodeCreator = [universe, parentNode]( const AtString &nodeType, const AtString &nodeName ) {
 			return AiNode( universe, nodeType, nodeName, parentNode );
 		};
-		convertWalk( network->getOutput(), network.get(), name, nodeCreator, result, converted );
+		convertWalk( network->getOutput(), network.get(), name, nodeCreator, result, converted, nodeParameters );
 		for( const auto &kv : network->outputShader()->blindData()->readable() )
 		{
 			ParameterAlgo::setParameter( result.back(), AtString( kv.first.c_str() ), kv.second.get() );
@@ -425,7 +465,18 @@ std::vector<AtNode *> convert( const IECoreScene::ShaderNetwork *shaderNetwork, 
 	return result;
 }
 
-bool update( std::vector<AtNode *> &nodes, const IECoreScene::ShaderNetwork *shaderNetwork )
+std::vector<AtNode *> convert( const IECoreScene::ShaderNetwork *shaderNetwork, AtUniverse *universe, const std::string &name, const AtNode *parentNode )
+{
+	std::vector<NodeParameter> nodeParameters;
+	auto result = convert( shaderNetwork, universe, name, nodeParameters, parentNode );
+	if( nodeParameters.size() )
+	{
+		msg( Msg::Warning, "IECoreArnold::ShaderNetworkAlgo", fmt::format( "{} NodeParameter{} ignored", nodeParameters.size(), nodeParameters.size() > 1 ? "s" : "" ) );
+	}
+	return result;
+}
+
+bool update( std::vector<AtNode *> &nodes, std::vector<NodeParameter> &nodeParameters, const IECoreScene::ShaderNetwork *shaderNetwork )
 {
 	if( !nodes.size() )
 	{
@@ -471,7 +522,8 @@ bool update( std::vector<AtNode *> &nodes, const IECoreScene::ShaderNetwork *sha
 	};
 
 	ShaderMap converted;
-	convertWalk( network->getOutput(), network.get(), name, nodeCreator, nodes, converted );
+	nodeParameters.clear();
+	convertWalk( network->getOutput(), network.get(), name, nodeCreator, nodes, converted, nodeParameters );
 
 	for( const auto &n : originalNodes )
 	{
@@ -479,6 +531,17 @@ bool update( std::vector<AtNode *> &nodes, const IECoreScene::ShaderNetwork *sha
 	}
 
 	return nodes.size() && reusedNodes.count( nodes.back() );
+}
+
+bool update( std::vector<AtNode *> &nodes, const IECoreScene::ShaderNetwork *shaderNetwork )
+{
+	std::vector<NodeParameter> nodeParameters;
+	const bool result = update( nodes, nodeParameters, shaderNetwork );
+	if( nodeParameters.size() )
+	{
+		msg( Msg::Warning, "IECoreArnold::ShaderNetworkAlgo", fmt::format( "{} NodeParameter{} ignored", nodeParameters.size(), nodeParameters.size() > 1 ? "s" : "" ) );
+	}
+	return result;
 }
 
 } // namespace ShaderNetworkAlgo
