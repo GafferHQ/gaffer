@@ -61,6 +61,8 @@ class ScenePathPlugValueWidget( GafferUI.PathPlugValueWidget ) :
 
 		GafferUI.PathPlugValueWidget.__init__( self, plug, path, **kw )
 
+		plug.ancestor( Gaffer.ScriptNode ).focusChangedSignal().connect( Gaffer.WeakMethod( self.__focusChanged ), scoped = False )
+
 	def _pathChooserDialogue( self ) :
 
 		dialogue = GafferUI.PathPlugValueWidget._pathChooserDialogue( self )
@@ -85,6 +87,9 @@ class ScenePathPlugValueWidget( GafferUI.PathPlugValueWidget ) :
 
 	def __scenePlug( self, plug ) :
 
+		# Search for a suitable ScenePlug input on the same node as this plug,
+		# or on the node of another plug being driven by this plug.
+
 		def predicate( plug ) :
 
 			scenePlugName = Gaffer.Metadata.value( plug, "scenePathPlugValueWidget:scene" ) or "in"
@@ -92,4 +97,24 @@ class ScenePathPlugValueWidget( GafferUI.PathPlugValueWidget ) :
 			if scenePlug and isinstance( scenePlug, GafferScene.ScenePlug ) :
 				return scenePlug
 
-		return Gaffer.PlugAlgo.findDestination( plug, predicate )
+		scenePlug = Gaffer.PlugAlgo.findDestination( plug, predicate )
+		if scenePlug is not None :
+			return scenePlug
+
+		# The above doesn't work well for ShaderNodes, since they don't have
+		# ScenePlug inputs. We _could_ traverse outputs from the shader looking
+		# for a ShaderAssignment node to get a ScenePlug from. But this wouldn't
+		# be useful if the scene hierarchy was manipulated downstream of the
+		# ShaderAssignment as shaders need the final paths as seen by the
+		# renderer. So instead use the focus node, as it is more likely to
+		# be pointed at the final render node.
+
+		focusNode = plug.ancestor( Gaffer.ScriptNode ).getFocus()
+		if focusNode is not None :
+			return next( GafferScene.ScenePlug.RecursiveOutputRange( focusNode ), None )
+
+	def __focusChanged( self, scriptNode, node ) :
+
+		scenePlug = self.__scenePlug( self.getPlug() )
+		if scenePlug is not None :
+			self.path().setScene( scenePlug )
