@@ -85,28 +85,11 @@ class ScenePathPlugValueWidget( GafferUI.PathPlugValueWidget ) :
 
 	def __scenePlug( self, plug ) :
 
-		scenePlugName = Gaffer.Metadata.value( plug, "scenePathPlugValueWidget:scene" ) or "in"
-		scenePlug = plug.node().descendant( scenePlugName )
-		if scenePlug and isinstance( scenePlug, GafferScene.ScenePlug ) :
-			return scenePlug
+		def predicate( plug ) :
 
-		# Couldn't find scene plug. Perhaps `plug` has been promoted but the
-		# corresponding scene hasn't been yet. Check outputs to see if that
-		# is the case.
+			scenePlugName = Gaffer.Metadata.value( plug, "scenePathPlugValueWidget:scene" ) or "in"
+			scenePlug = plug.node().descendant( scenePlugName )
+			if scenePlug and isinstance( scenePlug, GafferScene.ScenePlug ) :
+				return scenePlug
 
-		for output in plug.outputs() :
-			p = self.__scenePlug( output )
-			if p is not None :
-				return p
-
-		# Or perhaps `plug` is in a cell in a spreadsheet, in which case
-		# we may be able to get somewhere by looking where the corresponding
-		# output is connected.
-		## \todo Can this sort of traversal be wrapped up in PlugAlgo somehow?
-
-		cellPlug = plug.ancestor( Gaffer.Spreadsheet.CellPlug )
-		if cellPlug is not None :
-			spreadsheet = cellPlug.ancestor( Gaffer.Spreadsheet )
-			if spreadsheet is not None :
-				return self.__scenePlug( spreadsheet["out"][cellPlug.getName()] )
-
+		return Gaffer.PlugAlgo.findDestination( plug, predicate )
