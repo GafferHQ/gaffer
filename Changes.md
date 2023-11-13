@@ -12,6 +12,7 @@ API
 ---
 
 - Capsule : Added protected `renderOptions()` and `throwIfNoScene()` methods.
+- ScenePath : Added support for passing `nullptr` for the scene.
 
 1.3.6.1 (relative to 1.3.6.0)
 =======

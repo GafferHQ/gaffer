@@ -59,14 +59,14 @@ using namespace GafferScene;
 namespace
 {
 
-ScenePathPtr constructor1( ScenePlug &scene, Context &context, PathFilterPtr filter )
+ScenePathPtr constructor1( ScenePlug *scene, Context &context, PathFilterPtr filter )
 {
-	return new ScenePath( &scene, &context, filter );
+	return new ScenePath( scene, &context, filter );
 }
 
-ScenePathPtr constructor2( ScenePlug &scene, Context &context, const std::string &path, PathFilterPtr filter )
+ScenePathPtr constructor2( ScenePlug *scene, Context &context, const std::string &path, PathFilterPtr filter )
 {
-	return new ScenePath( &scene, &context, path, filter );
+	return new ScenePath( scene, &context, path, filter );
 }
 
 PathFilterPtr createStandardFilter( object pythonSetNames, const std::string &setsLabel )
