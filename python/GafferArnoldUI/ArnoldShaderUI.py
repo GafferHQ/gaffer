@@ -287,8 +287,13 @@ def __translateNodeMetadata( nodeEntry ) :
 				"popup" : "GafferUI.PresetsPlugValueWidget",
 				"mapper" : "GafferUI.PresetsPlugValueWidget",
 				"filename" : "GafferUI.PathPlugValueWidget",
+				"camera" : "GafferSceneUI.ScenePathPlugValueWidget",
 				"null" : "",
 			}[widget]
+
+			if widget == "camera" :
+				__metadata[paramPath]["scenePathPlugValueWidget:setNames"] = IECore.StringVectorData( [ "__cameras" ] )
+				__metadata[paramPath]["scenePathPlugValueWidget:setsLabel"] = "Show only cameras"
 
 		# Layout section from OSL "page".
 

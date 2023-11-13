@@ -62,6 +62,7 @@ using namespace GafferArnold;
 namespace
 {
 
+const AtString g_emptyArnoldString( "" );
 const AtString g_nameArnoldString( "name" );
 const AtString g_gafferPlugTypeArnoldString( "gaffer.plugType" );
 const AtString g_gafferDefaultArnoldString( "gaffer.default" );
@@ -70,6 +71,7 @@ const AtString g_FloatPlugArnoldString( "FloatPlug" );
 const AtString g_Color3fPlugArnoldString( "Color3fPlug" );
 const AtString g_Color4fPlugArnoldString( "Color4fPlug" );
 const AtString g_ClosurePlugArnoldString( "ClosurePlug" );
+const AtString g_StringPlugArnoldString( "StringPlug" );
 
 const AtString g_quadLightShaderName( "quad_light" );
 
@@ -403,6 +405,10 @@ Gaffer::Plug *ParameterHandler::setupPlug( const AtNodeEntry *node, const AtPara
 		{
 			parameterType = AI_TYPE_CLOSURE;
 		}
+		else if( plugTypeOverride == g_StringPlugArnoldString )
+		{
+			parameterType = AI_TYPE_STRING;
+		}
 		else
 		{
 			msg(
@@ -512,7 +518,19 @@ Gaffer::Plug *ParameterHandler::setupPlug( const AtNodeEntry *node, const AtPara
 		case AI_TYPE_STRING :
 
 			{
-				AtString defaultValue = AiParamGetDefault( parameter )->STR();
+				AtString defaultValue;
+				if( AiParamGetType( parameter ) == AI_TYPE_STRING )
+				{
+					defaultValue = AiParamGetDefault( parameter )->STR();
+				}
+				else
+				{
+					// We get here when `plugTypeOverride` causes us to treat a
+					// non-string parameter as a string. In this case, Arnold's
+					// default value won't be a valid `AtString` so we must
+					// ignore it.
+					defaultValue = g_emptyArnoldString;
+				}
 				AiMetaDataGetStr( node, name, g_gafferDefaultArnoldString, &defaultValue );
 				plug = setupTypedPlug<StringPlug>(
 					node,
