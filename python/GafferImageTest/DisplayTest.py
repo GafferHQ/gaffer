@@ -105,7 +105,11 @@ class DisplayTest( GafferImageTest.ImageTestCase ) :
 				h.assertCalled()
 				h.assertDone()
 
-		def close( self ) :
+		def close( self, withCallHandler = True ) :
+
+			if not withCallHandler :
+				self.__driver.imageClose()
+				return
 
 			with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as h :
 				self.__driver.imageClose()

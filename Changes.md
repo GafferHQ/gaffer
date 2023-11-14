@@ -8,6 +8,11 @@ Improvements
   - Improved scene generation for encapsulated instancers significantly, with some production scenes now generating 5-7x faster.
   - Added `omitDuplicateIds` plug, to determine whether points with duplicate IDs are ignored or should trigger an error.
 
+Fixes
+-----
+
+- Catalogue : Fixed performance regressive when saving interactive renders with multiple AOVs (introduced in 1.3.6.1).
+
 API
 ---
 
