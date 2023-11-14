@@ -270,7 +270,8 @@ def __translateNodeMetadata( nodeEntry ) :
 			nodeEntry, paramName, "linkable",
 			defaultValue = paramType not in (
 				arnold.AI_TYPE_BYTE, arnold.AI_TYPE_INT, arnold.AI_TYPE_UINT,
-				arnold.AI_TYPE_BOOLEAN, arnold.AI_TYPE_ENUM, arnold.AI_TYPE_STRING
+				arnold.AI_TYPE_BOOLEAN, arnold.AI_TYPE_ENUM, arnold.AI_TYPE_STRING,
+				arnold.AI_TYPE_NODE
 			)
 		)
 		__metadata[paramPath]["nodule:type"] = None if linkable else ""
