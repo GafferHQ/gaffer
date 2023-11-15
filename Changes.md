@@ -11,6 +11,11 @@ Improvements
 - ScenePathPlugValueWidget : Added fallback to browsing the focussed scene when no other scene can be found. This makes the widget suitable for use on ShaderNodes.
 - Windows : Disabled Arnold's ADP usage and crash reporting module by default. Users can enable it by setting `ARNOLD_ADP_DISABLE=0` for Arnold versions after 7.1.4.0 or `ARNOLD_ADP_OPTIN=1` for earlier versions.
 
+Fixes
+-----
+
+- Catalogue : Fixed performance regressive when saving interactive renders with multiple AOVs (introduced in 1.3.6.1).
+
 API
 ---
 

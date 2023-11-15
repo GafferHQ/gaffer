@@ -1003,6 +1003,55 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 			c["catalogue:imageName"] = "output:3"
 			self.assertImagesEqual( notFoundText["out"], catalogue["out"] )
 
+	def testYouOnlySaveOnce( self ) :
+
+		# Send a bunch of AOVs to a Catalogue image, but don't
+		# close the drivers yet.
+
+		script = Gaffer.ScriptNode()
+
+		script["catalogue"] = GafferImage.Catalogue()
+		script["catalogue"]["directory"].setValue( self.temporaryDirectory() / "catalogue" )
+
+		script["constant"] = GafferImage.Constant()
+		script["constant"]["format"].setValue( GafferImage.Format( 100, 100 ) )
+		script["constant"]["color"].setValue( imath.Color4f( 1, 0, 0, 1 ) )
+
+		drivers = []
+		for layer in [ "" ] + [ f"aov{n}" for n in range( 0, 10 ) ] :
+
+			script["constant"]["layer"].setValue( layer )
+			drivers.append( self.sendImage( script["constant"]["out"], script["catalogue"], waitForSave = False, close = False ) )
+
+		self.assertEqual( len( script["catalogue"]["images"] ), 1 )
+
+		# Now close the drivers from a background thread, as they will be by a
+		# real renderer, and check that the image is saved to file appropriately.
+
+		with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as handler :
+			closingThread = threading.Thread( target = lambda : [ d.close( withCallHandler = False ) for d in drivers ] )
+			closingThread.start()
+			# In practice, renderers close drivers fast enough that all drivers
+			# are closed before the first `Display::imageReceivedSignal()` is
+			# emitted on the UI thread. Emulate this by waiting for the thread to
+			# finish before calling `assertCalled()`
+			closingThread.join()
+			# We now have a bunch of pending UI thread calls, one for each driver,
+			# so handle those. We expect the first call to start the saving process,
+			# but that process happens in the background and won't be visible yet.
+			for driver in drivers :
+				handler.assertCalled()
+				self.assertEqual( script["catalogue"]["images"][0]["fileName"].getValue(), "" )
+			# The saving process will make one more UI thread call, to make the
+			# result of the save visible. Handle that and check we now have an image
+			# file.
+			handler.assertCalled()
+			self.assertNotEqual( script["catalogue"]["images"][0]["fileName"].getValue(), "" )
+			self.assertTrue( pathlib.Path( script["catalogue"]["images"][0]["fileName"].getValue() ).is_file() )
+			# That should be it. There should definitely not be a whole load more
+			# attempts to save the image, so assert that no more UI thread calls are
+			# made.
+			handler.assertDone()
 
 if __name__ == "__main__":
 	unittest.main()
