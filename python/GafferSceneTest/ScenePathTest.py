@@ -213,15 +213,26 @@ class ScenePathTest( GafferSceneTest.SceneTestCase ) :
 		path.setFilter( GafferScene.ScenePath.createStandardFilter( [ "__cameras" ] ) )
 		self.assertEqual( { str( c ) for c in path.children() }, { "/camera" } )
 
-	def testNone( self ) :
+	def testNoneContext( self ) :
 
 		plane = GafferScene.Plane()
 
 		with self.assertRaisesRegex( Exception, "Python argument types" ) :
-			GafferScene.ScenePath( None, Gaffer.Context() )
-
-		with self.assertRaisesRegex( Exception, "Python argument types" ) :
 			GafferScene.ScenePath( plane["out"], None )
+
+	def testNoneScene( self ) :
+
+		path = GafferScene.ScenePath( None, Gaffer.Context() )
+		self.assertIsNone( path.getScene() )
+		self.assertIsNone( path.cancellationSubject() )
+		self.assertFalse( path.isValid() )
+		self.assertEqual( path.children(), [] )
+
+		path2 = path.copy()
+		self.assertIsNone( path2.getScene() )
+		self.assertIsNone( path2.cancellationSubject() )
+		self.assertFalse( path2.isValid() )
+		self.assertEqual( path2.children(), [] )
 
 	def testGILManagement( self ) :
 

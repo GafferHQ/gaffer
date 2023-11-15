@@ -60,10 +60,13 @@ if "%ARNOLD_ROOT%" NEQ "" (
 
 	if exist "%ARNOLD_ROOT%\include\ai_version.h" (
 		for /f "tokens=3" %%A in ('findstr /R /C:"#define *AI_VERSION_ARCH_NUM" "%ARNOLD_ROOT%\include\ai_version.h"') do (
-			set ARNOLD_ARCH_NUM=%%A
+			set /a ARNOLD_ARCH_NUM=%%A
 		)
 		for /f "tokens=3" %%A in ('findstr /R /C:"#define *AI_VERSION_MAJOR_NUM" "%ARNOLD_ROOT%\include\ai_version.h"') do (
-			set ARNOLD_VERSION_NUM=%%A
+			set /a ARNOLD_VERSION_NUM=%%A
+		)
+		for /f "tokens=3" %%A in ('findstr /R /C:"#define *AI_VERSION_MINOR_NUM" "%ARNOLD_ROOT%\include\ai_version.h"') do (
+			set /a ARNOLD_MINOR_NUM=%%A
 		)
 
 		set ARNOLD_VERSION=!ARNOLD_ARCH_NUM!.!ARNOLD_VERSION_NUM!
@@ -76,6 +79,24 @@ if "%ARNOLD_ROOT%" NEQ "" (
 		)
 	) else (
 		echo WARNING : Unable to determine Arnold version
+	)
+
+	REM Disable Autodesk Analytics, unless it is being explicitly managed already
+	REM by setting `ARNOLD_ADP_OPTIN` OR `ARNOLD_ADP_DISABLE`
+	if "%ARNOLD_ADP_OPTIN%" EQU "" (
+		if "%ARNOLD_ADP_DISABLE%" EQU "" (
+			set /a ARNOLD_VERSION_EXPANDED=!ARNOLD_ARCH_NUM!*10000+!ARNOLD_VERSION_NUM!*100+!ARNOLD_MINOR_NUM!
+			if !ARNOLD_VERSION_EXPANDED! GEQ 70104 (
+				REM `ARNOLD_ADP_DISABLE` is new in Arnold `7.1.4.0`, and is claimed
+				REM to completely disable ADP.
+				set ARNOLD_ADP_DISABLE=1
+			) else (
+				REM In older Arnold versions, we only have `ARNOLD_ADP_OPTIN`, which
+				REM still allows ADP to run, but is meant to opt out of reporting.
+				REM In Arnold 7.1.4.0 is has been observed to cause hangs.
+				set ARNOLD_ADP_OPTIN=0
+			)
+		)
 	)
 )
 

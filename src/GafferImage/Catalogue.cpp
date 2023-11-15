@@ -345,6 +345,11 @@ class Catalogue::InternalImage : public ImageNode
 
 		void driverClosed()
 		{
+			if( m_saver )
+			{
+				return;
+			}
+
 			for( const auto &[outputID, display] : m_displays )
 			{
 				if( !display->driverClosed() )

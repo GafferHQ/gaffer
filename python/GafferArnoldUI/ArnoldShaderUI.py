@@ -270,7 +270,8 @@ def __translateNodeMetadata( nodeEntry ) :
 			nodeEntry, paramName, "linkable",
 			defaultValue = paramType not in (
 				arnold.AI_TYPE_BYTE, arnold.AI_TYPE_INT, arnold.AI_TYPE_UINT,
-				arnold.AI_TYPE_BOOLEAN, arnold.AI_TYPE_ENUM, arnold.AI_TYPE_STRING
+				arnold.AI_TYPE_BOOLEAN, arnold.AI_TYPE_ENUM, arnold.AI_TYPE_STRING,
+				arnold.AI_TYPE_NODE
 			)
 		)
 		__metadata[paramPath]["nodule:type"] = None if linkable else ""
@@ -287,8 +288,13 @@ def __translateNodeMetadata( nodeEntry ) :
 				"popup" : "GafferUI.PresetsPlugValueWidget",
 				"mapper" : "GafferUI.PresetsPlugValueWidget",
 				"filename" : "GafferUI.PathPlugValueWidget",
+				"camera" : "GafferSceneUI.ScenePathPlugValueWidget",
 				"null" : "",
 			}[widget]
+
+			if widget == "camera" :
+				__metadata[paramPath]["scenePathPlugValueWidget:setNames"] = IECore.StringVectorData( [ "__cameras" ] )
+				__metadata[paramPath]["scenePathPlugValueWidget:setsLabel"] = "Show only cameras"
 
 		# Layout section from OSL "page".
 

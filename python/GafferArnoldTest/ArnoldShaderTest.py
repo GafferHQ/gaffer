@@ -937,5 +937,15 @@ class ArnoldShaderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( shader["parameters"]["width"].isSetToDefault() )
 		self.assertTrue( shader["parameters"]["height"].isSetToDefault() )
 
+	def testLoadCameraProjection( self ) :
+
+		shader = GafferArnold.ArnoldShader()
+		shader.loadShader( "camera_projection" )
+
+		self.assertIn( "camera", shader["parameters"] )
+		self.assertIsInstance( shader["parameters"]["camera"], Gaffer.StringPlug )
+		self.assertEqual( shader["parameters"]["camera"].getValue(), "" )
+		self.assertEqual( shader["parameters"]["camera"].defaultValue(), "" )
+
 if __name__ == "__main__":
 	unittest.main()

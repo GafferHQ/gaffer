@@ -11,20 +11,35 @@ Breaking Changes
 - OpenColorIOContext : Removed `configEnabledPlug()`, `configValuePlug()`, `workingSpaceEnabledPlug()` and `workingSpaceValuePlug()` methods. Use the OptionalValuePlug child accessors instead.
 - Windows launch script : Removed the hardcoded `/debugexe` switch used when `GAFFER_DEBUG` is enabled, making it possible to use debuggers other than Visual Studio. Debug switches can be added to the `GAFFER_DEBUGGER` environment variable instead.
 
-1.3.x.x (relative to 1.3.6.1)
+1.3.x.x (relative to 1.3.7.0)
+=======
+
+
+
+1.3.7.0 (relative to 1.3.6.1)
 =======
 
 Improvements
 ------------
 
+- ArnoldShader : Improved support for camera projections by exposing the `camera` plug on the `camera_projection` shader.
 - Instancer :
   - Improved scene generation for encapsulated instancers significantly, with some production scenes now generating 5-7x faster.
   - Added `omitDuplicateIds` plug, to determine whether points with duplicate IDs are ignored or should trigger an error.
+- ScenePathPlugValueWidget : Added fallback to browsing the focussed scene when no other scene can be found. This makes the widget suitable for use on ShaderNodes.
+- Windows : Disabled Arnold's ADP usage and crash reporting module by default. Users can enable it by setting `ARNOLD_ADP_DISABLE=0` for Arnold versions after 7.1.4.0 or `ARNOLD_ADP_OPTIN=1` for earlier versions.
+
+Fixes
+-----
+
+- Catalogue : Fixed performance regressive when saving interactive renders with multiple AOVs (introduced in 1.3.6.1).
 
 API
 ---
 
 - Capsule : Added protected `renderOptions()` and `throwIfNoScene()` methods.
+- ScenePath : Added support for passing `nullptr` for the scene.
+- ArnoldShaderUI : Added support for `camera` widget type metadata, to add a camera browser to a string parameter.
 
 1.3.6.1 (relative to 1.3.6.0)
 =======
