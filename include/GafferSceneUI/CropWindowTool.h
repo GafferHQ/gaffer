@@ -104,6 +104,8 @@ class GAFFERSCENEUI_API CropWindowTool : public GafferUI::Tool
 
 		Imath::Box2f resolutionGate() const;
 
+		bool keyPress( const GafferUI::KeyEvent &event );
+
 		Gaffer::Signals::ScopedConnection m_overlayRectangleChangedConnection;
 
 		std::string m_overlayMessage;

@@ -536,6 +536,8 @@ CropWindowTool::CropWindowTool( View *view, const std::string &name )
 
 	Metadata::plugValueChangedSignal().connect( boost::bind( &CropWindowTool::metadataChanged, this, ::_3 ) );
 	Metadata::nodeValueChangedSignal().connect( boost::bind( &CropWindowTool::metadataChanged, this, ::_2 ) );
+
+	view->viewportGadget()->keyPressSignal().connect( boost::bind( &CropWindowTool::keyPress, this, ::_2 ) );
 }
 
 CropWindowTool::~CropWindowTool()
@@ -1017,4 +1019,23 @@ Box2f CropWindowTool::resolutionGate() const
 		}
 	}
 	return resolutionGate;
+}
+
+bool CropWindowTool::keyPress( const KeyEvent &event )
+{
+	if( const auto hotkey = Gaffer::Metadata::value<StringData>( this, "viewer:shortCut" ) )
+	{
+		if( event.key == hotkey->readable() && event.modifiers == KeyEvent::Modifiers::Alt )
+		{
+			const bool newState = !activePlug()->getValue();
+
+			activePlug()->setValue( newState );
+			if( m_cropWindowEnabledPlug )
+			{
+				UndoScope undoScope( m_cropWindowPlug->ancestor<ScriptNode>() );
+				m_cropWindowEnabledPlug->setValue( newState );
+			}
+		}
+	}
+	return false;
 }
