@@ -60,17 +60,17 @@ using namespace GafferScene;
 IE_CORE_DEFINERUNTIMETYPED( ScenePath );
 
 ScenePath::ScenePath( ScenePlugPtr scene, Gaffer::ContextPtr context, Gaffer::PathFilterPtr filter )
-	:	Path( filter ), m_node( scene->node() ), m_scene( scene ), m_context( context )
+	:	Path( filter ), m_node( scene ? scene->node() : nullptr ), m_scene( scene ), m_context( context )
 {
 }
 
 ScenePath::ScenePath( ScenePlugPtr scene, Gaffer::ContextPtr context, const std::string &path, Gaffer::PathFilterPtr filter )
-	:	Path( path, filter ), m_node( scene->node() ), m_scene( scene ), m_context( context )
+	:	Path( path, filter ), m_node( scene ? scene->node() : nullptr ), m_scene( scene ), m_context( context )
 {
 }
 
 ScenePath::ScenePath( ScenePlugPtr scene, Gaffer::ContextPtr context, const Names &names, const IECore::InternedString &root, Gaffer::PathFilterPtr filter )
-	:	Path( names, root, filter ), m_node( scene->node() ), m_scene( scene ), m_context( context )
+	:	Path( names, root, filter ), m_node( scene ? scene->node() : nullptr ), m_scene( scene ), m_context( context )
 {
 }
 
@@ -88,7 +88,7 @@ void ScenePath::setScene( ScenePlugPtr scene )
 	m_plugDirtiedConnection.disconnect();
 
 	m_scene = scene;
-	m_node = scene->node();
+	m_node = scene ? scene->node() : nullptr;
 
 	if( m_node && havePathChangedSignal() )
 	{
@@ -146,7 +146,7 @@ bool ScenePath::isValid( const IECore::Canceller *canceller ) const
 	{
 		scopedContext.setCanceller( canceller );
 	}
-	return m_scene->exists( names() );
+	return m_scene ? m_scene->exists( names() ) : false;
 }
 
 bool ScenePath::isLeaf( const IECore::Canceller *canceller ) const
@@ -167,6 +167,11 @@ const Gaffer::Plug *ScenePath::cancellationSubject() const
 
 void ScenePath::doChildren( std::vector<PathPtr> &children, const IECore::Canceller *canceller ) const
 {
+	if( !m_scene )
+	{
+		return;
+	}
+
 	Context::EditableScope scopedContext( m_context.get() );
 	if( canceller )
 	{

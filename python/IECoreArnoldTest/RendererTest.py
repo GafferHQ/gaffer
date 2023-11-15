@@ -4237,6 +4237,165 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( arnold.AiNodeGetInt( options, "GI_diffuse_depth" ), 2 )
 		self.assertEqual( arnold.AiNodeGetInt( options, "GI_specular_depth" ), 2 )
 
+	def testInteractiveNodeParameters( self ) :
+
+		# Make renderer with two cameras
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		renderer.output(
+			"test",
+			IECoreScene.Output(
+				str( self.temporaryDirectory() / "beauty.exr" ),
+				"exr",
+				"rgba",
+				{
+				}
+			)
+		)
+
+		cameraAttributes = renderer.attributes( IECore.CompoundObject() )
+		camera1 = renderer.camera( "/camera1", IECoreScene.Camera(), cameraAttributes )
+		camera2 = renderer.camera( "/camera2", IECoreScene.Camera(), cameraAttributes )
+
+		# Render a plane with a camera projection referencing the
+		# camera by name.
+
+		def cameraProjectionAttributes( renderer, camera ) :
+
+			shaderNetwork = IECoreScene.ShaderNetwork(
+				shaders = {
+					"output" : IECoreScene.Shader(
+						"camera_projection", "ai:surface",
+						{ "camera" : IECore.StringData( camera ) }
+					)
+				},
+				output = ( "output", "" )
+			)
+
+			return renderer.attributes( IECore.CompoundObject( { "ai:surface" : shaderNetwork } ) )
+
+		plane = renderer.object(
+			"/plane",
+			IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) ),
+			cameraProjectionAttributes( renderer, "/camera1" )
+		)
+		renderer.render()
+
+		# Check that the `camera` parameter has been converted to hold
+		# the appropriate `AtNode *`.
+
+		def assertCameraParameter( renderer, cameraName ) :
+
+			universe = ctypes.cast( renderer.command( "ai:queryUniverse", {} ), ctypes.POINTER( arnold.AtUniverse ) )
+			planeNode = arnold.AiNodeLookUpByName( universe, "/plane" )
+			planeShader = arnold.AiNodeGetPtr( planeNode, "shader" )
+			cameraNode = arnold.AiNodeGetPtr( planeShader, "camera" )
+			if cameraName is None :
+				self.assertIsNone( cameraNode )
+			else :
+				self.assertEqual( arnold.AiNodeGetName( cameraNode ), cameraName )
+
+		assertCameraParameter( renderer, "/camera1" )
+
+		# Edit the camera parameter and check it has been updated.
+
+		renderer.pause()
+		plane.attributes( cameraProjectionAttributes( renderer, "/camera2" ) )
+		renderer.render()
+		assertCameraParameter( renderer, "/camera2" )
+
+		# Delete the camera, and check that the camera parameter has been
+		# reset so that it doesn't contain a dangling pointer.
+
+		with IECore.CapturingMessageHandler() as mh :
+			renderer.pause()
+			del camera2
+			renderer.render()
+			assertCameraParameter( renderer, None )
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertRegex( mh.messages[0].message, "Node \"/camera2\" not found" )
+
+		# Point to a camera that does exist.
+
+		renderer.pause()
+		plane.attributes( cameraProjectionAttributes( renderer, "/camera1" ) )
+		renderer.render()
+		assertCameraParameter( renderer, "/camera1" )
+
+		# Replace that camera, and check that the parameter is updated again
+		# to avoid the dangling pointer.
+
+		renderer.pause()
+		del camera1
+		camera1 = renderer.camera( "/camera1", IECoreScene.Camera(), cameraAttributes )
+		renderer.render()
+		assertCameraParameter( renderer, "/camera1" )
+
+		# Edit the parameter to point to a non-existent camera.
+
+		with IECore.CapturingMessageHandler() as mh :
+			renderer.pause()
+			plane.attributes( cameraProjectionAttributes( renderer, "/camera3" ) )
+			renderer.render()
+			assertCameraParameter( renderer, None )
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertRegex( mh.messages[0].message, "Node \"/camera3\" not found" )
+
+		# And then point back to the good camera.
+
+		renderer.pause()
+		plane.attributes( cameraProjectionAttributes( renderer, "/camera1" ) )
+		renderer.render()
+		assertCameraParameter( renderer, "/camera1" )
+
+		del camera1, cameraAttributes, plane
+		del renderer
+
+	def testBatchNodeParameters( self ) :
+
+		# Render a camera projection setup to an ASS file.
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.ass" )
+		)
+
+		renderer.camera( "/camera", IECoreScene.Camera(), renderer.attributes( IECore.CompoundObject() ) )
+
+		shaderNetwork = IECoreScene.ShaderNetwork(
+			shaders = {
+				"output" : IECoreScene.Shader(
+					"camera_projection", "ai:surface",
+					{ "camera" : IECore.StringData( "/camera" ) }
+				)
+			},
+			output = ( "output", "" )
+		)
+
+		renderer.object(
+			"/plane",
+			IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) ),
+			renderer.attributes( IECore.CompoundObject( { "ai:surface" : shaderNetwork } ) )
+		)
+		renderer.render()
+
+		# Check we got what we wanted.
+
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
+			planeNode = arnold.AiNodeLookUpByName( universe, "/plane" )
+			planeShader = arnold.AiNodeGetPtr( planeNode, "shader" )
+			cameraNode = arnold.AiNodeGetPtr( planeShader, "camera" )
+			self.assertEqual( arnold.AiNodeGetName( cameraNode ), "/camera" )
+
 	@staticmethod
 	def __m44f( m ) :
 

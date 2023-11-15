@@ -4,14 +4,18 @@
 Improvements
 ------------
 
+- ArnoldShader : Improved support for camera projections by exposing the `camera` plug on the `camera_projection` shader.
 - Instancer :
   - Improved scene generation for encapsulated instancers significantly, with some production scenes now generating 5-7x faster.
   - Added `omitDuplicateIds` plug, to determine whether points with duplicate IDs are ignored or should trigger an error.
+- ScenePathPlugValueWidget : Added fallback to browsing the focussed scene when no other scene can be found. This makes the widget suitable for use on ShaderNodes.
 
 API
 ---
 
 - Capsule : Added protected `renderOptions()` and `throwIfNoScene()` methods.
+- ScenePath : Added support for passing `nullptr` for the scene.
+- ArnoldShaderUI : Added support for `camera` widget type metadata, to add a camera browser to a string parameter.
 
 1.3.6.1 (relative to 1.3.6.0)
 =======

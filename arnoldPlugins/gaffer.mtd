@@ -1029,7 +1029,8 @@
 	gaffer.layout.activator.coordSpaceIsPref STRING "parameters['coord_space'].getValue() == 'Pref'"
 
 	[attr camera]
-		gaffer.plugType STRING ""
+		gaffer.plugType STRING "StringPlug"
+		widget STRING "camera"
 
 	[attr pref_name]
 		gaffer.layout.activator STRING "coordSpaceIsPref"

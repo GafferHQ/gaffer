@@ -61,6 +61,8 @@ class ScenePathPlugValueWidget( GafferUI.PathPlugValueWidget ) :
 
 		GafferUI.PathPlugValueWidget.__init__( self, plug, path, **kw )
 
+		plug.ancestor( Gaffer.ScriptNode ).focusChangedSignal().connect( Gaffer.WeakMethod( self.__focusChanged ), scoped = False )
+
 	def _pathChooserDialogue( self ) :
 
 		dialogue = GafferUI.PathPlugValueWidget._pathChooserDialogue( self )
@@ -85,28 +87,34 @@ class ScenePathPlugValueWidget( GafferUI.PathPlugValueWidget ) :
 
 	def __scenePlug( self, plug ) :
 
-		scenePlugName = Gaffer.Metadata.value( plug, "scenePathPlugValueWidget:scene" ) or "in"
-		scenePlug = plug.node().descendant( scenePlugName )
-		if scenePlug and isinstance( scenePlug, GafferScene.ScenePlug ) :
+		# Search for a suitable ScenePlug input on the same node as this plug,
+		# or on the node of another plug being driven by this plug.
+
+		def predicate( plug ) :
+
+			scenePlugName = Gaffer.Metadata.value( plug, "scenePathPlugValueWidget:scene" ) or "in"
+			scenePlug = plug.node().descendant( scenePlugName )
+			if scenePlug and isinstance( scenePlug, GafferScene.ScenePlug ) :
+				return scenePlug
+
+		scenePlug = Gaffer.PlugAlgo.findDestination( plug, predicate )
+		if scenePlug is not None :
 			return scenePlug
 
-		# Couldn't find scene plug. Perhaps `plug` has been promoted but the
-		# corresponding scene hasn't been yet. Check outputs to see if that
-		# is the case.
+		# The above doesn't work well for ShaderNodes, since they don't have
+		# ScenePlug inputs. We _could_ traverse outputs from the shader looking
+		# for a ShaderAssignment node to get a ScenePlug from. But this wouldn't
+		# be useful if the scene hierarchy was manipulated downstream of the
+		# ShaderAssignment as shaders need the final paths as seen by the
+		# renderer. So instead use the focus node, as it is more likely to
+		# be pointed at the final render node.
 
-		for output in plug.outputs() :
-			p = self.__scenePlug( output )
-			if p is not None :
-				return p
+		focusNode = plug.ancestor( Gaffer.ScriptNode ).getFocus()
+		if focusNode is not None :
+			return next( GafferScene.ScenePlug.RecursiveOutputRange( focusNode ), None )
 
-		# Or perhaps `plug` is in a cell in a spreadsheet, in which case
-		# we may be able to get somewhere by looking where the corresponding
-		# output is connected.
-		## \todo Can this sort of traversal be wrapped up in PlugAlgo somehow?
+	def __focusChanged( self, scriptNode, node ) :
 
-		cellPlug = plug.ancestor( Gaffer.Spreadsheet.CellPlug )
-		if cellPlug is not None :
-			spreadsheet = cellPlug.ancestor( Gaffer.Spreadsheet )
-			if spreadsheet is not None :
-				return self.__scenePlug( spreadsheet["out"][cellPlug.getName()] )
-
+		scenePlug = self.__scenePlug( self.getPlug() )
+		if scenePlug is not None :
+			self.path().setScene( scenePlug )
