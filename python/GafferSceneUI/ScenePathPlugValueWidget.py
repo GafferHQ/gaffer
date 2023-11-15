@@ -36,6 +36,7 @@
 
 import Gaffer
 import GafferUI
+import GafferImage
 import GafferScene
 
 class ScenePathPlugValueWidget( GafferUI.PathPlugValueWidget ) :
@@ -111,7 +112,12 @@ class ScenePathPlugValueWidget( GafferUI.PathPlugValueWidget ) :
 
 		focusNode = plug.ancestor( Gaffer.ScriptNode ).getFocus()
 		if focusNode is not None :
-			return next( GafferScene.ScenePlug.RecursiveOutputRange( focusNode ), None )
+			outputScene = next( GafferScene.ScenePlug.RecursiveOutputRange( focusNode ), None )
+			if outputScene is not None :
+				return outputScene
+			outputImage = next( GafferImage.ImagePlug.RecursiveOutputRange( focusNode ), None )
+			if outputImage is not None :
+				return GafferScene.SceneAlgo.sourceScene( outputImage )
 
 	def __focusChanged( self, scriptNode, node ) :
 
