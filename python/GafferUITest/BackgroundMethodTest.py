@@ -254,7 +254,7 @@ class BackgroundMethodTest( GafferUITest.TestCase ) :
 			# a zombie widget, we'd get PySide errors in our redirected output,
 			# so make sure that doesn't happen.
 			del window
-			self.waitForIdle( 1000 )
+			self.waitForIdle( 10000 )
 
 		self.assertIsNone( w() )
 		self.assertEqual( out, [] )
