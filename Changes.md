@@ -1,10 +1,20 @@
 1.3.x.x (relative to 1.3.7.0)
 =======
 
+Features
+--------
+
+- Viewer : Added "Snapshot To Catalogue" command to the right-click menu of the 3D view.
+
 Fixes
 -----
 
 - Windows `Scene/OpenGL/Shader` Menu : Removed `\` at the beginning of menu items.
+
+API
+---
+
+- SceneGadget : Added `snapshotToFile()` method.
 
 1.3.7.0 (relative to 1.3.6.1)
 =======
