@@ -37,6 +37,7 @@
 import os
 import string
 import functools
+import pathlib
 
 import IECore
 
@@ -99,11 +100,11 @@ def shaderSubMenu() :
 	# a lot of irrelevancies at IE at the moment.
 	paths = [ os.environ["GAFFER_ROOT"] + "/glsl" ]
 	for path in paths :
-		for root, dirs, files in os.walk( path ) :
-			for file in files :
-				if os.path.splitext( file )[1] in ( ".vert", ".frag" ) :
-					shaderPath = os.path.join( root, file ).partition( path )[-1].lstrip( "/" )
-					shaders.add( os.path.splitext( shaderPath )[0] )
+		for extension in [ ".vert", ".frag" ] :
+			shaderPaths = pathlib.Path( path ).glob( "**/*" + extension )
+
+			for shaderPath in shaderPaths :
+				shaders.add( shaderPath.relative_to( path ).as_posix()[:-len( extension )] )
 
 	result = IECore.MenuDefinition()
 	for shader in sorted( list( shaders ) ) :
