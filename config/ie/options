@@ -252,6 +252,7 @@ ocioVersion = targetAppReg.get( "OpenColorIOVersion", cortexReg["OpenColorIOVers
 exrVersion = targetAppReg.get( "OpenEXRVersion", cortexReg["OpenEXRVersion"] )
 oiioVersion = targetAppReg.get( "OpenImageIOVersion", cortexReg["OpenImageIOVersion"] )
 oiioLibSuffix = targetAppReg.get( "OpenImageIOLibSuffix", oiioVersion )
+ocioLibSuffix = targetAppReg.get( "OpenColorIOLibSuffix", IEEnv.BuildUtil.libSuffix( "OpenColorIO", ocioVersion ) )
 vdbVersion = targetAppReg.get( "OpenVDBVersion", cortexReg["OpenVDBVersion"] )
 oslVersion = targetAppReg.get( "OpenShadingLanguageVersion", gafferReg.get( "OpenShadingLanguageVersion", cortexReg["OpenShadingLanguageVersion"] ) )
 tbbVersion = targetAppReg.get( "tbbVersion", cortexReg["tbbVersion"] )
@@ -337,6 +338,7 @@ LOCATE_DEPENDENCY_LIBPATH = [
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "openexr", exrVersion, IEEnv.platform(), compiler, compilerVersion, "python", pythonVersion, "boost", boostVersion, "lib64" ),
 	os.path.join( IEEnv.Environment.rootPath(), "tools", "lib", IEEnv.platform(), compiler, compilerVersion ),
 	os.path.join( IEEnv.Environment.rootPath(), "apps", "embree", embreeVersion, IEEnv.platform(), compiler, compilerVersion, "lib" ),
+	os.path.join( IEEnv.Environment.rootPath(), "apps", "OpenColorIO", ocioVersion, IEEnv.platform(), compiler, compilerVersion, "lib" ),
 
 ]
 
@@ -487,7 +489,9 @@ if "install" in sys.argv :
 
 IMATH_LIB_SUFFIX = IEEnv.BuildUtil.libSuffix( "OpenEXR", exrVersion )
 OIIO_LIB_SUFFIX = IEEnv.BuildUtil.libSuffix( "OpenImageIO", oiioLibSuffix )
-OCIO_LIB_SUFFIX = IEEnv.BuildUtil.libSuffix( "OpenColorIO", ocioVersion )
+# ocioLibSuffix, when provided, should be used directly, without the addition of "-"
+# For example, when set to "Foundry"
+OCIO_LIB_SUFFIX = ocioLibSuffix
 OSL_LIB_SUFFIX = IEEnv.BuildUtil.libSuffix( "OpenShadingLanguage", oslVersion )
 BOOST_LIB_SUFFIX = IEEnv.BuildUtil.libSuffix( "boost", boostVersion, { "compiler" : compiler, "compilerVersion" : compilerVersion } )
 BOOST_PYTHON_LIB_SUFFIX = IEEnv.BuildUtil.libSuffix(
