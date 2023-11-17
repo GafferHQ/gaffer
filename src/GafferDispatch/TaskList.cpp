@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2023 John Haddon. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,22 +34,49 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#pragma once
+#include "GafferDispatch/TaskList.h"
 
-namespace GafferDispatch
+#include "Gaffer/Context.h"
+
+using namespace IECore;
+using namespace Gaffer;
+using namespace GafferDispatch;
+
+GAFFER_NODE_DEFINE_TYPE( TaskList )
+
+size_t TaskList::g_firstPlugIndex;
+
+TaskList::TaskList( const std::string &name )
+	:	TaskNode( name )
 {
+	storeIndexOfNextChild( g_firstPlugIndex );
+	addChild( new BoolPlug( "sequence" ) );
+}
 
-enum TypeId
+TaskList::~TaskList()
 {
+}
 
-	TaskNodeTypeId = 110160,
-	TaskNodeTaskPlugTypeId = 110161,
-	DispatcherTypeId = 110162,
-	TaskListTypeId = 110163,
-	FrameMaskTypeId = 110164,
+Gaffer::BoolPlug *TaskList::sequencePlug()
+{
+	return getChild<BoolPlug>( g_firstPlugIndex );
+}
 
-	LastTypeId = 110180,
+const Gaffer::BoolPlug *TaskList::sequencePlug() const
+{
+	return getChild<BoolPlug>( g_firstPlugIndex );
+}
 
-};
+IECore::MurmurHash TaskList::hash( const Context *context ) const
+{
+	return MurmurHash();
+}
 
-} // namespace GafferDispatch
+void TaskList::execute() const
+{
+}
+
+bool TaskList::requiresSequenceExecution() const
+{
+	return sequencePlug()->getValue();
+}

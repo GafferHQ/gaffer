@@ -49,18 +49,24 @@ class TaskListTest( GafferTest.TestCase ) :
 		n = GafferDispatch.TaskList()
 		with Gaffer.Context() as c :
 
-			h1 = n["task"].hash()
+			self.assertEqual( n["task"].hash(), IECore.MurmurHash() )
 			c["frame"] = 10.0
-			h2 = n["task"].hash()
-
-			self.assertEqual( h1, h2 )
+			self.assertEqual( n["task"].hash(), IECore.MurmurHash() )
 
 		n2 = GafferDispatch.TaskList( "TaskList2" )
 		with Gaffer.Context() as c :
 
-			self.assertEqual( n2["task"].hash(), h1 )
+			self.assertEqual( n2["task"].hash(), IECore.MurmurHash() )
 			c["frame"] = 10.0
-			self.assertEqual( n2["task"].hash(), h2 )
+			self.assertEqual( n2["task"].hash(), IECore.MurmurHash() )
+
+	def testSequenceExecution( self ) :
+
+		n = GafferDispatch.TaskList()
+		self.assertFalse( n["task"].requiresSequenceExecution() )
+
+		n["sequence"].setValue( True )
+		self.assertTrue( n["task"].requiresSequenceExecution() )
 
 if __name__ == "__main__":
 	unittest.main()
