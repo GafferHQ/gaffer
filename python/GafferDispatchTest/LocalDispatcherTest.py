@@ -989,5 +989,27 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 			]
 		)
 
+	def testSubprocessMessages( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["command"] = GafferDispatch.PythonCommand()
+		script["command"]["command"].setValue( inspect.cleandoc(
+			"""
+			import sys
+			sys.stderr.write( "Hello stderr!\\n" )
+			sys.stdout.write( "Hello stdout!\\n" )
+			"""
+		) )
+
+		dispatcher = self.__createLocalDispatcher()
+		dispatcher["executeInBackground"].setValue( True )
+		dispatcher.dispatch( [ script["command"] ] )
+		dispatcher.jobPool().waitForAll()
+
+		messages = dispatcher.jobPool().jobs()[0].messageHandler().messages
+		messages = { m.message for m in messages }
+		self.assertIn( "Hello stderr!", messages )
+		self.assertIn( "Hello stdout!", messages )
+
 if __name__ == "__main__":
 	unittest.main()

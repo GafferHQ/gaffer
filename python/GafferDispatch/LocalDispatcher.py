@@ -239,7 +239,8 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 				batch.execute()
 				return
 
-			# Background execution. Launch a separate process
+			# Background execution. Launch a separate process.
+			# Start by building the command arguments.
 
 			taskContext = batch.context()
 			frames = str( IECore.frameListFromList( [ int(x) for x in batch.frames() ] ) )
@@ -263,15 +264,41 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			if contextArgs :
 				args.extend( [ "-context" ] + contextArgs )
 
-			if os.name == "nt":
-				if self.__environmentCommand :
-					process = subprocess.Popen( args, shell=True )
-				else :
-					process = subprocess.Popen( args )
-			else:
-				process = subprocess.Popen( args, start_new_session=True )
+			# Launch process.
 
+			platformKW = { "start_new_session" : True } if os.name != "nt" else {}
+			process = subprocess.Popen(
+				args,
+				text = True, stdout = subprocess.PIPE, stderr = subprocess.STDOUT,
+				shell = os.name == "nt" and self.__environmentCommand,
+				**platformKW,
+			)
 			batch.blindData()["pid"] = IECore.IntData( process.pid )
+
+			# Launch a thread to monitor the output stream and feed it into a
+			# our message handler. We must do this on a thread because reading
+			# from the stream is a blocking operation, and we need to check for
+			# cancellation periodically even if there is no output.
+			# > Note : `os.set_blocking( False )` is not a good solution because :
+			# >  1. It is not available on Windows until Python 3.12.
+			# >  2. If we interleave sleeping and reading on one thread, processes
+			# >     with a lot of output are artifically slowed by the sleeps.
+
+			def handleOutput( stream, messageContext, messageHandler ) :
+
+				for line in iter( stream.readline, "" ) :
+					messageHandler.handle( IECore.Msg.Level.Info, messageContext, line[:-1] )
+				stream.close()
+
+			outputHandler = threading.Thread(
+				target = handleOutput,
+				args = [ process.stdout, str( batch.blindData()["nodeName"] ), self.__messageHandler ],
+				name = "localDispatcherOutputHandler",
+			)
+			outputHandler.start()
+
+			# Wait for the process to complete, killing it if cancellation
+			# is requested in the meantime.
 
 			while process.poll() is None :
 
@@ -280,9 +307,12 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 						subprocess.check_call( [ "TASKKILL", "/F", "/PID", str( process.pid ), "/T" ] )
 					else :
 						os.killpg( process.pid, signal.SIGTERM )
+					outputHandler.join()
 					raise IECore.Cancelled()
 
 				time.sleep( 0.01 )
+
+			outputHandler.join()
 
 			if process.returncode :
 				raise subprocess.CalledProcessError(
