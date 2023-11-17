@@ -321,14 +321,14 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 			return self.__jobRemovedSignal
 
-		def _append( self, job ) :
+		def addJob( self, job ) :
 
 			assert( isinstance( job, LocalDispatcher.Job ) )
 
 			self.__jobs.append( job )
 			self.jobAddedSignal()( job )
 
-		def _remove( self, job ) :
+		def removeJob( self, job ) :
 
 			if job in self.__jobs :
 				self.__jobs.remove( job )
@@ -352,7 +352,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			dispatcher = self,
 		)
 
-		self.__jobPool._append( job )
+		self.__jobPool.addJob( job )
 		job._execute()
 
 IECore.registerRunTimeTyped( LocalDispatcher, typeName = "GafferDispatch::LocalDispatcher" )

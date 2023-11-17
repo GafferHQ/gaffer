@@ -20,7 +20,9 @@ Fixes
 API
 ---
 
-- LocalDispatcher : Added `Job.status()` method.
+- LocalDispatcher :
+  - Added `Job.status()` method.
+  - Added `JobPool.addJob()` and `JobPool.removeJob()` methods.
 
 Breaking Changes
 ----------------

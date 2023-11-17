@@ -906,5 +906,31 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 			GafferDispatch.LocalDispatcher.Job.Status.Failed
 		)
 
+	def testJobPoolSignals( self ) :
+
+		dispatcher = self.__createLocalDispatcher()
+
+		jobAddedSlot = GafferTest.CapturingSlot( dispatcher.jobPool().jobAddedSignal() )
+		jobRemovedSlot = GafferTest.CapturingSlot( dispatcher.jobPool().jobRemovedSignal() )
+
+		script = Gaffer.ScriptNode()
+		script["taskNode"] = GafferDispatchTest.LoggingTaskNode()
+
+		self.assertEqual( len( jobAddedSlot ), 0 )
+		self.assertEqual( len( jobRemovedSlot ), 0 )
+
+		dispatcher.dispatch( [ script["taskNode"] ] )
+
+		self.assertEqual( len( jobAddedSlot ), 1 )
+		job = jobAddedSlot[0][0]
+		self.assertIsInstance( job, GafferDispatch.LocalDispatcher.Job )
+		self.assertIs( job, dispatcher.jobPool().jobs()[0] )
+		self.assertEqual( len( jobRemovedSlot ), 0 )
+
+		dispatcher.jobPool().removeJob( job )
+		self.assertEqual( len( jobAddedSlot ), 1 )
+		self.assertEqual( len( jobRemovedSlot ), 1 )
+		self.assertIs( jobRemovedSlot[0][0], job )
+
 if __name__ == "__main__":
 	unittest.main()
