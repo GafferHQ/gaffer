@@ -36,7 +36,6 @@
 
 import enum
 import os
-import errno
 import signal
 import shlex
 import subprocess
