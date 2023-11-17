@@ -17,6 +17,11 @@ API
 
 - SceneGadget : Added `snapshotToFile()` method.
 
+Build
+-----
+
+- Instancer : Fixed ambiguous reference compilation errors when building with Boost 1.70.
+
 1.3.7.0 (relative to 1.3.6.1)
 =======
 

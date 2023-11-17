@@ -756,13 +756,13 @@ class Instancer::EngineData : public Data
 			template<typename T>
 			AttributeCreator operator()( const TypedData<vector<T>> *data )
 			{
-				return std::bind( &createAttribute<T>, data->readable(), ::_1 );
+				return std::bind( &createAttribute<T>, data->readable(), std::placeholders::_1 );
 			}
 
 			template<typename T>
 			AttributeCreator operator()( const GeometricTypedData<vector<T>> *data )
 			{
-				return std::bind( &createGeometricAttribute<T>, data->readable(), data->getInterpretation(), ::_1 );
+				return std::bind( &createGeometricAttribute<T>, data->readable(), data->getInterpretation(), std::placeholders::_1 );
 			}
 
 			AttributeCreator operator()( const Data *data )
