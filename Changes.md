@@ -9,6 +9,7 @@ Improvements
 - TaskList, FrameMask : Reimplemented in C++ for improved performance.
 - LocalDispatcher :
   - Added a new dockable LocalJobs editor, to replace the floating window previously accessible via the "Execute/Local Jobs" menu item.
+  - Task output is now shown in the UI.
   - Jobs are no longer removed from the UI as soon as they complete.
 - Cache : Increased default computation cache size to 8Gb. Call `Gaffer.ValuePlug.setCacheMemoryLimit()` from a startup file to override this.
 - Dispatcher : Reduced internal overhead of `dispatch()` call, with one benchmark showing around a 3x speedup.
