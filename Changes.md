@@ -23,6 +23,7 @@ API
 
 - LocalDispatcher :
   - Added `Job.status()` and `Job.statusChangedSignal()` methods.
+  - Added `Job.messages()` and `Job.messagesChangedSignal()` methods.
   - Added `JobPool.addJob()` and `JobPool.removeJob()` methods.
 - ParallelAlgo : Added `canCallOnUIThread()` function.
 
@@ -38,6 +39,7 @@ Breaking Changes
   - Removed `JobPool.failedJobs()` method. Failed jobs now remain in place in the main `jobs()` container.
   - Removed `Job.failed()` and `Job.killed()` methods. Use `Job.status()` instead.
   - Removed `Job.execute()` method. This should not have been public.
+  - Removed `Job.messageHandler()` method. Use `Job.messages()` instead.
   - JobPool no longer derives from RunTimeTyped.
 - LocalDispatcherUI : Removed `appendMenuDefinitions()` function.
 - Process : Removed non-const variant of the `handleException()` method.

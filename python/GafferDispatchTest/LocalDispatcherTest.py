@@ -1006,7 +1006,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		dispatcher.dispatch( [ script["command"] ] )
 		dispatcher.jobPool().waitForAll()
 
-		messages = dispatcher.jobPool().jobs()[0].messageHandler().messages
+		messages = dispatcher.jobPool().jobs()[0].messages()
 		messages = { m.message for m in messages }
 		self.assertIn( "Hello stderr!", messages )
 		self.assertIn( "Hello stdout!", messages )

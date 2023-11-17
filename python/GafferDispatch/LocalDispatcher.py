@@ -90,7 +90,9 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			)
 			self.__executeInBackground = dispatcher["executeInBackground"].getValue()
 
-			self.__messageHandler = IECore.CapturingMessageHandler()
+			self.__messageHandler = _MessageHandler()
+			self.__messagesChangedSignal = Gaffer.Signal1()
+			self.__messageHandler.messagesChangedSignal().connect( Gaffer.WeakMethod( self.__messagesChanged ), scoped = False )
 			self.__messageTitle = "%s : Job %s %s" % ( dispatcher.getName(), self.__name, self.__id )
 
 			self.__initBatchWalk( batch )
@@ -151,10 +153,6 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 				"rss" : rss,
 			}
 
-		def messageHandler( self ) :
-
-			return self.__messageHandler
-
 		def status( self ) :
 
 			return self.__status
@@ -167,6 +165,14 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 		def statusChangedSignal( self ) :
 
 			return self.__statusChangedSignal
+
+		def messages( self ) :
+
+			return self.__messageHandler.messages()
+
+		def messagesChangedSignal( self ) :
+
+			return self.__messagesChangedSignal
 
 		def _execute( self ) :
 
@@ -342,6 +348,10 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			elif Gaffer.ParallelAlgo.canCallOnUIThread() :
 				Gaffer.ParallelAlgo.callOnUIThread( functools.partial( self.statusChangedSignal(), self ) )
 
+		def __messagesChanged( self ) :
+
+			self.__messagesChangedSignal( self )
+
 	class JobPool :
 
 		def __init__( self ) :
@@ -403,3 +413,49 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 IECore.registerRunTimeTyped( LocalDispatcher, typeName = "GafferDispatch::LocalDispatcher" )
 GafferDispatch.Dispatcher.registerDispatcher( "Local", LocalDispatcher )
+
+## \todo Should this be a shared component implemented in C++ in `Messages.h`?
+# It is incredibly similar to the handler in `InteractiveRender.cpp`.
+class _MessageHandler( IECore.MessageHandler ) :
+
+	def __init__( self ) :
+
+		IECore.MessageHandler.__init__( self )
+
+		self.__mutex = threading.Lock()
+		self.__messages = Gaffer.Private.IECorePreview.Messages()
+		self.__messagesChangedSignal = Gaffer.Signal0()
+		self.__messagesChangedPending = False
+
+	def messages( self ) :
+
+		with self.__mutex :
+			return Gaffer.Private.IECorePreview.Messages( self.__messages )
+
+	def messagesChangedSignal( self ) :
+
+		return self.__messagesChangedSignal
+
+	def handle( self, level, context, msg ) :
+
+		with self.__mutex :
+			self.__messages.add( Gaffer.Private.IECorePreview.Message( level, context, msg ) )
+			pendingAlready = self.__messagesChangedPending
+			self.__messagesChangedPending = True
+
+		if threading.current_thread() is threading.main_thread() :
+			self.__messagesChangedSignal()
+			return
+
+		if pendingAlready :
+			return
+
+		if Gaffer.ParallelAlgo.canCallOnUIThread() :
+			Gaffer.ParallelAlgo.callOnUIThread( self.__messagesChangedUICall )
+
+	def __messagesChangedUICall( self ) :
+
+		with self.__mutex :
+			self.__messagesChangedPending = False
+
+		self.__messagesChangedSignal()

@@ -240,7 +240,7 @@ class LocalJobs( GafferUI.Editor ) :
 		if len( jobs ) != 1 :
 			return
 
-		for m in jobs[0].messageHandler().messages :
+		for m in jobs[0].messages() :
 			self.__messageWidget.messageHandler().handle( m.level, m.context, m.message )
 
 	def __killClicked( self, button ) :
