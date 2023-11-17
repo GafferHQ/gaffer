@@ -35,10 +35,12 @@
 ##########################################################################
 
 import enum
+import functools
 import os
 import signal
 import shlex
 import subprocess
+import threading
 import time
 import traceback
 
@@ -92,6 +94,8 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			self.__messageTitle = "%s : Job %s %s" % ( dispatcher.getName(), self.__name, self.__id )
 
 			self.__initBatchWalk( batch )
+
+			self.__statusChangedSignal = Gaffer.Signal1()
 
 			self.__currentBatch = None
 			self.__status = self.Status.Waiting
@@ -160,6 +164,10 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			if self.__backgroundTask is not None :
 				self.__backgroundTask.cancel()
 
+		def statusChangedSignal( self ) :
+
+			return self.__statusChangedSignal
+
 		def _execute( self ) :
 
 			if self.__executeInBackground :
@@ -170,18 +178,18 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 		def __executeInternal( self, canceller = None ) :
 
 			with self.__messageHandler :
-				self.__status = self.Status.Running
+				self.__updateStatus( self.Status.Running )
 				try :
 					self.__executeWalk( self.__batch, canceller )
 				except IECore.Cancelled :
-					self.__status = self.Status.Killed
+					self.__updateStatus( self.Status.Killed )
 					IECore.msg( IECore.MessageHandler.Level.Info, self.__messageTitle, "Killed " + self.name() )
 				except :
-					self.__status = self.Status.Failed
+					self.__updateStatus( self.Status.Failed )
 					if not self.__executeInBackground :
 						raise
 				else :
-					self.__status = self.Status.Complete
+					self.__updateStatus( self.Status.Complete )
 					IECore.msg( IECore.MessageHandler.Level.Info, self.__messageTitle, "Dispatched all tasks for " + self.name() )
 
 		def __executeWalk( self, batch, canceller ) :
@@ -295,6 +303,14 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 			for upstreamBatch in batch.preTasks() :
 				self.__initBatchWalk( upstreamBatch )
+
+		def __updateStatus( self, status ) :
+
+			self.__status = status
+			if threading.current_thread() is threading.main_thread() :
+				self.statusChangedSignal()( self )
+			elif Gaffer.ParallelAlgo.canCallOnUIThread() :
+				Gaffer.ParallelAlgo.callOnUIThread( functools.partial( self.statusChangedSignal(), self ) )
 
 	class JobPool :
 

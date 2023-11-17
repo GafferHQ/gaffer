@@ -41,6 +41,8 @@ import unittest
 import time
 import inspect
 import functools
+import threading
+import weakref
 
 import imath
 
@@ -931,6 +933,61 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( len( jobAddedSlot ), 1 )
 		self.assertEqual( len( jobRemovedSlot ), 1 )
 		self.assertIs( jobRemovedSlot[0][0], job )
+
+	def testJobStatusChangedSignal( self ) :
+
+		# Create dispatcher and connect to signals
+
+		dispatcher = self.__createLocalDispatcher()
+
+		statusChanges = []
+		def statusChanged( job ) :
+
+			self.assertIs( threading.current_thread(), threading.main_thread() )
+			# Job holds a reference to the `statusChanged()` function (via
+			# `statusChangedSignal()`), and we hold a reference to the
+			# `statusChanges` list. Use `weakref` to avoid creating a circular
+			# reference back to the job.
+			statusChanges.append( ( weakref.proxy( job ), job.status() ) )
+
+		def jobAdded( job ) :
+
+			job.statusChangedSignal().connect( statusChanged, scoped = False )
+
+		dispatcher.jobPool().jobAddedSignal().connect( jobAdded, scoped = False )
+
+		# Test foreground dispatch
+
+		script = Gaffer.ScriptNode()
+		script["taskNode"] = GafferDispatchTest.LoggingTaskNode()
+
+		dispatcher.dispatch( [ script["taskNode"] ] )
+
+		self.assertEqual(
+			statusChanges,
+			[
+				( dispatcher.jobPool().jobs()[0], GafferDispatch.LocalDispatcher.Job.Status.Running ),
+				( dispatcher.jobPool().jobs()[0], GafferDispatch.LocalDispatcher.Job.Status.Complete )
+			]
+		)
+
+		# Test background dispatch
+
+		dispatcher["executeInBackground"].setValue( True )
+		del statusChanges[:]
+
+		with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as handler :
+			dispatcher.dispatch( [ script["taskNode"] ] )
+			handler.assertCalled()
+			dispatcher.jobPool().waitForAll()
+
+		self.assertEqual(
+			statusChanges,
+			[
+				( dispatcher.jobPool().jobs()[1], GafferDispatch.LocalDispatcher.Job.Status.Running ),
+				( dispatcher.jobPool().jobs()[1], GafferDispatch.LocalDispatcher.Job.Status.Complete )
+			]
+		)
 
 if __name__ == "__main__":
 	unittest.main()
