@@ -9,6 +9,7 @@ Features
 Fixes
 -----
 
+- InteractiveArnoldRender : Fixed creation of new Catalogue image when editing output metadata or pixel filter.
 - Windows `Scene/OpenGL/Shader` Menu : Removed `\` at the beginning of menu items.
 
 API

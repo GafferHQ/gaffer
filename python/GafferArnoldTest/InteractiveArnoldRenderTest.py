@@ -747,6 +747,173 @@ class InteractiveArnoldRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 				self.assertEqual( len( script["catalogue"]["images"] ), 1 )
 				self.assertNotIn( "gaffer:isRendering", script["catalogue"]["out"].metadata() )
 
+	## \todo Promote to InteractiveRenderTest and check it works for other renderer backends.
+	def testEditOutputMetadata( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["catalogue"] = GafferImage.Catalogue()
+
+		script["sphere"] = GafferScene.Sphere()
+
+		script["outputs"] = GafferScene.Outputs()
+		script["outputs"]["in"].setInput( script["sphere"]["out"] )
+
+		script["outputs"].addOutput(
+			"beauty",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ClientDisplayDriver",
+					"displayHost" : "localhost",
+					"displayPort" : str( script["catalogue"].displayDriverServer().portNumber() ),
+					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+					"header:test1" : "hello",
+					"header:test2" : "world",
+				}
+			)
+		)
+
+		script["renderer"] = self._createInteractiveRender()
+		script["renderer"]["in"].setInput( script["outputs"]["out"] )
+
+		# Start a render, give it time to finish, and check we have our
+		# custom metadata in the outputs.
+
+		script["renderer"]["state"].setValue( script["renderer"].State.Running )
+		self.uiThreadCallHandler.waitFor( 1 )
+
+		self.assertEqual( len( script["catalogue"]["images"] ), 1 )
+		self.assertEqual( script["catalogue"]["out"].metadata()["test1"], IECore.StringData( "hello" ) )
+		self.assertEqual( script["catalogue"]["out"].metadata()["test2"], IECore.StringData( "world" ) )
+
+		# Modify the header parameters and rerender.
+
+		with Gaffer.DirtyPropagationScope() :
+
+			script["outputs"]["outputs"][0]["parameters"]["header_test1"]["name"].setValue( "header:test1B" )
+			script["outputs"]["outputs"][0]["parameters"]["header_test2"]["value"].setValue( "edited" )
+
+		self.uiThreadCallHandler.waitFor( 1 )
+
+		self.assertEqual( len( script["catalogue"]["images"] ), 1 )
+		self.assertNotIn( "test1", script["catalogue"]["out"].metadata() )
+		self.assertEqual( script["catalogue"]["out"].metadata()["test1B"], IECore.StringData( "hello" ) )
+		self.assertEqual( script["catalogue"]["out"].metadata()["test2"], IECore.StringData( "edited" ) )
+
+	## \todo Promote to InteractiveRenderTest and check it works for other renderer backends.
+	def testEditOutputType( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["catalogue"] = GafferImage.Catalogue()
+
+		script["sphere"] = GafferScene.Sphere()
+
+		script["outputs"] = GafferScene.Outputs()
+		script["outputs"]["in"].setInput( script["sphere"]["out"] )
+
+		script["outputs"].addOutput(
+			"beauty",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ClientDisplayDriver",
+					"displayHost" : "localhost",
+					"displayPort" : str( script["catalogue"].displayDriverServer().portNumber() ),
+					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+				}
+			)
+		)
+
+		script["renderer"] = self._createInteractiveRender()
+		script["renderer"]["in"].setInput( script["outputs"]["out"] )
+
+		# Start a render, give it time to finish, and check we have an image.
+
+		script["renderer"]["state"].setValue( script["renderer"].State.Running )
+		self.uiThreadCallHandler.waitFor( 1 )
+
+		self.assertEqual( len( script["catalogue"]["images"] ), 1 )
+		self.assertEqual( script["catalogue"]["out"].metadata()["gaffer:isRendering"], IECore.BoolData( True ) )
+
+		# Modify the output to render to file instead of the catalogue, and check
+		# the catalogue image is closed and the file is created.
+
+		with Gaffer.DirtyPropagationScope() :
+
+			script["outputs"]["outputs"][0]["fileName"].setValue( self.temporaryDirectory() / "test.exr" )
+			script["outputs"]["outputs"][0]["type"].setValue( "exr" )
+
+		self.uiThreadCallHandler.waitFor( 1 )
+
+		self.assertEqual( len( script["catalogue"]["images"] ), 1 )
+		self.assertNotIn( "gaffer:isRendering", script["catalogue"]["out"].metadata() )
+		self.assertTrue( ( self.temporaryDirectory() / "test.exr" ).is_file() )
+
+	## \todo Promote to InteractiveRenderTest and check it works for other renderer backends.
+	def testEditOutputFilterType( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["catalogue"] = GafferImage.Catalogue()
+
+		script["sphere"] = GafferScene.Sphere()
+
+		script["outputs"] = GafferScene.Outputs()
+		script["outputs"]["in"].setInput( script["sphere"]["out"] )
+
+		script["outputs"].addOutput(
+			"beauty",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ClientDisplayDriver",
+					"displayHost" : "localhost",
+					"displayPort" : str( script["catalogue"].displayDriverServer().portNumber() ),
+					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+					"filter" : "gaussian"
+				}
+			)
+		)
+
+		script["renderer"] = self._createInteractiveRender()
+		script["renderer"]["in"].setInput( script["outputs"]["out"] )
+
+		# Start a render, give it time to finish, and check we have an image.
+
+		script["renderer"]["state"].setValue( script["renderer"].State.Running )
+		self.uiThreadCallHandler.waitFor( 1 )
+
+		self.assertEqual( len( script["catalogue"]["images"] ), 1 )
+		self.assertEqual( script["catalogue"]["out"].metadata()["gaffer:isRendering"], IECore.BoolData( True ) )
+
+		self.assertAlmostEqual(
+			self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ).r,
+			1,
+			delta = 0.01
+		)
+
+		# Modify the output to use a different filter, check we're still
+		# rendering to the same image in the catalogue, and that the image
+		# has been affected by the filter.
+
+		script["outputs"]["outputs"][0]["parameters"]["filter"]["value"].setValue( "variance" )
+
+		self.uiThreadCallHandler.waitFor( 1 )
+
+		self.assertEqual( len( script["catalogue"]["images"] ), 1 )
+		self.assertEqual( script["catalogue"]["out"].metadata()["gaffer:isRendering"], IECore.BoolData( True ) )
+
+		self.assertAlmostEqual(
+			self._color4fAtUV( script["catalogue"], imath.V2f( 0.5 ) ).r,
+			0,
+			delta = 0.01
+		)
+
 	def _createConstantShader( self ) :
 
 		shader = GafferArnold.ArnoldShader()

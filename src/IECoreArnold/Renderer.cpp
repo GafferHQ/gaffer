@@ -471,8 +471,14 @@ class ArnoldOutput : public IECore::RefCounted
 	public :
 
 		ArnoldOutput( AtUniverse *universe, const IECore::InternedString &name, const IECoreScene::Output *output, NodeDeleter nodeDeleter )
+			:	m_universe( universe ), m_name( name ), m_nodeDeleter( nodeDeleter )
 		{
-			// Create a driver node and set its parameters.
+			update( output );
+		}
+
+		void update( const IECoreScene::Output *output )
+		{
+			// Create a driver node, or reuse the existing one if we can.
 
 			AtString driverNodeType( output->getType().c_str() );
 			if( AiNodeEntryGetType( AiNodeEntryLookUp( driverNodeType ) ) != AI_NODE_DRIVER )
@@ -486,15 +492,27 @@ class ArnoldOutput : public IECore::RefCounted
 				}
 			}
 
-			const std::string driverNodeName = fmt::format( "ieCoreArnold:display:{}", name.string() );
-			m_driver.reset(
-				AiNode( universe, driverNodeType, AtString( driverNodeName.c_str() ) ),
-				nodeDeleter
-			);
-			if( !m_driver )
+			if( m_driver && AiNodeEntryGetNameAtString( AiNodeGetNodeEntry( m_driver.get() ) ) == driverNodeType )
 			{
-				throw IECore::Exception( fmt::format( "Unable to create output driver of type \"{}\"", driverNodeType.c_str() ) );
+				// Reuse
+				AiNodeReset( m_driver.get() );
 			}
+			else
+			{
+				// Create
+				m_driver = nullptr; // Delete old driver so name doesn't clash with new driver
+				const std::string driverNodeName = fmt::format( "ieCoreArnold:display:{}", m_name.string() );
+				m_driver.reset(
+					AiNode( m_universe, driverNodeType, AtString( driverNodeName.c_str() ) ),
+					m_nodeDeleter
+				);
+				if( !m_driver )
+				{
+					throw IECore::Exception( fmt::format( "Unable to create output driver of type \"{}\"", driverNodeType.c_str() ) );
+				}
+			}
+
+			// Set driver parameters.
 
 			if( const AtParamEntry *fileNameParameter = AiNodeEntryLookUpParameter( AiNodeGetNodeEntry( m_driver.get() ), g_fileNameArnoldString ) )
 			{
@@ -511,6 +529,7 @@ class ArnoldOutput : public IECore::RefCounted
 				customAttributesData = new IECore::StringVectorData();
 			}
 
+			m_cameraOverride = "";
 			std::vector<std::string> &customAttributes = customAttributesData->writable();
 			for( IECore::CompoundDataMap::const_iterator it = output->parameters().begin(), eIt = output->parameters().end(); it != eIt; ++it )
 			{
@@ -545,7 +564,7 @@ class ArnoldOutput : public IECore::RefCounted
 				ParameterAlgo::setParameter( m_driver.get(), "custom_attributes", customAttributesData.get() );
 			}
 
-			// Create a filter.
+			// Create a filter node, or reuse an existing one if we can.
 
 			std::string filterNodeType = parameter<std::string>( output->parameters(), "filter", "gaussian" );
 			if( AiNodeEntryGetType( AiNodeEntryLookUp( AtString( filterNodeType.c_str() ) ) ) != AI_NODE_FILTER )
@@ -553,15 +572,27 @@ class ArnoldOutput : public IECore::RefCounted
 				filterNodeType = filterNodeType + "_filter";
 			}
 
-			const std::string filterNodeName = fmt::format( "ieCoreArnold:filter:{}", name.string() );
-			m_filter.reset(
-				AiNode( universe, AtString( filterNodeType.c_str() ), AtString( filterNodeName.c_str() ) ),
-				nodeDeleter
-			);
-			if( AiNodeEntryGetType( AiNodeGetNodeEntry( m_filter.get() ) ) != AI_NODE_FILTER )
+			if( m_filter && AiNodeEntryGetName( AiNodeGetNodeEntry( m_filter.get() ) ) == filterNodeType )
 			{
-				throw IECore::Exception( fmt::format( "Unable to create filter of type \"{}\"", filterNodeType ) );
+				// Reuse
+				AiNodeReset( m_filter.get() );
 			}
+			else
+			{
+				// Create
+				m_filter = nullptr; // Delete old filter so name doesn't clash with new filter
+				const std::string filterNodeName = fmt::format( "ieCoreArnold:filter:{}", m_name.string() );
+				m_filter.reset(
+					AiNode( m_universe, AtString( filterNodeType.c_str() ), AtString( filterNodeName.c_str() ) ),
+					m_nodeDeleter
+				);
+				if( AiNodeEntryGetType( AiNodeGetNodeEntry( m_filter.get() ) ) != AI_NODE_FILTER )
+				{
+					throw IECore::Exception( fmt::format( "Unable to create filter of type \"{}\"", filterNodeType ) );
+				}
+			}
+
+			// Set filter parameters.
 
 			for( IECore::CompoundDataMap::const_iterator it = output->parameters().begin(), eIt = output->parameters().end(); it != eIt; ++it )
 			{
@@ -632,7 +663,7 @@ class ArnoldOutput : public IECore::RefCounted
 					}
 					else if( tokens[0] == "lpe" )
 					{
-						m_lpeName = m_layerName.size() ? m_layerName : "ieCoreArnold:lpe:" + name.string();
+						m_lpeName = m_layerName.size() ? m_layerName : "ieCoreArnold:lpe:" + m_name.string();
 						m_lpeValue = tokens[1];
 						m_data = m_lpeName;
 						m_type = colorType;
@@ -652,7 +683,7 @@ class ArnoldOutput : public IECore::RefCounted
 						/// to use the standard Cortex formatting instead.
 						IECore::msg(
 							IECore::Msg::Warning, "ArnoldRenderer",
-							fmt::format( "Unknown data type \"{}\" for output \"{}\"", tokens[0], name.string() )
+							fmt::format( "Unknown data type \"{}\" for output \"{}\"", tokens[0], m_name.string() )
 						);
 						m_data = tokens[0];
 						m_type = tokens[1];
@@ -663,7 +694,7 @@ class ArnoldOutput : public IECore::RefCounted
 					/// \todo See above.
 					IECore::msg(
 						IECore::Msg::Warning, "ArnoldRenderer",
-						fmt::format( "Unknown data specification \"{}\" for output \"{}\"", output->getData(), name.string() )
+						fmt::format( "Unknown data specification \"{}\" for output \"{}\"", output->getData(), m_name.string() )
 					);
 					m_data = output->getData();
 					m_type = "";
@@ -687,7 +718,7 @@ class ArnoldOutput : public IECore::RefCounted
 					if( m_lpeName.empty() )
 					{
 						IECore::msg( IECore::Msg::Warning, "ArnoldRenderer",
-							fmt::format( "Cannot use `layerName` with `layerPerLightGroup` for non-LPE output \"{}\", due to Arnold bug #12282", name.string() )
+							fmt::format( "Cannot use `layerName` with `layerPerLightGroup` for non-LPE output \"{}\", due to Arnold bug #12282", m_name.string() )
 						);
 					}
 					else
@@ -740,6 +771,9 @@ class ArnoldOutput : public IECore::RefCounted
 
 	private :
 
+		AtUniverse *m_universe;
+		const IECore::InternedString m_name;
+		NodeDeleter m_nodeDeleter;
 		SharedAtNodePtr m_driver;
 		SharedAtNodePtr m_filter;
 		std::string m_data;
@@ -3648,21 +3682,30 @@ class ArnoldGlobals
 
 		void output( const IECore::InternedString &name, const IECoreScene::Output *output )
 		{
-			m_outputs.erase( name );
-			if( output )
+			if( !output )
 			{
-				try
-				{
-					ArnoldOutputPtr o = new ArnoldOutput( m_universeBlock->universe(), name, output, nodeDeleter( m_renderType ) );
-					o->updateImager( m_imager ? m_imager->root() : nullptr );
-					m_outputs[name] = o;
-				}
-				catch( const std::exception &e )
-				{
-					IECore::msg( IECore::Msg::Warning, "IECoreArnold::Renderer::output", e.what() );
-				}
+				m_outputs.erase( name );
+				return;
 			}
 
+			try
+			{
+				ArnoldOutputPtr &arnoldOutput = m_outputs[name];
+				if( arnoldOutput )
+				{
+					arnoldOutput->update( output );
+				}
+				else
+				{
+					arnoldOutput = new ArnoldOutput( m_universeBlock->universe(), name, output, nodeDeleter( m_renderType ) );
+				}
+				arnoldOutput->updateImager( m_imager ? m_imager->root() : nullptr );
+			}
+			catch( const std::exception &e )
+			{
+				IECore::msg( IECore::Msg::Warning, "IECoreArnold::Renderer::output", e.what() );
+				m_outputs.erase( name );
+			}
 		}
 
 		// Some of Arnold's globals come from camera parameters, so the
