@@ -232,17 +232,6 @@ class LocalJobs( GafferUI.Editor ) :
 		self.__detailsCurrentDescription.setText( jobs[0].description() )
 		self.__detailsDirectory.setText( jobs[0].directory() )
 
-	def __updateMessages( self ) :
-
-		self.__messageWidget.clear()
-
-		jobs = self.__selectedJobs()
-		if len( jobs ) != 1 :
-			return
-
-		for m in jobs[0].messages() :
-			self.__messageWidget.messageHandler().handle( m.level, m.context, m.message )
-
 	def __killClicked( self, button ) :
 
 		for job in self.__selectedJobs() :
@@ -270,17 +259,24 @@ class LocalJobs( GafferUI.Editor ) :
 		self.__removeButton.setEnabled( len( jobs ) )
 		self.__killButton.setEnabled( any( j.status() == j.Status.Running for j in jobs ) )
 
+		if len( jobs ) == 1 :
+			self.__messageWidget.setMessages( jobs[0].messages() )
+			self.__messagesChangedConnection = jobs[0].messagesChangedSignal().connect( Gaffer.WeakMethod( self.__messagesChanged ), scoped = True )
+		else :
+			self.__messageWidget.clear()
+			self.__messagesChangedConnection = None
+
 		currentTab = self.__tabs.getCurrent()
 		if currentTab is self.__detailsTab :
 			self.__updateDetails()
-		elif currentTab is self.__messagesTab :
-			self.__updateMessages()
 
 	def __tabChanged( self, tabs, currentTab ) :
 
 		if currentTab is self.__detailsTab :
 			self.__updateDetails()
-		elif currentTab is self.__messagesTab :
-			self.__updateMessages()
+
+	def __messagesChanged( self, job ) :
+
+		self.__messageWidget.setMessages( job.messages() )
 
 GafferUI.Editor.registerType( "LocalJobs", LocalJobs )

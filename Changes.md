@@ -16,7 +16,9 @@ Improvements
 Fixes
 -----
 
-- LocalDispatcher : Stopped failed jobs jumping to the end of the Local Jobs UI.
+- LocalDispatcher :
+  - Stopped failed jobs jumping to the end of the Local Jobs UI.
+  - Fixed message log update.
 
 API
 ---
