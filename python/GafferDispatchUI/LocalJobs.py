@@ -149,6 +149,10 @@ class LocalJobs( GafferUI.Editor ) :
 
 			with GafferUI.TabbedContainer() as self.__tabs :
 
+				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=10, borderWidth=10, parenting = { "label"  : "Log" } ) as self.__messagesTab :
+					self.__messageWidget = GafferUI.MessageWidget( toolbars = True, follow = True, role = GafferUI.MessageWidget.Role.Log )
+					self.__messageWidget._qtWidget().setMinimumHeight( 150 )
+
 				with GafferUI.ScrolledContainer( parenting = { "label"  : "Details" } ) as self.__detailsTab :
 
 					with GafferUI.GridContainer( spacing=10, borderWidth=10 ) :
@@ -160,10 +164,6 @@ class LocalJobs( GafferUI.Editor ) :
 						GafferUI.Label( "Job Directory", parenting = { "index" : ( 0, 1 ) } )
 						self.__detailsDirectory = GafferUI.Label(  parenting = { "index" : ( 1, 1 ) } )
 						self.__detailsDirectory.setTextSelectable( True )
-
-				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=10, borderWidth=10, parenting = { "label"  : "Log" } ) as self.__messagesTab :
-					self.__messageWidget = GafferUI.MessageWidget( toolbars = True, follow = True )
-					self.__messageWidget._qtWidget().setMinimumHeight( 150 )
 
 			self.__tabs.currentChangedSignal().connect( Gaffer.WeakMethod( self.__tabChanged ), scoped = False )
 
