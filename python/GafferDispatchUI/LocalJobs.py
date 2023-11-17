@@ -235,16 +235,12 @@ class LocalJobs( GafferUI.Editor ) :
 		for job in self.__selectedJobs() :
 			job.kill()
 
-		self.__update()
-
 	def __removeClicked( self, button ) :
 
 		jobPool = self.__jobListingWidget.getPath().jobPool()
 		for job in self.__selectedJobs() :
 			job.kill()
 			jobPool.removeJob( job )
-
-		self.__update()
 
 	def __selectedJobs( self ) :
 
