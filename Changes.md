@@ -43,6 +43,7 @@ Breaking Changes
   - Removed `JobPool.jobFailedSignal()`.
   - Removed `JobPool.failedJobs()` method. Failed jobs now remain in place in the main `jobs()` container.
   - Removed `Job.failed()` and `Job.killed()` methods. Use `Job.status()` instead.
+  - Removed `Job.execute()` method. This should not have been public.
   - JobPool no longer derives from RunTimeTyped.
 - LocalDispatcherUI : Removed `appendMenuDefinitions()` function.
 - Process : Removed non-const variant of the `handleException()` method.
