@@ -672,14 +672,14 @@ class RendererAlgoTest( GafferSceneTest.SceneTestCase ) :
 				else :
 					self.assertIsNone( renderer.capturedObject( path ) )
 
-		# If we don't specify a purpose, then we should get everything.
+		# If we don't specify a purpose, then we should get just "default"
+		# and "render".
 
 		assertIncludedObjects(
 			group["out"], None,
 			{
 				"/group/innerGroup1/cube",
 				"/group/innerGroup1/sphere",
-				"/group/innerGroup2/cube",
 				"/group/innerGroup2/sphere",
 			}
 		)

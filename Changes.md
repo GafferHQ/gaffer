@@ -10,6 +10,7 @@ Improvements
 Breaking Changes
 ----------------
 
+- Render : Changed `render:includedPurposes` default to `"default", "render"`.
 - ValuePlug : Removed deprecated `getObjectValue()` overload.
 - Dispatcher : Removed `createMatching()` method.
 - Process : Removed non-const variant of the `handleException()` method.

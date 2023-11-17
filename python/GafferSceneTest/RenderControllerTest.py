@@ -1535,10 +1535,10 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 
 		self.assertIsNotNone( renderer.capturedObject( "/group/sphere" ) )
 
-		# Should still be visible when we add a purpose attribute, because we haven't
-		# specified the `render:includedPurposes` option.
+		# Should still be visible when we add a purpose of `render`, because that's included
+		# in the default for `render:includedPurposes`.
 
-		sphereAttributes["attributes"].addChild( Gaffer.NameValuePlug( "usd:purpose", "proxy", defaultEnabled = True ) )
+		sphereAttributes["attributes"].addChild( Gaffer.NameValuePlug( "usd:purpose", "render", defaultEnabled = True ) )
 		self.assertTrue( controller.updateRequired() )
 		controller.update()
 		self.assertIsNotNone( renderer.capturedObject( "/group/sphere" ) )
@@ -1546,9 +1546,10 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		# But should be hidden when we add `render:includedPurposes` to exclude it.
 
 		standardOptions["options"]["includedPurposes"]["enabled"].setValue( True )
+		standardOptions["options"]["includedPurposes"]["value"].setValue( IECore.StringVectorData( [ "default", "proxy" ] ) )
 		self.assertEqual(
 			standardOptions["options"]["includedPurposes"]["value"].getValue(),
-			IECore.StringVectorData( [ "default", "render" ] ),
+			IECore.StringVectorData( [ "default", "proxy" ] ),
 		)
 		self.assertTrue( controller.updateRequired() )
 		controller.update()
@@ -1556,7 +1557,7 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 
 		# Should be shown again if we change purpose to one that is included.
 
-		sphereAttributes["attributes"][0]["value"].setValue( "render" )
+		sphereAttributes["attributes"][0]["value"].setValue( "proxy" )
 		self.assertTrue( controller.updateRequired() )
 		controller.update()
 		self.assertIsNotNone( renderer.capturedObject( "/group/sphere" ) )
@@ -1564,7 +1565,7 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		# Shouldn't matter if parent has a purpose which is excluded, because local
 		# purpose will override that.
 
-		groupAttributes["attributes"].addChild( Gaffer.NameValuePlug( "usd:purpose", "proxy", defaultEnabled = True ) )
+		groupAttributes["attributes"].addChild( Gaffer.NameValuePlug( "usd:purpose", "render", defaultEnabled = True ) )
 		self.assertTrue( controller.updateRequired() )
 		controller.update()
 		self.assertIsNotNone( renderer.capturedObject( "/group/sphere" ) )
@@ -1577,7 +1578,8 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		controller.update()
 		self.assertIsNone( renderer.capturedObject( "/group/sphere" ) )
 
-		# Reverting to no `includedPurposes` option should revert to showing everything.
+		# Reverting to no `includedPurposes` option should revert to showing
+		# just `default` and `render`.
 
 		standardOptions["options"]["includedPurposes"]["enabled"].setValue( False )
 		self.assertTrue( controller.updateRequired() )
@@ -1640,7 +1642,7 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		# get another update.
 
 		del capture
-		standardOptions["options"]["includedPurposes"]["value"].setValue( IECore.StringVectorData( [ "default", "render", "proxy", "guide" ] ) )
+		standardOptions["options"]["includedPurposes"]["value"].setToDefault()
 		self.assertTrue( controller.updateRequired() )
 		controller.update()
 		assertExpectedRenderOptions()

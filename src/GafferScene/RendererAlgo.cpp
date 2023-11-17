@@ -91,9 +91,7 @@ const InternedString g_shutterOptionName( "option:render:shutter" );
 const InternedString g_includedPurposesOptionName( "option:render:includedPurposes" );
 const InternedString g_purposeAttributeName( "usd:purpose" );
 
-/// \todo We should really default to `{ "default", "render" }`, but can only
-/// change that on a major version update.
-const ConstStringVectorDataPtr g_defaultIncludedPurposes( new StringVectorData( { "default", "render", "proxy", "guide" } ) );
+const ConstStringVectorDataPtr g_defaultIncludedPurposes( new StringVectorData( { "default", "render" } ) );
 const std::string g_defaultPurpose( "default" );
 
 } // namespace
