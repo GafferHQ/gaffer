@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import threading
+
 import Gaffer
 import GafferUI
 import GafferDispatch
@@ -175,14 +177,17 @@ class LocalJobs( GafferUI.Editor ) :
 				self.__removeButton.setEnabled( False )
 				self.__removeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__removeClicked ), scoped = False )
 
-		self.__updateTimer = QtCore.QTimer()
-		self.__updateTimer.timeout.connect( Gaffer.WeakMethod( self.__update ) )
-		self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ), scoped = False )
-
+		# Connecting to the JobPool and Job signals allows us to update our PathListingWidget
+		# immediately when jobs are added and removed or their status changes.
 		jobPool.jobAddedSignal().connect( Gaffer.WeakMethod( self.__jobAdded ), scoped = False )
 		jobPool.jobRemovedSignal().connect( Gaffer.WeakMethod( self.__jobRemoved ), scoped = False )
 
-		self.__update()
+		# But we also want to perform periodic updates to sample CPU/memory statistics, which
+		# we do using this timer.
+		self.__statisticsTimer = QtCore.QTimer()
+		self.__statisticsTimer.timeout.connect( Gaffer.WeakMethod( self.__statisticsTimeout ) )
+		self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ), scoped = False )
+
 		self.__updateDetails()
 
 	def __repr__( self ) :
@@ -192,19 +197,27 @@ class LocalJobs( GafferUI.Editor ) :
 	def __visibilityChanged( self, widget ) :
 
 		if widget.visible() :
-			self.__updateTimer.start( 5000 )
+			self.__statisticsTimer.start( 5000 )
 		else :
-			self.__updateTimer.stop()
+			self.__statisticsTimer.stop()
 
 	def __jobAdded( self, job ) :
 
-		GafferUI.EventLoop.executeOnUIThread( self.__update )
+		assert( threading.current_thread() is threading.main_thread() )
+		job.statusChangedSignal().connect( Gaffer.WeakMethod( self.__jobStatusChanged ), scoped = False )
+		self.__jobListingWidget.getPath()._emitPathChanged()
 
 	def __jobRemoved( self, job ) :
 
-		GafferUI.EventLoop.executeOnUIThread( self.__update )
+		assert( threading.current_thread() is threading.main_thread() )
+		self.__jobListingWidget.getPath()._emitPathChanged()
 
-	def __update( self ) :
+	def __jobStatusChanged( self, job ) :
+
+		assert( threading.current_thread() is threading.main_thread() )
+		self.__jobListingWidget.getPath()._emitPathChanged()
+
+	def __statisticsTimeout( self ) :
 
 		self.__jobListingWidget.getPath()._emitPathChanged()
 
