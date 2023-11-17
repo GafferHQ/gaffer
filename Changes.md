@@ -21,7 +21,7 @@ API
 ---
 
 - LocalDispatcher :
-  - Added `Job.status()` method.
+  - Added `Job.status()` and `Job.statusChangedSignal()` methods.
   - Added `JobPool.addJob()` and `JobPool.removeJob()` methods.
 - ParallelAlgo : Added `canCallOnUIThread()` function.
 
