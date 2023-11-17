@@ -151,13 +151,6 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 			return self.__messageHandler
 
-		def execute( self ) :
-
-			if self.__executeInBackground :
-				self.__backgroundTask = Gaffer.BackgroundTask( None, self.__executeInternal )
-			else :
-				self.__executeInternal()
-
 		def status( self ) :
 
 			return self.__status
@@ -166,6 +159,13 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 			if self.__backgroundTask is not None :
 				self.__backgroundTask.cancel()
+
+		def _execute( self ) :
+
+			if self.__executeInBackground :
+				self.__backgroundTask = Gaffer.BackgroundTask( None, self.__executeInternal )
+			else :
+				self.__executeInternal()
 
 		def __executeInternal( self, canceller = None ) :
 
@@ -353,8 +353,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 		)
 
 		self.__jobPool._append( job )
-
-		job.execute()
+		job._execute()
 
 IECore.registerRunTimeTyped( LocalDispatcher, typeName = "GafferDispatch::LocalDispatcher" )
 GafferDispatch.Dispatcher.registerDispatcher( "Local", LocalDispatcher )
