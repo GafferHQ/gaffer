@@ -39,7 +39,6 @@ import os
 import signal
 import shlex
 import subprocess
-import threading
 import time
 import traceback
 
@@ -96,6 +95,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 			self.__currentBatch = None
 			self.__status = self.Status.Waiting
+			self.__backgroundTask = None
 
 		def name( self ) :
 
@@ -154,7 +154,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 		def execute( self ) :
 
 			if self.__executeInBackground :
-				threading.Thread( target = self.__executeInternal ).start()
+				self.__backgroundTask = Gaffer.BackgroundTask( None, self.__executeInternal )
 			else :
 				self.__executeInternal()
 
@@ -164,40 +164,36 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 		def kill( self ) :
 
-			self.__killBatchWalk( self.__batch )
+			if self.__backgroundTask is not None :
+				self.__backgroundTask.cancel()
 
-		def __killBatchWalk( self, batch ) :
-
-			if "killed" in batch.blindData() :
-				# Already visited via another path
-				return
-
-			# this doesn't set the status to Killed because that could
-			# run into a race condition with a background dispatch.
-			batch.blindData()["killed"] = IECore.BoolData( True )
-			for upstreamBatch in batch.preTasks() :
-				self.__killBatchWalk( upstreamBatch )
-
-		def __executeInternal( self ) :
+		def __executeInternal( self, canceller = None ) :
 
 			with self.__messageHandler :
 				self.__status = self.Status.Running
-				if self.__executeWalk( self.__batch ) :
-					self.__reportCompleted()
+				try :
+					self.__executeWalk( self.__batch, canceller )
+				except IECore.Cancelled :
+					self.__status = self.Status.Killed
+					IECore.msg( IECore.MessageHandler.Level.Info, self.__messageTitle, "Killed " + self.name() )
+				except :
+					self.__status = self.Status.Failed
+					if not self.__executeInBackground :
+						raise
+				else :
+					self.__status = self.Status.Complete
+					IECore.msg( IECore.MessageHandler.Level.Info, self.__messageTitle, "Dispatched all tasks for " + self.name() )
 
-		def __executeWalk( self, batch ) :
+		def __executeWalk( self, batch, canceller ) :
 
 			if "localDispatcher:executed" in batch.blindData() :
 				# Visited this batch by another path
-				return True
+				return
 
 			for upstreamBatch in batch.preTasks() :
-				if not self.__executeWalk( upstreamBatch ) :
-					return False
+				self.__executeWalk( upstreamBatch, canceller )
 
-			if batch.blindData().get( "killed" ) :
-				self.__reportKilled()
-				return False
+			IECore.Canceller.check( canceller )
 
 			IECore.msg(
 				IECore.MessageHandler.Level.Info, self.__messageTitle,
@@ -210,21 +206,21 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 			try :
 				self.__currentBatch = batch
-				self.__executeBatch( batch )
+				self.__executeBatch( batch, canceller )
 				batch.blindData()["localDispatcher:executed"] = IECore.BoolData( True )
 			except Exception as e :
 				IECore.msg( IECore.MessageHandler.Level.Debug, self.__messageTitle, traceback.format_exc() )
-				self.__reportFailed( batch )
-				if self.__executeInBackground :
-					return False
-				else :
-					raise e
+				IECore.msg(
+					IECore.MessageHandler.Level.Error, self.__messageTitle,
+					"Failed to execute {} on frames {}".format(
+						batch.blindData()["nodeName"].value, IECore.frameListFromList( [ int(x) for x in batch.frames() ] )
+					)
+				)
+				raise e
 			finally :
 				self.__currentBatch = None
 
-			return True
-
-		def __executeBatch( self, batch ) :
+		def __executeBatch( self, batch, canceller ) :
 
 			# Simple cases for foreground execution and no-ops.
 
@@ -271,13 +267,12 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 			while process.poll() is None :
 
-				if batch.blindData().get( "killed" ) :
+				if canceller is not None and canceller.cancelled() :
 					if os.name == "nt" :
 						subprocess.check_call( [ "TASKKILL", "/F", "/PID", str( process.pid ), "/T" ] )
 					else :
 						os.killpg( process.pid, signal.SIGTERM )
-					self.__reportKilled()
-					return False
+					raise IECore.Cancelled()
 
 				time.sleep( 0.01 )
 
@@ -286,22 +281,6 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 					process.returncode,
 					" ".join( shlex.quote( a ) for a in args )
 				)
-
-		def __reportCompleted( self ) :
-
-			self.__status = LocalDispatcher.Job.Status.Complete
-			IECore.msg( IECore.MessageHandler.Level.Info, self.__messageTitle, "Dispatched all tasks for " + self.name() )
-
-		def __reportFailed( self, batch ) :
-
-			self.__status = LocalDispatcher.Job.Status.Failed
-			frames = str( IECore.frameListFromList( [ int(x) for x in batch.frames() ] ) )
-			IECore.msg( IECore.MessageHandler.Level.Error, self.__messageTitle, "Failed to execute " + batch.blindData()["nodeName"].value + " on frames " + frames )
-
-		def __reportKilled( self ) :
-
-			self.__status = LocalDispatcher.Job.Status.Killed
-			IECore.msg( IECore.MessageHandler.Level.Info, self.__messageTitle, "Killed " + self.name() )
 
 		def __initBatchWalk( self, batch ) :
 
@@ -331,7 +310,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 		def waitForAll( self ) :
 
-			while any( j.status() == j.Status.Running for j in self.__jobs ) :
+			while any( j.status() in ( j.Status.Waiting, j.Status.Running ) for j in self.__jobs ) :
 				time.sleep( 0.2 )
 
 		def jobAddedSignal( self ) :
