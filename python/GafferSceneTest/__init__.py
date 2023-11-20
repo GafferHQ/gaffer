@@ -173,7 +173,7 @@ from .MeshSplitTest import MeshSplitTest
 from .FramingConstraintTest import FramingConstraintTest
 from .MeshNormalsTest import MeshNormalsTest
 from .ImageScatterTest import ImageScatterTest
-from .PassesTest import PassesTest
+from .RenderPassesTest import RenderPassesTest
 from .DeletePassesTest import DeletePassesTest
 from .PassWedgeTest import PassWedgeTest
 

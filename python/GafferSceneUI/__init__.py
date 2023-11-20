@@ -187,7 +187,7 @@ from . import FramingConstraintUI
 from . import MeshNormalsUI
 from . import LightToolUI
 from . import ImageScatterUI
-from . import PassesUI
+from . import RenderPassesUI
 from . import DeletePassesUI
 from . import PassWedgeUI
 

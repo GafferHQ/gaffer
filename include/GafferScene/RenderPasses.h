@@ -43,15 +43,15 @@
 namespace GafferScene
 {
 
-class GAFFERSCENE_API Passes : public GlobalsProcessor
+class GAFFERSCENE_API RenderPasses : public GlobalsProcessor
 {
 
 	public :
 
-		explicit Passes( const std::string &name=defaultName<Passes>() );
-		~Passes() override;
+		explicit RenderPasses( const std::string &name=defaultName<RenderPasses>() );
+		~RenderPasses() override;
 
-		GAFFER_NODE_DECLARE_TYPE( GafferScene::Passes, PassesTypeId, GlobalsProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::RenderPasses, PassesTypeId, GlobalsProcessor );
 
 		Gaffer::StringVectorDataPlug *namesPlug();
 		const Gaffer::StringVectorDataPlug *namesPlug() const;
@@ -69,6 +69,6 @@ class GAFFERSCENE_API Passes : public GlobalsProcessor
 
 };
 
-IE_CORE_DECLAREPTR( Passes );
+IE_CORE_DECLAREPTR( RenderPasses );
 
 } // namespace GafferScene

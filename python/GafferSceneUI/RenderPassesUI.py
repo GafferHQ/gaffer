@@ -39,27 +39,26 @@ import GafferScene
 
 Gaffer.Metadata.registerNode(
 
-	GafferScene.Passes,
+	GafferScene.RenderPasses,
 
 	"description",
 	"""
-	Appends passes to the scene globals.
+	Appends render passes to the scene globals.
 
-	Passes can be used to define named variations of a scene. These can
-	be rendered by dispatching a PassWedge node downstream of your render
-	node of choice, or written to disk by dispatching a PassWedge node
-	downstream of a SceneWriter.
+	Render passes can be used to define named variations of a scene.
+	These can be rendered by dispatching a PassWedge node downstream
+	of your render node of choice, or written to disk by dispatching
+	a PassWedge node downstream of a SceneWriter.
 
-	Scenes can be varied per pass based on the value of the `pass`
-	context variable, which will contain the name of the current pass
-	being dispatched. `${pass}` can be used on the `selector` plug of
-	Spreadsheet or NameSwitch nodes to choose specific plug values or
-	branches of the node graph per pass, and its value can be queried
-	using Expression or ContextQuery nodes.
+	Scenes can be varied per render pass based on the value of the
+	`renderPass` context variable, which will contain the name of the
+	current render pass being dispatched. `${renderPass}` can be used
+	on the `selector` plug of Spreadsheet or NameSwitch nodes to choose
+	specific plug values or branches of the node graph per render pass,
+	and its value can be queried using Expression or ContextQuery nodes.
 
-	> Tip : If any of the specified names already exist, they will be
-	> removed from their existing position in the list and appended
-	> to the end.
+	> Tip : The list of render passes is stored in the `renderPass:names`
+	> option in the scene globals.
 	""",
 
 	plugs = {
@@ -68,7 +67,11 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The names of passes to be created.
+			The names of render passes to be created.
+
+			> Tip : If any of the specified names already exist, they
+			> will be removed from their existing position in the list
+			> and appended to the end.
 			""",
 
 		],

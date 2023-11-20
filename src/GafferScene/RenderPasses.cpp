@@ -34,41 +34,41 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferScene/Passes.h"
+#include "GafferScene/RenderPasses.h"
 
 #include "Gaffer/TypedObjectPlug.h"
 
 using namespace Gaffer;
 using namespace GafferScene;
 
-GAFFER_NODE_DEFINE_TYPE( Passes );
+GAFFER_NODE_DEFINE_TYPE( RenderPasses );
 
-const std::string g_passNamesOptionName = "option:pass:names";
+const std::string g_passNamesOptionName = "option:renderPass:names";
 
-size_t Passes::g_firstPlugIndex = 0;
+size_t RenderPasses::g_firstPlugIndex = 0;
 
-Passes::Passes( const std::string &name )
+RenderPasses::RenderPasses( const std::string &name )
 	:	GlobalsProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new StringVectorDataPlug( "names" ) );
 }
 
-Passes::~Passes()
+RenderPasses::~RenderPasses()
 {
 }
 
-Gaffer::StringVectorDataPlug *Passes::namesPlug()
-{
-	return getChild<StringVectorDataPlug>( g_firstPlugIndex );
-}
-
-const Gaffer::StringVectorDataPlug *Passes::namesPlug() const
+Gaffer::StringVectorDataPlug *RenderPasses::namesPlug()
 {
 	return getChild<StringVectorDataPlug>( g_firstPlugIndex );
 }
 
-void Passes::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
+const Gaffer::StringVectorDataPlug *RenderPasses::namesPlug() const
+{
+	return getChild<StringVectorDataPlug>( g_firstPlugIndex );
+}
+
+void RenderPasses::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	GlobalsProcessor::affects( input, outputs );
 
@@ -78,12 +78,12 @@ void Passes::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 	}
 }
 
-void Passes::hashProcessedGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void RenderPasses::hashProcessedGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	namesPlug()->hash( h );
 }
 
-IECore::ConstCompoundObjectPtr Passes::computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const
+IECore::ConstCompoundObjectPtr RenderPasses::computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const
 {
 	IECore::ConstStringVectorDataPtr namesData = namesPlug()->getValue();
 	const std::vector<std::string> &names = namesData->readable();

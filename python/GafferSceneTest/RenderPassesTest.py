@@ -45,7 +45,7 @@ import GafferTest
 import GafferScene
 import GafferSceneTest
 
-class PassesTest( GafferSceneTest.SceneTestCase ) :
+class RenderPassesTest( GafferSceneTest.SceneTestCase ) :
 
 	testNames = IECore.StringVectorData( [
 		"gafferBot_beauty",
@@ -56,7 +56,7 @@ class PassesTest( GafferSceneTest.SceneTestCase ) :
 	def test( self ) :
 
 		plane = GafferScene.Plane()
-		passes = GafferScene.Passes()
+		passes = GafferScene.RenderPasses()
 		passes["in"].setInput( plane["out"] )
 
 		# check that the scene hierarchy is passed through
@@ -67,12 +67,12 @@ class PassesTest( GafferSceneTest.SceneTestCase ) :
 
 		g = passes["out"]["globals"].getValue()
 		self.assertEqual( len( g ), 1 )
-		self.assertEqual( g["option:pass:names"], self.testNames )
+		self.assertEqual( g["option:renderPass:names"], self.testNames )
 
 	def testSerialisation( self ) :
 
 		s = Gaffer.ScriptNode()
-		s["passesNode"] = GafferScene.Passes()
+		s["passesNode"] = GafferScene.RenderPasses()
 		s["passesNode"]["names"].setValue( self.testNames )
 
 		ss = s.serialise()
@@ -82,7 +82,7 @@ class PassesTest( GafferSceneTest.SceneTestCase ) :
 
 		g = s2["passesNode"]["out"]["globals"].getValue()
 		self.assertEqual( len( g ), 1 )
-		self.assertEqual( g["option:pass:names"], self.testNames )
+		self.assertEqual( g["option:renderPass:names"], self.testNames )
 
 	def testHashPassThrough( self ) :
 
@@ -90,7 +90,7 @@ class PassesTest( GafferSceneTest.SceneTestCase ) :
 		# identical to the input, so that they share cache entries.
 
 		plane = GafferScene.Plane()
-		passes = GafferScene.Passes()
+		passes = GafferScene.RenderPasses()
 		passes["in"].setInput( plane["out"] )
 		passes["names"].setValue( self.testNames )
 
@@ -99,7 +99,7 @@ class PassesTest( GafferSceneTest.SceneTestCase ) :
 	def testDisabled( self ) :
 
 		plane = GafferScene.Plane()
-		passes = GafferScene.Passes()
+		passes = GafferScene.RenderPasses()
 		passes["in"].setInput( plane["out"] )
 		passes["names"].setValue( self.testNames )
 
@@ -114,7 +114,7 @@ class PassesTest( GafferSceneTest.SceneTestCase ) :
 	def testDirtyPropagation( self ) :
 
 		plane = GafferScene.Plane()
-		passes = GafferScene.Passes()
+		passes = GafferScene.RenderPasses()
 		passes["in"].setInput( plane["out"] )
 
 		cs = GafferTest.CapturingSlot( passes.plugDirtiedSignal() )
@@ -138,7 +138,7 @@ class PassesTest( GafferSceneTest.SceneTestCase ) :
 
 	def testDirtyPropagationOnPassAdditionAndRemoval( self ) :
 
-		passes = GafferScene.Passes()
+		passes = GafferScene.RenderPasses()
 		cs = GafferTest.CapturingSlot( passes.plugDirtiedSignal() )
 
 		passes["names"].setValue( self.testNames )
@@ -153,7 +153,7 @@ class PassesTest( GafferSceneTest.SceneTestCase ) :
 		plane = GafferScene.Plane()
 		plane["sets"].setValue( "a b" )
 
-		passes = GafferScene.Passes()
+		passes = GafferScene.RenderPasses()
 		passes["in"].setInput( plane["out"] )
 
 		self.assertEqual( plane["out"]["setNames"].hash(), passes["out"]["setNames"].hash() )
@@ -164,25 +164,25 @@ class PassesTest( GafferSceneTest.SceneTestCase ) :
 
 	def testAppendPasses( self ) :
 
-		passes = GafferScene.Passes()
+		passes = GafferScene.RenderPasses()
 		passes["names"].setValue( IECore.StringVectorData( [ "a", "b", "c" ] ) )
 
-		self.assertEqual( passes["out"]["globals"].getValue()["option:pass:names"], IECore.StringVectorData( [ "a", "b", "c" ] ) )
+		self.assertEqual( passes["out"]["globals"].getValue()["option:renderPass:names"], IECore.StringVectorData( [ "a", "b", "c" ] ) )
 
-		passes2 = GafferScene.Passes()
+		passes2 = GafferScene.RenderPasses()
 		passes2["names"].setValue( IECore.StringVectorData( [ "d", "e", "f" ] ) )
 
-		self.assertEqual( passes2["out"]["globals"].getValue()["option:pass:names"], IECore.StringVectorData( [ "d", "e", "f" ] ) )
+		self.assertEqual( passes2["out"]["globals"].getValue()["option:renderPass:names"], IECore.StringVectorData( [ "d", "e", "f" ] ) )
 
 		passes2["in"].setInput( passes["out"] )
 
-		self.assertEqual( passes2["out"]["globals"].getValue()["option:pass:names"], IECore.StringVectorData( [ "a", "b", "c", "d", "e", "f" ] ) )
+		self.assertEqual( passes2["out"]["globals"].getValue()["option:renderPass:names"], IECore.StringVectorData( [ "a", "b", "c", "d", "e", "f" ] ) )
 
-		passes3 = GafferScene.Passes()
+		passes3 = GafferScene.RenderPasses()
 		passes3["in"].setInput( passes2["out"] )
 		passes3["names"].setValue( IECore.StringVectorData( [ "a", "d", "g" ] ) )
 
-		self.assertEqual( passes3["out"]["globals"].getValue()["option:pass:names"], IECore.StringVectorData( [ "b", "c", "e", "f", "a", "d", "g" ] ) )
+		self.assertEqual( passes3["out"]["globals"].getValue()["option:renderPass:names"], IECore.StringVectorData( [ "b", "c", "e", "f", "a", "d", "g" ] ) )
 
 if __name__ == "__main__":
 	unittest.main()
