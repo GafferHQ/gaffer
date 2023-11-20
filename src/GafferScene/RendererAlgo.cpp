@@ -442,25 +442,21 @@ bool objectSamples( const ObjectPlug *objectPlug, const std::vector<float> &samp
 				Context::Scope frameScope( frameContext );
 				std::vector<float> tempTimes = {};
 
-				// \todo - this is quite bad for the case of any Capsules, which use a naive hash
-				// that always varies with the context. This should be investigated soon as a follow
-				// up.
+				// Use the hash from the shutter samples. This is technically incorrect, since we are going
+				// to evaluate the object on-frame, and the on-frame sample may not have been included in the
+				// sample times - but it does mean the hash will match if we are called again without the object
+				// changing. We're seeing a 2X speedup from this, so we've decided it's worthwhile.
 				//
-				// This is a pretty weird case - we would have taken an earlier branch if the hashes
-				// had all matched, so it looks like this object is actual animated, despite not supporting
-				// animation.
-				// The most correct thing to do here is reset the hash, since we may not have included the
-				// on frame in the samples we hashed, and in theory, the on frame value could vary independently
-				// of shutter open and close.  This means that an animated non-animateable object will never have
-				// a matching hash, and will be updated every pass.  May be a performance hazard, but probably
-				// preferable to incorrect behaviour?  Just means people need to be careful to make sure their
-				// heavy crowd procedurals don't have a hash that changes during the shutter?
-				// ( I guess in theory we could check if the on frame time is in sampleTimes, but I don't want to
-				// add any more special cases to this weird corner ).
-				//
+				// The user facing inconsistency is that we should update whenever the on-frame data
+				// we are using changes, but if the user changes the on-frame result, while keeping the data
+				// the same at the shutter samples ( using an odd number of segments with a centered shutter,
+				// so the shutter samples don't include the on-frame time ), then we would fail to update
+				// until the render is restarted. It seems quite unlikely a user will ever actually do this
+				// ( in any normal operation, when you change something, you change it for a frame or more
+				// at a time )
 				if( hash )
 				{
-					*hash = IECore::MurmurHash();
+					*hash = combinedHash;
 				}
 
 				return objectSamples( objectPlug, tempTimes, samples );
