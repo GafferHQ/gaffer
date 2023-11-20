@@ -45,7 +45,7 @@ import GafferDispatch
 import GafferDispatchTest
 import GafferScene
 
-class PassWedgeTest( GafferTest.TestCase ) :
+class RenderPassWedgeTest( GafferTest.TestCase ) :
 
 	def __dispatcher( self, frameRange = None ) :
 
@@ -63,12 +63,12 @@ class PassWedgeTest( GafferTest.TestCase ) :
 		script = Gaffer.ScriptNode()
 
 		script["writer"] = GafferDispatchTest.TextWriter()
-		script["writer"]["fileName"].setValue( self.temporaryDirectory() / "${pass}.txt" )
+		script["writer"]["fileName"].setValue( self.temporaryDirectory() / "${renderPass}.txt" )
 
-		script["wedge"] = GafferScene.PassWedge()
+		script["wedge"] = GafferScene.RenderPassWedge()
 		script["wedge"]["preTasks"][0].setInput( script["writer"]["task"] )
 
-		script["passes"] = GafferScene.Passes()
+		script["passes"] = GafferScene.RenderPasses()
 		script["passes"]["names"].setValue( IECore.StringVectorData( [ "tom", "dick", "harry" ] ) )
 
 		script["wedge"]["in"].setInput( script["passes"]["out"] )
@@ -89,24 +89,24 @@ class PassWedgeTest( GafferTest.TestCase ) :
 		script = Gaffer.ScriptNode()
 
 		script["writer"] = GafferDispatchTest.TextWriter()
-		script["writer"]["fileName"].setValue( self.temporaryDirectory() / "${pass}.txt" )
+		script["writer"]["fileName"].setValue( self.temporaryDirectory() / "${renderPass}.txt" )
 
-		script["wedge"] = GafferScene.PassWedge()
+		script["wedge"] = GafferScene.RenderPassWedge()
 		script["wedge"]["preTasks"][0].setInput( script["writer"]["task"] )
 
-		script["passes"] = GafferScene.Passes()
+		script["passes"] = GafferScene.RenderPasses()
 		script["passes"]["names"].setValue( IECore.StringVectorData( [ "tom", "dick", "harry" ] ) )
 
 		script["disablePass"] = GafferScene.CustomOptions()
 		script["disablePass"]["in"].setInput( script["passes"]["out"] )
-		script["disablePass"]["options"].addChild( Gaffer.NameValuePlug( "pass:enabled", Gaffer.BoolPlug( "value", defaultValue = False ), True, "member1" ) )
+		script["disablePass"]["options"].addChild( Gaffer.NameValuePlug( "renderPass:enabled", Gaffer.BoolPlug( "value", defaultValue = False ), True, "member1" ) )
 
 		# disable harry
 		script["expression"] = Gaffer.Expression()
 		script["expression"].setExpression(
 			inspect.cleandoc(
 				"""
-				parent["disablePass"]["options"]["member1"]["value"] = context.get( "pass", "" ) != "harry"
+				parent["disablePass"]["options"]["member1"]["value"] = context.get( "renderPass", "" ) != "harry"
 				"""
 			)
 		)
@@ -128,12 +128,12 @@ class PassWedgeTest( GafferTest.TestCase ) :
 		script = Gaffer.ScriptNode()
 
 		script["writer"] = GafferDispatchTest.TextWriter()
-		script["writer"]["fileName"].setValue( self.temporaryDirectory() / "${pass}.####.txt" )
+		script["writer"]["fileName"].setValue( self.temporaryDirectory() / "${renderPass}.####.txt" )
 
-		script["wedge"] = GafferScene.PassWedge()
+		script["wedge"] = GafferScene.RenderPassWedge()
 		script["wedge"]["preTasks"][0].setInput( script["writer"]["task"] )
 
-		script["passes"] = GafferScene.Passes()
+		script["passes"] = GafferScene.RenderPasses()
 		script["passes"]["names"].setValue( IECore.StringVectorData( [ "tom", "dick", "harry" ] ) )
 
 		script["wedge"]["in"].setInput( script["passes"]["out"] )
@@ -160,12 +160,12 @@ class PassWedgeTest( GafferTest.TestCase ) :
 
 		script["writer"] = GafferDispatchTest.TextWriter()
 		script["writer"]["preTasks"][0].setInput( script["constant"]["task"] )
-		script["writer"]["fileName"].setValue( self.temporaryDirectory() / "${pass}.txt" )
+		script["writer"]["fileName"].setValue( self.temporaryDirectory() / "${renderPass}.txt" )
 
-		script["wedge"] = GafferScene.PassWedge()
+		script["wedge"] = GafferScene.RenderPassWedge()
 		script["wedge"]["preTasks"][0].setInput( script["writer"]["task"] )
 
-		script["passes"] = GafferScene.Passes()
+		script["passes"] = GafferScene.RenderPasses()
 		script["passes"]["names"].setValue( IECore.StringVectorData( [ "tom", "dick", "harry" ] ) )
 
 		script["wedge"]["in"].setInput( script["passes"]["out"] )
@@ -192,10 +192,10 @@ class PassWedgeTest( GafferTest.TestCase ) :
 
 		script["writer"] = GafferDispatchTest.TextWriter()
 
-		script["wedge"] = GafferScene.PassWedge()
+		script["wedge"] = GafferScene.RenderPassWedge()
 		script["wedge"]["preTasks"][0].setInput( script["writer"]["task"] )
 
-		script["passes"] = GafferScene.Passes()
+		script["passes"] = GafferScene.RenderPasses()
 		script["wedge"]["in"].setInput( script["passes"]["out"] )
 
 		script["expression"] = Gaffer.Expression()
@@ -221,7 +221,7 @@ class PassWedgeTest( GafferTest.TestCase ) :
 			self.assertEqual( monitor.combinedStatistics().numUniqueValues( "frame" ), 1 )
 
 			testDirectory = self.temporaryDirectory() / startFrame
-			script["writer"]["fileName"].setValue( testDirectory / "${pass}.####.txt" )
+			script["writer"]["fileName"].setValue( testDirectory / "${renderPass}.####.txt" )
 
 			with Gaffer.ContextMonitor( script["passes"] ) as monitor :
 				with Gaffer.Context( script.context() ) as c :

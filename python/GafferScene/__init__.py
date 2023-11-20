@@ -43,6 +43,6 @@ __import__( "GafferImage" )
 from ._GafferScene import *
 
 from .ShaderBall import ShaderBall
-from .PassWedge import PassWedge
+from .RenderPassWedge import RenderPassWedge
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferScene" )

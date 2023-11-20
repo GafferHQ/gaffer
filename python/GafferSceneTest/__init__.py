@@ -175,7 +175,7 @@ from .MeshNormalsTest import MeshNormalsTest
 from .ImageScatterTest import ImageScatterTest
 from .RenderPassesTest import RenderPassesTest
 from .DeleteRenderPassesTest import DeleteRenderPassesTest
-from .PassWedgeTest import PassWedgeTest
+from .RenderPassWedgeTest import RenderPassWedgeTest
 
 from .IECoreScenePreviewTest import *
 from .IECoreGLPreviewTest import *

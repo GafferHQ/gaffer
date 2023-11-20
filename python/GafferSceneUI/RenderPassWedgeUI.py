@@ -40,27 +40,27 @@ import GafferScene
 
 Gaffer.Metadata.registerNode(
 
-	GafferScene.PassWedge,
+	GafferScene.RenderPassWedge,
 
 	"description",
 	"""
 	Causes upstream nodes to be dispatched multiple times in a range
-	of contexts, each time with a different value for the `pass`
-	context variable. Each value of `pass` is the name of a pass
-	created from one or more Passes nodes in the network upstream
-	of the `in` plug.
+	of contexts, each time with a different value for the `renderPass`
+	context variable. Each value of `renderPass` is the name of a
+	render pass created from one or more RenderPasses nodes in the
+	network upstream of the `in` plug.
 
-	> Tip : Typically, a PassWedge would be placed downstream of
+	> Tip : Typically, a RenderPassWedge would be placed downstream of
 	> your render node of choice, allowing render tasks to be dispatched
-	> for each pass.
+	> for each render pass.
 
-	Tasks can be varied per pass by using `${pass}` in an upstream
+	Tasks can be varied per pass by using `${renderPass}` in an upstream
 	Spreadsheet or NameSwitch's `selector` or through use of a
 	ContextQuery node or an expression.
 
 	Specific passes can be disabled from wedging by setting the
-	`pass:enabled` option to `False` in contexts where that pass name is
-	the value of the `pass` context variable.
+	`renderPass:enabled` option to `False` in contexts where that render
+	pass name is the value of the `renderPass` context variable.
 	""",
 
 	plugs = {
@@ -69,7 +69,7 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The input scene containing the passes to wedge.
+			The input scene containing the render passes to wedge.
 			""",
 			"nodule:type", "GafferUI::StandardNodule",
 
@@ -79,14 +79,14 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The names of the passes to be wedged.
+			The names of the render passes to be wedged.
 
-			> Note : Pass names are queried at the script's
-			> start frame to ensure they do not vary over
-			> time and to prevent scenes with expensive
+			> Note : Render pass names are queried at the
+			> script's start frame to ensure they do not vary
+			> over time and to prevent scenes with expensive
 			> globals from slowing task dispatch.
 			""",
-			"plugValueWidget:type", "GafferSceneUI.PassWedgeUI._PassNamesWidget",
+			"plugValueWidget:type", "GafferSceneUI.RenderPassWedgeUI._PassNamesWidget",
 
 		],
 

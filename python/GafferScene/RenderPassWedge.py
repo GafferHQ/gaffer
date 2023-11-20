@@ -40,9 +40,9 @@ import Gaffer
 import GafferDispatch
 import GafferScene
 
-class PassWedge( GafferDispatch.TaskContextProcessor ) :
+class RenderPassWedge( GafferDispatch.TaskContextProcessor ) :
 
-	def __init__( self, name = "PassWedge" ) :
+	def __init__( self, name = "RenderPassWedge" ) :
 
 		GafferDispatch.TaskContextProcessor.__init__( self, name )
 
@@ -55,7 +55,7 @@ class PassWedge( GafferDispatch.TaskContextProcessor ) :
 		self["__ContextQuery"].addQuery( Gaffer.IntPlug( defaultValue = 1 ) )
 		self["__ContextQuery"].addQuery( Gaffer.StringPlug() )
 		self["__ContextQuery"]["queries"][0]["name"].setValue( "frameRange:start" )
-		self["__ContextQuery"]["queries"][1]["name"].setValue( "pass" )
+		self["__ContextQuery"]["queries"][1]["name"].setValue( "renderPass" )
 
 		self["__TimeWarp"] = Gaffer.TimeWarp()
 		self["__TimeWarp"].setup( self["in"] )
@@ -67,11 +67,11 @@ class PassWedge( GafferDispatch.TaskContextProcessor ) :
 		self["__OptionQuery"]["scene"].setInput( self["__TimeWarp"]["out"] )
 		self["__OptionQuery"].addQuery( Gaffer.StringVectorDataPlug( defaultValue = IECore.StringVectorData() ) )
 		self["__OptionQuery"].addQuery( Gaffer.BoolPlug( defaultValue = True ) )
-		self["__OptionQuery"]["queries"][0]["name"].setValue( "pass:names" )
-		self["__OptionQuery"]["queries"][1]["name"].setValue( "pass:enabled" )
+		self["__OptionQuery"]["queries"][0]["name"].setValue( "renderPass:names" )
+		self["__OptionQuery"]["queries"][1]["name"].setValue( "renderPass:enabled" )
 
 		self["__Collect"] = Gaffer.Collect()
-		self["__Collect"]["contextVariable"].setValue( "pass" )
+		self["__Collect"]["contextVariable"].setValue( "renderPass" )
 		self["__Collect"]["contextValues"].setInput( self["__OptionQuery"]["out"][0]["value"] )
 		self["__Collect"]["enabled"].setInput( self["__OptionQuery"]["out"][1]["value"] )
 		self["__Collect"].addInput( Gaffer.StringPlug( "names" ) )
@@ -87,8 +87,8 @@ class PassWedge( GafferDispatch.TaskContextProcessor ) :
 		contexts = []
 		for name in self["names"].getValue() :
 			contexts.append( Gaffer.Context( context ) )
-			contexts[-1]["pass"] = name
+			contexts[-1]["renderPass"] = name
 
 		return contexts
 
-IECore.registerRunTimeTyped( PassWedge, typeName = "GafferScene::PassWedge" )
+IECore.registerRunTimeTyped( RenderPassWedge, typeName = "GafferScene::RenderPassWedge" )

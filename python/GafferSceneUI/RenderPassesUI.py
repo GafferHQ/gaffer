@@ -46,9 +46,9 @@ Gaffer.Metadata.registerNode(
 	Appends render passes to the scene globals.
 
 	Render passes can be used to define named variations of a scene.
-	These can be rendered by dispatching a PassWedge node downstream
+	These can be rendered by dispatching a RenderPassWedge node downstream
 	of your render node of choice, or written to disk by dispatching
-	a PassWedge node downstream of a SceneWriter.
+	a RenderPassWedge node downstream of a SceneWriter.
 
 	Scenes can be varied per render pass based on the value of the
 	`renderPass` context variable, which will contain the name of the
