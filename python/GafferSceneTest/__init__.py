@@ -174,7 +174,7 @@ from .FramingConstraintTest import FramingConstraintTest
 from .MeshNormalsTest import MeshNormalsTest
 from .ImageScatterTest import ImageScatterTest
 from .RenderPassesTest import RenderPassesTest
-from .DeletePassesTest import DeletePassesTest
+from .DeleteRenderPassesTest import DeleteRenderPassesTest
 from .PassWedgeTest import PassWedgeTest
 
 from .IECoreScenePreviewTest import *

@@ -43,23 +43,23 @@ import GafferTest
 import GafferScene
 import GafferSceneTest
 
-class DeletePassesTest( GafferSceneTest.SceneTestCase ) :
+class DeleteRenderPassesTest( GafferSceneTest.SceneTestCase ) :
 
 	def testDirtyPropagation( self ) :
 
 		plane = GafferScene.Plane()
 
-		passes = GafferScene.Passes()
+		passes = GafferScene.RenderPasses()
 		passes["in"].setInput( plane["out"] )
 		passes["names"].setValue( IECore.StringVectorData( [ "tom", "dick", "harry" ] ) )
 
-		deletePasses = GafferScene.DeletePasses()
+		deletePasses = GafferScene.DeleteRenderPasses()
 		deletePasses["in"].setInput( passes["out"] )
 
 		cs = GafferTest.CapturingSlot( deletePasses.plugDirtiedSignal() )
 
-		self.assertEqual( deletePasses["mode"].getValue(), GafferScene.DeletePasses.Mode.Delete )
-		deletePasses["mode"].setValue( GafferScene.DeletePasses.Mode.Keep )
+		self.assertEqual( deletePasses["mode"].getValue(), GafferScene.DeleteRenderPasses.Mode.Delete )
+		deletePasses["mode"].setValue( GafferScene.DeleteRenderPasses.Mode.Keep )
 
 		dirtiedPlugs = set( [ x[0].relativeName( x[0].node() ) for x in cs ] )
 
@@ -80,48 +80,48 @@ class DeletePassesTest( GafferSceneTest.SceneTestCase ) :
 
 	def testDeletePasses( self ) :
 
-		passes = GafferScene.Passes()
+		passes = GafferScene.RenderPasses()
 		passes["names"].setValue( IECore.StringVectorData( [ "tom", "dick", "harry" ] ) )
 
-		deletePasses = GafferScene.DeletePasses()
+		deletePasses = GafferScene.DeleteRenderPasses()
 		deletePasses["in"].setInput( passes["out"] )
 
-		deletePasses["mode"].setValue( GafferScene.DeletePasses.Mode.Delete ) # Remove selected passes
+		deletePasses["mode"].setValue( GafferScene.DeleteRenderPasses.Mode.Delete ) # Remove selected passes
 		deletePasses["names"].setValue( "dick harry" )
 
-		self.assertEqual( deletePasses["out"]["globals"].getValue()["option:pass:names"], IECore.StringVectorData( [ "tom" ] ) )
+		self.assertEqual( deletePasses["out"]["globals"].getValue()["option:renderPass:names"], IECore.StringVectorData( [ "tom" ] ) )
 
 		deletePasses["names"].setValue( "t* d*" )
 
-		self.assertEqual( deletePasses["out"]["globals"].getValue()["option:pass:names"], IECore.StringVectorData( [ "harry" ] ) )
+		self.assertEqual( deletePasses["out"]["globals"].getValue()["option:renderPass:names"], IECore.StringVectorData( [ "harry" ] ) )
 
 	def testKeepPasses( self ) :
 
-		passes = GafferScene.Passes()
+		passes = GafferScene.RenderPasses()
 		passes["names"].setValue( IECore.StringVectorData( [ "tom", "dick", "harry" ] ) )
 
-		deletePasses = GafferScene.DeletePasses()
+		deletePasses = GafferScene.DeleteRenderPasses()
 		deletePasses["in"].setInput( passes["out"] )
 
-		deletePasses["mode"].setValue( GafferScene.DeletePasses.Mode.Keep ) # Keep selected passes
+		deletePasses["mode"].setValue( GafferScene.DeleteRenderPasses.Mode.Keep ) # Keep selected passes
 		deletePasses["names"].setValue( "dick harry" )
 
-		self.assertEqual( deletePasses["out"]["globals"].getValue()["option:pass:names"], IECore.StringVectorData( [ "dick", "harry" ] ) )
+		self.assertEqual( deletePasses["out"]["globals"].getValue()["option:renderPass:names"], IECore.StringVectorData( [ "dick", "harry" ] ) )
 
 		deletePasses["names"].setValue( "t* d*" )
 
-		self.assertEqual( deletePasses["out"]["globals"].getValue()["option:pass:names"], IECore.StringVectorData( [ "tom", "dick" ] ) )
+		self.assertEqual( deletePasses["out"]["globals"].getValue()["option:renderPass:names"], IECore.StringVectorData( [ "tom", "dick" ] ) )
 
 	def testHashChanged( self ) :
 
-		passes = GafferScene.Passes()
+		passes = GafferScene.RenderPasses()
 		passes["names"].setValue( IECore.StringVectorData( [ "tom", "dick", "harry" ] ) )
 
-		deletePasses = GafferScene.DeletePasses()
+		deletePasses = GafferScene.DeleteRenderPasses()
 		deletePasses["in"].setInput( passes["out"] )
 
-		deletePasses["mode"].setValue( GafferScene.DeletePasses.Mode.Keep )
-		deletePasses["names"].setValue( " ".join( deletePasses["in"]["globals"].getValue()["option:pass:names"] ) )
+		deletePasses["mode"].setValue( GafferScene.DeleteRenderPasses.Mode.Keep )
+		deletePasses["names"].setValue( " ".join( deletePasses["in"]["globals"].getValue()["option:renderPass:names"] ) )
 		h = deletePasses["out"]["globals"].hash()
 
 		deletePasses["names"].setValue( "tom" )
@@ -130,7 +130,7 @@ class DeletePassesTest( GafferSceneTest.SceneTestCase ) :
 
 	def testModePlug( self ) :
 
-		deletePasses = GafferScene.DeletePasses()
+		deletePasses = GafferScene.DeleteRenderPasses()
 		self.assertEqual( deletePasses["mode"].defaultValue(), deletePasses.Mode.Delete )
 		self.assertEqual( deletePasses["mode"].getValue(), deletePasses.Mode.Delete )
 
@@ -144,7 +144,7 @@ class DeletePassesTest( GafferSceneTest.SceneTestCase ) :
 
 		plane = GafferScene.Plane()
 
-		deletePasses = GafferScene.DeletePasses()
+		deletePasses = GafferScene.DeleteRenderPasses()
 		deletePasses["in"].setInput( plane["out"] )
 
 		self.assertScenesEqual( plane["out"], deletePasses["out"] )

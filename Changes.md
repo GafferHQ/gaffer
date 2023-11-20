@@ -7,7 +7,7 @@ Features
 - Viewer : Added "Snapshot To Catalogue" command to the right-click menu of the 3D view.
 - RenderPasses : Added new nodes for working with render passes. Render passes are defined as a list of names stored in the `renderPass:names` option in the scene globals, and can be used to dispatch tasks that vary based on those names. This can be useful for purposes such as producing multiple renders with varying object visibility and shading, or for writing variations of a scene to individual files.
   - RenderPasses : Added a new node for appending render passes to the scene globals.
-  - DeletePasses : Added a new node for removing names from the `pass:names` option.
+  - DeleteRenderPasses : Added a new node for removing render passes from the scene globals.
   - PassWedge : Added a new node for dispatching upstream tasks in a range of contexts where the value of the `pass` context variable is varied based on the names defined in the `pass:names` option.
 
 Improvements

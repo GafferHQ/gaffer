@@ -48,7 +48,7 @@ IE_CORE_FORWARDDECLARE( StringPlug )
 namespace GafferScene
 {
 
-class GAFFERSCENE_API DeletePasses : public GlobalsProcessor
+class GAFFERSCENE_API DeleteRenderPasses : public GlobalsProcessor
 {
 
 	public :
@@ -59,10 +59,10 @@ class GAFFERSCENE_API DeletePasses : public GlobalsProcessor
 			Keep = 1
 		};
 
-		explicit DeletePasses( const std::string &name=defaultName<DeletePasses>() );
-		~DeletePasses() override;
+		explicit DeleteRenderPasses( const std::string &name=defaultName<DeleteRenderPasses>() );
+		~DeleteRenderPasses() override;
 
-		GAFFER_NODE_DECLARE_TYPE( GafferScene::DeletePasses, DeletePassesTypeId, GlobalsProcessor );
+		GAFFER_NODE_DECLARE_TYPE( GafferScene::DeleteRenderPasses, DeletePassesTypeId, GlobalsProcessor );
 
 		Gaffer::IntPlug *modePlug();
 		const Gaffer::IntPlug *modePlug() const;
@@ -83,6 +83,6 @@ class GAFFERSCENE_API DeletePasses : public GlobalsProcessor
 
 };
 
-IE_CORE_DECLAREPTR( DeletePasses );
+IE_CORE_DECLAREPTR( DeleteRenderPasses );
 
 } // namespace GafferScene

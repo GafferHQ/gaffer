@@ -34,7 +34,7 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "GafferScene/DeletePasses.h"
+#include "GafferScene/DeleteRenderPasses.h"
 
 #include "Gaffer/StringPlug.h"
 
@@ -43,13 +43,13 @@
 using namespace Gaffer;
 using namespace GafferScene;
 
-GAFFER_NODE_DEFINE_TYPE( DeletePasses );
+GAFFER_NODE_DEFINE_TYPE( DeleteRenderPasses );
 
-const std::string g_passNamesOptionName = "option:pass:names";
+const std::string g_passNamesOptionName = "option:renderPass:names";
 
-size_t DeletePasses::g_firstPlugIndex = 0;
+size_t DeleteRenderPasses::g_firstPlugIndex = 0;
 
-DeletePasses::DeletePasses( const std::string &name )
+DeleteRenderPasses::DeleteRenderPasses( const std::string &name )
 	:	GlobalsProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
@@ -57,31 +57,31 @@ DeletePasses::DeletePasses( const std::string &name )
 	addChild( new StringPlug( "names" ) );
 }
 
-DeletePasses::~DeletePasses()
+DeleteRenderPasses::~DeleteRenderPasses()
 {
 }
 
-Gaffer::IntPlug *DeletePasses::modePlug()
-{
-	return getChild<IntPlug>( g_firstPlugIndex );
-}
-
-const Gaffer::IntPlug *DeletePasses::modePlug() const
+Gaffer::IntPlug *DeleteRenderPasses::modePlug()
 {
 	return getChild<IntPlug>( g_firstPlugIndex );
 }
 
-Gaffer::StringPlug *DeletePasses::namesPlug()
+const Gaffer::IntPlug *DeleteRenderPasses::modePlug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex );
+}
+
+Gaffer::StringPlug *DeleteRenderPasses::namesPlug()
 {
 	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
-const Gaffer::StringPlug *DeletePasses::namesPlug() const
+const Gaffer::StringPlug *DeleteRenderPasses::namesPlug() const
 {
 	return getChild<StringPlug>( g_firstPlugIndex + 1 );
 }
 
-void DeletePasses::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
+void DeleteRenderPasses::affects( const Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	GlobalsProcessor::affects( input, outputs );
 
@@ -91,13 +91,13 @@ void DeletePasses::affects( const Plug *input, AffectedPlugsContainer &outputs )
 	}
 }
 
-void DeletePasses::hashProcessedGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const
+void DeleteRenderPasses::hashProcessedGlobals( const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	modePlug()->hash( h );
 	namesPlug()->hash( h );
 }
 
-IECore::ConstCompoundObjectPtr DeletePasses::computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const
+IECore::ConstCompoundObjectPtr DeleteRenderPasses::computeProcessedGlobals( const Gaffer::Context *context, IECore::ConstCompoundObjectPtr inputGlobals ) const
 {
 	if( !inputGlobals->members().count( g_passNamesOptionName ) )
 	{

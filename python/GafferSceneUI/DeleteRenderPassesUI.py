@@ -43,11 +43,11 @@ import GafferScene
 
 Gaffer.Metadata.registerNode(
 
-	GafferScene.DeletePasses,
+	GafferScene.DeleteRenderPasses,
 
 	"description",
 	"""
-	Deletes passes from the scene globals.
+	Deletes render passes from the scene globals.
 	""",
 
 	plugs = {
@@ -61,8 +61,8 @@ Gaffer.Metadata.registerNode(
 			Keep mode keeps the listed names, deleting all others.
 			""",
 
-			"preset:Delete", GafferScene.DeletePasses.Mode.Delete,
-			"preset:Keep", GafferScene.DeletePasses.Mode.Keep,
+			"preset:Delete", GafferScene.DeleteRenderPasses.Mode.Delete,
+			"preset:Keep", GafferScene.DeleteRenderPasses.Mode.Keep,
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
@@ -72,13 +72,13 @@ Gaffer.Metadata.registerNode(
 
 			"description",
 			"""
-			The names of passes to be deleted (or kept
+			The names of render passes to be deleted (or kept
 			if the mode is set to Keep). Names should be separated
 			by spaces and may contain any of Gaffer's standard
 			wildcards.
 			""",
 
-			"ui:scene:acceptsPassNames", True,
+			"ui:scene:acceptsRenderPassNames", True,
 
 		],
 
@@ -87,7 +87,7 @@ Gaffer.Metadata.registerNode(
 )
 
 ##########################################################################
-# Right click menu for adding pass names to plugs
+# Right click menu for adding render pass names to plugs
 # This is driven by metadata so it can be used for plugs on other
 # nodes too.
 ##########################################################################
@@ -103,18 +103,18 @@ def __passPopupMenu( menuDefinition, plugValueWidget ) :
 	if plug is None :
 		return
 
-	if not Gaffer.Metadata.value( plug, "ui:scene:acceptsPassNames" ) :
+	if not Gaffer.Metadata.value( plug, "ui:scene:acceptsRenderPassNames" ) :
 		return
 
 	with plugValueWidget.getContext() :
 		globals = plug.node()["in"]["globals"].getValue()
 		currentNames = set( plug.getValue().split() )
 
-	menuDefinition.prepend( "/PassesDivider", { "divider" : True } )
+	menuDefinition.prepend( "/RenderPassesDivider", { "divider" : True } )
 
-	passNames = globals.get( "option:pass:names" ) or []
+	passNames = globals.get( "option:renderPass:names" ) or []
 	if not len( passNames ) :
-		menuDefinition.prepend( "/Passes/No Passes Available", { "active" : False } )
+		menuDefinition.prepend( "/Render Passes/No Render Passes Available", { "active" : False } )
 		return
 
 	for passName in reversed( sorted( list( passNames ) ) ) :
@@ -127,7 +127,7 @@ def __passPopupMenu( menuDefinition, plugValueWidget ) :
 			newNames.discard( passName )
 
 		menuDefinition.prepend(
-			"/Passes/{}".format( passName ),
+			"/Render Passes/{}".format( passName ),
 			{
 				"command" : functools.partial( __setValue, plug, " ".join( sorted( newNames ) ) ),
 				"checkBox" : passName in currentNames,
