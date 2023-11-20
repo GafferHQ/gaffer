@@ -6,6 +6,11 @@ Features
 
 - Viewer : Added "Snapshot To Catalogue" command to the right-click menu of the 3D view.
 
+Improvements
+------------
+
+- ImageTransform, Resample : Improved performance for non-separable filters without scaling, with 2-6x speedups in some benchmark cases.
+
 Fixes
 -----
 
