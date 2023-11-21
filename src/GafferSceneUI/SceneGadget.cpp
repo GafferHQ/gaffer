@@ -780,6 +780,20 @@ Imath::Box3f SceneGadget::bound() const
 	return bound( /* selection = */ false );
 }
 
+void SceneGadget::snapshotToFile(
+	const std::filesystem::path &fileName,
+	const Box2f &resolutionGate,
+	const CompoundData *metadata
+) const
+{
+	if( !m_outputBuffer )
+	{
+		return;
+	}
+
+	m_outputBuffer->snapshotToFile( fileName, resolutionGate, metadata );
+}
+
 void SceneGadget::renderLayer( Layer layer, const GafferUI::Style *style, RenderReason reason ) const
 {
 	assert( layer == m_layer || layer == Layer::MidFront );

@@ -36,6 +36,8 @@
 ##########################################################################
 
 import functools
+import datetime
+import pathlib
 
 import imath
 
@@ -46,6 +48,7 @@ import Gaffer
 import GafferUI
 import GafferScene
 import GafferSceneUI
+import GafferImage
 
 from ._SceneViewInspector import _SceneViewInspector
 
@@ -1082,12 +1085,118 @@ def __appendClippingPlaneMenuItems( menuDefinition, prefix, view, parentWidget )
 			}
 		)
 
+def __snapshotDescription( view ) :
+
+	sceneGadget = view.viewportGadget().getPrimaryChild()
+	if sceneGadget.getRenderer() == "OpenGL" :
+		return "Viewport snapshots are only available for rendered (non-OpenGL) previews."
+
+	return "Snapshot viewport and send to catalogue."
+
+def __snapshotToCatalogue( catalogue, view ) :
+
+	timeStamp = str( datetime.datetime.now() )
+
+	scriptRoot = view["in"].getInput().ancestor( Gaffer.ScriptNode )
+
+	fileName = pathlib.Path(
+		scriptRoot.context().substitute( catalogue["directory"].getValue() )
+	) / ( f"viewerSnapshot-{ timeStamp.replace( ':', '-' ).replace(' ', '_'  ) }.exr" )
+
+	resolutionGate = imath.Box3f()
+	if isinstance( view, GafferSceneUI.SceneView ) :
+		resolutionGate = view.resolutionGate()
+
+	metadata = IECore.CompoundData(
+		{
+			"gaffer:sourceScene" : view["in"].getInput().relativeName( scriptRoot ),
+			"gaffer:context:frame" : view["in"].node().getContext().getFrame()
+		}
+	)
+
+	sceneGadget = view.viewportGadget().getPrimaryChild()
+	sceneGadget.snapshotToFile( fileName, resolutionGate, metadata )
+
+	image = GafferImage.Catalogue.Image( "Snapshot1", Gaffer.Plug.Direction.In, Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+	image["fileName"].setValue( fileName )
+
+	image["description"].setValue(
+		"Snapshot of {} at frame {} taken at {}".format(
+			metadata["gaffer:sourceScene"],
+			metadata["gaffer:context:frame"], timeStamp[:-6]  # Remove trailing microseconds
+		)
+	)
+
+	catalogue["images"].source().addChild( image )
+	catalogue["imageIndex"].source().setValue( len( catalogue["images"].source().children() ) - 1 )
+
+def __snapshotCataloguesSubMenu( view, scriptNode ) :
+
+	menuDefinition = IECore.MenuDefinition()
+
+	catalogueList = list( GafferImage.Catalogue.RecursiveRange( scriptNode ) )
+
+	if len( catalogueList ) == 0 :
+		menuDefinition.append(
+			"/No Catalogues Available",
+			{
+				"active" : False,
+			}
+		)
+
+	else :
+		commonDescription = __snapshotDescription( view )
+		commonActive = view["renderer"]["name"].getValue() != "OpenGL"
+
+		for c in catalogueList :
+
+			cName = c["name"].getValue()
+			nName = c["imageIndex"].source().node().relativeName( scriptNode )
+
+			snapshotActive = (
+				commonActive and
+				not Gaffer.MetadataAlgo.readOnly( c["images"].source() ) and
+				not Gaffer.MetadataAlgo.readOnly( c["imageIndex"].source() )
+			)
+
+			snapshotDescription = commonDescription
+			if Gaffer.MetadataAlgo.readOnly( c["images"].source() ) :
+				snapshotDescription = "\"images\" plug is read-only"
+			if Gaffer.MetadataAlgo.readOnly( c["imageIndex"].source() ) :
+				snapshotDescription = "\"imageIndex\" plug is read-only"
+
+			menuDefinition.append(
+				"/" + ( nName + ( " ({})".format( cName ) if cName else "" ) ),
+				{
+					"active" : snapshotActive,
+					"command" : functools.partial( __snapshotToCatalogue, c, view ),
+					"description" : snapshotDescription
+				}
+			)
+
+	return menuDefinition
+
+
 def __viewContextMenu( viewer, view, menuDefinition ) :
 
 	if not isinstance( view, GafferSceneUI.SceneView ) :
 		return False
 
 	__appendClippingPlaneMenuItems( menuDefinition, "/Clipping Planes", view, viewer )
+
+	scriptNode = view["in"].getInput().ancestor( Gaffer.ScriptNode )
+
+	menuDefinition.append(
+		"/Snapshot to Catalogue",
+		{
+			"subMenu" : functools.partial(
+				__snapshotCataloguesSubMenu,
+				view,
+				scriptNode
+			)
+		}
+	)
+
 
 GafferUI.Viewer.viewContextMenuSignal().connect( __viewContextMenu, scoped = False )
 

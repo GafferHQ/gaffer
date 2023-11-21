@@ -22,7 +22,32 @@ Breaking Changes
 1.3.x.x (relative to 1.3.7.0)
 =======
 
+Features
+--------
 
+- Viewer : Added "Snapshot To Catalogue" command to the right-click menu of the 3D view.
+
+Improvements
+------------
+
+- ImageTransform, Resample : Improved performance for non-separable filters without scaling, with 2-6x speedups in some benchmark cases.
+
+Fixes
+-----
+
+- InteractiveRender : Fixed unnecessary updates to encapsulated locations when deforming an unrelated object.
+- InteractiveArnoldRender : Fixed creation of new Catalogue image when editing output metadata or pixel filter.
+- Windows `Scene/OpenGL/Shader` Menu : Removed `\` at the beginning of menu items.
+
+API
+---
+
+- SceneGadget : Added `snapshotToFile()` method.
+
+Build
+-----
+
+- Instancer : Fixed ambiguous reference compilation errors when building with Boost 1.70.
 
 1.3.7.0 (relative to 1.3.6.1)
 =======

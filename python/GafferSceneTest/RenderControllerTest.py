@@ -330,6 +330,148 @@ class RenderControllerTest( GafferSceneTest.SceneTestCase ) :
 		links = renderer.capturedObject( "/group/spheres/instances/sphere/0" ).capturedLinks( "lights" )
 		self.assertEqual( len( links ), numLights )
 
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testCapsuleDeformPerformance( self ) :
+
+		# Test the performance of doing an edit to one thing in a scene which contains many Capsules
+		# with deformation blur turned on. This stresses our mechanism for determining that the Capsules
+		# haven't changed.
+
+		sphere = GafferScene.Sphere()
+
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ '/sphere' ] ) )
+
+		encapsulate = GafferScene.Encapsulate()
+		encapsulate["in"].setInput( sphere["out"] )
+		encapsulate["filter"].setInput( sphereFilter["out"] )
+
+		duplicate = GafferScene.Duplicate()
+		duplicate["in"].setInput( encapsulate["out"] )
+		duplicate["filter"].setInput( sphereFilter["out"] )
+		duplicate["copies"].setValue( 50000 )
+		duplicate["transform"]["translate"].setValue( imath.V3f( 1.5, 0, 0 ) )
+		duplicate["transform"]["rotate"].setValue( imath.V3f( 0.03, 2.4, 0.8 ) )
+
+		editedSphere = GafferScene.Sphere()
+		editedSphere["radius"].setValue( 8 )
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( duplicate["out"] )
+		group["in"][1].setInput( editedSphere["out"] )
+
+		standardOptions = GafferScene.StandardOptions()
+		standardOptions["in"].setInput( group["out"] )
+		standardOptions["options"]["deformationBlur"]["value"].setValue( True )
+		standardOptions["options"]["deformationBlur"]["enabled"].setValue( True )
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer()
+		controller = GafferScene.RenderController( standardOptions["out"], Gaffer.Context(), renderer )
+		controller.setMinimumExpansionDepth( 10 )
+
+		controller.update()
+
+		# Modify a simple object not related to the capsule - this shouldn't trigger a regenerate
+		editedSphere["divisions"].setValue( imath.V2i( 6 ) )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			controller.update()
+
+	def testCapsuleNoBogusRegenerate( self ) :
+
+		sphere = GafferScene.Sphere()
+
+		sphereFilter = GafferScene.PathFilter()
+		sphereFilter["paths"].setValue( IECore.StringVectorData( [ '/sphere' ] ) )
+
+		encapsulate = GafferScene.Encapsulate()
+		encapsulate["in"].setInput( sphere["out"] )
+		encapsulate["filter"].setInput( sphereFilter["out"] )
+
+		editedSphere = GafferScene.Sphere()
+		editedSphere["name"].setValue( "editedSphere" )
+		editedSphere["radius"].setValue( 8 )
+
+		group = GafferScene.Group()
+		group["in"][0].setInput( encapsulate["out"] )
+		group["in"][1].setInput( editedSphere["out"] )
+
+		standardOptions = GafferScene.StandardOptions()
+		standardOptions["in"].setInput( group["out"] )
+		standardOptions["options"]["deformationBlur"]["value"].setValue( True )
+		standardOptions["options"]["deformationBlur"]["enabled"].setValue( True )
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer()
+		controller = GafferScene.RenderController( standardOptions["out"], Gaffer.Context(), renderer )
+		controller.setMinimumExpansionDepth( 10 )
+
+		controller.update()
+
+		original = renderer.capturedObject( "/group/sphere" )
+
+		editedSphere["divisions"].setValue( imath.V2i( 6 ) )
+		controller.update()
+
+		# Editing the sphere shouldn't cause the capsule to be regenerated
+		self.assertTrue( renderer.capturedObject( "/group/sphere" ).isSame( original ) )
+
+	@unittest.expectedFailure
+	def testCapsuleModifyOnFrameNotShutter( self ) :
+
+		# Test a weird corner case where none of the shutter samples contributing to a Capsule have changed,
+		# but the capsule actually has changed - because it is sampled on frame, and the on-frame data is
+		# different even though none of the shutter samples have changed.
+		#
+		# This is currently an expected failure because we consider it worthwhile to use the same mechanism
+		# as other objects for caching things that don't support deformation blur - even though a Capsule
+		# doesn't support deformation blur, we still consider it to have not changed if the hashes of the
+		# deformation samples haven't changed. It introduces a minor inconsistency, but no other solution
+		# offers the same level of performance for Capsules that haven't changed without introducing more
+		# complex code
+
+		rootFilter = GafferScene.PathFilter()
+		rootFilter["paths"].setValue( IECore.StringVectorData( [ '/sphere' ] ) )
+
+		sphere = GafferScene.Sphere()
+
+		sphereEncapsulate = GafferScene.Encapsulate()
+		sphereEncapsulate["in"].setInput( sphere["out"] )
+		sphereEncapsulate["filter"].setInput( rootFilter["out"] )
+
+		cube = GafferScene.Cube()
+		cube["name"].setValue( "sphere" )
+
+		cubeEncapsulate = GafferScene.Encapsulate()
+		cubeEncapsulate["in"].setInput( cube["out"] )
+		cubeEncapsulate["filter"].setInput( rootFilter["out"] )
+
+		switch = Gaffer.Switch()
+		switch.setup( sphereEncapsulate["out"] )
+		switch["in"][0].setInput( sphereEncapsulate["out"] )
+		switch["in"][1].setInput( cubeEncapsulate["out"] )
+
+		standardOptions = GafferScene.StandardOptions()
+		standardOptions["in"].setInput( switch["out"] )
+		standardOptions["options"]["deformationBlur"]["value"].setValue( True )
+		standardOptions["options"]["deformationBlur"]["enabled"].setValue( True )
+
+		renderer = GafferScene.Private.IECoreScenePreview.CapturingRenderer()
+		controller = GafferScene.RenderController( standardOptions["out"], Gaffer.Context(), renderer )
+		controller.setMinimumExpansionDepth( 10 )
+
+		controller.update()
+		self.assertEqual( renderer.capturedObject( "/sphere" ).capturedSamples()[0].scene(), sphere["out"] )
+
+		# We now modify the capsule on frame 1, but crucially, NOT at time 0.75 or 1.25, which are
+		# the times that get sampled by the shutter. This tests a corner case where a capsule is incorrectly
+		# cached ( because it wouldn't have changed if it was a usual object that is sampled by the shutter )
+
+		switch["expression"] = Gaffer.Expression()
+		switch["expression"].setExpression( 'parent["index"] = context.getFrame() == 1.0', "python" )
+
+		controller.update()
+		self.assertEqual( renderer.capturedObject( "/sphere" ).capturedSamples()[0].scene(), cube["out"] )
+
 	def testHideLinkedLight( self ) :
 
 		# One default light and one non-default light, which will

@@ -44,6 +44,7 @@
 
 #include "IECore/PathMatcher.h"
 
+#include <filesystem>
 #include <mutex>
 
 namespace GafferSceneUI
@@ -80,6 +81,13 @@ class OutputBuffer
 		/// should be called.
 		using BufferChangedSignal = Gaffer::Signals::Signal<void()>;
 		BufferChangedSignal &bufferChangedSignal();
+
+		/// See `SceneGadget::snapshotToFile()` for documentation.
+		void snapshotToFile(
+			const std::filesystem::path &fileName,
+			const Imath::Box2f &resolutionGate = Imath::Box2f(),
+			const IECore::CompoundData *metadata = nullptr
+		);
 
 	private :
 

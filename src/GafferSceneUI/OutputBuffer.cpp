@@ -37,6 +37,7 @@
 #include "IECoreGL/ShaderLoader.h"
 
 #include "IECoreImage/DisplayDriver.h"
+#include "IECoreImage/OpenImageIOAlgo.h"
 
 #include "OpenEXR/OpenEXRConfig.h"
 #if OPENEXR_VERSION_MAJOR < 3
@@ -44,6 +45,8 @@
 #else
 #include "Imath/ImathBoxAlgo.h"
 #endif
+
+#include "OpenImageIO/imageio.h"
 
 #include "boost/lexical_cast.hpp"
 
@@ -460,6 +463,46 @@ void OutputBuffer::dirtyTexture()
 	{
 		bufferChangedSignal()();
 	}
+}
+
+void OutputBuffer::snapshotToFile(
+	const std::filesystem::path &fileName,
+	const Box2f &resolutionGate,
+	const CompoundData *metadata
+)
+{
+	std::filesystem::create_directories( fileName.parent_path() );
+
+	std::unique_lock lock( m_bufferReallocationMutex );
+
+	OIIO::ImageSpec spec( m_dataWindow.size().x + 1, m_dataWindow.size().y + 1, 4, OIIO::TypeDesc::HALF );
+
+	if( !resolutionGate.isEmpty() )
+	{
+		spec.x = -resolutionGate.min.x;
+		spec.y = -resolutionGate.min.y;
+
+		spec.full_x = 0;
+		spec.full_y = 0;
+		spec.full_width = resolutionGate.size().x;
+		spec.full_height = resolutionGate.size().y;
+	}
+
+	const std::vector<float> &rgbaBuffer = m_rgbaBuffer;
+
+	for( const auto &[key, value] : metadata->readable() )
+	{
+		const IECoreImage::OpenImageIOAlgo::DataView dataView( value.get() );
+		if( dataView.data )
+		{
+			spec.attribute( key.c_str(), dataView.type, dataView.data );
+		}
+	}
+
+	std::unique_ptr<OIIO::ImageOutput> output = OIIO::ImageOutput::create( fileName.c_str() );
+	output->open( fileName.c_str(), spec );
+	output->write_image( OIIO::TypeDesc::FLOAT, &rgbaBuffer[0] );
+	output->close();
 }
 
 //////////////////////////////////////////////////////////////////////////
