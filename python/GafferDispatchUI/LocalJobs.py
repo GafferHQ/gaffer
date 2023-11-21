@@ -37,6 +37,8 @@
 import datetime
 import threading
 
+import imath
+
 import Gaffer
 import GafferUI
 import GafferDispatch
@@ -138,21 +140,30 @@ class LocalJobs( GafferUI.Editor ) :
 
 		with splitContainer :
 
-			self.__jobListingWidget = GafferUI.PathListingWidget(
-				_LocalJobsPath( jobPool ),
-				columns = (
-					GafferUI.PathListingWidget.IconColumn( "Status", "localDispatcherStatus", "localDispatcher:status" ),
-					GafferUI.PathListingWidget.StandardColumn( "Name", "localDispatcher:jobName", sizeMode = GafferUI.PathColumn.SizeMode.Stretch ),
-					GafferUI.PathListingWidget.StandardColumn( "Id", "localDispatcher:id" ),
-					GafferUI.PathListingWidget.StandardColumn( "CPU", "localDispatcher:cpu" ),
-					GafferUI.PathListingWidget.StandardColumn( "Memory", "localDispatcher:memory" ),
-				),
-				selectionMode = GafferUI.PathListingWidget.SelectionMode.Rows,
-			)
-			self.__jobListingWidget._qtWidget().header().setSortIndicator( 1, QtCore.Qt.AscendingOrder )
-			self.__jobListingWidget.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__jobSelectionChanged ), scoped = False )
+			with GafferUI.ListContainer( spacing = 4 ) :
 
-			with GafferUI.TabbedContainer() as self.__tabs :
+				self.__jobListingWidget = GafferUI.PathListingWidget(
+					_LocalJobsPath( jobPool ),
+					columns = (
+						GafferUI.PathListingWidget.IconColumn( "Status", "localDispatcherStatus", "localDispatcher:status" ),
+						GafferUI.PathListingWidget.StandardColumn( "Name", "localDispatcher:jobName", sizeMode = GafferUI.PathColumn.SizeMode.Stretch ),
+						GafferUI.PathListingWidget.StandardColumn( "Id", "localDispatcher:id" ),
+						GafferUI.PathListingWidget.StandardColumn( "CPU", "localDispatcher:cpu" ),
+						GafferUI.PathListingWidget.StandardColumn( "Memory", "localDispatcher:memory" ),
+					),
+					selectionMode = GafferUI.PathListingWidget.SelectionMode.Rows,
+				)
+				self.__jobListingWidget._qtWidget().header().setSortIndicator( 1, QtCore.Qt.AscendingOrder )
+				self.__jobListingWidget.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__jobSelectionChanged ), scoped = False )
+
+				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=5 ) :
+					GafferUI.Spacer( imath.V2i( 0 ), parenting = { "expand" : True } )
+					self.__killButton = GafferUI.Button( "Kill Selected Jobs" )
+					self.__killButton.clickedSignal().connect( Gaffer.WeakMethod( self.__killClicked ), scoped = False )
+					self.__removeButton = GafferUI.Button( "Remove Selected Jobs" )
+					self.__removeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__removeClicked ), scoped = False )
+
+			with GafferUI.TabbedContainer() :
 
 				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing=10, borderWidth=10, parenting = { "label"  : "Log" } ) as self.__messagesTab :
 					self.__messageWidget = GafferUI.MessageWidget( toolbars = True, follow = True, role = GafferUI.MessageWidget.Role.Log )
@@ -174,14 +185,6 @@ class LocalJobs( GafferUI.Editor ) :
 						GafferUI.Label( "Start Time", parenting = { "index" : ( 0, 3 ) } )
 						self.__propertiesStartTime = GafferUI.Label( textSelectable = True, parenting = { "index" : ( 1, 3 ) } )
 
-			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=5 ) :
-				self.__killButton = GafferUI.Button( "Kill Selected Jobs" )
-				self.__killButton.setEnabled( False )
-				self.__killButton.clickedSignal().connect( Gaffer.WeakMethod( self.__killClicked ), scoped = False )
-				self.__removeButton = GafferUI.Button( "Remove Selected Jobs" )
-				self.__removeButton.setEnabled( False )
-				self.__removeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__removeClicked ), scoped = False )
-
 		# Connecting to the JobPool and Job signals allows us to update our PathListingWidget
 		# immediately when jobs are added and removed or their status changes.
 		jobPool.jobAddedSignal().connect( Gaffer.WeakMethod( self.__jobAdded ), scoped = False )
@@ -192,6 +195,8 @@ class LocalJobs( GafferUI.Editor ) :
 		self.__statisticsTimer = QtCore.QTimer()
 		self.__statisticsTimer.timeout.connect( Gaffer.WeakMethod( self.__statisticsTimeout ) )
 		self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ), scoped = False )
+
+		self.__updateButtons()
 
 	def __repr__( self ) :
 
@@ -219,6 +224,7 @@ class LocalJobs( GafferUI.Editor ) :
 
 		assert( threading.current_thread() is threading.main_thread() )
 		self.__jobListingWidget.getPath()._emitPathChanged()
+		self.__updateButtons()
 
 	def __statisticsTimeout( self ) :
 
@@ -248,8 +254,6 @@ class LocalJobs( GafferUI.Editor ) :
 	def __jobSelectionChanged( self, widget ) :
 
 		jobs = self.__selectedJobs()
-		self.__removeButton.setEnabled( len( jobs ) )
-		self.__killButton.setEnabled( any( j.status() == j.Status.Running for j in jobs ) )
 
 		if len( jobs ) == 1 :
 			self.__messageWidget.setMessages( jobs[0].messages() )
@@ -274,8 +278,16 @@ class LocalJobs( GafferUI.Editor ) :
 		self.__propertiesEnvironmentCommand.setText( soleFormat( [ j.environmentCommand() for j in jobs ] ) )
 		self.__propertiesStartTime.setText( soleFormat( [ j.startTime() for j in jobs ] ) )
 
+		self.__updateButtons()
+
 	def __messagesChanged( self, job ) :
 
 		self.__messageWidget.setMessages( job.messages() )
+
+	def __updateButtons( self ) :
+
+		jobs = self.__selectedJobs()
+		self.__removeButton.setEnabled( len( jobs ) )
+		self.__killButton.setEnabled( any( j.status() == j.Status.Running for j in jobs ) )
 
 GafferUI.Editor.registerType( "LocalJobs", LocalJobs )
