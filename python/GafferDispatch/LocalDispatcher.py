@@ -82,6 +82,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			self.__name = Gaffer.Context.current().substitute( dispatcher["jobName"].getValue() )
 			self.__directory = Gaffer.Context.current()["dispatcher:jobDirectory"]
 			self.__scriptFile = Gaffer.Context.current()["dispatcher:scriptFileName"]
+			self.__frameRange = dispatcher.frameRange( script, self.__context )
 			self.__id = os.path.basename( self.__directory )
 			self.__ignoreScriptLoadErrors = dispatcher["ignoreScriptLoadErrors"].getValue()
 			## \todo Make `Dispatcher::dispatch()` use a Process, so we don't need to
@@ -90,6 +91,8 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 				dispatcher["environmentCommand"].getValue()
 			)
 			self.__executeInBackground = dispatcher["executeInBackground"].getValue()
+
+			self.__startTime = datetime.datetime.now()
 
 			self.__messageHandler = _MessageHandler()
 			self.__messagesChangedSignal = Gaffer.Signal1()
@@ -115,15 +118,17 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 			return self.__directory
 
-		def description( self ) :
+		def frameRange( self ) :
 
-			batch = self.__currentBatch
-			if batch is None or batch.plug() is None :
-				return "N/A"
+			return self.__frameRange
 
-			frames = str( IECore.frameListFromList( [ int(x) for x in batch.frames() ] ) )
+		def environmentCommand( self ) :
 
-			return "Executing " + batch.blindData()["nodeName"].value + " on frames " + frames
+			return self.__environmentCommand
+
+		def startTime( self ) :
+
+			return self.__startTime
 
 		def statistics( self ) :
 
