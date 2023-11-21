@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import datetime
 import enum
 import functools
 import os
@@ -93,7 +94,6 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			self.__messageHandler = _MessageHandler()
 			self.__messagesChangedSignal = Gaffer.Signal1()
 			self.__messageHandler.messagesChangedSignal().connect( Gaffer.WeakMethod( self.__messagesChanged ), scoped = False )
-			self.__messageTitle = "%s : Job %s %s" % ( dispatcher.getName(), self.__name, self.__id )
 
 			self.__initBatchWalk( batch )
 
@@ -189,14 +189,12 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 					self.__executeWalk( self.__batch, canceller )
 				except IECore.Cancelled :
 					self.__updateStatus( self.Status.Killed )
-					IECore.msg( IECore.MessageHandler.Level.Info, self.__messageTitle, "Killed " + self.name() )
 				except :
 					self.__updateStatus( self.Status.Failed )
 					if not self.__executeInBackground :
 						raise
 				else :
 					self.__updateStatus( self.Status.Complete )
-					IECore.msg( IECore.MessageHandler.Level.Info, self.__messageTitle, "Dispatched all tasks for " + self.name() )
 
 		def __executeWalk( self, batch, canceller ) :
 
@@ -207,28 +205,48 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			for upstreamBatch in batch.preTasks() :
 				self.__executeWalk( upstreamBatch, canceller )
 
+			if batch.plug() is None :
+				assert( batch is self.__batch )
+				return
+
+			if len( batch.frames() ) == 0 :
+				# This case occurs for nodes like TaskList and
+				# TaskContextProcessors, because they don't do anything in
+				# execute (they have empty hashes). Their batches exist only to
+				# depend on upstream batches, so we don't need to do any work
+				# here.
+				return
+
 			IECore.Canceller.check( canceller )
 
+			frames = "frame{framesPlural} {frames}".format(
+				framesPlural = "s" if len( batch.frames() ) > 1 else "",
+				frames = str( IECore.frameListFromList( [ int( x ) for x in batch.frames() ] ) )
+			)
+
 			IECore.msg(
-				IECore.MessageHandler.Level.Info, self.__messageTitle,
-				"Executing {node}{framesSeparator}{frames}".format(
-					node = batch.blindData()["nodeName"].value,
-					framesSeparator = " on frames " if len( batch.frames() ) > 1 else " on frame " if len( batch.frames() ) else "",
-					frames = str( IECore.frameListFromList( [ int(x) for x in batch.frames() ] ) )
-				)
+				IECore.MessageHandler.Level.Info, batch.blindData()["nodeName"].value,
+				f"Executing {frames}"
 			)
 
 			try :
 				self.__currentBatch = batch
+				startTime = time.perf_counter()
 				self.__executeBatch( batch, canceller )
+				IECore.msg(
+					IECore.MessageHandler.Level.Info, batch.blindData()["nodeName"].value,
+					"Completed {frames} in {time}".format(
+						frames = frames,
+						time = datetime.timedelta( seconds = int( 0.5 + time.perf_counter() - startTime ) )
+					)
+				)
 				batch.blindData()["localDispatcher:executed"] = IECore.BoolData( True )
 			except Exception as e :
-				IECore.msg( IECore.MessageHandler.Level.Debug, self.__messageTitle, traceback.format_exc() )
+				for line in traceback.format_exc().split( "\n" ) :
+					IECore.msg( IECore.MessageHandler.Level.Debug, batch.blindData()["nodeName"].value, line )
 				IECore.msg(
-					IECore.MessageHandler.Level.Error, self.__messageTitle,
-					"Failed to execute {} on frames {}".format(
-						batch.blindData()["nodeName"].value, IECore.frameListFromList( [ int(x) for x in batch.frames() ] )
-					)
+					IECore.MessageHandler.Level.Error, batch.blindData()["nodeName"].value,
+					f"Execution failed for {frames}"
 				)
 				raise e
 			finally :
@@ -236,12 +254,9 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 		def __executeBatch( self, batch, canceller ) :
 
-			# Simple cases for foreground execution and no-ops.
+			# Simple case for foreground execution.
 
-			if batch.plug() is None or not batch.frames() :
-				# Root batch or no-op batch.
-				return
-			elif not self.__executeInBackground :
+			if not self.__executeInBackground :
 				batch.execute()
 				return
 
@@ -271,6 +286,8 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 				args.extend( [ "-context" ] + contextArgs )
 
 			# Launch process.
+
+			IECore.msg( IECore.Msg.Level.Debug, batch.blindData()["nodeName"].value, "Executing `{}`".format( " ".join( args ) ) )
 
 			platformKW = { "start_new_session" : True } if os.name != "nt" else {}
 			process = subprocess.Popen(
@@ -323,7 +340,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			if process.returncode :
 				raise subprocess.CalledProcessError(
 					process.returncode,
-					" ".join( shlex.quote( a ) for a in args )
+					" ".join( args )
 				)
 
 		def __initBatchWalk( self, batch ) :
@@ -343,10 +360,15 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 		def __updateStatus( self, status ) :
 
 			self.__status = status
+
 			if threading.current_thread() is threading.main_thread() :
 				self.statusChangedSignal()( self )
 			elif Gaffer.ParallelAlgo.canCallOnUIThread() :
 				Gaffer.ParallelAlgo.callOnUIThread( functools.partial( self.statusChangedSignal(), self ) )
+
+			IECore.msg(
+				IECore.MessageHandler.Level.Info, f"{self.__name} {self.__id}", str( status )
+			)
 
 		def __messagesChanged( self ) :
 
