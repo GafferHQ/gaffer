@@ -39,6 +39,7 @@
 #include "GafferScene/AttributeTweaks.h"
 #include "GafferScene/CameraTweaks.h"
 #include "GafferScene/CopyAttributes.h"
+#include "GafferScene/CopyOptions.h"
 #include "GafferScene/Filter.h"
 #include "GafferScene/FilterProcessor.h"
 #include "GafferScene/LocaliseAttributes.h"
@@ -385,6 +386,8 @@ IECore::ConstCompoundDataPtr GafferScene::SceneAlgo::sets( const ScenePlug *scen
 namespace
 {
 
+const std::string g_optionPrefix( "option:" );
+
 struct CapturedProcess
 {
 
@@ -574,6 +577,17 @@ void addGenericAttributePredecessors( const SceneAlgo::History::Predecessors &so
 	}
 }
 
+void addGenericOptionPredecessors( const SceneAlgo::History::Predecessors &source, SceneAlgo::OptionHistory *destination )
+{
+	for( auto &h : source )
+	{
+		if( auto oh = SceneAlgo::optionHistory( h.get(), destination->optionName ) )
+		{
+			destination->predecessors.push_back( oh );
+		}
+	}
+}
+
 void addCopyAttributesPredecessors( const CopyAttributes *copyAttributes, const SceneAlgo::History::Predecessors &source, SceneAlgo::AttributeHistory *destination )
 {
 	const ScenePlug *sourceScene = copyAttributes->inPlug();
@@ -610,6 +624,27 @@ void addCopyAttributesPredecessors( const CopyAttributes *copyAttributes, const 
 		if( h->scene == sourceScene )
 		{
 			destination->predecessors.push_back( SceneAlgo::attributeHistory( h.get(), destination->attributeName ) );
+		}
+	}
+}
+
+void addCopyOptionsPredecessors( const CopyOptions *copyOptions, const SceneAlgo::History::Predecessors &source, SceneAlgo::OptionHistory *destination )
+{
+	const ScenePlug *sourceScene = copyOptions->inPlug();
+	if( StringAlgo::matchMultiple( destination->optionName, copyOptions->optionsPlug()->getValue() ) )
+	{
+		ConstCompoundObjectPtr sourceOptions = copyOptions->sourcePlug()->globalsPlug()->getValue();
+		if( sourceOptions->members().count( g_optionPrefix + destination->optionName.string() ) )
+		{
+			sourceScene = copyOptions->sourcePlug();
+		}
+	}
+
+	for( auto &h : source )
+	{
+		if( h->scene == sourceScene )
+		{
+			destination->predecessors.push_back( SceneAlgo::optionHistory( h.get(), destination->optionName ) );
 		}
 	}
 }
@@ -677,6 +712,24 @@ void addMergeScenesPredecessors( const MergeScenes *mergeScenes, const SceneAlgo
 	for( auto &h : source )
 	{
 		if( auto p = attributeHistory( h.get(), destination->attributeName ) )
+		{
+			predecessor = p;
+		}
+	}
+
+	assert( predecessor );
+	destination->predecessors.push_back( predecessor );
+}
+
+void addMergeScenesPredecessors( const MergeScenes *mergeScenes, const SceneAlgo::History::Predecessors &source, SceneAlgo::OptionHistory *destination )
+{
+	// MergeScenes evaluates in an order whereby the last input with
+	// the option wins.
+
+	SceneAlgo::OptionHistory::Ptr predecessor;
+	for( auto &h : source )
+	{
+		if( auto p = optionHistory( h.get(), destination->optionName ) )
 		{
 			predecessor = p;
 		}
@@ -769,6 +822,34 @@ SceneAlgo::History::Ptr SceneAlgo::history( const Gaffer::ValuePlug *scenePlugCh
 	return historyWalk( monitor->rootProcesses().front().get(), scenePlugChild->getName(), nullptr );
 }
 
+SceneAlgo::History::Ptr SceneAlgo::history( const Gaffer::ValuePlug *scenePlugChild )
+{
+	if( !scenePlugChild->parent<ScenePlug>() )
+	{
+		throw IECore::Exception(
+			fmt::format( "Plug \"{}\" is not a child of a ScenePlug.", scenePlugChild->fullName() )
+		);
+	}
+
+	CapturingMonitorPtr monitor = new CapturingMonitor( scenePlugChild->getName() );
+	{
+		ScenePlug::GlobalScope globalScope( Context::current() );
+		Monitor::Scope monitorScope( monitor );
+		scenePlugChild->hash();
+	}
+
+	if( monitor->rootProcesses().size() == 0 )
+	{
+		return new History(
+			const_cast<ScenePlug *>( scenePlugChild->parent<ScenePlug>() ),
+			new Context( *Context::current(), /* omitCanceller = */ true )
+		);
+	}
+
+	assert( monitor->rootProcesses().size() == 1 );
+	return historyWalk( monitor->rootProcesses().front().get(), scenePlugChild->getName(), nullptr );
+}
+
 SceneAlgo::AttributeHistory::Ptr SceneAlgo::attributeHistory( const SceneAlgo::History *attributesHistory, const IECore::InternedString &attribute )
 {
 	Context::Scope scopedContext( attributesHistory->context.get() );
@@ -827,6 +908,53 @@ SceneAlgo::AttributeHistory::Ptr SceneAlgo::attributeHistory( const SceneAlgo::H
 	else
 	{
 		addGenericAttributePredecessors( attributesHistory->predecessors, result.get() );
+	}
+
+	return result;
+}
+
+SceneAlgo::OptionHistory::Ptr SceneAlgo::optionHistory( const SceneAlgo::History *globalsHistory, const IECore::InternedString &option )
+{
+	Context::Scope scopedContext( globalsHistory->context.get() );
+	ConstCompoundObjectPtr globals = globalsHistory->scene->globalsPlug()->getValue();
+	ConstObjectPtr optionValue = globals->member<Object>( g_optionPrefix + option.string() );
+
+	if( !optionValue )
+	{
+		return nullptr;
+	}
+
+	SceneAlgo::OptionHistory::Ptr result = new OptionHistory(
+		globalsHistory->scene, globalsHistory->context,
+		option, optionValue
+	);
+
+	// Filter the _globals_ history to include only predecessors which
+	// contribute specifically to our single _option_. In the absence of
+	// a SceneNode-level API for querying option sources, we resort to
+	// special case code for backtracking through certain node types.
+	/// \todo Consider an official API that allows the nodes themselves to
+	/// take responsibility for this backtracking.
+
+	auto node = runTimeCast<const SceneNode>( globalsHistory->scene->node() );
+	if( node && node->enabledPlug()->getValue() && globalsHistory->scene == node->outPlug() )
+	{
+		if( auto copyOptions = runTimeCast<const CopyOptions>( node ) )
+		{
+			addCopyOptionsPredecessors( copyOptions, globalsHistory->predecessors, result.get() );
+		}
+		else if( auto mergeScenes = runTimeCast<const MergeScenes>( node ) )
+		{
+			addMergeScenesPredecessors( mergeScenes, globalsHistory->predecessors, result.get() );
+		}
+		else
+		{
+			addGenericOptionPredecessors( globalsHistory->predecessors, result.get() );
+		}
+	}
+	else
+	{
+		addGenericOptionPredecessors( globalsHistory->predecessors, result.get() );
 	}
 
 	return result;
