@@ -34,11 +34,14 @@
 #
 ##########################################################################
 
+import datetime
 import threading
 
 import Gaffer
 import GafferUI
 import GafferDispatch
+
+from GafferUI.PlugValueWidget import sole
 
 from Qt import QtCore
 from Qt import QtGui
@@ -155,19 +158,21 @@ class LocalJobs( GafferUI.Editor ) :
 					self.__messageWidget = GafferUI.MessageWidget( toolbars = True, follow = True, role = GafferUI.MessageWidget.Role.Log )
 					self.__messageWidget._qtWidget().setMinimumHeight( 150 )
 
-				with GafferUI.ScrolledContainer( parenting = { "label"  : "Details" } ) as self.__detailsTab :
+				with GafferUI.ScrolledContainer( parenting = { "label"  : "Properties" } ) :
 
 					with GafferUI.GridContainer( spacing=10, borderWidth=10 ) :
 
-						GafferUI.Label( "Current Batch", parenting = { "index" : ( 0, 0 ) } )
-						self.__detailsCurrentDescription = GafferUI.Label( parenting = { "index" : ( 1, 0 ) } )
-						self.__detailsCurrentDescription.setTextSelectable( True )
+						GafferUI.Label( "Frame Range", parenting = { "index" : ( 0, 0 ) } )
+						self.__propertiesFrameRange = GafferUI.Label( textSelectable = True, parenting = { "index" : ( 1, 0 ) } )
 
 						GafferUI.Label( "Job Directory", parenting = { "index" : ( 0, 1 ) } )
-						self.__detailsDirectory = GafferUI.Label(  parenting = { "index" : ( 1, 1 ) } )
-						self.__detailsDirectory.setTextSelectable( True )
+						self.__propertiesJobDirectory = GafferUI.Label( textSelectable = True, parenting = { "index" : ( 1, 1 ) } )
 
-			self.__tabs.currentChangedSignal().connect( Gaffer.WeakMethod( self.__tabChanged ), scoped = False )
+						GafferUI.Label( "Environment Command", parenting = { "index" : ( 0, 2 ) } )
+						self.__propertiesEnvironmentCommand = GafferUI.Label( textSelectable = True, parenting = { "index" : ( 1, 2 ) } )
+
+						GafferUI.Label( "Start Time", parenting = { "index" : ( 0, 3 ) } )
+						self.__propertiesStartTime = GafferUI.Label( textSelectable = True, parenting = { "index" : ( 1, 3 ) } )
 
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing=5 ) :
 				self.__killButton = GafferUI.Button( "Kill Selected Jobs" )
@@ -187,8 +192,6 @@ class LocalJobs( GafferUI.Editor ) :
 		self.__statisticsTimer = QtCore.QTimer()
 		self.__statisticsTimer.timeout.connect( Gaffer.WeakMethod( self.__statisticsTimeout ) )
 		self.visibilityChangedSignal().connect( Gaffer.WeakMethod( self.__visibilityChanged ), scoped = False )
-
-		self.__updateDetails()
 
 	def __repr__( self ) :
 
@@ -220,17 +223,6 @@ class LocalJobs( GafferUI.Editor ) :
 	def __statisticsTimeout( self ) :
 
 		self.__jobListingWidget.getPath()._emitPathChanged()
-
-	def __updateDetails( self ) :
-
-		jobs = self.__selectedJobs()
-		if len( jobs ) != 1 :
-			self.__detailsCurrentDescription.setText( "---" )
-			self.__detailsDirectory.setText( "---" )
-			return
-
-		self.__detailsCurrentDescription.setText( jobs[0].description() )
-		self.__detailsDirectory.setText( jobs[0].directory() )
 
 	def __killClicked( self, button ) :
 
@@ -266,14 +258,21 @@ class LocalJobs( GafferUI.Editor ) :
 			self.__messageWidget.clear()
 			self.__messagesChangedConnection = None
 
-		currentTab = self.__tabs.getCurrent()
-		if currentTab is self.__detailsTab :
-			self.__updateDetails()
+		def soleFormat( values ) :
 
-	def __tabChanged( self, tabs, currentTab ) :
+			value = sole( values )
+			if value is not None :
+				if isinstance( value, datetime.datetime ) :
+					return "{:%a %b %d %H:%M:%S}".format( value )
+				else :
+					return str( value )
+			else :
+				return "---"
 
-		if currentTab is self.__detailsTab :
-			self.__updateDetails()
+		self.__propertiesFrameRange.setText( soleFormat( [ j.frameRange() for j in jobs ] ) )
+		self.__propertiesJobDirectory.setText( soleFormat( [ j.directory() for j in jobs ] ) )
+		self.__propertiesEnvironmentCommand.setText( soleFormat( [ j.environmentCommand() for j in jobs ] ) )
+		self.__propertiesStartTime.setText( soleFormat( [ j.startTime() for j in jobs ] ) )
 
 	def __messagesChanged( self, job ) :
 
