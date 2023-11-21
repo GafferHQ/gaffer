@@ -71,7 +71,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			assert( isinstance( batch, GafferDispatch.Dispatcher._TaskBatch ) )
 			assert( isinstance( dispatcher, GafferDispatch.Dispatcher ) )
 
-			self.__batch = batch
+			self.__rootBatch = batch
 
 			script = batch.preTasks()[0].plug().ancestor( Gaffer.ScriptNode )
 			self.__context = Gaffer.Context( script.context() )
@@ -186,7 +186,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			with self.__messageHandler :
 				self.__updateStatus( self.Status.Running )
 				try :
-					self.__executeWalk( self.__batch, canceller )
+					self.__executeWalk( self.__rootBatch, canceller )
 				except IECore.Cancelled :
 					self.__updateStatus( self.Status.Killed )
 				except :
@@ -206,7 +206,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 				self.__executeWalk( upstreamBatch, canceller )
 
 			if batch.plug() is None :
-				assert( batch is self.__batch )
+				assert( batch is self.__rootBatch )
 				return
 
 			if len( batch.frames() ) == 0 :
