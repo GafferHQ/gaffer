@@ -71,6 +71,9 @@ GAFFER_API void callOnUIThread( const UIThreadFunction &function );
 using UIThreadCallHandler = std::function<void ( const UIThreadFunction & )>;
 GAFFER_API void pushUIThreadCallHandler( const UIThreadCallHandler &handler );
 GAFFER_API void popUIThreadCallHandler();
+/// Returns `true` if a UIThreadCallHandler is currently registered, and `false`
+/// otherwise.
+GAFFER_API bool canCallOnUIThread();
 
 /// Runs the specified function asynchronously on a background thread,
 /// using a copy of the current Context from the calling thread. This
