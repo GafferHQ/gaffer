@@ -47,7 +47,7 @@ class Label( GafferUI.Widget ) :
 	HorizontalAlignment = GafferUI.HorizontalAlignment
 	VerticalAlignment = GafferUI.VerticalAlignment
 
-	def __init__( self, text="", horizontalAlignment=HorizontalAlignment.Left, verticalAlignment=VerticalAlignment.Center, **kw ) :
+	def __init__( self, text="", horizontalAlignment=HorizontalAlignment.Left, verticalAlignment=VerticalAlignment.Center, textSelectable = False, **kw ) :
 
 		GafferUI.Widget.__init__( self, QtWidgets.QLabel( text ), **kw )
 
@@ -58,6 +58,8 @@ class Label( GafferUI.Widget ) :
 		self._qtWidget().setSizePolicy( QtWidgets.QSizePolicy( QtWidgets.QSizePolicy.Fixed, QtWidgets.QSizePolicy.Fixed ) )
 
 		self.setAlignment( horizontalAlignment, verticalAlignment )
+		if textSelectable :
+			self.setTextSelectable( True )
 
 	def setText( self, text ) :
 

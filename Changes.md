@@ -32,6 +32,7 @@ API
 - GafferTractor : Added `tractorAPI()` method used for accessing the `tractor.api.author` module.
 - GafferTractorTest : Added `tractorAPI()` method which returns a mock API if Tractor is not available. This allows the GafferTractor module to be tested without Tractor being installed.
 - ParallelAlgo : Added `canCallOnUIThread()` function.
+- Label : Added `textSelectable` constructor argument.
 
 Breaking Changes
 ----------------
