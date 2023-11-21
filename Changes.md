@@ -28,6 +28,7 @@ API
   - Added `Job.messages()` and `Job.messagesChangedSignal()` methods.
   - Added `JobPool.addJob()` and `JobPool.removeJob()` methods.
 - ParallelAlgo : Added `canCallOnUIThread()` function.
+- Label : Added `textSelectable` constructor argument.
 
 Breaking Changes
 ----------------
