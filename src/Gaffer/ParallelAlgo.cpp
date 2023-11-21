@@ -102,6 +102,13 @@ void ParallelAlgo::popUIThreadCallHandler()
 	}
 }
 
+bool ParallelAlgo::canCallOnUIThread()
+{
+	UIThreadCallHandlers *handlers = nullptr;
+	auto lock = lockUIThreadCallHandlers( handlers );
+	return handlers->size();
+}
+
 GAFFER_API std::unique_ptr<BackgroundTask> ParallelAlgo::callOnBackgroundThread( const Plug *subject, BackgroundFunction function )
 {
 	ContextPtr backgroundContext = new Context( *Context::current() );

@@ -272,6 +272,7 @@ void GafferModule::bindParallelAlgo()
 	def( "callOnUIThread", &callOnUIThread );
 	def( "pushUIThreadCallHandler", &pushUIThreadCallHandler );
 	def( "popUIThreadCallHandler", &popUIThreadCallHandler );
+	def( "canCallOnUIThread", &ParallelAlgo::canCallOnUIThread );
 	def( "callOnBackgroundThread", &callOnBackgroundThread );
 
 }
