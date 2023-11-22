@@ -36,6 +36,7 @@
 ##########################################################################
 
 import contextlib
+import enum
 import sys
 import threading
 import traceback
@@ -67,7 +68,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 	#
 	# NoneByDefault : deprecated - the same as DisplayResult
 	# CloseByDefault : deprecated - the same as DisplayResult
-	PostExecuteBehaviour = IECore.Enum.create( "FromUserData", "None_", "Close", "DisplayResult", "DisplayResultAndClose", "NoneByDefault", "CloseByDefault" )
+	PostExecuteBehaviour = enum.Enum( "PostExecuteBehaviour", [ "FromUserData", "None_", "Close", "DisplayResult", "DisplayResultAndClose", "NoneByDefault", "CloseByDefault" ] )
 
 	## Defines which button has the focus when the op is displayed for editing.
 	#
@@ -80,7 +81,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 	# OK : The OK button has the focus.
 	#
 	# Cancel : The cancel button has the focus.
-	DefaultButton = IECore.Enum.create( "FromUserData", "None_", "OK", "Cancel" )
+	DefaultButton = enum.Enum( "DefaultButton", [ "FromUserData", "None_", "OK", "Cancel" ] )
 
 	# If executeInBackground is True, then the Op will be executed on another
 	# thread, allowing the UI to remain responsive during execution. This is
@@ -255,7 +256,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 		# the op is running in the background.
 		return self.__state != self.__State.Execution
 
-	__State = IECore.Enum.create( "ParameterEditing", "Execution", "ErrorDisplay", "ResultDisplay" )
+	__State = enum.Enum( "__State", [ "ParameterEditing", "Execution", "ErrorDisplay", "ResultDisplay" ] )
 
 	def __initiateParameterEditing( self, *unused ) :
 

@@ -35,6 +35,7 @@
 ##########################################################################
 
 import bisect
+import enum
 import functools
 import imath
 import weakref
@@ -58,7 +59,7 @@ class MessageWidget( GafferUI.Widget ) :
 
 	# Messages : For presenting longer messages in detail. They are shown as line-wrapped paragraphs.
 	# Log : For presenting a large number of messages in tabular form with un-wrapped lines.
-	Role = IECore.Enum.create( "Messages", "Log" )
+	Role = enum.Enum( "Role", [ "Messages", "Log" ] )
 
 	# messageLevel : The minimum importance of message that will be displayed.
 	# role : The style of message presentation.
@@ -1353,7 +1354,7 @@ class _MessageTableFilterModel( QtCore.QSortFilterProxyModel ) :
 class _MessageTableModel( QtCore.QAbstractTableModel ) :
 
 	ColumnCount = 3
-	Column = IECore.Enum.create( "Level", "Context", "Message" )
+	Column = enum.IntEnum( "Column", [ "Level", "Context", "Message" ], start = 0 )
 
 	# A role to allow access the underlying Message data, without any display coercion.
 	ValueRole = 100

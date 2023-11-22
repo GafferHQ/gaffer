@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import enum
 import os
 import errno
 import signal
@@ -62,7 +63,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 	class Job( object ) :
 
-		Status = IECore.Enum.create( "Waiting", "Running", "Complete", "Failed", "Killed" )
+		Status = enum.IntEnum( "Status", [ "Waiting", "Running", "Complete", "Failed", "Killed" ] )
 
 		def __init__( self, batch, dispatcher ) :
 

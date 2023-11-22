@@ -35,6 +35,8 @@
 #
 ##########################################################################
 
+import enum
+
 import imath
 
 import IECore
@@ -49,7 +51,7 @@ from Qt import QtWidgets
 ## This Widget simply displays an IECore.Spline object.
 class SplineWidget( GafferUI.Widget ) :
 
-	DrawMode = IECore.Enum.create( "Invalid", "Ramp", "Splines" )
+	DrawMode = enum.Enum( "DrawMode", [ "Invalid", "Ramp", "Splines" ] )
 
 	def __init__( self, spline=None, drawMode=DrawMode.Splines, **kw ) :
 

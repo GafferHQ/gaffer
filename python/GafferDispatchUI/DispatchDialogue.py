@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import enum
 import functools
 import sys
 import threading
@@ -54,7 +55,7 @@ class DispatchDialogue( GafferUI.Dialogue ) :
 	# Close : The dialogue is closed immediately.
 	#
 	# Confirm : The dialogue remains open confirming success, with a button for returning to the editing state.
-	PostDispatchBehaviour = IECore.Enum.create( "Close", "Confirm" )
+	PostDispatchBehaviour = enum.Enum( "PostDispatchBehaviour", [ "Close", "Confirm" ] )
 
 	__dispatchDialogueMenuDefinition = None
 

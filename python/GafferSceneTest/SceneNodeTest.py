@@ -35,6 +35,7 @@
 #
 ##########################################################################
 
+import enum
 import inspect
 import unittest
 import time
@@ -218,7 +219,7 @@ class SceneNodeTest( GafferSceneTest.SceneTestCase ) :
 
 		class SphereOrCube( GafferScene.SceneNode ) :
 
-			Type = IECore.Enum.create( "Sphere", "Cube" )
+			Type = enum.IntEnum( "Type", [ "Sphere", "Cube" ], start = 0 )
 
 			def __init__( self, name = "SphereOrCube" ) :
 

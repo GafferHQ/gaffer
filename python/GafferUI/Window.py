@@ -35,11 +35,10 @@
 #
 ##########################################################################
 
+import enum
 import sys
 import warnings
 import imath
-
-import IECore
 
 import GafferUI
 import Gaffer
@@ -51,7 +50,7 @@ import Qt
 
 class Window( GafferUI.ContainerWidget ) :
 
-	SizeMode = IECore.Enum.create( "Fixed", "Manual", "Automatic" )
+	SizeMode = enum.Enum( "SizeMode", [ "Fixed", "Manual", "Automatic" ] )
 
 	## \todo Remove the deprecated resizable argument
 	def __init__( self, title="GafferUI.Window", borderWidth=0, resizeable=None, child=None, sizeMode=SizeMode.Manual, icon="GafferLogoMini.png", **kw ) :

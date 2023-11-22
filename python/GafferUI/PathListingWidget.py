@@ -36,6 +36,7 @@
 ##########################################################################
 
 import collections
+import enum
 import math
 import warnings
 
@@ -88,8 +89,8 @@ class PathListingWidget( GafferUI.Widget ) :
 		defaultIndexedIOArrayLengthColumn,
 	)
 
-	DisplayMode = IECore.Enum.create( "List", "Tree" )
-	SelectionMode = IECore.Enum.create( "Row", "Rows", "Cell", "Cells" )
+	DisplayMode = enum.Enum( "DisplayMode", [ "List", "Tree" ] )
+	SelectionMode = enum.Enum( "SelectionMode", [ "Row", "Rows", "Cell", "Cells" ] )
 
 	def __init__(
 		self,

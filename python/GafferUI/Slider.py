@@ -35,6 +35,7 @@
 #
 ##########################################################################
 
+import enum
 import math
 
 import IECore
@@ -48,7 +49,7 @@ from Qt import QtWidgets
 
 class Slider( GafferUI.Widget ) :
 
-	ValueChangedReason = IECore.Enum.create( "Invalid", "SetValues", "Click", "IndexAdded", "IndexRemoved", "DragBegin", "DragMove", "DragEnd", "Increment" )
+	ValueChangedReason = enum.Enum( "ValueChangedReason", [ "Invalid", "SetValues", "Click", "IndexAdded", "IndexRemoved", "DragBegin", "DragMove", "DragEnd", "Increment" ] )
 
 	# The min and max arguments define the numeric values at the ends of the slider.
 	# By default, values outside this range will be clamped, but hardMin and hardMax

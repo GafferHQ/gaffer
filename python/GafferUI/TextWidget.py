@@ -35,9 +35,8 @@
 #
 ##########################################################################
 
+import enum
 import warnings
-
-import IECore
 
 import Gaffer
 import GafferUI
@@ -48,7 +47,7 @@ from Qt import QtWidgets
 
 class TextWidget( GafferUI.Widget ) :
 
-	DisplayMode = IECore.Enum.create( "Normal", "Password" )
+	DisplayMode = enum.Enum( "DisplayMode", [ "Normal", "Password" ] )
 
 	def __init__( self, text="", editable=True, displayMode=DisplayMode.Normal, characterWidth=None, **kw ) :
 

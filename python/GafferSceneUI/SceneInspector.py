@@ -35,6 +35,7 @@
 #
 ##########################################################################
 
+import enum
 import math
 import difflib
 import html
@@ -332,7 +333,7 @@ class Diff( GafferUI.Widget ) :
 # with background colours appropriate to the relationship between the two.
 class SideBySideDiff( Diff ) :
 
-	Background = IECore.Enum.create( "A", "B", "AB", "Other" )
+	Background = enum.Enum( "Background", [ "A", "B", "AB", "Other" ] )
 
 	def __init__( self, **kw ) :
 
@@ -412,8 +413,8 @@ class SideBySideDiff( Diff ) :
 				continue
 
 			repolish = False
-			if str(backgrounds[i]) != frame._qtWidget().property( "gafferDiff" ) :
-				frame._qtWidget().setProperty( "gafferDiff", str(backgrounds[i]) )
+			if backgrounds[i].name != frame._qtWidget().property( "gafferDiff" ) :
+				frame._qtWidget().setProperty( "gafferDiff", backgrounds[i].name )
 				repolish = True
 
 			if i == 0 :
@@ -1238,7 +1239,7 @@ from Qt import QtWidgets
 
 class _Rail( GafferUI.ListContainer ) :
 
-	Type = IECore.Enum.create( "Top", "Middle", "Gap", "Bottom", "Single" )
+	Type = enum.Enum( "Type", [ "Top", "Middle", "Gap", "Bottom", "Single" ] )
 
 	def __init__( self, type, **kw ) :
 

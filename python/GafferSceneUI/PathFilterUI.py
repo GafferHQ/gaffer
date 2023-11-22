@@ -34,7 +34,7 @@
 #
 ##########################################################################
 
-import types
+import enum
 import imath
 import functools
 from collections import deque
@@ -236,7 +236,7 @@ GafferUI.Pointer.registerPointer( "addObjects", GafferUI.Pointer( "addObjects.pn
 GafferUI.Pointer.registerPointer( "removeObjects", GafferUI.Pointer( "removeObjects.png", imath.V2i( 53, 14 ) ) )
 GafferUI.Pointer.registerPointer( "replaceObjects", GafferUI.Pointer( "replaceObjects.png", imath.V2i( 53, 14 ) ) )
 
-__DropMode = IECore.Enum.create( "None_", "Add", "Remove", "Replace" )
+__DropMode = enum.Enum( "__DropMode", [ "None_", "Add", "Remove", "Replace" ] )
 
 __originalDragPointer = None
 

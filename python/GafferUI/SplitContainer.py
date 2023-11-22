@@ -35,7 +35,7 @@
 #
 ##########################################################################
 
-import IECore
+import enum
 
 import GafferUI
 
@@ -45,7 +45,7 @@ from Qt import QtWidgets
 ## \todo Support other list operations for child access
 class SplitContainer( GafferUI.ContainerWidget ) :
 
-	Orientation = IECore.Enum.create( "Vertical", "Horizontal" )
+	Orientation = enum.Enum( "Orientation", [ "Vertical", "Horizontal" ] )
 
 	def __init__( self, orientation=Orientation.Vertical, borderWidth=0, **kw ) :
 

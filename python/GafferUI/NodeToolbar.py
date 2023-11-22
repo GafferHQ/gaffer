@@ -73,7 +73,7 @@ class NodeToolbar( GafferUI.Widget ) :
 	def create( cls, node, edge = GafferUI.Edge.Top ) :
 
 		# Try to create a toolbar using metadata.
-		toolbarType = Gaffer.Metadata.value( node, "nodeToolbar:%s:type" % str( edge ).lower() )
+		toolbarType = Gaffer.Metadata.value( node, "nodeToolbar:{}:type".format( edge.name.lower() ) )
 		if toolbarType is not None :
 			if toolbarType == "" :
 				return None

@@ -35,10 +35,9 @@
 #
 ##########################################################################
 
+import enum
 import sys
 import imath
-
-import IECore
 
 import Gaffer
 import GafferUI
@@ -110,7 +109,7 @@ class _ComponentSlider( GafferUI.Slider ) :
 
 class ColorChooser( GafferUI.Widget ) :
 
-	ColorChangedReason = IECore.Enum.create( "Invalid", "SetColor", "Reset" )
+	ColorChangedReason = enum.Enum( "ColorChangedReason", [ "Invalid", "SetColor", "Reset" ] )
 
 	def __init__( self, color=imath.Color3f( 1 ), **kw ) :
 
