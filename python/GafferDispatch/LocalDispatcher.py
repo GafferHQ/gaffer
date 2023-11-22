@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import atexit
 import datetime
 import enum
 import functools
@@ -417,12 +418,26 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 				self.__jobs.remove( job )
 				self.jobRemovedSignal()( job )
 
-	__jobPool = JobPool()
+	__defaultJobPool = None
 
 	@staticmethod
 	def defaultJobPool() :
 
-		return LocalDispatcher.__jobPool
+		if LocalDispatcher.__defaultJobPool is not None :
+			return LocalDispatcher.__defaultJobPool
+
+		LocalDispatcher.__defaultJobPool = LocalDispatcher.JobPool()
+
+		def cleanupJobPool( jobPool ) :
+
+			for job in jobPool.jobs() :
+				job.kill()
+
+			jobPool.waitForAll()
+
+		atexit.register( cleanupJobPool, LocalDispatcher.__defaultJobPool )
+
+		return LocalDispatcher.__defaultJobPool
 
 	def jobPool( self ) :
 
