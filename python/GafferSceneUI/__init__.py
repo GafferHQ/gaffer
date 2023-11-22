@@ -187,6 +187,9 @@ from . import FramingConstraintUI
 from . import MeshNormalsUI
 from . import LightToolUI
 from . import ImageScatterUI
+from . import RenderPassesUI
+from . import DeleteRenderPassesUI
+from . import RenderPassWedgeUI
 
 # then all the PathPreviewWidgets. note that the order
 # of import controls the order of display.

@@ -342,6 +342,9 @@ nodeMenu.append( "/Scene/Utility/Set Query", GafferScene.SetQuery, searchText = 
 nodeMenu.append( "/Scene/Utility/Shader Query", GafferScene.ShaderQuery, searchText = "ShaderQuery" )
 nodeMenu.append( "/Scene/Utility/Option Query", GafferScene.OptionQuery, searchText = "OptionQuery" )
 nodeMenu.append( "/Scene/Utility/Primitive Variable Query", GafferScene.PrimitiveVariableQuery, searchText = "PrimitiveVariableQuery" )
+nodeMenu.append( "/Scene/Passes/Render Passes", GafferScene.RenderPasses, searchText = "RenderPasses" )
+nodeMenu.append( "/Scene/Passes/Delete Render Passes", GafferScene.DeleteRenderPasses, searchText = "DeleteRenderPasses" )
+nodeMenu.append( "/Scene/Passes/Render Pass Wedge", GafferScene.RenderPassWedge, searchText = "RenderPassWedge" )
 
 # Image nodes
 
