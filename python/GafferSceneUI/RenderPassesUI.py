@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012-2014, John Haddon. All rights reserved.
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2023, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,14 +34,48 @@
 #
 ##########################################################################
 
-__import__( "IECoreScene" )
-__import__( "Gaffer" )
-__import__( "GafferDispatch" )
-__import__( "GafferImage" )
+import Gaffer
+import GafferScene
 
-from ._GafferScene import *
+Gaffer.Metadata.registerNode(
 
-from .ShaderBall import ShaderBall
-from .RenderPassWedge import RenderPassWedge
+	GafferScene.RenderPasses,
 
-__import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferScene" )
+	"description",
+	"""
+	Appends render passes to the scene globals.
+
+	Render passes can be used to define named variations of a scene.
+	These can be rendered by dispatching a RenderPassWedge node downstream
+	of your render node of choice, or written to disk by dispatching
+	a RenderPassWedge node downstream of a SceneWriter.
+
+	Scenes can be varied per render pass based on the value of the
+	`renderPass` context variable, which will contain the name of the
+	current render pass being dispatched. `${renderPass}` can be used
+	on the `selector` plug of Spreadsheet or NameSwitch nodes to choose
+	specific plug values or branches of the node graph per render pass,
+	and its value can be queried using Expression or ContextQuery nodes.
+
+	> Tip : The list of render passes is stored in the `renderPass:names`
+	> option in the scene globals.
+	""",
+
+	plugs = {
+
+		"names" : [
+
+			"description",
+			"""
+			The names of render passes to be created.
+
+			> Tip : If any of the specified names already exist, they
+			> will be removed from their existing position in the list
+			> and appended to the end.
+			""",
+
+		],
+
+	}
+
+)

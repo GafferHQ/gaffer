@@ -75,6 +75,8 @@ Gaffer.Metadata.registerNode(
 			the `${variableName}` syntax.
 			""",
 
+			"preset:Render Pass", "${renderPass}",
+
 			"nodule:type", "",
 			"divider", True,
 

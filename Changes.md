@@ -5,11 +5,18 @@ Features
 --------
 
 - Viewer : Added "Snapshot To Catalogue" command to the right-click menu of the 3D view.
+- RenderPasses : Added new nodes for working with render passes. Render passes are defined as a list of names stored in the `renderPass:names` option in the scene globals, and can be used to dispatch tasks that vary based on those names. This can be useful for purposes such as producing multiple renders with varying object visibility and shading, or for writing variations of a scene to individual files.
+  - RenderPasses : Added a new node for appending render passes to the scene globals.
+  - DeleteRenderPasses : Added a new node for removing render passes from the scene globals.
+  - RenderPassWedge : Added a new node for causing upstream tasks to be dispatched in a range of contexts where the value of the `renderPass` context variable is varied based on the render pass names defined in the `renderPass:names` option.
 
 Improvements
 ------------
 
 - ImageTransform, Resample : Improved performance for non-separable filters without scaling, with 2-6x speedups in some benchmark cases.
+- Outputs : Included `renderPass` in the filename for newly created Arnold, Cycles and 3Delight outputs. Allowing rendered images to be written to a specific directory based on the name of the current render pass.
+- GUI Config : Included `renderPass` in the default filename when writing ass files from an ArnoldRender node.
+- NameSwitch/Spreadsheet : Added "Render Pass" preset to `selector` plug.
 
 Fixes
 -----

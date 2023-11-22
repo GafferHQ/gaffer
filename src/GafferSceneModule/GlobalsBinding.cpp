@@ -39,9 +39,11 @@
 #include "GlobalsBinding.h"
 
 #include "GafferScene/DeleteOutputs.h"
+#include "GafferScene/DeleteRenderPasses.h"
 #include "GafferScene/DeleteSets.h"
 #include "GafferScene/GlobalShader.h"
 #include "GafferScene/Outputs.h"
+#include "GafferScene/RenderPasses.h"
 #include "GafferScene/Set.h"
 
 #include "GafferBindings/DependencyNodeBinding.h"
@@ -112,5 +114,15 @@ void GafferSceneModule::bindGlobals()
 	}
 
 	DependencyNodeClass<GlobalShader>();
+
+	{
+		scope s = DependencyNodeClass<DeleteRenderPasses>();
+
+		enum_<DeleteRenderPasses::Mode>( "Mode" )
+			.value( "Keep", DeleteRenderPasses::Keep )
+			.value( "Delete", DeleteRenderPasses::Delete )
+		;
+	}
+	DependencyNodeClass<RenderPasses>();
 
 }
