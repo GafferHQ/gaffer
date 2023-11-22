@@ -36,6 +36,7 @@ API
 - SceneAlgo :
   - Added `history()` overload for returning computation history independent of a scene location, this is useful when generating history from the globals.
   - Added `optionHistory()` method which returns a computation history for one specific option.
+- Widget : Added handling for drag & drop from an external application via the existing `dragEnterSignal()`, `dragMoveSignal()`, `dragLeaveSignal()` and `dropSignal()` signals.
 
 Build
 -----
