@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import errno
 import os
 import stat
 import shutil
@@ -41,6 +42,9 @@ import unittest
 import time
 import inspect
 import functools
+import subprocess
+import sys
+import tempfile
 import threading
 import weakref
 
@@ -1010,6 +1014,58 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		messages = { m.message for m in messages }
 		self.assertIn( "Hello stderr!", messages )
 		self.assertIn( "Hello stdout!", messages )
+
+	def testShutdownDuringBackgroundDispatch( self ) :
+
+		# Launch a subprocess that will launch a very long background task,
+		# print out the PID of that task, and then exit before the task
+		# has finished.
+
+		output = subprocess.check_output(
+			[ str( Gaffer.executablePath() ), "env", "python", "-c", "import GafferDispatchTest; GafferDispatchTest.LocalDispatcherTest._shutdownDuringBackgroundDispatch()" ],
+			stderr = subprocess.STDOUT, text = True
+		)
+
+		# We want a prompt clean exit, with only the output we expect.
+
+		self.assertRegex( output, "^PID : [0-9]+$" )
+		pid = int( output.split( ":" )[-1].strip() )
+
+		# And we want the process for the child task to have
+		# been terminated.
+		# \todo Figure out how to check this on Windows.
+
+		if os.name != "nt" :
+			with self.assertRaises( OSError ) as check :
+				os.kill( pid, 0 )
+			self.assertEqual( check.exception.errno, errno.ESRCH ) # ESRCH means "no such process"
+
+	@staticmethod
+	def _shutdownDuringBackgroundDispatch() :
+
+		script = Gaffer.ScriptNode()
+		script["command"] = GafferDispatch.PythonCommand()
+		script["command"]["command"].setValue( inspect.cleandoc(
+			"""
+			import time
+			time.sleep( 1000000 )
+			"""
+		) )
+
+		with tempfile.TemporaryDirectory() as jobDirectory :
+
+			dispatcher = GafferDispatch.LocalDispatcher()
+			dispatcher["jobsDirectory"].setValue( jobDirectory )
+			dispatcher["executeInBackground"].setValue( True )
+			dispatcher.dispatch( [ script["command"] ] )
+
+			# Wait for background task to start, print its PID
+			# to `stdout` and then exit.
+			while True :
+				s = dispatcher.jobPool().jobs()[-1].statistics()
+				if "pid" in s :
+					sys.stdout.write( "PID : {}\n".format( s["pid"] ) )
+					sys.exit( 0 )
 
 if __name__ == "__main__":
 	unittest.main()
