@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import contextlib
+
 import IECore
 
 import Gaffer
@@ -59,7 +61,7 @@ class StringParameterValueWidget( GafferCortexUI.ParameterValueWidget ) :
 	def __init__( self, parameterHandler, **kw ) :
 
 		multiLine = False
-		with IECore.IgnoredExceptions( KeyError ) :
+		with contextlib.suppress( KeyError ) :
 			multiLine = parameterHandler.parameter().userData()["UI"]["multiLine"].value
 
 		if multiLine :
@@ -67,7 +69,7 @@ class StringParameterValueWidget( GafferCortexUI.ParameterValueWidget ) :
 
 		else :
 			plugValueWidget = GafferUI.StringPlugValueWidget( parameterHandler.plug() )
-			with IECore.IgnoredExceptions( KeyError ) :
+			with contextlib.suppress( KeyError ) :
 				if parameterHandler.parameter().userData()["UI"]["password"].value :
 					plugValueWidget.textWidget().setDisplayMode( GafferUI.TextWidget.DisplayMode.Password )
 
@@ -95,7 +97,7 @@ def __fixedLineHeight( plug ) :
 	# for a brief description, for this reason we check by the user data "multiLineFixedLineHeight" which when set
 	# forces the parameter to show an arbitrary number of lines
 	fixedLineHeight = None
-	with IECore.IgnoredExceptions( KeyError ) :
+	with contextlib.suppress( KeyError ) :
 		fixedLineHeight = parameter.userData()["UI"]["multiLineFixedLineHeight"].value
 
 	return fixedLineHeight

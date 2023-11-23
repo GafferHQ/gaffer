@@ -41,6 +41,7 @@ import token
 import keyword
 import tokenize
 import collections
+import contextlib
 import io
 
 import imath
@@ -529,7 +530,7 @@ class PythonCompleter( Completer ) :
 				return []
 			items = []
 			for n in dir( rootObject ) :
-				with IECore.IgnoredExceptions( AttributeError ) :
+				with contextlib.suppress( AttributeError ) :
 					items.append( ( n, getattr( rootObject, n ) ) )
 			return self.__completions(
 				items = items,

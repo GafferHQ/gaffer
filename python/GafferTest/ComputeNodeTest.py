@@ -35,6 +35,7 @@
 #
 ##########################################################################
 
+import contextlib
 import inspect
 import unittest
 import threading
@@ -444,7 +445,7 @@ class ComputeNodeTest( GafferTest.TestCase ) :
 		n = GafferTest.BadNode()
 		c = n.errorSignal().connect( f, scoped = True )
 
-		with IECore.IgnoredExceptions( Exception ) :
+		with contextlib.suppress( Exception ) :
 			n["out1"].getValue()
 
 		self.assertTrue( self.fRan )

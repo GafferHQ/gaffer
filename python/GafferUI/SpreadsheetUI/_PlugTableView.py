@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import contextlib
 import functools
 
 import imath
@@ -1248,7 +1249,7 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		enabled = True
 		with self.ancestor( GafferUI.PlugValueWidget ).getContext() :
-			with IECore.IgnoredExceptions( Gaffer.ProcessException ) :
+			with contextlib.suppress( Gaffer.ProcessException ) :
 				enabled = all( [ plug.getValue() for plug in enabledPlugs ] )
 
 		return ( allSettable and not anyReadOnly, enabled )

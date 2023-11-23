@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import contextlib
+
 import IECore
 
 import Gaffer
@@ -56,7 +58,7 @@ if application["gui"].getTypedValue() :
 		"GafferDelightUI",
 		"GafferTractorUI",
 	) :
-		with IECore.IgnoredExceptions( ImportError ) :
+		with contextlib.suppress( ImportError ) :
 			__import__( module )
 
 	menu = GafferDispatchUI.DispatchDialogue.menuDefinition()

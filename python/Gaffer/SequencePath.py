@@ -35,6 +35,7 @@
 ##########################################################################
 
 import collections
+import contextlib
 
 import IECore
 
@@ -154,7 +155,7 @@ class SequencePath( Gaffer.Path ) :
 	def __basePaths( self ) :
 
 		sequence = None
-		with IECore.IgnoredExceptions( Exception ) :
+		with contextlib.suppress( Exception ) :
 			sequence = IECore.FileSequence( str( self ) )
 
 		result = []

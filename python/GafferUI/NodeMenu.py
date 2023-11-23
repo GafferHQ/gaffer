@@ -35,6 +35,7 @@
 #
 ##########################################################################
 
+import contextlib
 import inspect
 import imath
 
@@ -103,7 +104,7 @@ class NodeMenu( object ) :
 			script = graphEditor.scriptNode()
 
 			commandArgs = []
-			with IECore.IgnoredExceptions( TypeError ) :
+			with contextlib.suppress( TypeError ) :
 				commandArgs = inspect.getfullargspec( nodeCreator ).args
 
 			with Gaffer.UndoScope( script ) :

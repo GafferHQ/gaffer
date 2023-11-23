@@ -35,6 +35,7 @@
 #
 ##########################################################################
 
+import contextlib
 import os
 
 import IECore
@@ -78,7 +79,7 @@ GafferScene.Outputs.registerOutput(
 
 # Add standard AOVs as they are defined in the aiStandard and alSurface shaders
 
-with IECore.IgnoredExceptions( ImportError ) :
+with contextlib.suppress( ImportError ) :
 
 	# If Arnold isn't available for any reason, this will fail
 	# and we won't add any unnecessary output definitions.
@@ -163,7 +164,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 
 # Add standard AOVs as they are defined in the 3Delight shaders
 
-with IECore.IgnoredExceptions( ImportError ) :
+with contextlib.suppress( ImportError ) :
 
 	# If 3Delight isn't available for any reason, this will fail
 	# and we won't add any unnecessary output definitions.
@@ -241,7 +242,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 
 if os.environ.get( "CYCLES_ROOT" ) and os.environ.get( "GAFFERCYCLES_HIDE_UI", "" ) != "1" :
 
-	with IECore.IgnoredExceptions( ImportError ) :
+	with contextlib.suppress( ImportError ) :
 
 		# If cycles isn't available for any reason, this will fail
 		# and we won't add any unnecessary output definitions.

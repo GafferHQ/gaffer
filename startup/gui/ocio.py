@@ -35,6 +35,8 @@
 #
 ##########################################################################
 
+import contextlib
+
 import IECore
 
 import Gaffer
@@ -70,7 +72,7 @@ for node, plug in [
 
 # Set up Arnold colour manager with metadata that integrates with our OCIO configs.
 
-with IECore.IgnoredExceptions( ImportError ) :
+with contextlib.suppress( ImportError ) :
 
 	import GafferArnold
 
