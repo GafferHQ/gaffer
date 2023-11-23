@@ -939,10 +939,12 @@ void IECoreArnold::ShaderNetworkAlgo::convertUSDShaders( ShaderNetwork *shaderNe
 
 			if( parameterValue<int>( shader.get(), g_useSpecularWorkflowParameter, 0 ) )
 			{
-				// > Note : Not completely equivalent to USD's specification. USD's colour
-				// is for the facing angle, and the edge colour is always white. In Arnold,
-				// this is a tint applied uniformly.
-				transferUSDParameter( shaderNetwork, handle, shader.get(), g_specularColorParameter, newShader.get(), g_specularColorArnoldParameter, Color3f( 0.0f ) );
+				// > Note : Not completely equivalent to USD's specification.
+				// USD's colour is for the facing angle, and the edge colour is
+				// always white. But Arnold's is a tint applied uniformly
+				// everywhere, so we use a fallback value of `1.0` rather than
+				// the `0.0` from the USD spec.
+				transferUSDParameter( shaderNetwork, handle, shader.get(), g_specularColorParameter, newShader.get(), g_specularColorArnoldParameter, Color3f( 1.0f ) );
 			}
 			else
 			{
