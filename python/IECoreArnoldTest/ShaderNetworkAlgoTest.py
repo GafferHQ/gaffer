@@ -347,6 +347,35 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 			)
 			self.assertEqual( convertedShader.parameters["emission"], IECore.FloatData( 1 ) )
 
+	def testConvertUSDPreviewSurfaceNormalMap( self ) :
+
+		network = IECoreScene.ShaderNetwork(
+			shaders = {
+				"previewSurface" : IECoreScene.Shader(
+					"UsdPreviewSurface", "surface"
+				),
+				"normalMap" : IECoreScene.Shader(
+					"UsdUVTexture", "shader"
+				),
+			},
+			connections = [
+				( ( "normalMap", "rgb" ), ( "previewSurface", "normal" ) )
+			],
+			output = "previewSurface",
+		)
+
+		convertedNetwork = network.copy()
+		IECoreArnold.ShaderNetworkAlgo.convertUSDShaders( convertedNetwork )
+
+		normalConnection = convertedNetwork.input( ( "previewSurface", "normal" ) )
+		normalShader = convertedNetwork.getShader( normalConnection.shader )
+		self.assertEqual( normalShader.name, "normal_map" )
+		self.assertFalse( normalShader.parameters["color_to_signed"].value )
+
+		inputConnection = convertedNetwork.input( ( normalConnection.shader, "input" ) )
+		inputShader = convertedNetwork.getShader( inputConnection.shader )
+		self.assertEqual( inputShader.name, "image" )
+
 	def testConvertUSDFloat3ToColor3f( self ) :
 
 		# Although UsdPreviewSurface parameters are defined to be `color3f` in the spec,
