@@ -368,9 +368,9 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			self.__status = status
 
 			if threading.current_thread() is threading.main_thread() :
-				self.statusChangedSignal()( self )
+				self.__emitStatusChanged()
 			elif Gaffer.ParallelAlgo.canCallOnUIThread() :
-				Gaffer.ParallelAlgo.callOnUIThread( functools.partial( self.statusChangedSignal(), self ) )
+				Gaffer.ParallelAlgo.callOnUIThread( Gaffer.WeakMethod( self.__emitStatusChanged, fallbackResult = None ) )
 
 			IECore.msg(
 				IECore.MessageHandler.Level.Info, f"{self.__name} {self.__id}", str( status )
@@ -379,6 +379,10 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 		def __messagesChanged( self ) :
 
 			self.__messagesChangedSignal( self )
+
+		def __emitStatusChanged( self ) :
+
+			self.statusChangedSignal()( self )
 
 	class JobPool :
 
@@ -493,7 +497,7 @@ class _MessageHandler( IECore.MessageHandler ) :
 			return
 
 		if Gaffer.ParallelAlgo.canCallOnUIThread() :
-			Gaffer.ParallelAlgo.callOnUIThread( self.__messagesChangedUICall )
+			Gaffer.ParallelAlgo.callOnUIThread( Gaffer.WeakMethod( self.__messagesChangedUICall, fallbackResult = None ) )
 
 	def __messagesChangedUICall( self ) :
 
