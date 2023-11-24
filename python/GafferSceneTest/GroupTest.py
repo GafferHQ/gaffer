@@ -538,15 +538,6 @@ class GroupTest( GafferSceneTest.SceneTestCase ) :
 		self.assertTrue( s["g2"]["in"][0].getInput().isSame( b["out"] ) )
 		self.assertTrue( b["out"].getInput().isSame( b["g1"]["out"] ) )
 
-		# this test was causing crashes elsewhere when the script
-		# was finally garbage collected, so we force the collection
-		# here so we can be sure the problem is fixed.
-		del s
-		del b
-		while gc.collect() :
-			pass
-		IECore.RefCounted.collectGarbage()
-
 	def testSetsWithRenaming( self ) :
 
 		l1 = GafferSceneTest.TestLight()
