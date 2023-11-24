@@ -515,17 +515,5 @@ class ArrayPlugTest( GafferTest.TestCase ) :
 		self.assertEqual( s2["n"]["in"][0].getInput(), s2["a"]["sum"] )
 		self.assertEqual( s2["n"]["in"][1].getInput(), s2["a"]["sum"] )
 
-	def tearDown( self ) :
-
-		# some bugs in the InputGenerator only showed themselves when
-		# the ScriptNode was deleted during garbage collection, often
-		# in totally unrelated tests. so we run the garbage collector
-		# here to localise any problems to this test, making them
-		# easier to diagnose and fix.
-
-		while gc.collect() :
-			pass
-		IECore.RefCounted.collectGarbage()
-
 if __name__ == "__main__":
 	unittest.main()
