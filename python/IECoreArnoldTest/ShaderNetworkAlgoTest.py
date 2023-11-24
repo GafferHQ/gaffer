@@ -347,6 +347,35 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 			)
 			self.assertEqual( convertedShader.parameters["emission"], IECore.FloatData( 1 ) )
 
+	def testConvertUSDPreviewSurfaceNormalMap( self ) :
+
+		network = IECoreScene.ShaderNetwork(
+			shaders = {
+				"previewSurface" : IECoreScene.Shader(
+					"UsdPreviewSurface", "surface"
+				),
+				"normalMap" : IECoreScene.Shader(
+					"UsdUVTexture", "shader"
+				),
+			},
+			connections = [
+				( ( "normalMap", "rgb" ), ( "previewSurface", "normal" ) )
+			],
+			output = "previewSurface",
+		)
+
+		convertedNetwork = network.copy()
+		IECoreArnold.ShaderNetworkAlgo.convertUSDShaders( convertedNetwork )
+
+		normalConnection = convertedNetwork.input( ( "previewSurface", "normal" ) )
+		normalShader = convertedNetwork.getShader( normalConnection.shader )
+		self.assertEqual( normalShader.name, "normal_map" )
+		self.assertFalse( normalShader.parameters["color_to_signed"].value )
+
+		inputConnection = convertedNetwork.input( ( normalConnection.shader, "input" ) )
+		inputShader = convertedNetwork.getShader( inputConnection.shader )
+		self.assertEqual( inputShader.name, "image" )
+
 	def testConvertUSDFloat3ToColor3f( self ) :
 
 		# Although UsdPreviewSurface parameters are defined to be `color3f` in the spec,
@@ -458,56 +487,63 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 	def testConvertUSDSpecular( self ) :
 
 		for useSpecularWorkflow in ( True, False ) :
+			for specularColor in ( imath.Color3f( 0, 0.25, 0.5 ), None ) :
+				with self.subTest( useSpecularWorkflow = useSpecularWorkflow, specularColor = specularColor ) :
 
-			network = IECoreScene.ShaderNetwork(
-				shaders = {
-					"previewSurface" : IECoreScene.Shader(
-						"UsdPreviewSurface", "surface",
-						{
-							"specularColor" : imath.V3f( 0, 0.25, 0.5 ),
-							"metallic" : 0.5,
-							"useSpecularWorkflow" : int( useSpecularWorkflow ),
-						}
+					parameters = {
+						"metallic" : 0.5,
+						"useSpecularWorkflow" : int( useSpecularWorkflow ),
+					}
+					if specularColor is not None :
+						parameters["specularColor"] = specularColor
+
+					network = IECoreScene.ShaderNetwork(
+						shaders = {
+							"previewSurface" : IECoreScene.Shader(
+								"UsdPreviewSurface", "surface", parameters
+							)
+						},
+						output = "previewSurface",
 					)
-				},
-				output = "previewSurface",
-			)
 
-			convertedNetwork = network.copy()
-			IECoreArnold.ShaderNetworkAlgo.convertUSDShaders( convertedNetwork )
-			convertedShader = convertedNetwork.getShader( "previewSurface" )
+					convertedNetwork = network.copy()
+					IECoreArnold.ShaderNetworkAlgo.convertUSDShaders( convertedNetwork )
+					convertedShader = convertedNetwork.getShader( "previewSurface" )
 
-			if useSpecularWorkflow :
-				self.assertEqual( convertedShader.parameters["specular_color"].value, imath.V3f( 0, 0.25, 0.5 ) )
-				self.assertNotIn( "metalness", convertedShader.parameters )
-			else :
-				self.assertEqual( convertedShader.parameters["metalness"].value, 0.5 )
-				self.assertNotIn( "specularColor", convertedShader.parameters )
+					if useSpecularWorkflow :
+						self.assertEqual(
+							convertedShader.parameters["specular_color"].value,
+							specularColor if specularColor is not None else imath.Color3f( 1 )
+						)
+						self.assertNotIn( "metalness", convertedShader.parameters )
+					else :
+						self.assertEqual( convertedShader.parameters["metalness"].value, 0.5 )
+						self.assertNotIn( "specularColor", convertedShader.parameters )
 
-			# Repeat with input connections
+					# Repeat with input connections
 
-			network.addShader( "texture", IECoreScene.Shader( "UsdUVTexture" ) )
-			network.addConnection( ( ( "texture", "rgb" ), ( "previewSurface", "specularColor" ) ) )
-			network.addConnection( ( ( "texture", "r" ), ( "previewSurface", "metallic" ) ) )
+					network.addShader( "texture", IECoreScene.Shader( "UsdUVTexture" ) )
+					network.addConnection( ( ( "texture", "rgb" ), ( "previewSurface", "specularColor" ) ) )
+					network.addConnection( ( ( "texture", "r" ), ( "previewSurface", "metallic" ) ) )
 
-			convertedNetwork = network.copy()
-			IECoreArnold.ShaderNetworkAlgo.convertUSDShaders( convertedNetwork )
+					convertedNetwork = network.copy()
+					IECoreArnold.ShaderNetworkAlgo.convertUSDShaders( convertedNetwork )
 
-			if useSpecularWorkflow :
-				self.assertEqual(
-					convertedNetwork.input( ( "previewSurface", "specular_color" ) ),
-					( "texture", "" ),
-				)
-				self.assertFalse( convertedNetwork.input( ( "previewSurface", "metalness" ) ) )
-			else :
-				self.assertEqual(
-					convertedNetwork.input( ( "previewSurface", "metalness" ) ),
-					( "texture", "r" ),
-				)
-				self.assertFalse( convertedNetwork.input( ( "previewSurface", "specular_color" ) ) )
+					if useSpecularWorkflow :
+						self.assertEqual(
+							convertedNetwork.input( ( "previewSurface", "specular_color" ) ),
+							( "texture", "" ),
+						)
+						self.assertFalse( convertedNetwork.input( ( "previewSurface", "metalness" ) ) )
+					else :
+						self.assertEqual(
+							convertedNetwork.input( ( "previewSurface", "metalness" ) ),
+							( "texture", "r" ),
+						)
+						self.assertFalse( convertedNetwork.input( ( "previewSurface", "specular_color" ) ) )
 
-			self.assertFalse( convertedNetwork.input( ( "previewSurface", "specularColor" ) ) )
-			self.assertFalse( convertedNetwork.input( ( "previewSurface", "metallic" ) ) )
+					self.assertFalse( convertedNetwork.input( ( "previewSurface", "specularColor" ) ) )
+					self.assertFalse( convertedNetwork.input( ( "previewSurface", "metallic" ) ) )
 
 	def testConvertUSDClearcoat( self ) :
 
