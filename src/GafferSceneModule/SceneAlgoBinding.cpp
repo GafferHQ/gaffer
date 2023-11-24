@@ -203,6 +203,12 @@ SceneAlgo::History::Ptr historyWrapper( const ValuePlug &scenePlugChild, const S
 	return SceneAlgo::history( &scenePlugChild, path );
 }
 
+SceneAlgo::History::Ptr historyWrapper2( const ValuePlug &scenePlugChild )
+{
+	IECorePython::ScopedGILRelease r;
+	return SceneAlgo::history( &scenePlugChild );
+}
+
 std::string attributeHistoryGetAttributeName( const SceneAlgo::AttributeHistory &h )
 {
 	return h.attributeName.string();
@@ -229,6 +235,34 @@ SceneAlgo::AttributeHistory::Ptr attributeHistoryWrapper( const SceneAlgo::Histo
 {
 	IECorePython::ScopedGILRelease r;
 	return SceneAlgo::attributeHistory( &attributesHistory, attributeName );
+}
+
+std::string optionHistoryGetOptionName( const SceneAlgo::OptionHistory &h )
+{
+	return h.optionName.string();
+}
+
+void optionHistorySetOptionName( SceneAlgo::OptionHistory &h, IECore::InternedString n )
+{
+	h.optionName = n;
+}
+
+ObjectPtr optionHistoryGetOptionValue( const SceneAlgo::OptionHistory &h )
+{
+	// Returning a copy because `optionValue` is const, and owned by Gaffer's cache.
+	// Allowing modification in Python would be catastrophic and hard to debug.
+	return h.optionValue ? h.optionValue->copy() : nullptr;
+}
+
+void optionHistorySetOptionValue( SceneAlgo::OptionHistory &h, ConstObjectPtr v )
+{
+	h.optionValue = v;
+}
+
+SceneAlgo::OptionHistory::Ptr optionHistoryWrapper( const SceneAlgo::History &globalsHistory, const InternedString &optionName )
+{
+	IECorePython::ScopedGILRelease r;
+	return SceneAlgo::optionHistory( &globalsHistory, optionName );
 }
 
 ScenePlugPtr sourceWrapper( const ScenePlug &scene, const ScenePlug::ScenePath &path )
@@ -373,6 +407,7 @@ void bindSceneAlgo()
 	}
 
 	def( "history", &historyWrapper );
+	def( "history", &historyWrapper2 );
 
 	IECorePython::RefCountedClass<SceneAlgo::AttributeHistory, SceneAlgo::History>( "AttributeHistory" )
 		.add_property( "attributeName", &attributeHistoryGetAttributeName, &attributeHistorySetAttributeName )
@@ -380,6 +415,13 @@ void bindSceneAlgo()
 	;
 
 	def( "attributeHistory", &attributeHistoryWrapper );
+
+	IECorePython::RefCountedClass<SceneAlgo::OptionHistory, SceneAlgo::History>( "OptionHistory" )
+		.add_property( "optionName", &optionHistoryGetOptionName, &optionHistorySetOptionName )
+		.add_property( "optionValue", &optionHistoryGetOptionValue, &optionHistorySetOptionValue )
+	;
+
+	def( "optionHistory", &optionHistoryWrapper );
 
 	def( "source", &sourceWrapper );
 	def( "objectTweaks", &objectTweaksWrapper );

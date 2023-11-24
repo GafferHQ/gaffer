@@ -32,6 +32,9 @@ API
 ---
 
 - SceneGadget : Added `snapshotToFile()` method.
+- SceneAlgo :
+  - Added `history()` overload for returning computation history independent of a scene location, this is useful when generating history from the globals.
+  - Added `optionHistory()` method which returns a computation history for one specific option.
 
 Build
 -----

@@ -932,6 +932,17 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( ah.attributeValue.shaders()[shaderName].parameters[parameterName].value, parameterValue )
 		self.assertEqual( len( ah.predecessors ), numPredecessors )
 
+	def __assertOptionHistory( self, optionHistory, predecessorIndices, scene, optionName, optionValue, numPredecessors ) :
+
+		oh = self.__predecessor( optionHistory, predecessorIndices )
+
+		self.assertIsInstance( oh, GafferScene.SceneAlgo.OptionHistory )
+		self.assertEqual( oh.scene, scene )
+		self.assertNotIn( "scene:path", oh.context )
+		self.assertEqual( oh.optionName, optionName )
+		self.assertEqual( oh.optionValue.value, optionValue )
+		self.assertEqual( len( oh.predecessors ), numPredecessors )
+
 	def testAttributeHistory( self ) :
 
 		# Build network
@@ -1565,6 +1576,232 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 		plane = GafferScene.Plane()
 		attributesHistory = GafferScene.SceneAlgo.history( plane["out"]["attributes"], "/plane" )
 		self.assertIsNone( GafferScene.SceneAlgo.attributeHistory( attributesHistory, "test" ) )
+
+	def testOptionHistory( self ) :
+
+		# Build network
+		# -------------
+		#
+		# standardOptions
+		#      |
+		# optionTweaks  customOptions
+		#       \         /
+		#        \       /
+		#         \     /
+		#      copyOptions
+
+		options = GafferScene.StandardOptions()
+		options["options"]["renderCamera"]["enabled"].setValue( True )
+		options["options"]["renderCamera"]["value"].setValue( "/renderCamera" )
+		options["options"]["resolutionMultiplier"]["enabled"].setValue( True )
+		options["options"]["resolutionMultiplier"]["value"].setValue( 2.0 )
+
+		tweaks = GafferScene.OptionTweaks()
+		tweaks["in"].setInput( options["out"] )
+
+		tweak = Gaffer.TweakPlug( "render:camera", "/tweakCamera" )
+		tweaks["tweaks"].addChild( tweak )
+
+		customOptions = GafferScene.CustomOptions()
+		customOptions["options"].addChild( Gaffer.NameValuePlug( "render:camera", "/customCamera" ) )
+		customOptions["options"].addChild( Gaffer.NameValuePlug( "render:resolutionMultiplier", 4.0 ) )
+
+		copyOptions = GafferScene.CopyOptions()
+		copyOptions["in"].setInput( tweaks["out"] )
+		copyOptions["source"].setInput( customOptions["out"] )
+
+		def assertResolutionMultiplierFromStandardOptions() :
+
+			history = GafferScene.SceneAlgo.history( copyOptions["out"]["globals"] )
+			optionHistory = GafferScene.SceneAlgo.optionHistory( history, "render:resolutionMultiplier" )
+
+			self.__assertOptionHistory( optionHistory, [], copyOptions["out"], "render:resolutionMultiplier", 2.0, 1 )
+			self.__assertOptionHistory( optionHistory, [ 0 ], copyOptions["in"], "render:resolutionMultiplier", 2.0, 1 )
+			self.__assertOptionHistory( optionHistory, [ 0, 0 ], tweaks["out"], "render:resolutionMultiplier", 2.0, 1 )
+			self.__assertOptionHistory( optionHistory, [ 0, 0, 0 ], tweaks["in"], "render:resolutionMultiplier", 2.0, 1 )
+			self.__assertOptionHistory( optionHistory, [ 0, 0, 0, 0 ], options["out"], "render:resolutionMultiplier", 2.0, 0 )
+
+		def assertResolutionMultiplierFromCustomOptions() :
+
+			history = GafferScene.SceneAlgo.history( copyOptions["out"]["globals"] )
+			optionHistory = GafferScene.SceneAlgo.optionHistory( history, "render:resolutionMultiplier" )
+
+			self.__assertOptionHistory( optionHistory, [], copyOptions["out"], "render:resolutionMultiplier", 4.0, 1 )
+			self.__assertOptionHistory( optionHistory, [ 0 ], copyOptions["source"], "render:resolutionMultiplier", 4.0, 1 )
+			self.__assertOptionHistory( optionHistory, [ 0, 0 ], customOptions["out"], "render:resolutionMultiplier", 4.0, 0 )
+
+		def assertRenderCameraFromStandardOptions() :
+
+			history = GafferScene.SceneAlgo.history( copyOptions["out"]["globals"] )
+			optionHistory = GafferScene.SceneAlgo.optionHistory( history, "render:camera" )
+
+			self.__assertOptionHistory( optionHistory, [], copyOptions["out"], "render:camera", "/tweakCamera", 1 )
+			self.__assertOptionHistory( optionHistory, [ 0 ], copyOptions["in"], "render:camera", "/tweakCamera", 1 )
+			self.__assertOptionHistory( optionHistory, [ 0, 0 ], tweaks["out"], "render:camera", "/tweakCamera", 1 )
+			self.__assertOptionHistory( optionHistory, [ 0, 0, 0 ], tweaks["in"], "render:camera", "/renderCamera", 1 )
+			self.__assertOptionHistory( optionHistory, [ 0, 0, 0, 0 ], options["out"], "render:camera", "/renderCamera", 0 )
+
+
+		def assertRenderCameraFromCustomOptions() :
+
+			history = GafferScene.SceneAlgo.history( copyOptions["out"]["globals"] )
+			optionHistory = GafferScene.SceneAlgo.optionHistory( history, "render:camera" )
+
+			self.__assertOptionHistory( optionHistory, [], copyOptions["out"], "render:camera", "/customCamera", 1 )
+			self.__assertOptionHistory( optionHistory, [ 0 ], copyOptions["source"], "render:camera", "/customCamera", 1 )
+			self.__assertOptionHistory( optionHistory, [ 0, 0 ], customOptions["out"], "render:camera", "/customCamera", 0 )
+
+		# Test `optionHistory()` with "render:camera" copied
+
+		copyOptions["options"].setValue( "render:ca*" )
+		assertRenderCameraFromCustomOptions()
+		assertResolutionMultiplierFromStandardOptions()
+
+		# Test `optionHistory()` with all "render:" options copied
+
+		copyOptions["options"].setValue( "render:*" )
+		assertRenderCameraFromCustomOptions()
+		assertResolutionMultiplierFromCustomOptions()
+
+		# Test `optionHistory()` with no options copied
+
+		copyOptions["options"].setValue( "" )
+		assertRenderCameraFromStandardOptions()
+		assertResolutionMultiplierFromStandardOptions()
+
+		# Test `optionHistory()` with an invalid option copied
+
+		copyOptions["options"].setValue( "not:an:option" )
+		assertRenderCameraFromStandardOptions()
+		assertResolutionMultiplierFromStandardOptions()
+
+		# Test `optionHistory()` with `copyOptions` disabled
+
+		copyOptions["enabled"].setValue( False )
+		assertRenderCameraFromStandardOptions()
+		assertResolutionMultiplierFromStandardOptions()
+
+	def testOptionHistoryWithMergeScenes( self ) :
+
+		# Build network
+		# -------------
+		#
+		# standardOptions  customOptions
+		#         \         /
+		#          \       /
+		#           \     /
+		#         mergeScenes
+
+		options = GafferScene.StandardOptions()
+		options["options"]["renderCamera"]["enabled"].setValue( True )
+		options["options"]["renderCamera"]["value"].setValue( "/renderCamera" )
+		options["options"]["resolutionMultiplier"]["enabled"].setValue( True )
+		options["options"]["resolutionMultiplier"]["value"].setValue( 2.0 )
+
+		customOptions = GafferScene.CustomOptions()
+		customOptions["options"].addChild( Gaffer.NameValuePlug( "render:camera", "/altCamera" ) )
+		customOptions["options"].addChild( Gaffer.NameValuePlug( "custom:camera", "/customCamera" ) )
+
+		mergeScenes = GafferScene.MergeScenes()
+		mergeScenes["in"][0].setInput( options["out"] )
+		mergeScenes["in"][1].setInput( customOptions["out"] )
+
+		def assertOptionHistory( optionName, mergeScenesInput, value ) :
+
+			history = GafferScene.SceneAlgo.history( mergeScenes["out"]["globals"] )
+			optionHistory = GafferScene.SceneAlgo.optionHistory( history, optionName )
+
+			if value is None :
+				self.assertIsNone( optionHistory )
+				return
+
+			self.__assertOptionHistory( optionHistory, [], mergeScenes["out"], optionName, value, 1 )
+			self.__assertOptionHistory( optionHistory, [ 0 ], mergeScenesInput, optionName, value, 1 )
+			self.__assertOptionHistory( optionHistory, [ 0, 0 ], mergeScenesInput.getInput(), optionName, value, 0 )
+
+		# Test Keep mode
+
+		mergeScenes["globalsMode"].setValue( mergeScenes.Mode.Keep )
+
+		assertOptionHistory( "render:camera", mergeScenes["in"][0], "/renderCamera" )
+		assertOptionHistory( "custom:camera", None, None )
+		assertOptionHistory( "render:resolutionMultiplier", mergeScenes["in"][0], 2.0 )
+
+		# Test Merge mode
+
+		mergeScenes["globalsMode"].setValue( mergeScenes.Mode.Merge )
+
+		assertOptionHistory( "render:camera", mergeScenes["in"][1], "/altCamera" )
+		assertOptionHistory( "custom:camera", mergeScenes["in"][1], "/customCamera" )
+		assertOptionHistory( "render:resolutionMultiplier", mergeScenes["in"][0], 2.0 )
+
+		# Test Replace mode
+
+		mergeScenes["globalsMode"].setValue( mergeScenes.Mode.Replace )
+
+		assertOptionHistory( "render:camera", mergeScenes["in"][1], "/altCamera" )
+		assertOptionHistory( "custom:camera", mergeScenes["in"][1], "/customCamera" )
+		assertOptionHistory( "render:resolutionMultiplier", None, None )
+
+	def testOptionHistoryWithMissingOption( self ) :
+
+		# Option doesn't exist, so we return None.
+
+		plane = GafferScene.Plane()
+		globalsHistory = GafferScene.SceneAlgo.history( plane["out"]["globals"] )
+		self.assertIsNone( GafferScene.SceneAlgo.optionHistory( globalsHistory, "test" ) )
+
+	def testOptionHistoryWithContext( self ) :
+
+		# Build network
+		# -------------
+		#
+		# standardOptions  standardOptions
+		#            \         /
+		#             \       /
+		#              \     /
+		#            nameSwitch
+
+		options = GafferScene.StandardOptions()
+		options["options"]["renderCamera"]["enabled"].setValue( True )
+		options["options"]["renderCamera"]["value"].setValue( "/010" )
+
+		options2 = GafferScene.StandardOptions()
+		options2["options"]["renderCamera"]["enabled"].setValue( True )
+		options2["options"]["renderCamera"]["value"].setValue( "/020" )
+
+		nameSwitch = Gaffer.NameSwitch()
+		nameSwitch.setup( GafferScene.ScenePlug() )
+		nameSwitch["selector"].setValue( "${shot}" )
+		nameSwitch["in"][0]["name"].setValue( "010" )
+		nameSwitch["in"][0]["value"].setInput( options["out"] )
+		nameSwitch["in"][1]["name"].setValue( "020" )
+		nameSwitch["in"][1]["value"].setInput( options2["out"] )
+
+		def assertOptionHistory( optionName, nameSwitchInput, value ) :
+
+			history = GafferScene.SceneAlgo.history( nameSwitch["out"]["value"]["globals"] )
+			optionHistory = GafferScene.SceneAlgo.optionHistory( history, optionName )
+
+			if value is None :
+				self.assertIsNone( optionHistory )
+				return
+
+			self.__assertOptionHistory( optionHistory, [], nameSwitch["out"]["value"], optionName, value, 1 )
+			self.__assertOptionHistory( optionHistory, [ 0 ], nameSwitchInput, optionName, value, 1 )
+			self.__assertOptionHistory( optionHistory, [ 0, 0 ], nameSwitchInput.getInput(), optionName, value, 0 )
+
+		with Gaffer.Context() as context :
+			context["shot"] = "010"
+			assertOptionHistory( "render:camera", nameSwitch["in"][0]["value"], "/010" )
+
+			context["shot"] = "020"
+			assertOptionHistory( "render:camera", nameSwitch["in"][1]["value"], "/020" )
+
+			# Use SceneTestCase's ContextSanitiser to indirectly test that `scene:path`
+			# isn't leaked into the context used to evaluate the globals.
+			context["scene:path"] = IECore.InternedStringVectorData( [ "plane" ] )
+			assertOptionHistory( "render:camera", nameSwitch["in"][1]["value"], "/020" )
 
 	def testHistoryWithCanceller( self ) :
 
