@@ -1,7 +1,10 @@
 1.3.x.x (relative to 1.3.9.0)
 =======
 
+API
+---
 
+- EditScopeAlgo : Added support for editing options for a specific render pass.
 
 1.3.9.0 (relative to 1.3.8.0)
 =======

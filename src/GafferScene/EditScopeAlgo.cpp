@@ -1289,3 +1289,201 @@ const Gaffer::GraphComponent *GafferScene::EditScopeAlgo::optionEditReadOnlyReas
 
 	return nullptr;
 }
+
+// Render Pass Option Edits
+// ========================
+
+namespace
+{
+
+const std::string g_renderPassOptionProcessorName = "RenderPassOptionEdits";
+
+SceneProcessorPtr renderPassOptionProcessor( const std::string &name )
+{
+	SceneProcessorPtr result = new SceneProcessor( name );
+
+	SpreadsheetPtr spreadsheet = new Spreadsheet;
+	result->addChild( spreadsheet );
+	spreadsheet->selectorPlug()->setValue( "${renderPass}" );
+
+	OptionTweaksPtr optionTweaks = new OptionTweaks;
+	result->addChild( optionTweaks );
+	optionTweaks->inPlug()->setInput( result->inPlug() );
+	optionTweaks->enabledPlug()->setInput( result->enabledPlug() );
+	optionTweaks->ignoreMissingPlug()->setValue( true );
+
+	auto rowsPlug = static_cast<Spreadsheet::RowsPlug *>(
+		PlugAlgo::promoteWithName( spreadsheet->rowsPlug(), "edits" )
+	);
+	Metadata::registerValue( rowsPlug, "spreadsheet:defaultRowVisible", new BoolData( false ) );
+	Metadata::registerValue( rowsPlug->defaultRow(), "spreadsheet:rowNameWidth", new IntData( 150 ) );
+
+	result->outPlug()->setInput( optionTweaks->outPlug() );
+
+	return result;
+}
+
+SceneProcessor *acquireRenderPassOptionProcessor( EditScope *editScope, bool createIfNecessary )
+{
+	static bool isRegistered = false;
+	if( !isRegistered )
+	{
+		EditScope::registerProcessor(
+			g_renderPassOptionProcessorName,
+			[]() {
+				return renderPassOptionProcessor( g_renderPassOptionProcessorName );
+			}
+		);
+
+		isRegistered = true;
+	}
+
+	return editScope->acquireProcessor<SceneProcessor>( g_renderPassOptionProcessorName, createIfNecessary );
+}
+
+}  // namespace
+
+bool GafferScene::EditScopeAlgo::hasRenderPassOptionEdit( const Gaffer::EditScope *scope, const std::string &renderPass, const std::string &option )
+{
+	return acquireRenderPassOptionEdit( const_cast<EditScope *>( scope ), renderPass, option, /* createIfNecessary = */ false );
+}
+
+TweakPlug *GafferScene::EditScopeAlgo::acquireRenderPassOptionEdit( Gaffer::EditScope *scope, const std::string &renderPass, const std::string &option, bool createIfNecessary )
+{
+	// If we need to create an edit, we'll need to do a compute to figure our the option
+	// type and value. But we don't want to do that if we already have an edit. And since the
+	// compute could error, we need to get the option value before making _any_ changes, so we
+	// don't leave things in a partial state. We use `ensureOptionValue()` to get the value
+	// lazily at the first point we know it will be needed.
+	ConstDataPtr optionValue;
+	auto ensureOptionValue = [&] {
+		if( !optionValue )
+		{
+			optionValue = runTimeCast<const Data>(
+				::optionValue( scope->outPlug<ScenePlug>(), option )
+			);
+			if( !optionValue )
+			{
+				throw IECore::Exception( fmt::format( "Option \"{}\" cannot be tweaked", option ) );
+			}
+		}
+	};
+
+	// Find processor
+
+	auto *processor = acquireRenderPassOptionProcessor( scope, /* createIfNecessary */ false );
+	if( !processor )
+	{
+		if( !createIfNecessary )
+		{
+			return nullptr;
+		}
+		else
+		{
+			ensureOptionValue();
+			processor = acquireRenderPassOptionProcessor( scope, /* createIfNecessary */ true );
+		}
+	}
+
+	auto *rows = processor->getChild<Spreadsheet::RowsPlug>( "edits" );
+	Spreadsheet::RowPlug *row = rows->row( renderPass );
+	if( !row )
+	{
+		if( !createIfNecessary )
+		{
+			return nullptr;
+		}
+		ensureOptionValue();
+		row = rows->addRow();
+		row->namePlug()->setValue( renderPass );
+	}
+
+	// Find cell for option
+
+	const std::string columnName = boost::replace_all_copy( option, ".", "_" );
+	if( auto *cell = row->cellsPlug()->getChild<Spreadsheet::CellPlug>( columnName ) )
+	{
+		return cell->valuePlug<TweakPlug>();
+	}
+
+	if( !createIfNecessary )
+	{
+		return nullptr;
+	}
+
+	// No tweak for the option yet. Create it.
+
+	ensureOptionValue();
+
+	ValuePlugPtr valuePlug = PlugAlgo::createPlugFromData( "value", Plug::In, Plug::Default, optionValue.get() );
+
+	TweakPlugPtr tweakPlug = new TweakPlug( option, valuePlug, TweakPlug::Create, false );
+
+	auto *optionTweaks = processor->getChild<OptionTweaks>( "OptionTweaks" );
+	optionTweaks->tweaksPlug()->addChild( tweakPlug );
+
+	size_t columnIndex = rows->addColumn( tweakPlug.get(), columnName, /* adoptEnabledPlug */ true );
+	MetadataAlgo::copyIf(
+		tweakPlug.get(), rows->defaultRow()->cellsPlug()->getChild<Spreadsheet::CellPlug>( columnIndex )->valuePlug(),
+		[] ( const GraphComponent *from, const GraphComponent *to, const std::string &name ) {
+			return boost::starts_with( name, "tweakPlugValueWidget:" );
+		}
+	);
+
+	tweakPlug->setInput( processor->getChild<Spreadsheet>( "Spreadsheet" )->outPlug()->getChild<Plug>( columnIndex ) );
+
+	return row->cellsPlug()->getChild<Spreadsheet::CellPlug>( columnIndex )->valuePlug<TweakPlug>();
+}
+
+void GafferScene::EditScopeAlgo::removeRenderPassOptionEdit( Gaffer::EditScope *scope, const std::string &renderPass, const std::string &option )
+{
+	TweakPlug *edit = acquireRenderPassOptionEdit( scope, renderPass, option, /* createIfNecessary */ false );
+	if( !edit )
+	{
+		return;
+	}
+	// We're unlikely to be able to delete the row or column,
+	// because that would affect other edits, so we simply disable
+	// the edit instead.
+	edit->enabledPlug()->setValue( false );
+}
+
+const Gaffer::GraphComponent *GafferScene::EditScopeAlgo::renderPassOptionEditReadOnlyReason( const Gaffer::EditScope *scope, const std::string &renderPass, const std::string &option )
+{
+	auto *processor = acquireRenderPassOptionProcessor( const_cast<EditScope *>( scope ), /*createIfNecessary */ false );
+	if( !processor )
+	{
+		return MetadataAlgo::readOnlyReason( scope );
+	}
+
+	auto *rows = processor->getChild<Spreadsheet::RowsPlug>( "edits" );
+	Spreadsheet::RowPlug *row = rows->row( renderPass );
+	if( !row )
+	{
+		return MetadataAlgo::readOnlyReason( rows );
+	}
+
+	if( const auto reason = MetadataAlgo::readOnlyReason( row->cellsPlug() ) )
+	{
+		return reason;
+	}
+
+	const std::string columnName = boost::replace_all_copy( option, ".", "_" );
+	if( auto *cell = row->cellsPlug()->getChild<Spreadsheet::CellPlug>( columnName ) )
+	{
+		if( MetadataAlgo::getReadOnly( cell ) )
+		{
+			return cell;
+		}
+
+		for( const auto &plug : Plug::RecursiveRange( *cell ) )
+		{
+			if( MetadataAlgo::getReadOnly( plug.get() ) )
+			{
+				return plug.get();
+			}
+		}
+	}
+
+	return nullptr;
+}

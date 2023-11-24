@@ -1435,6 +1435,206 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( edit["enabled"].getValue(), True )
 		self.assertEqual( edit["value"].getValue(), 20 )
 
+	def testRenderPassOptionEdits( self ) :
+
+		options = GafferScene.CustomOptions()
+		options["options"].addChild( Gaffer.NameValuePlug( "test", IECore.IntData( 10 ) ) )
+
+		editScope = Gaffer.EditScope()
+		editScope.setup( options["out"] )
+		editScope["in"].setInput( options["out"] )
+
+		for renderPass, value in [
+			( "renderPassA", 20 ),
+			( "renderPassB", 30 ),
+		] :
+
+			self.assertFalse( GafferScene.EditScopeAlgo.hasRenderPassOptionEdit( editScope, renderPass, "test" ) )
+			self.assertIsNone(
+				GafferScene.EditScopeAlgo.acquireRenderPassOptionEdit(
+					editScope, renderPass, "test", createIfNecessary = False
+				)
+			)
+
+			edit = GafferScene.EditScopeAlgo.acquireRenderPassOptionEdit( editScope, renderPass, "test" )
+			self.assertIsInstance( edit, Gaffer.TweakPlug )
+			self.assertIsInstance( edit["value"], Gaffer.IntPlug )
+			self.assertEqual( edit["mode"].getValue(), Gaffer.TweakPlug.Mode.Create )
+			self.assertEqual( edit["value"].getValue(), 10 )
+			self.assertEqual( edit["enabled"].getValue(), False )
+			self.assertEqual( editScope["RenderPassOptionEdits"]["OptionTweaks"]["enabled"].getInput(), editScope["RenderPassOptionEdits"]["enabled"] )
+
+			edit["enabled"].setValue( True )
+			edit["value"].setValue( value )
+			self.assertIn( "option:test", editScope["out"].globals() )
+			with Gaffer.Context() as context :
+				context["renderPass"] = renderPass
+				self.assertEqual( editScope["out"].globals()["option:test"].value, value )
+
+			self.assertEqual(
+				GafferScene.EditScopeAlgo.acquireRenderPassOptionEdit( editScope, renderPass, "test" ),
+				edit
+			)
+
+		self.assertEqual( editScope["out"].globals()["option:test"].value, 10 )
+
+	def testRenderPassOptionEditRemoval( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["options"] = GafferScene.CustomOptions()
+		s["options"]["options"].addChild( Gaffer.NameValuePlug( "test", IECore.IntData( 10 ) ) )
+
+		s["scope"] = Gaffer.EditScope()
+		s["scope"].setup( s["options"]["out"] )
+		s["scope"]["in"].setInput( s["options"]["out"] )
+
+		edit1 = GafferScene.EditScopeAlgo.acquireRenderPassOptionEdit( s["scope"], "renderPassA", "test" )
+
+		self.assertEqual( len( s["scope"]["RenderPassOptionEdits"]["edits"].children() ), 2 )
+		self.assertEqual( s["scope"]["RenderPassOptionEdits"]["edits"][1]["cells"]["test"]["value"], edit1 )
+		edit1["enabled"].setValue( True )
+
+		GafferScene.EditScopeAlgo.removeRenderPassOptionEdit( s["scope"], "renderPassA", "test" )
+
+		# Removing an edit will result in it being disabled, as it could be sharing a spreadsheet
+		# row or column with other edits.
+		self.assertEqual( s["scope"]["RenderPassOptionEdits"]["edits"][1]["cells"]["test"]["value"], edit1 )
+		self.assertFalse( edit1["enabled"].getValue() )
+
+	def testRenderPassOptionEditReadOnlyReason( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["options"] = GafferScene.CustomOptions()
+		s["options"]["options"].addChild( Gaffer.NameValuePlug( "test", IECore.IntData( 10 ) ) )
+
+		s["scope"] = Gaffer.EditScope()
+		s["scope"].setup( s["options"]["out"] )
+		s["scope"]["in"].setInput( s["options"]["out"] )
+
+		s["box"] = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["options"], s["scope"] ] ) )
+
+		self.assertIsNone(
+			GafferScene.EditScopeAlgo.renderPassOptionEditReadOnlyReason( s["box"]["scope"], "renderPassA", "test" )
+		)
+
+		for component in ( s["box"], s["box"]["scope"] ) :
+			Gaffer.MetadataAlgo.setReadOnly( component, True )
+			self.assertEqual(
+				GafferScene.EditScopeAlgo.renderPassOptionEditReadOnlyReason( s["box"]["scope"], "renderPassA", "test" ),
+				s["box"]
+			)
+
+		Gaffer.MetadataAlgo.setReadOnly( s["box"], False )
+		self.assertEqual(
+			GafferScene.EditScopeAlgo.renderPassOptionEditReadOnlyReason( s["box"]["scope"], "renderPassA", "test" ),
+			s["box"]["scope"]
+		)
+
+		Gaffer.MetadataAlgo.setReadOnly( s["box"]["scope"], False )
+		GafferScene.EditScopeAlgo.acquireRenderPassOptionEdit( s["box"]["scope"], "renderPassA", "test" )
+
+		self.assertIsNone(
+			GafferScene.EditScopeAlgo.renderPassOptionEditReadOnlyReason( s["box"]["scope"], "renderPassA", "test" )
+		)
+
+		candidateComponents = (
+			s["box"]["scope"]["RenderPassOptionEdits"]["edits"][1]["cells"]["test"]["value"]["value"],
+			s["box"]["scope"]["RenderPassOptionEdits"]["edits"][1]["cells"]["test"]["value"]["mode"],
+			s["box"]["scope"]["RenderPassOptionEdits"]["edits"][1]["cells"]["test"]["value"]["enabled"],
+			s["box"]["scope"]["RenderPassOptionEdits"]["edits"][1]["cells"]["test"]["value"]["name"],
+			s["box"]["scope"]["RenderPassOptionEdits"]["edits"][1]["cells"]["test"]["value"],
+			s["box"]["scope"]["RenderPassOptionEdits"]["edits"][1]["cells"]["test"],
+			s["box"]["scope"]["RenderPassOptionEdits"]["edits"][1]["cells"],
+			s["box"]["scope"]["RenderPassOptionEdits"]["edits"][1],
+			s["box"]["scope"]["RenderPassOptionEdits"]["edits"],
+			s["box"]["scope"]["RenderPassOptionEdits"],
+			s["box"]["scope"],
+			s["box"]
+		)
+
+		for component in candidateComponents :
+			Gaffer.MetadataAlgo.setReadOnly( component, True )
+			self.assertEqual(
+				GafferScene.EditScopeAlgo.renderPassOptionEditReadOnlyReason(
+					s["box"]["scope"],
+					"renderPassA",
+					"test"
+				),
+				component
+			)
+
+		for component in candidateComponents :
+			Gaffer.MetadataAlgo.setReadOnly( component, False )
+
+		# We can't remove option edits, they're just disabled (as the row is shared with
+		# other options), so we try to create one for another option instead.
+		s["box"]["options"]["options"]["NameValuePlug"]["name"].setValue( "test2" )
+
+		self.assertIsNone(
+			GafferScene.EditScopeAlgo.acquireRenderPassOptionEdit(
+				s["box"]["scope"],
+				"renderPassA",
+				"test2",
+				createIfNecessary = False
+			)
+		)
+
+		for component in (
+			s["box"]["scope"]["RenderPassOptionEdits"]["edits"],
+			s["box"]["scope"]["RenderPassOptionEdits"]
+		) :
+			Gaffer.MetadataAlgo.setReadOnly( component, True )
+			self.assertEqual(
+				GafferScene.EditScopeAlgo.renderPassOptionEditReadOnlyReason(
+					s["box"]["scope"],
+					"renderPassA",
+					"test"
+				),
+				component
+			)
+
+	def testRenderPassOptionEditExceptions( self ) :
+
+		options = GafferScene.Options()
+		editScope = Gaffer.EditScope()
+		editScope.setup( options["out"] )
+		editScope["in"].setInput( options["out"] )
+		emptyKeys = editScope.keys()
+
+		with self.assertRaisesRegex( RuntimeError, 'Option "bogus" does not exist' ) :
+			GafferScene.EditScopeAlgo.acquireRenderPassOptionEdit( editScope, "renderPassA", "bogus" )
+		self.assertEqual( editScope.keys(), emptyKeys )
+
+	def testRenderPassOptionEditSerialisation( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["options"] = GafferScene.CustomOptions()
+		script["options"]["options"].addChild( Gaffer.NameValuePlug( "test", IECore.IntData( 10 ) ) )
+
+		script["editScope"] = Gaffer.EditScope()
+		script["editScope"].setup( script["options"]["out"] )
+		script["editScope"]["in"].setInput( script["options"]["out"] )
+
+		edit = GafferScene.EditScopeAlgo.acquireRenderPassOptionEdit( script["editScope"], "renderPassA", "test" )
+		edit["enabled"].setValue( True )
+		edit["value"].setValue( 20 )
+
+		script2 = Gaffer.ScriptNode()
+		script2.execute( script.serialise() )
+
+		with Gaffer.Context() as context :
+			context["renderPass"] = "renderPassA"
+			self.assertScenesEqual( script2["editScope"]["out"], script["editScope"]["out"] )
+
+		edit = GafferScene.EditScopeAlgo.acquireRenderPassOptionEdit(
+			script2["editScope"], "renderPassA", "test", createIfNecessary = False
+		)
+		self.assertIsNotNone( edit )
+		self.assertEqual( edit["enabled"].getValue(), True )
+		self.assertEqual( edit["value"].getValue(), 20 )
 
 if __name__ == "__main__":
 	unittest.main()
