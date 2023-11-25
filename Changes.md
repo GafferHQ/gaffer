@@ -23,6 +23,7 @@ Fixes
 
 - InteractiveRender : Fixed unnecessary updates to encapsulated locations when deforming an unrelated object.
 - InteractiveArnoldRender : Fixed creation of new Catalogue image when editing output metadata or pixel filter.
+- GraphEditor : Fixed error caused by additional connections to `dragEnterSignal()`.
 - Windows `Scene/OpenGL/Shader` Menu : Removed `\` at the beginning of menu items.
 - Arnold :
   - Fixed translation of `UsdPreviewSurface` normal maps.

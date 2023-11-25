@@ -70,6 +70,7 @@ class GraphEditor( GafferUI.Editor ) :
 		self.dragEnterSignal().connect( Gaffer.WeakMethod( self.__dragEnter ), scoped = False )
 		self.dragLeaveSignal().connect( Gaffer.WeakMethod( self.__dragLeave ), scoped = False )
 		self.dropSignal().connect( Gaffer.WeakMethod( self.__drop ), scoped = False )
+		self.__dragEnterPointer = None
 		self.__gadgetWidget.getViewportGadget().preRenderSignal().connect( Gaffer.WeakMethod( self.__preRender ), scoped = False )
 
 		with GafferUI.ListContainer( borderWidth = 8, spacing = 0 ) as overlay :
@@ -511,8 +512,12 @@ class GraphEditor( GafferUI.Editor ) :
 
 	def __dragLeave( self, widget, event ) :
 
-		GafferUI.Pointer.setCurrent( self.__dragEnterPointer )
-		return True
+		if self.__dragEnterPointer is not None :
+			GafferUI.Pointer.setCurrent( self.__dragEnterPointer )
+			self.__dragEnterPointer = None
+			return True
+
+		return False
 
 	def __drop( self, widget, event ) :
 
@@ -523,6 +528,7 @@ class GraphEditor( GafferUI.Editor ) :
 		if dropNodes :
 			self.graphGadget().setRoot( dropNodes[0].parent() )
 			self.__frame( dropNodes, at = imath.V2f( event.line.p0.x, event.line.p0.y ) )
+			self.__dragEnterPointer = None
 			return True
 
 		return False
