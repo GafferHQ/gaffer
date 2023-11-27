@@ -27,6 +27,7 @@ Fixes
 - Arnold :
   - Fixed translation of `UsdPreviewSurface` normal maps.
   - Fixed translation of `UsdPreviewSurface` `specularColor` fallback value.
+- Scene History : Fixed error caused by `Alt+E` keypress on panels other than the Viewer, HierarchyView, LightEditor or NodeEditor.
 
 API
 ---
