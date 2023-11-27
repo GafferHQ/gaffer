@@ -35,6 +35,7 @@
 #
 ##########################################################################
 
+import contextlib
 import functools
 import imath
 
@@ -100,7 +101,7 @@ class Column( GafferUI.PathColumn ) :
 		# Suppress error. The GraphEditor will be displaying the
 		# error anyway, as will the standard type column, and we're
 		# not in a position to do anything more helpful.
-		with IECore.IgnoredExceptions( Gaffer.ProcessException ) :
+		with contextlib.suppress( Gaffer.ProcessException ) :
 
 			# Call `_imageCellData()` in a context which causes the Catalogue
 			# to output the image of interest.

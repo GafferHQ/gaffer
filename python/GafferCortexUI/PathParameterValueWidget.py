@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import contextlib
+
 import IECore
 
 import Gaffer
@@ -73,7 +75,7 @@ class PathParameterValueWidget( GafferCortexUI.ParameterValueWidget ) :
 		result = {}
 
 		bookmarksCategory = None
-		with IECore.IgnoredExceptions( KeyError ) :
+		with contextlib.suppress( KeyError ) :
 			bookmarksCategory = self.parameter().userData()["UI"]["bookmarksCategory"].value
 		result["bookmarks"] = GafferUI.Bookmarks.acquire(
 			# sometimes parameter widgets are used with nodes which are parented to an application,

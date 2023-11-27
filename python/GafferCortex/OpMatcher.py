@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import contextlib
 import threading
 import traceback
 import weakref
@@ -72,10 +73,10 @@ class OpMatcher( object ) :
 				continue
 
 			ignore = False
-			with IECore.IgnoredExceptions( KeyError ) :
+			with contextlib.suppress( KeyError ) :
 				# backwards compatibility with something proprietary
 				ignore = opInstance.userData()["UI"]["OpMatcher"]["ignore"].value
-			with IECore.IgnoredExceptions( KeyError ) :
+			with contextlib.suppress( KeyError ) :
 				ignore = opInstance.userData()["OpMatcher"]["ignore"].value
 			if ignore :
 				continue
@@ -150,10 +151,10 @@ class OpMatcher( object ) :
 		for child in parameter.values() :
 
 			ignore = False
-			with IECore.IgnoredExceptions( KeyError ) :
+			with contextlib.suppress( KeyError ) :
 				# backwards compatibility with something proprietary
 				ignore = child.userData()["UI"]["OpMatcher"]["ignore"].value
-			with IECore.IgnoredExceptions( KeyError ) :
+			with contextlib.suppress( KeyError ) :
 				# backwards compatibility with something proprietary
 				ignore = child.userData()["OpMatcher"]["ignore"].value
 			if ignore :

@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import contextlib
+
 import IECore
 
 import Gaffer
@@ -78,7 +80,7 @@ class PathFilterWidget( GafferUI.Widget ) :
 	def create( cls, pathFilter ) :
 
 		visible = True
-		with IECore.IgnoredExceptions( KeyError ) :
+		with contextlib.suppress( KeyError ) :
 			visible = pathFilter.userData()["UI"]["visible"].value
 
 		if not visible :
@@ -118,19 +120,19 @@ class BasicPathFilterWidget( PathFilterWidget ) :
 	def _updateFromPathFilter( self ) :
 
 		label = str( self.pathFilter() )
-		with IECore.IgnoredExceptions( KeyError ) :
+		with contextlib.suppress( KeyError ) :
 			label = self.pathFilter().userData()["UI"]["label"].value
 		self.__checkBox.setText( label )
 
 		invertEnabled = False
-		with IECore.IgnoredExceptions( KeyError ) :
+		with contextlib.suppress( KeyError ) :
 			invertEnabled = self.pathFilter().userData()["UI"]["invertEnabled"].value
 		self.__checkBox.setState( self.pathFilter().getEnabled() is not invertEnabled )
 
 	def __stateChanged( self, checkBox ) :
 
 		invertEnabled = False
-		with IECore.IgnoredExceptions( KeyError ) :
+		with contextlib.suppress( KeyError ) :
 			invertEnabled = self.pathFilter().userData()["UI"]["invertEnabled"].value
 		self.pathFilter().setEnabled( checkBox.getState() is not invertEnabled )
 

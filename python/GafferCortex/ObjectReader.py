@@ -35,6 +35,8 @@
 #
 ##########################################################################
 
+import contextlib
+
 import IECore
 
 import Gaffer
@@ -69,7 +71,7 @@ class ObjectReader( Gaffer.ComputeNode ) :
 		assert( plug.isSame( self["out"] ) )
 
 		reader = None
-		with IECore.IgnoredExceptions( RuntimeError ) :
+		with contextlib.suppress( RuntimeError ) :
 			reader = IECore.Reader.create( self["fileName"].getValue() )
 
 		plug.setValue( reader.read() if reader else plug.defaultValue() )

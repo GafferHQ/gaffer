@@ -35,6 +35,7 @@
 #
 ##########################################################################
 
+import contextlib
 import inspect
 import functools
 import weakref
@@ -364,7 +365,7 @@ class Menu( GafferUI.Widget ) :
 	def __buildAction( self, item, name, parent ) :
 
 		label = name
-		with IECore.IgnoredExceptions( AttributeError ) :
+		with contextlib.suppress( AttributeError ) :
 			label = item.label
 
 		if item.divider :

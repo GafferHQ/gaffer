@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import contextlib
 import functools
 import imath
 
@@ -158,7 +159,7 @@ def __connectionContextMenu( graphEditor, destinationPlug, menuDefinition ) :
 
 	applicationRoot = graphEditor.scriptNode().ancestor( Gaffer.ApplicationRoot )
 	connected = False
-	with IECore.IgnoredExceptions( AttributeError ) :
+	with contextlib.suppress( AttributeError ) :
 		connected = applicationRoot.__dotUIConnected
 
 	if not connected :

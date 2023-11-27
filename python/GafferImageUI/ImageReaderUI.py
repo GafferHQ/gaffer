@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import contextlib
+
 import IECore
 
 import Gaffer
@@ -307,7 +309,7 @@ class _ColorSpacePlugValueWidget( GafferUI.PresetsPlugValueWidget ) :
 
 			automaticSpace = ""
 			if len( colorSpacePlugs ) and preset == "Automatic" :
-				with IECore.IgnoredExceptions( Gaffer.ProcessException ) :
+				with contextlib.suppress( Gaffer.ProcessException ) :
 					automaticSpace = colorSpacePlugs[0].getValue() or "Working Space"
 
 			result.append( {

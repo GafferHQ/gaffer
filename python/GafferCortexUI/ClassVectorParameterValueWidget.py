@@ -35,6 +35,8 @@
 #
 ##########################################################################
 
+import contextlib
+
 import imath
 
 import IECore
@@ -155,7 +157,7 @@ class _PlugValueWidget( GafferCortexUI.CompoundParameterValueWidget._PlugValueWi
 		result = IECore.MenuDefinition()
 
 		classNameFilter = "*"
-		with IECore.IgnoredExceptions( KeyError ) :
+		with contextlib.suppress( KeyError ) :
 			classNameFilter = self._parameter().userData()["UI"]["classNameFilter"].value
 		menuPathStart = max( 0, classNameFilter.find( "*" ) )
 
@@ -250,10 +252,10 @@ class _ChildParameterUI( CompoundPlugValueWidget ) :
 			preHeaderParameters = []
 			headerParameters = []
 			for parameter in self.__parameterHandler.parameter().values() :
-				with IECore.IgnoredExceptions( KeyError ) :
+				with contextlib.suppress( KeyError ) :
 					if parameter.userData()["UI"]["classVectorParameterPreHeader"].value :
 						preHeaderParameters.append( parameter )
-				with IECore.IgnoredExceptions( KeyError ) :
+				with contextlib.suppress( KeyError ) :
 					if parameter.userData()["UI"]["classVectorParameterHeader"].value :
 						headerParameters.append( parameter )
 

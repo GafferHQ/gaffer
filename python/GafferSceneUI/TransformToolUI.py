@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import contextlib
 import sys
 
 import imath
@@ -85,7 +86,7 @@ class _RightSpacer( GafferUI.Spacer ) :
 
 def _boldFormatter( graphComponents ) :
 
-	with IECore.IgnoredExceptions( ValueError ) :
+	with contextlib.suppress( ValueError ) :
 		## \todo Should the NameLabel ignore ScriptNodes and their ancestors automatically?
 		scriptNodeIndex = [ isinstance( g, Gaffer.ScriptNode ) for g in graphComponents ].index( True )
 		graphComponents = graphComponents[scriptNodeIndex+1:]

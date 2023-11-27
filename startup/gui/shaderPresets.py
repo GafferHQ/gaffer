@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import contextlib
 import os
 
 import IECore
@@ -46,7 +47,7 @@ def __registerShaderPresets( presets ) :
 		Gaffer.Metadata.registerValue( GafferScene.ShaderTweaks, "shader", "preset:" + name, value )
 		Gaffer.Metadata.registerValue( GafferScene.ShaderQuery, "shader", "preset:" + name, value )
 
-with IECore.IgnoredExceptions( ImportError ) :
+with contextlib.suppress( ImportError ) :
 
 	import GafferArnold
 
@@ -64,7 +65,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 
 if os.environ.get( "CYCLES_ROOT" ) and os.environ.get( "GAFFERCYCLES_HIDE_UI", "" ) != "1" :
 
-	with IECore.IgnoredExceptions( ImportError ) :
+	with contextlib.suppress( ImportError ) :
 
 		import GafferCycles
 
@@ -73,7 +74,7 @@ if os.environ.get( "CYCLES_ROOT" ) and os.environ.get( "GAFFERCYCLES_HIDE_UI", "
 			( "Cycles Light", "cycles:light" ),
 		] )
 
-with IECore.IgnoredExceptions( ImportError ) :
+with contextlib.suppress( ImportError ) :
 
 	import GafferOSL
 

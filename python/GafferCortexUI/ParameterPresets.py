@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import contextlib
 import os
 import re
 import shutil
@@ -107,7 +108,7 @@ class PresetDialogue( GafferUI.Dialogue ) :
 		existingPaths = []
 		for path in paths :
 			if not os.path.isdir( path ) :
-				with IECore.IgnoredExceptions( Exception ) :
+				with contextlib.suppress( Exception ) :
 					os.makedirs( path )
 			if os.path.isdir( path ) :
 				if owned and os.stat( path ).st_uid != os.getuid() :

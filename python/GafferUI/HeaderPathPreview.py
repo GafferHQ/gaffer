@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import contextlib
 import os
 
 import IECore
@@ -72,14 +73,14 @@ class HeaderPathPreview( GafferUI.DeferredPathPreview ) :
 	def _load( self ) :
 
 		reader = None
-		with IECore.IgnoredExceptions( RuntimeError ) :
+		with contextlib.suppress( RuntimeError ) :
 			reader = IECore.Reader.create( str( self.getPath() ) )
 
 		if reader is None :
 			return None
 
 		header = None
-		with IECore.IgnoredExceptions( RuntimeError ) :
+		with contextlib.suppress( RuntimeError ) :
 			header = reader.readHeader()
 
 		return header

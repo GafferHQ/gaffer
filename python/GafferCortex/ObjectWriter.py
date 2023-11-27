@@ -35,6 +35,7 @@
 #
 ##########################################################################
 
+import contextlib
 import os
 
 import IECore
@@ -111,7 +112,7 @@ class ObjectWriter( GafferDispatch.TaskNode ) :
 
 				self.__writer = None
 				self.__exposedParameters.clearParameters()
-				with IECore.IgnoredExceptions( RuntimeError ) :
+				with contextlib.suppress( RuntimeError ) :
 					self.__writer = IECore.Writer.create( fileName )
 
 				if self.__writer is not None :

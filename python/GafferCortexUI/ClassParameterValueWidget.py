@@ -35,6 +35,8 @@
 #
 ##########################################################################
 
+import contextlib
+
 import imath
 
 import IECore
@@ -105,7 +107,7 @@ class _PlugValueWidget( GafferCortexUI.CompoundParameterValueWidget._PlugValueWi
 		classInfo = self._parameter().getClass( True )
 
 		classNameFilter = "*"
-		with IECore.IgnoredExceptions( KeyError ) :
+		with contextlib.suppress( KeyError ) :
 			classNameFilter = self._parameter().userData()["UI"]["classNameFilter"].value
 		menuPathStart = max( 0, classNameFilter.find( "*" ) )
 

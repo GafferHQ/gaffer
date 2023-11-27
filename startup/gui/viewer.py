@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import contextlib
 import functools
 import imath
 import inspect
@@ -154,7 +155,7 @@ def __loadRendererSettings( fileName ) :
 
 	return script["Processor"]
 
-with IECore.IgnoredExceptions( ImportError ) :
+with contextlib.suppress( ImportError ) :
 
 	import GafferArnold
 
@@ -179,7 +180,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 		functools.partial( __loadRendererSettings, os.path.join( os.path.dirname( __file__ ), "arnoldViewerSettings.gfr" ) )
 	)
 
-with IECore.IgnoredExceptions( ImportError ) :
+with contextlib.suppress( ImportError ) :
 
 	import GafferDelight
 
@@ -198,7 +199,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 
 if os.environ.get( "CYCLES_ROOT" ) and os.environ.get( "GAFFERCYCLES_HIDE_UI", "" ) != "1" :
 
-	with IECore.IgnoredExceptions( ImportError ) :
+	with contextlib.suppress( ImportError ) :
 
 		import GafferCycles
 

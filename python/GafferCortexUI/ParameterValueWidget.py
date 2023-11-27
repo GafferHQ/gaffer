@@ -35,6 +35,8 @@
 #
 ##########################################################################
 
+import contextlib
+
 import IECore
 
 import Gaffer
@@ -87,7 +89,7 @@ class ParameterValueWidget( GafferUI.Widget ) :
 			return GafferCortexUI.PresetsOnlyParameterValueWidget( parameterHandler )
 
 		uiTypeHint = None
-		with IECore.IgnoredExceptions( KeyError ) :
+		with contextlib.suppress( KeyError ) :
 			uiTypeHint = parameter.userData()["UI"]["typeHint"].value
 
 		parameterHierarchy = [ parameter.typeId() ] + IECore.RunTimeTyped.baseTypeIds( parameter.typeId() )

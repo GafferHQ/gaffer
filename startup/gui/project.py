@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import contextlib
 import functools
 import os
 import sys
@@ -108,7 +109,7 @@ if 'GafferUI' in sys.modules :
 ##########################################################################
 
 dispatchers = [ GafferDispatch.LocalDispatcher ]
-with IECore.IgnoredExceptions( ImportError ) :
+with contextlib.suppress( ImportError ) :
 	import GafferTractor
 	dispatchers.append( GafferTractor.TractorDispatcher )
 
@@ -122,7 +123,7 @@ for dispatcher in dispatchers :
 # Renderers
 ##########################################################################
 
-with IECore.IgnoredExceptions( ImportError ) :
+with contextlib.suppress( ImportError ) :
 	import GafferArnold
 	Gaffer.Metadata.registerValue( GafferArnold.ArnoldRender, "fileName", "userDefault", "${project:rootDirectory}/asses/${script:name}/${renderPass}/${script:name}.####.ass" )
 	Gaffer.Metadata.registerValue( GafferArnold.ArnoldTextureBake, "bakeDirectory", "userDefault", "${project:rootDirectory}/bakedTextures/${script:name}/" )

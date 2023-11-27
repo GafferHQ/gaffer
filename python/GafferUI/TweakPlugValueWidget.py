@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import contextlib
 import functools
 import re
 
@@ -218,7 +219,7 @@ def __noduleLabel( plug ) :
 		plug = plug.parent()
 
 	name = None
-	with IECore.IgnoredExceptions( Exception ) :
+	with contextlib.suppress( Exception ) :
 		name = plug["name"].getValue()
 
 	return name or plug.getName()

@@ -35,6 +35,8 @@
 #
 ##########################################################################
 
+import contextlib
+
 import imath
 
 import IECore
@@ -81,11 +83,11 @@ class _PlugValueWidget( GafferCortexUI.CompoundParameterValueWidget._PlugValueWi
 		columnToolTips = [ self._parameterToolTip( self._parameterHandler().childParameterHandler( x ) ) for x in self._parameter().values() ]
 
 		showIndices = True
-		with IECore.IgnoredExceptions( KeyError ) :
+		with contextlib.suppress( KeyError ) :
 			showIndices = self._parameterHandler().parameter().userData()["UI"]["showIndices"].value
 
 		sizeEditable = True
-		with IECore.IgnoredExceptions( KeyError ) :
+		with contextlib.suppress( KeyError ) :
 			sizeEditable = self._parameterHandler().parameter().userData()["UI"]["sizeEditable"].value
 
 		self.__vectorDataWidget = _VectorDataWidget(
@@ -136,12 +138,12 @@ class _PlugValueWidget( GafferCortexUI.CompoundParameterValueWidget._PlugValueWi
 		for columnIndex, childParameter in enumerate( self._parameter().values() ) :
 
 			columnVisible = True
-			with IECore.IgnoredExceptions( KeyError ) :
+			with contextlib.suppress( KeyError ) :
 				columnVisible = childParameter.userData()["UI"]["visible"].value
 			self.__vectorDataWidget.setColumnVisible( columnIndex, columnVisible )
 
 			columnEditable = True
-			with IECore.IgnoredExceptions( KeyError ) :
+			with contextlib.suppress( KeyError ) :
 				columnEditable = childParameter.userData()["UI"]["editable"].value
 			self.__vectorDataWidget.setColumnEditable( columnIndex, columnEditable )
 
@@ -151,7 +153,7 @@ class _PlugValueWidget( GafferCortexUI.CompoundParameterValueWidget._PlugValueWi
 		childParameter = self._parameter().values()[dataIndex]
 
 		presetsOnly = False
-		with IECore.IgnoredExceptions( KeyError ) :
+		with contextlib.suppress( KeyError ) :
 			presetsOnly = childParameter.userData()["UI"]["elementPresetsOnly"].value
 
 		if not presetsOnly :
@@ -280,12 +282,12 @@ def __parameterPopupMenu( menuDefinition, parameterValueWidget ) :
 	parameter = parameterValueWidget.parameter()
 	columnParameter = parameter.values()[vectorDataWidget.columnToDataIndex( column )[0]]
 
-	with IECore.IgnoredExceptions( KeyError ) :
+	with contextlib.suppress( KeyError ) :
 		if columnParameter.userData()["UI"]["editable"].value == False :
 			return
 
 	presets = None
-	with IECore.IgnoredExceptions( KeyError ) :
+	with contextlib.suppress( KeyError ) :
 		presets = columnParameter.userData()["UI"]["elementPresets"]
 
 	if presets is None :

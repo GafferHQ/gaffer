@@ -35,6 +35,7 @@
 #
 ##########################################################################
 
+import contextlib
 import os
 import functools
 import imath
@@ -168,7 +169,7 @@ def openRecent( menu ) :
 	applicationRoot = currentScript.ancestor( Gaffer.ApplicationRoot )
 
 	recentFiles = []
-	with IECore.IgnoredExceptions( AttributeError ) :
+	with contextlib.suppress( AttributeError ) :
 		recentFiles = applicationRoot.__recentFiles
 
 	result = IECore.MenuDefinition()

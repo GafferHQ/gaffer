@@ -35,6 +35,7 @@
 #
 ##########################################################################
 
+import contextlib
 import os
 import re
 import traceback
@@ -567,7 +568,7 @@ nodeMenu.append( "/Utility/Collect", Gaffer.Collect )
 
 GafferUI.DotUI.connect( application.root() )
 
-with IECore.IgnoredExceptions( ImportError ) :
+with contextlib.suppress( ImportError ) :
 
 	import GafferTractorUI
 
