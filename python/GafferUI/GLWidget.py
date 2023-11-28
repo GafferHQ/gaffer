@@ -35,6 +35,7 @@
 #
 ##########################################################################
 
+import enum
 import sys
 import logging
 import collections
@@ -74,11 +75,7 @@ class GLWidget( GafferUI.Widget ) :
 
 	## This enum defines the optional elements of the GL buffer used
 	# for display.
-	BufferOptions = IECore.Enum.create(
-		"Alpha",
-		"Depth",
-		"AntiAlias",
-	)
+	BufferOptions = enum.Enum( "BufferOptions", [ "Alpha", "Depth", "AntiAlias" ] )
 
 	## Note that you won't always get the buffer options you ask for - a best fit is found
 	# among the available formats. In particular it appears that a depth buffer is often present

@@ -35,6 +35,7 @@
 #
 ##########################################################################
 
+import enum
 import time
 import weakref
 import threading
@@ -53,7 +54,7 @@ from Qt import QtWidgets
 ## This class provides the event loops used to run GafferUI based applications.
 class EventLoop( object ) :
 
-	__RunStyle = IECore.Enum.create( "Normal", "PumpThread", "AlreadyRunning", "Houdini" )
+	__RunStyle = enum.Enum( "__RunStyle", [ "Normal", "PumpThread", "AlreadyRunning", "Houdini" ] )
 
 	## Creates a new EventLoop. Note that if you are creating the primary
 	# EventLoop for an application then you should use mainEventLoop() instead.

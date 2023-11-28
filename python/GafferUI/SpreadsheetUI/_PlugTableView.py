@@ -35,6 +35,7 @@
 ##########################################################################
 
 import contextlib
+import enum
 import functools
 
 import imath
@@ -63,7 +64,7 @@ from .._TableView import _TableView
 
 class _PlugTableView( GafferUI.Widget ) :
 
-	Mode = IECore.Enum.create( "RowNames", "Defaults", "Cells" )
+	Mode = enum.Enum( "Mode", [ "RowNames", "Defaults", "Cells" ] )
 
 	def __init__( self, selectionModel, mode, **kw ) :
 		tableView = _NavigableTable()
@@ -512,7 +513,7 @@ class _PlugTableView( GafferUI.Widget ) :
 
 				self.__applyColumnVisibility()
 
-	__DropMode = IECore.Enum.create( "Set", "Add", "Remove" )
+	__DropMode = enum.Enum( "__DropMode", [ "Set", "Add", "Remove" ] )
 	def __dropMode( self, destinationPlug, event ) :
 
 		if (

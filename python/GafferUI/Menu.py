@@ -37,6 +37,7 @@
 
 import contextlib
 import inspect
+import enum
 import functools
 import weakref
 import types
@@ -707,7 +708,7 @@ class _SpacerAction( QtWidgets.QWidgetAction ) :
 
 class _Menu( QtWidgets.QMenu ) :
 
-	KeyboardMode = IECore.Enum.create( "Grab", "Close", "Forward" )
+	KeyboardMode = enum.Enum( "KeyboardMode", [ "Grab", "Close", "Forward" ] )
 
 	def __init__( self, parent, title=None ) :
 

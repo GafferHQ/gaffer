@@ -35,6 +35,7 @@
 #
 ##########################################################################
 
+import enum
 import functools
 
 import IECore
@@ -48,7 +49,7 @@ from Qt import QtWidgets
 
 class TabbedContainer( GafferUI.ContainerWidget ) :
 
-	__DragState = IECore.Enum.create( "None_", "Waiting", "Active" )
+	__DragState = enum.Enum( "__DragState", [ "None_", "Waiting", "Active" ] )
 	__palette = None
 
 	def __init__( self, cornerWidget=None, **kw ) :

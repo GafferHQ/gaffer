@@ -36,6 +36,7 @@
 
 import os
 import re
+import enum
 import functools
 import token
 import keyword
@@ -285,10 +286,13 @@ class CodeWidget( GafferUI.MultiLineTextWidget ) :
 
 class Highlighter( object ) :
 
-	Type = IECore.Enum.create(
-		"SingleQuotedString", "DoubleQuotedString", "Number",
-		"Keyword", "ControlFlow", "Braces", "Operator", "Call",
-		"Comment", "ReservedWord", "Preprocessor"
+	Type = enum.Enum(
+		"Type",
+		[
+			"SingleQuotedString", "DoubleQuotedString", "Number",
+			"Keyword", "ControlFlow", "Braces", "Operator", "Call",
+			"Comment", "ReservedWord", "Preprocessor"
+		]
 	)
 
 	# Specifies a highlight type to be used for the characters

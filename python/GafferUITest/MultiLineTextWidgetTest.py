@@ -82,7 +82,7 @@ class MultiLineTextWidgetTest( GafferUITest.TestCase ) :
 		w = GafferUI.MultiLineTextWidget()
 		self.assertEqual( w.getWrapMode(), w.WrapMode.WordOrCharacter )
 
-		for wm in w.WrapMode.values() :
+		for wm in w.WrapMode :
 			w.setWrapMode( wm )
 			self.assertEqual( w.getWrapMode(), wm )
 

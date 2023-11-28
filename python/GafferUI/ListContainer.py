@@ -35,6 +35,8 @@
 #
 ##########################################################################
 
+import enum
+
 import imath
 
 import IECore
@@ -47,7 +49,7 @@ from Qt import QtCore
 # It attempts to provide a list like interface for manipulation of the widgets.
 class ListContainer( GafferUI.ContainerWidget ) :
 
-	Orientation = IECore.Enum.create( "Vertical", "Horizontal" )
+	Orientation = enum.Enum( "Orientation", [ "Vertical", "Horizontal" ] )
 	HorizontalAlignment = GafferUI.Enums.HorizontalAlignment
 	VerticalAlignment = GafferUI.Enums.VerticalAlignment
 

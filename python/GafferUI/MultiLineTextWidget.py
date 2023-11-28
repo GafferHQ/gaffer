@@ -36,6 +36,7 @@
 ##########################################################################
 
 import contextlib
+import enum
 
 import imath
 
@@ -50,8 +51,8 @@ from Qt import QtCore
 
 class MultiLineTextWidget( GafferUI.Widget ) :
 
-	WrapMode = IECore.Enum.create( "None_", "Word", "Character", "WordOrCharacter" )
-	Role = IECore.Enum.create( "Text", "Code" )
+	WrapMode = enum.Enum( "WrapNode", [ "None_", "Word", "Character", "WordOrCharacter" ] )
+	Role = enum.Enum( "Role", [ "Text", "Code" ] )
 
 	def __init__( self, text="", editable=True, wrapMode=WrapMode.WordOrCharacter, fixedLineHeight=None, role=Role.Text, **kw ) :
 
@@ -240,7 +241,7 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 		if role == self.getRole() :
 			return
 
-		self._qtWidget().setProperty( "gafferRole", GafferUI._Variant.toVariant( str( role ) ) )
+		self._qtWidget().setProperty( "gafferRole", GafferUI._Variant.toVariant( role.name ) )
 		self._repolish()
 
 	def getRole( self ) :

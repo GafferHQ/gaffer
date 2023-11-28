@@ -34,9 +34,8 @@
 #
 ##########################################################################
 
+import enum
 import math
-
-import IECore
 
 import Gaffer
 import GafferUI
@@ -50,7 +49,7 @@ from Qt import QtCore
 # a Playback object to ensure synchronisation between elements.
 class Playback( object ) :
 
-	State = IECore.Enum.create( "PlayingForwards", "PlayingBackwards", "Scrubbing", "Stopped" )
+	State = enum.Enum( "State", [ "PlayingForwards", "PlayingBackwards", "Scrubbing", "Stopped" ] )
 
 	## Use acquire rather than this method.
 	def __init__( self, __context ) :

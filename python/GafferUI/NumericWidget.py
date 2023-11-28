@@ -35,6 +35,7 @@
 #
 ##########################################################################
 
+import enum
 import math
 import re
 import operator
@@ -49,7 +50,7 @@ from Qt import QtGui
 ## \todo Fix bug when pressing up arrow with cursor to left of minus sign
 class NumericWidget( GafferUI.TextWidget ) :
 
-	ValueChangedReason = IECore.Enum.create( "Invalid", "SetValue", "DragBegin", "DragMove", "DragEnd", "Increment", "Edit", "InvalidEdit" )
+	ValueChangedReason = enum.Enum( "ValueChangedReason", [ "Invalid", "SetValue", "DragBegin", "DragMove", "DragEnd", "Increment", "Edit", "InvalidEdit" ] )
 
 	def __init__( self, value, **kw ) :
 

@@ -34,7 +34,7 @@
 #
 ##########################################################################
 
-import IECore
+import enum
 
 import GafferUI
 
@@ -42,7 +42,7 @@ from Qt import QtWidgets
 
 class Divider( GafferUI.Widget ) :
 
-	Orientation = IECore.Enum.create( "Vertical", "Horizontal" )
+	Orientation = enum.Enum( "Divider", [ "Vertical", "Horizontal" ] )
 
 	def __init__( self, orientation = Orientation.Horizontal, **kw ) :
 

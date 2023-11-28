@@ -35,7 +35,7 @@
 #
 ##########################################################################
 
-import IECore
+import enum
 
 import GafferUI
 
@@ -44,7 +44,7 @@ from Qt import QtWidgets
 class Frame( GafferUI.ContainerWidget ) :
 
 	## \todo Raised and Inset?
-	BorderStyle = IECore.Enum.create( "None_", "Flat" )
+	BorderStyle = enum.Enum( "BorderStyle", [ "None_", "Flat" ] )
 
 	def __init__( self, child=None, borderWidth=8, borderStyle=BorderStyle.Flat, **kw ) :
 
@@ -61,7 +61,7 @@ class Frame( GafferUI.ContainerWidget ) :
 
 	def setBorderStyle( self, borderStyle ) :
 
-		self._qtWidget().setProperty( "gafferBorderStyle", str( borderStyle ) )
+		self._qtWidget().setProperty( "gafferBorderStyle", borderStyle.name )
 
 	def getBorderStyle( self ) :
 

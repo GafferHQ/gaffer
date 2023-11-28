@@ -34,7 +34,7 @@
 #
 ##########################################################################
 
-import math
+import enum
 import imath
 
 import IECore
@@ -44,7 +44,7 @@ import GafferDispatch
 
 class Wedge( GafferDispatch.TaskContextProcessor ) :
 
-	Mode = IECore.Enum.create( "FloatRange", "IntRange", "ColorRange", "FloatList", "IntList", "StringList" )
+	Mode = enum.IntEnum( "Mode", [ "FloatRange", "IntRange", "ColorRange", "FloatList", "IntList", "StringList" ], start = 0 )
 
 	def __init__( self, name = "Wedge" ) :
 
