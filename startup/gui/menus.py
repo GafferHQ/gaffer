@@ -570,8 +570,11 @@ GafferUI.DotUI.connect( application.root() )
 
 with contextlib.suppress( ImportError ) :
 
-	import GafferTractorUI
+	# Raises if Tractor not available, thus avoiding registering the
+	# TractorDispatcher.
+	import tractor.api.author
 
+	import GafferTractorUI
 
 ## Metadata cleanup
 ###########################################################################

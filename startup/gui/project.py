@@ -110,6 +110,7 @@ if 'GafferUI' in sys.modules :
 
 dispatchers = [ GafferDispatch.LocalDispatcher ]
 with contextlib.suppress( ImportError ) :
+	import tractor.api.author # Raises if Tractor not available
 	import GafferTractor
 	dispatchers.append( GafferTractor.TractorDispatcher )
 

@@ -36,18 +36,19 @@
 
 import os
 
-import tractor.api.author as author
-
 import IECore
 
 import Gaffer
 import GafferDispatch
+import GafferTractor
 
 class TractorDispatcher( GafferDispatch.Dispatcher ) :
 
 	def __init__( self, name = "TractorDispatcher" ) :
 
 		GafferDispatch.Dispatcher.__init__( self, name )
+
+		self.__tractorAPI = GafferTractor.tractorAPI()
 
 		self["service"] = Gaffer.StringPlug( defaultValue = '"*"' )
 		self["envKey"] = Gaffer.StringPlug()
@@ -82,7 +83,7 @@ class TractorDispatcher( GafferDispatch.Dispatcher ) :
 
 		context = Gaffer.Context.current()
 
-		job = author.Job(
+		job = self.__tractorAPI.Job(
 			## \todo Remove these manual substitutions once #887 is resolved.
 			title = context.substitute( self["jobName"].getValue() ) or "untitled",
 			service = context.substitute( self["service"].getValue() ),
@@ -143,7 +144,7 @@ class TractorDispatcher( GafferDispatch.Dispatcher ) :
 		# Make a task.
 
 		nodeName = batch.node().relativeName( dispatchData["scriptNode"] )
-		task = author.Task( title = nodeName )
+		task = self.__tractorAPI.Task( title = nodeName )
 
 		if batch.frames() :
 
@@ -172,7 +173,7 @@ class TractorDispatcher( GafferDispatch.Dispatcher ) :
 			# Create a Tractor command to execute that command line, and add
 			# it to the task.
 
-			command = author.Command( argv = args )
+			command = self.__tractorAPI.Command( argv = args )
 			task.addCommand( command )
 
 			# Apply any custom dispatch settings to the command.

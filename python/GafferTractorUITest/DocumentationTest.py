@@ -41,14 +41,13 @@ import IECore
 
 import GafferUITest
 import GafferDispatch
+import GafferDispatchUI
+import GafferTractor
+import GafferTractorUI
 
-@unittest.skipIf( not IECore.SearchPath( sys.path ).find( "tractor" ), "Tractor not available" )
 class DocumentationTest( GafferUITest.TestCase ) :
 
 	def test( self ) :
-
-		import GafferTractor
-		import GafferTractorUI
 
 		self.maxDiff = None
 		self.assertNodesAreDocumented( GafferTractor )
