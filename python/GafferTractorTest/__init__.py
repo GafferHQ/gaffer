@@ -34,6 +34,98 @@
 #
 ##########################################################################
 
+__mockAPI = None
+
+# Testing replacement for `GafferTractor.tractorAPI()`. This returns
+# the same `tractor.api.author` module if it is available, but otherwise
+# returns a mock module sufficient for running the unit tests without
+# Tractor present.
+def tractorAPI() :
+
+	import types
+	import contextlib
+
+	# Use the real API if it is available.
+
+	with contextlib.suppress( ImportError ) :
+		from tractor.api.author import author
+		return author
+
+	# Otherwise build mock version. The goal here is not to emulate the whole
+	# Tractor API, but to provide the bare minimum needed to run the unit tests.
+
+	global __mockAPI
+	if __mockAPI is not None :
+		return __mockAPI
+
+	class TaskBased :
+
+		def __init__( self, **kw ) :
+
+			for key, value in kw.items() :
+				setattr( self, key, value )
+
+			self.subtasks = []
+
+		def addChild( self, task ) :
+
+			if task.parent is None :
+				self.subtasks.append( task )
+				task.parent = self
+			else :
+				self.subtasks.append( Instance( title = task.title ) )
+
+	class Job( TaskBased ) :
+
+		__slots__ = [ "title", "service", "envkey" ]
+
+		def asTcl( self ) :
+
+			return "# Mock serialisation"
+
+		def spool( self, block = False ) :
+
+			pass
+
+	class Task( TaskBased ) :
+
+		__slots__ = [ "title", "service", "envkey", "parent" ]
+
+		def __init__( self, **kw ) :
+
+			TaskBased.__init__( self, **kw )
+			self.cmds = []
+			self.parent = None
+
+		def addCommand( self, command ) :
+
+			self.cmds.append( command )
+
+	class Instance :
+
+		__slots__ = [ "title" ]
+
+		def __init__( self, title ) :
+
+			self.title = title
+
+	class Command :
+
+		__slots__ = [ "argv", "service", "tags" ]
+
+		def __init__( self, **kw ) :
+
+			for key, value in kw.items() :
+				setattr( self, key, value )
+
+	__mockAPI = types.ModuleType( "author" )
+	__mockAPI.Job = Job
+	__mockAPI.Task = Task
+	__mockAPI.Instance = Instance
+	__mockAPI.Command = Command
+
+	return __mockAPI
+
 from .TractorDispatcherTest import TractorDispatcherTest
 from .ModuleTest import ModuleTest
 

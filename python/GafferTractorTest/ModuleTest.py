@@ -41,7 +41,6 @@ import IECore
 
 import GafferTest
 
-@unittest.skipIf( not IECore.SearchPath( sys.path ).find( "tractor" ), "Tractor not available" )
 class ModuleTest( GafferTest.TestCase ) :
 
 	def testDoesNotImportUI( self ) :

@@ -35,8 +35,10 @@
 ##########################################################################
 
 import unittest
+import unittest.mock
 import inspect
 import sys
+
 import imath
 
 import IECore
@@ -45,13 +47,13 @@ import Gaffer
 import GafferTest
 import GafferDispatch
 import GafferDispatchTest
+import GafferTractor
+import GafferTractorTest
 
-@unittest.skipIf( not IECore.SearchPath( sys.path ).find( "tractor" ), "Tractor not available" )
+@unittest.mock.patch( "GafferTractor.tractorAPI", new = GafferTractorTest.tractorAPI )
 class TractorDispatcherTest( GafferTest.TestCase ) :
 
 	def __dispatcher( self ) :
-
-		import GafferTractor
 
 		dispatcher = GafferTractor.TractorDispatcher()
 		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() / "testJobDirectory" )
@@ -59,8 +61,6 @@ class TractorDispatcherTest( GafferTest.TestCase ) :
 		return dispatcher
 
 	def __job( self, nodes, dispatcher = None ) :
-
-		import GafferTractor
 
 		jobs = []
 		def f( dispatcher, job ) :
@@ -77,8 +77,6 @@ class TractorDispatcherTest( GafferTest.TestCase ) :
 		return jobs[0]
 
 	def testPreSpoolSignal( self ) :
-
-		import GafferTractor
 
 		s = Gaffer.ScriptNode()
 		s["n"] = GafferDispatchTest.LoggingTaskNode()
@@ -187,8 +185,6 @@ class TractorDispatcherTest( GafferTest.TestCase ) :
 
 	def testSharedPreTasks( self ) :
 
-		import tractor.api.author as author
-
 		#   n1
 		#  / \
 		# i1 i2
@@ -221,7 +217,10 @@ class TractorDispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( job.subtasks[0].subtasks[0].subtasks[0].title, "n1 1" )
 		self.assertEqual( job.subtasks[0].subtasks[1].subtasks[0].title, "n1 1" )
 
-		self.assertTrue( isinstance( job.subtasks[0].subtasks[1].subtasks[0], author.Instance ) )
+		self.assertIsInstance(
+			job.subtasks[0].subtasks[1].subtasks[0],
+			GafferTractor.tractorAPI().Instance
+		)
 
 	def testTaskPlugs( self ) :
 
@@ -241,13 +240,9 @@ class TractorDispatcherTest( GafferTest.TestCase ) :
 
 	def testTypeNamePrefixes( self ) :
 
-		import GafferTractor
-
 		self.assertTypeNamesArePrefixed( GafferTractor )
 
 	def testDefaultNames( self ) :
-
-		import GafferTractor
 
 		self.assertDefaultNamesAreCorrect( GafferTractor )
 
