@@ -166,7 +166,7 @@ class ArnoldTextureBakeTest( GafferSceneTest.SceneTestCase ) :
 		# Dispatch the bake
 		script = Gaffer.ScriptNode()
 		script.addChild( arnoldTextureBake )
-		dispatcher = GafferDispatch.LocalDispatcher()
+		dispatcher = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
 		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() )
 		dispatcher.dispatch( [ arnoldTextureBake ] )
 
@@ -308,7 +308,7 @@ class ArnoldTextureBakeTest( GafferSceneTest.SceneTestCase ) :
 		# Dispatch the bake
 		script = Gaffer.ScriptNode()
 		script.addChild( arnoldTextureBake )
-		dispatcher = GafferDispatch.LocalDispatcher()
+		dispatcher = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
 		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() )
 		dispatcher.dispatch( [ arnoldTextureBake ] )
 
@@ -452,7 +452,7 @@ class ArnoldTextureBakeTest( GafferSceneTest.SceneTestCase ) :
 		# Dispatch the bake
 		script = Gaffer.ScriptNode()
 		script.addChild( arnoldTextureBake )
-		dispatcher = GafferDispatch.LocalDispatcher()
+		dispatcher = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
 		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() )
 		dispatcher.dispatch( [ arnoldTextureBake ] )
 

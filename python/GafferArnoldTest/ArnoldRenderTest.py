@@ -280,7 +280,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
 		s.save()
 
-		dispatcher = GafferDispatch.LocalDispatcher()
+		dispatcher = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
 		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() / "testJobDirectory" )
 		dispatcher["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CurrentFrame )
 		dispatcher["executeInBackground"].setValue( False )

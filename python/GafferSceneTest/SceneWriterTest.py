@@ -310,7 +310,7 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 			""".format( filePath.as_posix() )
 		) )
 
-		dispatcher = GafferDispatch.LocalDispatcher()
+		dispatcher = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
 		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() )
 		dispatcher["framesMode"].setValue( dispatcher.FramesMode.CustomRange )
 		dispatcher["frameRange"].setValue( "1-10" )
@@ -328,7 +328,7 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 		script["writer"]["in"].setInput( script["plane"]["out"] )
 		script["writer"]["fileName"].setValue( self.temporaryDirectory() / "test.####.scc" )
 
-		dispatcher = GafferDispatch.LocalDispatcher()
+		dispatcher = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
 		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() )
 		dispatcher["framesMode"].setValue( dispatcher.FramesMode.CustomRange )
 		dispatcher["frameRange"].setValue( "1-10" )

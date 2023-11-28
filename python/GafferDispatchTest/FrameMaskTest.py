@@ -56,7 +56,7 @@ class FrameMaskTest( GafferTest.TestCase ) :
 		s["mask"]["preTasks"][0].setInput( s["task"]["task"] )
 		s["mask"]["mask"].setValue( "1,3,10-15,20-30x2" )
 
-		d = GafferDispatch.LocalDispatcher()
+		d = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
 		d["jobsDirectory"].setValue( self.temporaryDirectory() / "jobs" )
 		d["framesMode"].setValue( d.FramesMode.CustomRange )
 		d["frameRange"].setValue( "1-50" )

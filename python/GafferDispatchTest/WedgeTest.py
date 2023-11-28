@@ -48,7 +48,7 @@ class WedgeTest( GafferTest.TestCase ) :
 
 	def __dispatcher( self, frameRange = None ) :
 
-		result = GafferDispatch.LocalDispatcher()
+		result = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
 		result["jobsDirectory"].setValue( self.temporaryDirectory() / "jobs" )
 
 		if frameRange is not None :
