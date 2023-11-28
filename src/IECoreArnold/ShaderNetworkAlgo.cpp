@@ -644,6 +644,7 @@ const InternedString g_colorParameter( "color" );
 const InternedString g_colorModeParameter( "color_mode" );
 const InternedString g_colorSpaceParameter( "color_space" );
 const InternedString g_colorTemperatureParameter( "colorTemperature" );
+const InternedString g_colorToSignedParameter( "color_to_signed" );
 const InternedString g_coneAngleParameter( "cone_angle" );
 const InternedString g_cosinePowerParameter( "cosine_power" );
 const InternedString g_defaultParameter( "default" );
@@ -677,6 +678,7 @@ const InternedString g_metalnessParameter( "metalness" );
 const InternedString g_missingTextureColorParameter( "missing_texture_color" );
 const InternedString g_multiplyParameter( "multiply" );
 const InternedString g_normalizeParameter( "normalize" );
+const InternedString g_normalParameter( "normal" );
 const InternedString g_offsetParameter( "offset" );
 const InternedString g_opacityParameter( "opacity" );
 const InternedString g_opacityThresholdParameter( "opacityThreshold" );
@@ -937,10 +939,12 @@ void IECoreArnold::ShaderNetworkAlgo::convertUSDShaders( ShaderNetwork *shaderNe
 
 			if( parameterValue<int>( shader.get(), g_useSpecularWorkflowParameter, 0 ) )
 			{
-				// > Note : Not completely equivalent to USD's specification. USD's colour
-				// is for the facing angle, and the edge colour is always white. In Arnold,
-				// this is a tint applied uniformly.
-				transferUSDParameter( shaderNetwork, handle, shader.get(), g_specularColorParameter, newShader.get(), g_specularColorArnoldParameter, Color3f( 0.0f ) );
+				// > Note : Not completely equivalent to USD's specification.
+				// USD's colour is for the facing angle, and the edge colour is
+				// always white. But Arnold's is a tint applied uniformly
+				// everywhere, so we use a fallback value of `1.0` rather than
+				// the `0.0` from the USD spec.
+				transferUSDParameter( shaderNetwork, handle, shader.get(), g_specularColorParameter, newShader.get(), g_specularColorArnoldParameter, Color3f( 1.0f ) );
 			}
 			else
 			{
@@ -981,6 +985,18 @@ void IECoreArnold::ShaderNetworkAlgo::convertUSDShaders( ShaderNetwork *shaderNe
 			}
 
 			newShader->parameters()[g_opacityParameter] = new Color3fData( Color3f( opacity ) );
+
+			// Normal
+
+			if( const ShaderNetwork::Parameter normalInput = shaderNetwork->input( { handle, g_normalParameter } ) )
+			{
+				ShaderPtr normalShader = new Shader( "normal_map" );
+				normalShader->parameters()[g_colorToSignedParameter] = new BoolData( false );
+				const InternedString normalHandle = shaderNetwork->addShader( handle.string() + "Normal", std::move( normalShader ) );
+				shaderNetwork->addConnection( ShaderNetwork::Connection( normalInput, { normalHandle, g_inputParameter } ) );
+				shaderNetwork->removeConnection( ShaderNetwork::Connection( normalInput, { handle, g_normalParameter } ) );
+				shaderNetwork->addConnection( ShaderNetwork::Connection( normalHandle, { handle, g_normalParameter } ) );
+			}
 		}
 		else if( shader->getName() == "UsdTransform2d" )
 		{

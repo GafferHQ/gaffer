@@ -885,8 +885,10 @@ class PlugValueWidget( GafferUI.Widget ) :
 
 		if isinstance( event.sourceWidget, GafferUI.PlugValueWidget ) :
 			sourcePlugValueWidget = event.sourceWidget
-		else :
+		elif event.sourceWidget is not None :
 			sourcePlugValueWidget = event.sourceWidget.ancestor( GafferUI.PlugValueWidget )
+		else :
+			sourcePlugValueWidget = None
 
 		if sourcePlugValueWidget is not None and sourcePlugValueWidget.getPlugs() & self.getPlugs() :
 			return False

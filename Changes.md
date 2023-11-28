@@ -22,7 +22,12 @@ Breaking Changes
 - Windows launch script : Removed the hardcoded `/debugexe` switch used when `GAFFER_DEBUG` is enabled, making it possible to use debuggers other than Visual Studio. Debug switches can be added to the `GAFFER_DEBUGGER` environment variable instead.
 - Enums : Replaced `IECore.Enum` types with standard Python types from the `enum` module.
 
-1.3.x.x (relative to 1.3.7.0)
+1.3.x.x (relative to 1.3.8.0)
+=======
+
+
+
+1.3.8.0 (relative to 1.3.7.0)
 =======
 
 Features
@@ -37,6 +42,7 @@ Features
 Improvements
 ------------
 
+- GraphEditor : Added drag & drop of files into the graph editor, automatically creating a SceneReader, ImageReader or Reference node as appropriate.
 - ImageTransform, Resample : Improved performance for non-separable filters without scaling, with 2-6x speedups in some benchmark cases.
 - Outputs : Included `renderPass` in the filename for newly created Arnold, Cycles and 3Delight outputs. Allowing rendered images to be written to a specific directory based on the name of the current render pass.
 - GUI Config : Included `renderPass` in the default filename when writing ass files from an ArnoldRender node.
@@ -47,16 +53,28 @@ Fixes
 
 - InteractiveRender : Fixed unnecessary updates to encapsulated locations when deforming an unrelated object.
 - InteractiveArnoldRender : Fixed creation of new Catalogue image when editing output metadata or pixel filter.
+- GraphEditor : Fixed error caused by additional connections to `dragEnterSignal()`.
 - Windows `Scene/OpenGL/Shader` Menu : Removed `\` at the beginning of menu items.
+- Arnold :
+  - Fixed translation of `UsdPreviewSurface` normal maps.
+  - Fixed translation of `UsdPreviewSurface` `specularColor` fallback value.
+- Scene History : Fixed error caused by `Alt+E` keypress on panels other than the Viewer, HierarchyView, LightEditor or NodeEditor.
+- ImageReader : Fixed crashes caused by null `ustring` metadata values.
+- Exception handling : Fixed memory leak caused by translation of `IECore::Exception` from C++ to Python and back again.
 
 API
 ---
 
 - SceneGadget : Added `snapshotToFile()` method.
+- SceneAlgo :
+  - Added `history()` overload for returning computation history independent of a scene location, this is useful when generating history from the globals.
+  - Added `optionHistory()` method which returns a computation history for one specific option.
+- Widget : Added handling for drag & drop from an external application via the existing `dragEnterSignal()`, `dragMoveSignal()`, `dragLeaveSignal()` and `dropSignal()` signals.
 
 Build
 -----
 
+- Cortex : Updated to version 10.5.4.2.
 - Instancer : Fixed ambiguous reference compilation errors when building with Boost 1.70.
 
 1.3.7.0 (relative to 1.3.6.1)

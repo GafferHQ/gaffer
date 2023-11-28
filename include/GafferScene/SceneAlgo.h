@@ -200,6 +200,7 @@ struct History : public IECore::RefCounted
 };
 
 GAFFERSCENE_API History::Ptr history( const Gaffer::ValuePlug *scenePlugChild, const ScenePlug::ScenePath &path );
+GAFFERSCENE_API History::Ptr history( const Gaffer::ValuePlug *scenePlugChild );
 
 /// Extends History to provide information on the history of a specific attribute.
 /// Attributes may be renamed by ShuffleAttributes nodes and this is reflected
@@ -220,6 +221,24 @@ struct AttributeHistory : public History
 /// `history( scene->attributesPlug(), path )`. If the attribute doesn't exist then
 /// null is returned.
 GAFFERSCENE_API AttributeHistory::Ptr attributeHistory( const History *attributesHistory, const IECore::InternedString &attribute );
+
+/// Extends History to provide information on the history of a specific option.
+struct OptionHistory : public History
+{
+	IE_CORE_DECLAREMEMBERPTR( OptionHistory )
+	OptionHistory(
+		const ScenePlugPtr &scene, const Gaffer::ContextPtr &context,
+		const IECore::InternedString &optionName, const IECore::ConstObjectPtr &optionValue
+	) :	History( scene, context ), optionName( optionName ), optionValue( optionValue ) {}
+	IECore::InternedString optionName;
+	IECore::ConstObjectPtr optionValue;
+};
+
+/// Filters `globalsHistory` and returns a history for the specific `option`.
+/// `globalsHistory` should have been obtained from a previous call to
+/// `history( scene->globalsPlug() )`. If the option doesn't exist then
+/// null is returned.
+GAFFERSCENE_API OptionHistory::Ptr optionHistory( const History *globalsHistory, const IECore::InternedString &option );
 
 /// Returns the upstream scene originally responsible for generating the specified location.
 GAFFERSCENE_API ScenePlug *source( const ScenePlug *scene, const ScenePlug::ScenePath &path );
