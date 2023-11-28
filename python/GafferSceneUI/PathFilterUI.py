@@ -327,7 +327,7 @@ def __dragMove( nodeGadget, event ) :
 	if __originalDragPointer is None :
 		return False
 
-	GafferUI.Pointer.setCurrent( str( __dropMode( nodeGadget, event ) ).lower() + "Objects" )
+	GafferUI.Pointer.setCurrent( __dropMode( nodeGadget, event ).name.lower() + "Objects" )
 
 	return True
 
