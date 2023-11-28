@@ -544,6 +544,7 @@ class Widget( Gaffer.Signals.Trackable, metaclass = _WidgetMetaclass ) :
 			self._dragEnterSignal = GafferUI.WidgetEventSignal()
 			self.__ensureEventFilter()
 			self.__ensureMouseTracking()
+			self._qtWidget().setAcceptDrops( True )
 		return self._dragEnterSignal
 
 	## This signal is emitted when a drag is moving within a Widget which
@@ -999,6 +1000,10 @@ class _EventFilter( QtCore.QObject ) :
 			QtCore.QEvent.Hide,
 			QtCore.QEvent.ContextMenu,
 			QtCore.QEvent.ParentChange,
+			QtCore.QEvent.DragEnter,
+			QtCore.QEvent.DragMove,
+			QtCore.QEvent.DragLeave,
+			QtCore.QEvent.Drop,
 		) )
 
 	def eventFilter( self, qObject, qEvent ) :
@@ -1065,6 +1070,22 @@ class _EventFilter( QtCore.QObject ) :
 		elif qEventType==qEvent.ParentChange :
 
 			return self.__parentChange( qObject, qEvent )
+
+		elif qEventType==qEvent.DragEnter :
+
+			return self.__foreignDragEnter( qObject, qEvent )
+
+		elif qEventType==qEvent.DragMove :
+
+			return self.__foreignDragMove( qObject, qEvent )
+
+		elif qEventType==qEvent.DragLeave :
+
+			return self.__foreignDragLeave( qObject, qEvent )
+
+		elif qEventType==qEvent.Drop :
+
+			return self.__foreignDrop( qObject, qEvent )
 
 		return False
 
@@ -1518,6 +1539,112 @@ class _EventFilter( QtCore.QObject ) :
 
 			self.__endDrag( self.__dragDropEvent.sourceWidget._qtWidget(), qEvent )
 			return True
+
+	# Although we have our own drag and drop system (see above), we also
+	# accept drops from Qt's system so that we can accept "foreign" drags
+	# from outside the application.
+	#
+	# > Note : We never _start_ a drag using Qt's system.
+
+	def __foreignDragEnter( self, qObject, qEvent ) :
+
+		widget = Widget._owner( qObject )
+		if widget is None or widget._dragEnterSignal is None :
+			return False
+
+		dragDropEvent = self.__foreignDragDropEvent( qEvent )
+		if dragDropEvent is None :
+			return False
+
+		if widget._dragEnterSignal( widget, dragDropEvent ) :
+			qEvent.acceptProposedAction()
+			return True
+
+		return False
+
+	def __foreignDragMove( self, qObject, qEvent ) :
+
+		widget = Widget._owner( qObject )
+		if widget is None or widget._dragMoveSignal is None :
+			return False
+
+		dragDropEvent = self.__foreignDragDropEvent( qEvent )
+		if dragDropEvent is None :
+			return False
+
+		widget._dragMoveSignal( widget, dragDropEvent )
+		qEvent.accept()
+
+		return True
+
+	def __foreignDragLeave( self, qObject, qEvent ) :
+
+		widget = Widget._owner( qObject )
+		if widget is None or widget._dragLeaveSignal is None :
+			return False
+
+		# Qt doesn't provide buttons, position or modifiers
+		# for a leave event.
+		dragDropEvent = GafferUI.DragDropEvent(
+			GafferUI.DragDropEvent.Buttons.None_,
+			GafferUI.DragDropEvent.Buttons.None_,
+			IECore.LineSegment3f(
+				imath.V3f( 0, 0, 1 ),
+				imath.V3f( 0, 0, 0 )
+			),
+			GafferUI.DragDropEvent.Modifiers.None_,
+		)
+		dragDropEvent.sourceWidget = None
+		dragDropEvent.destinationWidget = widget
+
+		widget._dragLeaveSignal( widget, dragDropEvent )
+		qEvent.accept()
+		return True
+
+	def __foreignDrop( self, qObject, qEvent ) :
+
+		widget = Widget._owner( qObject )
+		if widget is None or widget._dropSignal is None :
+			return False
+
+		dragDropEvent = self.__foreignDragDropEvent( qEvent )
+		if dragDropEvent is None :
+			return False
+
+		if widget._dropSignal( widget, dragDropEvent ) :
+			qEvent.acceptProposedAction()
+			return True
+
+		return False
+
+	def __foreignDragDropEvent( self, qEvent ) :
+
+		if qEvent.mimeData().hasUrls() :
+			data = IECore.StringVectorData( [
+				url.toString( url.PrettyDecoded | url.PreferLocalFile )
+				for url in qEvent.mimeData().urls()
+			] )
+		elif qEvent.mimeData().hasText() :
+			data = IECore.StringData( qEvent.mimeData().text() )
+		else :
+			return None
+
+		cursorPos = imath.V2i( qEvent.pos().x(), qEvent.pos().y() )
+
+		dragDropEvent = GafferUI.DragDropEvent(
+			Widget._buttons( qEvent.mouseButtons() ),
+			Widget._buttons( qEvent.mouseButtons() ),
+			IECore.LineSegment3f(
+				imath.V3f( cursorPos.x, cursorPos.y, 1 ),
+				imath.V3f( cursorPos.x, cursorPos.y, 0 )
+			),
+			Widget._modifiers( qEvent.keyboardModifiers() ),
+		)
+		dragDropEvent.data = data
+		dragDropEvent.sourceWidget = None
+		dragDropEvent.destinationWidget = None
+
+		return dragDropEvent
 
 	# Maps the position of the supplied Qt mouse event into the coordinate
 	# space of the target Gaffer widget. This is required as certain widget

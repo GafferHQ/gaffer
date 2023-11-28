@@ -13,6 +13,7 @@ Features
 Improvements
 ------------
 
+- GraphEditor : Added drag & drop of files into the graph editor, automatically creating a SceneReader, ImageReader or Reference node as appropriate.
 - ImageTransform, Resample : Improved performance for non-separable filters without scaling, with 2-6x speedups in some benchmark cases.
 - Outputs : Included `renderPass` in the filename for newly created Arnold, Cycles and 3Delight outputs. Allowing rendered images to be written to a specific directory based on the name of the current render pass.
 - GUI Config : Included `renderPass` in the default filename when writing ass files from an ArnoldRender node.
@@ -23,6 +24,7 @@ Fixes
 
 - InteractiveRender : Fixed unnecessary updates to encapsulated locations when deforming an unrelated object.
 - InteractiveArnoldRender : Fixed creation of new Catalogue image when editing output metadata or pixel filter.
+- GraphEditor : Fixed error caused by additional connections to `dragEnterSignal()`.
 - Windows `Scene/OpenGL/Shader` Menu : Removed `\` at the beginning of menu items.
 - Arnold :
   - Fixed translation of `UsdPreviewSurface` normal maps.
@@ -36,6 +38,7 @@ API
 - SceneAlgo :
   - Added `history()` overload for returning computation history independent of a scene location, this is useful when generating history from the globals.
   - Added `optionHistory()` method which returns a computation history for one specific option.
+- Widget : Added handling for drag & drop from an external application via the existing `dragEnterSignal()`, `dragMoveSignal()`, `dragLeaveSignal()` and `dropSignal()` signals.
 
 Build
 -----

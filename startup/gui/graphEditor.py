@@ -36,12 +36,16 @@
 ##########################################################################
 
 import functools
+import pathlib
+import re
+
 import imath
 
 import IECore
 
 import Gaffer
 import GafferUI
+import GafferImage
 import GafferScene
 import GafferSceneUI
 import GafferDispatch
@@ -120,3 +124,124 @@ def __connectionContextMenu( graphEditor, destinationPlug, menuDefinition ) :
 	GafferUI.GraphEditor.appendConnectionNavigationMenuDefinitions( graphEditor, destinationPlug, menuDefinition )
 
 GafferUI.GraphEditor.connectionContextMenuSignal().connect( __connectionContextMenu, scoped = False )
+
+##########################################################################
+# File drop handler
+##########################################################################
+
+def __sceneFileHandler( fileName ) :
+
+	result = GafferScene.SceneReader()
+	result["fileName"].setValue( fileName )
+	return result
+
+def __imageFileHandler( fileName ) :
+
+	result = GafferImage.ImageReader()
+	result["fileName"].setValue( fileName )
+	return result
+
+def __referenceFileHandler( fileName ) :
+
+	# We need a temp ScriptNode to be able to call `load()`,
+	# but we can safely discard it afterwards and reparent
+	# the Reference somewhere else.
+	script = Gaffer.ScriptNode()
+	script["Reference"] = Gaffer.Reference()
+	script["Reference"].load( fileName )
+	return script["Reference"]
+
+## \todo Maybe we should move this to GraphGadget and add a
+# public API to allow people to register their own handlers?
+
+__fileHandlers = {
+	"grf" : __referenceFileHandler
+}
+
+__fileHandlers.update( {
+	ext : __sceneFileHandler
+	for ext in GafferScene.SceneReader.supportedExtensions()
+} )
+
+__fileHandlers.update( {
+	ext : __imageFileHandler
+	for ext in GafferImage.ImageReader.supportedExtensions()
+} )
+
+def __dropHandler( s ) :
+
+	path = pathlib.Path( s )
+	if not path.suffix or not path.is_file() :
+		return None
+
+	handler = __fileHandlers.get( path.suffix[1:].lower() )
+	return functools.partial( handler, path ) if handler is not None else None
+
+def __canDropFiles( graphEditor, event ) :
+
+	return (
+		isinstance( event.data, IECore.StringVectorData ) and
+		all( __dropHandler( s ) is not None for s in event.data ) and
+		not Gaffer.MetadataAlgo.readOnly( graphEditor.graphGadget().getRoot() ) and
+		not Gaffer.MetadataAlgo.getChildNodesAreReadOnly( graphEditor.graphGadget().getRoot() )
+	)
+
+def __dragEnter( graphEditor, event ) :
+
+	return __canDropFiles( graphEditor, event )
+
+def __drop( graphEditor, event ) :
+
+	if not __canDropFiles( graphEditor, event ) :
+		return False
+
+	graphGadget = graphEditor.graphGadget()
+
+	position = graphEditor.graphGadgetWidget().getViewportGadget().rasterToGadgetSpace(
+		imath.V2f( event.line.p0.x, event.line.p0.y ),
+		gadget = graphEditor.graphGadget()
+	).p0
+	position = imath.V2f( position.x, position.y )
+
+	nodes = Gaffer.StandardSet()
+	with Gaffer.UndoScope( graphEditor.scriptNode() ) :
+
+		for s in event.data :
+
+			node =  __dropHandler( s )()
+
+			## \todo GraphComponent should either provide a utility
+			# to sanitise a name, or `setName()` should just sanitise
+			# the name automatically.
+			name = re.sub(
+				"[^A-Za-z_:0-9]",
+				"_",
+				pathlib.Path( s ).stem
+			)
+			if name[0].isdigit() :
+				name = "_" + name
+
+			node.setName( name )
+			graphGadget.getRoot().addChild( node )
+
+			nodeGadget = graphGadget.nodeGadget( node )
+			width = nodeGadget.bound().size().x
+			if len( nodes ) :
+				position.x += width / 2
+
+			graphGadget.setNodePosition( node, position )
+			position.x += 2 + width / 2
+
+			nodes.add( node )
+
+	graphEditor.scriptNode().selection().clear()
+	graphEditor.scriptNode().selection().add( nodes )
+
+	return True
+
+def __graphEditorCreated( graphEditor ) :
+
+	graphEditor.dragEnterSignal().connect( __dragEnter, scoped = False )
+	graphEditor.dropSignal().connect( __drop, scoped = False )
+
+GafferUI.GraphEditor.instanceCreatedSignal().connect( __graphEditorCreated, scoped = False )

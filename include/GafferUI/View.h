@@ -47,6 +47,7 @@
 #include "boost/regex.hpp"
 
 #include <functional>
+#include <unordered_map>
 
 namespace Gaffer
 {

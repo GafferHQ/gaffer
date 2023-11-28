@@ -370,6 +370,7 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 	def __drop( self, widget, event ) :
 
 		self.insertText( self.__dropText( event.data ) )
+		return True
 
 class _PlainTextEdit( QtWidgets.QPlainTextEdit ) :
 
