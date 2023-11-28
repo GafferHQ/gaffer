@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2012, John Haddon. All rights reserved.
-#  Copyright (c) 2013, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2023, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -35,39 +34,21 @@
 #
 ##########################################################################
 
+import os
 import Gaffer
-import GafferImage
 
-# add plugs to the preferences node
+# Set cache memory limit to 8 gigs, capped at 3/4 of the total
+# physical memory.
 
-preferences = application.root()["preferences"]
-preferences["cache"] = Gaffer.Plug()
-preferences["cache"]["enabled"] = Gaffer.BoolPlug( defaultValue = True )
-preferences["cache"]["memoryLimit"] = Gaffer.IntPlug( defaultValue = Gaffer.ValuePlug.getCacheMemoryLimit() // ( 1024 * 1024 ) )
+cacheLimit = 1024**3 * 8 # 8 Gigs
 
-Gaffer.Metadata.registerValue( preferences["cache"], "plugValueWidget:type", "GafferUI.LayoutPlugValueWidget", persistent = False )
-Gaffer.Metadata.registerValue( preferences["cache"], "layout:section", "Cache", persistent = False )
+if os.name != "nt" :
+	physicalMemory = os.sysconf( "SC_PAGE_SIZE" ) * os.sysconf( "SC_PHYS_PAGES" )
+	cacheLimit = min( cacheLimit, physicalMemory * 3 // 4  )
+else :
+	# No native Python API for querying physical memory on Windows.
+	# And surely nobody is brave enough to use Windows with less
+	# than 8 gigs ;)
+	pass
 
-Gaffer.Metadata.registerValue(
-	preferences["cache"]["memoryLimit"],
-	"description",
-	"""
-	Controls the memory limit for Gaffer's ValuePlug cache.
-	""",
-	persistent = False
-)
-
-# update cache settings when they change
-
-def __plugSet( plug ) :
-
-	if plug.relativeName( plug.node() ) != "cache" :
-		return
-
-	memoryLimit = plug["memoryLimit"].getValue() * 1024 * 1024
-	if not plug["enabled"].getValue() :
-		memoryLimit = 0
-
-	Gaffer.ValuePlug.setCacheMemoryLimit( memoryLimit )
-
-preferences.plugSetSignal().connect( __plugSet, scoped = False )
+Gaffer.ValuePlug.setCacheMemoryLimit( cacheLimit )
