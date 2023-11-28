@@ -84,7 +84,7 @@ class _LocalJobsPath( Gaffer.Path ) :
 			return None
 
 		if name == "localDispatcher:status" :
-			return str( self.__job.status() )
+			return self.__job.status().name
 		elif name == "localDispatcher:id" :
 			return self.__job.id()
 		elif name == "localDispatcher:jobName" :
