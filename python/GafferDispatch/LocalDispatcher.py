@@ -134,30 +134,39 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 		def statistics( self ) :
 
 			batch = self.__currentBatch
-			if batch is None or "pid" not in batch.blindData().keys() :
+			if batch is None :
 				return {}
 
-			rss = 0
-			pcpu = 0.0
 			pid = batch.blindData().get( "pid" )
-
-			try :
-				stats = subprocess.check_output(
-					[ "ps", "-Ao", "pid,ppid,pgid,sess,pcpu,rss" ],
-					universal_newlines = True,
-				).split()
-				for i in range( 0, len(stats), 6 ) :
-					if str(pid) in stats[i:i+4] :
-						pcpu += float(stats[i+4])
-						rss += float(stats[i+5])
-			except :
+			if pid is None :
 				return {}
 
-			return {
-				"pid" : pid,
-				"pcpu" : pcpu,
-				"rss" : rss,
-			}
+			result = { "pid" : pid }
+
+			## \todo Figure out how to query memory and CPU usage on Windows.
+			# One way would be the `psutil` module, but that would mean another
+			# dependency.
+			if os.name != "nt" :
+				try :
+					stats = subprocess.check_output(
+						[ "ps", "-Ao", "pid,ppid,pgid,sess,pcpu,rss" ],
+						universal_newlines = True,
+					).split()
+					rss = 0
+					pcpu = 0.0
+					for i in range( 0, len(stats), 6 ) :
+						if str( pid ) in stats[i:i+4] :
+							pcpu += float(stats[i+4])
+							rss += float(stats[i+5])
+					result["rss"] = rss
+					result["pcpu"] = pcpu
+				except subprocess.CalledProcessError :
+					# Most likely explanation is that our PID is no longer
+					# valid because the current batch just completed. So
+					# return empty stats, not even including the PID.
+					return {}
+
+			return result
 
 		def status( self ) :
 

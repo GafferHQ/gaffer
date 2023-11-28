@@ -22,6 +22,7 @@ Fixes
   - Fixed delays and zombie processes caused by shutting down Gaffer while background jobs were running. Background jobs are now killed before Gaffer exits instead.
   - Stopped failed jobs jumping to the end of the Local Jobs UI.
   - Fixed message log update.
+  - Fixed `Job.statistics()` errors on Windows, ensuring that a `pid` is always returned when available.
 
 API
 ---
