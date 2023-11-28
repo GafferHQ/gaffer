@@ -297,7 +297,7 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 			# We need to access frame and "BAKE_WEDGE:index" so that the hash of render varies with the wedge index,
 			# so we might as well print what we're doing
 			IECore.msg( IECore.MessageHandler.Level.Info, "Bake Process", "Dispatching render task index %i for frame %i" % ( context["BAKE_WEDGE:index"], context.getFrame() ) )
-			d = GafferDispatch.LocalDispatcher()
+			d = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
 			d.dispatch( [ self.parent()["__bakeDirectoryContext"] ] )
 			"""
 		) )
@@ -309,7 +309,7 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 			# We need to access frame and "BAKE_WEDGE:index" so that the hash of render varies with the wedge index,
 			# so we might as well print what we're doing
 			IECore.msg( IECore.MessageHandler.Level.Info, "Bake Process", "Dispatching image task index %i for frame %i" % ( context["BAKE_WEDGE:index"], context.getFrame() ) )
-			d = GafferDispatch.LocalDispatcher()
+			d = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
 			d.dispatch( [ self.parent()["__CleanUpSwitch"] ] )
 			"""
 		) )
