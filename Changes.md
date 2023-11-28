@@ -30,6 +30,8 @@ Fixes
   - Fixed translation of `UsdPreviewSurface` normal maps.
   - Fixed translation of `UsdPreviewSurface` `specularColor` fallback value.
 - Scene History : Fixed error caused by `Alt+E` keypress on panels other than the Viewer, HierarchyView, LightEditor or NodeEditor.
+- ImageReader : Fixed crashes caused by null `ustring` metadata values.
+- Exception handling : Fixed memory leak caused by translation of `IECore::Exception` from C++ to Python and back again.
 
 API
 ---
@@ -43,6 +45,7 @@ API
 Build
 -----
 
+- Cortex : Updated to version 10.5.4.2.
 - Instancer : Fixed ambiguous reference compilation errors when building with Boost 1.70.
 
 1.3.7.0 (relative to 1.3.6.1)
