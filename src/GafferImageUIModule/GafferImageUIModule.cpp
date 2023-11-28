@@ -37,6 +37,7 @@
 
 #include "boost/python.hpp"
 
+#include "DeepSampleGadgetBinding.h"
 #include "ImageGadgetBinding.h"
 #include "ImageViewBinding.h"
 #include "OpenColorIOAlgoBinding.h"
@@ -48,6 +49,7 @@ using namespace GafferImageUIModule;
 BOOST_PYTHON_MODULE( _GafferImageUI )
 {
 
+	bindDeepSampleGadget();
 	bindImageView();
 	bindImageGadget();
 	bindOpenColorIOAlgo();

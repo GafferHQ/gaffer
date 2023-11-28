@@ -40,6 +40,7 @@
 #include "GafferImageUI/ImageGadget.h"
 #include "GafferImageUI/OpenColorIOAlgo.h"
 
+#include "GafferImage/DeepSampler.h"
 #include "GafferImage/ImagePlug.h"
 #include "GafferImage/ImageSampler.h"
 #include "GafferImage/ImageStats.h"
@@ -1269,8 +1270,10 @@ class ImageView::ColorInspector : public Signals::Trackable
 			:	m_view( view ),
 				m_contextQuery( new ContextQuery ),
 				m_deleteContextVariables( new DeleteContextVariables ),
+				m_deepDeleteContextVariables( new DeleteContextVariables ),
 				m_sampler( new ImageSampler ),
-				m_areaSampler( new ImageStats )
+				m_areaSampler( new ImageStats ),
+				m_deepSampler( new DeepSampler )
 		{
 			// ---- Create a plug on ImageView which will be used for evaluating colorInspectors
 
@@ -1281,6 +1284,7 @@ class ImageView::ColorInspector : public Signals::Trackable
 			colorInspectorPlug->addChild( evaluatorPlug );
 			evaluatorPlug->addChild( new Color4fPlug( "pixelColor" ) );
 			evaluatorPlug->addChild( new Color4fPlug( "areaColor" ) );
+			evaluatorPlug->addChild( new AtomicCompoundDataPlug( "deepData" ) );
 
 			// We use `m_pixel` to fetch a context variable to transfer
 			// the mouse position into `m_sampler`. We could use `mouseMoveSignal()`
@@ -1296,31 +1300,46 @@ class ImageView::ColorInspector : public Signals::Trackable
 			Box2iPlugPtr box2iTemplate = new Gaffer::Box2iPlug( "box2iTemplate" );
 			m_contextQuery->addQuery( box2iTemplate.get(), "colorInspector:source" );
 
+			// And finally, for the deep sample visualizer, we need a DeepSampler, which
+			// also takes a single pixel, but as integers instead of floats
+			V2iPlugPtr v2iTemplate = new Gaffer::V2iPlug( "v2iTemplate" );
+			m_contextQuery->addQuery( v2iTemplate.get(), "colorInspector:source" );
+
 			// And we use a DeleteContextVariables node to make sure that our
 			// private context variable doesn't become visible to the upstream
 			// graph.
 			m_deleteContextVariables->setup( view->inPlug<ImagePlug>() );
 			m_deleteContextVariables->variablesPlug()->setValue( "colorInspector:source" );
+			m_deepDeleteContextVariables->setup( view->inPlug<ImagePlug>() );
+			m_deepDeleteContextVariables->variablesPlug()->setValue( "colorInspector:source" );
 
 			// We want to sample the image before the display transforms
 			// are applied. We can't simply get this image from inPlug()
 			// because derived classes may have called insertConverter(),
 			// so we take it from the input to the display transform chain.
 
-			ImagePlug *image = view->getPreprocessor()->getChild<DeepState>( "__flattenedImage" )->getChild<ImagePlug>( "out" );
-			m_deleteContextVariables->inPlug()->setInput( image );
+			m_deleteContextVariables->inPlug()->setInput(
+				view->getPreprocessor()->getChild<DeepState>( "__flattenedImage" )->outPlug()
+			);
+			m_deepDeleteContextVariables->inPlug()->setInput(
+				view->getPreprocessor()->getChild<DeepState>( "__flattenedImage" )->inPlug()
+			);
 			m_sampler->imagePlug()->setInput( m_deleteContextVariables->outPlug() );
 
-			ValuePlugPtr v2iValuePlug = m_contextQuery->valuePlugFromQueryPlug( m_contextQuery->queriesPlug()->getChild<NameValuePlug>( 0 ) );
-			m_sampler->pixelPlug()->setInput( v2iValuePlug );
+			ValuePlugPtr v2fValuePlug = m_contextQuery->valuePlugFromQueryPlug( m_contextQuery->queriesPlug()->getChild<NameValuePlug>( 0 ) );
+			m_sampler->pixelPlug()->setInput( v2fValuePlug );
 			m_sampler->interpolatePlug()->setValue( false );
-
 			evaluatorPlug->getChild<Color4fPlug>( "pixelColor" )->setInput( m_sampler->colorPlug() );
 
 			m_areaSampler->inPlug()->setInput( m_deleteContextVariables->outPlug() );
 			ValuePlugPtr box2iValuePlug = m_contextQuery->valuePlugFromQueryPlug( m_contextQuery->queriesPlug()->getChild<NameValuePlug>( 1 ) );
 			m_areaSampler->areaPlug()->setInput( box2iValuePlug );
 			evaluatorPlug->getChild<Color4fPlug>( "areaColor" )->setInput( m_areaSampler->averagePlug() );
+
+			m_deepSampler->imagePlug()->setInput( m_deepDeleteContextVariables->outPlug() );
+			ValuePlugPtr v2iValuePlug = m_contextQuery->valuePlugFromQueryPlug( m_contextQuery->queriesPlug()->getChild<NameValuePlug>( 2 ) );
+			m_deepSampler->pixelPlug()->setInput( v2iValuePlug );
+			evaluatorPlug->getChild<AtomicCompoundDataPlug>( "deepData" )->setInput( m_deepSampler->pixelDataPlug() );
 
 			ImageGadget *imageGadget = static_cast<ImageGadget *>( m_view->viewportGadget()->getPrimaryChild() );
 			imageGadget->channelsChangedSignal().connect( boost::bind( &ColorInspector::channelsChanged, this ) );
@@ -1427,13 +1446,16 @@ class ImageView::ColorInspector : public Signals::Trackable
 			) );
 			m_sampler->channelsPlug()->setValue( channels );
 			m_areaSampler->channelsPlug()->setValue( channels );
+			// TODO - deep channel selection
 		}
 
 		ImageView *m_view;
 		ContextQueryPtr m_contextQuery;
 		DeleteContextVariablesPtr m_deleteContextVariables;
+		DeleteContextVariablesPtr m_deepDeleteContextVariables;
 		ImageSamplerPtr m_sampler;
 		ImageStatsPtr m_areaSampler;
+		DeepSamplerPtr m_deepSampler;
 
 };
 
