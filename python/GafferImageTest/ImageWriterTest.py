@@ -1046,7 +1046,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		s["w2"]["fileName"].setValue( self.temporaryDirectory() / "test2.exr" )
 		s["w2"]["preTasks"][0].setInput( s["w1"]["task"] )
 
-		d = GafferDispatch.LocalDispatcher()
+		d = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
 		d["jobsDirectory"].setValue( self.temporaryDirectory() / "jobs" )
 
 		with s.context() :
@@ -1065,7 +1065,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		s["w"]["in"].setInput( s["c"]["out"] )
 		s["w"]["fileName"].setValue( self.temporaryDirectory() / "test.exr" )
 
-		d = GafferDispatch.LocalDispatcher()
+		d = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
 		d["jobsDirectory"].setValue( self.temporaryDirectory() / "jobs" )
 		d["executeInBackground"].setValue( True )
 

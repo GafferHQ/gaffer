@@ -106,7 +106,7 @@ class OpenColorIOConfigPlugTest( GafferImageTest.ImageTestCase ) :
 		script["writer"]["fileName"].setValue( self.temporaryDirectory() / "test.txt" )
 		script["writer"]["text"].setValue( "${ocio:config}, ${ocio:stringVar:testA}" )
 
-		dispatcher = GafferDispatch.LocalDispatcher()
+		dispatcher = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
 		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() / "testDispatch" )
 		dispatcher["executeInBackground"].setValue( True )
 

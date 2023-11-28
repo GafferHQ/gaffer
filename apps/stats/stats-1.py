@@ -635,7 +635,7 @@ class stats( Gaffer.Application ) :
 			IECore.msg( IECore.Msg.Level.Error, "stats", "Task \"%s\" does not exist" % args["task"].value )
 			return
 
-		dispatcher = GafferDispatch.LocalDispatcher()
+		dispatcher = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
 		dispatcher["jobsDirectory"].setValue( tempfile.mkdtemp( prefix = "gafferStats" ) )
 
 		memory = _Memory.maxRSS()

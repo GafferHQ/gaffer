@@ -872,7 +872,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		s["dispatchTask"]["command"].setValue( inspect.cleandoc(
 			"""
 			import GafferDispatch
-			dispatcher = GafferDispatch.LocalDispatcher()
+			dispatcher = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
 			dispatcher.dispatch( [ self.parent()["nestedTask"] ] )
 			"""
 		) )
@@ -1054,7 +1054,9 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 		with tempfile.TemporaryDirectory() as jobDirectory :
 
-			dispatcher = GafferDispatch.LocalDispatcher()
+			# `LocalDispatcher.defaultJobPool()` automatically kills
+			# running jobs at exit.
+			dispatcher = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.defaultJobPool() )
 			dispatcher["jobsDirectory"].setValue( jobDirectory )
 			dispatcher["executeInBackground"].setValue( True )
 			dispatcher.dispatch( [ script["command"] ] )
