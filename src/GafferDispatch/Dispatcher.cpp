@@ -246,26 +246,25 @@ const std::filesystem::path Dispatcher::jobDirectory() const
 void Dispatcher::createJobDirectory( const Gaffer::ScriptNode *script, Gaffer::Context *context ) const
 {
 	std::filesystem::path jobDirectory( jobsDirectoryPlug()->getValue() );
-	jobDirectory /= jobNamePlug()->getValue();
-
-	if( jobDirectory == "" )
+	std::string jobName = jobNamePlug()->getValue();
+	if( !jobName.empty() )
 	{
-		const string outerJobDirectory = context->get<string>( g_jobDirectoryContextEntry, "" );
-		const string outerScriptFileName = context->get<string>( g_scriptFileNameContextEntry, "" );
+		jobDirectory /= jobName;
+	}
 
-		if( outerJobDirectory.size() && outerScriptFileName.size() )
+	const std::filesystem::path outerJobDirectory( context->get<string>( g_jobDirectoryContextEntry, "" ) );
+	if( !outerJobDirectory.empty() )
+	{
+		// We're nested inside another dispatch process. Reuse the job directory if we can.
+		if( jobDirectory.empty() || jobDirectory == outerJobDirectory.parent_path() )
 		{
-			// We're being run inside a task executing in another dispatch
-			// for the same script. Borrow the job directory created by that dispatch.
-			/// \todo Should there be a more explicit way of saying "borrow
-			/// the outer directory"? Perhaps dispatchers should have a
-			/// plug specifying that they are to do a nested dispatch?
-			/// Consider this at the same time as we consider hosting
-			/// dispatchers directly in the graph.
 			m_jobDirectory = outerJobDirectory;
 			return;
 		}
+	}
 
+	if( jobDirectory.empty() )
+	{
 		/// \todo I think it would be better to throw here, rather than
 		/// litter the current directory.
 		jobDirectory = std::filesystem::current_path();

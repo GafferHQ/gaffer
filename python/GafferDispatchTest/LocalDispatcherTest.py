@@ -44,6 +44,7 @@ import unittest
 import time
 import inspect
 import functools
+import pathlib
 import subprocess
 import sys
 import tempfile
@@ -874,6 +875,10 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 	def testNestedDispatchBorrowingOuterJobDirectory( self ) :
 
+		# This tested very early initial support for limited nested dispatch,
+		# where the job directory was borrowed if the nested dispatcher didn't
+		# specify a directory at all.
+
 		s = Gaffer.ScriptNode()
 
 		s["nestedTask"] = GafferDispatchTest.TextWriter()
@@ -906,6 +911,54 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 			open( self.temporaryDirectory() / "nested.txt", encoding = "utf-8" ).readlines(),
 			open( self.temporaryDirectory() / "outer.txt", encoding = "utf-8" ).readlines(),
 		)
+
+	def testUpstreamDispatchJobDirectory( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		# Nested dispatcher sharing the job directory from the outer dispatch,
+		# because it's `jobDirectory` plug has the same value.
+
+		script["nestedTask"] = GafferDispatchTest.LoggingTaskNode()
+
+		script["nestedDispatcher"] = self.__createLocalDispatcher()
+		script["nestedDispatcher"]["tasks"][0].setInput( script["nestedTask"]["task"] )
+
+		script["outerTask"] = GafferDispatchTest.LoggingTaskNode()
+		script["outerTask"]["preTasks"][0].setInput( script["nestedDispatcher"]["task"] )
+
+		script["outerDispatcher"] = self.__createLocalDispatcher()
+		script["outerDispatcher"]["tasks"][0].setInput( script["outerTask"]["task"] )
+		script["outerDispatcher"]["task"].execute()
+
+		self.assertEqual(
+			script["outerTask"].log[0].context["dispatcher:jobDirectory"],
+			script["nestedTask"].log[0].context["dispatcher:jobDirectory"],
+		)
+		self.assertEqual(
+			script["outerTask"].log[0].context["dispatcher:scriptFileName"],
+			script["nestedTask"].log[0].context["dispatcher:scriptFileName"],
+		)
+		self.assertTrue( pathlib.Path( script["outerTask"].log[0].context["dispatcher:scriptFileName"] ).is_file() )
+
+		# Nested dispatcher with its own job directory.
+
+		del script["outerTask"].log[:]
+		del script["nestedTask"].log[:]
+
+		script["nestedDispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() / "nestedJobDir" )
+		script["outerDispatcher"]["task"].execute()
+
+		self.assertNotEqual(
+			script["outerTask"].log[0].context["dispatcher:jobDirectory"],
+			script["nestedTask"].log[0].context["dispatcher:jobDirectory"],
+		)
+		self.assertEqual(
+			pathlib.Path( script["nestedTask"].log[0].context["dispatcher:jobDirectory"] ),
+			self.temporaryDirectory() / "nestedJobDir" / "000000"
+		)
+		self.assertTrue( pathlib.Path( script["outerTask"].log[0].context["dispatcher:scriptFileName"] ).is_file() )
+		self.assertTrue( pathlib.Path( script["nestedTask"].log[0].context["dispatcher:scriptFileName"] ).is_file() )
 
 	def testBackgroundJobFailureStatus( self ) :
 
