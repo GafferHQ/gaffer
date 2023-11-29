@@ -341,7 +341,10 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 				if canceller is not None and canceller.cancelled() :
 					if os.name == "nt" :
-						subprocess.check_call( [ "TASKKILL", "/F", "/PID", str( process.pid ), "/T" ] )
+						subprocess.check_call(
+							[ "TASKKILL", "/F", "/PID", str( process.pid ), "/T" ],
+							stdout = subprocess.DEVNULL
+						)
 					else :
 						os.killpg( process.pid, signal.SIGTERM )
 					outputHandler.join()
