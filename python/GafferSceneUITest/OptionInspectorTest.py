@@ -425,6 +425,43 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 		Gaffer.MetadataAlgo.setReadOnly( editScope, True )
 		self.assertEqual( len( cs ), 2 )  # Change affects the result of `inspect().editable()`
 
+	def testRegisteredOption( self ) :
+
+		standardOptions = GafferScene.StandardOptions()
+
+		editScope = Gaffer.EditScope()
+		editScope.setup( standardOptions["out"] )
+		editScope["in"].setInput( standardOptions["out"] )
+
+		# Inspecting the "renderPass:enabled" option without an active EditScope
+		# returns `None` as we have no upstream nodes capable of editing it.
+
+		self.assertIsNone( self.__inspect( editScope["out"], "renderPass:enabled" ) )
+
+		# Providing an EditScope allows the option edit to take place.
+
+		inspection = self.__inspect( editScope["out"], "renderPass:enabled", editScope )
+		edit = inspection.acquireEdit()
+		self.assertEqual(
+			edit,
+			GafferScene.EditScopeAlgo.acquireOptionEdit(
+				editScope, "renderPass:enabled", createIfNecessary = False
+			)
+		)
+
+		edit["enabled"].setValue( True )
+
+		# With the tweak in place in `editScope`, force the history to be checked again
+		# to make sure we get the right source back.
+
+		self.__assertExpectedResult(
+			self.__inspect( editScope["out"], "renderPass:enabled", editScope ),
+			source = edit,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.EditScope,
+			editable = True,
+			edit = edit
+		)
+
 	def testRenderPassValues( self ) :
 
 		options = GafferScene.StandardOptions()

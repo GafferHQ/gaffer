@@ -97,7 +97,9 @@ CreatableRegistry g_attributeRegistry {
 };
 
 /// Entry keys for `g_optionRegistry` should not include the "option:" prefix.
-CreatableRegistry g_optionRegistry;
+CreatableRegistry g_optionRegistry {
+	{ "renderPass:enabled", new BoolData( true ) },
+};
 
 // Pruning
 // =======
@@ -1146,7 +1148,7 @@ ConstObjectPtr optionValue( const ScenePlug *scene, const std::string &option )
 
 	if( !result )
 	{
-		CreatableRegistry::const_iterator registeredOption = g_optionRegistry.find( g_optionPrefix + option );
+		CreatableRegistry::const_iterator registeredOption = g_optionRegistry.find( option );
 		if( registeredOption != g_optionRegistry.end() )
 		{
 			return registeredOption->second;
