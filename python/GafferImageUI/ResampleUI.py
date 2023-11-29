@@ -141,6 +141,22 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"filterDeep" : [
+
+			"description",
+			"""
+			By default, we use a nearest filter for deep images, because
+			accurately filtering deeps can be extremely expensive, and
+			produces images that are too large to store on disk. If you
+			know what you're doing, turn this on to do accurate filtering
+			( the only manageable use case is probably if you immediately
+			do a merge or holdout after resampling, so the a minimum
+			amount of processing needs to happen to the huge data of the
+			resampled deep ).
+			""",
+
+		],
+
 	}
 
 )
