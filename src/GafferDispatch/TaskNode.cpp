@@ -56,11 +56,12 @@ using namespace GafferDispatch;
 //////////////////////////////////////////////////////////////////////////
 
 TaskNode::Task::Task( ConstTaskPlugPtr plug, const Gaffer::Context *context )
-	:	m_plug( plug ), m_context( new Context( *context ) )
+	:	m_plug( plug ), m_context( context )
 {
 }
 
-TaskNode::Task::Task( TaskNodePtr n, const Context *c ) : m_plug( n->taskPlug() ), m_context( new Context( *c ) )
+TaskNode::Task::Task( TaskNodePtr n, const Context *context )
+	:	Task( n->taskPlug(), context )
 {
 }
 

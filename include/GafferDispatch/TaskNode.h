@@ -88,9 +88,12 @@ class GAFFERDISPATCH_API TaskNode : public Gaffer::DependencyNode
 		{
 			public :
 
-				/// Constructs a task representing a call to
-				/// `plug->execute()` in the specified context.
-				/// A copy of the context is stored.
+				/// Constructs a task representing a call to `plug->execute()`
+				/// in the specified context.
+				///
+				/// > Caution : The context is referenced directly rather than
+				/// > being copied, and must not be modified after being passed
+				/// > to the Task.
 				Task( ConstTaskPlugPtr plug, const Gaffer::Context *context );
 				Task( const Task &t ) = default;
 				~Task() = default;
