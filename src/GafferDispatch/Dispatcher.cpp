@@ -880,14 +880,6 @@ void Dispatcher::execute() const
 		return;
 	}
 
-	// create the job directory now, so it's available in preDispatchSignal().
-	/// \todo: move directory creation between preDispatchSignal() and dispatchSignal() - a cancelled
-	/// dispatch should not create anything on disk.
-
-	ContextPtr jobContext = new Context( *Context::current() );
-	Context::Scope jobScope( jobContext.get() );
-	createJobDirectory( script, jobContext.get() );
-
 	// this object calls this->preDispatchSignal() in its constructor and this->postDispatchSignal()
 	// in its destructor, thereby guaranteeing that we always call this->postDispatchSignal().
 
@@ -896,6 +888,10 @@ void Dispatcher::execute() const
 	{
 		return;
 	}
+
+	ContextPtr jobContext = new Context( *Context::current() );
+	Context::Scope jobScope( jobContext.get() );
+	createJobDirectory( script, jobContext.get() );
 
 	dispatchSignal()( this, taskNodes );
 

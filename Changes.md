@@ -61,6 +61,7 @@ Fixes
 -----
 
 - BackgroundTask : Fixed potential deadlock caused by destroying a BackgroundTask from Python while it was still running.
+- Dispatcher : The job directory is no longer created when dispatch is cancelled by a slot connected to `preDispatchSignal()`.
 - LocalDispatcher :
   - Fixed delays and zombie processes caused by shutting down Gaffer while background jobs were running. Background jobs are now killed before Gaffer exits instead.
   - Stopped failed jobs jumping to the end of the Local Jobs UI.
@@ -120,6 +121,7 @@ Breaking Changes
   - Removed `createMatching()` method.
   - Removed non-const TaskBatch accessors `frames()` and `preTasks()`.
   - Made `TaskBatch` constructors private.
+  - The job directory is no longer available in slots connected to `preDispatchSignal()`.
 - DispatcherUI :
   - Removed `appendMenuDefinitions()`, `appendNodeContextMenuDefinitions()`, `executeSelected()` and `repeatPrevious()` functions.
   - Removed `DispatcherWindow` class.

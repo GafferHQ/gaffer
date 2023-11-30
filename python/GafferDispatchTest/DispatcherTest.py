@@ -1021,6 +1021,30 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( next( open( "%s/test.0004.txt" % jobDir, encoding = "utf-8" ) ), "w on 4 from %s" % jobDir )
 		self.assertEqual( next( open( "%s/test.0006.txt" % jobDir, encoding = "utf-8" ) ), "w on 6 from %s" % jobDir )
 
+	def testJobDirectoryNotCreatedForCancelledDispatch( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["node"] = GafferDispatchTest.LoggingTaskNode()
+
+		script["dispatcher"] = self.TestDispatcher()
+		script["dispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+		script["dispatcher"]["tasks"][0].setInput( script["node"]["task"] )
+
+		def preDispatch( dispatcher, nodes ) :
+
+			self.assertNotIn( "dispatcher:jobDirectory", Gaffer.Context.current() )
+			self.assertNotIn( "dispatcher:scriptFileName", Gaffer.Context.current() )
+
+			return True # Cancel dispatch
+
+		preDispatchConnection = GafferDispatch.Dispatcher.preDispatchSignal().connect( preDispatch, scoped = True )
+		dispatchSlot = GafferTest.CapturingSlot( GafferDispatch.Dispatcher.dispatchSignal() )
+		script["dispatcher"]["task"].execute()
+
+		self.assertEqual( len( dispatchSlot ), 0 )
+		self.assertEqual( list( self.temporaryDirectory().iterdir() ), [] )
+
 	def testNoOpDoesntBreakFrameParallelism( self ) :
 
 		# perFrame1
