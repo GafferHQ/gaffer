@@ -250,7 +250,7 @@ class GAFFERDISPATCH_API Dispatcher : public Gaffer::Node
 				friend class Dispatcher;
 
 				TaskNode::ConstTaskPlugPtr m_plug;
-				Gaffer::ContextPtr m_context;
+				Gaffer::ConstContextPtr m_context;
 				IECore::CompoundDataPtr m_blindData;
 				std::vector<float> m_frames;
 				// We want to store pretasks in the order we discover them,

@@ -98,13 +98,60 @@ tuple<const Plug *, ConstContextPtr> computedSource( const Plug *plug )
 	return make_tuple( plug, Context::current() );
 }
 
+const InternedString g_frame( "frame" );
+
+// TaskBatch contexts are identical to the contexts of their corresponding
+// Tasks, except that they omit the `frame` variable. We need to construct a
+// _lot_ of them during dispatch, and many TaskBatches have identical contexts.
+// So we use BatchContextPool to eliminate the copying overhead by constructing
+// only a single instance of each unique context.
+struct BatchContextPool
+{
+
+	ConstContextPtr acquireUnique( const Context *taskContext )
+	{
+		// Get the hash of the `taskContext`, but omitting the frame value.
+		// The "sum of variable hashes" approach mirrors what `Context::hash()`
+		// does itself, and means that `ui:` prefixed variables have no effect.
+		m_names.clear();
+		taskContext->names( m_names );
+		uint64_t sumH1 = 0, sumH2 = 0;
+		for( const auto &name : m_names )
+		{
+			if( name == g_frame )
+			{
+				continue;
+			}
+			const MurmurHash vh = taskContext->variableHash( name );
+			sumH1 += vh.h1();
+			sumH2 += vh.h2();
+		}
+
+		auto [it, inserted] = m_contexts.insert( { MurmurHash( sumH1, sumH2 ), nullptr } );
+		if( inserted )
+		{
+			ContextPtr batchContext = new Context( *taskContext );
+			batchContext->remove( g_frame );
+			it->second = batchContext;
+		}
+
+		return it->second;
+	}
+
+	private :
+
+		std::unordered_map<IECore::MurmurHash, ConstContextPtr> m_contexts;
+		// Scratch space to avoid allocations every time we query names.
+		std::vector<InternedString> m_names;
+
+};
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
 // Dispatcher
 //////////////////////////////////////////////////////////////////////////
 
-static InternedString g_frame( "frame" );
 static InternedString g_batchSize( "batchSize" );
 static InternedString g_immediatePlugName( "immediate" );
 static InternedString g_postTaskIndexBlindDataName( "dispatcher:postTaskIndex" );
@@ -333,12 +380,8 @@ Dispatcher::TaskBatch::TaskBatch()
 }
 
 Dispatcher::TaskBatch::TaskBatch( TaskNode::ConstTaskPlugPtr plug, Gaffer::ConstContextPtr context )
-	:	m_plug( plug ), m_context( new Context( *context ) ), m_blindData( new CompoundData )
+	:	m_plug( plug ), m_context( context ), m_blindData( new CompoundData )
 {
-	// Frames must be determined by our `frames()` field, so
-	// remove any possibility of accidentally using the frame
-	// from the context.
-	m_context->remove( "frame" );
 }
 
 Dispatcher::TaskBatch::TaskBatch( ConstTaskNodePtr node, Gaffer::ConstContextPtr context )
@@ -528,7 +571,7 @@ class Dispatcher::Batcher
 			{
 				// Prevent no-ops from coalescing into a single batch, as this
 				// would break parallelism - see `DispatcherTest.testNoOpDoesntBreakFrameParallelism()`
-				taskHash.append( contextHash( task.context() ) );
+				taskHash.append( task.context()->hash() );
 			}
 			// Prevent identical tasks from different nodes from being
 			// coalesced.
@@ -547,8 +590,11 @@ class Dispatcher::Batcher
 
 			const bool requiresSequenceExecution = task.plug()->requiresSequenceExecution();
 
+			ConstContextPtr batchContext = m_batchContextPool.acquireUnique( task.context() );
+			MurmurHash batchMapHash = batchContext->hash();
+			batchMapHash.append( (uint64_t)task.plug() );
+
 			TaskBatchPtr batch = nullptr;
-			const MurmurHash batchMapHash = batchHash( task );
 			BatchMap::iterator bIt = m_currentBatches.find( batchMapHash );
 			if( bIt != m_currentBatches.end() )
 			{
@@ -567,7 +613,7 @@ class Dispatcher::Batcher
 
 			if( !batch )
 			{
-				batch = new TaskBatch( task.plug(), task.context() );
+				batch = new TaskBatch( task.plug(), batchContext );
 				batch->blindData()->writable()[g_sizeBlindDataName] = new IntData( 1 );
 				m_currentBatches[batchMapHash] = batch;
 			}
@@ -600,43 +646,6 @@ class Dispatcher::Batcher
 			m_tasksToBatches[taskHash] = batch;
 
 			return batch;
-		}
-
-		// Hash used to determine how to coalesce tasks into batches.
-		// If `batchHash( task1 ) == batchHash( task2 )` then the two
-		// tasks can be placed in the same batch.
-		IECore::MurmurHash batchHash( const TaskNode::Task &task )
-		{
-			MurmurHash result;
-			result.append( (uint64_t)task.plug() );
-			// We ignore the frame because the whole point of batching
-			// is to allow multiple frames to be placed in the same
-			// batch if the context is otherwise identical.
-			result.append( contextHash( task.context(), /* ignoreFrame = */ true ) );
-			return result;
-		}
-
-		IECore::MurmurHash contextHash( const Context *context, bool ignoreFrame = false ) const
-		{
-			IECore::MurmurHash result;
-			std::vector<IECore::InternedString> names;
-			context->names( names );
-			for( std::vector<IECore::InternedString>::const_iterator it = names.begin(); it != names.end(); ++it )
-			{
-				// Ignore the UI values since they should be irrelevant
-				// to execution.
-				if( boost::starts_with( it->string(), "ui:" ) )
-				{
-					continue;
-				}
-				if( ignoreFrame && *it == g_frame )
-				{
-					continue;
-				}
-
-				result.append( context->variableHash( *it ) );
-			}
-			return result;
 		}
 
 		void addPreTask( TaskBatch *batch, TaskBatchPtr preTask, bool forPostTask = false )
@@ -709,6 +718,7 @@ class Dispatcher::Batcher
 		TaskBatchPtr m_rootBatch;
 		BatchMap m_currentBatches;
 		TaskToBatchMap m_tasksToBatches;
+		BatchContextPool m_batchContextPool;
 
 };
 
