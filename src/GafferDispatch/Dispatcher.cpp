@@ -372,19 +372,9 @@ const Context *Dispatcher::TaskBatch::context() const
 	return m_context.get();
 }
 
-std::vector<float> &Dispatcher::TaskBatch::frames()
-{
-	return m_frames;
-}
-
 const std::vector<float> &Dispatcher::TaskBatch::frames() const
 {
 	return m_frames;
-}
-
-std::vector<Dispatcher::TaskBatchPtr> &Dispatcher::TaskBatch::preTasks()
-{
-	return m_preTasks;
 }
 
 const std::vector<Dispatcher::TaskBatchPtr> &Dispatcher::TaskBatch::preTasks() const
@@ -589,7 +579,7 @@ class Dispatcher::Batcher
 			if( !taskIsNoOp )
 			{
 				float frame = task.context()->getFrame();
-				std::vector<float> &frames = batch->frames();
+				std::vector<float> &frames = batch->m_frames;
 				if( requiresSequenceExecution )
 				{
 					frames.insert( std::lower_bound( frames.begin(), frames.end(), frame ), frame );
@@ -652,7 +642,7 @@ class Dispatcher::Batcher
 
 		void addPreTask( TaskBatch *batch, TaskBatchPtr preTask, bool forPostTask = false )
 		{
-			TaskBatches &preTasks = batch->preTasks();
+			TaskBatches &preTasks = batch->m_preTasks;
 			if( std::find( preTasks.begin(), preTasks.end(), preTask ) == preTasks.end() )
 			{
 				if( forPostTask )
@@ -863,7 +853,7 @@ void Dispatcher::executeAndPruneImmediateBatches( TaskBatch *batch, bool immedia
 
 	immediate = immediate || batch->blindData()->member<BoolData>( g_immediateBlindDataName );
 
-	TaskBatches &preTasks = batch->preTasks();
+	TaskBatches &preTasks = batch->m_preTasks;
 	for( TaskBatches::iterator it = preTasks.begin(); it != preTasks.end(); )
 	{
 		executeAndPruneImmediateBatches( it->get(), immediate );

@@ -26,7 +26,9 @@ Breaking Changes
 - Render : Changed `render:includedPurposes` default to `"default", "render"`.
 - ValuePlug : Removed deprecated `getObjectValue()` overload.
 - Preferences : Removed `cache` plug.
-- Dispatcher : Removed `createMatching()` method.
+- Dispatcher :
+  - Removed `createMatching()` method.
+  - Removed non-const TaskBatch accessors `frames()` and `preTasks()`.
 - Process : Removed non-const variant of the `handleException()` method.
 - StringPlug : Removed deprecated `precomputedHash` argument from `getValue()` method.
 - OpenColorIOContext : Removed `configEnabledPlug()`, `configValuePlug()`, `workingSpaceEnabledPlug()` and `workingSpaceValuePlug()` methods. Use the OptionalValuePlug child accessors instead.
