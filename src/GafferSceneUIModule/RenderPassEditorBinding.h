@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012-2013, John Haddon. All rights reserved.
+//  Copyright (c) 2023, Cinesite VFX Ltd. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -34,35 +34,11 @@
 //
 //////////////////////////////////////////////////////////////////////////
 
-#include "boost/python.hpp"
+#pragma once
 
-#include "ContextAlgoBinding.h"
-#include "HierarchyViewBinding.h"
-#include "InspectorBinding.h"
-#include "SceneGadgetBinding.h"
-#include "LightEditorBinding.h"
-#include "ToolBinding.h"
-#include "ViewBinding.h"
-#include "VisualiserBinding.h"
-#include "QueryBinding.h"
-#include "SetEditorBinding.h"
-#include "RenderPassEditorBinding.h"
-
-using namespace GafferSceneUIModule;
-
-BOOST_PYTHON_MODULE( _GafferSceneUI )
+namespace GafferSceneUIModule
 {
 
-	bindViews();
-	bindTools();
-	bindVisualisers();
-	bindHierarchyView();
-	bindSceneGadget();
-	bindContextAlgo();
-	bindQueries();
-	bindInspector();
-	bindLightEditor();
-	bindSetEditor();
-	bindRenderPassEditor();
+void bindRenderPassEditor();
 
-}
+} // namespace GafferSceneUIModule
