@@ -52,6 +52,7 @@
 #include <map>
 #include <set>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 namespace Gaffer
@@ -252,7 +253,12 @@ class GAFFERDISPATCH_API Dispatcher : public Gaffer::Node
 				Gaffer::ContextPtr m_context;
 				IECore::CompoundDataPtr m_blindData;
 				std::vector<float> m_frames;
+				// We want to store pretasks in the order we discover them,
+				// so our primary storage is a vector.
 				TaskBatches m_preTasks;
+				// But we also need to perform quick membership
+				// queries, for which we use a secondary set.
+				std::unordered_set<const TaskBatch *> m_preTasksSet;
 
 		};
 

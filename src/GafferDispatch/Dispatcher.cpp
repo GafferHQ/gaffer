@@ -641,31 +641,60 @@ class Dispatcher::Batcher
 
 		void addPreTask( TaskBatch *batch, TaskBatchPtr preTask, bool forPostTask = false )
 		{
+			// Check that `preTask` isn't already in `batch->m_preTasks`,
+			// returning if it is.
+
+			const size_t setThreshold = 1000;
 			TaskBatches &preTasks = batch->m_preTasks;
-			if( std::find( preTasks.begin(), preTasks.end(), preTask ) == preTasks.end() )
+			if( preTasks.size() < setThreshold )
 			{
-				if( forPostTask )
+				// Linear search is cheaper than set lookups for smallish
+				// numbers of preTasks.
+				if( std::find( preTasks.begin(), preTasks.end(), preTask ) != preTasks.end() )
 				{
-					// We're adding the preTask because the batch is a postTask
-					// of it, but the batch may already have it's own standard
-					// preTasks. There's no strict requirement that we separate
-					// out these two types of preTasks (indeed a good dispatcher might
-					// execute them in parallel), but for simple dispatchers
-					// it's more intuitive to users if we separate them so the
-					// standard preTasks come second.
-					//
-					// See `DispatcherTest.testPostTaskWithPreTasks()` for an
-					// example.
-					IntDataPtr postTaskIndex = batch->blindData()->member<IntData>(
-						g_postTaskIndexBlindDataName, /* throwExceptions = */ false, /* createIfMissing = */ true
-					);
-					preTasks.insert( preTasks.begin() + postTaskIndex->readable(), preTask );
-					postTaskIndex->writable()++;
+					return;
 				}
-				else
+			}
+			else
+			{
+				// But for large numbers of preTasks we switch to testing
+				// a set for membership for improved performance.
+				if( batch->m_preTasksSet.empty() )
 				{
-					preTasks.push_back( preTask );
+					for( const auto &p : preTasks )
+					{
+						batch->m_preTasksSet.insert( p.get() );
+					}
 				}
+				if( !batch->m_preTasksSet.insert( preTask.get() ).second )
+				{
+					return;
+				}
+			}
+
+			// Add to preTasks.
+
+			if( forPostTask )
+			{
+				// We're adding the preTask because the batch is a postTask
+				// of it, but the batch may already have it's own standard
+				// preTasks. There's no strict requirement that we separate
+				// out these two types of preTasks (indeed a good dispatcher might
+				// execute them in parallel), but for simple dispatchers
+				// it's more intuitive to users if we separate them so the
+				// standard preTasks come second.
+				//
+				// See `DispatcherTest.testPostTaskWithPreTasks()` for an
+				// example.
+				IntDataPtr postTaskIndex = batch->blindData()->member<IntData>(
+					g_postTaskIndexBlindDataName, /* throwExceptions = */ false, /* createIfMissing = */ true
+				);
+				preTasks.insert( preTasks.begin() + postTaskIndex->readable(), preTask );
+				postTaskIndex->writable()++;
+			}
+			else
+			{
+				preTasks.push_back( preTask );
 			}
 		}
 
@@ -858,6 +887,7 @@ void Dispatcher::executeAndPruneImmediateBatches( TaskBatch *batch, bool immedia
 		executeAndPruneImmediateBatches( it->get(), immediate );
 		if( (*it)->blindData()->member<BoolData>( g_executedBlindDataName ) )
 		{
+			batch->m_preTasksSet.erase( it->get() );
 			it = preTasks.erase( it );
 		}
 		else
