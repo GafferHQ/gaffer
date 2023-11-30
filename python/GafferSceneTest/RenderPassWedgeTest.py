@@ -73,7 +73,9 @@ class RenderPassWedgeTest( GafferTest.TestCase ) :
 
 		script["wedge"]["in"].setInput( script["passes"]["out"] )
 
-		self.__dispatcher().dispatch( [ script["wedge"] ] )
+		script["dispatcher"] = self.__dispatcher()
+		script["dispatcher"]["tasks"][0].setInput( script["wedge"]["task"] )
+		script["dispatcher"]["task"].execute()
 
 		self.assertEqual(
 			set( self.temporaryDirectory().glob( "*.txt" ) ),
@@ -113,7 +115,9 @@ class RenderPassWedgeTest( GafferTest.TestCase ) :
 
 		script["wedge"]["in"].setInput( script["disablePass"]["out"] )
 
-		self.__dispatcher().dispatch( [ script["wedge"] ] )
+		script["dispatcher"] = self.__dispatcher()
+		script["dispatcher"]["tasks"][0].setInput( script["wedge"]["task"] )
+		script["dispatcher"]["task"].execute()
 
 		self.assertEqual(
 			set( self.temporaryDirectory().glob( "*.txt" ) ),
@@ -138,7 +142,9 @@ class RenderPassWedgeTest( GafferTest.TestCase ) :
 
 		script["wedge"]["in"].setInput( script["passes"]["out"] )
 
-		self.__dispatcher( frameRange = "21-22" ).dispatch( [ script["wedge"] ] )
+		script["dispatcher"] = self.__dispatcher( frameRange = "21-22" )
+		script["dispatcher"]["tasks"][0].setInput( script["wedge"]["task"] )
+		script["dispatcher"]["task"].execute()
 
 		self.assertEqual(
 			set( self.temporaryDirectory().glob( "*.txt" ) ),
@@ -170,7 +176,9 @@ class RenderPassWedgeTest( GafferTest.TestCase ) :
 
 		script["wedge"]["in"].setInput( script["passes"]["out"] )
 
-		self.__dispatcher().dispatch( [ script["wedge"] ] )
+		script["dispatcher"] = self.__dispatcher()
+		script["dispatcher"]["tasks"][0].setInput( script["wedge"]["task"] )
+		script["dispatcher"]["task"].execute()
 
 		self.assertEqual(
 			set( self.temporaryDirectory().glob( "*.txt" ) ),
@@ -207,6 +215,9 @@ class RenderPassWedgeTest( GafferTest.TestCase ) :
 			)
 		)
 
+		script["dispatcher"] = self.__dispatcher( frameRange = "21-22" )
+		script["dispatcher"]["tasks"][0].setInput( script["wedge"]["task"] )
+
 		for f in [ 1, 3, 5 ] :
 
 			script["frameRange"]["start"].setValue( f )
@@ -225,7 +236,7 @@ class RenderPassWedgeTest( GafferTest.TestCase ) :
 
 			with Gaffer.ContextMonitor( script["passes"] ) as monitor :
 				with Gaffer.Context( script.context() ) as c :
-					self.__dispatcher( frameRange = "21-22" ).dispatch( [ script["wedge"] ] )
+					script["dispatcher"]["task"].execute()
 
 			self.assertEqual( monitor.combinedStatistics().numUniqueValues( "frame" ), 1 )
 

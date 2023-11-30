@@ -480,9 +480,10 @@ class TaskNodeTest( GafferTest.TestCase ) :
 		self.assertEqual( postTasks[0].plug(), s["n3"]["internalTask"]["postTasks"][0] )
 		self.assertEqual( postTasks[1].plug(), s["n3"]["internalTask"]["postTasks"][1] )
 
-		dispatcher = GafferDispatchTest.DispatcherTest.TestDispatcher()
-		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() )
-		dispatcher.dispatch( [ s["n3"] ] )
+		s["dispatcher"] = GafferDispatchTest.DispatcherTest.TestDispatcher()
+		s["dispatcher"]["tasks"][0].setInput( s["n3"]["task"] )
+		s["dispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+		s["dispatcher"]["task"].execute()
 
 		self.assertEqual( len( log ), 3 )
 		self.assertEqual( [ l.node for l in log ], [ s["n1"], s["n3"]["internalTask"], s["n2"] ] )

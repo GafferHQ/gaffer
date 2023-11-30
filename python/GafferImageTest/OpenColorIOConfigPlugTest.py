@@ -106,12 +106,13 @@ class OpenColorIOConfigPlugTest( GafferImageTest.ImageTestCase ) :
 		script["writer"]["fileName"].setValue( self.temporaryDirectory() / "test.txt" )
 		script["writer"]["text"].setValue( "${ocio:config}, ${ocio:stringVar:testA}" )
 
-		dispatcher = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
-		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() / "testDispatch" )
-		dispatcher["executeInBackground"].setValue( True )
+		script["dispatcher"] = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
+		script["dispatcher"]["tasks"][0].setInput( script["writer"]["task"] )
+		script["dispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() / "testDispatch" )
+		script["dispatcher"]["executeInBackground"].setValue( True )
 
-		dispatcher.dispatch( [ script["writer"] ] )
-		dispatcher.jobPool().waitForAll()
+		script["dispatcher"]["task"].execute()
+		script["dispatcher"].jobPool().waitForAll()
 
 		with open( script["writer"]["fileName"].getValue() ) as f :
 			self.assertEqual( f.readlines(), [ "test.ocio, testValueA" ] )

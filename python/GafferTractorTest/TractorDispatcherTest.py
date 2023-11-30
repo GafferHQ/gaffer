@@ -72,7 +72,10 @@ class TractorDispatcherTest( GafferTest.TestCase ) :
 		if dispatcher is None :
 			dispatcher = self.__dispatcher()
 
-		dispatcher.dispatch( nodes )
+		for i, node in enumerate( nodes ) :
+			dispatcher["tasks"][i].setInput( node["task"] )
+
+		dispatcher["task"].execute()
 
 		return jobs[0]
 
@@ -89,7 +92,8 @@ class TractorDispatcherTest( GafferTest.TestCase ) :
 		c = GafferTractor.TractorDispatcher.preSpoolSignal().connect( f, scoped = True )
 
 		dispatcher = self.__dispatcher()
-		dispatcher.dispatch( [ s["n"] ] )
+		dispatcher["tasks"][0].setInput( s["n"]["task"] )
+		dispatcher["task"].execute()
 
 		self.assertEqual( len( spooled ), 1 )
 		self.assertTrue( spooled[0][0] is dispatcher )
@@ -100,7 +104,8 @@ class TractorDispatcherTest( GafferTest.TestCase ) :
 		s["n"] = GafferDispatchTest.LoggingTaskNode()
 
 		dispatcher = self.__dispatcher()
-		dispatcher.dispatch( [ s["n"] ] )
+		dispatcher["tasks"][0].setInput( s["n"]["task"] )
+		dispatcher["task"].execute()
 
 		self.assertTrue( ( dispatcher.jobDirectory() / "job.alf" ).is_file() )
 

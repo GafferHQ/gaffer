@@ -646,13 +646,14 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 		traverseConnection = Gaffer.Signals.ScopedConnection( GafferSceneTest.connectTraverseSceneToPreDispatchSignal( script["instancer"]["out"] ) )
 
-		dispatcher = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
-		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() )
+		script["dispatcher"] = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
+		script["dispatcher"]["tasks"][0].setInput( script["pythonCommand"]["task"] )
+		script["dispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() )
 
 		with Gaffer.Context() as c :
 			for i in range( 1, 10 ) :
 				c.setFrame( i )
-				dispatcher.dispatch( [ script["pythonCommand"] ] )
+				script["dispatcher"]["task"].execute()
 
 	def testTransform( self ) :
 
