@@ -567,10 +567,10 @@ class Dispatcher::Batcher
 			// coalesced.
 			taskHash.append( (uint64_t)task.plug() );
 
-			const TaskToBatchMap::const_iterator it = m_tasksToBatches.find( taskHash );
-			if( it != m_tasksToBatches.end() )
+			TaskBatchPtr &batchForTask = m_tasksToBatches[taskHash];
+			if( batchForTask )
 			{
-				return it->second;
+				return batchForTask;
 			}
 
 			// We haven't seen this task before, so we need to find
@@ -584,24 +584,21 @@ class Dispatcher::Batcher
 			MurmurHash batchMapHash = batchContext->hash();
 			batchMapHash.append( (uint64_t)task.plug() );
 
-			TaskBatchPtr batch = nullptr;
-			BatchMap::iterator bIt = m_currentBatches.find( batchMapHash );
-			if( bIt != m_currentBatches.end() )
+			TaskBatchPtr &batch = m_currentBatches[batchMapHash];
+			if( batch && !requiresSequenceExecution )
 			{
-				TaskBatchPtr candidateBatch = bIt->second;
-
 				const IntPlug *batchSizePlug = dispatcherPlug( task )->getChild<const IntPlug>( g_batchSize );
 				const int batchSizeLimit = ( batchSizePlug ) ? batchSizePlug->getValue() : 1;
-				if( requiresSequenceExecution || ( candidateBatch->m_size < (size_t)batchSizeLimit ) )
+				if( batch->m_size >= (size_t)batchSizeLimit )
 				{
-					batch = candidateBatch;
+					// The current batch is full, so we'll need to make a new one.
+					batch = nullptr;
 				}
 			}
 
 			if( !batch )
 			{
 				batch = new TaskBatch( task.plug(), batchContext );
-				m_currentBatches[batchMapHash] = batch;
 			}
 
 			// Now we have an appropriate batch, update it to include
@@ -631,7 +628,7 @@ class Dispatcher::Batcher
 
 			// Remember which batch we stored this task in, for
 			// the next time someone asks for it.
-			m_tasksToBatches[taskHash] = batch;
+			batchForTask = batch;
 
 			return batch;
 		}
