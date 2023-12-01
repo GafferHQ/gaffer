@@ -27,7 +27,9 @@ Breaking Changes
 - Render : Changed `render:includedPurposes` default to `"default", "render"`.
 - ValuePlug : Removed deprecated `getObjectValue()` overload.
 - Preferences : Removed `cache` plug.
-- TaskNode : The `Task` constructor no longer takes a copy of the context, so the context must not be modified after being passed.
+- TaskNode :
+  - The `Task` constructor no longer takes a copy of the context, so the context must not be modified after being passed.
+  - Removed `Task( taskNode, context )` constructor. Use `Task( taskNode["task"], context )` instead.
 - Dispatcher :
   - Removed `createMatching()` method.
   - Removed non-const TaskBatch accessors `frames()` and `preTasks()`.

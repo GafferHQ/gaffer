@@ -108,9 +108,6 @@ class GAFFERDISPATCH_API TaskNode : public Gaffer::DependencyNode
 
 				bool operator == ( const Task &rhs ) const;
 
-				/// \deprecated
-				Task( TaskNodePtr n, const Gaffer::Context *c );
-
 			private :
 
 				ConstTaskPlugPtr m_plug;

@@ -60,11 +60,6 @@ TaskNode::Task::Task( ConstTaskPlugPtr plug, const Gaffer::Context *context )
 {
 }
 
-TaskNode::Task::Task( TaskNodePtr n, const Context *context )
-	:	Task( n->taskPlug(), context )
-{
-}
-
 const TaskNode::TaskPlug *TaskNode::Task::plug() const
 {
 	return m_plug.get();

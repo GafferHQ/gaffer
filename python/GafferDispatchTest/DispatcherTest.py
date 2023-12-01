@@ -883,7 +883,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 					customContext = Gaffer.Context( context )
 					customContext["selfExecutingNode:preExecute"] = True
-					preTasks = [ GafferDispatch.TaskNode.Task( self, customContext ) ]
+					preTasks = [ GafferDispatch.TaskNode.Task( self["task"], customContext ) ]
 
 				else :
 

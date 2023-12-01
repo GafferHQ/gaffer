@@ -822,7 +822,7 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 		for( std::vector<TaskNodePtr>::const_iterator nIt = taskNodes.begin(); nIt != taskNodes.end(); ++nIt )
 		{
 			jobContext->setFrame( *fIt );
-			batcher.addTask( TaskNode::Task( *nIt, Context::current() ) );
+			batcher.addTask( TaskNode::Task( (*nIt)->taskPlug(), Context::current() ) );
 		}
 	}
 
