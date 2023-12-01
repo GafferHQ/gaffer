@@ -330,11 +330,11 @@ void Dispatcher::setupPlugs( Plug *parentPlug )
 	parentPlug->addChild( new BoolPlug( g_immediatePlugName, Plug::In, false ) );
 
 	const CreatorMap &m = creators();
-	for ( CreatorMap::const_iterator it = m.begin(); it != m.end(); ++it )
+	for( const auto &[name, creator] : m )
 	{
-		if ( it->second.second )
+		if( creator.second )
 		{
-			it->second.second( parentPlug );
+			creator.second( parentPlug );
 		}
 	}
 }
@@ -504,9 +504,9 @@ class Dispatcher::Batcher
 			// in the ancestors for cycle detection when getting
 			// the preTask batches.
 			TaskBatches postBatches;
-			for( TaskNode::Tasks::const_iterator it = postTasks.begin(); it != postTasks.end(); ++it )
+			for( const auto &postTask : postTasks )
 			{
-				if( auto postBatch = batchTasksWalk( *it ) )
+				if( auto postBatch = batchTasksWalk( postTask ) )
 				{
 					postBatches.push_back( postBatch );
 				}
@@ -517,14 +517,14 @@ class Dispatcher::Batcher
 
 			std::set<const TaskBatch *> preTaskAncestors( ancestors );
 			preTaskAncestors.insert( batch.get() );
-			for( TaskBatches::const_iterator it = postBatches.begin(), eIt = postBatches.end(); it != eIt; ++it )
+			for( const auto &postBatch : postBatches )
 			{
-				preTaskAncestors.insert( it->get() );
+				preTaskAncestors.insert( postBatch.get() );
 			}
 
-			for( TaskNode::Tasks::const_iterator it = preTasks.begin(); it != preTasks.end(); ++it )
+			for( const auto &preTask : preTasks )
 			{
-				if( auto preBatch = batchTasksWalk( *it, preTaskAncestors ) )
+				if( auto preBatch = batchTasksWalk( preTask, preTaskAncestors ) )
 				{
 					addPreTask( batch.get(), preBatch );
 				}
@@ -535,10 +535,10 @@ class Dispatcher::Batcher
 			// this batch a preTask of each of the postTask batches. We also
 			// add the postTask batches as preTasks for the root, so that they
 			// are reachable from doDispatch().
-			for( TaskBatches::const_iterator it = postBatches.begin(), eIt = postBatches.end(); it != eIt; ++it )
+			for( const auto &postBatch : postBatches )
 			{
-				addPreTask( it->get(), batch, /* forPostTask =  */ true );
-				addPreTask( m_rootBatch.get(), *it );
+				addPreTask( postBatch.get(), batch, /* forPostTask =  */ true );
+				addPreTask( m_rootBatch.get(), postBatch );
 			}
 
 			return batch;
@@ -817,12 +817,12 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 	frameList->asList( frames );
 
 	Batcher batcher;
-	for( std::vector<FrameList::Frame>::const_iterator fIt = frames.begin(); fIt != frames.end(); ++fIt )
+	for( const auto &frame : frames )
 	{
-		for( std::vector<TaskNodePtr>::const_iterator nIt = taskNodes.begin(); nIt != taskNodes.end(); ++nIt )
+		for( const auto &taskNode : taskNodes )
 		{
-			jobContext->setFrame( *fIt );
-			batcher.addTask( TaskNode::Task( (*nIt)->taskPlug(), Context::current() ) );
+			jobContext->setFrame( frame );
+			batcher.addTask( TaskNode::Task( taskNode->taskPlug(), Context::current() ) );
 		}
 	}
 
@@ -931,9 +931,9 @@ void Dispatcher::registerDispatcher( const std::string &dispatcherType, Creator 
 void Dispatcher::registeredDispatchers( std::vector<std::string> &dispatcherTypes )
 {
 	const CreatorMap &m = creators();
-	for ( CreatorMap::const_iterator it = m.begin(); it!=m.end(); ++it )
+	for( const auto &[name, creator] : m )
 	{
-		dispatcherTypes.push_back( it->first );
+		dispatcherTypes.push_back( name );
 	}
 }
 
