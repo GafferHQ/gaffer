@@ -375,17 +375,12 @@ FrameListPtr Dispatcher::frameRange( const ScriptNode *script, const Context *co
 //////////////////////////////////////////////////////////////////////////
 
 Dispatcher::TaskBatch::TaskBatch()
-	:	m_blindData( new CompoundData )
+	:	TaskBatch( nullptr, nullptr )
 {
 }
 
 Dispatcher::TaskBatch::TaskBatch( TaskNode::ConstTaskPlugPtr plug, Gaffer::ConstContextPtr context )
 	:	m_plug( plug ), m_context( context ), m_blindData( new CompoundData )
-{
-}
-
-Dispatcher::TaskBatch::TaskBatch( ConstTaskNodePtr node, Gaffer::ConstContextPtr context )
-	:	TaskBatch( node->taskPlug(), context )
 {
 }
 

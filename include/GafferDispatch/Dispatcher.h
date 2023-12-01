@@ -225,11 +225,6 @@ class GAFFERDISPATCH_API Dispatcher : public Gaffer::Node
 		{
 			public :
 
-				TaskBatch();
-				TaskBatch( TaskNode::ConstTaskPlugPtr plug, Gaffer::ConstContextPtr context );
-				/// \deprecated
-				TaskBatch( ConstTaskNodePtr node, Gaffer::ConstContextPtr context );
-
 				IE_CORE_DECLAREMEMBERPTR( TaskBatch );
 
 				void execute() const;
@@ -246,6 +241,9 @@ class GAFFERDISPATCH_API Dispatcher : public Gaffer::Node
 				const IECore::CompoundData *blindData() const;
 
 			private :
+
+				TaskBatch();
+				TaskBatch( TaskNode::ConstTaskPlugPtr plug, Gaffer::ConstContextPtr context );
 
 				friend class Dispatcher;
 
