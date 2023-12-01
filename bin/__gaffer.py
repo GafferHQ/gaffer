@@ -60,7 +60,7 @@ if os.name != "nt" :
 	softFileLimit, hardFileLimit = resource.getrlimit( resource.RLIMIT_NOFILE )
 	if softFileLimit < hardFileLimit :
 		resource.setrlimit( resource.RLIMIT_NOFILE, ( hardFileLimit, hardFileLimit ) )
-		IECore.msg( IECore.Msg.Level.Info, "Gaffer", "Increased file handle limit to {}".format( hardFileLimit ) )
+		IECore.msg( IECore.Msg.Level.Debug, "Gaffer", "Increased file handle limit to {}".format( hardFileLimit ) )
 
 from Gaffer._Gaffer import _nameProcess
 _nameProcess()
