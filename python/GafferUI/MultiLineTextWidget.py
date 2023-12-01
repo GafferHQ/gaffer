@@ -35,7 +35,6 @@
 #
 ##########################################################################
 
-import contextlib
 import enum
 
 import imath
@@ -336,7 +335,7 @@ class MultiLineTextWidget( GafferUI.Widget ) :
 	def __dropText( self, dragData ) :
 
 		signal = None
-		with contextlib.suppress( AttributeError ) :
+		with IECore.IgnoredExceptions( AttributeError ) :
 			signal = self.__dropTextSignal
 
 		text = None

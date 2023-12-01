@@ -34,7 +34,6 @@
 #
 ##########################################################################
 
-import contextlib
 import os
 
 import IECore
@@ -65,7 +64,7 @@ if os.environ.get( "CYCLES_ROOT" ) and os.environ.get( "GAFFERCYCLES_HIDE_UI", "
 
 	Gaffer.Metadata.registerValue( GafferSceneUI.LightEditor.Settings, "attribute", "userDefault", "cycles:light" )
 
-with contextlib.suppress( ImportError ) :
+with IECore.IgnoredExceptions( ImportError ) :
 
 	# This import appears unused, but it is intentional; it prevents us from
 	# adding the OSL lights when 3Delight isn't available.
@@ -91,7 +90,7 @@ with contextlib.suppress( ImportError ) :
 	# If 3Delight is available, then assume it will be used in preference to Cycles.
 	Gaffer.Metadata.registerValue( GafferSceneUI.LightEditor.Settings, "attribute", "userDefault", "osl:light" )
 
-with contextlib.suppress( ImportError ) :
+with IECore.IgnoredExceptions( ImportError ) :
 
 	import GafferArnold
 	# Register Light Editor sections for Arnold before the generic "Visualisation" section

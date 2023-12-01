@@ -34,7 +34,6 @@
 #
 ##########################################################################
 
-import contextlib
 import functools
 
 import IECore
@@ -73,7 +72,7 @@ class MatchPatternPathFilterWidget( GafferUI.PathFilterWidget ) :
 	def _updateFromPathFilter( self ) :
 
 		editable = False
-		with contextlib.suppress( KeyError ) :
+		with IECore.IgnoredExceptions( KeyError ) :
 			editable = self.pathFilter().userData()["UI"]["editable"].value
 
 		self.__enabledWidget.setVisible( not editable )
@@ -81,7 +80,7 @@ class MatchPatternPathFilterWidget( GafferUI.PathFilterWidget ) :
 		self.__patternWidget.setVisible( editable )
 
 		label = str( self.pathFilter() )
-		with contextlib.suppress( KeyError ) :
+		with IECore.IgnoredExceptions( KeyError ) :
 			label = self.pathFilter().userData()["UI"]["label"].value
 			if len(label) > 40:
 				self.__enabledWidget.setToolTip( label )
@@ -90,7 +89,7 @@ class MatchPatternPathFilterWidget( GafferUI.PathFilterWidget ) :
 		self.__enabledWidget.setText( label )
 
 		invertEnabled = False
-		with contextlib.suppress( KeyError ) :
+		with IECore.IgnoredExceptions( KeyError ) :
 			invertEnabled = self.pathFilter().userData()["UI"]["invertEnabled"].value
 
 		self.__enabledWidget.setState( self.pathFilter().getEnabled() is not invertEnabled )
@@ -101,7 +100,7 @@ class MatchPatternPathFilterWidget( GafferUI.PathFilterWidget ) :
 		assert( widget is self.__enabledWidget )
 
 		invertEnabled = False
-		with contextlib.suppress( KeyError ) :
+		with IECore.IgnoredExceptions( KeyError ) :
 			invertEnabled = self.pathFilter().userData()["UI"]["invertEnabled"].value
 
 		with Gaffer.Signals.BlockedConnection( self._pathFilterChangedConnection() ) :
@@ -167,7 +166,7 @@ class MatchPatternPathFilterWidget( GafferUI.PathFilterWidget ) :
 
 		result = { "name": IECore.StringData( "Name" ), "filesystem:owner": IECore.StringData( "Owner" ) }
 
-		with contextlib.suppress( KeyError ) :
+		with IECore.IgnoredExceptions( KeyError ) :
 			result = self.pathFilter().userData()["UI"]["propertyFilters"]
 
 		return result

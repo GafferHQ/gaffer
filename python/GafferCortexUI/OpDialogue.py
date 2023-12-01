@@ -35,7 +35,6 @@
 #
 ##########################################################################
 
-import contextlib
 import enum
 import sys
 import threading
@@ -128,7 +127,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 			postExecuteBehaviour = self.PostExecuteBehaviour.DisplayResult
 
 			d = None
-			with contextlib.suppress( KeyError ) :
+			with IECore.IgnoredExceptions( KeyError ) :
 				d = opInstance.userData()["UI"]["postExecuteBehaviour"]
 			if d is not None :
 				for v in self.PostExecuteBehaviour.values() :
@@ -137,7 +136,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 						break
 			else :
 				# backwards compatibility with batata
-				with contextlib.suppress( KeyError ) :
+				with IECore.IgnoredExceptions( KeyError ) :
 					d = opInstance.userData()["UI"]["closeAfterExecution"]
 				if d is not None :
 					postExecuteBehaviour = self.PostExecuteBehaviour.Close if d.value else self.PostExecuteBehaviour.DisplayResult
@@ -266,7 +265,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 		self.__backButtonClickedConnection = self.__backButton.clickedSignal().connectFront( Gaffer.WeakMethod( self.__close ), scoped = True )
 
 		executeLabel = "OK"
-		with contextlib.suppress( KeyError ) :
+		with IECore.IgnoredExceptions( KeyError ) :
 			executeLabel = self.__node.getParameterised()[0].userData()["UI"]["buttonLabel"].value
 
 		self.__forwardButton.setText( executeLabel )
@@ -456,7 +455,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 		if defaultButton == self.DefaultButton.FromUserData :
 			defaultButton = self.DefaultButton.OK
 			d = None
-			with contextlib.suppress( KeyError ) :
+			with IECore.IgnoredExceptions( KeyError ) :
 				d = self.__node.getParameterised()[0].userData()["UI"]["defaultButton"]
 			if d is not None :
 				for v in self.DefaultButton.values() :
@@ -485,7 +484,7 @@ class OpDialogue( GafferUI.Dialogue ) :
 	def __setUserDefaults( self, graphComponent ) :
 
 		if isinstance( graphComponent, Gaffer.Plug ) and hasattr( graphComponent, "getValue" ) :
-			with contextlib.suppress( Exception ) :
+			with IECore.IgnoredExceptions( Exception ) :
 				Gaffer.Metadata.registerValue( graphComponent, "userDefault", graphComponent.getValue() )
 
 		for child in graphComponent.children() :

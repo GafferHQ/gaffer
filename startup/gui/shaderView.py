@@ -34,7 +34,6 @@
 #
 ##########################################################################
 
-import contextlib
 import os
 
 import IECore
@@ -43,7 +42,7 @@ import GafferSceneUI
 
 if os.environ.get( "CYCLES_ROOT" ) :
 
-	with contextlib.suppress( ImportError ) :
+	with IECore.IgnoredExceptions( ImportError ) :
 
 		import GafferCycles
 
@@ -68,7 +67,7 @@ if os.environ.get( "CYCLES_ROOT" ) :
 		GafferSceneUI.ShaderView.registerRenderer( "osl", GafferCycles.InteractiveCyclesRender )
 		GafferSceneUI.ShaderView.registerScene( "osl", "Default", __cyclesShaderBall )
 
-with contextlib.suppress( ImportError ) :
+with IECore.IgnoredExceptions( ImportError ) :
 
 	import GafferArnold
 	GafferSceneUI.ShaderView.registerRenderer( "ai", GafferArnold.InteractiveArnoldRender )

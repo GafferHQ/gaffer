@@ -35,7 +35,6 @@
 #
 ##########################################################################
 
-import contextlib
 import re
 import pipes
 import fnmatch
@@ -73,7 +72,7 @@ class _ParameterisedHolderNodeUI( GafferUI.NodeUI ) :
 
 		headerVisible = True
 		parameterised = self.node().getParameterised()[0]
-		with contextlib.suppress( KeyError ) :
+		with IECore.IgnoredExceptions( KeyError ) :
 			headerVisible = parameterised.userData()["UI"]["headerVisible"].value
 
 		with column :

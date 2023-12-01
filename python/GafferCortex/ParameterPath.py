@@ -34,8 +34,6 @@
 #
 ##########################################################################
 
-import contextlib
-
 import IECore
 
 import Gaffer
@@ -75,7 +73,7 @@ class ParameterPath( Gaffer.Path ) :
 	def property( self, name, canceller = None ) :
 
 		if name == "parameter:parameter" :
-			with contextlib.suppress( Exception ) :
+			with IECore.IgnoredExceptions( Exception ) :
 				return self.__parameter()
 			return None
 

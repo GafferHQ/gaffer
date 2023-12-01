@@ -34,8 +34,6 @@
 #
 ##########################################################################
 
-import contextlib
-
 import IECore
 
 import Gaffer
@@ -61,7 +59,7 @@ class DataPathPreview( GafferUI.DeferredPathPreview ) :
 	def _load( self ) :
 
 		data = None
-		with contextlib.suppress( RuntimeError ) :
+		with IECore.IgnoredExceptions( RuntimeError ) :
 			data = self.getPath().data()
 
 		return data

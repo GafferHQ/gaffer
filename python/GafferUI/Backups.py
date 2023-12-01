@@ -41,7 +41,6 @@ import IECore
 from Qt import QtCore
 
 import collections
-import contextlib
 import pathlib
 import re
 import stat
@@ -99,7 +98,7 @@ class Backups( object ) :
 		# temporarily make it writable. If this fails for
 		# any reason we leave it to `serialiseToFile()` to
 		# throw.
-		with contextlib.suppress( OSError ) :
+		with IECore.IgnoredExceptions( OSError ) :
 			path.chmod( stat.S_IWUSR )
 
 		script.serialiseToFile( path )

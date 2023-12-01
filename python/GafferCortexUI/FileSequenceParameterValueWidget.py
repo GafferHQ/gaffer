@@ -34,8 +34,6 @@
 #
 ##########################################################################
 
-import contextlib
-
 import IECore
 
 import Gaffer
@@ -85,7 +83,7 @@ def __isFileSequence( plug ) :
 		return True
 
 	if isinstance( parameter, IECore.PathParameter ) :
-		with contextlib.suppress( KeyError ) :
+		with IECore.IgnoredExceptions( KeyError ) :
 			return parameter.userData()["UI"]["typeHint"].value == "includeSequences"
 
 	return False
@@ -105,7 +103,7 @@ def __includeFrameRange( plug ) :
 		return None
 
 	includeFrameRange = True
-	with contextlib.suppress( KeyError ) :
+	with IECore.IgnoredExceptions( KeyError ) :
 		includeFrameRange = parameter.userData()["UI"]["includeFrameRange"].value
 
 	return includeFrameRange

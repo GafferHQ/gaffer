@@ -35,7 +35,6 @@
 #
 ##########################################################################
 
-import contextlib
 import os
 import re
 import traceback
@@ -568,7 +567,7 @@ nodeMenu.append( "/Utility/Collect", Gaffer.Collect )
 
 GafferUI.DotUI.connect( application.root() )
 
-with contextlib.suppress( ImportError ) :
+with IECore.IgnoredExceptions( ImportError ) :
 
 	# Raises if Tractor not available, thus avoiding registering the
 	# TractorDispatcher.

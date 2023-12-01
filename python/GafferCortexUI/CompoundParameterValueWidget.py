@@ -35,8 +35,6 @@
 #
 ##########################################################################
 
-import contextlib
-
 import IECore
 
 import GafferUI
@@ -59,13 +57,13 @@ class CompoundParameterValueWidget( GafferCortexUI.ParameterValueWidget ) :
 
 		if collapsible is None :
 			collapsible = True
-			with contextlib.suppress( KeyError ) :
+			with IECore.IgnoredExceptions( KeyError ) :
 				collapsible = parameterHandler.parameter().userData()["UI"]["collapsible"].value
 
 		collapsed = None
 		if collapsible :
 			collapsed = True
-			with contextlib.suppress( KeyError ) :
+			with IECore.IgnoredExceptions( KeyError ) :
 				collapsed = parameterHandler.parameter().userData()["UI"]["collapsed"].value
 
 		if _plugValueWidgetClass is None :
@@ -103,7 +101,7 @@ class _PlugValueWidget( CompoundPlugValueWidget ) :
 
 		childParameter = self.__parameterHandler.parameter()[childPlug.getName()]
 
-		with contextlib.suppress( KeyError ) :
+		with IECore.IgnoredExceptions( KeyError ) :
 			if not childParameter.userData()["UI"]["visible"].value :
 				return None
 

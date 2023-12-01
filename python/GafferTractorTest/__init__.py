@@ -43,11 +43,11 @@ __mockAPI = None
 def tractorAPI() :
 
 	import types
-	import contextlib
+	import IECore
 
 	# Use the real API if it is available.
 
-	with contextlib.suppress( ImportError ) :
+	with IECore.IgnoredExceptions( ImportError ) :
 		from tractor.api.author import author
 		return author
 

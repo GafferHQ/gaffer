@@ -35,7 +35,6 @@
 ##########################################################################
 
 import ast
-import contextlib
 
 import IECore
 import imath
@@ -173,7 +172,7 @@ class _VariablesDict( dict ) :
 			value, name = self.__variables.memberDataAndName( plug )
 			if value is None :
 				continue
-			with contextlib.suppress( Exception ) :
+			with IECore.IgnoredExceptions( Exception ) :
 				value = value.value
 
 			self[name] = value

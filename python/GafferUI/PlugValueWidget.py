@@ -36,7 +36,6 @@
 ##########################################################################
 
 import collections
-import contextlib
 import functools
 import inspect
 import itertools
@@ -415,7 +414,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 			if hasattr( value, "value" ) :
 				dataValue = value.value
 			else :
-				with contextlib.suppress( Exception ) :
+				with IECore.IgnoredExceptions( Exception ) :
 					if len( value ) == 1 :
 						dataValue = value[0]
 
@@ -424,7 +423,7 @@ class PlugValueWidget( GafferUI.Widget ) :
 			elif isinstance( dataValue, plugValueType ) :
 				return dataValue
 			else :
-				with contextlib.suppress( Exception ) :
+				with IECore.IgnoredExceptions( Exception ) :
 					return plugValueType( dataValue )
 
 		return None
