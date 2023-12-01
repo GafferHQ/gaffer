@@ -96,8 +96,10 @@ class GAFFERDISPATCH_API TaskNode : public Gaffer::DependencyNode
 				/// > to the Task.
 				Task( ConstTaskPlugPtr plug, const Gaffer::Context *context );
 				Task( const Task &t ) = default;
+				Task( Task &&t ) = default;
 				~Task() = default;
 				Task & operator = ( const Task &rhs ) = default;
+				Task & operator = ( Task &&rhs ) = default;
 
 				/// Returns the TaskPlug component of the task.
 				const TaskPlug *plug() const;
