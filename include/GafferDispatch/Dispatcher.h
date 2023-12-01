@@ -251,12 +251,21 @@ class GAFFERDISPATCH_API Dispatcher : public Gaffer::Node
 				Gaffer::ConstContextPtr m_context;
 				IECore::CompoundDataPtr m_blindData;
 				std::vector<float> m_frames;
+				// We have to track batch size separately from
+				// `m_frames().size()`, because no-ops don't update `frames()`,
+				// but _do_ count towards batch size.
+				size_t m_size;
 				// We want to store pretasks in the order we discover them,
 				// so our primary storage is a vector.
 				TaskBatches m_preTasks;
+				size_t m_postTaskIndex;
 				// But we also need to perform quick membership
 				// queries, for which we use a secondary set.
 				std::unordered_set<const TaskBatch *> m_preTasksSet;
+				// Flags used by `executeAndPruneImmediateBatches()`.
+				bool m_immediate;
+				bool m_visited;
+				bool m_executed;
 
 		};
 

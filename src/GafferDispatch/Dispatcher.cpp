@@ -154,14 +154,8 @@ struct BatchContextPool
 
 static InternedString g_batchSize( "batchSize" );
 static InternedString g_immediatePlugName( "immediate" );
-static InternedString g_postTaskIndexBlindDataName( "dispatcher:postTaskIndex" );
-static InternedString g_immediateBlindDataName( "dispatcher:immediate" );
-static InternedString g_sizeBlindDataName( "dispatcher:size" );
-static InternedString g_executedBlindDataName( "dispatcher:executed" );
-static InternedString g_visitedBlindDataName( "dispatcher:visited" );
 static InternedString g_jobDirectoryContextEntry( "dispatcher:jobDirectory" );
 static InternedString g_scriptFileNameContextEntry( "dispatcher:scriptFileName" );
-static IECore::BoolDataPtr g_trueBoolData = new BoolData( true );
 
 size_t Dispatcher::g_firstPlugIndex = 0;
 Dispatcher::PreDispatchSignal Dispatcher::g_preDispatchSignal;
@@ -380,7 +374,8 @@ Dispatcher::TaskBatch::TaskBatch()
 }
 
 Dispatcher::TaskBatch::TaskBatch( TaskNode::ConstTaskPlugPtr plug, Gaffer::ConstContextPtr context )
-	:	m_plug( plug ), m_context( context ), m_blindData( new CompoundData )
+	:	m_plug( plug ), m_context( context ), m_blindData( new CompoundData ),
+		m_size( 0 ), m_postTaskIndex( 0 ), m_immediate( false ), m_visited( false ), m_executed( false )
 {
 }
 
@@ -594,22 +589,18 @@ class Dispatcher::Batcher
 			if( bIt != m_currentBatches.end() )
 			{
 				TaskBatchPtr candidateBatch = bIt->second;
-				// Unfortunately we have to track batch size separately from `batch->frames().size()`,
-				// because no-ops don't update `frames()`, but _do_ count towards batch size.
-				IntDataPtr batchSizeData = candidateBatch->blindData()->member<IntData>( g_sizeBlindDataName );
+
 				const IntPlug *batchSizePlug = dispatcherPlug( task )->getChild<const IntPlug>( g_batchSize );
 				const int batchSizeLimit = ( batchSizePlug ) ? batchSizePlug->getValue() : 1;
-				if( requiresSequenceExecution || ( batchSizeData->readable() < batchSizeLimit ) )
+				if( requiresSequenceExecution || ( candidateBatch->m_size < (size_t)batchSizeLimit ) )
 				{
 					batch = candidateBatch;
-					batchSizeData->writable()++;
 				}
 			}
 
 			if( !batch )
 			{
 				batch = new TaskBatch( task.plug(), batchContext );
-				batch->blindData()->writable()[g_sizeBlindDataName] = new IntData( 1 );
 				m_currentBatches[batchMapHash] = batch;
 			}
 
@@ -630,10 +621,12 @@ class Dispatcher::Batcher
 				}
 			}
 
+			batch->m_size++;
+
 			const BoolPlug *immediatePlug = dispatcherPlug( task )->getChild<const BoolPlug>( g_immediatePlugName );
 			if( immediatePlug && immediatePlug->getValue() )
 			{
-				batch->blindData()->writable()[g_immediateBlindDataName] = g_trueBoolData;
+				batch->m_immediate = true;
 			}
 
 			// Remember which batch we stored this task in, for
@@ -690,11 +683,8 @@ class Dispatcher::Batcher
 				//
 				// See `DispatcherTest.testPostTaskWithPreTasks()` for an
 				// example.
-				IntDataPtr postTaskIndex = batch->blindData()->member<IntData>(
-					g_postTaskIndexBlindDataName, /* throwExceptions = */ false, /* createIfMissing = */ true
-				);
-				preTasks.insert( preTasks.begin() + postTaskIndex->readable(), preTask );
-				postTaskIndex->writable()++;
+				preTasks.insert( preTasks.begin() + batch->m_postTaskIndex, preTask );
+				batch->m_postTaskIndex++;
 			}
 			else
 			{
@@ -879,18 +869,18 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 
 void Dispatcher::executeAndPruneImmediateBatches( TaskBatch *batch, bool immediate ) const
 {
-	if( batch->blindData()->member<BoolData>( g_visitedBlindDataName ) )
+	if( batch->m_visited )
 	{
 		return;
 	}
 
-	immediate = immediate || batch->blindData()->member<BoolData>( g_immediateBlindDataName );
+	immediate = immediate || batch->m_immediate;
 
 	TaskBatches &preTasks = batch->m_preTasks;
 	for( TaskBatches::iterator it = preTasks.begin(); it != preTasks.end(); )
 	{
 		executeAndPruneImmediateBatches( it->get(), immediate );
-		if( (*it)->blindData()->member<BoolData>( g_executedBlindDataName ) )
+		if( (*it)->m_executed )
 		{
 			batch->m_preTasksSet.erase( it->get() );
 			it = preTasks.erase( it );
@@ -904,10 +894,10 @@ void Dispatcher::executeAndPruneImmediateBatches( TaskBatch *batch, bool immedia
 	if( immediate )
 	{
 		batch->execute();
-		batch->blindData()->writable()[g_executedBlindDataName] = g_trueBoolData;
+		batch->m_executed = true;
 	}
 
-	batch->blindData()->writable()[g_visitedBlindDataName] = g_trueBoolData;
+	batch->m_visited = true;
 }
 
 //////////////////////////////////////////////////////////////////////////
