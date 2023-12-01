@@ -1015,6 +1015,72 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		self.assertIn( "Hello stderr!", messages )
 		self.assertIn( "Hello stdout!", messages )
 
+	def testMessageLevels( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["command"] = GafferDispatch.PythonCommand()
+		script["command"]["command"].setValue( inspect.cleandoc(
+			r"""
+			import sys
+			import IECore
+
+			# Cortex messages
+
+			for level in IECore.Msg.Level.values.values() :
+				IECore.msg(
+					level, "testMessageLevels",
+					# Obfuscate the level in the message text, so it can't be used
+					# by any level-detection heuristics in the LocalDispatcher.
+					"message level {}".format(
+						"-".join( str( level.name ) )
+					)
+				)
+
+			# Arnold-like messages, with and without time and memory prefixes
+
+			for message in [
+				"00:00:00   315MB WARNING | rendering with watermarks because ARNOLD_LICENSE_ORDER = none",
+				"315MB WARNING | rendering with watermarks because ARNOLD_LICENSE_ORDER = none",
+				"WARNING | rendering with watermarks because ARNOLD_LICENSE_ORDER = none",
+				"00:00:00   368MB ERROR   |  [texturesys] shader:55b3960bd4e0c6a75adc63c08ac0cb6b: Invalid image file "": ImageInput::create() called with no filename",
+
+			] :
+				sys.stdout.write( f"{message}\n" )
+			"""
+		) )
+
+		dispatcher = self.__createLocalDispatcher()
+		dispatcher["executeInBackground"].setValue( True )
+		dispatcher.dispatch( [ script["command"] ] )
+		dispatcher.jobPool().waitForAll()
+
+		messages = dispatcher.jobPool().jobs()[0].messages()
+		messageLevels = {
+			m.message : m.level
+			for m in messages
+		}
+
+		for level in IECore.Msg.Level.values.values() :
+			if level == IECore.Msg.Level.Invalid :
+				continue
+			self.assertEqual(
+				messageLevels["testMessageLevels : message level {}".format( "-".join( str( level ) ) ) ],
+				level
+			)
+
+		for message, level in [
+			( "00:00:00   315MB WARNING | rendering with watermarks because ARNOLD_LICENSE_ORDER = none", IECore.Msg.Level.Warning ),
+			( "315MB WARNING | rendering with watermarks because ARNOLD_LICENSE_ORDER = none", IECore.Msg.Level.Warning ),
+			( "rendering with watermarks because ARNOLD_LICENSE_ORDER = none", IECore.Msg.Level.Warning ),
+			( "00:00:00   368MB ERROR   |  [texturesys] shader:55b3960bd4e0c6a75adc63c08ac0cb6b: Invalid image file "": ImageInput::create() called with no filename", IECore.Msg.Level.Error ),
+		] :
+			self.assertEqual( messageLevels[message], level )
+
+			# self.assertEqual( messages[i].level, level )
+			# self.assertEqual( messages[i].context, "testMessageLevels" )
+			# self.assertEqual( messages[i].message, "this is a message" )
+
 	def testShutdownDuringBackgroundDispatch( self ) :
 
 		# Launch a subprocess that will launch a very long background task,
@@ -1068,6 +1134,8 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 				if "pid" in s :
 					sys.stdout.write( "PID : {}\n".format( s["pid"] ) )
 					sys.exit( 0 )
+
+
 
 if __name__ == "__main__":
 	unittest.main()

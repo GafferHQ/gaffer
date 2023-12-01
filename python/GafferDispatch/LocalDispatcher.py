@@ -39,6 +39,7 @@ import datetime
 import enum
 import functools
 import os
+import re
 import signal
 import shlex
 import subprocess
@@ -299,6 +300,13 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			if contextArgs :
 				args.extend( [ "-context" ] + contextArgs )
 
+			# Build environment. We want to enable all Cortex message levels so
+			# we can capture everything and then let the LocalJobs UI filter
+			# it dynamically.
+
+			env = os.environ.copy()
+			env["IECORE_LOG_LEVEL"] = "DEBUG"
+
 			# Launch process.
 
 			IECore.msg( IECore.Msg.Level.Debug, batch.blindData()["nodeName"].value, "Executing `{}`".format( " ".join( args ) ) )
@@ -307,7 +315,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			process = subprocess.Popen(
 				args,
 				text = True, stdout = subprocess.PIPE, stderr = subprocess.STDOUT,
-				shell = os.name == "nt" and self.__environmentCommand,
+				shell = os.name == "nt" and self.__environmentCommand, env = env,
 				**platformKW,
 			)
 			batch.blindData()["pid"] = IECore.IntData( process.pid )
@@ -324,7 +332,8 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			def handleOutput( stream, messageContext, messageHandler ) :
 
 				for line in iter( stream.readline, "" ) :
-					messageHandler.handle( IECore.Msg.Level.Info, messageContext, line[:-1] )
+					message, level = _messageLevel( line[:-1] )
+					messageHandler.handle( level, messageContext, message )
 				stream.close()
 
 			outputHandler = threading.Thread(
@@ -518,3 +527,22 @@ class _MessageHandler( IECore.MessageHandler ) :
 			self.__messagesChangedPending = False
 
 		self.__messagesChangedSignal()
+
+__messageLevelRE = re.compile(
+	r"(DEBUG|INFO|WARNING|ERROR) +[:|] ",
+)
+
+# Uses heuristics to discern the IECore.Msg.Level for an arbitrary line of output
+# captured from a subproces, returning the message and level.
+def _messageLevel( line ) :
+
+	m = __messageLevelRE.search( line )
+	if m is not None :
+		level = IECore.Msg.Level.names[m.group(1).title()]
+		if m.start() == 0 :
+			# Level is at start of line - strip it so it's not doubled
+			# up with our own level.
+			line = line[:m.start()] + line[m.end():]
+		return line, level
+
+	return line, IECore.Msg.Level.Info
