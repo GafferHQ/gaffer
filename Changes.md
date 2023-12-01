@@ -5,6 +5,7 @@ Features
 --------
 
 - 3Delight : Added support for USD `SphereLight`, `RectLight`, `DiskLight`, `DistantLight`, `DomeLight` and `CylinderLight`.
+- RenderPassEditor : Added a new editor UI for inspecting and editing render passes.
 
 Improvements
 ------------
