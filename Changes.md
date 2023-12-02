@@ -26,6 +26,9 @@ Improvements
 - Cache : Increased default computation cache size to 8Gb. Call `Gaffer.ValuePlug.setCacheMemoryLimit()` from a startup file to override this.
 - Dispatcher : Reduced internal overhead of `dispatch()` call, with one benchmark showing around a 3x speedup.
 - ScriptWindow : Added "Save" option to dialogue shown when closing a window containing unsaved changes.
+- Resize :
+  - Added support for deep images.
+  - Added "Nearest" filter.
 - Shuffle :
   - Reimplemented to match ShuffleAttributes and ShufflePrimitiveVariables.
     - Any number of shuffles can be added using the UI.

@@ -92,13 +92,30 @@ class ResizeTest( GafferImageTest.ImageTestCase ) :
 					)
 				)
 
-	# Tests that hashes pass through when the input data is not Flat
-	def testNonFlatThrows( self ) :
+	def testDeep( self ) :
+		representativeDeepImagePath = GafferImageTest.ImageTestCase.imagesPath() / "representativeDeepImage.exr"
+
+		representativeDeepImage = GafferImage.ImageReader()
+		representativeDeepImage["fileName"].setValue( representativeDeepImagePath )
 
 		resize = GafferImage.Resize()
-		resize["format"].setValue( GafferImage.Format( imath.Box2i( imath.V2i( 0 ), imath.V2i( 1024 ) ), 1 ) )
+		resize["in"].setInput( representativeDeepImage["out"] )
+		resize["format"].setValue( GafferImage.Format( imath.Box2i( imath.V2i( 0 ), imath.V2i( 200 ) ), 1 ) )
+		resize["filterDeep"].setValue( True )
 
-		self.assertRaisesDeepNotSupported( resize )
+		flattenAfterResize = GafferImage.DeepToFlat()
+		flattenAfterResize["in"].setInput( resize["out"] )
+		flattenAfterResize['depthMode'].setValue( GafferImage.DeepToFlat.DepthMode.None_ )
+
+		flattenBefore = GafferImage.DeepToFlat()
+		flattenBefore["in"].setInput( representativeDeepImage["out"] )
+		flattenBefore['depthMode'].setValue( GafferImage.DeepToFlat.DepthMode.None_ )
+
+		resizeAfterFlatten = GafferImage.Resize()
+		resizeAfterFlatten["in"].setInput( flattenBefore["out"] )
+		resizeAfterFlatten["format"].setValue( GafferImage.Format( imath.Box2i( imath.V2i( 0 ), imath.V2i( 200 ) ), 1 ) )
+
+		self.assertImagesEqual( flattenAfterResize["out"], resizeAfterFlatten["out"], maxDifference = 3e-5 )
 
 
 	def testFit( self ) :
