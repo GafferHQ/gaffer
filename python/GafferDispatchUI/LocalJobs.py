@@ -70,6 +70,8 @@ class _LocalJobsPath( Gaffer.Path ) :
 			"localDispatcher:id",
 			"localDispatcher:jobName",
 			"localDispatcher:directory",
+			"localDispatcher:startTime",
+			"localDispatcher:runningTime",
 			"localDispatcher:cpu",
 			"localDispatcher:memory",
 		]
@@ -91,6 +93,10 @@ class _LocalJobsPath( Gaffer.Path ) :
 			return self.__job.name()
 		elif name == "localDispatcher:directory" :
 			return self.__job.directory()
+		elif name == "localDispatcher:startTime" :
+			return self.__job.startTime()
+		elif name == "localDispatcher:runningTime" :
+			return self.__job.runningTime().total_seconds()
 		elif name == "localDispatcher:cpu" :
 			stats = self.__job.statistics()
 			return "{0:.2f} %".format( stats["pcpu"] ) if "pcpu" in stats.keys() else "---"
@@ -144,6 +150,25 @@ class _StatusColumn( GafferUI.PathColumn ) :
 
 		return GafferUI.PathColumn.CellData( value = "Status" )
 
+class _RunningTimeColumn( GafferUI.PathColumn ) :
+
+	def cellData( self, path, canceller ) :
+
+		seconds = int( path.property( "localDispatcher:runningTime", canceller ) )
+
+		return GafferUI.PathColumn.CellData(
+			value = "{:02}:{:02}:{:02}".format(
+				seconds // 3600,
+				(seconds % 3600) // 60,
+				seconds % 60
+			),
+			sortValue = seconds
+		)
+
+	def headerData( self, canceller ) :
+
+		return GafferUI.PathColumn.CellData( value = "Running Time" )
+
 class LocalJobs( GafferUI.Editor ) :
 
 	def __init__( self, scriptNode, **kw ) :
@@ -163,6 +188,8 @@ class LocalJobs( GafferUI.Editor ) :
 						_StatusColumn(),
 						GafferUI.PathListingWidget.StandardColumn( "Name", "localDispatcher:jobName", sizeMode = GafferUI.PathColumn.SizeMode.Stretch ),
 						GafferUI.PathListingWidget.StandardColumn( "Id", "localDispatcher:id" ),
+						GafferUI.PathListingWidget.StandardColumn( "Start Time", "localDispatcher:startTime" ),
+						_RunningTimeColumn(),
 						GafferUI.PathListingWidget.StandardColumn( "CPU", "localDispatcher:cpu" ),
 						GafferUI.PathListingWidget.StandardColumn( "Memory", "localDispatcher:memory" ),
 					),
@@ -220,7 +247,7 @@ class LocalJobs( GafferUI.Editor ) :
 	def __visibilityChanged( self, widget ) :
 
 		if widget.visible() :
-			self.__statisticsTimer.start( 5000 )
+			self.__statisticsTimer.start( 1000 )
 		else :
 			self.__statisticsTimer.stop()
 
