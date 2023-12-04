@@ -39,6 +39,8 @@ import threading
 
 import imath
 
+import IECore
+
 import Gaffer
 import GafferUI
 import GafferDispatch
@@ -72,8 +74,8 @@ class _LocalJobsPath( Gaffer.Path ) :
 			"localDispatcher:directory",
 			"localDispatcher:startTime",
 			"localDispatcher:runningTime",
-			"localDispatcher:cpu",
-			"localDispatcher:memory",
+			"localDispatcher:cpuUsage",
+			"localDispatcher:memoryUage",
 		]
 
 	def property( self, name, canceller = None ) :
@@ -97,12 +99,10 @@ class _LocalJobsPath( Gaffer.Path ) :
 			return self.__job.startTime()
 		elif name == "localDispatcher:runningTime" :
 			return self.__job.runningTime().total_seconds()
-		elif name == "localDispatcher:cpu" :
-			stats = self.__job.statistics()
-			return "{0:.2f} %".format( stats["pcpu"] ) if "pcpu" in stats.keys() else "---"
-		elif name == "localDispatcher:memory" :
-			stats = self.__job.statistics()
-			return "{0:.2f} GB".format( stats["rss"] / 1024.0  / 1024.0 ) if "rss" in stats.keys() else "---"
+		elif name == "localDispatcher:cpuUsage" :
+			return self.__job.cpuUsage()
+		elif name == "localDispatcher:memoryUsage" :
+			return self.__job.memoryUsage()
 
 		return None
 
@@ -169,6 +169,38 @@ class _RunningTimeColumn( GafferUI.PathColumn ) :
 
 		return GafferUI.PathColumn.CellData( value = "Running Time" )
 
+class _CPUUsageColumn( GafferUI.PathColumn ) :
+
+	def cellData( self, path, canceller ) :
+
+		cpu = path.property( "localDispatcher:cpuUsage", canceller )
+
+		return GafferUI.PathColumn.CellData(
+			value = f"{cpu:.2f}" if cpu is not None else "---",
+			sortValue = cpu if cpu is not None else 0.0,
+			toolTip = "CPU usage for current batch"
+		)
+
+	def headerData( self, canceller ) :
+
+		return GafferUI.PathColumn.CellData( value = "CPU" )
+
+class _MemoryUsageColumn( GafferUI.PathColumn ) :
+
+	def cellData( self, path, canceller ) :
+
+		memory = path.property( "localDispatcher:memoryUsage", canceller )
+
+		return GafferUI.PathColumn.CellData(
+			value = "{:.2f}GB".format( memory / (1024 ** 3) ) if memory is not None else "---",
+			sortValue = IECore.UInt64Data( memory if memory is not None else 0 ),
+			toolTip = "Memory usage for current batch"
+		)
+
+	def headerData( self, canceller ) :
+
+		return GafferUI.PathColumn.CellData( value = "Memory" )
+
 class LocalJobs( GafferUI.Editor ) :
 
 	def __init__( self, scriptNode, **kw ) :
@@ -190,8 +222,8 @@ class LocalJobs( GafferUI.Editor ) :
 						GafferUI.PathListingWidget.StandardColumn( "Id", "localDispatcher:id" ),
 						GafferUI.PathListingWidget.StandardColumn( "Start Time", "localDispatcher:startTime" ),
 						_RunningTimeColumn(),
-						GafferUI.PathListingWidget.StandardColumn( "CPU", "localDispatcher:cpu" ),
-						GafferUI.PathListingWidget.StandardColumn( "Memory", "localDispatcher:memory" ),
+						_CPUUsageColumn(),
+						_MemoryUsageColumn(),
 					),
 					selectionMode = GafferUI.PathListingWidget.SelectionMode.Rows,
 				)

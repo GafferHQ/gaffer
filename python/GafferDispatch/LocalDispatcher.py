@@ -47,6 +47,8 @@ import threading
 import time
 import traceback
 
+import psutil
+
 import IECore
 
 import Gaffer
@@ -105,7 +107,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 			self.__statusChangedSignal = Gaffer.Signal1()
 
-			self.__currentBatch = None
+			self.__currentProcess = None
 			self.__status = self.Status.Waiting
 			self.__backgroundTask = None
 
@@ -140,42 +142,29 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			else :
 				return datetime.datetime.now() - self.__startTime
 
-		def statistics( self ) :
+		def processID( self ) :
 
-			batch = self.__currentBatch
-			if batch is None :
-				return {}
+			return self.__currentProcess.pid if self.__currentProcess is not None else None
 
-			pid = batch.blindData().get( "pid" )
-			if pid is None :
-				return {}
+		def memoryUsage( self ) :
 
-			result = { "pid" : pid }
+			if self.__currentProcess is None :
+				return None
 
-			## \todo Figure out how to query memory and CPU usage on Windows.
-			# One way would be the `psutil` module, but that would mean another
-			# dependency.
-			if os.name != "nt" :
-				try :
-					stats = subprocess.check_output(
-						[ "ps", "-Ao", "pid,ppid,pgid,sess,pcpu,rss" ],
-						universal_newlines = True,
-					).split()
-					rss = 0
-					pcpu = 0.0
-					for i in range( 0, len(stats), 6 ) :
-						if str( pid ) in stats[i:i+4] :
-							pcpu += float(stats[i+4])
-							rss += float(stats[i+5])
-					result["rss"] = rss
-					result["pcpu"] = pcpu
-				except subprocess.CalledProcessError :
-					# Most likely explanation is that our PID is no longer
-					# valid because the current batch just completed. So
-					# return empty stats, not even including the PID.
-					return {}
+			try :
+				return self.__currentProcess.memory_info().rss
+			except psutil.NoSuchProcess :
+				return None
 
-			return result
+		def cpuUsage( self ) :
+
+			if self.__currentProcess is None :
+				return None
+
+			try :
+				return self.__currentProcess.cpu_percent()
+			except psutil.NoSuchProcess :
+				return None
 
 		def status( self ) :
 
@@ -254,7 +243,6 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			)
 
 			try :
-				self.__currentBatch = batch
 				startTime = time.perf_counter()
 				self.__executeBatch( batch, canceller )
 				IECore.msg(
@@ -272,8 +260,6 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 					f"Execution failed for {frames}"
 				)
 				raise e
-			finally :
-				self.__currentBatch = None
 
 		def __executeBatch( self, batch, canceller ) :
 
@@ -326,7 +312,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 				shell = os.name == "nt" and self.__environmentCommand, env = env,
 				**platformKW,
 			)
-			batch.blindData()["pid"] = IECore.IntData( process.pid )
+			self.__currentProcess = psutil.Process( process.pid )
 
 			# Launch a thread to monitor the output stream and feed it into a
 			# our message handler. We must do this on a thread because reading
@@ -354,28 +340,32 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			# Wait for the process to complete, killing it if cancellation
 			# is requested in the meantime.
 
-			while process.poll() is None :
+			try :
 
-				if canceller is not None and canceller.cancelled() :
-					if os.name == "nt" :
-						subprocess.check_call(
-							[ "TASKKILL", "/F", "/PID", str( process.pid ), "/T" ],
-							stdout = subprocess.DEVNULL
-						)
-					else :
-						os.killpg( process.pid, signal.SIGTERM )
-					outputHandler.join()
-					raise IECore.Cancelled()
+				while process.poll() is None :
 
-				time.sleep( 0.01 )
+					if canceller is not None and canceller.cancelled() :
+						if os.name == "nt" :
+							subprocess.check_call(
+								[ "TASKKILL", "/F", "/PID", str( process.pid ), "/T" ],
+								stdout = subprocess.DEVNULL
+							)
+						else :
+							os.killpg( process.pid, signal.SIGTERM )
+						raise IECore.Cancelled()
 
-			outputHandler.join()
+					time.sleep( 0.01 )
 
-			if process.returncode :
-				raise subprocess.CalledProcessError(
-					process.returncode,
-					" ".join( args )
-				)
+				if process.returncode :
+					raise subprocess.CalledProcessError(
+						process.returncode,
+						" ".join( args )
+					)
+
+			finally :
+
+				self.__currentProcess = None
+				outputHandler.join()
 
 		def __initBatchWalk( self, batch ) :
 

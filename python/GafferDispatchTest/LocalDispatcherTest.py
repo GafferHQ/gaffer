@@ -1131,9 +1131,9 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 			# Wait for background task to start, print its PID
 			# to `stdout` and then exit.
 			while True :
-				s = dispatcher.jobPool().jobs()[-1].statistics()
-				if "pid" in s :
-					sys.stdout.write( "PID : {}\n".format( s["pid"] ) )
+				pid = dispatcher.jobPool().jobs()[-1].processID()
+				if pid is not None :
+					sys.stdout.write( f"PID : {pid}\n" )
 					sys.exit( 0 )
 
 	def testRunningTime( self ) :

@@ -32,6 +32,7 @@ API
   - Added `Job.status()` and `Job.statusChangedSignal()` methods.
   - Added `Job.messages()` and `Job.messagesChangedSignal()` methods.
   - Added `Job.frameRange()`, `Job.environmentCommand()` and `Job.startTime()` methods.
+  - Added `Job.cpuUsage()` and `Job.memoryUsage()` methods.
   - Added `JobPool.addJob()` and `JobPool.removeJob()` methods.
 - GafferTractor : Added `tractorAPI()` method used for accessing the `tractor.api.author` module.
 - GafferTractorTest : Added `tractorAPI()` method which returns a mock API if Tractor is not available. This allows the GafferTractor module to be tested without Tractor being installed.
@@ -58,6 +59,7 @@ Breaking Changes
   - Removed `Job.execute()` method. This should not have been public.
   - Removed `Job.messageHandler()` method. Use `Job.messages()` instead.
   - Removed `Job.description()` method.
+  - Removed `Job.statistics()` method. Use `Job.memoryUsage()` and `Job.cpuUsage()` instead.
   - JobPool no longer derives from RunTimeTyped.
 - LocalDispatcherUI : Removed `appendMenuDefinitions()` function.
 - Process : Removed non-const variant of the `handleException()` method.
