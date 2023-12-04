@@ -339,11 +339,14 @@ QVariant dataToVariant( const IECore::Data *value, int role )
 struct CellVariants
 {
 
+	static constexpr Qt::ItemDataRole SortRole = Qt::UserRole;
+
 	CellVariants( const GafferUI::PathColumn::CellData &cellData )
 		:	m_display( dataToVariant( cellData.value.get(), Qt::DisplayRole ) ),
 			m_decoration( dataToVariant( cellData.icon.get(), Qt::DecorationRole ) ),
 			m_background( dataToVariant( cellData.background.get(), Qt::BackgroundRole ) ),
-			m_toolTip( dataToVariant( cellData.toolTip.get(), Qt::ToolTipRole ) )
+			m_toolTip( dataToVariant( cellData.toolTip.get(), Qt::ToolTipRole ) ),
+			m_sort( dataToVariant( cellData.sortValue.get(), SortRole ) )
 	{
 	}
 
@@ -363,6 +366,8 @@ struct CellVariants
 				return m_background;
 			case Qt::ToolTipRole :
 				return m_toolTip;
+			case SortRole :
+				return m_sort.isNull() ? m_display : m_sort;
 			default :
 				return QVariant();
 		}
@@ -384,6 +389,7 @@ struct CellVariants
 		QVariant m_decoration;
 		QVariant m_background;
 		QVariant m_toolTip;
+		QVariant m_sort;
 
 };
 
@@ -1275,7 +1281,7 @@ class PathModel : public QAbstractItemModel
 					{
 						return QVariant();
 					}
-					return data[model->m_sortColumn].variant( Qt::DisplayRole );
+					return data[model->m_sortColumn].variant( CellVariants::SortRole );
 				}
 
 				// Updates data and returns the value that should be used for sorting.

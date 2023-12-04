@@ -27,6 +27,7 @@ Fixes
 API
 ---
 
+- PathColumn : Added `CellData::sortValue` member, to provide additional control over sorting in the PathListingWidget.
 - LocalDispatcher :
   - Added `Job.status()` and `Job.statusChangedSignal()` methods.
   - Added `Job.messages()` and `Job.messagesChangedSignal()` methods.
