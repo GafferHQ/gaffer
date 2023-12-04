@@ -73,10 +73,12 @@ class GAFFERSCENEUI_API LightPositionTool : public GafferSceneUI::TransformTool
 		struct TranslationRotation
 		{
 
-			TranslationRotation( const Selection &selection );
+			TranslationRotation( const Selection &selection, Orientation orientation );
 
-			bool canApply() const;
-			void apply( const Imath::V3f &tranlation, const Imath::Eulerf &rotation );
+			bool canApplyTranslation() const;
+			bool canApplyRotation( const Imath::V3i &axisMask ) const;
+			void applyTranslation( const Imath::V3f &translation );
+			void applyRotation( const Imath::Eulerf &rotation );
 
 			private :
 
@@ -90,6 +92,10 @@ class GAFFERSCENEUI_API LightPositionTool : public GafferSceneUI::TransformTool
 				mutable std::optional<Imath::Eulerf> m_originalRotation;  // Radians
 
 		};
+
+		IECore::RunTimeTypedPtr handleDragBegin();
+		bool handleDragMove( GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event );
+		bool handleDragEnd();
 
 		bool keyPress( const GafferUI::KeyEvent &event );
 		bool keyRelease( const GafferUI::KeyEvent &event );
@@ -119,6 +125,9 @@ class GAFFERSCENEUI_API LightPositionTool : public GafferSceneUI::TransformTool
 		std::optional<float> getShadowPivotDistance() const;
 
 		TargetMode m_targetMode;
+
+		std::optional<TranslationRotation> m_drag;
+		float m_startShadowPivotDistance;
 
 		GafferUI::HandlePtr m_shadowHandle;
 

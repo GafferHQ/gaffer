@@ -378,6 +378,11 @@ class ShadowHandle : public Handle
 			return m_pivotDistance;
 		}
 
+		V3f translation( const DragDropEvent &event )
+		{
+			return V3f( 0, 0, m_drag.updatedPosition( event ) - m_drag.startPosition() );
+		}
+
 	protected :
 
 		void renderHandle( const Style *style, Style::State state ) const override
@@ -499,6 +504,12 @@ class ShadowHandle : public Handle
 
 		void dragBegin( const DragDropEvent &event ) override
 		{
+			m_drag = LinearDrag( this, LineSegment3f( V3f( 0 ), V3f( 0, 0, 1 ) ), event );
+			std::optional<float> pivotDistance = getPivotDistance();
+
+			assert( pivotDistance );
+
+			m_startDistance = pivotDistance.value();
 		}
 
 	private :
@@ -506,6 +517,9 @@ class ShadowHandle : public Handle
 		std::optional<V3f> m_shadowPivot;
 		std::optional<V3f> m_shadowTarget;
 		std::optional<float> m_pivotDistance;
+
+		LinearDrag m_drag;
+		float m_startDistance;
 
 };
 
@@ -523,6 +537,9 @@ LightPositionTool::LightPositionTool( SceneView *view, const std::string &name )
 	m_shadowHandle = new ShadowHandle();
 	m_shadowHandle->setRasterScale( 0 );
 	handles()->setChild( "shadowHandle", m_shadowHandle );
+	m_shadowHandle->dragBeginSignal().connectFront( boost::bind( &LightPositionTool::handleDragBegin, this ) );
+	m_shadowHandle->dragMoveSignal().connect( boost::bind( &LightPositionTool::handleDragMove, this, ::_1, ::_2 ) );
+	m_shadowHandle->dragEndSignal().connect( boost::bind( &LightPositionTool::handleDragEnd, this ) );
 
 	SceneGadget *sg = runTimeCast<SceneGadget>( this->view()->viewportGadget()->getPrimaryChild() );
 	sg->keyPressSignal().connect( boost::bind( &LightPositionTool::keyPress, this, ::_2 ) );
@@ -576,7 +593,10 @@ void LightPositionTool::position( const V3f &shadowPivot, const V3f &shadowTarge
 	const V3f p = V3f( 0 ) * s.orientedTransform( Orientation::World );
 	const V3f offset = newP - p;
 
-	TranslationRotation( s ).apply( offset, relativeRotation );
+	TranslationRotation trTranslate( s, Orientation::World );
+	trTranslate.applyTranslation( offset );
+	TranslationRotation trRotate( s, Orientation::Parent );
+	trRotate.applyRotation( relativeRotation );
 }
 
 bool LightPositionTool::affectsHandles( const Gaffer::Plug *input ) const
@@ -595,9 +615,19 @@ void LightPositionTool::updateHandles( float rasterScale )
 
 	handles()->setTransform( s.orientedTransform( Orientation::Local ) );
 
-	m_shadowHandle->setEnabled( selection().size() == 1 && TranslationRotation( s ).canApply() );
+	if( !m_drag )
+	{
+		bool singleSelection = selection().size() == 1;
 
-	m_shadowHandle->setRasterScale( 0 );
+		TranslationRotation trShadowHandle( s, Orientation::World );
+		m_shadowHandle->setEnabled(
+			singleSelection &&
+			trShadowHandle.canApplyTranslation() &&
+			trShadowHandle.canApplyRotation( V3i( 1, 1, 1 ) )
+		);
+
+		m_shadowHandle->setRasterScale( 0 );
+	}
 
 	auto shadowHandle = static_cast<ShadowHandle *>( m_shadowHandle.get() );
 
@@ -626,8 +656,11 @@ void LightPositionTool::updateHandles( float rasterScale )
 	worldTransform.multDirMatrix( V3f( 0, 0, -1.f ), direction );
 
 	if(
-		!direction.equalWithAbsError( ( shadowTarget.value() - shadowPivot.value() ).normalized(), 1e-4 ) ||
-		handleLine.distanceTo( p ) > shadowHandle->getPivotDistance().value() * 1e-4
+		!m_drag &&
+		(
+			!direction.equalWithAbsError( ( shadowTarget.value() - shadowPivot.value() ).normalized(), 1e-4 ) ||
+			handleLine.distanceTo( p ) > shadowHandle->getPivotDistance().value() * 1e-4
+		)
 	)
 	{
 		shadowHandle->setShadowPivot( std::nullopt );
@@ -639,8 +672,42 @@ void LightPositionTool::updateHandles( float rasterScale )
 		m_shadowPivotMap.erase( p );
 		m_shadowPivotDistanceMap.erase( p );
 	}
+	else
+	{
+		setShadowPivotDistance( ( p - shadowPivot.value() ).length() );
+	}
+}
 
-	shadowHandle->setPivotDistance( ( p - shadowPivot.value() ).length() );
+IECore::RunTimeTypedPtr LightPositionTool::handleDragBegin()
+{
+	m_drag.emplace( selection().back(), Orientation::Local );
+	assert( getShadowPivotDistance() );
+	m_startShadowPivotDistance = getShadowPivotDistance().value();
+
+	TransformTool::dragBegin();
+
+	return nullptr;  // let the handle start the drag with the event system
+}
+
+bool LightPositionTool::handleDragMove( Gadget *gadget, const DragDropEvent &event )
+{
+	UndoScope undoScope( selection().back().editTarget()->ancestor<ScriptNode>(), UndoScope::Enabled, undoMergeGroup() );
+
+	const auto shadowHandle = static_cast<ShadowHandle *>( m_shadowHandle.get() );
+
+	V3f t = shadowHandle->translation( event );
+	t.z = std::max( -m_startShadowPivotDistance, t.z );
+
+	m_drag.value().applyTranslation( t );
+
+	return true;
+}
+
+bool LightPositionTool::handleDragEnd()
+{
+	TransformTool::dragEnd();
+	m_drag = std::nullopt;
+	return false;
 }
 
 bool LightPositionTool::keyPress( const KeyEvent &event )
@@ -872,17 +939,17 @@ std::optional<float> LightPositionTool::getShadowPivotDistance() const
 /// `TranslateTool` and `RotateTool` or very close. Do they belong
 /// in a `TransformToolAlgo` or something similar?
 
-LightPositionTool::TranslationRotation::TranslationRotation( const Selection &selection )
+LightPositionTool::TranslationRotation::TranslationRotation( const Selection &selection, Orientation orientation )
 	: m_selection( selection )
 {
-	const M44f handleRotationXform = selection.orientedTransform( Orientation::World );
+	const M44f handleRotationXform = selection.orientedTransform( orientation );
 	m_gadgetToRotationXform = handleRotationXform * selection.sceneToTransformSpace();
 
-	const M44f handleTranslateXform = selection.orientedTransform( Orientation::Parent );
+	const M44f handleTranslateXform = selection.orientedTransform( orientation );
 	m_gadgetToTranslationXform = handleTranslateXform * selection.sceneToTransformSpace();
 }
 
-bool LightPositionTool::TranslationRotation::canApply() const
+bool LightPositionTool::TranslationRotation::canApplyTranslation() const
 {
 	auto edit = m_selection.acquireTransformEdit( /* createIfNecessary = */ false );
 	if( !edit )
@@ -893,10 +960,7 @@ bool LightPositionTool::TranslationRotation::canApply() const
 
 	for( int i = 0; i < 3; ++i )
 	{
-		if(
-			!canSetValueOrAddKey( edit->translate->getChild( i ) ) ||
-			!canSetValueOrAddKey( edit->rotate->getChild( i ) )
-		)
+		if( !canSetValueOrAddKey( edit->translate->getChild( i ) ) )
 		{
 			return false;
 		}
@@ -905,7 +969,34 @@ bool LightPositionTool::TranslationRotation::canApply() const
 	return true;
 }
 
-void LightPositionTool::TranslationRotation::apply( const V3f &translation, const Eulerf &rotation )
+bool LightPositionTool::TranslationRotation::canApplyRotation( const V3i &axisMask ) const
+{
+	auto edit = m_selection.acquireTransformEdit( /* createIfNecessary = */ false );
+	if( !edit )
+	{
+		// Edit will be created on demand in `apply()`.
+		return !MetadataAlgo::readOnly( m_selection.editTarget() );
+	}
+
+	Imath::V3f current;
+	const Imath::V3f updated = updatedRotateValue( edit->rotate.get(), V3f( axisMask ), &current );
+	for( int i = 0; i < 3; ++i )
+	{
+		if( updated[i] == current[i] )
+		{
+			continue;
+		}
+
+		if( !canSetValueOrAddKey( edit->rotate->getChild( i ) ) )
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
+void LightPositionTool::TranslationRotation::applyTranslation( const V3f &translation )
 {
 	V3fPlug *translatePlug = m_selection.acquireTransformEdit()->translate.get();
 	if( !m_originalTranslation )
@@ -917,9 +1008,6 @@ void LightPositionTool::TranslationRotation::apply( const V3f &translation, cons
 	V3f offsetInTransformSpace;
 	m_gadgetToTranslationXform.multDirMatrix( translation, offsetInTransformSpace );
 
-	V3fPlug *rotatePlug = m_selection.acquireTransformEdit()->rotate.get();
-
-	const Imath::V3f e = updatedRotateValue( rotatePlug, rotation );
 	for( int i = 0; i < 3; ++i )
 	{
 		FloatPlug *pTranslate = translatePlug->getChild( i );
@@ -927,7 +1015,15 @@ void LightPositionTool::TranslationRotation::apply( const V3f &translation, cons
 		{
 			setValueOrAddKey( pTranslate, m_selection.context()->getTime(), (*m_originalTranslation)[i] + offsetInTransformSpace[i] );
 		}
+	}
+}
 
+void LightPositionTool::TranslationRotation::applyRotation( const Eulerf &rotation )
+{
+	V3fPlug *rotatePlug = m_selection.acquireTransformEdit()->rotate.get();
+	const Imath::V3f e = updatedRotateValue( rotatePlug, rotation );
+	for( int i = 0; i < 3; ++i )
+	{
 		FloatPlug *pRotate = rotatePlug->getChild( i );
 		if( canSetValueOrAddKey( pRotate ) )
 		{
@@ -938,8 +1034,6 @@ void LightPositionTool::TranslationRotation::apply( const V3f &translation, cons
 
 V3f LightPositionTool::TranslationRotation::updatedRotateValue( const V3fPlug *rotatePlug, const Eulerf &rotation, V3f *currentValue ) const
 {
-	// Duplicated verbatim from `RotateTool::Rotation::updatedRotateValue()`
-
 	if( !m_originalRotation )
 	{
 		Context::Scope scopedContext( m_selection.context() );
