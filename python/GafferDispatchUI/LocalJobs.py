@@ -129,6 +129,21 @@ class _LocalJobsPath( Gaffer.Path ) :
 
 		return result
 
+class _StatusColumn( GafferUI.PathColumn ) :
+
+	def cellData( self, path, canceller ) :
+
+		status = path.property( "localDispatcher:status", canceller )
+		return GafferUI.PathColumn.CellData(
+			icon = f"localDispatcherStatus{status}.png",
+			toolTip = status,
+			sortValue = int( GafferDispatch.LocalDispatcher.Job.Status[status] )
+		)
+
+	def headerData( self, canceller ) :
+
+		return GafferUI.PathColumn.CellData( value = "Status" )
+
 class LocalJobs( GafferUI.Editor ) :
 
 	def __init__( self, scriptNode, **kw ) :
@@ -145,7 +160,7 @@ class LocalJobs( GafferUI.Editor ) :
 				self.__jobListingWidget = GafferUI.PathListingWidget(
 					_LocalJobsPath( jobPool ),
 					columns = (
-						GafferUI.PathListingWidget.IconColumn( "Status", "localDispatcherStatus", "localDispatcher:status" ),
+						_StatusColumn(),
 						GafferUI.PathListingWidget.StandardColumn( "Name", "localDispatcher:jobName", sizeMode = GafferUI.PathColumn.SizeMode.Stretch ),
 						GafferUI.PathListingWidget.StandardColumn( "Id", "localDispatcher:id" ),
 						GafferUI.PathListingWidget.StandardColumn( "CPU", "localDispatcher:cpu" ),
