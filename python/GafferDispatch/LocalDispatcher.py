@@ -95,6 +95,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			self.__executeInBackground = dispatcher["executeInBackground"].getValue()
 
 			self.__startTime = datetime.datetime.now()
+			self.__endTime = None
 
 			self.__messageHandler = _MessageHandler()
 			self.__messagesChangedSignal = Gaffer.Signal1()
@@ -131,6 +132,13 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 		def startTime( self ) :
 
 			return self.__startTime
+
+		def runningTime( self ) :
+
+			if self.__endTime is not None :
+				return self.__endTime - self.__startTime
+			else :
+				return datetime.datetime.now() - self.__startTime
 
 		def statistics( self ) :
 
@@ -386,6 +394,9 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 		def __updateStatus( self, status ) :
 
 			self.__status = status
+
+			if status in ( self.Status.Complete, self.Status.Failed, self.Status.Killed ) :
+				self.__endTime = datetime.datetime.now()
 
 			if threading.current_thread() is threading.main_thread() :
 				self.__emitStatusChanged()

@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import datetime
 import errno
 import os
 import stat
@@ -1135,7 +1136,25 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 					sys.stdout.write( "PID : {}\n".format( s["pid"] ) )
 					sys.exit( 0 )
 
+	def testRunningTime( self ) :
 
+		script = Gaffer.ScriptNode()
+		script["command"] = GafferDispatch.PythonCommand()
+		script["command"]["command"].setValue( inspect.cleandoc(
+			"""
+			import time
+			time.sleep( 0.5 )
+			"""
+		) )
+
+		dispatcher = self.__createLocalDispatcher()
+		dispatcher["executeInBackground"].setValue( True )
+		dispatcher.dispatch( [ script["command"] ] )
+		dispatcher.jobPool().waitForAll()
+
+		runningTime = dispatcher.jobPool().jobs()[0].runningTime()
+		self.assertGreaterEqual( runningTime, datetime.timedelta( seconds = 0.5 ) )
+		self.assertEqual( dispatcher.jobPool().jobs()[0].runningTime(), runningTime )
 
 if __name__ == "__main__":
 	unittest.main()
