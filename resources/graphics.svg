@@ -1637,6 +1637,29 @@
            id="rect8084-2" /></flowRegion><flowPara
          style="font-size:16px;fill:#f4f4f4;fill-opacity:1;stroke-width:1.00000381"
          id="flowPara8088-1">SetEditor</flowPara></flowRoot>
+    <path
+       style="display:inline;opacity:1;fill:none;stroke:#ffffff;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="M -5.8202246,2879.2996 H 744.17977"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cc"
+       inkscape:label="hr1"
+       id="path7" />
+    <flowRoot
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:24px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;display:inline;opacity:1;fill:#f4f4f4;fill-opacity:1;stroke:none;stroke-width:1"
+       transform="matrix(1,0,0,1.0000138,288.28134,1866.3792)"
+       inkscape:label="docTitle"
+       id="flowRoot7"><flowRegion
+         style="font-size:24px;fill:#f4f4f4;fill-opacity:1;stroke-width:1"
+         id="flowRegion7"><rect
+           width="343.75"
+           height="54.25"
+           x="-295"
+           y="983"
+           style="font-size:24px;fill:#f4f4f4;fill-opacity:1;stroke-width:1.00000381"
+           id="rect7" /></flowRegion><flowPara
+         style="font-size:16px;fill:#f4f4f4;fill-opacity:1;stroke-width:1"
+         id="flowPara7">RenderPassEditor</flowPara></flowRoot>
   </g>
   <g
      id="layer4"
@@ -3176,6 +3199,51 @@
        id="path2293"
        d="m 224,2624.5 h -3.5 v -3.5"
        style="fill:none;stroke:url(#foreground);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1" />
+    <g
+       id="g17"
+       inkscape:label="RenderPassEditor"
+       transform="translate(0,107)">
+      <rect
+         inkscape:label="renderPassIcon"
+         style="display:inline;opacity:0.1;fill:none;fill-opacity:1;stroke:none;stroke-width:0.597614;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173;stroke-opacity:1;paint-order:markers stroke fill"
+         width="16"
+         height="16"
+         x="30"
+         y="2776"
+         id="renderPass" />
+      <rect
+         id="disabledRenderPass"
+         y="2776"
+         x="50"
+         height="16"
+         width="16"
+         style="display:inline;opacity:0.1;fill:none;fill-opacity:1;stroke:none;stroke-width:0.597614;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173;stroke-opacity:1;paint-order:markers stroke fill"
+         inkscape:label="disabledRenderPassIcon" />
+      <rect
+         id="renderPassFolder"
+         y="2776"
+         x="70"
+         height="16"
+         width="16"
+         style="display:inline;opacity:0.1;fill:none;fill-opacity:1;stroke:none;stroke-width:0.597614;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173;stroke-opacity:1;paint-order:markers stroke fill"
+         inkscape:label="renderPassFolderIcon" />
+      <rect
+         id="activeRenderPass"
+         y="2776"
+         x="90"
+         height="16"
+         width="16"
+         style="display:inline;opacity:0.1;fill:none;fill-opacity:1;stroke:none;stroke-width:0.597614;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173;stroke-opacity:1;paint-order:markers stroke fill"
+         inkscape:label="activeRenderPassIcon" />
+      <rect
+         id="activeRenderPassFadedHighlighted"
+         y="2776"
+         x="110"
+         height="16"
+         width="16"
+         style="display:inline;opacity:0.1;fill:none;fill-opacity:1;stroke:none;stroke-width:0.597614;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173;stroke-opacity:1;paint-order:markers stroke fill"
+         inkscape:label="activeRenderPassFadedHighlightedIcon" />
+    </g>
   </g>
   <g
      inkscape:label="Artwork"
@@ -9566,6 +9634,102 @@
            cx="53.141415"
            id="circle7867"
            style="display:inline;opacity:1;fill:#cccccc;fill-opacity:1;stroke:#3c3c3c;stroke-width:1;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
+      </g>
+    </g>
+    <g
+       id="g13"
+       inkscape:label="RenderPassEditor"
+       transform="translate(0,159.23177)">
+      <rect
+         id="rect8"
+         y="2776.1304"
+         x="9.9351273"
+         height="16"
+         width="16"
+         style="display:inline;opacity:1;fill:url(#boundsTemplate);fill-opacity:1;stroke:none;stroke-width:0.597614;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173;stroke-opacity:1;paint-order:markers stroke fill"
+         inkscape:label="sizeGuide" />
+      <g
+         style="fill:url(#backgroundLight);fill-opacity:1"
+         inkscape:label="disabledRenderPass"
+         id="g8"
+         transform="translate(-0.036244,0.12970317)">
+        <rect
+           style="display:inline;fill:url(#backgroundLight);stroke:#3d3d3d;stroke-width:1;stroke-linejoin:miter;stroke-dasharray:none"
+           id="rect13-7"
+           width="11"
+           height="7"
+           x="52.537006"
+           y="2782.4839" />
+        <rect
+           style="display:inline;fill:url(#backgroundLight);stroke:#3d3d3d;stroke-width:1;stroke-linejoin:miter;stroke-dasharray:none"
+           id="rect14-0"
+           width="11"
+           height="2.5"
+           x="52.536243"
+           y="2779.0571" />
+      </g>
+      <g
+         id="g9"
+         inkscape:label="renderPassFolder"
+         style="fill:url(#backgroundLight);fill-opacity:1"
+         transform="matrix(0.99889295,0,0,1.0166942,0.0863502,-46.342392)">
+        <rect
+           style="opacity:1;fill:url(#backgroundLight);fill-opacity:1;stroke:#3d3d3d;stroke-width:1.08437;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           id="rect9"
+           width="2.4712856"
+           height="12.867659"
+           x="1830.3557"
+           y="3283.8118"
+           transform="matrix(1,0,-0.53296674,0.84613619,0,0)"
+           ry="0" />
+      </g>
+      <g
+         inkscape:label="renderPass"
+         id="g12"
+         style="fill:#cccccc;fill-opacity:1"
+         transform="translate(-15.135344,-0.81469727)">
+        <rect
+           style="display:inline;fill:#cccccc;fill-opacity:0.992157;stroke:#3d3d3d;stroke-width:1;stroke-linejoin:miter;stroke-dasharray:none"
+           id="rect13"
+           width="11"
+           height="7"
+           x="47.635345"
+           y="2783.4512"
+           rx="0" />
+        <rect
+           style="display:inline;fill:#cccccc;fill-opacity:0.992157;stroke:#3d3d3d;stroke-width:1.00692315;stroke-linejoin:miter;stroke-dasharray:none"
+           id="rect14"
+           width="11.162248"
+           height="2.3981025"
+           x="-59.454838"
+           y="2788.3389"
+           transform="matrix(-0.98629618,0.1649844,0,1,0,0)"
+           inkscape:label="rect14"
+           rx="0" />
+      </g>
+      <g
+         transform="translate(43.820791,-0.81469727)"
+         inkscape:label="activeRenderPass"
+         id="g18"
+         style="fill:#cccccc;fill-opacity:1">
+        <circle
+           r="5.5"
+           cy="2784.9451"
+           cx="54.179211"
+           id="circle6245-3"
+           style="display:inline;vector-effect:none;fill:#54ad5e;fill-opacity:1;fill-rule:nonzero;stroke:#3c3c3c;stroke-width:1.00157;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal" />
+      </g>
+      <g
+         transform="translate(61.820791,-0.81469727)"
+         inkscape:label="activeRenderPassFadedHighlighted"
+         id="g20"
+         style="fill:#cccccc;fill-opacity:1">
+        <circle
+           r="5.5"
+           cy="2784.9451"
+           cx="56.179211"
+           id="circle6253-6"
+           style="display:inline;vector-effect:none;fill:#54ad5e;fill-opacity:0.4;fill-rule:nonzero;stroke:#779cbd;stroke-width:1.00157;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:normal" />
       </g>
     </g>
     <g
