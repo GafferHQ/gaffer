@@ -1334,6 +1334,22 @@ class AttributeQueryTest( GafferSceneTest.SceneTestCase ):
 
 		self.assertEqual( q["value"].getValue(), v.attributes()["test:shader"] )
 
+	def testQueryDoubleData( self ) :
+
+		sphere = GafferScene.Sphere()
+
+		attributes = GafferScene.CustomAttributes()
+		attributes["in"].setInput( sphere["out"] )
+		attributes["extraAttributes"].setValue( IECore.CompoundObject( { "test" : IECore.DoubleData( 2.5 ) } ) )
+
+		query = GafferScene.AttributeQuery()
+		query.setup( Gaffer.FloatPlug() )
+		query["scene"].setInput( attributes["out"] )
+		query["location"].setValue( "/sphere" )
+		query["attribute"].setValue( "test" )
+
+		self.assertTrue( query["exists"].getValue() )
+		self.assertEqual( query["value"].getValue(), 2.5 )
 
 if __name__ == "__main__":
 	unittest.main()
