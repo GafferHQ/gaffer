@@ -1070,5 +1070,34 @@ class PlugAlgoTest( GafferTest.TestCase ) :
 			).isSame( node2["product"] )
 		)
 
+	def testNumericDataConversions( self ) :
+
+		for data in [
+			IECore.HalfData( 2.5 ),
+			IECore.DoubleData( 2.5 ),
+			IECore.CharData( "a" ),
+			IECore.UCharData( 11 ),
+			IECore.ShortData( -101 ),
+			IECore.UShortData( 102 ),
+			IECore.UIntData( 405 ),
+			IECore.Int64Data( -1001 ),
+			IECore.UInt64Data( 1002 ),
+		] :
+
+			for plugType in [
+				Gaffer.IntPlug,
+				Gaffer.FloatPlug,
+				Gaffer.BoolPlug,
+			] :
+
+				with self.subTest( data = data, plugType = plugType ) :
+
+					plug = plugType()
+					self.assertTrue( Gaffer.PlugAlgo.canSetValueFromData( plug, data ) )
+
+					Gaffer.PlugAlgo.setValueFromData( plug, data )
+					value = ord( data.value ) if isinstance( data, IECore.CharData ) else data.value
+					self.assertEqual( plug.getValue(), plugType.ValueType( value ) )
+
 if __name__ == "__main__":
 	unittest.main()
