@@ -1261,5 +1261,29 @@ class TranslateToolTest( GafferUITest.TestCase ) :
 			self.assertEqual( script["editScope"]["out"].transform( "/cube1" ).translation(), imath.V3f( 10, 0, 0 ) )
 			self.assertEqual( script["editScope"]["out"].transform( "/cube2" ).translation(), imath.V3f( 10, 0, 0 ) )
 
+	def testIndividualComponentConnections( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["box"] = Gaffer.Box()
+		script["box"]["cube"] = GafferScene.Cube()
+
+		promotedX = Gaffer.PlugAlgo.promote( script["box"]["cube"]["transform"]["translate"]["x"] )
+		promotedY = Gaffer.PlugAlgo.promote( script["box"]["cube"]["transform"]["translate"]["y"] )
+		promotedZ = Gaffer.PlugAlgo.promote( script["box"]["cube"]["transform"]["translate"]["z"] )
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["box"]["cube"]["out"] )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/cube" ] ) )
+
+		tool = GafferSceneUI.TranslateTool( view )
+		tool["active"].setValue( True )
+
+		tool.translate( imath.V3f( 1, 2, 3 ) )
+		self.assertEqual( script["box"]["cube"]["transform"]["translate"].getValue(), imath.V3f( 1, 2, 3 ) )
+		self.assertEqual( promotedX.getValue(), 1 )
+		self.assertEqual( promotedY.getValue(), 2 )
+		self.assertEqual( promotedZ.getValue(), 3 )
+
 if __name__ == "__main__":
 	unittest.main()

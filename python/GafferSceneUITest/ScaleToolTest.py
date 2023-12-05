@@ -175,5 +175,48 @@ class ScaleToolTest( GafferUITest.TestCase ) :
 
 		self.assertEqual( tool.handlesTransform(), imath.M44f().translate( cubeTranslate ) )
 
+	def testEditIndividualPromotedAxis( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["box"] = Gaffer.Box()
+
+		script["box"]["sphere"] = GafferScene.Sphere()
+		promoted = Gaffer.PlugAlgo.promote( script["box"]["sphere"]["transform"]["scale"]["y"] )
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["box"]["sphere"]["out"] )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/sphere" ] ) )
+
+		tool = GafferSceneUI.ScaleTool( view )
+		tool["active"].setValue( True )
+
+		tool.scale( imath.V3f( 10 ) )
+		self.assertEqual( script["box"]["sphere"]["transform"]["scale"].getValue(), imath.V3f( 10 ) )
+		self.assertEqual( promoted.getValue(), 10 )
+
+	def testGangedPlugs( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["sphere"] = GafferScene.Sphere()
+		script["sphere"]["transform"]["scale"].gang()
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["sphere"]["out"] )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/sphere" ] ) )
+
+		tool = GafferSceneUI.ScaleTool( view )
+		tool["active"].setValue( True )
+
+		self.assertEqual( tool.handlesTransform(), imath.M44f() )
+		self.assertTrue( view.viewportGadget()["HandlesGadget"]["x"].getEnabled() )
+		self.assertFalse( view.viewportGadget()["HandlesGadget"]["y"].getEnabled() )
+		self.assertFalse( view.viewportGadget()["HandlesGadget"]["z"].getEnabled() )
+
+		tool.scale( imath.V3f( 10 ) )
+		self.assertEqual( script["sphere"]["transform"]["scale"].getValue(), imath.V3f( 10 ) )
+
 if __name__ == "__main__":
 	unittest.main()
