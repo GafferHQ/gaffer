@@ -34,6 +34,10 @@
 #
 ##########################################################################
 
+import imath
+
+import IECore
+
 import Gaffer
 import GafferUI
 import GafferSceneUI
@@ -50,5 +54,7 @@ Gaffer.Metadata.registerNode(
 	"viewer:shortCut", "D",
 	"order", 7,
 	"tool:exclusive", True,
+
+	"ui:transformTool:toolTip", "Hold 'Shift' + 'V' to place shadow pivot\nHold 'V' to place shadow target",
 
 )

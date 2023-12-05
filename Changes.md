@@ -26,6 +26,11 @@ API
   - `fileSystemPath:extensions`
   - `fileSystemPath:extensionsLabel`
 
+Improvements
+------------
+
+- Translate and Rotate tools : Added viewer tip to the upper left corner of the viewer explaining how to use the target modes.
+
 1.3.9.0 (relative to 1.3.8.0)
 =======
 

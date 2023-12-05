@@ -34,6 +34,8 @@
 #
 ##########################################################################
 
+import IECore
+
 import Gaffer
 import GafferSceneUI
 
@@ -50,6 +52,8 @@ Gaffer.Metadata.registerNode(
 
 	"viewer:shortCut", "W",
 	"order", 1,
+
+	"ui:transformTool:toolTip", "Hold 'V' and click to snap to geometry",
 
 	plugs = {
 
