@@ -223,6 +223,7 @@ Cycle Transform Tool Orientation     | {kbd}`O`
 Scale Tool                           | {kbd}`R`
 Camera Tool                          | {kbd}`T`
 Crop Window Tool                     | {kbd}`C`
+Light Position Tool                  | {kbd}`D`
 Pin to numeric bookmark              | {kbd}`1` … {kbd}`9`
 
 ### 3D scenes ###
@@ -272,6 +273,16 @@ Action                                        | Control or shortcut
 ----------------------------------------------|--------------------
 Adjust, fine precision                        | Hold {kbd}`Shift` during action
 Constrain to aspect ratio (Quad lights only)  | Hold {kbd}`Ctrl` during action
+
+### Light Position Tool ###
+
+> Note :
+> For the following controls and shortcuts, the Light Position Tool must be active.
+
+Action                                        | Control or shortcut
+----------------------------------------------|--------------------
+Set shadow target position                    | {kbd}`V` + {{leftClick}}
+Set shadow pivot position                     | {kbd}`Shift` + {kbd}`V` + {{leftClick}}
 
 
 ### 2D images ###

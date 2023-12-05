@@ -38,11 +38,12 @@
 
 #include "GafferSceneUI/CameraTool.h"
 #include "GafferSceneUI/CropWindowTool.h"
+#include "GafferSceneUI/LightPositionTool.h"
+#include "GafferSceneUI/LightTool.h"
 #include "GafferSceneUI/RotateTool.h"
 #include "GafferSceneUI/ScaleTool.h"
 #include "GafferSceneUI/SceneView.h"
 #include "GafferSceneUI/SelectionTool.h"
-#include "GafferSceneUI/LightTool.h"
 #include "GafferSceneUI/TransformTool.h"
 #include "GafferSceneUI/TranslateTool.h"
 
@@ -267,5 +268,10 @@ void GafferSceneUIModule::bindTools()
 
 		GafferBindings::SignalClass<LightTool::SelectionChangedSignal, GafferBindings::DefaultSignalCaller<LightTool::SelectionChangedSignal>, SelectionChangedSlotCaller<LightTool>>( "SelectionChangedSignal" );
 	}
+
+	GafferBindings::NodeClass<LightPositionTool>( nullptr, no_init )
+		.def( init<SceneView *>() )
+		.def( "position", &LightPositionTool::position )
+	;
 
 }

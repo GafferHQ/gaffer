@@ -70,6 +70,7 @@ static Registry &registry()
 		r["add"] = new Pointer( "pointerAdd.png", Imath::V2i( 18, 11 ) );
 		r["remove"] = new Pointer( "pointerRemove.png", Imath::V2i( 18, 11 ) );
 		r["rotate"] = new Pointer( "pointerRotate.png", Imath::V2i( 10 ) );
+		r["pivot"] = new Pointer( "pointerPivot.png", Imath::V2i( 13, 0 ) );
 	}
 	return r;
 }
