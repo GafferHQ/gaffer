@@ -35,7 +35,6 @@
 #
 ##########################################################################
 
-import contextlib
 import functools
 import imath
 
@@ -503,7 +502,7 @@ class VectorDataWidget( GafferUI.Widget ) :
 					continue
 				# we have to ignore exceptions, as the items we're setting might
 				# have a different data type than the value we're passing.
-				with contextlib.suppress( Exception ) :
+				with IECore.IgnoredExceptions( Exception ) :
 					self.__model.setData( index, valueToPropagate, QtCore.Qt.EditRole )
 			self.__propagatingDataChangesToSelection = False
 

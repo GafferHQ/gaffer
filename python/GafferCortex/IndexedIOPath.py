@@ -34,8 +34,6 @@
 #
 ##########################################################################
 
-import contextlib
-
 import IECore
 
 import Gaffer
@@ -86,7 +84,7 @@ class IndexedIOPath( Gaffer.Path ) :
 		elif name == "indexedIO:dataType" :
 			return e.dataType() if e.entryType() == IECore.IndexedIO.EntryType.File else None
 		elif name == "indexedIO:arrayLength" :
-			with contextlib.suppress( Exception ) :
+			with IECore.IgnoredExceptions( Exception ) :
 				return e.arrayLength()
 
 		return None

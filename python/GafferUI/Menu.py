@@ -35,7 +35,6 @@
 #
 ##########################################################################
 
-import contextlib
 import inspect
 import enum
 import functools
@@ -366,7 +365,7 @@ class Menu( GafferUI.Widget ) :
 	def __buildAction( self, item, name, parent ) :
 
 		label = name
-		with contextlib.suppress( AttributeError ) :
+		with IECore.IgnoredExceptions( AttributeError ) :
 			label = item.label
 
 		if item.divider :

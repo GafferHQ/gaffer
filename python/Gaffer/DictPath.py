@@ -34,8 +34,6 @@
 #
 ##########################################################################
 
-import contextlib
-
 import IECore
 
 import Gaffer
@@ -81,7 +79,7 @@ class DictPath( Gaffer.Path ) :
 	def property( self, name, canceller = None ) :
 
 		if name == "dict:value" :
-			with contextlib.suppress( Exception ) :
+			with IECore.IgnoredExceptions( Exception ) :
 				e = self.__dictEntry()
 				if not isinstance( e, self.__dictTypes ) :
 					return e

@@ -34,7 +34,6 @@
 #
 ##########################################################################
 
-import contextlib
 import weakref
 import functools
 import collections
@@ -126,10 +125,10 @@ class LazyMethod( object ) :
 	def __playback( cls, widget ) :
 
 		context = None
-		with contextlib.suppress( AttributeError ) :
+		with IECore.IgnoredExceptions( AttributeError ) :
 			context = widget.getContext()
 		if context is None :
-			with contextlib.suppress( AttributeError ) :
+			with IECore.IgnoredExceptions( AttributeError ) :
 				context = widget.context()
 
 		return GafferUI.Playback.acquire( context )

@@ -34,7 +34,6 @@
 #
 ##########################################################################
 
-import contextlib
 import enum
 import functools
 import imath
@@ -79,7 +78,7 @@ class _CryptomatteNamesPlugValueWidget( GafferUI.VectorDataPlugValueWidget ) :
 		cryptomatteNode = _findCryptomatteNode( self.getPlug() )
 		if cryptomatteNode :
 			with self.getContext() :
-				with contextlib.suppress( Exception ) :
+				with IECore.IgnoredExceptions( Exception ) :
 					return cryptomatteNode["__manifest"].getValue()
 
 		return None

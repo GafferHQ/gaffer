@@ -35,7 +35,6 @@
 #
 ##########################################################################
 
-import contextlib
 import unittest
 import threading
 import imath
@@ -1049,7 +1048,7 @@ class GraphGadgetTest( GafferUITest.TestCase ) :
 		# a background thread.
 
 		def f() :
-			with contextlib.suppress( Exception ) :
+			with IECore.IgnoredExceptions( Exception ) :
 				script["n"]["out1"].getValue()
 
 		r = threading.Thread( target = f )

@@ -37,7 +37,6 @@
 
 import re
 import ast
-import contextlib
 import functools
 import inspect
 import pathlib
@@ -373,7 +372,7 @@ def __compoundObjectPlugValueExtractor( plug, topLevelPlug, value ) :
 
 def __defaultValueExtractor( plug, topLevelPlug, value ) :
 
-	with contextlib.suppress( AttributeError ) :
+	with IECore.IgnoredExceptions( AttributeError ) :
 		value = value.value
 
 	# Deal with the simple atomic plug case.

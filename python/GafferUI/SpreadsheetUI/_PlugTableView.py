@@ -34,7 +34,6 @@
 #
 ##########################################################################
 
-import contextlib
 import enum
 import functools
 
@@ -1250,7 +1249,7 @@ class _PlugTableView( GafferUI.Widget ) :
 
 		enabled = True
 		with self.ancestor( GafferUI.PlugValueWidget ).getContext() :
-			with contextlib.suppress( Gaffer.ProcessException ) :
+			with IECore.IgnoredExceptions( Gaffer.ProcessException ) :
 				enabled = all( [ plug.getValue() for plug in enabledPlugs ] )
 
 		return ( allSettable and not anyReadOnly, enabled )

@@ -34,7 +34,6 @@
 #
 ##########################################################################
 
-import contextlib
 import re
 import os
 
@@ -97,7 +96,7 @@ class PathVectorParameterValueWidget( GafferCortexUI.ParameterValueWidget ) :
 		result = {}
 
 		bookmarksCategory = None
-		with contextlib.suppress( KeyError ) :
+		with IECore.IgnoredExceptions( KeyError ) :
 			bookmarksCategory = self.parameter().userData()["UI"]["bookmarksCategory"].value
 
 		result["bookmarks"] = GafferUI.Bookmarks.acquire(
