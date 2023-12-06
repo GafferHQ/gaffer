@@ -2208,11 +2208,6 @@ class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
 				return;
 			ccl::Transform tfm = SocketAlgo::setTransform( transform );
 			light->set_tfm( tfm );
-			// To feed into area lights
-			light->set_axisu( ccl::transform_get_column(&tfm, 0) );
-			light->set_axisv( ccl::transform_get_column(&tfm, 1) );
-			light->set_co( ccl::transform_get_column(&tfm, 3) );
-			light->set_dir( -ccl::transform_get_column(&tfm, 2) );
 
 			light->tag_update( m_session->scene );
 		}
