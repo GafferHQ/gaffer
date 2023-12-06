@@ -121,5 +121,6 @@ from . import AnaglyphUI
 from . import LookTransformUI
 from . import OpenColorIOContextUI
 from . import OpenColorIOConfigPlugUI
+from . import DeepSliceUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferImageUI" )

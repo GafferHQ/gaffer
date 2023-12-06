@@ -1,6 +1,11 @@
 1.x.x.x (relative to 1.3.x.x)
 =======
 
+Features
+--------
+
+- GafferImage : Added DeepSlice node for clipping out part of an image based on depth.
+
 Improvements
 ------------
 

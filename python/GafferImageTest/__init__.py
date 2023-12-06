@@ -113,6 +113,7 @@ from .LookTransformTest import LookTransformTest
 from .OpenColorIOAlgoTest import OpenColorIOAlgoTest
 from .OpenColorIOContextTest import OpenColorIOContextTest
 from .OpenColorIOConfigPlugTest import OpenColorIOConfigPlugTest
+from .DeepSliceTest import DeepSliceTest
 
 
 if __name__ == "__main__":
