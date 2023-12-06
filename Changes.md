@@ -31,7 +31,15 @@ Breaking Changes
 1.3.x.x (relative to 1.3.8.0)
 =======
 
+Fixes
+-----
 
+- AttributeQuery, OptionQuery, PrimitiveVariableQuery, ShaderQuery : Added support for querying values of all numeric data types, whereas before queries were limited to `bool`, `int` and `float` values.
+
+API
+---
+
+- PlugAlgo : `setPlugFromData()` now supports conversions from all numeric data types to `BoolPlug`, `IntPlug` and `FloatPlug` values.
 
 1.3.8.0 (relative to 1.3.7.0)
 =======

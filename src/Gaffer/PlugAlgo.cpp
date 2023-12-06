@@ -554,11 +554,38 @@ bool setNumericPlugValue( PlugType *plug, const Data *value )
 {
 	switch( value->typeId() )
 	{
+		case HalfDataTypeId :
+			plug->setValue( static_cast<const HalfData *>( value )->readable() );
+			return true;
 		case FloatDataTypeId :
 			plug->setValue( static_cast<const FloatData *>( value )->readable() );
 			return true;
+		case DoubleDataTypeId :
+			plug->setValue( static_cast<const DoubleData *>( value )->readable() );
+			return true;
+		case CharDataTypeId :
+			plug->setValue( static_cast<const CharData *>( value )->readable() );
+			return true;
+		case UCharDataTypeId :
+			plug->setValue( static_cast<const UCharData *>( value )->readable() );
+			return true;
+		case ShortDataTypeId :
+			plug->setValue( static_cast<const ShortData *>( value )->readable() );
+			return true;
+		case UShortDataTypeId :
+			plug->setValue( static_cast<const UShortData *>( value )->readable() );
+			return true;
 		case IntDataTypeId :
 			plug->setValue( static_cast<const IntData *>( value )->readable() );
+			return true;
+		case UIntDataTypeId :
+			plug->setValue( static_cast<const UIntData *>( value )->readable() );
+			return true;
+		case Int64DataTypeId :
+			plug->setValue( static_cast<const Int64Data *>( value )->readable() );
+			return true;
+		case UInt64DataTypeId :
+			plug->setValue( static_cast<const UInt64Data *>( value )->readable() );
 			return true;
 		case BoolDataTypeId :
 			plug->setValue( static_cast<const BoolData *>( value )->readable() );
@@ -706,8 +733,17 @@ bool canSetNumericPlugValue( const Data *value )
 
 	switch( value->typeId() )
 	{
+		case HalfDataTypeId :
 		case FloatDataTypeId :
+		case DoubleDataTypeId :
+		case CharDataTypeId :
+		case UCharDataTypeId :
+		case ShortDataTypeId :
+		case UShortDataTypeId :
 		case IntDataTypeId :
+		case UIntDataTypeId :
+		case Int64DataTypeId :
+		case UInt64DataTypeId :
 		case BoolDataTypeId :
 			return true;
 		default :
