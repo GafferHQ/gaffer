@@ -35,6 +35,7 @@
 ##########################################################################
 
 import functools
+import threading
 import time
 
 import IECore
@@ -233,6 +234,26 @@ class BackgroundTaskTest( GafferTest.TestCase ) :
 		self.assertGreaterEqual( time.time(), startTime + 0.2 )
 
 		t.cancelAndWait()
+
+	def testDestroyWhileRunning( self ) :
+
+		started = threading.Event()
+
+		def f( canceller ) :
+
+			started.set()
+			while True :
+				IECore.Canceller.check( canceller )
+
+		# Start task and wait for it to be running
+		task = Gaffer.BackgroundTask( None, f )
+		started.wait()
+
+		# Destroy task. This will cancel it via `canceller`,
+		# and wait for it to return. If we don't release the
+		# GIL while doing that then it'll never be able to
+		# check for cancellation, and we'll deadlock.
+		del task
 
 if __name__ == "__main__":
 	unittest.main()
