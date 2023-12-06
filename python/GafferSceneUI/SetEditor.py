@@ -58,11 +58,11 @@ class SetEditor( GafferUI.NodeSetEditor ) :
 
 		searchFilter = _GafferSceneUI._SetEditor.SearchFilter()
 		emptySetFilter = _GafferSceneUI._SetEditor.EmptySetFilter()
-		emptySetFilter.userData()["UI"] = { "label" : "Hide Empty" }
+		emptySetFilter.userData()["UI"] = { "label" : "Hide Empty Members", "toolTip" : "Hide sets with no members" }
 		emptySetFilter.setEnabled( False )
 
 		emptySelectionFilter = _GafferSceneUI._SetEditor.EmptySetFilter( propertyName = "setPath:selectedMemberCount" )
-		emptySelectionFilter.userData()["UI"] = { "label" : "Hide Empty Selection" }
+		emptySelectionFilter.userData()["UI"] = { "label" : "Hide Empty Selection", "toolTip" : "Hide sets with no selected members or descendants" }
 		emptySelectionFilter.setEnabled( False )
 
 		self.__filter = Gaffer.CompoundPathFilter( [ searchFilter, emptySetFilter, emptySelectionFilter ] )

@@ -127,6 +127,11 @@ class BasicPathFilterWidget( PathFilterWidget ) :
 			invertEnabled = self.pathFilter().userData()["UI"]["invertEnabled"].value
 		self.__checkBox.setState( self.pathFilter().getEnabled() is not invertEnabled )
 
+		toolTip = ""
+		with IECore.IgnoredExceptions( KeyError ) :
+			toolTip = self.pathFilter().userData()["UI"]["toolTip"].value
+		self.__checkBox.setToolTip( toolTip )
+
 	def __stateChanged( self, checkBox ) :
 
 		invertEnabled = False
