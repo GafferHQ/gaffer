@@ -5,6 +5,9 @@ Improvements
 ------------
 
 - 3Delight : Added support for subdivision corners and creases.
+- SetEditor :
+  - Added "Selection" column displaying the number of currently selected members for each set.
+  - Added "Hide Empty Selection" checkbox. When on, the SetEditor will only display sets with currently selected members.
 
 Fixes
 -----

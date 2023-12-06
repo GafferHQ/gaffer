@@ -61,7 +61,11 @@ class SetEditor( GafferUI.NodeSetEditor ) :
 		emptySetFilter.userData()["UI"] = { "label" : "Hide Empty" }
 		emptySetFilter.setEnabled( False )
 
-		self.__filter = Gaffer.CompoundPathFilter( [ searchFilter, emptySetFilter ] )
+		emptySelectionFilter = _GafferSceneUI._SetEditor.EmptySetFilter( propertyName = "setPath:selectedMemberCount" )
+		emptySelectionFilter.userData()["UI"] = { "label" : "Hide Empty Selection" }
+		emptySelectionFilter.setEnabled( False )
+
+		self.__filter = Gaffer.CompoundPathFilter( [ searchFilter, emptySetFilter, emptySelectionFilter ] )
 
 		with mainColumn :
 
@@ -69,8 +73,10 @@ class SetEditor( GafferUI.NodeSetEditor ) :
 
 				self.__searchFilterWidget = _SearchFilterWidget( searchFilter )
 				GafferUI.BasicPathFilterWidget( emptySetFilter )
+				GafferUI.BasicPathFilterWidget( emptySelectionFilter )
 
 			self.__setMembersColumn = GafferUI.StandardPathColumn( "Members", "setPath:memberCount" )
+			self.__selectedSetMembersColumn = GafferUI.StandardPathColumn( "Selection", "setPath:selectedMemberCount" )
 			self.__includedSetMembersColumn = _GafferSceneUI._SetEditor.VisibleSetInclusionsColumn( scriptNode.context() )
 			self.__excludedSetMembersColumn = _GafferSceneUI._SetEditor.VisibleSetExclusionsColumn( scriptNode.context() )
 			self.__pathListing = GafferUI.PathListingWidget(
@@ -78,6 +84,7 @@ class SetEditor( GafferUI.NodeSetEditor ) :
 				columns = [
 					_GafferSceneUI._SetEditor.SetNameColumn(),
 					self.__setMembersColumn,
+					self.__selectedSetMembersColumn,
 					self.__includedSetMembersColumn,
 					self.__excludedSetMembersColumn,
 				],
@@ -186,6 +193,8 @@ class SetEditor( GafferUI.NodeSetEditor ) :
 		column = self.__pathListing.columnAt( imath.V2f( event.line.p0.x, event.line.p0.y ) )
 		if column == self.__setMembersColumn :
 			return IECore.StringVectorData( self.__getSetMembers( setNames ).paths() )
+		elif column == self.__selectedSetMembersColumn :
+			return IECore.StringVectorData( self.__getSelectedSetMembers( setNames ).paths() )
 		elif column == self.__includedSetMembersColumn :
 			return IECore.StringVectorData( self.__getIncludedSetMembers( setNames ).paths() )
 		elif column == self.__excludedSetMembersColumn :
@@ -263,6 +272,14 @@ class SetEditor( GafferUI.NodeSetEditor ) :
 				result.addPaths( self.__plug.set( setName ).value )
 
 		return result
+
+	def __getSelectedSetMembers( self, setNames, *unused ) :
+
+		setMembers = self.__getSetMembers( setNames )
+		return IECore.PathMatcher( [
+			p for p in ContextAlgo.getSelectedPaths( self.getContext() ).paths()
+			if setMembers.match( p ) & ( IECore.PathMatcher.Result.ExactMatch | IECore.PathMatcher.Result.AncestorMatch )
+		] )
 
 	def __getIncludedSetMembers( self, setNames, *unused ) :
 
