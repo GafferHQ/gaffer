@@ -128,12 +128,13 @@ class SetEditor( GafferUI.NodeSetEditor ) :
 	def __updatePathListingPath( self ) :
 
 		if self.__plug is not None :
-			# We take a static copy of our current context for use in the SetPath - this prevents the
-			# PathListing from updating automatically when the original context changes, and allows us to take
-			# control of updates ourselves in _updateFromContext(), using LazyMethod to defer the calls to this
-			# function until we are visible and playback has stopped.
-			## \todo This may no longer be necessary now that the PathListingWidget updates asynchronously and
-			# doesn't update when hidden.
+			# We take a static copy of our current context for use in the SetPath for two reasons :
+			#
+			# 1. To prevent the PathListing from updating automatically when the original context
+			#    changes, allowing us to use LazyMethod to defer updates until playback stops.
+			# 2. Because the PathListingWidget uses a BackgroundTask to evaluate the Path, and it
+			#    would not be thread-safe to directly reference a context that could be modified by
+			#    the UI thread at any time.
 			contextCopy = Gaffer.Context( self.getContext() )
 			self.__searchFilterWidget.setScene( self.__plug )
 			self.__searchFilterWidget.setContext( contextCopy )
