@@ -45,7 +45,7 @@ import contextlib
 if sys.platform != "win32":
 	import resource
 else:
-	import subprocess
+	import psutil
 
 import IECore
 
@@ -746,8 +746,7 @@ class _Memory( object ) :
 		if sys.platform == "darwin" :
 			return cls( resource.getrusage( resource.RUSAGE_SELF ).ru_maxrss )
 		elif sys.platform == "win32" :
-			result = subprocess.check_output( ["wmic", "process", "where", "processid={}".format(os.getpid()), "get", "PeakWorkingSetSize"] )
-			return cls( int( result.split()[1] ) * 1024 )
+			return cls( psutil.Process().memory_info().peak_wset )
 		else :
 			return cls( resource.getrusage( resource.RUSAGE_SELF ).ru_maxrss * 1024 )
 

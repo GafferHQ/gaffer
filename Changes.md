@@ -28,6 +28,11 @@ Breaking Changes
 - Windows launch script : Removed the hardcoded `/debugexe` switch used when `GAFFER_DEBUG` is enabled, making it possible to use debuggers other than Visual Studio. Debug switches can be added to the `GAFFER_DEBUGGER` environment variable instead.
 - Enums : Replaced `IECore.Enum` types with standard Python types from the `enum` module.
 
+Build
+-----
+
+- PsUtil : Added version 5.9.6.
+
 1.3.x.x (relative to 1.3.8.0)
 =======
 
