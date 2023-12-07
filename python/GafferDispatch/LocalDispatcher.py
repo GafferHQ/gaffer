@@ -346,10 +346,8 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 					if canceller is not None and canceller.cancelled() :
 						if os.name == "nt" :
-							subprocess.check_call(
-								[ "TASKKILL", "/F", "/PID", str( process.pid ), "/T" ],
-								stdout = subprocess.DEVNULL
-							)
+							for toKill in self.__currentProcess.children( recursive = True ) + [ self.__currentProcess ] :
+								toKill.kill()
 						else :
 							os.killpg( process.pid, signal.SIGTERM )
 						raise IECore.Cancelled()
