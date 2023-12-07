@@ -128,7 +128,7 @@ void ScaleTool::scale( const Imath::V3f &scale )
 {
 	for( const auto &s : selection() )
 	{
-		Scale( s ).apply( scale );
+		Scale( s ).apply( V3i( 1 ), scale );
 	}
 }
 
@@ -146,10 +146,11 @@ IECore::RunTimeTypedPtr ScaleTool::dragBegin( GafferUI::Style::Axes axes )
 bool ScaleTool::dragMove( GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event )
 {
 	UndoScope undoScope( selection().back().editTarget()->ancestor<ScriptNode>(), UndoScope::Enabled, undoMergeGroup() );
-	const V3f &scaling = static_cast<ScaleHandle *>( gadget )->scaling( event );
+	ScaleHandle *scaleHandle = static_cast<ScaleHandle *>( gadget );
+	const V3f &scaling = scaleHandle->scaling( event );
 	for( auto &s : m_drag )
 	{
-		s.apply( scaling );
+		s.apply( scaleHandle->axisMask(), scaling );
 	}
 	return true;
 }
@@ -189,7 +190,7 @@ bool ScaleTool::Scale::canApply( const Imath::V3i &axisMask ) const
 	return true;
 }
 
-void ScaleTool::Scale::apply( const Imath::V3f &scale )
+void ScaleTool::Scale::apply( const Imath::V3i &axisMask, const Imath::V3f &scale )
 {
 	V3fPlug *scalePlug = m_selection.acquireTransformEdit()->scale.get();
 	if( !m_originalScale )
@@ -202,7 +203,7 @@ void ScaleTool::Scale::apply( const Imath::V3f &scale )
 	for( int i = 0; i < 3; ++i )
 	{
 		FloatPlug *plug = scalePlug->getChild( i );
-		if( canSetValueOrAddKey( plug ) )
+		if( axisMask[i] && canSetValueOrAddKey( plug ) )
 		{
 			setValueOrAddKey( plug, m_selection.context()->getTime(), (*m_originalScale)[i] * scale[i] );
 		}
