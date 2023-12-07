@@ -41,6 +41,7 @@
 #include "GafferSceneUI/TypeIds.h"
 
 #include "GafferUI/Handle.h"
+#include "GafferUI/RotateHandle.h"
 
 #include "Gaffer/ScriptNode.h"
 
@@ -93,7 +94,7 @@ class GAFFERSCENEUI_API LightPositionTool : public GafferSceneUI::TransformTool
 
 		};
 
-		IECore::RunTimeTypedPtr handleDragBegin();
+		IECore::RunTimeTypedPtr handleDragBegin( GafferUI::Gadget *gadget );
 		bool handleDragMove( GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event );
 		bool handleDragEnd();
 
@@ -130,6 +131,7 @@ class GAFFERSCENEUI_API LightPositionTool : public GafferSceneUI::TransformTool
 		float m_startShadowPivotDistance;
 
 		GafferUI::HandlePtr m_shadowHandle;
+		GafferUI::RotateHandlePtr m_rotateHandle;
 
 		Gaffer::Signals::ScopedConnection m_contextChangedConnection;
 

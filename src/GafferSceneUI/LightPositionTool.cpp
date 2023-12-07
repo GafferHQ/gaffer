@@ -537,9 +537,15 @@ LightPositionTool::LightPositionTool( SceneView *view, const std::string &name )
 	m_shadowHandle = new ShadowHandle();
 	m_shadowHandle->setRasterScale( 0 );
 	handles()->setChild( "shadowHandle", m_shadowHandle );
-	m_shadowHandle->dragBeginSignal().connectFront( boost::bind( &LightPositionTool::handleDragBegin, this ) );
+	m_shadowHandle->dragBeginSignal().connectFront( boost::bind( &LightPositionTool::handleDragBegin, this, ::_1 ) );
 	m_shadowHandle->dragMoveSignal().connect( boost::bind( &LightPositionTool::handleDragMove, this, ::_1, ::_2 ) );
 	m_shadowHandle->dragEndSignal().connect( boost::bind( &LightPositionTool::handleDragEnd, this ) );
+
+	m_rotateHandle = new RotateHandle( GafferUI::Style::Axes::Z );
+	handles()->setChild( "rotateHandle", m_rotateHandle );
+	m_rotateHandle->dragBeginSignal().connectFront( boost::bind( &LightPositionTool::handleDragBegin, this, ::_1 ) );
+	m_rotateHandle->dragMoveSignal().connect( boost::bind( &LightPositionTool::handleDragMove, this, ::_1, ::_2 ) );
+	m_rotateHandle->dragEndSignal().connect( boost::bind( &LightPositionTool::handleDragEnd, this ) );
 
 	SceneGadget *sg = runTimeCast<SceneGadget>( this->view()->viewportGadget()->getPrimaryChild() );
 	sg->keyPressSignal().connect( boost::bind( &LightPositionTool::keyPress, this, ::_2 ) );
@@ -626,7 +632,11 @@ void LightPositionTool::updateHandles( float rasterScale )
 			trShadowHandle.canApplyRotation( V3i( 1, 1, 1 ) )
 		);
 
+		TranslationRotation trRotateHandle( s, Orientation::Local );
+		m_rotateHandle->setEnabled( singleSelection && trRotateHandle.canApplyRotation( V3i( 0, 0, 1 ) ) );
+
 		m_shadowHandle->setRasterScale( 0 );
+		m_rotateHandle->setRasterScale( rasterScale );
 	}
 
 	auto shadowHandle = static_cast<ShadowHandle *>( m_shadowHandle.get() );
@@ -678,11 +688,14 @@ void LightPositionTool::updateHandles( float rasterScale )
 	}
 }
 
-IECore::RunTimeTypedPtr LightPositionTool::handleDragBegin()
+IECore::RunTimeTypedPtr LightPositionTool::handleDragBegin( Gadget *gadget )
 {
 	m_drag.emplace( selection().back(), Orientation::Local );
-	assert( getShadowPivotDistance() );
-	m_startShadowPivotDistance = getShadowPivotDistance().value();
+	if( gadget == m_shadowHandle.get() )
+	{
+		assert( getShadowPivotDistance() );
+		m_startShadowPivotDistance = getShadowPivotDistance().value();
+	}
 
 	TransformTool::dragBegin();
 
@@ -693,12 +706,20 @@ bool LightPositionTool::handleDragMove( Gadget *gadget, const DragDropEvent &eve
 {
 	UndoScope undoScope( selection().back().editTarget()->ancestor<ScriptNode>(), UndoScope::Enabled, undoMergeGroup() );
 
-	const auto shadowHandle = static_cast<ShadowHandle *>( m_shadowHandle.get() );
+	if( gadget == m_shadowHandle.get() )
+	{
+		const auto shadowHandle = static_cast<ShadowHandle *>( m_shadowHandle.get() );
 
-	V3f t = shadowHandle->translation( event );
-	t.z = std::max( -m_startShadowPivotDistance, t.z );
+		V3f t = shadowHandle->translation( event );
+		t.z = std::max( -m_startShadowPivotDistance, t.z );
 
-	m_drag.value().applyTranslation( t );
+		m_drag.value().applyTranslation( t );
+	}
+	else if( gadget == m_rotateHandle.get() )
+	{
+		const V3f rotation = m_rotateHandle->rotation( event );
+		m_drag.value().applyRotation( rotation );
+	}
 
 	return true;
 }
