@@ -528,6 +528,40 @@ class SwitchTest( GafferTest.TestCase ) :
 		self.assertEqual( s.correspondingInput( s["out"]["value"]["x"] ), s["in"][0]["value"]["x"] )
 		self.assertEqual( s.activeInPlug( s["out"]["value"]["y"] ), s["in"][0]["value"]["y"] )
 
+	def testInternalConnectionWithTypeConversionAndCanceller( self ) :
+
+		# Make a switch with 2 inputs.
+
+		switch = Gaffer.Switch()
+		switch.setup( Gaffer.IntPlug() )
+		switch["in"][0].setInput( self.intPlug( 0 ) )
+		switch["in"][1].setInput( self.intPlug( 1 ) )
+
+		# Drive the index with a BoolPlug. This means that `indexPlug()->getValue()`
+		# will perform a type conversion using `ValuePlug::setFrom()`, performed
+		# inside a `Process` which will check for cancellation in its constructor.
+
+		boolPlug = Gaffer.BoolPlug()
+		switch["index"].setInput( boolPlug )
+
+		# Change the index by setting the value of `boolPlug`, but do this in a
+		# Context in which cancellation has been requested. This models a bizarre
+		# condition in which garbage collection destroys a `GafferImage.Shape` node
+		# from within a cancelled background task, and `Switch::plugInputChanged()`
+		# is called as the Shape is destroyed (Shape nodes have a bool->index connection
+		# internally).
+		#
+		# We do not want this to throw `IECore::Cancelled` because the graph authoring
+		# API (here, `setValue()`) is not context-sensitive, so it would be surprising
+		# if it considered the canceller.
+
+		canceller = IECore.Canceller()
+		canceller.cancel()
+		with Gaffer.Context( Gaffer.Context(), canceller ) :
+			for index in ( 0, 1 ) :
+				boolPlug.setValue( index )
+				self.assertTrue( switch["out"].getInput().isSame( switch["in"][index] ) )
+
 	def setUp( self ) :
 
 		GafferTest.TestCase.setUp( self )
