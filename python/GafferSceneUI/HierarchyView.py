@@ -160,10 +160,15 @@ class HierarchyView( GafferUI.NodeSetEditor ) :
 			f.setScene( self.__plug )
 
 		if self.__plug is not None :
-			# We take a static copy of our current context for use in the ScenePath - this prevents the
-			# PathListing from updating automatically when the original context changes, and allows us to take
-			# control of updates ourselves in _updateFromContext(), using LazyMethod to defer the calls to this
-			# function until we are visible and playback has stopped.
+			# We take a static copy of our current context for use in the ScenePath for two reasons :
+			#
+			# 1. To prevent the PathListing from updating automatically when the original context
+			#    changes, which allows us to take control of updates ourselves in `_updateFromContext()`,
+			#    using LazyMethod to defer the calls to this function until we are visible and
+			#    playback has stopped.
+			# 2. Because the PathListingWidget uses a BackgroundTask to evaluate the Path, and it
+			#    would not be thread-safe to directly reference a context that could be modified by
+			#    the UI thread at any time.
 			contextCopy = Gaffer.Context( self.getContext() )
 			for f in self.__filter.getFilters() :
 				f.setContext( contextCopy )
