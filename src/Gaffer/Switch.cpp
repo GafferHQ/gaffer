@@ -49,8 +49,13 @@
 using namespace boost::placeholders;
 using namespace Gaffer;
 
-static IECore::InternedString g_inPlugsName( "in" );
-static IECore::InternedString g_outPlugName( "out" );
+namespace
+{
+
+const IECore::InternedString g_inPlugsName( "in" );
+const IECore::InternedString g_outPlugName( "out" );
+
+} // namespace
 
 GAFFER_NODE_DEFINE_TYPE( Switch );
 
