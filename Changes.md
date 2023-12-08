@@ -4,6 +4,7 @@
 Fixes
 -----
 
+- TransformTools : Fixed editing of XYZ component plugs with individual input connections, such as when only a single component is promoted to a Box.
 - AttributeQuery, OptionQuery, PrimitiveVariableQuery, ShaderQuery : Added support for querying values of all numeric data types, whereas before queries were limited to `bool`, `int` and `float` values.
 
 API
