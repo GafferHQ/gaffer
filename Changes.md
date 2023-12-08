@@ -30,6 +30,7 @@ Improvements
 - NodeEditor : Improved image channel selectors :
   - Added "Custom" option, to allow strings to be entered manually.
   - Added right-click context menu.
+- Switch : Added `connectedInputs` output plug.
 
 Fixes
 -----

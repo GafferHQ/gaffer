@@ -73,8 +73,7 @@ class SceneSwitchTest( GafferSceneTest.SceneTestCase ) :
 		for p in [ switch["in"][0], switch["in"][1] ] :
 			for n in p.keys() :
 				a = switch.affects( p[n] )
-				self.assertEqual( len( a ), 1 )
-				self.assertTrue( a[0].isSame( switch["out"][n] ) )
+				self.assertEqual( a, [ switch["out"][n], switch["connectedInputs"] ] )
 
 		a = set( switch.affects( switch["enabled"] ) )
 		self.assertEqual( a, set( switch["out"].children() ) )

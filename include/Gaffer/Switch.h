@@ -39,6 +39,7 @@
 #include "Gaffer/ArrayPlug.h"
 #include "Gaffer/ComputeNode.h"
 #include "Gaffer/NumericPlug.h"
+#include "Gaffer/TypedObjectPlug.h"
 
 namespace Gaffer
 {
@@ -86,6 +87,9 @@ class GAFFER_API Switch : public ComputeNode
 
 		BoolPlug *enabledPlug() override;
 		const BoolPlug *enabledPlug() const override;
+
+		IntVectorDataPlug *connectedInputsPlug();
+		const IntVectorDataPlug *connectedInputsPlug() const;
 
 		Plug *correspondingInput( const Plug *output ) override;
 		const Plug *correspondingInput( const Plug *output ) const override;

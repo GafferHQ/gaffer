@@ -52,6 +52,36 @@ using namespace Gaffer;
 namespace
 {
 
+bool connectedIndividually( const ArrayPlug *array, size_t childIndex )
+{
+	const Plug *child = array->getChild<Plug>( childIndex );
+	auto nameValuePlug = IECore::runTimeCast<const NameValuePlug>( child );
+	if( nameValuePlug )
+	{
+		// For NameSwitch, we only check connections to the `value`
+		// plug, because typically the `name` part isn't connected.
+		child = nameValuePlug->valuePlug();
+		if( !child )
+		{
+			return false;
+		}
+	}
+
+	const Plug *source = child->source();
+	if( source == child )
+	{
+		// No input.
+		return false;
+	}
+
+	// We do have an input connection, but it might just be
+	// that the entire input array was promoted. We don't consider
+	// an individual child to have a connection until it differs
+	// from the array's.
+
+	return !array->source()->isAncestorOf( source );
+}
+
 const IECore::InternedString g_inPlugsName( "in" );
 const IECore::InternedString g_outPlugName( "out" );
 
@@ -70,6 +100,7 @@ Switch::Switch( const std::string &name)
 
 	addChild( new IntPlug( "index", Gaffer::Plug::In, 0, 0 ) );
 	addChild( new BoolPlug( "enabled", Gaffer::Plug::In, true ) );
+	addChild( new IntVectorDataPlug( "connectedInputs", Plug::Out ) );
 
 	childAddedSignal().connect( boost::bind( &Switch::childAdded, this, ::_2 ) );
 	plugSetSignal().connect( boost::bind( &Switch::plugSet, this, ::_1 ) );
@@ -169,6 +200,16 @@ const BoolPlug *Switch::enabledPlug() const
 	return getChild<BoolPlug>( g_firstPlugIndex + 1 );
 }
 
+IntVectorDataPlug *Switch::connectedInputsPlug()
+{
+	return getChild<IntVectorDataPlug>( g_firstPlugIndex + 2 );
+}
+
+const IntVectorDataPlug *Switch::connectedInputsPlug() const
+{
+	return getChild<IntVectorDataPlug>( g_firstPlugIndex + 2 );
+}
+
 void Switch::affects( const Plug *input, DependencyNode::AffectedPlugsContainer &outputs ) const
 {
 	ComputeNode::affects( input, outputs );
@@ -204,6 +245,7 @@ void Switch::affects( const Plug *input, DependencyNode::AffectedPlugsContainer 
 			{
 				outputs.push_back( output );
 			}
+			outputs.push_back( connectedInputsPlug() );
 		}
 	}
 }
@@ -275,6 +317,21 @@ void Switch::hash( const ValuePlug *output, const Context *context, IECore::Murm
 		h = input->hash();
 		return;
 	}
+	else if( output == connectedInputsPlug() )
+	{
+		ComputeNode::hash( output, context, h );
+		if( auto in = inPlugs() )
+		{
+			for( int i = 0, s = in->children().size(); i < s; ++i )
+			{
+				if( connectedIndividually( in, i ) )
+				{
+					h.append( i );
+				}
+			}
+		}
+		return;
+	}
 
 	ComputeNode::hash( output, context, h );
 }
@@ -284,6 +341,23 @@ void Switch::compute( ValuePlug *output, const Context *context ) const
 	if( const ValuePlug *input = IECore::runTimeCast<const ValuePlug>( oppositePlug( output, context ) ) )
 	{
 		output->setFrom( input );
+		return;
+	}
+	else if( output == connectedInputsPlug() )
+	{
+		IECore::IntVectorDataPtr resultData = new IECore::IntVectorData;
+		std::vector<int> &result = resultData->writable();
+		if( auto in = inPlugs() )
+		{
+			for( int i = 0, s = in->children().size(); i < s; ++i )
+			{
+				if( connectedIndividually( in, i ) )
+				{
+					result.push_back( i );
+				}
+			}
+		}
+		static_cast<IntVectorDataPlug *>( output )->setValue( resultData );
 		return;
 	}
 

@@ -141,14 +141,14 @@ class SwitchTest( GafferTest.TestCase ) :
 		# not affect the output (dependency is carried by
 		# the connection instead).
 		for plug in [ n["in"][0], n["in"][1] ] :
-			self.assertEqual( n.affects( plug ), [] )
+			self.assertEqual( n.affects( plug ), [ n["connectedInputs"] ] )
 
 		# Now the index is computed, the dependencies
 		# must be declared.
 		a = GafferTest.AddNode()
 		n["index"].setInput( a["sum"] )
 		for plug in [ n["in"][0], n["in"][1] ] :
-			self.assertEqual( n.affects( plug ), [ n["out"] ] )
+			self.assertEqual( n.affects( plug ), [ n["out"], n["connectedInputs"] ] )
 
 		self.assertEqual( n.affects( n["out"] ), [] )
 
@@ -561,6 +561,46 @@ class SwitchTest( GafferTest.TestCase ) :
 			for index in ( 0, 1 ) :
 				boolPlug.setValue( index )
 				self.assertTrue( switch["out"].getInput().isSame( switch["in"][index] ) )
+
+	def testConnectedInputs( self ) :
+
+		switch = Gaffer.Switch()
+		self.assertEqual( switch["connectedInputs"].getValue(), IECore.IntVectorData() )
+
+		switch.setup( Gaffer.IntPlug() )
+		self.assertEqual( switch["connectedInputs"].getValue(), IECore.IntVectorData() )
+
+		inputA = Gaffer.IntPlug()
+		switch["in"][0].setInput( inputA )
+		self.assertEqual( switch["connectedInputs"].getValue(), IECore.IntVectorData( [ 0 ] ) )
+
+		switch["in"][1].setInput( inputA )
+		self.assertEqual( switch["connectedInputs"].getValue(), IECore.IntVectorData( [ 0, 1 ] ) )
+
+		switch["in"][0].setInput( None )
+		self.assertEqual( switch["connectedInputs"].getValue(), IECore.IntVectorData( [ 1 ] ) )
+
+	def testConnectedInputsWithPromotedInPlug( self ) :
+
+		box = Gaffer.Box()
+		box["switch"] =  Gaffer.Switch()
+		self.assertEqual( box["switch"]["connectedInputs"].getValue(), IECore.IntVectorData() )
+
+		box["switch"].setup( Gaffer.IntPlug() )
+		self.assertEqual( box["switch"]["connectedInputs"].getValue(), IECore.IntVectorData() )
+
+		Gaffer.PlugAlgo.promote( box["switch"]["in"] )
+		self.assertEqual( box["switch"]["connectedInputs"].getValue(), IECore.IntVectorData() )
+
+		inputA = Gaffer.IntPlug()
+		box["in"][0].setInput( inputA )
+		self.assertEqual( box["switch"]["connectedInputs"].getValue(), IECore.IntVectorData( [ 0 ] ) )
+
+		box["in"][1].setInput( inputA )
+		self.assertEqual( box["switch"]["connectedInputs"].getValue(), IECore.IntVectorData( [ 0, 1 ] ) )
+
+		box["in"][0].setInput( None )
+		self.assertEqual( box["switch"]["connectedInputs"].getValue(), IECore.IntVectorData( [ 1 ] ) )
 
 	def setUp( self ) :
 
