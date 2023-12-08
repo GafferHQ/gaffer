@@ -190,7 +190,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 		def _execute( self ) :
 
 			if self.__executeInBackground :
-				self.__backgroundTask = Gaffer.BackgroundTask( None, self.__executeInternal )
+				self.__backgroundTask = Gaffer.BackgroundTask( None, Gaffer.WeakMethod( self.__executeInternal ) )
 			else :
 				self.__executeInternal()
 

@@ -36,6 +36,7 @@
 
 import datetime
 import errno
+import gc
 import os
 import stat
 import shutil
@@ -59,6 +60,16 @@ import GafferDispatch
 import GafferDispatchTest
 
 class LocalDispatcherTest( GafferTest.TestCase ) :
+
+	def tearDown( self ) :
+
+		GafferTest.TestCase.tearDown( self )
+
+		# Check for Jobs existing past their expected lifetime (most likely through circular references).
+		self.assertEqual(
+			[ o for o in gc.get_objects() if isinstance( o, GafferDispatch.LocalDispatcher.Job ) ],
+			[]
+		)
 
 	def __createLocalDispatcher( self, jobPool = None ) :
 
@@ -528,7 +539,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		self.assertFalse( os.path.isfile( s.context().substitute( s["n2"]["fileName"].getValue() ) ) )
 		self.assertFalse( os.path.isfile( s.context().substitute( s["n1"]["fileName"].getValue() ) ) )
 
-		self.tearDown()
+		os.unlink( s.context().substitute( s["n3"]["fileName"].getValue() ) )
 
 		dispatcher["executeInBackground"].setValue( True )
 		dispatcher.dispatch( [ s["n1"] ] )
