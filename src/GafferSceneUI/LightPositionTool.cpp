@@ -532,7 +532,8 @@ size_t LightPositionTool::g_firstPlugIndex = 0;
 
 LightPositionTool::LightPositionTool( SceneView *view, const std::string &name ) :
 	TransformTool( view, name ),
-	m_targetMode( TargetMode::None )
+	m_targetMode( TargetMode::None ),
+	m_draggingTarget( false )
 {
 	m_shadowHandle = new ShadowHandle();
 	m_shadowHandle->setRasterScale( 0 );
@@ -553,6 +554,11 @@ LightPositionTool::LightPositionTool( SceneView *view, const std::string &name )
 	// We have to insert this before the underlying SelectionTool connections or it starts an object drag.
 	sg->buttonPressSignal().connectFront( boost::bind( &LightPositionTool::buttonPress, this, ::_2 ) );
 	sg->buttonReleaseSignal().connectFront( boost::bind( &LightPositionTool::buttonRelease, this, ::_2 ) );
+
+	sg->dragBeginSignal().connectFront( boost::bind( &LightPositionTool::sceneGadgetDragBegin, this, ::_1, ::_2 ) );
+	sg->dragEnterSignal().connectFront( boost::bind( &LightPositionTool::sceneGadgetDragEnter, this, ::_1, ::_2 ) );
+	sg->dragMoveSignal().connectFront( boost::bind( &LightPositionTool::sceneGadgetDragMove, this, ::_2 ) );
+	sg->dragEndSignal().connectFront( boost::bind( &LightPositionTool::sceneGadgetDragEnd, this ) );
 
 	// We need to track the tool state/view visibility so we don't leave a lingering target cursor
 	sg->visibilityChangedSignal().connect( boost::bind( &LightPositionTool::visibilityChanged, this, ::_1 ) );
@@ -731,6 +737,49 @@ bool LightPositionTool::handleDragEnd()
 	return false;
 }
 
+RunTimeTypedPtr LightPositionTool::sceneGadgetDragBegin( Gadget *gadget, const DragDropEvent &event )
+{
+	if( !activePlug()->getValue() || getTargetMode() == TargetMode::None )
+	{
+		return nullptr;
+	}
+	m_draggingTarget = true;
+
+	TransformTool::dragBegin();
+	return gadget;
+}
+
+bool LightPositionTool::sceneGadgetDragEnter( Gadget *gadget, const DragDropEvent &event )
+{
+	return m_draggingTarget && event.sourceGadget == gadget && event.data == gadget;
+}
+
+bool LightPositionTool::sceneGadgetDragMove( const DragDropEvent &event )
+{
+	if( !m_draggingTarget )
+	{
+		return false;
+	}
+
+	// We always return true to prevent the SelectTool defaults.
+	if( !selectionEditable() || !m_shadowHandle->enabled() )
+	{
+		return true;
+	}
+
+	UndoScope undoScope( selection().back().editTarget()->ancestor<ScriptNode>(), UndoScope::Enabled, undoMergeGroup() );
+
+	placeTarget( event.line );
+	return true;
+}
+
+bool LightPositionTool::sceneGadgetDragEnd()
+{
+	m_draggingTarget = false;
+	TransformTool::dragEnd();
+	return false;
+}
+
 bool LightPositionTool::keyPress( const KeyEvent &event )
 {
 	if( activePlug()->getValue() )
@@ -814,20 +863,38 @@ bool LightPositionTool::buttonPress( const ButtonEvent &event )
 		return true;
 	}
 
+	UndoScope undoScope( selection().back().editTarget()->ancestor<ScriptNode>(), UndoScope::Enabled, undoMergeGroup() );
+
+	placeTarget( event.line );
+	return true;
+}
+
+bool LightPositionTool::buttonRelease( const ButtonEvent &event )
+{
+	if( event.button != ButtonEvent::Left || !activePlug()->getValue() || getTargetMode() == TargetMode::None )
+	{
+		return false;
+	}
+
+	// We're not in a drag event, but we do want to increment `TransformTool::m_mergeGroupId`
+	TransformTool::dragEnd();
+	return true;
+}
+
+bool LightPositionTool::placeTarget( const LineSegment3f &eventLine )
+{
 	ScenePlug::ScenePath scenePath;
 	V3f targetPos;
 
 	const SceneGadget *sceneGadget = runTimeCast<SceneGadget>( view()->viewportGadget()->getPrimaryChild() );
-	if( !sceneGadget->objectAt( event.line, scenePath, targetPos ) )
+	if( !sceneGadget->objectAt( eventLine, scenePath, targetPos ) )
 	{
-		return true;
+		return false;
 	}
 
 	const auto shadowHandle = static_cast<ShadowHandle *>( m_shadowHandle.get() );
 	Selection s = selection().back();
 	ScriptNodePtr scriptNode = s.editTarget()->ancestor<ScriptNode>();
-
-	UndoScope undoScope( scriptNode );
 
 	if( getTargetMode() == TargetMode::ShadowPivot )
 	{
@@ -847,7 +914,7 @@ bool LightPositionTool::buttonPress( const ButtonEvent &event )
 
 	if( !shadowHandle->getShadowPivot() || !shadowHandle->getShadowTarget() )
 	{
-		return true;
+		return false;
 	}
 
 	position( shadowHandle->getShadowPivot().value(), shadowHandle->getShadowTarget().value(), shadowHandle->getPivotDistance().value() );

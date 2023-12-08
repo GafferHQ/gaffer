@@ -98,6 +98,11 @@ class GAFFERSCENEUI_API LightPositionTool : public GafferSceneUI::TransformTool
 		bool handleDragMove( GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event );
 		bool handleDragEnd();
 
+		IECore::RunTimeTypedPtr sceneGadgetDragBegin( GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event );
+		bool sceneGadgetDragEnter( GafferUI::Gadget *gadget, const GafferUI::DragDropEvent &event );
+		bool sceneGadgetDragMove( const GafferUI::DragDropEvent &event );
+		bool sceneGadgetDragEnd();
+
 		bool keyPress( const GafferUI::KeyEvent &event );
 		bool keyRelease( const GafferUI::KeyEvent &event );
 		void viewportGadgetLeave( const GafferUI::ButtonEvent &event );
@@ -107,6 +112,8 @@ class GAFFERSCENEUI_API LightPositionTool : public GafferSceneUI::TransformTool
 
 		bool buttonPress( const GafferUI::ButtonEvent &event );
 		bool buttonRelease( const GafferUI::ButtonEvent &event );
+
+		bool placeTarget( const IECore::LineSegment3f &eventLine );
 
 		enum class TargetMode
 		{
@@ -138,6 +145,8 @@ class GAFFERSCENEUI_API LightPositionTool : public GafferSceneUI::TransformTool
 		std::unordered_map<std::string, std::optional<Imath::V3f>> m_shadowPivotMap;  // world-space
 		std::unordered_map<std::string, std::optional<Imath::V3f>> m_shadowTargetMap;  // world-space
 		std::unordered_map<std::string, std::optional<float>> m_shadowPivotDistanceMap;
+
+		bool m_draggingTarget;
 
 		static ToolDescription<LightPositionTool, SceneView> g_toolDescription;
 		static size_t g_firstPlugIndex;
