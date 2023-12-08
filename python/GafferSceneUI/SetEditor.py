@@ -75,8 +75,8 @@ class SetEditor( GafferUI.NodeSetEditor ) :
 				GafferUI.BasicPathFilterWidget( emptySetFilter )
 				GafferUI.BasicPathFilterWidget( emptySelectionFilter )
 
-			self.__setMembersColumn = GafferUI.StandardPathColumn( "Members", "setPath:memberCount" )
-			self.__selectedSetMembersColumn = GafferUI.StandardPathColumn( "Selection", "setPath:selectedMemberCount" )
+			self.__setMembersColumn = _GafferSceneUI._SetEditor.SetMembersColumn()
+			self.__selectedSetMembersColumn = _GafferSceneUI._SetEditor.SetSelectionColumn()
 			self.__includedSetMembersColumn = _GafferSceneUI._SetEditor.VisibleSetInclusionsColumn( scriptNode.context() )
 			self.__excludedSetMembersColumn = _GafferSceneUI._SetEditor.VisibleSetExclusionsColumn( scriptNode.context() )
 			self.__pathListing = GafferUI.PathListingWidget(

@@ -62,6 +62,8 @@
 #include "boost/bind/bind.hpp"
 #include "boost/container/flat_set.hpp"
 
+#include "fmt/format.h"
+
 using namespace std;
 using namespace boost::placeholders;
 using namespace boost::python;
@@ -426,6 +428,92 @@ class SetNameColumn : public StandardPathColumn
 					result.icon = memberCount->readable() > 0 ? g_populatedSetIcon : g_emptySetIcon;
 				}
 			}
+
+			return result;
+		}
+
+};
+
+//////////////////////////////////////////////////////////////////////////
+// SetMembersColumn
+//////////////////////////////////////////////////////////////////////////
+
+class SetMembersColumn : public StandardPathColumn
+{
+
+	public :
+
+		IE_CORE_DECLAREMEMBERPTR( SetMembersColumn )
+
+		SetMembersColumn()
+			:	StandardPathColumn( "Members", g_memberCountPropertyName )
+		{
+		}
+
+		CellData cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const override
+		{
+			CellData result = StandardPathColumn::cellData( path, canceller );
+			if( const auto setName = runTimeCast<const IECore::StringData>( path.property( g_setNamePropertyName, canceller ) ) )
+			{
+				const auto memberCount = runTimeCast<const IECore::IntData>( path.property( g_memberCountPropertyName, canceller ) );
+				const auto count = memberCount ? memberCount->readable() : 0;
+				result.toolTip = new IECore::StringData(
+					fmt::format( "{} scene location{} of {}",
+						count, count == 1 ? " is a member" : "s are members", setName->readable()
+					)
+				);
+			}
+
+			return result;
+		}
+
+		CellData headerData( const IECore::Canceller *canceller ) const override
+		{
+			CellData result = StandardPathColumn::headerData( canceller );
+			result.toolTip = new IECore::StringData( "The number of scene locations that are set members" );
+
+			return result;
+		}
+
+};
+
+//////////////////////////////////////////////////////////////////////////
+// SetSelectionColumn
+//////////////////////////////////////////////////////////////////////////
+
+class SetSelectionColumn : public StandardPathColumn
+{
+
+	public :
+
+		IE_CORE_DECLAREMEMBERPTR( SetSelectionColumn )
+
+		SetSelectionColumn()
+			:	StandardPathColumn( "Selection", g_selectedMemberCountPropertyName )
+		{
+		}
+
+		CellData cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const override
+		{
+			CellData result = StandardPathColumn::cellData( path, canceller );
+			if( const auto setName = runTimeCast<const IECore::StringData>( path.property( g_setNamePropertyName, canceller ) ) )
+			{
+				const auto selectedMemberCount = runTimeCast<const IECore::IntData>( path.property( g_selectedMemberCountPropertyName, canceller ) );
+				const auto count = selectedMemberCount ? selectedMemberCount->readable() : 0;
+				result.toolTip = new IECore::StringData(
+					fmt::format( "{} selected scene location{} of {}",
+						count, count == 1 ? " is a member or descendant" : "s are members and/or descendants", setName->readable()
+					)
+				);
+			}
+
+			return result;
+		}
+
+		CellData headerData( const IECore::Canceller *canceller ) const override
+		{
+			CellData result = StandardPathColumn::headerData( canceller );
+			result.toolTip = new IECore::StringData( "The number of selected scene locations that are set members, or their descendants" );
 
 			return result;
 		}
@@ -1057,6 +1145,14 @@ void GafferSceneUIModule::bindSetEditor()
 	;
 
 	RefCountedClass<SetNameColumn, GafferUI::PathColumn>( "SetNameColumn" )
+		.def( init<>() )
+	;
+
+	RefCountedClass<SetMembersColumn, GafferUI::PathColumn>( "SetMembersColumn" )
+		.def( init<>() )
+	;
+
+	RefCountedClass<SetSelectionColumn, GafferUI::PathColumn>( "SetSelectionColumn" )
 		.def( init<>() )
 	;
 
