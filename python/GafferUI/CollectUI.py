@@ -345,7 +345,7 @@ class _OutputPlugValueWidget( GafferUI.PlugValueWidget ) :
 		return [
 			{
 				"enabledValues" : enabledValuesPlug.getValue(),
-				"outputs" : [ c.getValue() for c in plug.children() ],
+				"outputs" : [ _OutputPlugValueWidget.__conformToVectorData( c.getValue() ) for c in plug.children() ],
 			}
 			for plug, ( enabledValuesPlug, ) in zip( plugs, auxiliaryPlugs )
 		]
@@ -360,6 +360,19 @@ class _OutputPlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		self.__busyWidget.setVisible( exception is None and not values )
 		self.__vectorDataWidget.setErrored( exception is not None )
+
+	@staticmethod
+	def __conformToVectorData( o ) :
+
+		if not isinstance( o, IECore.ObjectVector ) :
+			return o
+
+		# It's unreasonable to expect VectorDataWidget to support ObjectVector
+		# because in the general case it could contain arbitrary objects and
+		# need a UI for editing. But in this case we know the widget is
+		# read-only, and that simple string formatting of the result is sufficient.
+
+		return IECore.StringVectorData( [ str( x ) for x in o ] )
 
 ##########################################################################
 # Delete menu items. We can't use the usual `deletable` metadata because

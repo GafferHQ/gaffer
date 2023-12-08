@@ -13,12 +13,14 @@ Improvements
   - Dragging cells selected from the "Name" column now provides a list of the selected render pass names, rather than their paths.
   - Disabled render pass names are now dimmed to more clearly indicate their state.
 - RenderPassEditor, LightEditor, PathListingWidget : Boolean values are now displayed as checkboxes rather than `0` or `1` [^1].
+- Collect : Added the ability to collect StringVectorData inputs.
 
 Fixes
 -----
 
 - 3Delight : Fixed startup errors on Windows when the `DELIGHT` environment variable wasn't defined [^1].
 - FlatImageProcessor : Fixed bug that could cause an input to be evaluated with an invalid `image:viewName`.
+- Collect : Fixed display of results collected from TypedObjectPlug inputs.
 
 API
 ---
