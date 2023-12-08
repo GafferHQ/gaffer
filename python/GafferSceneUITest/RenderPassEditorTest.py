@@ -152,3 +152,40 @@ class RenderPassEditorTest( GafferUITest.TestCase ) :
 		searchFilter.setMatchPattern( "A D" )
 
 		self.assertEqual( [ str( c ) for c in path.children() ], [ "/A", "/D" ] )
+
+	def testDisabledRenderPassFilter( self ) :
+
+		renderPasses = GafferScene.RenderPasses()
+		renderPasses["names"].setValue( IECore.StringVectorData( ["A", "B", "C", "D"] ) )
+
+		disablePass = GafferScene.CustomOptions( "disablePass" )
+		disablePass["in"].setInput( renderPasses["out"] )
+		disablePass["options"].addChild( Gaffer.NameValuePlug( "renderPass:enabled", Gaffer.BoolPlug( "value", defaultValue = False ), True, "member1" ) )
+
+		# disable A & D
+		switch = Gaffer.NameSwitch()
+		switch.setup( renderPasses["out"] )
+		switch["selector"].setValue( "${renderPass}" )
+		switch["in"]["in0"]["value"].setInput( renderPasses["out"] )
+		switch["in"]["in1"]["value"].setInput( disablePass["out"] )
+		switch["in"]["in1"]["name"].setValue( "A D" )
+
+		context = Gaffer.Context()
+		path = _GafferSceneUI._RenderPassEditor.RenderPassPath( switch["out"]["value"], context, "/" )
+
+		self.assertEqual( [ str( c ) for c in path.children() ], [ "/A", "/B", "/C", "/D" ] )
+
+		pathCopy = path.copy()
+
+		for p in [ "/A", "/B", "/C", "/D" ] :
+			pathCopy.setFromString( p )
+			self.assertEqual( pathCopy.property( "renderPassPath:enabled" ), p in ( "/B", "/C" ) )
+
+		disabledRenderPassFilter = _GafferSceneUI._RenderPassEditor.DisabledRenderPassFilter()
+		path.setFilter( disabledRenderPassFilter )
+
+		self.assertEqual( [ str( c ) for c in path.children() ], [ "/B", "/C" ] )
+
+		disabledRenderPassFilter.setEnabled( False )
+
+		self.assertEqual( [ str( c ) for c in path.children() ], [ "/A", "/B", "/C", "/D" ] )

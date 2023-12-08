@@ -91,7 +91,11 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 		Gaffer.NodeAlgo.applyUserDefaults( self.__settingsNode )
 
 		searchFilter = _GafferSceneUI._RenderPassEditor.SearchFilter()
-		self.__filter = searchFilter
+		disabledRenderPassFilter = _GafferSceneUI._RenderPassEditor.DisabledRenderPassFilter()
+		disabledRenderPassFilter.userData()["UI"] = { "label" : "Hide Disabled", "toolTip" : "Hide render passes that are disabled for rendering" }
+		disabledRenderPassFilter.setEnabled( False )
+
+		self.__filter = Gaffer.CompoundPathFilter( [ searchFilter, disabledRenderPassFilter ] )
 
 		with mainColumn :
 
@@ -101,7 +105,10 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 				rootSection = "Settings"
 			)
 
-			_SearchFilterWidget( searchFilter )
+			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+
+				_SearchFilterWidget( searchFilter )
+				GafferUI.BasicPathFilterWidget( disabledRenderPassFilter )
 
 			self.__renderPassNameColumn = _GafferSceneUI._RenderPassEditor.RenderPassNameColumn()
 			self.__renderPassActiveColumn = _GafferSceneUI._RenderPassEditor.RenderPassActiveColumn()

@@ -684,6 +684,63 @@ class RenderPassEditorSearchFilter : public Gaffer::PathFilter
 
 };
 
+//////////////////////////////////////////////////////////////////////////
+// DisabledRenderPassFilter - filters out paths with a renderPassPath:enabled
+// property value of `false`. This also removes non-leaf paths if all their
+// children have been removed by the filter.
+//////////////////////////////////////////////////////////////////////////
+
+class DisabledRenderPassFilter : public Gaffer::PathFilter
+{
+
+	public :
+
+		IE_CORE_DECLAREMEMBERPTR( DisabledRenderPassFilter )
+
+		DisabledRenderPassFilter( IECore::CompoundDataPtr userData = nullptr )
+			:	PathFilter( userData )
+		{
+		}
+
+		void doFilter( std::vector<PathPtr> &paths, const IECore::Canceller *canceller ) const override
+		{
+			paths.erase(
+				std::remove_if(
+					paths.begin(),
+					paths.end(),
+					[this, canceller] ( auto &p ) { return remove( p, canceller ); }
+				),
+				paths.end()
+			);
+		}
+
+		bool remove( PathPtr path, const IECore::Canceller *canceller ) const
+		{
+			if( !path->names().size() )
+			{
+				return true;
+			}
+
+			bool leaf = path->isLeaf();
+			if( !leaf )
+			{
+				std::vector<PathPtr> c;
+				path->children( c );
+
+				leaf = std::all_of( c.begin(), c.end(), [this, canceller] ( const auto &p ) { return remove( p, canceller ); } );
+			}
+
+			bool enabled = true;
+			if( const auto enabledData = IECore::runTimeCast<const IECore::BoolData>( path->property( g_renderPassEnabledPropertyName, canceller ) ) )
+			{
+				enabled = enabledData->readable();
+			}
+
+			return leaf && !enabled;
+		}
+
+};
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -754,6 +811,10 @@ void GafferSceneUIModule::bindRenderPassEditor()
 		.def( init<IECore::CompoundDataPtr>( ( boost::python::arg( "userData" ) = object() ) ) )
 		.def( "setMatchPattern", &RenderPassEditorSearchFilter::setMatchPattern )
 		.def( "getMatchPattern", &RenderPassEditorSearchFilter::getMatchPattern, return_value_policy<copy_const_reference>() )
+	;
+
+	RefCountedClass<DisabledRenderPassFilter, PathFilter>( "DisabledRenderPassFilter" )
+		.def( init<IECore::CompoundDataPtr>( ( boost::python::arg( "userData" ) = object() ) ) )
 	;
 
 }
