@@ -39,6 +39,8 @@
 
 #include <nsi.h>
 
+#include <numeric>
+
 using namespace std;
 using namespace IECore;
 using namespace IECoreScene;
@@ -66,6 +68,58 @@ void staticParameters( const IECoreScene::MeshPrimitive *mesh, ParameterList &pa
 	}
 }
 
+void convertCornersAndCreases( const IECoreScene::MeshPrimitive *mesh, NSIContext_t context, const char *handle )
+{
+	ParameterList parameters;
+
+	if( mesh->cornerIds()->readable().size() )
+	{
+		parameters.add( "subdivision.cornervertices", mesh->cornerIds() );
+		parameters.add( "subdivision.cornersharpness", mesh->cornerSharpnesses() );
+	}
+
+	IntVectorDataPtr delightIndicesData;       // Must remain alive until we call
+	FloatVectorDataPtr delightSharpnessesData; // NSISetAttribute.
+	if( mesh->creaseLengths()->readable().size() )
+	{
+		// Convert from our arbitrary-length creases
+		// to 3Delight's representation, which specifies
+		// an edge at a time using pairs of ids.
+
+		const auto &lengths = mesh->creaseLengths()->readable();
+		const size_t numEdges = std::accumulate( lengths.begin(), lengths.end(), 0 ) - lengths.size();
+
+		delightIndicesData = new IntVectorData;
+		delightSharpnessesData = new FloatVectorData;
+		auto &delightIndices = delightIndicesData->writable();
+		auto &delightSharpnesses = delightSharpnessesData->writable();
+
+		delightIndices.reserve( numEdges * 2 );
+		delightSharpnesses.reserve( numEdges );
+
+		auto idIt = mesh->creaseIds()->readable().begin();
+		auto sharpnessIt = mesh->creaseSharpnesses()->readable().begin();
+		for( int length : lengths )
+		{
+			for( int j = 0; j < length - 1; ++j )
+			{
+				delightSharpnesses.push_back( *sharpnessIt );
+				delightIndices.push_back( *idIt++ );
+				delightIndices.push_back( *idIt );
+			}
+			sharpnessIt++;
+		}
+
+		parameters.add( "subdivision.creasevertices", delightIndicesData.get() );
+		parameters.add( "subdivision.creasesharpness", delightSharpnessesData.get() );
+	}
+
+	if( parameters.size() )
+	{
+		NSISetAttribute( context, handle, parameters.size(), parameters.data() );
+	}
+}
+
 bool convertStatic( const IECoreScene::MeshPrimitive *mesh, NSIContext_t context, const char *handle )
 {
 	NSICreate( context, handle, "mesh", 0, nullptr );
@@ -75,6 +129,8 @@ bool convertStatic( const IECoreScene::MeshPrimitive *mesh, NSIContext_t context
 	NodeAlgo::primitiveVariableParameterList( mesh, parameters, mesh->vertexIds() );
 
 	NSISetAttribute( context, handle, parameters.size(), parameters.data() );
+
+	convertCornersAndCreases( mesh, context, handle );
 
 	return true;
 }
@@ -102,6 +158,8 @@ bool convertAnimated( const vector<const IECoreScene::MeshPrimitive *> &meshes, 
 			NSISetAttributeAtTime( context, handle, times[i], animatedParameters[i].size(), animatedParameters[i].data() );
 		}
 	}
+
+	convertCornersAndCreases( meshes.front(), context, handle );
 
 	return true;
 }
