@@ -96,7 +96,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			)
 			self.__executeInBackground = dispatcher["executeInBackground"].getValue()
 
-			self.__startTime = datetime.datetime.now()
+			self.__startTime = datetime.datetime.now( datetime.timezone.utc )
 			self.__endTime = None
 
 			self.__messageHandler = _MessageHandler()
@@ -140,7 +140,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			if self.__endTime is not None :
 				return self.__endTime - self.__startTime
 			else :
-				return datetime.datetime.now() - self.__startTime
+				return datetime.datetime.now( datetime.timezone.utc ) - self.__startTime
 
 		def processID( self ) :
 
@@ -384,7 +384,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			self.__status = status
 
 			if status in ( self.Status.Complete, self.Status.Failed, self.Status.Killed ) :
-				self.__endTime = datetime.datetime.now()
+				self.__endTime = datetime.datetime.now( datetime.timezone.utc )
 
 			if threading.current_thread() is threading.main_thread() :
 				self.__emitStatusChanged()

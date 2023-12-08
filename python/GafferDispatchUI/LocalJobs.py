@@ -341,7 +341,7 @@ class LocalJobs( GafferUI.Editor ) :
 			value = sole( values )
 			if value is not None :
 				if isinstance( value, datetime.datetime ) :
-					return "{:%a %b %d %H:%M:%S}".format( value )
+					return "{:%a %b %d %H:%M:%S}".format( value.astimezone() )
 				else :
 					return str( value )
 			else :
