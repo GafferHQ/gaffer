@@ -9,6 +9,11 @@ Improvements
 - TaskList, FrameMask : Reimplemented in C++ for improved performance.
 - Cache : Increased default computation cache size to 8Gb. Call `Gaffer.ValuePlug.setCacheMemoryLimit()` from a startup file to override this.
 
+Fixes
+-----
+
+- BackgroundTask : Fixed potential deadlock caused by destroying a BackgroundTask from Python while it was still running.
+
 API
 ---
 
