@@ -79,4 +79,6 @@ class GAFFERIMAGE_API DeepSampler : public Gaffer::ComputeNode
 
 };
 
+IE_CORE_DECLAREPTR( DeepSampler )
+
 } // namespace GafferImage
