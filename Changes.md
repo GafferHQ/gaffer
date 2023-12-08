@@ -1,6 +1,11 @@
 1.3.x.x (relative to 1.3.8.0)
 =======
 
+Improvements
+------------
+
+- 3Delight : Added support for subdivision corners and creases.
+
 Fixes
 -----
 
