@@ -28,6 +28,7 @@ API
 ---
 
 - ArnoldShaderUI : Added support for `colorSpace` widget type metadata, allowing an OpenColorIO colour space to be chosen.
+- PathColumn : Added `CellData::foreground` member, to provide additional control over foreground colours in the PathListingWidget.
 
 1.3.10.0 (relative to 1.3.9.0)
 ========
