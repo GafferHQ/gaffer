@@ -141,6 +141,7 @@ void GafferSceneUIModule::bindInspector()
 			.value( "EditScope", Inspector::Result::SourceType::EditScope )
 			.value( "Downstream", Inspector::Result::SourceType::Downstream )
 			.value( "Other", Inspector::Result::SourceType::Other )
+			.value( "Fallback", Inspector::Result::SourceType::Fallback )
 		;
 	}
 
