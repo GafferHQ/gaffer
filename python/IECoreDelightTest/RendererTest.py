@@ -1048,6 +1048,32 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( len( nsi[testShader]["uvCoord"] ), 1 )
 		self.assertEqual( self.__connectionSource( nsi[testShader]["uvCoord"][0], nsi ), nsi[uvShader] )
 
+	def testCornersAndCreases( self ) :
+
+		mesh = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) )
+		mesh.setInterpolation( "catmullClark" )
+		mesh.setCorners( IECore.IntVectorData( [ 3 ] ), IECore.FloatVectorData( [ 5 ] ) )
+		mesh.setCreases( IECore.IntVectorData( [ 3 ] ), IECore.IntVectorData( [ 0, 1, 2 ] ), IECore.FloatVectorData( [ 6 ] ) )
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"3Delight",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.nsi" ),
+		)
+
+		renderer.object( "testPlane", mesh, renderer.attributes( IECore.CompoundObject() ) )
+
+		renderer.render()
+		del renderer
+
+		nsi = self.__parseDict( self.temporaryDirectory() / "test.nsi" )
+
+		mesh = next( node for node in nsi.values() if node["nodeType"] == "mesh" )
+		self.assertEqual( mesh["subdivision.creasevertices"], [ 0, 1, 1, 2 ] )
+		self.assertEqual( mesh["subdivision.creasesharpness"], [ 6, 6 ] )
+		self.assertEqual( mesh["subdivision.cornervertices"], 3 )
+		self.assertEqual( mesh["subdivision.cornersharpness"], 5 )
+
 	# Helper methods used to check that NSI files we write contain what we
 	# expect. The 3delight API only allows values to be set, not queried,
 	# so we build a simple dictionary-based node graph for now.
