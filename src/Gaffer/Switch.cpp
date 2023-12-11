@@ -49,8 +49,15 @@
 using namespace boost::placeholders;
 using namespace Gaffer;
 
-static IECore::InternedString g_inPlugsName( "in" );
-static IECore::InternedString g_outPlugName( "out" );
+namespace
+{
+
+const IECore::InternedString g_inPlugsName( "in" );
+const IECore::InternedString g_outPlugName( "out" );
+
+ConstContextPtr g_defaultContext = new Context;
+
+} // namespace
 
 GAFFER_NODE_DEFINE_TYPE( Switch );
 
@@ -418,6 +425,12 @@ void Switch::updateInternalConnection()
 		return;
 	}
 
-	Plug *in = const_cast<Plug *>( oppositePlug( out, Context::current() ) );
+	// The context is irrelevant since we've already checked that `indexPlug()`
+	// and `enabledPlug()` aren't computed. But we need to pass _something_ non-null
+	// because that is how we tell `oppositePlug()` we want it to take the index
+	// into account. And we need to scope this default context too - see
+	// `SwitchTest.testInternalConnectionWithTypeConversionAndCanceller()`.
+	Context::Scope scope( g_defaultContext.get() );
+	Plug *in = const_cast<Plug *>( oppositePlug( out, g_defaultContext.get() ) );
 	out->setInput( in );
 }
