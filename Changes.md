@@ -49,6 +49,7 @@ API
 - GafferTractorTest : Added `tractorAPI()` method which returns a mock API if Tractor is not available. This allows the GafferTractor module to be tested without Tractor being installed.
 - ParallelAlgo : Added `canCallOnUIThread()` function.
 - Label : Added `textSelectable` constructor argument.
+- ShufflePlugValueWidget : Widgets for the `source` and `destination` plugs can now be customised using standard `plugValueWidget:type` metadata.
 
 Breaking Changes
 ----------------

@@ -43,6 +43,8 @@ import IECore
 import Gaffer
 import GafferUI
 
+from Qt import QtWidgets
+
 ##########################################################################
 # ShufflePlug Widget
 ##########################################################################
@@ -57,8 +59,11 @@ class ShufflePlugValueWidget( GafferUI.PlugValueWidget ) :
 
 		GafferUI.PlugValueWidget.__init__( self, self.__row, plugs )
 
-		sourceWidget = GafferUI.StringPlugValueWidget( { p["source"] for p in self.getPlugs() } )
-		sourceWidget.textWidget()._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
+		sourceWidget = GafferUI.PlugValueWidget.create( { p["source"] for p in self.getPlugs() } )
+		sourceWidget._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
+		if sourceWidget._qtWidget().layout() is not None :
+			sourceWidget._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetDefaultConstraint )
+
 		self.__row.append( sourceWidget, verticalAlignment = GafferUI.Label.VerticalAlignment.Top )
 
 		self.__row.append(
@@ -69,14 +74,28 @@ class ShufflePlugValueWidget( GafferUI.PlugValueWidget ) :
 			verticalAlignment = GafferUI.Label.VerticalAlignment.Top,
 		)
 
-		destinationWidget = GafferUI.StringPlugValueWidget( { p["destination"] for p in self.getPlugs() } )
-		destinationWidget.textWidget()._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
+		destinationWidget = GafferUI.PlugValueWidget.create( { p["destination"] for p in self.getPlugs() } )
+		destinationWidget._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() )
+		if destinationWidget._qtWidget().layout() is not None :
+			destinationWidget._qtWidget().layout().setSizeConstraint( QtWidgets.QLayout.SetDefaultConstraint )
 		self.__row.append( destinationWidget, verticalAlignment = GafferUI.Label.VerticalAlignment.Top )
 
 		deleteSourceWidget = GafferUI.BoolPlugValueWidget( { p["deleteSource"] for p in self.getPlugs() } )
 		deleteSourceWidget.boolWidget()._qtWidget().setFixedWidth( GafferUI.PlugWidget.labelWidth() - 40 )
-		self.__row.append( deleteSourceWidget )
-		self.__row.append( GafferUI.BoolPlugValueWidget( { p["replaceDestination"] for p in self.getPlugs() } ) )
+		self.__row.append( deleteSourceWidget, verticalAlignment = GafferUI.Label.VerticalAlignment.Top )
+		self.__row.append(
+			GafferUI.BoolPlugValueWidget( { p["replaceDestination"] for p in self.getPlugs() } ),
+			verticalAlignment = GafferUI.Label.VerticalAlignment.Top,
+		)
+
+		# Work around annoying Qt behaviour whereby QHBoxLayout expands vertically if all children
+		# have a vertical alignment. This appears to ultimately be the fault of `qSmartMaxSize` in
+		# `qlayoutengine.cpp`, which sets the maximum height to `QLAYOUTSIZE_MAX` when there is _any_
+		# vertical alignment flag set.
+		self.__row.append(
+			GafferUI.Spacer( imath.V2i( 0 ), maximumSize = imath.V2i( 0 ) ),
+			# Note : no `verticalAlignment` argument
+		)
 
 	def setPlugs( self, plugs ) :
 
