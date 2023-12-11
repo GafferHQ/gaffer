@@ -36,6 +36,7 @@ API
 - IconPathColumn :
   - Added constructor which allows the full header CellData to be specified.
   - Added `prefix()` and `property()` accessors.
+- Window : Added `preCloseSignal()`, which allows connected slots to prevent a window from being closed.
 - LocalDispatcher :
   - Added `Job.status()` and `Job.statusChangedSignal()` methods.
   - Added `Job.messages()` and `Job.messagesChangedSignal()` methods.
