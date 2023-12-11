@@ -51,6 +51,8 @@
 
 #include "fmt/format.h"
 
+#include <unordered_map>
+
 using namespace std;
 using namespace IECore;
 using namespace Gaffer;
