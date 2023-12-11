@@ -98,23 +98,64 @@ tuple<const Plug *, ConstContextPtr> computedSource( const Plug *plug )
 	return make_tuple( plug, Context::current() );
 }
 
+const InternedString g_frame( "frame" );
+
+// TaskBatch contexts are identical to the contexts of their corresponding
+// Tasks, except that they omit the `frame` variable. We need to construct a
+// _lot_ of them during dispatch, and many TaskBatches have identical contexts.
+// So we use BatchContextPool to eliminate the copying overhead by constructing
+// only a single instance of each unique context.
+struct BatchContextPool
+{
+
+	ConstContextPtr acquireUnique( const Context *taskContext )
+	{
+		// Get the hash of the `taskContext`, but omitting the frame value.
+		// The "sum of variable hashes" approach mirrors what `Context::hash()`
+		// does itself, and means that `ui:` prefixed variables have no effect.
+		m_names.clear();
+		taskContext->names( m_names );
+		uint64_t sumH1 = 0, sumH2 = 0;
+		for( const auto &name : m_names )
+		{
+			if( name == g_frame )
+			{
+				continue;
+			}
+			const MurmurHash vh = taskContext->variableHash( name );
+			sumH1 += vh.h1();
+			sumH2 += vh.h2();
+		}
+
+		auto [it, inserted] = m_contexts.insert( { MurmurHash( sumH1, sumH2 ), nullptr } );
+		if( inserted )
+		{
+			ContextPtr batchContext = new Context( *taskContext );
+			batchContext->remove( g_frame );
+			it->second = batchContext;
+		}
+
+		return it->second;
+	}
+
+	private :
+
+		std::unordered_map<IECore::MurmurHash, ConstContextPtr> m_contexts;
+		// Scratch space to avoid allocations every time we query names.
+		std::vector<InternedString> m_names;
+
+};
+
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
 // Dispatcher
 //////////////////////////////////////////////////////////////////////////
 
-static InternedString g_frame( "frame" );
 static InternedString g_batchSize( "batchSize" );
 static InternedString g_immediatePlugName( "immediate" );
-static InternedString g_postTaskIndexBlindDataName( "dispatcher:postTaskIndex" );
-static InternedString g_immediateBlindDataName( "dispatcher:immediate" );
-static InternedString g_sizeBlindDataName( "dispatcher:size" );
-static InternedString g_executedBlindDataName( "dispatcher:executed" );
-static InternedString g_visitedBlindDataName( "dispatcher:visited" );
 static InternedString g_jobDirectoryContextEntry( "dispatcher:jobDirectory" );
 static InternedString g_scriptFileNameContextEntry( "dispatcher:scriptFileName" );
-static IECore::BoolDataPtr g_trueBoolData = new BoolData( true );
 
 size_t Dispatcher::g_firstPlugIndex = 0;
 Dispatcher::PreDispatchSignal Dispatcher::g_preDispatchSignal;
@@ -289,11 +330,11 @@ void Dispatcher::setupPlugs( Plug *parentPlug )
 	parentPlug->addChild( new BoolPlug( g_immediatePlugName, Plug::In, false ) );
 
 	const CreatorMap &m = creators();
-	for ( CreatorMap::const_iterator it = m.begin(); it != m.end(); ++it )
+	for( const auto &[name, creator] : m )
 	{
-		if ( it->second.second )
+		if( creator.second )
 		{
-			it->second.second( parentPlug );
+			creator.second( parentPlug );
 		}
 	}
 }
@@ -328,21 +369,13 @@ FrameListPtr Dispatcher::frameRange( const ScriptNode *script, const Context *co
 //////////////////////////////////////////////////////////////////////////
 
 Dispatcher::TaskBatch::TaskBatch()
-	:	m_blindData( new CompoundData )
+	:	TaskBatch( nullptr, nullptr )
 {
 }
 
 Dispatcher::TaskBatch::TaskBatch( TaskNode::ConstTaskPlugPtr plug, Gaffer::ConstContextPtr context )
-	:	m_plug( plug ), m_context( new Context( *context ) ), m_blindData( new CompoundData )
-{
-	// Frames must be determined by our `frames()` field, so
-	// remove any possibility of accidentally using the frame
-	// from the context.
-	m_context->remove( "frame" );
-}
-
-Dispatcher::TaskBatch::TaskBatch( ConstTaskNodePtr node, Gaffer::ConstContextPtr context )
-	:	TaskBatch( node->taskPlug(), context )
+	:	m_plug( plug ), m_context( context ), m_blindData( new CompoundData ),
+		m_size( 0 ), m_postTaskIndex( 0 ), m_immediate( false ), m_visited( false ), m_executed( false )
 {
 }
 
@@ -372,19 +405,9 @@ const Context *Dispatcher::TaskBatch::context() const
 	return m_context.get();
 }
 
-std::vector<float> &Dispatcher::TaskBatch::frames()
-{
-	return m_frames;
-}
-
 const std::vector<float> &Dispatcher::TaskBatch::frames() const
 {
 	return m_frames;
-}
-
-std::vector<Dispatcher::TaskBatchPtr> &Dispatcher::TaskBatch::preTasks()
-{
-	return m_preTasks;
 }
 
 const std::vector<Dispatcher::TaskBatchPtr> &Dispatcher::TaskBatch::preTasks() const
@@ -439,8 +462,7 @@ class Dispatcher::Batcher
 			// Switches and ContextProcessors.
 			{
 				Context::Scope scopedTaskContext( task.context() );
-				const Plug *sourcePlug; ConstContextPtr sourceContext;
-				tie( sourcePlug, sourceContext ) = computedSource( task.plug() );
+				auto [sourcePlug, sourceContext] = computedSource( task.plug() );
 				if( auto sourceTaskPlug = runTimeCast<const TaskNode::TaskPlug>( sourcePlug ) )
 				{
 					task = TaskNode::Task( sourceTaskPlug, sourceContext ? sourceContext.get() : task.context() );
@@ -482,9 +504,9 @@ class Dispatcher::Batcher
 			// in the ancestors for cycle detection when getting
 			// the preTask batches.
 			TaskBatches postBatches;
-			for( TaskNode::Tasks::const_iterator it = postTasks.begin(); it != postTasks.end(); ++it )
+			for( const auto &postTask : postTasks )
 			{
-				if( auto postBatch = batchTasksWalk( *it ) )
+				if( auto postBatch = batchTasksWalk( postTask ) )
 				{
 					postBatches.push_back( postBatch );
 				}
@@ -495,14 +517,14 @@ class Dispatcher::Batcher
 
 			std::set<const TaskBatch *> preTaskAncestors( ancestors );
 			preTaskAncestors.insert( batch.get() );
-			for( TaskBatches::const_iterator it = postBatches.begin(), eIt = postBatches.end(); it != eIt; ++it )
+			for( const auto &postBatch : postBatches )
 			{
-				preTaskAncestors.insert( it->get() );
+				preTaskAncestors.insert( postBatch.get() );
 			}
 
-			for( TaskNode::Tasks::const_iterator it = preTasks.begin(); it != preTasks.end(); ++it )
+			for( const auto &preTask : preTasks )
 			{
-				if( auto preBatch = batchTasksWalk( *it, preTaskAncestors ) )
+				if( auto preBatch = batchTasksWalk( preTask, preTaskAncestors ) )
 				{
 					addPreTask( batch.get(), preBatch );
 				}
@@ -513,10 +535,10 @@ class Dispatcher::Batcher
 			// this batch a preTask of each of the postTask batches. We also
 			// add the postTask batches as preTasks for the root, so that they
 			// are reachable from doDispatch().
-			for( TaskBatches::const_iterator it = postBatches.begin(), eIt = postBatches.end(); it != eIt; ++it )
+			for( const auto &postBatch : postBatches )
 			{
-				addPreTask( it->get(), batch, /* forPostTask =  */ true );
-				addPreTask( m_rootBatch.get(), *it );
+				addPreTask( postBatch.get(), batch, /* forPostTask =  */ true );
+				addPreTask( m_rootBatch.get(), postBatch );
 			}
 
 			return batch;
@@ -539,16 +561,16 @@ class Dispatcher::Batcher
 			{
 				// Prevent no-ops from coalescing into a single batch, as this
 				// would break parallelism - see `DispatcherTest.testNoOpDoesntBreakFrameParallelism()`
-				taskHash.append( contextHash( task.context() ) );
+				taskHash.append( task.context()->hash() );
 			}
 			// Prevent identical tasks from different nodes from being
 			// coalesced.
 			taskHash.append( (uint64_t)task.plug() );
 
-			const TaskToBatchMap::const_iterator it = m_tasksToBatches.find( taskHash );
-			if( it != m_tasksToBatches.end() )
+			TaskBatchPtr &batchForTask = m_tasksToBatches[taskHash];
+			if( batchForTask )
 			{
-				return it->second;
+				return batchForTask;
 			}
 
 			// We haven't seen this task before, so we need to find
@@ -558,29 +580,25 @@ class Dispatcher::Batcher
 
 			const bool requiresSequenceExecution = task.plug()->requiresSequenceExecution();
 
-			TaskBatchPtr batch = nullptr;
-			const MurmurHash batchMapHash = batchHash( task );
-			BatchMap::iterator bIt = m_currentBatches.find( batchMapHash );
-			if( bIt != m_currentBatches.end() )
+			ConstContextPtr batchContext = m_batchContextPool.acquireUnique( task.context() );
+			MurmurHash batchMapHash = batchContext->hash();
+			batchMapHash.append( (uint64_t)task.plug() );
+
+			TaskBatchPtr &batch = m_currentBatches[batchMapHash];
+			if( batch && !requiresSequenceExecution )
 			{
-				TaskBatchPtr candidateBatch = bIt->second;
-				// Unfortunately we have to track batch size separately from `batch->frames().size()`,
-				// because no-ops don't update `frames()`, but _do_ count towards batch size.
-				IntDataPtr batchSizeData = candidateBatch->blindData()->member<IntData>( g_sizeBlindDataName );
 				const IntPlug *batchSizePlug = dispatcherPlug( task )->getChild<const IntPlug>( g_batchSize );
 				const int batchSizeLimit = ( batchSizePlug ) ? batchSizePlug->getValue() : 1;
-				if( requiresSequenceExecution || ( batchSizeData->readable() < batchSizeLimit ) )
+				if( batch->m_size >= (size_t)batchSizeLimit )
 				{
-					batch = candidateBatch;
-					batchSizeData->writable()++;
+					// The current batch is full, so we'll need to make a new one.
+					batch = nullptr;
 				}
 			}
 
 			if( !batch )
 			{
-				batch = new TaskBatch( task.plug(), task.context() );
-				batch->blindData()->writable()[g_sizeBlindDataName] = new IntData( 1 );
-				m_currentBatches[batchMapHash] = batch;
+				batch = new TaskBatch( task.plug(), batchContext );
 			}
 
 			// Now we have an appropriate batch, update it to include
@@ -589,7 +607,7 @@ class Dispatcher::Batcher
 			if( !taskIsNoOp )
 			{
 				float frame = task.context()->getFrame();
-				std::vector<float> &frames = batch->frames();
+				std::vector<float> &frames = batch->m_frames;
 				if( requiresSequenceExecution )
 				{
 					frames.insert( std::lower_bound( frames.begin(), frames.end(), frame ), frame );
@@ -600,83 +618,74 @@ class Dispatcher::Batcher
 				}
 			}
 
+			batch->m_size++;
+
 			const BoolPlug *immediatePlug = dispatcherPlug( task )->getChild<const BoolPlug>( g_immediatePlugName );
 			if( immediatePlug && immediatePlug->getValue() )
 			{
-				batch->blindData()->writable()[g_immediateBlindDataName] = g_trueBoolData;
+				batch->m_immediate = true;
 			}
 
 			// Remember which batch we stored this task in, for
 			// the next time someone asks for it.
-			m_tasksToBatches[taskHash] = batch;
+			batchForTask = batch;
 
 			return batch;
 		}
 
-		// Hash used to determine how to coalesce tasks into batches.
-		// If `batchHash( task1 ) == batchHash( task2 )` then the two
-		// tasks can be placed in the same batch.
-		IECore::MurmurHash batchHash( const TaskNode::Task &task )
-		{
-			MurmurHash result;
-			result.append( (uint64_t)task.plug() );
-			// We ignore the frame because the whole point of batching
-			// is to allow multiple frames to be placed in the same
-			// batch if the context is otherwise identical.
-			result.append( contextHash( task.context(), /* ignoreFrame = */ true ) );
-			return result;
-		}
-
-		IECore::MurmurHash contextHash( const Context *context, bool ignoreFrame = false ) const
-		{
-			IECore::MurmurHash result;
-			std::vector<IECore::InternedString> names;
-			context->names( names );
-			for( std::vector<IECore::InternedString>::const_iterator it = names.begin(); it != names.end(); ++it )
-			{
-				// Ignore the UI values since they should be irrelevant
-				// to execution.
-				if( boost::starts_with( it->string(), "ui:" ) )
-				{
-					continue;
-				}
-				if( ignoreFrame && *it == g_frame )
-				{
-					continue;
-				}
-
-				result.append( context->variableHash( *it ) );
-			}
-			return result;
-		}
-
 		void addPreTask( TaskBatch *batch, TaskBatchPtr preTask, bool forPostTask = false )
 		{
-			TaskBatches &preTasks = batch->preTasks();
-			if( std::find( preTasks.begin(), preTasks.end(), preTask ) == preTasks.end() )
+			// Check that `preTask` isn't already in `batch->m_preTasks`,
+			// returning if it is.
+
+			const size_t setThreshold = 1000;
+			TaskBatches &preTasks = batch->m_preTasks;
+			if( preTasks.size() < setThreshold )
 			{
-				if( forPostTask )
+				// Linear search is cheaper than set lookups for smallish
+				// numbers of preTasks.
+				if( std::find( preTasks.begin(), preTasks.end(), preTask ) != preTasks.end() )
 				{
-					// We're adding the preTask because the batch is a postTask
-					// of it, but the batch may already have it's own standard
-					// preTasks. There's no strict requirement that we separate
-					// out these two types of preTasks (indeed a good dispatcher might
-					// execute them in parallel), but for simple dispatchers
-					// it's more intuitive to users if we separate them so the
-					// standard preTasks come second.
-					//
-					// See `DispatcherTest.testPostTaskWithPreTasks()` for an
-					// example.
-					IntDataPtr postTaskIndex = batch->blindData()->member<IntData>(
-						g_postTaskIndexBlindDataName, /* throwExceptions = */ false, /* createIfMissing = */ true
-					);
-					preTasks.insert( preTasks.begin() + postTaskIndex->readable(), preTask );
-					postTaskIndex->writable()++;
+					return;
 				}
-				else
+			}
+			else
+			{
+				// But for large numbers of preTasks we switch to testing
+				// a set for membership for improved performance.
+				if( batch->m_preTasksSet.empty() )
 				{
-					preTasks.push_back( preTask );
+					for( const auto &p : preTasks )
+					{
+						batch->m_preTasksSet.insert( p.get() );
+					}
 				}
+				if( !batch->m_preTasksSet.insert( preTask.get() ).second )
+				{
+					return;
+				}
+			}
+
+			// Add to preTasks.
+
+			if( forPostTask )
+			{
+				// We're adding the preTask because the batch is a postTask
+				// of it, but the batch may already have it's own standard
+				// preTasks. There's no strict requirement that we separate
+				// out these two types of preTasks (indeed a good dispatcher might
+				// execute them in parallel), but for simple dispatchers
+				// it's more intuitive to users if we separate them so the
+				// standard preTasks come second.
+				//
+				// See `DispatcherTest.testPostTaskWithPreTasks()` for an
+				// example.
+				preTasks.insert( preTasks.begin() + batch->m_postTaskIndex, preTask );
+				batch->m_postTaskIndex++;
+			}
+			else
+			{
+				preTasks.push_back( preTask );
 			}
 		}
 
@@ -685,12 +694,13 @@ class Dispatcher::Batcher
 			return static_cast<const TaskNode *>( task.plug()->node() )->dispatcherPlug();
 		}
 
-		using BatchMap = std::map<IECore::MurmurHash, TaskBatchPtr>;
-		using TaskToBatchMap = std::map<IECore::MurmurHash, TaskBatchPtr>;
+		using BatchMap = std::unordered_map<IECore::MurmurHash, TaskBatchPtr>;
+		using TaskToBatchMap = std::unordered_map<IECore::MurmurHash, TaskBatchPtr>;
 
 		TaskBatchPtr m_rootBatch;
 		BatchMap m_currentBatches;
 		TaskToBatchMap m_tasksToBatches;
+		BatchContextPool m_batchContextPool;
 
 };
 
@@ -807,12 +817,12 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 	frameList->asList( frames );
 
 	Batcher batcher;
-	for( std::vector<FrameList::Frame>::const_iterator fIt = frames.begin(); fIt != frames.end(); ++fIt )
+	for( const auto &frame : frames )
 	{
-		for( std::vector<TaskNodePtr>::const_iterator nIt = taskNodes.begin(); nIt != taskNodes.end(); ++nIt )
+		for( const auto &taskNode : taskNodes )
 		{
-			jobContext->setFrame( *fIt );
-			batcher.addTask( TaskNode::Task( *nIt, Context::current() ) );
+			jobContext->setFrame( frame );
+			batcher.addTask( TaskNode::Task( taskNode->taskPlug(), Context::current() ) );
 		}
 	}
 
@@ -856,19 +866,20 @@ void Dispatcher::dispatch( const std::vector<NodePtr> &nodes ) const
 
 void Dispatcher::executeAndPruneImmediateBatches( TaskBatch *batch, bool immediate ) const
 {
-	if( batch->blindData()->member<BoolData>( g_visitedBlindDataName ) )
+	if( batch->m_visited )
 	{
 		return;
 	}
 
-	immediate = immediate || batch->blindData()->member<BoolData>( g_immediateBlindDataName );
+	immediate = immediate || batch->m_immediate;
 
-	TaskBatches &preTasks = batch->preTasks();
+	TaskBatches &preTasks = batch->m_preTasks;
 	for( TaskBatches::iterator it = preTasks.begin(); it != preTasks.end(); )
 	{
 		executeAndPruneImmediateBatches( it->get(), immediate );
-		if( (*it)->blindData()->member<BoolData>( g_executedBlindDataName ) )
+		if( (*it)->m_executed )
 		{
+			batch->m_preTasksSet.erase( it->get() );
 			it = preTasks.erase( it );
 		}
 		else
@@ -880,10 +891,10 @@ void Dispatcher::executeAndPruneImmediateBatches( TaskBatch *batch, bool immedia
 	if( immediate )
 	{
 		batch->execute();
-		batch->blindData()->writable()[g_executedBlindDataName] = g_trueBoolData;
+		batch->m_executed = true;
 	}
 
-	batch->blindData()->writable()[g_visitedBlindDataName] = g_trueBoolData;
+	batch->m_visited = true;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -920,9 +931,9 @@ void Dispatcher::registerDispatcher( const std::string &dispatcherType, Creator 
 void Dispatcher::registeredDispatchers( std::vector<std::string> &dispatcherTypes )
 {
 	const CreatorMap &m = creators();
-	for ( CreatorMap::const_iterator it = m.begin(); it!=m.end(); ++it )
+	for( const auto &[name, creator] : m )
 	{
-		dispatcherTypes.push_back( it->first );
+		dispatcherTypes.push_back( name );
 	}
 }
 

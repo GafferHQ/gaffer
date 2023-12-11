@@ -8,6 +8,7 @@ Improvements
 - CropWindowTool : Added <kbd>`Alt` + <kbd>`C` for toggling both the crop window tool and the relevant crop window `enabled` plug.
 - TaskList, FrameMask : Reimplemented in C++ for improved performance.
 - Cache : Increased default computation cache size to 8Gb. Call `Gaffer.ValuePlug.setCacheMemoryLimit()` from a startup file to override this.
+- Dispatcher : Reduced internal overhead of `dispatch()` call, with one benchmark showing around a 3x speedup.
 
 Fixes
 -----
@@ -26,7 +27,13 @@ Breaking Changes
 - Render : Changed `render:includedPurposes` default to `"default", "render"`.
 - ValuePlug : Removed deprecated `getObjectValue()` overload.
 - Preferences : Removed `cache` plug.
-- Dispatcher : Removed `createMatching()` method.
+- TaskNode :
+  - The `Task` constructor no longer takes a copy of the context, so the context must not be modified after being passed.
+  - Removed `Task( taskNode, context )` constructor. Use `Task( taskNode["task"], context )` instead.
+- Dispatcher :
+  - Removed `createMatching()` method.
+  - Removed non-const TaskBatch accessors `frames()` and `preTasks()`.
+  - Made `TaskBatch` constructors private.
 - Process : Removed non-const variant of the `handleException()` method.
 - StringPlug : Removed deprecated `precomputedHash` argument from `getValue()` method.
 - OpenColorIOContext : Removed `configEnabledPlug()`, `configValuePlug()`, `workingSpaceEnabledPlug()` and `workingSpaceValuePlug()` methods. Use the OptionalValuePlug child accessors instead.

@@ -883,7 +883,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 					customContext = Gaffer.Context( context )
 					customContext["selfExecutingNode:preExecute"] = True
-					preTasks = [ GafferDispatch.TaskNode.Task( self, customContext ) ]
+					preTasks = [ GafferDispatch.TaskNode.Task( self["task"], customContext ) ]
 
 				else :
 
@@ -1050,6 +1050,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( [ l.context.getFrame() for l in log ], [ 1, 1, 2, 2, 3, 3, 4, 4, 5, 5 ] )
 		self.assertEqual( [ l.node for l in log ], [ s["perFrame1"], s["perFrame2"] ] * 5 )
 
+	@GafferTest.TestRunner.PerformanceTestMethod()
 	def testManyFrames( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -1069,11 +1070,32 @@ class DispatcherTest( GafferTest.TestCase ) :
 		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
 		dispatcher["framesMode"].setValue( dispatcher.FramesMode.CustomRange )
 		dispatcher["frameRange"].setValue( "1-10000" )
-		dispatcher.dispatch( [ s["t3"] ] )
+		with GafferTest.TestRunner.PerformanceScope() :
+			dispatcher.dispatch( [ s["t3"] ] )
 
 		self.assertEqual( len( s["t1"].log ), 10000 )
 		self.assertEqual( len( s["t2"].log ), 10000 )
 		self.assertEqual( len( s["t3"].log ), 10000 )
+
+	@GafferTest.TestRunner.PerformanceTestMethod()
+	def testBasicBatcherPerformance( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["taskList1"] = GafferDispatch.TaskList()
+		script["taskList2"] = GafferDispatch.TaskList()
+		script["taskList2"]["preTasks"][0].setInput( script["taskList1"]["task"] )
+		script["taskList3"] = GafferDispatch.TaskList()
+		script["taskList3"]["preTasks"][0].setInput( script["taskList2"]["task"] )
+
+		dispatcher = GafferDispatchTest.DispatcherTest.NullDispatcher()
+		dispatcher["framesMode"].setValue( dispatcher.FramesMode.CustomRange )
+		dispatcher["frameRange"].setValue( "1-200000" )
+		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory())
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			# Because NullDispatcher doesn't do anything in `_doDispatch()`, here
+			# we're mostly just testing the internal Batcher machinery in Dispatcher.
+			dispatcher.dispatch( [ script["taskList3"] ] )
 
 	def testDirectCyles( self ) :
 

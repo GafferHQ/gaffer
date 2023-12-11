@@ -52,6 +52,7 @@
 #include <map>
 #include <set>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 namespace Gaffer
@@ -224,11 +225,6 @@ class GAFFERDISPATCH_API Dispatcher : public Gaffer::Node
 		{
 			public :
 
-				TaskBatch();
-				TaskBatch( TaskNode::ConstTaskPlugPtr plug, Gaffer::ConstContextPtr context );
-				/// \deprecated
-				TaskBatch( ConstTaskNodePtr node, Gaffer::ConstContextPtr context );
-
 				IE_CORE_DECLAREMEMBERPTR( TaskBatch );
 
 				void execute() const;
@@ -238,10 +234,7 @@ class GAFFERDISPATCH_API Dispatcher : public Gaffer::Node
 				const TaskNode *node() const;
 				const Gaffer::Context *context() const;
 
-				std::vector<float> &frames();
 				const std::vector<float> &frames() const;
-
-				TaskBatches &preTasks();
 				const TaskBatches &preTasks() const;
 
 				IECore::CompoundData *blindData();
@@ -249,11 +242,30 @@ class GAFFERDISPATCH_API Dispatcher : public Gaffer::Node
 
 			private :
 
+				TaskBatch();
+				TaskBatch( TaskNode::ConstTaskPlugPtr plug, Gaffer::ConstContextPtr context );
+
+				friend class Dispatcher;
+
 				TaskNode::ConstTaskPlugPtr m_plug;
-				Gaffer::ContextPtr m_context;
+				Gaffer::ConstContextPtr m_context;
 				IECore::CompoundDataPtr m_blindData;
 				std::vector<float> m_frames;
+				// We have to track batch size separately from
+				// `m_frames().size()`, because no-ops don't update `frames()`,
+				// but _do_ count towards batch size.
+				size_t m_size;
+				// We want to store pretasks in the order we discover them,
+				// so our primary storage is a vector.
 				TaskBatches m_preTasks;
+				size_t m_postTaskIndex;
+				// But we also need to perform quick membership
+				// queries, for which we use a secondary set.
+				std::unordered_set<const TaskBatch *> m_preTasksSet;
+				// Flags used by `executeAndPruneImmediateBatches()`.
+				bool m_immediate;
+				bool m_visited;
+				bool m_executed;
 
 		};
 
