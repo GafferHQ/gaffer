@@ -41,6 +41,7 @@ import IECore
 
 import Gaffer
 import GafferScene
+import GafferSceneUI
 import GafferUITest
 
 from GafferSceneUI import _GafferSceneUI
@@ -182,6 +183,113 @@ class SetEditorTest( GafferUITest.TestCase ) :
 			path.setFromString( parent )
 			self.assertEqual( path.property( "setPath:memberCount" ), count )
 
+	def testSetPathSelectedMemberCount( self ) :
+
+		plane = GafferScene.Plane()
+		plane["sets"].setValue( "A A:B A:C D E:F:G" )
+
+		planeB = GafferScene.Plane()
+		planeB["name"].setValue( "planeB" )
+		planeB["sets"].setValue( "A A:C D F" )
+
+		p = GafferScene.Parent()
+		p["parent"].setValue( "/" )
+		p["in"].setInput( plane["out"] )
+		p["children"]["child0"].setInput( planeB["out"] )
+
+		context = Gaffer.Context()
+		path = _GafferSceneUI._SetEditor.SetPath( p["out"], context, "/" )
+		self.assertTrue( path.isValid() )
+		self.assertFalse( path.isLeaf() )
+
+		for parent, selection, count in [
+			( "/", [], None ),
+			( "/", [ "/plane" ], None ),
+			( "/A", [ "/plane", "/planeB" ], 2 ),
+			( "/A", [ "/plane" ], 1 ),
+			( "/A", [ "/planeB" ], 1 ),
+			( "/A/A:B", [ "/plane" ], 1 ),
+			( "/A/A:B", [ "/planeB" ], 0 ),
+			( "/A/A:B", [], 0 ),
+			( "/A/A:C", [ "/plane", "/planeB" ], 2 ),
+			( "/A/A:C", [ "/plane" ], 1 ),
+			( "/A/A:C", [ "/planeB" ], 1 ),
+			( "/D", [ "/plane", "/planeB" ], 2 ),
+			( "/D", [ "/plane" ], 1 ),
+			( "/D", [ "/planeB" ], 1 ),
+			( "/E", [ "/plane", "/planeB" ], None ),
+			( "/E/F", [ "/plane" ], None ),
+			( "/E/F/E:F:G", [ "/plane", "/planeB" ], 1 ),
+			( "/E/F/E:F:G", [ "/plane" ], 1 ),
+			( "/E/F/E:F:G", [ "/planeB" ], 0 ),
+			( "/F", [ "/plane", "/planeB" ], 1 ),
+			( "/F", [ "/plane" ], 0 ),
+			( "/F", [ "/planeB" ], 1 ),
+			( "/A/A:D", [ "/plane", "/planeB" ], None ),
+			( "/D/D:A", [ "/planeB" ], None ),
+		] :
+
+			path.setFromString( parent )
+			GafferSceneUI.ContextAlgo.setSelectedPaths( context, IECore.PathMatcher( selection ) )
+			self.assertEqual( path.property( "setPath:selectedMemberCount" ), count )
+
+	def testSetPathSelectedMemberCountWithInheritance( self ) :
+
+		plane = GafferScene.Plane()
+		plane["sets"].setValue( "A" )
+
+		sphere = GafferScene.Sphere()
+
+		p = GafferScene.Parent()
+		p["parent"].setValue( "/plane" )
+		p["in"].setInput( plane["out"] )
+		p["children"]["child0"].setInput( sphere["out"] )
+
+		planeB = GafferScene.Plane()
+		planeB["name"].setValue( "planeB" )
+		planeB["sets"].setValue( "B" )
+
+		g = GafferScene.Group()
+		g["in"]["in0"].setInput( p["out"] )
+		g["in"]["in1"].setInput( planeB["out"] )
+
+		f = GafferScene.PathFilter()
+		f["paths"].setValue( IECore.StringVectorData( [ "/group" ] ) )
+
+		s = GafferScene.Set()
+		s["name"].setValue( "AB" )
+		s["in"].setInput( g["out"] )
+		s["filter"].setInput( f["out"] )
+
+		context = Gaffer.Context()
+		path = _GafferSceneUI._SetEditor.SetPath( s["out"], context, "/" )
+		self.assertTrue( path.isValid() )
+		self.assertFalse( path.isLeaf() )
+
+		for parent, selection, count in [
+			( "/", [], None ),
+			( "/", [ "/group" ], None ),
+			( "/", [ "/group/plane" ], None ),
+			( "/A", [ "/group/plane" ], 1 ),
+			( "/A", [ "/group/plane/sphere" ], 1 ),
+			( "/A", [ "/group/plane", "/group/plane/sphere" ], 2 ),
+			( "/A", [ "/group", "/group/plane", "/group/plane/sphere" ], 2 ),
+			( "/A", [ "/group" ], 0 ),
+			( "/A", [ "/group/planeB" ], 0 ),
+			( "/B", [ "/group/plane" ], 0 ),
+			( "/B", [ "/group" ], 0 ),
+			( "/B", [ "/group/planeB" ], 1 ),
+			( "/AB", [ "/group/plane" ], 1 ),
+			( "/AB", [ "/group" ], 1 ),
+			( "/AB", [ "/group/planeB" ], 1 ),
+			( "/AB", [ "/group", "/group/plane", "/group/planeB" ], 3 ),
+			( "/AB", [ "/group", "/group/plane", "/group/planeB", "/group/plane/sphere" ], 4 ),
+		] :
+
+			path.setFromString( parent )
+			GafferSceneUI.ContextAlgo.setSelectedPaths( context, IECore.PathMatcher( selection ) )
+			self.assertEqual( path.property( "setPath:selectedMemberCount" ), count )
+
 	def testSetPathCancellation( self ) :
 
 		plane = GafferScene.Plane()
@@ -267,3 +375,57 @@ class SetEditorTest( GafferUITest.TestCase ) :
 
 		emptySetFilter.setEnabled( True )
 		self.assertEqual( [ str( c ) for c in path.children() ], [ "/A/A:E" ] )
+
+	def testEmptySetFilterWithSelectedMemberCount( self ) :
+
+		plane = GafferScene.Plane()
+		plane["sets"].setValue( "A A:E B C D" )
+
+		planeB = GafferScene.Plane()
+		planeB["name"].setValue( "planeB" )
+		planeB["sets"].setValue( "A A:C D F" )
+
+		p = GafferScene.Parent()
+		p["parent"].setValue( "/" )
+		p["in"].setInput( plane["out"] )
+		p["children"]["child0"].setInput( planeB["out"] )
+
+		emptySet = GafferScene.Set()
+		emptySet["name"].setValue( "EMPTY A:EMPTY" )
+		emptySet["in"].setInput( p["out"] )
+
+		context = Gaffer.Context()
+		path = _GafferSceneUI._SetEditor.SetPath( emptySet["out"], context, "/" )
+
+		self.assertEqual( [ str( c ) for c in path.children() ], [ "/A", "/B", "/C", "/D", "/EMPTY", "/F" ] )
+
+		emptySetFilter = _GafferSceneUI._SetEditor.EmptySetFilter( propertyName = "setPath:selectedMemberCount" )
+		path.setFilter( emptySetFilter )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( context, IECore.PathMatcher( [ "/plane" ] ) )
+		self.assertEqual( [ str( c ) for c in path.children() ], [ "/A", "/B", "/C", "/D" ] )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( context, IECore.PathMatcher( [ "/planeB" ] ) )
+		self.assertEqual( [ str( c ) for c in path.children() ], [ "/A", "/D", "/F" ] )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( context, IECore.PathMatcher( [ "/plane", "/planeB" ] ) )
+		self.assertEqual( [ str( c ) for c in path.children() ], [ "/A", "/B", "/C", "/D", "/F" ] )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( context, IECore.PathMatcher( [] ) )
+		self.assertEqual( [ str( c ) for c in path.children() ], [] )
+
+		emptySetFilter.setEnabled( False )
+		self.assertEqual( [ str( c ) for c in path.children() ], [ "/A", "/B", "/C", "/D", "/EMPTY", "/F" ] )
+
+		path.setFromString( "/A" )
+		self.assertEqual( [ str( c ) for c in path.children() ], [ "/A/A:C", "/A/A:E", "/A/A:EMPTY" ] )
+
+		emptySetFilter.setEnabled( True )
+		GafferSceneUI.ContextAlgo.setSelectedPaths( context, IECore.PathMatcher( [ "/plane" ] ) )
+		self.assertEqual( [ str( c ) for c in path.children() ], [ "/A/A:E" ] )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( context, IECore.PathMatcher( [ "/planeB" ] ) )
+		self.assertEqual( [ str( c ) for c in path.children() ], [ "/A/A:C" ] )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( context, IECore.PathMatcher( [] ) )
+		self.assertEqual( [ str( c ) for c in path.children() ], [] )

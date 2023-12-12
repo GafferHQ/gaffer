@@ -73,13 +73,21 @@ Build
 
 - PsUtil : Added version 5.9.6.
 
-1.3.x.x (relative to 1.3.8.0)
+1.3.x.x (relative to 1.3.9.0)
+=======
+
+
+
+1.3.9.0 (relative to 1.3.8.0)
 =======
 
 Improvements
 ------------
 
 - 3Delight : Added support for subdivision corners and creases.
+- SetEditor :
+  - Added "Selection" column displaying the number of currently selected members for each set.
+  - Added "Hide Empty Selection" checkbox. When on, the SetEditor will only display sets with currently selected members.
 
 Fixes
 -----

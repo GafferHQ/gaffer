@@ -62,6 +62,8 @@
 #include "boost/bind/bind.hpp"
 #include "boost/container/flat_set.hpp"
 
+#include "fmt/format.h"
+
 using namespace std;
 using namespace boost::placeholders;
 using namespace boost::python;
@@ -148,6 +150,7 @@ PathMatcherCache g_pathMatcherCache( pathMatcherCacheGetter, 25 );
 
 const InternedString g_setNamePropertyName( "setPath:setName" );
 const InternedString g_memberCountPropertyName( "setPath:memberCount" );
+const InternedString g_selectedMemberCountPropertyName( "setPath:selectedMemberCount" );
 
 //////////////////////////////////////////////////////////////////////////
 // SetPath
@@ -252,6 +255,7 @@ class SetPath : public Gaffer::Path
 			Path::propertyNames( names, canceller );
 			names.push_back( g_setNamePropertyName );
 			names.push_back( g_memberCountPropertyName );
+			names.push_back( g_selectedMemberCountPropertyName );
 		}
 
 		IECore::ConstRunTimeTypedPtr property( const IECore::InternedString &name, const IECore::Canceller *canceller = nullptr ) const override
@@ -276,6 +280,29 @@ class SetPath : public Gaffer::Path
 					}
 					const auto setMembers = getScene()->set( names().back().string() );
 					return new IntData( setMembers->readable().size() );
+				}
+			}
+			else if( name == g_selectedMemberCountPropertyName )
+			{
+				const PathMatcher p = pathMatcher( canceller );
+				if( p.match( names() ) & PathMatcher::ExactMatch )
+				{
+					Context::EditableScope scopedContext( getContext() );
+					if( canceller )
+					{
+						scopedContext.setCanceller( canceller );
+					}
+					const auto setMembers = getScene()->set( names().back().string() );
+					const auto selectedPaths = ContextAlgo::getSelectedPaths( Context::current() );
+					int memberCount = 0;
+					// Consider inheritance in selected member count so descendants
+					// of set members are included in the count
+					for( PathMatcher::Iterator it = setMembers->readable().begin(), eIt = setMembers->readable().end(); it != eIt; ++it )
+					{
+						memberCount += selectedPaths.subTree( *it ).size();
+						it.prune();
+					}
+					return new IntData( memberCount );
 				}
 			}
 			return Path::property( name, canceller );
@@ -401,6 +428,92 @@ class SetNameColumn : public StandardPathColumn
 					result.icon = memberCount->readable() > 0 ? g_populatedSetIcon : g_emptySetIcon;
 				}
 			}
+
+			return result;
+		}
+
+};
+
+//////////////////////////////////////////////////////////////////////////
+// SetMembersColumn
+//////////////////////////////////////////////////////////////////////////
+
+class SetMembersColumn : public StandardPathColumn
+{
+
+	public :
+
+		IE_CORE_DECLAREMEMBERPTR( SetMembersColumn )
+
+		SetMembersColumn()
+			:	StandardPathColumn( "Members", g_memberCountPropertyName )
+		{
+		}
+
+		CellData cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const override
+		{
+			CellData result = StandardPathColumn::cellData( path, canceller );
+			if( const auto setName = runTimeCast<const IECore::StringData>( path.property( g_setNamePropertyName, canceller ) ) )
+			{
+				const auto memberCount = runTimeCast<const IECore::IntData>( path.property( g_memberCountPropertyName, canceller ) );
+				const auto count = memberCount ? memberCount->readable() : 0;
+				result.toolTip = new IECore::StringData(
+					fmt::format( "{} scene location{} of {}",
+						count, count == 1 ? " is a member" : "s are members", setName->readable()
+					)
+				);
+			}
+
+			return result;
+		}
+
+		CellData headerData( const IECore::Canceller *canceller ) const override
+		{
+			CellData result = StandardPathColumn::headerData( canceller );
+			result.toolTip = new IECore::StringData( "The number of scene locations that are set members" );
+
+			return result;
+		}
+
+};
+
+//////////////////////////////////////////////////////////////////////////
+// SetSelectionColumn
+//////////////////////////////////////////////////////////////////////////
+
+class SetSelectionColumn : public StandardPathColumn
+{
+
+	public :
+
+		IE_CORE_DECLAREMEMBERPTR( SetSelectionColumn )
+
+		SetSelectionColumn()
+			:	StandardPathColumn( "Selection", g_selectedMemberCountPropertyName )
+		{
+		}
+
+		CellData cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const override
+		{
+			CellData result = StandardPathColumn::cellData( path, canceller );
+			if( const auto setName = runTimeCast<const IECore::StringData>( path.property( g_setNamePropertyName, canceller ) ) )
+			{
+				const auto selectedMemberCount = runTimeCast<const IECore::IntData>( path.property( g_selectedMemberCountPropertyName, canceller ) );
+				const auto count = selectedMemberCount ? selectedMemberCount->readable() : 0;
+				result.toolTip = new IECore::StringData(
+					fmt::format( "{} selected scene location{} of {}",
+						count, count == 1 ? " is a member or descendant" : "s are members and/or descendants", setName->readable()
+					)
+				);
+			}
+
+			return result;
+		}
+
+		CellData headerData( const IECore::Canceller *canceller ) const override
+		{
+			CellData result = StandardPathColumn::headerData( canceller );
+			result.toolTip = new IECore::StringData( "The number of selected scene locations that are set members, or their descendants" );
 
 			return result;
 		}
@@ -915,7 +1028,7 @@ class SetEditorSearchFilter : public Gaffer::PathFilter
 };
 
 //////////////////////////////////////////////////////////////////////////
-// SetEditorEmptySetFilter - filters out paths that have a memberCount
+// SetEditorEmptySetFilter - filters out paths that have a specified
 // property value of 0. This also removes non-leaf paths if all their
 // children have been removed by the filter.
 //////////////////////////////////////////////////////////////////////////
@@ -927,8 +1040,8 @@ class SetEditorEmptySetFilter : public Gaffer::PathFilter
 
 		IE_CORE_DECLAREMEMBERPTR( SetEditorEmptySetFilter )
 
-		SetEditorEmptySetFilter( IECore::CompoundDataPtr userData = nullptr )
-			:	PathFilter( userData )
+		SetEditorEmptySetFilter( IECore::CompoundDataPtr userData = nullptr, const std::string &propertyName = g_memberCountPropertyName )
+			:	PathFilter( userData ), m_propertyName( propertyName )
 		{
 		}
 
@@ -961,7 +1074,7 @@ class SetEditorEmptySetFilter : public Gaffer::PathFilter
 			}
 
 			bool members = false;
-			if( const auto memberCountData = IECore::runTimeCast<const IECore::IntData>( path->property( g_memberCountPropertyName, canceller ) ) )
+			if( const auto memberCountData = IECore::runTimeCast<const IECore::IntData>( path->property( m_propertyName, canceller ) ) )
 			{
 				members = memberCountData->readable() > 0;
 			}
@@ -969,7 +1082,11 @@ class SetEditorEmptySetFilter : public Gaffer::PathFilter
 			return leaf && !members;
 		}
 
-	};
+	private :
+
+		const InternedString m_propertyName;
+
+};
 
 } // namespace
 
@@ -1024,10 +1141,18 @@ void GafferSceneUIModule::bindSetEditor()
 	;
 
 	RefCountedClass<SetEditorEmptySetFilter, PathFilter>( "EmptySetFilter" )
-		.def( init<IECore::CompoundDataPtr>( ( boost::python::arg( "userData" ) = object() ) ) )
+		.def( init<IECore::CompoundDataPtr, const std::string &>( ( boost::python::arg( "userData" ) = object(), boost::python::arg( "propertyName" ) = g_memberCountPropertyName ) ) )
 	;
 
 	RefCountedClass<SetNameColumn, GafferUI::PathColumn>( "SetNameColumn" )
+		.def( init<>() )
+	;
+
+	RefCountedClass<SetMembersColumn, GafferUI::PathColumn>( "SetMembersColumn" )
+		.def( init<>() )
+	;
+
+	RefCountedClass<SetSelectionColumn, GafferUI::PathColumn>( "SetSelectionColumn" )
 		.def( init<>() )
 	;
 
