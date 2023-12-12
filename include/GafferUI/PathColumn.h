@@ -179,6 +179,7 @@ class GAFFERUI_API StandardPathColumn : public PathColumn
 		IE_CORE_DECLAREMEMBERPTR( StandardPathColumn )
 
 		StandardPathColumn( const std::string &label, IECore::InternedString property, PathColumn::SizeMode sizeMode = Default );
+		StandardPathColumn( const CellData &headerData, IECore::InternedString property, PathColumn::SizeMode sizeMode = Default );
 
 		IECore::InternedString property() const;
 
@@ -187,7 +188,7 @@ class GAFFERUI_API StandardPathColumn : public PathColumn
 
 	private :
 
-		IECore::ConstStringDataPtr m_label;
+		const CellData m_headerData;
 		IECore::InternedString m_property;
 
 };
@@ -209,13 +210,17 @@ class GAFFERUI_API IconPathColumn : public PathColumn
 		/// - IntData, UInt44Data
 		/// - BoolData
 		IconPathColumn( const std::string &label, const std::string &prefix, IECore::InternedString property, PathColumn::SizeMode sizeMode = Default );
+		IconPathColumn( const CellData &headerData, const std::string &prefix, IECore::InternedString property, PathColumn::SizeMode sizeMode = Default );
+
+		const std::string &prefix() const;
+		IECore::InternedString property() const;
 
 		CellData cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const override;
 		CellData headerData( const IECore::Canceller *canceller ) const override;
 
 	private :
 
-		IECore::ConstStringDataPtr m_label;
+		const CellData m_headerData;
 		std::string m_prefix;
 		IECore::InternedString m_property;
 
