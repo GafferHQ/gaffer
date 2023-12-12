@@ -628,8 +628,8 @@ class stats( Gaffer.Application ) :
 		import GafferDispatch
 
 		task = script.descendant( args["task"].value )
-		if isinstance( task, GafferDispatch.TaskNode.TaskPlug ) :
-			task = task.node()
+		if isinstance( task, Gaffer.Node ) :
+			task = next( GafferDispatch.TaskNode.TaskPlug.RecursiveOutputRange( task ), None )
 
 		if task is None :
 			IECore.msg( IECore.Msg.Level.Error, "stats", "Task \"%s\" does not exist" % args["task"].value )
@@ -637,6 +637,7 @@ class stats( Gaffer.Application ) :
 
 		dispatcher = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
 		dispatcher["jobsDirectory"].setValue( tempfile.mkdtemp( prefix = "gafferStats" ) )
+		dispatcher["tasks"][0].setInput( task )
 
 		memory = _Memory.maxRSS()
 		with _Timer() as taskTimer :
@@ -644,7 +645,7 @@ class stats( Gaffer.Application ) :
 				with self.__context( script, args ) as context :
 					for frame in self.__frames( script, args ) :
 						context.setFrame( frame )
-						dispatcher.dispatch( [ task ] )
+						dispatcher["task"].execute()
 
 		self.__timers["Task execution"] = taskTimer
 		self.__memory["Task execution"] = _Memory.maxRSS() - memory
