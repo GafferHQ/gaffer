@@ -646,7 +646,7 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 
 		traverseConnection = Gaffer.Signals.ScopedConnection( GafferSceneTest.connectTraverseSceneToPreDispatchSignal( script["instancer"]["out"] ) )
 
-		dispatcher = GafferDispatch.LocalDispatcher()
+		dispatcher = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
 		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() )
 
 		with Gaffer.Context() as c :

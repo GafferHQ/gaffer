@@ -46,23 +46,6 @@ import GafferTest
 
 class PerformanceMonitorTest( GafferTest.TestCase ) :
 
-	def setUp( self ) :
-
-		GafferTest.TestCase.setUp( self )
-
-		# Clean up any garbage from previous tests.
-		# If python were to trigger the garbage collection
-		# of an old plug during a test here, it could
-		# clear the hash cache and give us unexpected
-		# results.
-		## \todo If we clear or invalidate the hash cache
-		# selectively for only dirtied/deleted plugs,
-		# this won't be an issue and we could remove this
-		# workaround.
-		IECore.RefCounted.collectGarbage()
-		while gc.collect() :
-			pass
-
 	def testStatistics( self ) :
 
 		m = Gaffer.PerformanceMonitor()

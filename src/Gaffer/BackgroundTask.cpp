@@ -97,7 +97,10 @@ const ScriptNode *scriptNode( const GraphComponent *subject )
 	{
 		if( subject->isInstanceOf( "GafferUI::View" ) )
 		{
-			return scriptNode( subject->getChild<Plug>( "in" )->getInput() );
+			if( auto inPlug = subject->getChild<Plug>( "in" ) )
+			{
+				return scriptNode( inPlug->getInput() );
+			}
 		}
 		subject = subject->parent();
 	}

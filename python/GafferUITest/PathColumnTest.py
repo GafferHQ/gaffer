@@ -52,6 +52,7 @@ class PathColumnTest( GafferUITest.TestCase ) :
 		self.assertIsNone( d.icon )
 		self.assertIsNone( d.background )
 		self.assertIsNone( d.toolTip )
+		self.assertIsNone( d.sortValue )
 
 	def testCellDataKeywordConstructor( self ) :
 
@@ -59,12 +60,14 @@ class PathColumnTest( GafferUITest.TestCase ) :
 			value = 10,
 			icon = "test.png",
 			background = imath.Color3f( 1 ),
-			toolTip = "help!"
+			toolTip = "help!",
+			sortValue = 1,
 		)
 		self.assertEqual( d.value, 10 )
 		self.assertEqual( d.icon, "test.png" )
 		self.assertEqual( d.background, imath.Color3f( 1 ) )
 		self.assertEqual( d.toolTip, "help!" )
+		self.assertEqual( d.sortValue, 1 )
 
 	def testCellDataSetters( self ) :
 
@@ -81,6 +84,9 @@ class PathColumnTest( GafferUITest.TestCase ) :
 
 		d.toolTip = "help!"
 		self.assertEqual( d.toolTip, "help!" )
+
+		d.sortValue = 2
+		self.assertEqual( d.sortValue, 2 )
 
 	def testSizeMode( self ) :
 

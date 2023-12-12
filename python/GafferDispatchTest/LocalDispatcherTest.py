@@ -34,6 +34,9 @@
 #
 ##########################################################################
 
+import datetime
+import errno
+import gc
 import os
 import stat
 import shutil
@@ -41,6 +44,11 @@ import unittest
 import time
 import inspect
 import functools
+import subprocess
+import sys
+import tempfile
+import threading
+import weakref
 
 import imath
 
@@ -53,9 +61,25 @@ import GafferDispatchTest
 
 class LocalDispatcherTest( GafferTest.TestCase ) :
 
-	def __createLocalDispatcher( self ) :
+	def tearDown( self ) :
 
-		result = GafferDispatch.LocalDispatcher()
+		GafferTest.TestCase.tearDown( self )
+
+		# Check for Jobs existing past their expected lifetime (most likely through circular references).
+		self.assertEqual(
+			[ o for o in gc.get_objects() if isinstance( o, GafferDispatch.LocalDispatcher.Job ) ],
+			[]
+		)
+
+	def __createLocalDispatcher( self, jobPool = None ) :
+
+		if jobPool is None :
+			# By default we run each test with its own JobPool,
+			# to avoid polluting the default pool, and having
+			# that spill from one test to the next.
+			jobPool = GafferDispatch.LocalDispatcher.JobPool()
+
+		result = GafferDispatch.LocalDispatcher( jobPool = jobPool )
 		result["jobsDirectory"].setValue( self.temporaryDirectory() )
 		return result
 
@@ -366,9 +390,9 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		self.assertFalse( os.path.isfile( s.context().substitute( s["n1"]["fileName"].getValue() ) ) )
 
 		# wait long enough to finish execution
-		self.assertEqual( len(dispatcher.jobPool().jobs()), 1 )
 		dispatcher.jobPool().waitForAll()
-		self.assertEqual( len(dispatcher.jobPool().jobs()), 0 )
+		self.assertEqual( len( dispatcher.jobPool().jobs() ), 1 )
+		self.assertEqual( dispatcher.jobPool().jobs()[0].status(), GafferDispatch.LocalDispatcher.Job.Status.Complete )
 
 		self.assertTrue( os.path.isfile( s.context().substitute( s["n1"]["fileName"].getValue() ) ) )
 
@@ -435,9 +459,9 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( text, expectedText )
 
 		# wait long enough for background execution to finish
-		self.assertEqual( len(dispatcher.jobPool().jobs()), 1 )
 		dispatcher.jobPool().waitForAll()
-		self.assertEqual( len(dispatcher.jobPool().jobs()), 0 )
+		self.assertEqual( len( dispatcher.jobPool().jobs() ), 1 )
+		self.assertEqual( dispatcher.jobPool().jobs()[0].status(), GafferDispatch.LocalDispatcher.Job.Status.Complete )
 
 		self.assertTrue( fileName.is_file() )
 		with open( fileName, "r", encoding = "utf-8" ) as f :
@@ -456,9 +480,11 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		s["n1"]["fileName"].setValue( self.temporaryDirectory() / "n1_####.txt" )
 		s["n1"]["text"].setValue( "n1 on ${frame}" )
 
-		dispatcher = self.__createLocalDispatcher()
+		jobPool = GafferDispatch.LocalDispatcher.JobPool()
+
+		dispatcher = self.__createLocalDispatcher( jobPool )
 		dispatcher["executeInBackground"].setValue( True )
-		dispatcher2 = self.__createLocalDispatcher()
+		dispatcher2 = self.__createLocalDispatcher( jobPool )
 		dispatcher2["executeInBackground"].setValue( True )
 		dispatcher.dispatch( [ s["n1"] ] )
 		c = s.context()
@@ -467,9 +493,13 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 			dispatcher2.dispatch( [ s["n1"] ] )
 
 		# wait long enough for background execution to finish
-		self.assertEqual( len(dispatcher.jobPool().jobs()), 2 )
+		self.assertEqual( len( jobPool.jobs() ), 2 )
 		dispatcher.jobPool().waitForAll()
-		self.assertEqual( len(dispatcher.jobPool().jobs()), 0 )
+		self.assertEqual( len( jobPool.jobs() ), 2 )
+		self.assertEqual(
+			[ j.status() for j in jobPool.jobs() ],
+			[ GafferDispatch.LocalDispatcher.Job.Status.Complete ] * 2
+		)
 
 		self.assertTrue( os.path.isfile( s.context().substitute( s["n1"]["fileName"].getValue() ) ) )
 		self.assertTrue( os.path.isfile( c.substitute( s["n1"]["fileName"].getValue() ) ) )
@@ -493,9 +523,11 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 		# fails because n2 doesn't have a valid fileName
 		self.assertRaisesRegex( RuntimeError, "No such file or directory", functools.partial( dispatcher.dispatch, [ s["n1"] ] ) )
-
-		# it still cleans up the JobPool
-		self.assertEqual( len(dispatcher.jobPool().jobs()), 0 )
+		self.assertEqual( len( dispatcher.jobPool().jobs() ), 1 )
+		self.assertEqual(
+			dispatcher.jobPool().jobs()[0].status(),
+			GafferDispatch.LocalDispatcher.Job.Status.Failed
+		)
 
 		# n3 executed correctly
 		self.assertTrue( os.path.isfile( s.context().substitute( s["n3"]["fileName"].getValue() ) ) )
@@ -507,15 +539,18 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		self.assertFalse( os.path.isfile( s.context().substitute( s["n2"]["fileName"].getValue() ) ) )
 		self.assertFalse( os.path.isfile( s.context().substitute( s["n1"]["fileName"].getValue() ) ) )
 
-		self.tearDown()
+		os.unlink( s.context().substitute( s["n3"]["fileName"].getValue() ) )
 
 		dispatcher["executeInBackground"].setValue( True )
 		dispatcher.dispatch( [ s["n1"] ] )
 
 		# wait long enough for background execution to finish
-		self.assertEqual( len(dispatcher.jobPool().jobs()), 1 )
 		dispatcher.jobPool().waitForAll()
-		self.assertEqual( len(dispatcher.jobPool().jobs()), 0 )
+		self.assertEqual( len( dispatcher.jobPool().jobs() ), 2 )
+		self.assertEqual(
+			dispatcher.jobPool().jobs()[1].status(),
+			GafferDispatch.LocalDispatcher.Job.Status.Failed
+		)
 
 		# n3 executed correctly
 		self.assertTrue( os.path.isfile( s.context().substitute( s["n3"]["fileName"].getValue() ) ) )
@@ -549,7 +584,8 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 		# wait long enough for the process to die
 		dispatcher.jobPool().waitForAll()
-		self.assertEqual( len(dispatcher.jobPool().jobs()), 0 )
+		self.assertEqual( len( dispatcher.jobPool().jobs() ), 1 )
+		self.assertEqual( dispatcher.jobPool().jobs()[0].status(), GafferDispatch.LocalDispatcher.Job.Status.Killed )
 
 		# make sure it never wrote the file
 		self.assertFalse( os.path.isfile( s.context().substitute( s["n1"]["fileName"].getValue() ) ) )
@@ -802,7 +838,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		d.dispatch( [ lastTask ] )
 
 		t = time.process_time()
-		d.jobPool().jobs()[0].kill()
+		d.jobPool().jobs()[-1].kill()
 		self.assertLess( time.process_time() - t, 1 )
 
 		d.jobPool().waitForAll()
@@ -848,7 +884,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		s["dispatchTask"]["command"].setValue( inspect.cleandoc(
 			"""
 			import GafferDispatch
-			dispatcher = GafferDispatch.LocalDispatcher()
+			dispatcher = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
 			dispatcher.dispatch( [ self.parent()["nestedTask"] ] )
 			"""
 		) )
@@ -870,6 +906,266 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 			open( self.temporaryDirectory() / "nested.txt", encoding = "utf-8" ).readlines(),
 			open( self.temporaryDirectory() / "outer.txt", encoding = "utf-8" ).readlines(),
 		)
+
+	def testBackgroundJobFailureStatus( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["pythonCommand"] = GafferDispatch.PythonCommand()
+		script["pythonCommand"]["command"].setValue( "a = nonExistentVariable" )
+
+		dispatcher = self.__createLocalDispatcher()
+		dispatcher["executeInBackground"].setValue( True )
+
+		dispatcher.dispatch( [ script["pythonCommand"] ] )
+		dispatcher.jobPool().waitForAll()
+		self.assertEqual(
+			dispatcher.jobPool().jobs()[0].status(),
+			GafferDispatch.LocalDispatcher.Job.Status.Failed
+		)
+
+	def testJobPoolSignals( self ) :
+
+		dispatcher = self.__createLocalDispatcher()
+
+		jobAddedSlot = GafferTest.CapturingSlot( dispatcher.jobPool().jobAddedSignal() )
+		jobRemovedSlot = GafferTest.CapturingSlot( dispatcher.jobPool().jobRemovedSignal() )
+
+		script = Gaffer.ScriptNode()
+		script["taskNode"] = GafferDispatchTest.LoggingTaskNode()
+
+		self.assertEqual( len( jobAddedSlot ), 0 )
+		self.assertEqual( len( jobRemovedSlot ), 0 )
+
+		dispatcher.dispatch( [ script["taskNode"] ] )
+
+		self.assertEqual( len( jobAddedSlot ), 1 )
+		job = jobAddedSlot[0][0]
+		self.assertIsInstance( job, GafferDispatch.LocalDispatcher.Job )
+		self.assertIs( job, dispatcher.jobPool().jobs()[0] )
+		self.assertEqual( len( jobRemovedSlot ), 0 )
+
+		dispatcher.jobPool().removeJob( job )
+		self.assertEqual( len( jobAddedSlot ), 1 )
+		self.assertEqual( len( jobRemovedSlot ), 1 )
+		self.assertIs( jobRemovedSlot[0][0], job )
+
+	def testJobStatusChangedSignal( self ) :
+
+		# Create dispatcher and connect to signals
+
+		dispatcher = self.__createLocalDispatcher()
+
+		statusChanges = []
+		def statusChanged( job ) :
+
+			self.assertIs( threading.current_thread(), threading.main_thread() )
+			# Job holds a reference to the `statusChanged()` function (via
+			# `statusChangedSignal()`), and we hold a reference to the
+			# `statusChanges` list. Use `weakref` to avoid creating a circular
+			# reference back to the job.
+			statusChanges.append( ( weakref.proxy( job ), job.status() ) )
+
+		def jobAdded( job ) :
+
+			job.statusChangedSignal().connect( statusChanged, scoped = False )
+
+		dispatcher.jobPool().jobAddedSignal().connect( jobAdded, scoped = False )
+
+		# Test foreground dispatch
+
+		script = Gaffer.ScriptNode()
+		script["taskNode"] = GafferDispatchTest.LoggingTaskNode()
+
+		dispatcher.dispatch( [ script["taskNode"] ] )
+
+		self.assertEqual(
+			statusChanges,
+			[
+				( dispatcher.jobPool().jobs()[0], GafferDispatch.LocalDispatcher.Job.Status.Running ),
+				( dispatcher.jobPool().jobs()[0], GafferDispatch.LocalDispatcher.Job.Status.Complete )
+			]
+		)
+
+		# Test background dispatch
+
+		dispatcher["executeInBackground"].setValue( True )
+		del statusChanges[:]
+
+		with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as handler :
+			dispatcher.dispatch( [ script["taskNode"] ] )
+			handler.assertCalled()
+			dispatcher.jobPool().waitForAll()
+
+		self.assertEqual(
+			statusChanges,
+			[
+				( dispatcher.jobPool().jobs()[1], GafferDispatch.LocalDispatcher.Job.Status.Running ),
+				( dispatcher.jobPool().jobs()[1], GafferDispatch.LocalDispatcher.Job.Status.Complete )
+			]
+		)
+
+	def testSubprocessMessages( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["command"] = GafferDispatch.PythonCommand()
+		script["command"]["command"].setValue( inspect.cleandoc(
+			"""
+			import sys
+			sys.stderr.write( "Hello stderr!\\n" )
+			sys.stdout.write( "Hello stdout!\\n" )
+			"""
+		) )
+
+		dispatcher = self.__createLocalDispatcher()
+		dispatcher["executeInBackground"].setValue( True )
+		dispatcher.dispatch( [ script["command"] ] )
+		dispatcher.jobPool().waitForAll()
+
+		messages = dispatcher.jobPool().jobs()[0].messages()
+		messages = { m.message for m in messages }
+		self.assertIn( "Hello stderr!", messages )
+		self.assertIn( "Hello stdout!", messages )
+
+	def testMessageLevels( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["command"] = GafferDispatch.PythonCommand()
+		script["command"]["command"].setValue( inspect.cleandoc(
+			r"""
+			import sys
+			import IECore
+
+			# Cortex messages
+
+			for level in IECore.Msg.Level.values.values() :
+				IECore.msg(
+					level, "testMessageLevels",
+					# Obfuscate the level in the message text, so it can't be used
+					# by any level-detection heuristics in the LocalDispatcher.
+					"message level {}".format(
+						"-".join( str( level.name ) )
+					)
+				)
+
+			# Arnold-like messages, with and without time and memory prefixes
+
+			for message in [
+				"00:00:00   315MB WARNING | rendering with watermarks because ARNOLD_LICENSE_ORDER = none",
+				"315MB WARNING | rendering with watermarks because ARNOLD_LICENSE_ORDER = none",
+				"WARNING | rendering with watermarks because ARNOLD_LICENSE_ORDER = none",
+				"00:00:00   368MB ERROR   |  [texturesys] shader:55b3960bd4e0c6a75adc63c08ac0cb6b: Invalid image file "": ImageInput::create() called with no filename",
+
+			] :
+				sys.stdout.write( f"{message}\n" )
+			"""
+		) )
+
+		dispatcher = self.__createLocalDispatcher()
+		dispatcher["executeInBackground"].setValue( True )
+		dispatcher.dispatch( [ script["command"] ] )
+		dispatcher.jobPool().waitForAll()
+
+		messages = dispatcher.jobPool().jobs()[0].messages()
+		messageLevels = {
+			m.message : m.level
+			for m in messages
+		}
+
+		for level in IECore.Msg.Level.values.values() :
+			if level == IECore.Msg.Level.Invalid :
+				continue
+			self.assertEqual(
+				messageLevels["testMessageLevels : message level {}".format( "-".join( str( level ) ) ) ],
+				level
+			)
+
+		for message, level in [
+			( "00:00:00   315MB WARNING | rendering with watermarks because ARNOLD_LICENSE_ORDER = none", IECore.Msg.Level.Warning ),
+			( "315MB WARNING | rendering with watermarks because ARNOLD_LICENSE_ORDER = none", IECore.Msg.Level.Warning ),
+			( "rendering with watermarks because ARNOLD_LICENSE_ORDER = none", IECore.Msg.Level.Warning ),
+			( "00:00:00   368MB ERROR   |  [texturesys] shader:55b3960bd4e0c6a75adc63c08ac0cb6b: Invalid image file "": ImageInput::create() called with no filename", IECore.Msg.Level.Error ),
+		] :
+			self.assertEqual( messageLevels[message], level )
+
+			# self.assertEqual( messages[i].level, level )
+			# self.assertEqual( messages[i].context, "testMessageLevels" )
+			# self.assertEqual( messages[i].message, "this is a message" )
+
+	def testShutdownDuringBackgroundDispatch( self ) :
+
+		# Launch a subprocess that will launch a very long background task,
+		# print out the PID of that task, and then exit before the task
+		# has finished.
+
+		output = subprocess.check_output(
+			[ str( Gaffer.executablePath() ), "env", "python", "-c", "import GafferDispatchTest; GafferDispatchTest.LocalDispatcherTest._shutdownDuringBackgroundDispatch()" ],
+			stderr = subprocess.STDOUT, text = True
+		)
+
+		# We want a prompt clean exit, with only the output we expect.
+
+		self.assertRegex( output, "^PID : [0-9]+$" )
+		pid = int( output.split( ":" )[-1].strip() )
+
+		# And we want the process for the child task to have
+		# been terminated.
+		# \todo Figure out how to check this on Windows.
+
+		if os.name != "nt" :
+			with self.assertRaises( OSError ) as check :
+				os.kill( pid, 0 )
+			self.assertEqual( check.exception.errno, errno.ESRCH ) # ESRCH means "no such process"
+
+	@staticmethod
+	def _shutdownDuringBackgroundDispatch() :
+
+		script = Gaffer.ScriptNode()
+		script["command"] = GafferDispatch.PythonCommand()
+		script["command"]["command"].setValue( inspect.cleandoc(
+			"""
+			import time
+			time.sleep( 1000000 )
+			"""
+		) )
+
+		with tempfile.TemporaryDirectory() as jobDirectory :
+
+			# `LocalDispatcher.defaultJobPool()` automatically kills
+			# running jobs at exit.
+			dispatcher = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.defaultJobPool() )
+			dispatcher["jobsDirectory"].setValue( jobDirectory )
+			dispatcher["executeInBackground"].setValue( True )
+			dispatcher.dispatch( [ script["command"] ] )
+
+			# Wait for background task to start, print its PID
+			# to `stdout` and then exit.
+			while True :
+				pid = dispatcher.jobPool().jobs()[-1].processID()
+				if pid is not None :
+					sys.stdout.write( f"PID : {pid}\n" )
+					sys.exit( 0 )
+
+	def testRunningTime( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["command"] = GafferDispatch.PythonCommand()
+		script["command"]["command"].setValue( inspect.cleandoc(
+			"""
+			import time
+			time.sleep( 0.5 )
+			"""
+		) )
+
+		dispatcher = self.__createLocalDispatcher()
+		dispatcher["executeInBackground"].setValue( True )
+		dispatcher.dispatch( [ script["command"] ] )
+		dispatcher.jobPool().waitForAll()
+
+		runningTime = dispatcher.jobPool().jobs()[0].runningTime()
+		self.assertGreaterEqual( runningTime, datetime.timedelta( seconds = 0.5 ) )
+		self.assertEqual( dispatcher.jobPool().jobs()[0].runningTime(), runningTime )
 
 if __name__ == "__main__":
 	unittest.main()

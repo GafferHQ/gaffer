@@ -108,7 +108,7 @@ class SystemCommandTest( GafferTest.TestCase ) :
 		s["n"] = GafferDispatch.SystemCommand()
 		s["n"]["command"].setValue( "echo 1 > {}".format( ( self.temporaryDirectory() / "systemCommandTest.####.txt" ).as_posix() ) )
 
-		d = GafferDispatch.LocalDispatcher()
+		d = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
 		d["jobsDirectory"].setValue( self.temporaryDirectory() / "jobs" )
 		d["framesMode"].setValue( d.FramesMode.CustomRange )
 		d["frameRange"].setValue( "1-10" )

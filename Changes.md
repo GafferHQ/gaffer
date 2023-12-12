@@ -7,6 +7,10 @@ Improvements
 - Toolbars : Changed hotkey behavior to toogle any tool on and off. Exclusive tools such as the Translate and Crop Window tools activate the first tool (currently Selection Tool) when they are toggled off.
 - CropWindowTool : Added <kbd>`Alt` + <kbd>`C` for toggling both the crop window tool and the relevant crop window `enabled` plug.
 - TaskList, FrameMask : Reimplemented in C++ for improved performance.
+- LocalDispatcher :
+  - Added a new dockable LocalJobs editor, to replace the floating window previously accessible via the "Execute/Local Jobs" menu item.
+  - Task output is now shown in the UI.
+  - Jobs are no longer removed from the UI as soon as they complete.
 - Cache : Increased default computation cache size to 8Gb. Call `Gaffer.ValuePlug.setCacheMemoryLimit()` from a startup file to override this.
 - Dispatcher : Reduced internal overhead of `dispatch()` call, with one benchmark showing around a 3x speedup.
 
@@ -14,12 +18,26 @@ Fixes
 -----
 
 - BackgroundTask : Fixed potential deadlock caused by destroying a BackgroundTask from Python while it was still running.
+- LocalDispatcher :
+  - Fixed delays and zombie processes caused by shutting down Gaffer while background jobs were running. Background jobs are now killed before Gaffer exits instead.
+  - Stopped failed jobs jumping to the end of the Local Jobs UI.
+  - Fixed message log update.
+  - Fixed `Job.statistics()` errors on Windows, ensuring that a `pid` is always returned when available.
 
 API
 ---
 
+- PathColumn : Added `CellData::sortValue` member, to provide additional control over sorting in the PathListingWidget.
+- LocalDispatcher :
+  - Added `Job.status()` and `Job.statusChangedSignal()` methods.
+  - Added `Job.messages()` and `Job.messagesChangedSignal()` methods.
+  - Added `Job.frameRange()`, `Job.environmentCommand()` and `Job.startTime()` methods.
+  - Added `Job.cpuUsage()` and `Job.memoryUsage()` methods.
+  - Added `JobPool.addJob()` and `JobPool.removeJob()` methods.
 - GafferTractor : Added `tractorAPI()` method used for accessing the `tractor.api.author` module.
 - GafferTractorTest : Added `tractorAPI()` method which returns a mock API if Tractor is not available. This allows the GafferTractor module to be tested without Tractor being installed.
+- ParallelAlgo : Added `canCallOnUIThread()` function.
+- Label : Added `textSelectable` constructor argument.
 
 Breaking Changes
 ----------------
@@ -34,6 +52,16 @@ Breaking Changes
   - Removed `createMatching()` method.
   - Removed non-const TaskBatch accessors `frames()` and `preTasks()`.
   - Made `TaskBatch` constructors private.
+- LocalDispatcher :
+  - Removed `JobPool.jobFailedSignal()`.
+  - Removed `JobPool.failedJobs()` method. Failed jobs now remain in place in the main `jobs()` container.
+  - Removed `Job.failed()` and `Job.killed()` methods. Use `Job.status()` instead.
+  - Removed `Job.execute()` method. This should not have been public.
+  - Removed `Job.messageHandler()` method. Use `Job.messages()` instead.
+  - Removed `Job.description()` method.
+  - Removed `Job.statistics()` method. Use `Job.memoryUsage()` and `Job.cpuUsage()` instead.
+  - JobPool no longer derives from RunTimeTyped.
+- LocalDispatcherUI : Removed `appendMenuDefinitions()` function.
 - Process : Removed non-const variant of the `handleException()` method.
 - StringPlug : Removed deprecated `precomputedHash` argument from `getValue()` method.
 - OpenColorIOContext : Removed `configEnabledPlug()`, `configValuePlug()`, `workingSpaceEnabledPlug()` and `workingSpaceValuePlug()` methods. Use the OptionalValuePlug child accessors instead.
