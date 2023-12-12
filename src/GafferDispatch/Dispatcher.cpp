@@ -744,14 +744,14 @@ class DispatcherSignalGuard
 
 	public:
 
-		DispatcherSignalGuard( const Dispatcher* d, const std::vector<TaskNodePtr> &taskNodes ) : m_dispatchSuccessful( false ), m_taskNodes( taskNodes ), m_dispatcher( d )
+		DispatcherSignalGuard( const Dispatcher *dispatcher ) : m_dispatchSuccessful( false ), m_dispatcher( dispatcher )
 		{
-			m_cancelledByPreDispatch = Dispatcher::preDispatchSignal()( m_dispatcher, m_taskNodes );
+			m_cancelledByPreDispatch = Dispatcher::preDispatchSignal()( m_dispatcher );
 		}
 
 		~DispatcherSignalGuard()
 		{
-			Dispatcher::postDispatchSignal()( m_dispatcher, m_taskNodes, (m_dispatchSuccessful && ( !m_cancelledByPreDispatch )) );
+			Dispatcher::postDispatchSignal()( m_dispatcher, (m_dispatchSuccessful && ( !m_cancelledByPreDispatch )) );
 		}
 
 		bool cancelledByPreDispatch( )
@@ -769,8 +769,7 @@ class DispatcherSignalGuard
 		bool m_cancelledByPreDispatch;
 		bool m_dispatchSuccessful;
 
-		const std::vector<TaskNodePtr> &m_taskNodes;
-		const Dispatcher* m_dispatcher;
+		const Dispatcher *m_dispatcher;
 
 };
 
@@ -842,8 +841,7 @@ void Dispatcher::execute() const
 
 	// Validate the tasks to be dispatched
 
-	std::vector<TaskNodePtr> taskNodes;
-
+	bool haveTasks = false;
 	const ScriptNode *script = scriptNode();
 	for( const auto &taskPlug : TaskPlug::Range( *tasksPlug() ) )
 	{
@@ -864,18 +862,10 @@ void Dispatcher::execute() const
 		{
 			throw IECore::Exception( fmt::format( "{} does not belong to a ScriptNode.", taskPlug->fullName() ) );
 		}
-
-		if( TaskNode *taskNode = runTimeCast<TaskNode>( taskPlug->source()->node() ) )
-		{
-			taskNodes.push_back( taskNode );
-		}
-		else
-		{
-			throw IECore::Exception( fmt::format( "{} does not belong to a TaskNode.", taskPlug->fullName() ) );
-		}
+		haveTasks = true;
 	}
 
-	if( taskNodes.empty() )
+	if( !haveTasks )
 	{
 		return;
 	}
@@ -883,7 +873,7 @@ void Dispatcher::execute() const
 	// this object calls this->preDispatchSignal() in its constructor and this->postDispatchSignal()
 	// in its destructor, thereby guaranteeing that we always call this->postDispatchSignal().
 
-	DispatcherSignalGuard signalGuard( this, taskNodes );
+	DispatcherSignalGuard signalGuard( this );
 	if ( signalGuard.cancelledByPreDispatch() )
 	{
 		return;
@@ -893,7 +883,7 @@ void Dispatcher::execute() const
 	Context::Scope jobScope( jobContext.get() );
 	createJobDirectory( script, jobContext.get() );
 
-	dispatchSignal()( this, taskNodes );
+	dispatchSignal()( this );
 
 	std::vector<FrameList::Frame> frames;
 	FrameListPtr frameList = frameRange( script, Context::current() );
@@ -902,10 +892,10 @@ void Dispatcher::execute() const
 	Batcher batcher;
 	for( const auto &frame : frames )
 	{
-		for( const auto &taskNode : taskNodes )
+		for( const auto &taskPlug : TaskPlug::Range( *tasksPlug() ) )
 		{
 			jobContext->setFrame( frame );
-			batcher.addTask( TaskNode::Task( taskNode->taskPlug(), Context::current() ) );
+			batcher.addTask( TaskNode::Task( taskPlug, Context::current() ) );
 		}
 	}
 

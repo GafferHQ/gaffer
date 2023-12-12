@@ -40,6 +40,7 @@ import unittest
 import functools
 import itertools
 import time
+import warnings
 
 import IECore
 
@@ -204,19 +205,73 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		self.assertEqual( len( preCs ), 1 )
 		self.assertTrue( preCs[0][0].isSame( s["dispatcher"] ) )
-		self.assertEqual( preCs[0][1], [ s["n1"] ] )
 
 		self.assertEqual( len( dispatchCs ), 1 )
 		self.assertTrue( dispatchCs[0][0].isSame( s["dispatcher"] ) )
-		self.assertEqual( dispatchCs[0][1], [ s["n1"] ] )
 
 		self.assertEqual( len( postCs ), 1 )
 		self.assertTrue( postCs[0][0].isSame( s["dispatcher"] ) )
-		self.assertEqual( postCs[0][1], [ s["n1"] ] )
+		self.assertEqual( postCs[0][1], True )
+
+	def testLegacyDispatcherSignals( self ) :
+
+		# Test legacy slots that expect an additional `nodes` argument.
+
+		preDispatchCalls = []
+		def preDispatch( dispatcher, nodes ) :
+
+			nonlocal preDispatchCalls
+			preDispatchCalls.append( [ dispatcher, nodes ] )
+
+		dispatchCalls = []
+		def dispatch( dispatcher, nodes ) :
+
+			nonlocal dispatchCalls
+			dispatchCalls.append( [ dispatcher, nodes ] )
+
+		postDispatchCalls = []
+		def postDispatch( dispatcher, nodes, success ) :
+
+			nonlocal postDispatchCalls
+			postDispatchCalls.append( [ dispatcher, nodes, success ] )
+
+		with warnings.catch_warnings() :
+
+			warnings.simplefilter( "ignore", DeprecationWarning )
+
+			preDispatchConnection = GafferDispatch.Dispatcher.preDispatchSignal().connect(
+				preDispatch, scoped = True
+			)
+			dispatchConnection = GafferDispatch.Dispatcher.dispatchSignal().connect(
+				dispatch, scoped = True
+			)
+			postDispatchConnection = GafferDispatch.Dispatcher.postDispatchSignal().connect(
+				postDispatch, scoped = True
+			)
+
+		s = Gaffer.ScriptNode()
+		s["n1"] = GafferDispatchTest.LoggingTaskNode()
+
+		s["dispatcher"] = GafferDispatch.Dispatcher.create( "testDispatcher" )
+		s["dispatcher"]["tasks"][0].setInput( s["n1"]["task"] )
+		s["dispatcher"]["task"].execute()
+
+		self.assertEqual( len( preDispatchCalls ), 1 )
+		self.assertTrue( preDispatchCalls[0][0].isSame( s["dispatcher"] ) )
+		self.assertEqual( preDispatchCalls[0][1], [ s["n1"] ] )
+
+		self.assertEqual( len( dispatchCalls ), 1 )
+		self.assertTrue( dispatchCalls[0][0].isSame( s["dispatcher"] ) )
+		self.assertEqual( dispatchCalls[0][1], [ s["n1"] ] )
+
+		self.assertEqual( len( postDispatchCalls ), 1 )
+		self.assertTrue( postDispatchCalls[0][0].isSame( s["dispatcher"] ) )
+		self.assertEqual( postDispatchCalls[0][1], [ s["n1"] ] )
+		self.assertEqual( postDispatchCalls[0][2], True )
 
 	def testCancelDispatch( self ) :
 
-		def onlyRunOnce( dispatcher, nodes ) :
+		def onlyRunOnce( dispatcher ) :
 
 			if len( s["n1"].log ) :
 				return True
@@ -1081,7 +1136,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		script["dispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() )
 		script["dispatcher"]["tasks"][0].setInput( script["node"]["task"] )
 
-		def preDispatch( dispatcher, nodes ) :
+		def preDispatch( dispatcher ) :
 
 			self.assertNotIn( "dispatcher:jobDirectory", Gaffer.Context.current() )
 			self.assertNotIn( "dispatcher:scriptFileName", Gaffer.Context.current() )

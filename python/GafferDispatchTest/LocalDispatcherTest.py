@@ -378,15 +378,12 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 		self.assertEqual( len( preCs ), 1 )
 		self.assertTrue( preCs[0][0].isSame( s["dispatcher"] ) )
-		self.assertEqual( preCs[0][1], [ s["n1"] ] )
 
 		self.assertEqual( len( dispatchCs ), 1 )
 		self.assertTrue( dispatchCs[0][0].isSame( s["dispatcher"] ) )
-		self.assertEqual( dispatchCs[0][1], [ s["n1"] ] )
 
 		self.assertEqual( len( postCs ), 1 )
 		self.assertTrue( postCs[0][0].isSame( s["dispatcher"] ) )
-		self.assertEqual( postCs[0][1], [ s["n1"] ] )
 
 	def testExecuteInBackground( self ) :
 

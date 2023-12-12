@@ -34,6 +34,9 @@
 #
 ##########################################################################
 
+import inspect
+import warnings
+
 import IECore
 
 import Gaffer
@@ -61,3 +64,50 @@ def __dispatch( self, nodes ) :
 	self["task"].execute()
 
 GafferDispatch.Dispatcher.dispatch = __dispatch
+
+# When the `dispatch()` method existed, the nodes being dispatched needed to be
+# passed to the dispatch signals as they were not discoverable any other way.
+# But now they are available from connections to the `Dispatcher.tasks` plugs so
+# it makes no sense to pass them. But we provide backwards compatibility for
+# old-style slots to aid the transition.
+
+def __slotWrapper( slot, numArgs ) :
+
+	signature = inspect.signature( slot )
+	dummyArgs = [ None ] * numArgs
+	try :
+		# Throws if not callable with numArgs
+		signature.bind( *dummyArgs )
+		# No need for a wrapper
+		return slot
+	except TypeError :
+		pass
+
+	# We'll need a wrapper
+
+	warnings.warn(
+		'The `nodes` argument to Dispatcher signals is deprecated. Use `dispatcher["tasks"]` instead.',
+		DeprecationWarning
+	)
+
+	def call( dispatcher, *args ) :
+
+		nodes = [ task.source().node() for task in dispatcher["tasks"] if task.getInput() is not None ]
+		slot( dispatcher, nodes, *args )
+
+	return call
+
+def __connectWrapper( originalConnect, numArgs ) :
+
+	def connect( signal, slot, scoped = None ) :
+
+		return originalConnect( signal, __slotWrapper( slot, numArgs ), scoped )
+
+	return connect
+
+GafferDispatch.Dispatcher.PreDispatchSignal.connect = __connectWrapper( GafferDispatch.Dispatcher.PreDispatchSignal.connect, 1 )
+GafferDispatch.Dispatcher.PreDispatchSignal.connectFront = __connectWrapper( GafferDispatch.Dispatcher.PreDispatchSignal.connectFront, 1 )
+GafferDispatch.Dispatcher.DispatchSignal.connect = __connectWrapper( GafferDispatch.Dispatcher.DispatchSignal.connect, 1 )
+GafferDispatch.Dispatcher.DispatchSignal.connectFront = __connectWrapper( GafferDispatch.Dispatcher.DispatchSignal.connectFront, 1 )
+GafferDispatch.Dispatcher.PostDispatchSignal.connect = __connectWrapper( GafferDispatch.Dispatcher.PostDispatchSignal.connect, 2 )
+GafferDispatch.Dispatcher.PostDispatchSignal.connectFront = __connectWrapper( GafferDispatch.Dispatcher.PostDispatchSignal.connectFront, 2 )

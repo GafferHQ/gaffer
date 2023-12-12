@@ -264,17 +264,12 @@ tuple registeredDispatchersWrapper()
 
 struct PreDispatchSlotCaller
 {
-	bool operator()( boost::python::object slot, const Dispatcher *d, const std::vector<TaskNodePtr> &nodes )
+	bool operator()( boost::python::object slot, const Dispatcher *d )
 	{
 		try
 		{
-			list nodeList;
-			for( std::vector<TaskNodePtr>::const_iterator nIt = nodes.begin(); nIt != nodes.end(); nIt++ )
-			{
-				nodeList.append( *nIt );
-			}
 			DispatcherPtr dd = const_cast<Dispatcher*>(d);
-			return slot( dd, nodeList );
+			return slot( dd );
 		}
 		catch( const boost::python::error_already_set & )
 		{
@@ -286,17 +281,12 @@ struct PreDispatchSlotCaller
 
 struct DispatchSlotCaller
 {
-	void operator()( boost::python::object slot, const Dispatcher *d, const std::vector<TaskNodePtr> &nodes )
+	void operator()( boost::python::object slot, const Dispatcher *d )
 	{
 		try
 		{
-			list nodeList;
-			for( std::vector<TaskNodePtr>::const_iterator nIt = nodes.begin(); nIt != nodes.end(); nIt++ )
-			{
-				nodeList.append( *nIt );
-			}
 			DispatcherPtr dd = const_cast<Dispatcher*>(d);
-			slot( dd, nodeList );
+			slot( dd );
 		}
 		catch( const boost::python::error_already_set & )
 		{
@@ -307,17 +297,12 @@ struct DispatchSlotCaller
 
 struct PostDispatchSlotCaller
 {
-	void operator()( boost::python::object slot, const Dispatcher *d, const std::vector<TaskNodePtr> &nodes, bool success )
+	void operator()( boost::python::object slot, const Dispatcher *d, bool success )
 	{
 		try
 		{
-			list nodeList;
-			for( std::vector<TaskNodePtr>::const_iterator nIt = nodes.begin(); nIt != nodes.end(); nIt++ )
-			{
-				nodeList.append( *nIt );
-			}
 			DispatcherPtr dd = const_cast<Dispatcher*>(d);
-			slot( dd, nodeList, success );
+			slot( dd, success );
 		}
 		catch( const boost::python::error_already_set & )
 		{

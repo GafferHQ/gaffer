@@ -106,24 +106,24 @@ class GAFFERDISPATCH_API Dispatcher : public TaskNode
 
 		GAFFER_NODE_DECLARE_TYPE( GafferDispatch::Dispatcher, DispatcherTypeId, TaskNode );
 
-		using PreDispatchSignal = Gaffer::Signals::Signal<bool ( const Dispatcher *, const std::vector<TaskNodePtr> & ), Detail::PreDispatchSignalCombiner>;
-		using DispatchSignal = Gaffer::Signals::Signal<void ( const Dispatcher *, const std::vector<TaskNodePtr> & ), Gaffer::Signals::CatchingCombiner<void>>;
-		using PostDispatchSignal = Gaffer::Signals::Signal<void ( const Dispatcher *, const std::vector<TaskNodePtr> &, bool ), Gaffer::Signals::CatchingCombiner<void>>;
+		using PreDispatchSignal = Gaffer::Signals::Signal<bool ( const Dispatcher * ), Detail::PreDispatchSignalCombiner>;
+		using DispatchSignal = Gaffer::Signals::Signal<void ( const Dispatcher * ), Gaffer::Signals::CatchingCombiner<void>>;
+		using PostDispatchSignal = Gaffer::Signals::Signal<void ( const Dispatcher *, bool ), Gaffer::Signals::CatchingCombiner<void>>;
 		//! @name Dispatch Signals
 		/// These signals are emitted on dispatch events for any registered Dispatcher instance.
 		////////////////////////////////////////////////////////////////////////////////////////
 		//@{
-		/// Called when any dispatcher might begin to dispatch nodes. Slots should have the
-		/// signature `bool slot( dispatcher, nodes )`, and may return True to cancel
+		/// Called when any dispatcher might begin to dispatch tasks. Slots should have the
+		/// signature `bool slot( dispatcher )`, and may return True to cancel
 		/// the dispatch, or False to allow it to continue.
 		static PreDispatchSignal &preDispatchSignal();
-		/// Called when any dispatcher is going to dispatch nodes. Slots should have the
-		/// signature `bool slot( dispatcher, nodes )`. This differs from the preDispatchSignal
+		/// Called when any dispatcher is going to dispatch tasks. Slots should have the
+		/// signature `bool slot( dispatcher )`. This differs from the `preDispatchSignal`
 		/// in that it is triggered when dispatching is imminent and non-cancellable.
 		static DispatchSignal &dispatchSignal();
 		/// Called after any dispatcher has finished dispatching nodes, or after a pending dispatch
 		/// has been cancelled by the preDispatchSignal slots. Slots should have the signature
-		/// `void slot( dispatcher, nodes, bool )`. The third argument will be True if the process
+		/// `void slot( dispatcher, bool )`. The third argument will be True if the process
 		/// was successful, and False otherwise.
 		static PostDispatchSignal &postDispatchSignal();
 		//@}

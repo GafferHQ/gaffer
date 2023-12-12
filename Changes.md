@@ -122,6 +122,7 @@ Breaking Changes
   - Removed non-const TaskBatch accessors `frames()` and `preTasks()`.
   - Made `TaskBatch` constructors private.
   - The job directory is no longer available in slots connected to `preDispatchSignal()`.
+  - Removed `nodes` arguments from dispatch signals. Use the `dispatcher["tasks"]` plug instead.
 - DispatcherUI :
   - Removed `appendMenuDefinitions()`, `appendNodeContextMenuDefinitions()`, `executeSelected()` and `repeatPrevious()` functions.
   - Removed `DispatcherWindow` class.
