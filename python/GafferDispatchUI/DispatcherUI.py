@@ -98,11 +98,13 @@ Gaffer.Metadata.registerNode(
 			Determines the active frame range to be dispatched as
 			follows :
 
-			  - CurrentFrame uses the current timeline frame only.
-			  - FullRange uses the outer handles of the timeline
-			    (i.e. the full range of the script).
+			  - CurrentFrame dispatches the current frame only, as
+			    specified by the `${frame}` context variable.
+			  - FullRange uses the full frame range as specified by the
+			    `${frameRange:start}` and `${frameRange:end}`
+			    context variables.
 			  - CustomRange uses a user defined range, as specified by
-			    the frameRange plug.
+			    the `frameRange` plug.
 			""",
 
 			"preset:Current Frame", GafferDispatch.Dispatcher.FramesMode.CurrentFrame,

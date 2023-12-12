@@ -96,7 +96,7 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 			}
 		}
 
-		FrameListPtr frameRange( const ScriptNode *script, const Context *context ) const override
+		FrameListPtr frameRange() const override
 		{
 			ScopedGILLock gilLock;
 
@@ -105,11 +105,7 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 			{
 				try
 				{
-					object obj = f(
-						ScriptNodePtr( const_cast<ScriptNode *>( script ) ),
-						ContextPtr( const_cast<Context *>( context ) )
-					);
-
+					object obj = f();
 					return extract<FrameListPtr>( obj );
 				}
 				catch( const boost::python::error_already_set & )
@@ -118,7 +114,7 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 				}
 			}
 
-			return Dispatcher::frameRange( script, context );
+			return Dispatcher::frameRange();
 		}
 
 		//////////////////////////////////////////////////////////////////////////
@@ -239,9 +235,9 @@ struct DispatcherHelper
 
 };
 
-IECore::FrameListPtr frameRange( Dispatcher &n, const ScriptNode &script, const Context &context )
+IECore::FrameListPtr frameRange( Dispatcher &n )
 {
-	return n.Dispatcher::frameRange( &script, &context );
+	return n.Dispatcher::frameRange();
 }
 
 void registerDispatcher( std::string type, object creator, object setupPlugsFn )

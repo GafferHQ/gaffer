@@ -161,6 +161,8 @@ const InternedString g_batchSize( "batchSize" );
 const InternedString g_immediatePlugName( "immediate" );
 const InternedString g_jobDirectoryContextEntry( "dispatcher:jobDirectory" );
 const InternedString g_scriptFileNameContextEntry( "dispatcher:scriptFileName" );
+const InternedString g_frameRangeStart( "frameRange:start" );
+const InternedString g_frameRangeEnd( "frameRange:end" );
 
 } // namespace
 
@@ -351,8 +353,10 @@ void Dispatcher::setupPlugs( Plug *parentPlug )
 	}
 }
 
-FrameListPtr Dispatcher::frameRange( const ScriptNode *script, const Context *context ) const
+FrameListPtr Dispatcher::frameRange() const
 {
+	const Context *context = Context::current();
+
 	FramesMode mode = (FramesMode)framesModePlug()->getValue();
 	if ( mode == CurrentFrame )
 	{
@@ -361,7 +365,9 @@ FrameListPtr Dispatcher::frameRange( const ScriptNode *script, const Context *co
 	}
 	else if ( mode == FullRange )
 	{
-		return new FrameRange( script->frameStartPlug()->getValue(), script->frameEndPlug()->getValue() );
+		const int start = context->get<int>( g_frameRangeStart, 1 );
+		const int end = context->get<int>( g_frameRangeEnd, 100 );
+		return new FrameRange( start, end );
 	}
 
 	// must be CustomRange
@@ -778,7 +784,7 @@ class DispatcherSignalGuard
 void Dispatcher::preTasks( const Gaffer::Context *context, Tasks &tasks ) const
 {
 	vector<int64_t> frames;
-	frameRange( scriptNode(), context )->asList( frames );
+	frameRange()->asList( frames );
 
 	tasks.reserve( frames.size() * preTasksPlug()->children().size() );
 	for( auto frame : frames )
@@ -814,7 +820,7 @@ IECore::MurmurHash Dispatcher::hash( const Gaffer::Context *context ) const
 	MurmurHash h = TaskNode::hash( context );
 
 	std::vector<int64_t> frames;
-	frameRange( scriptNode(), context )->asList( frames );
+	frameRange()->asList( frames );
 
 	Context::EditableScope jobContext( context );
 
@@ -886,7 +892,7 @@ void Dispatcher::execute() const
 	dispatchSignal()( this );
 
 	std::vector<FrameList::Frame> frames;
-	FrameListPtr frameList = frameRange( script, Context::current() );
+	FrameListPtr frameList = frameRange();
 	frameList->asList( frames );
 
 	Batcher batcher;

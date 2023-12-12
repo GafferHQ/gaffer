@@ -148,9 +148,9 @@ class GAFFERDISPATCH_API Dispatcher : public TaskNode
 		/// Returns frame range to be used when framesModePlug is set to CustomRange.
 		Gaffer::StringPlug *frameRangePlug();
 		const Gaffer::StringPlug *frameRangePlug() const;
-		/// Returns the FrameList that will be used during dispatch() to create the TaskBatches.
-		/// Derived classes which reimplement this must call the base class first.
-		virtual IECore::FrameListPtr frameRange( const Gaffer::ScriptNode *script, const Gaffer::Context *context ) const;
+		/// Returns the frame range that would be used by a dispatch in the
+		/// current context.
+		virtual IECore::FrameListPtr frameRange() const;
 		//@}
 
 		//! @name Dispatcher Jobs

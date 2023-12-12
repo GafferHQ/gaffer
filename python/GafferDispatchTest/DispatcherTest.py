@@ -567,9 +567,8 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		context = Gaffer.Context( s.context() )
 		context.setFrame( s.context().getFrame() + 10 )
-		self.assertEqual( s["dispatcher"].frameRange( s, context ), IECore.frameListFromList( [ int(context.getFrame()) ] ) )
-
 		with context :
+			self.assertEqual( s["dispatcher"].frameRange(), IECore.frameListFromList( [ int(context.getFrame()) ] ) )
 			s["dispatcher"]["task"].execute()
 
 		self.assertEqual( len( s["n1"].log ), 1 )
@@ -585,12 +584,28 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["dispatcher"]["tasks"][0].setInput( s["n1"]["task"] )
 		s["dispatcher"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.FullRange )
 
-		s["dispatcher"]["task"].execute()
-
 		frameRange = IECore.FrameRange( s["frameRange"]["start"].getValue(), s["frameRange"]["end"].getValue() )
-		self.assertEqual( s["dispatcher"].frameRange( s, s.context() ), frameRange )
+
+		with s.context() :
+
+			self.assertEqual( s["dispatcher"].frameRange(), frameRange )
+			s["dispatcher"]["task"].execute()
+
 		self.assertEqual( len( s["n1"].log ), len( frameRange.asList() ) )
 		self.assertEqual( [ l.context.getFrame() for l in s["n1"].log ], frameRange.asList() )
+
+		del s["n1"].log[:]
+
+		with Gaffer.Context( s.context() ) as context :
+
+			context["frameRange:start"] = 10
+			context["frameRange:end"] = 20
+
+			self.assertEqual( s["dispatcher"].frameRange(), IECore.FrameRange( 10, 20 ) )
+			s["dispatcher"]["task"].execute()
+
+		self.assertEqual( len( s["n1"].log ), 11 )
+		self.assertEqual( [ l.context.getFrame() for l in s["n1"].log ], list( range( 10, 21 ) ) )
 
 	def testDispatchCustomRange( self ) :
 
@@ -607,7 +622,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["dispatcher"]["task"].execute()
 
 		frames = frameList.asList()
-		self.assertEqual( s["dispatcher"].frameRange( s, s.context() ), frameList )
+		self.assertEqual( s["dispatcher"].frameRange(), frameList )
 		self.assertEqual( len( s["n1"].log ), len( frames ) )
 		self.assertEqual( [ l.context.getFrame() for l in s["n1"].log ], frames )
 
@@ -622,7 +637,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["dispatcher"]["frameRange"].setValue( "notAFrameRange" )
 
 		self.assertRaises( RuntimeError, s["dispatcher"]["task"].execute )
-		self.assertRaises( RuntimeError, s["dispatcher"].frameRange, s, s.context() )
+		self.assertRaises( RuntimeError, s["dispatcher"].frameRange )
 		self.assertEqual( len( s["n1"].log ), 0 )
 
 	def testDoesNotRequireSequenceExecution( self ) :
@@ -928,9 +943,9 @@ class DispatcherTest( GafferTest.TestCase ) :
 
 		class BinaryDispatcher( DispatcherTest.TestDispatcher ) :
 
-			def frameRange( self, script, context ) :
+			def frameRange( self ) :
 
-				frameRange = GafferDispatch.Dispatcher.frameRange( self, script, context )
+				frameRange = GafferDispatch.Dispatcher.frameRange( self )
 
 				if self["framesMode"].getValue() == GafferDispatch.Dispatcher.FramesMode.CurrentFrame :
 					return frameRange
@@ -949,20 +964,56 @@ class DispatcherTest( GafferTest.TestCase ) :
 		s["dispatcher"]["frameRange"].setValue( str(frameList) )
 
 		s["dispatcher"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CurrentFrame )
-		self.assertEqual( s["dispatcher"].frameRange( s, s.context() ), IECore.frameListFromList( [ int(s.context().getFrame()) ] ) )
+		self.assertEqual( s["dispatcher"].frameRange(), IECore.frameListFromList( [ int(s.context().getFrame()) ] ) )
 
 		s["dispatcher"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.FullRange )
-		self.assertEqual( s["dispatcher"].frameRange( s, s.context() ), IECore.FrameList.parse( "1-100b" ) )
+		self.assertEqual( s["dispatcher"].frameRange(), IECore.FrameList.parse( "1-100b" ) )
 
 		s["dispatcher"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CustomRange )
 		binaryFrames = IECore.FrameList.parse( "1-10b" )
-		self.assertEqual( s["dispatcher"].frameRange( s, s.context() ), binaryFrames )
+		self.assertEqual( s["dispatcher"].frameRange(), binaryFrames )
 
 		s["dispatcher"]["tasks"][0].setInput( s["n1"]["task"] )
 		s["dispatcher"]["task"].execute()
 
 		self.assertEqual( len( s["n1"].log ), len( frameList.asList() ) )
 		self.assertEqual( [ l.context.getFrame() for l in s["n1"].log ], binaryFrames.asList() )
+
+	def testLegacyFrameRange( self ) :
+
+		# This tests the compatibility shim that allows the `frameRange()`
+		# method to be passed the old `script` and `context` arguments.
+
+		dispatcher = GafferDispatch.Dispatcher.create( "testDispatcher" )
+		script = Gaffer.ScriptNode()
+
+		with Gaffer.Context() as context :
+
+			# These values from the current context should be ignored,
+			# because the old method ignored convention and passed a
+			# separate context in.
+			context["frameRange:start"] = 1000
+			context["frameRange:end"] = 2000
+			context.setFrame( 100 )
+
+			# This is the context we pass in. It's not the current context.
+			# But it was used to provide the "current" frame.
+			context2 = Gaffer.Context()
+			context["frameRange:start"] = 2000
+			context["frameRange:end"] = 3000
+			context2.setFrame( 200 )
+
+			with warnings.catch_warnings() :
+
+				warnings.simplefilter( "ignore", DeprecationWarning )
+
+				dispatcher["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CurrentFrame )
+				self.assertEqual( dispatcher.frameRange( script, context2 ).asList(), [ 200 ] )
+
+				# But hilariously, despite now having _two_ potential contexts to define a frame
+				# range, the old method wouldn't use either. Instead it used the script directly.
+				dispatcher["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.FullRange )
+				self.assertEqual( dispatcher.frameRange( script, context2 ).asList(), list( range( 1, 101 ) ) )
 
 	def testPreTasksOverride( self ) :
 
@@ -1762,20 +1813,6 @@ class DispatcherTest( GafferTest.TestCase ) :
 			self.assertNotIn( "frame", batch.context() )
 			self.assertEqual( batch.context(), batches[0].context() )
 
-	def testNullScriptInFrameRangeCall( self ) :
-
-		d = self.NullDispatcher()
-		d["framesMode"].setValue( d.FramesMode.FullRange )
-		with self.assertRaisesRegex( Exception, "Python argument types in" ) :
-			d.frameRange( None, Gaffer.Context() )
-
-	def testNullContextInFrameRangeCall( self ) :
-
-		d = self.NullDispatcher()
-		d["framesMode"].setValue( d.FramesMode.CurrentFrame )
-		with self.assertRaisesRegex( Exception, "Python argument types in" ) :
-			d.frameRange( Gaffer.ScriptNode(), None )
-
 	def testSwitch( self ) :
 
 		s = Gaffer.ScriptNode()
@@ -2126,6 +2163,65 @@ class DispatcherTest( GafferTest.TestCase ) :
 					dispatcher["task"].postTasks(),
 					[ GafferDispatch.TaskNode.Task( dispatcher["postTasks"][0], c ) for c in taskContexts ]
 				)
+
+	def testWedgedDispatchWithVaryingFrameRange( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["node"] = GafferDispatchTest.LoggingTaskNode()
+		script["node"]["contextSensitivity"] = Gaffer.StringPlug( defaultValue = "shot : ${shot} frame : ${frame}" )
+
+		script["shotDispatcher"] = self.TestDispatcher()
+		script["shotDispatcher"]["tasks"][0].setInput( script["node"]["task"] )
+		script["shotDispatcher"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.FullRange )
+
+		shotList = [
+			{ "name" : "shotA", "start" : 1, "end" : 10 },
+			{ "name" : "shotB", "start" : 1, "end" : 5 },
+			{ "name" : "shotC", "start" : 1, "end" : 12 },
+		]
+
+		script["shotSpreadsheet"] = Gaffer.Spreadsheet()
+		script["shotSpreadsheet"]["selector"].setValue( "${shot}" )
+		script["shotSpreadsheet"]["rows"].addColumn( Gaffer.IntPlug( "start" ) )
+		script["shotSpreadsheet"]["rows"].addColumn( Gaffer.IntPlug( "end" ) )
+		for shot in shotList :
+			row = script["shotSpreadsheet"]["rows"].addRow()
+			row["name"].setValue( shot["name"] )
+			row["cells"]["start"]["value"].setValue( shot["start"] )
+			row["cells"]["end"]["value"].setValue( shot["end"] )
+
+		script["contextVariables"] = Gaffer.ContextVariables()
+		script["contextVariables"].setup( script["shotDispatcher"]["task"] )
+		script["contextVariables"]["in"].setInput( script["shotDispatcher"]["task"] )
+		script["contextVariables"]["variables"].addChild( Gaffer.NameValuePlug( "frameRange:start", 0, name = "start" ) )
+		script["contextVariables"]["variables"].addChild( Gaffer.NameValuePlug( "frameRange:end", 0, name = "end" ) )
+		script["contextVariables"]["variables"]["start"]["value"].setInput( script["shotSpreadsheet"]["out"]["start"] )
+		script["contextVariables"]["variables"]["end"]["value"].setInput( script["shotSpreadsheet"]["out"]["end"] )
+
+		script["shotWedge"] = GafferDispatch.Wedge()
+		script["shotWedge"]["preTasks"][0].setInput( script["contextVariables"]["out"] )
+		script["shotWedge"]["variable"].setValue( "shot" )
+		script["shotWedge"]["indexVariable"].setValue( "" )
+		script["shotWedge"]["mode"].setValue( GafferDispatch.Wedge.Mode.StringList )
+		script["shotWedge"]["strings"].setInput( script["shotSpreadsheet"]["enabledRowNames"] )
+
+		script["dispatcher"] = self.TestDispatcher()
+		script["dispatcher"]["tasks"][0].setInput( script["shotWedge"]["task"] )
+		script["dispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+		script["dispatcher"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CurrentFrame )
+
+		script["dispatcher"]["task"].execute()
+
+		self.assertEqual( len( script["node"].log ), sum( 1 + shot["end"] - shot["start"] for shot in shotList ) )
+		i = 0
+		for shot in shotList :
+			for frame in range( shot["start"], shot["end"] + 1 ) :
+				self.assertEqual( script["node"].log[i].context["shot"], shot["name"] )
+				self.assertEqual( script["node"].log[i].context.getFrame(), frame )
+				self.assertEqual( script["node"].log[i].context["frameRange:start"], shot["start"] )
+				self.assertEqual( script["node"].log[i].context["frameRange:end"], shot["end"] )
+				i += 1
 
 if __name__ == "__main__":
 	unittest.main()

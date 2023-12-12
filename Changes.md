@@ -123,6 +123,7 @@ Breaking Changes
   - Made `TaskBatch` constructors private.
   - The job directory is no longer available in slots connected to `preDispatchSignal()`.
   - Removed `nodes` arguments from dispatch signals. Use the `dispatcher["tasks"]` plug instead.
+  - Removed `script` and `context` arguments from `frameRange()` method. The current frame and full frame range are now queried from the current context.
 - DispatcherUI :
   - Removed `appendMenuDefinitions()`, `appendNodeContextMenuDefinitions()`, `executeSelected()` and `repeatPrevious()` functions.
   - Removed `DispatcherWindow` class.

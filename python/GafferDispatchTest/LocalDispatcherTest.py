@@ -230,7 +230,8 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		s["dispatcher"] = self.__createLocalDispatcher()
 		s["dispatcher"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.FullRange )
 		s["dispatcher"]["tasks"][0].setInput( s["n1"]["task"] )
-		s["dispatcher"]["task"].execute()
+		with s.context() :
+			s["dispatcher"]["task"].execute()
 		self.assertTrue( fileName.is_file() )
 		with open( fileName, "r", encoding = "utf-8" ) as f :
 			text = f.read()
@@ -244,7 +245,8 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		# Executing a leaf node, should not trigger other executions.
 		fileName.unlink()
 		s["dispatcher"]["tasks"][0].setInput( s["n2b"]["task"] )
-		s["dispatcher"]["task"].execute()
+		with s.context() :
+			s["dispatcher"]["task"].execute()
 		self.assertTrue( fileName.is_file() )
 		with open( fileName, "r", encoding = "utf-8" ) as f :
 			text = f.read()

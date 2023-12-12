@@ -111,3 +111,31 @@ GafferDispatch.Dispatcher.DispatchSignal.connect = __connectWrapper( GafferDispa
 GafferDispatch.Dispatcher.DispatchSignal.connectFront = __connectWrapper( GafferDispatch.Dispatcher.DispatchSignal.connectFront, 1 )
 GafferDispatch.Dispatcher.PostDispatchSignal.connect = __connectWrapper( GafferDispatch.Dispatcher.PostDispatchSignal.connect, 2 )
 GafferDispatch.Dispatcher.PostDispatchSignal.connectFront = __connectWrapper( GafferDispatch.Dispatcher.PostDispatchSignal.connectFront, 2 )
+
+# Compatibility for the bogus old `script` and `context` arguments to `Dispatcher.frameRange()`.
+
+def __frameRangeWrapper( originalFrameRange ) :
+
+	def frameRange( self, script = None, context = None ) :
+
+		if script is not None :
+
+			# Old skool API
+			assert( context is not None )
+			warnings.warn(
+				"The `script` and `context` arguments to `Dispatcher.frameRange()` are deprecated. Use `with context :` instead",
+				DeprecationWarning
+			)
+
+			with Gaffer.Context( context ) as frameRangeContext :
+
+				frameRangeContext["frameRange:start"] = script["frameRange"]["start"].getValue()
+				frameRangeContext["frameRange:end"] = script["frameRange"]["end"].getValue()
+
+				return originalFrameRange( self )
+
+		return originalFrameRange( self )
+
+	return frameRange
+
+GafferDispatch.Dispatcher.frameRange = __frameRangeWrapper( GafferDispatch.Dispatcher.frameRange )

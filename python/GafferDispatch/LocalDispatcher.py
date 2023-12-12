@@ -86,7 +86,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			self.__name = dispatcher["jobName"].getValue()
 			self.__directory = Gaffer.Context.current()["dispatcher:jobDirectory"]
 			self.__scriptFile = Gaffer.Context.current()["dispatcher:scriptFileName"]
-			self.__frameRange = dispatcher.frameRange( script, self.__context )
+			self.__frameRange = dispatcher.frameRange()
 			self.__id = os.path.basename( self.__directory )
 			self.__ignoreScriptLoadErrors = dispatcher["ignoreScriptLoadErrors"].getValue()
 			self.__environmentCommand = dispatcher["environmentCommand"].getValue()
