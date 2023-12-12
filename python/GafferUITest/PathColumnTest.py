@@ -96,5 +96,39 @@ class PathColumnTest( GafferUITest.TestCase ) :
 		p.setSizeMode( GafferUI.PathColumn.SizeMode.Interactive )
 		self.assertEqual( p.getSizeMode(), GafferUI.PathColumn.SizeMode.Interactive )
 
+	def testStandardPathColumnConstructors( self ) :
+
+		c = GafferUI.StandardPathColumn( "label", "property" )
+		self.assertEqual( c.property(), "property" )
+		self.assertEqual( c.getSizeMode(), GafferUI.PathColumn.SizeMode.Default )
+		self.assertEqual( c.headerData().value, "label" )
+
+		c = GafferUI.StandardPathColumn(
+			GafferUI.PathColumn.CellData( value = "label", toolTip = "help!" ),
+			"property", GafferUI.PathColumn.SizeMode.Stretch
+		)
+		self.assertEqual( c.property(), "property" )
+		self.assertEqual( c.getSizeMode(), GafferUI.PathColumn.SizeMode.Stretch )
+		self.assertEqual( c.headerData().value, "label" )
+		self.assertEqual( c.headerData().toolTip, "help!" )
+
+	def testIconPathColumnConstructors( self ) :
+
+		c = GafferUI.IconPathColumn( "label", "prefix", "property" )
+		self.assertEqual( c.prefix(), "prefix" )
+		self.assertEqual( c.property(), "property" )
+		self.assertEqual( c.getSizeMode(), GafferUI.PathColumn.SizeMode.Default )
+		self.assertEqual( c.headerData().value, "label" )
+
+		c = GafferUI.IconPathColumn(
+			GafferUI.PathColumn.CellData( value = "label", toolTip = "help!" ),
+			"prefix", "property", GafferUI.PathColumn.SizeMode.Stretch
+		)
+		self.assertEqual( c.prefix(), "prefix" )
+		self.assertEqual( c.property(), "property" )
+		self.assertEqual( c.getSizeMode(), GafferUI.PathColumn.SizeMode.Stretch )
+		self.assertEqual( c.headerData().value, "label" )
+		self.assertEqual( c.headerData().toolTip, "help!" )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -270,6 +270,12 @@ PathColumn::CellData cellDataWrapper( PathColumn &pathColumn, const Path &path, 
 	return pathColumn.cellData( path, canceller );
 }
 
+PathColumn::CellData headerDataWrapper( PathColumn &pathColumn, const Canceller *canceller )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return pathColumn.headerData( canceller );
+}
+
 struct ChangedSignalSlotCaller
 {
 	void operator()( boost::python::object slot, PathColumnPtr c )
@@ -313,6 +319,12 @@ struct ButtonSignalSlotCaller
 		}
 	}
 };
+
+template<typename T>
+const char *pathColumnProperty( const T &column )
+{
+	return column.property().c_str();
+}
 
 } // namespace
 
@@ -363,6 +375,7 @@ void GafferUIModule::bindPathColumn()
 	pathColumnClass.def( init<PathColumn::SizeMode>( arg( "sizeMode" ) = PathColumn::SizeMode::Default ) )
 		.def( "changedSignal", &PathColumn::changedSignal, return_internal_reference<1>() )
 		.def( "cellData", &cellDataWrapper, ( arg( "path" ), arg( "canceller" ) = object() ) )
+		.def( "headerData", &headerDataWrapper, ( arg( "canceller" ) = object() ) )
 		.def( "buttonPressSignal", &PathColumn::buttonPressSignal, return_internal_reference<1>() )
 		.def( "buttonReleaseSignal", &PathColumn::buttonReleaseSignal, return_internal_reference<1>() )
 		.def( "buttonDoubleClickSignal", &PathColumn::buttonDoubleClickSignal, return_internal_reference<1>() )
@@ -372,10 +385,15 @@ void GafferUIModule::bindPathColumn()
 
 	IECorePython::RefCountedClass<StandardPathColumn, PathColumn>( "StandardPathColumn" )
 		.def( init<const std::string &, IECore::InternedString, PathColumn::SizeMode>( arg( "sizeMode" ) = PathColumn::Default ) )
+		.def( init<const PathColumn::CellData &, IECore::InternedString, PathColumn::SizeMode>( arg( "sizeMode" ) = PathColumn::Default ) )
+		.def( "property", &pathColumnProperty<StandardPathColumn> )
 	;
 
 	IECorePython::RefCountedClass<IconPathColumn, PathColumn>( "IconPathColumn" )
 		.def( init<const std::string &, const std::string &, IECore::InternedString, PathColumn::SizeMode>( arg( "sizeMode" ) = PathColumn::Default ) )
+		.def( init<const PathColumn::CellData &, const std::string &, IECore::InternedString, PathColumn::SizeMode>( arg( "sizeMode" ) = PathColumn::Default ) )
+		.def( "prefix", &IconPathColumn::prefix, return_value_policy<copy_const_reference>() )
+		.def( "property", &pathColumnProperty<IconPathColumn> )
 	;
 
 	IECorePython::RefCountedClass<FileIconPathColumn, PathColumn>( "FileIconPathColumn" )

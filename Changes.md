@@ -27,7 +27,15 @@ Fixes
 API
 ---
 
-- PathColumn : Added `CellData::sortValue` member, to provide additional control over sorting in the PathListingWidget.
+- PathColumn :
+  - Added `CellData::sortValue` member, to provide additional control over sorting in the PathListingWidget.
+  - Added missing Python binding for `headerData()` method.
+- StandardPathColumn :
+  - Added constructor which allows the full header CellData to be specified.
+  - Added missing Python binding for `property()` method.
+- IconPathColumn :
+  - Added constructor which allows the full header CellData to be specified.
+  - Added `prefix()` and `property()` accessors.
 - LocalDispatcher :
   - Added `Job.status()` and `Job.statusChangedSignal()` methods.
   - Added `Job.messages()` and `Job.messagesChangedSignal()` methods.

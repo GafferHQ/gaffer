@@ -115,7 +115,12 @@ PathColumn::ButtonSignal &PathColumn::buttonDoubleClickSignal()
 //////////////////////////////////////////////////////////////////////////
 
 StandardPathColumn::StandardPathColumn( const std::string &label, IECore::InternedString property, SizeMode sizeMode )
-	:	PathColumn( sizeMode ), m_label( new IECore::StringData( label ) ), m_property( property )
+	:	StandardPathColumn( CellData( new StringData( label ) ), property, sizeMode )
+{
+}
+
+StandardPathColumn::StandardPathColumn( const CellData &headerData, IECore::InternedString property, PathColumn::SizeMode sizeMode )
+	:	PathColumn( sizeMode ), m_headerData( headerData ), m_property( property )
 {
 }
 
@@ -159,7 +164,7 @@ PathColumn::CellData StandardPathColumn::cellData( const Gaffer::Path &path, con
 
 PathColumn::CellData StandardPathColumn::headerData( const IECore::Canceller *canceller ) const
 {
-	return CellData( m_label );
+	return m_headerData;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -167,8 +172,23 @@ PathColumn::CellData StandardPathColumn::headerData( const IECore::Canceller *ca
 //////////////////////////////////////////////////////////////////////////
 
 IconPathColumn::IconPathColumn( const std::string &label, const std::string &prefix, IECore::InternedString property, SizeMode sizeMode )
-	:	PathColumn( sizeMode ), m_label( new StringData( label ) ), m_prefix( prefix ), m_property( property )
+	:	IconPathColumn( CellData( new StringData( label ) ), prefix, property, sizeMode )
 {
+}
+
+IconPathColumn::IconPathColumn( const CellData &headerData, const std::string &prefix, IECore::InternedString property, PathColumn::SizeMode sizeMode )
+	:	PathColumn( sizeMode ), m_headerData( headerData ), m_prefix( prefix ), m_property( property )
+{
+}
+
+const std::string &IconPathColumn::prefix() const
+{
+	return m_prefix;
+}
+
+IECore::InternedString IconPathColumn::property() const
+{
+	return m_property;
 }
 
 PathColumn::CellData IconPathColumn::cellData( const Gaffer::Path &path, const IECore::Canceller *canceller ) const
@@ -207,7 +227,7 @@ PathColumn::CellData IconPathColumn::cellData( const Gaffer::Path &path, const I
 
 PathColumn::CellData IconPathColumn::headerData( const IECore::Canceller *canceller ) const
 {
-	return CellData( m_label );
+	return m_headerData;
 }
 
 //////////////////////////////////////////////////////////////////////////
