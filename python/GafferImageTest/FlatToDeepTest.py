@@ -54,8 +54,8 @@ class FlatToDeepTest( GafferImageTest.ImageTestCase ) :
 
 		shuffle = GafferImage.Shuffle()
 		shuffle["in"].setInput( constant["out"] )
-		shuffle["channels"].addChild( shuffle.ChannelPlug( "Z", "R" ) )
-		shuffle["channels"].addChild( shuffle.ChannelPlug( "ZBack", "G" ) )
+		shuffle["shuffles"].addChild( Gaffer.ShufflePlug( "R", "Z" ) )
+		shuffle["shuffles"].addChild( Gaffer.ShufflePlug( "G", "ZBack" ) )
 		shuffle["enabled"].setValue( False )
 
 		addDepth = GafferImage.FlatToDeep()

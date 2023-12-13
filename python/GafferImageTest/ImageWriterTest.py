@@ -1270,7 +1270,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 		extraChannel = GafferImage.Shuffle()
 		extraChannel["in"].setInput( reader["out"] )
-		extraChannel["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "Q", "R" ) )
+		extraChannel["shuffles"].addChild( Gaffer.ShufflePlug( "R", "Q" ) )
 
 		writer = GafferImage.ImageWriter()
 
@@ -1404,10 +1404,10 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 		shuffle = GafferImage.Shuffle()
 		shuffle["in"].setInput( reader["out"] )
-		shuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "R", "customRgba.R" ) )
-		shuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "G", "customRgba.G" ) )
-		shuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "B", "customRgba.B" ) )
-		shuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "A", "customRgba.A" ) )
+		shuffle["shuffles"].addChild( Gaffer.ShufflePlug( "customRgba.R", "R" ) )
+		shuffle["shuffles"].addChild( Gaffer.ShufflePlug( "customRgba.G", "G" ) )
+		shuffle["shuffles"].addChild( Gaffer.ShufflePlug( "customRgba.B", "B" ) )
+		shuffle["shuffles"].addChild( Gaffer.ShufflePlug( "customRgba.A", "A" ) )
 
 		# Write the image out and assert that it reads in again the same.
 
@@ -1482,9 +1482,7 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 
 		shuffleDepth = GafferImage.Shuffle()
 		shuffleDepth["in"].setInput( constant["out"] )
-		shuffleDepth["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "channel" ) )
-		shuffleDepth["channels"]["channel"]["out"].setValue( 'depth.Z' )
-		shuffleDepth["channels"]["channel"]["in"].setValue( 'A' )
+		shuffleDepth["shuffles"].addChild( Gaffer.ShufflePlug( "A", "depth.Z" ) )
 
 		deleteChannels["in"].setInput( shuffleDepth["out"] )
 		writer["in"].setInput( deleteChannels["out"] )

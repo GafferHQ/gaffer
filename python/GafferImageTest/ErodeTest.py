@@ -247,8 +247,8 @@ class ErodeTest( GafferImageTest.ImageTestCase ) :
 
 		driverShuffle = GafferImage.Shuffle()
 		driverShuffle["in"].setInput( imageReader["out"] )
-		driverShuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "driver", "R" ) )
-		driverShuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "driven", "R" ) )
+		driverShuffle["shuffles"].addChild( Gaffer.ShufflePlug( "R", "driver" ) )
+		driverShuffle["shuffles"].addChild( Gaffer.ShufflePlug( "R", "driven" ) )
 
 		driverDelete = GafferImage.DeleteChannels()
 		driverDelete["in"].setInput( driverShuffle["out"] )
@@ -262,8 +262,8 @@ class ErodeTest( GafferImageTest.ImageTestCase ) :
 
 		refDriverShuffle = GafferImage.Shuffle()
 		refDriverShuffle["in"].setInput( refReader["out"] )
-		refDriverShuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "driver", "R" ) )
-		refDriverShuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "driven", "R" ) )
+		refDriverShuffle["shuffles"].addChild( Gaffer.ShufflePlug( "R", "driver" ) )
+		refDriverShuffle["shuffles"].addChild( Gaffer.ShufflePlug( "R", "driven" ) )
 
 		refDriverDelete = GafferImage.DeleteChannels()
 		refDriverDelete["in"].setInput( refDriverShuffle["out"] )
@@ -309,7 +309,7 @@ class ErodeTest( GafferImageTest.ImageTestCase ) :
 					refReader["fileName"].setValue( self.temporaryDirectory() / ref )
 
 				with self.subTest( refFile = ref, driverChannel = channelName ):
-					for channelPlug in [ i["in"] for i in driverShuffle["channels"].children() + refDriverShuffle["channels"].children() ] + [ driverErode["masterChannel"] ]:
+					for channelPlug in [ i["source"] for i in driverShuffle["shuffles"].children() + refDriverShuffle["shuffles"].children() ] + [ driverErode["masterChannel"] ]:
 						channelPlug.setValue( channelName )
 
 					self.assertImagesEqual( driverErode["out"], refDriverDelete["out"], ignoreMetadata = True )

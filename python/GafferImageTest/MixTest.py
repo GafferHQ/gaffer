@@ -498,7 +498,7 @@ class MixTest( GafferImageTest.ImageTestCase ) :
 		offset["offset"].setValue( imath.V2i( 33, -25 ) )
 
 		addOffsetMarker = GafferImage.Shuffle()
-		addOffsetMarker["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "offsetted", "__white" ) )
+		addOffsetMarker["shuffles"].addChild( Gaffer.ShufflePlug( "__white", "offsetted" ) )
 		addOffsetMarker["in"].setInput( offset["out"] )
 
 		deepMerge = GafferImage.DeepMerge()
@@ -608,14 +608,14 @@ class MixTest( GafferImageTest.ImageTestCase ) :
 		file1["fileName"].setValue( self.checkerNegativeDataWindowPath )
 
 		file1Shuffle = GafferImage.Shuffle()
-		file1Shuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "A", "R" ) )
+		file1Shuffle["shuffles"].addChild( Gaffer.ShufflePlug( "R", "A" ) )
 		file1Shuffle['in'].setInput( file1['out'] )
 
 		file2 = GafferImage.ImageReader()
 		file2["fileName"].setValue( self.checkerPath )
 
 		file2Shuffle = GafferImage.Shuffle()
-		file2Shuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "A", "R" ) )
+		file2Shuffle["shuffles"].addChild( Gaffer.ShufflePlug( "R", "A" ) )
 		file2Shuffle['in'].setInput( file2['out'] )
 
 		largeConstant = GafferImage.Constant()
@@ -638,10 +638,10 @@ class MixTest( GafferImageTest.ImageTestCase ) :
 
 		# Create a network using Merge that should match the result of Mix
 		MaskPromote = GafferImage.Shuffle( "MaskPromote" )
-		MaskPromote["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "R", "A" ) )
-		MaskPromote["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "G", "A" ) )
-		MaskPromote["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "B", "A" ) )
-		MaskPromote["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "A", "A" ) )
+		MaskPromote["shuffles"].addChild( Gaffer.ShufflePlug( "A", "R" ) )
+		MaskPromote["shuffles"].addChild( Gaffer.ShufflePlug( "A", "G" ) )
+		MaskPromote["shuffles"].addChild( Gaffer.ShufflePlug( "A", "B" ) )
+		MaskPromote["shuffles"].addChild( Gaffer.ShufflePlug( "A", "A" ) )
 		MaskPromote['in'].setInput( Mix['mask'] )
 
 		Input0Mult = GafferImage.Merge( "Input0Mult" )
@@ -666,10 +666,10 @@ class MixTest( GafferImageTest.ImageTestCase ) :
 
 		# Expand the data window of the reference to match the Mix, so we can compare
 		BlackBackground = GafferImage.Shuffle( "BlackBackground" )
-		BlackBackground["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "R", "__black" ) )
-		BlackBackground["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "G", "__black" ) )
-		BlackBackground["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "B", "__black" ) )
-		BlackBackground["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "A", "__black" ) )
+		BlackBackground["shuffles"].addChild( Gaffer.ShufflePlug( "__black", "R" ) )
+		BlackBackground["shuffles"].addChild( Gaffer.ShufflePlug( "__black", "G" ) )
+		BlackBackground["shuffles"].addChild( Gaffer.ShufflePlug( "__black", "B" ) )
+		BlackBackground["shuffles"].addChild( Gaffer.ShufflePlug( "__black", "A" ) )
 		BlackBackground["in"].setInput( Mix["out"] )
 
 		ReferenceWithDataWindow = GafferImage.Merge( "ReferenceWithDataWindow" )

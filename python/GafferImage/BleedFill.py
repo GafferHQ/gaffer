@@ -181,7 +181,7 @@ class BleedFill( GafferImage.ImageProcessor ) :
 		self["__unpremult"]["in"].setInput( self["__restoreDataSize"]["out"] )
 
 		self["__resetAlpha"] = GafferImage.Shuffle()
-		self["__resetAlpha"]["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "A", "__white" ) )
+		self["__resetAlpha"]["shuffles"].addChild( Gaffer.ShufflePlug( "__white", "A" ) )
 		self["__resetAlpha"]["in"].setInput( self["__unpremult"]["out"] )
 
 		self["__disableSwitch"] = Gaffer.Switch()

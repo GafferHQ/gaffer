@@ -41,6 +41,7 @@ import os
 
 import IECore
 
+import Gaffer
 import GafferTest
 import GafferImage
 import GafferImageTest
@@ -95,10 +96,10 @@ class DeepHoldoutTest( GafferImageTest.ImageTestCase ) :
 		# For a more complex holdout, we can create a comparison manually using shuffles and a DeepMerge
 		preShuffle = GafferImage.Shuffle()
 		preShuffle["in"].setInput( representativeImage["out"] )
-		preShuffle["channels"].addChild( preShuffle.ChannelPlug( "holdoutR", "R" ) )
-		preShuffle["channels"].addChild( preShuffle.ChannelPlug( "holdoutG", "G" ) )
-		preShuffle["channels"].addChild( preShuffle.ChannelPlug( "holdoutB", "B" ) )
-		preShuffle["channels"].addChild( preShuffle.ChannelPlug( "holdoutA", "A" ) )
+		preShuffle["shuffles"].addChild( Gaffer.ShufflePlug( "R", "holdoutR" ) )
+		preShuffle["shuffles"].addChild( Gaffer.ShufflePlug( "G", "holdoutG" ) )
+		preShuffle["shuffles"].addChild( Gaffer.ShufflePlug( "B", "holdoutB" ) )
+		preShuffle["shuffles"].addChild( Gaffer.ShufflePlug( "A", "holdoutA" ) )
 
 		manualHoldoutMerge = GafferImage.DeepMerge()
 		manualHoldoutMerge["in"][0].setInput( preShuffle["out"] )
@@ -109,10 +110,10 @@ class DeepHoldoutTest( GafferImageTest.ImageTestCase ) :
 
 		postShuffle = GafferImage.Shuffle()
 		postShuffle["in"].setInput( manualHoldoutFlatten["out"] )
-		postShuffle["channels"].addChild( postShuffle.ChannelPlug( "R", "holdoutR" ) )
-		postShuffle["channels"].addChild( postShuffle.ChannelPlug( "G", "holdoutG" ) )
-		postShuffle["channels"].addChild( postShuffle.ChannelPlug( "B", "holdoutB" ) )
-		postShuffle["channels"].addChild( postShuffle.ChannelPlug( "A", "holdoutA" ) )
+		postShuffle["shuffles"].addChild( Gaffer.ShufflePlug( "holdoutR", "R" ) )
+		postShuffle["shuffles"].addChild( Gaffer.ShufflePlug( "holdoutG", "G" ) )
+		postShuffle["shuffles"].addChild( Gaffer.ShufflePlug( "holdoutB", "B" ) )
+		postShuffle["shuffles"].addChild( Gaffer.ShufflePlug( "holdoutA", "A" ) )
 
 		channelCleanup = GafferImage.DeleteChannels()
 		channelCleanup["in"].setInput( postShuffle["out"] )
@@ -169,7 +170,7 @@ class DeepHoldoutTest( GafferImageTest.ImageTestCase ) :
 		self.assertIn( "out.channelData", dirtiedPlugs )
 		del cs[:]
 
-		aShuffle["channels"].addChild( bShuffle.ChannelPlug( "Z", "__white" ) )
+		aShuffle["shuffles"].addChild( Gaffer.ShufflePlug( "__white", "Z" ) )
 		dirtiedPlugs = { x[0].relativeName( holdout ) for x in cs }
 		self.assertIn( "__intermediateIn.channelData", dirtiedPlugs )
 		self.assertIn( "__flattened.channelData", dirtiedPlugs )
@@ -179,7 +180,7 @@ class DeepHoldoutTest( GafferImageTest.ImageTestCase ) :
 		self.assertIn( "out.channelNames", dirtiedPlugs )
 		del cs[:]
 
-		bShuffle["channels"].addChild( bShuffle.ChannelPlug( "Z", "__white" ) )
+		bShuffle["shuffles"].addChild( Gaffer.ShufflePlug( "__white", "Z" ) )
 		dirtiedPlugs = { x[0].relativeName( holdout ) for x in cs }
 		self.assertIn( "__flattened.channelData", dirtiedPlugs )
 		self.assertIn( "out.channelData", dirtiedPlugs )
