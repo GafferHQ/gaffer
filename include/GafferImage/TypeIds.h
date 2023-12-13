@@ -58,7 +58,7 @@ enum TypeId
 	GradeTypeId = 110763,
 	ShuffleTypeId = 110764,
 	ConstantTypeId = 110765,
-	ShuffleChannelPlugTypeId = 110766,
+	ShuffleChannelPlugTypeId = 110766, // Obsolete - available for reuse
 	ChannelMaskPlugTypeId = 110767,
 	WarpTypeId = 110768,
 	VectorWarpTypeId = 110769,

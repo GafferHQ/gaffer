@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
+#  Copyright (c) 2023, John Haddon. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,60 +34,47 @@
 #
 ##########################################################################
 
-import functools
-
-import IECore
-
 import Gaffer
-import GafferUI
-
 import GafferImage
 
-## \todo Add buttons for removing existing ChannelPlugs, and for adding
-# extras. This is probably best done as part of a concerted effort to
-# support layers everywhere (we can already compute arbitrary numbers of
-# named channels, we just need a convention and a UI for presenting this
-# as layers).
+class __ChannelPlug( Gaffer.ShufflePlug ) :
 
-Gaffer.Metadata.registerNode(
+	def __init__( self, *args, **kw ) :
 
-	GafferImage.Shuffle,
+		if (
+			len( kw ) == 0 and len( args ) == 2
+			and isinstance( args[0], str ) and isinstance( args[1], str )
+		) :
+			Gaffer.ShufflePlug.__init__( self, args[1], args[0] )
+		else :
+			Gaffer.ShufflePlug.__init__( self, *args, **kw )
 
-	"description",
-	"""
-	Shuffles data between image channels, for instance by copying R
-	into G or a constant white into A.
-	""",
+GafferImage.Shuffle.ChannelPlug = __ChannelPlug
 
-	plugs = {
+def __shufflePlugGetItem( originalGetItem ) :
 
-		"shuffles" : [
+	def getItem( self, key ) :
 
-			"description",
-			"""
-			The definition of the shuffling to be performed - an
-			arbitrary number of channel edits can be made by adding
-			ShufflePlugs as children of this plug.
-			""",
+		if key == "in" :
+			key = "source"
+		elif key == "out" :
+			key = "destination"
 
-		],
+		return originalGetItem( self, key )
 
-		"shuffles.*.source" : [
+	return getItem
 
-			"plugValueWidget:type", "GafferImageUI.ChannelPlugValueWidget",
-			"channelPlugValueWidget:extraChannels", IECore.StringVectorData( [ "__white", "__black" ] ),
-			"channelPlugValueWidget:extraChannelLabels", IECore.StringVectorData( [ "White", "Black" ] ),
+Gaffer.ShufflePlug.__getitem__ = __shufflePlugGetItem( Gaffer.ShufflePlug.__getitem__ )
 
-		],
+def __shuffleGetItem( originalGetItem ) :
 
-		"shuffles.*.destination" : [
+	def getItem( self, key ) :
 
+		if key == "channels" :
+			key = "shuffles"
 
-			"plugValueWidget:type", "GafferImageUI.ChannelPlugValueWidget",
-			"channelPlugValueWidget:allowNewChannels", True,
+		return originalGetItem( self, key )
 
-		],
+	return getItem
 
-	}
-
-)
+GafferImage.Shuffle.__getitem__ = __shuffleGetItem( GafferImage.Shuffle.__getitem__ )

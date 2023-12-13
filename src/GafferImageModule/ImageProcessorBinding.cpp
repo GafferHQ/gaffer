@@ -77,6 +77,7 @@ void GafferImageModule::bindImageProcessor()
 	DependencyNodeClass<CollectImages>();
 	DependencyNodeClass<CopyChannels>();
 	DependencyNodeClass<Mix>();
+	DependencyNodeClass<Shuffle>();
 
 	{
 		scope s = GafferBindings::DependencyNodeClass<DeleteChannels>();
@@ -105,23 +106,6 @@ void GafferImageModule::bindImageProcessor()
 			.value( "Under", Merge::Under )
 			.value( "Min", Merge::Min )
 			.value( "Max", Merge::Max )
-		;
-	}
-
-	{
-		scope s = DependencyNodeClass<Shuffle>();
-
-		PlugClass<Shuffle::ChannelPlug>()
-			.def( init<const char *, Plug::Direction, unsigned>(
-					(
-						boost::python::arg_( "name" )=GraphComponent::defaultName<Shuffle::ChannelPlug>(),
-						boost::python::arg_( "direction" )=Plug::In,
-						boost::python::arg_( "flags" )=Plug::Default
-					)
-				)
-			)
-			.def( init<const std::string &, const std::string &>() )
-			.attr( "__qualname__" ) = "Shuffle.ChannelPlug"
 		;
 	}
 

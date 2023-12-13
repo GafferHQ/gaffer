@@ -38,12 +38,11 @@
 
 #include "GafferImage/ImageProcessor.h"
 
-#include "Gaffer/StringPlug.h"
+#include "Gaffer/ShufflePlug.h"
 
 namespace GafferImage
 {
 
-/// \todo: Refactor using Gaffer::ShufflesPlug
 class GAFFERIMAGE_API Shuffle : public ImageProcessor
 {
 
@@ -54,45 +53,15 @@ class GAFFERIMAGE_API Shuffle : public ImageProcessor
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::Shuffle, ShuffleTypeId, ImageProcessor );
 
-		/// A custom plug to hold the name of an output channel and the
-		/// name of an input channel to shuffle into it. Add instances
-		/// of these to the Shuffle::channelsPlug() to define the shuffle.
-		class GAFFERIMAGE_API ChannelPlug : public Gaffer::ValuePlug
-		{
-
-			public :
-
-				GAFFER_PLUG_DECLARE_TYPE( GafferImage::Shuffle::ChannelPlug, ShuffleChannelPlugTypeId, Gaffer::ValuePlug );
-
-				// Standard constructor. This is needed for serialisation.
-				ChannelPlug(
-					const std::string &name = defaultName<ChannelPlug>(),
-					Direction direction=In,
-					unsigned flags = Default
-				);
-				// Convenience constructor defining a shuffle of the specified
-				// in channel to the specified out channel.
-				ChannelPlug( const std::string &out, const std::string &in );
-
-				Gaffer::StringPlug *outPlug();
-				const Gaffer::StringPlug *outPlug() const;
-
-				Gaffer::StringPlug *inPlug();
-				const Gaffer::StringPlug *inPlug() const;
-
-				bool acceptsChild( const Gaffer::GraphComponent *potentialChild ) const override;
-				Gaffer::PlugPtr createCounterpart( const std::string &name, Direction direction ) const override;
-
-		};
-
-		IE_CORE_DECLAREPTR( ChannelPlug )
-
-		Gaffer::ValuePlug *channelsPlug();
-		const Gaffer::ValuePlug *channelsPlug() const;
+		Gaffer::ShufflesPlug *shufflesPlug();
+		const Gaffer::ShufflesPlug *shufflesPlug() const;
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
 	protected :
+
+		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
 
 		void hashChannelNames( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		void hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
@@ -101,6 +70,9 @@ class GAFFERIMAGE_API Shuffle : public ImageProcessor
 		IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const override;
 
 	private :
+
+		Gaffer::ObjectPlug *mappingPlug();
+		const Gaffer::ObjectPlug *mappingPlug() const;
 
 		std::string inChannelName( const std::string &outChannelName ) const;
 

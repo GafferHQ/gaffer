@@ -38,67 +38,68 @@
 
 #include "GafferImage/ImageAlgo.h"
 
+#include "IECore/NullObject.h"
+
+#include <unordered_map>
+
 using namespace std;
 using namespace IECore;
 using namespace Gaffer;
 using namespace GafferImage;
 
-//////////////////////////////////////////////////////////////////////////
-// Shuffle::ChannelPlug
-//////////////////////////////////////////////////////////////////////////
-
-GAFFER_PLUG_DEFINE_TYPE( Shuffle::ChannelPlug );
-
-Shuffle::ChannelPlug::ChannelPlug( const std::string &name, Direction direction, unsigned flags)
-	:	ValuePlug( name, direction, flags )
+namespace
 {
-	const unsigned childFlags = flags & ~Dynamic;
-	addChild( new StringPlug( "out", direction, "", childFlags ) );
-	addChild( new StringPlug( "in", direction, "", childFlags ) );
-}
 
-Shuffle::ChannelPlug::ChannelPlug( const std::string &out, const std::string &in )
-	:	ValuePlug( "channel", In, Default | Dynamic )
+struct MappingData : public IECore::Data
 {
-	addChild( new StringPlug( "out" ) );
-	addChild( new StringPlug( "in" ) );
-	outPlug()->setValue( out );
-	inPlug()->setValue( in );
-}
 
-StringPlug *Shuffle::ChannelPlug::outPlug()
-{
-	return getChild<StringPlug>( 0 );
-}
+	MappingData( const StringVectorData *inChannelNames, const ShufflesPlug *shuffles )
+	{
+		for( const auto &channelName : inChannelNames->readable() )
+		{
+			m_mapping[channelName] = channelName;
+		}
 
-const StringPlug *Shuffle::ChannelPlug::outPlug() const
-{
-	return getChild<StringPlug>( 0 );
-}
+		Map extraSources = {
+			{ "__white", "__white" },
+			{ "__black", "__black" },
+			{ "*", "__black" }
+		};
 
-StringPlug *Shuffle::ChannelPlug::inPlug()
-{
-	return getChild<StringPlug>( 1 );
-}
+		m_mapping = shuffles->shuffleWithExtraSources( m_mapping, extraSources );
 
-const StringPlug *Shuffle::ChannelPlug::inPlug() const
-{
-	return getChild<StringPlug>( 1 );
-}
+		m_outChannelNames = new StringVectorData();
+		for( const auto &m : m_mapping )
+		{
+			m_outChannelNames->writable().push_back( m.first );
+		}
+		m_outChannelNames->writable() = ImageAlgo::sortedChannelNames( m_outChannelNames->readable() );
+	}
 
-bool Shuffle::ChannelPlug::acceptsChild( const Gaffer::GraphComponent *potentialChild ) const
-{
-	return children().size() < 2;
-}
+	const StringVectorData *outChannelNames() const { return m_outChannelNames.get(); }
 
-PlugPtr Shuffle::ChannelPlug::createCounterpart( const std::string &name, Direction direction ) const
-{
-	return new ChannelPlug( name, direction, getFlags() );
-}
+	const string &inChannelName( const string &outChannelName ) const
+	{
+		auto it = m_mapping.find( outChannelName );
+		if( it == m_mapping.end() )
+		{
+			throw IECore::Exception( fmt::format( "Invalid output channel {}", outChannelName ) );
+		}
+		return it->second;
+	}
 
-//////////////////////////////////////////////////////////////////////////
-// Shuffle
-//////////////////////////////////////////////////////////////////////////
+	private :
+
+		StringVectorDataPtr m_outChannelNames;
+
+		using Map = unordered_map<string, string>;
+		Map m_mapping;
+
+};
+
+IE_CORE_DECLAREPTR( MappingData )
+
+} // namespace
 
 size_t Shuffle::g_firstPlugIndex = 0;
 
@@ -108,7 +109,8 @@ Shuffle::Shuffle( const std::string &name )
 	:	ImageProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
-	addChild( new ValuePlug( "channels" ) );
+	addChild( new ShufflesPlug( "shuffles" ) );
+	addChild( new ObjectPlug( "__mapping", Plug::Out, IECore::NullObject::defaultNullObject() ) );
 
 	// Pass-through the things we don't want to modify.
 	outPlug()->viewNamesPlug()->setInput( inPlug()->viewNamesPlug() );
@@ -123,59 +125,84 @@ Shuffle::~Shuffle()
 {
 }
 
-ValuePlug *Shuffle::channelsPlug()
+Gaffer::ShufflesPlug *Shuffle::shufflesPlug()
 {
-	return getChild<ValuePlug>( g_firstPlugIndex );
+	return getChild<ShufflesPlug>( g_firstPlugIndex );
 }
 
-const ValuePlug *Shuffle::channelsPlug() const
+const Gaffer::ShufflesPlug *Shuffle::shufflesPlug() const
 {
-	return getChild<ValuePlug>( g_firstPlugIndex );
+	return getChild<ShufflesPlug>( g_firstPlugIndex );
+}
+
+Gaffer::ObjectPlug *Shuffle::mappingPlug()
+{
+	return getChild<ObjectPlug>( g_firstPlugIndex + 1 );
+}
+
+const Gaffer::ObjectPlug *Shuffle::mappingPlug() const
+{
+	return getChild<ObjectPlug>( g_firstPlugIndex + 1 );
 }
 
 void Shuffle::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
 {
 	ImageProcessor::affects( input, outputs );
 
-	if( input == inPlug()->channelNamesPlug() )
+	if(
+		input == inPlug()->channelNamesPlug() ||
+		shufflesPlug()->isAncestorOf( input )
+	)
+	{
+		outputs.push_back( mappingPlug() );
+	}
+
+	if( input == mappingPlug() )
 	{
 		outputs.push_back( outPlug()->channelNamesPlug() );
 	}
-	else if( input == inPlug()->channelDataPlug() || input == inPlug()->channelNamesPlug() )
+
+	if(
+		input == mappingPlug() ||
+		input == inPlug()->channelDataPlug()
+	)
 	{
 		outputs.push_back( outPlug()->channelDataPlug() );
 	}
-	else if( channelsPlug()->isAncestorOf( input ) )
+}
+
+void Shuffle::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
+{
+	ImageProcessor::hash( output, context, h );
+
+	if( output == mappingPlug() )
 	{
-		outputs.push_back( outPlug()->channelNamesPlug() );
-		outputs.push_back( outPlug()->channelDataPlug() );
+		inPlug()->channelNamesPlug()->hash( h );
+		shufflesPlug()->hash( h );
 	}
+}
+
+void Shuffle::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const
+{
+	if( output == mappingPlug() )
+	{
+		ConstStringVectorDataPtr inChannelNames = inPlug()->channelNamesPlug()->getValue();
+		static_cast<ObjectPlug *>( output )->setValue( new MappingData( inChannelNames.get(), shufflesPlug() ) );
+	}
+
+	return ImageProcessor::compute( output, context );
 }
 
 void Shuffle::hashChannelNames( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
 	ImageProcessor::hashChannelNames( parent, context, h );
-	inPlug()->channelNamesPlug()->hash( h );
-	for( ChannelPlug::Iterator it( channelsPlug() ); !it.done(); ++it )
-	{
-		(*it)->outPlug()->hash( h );
-	}
+	mappingPlug()->hash( h );
 }
 
 IECore::ConstStringVectorDataPtr Shuffle::computeChannelNames( const Gaffer::Context *context, const ImagePlug *parent ) const
 {
-	StringVectorDataPtr resultData = inPlug()->channelNamesPlug()->getValue()->copy();
-	vector<string> &result = resultData->writable();
-	for( ChannelPlug::Iterator it( channelsPlug() ); !it.done(); ++it )
-	{
-		string channelName = (*it)->outPlug()->getValue();
-		if( channelName != "" && find( result.begin(), result.end(), channelName ) == result.end() )
-		{
-			result.push_back( channelName );
-		}
-	}
-
-	return resultData;
+	ConstMappingDataPtr mapping = boost::static_pointer_cast<const MappingData>( mappingPlug()->getValue() );
+	return mapping->outChannelNames();
 }
 
 
@@ -251,20 +278,6 @@ IECore::ConstFloatVectorDataPtr Shuffle::computeChannelData( const std::string &
 std::string Shuffle::inChannelName( const std::string &outChannelName ) const
 {
 	ImagePlug::GlobalScope s( Context::current() );
-	for( ChannelPlug::Iterator it( channelsPlug() ); !it.done(); ++it )
-	{
-		if( (*it)->outPlug()->getValue() == outChannelName )
-		{
-			const string inChannelName = (*it)->inPlug()->getValue();
-			if( inChannelName == "__white" || ImageAlgo::channelExists( inPlug(), inChannelName ) )
-			{
-				return inChannelName;
-			}
-			else
-			{
-				return "__black";
-			}
-		}
-	}
-	return outChannelName;
+	ConstMappingDataPtr mapping = boost::static_pointer_cast<const MappingData>( mappingPlug()->getValue() );
+	return mapping->inChannelName( outChannelName );
 }

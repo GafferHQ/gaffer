@@ -381,7 +381,7 @@ nodeMenu.append( "/Image/Transform/Crop", GafferImage.Crop, postCreator = Gaffer
 nodeMenu.append( "/Image/Transform/Offset", GafferImage.Offset )
 nodeMenu.append( "/Image/Transform/Mirror", GafferImage.Mirror )
 nodeMenu.append( "/Image/Warp/VectorWarp", GafferImage.VectorWarp )
-nodeMenu.append( "/Image/Channels/Shuffle", GafferImageUI.ShuffleUI.nodeMenuCreateCommand, searchText = "Shuffle" )
+nodeMenu.append( "/Image/Channels/Shuffle", GafferImage.Shuffle, searchText = "Shuffle" )
 nodeMenu.append( "/Image/Channels/Copy", GafferImage.CopyChannels, searchText = "CopyChannels" )
 nodeMenu.append( "/Image/Channels/Delete", GafferImage.DeleteChannels, searchText = "DeleteChannels" )
 nodeMenu.append( "/Image/Channels/Collect", GafferImage.CollectImages, searchText = "CollectImages" )
