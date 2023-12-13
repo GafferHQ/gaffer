@@ -208,5 +208,33 @@ class ConstantTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertTrue( c["out"]["channelNames"] in set( [ x[0] for x in cs ] ) )
 
+	def testAssertImagesEqual( self ) :
+
+		a = GafferImage.Constant()
+		a["color"].setValue( imath.Color4f( 0.5 ) )
+
+		b = GafferImage.Constant()
+		b["color"].setValue( imath.Color4f( 0.5 ) )
+
+		self.assertImagesEqual( a["out"], b["out"] )
+
+		a["color"].setValue( imath.Color4f( 0.75 ) )
+
+		with self.assertRaisesRegex( AssertionError, "0.25 not less than or equal to 0.0 : Channel R" ) :
+			self.assertImagesEqual( a["out"], b["out"] )
+
+		self.assertImagesEqual( a["out"], b["out"], maxDifference = 0.25 )
+
+		self.assertImagesEqual( a["out"], b["out"], maxDifference = ( -0.25, 0.0 ) )
+		with self.assertRaisesRegex( AssertionError, "-0.25 not greater than or equal to 0.0 : Channel R" ) :
+			self.assertImagesEqual( a["out"], b["out"], maxDifference = ( 0.0, 0.25 ) )
+
+		b["color"].setValue( imath.Color4f( 1.0 ) )
+
+		self.assertImagesEqual( a["out"], b["out"], maxDifference = ( 0.0, 0.25 ) )
+		with self.assertRaisesRegex( AssertionError, "0.25 not less than or equal to 0.0 : Channel R" ) :
+			self.assertImagesEqual( a["out"], b["out"], maxDifference = ( -0.25, 0.0 ) )
+
+
 if __name__ == "__main__":
 	unittest.main()

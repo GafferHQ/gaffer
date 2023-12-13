@@ -63,6 +63,7 @@ API
   - Added `ignoreMissingSource` argument to `shuffle()`.
   - Added `shuffleWithExtraSources()` method.
 - ShufflePlugValueWidget : Widgets for the `source` and `destination` plugs can now be customised using standard `plugValueWidget:type` metadata.
+- ImageTestCase : in `assertImageEqual` function, maxDifference may now be a tuple, to specify an asymmetric range.
 
 Breaking Changes
 ----------------
