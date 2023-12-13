@@ -118,12 +118,22 @@ class ScriptWindow( GafferUI.Window ) :
 		f = self.__script["fileName"].getValue()
 		f = f.rpartition( "/" )[2] if f else "untitled"
 
-		dialogue = GafferUI.ConfirmationDialogue(
+		dialogue = _ChoiceDialogue(
 			"Discard Unsaved Changes?",
-			"The file %s has unsaved changes. Do you want to discard them?" % f,
-			confirmLabel = "Discard"
+			f"The file \"{f}\" has unsaved changes. Do you want to discard them?",
+			choices = [ "Cancel", "Save", "Discard" ]
 		)
-		return dialogue.waitForConfirmation( parentWindow=self )
+		choice = dialogue.waitForChoice( parentWindow=self )
+
+		if choice == "Discard" :
+			return True
+		elif choice == "Save" :
+			## \todo Is it a bit odd that ScriptWindow should depend on FileMenu
+			# like this? Should the code be moved somewhere else?
+			GafferUI.FileMenu.save( self.menuBar() )
+			return True
+		else :
+			return False
 
 	def __closed( self, widget ) :
 
@@ -194,6 +204,31 @@ class ScriptWindow( GafferUI.Window ) :
 		if not len( scriptContainer.children() ) and GafferUI.EventLoop.mainEventLoop().running() :
 			GafferUI.EventLoop.mainEventLoop().stop()
 
+## \todo Would this be worthy of inclusion in GafferUI?
+class _ChoiceDialogue( GafferUI.Dialogue ) :
+
+	def __init__( self, title, message, choices, **kw ) :
+
+		GafferUI.Dialogue.__init__( self, title, sizeMode=GafferUI.Window.SizeMode.Automatic, **kw )
+
+		with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 8 ) as column :
+
+			GafferUI.Label( message )
+
+		self._setWidget( column )
+
+		for choice in choices :
+			self.__lastButton = self._addButton( choice )
+
+	def waitForChoice( self, **kw ) :
+
+		self.__lastButton._qtWidget().setFocus()
+		button = self.waitForButton( **kw )
+
+		if button is None :
+			return None
+		else :
+			return button.getText()
 
 class _WindowTitleBehaviour :
 

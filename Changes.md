@@ -11,8 +11,10 @@ Improvements
   - Added a new dockable LocalJobs editor, to replace the floating window previously accessible via the "Execute/Local Jobs" menu item.
   - Task output is now shown in the UI.
   - Jobs are no longer removed from the UI as soon as they complete.
+  - Incomplete jobs are now killed automatically when the application is closed, after prompting to confirm that shutdown should go ahead.
 - Cache : Increased default computation cache size to 8Gb. Call `Gaffer.ValuePlug.setCacheMemoryLimit()` from a startup file to override this.
 - Dispatcher : Reduced internal overhead of `dispatch()` call, with one benchmark showing around a 3x speedup.
+- ScriptWindow : Added "Save" option to dialogue shown when closing a window containing unsaved changes.
 
 Fixes
 -----
@@ -36,6 +38,7 @@ API
 - IconPathColumn :
   - Added constructor which allows the full header CellData to be specified.
   - Added `prefix()` and `property()` accessors.
+- Window : Added `preCloseSignal()`, which allows connected slots to prevent a window from being closed.
 - LocalDispatcher :
   - Added `Job.status()` and `Job.statusChangedSignal()` methods.
   - Added `Job.messages()` and `Job.messagesChangedSignal()` methods.

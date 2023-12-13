@@ -46,6 +46,7 @@ import imath
 import IECore
 
 import Gaffer
+import GafferTest
 import GafferUI
 import GafferUITest
 
@@ -458,6 +459,31 @@ class WindowTest( GafferUITest.TestCase ) :
 
 			# If the bug is fixed, nothing should have been printed.
 			self.assertEqual( tmpStdErr.getvalue(), "" )
+
+	def testPreCloseSignal( self ) :
+
+		window = GafferUI.Window()
+		window.setVisible( True )
+
+		preCloseSlotResult = True
+		def preCloseSlot( w ) :
+
+			nonlocal preCloseSlotResult
+			return preCloseSlotResult
+
+		window.preCloseSignal().connect( preCloseSlot, scoped = False )
+		preCloseCapturingSlot = GafferTest.CapturingSlot( window.preCloseSignal() )
+		closedSlot = GafferTest.CapturingSlot( window.closedSignal() )
+
+		self.assertFalse( window.close() )
+		self.assertEqual( len( preCloseCapturingSlot ), 0 )
+		self.assertEqual( len( closedSlot ), 0 )
+
+		preCloseSlotResult = False
+
+		self.assertTrue( window.close() )
+		self.assertEqual( len( preCloseCapturingSlot ), 1 )
+		self.assertEqual( len( closedSlot ), 1 )
 
 if __name__ == "__main__":
 	unittest.main()
