@@ -107,7 +107,10 @@ Gaffer.Metadata.registerNode(
 			The image channel used to modulate the density of the scattered points.
 			Black pixels will receive no points and white pixels will receive the
 			full amount as defined by the `density` plug.
-			"""
+			""",
+
+			"plugValueWidget:type", "GafferImageUI.ChannelPlugValueWidget",
+			"channelPlugValueWidget:imagePlugName", "image",
 
 		],
 
