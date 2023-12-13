@@ -22,6 +22,9 @@ Improvements
     - Source channels can optionally be deleted after shuffling.
     - Overwriting of destination channels can optionally be avoided.
   - Added `missingSourceMode` plug to determine behaviour when a source channel doesn't exist.
+- NodeEditor : Improved image channel selectors :
+  - Added "Custom" option, to allow strings to be entered manually.
+  - Added right-click context menu.
 
 Fixes
 -----
