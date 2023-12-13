@@ -1,6 +1,11 @@
 1.3.x.x (relative to 1.3.10.0)
 =======
 
+Features
+--------
+
+- 3Delight : Added support for USD `SphereLight`, `RectLight`, `DiskLight`, `DistantLight`, `DomeLight` and `CylinderLight`.
+
 Improvements
 ------------
 
