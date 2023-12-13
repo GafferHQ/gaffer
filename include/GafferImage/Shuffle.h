@@ -53,6 +53,16 @@ class GAFFERIMAGE_API Shuffle : public ImageProcessor
 
 		GAFFER_NODE_DECLARE_TYPE( GafferImage::Shuffle, ShuffleTypeId, ImageProcessor );
 
+		enum class MissingSourceMode
+		{
+			Ignore,
+			Error,
+			Black
+		};
+
+		Gaffer::IntPlug *missingSourceModePlug();
+		const Gaffer::IntPlug *missingSourceModePlug() const;
+
 		Gaffer::ShufflesPlug *shufflesPlug();
 		const Gaffer::ShufflesPlug *shufflesPlug() const;
 

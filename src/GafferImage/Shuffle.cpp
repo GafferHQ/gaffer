@@ -53,7 +53,7 @@ namespace
 struct MappingData : public IECore::Data
 {
 
-	MappingData( const StringVectorData *inChannelNames, const ShufflesPlug *shuffles )
+	MappingData( const StringVectorData *inChannelNames, const ShufflesPlug *shuffles, Shuffle::MissingSourceMode mode )
 	{
 		for( const auto &channelName : inChannelNames->readable() )
 		{
@@ -62,11 +62,14 @@ struct MappingData : public IECore::Data
 
 		Map extraSources = {
 			{ "__white", "__white" },
-			{ "__black", "__black" },
-			{ "*", "__black" }
+			{ "__black", "__black" }
 		};
+		if( mode == Shuffle::MissingSourceMode::Black )
+		{
+			extraSources["*"] = "__black";
+		}
 
-		m_mapping = shuffles->shuffleWithExtraSources( m_mapping, extraSources );
+		m_mapping = shuffles->shuffleWithExtraSources( m_mapping, extraSources, mode == Shuffle::MissingSourceMode::Ignore );
 
 		m_outChannelNames = new StringVectorData();
 		for( const auto &m : m_mapping )
@@ -109,6 +112,7 @@ Shuffle::Shuffle( const std::string &name )
 	:	ImageProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
+	addChild( new IntPlug( "missingSourceMode", Plug::In, (int)MissingSourceMode::Black, (int)MissingSourceMode::Ignore, (int)MissingSourceMode::Black ) );
 	addChild( new ShufflesPlug( "shuffles" ) );
 	addChild( new ObjectPlug( "__mapping", Plug::Out, IECore::NullObject::defaultNullObject() ) );
 
@@ -125,24 +129,34 @@ Shuffle::~Shuffle()
 {
 }
 
+Gaffer::IntPlug *Shuffle::missingSourceModePlug()
+{
+	return getChild<IntPlug>( g_firstPlugIndex );
+}
+
+const Gaffer::IntPlug *Shuffle::missingSourceModePlug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex );
+}
+
 Gaffer::ShufflesPlug *Shuffle::shufflesPlug()
 {
-	return getChild<ShufflesPlug>( g_firstPlugIndex );
+	return getChild<ShufflesPlug>( g_firstPlugIndex +1 );
 }
 
 const Gaffer::ShufflesPlug *Shuffle::shufflesPlug() const
 {
-	return getChild<ShufflesPlug>( g_firstPlugIndex );
+	return getChild<ShufflesPlug>( g_firstPlugIndex + 1 );
 }
 
 Gaffer::ObjectPlug *Shuffle::mappingPlug()
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 1 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 2 );
 }
 
 const Gaffer::ObjectPlug *Shuffle::mappingPlug() const
 {
-	return getChild<ObjectPlug>( g_firstPlugIndex + 1 );
+	return getChild<ObjectPlug>( g_firstPlugIndex + 2 );
 }
 
 void Shuffle::affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const
@@ -151,7 +165,8 @@ void Shuffle::affects( const Gaffer::Plug *input, AffectedPlugsContainer &output
 
 	if(
 		input == inPlug()->channelNamesPlug() ||
-		shufflesPlug()->isAncestorOf( input )
+		shufflesPlug()->isAncestorOf( input ) ||
+		input == missingSourceModePlug()
 	)
 	{
 		outputs.push_back( mappingPlug() );
@@ -179,6 +194,7 @@ void Shuffle::hash( const Gaffer::ValuePlug *output, const Gaffer::Context *cont
 	{
 		inPlug()->channelNamesPlug()->hash( h );
 		shufflesPlug()->hash( h );
+		missingSourceModePlug()->hash( h );
 	}
 }
 
@@ -187,7 +203,9 @@ void Shuffle::compute( Gaffer::ValuePlug *output, const Gaffer::Context *context
 	if( output == mappingPlug() )
 	{
 		ConstStringVectorDataPtr inChannelNames = inPlug()->channelNamesPlug()->getValue();
-		static_cast<ObjectPlug *>( output )->setValue( new MappingData( inChannelNames.get(), shufflesPlug() ) );
+		static_cast<ObjectPlug *>( output )->setValue(
+			new MappingData( inChannelNames.get(), shufflesPlug(), (MissingSourceMode)missingSourceModePlug()->getValue() )
+		);
 	}
 
 	return ImageProcessor::compute( output, context );

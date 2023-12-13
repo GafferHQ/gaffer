@@ -77,7 +77,6 @@ void GafferImageModule::bindImageProcessor()
 	DependencyNodeClass<CollectImages>();
 	DependencyNodeClass<CopyChannels>();
 	DependencyNodeClass<Mix>();
-	DependencyNodeClass<Shuffle>();
 
 	{
 		scope s = GafferBindings::DependencyNodeClass<DeleteChannels>();
@@ -106,6 +105,16 @@ void GafferImageModule::bindImageProcessor()
 			.value( "Under", Merge::Under )
 			.value( "Min", Merge::Min )
 			.value( "Max", Merge::Max )
+		;
+	}
+
+	{
+		scope s = DependencyNodeClass<Shuffle>();
+
+		enum_<Shuffle::MissingSourceMode>( "MissingSourceMode" )
+			.value( "Ignore", Shuffle::MissingSourceMode::Ignore )
+			.value( "Error", Shuffle::MissingSourceMode::Error )
+			.value( "Black", Shuffle::MissingSourceMode::Black )
 		;
 	}
 

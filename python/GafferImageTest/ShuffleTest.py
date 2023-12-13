@@ -382,5 +382,35 @@ class ShuffleTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertImagesEqual( script["Shuffle"]["out"], constant["out"] )
 
+	def testMissingSourceMode( self ) :
+
+		constant = GafferImage.Constant()
+		constant["color"].setValue( imath.Color4f( 1, 1, 1, 1 ) )
+
+		shuffle = GafferImage.Shuffle()
+		shuffle["in"].setInput( constant["out"] )
+		shuffle["shuffles"].addChild( Gaffer.ShufflePlug( "nonExistent", "R" ) )
+
+		self.assertEqual( shuffle["missingSourceMode"].getValue(), shuffle.MissingSourceMode.Black )
+		self.assertEqual( shuffle["out"].channelData( "R", imath.V2i( 0 ) )[0], 0 )
+
+		shuffle["missingSourceMode"].setValue( shuffle.MissingSourceMode.Ignore )
+		self.assertEqual( shuffle["out"].channelData( "R", imath.V2i( 0 ) )[0], 1 )
+
+		shuffle["missingSourceMode"].setValue( shuffle.MissingSourceMode.Error )
+		with self.assertRaisesRegex( Gaffer.ProcessException, "Source \"nonExistent\" does not exist" ) :
+			shuffle["out"].channelData( "R", imath.V2i( 0 ) )
+
+	def testIgnoreMissingSourceDoesnCreateChannels( self ) :
+
+		constant = GafferImage.Constant()
+
+		shuffle = GafferImage.Shuffle()
+		shuffle["in"].setInput( constant["out"] )
+		shuffle["shuffles"].addChild( Gaffer.ShufflePlug( "nonExistent", "newChannel" ) )
+
+		shuffle["missingSourceMode"].setValue( shuffle.MissingSourceMode.Ignore )
+		self.assertEqual( shuffle["out"].channelNames(), IECore.StringVectorData( [ "R", "G", "B", "A" ] ) )
+
 if __name__ == "__main__":
 	unittest.main()

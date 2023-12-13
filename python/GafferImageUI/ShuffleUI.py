@@ -61,6 +61,28 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
+		"missingSourceMode" : [
+
+			"description",
+			"""
+			Determines behaviour when the source channel doesn't exist :
+
+			- Ignore : No change is made to the destination channel.
+			- Error : The node errors.
+			- Black : Black is shuffled into the destination channel.
+
+			> Note : Does not apply when source contains wildcards.
+			""",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"preset:Ignore", GafferImage.Shuffle.MissingSourceMode.Ignore,
+			"preset:Error", GafferImage.Shuffle.MissingSourceMode.Error,
+			"preset:Black", GafferImage.Shuffle.MissingSourceMode.Black,
+
+			"layout:divider", True,
+
+		],
+
 		"shuffles" : [
 
 			"description",

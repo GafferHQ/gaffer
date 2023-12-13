@@ -15,11 +15,13 @@ Improvements
 - Cache : Increased default computation cache size to 8Gb. Call `Gaffer.ValuePlug.setCacheMemoryLimit()` from a startup file to override this.
 - Dispatcher : Reduced internal overhead of `dispatch()` call, with one benchmark showing around a 3x speedup.
 - ScriptWindow : Added "Save" option to dialogue shown when closing a window containing unsaved changes.
-- Shuffle : Reimplemented to match ShuffleAttributes and ShufflePrimitiveVariables.
-  - Any number of shuffles can be added using the UI.
-  - Wildcards can be used to match multiple source channels, and expressions can be used to map them to destination channels.
-  - Source channels can optionally be deleted after shuffling.
-  - Overwriting of destination channels can optionally be avoided.
+- Shuffle :
+  - Reimplemented to match ShuffleAttributes and ShufflePrimitiveVariables.
+    - Any number of shuffles can be added using the UI.
+    - Wildcards can be used to match multiple source channels, and expressions can be used to map them to destination channels.
+    - Source channels can optionally be deleted after shuffling.
+    - Overwriting of destination channels can optionally be avoided.
+  - Added `missingSourceMode` plug to determine behaviour when a source channel doesn't exist.
 
 Fixes
 -----
