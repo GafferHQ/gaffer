@@ -128,6 +128,7 @@ enum TypeId
 	DeepHoldoutTypeId = 110833,
 	DeepRecolorTypeId = 110834,
 	SaturationTypeId = 110835,
+	DeepSliceTypeId = 110836,
 
 	LastTypeId = 110849
 };

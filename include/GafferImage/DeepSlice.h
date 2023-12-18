@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2019, Image Engine Design Inc. All rights reserved.
+//  Copyright (c) 2023, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,35 +36,38 @@
 
 #pragma once
 
-#include "GafferImage/DeepState.h"
-#include "GafferImage/Export.h"
-#include "GafferImage/TypeIds.h"
+#include "GafferImage/ImageProcessor.h"
 
-#include "Gaffer/CompoundNumericPlug.h"
-#include "Gaffer/ComputeNode.h"
-#include "Gaffer/TypedObjectPlug.h"
+#include "Gaffer/OptionalValuePlug.h"
+#include "Gaffer/NumericPlug.h"
+
+namespace Gaffer
+{
+
+IE_CORE_FORWARDDECLARE( StringPlug )
+
+} // namespace Gaffer
 
 namespace GafferImage
 {
 
-class GAFFERIMAGE_API DeepSampler : public Gaffer::ComputeNode
+class GAFFERIMAGE_API DeepSlice : public ImageProcessor
 {
-
 	public :
 
-		explicit DeepSampler( const std::string &name=defaultName<DeepSampler>() );
-		~DeepSampler() override;
+		explicit DeepSlice( const std::string &name=defaultName<DeepSlice>() );
+		~DeepSlice() override;
 
-		GAFFER_NODE_DECLARE_TYPE( GafferImage::DeepSampler, DeepSamplerTypeId, ComputeNode );
+		GAFFER_NODE_DECLARE_TYPE( GafferImage::DeepSlice, DeepSliceTypeId, ImageProcessor );
 
-		ImagePlug *imagePlug();
-		const ImagePlug *imagePlug() const;
+		Gaffer::OptionalValuePlug *nearClipPlug();
+		const Gaffer::OptionalValuePlug *nearClipPlug() const;
 
-		Gaffer::V2iPlug *pixelPlug();
-		const Gaffer::V2iPlug *pixelPlug() const;
+		Gaffer::OptionalValuePlug *farClipPlug();
+		const Gaffer::OptionalValuePlug *farClipPlug() const;
 
-		Gaffer::AtomicCompoundDataPlug *pixelDataPlug();
-		const Gaffer::AtomicCompoundDataPlug *pixelDataPlug() const;
+		Gaffer::BoolPlug *flattenPlug();
+		const Gaffer::BoolPlug *flattenPlug() const;
 
 		void affects( const Gaffer::Plug *input, AffectedPlugsContainer &outputs ) const override;
 
@@ -73,12 +76,27 @@ class GAFFERIMAGE_API DeepSampler : public Gaffer::ComputeNode
 		void hash( const Gaffer::ValuePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
 		void compute( Gaffer::ValuePlug *output, const Gaffer::Context *context ) const override;
 
+		void hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstFloatVectorDataPtr computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const override;
+
+		void hashSampleOffsets( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		IECore::ConstIntVectorDataPtr computeSampleOffsets( const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const override;
+
+		void hashDeep( const GafferImage::ImagePlug *parent, const Gaffer::Context *context, IECore::MurmurHash &h ) const override;
+		bool computeDeep( const Gaffer::Context *context, const ImagePlug *parent ) const override;
+
 	private :
+
+		ImagePlug *tidyInPlug();
+		const ImagePlug *tidyInPlug() const;
+
+		Gaffer::CompoundObjectPlug *sliceDataPlug();
+		const Gaffer::CompoundObjectPlug *sliceDataPlug() const;
 
 		static size_t g_firstPlugIndex;
 
 };
 
-IE_CORE_DECLAREPTR( DeepSampler )
+IE_CORE_DECLAREPTR( DeepSlice )
 
 } // namespace GafferImage

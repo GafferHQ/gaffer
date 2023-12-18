@@ -1,6 +1,11 @@
 1.x.x.x (relative to 1.3.x.x)
 =======
 
+Features
+--------
+
+- GafferImage : Added DeepSlice node for clipping out part of an image based on depth.
+
 Improvements
 ------------
 
@@ -63,6 +68,7 @@ API
   - Added `ignoreMissingSource` argument to `shuffle()`.
   - Added `shuffleWithExtraSources()` method.
 - ShufflePlugValueWidget : Widgets for the `source` and `destination` plugs can now be customised using standard `plugValueWidget:type` metadata.
+- ImageTestCase : in `assertImageEqual` function, maxDifference may now be a tuple, to specify an asymmetric range.
 
 Breaking Changes
 ----------------
