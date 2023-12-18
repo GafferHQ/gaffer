@@ -1,10 +1,23 @@
 1.3.x.x (relative to 1.3.9.0)
 =======
 
+Improvements
+------------
+
+- ArnoldShader, ArnoldColorManager : Improved browsers for file parameters (#5592) :
+  - Added filtering by extension.
+  - Added bookmarks.
+
 API
 ---
 
 - EditScopeAlgo : Added support for editing options for a specific render pass.
+- ArnoldShaderUI : Added support for Gaffer filebrowser metadata in Arnold `.mtd` files. The following fields are supported, and correspond directly to the metadata documented on the PathPlugValueWidget and FileSystemPathPlugValueWidget :
+  - `path:leaf`
+  - `path:valid`
+  - `path:bookmarks`
+  - `fileSystemPath:extensions`
+  - `fileSystemPath:extensionsLabel`
 
 1.3.9.0 (relative to 1.3.8.0)
 =======
