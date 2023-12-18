@@ -204,10 +204,10 @@ parent["color"] = imath.Color4f( 0.5, 0.6, 0.7, 0.8 ) if context.get( "collect:l
 """ )
 
 		channelTestImage["Shuffle"] = GafferImage.Shuffle()
-		channelTestImage["Shuffle"]["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "Z", "R" ) )
-		channelTestImage["Shuffle"]["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "ZBack", "G" ) )
-		channelTestImage["Shuffle"]["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "custom", "A" ) )
-		channelTestImage["Shuffle"]["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "mask", "B" ) )
+		channelTestImage["Shuffle"]["shuffles"].addChild( Gaffer.ShufflePlug( "R", "Z" ) )
+		channelTestImage["Shuffle"]["shuffles"].addChild( Gaffer.ShufflePlug( "G", "ZBack" ) )
+		channelTestImage["Shuffle"]["shuffles"].addChild( Gaffer.ShufflePlug( "A", "custom" ) )
+		channelTestImage["Shuffle"]["shuffles"].addChild( Gaffer.ShufflePlug( "B", "mask" ) )
 		channelTestImage["Shuffle"]["in"].setInput( channelTestImage["Constant"]["out"] )
 
 		channelTestImage["in"].setInput( channelTestImage["Shuffle"]["out"] )

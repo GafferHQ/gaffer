@@ -1,7 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2015, Image Engine Design Inc. All rights reserved.
-#  Copyright (c) 2015, Nvizible Ltd. All rights reserved.
+#  Copyright (c) 2023, John Haddon. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -38,35 +37,44 @@
 import Gaffer
 import GafferImage
 
-Gaffer.Metadata.registerNode(
+class __ChannelPlug( Gaffer.ShufflePlug ) :
 
-	GafferImage.Unpremultiply,
+	def __init__( self, *args, **kw ) :
 
-	"description",
-	"""
-	Divides selected channels by a specified alpha channel.
-	If the alpha channel on a pixel is 0, then that pixel will remain
-	the same as the input.
-	""",
+		if (
+			len( kw ) == 0 and len( args ) == 2
+			and isinstance( args[0], str ) and isinstance( args[1], str )
+		) :
+			Gaffer.ShufflePlug.__init__( self, args[1], args[0] )
+		else :
+			Gaffer.ShufflePlug.__init__( self, *args, **kw )
 
-	plugs = {
+GafferImage.Shuffle.ChannelPlug = __ChannelPlug
 
-		"alphaChannel" : [
+def __shufflePlugGetItem( originalGetItem ) :
 
-			"description",
-			"""
-			The channel to use as the alpha channel.
-			The selected channel does not have to be 'A', but whichever
-			channel is chosen will act as the alpha for the sake of this
-			node.
-			This channel will never be divided by itself - it will
-			remain the same as the input.
-			""",
+	def getItem( self, key ) :
 
-			"plugValueWidget:type", "GafferImageUI.ChannelPlugValueWidget",
+		if key == "in" :
+			key = "source"
+		elif key == "out" :
+			key = "destination"
 
-		],
+		return originalGetItem( self, key )
 
-	}
+	return getItem
 
-)
+Gaffer.ShufflePlug.__getitem__ = __shufflePlugGetItem( Gaffer.ShufflePlug.__getitem__ )
+
+def __shuffleGetItem( originalGetItem ) :
+
+	def getItem( self, key ) :
+
+		if key == "channels" :
+			key = "shuffles"
+
+		return originalGetItem( self, key )
+
+	return getItem
+
+GafferImage.Shuffle.__getitem__ = __shuffleGetItem( GafferImage.Shuffle.__getitem__ )

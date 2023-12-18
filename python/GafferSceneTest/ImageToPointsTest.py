@@ -144,11 +144,11 @@ class ImageToPointsTest( GafferSceneTest.SceneTestCase ) :
 
 		shuffle = GafferImage.Shuffle()
 		shuffle["in"].setInput( ramp["out"] )
-		shuffle["channels"].addChild( shuffle.ChannelPlug( "diffuse.R", "B" ) )
-		shuffle["channels"].addChild( shuffle.ChannelPlug( "diffuse.G", "G" ) )
-		shuffle["channels"].addChild( shuffle.ChannelPlug( "diffuse.B", "R" ) )
-		shuffle["channels"].addChild( shuffle.ChannelPlug( "depth", "R" ) )
-		shuffle["channels"].addChild( shuffle.ChannelPlug( "layer.specialChannel", "B" ) )
+		shuffle["shuffles"].addChild( Gaffer.ShufflePlug( "B", "diffuse.R" ) )
+		shuffle["shuffles"].addChild( Gaffer.ShufflePlug( "G", "diffuse.G" ) )
+		shuffle["shuffles"].addChild( Gaffer.ShufflePlug( "R", "diffuse.B" ) )
+		shuffle["shuffles"].addChild( Gaffer.ShufflePlug( "R", "depth" ) )
+		shuffle["shuffles"].addChild( Gaffer.ShufflePlug( "B", "layer.specialChannel" ) )
 
 		imageToPoints = GafferScene.ImageToPoints()
 		imageToPoints["image"].setInput( shuffle["out"] )

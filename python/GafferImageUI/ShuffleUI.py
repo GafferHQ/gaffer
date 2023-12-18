@@ -61,28 +61,40 @@ Gaffer.Metadata.registerNode(
 
 	plugs = {
 
-		"channels" : [
+		"missingSourceMode" : [
+
+			"description",
+			"""
+			Determines behaviour when the source channel doesn't exist :
+
+			- Ignore : No change is made to the destination channel.
+			- Error : The node errors.
+			- Black : Black is shuffled into the destination channel.
+
+			> Note : Does not apply when source contains wildcards.
+			""",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"preset:Ignore", GafferImage.Shuffle.MissingSourceMode.Ignore,
+			"preset:Error", GafferImage.Shuffle.MissingSourceMode.Error,
+			"preset:Black", GafferImage.Shuffle.MissingSourceMode.Black,
+
+			"layout:divider", True,
+
+		],
+
+		"shuffles" : [
 
 			"description",
 			"""
 			The definition of the shuffling to be performed - an
 			arbitrary number of channel edits can be made by adding
-			Shuffle.ChannelPlugs as children of this plug.
+			ShufflePlugs as children of this plug.
 			""",
 
-			"plugValueWidget:type", "GafferUI.LayoutPlugValueWidget",
-
 		],
 
-		"channels.*.out" : [
-
-
-			"plugValueWidget:type", "GafferImageUI.ChannelPlugValueWidget",
-			"channelPlugValueWidget:allowNewChannels", True,
-
-		],
-
-		"channels.*.in" : [
+		"shuffles.*.source" : [
 
 			"plugValueWidget:type", "GafferImageUI.ChannelPlugValueWidget",
 			"channelPlugValueWidget:extraChannels", IECore.StringVectorData( [ "__white", "__black" ] ),
@@ -90,50 +102,14 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"shuffles.*.destination" : [
+
+
+			"plugValueWidget:type", "GafferImageUI.ChannelPlugValueWidget",
+			"channelPlugValueWidget:allowNewChannels", True,
+
+		],
+
 	}
 
 )
-
-def nodeMenuCreateCommand() :
-
-	result = GafferImage.Shuffle()
-	for channel in ( "R", "G", "B", "A" ) :
-		result["channels"].addChild( result.ChannelPlug( channel, channel ) )
-
-	return result
-
-class _ShuffleChannelPlugValueWidget( GafferUI.PlugValueWidget ) :
-
-	def __init__( self, plug, **kw ) :
-
-		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
-		GafferUI.PlugValueWidget.__init__( self, self.__row, plug, **kw )
-
-		with self.__row :
-
-			GafferUI.PlugValueWidget.create( plug["out"] )
-
-			GafferUI.Image( "shuffleArrow.png" )
-
-			GafferUI.PlugValueWidget.create( plug["in"] )
-
-	def setPlug( self, plug ) :
-
-		GafferUI.PlugValueWidget.setPlug( self, plug )
-
-		self.__row[0].setPlug( plug[0] )
-		self.__row[2].setPlug( plug[1] )
-
-	def childPlugValueWidget( self, childPlug ) :
-
-		for w in self.__row[0], self.__row[2] :
-			if childPlug.isSame( w.getPlug() ) :
-				return w
-
-		return None
-
-	def hasLabel( self ) :
-
-		return True
-
-GafferUI.PlugValueWidget.registerType( GafferImage.Shuffle.ChannelPlug, _ShuffleChannelPlugValueWidget )

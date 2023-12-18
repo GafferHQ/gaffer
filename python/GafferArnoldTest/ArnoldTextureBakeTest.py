@@ -231,9 +231,7 @@ class ArnoldTextureBakeTest( GafferSceneTest.SceneTestCase ) :
 		shuffleRef["in"].setInput( resizeRef["out"] )
 		for layer in [ "beauty", "diffuse" ]:
 			for channel in [ "R", "G", "B" ]:
-				shuffleRef["channels"].addChild( GafferImage.Shuffle.ChannelPlug() )
-				shuffleRef["channels"][-1]["in"].setValue( channel )
-				shuffleRef["channels"][-1]["out"].setValue( layer + "." + channel )
+				shuffleRef["shuffles"].addChild( Gaffer.ShufflePlug( channel, f"{layer}.{channel}" ) )
 
 		differenceMerge = GafferImage.Merge()
 		differenceMerge["in"]["in0"].setInput( aovCollect["out"] )

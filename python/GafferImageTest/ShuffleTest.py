@@ -36,6 +36,7 @@
 
 import unittest
 import os
+import pathlib
 import imath
 
 import IECore
@@ -71,10 +72,10 @@ class ShuffleTest( GafferImageTest.ImageTestCase ) :
 				)
 			)
 
-		s["channels"].addChild( s.ChannelPlug( "R", "G" ) )
-		s["channels"].addChild( s.ChannelPlug( "G", "B" ) )
-		s["channels"].addChild( s.ChannelPlug( "B", "A" ) )
-		s["channels"].addChild( s.ChannelPlug( "A", "R" ) )
+		s["shuffles"].addChild( Gaffer.ShufflePlug( "G", "R" ) )
+		s["shuffles"].addChild( Gaffer.ShufflePlug( "B", "G" ) )
+		s["shuffles"].addChild( Gaffer.ShufflePlug( "A", "B" ) )
+		s["shuffles"].addChild( Gaffer.ShufflePlug( "R", "A" ) )
 
 		for outName, inName in [ ( "R", "G" ), ( "G", "B" ), ( "B", "A" ), ( "A", "R" ) ] :
 			self.assertEqual(
@@ -92,7 +93,7 @@ class ShuffleTest( GafferImageTest.ImageTestCase ) :
 		s = GafferImage.Shuffle()
 		self.assertEqual( s["out"]["channelNames"].getValue(), IECore.StringVectorData() )
 
-		s["channels"].addChild( s.ChannelPlug( "A", "__white" ) )
+		s["shuffles"].addChild( Gaffer.ShufflePlug( "__white", "A" ) )
 		self.assertEqual( s["out"]["channelNames"].getValue(), IECore.StringVectorData( [ "A" ] ) )
 
 		self.assertEqual( s["out"].channelData( "A", imath.V2i( 0 ) )[0], 1 )
@@ -107,48 +108,43 @@ class ShuffleTest( GafferImageTest.ImageTestCase ) :
 		s = Gaffer.ScriptNode()
 
 		s["shuffle"] = GafferImage.Shuffle()
-		s["shuffle"]["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "R", "G" ) )
-		s["shuffle"]["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "G", "B" ) )
-		s["shuffle"]["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "B", "R" ) )
+		s["shuffle"]["shuffles"].addChild( Gaffer.ShufflePlug( "G", "R" ) )
+		s["shuffle"]["shuffles"].addChild( Gaffer.ShufflePlug( "B", "G" ) )
+		s["shuffle"]["shuffles"].addChild( Gaffer.ShufflePlug( "R", "B" ) )
 
 		s2 = Gaffer.ScriptNode()
 		s2.execute( s.serialise() )
 
-		self.assertTrue( len( s2["shuffle"]["channels"] ), 3 )
-		self.assertEqual( s2["shuffle"]["channels"][0]["out"].getValue(), "R" )
-		self.assertEqual( s2["shuffle"]["channels"][0]["in"].getValue(), "G" )
-		self.assertEqual( s2["shuffle"]["channels"][1]["out"].getValue(), "G" )
-		self.assertEqual( s2["shuffle"]["channels"][1]["in"].getValue(), "B" )
-		self.assertEqual( s2["shuffle"]["channels"][2]["out"].getValue(), "B" )
-		self.assertEqual( s2["shuffle"]["channels"][2]["in"].getValue(), "R" )
+		self.assertTrue( len( s2["shuffle"]["shuffles"] ), 3 )
+		self.assertEqual( s2["shuffle"]["shuffles"][0]["destination"].getValue(), "R" )
+		self.assertEqual( s2["shuffle"]["shuffles"][0]["source"].getValue(), "G" )
+		self.assertEqual( s2["shuffle"]["shuffles"][1]["destination"].getValue(), "G" )
+		self.assertEqual( s2["shuffle"]["shuffles"][1]["source"].getValue(), "B" )
+		self.assertEqual( s2["shuffle"]["shuffles"][2]["destination"].getValue(), "B" )
+		self.assertEqual( s2["shuffle"]["shuffles"][2]["source"].getValue(), "R" )
 
 		s3 = Gaffer.ScriptNode()
 		s3.execute( s2.serialise() )
 
-		self.assertTrue( len( s3["shuffle"]["channels"] ), 3 )
-		self.assertEqual( s3["shuffle"]["channels"][0]["out"].getValue(), "R" )
-		self.assertEqual( s3["shuffle"]["channels"][0]["in"].getValue(), "G" )
-		self.assertEqual( s3["shuffle"]["channels"][1]["out"].getValue(), "G" )
-		self.assertEqual( s3["shuffle"]["channels"][1]["in"].getValue(), "B" )
-		self.assertEqual( s3["shuffle"]["channels"][2]["out"].getValue(), "B" )
-		self.assertEqual( s3["shuffle"]["channels"][2]["in"].getValue(), "R" )
-
-	def testCreateCounterpart( self ) :
-
-		p = GafferImage.Shuffle.ChannelPlug()
-		p2 = p.createCounterpart( "p2", p.Direction.Out )
-		self.assertTrue( isinstance( p2, GafferImage.Shuffle.ChannelPlug ) )
-		self.assertTrue( p2.direction(), p.Direction.Out )
+		self.assertTrue( len( s3["shuffle"]["shuffles"] ), 3 )
+		self.assertEqual( s3["shuffle"]["shuffles"][0]["destination"].getValue(), "R" )
+		self.assertEqual( s3["shuffle"]["shuffles"][0]["source"].getValue(), "G" )
+		self.assertEqual( s3["shuffle"]["shuffles"][1]["destination"].getValue(), "G" )
+		self.assertEqual( s3["shuffle"]["shuffles"][1]["source"].getValue(), "B" )
+		self.assertEqual( s3["shuffle"]["shuffles"][2]["destination"].getValue(), "B" )
+		self.assertEqual( s3["shuffle"]["shuffles"][2]["source"].getValue(), "R" )
 
 	def testAffects( self ) :
 
 		s = GafferImage.Shuffle()
 
 		self.assertEqual( s.affects( s["in"]["channelData"] ), [ s["out"]["channelData" ] ] )
-		self.assertEqual( s.affects( s["in"]["channelNames"] ), [ s["out"]["channelNames" ] ] )
+		self.assertEqual( s.affects( s["in"]["channelNames"] ), [ s["__mapping" ] ] )
 
-		s["channels"].addChild( s.ChannelPlug( "R", "G" ) )
-		self.assertEqual( s.affects( s["channels"][0]["out"] ), [ s["out"]["channelNames"], s["out"]["channelData"] ] )
+		s["shuffles"].addChild( Gaffer.ShufflePlug( "G", "R" ) )
+		self.assertEqual( s.affects( s["shuffles"][0]["out"] ), [ s["__mapping"] ] )
+
+		self.assertEqual( s.affects( s["__mapping"] ), [ s["out"]["channelNames"], s["out"]["channelData" ] ] )
 
 	def testMissingInputChannel( self ) :
 
@@ -158,10 +154,10 @@ class ShuffleTest( GafferImageTest.ImageTestCase ) :
 
 		s = GafferImage.Shuffle()
 		s["in"].setInput( r["out"] )
-		s["channels"].addChild( s.ChannelPlug( "R", "A" ) )
-		s["channels"].addChild( s.ChannelPlug( "G", "B" ) )
-		s["channels"].addChild( s.ChannelPlug( "B", "G" ) )
-		s["channels"].addChild( s.ChannelPlug( "A", "R" ) )
+		s["shuffles"].addChild( Gaffer.ShufflePlug( "A", "R" ) )
+		s["shuffles"].addChild( Gaffer.ShufflePlug( "B", "G" ) )
+		s["shuffles"].addChild( Gaffer.ShufflePlug( "G", "B" ) )
+		s["shuffles"].addChild( Gaffer.ShufflePlug( "R", "A" ) )
 
 		black = IECore.FloatVectorData( [ 0 ] * GafferImage.ImagePlug.tileSize() * GafferImage.ImagePlug.tileSize() )
 
@@ -185,11 +181,11 @@ class ShuffleTest( GafferImageTest.ImageTestCase ) :
 
 		flatShuffle = GafferImage.Shuffle()
 		flatShuffle["in"].setInput( preFlatten["out"] )
-		flatShuffle["channels"].setInput( deepShuffle["channels"] )
+		flatShuffle["shuffles"].setInput( deepShuffle["shuffles"] )
 
-		deepShuffle["channels"].addChild( deepShuffle.ChannelPlug( "R", "B" ) )
-		deepShuffle["channels"].addChild( deepShuffle.ChannelPlug( "G", "R" ) )
-		deepShuffle["channels"].addChild( deepShuffle.ChannelPlug( "B", "G" ) )
+		deepShuffle["shuffles"].addChild( Gaffer.ShufflePlug( "B", "R" ) )
+		deepShuffle["shuffles"].addChild( Gaffer.ShufflePlug( "R", "G" ) )
+		deepShuffle["shuffles"].addChild( Gaffer.ShufflePlug( "G", "B" ) )
 
 		deepOrig = GafferImage.ImageAlgo.tiles( representativeDeep["out"] )
 		flatOrig = GafferImage.ImageAlgo.tiles( preFlatten["out"] )
@@ -210,10 +206,10 @@ class ShuffleTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertImagesEqual( postFlatten["out"], flatShuffle["out"] )
 
-		deepShuffle["channels"].clearChildren()
-		deepShuffle["channels"].addChild( deepShuffle.ChannelPlug( "R", "__black" ) )
-		deepShuffle["channels"].addChild( deepShuffle.ChannelPlug( "G", "__white" ) )
-		deepShuffle["channels"].addChild( deepShuffle.ChannelPlug( "B", "__black" ) )
+		deepShuffle["shuffles"].clearChildren()
+		deepShuffle["shuffles"].addChild( Gaffer.ShufflePlug( "__black", "R" ) )
+		deepShuffle["shuffles"].addChild( Gaffer.ShufflePlug( "__white", "G" ) )
+		deepShuffle["shuffles"].addChild( Gaffer.ShufflePlug( "__black", "B" ) )
 
 		flatGreen = GafferImage.ImageAlgo.tiles( flatShuffle["out"] )
 		deepGreen = GafferImage.ImageAlgo.tiles( deepShuffle["out"] )
@@ -238,8 +234,183 @@ class ShuffleTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertImagesEqual( postFlatten["out"], flatPremult["out"], maxDifference = 0.000001 )
 
+	def testWildCards( self ) :
 
+		constant = GafferImage.Constant()
+		constant["color"].setValue( imath.Color4f( 0, 1, 2, 3 ) )
 
+		shuffle = GafferImage.Shuffle()
+		shuffle["in"].setInput( constant["out"] )
+
+		self.assertImagesEqual( shuffle["out"], constant["out"] )
+
+		shuffle["shuffles"].addChild(
+			Gaffer.ShufflePlug( "[RGB]", "newLayer.${source}" )
+		)
+
+		self.assertEqual(
+			shuffle["out"].channelNames(),
+			IECore.StringVectorData( [ "R", "G", "B", "A", "newLayer.R", "newLayer.G", "newLayer.B" ] )
+		)
+
+		for channel in "RGB" :
+			self.assertEqual(
+				shuffle["out"].channelData( f"newLayer.{channel}", imath.V2i( 0 ) ),
+				constant["out"].channelData( channel, imath.V2i( 0 ) ),
+			)
+
+	def testWildCardsDontMatchSpecialChannels( self ) :
+
+		constant = GafferImage.Constant()
+		constant["color"].setValue( imath.Color4f( 0, 1, 2, 3 ) )
+
+		shuffle = GafferImage.Shuffle()
+		shuffle["in"].setInput( constant["out"] )
+
+		self.assertImagesEqual( shuffle["out"], constant["out"] )
+
+		shuffle["shuffles"].addChild(
+			Gaffer.ShufflePlug( "*", "newLayer.${source}" )
+		)
+
+		self.assertEqual(
+			shuffle["out"].channelNames(),
+			IECore.StringVectorData( [ "R", "G", "B", "A", "newLayer.R", "newLayer.G", "newLayer.B", "newLayer.A" ] )
+		)
+
+		for channel in "RGBA" :
+			self.assertEqual(
+				shuffle["out"].channelData( f"newLayer.{channel}", imath.V2i( 0 ) ),
+				constant["out"].channelData( channel, imath.V2i( 0 ) ),
+			)
+
+	def testDeleteSource( self ) :
+
+		constant = GafferImage.Constant()
+		constant["color"].setValue( imath.Color4f( 0, 1, 2, 3 ) )
+
+		shuffle = GafferImage.Shuffle()
+		shuffle["in"].setInput( constant["out"] )
+
+		self.assertImagesEqual( shuffle["out"], constant["out"] )
+
+		shuffle["shuffles"].addChild(
+			Gaffer.ShufflePlug( "R", "newLayer.R" )
+		)
+
+		# With `deleteSource` off.
+
+		self.assertFalse( shuffle["shuffles"][0]["deleteSource"].getValue() )
+
+		self.assertEqual(
+			shuffle["out"].channelNames(),
+			IECore.StringVectorData( [ "R", "G", "B", "A", "newLayer.R" ] )
+		)
+
+		self.assertEqual(
+			shuffle["out"].channelData( "newLayer.R", imath.V2i( 0 ) ),
+			constant["out"].channelData( "R", imath.V2i( 0 ) ),
+		)
+
+		# With `deleteSource` on.
+
+		shuffle["shuffles"][0]["deleteSource"].setValue( True )
+
+		self.assertEqual(
+			shuffle["out"].channelNames(),
+			IECore.StringVectorData( [ "G", "B", "A", "newLayer.R" ] )
+		)
+
+		self.assertEqual(
+			shuffle["out"].channelData( "newLayer.R", imath.V2i( 0 ) ),
+			constant["out"].channelData( "R", imath.V2i( 0 ) ),
+		)
+
+		with self.assertRaisesRegex( Gaffer.ProcessException, "Invalid output channel" ) :
+			shuffle["out"].channelData( "R", imath.V2i( 0 ) )
+
+	def testReplaceDestination( self ) :
+
+		constant = GafferImage.Constant()
+		constant["color"].setValue( imath.Color4f( 0, 1, 2, 3 ) )
+
+		shuffle = GafferImage.Shuffle()
+		shuffle["in"].setInput( constant["out"] )
+
+		self.assertImagesEqual( shuffle["out"], constant["out"] )
+
+		shuffle["shuffles"].addChild(
+			Gaffer.ShufflePlug( "R", "G" )
+		)
+
+		# With `replaceDestination` on.
+
+		self.assertTrue( shuffle["shuffles"][0]["replaceDestination"].getValue() )
+
+		self.assertEqual(
+			shuffle["out"].channelNames(),
+			IECore.StringVectorData( [ "R", "G", "B", "A" ] )
+		)
+
+		self.assertEqual(
+			shuffle["out"].channelData( "G", imath.V2i( 0 ) ),
+			constant["out"].channelData( "R", imath.V2i( 0 ) ),
+		)
+
+		# With `replaceDestination` on.
+
+		shuffle["shuffles"][0]["replaceDestination"].setValue( False )
+
+		self.assertEqual(
+			shuffle["out"].channelNames(),
+			IECore.StringVectorData( [ "R", "G", "B", "A" ] )
+		)
+
+		self.assertEqual(
+			shuffle["out"].channelData( "G", imath.V2i( 0 ) ),
+			constant["out"].channelData( "G", imath.V2i( 0 ) ),
+		)
+
+	def testLoadFrom1_3( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["fileName"].setValue( pathlib.Path( __file__ ).parent / "scripts" / "shuffle-1.3.9.0.gfr" )
+		script.load()
+
+		constant = GafferImage.Constant()
+		constant["color"].setValue( imath.Color4f( 3, 2, 1, 0 ) )
+
+		self.assertImagesEqual( script["Shuffle"]["out"], constant["out"] )
+
+	def testMissingSourceMode( self ) :
+
+		constant = GafferImage.Constant()
+		constant["color"].setValue( imath.Color4f( 1, 1, 1, 1 ) )
+
+		shuffle = GafferImage.Shuffle()
+		shuffle["in"].setInput( constant["out"] )
+		shuffle["shuffles"].addChild( Gaffer.ShufflePlug( "nonExistent", "R" ) )
+
+		self.assertEqual( shuffle["missingSourceMode"].getValue(), shuffle.MissingSourceMode.Black )
+		self.assertEqual( shuffle["out"].channelData( "R", imath.V2i( 0 ) )[0], 0 )
+
+		shuffle["missingSourceMode"].setValue( shuffle.MissingSourceMode.Ignore )
+		self.assertEqual( shuffle["out"].channelData( "R", imath.V2i( 0 ) )[0], 1 )
+
+		shuffle["missingSourceMode"].setValue( shuffle.MissingSourceMode.Error )
+		with self.assertRaisesRegex( Gaffer.ProcessException, "Source \"nonExistent\" does not exist" ) :
+			shuffle["out"].channelData( "R", imath.V2i( 0 ) )
+
+	def testIgnoreMissingSourceDoesnCreateChannels( self ) :
+
+		constant = GafferImage.Constant()
+
+		shuffle = GafferImage.Shuffle()
+		shuffle["in"].setInput( constant["out"] )
+		shuffle["shuffles"].addChild( Gaffer.ShufflePlug( "nonExistent", "newChannel" ) )
+
+		shuffle["missingSourceMode"].setValue( shuffle.MissingSourceMode.Ignore )
+		self.assertEqual( shuffle["out"].channelNames(), IECore.StringVectorData( [ "R", "G", "B", "A" ] ) )
 
 if __name__ == "__main__":
 	unittest.main()

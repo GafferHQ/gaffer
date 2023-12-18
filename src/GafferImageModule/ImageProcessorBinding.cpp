@@ -111,17 +111,10 @@ void GafferImageModule::bindImageProcessor()
 	{
 		scope s = DependencyNodeClass<Shuffle>();
 
-		PlugClass<Shuffle::ChannelPlug>()
-			.def( init<const char *, Plug::Direction, unsigned>(
-					(
-						boost::python::arg_( "name" )=GraphComponent::defaultName<Shuffle::ChannelPlug>(),
-						boost::python::arg_( "direction" )=Plug::In,
-						boost::python::arg_( "flags" )=Plug::Default
-					)
-				)
-			)
-			.def( init<const std::string &, const std::string &>() )
-			.attr( "__qualname__" ) = "Shuffle.ChannelPlug"
+		enum_<Shuffle::MissingSourceMode>( "MissingSourceMode" )
+			.value( "Ignore", Shuffle::MissingSourceMode::Ignore )
+			.value( "Error", Shuffle::MissingSourceMode::Error )
+			.value( "Black", Shuffle::MissingSourceMode::Black )
 		;
 	}
 

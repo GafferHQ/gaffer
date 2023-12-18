@@ -484,5 +484,47 @@ class ShufflePlugTest( GafferTest.TestCase ) :
 		dest = p.shuffle( source )
 		self.assertEqual( dest, source )
 
+	def testIgnoreMissingSource( self ) :
+
+		plug = Gaffer.ShufflesPlug()
+		plug.addChild( Gaffer.ShufflePlug( source = "foo", destination = "bar" ) )
+
+		source = IECore.CompoundData()
+		self.assertEqual( plug.shuffle( source ), IECore.CompoundData() )
+		self.assertEqual( plug.shuffle( source, ignoreMissingSource = True ), IECore.CompoundData() )
+		with self.assertRaisesRegex( RuntimeError, "Source \"foo\" does not exist" ) :
+			plug.shuffle( source, ignoreMissingSource = False )
+
+		# Wildcards that don't match anything are not considered to be missing.
+		plug[0]["source"].setValue( "foo*" )
+		self.assertEqual( plug.shuffle( source ), IECore.CompoundData() )
+		self.assertEqual( plug.shuffle( source, ignoreMissingSource = True ), IECore.CompoundData() )
+		self.assertEqual( plug.shuffle( source, ignoreMissingSource = False ), IECore.CompoundData() )
+
+	def testExtraSources( self ) :
+
+		plug = Gaffer.ShufflesPlug()
+		plug.addChild( Gaffer.ShufflePlug( source = "foo", destination = "bar" ) )
+
+		source = IECore.CompoundData()
+		extraSources = IECore.CompoundData( { "foo" : 10 } )
+		self.assertEqual( plug.shuffleWithExtraSources( source, extraSources ), IECore.CompoundData( { "bar" : 10 } ) )
+
+		# Wildcards are not looked up in `extraSources`.
+		plug[0]["source"].setValue( "foo*" )
+		self.assertEqual( plug.shuffleWithExtraSources( source, extraSources ), IECore.CompoundData() )
+
+		# `ignoreMissingSource` has the same meaning as for `shuffle()`
+		plug[0]["source"].setValue( "toto" )
+		self.assertEqual( plug.shuffleWithExtraSources( source, extraSources ), IECore.CompoundData() )
+		self.assertEqual( plug.shuffleWithExtraSources( source, extraSources, ignoreMissingSource = True ), IECore.CompoundData() )
+		with self.assertRaisesRegex( RuntimeError, "Source \"toto\" does not exist" ) :
+			plug.shuffleWithExtraSources( source, extraSources, ignoreMissingSource = False )
+
+		# An extra source of `*` matches anything
+		extraSources["*"] = 20
+		self.assertEqual( plug.shuffleWithExtraSources( source, extraSources ), IECore.CompoundData( { "bar" : 20 } ) )
+		self.assertEqual( plug.shuffleWithExtraSources( source, extraSources, ignoreMissingSource = False ), IECore.CompoundData( { "bar" : 20 } ) )
+
 if __name__ == "__main__":
 	unittest.main()

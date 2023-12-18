@@ -960,7 +960,7 @@ class DeepStateTest( GafferImageTest.ImageTestCase ) :
 
 		referenceNoZBack = GafferImage.Shuffle()
 		referenceNoZBack["in"].setInput( deepMerge["out"] )
-		referenceNoZBack["channels"].addChild( referenceNoZBack.ChannelPlug( "ZBack", "Z" ) )
+		referenceNoZBack["shuffles"].addChild( Gaffer.ShufflePlug( "Z", "ZBack" ) )
 
 		referenceFlatten["in"].setInput( referenceNoZBack["out"] )
 

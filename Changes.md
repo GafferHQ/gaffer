@@ -15,6 +15,16 @@ Improvements
 - Cache : Increased default computation cache size to 8Gb. Call `Gaffer.ValuePlug.setCacheMemoryLimit()` from a startup file to override this.
 - Dispatcher : Reduced internal overhead of `dispatch()` call, with one benchmark showing around a 3x speedup.
 - ScriptWindow : Added "Save" option to dialogue shown when closing a window containing unsaved changes.
+- Shuffle :
+  - Reimplemented to match ShuffleAttributes and ShufflePrimitiveVariables.
+    - Any number of shuffles can be added using the UI.
+    - Wildcards can be used to match multiple source channels, and expressions can be used to map them to destination channels.
+    - Source channels can optionally be deleted after shuffling.
+    - Overwriting of destination channels can optionally be avoided.
+  - Added `missingSourceMode` plug to determine behaviour when a source channel doesn't exist.
+- NodeEditor : Improved image channel selectors :
+  - Added "Custom" option, to allow strings to be entered manually.
+  - Added right-click context menu.
 
 Fixes
 -----
@@ -49,6 +59,10 @@ API
 - GafferTractorTest : Added `tractorAPI()` method which returns a mock API if Tractor is not available. This allows the GafferTractor module to be tested without Tractor being installed.
 - ParallelAlgo : Added `canCallOnUIThread()` function.
 - Label : Added `textSelectable` constructor argument.
+- ShufflesPlug :
+  - Added `ignoreMissingSource` argument to `shuffle()`.
+  - Added `shuffleWithExtraSources()` method.
+- ShufflePlugValueWidget : Widgets for the `source` and `destination` plugs can now be customised using standard `plugValueWidget:type` metadata.
 
 Breaking Changes
 ----------------
@@ -78,6 +92,10 @@ Breaking Changes
 - OpenColorIOContext : Removed `configEnabledPlug()`, `configValuePlug()`, `workingSpaceEnabledPlug()` and `workingSpaceValuePlug()` methods. Use the OptionalValuePlug child accessors instead.
 - Windows launch script : Removed the hardcoded `/debugexe` switch used when `GAFFER_DEBUG` is enabled, making it possible to use debuggers other than Visual Studio. Debug switches can be added to the `GAFFER_DEBUGGER` environment variable instead.
 - Enums : Replaced `IECore.Enum` types with standard Python types from the `enum` module.
+- Shuffle :
+  - Removed ChannelPlug type. Use `Gaffer.ShufflePlug` instead.
+  - Renamed `channels` plug to `shuffles` plug, matching nodes such as ShuffleAttributes and ShufflePrimitiveVariables.
+- ShuffleUI : Removed `nodeMenuCreateCommand()`.
 
 Build
 -----

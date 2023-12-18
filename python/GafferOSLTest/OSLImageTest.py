@@ -77,9 +77,7 @@ class OSLImageTest( GafferImageTest.ImageTestCase ) :
 
 			shuffle = GafferImage.Shuffle()
 			shuffle["in"].setInput( reader["out"] )
-			shuffle["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "channel" ) )
-			shuffle["channels"]["channel"]["out"].setValue( 'unchangedR' )
-			shuffle["channels"]["channel"]["in"].setValue( 'R' )
+			shuffle["shuffles"].addChild( Gaffer.ShufflePlug( "R", "unchangedR" ) )
 
 			image = GafferOSL.OSLImage()
 			image["in"].setInput( shuffle["out"] )

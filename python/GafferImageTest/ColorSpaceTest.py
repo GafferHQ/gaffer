@@ -261,8 +261,8 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 
 		s = GafferImage.Shuffle()
 		s["in"].setInput( r["out"] )
-		s["channels"].addChild( s.ChannelPlug( "G", "R" ) )
-		s["channels"].addChild( s.ChannelPlug( "B", "R" ) )
+		s["shuffles"].addChild( Gaffer.ShufflePlug( "R", "G" ) )
+		s["shuffles"].addChild( Gaffer.ShufflePlug( "R", "B" ) )
 
 		# This test is primarily to check that the ColorSpace node doesn't pull
 		# on non-existent input channels, and can still transform a single-channel
@@ -289,10 +289,8 @@ class ColorSpaceTest( GafferImageTest.ImageTestCase ) :
 		i["fileName"].setValue( self.imagesPath() / "circles.exr" )
 
 		shuffleAlpha = GafferImage.Shuffle()
-		shuffleAlpha["channels"].addChild( GafferImage.Shuffle.ChannelPlug( "channel" ) )
+		shuffleAlpha["shuffles"].addChild( Gaffer.ShufflePlug( "R", "A" ) )
 		shuffleAlpha["in"].setInput( i["out"] )
-		shuffleAlpha["channels"]["channel"]["out"].setValue( 'A' )
-		shuffleAlpha["channels"]["channel"]["in"].setValue( 'R' )
 
 		gradeAlpha = GafferImage.Grade()
 		gradeAlpha["in"].setInput( shuffleAlpha["out"] )

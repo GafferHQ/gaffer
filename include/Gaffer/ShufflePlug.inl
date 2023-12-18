@@ -59,7 +59,19 @@ namespace Gaffer
 {
 
 template<typename T>
-T ShufflesPlug::shuffle( const T &sourceContainer ) const
+T ShufflesPlug::shuffle( const T &sourceContainer, bool ignoreMissingSource ) const
+{
+	return shuffleInternal( sourceContainer, static_cast<const T *>( nullptr ), ignoreMissingSource );
+}
+
+template<typename T>
+T ShufflesPlug::shuffleWithExtraSources( const T &sourceContainer, const T &extraSources, bool ignoreMissingSource ) const
+{
+	return shuffleInternal( sourceContainer, &extraSources, ignoreMissingSource );
+}
+
+template<typename T>
+T ShufflesPlug::shuffleInternal( const T &sourceContainer, const T *extraSources, bool ignoreMissingSource ) const
 {
 	using NameContainer = std::unordered_set< typename T::key_type >;
 
@@ -103,8 +115,26 @@ T ShufflesPlug::shuffle( const T &sourceContainer ) const
 			// NOTE : No wildcards in source so shuffle is one move.
 
 			const std::string &srcName = srcPattern;
-			const typename T::const_iterator sIt = sourceContainer.find( srcName );
+			const typename T::mapped_type *srcValue = nullptr;
+			typename T::const_iterator sIt = sourceContainer.find( srcName );
 			if( sIt != sourceContainer.end() )
+			{
+				srcValue = &sIt->second;
+			}
+			else if( extraSources )
+			{
+				sIt = extraSources->find( srcName );
+				if( sIt == extraSources->end() )
+				{
+					sIt = extraSources->find( "*" );
+				}
+				if( sIt != extraSources->end() )
+				{
+					srcValue = &sIt->second;
+				}
+			}
+
+			if( srcValue )
 			{
 				Gaffer::Context::EditableScope scope( Gaffer::Context::current() );
 				scope.set<std::string>( g_sourceVariable, &srcName );
@@ -116,7 +146,7 @@ T ShufflesPlug::shuffle( const T &sourceContainer ) const
 					{
 						if( dstReplace || ( destinationContainer.find( dstName ) == destinationContainer.end() ) )
 						{
-							destinationContainer[ dstName ] = sIt->second;
+							destinationContainer[ dstName ] = *srcValue;
 							names.insert( dstName );
 						}
 
@@ -126,6 +156,9 @@ T ShufflesPlug::shuffle( const T &sourceContainer ) const
 						}
 					}
 				}
+			} else if( !ignoreMissingSource )
+			{
+				throw IECore::Exception( fmt::format( "Source \"{}\" does not exist", srcName ) );
 			}
 		}
 		else
