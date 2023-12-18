@@ -63,6 +63,7 @@ Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "config", "pre
 Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "config", "fileSystemPath:extensions", "ocio" )
 Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "config", "path:leaf", True )
 Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "config", "path:valid", True )
+Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "config", "path:bookmarks", "openColorIOConfig" )
 
 Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "workingSpace", "plugValueWidget:type", "GafferUI.PresetsPlugValueWidget" )
 Gaffer.Metadata.registerValue( GafferImage.OpenColorIOConfigPlug, "workingSpace", "presetNames", GafferImageUI.OpenColorIOTransformUI.colorSpacePresetNames )

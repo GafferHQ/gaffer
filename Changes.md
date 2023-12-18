@@ -8,6 +8,7 @@ Improvements
   - Added filtering by extension.
   - Added bookmarks.
 - USDLight : Added file browser for `shaping:ies:file` parameter.
+- OpenColorIOContext : Added file browser for `config` plug.
 
 API
 ---
