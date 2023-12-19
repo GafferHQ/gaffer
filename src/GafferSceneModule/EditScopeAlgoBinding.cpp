@@ -227,6 +227,32 @@ GraphComponentPtr optionEditReadOnlyReasonWrapper( Gaffer::EditScope &scope, con
 	return const_cast<GraphComponent *>( EditScopeAlgo::optionEditReadOnlyReason( &scope, option ) );
 }
 
+// Render Pass Option Edits
+// ========================
+
+bool hasRenderPassOptionEditWrapper( const Gaffer::EditScope &scope, const std::string &renderPass, const std::string &option )
+{
+	return EditScopeAlgo::hasRenderPassOptionEdit( &scope, renderPass, option );
+}
+
+TweakPlugPtr acquireRenderPassOptionEditWrapper( Gaffer::EditScope &scope, const std::string &renderPass, const std::string &option, bool createIfNecessary )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return EditScopeAlgo::acquireRenderPassOptionEdit( &scope, renderPass, option, createIfNecessary );
+}
+
+void removeRenderPassOptionEditWrapper( Gaffer::EditScope &scope, const std::string &renderPass, const std::string &option )
+{
+	IECorePython::ScopedGILRelease gilRelease;
+	return EditScopeAlgo::removeRenderPassOptionEdit( &scope, renderPass, option );
+}
+
+GraphComponentPtr renderPassOptionEditReadOnlyReasonWrapper( Gaffer::EditScope &scope, const std::string &renderPass, const std::string &option )
+{
+	return const_cast<GraphComponent *>( EditScopeAlgo::renderPassOptionEditReadOnlyReason( &scope, renderPass, option ) );
+}
+
+
 } // namespace
 
 namespace GafferSceneModule
@@ -283,6 +309,11 @@ void bindEditScopeAlgo()
 	def( "hasOptionEdit", &hasOptionEditWrapper, ( arg( "scope" ), arg( "option" ) ) );
 	def( "removeOptionEdit", &removeOptionEditWrapper, ( arg( "scope" ), arg( "option" ) ) );
 	def( "optionEditReadOnlyReason", &optionEditReadOnlyReasonWrapper, ( arg( "scope" ), arg( "option" ) ) );
+
+	def( "acquireRenderPassOptionEdit", &acquireRenderPassOptionEditWrapper, ( arg( "scope" ), arg( "renderPass" ), arg( "option" ), arg( "createIfNecessary" ) = true ) );
+	def( "hasRenderPassOptionEdit", &hasRenderPassOptionEditWrapper, ( arg( "scope" ), arg( "renderPass" ), arg( "option" ) ) );
+	def( "removeRenderPassOptionEdit", &removeRenderPassOptionEditWrapper, ( arg( "scope" ), arg( "renderPass" ), arg( "option" ) ) );
+	def( "renderPassOptionEditReadOnlyReason", &renderPassOptionEditReadOnlyReasonWrapper, ( arg( "scope" ), arg( "renderPass" ), arg( "option" ) ) );
 
 }
 
