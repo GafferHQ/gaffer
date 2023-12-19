@@ -383,6 +383,11 @@ class ShadowHandle : public Handle
 			return V3f( 0, 0, m_drag.updatedPosition( event ) - m_drag.startPosition() );
 		}
 
+		void setTransformToSceneSpace( const M44f &t )
+		{
+			m_transformToSceneSpace = t;
+		}
+
 	protected :
 
 		void renderHandle( const Style *style, Style::State state ) const override
@@ -455,7 +460,7 @@ class ShadowHandle : public Handle
 				);
 				pivotGroup->addChild( circle() );
 
-				const V3f localPivot = m_shadowPivot.value() * fullTransformInverse;
+				const V3f localPivot = m_shadowPivot.value() * m_transformToSceneSpace * fullTransformInverse;
 
 				pivotGroup->setTransform(
 					M44f().scale( V3f( circleSize ) * ::rasterScaleFactor( this, localPivot ) ) *
@@ -473,7 +478,7 @@ class ShadowHandle : public Handle
 				IECoreGL::GroupPtr coneGroup = new IECoreGL::Group;
 				coneGroup->addChild( unitCone() );
 
-				localTarget = m_shadowTarget.value() * fullTransformInverse;
+				localTarget = m_shadowTarget.value() * m_transformToSceneSpace * fullTransformInverse;
 				const V3f coneScale = V3f( coneSize ) * ::rasterScaleFactor( this, localTarget );
 				coneHeightOffset = V3f( 0, 0, g_unitConeHeight * coneScale.z );
 
@@ -505,18 +510,23 @@ class ShadowHandle : public Handle
 		void dragBegin( const DragDropEvent &event ) override
 		{
 			m_drag = LinearDrag( this, LineSegment3f( V3f( 0 ), V3f( 0, 0, 1 ) ), event );
-			std::optional<float> pivotDistance = getPivotDistance();
 
-			assert( pivotDistance );
+			assert( m_pivotDistance );
 
-			m_startDistance = pivotDistance.value();
+			m_startDistance = m_pivotDistance.value();
 		}
 
 	private :
 
+		// As with `LightPositionTool::m_shadowPivotMap` and `LightPositionTool::m_shadowTargetMap`,
+		// we store the pivot and target position in transform space.
 		std::optional<V3f> m_shadowPivot;
 		std::optional<V3f> m_shadowTarget;
+
 		std::optional<float> m_pivotDistance;
+
+		// Used to transform the rendered elements from transform to world space.
+		M44f m_transformToSceneSpace;
 
 		LinearDrag m_drag;
 		float m_startDistance;
@@ -650,8 +660,11 @@ void LightPositionTool::updateHandles( float rasterScale )
 	std::optional<V3f> shadowPivot = getShadowPivot();
 	std::optional<V3f> shadowTarget = getShadowTarget();
 
+	const M44f sceneToTransform = s.sceneToTransformSpace();
+	const M44f sceneToTransformInverse = sceneToTransform.inverse();
 	shadowHandle->setShadowPivot( shadowPivot );
 	shadowHandle->setShadowTarget( shadowTarget );
+	shadowHandle->setTransformToSceneSpace( sceneToTransformInverse );
 
 	if( !shadowPivot || !shadowTarget )
 	{
@@ -664,12 +677,12 @@ void LightPositionTool::updateHandles( float rasterScale )
 
 	Context::Scope scopedContext( s.context() );
 
-	const M44f worldTransform = s.scene()->fullTransform( s.path() );
-	const V3f p = worldTransform.translation();
+	const M44f transform = s.scene()->fullTransform( s.path() ) * sceneToTransform;
+	const V3f p = transform.translation();
 	const Line3f handleLine( shadowTarget.value(), shadowPivot.value() );
 
 	V3f direction;
-	worldTransform.multDirMatrix( V3f( 0, 0, -1.f ), direction );
+	transform.multDirMatrix( V3f( 0, 0, -1.f ), direction );
 
 	if(
 		!m_drag &&
@@ -884,10 +897,10 @@ bool LightPositionTool::buttonRelease( const ButtonEvent &event )
 bool LightPositionTool::placeTarget( const LineSegment3f &eventLine )
 {
 	ScenePlug::ScenePath scenePath;
-	V3f targetPos;
+	V3f gadgetTargetPos;
 
 	const SceneGadget *sceneGadget = runTimeCast<SceneGadget>( view()->viewportGadget()->getPrimaryChild() );
-	if( !sceneGadget->objectAt( eventLine, scenePath, targetPos ) )
+	if( !sceneGadget->objectAt( eventLine, scenePath, gadgetTargetPos ) )
 	{
 		return false;
 	}
@@ -896,20 +909,25 @@ bool LightPositionTool::placeTarget( const LineSegment3f &eventLine )
 	Selection s = selection().back();
 	ScriptNodePtr scriptNode = s.editTarget()->ancestor<ScriptNode>();
 
+	const M44f sceneToTransformSpace = s.sceneToTransformSpace();
+	const M44f sceneToTransformSpaceInverse = sceneToTransformSpace.inverse();
+
+	shadowHandle->setTransformToSceneSpace( sceneToTransformSpaceInverse );
+
 	if( getTargetMode() == TargetMode::ShadowPivot )
 	{
-		const V3f newPivot = targetPos * sceneGadget->fullTransform();
+		const V3f newPivot = gadgetTargetPos * sceneGadget->fullTransform() * sceneToTransformSpace;
 		if( !shadowHandle->getShadowPivot() )
 		{
 			setShadowPivotDistance(
-				( newPivot - ( V3f( 0 ) * s.orientedTransform( Orientation::World ) ) ).length()
+				( newPivot - ( V3f( 0 ) * ( s.orientedTransform( Orientation::World ) * sceneToTransformSpace ) ) ).length()
 			);
 		}
 		setShadowPivot( newPivot, scriptNode );
 	}
 	else if( getTargetMode() == TargetMode::ShadowTarget )
 	{
-		setShadowTarget( targetPos * sceneGadget->fullTransform(), scriptNode );
+		setShadowTarget( gadgetTargetPos * sceneGadget->fullTransform() * sceneToTransformSpace, scriptNode );
 	}
 
 	if( !shadowHandle->getShadowPivot() || !shadowHandle->getShadowTarget() )
@@ -917,7 +935,11 @@ bool LightPositionTool::placeTarget( const LineSegment3f &eventLine )
 		return false;
 	}
 
-	position( shadowHandle->getShadowPivot().value(), shadowHandle->getShadowTarget().value(), shadowHandle->getPivotDistance().value() );
+	position(
+		shadowHandle->getShadowPivot().value() * sceneToTransformSpaceInverse,
+		shadowHandle->getShadowTarget().value() * sceneToTransformSpaceInverse,
+		shadowHandle->getPivotDistance().value()
+	);
 
 	return true;
 }

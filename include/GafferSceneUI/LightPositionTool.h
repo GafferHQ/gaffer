@@ -62,6 +62,8 @@ class GAFFERSCENEUI_API LightPositionTool : public GafferSceneUI::TransformTool
 
 		GAFFER_NODE_DECLARE_TYPE( GafferSceneUI::LightPositionTool, LightPositionToolTypeId, TransformTool );
 
+		// Positions the current selection to cast a shadow from `shadowPivot` to `shadowTarget`,
+		// with the light `targetDistance` from the pivot. All coordinates are in world space.
 		void position( const Imath::V3f &shadowPivot, const Imath::V3f &shadowTarget, const float targetDistance );
 
 	protected :
@@ -142,8 +144,12 @@ class GAFFERSCENEUI_API LightPositionTool : public GafferSceneUI::TransformTool
 
 		Gaffer::Signals::ScopedConnection m_contextChangedConnection;
 
-		std::unordered_map<std::string, std::optional<Imath::V3f>> m_shadowPivotMap;  // world-space
-		std::unordered_map<std::string, std::optional<Imath::V3f>> m_shadowTargetMap;  // world-space
+		// Pivots and targets are stored in transform space - the world space transform
+		// of the scene in which the transform will be applied.
+		// See `TransformTool::transformSpace()` for details.
+		std::unordered_map<std::string, std::optional<Imath::V3f>> m_shadowPivotMap;
+		std::unordered_map<std::string, std::optional<Imath::V3f>> m_shadowTargetMap;
+
 		std::unordered_map<std::string, std::optional<float>> m_shadowPivotDistanceMap;
 
 		bool m_draggingTarget;
