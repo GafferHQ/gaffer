@@ -4,7 +4,7 @@
 Features
 --------
 
-- GafferImage : Added DeepSlice node for clipping out part of an image based on depth.
+- DeepSlice : Added a new node for clipping out part of an image based on depth.
 
 Improvements
 ------------
