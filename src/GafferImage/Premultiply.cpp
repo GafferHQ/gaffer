@@ -84,9 +84,24 @@ void Premultiply::affects( const Gaffer::Plug *input, AffectedPlugsContainer &ou
 
 void Premultiply::hashChannelData( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
 {
-	std::string alphaChannel = alphaChannelPlug()->getValue();
 
 	ChannelDataProcessor::hashChannelData( output, context, h );
+
+	std::string alphaChannel;
+	ConstStringVectorDataPtr inChannelNamesPtr;
+	{
+		ImagePlug::GlobalScope c( context );
+		alphaChannel = alphaChannelPlug()->getValue();
+		inChannelNamesPtr = inPlug()->channelNamesPlug()->getValue();
+	}
+
+	h.append( alphaChannel == context->get<std::string>( ImagePlug::channelNameContextName ) );
+
+	const std::vector<std::string> &inChannelNames = inChannelNamesPtr->readable();
+	if ( std::find( inChannelNames.begin(), inChannelNames.end(), alphaChannel ) == inChannelNames.end() )
+	{
+		throw IECore::Exception( fmt::format( "Channel '{}' does not exist", alphaChannel ) );
+	}
 
 	inPlug()->channelDataPlug()->hash( h );
 
@@ -98,25 +113,24 @@ void Premultiply::hashChannelData( const GafferImage::ImagePlug *output, const G
 
 void Premultiply::processChannelData( const Gaffer::Context *context, const ImagePlug *parent, const std::string &channel, FloatVectorDataPtr outData ) const
 {
-	std::string alphaChannel = alphaChannelPlug()->getValue();
 
-	if ( channel == alphaChannel )
-	{
-		return;
-	}
-
+	std::string alphaChannel;
 	ConstStringVectorDataPtr inChannelNamesPtr;
 	{
 		ImagePlug::GlobalScope c( context );
+		alphaChannel = alphaChannelPlug()->getValue();
 		inChannelNamesPtr = inPlug()->channelNamesPlug()->getValue();
+	}
+
+	if( channel == alphaChannel )
+	{
+		return;
 	}
 
 	const std::vector<std::string> &inChannelNames = inChannelNamesPtr->readable();
 	if ( std::find( inChannelNames.begin(), inChannelNames.end(), alphaChannel ) == inChannelNames.end() )
 	{
-		std::ostringstream channelError;
-		channelError << "Channel '" << alphaChannel << "' does not exist";
-		throw( IECore::Exception( channelError.str() ) );
+		throw IECore::Exception( fmt::format( "Channel '{}' does not exist", alphaChannel ) );
 	}
 
 	ImagePlug::ChannelDataScope channelDataScope( context );
