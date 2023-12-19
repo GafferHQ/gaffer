@@ -376,6 +376,8 @@ options.Add( "GAFFER_VERSION_SUFFIX", "Version suffix", str( gafferVersionSuffix
 
 env = Environment(
 
+	MSVC_VERSION = "14.2",
+
 	options = options,
 
 	CPPDEFINES = [
