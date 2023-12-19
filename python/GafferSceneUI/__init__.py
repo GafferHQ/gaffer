@@ -49,6 +49,7 @@ from .FilterPlugValueWidget import FilterPlugValueWidget
 from .ScenePathPlugValueWidget import ScenePathPlugValueWidget
 from .LightEditor import LightEditor
 from .SetEditor import SetEditor
+from .RenderPassEditor import RenderPassEditor
 from . import SceneHistoryUI
 from . import EditScopeUI
 
