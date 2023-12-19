@@ -89,6 +89,53 @@ void titleAndDescriptionFromPlugs( const StringPlug *titlePlug, const StringPlug
 	}
 }
 
+// Remaps `x` into the range `outMin, outMax`. The initial portion
+// of the mapping - for `x < m` - is linear and uses the first proportion
+// `q` of the output range. After that the result approaches `outMax`
+// asymptotically.
+float remap( float x, float m, float q, float outMin, float outMax )
+{
+	if( x < m )
+	{
+		return outMin + q * ( x / m ) * ( outMax - outMin );
+	}
+	else
+	{
+		return outMax - ( outMax - outMin ) * ( 1.0 - 2.0 * q + q * q ) / ( 1.0 - 2.0 * q + q * (x / m) );
+	}
+}
+
+float depth( const Backdrop *backdrop, const Box2f &bound, const V2f &clipping )
+{
+	// We let the user assign a fixed depth from a narrow set of integer
+	// options. We use this to carve out a range within the clipping planes.
+
+	float nodeDepth = 0;
+	try
+	{
+		nodeDepth = backdrop->depthPlug()->getValue();
+	}
+	catch( ... )
+	{
+	}
+	const float nodeDepthMin = backdrop->depthPlug()->minValue();
+	const float nodeDepthMax = backdrop->depthPlug()->maxValue();
+	const float rangeSize = ( clipping[1] - clipping[0] ) / ( 1.0 + nodeDepthMax - nodeDepthMin );
+	const float rangeStart = clipping[0] + ( nodeDepthMax - nodeDepth ) * rangeSize;
+	const float rangeEnd = rangeStart + rangeSize;
+
+	// We then choose a depth within that range based on the area of
+	// the backdrop, with larger backdrops being given larger depths.
+	// In most cases this means that backdrops automatically order
+	// themselves, and the user only needs to assign a depth manually
+	// in unusual cases where they want a smaller backdrop to appear
+	// behind a larger one.
+
+	const float area = bound.size().x * bound.size().y;
+	const float maxLikelyArea = 1000 * 1000;
+	return -remap( area, maxLikelyArea, 0.75, rangeStart, rangeEnd );
+}
+
 const float g_margin = 3.0f;
 const float g_titleBarHeight = 1.0f;
 const float g_titleBarMargin = 1.0f;
@@ -271,13 +318,19 @@ void BackdropNodeGadget::renderLayer( Layer layer, const Style *style, RenderRea
 
 	const Backdrop *backdrop = static_cast<const Backdrop *>( node() );
 	const float scale = backdrop->scalePlug()->getValue();
+	const float translateZ = depth( backdrop, bound, ancestor<ViewportGadget>()->getCamera()->getClippingPlanes() );
 
 	bound.min /= scale;
 	bound.max /= scale;
 
 	glPushMatrix();
+	glPushAttrib( GL_DEPTH_BUFFER_BIT );
 
-	glScalef( scale, scale, scale );
+	glEnable( GL_DEPTH_TEST );
+	glDepthFunc( GL_LEQUAL );
+
+	glScalef( scale, scale, 1.0f );
+	glTranslatef( 0, 0, translateZ );
 
 	const Box3f titleCharacterBound = style->characterBound( Style::HeadingText );
 	const float titleBaseline = bound.max.y - g_margin - titleCharacterBound.max.y;
@@ -352,6 +405,7 @@ void BackdropNodeGadget::renderLayer( Layer layer, const Style *style, RenderRea
 		}
 	}
 
+	glPopAttrib();
 	glPopMatrix();
 }
 
@@ -384,7 +438,8 @@ void BackdropNodeGadget::plugDirtied( const Gaffer::Plug *plug )
 	if(
 		plug == backdrop->titlePlug() ||
 		plug == backdrop->scalePlug() ||
-		plug == backdrop->descriptionPlug()
+		plug == backdrop->descriptionPlug() ||
+		plug == backdrop->depthPlug()
 	)
 	{
 		dirty( DirtyType::Render );

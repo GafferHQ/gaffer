@@ -31,6 +31,9 @@ Improvements
   - Added "Custom" option, to allow strings to be entered manually.
   - Added right-click context menu.
 - Switch : Added `connectedInputs` output plug.
+- Backdrop : Improved drawing order for nested backdrops :
+  - Larger backdrops are automatically drawn behind smaller ones, so that nested backdrops will always appear on top.
+  - Added a `depth` plug to assign a manual drawing depth for the rare cases where the automatic depth is unwanted.
 
 Fixes
 -----
@@ -75,6 +78,7 @@ Breaking Changes
 ----------------
 
 - Render : Changed `render:includedPurposes` default to `"default", "render"`.
+- Backdrop : Changed default drawing order. Use the new `depth` plug to override the order if necessary.
 - ValuePlug : Removed deprecated `getObjectValue()` overload.
 - Preferences : Removed `cache` plug.
 - TaskNode :

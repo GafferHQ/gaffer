@@ -65,6 +65,9 @@ class GAFFER_API Backdrop : public Node
 		StringPlug *descriptionPlug();
 		const StringPlug *descriptionPlug() const;
 
+		IntPlug *depthPlug();
+		const IntPlug *depthPlug() const;
+
 	private :
 
 		static size_t g_firstPlugIndex;
