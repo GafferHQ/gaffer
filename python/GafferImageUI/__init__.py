@@ -46,6 +46,7 @@ from .ChannelMaskPlugValueWidget import ChannelMaskPlugValueWidget
 from .RGBAChannelsPlugValueWidget import RGBAChannelsPlugValueWidget
 from .ChannelPlugValueWidget import ChannelPlugValueWidget
 from .ViewPlugValueWidget import ViewPlugValueWidget
+from .ImageInspector import ImageInspector
 
 from . import ImageReaderPathPreview
 

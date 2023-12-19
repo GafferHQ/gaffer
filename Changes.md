@@ -5,6 +5,7 @@ Features
 --------
 
 - DeepSlice : Added a new node for clipping out part of an image based on depth.
+- ImageInspector : Added a new panel for inspecting image format, metadata and channel statistics.
 
 Improvements
 ------------
