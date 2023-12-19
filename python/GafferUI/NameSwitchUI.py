@@ -152,6 +152,12 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"connectedInputs" : [
+
+			"layout:index", -3,
+
+		],
+
 	}
 
 )
