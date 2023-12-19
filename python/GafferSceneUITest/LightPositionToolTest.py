@@ -106,7 +106,7 @@ class LightPositionToolTest( GafferUITest.TestCase ) :
 			upDir = script["light"]["transform"].matrix().multDirMatrix( imath.V3f( 0, 1, 0 ) )
 
 			with Gaffer.Context() :
-				tool.position( shadowPivot, shadowPoint, d0 )
+				tool.positionShadow( shadowPivot, shadowPoint, d0 )
 
 			p = script["light"]["transform"]["translate"].getValue()
 
@@ -166,7 +166,7 @@ class LightPositionToolTest( GafferUITest.TestCase ) :
 				d = ( worldP - shadowPivot ).length()
 
 				with Gaffer.Context() :
-					tool.position( shadowPivot, shadowPoint, d )
+					tool.positionShadow( shadowPivot, shadowPoint, d )
 
 				parentInverseTransform = script["group"]["out"].fullTransform( "/group" ).inverse()
 

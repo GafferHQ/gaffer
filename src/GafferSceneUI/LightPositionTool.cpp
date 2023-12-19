@@ -329,41 +329,41 @@ std::string selectedUpstreamPathToString( const std::vector<TransformTool::Selec
 	return "";
 }
 
-class ShadowHandle : public Handle
+class DistanceHandle : public Handle
 {
 
 	public :
 
-		ShadowHandle()
+		DistanceHandle()
 		{
 
 		}
 
-		~ShadowHandle() override
+		~DistanceHandle() override
 		{
 
 		}
 
 		// Set the position of the shadow pivot from the given world-space coordinate.
-		void setShadowPivot( const std::optional<V3f> &p )
+		void setPivot( const std::optional<V3f> &p )
 		{
 			m_shadowPivot = p;
 			dirty( DirtyType::Render );
 		}
 
-		const std::optional<V3f> &getShadowPivot() const
+		const std::optional<V3f> &getPivot() const
 		{
 			return m_shadowPivot;
 		}
 
 		// Set the position of the shadow target from the given world-space coordinate.
-		void setShadowTarget( const std::optional<V3f> &p )
+		void setTarget( const std::optional<V3f> &p )
 		{
 			m_shadowTarget = p;
 			dirty( DirtyType::Render );
 		}
 
-		const std::optional<V3f> &getShadowTarget() const
+		const std::optional<V3f> &getTarget() const
 		{
 			return m_shadowTarget;
 		}
@@ -545,12 +545,12 @@ LightPositionTool::LightPositionTool( SceneView *view, const std::string &name )
 	m_targetMode( TargetMode::None ),
 	m_draggingTarget( false )
 {
-	m_shadowHandle = new ShadowHandle();
-	m_shadowHandle->setRasterScale( 0 );
-	handles()->setChild( "shadowHandle", m_shadowHandle );
-	m_shadowHandle->dragBeginSignal().connectFront( boost::bind( &LightPositionTool::handleDragBegin, this, ::_1 ) );
-	m_shadowHandle->dragMoveSignal().connect( boost::bind( &LightPositionTool::handleDragMove, this, ::_1, ::_2 ) );
-	m_shadowHandle->dragEndSignal().connect( boost::bind( &LightPositionTool::handleDragEnd, this ) );
+	m_distanceHandle = new DistanceHandle();
+	m_distanceHandle->setRasterScale( 0 );
+	handles()->setChild( "distanceHandle", m_distanceHandle );
+	m_distanceHandle->dragBeginSignal().connectFront( boost::bind( &LightPositionTool::handleDragBegin, this, ::_1 ) );
+	m_distanceHandle->dragMoveSignal().connect( boost::bind( &LightPositionTool::handleDragMove, this, ::_1, ::_2 ) );
+	m_distanceHandle->dragEndSignal().connect( boost::bind( &LightPositionTool::handleDragEnd, this ) );
 
 	m_rotateHandle = new RotateHandle( GafferUI::Style::Axes::Z );
 	handles()->setChild( "rotateHandle", m_rotateHandle );
@@ -584,9 +584,9 @@ LightPositionTool::~LightPositionTool()
 {
 }
 
-void LightPositionTool::position( const V3f &shadowPivot, const V3f &shadowTarget, const float pivotDistance )
+void LightPositionTool::positionShadow( const V3f &shadowPivot, const V3f &shadowTarget, const float pivotDistance )
 {
-	if( !m_shadowHandle->enabled() || selection().empty() )
+	if( !m_distanceHandle->enabled() || selection().empty() )
 	{
 		return;
 	}
@@ -641,30 +641,30 @@ void LightPositionTool::updateHandles( float rasterScale )
 	{
 		bool singleSelection = selection().size() == 1;
 
-		TranslationRotation trShadowHandle( s, Orientation::World );
-		m_shadowHandle->setEnabled(
+		TranslationRotation trDistanceHandle( s, Orientation::World );
+		m_distanceHandle->setEnabled(
 			singleSelection &&
-			trShadowHandle.canApplyTranslation() &&
-			trShadowHandle.canApplyRotation( V3i( 1, 1, 1 ) )
+			trDistanceHandle.canApplyTranslation() &&
+			trDistanceHandle.canApplyRotation( V3i( 1, 1, 1 ) )
 		);
 
 		TranslationRotation trRotateHandle( s, Orientation::Local );
 		m_rotateHandle->setEnabled( singleSelection && trRotateHandle.canApplyRotation( V3i( 0, 0, 1 ) ) );
 
-		m_shadowHandle->setRasterScale( 0 );
+		m_distanceHandle->setRasterScale( 0 );
 		m_rotateHandle->setRasterScale( rasterScale );
 	}
 
-	auto shadowHandle = static_cast<ShadowHandle *>( m_shadowHandle.get() );
+	auto distanceHandle = static_cast<DistanceHandle *>( m_distanceHandle.get() );
 
-	std::optional<V3f> shadowPivot = getShadowPivot();
-	std::optional<V3f> shadowTarget = getShadowTarget();
+	std::optional<V3f> shadowPivot = getPivot();
+	std::optional<V3f> shadowTarget = getTarget();
 
 	const M44f sceneToTransform = s.sceneToTransformSpace();
 	const M44f sceneToTransformInverse = sceneToTransform.inverse();
-	shadowHandle->setShadowPivot( shadowPivot );
-	shadowHandle->setShadowTarget( shadowTarget );
-	shadowHandle->setTransformToSceneSpace( sceneToTransformInverse );
+	distanceHandle->setPivot( shadowPivot );
+	distanceHandle->setTarget( shadowTarget );
+	distanceHandle->setTransformToSceneSpace( sceneToTransformInverse );
 
 	if( !shadowPivot || !shadowTarget )
 	{
@@ -688,32 +688,32 @@ void LightPositionTool::updateHandles( float rasterScale )
 		!m_drag &&
 		(
 			!direction.equalWithAbsError( ( shadowTarget.value() - shadowPivot.value() ).normalized(), 1e-4 ) ||
-			handleLine.distanceTo( p ) > shadowHandle->getPivotDistance().value() * 1e-4
+			handleLine.distanceTo( p ) > distanceHandle->getPivotDistance().value() * 1e-4
 		)
 	)
 	{
-		shadowHandle->setShadowPivot( std::nullopt );
-		shadowHandle->setShadowTarget( std::nullopt );
-		shadowHandle->setPivotDistance( std::nullopt );
+		distanceHandle->setPivot( std::nullopt );
+		distanceHandle->setTarget( std::nullopt );
+		distanceHandle->setPivotDistance( std::nullopt );
 
 		const std::string p = ScenePlug::pathToString( s.path() );
-		m_shadowTargetMap.erase( p );
-		m_shadowPivotMap.erase( p );
-		m_shadowPivotDistanceMap.erase( p );
+		m_targetMap.erase( p );
+		m_pivotMap.erase( p );
+		m_pivotDistanceMap.erase( p );
 	}
 	else
 	{
-		setShadowPivotDistance( ( p - shadowPivot.value() ).length() );
+		setPivotDistance( ( p - shadowPivot.value() ).length() );
 	}
 }
 
 IECore::RunTimeTypedPtr LightPositionTool::handleDragBegin( Gadget *gadget )
 {
 	m_drag.emplace( selection().back(), Orientation::Local );
-	if( gadget == m_shadowHandle.get() )
+	if( gadget == m_distanceHandle.get() )
 	{
-		assert( getShadowPivotDistance() );
-		m_startShadowPivotDistance = getShadowPivotDistance().value();
+		assert( getPivotDistance() );
+		m_startPivotDistance = getPivotDistance().value();
 	}
 
 	TransformTool::dragBegin();
@@ -725,12 +725,12 @@ bool LightPositionTool::handleDragMove( Gadget *gadget, const DragDropEvent &eve
 {
 	UndoScope undoScope( selection().back().editTarget()->ancestor<ScriptNode>(), UndoScope::Enabled, undoMergeGroup() );
 
-	if( gadget == m_shadowHandle.get() )
+	if( gadget == m_distanceHandle.get() )
 	{
-		const auto shadowHandle = static_cast<ShadowHandle *>( m_shadowHandle.get() );
+		const auto distanceHandle = static_cast<DistanceHandle *>( m_distanceHandle.get() );
 
-		V3f t = shadowHandle->translation( event );
-		t.z = std::max( -m_startShadowPivotDistance, t.z );
+		V3f t = distanceHandle->translation( event );
+		t.z = std::max( -m_startPivotDistance, t.z );
 
 		m_drag.value().applyTranslation( t );
 	}
@@ -775,7 +775,7 @@ bool LightPositionTool::sceneGadgetDragMove( const DragDropEvent &event )
 	}
 
 	// We always return true to prevent the SelectTool defaults.
-	if( !selectionEditable() || !m_shadowHandle->enabled() )
+	if( !selectionEditable() || !m_distanceHandle->enabled() )
 	{
 		return true;
 	}
@@ -799,15 +799,15 @@ bool LightPositionTool::keyPress( const KeyEvent &event )
 	{
 		if(
 			( event.key == "V" && event.modifiers == KeyEvent::Modifiers::Shift ) ||
-			( event.key == "Shift" && getTargetMode() == TargetMode::ShadowTarget )
+			( event.key == "Shift" && getTargetMode() == TargetMode::Target )
 		)
 		{
-			setTargetMode( TargetMode::ShadowPivot );
+			setTargetMode( TargetMode::Pivot );
 			return true;
 		}
 		if( event.key == "V" && event.modifiers == KeyEvent::Modifiers::None )
 		{
-			setTargetMode( TargetMode::ShadowTarget );
+			setTargetMode( TargetMode::Target );
 			return true;
 		}
 	}
@@ -824,9 +824,9 @@ bool LightPositionTool::keyRelease( const KeyEvent &event )
 			setTargetMode( TargetMode::None );
 			return true;
 		}
-		if( event.key == "Shift" && getTargetMode() == TargetMode::ShadowPivot )
+		if( event.key == "Shift" && getTargetMode() == TargetMode::Pivot )
 		{
-			setTargetMode( TargetMode::ShadowTarget );
+			setTargetMode( TargetMode::Target );
 			return true;
 		}
 	}
@@ -871,7 +871,7 @@ bool LightPositionTool::buttonPress( const ButtonEvent &event )
 
 	// We always return true to prevent the SelectTool defaults.
 
-	if( !selectionEditable() || !m_shadowHandle->enabled() )
+	if( !selectionEditable() || !m_distanceHandle->enabled() )
 	{
 		return true;
 	}
@@ -905,40 +905,40 @@ bool LightPositionTool::placeTarget( const LineSegment3f &eventLine )
 		return false;
 	}
 
-	const auto shadowHandle = static_cast<ShadowHandle *>( m_shadowHandle.get() );
+	const auto distanceHandle = static_cast<DistanceHandle *>( m_distanceHandle.get() );
 	Selection s = selection().back();
 	ScriptNodePtr scriptNode = s.editTarget()->ancestor<ScriptNode>();
 
 	const M44f sceneToTransformSpace = s.sceneToTransformSpace();
 	const M44f sceneToTransformSpaceInverse = sceneToTransformSpace.inverse();
 
-	shadowHandle->setTransformToSceneSpace( sceneToTransformSpaceInverse );
+	distanceHandle->setTransformToSceneSpace( sceneToTransformSpaceInverse );
 
-	if( getTargetMode() == TargetMode::ShadowPivot )
+	if( getTargetMode() == TargetMode::Pivot )
 	{
 		const V3f newPivot = gadgetTargetPos * sceneGadget->fullTransform() * sceneToTransformSpace;
-		if( !shadowHandle->getShadowPivot() )
+		if( !distanceHandle->getPivot() )
 		{
-			setShadowPivotDistance(
+			setPivotDistance(
 				( newPivot - ( V3f( 0 ) * ( s.orientedTransform( Orientation::World ) * sceneToTransformSpace ) ) ).length()
 			);
 		}
-		setShadowPivot( newPivot, scriptNode );
+		setPivot( newPivot, scriptNode );
 	}
-	else if( getTargetMode() == TargetMode::ShadowTarget )
+	else if( getTargetMode() == TargetMode::Target )
 	{
-		setShadowTarget( gadgetTargetPos * sceneGadget->fullTransform() * sceneToTransformSpace, scriptNode );
+		setTarget( gadgetTargetPos * sceneGadget->fullTransform() * sceneToTransformSpace, scriptNode );
 	}
 
-	if( !shadowHandle->getShadowPivot() || !shadowHandle->getShadowTarget() )
+	if( !distanceHandle->getPivot() || !distanceHandle->getTarget() )
 	{
 		return false;
 	}
 
-	position(
-		shadowHandle->getShadowPivot().value() * sceneToTransformSpaceInverse,
-		shadowHandle->getShadowTarget().value() * sceneToTransformSpaceInverse,
-		shadowHandle->getPivotDistance().value()
+	positionShadow(
+		distanceHandle->getPivot().value() * sceneToTransformSpaceInverse,
+		distanceHandle->getTarget().value() * sceneToTransformSpaceInverse,
+		distanceHandle->getPivotDistance().value()
 	);
 
 	return true;
@@ -956,85 +956,85 @@ void LightPositionTool::setTargetMode( TargetMode targeted )
 	switch( m_targetMode )
 	{
 		case TargetMode::None : GafferUI::Pointer::setCurrent( "" ); break;
-		case TargetMode::ShadowPivot : GafferUI::Pointer::setCurrent( "pivot" ); break;
-		case TargetMode::ShadowTarget : GafferUI::Pointer::setCurrent( "target" ); break;
+		case TargetMode::Pivot : GafferUI::Pointer::setCurrent( "pivot" ); break;
+		case TargetMode::Target : GafferUI::Pointer::setCurrent( "target" ); break;
 	}
 }
 
-void LightPositionTool::setShadowPivot( const V3f &p, ScriptNodePtr scriptNode )
+void LightPositionTool::setPivot( const V3f &p, ScriptNodePtr scriptNode )
 {
-	std::optional<V3f> currentValue = getShadowPivot();
-	auto shadowHandle = static_cast<ShadowHandle *>( m_shadowHandle.get() );
+	std::optional<V3f> currentValue = getPivot();
+	auto distanceHandle = static_cast<DistanceHandle *>( m_distanceHandle.get() );
 	const auto pathString = selectedUpstreamPathToString( selection() );
 	Action::enact(
 		scriptNode,
-		[t = LightPositionToolPtr( this ), k = pathString, p, shadowHandle]() {
-			t->m_shadowPivotMap[k] = p;
-			shadowHandle->setShadowPivot( p );
+		[t = LightPositionToolPtr( this ), k = pathString, p, distanceHandle]() {
+			t->m_pivotMap[k] = p;
+			distanceHandle->setPivot( p );
 		},
-		[t = LightPositionToolPtr( this ), k = pathString, currentValue, shadowHandle]() {
-			t->m_shadowPivotMap[k] = currentValue;
+		[t = LightPositionToolPtr( this ), k = pathString, currentValue, distanceHandle]() {
+			t->m_pivotMap[k] = currentValue;
 			const std::string upstreamPath = selectedUpstreamPathToString( t->selection() );
 			if( !upstreamPath.empty() && upstreamPath == k )
 			{
-				shadowHandle->setShadowPivot( currentValue );
+				distanceHandle->setPivot( currentValue );
 			}
 		}
 	);
 }
 
-std::optional<V3f> LightPositionTool::getShadowPivot() const
+std::optional<V3f> LightPositionTool::getPivot() const
 {
-	auto it = m_shadowPivotMap.find( selectedUpstreamPathToString( selection() ) );
-	if( it == m_shadowPivotMap.end() )
+	auto it = m_pivotMap.find( selectedUpstreamPathToString( selection() ) );
+	if( it == m_pivotMap.end() )
 	{
 		return std::nullopt;
 	}
 	return it->second;
 }
 
-void LightPositionTool::setShadowTarget( const V3f &p, ScriptNodePtr scriptNode )
+void LightPositionTool::setTarget( const V3f &p, ScriptNodePtr scriptNode )
 {
-	std::optional<V3f> currentValue = getShadowTarget();
-	auto shadowHandle = static_cast<ShadowHandle *>( m_shadowHandle.get() );
+	std::optional<V3f> currentValue = getTarget();
+	auto distanceHandle = static_cast<DistanceHandle *>( m_distanceHandle.get() );
 	const auto pathString = selectedUpstreamPathToString( selection() );
 	Action::enact(
 		scriptNode,
-		[t = LightPositionToolPtr( this ), k = pathString, p, shadowHandle]() {
-			t->m_shadowTargetMap[k] = p;
-			shadowHandle->setShadowTarget( p );
+		[t = LightPositionToolPtr( this ), k = pathString, p, distanceHandle]() {
+			t->m_targetMap[k] = p;
+			distanceHandle->setTarget( p );
 		},
-		[t = LightPositionToolPtr( this ), k = pathString, currentValue, shadowHandle]() {
-			t->m_shadowTargetMap[k] = currentValue;
+		[t = LightPositionToolPtr( this ), k = pathString, currentValue, distanceHandle]() {
+			t->m_targetMap[k] = currentValue;
 			const std::string upstreamPath = selectedUpstreamPathToString( t->selection() );
 			if( !upstreamPath.empty() && upstreamPath == k )
 			{
-				shadowHandle->setShadowTarget( currentValue );
+				distanceHandle->setTarget( currentValue );
 			}
 		}
 	);
 }
 
-std::optional<V3f> LightPositionTool::getShadowTarget() const
+std::optional<V3f> LightPositionTool::getTarget() const
 {
-	auto it = m_shadowTargetMap.find( selectedUpstreamPathToString( selection() ) );
-	if( it == m_shadowTargetMap.end() )
+	auto it = m_targetMap.find( selectedUpstreamPathToString( selection() ) );
+	if( it == m_targetMap.end() )
 	{
 		return std::nullopt;
 	}
 	return it->second;
 }
 
-void LightPositionTool::setShadowPivotDistance( const float d )
+void LightPositionTool::setPivotDistance( const float d )
 {
-	m_shadowPivotDistanceMap[selectedUpstreamPathToString( selection() )] = d;
-	static_cast<ShadowHandle *>( m_shadowHandle.get() )->setPivotDistance( d );
+	m_pivotDistanceMap[selectedUpstreamPathToString( selection() )] = d;
+	static_cast<DistanceHandle *>( m_distanceHandle.get() )->setPivotDistance( d );
 }
 
-std::optional<float> LightPositionTool::getShadowPivotDistance() const
+std::optional<float> LightPositionTool::getPivotDistance() const
 {
-	auto it = m_shadowPivotDistanceMap.find( selectedUpstreamPathToString( selection() ) );
-	if( it == m_shadowPivotDistanceMap.end() )
+	auto it = m_pivotDistanceMap.find( selectedUpstreamPathToString( selection() ) );
+	if( it == m_pivotDistanceMap.end() )
 	{
 		return std::nullopt;
 	}

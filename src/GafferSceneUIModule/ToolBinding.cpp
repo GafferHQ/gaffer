@@ -271,7 +271,7 @@ void GafferSceneUIModule::bindTools()
 
 	GafferBindings::NodeClass<LightPositionTool>( nullptr, no_init )
 		.def( init<SceneView *>() )
-		.def( "position", &LightPositionTool::position )
+		.def( "positionShadow", &LightPositionTool::positionShadow )
 	;
 
 }

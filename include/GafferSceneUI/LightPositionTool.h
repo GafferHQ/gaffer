@@ -64,7 +64,7 @@ class GAFFERSCENEUI_API LightPositionTool : public GafferSceneUI::TransformTool
 
 		// Positions the current selection to cast a shadow from `shadowPivot` to `shadowTarget`,
 		// with the light `targetDistance` from the pivot. All coordinates are in world space.
-		void position( const Imath::V3f &shadowPivot, const Imath::V3f &shadowTarget, const float targetDistance );
+		void positionShadow( const Imath::V3f &shadowPivot, const Imath::V3f &shadowTarget, const float targetDistance );
 
 	protected :
 
@@ -120,26 +120,26 @@ class GAFFERSCENEUI_API LightPositionTool : public GafferSceneUI::TransformTool
 		enum class TargetMode
 		{
 			None,
-			ShadowPivot,
-			ShadowTarget
+			Pivot,
+			Target
 		};
 
 		void setTargetMode( TargetMode mode );
 		TargetMode getTargetMode() const { return m_targetMode; }
 
-		void setShadowPivot( const Imath::V3f &p, Gaffer::ScriptNodePtr scriptNode );
-		std::optional<Imath::V3f> getShadowPivot() const;
-		void setShadowTarget( const Imath::V3f &p, Gaffer::ScriptNodePtr scriptNode );
-		std::optional<Imath::V3f> getShadowTarget() const;
-		void setShadowPivotDistance( const float d );
-		std::optional<float> getShadowPivotDistance() const;
+		void setPivot( const Imath::V3f &p, Gaffer::ScriptNodePtr scriptNode );
+		std::optional<Imath::V3f> getPivot() const;
+		void setTarget( const Imath::V3f &p, Gaffer::ScriptNodePtr scriptNode );
+		std::optional<Imath::V3f> getTarget() const;
+		void setPivotDistance( const float d );
+		std::optional<float> getPivotDistance() const;
 
 		TargetMode m_targetMode;
 
 		std::optional<TranslationRotation> m_drag;
-		float m_startShadowPivotDistance;
+		float m_startPivotDistance;
 
-		GafferUI::HandlePtr m_shadowHandle;
+		GafferUI::HandlePtr m_distanceHandle;
 		GafferUI::RotateHandlePtr m_rotateHandle;
 
 		Gaffer::Signals::ScopedConnection m_contextChangedConnection;
@@ -147,10 +147,10 @@ class GAFFERSCENEUI_API LightPositionTool : public GafferSceneUI::TransformTool
 		// Pivots and targets are stored in transform space - the world space transform
 		// of the scene in which the transform will be applied.
 		// See `TransformTool::transformSpace()` for details.
-		std::unordered_map<std::string, std::optional<Imath::V3f>> m_shadowPivotMap;
-		std::unordered_map<std::string, std::optional<Imath::V3f>> m_shadowTargetMap;
+		std::unordered_map<std::string, std::optional<Imath::V3f>> m_pivotMap;
+		std::unordered_map<std::string, std::optional<Imath::V3f>> m_targetMap;
 
-		std::unordered_map<std::string, std::optional<float>> m_shadowPivotDistanceMap;
+		std::unordered_map<std::string, std::optional<float>> m_pivotDistanceMap;
 
 		bool m_draggingTarget;
 
