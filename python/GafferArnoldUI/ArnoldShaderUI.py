@@ -287,7 +287,7 @@ def __translateNodeMetadata( nodeEntry ) :
 				"checkBox" : "GafferUI.BoolPlugValueWidget",
 				"popup" : "GafferUI.PresetsPlugValueWidget",
 				"mapper" : "GafferUI.PresetsPlugValueWidget",
-				"filename" : "GafferUI.PathPlugValueWidget",
+				"filename" : "GafferUI.FileSystemPathPlugValueWidget",
 				"camera" : "GafferSceneUI.ScenePathPlugValueWidget",
 				"null" : "",
 			}[widget]
@@ -397,6 +397,19 @@ def __translateNodeMetadata( nodeEntry ) :
 		if visibilityActivator is not None :
 			addActivator( visibilityActivator )
 			__metadata[paramPath]["layout:visibilityActivator"] = visibilityActivator
+
+		# FileSystemPathPlugValueWidget metadata
+
+		for gafferKey, arnoldGetter in [
+			( "path:leaf", __aiMetadataGetBool ),
+			( "path:valid", __aiMetadataGetBool ),
+			( "path:bookmarks", __aiMetadataGetStr ),
+			( "fileSystemPath:extensions", __aiMetadataGetStr ),
+			( "fileSystemPath:extensionsLabel", __aiMetadataGetStr ),
+		] :
+			value = arnoldGetter( nodeEntry, paramName, "gaffer.{}".format( gafferKey.replace( ":", "." ) ) )
+			if value is not None :
+				__metadata[paramPath][gafferKey] = value
 
 with IECoreArnold.UniverseBlock( writable = False ) :
 

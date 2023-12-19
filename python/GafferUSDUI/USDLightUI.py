@@ -72,6 +72,14 @@ Gaffer.Metadata.registerNode(
 			"label", lambda plug : " ".join( IECore.CamelCase.toSpaced( t ) for t in plug.getName().split( ":" )[1:] )
 		],
 
+		"parameters.shaping:ies:file.value" : [
+			"plugValueWidget:type", "GafferUI.FileSystemPathPlugValueWidget",
+			"path:bookmarks", "iesProfile",
+			"path:leaf", True,
+			"path:value", True,
+			"fileSystemPath:extensions", "ies",
+		],
+
 		"parameters.shadow:enable" : [ "layout:section", "Shadow" ],
 		"parameters.shadow:color" : [ "layout:section", "Shadow" ],
 		"parameters.shadow:distance" : [ "layout:section", "Shadow" ],
