@@ -433,10 +433,13 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 		editScope.setup( standardOptions["out"] )
 		editScope["in"].setInput( standardOptions["out"] )
 
-		# Inspecting the "renderPass:enabled" option without an active EditScope
-		# returns `None` as we have no upstream nodes capable of editing it.
+		self.assertIsNotNone( Gaffer.Metadata.value( "option:renderPass:enabled" , "defaultValue" ) )
 
-		self.assertIsNone( self.__inspect( editScope["out"], "renderPass:enabled" ) )
+		# Inspecting the source of the "renderPass:enabled" option without an active EditScope
+		# returns `None` as we have no upstream nodes capable of editing it. We still get a result
+		# from this inspection as "defaultValue" metadata has been registered for this option.
+
+		self.assertIsNone( self.__inspect( editScope["out"], "renderPass:enabled" ).source() )
 
 		# Providing an EditScope allows the option edit to take place.
 
