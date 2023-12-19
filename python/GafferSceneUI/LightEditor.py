@@ -82,7 +82,7 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 			self["section"] = Gaffer.StringPlug( defaultValue = "" )
 			self["editScope"] = Gaffer.Plug()
 
-	IECore.registerRunTimeTyped( Settings )
+	IECore.registerRunTimeTyped( Settings, typeName = "LightEditor::Settings" )
 
 	def __init__( self, scriptNode, **kw ) :
 
