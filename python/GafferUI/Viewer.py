@@ -331,10 +331,10 @@ class _Toolbar( GafferUI.Frame ) :
 		if self.__node is not None :
 			toolbar = self.__nodeToolbarCache.get( ( self.__node, self.__edge ) )
 			self.setChild( toolbar )
+			self.setVisible( True )
 		else :
+			self.setVisible( False )
 			self.setChild( None )
-
-		self.setVisible( self.getChild() is not None )
 
 	def getNode( self ) :
 
