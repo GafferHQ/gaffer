@@ -506,7 +506,7 @@ class _SplitContainer( GafferUI.SplitContainer ) :
 		if self.isSplit() :
 			sizes = self.getSizes()
 			splitPosition = ( float( sizes[0] ) / sum( sizes ) ) if sum( sizes ) else 0
-			return "( GafferUI.SplitContainer.Orientation.%s, %f, ( %s, %s ) )" % (
+			return "( GafferUI.SplitContainer.{}, {}, ( {}, {} ) )".format(
 				str( self.getOrientation() ), splitPosition,
 				self[0].serialiseChildren( scriptNode ), self[1].serialiseChildren( scriptNode )
 			)
