@@ -108,16 +108,6 @@ class InteractiveCyclesRenderTest( GafferSceneTest.InteractiveRenderTest ) :
 
 		pass
 
-	@unittest.skip( "Light linking not supported" )
-	def testLightLinking( self ) :
-
-		pass
-
-	@unittest.skip( "Light linking not supported" )
-	def testHideLinkedLight( self ) :
-
-		pass
-
 	def _createConstantShader( self ) :
 
 		shader = GafferCycles.CyclesShader()

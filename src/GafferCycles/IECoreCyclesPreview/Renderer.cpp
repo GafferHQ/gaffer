@@ -814,6 +814,563 @@ IE_CORE_DECLAREPTR( ShaderCache )
 
 } // namespace
 
+
+namespace {
+
+//////////////////////////////////////////////////////////////////////////
+// LinkSet
+//////////////////////////////////////////////////////////////////////////
+
+class LinkSetBase : public IECore::RefCounted
+{
+
+	public:
+
+		LinkSetBase( const vector<ccl::Node*> &nodes )
+			: m_nodes( nodes )
+		{
+		}
+
+		~LinkSetBase() override
+		{
+		}
+
+		void replace( const vector<ccl::Node*> &nodes )
+		{
+			m_nodes = nodes;
+		}
+
+	private:
+
+		vector<ccl::Node*> m_nodes;
+
+		friend class LightLinkSet;
+		friend class ShadowLinkSet;
+
+};
+
+class LightLinkSet : public LinkSetBase
+{
+
+	public :
+
+		LightLinkSet( const vector<ccl::Node*> &nodes )
+			: LinkSetBase( nodes )
+		{
+		}
+
+		void update( const uint32_t index )
+		{
+			for( ccl::Node *node : m_nodes )
+			{
+				if ( !node ) continue;
+				if( node->is_a( ccl::Light::get_node_type() ) )
+				{
+					ccl::Light *light = static_cast<ccl::Light*>( node );
+					uint64_t membership = light->get_light_set_membership();
+					light->set_light_set_membership( membership | ( uint64_t( 1 ) << uint64_t( index ) ) );
+				}
+				else if( node->is_a( ccl::Object::get_node_type() ) )
+				{
+					ccl::Object *object = static_cast<ccl::Object*>( node );
+					uint64_t membership = object->get_light_set_membership();
+					object->set_light_set_membership( membership | ( uint64_t( 1 ) << uint64_t( index ) ) );
+				}
+			}
+		}
+
+};
+
+IE_CORE_DECLAREPTR( LightLinkSet )
+
+class ShadowLinkSet : public LinkSetBase
+{
+
+	public :
+
+		ShadowLinkSet( const vector<ccl::Node*> &nodes )
+			: LinkSetBase( nodes )
+		{
+		}
+
+		void update( const uint32_t index )
+		{
+			for( ccl::Node *node : m_nodes )
+			{
+				if ( !node ) continue;
+				if( node->is_a( ccl::Light::get_node_type() ) )
+				{
+					ccl::Light *light = static_cast<ccl::Light*>( node );
+					uint64_t membership = light->get_shadow_set_membership();
+					light->set_shadow_set_membership( membership | ( uint64_t( 1 ) << uint64_t( index ) ) );
+				}
+				else if( node->is_a( ccl::Object::get_node_type() ) )
+				{
+					ccl::Object *object = static_cast<ccl::Object*>( node );
+					uint64_t membership = object->get_shadow_set_membership();
+					object->set_shadow_set_membership( membership | ( uint64_t( 1 ) << uint64_t( index ) ) );
+				}
+			}
+		}
+
+};
+
+IE_CORE_DECLAREPTR( ShadowLinkSet )
+
+//////////////////////////////////////////////////////////////////////////
+// LinkSetCache
+//////////////////////////////////////////////////////////////////////////
+
+class LinkSetCacheBase : public IECore::RefCounted
+{
+
+	public :
+
+		LinkSetCacheBase( ccl::Scene *scene )
+			: m_scene( scene ), m_needUpdate( false ), m_link( false )
+		{
+		}
+
+		// Can be called concurrently with other add() and remove() calls.
+		void add( const IECore::MurmurHash &h, ccl::Object *object )
+		{
+			m_needUpdate = true;
+
+			LinkSetMap::accessor a;
+			if( m_linkSetMap.find( a, h ) )
+			{
+				a->second.push_back( object );
+				return;
+			}
+
+			if( m_linkSetMap.insert( a, h ) )
+			{
+				a->second.push_back( object );
+			}
+		}
+
+		void remove( const IECore::MurmurHash &h, ccl::Object *object )
+		{
+			m_needUpdate = true;
+
+			LinkSetMap::accessor a;
+			if( m_linkSetMap.find( a, h ) )
+			{
+				for( ccl::Object *obj : a->second )
+				{
+					if( obj == object )
+					{
+						// Defer actual removing to clearUnused()
+						// as remove() is run concurrently.
+						LinkSetMap::accessor ea;
+						m_objectsToErase.insert( ea, h );
+						ea->second.push_back( obj );
+						break;
+					}
+				}
+			}
+		}
+
+		// Must not be called concurrently with anything.
+		virtual void clearUnused()
+		{
+			// Remove old object linkmaps
+			ccl::set<ccl::Object*> toEraseObjs;
+			for( LinkSetMap::iterator it = m_objectsToErase.begin(), eIt = m_objectsToErase.end(); it != eIt; ++it )
+			{
+				LinkSetMap::accessor a;
+				if( m_linkSetMap.find( a, it->first ) )
+				{
+					for( ccl::Object *obj : it->second )
+					{
+						toEraseObjs.insert( obj );
+					}
+
+					size_t newSize = a->second.size();
+					for( size_t i = 0; i < newSize; ++i )
+					{
+						ccl::Object *node = a->second[i];
+
+						if( toEraseObjs.find( node ) != toEraseObjs.end() )
+						{
+							std::swap( a->second[i], a->second[newSize - 1] );
+							i -= 1;
+							newSize -= 1;
+						}
+					}
+					a->second.resize( newSize );
+
+					toEraseObjs.clear();
+				}
+			}
+			m_objectsToErase.clear();
+
+			// Remove any deleted objects
+			for( LinkSetMap::iterator it = m_linkSetMap.begin(), eIt = m_linkSetMap.end(); it != eIt; ++it )
+			{
+				for( ccl::Object *obj : it->second )
+				{
+					if( !obj )
+					{
+						toEraseObjs.insert( obj );
+					}
+				}
+
+				size_t newSize = it->second.size();
+				for( size_t i = 0; i < newSize; ++i )
+				{
+					ccl::Object *node = it->second[i];
+
+					if( toEraseObjs.find( node ) != toEraseObjs.end() )
+					{
+						std::swap( it->second[i], it->second[newSize - 1] );
+						i -= 1;
+						newSize -= 1;
+					}
+				}
+				it->second.resize( newSize );
+
+				toEraseObjs.clear();
+			}
+		}
+
+		IECore::MurmurHash defaultLinkSetHash() const
+		{
+			return m_defaultLinkSetHash;
+		}
+
+		void link( const bool state )
+		{
+			m_needUpdate = true;
+			m_link = state;
+		}
+
+	private :
+
+		IECore::MurmurHash m_defaultLinkSetHash;
+		using LinkSetMap = tbb::concurrent_hash_map<IECore::MurmurHash, tbb::concurrent_vector<ccl::Object*>>;
+		LinkSetMap m_linkSetMap;
+		LinkSetMap m_objectsToErase;
+		ccl::Scene *m_scene;
+		bool m_needUpdate;
+		bool m_link;
+
+		friend class LightLinkSetCache;
+		friend class ShadowLinkSetCache;
+
+};
+
+class LightLinkSetCache : public LinkSetCacheBase
+{
+
+	public :
+
+		LightLinkSetCache( ccl::Scene *scene, const InternedString &defaultLinkSetName )
+			: LinkSetCacheBase( scene )
+		{
+			m_defaultLinkSetHash.append( defaultLinkSetName.string() );
+		}
+
+		// Can be called concurrently with other get() calls.
+		LightLinkSetPtr get( const IECore::MurmurHash &h, const vector<ccl::Node*> &nodes )
+		{
+			m_needUpdate = true;
+
+			Cache::accessor a;
+			if( m_cache.find( a, h ) )
+			{
+				a->second->replace( nodes );
+				return a->second;
+			}
+
+			if( m_cache.insert( a, h ) )
+			{
+				a->second = new LightLinkSet( nodes );
+
+				if( h == m_defaultLinkSetHash )
+				{
+					m_defaultLinkSet = a->second;
+				}
+
+				return a->second;
+			}
+
+			return nullptr;
+		}
+
+		// Must not be called concurrently with anything.
+		void clearUnused() override
+		{
+			vector<IECore::MurmurHash> toErase;
+
+			for( Cache::iterator it = m_cache.begin(), eIt = m_cache.end(); it != eIt; ++it )
+			{
+				if( it->second->refCount() == 1 )
+				{
+					// Only one reference - this is ours, so
+					// nothing outside of the cache is using the
+					// attributes.
+					toErase.push_back( it->first );
+				}
+			}
+			for( vector<IECore::MurmurHash>::const_iterator it = toErase.begin(), eIt = toErase.end(); it != eIt; ++it )
+			{
+				m_cache.erase( *it );
+			}
+
+			LinkSetCacheBase::clearUnused();
+		}
+
+		void update()
+		{
+			if( m_needUpdate && !m_link )
+			{
+				// Set to cycles defaults aka no links
+				for( ccl::Light *light : m_scene->lights )
+				{
+					light->set_light_set_membership( LIGHT_LINK_MASK_ALL );
+				}
+				for( ccl::Object *object : m_scene->objects )
+				{
+					object->set_light_set_membership( LIGHT_LINK_MASK_ALL );
+					object->set_receiver_light_set( 0 );
+				}
+				m_needUpdate = false;
+
+				return;
+			}
+
+			if( !m_needUpdate ) return;
+
+			// Set all to 0 and fill out the bitmasks
+			for( ccl::Light *light : m_scene->lights )
+			{
+				light->set_light_set_membership( 0 );
+			}
+			for( ccl::Object *object : m_scene->objects )
+			{
+				object->set_light_set_membership( 0 );
+			}
+
+			// Set default light memberships
+			Cache::const_accessor a;
+			if( m_cache.find( a, m_defaultLinkSetHash ) )
+			{
+				a->second->update( 0 );
+			}
+
+			// As well as any objects that are in the default receiver light set
+			for( LinkSetMap::iterator it = m_linkSetMap.begin(), eIt = m_linkSetMap.end(); it != eIt; ++it )
+			{
+				if( it->first == m_defaultLinkSetHash )
+				{
+					for( ccl::Object *object : it->second )
+					{
+						if ( !object ) continue;
+						object->set_receiver_light_set( 0 );
+					}
+					break;
+				}
+			}
+
+			uint32_t i = 1;
+			for( LinkSetMap::iterator it = m_linkSetMap.begin(), eIt = m_linkSetMap.end(); it != eIt; ++it )
+			{
+				if( i == LIGHT_LINK_SET_MAX )
+				{
+					IECore::msg(
+						IECore::Msg::Warning, "CyclesRenderer::render",
+						fmt::format( "Light link-set exceeds maximum of {}.", LIGHT_LINK_SET_MAX )
+					);
+					break;
+				}
+
+				if( it->first != m_defaultLinkSetHash )
+				{
+					// Now set the objects that need to be in a particular receiver index
+					for( ccl::Object *object : it->second )
+					{
+						if ( !object ) continue;
+						object->set_receiver_light_set( i );
+					}
+
+					// And set the bitflags on the lights and meshlights
+					Cache::const_accessor a;
+					if( m_cache.find( a, it->first ) )
+					{
+						a->second->update( i );
+					}
+					i++;
+				}
+			}
+			m_needUpdate = false;
+		}
+
+	private :
+
+		LightLinkSetPtr m_defaultLinkSet;
+		using Cache = tbb::concurrent_hash_map<IECore::MurmurHash, LightLinkSetPtr>;
+		Cache m_cache;
+
+};
+
+IE_CORE_DECLAREPTR( LightLinkSetCache )
+
+class ShadowLinkSetCache : public LinkSetCacheBase
+{
+
+	public :
+
+		ShadowLinkSetCache( ccl::Scene *scene, const InternedString &defaultLinkSetName )
+			: LinkSetCacheBase( scene )
+		{
+			m_defaultLinkSetHash.append( defaultLinkSetName.string() );
+		}
+
+		// Can be called concurrently with other get() calls.
+		ShadowLinkSetPtr get( const IECore::MurmurHash &h, const vector<ccl::Node*> &nodes )
+		{
+			m_needUpdate = true;
+
+			Cache::accessor a;
+			if( m_cache.find( a, h ) )
+			{
+				a->second->replace( nodes );
+				return a->second;
+			}
+
+			if( m_cache.insert( a, h ) )
+			{
+				a->second = new ShadowLinkSet( nodes );
+
+				if( h == m_defaultLinkSetHash )
+				{
+					m_defaultLinkSet = a->second;
+				}
+
+				return a->second;
+			}
+
+			return nullptr;
+		}
+
+		// Must not be called concurrently with anything.
+		void clearUnused() override
+		{
+			vector<IECore::MurmurHash> toErase;
+
+			for( Cache::iterator it = m_cache.begin(), eIt = m_cache.end(); it != eIt; ++it )
+			{
+				if( it->second->refCount() == 1 )
+				{
+					// Only one reference - this is ours, so
+					// nothing outside of the cache is using the
+					// attributes.
+					toErase.push_back( it->first );
+				}
+			}
+			for( vector<IECore::MurmurHash>::const_iterator it = toErase.begin(), eIt = toErase.end(); it != eIt; ++it )
+			{
+				m_cache.erase( *it );
+			}
+
+			LinkSetCacheBase::clearUnused();
+		}
+
+		void update()
+		{
+			if( m_needUpdate && !m_link )
+			{
+				for( ccl::Light *light : m_scene->lights )
+				{
+					light->set_shadow_set_membership( LIGHT_LINK_MASK_ALL );
+				}
+				for( ccl::Object *object : m_scene->objects )
+				{
+					object->set_shadow_set_membership( LIGHT_LINK_MASK_ALL );
+					object->set_blocker_shadow_set( 0 );
+				}
+				m_needUpdate = false;
+			}
+
+			if( !m_needUpdate ) return;
+
+			// Set all to 0 and fill out the bitmasks
+			for( ccl::Light *light : m_scene->lights )
+			{
+				light->set_shadow_set_membership( 0 );
+			}
+			for( ccl::Object *object : m_scene->objects )
+			{
+				object->set_shadow_set_membership( 0 );
+			}
+
+			// Set default shadow membership
+			Cache::const_accessor a;
+			if( m_cache.find( a, m_defaultLinkSetHash ) )
+			{
+				a->second->update( 0 );
+			}
+
+			// As well as any objects that are in the default blocker shadow set
+			for( LinkSetMap::iterator it = m_linkSetMap.begin(), eIt = m_linkSetMap.end(); it != eIt; ++it )
+			{
+				if( it->first == m_defaultLinkSetHash )
+				{
+					for( ccl::Object *object : it->second )
+					{
+						if ( !object ) continue;
+						object->set_blocker_shadow_set( 0 );
+					}
+					break;
+				}
+			}
+
+			uint32_t i = 1;
+			for( LinkSetMap::iterator it = m_linkSetMap.begin(), eIt = m_linkSetMap.end(); it != eIt; ++it )
+			{
+				if( i == LIGHT_LINK_SET_MAX )
+				{
+					IECore::msg(
+						IECore::Msg::Warning, "CyclesRenderer::render",
+						fmt::format( "Shadow link-set exceeds maximum of {}.", LIGHT_LINK_SET_MAX )
+					);
+					break;
+				}
+
+				if( it->first != m_defaultLinkSetHash )
+				{
+					// Now set the objects that need to be in a particular blocker index
+					for( ccl::Object *object : it->second )
+					{
+						if ( !object ) continue;
+						object->set_blocker_shadow_set( i );
+					}
+
+					// And set the bitflags on the lights and meshlights
+					Cache::const_accessor a;
+					if( m_cache.find( a, it->first ) )
+					{
+						a->second->update( i );
+					}
+					i++;
+				}
+			}
+			m_needUpdate = false;
+		}
+
+	private :
+
+		ShadowLinkSetPtr m_defaultLinkSet;
+		using Cache = tbb::concurrent_hash_map<IECore::MurmurHash, ShadowLinkSetPtr>;
+		Cache m_cache;
+
+};
+
+IE_CORE_DECLAREPTR( ShadowLinkSetCache )
+
+} // namespace
+
 //////////////////////////////////////////////////////////////////////////
 // CyclesAttributes
 //////////////////////////////////////////////////////////////////////////
@@ -830,6 +1387,11 @@ IECore::InternedString g_deformationBlurSegmentsAttributeName( "deformationBlurS
 IECore::InternedString g_displayColorAttributeName( "render:displayColor" );
 IECore::InternedString g_lightAttributeName( "light" );
 IECore::InternedString g_muteLightAttributeName( "light:mute" );
+// Standard light-linking
+IECore::InternedString g_linkedLightsAttributeName( "linkedLights" );
+IECore::InternedString g_shadowGroupAttributeName( "ai:visibility:shadow_group" );
+IECore::InternedString g_defaultLightsSetName( "defaultLights" );
+IECore::InternedString g_lightsSetName( "__lights" );
 // Cycles Attributes
 IECore::InternedString g_cclVisibilityAttributeName( "cycles:visibility" );
 IECore::InternedString g_useHoldoutAttributeName( "cycles:use_holdout" );
@@ -1002,6 +1564,14 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 					);
 				}
 			}
+
+			// Link set hash
+			const StringData *linkedLightsExpressionData = attributes->member<StringData>( g_linkedLightsAttributeName );
+			const std::string linkedLightsExpression = linkedLightsExpressionData ? linkedLightsExpressionData->readable() : g_defaultLightsSetName.c_str();
+			m_lightSetHash.append( linkedLightsExpression );
+			const StringData *shadowGroupExpressionData = attributes->member<StringData>( g_shadowGroupAttributeName );
+			const std::string shadowGroupExpression = shadowGroupExpressionData ? shadowGroupExpressionData->readable() : g_lightsSetName.c_str();
+			m_shadowSetHash.append( shadowGroupExpression );
 		}
 
 		bool applyObject( ccl::Object *object, const CyclesAttributes *previousAttributes ) const
@@ -1184,6 +1754,16 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			m_shader->nodesCreated( nodes );
 		}
 
+		IECore::MurmurHash lightSetHash() const
+		{
+			return m_lightSetHash;
+		}
+
+		IECore::MurmurHash shadowSetHash() const
+		{
+			return m_shadowSetHash;
+		}
+
 	private :
 
 		void updateVisibility( const IECore::InternedString &name, int rayType, const IECore::CompoundObject *attributes )
@@ -1307,6 +1887,8 @@ class CyclesAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 		// Need to assign shaders in a deferred manner
 		ShaderCache *m_shaderCache;
 		bool m_muteLight;
+		IECore::MurmurHash m_lightSetHash;
+		IECore::MurmurHash m_shadowSetHash;
 
 		using CustomAttributes = ccl::vector<ccl::ParamValue>;
 		CustomAttributes m_custom;
@@ -1393,12 +1975,12 @@ class Instance
 
 	public :
 
-		ccl::Object *object()
+		ccl::Object *object() const
 		{
 			return m_object.get();
 		}
 
-		ccl::Geometry *geometry()
+		ccl::Geometry *geometry() const
 		{
 			return m_geometry.get();
 		}
@@ -1880,19 +2462,105 @@ IE_CORE_DECLAREPTR( CameraCache )
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
+// CyclesLight
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
+{
+
+	public :
+
+		CyclesLight( ccl::Session *session, SharedCLightPtr &light )
+			: m_session( session ), m_light( light ), m_attributes( nullptr )
+		{
+		}
+
+		~CyclesLight() override
+		{
+		}
+
+		void link( const IECore::InternedString &type, const IECoreScenePreview::Renderer::ConstObjectSetPtr &objects ) override
+		{
+		}
+
+		void transform( const Imath::M44f &transform ) override
+		{
+			ccl::Light *light = m_light.get();
+			if( !light )
+				return;
+			ccl::Transform tfm = SocketAlgo::setTransform( transform );
+			light->set_tfm( tfm );
+
+			light->tag_update( m_session->scene );
+		}
+
+		void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) override
+		{
+			// Cycles doesn't support motion samples on lights (yet)
+			transform( samples[0] );
+		}
+
+		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
+		{
+			const CyclesAttributes *cyclesAttributes = static_cast<const CyclesAttributes *>( attributes );
+
+			ccl::Light *light = m_light.get();
+			if( !light || cyclesAttributes->applyLight( light, m_attributes.get() ) )
+			{
+				m_attributes = cyclesAttributes;
+				light->tag_update( m_session->scene );
+				return true;
+			}
+
+			return false;
+		}
+
+		void nodesCreated( NodesCreated &nodes ) const
+		{
+			nodes.push_back( m_light.get() );
+		}
+
+		void assignID( uint32_t id ) override
+		{
+			/// \todo Implement me
+		}
+
+		ccl::Light *light() const
+		{
+			return m_light.get();
+		}
+
+	private :
+
+		ccl::Session *m_session;
+		SharedCLightPtr m_light;
+		ConstCyclesAttributesPtr m_attributes;
+
+};
+
+IE_CORE_DECLAREPTR( CyclesLight )
+
+} // namespace
+
+//////////////////////////////////////////////////////////////////////////
 // CyclesObject
 //////////////////////////////////////////////////////////////////////////
 
 namespace
 {
 
+IECore::InternedString g_lights( "lights" );
+
 class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 {
 
 	public :
 
-		CyclesObject( ccl::Session *session, const Instance &instance, const float frame )
-			:	m_session( session ), m_instance( instance ), m_frame( frame ), m_attributes( nullptr )
+		CyclesObject( ccl::Session *session, const Instance &instance, const float frame, LightLinkSetCache *lightLinkSetCache, ShadowLinkSetCache *shadowLinkSetCache )
+			: m_session( session ), m_instance( instance ), m_frame( frame ), m_attributes( nullptr ), m_lightLinkSetCache( lightLinkSetCache ), m_shadowLinkSetCache( shadowLinkSetCache ), m_lightSet( nullptr ), m_shadowSet( nullptr )
 		{
 		}
 
@@ -1902,6 +2570,72 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 
 		void link( const IECore::InternedString &type, const IECoreScenePreview::Renderer::ConstObjectSetPtr &objects ) override
 		{
+			if( !m_instance.object() ) return;
+			if( type != g_lights && type != g_shadowGroupAttributeName ) return;
+
+			if( objects )
+			{
+				vector<ccl::Node*> cyclesNodes; cyclesNodes.reserve( objects->size() );
+				for( const auto &o : *objects )
+				{
+					auto cyclesLight = dynamic_cast<const CyclesLight *>( o.get() );
+					if( cyclesLight && cyclesLight->light() )
+					{
+						ccl::Light *light = cyclesLight->light();
+						cyclesNodes.push_back( (ccl::Node *)light );
+					}
+					auto cyclesObject = dynamic_cast<const CyclesObject *>( o.get() );
+					if( cyclesObject && cyclesObject->object() )
+					{
+						ccl::Object *object = cyclesObject->object();
+						cyclesNodes.push_back( (ccl::Node *)object );
+					}
+				}
+
+				// Store objects/lights in a linkset cache, we will set the right membership
+				// bitflags in the update before rendering once we have an in-order list of
+				// linksets mapped and can assign the index number.
+				if( type == g_lights )
+				{
+					m_lightLinkSetCache->link( true );
+					if ( objects->size() || m_attributes->lightSetHash() == m_lightLinkSetCache->defaultLinkSetHash() )
+					{
+						m_lightSet = m_lightLinkSetCache->get( m_attributes->lightSetHash(), cyclesNodes );
+					}
+					else
+					{
+						m_lightSet = nullptr;
+					}
+				}
+				else if( type == g_shadowGroupAttributeName )
+				{
+					m_shadowLinkSetCache->link( true );
+					if ( objects->size() || m_attributes->shadowSetHash() == m_shadowLinkSetCache->defaultLinkSetHash() )
+					{
+						m_shadowSet == m_shadowLinkSetCache->get( m_attributes->shadowSetHash(), cyclesNodes );
+					}
+					else
+					{
+						m_shadowSet = nullptr;
+					}
+				}
+			}
+			else
+			{
+				// No links, use the objects nullptr as an indicator that we have
+				// no links in the scene and we will flag all objects/lights as
+				// visible to all objects.
+				if( type == g_lights )
+				{
+					m_lightLinkSetCache->link( false );
+					m_lightSet = nullptr;
+				}
+				else if( type == g_shadowGroupAttributeName )
+				{
+					m_shadowLinkSetCache->link( false );
+					m_shadowSet = nullptr;
+				}
+			}
 		}
 
 		void transform( const Imath::M44f &transform ) override
@@ -2065,11 +2799,29 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 			ccl::Object *object = m_instance.object();
 			if( !object || cyclesAttributes->applyObject( object, m_attributes.get() ) )
 			{
+				// Remove object from light/shadow set maps
+				if( m_attributes )
+				{
+					if( m_attributes->lightSetHash() != cyclesAttributes->lightSetHash() )
+					{
+						m_lightLinkSetCache->remove( m_attributes->lightSetHash(), object );
+					}
+					if( m_attributes->shadowSetHash() != cyclesAttributes->shadowSetHash() )
+					{
+						m_shadowLinkSetCache->remove( m_attributes->shadowSetHash(), object );
+					}
+				}
+
 				m_attributes = cyclesAttributes;
+
+				m_lightLinkSetCache->add( m_attributes->lightSetHash(), object );
+				m_shadowLinkSetCache->add( m_attributes->shadowSetHash(), object );
+
 				if( object )
 				{
 					object->tag_update( m_session->scene );
 				}
+
 				return true;
 			}
 
@@ -2084,93 +2836,25 @@ class CyclesObject : public IECoreScenePreview::Renderer::ObjectInterface
 			}
 		}
 
+		// For obtaining objects to be linked that are mesh lights
+		ccl::Object *object() const
+		{
+			return m_instance.object();
+		}
+
 	private :
 
 		ccl::Session *m_session;
 		Instance m_instance;
 		const float m_frame;
 		ConstCyclesAttributesPtr m_attributes;
+		// Need to create linksets from the link() call
+		LightLinkSetCache *m_lightLinkSetCache;
+		ShadowLinkSetCache *m_shadowLinkSetCache;
+		LightLinkSetPtr m_lightSet;
+		ShadowLinkSetPtr m_shadowSet;
 
 };
-
-} // namespace
-
-//////////////////////////////////////////////////////////////////////////
-// CyclesLight
-//////////////////////////////////////////////////////////////////////////
-
-namespace
-{
-
-class CyclesLight : public IECoreScenePreview::Renderer::ObjectInterface
-{
-
-	public :
-
-		CyclesLight( ccl::Session *session, SharedCLightPtr &light )
-			: m_session( session ), m_light( light ), m_attributes( nullptr )
-		{
-		}
-
-		~CyclesLight() override
-		{
-		}
-
-		void link( const IECore::InternedString &type, const IECoreScenePreview::Renderer::ConstObjectSetPtr &objects ) override
-		{
-		}
-
-		void transform( const Imath::M44f &transform ) override
-		{
-			ccl::Light *light = m_light.get();
-			if( !light )
-				return;
-			ccl::Transform tfm = SocketAlgo::setTransform( transform );
-			light->set_tfm( tfm );
-
-			light->tag_update( m_session->scene );
-		}
-
-		void transform( const std::vector<Imath::M44f> &samples, const std::vector<float> &times ) override
-		{
-			// Cycles doesn't support motion samples on lights (yet)
-			transform( samples[0] );
-		}
-
-		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
-		{
-			const CyclesAttributes *cyclesAttributes = static_cast<const CyclesAttributes *>( attributes );
-
-			ccl::Light *light = m_light.get();
-			if( !light || cyclesAttributes->applyLight( light, m_attributes.get() ) )
-			{
-				m_attributes = cyclesAttributes;
-				light->tag_update( m_session->scene );
-				return true;
-			}
-
-			return false;
-		}
-
-		void nodesCreated( NodesCreated &nodes ) const
-		{
-			nodes.push_back( m_light.get() );
-		}
-
-		void assignID( uint32_t id ) override
-		{
-			/// \todo Implement me
-		}
-
-	private :
-
-		ccl::Session *m_session;
-		SharedCLightPtr m_light;
-		ConstCyclesAttributesPtr m_attributes;
-
-};
-
-IE_CORE_DECLAREPTR( CyclesLight )
 
 } // namespace
 
@@ -2614,6 +3298,25 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 			acquireSession();
 
+			// Check to see if it's meant to be a meshlight
+			if( object && object->typeId() == IECoreScene::MeshPrimitive::staticTypeId() )
+			{
+				Instance instance = m_instanceCache->get( object, attributes, name );
+				if( !instance.object() )
+				{
+					return nullptr;
+				}
+
+				ObjectInterfacePtr result = new CyclesObject( m_session.get(), instance, frame(), m_lightLinkSetCache.get(), m_shadowLinkSetCache.get() );
+				result->attributes( attributes );
+
+				instance.objectsCreated( m_objectsCreated );
+				// These will only accumulate if it's the prototype
+				instance.geometryCreated( m_geometryCreated );
+
+				return result;
+			}
+
 			SharedCLightPtr clight = m_lightCache->get( name );
 			if( !clight )
 			{
@@ -2653,7 +3356,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				return nullptr;
 			}
 
-			ObjectInterfacePtr result = new CyclesObject( m_session.get(), instance, frame() );
+			ObjectInterfacePtr result = new CyclesObject( m_session.get(), instance, frame(), m_lightLinkSetCache.get(), m_shadowLinkSetCache.get() );
 			result->attributes( attributes );
 
 			instance.objectsCreated( m_objectsCreated );
@@ -2688,7 +3391,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				return nullptr;
 			}
 
-			ObjectInterfacePtr result = new CyclesObject( m_session.get(), instance, frame() );
+			ObjectInterfacePtr result = new CyclesObject( m_session.get(), instance, frame(), m_lightLinkSetCache.get(), m_shadowLinkSetCache.get() );
 			result->attributes( attributes );
 
 			instance.objectsCreated( m_objectsCreated );
@@ -2888,6 +3591,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_shaderCache = new ShaderCache( m_scene );
 			m_instanceCache = new InstanceCache( m_scene );
 			m_attributesCache = new AttributesCache( m_shaderCache );
+			m_lightLinkSetCache = new LightLinkSetCache( m_scene, g_defaultLightsSetName );
+			m_shadowLinkSetCache = new ShadowLinkSetCache( m_scene, g_lightsSetName );
 		}
 
 		void clearUnused()
@@ -2896,6 +3601,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_instanceCache->clearUnused();
 			m_lightCache->clearUnused();
 			m_attributesCache->clearUnused();
+			m_lightLinkSetCache->clearUnused();
+			m_shadowLinkSetCache->clearUnused();
 		}
 
 		void updateSceneObjects()
@@ -2906,6 +3613,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_lightCache->update( m_lightsCreated );
 			m_instanceCache->update( m_objectsCreated, m_geometryCreated );
 			m_shaderCache->update( m_shadersCreated );
+			m_lightLinkSetCache->update();
+			m_shadowLinkSetCache->update();
 		}
 
 		void updateOptions()
@@ -3408,6 +4117,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_lightCache.reset();
 			m_shaderCache.reset();
 			m_attributesCache.reset();
+			m_lightLinkSetCache.reset();
+			m_shadowLinkSetCache.reset();
 		}
 
 		// Most `ccl::SessionParams` and `ccl::SceneParams` cannot be modified
@@ -3464,6 +4175,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		LightCachePtr m_lightCache;
 		InstanceCachePtr m_instanceCache;
 		AttributesCachePtr m_attributesCache;
+		LightLinkSetCachePtr m_lightLinkSetCache;
+		ShadowLinkSetCachePtr m_shadowLinkSetCache;
 
 		// Nodes created to update to Cycles
 		/// \todo I don't see why these need to be state on the Renderer.
