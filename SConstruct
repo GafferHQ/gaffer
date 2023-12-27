@@ -44,6 +44,7 @@ import locale
 import platform
 import shutil
 import subprocess
+import tempfile
 import distutils.dir_util
 import codecs
 
@@ -399,7 +400,6 @@ env = Environment(
 	FRAMEWORKPATH = "$BUILD_DIR/lib",
 
 )
-
 
 # include 3rd party headers with -isystem rather than -I.
 # this should turn off warnings from those headers, allowing us to
@@ -1590,6 +1590,8 @@ if env["PLATFORM"] == "win32" :
 # The stuff that actually builds the libraries and python modules
 ###############################################################################################
 
+extensionSources = []
+extensionTargets = []
 for libraryName, libraryDef in libraries.items() :
 
 	# skip this library if we don't have the config we need
@@ -1627,7 +1629,7 @@ for libraryName, libraryDef in libraries.items() :
 			os.path.join( installRoot, os.path.dirname( libraryInstallName ) ),
 			library
 		)
-		libEnv.Alias( "build", libraryInstall )
+		libEnv.Alias( "buildCore", libraryInstall )
 
 	# header install
 
@@ -1680,7 +1682,7 @@ for libraryName, libraryDef in libraries.items() :
 		bindingsEnv.Default( bindingsLibrary )
 
 		bindingsLibraryInstall = bindingsEnv.Install( os.path.join( installRoot, "lib" ), bindingsLibrary )
-		env.Alias( "build", bindingsLibraryInstall )
+		env.Alias( "buildCore", bindingsLibraryInstall )
 
 	# bindings header install
 
@@ -1715,7 +1717,7 @@ for libraryName, libraryDef in libraries.items() :
 		pythonModuleEnv.Default( pythonModule )
 
 		moduleInstall = pythonModuleEnv.Install( os.path.join( installRoot, "python", libraryName ), pythonModule )
-		pythonModuleEnv.Alias( "build", moduleInstall )
+		pythonModuleEnv.Alias( "buildCore", moduleInstall )
 
 	# Moc preprocessing, for QObject derived classes. SCons does include a "qt" tool that
 	# can scan files automatically for the Q_OBJECT macro, but it hasn't been updated for Qt 5.
@@ -1737,20 +1739,30 @@ for libraryName, libraryDef in libraries.items() :
 			pythonFile,
 			SUBST_DICT = fileSubstitutions
 		)
-		env.Alias( "build", pythonFileInstall )
+		env.Alias( "buildCore", pythonFileInstall )
+
+	# Nodes implemented using ExtensionAlgo.
+
+	for extensionSource in glob.glob( "python/" + libraryName + "/*.gfr" ) :
+		extensionSources.append( extensionSource )
+		extensionNode = os.path.splitext( os.path.basename( extensionSource ) )[0]
+		extensionTargets.extend( [
+			os.path.join( installRoot, "python", libraryName, extensionNode + ".py" ),
+			os.path.join( installRoot, "python", libraryName + "UI", extensionNode + "UI.py" ),
+		] )
 
 	# apps
 
 	for app in libraryDef.get( "apps", [] ) :
 		appInstall = env.InstallAs( os.path.join( installRoot, "apps", app, "{app}-1.py".format( app=app ) ), "apps/{app}/{app}-1.py".format( app=app ) )
-		env.Alias( "build", appInstall )
+		env.Alias( "buildCore", appInstall )
 
 	# startup files
 
 	for startupDir in libraryDef.get( "apps", [] ) + [ libraryName ] :
 		for startupFile in glob.glob( "startup/{startupDir}/*.py".format( startupDir=startupDir ) ) + glob.glob( "startup/{startupDir}/*.gfr".format( startupDir=startupDir ) ) :
 			startupFileInstall = env.InstallAs( os.path.join( installRoot, startupFile ), startupFile )
-			env.Alias( "build", startupFileInstall )
+			env.Alias( "buildCore", startupFileInstall )
 
 	# additional files
 
@@ -1758,14 +1770,14 @@ for libraryName, libraryDef in libraries.items() :
 		if additionalFile in pythonFiles :
 			continue
 		additionalFileInstall = env.InstallAs( os.path.join( installRoot, additionalFile ), additionalFile )
-		env.Alias( "build", additionalFileInstall )
+		env.Alias( "buildCore", additionalFileInstall )
 
 	# osl headers
 
 	for oslHeader in libraryDef.get( "oslHeaders", [] ) :
 		oslHeaderInstall = env.InstallAs( os.path.join( installRoot, oslHeader ), oslHeader )
 		env.Alias( "oslHeaders", oslHeaderInstall )
-		env.Alias( "build", oslHeaderInstall )
+		env.Alias( "buildCore", oslHeaderInstall )
 
 	# osl shaders
 
@@ -1781,10 +1793,10 @@ for libraryName, libraryDef in libraries.items() :
 		)
 
 	for oslShader in libraryDef.get( "oslShaders", [] ) :
-		env.Alias( "build", oslShader )
+		env.Alias( "buildCore", oslShader )
 		compiledFile = commandEnv.Command( os.path.join( installRoot, os.path.splitext( oslShader )[0] + ".oso" ), oslShader, buildOSL )
 		env.Depends( compiledFile, "oslHeaders" )
-		env.Alias( "build", compiledFile )
+		env.Alias( "buildCore", compiledFile )
 
 	# class stubs
 
@@ -1807,7 +1819,47 @@ for libraryName, libraryDef in libraries.items() :
 			GAFFER_STUB_CLASS = classStub[0],
 		)
 		stub = stubEnv.Command( stubFileName, "", buildClassStub )
-		stubEnv.Alias( "build", stub )
+		stubEnv.Alias( "buildCore", stub )
+
+env.Alias( "build", "buildCore" )
+
+#########################################################################################################
+# Python nodes authored as Boxes and exported by ExtensionAlgo
+#########################################################################################################
+
+def exportExtensions( target, source, env ) :
+
+	with tempfile.NamedTemporaryFile( "w" ) as exportScript :
+
+		exportScript.write( "import Gaffer\nscript = Gaffer.ScriptNode()\n" )
+		for sourceFile, targetFile, targetUIFile in zip( source, target[::2], target[1::2] ) :
+
+			sourceFile = str( sourceFile )
+			targetFile = str( targetFile )
+			targetUIFile = str( targetUIFile )
+			moduleName = os.path.basename( os.path.dirname( sourceFile ) )
+			nodeName = os.path.splitext( os.path.basename( sourceFile ) )[0]
+
+			# We have a chicken and egg situation. We need to import the Gaffer modules
+			# to be able to do the export, but their `__init__.py` files will be wanting
+			# to import the extensions that we haven't created yet. Write stub files
+			# to allow the imports to go ahead.
+			if not os.path.exists( targetFile ) :
+				with open( targetFile, "w" ) as stub :
+					stub.write( f"class {nodeName} : pass\n" )
+
+			exportScript.write( f"\nscript['fileName'].setValue( '{sourceFile}' )\n" )
+			exportScript.write( "script.load()\n" )
+			exportScript.write( f"Gaffer.ExtensionAlgo.exportNode( '{moduleName}', script['{nodeName}'], '{targetFile}' )\n" )
+			exportScript.write( f"Gaffer.ExtensionAlgo.exportNodeUI( '{moduleName}', script['{nodeName}'], '{targetUIFile}' )\n" )
+
+		exportScript.flush()
+		subprocess.check_call( [ "gaffer", "env", "python", exportScript.name ], env = env["ENV"] )
+
+exportedFiles = commandEnv.Command( extensionTargets, extensionSources, exportExtensions )
+env.Depends( exportedFiles, "buildCore" )
+env.Alias( "buildExtensions", exportedFiles )
+env.Alias( "build", "buildExtensions" )
 
 #########################################################################################################
 # Graphics

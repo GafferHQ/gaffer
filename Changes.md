@@ -7,6 +7,11 @@ Fixes
 - 3Delight : Fixed startup errors on Windows when the `DELIGHT` environment variable wasn't defined [^1].
 - FlatImageProcessor : Fixed bug that could cause an input to be evaluated with an invalid `image:viewName`.
 
+API
+---
+
+- ExtensionAlgo : Added `exportNode()` and `exportNodeUI()` functions.
+
 Breaking Changes
 ----------------
 
