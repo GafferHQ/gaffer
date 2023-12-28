@@ -43,6 +43,7 @@ import IECore
 import Gaffer
 import GafferUI
 import GafferCycles
+import GafferImage
 
 ##########################################################################
 # Build a registry of information retrieved from GafferCycles metadata.
@@ -84,7 +85,12 @@ def __translateParamMetadata( nodeTypeName, socketName, value ) :
 		__metadata[paramPath]["plugValueWidget:type"] = "GafferUI.PresetsPlugValueWidget"
 
 	if( socketName == "filename" ) :
-		__metadata[paramPath]["plugValueWidget:type"] = "GafferUI.PathPlugValueWidget"
+		__metadata[paramPath]["plugValueWidget:type"] = "GafferUI.FileSystemPathPlugValueWidget"
+		__metadata[paramPath]["path:leaf"] = True
+		__metadata[paramPath]["path:valid"] = True
+		__metadata[paramPath]["path:bookmarks"] = "texture"
+		__metadata[paramPath]["fileSystemPath:extensions"] = " ".join( GafferImage.OpenImageIOReader.supportedExtensions() )
+		__metadata[paramPath]["fileSystemPath:extensionsLabel"] = "Show only image files"
 
 	__metadata[paramPath]["noduleLayout:visible"] = True
 	__metadata[paramPath]["label"] = label

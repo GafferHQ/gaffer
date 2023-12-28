@@ -4,7 +4,7 @@
 Improvements
 ------------
 
-- ArnoldShader, ArnoldColorManager : Improved browsers for file parameters (#5592) :
+- ArnoldShader, ArnoldColorManager, CyclesShader : Improved browsers for file parameters (#5592, #5602) :
   - Added filtering by extension.
   - Added bookmarks.
 - USDLight : Added file browser for `shaping:ies:file` parameter.
