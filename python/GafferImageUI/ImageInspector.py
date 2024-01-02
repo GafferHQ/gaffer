@@ -47,11 +47,11 @@ class ImageInspector( GafferUI.NodeSetEditor ) :
 	# for the ImageInspector.
 	## \todo Eventually we want `GafferUI.Editor` to derive from Node itself,
 	# in which case we wouldn't need a separate settings object.
-	class Settings( Gaffer.Node ) :
+	class Settings( GafferUI.Editor.Settings ) :
 
-		def __init__( self ) :
+		def __init__( self, script ) :
 
-			Gaffer.Node.__init__( self, "ImageInspectorSettings" )
+			GafferUI.Editor.Settings.__init__( self, "ImageInspectorSettings", script )
 
 			self["in"] = GafferImage.ImagePlug()
 			self["view"] = Gaffer.StringPlug( defaultValue = "default" )
@@ -85,7 +85,7 @@ class ImageInspector( GafferUI.NodeSetEditor ) :
 			self["__sampleStats"]["in"].setInput( self["__sampleCounts"]["out"] )
 			self["__sampleStats"]["area"].setInput( self["__formatQuery"]["format"]["displayWindow"] )
 
-	IECore.registerRunTimeTyped( Settings, typeName = "ImageInspector::Settings" )
+	IECore.registerRunTimeTyped( Settings, typeName = "GafferImageUI::ImageInspector::Settings" )
 
 	def __init__( self, scriptNode, **kw ) :
 
@@ -93,7 +93,7 @@ class ImageInspector( GafferUI.NodeSetEditor ) :
 
 		GafferUI.NodeSetEditor.__init__( self, column, scriptNode, nodeSet = scriptNode.focusSet(), **kw )
 
-		self.__settingsNode = self.Settings()
+		self.__settingsNode = self.Settings( scriptNode )
 		Gaffer.NodeAlgo.applyUserDefaults( self.__settingsNode )
 
 		with column :
@@ -262,9 +262,7 @@ class _ImagePathBase( Gaffer.Path ) :
 
 	def cancellationSubject( self ) :
 
-		## \todo We really just want to return `self._image` here, but we
-		# can't because BackgroundTask can't find the right ScriptNode from it.
-		return self.__scriptNode["fileName"]
+		return self._image
 
 	def _children( self, canceller ) :
 
