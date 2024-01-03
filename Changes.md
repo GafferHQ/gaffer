@@ -112,6 +112,7 @@ Breaking Changes
   - Removed ChannelPlug type. Use `Gaffer.ShufflePlug` instead.
   - Renamed `channels` plug to `shuffles` plug, matching nodes such as ShuffleAttributes and ShufflePrimitiveVariables.
 - ShuffleUI : Removed `nodeMenuCreateCommand()`.
+- ImageStatsUI : Removed `postCreate()`.
 
 Build
 -----
