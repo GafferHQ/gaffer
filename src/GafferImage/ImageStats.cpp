@@ -337,6 +337,7 @@ void ImageStats::hash( const ValuePlug *output, const Context *context, IECore::
 	}
 
 	Imath::Box2i boundsIntersection;
+	bool beyondDataWindow;
 	double areaMult;
 
 	{
@@ -363,6 +364,7 @@ void ImageStats::hash( const ValuePlug *output, const Context *context, IECore::
 		}
 		const Imath::Box2i dataWindow = flattenedInPlug()->dataWindowPlug()->getValue();
 		boundsIntersection = BufferAlgo::intersection( area, dataWindow );
+		beyondDataWindow = boundsIntersection != area;
 		areaMult = double(area.size().x) * area.size().y;
 	}
 
@@ -383,6 +385,8 @@ void ImageStats::hash( const ValuePlug *output, const Context *context, IECore::
 			h.append( 0.0f );
 			return;
 		}
+
+		h.append( beyondDataWindow );
 
 		// We traverse in TopToBottom order because otherwise the hash could change just based on
 		// the order in which hashes are combined
@@ -442,6 +446,7 @@ void ImageStats::compute( ValuePlug *output, const Context *context ) const
 	}
 
 	Imath::Box2i boundsIntersection;
+	bool beyondDataWindow;
 	double areaMult;
 
 	{
@@ -468,6 +473,7 @@ void ImageStats::compute( ValuePlug *output, const Context *context ) const
 		}
 		const Imath::Box2i dataWindow = flattenedInPlug()->dataWindowPlug()->getValue();
 		boundsIntersection = BufferAlgo::intersection( area, dataWindow );
+		beyondDataWindow = boundsIntersection != area;
 		areaMult = double(area.size().x) * area.size().y;
 	}
 
@@ -509,6 +515,12 @@ void ImageStats::compute( ValuePlug *output, const Context *context ) const
 		float min = std::numeric_limits<float>::infinity();
 		float max = -std::numeric_limits<float>::infinity();
 		double sum = 0.;
+
+		if( beyondDataWindow )
+		{
+			min = 0.;
+			max = 0.;
+		}
 
 		// We traverse in TopToBottom order because floating point precision means that changing
 		// the order to sum in could produce slightly non-deterministic results

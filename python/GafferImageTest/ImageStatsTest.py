@@ -188,6 +188,40 @@ class ImageStatsTest( GafferImageTest.ImageTestCase ) :
 		self.__assertColour( s["min"].getValue(), imath.Color4f( 0.25, 0, 0, 0.5 ) )
 		self.__assertColour( s["max"].getValue(), imath.Color4f( 0.5, 0.5, 0, 0.75 ) )
 
+		# Offset the colors in the image so we can see the effects of whether or not we include pixels outside
+		# the data window.
+
+		g = GafferImage.Grade()
+		g["in"].setInput( r["out"] )
+		g['channels'].setValue( "*" )
+		g['blackClamp'].setValue( False )
+		g['whiteClamp'].setValue( False )
+		g['offset'].setValue( imath.Color4f( 1 ) )
+
+		s["in"].setInput( g["out"] )
+
+		s["area"].setValue( imath.Box2i( imath.V2i( 20, 20 ), imath.V2i( 25, 25 ) ) )
+		self.__assertColour( s["average"].getValue(), imath.Color4f( 1.5, 1, 1, 1.5 ) )
+		self.__assertColour( s["max"].getValue(), imath.Color4f( 1.5, 1, 1, 1.5 ) )
+		self.__assertColour( s["min"].getValue(), imath.Color4f( 1.5, 1, 1, 1.5 ) )
+
+		s["area"].setValue( imath.Box2i( imath.V2i( 19, 20 ), imath.V2i( 24, 25 ) ) )
+		self.__assertColour( s["average"].getValue(), imath.Color4f( 1.2, 0.8, 0.8, 1.2 ) )
+		self.__assertColour( s["max"].getValue(), imath.Color4f( 1.5, 1, 1, 1.5 ) )
+		self.__assertColour( s["min"].getValue(), imath.Color4f( 0, 0, 0, 0 ) )
+
+		g['offset'].setValue( imath.Color4f( -2 ) )
+
+		s["area"].setValue( imath.Box2i( imath.V2i( 20, 20 ), imath.V2i( 25, 25 ) ) )
+		self.__assertColour( s["average"].getValue(), imath.Color4f( -1.5, -2, -2, -1.5 ) )
+		self.__assertColour( s["max"].getValue(), imath.Color4f( -1.5, -2, -2, -1.5 ) )
+		self.__assertColour( s["min"].getValue(), imath.Color4f( -1.5, -2, -2, -1.5 ) )
+
+		s["area"].setValue( imath.Box2i( imath.V2i( 19, 20 ), imath.V2i( 24, 25 ) ) )
+		self.__assertColour( s["average"].getValue(), imath.Color4f( -1.2, -1.6, -1.6, -1.2 ) )
+		self.__assertColour( s["max"].getValue(), imath.Color4f( 0, 0, 0, 0 ) )
+		self.__assertColour( s["min"].getValue(), imath.Color4f( -1.5, -2, -2, -1.5 ) )
+
 	# Test only tiles which intersect a changed boundary have modified hashes
 	def testROIHash( self ) :
 

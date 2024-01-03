@@ -46,7 +46,9 @@ Fixes
   - Stopped failed jobs jumping to the end of the Local Jobs UI.
   - Fixed message log update.
   - Fixed `Job.statistics()` errors on Windows, ensuring that a `pid` is always returned when available.
-- ImageStats : Fixed output of infinite values, which were previously being clamped.
+- ImageStats :
+  - Fixed output of infinite values, which were previously being clamped.
+  - Results for min/max now correctly reflect zero values outside the data window.
 - NodeMenu, NodeEditor : `userDefault` metadata is now evaluated in the script context, so it can depend on script variables.
 
 API
