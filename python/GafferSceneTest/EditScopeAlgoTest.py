@@ -1636,5 +1636,22 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( edit["enabled"].getValue(), True )
 		self.assertEqual( edit["value"].getValue(), 20 )
 
+	def testOptionEditFromDefaultValueMetadata( self ) :
+
+		options = GafferScene.Options()
+		editScope = Gaffer.EditScope()
+		editScope.setup( options["out"] )
+		editScope["in"].setInput( options["out"] )
+		emptyKeys = editScope.keys()
+
+		with self.assertRaisesRegex( RuntimeError, 'Option "test:bogus" does not exist' ) :
+			GafferScene.EditScopeAlgo.acquireOptionEdit( editScope, "test:bogus" )
+		self.assertEqual( editScope.keys(), emptyKeys )
+
+		Gaffer.Metadata.registerValue( "option:test:bogus", "defaultValue", 123 )
+
+		self.assertIsNotNone( GafferScene.EditScopeAlgo.acquireOptionEdit( editScope, "test:bogus" ) )
+		self.assertNotEqual( editScope.keys(), emptyKeys )
+
 if __name__ == "__main__":
 	unittest.main()

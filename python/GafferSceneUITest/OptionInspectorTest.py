@@ -862,5 +862,29 @@ class OptionInspectorTest( GafferUITest.TestCase ) :
 		Gaffer.Metadata.registerValue( "option:test:enabled", "defaultValue", False )
 		self.assertEqual( self.__inspect( editScope["out"], "test:enabled", editScope ).value(), IECore.BoolData( 0 ) )
 
+		# The default value now allows the option edit to take place.
+
+		inspection = self.__inspect( editScope["out"], "test:enabled", editScope )
+		edit = inspection.acquireEdit()
+		self.assertEqual(
+			edit,
+			GafferScene.EditScopeAlgo.acquireOptionEdit(
+				editScope, "test:enabled", createIfNecessary = False
+			)
+		)
+
+		edit["enabled"].setValue( True )
+
+		# With the tweak in place in `editScope`, force the history to be checked again
+		# to make sure we get the right source back.
+
+		self.__assertExpectedResult(
+			self.__inspect( editScope["out"], "test:enabled", editScope ),
+			source = edit,
+			sourceType = GafferSceneUI.Private.Inspector.Result.SourceType.EditScope,
+			editable = True,
+			edit = edit
+		)
+
 if __name__ == "__main__" :
 	unittest.main()
