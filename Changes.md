@@ -19,7 +19,7 @@ Fixes
 -----
 
 - Arnold : Fixed translation of USD `uchar` attributes and shader parameters.
-- Orientation : Now normalizes unnormalized quaternion inputs - this allows correctly processing files with primvars that contain unnormalized quaternions ( which it is possible to write from Houdini ).
+- Orientation/Instancer : Now normalizes unnormalized quaternion inputs - this allows correctly processing files with primvars that contain unnormalized quaternions ( which it is possible to write from Houdini ).
 
 API
 ---
