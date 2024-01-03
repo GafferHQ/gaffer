@@ -36,14 +36,11 @@
 import sys
 import argparse
 import os
+import pathlib
+import shutil
 import subprocess
-import urllib
+import urllib.request
 import zipfile
-
-if sys.version_info[0] < 3 :
-    from urllib import urlretrieve
-else:
-    from urllib.request import urlretrieve
 
 platform = { "darwin" : "darwin", "win32" : "windows" }.get( sys.platform, "linux" )
 format = { "win32" : "zip" }.get( sys.platform, "tgz" )
@@ -65,15 +62,29 @@ archive = "Arnold-{version}-{platform}.{format}".format(
 
 url="https://forgithubci.solidangle.com/arnold/{}".format( archive )
 
-installDir = os.path.join( "arnoldRoot", args.version )
-os.makedirs( installDir )
-os.chdir( installDir )
+installDir = pathlib.Path.cwd() / "arnoldRoot" / args.version
+installDir.mkdir( parents = True, exist_ok = True )
+archiveFile = installDir /  archive
 
 print( "Downloading Arnold \"{}\"".format( url ) )
-archiveFile, headers = urlretrieve( url )
+
+passwordManager = urllib.request.HTTPPasswordMgrWithDefaultRealm()
+passwordManager.add_password(
+    realm = None,
+    uri = url,
+    user = os.environ["ARNOLD_DOWNLOAD_USER"],
+    passwd = os.environ["ARNOLD_DOWNLOAD_PASSWORD"]
+)
+
+authHandler = urllib.request.HTTPBasicAuthHandler( passwordManager )
+opener = urllib.request.build_opener( authHandler )
+
+with opener.open( url ) as inFile :
+    with open( archiveFile, "wb" ) as outFile :
+        shutil.copyfileobj( inFile, outFile )
 
 if format == "tgz" :
-    subprocess.check_call( [ "tar", "-xzf", archiveFile ] )
+    subprocess.check_call( [ "tar", "-xzf", archiveFile, "-C", installDir ] )
 elif format == "zip":
     with zipfile.ZipFile( archiveFile ) as f :
-        f.extractall()
+        f.extractall( path = installDir )

@@ -204,6 +204,8 @@ jobs:
             f.write( 'ARNOLD_ROOT=%s\n' % arnoldRoot )
       env:
         PYTHONUTF8: 1
+        ARNOLD_DOWNLOAD_USER: ${{ secrets.ARNOLD_DOWNLOAD_USER }}
+        ARNOLD_DOWNLOAD_PASSWORD: ${{ secrets.ARNOLD_DOWNLOAD_PASSWORD }}
       shell: python
 
     - name: Build Docs and Package
