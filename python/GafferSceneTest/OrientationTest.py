@@ -68,6 +68,16 @@ class OrientationTest( GafferSceneTest.SceneTestCase ) :
 			IECore.QuatfVectorData()
 		)
 
+		points["unnormalizedQuaternion"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECore.QuatfVectorData()
+		)
+
+		points["unnormalizedHoudiniAlembicOrderQuaternion"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECore.QuatfVectorData()
+		)
+
 		points["axis"] = IECoreScene.PrimitiveVariable(
 			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
 			IECore.V3fVectorData()
@@ -93,6 +103,10 @@ class OrientationTest( GafferSceneTest.SceneTestCase ) :
 
 			points["euler"].data.append( degrees )
 			points["quaternion"].data.append( q )
+			points["unnormalizedQuaternion"].data.append( 0.2 * q )
+			points["unnormalizedHoudiniAlembicOrderQuaternion"].data.append(
+				0.2 * imath.Quatf( q.v()[0], q.v()[1], q.v()[2], q.r() )
+			)
 			points["axis"].data.append( q.axis() )
 			points["angle"].data.append( q.angle() )
 
@@ -163,6 +177,34 @@ class OrientationTest( GafferSceneTest.SceneTestCase ) :
 			orientation["out"].object( "/object" )["outAngle"].data,
 		)
 
+		# Test quaternion -> quaternion
+
+		orientation["inMode"].setValue( orientation.Mode.Quaternion )
+		orientation["outMode"].setValue( orientation.Mode.Quaternion )
+		orientation["outQuaternion"].setValue( "outQuaternion" )
+
+		orientation["inQuaternion"].setValue( "quaternion" )
+
+		self.__assertVectorDataAlmostEqual(
+			orientation["in"].object( "/object" )["quaternion"].data,
+			orientation["out"].object( "/object" )["outQuaternion"].data,
+		)
+
+		orientation["inQuaternion"].setValue( "unnormalizedQuaternion" )
+
+		self.__assertVectorDataAlmostEqual(
+			orientation["in"].object( "/object" )["quaternion"].data,
+			orientation["out"].object( "/object" )["outQuaternion"].data,
+		)
+
+		orientation["inQuaternion"].setValue( "unnormalizedHoudiniAlembicOrderQuaternion" )
+		orientation["inMode"].setValue( orientation.Mode.QuaternionXYZW )
+
+		self.__assertVectorDataAlmostEqual(
+			orientation["in"].object( "/object" )["quaternion"].data,
+			orientation["out"].object( "/object" )["outQuaternion"].data,
+		)
+
 	def testMismatchedInputSizes( self ) :
 
 		points = IECoreScene.PointsPrimitive(
@@ -223,7 +265,7 @@ class OrientationTest( GafferSceneTest.SceneTestCase ) :
 
 		if isinstance( a, IECore.QuatfVectorData ) :
 			equal = [
-				aa.axis().equalWithAbsError( bb.axis(), delta ) and math.fabs( aa.angle() - bb.angle() ) < delta
+				aa.v().equalWithAbsError( bb.v(), delta ) and math.fabs( aa.r() - bb.r() ) < delta
 				for aa, bb in zip( a, b )
 			]
 		elif isinstance( a, IECore.V3fVectorData ) :

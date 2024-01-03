@@ -21,6 +21,11 @@ API
   - `fileSystemPath:extensions`
   - `fileSystemPath:extensionsLabel`
 
+Fixes
+-----
+
+- Orientation : Now normalizes quaternion inputs - this allows correctly processing files with primvars that contain unnormalized quaternions ( which it is possible to write from Houdini ).
+
 1.3.9.0 (relative to 1.3.8.0)
 =======
 
