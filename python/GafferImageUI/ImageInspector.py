@@ -70,12 +70,9 @@ class ImageInspector( GafferUI.NodeSetEditor ) :
 			self["__deleteContextVariables"]["in"].setInput( self["__selectView"]["out"] )
 			self["__deleteContextVariables"]["variables"].setValue( "imageInspector:statsChannels" )
 
-			self["__formatQuery"] = GafferImage.FormatQuery()
-			self["__formatQuery"]["image"].setInput( self["__deleteContextVariables"]["out"] )
-
 			self["__imageStats"] = GafferImage.ImageStats()
 			self["__imageStats"]["in"].setInput(  self["__deleteContextVariables"]["out"] )
-			self["__imageStats"]["area"].setInput( self["__formatQuery"]["format"]["displayWindow"] )
+			self["__imageStats"]["areaSource"].setValue( GafferImage.ImageStats.AreaSource.DataWindow )
 			self["__imageStats"]["channels"].setInput( self["__contextQuery"]["out"][0]["value"] )
 
 			self["__sampleCounts"] = GafferImage.DeepSampleCounts()
@@ -83,7 +80,7 @@ class ImageInspector( GafferUI.NodeSetEditor ) :
 
 			self["__sampleStats"] = GafferImage.ImageStats()
 			self["__sampleStats"]["in"].setInput( self["__sampleCounts"]["out"] )
-			self["__sampleStats"]["area"].setInput( self["__formatQuery"]["format"]["displayWindow"] )
+			self["__sampleStats"]["areaSource"].setValue( GafferImage.ImageStats.AreaSource.DataWindow )
 
 	IECore.registerRunTimeTyped( Settings, typeName = "GafferImageUI::ImageInspector::Settings" )
 
@@ -124,9 +121,27 @@ class ImageInspector( GafferUI.NodeSetEditor ) :
 					Gaffer.DictPath( {}, "/" ),
 					columns = [
 						GafferUI.PathListingWidget.defaultNameColumn,
-						GafferUI.StandardPathColumn( "Min", "stats:min", sizeMode = GafferUI.PathColumn.SizeMode.Stretch ),
-						GafferUI.StandardPathColumn( "Max", "stats:max", sizeMode = GafferUI.PathColumn.SizeMode.Stretch ),
-						GafferUI.StandardPathColumn( "Average", "stats:average", sizeMode = GafferUI.PathColumn.SizeMode.Stretch ),
+						GafferUI.StandardPathColumn(
+							GafferUI.PathColumn.CellData(
+								"Min",
+								toolTip = "The minimum value of all pixels in the data window."
+							),
+							"stats:min", sizeMode = GafferUI.PathColumn.SizeMode.Stretch
+						),
+						GafferUI.StandardPathColumn(
+							GafferUI.PathColumn.CellData(
+								"Max",
+								toolTip = "The maximum value of all pixels in the data window."
+							),
+							"stats:max", sizeMode = GafferUI.PathColumn.SizeMode.Stretch
+						),
+						GafferUI.StandardPathColumn(
+							GafferUI.PathColumn.CellData(
+								"Average",
+								toolTip = "The average value of all pixels in the data window."
+							),
+							"stats:average", sizeMode = GafferUI.PathColumn.SizeMode.Stretch
+						),
 					],
 					displayMode = GafferUI.PathListingWidget.DisplayMode.Tree,
 					selectionMode = GafferUI.PathListingWidget.SelectionMode.Cell,
