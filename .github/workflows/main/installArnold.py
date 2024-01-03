@@ -68,16 +68,18 @@ archiveFile = installDir /  archive
 
 print( "Downloading Arnold \"{}\"".format( url ) )
 
-authHandler = urllib.request.HTTPBasicAuthHandler()
-authHandler.add_password(
+passwordManager = urllib.request.HTTPPasswordMgrWithDefaultRealm()
+passwordManager.add_password(
     realm = None,
     uri = url,
     user = os.environ["ARNOLD_DOWNLOAD_USER"],
     passwd = os.environ["ARNOLD_DOWNLOAD_PASSWORD"]
 )
 
-urllib.request.install_opener( urllib.request.build_opener( authHandler ) )
-with urllib.request.urlopen( url ) as inFile :
+authHandler = urllib.request.HTTPBasicAuthHandler( passwordManager )
+opener = urllib.request.build_opener( authHandler )
+
+with opener.open( url ) as inFile :
     with open( archiveFile, "wb" ) as outFile :
         shutil.copyfileobj( inFile, outFile )
 
