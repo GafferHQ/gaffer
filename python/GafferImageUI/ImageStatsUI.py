@@ -62,6 +62,8 @@ Gaffer.Metadata.registerNode(
 	within the node graph.
 	""",
 
+	"layout:activator:areaSourceIsArea", lambda node : node["areaSource"].getValue() == GafferImage.ImageStats.AreaSource.Area,
+
 	plugs = {
 
 		"in" : [
@@ -98,14 +100,35 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"areaSource" : [
+
+			"description",
+			"""
+			Where to source the area to be analysed. If this is
+			set to DataWindow, it will use the input's Data Window,
+			if it is set to DisplayWindow, it will use the input's
+			Display Window, and if it is set to Area, it will use
+			the Area plug.
+			""",
+
+			"preset:Area", GafferImage.ImageStats.AreaSource.Area,
+			"preset:DataWindow", GafferImage.ImageStats.AreaSource.DataWindow,
+			"preset:DisplayWindow", GafferImage.ImageStats.AreaSource.DisplayWindow,
+
+			"nodule:type", "",
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+		],
+
 		"area" : [
 
 			"description",
 			"""
 			The area of the image to be analysed.
+			This plug is only used if 'Area Source' is set to Area.
 			""",
 
-			"nodule:type", "",
+			"layout:activator", "areaSourceIsArea",
 
 		],
 

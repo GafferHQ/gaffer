@@ -116,7 +116,7 @@ class ImageStatsTest( GafferImageTest.ImageTestCase ) :
 		r["fileName"].setValue( self.__rgbFilePath )
 
 		s = GafferImage.ImageStats()
-		s["area"].setValue( r["out"]["format"].getValue().getDisplayWindow() )
+		s["areaSource"].setValue( GafferImage.ImageStats.AreaSource.DisplayWindow )
 
 		# Get the hashes of the outputs when there is no input.
 		minHash = s["min"].hash()
@@ -138,7 +138,7 @@ class ImageStatsTest( GafferImageTest.ImageTestCase ) :
 		s["in"].setInput( r["out"] )
 		s["channels"].setValue( IECore.StringVectorData( [ "R", "G", "B", "A" ] ) )
 
-		s["area"].setValue( r["out"]["format"].getValue().getDisplayWindow() )
+		s["areaSource"].setValue( GafferImage.ImageStats.AreaSource.DisplayWindow )
 		self.__assertColour( s["average"].getValue(), imath.Color4f( 0.0544, 0.0744, 0.1250, 0.2537 ) )
 		self.__assertColour( s["min"].getValue(), imath.Color4f( 0, 0, 0, 0 ) )
 		self.__assertColour( s["max"].getValue(), imath.Color4f( 0.5, 0.5, 0.5, 0.875 ) )
@@ -152,6 +152,31 @@ class ImageStatsTest( GafferImageTest.ImageTestCase ) :
 		s = GafferImage.ImageStats()
 		s["in"].setInput( r["out"] )
 		s["channels"].setValue( IECore.StringVectorData( [ "R", "G", "B", "A" ] ) )
+
+		s["areaSource"].setValue( GafferImage.ImageStats.AreaSource.DisplayWindow )
+		self.__assertColour( s["average"].getValue(), imath.Color4f(0.054375, 0.074375, 0.125, 0.25375) )
+		self.__assertColour( s["min"].getValue(), imath.Color4f( 0, 0, 0, 0 ) )
+		self.__assertColour( s["max"].getValue(), imath.Color4f( 0.5, 0.5, 0.5, 0.875 ) )
+
+		s["areaSource"].setValue( GafferImage.ImageStats.AreaSource.Area )
+		s["area"].setValue( imath.Box2i( imath.V2i( 0, 0 ), imath.V2i( 100, 100 ) ) )
+
+		self.__assertColour( s["average"].getValue(), imath.Color4f(0.054375, 0.074375, 0.125, 0.25375) )
+		self.__assertColour( s["min"].getValue(), imath.Color4f( 0, 0, 0, 0 ) )
+		self.__assertColour( s["max"].getValue(), imath.Color4f( 0.5, 0.5, 0.5, 0.875 ) )
+
+		s["areaSource"].setValue( GafferImage.ImageStats.AreaSource.DataWindow )
+		self.__assertColour( s["average"].getValue(), imath.Color4f(0.151042, 0.206597, 0.347222, 0.704861) )
+		self.__assertColour( s["min"].getValue(), imath.Color4f( 0, 0, 0, 0 ) )
+		self.__assertColour( s["max"].getValue(), imath.Color4f( 0.5, 0.5, 0.5, 0.875 ) )
+
+		s["areaSource"].setValue( GafferImage.ImageStats.AreaSource.Area )
+		s["area"].setValue( imath.Box2i( imath.V2i( 20, 20 ), imath.V2i( 80, 80 ) ) )
+
+		self.__assertColour( s["average"].getValue(), imath.Color4f(0.151042, 0.206597, 0.347222, 0.704861) )
+		self.__assertColour( s["min"].getValue(), imath.Color4f( 0, 0, 0, 0 ) )
+		self.__assertColour( s["max"].getValue(), imath.Color4f( 0.5, 0.5, 0.5, 0.875 ) )
+
 
 		s["area"].setValue( imath.Box2i( imath.V2i( 20, 20 ), imath.V2i( 25, 25 ) ) )
 		self.__assertColour( s["average"].getValue(), imath.Color4f( 0.5, 0, 0, 0.5 ) )
