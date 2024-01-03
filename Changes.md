@@ -45,6 +45,7 @@ Fixes
   - Stopped failed jobs jumping to the end of the Local Jobs UI.
   - Fixed message log update.
   - Fixed `Job.statistics()` errors on Windows, ensuring that a `pid` is always returned when available.
+- ImageStats : Fixed output of infinite values, which were previously being clamped.
 
 API
 ---

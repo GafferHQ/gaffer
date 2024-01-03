@@ -113,9 +113,18 @@ ImageStats::ImageStats( const std::string &name )
 	addChild( new StringVectorDataPlug( "channels", Plug::In, defaultChannelsData ) );
 
 	addChild( new Box2iPlug( "area", Gaffer::Plug::In ) );
-	addChild( new Color4fPlug( "average", Gaffer::Plug::Out, Imath::Color4f( 0, 0, 0, 1 ) ) );
-	addChild( new Color4fPlug( "min", Gaffer::Plug::Out, Imath::Color4f( 0, 0, 0, 1 ) ) );
-	addChild( new Color4fPlug( "max", Gaffer::Plug::Out, Imath::Color4f( 0, 0, 0, 1 ) ) );
+	addChild( new Color4fPlug(
+		"average", Gaffer::Plug::Out, Imath::Color4f( 0, 0, 0, 1 ),
+		Imath::Color4f( -std::numeric_limits<float>::infinity() ), Imath::Color4f( std::numeric_limits<float>::infinity() )
+	) );
+	addChild(
+		new Color4fPlug( "min", Gaffer::Plug::Out, Imath::Color4f( 0, 0, 0, 1 ),
+		Imath::Color4f( -std::numeric_limits<float>::infinity() ), Imath::Color4f( std::numeric_limits<float>::infinity() )
+	) );
+	addChild(
+		new Color4fPlug( "max", Gaffer::Plug::Out, Imath::Color4f( 0, 0, 0, 1 ),
+		Imath::Color4f( -std::numeric_limits<float>::infinity() ), Imath::Color4f( std::numeric_limits<float>::infinity() )
+	) );
 
 	addChild( new ObjectPlug( "__tileStats", Gaffer::Plug::Out, new IECore::V3dData() ) );
 	addChild( new ObjectPlug( "__allStats", Gaffer::Plug::Out, new IECore::V3dData() ) );
@@ -419,8 +428,8 @@ void ImageStats::compute( ValuePlug *output, const Context *context ) const
 
 		IECore::ConstFloatVectorDataPtr channelData = flattenedInPlug()->channelDataPlug()->getValue();
 
-		float min = std::numeric_limits<float>::max();
-		float max = std::numeric_limits<float>::lowest();
+		float min = std::numeric_limits<float>::infinity();
+		float max = -std::numeric_limits<float>::infinity();
 		double sum = 0.;
 
 		const std::vector<float> &channel = channelData->readable();
@@ -444,8 +453,8 @@ void ImageStats::compute( ValuePlug *output, const Context *context ) const
 			static_cast<ObjectPlug *>( output )->setValue( new IECore::V3dData( Imath::V3d( 0 ) ) );
 			return;
 		}
-		float min = std::numeric_limits<float>::max();
-		float max = std::numeric_limits<float>::lowest();
+		float min = std::numeric_limits<float>::infinity();
+		float max = -std::numeric_limits<float>::infinity();
 		double sum = 0.;
 
 		// We traverse in TopToBottom order because floating point precision means that changing
