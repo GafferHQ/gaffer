@@ -35,6 +35,7 @@ Improvements
 - Backdrop : Improved drawing order for nested backdrops :
   - Larger backdrops are automatically drawn behind smaller ones, so that nested backdrops will always appear on top.
   - Added a `depth` plug to assign a manual drawing depth for the rare cases where the automatic depth is unwanted.
+- ImageStats : Added `areaSource` plug, allowing area to be driven by the input display window or data window.
 
 Fixes
 -----
@@ -45,7 +46,10 @@ Fixes
   - Stopped failed jobs jumping to the end of the Local Jobs UI.
   - Fixed message log update.
   - Fixed `Job.statistics()` errors on Windows, ensuring that a `pid` is always returned when available.
-- ImageStats : Fixed output of infinite values, which were previously being clamped.
+- ImageStats :
+  - Fixed output of infinite values, which were previously being clamped.
+  - Results for min/max now correctly reflect zero values outside the data window.
+- NodeMenu, NodeEditor : `userDefault` metadata is now evaluated in the script context, so it can depend on script variables.
 
 API
 ---
@@ -110,6 +114,7 @@ Breaking Changes
   - Removed ChannelPlug type. Use `Gaffer.ShufflePlug` instead.
   - Renamed `channels` plug to `shuffles` plug, matching nodes such as ShuffleAttributes and ShufflePrimitiveVariables.
 - ShuffleUI : Removed `nodeMenuCreateCommand()`.
+- ImageStatsUI : Removed `postCreate()`.
 
 Build
 -----
