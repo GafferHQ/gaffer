@@ -1219,8 +1219,7 @@ class LightToolHandle : public Handle
 			);
 
 			auto standardStyle = runTimeCast<const StandardStyle>( style );
-			assert( standardStyle );
-			const Color3f highlightColor3 = standardStyle->getColor( StandardStyle::Color::HighlightColor );
+			const Color3f highlightColor3 = standardStyle ? standardStyle->getColor( StandardStyle::Color::HighlightColor ) : Color3f( 0.466, 0.612, 0.741 );
 			const Color4f highlightColor4 = Color4f( highlightColor3.x, highlightColor3.y, highlightColor3.z, 1.f );
 
 			const bool enabled = allInspectionsEnabled();
