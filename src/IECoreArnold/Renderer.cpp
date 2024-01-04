@@ -1537,7 +1537,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 
 			PolyMesh( const IECore::CompoundObject *attributes )
 			{
-				subdivIterations = attributeValue<int>( g_polyMeshSubdivIterationsAttributeName, attributes, 1 );
+				subdivIterations = integralAttribute<uint8_t>( g_polyMeshSubdivIterationsAttributeName, attributes, 1 );
 				subdivAdaptiveError = attributeValue<float>( g_polyMeshSubdivAdaptiveErrorAttributeName, attributes, 0.0f );
 
 				const IECore::StringData *subdivAdaptiveMetricData = attribute<IECore::StringData>( g_polyMeshSubdivAdaptiveMetricAttributeName, attributes );
@@ -1574,7 +1574,7 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 				subdivFrustumIgnore = attributeValue<bool>( g_polyMeshSubdivFrustumIgnoreAttributeName, attributes, false );
 			}
 
-			int subdivIterations;
+			uint8_t subdivIterations;
 			float subdivAdaptiveError;
 			AtString subdivAdaptiveMetric;
 			AtString subdivAdaptiveSpace;
@@ -1899,6 +1899,37 @@ class ArnoldAttributes : public IECoreScenePreview::Renderer::AttributesInterfac
 			{
 				return AtString( sd->readable().c_str() );
 			};
+			return defaultValue;
+		}
+
+		template<typename T>
+		static T integralAttribute( const IECore::InternedString &name, const IECore::CompoundObject *attributes, T defaultValue )
+		{
+			IECore::CompoundObject::ObjectMap::const_iterator it = attributes->members().find( name );
+			if( it == attributes->members().end() )
+			{
+				return defaultValue;
+			}
+
+			if constexpr( !std::is_same_v<T, int> )
+			{
+				// Gaffer currently uses IntData for all integral attributes regardless of the
+				// actual type in Arnold, so first check for that.
+				/// \todo Produce the expected types in Gaffer.
+				if( auto intData = IECore::runTimeCast<const IECore::IntData>( it->second.get() ) )
+				{
+					return intData->readable();
+				}
+			}
+
+			// Data coming from USD will use the exact Arnold type - for instance `unsigned char`
+			// for `subdiv_iterations`.
+			using DataType = IECore::TypedData<T>;
+			if( auto sd = reportedCast<const DataType>( it->second.get(), "attribute", name ) )
+			{
+				return sd->readable();
+			};
+
 			return defaultValue;
 		}
 
