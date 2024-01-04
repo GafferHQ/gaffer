@@ -58,6 +58,13 @@ parser.add_argument(
 	help = "If set, validation will not check for documentation in the archive"
 )
 
+parser.add_argument(
+	"--skipPaths",
+	nargs = '+',
+	default = [],
+	help = "A list of paths to skip the checks for."
+)
+
 args = parser.parse_args()
 
 if not os.path.exists( args.archive ) :
@@ -88,6 +95,10 @@ for module in (
 ) :
 	requiredPaths.append( os.path.join( "python", module ) )
 	requiredPaths.append( os.path.join( "python", "%sUI" % module ) )
+
+for path in args.skipPaths :
+	if path in requiredPaths :
+		requiredPaths.remove( path )
 
 rawMembers = []
 

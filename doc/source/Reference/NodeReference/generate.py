@@ -11,6 +11,6 @@ try :
 	import GafferArnoldUI
 	modules = [ GafferArnold ]
 except ImportError :
-	modules = modules
+	modules = []
 
 GafferUI.DocumentationAlgo.exportNodeReference( "./", modules = modules, modulePath = "$GAFFER_ROOT/python" )
