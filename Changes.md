@@ -5,6 +5,7 @@ Features
 --------
 
 - DeepSlice : Added a new node for clipping out part of an image based on depth.
+- ImageInspector : Added a new panel for inspecting image format, metadata and channel statistics.
 
 Improvements
 ------------
@@ -73,6 +74,7 @@ API
   - Added `shuffleWithExtraSources()` method.
 - ShufflePlugValueWidget : Widgets for the `source` and `destination` plugs can now be customised using standard `plugValueWidget:type` metadata.
 - ImageTestCase : in `assertImageEqual` function, maxDifference may now be a tuple, to specify an asymmetric range.
+- Editor : Added `Settings` class, which should be used to store settings for subclasses. See LightEditor and ImageInspector for examples.
 
 Breaking Changes
 ----------------

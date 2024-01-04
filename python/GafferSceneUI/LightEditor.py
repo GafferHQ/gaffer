@@ -60,29 +60,18 @@ from Qt import QtWidgets
 # with HierarchyView.
 class LightEditor( GafferUI.NodeSetEditor ) :
 
-	# We store our settings as plugs on a node for a few reasons :
-	#
-	# - We want to use an EditScopePlugValueWidget, and that requires it.
-	# - We get a bunch of useful widgets and signals for free.
-	# - Longer term we want to refactor all Editors to derive from Node,
-	#   in the same way that View does already. This will let us serialise
-	#   _all_ layout state in the same format we serialise node graphs in.
-	# - The `userDefault` metadata provides a convenient way of configuring
-	#   defaults.
-	# - The PlugLayout we use to display the settings allows users to add
-	#   their own widgets to the UI.
-	class Settings( Gaffer.Node ) :
+	class Settings( GafferUI.Editor.Settings ) :
 
-		def __init__( self ) :
+		def __init__( self, script ) :
 
-			Gaffer.Node.__init__( self, "LightEditorSettings" )
+			GafferUI.Editor.Settings.__init__( self, "LightEditorSettings", script )
 
 			self["in"] = GafferScene.ScenePlug()
 			self["attribute"] = Gaffer.StringPlug( defaultValue = "light" )
 			self["section"] = Gaffer.StringPlug( defaultValue = "" )
 			self["editScope"] = Gaffer.Plug()
 
-	IECore.registerRunTimeTyped( Settings )
+	IECore.registerRunTimeTyped( Settings, typeName = "GafferSceneUI::LightEditor::Settings" )
 
 	def __init__( self, scriptNode, **kw ) :
 
@@ -90,7 +79,7 @@ class LightEditor( GafferUI.NodeSetEditor ) :
 
 		GafferUI.NodeSetEditor.__init__( self, column, scriptNode, nodeSet = scriptNode.focusSet(), **kw )
 
-		self.__settingsNode = self.Settings()
+		self.__settingsNode = self.Settings( scriptNode )
 		Gaffer.NodeAlgo.applyUserDefaults( self.__settingsNode )
 
 		self.__setFilter = _GafferSceneUI._HierarchyViewSetFilter()
