@@ -1505,10 +1505,36 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 			const V2i &resolution = camera->getResolution();
 			screeenParameters.add( { "resolution", resolution.getValue(), NSITypeInteger, 2, 1, NSIParamIsArray } );
 
+			const bool &overscanOn = camera->getOverscan();
+
+			const int overscanLeft = static_cast<int>(camera->getOverscanLeft() * resolution.x);
+			const int overscanTop = static_cast<int>(camera->getOverscanTop() * resolution.y);
+			const int overscanRight = static_cast<int>(camera->getOverscanRight() * resolution.x);
+			const int overscanBottom = static_cast<int>(camera->getOverscanBottom() * resolution.y);
+
+			const Box2i overscan(
+				V2i(
+					overscanLeft,
+					overscanTop
+				),
+				V2i(
+					overscanRight,
+					overscanBottom
+				)
+			);
+
+			if( overscanOn == true )
+			{
+				screeenParameters.add( { "overscan", overscan.min.getValue(), NSITypeInteger, 2, 2, NSIParamIsArray } );
+			}
+
 			Box2i renderRegion = camera->renderRegion();
 
-			// I can't find any support in 3delight for overscan - and if crop goes outside 0 - 1,
-			// it ignores crop.  So we clamp it.
+			// If crop goes outside 0 - 1, 3Delight ignores it, so we clamp.
+			/// \todo 3Delight interprets crop as 0-1 across the overscanned data window, but
+			/// Gaffer defines it as 0-1 across the original (non-overscanned) display window.
+			/// Adjust for that. This will only work nicely with the CropWindowTool if we also
+			/// update the display driver to output an accurate display window for overscanned renders.
 			renderRegion.min.x = std::max( 0, renderRegion.min.x );
 			renderRegion.max.x = std::min( resolution.x, renderRegion.max.x );
 			renderRegion.min.y = std::max( 0, renderRegion.min.y );
