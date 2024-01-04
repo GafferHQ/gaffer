@@ -36,6 +36,7 @@
 
 import os
 import unittest
+import math
 import imath
 
 import IECore
@@ -299,6 +300,31 @@ class ImageStatsTest( GafferImageTest.ImageTestCase ) :
 			GafferTest.parallelGetValue( stats["average"]["r"], 10000 )
 
 		self.assertEqual( pm.plugStatistics( stats["__allStats" ] ).computeCount, 1 )
+
+	def testInf( self ) :
+
+		# Make an image with all `inf` values. We can't do this directly
+		# with a Constant because the inputs are clamped at float max,
+		# so we divide an image by zero to get what we want.
+
+		constant0 = GafferImage.Constant()
+		constant1 = GafferImage.Constant()
+		constant1["color"].setValue( imath.Color4f( 1 ) )
+
+		merge = GafferImage.Merge()
+		merge["in"][0].setInput( constant0["out"] )
+		merge["in"][1].setInput( constant1["out"] )
+		merge["operation"].setValue( merge.Operation.Divide )
+
+		# Since all values are `inf`, all outputs should be too.
+
+		stats = GafferImage.ImageStats()
+		stats["in"].setInput( merge["out"] )
+		stats["area"].setValue( stats["in"].format().getDisplayWindow() )
+
+		self.assertTrue( math.isinf( stats["max"][0].getValue() ) )
+		self.assertTrue( math.isinf( stats["min"][0].getValue() ) )
+		self.assertTrue( math.isinf( stats["average"][0].getValue() ) )
 
 	def __assertColour( self, colour1, colour2 ) :
 		for i in range( 0, 4 ):
