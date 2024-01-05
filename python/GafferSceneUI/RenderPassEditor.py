@@ -137,15 +137,22 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 	@classmethod
 	def registerOption( cls, groupKey, optionName, section = "Main", columnName = None ) :
 
+		optionLabel = Gaffer.Metadata.value( "option:" + optionName, "label" )
 		if not columnName :
-			columnName = optionName.split( ":" )[-1]
+			columnName = optionLabel or optionName.split( ":" )[-1]
+
+		toolTip = "<h3>{}</h3>".format( optionLabel or columnName )
+		optionDescription = Gaffer.Metadata.value( "option:" + optionName, "description" )
+		if optionDescription :
+			toolTip += "\n\n" + optionDescription
 
 		GafferSceneUI.RenderPassEditor.registerColumn(
 			groupKey,
 			optionName,
 			lambda scene, editScope : _GafferSceneUI._RenderPassEditor.OptionInspectorColumn(
 				GafferSceneUI.Private.OptionInspector( scene, editScope, optionName ),
-				columnName
+				columnName,
+				toolTip
 			),
 			section
 		)
