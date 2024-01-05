@@ -60,6 +60,7 @@ from .SetMembershipInspectorTest import SetMembershipInspectorTest
 from .SetEditorTest import SetEditorTest
 from .LightToolTest import LightToolTest
 from .OptionInspectorTest import OptionInspectorTest
+from .LightPositionToolTest import LightPositionToolTest
 
 if __name__ == "__main__":
 	unittest.main()

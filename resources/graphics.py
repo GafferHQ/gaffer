@@ -33,6 +33,7 @@
 				"pointerAdd",
 				"pointerRemove",
 				"pointerRotate",
+				"pointerPivot",
 			]
 		},
 
@@ -195,6 +196,7 @@
 				'gafferSceneUIScaleTool',
 				'gafferSceneUITranslateTool',
 				'gafferSceneUILightTool',
+				'gafferSceneUILightPositionTool',
 			]
 
 		},

@@ -1,6 +1,6 @@
 ##########################################################################
 #
-#  Copyright (c) 2016, John Haddon. All rights reserved.
+#  Copyright (c) 2023, Cinesite VFX Ltd. All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions are
@@ -34,50 +34,27 @@
 #
 ##########################################################################
 
+import imath
+
 import IECore
 
 import Gaffer
+import GafferUI
 import GafferSceneUI
 
 Gaffer.Metadata.registerNode(
 
-	GafferSceneUI.TranslateTool,
+	GafferSceneUI.LightPositionTool,
 
 	"description",
 	"""
-	Tool for editing object translation.
+	Tool for placing lights.
 	""",
 
-	"nodeToolbar:bottom:type", "GafferUI.StandardNodeToolbar.bottom",
+	"viewer:shortCut", "D",
+	"order", 7,
+	"tool:exclusive", True,
 
-	"viewer:shortCut", "W",
-	"order", 1,
-
-	"ui:transformTool:toolTip", "Hold 'V' and click to snap to geometry",
-
-	plugs = {
-
-		"orientation" : [
-
-			"description",
-			"""
-			The space used to define the orientation of the XYZ
-			translation handles. Note that this is independent
-			of the space setting on a Transform node - each
-			setting can be mixed and matched freely.
-			""",
-
-			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
-
-			"toolbarLayout:section", "Bottom",
-			"toolbarLayout:width", 100,
-
-			"preset:Local", GafferSceneUI.TransformTool.Orientation.Local,
-			"preset:Parent", GafferSceneUI.TransformTool.Orientation.Parent,
-			"preset:World", GafferSceneUI.TransformTool.Orientation.World,
-
-		],
-
-	}
+	"ui:transformTool:toolTip", "Hold 'Shift' + 'V' to place shadow pivot\nHold 'V' to place shadow target",
 
 )

@@ -159,7 +159,7 @@
     </linearGradient>
     <linearGradient
        id="foreground"
-       gradientTransform="matrix(2.4748712,0,0,2.4748712,306.23756,9040.4548)"
+       gradientTransform="matrix(3.299828,0,0,3.2998284,319.81673,11436.486)"
        inkscape:swatch="solid">
       <stop
          style="stop-color:#e0e0e0;stop-opacity:1;"
@@ -278,13 +278,13 @@
      inkscape:showpageshadow="2"
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#4c4c4c"
-     showgrid="false"
-     inkscape:zoom="5.357041"
-     inkscape:cx="260.68496"
-     inkscape:cy="2570.2622"
-     inkscape:window-width="3747"
+     showgrid="true"
+     inkscape:zoom="5.6568542"
+     inkscape:cx="705.16224"
+     inkscape:cy="1362.7715"
+     inkscape:window-width="3745"
      inkscape:window-height="2126"
-     inkscape:window-x="82"
+     inkscape:window-x="84"
      inkscape:window-y="-11"
      inkscape:window-maximized="1"
      inkscape:current-layer="layer1">
@@ -595,6 +595,43 @@
        position="22.112383,-1784"
        orientation="0,1"
        id="guide2303"
+       inkscape:locked="false" />
+    <sodipodi:guide
+       position="253,-779.90051"
+       orientation="1,0"
+       id="guide5282"
+       inkscape:locked="false" />
+    <sodipodi:guide
+       position="258.65492,-774"
+       orientation="0,-1"
+       id="guide5284"
+       inkscape:locked="false" />
+    <sodipodi:guide
+       position="278,-782.21056"
+       orientation="1,0"
+       id="guide5286"
+       inkscape:locked="false" />
+    <sodipodi:guide
+       position="271.13849,-799"
+       orientation="0,-1"
+       id="guide5288"
+       inkscape:locked="false" />
+    <sodipodi:guide
+       position="265.5,-789.5"
+       orientation="-0.70710678,-0.70710678"
+       id="guide4982"
+       inkscape:locked="false" />
+    <sodipodi:guide
+       position="265.5,-798"
+       orientation="-1,0"
+       id="guide4986"
+       inkscape:locked="false"
+       inkscape:label=""
+       inkscape:color="rgb(0,134,229)" />
+    <sodipodi:guide
+       position="276.5,-778.5"
+       orientation="0,-1"
+       id="guide5064"
        inkscape:locked="false" />
   </sodipodi:namedview>
   <metadata
@@ -1599,7 +1636,8 @@
            style="font-size:24px;fill:#f4f4f4;fill-opacity:1;stroke-width:1.00000381"
            id="rect8084-2" /></flowRegion><flowPara
          style="font-size:16px;fill:#f4f4f4;fill-opacity:1;stroke-width:1.00000381"
-         id="flowPara8088-1">SetEditor</flowPara></flowRoot>  </g>
+         id="flowPara8088-1">SetEditor</flowPara></flowRoot>
+  </g>
   <g
      id="layer4"
      inkscape:label="ExportAreas"
@@ -1745,13 +1783,21 @@
          id="pointerRemove"
          style="opacity:1;fill:none;fill-opacity:1;stroke:none;stroke-width:2.93652129;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173225;stroke-opacity:1;paint-order:markers stroke fill" />
       <rect
-         style="opacity:1;fill:none;fill-opacity:0.99215686;stroke:none;stroke-width:2.20689678;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173225;stroke-opacity:1;paint-order:markers stroke fill"
+         style="opacity:1;fill:none;fill-opacity:1;stroke:none;stroke-width:2.20689678;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173225;stroke-opacity:1;paint-order:markers stroke fill"
          id="pointerRotate"
          width="32"
          height="32"
          x="670"
          y="1290"
          inkscape:label="pointerRotate" />
+      <rect
+         style="opacity:1;fill:none;fill-opacity:1;stroke:none;stroke-width:2.2069;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173;stroke-opacity:1;paint-order:markers stroke fill"
+         id="pointerPivot"
+         width="32"
+         height="32"
+         x="710"
+         y="1290"
+         inkscape:label="pointerPivot" />
     </g>
     <g
        id="g2889"
@@ -2358,6 +2404,14 @@
          x="220"
          y="1774"
          inkscape:label="gafferSceneUILightTool" />
+      <rect
+         style="display:inline;opacity:1;fill:none;fill-opacity:1;stroke:none;stroke-width:0.917663;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:1.10173;stroke-opacity:1;paint-order:markers stroke fill"
+         id="gafferSceneUILightPositionTool"
+         width="25"
+         height="25"
+         x="253"
+         y="1774"
+         inkscape:label="gafferSceneUILightPositionTool" />
     </g>
     <g
        id="g3414"
@@ -4962,6 +5016,31 @@
              inkscape:connector-curvature="0"
              sodipodi:nodetypes="csc" />
         </g>
+      </g>
+      <g
+         id="g12364"
+         style="display:inline"
+         inkscape:label="lightPositionTool"
+         transform="translate(0,-1.7e-5)">
+        <path
+           style="display:inline;fill:#818181;fill-opacity:1;stroke:#3c3c3c;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+           d="m 254,1848.8622 h 23 l -5,-12 h -13 z"
+           id="path14061"
+           sodipodi:nodetypes="ccccc"
+           inkscape:label="plane" />
+        <ellipse
+           style="display:inline;fill:url(#foreground);fill-opacity:1;fill-rule:nonzero;stroke:#3c3c3c;stroke-width:1.33333;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+           id="path6796"
+           cy="1842.3622"
+           cx="265.5"
+           rx="3.3333333"
+           ry="3.3333335"
+           inkscape:label="highlight" />
+        <path
+           style="color:#000000;fill:#f0c717;fill-opacity:0.992157;stroke:#3c3c3c;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+           d="m 270.5,1830.3613 v 1 h 4.79297 l -9.79297,9.793 -10.64648,-10.6465 -0.70704,0.707 11.35352,11.3536 10.5,-10.5 v 4.7929 h 1 v -6.5 z"
+           id="path4996"
+           inkscape:label="ray" />
       </g>
     </g>
     <g
@@ -9406,7 +9485,7 @@
     <path
        style="fill:none;stroke:url(#foreground);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        d="m 224,2665.8622 c 0,0 -3.5,0 -3.5,0 0,0 0,3.5 0,3.5"
-       id="path2265"
+       id="path2976"
        inkscape:connector-curvature="0"
        inkscape:path-effect="#path-effect2267"
        inkscape:original-d="m 224,2665.8622 h -3.5 v 3.5"
@@ -9417,7 +9496,7 @@
        inkscape:original-d="m 224,2665.8622 h -3.5 v 3.5"
        inkscape:path-effect="#path-effect2297"
        inkscape:connector-curvature="0"
-       id="path2295"
+       id="path2978"
        d="m 224,2665.8622 c 0,0 -3.5,0 -3.5,0 0,0 0,3.5 0,3.5"
        style="fill:none;stroke:url(#foreground);stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        transform="rotate(-180,226,2671.3622)" />
@@ -9489,5 +9568,14 @@
            style="display:inline;opacity:1;fill:#cccccc;fill-opacity:1;stroke:#3c3c3c;stroke-width:1;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" />
       </g>
     </g>
+    <g
+       id="layer6"
+       inkscape:label="Pointers"
+       transform="translate(0,52.362183)" />
+    <path
+       style="color:#000000;fill:#000000;stroke:#ffffff;stroke-width:2;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
+       d="m 722.5,1343.8622 -10.75195,12.8593 1.5039,1.3184 9.24805,-11.1406 9.24805,11.1406 1.50391,-1.3184 z"
+       id="path10506"
+       sodipodi:nodetypes="ccccccc" />
   </g>
 </svg>
