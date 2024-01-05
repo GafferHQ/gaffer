@@ -69,6 +69,14 @@ Gaffer.Metadata.registerNode(
 	"toolbarLayout:customWidget:RightSpacer:section", "Bottom",
 	"toolbarLayout:customWidget:RightSpacer:index", -1,
 
+	"nodeToolbar:top:type", "GafferUI.StandardNodeToolbar.top",
+	"toolbarLayout:customWidget:TargetTipWidget:widgetType", "GafferSceneUI.TransformToolUI._TargetTipWidget",
+	"toolbarLayout:customWidget:TargetTipWidget:section", "Top",
+
+	"toolbarLayout:customWidget:TopRightSpacer:widgetType", "GafferSceneUI.TransformToolUI._RightSpacer",
+	"toolbarLayout:customWidget:TopRightSpacer:section", "Top",
+	"toolbarLayout:customWidget:TopRightSpacer:index", -1,
+
 )
 
 class _LeftSpacer( GafferUI.Spacer ) :
@@ -100,6 +108,21 @@ def _distance( ancestor, descendant ) :
 		descendant = descendant.parent()
 
 	return result
+
+class _TargetTipWidget( GafferUI.Frame ) :
+
+	def __init__( self, tool, **kw ) :
+
+		GafferUI.Frame.__init__( self, borderWidth = 4, **kw )
+
+		label = Gaffer.Metadata.value( tool, "ui:transformTool:toolTip" ) or ""
+
+		with self :
+			with GafferUI.Frame( borderWidth = 0 ) as self.__innerFrame :
+				GafferUI.Label( label )
+
+		if not label :
+			self.__innerFrame.setVisible( False )
 
 class _SelectionWidget( GafferUI.Frame ) :
 

@@ -1489,9 +1489,17 @@ _styleSheet = string.Template(
 		background-color: $brightColor;
 	}
 
+	*[gafferClass="GafferSceneUI.TransformToolUI._TargetTipWidget"]
+	{
+		border: 0px;
+		margin: 0px;
+		padding: 0px;
+	}
+
 	#gafferColorInspector,
 	*[gafferClass="GafferSceneUI.TransformToolUI._SelectionWidget"],
 	*[gafferClass="GafferSceneUI.CropWindowToolUI._StatusWidget"],
+	*[gafferClass="GafferSceneUI.TransformToolUI._TargetTipWidget"] > QFrame,
 	*[gafferClass="GafferUI.EditScopeUI.EditScopePlugValueWidget"] > QFrame,
 	*[gafferClass="GafferSceneUI.InteractiveRenderUI._ViewRenderControlUI"] > QFrame,
 	*[gafferClass="GafferSceneUI._SceneViewInspector"] > QFrame

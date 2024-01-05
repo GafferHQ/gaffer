@@ -107,7 +107,11 @@ void setParameterInternal( AtNode *node, AtString name, int parameterType, bool 
 				}
 				break;
 			case AI_TYPE_BYTE :
-				if( const IntData *data = dataCast<IntData>( name, value ) )
+				if( const IntData *data = runTimeCast<const IntData>( value ) )
+				{
+					AiNodeSetByte( node, name, data->readable() );
+				}
+				else if( const UCharData *data = dataCast<UCharData>( name, value ) )
 				{
 					AiNodeSetByte( node, name, data->readable() );
 				}

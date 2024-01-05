@@ -124,6 +124,11 @@ Build
 1.3.x.x (relative to 1.3.9.0)
 =======
 
+Features
+--------
+
+- LightPositionTool : Added tool to the scene viewer to place shadows. With a light selected, holding <kbd>Shift</kbd> + <kbd>V</kbd> and clicking on geometry will set the pivot point used for casting a shadow. Holding <kbd>V</kdb> and clicking sets the point to receive the shadow. The light is repositioned to be the same distance from the pivot, along the pivot-shadow point line, and oriented to face the shadow point.
+
 Improvements
 ------------
 
@@ -132,6 +137,11 @@ Improvements
   - Added bookmarks.
 - USDLight : Added file browser for `shaping:ies:file` parameter.
 - OpenColorIOContext : Added file browser for `config` plug.
+
+Fixes
+-----
+
+- Arnold : Fixed translation of USD `uchar` attributes and shader parameters.
 
 API
 ---
@@ -143,6 +153,11 @@ API
   - `path:bookmarks`
   - `fileSystemPath:extensions`
   - `fileSystemPath:extensionsLabel`
+
+Improvements
+------------
+
+- Translate and Rotate tools : Added viewer tip to the upper left corner of the viewer explaining how to use the target modes.
 
 1.3.9.0 (relative to 1.3.8.0)
 =======
