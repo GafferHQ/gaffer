@@ -10,6 +10,11 @@ Improvements
 - USDLight : Added file browser for `shaping:ies:file` parameter.
 - OpenColorIOContext : Added file browser for `config` plug.
 
+Fixes
+-----
+
+- Arnold : Fixed translation of USD `uchar` attributes and shader parameters.
+
 API
 ---
 
