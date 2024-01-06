@@ -64,6 +64,7 @@ Fixes
   - Results for min/max now correctly reflect zero values outside the data window.
 - NodeMenu, NodeEditor : `userDefault` metadata is now evaluated in the script context, so it can depend on script variables.
 - 3Delight : Fixed loading of surface shaders such as `dlStandard` so that they can be connected to the inputs of shaders such as `dlLayeredMaterial`.
+- DeepState : Fixed handling of `NaN` values and samples where `ZBack` is less than `Z`.
 
 API
 ---
