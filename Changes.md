@@ -36,7 +36,9 @@ Improvements
   - Larger backdrops are automatically drawn behind smaller ones, so that nested backdrops will always appear on top.
   - Added a `depth` plug to assign a manual drawing depth for the rare cases where the automatic depth is unwanted.
 - ImageStats : Added `areaSource` plug, allowing area to be driven by the input display window or data window.
-- 3Delight : Added camera overscan support.
+- 3Delight :
+  - Added camera overscan support.
+  - NSI scene description export format is now based on file extension - `.nsi` for binary and `.nsia` for ASCII.
 
 Fixes
 -----
@@ -116,6 +118,7 @@ Breaking Changes
   - Renamed `channels` plug to `shuffles` plug, matching nodes such as ShuffleAttributes and ShufflePrimitiveVariables.
 - ShuffleUI : Removed `nodeMenuCreateCommand()`.
 - ImageStatsUI : Removed `postCreate()`.
+- 3Delight : Changed NSI scene description export with `.nsi` file extension from ASCII to binary (`.nsia` is used for ASCII now).
 
 Build
 -----
