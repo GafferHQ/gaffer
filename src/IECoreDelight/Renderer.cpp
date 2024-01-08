@@ -1087,11 +1087,13 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 			vector<NSIParam_t> params;
 
 			const char *apistream = "apistream";
+			const char *streamformat = "autonsi";
 			const char *fileNamePtr = fileName.c_str();
 			if( renderType == SceneDescription )
 			{
 				params = {
 					{ "type", &apistream, NSITypeString, 0, 1, 0 },
+					{ "streamformat", &streamformat, NSITypeString, 0, 1, 0 },
 					{ "streamfilename", &fileNamePtr, NSITypeString , 0, 1, 0 }
 				};
 			}
