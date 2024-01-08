@@ -100,7 +100,10 @@ void GafferSceneModule::bindObjectProcessor()
 	}
 
 	{
-		scope s = GafferBindings::DependencyNodeClass<Orientation>();
+		scope s = GafferBindings::DependencyNodeClass<Orientation>()
+			.def( "normalizedIfNeeded", &Orientation::normalizedIfNeeded )
+			.staticmethod( "normalizedIfNeeded" )
+		;
 
 		enum_<GafferScene::Orientation::Mode>( "Mode" )
 			.value( "Euler", GafferScene::Orientation::Mode::Euler )
