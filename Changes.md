@@ -10,6 +10,7 @@ Features
 Improvements
 ------------
 
+- Preferences : The preferences location now includes the Gaffer major version (`$HOME/gaffer/startup-1.4`). Among other things, this avoids problems caused by saving a UI layout in a new version and then running an older version (#368, #2882). The unversioned startup directory (`$HOME/gaffer/startup`) remains, and may continue to be used to store startup scripts that apply to all Gaffer versions.
 - Toolbars : Changed hotkey behavior to toogle any tool on and off. Exclusive tools such as the Translate and Crop Window tools activate the first tool (currently Selection Tool) when they are toggled off.
 - CropWindowTool : Added <kbd>`Alt` + <kbd>`C` for toggling both the crop window tool and the relevant crop window `enabled` plug.
 - TaskList, FrameMask : Reimplemented in C++ for improved performance.

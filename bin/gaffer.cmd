@@ -28,7 +28,6 @@ set CORTEX_POINTDISTRIBUTION_TILESET=%GAFFER_ROOT%\resources\cortex\tileset_2048
 
 call :prependToPath "%USERPROFILE%\gaffer\apps;%GAFFER_ROOT%\apps" GAFFER_APP_PATHS
 
-call :prependToPath "%USERPROFILE%\gaffer\startup" GAFFER_STARTUP_PATHS
 call :appendToPath "%GAFFER_ROOT%\startup" GAFFER_STARTUP_PATHS
 
 call :prependToPath "%GAFFER_ROOT%\graphics" GAFFERUI_IMAGE_PATHS

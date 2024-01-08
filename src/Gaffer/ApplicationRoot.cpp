@@ -38,6 +38,7 @@
 #include "Gaffer/ApplicationRoot.h"
 
 #include "Gaffer/Preferences.h"
+#include "Gaffer/Version.h"
 
 #include <filesystem>
 
@@ -130,7 +131,7 @@ std::filesystem::path ApplicationRoot::preferencesLocation() const
 	}
 
 	std::filesystem::path result = home;
-	result = result / "gaffer" / "startup" / getName().string();
+	result = result / "gaffer" / fmt::format( "startup-{}.{}", GAFFER_MILESTONE_VERSION, GAFFER_MAJOR_VERSION ) / getName().string();
 
 	std::filesystem::create_directories( result );
 

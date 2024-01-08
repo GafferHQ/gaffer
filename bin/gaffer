@@ -135,7 +135,6 @@ fi
 
 prependToPath "$HOME/gaffer/apps:$GAFFER_ROOT/apps" GAFFER_APP_PATHS
 
-prependToPath "$HOME/gaffer/startup" GAFFER_STARTUP_PATHS
 appendToPath "$GAFFER_ROOT/startup" GAFFER_STARTUP_PATHS
 
 prependToPath "$HOME/gaffer/startup" CORTEX_STARTUP_PATHS
