@@ -95,6 +95,8 @@ def __shaderSubMenu( oslPath ) :
 					subMenu = "Utility"
 				elif tag == "toon" :
 					subMenu = "Toon"
+				else :
+					subMenu = "Other"
 
 			if subMenu is None :
 				continue
