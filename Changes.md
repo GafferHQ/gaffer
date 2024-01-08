@@ -36,6 +36,7 @@ Improvements
   - Larger backdrops are automatically drawn behind smaller ones, so that nested backdrops will always appear on top.
   - Added a `depth` plug to assign a manual drawing depth for the rare cases where the automatic depth is unwanted.
 - ImageStats : Added `areaSource` plug, allowing area to be driven by the input display window or data window.
+- 3Delight : Added camera overscan support.
 
 Fixes
 -----

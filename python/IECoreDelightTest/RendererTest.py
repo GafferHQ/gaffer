@@ -460,6 +460,11 @@ class RendererTest( GafferTest.TestCase ) :
 					"focalLength" : 2.0,
 					"clippingPlanes" : imath.V2f( 0.25, 10 ),
 					"shutter" : imath.V2f( 0, 1 ),
+					"overscan" : True,
+					"overscanTop" : 0.1,
+					"overscanBottom" : 0.2,
+					"overscanLeft" : 0.1,
+					"overscanRight" : 0.2,
 				}
 			),
 			r.attributes( IECore.CompoundObject() )
@@ -478,6 +483,7 @@ class RendererTest( GafferTest.TestCase ) :
 		self.__assertInNSI( '"pixelaspectratio" "float" 1 1', nsi )
 		self.__assertInNSI( '"clippingrange" "double" 2 [ 0.25 10 ]', nsi )
 		self.__assertInNSI( '"shutterrange" "double" 2 [ 0 1 ]', nsi )
+		self.__assertInNSI( '"overscan" "int[2]" 2 [ 200 100 400 200 ]', nsi )
 
 	def testObjectInstancing( self ) :
 
