@@ -1064,6 +1064,7 @@ IECore::InternedString g_maxLengthSpecularOptionName( "dl:maximumraylength.specu
 IECore::InternedString g_maxLengthVolumeOptionName( "dl:maximumraylength.volume" );
 IECore::InternedString g_clampIndirectOptionName( "dl:clampindirect" );
 IECore::InternedString g_showMultipleScatteringOptionName( "dl:show.multiplescattering" );
+IECore::InternedString g_importancesamplefilterOptionName( "dl:importancesamplefilter" );
 
 const char *g_screenHandle = "ieCoreDelight:defaultScreen";
 
@@ -1088,6 +1089,27 @@ void setNSIGlobalOption( NSIContext_t context, const InternedString &name, const
 	}
 }
 
+void setNSIScreenOption( NSIContext_t context, const InternedString &name, const Object *value )
+{
+	if( value )
+	{
+		if( const Data *data = reportedCast<const Data>( value, "option", name ) )
+		{
+			ParameterList params;
+			params.add( name.c_str() + 3, data, true );
+			NSISetAttribute( context, g_screenHandle, params.size(), params.data() );
+		}
+		else
+		{
+			NSIDeleteAttribute( context, g_screenHandle, name.c_str() + 3 );
+		}
+	}
+	else
+	{
+		NSIDeleteAttribute( context, g_screenHandle, name.c_str() + 3 );
+	}
+}
+
 IE_CORE_FORWARDDECLARE( DelightRenderer )
 
 class DelightRenderer final : public IECoreScenePreview::Renderer
@@ -1096,7 +1118,7 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 	public :
 
 		DelightRenderer( RenderType renderType, const std::string &fileName, const IECore::MessageHandlerPtr &messageHandler )
-			:	m_renderType( renderType ), m_frame( 1 ), m_oversampling( 9 ), m_messageHandler( messageHandler )
+			:	m_renderType( renderType ), m_frame( 1 ), m_messageHandler( messageHandler )
 		{
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 
@@ -1186,25 +1208,11 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 			}
 			else if( name == g_oversamplingOptionName )
 			{
-				if( value )
-				{
-					if( const IntData *d = reportedCast<const IntData>( value, "option", name ) )
-					{
-						if( m_oversampling != d->readable() )
-						{
-							stop();
-							m_oversampling = d->readable();
-						}
-					}
-					else
-					{
-						m_oversampling = 9;
-					}
-				}
-				else
-				{
-					m_oversampling = 9;
-				}
+				setNSIScreenOption( m_context, name, value );
+			}
+			else if( name == g_importancesamplefilterOptionName )
+			{
+				setNSIScreenOption( m_context, name, value );
 			}
 			else if(
 				name == g_maxLengthDiffuseOptionName ||
@@ -1247,9 +1255,6 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 		{
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 
-			// 3Delight crashes if we don't stop the render before
-			// modifying the output chain.
-			stop();
 			m_outputs.erase( name );
 			if( !output )
 			{
@@ -1516,9 +1521,7 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 
 			// Update the screen
 
-			ParameterList screeenParameters = {
-				{ "oversampling", &m_oversampling, NSITypeInteger, 0, 1, 0 }
-			};
+			ParameterList screeenParameters;
 
 			const V2i &resolution = camera->getResolution();
 			screeenParameters.add( { "resolution", resolution.getValue(), NSITypeInteger, 2, 1, NSIParamIsArray } );
@@ -1609,7 +1612,6 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 
 		int m_frame;
 		string m_camera;
-		int m_oversampling;
 
 		bool m_rendering = false;
 

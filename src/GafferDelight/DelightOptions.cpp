@@ -58,6 +58,7 @@ DelightOptions::DelightOptions( const std::string &name )
 	options->addChild( new Gaffer::NameValuePlug( "dl:quality.shadingsamples", new IECore::IntData( 64 ), false, "shadingSamples" ) );
 	options->addChild( new Gaffer::NameValuePlug( "dl:quality.volumesamples", new IECore::IntData( 1 ), false, "volumeSamples" ) );
 	options->addChild( new Gaffer::NameValuePlug( "dl:clampindirect", new IECore::FloatData( 2 ), false, "clampIndirect" ) );
+	options->addChild( new Gaffer::NameValuePlug( "dl:importancesamplefilter", new IECore::BoolData( false ), false, "importanceSampleFilter" ) );
 
 	// Features
 

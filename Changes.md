@@ -40,6 +40,7 @@ Improvements
   - Added camera overscan support.
   - NSI scene description export format is now based on file extension - `.nsi` for binary and `.nsia` for ASCII.
   - Added support for reading `dl:` and `user:` attributes from shaders.
+  - Added `importanceSampleFilter` plug to DelightOptions, providing denoiser-compatible output.
 
 Fixes
 -----
