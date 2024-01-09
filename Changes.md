@@ -14,6 +14,7 @@ Improvements
   - Added bookmarks.
 - USDLight : Added file browser for `shaping:ies:file` parameter.
 - OpenColorIOContext : Added file browser for `config` plug.
+- Layouts : Added the ability to load layouts containing editors that aren't currently available. This allows layouts containing new editors introduced in Gaffer 1.4 to be loaded in Gaffer 1.3.
 
 Fixes
 -----
