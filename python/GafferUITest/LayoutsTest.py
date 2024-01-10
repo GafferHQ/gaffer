@@ -191,5 +191,47 @@ class LayoutsTest( GafferUITest.TestCase ) :
 		ns = editors[3].getNodeSet()
 		self.assertTrue( isinstance( ns, Gaffer.StandardSet ) )
 
+	def testMissingEditorType( self ) :
+
+		applicationRoot = Gaffer.ApplicationRoot( "testApp" )
+		layouts = GafferUI.Layouts.acquire( applicationRoot )
+
+		# Register a layout containing an editor that doesn't exist.
+		layouts.add( "MissingEditor", "GafferUI.NonexistentEditor( scriptNode )" )
+
+		# Check that we can still create such a layout, and that
+		# it has a proxy with the expected properties.
+		script = Gaffer.ScriptNode()
+		layout = layouts.create( "MissingEditor", script )
+		self.assertIsInstance( layout, GafferUI.Editor )
+		self.assertEqual( layout.getTitle(), "Nonexistent Editor" )
+
+		# Save the layout again and check that the same applies.
+		layouts.add( "MissingEditor2", layout )
+		layout2 = layouts.create( "MissingEditor2", script )
+		self.assertIsInstance( layout2, GafferUI.Editor )
+		self.assertEqual( layout2.getTitle(), "Nonexistent Editor" )
+
+	def testMissingEditorModule( self ) :
+
+		applicationRoot = Gaffer.ApplicationRoot( "testApp" )
+		layouts = GafferUI.Layouts.acquire( applicationRoot )
+
+		# Register a layout containing an editor from a module that doesn't exist.
+		layouts.add( "MissingEditor", "NonexistentGafferModule.NonexistentEditor( scriptNode )" )
+
+		# Check that we can still create such a layout, and that
+		# it has a proxy with the expected properties.
+		script = Gaffer.ScriptNode()
+		layout = layouts.create( "MissingEditor", script )
+		self.assertIsInstance( layout, GafferUI.Editor )
+		self.assertEqual( layout.getTitle(), "Nonexistent Editor" )
+
+		# Save the layout again and check that the same applies.
+		layouts.add( "MissingEditor2", layout )
+		layout2 = layouts.create( "MissingEditor2", script )
+		self.assertIsInstance( layout2, GafferUI.Editor )
+		self.assertEqual( layout2.getTitle(), "Nonexistent Editor" )
+
 if __name__ == "__main__":
 	unittest.main()
