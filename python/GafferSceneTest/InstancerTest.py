@@ -661,6 +661,10 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
 			IECore.QuatfVectorData( [ imath.Quatf().setAxisAngle( imath.V3f( 0, 1, 0 ), math.pi / 2.0 ) ] )
 		)
+		point["orientationUnnormalized"] = IECoreScene.PrimitiveVariable(
+			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
+			IECore.QuatfVectorData( [ 0.2 * imath.Quatf().setAxisAngle( imath.V3f( 0, 1, 0 ), math.pi / 2.0 ) ] )
+		)
 		point["scale"] = IECoreScene.PrimitiveVariable(
 			IECoreScene.PrimitiveVariable.Interpolation.Vertex,
 			IECore.V3fVectorData( [ imath.V3f( 2, 3, 4 ) ] )
@@ -684,6 +688,16 @@ class InstancerTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEncapsulatedRendersSame( instancer )
 
 		instancer["orientation"].setValue( "orientation" )
+		self.assertTrue(
+			imath.V3f( 4, 0, -1 ).equalWithAbsError(
+				imath.V3f( 1, 0, 0 ) * instancer["out"].transform( "/object/instances/sphere/0" ),
+				0.00001
+			)
+		)
+		self.assertEncapsulatedRendersSame( instancer )
+
+		# Using the same orientation but not normalized should still have an identical effect
+		instancer["orientation"].setValue( "orientationUnnormalized" )
 		self.assertTrue(
 			imath.V3f( 4, 0, -1 ).equalWithAbsError(
 				imath.V3f( 1, 0, 0 ) * instancer["out"].transform( "/object/instances/sphere/0" ),
@@ -2874,6 +2888,36 @@ parent["radius"] = ( 2 + context.getFrame() ) * 15
 					instancer["out"]["object"],
 					{ x[0] for x in dirtiedPlugs }
 				)
+
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 10 )
+	def testBoundPerformance( self ) :
+
+		sphere = GafferScene.Sphere()
+		sphere["divisions"].setValue( imath.V2i( 1000 ) )
+
+		filter = GafferScene.PathFilter()
+		filter["paths"].setValue( IECore.StringVectorData( [ '/sphere' ] ) )
+
+		orient = GafferScene.Orientation()
+		orient["in"].setInput( sphere["out"] )
+		orient["filter"].setInput( filter["out"] )
+		orient["randomEnabled"].setValue( True )
+		orient["randomSpread"].setValue( 180.0 )
+		orient["randomTwist"].setValue( 180.0 )
+
+		cube = GafferScene.Cube()
+
+		instancer = GafferScene.Instancer()
+		instancer["in"].setInput( orient["out"] )
+		instancer["filter"].setInput( filter["out"] )
+		instancer["prototypes"].setInput( cube["out"] )
+		instancer["orientation"].setValue( "orientation" )
+
+		GafferSceneTest.traverseScene( orient["out"] )
+		GafferSceneTest.traverseScene( cube["out"] )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			instancer["out"].bound( "/sphere/instances/cube" )
 
 	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
 	@GafferTest.TestRunner.CategorisedTestMethod( { "expensivePerformance" } )

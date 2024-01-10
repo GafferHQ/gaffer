@@ -86,7 +86,7 @@ namespace
 {
 
 // Color from `StandardLightVisualiser`
-const Color3f g_lightToolColor = Color3f( 1.0f, 0.835f, 0.07f );
+const Color3f g_lightToolColor = Color3f( 0.850f, 0.345f, 0.129f );
 const Color4f g_lightToolColor4 = Color4f( g_lightToolColor.x, g_lightToolColor.y, g_lightToolColor.z, 1.f );
 
 const Color4f g_lightToolDisabledColor4 = Color4f( 0.4f, 0.4f, 0.4f, 1.f );

@@ -38,6 +38,7 @@
 #include "GafferScene/Instancer.h"
 
 #include "GafferScene/Capsule.h"
+#include "GafferScene/Orientation.h"
 #include "GafferScene/SceneAlgo.h"
 
 #include "GafferScene/Private/ChildNamesMap.h"
@@ -580,7 +581,11 @@ class Instancer::EngineData : public Data
 			}
 			if( m_orientations )
 			{
-				result = (*m_orientations)[pointIndex].toMatrix44() * result;
+				// Using Orientation::normalizedIfNeeded avoids modifying quaternions that are already
+				// normalized. It's better for consistency to not be pointlessly changing the values
+				// slightly at the limits of floating point precision, when they're already as close to
+				// normalized as they can get, and this saves 4% runtime on InstancerTest.testBoundPerformance.
+				result = Orientation::normalizedIfNeeded((*m_orientations)[pointIndex]).toMatrix44() * result;
 			}
 			if( m_scales )
 			{

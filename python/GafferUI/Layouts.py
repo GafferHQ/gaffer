@@ -36,6 +36,7 @@
 ##########################################################################
 
 import collections
+import importlib
 import re
 import traceback
 import weakref
@@ -125,7 +126,8 @@ class Layouts( object ) :
 
 		layout = self.__namedLayouts[name]
 
-		# first try to import the modules the layout needs
+		# First try to import the modules the layout needs. We wrap these with
+		# `_ModuleProxy` so that we can handle missing editor types gracefully.
 		contextDict = { "scriptNode" : scriptNode, "imath" : imath }
 		imported = set()
 		classNameRegex = re.compile( r"[a-zA-Z]*Gaffer[^(,]*\(" )
@@ -133,10 +135,10 @@ class Layouts( object ) :
 			moduleName = className.partition( "." )[0]
 			if moduleName not in imported :
 				try :
-					exec( "import %s" % moduleName, contextDict, contextDict )
-				except( ImportError ) :
-					IECore.msg( IECore.MessageHandler.Level.Error, "GafferUI.Layouts", "Failed to load \"{layout}\" layout. {module} is not available.".format( layout=name, module=moduleName ) )
-					return GafferUI.CompoundEditor( scriptNode )
+					module = importlib.import_module( moduleName )
+				except ImportError :
+					module = None
+				contextDict[moduleName] = _EditorModuleProxy( module, moduleName )
 				imported.add( moduleName )
 
 		try :
@@ -205,3 +207,84 @@ class Layouts( object ) :
 
 		if self.__defaultPersistent and self.__default in self.__namedLayouts :
 			f.write( "layouts.setDefault( {0}, persistent = True )\n".format( repr( self.__default ) ) )
+
+# Proxy used for modules needed by `Layouts.create()`, so we can gracefully
+# handle missing modules and editors.
+class _EditorModuleProxy :
+
+	def __init__( self, module, path ) :
+
+		self.__module = module
+		self.__path = path
+
+	def __getattr__( self, name ) :
+
+		if self.__module is not None :
+			a = getattr( self.__module, name, None )
+			if a is not None :
+				return a
+
+		return _EditorModuleProxy( None, f"{self.__path}.{name}" )
+
+	def __call__( self, *args, **kw ) :
+
+		return _MissingEditor( self.__path, *args, **kw )
+
+# Proxy for Editor types that are currently unavailable.
+class _MissingEditor( GafferUI.Editor ) :
+
+	def __init__( self, path, scriptNode, *args, **kw ) :
+
+		column = GafferUI.ListContainer( borderWidth = 8 )
+		GafferUI.Editor.__init__( self, column, scriptNode )
+
+		with column :
+
+			GafferUI.Spacer(
+				imath.V2i( 1 ),
+				parenting = { "expand" : True }
+			)
+
+			with GafferUI.ListContainer(
+				GafferUI.ListContainer.Orientation.Horizontal, spacing = 4,
+				parenting = { "horizontalAlignment" : GafferUI.Label.HorizontalAlignment.Center },
+			) :
+
+				GafferUI.Image( "warningNotification.png" )
+				GafferUI.Label(
+					f"<b>{path} not available</b>", horizontalAlignment = GafferUI.HorizontalAlignment.Center,
+				)
+
+			GafferUI.Spacer(
+				imath.V2i( 1 ),
+				parenting = { "expand" : True }
+			)
+
+		self.__path = path
+		self.__args = args
+		self.__kw = kw
+
+	# We don't actually derive from NodeSetEditor, because we don't know if
+	# we should or not. But we provide the same methods so that CompoundEditor
+	# doesn't get upset if it tries to restore a node set.
+	def setNodeSet( self, nodeSet ) :
+
+		self.__nodeSet = nodeSet
+
+	def getNodeSet( self ) :
+
+		return self.__nodeSet
+
+	def getTitle( self ) :
+
+		return IECore.CamelCase.toSpaced( self.__path.rpartition( "." )[2] )
+
+	def __repr__( self ) :
+
+		return "{path}( scriptNode{argsSeparator}{args}{kwSeparator}{kw} )".format(
+			path = self.__path,
+			argsSeparator = ", " if self.__args else "",
+			args = ", ".join( repr( a ) for a in self.__args ),
+			kwSeparator = ", " if self.__kw else "",
+			kw = ", ".join( f"{k} = {v}" for k, v in self.__kw.items() )
+		)

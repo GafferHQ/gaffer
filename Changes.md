@@ -141,11 +141,14 @@ Improvements
   - Added bookmarks.
 - USDLight : Added file browser for `shaping:ies:file` parameter.
 - OpenColorIOContext : Added file browser for `config` plug.
+- Layouts : Added the ability to load layouts containing editors that aren't currently available. This allows layouts containing new editors introduced in Gaffer 1.4 to be loaded in Gaffer 1.3.
+- LightTool : Changed the color of the non-highlighted handles to orange and the highlighted handles to cyan for consistency with other highlight colors.
 
 Fixes
 -----
 
 - Arnold : Fixed translation of USD `uchar` attributes and shader parameters.
+- Orientation/Instancer : Now normalizes unnormalized quaternion inputs - this allows correctly processing files with primvars that contain unnormalized quaternions ( which it is possible to write from Houdini ).
 
 API
 ---
