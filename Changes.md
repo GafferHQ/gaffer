@@ -1,6 +1,10 @@
 1.x.x.x (relative to 1.3.x.x)
 =======
 
+> Note : This release introduces `linux-gcc11` builds which are only compatible with Linux distributions using glibc 2.28 or higher.
+> These specific `linux-gcc11` builds are intended for testing purposes while we upgrade our toolchain and dependencies to better align
+> with VFX Platform 2023, and should be considered "beta" in advance of a stable release in Gaffer 1.5.
+
 Features
 --------
 
@@ -129,7 +133,21 @@ Breaking Changes
 Build
 -----
 
+- Imath : Updated to version 3.1.9.
+- MaterialX : Updated to version 1.38.8.
+- LibWebP : Added version 1.3.2.
+- OpenEXR : Updated to version 3.1.9.
+- OpenImageIO : Updated to version 2.4.17.0.
+- OpenSubdiv : Updated to version 3.5.1.
+- OpenSSL : Removed.
+- OpenVDB : Updated to version 10.0.1.
 - PsUtil : Added version 5.9.6.
+- PySide : Updated to version 5.15.12.
+- Qt :
+  - Updated to version 5.15.12.
+  - Removed QtPurchasing library.
+  - Removed QtNetworkAuth library.
+- USD : Updated to version 23.11.
 
 1.3.x.x (relative to 1.3.10.0)
 =======

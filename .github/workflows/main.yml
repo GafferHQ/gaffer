@@ -28,18 +28,19 @@ jobs:
         # and then use `include` to define their settings.
 
         name: [
-          linux,
-          linux-debug,
+          linux-gcc9,
+          linux-debug-gcc9,
+          linux-gcc11,
           windows,
         ]
 
         include:
 
-          - name: linux
+          - name: linux-gcc9
             os: ubuntu-20.04
             buildType: RELEASE
             publish: true
-            containerImage: ghcr.io/gafferhq/build/build:2.0.0
+            containerImage: ghcr.io/gafferhq/build/build:2.1.1
             # GitHub container builds run as root. This causes failures for tests that
             # assert that filesystem permissions are respected, because root doesn't
             # respect permissions. So we run the final test suite as a dedicated
@@ -47,16 +48,28 @@ jobs:
             testRunner: su testUser -c
             sconsCacheMegabytes: 400
 
-          - name: linux-debug
+          - name: linux-debug-gcc9
             os: ubuntu-20.04
             buildType: DEBUG
             publish: false
-            containerImage: ghcr.io/gafferhq/build/build:2.0.0
+            containerImage: ghcr.io/gafferhq/build/build:2.1.1
             testRunner: su testUser -c
             testArguments: -excludedCategories performance
             # Debug builds are ludicrously big, so we must use a larger cache
             # limit. In practice this compresses down to 4-500Mb.
             sconsCacheMegabytes: 2500
+
+          - name: linux-gcc11
+            os: ubuntu-20.04
+            buildType: RELEASE
+            publish: true
+            containerImage: ghcr.io/gafferhq/build/build:3.0.0a4
+            # GitHub container builds run as root. This causes failures for tests that
+            # assert that filesystem permissions are respected, because root doesn't
+            # respect permissions. So we run the final test suite as a dedicated
+            # test user rather than as root.
+            testRunner: su testUser -c
+            sconsCacheMegabytes: 400
 
           - name: windows
             os: windows-2019
