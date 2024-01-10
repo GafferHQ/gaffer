@@ -106,11 +106,10 @@ namespace
 
 const std::string g_lightAttributePattern = "light *:light";
 
-const Color3f g_lightToolHandleColor = Color3f( 0.825, 0.720f, 0.230f );
+const Color3f g_lightToolArcColor = Color3f( 0.825, 0.720f, 0.230f );
 
-// Color from `StandardLightVisualiser`
-const Color3f g_lightToolHighlightColor = Color3f( 1.0f, 0.835f, 0.07f );
-const Color4f g_lightToolHighlightColor4 = Color4f( g_lightToolHighlightColor.x, g_lightToolHighlightColor.y, g_lightToolHighlightColor.z, 1.f );
+const Color3f g_lightToolColor = Color3f( 0.850f, 0.345f, 0.129f );
+const Color4f g_lightToolColor4 = Color4f( g_lightToolColor.x, g_lightToolColor.y, g_lightToolColor.z, 1.f );
 
 const Color4f g_lightToolDisabledColor4 = Color4f( 0.4f, 0.4f, 0.4f, 1.f );
 
@@ -1219,15 +1218,14 @@ class LightToolHandle : public Handle
 			);
 
 			auto standardStyle = runTimeCast<const StandardStyle>( style );
-			assert( standardStyle );
-			const Color3f highlightColor3 = standardStyle->getColor( StandardStyle::Color::HighlightColor );
+			const Color3f highlightColor3 = standardStyle ? standardStyle->getColor( StandardStyle::Color::HighlightColor ) : Color3f( 0.466, 0.612, 0.741 );
 			const Color4f highlightColor4 = Color4f( highlightColor3.x, highlightColor3.y, highlightColor3.z, 1.f );
 
 			const bool enabled = allInspectionsEnabled();
 
 			group->getState()->add(
 				new IECoreGL::Color(
-					enabled ? ( highlighted ? g_lightToolHighlightColor4 : highlightColor4 ) : g_lightToolDisabledColor4
+					enabled ? ( highlighted ? highlightColor4 : g_lightToolColor4 ) : g_lightToolDisabledColor4
 				)
 			);
 
@@ -1468,8 +1466,8 @@ class SpotLightHandle : public LightToolHandle
 				IECoreScene::MeshPrimitivePtr previousSolidArc = nullptr;
 				IECoreScene::MeshPrimitivePtr currentSolidArc = nullptr;
 
-				const Color3f previousColor = g_lightToolHandleColor * g_highlightMultiplier;
-				const Color3f currentColor = g_lightToolHandleColor;
+				const Color3f previousColor = g_lightToolArcColor * g_highlightMultiplier;
+				const Color3f currentColor = g_lightToolArcColor;
 
 				const float arcWidth = g_dragArcWidth * ::rasterScaleFactor( this, V3f( 0, 0, -m_arcRadius ) );
 				previousSolidArc = solidArc(
