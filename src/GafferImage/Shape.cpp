@@ -112,7 +112,6 @@ Shape::Shape( const std::string &name )
 	merge->operationPlug()->setValue( Merge::Over );
 
 	outPlug()->setInput( merge->outPlug() );
-	outPlug()->setFlags( Gaffer::Plug::Serialisable, false );
 }
 
 Shape::~Shape()

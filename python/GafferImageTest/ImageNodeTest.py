@@ -34,7 +34,7 @@
 #
 ##########################################################################
 
-import os
+import inspect
 import unittest
 import threading
 import imath
@@ -105,6 +105,44 @@ class ImageNodeTest( GafferImageTest.ImageTestCase ) :
 
 		self.assertNodesConstructWithDefaultValues( GafferImage )
 		self.assertNodesConstructWithDefaultValues( GafferImageTest )
+
+	def testMetadataExpression( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["checker"] = GafferImage.Checkerboard()
+
+		script["metadata"] = GafferImage.ImageMetadata()
+		script["metadata"]["in"].setInput( script["checker"]["out"] )
+		script["metadata"]["metadata"].addChild( Gaffer.NameValuePlug( "test", "testValue", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+
+		script["dot"] = Gaffer.Dot()
+		script["dot"].setup( script["metadata"]["out"] )
+		script["dot"]["in"].setInput( script["metadata"]["out"] )
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression( inspect.cleandoc(
+			"""
+			m = parent["metadata"]["out"]["metadata"]
+			m["test"] = m["test"].value + "Modified"
+			parent["dot"]["in"]["metadata"] = m
+			"""
+		) )
+
+		def assertExpectedImage( image ) :
+
+			self.assertImagesEqual( image, script["metadata"]["out"], ignoreMetadata = True )
+			self.assertEqual( image.metadata()["test"], IECore.StringData( "testValueModified" ) )
+
+		assertExpectedImage( script["dot"]["out"] )
+
+		script2 = Gaffer.ScriptNode()
+		script2.execute( script.serialise() )
+
+		print( script2["dot"]["out"]["dataWindow"].source().fullName() )
+
+		assertExpectedImage( script2["dot"]["out"] )
+		self.assertEqual( script2["expression"].getExpression(), script["expression"].getExpression() )
 
 	def setUp( self ) :
 

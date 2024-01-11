@@ -77,11 +77,7 @@ ImagePlug::ImagePlug( const std::string &name, Direction direction, unsigned fla
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 
-	// we don't want the children to be serialised in any way - we always create
-	// them ourselves in this constructor so they aren't Dynamic, and we don't ever
-	// want to store their values because they are meaningless without an input
-	// connection, so they aren't Serialisable either.
-	unsigned childFlags = flags & ~(Dynamic | Serialisable);
+	const unsigned childFlags = flags & ~Dynamic;
 
 	addChild(
 		new StringVectorDataPlug(
