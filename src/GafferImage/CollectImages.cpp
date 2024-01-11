@@ -728,7 +728,11 @@ void CollectImages::hashChannelData( const GafferImage::ImagePlug *parent, const
 		if( !BufferAlgo::empty( validBound ) )
 		{
 			h.append( inputChannelDataHash );
-			h.append( BufferAlgo::intersection( inputDataWindow, tileBound ) );
+			// Work around strange Box2i hashing behaviour in GCC 11, though it would be
+			// preferable to fix this in MurmurHash.
+			const Box2i boundIntersection = BufferAlgo::intersection( inputDataWindow, tileBound );
+			h.append( boundIntersection.min );
+			h.append( boundIntersection.max );
 		}
 	}
 }
