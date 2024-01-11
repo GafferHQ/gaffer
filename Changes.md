@@ -16,6 +16,7 @@ Improvements
 - OpenColorIOContext : Added file browser for `config` plug.
 - Layouts : Added the ability to load layouts containing editors that aren't currently available. This allows layouts containing new editors introduced in Gaffer 1.4 to be loaded in Gaffer 1.3.
 - LightTool : Changed the color of the non-highlighted handles to orange and the highlighted handles to cyan for consistency with other highlight colors.
+- Outputs : Variable substitutions are now applied to `gaffer:context:*` image metadata values. This is needed when the value of a context variable contains references to other variables, with the default value for `project:rootDirectory` being one example.
 
 Fixes
 -----

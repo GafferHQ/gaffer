@@ -118,6 +118,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 
 		s = Gaffer.ScriptNode()
 		s["variables"].addChild( Gaffer.NameValuePlug( "a", "A", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+		s["variables"].addChild( Gaffer.NameValuePlug( "b", "${a}", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
 
 		s["s"] = GafferScene.Sphere()
 
@@ -148,6 +149,7 @@ class InteractiveRenderTest( GafferSceneTest.SceneTestCase ) :
 		self.assertEqual( headers["gaffer:version"], IECore.StringData( Gaffer.About.versionString() ) )
 		self.assertEqual( headers["gaffer:sourceScene"], IECore.StringData( "r.__adaptedIn" ) )
 		self.assertEqual( headers["gaffer:context:a"], IECore.StringData( "A" ) )
+		self.assertEqual( headers["gaffer:context:b"], IECore.StringData( "A" ) )
 
 	def testAddAndRemoveOutput( self ):
 

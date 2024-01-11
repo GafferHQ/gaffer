@@ -1605,11 +1605,15 @@ ConstOutputPtr addGafferOutputParameters( const Output *output, const ScenePlug 
 			case IECore::BoolDataTypeId :
 			case IECore::IntDataTypeId :
 			case IECore::FloatDataTypeId :
-			case IECore::StringDataTypeId :
 			case IECore::V3fDataTypeId :
 			case IECore::Color3fDataTypeId :
 			case IECore::Color4fDataTypeId :
 				param->writable()["header:gaffer:context:" + name.string()] = data;
+				break;
+			case IECore::StringDataTypeId :
+				param->writable()["header:gaffer:context:" + name.string()] = new StringData(
+					context->substitute( static_cast<const StringData *>( data.get() )->readable() )
+				);
 				break;
 			default :
 				IECore::msg(
