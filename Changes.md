@@ -1,5 +1,5 @@
-1.3.x.x (relative to 1.3.9.0)
-=======
+1.3.10.0 (relative to 1.3.9.0)
+========
 
 Features
 --------
@@ -15,6 +15,7 @@ Improvements
 - USDLight : Added file browser for `shaping:ies:file` parameter.
 - OpenColorIOContext : Added file browser for `config` plug.
 - Layouts : Added the ability to load layouts containing editors that aren't currently available. This allows layouts containing new editors introduced in Gaffer 1.4 to be loaded in Gaffer 1.3.
+- TranslateTool, RotateTool : Added tooltip to the upper left corner of the Viewer explaining how to use the target modes.
 - LightTool : Changed the color of the non-highlighted handles to orange and the highlighted handles to cyan for consistency with other highlight colors.
 - Outputs : Variable substitutions are now applied to `gaffer:context:*` image metadata values. This is needed when the value of a context variable contains references to other variables, with the default value for `project:rootDirectory` being one example.
 
@@ -34,11 +35,6 @@ API
   - `path:bookmarks`
   - `fileSystemPath:extensions`
   - `fileSystemPath:extensionsLabel`
-
-Improvements
-------------
-
-- Translate and Rotate tools : Added viewer tip to the upper left corner of the viewer explaining how to use the target modes.
 
 1.3.9.0 (relative to 1.3.8.0)
 =======
