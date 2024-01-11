@@ -336,7 +336,7 @@ class DistanceHandle : public Handle
 
 	public :
 
-		DistanceHandle()
+		DistanceHandle( const bool requiresPivot ) : m_requiresPivot( requiresPivot )
 		{
 
 		}
@@ -388,6 +388,11 @@ class DistanceHandle : public Handle
 		void setTransformToSceneSpace( const M44f &t )
 		{
 			m_transformToSceneSpace = t;
+		}
+
+		void setRequiresPivot( const bool requiresPivot )
+		{
+			m_requiresPivot = requiresPivot;
 		}
 
 	protected :
@@ -447,7 +452,7 @@ class DistanceHandle : public Handle
 
 			const M44f fullTransformInverse = fullTransform().inverse();
 
-			if( m_shadowPivot )
+			if( m_shadowPivot && m_requiresPivot )
 			{
 				IECoreGL::GroupPtr pivotGroup = new IECoreGL::Group;
 				pivotGroup->getState()->add(
@@ -490,20 +495,20 @@ class DistanceHandle : public Handle
 				);
 
 				group->addChild( coneGroup );
-			}
 
-			if( m_shadowTarget && m_shadowPivot )
-			{
-				IECoreGL::GroupPtr lineGroup = new IECoreGL::Group;
-				lineGroup->addChild(
-					cone(
-						localTarget.length() - coneHeightOffset.z,
-						lineRadius * ::rasterScaleFactor( this, V3f( 0 ) ),
-						lineRadius * ::rasterScaleFactor( this, localTarget )
-					)
-				);
+				if( !m_requiresPivot || m_shadowPivot )
+				{
+					IECoreGL::GroupPtr lineGroup = new IECoreGL::Group;
+					lineGroup->addChild(
+						cone(
+							localTarget.length() - coneHeightOffset.z,
+							lineRadius * ::rasterScaleFactor( this, V3f( 0 ) ),
+							lineRadius * ::rasterScaleFactor( this, localTarget )
+						)
+					);
 
-				group->addChild( lineGroup );
+					group->addChild( lineGroup );
+				}
 			}
 
 			group->render( glState );
@@ -533,6 +538,8 @@ class DistanceHandle : public Handle
 		LinearDrag m_drag;
 		float m_startDistance;
 
+		bool m_requiresPivot;
+
 };
 
 }  // namespace
@@ -547,7 +554,7 @@ LightPositionTool::LightPositionTool( SceneView *view, const std::string &name )
 	m_targetMode( TargetMode::None ),
 	m_draggingTarget( false )
 {
-	m_distanceHandle = new DistanceHandle();
+	m_distanceHandle = new DistanceHandle( true );
 	m_distanceHandle->setRasterScale( 0 );
 	handles()->setChild( "distanceHandle", m_distanceHandle );
 	m_distanceHandle->dragBeginSignal().connectFront( boost::bind( &LightPositionTool::handleDragBegin, this, ::_1 ) );
@@ -908,6 +915,11 @@ void LightPositionTool::plugSet( Plug *plug )
 	if( plug == activePlug() && !activePlug()->getValue() && getTargetMode() != TargetMode::None )
 	{
 		setTargetMode( TargetMode::None );
+	}
+	else if( plug == modePlug() )
+	{
+		auto h = static_cast<DistanceHandle *>( m_distanceHandle.get() );
+		h->setRequiresPivot( modePlug()->getValue() == (int)Mode::Shadow );
 	}
 }
 
