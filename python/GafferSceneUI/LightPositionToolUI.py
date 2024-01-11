@@ -90,6 +90,8 @@ Gaffer.Metadata.registerNode(
 			"preset:Shadow", GafferSceneUI.LightPositionTool.Mode.Shadow,
 			"preset:Highlight", GafferSceneUI.LightPositionTool.Mode.Highlight,
 
+			"viewer:cyclePresetShortcut", "O",
+
 		]
 
 	}
