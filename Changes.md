@@ -48,6 +48,7 @@ Improvements
   - Added `importanceSampleFilter` plug to DelightOptions, providing denoiser-compatible output.
   - Matched DelightOptions default values for `oversampling` and `shadingSamples` to 3Delight's own default values.
 - GraphEditor : Improved logic used to connect a newly created node to the selected nodes.
+- ScenePlug : Child plugs are now serialisable. Among other things, this enables them to be driven by expressions.
 
 Fixes
 -----
@@ -132,6 +133,7 @@ Breaking Changes
 - 3Delight : Changed NSI scene description export with `.nsi` file extension from ASCII to binary (`.nsia` is used for ASCII now).
 - OSLShader : Output parameters are now loaded onto the `out` plug for all types (`surface`, `displacement` etc), not just `shader`.
 - DelightOptions : Changed default values for `oversampling` and `shadingSamples` plugs.
+- SceneProcessor : Subclasses no longer serialise internal connections to the `out` plug.
 
 Build
 -----
