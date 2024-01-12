@@ -1,3 +1,16 @@
+1.3.x.x (relative to 1.3.10.0)
+=======
+
+Improvements
+------------
+
+- ArnoldShader : Added a colour space presets menu for the `image` shader.
+
+API
+---
+
+- ArnoldShaderUI : Added support for `colorSpace` widget type metadata, allowing an OpenColorIO colour space to be chosen.
+
 1.3.10.0 (relative to 1.3.9.0)
 ========
 
