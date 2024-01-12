@@ -2174,6 +2174,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		script["shotDispatcher"] = self.TestDispatcher()
 		script["shotDispatcher"]["tasks"][0].setInput( script["node"]["task"] )
 		script["shotDispatcher"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.FullRange )
+		script["shotDispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() )
 
 		shotList = [
 			{ "name" : "shotA", "start" : 1, "end" : 10 },
@@ -2210,6 +2211,7 @@ class DispatcherTest( GafferTest.TestCase ) :
 		script["dispatcher"]["tasks"][0].setInput( script["shotWedge"]["task"] )
 		script["dispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() )
 		script["dispatcher"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CurrentFrame )
+		script["dispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() )
 
 		script["dispatcher"]["task"].execute()
 
@@ -2222,6 +2224,76 @@ class DispatcherTest( GafferTest.TestCase ) :
 				self.assertEqual( script["node"].log[i].context["frameRange:start"], shot["start"] )
 				self.assertEqual( script["node"].log[i].context["frameRange:end"], shot["end"] )
 				i += 1
+
+	def testNoSignalsForNestedDispatch( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["node"] = GafferDispatchTest.LoggingTaskNode()
+
+		script["innerDispatcher"] = self.TestDispatcher()
+		script["innerDispatcher"]["tasks"][0].setInput( script["node"]["task"] )
+		script["innerDispatcher"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CurrentFrame )
+		script["innerDispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+
+		script["outerDispatcher"] = self.TestDispatcher()
+		script["outerDispatcher"]["tasks"][0].setInput( script["innerDispatcher"]["task"] )
+		script["outerDispatcher"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CurrentFrame )
+		script["outerDispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+
+		preDispatchSlot = GafferTest.CapturingSlot( GafferDispatch.Dispatcher.preDispatchSignal() )
+		dispatchSlot = GafferTest.CapturingSlot( GafferDispatch.Dispatcher.dispatchSignal() )
+		postDispatchSlot = GafferTest.CapturingSlot( GafferDispatch.Dispatcher.postDispatchSignal() )
+
+		script["outerDispatcher"]["task"].execute()
+
+		self.assertEqual( len( preDispatchSlot ), 1 )
+		self.assertEqual( len( dispatchSlot ), 1 )
+		self.assertEqual( len( postDispatchSlot ), 1 )
+
+		self.assertEqual( preDispatchSlot[0], ( script["outerDispatcher"], ) )
+		self.assertEqual( dispatchSlot[0], ( script["outerDispatcher"], ) )
+		self.assertEqual( postDispatchSlot[0], ( script["outerDispatcher"], True ) )
+
+	def testPostDispatchSignalSuccess( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["node"] = GafferDispatchTest.LoggingTaskNode()
+
+		script["dispatcher"] = self.TestDispatcher()
+		script["dispatcher"]["tasks"][0].setInput( script["node"]["task"] )
+		script["dispatcher"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CurrentFrame )
+		script["dispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+
+		postDispatchSlot = GafferTest.CapturingSlot( GafferDispatch.Dispatcher.postDispatchSignal() )
+
+		script["dispatcher"]["task"].execute()
+		self.assertEqual( len( postDispatchSlot ), 1 )
+		self.assertEqual( postDispatchSlot[0], ( script["dispatcher"], True ) )
+
+		preDispatchConnection = GafferDispatch.Dispatcher.preDispatchSignal().connect(
+			lambda dispatcher : True, scoped = False
+		)
+
+		script["dispatcher"]["task"].execute()
+		self.assertEqual( len( postDispatchSlot ), 2 )
+		self.assertEqual( postDispatchSlot[1], ( script["dispatcher"], False ) )
+
+		preDispatchConnection.disconnect()
+
+		script["dispatcher"]["task"].execute()
+		self.assertEqual( len( postDispatchSlot ), 3 )
+		self.assertEqual( postDispatchSlot[2], ( script["dispatcher"], True ) )
+
+		script["badCommand"] = GafferDispatch.PythonCommand()
+		script["badCommand"]["command"].setValue( "bleurgh" )
+		script["node"]["preTasks"][0].setInput( script["badCommand"]["task"] )
+
+		with self.assertRaises( Gaffer.ProcessException ) :
+			script["dispatcher"]["task"].execute()
+		self.assertEqual( len( postDispatchSlot ), 4 )
+		self.assertEqual( postDispatchSlot[3], ( script["dispatcher"], False ) )
 
 if __name__ == "__main__":
 	unittest.main()

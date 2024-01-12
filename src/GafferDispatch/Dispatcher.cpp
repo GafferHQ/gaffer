@@ -750,31 +750,51 @@ class DispatcherSignalGuard
 
 	public:
 
-		DispatcherSignalGuard( const Dispatcher *dispatcher ) : m_dispatchSuccessful( false ), m_dispatcher( dispatcher )
+		DispatcherSignalGuard( const Dispatcher *dispatcher ) : m_cancelledByPreDispatch( false ), m_dispatcher( dispatcher )
 		{
-			m_cancelledByPreDispatch = Dispatcher::preDispatchSignal()( m_dispatcher );
+			if( Context::current()->getIfExists<string>( g_jobDirectoryContextEntry ) )
+			{
+				// We're in a nested dispatch. We don't want to emit any signals
+				// in this case because we believe that most handlers that exist
+				// in the wild are not expecting it, having been written before
+				// nested dispatch was supported. It also seems that some such
+				// handlers are modifying the graph before dispatch, which was
+				// bad before, but would be even more likely to cause problems
+				// were it to be done repeatedly for nested dispatchers inside
+				// an outer dispatch.
+				m_dispatcher = nullptr;
+			}
+
+			if( m_dispatcher )
+			{
+				m_cancelledByPreDispatch = Dispatcher::preDispatchSignal()( m_dispatcher );
+			}
 		}
 
 		~DispatcherSignalGuard()
 		{
-			Dispatcher::postDispatchSignal()( m_dispatcher, (m_dispatchSuccessful && ( !m_cancelledByPreDispatch )) );
+			if( m_dispatcher )
+			{
+				Dispatcher::postDispatchSignal()( m_dispatcher, !std::uncaught_exceptions() && !m_cancelledByPreDispatch );
+			}
 		}
 
-		bool cancelledByPreDispatch( )
+		bool cancelledByPreDispatch()
 		{
 			return m_cancelledByPreDispatch;
 		}
 
-		void success()
+		void emitDispatchSignal()
 		{
-			m_dispatchSuccessful = true;
+			if( m_dispatcher )
+			{
+				Dispatcher::dispatchSignal()( m_dispatcher );
+			}
 		}
 
 	private:
 
 		bool m_cancelledByPreDispatch;
-		bool m_dispatchSuccessful;
-
 		const Dispatcher *m_dispatcher;
 
 };
@@ -889,7 +909,7 @@ void Dispatcher::execute() const
 	Context::Scope jobScope( jobContext.get() );
 	createJobDirectory( script, jobContext.get() );
 
-	dispatchSignal()( this );
+	signalGuard.emitDispatchSignal();
 
 	std::vector<FrameList::Frame> frames;
 	FrameListPtr frameList = frameRange();
@@ -936,11 +956,6 @@ void Dispatcher::execute() const
 	{
 		doDispatch( batcher.rootBatch() );
 	}
-
-	// inform the guard that the process has been completed, so it can pass this info to
-	// postDispatchSignal():
-
-	signalGuard.success();
 }
 
 void Dispatcher::executeAndPruneImmediateBatches( TaskBatch *batch, bool immediate ) const
