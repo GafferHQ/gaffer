@@ -152,6 +152,8 @@ Disconnect plug                      | {{leftClick}} and drag connection to back
 Insert node onto connection          | {{leftClick}} and drag node onto connection
 Auto-arrange selected nodes          | {kbd}`Ctrl` + {kbd}`L`
 Duplicate outgoing connection        | {kbd}`Shift` + {{leftClick}} and drag connection just before in plug
+Disconnect connections under cursor  | {kbd}`X` + {{leftClick}}
+Disconnect connections under line    | {kbd}`X` + {{leftClick}} and drag to draw a line, then release {{leftClick}}
 
 ### Focus Node ###
 

@@ -34,6 +34,8 @@
 				"pointerRemove",
 				"pointerRotate",
 				"pointerPivot",
+				"pointerCut",
+				"pointerNotEditable",
 			]
 		},
 

@@ -71,6 +71,8 @@ static Registry &registry()
 		r["remove"] = new Pointer( "pointerRemove.png", Imath::V2i( 18, 11 ) );
 		r["rotate"] = new Pointer( "pointerRotate.png", Imath::V2i( 10 ) );
 		r["pivot"] = new Pointer( "pointerPivot.png", Imath::V2i( 13, 0 ) );
+		r["cut"] = new Pointer( "pointerCut.png", Imath::V2i( 11, 7 ) );
+		r["notEditable"] = new Pointer( "pointerNotEditable.png", Imath::V2i( 10 ) );
 	}
 	return r;
 }
