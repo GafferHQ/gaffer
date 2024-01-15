@@ -42,6 +42,7 @@ Improvements
   - Added support for reading `dl:` and `user:` attributes from shaders.
   - Added `importanceSampleFilter` plug to DelightOptions, providing denoiser-compatible output.
   - Matched DelightOptions default values for `oversampling` and `shadingSamples` to 3Delight's own default values.
+- GraphEditor : Improved logic used to connect a newly created node to the selected nodes.
 
 Fixes
 -----

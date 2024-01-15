@@ -89,6 +89,7 @@ class GAFFERUI_API StandardGraphLayout : public GraphLayout
 		struct Endpoint
 		{
 			Gaffer::Plug *plug;
+			Imath::V3f position;
 			Imath::V3f tangent;
 		};
 

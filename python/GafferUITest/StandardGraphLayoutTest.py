@@ -153,6 +153,45 @@ class StandardGraphLayoutTest( GafferUITest.TestCase ) :
 					else :
 						self.assertIsNone( plug.getInput() )
 
+	def testConnectNodeOrder( self ) :
+
+		for reverseSelection in ( True, False ) :
+
+			with self.subTest( reverseSelection = reverseSelection ) :
+
+				script = Gaffer.ScriptNode()
+
+				script["node1"] = Gaffer.Node()
+				script["node1"]["out"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+				Gaffer.Metadata.registerValue( script["node1"]["out"], "noduleLayout:section", "bottom" )
+
+				script["node2"] = Gaffer.Node()
+				script["node2"]["out"] = Gaffer.IntPlug( direction = Gaffer.Plug.Direction.Out, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic )
+				Gaffer.Metadata.registerValue( script["node2"]["out"], "noduleLayout:section", "bottom" )
+
+				script["node3"] = self.LayoutNode()
+
+				if reverseSelection :
+					selection = Gaffer.StandardSet( [ script["node2" ], script["node1"] ] )
+				else :
+					selection = Gaffer.StandardSet( [ script["node1" ], script["node2"] ] )
+
+				graph = GafferUI.GraphGadget( script )
+				graph.setNodePosition(
+					script["node1"],
+					graph.getNodePosition( script["node2"] ) - imath.V2f(
+						graph.nodeGadget( script["node1"] ).bound().size().x + graph.nodeGadget( script["node2"] ).bound().size().x,
+						0
+					)
+				)
+
+				self.assertTrue(
+					graph.getLayout().connectNode( graph, script["node3"], selection )
+				)
+
+				self.assertEqual( script["node3"]["top0"].getInput(), script["node1"]["out"] )
+				self.assertEqual( script["node3"]["top1"].getInput(), script["node2"]["out"] )
+
 	def testConnectNodes( self ) :
 
 		s = Gaffer.ScriptNode()

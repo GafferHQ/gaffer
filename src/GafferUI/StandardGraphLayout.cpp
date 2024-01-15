@@ -1362,6 +1362,30 @@ bool StandardGraphLayout::connectNodeInternal( GraphGadget *graph, Gaffer::Node 
 		return false;
 	}
 
+	// Sort outputs spatially, left to right and then bottom to top. This
+	// makes the result deterministic regardless of the ordering of
+	// `potentialInputs`, and avoids the creation of intersecting connections
+	// (because our iteration order for the plugs on `node` is naturally
+	// left to right).
+
+	std::sort(
+		outputs.begin(), outputs.end(),
+		[] ( const Endpoint &e1, const Endpoint &e2 ) {
+			for( int i = 0; i < 3; ++i )
+			{
+				if( e1.position[i] < e2.position[i] )
+				{
+					return true;
+				}
+				else if( e2.position[i] < e1.position[i] )
+				{
+					return false;
+				}
+			}
+			return false;
+		}
+	);
+
 	// If we're trying to connect a Dot, Switch, BoxOut, ContextProcessor
 	// or Loop, then we may need to give it plugs first.
 	/// \todo We should be able to do this by talking to PlugAdders instead of
@@ -1531,7 +1555,7 @@ size_t StandardGraphLayout::outputs( NodeGadget *nodeGadget, std::vector<Endpoin
 		{
 			if( !runTimeCast<CompoundNodule>( nodule ) )
 			{
-				endpoints.push_back( { it->get(), nodeGadget->connectionTangent( nodule ) } );
+				endpoints.push_back( { it->get(), nodule->transformedBound( nullptr ).center(), nodeGadget->connectionTangent( nodule ) } );
 			}
 		}
 	}
@@ -1567,7 +1591,7 @@ size_t StandardGraphLayout::unconnectedInputs( NodeGadget *nodeGadget, std::vect
 		}
 		if( auto *nodule = nodeGadget->nodule( it->get() ) )
 		{
-			endpoints.push_back( { it->get(), nodeGadget->connectionTangent( nodule ) } );
+			endpoints.push_back( { it->get(), nodule->transformedBound( nullptr ).center(), nodeGadget->connectionTangent( nodule ) } );
 		}
 	}
 	return endpoints.size();
