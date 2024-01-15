@@ -53,6 +53,7 @@ Fixes
   - Fixed output of infinite values, which were previously being clamped.
   - Results for min/max now correctly reflect zero values outside the data window.
 - NodeMenu, NodeEditor : `userDefault` metadata is now evaluated in the script context, so it can depend on script variables.
+- 3Delight : Fixed loading of surface shaders such as `dlStandard` so that they can be connected to the inputs of shaders such as `dlLayeredMaterial`.
 
 API
 ---
@@ -119,6 +120,7 @@ Breaking Changes
 - ShuffleUI : Removed `nodeMenuCreateCommand()`.
 - ImageStatsUI : Removed `postCreate()`.
 - 3Delight : Changed NSI scene description export with `.nsi` file extension from ASCII to binary (`.nsia` is used for ASCII now).
+- OSLShader : Output parameters are now loaded onto the `out` plug for all types (`surface`, `displacement` etc), not just `shader`.
 
 Build
 -----

@@ -1208,14 +1208,17 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 
 		self.assertEqual( shaderAssignment["out"].attributes( "/plane" ).keys(), [ "osl:surface" ] )
 
-	def testConstantOutPlug( self ) :
+	def testSurfaceShaderOutParameters( self ) :
 
-		# For compatibility with Arnold, we hack an output closure
-		# parameter onto our Constant shader, but we don't want that
-		# to affect the way we represent the output plug in Gaffer.
+		# OSL is moving away from strong typing for shaders, and there
+		# are uses for connecting surface shaders as inputs to other shaders
+		# (layered shading etc). So we always load the output parameters
+		# for every shader, even if they are a surface shader.
+
 		shader = GafferOSL.OSLShader()
 		shader.loadShader( "Surface/Constant" )
-		self.assertEqual( len( shader["out"].children() ), 0 )
+		self.assertEqual( shader["out"].keys(), [ "out" ] )
+		self.assertIsInstance( shader["out"]["out"], GafferOSL.ClosurePlug )
 
 	def testShadingEngineDeduplicate( self ) :
 
@@ -1284,6 +1287,27 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		n.loadShader( s )
 
 		self.assertEqual( n["type"].getValue(), "osl:shader" )
+
+	def testLoadSurfaceWithOutputParameters( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["fileName"].setValue( pathlib.Path( __file__ ).parent / "scripts" / "surfaceWithOutputs-1.3.9.0.gfr" )
+		script.load()
+
+		# The script was saved from a version of Gaffer where we didn't load output parameters
+		# for surface shaders. But we expect to load them now.
+
+		self.assertEqual( script["Constant"]["out"].keys(), [ "out" ] )
+		self.assertIsInstance( script["Constant"]["out"]["out"], GafferOSL.ClosurePlug )
+
+		# And we expect the old connection from `Constant.out` to continue to work, even though
+		# we would now expect an equivalent connection to be made from `Constant.out.out`.
+
+		self.assertEqual( script["ShaderAssignment"]["shader"].getInput(), script["Constant"]["out"] )
+		self.assertIn( "osl:surface", script["ShaderAssignment"]["out"].attributes( "/sphere" ) )
+		network = script["ShaderAssignment"]["out"].attributes( "/sphere" )["osl:surface"]
+		self.assertIsInstance( network, IECoreScene.ShaderNetwork )
+		self.assertEqual( network.outputShader().name, "Surface/Constant" )
 
 if __name__ == "__main__":
 	unittest.main()
