@@ -86,10 +86,16 @@ class GAFFERUI_API StandardGraphLayout : public GraphLayout
 
 		bool connectNodeInternal( GraphGadget *graph, Gaffer::Node *node, Gaffer::Set *potentialInputs, bool insertIfPossible ) const;
 
-		size_t outputPlugs( NodeGadget *nodeGadget, std::vector<Gaffer::Plug *> &plugs ) const;
-		size_t outputPlugs( GraphGadget *graph, Gaffer::Set *nodes, std::vector<Gaffer::Plug *> &plugs ) const;
+		struct Endpoint
+		{
+			Gaffer::Plug *plug;
+			Imath::V3f tangent;
+		};
+
+		size_t outputs( NodeGadget *nodeGadget, std::vector<Endpoint> &endpoints ) const;
+		size_t outputs( GraphGadget *graph, Gaffer::Set *nodes, std::vector<Endpoint> &endpoints ) const;
 		Gaffer::Plug *correspondingOutput( const Gaffer::Plug *input ) const;
-		size_t unconnectedInputPlugs( NodeGadget *nodeGadget, std::vector<Gaffer::Plug *> &plugs ) const;
+		size_t unconnectedInputs( NodeGadget *nodeGadget, std::vector<Endpoint> &endpoints ) const;
 
 		float m_connectionScale;
 		float m_nodeSeparationScale;

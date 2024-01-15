@@ -1356,8 +1356,8 @@ bool StandardGraphLayout::connectNodeInternal( GraphGadget *graph, Gaffer::Node 
 	}
 
 	// get all visible output plugs we could potentially connect in to our node
-	vector<Plug *> outputPlugs;
-	if( !this->outputPlugs( graph, potentialInputs, outputPlugs ) )
+	vector<Endpoint> outputs;
+	if( !this->outputs( graph, potentialInputs, outputs ) )
 	{
 		return false;
 	}
@@ -1382,35 +1382,35 @@ bool StandardGraphLayout::connectNodeInternal( GraphGadget *graph, Gaffer::Node 
 	{
 		if( !dot->inPlug() )
 		{
-			dot->setup( outputPlugs.front() );
+			dot->setup( outputs.front().plug );
 		}
 	}
 	else if( NameSwitch *switchNode = runTimeCast<NameSwitch>( node ) )
 	{
 		if( !switchNode->inPlugs() )
 		{
-			switchNode->setup( outputPlugs.front() );
+			switchNode->setup( outputs.front().plug );
 		}
 	}
 	else if( Switch *switchNode = runTimeCast<Switch>( node ) )
 	{
 		if( !switchNode->inPlugs() )
 		{
-			switchNode->setup( outputPlugs.front() );
+			switchNode->setup( outputs.front().plug );
 		}
 	}
 	else if( BoxOut *boxOut = runTimeCast<BoxOut>( node ) )
 	{
 		if( !boxOut->plug() )
 		{
-			boxOut->setup( outputPlugs.front() );
+			boxOut->setup( outputs.front().plug );
 		}
 	}
 	else if( ContextProcessor *contextProcessor = runTimeCast<ContextProcessor>( node ) )
 	{
 		if( !contextProcessor->inPlug() )
 		{
-			if( ValuePlug *valuePlug = runTimeCast<ValuePlug>( outputPlugs.front() ) )
+			if( ValuePlug *valuePlug = runTimeCast<ValuePlug>( outputs.front().plug ) )
 			{
 				contextProcessor->setup( valuePlug );
 			}
@@ -1420,7 +1420,7 @@ bool StandardGraphLayout::connectNodeInternal( GraphGadget *graph, Gaffer::Node 
 	{
 		if( !loop->inPlug() )
 		{
-			if( ValuePlug *valuePlug = runTimeCast<ValuePlug>( outputPlugs.front() ) )
+			if( ValuePlug *valuePlug = runTimeCast<ValuePlug>( outputs.front().plug ) )
 			{
 				loop->setup( valuePlug );
 			}
@@ -1430,7 +1430,7 @@ bool StandardGraphLayout::connectNodeInternal( GraphGadget *graph, Gaffer::Node 
 	{
 		if( !editScope->inPlug() )
 		{
-			editScope->setup( outputPlugs.front() );
+			editScope->setup( outputs.front().plug );
 		}
 	}
 
@@ -1438,27 +1438,40 @@ bool StandardGraphLayout::connectNodeInternal( GraphGadget *graph, Gaffer::Node 
 
 	size_t numConnectionsMade = 0;
 	Plug *firstConnectionSrc = nullptr, *firstConnectionDst = nullptr;
-	vector<Plug *> inputPlugs;
-	unconnectedInputPlugs( nodeGadget, inputPlugs );
-	for( auto outputPlug : outputPlugs )
+	vector<Endpoint> inputs;
+	unconnectedInputs( nodeGadget, inputs );
+	for( const auto &output : outputs )
 	{
-		for( auto inputPlug : inputPlugs )
+		// Find the best destination for the source, based on
+		// how well the nodule tangents match.
+		Plug *bestDst = nullptr;
+		float bestScore = std::numeric_limits<float>::lowest();
+		for( const auto &input : inputs )
 		{
-			if( inputPlug->acceptsInput( outputPlug ) )
+			if( !input.plug->acceptsInput( output.plug ) )
 			{
-				inputPlug->setInput( outputPlug );
-				if( numConnectionsMade == 0 )
-				{
-					firstConnectionSrc = outputPlug;
-					firstConnectionDst = inputPlug;
-				}
-				numConnectionsMade += 1;
-				// some nodes dynamically add new inputs when we connect
-				// existing inputs, so we recalculate the input plugs
-				// to take account
-				unconnectedInputPlugs( nodeGadget, inputPlugs );
-				break;
+				continue;
 			}
+
+			const float score = input.tangent.dot( -output.tangent );
+			if( score > bestScore )
+			{
+				bestDst = input.plug;
+				bestScore = score;
+			}
+		}
+		if( bestDst )
+		{
+			bestDst->setInput( output.plug );
+			if( numConnectionsMade == 0 )
+			{
+				firstConnectionSrc = output.plug;
+				firstConnectionDst = bestDst;
+			}
+			numConnectionsMade += 1;
+			// Some nodes dynamically add new inputs when we connect existing
+			// inputs, so we recalculate the inputs to take account.
+			unconnectedInputs( nodeGadget, inputs );
 		}
 	}
 
@@ -1510,7 +1523,7 @@ bool StandardGraphLayout::connectNodeInternal( GraphGadget *graph, Gaffer::Node 
 	return numConnectionsMade;
 }
 
-size_t StandardGraphLayout::outputPlugs( NodeGadget *nodeGadget, std::vector<Gaffer::Plug *> &plugs ) const
+size_t StandardGraphLayout::outputs( NodeGadget *nodeGadget, std::vector<Endpoint> &endpoints ) const
 {
 	for( Plug::RecursiveOutputIterator it( nodeGadget->node() ); !it.done(); it++ )
 	{
@@ -1518,15 +1531,15 @@ size_t StandardGraphLayout::outputPlugs( NodeGadget *nodeGadget, std::vector<Gaf
 		{
 			if( !runTimeCast<CompoundNodule>( nodule ) )
 			{
-				plugs.push_back( it->get() );
+				endpoints.push_back( { it->get(), nodeGadget->connectionTangent( nodule ) } );
 			}
 		}
 	}
 
-	return plugs.size();
+	return endpoints.size();
 }
 
-size_t StandardGraphLayout::outputPlugs( GraphGadget *graph, Gaffer::Set *nodes, std::vector<Gaffer::Plug *> &plugs ) const
+size_t StandardGraphLayout::outputs( GraphGadget *graph, Gaffer::Set *nodes, std::vector<Endpoint> &endpoints ) const
 {
 	for( size_t i = 0; i < nodes->size(); i++ )
 	{
@@ -1536,24 +1549,28 @@ size_t StandardGraphLayout::outputPlugs( GraphGadget *graph, Gaffer::Set *nodes,
 			NodeGadget *nodeGadget = graph->nodeGadget( node );
 			if( nodeGadget )
 			{
-				outputPlugs( nodeGadget, plugs );
+				outputs( nodeGadget, endpoints );
 			}
 		}
 	}
-	return plugs.size();
+	return endpoints.size();
 }
 
-size_t StandardGraphLayout::unconnectedInputPlugs( NodeGadget *nodeGadget, std::vector<Plug *> &plugs ) const
+size_t StandardGraphLayout::unconnectedInputs( NodeGadget *nodeGadget, std::vector<Endpoint> &endpoints ) const
 {
-	plugs.clear();
+	endpoints.clear();
 	for( Plug::RecursiveInputIterator it( nodeGadget->node() ); !it.done(); it++ )
 	{
-		if( (*it)->getInput() == nullptr && nodeGadget->nodule( it->get() ) )
+		if( (*it)->getInput() )
 		{
-			plugs.push_back( it->get() );
+			continue;
+		}
+		if( auto *nodule = nodeGadget->nodule( it->get() ) )
+		{
+			endpoints.push_back( { it->get(), nodeGadget->connectionTangent( nodule ) } );
 		}
 	}
-	return plugs.size();
+	return endpoints.size();
 }
 
 Gaffer::Plug *StandardGraphLayout::correspondingOutput( const Gaffer::Plug *input ) const
