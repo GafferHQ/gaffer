@@ -1440,17 +1440,17 @@ bool StandardGraphLayout::connectNodeInternal( GraphGadget *graph, Gaffer::Node 
 	Plug *firstConnectionSrc = nullptr, *firstConnectionDst = nullptr;
 	vector<Plug *> inputPlugs;
 	unconnectedInputPlugs( nodeGadget, inputPlugs );
-	for( vector<Plug *>::const_iterator oIt = outputPlugs.begin(), oEIt = outputPlugs.end(); oIt != oEIt; oIt++ )
+	for( auto outputPlug : outputPlugs )
 	{
-		for( vector<Plug *>::const_iterator iIt = inputPlugs.begin(), iEIt = inputPlugs.end(); iIt != iEIt; iIt++ )
+		for( auto inputPlug : inputPlugs )
 		{
-			if( (*iIt)->acceptsInput( *oIt ) )
+			if( inputPlug->acceptsInput( outputPlug ) )
 			{
-				(*iIt)->setInput( *oIt );
+				inputPlug->setInput( outputPlug );
 				if( numConnectionsMade == 0 )
 				{
-					firstConnectionSrc = *oIt;
-					firstConnectionDst = *iIt;
+					firstConnectionSrc = outputPlug;
+					firstConnectionDst = inputPlug;
 				}
 				numConnectionsMade += 1;
 				// some nodes dynamically add new inputs when we connect
@@ -1473,24 +1473,23 @@ bool StandardGraphLayout::connectNodeInternal( GraphGadget *graph, Gaffer::Node 
 			// Find the destination plugs at the end of the existing
 			// connections we want to insert into.
 			vector<Plug *> insertionDsts;
-			const Plug::OutputContainer &outputs = firstConnectionSrc->outputs();
-			for( Plug::OutputContainer::const_iterator it = outputs.begin(); it != outputs.end(); ++it )
+			for( auto output : firstConnectionSrc->outputs() )
 			{
 				// ignore outputs that aren't visible:
-				NodeGadget *nodeGadget = graph->nodeGadget( (*it)->node() );
-				if( !nodeGadget || !nodeGadget->nodule( *it ) )
+				NodeGadget *nodeGadget = graph->nodeGadget( output->node() );
+				if( !nodeGadget || !nodeGadget->nodule( output ) )
 				{
 					continue;
 				}
 				// Ignore the output which we made when connecting the node above
-				if( *it == firstConnectionDst )
+				if( output == firstConnectionDst )
 				{
 					continue;
 				}
-				if( (*it)->acceptsInput( correspondingOutput ) )
+				if( output->acceptsInput( correspondingOutput ) )
 				{
 					// Insertion accepted - store for reconnection
-					insertionDsts.push_back( *it );
+					insertionDsts.push_back( output );
 				}
 				else
 				{
@@ -1501,9 +1500,9 @@ bool StandardGraphLayout::connectNodeInternal( GraphGadget *graph, Gaffer::Node 
 				}
 			}
 			// Reconnect the destination plugs such that we've inserted our node
-			for( vector<Plug *>::const_iterator it = insertionDsts.begin(), eIt = insertionDsts.end(); it != eIt; ++it )
+			for( auto insertDst : insertionDsts )
 			{
-				(*it)->setInput( correspondingOutput );
+				insertDst->setInput( correspondingOutput );
 			}
 		}
 	}
