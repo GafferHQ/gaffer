@@ -1271,14 +1271,7 @@ void OSLShader::loadShader( const std::string &shaderName, bool keepExistingValu
 		setChild( "out", outPlug );
 	}
 
-	if( query->shadertype() == "shader" )
-	{
-		loadShaderParameters( *query, outPlug(), parameterMetadata );
-	}
-	else
-	{
-		outPlug()->clearChildren();
-	}
+	loadShaderParameters( *query, outPlug(), parameterMetadata );
 
 	if( static_cast<bool>( outPlug()->children().size() ) != outPlugHadChildren )
 	{
