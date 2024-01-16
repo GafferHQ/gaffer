@@ -312,5 +312,17 @@ class TractorDispatcherTest( GafferTest.TestCase ) :
 			task.cmds[0].argv
 		)
 
+	def testMissingTractorAPI( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["pythonCommand"] = GafferDispatch.PythonCommand()
+
+		script["dispatcher"] = self.__dispatcher()
+		script["dispatcher"]["tasks"][0].setInput( script["pythonCommand"]["task"] )
+
+		with unittest.mock.patch( "GafferTractor.tractorAPI", side_effect = ImportError() ) :
+			with self.assertRaisesRegex( RuntimeError, "Tractor API not found" ) :
+				script["dispatcher"]["task"].execute()
+
 if __name__ == "__main__":
 	unittest.main()

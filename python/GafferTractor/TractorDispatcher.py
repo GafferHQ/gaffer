@@ -48,8 +48,6 @@ class TractorDispatcher( GafferDispatch.Dispatcher ) :
 
 		GafferDispatch.Dispatcher.__init__( self, name )
 
-		self.__tractorAPI = GafferTractor.tractorAPI()
-
 		self["service"] = Gaffer.StringPlug( defaultValue = '"*"' )
 		self["envKey"] = Gaffer.StringPlug()
 
@@ -69,6 +67,14 @@ class TractorDispatcher( GafferDispatch.Dispatcher ) :
 
 	def _doDispatch( self, rootBatch ) :
 
+		# If the Tractor API isn't available, issue an informative
+		# error.
+
+		try :
+			GafferTractor.tractorAPI()
+		except ImportError :
+			raise RuntimeError( "Tractor API not found. Please ensure the `tractor` Python module is accessible on the `PYTHONPATH`." ) from None
+
 		# Construct an object to track everything we need
 		# to generate the job. I have a suspicion that at
 		# some point we'll want a Dispatcher::Job base class
@@ -83,7 +89,7 @@ class TractorDispatcher( GafferDispatch.Dispatcher ) :
 
 		context = Gaffer.Context.current()
 
-		job = self.__tractorAPI.Job(
+		job = GafferTractor.tractorAPI().Job(
 			title = self["jobName"].getValue() or "untitled",
 			service = self["service"].getValue(),
 			envkey = self["envKey"].getValue().split(),
@@ -143,7 +149,7 @@ class TractorDispatcher( GafferDispatch.Dispatcher ) :
 		# Make a task.
 
 		nodeName = batch.node().relativeName( dispatchData["scriptNode"] )
-		task = self.__tractorAPI.Task( title = nodeName )
+		task = GafferTractor.tractorAPI().Task( title = nodeName )
 
 		if batch.frames() :
 
@@ -172,7 +178,7 @@ class TractorDispatcher( GafferDispatch.Dispatcher ) :
 			# Create a Tractor command to execute that command line, and add
 			# it to the task.
 
-			command = self.__tractorAPI.Command( argv = args )
+			command = GafferTractor.tractorAPI().Command( argv = args )
 			task.addCommand( command )
 
 			# Apply any custom dispatch settings to the command.

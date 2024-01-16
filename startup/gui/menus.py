@@ -568,15 +568,13 @@ nodeMenu.append( "/Utility/Collect", Gaffer.Collect )
 
 GafferUI.DotUI.connect( application.root() )
 
+import GafferTractor
+import GafferTractorUI
+
 with IECore.IgnoredExceptions( ImportError ) :
-
-	# Raises if Tractor not available, thus avoiding registering the
-	# TractorDispatcher.
-	import tractor.api.author
-
-	import GafferTractor
-	import GafferTractorUI
-
+	# Raises if Tractor not available, thus avoiding adding the TractorDispatcher
+	# to the menus.
+	GafferTractor.tractorAPI()
 	nodeMenu.append( "/Dispatch/Tractor Dispatcher", GafferTractor.TractorDispatcher, searchText = "TractorDispatcher" )
 
 ## Metadata cleanup
