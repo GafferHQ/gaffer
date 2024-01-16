@@ -173,6 +173,7 @@ class GAFFERDISPATCH_API Dispatcher : public Gaffer::Node
 		const Gaffer::StringPlug *jobsDirectoryPlug() const;
 		/// At the start of dispatch(), a directory is created under `jobsDirectoryPlug / jobNamePlug`
 		/// which the dispatcher writes temporary files to. This method returns the most recent created directory.
+		/// \todo Remove. Nodes shouldn't store state.
 		const std::filesystem::path jobDirectory() const;
 		//@}
 
