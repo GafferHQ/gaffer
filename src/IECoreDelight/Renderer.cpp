@@ -656,7 +656,10 @@ class DelightAttributes : public IECoreScenePreview::Renderer::AttributesInterfa
 				}
 				else if( boost::starts_with( m.first.string(), "user:" ) )
 				{
-					msg( Msg::Warning, "DelightRenderer", fmt::format( "User attribute \"{}\" not supported", m.first.string() ) );
+					if( const Data *d = reportedCast<const IECore::Data>( m.second.get(), "attribute", m.first ) )
+					{
+						params.add( m.first.c_str(), d, true );
+					}
 				}
 				else if( boost::contains( m.first.string(), ":" ) )
 				{
@@ -992,6 +995,11 @@ class DelightObject : public IECoreScenePreview::Renderer::ObjectInterface
 					m_attributes->handle().name(), "",
 					m_transformHandle.name(), "geometryattributes"
 				);
+				NSIDisconnect(
+					m_transformHandle.context(),
+					m_attributes->handle().name(), "",
+					m_transformHandle.name(), "shaderattributes"
+				);
 			}
 
 			m_attributes = static_cast<const DelightAttributes *>( attributes );
@@ -1002,6 +1010,14 @@ class DelightObject : public IECoreScenePreview::Renderer::ObjectInterface
 				0, nullptr
 
 			);
+			NSIConnect(
+				m_transformHandle.context(),
+				m_attributes->handle().name(), "",
+				m_transformHandle.name(), "shaderattributes",
+				0, nullptr
+
+			);
+
 			return true;
 		}
 

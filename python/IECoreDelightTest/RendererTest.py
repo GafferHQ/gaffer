@@ -731,13 +731,19 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( len( allAttributes ), 1 )
 		attributes = allAttributes[next( iter( allAttributes ) )]
 
+		allTransforms = { k: v for k, v in nsi.items() if nsi[k]["nodeType"] == "transform" }
+		self.assertEqual( len( allTransforms ), 1 )
+		transforms = allTransforms[next( iter( allTransforms ) )]
+
 		self.assertIn( "surfaceshader", attributes )
 		self.assertIn( "volumeshader", attributes )
 		self.assertIn( "displacementshader", attributes )
+		self.assertIn( "shaderattributes", transforms )
 
 		self.assertGreater( len( attributes["surfaceshader"] ), 0 )
 		self.assertGreater( len( attributes["volumeshader"] ), 0 )
 		self.assertGreater( len( attributes["displacementshader"] ), 0 )
+		self.assertGreater( len( transforms["shaderattributes"] ), 0 )
 
 		surfaceShader = self.__connectionSource( attributes["surfaceshader"][0], nsi )
 		volumeShader = self.__connectionSource( attributes["volumeshader"][0], nsi )
