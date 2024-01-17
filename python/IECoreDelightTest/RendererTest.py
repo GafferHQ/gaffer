@@ -483,7 +483,6 @@ class RendererTest( GafferTest.TestCase ) :
 		self.__assertInNSI( '"pixelaspectratio" "float" 1 1', nsi )
 		self.__assertInNSI( '"clippingrange" "double" 2 [ 0.25 10 ]', nsi )
 		self.__assertInNSI( '"shutterrange" "double" 2 [ 0 1 ]', nsi )
-		self.__assertInNSI( '"overscan" "int[2]" 2 [ 200 100 400 200 ]', nsi )
 
 	def testObjectInstancing( self ) :
 
@@ -650,6 +649,39 @@ class RendererTest( GafferTest.TestCase ) :
 		for name, value, type in options :
 			self.__assertInNSI(
 				'SetAttribute ".global" "{}" "{}" 1 {}{}{}'.format(
+				name[3:],
+				type,
+				"\"" if type == "string" else "",
+				value.value if not isinstance( value, IECore.BoolData ) else int( value.value ),
+				"\"" if type == "string" else ""
+			),
+			nsi
+		)
+
+	def testScreenOptions( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"3Delight",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.nsia" )
+		)
+
+		options = [
+			( "dl:oversampling", IECore.IntData( 16 ), "int" ),
+			( "dl:importancesamplefilter", IECore.BoolData( True ), "int" ),
+		]
+
+		for name, value, type in options :
+			r.option( name, value )
+
+		r.render()
+		del r
+
+		nsi = self.__parse( self.temporaryDirectory() / "test.nsia" )
+
+		for name, value, type in options :
+			self.__assertInNSI(
+				'SetAttribute "ieCoreDelight:defaultScreen" "{}" "{}" 1 {}{}{}'.format(
 				name[3:],
 				type,
 				"\"" if type == "string" else "",
