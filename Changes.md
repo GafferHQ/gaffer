@@ -131,6 +131,20 @@ Build
 
 - PsUtil : Added version 5.9.6.
 
+1.3.x.x (relative to 1.3.10.0)
+=======
+
+Improvements
+------------
+
+- ArnoldShader : Added a colour space presets menu for the `image` shader.
+- CyclesShader : Added a colour space presets menu for the `image_texture` and `environment_texture` shaders (#5618).
+
+API
+---
+
+- ArnoldShaderUI : Added support for `colorSpace` widget type metadata, allowing an OpenColorIO colour space to be chosen.
+
 1.3.10.0 (relative to 1.3.9.0)
 ========
 

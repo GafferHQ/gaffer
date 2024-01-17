@@ -47,6 +47,7 @@ import imath
 
 import Gaffer
 import GafferUI
+import GafferImageUI
 import GafferSceneUI
 import GafferArnold
 
@@ -289,12 +290,25 @@ def __translateNodeMetadata( nodeEntry ) :
 				"mapper" : "GafferUI.PresetsPlugValueWidget",
 				"filename" : "GafferUI.FileSystemPathPlugValueWidget",
 				"camera" : "GafferSceneUI.ScenePathPlugValueWidget",
+				"colorSpace" : "GafferUI.PresetsPlugValueWidget",
 				"null" : "",
 			}[widget]
 
 			if widget == "camera" :
 				__metadata[paramPath]["scenePathPlugValueWidget:setNames"] = IECore.StringVectorData( [ "__cameras" ] )
 				__metadata[paramPath]["scenePathPlugValueWidget:setsLabel"] = "Show only cameras"
+
+			if widget == "colorSpace" :
+				# Here we're assuming that Arnold is being used with an OCIO
+				# colour manager configured to match Gaffer.
+				__metadata[paramPath]["presetNames"] = GafferImageUI.OpenColorIOTransformUI.colorSpacePresetNames
+				__metadata[paramPath]["presetValues"] = GafferImageUI.OpenColorIOTransformUI.colorSpacePresetValues
+				__metadata[paramPath]["openColorIO:extraPresetNames"] = IECore.StringVectorData( [ "Auto" ] )
+				__metadata[paramPath]["openColorIO:extraPresetValues"] = IECore.StringVectorData( [ "auto" ] )
+				__metadata[paramPath]["openColorIO:includeRoles"] = True
+				# Allow custom values in case Arnold has been configured to use
+				# some other colour manager instead.
+				__metadata[paramPath]["presetsPlugValueWidget:allowCustom"] = True
 
 		# Layout section from OSL "page".
 
