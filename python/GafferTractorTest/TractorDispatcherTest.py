@@ -109,6 +109,46 @@ class TractorDispatcherTest( GafferTest.TestCase ) :
 
 		self.assertTrue( ( dispatcher.jobDirectory() / "job.alf" ).is_file() )
 
+	def testJobScriptInNestedDispatch( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		# Fake the creation of a `.alf` file from a downstream
+		# TractorDispatcher. We can't use a TractorDispatcher to do this because
+		# the Tractor API is mocked during testing.
+
+		script["pythonCommand"] = GafferDispatch.PythonCommand()
+		script["pythonCommand"]["command"].setValue( inspect.cleandoc(
+			"""
+			import pathlib
+			p = pathlib.Path( context["dispatcher:jobDirectory"] ) / "job.alf"
+			with open( p, "w", encoding = "utf-8" ) as f :
+					f.write( "First one wins" )
+			"""
+		) )
+
+		# That runs as a preTask for an actual TractorDispatcher.
+
+		script["node"] = GafferDispatchTest.LoggingTaskNode()
+
+		script["tractorDispatcher"] = self.__dispatcher()
+		script["tractorDispatcher"]["tasks"][0].setInput( script["node"]["task"] )
+		script["tractorDispatcher"]["preTasks"][0].setInput( script["pythonCommand"]["task"] )
+
+		# And then we use a LocalDispatcher to launch the whole thing.
+
+		script["localDispatcher"] = GafferDispatch.LocalDispatcher()
+		script["localDispatcher"]["tasks"][0].setInput( script["tractorDispatcher"]["task"] )
+		script["localDispatcher"]["jobsDirectory"].setValue( script["tractorDispatcher"]["jobsDirectory"].getValue() )
+		script["localDispatcher"]["task"].execute()
+
+		# We want our fake job script to have won, because it represents
+		# the downstream dispatch, which provides a full record of the job.
+
+		self.assertTrue( ( script["tractorDispatcher"].jobDirectory() / "job.alf" ).is_file() )
+		with open( script["tractorDispatcher"].jobDirectory() / "job.alf" ) as f :
+			self.assertEqual( f.readline(), "First one wins" )
+
 	def testJobAttributes( self ) :
 
 		s = Gaffer.ScriptNode()
