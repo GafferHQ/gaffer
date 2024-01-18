@@ -375,7 +375,10 @@ void ImageStats::hash( const ValuePlug *output, const Context *context, IECore::
 			Imath::Box2i( boundsIntersection.min - tileOrigin, boundsIntersection.max - tileOrigin ),
 			Imath::Box2i( Imath::V2i( 0 ), Imath::V2i( ImagePlug::tileSize() ) )
 		);
-		h.append( tileBound );
+		// Work around strange Box2i hashing behaviour in GCC 11, though it would be
+		// preferable to fix this in MurmurHash.
+		h.append( tileBound.min );
+		h.append( tileBound.max );
 		flattenedInPlug()->channelDataPlug()->hash( h );
 	}
 	else if( output == allStatsPlug() )
