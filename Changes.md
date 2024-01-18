@@ -5,6 +5,7 @@ Features
 --------
 
 - DeepSlice : Added a new node for clipping out part of an image based on depth.
+- ImageInspector : Added a new panel for inspecting image format, metadata and channel statistics.
 
 Improvements
 ------------
@@ -34,6 +35,13 @@ Improvements
 - Backdrop : Improved drawing order for nested backdrops :
   - Larger backdrops are automatically drawn behind smaller ones, so that nested backdrops will always appear on top.
   - Added a `depth` plug to assign a manual drawing depth for the rare cases where the automatic depth is unwanted.
+- ImageStats : Added `areaSource` plug, allowing area to be driven by the input display window or data window.
+- 3Delight :
+  - Added camera overscan support.
+  - NSI scene description export format is now based on file extension - `.nsi` for binary and `.nsia` for ASCII.
+  - Added support for reading `dl:` and `user:` attributes from shaders.
+  - Added `importanceSampleFilter` plug to DelightOptions, providing denoiser-compatible output.
+  - Matched DelightOptions default values for `oversampling` and `shadingSamples` to 3Delight's own default values.
 
 Fixes
 -----
@@ -44,6 +52,11 @@ Fixes
   - Stopped failed jobs jumping to the end of the Local Jobs UI.
   - Fixed message log update.
   - Fixed `Job.statistics()` errors on Windows, ensuring that a `pid` is always returned when available.
+- ImageStats :
+  - Fixed output of infinite values, which were previously being clamped.
+  - Results for min/max now correctly reflect zero values outside the data window.
+- NodeMenu, NodeEditor : `userDefault` metadata is now evaluated in the script context, so it can depend on script variables.
+- 3Delight : Fixed loading of surface shaders such as `dlStandard` so that they can be connected to the inputs of shaders such as `dlLayeredMaterial`.
 
 API
 ---
@@ -73,6 +86,7 @@ API
   - Added `shuffleWithExtraSources()` method.
 - ShufflePlugValueWidget : Widgets for the `source` and `destination` plugs can now be customised using standard `plugValueWidget:type` metadata.
 - ImageTestCase : in `assertImageEqual` function, maxDifference may now be a tuple, to specify an asymmetric range.
+- Editor : Added `Settings` class, which should be used to store settings for subclasses. See LightEditor and ImageInspector for examples.
 
 Breaking Changes
 ----------------
@@ -107,14 +121,37 @@ Breaking Changes
   - Removed ChannelPlug type. Use `Gaffer.ShufflePlug` instead.
   - Renamed `channels` plug to `shuffles` plug, matching nodes such as ShuffleAttributes and ShufflePrimitiveVariables.
 - ShuffleUI : Removed `nodeMenuCreateCommand()`.
+- ImageStatsUI : Removed `postCreate()`.
+- 3Delight : Changed NSI scene description export with `.nsi` file extension from ASCII to binary (`.nsia` is used for ASCII now).
+- OSLShader : Output parameters are now loaded onto the `out` plug for all types (`surface`, `displacement` etc), not just `shader`.
+- DelightOptions : Changed default values for `oversampling` and `shadingSamples` plugs.
 
 Build
 -----
 
 - PsUtil : Added version 5.9.6.
 
-1.3.x.x (relative to 1.3.9.0)
+1.3.x.x (relative to 1.3.10.0)
 =======
+
+Improvements
+------------
+
+- ArnoldShader : Added a colour space presets menu for the `image` shader.
+- CyclesShader : Added a colour space presets menu for the `image_texture` and `environment_texture` shaders (#5618).
+
+API
+---
+
+- ArnoldShaderUI : Added support for `colorSpace` widget type metadata, allowing an OpenColorIO colour space to be chosen.
+
+1.3.10.0 (relative to 1.3.9.0)
+========
+
+Features
+--------
+
+- LightPositionTool : Added tool to the scene viewer to place shadows. With a light selected, holding <kbd>Shift</kbd> + <kbd>V</kbd> and clicking on geometry will set the pivot point used for casting a shadow. Holding <kbd>V</kdb> and clicking sets the point to receive the shadow. The light is repositioned to be the same distance from the pivot, along the pivot-shadow point line, and oriented to face the shadow point.
 
 Improvements
 ------------
@@ -124,6 +161,16 @@ Improvements
   - Added bookmarks.
 - USDLight : Added file browser for `shaping:ies:file` parameter.
 - OpenColorIOContext : Added file browser for `config` plug.
+- Layouts : Added the ability to load layouts containing editors that aren't currently available. This allows layouts containing new editors introduced in Gaffer 1.4 to be loaded in Gaffer 1.3.
+- TranslateTool, RotateTool : Added tooltip to the upper left corner of the Viewer explaining how to use the target modes.
+- LightTool : Changed the color of the non-highlighted handles to orange and the highlighted handles to cyan for consistency with other highlight colors.
+- Outputs : Variable substitutions are now applied to `gaffer:context:*` image metadata values. This is needed when the value of a context variable contains references to other variables, with the default value for `project:rootDirectory` being one example.
+
+Fixes
+-----
+
+- Arnold : Fixed translation of USD `uchar` attributes and shader parameters.
+- Orientation/Instancer : Now normalizes unnormalized quaternion inputs - this allows correctly processing files with primvars that contain unnormalized quaternions ( which it is possible to write from Houdini ).
 
 API
 ---

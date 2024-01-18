@@ -54,10 +54,11 @@ DelightOptions::DelightOptions( const std::string &name )
 
 	// Quality
 
-	options->addChild( new Gaffer::NameValuePlug( "dl:oversampling", new IECore::IntData( 9 ), false, "oversampling" ) );
-	options->addChild( new Gaffer::NameValuePlug( "dl:quality.shadingsamples", new IECore::IntData( 64 ), false, "shadingSamples" ) );
+	options->addChild( new Gaffer::NameValuePlug( "dl:oversampling", new IECore::IntData( 4 ), false, "oversampling" ) );
+	options->addChild( new Gaffer::NameValuePlug( "dl:quality.shadingsamples", new IECore::IntData( 1 ), false, "shadingSamples" ) );
 	options->addChild( new Gaffer::NameValuePlug( "dl:quality.volumesamples", new IECore::IntData( 1 ), false, "volumeSamples" ) );
 	options->addChild( new Gaffer::NameValuePlug( "dl:clampindirect", new IECore::FloatData( 2 ), false, "clampIndirect" ) );
+	options->addChild( new Gaffer::NameValuePlug( "dl:importancesamplefilter", new IECore::BoolData( false ), false, "importanceSampleFilter" ) );
 
 	// Features
 

@@ -154,10 +154,15 @@ struct BatchContextPool
 // Dispatcher
 //////////////////////////////////////////////////////////////////////////
 
-static InternedString g_batchSize( "batchSize" );
-static InternedString g_immediatePlugName( "immediate" );
-static InternedString g_jobDirectoryContextEntry( "dispatcher:jobDirectory" );
-static InternedString g_scriptFileNameContextEntry( "dispatcher:scriptFileName" );
+namespace
+{
+
+const InternedString g_batchSize( "batchSize" );
+const InternedString g_immediatePlugName( "immediate" );
+const InternedString g_jobDirectoryContextEntry( "dispatcher:jobDirectory" );
+const InternedString g_scriptFileNameContextEntry( "dispatcher:scriptFileName" );
+
+} // namespace
 
 size_t Dispatcher::g_firstPlugIndex = 0;
 Dispatcher::PreDispatchSignal Dispatcher::g_preDispatchSignal;

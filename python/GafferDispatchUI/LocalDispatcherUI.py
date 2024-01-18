@@ -47,6 +47,8 @@ Gaffer.Metadata.registerNode(
 	may be dispatched in the background to keep the UI responsive.
 	""",
 
+	"layout:activator:executeInBackgroundIsOn", lambda node : node["executeInBackground"].getValue(),
+
 	plugs = {
 
 		"executeInBackground" : (
@@ -66,6 +68,8 @@ Gaffer.Metadata.registerNode(
 			Ignores errors loading the script when executing in the background.
 			This is not recommended - fix the problem instead.
 			""",
+
+			"layout:activator", "executeInBackgroundIsOn",
 
 		),
 
@@ -87,7 +91,9 @@ Gaffer.Metadata.registerNode(
 			```
 			/usr/bin/env FOO=BAR TOTO=TATA
 			```
-			"""
+			""",
+
+			"layout:activator", "executeInBackgroundIsOn",
 
 		),
 

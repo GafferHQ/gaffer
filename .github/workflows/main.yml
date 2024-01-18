@@ -207,6 +207,12 @@ jobs:
         ARNOLD_DOWNLOAD_USER: ${{ secrets.ARNOLD_DOWNLOAD_USER }}
         ARNOLD_DOWNLOAD_PASSWORD: ${{ secrets.ARNOLD_DOWNLOAD_PASSWORD }}
       shell: python
+      # We can't build GafferArnold for pull requests from forks, because the
+      # authentication secrets for downloading Arnold aren't available (this is
+      # a GitHub security restriction). The core development team can still build
+      # GafferArnold for pull requests by pushing a branch to the main repo and
+      # making a pull request from there.
+      if: ${{ env.ARNOLD_DOWNLOAD_USER != '' }}
 
     - name: Build Docs and Package
       # Docs builds should be relatively quick. If there is a problem, this
@@ -224,7 +230,7 @@ jobs:
     - name: Validate
       run: |
         echo "::add-matcher::./.github/workflows/main/problemMatchers/validateRelease.json"
-        python ./config/validateRelease.py --archive ${{ env.GAFFER_BUILD_NAME }}.${{ env.PACKAGE_EXTENSION }} ${{ env.GAFFER_VALIDATE_EXTRA_FLAGS }}
+        python ./config/validateRelease.py --archive ${{ env.GAFFER_BUILD_NAME }}.${{ env.PACKAGE_EXTENSION }} ${{ env.GAFFER_VALIDATE_EXTRA_FLAGS }} ${{ secrets.ARNOLD_DOWNLOAD_USER == '' && '--skipPaths arnold' || '' }}
         echo "::remove-matcher owner=validateRelease::"
       if: matrix.publish
 

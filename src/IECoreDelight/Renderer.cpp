@@ -656,7 +656,10 @@ class DelightAttributes : public IECoreScenePreview::Renderer::AttributesInterfa
 				}
 				else if( boost::starts_with( m.first.string(), "user:" ) )
 				{
-					msg( Msg::Warning, "DelightRenderer", fmt::format( "User attribute \"{}\" not supported", m.first.string() ) );
+					if( const Data *d = reportedCast<const IECore::Data>( m.second.get(), "attribute", m.first ) )
+					{
+						params.add( m.first.c_str(), d, true );
+					}
 				}
 				else if( boost::contains( m.first.string(), ":" ) )
 				{
@@ -992,6 +995,11 @@ class DelightObject : public IECoreScenePreview::Renderer::ObjectInterface
 					m_attributes->handle().name(), "",
 					m_transformHandle.name(), "geometryattributes"
 				);
+				NSIDisconnect(
+					m_transformHandle.context(),
+					m_attributes->handle().name(), "",
+					m_transformHandle.name(), "shaderattributes"
+				);
 			}
 
 			m_attributes = static_cast<const DelightAttributes *>( attributes );
@@ -1002,6 +1010,14 @@ class DelightObject : public IECoreScenePreview::Renderer::ObjectInterface
 				0, nullptr
 
 			);
+			NSIConnect(
+				m_transformHandle.context(),
+				m_attributes->handle().name(), "",
+				m_transformHandle.name(), "shaderattributes",
+				0, nullptr
+
+			);
+
 			return true;
 		}
 
@@ -1048,6 +1064,7 @@ IECore::InternedString g_maxLengthSpecularOptionName( "dl:maximumraylength.specu
 IECore::InternedString g_maxLengthVolumeOptionName( "dl:maximumraylength.volume" );
 IECore::InternedString g_clampIndirectOptionName( "dl:clampindirect" );
 IECore::InternedString g_showMultipleScatteringOptionName( "dl:show.multiplescattering" );
+IECore::InternedString g_importancesamplefilterOptionName( "dl:importancesamplefilter" );
 
 const char *g_screenHandle = "ieCoreDelight:defaultScreen";
 
@@ -1072,6 +1089,27 @@ void setNSIGlobalOption( NSIContext_t context, const InternedString &name, const
 	}
 }
 
+void setNSIScreenOption( NSIContext_t context, const InternedString &name, const Object *value )
+{
+	if( value )
+	{
+		if( const Data *data = reportedCast<const Data>( value, "option", name ) )
+		{
+			ParameterList params;
+			params.add( name.c_str() + 3, data, true );
+			NSISetAttribute( context, g_screenHandle, params.size(), params.data() );
+		}
+		else
+		{
+			NSIDeleteAttribute( context, g_screenHandle, name.c_str() + 3 );
+		}
+	}
+	else
+	{
+		NSIDeleteAttribute( context, g_screenHandle, name.c_str() + 3 );
+	}
+}
+
 IE_CORE_FORWARDDECLARE( DelightRenderer )
 
 class DelightRenderer final : public IECoreScenePreview::Renderer
@@ -1080,18 +1118,20 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 	public :
 
 		DelightRenderer( RenderType renderType, const std::string &fileName, const IECore::MessageHandlerPtr &messageHandler )
-			:	m_renderType( renderType ), m_frame( 1 ), m_oversampling( 9 ), m_messageHandler( messageHandler )
+			:	m_renderType( renderType ), m_frame( 1 ), m_messageHandler( messageHandler )
 		{
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 
 			vector<NSIParam_t> params;
 
 			const char *apistream = "apistream";
+			const char *streamformat = "autonsi";
 			const char *fileNamePtr = fileName.c_str();
 			if( renderType == SceneDescription )
 			{
 				params = {
 					{ "type", &apistream, NSITypeString, 0, 1, 0 },
+					{ "streamformat", &streamformat, NSITypeString, 0, 1, 0 },
 					{ "streamfilename", &fileNamePtr, NSITypeString , 0, 1, 0 }
 				};
 			}
@@ -1168,25 +1208,11 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 			}
 			else if( name == g_oversamplingOptionName )
 			{
-				if( value )
-				{
-					if( const IntData *d = reportedCast<const IntData>( value, "option", name ) )
-					{
-						if( m_oversampling != d->readable() )
-						{
-							stop();
-							m_oversampling = d->readable();
-						}
-					}
-					else
-					{
-						m_oversampling = 9;
-					}
-				}
-				else
-				{
-					m_oversampling = 9;
-				}
+				setNSIScreenOption( m_context, name, value );
+			}
+			else if( name == g_importancesamplefilterOptionName )
+			{
+				setNSIScreenOption( m_context, name, value );
 			}
 			else if(
 				name == g_maxLengthDiffuseOptionName ||
@@ -1229,9 +1255,6 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 		{
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 
-			// 3Delight crashes if we don't stop the render before
-			// modifying the output chain.
-			stop();
 			m_outputs.erase( name );
 			if( !output )
 			{
@@ -1498,17 +1521,41 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 
 			// Update the screen
 
-			ParameterList screeenParameters = {
-				{ "oversampling", &m_oversampling, NSITypeInteger, 0, 1, 0 }
-			};
+			ParameterList screeenParameters;
 
 			const V2i &resolution = camera->getResolution();
 			screeenParameters.add( { "resolution", resolution.getValue(), NSITypeInteger, 2, 1, NSIParamIsArray } );
 
+			const bool &overscanOn = camera->getOverscan();
+
+			const int overscanLeft = static_cast<int>(camera->getOverscanLeft() * resolution.x);
+			const int overscanTop = static_cast<int>(camera->getOverscanTop() * resolution.y);
+			const int overscanRight = static_cast<int>(camera->getOverscanRight() * resolution.x);
+			const int overscanBottom = static_cast<int>(camera->getOverscanBottom() * resolution.y);
+
+			const Box2i overscan(
+				V2i(
+					overscanLeft,
+					overscanTop
+				),
+				V2i(
+					overscanRight,
+					overscanBottom
+				)
+			);
+
+			if( overscanOn == true )
+			{
+				screeenParameters.add( { "overscan", overscan.min.getValue(), NSITypeInteger, 2, 2, NSIParamIsArray } );
+			}
+
 			Box2i renderRegion = camera->renderRegion();
 
-			// I can't find any support in 3delight for overscan - and if crop goes outside 0 - 1,
-			// it ignores crop.  So we clamp it.
+			// If crop goes outside 0 - 1, 3Delight ignores it, so we clamp.
+			/// \todo 3Delight interprets crop as 0-1 across the overscanned data window, but
+			/// Gaffer defines it as 0-1 across the original (non-overscanned) display window.
+			/// Adjust for that. This will only work nicely with the CropWindowTool if we also
+			/// update the display driver to output an accurate display window for overscanned renders.
 			renderRegion.min.x = std::max( 0, renderRegion.min.x );
 			renderRegion.max.x = std::min( resolution.x, renderRegion.max.x );
 			renderRegion.min.y = std::max( 0, renderRegion.min.y );
@@ -1565,7 +1612,6 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 
 		int m_frame;
 		string m_camera;
-		int m_oversampling;
 
 		bool m_rendering = false;
 

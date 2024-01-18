@@ -78,7 +78,7 @@ Gaffer.Metadata.registerNode(
 			Where to source the actual area to use. If this is
 			set to DataWindow, it will use the input's Data Window,
 			if it is set to DisplayWindow, it will use the input's
-			Display Window, and if it is set to Custom, it will use
+			Display Window, and if it is set to Area, it will use
 			the Area plug.
 			""",
 
@@ -97,7 +97,7 @@ Gaffer.Metadata.registerNode(
 			"""
 			The custom area to set the Data/Display Window to.
 			This plug is only used if 'Area Source' is set to
-			Custom.
+			Area.
 			""",
 
 			"layout:activator", "areaSourceIsArea",

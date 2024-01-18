@@ -193,6 +193,11 @@ class GAFFERSCENE_API Orientation : public ObjectProcessor
 		Gaffer::StringPlug *outMatrixPlug();
 		const Gaffer::StringPlug *outMatrixPlug() const;
 
+		// Normalize a quaternion if it is not already normalized. Values within tolerance of being
+		// normalized are passed through unmodified. The tolerance is calibrated so that any quaternion
+		// produced by Imath::Quatf::normalized() should be unmodified.
+		static inline Imath::Quatf normalizedIfNeeded( const Imath::Quatf &q );
+
 	protected :
 
 		bool affectsProcessedObject( const Gaffer::Plug *input ) const override;
@@ -208,3 +213,5 @@ class GAFFERSCENE_API Orientation : public ObjectProcessor
 IE_CORE_DECLAREPTR( Orientation )
 
 } // namespace GafferScene
+
+#include "GafferScene/Orientation.inl"

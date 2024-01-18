@@ -1254,6 +1254,36 @@ class RendererTest( GafferTest.TestCase ) :
 			self.assertEqual( arnold.AiNodeGetStr( node, "subdiv_adaptive_space" ), "raster" )
 			self.assertEqual( arnold.AiNodeGetBool( node, "subdiv_frustum_ignore" ), True )
 
+	def testUCharSubdivIterations( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Arnold",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.ass" )
+		)
+
+		subdivPlane = IECoreScene.MeshPrimitive.createPlane( imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ) )
+		subdivPlane.interpolation = "catmullClark"
+
+		r.object(
+			"plane",
+			subdivPlane,
+			r.attributes(
+				IECore.CompoundObject( {
+					"ai:polymesh:subdiv_iterations" : IECore.UCharData( 10 ),
+				} )
+			)
+		)
+
+		r.render()
+		del r
+
+		with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+			arnold.AiSceneLoad( universe, str( self.temporaryDirectory() / "test.ass" ), None )
+			node = arnold.AiNodeGetPtr( arnold.AiNodeLookUpByName( universe, "plane" ), "node" )
+			self.assertEqual( arnold.AiNodeGetByte( node, "subdiv_iterations" ), 10 )
+
 	def testSSSSetNameAttribute( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(

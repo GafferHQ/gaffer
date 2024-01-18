@@ -1473,6 +1473,7 @@
 		gaffer.fileSystemPath.extensions STRING "tx"
 	[attr color_space]
 		gaffer.layout.index INT 1
+		widget STRING "colorSpace"
 	[attr uvset]
 		gaffer.layout.index INT 2
 

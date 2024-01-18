@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////
 //
-//  Copyright (c) 2012, John Haddon. All rights reserved.
+//  Copyright (c) 2024, Image Engine Design Inc. All rights reserved.
 //
 //  Redistribution and use in source and binary forms, with or without
 //  modification, are permitted provided that the following conditions are
@@ -36,30 +36,23 @@
 
 #pragma once
 
-namespace GafferSceneUI
+namespace GafferScene
 {
 
-enum TypeId
+inline Imath::Quatf Orientation::normalizedIfNeeded( const Imath::Quatf &q )
 {
-	SceneViewTypeId = 110651,
-	SceneGadgetTypeId = 110652,
-	SelectionToolTypeId = 110653,
-	CropWindowToolTypeId = 110654,
-	ShaderViewTypeId = 110655,
-	ShaderNodeGadgetTypeId = 110656,
-	TransformToolTypeId = 110657,
-	TranslateToolTypeId = 110658,
-	ScaleToolTypeId = 110659,
-	RotateToolTypeId = 110660,
-	CameraToolTypeId = 110661,
-	UVViewTypeId = 110662,
-	UVSceneTypeId = 110663,
-	HistoryPathTypeId = 110664,
-	SetPathTypeId = 110665,
-	LightToolTypeId = 110666,
-	LightPositionToolTypeId = 110667,
+	// Testing with four hundred million random quaternions, normalized using Imath, the lengths
+	// are always > 1 - 5e-7 and < 1 + 5e-7. We make this threshold slightly more tolerant
+	// to be safe.
+	float lengthSquared = q.r * q.r + ( q.v ^ q.v );
+	if( lengthSquared >= ( 1 - 6e-7 ) && lengthSquared <= ( 1 + 6e-7 ) )
+	{
+		return q;
+	}
+	else
+	{
+		return q.normalized();
+	}
+}
 
-	LastTypeId = 110700
-};
-
-} // namespace GafferSceneUI
+} // namespace GafferScene

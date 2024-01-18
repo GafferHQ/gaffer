@@ -71,6 +71,9 @@ def __qualitySummary( plug ) :
 	if plug["clampIndirect"]["enabled"].getValue() :
 		info.append( "Clamp Indirect {}".format( plug["clampIndirect"]["value"].getValue() ) )
 
+	if plug["importanceSampleFilter"]["enabled"].getValue() :
+		info.append( "Importance Sample Filter {}".format( "On" if plug["importanceSampleFilter"]["value"].getValue() else "Off" ) )
+
 	return ", ".join( info )
 
 def __featuresSummary( plug ) :
@@ -282,6 +285,18 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			The maximum value to clamp indirect light rays to.
+			""",
+
+			"layout:section", "Quality",
+
+		],
+
+		"options.importanceSampleFilter" : [
+
+			"description",
+			"""
+			Use filter importance sampling (on) or splatting (off)
+			for sample filtering.
 			""",
 
 			"layout:section", "Quality",

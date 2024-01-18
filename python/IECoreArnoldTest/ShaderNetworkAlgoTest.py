@@ -184,6 +184,32 @@ class ShaderNetworkAlgoTest( unittest.TestCase ) :
 				ctypes.addressof( nodes[0].contents )
 			)
 
+	def testUCharParameters( self ) :
+
+		for dataType in ( IECore.IntData, IECore.UCharData ) :
+
+			with self.subTest( dataType = dataType ) :
+
+				network = IECoreScene.ShaderNetwork(
+					shaders = {
+						"imageHandle" : IECoreScene.Shader(
+							"image", "surface",
+							{
+								"start_channel" : dataType( 10 ),
+							}
+						),
+					},
+					output = "imageHandle"
+				)
+
+				with IECoreArnold.UniverseBlock( writable = True ) as universe :
+
+					nodes = IECoreArnold.ShaderNetworkAlgo.convert( network, universe, "test" )
+
+					self.assertEqual( len( nodes ), 1 )
+					self.assertEqual( arnold.AiNodeEntryGetName( arnold.AiNodeGetNodeEntry( nodes[0] ) ), "image" )
+					self.assertEqual( arnold.AiNodeGetByte( nodes[0], "start_channel" ), 10 )
+
 	def testBlindData( self ) :
 
 		flat = IECoreScene.Shader( "flat" )
