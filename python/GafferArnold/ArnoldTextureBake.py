@@ -289,6 +289,10 @@ class ArnoldTextureBake( GafferDispatch.TaskNode ) :
 		# First, setup python commands which will dispatch a chunk of a render or image tasks as
 		# immediate execution once they reach the farm - this allows us to run multiple tasks in
 		# one farm process.
+		## \todo Ideally we would host LocalDispatcher nodes in our internal graph, instead of
+		# constructing them inside of PythonCommands. That's not currently possible because the
+		# hash for the tasks being dispatched relies on the index file, which doesn't exist
+		# prior to dispatch.
 		self["__RenderDispatcher"] = GafferDispatch.PythonCommand()
 		self["__RenderDispatcher"]["preTasks"][0].setInput( self["__CleanPreTasks"]["out"] )
 		self["__RenderDispatcher"]["command"].setValue( inspect.cleandoc(
