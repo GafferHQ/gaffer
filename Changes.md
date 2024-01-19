@@ -11,6 +11,9 @@ Fixes
 -----
 
 - Reference : Fixed bug where `GAFFER_REFERENCE_PATHS` was not being searched when performing "Duplicate as Box" action.
+- Outputs :
+  - Fixed bug which meant that adding an output via the UI was not undoable.
+  - Fixed bug which allowed outputs to be added to a read-only node via the UI.
 
 API
 ---
