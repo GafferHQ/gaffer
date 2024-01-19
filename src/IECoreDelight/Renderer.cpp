@@ -321,11 +321,14 @@ class DelightOutput : public IECore::RefCounted
 					variableSource = nameTokens[0];
 				}
 
-				// Remove the `.` character and use camel case
-				vector<string> layerTokens;
-				IECore::StringAlgo::tokenize( variableName, '.', layerTokens );
-				layerName = IECore::CamelCase::join( layerTokens.begin(), layerTokens.end(), IECore::CamelCase::AllExceptFirst);
+				layerName = variableName;
+				// Shader outputs like `diffuse` and `diffuse.direct` create incompatible layer names
+				// by using `diffuse` both as a container for channels and a container for sublayers.
+				// Replace `.` with `_` to avoid the problem.
+				boost::replace_all( layerName, ".", "_" );
 			}
+
+			layerName = parameter<string>( output->parameters(), "layerName", layerName );
 
 			ParameterList layerParams;
 
