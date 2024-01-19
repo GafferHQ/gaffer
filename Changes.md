@@ -14,6 +14,7 @@ Improvements
   - Improved cancellation responsiveness.
 - 3Delight : Added NSI screen static sampling pattern option (`dl:staticsamplingpattern`).
 - GraphEditor : The source node for any location can be located by dragging the location into the GraphEditor from the Viewer or HierarchyView.
+- GraphComponent : Node and Plug names may now start with a numeric digit.
 
 Fixes
 -----
