@@ -5,6 +5,7 @@ Features
 --------
 
 - ShaderTweaks : Added support for creating ShaderTweakProxy nodes that allow making input connections to the original network.
+- 3Delight : Added interactive Viewer renderer.
 
 Improvements
 ------------
