@@ -726,7 +726,7 @@ void StandardNodeGadget::renderLayer( Layer layer, const Style *style, RenderRea
 
 			break;
 		}
-		case GraphLayer::Overlay :
+		case GraphLayer::Highlighting :
 		{
 			const Box3f b = bound();
 
@@ -804,7 +804,7 @@ void StandardNodeGadget::updateTextDimming()
 
 unsigned StandardNodeGadget::layerMask() const
 {
-	return GraphLayer::Nodes | GraphLayer::Overlay | GraphLayer::OverBackdrops;
+	return GraphLayer::Nodes | GraphLayer::Highlighting | GraphLayer::OverBackdrops;
 }
 
 Imath::Box3f StandardNodeGadget::renderBound() const
