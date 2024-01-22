@@ -71,35 +71,158 @@ def __shaderSubMenu( oslPath ) :
 			for m in q.metadata :
 				metadata[m.name] = m.value
 
-			shaderName = metadata.get( "niceName", IECore.CamelCase.toSpaced( shader ) )
+			shaderFileName = metadata.get( "niceName", shader )
 
+			shaderName = metadata.get( "niceName", IECore.CamelCase.toSpaced( shader ) )
 			shaderName = shaderName.replace( "&", "and" )
 			shaderName = shaderName[2:].lstrip() if shaderName.lower().startswith( "dl" ) else shaderName
 
 			if "hidden" in metadata.get( "tags", [] ) :
 				continue
+			if "houdini" in metadata.get( "tags", [] ) :
+				continue
 
 			subMenu = None
 			for tag in metadata.get( "tags", [] ) :
-				if tag == "surface" and shader.startswith( "dl" ) :
-					subMenu = "Surface"
-				elif tag == "volume" :
-					subMenu = "Volume"
-				elif tag == "displacement" and shader.startswith( "dl" ) :
-					subMenu = "Displacement"
-				elif tag == "texture/2d" :
-					subMenu = "Texture 2D"
-				elif tag == "texture/3d" :
-					subMenu = "Texture 3D"
-				elif tag == "utility" :
-					subMenu = "Utility"
-				elif tag == "toon" :
-					subMenu = "Toon"
-				else :
-					subMenu = "Other"
+				subMenu = tag.capitalize()
+
+			if shaderFileName == "distantLight" :
+				continue
+			elif shaderFileName == "directionalLight" :
+				continue
+			elif shaderFileName == "distantLight" :
+				continue
+			elif shaderFileName == "pointLight" :
+				continue
+			elif shaderFileName == "spotLight" :
+				continue
+			elif shaderFileName == "environmentLight" :
+				continue
+			elif shaderFileName == "displacementShader" :
+				continue
+			elif shaderFileName == "surfaceShader" :
+				continue
+			elif shaderFileName == "plusMinusAverage" :
+				continue
+			elif shaderFileName == "addDoubleLinear" :
+				continue
+			elif shaderFileName == "multDoubleLinear" :
+				continue
+			elif shaderFileName == "tripleShadingSwitch" :
+				continue
+			elif shaderFileName == "pfx" :
+				continue
+			elif shaderFileName == "particleCloud" :
+				continue
+			elif shaderFileName == "shadingEngine_surface" :
+				continue
+			elif shaderFileName == "surfaceLuminance" :
+				continue
+			elif shaderFileName == "filter_multiply" :
+				continue
+			elif shaderFileName == "lens_distortion" :
+				continue
+			elif shaderFileName == "dl3DelightMaterial" :
+				continue
+			elif shaderFileName == "transparent" :
+				continue
+			elif shaderFileName == "shadingEngine_displacement" :
+				subMenu = "Displacement"
+			elif shaderFileName == "builtinDisplacement" :
+				subMenu = "Displacement"
+			elif shaderFileName == "glassInterior" :
+				subMenu = "Surface"
+			elif shaderFileName == "bump2d" :
+				subMenu = "Bump"
+			elif shaderFileName == "bump3d" :
+				subMenu = "Bump"
+			elif shaderFileName == "dlPrimitiveAttribute" :
+				subMenu = "Utility"
+			elif shaderFileName == "dlAOVGroup" :
+				subMenu = "AOV"
+			elif shaderFileName == "dlAOVGroupFour" :
+				subMenu = "AOV"
+			elif shaderFileName == "hsvToRgb" :
+				subMenu = "Utility (Legacy)"
+			elif shaderFileName == "rgbToHsv" :
+				subMenu = "Utility (Legacy)"
+			elif shaderFileName == "blendColors" :
+				subMenu = "Utility (Legacy)"
+			elif shaderFileName == "Curve UV Coordinates" :
+				subMenu = "Utility (Legacy)"
+			elif shaderFileName == "uvCoord" :
+				subMenu = "Utility (Legacy)"
+			elif shaderFileName == "contrast" :
+				subMenu = "Utility (Legacy)"
+			elif shaderFileName == "remapHsv" :
+				subMenu = "Utility (Legacy)"
+			elif shaderFileName == "remapValue" :
+				subMenu = "Utility (Legacy)"
+			elif shaderFileName == "shadingEngine_surface_switch" :
+				subMenu = "Utility (Legacy)"
+			elif shaderFileName == "shadingEngine_displacement_switch" :
+				subMenu = "Utility (Legacy)"
+			elif shaderFileName == "uvChooser" :
+				subMenu = "Utility (Legacy)"
+			elif shaderFileName == "multiplyDivide" :
+				subMenu = "Utility (Legacy)"
+			elif shaderFileName == "Set Range" :
+				subMenu = "Utility (Legacy)"
+			elif shaderFileName == "reverse" :
+				subMenu = "Utility (Legacy)"
+			elif shaderFileName == "uvCombine" :
+				subMenu = "Utility (Legacy)"
+			elif shaderFileName == "colorCombine" :
+				subMenu = "Utility (Legacy)"
+			elif shaderFileName == "luminance" :
+				subMenu = "Utility (Legacy)"
+			elif shaderFileName == "smear" :
+				subMenu = "Utility (Legacy)"
+			elif shaderFileName == "remapColor" :
+				subMenu = "Utility (Legacy)"
+			elif shaderFileName == "vectorProduct" :
+				subMenu = "Utility (Legacy)"
+			elif shaderFileName == "fourByFourMatrix" :
+				subMenu = "Utility (Legacy)"
+			elif shaderFileName == "uvCoordEnvironment" :
+				subMenu = "Utility (Legacy)"
+			elif shaderFileName == "channels" :
+				subMenu = "Utility (Legacy)"
+			elif shaderFileName == "samplerInfo" :
+				subMenu = "Utility (Legacy)"
+			elif shaderFileName == "distanceBetween" :
+				subMenu = "Utility (Legacy)"
+			elif shaderFileName == "ocean" :
+				subMenu = "Texture 2D (Legacy)"
+			elif shaderFileName == "psdFileTex" :
+				subMenu = "Texture 2D (Legacy)"
+			elif shaderFileName == "file" :
+				subMenu = "Texture 2D (Legacy)"
+			elif shaderFileName == "place2dTexture" :
+				subMenu = "Texture 2D (Legacy)"
+			elif shaderFileName == "ramp" :
+				subMenu = "Texture 2D (Legacy)"
+			elif shaderFileName == "imagePlane" :
+				subMenu = "Texture 2D (Legacy)"
+			elif shaderFileName == "stencil" :
+				subMenu = "Texture 2D (Legacy)"
+			elif shaderFileName == "place3dTexture" :
+				subMenu = "Texture 3D (Legacy)"
+			elif shaderFileName == "stucco" :
+				subMenu = "Texture 3D (Legacy)"
+			elif shaderFileName == "envChrome" :
+				subMenu = "Texture 3D (Legacy)"
+			elif shaderFileName == "snow" :
+				subMenu = "Texture 3D (Legacy)"
 
 			if subMenu is None :
-				continue
+				subMenu = "Other"
+			elif subMenu == "Texture/2d" :
+				subMenu = "Texture 2D"
+			elif subMenu == "Texture/3d" :
+				subMenu = "Texture 3D"
+			elif subMenu == "Lightfilter" :
+				subMenu = "Light"
 
 			menu.setdefault( subMenu, [] ).append( ( shader, shaderName ) )
 
