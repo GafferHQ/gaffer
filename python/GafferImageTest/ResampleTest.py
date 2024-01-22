@@ -52,6 +52,9 @@ import GafferImageTest
 
 class ResampleTest( GafferImageTest.ImageTestCase ) :
 
+	# The closest thing we have in the test images to a "normal" image
+	representativeImagePath = GafferImageTest.ImageTestCase.imagesPath() / 'deepMergeReference.exr'
+
 	def testDataWindow( self ) :
 
 		c = GafferImage.Constant()
@@ -154,6 +157,25 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 			with self.subTest( fileName = args[0], size = args[1], ftilter = args[2] ):
 				__test( *args )
 
+	def testNearest( self ) :
+
+		reader = GafferImage.ImageReader()
+		reader["fileName"].setValue( self.representativeImagePath )
+
+		resampleNearest = GafferImage.Resample()
+		resampleNearest["in"].setInput( reader["out"] )
+		resampleNearest["filter"].setValue( "nearest" )
+		resampleNearest["matrix"].setValue( imath.M33f( 1.377, 0, 0, 0, 1.377, 0, 0, 0, 1 ) )
+
+		resampleRef = GafferImage.Resample()
+		resampleRef["in"].setInput( reader["out"] )
+		resampleRef["filter"].setValue( "box" )
+		resampleRef["matrix"].setValue( imath.M33f( 1.377, 0, 0, 0, 1.377, 0, 0, 0, 1 ) )
+
+		# For upscaling, "nearest" should have the same result as a box filter with a default filter size,
+		# except that "nearest" is faster
+		self.assertImagesEqual( resampleNearest["out"], resampleRef["out"] )
+
 	def testInseparableFastPath( self ) :
 
 		reader = GafferImage.ImageReader()
@@ -248,7 +270,7 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 	def testPerfHorizontal( self ) :
 
 		imageReader = GafferImage.ImageReader()
-		imageReader["fileName"].setValue( self.imagesPath() / 'deepMergeReference.exr' )
+		imageReader["fileName"].setValue( self.representativeImagePath )
 
 		resize = GafferImage.Resize()
 		resize["in"].setInput( imageReader["out"] )
@@ -268,7 +290,7 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 	def testPerfVertical( self ) :
 
 		imageReader = GafferImage.ImageReader()
-		imageReader["fileName"].setValue( self.imagesPath() / 'deepMergeReference.exr' )
+		imageReader["fileName"].setValue( self.representativeImagePath )
 
 		resize = GafferImage.Resize()
 		resize["in"].setInput( imageReader["out"] )
@@ -288,7 +310,7 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 	def testPerfSmallFilter( self ) :
 
 		imageReader = GafferImage.ImageReader()
-		imageReader["fileName"].setValue( self.imagesPath() / 'deepMergeReference.exr' )
+		imageReader["fileName"].setValue( self.representativeImagePath )
 
 		resize = GafferImage.Resize()
 		resize["in"].setInput( imageReader["out"] )
@@ -308,7 +330,7 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 	def testPerfVerySmallFilter( self ) :
 
 		imageReader = GafferImage.ImageReader()
-		imageReader["fileName"].setValue( self.imagesPath() / 'deepMergeReference.exr' )
+		imageReader["fileName"].setValue( self.representativeImagePath )
 
 		resize = GafferImage.Resize()
 		resize["in"].setInput( imageReader["out"] )
@@ -328,7 +350,7 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 	def testPerfInseparableLanczos( self ) :
 
 		imageReader = GafferImage.ImageReader()
-		imageReader["fileName"].setValue( self.imagesPath() / 'deepMergeReference.exr' )
+		imageReader["fileName"].setValue( self.representativeImagePath )
 
 		resize = GafferImage.Resize()
 		resize["in"].setInput( imageReader["out"] )
@@ -348,7 +370,7 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 	def testPerfInseparableDisk( self ) :
 
 		imageReader = GafferImage.ImageReader()
-		imageReader["fileName"].setValue( self.imagesPath() / 'deepMergeReference.exr' )
+		imageReader["fileName"].setValue( self.representativeImagePath )
 
 		resize = GafferImage.Resize()
 		resize["in"].setInput( imageReader["out"] )
@@ -368,7 +390,7 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 	def testPerfInseparableAwkwardSize( self ) :
 
 		imageReader = GafferImage.ImageReader()
-		imageReader["fileName"].setValue( self.imagesPath() / 'deepMergeReference.exr' )
+		imageReader["fileName"].setValue( self.representativeImagePath )
 
 		resize = GafferImage.Resize()
 		resize["in"].setInput( imageReader["out"] )
@@ -383,7 +405,6 @@ class ResampleTest( GafferImageTest.ImageTestCase ) :
 
 		with GafferTest.TestRunner.PerformanceScope() :
 			GafferImageTest.processTiles( resample["out"] )
-
 
 if __name__ == "__main__":
 	unittest.main()

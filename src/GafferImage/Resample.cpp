@@ -59,6 +59,8 @@ using namespace GafferImage;
 namespace
 {
 
+const std::string g_nearestString( "nearest" );
+
 // Used as a bitmask to say which filter pass(es) we're computing.
 enum Passes
 {
@@ -71,7 +73,7 @@ enum Passes
 	BothOptimized = Both | 4
 };
 
-unsigned requiredPasses( const Resample *resample, const ImagePlug *image, const OIIO::Filter2D *filter, V2f &ratio )
+Passes requiredPasses( const Resample *resample, const ImagePlug *image, const OIIO::Filter2D *filter, V2f &ratio )
 {
 	int debug = resample->debugPlug()->getValue();
 	if( debug == Resample::HorizontalPass )
@@ -83,11 +85,16 @@ unsigned requiredPasses( const Resample *resample, const ImagePlug *image, const
 		// For a SinglePass debug mode, we always use Both.
 		// Note that we don't use the optimized pass here, even if the ratio is 1 - we want debug to always
 		// use the same path.
-		return Horizontal | Vertical;
+		return (Passes)( Horizontal | Vertical );
 	}
 
 	if( image == image->parent<ImageNode>()->outPlug() )
 	{
+		if( !filter )
+		{
+			// For the nearest filter, we use a separate code path that doesn't consider RequiredPasses anyway.
+			return Both;
+		}
 		if( filter->separable() )
 		{
 			return Vertical;
@@ -123,6 +130,11 @@ void ratioAndOffset( const M33f &matrix, V2f &ratio, V2f &offset )
 // method returns it as a number of pixels in the input space.
 V2f inputFilterRadius( const OIIO::Filter2D *filter, const V2f &inputFilterScale )
 {
+	if( !filter )
+	{
+		return V2f( 0.0f );
+	}
+
 	return V2f(
 		filter->width() * inputFilterScale.x * 0.5f,
 		filter->height() * inputFilterScale.y * 0.5f
@@ -187,6 +199,11 @@ const OIIO::Filter2D *filterAndScale( const std::string &name, V2f ratio, V2f &i
 			result = FilterAlgo::acquireFilter( "lanczos3" );
 		}
 	}
+	else if( name == g_nearestString )
+	{
+		inputFilterScale = V2f( 0 );
+		return nullptr;
+	}
 	else
 	{
 		result = FilterAlgo::acquireFilter( name );
@@ -230,10 +247,11 @@ void filterWeights1D( const OIIO::Filter2D *filter, const float inputFilterScale
 		for( int fX = minX; fX < maxX; ++fX )
 		{
 			const float f = filterCoordinateMult * ( float( fX ) + 0.5f - iX );
+			// \todo - supportRanges should only include values != 0. Address at same time as
+			// moving normalization in here.
 			const float w = pass == Horizontal ? filter->xfilt( f ) : filter->yfilt( f );
 			weights.push_back( w );
 		}
-
 	}
 }
 
@@ -273,6 +291,18 @@ void filterWeights2D( const OIIO::Filter2D *filter, const V2f inputFilterScale, 
 	}
 }
 
+// Find the x index of the nearest input pixel for each pixel in this row. Used to implement the fast
+// path for the "nearest" filter.
+void nearestInputPixelX( const int x, const float ratio, const float offset, std::vector<int> &result )
+{
+	result.reserve( ImagePlug::tileSize() );
+
+	for( int oX = x, eX = x + ImagePlug::tileSize(); oX < eX; ++oX )
+	{
+		result.push_back( floorf( ( oX + 0.5f ) / ratio + offset ) );
+	}
+}
+
 Box2f transform( const Box2f &b, const M33f &m )
 {
 	if( b.isEmpty() )
@@ -299,7 +329,7 @@ GAFFER_NODE_DEFINE_TYPE( Resample );
 size_t Resample::g_firstPlugIndex = 0;
 
 Resample::Resample( const std::string &name )
-	:   FlatImageProcessor( name )
+	: FlatImageProcessor( name )
 {
 	storeIndexOfNextChild( g_firstPlugIndex );
 	addChild( new M33fPlug( "matrix" ) );
@@ -469,7 +499,7 @@ Imath::Box2i Resample::computeDataWindow( const Gaffer::Context *context, const 
 		const OIIO::Filter2D *filter = filterAndScale( filterPlug()->getValue(), ratio, inputFilterScale );
 		inputFilterScale *= filterScalePlug()->getValue();
 
-		const V2f filterRadius = V2f( filter->width(), filter->height() ) * inputFilterScale * 0.5f;
+		const V2f filterRadius = filter ? V2f( filter->width(), filter->height() ) * inputFilterScale * 0.5f : V2f( 0.0f );
 
 		dstDataWindow.min -= filterRadius * ratio;
 		dstDataWindow.max += filterRadius * ratio;
@@ -504,7 +534,7 @@ Imath::Box2i Resample::computeDataWindow( const Gaffer::Context *context, const 
 	// If we're outputting the horizontal pass, then replace
 	// the vertical range with the original.
 
-	if( parent  == horizontalPassPlug() || debugPlug()->getValue() == HorizontalPass )
+	if( parent == horizontalPassPlug() || debugPlug()->getValue() == HorizontalPass )
 	{
 		dataWindow.min.y = srcDataWindow.min.y;
 		dataWindow.max.y = srcDataWindow.max.y;
@@ -518,18 +548,31 @@ void Resample::hashChannelData( const GafferImage::ImagePlug *parent, const Gaff
 	FlatImageProcessor::hashChannelData( parent, context, h );
 
 	V2f ratio, offset;
+
+	V2f inputFilterScale;
+	const OIIO::Filter2D *filter;
+
+	Sampler::BoundingMode boundingMode;
 	{
 		ImagePlug::GlobalScope c( context );
 		ratioAndOffset( matrixPlug()->getValue(), ratio, offset );
-	}
 
-	V2f inputFilterScale;
-	const OIIO::Filter2D *filter = filterAndScale( filterPlug()->getValue(), ratio, inputFilterScale );
-	inputFilterScale *= filterScalePlug()->getValue();
+		const std::string filterName = filterPlug()->getValue();
+		const V2f filterScale = filterScalePlug()->getValue();
+
+		filter = filterAndScale( filterName, ratio, inputFilterScale );
+		inputFilterScale *= filterScale;
+
+		boundingMode = (Sampler::BoundingMode)boundingModePlug()->getValue();
+	}
 
 	filterPlug()->hash( h );
 
-	const unsigned passes = requiredPasses( this, parent, filter, ratio );
+	const V2i tileOrigin = context->get<V2i>( ImagePlug::tileOriginContextName );
+	const std::string &channelName = context->get<std::string>( ImagePlug::channelNameContextName );
+	Passes passes = requiredPasses( this, parent, filter, ratio );
+	Box2i ir = inputRegion( tileOrigin, passes, ratio, offset, filter, inputFilterScale );
+
 	if( passes & Horizontal )
 	{
 		h.append( inputFilterScale.x );
@@ -549,12 +592,11 @@ void Resample::hashChannelData( const GafferImage::ImagePlug *parent, const Gaff
 		h.append( true );
 	}
 
-	const V2i tileOrigin = context->get<V2i>( ImagePlug::tileOriginContextName );
 	Sampler sampler(
 		passes == Vertical ? horizontalPassPlug() : inPlug(),
-		context->get<std::string>( ImagePlug::channelNameContextName ),
-		inputRegion( tileOrigin, passes, ratio, offset, filter, inputFilterScale ),
-		(Sampler::BoundingMode)boundingModePlug()->getValue()
+		channelName,
+		ir,
+		boundingMode
 	);
 	sampler.hash( h );
 
@@ -567,33 +609,64 @@ void Resample::hashChannelData( const GafferImage::ImagePlug *parent, const Gaff
 IECore::ConstFloatVectorDataPtr Resample::computeChannelData( const std::string &channelName, const Imath::V2i &tileOrigin, const Gaffer::Context *context, const ImagePlug *parent ) const
 {
 	V2f ratio, offset;
+	V2f inputFilterScale;
+	const OIIO::Filter2D *filter;
+	Sampler::BoundingMode boundingMode;
 	{
 		ImagePlug::GlobalScope c( context );
 		ratioAndOffset( matrixPlug()->getValue(), ratio, offset );
+
+		const std::string filterName = filterPlug()->getValue();
+		const V2f filterScale = filterScalePlug()->getValue();
+
+		filter = filterAndScale( filterName, ratio, inputFilterScale );
+		inputFilterScale *= filterScale;
+
+		boundingMode = (Sampler::BoundingMode)boundingModePlug()->getValue();
 	}
 
-	V2f inputFilterScale;
-	const OIIO::Filter2D *filter = filterAndScale( filterPlug()->getValue(), ratio, inputFilterScale );
-	inputFilterScale *= filterScalePlug()->getValue();
+	Passes passes = requiredPasses( this, parent, filter, ratio );
+	Box2i ir = inputRegion( tileOrigin, passes, ratio, offset, filter, inputFilterScale );
 
-	const unsigned passes = requiredPasses( this, parent, filter, ratio );
+	const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
 
 	Sampler sampler(
 		passes == Vertical ? horizontalPassPlug() : inPlug(),
 		channelName,
-		inputRegion( tileOrigin, passes, ratio, offset, filter, inputFilterScale ),
-		(Sampler::BoundingMode)boundingModePlug()->getValue()
+		ir,
+		boundingMode
 	);
 
 	const V2f filterRadius = inputFilterRadius( filter, inputFilterScale );
-	const Box2i tileBound( tileOrigin, tileOrigin + V2i( ImagePlug::tileSize() ) );
 
 	FloatVectorDataPtr resultData = new FloatVectorData;
 	std::vector<float> &result = resultData->writable();
 	result.resize( ImagePlug::tileSize() * ImagePlug::tileSize() );
 	std::vector<float>::iterator pIt = result.begin();
 
-	if( passes == Both )
+	if( !filter )
+	{
+		std::vector<int> iPx;
+		nearestInputPixelX( tileBound.min.x, ratio.x, offset.x, iPx );
+
+		V2i oP; // output pixel position
+		int iPy; // input pixel position Y
+
+		for( oP.y = tileBound.min.y; oP.y < tileBound.max.y; ++oP.y )
+		{
+			iPy = floorf( ( oP.y + 0.5f ) / ratio.y + offset.y );
+			std::vector<int>::const_iterator iPxIt = iPx.begin();
+
+			Canceller::check( context->canceller() );
+			for( oP.x = tileBound.min.x; oP.x < tileBound.max.x; ++oP.x )
+			{
+				*pIt = sampler.sample( *iPxIt, iPy );
+				++iPxIt;
+				++pIt;
+			}
+		}
+	}
+	else if( passes == Both )
 	{
 		// When the filter isn't separable we must perform all the
 		// filtering in a single pass. This version also provides
