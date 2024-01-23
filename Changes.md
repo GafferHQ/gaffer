@@ -92,6 +92,7 @@ API
 Breaking Changes
 ----------------
 
+- Arnold : Removed support for Arnold 7.1.
 - Render : Changed `render:includedPurposes` default to `"default", "render"`.
 - Backdrop : Changed default drawing order. Use the new `depth` plug to override the order if necessary.
 - ValuePlug : Removed deprecated `getObjectValue()` overload.

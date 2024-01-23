@@ -176,7 +176,7 @@ jobs:
         import sys
         import os
 
-        for arnoldVersion in [ "7.1.1.0", "7.2.1.0" ] :
+        for arnoldVersion in [ "7.2.1.0" ] :
           arnoldRoot = os.path.join( os.environ["GITHUB_WORKSPACE"], "arnoldRoot", arnoldVersion )
           os.environ["ARNOLD_ROOT"] = arnoldRoot
 

@@ -4058,7 +4058,6 @@ class RendererTest( GafferTest.TestCase ) :
 			{ "diffuse_{}.{}".format( g, c ) for g in lightGroups for c in "RGB" }
 		)
 
-	@unittest.skipIf( [ int( x ) for x in arnold.AiGetVersion()[:3] ] < [ 7, 1, 3 ], "Fails due to bug ARNOLD-12282" )
 	def testLightGroupBeautyOutputWithLayerName( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
@@ -4224,7 +4223,6 @@ class RendererTest( GafferTest.TestCase ) :
 			plane = arnold.AiNodeLookUpByName( universe, "testPlane" )
 			self.assertEqual( arnold.AiNodeGetStr( plane, "user:myString" ), "test" )
 
-	@unittest.skipIf( [ int( x ) for x in arnold.AiGetVersion()[:3] ] < [ 7, 1, 4 ], "Option not available in Arnold" )
 	def testTextureAutoGenerate( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
