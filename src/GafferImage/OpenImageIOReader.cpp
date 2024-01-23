@@ -61,6 +61,9 @@
 #include "boost/bind/bind.hpp"
 #include "boost/regex.hpp"
 
+#include "tbb/parallel_for.h"
+#include "tbb/enumerable_thread_specific.h"
+
 #include <memory>
 
 OIIO_NAMESPACE_USING
@@ -76,8 +79,45 @@ using namespace Gaffer;
 namespace
 {
 
+// \todo - this should become unnecessary once we find a better data type for channel data
+//
+//
+// We don't want to waste time setting a bunch of memory to 0 before we launch the threads that
+// will actually fill that memory, but STL vector is designed to prevent us from allocating memory
+// without wasting time initializing it. The long term solution is probably to choose a new type
+// for channel data ( we'd probably want to change the API for ChannelDataProcessor at the same
+// time to avoid copying channel data before we modify it ).
+//
+// In the mean time, I'm hacking around the STL behaviour by using a non-standards compliant
+// reinterpret_cast to pretend that the vector is a vector of a custom class with the same size as
+// our target, but without any initialization behaviour.
+//
+// This reduces runtime from 0.6 seconds to 0.37 seconds on a test with an 8K x 8K half float
+// scanline exr.
+template<typename T>
+void podVectorResizeUninitialized( std::vector<T> &v, size_t s )
+{
+	struct TNoInit
+	{
+		T data;
+		TNoInit() noexcept {
+		}
+	};
+
+#ifdef NDEBUG
+	reinterpret_cast< std::vector< TNoInit >* >( &v )->resize( s );
+#else
+	// Actually leaving things uninitialized is great for performance, but not so great for reliably
+	// tracking down bugs. In debug mode, where we don't care about performance, set everything to a
+	// sentinel value that will make it obvious if something uses an uninitialized value.
+	v.resize( s, 777 );
+#endif
+}
+
 const IECore::InternedString g_tileBatchOriginContextName( "__tileBatchOrigin" );
 const IECore::InternedString g_noView( "" );
+
+const std::string g_oiioCompression( "compression" );
 
 struct ChannelMapEntry
 {
@@ -101,11 +141,11 @@ struct ChannelMapEntry
 // This is similar to Format::fromEXRSpace/toEXRSpace but those functions mix in switching
 // between inclusive/exclusive bounds, so in order to use them we would have to add a bunch
 // of confusing offsets by 1.  In this class, we always interpret ranges as [ minPixel, onePastMaxPixel )
-Box2i flopDisplayWindow( Box2i b, int displayOriginY, int displayHeight )
+Box2i flopDisplayWindow( const Box2i &b, const ImageSpec &spec )
 {
 	return Box2i(
-		V2i( b.min.x, displayOriginY + displayOriginY + displayHeight - b.max.y ),
-		V2i( b.max.x, displayOriginY + displayOriginY + displayHeight - b.min.y )
+		V2i( b.min.x, spec.full_y + spec.full_y + spec.full_height - b.max.y ),
+		V2i( b.max.x, spec.full_y + spec.full_y + spec.full_height - b.min.y )
 	);
 }
 
@@ -232,6 +272,412 @@ std::string channelNameFromEXR( std::string view, std::string part, std::string 
 	}
 
 }
+
+inline void basicBlit(
+	int width, int height,
+	const float* src, int srcStrideX, int srcStrideY,
+	float* dst, int dstStrideX, int dstStrideY
+)
+{
+	/*
+	This is a very standard blit. It could be implemented by calling an OIIO function like
+	this:
+
+	OIIO::convert_image (
+		1, width, height, 1,
+		src, TypeDesc::FLOAT, srcStrideX * sizeof( float ), srcStrideY * sizeof( float ), 0,
+		dst, TypeDesc::FLOAT, dstStrideX * sizeof( float ), dstStrideY * sizeof( float ), 0
+	);
+
+	However, that is somehow slower than a manual implementation ... it's possible that
+	treating the memory as floats is somehow faster than than treating it as generic bytes?
+	Maybe OIIO will fix their performance at some point, and then we can remove this function.
+
+	If we were using the OIIO function, we would have the option of not forcing the intermediate
+	buffer to be float, and instead using whatever the native data format is ... I thought that
+	might make things faster, but instead in testing in made them even slower.
+	*/
+
+	for( int i = 0; i < height; i++ )
+	{
+		float *dstStart = dst + dstStrideY * i;
+		float *dstEnd = dstStart + width * dstStrideX;
+
+		const float *curSrc = src + srcStrideY * i;
+
+		for( float *p = dstStart; p < dstEnd; p += dstStrideX )
+		{
+			*p = *curSrc;
+			curSrc += srcStrideX;
+		}
+	}
+}
+
+// Similar to the basic blit, but copies sample counts from OIIO::DeepData
+// The x strides are hardcoded to 1, since this fits all our usage
+inline void sampleCountBlit(
+	int width, int height,
+	const OIIO::DeepData &src, int srcStartIndex, int srcStrideY,
+	int* dst, int dstStrideY
+)
+{
+	for( int i = 0; i < height; i++ )
+	{
+		int *dstStart = dst + dstStrideY * i;
+		int *dstEnd = dstStart + width;
+
+		int curSrc = srcStartIndex + srcStrideY * i;
+
+		for( int *p = dstStart; p < dstEnd; p++ )
+		{
+			*p = src.samples( curSrc );
+			curSrc++;
+		}
+	}
+}
+
+// Similar to the basic blit, but copies all deep samples in each pixel.
+// The x strides are hardcoded to 1, since this fits all our usage, and
+// allows for optimization
+inline void deepBlit(
+	int width, int height,
+	const OIIO::DeepData &src, int channel, int srcStartIndex, int srcStrideY,
+	const int* dstOffsets, int dstStartIndex, int dstStrideY, float *dst
+)
+{
+	for( int i = 0; i < height; i++ )
+	{
+		int prevOffset = 0;
+		if( dstStartIndex + dstStrideY * i > 0 )
+		{
+			prevOffset = dstOffsets[ dstStartIndex + dstStrideY * i - 1 ];
+		}
+		float *curDst = dst + prevOffset;
+
+		int rowLast = srcStartIndex + srcStrideY * i + width;
+		for( int j = srcStartIndex + srcStrideY * i; j < rowLast; j++ )
+		{
+			int numSamples = src.samples( j );
+			for( int k = 0; k < numSamples; k++ )
+			{
+				*curDst = src.deep_value( j, channel, k );
+				curDst++;
+			}
+		}
+	}
+}
+
+// Copies data from an intermediate buffer into the Gaffer tiles, accounting for differences in storage
+// between OIIO and Gaffer.
+//
+// The source data in OIIO format has the channels interleaved, and is flipped in Y relative to Gaffer.
+// The Gaffer targets are a series of tiles of a fixed size, with separate tiles for each channel.
+
+void blitOIIORectToTileBatch(
+		int numChannels, float* buffer, const Box2i &rect,
+		const V2i &tileBatchSize, const V3i &tileBatchOrigin, std::vector< float* > &tilePointers,
+		const vector< Box2i > &tileDataWindows
+)
+{
+	const unsigned int tileBatchChannelSize = tileBatchSize.x * tileBatchSize.y;
+
+	const V2i rectSize = rect.size();
+	for( int ty = 0; ty < tileBatchSize.y; ty++ )
+	{
+		int tileRelMinY = rect.min.y - ( tileBatchOrigin.y + ImagePlug::tileSize() * ty );
+		int clampedMinY = std::max( tileRelMinY, 0 );
+		int height = std::min( tileRelMinY + rectSize.y, ImagePlug::tileSize() ) - clampedMinY;
+
+		if( height <= 0 )
+		{
+			// If there is no vertical overlap between the source rectangle and this row of tiles,
+			// skip the whole row
+			continue;
+		}
+
+		for( int tx = 0; tx < tileBatchSize.x; tx++ )
+		{
+			int tileRelMinX = rect.min.x - ( tileBatchOrigin.x + ImagePlug::tileSize() * tx );
+
+			int clampedMinX = std::max( tileRelMinX, 0 );
+			int width = std::min( tileRelMinX + rectSize.x, ImagePlug::tileSize() ) - clampedMinX;
+
+			if( width <= 0 )
+			{
+				continue;
+			}
+
+			int tileBatchIndex = ty * tileBatchSize.x + tx;
+
+			int tileStartIndex = clampedMinY * ImagePlug::tileSize() + clampedMinX;
+
+			// Note that in order to account for the OIIO rect being upside down relative to Gaffer,
+			// we offset this start index to the last row of the source rect, and pass a negative
+			// srcStrideY to basicBlit.
+			int rectStartIndex = clampedMinX - tileRelMinX +
+				( rectSize.y - 1 - ( clampedMinY - tileRelMinY ) ) * rectSize.x;
+
+			for( int channel = 0; channel < numChannels; channel++ )
+			{
+				basicBlit(
+					width, height, &buffer[rectStartIndex * numChannels + channel ],
+					numChannels, -numChannels * rectSize.x,
+					&tilePointers[ channel * tileBatchChannelSize + tileBatchIndex ][ tileStartIndex ],
+					1, ImagePlug::tileSize()
+				);
+			}
+
+			// This is a bit irregular, but we don't want to initialize tiles up front before threading
+			// can get started ... but we do want to set to 0 anything outside the data window ( in case
+			// a different part of a multipart file has a different data window, this data could end up
+			// being used ). In order to ensure that this cost is spread reasonably between threads,
+			// and happens exactly once, whoever blits to the pixel at the minimum of the data window
+			// of a partially covered tile, is responsible for zeroing out all the parts of that tile
+			// outside the data window.
+			if(
+				!(
+					tileDataWindows[tileBatchIndex].min.x == 0 &&
+					tileDataWindows[tileBatchIndex].min.y == 0 &&
+					tileDataWindows[tileBatchIndex].max.x == ImagePlug::tileSize() &&
+					tileDataWindows[tileBatchIndex].max.y == ImagePlug::tileSize()
+				)
+			)
+			{
+				const Box2i &tileDataWindow = tileDataWindows[tileBatchIndex];
+				if( tileStartIndex == tileDataWindow.min.y * ImagePlug::tileSize() + tileDataWindow.min.x )
+				{
+					for( int channel = 0; channel < numChannels; channel++ )
+					{
+						float *tilePtr = tilePointers[ channel * tileBatchChannelSize + tileBatchIndex ];
+						for( int y = 0; y < ImagePlug::tileSize(); y++ )
+						{
+							if( y < tileDataWindow.min.y || y >= tileDataWindow.max.y )
+							{
+								memset(
+									&tilePtr[ y * ImagePlug::tileSize() ], 0,
+									sizeof( float ) * ImagePlug::tileSize()
+								);
+								continue;
+							}
+
+							if( tileDataWindow.min.x > 0 )
+							{
+								memset(
+									&tilePtr[ y * ImagePlug::tileSize() ], 0,
+									sizeof( float ) * tileDataWindow.min.x
+								);
+							}
+
+							if( tileDataWindow.max.x < ImagePlug::tileSize() )
+							{
+								memset(
+									&tilePtr[ y * ImagePlug::tileSize() + tileDataWindow.max.x ], 0,
+									sizeof( float ) * ( ImagePlug::tileSize() - tileDataWindow.max.x )
+								);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+void blitOIIOSampleCountsToTileBatch(
+	const OIIO::DeepData &deepData, const Box2i &rect,
+	const V2i &tileBatchSize, const V3i &tileBatchOrigin, std::vector< int* > &tilePointers
+)
+{
+	const V2i rectSize = rect.size();
+	for( int ty = 0; ty < tileBatchSize.y; ty++ )
+	{
+		int tileRelMinY = rect.min.y - ( tileBatchOrigin.y + ImagePlug::tileSize() * ty );
+		int clampedMinY = std::max( tileRelMinY, 0 );
+		int height = std::min( tileRelMinY + rectSize.y, ImagePlug::tileSize() ) - clampedMinY;
+
+		if( height <= 0 )
+		{
+			// If there is no vertical overlap between the source rectangle and this row of tiles,
+			// skip the whole row
+			continue;
+		}
+
+		for( int tx = 0; tx < tileBatchSize.x; tx++ )
+		{
+			int tileRelMinX = rect.min.x - ( tileBatchOrigin.x + ImagePlug::tileSize() * tx );
+
+			int clampedMinX = std::max( tileRelMinX, 0 );
+			int width = std::min( tileRelMinX + rectSize.x, ImagePlug::tileSize() ) - clampedMinX;
+
+			if( width <= 0 )
+			{
+				continue;
+			}
+
+			int tileBatchIndex = ty * tileBatchSize.x + tx;
+
+			int tileStartIndex = clampedMinY * ImagePlug::tileSize() + clampedMinX;
+
+			// Note that in order to account for the OIIO rect being upside down relative to Gaffer,
+			// we offset this start index to the last row of the source rect, and pass a negative
+			// srcStrideY to basicBlit.
+			int rectStartIndex = clampedMinX - tileRelMinX +
+				( rectSize.y - 1 - ( clampedMinY - tileRelMinY ) ) * rectSize.x;
+
+			sampleCountBlit(
+				width, height, deepData, rectStartIndex,
+				-rectSize.x,
+				&tilePointers[ tileBatchIndex ][ tileStartIndex ],
+				ImagePlug::tileSize()
+			);
+		}
+	}
+}
+
+void blitDeepOIIORectToTileBatch(
+	int numChannels, const OIIO::DeepData &deepData, const Box2i &rect,
+	const V2i &tileBatchSize, const V3i &tileBatchOrigin, std::vector< float* > &tileChannelPointers,
+	const std::vector< int* > &tileOffsetPointers
+)
+{
+	const unsigned int tileBatchChannelSize = tileBatchSize.x * tileBatchSize.y;
+
+	const V2i rectSize = rect.size();
+	for( int ty = 0; ty < tileBatchSize.y; ty++ )
+	{
+		int tileRelMinY = rect.min.y - ( tileBatchOrigin.y + ImagePlug::tileSize() * ty );
+		int clampedMinY = std::max( tileRelMinY, 0 );
+		int height = std::min( tileRelMinY + rectSize.y, ImagePlug::tileSize() ) - clampedMinY;
+
+		if( height <= 0 )
+		{
+			// If there is no vertical overlap between the source rectangle and this row of tiles,
+			// skip the whole row
+			continue;
+		}
+
+		for( int tx = 0; tx < tileBatchSize.x; tx++ )
+		{
+			int tileRelMinX = rect.min.x - ( tileBatchOrigin.x + ImagePlug::tileSize() * tx );
+
+			int clampedMinX = std::max( tileRelMinX, 0 );
+			int width = std::min( tileRelMinX + rectSize.x, ImagePlug::tileSize() ) - clampedMinX;
+
+			if( width <= 0 )
+			{
+				continue;
+			}
+
+			int tileBatchIndex = ty * tileBatchSize.x + tx;
+
+			int tileStartIndex = clampedMinY * ImagePlug::tileSize() + clampedMinX;
+
+			// Note that in order to account for the OIIO rect being upside down relative to Gaffer,
+			// we offset this start index to the last row of the source rect, and pass a negative
+			// srcStrideY to basicBlit.
+			int rectStartIndex = clampedMinX - tileRelMinX +
+				( rectSize.y - 1 - ( clampedMinY - tileRelMinY ) ) * rectSize.x;
+
+			for( int channel = 0; channel < numChannels; channel++ )
+			{
+				deepBlit(
+					width, height,
+					deepData, channel, rectStartIndex, -rectSize.x,
+					tileOffsetPointers[ tileBatchIndex ], tileStartIndex, ImagePlug::tileSize(),
+					tileChannelPointers[ channel * tileBatchChannelSize + tileBatchIndex ]
+				);
+			}
+		}
+	}
+}
+
+// Convert a count in each pixel into a running sampleOffset. Only counts within
+// the dataWindow are required to be initialized - counts outside the dataWindow
+// are assumed to be 0 without being read.
+void accumulateSampleOffsets( int *sampleOffsets, const Box2i &tileDataWindow )
+{
+	int accum = 0;
+
+	if(
+		tileDataWindow.min.x == 0 &&
+		tileDataWindow.min.y == 0 &&
+		tileDataWindow.max.x == ImagePlug::tileSize() &&
+		tileDataWindow.max.y == ImagePlug::tileSize()
+	)
+	{
+		// Whole tile is within data window, we are just doing a running sum of everything.
+		int *last = sampleOffsets + ImagePlug::tilePixels();
+		for( int *cur = sampleOffsets; cur < last; cur++ )
+		{
+			accum += *cur;
+			*cur = accum;
+		}
+		return;
+	}
+
+	for( int y = 0; y < ImagePlug::tileSize(); y++ )
+	{
+		int *rowLast = sampleOffsets + ( y + 1 ) * ImagePlug::tileSize();
+		int *cur = sampleOffsets + y * ImagePlug::tileSize();
+		if( y < tileDataWindow.min.y || y >= tileDataWindow.max.y )
+		{
+			for( ; cur < rowLast; cur++ )
+			{
+				*cur = accum;
+			}
+			continue;
+		}
+
+		int *dataStart = sampleOffsets + y * ImagePlug::tileSize() + tileDataWindow.min.x;
+		int *dataEnd = sampleOffsets + y * ImagePlug::tileSize() + tileDataWindow.max.x;
+		for( ; cur < dataStart; cur++ )
+		{
+			*cur = accum;
+		}
+		for( ; cur < dataEnd; cur++ )
+		{
+			accum += *cur;
+			*cur = accum;
+		}
+		for( ; cur < rowLast; cur++ )
+		{
+			*cur = accum;
+		}
+	}
+}
+
+// Compute the region of each tile that is within the data window
+std::vector< Box2i > calculateTileDataWindows(
+	int tileBatchNumTiles, const V3i &tileBatchOrigin, const V2i &tileBatchSize, const Box2i &gafferDataWindow
+)
+{
+	std::vector< Box2i > result( tileBatchNumTiles );
+	for( int subIndex = 0; subIndex < tileBatchNumTiles; subIndex++ )
+	{
+		int tx = subIndex % tileBatchSize.x;
+		int ty = subIndex / tileBatchSize.x;
+		V2i tileOrigin(
+			tileBatchOrigin.x + tx * ImagePlug::tileSize(),
+			tileBatchOrigin.y + ty * ImagePlug::tileSize()
+		);
+
+		Box2i tileRelativeBound( gafferDataWindow.min - tileOrigin, gafferDataWindow.max - tileOrigin );
+		result[ subIndex ] = BufferAlgo::intersection(
+			tileRelativeBound,
+			Box2i( V2i( 0 ), V2i( ImagePlug::tileSize() ) )
+		);
+	}
+	return result;
+}
+
+Box2i expandToGrid( Box2i region, V2i gridOrigin, V2i gridSize )
+{
+	return Box2i(
+		coordinateDivide( region.min - gridOrigin, gridSize ) * gridSize + gridOrigin,
+		coordinateDivide( region.max - gridOrigin + gridSize - V2i(1), gridSize ) * gridSize + gridOrigin
+	);
+}
+
 
 // This class handles storing a file handle, and reading data from it in a way compatible with how we want
 // to store it on plugs.
@@ -493,205 +939,341 @@ class File
 		{
 			const View& view = lookupView( c );
 
-			V2i batchFirstTile = ImagePlug::tileIndex( V2i( tileBatchOrigin.x, tileBatchOrigin.y ) );
-			Box2i targetRegion = Box2i(
-				V2i( tileBatchOrigin.x, tileBatchOrigin.y ),
-				V2i( tileBatchOrigin.x, tileBatchOrigin.y ) + view.tileBatchSize * ImagePlug::tileSize()
+			const ImageSpec spec = m_imageInput->spec( tileBatchOrigin.z, 0 );
+
+			const int tileBatchNumTileChannels = spec.nchannels * view.tileBatchSize.y * view.tileBatchSize.x;
+			const int tileBatchNumTiles = view.tileBatchSize.y * view.tileBatchSize.x;
+
+			ObjectVectorPtr resultChannels = new ObjectVector();
+			resultChannels->members().resize( tileBatchNumTileChannels );
+			std::vector< float* > tileChannelPointers( tileBatchNumTileChannels );
+
+			// Only used by deep images. These will initially hold sample counts, and then we will do
+			// a running sum to convert these to the sampleOffsets expected for ImagePlug.
+			ObjectVectorPtr resultOffsets;
+			std::vector< int* > tileOffsetPointers;
+
+			// Convert the data window from the file into Gaffer coordinates
+			const V2i fileDataOrigin( spec.x, spec.y );
+			const Box2i fileDataWindow( fileDataOrigin, fileDataOrigin + V2i( spec.width, spec.height ) );
+			const Box2i gafferDataWindow = flopDisplayWindow( fileDataWindow, spec );
+
+			// The region of each tile that is within the data window
+			const std::vector< Box2i > tileDataWindows = calculateTileDataWindows(
+				tileBatchNumTiles, tileBatchOrigin, view.tileBatchSize, gafferDataWindow
 			);
 
-			// Do the actual read of data
+			if( !spec.deep )
+			{
+				// For flat images we can allocate all the outputs from the start
+				for( int subIndex = 0; subIndex < tileBatchNumTileChannels; subIndex++ )
+				{
+					if( !BufferAlgo::empty( tileDataWindows[ subIndex % tileBatchNumTiles ] ) )
+					{
+						FloatVectorDataPtr tileAlloc = new IECore::FloatVectorData();
+						podVectorResizeUninitialized<float>( tileAlloc->writable(), ImagePlug::tilePixels() );
+						tileChannelPointers[ subIndex ] = &tileAlloc->writable()[0];
+						resultChannels->members()[ subIndex ] = std::move( tileAlloc );
+					}
+					else
+					{
+						// If this subImage has a smaller data window than other subImages for this view,
+						// there may be tiles in the tile batch that are fully outside the data window.
+						// We can just use black tiles for them.
+						//
+						// The const_cast is safe because we will never write to these tiles, and our output
+						// is treated as const.
+						resultChannels->members()[ subIndex ] = const_cast<IECore::FloatVectorData*>( ImagePlug::blackTile() );
 
-			// Convert target region to EXR space to pass to readRegion
-			Box2i exrTargetRegion = flopDisplayWindow( targetRegion, view.imageSpec.full_y, view.imageSpec.full_height );
-			std::vector<float> fileData;
-			DeepData fileDeepData;
-			Box2i exrDataRegion;
+						// To ensure that we never write to the tiles that must be treated as const, we set
+						// the pointer used for writing these tiles to a nullptr.
+						tileChannelPointers[ subIndex ] = nullptr;
+					}
+				}
+			}
+			else
+			{
+				// For deep images, we allocate the sample offsets, but can't allocate any of the channel
+				// data until we know how many samples there are
+				resultOffsets = new ObjectVector();
+				resultOffsets->members().resize( tileBatchNumTiles );
+				tileOffsetPointers.resize( tileBatchNumTiles );
 
-			const int nchannels = readRegion( tileBatchOrigin.z, exrTargetRegion, fileData, fileDeepData, exrDataRegion );
+				for( int subIndex = 0; subIndex < tileBatchNumTiles; subIndex++ )
+				{
+					if( !BufferAlgo::empty( tileDataWindows[ subIndex % tileBatchNumTiles ] ) )
+					{
+						IntVectorDataPtr tileAlloc = new IECore::IntVectorData();
+						podVectorResizeUninitialized<int>( tileAlloc->writable(), ImagePlug::tilePixels() );
+						tileOffsetPointers[ subIndex ] = &tileAlloc->writable()[0];
+						resultOffsets->members()[ subIndex ] = std::move( tileAlloc );
+					}
+					else
+					{
+						// This is a bit of a weird case : we don't support multiple subImages for deep images,
+						// so we will never use any tiles outside the data window. But for tiled images, the tile
+						// batch size is constant, and the image could be smaller than that, resulting in tiles
+						// outside the data window that are never used, and it's better not to have uninitialized
+						// data lying around, so we do the same trick as we do for flat images here:
+						resultOffsets->members()[ subIndex ] = const_cast<IECore::IntVectorData*>( ImagePlug::emptyTileSampleOffsets() );
+						tileOffsetPointers[ subIndex ] = nullptr;
+					}
 
-			// Convert the resulting region from readRegion back from EXR coordinates to Gaffer coordinates
-			Box2i fileDataRegion = flopDisplayWindow( exrDataRegion, view.imageSpec.full_y, view.imageSpec.full_height );
+				}
+			}
 
-			// Pull data apart into tiles ( separate for each channel instead of interleaved )
-			int tileBatchNumElements = nchannels * view.tileBatchSize.y * view.tileBatchSize.x;
+			// Find the portion of the data window that intersects with the current tile batch,
+			// and convert it from Gaffer coordinates to file coordinates.
+			const V2i tileBatchOriginXY( tileBatchOrigin.x, tileBatchOrigin.y );
+			const Box2i targetRegion = BufferAlgo::intersection(
+				Box2i( tileBatchOriginXY, tileBatchOriginXY + view.tileBatchSize * ImagePlug::tileSize() ),
+				gafferDataWindow
+			);
+			const Box2i fileTargetRegion = flopDisplayWindow( targetRegion, view.imageSpec );
+
+			// It would probably be more efficient if we just did two separate traversals of the input regions,
+			// with the first one setting EXR_DECODE_SAMPLE_DATA_ONLY, rather than decoding everything up front,
+			// and having to hold it in memory while we compute our sample offsets before we can actually use it.
+			// OIIO does not expose any way to do this though ... it would really make sense if passing chend = 0
+			// would get you just the sample counts.
+			std::vector< OIIO::DeepData > deepRectsData;
+			std::vector< Box2i > deepRects;
+
+			bool usingExrCore =
+				strcmp( m_imageInput->format_name(), "openexr" ) == 0 &&
+				OIIO::get_int_attribute( "openexr:core" );
+
+			tbb::enumerable_thread_specific< std::vector< float > > threadBuffers;
+			tbb::task_group_context taskGroupContext( tbb::task_group_context::isolated );
+
+			const std::string compression = spec.get_string_attribute( g_oiioCompression );
+
+			const V2i tileSize( spec.tile_width, spec.tile_height );
+
+			if( tileSize == V2i( 0 ) && ( !usingExrCore || compression == "dwab" ) )
+			{
+				// If we are using compression other than EXR, or we're using the massive 256 scanline blocks
+				// of DWAB, then we can't benefit from splitting the decompression over multiple threads -
+				// we'll just use one thread for the whole batch. Would be nice if more of these cases
+				// were efficiently threaded, but the current approach works well for "zips" compression,
+				// or tiled images.
+				//
+				// Note this means scanline DWAB is a very poor match for our compute model in Gaffer.
+				// Tiled DWAB works great though.
+
+				if( spec.deep )
+				{
+					deepRects.resize( 1 );
+					deepRectsData.resize( 1 );
+				}
+
+				std::vector<float> buffer;
+				processFileRegionScanline(
+					spec, tileBatchOrigin, fileTargetRegion, buffer,
+					view.tileBatchSize, tileChannelPointers, tileDataWindows,
+					deepRectsData.size() ? &deepRectsData[0] : nullptr,
+					deepRects.size() ? &deepRects[0] : nullptr, tileOffsetPointers
+				);
+			}
+			else if( tileSize == V2i( 0 ) )
+			{
+				// The standard case for scanline - we're using ExrCore, and we've got an exr that we
+				// should be able to multithread
+
+				// We need to batch together scanlines that are compressed together, otherwise we end up
+				// repeating the work of decoding the whole compressed block for each scanline we need to access.
+				// A batch of 16 scanlines works for the "zip" compression type, which compresses blocks of
+				// 16 scanlines, and is a reasonable default if we encounter a compression type we haven't
+				// accounted for.
+				int compressionBatch = 16;
+
+				if( compression == "zips" )
+				{
+					// For single-scanline zip compression, we can decode 1 scanline at a time, and benefit from
+					// full multithreading.
+					compressionBatch = 1;
+				}
+				else if( compression == "dwaa" )
+				{
+					// DWAA uses 32 scanline blocks
+					// ( DWAB uses 256, so we just completely disable using multiple threads below )
+					compressionBatch = 32;
+				}
+
+				// scanlineBatch and scanlineBatchOffset control how many scanlines we process at once,
+				// and how they are aligned. In order to avoid decompressing the same EXR chunk multiple times,
+				// it's important that these batches are aligned to the data origin in EXR space, not aligned
+				// to the Gaffer tiles.
+				int scanlineBatch = compressionBatch;
+				int scanlineBatchOffset = ( ( fileTargetRegion.min.y - fileDataOrigin.y ) / compressionBatch ) * compressionBatch + fileDataOrigin.y;
+
+				// Compute how many batches are needed to cover the size of the target region
+				const int numScanlineBatches = ( fileTargetRegion.max.y - scanlineBatchOffset + scanlineBatch - 1 ) / scanlineBatch;
+
+				if( spec.deep )
+				{
+					deepRects.resize( numScanlineBatches );
+					deepRectsData.resize( numScanlineBatches );
+				}
+
+				tbb::parallel_for(
+					tbb::blocked_range<int>( 0, numScanlineBatches ),
+					[&] ( const tbb::blocked_range<int> &range )
+					{
+						std::vector<float> &buffer = threadBuffers.local();
+						for( int i = range.begin(); i < range.end(); i++ )
+						{
+							const int y = i * scanlineBatch + scanlineBatchOffset;
+							const int yEnd = std::min( y + scanlineBatch, fileTargetRegion.max.y );
+
+							const Box2i batchRect(
+								Imath::V2i( fileTargetRegion.min.x, y ),
+								Imath::V2i( fileTargetRegion.max.x, yEnd )
+							);
+
+							processFileRegionScanline(
+								spec, tileBatchOrigin, batchRect, buffer,
+								view.tileBatchSize, tileChannelPointers, tileDataWindows,
+								deepRectsData.size() ? &deepRectsData[i] : nullptr,
+								deepRects.size() ? &deepRects[i] : nullptr, tileOffsetPointers
+							);
+						}
+					},
+					taskGroupContext
+				);
+			}
+			else if( !usingExrCore )
+			{
+				// A tiled image that we can't use our threading on
+
+				if( spec.deep )
+				{
+					deepRects.resize( 1 );
+					deepRectsData.resize( 1 );
+				}
+
+				// Round the target region coordinates outwards to the tile boundaries in the file
+				const Box2i fileTileRegion = expandToGrid( fileTargetRegion, fileDataOrigin, tileSize );
+
+				std::vector<float> buffer;
+				processFileRegionTiled(
+					spec, tileBatchOrigin, BufferAlgo::intersection( fileTileRegion, fileDataWindow ), buffer,
+					view.tileBatchSize, tileChannelPointers, tileDataWindows,
+					deepRectsData.size() ? &deepRectsData[0] : nullptr,
+					deepRects.size() ? &deepRects[0] : nullptr, tileOffsetPointers
+				);
+			}
+			else
+			{
+				// A tiled image that we can multithread
+
+				// Round the target region coordinates outwards to the tile boundaries in the file
+				const Box2i fileTileRegion = expandToGrid( fileTargetRegion, fileDataOrigin, tileSize );
+
+				const V2i fileTileCounts = fileTileRegion.size() / tileSize;
+
+				const unsigned int numFileTiles = fileTileCounts.x * fileTileCounts.y;
+
+				if( spec.deep )
+				{
+					deepRects.resize( numFileTiles );
+					deepRectsData.resize( numFileTiles );
+				}
+
+				tbb::parallel_for(
+					tbb::blocked_range<int>( 0, numFileTiles ),
+					[&] ( const tbb::blocked_range<int> &range )
+					{
+						std::vector<float> &buffer = threadBuffers.local();
+						for( int i = range.begin(); i < range.end(); i++ )
+						{
+							// For a tiled image, each tile can be it's own batch of processing, so we
+							// get good parallelism.
+							const V2i fileTile = fileTileRegion.min + V2i( i % fileTileCounts.x, i / fileTileCounts.x ) * tileSize;
+							const Box2i batchRect = BufferAlgo::intersection( fileDataWindow, Imath::Box2i (
+								Imath::V2i( fileTile.x, fileTile.y ),
+								Imath::V2i( fileTile.x + tileSize.x, fileTile.y + tileSize.y )
+							) );
+
+							processFileRegionTiled(
+								spec, tileBatchOrigin, batchRect, buffer,
+								view.tileBatchSize, tileChannelPointers, tileDataWindows,
+								deepRectsData.size() ? &deepRectsData[i] : nullptr,
+								deepRects.size() ? &deepRects[i] : nullptr, tileOffsetPointers
+							);
+						}
+					},
+					taskGroupContext
+				);
+			}
+
+			if( spec.deep )
+			{
+				// For a deep image, all we can actually do in the initial pass is set initial sample counts
+				// ... we've still got lots of work to do to actually get the data in place.
+
+				// This parallel loop over the tiles converts from sample counts to sample offsets,
+				// and allocates all the channel data
+				tbb::parallel_for(
+					tbb::blocked_range<int>( 0, tileBatchNumTiles ),
+					[&] ( const tbb::blocked_range<int> &range )
+					{
+						for( int i = range.begin(); i < range.end(); i++ )
+						{
+							if( !tileOffsetPointers[i] )
+							{
+								// Empty tiles outside the data window are never used, but we still need to make
+								// sure we don't crash while processing them, so we might as well do something
+								// reasonable.
+								for( int c = 0; c < spec.nchannels; c++ )
+								{
+									resultChannels->members()[ c * tileBatchNumTiles + i ] = const_cast<IECore::FloatVectorData*>( ImagePlug::emptyTile() );
+									tileChannelPointers[ c * tileBatchNumTiles + i ] = nullptr;
+								}
+								continue;
+							}
+
+							accumulateSampleOffsets( tileOffsetPointers[ i ], tileDataWindows[ i ] );
+
+							int totalSamples = tileOffsetPointers[i][ ImagePlug::tilePixels() - 1 ];
+							for( int c = 0; c < spec.nchannels; c++ )
+							{
+								FloatVectorDataPtr tileAlloc = new IECore::FloatVectorData();
+								podVectorResizeUninitialized<float>( tileAlloc->writable(), totalSamples );
+
+								tileChannelPointers[ c * tileBatchNumTiles + i ] = &tileAlloc->writable()[0];
+								resultChannels->members()[ c * tileBatchNumTiles + i ] = std::move( tileAlloc );
+
+							}
+						}
+					},
+					taskGroupContext
+				);
+
+				// Now we can finally do one last parallel loop over the batches of OIIO data, and actually
+				// copy the channel data into the right places in the Gaffer tiles.
+				tbb::parallel_for(
+					tbb::blocked_range<int>( 0, deepRects.size() ),
+					[&] ( const tbb::blocked_range<int> &range )
+					{
+						for( int i = range.begin(); i < range.end(); i++ )
+						{
+							blitDeepOIIORectToTileBatch(
+								spec.nchannels, deepRectsData[i], deepRects[i],
+								view.tileBatchSize, tileBatchOrigin, tileChannelPointers,
+								tileOffsetPointers
+							);
+						}
+					},
+					taskGroupContext
+				);
+
+			}
+
 			ObjectVectorPtr result = new ObjectVector();
-			result->members().resize( tileBatchNumElements );
-
-			ObjectVectorPtr resultChannels = result;
-
-			std::vector< int > deepTileSizes;
-
-			if( view.imageSpec.deep )
-			{
-				result = new ObjectVector();
-				result->members().resize( 2 );
-				result->members()[1] = resultChannels;
-
-				ObjectVectorPtr resultOffsets = new ObjectVector();
-				resultOffsets->members().resize( view.tileBatchSize.y * view.tileBatchSize.x );
-				result->members()[0] = resultOffsets;
-
-				deepTileSizes.resize( view.tileBatchSize.y * view.tileBatchSize.x );
-
-				for( int ty = batchFirstTile.y; ty < batchFirstTile.y + view.tileBatchSize.y; ty++ )
-				{
-					for( int tx = batchFirstTile.x; tx < batchFirstTile.x + view.tileBatchSize.x; tx++ )
-					{
-						V2i tileOffset = ImagePlug::tileSize() * V2i( tx, ty );
-						int subIndex = tileBatchSubIndex( view, 0, tileOffset );
-
-						Box2i tileRelativeFileRegion( fileDataRegion.min - tileOffset, fileDataRegion.max - tileOffset );
-						Box2i tileRegion = BufferAlgo::intersection(
-							Box2i( V2i( 0 ), V2i( ImagePlug::tileSize() ) ), tileRelativeFileRegion
-						);
-
-						if( BufferAlgo::empty( tileRegion ) )
-						{
-							// Result will be treated as const as soon as we set it on the plug, and we're not
-							// going to modify any elements after setting them, so it's safe to store a const
-							// value in one of the elements
-							resultOffsets->members()[ subIndex ] = const_cast<IntVectorData*>( ImagePlug::emptyTileSampleOffsets() );
-
-							continue;
-						}
-
-						IntVectorDataPtr tileData = new IECore::IntVectorData(
-							std::vector<int>( ImagePlug::tilePixels(), 0 )
-						);
-						vector<int> &tile = tileData->writable();
-						int curOffset = 0;
-
-						int *tileIndex = &tile[ tileRegion.min.y * ImagePlug::tileSize() + tileRegion.min.x];
-						for( int y = tileRegion.min.y; y < tileRegion.max.y; ++y )
-						{
-							int *newTileIndex = &tile[ y * ImagePlug::tileSize() + tileRegion.min.x ];
-
-							// Any empty pixels we're skipping should get filled with an offset that
-							// hasn't changed
-							while( tileIndex < newTileIndex )
-							{
-								*tileIndex = curOffset;
-								tileIndex++;
-							}
-							tileIndex = newTileIndex;
-
-							int scanline = fileDataRegion.size().y - 1 - (y - tileRelativeFileRegion.min.y);
-							int dataIndex = scanline * fileDataRegion.size().x +
-								tileRegion.min.x - tileRelativeFileRegion.min.x;
-
-							for( int x = tileRegion.min.x; x < tileRegion.max.x; x++ )
-							{
-								curOffset += fileDeepData.samples( dataIndex );
-								*tileIndex = curOffset;
-								tileIndex++;
-								dataIndex++;
-							}
-						}
-						// Any empty pixels at the end should get filled with an offset that hasn't changed
-						while( tileIndex <= &tile.back() )
-						{
-							*tileIndex = curOffset;
-							tileIndex++;
-						}
-						resultOffsets->members()[ subIndex ] = tileData;
-
-						deepTileSizes[ ( ty - batchFirstTile.y ) * view.tileBatchSize.x  + tx - batchFirstTile.x ] = curOffset;
-					}
-				}
-			}
-
-			for( int channelIdx = 0; channelIdx < nchannels; channelIdx++ )
-			{
-				for( int ty = batchFirstTile.y; ty < batchFirstTile.y + view.tileBatchSize.y; ty++ )
-				{
-					for( int tx = batchFirstTile.x; tx < batchFirstTile.x + view.tileBatchSize.x; tx++ )
-					{
-						V2i tileOffset = ImagePlug::tileSize() * V2i( tx, ty );
-						int subIndex = tileBatchSubIndex( view, channelIdx, tileOffset );
-
-						Box2i tileRelativeFileRegion( fileDataRegion.min - tileOffset, fileDataRegion.max - tileOffset );
-						Box2i tileRegion = BufferAlgo::intersection(
-							Box2i( V2i( 0 ), V2i( ImagePlug::tileSize() ) ), tileRelativeFileRegion
-						);
-
-						if( BufferAlgo::empty( tileRegion ) )
-						{
-							const FloatVectorData* emptyResult;
-							if( !view.imageSpec.deep )
-							{
-								emptyResult = ImagePlug::blackTile();
-							}
-							else
-							{
-								emptyResult = ImagePlug::emptyTile();
-							}
-
-							// Result will be treated as const as soon as we set it on the plug, and we're not
-							// going to modify any elements after setting them, so it's safe to store a const
-							// value in one of the elements
-							resultChannels->members()[ subIndex ] = const_cast<FloatVectorData*>( emptyResult );
-
-							continue;
-						}
-
-						if( !view.imageSpec.deep )
-						{
-							FloatVectorDataPtr tileData = new IECore::FloatVectorData(
-								std::vector<float>( ImagePlug::tilePixels() )
-							);
-							vector<float> &tile = tileData->writable();
-
-							for( int y = tileRegion.min.y; y < tileRegion.max.y; ++y )
-							{
-
-								float *tileIndex = &tile[ y * ImagePlug::tileSize() + tileRegion.min.x ];
-								int scanline = fileDataRegion.size().y - 1 - (y - tileRelativeFileRegion.min.y);
-								float *dataIndex = &fileData[
-									( scanline * fileDataRegion.size().x + tileRegion.min.x - tileRelativeFileRegion.min.x
-									) * nchannels + channelIdx
-								];
-								for( int x = tileRegion.min.x; x < tileRegion.max.x; x++ )
-								{
-									*tileIndex = *dataIndex;
-									tileIndex++;
-									dataIndex += nchannels;
-								}
-							}
-							resultChannels->members()[ subIndex ] = tileData;
-						}
-						else
-						{
-							int curSize = deepTileSizes[ ( ty - batchFirstTile.y ) * view.tileBatchSize.x  + tx - batchFirstTile.x ];
-							FloatVectorDataPtr tileData = new IECore::FloatVectorData(
-								std::vector<float>( curSize )
-							);
-							vector<float> &tile = tileData->writable();
-
-							float *tileIndex = &tile[0];
-
-							for( int y = tileRegion.min.y; y < tileRegion.max.y; ++y )
-							{
-								int scanline = fileDataRegion.size().y - 1 - (y - tileRelativeFileRegion.min.y);
-								int dataIndex = scanline * fileDataRegion.size().x +
-									tileRegion.min.x - tileRelativeFileRegion.min.x;
-
-								for( int x = tileRegion.min.x; x < tileRegion.max.x; x++ )
-								{
-									int s = fileDeepData.samples( dataIndex );
-									for( int i = 0; i < s; i++ )
-									{
-										*tileIndex = fileDeepData.deep_value( dataIndex, channelIdx, i );
-										tileIndex++;
-									}
-									dataIndex++;
-								}
-							}
-							assert( tileIndex - &tile[0] == curSize );
-							resultChannels->members()[ subIndex ] = tileData;
-						}
-					}
-				}
-			}
+			result->members().resize( 2 );
+			result->members()[0] = resultChannels;
+			result->members()[1] = spec.deep ? resultOffsets : nullptr;
 
 			return result;
 		}
@@ -719,6 +1301,120 @@ class File
 				ChannelMapEntry channelMapEntry = findIt->second;
 				batchOrigin = tileBatchOrigin( view, channelMapEntry.subImage, tileOrigin );
 				batchSubIndex = tileBatchSubIndex( view, channelMapEntry.channelIndex, tileOrigin - V2i( batchOrigin.x, batchOrigin.y ) );
+			}
+		}
+
+		void processFileRegionScanline(
+			const ImageSpec &spec, const V3i &tileBatchOrigin, const Box2i &regionRect, std::vector<float> &buffer,
+			const V2i &tileBatchSize, std::vector< float* > &tileChannelPointers,
+			const std::vector< Box2i > &tileDataWindows,
+			OIIO::DeepData *deepRectData, Box2i *deepRect, std::vector< int* > &tileOffsetPointers
+		)
+		{
+			Box2i gafferRegionRect = flopDisplayWindow( regionRect, spec );
+
+			if( !spec.deep )
+			{
+				podVectorResizeUninitialized<float>(
+					buffer, spec.nchannels * regionRect.size().x * regionRect.size().y
+				);
+
+				// Tell OIIO to do the actual read/decompress to the temp buffer
+				if( !m_imageInput->read_scanlines(
+					tileBatchOrigin.z, 0,
+					regionRect.min.y, regionRect.max.y, 0, 0, spec.nchannels, TypeDesc::FLOAT, &buffer[0]
+				) )
+				{
+					handleOIIOError( "Failed to read scanlines", gafferRegionRect );
+				}
+
+				// Copy the data from the temp buffer to whatever tiles it belongs in
+				blitOIIORectToTileBatch(
+					spec.nchannels, &buffer[0], gafferRegionRect,
+					tileBatchSize, tileBatchOrigin, tileChannelPointers,
+					tileDataWindows
+				);
+			}
+			else
+			{
+				// For deep, we unfortunately don't currently have a way to tell OIIO to read
+				// just the sample counts, so this read will pull in all the data, and we need
+				// to remember it for later.
+				if( !m_imageInput->read_native_deep_scanlines(
+					tileBatchOrigin.z, 0,
+					regionRect.min.y, regionRect.max.y, 0, 0, spec.nchannels, *deepRectData
+				) )
+				{
+					handleOIIOError( "Failed to read deep scanlines", gafferRegionRect );
+				}
+
+				// Remember the region covered by this data so we can put it in the right place
+				// later
+				*deepRect = gafferRegionRect;
+
+				// Set the sample counts from this chunk of data
+				blitOIIOSampleCountsToTileBatch(
+					*deepRectData, gafferRegionRect,
+					tileBatchSize, tileBatchOrigin, tileOffsetPointers
+				);
+			}
+		}
+
+		void processFileRegionTiled(
+			const ImageSpec &spec, const V3i &tileBatchOrigin, const Box2i &regionRect, std::vector<float> &buffer,
+			const V2i &tileBatchSize, std::vector< float* > &tileChannelPointers,
+			const std::vector< Box2i > &tileDataWindows,
+			OIIO::DeepData *deepRectData, Box2i *deepRect, std::vector< int* > &tileOffsetPointers
+		)
+		{
+			Box2i gafferRegionRect = flopDisplayWindow( regionRect, spec );
+
+			if( !spec.deep )
+			{
+				podVectorResizeUninitialized<float>(
+					buffer, spec.nchannels * regionRect.size().x * regionRect.size().y
+				);
+
+				// Tell OIIO to do the actual read/decompress to the temp buffer
+				if( ! m_imageInput->read_tiles(
+					tileBatchOrigin.z, 0,
+					regionRect.min.x, regionRect.max.x, regionRect.min.y, regionRect.max.y,
+					0, 1, 0, spec.nchannels, TypeDesc::FLOAT, &buffer[0]
+				) )
+				{
+					handleOIIOError( "Failed to read tiles", gafferRegionRect );
+				}
+
+				// Copy the data from the temp buffer to whatever tiles it belongs in
+				blitOIIORectToTileBatch(
+					spec.nchannels, &buffer[0], gafferRegionRect,
+					tileBatchSize, tileBatchOrigin, tileChannelPointers,
+					tileDataWindows
+				);
+			}
+			else
+			{
+				// For deep, we unfortunately don't currently have a way to tell OIIO to read
+				// just the sample counts, so this read will pull in all the data, and we need
+				// to remember it for later.
+				if( !m_imageInput->read_native_deep_tiles (
+					tileBatchOrigin.z, 0,
+					regionRect.min.x, regionRect.max.x, regionRect.min.y, regionRect.max.y,
+					0, 1, 0, spec.nchannels, *deepRectData
+				) )
+				{
+					handleOIIOError( "Failed to read deep tiles", gafferRegionRect );
+				}
+
+				// Remember the region covered by this data so we can put it in the right place
+				// later
+				*deepRect = gafferRegionRect;
+
+				// Set the sample counts from this chunk of data
+				blitOIIOSampleCountsToTileBatch(
+					*deepRectData, gafferRegionRect,
+					tileBatchSize, tileBatchOrigin, tileOffsetPointers
+				);
 			}
 		}
 
@@ -788,111 +1484,6 @@ class File
 			}
 		};
 
-		// Fill the data vector ( for a flat image ) or the deepData object ( for a deep image )
-		// with all data for the specified subImage and target region,
-		// setting the dataRegion to represent the actual bounds of the data read ( which may have had to
-		// be enlarged to match tile boundaries ), and returning the number of channels read
-		//
-		// Operates in the EXR coordinate space
-		//
-		// This is currenly only used by readTileBatch below - we always cache to tile batches when reading
-		// channel data.
-		int readRegion( int subImage, const Box2i &targetRegion, std::vector<float> &data, DeepData &deepData, Box2i &exrDataRegion )
-		{
-			ImageSpec spec = m_imageInput->spec( subImage, 0 );
-
-			const V2i fileDataOrigin( spec.x, spec.y );
-			const Box2i fileDataWindow( fileDataOrigin, fileDataOrigin + V2i( spec.width, spec.height ) );
-
-			// We may have expanded the region to tile boundary, intersect it down to just region actually
-			// covered by the file's data window
-			const Box2i fileTargetRegion = BufferAlgo::intersection( targetRegion, fileDataWindow );
-
-			if( spec.tile_width == 0 && spec.tile_height == 0 )
-			{
-				exrDataRegion = fileTargetRegion;
-
-				bool success;
-				if( !spec.deep )
-				{
-					data.resize( spec.nchannels * exrDataRegion.size().x * exrDataRegion.size().y );
-					success = m_imageInput->read_scanlines(
-						subImage, 0,
-						exrDataRegion.min.y, exrDataRegion.max.y, 0, 0, spec.nchannels, TypeDesc::FLOAT, &data[0]
-					);
-				}
-				else
-				{
-					success = m_imageInput->read_native_deep_scanlines(
-						subImage, 0,
-						exrDataRegion.min.y, exrDataRegion.max.y, 0, 0, spec.nchannels, deepData
-					);
-				}
-
-				if( !success )
-				{
-					throw IECore::Exception(
-						fmt::format(
-							"OpenImageIOReader : Failed to read scanlines {} to {}. Error : {}",
-							exrDataRegion.min.y, exrDataRegion.max.y,
-							m_imageInput->geterror()
-						)
-					);
-				}
-			}
-			else
-			{
-				V2i tileSize( spec.tile_width, spec.tile_height );
-
-				// Round the target region coordinates outwards to the tile boundaries in the file
-				// ( these are sized based on imageSpec.tile_(width/height), and spaced relative to
-				// the data window origin ).
-				//
-				// Then clamp them back to the data window.
-				// ( read_tiles requires that the coordinates lie on either a tile boundary OR the image boundary )
-
-				exrDataRegion = BufferAlgo::intersection( fileDataWindow, Box2i(
-					coordinateDivide( fileTargetRegion.min - fileDataOrigin, tileSize ) * tileSize + fileDataOrigin,
-					coordinateDivide( fileTargetRegion.max - fileDataOrigin + tileSize - V2i(1), tileSize ) * tileSize + fileDataOrigin
-				) );
-
-
-				bool success;
-				if( !spec.deep )
-				{
-					data.resize( spec.nchannels * exrDataRegion.size().x * exrDataRegion.size().y );
-					success = m_imageInput->read_tiles (
-						subImage, 0,
-						exrDataRegion.min.x, exrDataRegion.max.x,
-						exrDataRegion.min.y, exrDataRegion.max.y, 0, 1, 0, spec.nchannels, TypeDesc::FLOAT, &data[0]
-					);
-				}
-				else
-				{
-					success = m_imageInput->read_native_deep_tiles (
-						subImage, 0,
-						exrDataRegion.min.x, exrDataRegion.max.x,
-						exrDataRegion.min.y, exrDataRegion.max.y, 0, 1, 0, spec.nchannels, deepData
-					);
-				}
-
-
-				if( !success )
-				{
-					throw IECore::Exception(
-						fmt::format(
-							"OpenImageIOReader : Failed to read tiles {},{} to {},{}. Error : {}",
-							exrDataRegion.min.x, exrDataRegion.min.y,
-							exrDataRegion.max.x, exrDataRegion.max.y,
-							m_imageInput->geterror()
-						)
-					);
-				}
-			}
-
-			return spec.nchannels;
-		}
-
 		// Given a subImage index, and a tile origin, return an origin to identify the tile batch
 		// where this channel data will be found
 		V3i tileBatchOrigin( const View &view, int subImage, V2i tileOrigin ) const
@@ -943,6 +1534,32 @@ class File
 			}
 
 			throw IECore::Exception( "OpenImageIOReader : Error in downstream node - incorrect request for invalid view \"" + viewName + "\"" );
+		}
+
+		void handleOIIOError( const std::string &description, const Box2i &bound )
+		{
+			std::string error;
+			if( m_imageInput->has_error() )
+			{
+				error = m_imageInput->geterror();
+			}
+			else
+			{
+				// The OIIO spec implies that an error should be set whenever a call reports failure
+				// by returning false ... in practice however, there seem to be plenty of things that
+				// are reported as failure without an error set.
+				error = "OIIO error not specified";
+			}
+
+			throw IECore::Exception(
+				fmt::format(
+					"OpenImageIOReader : {} : {},{} to {},{}. Error : {}",
+					description,
+					bound.min.x, bound.min.y,
+					bound.max.x, bound.max.y,
+					error
+				)
+			);
 		}
 
 		std::unique_ptr<ImageInput> m_imageInput;
@@ -1292,9 +1909,10 @@ Gaffer::ValuePlug::CachePolicy OpenImageIOReader::computeCachePolicy( const Gaff
 {
 	if( output == tileBatchPlug() )
 	{
-		// Request blocking compute for tile batches, to avoid concurrent threads loading
-		// the same batch redundantly.
-		return ValuePlug::CachePolicy::Standard;
+		// For our most common case, reading Exrs using ExrCore, we are able to have multiple threads join
+		// and help with reading ( the actual file reads probably don't benefit too much from multithreading,
+		// but decompression benefits a lot )
+		return ValuePlug::CachePolicy::TaskCollaboration;
 	}
 	else if( output == outPlug()->channelDataPlug() )
 	{
@@ -1390,7 +2008,7 @@ Imath::Box2i OpenImageIOReader::computeDataWindow( const Gaffer::Context *contex
 	const ImageSpec &spec = file->imageSpec( context );
 
 	Imath::Box2i dataWindow( Imath::V2i( spec.x, spec.y ), Imath::V2i( spec.width + spec.x, spec.height + spec.y ) );
-	return flopDisplayWindow( dataWindow, spec.full_y, spec.full_height );
+	return flopDisplayWindow( dataWindow, spec );
 }
 
 void OpenImageIOReader::hashMetadata( const GafferImage::ImagePlug *output, const Gaffer::Context *context, IECore::MurmurHash &h ) const
@@ -1542,7 +2160,7 @@ IECore::ConstIntVectorDataPtr OpenImageIOReader::computeSampleOffsets( const Ima
 
 		ConstObjectVectorPtr tileBatch = tileBatchPlug()->getValue();
 
-		ConstObjectPtr curTileSampleOffsets = IECore::runTimeCast< const ObjectVector >( tileBatch->members()[0] )->members()[ subIndex ];
+		ConstObjectPtr curTileSampleOffsets = IECore::runTimeCast< const ObjectVector >( tileBatch->members()[1] )->members()[ subIndex ];
 		return IECore::runTimeCast< const IntVectorData >( curTileSampleOffsets );
 	}
 }
@@ -1593,15 +2211,10 @@ IECore::ConstFloatVectorDataPtr OpenImageIOReader::computeChannelData( const std
 	c.set( g_tileBatchOriginContextName, &tileBatchOrigin );
 
 	ConstObjectVectorPtr tileBatch = tileBatchPlug()->getValue();
-	ConstObjectPtr curTileChannel;
-	if( !file->imageSpec( context ).deep )
-	{
-		curTileChannel = tileBatch->members()[ subIndex ];
-	}
-	else
-	{
-		curTileChannel = IECore::runTimeCast< const ObjectVector >( tileBatch->members()[1] )->members()[ subIndex ];
-	}
+	ConstObjectPtr curTileChannel = IECore::runTimeCast< const ObjectVector >(
+			tileBatch->members()[0]
+	)->members()[ subIndex ];
+
 	return IECore::runTimeCast< const FloatVectorData >( curTileChannel );
 }
 

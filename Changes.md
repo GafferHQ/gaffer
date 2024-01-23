@@ -61,6 +61,7 @@ Improvements
 - ScenePlug, ImagePlug : Child plugs are now serialisable. Among other things, this enables them to be driven by expressions (#3986).
 - Premultiply : Added `useDeepVisibility` plug, which weights samples according to their visibility based on the opacity of samples in front.
 - CyclesOptions : Improved device selection UI.
+- ImageReader : Improved multithreading of EXR reads. This can result in a performance improvement of around 4X for large images.
 
 Fixes
 -----
