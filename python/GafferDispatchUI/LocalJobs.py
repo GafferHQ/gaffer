@@ -287,6 +287,7 @@ class LocalJobs( GafferUI.Editor ) :
 
 		assert( threading.current_thread() is threading.main_thread() )
 		self.__jobListingWidget.getPath()._emitPathChanged()
+		self.__jobSelectionChanged( self.__jobListingWidget )
 
 	def __jobStatusChanged( self, job ) :
 
@@ -309,6 +310,7 @@ class LocalJobs( GafferUI.Editor ) :
 		for job in self.__selectedJobs() :
 			job.kill()
 			jobPool.removeJob( job )
+			self.__jobSelectionChanged( self.__jobListingWidget )
 
 	def __selectedJobs( self ) :
 
