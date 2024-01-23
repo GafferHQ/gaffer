@@ -173,45 +173,209 @@ with IECore.IgnoredExceptions( ImportError ) :
 	# https://gitlab.com/3Delight/3delight-for-houdini/-/blob/master/ui/aov.cpp
 	# See `contrib/scripts/3delightOutputs.py` in this repository for a helper script.
 
+	GafferScene.Outputs.registerOutput(
+		"Interactive/3Delight/Beauty_3Delight",
+		IECoreScene.Output(
+			"beauty",
+			"ieDisplay",
+			"rgba",
+			{
+				"catalogue:imageName" : "Image",
+				"driverType" : "ClientDisplayDriver",
+				"displayHost" : "localhost",
+				"displayPort" : "${image:catalogue:port}",
+				"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+				"scalarformat" : "half",
+				"colorprofile" : "linear",
+				"filter" : "blackman-harris",
+				"filtersize" : 3.0,
+			}
+		)
+	)
+
+	GafferScene.Outputs.registerOutput(
+		"Batch/3Delight/Beauty_3Delight",
+		IECoreScene.Output(
+			"${project:rootDirectory}/renders/${script:name}/beauty/beauty.####.exr",
+			"exr",
+			"rgba",
+			{
+				"scalarformat" : "half",
+				"colorprofile" : "linear",
+				"filter" : "blackman-harris",
+				"filtersize" : 3.0,
+			}
+		)
+	)
+
+	GafferScene.Outputs.registerOutput(
+		"Batch/3Delight/Crypto/Surface_Shader_Cryptomatte_Header",
+		IECoreScene.Output(
+			"${project:rootDirectory}/renders/${script:name}/id.surfaceshader/id.surfaceshader.####.exr",
+			"exr",
+			"color builtin:id.surfaceshader",
+			{
+				"scalarformat" : "half",
+				"sortkey" : 1,
+				"filter" : "cryptomatteheader",
+			}
+		)
+	)
+
+	GafferScene.Outputs.registerOutput(
+		"Batch/3Delight/Crypto/Surface_Shader_Cryptomatte_Layer0",
+		IECoreScene.Output(
+			"${project:rootDirectory}/renders/${script:name}/id.surfaceshader/id.surfaceshader.####.exr",
+			"exr",
+			"quad builtin:id.surfaceshader",
+			{
+				"scalarformat" : "float",
+				"sortkey" : 2,
+				"filter" : "cryptomattelayer0",
+				"customdrivername" : "Batch/3Delight/Crypto/Surface_Shader_Cryptomatte_Header",
+			}
+		)
+	)
+
+	GafferScene.Outputs.registerOutput(
+		"Batch/3Delight/Crypto/Surface_Shader_Cryptomatte_Layer2",
+		IECoreScene.Output(
+			"${project:rootDirectory}/renders/${script:name}/id.surfaceshader/id.surfaceshader.####.exr",
+			"exr",
+			"quad builtin:id.surfaceshader",
+			{
+				"scalarformat" : "float",
+				"sortkey" : 3,
+				"filter" : "cryptomattelayer2",
+				"customdrivername" : "Batch/3Delight/Crypto/Surface_Shader_Cryptomatte_Header",
+			}
+		)
+	)
+
+	GafferScene.Outputs.registerOutput(
+		"Batch/3Delight/Crypto/Geometry_Cryptomatte_Header",
+		IECoreScene.Output(
+			"${project:rootDirectory}/renders/${script:name}/id.geometry/id.geometry.####.exr",
+			"exr",
+			"color builtin:id.geometry",
+			{
+				"scalarformat" : "half",
+				"sortkey" : 1,
+				"filter" : "cryptomatteheader",
+			}
+		)
+	)
+
+	GafferScene.Outputs.registerOutput(
+		"Batch/3Delight/Crypto/Geometry_Cryptomatte_Layer0",
+		IECoreScene.Output(
+			"${project:rootDirectory}/renders/${script:name}/id.geometry/id.geometry.####.exr",
+			"exr",
+			"quad builtin:id.geometry",
+			{
+				"scalarformat" : "float",
+				"sortkey" : 2,
+				"filter" : "cryptomattelayer0",
+				"customdrivername" : "Batch/3Delight/Crypto/Geometry_Cryptomatte_Header",
+			}
+		)
+	)
+
+	GafferScene.Outputs.registerOutput(
+		"Batch/3Delight/Crypto/Geometry_Cryptomatte_Layer2",
+		IECoreScene.Output(
+			"${project:rootDirectory}/renders/${script:name}/id.geometry/id.geometry.####.exr",
+			"exr",
+			"quad builtin:id.geometry",
+			{
+				"scalarformat" : "float",
+				"sortkey" : 3,
+				"filter" : "cryptomattelayer2",
+				"customdrivername" : "Batch/3Delight/Crypto/Geometry_Cryptomatte_Header",
+			}
+		)
+	)
+
+	GafferScene.Outputs.registerOutput(
+		"Batch/3Delight/Crypto/Scene_Path_Cryptomatte_Header",
+		IECoreScene.Output(
+			"${project:rootDirectory}/renders/${script:name}/id.scenepath/id.scenepath.####.exr",
+			"exr",
+			"color builtin:id.scenepath",
+			{
+				"scalarformat" : "half",
+				"sortkey" : 1,
+				"filter" : "cryptomatteheader",
+			}
+		)
+	)
+
+	GafferScene.Outputs.registerOutput(
+		"Batch/3Delight/Crypto/Scene_Path_Cryptomatte_Layer0",
+		IECoreScene.Output(
+			"${project:rootDirectory}/renders/${script:name}/id.scenepath/id.scenepath.####.exr",
+			"exr",
+			"quad builtin:id.scenepath",
+			{
+				"scalarformat" : "float",
+				"sortkey" : 2,
+				"filter" : "cryptomattelayer0",
+				"customdrivername" : "Batch/3Delight/Crypto/Scene_Path_Cryptomatte_Header",
+			}
+		)
+	)
+
+	GafferScene.Outputs.registerOutput(
+		"Batch/3Delight/Crypto/Scene_Path_Cryptomatte_Layer2",
+		IECoreScene.Output(
+			"${project:rootDirectory}/renders/${script:name}/id.scenepath/id.scenepath.####.exr",
+			"exr",
+			"quad builtin:id.scenepath",
+			{
+				"scalarformat" : "float",
+				"sortkey" : 3,
+				"filter" : "cryptomattelayer2",
+				"customdrivername" : "Batch/3Delight/Crypto/Scene_Path_Cryptomatte_Header",
+			}
+		)
+	)
+
 	for name, displayName, source, dataType in [
 		( "Ci", "Ci", "shader", "color" ),
-		( "Ci.direct", "Ci (direct)", "shader", "color" ),
-		( "Ci.indirect", "Ci (indirect)", "shader", "color" ),
+		( "Ci.direct", "Ci_(direct)", "shader", "color" ),
+		( "Ci.indirect", "Ci_(indirect)", "shader", "color" ),
 		( "diffuse", "Diffuse", "shader", "color" ),
-		( "diffuse.direct", "Diffuse (direct)", "shader", "color" ),
-		( "diffuse.indirect", "Diffuse (indirect)", "shader", "color" ),
-		( "hair", "Hair and Fur", "shader", "color" ),
-		( "subsurface", "Subsurface Scattering", "shader", "color" ),
+		( "diffuse.direct", "Diffuse_(direct)", "shader", "color" ),
+		( "diffuse.indirect", "Diffuse_(indirect)", "shader", "color" ),
+		( "hair", "Hair_and_Fur", "shader", "color" ),
+		( "subsurface", "Subsurface_Scattering", "shader", "color" ),
 		( "reflection", "Reflection", "shader", "color" ),
-		( "reflection.direct", "Reflection (direct)", "shader", "color" ),
-		( "reflection.indirect", "Reflection (indirect)", "shader", "color" ),
+		( "reflection.direct", "Reflection_(direct)", "shader", "color" ),
+		( "reflection.indirect", "Reflection_(indirect)", "shader", "color" ),
 		( "refraction", "Refraction", "shader", "color" ),
-		( "volume", "Volume Scattering", "shader", "color" ),
-		( "volume.direct", "Volume Scattering (direct)", "shader", "color" ),
-		( "volume.indirect", "Volume Scattering (indirect)", "shader", "color" ),
+		( "volume", "Volume_Scattering", "shader", "color" ),
+		( "volume.direct", "Volume_Scattering_(direct)", "shader", "color" ),
+		( "volume.indirect", "Volume_Scattering_(indirect)", "shader", "color" ),
 		( "incandescence", "Incandescence", "shader", "color" ),
-		( "toon_base", "Toon Base", "shader", "color" ),
-		( "toon_diffuse", "Toon Diffuse", "shader", "color" ),
-		( "toon_specular", "Toon Specular", "shader", "color" ),
-		( "toon_matte", "Toon Matte", "shader", "color" ),
-		( "toon_tint", "Toon Tint", "shader", "color" ),
+		( "toon_base", "Toon_Base", "shader", "color" ),
+		( "toon_diffuse", "Toon_Diffuse", "shader", "color" ),
+		( "toon_specular", "Toon_Specular", "shader", "color" ),
+		( "toon_matte", "Toon_Matte", "shader", "color" ),
+		( "toon_tint", "Toon_Tint", "shader", "color" ),
 		( "outlines", "Outlines", "shader", "quad" ),
 		( "albedo", "Albedo", "shader", "color" ),
-		( "z", "Z (depth)", "builtin", "float" ),
-		( "P.camera", "Camera Space Position", "builtin", "point" ),
-		( "N.camera", "Camera Space Normal", "builtin", "point" ),
-		( "P.world", "World Space Position", "builtin", "point" ),
-		( "N.world", "World Space Normal", "builtin", "point" ),
-		( "Pref", "Reference Position", "attribute", "point" ),
-		( "shadow_mask", "Shadow Mask", "shader", "color" ),
+		( "z", "Z_(depth)", "builtin", "float" ),
+		( "P.camera", "Camera_Space_Position", "builtin", "point" ),
+		( "N.camera", "Camera_Space_Normal", "builtin", "point" ),
+		( "P.world", "World_Space_Position", "builtin", "point" ),
+		( "N.world", "World_Space_Normal", "builtin", "point" ),
+		( "Pref", "Reference_Position", "attribute", "point" ),
+		( "shadow_mask", "Shadow_Mask", "shader", "color" ),
 		( "st", "UV", "attribute", "point" ),
-		( "id.geometry", "Geometry Cryptomatte", "builtin", "float" ),
-		( "id.scenepath", "Scene Path Cryptomatte", "builtin", "float" ),
-		( "id.surfaceshader", "Surface Shader Cryptomatte", "builtin", "float" ),
-		( "relighting_multiplier", "Relighting Multiplier", "shader", "color" ),
-		( "relighting_reference", "Relighting Reference", "shader", "color" ),
-		( "motionvector", "Motion Vector", "builtin", "point" ),
-		( "occlusion", "Ambient Occlusion", "shader", "color" ),
+		( "relighting_multiplier", "Relighting_Multiplier", "shader", "color" ),
+		( "relighting_reference", "Relighting_Reference", "shader", "color" ),
+		( "motionvector", "Motion_Vector", "builtin", "point" ),
+		( "occlusion", "Ambient_Occlusion", "shader", "color" ),
 	] :
 		GafferScene.Outputs.registerOutput(
 			"Interactive/3Delight/{}/{}".format( source.capitalize(), displayName ),
@@ -224,6 +388,12 @@ with IECore.IgnoredExceptions( ImportError ) :
 					"displayHost" : "localhost",
 					"displayPort" : "${image:catalogue:port}",
 					"remoteDisplayType" : "GafferImage::GafferDisplayDriver",
+					"scalarformat" : "half",
+					"colorprofile" : "linear",
+					"filter" : "blackman-harris",
+					"filtersize" : 3.0,
+					"customdrivername" : "",
+					"lightgroup" : "",
 				}
 			)
 		)
@@ -231,9 +401,17 @@ with IECore.IgnoredExceptions( ImportError ) :
 		GafferScene.Outputs.registerOutput(
 			"Batch/3Delight/{}/{}".format( source.capitalize(), displayName ),
 			IECoreScene.Output(
-				"${project:rootDirectory}/renders/${script:name}/${renderPass}/%s/%s.####.exr" % ( name, name ),
+				"${project:rootDirectory}/renders/${script:name}/%s/%s.####.exr" % ( name, name ),
 				"exr",
 				"{} {}:{}".format( dataType, source, name ),
+				{
+					"scalarformat" : "half",
+					"colorprofile" : "linear",
+					"filter" : "blackman-harris",
+					"filtersize" : 3.0,
+					"customdrivername" : "",
+					"lightgroup" : "",
+				}
 			)
 		)
 

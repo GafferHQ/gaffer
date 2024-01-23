@@ -314,7 +314,6 @@ void Render::executeInternal( bool flushCaches ) const
 	Monitor::Scope performanceMonitorScope( performanceMonitor );
 
 	GafferScene::Private::RendererAlgo::outputOptions( renderOptions.globals.get(), renderer.get() );
-	GafferScene::Private::RendererAlgo::outputOutputs( inPlug(), renderOptions.globals.get(), renderer.get() );
 
 	{
 		// Using nested scope so that we free the memory used by `renderSets`
@@ -328,6 +327,8 @@ void Render::executeInternal( bool flushCaches ) const
 		lightLinks.outputLightFilterLinks( adaptedInPlug() );
 		GafferScene::Private::RendererAlgo::outputObjects( adaptedInPlug(), renderOptions, renderSets, &lightLinks, renderer.get() );
 	}
+
+	GafferScene::Private::RendererAlgo::outputOutputs( inPlug(), renderOptions.globals.get(), renderer.get() );
 
 	if( renderScope.sceneTranslationOnly() )
 	{
