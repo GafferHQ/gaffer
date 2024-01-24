@@ -123,11 +123,6 @@ SurfaceTextureCache g_surfaceTextureCache( surfaceTextureGetter, 1024 * 1024 * 6
 
 IECoreGL::RenderablePtr iesVisualisation( const std::string &filename )
 {
-
-#if AI_VERSION_ARCH_NUM < 6
-	return nullptr;
-#else
-
 	// It's not entirely clear from rendered results exactly how radius
 	// interacts with the profile, so we just draw the normalised distribution
 	// of the profile.
@@ -172,8 +167,6 @@ IECoreGL::RenderablePtr iesVisualisation( const std::string &filename )
 	IECoreGL::PointsPrimitivePtr points = new IECoreGL::PointsPrimitive( IECoreGL::PointsPrimitive::Point );
 	points->addPrimitiveVariable( "P", PrimitiveVariable( PrimitiveVariable::Interpolation::Vertex, pData ) );
 	return points;
-
-#endif
 }
 
 //////////////////////////////////////////////////////////////////////////

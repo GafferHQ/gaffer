@@ -161,31 +161,6 @@ T parameter( const IECore::CompoundDataMap &parameters, const IECore::InternedSt
 	}
 }
 
-bool aiVersionLessThan( int arch, int major, int minor, int patch )
-{
-	// This is _not_ the same as `AiCheckAPIVersion()` :
-	//
-	// - `AiCheckAPIVersion()` is for determining ABI compatibility and
-	//   returns false if the `arch` or `major` numbers are not equal.
-	// - `AiCheckAPIVersion()` doesn't support a patch version.
-	// - `aiVersionLess()` is suitable for determining if an Arnold
-	//   feature or bugfix is available.
-	const char *arnoldVersionString = AiGetVersion( nullptr, nullptr, nullptr, nullptr );
-	int arnoldVersion[4];
-	for( int i = 0; i < 4; ++i )
-	{
-		arnoldVersion[i] = strtol( arnoldVersionString, const_cast<char **>( &arnoldVersionString ), 10 );
-		++arnoldVersionString;
-	}
-
-	auto version = { arch, major, minor, patch };
-
-	return std::lexicographical_compare(
-		begin( arnoldVersion ), end( arnoldVersion ),
-		version.begin(), version.end()
-	);
-}
-
 std::string formatHeaderParameter( const std::string name, const IECore::Data *data )
 {
 	if( const IECore::BoolData *boolData = IECore::runTimeCast<const IECore::BoolData>( data ) )
@@ -708,26 +683,6 @@ class ArnoldOutput : public IECore::RefCounted
 				// easier to discover/use, and it should be easier to generalise to other
 				// renderers.
 				m_data += "_*";
-				if( aiVersionLessThan( 7, 1, 3, 0 ) && m_layerName.size() )
-				{
-					// Work around Arnold bug #12282. If a layer name is specified, then Arnold
-					// will fail to apply the light group suffix to it. This causes the EXR driver
-					// to write duplicate channels with the same name, resulting in errors and/or
-					// crashes.
-					m_layerName = "";
-					if( m_lpeName.empty() )
-					{
-						IECore::msg( IECore::Msg::Warning, "ArnoldRenderer",
-							fmt::format( "Cannot use `layerName` with `layerPerLightGroup` for non-LPE output \"{}\", due to Arnold bug #12282", m_name.string() )
-						);
-					}
-					else
-					{
-						// Although we've had to clear the layer name, we'll actually still
-						// get what we want, because the layer name is used as the name of the
-						// LPE.
-					}
-				}
 			}
 
 			// Decide if this render should be updated at interactive rates or
