@@ -57,6 +57,29 @@ using namespace Gaffer;
 using namespace GafferBindings;
 using namespace GafferImage;
 
+namespace
+{
+
+class ImageProcessorSerialiser : public GafferBindings::NodeSerialiser
+{
+
+	public :
+
+		bool childNeedsSerialisation( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const override
+		{
+			auto imageProcessor = static_cast<const ImageProcessor *>( child->parent() );
+			if( child == imageProcessor->outPlug() )
+			{
+				return false;
+			}
+
+			return NodeSerialiser::childNeedsSerialisation( child, serialisation );
+		}
+
+};
+
+} // namespace
+
 void GafferImageModule::bindImageProcessor()
 {
 
@@ -71,6 +94,8 @@ void GafferImageModule::bindImageProcessor()
 			)
 		)
 	;
+
+	Serialisation::registerSerialiser( ImageProcessor::staticTypeId(), new ImageProcessorSerialiser );
 
 	GafferBindings::DependencyNodeClass<FlatImageProcessor>();
 
