@@ -31,7 +31,7 @@ shader dlAOVGroupFour(
 	if(
 		raytype("camera") ||
 		(raytype("refraction") && visible_in_refractions) ||
-		(raytype("reflection") && visible_in_refractions) ||
+		(raytype("reflection") && visible_in_reflections) ||
 		(raytype("diffuse") && visible_in_diffuse)
 	)
 	{

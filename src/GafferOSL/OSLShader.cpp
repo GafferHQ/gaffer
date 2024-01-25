@@ -1233,11 +1233,19 @@ void OSLShader::loadShader( const std::string &shaderName, bool keepExistingValu
 	namePlug->source<StringPlug>()->setValue( shaderName );
 	// 3delight sets it's vdbVolume shader as a "shader" type but requires the
 	// attribute name be `volumeshader` which we handle when spooling the scene.
-	typePlug->source<StringPlug>()->setValue(
-		std::string( "osl:" ) + (
-			std::filesystem::path( shaderName ).stem() != "vdbVolume" ? query->shadertype().c_str() : "volume"
-		)
-	);
+
+	if ( std::filesystem::path( shaderName ).stem() == "vdbVolume" )
+	{
+		typePlug->source<StringPlug>()->setValue( std::string( "osl:volume" ));
+	}
+	else if ( std::filesystem::path( shaderName ).stem() == "dlDisplacement" )
+	{
+		typePlug->source<StringPlug>()->setValue( std::string( "osl:displacement" ));
+	}
+	else
+	{
+		typePlug->source<StringPlug>()->setValue( std::string( "osl:" ) + ( query->shadertype().c_str() ));
+	}
 
 	const IECore::CompoundData *metadata = OSLShader::metadata();
 	const IECore::CompoundData *parameterMetadata = nullptr;
