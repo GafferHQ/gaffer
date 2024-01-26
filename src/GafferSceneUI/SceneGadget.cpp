@@ -67,16 +67,6 @@ using namespace GafferSceneUI;
 namespace
 {
 
-float lineariseDepthBufferSample( float bufferDepth, float *m )
-{
-	// Heavily optimised extraction that works with our orthogonal clipping planes
-	//   Fast Extraction of Viewing Frustum Planes from the WorldView-Projection Matrix
-	//   http://www.cs.otago.ac.nz/postgrads/alexis/planeExtraction.pdf
-	const float n = - ( m[15] + m[14] ) / ( m[11] + m[10] );
-	const float f = - ( m[15] - m[14] ) / ( m[11] - m[10] );
-	return ( 2.0f * n * f ) / ( f + n - ( bufferDepth * 2.0f - 1.0f ) * ( f - n ) );
-}
-
 /// \todo Could this find a home in SceneAlgo?
 Box3f sceneBound( const ScenePlug *scene, const PathMatcher *include, const PathMatcher *exclude )
 {
@@ -566,15 +556,10 @@ bool SceneGadget::objectAt( const IECore::LineSegment3f &lineInGadgetSpace, Gaff
 
 bool SceneGadget::openGLObjectAt( const IECore::LineSegment3f &lineInGadgetSpace, GafferScene::ScenePlug::ScenePath &path, float &depth ) const
 {
-	float projectionMatrix[16];
-
 	std::vector<IECoreGL::HitRecord> selection;
 	{
 		ViewportGadget::SelectionScope selectionScope( lineInGadgetSpace, this, selection, IECoreGL::Selector::IDRender );
-		//  Fetch the matrix so we can work out our clipping planes to extract
-		//  a real-world depth from the buffer. We do this here in case
-		//  SelectionScope ever affects the matrix/planes.
-		glGetFloatv( GL_PROJECTION_MATRIX, projectionMatrix );
+
 		IECore::CompoundDataMap parameters;
 		parameters["colorSpace"] = g_sceneColorSpace;
 		m_renderer->command( "gl:renderToCurrentContext", parameters );
@@ -605,7 +590,7 @@ bool SceneGadget::openGLObjectAt( const IECore::LineSegment3f &lineInGadgetSpace
 	}
 
 	path = *PathMatcher::Iterator( paths.begin() );
-	depth = -lineariseDepthBufferSample( depthMin, projectionMatrix );
+	depth = ( selection[0].depthMin + selection[0].depthMax ) * 0.5f;
 
 	return true;
 }

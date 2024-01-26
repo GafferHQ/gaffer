@@ -2230,7 +2230,7 @@ void ViewportGadget::SelectionScope::begin( const ViewportGadget *viewportGadget
 	m_depthSort = false;
 	camera->render( nullptr );
 
-	m_selector = SelectorPtr( new IECoreGL::Selector( ndcRegion, mode, m_selection ) );
+	m_selector = SelectorPtr( new IECoreGL::Selector( ndcRegion, mode, m_selection, true ) );
 
 	glPushMatrix();
 	glMultMatrixf( transform.getValue() );

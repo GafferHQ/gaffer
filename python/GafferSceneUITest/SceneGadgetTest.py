@@ -497,8 +497,8 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		self.assertIsNotNone( pathA )
 		self.assertEqual( pathA, IECore.InternedStringVectorData( [ "group", "left" ] ) )
 		self.assertEqual( pathA,  pathB )
-		self.assertAlmostEqual( hitPoint.x, -2, delta = 0.01 )
-		self.assertAlmostEqual( hitPoint.y, 0, delta = 0.01 )
+		self.assertAlmostEqual( hitPoint.x, -2.0 + ( 1.0 / vp.getViewport().x ), delta = 0.01 )
+		self.assertAlmostEqual( hitPoint.y, -1.0 / vp.getViewport().y, delta = 0.01 )
 		self.assertAlmostEqual( hitPoint.z, -2, delta = 0.01 )
 
 		centerCubeDir = IECore.LineSegment3f( imath.V3f( 0, 0, 1 ), imath.V3f( 0, 0, -1 ) )
@@ -507,8 +507,8 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		self.assertIsNotNone( pathA )
 		self.assertEqual( pathA, IECore.InternedStringVectorData( [ "group", "center" ] ) )
 		self.assertEqual( pathA,  pathB )
-		self.assertAlmostEqual( hitPoint.x, 0, delta = 0.01 )
-		self.assertAlmostEqual( hitPoint.y, 0, delta = 0.01  )
+		self.assertAlmostEqual( hitPoint.x, 1.0 / vp.getViewport().x, delta = 0.01 )
+		self.assertAlmostEqual( hitPoint.y, -1.0 / vp.getViewport().y, delta = 0.01  )
 		self.assertAlmostEqual( hitPoint.z, -2, delta = 0.01 )
 
 		rightCubeDir = IECore.LineSegment3f( imath.V3f( 0, 0, 2 ), imath.V3f( 2, 0, -2 ) )
@@ -517,8 +517,8 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		self.assertIsNotNone( pathA )
 		self.assertEqual( pathA, IECore.InternedStringVectorData( [ "group", "right" ] ) )
 		self.assertEqual( pathA,  pathB )
-		self.assertAlmostEqual( hitPoint.x, 2, delta = 0.01 )
-		self.assertAlmostEqual( hitPoint.y, 0, delta = 0.01 )
+		self.assertAlmostEqual( hitPoint.x, 2 + ( 1.0 / vp.getViewport().x ), delta = 0.01 )
+		self.assertAlmostEqual( hitPoint.y, -1.0 / vp.getViewport().y, delta = 0.01 )
 		self.assertAlmostEqual( hitPoint.z, -2, delta = 0.01 )
 
 		missDir = IECore.LineSegment3f( imath.V3f( 0, 0, 2 ), imath.V3f( 0, 10, -2 ) )
