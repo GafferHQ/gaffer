@@ -195,6 +195,7 @@ if moduleSearchPath.find( "nsi.py" ) and moduleSearchPath.find( "GafferDelight" 
 			[ "SpotLight", "spotLight", GafferOSL.OSLLight.Shape.Disk ],
 			[ "DistantLight", "distantLight", "distant" ],
 			[ "EnvironmentLight", "environmentLight", "environment" ],
+			[ "SkyLight", "hlight_sky", "environment" ],
 		] :
 			nodeMenu.append(
 				"/3Delight/Light/" + label,
