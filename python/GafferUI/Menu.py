@@ -391,7 +391,7 @@ class Menu( GafferUI.Widget ) :
 
 			signal.connect( IECore.curry( Gaffer.WeakMethod( self.__actionTriggered ), weakref.ref( qtAction ) ) )
 
-		active = self.__evaluateItemValue( item.active )
+		active = self.__evaluateItemValue( item.active ) and not getattr( item, "disabled", None )
 		qtAction.setEnabled( active )
 
 		shortCut = getattr( item, "shortCut", None )

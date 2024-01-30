@@ -1,6 +1,11 @@
 1.2.10.x (relative to 1.2.10.5)
 ========
 
+Improvements
+-----
+
+- Menu : Added ability to show disabled menu actions 
+
 1.2.10.5 (relative to 1.2.10.4)
 ========
 
