@@ -1269,5 +1269,28 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		self.assertGreaterEqual( runningTime, datetime.timedelta( seconds = 0.5 ) )
 		self.assertEqual( dispatcher.jobPool().jobs()[0].runningTime(), runningTime )
 
+	def testNoNestedBackgroundDispatch( self ) :
+
+		fileToCreate = self.temporaryDirectory() / "test.txt"
+
+		script = Gaffer.ScriptNode()
+
+		script["writer"] = GafferDispatchTest.TextWriter()
+		script["writer"]["fileName"].setValue( fileToCreate )
+		script["writer"]["text"].setValue( "test" )
+
+		script["innerDispatcher"] = self.__createLocalDispatcher()
+		script["innerDispatcher"]["tasks"][0].setInput( script["writer"]["task"] )
+		script["innerDispatcher"]["executeInBackground"].setValue( True )
+
+		script["outerDispatcher"] = self.__createLocalDispatcher()
+		script["outerDispatcher"]["tasks"][0].setInput( script["innerDispatcher"]["task"] )
+		script["outerDispatcher"]["executeInBackground"].setValue( True )
+
+		script["outerDispatcher"]["task"].execute()
+		script["outerDispatcher"].jobPool().waitForAll()
+
+		self.assertTrue( fileToCreate.is_file() )
+
 if __name__ == "__main__":
 	unittest.main()

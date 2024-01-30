@@ -92,6 +92,16 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 			self.__environmentCommand = dispatcher["environmentCommand"].getValue()
 			self.__executeInBackground = dispatcher["executeInBackground"].getValue()
 
+			if self.__executeInBackground :
+				application = script.ancestor( Gaffer.ApplicationRoot )
+				if application is not None and application.getName() == "execute" :
+					# Background execution makes no sense within the `execute`
+					# app, since the app will exit as soon as `_doDispatch()`
+					# returns, and the background job will be killed before it
+					# can complete.
+					IECore.msg( IECore.Msg.Level.Warning, "LocalDispatcher", "Forcing foreground execution" )
+					self.__executeInBackground = False
+
 			self.__startTime = datetime.datetime.now( datetime.timezone.utc )
 			self.__endTime = None
 
