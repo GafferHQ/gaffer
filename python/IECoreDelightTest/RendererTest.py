@@ -392,6 +392,43 @@ class RendererTest( GafferTest.TestCase ) :
 		self.__assertInNSI( '"width" "v float" 1 4', nsi )
 		self.__assertNotInNSI( '"N"', nsi )
 
+	def testProcedural( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"3Delight",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.nsia" ),
+		)
+
+		r.object(
+			"testProcedural",
+			IECoreScene.ExternalProcedural(
+				str( self.temporaryDirectory() / "testProc.nsi" ),
+				imath.Box3f( imath.V3f( -0.5, -0.5, -0.5 ), imath.V3f( 0.5, 0.5, 0.5 ) ),
+				IECore.CompoundData( {
+					"customParamFloat" : 1.0,
+				} )
+			),
+			r.attributes( IECore.CompoundObject() ),
+		)
+
+		r.render()
+		del r
+
+		nsi = self.__parseDict( self.temporaryDirectory() / "test.nsia" )
+
+		self.assertIn( "testProcedural", nsi )
+		self.assertEqual( nsi["testProcedural"]["nodeType"], "transform" )
+
+		procedurals = { k: v for k, v in nsi.items() if nsi[k]["nodeType"] == "procedural" }
+		self.assertEqual( len( procedurals ), 1 )
+
+		procedural = procedurals[next( iter( procedurals ) )]
+
+		self.assertEqual( procedural["filename"], str( self.temporaryDirectory() / "testProc.nsi" ) )
+		self.assertEqual( procedural["type"], "apistream" )
+		self.assertEqual( procedural["customParamFloat"], 1.0 )
+
 	def testEnvironment( self ) :
 
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(

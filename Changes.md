@@ -53,6 +53,7 @@ Improvements
   - Added support for reading `dl:` and `user:` attributes from shaders.
   - Added `importanceSampleFilter` plug to DelightOptions, providing denoiser-compatible output.
   - Matched DelightOptions default values for `oversampling` and `shadingSamples` to 3Delight's own default values.
+  - Added support for external procedurals. 
 - GraphEditor : Improved logic used to connect a newly created node to the selected nodes.
 - ScenePlug, ImagePlug : Child plugs are now serialisable. Among other things, this enables them to be driven by expressions (#3986).
 - Premultiply : Added `useDeepVisibility` plug, which weights samples according to their visibility based on the opacity of samples in front.
