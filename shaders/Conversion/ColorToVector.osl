@@ -36,8 +36,8 @@
 
 shader ColorToVector
 (
-	vector col = 0,
-	output color vec = 0
+	color col = 0,
+	output vector vec = 0
 )
 {
 	vec = vector( col );
