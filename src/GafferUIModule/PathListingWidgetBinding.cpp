@@ -277,7 +277,7 @@ QVariant dataToVariant( const IECore::Data *value, int role )
 		}
 	}
 
-	if( role == Qt::BackgroundRole )
+	if( role == Qt::BackgroundRole || role == Qt::ForegroundRole )
 	{
 		switch( value->typeId() )
 		{
@@ -346,7 +346,8 @@ struct CellVariants
 			m_decoration( dataToVariant( cellData.icon.get(), Qt::DecorationRole ) ),
 			m_background( dataToVariant( cellData.background.get(), Qt::BackgroundRole ) ),
 			m_toolTip( dataToVariant( cellData.toolTip.get(), Qt::ToolTipRole ) ),
-			m_sort( dataToVariant( cellData.sortValue.get(), SortRole ) )
+			m_sort( dataToVariant( cellData.sortValue.get(), SortRole ) ),
+			m_foreground( dataToVariant( cellData.foreground.get(), Qt::ForegroundRole ) )
 	{
 	}
 
@@ -368,6 +369,8 @@ struct CellVariants
 				return m_toolTip;
 			case SortRole :
 				return m_sort.isNull() ? m_display : m_sort;
+			case Qt::ForegroundRole :
+				return m_foreground;
 			default :
 				return QVariant();
 		}
@@ -379,7 +382,8 @@ struct CellVariants
 			m_display == rhs.m_display &&
 			m_decoration == rhs.m_decoration &&
 			m_background == rhs.m_background &&
-			m_toolTip == rhs.m_toolTip
+			m_toolTip == rhs.m_toolTip &&
+			m_foreground == rhs.m_foreground
 		;
 	}
 
@@ -390,6 +394,7 @@ struct CellVariants
 		QVariant m_background;
 		QVariant m_toolTip;
 		QVariant m_sort;
+		QVariant m_foreground;
 
 };
 

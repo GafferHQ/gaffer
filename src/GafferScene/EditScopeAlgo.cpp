@@ -1145,6 +1145,10 @@ ConstObjectPtr optionValue( const ScenePlug *scene, const std::string &option )
 	{
 		result = it->second;
 	}
+	else if( const auto defaultValue = Gaffer::Metadata::value( g_optionPrefix + option, "defaultValue" ) )
+	{
+		return defaultValue;
+	}
 
 	if( !result )
 	{

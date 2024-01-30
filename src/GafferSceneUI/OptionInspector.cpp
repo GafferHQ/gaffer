@@ -61,7 +61,9 @@ namespace
 {
 
 const std::string g_emptyString( "" );
+const std::string g_optionPrefix( "option:" );
 const InternedString g_renderPassContextName( "renderPass" );
+const InternedString g_defaultValue( "defaultValue" );
 
 // This uses the same strategy that ValuePlug uses for the hash cache,
 // using `plug->dirtyCount()` to invalidate previous cache entries when
@@ -210,6 +212,16 @@ IECore::ConstObjectPtr OptionInspector::value( const GafferScene::SceneAlgo::His
 		return optionHistory->optionValue;
 	}
 	// Option doesn't exist.
+	return nullptr;
+}
+
+IECore::ConstObjectPtr OptionInspector::fallbackValue() const
+{
+	if( const auto defaultValue = Gaffer::Metadata::value( g_optionPrefix + m_option.string(), g_defaultValue ) )
+	{
+		return defaultValue;
+	}
+
 	return nullptr;
 }
 

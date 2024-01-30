@@ -169,11 +169,15 @@ Features
 --------
 
 - 3Delight : Added support for USD `SphereLight`, `RectLight`, `DiskLight`, `DistantLight`, `DomeLight` and `CylinderLight`.
+- RenderPassEditor : Added a new editor UI for inspecting and editing render passes.
 
 Improvements
 ------------
 
-- ArnoldShader : Added a colour space presets menu for the `image` shader.
+- Arnold :
+  - ArnoldShader : Added a colour space presets menu for the `image` shader.
+  - Added specific warning for outputs with space in name.
+  - Added normal and depth AOVs.
 - CyclesShader : Added a colour space presets menu for the `image_texture` and `environment_texture` shaders (#5618).
 
 Fixes
@@ -188,6 +192,7 @@ API
 ---
 
 - ArnoldShaderUI : Added support for `colorSpace` widget type metadata, allowing an OpenColorIO colour space to be chosen.
+- PathColumn : Added `CellData::foreground` member, to provide additional control over foreground colours in the PathListingWidget.
 
 1.3.10.0 (relative to 1.3.9.0)
 ========

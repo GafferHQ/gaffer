@@ -56,6 +56,7 @@ layouts.registerEditor( "PrimitiveInspector")
 layouts.registerEditor( "UVInspector")
 layouts.registerEditor( "LocalJobs" )
 layouts.registerEditor( "ImageInspector")
+layouts.registerEditor( "RenderPassEditor" )
 
 # Register some predefined layouts
 #

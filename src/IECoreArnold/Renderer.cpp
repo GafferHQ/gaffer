@@ -448,6 +448,10 @@ class ArnoldOutput : public IECore::RefCounted
 		ArnoldOutput( AtUniverse *universe, const IECore::InternedString &name, const IECoreScene::Output *output, NodeDeleter nodeDeleter )
 			:	m_universe( universe ), m_name( name ), m_nodeDeleter( nodeDeleter )
 		{
+			if( m_name.string().find( " " ) != std::string::npos )
+			{
+				throw IECore::Exception( fmt::format( "Unable to create output driver with name \"{}\", Arnold does not allow spaces in output names.", m_name.string() ) );
+			}
 			update( output );
 		}
 
