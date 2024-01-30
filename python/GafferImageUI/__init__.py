@@ -77,8 +77,8 @@ from . import ShuffleUI
 from . import PremultiplyUI
 from . import UnpremultiplyUI
 from . import CropUI
-from . import ResizeUI
 from . import ResampleUI
+from . import ResizeUI
 from . import LUTUI
 from . import CDLUI
 from . import DisplayTransformUI

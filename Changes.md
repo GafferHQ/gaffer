@@ -26,6 +26,9 @@ Improvements
 - Cache : Increased default computation cache size to 8Gb. Call `Gaffer.ValuePlug.setCacheMemoryLimit()` from a startup file to override this.
 - Dispatcher : Reduced internal overhead of `dispatch()` call, with one benchmark showing around a 3x speedup.
 - ScriptWindow : Added "Save" option to dialogue shown when closing a window containing unsaved changes.
+- Resize :
+  - Added support for deep images.
+  - Added "Nearest" filter.
 - Shuffle :
   - Reimplemented to match ShuffleAttributes and ShufflePrimitiveVariables.
     - Any number of shuffles can be added using the UI.
@@ -49,6 +52,7 @@ Improvements
   - Matched DelightOptions default values for `oversampling` and `shadingSamples` to 3Delight's own default values.
 - GraphEditor : Improved logic used to connect a newly created node to the selected nodes.
 - ScenePlug, ImagePlug : Child plugs are now serialisable. Among other things, this enables them to be driven by expressions (#3986).
+- Premultiply : Added `useDeepVisibility` plug, which weights samples according to their visibility based on the opacity of samples in front.
 
 Fixes
 -----
@@ -64,6 +68,8 @@ Fixes
   - Results for min/max now correctly reflect zero values outside the data window.
 - NodeMenu, NodeEditor : `userDefault` metadata is now evaluated in the script context, so it can depend on script variables.
 - 3Delight : Fixed loading of surface shaders such as `dlStandard` so that they can be connected to the inputs of shaders such as `dlLayeredMaterial`.
+- DeepState : Fixed handling of `NaN` values and samples where `ZBack` is less than `Z`.
+- Premultiply : Fixed handling of non-existent alpha channel.
 
 API
 ---
@@ -94,6 +100,7 @@ API
 - ShufflePlugValueWidget : Widgets for the `source` and `destination` plugs can now be customised using standard `plugValueWidget:type` metadata.
 - ImageTestCase : in `assertImageEqual` function, maxDifference may now be a tuple, to specify an asymmetric range.
 - Editor : Added `Settings` class, which should be used to store settings for subclasses. See LightEditor and ImageInspector for examples.
+- DeepPixelAccessor : Added utility class for accessing deep samples while abstracting away the underlying tile storage.
 
 Breaking Changes
 ----------------
