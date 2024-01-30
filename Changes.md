@@ -79,6 +79,7 @@ Fixes
 - DeepState : Fixed handling of `NaN` values and samples where `ZBack` is less than `Z`.
 - Premultiply : Fixed handling of non-existent alpha channel.
 - PlugAlgo : Fixed promotion of CompoundDataPlugs with non-dynamic children, such as the `Camera.renderSettingOverrides` plug.
+- ColorToVector : Fixed parameter types.
 
 API
 ---
