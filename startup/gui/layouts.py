@@ -54,6 +54,7 @@ layouts.registerEditor( "UIEditor" )
 layouts.registerEditor( "AnimationEditor" )
 layouts.registerEditor( "PrimitiveInspector")
 layouts.registerEditor( "UVInspector")
+layouts.registerEditor( "RenderPassEditor" )
 
 # Register some predefined layouts
 #

@@ -89,8 +89,11 @@ class GAFFERUI_API PathColumn : public IECore::RefCounted, public Gaffer::Signal
 				const IECore::ConstDataPtr &value = nullptr,
 				const IECore::ConstDataPtr &icon = nullptr,
 				const IECore::ConstDataPtr &background = nullptr,
-				const IECore::ConstDataPtr &toolTip = nullptr
-			)	:	value( value ), icon( icon ), background( background ), toolTip( toolTip ) {}
+				const IECore::ConstDataPtr &toolTip = nullptr,
+				const IECore::ConstDataPtr &foreground = nullptr
+			)	:	value( value ), icon( icon ), background( background ), toolTip( toolTip ),
+					foreground( foreground ) {}
+
 			CellData( const CellData &other ) = default;
 
 			/// The primary value to be displayed in a cell or header.
@@ -119,11 +122,15 @@ class GAFFERUI_API PathColumn : public IECore::RefCounted, public Gaffer::Signal
 			///
 			/// - StringData
 			IECore::ConstDataPtr toolTip;
+			/// The foreground colour for the cell value. Supported types :
+			///
+			/// - Color3fData
+			/// - Color4fData
+			IECore::ConstDataPtr foreground;
 
 			private :
 
 				IECore::ConstDataPtr m_reserved1;
-				IECore::ConstDataPtr m_reserved2;
 
 		};
 
