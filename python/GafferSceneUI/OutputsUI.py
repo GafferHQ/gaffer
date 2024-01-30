@@ -137,7 +137,7 @@ class OutputsPlugValueWidget( GafferUI.PlugValueWidget ) :
 			# now we just need a little footer with a button for adding new outputs
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
 
-				GafferUI.MenuButton(
+				self.__addButton = GafferUI.MenuButton(
 					image="plus.png", hasFrame=False, menu = GafferUI.Menu( Gaffer.WeakMethod( self.__addMenuDefinition ) )
 				)
 
@@ -146,6 +146,10 @@ class OutputsPlugValueWidget( GafferUI.PlugValueWidget ) :
 	def hasLabel( self ) :
 
 		return True
+
+	def _updateFromEditable( self ) :
+
+		self.__addButton.setEnabled( not Gaffer.MetadataAlgo.readOnly( self.getPlug() ) )
 
 	def __addMenuDefinition( self ) :
 
@@ -162,7 +166,7 @@ class OutputsPlugValueWidget( GafferUI.PlugValueWidget ) :
 			m.append(
 				menuPath,
 				{
-					"command" : functools.partial( node.addOutput, name ),
+					"command" : functools.partial( Gaffer.WeakMethod( self.__addOutput ), name ),
 					"active" : name not in currentNames
 				}
 			)
@@ -173,6 +177,11 @@ class OutputsPlugValueWidget( GafferUI.PlugValueWidget ) :
 		m.append( "/Blank", { "command" : functools.partial( node.addOutput, "", IECoreScene.Output( "", "", "" ) ) } )
 
 		return m
+
+	def __addOutput( self, name ) :
+
+		with Gaffer.UndoScope( self.getPlug().ancestor( Gaffer.ScriptNode ) ) :
+			self.getPlug().node().addOutput( name )
 
 # A widget for representing an individual output.
 class ChildPlugValueWidget( GafferUI.PlugValueWidget ) :

@@ -42,6 +42,7 @@ import shlex
 import pathlib
 import os
 import subprocess
+import math
 
 import imath
 
@@ -1118,6 +1119,260 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( mesh["subdivision.cornervertices"], 3 )
 		self.assertEqual( mesh["subdivision.cornersharpness"], 5 )
 
+	# `lightSettings` is a list of tuples of the form :
+	# ( USD light type, position, rotation (V3f, degrees), 3Delight geometry type,
+	# 3Delight geometry attributes, 3Delight shader, IECore light parameters, 3Delight parameters )
+	# Returns the path to the rendered NSI file.
+	def __renderLights( self, lightSettings ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"3Delight",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.nsi" ),
+		)
+
+		for lightType, position, rotation, geometryType, geometryAttributes, shader, lightParameters, dlParameters in lightSettings :
+			lightShader = IECoreScene.ShaderNetwork(
+				{
+					"lightHandle": IECoreScene.Shader( lightType, "light", lightParameters ),
+				},
+				output = "lightHandle"
+			)
+			r.light(
+				"test" + lightType,
+				None,  # IECore.Object
+				r.attributes(IECore.CompoundObject( { "light": lightShader } ) )
+			).transform( imath.M44f().translate( position ) * imath.M44f().rotate( IECore.degreesToRadians( rotation ) ) )
+
+		r.render()
+		del r
+
+		return self.temporaryDirectory() / "test.nsi"
+
+	def __assertLightSettings( self, nsi, lightSettings ) :
+
+		for lightType, translation, rotation, geometryType, geometryAttributes, shader, lightParameters, dlParameters in lightSettings :
+			with self.subTest( lightType = lightType ) :
+				lightName = "test" + lightType
+				self.assertIn( lightName, nsi )
+				transform = nsi[lightName]
+
+				self.assertIn( "geometryattributes", transform )
+				self.assertEqual( len( transform["geometryattributes"] ), 1 )
+				attributes = self.__connectionSource( transform["geometryattributes"][0], nsi )
+
+				self.assertIn( "surfaceshader", attributes )
+				self.assertEqual( len( attributes["surfaceshader"] ), 1 )
+				surface = self.__connectionSource( attributes["surfaceshader"][0], nsi )
+
+				self.assertEqual( pathlib.Path( surface["shaderfilename"] ).name, shader )
+				for k, v in dlParameters.items() :
+					with self.subTest( k = k ) :
+						self.assertIn( k, surface )
+						self.assertEqual( surface[k], v )
+
+				self.assertIn( "objects", transform )
+				self.assertEqual( len( transform["objects"] ), 1 )
+				geometry = self.__connectionSource( transform["objects"][0], nsi )
+
+				self.assertEqual( geometry["nodeType"], geometryType )
+				for k, v in geometryAttributes.items() :
+					with self.subTest( k = k ) :
+						self.assertIn( k, geometry )
+						if isinstance( v, list ) :
+							self.assertEqual( len( geometry[k] ), len( v ) )
+							for i in range( 0, len( v ) ) :
+								if isinstance( v[i], imath.V3f ) :
+									for j in range( 0, 3 ) :
+										self.assertAlmostEqual( geometry[k][i][j], v[i][j], places = 5 )
+								else :
+									self.assertAlmostEqual( geometry[k][i], v[i], places = 5 )
+						else :
+							self.assertAlmostEqual( geometry[k], v, places = 5 )
+
+				self.assertIn( "transformationmatrix", transform )
+				xform = imath.M44f().rotate( IECore.degreesToRadians( rotation ) ).translate( translation )
+				for i in range( 0, 4 ) :
+					with self.subTest( i = i ) :
+						for j in range( 0, 4 ) :
+							with self.subTest( j = j ) :
+								self.assertAlmostEqual( transform["transformationmatrix"][i][j], xform[i][j])
+
+	def testUSDLights( self ) :
+
+		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"3Delight",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
+			str( self.temporaryDirectory() / "test.nsi" ),
+		)
+
+		# List of tuples of the form :
+		# ( USD light type, position, rotation (V3f, degrees), 3Delight geometry type,
+		# 3Delight geometry attributes, 3Delight shader, IECore light parameters, 3Delight parameters )
+		lightSettings = [
+			(
+				"SphereLight",
+				imath.V3f( 1.0, 2.0, 3.0 ),
+				imath.V3f( 10.0, 20.0, 30.0 ),
+				"particles",
+				{ "P": imath.V3f( 0, 0, 0 ), "width": 6.0, },
+				"pointLight.oso",
+				{ "intensity": 2.0, "diffuse": 0.1, "specular": 0.5, "exposure": 10.0, "color": imath.Color3f( 4.0, 5.0, 6.0 ), "radius": 3.0, },
+				{ "intensity": 2.0, "diffuse_contribution": 0.1, "reflection_contribution": 0.5, "exposure": 10.0, "i_color": imath.Color3f( 4.0, 5.0, 6.0 ) },
+			),
+			(
+				"RectLight",
+				imath.V3f( 1.0, 2.0, 3.0 ),
+				imath.V3f( 10.0, 20.0, 30.0 ),
+				"mesh",
+				{
+					"P": [ imath.V3f( 1.0, 1.5, 0.0 ), imath.V3f( 1.0, -1.5, 0.0 ), imath.V3f( -1.0, -1.5, 0.0 ), imath.V3f( -1.0, 1.5, 0.0 ) ],
+					"P.indices": [ 0, 1, 2, 3 ],
+					"N": imath.V3f( 0.0, 0.0, -1.0 ),
+					"N.indices": [ 0, 0, 0, 0 ],
+					"st": [ imath.V2f( 0.0, 1.0 ), imath.V2f( 0.0, 0.0 ), imath.V2f( 1.0, 0.0 ), imath.V2f( 1.0, 1.0 ) ]
+				},
+				"areaLight.oso",
+				{ "intensity": 2.0, "diffuse": 0.1, "specular": 0.5, "exposure": 10.0, "color": imath.Color3f( 4.0, 5.0, 6.0 ), "width": 2.0, "height": 3.0, },
+				{ "intensity": 2.0, "diffuse_contribution": 0.1, "reflection_contribution": 0.5, "exposure": 10.0, "i_color": imath.Color3f( 4.0, 5.0, 6.0 ) },
+			),
+			(
+				"DiskLight",
+				imath.V3f( 1.0, 2.0, 3.0 ),
+				imath.V3f( 10.0, 20.0, 30.0 ),
+				"particles",
+				{ "P": imath.V3f( 0.0, 0.0, 0.0 ), "width": 6.0, "N": imath.V3f( 0.0, 0.0, -1.0 ) },
+				"areaLight.oso",
+				{ "intensity": 2.0, "diffuse": 0.1, "specular": 0.5, "exposure": 10.0, "color": imath.Color3f( 4.0, 5.0, 6.0 ), "radius": 3.0, },
+				{ "intensity": 2.0, "diffuse_contribution": 0.1, "reflection_contribution": 0.5, "exposure": 10.0, "i_color": imath.Color3f( 4.0, 5.0, 6.0 ) },
+			),
+			(
+				"DistantLight",
+				imath.V3f( 1.0, 2.0, 3.0 ),
+				imath.V3f( 10.0, 20.0, 30.0 ),
+				"environment",
+				{ "angle": 10.0 },
+				"distantLight.oso",
+				{ "intensity": 2.0, "diffuse": 0.1, "specular": 0.5, "exposure": 10.0, "color": imath.Color3f( 4.0, 5.0, 6.0 ), "angle": 10.0 },
+				{ "intensity": 2.0, "diffuse_contribution": 0.1, "reflection_contribution": 0.5, "exposure": 10.0, "i_color": imath.Color3f( 4.0, 5.0, 6.0 ) },
+			),
+			(
+				"DomeLight",
+				imath.V3f( 1.0, 2.0, 3.0 ),
+				imath.V3f( 10.0, 20.0, 30.0 ),
+				"environment",
+				{ "angle": 360.0 },
+				"environmentLight.oso",
+				{ "intensity": 2.0, "diffuse": 0.1, "specular": 0.5, "exposure": 10.0, "color": imath.Color3f( 4.0, 5.0, 6.0 ), "angle": 10.0, "texture:file": "env.exr", "texture:format": "latlong" },
+				{ "intensity": 2.0, "diffuse_contribution": 0.1, "specular_contribution": 0.5, "exposure": 10.0, "i_color": imath.Color3f( 4.0, 5.0, 6.0 ), "image": "env.exr", "mapping": 0 },
+			),
+			(
+				"CylinderLight",
+				imath.V3f( 1.0, 2.0, 3.0 ),
+				imath.V3f( 10.0, 20.0, 30.0 ),
+				"mesh",
+				self.__cylinderMesh( 2.0, 3.0 ),
+				"areaLight.oso",
+				{ "intensity": 2.0, "diffuse": 0.1, "specular": 0.5, "exposure": 10.0, "color": imath.Color3f( 4.0, 5.0, 6.0 ), "length": 2.0, "radius": 3.0 },
+				{ "intensity": 2.0, "diffuse_contribution": 0.1, "reflection_contribution": 0.5, "exposure": 10.0, "i_color": imath.Color3f( 4.0, 5.0, 6.0 ) },
+			),
+		]
+
+		nsi = self.__parseDict( self.__renderLights( lightSettings ) )
+
+		self.__assertLightSettings( nsi, lightSettings )
+
+	def testUSDLightShaping( self ) :
+
+		lightSettings = [
+			(
+				"RectLight",
+				imath.V3f( 1.0, 2.0, 3.0 ),
+				imath.V3f( 10.0, 20.0, 30.0 ),
+				"mesh",
+				{
+					"P": [ imath.V3f( 1.0, 1.5, 0.0 ), imath.V3f( 1.0, -1.5, 0.0 ), imath.V3f( -1.0, -1.5, 0.0 ), imath.V3f( -1.0, 1.5, 0.0 ) ],
+					"P.indices": [ 0, 1, 2, 3 ],
+					"N": imath.V3f( 0.0, 0.0, -1.0 ),
+					"N.indices": [ 0, 0, 0, 0 ],
+					"st": [ imath.V2f( 0.0, 1.0 ), imath.V2f( 0.0, 0.0 ), imath.V2f( 1.0, 0.0 ), imath.V2f( 1.0, 1.0 ) ]
+				},
+				"spotLight.oso",
+				{ "intensity": 2.0, "diffuse": 0.1, "specular": 0.5, "exposure": 10.0, "color": imath.Color3f( 4.0, 5.0, 6.0 ), "width": 2.0, "height": 3.0, "shaping:cone:angle": 45.0, "shaping:cone:softness": 0.1 },
+				{ "intensity": 2.0, "diffuse_contribution": 0.1, "reflection_contribution": 0.5, "exposure": 10.0, "i_color": imath.Color3f( 4.0, 5.0, 6.0 ), "coneAngle": 81.0, "penumbraAngle": 4.5 },
+			),
+			(
+				"DiskLight",
+				imath.V3f( 1.0, 2.0, 3.0 ),
+				imath.V3f( 10.0, 20.0, 30.0 ),
+				"particles",
+				{ "P": imath.V3f( 0.0, 0.0, 0.0 ), "width": 6.0, "N": imath.V3f( 0.0, 0.0, -1.0 ) },
+				"spotLight.oso",
+				{ "intensity": 2.0, "diffuse": 0.1, "specular": 0.5, "exposure": 10.0, "color": imath.Color3f( 4.0, 5.0, 6.0 ), "radius": 3.0, "shaping:cone:angle": 45.0, "shaping:cone:softness": 0.1 },
+				{ "intensity": 2.0, "diffuse_contribution": 0.1, "reflection_contribution": 0.5, "exposure": 10.0, "i_color": imath.Color3f( 4.0, 5.0, 6.0 ), "coneAngle": 81.0, "penumbraAngle": 4.5 },
+			),
+		]
+
+		nsi = self.__parseDict( self.__renderLights( lightSettings ) )
+
+		self.__assertLightSettings( nsi, lightSettings )
+
+	@staticmethod
+	def __cylinderMesh( length, radius ) :
+
+		numSegments = 100
+		halfLength = length * 0.5
+
+		p = []
+		pIndices = []
+		n = []
+		nIndices = []
+
+		for i in range( 0, numSegments + 1 ) :
+			a = ( float(i) / numSegments ) * 2.0 * math.pi
+			z = math.sin( a ) * radius
+			y = math.cos( a ) * radius
+
+			p.append( imath.V3f( halfLength, y, z ) )
+			p.append( imath.V3f( -halfLength, y, z ) )
+			n.append( imath.V3f( 0, y, z ).normalized() )
+
+		for i in range( 0, numSegments ) :
+			pIndices.append( i * 2 )
+			pIndices.append( i * 2 + 1 )
+			pIndices.append( i * 2 + 3 )
+			pIndices.append( i * 2 + 2 )
+
+			nIndices.append( i )
+			nIndices.append( i )
+			nIndices.append( i + 1 )
+			nIndices.append( i + 1 )
+
+		# end caps
+		p.append( imath.V3f( halfLength, 0, 0 ) )
+		p.append( imath.V3f( -halfLength, 0, 0 ) )
+		n.append( imath.V3f( 1, 0, 0 ) )
+		n.append( imath.V3f( -1, 0, 0 ) )
+
+		for i in range( 0, numSegments ) :
+			pIndices.append( numSegments + 1 )
+			pIndices.append( i * 2 )
+			pIndices.append( i * 2 + 2 )
+
+			nIndices.append( numSegments + 1 )
+			nIndices.append( numSegments + 1 )
+			nIndices.append( numSegments + 1 )
+
+			pIndices.append( numSegments + 2 )
+			pIndices.append( i * 2 + 3 )
+			pIndices.append( i * 2 + 1 )
+
+			nIndices.append( numSegments + 2 )
+			nIndices.append( numSegments + 2 )
+			nIndices.append( numSegments + 2 )
+
+		return { "P": p, "P.indices": pIndices, "N": n, "N.indices": nIndices }
+
 	# Helper methods used to check that NSI files we write contain what we
 	# expect. The 3delight API only allows values to be set, not queried,
 	# so we build a simple dictionary-based node graph for now.
@@ -1191,8 +1446,10 @@ class RendererTest( GafferTest.TestCase ) :
 			else :
 				# List of attributes
 				pType = tokens.popleft()
-				if pType == "v normal" or pType == "v point" :
+				if pType == "v normal" or pType == "v point" or pType == "normal" or pType == "point" :
 					pType = "v"
+				elif pType == "v float" :
+					pType = "float"
 				pSize = int( tokens.popleft() )
 				pLength = 1
 

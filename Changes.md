@@ -165,11 +165,24 @@ Build
 1.3.x.x (relative to 1.3.10.0)
 =======
 
+Features
+--------
+
+- 3Delight : Added support for USD `SphereLight`, `RectLight`, `DiskLight`, `DistantLight`, `DomeLight` and `CylinderLight`.
+
 Improvements
 ------------
 
 - ArnoldShader : Added a colour space presets menu for the `image` shader.
 - CyclesShader : Added a colour space presets menu for the `image_texture` and `environment_texture` shaders (#5618).
+
+Fixes
+-----
+
+- Reference : Fixed bug where `GAFFER_REFERENCE_PATHS` was not being searched when performing "Duplicate as Box" action.
+- Outputs :
+  - Fixed bug which meant that adding an output via the UI was not undoable.
+  - Fixed bug which allowed outputs to be added to a read-only node via the UI.
 
 API
 ---
