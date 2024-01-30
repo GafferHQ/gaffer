@@ -1128,7 +1128,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r = GafferScene.Private.IECoreScenePreview.Renderer.create(
 			"3Delight",
 			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.SceneDescription,
-			str( self.temporaryDirectory() / "test.nsi" ),
+			str( self.temporaryDirectory() / "test.nsia" ),
 		)
 
 		for lightType, position, rotation, geometryType, geometryAttributes, shader, lightParameters, dlParameters in lightSettings :
@@ -1147,7 +1147,7 @@ class RendererTest( GafferTest.TestCase ) :
 		r.render()
 		del r
 
-		return self.temporaryDirectory() / "test.nsi"
+		return self.temporaryDirectory() / "test.nsia"
 
 	def __assertLightSettings( self, nsi, lightSettings ) :
 
