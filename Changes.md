@@ -9,7 +9,9 @@ Features
 Improvements
 ------------
 
-- ArnoldShader : Added a colour space presets menu for the `image` shader.
+- Arnold :
+  - ArnoldShader : Added a colour space presets menu for the `image` shader.
+  - Added specific warning for outputs with space in name.
 - CyclesShader : Added a colour space presets menu for the `image_texture` and `environment_texture` shaders (#5618).
 
 Fixes
