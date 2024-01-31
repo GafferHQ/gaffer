@@ -241,5 +241,17 @@ class CameraTest( GafferSceneTest.SceneTestCase ) :
 		c["orthographicAperture"].setValue( imath.V2f( 0.1, 12 ) )
 		self.assertEqual( c["out"].object( "/camera" ).frustum( IECoreScene.Camera.FilmFit.Distort ).max() * 2.0, c["orthographicAperture"].getValue() )
 
+	def testPromoteRenderOverrides( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["box"] = Gaffer.Box()
+		script["box"]["camera"] = GafferScene.Camera()
+		Gaffer.PlugAlgo.promote( script["box"]["camera"]["renderSettingOverrides"] )
+
+		script2 = Gaffer.ScriptNode()
+		script2.execute( script.serialise() )
+		self.assertEqual( script2["box"]["renderSettingOverrides"].keys(), script["box"]["renderSettingOverrides"].keys() )
+		self.assertTrue( Gaffer.PlugAlgo.isPromoted( script2["box"]["camera"]["renderSettingOverrides"] ) )
+
 if __name__ == "__main__":
 	unittest.main()

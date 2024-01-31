@@ -74,6 +74,7 @@ Fixes
 - 3Delight : Fixed loading of surface shaders such as `dlStandard` so that they can be connected to the inputs of shaders such as `dlLayeredMaterial`.
 - DeepState : Fixed handling of `NaN` values and samples where `ZBack` is less than `Z`.
 - Premultiply : Fixed handling of non-existent alpha channel.
+- PlugAlgo : Fixed promotion of CompoundDataPlugs with non-dynamic children, such as the `Camera.renderSettingOverrides` plug.
 
 API
 ---

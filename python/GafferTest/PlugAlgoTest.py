@@ -1099,5 +1099,38 @@ class PlugAlgoTest( GafferTest.TestCase ) :
 					value = ord( data.value ) if isinstance( data, IECore.CharData ) else data.value
 					self.assertEqual( plug.getValue(), plugType.ValueType( value ) )
 
+	class CompoundDataNode( Gaffer.Node ) :
+
+		def __init__( self, name = "CompoundDataNode" ) :
+
+			Gaffer.Node.__init__( self, name )
+
+			self["plug"] = Gaffer.CompoundDataPlug()
+			self["plug"]["child1"] = Gaffer.NameValuePlug( "value1", 10 )
+			self["plug"]["child2"] = Gaffer.NameValuePlug( "value2", 20 )
+
+	IECore.registerRunTimeTyped( CompoundDataNode )
+
+	def testPromoteCompoundDataPlug( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["box"] = Gaffer.Box()
+		script["box"]["node"] = self.CompoundDataNode()
+
+		Gaffer.PlugAlgo.promote( script["box"]["node"]["plug"] )
+		script["box"]["plug"]["child1"]["value"].setValue( 100 )
+		script["box"]["plug"]["child2"]["value"].setInput( script["box"]["plug"]["child1"]["value"] )
+
+		script2 = Gaffer.ScriptNode()
+		script2.execute( script.serialise() )
+
+		self.assertEqual( script2["box"]["plug"].keys(), script["box"]["plug"].keys() )
+		self.assertTrue( Gaffer.PlugAlgo.isPromoted( script2["box"]["node"]["plug"] ) )
+		self.assertEqual( script2["box"]["node"]["plug"]["child1"]["value"].getValue(), 100 )
+		self.assertEqual(
+			script2["box"]["node"]["plug"]["child2"]["value"].source(),
+			script2["box"]["plug"]["child1"]["value"].source()
+		)
+
 if __name__ == "__main__":
 	unittest.main()
