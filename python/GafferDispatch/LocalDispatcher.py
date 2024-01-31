@@ -35,6 +35,7 @@
 ##########################################################################
 
 import atexit
+import collections
 import datetime
 import enum
 import functools
@@ -101,7 +102,7 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 			self.__messageHandler = _MessageHandler()
 			self.__messagesChangedSignal = Gaffer.Signal1()
-			self.__messageHandler.messagesChangedSignal().connect( Gaffer.WeakMethod( self.__messagesChanged ), scoped = False )
+			self.__messageHandler.messagesChangedSignal().connect( Gaffer.WeakMethod( self.__messagesChanged, fallbackResult = None ), scoped = False )
 
 			self.__initBatchWalk( batch )
 
@@ -407,17 +408,25 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 		def __init__( self ) :
 
-			self.__jobs = []
+			self.__jobs = collections.OrderedDict()
+			self.__nextId = 0
+
 			self.__jobAddedSignal = Gaffer.Signals.Signal1()
 			self.__jobRemovedSignal = Gaffer.Signals.Signal1()
 
+		# Returns a list of jobs in the order they were added.
 		def jobs( self ) :
 
-			return list(self.__jobs)
+			return list( self.__jobs.values() )
+
+		# Returns an ordered dictionary mapping from unique IDs to jobs.
+		def jobsDict( self ) :
+
+			return self.__jobs
 
 		def waitForAll( self ) :
 
-			while any( j.status() in ( j.Status.Waiting, j.Status.Running ) for j in self.__jobs ) :
+			while any( j.status() in ( j.Status.Waiting, j.Status.Running ) for j in self.__jobs.values() ) :
 				time.sleep( 0.2 )
 
 		def jobAddedSignal( self ) :
@@ -432,14 +441,16 @@ class LocalDispatcher( GafferDispatch.Dispatcher ) :
 
 			assert( isinstance( job, LocalDispatcher.Job ) )
 
-			self.__jobs.append( job )
+			job.__jobPoolId = self.__nextId
+			self.__nextId += 1
+			self.__jobs[job.__jobPoolId] = job
+
 			self.jobAddedSignal()( job )
 
 		def removeJob( self, job ) :
 
-			if job in self.__jobs :
-				self.__jobs.remove( job )
-				self.jobRemovedSignal()( job )
+			del self.__jobs[job.__jobPoolId]
+			self.jobRemovedSignal()( job )
 
 	__defaultJobPool = None
 

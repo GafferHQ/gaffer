@@ -52,18 +52,15 @@ from Qt import QtGui
 
 class _LocalJobsPath( Gaffer.Path ) :
 
-	def __init__( self, jobPool, job = None, path = None, root = "/" ) :
+	def __init__( self, jobPool, path = None, root = "/", filter = None ) :
 
-		Gaffer.Path.__init__( self, path = path, root = root )
+		Gaffer.Path.__init__( self, path = path, root = root, filter = filter )
 
 		self.__jobPool = jobPool
-		self.__job = job
 
 	def copy( self ) :
 
-		c = self.__class__( self.__jobPool, self.__job )
-
-		return c
+		return self.__class__( self.__jobPool, self[:], self.root(), self.getFilter() )
 
 	def propertyNames( self, canceller = None ) :
 
@@ -84,31 +81,35 @@ class _LocalJobsPath( Gaffer.Path ) :
 		if result is not None :
 			return result
 
-		if self.__job is None :
+		job = self.job()
+		if job is None :
 			return None
 
 		if name == "localDispatcher:status" :
-			return self.__job.status().name
+			return job.status().name
 		elif name == "localDispatcher:id" :
-			return self.__job.id()
+			return job.id()
 		elif name == "localDispatcher:jobName" :
-			return self.__job.name()
+			return job.name()
 		elif name == "localDispatcher:directory" :
-			return self.__job.directory()
+			return job.directory()
 		elif name == "localDispatcher:startTime" :
-			return self.__job.startTime()
+			return job.startTime()
 		elif name == "localDispatcher:runningTime" :
-			return self.__job.runningTime().total_seconds()
+			return job.runningTime().total_seconds()
 		elif name == "localDispatcher:cpuUsage" :
-			return self.__job.cpuUsage()
+			return job.cpuUsage()
 		elif name == "localDispatcher:memoryUsage" :
-			return self.__job.memoryUsage()
+			return job.memoryUsage()
 
 		return None
 
 	def job( self ) :
 
-		return self.__job
+		if len( self ) != 1 :
+			return None
+
+		return self.__jobPool.jobsDict().get( int( self[0] ) )
 
 	def jobPool( self ) :
 
@@ -123,17 +124,10 @@ class _LocalJobsPath( Gaffer.Path ) :
 		if self.isLeaf() :
 			return []
 
-		result = []
-		for index, job in enumerate( self.__jobPool.jobs() ) :
-			result.append(
-				_LocalJobsPath(
-					jobPool = self.__jobPool,
-					job = job,
-					path = [ str( index ) ],
-				)
-			)
-
-		return result
+		return [
+			_LocalJobsPath( self.__jobPool, [ str( x ) ], self.root(), self.getFilter() )
+			for x in self.__jobPool.jobsDict().keys()
+		]
 
 class _StatusColumn( GafferUI.PathColumn ) :
 
@@ -293,6 +287,7 @@ class LocalJobs( GafferUI.Editor ) :
 
 		assert( threading.current_thread() is threading.main_thread() )
 		self.__jobListingWidget.getPath()._emitPathChanged()
+		self.__jobSelectionChanged( self.__jobListingWidget )
 
 	def __jobStatusChanged( self, job ) :
 
@@ -315,6 +310,7 @@ class LocalJobs( GafferUI.Editor ) :
 		for job in self.__selectedJobs() :
 			job.kill()
 			jobPool.removeJob( job )
+			self.__jobSelectionChanged( self.__jobListingWidget )
 
 	def __selectedJobs( self ) :
 
