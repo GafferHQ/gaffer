@@ -72,7 +72,10 @@ class TractorDispatcherTest( GafferTest.TestCase ) :
 		if dispatcher is None :
 			dispatcher = self.__dispatcher()
 
-		dispatcher.dispatch( nodes )
+		for i, node in enumerate( nodes ) :
+			dispatcher["tasks"][i].setInput( node["task"] )
+
+		dispatcher["task"].execute()
 
 		return jobs[0]
 
@@ -89,7 +92,8 @@ class TractorDispatcherTest( GafferTest.TestCase ) :
 		c = GafferTractor.TractorDispatcher.preSpoolSignal().connect( f, scoped = True )
 
 		dispatcher = self.__dispatcher()
-		dispatcher.dispatch( [ s["n"] ] )
+		dispatcher["tasks"][0].setInput( s["n"]["task"] )
+		dispatcher["task"].execute()
 
 		self.assertEqual( len( spooled ), 1 )
 		self.assertTrue( spooled[0][0] is dispatcher )
@@ -100,9 +104,50 @@ class TractorDispatcherTest( GafferTest.TestCase ) :
 		s["n"] = GafferDispatchTest.LoggingTaskNode()
 
 		dispatcher = self.__dispatcher()
-		dispatcher.dispatch( [ s["n"] ] )
+		dispatcher["tasks"][0].setInput( s["n"]["task"] )
+		dispatcher["task"].execute()
 
 		self.assertTrue( ( dispatcher.jobDirectory() / "job.alf" ).is_file() )
+
+	def testJobScriptInNestedDispatch( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		# Fake the creation of a `.alf` file from a downstream
+		# TractorDispatcher. We can't use a TractorDispatcher to do this because
+		# the Tractor API is mocked during testing.
+
+		script["pythonCommand"] = GafferDispatch.PythonCommand()
+		script["pythonCommand"]["command"].setValue( inspect.cleandoc(
+			"""
+			import pathlib
+			p = pathlib.Path( context["dispatcher:jobDirectory"] ) / "job.alf"
+			with open( p, "w", encoding = "utf-8" ) as f :
+					f.write( "First one wins" )
+			"""
+		) )
+
+		# That runs as a preTask for an actual TractorDispatcher.
+
+		script["node"] = GafferDispatchTest.LoggingTaskNode()
+
+		script["tractorDispatcher"] = self.__dispatcher()
+		script["tractorDispatcher"]["tasks"][0].setInput( script["node"]["task"] )
+		script["tractorDispatcher"]["preTasks"][0].setInput( script["pythonCommand"]["task"] )
+
+		# And then we use a LocalDispatcher to launch the whole thing.
+
+		script["localDispatcher"] = GafferDispatch.LocalDispatcher()
+		script["localDispatcher"]["tasks"][0].setInput( script["tractorDispatcher"]["task"] )
+		script["localDispatcher"]["jobsDirectory"].setValue( script["tractorDispatcher"]["jobsDirectory"].getValue() )
+		script["localDispatcher"]["task"].execute()
+
+		# We want our fake job script to have won, because it represents
+		# the downstream dispatch, which provides a full record of the job.
+
+		self.assertTrue( ( script["tractorDispatcher"].jobDirectory() / "job.alf" ).is_file() )
+		with open( script["tractorDispatcher"].jobDirectory() / "job.alf" ) as f :
+			self.assertEqual( f.readline(), "First one wins" )
 
 	def testJobAttributes( self ) :
 
@@ -119,6 +164,22 @@ class TractorDispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( job.title, "Test Job" )
 		self.assertEqual( job.service, "myService" )
 		self.assertEqual( job.envkey, [ "myEnvKey" ] )
+
+		dispatcher["jobName"].setValue( "${jobName}" )
+		dispatcher["service"].setValue( "${service}" )
+		dispatcher["envKey"].setValue( "${envKey}" )
+
+		with Gaffer.Context() as context :
+
+			context["jobName"] = "a"
+			context["service"] = "b"
+			context["envKey"] = "c"
+
+			job = self.__job( [ s["n" ] ], dispatcher )
+
+		self.assertEqual( job.title, "a" )
+		self.assertEqual( job.service, "b" )
+		self.assertEqual( job.envkey, [ "c" ] )
 
 	def testTaskAttributes( self ) :
 
@@ -290,6 +351,18 @@ class TractorDispatcherTest( GafferTest.TestCase ) :
 			"imath.Color3f( 0, 1, 2 )",
 			task.cmds[0].argv
 		)
+
+	def testMissingTractorAPI( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["pythonCommand"] = GafferDispatch.PythonCommand()
+
+		script["dispatcher"] = self.__dispatcher()
+		script["dispatcher"]["tasks"][0].setInput( script["pythonCommand"]["task"] )
+
+		with unittest.mock.patch( "GafferTractor.tractorAPI", side_effect = ImportError() ) :
+			with self.assertRaisesRegex( RuntimeError, "Tractor API not found" ) :
+				script["dispatcher"]["task"].execute()
 
 if __name__ == "__main__":
 	unittest.main()

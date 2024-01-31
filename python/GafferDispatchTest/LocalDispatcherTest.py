@@ -44,6 +44,7 @@ import unittest
 import time
 import inspect
 import functools
+import pathlib
 import subprocess
 import sys
 import tempfile
@@ -90,7 +91,6 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 	def testDispatch( self ) :
 
-		dispatcher = self.__createLocalDispatcher()
 		fileName = self.temporaryDirectory() / "result.txt"
 
 		def createWriter( text ) :
@@ -118,7 +118,9 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		self.assertFalse( fileName.is_file() )
 
 		# Executing n1 should trigger execution of all of them
-		dispatcher.dispatch( [ s["n1"] ] )
+		s["dispatcher"] = self.__createLocalDispatcher()
+		s["dispatcher"]["tasks"][0].setInput( s["n1"]["task"] )
+		s["dispatcher"]["task"].execute()
 		self.assertTrue( fileName.is_file() )
 		with open( fileName, "r", encoding = "utf-8" ) as f :
 			text = f.read()
@@ -127,7 +129,9 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 		# Executing n1 and anything else, should be the same as just n1, but forcing n2b execution puts it before n2a
 		fileName.unlink()
-		dispatcher.dispatch( [ s["n2b"], s["n1"] ] )
+		s["dispatcher"]["tasks"][0].setInput( s["n2b"]["task"] )
+		s["dispatcher"]["tasks"][1].setInput( s["n1"]["task"] )
+		s["dispatcher"]["task"].execute()
 		self.assertTrue( fileName.is_file() )
 		with open( fileName, "r", encoding = "utf-8" ) as f :
 			text = f.read()
@@ -136,7 +140,11 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 		# Executing all nodes should be the same as just n1
 		fileName.unlink()
-		dispatcher.dispatch( [ s["n2"], s["n2b"], s["n1"], s["n2a"] ] )
+		s["dispatcher"]["tasks"][0].setInput( s["n2"]["task"] )
+		s["dispatcher"]["tasks"][1].setInput( s["n2b"]["task"] )
+		s["dispatcher"]["tasks"][2].setInput( s["n1"]["task"] )
+		s["dispatcher"]["tasks"][3].setInput( s["n2a"]["task"] )
+		s["dispatcher"]["task"].execute()
 		self.assertTrue( fileName.is_file() )
 		with open( fileName, "r", encoding = "utf-8" ) as f :
 			text = f.read()
@@ -145,7 +153,9 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 		# Executing a sub-branch (n2) should only trigger execution in that branch
 		fileName.unlink()
-		dispatcher.dispatch( [ s["n2"] ] )
+		s["dispatcher"]["tasks"].resize( 1 )
+		s["dispatcher"]["tasks"][0].setInput( s["n2"]["task"] )
+		s["dispatcher"]["task"].execute()
 		self.assertTrue( fileName.is_file() )
 		with open( fileName, "r", encoding = "utf-8" ) as f :
 			text = f.read()
@@ -154,7 +164,8 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 		# Executing a leaf node, should not trigger other executions.
 		fileName.unlink()
-		dispatcher.dispatch( [ s["n2b"] ] )
+		s["dispatcher"]["tasks"][0].setInput( s["n2b"]["task"] )
+		s["dispatcher"]["task"].execute()
 		self.assertTrue( fileName.is_file() )
 		with open( fileName, "r", encoding = "utf-8" ) as f :
 			text = f.read()
@@ -168,11 +179,14 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		s["n1"]["fileName"].setValue( self.temporaryDirectory() / "n1_####.txt" )
 		s["n1"]["text"].setValue( "n1 on ${frame}" )
 
+		s["dispatcher"] = self.__createLocalDispatcher()
+		s["dispatcher"]["tasks"][0].setInput( s["n1"]["task"] )
+
 		context = Gaffer.Context( s.context() )
 		context.setFrame( s.context().getFrame() + 10 )
 
 		with context :
-			self.__createLocalDispatcher().dispatch( [ s["n1"] ] )
+			s["dispatcher"]["task"].execute()
 
 		fileName = context.substitute( s["n1"]["fileName"].getValue() )
 		self.assertTrue( os.path.isfile( fileName ) )
@@ -182,8 +196,6 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 	def testDispatchFullRange( self ) :
 
-		dispatcher = self.__createLocalDispatcher()
-		dispatcher["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.FullRange )
 		frameList = IECore.FrameList.parse( "5-7" )
 		fileName = self.temporaryDirectory() / "result.txt"
 
@@ -214,7 +226,12 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		self.assertFalse( fileName.is_file() )
 
 		# Executing n1 should trigger execution of all of them
-		dispatcher.dispatch( [ s["n1"] ] )
+
+		s["dispatcher"] = self.__createLocalDispatcher()
+		s["dispatcher"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.FullRange )
+		s["dispatcher"]["tasks"][0].setInput( s["n1"]["task"] )
+		with s.context() :
+			s["dispatcher"]["task"].execute()
 		self.assertTrue( fileName.is_file() )
 		with open( fileName, "r", encoding = "utf-8" ) as f :
 			text = f.read()
@@ -227,7 +244,9 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 		# Executing a leaf node, should not trigger other executions.
 		fileName.unlink()
-		dispatcher.dispatch( [ s["n2b"] ] )
+		s["dispatcher"]["tasks"][0].setInput( s["n2b"]["task"] )
+		with s.context() :
+			s["dispatcher"]["task"].execute()
 		self.assertTrue( fileName.is_file() )
 		with open( fileName, "r", encoding = "utf-8" ) as f :
 			text = f.read()
@@ -240,10 +259,7 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 	def testDispatchCustomRange( self ) :
 
-		dispatcher = self.__createLocalDispatcher()
-		dispatcher["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CustomRange )
 		frameList = IECore.FrameList.parse( "2-6x2" )
-		dispatcher["frameRange"].setValue( str(frameList) )
 		fileName = self.temporaryDirectory() / "result.txt"
 
 		def createWriter( text ) :
@@ -271,7 +287,12 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		self.assertFalse( fileName.is_file() )
 
 		# Executing n1 should trigger execution of all of them
-		dispatcher.dispatch( [ s["n1"] ] )
+		s["dispatcher"] = self.__createLocalDispatcher()
+		s["dispatcher"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CustomRange )
+		s["dispatcher"]["frameRange"].setValue( str(frameList) )
+
+		s["dispatcher"]["tasks"][0].setInput( s["n1"]["task"] )
+		s["dispatcher"]["task"].execute()
 		self.assertTrue( fileName.is_file() )
 		with open( fileName, "r", encoding = "utf-8" ) as f :
 			text = f.read()
@@ -284,7 +305,8 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 		# Executing a leaf node, should not trigger other executions.
 		fileName.unlink()
-		dispatcher.dispatch( [ s["n2b"] ] )
+		s["dispatcher"]["tasks"][0].setInput( s["n2b"]["task"] )
+		s["dispatcher"]["task"].execute()
 		self.assertTrue( fileName.is_file() )
 		with open( fileName, "r", encoding = "utf-8" ) as f :
 			text = f.read()
@@ -297,16 +319,17 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 	def testDispatchBadCustomRange( self ) :
 
-		dispatcher = self.__createLocalDispatcher()
-		dispatcher["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CustomRange )
-		dispatcher["frameRange"].setValue( "notAFrameRange" )
-
 		s = Gaffer.ScriptNode()
 		s["n1"] = GafferDispatchTest.TextWriter()
 		s["n1"]["fileName"].setValue( self.temporaryDirectory() / "n1_####.txt" )
 		s["n1"]["text"].setValue( "n1 on ${frame}" )
 
-		self.assertRaises( RuntimeError, dispatcher.dispatch, [ s["n1"] ] )
+		s["dispatcher"] = self.__createLocalDispatcher()
+		s["dispatcher"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CustomRange )
+		s["dispatcher"]["frameRange"].setValue( "notAFrameRange" )
+		s["dispatcher"]["tasks"][0].setInput( s["n1"]["task"] )
+
+		self.assertRaises( RuntimeError, s["dispatcher"]["task"].execute )
 		self.assertFalse( os.path.isfile( s.context().substitute( s["n1"]["fileName"].getValue() ) ) )
 
 	def testContextVariation( self ) :
@@ -320,11 +343,14 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		s["n1"]["fileName"].setValue( self.temporaryDirectory() / "${script:name}_####.txt" )
 		s["n1"]["text"].setValue( "${script:name} on ${frame}" )
 
+		s["dispatcher"] = self.__createLocalDispatcher()
+		s["dispatcher"]["tasks"][0].setInput( s["n1"]["task"] )
+
 		fileName = context.substitute( s["n1"]["fileName"].getValue() )
 		self.assertFalse( os.path.isfile( fileName ) )
 
 		with context :
-			self.__createLocalDispatcher().dispatch( [ s["n1"] ] )
+			s["dispatcher"]["task"].execute()
 
 		self.assertTrue( os.path.isfile( fileName ) )
 		self.assertTrue( os.path.basename( fileName ).startswith( context["script:name"] ) )
@@ -348,20 +374,18 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		s["n1"]["fileName"].setValue( self.temporaryDirectory() / "n1_####.txt" )
 		s["n1"]["text"].setValue( "n1 on ${frame}" )
 
-		dispatcher = self.__createLocalDispatcher()
-		dispatcher.dispatch( [ s["n1"] ] )
+		s["dispatcher"] = self.__createLocalDispatcher()
+		s["dispatcher"]["tasks"][0].setInput( s["n1"]["task"] )
+		s["dispatcher"]["task"].execute()
 
 		self.assertEqual( len( preCs ), 1 )
-		self.assertTrue( preCs[0][0].isSame( dispatcher ) )
-		self.assertEqual( preCs[0][1], [ s["n1"] ] )
+		self.assertTrue( preCs[0][0].isSame( s["dispatcher"] ) )
 
 		self.assertEqual( len( dispatchCs ), 1 )
-		self.assertTrue( dispatchCs[0][0].isSame( dispatcher ) )
-		self.assertEqual( dispatchCs[0][1], [ s["n1"] ] )
+		self.assertTrue( dispatchCs[0][0].isSame( s["dispatcher"] ) )
 
 		self.assertEqual( len( postCs ), 1 )
-		self.assertTrue( postCs[0][0].isSame( dispatcher ) )
-		self.assertEqual( postCs[0][1], [ s["n1"] ] )
+		self.assertTrue( postCs[0][0].isSame( s["dispatcher"] ) )
 
 	def testExecuteInBackground( self ) :
 
@@ -377,9 +401,10 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		s["n1"]["fileName"].setValue( self.temporaryDirectory() / "n1_####.txt" )
 		s["n1"]["text"].setValue( "n1 on ${frame}" )
 
-		dispatcher = self.__createLocalDispatcher()
-		dispatcher["executeInBackground"].setValue( True )
-		dispatcher.dispatch( [ s["n1"] ] )
+		s["dispatcher"] = self.__createLocalDispatcher()
+		s["dispatcher"]["executeInBackground"].setValue( True )
+		s["dispatcher"]["tasks"][0].setInput( s["n1"]["task"] )
+		s["dispatcher"]["task"].execute()
 
 		# the dispatching started and finished
 		self.assertEqual( len( preCs ), 1 )
@@ -390,9 +415,9 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		self.assertFalse( os.path.isfile( s.context().substitute( s["n1"]["fileName"].getValue() ) ) )
 
 		# wait long enough to finish execution
-		dispatcher.jobPool().waitForAll()
-		self.assertEqual( len( dispatcher.jobPool().jobs() ), 1 )
-		self.assertEqual( dispatcher.jobPool().jobs()[0].status(), GafferDispatch.LocalDispatcher.Job.Status.Complete )
+		s["dispatcher"].jobPool().waitForAll()
+		self.assertEqual( len( s["dispatcher"].jobPool().jobs() ), 1 )
+		self.assertEqual( s["dispatcher"].jobPool().jobs()[0].status(), GafferDispatch.LocalDispatcher.Job.Status.Complete )
 
 		self.assertTrue( os.path.isfile( s.context().substitute( s["n1"]["fileName"].getValue() ) ) )
 
@@ -434,13 +459,14 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		s["n2"]["preTasks"][0].setInput( s["n2a"]["task"] )
 		s["n2"]["preTasks"][1].setInput( s["n2b"]["task"] )
 
-		dispatcher = self.__createLocalDispatcher()
-		dispatcher["executeInBackground"].setValue( True )
-		dispatcher["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CustomRange )
+		s["dispatcher"] = self.__createLocalDispatcher()
+		s["dispatcher"]["executeInBackground"].setValue( True )
+		s["dispatcher"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CustomRange )
 		frameList = IECore.FrameList.parse( "2-6x2" )
-		dispatcher["frameRange"].setValue( str(frameList) )
+		s["dispatcher"]["frameRange"].setValue( str(frameList) )
 
-		dispatcher.dispatch( [ s["n1"] ] )
+		s["dispatcher"]["tasks"][0].setInput( s["n1"]["task"] )
+		s["dispatcher"]["task"].execute()
 
 		# the dispatching started and finished
 		self.assertEqual( len( preCs ), 1 )
@@ -459,9 +485,9 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		self.assertEqual( text, expectedText )
 
 		# wait long enough for background execution to finish
-		dispatcher.jobPool().waitForAll()
-		self.assertEqual( len( dispatcher.jobPool().jobs() ), 1 )
-		self.assertEqual( dispatcher.jobPool().jobs()[0].status(), GafferDispatch.LocalDispatcher.Job.Status.Complete )
+		s["dispatcher"].jobPool().waitForAll()
+		self.assertEqual( len( s["dispatcher"].jobPool().jobs() ), 1 )
+		self.assertEqual( s["dispatcher"].jobPool().jobs()[0].status(), GafferDispatch.LocalDispatcher.Job.Status.Complete )
 
 		self.assertTrue( fileName.is_file() )
 		with open( fileName, "r", encoding = "utf-8" ) as f :
@@ -482,19 +508,23 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 		jobPool = GafferDispatch.LocalDispatcher.JobPool()
 
-		dispatcher = self.__createLocalDispatcher( jobPool )
-		dispatcher["executeInBackground"].setValue( True )
-		dispatcher2 = self.__createLocalDispatcher( jobPool )
-		dispatcher2["executeInBackground"].setValue( True )
-		dispatcher.dispatch( [ s["n1"] ] )
+		s["dispatcher"] = self.__createLocalDispatcher( jobPool )
+		s["dispatcher"]["executeInBackground"].setValue( True )
+		s["dispatcher"]["tasks"][0].setInput( s["n1"]["task"] )
+		s["dispatcher2"] = self.__createLocalDispatcher( jobPool )
+		s["dispatcher2"]["executeInBackground"].setValue( True )
+		s["dispatcher2"]["tasks"][0].setInput( s["n1"]["task"] )
+
+		s["dispatcher"]["task"].execute()
+
 		c = s.context()
 		c.setFrame( 2 )
 		with c :
-			dispatcher2.dispatch( [ s["n1"] ] )
+			s["dispatcher2"]["task"].execute()
 
 		# wait long enough for background execution to finish
 		self.assertEqual( len( jobPool.jobs() ), 2 )
-		dispatcher.jobPool().waitForAll()
+		s["dispatcher"].jobPool().waitForAll()
 		self.assertEqual( len( jobPool.jobs() ), 2 )
 		self.assertEqual(
 			[ j.status() for j in jobPool.jobs() ],
@@ -519,13 +549,14 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		s["n1"]["preTasks"][0].setInput( s["n2"]["task"] )
 		s["n2"]["preTasks"][0].setInput( s["n3"]["task"] )
 
-		dispatcher = self.__createLocalDispatcher()
+		s["dispatcher"] = self.__createLocalDispatcher()
+		s["dispatcher"]["tasks"][0].setInput( s["n1"]["task"] )
 
 		# fails because n2 doesn't have a valid fileName
-		self.assertRaisesRegex( RuntimeError, "No such file or directory", functools.partial( dispatcher.dispatch, [ s["n1"] ] ) )
-		self.assertEqual( len( dispatcher.jobPool().jobs() ), 1 )
+		self.assertRaisesRegex( RuntimeError, "No such file or directory", s["dispatcher"]["task"].execute )
+		self.assertEqual( len( s["dispatcher"].jobPool().jobs() ), 1 )
 		self.assertEqual(
-			dispatcher.jobPool().jobs()[0].status(),
+			s["dispatcher"].jobPool().jobs()[0].status(),
 			GafferDispatch.LocalDispatcher.Job.Status.Failed
 		)
 
@@ -541,14 +572,14 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 		os.unlink( s.context().substitute( s["n3"]["fileName"].getValue() ) )
 
-		dispatcher["executeInBackground"].setValue( True )
-		dispatcher.dispatch( [ s["n1"] ] )
+		s["dispatcher"]["executeInBackground"].setValue( True )
+		s["dispatcher"]["task"].execute()
 
 		# wait long enough for background execution to finish
-		dispatcher.jobPool().waitForAll()
-		self.assertEqual( len( dispatcher.jobPool().jobs() ), 2 )
+		s["dispatcher"].jobPool().waitForAll()
+		self.assertEqual( len( s["dispatcher"].jobPool().jobs() ), 2 )
 		self.assertEqual(
-			dispatcher.jobPool().jobs()[1].status(),
+			s["dispatcher"].jobPool().jobs()[1].status(),
 			GafferDispatch.LocalDispatcher.Job.Status.Failed
 		)
 
@@ -569,23 +600,24 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		s["n1"]["fileName"].setValue( self.temporaryDirectory() / "n1_####.txt" )
 		s["n1"]["text"].setValue( "n1 on ${frame}" )
 
-		dispatcher = self.__createLocalDispatcher()
-		dispatcher["executeInBackground"].setValue( True )
+		s["dispatcher"] = self.__createLocalDispatcher()
+		s["dispatcher"]["executeInBackground"].setValue( True )
+		s["dispatcher"]["tasks"][0].setInput( s["n1"]["task"] )
 
-		self.assertEqual( len(dispatcher.jobPool().jobs()), 0 )
-		dispatcher.dispatch( [ s["n1"] ] )
-		self.assertEqual( len(dispatcher.jobPool().jobs()), 1 )
+		self.assertEqual( len(s["dispatcher"].jobPool().jobs()), 0 )
+		s["dispatcher"]["task"].execute()
+		self.assertEqual( len(s["dispatcher"].jobPool().jobs()), 1 )
 
 		# the execution hasn't finished yet
 		self.assertFalse( os.path.isfile( s.context().substitute( s["n1"]["fileName"].getValue() ) ) )
 
 		# kill the job
-		dispatcher.jobPool().jobs()[0].kill()
+		s["dispatcher"].jobPool().jobs()[0].kill()
 
 		# wait long enough for the process to die
-		dispatcher.jobPool().waitForAll()
-		self.assertEqual( len( dispatcher.jobPool().jobs() ), 1 )
-		self.assertEqual( dispatcher.jobPool().jobs()[0].status(), GafferDispatch.LocalDispatcher.Job.Status.Killed )
+		s["dispatcher"].jobPool().waitForAll()
+		self.assertEqual( len( s["dispatcher"].jobPool().jobs() ), 1 )
+		self.assertEqual( s["dispatcher"].jobPool().jobs()[0].status(), GafferDispatch.LocalDispatcher.Job.Status.Killed )
 
 		# make sure it never wrote the file
 		self.assertFalse( os.path.isfile( s.context().substitute( s["n1"]["fileName"].getValue() ) ) )
@@ -598,16 +630,17 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		s["n"]["fileName"].setValue( self.temporaryDirectory() / "test.txt" )
 		s["n"]["text"].setValue( "${test}" )
 
-		dispatcher = self.__createLocalDispatcher()
-		dispatcher["executeInBackground"].setValue( True )
+		s["dispatcher"] = self.__createLocalDispatcher()
+		s["dispatcher"]["executeInBackground"].setValue( True )
+		s["dispatcher"]["tasks"][0].setInput( s["n"]["task"] )
 
 		c = Gaffer.Context()
 		c["test"] = "i am a string with spaces"
 
 		with c :
-			dispatcher.dispatch( [ s["n"] ] )
+			s["dispatcher"]["task"].execute()
 
-		dispatcher.jobPool().waitForAll()
+		s["dispatcher"].jobPool().waitForAll()
 
 		text = "".join( open( self.temporaryDirectory() / "test.txt", encoding = "utf-8" ).readlines() )
 		self.assertEqual( text, "i am a string with spaces" )
@@ -619,17 +652,18 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		s["n"]["fileName"].setValue( self.temporaryDirectory() / "out.txt" )
 		s["n"]["text"].setValue( "${foo} ${ui:foo}" )
 
-		dispatcher = self.__createLocalDispatcher()
-		dispatcher["executeInBackground"].setValue( True )
+		s["dispatcher"] = self.__createLocalDispatcher()
+		s["dispatcher"]["executeInBackground"].setValue( True )
+		s["dispatcher"]["tasks"][0].setInput( s["n"]["task"] )
 
 		c = Gaffer.Context()
 		c["ui:foo"] = "uiFoo"
 		c["foo"] = "foo"
 
 		with c :
-			dispatcher.dispatch( [ s["n"] ] )
+			s["dispatcher"]["task"].execute()
 
-		dispatcher.jobPool().waitForAll()
+		s["dispatcher"].jobPool().waitForAll()
 
 		text = "".join( open( self.temporaryDirectory() / "out.txt", encoding = "utf-8" ).readlines() )
 		self.assertEqual( text, "foo " )
@@ -643,20 +677,21 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		s["n1"]["fileName"].setValue( fileName )
 		s["n1"]["text"].setValue( "n1 on ${frame} with ${foo}" )
 
-		dispatcher = self.__createLocalDispatcher()
-		dispatcher["executeInBackground"].setValue( True )
+		s["dispatcher"] = self.__createLocalDispatcher()
+		s["dispatcher"]["executeInBackground"].setValue( True )
+		s["dispatcher"]["tasks"][0].setInput( s["n1"]["task"] )
 
 		c = Gaffer.Context( s.context() )
 		c["foo"] = "foo"
 
 		with c :
-			dispatcher.dispatch( [ s["n1"] ] )
+			s["dispatcher"]["task"].execute()
 
 		self.assertFalse( fileName.is_file() )
 
 		foo = s["variables"].addChild( Gaffer.NameValuePlug( "foo", IECore.StringData( "foo" ) ) )
 
-		dispatcher.jobPool().waitForAll()
+		s["dispatcher"].jobPool().waitForAll()
 
 		self.assertTrue( fileName.is_file() )
 
@@ -672,15 +707,16 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		s["n1"]["fileName"].setValue( fileName )
 		s["n1"]["text"].setValue( "n1 on ${frame}" )
 
-		dispatcher = self.__createLocalDispatcher()
-		dispatcher["executeInBackground"].setValue( True )
-		dispatcher.dispatch( [ s["n1"] ] )
+		s["dispatcher"] = self.__createLocalDispatcher()
+		s["dispatcher"]["executeInBackground"].setValue( True )
+		s["dispatcher"]["tasks"][0].setInput( s["n1"]["task"] )
+		s["dispatcher"]["task"].execute()
 
 		self.assertFalse( fileName.is_file() )
 
 		s["n1"].setName( "n2" )
 
-		dispatcher.jobPool().waitForAll()
+		s["dispatcher"].jobPool().waitForAll()
 
 		self.assertTrue( fileName.is_file() )
 
@@ -701,17 +737,18 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		s["n"]["user"]["badPlug"] = Gaffer.IntPlug()
 		s["n"]["user"]["badPlug"].setValue( 10 )
 
-		dispatcher = self.__createLocalDispatcher()
-		dispatcher["executeInBackground"].setValue( True )
+		s["dispatcher"] = self.__createLocalDispatcher()
+		s["dispatcher"]["executeInBackground"].setValue( True )
+		s["dispatcher"]["tasks"][0].setInput( s["n"]["task"] )
 
-		dispatcher.dispatch( [ s["n"] ] )
-		dispatcher.jobPool().waitForAll()
+		s["dispatcher"]["task"].execute()
+		s["dispatcher"].jobPool().waitForAll()
 
 		self.assertFalse( fileName.is_file() )
 
-		dispatcher["ignoreScriptLoadErrors"].setValue( True )
-		dispatcher.dispatch( [ s["n"] ] )
-		dispatcher.jobPool().waitForAll()
+		s["dispatcher"]["ignoreScriptLoadErrors"].setValue( True )
+		s["dispatcher"]["task"].execute()
+		s["dispatcher"].jobPool().waitForAll()
 
 		self.assertTrue( fileName.is_file() )
 
@@ -723,16 +760,17 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		s["w"]["fileName"].setValue( "${dispatcher:jobDirectory}/test.####.txt" )
 		s["w"]["text"].setValue( "w on ${frame} from ${dispatcher:jobDirectory}" )
 
-		dispatcher = self.__createLocalDispatcher()
-		dispatcher["executeInBackground"].setValue( True )
-		dispatcher["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CustomRange )
+		s["dispatcher"] = self.__createLocalDispatcher()
+		s["dispatcher"]["executeInBackground"].setValue( True )
+		s["dispatcher"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CustomRange )
 		frameList = IECore.FrameList.parse( "2-6x2" )
-		dispatcher["frameRange"].setValue( str(frameList) )
-		dispatcher.dispatch( [ s["w"] ] )
-		dispatcher.jobPool().waitForAll()
+		s["dispatcher"]["frameRange"].setValue( str(frameList) )
+		s["dispatcher"]["tasks"][0].setInput( s["w"]["task"] )
+		s["dispatcher"]["task"].execute()
+		s["dispatcher"].jobPool().waitForAll()
 
 		# a single dispatch should have the same job directory for all batches
-		jobDir = dispatcher["jobsDirectory"].getValue() + "/000000"
+		jobDir = s["dispatcher"]["jobsDirectory"].getValue() + "/000000"
 		self.assertEqual( next( open( "%s/test.0002.txt" % jobDir, encoding = "utf-8" ) ), "w on 2 from %s" % jobDir )
 		self.assertEqual( next( open( "%s/test.0004.txt" % jobDir, encoding = "utf-8" ) ), "w on 4 from %s" % jobDir )
 		self.assertEqual( next( open( "%s/test.0006.txt" % jobDir, encoding = "utf-8" ) ), "w on 6 from %s" % jobDir )
@@ -749,21 +787,22 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		else :
 			s["c"]["command"].setValue( "echo HELLO %GAFFERDISPATCHTEST_ENVVAR%> " + testFile.as_posix() )
 
-		dispatcher = self.__createLocalDispatcher()
-		dispatcher["executeInBackground"].setValue( True )
-		dispatcher["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CurrentFrame )
-		dispatcher.dispatch( [ s["c"] ] )
-		dispatcher.jobPool().waitForAll()
+		s["dispatcher"] = self.__createLocalDispatcher()
+		s["dispatcher"]["executeInBackground"].setValue( True )
+		s["dispatcher"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CurrentFrame )
+		s["dispatcher"]["tasks"][0].setInput( s["c"]["task"] )
+		s["dispatcher"]["task"].execute()
+		s["dispatcher"].jobPool().waitForAll()
 
 		with open( testFile, encoding = "utf-8" ) as f :
 			self.assertEqual( f.readlines(), [ "HELLO\n" if os.name != "nt" else "HELLO %GAFFERDISPATCHTEST_ENVVAR%\n" ] )
 
 		if os.name != "nt" :
-			dispatcher["environmentCommand"].setValue( "env GAFFERDISPATCHTEST_ENVVAR=WORLD" )
+			s["dispatcher"]["environmentCommand"].setValue( "env GAFFERDISPATCHTEST_ENVVAR=WORLD" )
 		else :
-			dispatcher["environmentCommand"].setValue( "set GAFFERDISPATCHTEST_ENVVAR=WORLD&" )
-		dispatcher.dispatch( [ s["c"] ] )
-		dispatcher.jobPool().waitForAll()
+			s["dispatcher"]["environmentCommand"].setValue( "set GAFFERDISPATCHTEST_ENVVAR=WORLD&" )
+		s["dispatcher"]["task"].execute()
+		s["dispatcher"].jobPool().waitForAll()
 
 		with open( testFile, encoding = "utf-8" ) as f :
 			self.assertEqual( f.readlines(), [ "HELLO WORLD\n" ] )
@@ -780,20 +819,21 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		else :
 			s["c"]["command"].setValue( "echo HELLO %GAFFERDISPATCHTEST_ENVVAR%> " + testFile.as_posix() )
 
-		dispatcher = self.__createLocalDispatcher()
-		dispatcher["executeInBackground"].setValue( True )
-		dispatcher["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CurrentFrame )
+		s["dispatcher"] = self.__createLocalDispatcher()
+		s["dispatcher"]["executeInBackground"].setValue( True )
+		s["dispatcher"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CurrentFrame )
+		s["dispatcher"]["tasks"][0].setInput( s["c"]["task"] )
 
 		if os.name != "nt" :
-			dispatcher["environmentCommand"].setValue( "env GAFFERDISPATCHTEST_ENVVAR=$world" )
+			s["dispatcher"]["environmentCommand"].setValue( "env GAFFERDISPATCHTEST_ENVVAR=$world" )
 		else :
-			dispatcher["environmentCommand"].setValue( "set GAFFERDISPATCHTEST_ENVVAR=$world&" )
+			s["dispatcher"]["environmentCommand"].setValue( "set GAFFERDISPATCHTEST_ENVVAR=$world&" )
 
 		with Gaffer.Context() as c :
 			c["world"] = "WORLD"
-			dispatcher.dispatch( [ s["c"] ] )
+			s["dispatcher"]["task"].execute()
 
-		dispatcher.jobPool().waitForAll()
+		s["dispatcher"].jobPool().waitForAll()
 
 		with open( testFile, encoding = "utf-8" ) as f :
 			self.assertEqual( f.readlines(), [ "HELLO WORLD\n" ] )
@@ -822,26 +862,27 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 			lastTask = perSequence
 
-		d = self.__createLocalDispatcher()
-		d["framesMode"].setValue( d.FramesMode.CustomRange )
-		d["frameRange"].setValue( "1-1000" )
+		s["d"] = self.__createLocalDispatcher()
+		s["d"]["framesMode"].setValue( s["d"].FramesMode.CustomRange )
+		s["d"]["frameRange"].setValue( "1-1000" )
+		s["d"]["tasks"][0].setInput( lastTask["task"] )
 
 		t = time.process_time()
-		d.dispatch( [ lastTask ] )
+		s["d"]["task"].execute()
 		timeLimit = 6
 		if Gaffer.isDebug():
 			timeLimit *= 2
 		self.assertLess( time.process_time() - t, timeLimit )
 
-		d["executeInBackground"].setValue( True )
+		s["d"]["executeInBackground"].setValue( True )
 
-		d.dispatch( [ lastTask ] )
+		s["d"]["task"].execute()
 
 		t = time.process_time()
-		d.jobPool().jobs()[-1].kill()
+		s["d"].jobPool().jobs()[-1].kill()
 		self.assertLess( time.process_time() - t, 1 )
 
-		d.jobPool().waitForAll()
+		s["d"].jobPool().waitForAll()
 
 	def testImathContextVariable( self ) :
 
@@ -862,10 +903,11 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		s["v"]["variables"].addChild( Gaffer.NameValuePlug( "c", imath.Color3f( 0, 1, 2 ) ) )
 		s["v"]["preTasks"][0].setInput( s["t"]["task"] )
 
-		d = self.__createLocalDispatcher()
-		d["executeInBackground"].setValue( True )
-		d.dispatch( [ s["v"] ] )
-		d.jobPool().waitForAll()
+		s["d"] = self.__createLocalDispatcher()
+		s["d"]["executeInBackground"].setValue( True )
+		s["d"]["tasks"][0].setInput( s["v"]["task"] )
+		s["d"]["task"].execute()
+		s["d"].jobPool().waitForAll()
 
 		self.assertEqual(
 			open( s["t"]["fileName"].getValue(), encoding = "utf-8" ).read(),
@@ -873,6 +915,10 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		)
 
 	def testNestedDispatchBorrowingOuterJobDirectory( self ) :
+
+		# This tested very early initial support for limited nested dispatch,
+		# where the job directory was borrowed if the nested dispatcher didn't
+		# specify a directory at all.
 
 		s = Gaffer.ScriptNode()
 
@@ -894,10 +940,11 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		s["outerTask"]["fileName"].setValue( self.temporaryDirectory() / "outer.txt" )
 		s["outerTask"]["text"].setValue( "${dispatcher:jobDirectory} : ${dispatcher:scriptFileName}" )
 
-		d = self.__createLocalDispatcher()
-		d["executeInBackground"].setValue( True )
-		d.dispatch( [ s["outerTask"] ] )
-		d.jobPool().waitForAll()
+		s["d"] = self.__createLocalDispatcher()
+		s["d"]["executeInBackground"].setValue( True )
+		s["d"]["tasks"][0].setInput( s["outerTask"]["task"] )
+		s["d"]["task"].execute()
+		s["d"].jobPool().waitForAll()
 
 		self.assertTrue( ( self.temporaryDirectory() / "nested.txt" ).exists() )
 		self.assertTrue( ( self.temporaryDirectory() / "outer.txt" ).exists() )
@@ -907,6 +954,54 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 			open( self.temporaryDirectory() / "outer.txt", encoding = "utf-8" ).readlines(),
 		)
 
+	def testUpstreamDispatchJobDirectory( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		# Nested dispatcher sharing the job directory from the outer dispatch,
+		# because it's `jobDirectory` plug has the same value.
+
+		script["nestedTask"] = GafferDispatchTest.LoggingTaskNode()
+
+		script["nestedDispatcher"] = self.__createLocalDispatcher()
+		script["nestedDispatcher"]["tasks"][0].setInput( script["nestedTask"]["task"] )
+
+		script["outerTask"] = GafferDispatchTest.LoggingTaskNode()
+		script["outerTask"]["preTasks"][0].setInput( script["nestedDispatcher"]["task"] )
+
+		script["outerDispatcher"] = self.__createLocalDispatcher()
+		script["outerDispatcher"]["tasks"][0].setInput( script["outerTask"]["task"] )
+		script["outerDispatcher"]["task"].execute()
+
+		self.assertEqual(
+			script["outerTask"].log[0].context["dispatcher:jobDirectory"],
+			script["nestedTask"].log[0].context["dispatcher:jobDirectory"],
+		)
+		self.assertEqual(
+			script["outerTask"].log[0].context["dispatcher:scriptFileName"],
+			script["nestedTask"].log[0].context["dispatcher:scriptFileName"],
+		)
+		self.assertTrue( pathlib.Path( script["outerTask"].log[0].context["dispatcher:scriptFileName"] ).is_file() )
+
+		# Nested dispatcher with its own job directory.
+
+		del script["outerTask"].log[:]
+		del script["nestedTask"].log[:]
+
+		script["nestedDispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() / "nestedJobDir" )
+		script["outerDispatcher"]["task"].execute()
+
+		self.assertNotEqual(
+			script["outerTask"].log[0].context["dispatcher:jobDirectory"],
+			script["nestedTask"].log[0].context["dispatcher:jobDirectory"],
+		)
+		self.assertEqual(
+			pathlib.Path( script["nestedTask"].log[0].context["dispatcher:jobDirectory"] ),
+			self.temporaryDirectory() / "nestedJobDir" / "000000"
+		)
+		self.assertTrue( pathlib.Path( script["outerTask"].log[0].context["dispatcher:scriptFileName"] ).is_file() )
+		self.assertTrue( pathlib.Path( script["nestedTask"].log[0].context["dispatcher:scriptFileName"] ).is_file() )
+
 	def testBackgroundJobFailureStatus( self ) :
 
 		script = Gaffer.ScriptNode()
@@ -914,38 +1009,40 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		script["pythonCommand"] = GafferDispatch.PythonCommand()
 		script["pythonCommand"]["command"].setValue( "a = nonExistentVariable" )
 
-		dispatcher = self.__createLocalDispatcher()
-		dispatcher["executeInBackground"].setValue( True )
+		script["dispatcher"] = self.__createLocalDispatcher()
+		script["dispatcher"]["executeInBackground"].setValue( True )
+		script["dispatcher"]["tasks"][0].setInput( script["pythonCommand"]["task"] )
 
-		dispatcher.dispatch( [ script["pythonCommand"] ] )
-		dispatcher.jobPool().waitForAll()
+		script["dispatcher"]["task"].execute()
+		script["dispatcher"].jobPool().waitForAll()
 		self.assertEqual(
-			dispatcher.jobPool().jobs()[0].status(),
+			script["dispatcher"].jobPool().jobs()[0].status(),
 			GafferDispatch.LocalDispatcher.Job.Status.Failed
 		)
 
 	def testJobPoolSignals( self ) :
 
-		dispatcher = self.__createLocalDispatcher()
-
-		jobAddedSlot = GafferTest.CapturingSlot( dispatcher.jobPool().jobAddedSignal() )
-		jobRemovedSlot = GafferTest.CapturingSlot( dispatcher.jobPool().jobRemovedSignal() )
-
 		script = Gaffer.ScriptNode()
 		script["taskNode"] = GafferDispatchTest.LoggingTaskNode()
+
+		script["dispatcher"] = self.__createLocalDispatcher()
+		script["dispatcher"]["tasks"][0].setInput( script["taskNode"]["task"] )
+
+		jobAddedSlot = GafferTest.CapturingSlot( script["dispatcher"].jobPool().jobAddedSignal() )
+		jobRemovedSlot = GafferTest.CapturingSlot( script["dispatcher"].jobPool().jobRemovedSignal() )
 
 		self.assertEqual( len( jobAddedSlot ), 0 )
 		self.assertEqual( len( jobRemovedSlot ), 0 )
 
-		dispatcher.dispatch( [ script["taskNode"] ] )
+		script["dispatcher"]["task"].execute()
 
 		self.assertEqual( len( jobAddedSlot ), 1 )
 		job = jobAddedSlot[0][0]
 		self.assertIsInstance( job, GafferDispatch.LocalDispatcher.Job )
-		self.assertIs( job, dispatcher.jobPool().jobs()[0] )
+		self.assertIs( job, script["dispatcher"].jobPool().jobs()[0] )
 		self.assertEqual( len( jobRemovedSlot ), 0 )
 
-		dispatcher.jobPool().removeJob( job )
+		script["dispatcher"].jobPool().removeJob( job )
 		self.assertEqual( len( jobAddedSlot ), 1 )
 		self.assertEqual( len( jobRemovedSlot ), 1 )
 		self.assertIs( jobRemovedSlot[0][0], job )
@@ -954,7 +1051,11 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 		# Create dispatcher and connect to signals
 
-		dispatcher = self.__createLocalDispatcher()
+		script = Gaffer.ScriptNode()
+		script["taskNode"] = GafferDispatchTest.LoggingTaskNode()
+
+		script["dispatcher"] = self.__createLocalDispatcher()
+		script["dispatcher"]["tasks"][0].setInput( script["taskNode"]["task"] )
 
 		statusChanges = []
 		def statusChanged( job ) :
@@ -970,38 +1071,35 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 			job.statusChangedSignal().connect( statusChanged, scoped = False )
 
-		dispatcher.jobPool().jobAddedSignal().connect( jobAdded, scoped = False )
+		script["dispatcher"].jobPool().jobAddedSignal().connect( jobAdded, scoped = False )
 
 		# Test foreground dispatch
 
-		script = Gaffer.ScriptNode()
-		script["taskNode"] = GafferDispatchTest.LoggingTaskNode()
-
-		dispatcher.dispatch( [ script["taskNode"] ] )
+		script["dispatcher"]["task"].execute()
 
 		self.assertEqual(
 			statusChanges,
 			[
-				( dispatcher.jobPool().jobs()[0], GafferDispatch.LocalDispatcher.Job.Status.Running ),
-				( dispatcher.jobPool().jobs()[0], GafferDispatch.LocalDispatcher.Job.Status.Complete )
+				( script["dispatcher"].jobPool().jobs()[0], GafferDispatch.LocalDispatcher.Job.Status.Running ),
+				( script["dispatcher"].jobPool().jobs()[0], GafferDispatch.LocalDispatcher.Job.Status.Complete )
 			]
 		)
 
 		# Test background dispatch
 
-		dispatcher["executeInBackground"].setValue( True )
+		script["dispatcher"]["executeInBackground"].setValue( True )
 		del statusChanges[:]
 
 		with GafferTest.ParallelAlgoTest.UIThreadCallHandler() as handler :
-			dispatcher.dispatch( [ script["taskNode"] ] )
+			script["dispatcher"]["task"].execute()
 			handler.assertCalled()
-			dispatcher.jobPool().waitForAll()
+			script["dispatcher"].jobPool().waitForAll()
 
 		self.assertEqual(
 			statusChanges,
 			[
-				( dispatcher.jobPool().jobs()[1], GafferDispatch.LocalDispatcher.Job.Status.Running ),
-				( dispatcher.jobPool().jobs()[1], GafferDispatch.LocalDispatcher.Job.Status.Complete )
+				( script["dispatcher"].jobPool().jobs()[1], GafferDispatch.LocalDispatcher.Job.Status.Running ),
+				( script["dispatcher"].jobPool().jobs()[1], GafferDispatch.LocalDispatcher.Job.Status.Complete )
 			]
 		)
 
@@ -1017,12 +1115,13 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 			"""
 		) )
 
-		dispatcher = self.__createLocalDispatcher()
-		dispatcher["executeInBackground"].setValue( True )
-		dispatcher.dispatch( [ script["command"] ] )
-		dispatcher.jobPool().waitForAll()
+		script["dispatcher"] = self.__createLocalDispatcher()
+		script["dispatcher"]["executeInBackground"].setValue( True )
+		script["dispatcher"]["tasks"][0].setInput( script["command"]["task"] )
+		script["dispatcher"]["task"].execute()
+		script["dispatcher"].jobPool().waitForAll()
 
-		messages = dispatcher.jobPool().jobs()[0].messages()
+		messages = script["dispatcher"].jobPool().jobs()[0].messages()
 		messages = { m.message for m in messages }
 		self.assertIn( "Hello stderr!", messages )
 		self.assertIn( "Hello stdout!", messages )
@@ -1063,8 +1162,9 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		) )
 
 		dispatcher = self.__createLocalDispatcher()
+		dispatcher["tasks"][0].setInput( script["command"]["task"] )
 		dispatcher["executeInBackground"].setValue( True )
-		dispatcher.dispatch( [ script["command"] ] )
+		dispatcher["task"].execute()
 		dispatcher.jobPool().waitForAll()
 
 		messages = dispatcher.jobPool().jobs()[0].messages()
@@ -1134,15 +1234,16 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 
 			# `LocalDispatcher.defaultJobPool()` automatically kills
 			# running jobs at exit.
-			dispatcher = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.defaultJobPool() )
-			dispatcher["jobsDirectory"].setValue( jobDirectory )
-			dispatcher["executeInBackground"].setValue( True )
-			dispatcher.dispatch( [ script["command"] ] )
+			script["dispatcher"] = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.defaultJobPool() )
+			script["dispatcher"]["jobsDirectory"].setValue( jobDirectory )
+			script["dispatcher"]["executeInBackground"].setValue( True )
+			script["dispatcher"]["tasks"][0].setInput( script["command"]["task"] )
+			script["dispatcher"]["task"].execute()
 
 			# Wait for background task to start, print its PID
 			# to `stdout` and then exit.
 			while True :
-				pid = dispatcher.jobPool().jobs()[-1].processID()
+				pid = script["dispatcher"].jobPool().jobs()[-1].processID()
 				if pid is not None :
 					sys.stdout.write( f"PID : {pid}\n" )
 					sys.exit( 0 )
@@ -1159,13 +1260,37 @@ class LocalDispatcherTest( GafferTest.TestCase ) :
 		) )
 
 		dispatcher = self.__createLocalDispatcher()
+		dispatcher["tasks"][0].setInput( script["command"]["task"] )
 		dispatcher["executeInBackground"].setValue( True )
-		dispatcher.dispatch( [ script["command"] ] )
+		dispatcher["task"].execute()
 		dispatcher.jobPool().waitForAll()
 
 		runningTime = dispatcher.jobPool().jobs()[0].runningTime()
 		self.assertGreaterEqual( runningTime, datetime.timedelta( seconds = 0.5 ) )
 		self.assertEqual( dispatcher.jobPool().jobs()[0].runningTime(), runningTime )
+
+	def testNoNestedBackgroundDispatch( self ) :
+
+		fileToCreate = self.temporaryDirectory() / "test.txt"
+
+		script = Gaffer.ScriptNode()
+
+		script["writer"] = GafferDispatchTest.TextWriter()
+		script["writer"]["fileName"].setValue( fileToCreate )
+		script["writer"]["text"].setValue( "test" )
+
+		script["innerDispatcher"] = self.__createLocalDispatcher()
+		script["innerDispatcher"]["tasks"][0].setInput( script["writer"]["task"] )
+		script["innerDispatcher"]["executeInBackground"].setValue( True )
+
+		script["outerDispatcher"] = self.__createLocalDispatcher()
+		script["outerDispatcher"]["tasks"][0].setInput( script["innerDispatcher"]["task"] )
+		script["outerDispatcher"]["executeInBackground"].setValue( True )
+
+		script["outerDispatcher"]["task"].execute()
+		script["outerDispatcher"].jobPool().waitForAll()
+
+		self.assertTrue( fileToCreate.is_file() )
 
 if __name__ == "__main__":
 	unittest.main()

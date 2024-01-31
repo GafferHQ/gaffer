@@ -310,11 +310,12 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 			""".format( filePath.as_posix() )
 		) )
 
-		dispatcher = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
-		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() )
-		dispatcher["framesMode"].setValue( dispatcher.FramesMode.CustomRange )
-		dispatcher["frameRange"].setValue( "1-10" )
-		dispatcher.dispatch( [ script["writer"] ] )
+		script["dispatcher"] = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
+		script["dispatcher"]["tasks"][0].setInput( script["writer"]["task"] )
+		script["dispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+		script["dispatcher"]["framesMode"].setValue( script["dispatcher"].FramesMode.CustomRange )
+		script["dispatcher"]["frameRange"].setValue( "1-10" )
+		script["dispatcher"]["task"].execute()
 
 		scene = IECoreScene.SceneInterface.create( str( filePath ), IECore.IndexedIO.OpenMode.Read )
 		self.assertEqual( scene.child( "plane" ).numObjectSamples(), 10 )
@@ -328,11 +329,12 @@ class SceneWriterTest( GafferSceneTest.SceneTestCase ) :
 		script["writer"]["in"].setInput( script["plane"]["out"] )
 		script["writer"]["fileName"].setValue( self.temporaryDirectory() / "test.####.scc" )
 
-		dispatcher = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
-		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() )
-		dispatcher["framesMode"].setValue( dispatcher.FramesMode.CustomRange )
-		dispatcher["frameRange"].setValue( "1-10" )
-		dispatcher.dispatch( [ script["writer"] ] )
+		script["dispatcher"] = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
+		script["dispatcher"]["tasks"][0].setInput( script["writer"]["task"] )
+		script["dispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+		script["dispatcher"]["framesMode"].setValue( script["dispatcher"].FramesMode.CustomRange )
+		script["dispatcher"]["frameRange"].setValue( "1-10" )
+		script["dispatcher"]["task"].execute()
 
 		with Gaffer.Context( script.context() ) as context :
 			for frame in range( 1, 10 ) :

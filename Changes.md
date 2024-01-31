@@ -8,6 +8,9 @@
 Features
 --------
 
+- Dispatcher : Dispatchers are now TaskNodes, allowing them to be nested in a task graph. Possibilities include :
+  - Using a LocalDispatcher and a Wedge to launch multiple TractorDispatcher jobs.
+  - Using a nested LocalDispatcher to perform a group of tasks on a single blade within a TractorDispatcher job.
 - DeepSlice : Added a new node for clipping out part of an image based on depth.
 - ImageInspector : Added a new panel for inspecting image format, metadata and channel statistics.
 
@@ -58,6 +61,7 @@ Fixes
 -----
 
 - BackgroundTask : Fixed potential deadlock caused by destroying a BackgroundTask from Python while it was still running.
+- Dispatcher : The job directory is no longer created when dispatch is cancelled by a slot connected to `preDispatchSignal()`.
 - LocalDispatcher :
   - Fixed delays and zombie processes caused by shutting down Gaffer while background jobs were running. Background jobs are now killed before Gaffer exits instead.
   - Stopped failed jobs jumping to the end of the Local Jobs UI.
@@ -117,6 +121,12 @@ Breaking Changes
   - Removed `createMatching()` method.
   - Removed non-const TaskBatch accessors `frames()` and `preTasks()`.
   - Made `TaskBatch` constructors private.
+  - The job directory is no longer available in slots connected to `preDispatchSignal()`.
+  - Removed `nodes` arguments from dispatch signals. Use the `dispatcher["tasks"]` plug instead.
+  - Removed `script` and `context` arguments from `frameRange()` method. The current frame and full frame range are now queried from the current context.
+- DispatcherUI :
+  - Removed `appendMenuDefinitions()`, `appendNodeContextMenuDefinitions()`, `executeSelected()` and `repeatPrevious()` functions.
+  - Removed `DispatcherWindow` class.
 - LocalDispatcher :
   - Removed `JobPool.jobFailedSignal()`.
   - Removed `JobPool.failedJobs()` method. Failed jobs now remain in place in the main `jobs()` container.

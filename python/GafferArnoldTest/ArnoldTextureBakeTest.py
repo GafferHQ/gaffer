@@ -166,9 +166,10 @@ class ArnoldTextureBakeTest( GafferSceneTest.SceneTestCase ) :
 		# Dispatch the bake
 		script = Gaffer.ScriptNode()
 		script.addChild( arnoldTextureBake )
-		dispatcher = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
-		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() )
-		dispatcher.dispatch( [ arnoldTextureBake ] )
+		script["dispatcher"] = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
+		script["dispatcher"]["tasks"][0].setInput( arnoldTextureBake["task"] )
+		script["dispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+		script["dispatcher"]["task"].execute()
 
 		# Test that we are writing all expected files, and that we have cleaned up all temp files
 		expectedUdims = [ i + j for j in [ 1001, 1033 ] for i in [ 0, 1, 10, 11 ] ]
@@ -306,9 +307,10 @@ class ArnoldTextureBakeTest( GafferSceneTest.SceneTestCase ) :
 		# Dispatch the bake
 		script = Gaffer.ScriptNode()
 		script.addChild( arnoldTextureBake )
-		dispatcher = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
-		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() )
-		dispatcher.dispatch( [ arnoldTextureBake ] )
+		script["dispatcher"] = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
+		script["dispatcher"]["tasks"][0].setInput( arnoldTextureBake["task"] )
+		script["dispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+		script["dispatcher"]["task"].execute()
 
 		self.assertEqual( sorted( [ x.name for x in ( self.temporaryDirectory() / 'bakeSpheres' ).iterdir() ] ),
 			[ "BAKE_FILE_INDEX_0.0001.txt", "BAKE_FILE_INDEX_1.0001.txt", "BAKE_FILE_INDEX_2.0001.txt", "beauty", "diffuse" ] )
@@ -450,9 +452,11 @@ class ArnoldTextureBakeTest( GafferSceneTest.SceneTestCase ) :
 		# Dispatch the bake
 		script = Gaffer.ScriptNode()
 		script.addChild( arnoldTextureBake )
-		dispatcher = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
-		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() )
-		dispatcher.dispatch( [ arnoldTextureBake ] )
+
+		script["dispatcher"] = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
+		script["dispatcher"]["tasks"][0].setInput( arnoldTextureBake["task"] )
+		script["dispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() )
+		script["dispatcher"]["task"].execute()
 
 		# Check results
 		imageReader = GafferImage.ImageReader()

@@ -37,7 +37,6 @@
 __import__( "GafferUI" )
 
 from . import DispatcherUI
-from .DispatcherUI import DispatcherWindow
 from .DispatchDialogue import DispatchDialogue
 from . import LocalDispatcherUI
 from . import TaskNodeUI

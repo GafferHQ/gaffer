@@ -63,7 +63,9 @@ class TaskContextVariablesTest( GafferTest.TestCase ) :
 		script["variables"]["preTasks"][0].setInput( script["writer"]["task"] )
 		script["variables"]["variables"].addChild( Gaffer.NameValuePlug( "name", "jimbob" ) )
 
-		self.__dispatcher().dispatch( [ script["variables"] ] )
+		script["dispatcher"] = self.__dispatcher()
+		script["dispatcher"]["tasks"][0].setInput( script["variables"]["task"] )
+		script["dispatcher"]["task"].execute()
 
 		self.assertEqual(
 			set( self.temporaryDirectory().glob( "*.txt" ) ),
@@ -85,7 +87,9 @@ class TaskContextVariablesTest( GafferTest.TestCase ) :
 		jim = script["variables"]["variables"].addChild( Gaffer.NameValuePlug( "name1", "jim", False ) )
 		bob = script["variables"]["variables"].addChild( Gaffer.NameValuePlug( "name2", "bob", True ) )
 
-		self.__dispatcher().dispatch( [ script["variables"] ] )
+		script["dispatcher"] = self.__dispatcher()
+		script["dispatcher"]["tasks"][0].setInput( script["variables"]["task"] )
+		script["dispatcher"]["task"].execute()
 
 		self.assertEqual(
 			set( self.temporaryDirectory().glob( "*.txt" ) ),
@@ -106,11 +110,12 @@ class TaskContextVariablesTest( GafferTest.TestCase ) :
 		script["variables"]["preTasks"][0].setInput( script["writer"]["task"] )
 		script["variables"]["variables"].addChild( Gaffer.NameValuePlug( "name", "jimbob" ) )
 
-		dispatcher = self.__dispatcher()
-		dispatcher["executeInBackground"].setValue( True )
-		dispatcher.dispatch( [ script["variables"] ] )
+		script["dispatcher"] = self.__dispatcher()
+		script["dispatcher"]["tasks"][0].setInput( script["variables"]["task"] )
+		script["dispatcher"]["executeInBackground"].setValue( True )
+		script["dispatcher"]["task"].execute()
 
-		dispatcher.jobPool().waitForAll()
+		script["dispatcher"].jobPool().waitForAll()
 
 		self.assertEqual(
 			set( self.temporaryDirectory().glob( "*.txt" ) ),
@@ -129,8 +134,9 @@ class TaskContextVariablesTest( GafferTest.TestCase ) :
 		self.assertEqual( len( mh.messages ), 1 )
 		self.assertRegex( mh.messages[0].message, "Cycle detected between ScriptNode.variables.preTasks.preTask0 and ScriptNode.variables.task" )
 
-		d = self.__dispatcher()
-		self.assertRaisesRegex( RuntimeError, "cannot have cyclic dependencies", d.dispatch, [ s["variables"] ] )
+		s["dispatcher"] = self.__dispatcher()
+		s["dispatcher"]["tasks"][0].setInput( s["variables"]["task"] )
+		self.assertRaisesRegex( RuntimeError, "cannot have cyclic dependencies", s["dispatcher"]["task"].execute )
 
 	def testStringSubstitutions( self ) :
 
@@ -140,9 +146,12 @@ class TaskContextVariablesTest( GafferTest.TestCase ) :
 		s["v"]["preTasks"][0].setInput( s["l"]["task"] )
 		s["v"]["variables"].addChild( Gaffer.NameValuePlug( "test", "test.####.cob" ) )
 
+		s["dispatcher"] = self.__dispatcher()
+		s["dispatcher"]["tasks"][0].setInput( s["v"]["task"] )
+
 		with Gaffer.Context() as c :
 			c.setFrame( 100 )
-			self.__dispatcher().dispatch( [ s["v"] ] )
+			s["dispatcher"]["task"].execute()
 
 		self.assertEqual( s["l"].log[0].context["test"], "test.0100.cob" )
 

@@ -56,12 +56,13 @@ class FrameMaskTest( GafferTest.TestCase ) :
 		s["mask"]["preTasks"][0].setInput( s["task"]["task"] )
 		s["mask"]["mask"].setValue( "1,3,10-15,20-30x2" )
 
-		d = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
-		d["jobsDirectory"].setValue( self.temporaryDirectory() / "jobs" )
-		d["framesMode"].setValue( d.FramesMode.CustomRange )
-		d["frameRange"].setValue( "1-50" )
+		s["d"] = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
+		s["d"]["tasks"][0].setInput( s["mask"]["task"] )
+		s["d"]["jobsDirectory"].setValue( self.temporaryDirectory() / "jobs" )
+		s["d"]["framesMode"].setValue( s["d"].FramesMode.CustomRange )
+		s["d"]["frameRange"].setValue( "1-50" )
 
-		d.dispatch( [ s["mask"] ] )
+		s["d"]["task"].execute()
 
 		self.assertEqual(
 			[ l.context.getFrame() for l in s["task"].log ],
@@ -73,11 +74,11 @@ class FrameMaskTest( GafferTest.TestCase ) :
 		del s["task"].log[:]
 		s["mask"]["mask"].setValue( "" )
 
-		d.dispatch( [ s["mask"] ] )
+		s["d"]["task"].execute()
 
 		self.assertEqual(
 			[ l.context.getFrame() for l in s["task"].log ],
-			IECore.FrameList.parse( d["frameRange"].getValue() ).asList()
+			IECore.FrameList.parse( s["d"]["frameRange"].getValue() ).asList()
 		)
 
 if __name__ == "__main__":
