@@ -135,6 +135,7 @@ class GAFFERUI_API PathColumn : public IECore::RefCounted, public Gaffer::Signal
 			private :
 
 				IECore::ConstDataPtr m_reserved1;
+				IECore::ConstDataPtr m_reserved2;
 
 		};
 
