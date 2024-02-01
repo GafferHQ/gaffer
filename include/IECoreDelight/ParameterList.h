@@ -65,6 +65,9 @@ class IECOREDELIGHT_API ParameterList
 
 		void add( const NSIParam_t &parameter );
 		void add( const char *name, const std::string &value );
+		// Prevent calls to `add()` with a temporary string, since that
+		// would cause a dangling pointer to be passed to 3Delight.
+		void add( const char *name, const std::string &&value ) = delete;
 		/// \deprecated Use the version below.
 		void add( const char *name, const IECore::Data *value );
 		void add( const char *name, const IECore::Data *value, bool isSingleArray );
