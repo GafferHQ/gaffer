@@ -5,6 +5,7 @@ Fixes
 -----
 
 - Viewer : Fixed context handling bug in the shader view (#5654).
+- PythonCommand : Fixed misleading results for `repr( variables )` and `str( variables )`, which would suggest the dictionary was empty when it was not.
 
 1.3.11.0 (relative to 1.3.10.0)
 ========
