@@ -201,7 +201,11 @@ const GafferImage::Display *ShaderView::display() const
 
 std::string ShaderView::shaderPrefix() const
 {
-	IECore::ConstCompoundObjectPtr attributes = inPlug<ShaderPlug>()->attributes();
+	IECore::ConstCompoundObjectPtr attributes;
+	{
+		Context::Scope scope( getContext() );
+		attributes = inPlug<ShaderPlug>()->attributes();
+	}
 	const char *shaders[] = { "surface", "displacement", "shader", nullptr };
 	for( IECore::CompoundObject::ObjectMap::const_iterator it = attributes->members().begin(), eIt = attributes->members().end(); it != eIt; ++it )
 	{
