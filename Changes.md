@@ -1,7 +1,10 @@
 1.3.x.x (relative to 1.3.11.0)
 =======
 
+Fixes
+-----
 
+- Viewer : Fixed context handling bug in the shader view (#5654).
 
 1.3.11.0 (relative to 1.3.10.0)
 ========
