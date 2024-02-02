@@ -1040,7 +1040,7 @@ private:
 	{
 		float depth;
 		int listIndex;
-		inline bool operator<( const HeapEntry& other )
+		inline bool operator<( const HeapEntry& other ) const
 		{
 			return depth > other.depth;
 		}
@@ -1525,7 +1525,6 @@ void Resample::compute( Gaffer::ValuePlug *output, const Gaffer::Context *contex
 	// combining step.
 	std::vector< std::vector< SampledDepth > > sampledPixels( inputSize.x * inputSize.y );
 
-	unsigned int totalSampledDepthsCount = 0;
 	MergeListsByIndices listMerger( horizontallyMixedDepths );
 	std::vector< float > fullyMixedDepths;
 
@@ -1574,8 +1573,6 @@ void Resample::compute( Gaffer::ValuePlug *output, const Gaffer::Context *contex
 				fullyMixedDepths,
 				sampledPixels[ y * inputSize.x + x ]
 			);
-
-			totalSampledDepthsCount += sampledPixels[ y * inputSize.x + x ].size();
 		}
 	}
 
