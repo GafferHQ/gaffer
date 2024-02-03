@@ -90,9 +90,10 @@ class GAFFERUI_API PathColumn : public IECore::RefCounted, public Gaffer::Signal
 				const IECore::ConstDataPtr &icon = nullptr,
 				const IECore::ConstDataPtr &background = nullptr,
 				const IECore::ConstDataPtr &toolTip = nullptr,
-				const IECore::ConstDataPtr &sortValue = nullptr
+				const IECore::ConstDataPtr &sortValue = nullptr,
+				const IECore::ConstDataPtr &foreground = nullptr
 			)	:	value( value ), icon( icon ), background( background ), toolTip( toolTip ),
-					sortValue( sortValue ) {}
+					sortValue( sortValue ), foreground( foreground ) {}
 
 			CellData( const CellData &other ) = default;
 
@@ -125,6 +126,11 @@ class GAFFERUI_API PathColumn : public IECore::RefCounted, public Gaffer::Signal
 			/// Used to determine sort order. If not specified, `value` is
 			/// used for sorting instead.
 			IECore::ConstDataPtr sortValue;
+			/// The foreground colour for the cell value. Supported types :
+			///
+			/// - Color3fData
+			/// - Color4fData
+			IECore::ConstDataPtr foreground;
 
 			private :
 

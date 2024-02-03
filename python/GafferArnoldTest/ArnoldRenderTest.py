@@ -280,12 +280,13 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["fileName"].setValue( self.temporaryDirectory() / "test.gfr" )
 		s.save()
 
-		dispatcher = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
-		dispatcher["jobsDirectory"].setValue( self.temporaryDirectory() / "testJobDirectory" )
-		dispatcher["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CurrentFrame )
-		dispatcher["executeInBackground"].setValue( False )
+		s["dispatcher"] = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
+		s["dispatcher"]["tasks"][0].setInput( s["wedge"]["task"] )
+		s["dispatcher"]["jobsDirectory"].setValue( self.temporaryDirectory() / "testJobDirectory" )
+		s["dispatcher"]["framesMode"].setValue( GafferDispatch.Dispatcher.FramesMode.CurrentFrame )
+		s["dispatcher"]["executeInBackground"].setValue( False )
 
-		dispatcher.dispatch( [ s["wedge"] ] )
+		s["dispatcher"]["task"].execute()
 
 		hidden = GafferImage.ImageReader()
 		hidden["fileName"].setValue( self.temporaryDirectory() / "hidden.exr" )

@@ -108,12 +108,13 @@ class SystemCommandTest( GafferTest.TestCase ) :
 		s["n"] = GafferDispatch.SystemCommand()
 		s["n"]["command"].setValue( "echo 1 > {}".format( ( self.temporaryDirectory() / "systemCommandTest.####.txt" ).as_posix() ) )
 
-		d = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
-		d["jobsDirectory"].setValue( self.temporaryDirectory() / "jobs" )
-		d["framesMode"].setValue( d.FramesMode.CustomRange )
-		d["frameRange"].setValue( "1-10" )
+		s["d"] = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
+		s["d"]["tasks"][0].setInput( s["n"]["task"] )
+		s["d"]["jobsDirectory"].setValue( self.temporaryDirectory() / "jobs" )
+		s["d"]["framesMode"].setValue( s["d"].FramesMode.CustomRange )
+		s["d"]["frameRange"].setValue( "1-10" )
 
-		d.dispatch( [ s["n"] ] )
+		s["d"]["task"].execute()
 
 		sequences = IECore.ls( str( self.temporaryDirectory() ) )
 		self.assertEqual( len( sequences ), 1 )

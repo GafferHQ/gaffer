@@ -43,6 +43,7 @@ import IECore
 import Gaffer
 import GafferImage
 import GafferDispatch
+import GafferTractor
 
 ##########################################################################
 # Note this file is shared with the `dispatch` app. We need to ensure any
@@ -107,13 +108,7 @@ if 'GafferUI' in sys.modules :
 # Dispatchers
 ##########################################################################
 
-dispatchers = [ GafferDispatch.LocalDispatcher ]
-with IECore.IgnoredExceptions( ImportError ) :
-	import tractor.api.author # Raises if Tractor not available
-	import GafferTractor
-	dispatchers.append( GafferTractor.TractorDispatcher )
-
-for dispatcher in dispatchers :
+for dispatcher in [ GafferDispatch.LocalDispatcher, GafferTractor.TractorDispatcher ] :
 
 	Gaffer.Metadata.registerValue( dispatcher, "jobName", "userDefault", "${script:name}" )
 	directoryName = dispatcher.staticTypeName().rpartition( ":" )[2].replace( "Dispatcher", "" ).lower()

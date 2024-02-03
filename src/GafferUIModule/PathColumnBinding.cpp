@@ -264,6 +264,16 @@ void cellDataSetSortValue( PathColumn::CellData &cellData, const ConstDataPtr &d
 	cellData.sortValue = data;
 }
 
+object cellDataGetForeground( PathColumn::CellData &cellData )
+{
+	return dataToPython( cellData.foreground.get(), /* copy = */ false );
+}
+
+void cellDataSetForeground( PathColumn::CellData &cellData, const ConstDataPtr &data )
+{
+	cellData.foreground = data;
+}
+
 PathColumn::CellData cellDataWrapper( PathColumn &pathColumn, const Path &path, const Canceller *canceller )
 {
 	IECorePython::ScopedGILRelease gilRelease;
@@ -341,13 +351,14 @@ void GafferUIModule::bindPathColumn()
 
 		class_<PathColumn::CellData>( "CellData" )
 			.def(
-				init<const IECore::ConstDataPtr &, const IECore::ConstDataPtr &, const IECore::ConstDataPtr &, const IECore::ConstDataPtr &, const IECore::ConstDataPtr &>(
+				init<const IECore::ConstDataPtr &, const IECore::ConstDataPtr &, const IECore::ConstDataPtr &, const IECore::ConstDataPtr &, const IECore::ConstDataPtr &, const IECore::ConstDataPtr &>(
 					(
 						arg( "value" ) = object(),
 						arg( "icon" ) = object(),
 						arg( "background" ) = object(),
 						arg( "toolTip" ) = object(),
-						arg( "sortValue" ) = object()
+						arg( "sortValue" ) = object(),
+						arg( "foreground" ) = object()
 					)
 				)
 			)
@@ -365,6 +376,9 @@ void GafferUIModule::bindPathColumn()
 			)
 			.add_property(
 				"sortValue", &cellDataGetSortValue, &cellDataSetSortValue
+			)
+			.add_property(
+				"foreground", &cellDataGetForeground, &cellDataSetForeground
 			)
 		;
 

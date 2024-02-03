@@ -440,7 +440,7 @@ class DelightShader : public IECore::RefCounted
 		{
 			ConstShaderNetworkPtr preprocessedNetwork = IECoreDelight::ShaderNetworkAlgo::preprocessedNetwork( shaderNetwork );
 
-			const string name = "shader:" + preprocessedNetwork->Object::hash().toString();
+			const string name = "shader:" + shaderNetwork->Object::hash().toString();
 			IECoreScene::ShaderNetworkAlgo::depthFirstTraverse(
 				preprocessedNetwork.get(),
 				[this, &name, &context, &ownership] ( const ShaderNetwork *shaderNetwork, const InternedString &handle ) {
@@ -630,6 +630,7 @@ namespace
 std::array<std::string, 4> g_surfaceShaderAttributeNames = { "osl:light", "light", "osl:surface", "surface" };
 std::array<std::string, 2> g_volumeShaderAttributeNames = { "osl:volume", "volume" };
 std::array<std::string, 2> g_displacementShaderAttributeNames = { "osl:displacement", "displacement" };
+const InternedString g_USDLightAttributeName = "light";
 
 IECore::InternedString g_setsAttributeName( "sets" );
 
@@ -668,6 +669,14 @@ class DelightAttributes : public IECoreScenePreview::Renderer::AttributesInterfa
 				}
 			}
 
+			if( auto o = attributes->member<const Object>( g_USDLightAttributeName ) )
+			{
+				if( auto shaderNetwork = reportedCast<const ShaderNetwork>( o, "attribute", g_USDLightAttributeName ) )
+				{
+					m_usdLightShader = shaderNetwork;
+				}
+			}
+
 			ParameterList params;
 			for( const auto &m : attributes->members() )
 			{
@@ -699,9 +708,10 @@ class DelightAttributes : public IECoreScenePreview::Renderer::AttributesInterfa
 						params.add( m.first.c_str(), d, true );
 					}
 				}
-				else if( boost::contains( m.first.string(), ":" ) )
+				else if( boost::contains( m.first.string(), ":" ) || m.first == g_USDLightAttributeName )
 				{
 					// Attribute for another renderer - ignore
+					// Or a USDLight, which we've handled above - ignore
 				}
 				else
 				{
@@ -743,6 +753,11 @@ class DelightAttributes : public IECoreScenePreview::Renderer::AttributesInterfa
 			}
 		}
 
+		const ShaderNetwork *usdLightShader() const
+		{
+			return m_usdLightShader.get();
+		}
+
 		const DelightHandle &handle() const
 		{
 			return m_handle;
@@ -766,6 +781,8 @@ class DelightAttributes : public IECoreScenePreview::Renderer::AttributesInterfa
 		ConstDelightShaderPtr m_surfaceShader;
 		ConstDelightShaderPtr m_volumeShader;
 		ConstDelightShaderPtr m_displacementShader;
+
+		ConstShaderNetworkPtr m_usdLightShader;
 
 };
 
@@ -953,7 +970,7 @@ IE_CORE_DECLAREPTR( InstanceCache )
 namespace
 {
 
-class DelightObject : public IECoreScenePreview::Renderer::ObjectInterface
+class DelightObject: public IECoreScenePreview::Renderer::ObjectInterface
 {
 
 	public :
@@ -961,12 +978,15 @@ class DelightObject : public IECoreScenePreview::Renderer::ObjectInterface
 		DelightObject( NSIContext_t context, const std::string &name, DelightHandleSharedPtr instance, DelightHandle::Ownership ownership )
 			:	m_transformHandle( context, name, ownership, "transform", {} ), m_instance( instance ), m_haveTransform( false )
 		{
-			NSIConnect(
-				m_transformHandle.context(),
-				m_instance->name(), "",
-				m_transformHandle.name(), "objects",
-				0, nullptr
-			);
+			if( m_instance )
+			{
+				NSIConnect(
+					m_transformHandle.context(),
+					m_instance->name(), "",
+					m_transformHandle.name(), "objects",
+					0, nullptr
+				);
+			}
 
 			NSIConnect(
 				m_transformHandle.context(),
@@ -1068,17 +1088,105 @@ class DelightObject : public IECoreScenePreview::Renderer::ObjectInterface
 			/// \todo Implement
 		}
 
-	private :
+	protected :
 
 		const DelightHandle m_transformHandle;
 		// We keep a reference to the instance and attributes so that they
 		// remain alive for at least as long as the object does.
 		ConstDelightAttributesPtr m_attributes;
+
+	private :
+
 		DelightHandleSharedPtr m_instance;
 
 		bool m_haveTransform;
 
 };
+
+}  // namespace
+
+//////////////////////////////////////////////////////////////////////////
+// DelightLight
+//////////////////////////////////////////////////////////////////////////
+
+namespace
+{
+
+class DelightLight : public DelightObject
+{
+
+	public :
+
+		DelightLight( NSIContext_t context, const std::string &name, DelightHandleSharedPtr instance, DelightHandle::Ownership ownership )
+			: DelightObject( context, name, instance, ownership ), m_lightGeometryType( nullptr )
+		{
+		}
+
+		bool attributes( const IECoreScenePreview::Renderer::AttributesInterface *attributes ) override
+		{
+			DelightObject::attributes( attributes );
+
+			if( const ShaderNetwork *usdLightShader = m_attributes->usdLightShader() )
+			{
+				const char *geometryType = IECoreDelight::ShaderNetworkAlgo::lightGeometryType( usdLightShader );
+
+				if( !geometryType )
+				{
+					msg( Msg::Warning, "IECoreDelight::attributes", "Unknown USD light type." );
+					return true;
+				}
+
+				if( !m_lightGeometryType || strcmp( geometryType, m_lightGeometryType ) )
+				{
+					const std::string lightName = std::string( m_transformHandle.name() ) + ":lightGeometry";
+					if( m_lightGeometry )
+					{
+						NSIDisconnect(
+							m_transformHandle.context(),
+							m_lightGeometry->name(), "",
+							m_transformHandle.name(), "objects"
+						);
+					}
+
+					m_lightGeometry.reset();
+
+					m_lightGeometry = std::make_shared<DelightHandle>(
+						m_transformHandle.context(),
+						lightName,
+						m_transformHandle.ownership(),
+						geometryType
+					);
+
+					NSIConnect(
+						m_transformHandle.context(),
+						m_lightGeometry->name(), "",
+						m_transformHandle.name(), "objects",
+						0, 0
+					);
+
+					m_lightGeometryType = geometryType;
+					m_lightGeometryState = MurmurHash();
+				}
+
+				IECoreDelight::ShaderNetworkAlgo::updateLightGeometry(
+					usdLightShader,
+					m_transformHandle.context(),
+					m_lightGeometry->name(),
+					m_lightGeometryState
+				);
+			}
+
+			return true;
+		}
+
+	private :
+
+		const char *m_lightGeometryType;
+		DelightHandleSharedPtr m_lightGeometry;
+		MurmurHash m_lightGeometryState;
+};
+
+IE_CORE_DECLAREPTR( DelightLight );
 
 } // namespace
 
@@ -1353,7 +1461,18 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 
 		ObjectInterfacePtr light( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override
 		{
-			return this->object( name, object, attributes );
+			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
+
+			DelightHandleSharedPtr instance;
+			if( object )
+			{
+				instance = m_instanceCache->get( object );
+			}
+
+			ObjectInterfacePtr result = new DelightLight( m_context, name, instance, ownership() );
+			result->attributes( attributes );
+
+			return result;
 		}
 
 		ObjectInterfacePtr lightFilter( const std::string &name, const IECore::Object *object, const AttributesInterface *attributes ) override

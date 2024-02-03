@@ -96,7 +96,7 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 			}
 		}
 
-		FrameListPtr frameRange( const ScriptNode *script, const Context *context ) const override
+		FrameListPtr frameRange() const override
 		{
 			ScopedGILLock gilLock;
 
@@ -105,11 +105,7 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 			{
 				try
 				{
-					object obj = f(
-						ScriptNodePtr( const_cast<ScriptNode *>( script ) ),
-						ContextPtr( const_cast<Context *>( context ) )
-					);
-
+					object obj = f();
 					return extract<FrameListPtr>( obj );
 				}
 				catch( const boost::python::error_already_set & )
@@ -118,7 +114,7 @@ class DispatcherWrapper : public NodeWrapper<Dispatcher>
 				}
 			}
 
-			return Dispatcher::frameRange( script, context );
+			return Dispatcher::frameRange();
 		}
 
 		//////////////////////////////////////////////////////////////////////////
@@ -239,17 +235,9 @@ struct DispatcherHelper
 
 };
 
-void dispatch( Dispatcher &dispatcher, object pythonNodes )
+IECore::FrameListPtr frameRange( Dispatcher &n )
 {
-	std::vector<NodePtr> nodes;
-	boost::python::container_utils::extend_container( nodes, pythonNodes );
-	IECorePython::ScopedGILRelease gilRelease;
-	dispatcher.dispatch( nodes );
-}
-
-IECore::FrameListPtr frameRange( Dispatcher &n, const ScriptNode &script, const Context &context )
-{
-	return n.Dispatcher::frameRange( &script, &context );
+	return n.Dispatcher::frameRange();
 }
 
 void registerDispatcher( std::string type, object creator, object setupPlugsFn )
@@ -272,17 +260,12 @@ tuple registeredDispatchersWrapper()
 
 struct PreDispatchSlotCaller
 {
-	bool operator()( boost::python::object slot, const Dispatcher *d, const std::vector<TaskNodePtr> &nodes )
+	bool operator()( boost::python::object slot, const Dispatcher *d )
 	{
 		try
 		{
-			list nodeList;
-			for( std::vector<TaskNodePtr>::const_iterator nIt = nodes.begin(); nIt != nodes.end(); nIt++ )
-			{
-				nodeList.append( *nIt );
-			}
 			DispatcherPtr dd = const_cast<Dispatcher*>(d);
-			return slot( dd, nodeList );
+			return slot( dd );
 		}
 		catch( const boost::python::error_already_set & )
 		{
@@ -294,17 +277,12 @@ struct PreDispatchSlotCaller
 
 struct DispatchSlotCaller
 {
-	void operator()( boost::python::object slot, const Dispatcher *d, const std::vector<TaskNodePtr> &nodes )
+	void operator()( boost::python::object slot, const Dispatcher *d )
 	{
 		try
 		{
-			list nodeList;
-			for( std::vector<TaskNodePtr>::const_iterator nIt = nodes.begin(); nIt != nodes.end(); nIt++ )
-			{
-				nodeList.append( *nIt );
-			}
 			DispatcherPtr dd = const_cast<Dispatcher*>(d);
-			slot( dd, nodeList );
+			slot( dd );
 		}
 		catch( const boost::python::error_already_set & )
 		{
@@ -315,17 +293,12 @@ struct DispatchSlotCaller
 
 struct PostDispatchSlotCaller
 {
-	void operator()( boost::python::object slot, const Dispatcher *d, const std::vector<TaskNodePtr> &nodes, bool success )
+	void operator()( boost::python::object slot, const Dispatcher *d, bool success )
 	{
 		try
 		{
-			list nodeList;
-			for( std::vector<TaskNodePtr>::const_iterator nIt = nodes.begin(); nIt != nodes.end(); nIt++ )
-			{
-				nodeList.append( *nIt );
-			}
 			DispatcherPtr dd = const_cast<Dispatcher*>(d);
-			slot( dd, nodeList, success );
+			slot( dd, success );
 		}
 		catch( const boost::python::error_already_set & )
 		{
@@ -339,7 +312,6 @@ struct PostDispatchSlotCaller
 void GafferDispatchModule::bindDispatcher()
 {
 	scope s = NodeClass<Dispatcher, DispatcherWrapper>()
-		.def( "dispatch", &dispatch )
 		.def( "jobDirectory", &Dispatcher::jobDirectory )
 		.def( "frameRange", &frameRange )
 		.def( "create", &Dispatcher::create ).staticmethod( "create" )

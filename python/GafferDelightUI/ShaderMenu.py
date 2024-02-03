@@ -71,33 +71,102 @@ def __shaderSubMenu( oslPath ) :
 			for m in q.metadata :
 				metadata[m.name] = m.value
 
-			shaderName = metadata.get( "niceName", IECore.CamelCase.toSpaced( shader ) )
+			shaderNiceName = metadata.get( "niceName", shader )
 
+			shaderName = metadata.get( "niceName", IECore.CamelCase.toSpaced( shader ) )
 			shaderName = shaderName.replace( "&", "and" )
 			shaderName = shaderName[2:].lstrip() if shaderName.lower().startswith( "dl" ) else shaderName
 
 			if "hidden" in metadata.get( "tags", [] ) :
 				continue
+			if "houdini" in metadata.get( "tags", [] ) :
+				continue
+
+			if shaderNiceName in [
+				"distantLight",
+				"directionalLight",
+				"pointLight",
+				"spotLight",
+				"environmentLight",
+				"displacementShader",
+				"builtinDisplacement",
+				"surfaceShader",
+				"plusMinusAverage",
+				"addDoubleLinear",
+				"multDoubleLinear",
+				"tripleShadingSwitch",
+				"dlAOVGroup",
+				"pfx",
+				"particleCloud",
+				"shadingEngine_surface",
+				"shadingEngine_surface_switch",
+				"shadingEngine_displacement",
+				"shadingEngine_displacement_switch",
+				"surfaceLuminance",
+				"filter_multiply",
+				"lens_distortion",
+				"dl3DelightMaterial",
+				"transparent"
+			] :
+				continue
 
 			subMenu = None
+
+			subMenu = {
+				"glassInterior" : "Surface",
+				"bump2d" : "Bump",
+				"bump3d" : "Bump",
+				"dlPrimitiveAttribute" : "Utility",
+				"hsvToRgb" : "Utility (Legacy)",
+				"rgbToHsv" : "Utility (Legacy)",
+				"blendColors" : "Utility (Legacy)",
+				"Curve UV Coordinates" : "Utility (Legacy)",
+				"uvCoord" : "Utility (Legacy)",
+				"contrast" : "Utility (Legacy)",
+				"remapHsv" : "Utility (Legacy)",
+				"remapValue" : "Utility (Legacy)",
+				"uvChooser" : "Utility (Legacy)",
+				"multiplyDivide" : "Utility (Legacy)",
+				"reverse" : "Utility (Legacy)",
+				"uvCombine" : "Utility (Legacy)",
+				"colorCombine" : "Utility (Legacy)",
+				"luminance" : "Utility (Legacy)",
+				"smear" : "Utility (Legacy)",
+				"remapColor" : "Utility (Legacy)",
+				"vectorProduct" : "Utility (Legacy)",
+				"fourByFourMatrix" : "Utility (Legacy)",
+				"uvCoordEnvironment" : "Utility (Legacy)",
+				"channels" : "Utility (Legacy)",
+				"samplerInfo" : "Utility (Legacy)",
+				"distanceBetween" : "Utility (Legacy)",
+				"ocean" : "Texture 2D (Legacy)",
+				"psdFileTex" : "Texture 2D (Legacy)",
+				"file" : "Texture 2D (Legacy)",
+				"place2dTexture" : "Texture 2D (Legacy)",
+				"ramp" : "Texture 2D (Legacy)",
+				"imagePlane" : "Texture 2D (Legacy)",
+				"stencil" : "Texture 2D (Legacy)",
+				"place3dTexture" : "Texture 3D (Legacy)",
+				"stucco" : "Texture 3D (Legacy)",
+				"envChrome" : "Texture 3D (Legacy)",
+				"snow" : "Texture 3D (Legacy)"
+			}.get( shaderNiceName, None )
+
 			for tag in metadata.get( "tags", [] ) :
-				if tag == "surface" and shader.startswith( "dl" ) :
-					subMenu = "Surface"
-				elif tag == "volume" :
-					subMenu = "Volume"
-				elif tag == "displacement" and shader.startswith( "dl" ) :
-					subMenu = "Displacement"
-				elif tag == "texture/2d" :
-					subMenu = "Texture 2D"
-				elif tag == "texture/3d" :
-					subMenu = "Texture 3D"
-				elif tag == "utility" :
-					subMenu = "Utility"
-				elif tag == "toon" :
-					subMenu = "Toon"
+				subMenu = tag.capitalize()
+
+			if shaderNiceName == "Set Range" :
+				subMenu = "Utility"
+				shaderName = "Set Range Float"
 
 			if subMenu is None :
-				continue
+				subMenu = "Other"
+			elif subMenu == "Texture/2d" :
+				subMenu = "Texture 2D"
+			elif subMenu == "Texture/3d" :
+				subMenu = "Texture 3D"
+			elif subMenu == "Lightfilter" :
+				subMenu = "Light"
 
 			menu.setdefault( subMenu, [] ).append( ( shader, shaderName ) )
 

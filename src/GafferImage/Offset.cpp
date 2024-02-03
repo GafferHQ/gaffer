@@ -168,7 +168,10 @@ void Offset::hashChannelData( const GafferImage::ImagePlug *parent, const Gaffer
 		// Note that two differing output tiles could depend on the same input tile, for
 		// example if the input image is small enough that there is a single valid tile.
 		// Hash in the bound to distinguish the output tiles in this case
-		h.append( inBound );
+		// Work around strange Box2i hashing behaviour in GCC 11, though it would be
+		// preferable to fix this in MurmurHash.
+		h.append( inBound.min );
+		h.append( inBound.max );
 
 		V2i inTileOrigin;
 		for( inTileOrigin.y = ImagePlug::tileOrigin( inBound.min ).y; inTileOrigin.y < inBound.max.y; inTileOrigin.y += ImagePlug::tileSize() )
@@ -325,7 +328,10 @@ void Offset::hashSampleOffsets( const GafferImage::ImagePlug *parent, const Gaff
 		// Note that two differing output tiles could depend on the same input tile, for
 		// example if the input image is small enough that there is a single valid tile.
 		// Hash in the bound to distinguish the output tiles in this case
-		h.append( inBound );
+		// Work around strange Box2i hashing behaviour in GCC 11, though it would be
+		// preferable to fix this in MurmurHash.
+		h.append( inBound.min );
+		h.append( inBound.max );
 
 		V2i inTileOrigin;
 		for( inTileOrigin.y = ImagePlug::tileOrigin( inBound.min ).y; inTileOrigin.y < inBound.max.y; inTileOrigin.y += ImagePlug::tileSize() )

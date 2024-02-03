@@ -56,6 +56,8 @@
 
 #include "fmt/format.h"
 
+#include <array>
+
 using namespace std;
 using namespace IECore;
 using namespace Gaffer;
@@ -1177,14 +1179,13 @@ void applyDynamicFlag( Plug *plug )
 	// for types like CompoundNumericPlug that create children in their constructors.
 	// Or, even better, abolish the Dynamic flag entirely and deal with everything
 	// via serialisers.
-	const Gaffer::TypeId compoundTypes[] = { PlugTypeId, ValuePlugTypeId, ArrayPlugTypeId };
-	const Gaffer::TypeId *compoundTypesEnd = compoundTypes + 3;
-	if( find( compoundTypes, compoundTypesEnd, (Gaffer::TypeId)plug->typeId() ) != compoundTypesEnd )
+	std::array<Gaffer::TypeId, 4> compoundTypes = { PlugTypeId, ValuePlugTypeId, ArrayPlugTypeId, CompoundDataPlugTypeId };
+	if( find( compoundTypes.begin(), compoundTypes.end(), (Gaffer::TypeId)plug->typeId() ) != compoundTypes.end() )
 	{
 		for( Plug::RecursiveIterator it( plug ); !it.done(); ++it )
 		{
 			(*it)->setFlags( Plug::Dynamic, true );
-			if( find( compoundTypes, compoundTypesEnd, (Gaffer::TypeId)(*it)->typeId() ) == compoundTypesEnd )
+			if( find( compoundTypes.begin(), compoundTypes.end(), (Gaffer::TypeId)plug->typeId() ) != compoundTypes.end() )
 			{
 				it.prune();
 			}

@@ -116,10 +116,19 @@ with IECore.IgnoredExceptions( ImportError ) :
 		"volume_indirect",
 		"volume_albedo",
 		"motionvector",
+		"normal",
+		"depth",
 	] :
 
 		label = aov.replace( "_", " " ).title().replace( " ", "_" )
-		data = "color " + aov if aov != "beauty" else "rgba"
+		if aov == "beauty":
+			data = "rgba"
+		elif aov == "depth":
+			data = "float Z"
+		elif aov == "normal":
+			data = "color N"
+		else:
+			data = "color " + aov
 
 		if aov == "motionvector" :
 			parameters = {
@@ -127,6 +136,9 @@ with IECore.IgnoredExceptions( ImportError ) :
 			}
 		else :
 			parameters = {}
+
+		if aov == "depth":
+			parameters["layerName"] = "Z"
 
 		if aov not in { "motionvector", "emission", "background" } :
 			parameters["layerPerLightGroup"] = False

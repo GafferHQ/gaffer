@@ -1,15 +1,23 @@
 1.x.x.x (relative to 1.3.x.x)
 =======
 
+> Note : This release introduces `linux-gcc11` builds which are only compatible with Linux distributions using glibc 2.28 or higher.
+> These specific `linux-gcc11` builds are intended for testing purposes while we upgrade our toolchain and dependencies to better align
+> with VFX Platform 2023, and should be considered "beta" in advance of a stable release in Gaffer 1.5.
+
 Features
 --------
 
+- Dispatcher : Dispatchers are now TaskNodes, allowing them to be nested in a task graph. Possibilities include :
+  - Using a LocalDispatcher and a Wedge to launch multiple TractorDispatcher jobs.
+  - Using a nested LocalDispatcher to perform a group of tasks on a single blade within a TractorDispatcher job.
 - DeepSlice : Added a new node for clipping out part of an image based on depth.
 - ImageInspector : Added a new panel for inspecting image format, metadata and channel statistics.
 
 Improvements
 ------------
 
+- Arnold : Gaffer's native OpenColorIO config is now automatically translated to Arnold. Use an ArnoldColorManager node to override this behaviour.
 - Toolbars : Changed hotkey behavior to toogle any tool on and off. Exclusive tools such as the Translate and Crop Window tools activate the first tool (currently Selection Tool) when they are toggled off.
 - CropWindowTool : Added <kbd>`Alt` + <kbd>`C` for toggling both the crop window tool and the relevant crop window `enabled` plug.
 - TaskList, FrameMask : Reimplemented in C++ for improved performance.
@@ -21,6 +29,9 @@ Improvements
 - Cache : Increased default computation cache size to 8Gb. Call `Gaffer.ValuePlug.setCacheMemoryLimit()` from a startup file to override this.
 - Dispatcher : Reduced internal overhead of `dispatch()` call, with one benchmark showing around a 3x speedup.
 - ScriptWindow : Added "Save" option to dialogue shown when closing a window containing unsaved changes.
+- Resize :
+  - Added support for deep images.
+  - Added "Nearest" filter.
 - Shuffle :
   - Reimplemented to match ShuffleAttributes and ShufflePrimitiveVariables.
     - Any number of shuffles can be added using the UI.
@@ -42,11 +53,16 @@ Improvements
   - Added support for reading `dl:` and `user:` attributes from shaders.
   - Added `importanceSampleFilter` plug to DelightOptions, providing denoiser-compatible output.
   - Matched DelightOptions default values for `oversampling` and `shadingSamples` to 3Delight's own default values.
+  - Added support for external procedurals. 
+- GraphEditor : Improved logic used to connect a newly created node to the selected nodes.
+- ScenePlug, ImagePlug : Child plugs are now serialisable. Among other things, this enables them to be driven by expressions (#3986).
+- Premultiply : Added `useDeepVisibility` plug, which weights samples according to their visibility based on the opacity of samples in front.
 
 Fixes
 -----
 
 - BackgroundTask : Fixed potential deadlock caused by destroying a BackgroundTask from Python while it was still running.
+- Dispatcher : The job directory is no longer created when dispatch is cancelled by a slot connected to `preDispatchSignal()`.
 - LocalDispatcher :
   - Fixed delays and zombie processes caused by shutting down Gaffer while background jobs were running. Background jobs are now killed before Gaffer exits instead.
   - Stopped failed jobs jumping to the end of the Local Jobs UI.
@@ -57,6 +73,9 @@ Fixes
   - Results for min/max now correctly reflect zero values outside the data window.
 - NodeMenu, NodeEditor : `userDefault` metadata is now evaluated in the script context, so it can depend on script variables.
 - 3Delight : Fixed loading of surface shaders such as `dlStandard` so that they can be connected to the inputs of shaders such as `dlLayeredMaterial`.
+- DeepState : Fixed handling of `NaN` values and samples where `ZBack` is less than `Z`.
+- Premultiply : Fixed handling of non-existent alpha channel.
+- PlugAlgo : Fixed promotion of CompoundDataPlugs with non-dynamic children, such as the `Camera.renderSettingOverrides` plug.
 
 API
 ---
@@ -87,10 +106,12 @@ API
 - ShufflePlugValueWidget : Widgets for the `source` and `destination` plugs can now be customised using standard `plugValueWidget:type` metadata.
 - ImageTestCase : in `assertImageEqual` function, maxDifference may now be a tuple, to specify an asymmetric range.
 - Editor : Added `Settings` class, which should be used to store settings for subclasses. See LightEditor and ImageInspector for examples.
+- DeepPixelAccessor : Added utility class for accessing deep samples while abstracting away the underlying tile storage.
 
 Breaking Changes
 ----------------
 
+- Arnold : Removed support for Arnold 7.1.
 - Render : Changed `render:includedPurposes` default to `"default", "render"`.
 - Backdrop : Changed default drawing order. Use the new `depth` plug to override the order if necessary.
 - ValuePlug : Removed deprecated `getObjectValue()` overload.
@@ -102,6 +123,12 @@ Breaking Changes
   - Removed `createMatching()` method.
   - Removed non-const TaskBatch accessors `frames()` and `preTasks()`.
   - Made `TaskBatch` constructors private.
+  - The job directory is no longer available in slots connected to `preDispatchSignal()`.
+  - Removed `nodes` arguments from dispatch signals. Use the `dispatcher["tasks"]` plug instead.
+  - Removed `script` and `context` arguments from `frameRange()` method. The current frame and full frame range are now queried from the current context.
+- DispatcherUI :
+  - Removed `appendMenuDefinitions()`, `appendNodeContextMenuDefinitions()`, `executeSelected()` and `repeatPrevious()` functions.
+  - Removed `DispatcherWindow` class.
 - LocalDispatcher :
   - Removed `JobPool.jobFailedSignal()`.
   - Removed `JobPool.failedJobs()` method. Failed jobs now remain in place in the main `jobs()` container.
@@ -125,25 +152,59 @@ Breaking Changes
 - 3Delight : Changed NSI scene description export with `.nsi` file extension from ASCII to binary (`.nsia` is used for ASCII now).
 - OSLShader : Output parameters are now loaded onto the `out` plug for all types (`surface`, `displacement` etc), not just `shader`.
 - DelightOptions : Changed default values for `oversampling` and `shadingSamples` plugs.
+- SceneProcessor : Subclasses no longer serialise internal connections to the `out` plug.
+- ImageProcessor : Internal connections to the `out` plug are no longer serialised.
 
 Build
 -----
 
+- Imath : Updated to version 3.1.9.
+- MaterialX : Updated to version 1.38.8.
+- LibWebP : Added version 1.3.2.
+- OpenEXR : Updated to version 3.1.9.
+- OpenImageIO : Updated to version 2.4.17.0.
+- OpenSubdiv : Updated to version 3.5.1.
+- OpenSSL : Removed.
+- OpenVDB : Updated to version 10.0.1.
 - PsUtil : Added version 5.9.6.
+- PySide : Updated to version 5.15.12.
+- Qt :
+  - Updated to version 5.15.12.
+  - Removed QtPurchasing library.
+  - Removed QtNetworkAuth library.
+- USD : Updated to version 23.11.
 
 1.3.x.x (relative to 1.3.10.0)
 =======
 
+Features
+--------
+
+- 3Delight : Added support for USD `SphereLight`, `RectLight`, `DiskLight`, `DistantLight`, `DomeLight` and `CylinderLight`.
+- RenderPassEditor : Added a new editor UI for inspecting and editing render passes.
+
 Improvements
 ------------
 
-- ArnoldShader : Added a colour space presets menu for the `image` shader.
+- Arnold :
+  - ArnoldShader : Added a colour space presets menu for the `image` shader.
+  - Added specific warning for outputs with space in name.
+  - Added normal and depth AOVs.
 - CyclesShader : Added a colour space presets menu for the `image_texture` and `environment_texture` shaders (#5618).
+
+Fixes
+-----
+
+- Reference : Fixed bug where `GAFFER_REFERENCE_PATHS` was not being searched when performing "Duplicate as Box" action.
+- Outputs :
+  - Fixed bug which meant that adding an output via the UI was not undoable.
+  - Fixed bug which allowed outputs to be added to a read-only node via the UI.
 
 API
 ---
 
 - ArnoldShaderUI : Added support for `colorSpace` widget type metadata, allowing an OpenColorIO colour space to be chosen.
+- PathColumn : Added `CellData::foreground` member, to provide additional control over foreground colours in the PathListingWidget.
 
 1.3.10.0 (relative to 1.3.9.0)
 ========
@@ -613,6 +674,7 @@ Improvements
 - OpenColorIO :
   - Updated default config to ACES Studio 1.3.
   - Added `openColorIO` plug to ScriptNode, allowing the OpenColorIO config, working space, variables and display transform to be customised on a per-script basis.
+  - Added automatic configuration of Arnold color manager from Gaffer's OpenColorIO configuration. This may be overridden by using an ArnoldColorManager node to define an alternative color manager.
   - Improved colorspace menus :
     - Organised colorspaces into submenus by family.
     - Removed unwanted title-casing, so that names are now displayed verbatim.

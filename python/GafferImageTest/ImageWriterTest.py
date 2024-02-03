@@ -1046,11 +1046,12 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		s["w2"]["fileName"].setValue( self.temporaryDirectory() / "test2.exr" )
 		s["w2"]["preTasks"][0].setInput( s["w1"]["task"] )
 
-		d = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
-		d["jobsDirectory"].setValue( self.temporaryDirectory() / "jobs" )
+		s["d"] = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
+		s["d"]["tasks"][0].setInput( s["w2"]["task"] )
+		s["d"]["jobsDirectory"].setValue( self.temporaryDirectory() / "jobs" )
 
 		with s.context() :
-			d.dispatch( [ s["w2"] ] )
+			s["d"]["task"].execute()
 
 		self.assertTrue( pathlib.Path( s["w1"]["fileName"].getValue() ).is_file() )
 		self.assertTrue( pathlib.Path( s["w2"]["fileName"].getValue() ).is_file() )
@@ -1065,14 +1066,15 @@ class ImageWriterTest( GafferImageTest.ImageTestCase ) :
 		s["w"]["in"].setInput( s["c"]["out"] )
 		s["w"]["fileName"].setValue( self.temporaryDirectory() / "test.exr" )
 
-		d = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
-		d["jobsDirectory"].setValue( self.temporaryDirectory() / "jobs" )
-		d["executeInBackground"].setValue( True )
+		s["d"] = GafferDispatch.LocalDispatcher( jobPool = GafferDispatch.LocalDispatcher.JobPool() )
+		s["d"]["tasks"][0].setInput( s["w"]["task"] )
+		s["d"]["jobsDirectory"].setValue( self.temporaryDirectory() / "jobs" )
+		s["d"]["executeInBackground"].setValue( True )
 
 		with s.context() :
-			d.dispatch( [ s["w"] ] )
+			s["d"]["task"].execute()
 
-		d.jobPool().waitForAll()
+		s["d"].jobPool().waitForAll()
 
 		self.assertTrue( pathlib.Path( s["w"]["fileName"].getValue() ).is_file() )
 

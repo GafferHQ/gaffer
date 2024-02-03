@@ -441,6 +441,23 @@
 				"emptySet",
 				"setFolder",
 			]
+		},
+
+		"renderPassEditor" : {
+
+			"options" : {
+				"requiredWidth" : 16,
+				"requiredHeight" : 16,
+				"validatePixelAlignment" : True
+			},
+
+			"ids" : [
+				"renderPass",
+				"disabledRenderPass",
+				"renderPassFolder",
+				"activeRenderPass",
+				"activeRenderPassFadedHighlighted",
+			]
 		}
 
 	},

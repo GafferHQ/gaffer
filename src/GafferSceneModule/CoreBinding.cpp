@@ -303,15 +303,23 @@ class SceneProcessorSerialiser : public NodeSerialiser
 
 	bool childNeedsSerialisation( const Gaffer::GraphComponent *child, const Serialisation &serialisation ) const override
 	{
-		if( child->parent()->typeId() == SceneProcessor::staticTypeId() )
+		const auto sceneProcessor = static_cast<const SceneProcessor *>( child->parent() );
+		const bool isSubclassed = sceneProcessor->typeId() != SceneProcessor::staticTypeId();
+
+		if( !isSubclassed && runTimeCast<const Node>( child ) )
 		{
-			// Parent is exactly a SceneProcessor, not a subclass. Since we don't add
-			// any nodes in the constructor, we know that any nodes added subsequently
-			// will need manual serialisation.
-			if( runTimeCast<const Node>( child ) )
-			{
-				return true;
-			}
+			// SceneProcessor doesn't add any nodes in the constructor, so we
+			// know that any nodes added subsequently will need manual
+			// serialisation.
+			return true;
+		}
+
+		if( isSubclassed && child == sceneProcessor->outPlug() )
+		{
+			// Internal connections shouldn't be serialised for custom node
+			// types, because that leaks their implementation, making it
+			// harder to change internals in future.
+			return false;
 		}
 
 		return NodeSerialiser::childNeedsSerialisation( child, serialisation );

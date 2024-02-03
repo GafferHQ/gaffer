@@ -61,6 +61,7 @@ from .SetEditorTest import SetEditorTest
 from .LightToolTest import LightToolTest
 from .OptionInspectorTest import OptionInspectorTest
 from .LightPositionToolTest import LightPositionToolTest
+from .RenderPassEditorTest import RenderPassEditorTest
 
 if __name__ == "__main__":
 	unittest.main()
