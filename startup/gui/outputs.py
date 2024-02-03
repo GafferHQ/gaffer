@@ -208,7 +208,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 	GafferScene.Outputs.registerOutput(
 		"Batch/3Delight/Beauty_3Delight",
 		IECoreScene.Output(
-			"${project:rootDirectory}/renders/${script:name}/beauty/beauty.####.exr",
+			"${project:rootDirectory}/renders/${script:name}/${renderPass}/beauty/beauty.####.exr",
 			"exr",
 			"rgba",
 			{
@@ -223,7 +223,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 	GafferScene.Outputs.registerOutput(
 		"Batch/3Delight/Crypto/Surface_Shader_Cryptomatte_Header",
 		IECoreScene.Output(
-			"${project:rootDirectory}/renders/${script:name}/id.surfaceshader/id.surfaceshader.####.exr",
+			"${project:rootDirectory}/renders/${script:name}/${renderPass}/id.surfaceshader/id.surfaceshader.####.exr",
 			"exr",
 			"color builtin:id.surfaceshader",
 			{
@@ -237,7 +237,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 	GafferScene.Outputs.registerOutput(
 		"Batch/3Delight/Crypto/Surface_Shader_Cryptomatte_Layer0",
 		IECoreScene.Output(
-			"${project:rootDirectory}/renders/${script:name}/id.surfaceshader/id.surfaceshader.####.exr",
+			"${project:rootDirectory}/renders/${script:name}/${renderPass}/id.surfaceshader/id.surfaceshader.####.exr",
 			"exr",
 			"quad builtin:id.surfaceshader",
 			{
@@ -252,7 +252,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 	GafferScene.Outputs.registerOutput(
 		"Batch/3Delight/Crypto/Surface_Shader_Cryptomatte_Layer2",
 		IECoreScene.Output(
-			"${project:rootDirectory}/renders/${script:name}/id.surfaceshader/id.surfaceshader.####.exr",
+			"${project:rootDirectory}/renders/${script:name}/${renderPass}/id.surfaceshader/id.surfaceshader.####.exr",
 			"exr",
 			"quad builtin:id.surfaceshader",
 			{
@@ -267,7 +267,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 	GafferScene.Outputs.registerOutput(
 		"Batch/3Delight/Crypto/Geometry_Cryptomatte_Header",
 		IECoreScene.Output(
-			"${project:rootDirectory}/renders/${script:name}/id.geometry/id.geometry.####.exr",
+			"${project:rootDirectory}/renders/${script:name}/${renderPass}/id.geometry/id.geometry.####.exr",
 			"exr",
 			"color builtin:id.geometry",
 			{
@@ -281,7 +281,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 	GafferScene.Outputs.registerOutput(
 		"Batch/3Delight/Crypto/Geometry_Cryptomatte_Layer0",
 		IECoreScene.Output(
-			"${project:rootDirectory}/renders/${script:name}/id.geometry/id.geometry.####.exr",
+			"${project:rootDirectory}/renders/${script:name}/${renderPass}/id.geometry/id.geometry.####.exr",
 			"exr",
 			"quad builtin:id.geometry",
 			{
@@ -296,7 +296,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 	GafferScene.Outputs.registerOutput(
 		"Batch/3Delight/Crypto/Geometry_Cryptomatte_Layer2",
 		IECoreScene.Output(
-			"${project:rootDirectory}/renders/${script:name}/id.geometry/id.geometry.####.exr",
+			"${project:rootDirectory}/renders/${script:name}/${renderPass}/id.geometry/id.geometry.####.exr",
 			"exr",
 			"quad builtin:id.geometry",
 			{
@@ -311,7 +311,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 	GafferScene.Outputs.registerOutput(
 		"Batch/3Delight/Crypto/Scene_Path_Cryptomatte_Header",
 		IECoreScene.Output(
-			"${project:rootDirectory}/renders/${script:name}/id.scenepath/id.scenepath.####.exr",
+			"${project:rootDirectory}/renders/${script:name}/${renderPass}/id.scenepath/id.scenepath.####.exr",
 			"exr",
 			"color builtin:id.scenepath",
 			{
@@ -325,7 +325,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 	GafferScene.Outputs.registerOutput(
 		"Batch/3Delight/Crypto/Scene_Path_Cryptomatte_Layer0",
 		IECoreScene.Output(
-			"${project:rootDirectory}/renders/${script:name}/id.scenepath/id.scenepath.####.exr",
+			"${project:rootDirectory}/renders/${script:name}/${renderPass}/id.scenepath/id.scenepath.####.exr",
 			"exr",
 			"quad builtin:id.scenepath",
 			{
@@ -340,7 +340,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 	GafferScene.Outputs.registerOutput(
 		"Batch/3Delight/Crypto/Scene_Path_Cryptomatte_Layer2",
 		IECoreScene.Output(
-			"${project:rootDirectory}/renders/${script:name}/id.scenepath/id.scenepath.####.exr",
+			"${project:rootDirectory}/renders/${script:name}/${renderPass}/id.scenepath/id.scenepath.####.exr",
 			"exr",
 			"quad builtin:id.scenepath",
 			{
@@ -413,7 +413,7 @@ with IECore.IgnoredExceptions( ImportError ) :
 		GafferScene.Outputs.registerOutput(
 			"Batch/3Delight/{}/{}".format( source.capitalize(), displayName ),
 			IECoreScene.Output(
-				"${project:rootDirectory}/renders/${script:name}/%s/%s.####.exr" % ( name, name ),
+				"${project:rootDirectory}/renders/${script:name}/${renderPass}/%s/%s.####.exr" % ( name, name ),
 				"exr",
 				"{} {}:{}".format( dataType, source, name ),
 				{
