@@ -158,6 +158,16 @@ class _VariablesDict( dict ) :
 		self.__update()
 		return dict.__getitem__( self, key )
 
+	def __repr__( self ) :
+
+		self.__update()
+		return dict.__repr__( self )
+
+	def __str__( self ) :
+
+		self.__update()
+		return dict.__str__( self )
+
 	def __update( self ) :
 		frame = self.__context.get( "frame", "NO FRAME" )
 
