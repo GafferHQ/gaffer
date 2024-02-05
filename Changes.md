@@ -53,7 +53,7 @@ Improvements
   - Added support for reading `dl:` and `user:` attributes from shaders.
   - Added `importanceSampleFilter` plug to DelightOptions, providing denoiser-compatible output.
   - Matched DelightOptions default values for `oversampling` and `shadingSamples` to 3Delight's own default values.
-  - Added support for external procedurals. 
+  - Added support for external procedurals.
 - GraphEditor : Improved logic used to connect a newly created node to the selected nodes.
 - ScenePlug, ImagePlug : Child plugs are now serialisable. Among other things, this enables them to be driven by expressions (#3986).
 - Premultiply : Added `useDeepVisibility` plug, which weights samples according to their visibility based on the opacity of samples in front.
@@ -174,8 +174,17 @@ Build
   - Removed QtNetworkAuth library.
 - USD : Updated to version 23.11.
 
-1.3.x.x (relative to 1.3.10.0)
+1.3.x.x (relative to 1.3.11.0)
 =======
+
+Fixes
+-----
+
+- Viewer : Fixed context handling bug in the shader view (#5654).
+- PythonCommand : Fixed misleading results for `repr( variables )` and `str( variables )`, which would suggest the dictionary was empty when it was not.
+
+1.3.11.0 (relative to 1.3.10.0)
+========
 
 Features
 --------

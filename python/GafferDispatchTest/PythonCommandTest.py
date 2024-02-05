@@ -433,5 +433,15 @@ class PythonCommandTest( GafferTest.TestCase ) :
 
 		self.assertEqual( Gaffer.Context.current(), Gaffer.Context() )
 
+	def testVariablesRepr( self ) :
+
+		command = GafferDispatch.PythonCommand()
+		command["variables"].addChild( Gaffer.NameValuePlug( "testKey", "testValue" ) )
+		command["command"].setValue( "self.variablesStr = str( variables ); self.variablesRepr = repr( variables )" )
+		command["task"].execute()
+
+		self.assertEqual( command.variablesStr, str( { "testKey" : "testValue" } ) )
+		self.assertEqual( command.variablesRepr, repr( { "testKey" : "testValue" } ) )
+
 if __name__ == "__main__":
 	unittest.main()
