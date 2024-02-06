@@ -1653,5 +1653,60 @@ class EditScopeAlgoTest( GafferSceneTest.SceneTestCase ) :
 		self.assertIsNotNone( GafferScene.EditScopeAlgo.acquireOptionEdit( editScope, "test:bogus" ) )
 		self.assertNotEqual( editScope.keys(), emptyKeys )
 
+	def testRenderPassesReadOnlyReason( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["cube"] = GafferScene.Cube()
+
+		s["scope"] = Gaffer.EditScope()
+		s["scope"].setup( s["cube"]["out"] )
+		s["scope"]["in"].setInput( s["cube"]["out"] )
+
+		s["box"] = Gaffer.Box.create( s, Gaffer.StandardSet( [ s["cube"], s["scope"] ] ) )
+
+		self.assertIsNone( GafferScene.EditScopeAlgo.renderPassesReadOnlyReason( s["box"]["scope"] ) )
+
+		for component in ( s["box"], s["box"]["scope"] ):
+			Gaffer.MetadataAlgo.setReadOnly( component, True )
+			self.assertEqual( GafferScene.EditScopeAlgo.renderPassesReadOnlyReason( s["box"]["scope"] ), s["box"] )
+
+		Gaffer.MetadataAlgo.setReadOnly( s["box"], False )
+		self.assertEqual( GafferScene.EditScopeAlgo.renderPassesReadOnlyReason( s["box"]["scope"] ), s["box"]["scope"] )
+
+		Gaffer.MetadataAlgo.setReadOnly( s["box"]["scope"], False )
+		renderPasses = s["box"]["scope"].acquireProcessor( "RenderPasses", createIfNecessary = True )
+		renderPasses["names"].setValue( IECore.StringVectorData( [ "renderPassA" ] ) )
+
+		self.assertIsNone( GafferScene.EditScopeAlgo.renderPassesReadOnlyReason( s["box"]["scope"] ) )
+
+		for component in (
+			s["box"]["scope"]["RenderPasses"]["names"],
+			s["box"]["scope"]["RenderPasses"],
+			s["box"]["scope"],
+			s["box"]
+		) :
+			Gaffer.MetadataAlgo.setReadOnly( component, True )
+			self.assertEqual( GafferScene.EditScopeAlgo.renderPassesReadOnlyReason( s["box"]["scope"] ), component )
+
+	def testRenderPassesSerialisation( self ) :
+
+		s = Gaffer.ScriptNode()
+
+		s["plane"] = GafferScene.Plane()
+
+		s["editScope"] = Gaffer.EditScope()
+		s["editScope"].setup( s["plane"]["out"] )
+
+		renderPasses = s["editScope"].acquireProcessor( "RenderPasses", createIfNecessary = True )
+		renderPasses["names"].setValue( IECore.StringVectorData( [ "renderPassA" ] ) )
+
+		self.assertEqual( s["editScope"]["out"]["globals"].getValue().get( "option:renderPass:names" ), IECore.StringVectorData( [ "renderPassA" ] ) )
+
+		s2 = Gaffer.ScriptNode()
+		s2.execute( s.serialise() )
+
+		self.assertEqual( s2["editScope"]["out"]["globals"].getValue().get( "option:renderPass:names" ), IECore.StringVectorData( [ "renderPassA" ] ) )
+
 if __name__ == "__main__":
 	unittest.main()

@@ -25,6 +25,11 @@ Documentation
 - Added Render Pass Editor shortcuts to the "Controls and Shortcuts" section.
 - Added Render Pass Editor (Arnold) example demonstrating use of the Render Pass Editor, as well as the RenderPasses and RenderPassWedge nodes.
 
+API
+---
+
+- EditScopeAlgo : Added support for creating render passes.
+
 Build
 -----
 
