@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import random
 import unittest
 import imath
 
@@ -59,10 +60,7 @@ class ExistenceQueryTest( GafferSceneTest.SceneTestCase ):
 
 	def testLocationSlashSceneInvalid( self ):
 
-		from random import Random
-		from datetime import datetime
-
-		r = Random( datetime.now() )
+		r = random.Random()
 
 		name1 = randomName( r, 5, 10 )
 		name2 = randomName( r, 5, 10 )
@@ -85,10 +83,7 @@ class ExistenceQueryTest( GafferSceneTest.SceneTestCase ):
 
 	def testLocationNoSlashSceneInvalid( self ):
 
-		from random import Random
-		from datetime import datetime
-
-		r = Random( datetime.now() )
+		r = random.Random()
 
 		name1 = randomName( r, 5, 10 )
 		name2 = randomName( r, 5, 10 )
@@ -133,10 +128,7 @@ class ExistenceQueryTest( GafferSceneTest.SceneTestCase ):
 
 	def testLocationNoSlashValid( self ):
 
-		from random import Random
-		from datetime import datetime
-
-		r = Random( datetime.now() )
+		r = random.Random()
 
 		name1 = randomName( r, 5, 10 )
 		name2 = randomName( r, 5, 10 )
@@ -161,10 +153,7 @@ class ExistenceQueryTest( GafferSceneTest.SceneTestCase ):
 
 	def testLocationSlashValid( self ):
 
-		from random import Random
-		from datetime import datetime
-
-		r = Random( datetime.now() )
+		r = random.Random()
 
 		name1 = randomName( r, 5, 10 )
 		name2 = randomName( r, 5, 10 )
@@ -189,10 +178,7 @@ class ExistenceQueryTest( GafferSceneTest.SceneTestCase ):
 
 	def testLocationNoSlashInValid( self ):
 
-		from random import Random
-		from datetime import datetime
-
-		r = Random( datetime.now() )
+		r = random.Random()
 
 		name1 = randomName( r, 5, 6 )
 		name2 = randomName( r, 5, 6 )
@@ -218,10 +204,7 @@ class ExistenceQueryTest( GafferSceneTest.SceneTestCase ):
 
 	def testLocationSlashInValid( self ):
 
-		from random import Random
-		from datetime import datetime
-
-		r = Random( datetime.now() )
+		r = random.Random()
 
 		name1 = randomName( r, 5, 6 )
 		name2 = randomName( r, 5, 6 )
@@ -247,10 +230,7 @@ class ExistenceQueryTest( GafferSceneTest.SceneTestCase ):
 
 	def testLocationNoSlashPartial( self ):
 
-		from random import Random
-		from datetime import datetime
-
-		r = Random( datetime.now() )
+		r = random.Random()
 
 		name1 = randomName( r, 5, 10 )
 		name2 = randomName( r, 5, 10 )
@@ -276,10 +256,7 @@ class ExistenceQueryTest( GafferSceneTest.SceneTestCase ):
 
 	def testLocationSlashPartial( self ):
 
-		from random import Random
-		from datetime import datetime
-
-		r = Random( datetime.now() )
+		r = random.Random()
 
 		name1 = randomName( r, 5, 10 )
 		name2 = randomName( r, 5, 10 )
