@@ -310,11 +310,10 @@ class _Parser( ast.NodeVisitor ) :
 		result = []
 		while node is not None :
 			if isinstance( node, ast.Subscript ) :
-				if isinstance( node.slice, ast.Index ) :
-					if isinstance( node.slice.value, ast.Str ) :
-						result.insert( 0, node.slice.value.s )
-					else :
-						return []
+				if isinstance( node.slice, ast.Constant ) and isinstance( node.slice.value, str ) :
+					result.insert( 0, node.slice.value )
+				else :
+					return []
 				node = node.value
 			elif isinstance( node, ast.Name ) :
 				result.insert( 0, node.id )
