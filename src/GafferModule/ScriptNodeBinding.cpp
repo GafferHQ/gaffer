@@ -70,45 +70,6 @@ using namespace boost;
 using namespace Gaffer;
 using namespace GafferBindings;
 
-#if !defined( _MSC_VER ) && PY_VERSION_HEX < 0x03080000
-
-//////////////////////////////////////////////////////////////////////////
-// Access to Python AST
-//////////////////////////////////////////////////////////////////////////
-
-extern "C"
-{
-
-// Essential to include this last, since it defines macros which
-// clash with other headers.
-#include "Python-ast.h"
-
-/// \todo The already esoteric AST API appears to be even more obscure
-/// in Python 3, and it has never been available on Windows. We would do
-/// well to avoid it entirely. One simple alternative is implemented in
-/// https://github.com/johnhaddon/gaffer/tree/simpleTolerantExec, but
-/// initial benchmarking suggested that performance was worse.
-#include "asdl.h"
-#undef arg
-#define asdl_seq_new _Py_asdl_seq_new
-
-};
-
-namespace boost {
-namespace python {
-
-// Specialisation to allow use of handle<PyCodeObject>
-template<>
-struct base_type_traits<PyCodeObject>
-{
-	using type = PyObject;
-};
-
-} // namespace python
-} // namespace boost
-
-#endif
-
 //////////////////////////////////////////////////////////////////////////
 // Serialisation
 //////////////////////////////////////////////////////////////////////////
@@ -124,81 +85,6 @@ const std::string formattedErrorContext( int lineNumber, const std::string &cont
 	);
 }
 
-#if !defined( _MSC_VER ) && PY_VERSION_HEX < 0x03080000
-// Execute the script one top level statement at a time,
-// reporting errors that occur, but otherwise continuing
-// with execution.
-bool tolerantExec( const std::string &pythonScript, boost::python::object globals, boost::python::object locals, const std::string &context )
-{
-	// The python parsing framework uses an arena to simplify memory allocation,
-	// which is handy for us, since we're going to manipulate the AST a little.
-	std::unique_ptr<PyArena, decltype( &PyArena_Free )> arena( PyArena_New(), PyArena_Free );
-
-	// Parse the whole script, getting an abstract syntax tree for a
-	// module which would execute everything.
-	mod_ty mod = PyParser_ASTFromString(
-		pythonScript.c_str(),
-		"<string>",
-		Py_file_input,
-		nullptr,
-		arena.get()
-	);
-
-	if( !mod )
-	{
-		int lineNumber = 0;
-		std::string message = IECorePython::ExceptionAlgo::formatPythonException( /* withTraceback = */ false, &lineNumber );
-		IECore::msg( IECore::Msg::Error, formattedErrorContext( lineNumber, context ), message );
-		return false;
-	}
-
-	const IECore::Canceller *canceller = Context::current()->canceller();
-	IECore::Canceller::check( canceller );
-
-	assert( mod->kind == Module_kind );
-
-	// Loop over the top-level statements in the module body,
-	// executing one at a time.
-	bool result = false;
-	int numStatements = asdl_seq_LEN( mod->v.Module.body );
-	for( int i=0; i<numStatements; ++i )
-	{
-		IECore::Canceller::check( canceller );
-
-		// Make a new module containing just this one statement.
-		asdl_seq *newBody = asdl_seq_new( 1, arena.get() );
-		asdl_seq_SET( newBody, 0, asdl_seq_GET( mod->v.Module.body, i ) );
-		mod_ty newModule = Module(
-			newBody,
-			arena.get()
-		);
-
-		// Compile it.
-		boost::python::handle<PyCodeObject> code( PyAST_Compile( newModule, "<string>", nullptr, arena.get() ) );
-
-		// And execute it.
-		boost::python::handle<> v( boost::python::allow_null(
-			PyEval_EvalCode(
-				(PyObject *)code.get(),
-				globals.ptr(),
-				locals.ptr()
-			)
-		) );
-
-		// Report any errors.
-		if( v == nullptr)
-		{
-			int lineNumber = 0;
-			std::string message = IECorePython::ExceptionAlgo::formatPythonException( /* withTraceback = */ false, &lineNumber );
-			IECore::msg( IECore::Msg::Error, formattedErrorContext( lineNumber, context ), message );
-			result = true;
-		}
-	}
-
-	return result;
-}
-
-#else
 // Execute the script one line at a time, reporting errors that occur,
 // but otherwise continuing with execution.
 bool tolerantExec( const std::string &pythonScript, boost::python::object globals, boost::python::object locals, const std::string &context )
@@ -229,8 +115,6 @@ bool tolerantExec( const std::string &pythonScript, boost::python::object global
 
 	return result;
 }
-
-#endif
 
 // The dict returned will form both the locals and the globals for
 // the execute() methods. It's not possible to have a separate locals
