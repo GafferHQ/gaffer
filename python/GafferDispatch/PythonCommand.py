@@ -207,10 +207,10 @@ class _Parser( ast.NodeVisitor ) :
 		if node.value.id != "context" :
 			return
 
-		if not isinstance( node.slice, ast.Index ) or not isinstance( node.slice.value, ast.Str ) :
+		if not isinstance( node.slice, ast.Constant ) or not isinstance( node.slice.value, str ) :
 			return
 
-		self.contextReads.add( node.slice.value.s )
+		self.contextReads.add( node.slice.value )
 
 	def visit_Call( self, node ) :
 
