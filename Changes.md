@@ -1,11 +1,23 @@
 1.3.x.x (relative to 1.3.11.0)
 =======
 
+Improvements
+------------
+
+- SceneReader : Added basic loding of UsdGeomNurbsCurves, converting them to CurvesPrimitives (basis curves).
+- Console output : Every line is now prefixed with the message level.
+
 Fixes
 -----
 
 - Viewer : Fixed context handling bug in the shader view (#5654).
 - PythonCommand : Fixed misleading results for `repr( variables )` and `str( variables )`, which would suggest the dictionary was empty when it was not.
+- CompoundObject : Fixed crashes in Python bindings caused by passing `None` as a key.
+
+Build
+-----
+
+- Cortex : Updated to version 10.5.6.0.
 
 1.3.11.0 (relative to 1.3.10.0)
 ========
