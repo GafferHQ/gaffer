@@ -577,6 +577,8 @@ with IECore.IgnoredExceptions( ImportError ) :
 	GafferTractor.tractorAPI()
 	nodeMenu.append( "/Dispatch/Tractor Dispatcher", GafferTractor.TractorDispatcher, searchText = "TractorDispatcher" )
 
+GafferDispatchUI.DispatcherUI.appendMenuDefinitions( scriptWindowMenu, "/Tools/Dispatch" )
+
 ## Metadata cleanup
 ###########################################################################
 
