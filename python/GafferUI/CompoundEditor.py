@@ -877,6 +877,9 @@ class _DetachedPanel( GafferUI.Window ) :
 		self.__splitContainer.append( _TabbedContainer() )
 		self.setChild( self.__splitContainer )
 
+		self.__parentEditor = None # HACK. CAN REMOVE IF WE REMOVE `parent()` OVERRIDE.
+		parentEditor.ancestor( GafferUI.Window ).addChildWindow( self )
+
 		# @see parent() As we can't be moved between CompoundEditors
 		# (scriptNode references in editors will be wrong), we don't need
 		# accessors for this.
@@ -890,6 +893,10 @@ class _DetachedPanel( GafferUI.Window ) :
 	# owned by a CompoundEditor, we re-implement this to re-direct ancestor
 	# calls to which ever editor we were added to (CompoundEditor fills this
 	# in for us when we're constructed).
+	## TODO : CAN WE REMOVE THIS NOW WE'RE PARENTING TO THE MAIN WINDOW? I THINK
+	# WE SHOULD (OUR PARENT IS THE PARENT WINDOW), BUT WE'LL NEED TO ADD A METHOD
+	# FOR GETTING TO THE COMPOUND EDITOR STILL, BECAUSE WE'RE CHEEKILY USING
+	# `parent()` FOR THAT IN A FEW PLACES.
 	def parent( self ) :
 
 		return self.__parentEditor() if self.__parentEditor else None
