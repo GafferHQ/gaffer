@@ -45,6 +45,7 @@
 #include "Gaffer/ScriptNode.h"
 #include "Gaffer/StringPlug.h"
 #include "Gaffer/TypedPlug.h"
+#include "Gaffer/ArrayPlug.h"
 
 #include "IECore/MessageHandler.h"
 
@@ -144,6 +145,26 @@ Gaffer::Plug *setupNumericPlug( const AtNodeEntry *node, const AtParamEntry *par
 	PlugAlgo::replacePlug( plugParent, plug );
 
 	return plug.get();
+}
+
+template<typename PlugType>
+Gaffer::Plug *setupArrayPlug( const IECore::InternedString &parameterName, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction )
+{
+    PlugType *existingPlug = plugParent->getChild<PlugType>( parameterName );
+
+    if(
+        existingPlug &&
+        existingPlug->direction() == direction
+    )
+    {
+        existingPlug->setFlags( Gaffer::Plug::Dynamic, false );
+        return existingPlug;
+    }
+
+    typename PlugType::Ptr plug = new PlugType( parameterName, direction, nullptr, 1, std::numeric_limits<size_t>::max(), Plug::Flags::Default, false );
+    PlugAlgo::replacePlug( plugParent, plug );
+
+    return plug.get();
 }
 
 Gaffer::Plug *setupPlug( const IECore::InternedString &parameterName, Gaffer::GraphComponent *plugParent, Gaffer::Plug::Direction direction )
@@ -571,6 +592,10 @@ Gaffer::Plug *ParameterHandler::setupPlug( const AtNodeEntry *node, const AtPara
 				direction
 			);
 			break;
+
+        case AI_TYPE_ARRAY :
+            plug = setupArrayPlug<ArrayPlug>( AiParamGetName( parameter ).c_str(), plugParent, direction);
+            break;
 
 	}
 
