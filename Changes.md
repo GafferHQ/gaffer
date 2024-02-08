@@ -7,6 +7,7 @@ Improvements
 - SceneReader : Added basic loding of UsdGeomNurbsCurves, converting them to CurvesPrimitives (basis curves).
 - Console output : Every line is now prefixed with the message level.
 - RenderPasses : Added validation of render pass names entered in the `names` plug.
+- RenderPassEditor : Added support for adding a new render pass to an EditScope by clicking the plus button at the bottom of the editor.
 
 Fixes
 -----
