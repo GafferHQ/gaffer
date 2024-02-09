@@ -65,7 +65,7 @@ parser.add_argument(
 	"--buildEnvironment",
 	help = "The build environment of the dependencies archive to download.",
 	choices = [ "gcc9", "gcc11" ],
-	default = os.environ.get( "GAFFER_BUILD_ENVIRONMENT", "gcc9" ),
+	default = os.environ.get( "GAFFER_BUILD_ENVIRONMENT", "gcc9" if sys.platform == "linux" else "" ),
 )
 
 parser.add_argument(
