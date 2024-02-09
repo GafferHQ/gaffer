@@ -1557,6 +1557,16 @@ class DelightRenderer final : public IECoreScenePreview::Renderer
 			// while we make our edits.
 		}
 
+		IECore::DataPtr command( const IECore::InternedString name, const IECore::CompoundDataMap &parameters ) override
+		{
+			if( boost::starts_with( name.string(), "dl:" ) || name.string().find( ":" ) == string::npos )
+			{
+				IECore::msg( IECore::Msg::Warning, "IECoreDelight::Renderer::command", boost::format( "Unknown command \"%s\"." ) % name.c_str() );
+			}
+
+			return nullptr;
+		}
+
 	private :
 
 		DelightHandle::Ownership ownership() const
