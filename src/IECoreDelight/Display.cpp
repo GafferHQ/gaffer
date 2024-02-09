@@ -314,7 +314,29 @@ PtDspyError imageData( PtDspyImageHandle image, int xMin, int xMaxPlusOne, int y
 	{
 		try
 		{
-			dd->imageData( box, (const float *)data, bufferSize );
+			if( dd->channelNames().size() == 1 && dd->channelNames()[0] == "id" )
+			{
+				// ID output for doing interactive selection (see `GafferSceneUI::OutputBuffer`).
+				// We want to have declared this output with an integer `scalarformat` to match the
+				// integer `cortexId` attribute created by `ObjectInterface::assignID()`, but we
+				// can't because 3Delight thinks it's quantizing a float into an integer and throws
+				// away everything outside `0-1` (see DelightOutput). So, we instead get floats
+				// from 3Delight and convert to integers here.
+				vector<uint32_t> intData( bufferSize );
+				for( int i = 0; i < bufferSize; ++i )
+				{
+					intData[i] = ((const float *)data)[i];
+				}
+				// Then, in a second hack that applies to all renderers/drivers,
+				// we have to pretend that the integers are floats to get them
+				// across the `IECoreImage::DisplayDriver` boundary, which only
+				// supports floats.
+				dd->imageData( box, (const float *)intData.data(), bufferSize );
+			}
+			else
+			{
+				dd->imageData( box, (const float *)data, bufferSize );
+			}
 		}
 		catch( std::exception &e )
 		{

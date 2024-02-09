@@ -15,7 +15,9 @@ Improvements
 - 3Delight : Added NSI screen static sampling pattern option (`dl:staticsamplingpattern`).
 - GraphEditor : The source node for any location can be located by dragging the location into the GraphEditor from the Viewer or HierarchyView.
 - GraphComponent : Node and Plug names may now start with a numeric digit.
-- 3Delight : Added support for `layerName` parameter in output definitions.
+- 3Delight :
+  - Added support for `layerName` parameter in output definitions.
+  - Added support for `filter` parameter in output definitions.
 
 Fixes
 -----
