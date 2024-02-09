@@ -221,6 +221,11 @@ class DelightHandle
 			release();
 		}
 
+		operator bool () const
+		{
+			return m_context != NSI_BAD_CONTEXT;
+		}
+
 	private :
 
 		void release()
@@ -1050,7 +1055,26 @@ class DelightObject: public IECoreScenePreview::Renderer::ObjectInterface
 
 		void assignID( uint32_t id ) override
 		{
-			/// \todo Implement
+			if( !m_idAttributesHandle )
+			{
+				m_idAttributesHandle = DelightHandle(
+					m_transformHandle.context(), string( m_transformHandle.name() ) + ":__idAttributes", m_transformHandle.ownership(), "attributes"
+				);
+				NSIConnect(
+					m_transformHandle.context(),
+					m_idAttributesHandle.name(), "",
+					m_transformHandle.name(), "shaderattributes",
+					0, nullptr
+				);
+			}
+			NSIParam_t param = {
+				"cortexId",
+				&id,
+				NSITypeInteger,
+				0, 1, // array length, count
+				0 // flags
+			};
+			NSISetAttribute( m_idAttributesHandle.context(), m_idAttributesHandle.name(), 1, &param );
 		}
 
 	protected :
@@ -1063,6 +1087,7 @@ class DelightObject: public IECoreScenePreview::Renderer::ObjectInterface
 	private :
 
 		DelightHandleSharedPtr m_instance;
+		DelightHandle m_idAttributesHandle;
 
 		bool m_haveTransform;
 
