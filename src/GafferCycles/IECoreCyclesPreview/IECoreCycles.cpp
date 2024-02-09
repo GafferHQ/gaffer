@@ -83,11 +83,7 @@ bool init()
 	ccl::util_logging_verbosity_set( 0 );
 
 	// Get devices
-	ccl::vector<ccl::DeviceInfo> devices = ccl::Device::available_devices( ccl::DEVICE_MASK_CPU | ccl::DEVICE_MASK_HIP | ccl::DEVICE_MASK_CUDA | ccl::DEVICE_MASK_METAL
-#ifdef WITH_OPTIX
-	| ccl::DEVICE_MASK_OPTIX
-#endif
-	);
+	ccl::vector<ccl::DeviceInfo> devices = ccl::Device::available_devices( ccl::DEVICE_MASK_CPU | ccl::DEVICE_MASK_HIP | ccl::DEVICE_MASK_CUDA | ccl::DEVICE_MASK_METAL | ccl::DEVICE_MASK_OPTIX );
 	devices.push_back( ccl::Device::get_multi_device( devices, 0, true ) );
 
 	for( auto device : devices )
