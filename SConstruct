@@ -585,6 +585,9 @@ else:
 				"/wd4275",
 				"/wd4324",  # suppress warning "structure was padded due to alignment specifier". Needed by cycles\kernel\types.h
 				"/wd4458",  # suppress warning "declaration of 'variable' hides class member". Needed by cycles\scene\shader_nodes.h and cycles\util\ssef.h
+				"/wd4003",  # suppress warning "not enough arguments for function-like macro invocation 'BOOST_PP_SEQ_DETAIL_IS_NOT_EMPTY'". Needed for USD.
+				"/wd4702",  # suppress warning "unreachable code". Need for OpenVDB.
+				"/wd4180",  # suppress warning "qualifier applied to function type has no meaning; ignored". Needed for OpenVDB
 			],
 		)
 
