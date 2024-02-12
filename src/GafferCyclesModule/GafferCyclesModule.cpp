@@ -387,8 +387,6 @@ py::dict getLights()
 			}
 			else if( type == "area_light" )
 			{
-				in["axisu"] = _in["axisu"];
-				in["axisv"] = _in["axisv"];
 				in["sizeu"] = _in["sizeu"];
 				in["sizev"] = _in["sizev"];
 				in["spread"] = _in["spread"];

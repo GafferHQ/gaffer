@@ -8,6 +8,9 @@
 Features
 --------
 
+- Cycles :
+  - Updated to version 4.0.2.
+  - Added support for CUDA and Optix devices.
 - Dispatcher : Dispatchers are now TaskNodes, allowing them to be nested in a task graph. Possibilities include :
   - Using a LocalDispatcher and a Wedge to launch multiple TractorDispatcher jobs.
   - Using a nested LocalDispatcher to perform a group of tasks on a single blade within a TractorDispatcher job.
@@ -112,6 +115,7 @@ Breaking Changes
 ----------------
 
 - Arnold : Removed support for Arnold 7.1.
+- Cycles : Updated to version 4.0.2.
 - Render : Changed `render:includedPurposes` default to `"default", "render"`.
 - Backdrop : Changed default drawing order. Use the new `depth` plug to override the order if necessary.
 - ValuePlug : Removed deprecated `getObjectValue()` overload.
@@ -154,18 +158,23 @@ Breaking Changes
 - DelightOptions : Changed default values for `oversampling` and `shadingSamples` plugs.
 - SceneProcessor : Subclasses no longer serialise internal connections to the `out` plug.
 - ImageProcessor : Internal connections to the `out` plug are no longer serialised.
+- USD : Removed Embree Hydra delegate.
 
 Build
 -----
 
+- Cortex : Updated to version 10.5.6.0.
+- Cycles : Updated to version 4.0.2.
+- Embree : Updated to version 4.3.0.
 - Imath : Updated to version 3.1.9.
 - MaterialX : Updated to version 1.38.8.
 - LibWebP : Added version 1.3.2.
 - OpenEXR : Updated to version 3.1.9.
 - OpenImageIO : Updated to version 2.4.17.0.
+- OpenPGL : Updated to version 0.5.0.
 - OpenSubdiv : Updated to version 3.5.1.
 - OpenSSL : Removed.
-- OpenVDB : Updated to version 10.0.1.
+- OpenVDB : Updated to version 10.1.0.
 - PsUtil : Added version 5.9.6.
 - PySide : Updated to version 5.15.12.
 - Qt :

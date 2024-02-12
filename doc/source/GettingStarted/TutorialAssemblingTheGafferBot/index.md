@@ -359,8 +359,8 @@ Now that you have more space, it's time to add some shading nodes:
 
 2. In the Node Editor, give the shader reflective surface properties:
     - Set the Base Color plug to `0.18 0.18 0.18`.
-    - Set the Specular plug to `0.6`.
-    - Set the Roughness plug to `0.35`.
+    - Set the Coat Weight plug to `1`.
+    - Set the Coat Roughness plug to `0.15`.
 
 > Tip :
 > Numeric fields support basic mathematical operations to adjust their values. For example, appending `+1` to a plug with an existing value of `2`, will set it to `3`. You can use `+`, `-`, `/`, `*` and `%` to modify the existing value.

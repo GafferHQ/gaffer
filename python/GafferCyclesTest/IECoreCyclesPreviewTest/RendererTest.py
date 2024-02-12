@@ -80,11 +80,11 @@ class RendererTest( GafferTest.TestCase ) :
 				"render:displayColor" : IECore.Color3fData( imath.Color3f( 1, 0.5, 0.25 ) ),
 				"cycles:surface" : IECoreScene.ShaderNetwork(
 					shaders = {
-						"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface" ),
+						"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", { "emission_strength" : 1 } ),
 						"info" : IECoreScene.Shader( "object_info", "cycles:shader" )
 					},
 					connections = [
-						( ( "info", "color" ), ( "output", "emission" ) )
+						( ( "info", "color" ), ( "output", "emission_color" ) )
 					],
 					output = "output",
 				)
@@ -551,11 +551,11 @@ class RendererTest( GafferTest.TestCase ) :
 			renderer.attributes( IECore.CompoundObject ( {
 				"cycles:surface" : IECoreScene.ShaderNetwork(
 					shaders = {
-						"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface" ),
+						"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", { "emission_strength" : 1 } ),
 						"attribute" : IECoreScene.Shader( "attribute", "cycles:shader", { "attribute" : "N" } ),
 					},
 					connections = [
-						( ( "attribute", "color" ), ( "output", "emission" ) ),
+						( ( "attribute", "color" ), ( "output", "emission_color" ) ),
 					],
 					output = "output",
 				)
@@ -733,11 +733,11 @@ class RendererTest( GafferTest.TestCase ) :
 
 		shader = IECoreScene.ShaderNetwork(
 			shaders = {
-				"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", { "base_color" : imath.Color3f( 0 ) } ),
+				"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", { "base_color" : imath.Color3f( 0 ), "emission_strength" : 1 } ),
 				"attribute" : IECoreScene.Shader( "attribute", "cycles:shader", { "attribute" : attributeName } ),
 			},
 			connections = [
-				( ( "attribute", "color" ), ( "output", "emission" ) ),
+				( ( "attribute", "color" ), ( "output", "emission_color" ) ),
 			],
 			output = "output",
 		)
@@ -1187,11 +1187,11 @@ class RendererTest( GafferTest.TestCase ) :
 
 		shader = IECoreScene.ShaderNetwork(
 			shaders = {
-				"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface" ),
+				"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", { "emission_strength" : 1 } ),
 				"texture" : IECoreScene.Shader( "image_texture", "cycles:shader", { "filename" : "<attr:textureFileName>" } )
 			},
 			connections = [
-				( ( "texture", "color" ), ( "output", "emission" ) )
+				( ( "texture", "color" ), ( "output", "emission_color" ) )
 			],
 			output = "output",
 		)
@@ -1283,11 +1283,11 @@ class RendererTest( GafferTest.TestCase ) :
 
 		shader = IECoreScene.ShaderNetwork(
 			shaders = {
-				"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", { "base_color" : imath.Color3f( 0 ) } ),
+				"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", { "base_color" : imath.Color3f( 0 ), "emission_strength" : 1 } ),
 				"attribute" : IECoreScene.Shader( "attribute", "cycles:shader", { "attribute" : attribute } ),
 			},
 			connections = [
-				( ( "attribute", outputPlug ), ( "output", "emission" ) ),
+				( ( "attribute", outputPlug ), ( "output", "emission_color" ) ),
 				( ( "attribute", "alpha" ), ( "output", "alpha" ) )
 			],
 			output = "output",
@@ -1359,11 +1359,11 @@ class RendererTest( GafferTest.TestCase ) :
 				"render:user:testColor" : IECore.Color3fData( imath.Color3f( 0, 1, 0 ) ),
 				"cycles:surface" : IECoreScene.ShaderNetwork(
 					shaders = {
-						"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", { "base_color" : imath.Color3f( 0 ) } ),
+						"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", { "base_color" : imath.Color3f( 0 ), "emission_strength" : 1 } ),
 						"attribute" : IECoreScene.Shader( "attribute", "cycles:shader", { "attribute" : "user:testColor" } ),
 					},
 					connections = [
-						( ( "attribute", "color" ), ( "output", "emission" ) )
+						( ( "attribute", "color" ), ( "output", "emission_color" ) )
 					],
 					output = "output",
 				)
@@ -1476,13 +1476,13 @@ class RendererTest( GafferTest.TestCase ) :
 			renderer.attributes( IECore.CompoundObject ( {
 				"cycles:surface" : IECoreScene.ShaderNetwork(
 					shaders = {
-						"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", { "base_color" : imath.Color3f( 0 ) } ),
+						"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", { "base_color" : imath.Color3f( 0 ), "emission_strength" : 1 } ),
 						"multiplyColor" : IECoreScene.Shader( "Maths/MultiplyColor", "osl:shader", { "b" : imath.Color3f( 0, 0, 0 ) } ),
 						"multiplyFloat" : IECoreScene.Shader( "Maths/MultiplyFloat", "osl:shader" ),
 					},
 					connections = [
 						( ( "multiplyFloat", "out" ), ( "multiplyColor", "b.b" ) ),
-						( ( "multiplyColor", "out" ), ( "output", "emission" ) ),
+						( ( "multiplyColor", "out" ), ( "output", "emission_color" ) ),
 					],
 					output = "output",
 				)
@@ -1530,7 +1530,7 @@ class RendererTest( GafferTest.TestCase ) :
 					shaders = {
 						"output" : IECoreScene.Shader(
 							"principled_bsdf", "cycles:shader",
-							{ "emission" : imath.Color3f( 1, 0, 1 ) }
+							{ "emission_color" : imath.Color3f( 1, 0, 1 ), "emission_strength" : 1 }
 						),
 					},
 					output = "output",
@@ -1729,13 +1729,13 @@ class RendererTest( GafferTest.TestCase ) :
 
 			shader = IECoreScene.ShaderNetwork(
 				shaders = {
-					"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", { "base_color" : imath.Color3f( 0 ) } ),
+					"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", { "base_color" : imath.Color3f( 0 ), "emission_strength" : 1 } ),
 					"value" : IECoreScene.Shader( "value", "cycles:shader", { "value" : value } ),
 					"converter" : IECoreScene.Shader( "convert_float_to_color", "cycles:shader" ),
 				},
 				connections = [
 					( ( "value", "value" ), ( "converter", "value_float" ) ),
-					( ( "converter", "value_color" ), ( "output", "emission" ) ),
+					( ( "converter", "value_color" ), ( "output", "emission_color" ) ),
 				],
 				output = "output",
 			)
@@ -1755,7 +1755,7 @@ class RendererTest( GafferTest.TestCase ) :
 				shaders = {
 					"output" : IECoreScene.Shader(
 						"principled_bsdf", "cycles:surface",
-						{ "base_color" : imath.Color3f( 0 ), "emission" : value }
+						{ "base_color" : imath.Color3f( 0 ), "emission_color" : value, "emission_strength" : 1 }
 					),
 				},
 				output = "output",
@@ -1778,11 +1778,11 @@ class RendererTest( GafferTest.TestCase ) :
 						"convert_vector_to_color", "cycles:shader", { "value_vector" : value }
 					),
 					"output" : IECoreScene.Shader(
-						"principled_bsdf", "cycles:surface", { "base_color" : imath.Color3f( 0 ) }
+						"principled_bsdf", "cycles:surface", { "base_color" : imath.Color3f( 0 ), "emission_strength" : 1 }
 					),
 				},
 				connections = [
-					( ( "converter", "value_color" ), ( "output", "emission" ) )
+					( ( "converter", "value_color" ), ( "output", "emission_color" ) )
 				],
 				output = "output",
 			)
@@ -1807,12 +1807,12 @@ class RendererTest( GafferTest.TestCase ) :
 					}
 				),
 				"output" : IECoreScene.Shader(
-					"principled_bsdf", "cycles:surface", { "base_color" : imath.Color3f( 0 ) }
+					"principled_bsdf", "cycles:surface", { "base_color" : imath.Color3f( 0 ), "emission_strength" : 1 }
 				),
 			},
 			connections = [
 				( ( "coordinates", "UV.x" ), ( "ramp", "fac" ) ),
-				( ( "ramp", "color" ), ( "output", "emission" ) ),
+				( ( "ramp", "color" ), ( "output", "emission_color" ) ),
 			],
 			output = "output",
 		)
@@ -1834,7 +1834,7 @@ class RendererTest( GafferTest.TestCase ) :
 		)
 
 		for name, value in {
-			"sheen" : IECore.StringData( "iShouldBeAFloat" ),
+			"sheen_weight" : IECore.StringData( "iShouldBeAFloat" ),
 			"base_color" : IECore.StringData( "iShouldBeAColor" ),
 			"normal" : IECore.StringData( "iShouldBeAV3f" ),
 			"subsurface_method" : IECore.Color3fData( imath.Color3f( 10 ) ),
