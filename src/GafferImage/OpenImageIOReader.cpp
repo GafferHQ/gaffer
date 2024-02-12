@@ -76,7 +76,7 @@ using namespace Gaffer;
 namespace
 {
 
-const IECore::InternedString g_tileBatchIndexContextName( "__tileBatchIndex" );
+const IECore::InternedString g_tileBatchOriginContextName( "__tileBatchOrigin" );
 const IECore::InternedString g_noView( "" );
 
 struct ChannelMapEntry
@@ -245,7 +245,7 @@ std::string channelNameFromEXR( std::string view, std::string part, std::string 
 // "tile batches".  A tile batch is an ObjectVector containing an array of separate channelData tiles.  It is
 // a large enough chunk of data that it can be read from the file with minimal waste.  We cache tile batches
 // on OpenImageIOReader::tileBatchPlug, and then OpenImageIOReader::computeChannelData just needs to select the
-// correct tile batch index, access tileBatchPlug, and then return the tile at the correct tileBatchSubIndex.
+// correct tile batch, access tileBatchPlug, and then return the tile at the correct tileBatchSubIndex.
 //
 // For scanline images, a tile batch is one tile high, and the full width of the image.
 // For tiled images, a tile batch is a fairly large fixed size ( current 512 pixels, or the tile size of the
@@ -255,14 +255,8 @@ std::string channelNameFromEXR( std::string view, std::string part, std::string 
 // For deep images, the tile batch also contains an extra channel worth of tiles at the end which store the
 // samples offsets.
 //
-// Tile batches are selected using V3i "tileBatchIndex".  The Z component is the subimage to load channels from.
-// The X and Y component select a region of the image.
-// For tiled images, the <0,0> tileBatch is at the origin of the image, and the X and Y components specify
-// how many tile batches to offset from that, horizontally and vertically.
-// For scanline images, Y works the same, but X is always 0, and the tile batch always covers the whole width
-// of the image horizontally ( this means that the left of the tileBatch is aligned to the data window, not
-// the origin ).
-//
+// Tile batches are selected using V3i "tileBatchOrigin".  The Z component is the subimage to load channels from.
+// The X and Y components are the pixel coordinates of the origin of the first tile.
 //
 class File
 {
@@ -495,22 +489,15 @@ class File
 		}
 
 		// Read a chunk of data from the file, formatted as a tile batch that will be stored on the tile batch plug
-		ConstObjectVectorPtr readTileBatch( const Context *c, V3i tileBatchIndex )
+		ConstObjectVectorPtr readTileBatch( const Context *c, V3i tileBatchOrigin )
 		{
 			const View& view = lookupView( c );
-			V2i batchFirstTile = V2i( tileBatchIndex.x, tileBatchIndex.y ) * view.tileBatchSize;
-			Box2i targetRegion = Box2i( batchFirstTile * ImagePlug::tileSize(),
-				( batchFirstTile + view.tileBatchSize ) * ImagePlug::tileSize()
+
+			V2i batchFirstTile = ImagePlug::tileIndex( V2i( tileBatchOrigin.x, tileBatchOrigin.y ) );
+			Box2i targetRegion = Box2i(
+				V2i( tileBatchOrigin.x, tileBatchOrigin.y ),
+				V2i( tileBatchOrigin.x, tileBatchOrigin.y ) + view.tileBatchSize * ImagePlug::tileSize()
 			);
-
-			if( !view.tiled )
-			{
-				// For scanline images, we always treat the tile batch as starting from the left of the data window
-				batchFirstTile.x = ImagePlug::tileIndex( V2i( view.imageSpec.x, 0 ) ).x;
-
-				targetRegion.min.x = view.imageSpec.x;
-				targetRegion.max.x = view.imageSpec.x + view.imageSpec.width;
-			}
 
 			// Do the actual read of data
 
@@ -520,7 +507,7 @@ class File
 			DeepData fileDeepData;
 			Box2i exrDataRegion;
 
-			const int nchannels = readRegion( tileBatchIndex.z, exrTargetRegion, fileData, fileDeepData, exrDataRegion );
+			const int nchannels = readRegion( tileBatchOrigin.z, exrTargetRegion, fileData, fileDeepData, exrDataRegion );
 
 			// Convert the resulting region from readRegion back from EXR coordinates to Gaffer coordinates
 			Box2i fileDataRegion = flopDisplayWindow( exrDataRegion, view.imageSpec.full_y, view.imageSpec.full_height );
@@ -710,17 +697,17 @@ class File
 		}
 
 		// Given a channelName and tileOrigin, return the information necessary to look up the data for this tile.
-		// The tileBatchIndex is used to find a tileBatch, and then the tileBatchSubIndex tells you the index
+		// The tileBatchOrigin is used to find a tileBatch, and then the tileBatchSubIndex tells you the index
 		// within that tile to use
-		void findTile( const Context *c, const std::string &channelName, const Imath::V2i &tileOrigin, V3i &batchIndex, int &batchSubIndex ) const
+		void findTile( const Context *c, const std::string &channelName, const Imath::V2i &tileOrigin, V3i &batchOrigin, int &batchSubIndex ) const
 		{
 			const View& view = lookupView( c );
 			if( !channelName.size() )
 			{
 				// For computing sample offsets
 				// This is a bit of a weird interface, I should probably fix it
-				batchIndex = tileBatchIndex( view, view.firstSubImage, tileOrigin );
-				batchSubIndex = tileBatchSubIndex( view, 0, tileOrigin );
+				batchOrigin = tileBatchOrigin( view, view.firstSubImage, tileOrigin );
+				batchSubIndex = tileBatchSubIndex( view, 0, tileOrigin - V2i( batchOrigin.x, batchOrigin.y ) );
 			}
 			else
 			{
@@ -730,8 +717,8 @@ class File
 					throw IECore::Exception( "OpenImageIOReader : No channel named \"" + channelName + "\"" );
 				}
 				ChannelMapEntry channelMapEntry = findIt->second;
-				batchIndex = tileBatchIndex( view, channelMapEntry.subImage, tileOrigin );
-				batchSubIndex = tileBatchSubIndex( view, channelMapEntry.channelIndex, tileOrigin );
+				batchOrigin = tileBatchOrigin( view, channelMapEntry.subImage, tileOrigin );
+				batchSubIndex = tileBatchSubIndex( view, channelMapEntry.channelIndex, tileOrigin - V2i( batchOrigin.x, batchOrigin.y ) );
 			}
 		}
 
@@ -906,33 +893,35 @@ class File
 			return spec.nchannels;
 		}
 
-		// Given a subImage index, and a tile origin, return an index to identify the tile batch which
+		// Given a subImage index, and a tile origin, return an origin to identify the tile batch
 		// where this channel data will be found
-		V3i tileBatchIndex( const View &view, int subImage, V2i tileOrigin ) const
+		V3i tileBatchOrigin( const View &view, int subImage, V2i tileOrigin ) const
 		{
-			V2i tileBatchOrigin = coordinateDivide( ImagePlug::tileIndex( tileOrigin ), view.tileBatchSize );
-			if( !view.tiled )
+			V2i o;
+
+			if( view.tiled )
 			{
-				tileBatchOrigin.x = 0;
+				// For tiled images, we find which batch we are in by rounding down by the size of a tile batch
+				o = coordinateDivide( ImagePlug::tileIndex( tileOrigin ), view.tileBatchSize ) * view.tileBatchSize * ImagePlug::tileSize();
 			}
-			return V3i( tileBatchOrigin.x, tileBatchOrigin.y, subImage );
+			else
+			{
+				// For scanline images, each tile batch is 1 tile high, and the width of the image,
+				// so the batch for this tile has the current Y origin, and the X is the tile origin
+				// of the left of the image
+				o = ImagePlug::tileOrigin( Imath::V2i( view.imageSpec.x, tileOrigin.y ) );
+			}
+
+			return V3i( o.x, o.y, subImage );
 		}
 
 		// Given a channel index, and a tile origin, return the index within a tile batch where the correct
 		// tile will be found.
-		int tileBatchSubIndex( const View &view, int channelIndex, V2i tileOrigin ) const
+		int tileBatchSubIndex( const View &view, int channelIndex, V2i tileOffset ) const
 		{
 			int tilePlaneSize = view.tileBatchSize.x * view.tileBatchSize.y;
-
-			V2i tileIndex = ImagePlug::tileIndex( tileOrigin );
-			V2i subIndex = tileIndex - coordinateDivide( tileIndex, view.tileBatchSize ) * view.tileBatchSize;
-			if( !view.tiled )
-			{
-				// For scanline images, horizontal index relative to data window
-				subIndex.x = tileIndex.x - ImagePlug::tileIndex( V2i( view.imageSpec.x, view.imageSpec.y ) ).x;
-			}
-
-			return channelIndex * tilePlaneSize + subIndex.y * view.tileBatchSize.x + subIndex.x;
+			V2i subXY = ImagePlug::tileIndex( tileOffset );
+			return channelIndex * tilePlaneSize + subXY.y * view.tileBatchSize.x + subXY.x;
 		}
 
 		inline const View &lookupView( const Context *c ) const
@@ -1212,11 +1201,11 @@ void OpenImageIOReader::hash( const ValuePlug *output, const Context *context, I
 	}
 	else if( output == tileBatchPlug() )
 	{
-		h.append( context->get<V3i>( g_tileBatchIndexContextName ) );
+		h.append( context->get<V3i>( g_tileBatchOriginContextName ) );
 		h.append( context->get<std::string>( ImagePlug::viewNameContextName, ImagePlug::defaultViewName ) );
 
 		Gaffer::Context::EditableScope c( context );
-		c.remove( g_tileBatchIndexContextName );
+		c.remove( g_tileBatchOriginContextName );
 
 		hashFileName( c.context(), h );
 		refreshCountPlug()->hash( h );
@@ -1277,10 +1266,10 @@ void OpenImageIOReader::compute( ValuePlug *output, const Context *context ) con
 	}
 	else if( output == tileBatchPlug() )
 	{
-		V3i tileBatchIndex = context->get<V3i>( g_tileBatchIndexContextName );
+		V3i tileBatchOrigin = context->get<V3i>( g_tileBatchOriginContextName );
 
 		Gaffer::Context::EditableScope c( context );
-		c.remove( g_tileBatchIndexContextName );
+		c.remove( g_tileBatchOriginContextName );
 
 		FilePtr file = std::static_pointer_cast<File>( retrieveFile( c.context() ) );
 
@@ -1290,7 +1279,7 @@ void OpenImageIOReader::compute( ValuePlug *output, const Context *context ) con
 		}
 
 		static_cast<ObjectVectorPlug *>( output )->setValue(
-			file->readTileBatch( context, tileBatchIndex )
+			file->readTileBatch( context, tileBatchOrigin )
 		);
 	}
 	else
@@ -1544,12 +1533,12 @@ IECore::ConstIntVectorDataPtr OpenImageIOReader::computeSampleOffsets( const Ima
 			);
 		}
 
-		V3i tileBatchIndex;
+		V3i tileBatchOrigin;
 		int subIndex;
 		std::string channelName(""); // TODO - should have better interface for selecting sampleOffsets
-		file->findTile( context, channelName, tileOrigin, tileBatchIndex, subIndex );
+		file->findTile( context, channelName, tileOrigin, tileBatchOrigin, subIndex );
 
-		c.set( g_tileBatchIndexContextName, &tileBatchIndex );
+		c.set( g_tileBatchOriginContextName, &tileBatchOrigin );
 
 		ConstObjectVectorPtr tileBatch = tileBatchPlug()->getValue();
 
@@ -1597,11 +1586,11 @@ IECore::ConstFloatVectorDataPtr OpenImageIOReader::computeChannelData( const std
 		);
 	}
 
-	V3i tileBatchIndex;
+	V3i tileBatchOrigin;
 	int subIndex;
-	file->findTile( context, channelName, tileOrigin, tileBatchIndex, subIndex );
+	file->findTile( context, channelName, tileOrigin, tileBatchOrigin, subIndex );
 
-	c.set( g_tileBatchIndexContextName, &tileBatchIndex );
+	c.set( g_tileBatchOriginContextName, &tileBatchOrigin );
 
 	ConstObjectVectorPtr tileBatch = tileBatchPlug()->getValue();
 	ConstObjectPtr curTileChannel;
