@@ -178,8 +178,11 @@ EditScopePtr editScope( const TransformTool::Selection &s )
 
 object acquireTransformEdit( const TransformTool::Selection &s, bool createIfNecessary )
 {
-	IECorePython::ScopedGILRelease gilRelease;
-	auto p = s.acquireTransformEdit( createIfNecessary );
+	std::optional<EditScopeAlgo::TransformEdit> p;
+	{
+		IECorePython::ScopedGILRelease gilRelease;
+		p = s.acquireTransformEdit( createIfNecessary );
+	}
 	return p ? object( *p ) : object();
 }
 
