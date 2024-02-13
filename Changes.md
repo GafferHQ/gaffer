@@ -111,7 +111,7 @@ API
 - ImageTestCase : in `assertImageEqual` function, maxDifference may now be a tuple, to specify an asymmetric range.
 - Editor : Added `Settings` class, which should be used to store settings for subclasses. See LightEditor and ImageInspector for examples.
 - DeepPixelAccessor : Added utility class for accessing deep samples while abstracting away the underlying tile storage.
-- V3f : Added implicit conversion to Color3f, among other things enabling calls to `Color3fPlug.setValue( V3f() )`.
+- Color3fPlug : Added `setValue( V3f() )` overload.
 
 Breaking Changes
 ----------------
