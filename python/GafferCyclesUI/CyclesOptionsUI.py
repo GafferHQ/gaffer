@@ -45,7 +45,14 @@ def __sessionSummary( plug ) :
 	info = []
 
 	if plug["device"]["enabled"].getValue() :
-		info.append( "Device(s) {}".format( plug["device"]["value"].getValue() ) )
+		# We don't have enough space to display the full device string, but the
+		# `:00` device indices are kindof confusing. Just strip off the
+		# indices so we're showing a list of device types.
+		devices = set(
+			d.partition( ":" )[0]
+			for d in plug["device"]["value"].getValue().split()
+		)
+		info.append( " + ".join( devices ) )
 
 	if plug["shadingSystem"]["enabled"].getValue() :
 		info.append( "Shading System {}".format( plug["shadingSystem"]["value"].getValue() ) )
@@ -359,57 +366,51 @@ def __logSummary( plug ) :
 
 	return ", ".join( info )
 
-def __devicesPreset() :
+def __registerDevicePresets() :
 
 	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:CPU", "CPU" )
 
-	cudaIndex = 0
-	hipIndex = 0
-	optixIndex = 0
-	metalIndex = 0
-
+	typeIndices = {}
 	for device in GafferCycles.devices :
 
-		index = 0
-		if device["type"] == "MULTI" or device["type"] == "CPU" :
+		if device["type"] == "CPU" :
 			continue
-		elif device["type"] == "CUDA" :
-			index = cudaIndex
-			cudaIndex += 1
-		elif device["type"] == "HIP" :
-			index = hipIndex
-			hipIndex += 1
-		elif device["type"] == "OPTIX" :
-			index = optixIndex
-			optixIndex += 1
-		elif device["type"] == "METAL" :
-			index = metalIndex
-			metalIndex += 1
-		Gaffer.Metadata.registerValue(
-			GafferCycles.CyclesOptions,
-			"options.device.value",
-			"preset:%s:%02i - %s" % ( device["type"], index, device["description"] ),
-			"%s:%02i" % ( device["type"], index )
-			)
-		Gaffer.Metadata.registerValue(
-			GafferCycles.CyclesOptions,
-			"options.device.value",
-			"preset:CPU and %s:%02i - %s" % ( device["type"], index, device["description"] ),
-			"CPU %s:%02i" % ( device["type"], index )
-			)
 
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:All CUDA", "CUDA:*" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:All OptiX", "OPTIX:*" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:All HIP", "HIP:*" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:All Metal", "METAL:*" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:CPU and all CUDA", "CPU CUDA:*" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:CPU and all OptiX", "CPU OPTIX:*" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:CPU and all HIP", "CPU HIP:*" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:CPU and all Metal", "CPU METAL:*" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:CPU and first CUDA found", "CPU CUDA:00" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:CPU and first OptiX found", "CPU OPTIX:00" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:CPU and first HIP found", "CPU HIP:00" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.device.value", "preset:CPU and first Metal found", "CPU METAL:00" )
+		typeIndex = typeIndices.setdefault( device["type"], 0 )
+		typeIndices[device["type"]] += 1
+
+		Gaffer.Metadata.registerValue(
+			GafferCycles.CyclesOptions,
+			"options.device.value",
+			"preset:{}/{}".format( device["type"], device["description"] ),
+			"{}:{:02}".format( device["type"], typeIndex )
+		)
+
+		Gaffer.Metadata.registerValue(
+			GafferCycles.CyclesOptions,
+			"options.device.value",
+			"preset:{}/{} + CPU".format( device["type"], device["description"] ),
+			"CPU {}:{:02}".format( device["type"], typeIndex )
+		)
+
+	for deviceType, count in typeIndices.items() :
+
+		if count <= 1 :
+			continue
+
+		Gaffer.Metadata.registerValue(
+			GafferCycles.CyclesOptions,
+			"options.device.value",
+			"preset:{}/All".format( deviceType ),
+			"{}:*".format( deviceType )
+		)
+
+		Gaffer.Metadata.registerValue(
+			GafferCycles.CyclesOptions,
+			"options.device.value",
+			"preset:{}/All + CPU".format( deviceType ),
+			"CPU {}:*".format( deviceType )
+		)
 
 Gaffer.Metadata.registerNode(
 
@@ -472,6 +473,14 @@ Gaffer.Metadata.registerNode(
 
 			"layout:section", "Session",
 			"label", "Device(s)",
+
+		],
+
+		"options.device.value" : [
+
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+			"presetsPlugValueWidget:allowCustom", True
 
 		],
 
@@ -1684,7 +1693,7 @@ Gaffer.Metadata.registerNode(
 	}
 )
 
-__devicesPreset()
+__registerDevicePresets()
 
 if not GafferCycles.withTextureCache :
 
