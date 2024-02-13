@@ -74,9 +74,7 @@ py::list getDevices()
 
 	py::list result;
 
-	std::vector<ccl::DeviceInfo> devices = IECoreCycles::devices();
-
-	for( const ccl::DeviceInfo &device : devices )
+	for( const ccl::DeviceInfo &device : ccl::Device::available_devices() )
 	{
 		py::dict d;
 		d["type"] = ccl::Device::string_from_type( device.type );

@@ -3285,7 +3285,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			ccl::DeviceInfo deviceFallback;
 
 			bool deviceAvailable = false;
-			for( const ccl::DeviceInfo& device : IECoreCycles::devices() )
+			for( const ccl::DeviceInfo &device : ccl::Device::available_devices() )
 			{
 				if( deviceTypeFallback == device.type )
 				{
@@ -3307,7 +3307,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 			else
 			{
-				for( const ccl::DeviceInfo& device : IECoreCycles::devices() )
+				for( const ccl::DeviceInfo &device : ccl::Device::available_devices() )
 				{
 					if( m_deviceName ==  device.id )
 					{
@@ -3842,7 +3842,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			int indexHIP = 0;
 			int indexOptiX = 0;
 			int indexMetal = 0;
-			for( const ccl::DeviceInfo &device : IECoreCycles::devices() )
+			for( const ccl::DeviceInfo &device : ccl::Device::available_devices() )
 			{
 				if( device.type == ccl::DEVICE_CPU )
 				{
