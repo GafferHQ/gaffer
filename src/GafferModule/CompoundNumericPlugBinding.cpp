@@ -99,8 +99,8 @@ class CompoundNumericPlugSerialiser : public ValuePlugSerialiser
 
 };
 
-template<typename T>
-void setValue( T *plug, const typename T::ValueType value )
+template<typename T, typename ValueType = typename T::ValueType>
+void setValue( T *plug, const ValueType &value )
 {
 	// we use a GIL release here to prevent a lock in the case where this triggers a graph
 	// evaluation which decides to go back into python on another thread:
@@ -136,12 +136,12 @@ void ungang( T *plug )
 }
 
 template<typename T>
-void bind()
+PlugClass<T> bind()
 {
 	using V = typename T::ValueType;
 
-	scope s = PlugClass<T>()
-		.def( init<const char *, Plug::Direction, V, V, V, unsigned, IECore::GeometricData::Interpretation>(
+	PlugClass<T> cls;
+		cls.def( init<const char *, Plug::Direction, V, V, V, unsigned, IECore::GeometricData::Interpretation>(
 				(
 					boost::python::arg_( "name" )=GraphComponent::defaultName<T>(),
 					boost::python::arg_( "direction" )=Plug::In,
@@ -168,14 +168,14 @@ void bind()
 		.def( "__repr__", &repr<T> )
 	;
 
+	scope s = cls;
+
 	const PyTypeObject *valueType = boost::python::to_python_value<const V &>().get_pytype();
 	s.attr( "ValueType" ) = boost::python::object( boost::python::handle<>( boost::python::borrowed( const_cast<PyTypeObject *>( valueType ) ) ) );
 
-	// Alow V3f to be passed to Color3f arguments, as it can be in C++.
-	implicitly_convertible<Imath::V3f, Imath::Color3f>();
-
 	Serialisation::registerSerialiser( T::staticTypeId(), new CompoundNumericPlugSerialiser<T>() );
 
+	return cls;
 }
 
 } // namespace
@@ -186,6 +186,8 @@ void GafferModule::bindCompoundNumericPlug()
 	bind<V3fPlug>();
 	bind<V2iPlug>();
 	bind<V3iPlug>();
-	bind<Color3fPlug>();
+	bind<Color3fPlug>()
+		.def( "setValue", &setValue<Color3fPlug, Imath::V3f> )
+	;
 	bind<Color4fPlug>();
 }
