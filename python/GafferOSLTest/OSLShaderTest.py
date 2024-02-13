@@ -1309,5 +1309,17 @@ class OSLShaderTest( GafferOSLTest.OSLTestCase ) :
 		self.assertIsInstance( network, IECoreScene.ShaderNetwork )
 		self.assertEqual( network.outputShader().name, "Surface/Constant" )
 
+	def testLoadColorToVectorFromVersion1_3( self ) :
+
+		script = Gaffer.ScriptNode()
+		script["fileName"].setValue( pathlib.Path( __file__ ).parent / "scripts" / "colorToVector-1.3.11.0.gfr" )
+		script.load()
+
+		self.assertEqual( script["ColorToVector"]["parameters"]["col"].getInput(), script["VectorToColor"]["out"]["c"] )
+		self.assertEqual( script["ColorToVector1"]["parameters"]["col"].getValue(), imath.Color3f( 1, 2, 3 ) )
+		self.assertEqual( script["ColorToVector2"]["parameters"]["col"].getInput(), script["FloatToColor"]["out"]["c"] )
+		self.assertEqual( script["VectorToColor1"]["parameters"]["vec"].getInput(), script["ColorToVector"]["out"]["vec"] )
+		self.assertEqual( script["ColorToFloat"]["parameters"]["c"].getInput(), script["ColorToVector"]["out"]["vec"] )
+
 if __name__ == "__main__":
 	unittest.main()

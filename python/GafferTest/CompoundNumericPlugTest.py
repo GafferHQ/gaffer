@@ -246,6 +246,12 @@ class CompoundNumericPlugTest( GafferTest.TestCase ) :
 		self.assertTrue( p3[2].getInput().isSame( p4[2] ) )
 		self.assertEqual( p4[3].outputs(), () )
 
+	def testColor3fAcceptsV3fValue( self ) :
+
+		p = Gaffer.Color3fPlug()
+		p.setValue( imath.V3f( 1, 2, 3 ) )
+		self.assertEqual( p.getValue(), imath.Color3f( 1, 2, 3 ) )
+
 	def testColor4fDoesntAcceptColor3fInput( self ) :
 
 		p4 = Gaffer.Color4fPlug()

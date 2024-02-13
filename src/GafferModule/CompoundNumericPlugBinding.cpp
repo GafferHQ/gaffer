@@ -171,6 +171,9 @@ void bind()
 	const PyTypeObject *valueType = boost::python::to_python_value<const V &>().get_pytype();
 	s.attr( "ValueType" ) = boost::python::object( boost::python::handle<>( boost::python::borrowed( const_cast<PyTypeObject *>( valueType ) ) ) );
 
+	// Alow V3f to be passed to Color3f arguments, as it can be in C++.
+	implicitly_convertible<Imath::V3f, Imath::Color3f>();
+
 	Serialisation::registerSerialiser( T::staticTypeId(), new CompoundNumericPlugSerialiser<T>() );
 
 }
