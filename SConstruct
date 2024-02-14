@@ -848,11 +848,11 @@ if not exrVersionHeader :
 	Exit( 1 )
 
 for line in open( str( exrVersionHeader ) ) :
-	m = re.match( r'^#define OPENEXR_VERSION_STRING "(\d)\.(\d)\.(\d)"$', line )
+	m = re.match( r'^#define OPENEXR_VERSION_STRING "(\d+)\.(\d+)\.(\d+)"$', line )
 	if m :
 		baseLibEnv["IMATH_MAJOR_VERSION"] = int( m.group( 1 ) )
 
-if baseLibEnv["IMATH_MAJOR_VERSION"] is None :
+if baseLibEnv.get( "IMATH_MAJOR_VERSION", None ) is None :
 	sys.stderr.write( "ERROR : unable to determine version from \"{}\".\n".format( exrVersionHeader ) )
 	Exit( 1 )
 
