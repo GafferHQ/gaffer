@@ -62,9 +62,21 @@ class GAFFERSCENEUI_API LightPositionTool : public GafferSceneUI::TransformTool
 
 		GAFFER_NODE_DECLARE_TYPE( GafferSceneUI::LightPositionTool, LightPositionToolTypeId, TransformTool );
 
+		Gaffer::IntPlug *modePlug();
+		const Gaffer::IntPlug *modePlug() const;
+
 		// Positions the current selection to cast a shadow from `shadowPivot` to `shadowTarget`,
 		// with the light `targetDistance` from the pivot. All coordinates are in world space.
 		void positionShadow( const Imath::V3f &shadowPivot, const Imath::V3f &shadowTarget, const float targetDistance );
+
+		enum class Mode
+		{
+			Shadow,
+			Highlight,
+
+			First = Shadow,
+			Last = Highlight
+		};
 
 	protected :
 

@@ -272,9 +272,16 @@ void GafferSceneUIModule::bindTools()
 		GafferBindings::SignalClass<LightTool::SelectionChangedSignal, GafferBindings::DefaultSignalCaller<LightTool::SelectionChangedSignal>, SelectionChangedSlotCaller<LightTool>>( "SelectionChangedSignal" );
 	}
 
-	GafferBindings::NodeClass<LightPositionTool>( nullptr, no_init )
-		.def( init<SceneView *>() )
-		.def( "positionShadow", &LightPositionTool::positionShadow )
-	;
+	{
+		scope s = GafferBindings::NodeClass<LightPositionTool>( nullptr, no_init )
+			.def( init<SceneView *>() )
+			.def( "positionShadow", &LightPositionTool::positionShadow )
+		;
+
+		enum_<LightPositionTool::Mode>( "Mode" )
+			.value( "Shadow", LightPositionTool::Mode::Shadow )
+			.value( "Highlight", LightPositionTool::Mode::Highlight )
+		;
+	}
 
 }

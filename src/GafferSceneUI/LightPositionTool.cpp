@@ -578,6 +578,18 @@ LightPositionTool::LightPositionTool( SceneView *view, const std::string &name )
 	plugSetSignal().connect( boost::bind( &LightPositionTool::plugSet, this, ::_1 ) );
 
 	storeIndexOfNextChild( g_firstPlugIndex );
+
+	addChild( new IntPlug( "mode", Plug::In, (int)Mode::Shadow, (int)Mode::First, (int)Mode::Last ) );
+}
+
+IntPlug *LightPositionTool::modePlug()
+{
+	return getChild<IntPlug>( g_firstPlugIndex );
+}
+
+const IntPlug *LightPositionTool::modePlug() const
+{
+	return getChild<IntPlug>( g_firstPlugIndex );
 }
 
 LightPositionTool::~LightPositionTool()
@@ -956,7 +968,11 @@ void LightPositionTool::setTargetMode( TargetMode targeted )
 	switch( m_targetMode )
 	{
 		case TargetMode::None : GafferUI::Pointer::setCurrent( "" ); break;
-		case TargetMode::Pivot : GafferUI::Pointer::setCurrent( "pivot" ); break;
+		case TargetMode::Pivot :
+			GafferUI::Pointer::setCurrent(
+				modePlug()->getValue() == (int)Mode::Shadow ? "pivot" : ""
+			);
+			break;
 		case TargetMode::Target : GafferUI::Pointer::setCurrent( "target" ); break;
 	}
 }
