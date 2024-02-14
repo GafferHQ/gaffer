@@ -37,6 +37,7 @@
 import collections
 import functools
 import imath
+import traceback
 
 import IECore
 
@@ -753,17 +754,36 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 		with self.getContext() :
 			return plug["globals"].getValue().get( "option:renderPass:names", IECore.StringVectorData() )
 
-	def __addButtonClicked( self, button ) :
+	def __renderPassCreationDialogue( self ) :
 
 		editScopeInput = self.__settingsNode["editScope"].getInput()
-		if editScopeInput is None :
-			return
+		assert( editScopeInput is not None )
 
 		editScope = editScopeInput.node()
 		dialogue = _RenderPassCreationDialogue( self.__renderPassNames( self.__settingsNode["in"] ), editScope )
-		renderPassName = dialogue.waitForRenderPassName( parentWindow = button.ancestor( GafferUI.Window ) )
+		renderPassName = dialogue.waitForRenderPassName( parentWindow = self.ancestor( GafferUI.Window ) )
 		if renderPassName :
 			self.__addRenderPass( renderPassName, editScope )
+
+	def __addButtonClicked( self, button ) :
+
+		menuDefinition = IECore.MenuDefinition()
+		self.addRenderPassButtonMenuSignal()( menuDefinition, self )
+
+		if menuDefinition.size() == 0 :
+			self.__renderPassCreationDialogue()
+		elif menuDefinition.size() == 1 :
+			_, item = menuDefinition.items()[0]
+			item.command()
+		else :
+			menuDefinition.prepend(
+				"Add...",
+				{
+					"command" : Gaffer.WeakMethod( self.__renderPassCreationDialogue )
+				}
+			)
+			self.__popupMenu = GafferUI.Menu( menuDefinition )
+			self.__popupMenu.popup( parent = self )
 
 	def __removeButtonClicked( self, button ) :
 
@@ -804,6 +824,23 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 
 		self.__addButton.setEnabled( editable )
 		self.__addButton.setToolTip( "Click to add render pass." if editable else "To add a render pass, first choose an editable Edit Scope." )
+
+	__addRenderPassButtonMenuSignal = None
+	## This signal is emitted whenever the add render pass button is clicked.
+	# If the resulting menu definition has been populated with items,
+	# a popup menu will be presented from the button.
+	# If only a single item is present, its command will be called
+	# immediately instead of presenting a menu.
+	# If no items are present, then the default behaviour is to
+	# add a single new render pass with a user specified name.
+
+	@classmethod
+	def addRenderPassButtonMenuSignal( cls ) :
+
+		if cls.__addRenderPassButtonMenuSignal is None :
+			cls.__addRenderPassButtonMenuSignal = _AddButtonMenuSignal()
+
+		return cls.__addRenderPassButtonMenuSignal
 
 GafferUI.Editor.registerType( "RenderPassEditor", RenderPassEditor )
 
@@ -1048,3 +1085,28 @@ class _RenderPassCreationDialogue( GafferUI.Dialogue ) :
 		self.__confirmButton.setEnabled( unique and name != "" )
 		self.__confirmButton.setImage( None if unique else "warningSmall.png" )
 		self.__confirmButton.setToolTip( "" if unique else "A render pass named '{}' already exists.".format( name ) )
+
+# Signal with custom result combiner to prevent bad
+# slots blocking the execution of others.
+class _AddButtonMenuSignal( Gaffer.Signals.Signal2 ) :
+
+	def __init__( self ) :
+
+		Gaffer.Signals.Signal2.__init__( self, self.__combiner )
+
+	@staticmethod
+	def __combiner( results ) :
+
+		while True :
+			try :
+				next( results )
+			except StopIteration :
+				return
+			except Exception as e :
+				# Print message but continue to execute other slots
+				IECore.msg(
+					IECore.Msg.Level.Error,
+					"RenderPassEditor Add Button menu", traceback.format_exc()
+				)
+				# Remove circular references that would keep the widget in limbo.
+				e.__traceback__ = None

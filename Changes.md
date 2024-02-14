@@ -34,6 +34,7 @@ API
 
 - EditScopeAlgo : Added support for creating render passes.
 - RenderPasses : Added `registerRenderPassNameWidget()` and `createRenderPassNameWidget()` methods for registration and creation of the widget used for editing render pass names.
+- RenderPassEditor : Added `addRenderPassButtonMenuSignal()` to allow customisation of the add render pass button behaviour.
 - ConfirmationDialogue : The cancel button may now be omitted by passing `cancelLabel = None` to the constructor.
 
 Build
