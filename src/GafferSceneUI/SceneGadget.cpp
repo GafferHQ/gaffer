@@ -48,6 +48,8 @@
 
 #include "tbb/enumerable_thread_specific.h"
 
+#include <math.h>
+
 using namespace std;
 using namespace boost::placeholders;
 using namespace Imath;
@@ -654,6 +656,75 @@ size_t SceneGadget::objectsAt(
 	}
 
 	return paths.size();
+}
+
+std::optional<V3f> SceneGadget::normalAt( const IECore::LineSegment3f &lineInGadgetSpace ) const
+{
+	V3f centerP;
+	ScenePlug::ScenePath centerPath;
+
+	auto viewportGadget = ancestor<ViewportGadget>();
+
+	// Transforming from raster to gadget space (done by `Widget`) and back to raster space
+	// can introduce enough floating point error to make positions, and therefore normals,
+	// incorrect. We expect that `lineInGadgetSpace` corresponds to the center of a pixel,
+	// so we snap to the nearest center as a corrective.
+	V2f centerRasterP = viewportGadget->gadgetToRasterSpace( lineInGadgetSpace.p0, this );
+	centerRasterP.x = (int)centerRasterP.x + 0.5f;
+	centerRasterP.y = (int)centerRasterP.y + 0.5f;
+
+	if( objectAt( viewportGadget->rasterToGadgetSpace( centerRasterP, this ), centerPath, centerP ) )
+	{
+		// Find the average normal of the triangles formed by `pixelPosition` and
+		// left + top, right + top, left + bottom and right + bottom depth samples
+		// where each pair has the same object ID as the center pixel.
+
+		const float spread = 1.f;
+
+		int sampleCount = 0;
+		V3f gadgetNormal( 0 );
+
+		ScenePlug::ScenePath prevPath;
+		V3f prevP;
+		bool prevHit = objectAt(
+			viewportGadget->rasterToGadgetSpace( centerRasterP + V2f( -spread, 0 ), this ),
+			prevPath,
+			prevP
+		);
+
+		std::array<V2f, 4> offsetList{
+			V2f( 0, -spread ),
+			V2f( spread, 0 ),
+			V2f( 0, spread ),
+			V2f( -spread, 0 )  // wrap back to left for final comparison
+		};
+
+		for( const auto &offset : offsetList )
+		{
+			V2f rasterP = centerRasterP + offset;
+			ScenePlug::ScenePath hitPath;
+			V3f hitP;
+			bool hit = objectAt( viewportGadget->rasterToGadgetSpace( rasterP, this ), hitPath, hitP );
+
+			if( hit && prevHit && prevPath == centerPath && hitPath == centerPath )
+			{
+				gadgetNormal += ( hitP - centerP ).cross( prevP - centerP ).normalized();
+				sampleCount++;
+			}
+
+			prevPath = hitPath;
+			prevP = hitP;
+			prevHit = hit;
+		}
+
+		if( sampleCount > 0 )
+		{
+			gadgetNormal /= sampleCount;
+			return gadgetNormal;
+		}
+	}
+
+	return std::nullopt;
 }
 
 IECore::PathMatcher SceneGadget::convertSelection( IECore::UIntVectorDataPtr ids ) const

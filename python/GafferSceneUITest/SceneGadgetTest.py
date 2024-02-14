@@ -34,9 +34,11 @@
 #
 ##########################################################################
 
+import math
 import os
 import time
 import unittest
+import random
 
 import imath
 
@@ -105,6 +107,16 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		gadgetLine = viewportGadget.rasterToGadgetSpace( rasterPosition, gadget )
 
 		self.assertEqual( gadget.objectAt( gadgetLine ), path )
+
+	def assertNormalAt( self, gadget, gadgetLine, normal ) :
+
+		n = gadget.normalAt( gadgetLine )
+
+		if normal is None :
+			self.assertIsNone( n )
+		else :
+			self.assertIsNotNone( n )
+			self.assertLess( math.acos( n.dot( normal ) ), math.radians( 5.0 ) )
 
 	def assertObjectsAt( self, gadget, ndcBox, paths ) :
 
@@ -674,6 +686,71 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 			self.waitForRender( sg )
 			sg.setRenderer( "OpenGL" )
 			self.waitForRender( sg )
+
+	def __raySphereIntersection( self, origin, direction, center, radius ) :
+
+		origin -= center
+		b = 2 * origin.dot( direction )
+		c = origin.dot( origin ) - radius * radius
+
+		discriminant = b * b - 4.0 * c
+		if discriminant < 0 :
+			return None
+
+		t = ( -b - math.sqrt( discriminant ) ) * 0.5
+
+		return origin + direction * t
+
+	def testNormalAt( self ) :
+
+		s = Gaffer.ScriptNode()
+		s["s"] = GafferScene.Sphere()
+
+		sg = GafferSceneUI.SceneGadget()
+		sg.setRenderer( self.renderer )
+		sg.setScene( s["s"]["out"] )
+		sg.setMinimumExpansionDepth( 100 )
+
+		with GafferUI.Window() as w :
+			gw = GafferUI.GadgetWidget( sg )
+
+		w.setVisible( True )
+		self.waitForIdle( 1000 )
+
+		vp = gw.getViewportGadget()
+
+		vp.setPlanarMovement( False )
+		vpSize = imath.V2i( 500, 500 )
+		vp.setViewport( vpSize )
+
+		c = IECoreScene.Camera()
+		c.setProjection( "perspective" )
+		c.setFocalLength( 36 )  # Use 36 to make the view plane at Z = 0 2.0 units wide
+		c.setAperture( imath.V2f( 36, 36 ) )
+		vp.setCamera( c )
+
+		cameraTransform = imath.M44f()
+		cameraOrigin = imath.V3f( 0.0, 0.0, 2.0 )
+		cameraTransform.translate( imath.V3f( 0, 0, 2  ) )
+		vp.setCameraTransform( cameraTransform )
+
+		self.waitForRender( sg )
+
+		random.seed( 1 )
+
+		for i in range( 100 ) :
+			# `rasterPosition` from the top-left corner of the viewport, +Y going down
+			rasterPosition = imath.V2f( int( random.random() * vpSize.x ), int( random.random() * vpSize.y ) )
+			gadgetLineCenter = vp.rasterToGadgetSpace( rasterPosition + imath.V2f( 0.5 ), sg )
+
+			sphereIntersection = self.__raySphereIntersection(
+				gadgetLineCenter.p0,
+				gadgetLineCenter.normalizedDirection(),
+				imath.V3f( 0.0 ),
+				1.0
+			)
+
+			self.assertNormalAt( sg, gadgetLineCenter, sphereIntersection )
 
 	def setUp( self ) :
 
