@@ -69,6 +69,16 @@ class GAFFERSCENEUI_API LightPositionTool : public GafferSceneUI::TransformTool
 		// with the light `targetDistance` from the pivot. All coordinates are in world space.
 		void positionShadow( const Imath::V3f &shadowPivot, const Imath::V3f &shadowTarget, const float targetDistance );
 
+		// Positions the current selection to be along the ray that is the reflection of the line
+		// from `viewpoint` to `highlightTarget` about `normal`, `targetDistance` from `highlightTarget`.
+		// All coordinates are in world space.
+		void positionHighlight(
+			const Imath::V3f &highlightTarget,
+			const Imath::V3f &viewpoint,
+			const Imath::V3f &normal,
+			const float targetDistance
+		);
+
 		enum class Mode
 		{
 			Shadow,
@@ -129,11 +139,18 @@ class GAFFERSCENEUI_API LightPositionTool : public GafferSceneUI::TransformTool
 
 		bool placeTarget( const IECore::LineSegment3f &eventLine );
 
+		void translateAndOrient(
+			const Selection &s,
+			const Imath::M44f &localTransform,
+			const Imath::V3f &newPosition,
+			const Imath::M44f &newOrientation
+		) const;
+
 		enum class TargetMode
 		{
 			None,
 			Pivot,
-			Target
+			Target,
 		};
 
 		void setTargetMode( TargetMode mode );
