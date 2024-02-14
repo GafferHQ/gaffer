@@ -1,0 +1,33 @@
+import Gaffer
+import GafferCycles
+import GafferImage
+import imath
+
+Gaffer.Metadata.registerValue( parent, "serialiser:milestoneVersion", 1, persistent=False )
+Gaffer.Metadata.registerValue( parent, "serialiser:majorVersion", 3, persistent=False )
+Gaffer.Metadata.registerValue( parent, "serialiser:minorVersion", 7, persistent=False )
+Gaffer.Metadata.registerValue( parent, "serialiser:patchVersion", 0, persistent=False )
+
+__children = {}
+
+parent["variables"].addChild( Gaffer.NameValuePlug( "image:catalogue:port", Gaffer.IntPlug( "value", defaultValue = 0, flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ), "imageCataloguePort", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+parent["variables"].addChild( Gaffer.NameValuePlug( "project:name", Gaffer.StringPlug( "value", defaultValue = 'default', flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ), "projectName", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+parent["variables"].addChild( Gaffer.NameValuePlug( "project:rootDirectory", Gaffer.StringPlug( "value", defaultValue = '$HOME/gaffer/projects/${project:name}', flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ), "projectRootDirectory", Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic ) )
+__children["openColorIO"] = GafferImage.OpenColorIOConfigPlug( "openColorIO", flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, )
+parent.addChild( __children["openColorIO"] )
+__children["defaultFormat"] = GafferImage.FormatPlug( "defaultFormat", defaultValue = GafferImage.Format( 1920, 1080, 1.000 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, )
+parent.addChild( __children["defaultFormat"] )
+__children["principled_bsdf"] = GafferCycles.CyclesShader( "principled_bsdf" )
+parent.addChild( __children["principled_bsdf"] )
+__children["principled_bsdf"].loadShader( "principled_bsdf" )
+__children["principled_bsdf"].addChild( Gaffer.V2fPlug( "__uiPosition", defaultValue = imath.V2f( 0, 0 ), flags = Gaffer.Plug.Flags.Default | Gaffer.Plug.Flags.Dynamic, ) )
+parent["variables"]["imageCataloguePort"]["value"].setValue( 2528 )
+Gaffer.Metadata.registerValue( parent["variables"]["imageCataloguePort"], 'readOnly', True )
+Gaffer.Metadata.registerValue( parent["variables"]["projectName"]["name"], 'readOnly', True )
+Gaffer.Metadata.registerValue( parent["variables"]["projectRootDirectory"]["name"], 'readOnly', True )
+__children["principled_bsdf"]["parameters"]["emission"].setValue( imath.Color3f( 0.5, 0.600000024, 0.699999988 ) )
+__children["principled_bsdf"]["__uiPosition"].setValue( imath.V2f( -11.7127047, 3.72868872 ) )
+
+
+del __children
+

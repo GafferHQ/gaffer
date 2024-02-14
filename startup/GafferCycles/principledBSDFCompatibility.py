@@ -67,7 +67,7 @@ def __cyclesShaderGetItem( originalGetItem ) :
 	def getItem( self, key ) :
 
 		result = originalGetItem( self, key )
-		if key == "parameters" :
+		if key == "parameters" and isinstance( result, Gaffer.Plug ) :
 			scriptNode = self.ancestor( Gaffer.ScriptNode )
 			if scriptNode is not None and scriptNode.isExecuting() :
 				return __ParametersPlugProxy( result )
