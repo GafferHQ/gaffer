@@ -734,9 +734,11 @@ class PathListingWidget( GafferUI.Widget ) :
 
 		index = self.__indexAt( event.line.p0 )
 		if index is not None :
-			GafferUI.Pointer.setCurrent( "values" )
+			value = self.getColumns()[index.column()].cellData( path ).value
+			if value is not None :
+				GafferUI.Pointer.setCurrent( "values" )
 
-			return self.getColumns()[index.column()].cellData( path ).value
+				return value
 
 		return None
 

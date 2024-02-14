@@ -14,6 +14,7 @@ Fixes
 - PythonCommand : Fixed misleading results for `repr( variables )` and `str( variables )`, which would suggest the dictionary was empty when it was not.
 - CompoundObject : Fixed crashes in Python bindings caused by passing `None` as a key.
 - Windows : Fixed "{path} was unexpected at this time." startup error when environment variables such as `PATH` contain `"` characters.
+- PathListingWidget : Fixed bug which caused the pointer to be stuck displaying the "values" icon after dragging cells with no value.
 
 Build
 -----
