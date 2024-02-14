@@ -13,6 +13,7 @@ Fixes
 - Viewer : Fixed context handling bug in the shader view (#5654).
 - PythonCommand : Fixed misleading results for `repr( variables )` and `str( variables )`, which would suggest the dictionary was empty when it was not.
 - CompoundObject : Fixed crashes in Python bindings caused by passing `None` as a key.
+- Windows : Fixed "{path} was unexpected at this time." startup error when environment variables such as `PATH` contain `"` characters.
 
 Build
 -----
