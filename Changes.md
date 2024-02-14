@@ -15,6 +15,7 @@ Fixes
 - CompoundObject : Fixed crashes in Python bindings caused by passing `None` as a key.
 - Windows : Fixed "{path} was unexpected at this time." startup error when environment variables such as `PATH` contain `"` characters.
 - PathListingWidget : Fixed bug which caused the pointer to be stuck displaying the "values" icon after dragging cells with no value.
+- SceneAlgo : Fixed computation of history through Expression nodes.
 
 Build
 -----

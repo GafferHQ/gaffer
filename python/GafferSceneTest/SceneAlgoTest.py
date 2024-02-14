@@ -35,6 +35,7 @@
 ##########################################################################
 
 import imath
+import inspect
 import unittest
 
 import IECore
@@ -1802,6 +1803,123 @@ class SceneAlgoTest( GafferSceneTest.SceneTestCase ) :
 			# isn't leaked into the context used to evaluate the globals.
 			context["scene:path"] = IECore.InternedStringVectorData( [ "plane" ] )
 			assertOptionHistory( "render:camera", nameSwitch["in"][1]["value"], "/020" )
+
+	def testOptionHistoryWithExpression( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["options"] = GafferScene.StandardOptions()
+		script["options"]["options"]["renderCamera"]["enabled"].setValue( True )
+		script["options"]["options"]["renderCamera"]["value"].setValue( "test" )
+
+		script["dot"] = Gaffer.Dot()
+		script["dot"].setup( script["options"]["out"] )
+		script["dot"]["in"].setInput( script["options"]["out"] )
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression( inspect.cleandoc(
+		"""
+		globals = parent["dot"]["in"]["globals"]
+		globals["option:render:camera"] = IECore.StringData( "expression" )
+		parent["dot"]["out"]["globals"] = globals
+		"""
+		) )
+
+		history = GafferScene.SceneAlgo.history( script["dot"]["out"]["globals"] )
+		optionHistory = GafferScene.SceneAlgo.optionHistory( history, "render:camera" )
+
+		self.__assertOptionHistory( optionHistory, [], script["dot"]["out"], "render:camera", "expression", 1 )
+		self.__assertOptionHistory( optionHistory, [ 0 ], script["dot"]["in"], "render:camera", "test", 1 )
+		self.__assertOptionHistory( optionHistory, [ 0, 0 ], script["options"]["out"], "render:camera", "test", 0 )
+
+	def testHistoryWithExpression( self ) :
+
+		script = Gaffer.ScriptNode()
+
+		script["options"] = GafferScene.StandardOptions()
+		script["options"]["options"]["renderCamera"]["enabled"].setValue( True )
+		script["options"]["options"]["renderCamera"]["value"].setValue( "test" )
+
+		script["dot"] = Gaffer.Dot()
+		script["dot"].setup( script["options"]["out"] )
+		script["dot"]["in"].setInput( script["options"]["out"] )
+
+		script["expression"] = Gaffer.Expression()
+		script["expression"].setExpression( inspect.cleandoc(
+		"""
+		globals = parent["dot"]["in"]["globals"]
+		globals["option:render:camera"] = IECore.StringData( "expression" )
+		parent["dot"]["out"]["globals"] = globals
+		"""
+		) )
+
+		def runTest() :
+
+			history = GafferScene.SceneAlgo.history( script["dot"]["out"]["globals"] )
+
+			for plug in [
+				script["dot"]["out"],
+				script["dot"]["in"],
+				script["options"]["out"],
+			] :
+				self.assertEqual( history.scene, plug )
+				self.assertLessEqual( len( history.predecessors ), 1 )
+				history = history.predecessors[0] if history.predecessors else None
+
+			self.assertIsNone( history )
+
+		# Test running the test while everything is already cached still works, and doesn't add any
+		# new entries to the cache
+		Gaffer.ValuePlug.clearHashCache()
+		runTest()
+		before = Gaffer.ValuePlug.hashCacheTotalUsage()
+		runTest()
+		self.assertEqual( Gaffer.ValuePlug.hashCacheTotalUsage(), before )
+
+		# Test that even the processes that aren't reading the cache still write to the cache, by
+		# making sure that a subsequent globalsHash doesn't need to do anything
+		Gaffer.ValuePlug.clearHashCache()
+		runTest()
+		with Gaffer.PerformanceMonitor() as pm :
+			script["dot"]["out"].globalsHash()
+		self.assertEqual( pm.combinedStatistics().hashCount, 0 )
+
+		# Test branching history with an expression using two input globals
+		# to produce our output
+		script["options2"] = GafferScene.StandardOptions()
+		script["options2"]["options"]["renderCamera"]["enabled"].setValue( True )
+		script["options2"]["options"]["renderCamera"]["value"].setValue( "other" )
+
+		script["expression"].setExpression( inspect.cleandoc(
+		"""
+		globals = parent["dot"]["in"]["globals"]
+		globals["option:render:camera"] = parent["options2"]["out"]["globals"].get( "option:render:camera" )
+		parent["dot"]["out"]["globals"] = globals
+		"""
+		) )
+
+		history = GafferScene.SceneAlgo.history( script["dot"]["out"]["globals"] )
+		self.assertEqual( len( history.predecessors ), 2 )
+		self.assertEqual( history.predecessors[0].scene, script["dot"]["in"] )
+		self.assertEqual( history.predecessors[1].scene, script["options2"]["out"] )
+
+		# Test that an expression using the value of a non-globals plug to modify the globals
+		# does not affect the history
+		script["cube"] = GafferScene.Cube()
+		script["cube"]["sets"].setValue( "foo" )
+
+		script["expression"].setExpression( inspect.cleandoc(
+		"""
+		globals = parent["dot"]["in"]["globals"]
+		globals["option:render:camera"] = IECore.StringData( "expression" )
+		globals["option:setNames"] = parent["cube"]["out"]["setNames"]
+		parent["dot"]["out"]["globals"] = globals
+		"""
+		) )
+
+		history = GafferScene.SceneAlgo.history( script["dot"]["out"]["globals"] )
+		self.assertEqual( len( history.predecessors ), 1 )
+		self.assertEqual( history.predecessors[0].scene, script["dot"]["in"] )
 
 	def testHistoryWithCanceller( self ) :
 

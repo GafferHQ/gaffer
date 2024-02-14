@@ -52,6 +52,7 @@
 
 #include "Gaffer/ArrayPlug.h"
 #include "Gaffer/Context.h"
+#include "Gaffer/Expression.h"
 #include "Gaffer/Monitor.h"
 #include "Gaffer/Private/IECorePreview/LRUCache.h"
 #include "Gaffer/Process.h"
@@ -510,7 +511,8 @@ class CapturingMonitor : public Monitor
 		{
 			return
 				( plug->parent<ScenePlug>() && plug->getName() == m_scenePlugChildName ) ||
-				( (Gaffer::TypeId)plug->typeId() == Gaffer::TypeId::ObjectPlugTypeId && plug->getName() == g_processedObjectPlugName )
+				( (Gaffer::TypeId)plug->typeId() == Gaffer::TypeId::ObjectPlugTypeId && plug->getName() == g_processedObjectPlugName ) ||
+				runTimeCast<const Expression>( plug->node() )
 			;
 		}
 
