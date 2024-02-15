@@ -121,10 +121,10 @@ class StringPlugTest( GafferTest.TestCase ) :
 		n = GafferTest.StringInOutNode()
 
 		n["in"].setValue( "~" )
-		self.assertEqual( n["out"].getValue(), os.path.expanduser( "~" ) )
+		self.assertEqual( n["out"].getValue(), os.path.expandvars( "$HOME" ) )
 
 		n["in"].setValue( "~/something.tif" )
-		self.assertEqual( n["out"].getValue(), os.path.expanduser( "~/something.tif" ) )
+		self.assertEqual( n["out"].getValue(), os.path.expandvars( "$HOME/something.tif" ) )
 
 		# ~ shouldn't be expanded unless it's at the front - it would
 		# be meaningless in other cases.
