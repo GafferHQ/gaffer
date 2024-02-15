@@ -1346,7 +1346,10 @@ libraries = {
 		"requiredOptions" : [ "CYCLES_ROOT" ],
 	},
 
-	"GafferCyclesTest" : { "requiredOptions" : [ "CYCLES_ROOT" ], },
+	"GafferCyclesTest" : {
+		"requiredOptions" : [ "CYCLES_ROOT" ],
+		"additionalFiles" : glob.glob( "python/GafferCyclesTest/*/*" )
+	},
 
 	"GafferCyclesUI" : { "requiredOptions" : [ "CYCLES_ROOT" ], },
 
