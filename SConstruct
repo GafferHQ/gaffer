@@ -848,7 +848,7 @@ if not exrVersionHeader :
 	Exit( 1 )
 
 for line in open( str( exrVersionHeader ) ) :
-	m = re.match( r'^#define OPENEXR_VERSION_STRING "(\d)\.(\d)\.(\d)"$', line )
+	m = re.match( r'^#define OPENEXR_VERSION_STRING "(\d)\.(\d)\.(\d+)"$', line )
 	if m :
 		baseLibEnv["IMATH_MAJOR_VERSION"] = int( m.group( 1 ) )
 

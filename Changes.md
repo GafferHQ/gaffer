@@ -185,6 +185,7 @@ Build
   - Updated to version 5.15.12.
   - Removed QtPurchasing library.
   - Removed QtNetworkAuth library.
+- SConstruct : Support detection of OpenEXR versions with a patch version containing multiple digits.
 - USD : Updated to version 23.11.
 
 1.3.x.x (relative to 1.3.11.0)
