@@ -165,15 +165,16 @@ Breaking Changes
 Build
 -----
 
-- Cortex : Updated to version 10.5.6.0.
+- Cortex : Updated to version 10.5.6.1.
 - Cycles : Updated to version 4.0.2.
 - Embree : Updated to version 4.3.0.
 - Imath : Updated to version 3.1.9.
 - MaterialX : Updated to version 1.38.8.
 - LibWebP : Added version 1.3.2.
-- OpenEXR : Updated to version 3.1.9.
-- OpenImageIO : Updated to version 2.4.17.0.
+- OpenEXR : Updated to version 3.1.12.
+- OpenImageIO : Updated to version 2.5.8.0.
 - OpenPGL : Updated to version 0.5.0.
+- OpenShadingLanguage : Updated to version 1.12.14.0.
 - OpenSubdiv : Updated to version 3.5.1.
 - OpenSSL : Removed.
 - OpenVDB : Updated to version 10.1.0.
