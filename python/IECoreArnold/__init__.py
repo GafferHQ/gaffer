@@ -34,6 +34,13 @@
 #
 ##########################################################################
 
+import os
+import pathlib
+
+if hasattr( os, "add_dll_directory" ) :
+	os.add_dll_directory( ( pathlib.Path( os.environ["ARNOLD_ROOT"] ) / "bin" ).resolve() )
+del os, pathlib # Don't pollute the namespace
+
 from ._IECoreArnold import *
 
 from .UniverseBlock import UniverseBlock

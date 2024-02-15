@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import random
 import unittest
 import imath
 
@@ -65,10 +66,7 @@ class BoundQueryTest( GafferSceneTest.SceneTestCase ):
 
 	def testSpaceLocal( self ):
 
-		from random import Random
-		from datetime import datetime
-
-		r = Random( datetime.now() )
+		r = random.Random()
 
 		name1 = randomName( r, 5, 10 )
 		s1 = GafferScene.Sphere()
@@ -173,10 +171,7 @@ class BoundQueryTest( GafferSceneTest.SceneTestCase ):
 
 	def testSpaceWorld( self ):
 
-		from random import Random
-		from datetime import datetime
-
-		r = Random( datetime.now() )
+		r = random.Random()
 
 		name1 = randomName( r, 5, 10 )
 		s1 = GafferScene.Sphere()
@@ -276,10 +271,7 @@ class BoundQueryTest( GafferSceneTest.SceneTestCase ):
 
 	def testSpaceRelative( self ):
 
-		from random import Random
-		from datetime import datetime
-
-		r = Random( datetime.now() )
+		r = random.Random()
 
 		name1 = randomName( r, 5, 10 )
 		s1 = GafferScene.Sphere()
@@ -388,10 +380,7 @@ class BoundQueryTest( GafferSceneTest.SceneTestCase ):
 
 	def testSpaceRelativeLocationSameAsLocationEmpty( self ):
 
-		from random import Random
-		from datetime import datetime
-
-		r = Random( datetime.now() )
+		r = random.Random()
 
 		name = randomName( r, 5, 10 )
 
@@ -416,10 +405,7 @@ class BoundQueryTest( GafferSceneTest.SceneTestCase ):
 
 	def testSpaceRelativeLocationSameAsLocationInvalid( self ):
 
-		from random import Random
-		from datetime import datetime
-
-		r = Random( datetime.now() )
+		r = random.Random()
 
 		name1 = 'a' + randomName( r, 4, 9 )
 		name2 = 'b' + randomName( r, 4, 9 )
@@ -445,10 +431,7 @@ class BoundQueryTest( GafferSceneTest.SceneTestCase ):
 
 	def testSpaceRelativeLocationSameAsLocationValid( self ):
 
-		from random import Random
-		from datetime import datetime
-
-		r = Random( datetime.now() )
+		r = random.Random()
 
 		name = randomName( r, 5, 10 )
 

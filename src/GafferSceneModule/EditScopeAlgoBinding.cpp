@@ -82,8 +82,11 @@ bool hasTransformEditWrapper( const Gaffer::EditScope &scope, const ScenePlug::S
 
 object acquireTransformEditWrapper( Gaffer::EditScope &scope, const ScenePlug::ScenePath &path, bool createIfNecessary )
 {
-	IECorePython::ScopedGILRelease gilRelease;
-	auto p = EditScopeAlgo::acquireTransformEdit( &scope, path, createIfNecessary );
+	std::optional<EditScopeAlgo::TransformEdit> p;
+	{
+		IECorePython::ScopedGILRelease gilRelease;
+		p = EditScopeAlgo::acquireTransformEdit( &scope, path, createIfNecessary );
+	}
 	return p ? object( *p ) : object();
 }
 

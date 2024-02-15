@@ -179,6 +179,7 @@ Build
 - OpenVDB : Updated to version 10.1.0.
 - PsUtil : Added version 5.9.6.
 - PySide : Updated to version 5.15.12.
+- Python : Updated to version 3.10.13.
 - Qt :
   - Updated to version 5.15.12.
   - Removed QtPurchasing library.

@@ -34,6 +34,13 @@
 #
 ##########################################################################
 
+import os
+import pathlib
+
+if hasattr( os, "add_dll_directory" ) :
+	os.add_dll_directory( ( pathlib.Path( os.environ["DELIGHT"] ) / "bin" ).resolve() )
+del os, pathlib # Don't pollute the namespace
+
 from ._IECoreDelight import *
 
 # The IECoreDelight module does not need any symbols from IECoreDelight, so MSVC tries

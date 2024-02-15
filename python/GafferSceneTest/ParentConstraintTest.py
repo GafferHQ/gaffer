@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import random
 import unittest
 import imath
 import inspect
@@ -707,9 +708,6 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 
 	def testTargetUVAxisAlignedEdge( self ) :
 
-		from random import Random
-		from datetime import datetime
-
 		verticesPerFace = IECore.IntVectorData( [ 4 ] )
 
 		vertexIds = IECore.IntVectorData( [
@@ -752,7 +750,7 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 		constraint[ "targetMode" ].setValue( GafferScene.Constraint.TargetMode.UV )
 		constraint[ "targetOffset" ].setValue( imath.V3f( 0, 0, 0 ) )
 
-		r = Random( datetime.now() )
+		r = random.Random()
 
 		# left edge
 		for i in range( 10 ) :
@@ -804,9 +802,6 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 
 	def testTargetUVNonLinearUMapping( self ) :
 
-		from random import Random
-		from datetime import datetime
-
 		verticesPerFace = IECore.IntVectorData( [ 4 ] )
 
 		vertexIds = IECore.IntVectorData( [
@@ -847,7 +842,7 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 		constraint[ "targetOffset" ].setValue( imath.V3f( 0, 0, 0 ) )
 		constraint[ "ignoreMissingTarget" ].setValue( False )
 
-		r = Random( datetime.now() )
+		r = random.Random()
 
 		mesh = IECoreScene.MeshPrimitive( verticesPerFace, vertexIds )
 		mesh[ "P" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, points )
@@ -924,9 +919,6 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 
 	def testTargetUVNonLinearVMapping( self ) :
 
-		from random import Random
-		from datetime import datetime
-
 		verticesPerFace = IECore.IntVectorData( [ 4 ] )
 
 		vertexIds = IECore.IntVectorData( [
@@ -967,7 +959,7 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 		constraint[ "targetOffset" ].setValue( imath.V3f( 0, 0, 0 ) )
 		constraint[ "ignoreMissingTarget" ].setValue( False )
 
-		r = Random( datetime.now() )
+		r = random.Random()
 
 		mesh = IECoreScene.MeshPrimitive( verticesPerFace, vertexIds )
 		mesh[ "P" ] = IECoreScene.PrimitiveVariable( IECoreScene.PrimitiveVariable.Interpolation.Vertex, points )
@@ -1160,9 +1152,6 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 
 	def testTargetUVCollapsedUTangent( self ) :
 
-		from random import Random
-		from datetime import datetime
-
 		verticesPerFace = IECore.IntVectorData( [ 4 ] )
 
 		vertexIds = IECore.IntVectorData( [
@@ -1204,7 +1193,7 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 		constraint[ "targetMode" ].setValue( GafferScene.Constraint.TargetMode.UV )
 		constraint[ "targetOffset" ].setValue( imath.V3f( 0, 0, 0 ) )
 
-		r = Random( datetime.now() )
+		r = random.Random()
 
 		for i in range( 10 ) :
 			u = r.uniform( 0.0, 1.0 )
@@ -1220,9 +1209,6 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 
 	def testTargetUVCollapsedVTangent( self ) :
 
-		from random import Random
-		from datetime import datetime
-
 		verticesPerFace = IECore.IntVectorData( [ 4 ] )
 
 		vertexIds = IECore.IntVectorData( [
@@ -1264,7 +1250,7 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 		constraint[ "targetMode" ].setValue( GafferScene.Constraint.TargetMode.UV )
 		constraint[ "targetOffset" ].setValue( imath.V3f( 0, 0, 0 ) )
 
-		r = Random( datetime.now() )
+		r = random.Random()
 
 		for i in range( 10 ) :
 			u = r.uniform( 0.0, 1.0 )
@@ -1279,9 +1265,6 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 			self.assertEqual( imath.V3f( m[ 2 ][ 0 ], m[ 2 ][ 1 ], m[ 2 ][ 2 ] ), imath.V3f( 0, 0, 1 ) )
 
 	def testTargetUVZeroAreaFace( self ) :
-
-		from random import Random
-		from datetime import datetime
 
 		verticesPerFace = IECore.IntVectorData( [ 4 ] )
 
@@ -1324,7 +1307,7 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 		constraint[ "targetMode" ].setValue( GafferScene.Constraint.TargetMode.UV )
 		constraint[ "targetOffset" ].setValue( imath.V3f( 0, 0, 0 ) )
 
-		r = Random( datetime.now() )
+		r = random.Random()
 
 		for i in range( 10 ) :
 			u = r.uniform( 0.0, 1.0 )
@@ -1340,9 +1323,7 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 
 	def testTargetUVDegenerateUVVertex( self ) :
 
-		from random import Random
-		from datetime import datetime
-		r = Random( datetime.now() )
+		r = random.Random()
 
 		verticesPerFace = IECore.IntVectorData( [ 4 ] )
 
@@ -1405,9 +1386,7 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 
 	def testTargetUVDegenerateUVVertexLine( self ) :
 
-		from random import Random
-		from datetime import datetime
-		r = Random( datetime.now() )
+		r = random.Random()
 
 		verticesPerFace = IECore.IntVectorData( [ 5 ] )
 
@@ -1472,9 +1451,7 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 
 	def testTargetUVDegenerateUVVertexLineRotate( self ) :
 
-		from random import Random
-		from datetime import datetime
-		r = Random( datetime.now() )
+		r = random.Random()
 
 		verticesPerFace = IECore.IntVectorData( [ 5 ] )
 
@@ -1539,10 +1516,7 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 
 	def testTargetUVDegenerateFace( self ) :
 
-		from random import Random
-		from datetime import datetime
-
-		r = Random( datetime.now() )
+		r = random.Random()
 		u = r.uniform( 0.0, 1.0 )
 		v = r.uniform( 0.0, 1.0 )
 
@@ -1597,9 +1571,6 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 
 	def testTargetUVNonConvexPoly( self ) :
 
-		from random import Random
-		from datetime import datetime
-
 		verticesPerFace = IECore.IntVectorData( [ 7, 6, 8, 6 ] )
 
 		vertexIds = IECore.IntVectorData( [
@@ -1649,7 +1620,7 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 		constraint[ "targetMode" ].setValue( GafferScene.Constraint.TargetMode.UV )
 		constraint[ "targetOffset" ].setValue( imath.V3f( 0, 0, 0 ) )
 
-		r = Random( datetime.now() )
+		r = random.Random()
 
 		for i in range( 10 ) :
 			u = r.uniform( 0.0, 1.0 )
@@ -1670,9 +1641,6 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 			self.assertAlmostEqual( m[ 2 ][ 2 ], 0.0, places=6 )
 
 	def testTargetUVNonConvexPolyMirroredU( self ) :
-
-		from random import Random
-		from datetime import datetime
 
 		verticesPerFace = IECore.IntVectorData( [ 7, 6, 8, 6 ] )
 
@@ -1723,7 +1691,7 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 		constraint[ "targetMode" ].setValue( GafferScene.Constraint.TargetMode.UV )
 		constraint[ "targetOffset" ].setValue( imath.V3f( 0, 0, 0 ) )
 
-		r = Random( datetime.now() )
+		r = random.Random()
 
 		for i in range( 10 ) :
 			u = r.uniform( 0.0, 1.0 )
@@ -1744,9 +1712,6 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 			self.assertAlmostEqual( m[ 2 ][ 2 ], 0.0, places=6 )
 
 	def testTargetUVNonConvexPolyMirroredV( self ) :
-
-		from random import Random
-		from datetime import datetime
 
 		verticesPerFace = IECore.IntVectorData( [ 7, 6, 8, 6 ] )
 
@@ -1797,7 +1762,7 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 		constraint[ "targetMode" ].setValue( GafferScene.Constraint.TargetMode.UV )
 		constraint[ "targetOffset" ].setValue( imath.V3f( 0, 0, 0 ) )
 
-		r = Random( datetime.now() )
+		r = random.Random()
 
 		for i in range( 10 ) :
 			u = r.uniform( 0.0, 1.0 )
@@ -1818,9 +1783,6 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 			self.assertAlmostEqual( m[ 2 ][ 2 ], 0.0, places=6 )
 
 	def testTargetUVNonConvexPolyMirroredUV( self ) :
-
-		from random import Random
-		from datetime import datetime
 
 		verticesPerFace = IECore.IntVectorData( [ 7, 6, 8, 6 ] )
 
@@ -1871,7 +1833,7 @@ class ParentConstraintTest( GafferSceneTest.SceneTestCase ) :
 		constraint[ "targetMode" ].setValue( GafferScene.Constraint.TargetMode.UV )
 		constraint[ "targetOffset" ].setValue( imath.V3f( 0, 0, 0 ) )
 
-		r = Random( datetime.now() )
+		r = random.Random()
 
 		for i in range( 10 ) :
 			u = r.uniform( 0.0, 1.0 )
