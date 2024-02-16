@@ -62,6 +62,7 @@ Improvements
 - Premultiply : Added `useDeepVisibility` plug, which weights samples according to their visibility based on the opacity of samples in front.
 - CyclesOptions : Improved device selection UI.
 - ImageReader : Improved multithreading of EXR reads. This can result in a performance improvement of around 4X for large images.
+- Added OIIO config that disables OIIO threading by default. This simplifies our threading model, and has no impact on performance for our main use cases. If read performance of Gaffer compositing using non-EXR formats, such as Tiff, is important to you, you may want to add your own config to turn OIIO threading back on.
 
 Fixes
 -----
