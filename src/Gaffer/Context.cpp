@@ -310,10 +310,14 @@ Context::~Context()
 
 void Context::set( const IECore::InternedString &name, const IECore::Data *value )
 {
-	// We copy the value so that the client can't invalidate this context by changing it.
-	ConstDataPtr copy = value->copy();
-	m_allocMap[name] = copy;
-	internalSet( name, Value( name, copy.get() ) );
+	IECore::ConstDataPtr &ownedValue = m_allocMap[name];
+	// Keep old value alive for comparison with new value in `internalSet()`.
+	IECore::ConstDataPtr oldValue( std::move( ownedValue ) );
+	// Take ownership of a copy of the value so that the client can't invalidate
+	// this context by changing it.
+	ownedValue = value->copy();
+	// Update `m_map`.
+	internalSet( name, Value( name, ownedValue.get() ) );
 }
 
 IECore::DataPtr Context::getAsData( const IECore::InternedString &name ) const

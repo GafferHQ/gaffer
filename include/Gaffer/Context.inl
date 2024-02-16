@@ -155,12 +155,17 @@ void Context::Value::registerType()
 template<typename T, typename Enabler>
 void Context::set( const IECore::InternedString &name, const T &value )
 {
-	// Allocate a new typed Data, store it in m_allocMap so that it won't be deallocated,
-	// and call internalSet to reference it in the main m_map
+	IECore::ConstDataPtr &ownedValue = m_allocMap[name];
+	// Keep old value alive for comparison with new value in `internalSet()`.
+	IECore::ConstDataPtr oldValue( std::move( ownedValue ) );
+	// Allocate new Data to own a copy of the value.
 	using DataType = typename Gaffer::Detail::DataTraits<T>::DataType;
-	typename DataType::Ptr d = new DataType( value );
-	m_allocMap[name] = d;
-	internalSet( name, Value( name, &d->readable() ) );
+	typename DataType::ConstPtr d = new DataType( value );
+	const T *v = &d->readable();
+	ownedValue = std::move( d );
+	// Update `m_map`.
+	internalSet( name, Value( name, v ) );
+
 }
 
 inline void Context::internalSet( const IECore::InternedString &name, const Value &value )

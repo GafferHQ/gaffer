@@ -1,6 +1,11 @@
 1.2.10.x (relative to 1.2.10.5)
 ========
 
+Fixes
+-----
+
+- Context : Fixed potential crash when setting a variable with ownership.
+
 1.2.10.5 (relative to 1.2.10.4)
 ========
 
