@@ -410,6 +410,10 @@ ValuePlugPtr createPlugFromData( const std::string &name, Plug::Direction direct
 		{
 			return typedObjectValuePlug( name, direction, flags, static_cast<const M33fVectorData *>( value ) );
 		}
+		case Box2fVectorDataTypeId :
+		{
+			return typedObjectValuePlug( name, direction, flags, static_cast<const Box2fVectorData *>( value ) );
+		}
 		case PathMatcherDataTypeId :
 		{
 			PathMatcherDataPlugPtr valuePlug = new PathMatcherDataPlug(
@@ -505,6 +509,8 @@ IECore::DataPtr getValueAsData( const ValuePlug *plug )
 			return static_cast<const M44fVectorDataPlug *>( plug )->getValue()->copy();
 		case M33fVectorDataPlugTypeId :
 			return static_cast<const M33fVectorDataPlug *>( plug )->getValue()->copy();
+		case Box2fVectorDataPlugTypeId :
+			return static_cast<const Box2fVectorDataPlug *>( plug )->getValue()->copy();
 		case SplineffPlugTypeId :
 			return new SplineffData( static_cast<const SplineffPlug *>( plug )->getValue().spline() );
 		case SplinefColor3fPlugTypeId :
@@ -905,6 +911,8 @@ bool canSetValueFromData( const ValuePlug *plug, const IECore::Data *value )
 			return canSetTypedDataPlugValue<M33fVectorDataPlug>( value );
 		case Gaffer::M44fVectorDataPlugTypeId:
 			return canSetTypedDataPlugValue<M44fVectorDataPlug>( value );
+		case Gaffer::Box2fVectorDataPlugTypeId:
+			return canSetTypedDataPlugValue<Box2fVectorDataPlug>( value );
 		case Gaffer::AtomicCompoundDataPlugTypeId:
 			return canSetTypedDataPlugValue<AtomicCompoundDataPlug>( value );
 		case Gaffer::PathMatcherDataPlugTypeId:
@@ -992,6 +1000,8 @@ bool setValueFromData( ValuePlug *plug, const IECore::Data *value )
 			return setTypedDataPlugValue( static_cast<M33fVectorDataPlug *>( plug ), value );
 		case Gaffer::M44fVectorDataPlugTypeId:
 			return setTypedDataPlugValue( static_cast<M44fVectorDataPlug *>( plug ), value );
+		case Gaffer::Box2fVectorDataPlugTypeId:
+			return setTypedDataPlugValue( static_cast<Box2fVectorDataPlug *>( plug ), value );
 		case Gaffer::AtomicCompoundDataPlugTypeId:
 			return setTypedDataPlugValue( static_cast<AtomicCompoundDataPlug *>( plug ), value );
 		case Gaffer::PathMatcherDataPlugTypeId:

@@ -60,6 +60,7 @@ void GafferModule::bindTypedObjectPlug()
 	GafferBindings::TypedObjectPlugClass<Gaffer::Color4fVectorDataPlug>();
 	GafferBindings::TypedObjectPlugClass<Gaffer::M44fVectorDataPlug>();
 	GafferBindings::TypedObjectPlugClass<Gaffer::M33fVectorDataPlug>();
+	GafferBindings::TypedObjectPlugClass<Gaffer::Box2fVectorDataPlug>();
 	GafferBindings::TypedObjectPlugClass<Gaffer::ObjectVectorPlug>();
 	GafferBindings::TypedObjectPlugClass<Gaffer::CompoundObjectPlug>();
 	GafferBindings::TypedObjectPlugClass<Gaffer::AtomicCompoundDataPlug>();

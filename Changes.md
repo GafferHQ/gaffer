@@ -5,6 +5,7 @@ API
 ---
 
 - TypedObjectPlug : Added Python bindings for the default values of the `defaultValue` constructor argument.
+- Box2fVectorDataPlug : Added new plug type for storing arrays of Box2f.
 
 Fixes
 -----
