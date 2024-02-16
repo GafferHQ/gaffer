@@ -43,7 +43,6 @@ import os
 import sys
 import signal
 import warnings
-import pathlib
 
 # Get rid of the annoying signal handler which turns Ctrl-C into a KeyboardInterrupt exception
 signal.signal( signal.SIGINT, signal.SIG_DFL )
