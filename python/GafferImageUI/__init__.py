@@ -124,5 +124,6 @@ from . import OpenColorIOContextUI
 from . import OpenColorIOConfigPlugUI
 from . import DeepSliceUI
 from . import ContactSheetCoreUI
+from . import ContactSheetUI
 
 __import__( "IECore" ).loadConfig( "GAFFER_STARTUP_PATHS", subdirectory = "GafferImageUI" )

@@ -4,6 +4,7 @@
 Features
 --------
 
+- ContactSheet : Added new node for creating contact sheets from multiple input images.
 - LightPositionTool : Added `Diffuse` mode for placing lights along the normal of the target position.
 
 Improvements
