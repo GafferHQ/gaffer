@@ -820,16 +820,16 @@ class LightToolHandle : public Handle
 				)
 				{
 					const auto shader = attributes->member<ShaderNetwork>( attributeName )->outputShader();
-					std::string shaderAttribute = shader->getType() + ":" + shader->getName();
+					const InternedString metadataTarget = attributeName.string() + ":" + shader->getName();
 
-					if( !isLightType( shaderAttribute ) )
+					if( !isLightType( metadataTarget ) )
 					{
 						continue;
 					}
 
 					for( const auto &m : m_metaParameters )
 					{
-						if( auto parameter = Metadata::value<StringData>( shaderAttribute, m ) )
+						if( auto parameter = Metadata::value<StringData>( metadataTarget, m ) )
 						{
 							m_inspectors[m] = new ParameterInspector(
 								scene(),
@@ -972,11 +972,11 @@ class LightToolHandle : public Handle
 			return m_handlePath;
 		}
 
-		// Returns true if `shaderAttribute` refers to the same light type
+		// Returns true if `metadataTarget` refers to the same light type
 		// as this handle was constructed to apply to.
-		bool isLightType( const std::string &shaderAttribute ) const
+		bool isLightType( const InternedString &metadataTarget ) const
 		{
-			auto lightType = Metadata::value<StringData>( shaderAttribute, "type" );
+			auto lightType = Metadata::value<StringData>( metadataTarget, "type" );
 
 			if( !lightType || !StringAlgo::matchMultiple( lightType->readable(), m_lightTypePattern ) )
 			{
@@ -1552,18 +1552,18 @@ class SpotLightHandle : public LightToolHandle
 				)
 				{
 					const auto shader = attributes->member<ShaderNetwork>( attributeName )->outputShader();
-					std::string shaderAttribute = shader->getType() + ":" + shader->getName();
+					const InternedString metadataTarget = attributeName.string() + ":" + shader->getName();
 
-					if( !isLightType( shaderAttribute ) )
+					if( !isLightType( metadataTarget ) )
 					{
 						continue;
 					}
 
-					auto penumbraTypeData = Metadata::value<StringData>( shaderAttribute, "penumbraType" );
+					auto penumbraTypeData = Metadata::value<StringData>( metadataTarget, "penumbraType" );
 					m_penumbraType = penumbraTypeData ? std::optional<InternedString>( InternedString( penumbraTypeData->readable() ) ) : std::nullopt;
 
 					m_lensRadius = 0;
-					if( auto lensRadiusParameterName = Metadata::value<StringData>( shaderAttribute, "lensRadiusParameter" ) )
+					if( auto lensRadiusParameterName = Metadata::value<StringData>( metadataTarget, "lensRadiusParameter" ) )
 					{
 						if( auto lensRadiusData = shader->parametersData()->member<FloatData>( lensRadiusParameterName->readable() ) )
 						{
@@ -1571,7 +1571,7 @@ class SpotLightHandle : public LightToolHandle
 						}
 					}
 
-					auto angleType = Metadata::value<StringData>( shaderAttribute, "coneAngleType" );
+					auto angleType = Metadata::value<StringData>( metadataTarget, "coneAngleType" );
 					if( angleType && angleType->readable() == "half" )
 					{
 						m_angleHandleRatio = 1.f;
@@ -2056,21 +2056,21 @@ class EdgeHandle : public LightToolHandle
 				)
 				{
 					const auto shader = attributes->member<ShaderNetwork>( attributeName )->outputShader();
-					std::string shaderAttribute = shader->getType() + ":" + shader->getName();
+					const InternedString metadataTarget = attributeName.string() + ":" + shader->getName();
 
-					if( !isLightType( shaderAttribute ) )
+					if( !isLightType( metadataTarget ) )
 					{
 						continue;
 					}
 
 					m_orientation = M44f();
-					if( auto orientationData = Metadata::value<M44fData>( shaderAttribute, "visualiserOrientation" ) )
+					if( auto orientationData = Metadata::value<M44fData>( metadataTarget, "visualiserOrientation" ) )
 					{
 						m_orientation = orientationData->readable();
 					}
 
 					m_oppositeAdditionalScale = 1.f;
-					if( auto scaleData = Metadata::value<FloatData>( shaderAttribute, m_oppositeScaleAttributeName ) )
+					if( auto scaleData = Metadata::value<FloatData>( metadataTarget, m_oppositeScaleAttributeName ) )
 					{
 						m_oppositeAdditionalScale = scaleData->readable();
 					}
@@ -2760,15 +2760,15 @@ class LengthHandle : public LightToolHandle
 				)
 				{
 					const auto shader = attributes->member<ShaderNetwork>( attributeName )->outputShader();
-					std::string shaderAttribute = shader->getType() + ":" + shader->getName();
+					const InternedString metadataTarget = attributeName.string() + ":" + shader->getName();
 
-					if( !isLightType( shaderAttribute ) )
+					if( !isLightType( metadataTarget ) )
 					{
 						continue;
 					}
 
 					m_orientation = M44f();
-					if( auto orientationData = Metadata::value<M44fData>( shaderAttribute, "visualiserOrientation" ) )
+					if( auto orientationData = Metadata::value<M44fData>( metadataTarget, "visualiserOrientation" ) )
 					{
 						m_orientation = orientationData->readable();
 					}
