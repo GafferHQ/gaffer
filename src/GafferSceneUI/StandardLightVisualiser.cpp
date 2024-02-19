@@ -76,10 +76,10 @@ const Color4f g_mutedLightWireframeColor4 = Color4f( g_mutedLightWireframeColor.
 
 enum Axis { X, Y, Z };
 
-IECore::InternedString metadataTargetForNetwork( const IECoreScene::ShaderNetwork *shaderNetwork )
+IECore::InternedString metadataTargetForNetwork( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork )
 {
 	const IECoreScene::Shader *shader = shaderNetwork->outputShader();
-	return shader->getType() + ":" + shader->getName();
+	return attributeName.string() + ":" + shader->getName();
 }
 
 template<typename T>
@@ -469,7 +469,7 @@ StandardLightVisualiser::~StandardLightVisualiser()
 
 Visualisations StandardLightVisualiser::visualise( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, const IECore::CompoundObject *attributes, IECoreGL::ConstStatePtr &state ) const
 {
-	const InternedString metadataTarget = metadataTargetForNetwork( shaderNetwork );
+	const InternedString metadataTarget = metadataTargetForNetwork( attributeName, shaderNetwork );
 	const IECore::CompoundData *shaderParameters = shaderNetwork->outputShader()->parametersData();
 
 	ConstStringDataPtr type = Metadata::value<StringData>( metadataTarget, g_typeString );
@@ -527,7 +527,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	{
 		if( drawShaded )
 		{
-			ConstDataPtr textureData = drawTextured ? surfaceTexture( shaderNetwork, attributes, maxTextureResolution ) : nullptr;
+			ConstDataPtr textureData = drawTextured ? surfaceTexture( attributeName, shaderNetwork, attributes, maxTextureResolution ) : nullptr;
 			result.push_back( Visualisation::createOrnament(
 				environmentSphereSurface( textureData, tint, maxTextureResolution, color ),
 				/* affectsFramingBound = */ true, Visualisation::ColorSpace::Scene
@@ -572,7 +572,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 		{
 			if( drawShaded )
 			{
-				ConstDataPtr textureData = drawTextured ? surfaceTexture( shaderNetwork, attributes, maxTextureResolution ) : nullptr;
+				ConstDataPtr textureData = drawTextured ? surfaceTexture( attributeName, shaderNetwork, attributes, maxTextureResolution ) : nullptr;
 				result.push_back( Visualisation::createGeometry(
 					quadSurface( size, textureData, tint, maxTextureResolution, color, uvOrientation ? uvOrientation->readable() : M33f() ),
 					Visualisation::ColorSpace::Scene
@@ -599,7 +599,7 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 
 		if( drawShaded )
 		{
-			ConstDataPtr textureData = drawTextured ? surfaceTexture( shaderNetwork, attributes, maxTextureResolution ) : nullptr;
+			ConstDataPtr textureData = drawTextured ? surfaceTexture( attributeName, shaderNetwork, attributes, maxTextureResolution ) : nullptr;
 			result.push_back( Visualisation::createGeometry(
 				diskSurface( radius, textureData, tint, maxTextureResolution, color ),
 				Visualisation::ColorSpace::Scene
@@ -698,9 +698,9 @@ Visualisations StandardLightVisualiser::visualise( const IECore::InternedString 
 	return result;
 }
 
-IECore::DataPtr StandardLightVisualiser::surfaceTexture( const IECoreScene::ShaderNetwork *shaderNetwork, const IECore::CompoundObject *attributes, int maxTextureResolution ) const
+IECore::DataPtr StandardLightVisualiser::surfaceTexture( const IECore::InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, const IECore::CompoundObject *attributes, int maxTextureResolution ) const
 {
-	const IECore::InternedString metadataTarget = metadataTargetForNetwork( shaderNetwork );
+	const IECore::InternedString metadataTarget = metadataTargetForNetwork( attributeName, shaderNetwork );
 	const IECore::CompoundData *shaderParameters = shaderNetwork->outputShader()->parametersData();
 	const std::string textureName = parameter<std::string>( metadataTarget, shaderParameters, "textureNameParameter", "" );
 	if( !textureName.empty() )
@@ -714,7 +714,7 @@ IECore::DataPtr StandardLightVisualiser::surfaceTexture( const IECoreScene::Shad
 void StandardLightVisualiser::spotlightParameters( const InternedString &attributeName, const IECoreScene::ShaderNetwork *shaderNetwork, float &innerAngle, float &outerAngle, float &radius, float &lensRadius )
 {
 
-	InternedString metadataTarget = metadataTargetForNetwork( shaderNetwork );
+	InternedString metadataTarget = metadataTargetForNetwork( attributeName, shaderNetwork );
 	const IECore::CompoundData *shaderParameters = shaderNetwork->outputShader()->parametersData();
 
 	float coneAngle = parameter<float>( metadataTarget, shaderParameters, "coneAngleParameter", 0.0f );
