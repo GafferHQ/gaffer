@@ -130,7 +130,7 @@ class LocationNameColumn : public StandardPathColumn
 				}
 
 				const IECoreScene::Shader *lightShader = shaderNetwork->outputShader();
-				const string metadataTarget = lightShader->getType() + ":" + lightShader->getName();
+				const string metadataTarget = attribute.first.string() + ":" + lightShader->getName();
 				ConstStringDataPtr lightType = Metadata::value<StringData>( metadataTarget, "type" );
 				if( !lightType )
 				{
