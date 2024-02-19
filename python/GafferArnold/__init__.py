@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+__import__( "IECoreArnold" )
 __import__( "GafferScene" )
 
 # GafferArnold makes use of OSL closure plugs, this ensures that the bindings

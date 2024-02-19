@@ -639,7 +639,7 @@ class CatalogueTest( GafferImageTest.ImageTestCase ) :
 		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Error )
 		self.assertIn( "Permission denied", mh.messages[0].message )
 
-		with self.assertRaisesRegex( RuntimeError, "Could not open file" ) :
+		with self.assertRaisesRegex( RuntimeError, r".* : Could not open \".*\" \(Permission denied\)" ) :
 			GafferImage.ImageAlgo.image( s["c"]["out"] )
 
 	def testDeleteKeepsOrder( self ) :

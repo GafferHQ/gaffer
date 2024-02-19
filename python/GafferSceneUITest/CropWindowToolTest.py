@@ -136,7 +136,7 @@ class CropWindowToolTest( GafferUITest.TestCase ) :
 		script["image"]["fileName"].setValue( "/i/do/not/exist.exr" )
 
 		self.waitForIdle( 1000 )
-		self.assertEqual( tool.status(), "Error: image.__oiioReader.out.format : OpenImageIOReader : Could not create ImageInput : Could not open file \"/i/do/not/exist.exr\"" )
+		self.assertEqual( tool.status(), "Error: image.__oiioReader.out.format : OpenImageIOReader : Could not create ImageInput : Could not open \"/i/do/not/exist.exr\" (No such file or directory)" )
 
 		# Missing metadata
 
