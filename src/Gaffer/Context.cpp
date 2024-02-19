@@ -270,15 +270,15 @@ Context::Context( const Context &other, CopyMode mode )
 			)
 			{
 				// The value is already owned by `other`, and is immutable, so we
-				// can just add our own reference to it to share ownership
-				// and then call `internalSet()`.
-				m_allocMap[i.first] = allocIt->second;
-				internalSet( i.first, i.second );
+				// can just share ownership with it.
+				internalSetWithOwner( i.first, i.second, ConstDataPtr( allocIt->second ) );
 			}
 			else
 			{
 				// Data not owned by `other`. Take a copy that we own, and call `internalSet()`.
-				internalSet( i.first, i.second.copy( m_allocMap[i.first] ) );
+				ConstDataPtr owner;
+				const Value v = i.second.copy( owner );
+				internalSetWithOwner( i.first, v, std::move( owner ) );
 			}
 		}
 	}
@@ -310,14 +310,10 @@ Context::~Context()
 
 void Context::set( const IECore::InternedString &name, const IECore::Data *value )
 {
-	IECore::ConstDataPtr &ownedValue = m_allocMap[name];
-	// Keep old value alive for comparison with new value in `internalSet()`.
-	IECore::ConstDataPtr oldValue( std::move( ownedValue ) );
-	// Take ownership of a copy of the value so that the client can't invalidate
-	// this context by changing it.
-	ownedValue = value->copy();
-	// Update `m_map`.
-	internalSet( name, Value( name, ownedValue.get() ) );
+	// We copy the value so that the client can't invalidate this context by changing it.
+	ConstDataPtr copy = value->copy();
+	const Value v( name, copy.get() );
+	internalSetWithOwner( name, v, std::move( copy ) );
 }
 
 IECore::DataPtr Context::getAsData( const IECore::InternedString &name ) const

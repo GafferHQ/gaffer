@@ -155,16 +155,10 @@ void Context::Value::registerType()
 template<typename T, typename Enabler>
 void Context::set( const IECore::InternedString &name, const T &value )
 {
-	IECore::ConstDataPtr &ownedValue = m_allocMap[name];
-	// Keep old value alive for comparison with new value in `internalSet()`.
-	IECore::ConstDataPtr oldValue( std::move( ownedValue ) );
-	// Allocate new Data to own a copy of the value.
 	using DataType = typename Gaffer::Detail::DataTraits<T>::DataType;
 	typename DataType::ConstPtr d = new DataType( value );
-	const T *v = &d->readable();
-	ownedValue = std::move( d );
-	// Update `m_map`.
-	internalSet( name, Value( name, v ) );
+	const Value v( name, &d->readable() );
+	internalSetWithOwner( name, v, std::move( d ) );
 
 }
 
@@ -194,6 +188,18 @@ inline void Context::internalSet( const IECore::InternedString &name, const Valu
 			(*m_changedSignal)( this, name );
 		}
 	}
+}
+
+inline void Context::internalSetWithOwner( const IECore::InternedString &name, const Value &value, IECore::ConstDataPtr &&owner )
+{
+	IECore::ConstDataPtr &currentOwner = m_allocMap[name];
+	// Keep old value alive for comparison with new value in `internalSet()`.
+	IECore::ConstDataPtr oldOwner( std::move( currentOwner ) );
+	// Assign new owner so that we have a consistent internal state when
+	// `internalSet()` emits `changedSignal()`.
+	currentOwner = owner;
+	// Update `m_map`.
+	internalSet( name, value );
 }
 
 inline const Context::Value &Context::internalGet( const IECore::InternedString &name ) const
