@@ -794,15 +794,13 @@ class LightToolHandle : public Handle
 
 		// Update inspectors and data needed to display and interact with the handle. Called
 		// in `preRender()` if the inspections are dirty.
-		void updateHandlePath( ScenePlugPtr scene, const Context *context, const ScenePlug::ScenePath &handlePath )
+		void updateHandlePath( const ScenePlug::ScenePath &handlePath )
 		{
-			m_scene = scene;
-			m_context = context;
 			m_handlePath = handlePath;
 
 			m_inspectors.clear();
 
-			if( !m_scene->exists( m_handlePath ) )
+			if( !scene()->exists( m_handlePath ) )
 			{
 				return;
 			}
@@ -812,7 +810,7 @@ class LightToolHandle : public Handle
 			/// \todo This can be simplified and some of the logic, especially getting the inspectors, can
 			/// be moved to the constructor when we standardize on a single USDLux light representation.
 
-			ConstCompoundObjectPtr attributes = m_scene->fullAttributes( m_handlePath );
+			ConstCompoundObjectPtr attributes = scene()->fullAttributes( m_handlePath );
 
 			for( const auto &[attributeName, value ] : attributes->members() )
 			{
@@ -834,7 +832,7 @@ class LightToolHandle : public Handle
 						if( auto parameter = Metadata::value<StringData>( shaderAttribute, m ) )
 						{
 							m_inspectors[m] = new ParameterInspector(
-								m_scene,
+								scene(),
 								m_editScope,
 								attributeName,
 								ShaderNetwork::Parameter( "", parameter->readable() )
@@ -847,22 +845,6 @@ class LightToolHandle : public Handle
 			}
 
 			handlePathChanged();
-		}
-
-		/// \todo Should these three be protected, or left out entirely until they are needed by client code?
-		const ScenePlug *scene() const
-		{
-			return m_scene.get();
-		}
-
-		const Context *context() const
-		{
-			return m_context;
-		}
-
-		const ScenePlug::ScenePath &handlePath() const
-		{
-			return m_handlePath;
 		}
 
 		/// \todo Remove these and handle the lookThrough logic internally?
@@ -980,6 +962,16 @@ class LightToolHandle : public Handle
 			mouseMoveSignal().connect( boost::bind( &LightToolHandle::mouseMove, this, ::_2 ) );
 		}
 
+		ScenePlug *scene() const
+		{
+			return m_view->inPlug<ScenePlug>();
+		}
+
+		const ScenePlug::ScenePath &handlePath() const
+		{
+			return m_handlePath;
+		}
+
 		// Returns true if `shaderAttribute` refers to the same light type
 		// as this handle was constructed to apply to.
 		bool isLightType( const std::string &shaderAttribute ) const
@@ -1010,7 +1002,7 @@ class LightToolHandle : public Handle
 		// Returns `nullptr` if no inspection exists for the handle.
 		Inspector::ResultPtr handleInspection( const InternedString &metaParameter ) const
 		{
-			ScenePlug::PathScope pathScope( m_context );
+			ScenePlug::PathScope pathScope( m_view->getContext() );
 			pathScope.setPath( &m_handlePath );
 
 			return inspection( metaParameter );
@@ -1292,8 +1284,6 @@ class LightToolHandle : public Handle
 			return enabled;
 		}
 
-		ScenePlugPtr m_scene;
-		const Context *m_context;
 		ScenePlug::ScenePath m_handlePath;
 
 		const std::string m_lightTypePattern;
@@ -3117,13 +3107,6 @@ void LightTool::updateHandleInspections()
 		return;
 	}
 
-	auto scene = scenePlug()->getInput<ScenePlug>();
-	scene = scene ? scene->getInput<ScenePlug>() : scene;
-	if( !scene )
-	{
-		return;
-	}
-
 	m_inspectorsDirtiedConnection.clear();
 
 	const PathMatcher selection = this->selection();
@@ -3158,7 +3141,7 @@ void LightTool::updateHandleInspections()
 		auto handle = runTimeCast<LightToolHandle>( c );
 		assert( handle );
 
-		handle->updateHandlePath( scene, view()->getContext(), lastSelectedPath );
+		handle->updateHandlePath( lastSelectedPath );
 
 		bool handleVisible = true;
 		bool handleEnabled = true;

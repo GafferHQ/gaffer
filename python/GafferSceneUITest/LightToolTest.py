@@ -142,6 +142,52 @@ class LightToolTest( GafferUITest.TestCase ) :
 		self.assertTrue( len( cs ) )
 		self.assertEqual( cs[0][0], tool )
 
+	def testDeleteNodeCrash( self ) :
+
+		# Make a spotlight and get the LightTool to edit it.
+
+		script = Gaffer.ScriptNode()
+
+		script["spotLight"] = GafferSceneTest.TestLight()
+		script["spotLight"]["parameters"].addChild( Gaffer.FloatPlug( "coneAngle", defaultValue = 10 ) )
+		script["spotLight"]["parameters"].addChild( Gaffer.FloatPlug( "penumbraAngle", defaultValue = 1 ) )
+
+		script["shaderAssignment"] = GafferScene.ShaderAssignment()
+		script["shaderAssignment"]["in"].setInput( script["spotLight"]["out"] )
+
+		view = GafferSceneUI.SceneView()
+		view["in"].setInput( script["shaderAssignment"]["out"] )
+
+		tool = GafferSceneUI.LightTool( view )
+		tool["active"].setValue( True )
+
+		GafferSceneUI.ContextAlgo.setSelectedPaths( view.getContext(), IECore.PathMatcher( [ "/light" ] ) )
+
+		with GafferUI.Window() as window :
+			gadgetWidget = GafferUI.GadgetWidget( view.viewportGadget() )
+		window.setVisible( True )
+
+		# Wait for the viewport to be rendered.
+
+		preRenderSlot = GafferTest.CapturingSlot( view.viewportGadget().preRenderSignal() )
+		while not len( preRenderSlot ) :
+			self.waitForIdle()
+
+		# Delete the node being viewed.
+
+		del script["shaderAssignment"]
+
+		# Wait for the viewport to be rendered again. This used to crash, so
+		# we're pretty happy if it doesn't.
+
+		del preRenderSlot[:]
+		with IECore.CapturingMessageHandler() as mh :
+			while not len( preRenderSlot ) :
+				self.waitForIdle()
+
+		# Ignore unrelated message from BackgroundTask. This needs a separate fix.
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].message, "Unable to find ScriptNode for SceneView.__preprocessor.out" )
 
 if __name__ == "__main__" :
 	unittest.main()

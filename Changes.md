@@ -20,6 +20,7 @@ Fixes
 - Windows : Fixed "{path} was unexpected at this time." startup error when environment variables such as `PATH` contain `"` characters.
 - PathListingWidget : Fixed bug which caused the pointer to be stuck displaying the "values" icon after dragging cells with no value.
 - SceneAlgo : Fixed computation of history through Expression nodes.
+- LightTool : Fixed crash when deleting the node being viewed.
 - USD : Fixed loading of Arnold lights previously exported from Gaffer to USD.
 - Catalogue : Fixed connection delays on Windows.
 
