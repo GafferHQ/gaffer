@@ -1266,18 +1266,13 @@ class LightToolHandle : public Handle
 		// Returns `nullptr` if no inspector or no inspection exists.
 		Inspector::ResultPtr inspection( const InternedString &metaParameter ) const
 		{
-			auto it = m_inspectors.find( metaParameter );
+			const auto it = m_inspectors.find( metaParameter );
 			if( it == m_inspectors.end() )
 			{
 				return nullptr;
 			}
 
-			if( Inspector::ResultPtr inspection = it->second->inspect() )
-			{
-				return inspection;
-			}
-
-			return nullptr;
+			return it->second->inspect();
 		}
 
 		bool allInspectionsEnabled() const
