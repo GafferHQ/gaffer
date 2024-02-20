@@ -64,4 +64,3 @@ __children["ColorToVector2"]["__uiPosition"].setValue( imath.V2f( -12.8156233, 5
 
 
 del __children
-
