@@ -296,9 +296,9 @@ IECoreGL::MeshPrimitivePtr unitCone()
 	return result;
 }
 
-V3f shadowSourcePosition( const V3f &shadowPivot, const V3f &shadowTarget, const float pivotDistance )
+V3f shadowSourcePosition( const V3f &Pivot, const V3f &Target, const float pivotDistance )
 {
-	return (shadowPivot - shadowTarget ).normalized() * pivotDistance + shadowPivot;
+	return (Pivot - Target ).normalized() * pivotDistance + Pivot;
 }
 
 // Must be called with the current context scoped.
@@ -314,7 +314,7 @@ M44f sourceOrientation( const TransformTool::Selection &s, const V3f &origin, co
 	V3f currentYAxis;
 	localTransform.multDirMatrix( V3f( 0.f, 1.f, 0.f ), currentYAxis );
 
-	// Point in the pivot-shadowTarget direction, in local space
+	// Point in the pivot-target direction, in local space
 	V3f targetZAxis;
 	worldParentTransformInverse.multDirMatrix( ( target - origin ), targetZAxis );
 
@@ -346,28 +346,28 @@ class DistanceHandle : public Handle
 
 		}
 
-		// Set the position of the shadow pivot from the given world-space coordinate.
+		// Set the position of the pivot from the given world-space coordinate.
 		void setPivot( const std::optional<V3f> &p )
 		{
-			m_shadowPivot = p;
+			m_pivot = p;
 			dirty( DirtyType::Render );
 		}
 
 		const std::optional<V3f> &getPivot() const
 		{
-			return m_shadowPivot;
+			return m_pivot;
 		}
 
-		// Set the position of the shadow target from the given world-space coordinate.
+		// Set the position of the target from the given world-space coordinate.
 		void setTarget( const std::optional<V3f> &p )
 		{
-			m_shadowTarget = p;
+			m_target = p;
 			dirty( DirtyType::Render );
 		}
 
 		const std::optional<V3f> &getTarget() const
 		{
-			return m_shadowTarget;
+			return m_target;
 		}
 
 		void setPivotDistance( const std::optional<float> d )
@@ -399,7 +399,7 @@ class DistanceHandle : public Handle
 
 		void renderHandle( const Style *style, Style::State state ) const override
 		{
-			if( !m_shadowPivot && !m_shadowTarget )
+			if( !m_pivot && !m_target )
 			{
 				return;
 			}
@@ -452,7 +452,7 @@ class DistanceHandle : public Handle
 
 			const M44f fullTransformInverse = fullTransform().inverse();
 
-			if( m_shadowPivot && m_requiresPivot )
+			if( m_pivot && m_requiresPivot )
 			{
 				IECoreGL::GroupPtr pivotGroup = new IECoreGL::Group;
 				pivotGroup->getState()->add(
@@ -467,7 +467,7 @@ class DistanceHandle : public Handle
 				);
 				pivotGroup->addChild( circle() );
 
-				const V3f localPivot = m_shadowPivot.value() * m_transformToSceneSpace * fullTransformInverse;
+				const V3f localPivot = m_pivot.value() * m_transformToSceneSpace * fullTransformInverse;
 
 				pivotGroup->setTransform(
 					M44f().scale( V3f( circleSize ) * ::rasterScaleFactor( this, localPivot ) ) *
@@ -480,12 +480,12 @@ class DistanceHandle : public Handle
 			V3f localTarget;
 			V3f coneHeightOffset;
 
-			if( m_shadowTarget )
+			if( m_target )
 			{
 				IECoreGL::GroupPtr coneGroup = new IECoreGL::Group;
 				coneGroup->addChild( unitCone() );
 
-				localTarget = m_shadowTarget.value() * m_transformToSceneSpace * fullTransformInverse;
+				localTarget = m_target.value() * m_transformToSceneSpace * fullTransformInverse;
 				const V3f coneScale = V3f( coneSize ) * ::rasterScaleFactor( this, localTarget );
 				coneHeightOffset = V3f( 0, 0, g_unitConeHeight * coneScale.z );
 
@@ -496,7 +496,7 @@ class DistanceHandle : public Handle
 
 				group->addChild( coneGroup );
 
-				if( !m_requiresPivot || m_shadowPivot )
+				if( !m_requiresPivot || m_pivot )
 				{
 					IECoreGL::GroupPtr lineGroup = new IECoreGL::Group;
 					lineGroup->addChild(
@@ -525,10 +525,10 @@ class DistanceHandle : public Handle
 
 	private :
 
-		// As with `LightPositionTool::m_shadowPivotMap` and `LightPositionTool::m_shadowTargetMap`,
+		// As with `LightPositionTool::m_pivotMap` and `LightPositionTool::m_targetMap`,
 		// we store the pivot and target position in transform space.
-		std::optional<V3f> m_shadowPivot;
-		std::optional<V3f> m_shadowTarget;
+		std::optional<V3f> m_pivot;
+		std::optional<V3f> m_target;
 
 		std::optional<float> m_pivotDistance;
 
@@ -605,7 +605,7 @@ LightPositionTool::~LightPositionTool()
 {
 }
 
-void LightPositionTool::positionShadow( const V3f &shadowPivot, const V3f &shadowTarget, const float pivotDistance )
+void LightPositionTool::positionShadow( const V3f &pivot, const V3f &target, const float pivotDistance )
 {
 	if( !m_distanceHandle->enabled() || selection().empty() )
 	{
@@ -613,14 +613,14 @@ void LightPositionTool::positionShadow( const V3f &shadowPivot, const V3f &shado
 	}
 	const Selection &s = selection().back();
 
-	const V3f newP = shadowSourcePosition( shadowPivot, shadowTarget, pivotDistance );
+	const V3f newP = shadowSourcePosition( pivot, target, pivotDistance );
 
 	// See `RotateTool::buttonPress()` for a description of why we use this relatively
 	// elaborate orientation calculation.
 
 	Context::Scope scopedContext( s.context() );
 
-	const M44f orientationMatrix = sourceOrientation( s, shadowPivot, shadowTarget );
+	const M44f orientationMatrix = sourceOrientation( s, pivot, target );
 
 	const M44f localTransform = s.scene()->transform( s.path() );
 	translateAndOrient( s, localTransform, newP, orientationMatrix );
@@ -702,9 +702,9 @@ void LightPositionTool::updateHandles( float rasterScale )
 		return;
 	}
 
-	// The user can control the distance along the line from shadow target
+	// The user can control the distance along the line from target
 	// to pivot, and the rotation around the Z-axis. Any variance from those
-	// contraints invalidates the stored shadow parameters.
+	// contraints invalidates the stored parameters.
 
 	Context::Scope scopedContext( s.context() );
 
