@@ -22,6 +22,12 @@ Build
 
 - Cortex : Updated to version 10.5.6.0.
 
+Documentation
+-------------
+
+- Added Render Pass Editor shortcuts to the "Controls and Shortcuts" section.
+- Added Render Pass Editor (Arnold) example demonstrating use of the Render Pass Editor, as well as the RenderPasses and RenderPassWedge nodes.
+
 1.3.11.0 (relative to 1.3.10.0)
 ========
 

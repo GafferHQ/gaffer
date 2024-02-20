@@ -64,3 +64,13 @@ GafferUI.Examples.registerExample(
 		GafferArnold.ArnoldShader
 	]
 )
+
+GafferUI.Examples.registerExample(
+	"Rendering/Render Pass Editor (Arnold)",
+	"$GAFFER_ROOT/resources/examples/rendering/renderPassEditorArnold.gfr",
+	description = "Demonstrates how to use the Render Pass Editor with Arnold.",
+	notableNodes = [
+		GafferScene.RenderPasses,
+		GafferScene.RenderPassWedge
+	]
+)
