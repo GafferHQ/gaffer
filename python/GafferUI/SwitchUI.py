@@ -101,6 +101,23 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"deleteContextVariables" : [
+
+			"description",
+			"""
+			The names of context variables to be deleted before accessing the array
+			of inputs. Names should be space-separated and may use Gaffer's standard
+			wildcards.
+
+			> Tip : This is convenient for cleaning up context variables only needed
+			to compute the switch index.
+			""",
+
+			"nodule:type", "",
+			"layout:section", "Advanced",
+
+		],
+
 		"connectedInputs" : [
 
 			"description",

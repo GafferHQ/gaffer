@@ -23,6 +23,7 @@ Improvements
   - Added Arnold-specific extension parameters.
   - Added parameter tooltips.
 - LightEditor : Added columns for Arnold-specific parameters on USD lights.
+- Switch : Added `deleteContextVariables` plug.
 
 Fixes
 -----
