@@ -357,9 +357,11 @@ class GAFFER_API Context : public IECore::RefCounted
 		};
 
 		// Sets a variable and emits `changedSignal()` as appropriate. Does not
-		// manage ownership in any way. If ownership is required, the caller must
-		// update `m_allocMap` appropriately _before_ calling `internalSet()`.
+		// manage ownership in any way. If ownership is required, call
+		// `internalSetWithOwner()` instead.
 		void internalSet( const IECore::InternedString &name, const Value &value );
+		// Sets a variable and maintains ownership of its data via `owner`.
+		void internalSetWithOwner( const IECore::InternedString &name, const Value &value, IECore::ConstDataPtr &&owner );
 		// Throws if variable doesn't exist.
 		const Value &internalGet( const IECore::InternedString &name ) const;
 		// Returns nullptr if variable doesn't exist.
