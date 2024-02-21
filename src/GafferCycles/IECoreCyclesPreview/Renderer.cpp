@@ -2423,6 +2423,19 @@ ccl::CurveShapeType nameToCurveShapeTypeEnum( const IECore::InternedString &name
 	return ccl::CurveShapeType::CURVE_THICK;
 }
 
+ccl::DeviceInfo firstCPUDevice()
+{
+	for( const auto &device : ccl::Device::available_devices() )
+	{
+		if( device.type == ccl::DEVICE_CPU )
+		{
+			return device;
+		}
+	}
+	assert( false );
+	return ccl::DeviceInfo();
+}
+
 // Shading-Systems
 IECore::InternedString g_shadingsystemOSL( "OSL" );
 IECore::InternedString g_shadingsystemSVM( "SVM" );
@@ -2436,9 +2449,6 @@ ccl::ShadingSystem nameToShadingSystemEnum( const IECore::InternedString &name )
 
 	return ccl::ShadingSystem::SHADINGSYSTEM_SVM;
 }
-
-// Default device
-IECore::InternedString g_defaultDeviceName( "CPU" );
 
 // Core
 IECore::InternedString g_frameOptionName( "frame" );
@@ -2533,7 +2543,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 #ifdef WITH_CYCLES_TEXTURE_CACHE
 				m_textureCacheParams( ccl::TextureCacheParams() ),
 #endif
-				m_deviceName( g_defaultDeviceName ),
 				m_renderType( renderType ),
 				m_frame( 1 ),
 				m_renderState( RENDERSTATE_READY ),
@@ -2544,11 +2553,10 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_useFrameAsSeed( true ),
 				m_messageHandler( messageHandler )
 		{
-			// Define internal device names
-			getCyclesDevices();
 			// Session Defaults
 			m_bufferParamsModified = m_bufferParams;
 
+			m_sessionParams.device = firstCPUDevice();
 			m_sessionParams.shadingsystem = ccl::SHADINGSYSTEM_OSL;
 			m_sessionParams.use_resolution_divider = false;
 			m_sceneParams.shadingsystem = m_sessionParams.shadingsystem;
@@ -2680,108 +2688,42 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 			else if( name == g_deviceOptionName )
 			{
-				if( value == nullptr )
+				string devicePattern = "CPU";
+				if( value )
 				{
-					m_multiDevices.clear();
-					const auto device = m_deviceMap.find( g_defaultDeviceName );
-					if( device != m_deviceMap.end() )
+					if( const StringData *data = reportedCast<const StringData>( value, "option", name ) )
 					{
-						m_multiDevices.push_back( device->second );
-					}
-					m_deviceName = g_defaultDeviceName;
-				}
-				else if( const StringData *data = reportedCast<const StringData>( value, "option", name ) )
-				{
-					m_multiDevices.clear();
-					auto deviceName = data->readable();
-					m_deviceName = "MULTI";
-
-					std::vector<std::string> split;
-					if( boost::contains( deviceName, " " ) )
-					{
-						boost::split( split, deviceName, boost::is_any_of( " " ) );
-					}
-					else
-					{
-						split.push_back( deviceName );
-					}
-
-					for( std::string &deviceStr : split )
-					{
-						if( deviceStr == g_defaultDeviceName.c_str() )
-						{
-							const auto device = m_deviceMap.find( g_defaultDeviceName );
-							if( device != m_deviceMap.end() )
-							{
-								m_multiDevices.push_back( device->second );
-
-								if( split.size() == 1 )
-								{
-									m_deviceName = g_defaultDeviceName;
-									break;
-								}
-								continue;
-							}
-						}
-						else if( boost::contains( deviceStr, ":" ) )
-						{
-							std::vector<std::string> _split;
-							boost::split( _split, deviceStr, boost::is_any_of( ":" ) );
-							ccl::DeviceType deviceType = ccl::Device::type_from_string( _split[0].c_str() );
-
-							if( _split[1] == "*" )
-							{
-								for( const auto &device : m_deviceMap )
-								{
-									if( deviceType == device.second.type )
-									{
-										m_multiDevices.push_back( device.second );
-									}
-								}
-							}
-							else
-							{
-								const auto device = m_deviceMap.find( deviceStr );
-								if( device != m_deviceMap.end() )
-								{
-									m_multiDevices.push_back( device->second );
-
-									if( split.size() == 1 )
-									{
-										m_deviceName = device->second.id;
-										break;
-									}
-									continue;
-								}
-								else
-								{
-									IECore::msg(
-										IECore::Msg::Warning, "CyclesRenderer::option",
-										fmt::format( "Cannot find device \"{}\" for option \"{}\".", deviceStr, name.string() )
-									);
-								}
-							}
-						}
-						else
-						{
-							IECore::msg(
-								IECore::Msg::Warning, "CyclesRenderer::option",
-								fmt::format( "Cannot find device \"{}\" for option \"{}\".", deviceStr, name.string() )
-							);
-						}
+						devicePattern = data->readable();
 					}
 				}
-				else
+
+				ccl::vector<ccl::DeviceInfo> devices;
+				std::unordered_map<ccl::DeviceType, int> typeIndices;
+				for( const auto &device : ccl::Device::available_devices() )
 				{
-					m_multiDevices.clear();
-					const auto device = m_deviceMap.find( g_defaultDeviceName );
-					if( device != m_deviceMap.end() )
+					const string typeString = ccl::Device::string_from_type( device.type );
+					const int typeIndex = typeIndices[device.type]++;
+					const string name = fmt::format( "{}:{:02}", typeString, typeIndex );
+					if(
+						// e.g. "CPU" matches the first CPU device.
+						( typeIndex == 0 && StringAlgo::matchMultiple( typeString, devicePattern ) ) ||
+						// e.g. "CUDA:*" matches all CUDA devices, or `OPTIX:00` matches the first Optix device.
+						StringAlgo::matchMultiple( name, devicePattern )
+					)
 					{
-						m_multiDevices.push_back( device->second );
+						devices.push_back( device );
 					}
-					m_deviceName = g_defaultDeviceName;
-					IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", fmt::format( "Unknown value for option \"{}\".", name.string() ) );
 				}
+
+				if( devices.empty() )
+				{
+					IECore::msg( IECore::Msg::Warning, "CyclesRenderer", fmt::format( "No devices matching \"{}\" found, reverting to CPU.", devicePattern ) );
+					devices.push_back( firstCPUDevice() );
+				}
+
+				// Note : if there's only one device, `get_multi_device()` just
+				// returns it directly, rather than wrapping it.
+				m_sessionParams.device = ccl::Device::get_multi_device( devices, /* threads = */ 0, /* background = */ true );
 				return;
 			}
 			else if( name == g_threadsOptionName )
@@ -3280,54 +3222,17 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		void init()
 		{
-			// Fallback
-			ccl::DeviceType deviceTypeFallback = ccl::DEVICE_CPU;
-			ccl::DeviceInfo deviceFallback;
-
-			bool deviceAvailable = false;
-			for( const ccl::DeviceInfo& device : IECoreCycles::devices() )
+			if( m_sessionParams.device.multi_devices.size() )
 			{
-				if( deviceTypeFallback == device.type )
-				{
-					deviceFallback = device;
-					break;
-				}
+				// When we first made this in `option()`, we didn't have the
+				// final values for `threads` and `background`. Apply those now.
+				m_sessionParams.device = ccl::Device::get_multi_device( m_sessionParams.device.multi_devices, m_sessionParams.threads, m_sessionParams.background );
 			}
 
-			if( m_multiDevices.size() == 0 )
+			if( m_sessionParams.shadingsystem == ccl::SHADINGSYSTEM_OSL && !m_sessionParams.device.has_osl )
 			{
-				m_deviceName = g_defaultDeviceName;
-			}
-
-			if( m_deviceName == "MULTI" )
-			{
-				ccl::DeviceInfo multidevice = ccl::Device::get_multi_device( m_multiDevices, m_sessionParams.threads, m_sessionParams.background );
-				m_sessionParams.device = multidevice;
-				deviceAvailable = true;
-			}
-			else
-			{
-				for( const ccl::DeviceInfo& device : IECoreCycles::devices() )
-				{
-					if( m_deviceName ==  device.id )
-					{
-						m_sessionParams.device = device;
-						deviceAvailable = true;
-						break;
-					}
-				}
-			}
-
-			if( !deviceAvailable )
-			{
-				IECore::msg( IECore::Msg::Warning, "CyclesRenderer", fmt::format( "Cannot find the device \"{}\" requested, reverting to CPU.", m_deviceName ) );
-				m_sessionParams.device = deviceFallback;
-			}
-
-			if( m_sessionParams.device.type != ccl::DEVICE_CPU && m_sessionParams.shadingsystem == ccl::SHADINGSYSTEM_OSL )
-			{
-				IECore::msg( IECore::Msg::Warning, "CyclesRenderer", "Shading system set to OSL, reverting to CPU." );
-				m_sessionParams.device = deviceFallback;
+				IECore::msg( IECore::Msg::Warning, "CyclesRenderer", "Device doesn't support OSL, reverting to CPU." );
+				m_sessionParams.device = firstCPUDevice();
 			}
 
 			if( m_session )
@@ -3836,51 +3741,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 		}
 
-		void getCyclesDevices()
-		{
-			int indexCuda = 0;
-			int indexHIP = 0;
-			int indexOptiX = 0;
-			int indexMetal = 0;
-			for( const ccl::DeviceInfo &device : IECoreCycles::devices() )
-			{
-				if( device.type == ccl::DEVICE_CPU )
-				{
-					m_deviceMap[g_defaultDeviceName] = device;
-					continue;
-				}
-				string deviceName = ccl::Device::string_from_type( device.type ).c_str();
-				if( device.type == ccl::DEVICE_CUDA )
-				{
-					auto optionName = fmt::format( "CUDA:{:02}", indexCuda );
-					m_deviceMap[optionName] = device;
-					++indexCuda;
-					continue;
-				}
-				if( device.type == ccl::DEVICE_HIP )
-				{
-					auto optionName = fmt::format( "HIP:{:02}", indexHIP );
-					m_deviceMap[optionName] = device;
-					++indexHIP;
-					continue;
-				}
-				if( device.type == ccl::DEVICE_OPTIX )
-				{
-					auto optionName = fmt::format( "OPTIX:{:02}", indexOptiX );
-					m_deviceMap[optionName] = device;
-					++indexOptiX;
-					continue;
-				}
-				if( device.type == ccl::DEVICE_METAL )
-				{
-					auto optionName = fmt::format( "METAL:{:02}", indexMetal );
-					m_deviceMap[optionName] = device;
-					++indexMetal;
-					continue;
-				}
-			}
-		}
-
 		void resetCaches()
 		{
 			m_cameraCache.reset();
@@ -3916,7 +3776,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 #endif
 
 		// IECoreScene::Renderer
-		string m_deviceName;
 		RenderType m_renderType;
 		int m_frame;
 		string m_camera;
@@ -3948,11 +3807,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		// Outputs
 		OutputMap m_outputs;
-
-		// Multi-Devices
-		typedef unordered_map<string, ccl::DeviceInfo> DeviceMap;
-		DeviceMap m_deviceMap;
-		ccl::vector<ccl::DeviceInfo> m_multiDevices;
 
 		// Cameras (Cycles can only know of one camera at a time)
 		typedef tbb::concurrent_unordered_map<std::string, IECoreScene::ConstCameraPtr> CameraMap;

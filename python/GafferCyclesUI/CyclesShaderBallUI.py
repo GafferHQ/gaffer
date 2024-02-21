@@ -34,6 +34,7 @@
 #
 ##########################################################################
 
+import IECore
 import Gaffer
 import GafferCycles
 
@@ -46,7 +47,7 @@ Gaffer.Metadata.registerNode(
 	Generates scenes suitable for rendering shader balls with Cycles.
 	""",
 
-	"layout:activator:deviceIsCpuOrMulti", lambda node : node["device"]["value"].getValue() in ["CPU", "MULTI"],
+	"layout:activator:deviceIncludesCPU", lambda node : IECore.StringAlgo.matchMultiple( "CPU", node["device"]["value"].getValue(), ),
 
 	plugs = {
 
@@ -84,7 +85,7 @@ Gaffer.Metadata.registerNode(
 			the rest of the UI for instance.
 			""",
 
-			"layout:visibilityActivator", "deviceIsCpuOrMulti",
+			"layout:activator", "deviceIncludesCPU",
 
 		],
 
