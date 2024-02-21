@@ -16,17 +16,19 @@ Fixes
 - Windows : Fixed "{path} was unexpected at this time." startup error when environment variables such as `PATH` contain `"` characters.
 - PathListingWidget : Fixed bug which caused the pointer to be stuck displaying the "values" icon after dragging cells with no value.
 - SceneAlgo : Fixed computation of history through Expression nodes.
-
-Build
------
-
-- Cortex : Updated to version 10.5.6.0.
+- USD : Fixed loading of Arnold lights previously exported from Gaffer to USD.
+- Catalogue : Fixed connection delays on Windows.
 
 Documentation
 -------------
 
 - Added Render Pass Editor shortcuts to the "Controls and Shortcuts" section.
 - Added Render Pass Editor (Arnold) example demonstrating use of the Render Pass Editor, as well as the RenderPasses and RenderPassWedge nodes.
+
+Build
+-----
+
+- Cortex : Updated to version 10.5.6.2.
 
 1.3.11.0 (relative to 1.3.10.0)
 ========
