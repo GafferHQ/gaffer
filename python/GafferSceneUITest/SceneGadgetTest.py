@@ -448,6 +448,10 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 			[]
 		)
 
+	@unittest.skipIf(
+		os.environ.get( "GAFFER_BUILD_ENVIRONMENT", "" ) == "gcc9",
+		"The gcc9 container does not support floating point depth buffers."
+	)
 	def testObjectAtLine( self ) :
 
 		script = Gaffer.ScriptNode()
@@ -701,6 +705,10 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 
 		return origin + direction * t
 
+	@unittest.skipIf(
+		os.environ.get( "GAFFER_BUILD_ENVIRONMENT", "" ) == "gcc9",
+		"The gcc9 container does not support floating point depth buffers."
+	)
 	def testNormalAt( self ) :
 
 		s = Gaffer.ScriptNode()
