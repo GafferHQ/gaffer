@@ -171,7 +171,7 @@ exit /B 0
 :prependToPath
 	set NewValue=%~1
 	set ExistingValue=!%~2!
-    if "%ExistingValue%" NEQ "" (
+    if "!ExistingValue!" NEQ "" (
         set ReplacedValue=!ExistingValue:%NewValue%=!
         if /I "!ExistingValue!" == "!ReplacedValue!" (
             set "%~2=!NewValue!;!ExistingValue!"
@@ -184,7 +184,7 @@ exit /B 0
 :appendToPath
     set NewValue=%~1
 	set ExistingValue=!%~2!
-    if "%ExistingValue%" NEQ "" (
+    if "!ExistingValue!" NEQ "" (
         set ReplacedValue=!ExistingValue:%NewValue%=!
         if /I "!ExistingValue!" == "!ReplacedValue!" (
             set "%~2=!ExistingValue!;!NewValue!"

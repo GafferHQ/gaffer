@@ -5,6 +5,7 @@ substitutions :
   middleClick : "![Middle click](images/mouseMiddleClick.png)"
   mouseWheel : "![Mouse wheel](images/mouseWheelUpDown.png)"
   editorFocusMenu : "![Editor focus menu](images/editorFocusMenuNodeSelection.png)"
+  activeRenderPass : "![Active render pass](images/activeRenderPass.png)"
 ---
 
 # Controls and Shortcuts #
@@ -422,3 +423,14 @@ Action                              | Control or shortcut
 ------------------------------------|-------------------
 Copy names of selected sets         | {kbd}`Ctrl` + {kbd}`C`
 Copy members of selected sets       | {kbd}`Ctrl` + {kbd}`Shift` + {kbd}`C`
+
+## Render Pass Editor ##
+
+Action                                               | Control or shortcut
+-----------------------------------------------------|---------------------
+Move cell selection                                  | {kbd}`↑`, {kbd}`↓`, {kbd}`←`, {kbd}`→`
+Extend cell selection                                | {kbd}`Shift` + {{leftClick}}<br>or<br>{kbd}`Shift` + {kbd}`↑`, {kbd}`↓`, {kbd}`←`, {kbd}`→`
+Toggle cell selection                                | {kbd}`Ctrl` + {{leftClick}}<br>or<br>{kbd}`Ctrl` + {kbd}`↑`, {kbd}`↓`, {kbd}`←`, {kbd}`→`
+Edit selected cells                                  | {kbd}`Return`<br>or<br>{kbd}`Enter`
+Disable edit                                         | {kbd}`D`
+Set a render pass as active                          | {kbd}`Return` or {{leftClick}} {{leftClick}} a cell within the {{activeRenderPass}} column

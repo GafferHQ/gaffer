@@ -203,11 +203,20 @@ Fixes
 - Viewer : Fixed context handling bug in the shader view (#5654).
 - PythonCommand : Fixed misleading results for `repr( variables )` and `str( variables )`, which would suggest the dictionary was empty when it was not.
 - CompoundObject : Fixed crashes in Python bindings caused by passing `None` as a key.
+- Windows : Fixed "{path} was unexpected at this time." startup error when environment variables such as `PATH` contain `"` characters.
+- PathListingWidget : Fixed bug which caused the pointer to be stuck displaying the "values" icon after dragging cells with no value.
+- SceneAlgo : Fixed computation of history through Expression nodes.
 
 Build
 -----
 
 - Cortex : Updated to version 10.5.6.0.
+
+Documentation
+-------------
+
+- Added Render Pass Editor shortcuts to the "Controls and Shortcuts" section.
+- Added Render Pass Editor (Arnold) example demonstrating use of the Render Pass Editor, as well as the RenderPasses and RenderPassWedge nodes.
 
 1.3.11.0 (relative to 1.3.10.0)
 ========
@@ -899,6 +908,11 @@ Build
 
 1.2.10.x (relative to 1.2.10.5)
 ========
+
+Fixes
+-----
+
+- Context : Fixed potential crash when setting a variable with ownership.
 
 1.2.10.5 (relative to 1.2.10.4)
 ========
