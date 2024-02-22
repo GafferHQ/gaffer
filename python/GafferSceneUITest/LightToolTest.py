@@ -171,7 +171,7 @@ class LightToolTest( GafferUITest.TestCase ) :
 
 		preRenderSlot = GafferTest.CapturingSlot( view.viewportGadget().preRenderSignal() )
 		while not len( preRenderSlot ) :
-			self.waitForIdle()
+			self.waitForIdle( 1000 )
 
 		# Delete the node being viewed.
 
@@ -183,7 +183,7 @@ class LightToolTest( GafferUITest.TestCase ) :
 		del preRenderSlot[:]
 		with IECore.CapturingMessageHandler() as mh :
 			while not len( preRenderSlot ) :
-				self.waitForIdle()
+				self.waitForIdle( 1000 )
 
 		# Ignore unrelated message from BackgroundTask. This needs a separate fix.
 		self.assertEqual( len( mh.messages ), 1 )
