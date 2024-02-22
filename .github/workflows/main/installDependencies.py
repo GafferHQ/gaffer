@@ -125,3 +125,7 @@ if args.outputFormat :
 			archiveDigest = md5.hexdigest()
 		)
 	)
+
+# Clean up
+
+pathlib.Path( archiveFileName ).unlink()
