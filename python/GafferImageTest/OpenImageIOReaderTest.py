@@ -65,6 +65,7 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 	multipartDefaultChannelsFileName = GafferImageTest.ImageTestCase.imagesPath() / "multipartDefaultChannels.exr"
 	multipartDefaultChannelsOverlapFileName = GafferImageTest.ImageTestCase.imagesPath() / "multipartDefaultChannelsOverlap.exr"
 	missingFileName = GafferImageTest.ImageTestCase.imagesPath() / "missing.####.exr"
+	dotGridWarpedFileName = GafferImageTest.ImageTestCase.imagesPath() / "dotGrid.warped.exr"
 
 	def testInternalImageSpaceConversion( self ) :
 
@@ -784,6 +785,65 @@ class OpenImageIOReaderTest( GafferImageTest.ImageTestCase ) :
 				reader["fileName"].setValue( f )
 				self.assertEqual( len( reader["out"].viewNames() ), r )
 
+	def runPerfTest( self, tiled, blockZip, offset ):
+		origSource = GafferImage.ImageReader()
+		origSource["fileName"].setValue( self.dotGridWarpedFileName )
+
+		resize = GafferImage.Resize()
+		resize["in"].setInput( origSource["out"] )
+		resize['format']["displayWindow"].setValue( imath.Box2i( imath.V2i( 0 ), imath.V2i( 8192 ) ) )
+
+		offsetNode = GafferImage.Offset()
+		offsetNode["in"].setInput( resize["out"] )
+		offsetNode['offset'].setValue( offset )
+
+		tempFile = self.temporaryDirectory() / "tempPerf.exr"
+
+		testWriter = GafferImage.ImageWriter()
+		testWriter["in"].setInput( offsetNode["out"] )
+		testWriter["fileName"].setValue( tempFile )
+		testWriter["openexr"]["mode"].setValue( GafferImage.ImageWriter.Mode.Tile if tiled else GafferImage.ImageWriter.Mode.Scanline )
+		testWriter["openexr"]["compression"].setValue( "zip" if blockZip else "zips" )
+		testWriter["task"].execute()
+
+		perfReader = GafferImage.ImageReader()
+		perfReader["fileName"].setValue( tempFile )
+
+		with GafferTest.TestRunner.PerformanceScope() :
+			GafferImageTest.processTiles( perfReader["out"] )
+
+	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 1 )
+	def testScanlinePerformance( self ):
+		self.runPerfTest( False, False, imath.V2i( 0 ) )
+
+	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 1 )
+	def testTilePerformance( self ):
+		self.runPerfTest( True, False, imath.V2i( 0 ) )
+
+	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 1 )
+	def testScanlineBlockPerformance( self ):
+		# When using large compression blocks with scanline mode, we can't multithread as effectively, so
+		# this will be a bit slower than the first two tests
+		self.runPerfTest( False, True, imath.V2i( 0 ) )
+
+	# These offsets test whether we are correctly aligning our decompression batches to the file.
+	# If everything is working properly, these should perform identically to the previous test.
+	# If `scanlineBatchOffset` is set wrong, the results will be correct, but these tests will run about
+	# twice as slowly ( because each batch of scanlines will have to decompress two chunks in order to
+	# get all the requested scanlines ).
+
+	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 1 )
+	def testScanlineBlockPerformanceOffsetPositive( self ):
+		self.runPerfTest( False, True, imath.V2i( 1 ) )
+
+	@unittest.skipIf( GafferTest.inCI(), "Performance not relevant on CI platform" )
+	@GafferTest.TestRunner.PerformanceTestMethod( repeat = 1 )
+	def testScanlineBlockPerformanceOffsetNegative( self ):
+		self.runPerfTest( False, True, imath.V2i( -1 ) )
 
 if __name__ == "__main__":
 	unittest.main()
