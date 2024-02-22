@@ -252,6 +252,13 @@ GraphComponentPtr renderPassOptionEditReadOnlyReasonWrapper( Gaffer::EditScope &
 	return const_cast<GraphComponent *>( EditScopeAlgo::renderPassOptionEditReadOnlyReason( &scope, renderPass, option ) );
 }
 
+// Render Passes
+// =============
+
+GraphComponentPtr renderPassesReadOnlyReasonWrapper( Gaffer::EditScope &scope )
+{
+	return const_cast<GraphComponent *>( EditScopeAlgo::renderPassesReadOnlyReason( &scope ) );
+}
 
 } // namespace
 
@@ -314,6 +321,8 @@ void bindEditScopeAlgo()
 	def( "hasRenderPassOptionEdit", &hasRenderPassOptionEditWrapper, ( arg( "scope" ), arg( "renderPass" ), arg( "option" ) ) );
 	def( "removeRenderPassOptionEdit", &removeRenderPassOptionEditWrapper, ( arg( "scope" ), arg( "renderPass" ), arg( "option" ) ) );
 	def( "renderPassOptionEditReadOnlyReason", &renderPassOptionEditReadOnlyReasonWrapper, ( arg( "scope" ), arg( "renderPass" ), arg( "option" ) ) );
+
+	def( "renderPassesReadOnlyReason", &renderPassesReadOnlyReasonWrapper );
 
 }
 

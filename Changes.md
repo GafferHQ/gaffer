@@ -6,6 +6,10 @@ Improvements
 
 - SceneReader : Added basic loding of UsdGeomNurbsCurves, converting them to CurvesPrimitives (basis curves).
 - Console output : Every line is now prefixed with the message level.
+- RenderPasses : Added validation of render pass names entered in the `names` plug.
+- RenderPassEditor :
+  - Added support for adding a new render pass to an EditScope by clicking the plus button at the bottom of the editor.
+  - Added support for deleting selected render passes by clicking the minus button at the bottom of the editor, or by right-clicking one of the names and selecting 'Delete Selected Render Passes'.
 
 Fixes
 -----
@@ -24,6 +28,14 @@ Documentation
 
 - Added Render Pass Editor shortcuts to the "Controls and Shortcuts" section.
 - Added Render Pass Editor (Arnold) example demonstrating use of the Render Pass Editor, as well as the RenderPasses and RenderPassWedge nodes.
+
+API
+---
+
+- EditScopeAlgo : Added support for creating render passes.
+- RenderPasses : Added `registerRenderPassNameWidget()` and `createRenderPassNameWidget()` methods for registration and creation of the widget used for editing render pass names.
+- RenderPassEditor : Added `addRenderPassButtonMenuSignal()` to allow customisation of the add render pass button behaviour.
+- ConfirmationDialogue : The cancel button may now be omitted by passing `cancelLabel = None` to the constructor.
 
 Build
 -----
