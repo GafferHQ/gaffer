@@ -63,7 +63,7 @@ jobs:
             os: ubuntu-20.04
             buildType: RELEASE
             publish: true
-            containerImage: ghcr.io/gafferhq/build/build:3.0.0a4
+            containerImage: ghcr.io/gafferhq/build/build:3.0.0a6
             # GitHub container builds run as root. This causes failures for tests that
             # assert that filesystem permissions are respected, because root doesn't
             # respect permissions. So we run the final test suite as a dedicated
