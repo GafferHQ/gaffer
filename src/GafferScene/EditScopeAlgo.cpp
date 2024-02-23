@@ -44,6 +44,7 @@
 #include "GafferScene/Set.h"
 #include "GafferScene/ShaderTweaks.h"
 #include "GafferScene/Transform.h"
+#include "GafferScene/RenderPasses.h"
 
 #include "Gaffer/EditScope.h"
 #include "Gaffer/Metadata.h"
@@ -1492,4 +1493,31 @@ const Gaffer::GraphComponent *GafferScene::EditScopeAlgo::renderPassOptionEditRe
 	}
 
 	return nullptr;
+}
+
+// Render Passes
+// =============
+
+namespace
+{
+
+const std::string g_renderPassesProcessorName = "RenderPasses";
+
+SceneProcessorPtr renderPassesProcessor()
+{
+	return new RenderPasses( g_renderPassesProcessorName );
+}
+
+EditScope::ProcessorRegistration g_renderPassProcessorRegistration( g_renderPassesProcessorName, renderPassesProcessor );
+
+} // namespace
+
+const Gaffer::GraphComponent *GafferScene::EditScopeAlgo::renderPassesReadOnlyReason( const Gaffer::EditScope *scope )
+{
+	if( auto processor = const_cast<EditScope *>( scope )->acquireProcessor<RenderPasses>( g_renderPassesProcessorName, /* createIfNecessary = */ false ) )
+	{
+		return MetadataAlgo::readOnlyReason( processor->namesPlug() );
+	}
+
+	return MetadataAlgo::readOnlyReason( scope );
 }

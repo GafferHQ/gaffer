@@ -34,8 +34,14 @@
 #
 ##########################################################################
 
+import re
+
 import Gaffer
+import GafferUI
 import GafferScene
+import GafferSceneUI
+
+from Qt import QtGui
 
 Gaffer.Metadata.registerNode(
 
@@ -74,8 +80,106 @@ Gaffer.Metadata.registerNode(
 			> and appended to the end.
 			""",
 
+			"plugValueWidget:type", "GafferSceneUI.RenderPassesUI._RenderPassVectorDataPlugValueWidget",
+
 		],
 
 	}
 
 )
+
+class _RenderPassNameWidget( GafferUI.TextWidget ) :
+
+	def __init__( self, **kw ) :
+
+		GafferUI.TextWidget.__init__( self, **kw )
+
+		self._qtWidget().setValidator( _RenderPassNameValidator( self._qtWidget() ) )
+
+	def setRenderPassName( self, name ) :
+
+		self.setText( name )
+
+	def getRenderPassName( self ) :
+
+		return self.getText()
+
+	def renderPassNameChangedSignal( self ) :
+
+		return self.textChangedSignal()
+
+class _RenderPassNameValidator( QtGui.QValidator ) :
+
+	def __init__( self, parent ) :
+
+		QtGui.QValidator.__init__( self, parent )
+
+	def validate( self, input, pos ) :
+
+		if len( input ) :
+			if re.match( "^[A-Za-z0-9_-]+$", input ) :
+				result = QtGui.QValidator.Acceptable
+			else :
+				result = QtGui.QValidator.Invalid
+		else :
+			result = QtGui.QValidator.Intermediate
+
+		return result, input, pos
+
+## Render Pass Name Widget Registration
+# -------------------------------------
+# We provide a default widget to display and edit a render pass name, but
+# facilities may wish to customise the widget used in order to provide their
+# own UI or name validation. These methods allow registration of a custom
+# widget via a startup config.
+
+__renderPassNameWidget = _RenderPassNameWidget
+
+## 'w' should be a callable that returns a widget with
+## `getRenderPassName()` and `setRenderPassName( renderPassName )` methods.
+## Optional `renderPassNameChangedSignal` and `activatedSignal` signals can
+## be emitted to inform observers of changes to, or the choice of render pass name.
+def registerRenderPassNameWidget( w ) :
+
+	__renderPassNameWidget = w
+
+def createRenderPassNameWidget() :
+
+	return __renderPassNameWidget()
+
+class _RenderPassVectorDataPlugValueWidget( GafferUI.VectorDataPlugValueWidget ) :
+
+	def __init__( self, plug, **kw ) :
+
+		GafferUI.VectorDataPlugValueWidget.__init__( self, plug, **kw )
+
+		self.vectorDataWidget().editSignal().connect( Gaffer.WeakMethod( self.__edit ), scoped = False )
+
+	def __edit( self, vectorDataWidget, column, row ) :
+
+		return _Editor()
+
+class _Editor( GafferUI.ListContainer ) :
+
+	def __init__( self ) :
+
+		GafferUI.ListContainer.__init__( self, orientation = GafferUI.ListContainer.Orientation.Horizontal, spacing = 2 )
+		with self :
+			self.__nameWidget = createRenderPassNameWidget()
+
+		self._qtWidget().setFocusProxy( self.__nameWidget._qtWidget() )
+
+		GafferUI.Widget.focusChangedSignal().connect( Gaffer.WeakMethod( self.__focusChanged ), scoped = False )
+
+	def setValue( self, value ) :
+
+		self.__nameWidget.setRenderPassName( value )
+
+	def getValue( self ) :
+
+		return self.__nameWidget.getRenderPassName()
+
+	def __focusChanged( self, oldWidget, newWidget ) :
+
+		if not self.isAncestorOf( newWidget ) :
+			self.setVisible( False )

@@ -190,14 +190,23 @@ Build
   - Removed QtNetworkAuth library.
 - USD : Updated to version 23.11.
 
-1.3.x.x (relative to 1.3.11.0)
+1.3.x.x (relative to 1.3.12.0)
 =======
+
+
+
+1.3.12.0 (relative to 1.3.11.0)
+========
 
 Improvements
 ------------
 
 - SceneReader : Added basic loding of UsdGeomNurbsCurves, converting them to CurvesPrimitives (basis curves).
 - Console output : Every line is now prefixed with the message level.
+- RenderPasses : Added validation of render pass names entered in the `names` plug.
+- RenderPassEditor :
+  - Added support for adding a new render pass to an EditScope by clicking the plus button at the bottom of the editor.
+  - Added support for deleting selected render passes by clicking the minus button at the bottom of the editor, or by right-clicking one of the names and selecting 'Delete Selected Render Passes'.
 
 Fixes
 -----
@@ -208,17 +217,29 @@ Fixes
 - Windows : Fixed "{path} was unexpected at this time." startup error when environment variables such as `PATH` contain `"` characters.
 - PathListingWidget : Fixed bug which caused the pointer to be stuck displaying the "values" icon after dragging cells with no value.
 - SceneAlgo : Fixed computation of history through Expression nodes.
-
-Build
------
-
-- Cortex : Updated to version 10.5.6.0.
+- LightTool : Fixed crash when deleting the node being viewed.
+- USD : Fixed loading of Arnold lights previously exported from Gaffer to USD.
+- Catalogue : Fixed connection delays on Windows.
+- Context : Fixed potential crash when setting a variable with ownership.
 
 Documentation
 -------------
 
 - Added Render Pass Editor shortcuts to the "Controls and Shortcuts" section.
 - Added Render Pass Editor (Arnold) example demonstrating use of the Render Pass Editor, as well as the RenderPasses and RenderPassWedge nodes.
+
+API
+---
+
+- EditScopeAlgo : Added support for creating render passes.
+- RenderPasses : Added `registerRenderPassNameWidget()` and `createRenderPassNameWidget()` methods for registration and creation of the widget used for editing render pass names.
+- RenderPassEditor : Added `addRenderPassButtonMenuSignal()` to allow customisation of the add render pass button behaviour.
+- ConfirmationDialogue : The cancel button may now be omitted by passing `cancelLabel = None` to the constructor.
+
+Build
+-----
+
+- Cortex : Updated to version 10.5.6.2.
 
 1.3.11.0 (relative to 1.3.10.0)
 ========
@@ -908,7 +929,12 @@ Build
 - USD : Updated to version 23.05.
 - ZLib : Added version 1.2.13.
 
-1.2.10.x (relative to 1.2.10.5)
+1.2.10.x (relative to 1.2.10.6)
+========
+
+
+
+1.2.10.6 (relative to 1.2.10.5)
 ========
 
 Fixes

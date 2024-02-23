@@ -35,9 +35,9 @@
 ##########################################################################
 
 import collections
-
 import functools
 import imath
+import traceback
 
 import IECore
 
@@ -123,14 +123,35 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 				horizontalScrollMode = GafferUI.ScrollMode.Automatic
 			)
 
+			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+
+				self.__addButton = GafferUI.Button(
+					image = "plus.png",
+					hasFrame = False
+				)
+
+				self.__removeButton = GafferUI.Button(
+					image = "minus.png",
+					hasFrame = False
+				)
+
+				GafferUI.Spacer( imath.V2i( 1 ), imath.V2i( 999999, 1 ), parenting = { "expand" : True } )
+
+			self.__addButton.clickedSignal().connect( Gaffer.WeakMethod( self.__addButtonClicked ), scoped = False )
+			self.__removeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__removeButtonClicked ), scoped = False )
+			Gaffer.Metadata.nodeValueChangedSignal().connect( Gaffer.WeakMethod( self.__metadataChanged ), scoped = False )
+
 			self.__pathListing.buttonDoubleClickSignal().connectFront( Gaffer.WeakMethod( self.__buttonDoubleClick ), scoped = False )
 			self.__pathListing.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
 			self.__pathListing.buttonPressSignal().connectFront( Gaffer.WeakMethod( self.__buttonPress ), scoped = False )
+			self.__pathListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ), scoped = False )
 
 			self.__settingsNode.plugSetSignal().connect( Gaffer.WeakMethod( self.__settingsPlugSet ), scoped = False )
+			self.__settingsNode.plugInputChangedSignal().connect( Gaffer.WeakMethod( self.__settingsPlugInputChanged ), scoped = False )
 
 		self._updateFromSet()
 		self.__updateColumns()
+		self.__updateButtonStatus()
 
 	__columnRegistry = collections.OrderedDict()
 
@@ -237,6 +258,11 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 		if plug in ( self.__settingsNode["section"], self.__settingsNode["tabGroup"] ) :
 			self.__updateColumns()
 
+	def __settingsPlugInputChanged( self, plug ) :
+
+		if plug in ( self.__settingsNode["in"], self.__settingsNode["editScope"] ) :
+			self.__updateButtonStatus()
+
 	def __plugParentChanged( self, plug, oldParent ) :
 
 		# if a plug has been removed or moved to another node, then
@@ -297,6 +323,11 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 
 		# There may be multiple columns with a selection, but we only operate on the specified column indices.
 		selection = self.__pathListing.getSelection()
+		# Any selection outside of our desired column(s) is ambiguous, so we return no names in that situation
+		for i, pathMatcher in enumerate( selection ) :
+			if i not in columns and not pathMatcher.isEmpty() :
+				return []
+
 		renderPassPath = self.__pathListing.getPath().copy()
 		result = set()
 		for c in columns :
@@ -518,7 +549,18 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 
 		menuDefinition = IECore.MenuDefinition()
 
-		if columnIndex > 1 :
+		if columnIndex == 0 :
+			# Render pass operations
+
+			menuDefinition.append(
+				"Delete Selected Render Passes",
+				{
+					"command" : Gaffer.WeakMethod( self.__deleteSelectedRenderPasses ),
+					"active" : self.__canEditRenderPasses()
+				}
+			)
+
+		elif columnIndex > 1 :
 			# Option cells
 
 			menuDefinition.append(
@@ -576,6 +618,229 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 				)
 				self.ancestor( GafferUI.Window ).addChildWindow( window, removeOnClose = True )
 				window.setVisible( True )
+
+	def __canEditRenderPasses( self, editScope = None ) :
+
+		input = self.__settingsNode["in"].getInput()
+		if input is None :
+			# No input scene
+			return False
+
+		inputNode = input.node()
+
+		if editScope is None :
+			# No edit scope provided so use the current selected
+			editScopeInput = self.__settingsNode["editScope"].getInput()
+			if editScopeInput is None :
+				# No edit scope selected
+				return False
+
+			editScope = editScopeInput.node()
+
+		if inputNode != editScope and editScope not in Gaffer.NodeAlgo.upstreamNodes( inputNode ) :
+			# Edit scope is downstream of input
+			return False
+		elif GafferScene.EditScopeAlgo.renderPassesReadOnlyReason( editScope ) is not None :
+			# RenderPasses node or the edit scope is read only
+			return False
+		else :
+			with self.getContext() :
+				if not editScope["enabled"].getValue() :
+					# Edit scope is disabled
+					return False
+
+		renderPassesProcessor = editScope.acquireProcessor( "RenderPasses", createIfNecessary = False )
+		if renderPassesProcessor is not None and ( not renderPassesProcessor["enabled"].getValue() or not renderPassesProcessor["names"].settable() ) :
+			# RenderPasses node is disabled
+			return False
+
+		return True
+
+	def __addRenderPass( self, renderPass, editScope ) :
+
+		assert( self.__canEditRenderPasses( editScope ) )
+
+		renderPassesProcessor = editScope.acquireProcessor( "RenderPasses", createIfNecessary = True )
+
+		renderPasses = renderPassesProcessor["names"].getValue()
+		renderPasses.append( renderPass )
+
+		with Gaffer.UndoScope( editScope.ancestor( Gaffer.ScriptNode ) ) :
+			renderPassesProcessor["names"].setValue( renderPasses )
+
+	def __disableRenderPasses( self, renderPasses, editScope ) :
+
+		with Gaffer.UndoScope( editScope.ancestor( Gaffer.ScriptNode ) ) :
+			for renderPass in renderPasses :
+				edit = GafferScene.EditScopeAlgo.acquireRenderPassOptionEdit(
+					editScope, renderPass, "renderPass:enabled", createIfNecessary = True
+				)
+				edit["enabled"].setValue( True )
+				edit["value"].setValue( False )
+
+	def __deleteSelectedRenderPasses( self ) :
+
+		selectedRenderPasses = self.__selectedRenderPasses()
+		if len( selectedRenderPasses ) == 0 :
+			return
+
+		editScopeInput = self.__settingsNode["editScope"].getInput()
+		if editScopeInput is None :
+			return
+
+		editScope = editScopeInput.node()
+		localRenderPasses = []
+		renderPassesProcessor = editScope.acquireProcessor( "RenderPasses", createIfNecessary = False )
+		if renderPassesProcessor is not None :
+			localRenderPasses = renderPassesProcessor["names"].getValue()
+
+		## \todo: This tracing would be better performed by an Inspector showing the existence history of a render pass
+		# allowing us to pinpoint the node each render pass originated from and deal with any Context changes along the way.
+		upstreamRenderPasses = self.__renderPassNames( renderPassesProcessor["in"] if renderPassesProcessor else editScope["in"] )
+		localSelection = []
+		upstreamSelection = []
+		downstreamSelection = []
+
+		for x in selectedRenderPasses :
+			if x in localRenderPasses :
+				localSelection.append( x )
+			elif x in upstreamRenderPasses :
+				upstreamSelection.append( x )
+			else :
+				downstreamSelection.append( x )
+
+		with Gaffer.UndoScope( editScope.ancestor( Gaffer.ScriptNode ) ) :
+			upstreamCount = len( upstreamSelection )
+			if upstreamCount > 0 :
+
+				dialogue = GafferUI.ConfirmationDialogue(
+					"Unable to Delete Upstream Render Passes",
+					"{count} render pass{suffix} created upstream of <b>{editScopeName}</b>.<br><br>We recommend deleting {target} in the upstream Edit Scope, or disabling {target} in <b>{editScopeName}</b>.".format(
+						count = upstreamCount,
+						suffix = "es were" if upstreamCount != 1 else " was",
+						editScopeName = editScope.relativeName( self.scriptNode() ),
+						target = "them" if upstreamCount != 1 else "it"
+					),
+					details = "\n".join( sorted( upstreamSelection ) ),
+					confirmLabel = "Disable Render Pass{}".format( "es" if upstreamCount != 1 else "" ),
+				)
+				if dialogue.waitForConfirmation( parentWindow = self.ancestor( GafferUI.Window ) ) :
+					self.__disableRenderPasses( upstreamSelection, editScope )
+				else :
+					return
+
+			if len( localRenderPasses ) > 0 and len( localSelection ) > 0 :
+				renderPassesProcessor["names"].setValue( IECore.StringVectorData( [ x for x in localRenderPasses if x not in localSelection ] ) )
+
+		downstreamCount = len( downstreamSelection )
+		if downstreamCount > 0 :
+
+			dialogue = GafferUI.ConfirmationDialogue(
+				"Unable to Delete Downstream Render Passes",
+				"{count} render pass{suffix} created downstream of <b>{editScopeName}</b>.<br><br>We recommend deleting {target} in the downstream Edit Scope.".format(
+					count = downstreamCount,
+					suffix = "es were" if downstreamCount != 1 else " was",
+					editScopeName = editScope.relativeName( self.scriptNode() ),
+					target = "them" if downstreamCount != 1 else "it"
+				),
+				details = "\n".join( sorted( downstreamSelection ) ),
+				confirmLabel = "Close",
+				cancelLabel = None
+			)
+			dialogue.waitForConfirmation( parentWindow = self.ancestor( GafferUI.Window ) )
+
+	def __renderPassNames( self, plug ) :
+
+		with self.getContext() :
+			return plug["globals"].getValue().get( "option:renderPass:names", IECore.StringVectorData() )
+
+	def __renderPassCreationDialogue( self ) :
+
+		editScopeInput = self.__settingsNode["editScope"].getInput()
+		assert( editScopeInput is not None )
+
+		editScope = editScopeInput.node()
+		dialogue = _RenderPassCreationDialogue( self.__renderPassNames( self.__settingsNode["in"] ), editScope )
+		renderPassName = dialogue.waitForRenderPassName( parentWindow = self.ancestor( GafferUI.Window ) )
+		if renderPassName :
+			self.__addRenderPass( renderPassName, editScope )
+
+	def __addButtonClicked( self, button ) :
+
+		menuDefinition = IECore.MenuDefinition()
+		self.addRenderPassButtonMenuSignal()( menuDefinition, self )
+
+		if menuDefinition.size() == 0 :
+			self.__renderPassCreationDialogue()
+		elif menuDefinition.size() == 1 :
+			_, item = menuDefinition.items()[0]
+			item.command()
+		else :
+			menuDefinition.prepend(
+				"Add...",
+				{
+					"command" : Gaffer.WeakMethod( self.__renderPassCreationDialogue )
+				}
+			)
+			self.__popupMenu = GafferUI.Menu( menuDefinition )
+			self.__popupMenu.popup( parent = self )
+
+	def __removeButtonClicked( self, button ) :
+
+		self.__deleteSelectedRenderPasses()
+		self.__updateButtonStatus()
+
+	def __metadataChanged( self, nodeTypeId, key, node ) :
+
+		editScopeInput = self.__settingsNode["editScope"].getInput()
+		if editScopeInput is None :
+			return
+
+		renderPassesProcessor = editScopeInput.node().acquireProcessor( "RenderPasses", createIfNecessary = False )
+
+		if (
+			Gaffer.MetadataAlgo.readOnlyAffectedByChange( editScopeInput, nodeTypeId, key, node ) or
+			( renderPassesProcessor and Gaffer.MetadataAlgo.readOnlyAffectedByChange( renderPassesProcessor, nodeTypeId, key, node ) )
+		) :
+			self.__updateButtonStatus()
+
+	def __selectionChanged( self, pathListing ) :
+
+		self.__updateButtonStatus()
+
+	def __updateButtonStatus( self, *unused ) :
+
+		editable = self.__canEditRenderPasses()
+		selection = len( self.__selectedRenderPasses() ) > 0
+
+		self.__removeButton.setEnabled( editable and selection )
+		if not editable :
+			removeToolTip = "To delete render passes, first choose an editable Edit Scope."
+		elif not selection :
+			removeToolTip = "To delete render passes, select them from the Name column."
+		else :
+			removeToolTip = "Click to delete selected render passes."
+		self.__removeButton.setToolTip( removeToolTip )
+
+		self.__addButton.setEnabled( editable )
+		self.__addButton.setToolTip( "Click to add render pass." if editable else "To add a render pass, first choose an editable Edit Scope." )
+
+	__addRenderPassButtonMenuSignal = None
+	## This signal is emitted whenever the add render pass button is clicked.
+	# If the resulting menu definition has been populated with items,
+	# a popup menu will be presented from the button.
+	# If only a single item is present, its command will be called
+	# immediately instead of presenting a menu.
+	# If no items are present, then the default behaviour is to
+	# add a single new render pass with a user specified name.
+
+	@classmethod
+	def addRenderPassButtonMenuSignal( cls ) :
+
+		if cls.__addRenderPassButtonMenuSignal is None :
+			cls.__addRenderPassButtonMenuSignal = _AddButtonMenuSignal()
+
+		return cls.__addRenderPassButtonMenuSignal
 
 GafferUI.Editor.registerType( "RenderPassEditor", RenderPassEditor )
 
@@ -755,3 +1020,93 @@ class _SearchFilterWidget( GafferUI.PathFilterWidget ) :
 		self.__patternWidget.setHighlighted( False )
 
 		return True
+
+class _RenderPassCreationDialogue( GafferUI.Dialogue ) :
+
+	def __init__( self, existingNames = [], editScope = None, title = "Add Render Pass", cancelLabel = "Cancel", confirmLabel = "Add", **kw ) :
+
+		GafferUI.Dialogue.__init__( self, title, sizeMode=GafferUI.Window.SizeMode.Fixed, **kw )
+
+		self.__existingNames = set( existingNames or [] )
+
+		self.__column = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Vertical, spacing = 8 )
+		with self.__column :
+			if editScope :
+				with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+					GafferUI.Label( "Add render pass to" )
+					GafferUI.Label( "<h4>{}</h4>".format( editScope.relativeName( editScope.ancestor( Gaffer.ScriptNode ) ) ) )
+					editScopeColor = Gaffer.Metadata.value( editScope, "nodeGadget:color" )
+					if editScopeColor :
+						swatch = GafferUI.ColorSwatch( color = editScopeColor, displayTransform = GafferUI.Widget.identityDisplayTransform )
+						swatch._qtWidget().setFixedWidth( 13 )
+
+			self.__renderPassNameWidget = GafferSceneUI.RenderPassesUI.createRenderPassNameWidget()
+
+		self._setWidget( self.__column )
+
+		self._addButton( cancelLabel )
+		self.__confirmButton = self._addButton( confirmLabel )
+
+		if hasattr( self.__renderPassNameWidget, "activatedSignal" ) :
+			self.__renderPassNameWidget.activatedSignal().connect( Gaffer.WeakMethod( self.__renderPassNameActivated ), scoped = False )
+		if hasattr( self.__renderPassNameWidget, "renderPassNameChangedSignal" ) :
+			self.__renderPassNameWidget.renderPassNameChangedSignal().connect( Gaffer.WeakMethod( self.__renderPassNameChanged ), scoped = False )
+			self.__updateButtonState()
+
+	def waitForRenderPassName( self, **kw ) :
+
+		if isinstance( self.__renderPassNameWidget, GafferUI.TextWidget ) :
+			self.__renderPassNameWidget.grabFocus()
+
+		button = self.waitForButton( **kw )
+		if button is self.__confirmButton :
+			return self.__renderPassNameWidget.getRenderPassName()
+
+		return None
+
+	def __renderPassNameActivated( self, renderPassNameWidget ) :
+
+		assert( renderPassNameWidget is self.__renderPassNameWidget )
+
+		if self.__confirmButton.getEnabled() :
+			self.__confirmButton.clickedSignal()( self.__confirmButton )
+
+	def __renderPassNameChanged( self, renderPassNameWidget ) :
+
+		assert( renderPassNameWidget is self.__renderPassNameWidget )
+
+		self.__updateButtonState()
+
+	def __updateButtonState( self, *unused ) :
+
+		name = self.__renderPassNameWidget.getRenderPassName()
+		unique = name not in self.__existingNames
+
+		self.__confirmButton.setEnabled( unique and name != "" )
+		self.__confirmButton.setImage( None if unique else "warningSmall.png" )
+		self.__confirmButton.setToolTip( "" if unique else "A render pass named '{}' already exists.".format( name ) )
+
+# Signal with custom result combiner to prevent bad
+# slots blocking the execution of others.
+class _AddButtonMenuSignal( Gaffer.Signals.Signal2 ) :
+
+	def __init__( self ) :
+
+		Gaffer.Signals.Signal2.__init__( self, self.__combiner )
+
+	@staticmethod
+	def __combiner( results ) :
+
+		while True :
+			try :
+				next( results )
+			except StopIteration :
+				return
+			except Exception as e :
+				# Print message but continue to execute other slots
+				IECore.msg(
+					IECore.Msg.Level.Error,
+					"RenderPassEditor Add Button menu", traceback.format_exc()
+				)
+				# Remove circular references that would keep the widget in limbo.
+				e.__traceback__ = None
