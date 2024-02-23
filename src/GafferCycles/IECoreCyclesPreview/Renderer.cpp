@@ -298,7 +298,7 @@ class CyclesOutput : public IECore::RefCounted
 
 	public :
 
-		CyclesOutput( const ccl::Session *session, const IECore::InternedString &name, const IECoreScene::Output *output )
+		CyclesOutput( const IECore::InternedString &name, const IECoreScene::Output *output )
 			: m_passType( ccl::PASS_NONE ), m_denoise( false ), m_interactive( false ), m_lightgroup( false )
 		{
 			m_parameters = output->parametersData()->copy();
@@ -2992,7 +2992,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				const auto coutput = m_outputs.find( name );
 				if( coutput == m_outputs.end() )
 				{
-					m_outputs[name] = new CyclesOutput( m_session, name, output );
+					m_outputs[name] = new CyclesOutput( name, output );
 					m_outputsChanged = true;
 				}
 			}
