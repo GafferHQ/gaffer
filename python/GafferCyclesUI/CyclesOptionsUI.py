@@ -315,48 +315,6 @@ def __backgroundSummary( plug ) :
 
 	return ", ".join( info )
 
-def __textureCacheSummary( plug ) :
-
-	info = []
-
-	if plug["useTextureCache"]["enabled"].getValue() :
-		info.append( "Use Texture Cache {}".format( plug["useTextureCache"]["value"].getValue() ) )
-
-	if plug["textureCacheSize"]["enabled"].getValue() :
-		info.append( "Texture Cache Size {}".format( plug["textureCacheSize"]["value"].getValue() ) )
-
-	if plug["textureAutoConvert"]["enabled"].getValue() :
-		info.append( "Texture Auto-Convert {}".format( plug["textureAutoConvert"]["value"].getValue() ) )
-
-	if plug["textureAcceptUnmipped"]["enabled"].getValue() :
-		info.append( "Texture Accept Unmipped {}".format( plug["textureAcceptUnmipped"]["value"].getValue() ) )
-
-	if plug["textureAcceptUntiled"]["enabled"].getValue() :
-		info.append( "Texture Accept Untiled {}".format( plug["textureAcceptUntiled"]["value"].getValue() ) )
-
-	if plug["textureAutoTile"]["enabled"].getValue() :
-		info.append( "Texture Auto-Tile {}".format( plug["textureAutoTile"]["value"].getValue() ) )
-
-	if plug["textureAutoMip"]["enabled"].getValue() :
-		info.append( "Texture Auto-Mip {}".format( plug["textureAutoMip"]["value"].getValue() ) )
-
-	if plug["textureTileSize"]["enabled"].getValue() :
-		info.append( "Texture Tile Size {}".format( plug["textureTileSize"]["value"].getValue() ) )
-
-	if plug["textureBlurDiffuse"]["enabled"].getValue() :
-		info.append( "Texture Blur Diffuse {}".format( plug["textureBlurDiffuse"]["value"].getValue() ) )
-
-	if plug["textureBlurGlossy"]["enabled"].getValue() :
-		info.append( "Texture Blur Glossy {}".format( plug["textureBlurGlossy"]["value"].getValue() ) )
-
-	if plug["useCustomCachePath"]["enabled"].getValue() :
-		info.append( "Use Custom Cache Path {}".format( plug["useCustomCachePath"]["value"].getValue() ) )
-
-	if plug["customCachePath"]["enabled"].getValue() :
-		info.append( "Custom Cache Path {}".format( plug["customCachePath"]["value"].getValue() ) )
-
-	return ", ".join( info )
-
 def __logSummary( plug ) :
 
 	info = []
@@ -440,7 +398,6 @@ Gaffer.Metadata.registerNode(
 			"layout:section:Film:summary", __filmSummary,
 			"layout:section:Denoising:summary", __denoisingSummary,
 			"layout:section:Background:summary", __backgroundSummary,
-			"layout:section:Texture Cache:summary", __textureCacheSummary,
 			"layout:section:Log:summary", __logSummary,
 
 		],
@@ -1539,135 +1496,6 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		# Texture Cache
-
-		"options.useTextureCache" : [
-
-			"description",
-			"""
-			Enables out-of-core texturing to conserve RAM.
-			""",
-
-			"layout:section", "Texture Cache",
-		],
-
-		"options.textureCacheSize" : [
-
-			"description",
-			"""
-			The size of the OpenImageIO texture cache in MB.
-			""",
-
-			"layout:section", "Texture Cache",
-		],
-
-		"options.textureAutoConvert" : [
-
-			"description",
-			"""
-			Automatically convert textures to .tx files for optimal texture
-			cache performance.
-			""",
-
-			"layout:section", "Texture Cache",
-		],
-
-		"options.textureAcceptUnmipped" : [
-
-			"description",
-			"""
-			Texture cached rendering without mip mapping is very expensive.
-			Uncheck to prevent Cycles from using textures that are not mip
-			mapped.
-			""",
-
-			"layout:section", "Texture Cache",
-		],
-
-		"options.textureAcceptUntiled" : [
-
-			"description",
-			"""
-			Texture cached rendering without tiled textures is very expensive.
-			Uncheck to prevent Cycles from using textures that are not tiled.
-			""",
-
-			"layout:section", "Texture Cache",
-		],
-
-		"options.textureAutoTile" : [
-
-			"description",
-			"""
-			On the fly creation of tiled versions of textures that are not
-			tiled. This can increase render time but helps reduce memory usage.
-			""",
-
-			"layout:section", "Texture Cache",
-		],
-
-		"options.textureAutoMip" : [
-
-			"description",
-			"""
-			On the fly creation of mip maps of textures that are not mip
-			mapped. This can increase render time but helps reduce memory
-			usage.
-			""",
-
-			"layout:section", "Texture Cache",
-		],
-
-		"options.textureTileSize" : [
-
-			"description",
-			"""
-			The size of tiles that Cycles uses for auto tiling.
-			""",
-
-			"layout:section", "Texture Cache",
-		],
-
-		"options.textureBlurDiffuse" : [
-
-			"description",
-			"""
-			The amount of texture blur applied to diffuse bounces.
-			""",
-
-			"layout:section", "Texture Cache",
-		],
-
-		"options.textureBlurGlossy" : [
-
-			"description",
-			"""
-			The amount of texture blur applied to glossy bounces.
-			""",
-
-			"layout:section", "Texture Cache",
-		],
-
-		"options.useCustomCachePath" : [
-
-			"description",
-			"""
-			Use Custom Cache Path.
-			""",
-
-			"layout:section", "Texture Cache",
-		],
-
-		"options.customCachePath" : [
-
-			"description",
-			"""
-			Custom path for the texture cache.
-			""",
-
-			"layout:section", "Texture Cache",
-		],
-
 		# Log
 
 		"options.logLevel" : [
@@ -1694,21 +1522,6 @@ Gaffer.Metadata.registerNode(
 )
 
 __registerDevicePresets()
-
-if not GafferCycles.withTextureCache :
-
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.useTextureCache", "plugValueWidget:type", "" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.textureCacheSize", "plugValueWidget:type", "" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.textureAutoConvert", "plugValueWidget:type", "" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.textureAcceptUnmipped", "plugValueWidget:type", "" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.textureAcceptUntiled", "plugValueWidget:type", "" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.textureAutoTile", "plugValueWidget:type", "" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.textureAutoMip", "plugValueWidget:type", "" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.textureTileSize", "plugValueWidget:type", "" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.textureBlurDiffuse", "plugValueWidget:type", "" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.textureBlurGlossy", "plugValueWidget:type", "" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.useCustomCachePath", "plugValueWidget:type", "" )
-	Gaffer.Metadata.registerValue( GafferCycles.CyclesOptions, "options.customCachePath", "plugValueWidget:type", "" )
 
 if GafferCycles.hasOptixDenoise :
 

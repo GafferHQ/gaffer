@@ -1,7 +1,10 @@
 1.4.x.x (relative to 1.4.0.0b1)
 =======
 
+Breaking Changes
+----------------
 
+- CyclesOptions : - Removed all texture cache options. These had never been exposed in the UI because this never became an offical Cycles feature.
 
 1.4.0.0b1 (relative to 1.3.x.x)
 =========
