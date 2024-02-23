@@ -2564,11 +2564,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			init();
 
-			// CyclesOptions will set some values to these.
-			m_integrator = *(m_scene->integrator);
-			m_background = *(m_scene->background);
 			m_scene->background->set_transparent( true );
-			m_film = *(m_scene->film);
 
 			m_cameraCache = new CameraCache();
 			m_lightCache = new LightCache( m_scene );
@@ -3286,20 +3282,17 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			if( integrator->is_modified() )
 			{
 				integrator->tag_update( m_scene, ccl::Integrator::UPDATE_ALL );
-				m_integrator = *integrator;
 			}
 
 			if( background->is_modified() )
 			{
 				background->tag_update( m_scene );
-				m_background = *background;
 			}
 
 			if( film->is_modified() )
 			{
 				//film->tag_update( m_scene );
 				integrator->tag_update( m_scene, ccl::Integrator::UPDATE_ALL );
-				m_film = *film;
 			}
 
 			// Check if an OSL shader exists & set the shadingsystem
@@ -3558,20 +3551,24 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_scene->shaders.resize( m_shaderCache->numDefaultShaders() );
 			m_scene->lights.clear();
 
+			const ccl::Integrator integratorCopy = *m_scene->integrator;
+			const ccl::Background backgroundCopy = *m_scene->background;
+			const ccl::Film filmCopy = *m_scene->film;
+
 			init();
 
 			// Re-apply the settings for these.
 			for( const ccl::SocketType &socketType : m_scene->integrator->type->inputs )
 			{
-				m_scene->integrator->copy_value(socketType, m_integrator, *m_integrator.type->find_input( socketType.name ) );
+				m_scene->integrator->copy_value(socketType, integratorCopy, *integratorCopy.type->find_input( socketType.name ) );
 			}
 			for( const ccl::SocketType &socketType : m_scene->background->type->inputs )
 			{
-				m_scene->background->copy_value(socketType, m_background, *m_background.type->find_input( socketType.name ) );
+				m_scene->background->copy_value(socketType, backgroundCopy, *backgroundCopy.type->find_input( socketType.name ) );
 			}
 			for( const ccl::SocketType &socketType : m_scene->film->type->inputs )
 			{
-				m_scene->film->copy_value(socketType, m_film, *m_film.type->find_input( socketType.name ) );
+				m_scene->film->copy_value(socketType, filmCopy, *filmCopy.type->find_input( socketType.name ) );
 			}
 
 			m_scene->background->set_shader( m_scene->default_background );
@@ -3713,9 +3710,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		ccl::SceneParams m_sceneParams;
 		ccl::BufferParams m_bufferParams;
 		ccl::BufferParams m_bufferParamsModified;
-		ccl::Integrator m_integrator;
-		ccl::Background m_background;
-		ccl::Film m_film;
 
 		// Background shader
 		CyclesShaderPtr m_backgroundShader;
