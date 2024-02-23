@@ -3208,9 +3208,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			m_scene->camera->need_flags_update = true;
 			m_scene->camera->update( m_scene );
-
-			// Set a more sane default than the arbitrary 0.8f
-			m_scene->film->set_exposure( 1.0f );
 		}
 
 		void clearUnused()
