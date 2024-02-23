@@ -23,6 +23,7 @@ Fixes
 - LightTool : Fixed crash when deleting the node being viewed.
 - USD : Fixed loading of Arnold lights previously exported from Gaffer to USD.
 - Catalogue : Fixed connection delays on Windows.
+- Context : Fixed potential crash when setting a variable with ownership.
 
 Documentation
 -------------
@@ -730,7 +731,12 @@ Build
 - USD : Updated to version 23.05.
 - ZLib : Added version 1.2.13.
 
-1.2.10.x (relative to 1.2.10.5)
+1.2.10.x (relative to 1.2.10.6)
+========
+
+
+
+1.2.10.6 (relative to 1.2.10.5)
 ========
 
 Fixes
