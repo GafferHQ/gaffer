@@ -534,9 +534,8 @@ class ShaderCache : public IECore::RefCounted
 		{
 		}
 
-		void update( ccl::Scene *scene, NodesCreated &shaders )
+		void update( NodesCreated &shaders )
 		{
-			m_scene = scene;
 			updateShaders( shaders );
 		}
 
@@ -1491,9 +1490,8 @@ class InstanceCache : public IECore::RefCounted
 		{
 		}
 
-		void update( ccl::Scene *scene, NodesCreated &object, NodesCreated &geometry )
+		void update( NodesCreated &object, NodesCreated &geometry )
 		{
-			m_scene = scene;
 			updateObjects( object );
 			updateGeometry( geometry );
 		}
@@ -1788,9 +1786,8 @@ class LightCache : public IECore::RefCounted
 		{
 		}
 
-		void update( ccl::Scene *scene, NodesCreated &nodes )
+		void update( NodesCreated &nodes )
 		{
-			m_scene = scene;
 			updateLights( nodes );
 		}
 
@@ -2998,17 +2995,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_sessionParams.device = firstCPUDevice();
 			}
 
-			if( m_session )
-			{
-				// A trick to retain the same pointer when re-creating a session.
-				m_session->~Session();
-				new ( m_session ) ccl::Session( m_sessionParams, m_sceneParams );
-			}
-			else
-			{
-				m_session = new ccl::Session( m_sessionParams, m_sceneParams );
-			}
-
+			m_session = new ccl::Session( m_sessionParams, m_sceneParams );
 			m_session->progress.set_update_callback( function_bind( &CyclesRenderer::progress, this ) );
 
 			m_scene = m_session->scene;
@@ -3025,21 +3012,14 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_attributesCache->clearUnused();
 		}
 
-		void updateSceneObjects( bool newScene = false )
+		void updateSceneObjects()
 		{
-			if( newScene )
-			{
-				// Get all objects held by Gaffer
-				m_instanceCache->nodesCreated( m_objectsCreated, m_geometryCreated );
-				m_lightCache->nodesCreated( m_lightsCreated );
-			}
-
 			// Add every shader each time, less issues
 			m_shaderCache->nodesCreated( m_shadersCreated );
 
-			m_lightCache->update( m_scene, m_lightsCreated );
-			m_instanceCache->update( m_scene, m_objectsCreated, m_geometryCreated );
-			m_shaderCache->update( m_scene, m_shadersCreated );
+			m_lightCache->update( m_lightsCreated );
+			m_instanceCache->update( m_objectsCreated, m_geometryCreated );
+			m_shaderCache->update( m_shadersCreated );
 		}
 
 		void updateOptions()
@@ -3090,18 +3070,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			{
 				//film->tag_update( m_scene );
 				integrator->tag_update( m_scene, ccl::Integrator::UPDATE_ALL );
-			}
-
-			// If anything changes in scene or session, we reset.
-			if( m_scene->params.modified( m_sceneParams ) ||
-				m_session->params.modified( m_sessionParams )
-			)
-			{
-				// Flag it true here so that we never mutex unlock a different scene pointer due to the reset
-				if( m_renderState != RENDERSTATE_RENDERING )
-				{
-					reset();
-				}
 			}
 		}
 
@@ -3320,49 +3288,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_session->set_output_driver( ccl::make_unique<OIIOOutputDriver>( displayWindow, dataWindow, paramData ) );
 
 			m_outputsChanged = false;
-		}
-
-		void reset()
-		{
-			m_session->cancel();
-			m_renderState = RENDERSTATE_READY;
-			// This is so cycles doesn't delete the objects that Gaffer manages.
-			m_scene->objects.clear();
-			m_scene->geometry.clear();
-			m_shaderCache->flushTextures();
-			m_scene->shaders.resize( m_shaderCache->numDefaultShaders() );
-			m_scene->lights.clear();
-
-			const ccl::Integrator integratorCopy = *m_scene->integrator;
-			const ccl::Background backgroundCopy = *m_scene->background;
-			const ccl::Film filmCopy = *m_scene->film;
-
-			init();
-
-			// Re-apply the settings for these.
-			for( const ccl::SocketType &socketType : m_scene->integrator->type->inputs )
-			{
-				m_scene->integrator->copy_value(socketType, integratorCopy, *integratorCopy.type->find_input( socketType.name ) );
-			}
-			for( const ccl::SocketType &socketType : m_scene->background->type->inputs )
-			{
-				m_scene->background->copy_value(socketType, backgroundCopy, *backgroundCopy.type->find_input( socketType.name ) );
-			}
-			for( const ccl::SocketType &socketType : m_scene->film->type->inputs )
-			{
-				m_scene->film->copy_value(socketType, filmCopy, *filmCopy.type->find_input( socketType.name ) );
-			}
-
-			m_scene->background->set_shader( m_scene->default_background );
-
-			m_scene->shader_manager->tag_update( m_scene, ccl::ShaderManager::UPDATE_ALL );
-			m_scene->integrator->tag_update( m_scene, ccl::Integrator::UPDATE_ALL );
-			m_scene->background->tag_update( m_scene );
-
-			m_session->stats.mem_peak = m_session->stats.mem_used;
-			// Make sure the instance cache points to the right scene.
-			updateSceneObjects( true );
-			m_scene->geometry_manager->tag_update( m_scene, ccl::GeometryManager::UPDATE_ALL );
 		}
 
 		void updateCamera()
