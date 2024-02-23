@@ -2514,8 +2514,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_messageHandler( messageHandler )
 		{
 			// Session Defaults
-			m_bufferParamsModified = m_bufferParams;
-
 			m_sessionParams.device = firstCPUDevice();
 			m_sessionParams.shadingsystem = ccl::SHADINGSYSTEM_OSL;
 			m_sessionParams.use_resolution_divider = false;
@@ -3287,17 +3285,22 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			ccl::Camera *camera = m_scene->camera;
 			int width = camera->get_full_width();
 			int height = camera->get_full_height();
-			m_bufferParamsModified.full_width = width;
-			m_bufferParamsModified.full_height = height;
-			m_bufferParamsModified.full_x = (int)(camera->get_border_left() * (float)width);
-			m_bufferParamsModified.full_y = (int)(camera->get_border_bottom() * (float)height);
-			m_bufferParamsModified.width =  (int)(camera->get_border_right() * (float)width) - m_bufferParamsModified.full_x;
-			m_bufferParamsModified.height = (int)(camera->get_border_top() * (float)height) - m_bufferParamsModified.full_y;
 
-			if( m_bufferParams.modified( m_bufferParamsModified ) )
+			ccl::BufferParams updatedBufferParams = m_bufferParams;
+			updatedBufferParams.full_width = width;
+			updatedBufferParams.full_height = height;
+			updatedBufferParams.full_x = (int)(camera->get_border_left() * (float)width);
+			updatedBufferParams.full_y = (int)(camera->get_border_bottom() * (float)height);
+			updatedBufferParams.width =  (int)(camera->get_border_right() * (float)width) - updatedBufferParams.full_x;
+			updatedBufferParams.height = (int)(camera->get_border_top() * (float)height) - updatedBufferParams.full_y;
+
+			if( m_bufferParams.modified( updatedBufferParams ) )
 			{
+				// Set `m_outputsChanged` so we call `m_session->reset()` below
+				// with the new buffer params, and so we update the display driver
+				// with the new resolution.
 				m_outputsChanged = true;
-				m_bufferParams = m_bufferParamsModified;
+				m_bufferParams = updatedBufferParams;
 			}
 
 			if( !m_outputsChanged )
@@ -3667,7 +3670,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		ccl::SessionParams m_sessionParams;
 		ccl::SceneParams m_sceneParams;
 		ccl::BufferParams m_bufferParams;
-		ccl::BufferParams m_bufferParamsModified;
 
 		// Background shader
 		CyclesShaderPtr m_backgroundShader;
