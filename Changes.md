@@ -1,16 +1,23 @@
-1.x.x.x (relative to 1.3.x.x)
+1.4.x.x (relative to 1.4.0.0b1)
 =======
+
+
+
+1.4.0.0b1 (relative to 1.3.x.x)
+=========
 
 > Note : This release introduces `linux-gcc11` builds which are only compatible with Linux distributions using glibc 2.28 or higher.
 > These specific `linux-gcc11` builds are intended for testing purposes while we upgrade our toolchain and dependencies to better align
 > with VFX Platform 2023, and should be considered "beta" in advance of a stable release in Gaffer 1.5.
+
+> Known bugs : Gaffer may crash when stopping an InteractiveCyclesRender with the CPU device and SVM shading mode. A fix is in progress.
 
 Features
 --------
 
 - Cycles :
   - Updated to version 4.0.2.
-  - Added support for CUDA and Optix devices.
+  - Added support for CUDA and Optix devices (GCC 11 builds only).
 - Dispatcher : Dispatchers are now TaskNodes, allowing them to be nested in a task graph. Possibilities include :
   - Using a LocalDispatcher and a Wedge to launch multiple TractorDispatcher jobs.
   - Using a nested LocalDispatcher to perform a group of tasks on a single blade within a TractorDispatcher job.
