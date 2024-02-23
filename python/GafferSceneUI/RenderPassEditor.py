@@ -153,6 +153,7 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 			self.__pathListing.keyPressSignal().connect( Gaffer.WeakMethod( self.__keyPress ), scoped = False )
 			self.__pathListing.buttonPressSignal().connectFront( Gaffer.WeakMethod( self.__buttonPress ), scoped = False )
 			self.__pathListing.selectionChangedSignal().connect( Gaffer.WeakMethod( self.__selectionChanged ), scoped = False )
+			self.__pathListing.dragBeginSignal().connectFront( Gaffer.WeakMethod( self.__dragBegin ), scoped = False )
 
 			self.__settingsNode.plugSetSignal().connect( Gaffer.WeakMethod( self.__settingsPlugSet ), scoped = False )
 			self.__settingsNode.plugInputChangedSignal().connect( Gaffer.WeakMethod( self.__settingsPlugInputChanged ), scoped = False )
@@ -348,6 +349,13 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 					result.add( name )
 
 		return list( result )
+
+	def __dragBegin( self, widget, event ) :
+
+		# Return render pass names rather than the path when dragging the Name column.
+		selection = self.__pathListing.getSelection()[0]
+		if not selection.isEmpty() :
+			return IECore.StringVectorData( self.__selectedRenderPasses() )
 
 	def __setActiveRenderPass( self, pathListing ) :
 
