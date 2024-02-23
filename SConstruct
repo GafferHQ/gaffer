@@ -1003,6 +1003,39 @@ if env["ARNOLD_ROOT"] :
 # Definitions for the libraries we wish to build
 ###############################################################################################
 
+# When Cycles is built, it uses several preprocessor variables that enable and
+# disable various features, and sometimes those defines are used to omit or
+# include members in public classes : *they affect ABI*. Traditionally a library
+# would provide a header which reproduced such definitions for client code, but
+# not Cycles : we must do that ourselves, to the point where we're even telling
+# it what namespace it was built in.
+#
+# When encountering mysterious GafferCycles memory corruptions, your first port of
+# call should be to ensure that these defines line up with Cycles' build-time
+# settings, lest the ABIs be misaligned.
+cyclesDefines = [
+	( "CCL_NAMESPACE_BEGIN", "namespace ccl {" ),
+	( "CCL_NAMESPACE_END", "}" ),
+	( "EMBREE_MAJOR_VERSION", "4" ),
+	( "PATH_GUIDING_LEVEL", "5" ),
+	( "WITH_ALEMBIC" ),
+	( "WITH_EMBREE" ),
+	( "WITH_OCIO" ),
+	( "WITH_OPENSUBDIV" ),
+	( "WITH_OPENVDB" ),
+	( "WITH_NANOVDB" ),
+	( "WITH_OSL" ),
+	( "WITH_PATH_GUIDING" ),
+	( "WITH_SYSTEM_PUGIXML" ),
+	# Technically these are not actually right for all builds - we
+	# currently only build GPU support for GCC 11 builds. But they
+	# don't currently affect ABI, and it won't be long till they
+	# apply everywhere.
+	( "WITH_CUDA" ),
+	( "WITH_CUDA_DYNLOAD" ),
+	( "WITH_OPTIX" ),
+]
+
 libraries = {
 
 	"Gaffer" : {
@@ -1319,12 +1352,7 @@ libraries = {
 				"openvdb$VDB_LIB_SUFFIX", "Alembic", "osdCPU", "OpenColorIO$OCIO_LIB_SUFFIX", "embree4", "Iex", "openpgl",
 			],
 			"CXXFLAGS" : [ systemIncludeArgument, "$CYCLES_ROOT/include" ],
-			"CPPDEFINES" : [
-				( "CCL_NAMESPACE_BEGIN", "namespace ccl {" ),
-				( "CCL_NAMESPACE_END", "}" ),
-				( "WITH_OSL", "1" ),
-				( "WITH_CYCLES_PATH_GUIDING", "1" ),
-			],
+			"CPPDEFINES" : cyclesDefines,
 			"FRAMEWORKS" : [ "Foundation", "Metal", "IOKit" ],
 		},
 		"pythonEnvAppends" : {
@@ -1337,11 +1365,7 @@ libraries = {
 				"oslquery$OSL_LIB_SUFFIX", "Alembic", "osdCPU", "OpenColorIO$OCIO_LIB_SUFFIX", "embree4", "Iex", "openpgl",
 			],
 			"CXXFLAGS" : [ systemIncludeArgument, "$CYCLES_ROOT/include" ],
-			"CPPDEFINES" : [
-				( "CCL_NAMESPACE_BEGIN", "namespace ccl {" ),
-				( "CCL_NAMESPACE_END", "}" ),
-				( "WITH_CYCLES_PATH_GUIDING", "1" ),
-			],
+			"CPPDEFINES" : cyclesDefines,
 		},
 		"requiredOptions" : [ "CYCLES_ROOT" ],
 	},
