@@ -2458,7 +2458,6 @@ IECore::InternedString g_textureLimitOptionName( "cycles:scene:texture_limit" );
 // Background shader
 IECore::InternedString g_backgroundShaderOptionName( "cycles:background:shader" );
 //
-IECore::InternedString g_useFrameAsSeedOptionName( "cycles:integrator:useFrameAsSeed" );
 IECore::InternedString g_seedOptionName( "cycles:integrator:seed" );
 
 ccl::PathRayFlag nameToRayType( const std::string &name )
@@ -2509,8 +2508,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_outputsChanged( true ),
 				m_cryptomatteAccurate( true ),
 				m_cryptomatteDepth( 0 ),
-				m_seed( 0 ),
-				m_useFrameAsSeed( true ),
 				m_messageHandler( messageHandler )
 		{
 			// Session Defaults
@@ -2585,7 +2582,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			{
 				if( value == nullptr )
 				{
-					m_frame = 0;
+					m_frame = 1;
 				}
 				else if( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
 				{
@@ -2730,27 +2727,11 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					return;
 				}
 			}
-			else if( name == g_useFrameAsSeedOptionName )
-			{
-				if( value == nullptr )
-				{
-					m_useFrameAsSeed = true;
-					return;
-				}
-				else
-				{
-					if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
-					{
-						m_useFrameAsSeed = data->readable();
-					}
-					return;
-				}
-			}
 			else if( name == g_seedOptionName )
 			{
 				if( value == nullptr )
 				{
-					m_seed = 0;
+					m_seed = std::nullopt;
 					return;
 				}
 				else
@@ -3215,14 +3196,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			ccl::Integrator *integrator = m_scene->integrator;
 			ccl::Background *background = m_scene->background;
 
-			if( m_useFrameAsSeed )
-			{
-				integrator->set_seed( m_frame );
-			}
-			else
-			{
-				integrator->set_seed( m_seed );
-			}
+			integrator->set_seed( m_seed.value_or( m_frame ) );
 
 			ccl::Shader *lightShader = nullptr;
 			for( ccl::Light *light : m_scene->lights )
@@ -3687,8 +3661,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		bool m_outputsChanged;
 		bool m_cryptomatteAccurate;
 		int m_cryptomatteDepth;
-		int m_seed;
-		bool m_useFrameAsSeed;
+		std::optional<int> m_seed;
 
 		// Logging
 		IECore::MessageHandlerPtr m_messageHandler;

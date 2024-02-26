@@ -101,7 +101,6 @@ CyclesOptions::CyclesOptions( const std::string &name )
 	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:caustics_reflective", new IECore::BoolData( true ), false, "causticsReflective" ) );
 	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:caustics_refractive", new IECore::BoolData( true ), false, "causticsRefractive" ) );
 	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:filter_glossy", new IECore::FloatData( 0.0f ), false, "filterGlossy" ) );
-	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:use_frame_as_seed", new IECore::BoolData( true ), false, "useFrameAsSeed" ) );
 	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:seed", new IECore::IntData( 0 ), false, "seed" ) );
 	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:sample_clamp_direct", new IECore::FloatData( 0.0f ), false, "sampleClampDirect" ) );
 	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:sample_clamp_indirect", new IECore::FloatData( 0.0f ), false, "sampleClampIndirect" ) );

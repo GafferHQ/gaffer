@@ -129,9 +129,6 @@ def __samplingSummary( plug ) :
 	if plug["filterGlossy"]["enabled"].getValue() :
 		info.append( "Filter Glossy {}".format( plug["filterGlossy"]["value"].getValue() ) )
 
-	if plug["useFrameAsSeed"]["enabled"].getValue() :
-		info.append( "Use Frame As Seed {}".format( plug["useFrameAsSeed"]["value"].getValue() ) )
-
 	if plug["seed"]["enabled"].getValue() :
 		info.append( "Seed Value {}".format( plug["seed"]["value"].getValue() ) )
 
@@ -757,22 +754,11 @@ Gaffer.Metadata.registerNode(
 
 		],
 
-		"options.useFrameAsSeed" : [
-
-			"description",
-			"""
-			Use current frame as the seed value for the sampling pattern.
-			""",
-
-			"layout:section", "Sampling",
-
-		],
-
 		"options.seed" : [
 
 			"description",
 			"""
-			Seed value for the sampling pattern. Disabled if \"Use Frame As Seed\" is on.
+			Seed value for the sampling pattern. If not specified, the frame number is used instead.
 			""",
 
 			"layout:section", "Sampling",
