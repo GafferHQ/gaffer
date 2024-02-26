@@ -3655,6 +3655,10 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		AttributesCachePtr m_attributesCache;
 
 		// Nodes created to update to Cycles
+		/// \todo I don't see why these need to be state on the Renderer.
+		/// I think they could either be private data within `InstanceCache`
+		/// etc, or we could just stop deferring the addition of objects to
+		/// the `ccl::Scene`.
 		NodesCreated m_objectsCreated;
 		NodesCreated m_lightsCreated;
 		NodesCreated m_geometryCreated;
