@@ -42,6 +42,8 @@
 #include "GafferUI/DragDropEvent.h"
 #include "GafferUI/Tool.h"
 
+#include "Gaffer/StringPlug.h"
+
 namespace GafferSceneUI
 {
 
@@ -58,6 +60,9 @@ class GAFFERSCENEUI_API SelectionTool : public GafferUI::Tool
 		~SelectionTool() override;
 
 		GAFFER_NODE_DECLARE_TYPE( GafferSceneUI::SelectionTool, SelectionToolTypeId, GafferUI::Tool );
+
+		Gaffer::StringPlug *selectModePlug();
+		const Gaffer::StringPlug *selectModePlug() const;
 
 	private :
 
@@ -77,6 +82,8 @@ class GAFFERSCENEUI_API SelectionTool : public GafferUI::Tool
 
 		bool m_acceptedButtonPress = false;
 		bool m_initiatedDrag = false;
+
+		static size_t g_firstPlugIndex;
 };
 
 } // namespace GafferSceneUI

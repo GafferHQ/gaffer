@@ -154,6 +154,10 @@ GAFFER_NODE_DEFINE_TYPE( SelectionTool );
 SelectionTool::ToolDescription<SelectionTool, SceneView> SelectionTool::g_toolDescription;
 static IECore::InternedString g_dragOverlayName( "__selectionToolDragOverlay" );
 
+size_t SelectionTool::g_firstPlugIndex = 0;
+
+const std::string g_noneSelectionModiferName = "None";
+
 SelectionTool::SelectionTool( SceneView *view, const std::string &name )
 	:	Tool( view, name )
 {
@@ -165,10 +169,24 @@ SelectionTool::SelectionTool( SceneView *view, const std::string &name )
 	sg->dragEnterSignal().connect( boost::bind( &SelectionTool::dragEnter, this, ::_1, ::_2 ) );
 	sg->dragMoveSignal().connect( boost::bind( &SelectionTool::dragMove, this, ::_2 ) );
 	sg->dragEndSignal().connect( boost::bind( &SelectionTool::dragEnd, this, ::_2 ) );
+
+	storeIndexOfNextChild( g_firstPlugIndex );
+
+	addChild( new StringPlug( "selectMode", Plug::Direction::In, g_anySelectModeName ) );
 }
 
 SelectionTool::~SelectionTool()
 {
+}
+
+StringPlug *SelectionTool::selectModePlug()
+{
+	return getChild<StringPlug>( g_firstPlugIndex );
+}
+
+const StringPlug *SelectionTool::selectModePlug() const
+{
+	return getChild<StringPlug>( g_firstPlugIndex );
 }
 
 SceneGadget *SelectionTool::sceneGadget()

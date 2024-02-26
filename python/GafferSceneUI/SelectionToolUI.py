@@ -34,7 +34,12 @@
 #
 ##########################################################################
 
+import imath
+
+import IECore
+
 import Gaffer
+import GafferUI
 import GafferSceneUI
 
 Gaffer.Metadata.registerNode(
@@ -52,7 +57,51 @@ Gaffer.Metadata.registerNode(
 		- Drag to PathFilter or Set node to add/remove their paths
 	""",
 
+	"nodeToolbar:bottom:type", "GafferUI.StandardNodeToolbar.bottom",
+
 	"viewer:shortCut", "Q",
 	"order", 0,
 
+	# So we don't obscure the corner gnomon
+	"toolbarLayout:customWidget:LeftSpacer:widgetType", "GafferSceneUI.SelectionToolUI._LeftSpacer",
+	"toolbarLayout:customWidget:LeftSpacer:section", "Bottom",
+	"toolbarLayout:customWidget:LeftSpacer:index", 0,
+
+	# So our layout doesn't jump around too much when our selection widget changes size
+	"toolbarLayout:customWidget:RightSpacer:widgetType", "GafferSceneUI.SelectionToolUI._RightSpacer",
+	"toolbarLayout:customWidget:RightSpacer:section", "Bottom",
+	"toolbarLayout:customWidget:RightSpacer:index", -1,
+
+	plugs = {
+
+		"selectMode" : [
+
+			"description",
+			"""
+			Determines the scene location that is ultimately selected or deselected,
+			which may differ from what is originally selected.
+			""",
+
+			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
+
+			"label", "Select",
+
+			"toolbarLayout:section", "Bottom",
+			"toolbarLayout:width", 150,
+
+		],
+	},
+
 )
+
+class _LeftSpacer( GafferUI.Spacer ) :
+
+	def __init__( self, imageView, **kw ) :
+
+		GafferUI.Spacer.__init__( self, size = imath.V2i( 40, 1 ), maximumSize = imath.V2i( 40, 1 ) )
+
+class _RightSpacer( GafferUI.Spacer ) :
+
+	def __init__( self, imageView, **kw ) :
+
+		GafferUI.Spacer.__init__( self, size = imath.V2i( 0, 0 ) )
