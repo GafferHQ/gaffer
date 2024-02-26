@@ -66,7 +66,7 @@ jobs:
             containerImage:
             dependenciesURL: https://github.com/ImageEngine/cortex/releases/download/10.4.9.1/cortex-10.4.9.1-windows-python3.zip
             testRunner: Invoke-Expression
-            testArguments: GafferTest GafferVDBTest GafferUSDTest GafferSceneTest GafferDispatchTest GafferOSLTest GafferImageTest GafferUITest GafferImageUITest GafferSceneUITest GafferDispatchUITest GafferOSLUITest GafferUSDUITest GafferVDBUITest GafferDelightUITest
+            testArguments: GafferTest GafferVDBTest GafferUSDTest GafferSceneTest GafferDispatchTest GafferOSLTest GafferImageTest GafferUITest GafferImageUITest GafferSceneUITest GafferDispatchUITest GafferOSLUITest GafferUSDUITest GafferVDBUITest GafferDelightUITest GafferCyclesTest GafferCyclesUITest
             sconsCacheMegabytes: 400
 
     runs-on: ${{ matrix.os }}
@@ -177,6 +177,7 @@ jobs:
         import subprocess
         import sys
         import os
+        import pathlib
 
         for arnoldVersion in [ "7.1.1.0", "7.2.1.0" ] :
           arnoldRoot = os.path.join( os.environ["GITHUB_WORKSPACE"], "arnoldRoot", arnoldVersion )
@@ -193,11 +194,16 @@ jobs:
           #Build Arnold extension
           subprocess.check_call( "scons -j 2 build BUILD_TYPE=${{ matrix.buildType }} OPTIONS=.github/workflows/main/sconsOptions", shell = True )
 
-          if os.name != "nt" :
-            # Test Arnold extension
-            print( "::add-matcher::./.github/workflows/main/problemMatchers/unittest.json" )
-            subprocess.check_call( "${{ matrix.testRunner }} \"" + os.path.join( os.environ["GAFFER_BUILD_DIR"], "bin", "gaffer" ) + " test IECoreArnoldTest GafferArnoldTest GafferArnoldUITest\"", shell = True )
-            print( "::remove-matcher owner=unittest::" )
+          # Test Arnold extension
+          print( "::add-matcher::./.github/workflows/main/problemMatchers/unittest.json" )
+
+          # `matrix.testRunner` on Windows is used to run tests in Powershell. Python `subprocess` uses
+          # `cmd.exe` on Windows, which requires Byzantine syntax to keep using Powershell. We
+          # run `gaffer` without the Powershell shim from `matrix.testRunner`.
+          cmd = str( ( pathlib.Path( os.environ["GAFFER_BUILD_DIR"] ) / "bin" / "gaffer" ).absolute() ) + " test IECoreArnoldTest GafferArnoldTest GafferArnoldUITest"
+          cmd = ( "${{ matrix.testRunner }} \"" if os.name != "nt" else "" ) + cmd + ( "\"" if os.name != "nt" else "" )
+          subprocess.check_call( cmd, shell = True )
+          print( "::remove-matcher owner=unittest::" )
 
           # Publish ARNOLD_ROOT to the environment for subsequent steps,
           # so we can build the docs for GafferArnold.

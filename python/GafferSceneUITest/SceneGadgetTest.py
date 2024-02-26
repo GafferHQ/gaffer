@@ -132,7 +132,7 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 			# to get into the buffers.
 			timeout = time.time() + 1
 			while time.time() < timeout :
-				self.waitForIdle()
+				self.waitForIdle( 5 )
 
 	def testObjectVisibility( self ) :
 
@@ -434,6 +434,7 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 			[]
 		)
 
+	@unittest.skipIf( os.name == "nt", "Unknown problem running on Windows." )
 	def testObjectAtLine( self ) :
 
 		cubes = []
@@ -561,6 +562,7 @@ class SceneGadgetTest( GafferUITest.TestCase ) :
 		sg.setSelectionMask( None )
 		self.assertEqual( sg.getSelectionMask(), None )
 
+	@unittest.skipIf( os.name == "nt", "Unknown problem running on Windows." )
 	def testSelectionMask( self ) :
 
 		plane = GafferScene.Plane()

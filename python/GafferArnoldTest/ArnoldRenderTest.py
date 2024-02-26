@@ -109,7 +109,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["outputs"].addOutput(
 			"beauty",
 			IECoreScene.Output(
-				str( self.temporaryDirectory() / "test.tif" ),
+				( self.temporaryDirectory() / "test.tif" ).as_posix(),
 				"tiff",
 				"rgba",
 				{}
@@ -157,7 +157,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["outputs"].addOutput(
 			"beauty",
 			IECoreScene.Output(
-				str( self.temporaryDirectory() / "test.####.tif" ),
+				( self.temporaryDirectory() / "test.####.tif" ).as_posix(),
 				"tiff",
 				"rgba",
 				{}
@@ -1082,7 +1082,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["outputs"].addOutput(
 			"beauty",
 			IECoreScene.Output(
-				str( self.temporaryDirectory() / "test.tif" ),
+				( self.temporaryDirectory() / "test.tif" ).as_posix(),
 				"tiff",
 				"rgba",
 				{}
@@ -1418,7 +1418,7 @@ class ArnoldRenderTest( GafferSceneTest.SceneTestCase ) :
 		s["outputs"].addOutput(
 			"beauty",
 			IECoreScene.Output(
-				str( self.temporaryDirectory() / "deformationBlurOff.exr" ),
+				( self.temporaryDirectory() / "deformationBlurOff.exr" ).as_posix(),
 				"exr",
 				"rgba",
 				{
