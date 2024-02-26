@@ -2532,8 +2532,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 	public :
 
 		CyclesRenderer( RenderType renderType, const std::string &fileName, const IECore::MessageHandlerPtr &messageHandler )
-			:	m_session( nullptr ),
-				m_scene( nullptr ),
+			:	m_scene( nullptr ),
 				m_sessionParams( ccl::SessionParams() ),
 				m_sceneParams( ccl::SceneParams() ),
 				m_bufferParams( ccl::BufferParams() ),
@@ -2582,8 +2581,11 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		~CyclesRenderer() override
 		{
+			// Cancel session before destruction of anything else. `~Session` actually
+			// calls `cancel()` internally, but the session can emit progress updates
+			// on other threads during cancellation, and our `progress()` method accesses
+			// member data that needs to be intact when that happens.
 			m_session->cancel();
-			delete m_session;
 		}
 
 		IECore::InternedString name() const override
@@ -2825,7 +2827,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				return nullptr;
 			}
 
-			CyclesLightPtr result = new CyclesLight( m_session, clight );
+			CyclesLightPtr result = new CyclesLight( m_session.get(), clight );
 			result->attributes( attributes );
 
 			result->nodesCreated( m_lightsCreated );
@@ -2856,7 +2858,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				return nullptr;
 			}
 
-			ObjectInterfacePtr result = new CyclesObject( m_session, instance, m_frame );
+			ObjectInterfacePtr result = new CyclesObject( m_session.get(), instance, m_frame );
 			result->attributes( attributes );
 
 			instance.objectsCreated( m_objectsCreated );
@@ -2890,7 +2892,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				return nullptr;
 			}
 
-			ObjectInterfacePtr result = new CyclesObject( m_session, instance, m_frame );
+			ObjectInterfacePtr result = new CyclesObject( m_session.get(), instance, m_frame );
 			result->attributes( attributes );
 
 			instance.objectsCreated( m_objectsCreated );
@@ -2995,8 +2997,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_sessionParams.device = firstCPUDevice();
 			}
 
-			m_session = new ccl::Session( m_sessionParams, m_sceneParams );
-			m_session->progress.set_update_callback( function_bind( &CyclesRenderer::progress, this ) );
+			m_session = std::make_unique<ccl::Session>( m_sessionParams, m_sceneParams );
+			m_session->progress.set_update_callback( std::bind( &CyclesRenderer::progress, this ) );
 
 			m_scene = m_session->scene;
 
@@ -3411,7 +3413,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		}
 
 		// Cycles core objects.
-		ccl::Session *m_session;
+		std::unique_ptr<ccl::Session> m_session;
 		ccl::Scene *m_scene;
 		ccl::SessionParams m_sessionParams;
 		ccl::SceneParams m_sceneParams;
