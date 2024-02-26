@@ -249,9 +249,9 @@ T parameter( const IECore::CompoundDataMap &parameters, const IECore::InternedSt
 	}
 }
 
-#define OPTION(TYPE, CATEGORY, OPTIONNAME, OPTION) if( name == OPTIONNAME ) { \
+#define OPTION(TYPE, CATEGORY, DEFAULT, OPTIONNAME, OPTION) if( name == OPTIONNAME ) { \
 	if( value == nullptr ) { \
-		CATEGORY.OPTION = CATEGORY ## Default.OPTION; \
+		CATEGORY.OPTION = DEFAULT.OPTION; \
 		return; } \
 	if ( const IECore::TypedData<TYPE> *data = reportedCast<const IECore::TypedData<TYPE>>( value, "option", name ) ) { \
 		CATEGORY.OPTION = data->readable(); } \
@@ -2445,6 +2445,46 @@ IECore::CompoundDataPtr sessionParamsAsData( const ccl::SessionParams params )
 	return result;
 }
 
+ccl::SessionParams defaultSessionParams( IECoreScenePreview::Renderer::RenderType renderType )
+{
+	ccl::SessionParams params;
+	params.device = firstCPUDevice();
+	params.shadingsystem = ccl::SHADINGSYSTEM_OSL;
+	params.use_resolution_divider = false;
+
+	if( renderType == IECoreScenePreview::Renderer::RenderType::Interactive )
+	{
+		params.headless = false;
+		params.background = false;
+		params.use_auto_tile = false;
+	}
+	else
+	{
+		params.headless = true;
+		params.background = true;
+	}
+
+	return params;
+}
+
+ccl::SceneParams defaultSceneParams( IECoreScenePreview::Renderer::RenderType renderType )
+{
+	ccl::SceneParams params;
+	params.shadingsystem = ccl::SHADINGSYSTEM_OSL;
+	params.bvh_layout = ccl::BVH_LAYOUT_AUTO;
+
+	if( renderType == IECoreScenePreview::Renderer::RenderType::Interactive )
+	{
+		params.bvh_type = ccl::BVH_TYPE_DYNAMIC;
+	}
+	else
+	{
+		params.bvh_type = ccl::BVH_TYPE_STATIC;
+	}
+
+	return params;
+}
+
 // Shading-Systems
 IECore::InternedString g_shadingsystemOSL( "OSL" );
 IECore::InternedString g_shadingsystemSVM( "SVM" );
@@ -2533,8 +2573,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		CyclesRenderer( RenderType renderType, const std::string &fileName, const IECore::MessageHandlerPtr &messageHandler )
 			:	m_scene( nullptr ),
-				m_sessionParams( ccl::SessionParams() ),
-				m_sceneParams( ccl::SceneParams() ),
+				m_sessionParams( defaultSessionParams( renderType ) ),
+				m_sceneParams( defaultSceneParams( renderType ) ),
 				m_bufferParams( ccl::BufferParams() ),
 				m_renderType( renderType ),
 				m_frame( 1 ),
@@ -2543,30 +2583,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_cryptomatteDepth( 0 ),
 				m_messageHandler( messageHandler )
 		{
-			// Session Defaults
-			m_sessionParams.device = firstCPUDevice();
-			m_sessionParams.shadingsystem = ccl::SHADINGSYSTEM_OSL;
-			m_sessionParams.use_resolution_divider = false;
-			m_sceneParams.shadingsystem = m_sessionParams.shadingsystem;
-			m_sceneParams.bvh_layout = ccl::BVH_LAYOUT_AUTO;
-
-			if( m_renderType != Interactive )
-			{
-				m_sessionParams.headless = true;
-				m_sessionParams.background = true;
-				m_sceneParams.bvh_type = ccl::BVH_TYPE_STATIC;
-			}
-			else
-			{
-				m_sessionParams.headless = false;
-				m_sessionParams.background = false;
-				m_sessionParams.use_auto_tile = false;
-				m_sceneParams.bvh_type = ccl::BVH_TYPE_DYNAMIC;
-			}
-
-			m_sessionParamsDefault = m_sessionParams;
-			m_sceneParamsDefault = m_sceneParams;
-
 			init();
 
 			m_scene->background->set_transparent( true );
@@ -2660,13 +2676,14 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 			else if( boost::starts_with( name.string(), "cycles:session:" ) )
 			{
-				OPTION(bool,  m_sessionParams, g_experimentalOptionName,   experimental);
-				OPTION(int,   m_sessionParams, g_samplesOptionName,      samples);
-				OPTION(int,   m_sessionParams, g_pixelSizeOptionName,    pixel_size);
-				OPTION(float, m_sessionParams, g_timeLimitOptionName,    time_limit);
-				OPTION(bool,  m_sessionParams, g_useProfilingOptionName, use_profiling);
-				OPTION(bool,  m_sessionParams, g_useAutoTileOptionName,  use_auto_tile);
-				OPTION(int,   m_sessionParams, g_tileSizeOptionName,     tile_size);
+				const ccl::SessionParams defaultParams = defaultSessionParams( m_renderType );
+				OPTION( bool, m_sessionParams, defaultParams, g_experimentalOptionName, experimental );
+				OPTION( int, m_sessionParams, defaultParams, g_samplesOptionName, samples );
+				OPTION( int, m_sessionParams, defaultParams, g_pixelSizeOptionName, pixel_size );
+				OPTION( float, m_sessionParams, defaultParams, g_timeLimitOptionName, time_limit );
+				OPTION( bool, m_sessionParams, defaultParams, g_useProfilingOptionName, use_profiling );
+				OPTION( bool, m_sessionParams, defaultParams, g_useAutoTileOptionName, use_auto_tile );
+				OPTION( int, m_sessionParams, defaultParams, g_tileSizeOptionName, tile_size );
 				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", fmt::format( "Unknown option \"{}\".", name.string() ) );
 				return;
 			}
@@ -2682,11 +2699,12 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 			else if( boost::starts_with( name.string(), "cycles:scene:" ) )
 			{
-				OPTION(bool, m_sceneParams, g_useBvhSpatialSplitOptionName,   use_bvh_spatial_split);
-				OPTION(bool, m_sceneParams, g_useBvhUnalignedNodesOptionName, use_bvh_unaligned_nodes);
-				OPTION(int,  m_sceneParams, g_numBvhTimeStepsOptionName,      num_bvh_time_steps);
-				OPTION(int,  m_sceneParams, g_hairSubdivisionsOptionName,     hair_subdivisions);
-				OPTION(int,  m_sceneParams, g_textureLimitOptionName,         texture_limit);
+				const ccl::SceneParams defaultParams = defaultSceneParams( m_renderType );
+				OPTION( bool, m_sceneParams, defaultParams, g_useBvhSpatialSplitOptionName, use_bvh_spatial_split );
+				OPTION( bool, m_sceneParams, defaultParams, g_useBvhUnalignedNodesOptionName, use_bvh_unaligned_nodes );
+				OPTION( int, m_sceneParams, defaultParams, g_numBvhTimeStepsOptionName, num_bvh_time_steps );
+				OPTION( int, m_sceneParams, defaultParams, g_hairSubdivisionsOptionName, hair_subdivisions );
+				OPTION( int, m_sceneParams, defaultParams, g_textureLimitOptionName, texture_limit );
 				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", fmt::format( "Unknown option \"{}\".", name.string() ) );
 				return;
 			}
@@ -3424,8 +3442,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		// Defaults
 		ccl::Camera m_cameraDefault;
-		ccl::SessionParams m_sessionParamsDefault;
-		ccl::SceneParams m_sceneParamsDefault;
 
 		// IECoreScene::Renderer
 		RenderType m_renderType;
