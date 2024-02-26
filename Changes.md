@@ -414,6 +414,11 @@ Documentation
 
 - Node Reference : Removed duplicate entries for nodes that have been aliased by compatibility configs.
 
+API
+---
+
+- SelectionTool : Added static `registerSelectMode()` method for registering a Python or C++ function that will modify a selected scene path location. Users can choose which mode is active when selecting.
+
 1.3.13.0 (relative to 1.3.12.0)
 ========
 

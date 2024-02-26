@@ -84,6 +84,13 @@ Gaffer.Metadata.registerNode(
 
 			"plugValueWidget:type", "GafferUI.PresetsPlugValueWidget",
 
+			"presetNames", lambda plug : IECore.StringVectorData(
+				GafferSceneUI.SelectionTool.registeredSelectModeLabels()
+			),
+			"presetValues", lambda plug : IECore.StringVectorData(
+				GafferSceneUI.SelectionTool.registeredSelectModes()
+			),
+
 			"label", "Select",
 
 			"toolbarLayout:section", "Bottom",
