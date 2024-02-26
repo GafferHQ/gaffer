@@ -2534,14 +2534,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 	public :
 
-		enum RenderState
-		{
-			RENDERSTATE_READY = 0,
-			RENDERSTATE_RENDERING = 1,
-			RENDERSTATE_STOPPED = 3,
-			RENDERSTATE_NUM_STATES
-		};
-
 		CyclesRenderer( RenderType renderType, const std::string &fileName, const IECore::MessageHandlerPtr &messageHandler )
 			:	m_session( nullptr ),
 				m_scene( nullptr ),
@@ -2550,7 +2542,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_bufferParams( ccl::BufferParams() ),
 				m_renderType( renderType ),
 				m_frame( 1 ),
-				m_renderState( RENDERSTATE_READY ),
+				m_rendering( false ),
 				m_outputsChanged( true ),
 				m_cryptomatteDepth( 0 ),
 				m_messageHandler( messageHandler )
@@ -2607,7 +2599,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 
 			// Error about options that cannot be set while interactive rendering.
-			if( m_renderState == RENDERSTATE_RENDERING )
+			if( m_rendering )
 			{
 				if( name == g_deviceOptionName ||
 					name == g_shadingsystemOptionName ||
@@ -2917,7 +2909,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			{
 				std::scoped_lock sceneLock( m_scene->mutex );
-				if( m_renderState == RENDERSTATE_RENDERING && m_renderType == Interactive )
+				if( m_rendering && m_renderType == Interactive )
 				{
 					clearUnused();
 				}
@@ -2927,7 +2919,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				updateCamera();
 				updateOutputs();
 
-				if( m_renderState == RENDERSTATE_RENDERING )
+				if( m_rendering )
 				{
 					if( m_scene->need_reset() )
 					{
@@ -2936,7 +2928,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				}
 			}
 
-			if( m_renderState == RENDERSTATE_RENDERING )
+			if( m_rendering )
 			{
 				m_session->set_pause( false );
 				return;
@@ -2944,7 +2936,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			m_session->start();
 
-			m_renderState = RENDERSTATE_RENDERING;
+			m_rendering = true;
 
 			if( m_renderType == Interactive )
 			{
@@ -2954,14 +2946,14 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			// Free up caches, Cycles now owns the data.
 			resetCaches();
 			m_session->wait();
-			m_renderState = RENDERSTATE_STOPPED;
+			m_rendering = false;
 		}
 
 		void pause() override
 		{
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 
-			if( m_renderState == RENDERSTATE_RENDERING )
+			if( m_rendering )
 			{
 				m_session->set_pause( true );
 			}
@@ -3480,7 +3472,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			// No way that I know of to inform Gaffer that the render has stopped either.
 			if( m_lastStatus == "Finished" )
 			{
-				m_renderState = RENDERSTATE_STOPPED;
+				m_rendering = false;
 			}
 		}
 
@@ -3512,7 +3504,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		RenderType m_renderType;
 		int m_frame;
 		string m_camera;
-		RenderState m_renderState;
+		bool m_rendering;
 		bool m_outputsChanged;
 		int m_cryptomatteDepth;
 		std::optional<int> m_seed;
