@@ -157,7 +157,6 @@ CyclesOptions::CyclesOptions( const std::string &name )
 	options->addChild( new Gaffer::NameValuePlug( "cycles:film:mist_depth", new IECore::FloatData( 100.0f ), false, "mistDepth" ) );
 	options->addChild( new Gaffer::NameValuePlug( "cycles:film:mist_falloff", new IECore::FloatData( 1.0f ), false, "mistFalloff" ) );
 
-	options->addChild( new Gaffer::NameValuePlug( "cycles:film:cryptomatte_accurate", new IECore::BoolData( false ), false, "cryptomatteAccurate" ) );
 	options->addChild( new Gaffer::NameValuePlug( "cycles:film:cryptomatte_depth", new IECore::IntData( 6 ), false, "cryptomatteDepth" ) );
 
 	// Dicing camera

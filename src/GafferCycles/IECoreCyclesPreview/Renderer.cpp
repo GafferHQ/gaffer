@@ -2478,7 +2478,6 @@ ccl::PathRayFlag nameToRayType( const std::string &name )
 IECore::InternedString g_dicingCameraOptionName( "cycles:dicing_camera" );
 
 // Cryptomatte
-IECore::InternedString g_cryptomatteAccurateOptionName( "cycles:film:cryptomatte_accurate" );
 IECore::InternedString g_cryptomatteDepthOptionName( "cycles:film:cryptomatte_depth");
 
 IE_CORE_FORWARDDECLARE( CyclesRenderer )
@@ -2506,7 +2505,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_frame( 1 ),
 				m_renderState( RENDERSTATE_READY ),
 				m_outputsChanged( true ),
-				m_cryptomatteAccurate( true ),
 				m_cryptomatteDepth( 0 ),
 				m_messageHandler( messageHandler )
 		{
@@ -2839,21 +2837,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 			else if( boost::starts_with( name.string(), "cycles:film:" ) )
 			{
-				if( name == g_cryptomatteAccurateOptionName )
-				{
-					m_outputsChanged = true;
-					if( value == nullptr )
-					{
-						m_cryptomatteAccurate = false;
-						return;
-					}
-					if( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
-					{
-						m_cryptomatteAccurate = data->readable();
-						return;
-					}
-				}
-
 				if( name == g_cryptomatteDepthOptionName )
 				{
 					m_outputsChanged = true;
@@ -3303,10 +3286,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			paramData->writable()["default"] = new StringData( "rgba" );
 
 			ccl::CryptomatteType crypto = ccl::CRYPT_NONE;
-			if( m_cryptomatteAccurate )
-			{
-				crypto = static_cast<ccl::CryptomatteType>( crypto | ccl::CRYPT_ACCURATE );
-			}
 
 			CompoundDataPtr layersData = new CompoundData();
 			InternedString cryptoAsset;
@@ -3367,7 +3346,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			// Adding cryptomattes in-order matters
 			ccl::Film *film = m_scene->film;
-			if( crypto == ccl::CRYPT_NONE || crypto == ( ccl::CRYPT_NONE | ccl::CRYPT_ACCURATE ) )
+			if( crypto == ccl::CRYPT_NONE )
 			{
 				// If there's no crypto, we must set depth to 0 otherwise bugs appear
 				film->set_cryptomatte_depth( 0 );
@@ -3659,7 +3638,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		string m_camera;
 		RenderState m_renderState;
 		bool m_outputsChanged;
-		bool m_cryptomatteAccurate;
 		int m_cryptomatteDepth;
 		std::optional<int> m_seed;
 

@@ -255,9 +255,6 @@ def __filmSummary( plug ) :
 	if plug["mistFalloff"]["enabled"].getValue() :
 		info.append( "Mist Falloff {}".format( plug["mistFalloff"]["value"].getValue() ) )
 
-	if plug["cryptomatteAccurate"]["enabled"].getValue() :
-		info.append( "Cryptomatte Accurate {}".format( plug["cryptomatteAccurate"]["value"].getValue() ) )
-
 	if plug["cryptomatteDepth"]["enabled"].getValue() :
 		info.append( "Cryptomatte Depth {}".format( plug["cryptomatteDepth"]["value"].getValue() ) )
 
@@ -1344,17 +1341,6 @@ Gaffer.Metadata.registerNode(
 			"description",
 			"""
 			Falloff of the mist/fog.
-			""",
-
-			"layout:section", "Film",
-
-		],
-
-		"options.cryptomatteAccurate" : [
-
-			"description",
-			"""
-			Generate a more accurate Cryptomatte pass. CPU only, may render slower and use more memory.
 			""",
 
 			"layout:section", "Film",
