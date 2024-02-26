@@ -1995,5 +1995,63 @@ class RendererTest( GafferTest.TestCase ) :
 
 		del plane, light
 
+	def testOSLInSVMShadingSystem( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		renderer.option( "cycles:shadingsystem", IECore.StringData( "SVM" ) )
+
+		renderer.output(
+			"testOutput",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testOSLInSVMShadingSystem",
+				}
+			)
+		)
+
+		plane = renderer.object(
+			"/plane",
+			IECoreScene.MeshPrimitive.createPlane(
+				imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ),
+			),
+			renderer.attributes( IECore.CompoundObject ( {
+				"cycles:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader(
+							"Surface/Constant", "osl:shader",
+							{ "Cs" : imath.Color3f( 0, 1, 0 ) }
+						),
+					},
+					output = "output",
+				)
+			} ) )
+		)
+		## \todo Default camera is facing down +ve Z but should be facing
+		# down -ve Z.
+		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
+
+		renderer.render()
+		time.sleep( 2 )
+
+		image = IECoreImage.ImageDisplayDriver.storedImage( "testOSLInSVMShadingSystem" )
+		self.assertIsInstance( image, IECoreImage.ImagePrimitive )
+
+		# Slightly off-centre, to avoid triangle edge artifact in centre of image.
+		testPixel = self.__colorAtUV( image, imath.V2f( 0.55 ) )
+		# Shader should be black and not crash.
+		self.assertEqual( testPixel.r, 0 )
+		self.assertEqual( testPixel.g, 0 )
+		self.assertEqual( testPixel.b, 0 )
+
+		del plane
+
 if __name__ == "__main__":
 	unittest.main()

@@ -726,16 +726,6 @@ class ShaderCache : public IECore::RefCounted
 			m_shaderAssignPairs.push_back( shaderAssign );
 		}
 
-		bool hasOSLShader()
-		{
-			for( ccl::Shader *shader : m_scene->shaders )
-			{
-				if( IECoreCycles::ShaderNetworkAlgo::hasOSL( shader ) )
-					return true;
-			}
-			return false;
-		}
-
 		uint32_t numDefaultShaders()
 		{
 			return m_numDefaultShaders;
@@ -765,19 +755,6 @@ class ShaderCache : public IECore::RefCounted
 					//}
 				}
 			}
-		}
-
-		void removeOSLShaders()
-		{
-			ccl::set<ccl::Shader *> remove;
-			for( ccl::Shader *shader : m_scene->shaders )
-			{
-				if( IECoreCycles::ShaderNetworkAlgo::hasOSL( shader ) )
-				{
-					remove.insert( shader );
-				}
-			}
-			m_scene->delete_nodes( remove, m_scene );
 		}
 
 	private :
@@ -3290,22 +3267,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			{
 				//film->tag_update( m_scene );
 				integrator->tag_update( m_scene, ccl::Integrator::UPDATE_ALL );
-			}
-
-			// Check if an OSL shader exists & set the shadingsystem
-			if( m_sessionParams.shadingsystem == ccl::SHADINGSYSTEM_SVM && m_shaderCache->hasOSLShader() )
-			{
-				if( m_renderState != RENDERSTATE_RENDERING )
-				{
-					IECore::msg( IECore::Msg::Warning, "CyclesRenderer", "OSL Shader detected, forcing OSL shading-system (CPU-only)" );
-					m_sessionParams.shadingsystem = ccl::SHADINGSYSTEM_OSL;
-					m_sceneParams.shadingsystem = ccl::SHADINGSYSTEM_OSL;
-				}
-				else
-				{
-					IECore::msg( IECore::Msg::Error, "CyclesRenderer", "OSL Shader detected, this will cause problems in a running interactive render" );
-					m_shaderCache->removeOSLShaders();
-				}
 			}
 
 			// If anything changes in scene or session, we reset.
