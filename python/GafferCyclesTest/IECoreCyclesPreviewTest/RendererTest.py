@@ -2053,5 +2053,175 @@ class RendererTest( GafferTest.TestCase ) :
 
 		del plane
 
+	def testFilmOptions( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		# Get default values
+
+		defaults = renderer.command( "cycles:queryFilm", {} )
+
+		# Set some values of our own and check they have taken hold.
+
+		options = IECore.CompoundData( {
+			"cycles:film:exposure" : 10.0,
+			"cycles:film:show_active_pixels" : True,
+			"cycles:film:filter_type" : "gaussian",
+			"cycles:film:filter_width" : 2.5,
+		} )
+		for name, value in options.items() :
+			renderer.option( name, value )
+
+		film = renderer.command( "cycles:queryFilm", {} )
+		for name, value in options.items() :
+			with self.subTest( name = name ) :
+				name = name.replace( "cycles:film:", "" )
+				self.assertIn( name, film )
+				self.assertEqual( film[name], value )
+
+		# Remove all our options and check that we get back to the
+		# original defaults.
+
+		for name in options.keys() :
+			renderer.option( name, None )
+
+		film = renderer.command( "cycles:queryFilm", {} )
+		for name in options.keys() :
+			with self.subTest( name = name ) :
+				name = name.replace( "cycles:film:", "" )
+				self.assertEqual( film[name], defaults[name] )
+
+	def testIntegratorOptions( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		# Get default values
+
+		defaults = renderer.command( "cycles:queryIntegrator", {} )
+
+		# Set some values of our own and check they have taken hold.
+
+		options = IECore.CompoundData( {
+			"cycles:integrator:min_bounce" : 1,
+			"cycles:integrator:max_bounce" : 4,
+			"cycles:integrator:use_light_tree" : False,
+			"cycles:integrator:use_adaptive_sampling" : False,
+		} )
+		for name, value in options.items() :
+			renderer.option( name, value )
+
+		film = renderer.command( "cycles:queryIntegrator", {} )
+		for name, value in options.items() :
+			with self.subTest( name = name ) :
+				name = name.replace( "cycles:integrator:", "" )
+				self.assertIn( name, film )
+				self.assertEqual( film[name], value )
+
+		# Remove all our options and check that we get back to the
+		# original defaults.
+
+		for name in options.keys() :
+			renderer.option( name, None )
+
+		film = renderer.command( "cycles:queryIntegrator", {} )
+		for name in options.keys() :
+			with self.subTest( name = name ) :
+				name = name.replace( "cycles:integrator:", "" )
+				self.assertEqual( film[name], defaults[name] )
+
+	def testUnknownOptions( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		with IECore.CapturingMessageHandler() as mh :
+			renderer.option( "cycles:invalid", IECore.IntData( 10 ) )
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].level, IECore.Msg.Level.Warning )
+		self.assertEqual( mh.messages[0].message, 'Unknown option "cycles:invalid".' )
+
+	def testThreads( self ) :
+
+		for threads, expectedThreads in [
+			( 1, 1 ),
+			( 2, 2 ),
+			( -1, max( IECore.hardwareConcurrency() -1, 1 ) ),
+			( -10, max( IECore.hardwareConcurrency() -10, 1 ) ),
+			( -10000, 1 ),
+		] :
+
+			with self.subTest( threads = threads ) :
+
+				renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+					"Cycles",
+					GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+				)
+
+				renderer.output(
+					"testOutput",
+					IECoreScene.Output(
+						"test",
+						"ieDisplay",
+						"rgba",
+						{
+							"driverType" : "ImageDisplayDriver",
+							"handle" : "testThreads",
+						}
+					)
+				)
+
+				renderer.option( "cycles:session:threads", IECore.IntData( threads ) )
+				## \todo We currently need to do a render for the threads value to
+				# be flushed into the session params. But in future we should be able
+				# to remove that.
+				renderer.render()
+				self.assertEqual( renderer.command( "cycles:querySession", {} )["threads"].value, expectedThreads )
+
+	def testDevices( self ) :
+
+		typeIndices = {}
+		for device in GafferCycles.devices :
+
+			deviceType = device["type"]
+			typeIndex = typeIndices.setdefault( deviceType, 0 )
+			typeIndices[device["type"]] += 1
+
+			with self.subTest( device = device["id"] ) :
+
+				renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+					"Cycles",
+					GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+				)
+
+				renderer.output(
+					"testOutput",
+					IECoreScene.Output(
+						"test",
+						"ieDisplay",
+						"rgba",
+						{
+							"driverType" : "ImageDisplayDriver",
+							"handle" : "testThreads",
+						}
+					)
+				)
+
+				renderer.option( "cycles:shadingsystem", IECore.StringData( "SVM" ) )
+				renderer.option( "cycles:device", IECore.StringData( f"{deviceType}:{typeIndex:02d}" ) )
+				## \todo We currently need to do a render for the device to
+				# be flushed into the session params. But in future we should be
+				# able to remove that.
+				renderer.render()
+				self.assertEqual( renderer.command( "cycles:querySession", {} )["device"].value, device["id"] )
+
 if __name__ == "__main__":
 	unittest.main()

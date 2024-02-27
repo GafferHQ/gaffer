@@ -2436,6 +2436,18 @@ ccl::DeviceInfo matchingDevices( const std::string &pattern, int threads, bool b
 	return ccl::Device::get_multi_device( devices, threads, background );
 }
 
+IECore::CompoundDataPtr sessionParamsAsData( const ccl::SessionParams params )
+{
+	IECore::CompoundDataPtr result = new IECore::CompoundData;
+	result->writable()["device"] = new StringData( params.device.id );
+	result->writable()["headless"] = new BoolData( params.headless );
+	result->writable()["background"] = new BoolData( params.background );
+	result->writable()["experimental"] = new BoolData( params.experimental );
+	result->writable()["samples"] = new BoolData( params.samples );
+	result->writable()["threads"] = new IntData( params.threads );
+	return result;
+}
+
 // Shading-Systems
 IECore::InternedString g_shadingsystemOSL( "OSL" );
 IECore::InternedString g_shadingsystemSVM( "SVM" );
@@ -2954,7 +2966,19 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		IECore::DataPtr command( const IECore::InternedString name, const IECore::CompoundDataMap &parameters ) override
 		{
-			if( boost::starts_with( name.string(), "cycles:" ) || name.string().find( ":" ) == string::npos )
+			if( name == "cycles:queryIntegrator" )
+			{
+				return SocketAlgo::getSockets( m_scene->integrator );
+			}
+			else if( name == "cycles:queryFilm" )
+			{
+				return SocketAlgo::getSockets( m_scene->film );
+			}
+			else if( name == "cycles:querySession" )
+			{
+				return sessionParamsAsData( m_session->params );
+			}
+			else if( boost::starts_with( name.string(), "cycles:" ) || name.string().find( ":" ) == string::npos )
 			{
 				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::command", fmt::format( "Unknown command \"{}\"", name.c_str() ) );
 			}

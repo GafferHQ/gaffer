@@ -630,6 +630,43 @@ ccl::ParamValue setParamValue( const IECore::InternedString &name, const IECore:
 	}
 }
 
+IECore::DataPtr getSocket( const ccl::Node *node, const ccl::SocketType *socket )
+{
+	switch( socket->type )
+	{
+		case ccl::SocketType::BOOLEAN :
+			return new BoolData( node->get_bool( *socket ) );
+		case ccl::SocketType::INT :
+			return new IntData( node->get_int( *socket ) );
+		case ccl::SocketType::FLOAT :
+			return new FloatData( node->get_float( *socket ) );
+		case ccl::SocketType::ENUM :
+			return new StringData( node->get_string( *socket ).string() );
+		default :
+			IECore::msg(
+				IECore::Msg::Warning, "Cycles::SocketAlgo::getSocket",
+				fmt::format(
+					"Unsupported socket type `{}` for socket `{}` on node `{}`.",
+					ccl::SocketType::type_name( socket->type ), socket->name, node->name
+				)
+			);
+	}
+	return nullptr;
+}
+
+IECore::CompoundDataPtr getSockets( const ccl::Node *node )
+{
+	IECore::CompoundDataPtr result = new IECore::CompoundData;
+	for( const ccl::SocketType &socket : node->type->inputs )
+	{
+		if( DataPtr d = getSocket( node, &socket ) )
+		{
+			result->writable()[socket.name.c_str()] = d;
+		}
+	}
+	return result;
+}
+
 } // namespace SocketAlgo
 
 } // namespace IECoreCycles
