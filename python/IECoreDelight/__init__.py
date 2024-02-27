@@ -37,7 +37,7 @@
 import os
 import pathlib
 
-if hasattr( os, "add_dll_directory" ) :
+if hasattr( os, "add_dll_directory" ) and "DELIGHT" in os.environ :
 	os.add_dll_directory( ( pathlib.Path( os.environ["DELIGHT"] ) / "bin" ).resolve() )
 del os, pathlib # Don't pollute the namespace
 
