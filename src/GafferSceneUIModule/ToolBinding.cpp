@@ -186,40 +186,37 @@ object acquireTransformEdit( const TransformTool::Selection &s, bool createIfNec
 	return p ? object( *p ) : object();
 }
 
-struct SelectModeHelper
-{
-	SelectModeHelper( object fn ) : m_fn( fn )
-	{
-	}
-
-	GafferScene::ScenePlug::ScenePath operator()(
-		const GafferScene::ScenePlug *scene,
-		const GafferScene::ScenePlug::ScenePath &path
-	)
-	{
-		IECorePython::ScopedGILLock gilLock;
-
-		try
-		{
-			const std::string pathString = GafferScene::ScenePlug::pathToString( path );
-			GafferScene::ScenePlug::ScenePath newPath = extract<GafferScene::ScenePlug::ScenePath>(
-				m_fn( GafferScene::ScenePlugPtr( const_cast<GafferScene::ScenePlug *>( scene ) ), pathString )
-			);
-			return newPath;
-		}
-		catch( const boost::python::error_already_set & )
-		{
-			ExceptionAlgo::translatePythonException();
-		}
-	}
-	private :
-		object m_fn;
-};
-
 void registerSelectMode( const std::string &modifierName, object modifier )
 {
-	SelectModeHelper helper( modifier );
-	SelectionTool::registerSelectMode( modifierName, helper );
+	auto selectModePtr = std::shared_ptr<boost::python::object>(
+		new boost::python::object( modifier ),
+		[]( boost::python::object *o ) {
+			IECorePython::ScopedGILLock gilLock;
+			delete o;
+		}
+	);
+
+	SelectionTool::registerSelectMode(
+		modifierName,
+		[selectModePtr](
+			const GafferScene::ScenePlug *scene,
+			const GafferScene::ScenePlug::ScenePath &path
+		) -> GafferScene::ScenePlug::ScenePath
+		{
+			IECorePython::ScopedGILLock gilLock;
+			try
+			{
+				const std::string pathString = GafferScene::ScenePlug::pathToString( path );
+				return extract<GafferScene::ScenePlug::ScenePath>(
+					(*selectModePtr)( GafferScene::ScenePlugPtr( const_cast<GafferScene::ScenePlug *>( scene ) ), pathString )
+				);
+			}
+			catch( const boost::python::error_already_set & )
+			{
+				ExceptionAlgo::translatePythonException();
+			}
+		}
+	);
 }
 
 } // namespace

@@ -35,7 +35,15 @@
 #
 ##########################################################################
 
+import functools
+
+from pxr import Kind
+
+import IECore
+
 import Gaffer
+import GafferScene
+import GafferSceneUI
 import GafferUSD
 
 # Default cone angle is 90 (an entire hemisphere), so replace with something
@@ -45,3 +53,49 @@ Gaffer.Metadata.registerValue( GafferUSD.USDLight, "parameters.shaping:cone:angl
 # `texture:format == automatic` isn't well supported at present, so default
 # user-created lights to `latlong`.
 Gaffer.Metadata.registerValue( GafferUSD.USDLight, "parameters.texture:format", "userDefault", "latlong" )
+
+
+def __kindSelectionModifier( targetKind, scene, pathString ) :
+	path = pathString.split( "/" )[1:]
+	targetKind = targetKind[9:] # 9 = len( "USD Kind/" )
+
+	kind = None
+	while len( path ) > 0 :
+		attributes = scene.attributes( path )
+		kind = attributes.get( "usd:kind", None )
+
+		if kind is not None and Kind.Registry.IsA( kind.value, targetKind ) :
+			break
+		path.pop()
+
+	return path
+
+
+usdKinds = Kind.Registry.GetAllKinds()
+
+# Build a simplified hierarchy for sorting
+kindPaths = []
+for kind in usdKinds :
+	kindPath = kind
+	kindParent = Kind.Registry.GetBaseKind( kind )
+	while kindParent != "" :
+		kindPath = kindParent + "/" + kindPath
+		kindParent = Kind.Registry.GetBaseKind( kindParent )
+	kindPaths.append( kindPath )
+
+kindPaths.sort( reverse = True)
+
+# We prefer to have "subcomponent" at the end.
+try :
+	kindPaths.remove( "subcomponent" )
+	kindPaths.append( "subcomponent" )
+except :
+	pass
+
+for kindPath in kindPaths :
+	# Add `USD Kind/` prefix so these entries go under that sub-heading.
+	kind = "USD Kind/" + kindPath.split( "/" )[-1]
+	GafferSceneUI.SelectionTool.registerSelectMode(
+		kind,
+		functools.partial( __kindSelectionModifier, kind ),
+	)

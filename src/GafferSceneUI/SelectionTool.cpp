@@ -316,11 +316,14 @@ bool SelectionTool::buttonPress( const GafferUI::ButtonEvent &event )
 	ScenePlug::ScenePath objectUnderMouse;
 	sg->objectAt( event.line, objectUnderMouse );
 
-	objectUnderMouse = modifyPath(
-		selectModePlug()->getValue(),
-		sceneGadget()->getScene(),
-		objectUnderMouse
-	) ;
+	{
+		Context::Scope scopedContext( sg->getContext() );
+		objectUnderMouse = modifyPath(
+			selectModePlug()->getValue(),
+			sceneGadget()->getScene(),
+			objectUnderMouse
+		);
+	}
 
 	PathMatcher selection = sg->getSelection();
 
@@ -455,6 +458,8 @@ bool SelectionTool::dragEnd( const GafferUI::DragDropEvent &event )
 		PathMatcher inDragRegionTransformed;
 		const ScenePlug *scene = sceneGadget()->getScene();
 		const std::string modeName = selectModePlug()->getValue();
+
+		Context::Scope scopedContext( sg->getContext() );
 		for( PathMatcher::Iterator it = inDragRegion.begin(), eIt = inDragRegion.end(); it != eIt; ++it )
 		{
 			ScenePlug::ScenePath modifiedPath = modifyPath( modeName, scene, *it );
