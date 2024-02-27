@@ -224,3 +224,50 @@ class RenderPassEditorTest( GafferUITest.TestCase ) :
 		# Ensure we can still get a flat output
 		path = _GafferSceneUI._RenderPassEditor.RenderPassPath( renderPasses["out"], context, "/", grouped = False )
 		self.assertEqual( [ str( c ) for c in path.children() ], [ "/char_bot_beauty", "/char_bot_shadow" ] )
+
+	def testDisabledRenderPassFilterWithPathGroupingFunction( self ) :
+
+		renderPasses = GafferScene.RenderPasses()
+		renderPasses["names"].setValue( IECore.StringVectorData( ["A_A", "A_B", "B_C", "B_D"] ) )
+
+		disablePass = GafferScene.CustomOptions( "disablePass" )
+		disablePass["in"].setInput( renderPasses["out"] )
+		disablePass["options"].addChild( Gaffer.NameValuePlug( "renderPass:enabled", Gaffer.BoolPlug( "value", defaultValue = False ), True, "member1" ) )
+
+		# disable A_B, B_C, B_D
+		switch = Gaffer.NameSwitch()
+		switch.setup( renderPasses["out"] )
+		switch["selector"].setValue( "${renderPass}" )
+		switch["in"]["in0"]["value"].setInput( renderPasses["out"] )
+		switch["in"]["in1"]["value"].setInput( disablePass["out"] )
+		switch["in"]["in1"]["name"].setValue( "A_B B_C B_D" )
+
+		def testFn( name ) :
+			return name.split( "_" )[:-1]
+
+		GafferSceneUI.RenderPassEditor.registerPathGroupingFunction( testFn )
+		context = Gaffer.Context()
+		path = _GafferSceneUI._RenderPassEditor.RenderPassPath( switch["out"]["value"], context, "/", grouped = True )
+
+		self.assertEqual( [ str( c ) for c in path.children() ], [ "/A", "/B" ] )
+
+		pathCopy = path.copy()
+		for p in [ "/A/A_A", "/A/A_B", "/B/B_C", "/B/B_D" ] :
+			pathCopy.setFromString( p )
+			self.assertEqual( pathCopy.property( "renderPassPath:enabled" ), p == "/A/A_A" )
+
+		disabledRenderPassFilter = _GafferSceneUI._RenderPassEditor.DisabledRenderPassFilter()
+		path.setFilter( disabledRenderPassFilter )
+		# We should only see /A, as both of /B's children are disabled
+		self.assertEqual( [ str( c ) for c in path.children() ], [ "/A" ] )
+		path.setFromString( "/A" )
+		self.assertEqual( [ str( c ) for c in path.children() ], [ "/A/A_A" ] )
+
+		# Disabling the filter should restore all paths
+		disabledRenderPassFilter.setEnabled( False )
+		path.setFromString( "/" )
+		self.assertEqual( [ str( c ) for c in path.children() ], [ "/A", "/B" ] )
+		path.setFromString( "/A" )
+		self.assertEqual( [ str( c ) for c in path.children() ], [ "/A/A_A", "/A/A_B" ] )
+		path.setFromString( "/B" )
+		self.assertEqual( [ str( c ) for c in path.children() ], [ "/B/B_C", "/B/B_D" ] )
