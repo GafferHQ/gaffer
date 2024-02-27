@@ -297,6 +297,7 @@ Isolate alpha channel                | {kbd}`A`
 View luminance of RGB                | {kbd}`L`
 Previous layer                       | {kbd}`PgUp`
 Next layer                           | {kbd}`PgDn`
+First layer (RGBA)                   | {kbd}`Ctrl` + {kbd}`PgUp`
 Previous view                        | {kbd}`[`
 Next view                            | {kbd}`]`
 Center image at 1:1 scale            | {kbd}`Home`
