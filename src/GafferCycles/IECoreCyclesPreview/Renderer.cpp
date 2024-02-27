@@ -2594,10 +2594,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		{
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 
-			auto *integrator = m_scene->integrator;
-			auto *background = m_scene->background;
-			auto *film = m_scene->film;
-
 			// Error about options that cannot be set while interactive rendering.
 			if( m_renderState == RENDERSTATE_RENDERING )
 			{
@@ -2715,22 +2711,10 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 			else if( boost::starts_with( name.string(), "cycles:background:" ) )
 			{
-				const ccl::SocketType *input = background->node_type->find_input( ccl::ustring( name.string().c_str() + 18 ) );
-				if( value && input )
-				{
-					if( const Data *data = reportedCast<const Data>( value, "option", name ) )
-					{
-						SocketAlgo::setSocket( (ccl::Node*)background, input, data );
-					}
-					else
-					{
-						background->set_default_value( *input );
-					}
-				}
-				else if( input )
-				{
-					background->set_default_value( *input );
-				}
+				SocketAlgo::setSocket(
+					m_scene->background, name.string().c_str() + 18,
+					value ? reportedCast<const Data>( value, "option", name ) : nullptr
+				);
 				return;
 			}
 			else if( name == g_cryptomatteDepthOptionName )
@@ -2741,42 +2725,18 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 			else if( boost::starts_with( name.string(), "cycles:film:" ) )
 			{
-				const ccl::SocketType *input = film->node_type->find_input( ccl::ustring( name.string().c_str() + 12 ) );
-				if( value && input )
-				{
-					if( const Data *data = reportedCast<const Data>( value, "option", name ) )
-					{
-						SocketAlgo::setSocket( (ccl::Node*)film, input, data );
-					}
-					else
-					{
-						film->set_default_value( *input );
-					}
-				}
-				else if( input )
-				{
-					film->set_default_value( *input );
-				}
+				SocketAlgo::setSocket(
+					m_scene->film, name.string().c_str() + 12,
+					value ? reportedCast<const Data>( value, "option", name ) : nullptr
+				);
 				return;
 			}
 			else if( boost::starts_with( name.string(), "cycles:integrator:" ) )
 			{
-				const ccl::SocketType *input = integrator->node_type->find_input( ccl::ustring( name.string().c_str() + 18 ) );
-				if( value && input )
-				{
-					if( const Data *data = reportedCast<const Data>( value, "option", name ) )
-					{
-						SocketAlgo::setSocket( (ccl::Node*)integrator, input, data );
-					}
-					else
-					{
-						integrator->set_default_value( *input );
-					}
-				}
-				else if( input )
-				{
-					integrator->set_default_value( *input );
-				}
+				SocketAlgo::setSocket(
+					m_scene->integrator, name.string().c_str() + 18,
+					value ? reportedCast<const Data>( value, "option", name ) : nullptr
+				);
 				return;
 			}
 			else if( boost::starts_with( name.string(), "cycles:" ) )

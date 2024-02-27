@@ -411,6 +411,12 @@ void setSocket( ccl::Node *node, const ccl::SocketType *socket, const IECore::Da
 	if( socket == nullptr )
 		return;
 
+	if( !value )
+	{
+		node->set_default_value( *socket );
+		return;
+	}
+
 	switch( socket->type )
 	{
 		case ccl::SocketType::BOOLEAN:
