@@ -303,6 +303,72 @@ class RendererTest( GafferTest.TestCase ) :
 		renderer.render()
 		time.sleep( 2.0 )
 
+	def testBackgroundLightBatchRender( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Batch,
+		)
+
+		fileName = self.temporaryDirectory() / "test.exr"
+		renderer.output(
+			"testOutput",
+			IECoreScene.Output(
+				str( fileName ),
+				"exr",
+				"rgba",
+				{}
+			)
+		)
+
+		# Set an option that requires a re-created cycles session before rendering starts
+		renderer.option( "cycles:session:use_auto_tile", IECore.BoolData( False ) )
+
+		plane = renderer.object(
+			"/plane",
+			IECoreScene.MeshPrimitive.createPlane(
+				imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ),
+			),
+			renderer.attributes( IECore.CompoundObject ( {
+				"cycles:surface" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader( "principled_bsdf", "cycles:surface", { "base_color" : imath.Color3f( 1, 1, 1 ) } ),
+					},
+					output = "output",
+				)
+			} ) )
+		)
+		## \todo Default camera is facing down +ve Z but should be facing
+		# down -ve Z.
+		plane.transform( imath.M44f().translate( imath.V3f( 0, 0, 1 ) ) )
+
+		light = renderer.light(
+			"/light",
+			None,
+			renderer.attributes( IECore.CompoundObject ( {
+				"cycles:light" : IECoreScene.ShaderNetwork(
+					shaders = {
+						"output" : IECoreScene.Shader( "background_light", "cycles:light", { "color" : imath.Color3f( 1, 0, 0 ) } ),
+					},
+					output = "output",
+				),
+			} ) )
+		)
+		light.transform( imath.M44f().rotate( imath.V3f( 0, math.pi, 0 ) ) )
+
+		renderer.render()
+
+		# Check that we have a pure red image.
+
+		image = IECore.Reader.create( str( fileName ) ).read()
+
+		middlePixel = self.__colorAtUV( image, imath.V2f( 0.5 ) )
+		self.assertGreater( middlePixel.r, 0 )
+		self.assertEqual( middlePixel.g, 0 )
+		self.assertEqual( middlePixel.b, 0 )
+
+		del plane
+
 	def testMultipleOutputs( self ) :
 
 		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
@@ -2210,6 +2276,13 @@ class RendererTest( GafferTest.TestCase ) :
 					)
 				)
 
+				# Ideally we want clients to emit all options before doing anything else,
+				# to simplify our internal session management. But certain important clients
+				# (SceneGadget, RenderController, I'm looking at you) like to create a camera
+				# first, and we need to accomodate them while preserving the ability to specify
+				# `cycles:device` afterwards.
+				renderer.camera( "camera", IECoreScene.Camera() )
+
 				renderer.option( "cycles:shadingsystem", IECore.StringData( "SVM" ) )
 				renderer.option( "cycles:device", IECore.StringData( f"{deviceType}:{typeIndex:02d}" ) )
 				## \todo We currently need to do a render for the device to
@@ -2281,6 +2354,105 @@ class RendererTest( GafferTest.TestCase ) :
 		self.assertEqual( testPixel, imath.Color4f( 2, 2, 2, 1 ) )
 
 		del plane
+
+	def testUnsupportedSessionEdit( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		renderer.option( "cycles:session:threads", IECore.IntData( 1 ) )
+
+		renderer.output(
+			"testOutput",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testUnsupportedSessionEdit",
+				}
+			)
+		)
+
+		renderer.render()
+		self.assertEqual( renderer.command( "cycles:querySession", {} )["threads"].value, 1 )
+
+		with IECore.CapturingMessageHandler() as mh :
+			renderer.pause()
+			renderer.option( "cycles:session:threads", IECore.IntData( 2 ) )
+			renderer.render()
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].context, "CyclesRenderer::option" )
+		self.assertEqual( mh.messages[0].message, "Option edit requires a manual render restart" )
+
+	def testUnsupportedSessionEdit( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		renderer.option( "cycles:session:threads", IECore.IntData( 1 ) )
+
+		renderer.output(
+			"testOutput",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testUnsupportedSessionEdit",
+				}
+			)
+		)
+
+		renderer.render()
+		self.assertEqual( renderer.command( "cycles:querySession", {} )["threads"].value, 1 )
+
+		with IECore.CapturingMessageHandler() as mh :
+			renderer.pause()
+			renderer.option( "cycles:session:threads", IECore.IntData( 2 ) )
+			renderer.render()
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].context, "CyclesRenderer::option" )
+		self.assertEqual( mh.messages[0].message, "Option edit requires a manual render restart" )
+
+	def testUnsupportedSceneEdit( self ) :
+
+		renderer = GafferScene.Private.IECoreScenePreview.Renderer.create(
+			"Cycles",
+			GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
+		)
+
+		renderer.output(
+			"testOutput",
+			IECoreScene.Output(
+				"test",
+				"ieDisplay",
+				"rgba",
+				{
+					"driverType" : "ImageDisplayDriver",
+					"handle" : "testUnsupportedSessionEdit",
+				}
+			)
+		)
+
+		renderer.render()
+
+		with IECore.CapturingMessageHandler() as mh :
+			renderer.pause()
+			renderer.option( "cycles:scene:use_bvh_spatial_split", IECore.BoolData( True ) )
+			renderer.render()
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].context, "CyclesRenderer::option" )
+		self.assertEqual( mh.messages[0].message, "Option edit requires a manual render restart" )
 
 if __name__ == "__main__":
 	unittest.main()

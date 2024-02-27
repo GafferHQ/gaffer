@@ -5,6 +5,9 @@ Fixes
 -----
 
 - Tractor : Fixed failure to import Tractor API [^1].
+- Cycles :
+  - Fixed hangs and crashes when using non-default session modes such as SVM shading.
+  - Fixed failure to render background light in batch renders (#5234).
 
 [^1]: To be omitted from final release notes for 1.4.0.0.
 
