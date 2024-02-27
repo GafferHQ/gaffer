@@ -257,14 +257,6 @@ T parameter( const IECore::CompoundDataMap &parameters, const IECore::InternedSt
 		CATEGORY.OPTION = data->readable(); } \
 	return; }
 
-#define OPTION_STR(CATEGORY, OPTIONNAME, OPTION) if( name == OPTIONNAME ) { \
-	if( value == nullptr ) { \
-		CATEGORY.OPTION = CATEGORY ## Default.OPTION; \
-		return; } \
-	if ( const StringData *data = reportedCast<const StringData>( value, "option", name ) ) { \
-		CATEGORY.OPTION = data->readable().c_str(); } \
-	return; }
-
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
