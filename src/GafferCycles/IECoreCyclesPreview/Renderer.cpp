@@ -2691,38 +2691,34 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", fmt::format( "Unknown option \"{}\".", name.string() ) );
 				return;
 			}
-			// The last 3 are subclassed internally from ccl::Node so treat their params like Cycles sockets
+			else if( name == g_backgroundShaderOptionName )
+			{
+				/// \todo Why is this assignment here? Is it bogus or do we need to destroy the old shader before getting the new one?
+				m_backgroundShader = nullptr;
+				if( const IECoreScene::ShaderNetwork *d = value ? reportedCast<const IECoreScene::ShaderNetwork>( value, "option", name ) : nullptr )
+				{
+					m_backgroundShader = m_shaderCache->get( d );
+				}
+				else
+				{
+					m_backgroundShader = nullptr;
+				}
+				return;
+			}
+			else if( boost::starts_with( name.string(), "cycles:background:visibility:" ) )
+			{
+				const int vis = optionValue<int>( name, value, 1 );
+				auto ray = nameToRayType( name.string().c_str() + 29 );
+				const uint32_t prevVis = m_scene->background->get_visibility();
+				m_scene->background->set_visibility( vis ? prevVis | ray : prevVis & ~ray );
+				return;
+			}
 			else if( boost::starts_with( name.string(), "cycles:background:" ) )
 			{
 				const ccl::SocketType *input = background->node_type->find_input( ccl::ustring( name.string().c_str() + 18 ) );
 				if( value && input )
 				{
-					if( boost::starts_with( name.string(), "cycles:background:visibility:" ) )
-					{
-						if( const Data *d = reportedCast<const IECore::Data>( value, "option", name ) )
-						{
-							if( const IntData *data = static_cast<const IntData *>( d ) )
-							{
-								auto &vis = data->readable();
-								auto ray = nameToRayType( name.string().c_str() + 29 );
-								uint32_t prevVis = background->get_visibility();
-								background->set_visibility( vis ? prevVis |= ray : prevVis & ~ray );
-							}
-						}
-					}
-					else if( name == g_backgroundShaderOptionName )
-					{
-						m_backgroundShader = nullptr;
-						if( const IECoreScene::ShaderNetwork *d = reportedCast<const IECoreScene::ShaderNetwork>( value, "option", name ) )
-						{
-							m_backgroundShader = m_shaderCache->get( d );
-						}
-						else
-						{
-							m_backgroundShader = nullptr;
-						}
-					}
-					else if( const Data *data = reportedCast<const Data>( value, "option", name ) )
+					if( const Data *data = reportedCast<const Data>( value, "option", name ) )
 					{
 						SocketAlgo::setSocket( (ccl::Node*)background, input, data );
 					}
