@@ -80,6 +80,52 @@ using namespace GafferSceneUI::Private;
 namespace
 {
 
+using PathGroupingFunction = std::function<std::vector<InternedString> ( const std::string &renderPassName )>;
+
+struct PathGroupingFunctionWrapper
+{
+	PathGroupingFunctionWrapper( object fn )
+		:	m_fn( fn )
+	{
+	}
+
+	std::vector<InternedString> operator()( const std::string &renderPassName )
+	{
+		IECorePython::ScopedGILLock gilock;
+		try
+		{
+			return extract<std::vector<InternedString>>( m_fn( renderPassName ) );
+		}
+		catch( const error_already_set & )
+		{
+			IECorePython::ExceptionAlgo::translatePythonException();
+		}
+	}
+
+	private:
+
+		object m_fn;
+};
+
+PathGroupingFunction &pathGroupingFunction()
+{
+	// We deliberately make no attempt to free this, because typically a python
+	// function is registered here, and we can't free that at exit because python
+	// is already shut down by then.
+	static PathGroupingFunction *g_pathGroupingFunction = new PathGroupingFunction;
+	return *g_pathGroupingFunction;
+}
+
+void registerPathGroupingFunction( PathGroupingFunction f )
+{
+	pathGroupingFunction() = f;
+}
+
+void registerPathGroupingFunctionWrapper( object f )
+{
+	registerPathGroupingFunction( PathGroupingFunctionWrapper( f ) );
+}
+
 //////////////////////////////////////////////////////////////////////////
 // LRU cache of PathMatchers built from render passes
 //////////////////////////////////////////////////////////////////////////
@@ -88,14 +134,15 @@ struct PathMatcherCacheGetterKey
 {
 
 	PathMatcherCacheGetterKey()
-		:	renderPassNames( nullptr )
+		:	renderPassNames( nullptr ), grouped( false )
 	{
 	}
 
-	PathMatcherCacheGetterKey( ConstStringVectorDataPtr renderPassNames )
-		:	renderPassNames( renderPassNames )
+	PathMatcherCacheGetterKey( ConstStringVectorDataPtr renderPassNames, bool grouped )
+		:	renderPassNames( renderPassNames ), grouped( grouped )
 	{
 		renderPassNames->hash( hash );
+		hash.append( grouped );
 	}
 
 	operator const IECore::MurmurHash & () const
@@ -105,6 +152,7 @@ struct PathMatcherCacheGetterKey
 
 	MurmurHash hash;
 	const ConstStringVectorDataPtr renderPassNames;
+	const bool grouped;
 
 };
 
@@ -114,9 +162,21 @@ PathMatcher pathMatcherCacheGetter( const PathMatcherCacheGetterKey &key, size_t
 
 	PathMatcher result;
 
-	for( const auto &renderPass : key.renderPassNames->readable() )
+	if( key.grouped && pathGroupingFunction() )
 	{
-		result.addPath( renderPass );
+		for( const auto &renderPass : key.renderPassNames->readable() )
+		{
+			std::vector<InternedString> path = pathGroupingFunction()( renderPass );
+			path.push_back( renderPass );
+			result.addPath( path );
+		}
+	}
+	else
+	{
+		for( const auto &renderPass : key.renderPassNames->readable() )
+		{
+			result.addPath( renderPass );
+		}
 	}
 
 	return result;
@@ -140,15 +200,15 @@ class RenderPassPath : public Gaffer::Path
 
 	public :
 
-		RenderPassPath( ScenePlugPtr scene, Gaffer::ContextPtr context, Gaffer::PathFilterPtr filter = nullptr )
-			:	Path( filter )
+		RenderPassPath( ScenePlugPtr scene, Gaffer::ContextPtr context, Gaffer::PathFilterPtr filter = nullptr, const bool grouped = false )
+			:	Path( filter ), m_grouped( grouped )
 		{
 			setScene( scene );
 			setContext( context );
 		}
 
-		RenderPassPath( ScenePlugPtr scene, Gaffer::ContextPtr context, const Names &names, const IECore::InternedString &root = "/", Gaffer::PathFilterPtr filter = nullptr )
-			:	Path( names, root, filter )
+		RenderPassPath( ScenePlugPtr scene, Gaffer::ContextPtr context, const Names &names, const IECore::InternedString &root = "/", Gaffer::PathFilterPtr filter = nullptr, const bool grouped = false )
+			:	Path( names, root, filter ), m_grouped( grouped )
 		{
 			setScene( scene );
 			setContext( context );
@@ -226,7 +286,7 @@ class RenderPassPath : public Gaffer::Path
 
 		PathPtr copy() const override
 		{
-			return new RenderPassPath( m_scene, m_context, names(), root(), const_cast<PathFilter *>( getFilter() ) );
+			return new RenderPassPath( m_scene, m_context, names(), root(), const_cast<PathFilter *>( getFilter() ), m_grouped );
 		}
 
 		void propertyNames( std::vector<IECore::InternedString> &names, const IECore::Canceller *canceller = nullptr ) const override
@@ -285,7 +345,7 @@ class RenderPassPath : public Gaffer::Path
 			++it;
 			while( it != p.end() && it->size() == names().size() + 1 )
 			{
-				children.push_back( new RenderPassPath( m_scene, m_context, *it, root(), const_cast<PathFilter *>( getFilter() ) ) );
+				children.push_back( new RenderPassPath( m_scene, m_context, *it, root(), const_cast<PathFilter *>( getFilter() ), m_grouped ) );
 				it.prune();
 				++it;
 			}
@@ -317,7 +377,7 @@ class RenderPassPath : public Gaffer::Path
 
 			if( ConstStringVectorDataPtr renderPassData = m_scene.get()->globals()->member<StringVectorData>( g_renderPassNamesOption ) )
 			{
-				const PathMatcherCacheGetterKey key( renderPassData );
+				const PathMatcherCacheGetterKey key( renderPassData, m_grouped );
 				return g_pathMatcherCache.get( key );
 			}
 
@@ -345,19 +405,20 @@ class RenderPassPath : public Gaffer::Path
 		Gaffer::ContextPtr m_context;
 		Gaffer::Signals::ScopedConnection m_plugDirtiedConnection;
 		Gaffer::Signals::ScopedConnection m_contextChangedConnection;
+		bool m_grouped;
 
 };
 
 IE_CORE_DEFINERUNTIMETYPED( RenderPassPath );
 
-RenderPassPath::Ptr constructor1( ScenePlug &scene, Context &context, PathFilterPtr filter )
+RenderPassPath::Ptr constructor1( ScenePlug &scene, Context &context, PathFilterPtr filter, const bool grouped )
 {
-	return new RenderPassPath( &scene, &context, filter );
+	return new RenderPassPath( &scene, &context, filter, grouped );
 }
 
-RenderPassPath::Ptr constructor2( ScenePlug &scene, Context &context, const std::vector<IECore::InternedString> &names, const IECore::InternedString &root, PathFilterPtr filter )
+RenderPassPath::Ptr constructor2( ScenePlug &scene, Context &context, const std::vector<IECore::InternedString> &names, const IECore::InternedString &root, PathFilterPtr filter, const bool grouped )
 {
-	return new RenderPassPath( &scene, &context, names, root, filter );
+	return new RenderPassPath( &scene, &context, names, root, filter, grouped );
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -770,7 +831,8 @@ void GafferSceneUIModule::bindRenderPassEditor()
 				(
 					boost::python::arg( "scene" ),
 					boost::python::arg( "context" ),
-					boost::python::arg( "filter" ) = object()
+					boost::python::arg( "filter" ) = object(),
+					boost::python::arg( "grouped" ) = false
 				)
 			)
 		)
@@ -784,7 +846,8 @@ void GafferSceneUIModule::bindRenderPassEditor()
 					boost::python::arg( "context" ),
 					boost::python::arg( "names" ),
 					boost::python::arg( "root" ) = "/",
-					boost::python::arg( "filter" ) = object()
+					boost::python::arg( "filter" ) = object(),
+					boost::python::arg( "grouped" ) = false
 				)
 			)
 		)
@@ -792,6 +855,8 @@ void GafferSceneUIModule::bindRenderPassEditor()
 		.def( "getScene", (ScenePlug *(RenderPassPath::*)())&RenderPassPath::getScene, return_value_policy<CastToIntrusivePtr>() )
 		.def( "setContext", &RenderPassPath::setContext )
 		.def( "getContext", (Context *(RenderPassPath::*)())&RenderPassPath::getContext, return_value_policy<CastToIntrusivePtr>() )
+		.def( "registerPathGroupingFunction", &registerPathGroupingFunctionWrapper )
+		.staticmethod( "registerPathGroupingFunction" )
 	;
 
 	RefCountedClass<RenderPassNameColumn, GafferUI::PathColumn>( "RenderPassNameColumn" )

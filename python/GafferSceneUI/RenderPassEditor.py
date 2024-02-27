@@ -842,6 +842,19 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 
 		return cls.__addRenderPassButtonMenuSignal
 
+	## Registration of the function used to group render passes when
+	# `RenderPassEditor.Settings.displayGrouped` is enabled.
+	# 'f' should be a callable that takes a render pass name and returns
+	# a string or list of strings containing the path names that the
+	# render pass should be grouped under.
+	# For example: If "char_gafferBot_beauty" should be displayed grouped
+	# under `/char/gafferBot`, then `f( "char_gafferBot_beauty" )` should
+	# return `"/char/gafferBot" or `[ "char", "gafferBot" ]`.
+	@staticmethod
+	def registerPathGroupingFunction( f ) :
+
+		_GafferSceneUI._RenderPassEditor.RenderPassPath.registerPathGroupingFunction( f )
+
 GafferUI.Editor.registerType( "RenderPassEditor", RenderPassEditor )
 
 ##########################################################################

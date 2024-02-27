@@ -5,11 +5,16 @@ Improvements
 ------------
 
 - Viewer : Added <kbd>Ctrl</kbd>+<kbd>PgUp</kbd> shortcut for displaying the RGBA image layer (or the first available layer if RGBA doesn't exist).
+- RenderPassEditor :
+  - Added the ability to display render passes grouped in a hierarchy generated from the render pass name. The default grouping uses the first token delimited by "_" from the render pass name, such that render passes named "char_gafferBot" and "char_cow" would be displayed under a "/char" group, while "prop_ball" and "prop_box" would be displayed under a "/prop" group.
+  - Render pass grouping can be configured in a startup file by using `GafferSceneUI.RenderPassEditor.registerPathGroupingFunction( f )`, where `f` is a function that receives a render pass name and returns the path that the render pass should be grouped under.
+  - Grouped display can be enabled by default in a startup file by using `Gaffer.Metadata.registerValue( GafferSceneUI.RenderPassEditor.Settings, "displayGrouped", "userDefault", IECore.BoolData( True ) )`.
 
 API
 ---
 
 - ScenePath : Added automatic conversion of a list of Python strings to a ScenePath.
+- RenderPassEditor : Added `registerPathGroupingFunction()` method.
 
 1.3.12.0 (relative to 1.3.11.0)
 ========
