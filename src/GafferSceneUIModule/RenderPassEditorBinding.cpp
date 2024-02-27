@@ -798,10 +798,17 @@ class DisabledRenderPassFilter : public Gaffer::PathFilter
 				leaf = std::all_of( c.begin(), c.end(), [this, canceller] ( const auto &p ) { return remove( p, canceller ); } );
 			}
 
-			bool enabled = true;
-			if( const auto enabledData = IECore::runTimeCast<const IECore::BoolData>( path->property( g_renderPassEnabledPropertyName, canceller ) ) )
+			bool enabled = false;
+			if( runTimeCast<const IECore::StringData>( path->property( g_renderPassNamePropertyName, canceller ) ) )
 			{
-				enabled = enabledData->readable();
+				if( const auto enabledData = IECore::runTimeCast<const IECore::BoolData>( path->property( g_renderPassEnabledPropertyName, canceller ) ) )
+				{
+					enabled = enabledData->readable();
+				}
+				else
+				{
+					enabled = true;
+				}
 			}
 
 			return leaf && !enabled;
