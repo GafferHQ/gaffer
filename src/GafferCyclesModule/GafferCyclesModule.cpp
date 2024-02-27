@@ -459,11 +459,6 @@ BOOST_PYTHON_MODULE( _GafferCycles )
 	py::scope().attr( "lights" ) = getLights();
 	py::scope().attr( "passes" ) = getPasses();
 
-#ifdef WITH_CYCLES_TEXTURE_CACHE
-	py::scope().attr( "withTextureCache" ) = true;
-#else
-	py::scope().attr( "withTextureCache" ) = false;
-#endif
 	if( ccl::openimagedenoise_supported() )
 		py::scope().attr( "hasOpenImageDenoise" ) = true;
 	else

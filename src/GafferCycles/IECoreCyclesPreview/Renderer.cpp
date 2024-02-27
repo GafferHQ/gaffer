@@ -298,7 +298,7 @@ class CyclesOutput : public IECore::RefCounted
 
 	public :
 
-		CyclesOutput( const ccl::Session *session, const IECore::InternedString &name, const IECoreScene::Output *output )
+		CyclesOutput( const IECore::InternedString &name, const IECoreScene::Output *output )
 			: m_passType( ccl::PASS_NONE ), m_denoise( false ), m_interactive( false ), m_lightgroup( false )
 		{
 			m_parameters = output->parametersData()->copy();
@@ -726,16 +726,6 @@ class ShaderCache : public IECore::RefCounted
 			m_shaderAssignPairs.push_back( shaderAssign );
 		}
 
-		bool hasOSLShader()
-		{
-			for( ccl::Shader *shader : m_scene->shaders )
-			{
-				if( IECoreCycles::ShaderNetworkAlgo::hasOSL( shader ) )
-					return true;
-			}
-			return false;
-		}
-
 		uint32_t numDefaultShaders()
 		{
 			return m_numDefaultShaders;
@@ -765,19 +755,6 @@ class ShaderCache : public IECore::RefCounted
 					//}
 				}
 			}
-		}
-
-		void removeOSLShaders()
-		{
-			ccl::set<ccl::Shader *> remove;
-			for( ccl::Shader *shader : m_scene->shaders )
-			{
-				if( IECoreCycles::ShaderNetworkAlgo::hasOSL( shader ) )
-				{
-					remove.insert( shader );
-				}
-			}
-			m_scene->delete_nodes( remove, m_scene );
 		}
 
 	private :
@@ -2481,7 +2458,6 @@ IECore::InternedString g_textureLimitOptionName( "cycles:scene:texture_limit" );
 // Background shader
 IECore::InternedString g_backgroundShaderOptionName( "cycles:background:shader" );
 //
-IECore::InternedString g_useFrameAsSeedOptionName( "cycles:integrator:useFrameAsSeed" );
 IECore::InternedString g_seedOptionName( "cycles:integrator:seed" );
 
 ccl::PathRayFlag nameToRayType( const std::string &name )
@@ -2502,22 +2478,7 @@ ccl::PathRayFlag nameToRayType( const std::string &name )
 IECore::InternedString g_dicingCameraOptionName( "cycles:dicing_camera" );
 
 // Cryptomatte
-IECore::InternedString g_cryptomatteAccurateOptionName( "cycles:film:cryptomatte_accurate" );
 IECore::InternedString g_cryptomatteDepthOptionName( "cycles:film:cryptomatte_depth");
-
-// Texture cache
-IECore::InternedString g_useTextureCacheOptionName( "cycles:texture:use_texture_cache" );
-IECore::InternedString g_textureCacheSizeOptionName( "cycles:texture:cache_size" );
-IECore::InternedString g_textureAutoConvertOptionName( "cycles:texture:auto_convert" );
-IECore::InternedString g_textureAcceptUnmippedOptionName( "cycles:texture:accept_unmipped" );
-IECore::InternedString g_textureAcceptUntiledOptionName( "cycles:texture:accept_untiled" );
-IECore::InternedString g_textureAutoTileOptionName( "cycles:texture:auto_tile" );
-IECore::InternedString g_textureAutoMipOptionName( "cycles:texture:auto_mip" );
-IECore::InternedString g_textureTileSizeOptionName( "cycles:texture:tile_size" );
-IECore::InternedString g_textureBlurDiffuseOptionName( "cycles:texture:blur_diffuse" );
-IECore::InternedString g_textureBlurGlossyOptionName( "cycles:texture:blur_glossy" );
-IECore::InternedString g_textureUseCustomCachePathOptionName( "cycles:texture:use_custom_cache_path" );
-IECore::InternedString g_textureCustomCachePathOptionName( "cycles:texture:custom_cache_path" );
 
 IE_CORE_FORWARDDECLARE( CyclesRenderer )
 
@@ -2540,22 +2501,14 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				m_sessionParams( ccl::SessionParams() ),
 				m_sceneParams( ccl::SceneParams() ),
 				m_bufferParams( ccl::BufferParams() ),
-#ifdef WITH_CYCLES_TEXTURE_CACHE
-				m_textureCacheParams( ccl::TextureCacheParams() ),
-#endif
 				m_renderType( renderType ),
 				m_frame( 1 ),
 				m_renderState( RENDERSTATE_READY ),
 				m_outputsChanged( true ),
-				m_cryptomatteAccurate( true ),
 				m_cryptomatteDepth( 0 ),
-				m_seed( 0 ),
-				m_useFrameAsSeed( true ),
 				m_messageHandler( messageHandler )
 		{
 			// Session Defaults
-			m_bufferParamsModified = m_bufferParams;
-
 			m_sessionParams.device = firstCPUDevice();
 			m_sessionParams.shadingsystem = ccl::SHADINGSYSTEM_OSL;
 			m_sessionParams.use_resolution_divider = false;
@@ -2578,17 +2531,10 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			m_sessionParamsDefault = m_sessionParams;
 			m_sceneParamsDefault = m_sceneParams;
-#ifdef WITH_CYCLES_TEXTURE_CACHE
-			m_textureCacheParamsDefault = m_textureCacheParams;
-#endif
 
 			init();
 
-			// CyclesOptions will set some values to these.
-			m_integrator = *(m_scene->integrator);
-			m_background = *(m_scene->background);
 			m_scene->background->set_transparent( true );
-			m_film = *(m_scene->film);
 
 			m_cameraCache = new CameraCache();
 			m_lightCache = new LightCache( m_scene );
@@ -2623,8 +2569,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				if( name == g_deviceOptionName ||
 					name == g_shadingsystemOptionName ||
 					boost::starts_with( name.string(), "cycles:session:" ) ||
-					boost::starts_with( name.string(), "cycles:scene:" ) ||
-					boost::starts_with( name.string(), "cycles:texture:" ) )
+					boost::starts_with( name.string(), "cycles:scene:" )
+				)
 				{
 					IECore::msg( IECore::Msg::Error, "CyclesRenderer::option", fmt::format( "\"{}\" requires a manual render restart.", name ) );
 				}
@@ -2634,7 +2580,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			{
 				if( value == nullptr )
 				{
-					m_frame = 0;
+					m_frame = 1;
 				}
 				else if( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
 				{
@@ -2779,27 +2725,11 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 					return;
 				}
 			}
-			else if( name == g_useFrameAsSeedOptionName )
-			{
-				if( value == nullptr )
-				{
-					m_useFrameAsSeed = true;
-					return;
-				}
-				else
-				{
-					if ( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
-					{
-						m_useFrameAsSeed = data->readable();
-					}
-					return;
-				}
-			}
 			else if( name == g_seedOptionName )
 			{
 				if( value == nullptr )
 				{
-					m_seed = 0;
+					m_seed = std::nullopt;
 					return;
 				}
 				else
@@ -2859,26 +2789,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", fmt::format( "Unknown option \"{}\".", name.string() ) );
 				return;
 			}
-			else if( boost::starts_with( name.string(), "cycles:texture:" ) )
-			{
-#ifdef WITH_CYCLES_TEXTURE_CACHE
-				OPTION(bool,  m_textureCacheParams, g_useTextureCacheOptionName,           use_cache );
-				OPTION(int,   m_textureCacheParams, g_textureCacheSizeOptionName,          cache_size );
-				OPTION(bool,  m_textureCacheParams, g_textureAutoConvertOptionName,        auto_convert );
-				OPTION(bool,  m_textureCacheParams, g_textureAcceptUnmippedOptionName,     accept_unmipped );
-				OPTION(bool,  m_textureCacheParams, g_textureAcceptUntiledOptionName,      accept_untiled );
-				OPTION(bool,  m_textureCacheParams, g_textureAutoTileOptionName,           auto_tile );
-				OPTION(bool,  m_textureCacheParams, g_textureAutoMipOptionName,            auto_mip );
-				OPTION(int,   m_textureCacheParams, g_textureTileSizeOptionName,           tile_size );
-				OPTION(float, m_textureCacheParams, g_textureBlurDiffuseOptionName,        diffuse_blur );
-				OPTION(float, m_textureCacheParams, g_textureBlurGlossyOptionName,         glossy_blur );
-				OPTION(bool,  m_textureCacheParams, g_textureUseCustomCachePathOptionName, use_custom_cache_path );
-				OPTION_STR(   m_textureCacheParams, g_textureCustomCachePathOptionName,    custom_cache_path );
-#endif
-
-				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", fmt::format( "Unknown option \"{}\".", name.string() ) );
-				return;
-			}
 			// The last 3 are subclassed internally from ccl::Node so treat their params like Cycles sockets
 			else if( boost::starts_with( name.string(), "cycles:background:" ) )
 			{
@@ -2927,21 +2837,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			}
 			else if( boost::starts_with( name.string(), "cycles:film:" ) )
 			{
-				if( name == g_cryptomatteAccurateOptionName )
-				{
-					m_outputsChanged = true;
-					if( value == nullptr )
-					{
-						m_cryptomatteAccurate = false;
-						return;
-					}
-					if( const BoolData *data = reportedCast<const BoolData>( value, "option", name ) )
-					{
-						m_cryptomatteAccurate = data->readable();
-						return;
-					}
-				}
-
 				if( name == g_cryptomatteDepthOptionName )
 				{
 					m_outputsChanged = true;
@@ -3036,7 +2931,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				const auto coutput = m_outputs.find( name );
 				if( coutput == m_outputs.end() )
 				{
-					m_outputs[name] = new CyclesOutput( m_session, name, output );
+					m_outputs[name] = new CyclesOutput( name, output );
 					m_outputsChanged = true;
 				}
 			}
@@ -3252,9 +3147,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			m_scene->camera->need_flags_update = true;
 			m_scene->camera->update( m_scene );
-
-			// Set a more sane default than the arbitrary 0.8f
-			m_scene->film->set_exposure( 1.0f );
 		}
 
 		void clearUnused()
@@ -3284,21 +3176,10 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		void updateOptions()
 		{
-#ifdef WITH_CYCLES_TEXTURE_CACHE
-			m_sceneParams.texture = m_textureCacheParams;
-#endif
-
 			ccl::Integrator *integrator = m_scene->integrator;
 			ccl::Background *background = m_scene->background;
 
-			if( m_useFrameAsSeed )
-			{
-				integrator->set_seed( m_frame );
-			}
-			else
-			{
-				integrator->set_seed( m_seed );
-			}
+			integrator->set_seed( m_seed.value_or( m_frame ) );
 
 			ccl::Shader *lightShader = nullptr;
 			for( ccl::Light *light : m_scene->lights )
@@ -3330,36 +3211,17 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			if( integrator->is_modified() )
 			{
 				integrator->tag_update( m_scene, ccl::Integrator::UPDATE_ALL );
-				m_integrator = *integrator;
 			}
 
 			if( background->is_modified() )
 			{
 				background->tag_update( m_scene );
-				m_background = *background;
 			}
 
 			if( film->is_modified() )
 			{
 				//film->tag_update( m_scene );
 				integrator->tag_update( m_scene, ccl::Integrator::UPDATE_ALL );
-				m_film = *film;
-			}
-
-			// Check if an OSL shader exists & set the shadingsystem
-			if( m_sessionParams.shadingsystem == ccl::SHADINGSYSTEM_SVM && m_shaderCache->hasOSLShader() )
-			{
-				if( m_renderState != RENDERSTATE_RENDERING )
-				{
-					IECore::msg( IECore::Msg::Warning, "CyclesRenderer", "OSL Shader detected, forcing OSL shading-system (CPU-only)" );
-					m_sessionParams.shadingsystem = ccl::SHADINGSYSTEM_OSL;
-					m_sceneParams.shadingsystem = ccl::SHADINGSYSTEM_OSL;
-				}
-				else
-				{
-					IECore::msg( IECore::Msg::Error, "CyclesRenderer", "OSL Shader detected, this will cause problems in a running interactive render" );
-					m_shaderCache->removeOSLShaders();
-				}
 			}
 
 			// If anything changes in scene or session, we reset.
@@ -3380,17 +3242,22 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			ccl::Camera *camera = m_scene->camera;
 			int width = camera->get_full_width();
 			int height = camera->get_full_height();
-			m_bufferParamsModified.full_width = width;
-			m_bufferParamsModified.full_height = height;
-			m_bufferParamsModified.full_x = (int)(camera->get_border_left() * (float)width);
-			m_bufferParamsModified.full_y = (int)(camera->get_border_bottom() * (float)height);
-			m_bufferParamsModified.width =  (int)(camera->get_border_right() * (float)width) - m_bufferParamsModified.full_x;
-			m_bufferParamsModified.height = (int)(camera->get_border_top() * (float)height) - m_bufferParamsModified.full_y;
 
-			if( m_bufferParams.modified( m_bufferParamsModified ) )
+			ccl::BufferParams updatedBufferParams = m_bufferParams;
+			updatedBufferParams.full_width = width;
+			updatedBufferParams.full_height = height;
+			updatedBufferParams.full_x = (int)(camera->get_border_left() * (float)width);
+			updatedBufferParams.full_y = (int)(camera->get_border_bottom() * (float)height);
+			updatedBufferParams.width =  (int)(camera->get_border_right() * (float)width) - updatedBufferParams.full_x;
+			updatedBufferParams.height = (int)(camera->get_border_top() * (float)height) - updatedBufferParams.full_y;
+
+			if( m_bufferParams.modified( updatedBufferParams ) )
 			{
+				// Set `m_outputsChanged` so we call `m_session->reset()` below
+				// with the new buffer params, and so we update the display driver
+				// with the new resolution.
 				m_outputsChanged = true;
-				m_bufferParams = m_bufferParamsModified;
+				m_bufferParams = updatedBufferParams;
 			}
 
 			if( !m_outputsChanged )
@@ -3419,10 +3286,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			paramData->writable()["default"] = new StringData( "rgba" );
 
 			ccl::CryptomatteType crypto = ccl::CRYPT_NONE;
-			if( m_cryptomatteAccurate )
-			{
-				crypto = static_cast<ccl::CryptomatteType>( crypto | ccl::CRYPT_ACCURATE );
-			}
 
 			CompoundDataPtr layersData = new CompoundData();
 			InternedString cryptoAsset;
@@ -3483,7 +3346,7 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			// Adding cryptomattes in-order matters
 			ccl::Film *film = m_scene->film;
-			if( crypto == ccl::CRYPT_NONE || crypto == ( ccl::CRYPT_NONE | ccl::CRYPT_ACCURATE ) )
+			if( crypto == ccl::CRYPT_NONE )
 			{
 				// If there's no crypto, we must set depth to 0 otherwise bugs appear
 				film->set_cryptomatte_depth( 0 );
@@ -3602,20 +3465,24 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 			m_scene->shaders.resize( m_shaderCache->numDefaultShaders() );
 			m_scene->lights.clear();
 
+			const ccl::Integrator integratorCopy = *m_scene->integrator;
+			const ccl::Background backgroundCopy = *m_scene->background;
+			const ccl::Film filmCopy = *m_scene->film;
+
 			init();
 
 			// Re-apply the settings for these.
 			for( const ccl::SocketType &socketType : m_scene->integrator->type->inputs )
 			{
-				m_scene->integrator->copy_value(socketType, m_integrator, *m_integrator.type->find_input( socketType.name ) );
+				m_scene->integrator->copy_value(socketType, integratorCopy, *integratorCopy.type->find_input( socketType.name ) );
 			}
 			for( const ccl::SocketType &socketType : m_scene->background->type->inputs )
 			{
-				m_scene->background->copy_value(socketType, m_background, *m_background.type->find_input( socketType.name ) );
+				m_scene->background->copy_value(socketType, backgroundCopy, *backgroundCopy.type->find_input( socketType.name ) );
 			}
 			for( const ccl::SocketType &socketType : m_scene->film->type->inputs )
 			{
-				m_scene->film->copy_value(socketType, m_film, *m_film.type->find_input( socketType.name ) );
+				m_scene->film->copy_value(socketType, filmCopy, *filmCopy.type->find_input( socketType.name ) );
 			}
 
 			m_scene->background->set_shader( m_scene->default_background );
@@ -3756,13 +3623,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		ccl::SessionParams m_sessionParams;
 		ccl::SceneParams m_sceneParams;
 		ccl::BufferParams m_bufferParams;
-		ccl::BufferParams m_bufferParamsModified;
-#ifdef WITH_CYCLES_TEXTURE_CACHE
-		ccl::TextureCacheParams m_textureCacheParams;
-#endif
-		ccl::Integrator m_integrator;
-		ccl::Background m_background;
-		ccl::Film m_film;
 
 		// Background shader
 		CyclesShaderPtr m_backgroundShader;
@@ -3771,9 +3631,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		ccl::Camera m_cameraDefault;
 		ccl::SessionParams m_sessionParamsDefault;
 		ccl::SceneParams m_sceneParamsDefault;
-#ifdef WITH_CYCLES_TEXTURE_CACHE
-		ccl::TextureCacheParams m_textureCacheParamsDefault;
-#endif
 
 		// IECoreScene::Renderer
 		RenderType m_renderType;
@@ -3781,10 +3638,8 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		string m_camera;
 		RenderState m_renderState;
 		bool m_outputsChanged;
-		bool m_cryptomatteAccurate;
 		int m_cryptomatteDepth;
-		int m_seed;
-		bool m_useFrameAsSeed;
+		std::optional<int> m_seed;
 
 		// Logging
 		IECore::MessageHandlerPtr m_messageHandler;
@@ -3800,6 +3655,10 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		AttributesCachePtr m_attributesCache;
 
 		// Nodes created to update to Cycles
+		/// \todo I don't see why these need to be state on the Renderer.
+		/// I think they could either be private data within `InstanceCache`
+		/// etc, or we could just stop deferring the addition of objects to
+		/// the `ccl::Scene`.
 		NodesCreated m_objectsCreated;
 		NodesCreated m_lightsCreated;
 		NodesCreated m_geometryCreated;

@@ -101,7 +101,6 @@ CyclesOptions::CyclesOptions( const std::string &name )
 	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:caustics_reflective", new IECore::BoolData( true ), false, "causticsReflective" ) );
 	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:caustics_refractive", new IECore::BoolData( true ), false, "causticsRefractive" ) );
 	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:filter_glossy", new IECore::FloatData( 0.0f ), false, "filterGlossy" ) );
-	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:use_frame_as_seed", new IECore::BoolData( true ), false, "useFrameAsSeed" ) );
 	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:seed", new IECore::IntData( 0 ), false, "seed" ) );
 	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:sample_clamp_direct", new IECore::FloatData( 0.0f ), false, "sampleClampDirect" ) );
 	options->addChild( new Gaffer::NameValuePlug( "cycles:integrator:sample_clamp_indirect", new IECore::FloatData( 0.0f ), false, "sampleClampIndirect" ) );
@@ -158,25 +157,10 @@ CyclesOptions::CyclesOptions( const std::string &name )
 	options->addChild( new Gaffer::NameValuePlug( "cycles:film:mist_depth", new IECore::FloatData( 100.0f ), false, "mistDepth" ) );
 	options->addChild( new Gaffer::NameValuePlug( "cycles:film:mist_falloff", new IECore::FloatData( 1.0f ), false, "mistFalloff" ) );
 
-	options->addChild( new Gaffer::NameValuePlug( "cycles:film:cryptomatte_accurate", new IECore::BoolData( false ), false, "cryptomatteAccurate" ) );
 	options->addChild( new Gaffer::NameValuePlug( "cycles:film:cryptomatte_depth", new IECore::IntData( 6 ), false, "cryptomatteDepth" ) );
 
 	// Dicing camera
 	options->addChild( new Gaffer::NameValuePlug( "cycles:dicing_camera", new IECore::StringData(), false, "dicingCamera" ) );
-
-	// Texture cache
-	options->addChild( new Gaffer::NameValuePlug( "cycles:texture:use_texture_cache", new IECore::BoolData( false ), false, "useTextureCache" ) );
-	options->addChild( new Gaffer::NameValuePlug( "cycles:texture:cache_size", new IECore::IntData( 1024 ), false, "textureCacheSize" ) );
-	options->addChild( new Gaffer::NameValuePlug( "cycles:texture:auto_convert", new IECore::BoolData( true ), false, "textureAutoConvert" ) );
-	options->addChild( new Gaffer::NameValuePlug( "cycles:texture:accept_unmipped", new IECore::BoolData( true ), false, "textureAcceptUnmipped" ) );
-	options->addChild( new Gaffer::NameValuePlug( "cycles:texture:accept_untiled", new IECore::BoolData( true ), false, "textureAcceptUntiled" ) );
-	options->addChild( new Gaffer::NameValuePlug( "cycles:texture:auto_tile", new IECore::BoolData( true ), false, "textureAutoTile" ) );
-	options->addChild( new Gaffer::NameValuePlug( "cycles:texture:auto_mip", new IECore::BoolData( true ), false, "textureAutoMip" ) );
-	options->addChild( new Gaffer::NameValuePlug( "cycles:texture:tile_size", new IECore::IntData( 64 ), false, "textureTileSize" ) );
-	options->addChild( new Gaffer::NameValuePlug( "cycles:texture:blur_diffuse", new IECore::FloatData( 0.0156f ), false, "textureBlurDiffuse" ) );
-	options->addChild( new Gaffer::NameValuePlug( "cycles:texture:blur_glossy", new IECore::FloatData( 0.0f ), false, "textureBlurGlossy" ) );
-	options->addChild( new Gaffer::NameValuePlug( "cycles:texture:use_custom_cache_path", new IECore::BoolData( false ), false, "useCustomCachePath" ) );
-	options->addChild( new Gaffer::NameValuePlug( "cycles:texture:custom_cache_path", new IECore::StringData(), false, "customCachePath" ) );
 }
 
 CyclesOptions::~CyclesOptions()
