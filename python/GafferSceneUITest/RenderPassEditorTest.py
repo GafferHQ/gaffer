@@ -41,6 +41,7 @@ import IECore
 
 import Gaffer
 import GafferScene
+import GafferSceneUI
 import GafferUITest
 
 from GafferSceneUI import _GafferSceneUI
@@ -189,3 +190,37 @@ class RenderPassEditorTest( GafferUITest.TestCase ) :
 		disabledRenderPassFilter.setEnabled( False )
 
 		self.assertEqual( [ str( c ) for c in path.children() ], [ "/A", "/B", "/C", "/D" ] )
+
+	def testPathGroupingFunction( self ) :
+
+		renderPasses = GafferScene.RenderPasses()
+		renderPasses["names"].setValue( IECore.StringVectorData( ["char_bot_beauty", "char_bot_shadow"] ) )
+
+		context = Gaffer.Context()
+		path = _GafferSceneUI._RenderPassEditor.RenderPassPath( renderPasses["out"], context, "/" )
+
+		self.assertEqual( [ str( c ) for c in path.children() ], [ "/char_bot_beauty", "/char_bot_shadow" ] )
+
+		def testFn( name ) :
+			return "/".join( name.split( "_" )[:-1] )
+
+		# Register our grouping function and test a grouped path
+		GafferSceneUI.RenderPassEditor.registerPathGroupingFunction( testFn )
+		path = _GafferSceneUI._RenderPassEditor.RenderPassPath( renderPasses["out"], context, "/", grouped = True )
+
+		for parent, children in [
+			( "/", [ "/char" ] ),
+			( "/char", [ "/char/bot" ] ),
+			( "/char/bot", [ "/char/bot/char_bot_beauty", "/char/bot/char_bot_shadow" ] ),
+			( "/char/bot/char_bot_beauty", [] ),
+			( "/char/bot/char_bot_shadow", [] ),
+		] :
+
+			path.setFromString( parent )
+			self.assertTrue( path.isValid() )
+			self.assertEqual( path.isLeaf(), children == [] )
+			self.assertEqual( [ str( c ) for c in path.children() ], children )
+
+		# Ensure we can still get a flat output
+		path = _GafferSceneUI._RenderPassEditor.RenderPassPath( renderPasses["out"], context, "/", grouped = False )
+		self.assertEqual( [ str( c ) for c in path.children() ], [ "/char_bot_beauty", "/char_bot_shadow" ] )
