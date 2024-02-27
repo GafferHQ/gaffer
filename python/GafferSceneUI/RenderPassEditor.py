@@ -78,6 +78,7 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 			self["tabGroup"] = Gaffer.StringPlug( defaultValue = "Cycles" )
 			self["section"] = Gaffer.StringPlug( defaultValue = "Main" )
 			self["editScope"] = Gaffer.Plug()
+			self["displayGrouped"] = Gaffer.BoolPlug()
 
 	IECore.registerRunTimeTyped( Settings, typeName = "GafferSceneUI::RenderPassEditor::Settings" )
 
@@ -106,6 +107,13 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 			)
 
 			with GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 ) :
+
+				GafferUI.PlugLayout(
+					self.__settingsNode,
+					orientation = GafferUI.ListContainer.Orientation.Horizontal,
+					rootSection = "Grouping"
+				)
+				GafferUI.Divider( orientation = GafferUI.Divider.Orientation.Vertical )
 
 				_SearchFilterWidget( searchFilter )
 				GafferUI.BasicPathFilterWidget( disabledRenderPassFilter )
@@ -257,6 +265,8 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 
 		if plug in ( self.__settingsNode["section"], self.__settingsNode["tabGroup"] ) :
 			self.__updateColumns()
+		elif plug == self.__settingsNode["displayGrouped"] :
+			self.__setPathListingPath()
 
 	def __settingsPlugInputChanged( self, plug ) :
 
@@ -280,7 +290,7 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 			# control of updates ourselves in _updateFromContext(), using LazyMethod to defer the calls to this
 			# function until we are visible and playback has stopped.
 			contextCopy = Gaffer.Context( self.getContext() )
-			self.__pathListing.setPath( _GafferSceneUI._RenderPassEditor.RenderPassPath( self.__settingsNode["in"], contextCopy, "/", filter = self.__filter ) )
+			self.__pathListing.setPath( _GafferSceneUI._RenderPassEditor.RenderPassPath( self.__settingsNode["in"], contextCopy, "/", filter = self.__filter, grouped = self.__settingsNode["displayGrouped"].getValue() ) )
 		else :
 			self.__pathListing.setPath( Gaffer.DictPath( {}, "/" ) )
 
@@ -899,6 +909,18 @@ Gaffer.Metadata.registerNode(
 
 		],
 
+		"displayGrouped" : [
+
+			"description",
+			"""
+			Click to toggle between list and grouped display of render passes.
+			""",
+
+			"layout:section", "Grouping",
+			"plugValueWidget:type", "GafferSceneUI.RenderPassEditor._ToggleGroupingPlugValueWidget",
+
+		],
+
 	}
 
 )
@@ -978,6 +1000,31 @@ class _Spacer( GafferUI.Spacer ) :
 		GafferUI.Spacer.__init__( self, imath.V2i( 0 ) )
 
 RenderPassEditor._Spacer = _Spacer
+
+## \todo Should this be a new displayMode of BoolPlugValueWidget?
+class _ToggleGroupingPlugValueWidget( GafferUI.PlugValueWidget ) :
+
+	def __init__( self, plugs, **kw ) :
+
+		self.__row = GafferUI.ListContainer( GafferUI.ListContainer.Orientation.Horizontal, spacing = 4 )
+
+		GafferUI.PlugValueWidget.__init__( self, self.__row, plugs )
+
+		self.__groupingModeButton = GafferUI.Button( image = "pathListingList.png", hasFrame=False )
+		self.__groupingModeButton.clickedSignal().connect( Gaffer.WeakMethod( self.__groupingModeButtonClicked ), scoped = False )
+		self.__row.append(
+			self.__groupingModeButton
+		)
+
+	def __groupingModeButtonClicked( self, button ) :
+
+		[ plug.setValue( not plug.getValue() ) for plug in self.getPlugs() ]
+
+	def _updateFromValues( self, values, exception ) :
+
+		self.__groupingModeButton.setImage( "pathListingTree.png" if all( values ) else "pathListingList.png" )
+
+RenderPassEditor._ToggleGroupingPlugValueWidget = _ToggleGroupingPlugValueWidget
 
 ##########################################################################
 # _SearchFilterWidget
