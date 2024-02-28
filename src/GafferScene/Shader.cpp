@@ -621,6 +621,19 @@ class Shader::NetworkBuilder
 					addParameterComponentConnections( it->get(), inputName, connections );
 				}
 			}
+			else
+			{
+				const Gaffer::Plug *effectiveParameter = this->effectiveParameter( parameter );
+				if( effectiveParameter && isOutputParameter( effectiveParameter ) )
+				{
+					IECore::InternedString inputName = parameterName.string();
+
+					connections.push_back( {
+						outputParameterForPlug( effectiveParameter ),
+						{ IECore::InternedString(), inputName }
+					} );
+				}
+			}
 		}
 
 		template< typename T >
