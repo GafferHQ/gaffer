@@ -106,7 +106,10 @@ void FlatImageProcessor::hashDeep( const GafferImage::ImagePlug *parent, const G
 	{
 		// We need to append to the node hash, rather than just overriding with the upstream value,
 		// so that we can't reuse the plug value from upstream, and have to call compute()
-		h.append( inPlug()->deepPlug()->hash() );
+		if( ImageAlgo::viewIsValid( context, inPlug()->viewNames()->readable() ) )
+		{
+			h.append( inPlug()->deepPlug()->hash() );
+		}
 	}
 }
 
@@ -128,7 +131,10 @@ bool FlatImageProcessor::computeDeep( const Gaffer::Context *context, const Imag
 	}
 	else
 	{
-		if( inPlug()->deepPlug()->getValue() )
+		if(
+			ImageAlgo::viewIsValid( context, inPlug()->viewNames()->readable() ) &&
+			inPlug()->deepPlug()->getValue()
+		)
 		{
 			badInput = inPlug();
 		}
