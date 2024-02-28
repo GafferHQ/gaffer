@@ -2227,24 +2227,7 @@ class RendererTest( GafferTest.TestCase ) :
 					GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
 				)
 
-				renderer.output(
-					"testOutput",
-					IECoreScene.Output(
-						"test",
-						"ieDisplay",
-						"rgba",
-						{
-							"driverType" : "ImageDisplayDriver",
-							"handle" : "testThreads",
-						}
-					)
-				)
-
 				renderer.option( "cycles:session:threads", IECore.IntData( threads ) )
-				## \todo We currently need to do a render for the threads value to
-				# be flushed into the session params. But in future we should be able
-				# to remove that.
-				renderer.render()
 				self.assertEqual( renderer.command( "cycles:querySession", {} )["threads"].value, expectedThreads )
 
 	def testDevices( self ) :
@@ -2263,19 +2246,6 @@ class RendererTest( GafferTest.TestCase ) :
 					GafferScene.Private.IECoreScenePreview.Renderer.RenderType.Interactive,
 				)
 
-				renderer.output(
-					"testOutput",
-					IECoreScene.Output(
-						"test",
-						"ieDisplay",
-						"rgba",
-						{
-							"driverType" : "ImageDisplayDriver",
-							"handle" : "testThreads",
-						}
-					)
-				)
-
 				# Ideally we want clients to emit all options before doing anything else,
 				# to simplify our internal session management. But certain important clients
 				# (SceneGadget, RenderController, I'm looking at you) like to create a camera
@@ -2285,10 +2255,6 @@ class RendererTest( GafferTest.TestCase ) :
 
 				renderer.option( "cycles:shadingsystem", IECore.StringData( "SVM" ) )
 				renderer.option( "cycles:device", IECore.StringData( f"{deviceType}:{typeIndex:02d}" ) )
-				## \todo We currently need to do a render for the device to
-				# be flushed into the session params. But in future we should be
-				# able to remove that.
-				renderer.render()
 				self.assertEqual( renderer.command( "cycles:querySession", {} )["device"].value, device["id"] )
 
 	def testExposureEdit( self ) :
