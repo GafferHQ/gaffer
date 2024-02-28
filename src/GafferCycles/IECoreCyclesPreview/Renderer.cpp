@@ -257,14 +257,6 @@ T parameter( const IECore::CompoundDataMap &parameters, const IECore::InternedSt
 		CATEGORY.OPTION = data->readable(); } \
 	return; }
 
-#define OPTION_STR(CATEGORY, OPTIONNAME, OPTION) if( name == OPTIONNAME ) { \
-	if( value == nullptr ) { \
-		CATEGORY.OPTION = CATEGORY ## Default.OPTION; \
-		return; } \
-	if ( const StringData *data = reportedCast<const StringData>( value, "option", name ) ) { \
-		CATEGORY.OPTION = data->readable().c_str(); } \
-	return; }
-
 } // namespace
 
 //////////////////////////////////////////////////////////////////////////
@@ -2413,6 +2405,49 @@ ccl::DeviceInfo firstCPUDevice()
 	return ccl::DeviceInfo();
 }
 
+ccl::DeviceInfo matchingDevices( const std::string &pattern, int threads, bool background )
+{
+	ccl::vector<ccl::DeviceInfo> devices;
+	std::unordered_map<ccl::DeviceType, int> typeIndices;
+	for( const auto &device : ccl::Device::available_devices() )
+	{
+		const string typeString = ccl::Device::string_from_type( device.type );
+		const int typeIndex = typeIndices[device.type]++;
+		const string name = fmt::format( "{}:{:02}", typeString, typeIndex );
+		if(
+			// e.g. "CPU" matches the first CPU device.
+			( typeIndex == 0 && StringAlgo::matchMultiple( typeString, pattern ) ) ||
+			// e.g. "CUDA:*" matches all CUDA devices, or `OPTIX:00` matches the first Optix device.
+			StringAlgo::matchMultiple( name, pattern )
+		)
+		{
+			devices.push_back( device );
+		}
+	}
+
+	if( devices.empty() )
+	{
+		IECore::msg( IECore::Msg::Warning, "CyclesRenderer", fmt::format( "No devices matching \"{}\" found, reverting to CPU.", pattern ) );
+		devices.push_back( firstCPUDevice() );
+	}
+
+	// Note : if there's only one device, `get_multi_device()` just
+	// returns it directly, rather than wrapping it.
+	return ccl::Device::get_multi_device( devices, threads, background );
+}
+
+IECore::CompoundDataPtr sessionParamsAsData( const ccl::SessionParams params )
+{
+	IECore::CompoundDataPtr result = new IECore::CompoundData;
+	result->writable()["device"] = new StringData( params.device.id );
+	result->writable()["headless"] = new BoolData( params.headless );
+	result->writable()["background"] = new BoolData( params.background );
+	result->writable()["experimental"] = new BoolData( params.experimental );
+	result->writable()["samples"] = new BoolData( params.samples );
+	result->writable()["threads"] = new IntData( params.threads );
+	return result;
+}
+
 // Shading-Systems
 IECore::InternedString g_shadingsystemOSL( "OSL" );
 IECore::InternedString g_shadingsystemSVM( "SVM" );
@@ -2425,6 +2460,18 @@ ccl::ShadingSystem nameToShadingSystemEnum( const IECore::InternedString &name )
 #undef MAP_NAME
 
 	return ccl::ShadingSystem::SHADINGSYSTEM_SVM;
+}
+
+template<typename T>
+T optionValue( const IECore::InternedString &name, const IECore::Object *value, const T &defaultValue )
+{
+	if( !value )
+	{
+		return defaultValue;
+	}
+	using DataType = IECore::TypedData<T>;
+	const DataType *data = reportedCast<const DataType>( value, "option", name );
+	return data ? data->readable() : defaultValue;
 }
 
 // Core
@@ -2559,10 +2606,6 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 		{
 			const IECore::MessageHandler::Scope s( m_messageHandler.get() );
 
-			auto *integrator = m_scene->integrator;
-			auto *background = m_scene->background;
-			auto *film = m_scene->film;
-
 			// Error about options that cannot be set while interactive rendering.
 			if( m_renderState == RENDERSTATE_RENDERING )
 			{
@@ -2578,168 +2621,51 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 			if( name == g_frameOptionName )
 			{
-				if( value == nullptr )
-				{
-					m_frame = 1;
-				}
-				else if( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
-				{
-					m_frame = data->readable();
-				}
+				m_frame = optionValue<int>( name, value, 1 );
 				return;
 			}
 			else if( name == g_cameraOptionName )
 			{
-				if( value == nullptr )
-				{
-					m_camera = "";
-				}
-				else if( const StringData *data = reportedCast<const StringData>( value, "option", name ) )
-				{
-					m_camera = data->readable();
-				}
+				m_camera = optionValue<string>( name, value, "" );
 				return;
 			}
 			else if( name == g_dicingCameraOptionName )
 			{
-				if( value == nullptr )
-				{
-					m_dicingCamera = "";
-				}
-				else if( const StringData *data = reportedCast<const StringData>( value, "option", name ) )
-				{
-					m_dicingCamera = data->readable();
-				}
+				m_dicingCamera = optionValue<string>( name, value, "" );
 				return;
 			}
 			else if( name == g_sampleMotionOptionName )
 			{
-				const ccl::SocketType *input = integrator->node_type->find_input( ccl::ustring( "motion_blur" ) );
-				if( value && input )
-				{
-					if( const Data *data = reportedCast<const Data>( value, "option", name ) )
-					{
-						SocketAlgo::setSocket( (ccl::Node*)integrator, input, data );
-					}
-					else
-					{
-						integrator->set_default_value( *input );
-					}
-				}
-				else if( input )
-				{
-					integrator->set_default_value( *input );
-				}
+				m_scene->integrator->set_motion_blur( optionValue<bool>( name, value, true ) );
 				return;
 			}
 			else if( name == g_deviceOptionName )
 			{
-				string devicePattern = "CPU";
-				if( value )
-				{
-					if( const StringData *data = reportedCast<const StringData>( value, "option", name ) )
-					{
-						devicePattern = data->readable();
-					}
-				}
-
-				ccl::vector<ccl::DeviceInfo> devices;
-				std::unordered_map<ccl::DeviceType, int> typeIndices;
-				for( const auto &device : ccl::Device::available_devices() )
-				{
-					const string typeString = ccl::Device::string_from_type( device.type );
-					const int typeIndex = typeIndices[device.type]++;
-					const string name = fmt::format( "{}:{:02}", typeString, typeIndex );
-					if(
-						// e.g. "CPU" matches the first CPU device.
-						( typeIndex == 0 && StringAlgo::matchMultiple( typeString, devicePattern ) ) ||
-						// e.g. "CUDA:*" matches all CUDA devices, or `OPTIX:00` matches the first Optix device.
-						StringAlgo::matchMultiple( name, devicePattern )
-					)
-					{
-						devices.push_back( device );
-					}
-				}
-
-				if( devices.empty() )
-				{
-					IECore::msg( IECore::Msg::Warning, "CyclesRenderer", fmt::format( "No devices matching \"{}\" found, reverting to CPU.", devicePattern ) );
-					devices.push_back( firstCPUDevice() );
-				}
-
-				// Note : if there's only one device, `get_multi_device()` just
-				// returns it directly, rather than wrapping it.
-				m_sessionParams.device = ccl::Device::get_multi_device( devices, /* threads = */ 0, /* background = */ true );
+				m_sessionParams.device = matchingDevices( optionValue<string>( name, value, "CPU" ), /* threads = */ 0, /* background = */ true );
 				return;
 			}
 			else if( name == g_threadsOptionName )
 			{
-				if( value == nullptr )
-				{
-					m_sessionParams.threads = 0;
-				}
-				else if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
-				{
-					auto threads = data->readable();
-					if( threads < 0 )
-					{
-						threads = max( (int)std::thread::hardware_concurrency() + threads, 1 );
-					}
-					m_sessionParams.threads = threads;
-				}
+				const int threads = optionValue<int>( name, value, 0 );
+				m_sessionParams.threads = threads > 0 ? threads : std::max( (int)std::thread::hardware_concurrency() + threads, 1 );
 				return;
 			}
 			else if( name == g_shadingsystemOptionName )
 			{
-				if( value == nullptr )
-				{
-					m_sessionParams.shadingsystem = ccl::SHADINGSYSTEM_OSL;
-					m_sceneParams.shadingsystem   = ccl::SHADINGSYSTEM_OSL;
-				}
-				else if( const StringData *data = reportedCast<const StringData>( value, "option", name ) )
-				{
-					auto shadingsystemName = data->readable();
-
-					m_sessionParams.shadingsystem = nameToShadingSystemEnum( shadingsystemName );
-					m_sceneParams.shadingsystem   = nameToShadingSystemEnum( shadingsystemName );
-				}
-				else
-				{
-					IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", fmt::format( "Unknown value for option \"{}\".", name.string() ) );
-				}
+				m_sessionParams.shadingsystem = m_sceneParams.shadingsystem = nameToShadingSystemEnum(
+					optionValue<string>( name, value, "OSL" )
+				);
 				return;
 			}
 			else if( name == g_logLevelOptionName )
 			{
-				if( value == nullptr )
-				{
-					ccl::util_logging_verbosity_set( 0 );
-					return;
-				}
-				else
-				{
-					if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
-					{
-						ccl::util_logging_verbosity_set( data->readable() );
-					}
-					return;
-				}
+				ccl::util_logging_verbosity_set( optionValue<int>( name, value, 0 ) );
+				return;
 			}
 			else if( name == g_seedOptionName )
 			{
-				if( value == nullptr )
-				{
-					m_seed = std::nullopt;
-					return;
-				}
-				else
-				{
-					if ( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
-					{
-						m_seed = data->readable();
-					}
-					return;
-				}
+				m_seed = value ? optional<int>( optionValue<int>( name, value, 0 ) ) : std::nullopt;
+				return;
 			}
 			else if( boost::starts_with( name.string(), "cycles:session:" ) )
 			{
@@ -2750,144 +2676,79 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 				OPTION(bool,  m_sessionParams, g_useProfilingOptionName, use_profiling);
 				OPTION(bool,  m_sessionParams, g_useAutoTileOptionName,  use_auto_tile);
 				OPTION(int,   m_sessionParams, g_tileSizeOptionName,     tile_size);
-
 				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", fmt::format( "Unknown option \"{}\".", name.string() ) );
+				return;
+			}
+			else if( name == g_bvhLayoutOptionName )
+			{
+				m_sceneParams.bvh_layout = nameToBvhLayoutEnum( optionValue<string>( name, value, "auto" ) );
+				return;
+			}
+			else if( name == g_hairShapeOptionName )
+			{
+				m_sceneParams.hair_shape = nameToCurveShapeTypeEnum( optionValue<string>( name, value, "thick" ) );
 				return;
 			}
 			else if( boost::starts_with( name.string(), "cycles:scene:" ) )
 			{
-				if( name == g_bvhLayoutOptionName )
-				{
-					if( value == nullptr )
-					{
-						m_sceneParams.bvh_layout = ccl::BVHLayout::BVH_LAYOUT_AUTO;
-					}
-					else if ( const StringData *data = reportedCast<const StringData>( value, "option", name ) )
-					{
-						m_sceneParams.bvh_layout = nameToBvhLayoutEnum( data->readable() );
-					}
-					return;
-				}
-				if( name == g_hairShapeOptionName )
-				{
-					if( value == nullptr )
-					{
-						m_sceneParams.hair_shape = ccl::CurveShapeType::CURVE_THICK;
-					}
-					else if ( const StringData *data = reportedCast<const StringData>( value, "option", name ) )
-					{
-						m_sceneParams.hair_shape = nameToCurveShapeTypeEnum( data->readable() );
-					}
-					return;
-				}
 				OPTION(bool, m_sceneParams, g_useBvhSpatialSplitOptionName,   use_bvh_spatial_split);
 				OPTION(bool, m_sceneParams, g_useBvhUnalignedNodesOptionName, use_bvh_unaligned_nodes);
 				OPTION(int,  m_sceneParams, g_numBvhTimeStepsOptionName,      num_bvh_time_steps);
 				OPTION(int,  m_sceneParams, g_hairSubdivisionsOptionName,     hair_subdivisions);
 				OPTION(int,  m_sceneParams, g_textureLimitOptionName,         texture_limit);
-
 				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::option", fmt::format( "Unknown option \"{}\".", name.string() ) );
 				return;
 			}
-			// The last 3 are subclassed internally from ccl::Node so treat their params like Cycles sockets
+			else if( name == g_backgroundShaderOptionName )
+			{
+				/// \todo Why is this assignment here? Is it bogus or do we need to destroy the old shader before getting the new one?
+				m_backgroundShader = nullptr;
+				if( const IECoreScene::ShaderNetwork *d = value ? reportedCast<const IECoreScene::ShaderNetwork>( value, "option", name ) : nullptr )
+				{
+					m_backgroundShader = m_shaderCache->get( d );
+				}
+				else
+				{
+					m_backgroundShader = nullptr;
+				}
+				return;
+			}
+			else if( boost::starts_with( name.string(), "cycles:background:visibility:" ) )
+			{
+				const int vis = optionValue<int>( name, value, 1 );
+				auto ray = nameToRayType( name.string().c_str() + 29 );
+				const uint32_t prevVis = m_scene->background->get_visibility();
+				m_scene->background->set_visibility( vis ? prevVis | ray : prevVis & ~ray );
+				return;
+			}
 			else if( boost::starts_with( name.string(), "cycles:background:" ) )
 			{
-				const ccl::SocketType *input = background->node_type->find_input( ccl::ustring( name.string().c_str() + 18 ) );
-				if( value && input )
-				{
-					if( boost::starts_with( name.string(), "cycles:background:visibility:" ) )
-					{
-						if( const Data *d = reportedCast<const IECore::Data>( value, "option", name ) )
-						{
-							if( const IntData *data = static_cast<const IntData *>( d ) )
-							{
-								auto &vis = data->readable();
-								auto ray = nameToRayType( name.string().c_str() + 29 );
-								uint32_t prevVis = background->get_visibility();
-								background->set_visibility( vis ? prevVis |= ray : prevVis & ~ray );
-							}
-						}
-					}
-					else if( name == g_backgroundShaderOptionName )
-					{
-						m_backgroundShader = nullptr;
-						if( const IECoreScene::ShaderNetwork *d = reportedCast<const IECoreScene::ShaderNetwork>( value, "option", name ) )
-						{
-							m_backgroundShader = m_shaderCache->get( d );
-						}
-						else
-						{
-							m_backgroundShader = nullptr;
-						}
-					}
-					else if( const Data *data = reportedCast<const Data>( value, "option", name ) )
-					{
-						SocketAlgo::setSocket( (ccl::Node*)background, input, data );
-					}
-					else
-					{
-						background->set_default_value( *input );
-					}
-				}
-				else if( input )
-				{
-					background->set_default_value( *input );
-				}
+				SocketAlgo::setSocket(
+					m_scene->background, name.string().c_str() + 18,
+					value ? reportedCast<const Data>( value, "option", name ) : nullptr
+				);
+				return;
+			}
+			else if( name == g_cryptomatteDepthOptionName )
+			{
+				m_cryptomatteDepth = optionValue<int>( name, value, 0 );
+				m_outputsChanged = true;
 				return;
 			}
 			else if( boost::starts_with( name.string(), "cycles:film:" ) )
 			{
-				if( name == g_cryptomatteDepthOptionName )
-				{
-					m_outputsChanged = true;
-					if( value == nullptr )
-					{
-						m_cryptomatteDepth = 0;
-						return;
-					}
-					if( const IntData *data = reportedCast<const IntData>( value, "option", name ) )
-					{
-						m_cryptomatteDepth = data->readable();
-						return;
-					}
-				}
-
-				const ccl::SocketType *input = film->node_type->find_input( ccl::ustring( name.string().c_str() + 12 ) );
-				if( value && input )
-				{
-					if( const Data *data = reportedCast<const Data>( value, "option", name ) )
-					{
-						SocketAlgo::setSocket( (ccl::Node*)film, input, data );
-					}
-					else
-					{
-						film->set_default_value( *input );
-					}
-				}
-				else if( input )
-				{
-					film->set_default_value( *input );
-				}
+				SocketAlgo::setSocket(
+					m_scene->film, name.string().c_str() + 12,
+					value ? reportedCast<const Data>( value, "option", name ) : nullptr
+				);
 				return;
 			}
 			else if( boost::starts_with( name.string(), "cycles:integrator:" ) )
 			{
-				const ccl::SocketType *input = integrator->node_type->find_input( ccl::ustring( name.string().c_str() + 18 ) );
-				if( value && input )
-				{
-					if( const Data *data = reportedCast<const Data>( value, "option", name ) )
-					{
-						SocketAlgo::setSocket( (ccl::Node*)integrator, input, data );
-					}
-					else
-					{
-						integrator->set_default_value( *input );
-					}
-				}
-				else if( input )
-				{
-					integrator->set_default_value( *input );
-				}
+				SocketAlgo::setSocket(
+					m_scene->integrator, name.string().c_str() + 18,
+					value ? reportedCast<const Data>( value, "option", name ) : nullptr
+				);
 				return;
 			}
 			else if( boost::starts_with( name.string(), "cycles:" ) )
@@ -3105,7 +2966,19 @@ class CyclesRenderer final : public IECoreScenePreview::Renderer
 
 		IECore::DataPtr command( const IECore::InternedString name, const IECore::CompoundDataMap &parameters ) override
 		{
-			if( boost::starts_with( name.string(), "cycles:" ) || name.string().find( ":" ) == string::npos )
+			if( name == "cycles:queryIntegrator" )
+			{
+				return SocketAlgo::getSockets( m_scene->integrator );
+			}
+			else if( name == "cycles:queryFilm" )
+			{
+				return SocketAlgo::getSockets( m_scene->film );
+			}
+			else if( name == "cycles:querySession" )
+			{
+				return sessionParamsAsData( m_session->params );
+			}
+			else if( boost::starts_with( name.string(), "cycles:" ) || name.string().find( ":" ) == string::npos )
 			{
 				IECore::msg( IECore::Msg::Warning, "CyclesRenderer::command", fmt::format( "Unknown command \"{}\"", name.c_str() ) );
 			}
