@@ -206,6 +206,8 @@ class RenderPassEditorTest( GafferUITest.TestCase ) :
 
 		# Register our grouping function and test a grouped path
 		GafferSceneUI.RenderPassEditor.registerPathGroupingFunction( testFn )
+		self.assertEqual( testFn( "/char_bot_beauty" ), GafferSceneUI.RenderPassEditor.pathGroupingFunction()( "/char_bot_beauty" ) )
+
 		path = _GafferSceneUI._RenderPassEditor.RenderPassPath( renderPasses["out"], context, "/", grouped = True )
 
 		for parent, children in [

@@ -15,7 +15,7 @@ API
 ---
 
 - ScenePath : Added automatic conversion of a list of Python strings to a ScenePath.
-- RenderPassEditor : Added `registerPathGroupingFunction()` method.
+- RenderPassEditor : Added `registerPathGroupingFunction()` and `pathGroupingFunction()` methods.
 
 1.3.12.0 (relative to 1.3.11.0)
 ========

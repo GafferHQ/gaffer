@@ -267,7 +267,7 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 		if plug in ( self.__settingsNode["section"], self.__settingsNode["tabGroup"] ) :
 			self.__updateColumns()
 		elif plug == self.__settingsNode["displayGrouped"] :
-			self.__setPathListingPath()
+			self.__displayGroupedChanged()
 
 	def __settingsPlugInputChanged( self, plug ) :
 
@@ -294,6 +294,34 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 			self.__pathListing.setPath( _GafferSceneUI._RenderPassEditor.RenderPassPath( self.__settingsNode["in"], contextCopy, "/", filter = self.__filter, grouped = self.__settingsNode["displayGrouped"].getValue() ) )
 		else :
 			self.__pathListing.setPath( Gaffer.DictPath( {}, "/" ) )
+
+	def __displayGroupedChanged( self ) :
+
+		selection = self.__pathListing.getSelection()
+		renderPassPath = self.__pathListing.getPath().copy()
+		grouped = self.__settingsNode["displayGrouped"].getValue()
+
+		# Remap selection so it is maintained when switching to/from grouped display
+		for i, pathMatcher in enumerate( selection ) :
+			remappedPaths = IECore.PathMatcher()
+			for path in pathMatcher.paths() :
+				renderPassPath.setFromString( path )
+				renderPassName = renderPassPath.property( "renderPassPath:name" )
+				if renderPassName is None :
+					continue
+
+				if grouped :
+					newPath = GafferScene.ScenePlug.stringToPath( self.pathGroupingFunction()( renderPassName ) )
+					newPath.append( renderPassName )
+				else :
+					newPath = renderPassName
+
+				remappedPaths.addPath( newPath )
+
+			selection[i] = remappedPaths
+
+		self.__setPathListingPath()
+		self.__pathListing.setSelection( selection )
 
 	def __buttonDoubleClick( self, pathListing, event ) :
 
@@ -872,6 +900,11 @@ class RenderPassEditor( GafferUI.NodeSetEditor ) :
 	def registerPathGroupingFunction( f ) :
 
 		_GafferSceneUI._RenderPassEditor.RenderPassPath.registerPathGroupingFunction( f )
+
+	@staticmethod
+	def pathGroupingFunction() :
+
+		return _GafferSceneUI._RenderPassEditor.RenderPassPath.pathGroupingFunction()
 
 GafferUI.Editor.registerType( "RenderPassEditor", RenderPassEditor )
 

@@ -126,6 +126,22 @@ void registerPathGroupingFunctionWrapper( object f )
 	registerPathGroupingFunction( PathGroupingFunctionWrapper( f ) );
 }
 
+string pathGroupingFunctionToString( const std::string &renderPassName )
+{
+	std::string result;
+	ScenePlug::pathToString( pathGroupingFunction()( renderPassName ), result );
+	return result;
+}
+
+object pathGroupingFunctionWrapper()
+{
+	return make_function(
+		pathGroupingFunctionToString,
+		default_call_policies(),
+		boost::mpl::vector<string, const string &>()
+	);
+}
+
 //////////////////////////////////////////////////////////////////////////
 // LRU cache of PathMatchers built from render passes
 //////////////////////////////////////////////////////////////////////////
@@ -864,6 +880,8 @@ void GafferSceneUIModule::bindRenderPassEditor()
 		.def( "getContext", (Context *(RenderPassPath::*)())&RenderPassPath::getContext, return_value_policy<CastToIntrusivePtr>() )
 		.def( "registerPathGroupingFunction", &registerPathGroupingFunctionWrapper )
 		.staticmethod( "registerPathGroupingFunction" )
+		.def( "pathGroupingFunction", &pathGroupingFunctionWrapper )
+		.staticmethod( "pathGroupingFunction" )
 	;
 
 	RefCountedClass<RenderPassNameColumn, GafferUI::PathColumn>( "RenderPassNameColumn" )
