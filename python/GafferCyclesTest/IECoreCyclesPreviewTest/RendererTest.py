@@ -2078,22 +2078,28 @@ class RendererTest( GafferTest.TestCase ) :
 			)
 		)
 
+		with IECore.CapturingMessageHandler() as mh :
+			attributes = renderer.attributes( IECore.CompoundObject ( {
+					"cycles:surface" : IECoreScene.ShaderNetwork(
+						shaders = {
+							"output" : IECoreScene.Shader(
+								"Surface/Constant", "osl:shader",
+								{ "Cs" : imath.Color3f( 0, 1, 0 ) }
+							),
+						},
+						output = "output",
+					)
+				} ) )
+
+		self.assertEqual( len( mh.messages ), 1 )
+		self.assertEqual( mh.messages[0].message, """Couldn't load OSL shader "Surface/Constant" as the shading system is not set to OSL.""" )
+
 		plane = renderer.object(
 			"/plane",
 			IECoreScene.MeshPrimitive.createPlane(
 				imath.Box2f( imath.V2f( -1 ), imath.V2f( 1 ) ),
 			),
-			renderer.attributes( IECore.CompoundObject ( {
-				"cycles:surface" : IECoreScene.ShaderNetwork(
-					shaders = {
-						"output" : IECoreScene.Shader(
-							"Surface/Constant", "osl:shader",
-							{ "Cs" : imath.Color3f( 0, 1, 0 ) }
-						),
-					},
-					output = "output",
-				)
-			} ) )
+			attributes
 		)
 		## \todo Default camera is facing down +ve Z but should be facing
 		# down -ve Z.
